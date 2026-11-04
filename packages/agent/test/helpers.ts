@@ -378,6 +378,22 @@ export function parseSse(text: string): SseEvent[] {
     });
 }
 
+/** The run id the `run` event names (always the first event). */
+export function runIdOf(es: SseEvent[]): string {
+  const run = es.find((e) => e.event === 'run')?.data as { run_id?: unknown } | undefined;
+  if (typeof run?.run_id !== 'string') throw new Error('no run event');
+  return run.run_id;
+}
+
+/** A JSON response body, typed loosely for assertions. */
+export interface Body {
+  error: { code: string; message: string; hint?: string; retry_after_s?: number };
+  [k: string]: unknown;
+}
+export async function bodyOf(res: Response | Promise<Response>): Promise<Body> {
+  return (await (await res).json()) as Body;
+}
+
 export async function collect(events: AsyncIterable<AgentEvent>): Promise<AgentEvent[]> {
   const out: AgentEvent[] = [];
   for await (const e of events) out.push(e);
