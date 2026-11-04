@@ -1,0 +1,102 @@
+{
+  "petal": "transcript/v1",
+  "kind": "hand",
+  "title": "Skeleton: who stands behind NEAR's validators?",
+  "question": "who stands behind NEAR's validators?",
+  "model": "recorded",
+  "note": "Hand-made (T020), in the tool order of quickstart step 2: get_snapshot, describe_snapshot, compute_figures, propose_spec with segments backers, validate_spec with the interpretation, render_flower, then the answer. {\"$from\": \"<call id>.<path>\"} takes a value from an earlier tool result in the conversation; {{<call id>.<path>}} puts one into text. Numbers in the answer come only from tool results.",
+  "turns": [
+    {
+      "content": null,
+      "tool_calls": [{ "id": "call_1", "name": "get_snapshot", "arguments": { "network": "near-validators" } }]
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        { "id": "call_2", "name": "describe_snapshot", "arguments": { "sha256": { "$from": "call_1.sha256" }, "top": 10 } }
+      ]
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_3",
+          "name": "compute_figures",
+          "arguments": { "sha256": { "$from": "call_1.sha256" }, "measure": "validator_stake_current_epoch", "petals": 60 }
+        }
+      ]
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_4",
+          "name": "propose_spec",
+          "arguments": {
+            "network": "near-validators",
+            "sha256": { "$from": "call_1.sha256" },
+            "choices": { "measure": "validator_stake_current_epoch", "segments": "backers" }
+          }
+        }
+      ]
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_5",
+          "name": "validate_spec",
+          "arguments": {
+            "spec": { "$from": "call_4.spec" },
+            "interpretation": {
+              "summary": "Stake decides who produces NEAR's blocks. {{call_3.nakamoto.count}} of the {{call_3.participants_included}} seated validators together hold more than a third of it, enough to stall the chain. Behind each pool stand its backers: many small delegators, a few large accounts, liquid-staking contracts and lockups.",
+              "power_means": [
+                {
+                  "claim": "A validator's power is its stake in the current epoch: it sets how many blocks and chunks the validator produces.",
+                  "sources": ["fastnear-rpc-validators"],
+                  "figures": ["fig:total", "fig:shares"]
+                },
+                {
+                  "claim": "{{call_3.nakamoto.count}} validators together pass the one-third threshold that BFT consensus needs to halt.",
+                  "sources": ["fastnear-rpc-validators"],
+                  "figures": ["fig:nakamoto"]
+                },
+                {
+                  "claim": "Stake is lent to a pool by its delegators; they can move it, so they share the pool's power.",
+                  "sources": ["fastnear-rpc-staking-pool-views"],
+                  "figures": ["fig:top_k_share.10"]
+                }
+              ],
+              "mappings": [
+                { "primitive": "width", "why": "Share of stake is the power that counts here, compressed into a band so small validators stay visible.", "sources": ["fastnear-rpc-validators"] },
+                { "primitive": "height", "why": "Bar height repeats the share, on a square-root scale, so the largest validators stand out.", "sources": ["fastnear-rpc-validators"] },
+                { "primitive": "colour", "why": "Kind of account tells pools from liquid-staking entities.", "sources": ["nearblocks-validators", "fastnear-rpc-liquid-staking"] },
+                { "primitive": "outline", "why": "Pool names are self-declared on-chain, so they are drawn as self-declared, never verified.", "sources": ["nearblocks-validators", "account-id"] },
+                { "primitive": "segments", "why": "Each bar is cut into the backers of the pool: other delegators, accounts with 1M+ NEAR, liquid-staking contracts and lockups.", "sources": ["fastnear-rpc-staking-pool-views"] },
+                { "primitive": "order", "why": "Largest first, clockwise from the top, so the validators that matter most are read first.", "sources": ["fastnear-rpc-validators"] }
+              ],
+              "conflicts": [
+                "House of Stake voting power (veNEAR) is a second kind of power on NEAR; this flower draws block-production stake only."
+              ],
+              "unknowns": [
+                "Who controls the large implicit (hex) delegators: most of the biggest delegators have no public name.",
+                "Who owns the lockup contracts: their owners were not resolved.",
+                "Whether several pools are run by one operator: pools are not merged without evidence."
+              ],
+              "inferred": ["A named .near account is a self-declared name, not a verified identity."],
+              "documents": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "content": null,
+      "tool_calls": [{ "id": "call_6", "name": "render_flower", "arguments": { "spec": { "$from": "call_4.spec" } } }]
+    },
+    {
+      "content": "Here is the flower of NEAR's validators, from a stored snapshot of block {{call_1.snapshot.block_height}}. {{call_3.nakamoto.count}} of {{call_3.participants_included}} seated validators together hold more than a third of the stake (the Nakamoto coefficient). Each bar is cut into the pool's backers: other delegators, accounts with 1M+ NEAR, liquid-staking contracts and lockups. What the data can't tell: who controls the large unnamed accounts, who owns the lockups, and whether several pools share one operator. Open it here: {{call_6.view_url}}",
+      "tool_calls": []
+    }
+  ]
+}

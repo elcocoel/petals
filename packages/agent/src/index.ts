@@ -9,7 +9,13 @@ import type { Budget, LlmClient } from './llm.ts';
 
 export type * from './llm.ts';
 export { DEFAULT_BUDGET } from './llm.ts';
-export { recordedClient } from './recorded.ts';
+export {
+  loadTranscript,
+  recordedClient,
+  SKELETON_TRANSCRIPT,
+  type Transcript,
+  type TranscriptTurn,
+} from './recorded.ts';
 
 /** The agent loop: events in the order of http-api.md (run first, done last). */
 export function runAgent(

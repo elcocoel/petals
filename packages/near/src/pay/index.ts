@@ -3,7 +3,14 @@
 import { notImplemented } from '@petal/core';
 import type { QuoteRequest, QuoteResult } from '@petal/core/types';
 
-export { fakeQuote } from './fake.ts';
+export {
+  BASE_USDC,
+  DRY_QUOTE_NOTE,
+  fakeQuote,
+  type OneClickQuoteResponse,
+  RECORDED_QUOTE,
+  toQuoteResult,
+} from './fake.ts';
 export type { QuoteRequest, QuoteResult };
 
 /** POST https://1click.chaindefuser.com/v0/quote with dry: true, swapType EXACT_OUTPUT. */
