@@ -261,4 +261,20 @@ describe('getSnapshot', () => {
     expect(failed).toMatchObject({ code: 'source_failed' });
     expect(failed.message).toMatch(/^venear-accounts: venear\.dao\.get_accounts/);
   });
+
+  test('deps.modules (v1.1): reads through the registry it is given, not the built-in one', async () => {
+    fakeLive({ block: 300_000_000, ms: Date.UTC(2026, 10, 4, 12) });
+    const own = { 'test-live': modules['test-live'] as InputModule };
+    delete modules['test-live'];
+    const first = await getSnapshot({ network: 'test-live' }, { store: store(), modules: own });
+    expect(first).toMatchObject({ reused: false, where: 'fetched' });
+    const none = await getSnapshot(
+      { network: 'near-validators' },
+      { store: store(), modules: {} },
+    ).catch((e) => e);
+    expect(none).toMatchObject({ code: 'cannot_read' });
+    await expect(getSnapshot({ network: 'test-live' }, { store: store() })).rejects.toMatchObject({
+      code: 'cannot_read',
+    });
+  });
 });

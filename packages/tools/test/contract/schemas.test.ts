@@ -1,13 +1,8 @@
 // T053 (tools.md, Contract tests): each tool's input and output validate against their JSON
 // Schemas, on the near-validators fixture; every error validates against the ToolError schema.
-import { describe, expect, test, vi } from 'vitest';
-
-vi.mock('@petal/core', async (o) => (await import('../doubles/core.ts')).mockCore(await o()));
-vi.mock('@petal/inputs', async (o) => (await import('../doubles/inputs.ts')).mockInputs(await o()));
-vi.mock('@petal/near/auth', async (o) => (await import('../doubles/near.ts')).mockAuth(await o()));
-vi.mock('@petal/near/map', async (o) => (await import('../doubles/near.ts')).mockMap(await o()));
 
 import { schemas } from '@petal/core';
+import { describe, expect, test } from 'vitest';
 import { compile, describeErrors, TOOL_ERROR_SCHEMA } from '../../src/define.ts';
 import { isToolError } from '../../src/errors.ts';
 import { findTool, registry } from '../../src/registry.ts';
@@ -17,7 +12,7 @@ type Json = Record<string, unknown>;
 
 describe('inputs and outputs match their schemas (near-validators fixture)', () => {
   test('one call per tool, success outputs against output, errors against ToolError', async () => {
-    const r = rig();
+    const r = await rig();
     const covered = new Set<string>();
     const checkError = compile(TOOL_ERROR_SCHEMA);
     const run = async (name: string, input: unknown): Promise<Json> => {
@@ -63,7 +58,7 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
   });
 
   test('outputs carry no snapshot body (step 1 lesson: never hand an agent a raw dump)', async () => {
-    const r = rig();
+    const r = await rig();
     const f = await flow(async (name, input) => (await findTool(name)?.run(input, r.ctx)) as Json);
     for (const out of [f.snap, f.proposed, f.rendered]) {
       expect(JSON.stringify(out)).not.toMatch(/"(participants|holdings|relationships)":\[/);

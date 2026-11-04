@@ -60,11 +60,11 @@ function result(
   };
 }
 
-function moduleFor(req: SnapshotRequest): InputModule {
-  const m = modules[req.network];
+function moduleFor(req: SnapshotRequest, registry: Record<string, InputModule>): InputModule {
+  const m = registry[req.network];
   if (!m)
     throw new InputError('cannot_read', `Petal has no input module for network "${req.network}"`, {
-      hint: `Petal can read: ${Object.keys(modules).sort().join(', ')}`,
+      hint: `Petal can read: ${Object.keys(registry).sort().join(', ')}`,
     });
   const spec = m.descriptor.params;
   const given = req.params ?? {};
@@ -109,14 +109,23 @@ function check(network: string, s: Snapshot): void {
   }
 }
 
-/** Resolve `at`, reuse a final snapshot from the store or the map index, or fetch and store. */
+/**
+ * Resolve `at`, reuse a final snapshot from the store or the map index, or fetch and store.
+ * `deps.modules` (packages/v1.1, additive) is the module registry to read through; it defaults to
+ * the built-in `modules`, so the tools can pass the ToolContext's modules.
+ */
 export async function getSnapshot(
   req: SnapshotRequest,
-  deps: { store: SnapshotStore; map?: MapIndex; onProgress?: Progress },
+  deps: {
+    store: SnapshotStore;
+    map?: MapIndex;
+    onProgress?: Progress;
+    modules?: Record<string, InputModule>;
+  },
 ): Promise<SnapshotResult> {
   const { store, map, onProgress } = deps;
   const say = (stage: string, message: string) => onProgress?.({ stage, message });
-  const mod = moduleFor(req);
+  const mod = moduleFor(req, deps.modules ?? modules);
   const d = mod.descriptor;
   const latest = req.at === undefined || req.at === 'latest';
 

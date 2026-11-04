@@ -1,25 +1,20 @@
 // T051: MCP over stateless Streamable HTTP at /mcp and over stdio (serveStdio's serveOn):
 // tools/list equals the registry, tools/call returns the tool's output as structuredContent,
 // errors come back as isError with the same ToolError, progress as notifications/progress.
-import { describe, expect, test, vi } from 'vitest';
-
-vi.mock('@petal/core', async (o) => (await import('./doubles/core.ts')).mockCore(await o()));
-vi.mock('@petal/inputs', async (o) => (await import('./doubles/inputs.ts')).mockInputs(await o()));
-vi.mock('@petal/near/auth', async (o) => (await import('./doubles/near.ts')).mockAuth(await o()));
-vi.mock('@petal/near/map', async (o) => (await import('./doubles/near.ts')).mockMap(await o()));
+import { describe, expect, test } from 'vitest';
 
 import { httpApp } from '../src/http/app.ts';
-import { mcpServer } from '../src/mcp/server.ts';
+import { mcpServer, progressLine } from '../src/mcp/server.ts';
 import { describeTool, registry } from '../src/registry.ts';
-import { httpMcpClient, rig, stdioMcpClient, validatorsFixture } from './helpers.ts';
+import { httpMcpClient, progressOf, rig, stdioMcpClient, validatorsFixture } from './helpers.ts';
 
 describe('MCP', () => {
-  test('mcpServer builds an McpServer for the context', () => {
-    expect(mcpServer(rig().ctx).server).toBeDefined();
+  test('mcpServer builds an McpServer for the context', async () => {
+    expect(mcpServer((await rig()).ctx).server).toBeDefined();
   });
 
   test('tools/list: the registry names, titles, descriptions and schemas, over HTTP and stdio', async () => {
-    const r = rig();
+    const r = await rig();
     const http = await httpMcpClient(httpApp(r.ctx));
     const { client: stdio } = await stdioMcpClient(r.ctx);
     for (const client of [http, stdio]) {
@@ -39,7 +34,7 @@ describe('MCP', () => {
   });
 
   test('tools/call returns structuredContent; errors are isError with the ToolError', async () => {
-    const r = rig();
+    const r = await rig();
     const client = await httpMcpClient(httpApp(r.ctx));
     const ok = await client.callTool({
       name: 'get_snapshot',
@@ -64,7 +59,7 @@ describe('MCP', () => {
 
   test('progress goes out as notifications/progress, over HTTP and stdio', async () => {
     for (const make of ['http', 'stdio'] as const) {
-      const r = rig();
+      const r = await rig();
       const client =
         make === 'http'
           ? await httpMcpClient(httpApp(r.ctx))
@@ -75,17 +70,26 @@ describe('MCP', () => {
         { onprogress: (p: { progress: number; message?: string }) => seen.push(p) } as never,
       );
       expect(out.structuredContent, make).toMatchObject({ reused: false });
+      // one notification per event the tool reports in process, in order; progress only grows
+      const inProcess = await progressOf('get_snapshot', { network: 'test-live' });
+      expect(
+        seen.map((p) => p.message),
+        make,
+      ).toEqual(inProcess.map(progressLine));
       expect(
         seen.map((p) => p.progress),
         make,
-      ).toEqual([1, 2, 3]);
-      expect(seen[1]?.message, make).toBe('fetching: reading holders (1/2)');
+      ).toEqual(inProcess.map((_, i) => i + 1));
+      expect(
+        seen.map((p) => p.message),
+        make,
+      ).toContain('fetching: reading holders (1/2)');
       await client.close();
     }
   });
 
   test('serveOn resolves when the client closes the connection', async () => {
-    const { client, closed } = await stdioMcpClient(rig().ctx);
+    const { client, closed } = await stdioMcpClient((await rig()).ctx);
     await client.close();
     await expect(closed).resolves.toBeUndefined();
   });
