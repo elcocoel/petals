@@ -29,6 +29,12 @@ importers:
       '@types/node':
         specifier: ^24.19.2
         version: 24.19.2
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
+      ajv-formats:
+        specifier: ^3.0.1
+        version: 3.0.1(ajv@8.20.0)
       json-schema-to-typescript:
         specifier: ^16.0.0
         version: 16.0.0

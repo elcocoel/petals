@@ -1,0 +1,1756 @@
+{
+  "petal": "snapshot/v1",
+  "network": {
+    "id": "test-tiny-backers",
+    "chain": "near:mainnet",
+    "population": "validators-test",
+    "title": "Five NEAR pools and their backers (test)"
+  },
+  "snapshot": {
+    "as_of": "2026-11-03T19:42:00Z",
+    "final": true
+  },
+  "module": {
+    "id": "test-subset",
+    "version": "1",
+    "imported_from": "fixtures/snapshots (near-validators)"
+  },
+  "coverage": {
+    "participants_total": 52528,
+    "participants_included": 52528,
+    "amount_total": "125301431.630820949185669497962905",
+    "amount_included": "125301431.630820949185669497962905",
+    "unit": "NEAR",
+    "measure": "validator_stake_current_epoch",
+    "grouped": [
+      {
+        "rule": "delegates_to rows under 1,000 NEAR staked, one group row per pool and backer class (as in the source snapshot)",
+        "rows_folded": 49344,
+        "amount": "2848995.483192221932868580316911"
+      },
+      {
+        "rule": "test subset: delegates_to rows of 1,000 NEAR or more beyond the 2 largest per pool and backer class, folded into the same group rows",
+        "rows_folded": 3145,
+        "amount": "56546568.185389986141922055286589"
+      }
+    ],
+    "note": "Test subset of the near-validators snapshot 72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec: 5 seated pools chosen so that every backer class (lockup, liquid, large, other) appears, with their owners, holdings and delegations; group rows fold the rest, declared in grouped."
+  },
+  "participants": [
+    {
+      "id": "astro-stakers.poolv1.near",
+      "label": "astro-stakers.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "astrostakers.com",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "source": "nearblocks-validators",
+      "detail": {
+        "pool_status": "active",
+        "seated_current_epoch": true,
+        "seated_next_epoch": true,
+        "proposal": true,
+        "reward_fee": {
+          "numerator": 1,
+          "denominator": 100,
+          "source": "nearblocks-validators"
+        },
+        "owner_id": "astrostakers.near",
+        "number_of_accounts": 32355,
+        "crawled": true,
+        "self_declared_url": "astrostakers.com",
+        "self_declared_twitter": "@astrostakers",
+        "self_declared_email": "heyheyhey@astrostakers.com",
+        "self_declared_country_code": "AQ",
+        "self_declared_description": "1% fee in perpetuity secured for NEAR community. Run by Silicon Valley engineers for service permanent availability. We drop rhymes, not blocks",
+        "account_type": "named"
+      }
+    },
+    {
+      "id": "astrostakers.near",
+      "label": "astrostakers.near",
+      "kind": "unknown",
+      "identity": {
+        "name": "astrostakers.near",
+        "source": "account-id",
+        "status": "self-declared"
+      },
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "named"
+      }
+    },
+    {
+      "id": "c7e9e9eaf340b35907df79841f596375531561cb.lockup.near",
+      "label": "c7e9e9eaf340b35907df79841f596375531561cb.lockup.near",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "lockup",
+        "backer_class": "lockup"
+      }
+    },
+    {
+      "id": "a7b761234a3f068e2e12920331395540cff6568f.lockup.near",
+      "label": "a7b761234a3f068e2e12920331395540cff6568f.lockup.near",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "lockup",
+        "backer_class": "lockup"
+      }
+    },
+    {
+      "id": "group:astro-stakers.poolv1.near:lockup",
+      "label": "183 lockups (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 183,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "astro-stakers.poolv1.near",
+        "backer_class": "lockup",
+        "rule": "test subset: see coverage.grouped"
+      }
+    },
+    {
+      "id": "lst.rhealab.near",
+      "label": "Rhea Liquid Near Staking Token",
+      "kind": "staking_entity",
+      "identity": {
+        "name": "Rhea Liquid Near Staking Token",
+        "source": "fastnear-rpc-liquid-staking",
+        "status": "self-declared"
+      },
+      "source": "fastnear-rpc-liquid-staking",
+      "detail": {
+        "symbol": "rNEAR",
+        "liquid_staking": true,
+        "token_holder_accounts": 18576,
+        "owner_id": "rhealab.near",
+        "source_metadata": {
+          "version": "1.0.2",
+          "link": "https://github.com/rhea-finance/rnear-contract/tree/c04e9008bfbf7a44d99c8f66179deb715a7357f9",
+          "standards": [
+            {
+              "standard": "nep330",
+              "version": "1.3.0"
+            }
+          ],
+          "build_info": {
+            "build_environment": "sourcescan/cargo-near:0.16.0-rust-1.86.0@sha256:3220302ebb7036c1942e772810f21edd9381edf9a339983da43487c77fbad488",
+            "build_command": [
+              "cargo",
+              "near",
+              "build",
+              "non-reproducible-wasm",
+              "--locked"
+            ],
+            "contract_path": "contracts/lst",
+            "source_code_snapshot": "git+https://github.com/rhea-finance/rnear-contract.git?rev=c04e9008bfbf7a44d99c8f66179deb715a7357f9",
+            "output_wasm_path": "/home/near/code/target/near/lst/lst.wasm"
+          }
+        },
+        "account_type": "named",
+        "backer_class": "liquid"
+      }
+    },
+    {
+      "id": "linear-protocol.near",
+      "label": "LiNEAR",
+      "kind": "staking_entity",
+      "identity": {
+        "name": "LiNEAR",
+        "source": "fastnear-rpc-liquid-staking",
+        "status": "self-declared"
+      },
+      "source": "fastnear-rpc-liquid-staking",
+      "detail": {
+        "symbol": "LINEAR",
+        "liquid_staking": true,
+        "token_holder_accounts": 47875,
+        "owner_id": "linear.sputnik-dao.near",
+        "source_metadata": {
+          "version": "1.6.2",
+          "link": "https://github.com/linear-protocol/LiNEAR"
+        },
+        "account_type": "named",
+        "backer_class": "liquid"
+      }
+    },
+    {
+      "id": "group:astro-stakers.poolv1.near:liquid",
+      "label": "1 liquid-staking contracts (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 1,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "astro-stakers.poolv1.near",
+        "backer_class": "liquid",
+        "rule": "test subset: see coverage.grouped"
+      }
+    },
+    {
+      "id": "8b86832ca46d0cd00a63473ef6e7cd107e8c93127d2a21445aba6afcade632f4",
+      "label": "8b86832ca46d0cd00a63473ef6e7cd107e8c93127d2a21445aba6afcade632f4",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "large"
+      }
+    },
+    {
+      "id": "liping.near",
+      "label": "liping.near",
+      "kind": "delegator",
+      "identity": {
+        "name": "liping.near",
+        "source": "account-id",
+        "status": "self-declared"
+      },
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "named",
+        "backer_class": "large"
+      }
+    },
+    {
+      "id": "group:astro-stakers.poolv1.near:large",
+      "label": "4 accounts with 1M+ NEAR (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 4,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "astro-stakers.poolv1.near",
+        "backer_class": "large",
+        "rule": "test subset: see coverage.grouped"
+      }
+    },
+    {
+      "id": "d7be837bddae208a781674f201b9553a6fd939c76f9734444b634cdccb9498ad",
+      "label": "d7be837bddae208a781674f201b9553a6fd939c76f9734444b634cdccb9498ad",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "other"
+      }
+    },
+    {
+      "id": "bf5cb425ba05c80828665cc66d1a2d0d09a50b200c84db1f5020008cfdf9f47e",
+      "label": "bf5cb425ba05c80828665cc66d1a2d0d09a50b200c84db1f5020008cfdf9f47e",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "other"
+      }
+    },
+    {
+      "id": "group:astro-stakers.poolv1.near:other",
+      "label": "32159 other delegators (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 32159,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "astro-stakers.poolv1.near",
+        "backer_class": "other",
+        "rule": "test subset: see coverage.grouped"
+      }
+    },
+    {
+      "id": "figment.poolv1.near",
+      "label": "figment.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "source": "nearblocks-validators",
+      "detail": {
+        "pool_status": "active",
+        "seated_current_epoch": true,
+        "seated_next_epoch": true,
+        "proposal": true,
+        "reward_fee": {
+          "numerator": 10,
+          "denominator": 100,
+          "source": "nearblocks-validators"
+        },
+        "owner_id": "figment.near",
+        "number_of_accounts": 1691,
+        "crawled": true,
+        "account_type": "named"
+      }
+    },
+    {
+      "id": "figment.near",
+      "label": "figment.near",
+      "kind": "unknown",
+      "identity": {
+        "name": "figment.near",
+        "source": "account-id",
+        "status": "self-declared"
+      },
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "named"
+      }
+    },
+    {
+      "id": "030722ff960a1e51e1af31f13eca39f4c16ce482.lockup.near",
+      "label": "030722ff960a1e51e1af31f13eca39f4c16ce482.lockup.near",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "lockup",
+        "backer_class": "lockup"
+      }
+    },
+    {
+      "id": "fedc4a53214d6ad18663e43de7018b9ff9fded52.lockup.near",
+      "label": "fedc4a53214d6ad18663e43de7018b9ff9fded52.lockup.near",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "lockup",
+        "backer_class": "lockup"
+      }
+    },
+    {
+      "id": "group:figment.poolv1.near:lockup",
+      "label": "4 lockups (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 4,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "figment.poolv1.near",
+        "backer_class": "lockup",
+        "rule": "test subset: see coverage.grouped"
+      }
+    },
+    {
+      "id": "4a082e8c3f9b46d1906c8244a52078ba401cec6b4d58c05829690f2f6cecb88b",
+      "label": "4a082e8c3f9b46d1906c8244a52078ba401cec6b4d58c05829690f2f6cecb88b",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "large"
+      }
+    },
+    {
+      "id": "4f4ebac8c8632d16091952bb06cf1be8fb01a46b5dc5381c4926f70b481a6123",
+      "label": "4f4ebac8c8632d16091952bb06cf1be8fb01a46b5dc5381c4926f70b481a6123",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "large"
+      }
+    },
+    {
+      "id": "group:figment.poolv1.near:large",
+      "label": "5 accounts with 1M+ NEAR (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 5,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "figment.poolv1.near",
+        "backer_class": "large",
+        "rule": "test subset: see coverage.grouped"
+      }
+    },
+    {
+      "id": "26d4f594db09d16c1c04cb703c6fe5d6d79d298eb2dede943e29272d0e1bd368",
+      "label": "26d4f594db09d16c1c04cb703c6fe5d6d79d298eb2dede943e29272d0e1bd368",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "other"
+      }
+    },
+    {
+      "id": "5811a1e5aa8f9b638981daea09f29df0e4920fa14d1a2b27a0218264be17afb3",
+      "label": "5811a1e5aa8f9b638981daea09f29df0e4920fa14d1a2b27a0218264be17afb3",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "other"
+      }
+    },
+    {
+      "id": "group:figment.poolv1.near:other",
+      "label": "1675 other delegators (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 1675,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "figment.poolv1.near",
+        "backer_class": "other",
+        "rule": "test subset: see coverage.grouped"
+      }
+    },
+    {
+      "id": "ledgerbyfigment.poolv1.near",
+      "label": "ledgerbyfigment.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "source": "nearblocks-validators",
+      "detail": {
+        "pool_status": "active",
+        "seated_current_epoch": true,
+        "seated_next_epoch": true,
+        "proposal": true,
+        "reward_fee": {
+          "numerator": 5,
+          "denominator": 100,
+          "source": "nearblocks-validators"
+        },
+        "owner_id": "ledgerxfigment.near",
+        "number_of_accounts": 13806,
+        "crawled": true,
+        "account_type": "named"
+      }
+    },
+    {
+      "id": "ledgerxfigment.near",
+      "label": "ledgerxfigment.near",
+      "kind": "unknown",
+      "identity": {
+        "name": "ledgerxfigment.near",
+        "source": "account-id",
+        "status": "self-declared"
+      },
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "named"
+      }
+    },
+    {
+      "id": "434fbe5d25e22c0a5628b6d4693a4076d0a100ec7d093e708b0a9aa00f84880a",
+      "label": "434fbe5d25e22c0a5628b6d4693a4076d0a100ec7d093e708b0a9aa00f84880a",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "large"
+      }
+    },
+    {
+      "id": "2242533657cc34cbee30f4ee128505b99324a2a56a406405272884a4a81723a5",
+      "label": "2242533657cc34cbee30f4ee128505b99324a2a56a406405272884a4a81723a5",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "large"
+      }
+    },
+    {
+      "id": "group:ledgerbyfigment.poolv1.near:large",
+      "label": "2 accounts with 1M+ NEAR (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 2,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "ledgerbyfigment.poolv1.near",
+        "backer_class": "large",
+        "rule": "test subset: see coverage.grouped"
+      }
+    },
+    {
+      "id": "6ccf53088a0670911e7072e9ce0f2159da727ca7a3ec20378ae48988e225a184",
+      "label": "6ccf53088a0670911e7072e9ce0f2159da727ca7a3ec20378ae48988e225a184",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "other"
+      }
+    },
+    {
+      "id": "e26f1aaa6e88d87e7007b5b7ce2322834bb49fbf5bae4e7f46d870b01e4fa414",
+      "label": "e26f1aaa6e88d87e7007b5b7ce2322834bb49fbf5bae4e7f46d870b01e4fa414",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "other"
+      }
+    },
+    {
+      "id": "group:ledgerbyfigment.poolv1.near:other",
+      "label": "13799 other delegators (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 13799,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "ledgerbyfigment.poolv1.near",
+        "backer_class": "other",
+        "rule": "test subset: see coverage.grouped"
+      }
+    },
+    {
+      "id": "staked.poolv1.near",
+      "label": "staked.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "source": "nearblocks-validators",
+      "detail": {
+        "pool_status": "active",
+        "seated_current_epoch": true,
+        "seated_next_epoch": true,
+        "proposal": true,
+        "reward_fee": {
+          "numerator": 10,
+          "denominator": 100,
+          "source": "nearblocks-validators"
+        },
+        "owner_id": "staked.near",
+        "number_of_accounts": 3477,
+        "crawled": true,
+        "account_type": "named"
+      }
+    },
+    {
+      "id": "staked.near",
+      "label": "staked.near",
+      "kind": "unknown",
+      "identity": {
+        "name": "staked.near",
+        "source": "account-id",
+        "status": "self-declared"
+      },
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "named"
+      }
+    },
+    {
+      "id": "da056a5ac60c027001b0fd1f6c7395f4dd574c81.lockup.near",
+      "label": "da056a5ac60c027001b0fd1f6c7395f4dd574c81.lockup.near",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "lockup",
+        "backer_class": "lockup"
+      }
+    },
+    {
+      "id": "5f26629815016a143d8c0054b6fa47a3b9961f1d.lockup.near",
+      "label": "5f26629815016a143d8c0054b6fa47a3b9961f1d.lockup.near",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "lockup",
+        "backer_class": "lockup"
+      }
+    },
+    {
+      "id": "group:staked.poolv1.near:lockup",
+      "label": "3 lockups (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 3,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "staked.poolv1.near",
+        "backer_class": "lockup",
+        "rule": "test subset: see coverage.grouped"
+      }
+    },
+    {
+      "id": "88730479801e0245f75a5bb5d83d09ef0d9a17b1144fc6573658d3b83fafd34a",
+      "label": "88730479801e0245f75a5bb5d83d09ef0d9a17b1144fc6573658d3b83fafd34a",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "large"
+      }
+    },
+    {
+      "id": "f593c153578b81b910a14d03892dd0cb4656a00f3a36666094bf7d8b2d916e7f",
+      "label": "f593c153578b81b910a14d03892dd0cb4656a00f3a36666094bf7d8b2d916e7f",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "large"
+      }
+    },
+    {
+      "id": "group:staked.poolv1.near:large",
+      "label": "1 accounts with 1M+ NEAR (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 1,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "staked.poolv1.near",
+        "backer_class": "large",
+        "rule": "test subset: see coverage.grouped"
+      }
+    },
+    {
+      "id": "250a08d42a1510a93ab92a28691aa0588612ce54e4a09616c9f257126e69d497",
+      "label": "250a08d42a1510a93ab92a28691aa0588612ce54e4a09616c9f257126e69d497",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "other"
+      }
+    },
+    {
+      "id": "df982ec119174188e73eef66510dc94d86370dbc930e8925baddd98497ec395b",
+      "label": "df982ec119174188e73eef66510dc94d86370dbc930e8925baddd98497ec395b",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "other"
+      }
+    },
+    {
+      "id": "group:staked.poolv1.near:other",
+      "label": "3467 other delegators (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 3467,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "staked.poolv1.near",
+        "backer_class": "other",
+        "rule": "test subset: see coverage.grouped"
+      }
+    },
+    {
+      "id": "binancenode1.poolv1.near",
+      "label": "binancenode1.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "source": "nearblocks-validators",
+      "detail": {
+        "pool_status": "active",
+        "seated_current_epoch": true,
+        "seated_next_epoch": true,
+        "proposal": true,
+        "reward_fee": {
+          "numerator": 5,
+          "denominator": 100,
+          "source": "nearblocks-validators"
+        },
+        "owner_id": "binancenode1.near",
+        "number_of_accounts": 1192,
+        "crawled": true,
+        "account_type": "named"
+      }
+    },
+    {
+      "id": "binancenode1.near",
+      "label": "binancenode1.near",
+      "kind": "unknown",
+      "identity": {
+        "name": "binancenode1.near",
+        "source": "account-id",
+        "status": "self-declared"
+      },
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "named",
+        "backer_class": "other"
+      }
+    },
+    {
+      "id": "277a16ad69dd7f635e99fa47f7096df54bb59abf.lockup.near",
+      "label": "277a16ad69dd7f635e99fa47f7096df54bb59abf.lockup.near",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "lockup",
+        "backer_class": "lockup"
+      }
+    },
+    {
+      "id": "93a84536a1e92eb40e0f98837c86d7c74fcd5f5b.lockup.near",
+      "label": "93a84536a1e92eb40e0f98837c86d7c74fcd5f5b.lockup.near",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "lockup",
+        "backer_class": "lockup"
+      }
+    },
+    {
+      "id": "7e6e17fcb8e8e6a22ecd47bbd1b58b1af3582b97bbfd4a8d974bb9c266fa282b",
+      "label": "7e6e17fcb8e8e6a22ecd47bbd1b58b1af3582b97bbfd4a8d974bb9c266fa282b",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "large"
+      }
+    },
+    {
+      "id": "48611d2a830a83e4a8fcaae8393737a93184ff354e375f809cd4c4dfb83ac3d3",
+      "label": "48611d2a830a83e4a8fcaae8393737a93184ff354e375f809cd4c4dfb83ac3d3",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "other"
+      }
+    },
+    {
+      "id": "afa6c0716ddd9ba0cf329ef950d09d55cdf7ddf02e49e48f7b3b695d140dd15a",
+      "label": "afa6c0716ddd9ba0cf329ef950d09d55cdf7ddf02e49e48f7b3b695d140dd15a",
+      "kind": "delegator",
+      "identity": null,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "account_type": "implicit",
+        "backer_class": "other"
+      }
+    },
+    {
+      "id": "group:binancenode1.poolv1.near:other",
+      "label": "1186 other delegators (folded)",
+      "kind": "group",
+      "identity": null,
+      "count": 1186,
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "pool": "binancenode1.poolv1.near",
+        "backer_class": "other",
+        "rule": "test subset: see coverage.grouped"
+      }
+    }
+  ],
+  "holdings": [
+    {
+      "participant": "astro-stakers.poolv1.near",
+      "asset": "NEAR",
+      "measure": "validator_stake_current_epoch",
+      "amount": "33270925.619217119134459443495696",
+      "amount_raw": "33270925619217119134459443495696",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "astro-stakers.poolv1.near",
+      "asset": "blocks",
+      "measure": "num_produced_blocks_current_epoch",
+      "amount": "1918",
+      "unit": "blocks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "astro-stakers.poolv1.near",
+      "asset": "blocks",
+      "measure": "num_expected_blocks_current_epoch",
+      "amount": "1918",
+      "unit": "blocks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "astro-stakers.poolv1.near",
+      "asset": "chunks",
+      "measure": "num_produced_chunks_current_epoch",
+      "amount": "9597",
+      "unit": "chunks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "astro-stakers.poolv1.near",
+      "asset": "chunks",
+      "measure": "num_expected_chunks_current_epoch",
+      "amount": "9599",
+      "unit": "chunks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "astro-stakers.poolv1.near",
+      "asset": "endorsements",
+      "measure": "num_produced_endorsements_current_epoch",
+      "amount": "324664",
+      "unit": "endorsements",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "astro-stakers.poolv1.near",
+      "asset": "endorsements",
+      "measure": "num_expected_endorsements_current_epoch",
+      "amount": "325821",
+      "unit": "endorsements",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "binancenode1.poolv1.near",
+      "asset": "NEAR",
+      "measure": "validator_stake_current_epoch",
+      "amount": "20129876.800994643581130761469535",
+      "amount_raw": "20129876800994643581130761469535",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "binancenode1.poolv1.near",
+      "asset": "blocks",
+      "measure": "num_produced_blocks_current_epoch",
+      "amount": "1180",
+      "unit": "blocks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "binancenode1.poolv1.near",
+      "asset": "blocks",
+      "measure": "num_expected_blocks_current_epoch",
+      "amount": "1180",
+      "unit": "blocks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "binancenode1.poolv1.near",
+      "asset": "chunks",
+      "measure": "num_produced_chunks_current_epoch",
+      "amount": "8283",
+      "unit": "chunks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "binancenode1.poolv1.near",
+      "asset": "chunks",
+      "measure": "num_expected_chunks_current_epoch",
+      "amount": "8298",
+      "unit": "chunks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "binancenode1.poolv1.near",
+      "asset": "endorsements",
+      "measure": "num_produced_endorsements_current_epoch",
+      "amount": "320037",
+      "unit": "endorsements",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "binancenode1.poolv1.near",
+      "asset": "endorsements",
+      "measure": "num_expected_endorsements_current_epoch",
+      "amount": "321692",
+      "unit": "endorsements",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "figment.poolv1.near",
+      "asset": "NEAR",
+      "measure": "validator_stake_current_epoch",
+      "amount": "27913093.179334048342469037509325",
+      "amount_raw": "27913093179334048342469037509325",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "figment.poolv1.near",
+      "asset": "blocks",
+      "measure": "num_produced_blocks_current_epoch",
+      "amount": "1664",
+      "unit": "blocks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "figment.poolv1.near",
+      "asset": "blocks",
+      "measure": "num_expected_blocks_current_epoch",
+      "amount": "1664",
+      "unit": "blocks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "figment.poolv1.near",
+      "asset": "chunks",
+      "measure": "num_produced_chunks_current_epoch",
+      "amount": "11191",
+      "unit": "chunks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "figment.poolv1.near",
+      "asset": "chunks",
+      "measure": "num_expected_chunks_current_epoch",
+      "amount": "11191",
+      "unit": "chunks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "figment.poolv1.near",
+      "asset": "endorsements",
+      "measure": "num_produced_endorsements_current_epoch",
+      "amount": "324957",
+      "unit": "endorsements",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "figment.poolv1.near",
+      "asset": "endorsements",
+      "measure": "num_expected_endorsements_current_epoch",
+      "amount": "325243",
+      "unit": "endorsements",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "ledgerbyfigment.poolv1.near",
+      "asset": "NEAR",
+      "measure": "validator_stake_current_epoch",
+      "amount": "22968074.415665397701473933025448",
+      "amount_raw": "22968074415665397701473933025448",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "ledgerbyfigment.poolv1.near",
+      "asset": "blocks",
+      "measure": "num_produced_blocks_current_epoch",
+      "amount": "1375",
+      "unit": "blocks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "ledgerbyfigment.poolv1.near",
+      "asset": "blocks",
+      "measure": "num_expected_blocks_current_epoch",
+      "amount": "1375",
+      "unit": "blocks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "ledgerbyfigment.poolv1.near",
+      "asset": "chunks",
+      "measure": "num_produced_chunks_current_epoch",
+      "amount": "12571",
+      "unit": "chunks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "ledgerbyfigment.poolv1.near",
+      "asset": "chunks",
+      "measure": "num_expected_chunks_current_epoch",
+      "amount": "12572",
+      "unit": "chunks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "ledgerbyfigment.poolv1.near",
+      "asset": "endorsements",
+      "measure": "num_produced_endorsements_current_epoch",
+      "amount": "322989",
+      "unit": "endorsements",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "ledgerbyfigment.poolv1.near",
+      "asset": "endorsements",
+      "measure": "num_expected_endorsements_current_epoch",
+      "amount": "323719",
+      "unit": "endorsements",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "staked.poolv1.near",
+      "asset": "NEAR",
+      "measure": "validator_stake_current_epoch",
+      "amount": "21019461.615609740426136322462901",
+      "amount_raw": "21019461615609740426136322462901",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "staked.poolv1.near",
+      "asset": "blocks",
+      "measure": "num_produced_blocks_current_epoch",
+      "amount": "1237",
+      "unit": "blocks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "staked.poolv1.near",
+      "asset": "blocks",
+      "measure": "num_expected_blocks_current_epoch",
+      "amount": "1237",
+      "unit": "blocks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "staked.poolv1.near",
+      "asset": "chunks",
+      "measure": "num_produced_chunks_current_epoch",
+      "amount": "13990",
+      "unit": "chunks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "staked.poolv1.near",
+      "asset": "chunks",
+      "measure": "num_expected_chunks_current_epoch",
+      "amount": "13997",
+      "unit": "chunks",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "staked.poolv1.near",
+      "asset": "endorsements",
+      "measure": "num_produced_endorsements_current_epoch",
+      "amount": "321246",
+      "unit": "endorsements",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "staked.poolv1.near",
+      "asset": "endorsements",
+      "measure": "num_expected_endorsements_current_epoch",
+      "amount": "322571",
+      "unit": "endorsements",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    }
+  ],
+  "relationships": [
+    {
+      "from": "astro-stakers.poolv1.near",
+      "to": "astrostakers.near",
+      "type": "owned_by",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views"
+    },
+    {
+      "from": "c7e9e9eaf340b35907df79841f596375531561cb.lockup.near",
+      "to": "astro-stakers.poolv1.near",
+      "type": "delegates_to",
+      "amount": "1363802.876921329611635859744287",
+      "amount_raw": "1363802876921329611635859744287",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000003",
+        "unstaked_raw": "3"
+      }
+    },
+    {
+      "from": "a7b761234a3f068e2e12920331395540cff6568f.lockup.near",
+      "to": "astro-stakers.poolv1.near",
+      "type": "delegates_to",
+      "amount": "1151953.931196037191635987141895",
+      "amount_raw": "1151953931196037191635987141895",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "5000.000000000000000000000001",
+        "unstaked_raw": "5000000000000000000000000001"
+      }
+    },
+    {
+      "from": "group:astro-stakers.poolv1.near:lockup",
+      "to": "astro-stakers.poolv1.near",
+      "type": "delegates_to",
+      "amount": "3859703.586834146217879322806139",
+      "amount_raw": "3859703586834146217879322806139",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 183
+      }
+    },
+    {
+      "from": "lst.rhealab.near",
+      "to": "astro-stakers.poolv1.near",
+      "type": "delegates_to",
+      "amount": "63469.313666073522838194711966",
+      "amount_raw": "63469313666073522838194711966",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000005",
+        "unstaked_raw": "5"
+      }
+    },
+    {
+      "from": "linear-protocol.near",
+      "to": "astro-stakers.poolv1.near",
+      "type": "delegates_to",
+      "amount": "61266.512818191950386918985132",
+      "amount_raw": "61266512818191950386918985132",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views"
+    },
+    {
+      "from": "group:astro-stakers.poolv1.near:liquid",
+      "to": "astro-stakers.poolv1.near",
+      "type": "delegates_to",
+      "amount": "8642.126485229900710878956894",
+      "amount_raw": "8642126485229900710878956894",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 1
+      }
+    },
+    {
+      "from": "8b86832ca46d0cd00a63473ef6e7cd107e8c93127d2a21445aba6afcade632f4",
+      "to": "astro-stakers.poolv1.near",
+      "type": "delegates_to",
+      "amount": "1704175.625747619871451199775978",
+      "amount_raw": "1704175625747619871451199775978",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000003",
+        "unstaked_raw": "3"
+      }
+    },
+    {
+      "from": "liping.near",
+      "to": "astro-stakers.poolv1.near",
+      "type": "delegates_to",
+      "amount": "1531402.003459435175898416562832",
+      "amount_raw": "1531402003459435175898416562832",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000001",
+        "unstaked_raw": "1"
+      }
+    },
+    {
+      "from": "group:astro-stakers.poolv1.near:large",
+      "to": "astro-stakers.poolv1.near",
+      "type": "delegates_to",
+      "amount": "3244410.854336236844034918051285",
+      "amount_raw": "3244410854336236844034918051285",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 4
+      }
+    },
+    {
+      "from": "d7be837bddae208a781674f201b9553a6fd939c76f9734444b634cdccb9498ad",
+      "to": "astro-stakers.poolv1.near",
+      "type": "delegates_to",
+      "amount": "888165.941303704737926869440678",
+      "amount_raw": "888165941303704737926869440678",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000001",
+        "unstaked_raw": "1"
+      }
+    },
+    {
+      "from": "bf5cb425ba05c80828665cc66d1a2d0d09a50b200c84db1f5020008cfdf9f47e",
+      "to": "astro-stakers.poolv1.near",
+      "type": "delegates_to",
+      "amount": "723497.874579357960368963335453",
+      "amount_raw": "723497874579357960368963335453",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000002",
+        "unstaked_raw": "2"
+      }
+    },
+    {
+      "from": "group:astro-stakers.poolv1.near:other",
+      "to": "astro-stakers.poolv1.near",
+      "type": "delegates_to",
+      "amount": "18674846.243009424426981467133372",
+      "amount_raw": "18674846243009424426981467133372",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 32159
+      }
+    },
+    {
+      "from": "figment.poolv1.near",
+      "to": "figment.near",
+      "type": "owned_by",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views"
+    },
+    {
+      "from": "030722ff960a1e51e1af31f13eca39f4c16ce482.lockup.near",
+      "to": "figment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "166672.217074485394735366975913",
+      "amount_raw": "166672217074485394735366975913",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000002",
+        "unstaked_raw": "2"
+      }
+    },
+    {
+      "from": "fedc4a53214d6ad18663e43de7018b9ff9fded52.lockup.near",
+      "to": "figment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "166672.217028639927754458760436",
+      "amount_raw": "166672217028639927754458760436",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000002",
+        "unstaked_raw": "2"
+      }
+    },
+    {
+      "from": "group:figment.poolv1.near:lockup",
+      "to": "figment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "2334.229192568957794553238973",
+      "amount_raw": "2334229192568957794553238973",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 4
+      }
+    },
+    {
+      "from": "linear-protocol.near",
+      "to": "figment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "1409.001702702579908684667331",
+      "amount_raw": "1409001702702579908684667331",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views"
+    },
+    {
+      "from": "4a082e8c3f9b46d1906c8244a52078ba401cec6b4d58c05829690f2f6cecb88b",
+      "to": "figment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "12954392.177088046259290526626488",
+      "amount_raw": "12954392177088046259290526626488",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000001",
+        "unstaked_raw": "1"
+      }
+    },
+    {
+      "from": "4f4ebac8c8632d16091952bb06cf1be8fb01a46b5dc5381c4926f70b481a6123",
+      "to": "figment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "2045807.407185172513814607133509",
+      "amount_raw": "2045807407185172513814607133509",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "3852.379744000000000000000063",
+        "unstaked_raw": "3852379744000000000000000063"
+      }
+    },
+    {
+      "from": "group:figment.poolv1.near:large",
+      "to": "figment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "5481286.072150437430615910776635",
+      "amount_raw": "5481286072150437430615910776635",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 5
+      }
+    },
+    {
+      "from": "26d4f594db09d16c1c04cb703c6fe5d6d79d298eb2dede943e29272d0e1bd368",
+      "to": "figment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "996573.753382474378522479998029",
+      "amount_raw": "996573753382474378522479998029",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views"
+    },
+    {
+      "from": "5811a1e5aa8f9b638981daea09f29df0e4920fa14d1a2b27a0218264be17afb3",
+      "to": "figment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "593895.339918526279024819176913",
+      "amount_raw": "593895339918526279024819176913",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000003",
+        "unstaked_raw": "3"
+      }
+    },
+    {
+      "from": "group:figment.poolv1.near:other",
+      "to": "figment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "5506090.934821417166224378819976",
+      "amount_raw": "5506090934821417166224378819976",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 1675
+      }
+    },
+    {
+      "from": "ledgerbyfigment.poolv1.near",
+      "to": "ledgerxfigment.near",
+      "type": "owned_by",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views"
+    },
+    {
+      "from": "linear-protocol.near",
+      "to": "ledgerbyfigment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "80147.860088176443776449851555",
+      "amount_raw": "80147860088176443776449851555",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views"
+    },
+    {
+      "from": "434fbe5d25e22c0a5628b6d4693a4076d0a100ec7d093e708b0a9aa00f84880a",
+      "to": "ledgerbyfigment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "4576580.744116801132066852919929",
+      "amount_raw": "4576580744116801132066852919929",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000002",
+        "unstaked_raw": "2"
+      }
+    },
+    {
+      "from": "2242533657cc34cbee30f4ee128505b99324a2a56a406405272884a4a81723a5",
+      "to": "ledgerbyfigment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "1154192.324703940094244450939503",
+      "amount_raw": "1154192324703940094244450939503",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000003",
+        "unstaked_raw": "3"
+      }
+    },
+    {
+      "from": "group:ledgerbyfigment.poolv1.near:large",
+      "to": "ledgerbyfigment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "1316317.28199286115538610557649",
+      "amount_raw": "1316317281992861155386105576490",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 2
+      }
+    },
+    {
+      "from": "6ccf53088a0670911e7072e9ce0f2159da727ca7a3ec20378ae48988e225a184",
+      "to": "ledgerbyfigment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "993410.469489592550811982773442",
+      "amount_raw": "993410469489592550811982773442",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000003",
+        "unstaked_raw": "3"
+      }
+    },
+    {
+      "from": "e26f1aaa6e88d87e7007b5b7ce2322834bb49fbf5bae4e7f46d870b01e4fa414",
+      "to": "ledgerbyfigment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "699557.703725970769246314949253",
+      "amount_raw": "699557703725970769246314949253",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000001",
+        "unstaked_raw": "1"
+      }
+    },
+    {
+      "from": "group:ledgerbyfigment.poolv1.near:other",
+      "to": "ledgerbyfigment.poolv1.near",
+      "type": "delegates_to",
+      "amount": "14221092.991537977632970912585987",
+      "amount_raw": "14221092991537977632970912585987",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 13799
+      }
+    },
+    {
+      "from": "staked.poolv1.near",
+      "to": "staked.near",
+      "type": "owned_by",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views"
+    },
+    {
+      "from": "da056a5ac60c027001b0fd1f6c7395f4dd574c81.lockup.near",
+      "to": "staked.poolv1.near",
+      "type": "delegates_to",
+      "amount": "167575.891987372353717305542331",
+      "amount_raw": "167575891987372353717305542331",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000002",
+        "unstaked_raw": "2"
+      }
+    },
+    {
+      "from": "5f26629815016a143d8c0054b6fa47a3b9961f1d.lockup.near",
+      "to": "staked.poolv1.near",
+      "type": "delegates_to",
+      "amount": "157046.477408031777811813982229",
+      "amount_raw": "157046477408031777811813982229",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000025",
+        "unstaked_raw": "25"
+      }
+    },
+    {
+      "from": "group:staked.poolv1.near:lockup",
+      "to": "staked.poolv1.near",
+      "type": "delegates_to",
+      "amount": "148082.559144469054564837339243",
+      "amount_raw": "148082559144469054564837339243",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 3
+      }
+    },
+    {
+      "from": "88730479801e0245f75a5bb5d83d09ef0d9a17b1144fc6573658d3b83fafd34a",
+      "to": "staked.poolv1.near",
+      "type": "delegates_to",
+      "amount": "7101880.571380529658122428985464",
+      "amount_raw": "7101880571380529658122428985464",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "74667.020202249592056620890004",
+        "unstaked_raw": "74667020202249592056620890004"
+      }
+    },
+    {
+      "from": "f593c153578b81b910a14d03892dd0cb4656a00f3a36666094bf7d8b2d916e7f",
+      "to": "staked.poolv1.near",
+      "type": "delegates_to",
+      "amount": "5824065.696508867181988788735427",
+      "amount_raw": "5824065696508867181988788735427",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "135235.497285183712937959590001",
+        "unstaked_raw": "135235497285183712937959590001"
+      }
+    },
+    {
+      "from": "group:staked.poolv1.near:large",
+      "to": "staked.poolv1.near",
+      "type": "delegates_to",
+      "amount": "5399990.208523618323737695154166",
+      "amount_raw": "5399990208523618323737695154166",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 1
+      }
+    },
+    {
+      "from": "250a08d42a1510a93ab92a28691aa0588612ce54e4a09616c9f257126e69d497",
+      "to": "staked.poolv1.near",
+      "type": "delegates_to",
+      "amount": "484448.526700352096341724222085",
+      "amount_raw": "484448526700352096341724222085",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "3962.389126657901410913400008",
+        "unstaked_raw": "3962389126657901410913400008"
+      }
+    },
+    {
+      "from": "df982ec119174188e73eef66510dc94d86370dbc930e8925baddd98497ec395b",
+      "to": "staked.poolv1.near",
+      "type": "delegates_to",
+      "amount": "393653.302224918822355999678207",
+      "amount_raw": "393653302224918822355999678207",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views"
+    },
+    {
+      "from": "group:staked.poolv1.near:other",
+      "to": "staked.poolv1.near",
+      "type": "delegates_to",
+      "amount": "1346846.460065844533758524010838",
+      "amount_raw": "1346846460065844533758524010838",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 3467
+      }
+    },
+    {
+      "from": "binancenode1.poolv1.near",
+      "to": "binancenode1.near",
+      "type": "owned_by",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views"
+    },
+    {
+      "from": "277a16ad69dd7f635e99fa47f7096df54bb59abf.lockup.near",
+      "to": "binancenode1.poolv1.near",
+      "type": "delegates_to",
+      "amount": "196244.792618277018112903264377",
+      "amount_raw": "196244792618277018112903264377",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000001",
+        "unstaked_raw": "1"
+      }
+    },
+    {
+      "from": "93a84536a1e92eb40e0f98837c86d7c74fcd5f5b.lockup.near",
+      "to": "binancenode1.poolv1.near",
+      "type": "delegates_to",
+      "amount": "1045.760119960532814057373676",
+      "amount_raw": "1045760119960532814057373676",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000001",
+        "unstaked_raw": "1"
+      }
+    },
+    {
+      "from": "linear-protocol.near",
+      "to": "binancenode1.poolv1.near",
+      "type": "delegates_to",
+      "amount": "101382.869124995920875398398498",
+      "amount_raw": "101382869124995920875398398498",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000001",
+        "unstaked_raw": "1"
+      }
+    },
+    {
+      "from": "7e6e17fcb8e8e6a22ecd47bbd1b58b1af3582b97bbfd4a8d974bb9c266fa282b",
+      "to": "binancenode1.poolv1.near",
+      "type": "delegates_to",
+      "amount": "19274414.308681283787216101276019",
+      "amount_raw": "19274414308681283787216101276019",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views"
+    },
+    {
+      "from": "48611d2a830a83e4a8fcaae8393737a93184ff354e375f809cd4c4dfb83ac3d3",
+      "to": "binancenode1.poolv1.near",
+      "type": "delegates_to",
+      "amount": "303033.084242081080458291302757",
+      "amount_raw": "303033084242081080458291302757",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000002",
+        "unstaked_raw": "2"
+      }
+    },
+    {
+      "from": "afa6c0716ddd9ba0cf329ef950d09d55cdf7ddf02e49e48f7b3b695d140dd15a",
+      "to": "binancenode1.poolv1.near",
+      "type": "delegates_to",
+      "amount": "68577.160894961757770604254445",
+      "amount_raw": "68577160894961757770604254445",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "unstaked": "0.000000000000000000000002",
+        "unstaked_raw": "2"
+      }
+    },
+    {
+      "from": "group:binancenode1.poolv1.near:other",
+      "to": "binancenode1.poolv1.near",
+      "type": "delegates_to",
+      "amount": "185920.120487976430131131153502",
+      "amount_raw": "185920120487976430131131153502",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-staking-pool-views",
+      "detail": {
+        "rows_folded": 1186
+      }
+    }
+  ],
+  "events": [],
+  "sources": [
+    {
+      "id": "fastnear-rpc-validators",
+      "url": "https://rpc.mainnet.fastnear.com",
+      "method": "validators [null] (current epoch)",
+      "fetched_at": "2026-11-03T19:42:00Z",
+      "kind": "chain"
+    },
+    {
+      "id": "fastnear-rpc-staking-pool-views",
+      "url": "https://rpc.mainnet.fastnear.com",
+      "method": "query call_function: get_total_staked_balance, get_number_of_accounts, get_owner_id, get_reward_fee_fraction, get_accounts{from_index,limit}",
+      "fetched_at": "2026-11-03T19:42:00Z",
+      "kind": "chain"
+    },
+    {
+      "id": "nearblocks-validators",
+      "url": "https://api.nearblocks.io/v3/validators?limit=100",
+      "method": "GET paginated; pool metadata self-declared in pool-details.near; staking_status; delegators_count",
+      "fetched_at": "2026-11-03T19:42:00Z",
+      "kind": "api"
+    },
+    {
+      "id": "account-id",
+      "url": "https://docs.near.org/protocol/accounts-contracts/account-id",
+      "method": "a named account id is a self-declared name, not verified",
+      "fetched_at": "2026-11-03T19:42:00Z",
+      "kind": "docs"
+    },
+    {
+      "id": "fastnear-rpc-liquid-staking",
+      "url": "https://rpc.mainnet.fastnear.com",
+      "method": "query call_function on liquid-staking contracts (ft_metadata, get_contract_state, get_summary, ...)",
+      "fetched_at": "2026-11-03T19:42:00Z",
+      "kind": "chain"
+    }
+  ]
+}

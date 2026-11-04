@@ -32,6 +32,8 @@
     "@petal/near": "workspace:*",
     "@petal/tools": "workspace:*",
     "@types/node": "^24.19.2",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "json-schema-to-typescript": "^16.0.0",
     "typescript": "7.0.2",
     "vitest": "^5.1.0"

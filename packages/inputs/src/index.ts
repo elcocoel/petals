@@ -16,7 +16,13 @@ import type {
   SnapshotResult,
 } from '@petal/core/types';
 
-export { importSpike, NEAR_VALIDATORS_RULES } from './import/spike.ts';
+export {
+  BACKER_CLASSES,
+  type BackerClass,
+  importSpike,
+  NEAR_VALIDATORS_RULES,
+  NO_GROUPING,
+} from './import/spike.ts';
 
 export interface InputModule {
   /** id, chain, population, capabilities, live, cost */

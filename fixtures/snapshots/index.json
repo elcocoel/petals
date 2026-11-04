@@ -1,0 +1,23 @@
+{
+  "petal": "snapshot-index/v1",
+  "snapshots": [
+    {
+      "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
+      "network": "near-validators",
+      "chain": "near:mainnet",
+      "population": "validators",
+      "block_height": 222915356,
+      "as_of": "2026-11-03T19:42:00Z",
+      "final": true,
+      "bytes": 6401763,
+      "gz_bytes": 834513,
+      "file": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec.json.gz",
+      "where": "fixture",
+      "module": {
+        "id": "near-validators",
+        "version": "spike-import/1",
+        "imported_from": "research/data/near/producers.json"
+      }
+    }
+  ]
+}

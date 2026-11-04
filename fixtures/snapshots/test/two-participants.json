@@ -1,0 +1,122 @@
+{
+  "petal": "snapshot/v1",
+  "network": {
+    "id": "test-two-participants",
+    "chain": "near:mainnet",
+    "population": "validators-test",
+    "title": "Two NEAR validators (test)"
+  },
+  "snapshot": {
+    "as_of": "2026-11-03T19:42:00Z",
+    "final": true
+  },
+  "module": {
+    "id": "test-subset",
+    "version": "1",
+    "imported_from": "fixtures/snapshots (near-validators)"
+  },
+  "coverage": {
+    "participants_total": 2,
+    "participants_included": 2,
+    "amount_total": "61184018.798551167476928481005021",
+    "amount_included": "61184018.798551167476928481005021",
+    "unit": "NEAR",
+    "measure": "validator_stake_current_epoch",
+    "note": "Test subset of the near-validators snapshot 72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec: the two largest seated validators by validator_stake_current_epoch."
+  },
+  "participants": [
+    {
+      "id": "astro-stakers.poolv1.near",
+      "label": "astro-stakers.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "astrostakers.com",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "source": "nearblocks-validators",
+      "detail": {
+        "pool_status": "active",
+        "seated_current_epoch": true,
+        "seated_next_epoch": true,
+        "proposal": true,
+        "reward_fee": {
+          "numerator": 1,
+          "denominator": 100,
+          "source": "nearblocks-validators"
+        },
+        "owner_id": "astrostakers.near",
+        "number_of_accounts": 32355,
+        "crawled": true,
+        "self_declared_url": "astrostakers.com",
+        "self_declared_twitter": "@astrostakers",
+        "self_declared_email": "heyheyhey@astrostakers.com",
+        "self_declared_country_code": "AQ",
+        "self_declared_description": "1% fee in perpetuity secured for NEAR community. Run by Silicon Valley engineers for service permanent availability. We drop rhymes, not blocks",
+        "account_type": "named"
+      }
+    },
+    {
+      "id": "figment.poolv1.near",
+      "label": "figment.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "source": "nearblocks-validators",
+      "detail": {
+        "pool_status": "active",
+        "seated_current_epoch": true,
+        "seated_next_epoch": true,
+        "proposal": true,
+        "reward_fee": {
+          "numerator": 10,
+          "denominator": 100,
+          "source": "nearblocks-validators"
+        },
+        "owner_id": "figment.near",
+        "number_of_accounts": 1691,
+        "crawled": true,
+        "account_type": "named"
+      }
+    }
+  ],
+  "holdings": [
+    {
+      "participant": "astro-stakers.poolv1.near",
+      "asset": "NEAR",
+      "measure": "validator_stake_current_epoch",
+      "amount": "33270925.619217119134459443495696",
+      "amount_raw": "33270925619217119134459443495696",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    },
+    {
+      "participant": "figment.poolv1.near",
+      "asset": "NEAR",
+      "measure": "validator_stake_current_epoch",
+      "amount": "27913093.179334048342469037509325",
+      "amount_raw": "27913093179334048342469037509325",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "fastnear-rpc-validators"
+    }
+  ],
+  "relationships": [],
+  "events": [],
+  "sources": [
+    {
+      "id": "fastnear-rpc-validators",
+      "url": "https://rpc.mainnet.fastnear.com",
+      "method": "validators [null] (current epoch)",
+      "fetched_at": "2026-11-03T19:42:00Z",
+      "kind": "chain"
+    },
+    {
+      "id": "nearblocks-validators",
+      "url": "https://api.nearblocks.io/v3/validators?limit=100",
+      "method": "GET paginated; pool metadata self-declared in pool-details.near; staking_status; delegators_count",
+      "fetched_at": "2026-11-03T19:42:00Z",
+      "kind": "api"
+    }
+  ]
+}
