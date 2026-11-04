@@ -147,6 +147,7 @@ export const getSnapshotTool = defineTool<
     };
     const deps = {
       store: ctx.store,
+      modules: ctx.modules,
       map: mapIndex(ctx),
       ...(ctx.onProgress ? { onProgress: ctx.onProgress } : {}),
     };

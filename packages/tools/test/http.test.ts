@@ -1,16 +1,11 @@
 // T052: the HTTP tool routes (http-api.md): status per code, open CORS, per-IP limits, SSE for
 // long tools, health, snapshot bodies with immutable cache headers, the flower SVG, /mcp.
-import { describe, expect, test, vi } from 'vitest';
-
-vi.mock('@petal/core', async (o) => (await import('./doubles/core.ts')).mockCore(await o()));
-vi.mock('@petal/inputs', async (o) => (await import('./doubles/inputs.ts')).mockInputs(await o()));
-vi.mock('@petal/near/auth', async (o) => (await import('./doubles/near.ts')).mockAuth(await o()));
-vi.mock('@petal/near/map', async (o) => (await import('./doubles/near.ts')).mockMap(await o()));
 
 import { gunzipSync } from 'node:zlib';
 import { canonicalJson, sha256Hex } from '@petal/core';
+import { describe, expect, test } from 'vitest';
 import { httpApp } from '../src/http/app.ts';
-import { flow, rig, validatorsFixture } from './helpers.ts';
+import { flow, progressOf, rig, validatorsFixture } from './helpers.ts';
 
 const json = (body: unknown, headers: Record<string, string> = {}) => ({
   method: 'POST',
@@ -18,8 +13,8 @@ const json = (body: unknown, headers: Record<string, string> = {}) => ({
   body: JSON.stringify(body),
 });
 
-function setup() {
-  const r = rig();
+async function setup() {
+  const r = await rig();
   const app = httpApp(r.ctx);
   const call = async (path: string, init?: RequestInit) => {
     const res = await app.request(path, init);
@@ -41,7 +36,7 @@ function setup() {
 
 describe('tool routes', () => {
   test('GET networks and a network; query params become params', async () => {
-    const { call } = setup();
+    const { call } = await setup();
     const list = await call('/api/v1/networks?query=validators');
     expect(list.res.status).toBe(200);
     expect(list.body.tools_version).toBe('tools/v1');
@@ -53,7 +48,7 @@ describe('tool routes', () => {
   });
 
   test('status per error code: bad_input 400, not_found 404, cannot_read 422, invalid_spec 422', async () => {
-    const { call } = setup();
+    const { call } = await setup();
     expect((await call('/api/v1/figures', json({ sha256: 'x' }))).res.status).toBe(400);
     expect(
       (await call('/api/v1/figures', { method: 'POST', body: '{nope' })).body.error?.code,
@@ -69,7 +64,7 @@ describe('tool routes', () => {
   });
 
   test('describe ?top= is read as a number', async () => {
-    const { call } = setup();
+    const { call } = await setup();
     const { sha256 } = validatorsFixture();
     const out = await call(`/api/v1/snapshots/${sha256}/describe?top=2`);
     expect(out.body.top).toHaveLength(2);
@@ -77,7 +72,7 @@ describe('tool routes', () => {
   });
 
   test('render: include_svg defaults to true over HTTP; ?format=svg returns image/svg+xml', async () => {
-    const { app, run } = setup();
+    const { app, run } = await setup();
     const { spec } = await flow(run);
     const out = await run('render_flower', { spec });
     expect(out.svg).toMatch(/^<svg /);
@@ -88,7 +83,7 @@ describe('tool routes', () => {
   });
 
   test('CORS is open', async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const res = await app.request('/api/v1/networks', {
       headers: { origin: 'https://elsewhere.example' },
     });
@@ -101,7 +96,7 @@ describe('tool routes', () => {
   });
 
   test('60 tool calls a minute per IP, then 429 rate_limited with retry_after_s', async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const from = (ip: string) => ({ headers: { 'x-forwarded-for': ip } });
     for (let i = 0; i < 60; i++)
       expect((await app.request('/api/v1/networks', from('1.2.3.4'))).status).toBe(200);
@@ -118,7 +113,7 @@ describe('tool routes', () => {
 
 describe('SSE, bodies, health', () => {
   test('a long tool streams progress events, then the result event', async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const res = await app.request(
       '/api/v1/snapshots',
       json({ network: 'test-live' }, { accept: 'text/event-stream' }),
@@ -129,13 +124,21 @@ describe('SSE, bodies, health', () => {
       event: m[1],
       data: JSON.parse(m[2] as string),
     }));
-    expect(events.map((e) => e.event)).toEqual(['progress', 'progress', 'progress', 'result']);
-    expect(events[1]?.data).toMatchObject({ stage: 'fetching', done: 1, total: 2 });
+    // exactly the events the tool reports in process, in order, then the result
+    const inProcess = await progressOf('get_snapshot', { network: 'test-live' });
+    expect(events.map((e) => e.event)).toEqual([...inProcess.map(() => 'progress'), 'result']);
+    expect(events.slice(0, -1).map((e) => e.data)).toEqual(inProcess);
+    expect(inProcess).toContainEqual({
+      stage: 'fetching',
+      message: 'reading holders',
+      done: 1,
+      total: 2,
+    });
     expect(events.at(-1)?.data).toMatchObject({ reused: false, tools_version: 'tools/v1' });
   });
 
   test('the snapshot body: canonical bytes, gzip, immutable cache, ETag, 304', async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const { s, sha256 } = validatorsFixture();
     const res = await app.request(`/api/v1/snapshots/${sha256}`, {
       headers: { 'accept-encoding': 'gzip' },
@@ -154,7 +157,7 @@ describe('SSE, bodies, health', () => {
   });
 
   test('health: ok, map mirror on the fake map, llm recorded without a key', async () => {
-    const { call } = setup();
+    const { call } = await setup();
     const out = await call('/api/v1/health');
     expect(out.body).toEqual({
       ok: true,
@@ -166,7 +169,7 @@ describe('SSE, bodies, health', () => {
   });
 
   test("a published flower's SVG, immutable", async () => {
-    const { app, r, run, call } = setup();
+    const { app, r, run, call } = await setup();
     const f = await flow(run);
     const prep = (await call('/api/v1/publish/prepare', json({ entry: f.draft }))).body;
     const proof = r.signer.sign({

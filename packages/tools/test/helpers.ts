@@ -1,6 +1,7 @@
-// Test helpers: fixture snapshots in a memory store, network descriptors, a ToolContext on fakes
-// (fakeMap, the test NEP-413 signer and fake RPC, the recorded dry quote), and MCP clients over
-// HTTP and in-memory stdio. Tests that use these also vi.mock the stub packages (doubles/).
+// Test helpers: fixture snapshots, real-shaped input modules, a ToolContext on the real packages
+// (fileStore, near-validators, core) with fakes only where the outside world would be (fakeMap,
+// the test NEP-413 signer and fake RPC, the recorded dry quote), and MCP clients over HTTP and
+// in-memory stdio.
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,21 +10,22 @@ import { gunzipSync } from 'node:zlib';
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
 import { InMemoryTransport } from '@modelcontextprotocol/server';
 import { canonicalJson, sha256Hex } from '@petal/core';
-import type {
-  Capabilities,
-  IndexRow,
-  NetworkDescriptor,
-  Snapshot,
-  SnapshotWhere,
-} from '@petal/core/types';
-import type { InputModule, SnapshotStore } from '@petal/inputs';
+import type { IndexRow, NetworkDescriptor, ProgressEvent, Snapshot } from '@petal/core/types';
+import {
+  fileStore,
+  type InputModule,
+  NEAR_VALIDATORS_DESCRIPTOR,
+  nearValidators,
+  type SnapshotStore,
+} from '@petal/inputs';
 import { fakeRpcFor, type TestSigner, testSigner } from '@petal/near/auth/testing';
 import { fakeMap } from '@petal/near/map';
 import { fakeQuote } from '@petal/near/pay';
 import type { Hono } from 'hono';
+import { expect } from 'vitest';
 import { serveOn } from '../src/mcp/stdio.ts';
+import { findTool } from '../src/registry.ts';
 import type { ToolContext } from '../src/types.ts';
-import { testModules } from './doubles/inputs.ts';
 
 type FakeMap = ReturnType<typeof fakeMap>;
 
@@ -56,137 +58,57 @@ export function testFixture(name: 'tiny-backers' | 'two-participants'): {
   return { s, sha256: sha256Hex(canonicalJson(s)) };
 }
 
-export type MemoryStore = SnapshotStore & { puts: string[] };
+// ---------------------------------------------------------------------------------------------
+// Networks: real-shaped input modules
 
-/** A content-addressed store in memory, like fileStore's interface. */
-export function memoryStore(
-  seed: { s: Snapshot; sha256: string; where?: Exclude<SnapshotWhere, 'map'> }[] = [],
-): MemoryStore {
-  const docs = new Map<string, { s: Snapshot; where: Exclude<SnapshotWhere, 'map'> }>();
-  for (const x of seed) docs.set(x.sha256, { s: x.s, where: x.where ?? 'fixture' });
-  const puts: string[] = [];
-  const rowOf = (sha256: string, s: Snapshot, where: Exclude<SnapshotWhere, 'map'>): IndexRow => ({
-    sha256,
-    network: s.network.id,
+/**
+ * A stored test network over one snapshot: the real NEAR validators descriptor, re-pointed at
+ * the snapshot's network id and population, with each standard meaning citing only sources the
+ * snapshot has (validator rule 4).
+ */
+export function testDescriptor(
+  s: Snapshot,
+  opts: { segments?: string[]; live?: boolean } = {},
+): NetworkDescriptor {
+  const base = NEAR_VALIDATORS_DESCRIPTOR;
+  const have = s.sources.map((x) => x.id);
+  const meanings = Object.fromEntries(
+    Object.entries(base.capabilities.meanings).map(([k, m]) => {
+      const sources = m.sources.filter((x) => have.includes(x));
+      return [k, { ...m, sources: sources.length ? sources : [have[0] as string] }];
+    }),
+  );
+  const segments = opts.segments ?? base.capabilities.segments;
+  return {
+    ...base,
+    id: s.network.id,
     chain: s.network.chain,
     population: s.network.population,
-    block_height: s.snapshot.block_height ?? null,
-    as_of: s.snapshot.as_of,
-    final: s.snapshot.final,
-    bytes: 0,
-    gz_bytes: 0,
-    file: `${sha256}.json.gz`,
-    where,
-    module: s.module,
-  });
-  return {
-    puts,
-    async get(sha256) {
-      return docs.get(sha256)?.s ?? null;
-    },
-    async put(s) {
-      const text = canonicalJson(s);
-      const sha256 = sha256Hex(text);
-      docs.set(sha256, { s, where: 'cache' });
-      puts.push(sha256);
-      return { sha256, bytes: new TextEncoder().encode(text).length };
-    },
-    async lookup({ chain, population, block_height }) {
-      for (const [sha, d] of docs) {
-        const n = d.s.network;
-        if (
-          n.chain === chain &&
-          n.population === population &&
-          d.s.snapshot.block_height === block_height
-        )
-          return sha;
-      }
-      return null;
-    },
-    async list(networkId) {
-      return [...docs]
-        .filter(([, d]) => !networkId || d.s.network.id === networkId)
-        .map(([sha, d]) => rowOf(sha, d.s, d.where));
-    },
-  };
-}
-
-// ---------------------------------------------------------------------------------------------
-// Networks
-
-const stake = (sources: string[]) => ({
-  'width:share': { meaning: 'share of stake in the current epoch, in a 2x band', sources },
-  'height:share': { meaning: 'square root of share of stake', sources },
-  'colour:kind': { meaning: 'kind of account: pool or liquid-staking entity', sources },
-  'outline:identity_status': {
-    meaning: 'pool names are self-declared on-chain: solid when declared, none when unknown',
-    sources,
-  },
-  'segments:backers': {
-    meaning: 'who backs the pool: other delegators, 1M+ NEAR accounts, liquid staking, lockups',
-    sources: ['fastnear-rpc-staking-pool-views'],
-  },
-  'order:measure_desc': { meaning: 'largest first, clockwise from the top', sources },
-});
-
-function capabilities(sources: string[], segments: string[]): Capabilities {
-  return {
-    measures: [{ id: 'validator_stake_current_epoch', unit: 'NEAR', label: 'stake this epoch' }],
-    by: {
-      width: ['share', 'equal'],
-      height: ['share', 'amount', 'equal'],
-      colour: ['kind', 'identity', 'single'],
-      outline: ['identity_status'],
-      segments,
-      order: ['measure_desc'],
-    },
-    segments,
-    relationships: ['delegates_to', 'owned_by'],
-    defaults: { measure: 'validator_stake_current_epoch' },
-    meanings: stake(sources),
-  };
-}
-
-export function descriptor(
-  id: string,
-  title: string,
-  opts: { segments?: string[]; live?: boolean; params?: NetworkDescriptor['params'] } = {},
-): NetworkDescriptor {
-  return {
-    id,
-    chain: 'near:mainnet',
-    population: id === 'near-validators' ? 'validators' : 'validators-test',
-    kind: 'chain',
-    title,
-    description: `${title}: stake and the delegators behind it`,
-    params: opts.params ?? {},
-    capabilities: capabilities(
-      ['fastnear-rpc-validators', 'nearblocks-validators'],
-      opts.segments ?? ['backers'],
-    ),
+    title: s.network.title,
+    description: `${s.network.title}: a test network over one snapshot`,
     live: opts.live ?? false,
-    cost: { calls: 0, seconds: 0, note: 'served from a fixture' },
-    sources: [
-      { id: 'fastnear-rpc-validators', kind: 'chain', url: 'https://rpc.mainnet.fastnear.com' },
-    ],
+    cost: { calls: 0, seconds: 0, note: 'test data' },
+    capabilities: {
+      ...base.capabilities,
+      by: { ...base.capabilities.by, segments },
+      segments,
+      meanings,
+    },
+    sources: base.sources.filter((x) => have.includes(x.id)),
   };
 }
 
-/** An input module for a descriptor; `fetch` reports progress and returns `snapshot`. */
-export function moduleOf(d: NetworkDescriptor, snapshot?: Snapshot): InputModule {
+/** An input module serving one snapshot; `fetch` reports progress like a live read. */
+export function moduleOf(d: NetworkDescriptor, s: Snapshot): InputModule {
   return {
     descriptor: d,
     async resolveAt() {
-      return {
-        block_height: snapshot?.snapshot.block_height ?? 1,
-        as_of: snapshot?.snapshot.as_of ?? '2026-11-04T00:00:00Z',
-      };
+      return { block_height: s.snapshot.block_height ?? 0, as_of: s.snapshot.as_of };
     },
     async fetch(_at, _params, onProgress) {
-      if (!snapshot) throw Object.assign(new Error('nothing to fetch'), { code: 'source_failed' });
       onProgress?.({ stage: 'fetching', message: 'reading holders', done: 1, total: 2 });
       onProgress?.({ stage: 'fetching', message: 'reading delegations', done: 2, total: 2 });
-      return snapshot;
+      return s;
     },
   };
 }
@@ -196,7 +118,12 @@ export function liveSnapshot(): Snapshot {
   const { s } = testFixture('two-participants');
   return {
     ...s,
-    network: { ...s.network, id: 'test-live', population: 'live-test' },
+    network: {
+      ...s.network,
+      id: 'test-live',
+      population: 'live-test',
+      title: 'A live test network',
+    },
     snapshot: { ...s.snapshot, block_height: 223_000_000 },
   };
 }
@@ -207,7 +134,7 @@ export function liveSnapshot(): Snapshot {
 export interface TestRig {
   ctx: ToolContext;
   map: FakeMap;
-  store: MemoryStore;
+  store: SnapshotStore;
   signer: TestSigner;
   /** a key of maker.testnet that is only a function-call key */
   fcSigner: TestSigner;
@@ -217,21 +144,25 @@ export interface TestRig {
 
 export const NOW = '2026-11-04T12:00:00.000Z';
 
-export function rig(opts: { tiny?: boolean } = {}): TestRig {
-  const v = validatorsFixture();
+/**
+ * A ToolContext on the real packages: fileStore over the repo fixtures (cache in a temp dir,
+ * holding the two test snapshots), the real near-validators module, fakeMap, the test NEP-413
+ * signer with a fake RPC, and the recorded dry quote.
+ */
+export async function rig(): Promise<TestRig> {
+  const stateDir = mkdtempSync(join(tmpdir(), 'petal-tools-'));
+  const store = fileStore({
+    fixtures: join(FIXTURES, 'snapshots'),
+    cache: join(stateDir, 'cache'),
+  });
   const tiny = testFixture('tiny-backers');
   const two = testFixture('two-participants');
-  const store = memoryStore(opts.tiny === false ? [v] : [v, tiny, two]);
+  for (const t of [tiny, two]) expect((await store.put(t.s)).sha256).toBe(t.sha256);
   const map = fakeMap();
   const signer = testSigner('maker.testnet');
   const fcSigner = testSigner('maker.testnet', 'maker.testnet/function-call');
-  const stateDir = mkdtempSync(join(tmpdir(), 'petal-tools-'));
   let now = new Date(NOW);
-  // the getSnapshot double fetches through these (the real one uses @petal/inputs' modules)
-  testModules['test-live'] = moduleOf(
-    descriptor('test-live', 'A live test network', { live: true }),
-    liveSnapshot(),
-  );
+  const live = liveSnapshot();
   const ctx: ToolContext = {
     config: {
       root: REPO,
@@ -242,12 +173,10 @@ export function rig(opts: { tiny?: boolean } = {}): TestRig {
     },
     store,
     modules: {
-      'near-validators': moduleOf(descriptor('near-validators', 'NEAR validators')),
-      'test-tiny-backers': moduleOf(descriptor('test-tiny-backers', 'Five NEAR pools (test)')),
-      'test-two-participants': moduleOf(
-        descriptor('test-two-participants', 'Two NEAR validators (test)', { segments: [] }),
-      ),
-      'test-live': testModules['test-live'],
+      'near-validators': nearValidators(),
+      'test-tiny-backers': moduleOf(testDescriptor(tiny.s), tiny.s),
+      'test-two-participants': moduleOf(testDescriptor(two.s, { segments: [] }), two.s),
+      'test-live': moduleOf(testDescriptor(live, { live: true }), live),
     },
     map: { reader: map, writer: map, receiver: map.receiver, trustedWriters: [map.writer] },
     rpc: fakeRpcFor([signer, fcSigner], [fcSigner]),
@@ -261,8 +190,22 @@ export function rig(opts: { tiny?: boolean } = {}): TestRig {
     signer,
     fcSigner,
     stateDir,
-    clock: { set: (iso) => (now = new Date(iso)) },
+    clock: {
+      set: (iso) => {
+        now = new Date(iso);
+      },
+    },
   };
+}
+
+/** The progress events a tool reports in process, on a fresh rig. */
+export async function progressOf(tool: string, input: unknown): Promise<ProgressEvent[]> {
+  const r = await rig();
+  const events: ProgressEvent[] = [];
+  const t = findTool(tool);
+  if (!t) throw new Error(tool);
+  await t.run(input, { ...r.ctx, onProgress: (e) => events.push(e) });
+  return events;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -299,7 +242,8 @@ export async function stdioMcpClient(
 // ---------------------------------------------------------------------------------------------
 // A full flow, for tests that need real inputs for every tool
 
-/** The skeleton interpretation (fixtures/transcripts/skeleton.hand.json), with no numbers. */
+/** The skeleton interpretation (fixtures/transcripts/skeleton.hand.json): one mapping per primitive
+ * the backers spec uses, no numbers. */
 export const INTERPRETATION = {
   summary:
     "Stake decides who produces NEAR's blocks. A few seated validators together hold more than a third of it.",
@@ -317,9 +261,29 @@ export const INTERPRETATION = {
       sources: ['fastnear-rpc-validators'],
     },
     {
+      primitive: 'height',
+      why: 'Bar height repeats the share, on a square-root scale.',
+      sources: ['fastnear-rpc-validators'],
+    },
+    {
+      primitive: 'colour',
+      why: 'Kind of account tells pools from liquid-staking entities.',
+      sources: ['nearblocks-validators', 'fastnear-rpc-liquid-staking'],
+    },
+    {
+      primitive: 'outline',
+      why: 'Pool names are self-declared on-chain, so they are drawn as self-declared.',
+      sources: ['nearblocks-validators', 'account-id'],
+    },
+    {
       primitive: 'segments',
       why: 'Each bar is cut into the backers of the pool.',
       sources: ['fastnear-rpc-staking-pool-views'],
+    },
+    {
+      primitive: 'order',
+      why: 'Largest first, clockwise from the top.',
+      sources: ['fastnear-rpc-validators'],
     },
   ],
   conflicts: ['House of Stake voting power is a second kind of power on NEAR.'],

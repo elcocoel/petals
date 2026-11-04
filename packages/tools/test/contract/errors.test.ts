@@ -1,13 +1,8 @@
 // T053 (tools.md, Contract tests: "each code above has one test"): every error code, through
 // HTTP with its status (http-api.md, Rules) and through MCP as the same ToolError.
-import { describe, expect, test, vi } from 'vitest';
-
-vi.mock('@petal/core', async (o) => (await import('../doubles/core.ts')).mockCore(await o()));
-vi.mock('@petal/inputs', async (o) => (await import('../doubles/inputs.ts')).mockInputs(await o()));
-vi.mock('@petal/near/auth', async (o) => (await import('../doubles/near.ts')).mockAuth(await o()));
-vi.mock('@petal/near/map', async (o) => (await import('../doubles/near.ts')).mockMap(await o()));
 
 import type { ToolErrorCode } from '@petal/core/types';
+import { describe, expect, test } from 'vitest';
 import { compile, TOOL_ERROR_SCHEMA } from '../../src/define.ts';
 import { ERROR_CODES, HTTP_STATUS } from '../../src/errors.ts';
 import { httpApp } from '../../src/http/app.ts';
@@ -61,7 +56,7 @@ describe('one test per error code', () => {
   });
 
   test('bad_input 400: an input that does not match the schema', async () => {
-    const out = await expectCode(rig().ctx, 'bad_input', 'compute_figures', {
+    const out = await expectCode((await rig()).ctx, 'bad_input', 'compute_figures', {
       sha256: 'x',
       measure: 'm',
     });
@@ -69,25 +64,27 @@ describe('one test per error code', () => {
   });
 
   test('not_found 404: a snapshot Petal does not hold', async () => {
-    await expectCode(rig().ctx, 'not_found', 'describe_snapshot', { sha256: 'd'.repeat(64) });
+    await expectCode((await rig()).ctx, 'not_found', 'describe_snapshot', {
+      sha256: 'd'.repeat(64),
+    });
   });
 
   test("cannot_read 422: a network Petal can't read, naming what it can", async () => {
-    const out = await expectCode(rig().ctx, 'cannot_read', 'get_network', {
+    const out = await expectCode((await rig()).ctx, 'cannot_read', 'get_network', {
       id: 'bitcoin-mining-pools',
     });
     expect(out.error.hint).toMatch(/near-validators/);
   });
 
   test('source_failed 502: the quote source fails', async () => {
-    await expectCode(rig().ctx, 'source_failed', 'quote_payment', {
+    await expectCode((await rig()).ctx, 'source_failed', 'quote_payment', {
       purpose: 'sponsor_coverage',
       amount_usd: 9,
     });
   });
 
   test('invalid_spec 422: render refuses what validate_spec rejects', async () => {
-    const r = rig();
+    const r = await rig();
     const f = await flow(async (name, input) => (await callTool(name, input, r.ctx)) as Json);
     const spec = {
       ...f.spec,
@@ -97,7 +94,7 @@ describe('one test per error code', () => {
   });
 
   test('unauthorised 401: a proof by a function-call key', async () => {
-    const r = rig();
+    const r = await rig();
     const f = await flow(async (name, input) => (await callTool(name, input, r.ctx)) as Json);
     const prep = (await callTool('prepare_publish', { entry: f.draft }, r.ctx)) as Json;
     const proof = r.fcSigner.sign({
@@ -112,7 +109,7 @@ describe('one test per error code', () => {
   });
 
   test('rate_limited 429: the 61st tool call in a minute from one address', async () => {
-    const app = httpApp(rig().ctx);
+    const app = httpApp((await rig()).ctx);
     const h = { headers: { 'x-forwarded-for': '9.9.9.9' } };
     for (let i = 0; i < 60; i++) await app.request('/api/v1/networks', h);
     const res = await app.request('/api/v1/networks', h);
@@ -128,7 +125,7 @@ describe('one test per error code', () => {
   test('budget_exhausted 429: a capped source says so, and the door keeps the code', async () => {
     // Petal's tools spend no LLM budget; the agent's daily cap (W5) returns this code. A source
     // that reports it keeps it through every door.
-    const r = rig();
+    const r = await rig();
     const ctx = {
       ...r.ctx,
       quote: async () => {
@@ -142,7 +139,7 @@ describe('one test per error code', () => {
   });
 
   test('internal 500: an unexpected failure is returned, not thrown', async () => {
-    const r = rig();
+    const r = await rig();
     const ctx = {
       ...r.ctx,
       store: {

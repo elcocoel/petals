@@ -1,16 +1,11 @@
-// T047–T050: each tool's behaviour in process, on fakes (fakeMap, test signer, recorded quote)
-// and the doubles for the stubs of W1–W3.
-import { describe, expect, test, vi } from 'vitest';
-
-vi.mock('@petal/core', async (o) => (await import('./doubles/core.ts')).mockCore(await o()));
-vi.mock('@petal/inputs', async (o) => (await import('./doubles/inputs.ts')).mockInputs(await o()));
-vi.mock('@petal/near/auth', async (o) => (await import('./doubles/near.ts')).mockAuth(await o()));
-vi.mock('@petal/near/map', async (o) => (await import('./doubles/near.ts')).mockMap(await o()));
+// T047–T050: each tool's behaviour in process, on the real core, inputs and near packages, with
+// fakes only for the outside world (fakeMap, the test signer and fake RPC, the recorded quote).
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { canonicalJson, entryId, specHash } from '@petal/core';
 import type { Entry, ProgressEvent } from '@petal/core/types';
+import { describe, expect, test } from 'vitest';
 import { callTool } from '../src/registry.ts';
 import type { ToolContext } from '../src/types.ts';
 import { entrySha256 } from '../src/verify.ts';
@@ -22,7 +17,7 @@ const runner = (ctx: ToolContext) => async (name: string, input: unknown) =>
 
 describe('list_networks, get_network', () => {
   test('lists the modules, filters by query, and says plainly what it cannot read', async () => {
-    const run = runner(rig().ctx);
+    const run = runner((await rig()).ctx);
     const all = await run('list_networks', {});
     expect((all.networks as { id: string }[]).map((n) => n.id)).toContain('near-validators');
     const q = await run('list_networks', { query: 'validators' });
@@ -35,7 +30,7 @@ describe('list_networks, get_network', () => {
   });
 
   test('get_network: the descriptor and the snapshots held locally and on the map', async () => {
-    const r = rig();
+    const r = await rig();
     const run = runner(r.ctx);
     // a snapshot fingerprint on the map, from a trusted writer
     await r.map.write({
@@ -56,7 +51,7 @@ describe('list_networks, get_network', () => {
   });
 
   test('get_network: an unknown network is cannot_read with what Petal can read', async () => {
-    const out = await runner(rig().ctx)('get_network', { id: 'bitcoin-mining-pools' });
+    const out = await runner((await rig()).ctx)('get_network', { id: 'bitcoin-mining-pools' });
     expect(out.error?.code).toBe('cannot_read');
     expect(out.error?.hint).toMatch(/near-validators/);
   });
@@ -64,7 +59,7 @@ describe('list_networks, get_network', () => {
 
 describe('get_snapshot', () => {
   test('reuses the final fixture: reused true, never the body', async () => {
-    const out = await runner(rig().ctx)('get_snapshot', { network: 'near-validators' });
+    const out = await runner((await rig()).ctx)('get_snapshot', { network: 'near-validators' });
     expect(out).toMatchObject({
       sha256: validatorsFixture().sha256,
       reused: true,
@@ -77,7 +72,7 @@ describe('get_snapshot', () => {
   });
 
   test('a live pull reports progress, stores, fingerprints on the map; the second is reused', async () => {
-    const r = rig();
+    const r = await rig();
     const events: ProgressEvent[] = [];
     const ctx = { ...r.ctx, onProgress: (e: ProgressEvent) => events.push(e) };
     const first = await runner(ctx)('get_snapshot', { network: 'test-live' });
@@ -91,7 +86,7 @@ describe('get_snapshot', () => {
   });
 
   test('a network Petal cannot read is cannot_read', async () => {
-    const out = await runner(rig().ctx)('get_snapshot', { network: 'ethereum-staking' });
+    const out = await runner((await rig()).ctx)('get_snapshot', { network: 'ethereum-staking' });
     expect(out.error?.code).toBe('cannot_read');
   });
 });
@@ -99,7 +94,7 @@ describe('get_snapshot', () => {
 describe('describe_snapshot, compute_figures', () => {
   test('describe: measures, kinds, segment options, primitives with status, top N', async () => {
     const { sha256 } = validatorsFixture();
-    const out = await runner(rig().ctx)('describe_snapshot', { sha256, top: 3 });
+    const out = await runner((await rig()).ctx)('describe_snapshot', { sha256, top: 3 });
     expect((out.measures as { id: string }[]).map((m) => m.id)).toContain(
       'validator_stake_current_epoch',
     );
@@ -117,7 +112,7 @@ describe('describe_snapshot, compute_figures', () => {
 
   test('compute_figures counts; an unknown measure is bad_input listing the measures', async () => {
     const { sha256 } = validatorsFixture();
-    const run = runner(rig().ctx);
+    const run = runner((await rig()).ctx);
     const f = await run('compute_figures', {
       sha256,
       measure: 'validator_stake_current_epoch',
@@ -125,7 +120,8 @@ describe('describe_snapshot, compute_figures', () => {
     });
     expect(f).toMatchObject({ measure: 'validator_stake_current_epoch', unit: 'NEAR' });
     expect((f.shares as unknown[]).length).toBeLessThanOrEqual(60);
-    expect((f.nakamoto as { count: number }).count).toBeGreaterThan(0);
+    // the figure the skeleton answer quotes (T025: Nakamoto is 9 on the validators fixture)
+    expect(f.nakamoto).toMatchObject({ count: 9 });
     const bad = await run('compute_figures', { sha256, measure: 'hashrate' });
     expect(bad.error).toMatchObject({
       code: 'bad_input',
@@ -138,7 +134,7 @@ describe('describe_snapshot, compute_figures', () => {
 
 describe('propose_spec, validate_spec, render_flower', () => {
   test('the same choices give the same spec_sha256, and the spec is canonical', async () => {
-    const run = runner(rig().ctx);
+    const run = runner((await rig()).ctx);
     const a = await flow(run);
     const b = await flow(run);
     expect(a.proposed.spec_sha256).toBe(b.proposed.spec_sha256);
@@ -148,7 +144,7 @@ describe('propose_spec, validate_spec, render_flower', () => {
   });
 
   test('an unavailable primitive is refused as "not available yet", never imitated (FR-032)', async () => {
-    const run = runner(rig().ctx);
+    const run = runner((await rig()).ctx);
     const { sha256 } = validatorsFixture();
     for (const choices of [
       { texture: 'hatch' },
@@ -169,7 +165,7 @@ describe('propose_spec, validate_spec, render_flower', () => {
   });
 
   test("a choice that doesn't apply to the population names the allowed values and the closest", async () => {
-    const r = rig();
+    const r = await rig();
     const { sha256 } = testFixture('two-participants');
     const out = await runner(r.ctx)('propose_spec', {
       network: 'test-two-participants',
@@ -185,12 +181,15 @@ describe('propose_spec, validate_spec, render_flower', () => {
 
   test('a snapshot of another network is bad_input', async () => {
     const { sha256 } = validatorsFixture();
-    const out = await runner(rig().ctx)('propose_spec', { network: 'test-tiny-backers', sha256 });
+    const out = await runner((await rig()).ctx)('propose_spec', {
+      network: 'test-tiny-backers',
+      sha256,
+    });
     expect(out.error?.code).toBe('bad_input');
   });
 
   test('validate_spec reports errors as a result; render_flower refuses them as invalid_spec', async () => {
-    const run = runner(rig().ctx);
+    const run = runner((await rig()).ctx);
     const { spec } = await flow(run);
     const broken = { ...spec, snapshot: { ...(spec.snapshot as object), sha256: 'e'.repeat(64) } };
     const v = await run('validate_spec', { spec: broken });
@@ -205,7 +204,7 @@ describe('propose_spec, validate_spec, render_flower', () => {
   });
 
   test('render_flower: hashes, legend, petals, a draft view_url; svg only when asked', async () => {
-    const run = runner(rig().ctx);
+    const run = runner((await rig()).ctx);
     const { spec, rendered } = await flow(run);
     expect(rendered).not.toHaveProperty('svg');
     expect(rendered.spec_sha256).toBe(specHash(spec as never));
@@ -221,7 +220,7 @@ describe('propose_spec, validate_spec, render_flower', () => {
 
 describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
   async function prepared() {
-    const r = rig();
+    const r = await rig();
     const run = runner(r.ctx);
     const f = await flow(run);
     const prep = await run('prepare_publish', { entry: f.draft });
@@ -248,7 +247,7 @@ describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
   });
 
   test('without a public base URL, view_url and sign_url stay relative (the web base)', async () => {
-    const r = rig();
+    const r = await rig();
     const { apiBase: _drop, ...config } = r.ctx.config;
     const run = runner({ ...r.ctx, config });
     const f = await flow(run);
@@ -261,7 +260,7 @@ describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
   });
 
   test('prepare refuses an entry whose hashes do not match', async () => {
-    const r = rig();
+    const r = await rig();
     const run = runner(r.ctx);
     const f = await flow(run);
     const bad = await run('prepare_publish', {
@@ -385,7 +384,7 @@ describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
   });
 
   test('get_flower with the map down is source_failed; list_flowers still answers', async () => {
-    const r = rig();
+    const r = await rig();
     const down = {
       ...r.ctx.map,
       reader: {
@@ -398,14 +397,14 @@ describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
     expect((await run('list_flowers', {})).flowers).toEqual([]);
   });
 
-  test('NOW is the clock the tools see', () => {
-    expect(rig().ctx.now().toISOString()).toBe(NOW);
+  test('NOW is the clock the tools see', async () => {
+    expect((await rig()).ctx.now().toISOString()).toBe(NOW);
   });
 });
 
 describe('quote_payment', () => {
   test('a dry quote; no deposit address; the label says paying is off (FR-031)', async () => {
-    const out = await runner(rig().ctx)('quote_payment', {
+    const out = await runner((await rig()).ctx)('quote_payment', {
       purpose: 'sponsor_refresh',
       amount_usd: 1,
     });
@@ -414,7 +413,7 @@ describe('quote_payment', () => {
   });
 
   test('sponsor_refresh of a network Petal cannot read is bad_input; a failing source is source_failed', async () => {
-    const run = runner(rig().ctx);
+    const run = runner((await rig()).ctx);
     const bad = await run('quote_payment', { purpose: 'sponsor_refresh', network: 'bitcoin' });
     expect(bad.error?.code).toBe('bad_input');
     const unrecorded = await run('quote_payment', { purpose: 'sponsor_coverage', amount_usd: 5 });
@@ -422,7 +421,7 @@ describe('quote_payment', () => {
   });
 
   test('a quote source that is not dry is refused', async () => {
-    const r = rig();
+    const r = await rig();
     const ctx = {
       ...r.ctx,
       quote: async () => ({ ...(await r.ctx.quote({ purpose: 'sponsor_refresh' })), dry: false }),

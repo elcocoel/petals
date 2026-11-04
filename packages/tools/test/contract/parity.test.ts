@@ -1,12 +1,7 @@
 // T053 (tools.md, http-api.md Contract tests): the registry in process, HTTP, MCP over /mcp and
 // MCP over stdio return identical JSON for the same call (minus transport fields); the same
 // choices give the same spec_sha256 through every door.
-import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
-
-vi.mock('@petal/core', async (o) => (await import('../doubles/core.ts')).mockCore(await o()));
-vi.mock('@petal/inputs', async (o) => (await import('../doubles/inputs.ts')).mockInputs(await o()));
-vi.mock('@petal/near/auth', async (o) => (await import('../doubles/near.ts')).mockAuth(await o()));
-vi.mock('@petal/near/map', async (o) => (await import('../doubles/near.ts')).mockMap(await o()));
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { callTool } from '../../src/registry.ts';
 import { entrySha256 } from '../../src/verify.ts';
@@ -19,7 +14,7 @@ let close: () => Promise<void>;
 let f: Awaited<ReturnType<typeof flow>>;
 
 beforeAll(async () => {
-  r = rig();
+  r = await rig();
   ({ all, close } = await doors(r.ctx));
   f = await flow(async (name, input) => (await callTool(name, input, r.ctx)) as Json);
 });

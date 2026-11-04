@@ -1,12 +1,7 @@
 // T046: one registry; schemas; errors returned, never thrown; tools_version on every output.
-import { describe, expect, test, vi } from 'vitest';
-
-vi.mock('@petal/core', async (o) => (await import('./doubles/core.ts')).mockCore(await o()));
-vi.mock('@petal/inputs', async (o) => (await import('./doubles/inputs.ts')).mockInputs(await o()));
-vi.mock('@petal/near/auth', async (o) => (await import('./doubles/near.ts')).mockAuth(await o()));
-vi.mock('@petal/near/map', async (o) => (await import('./doubles/near.ts')).mockMap(await o()));
 
 import { NotImplementedError } from '@petal/core';
+import { describe, expect, test } from 'vitest';
 import { compile, defineTool, TOOL_ERROR_SCHEMA } from '../src/define.ts';
 import { callTool, describeTool, registry } from '../src/registry.ts';
 import { rig } from './helpers.ts';
@@ -46,7 +41,7 @@ describe('registry', () => {
   });
 
   test('a bad input is a bad_input, with tools_version', async () => {
-    const { ctx } = rig();
+    const { ctx } = await rig();
     const out = await callTool('compute_figures', { sha256: 'nope' }, ctx);
     expect(compile(TOOL_ERROR_SCHEMA)(out)).toBe(true);
     expect(out).toMatchObject({ error: { code: 'bad_input' }, tools_version: 'tools/v1' });
@@ -54,7 +49,7 @@ describe('registry', () => {
   });
 
   test('an unknown tool is a bad_input naming the tools', async () => {
-    const out = await callTool('draw_texture', {}, rig().ctx);
+    const out = await callTool('draw_texture', {}, (await rig()).ctx);
     expect(out).toMatchObject({
       error: { code: 'bad_input', hint: expect.stringContaining('render_flower') },
     });
@@ -71,7 +66,7 @@ describe('registry', () => {
         throw new NotImplementedError('fileStore');
       },
     });
-    const out = await throwing.run({}, rig().ctx);
+    const out = await throwing.run({}, (await rig()).ctx);
     expect(out).toMatchObject({
       error: { code: 'internal', message: 'not built yet: fileStore' },
       tools_version: 'tools/v1',
@@ -83,7 +78,7 @@ describe('registry', () => {
         throw Object.assign(new Error('rpc down'), { code: 'rate_limited', retry_after_s: 7 });
       },
     });
-    expect(await coded.run({}, rig().ctx)).toMatchObject({
+    expect(await coded.run({}, (await rig()).ctx)).toMatchObject({
       error: { code: 'rate_limited', message: 'rpc down', retry_after_s: 7 },
     });
     const plain = defineTool<object, object>({
@@ -93,6 +88,8 @@ describe('registry', () => {
         throw new Error('boom');
       },
     });
-    expect(await plain.run({}, rig().ctx)).toMatchObject({ error: { code: 'source_failed' } });
+    expect(await plain.run({}, (await rig()).ctx)).toMatchObject({
+      error: { code: 'source_failed' },
+    });
   });
 });

@@ -1,8 +1,8 @@
 // createContext (T045): wires the store, the input modules, the map reader and writer (fake
 // unless configured), RPC and quotes from a Config; configFromEnv reads the env list in
-// quickstart.md and .env.example. Parts are built on first use, so a context can be made before
-// every package is built: a part that is still a stub fails inside the tool call that needs it
-// (as `internal`, "not built yet"), never here.
+// quickstart.md and .env.example. Parts are built on first use, so making a context touches no
+// disk, key file or network; a part that cannot be built (a missing key file, say) fails inside
+// the tool call that needs it, as a ToolError, never here.
 import { join, resolve } from 'node:path';
 import type { QuoteRequest, QuoteResult } from '@petal/core/types';
 import { fileStore, modules } from '@petal/inputs';

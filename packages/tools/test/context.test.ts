@@ -1,13 +1,14 @@
-// T045: configFromEnv and createContext, on the real packages (no doubles): a context can be made
-// while W1–W3 are still stubs, and a stub fails inside the tool that needs it, never here.
-import { mkdtempSync } from 'node:fs';
+// T045: configFromEnv and createContext, on the real packages: making a context never throws
+// (parts are built on first use), and each configuration wires the parts it promises.
+import { mkdtempSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fakeRpcFor, testSigner } from '@petal/near/auth/testing';
 import { describe, expect, test } from 'vitest';
 import { configFromEnv, createContext, deferred } from '../src/context.ts';
 import { callTool } from '../src/registry.ts';
 import { jsonRpc } from '../src/rpc.ts';
-import { REPO } from './helpers.ts';
+import { flow, REPO } from './helpers.ts';
 
 describe('configFromEnv', () => {
   test('no variables: fake map and mirror, no live, no fake, $3 a day', () => {
@@ -96,6 +97,34 @@ describe('createContext', () => {
     expect(out.tools_version).toBe('tools/v1');
     const nets = (await callTool('list_networks', {}, ctx)) as { networks: unknown[] };
     expect(Array.isArray(nets.networks)).toBe(true);
+  });
+
+  test('local dev (no map configured): a publish lands in the fake map and in .petal/mirror', async () => {
+    const dir = stateDir();
+    const signer = testSigner('maker.testnet');
+    const ctx = { ...createContext({ root: REPO, stateDir: dir }), rpc: fakeRpcFor([signer]) };
+    const run = async (name: string, input: unknown) =>
+      (await callTool(name, input, ctx)) as Record<string, unknown>;
+    const f = await flow(run);
+    const prep = await run('prepare_publish', { entry: f.draft });
+    const proof = signer.sign({
+      message: prep.message as string,
+      nonce: prep.nonce as string,
+      recipient: prep.recipient as string,
+    });
+    const pub = await run('publish_flower', { entry_sha256: prep.entry_sha256, proof });
+    expect(pub).toMatchObject({ key: `petal/v1/spec/${pub.id}`, writer: 'writer.petals.testnet' });
+    const records = readdirSync(join(dir, 'mirror')).filter((n) => n.endsWith('.json'));
+    expect(records).toHaveLength(1);
+    const rec = JSON.parse(readFileSync(join(dir, 'mirror', records[0] as string), 'utf8'));
+    expect(rec).toMatchObject({ status: 'written', tx_hash: pub.tx_hash });
+    expect(Object.keys(rec.entries)).toEqual([pub.key]);
+    const got = await run('get_flower', { id: pub.id });
+    expect(got.verified).toEqual({
+      entry_hash: true,
+      maker_signature: true,
+      model_signature: 'absent',
+    });
   });
 
   test('a configured testnet map gets a writer only with a key file; mainnet never writes', () => {
