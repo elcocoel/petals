@@ -269,10 +269,17 @@ export function rig(opts: { tiny?: boolean } = {}): TestRig {
 // MCP clients
 
 /** An MCP client over Streamable HTTP, talking to `app` at /mcp without a network. */
-export async function httpMcpClient(app: Hono): Promise<Client> {
+export async function httpMcpClient(
+  app: Hono,
+  headers: () => Record<string, string> = () => ({}),
+): Promise<Client> {
   const client = new Client({ name: 'petal-test', version: '1' });
   const transport = new StreamableHTTPClientTransport(new URL('https://petal.test/mcp'), {
-    fetch: async (url, init) => app.fetch(new Request(url, init)),
+    fetch: async (url, init) => {
+      const req = new Request(url, init);
+      for (const [k, v] of Object.entries(headers())) req.headers.set(k, v);
+      return app.fetch(req);
+    },
   });
   await client.connect(transport);
   return client;

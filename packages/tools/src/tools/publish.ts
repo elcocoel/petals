@@ -1,7 +1,14 @@
 // prepare_publish and publish_flower (tools.md; shared-map.md, Writing, Phase A relayed
 // publish). The maker signs one NEP-413 message naming the entry hash; Petal's writer writes
 // petal/v1/spec/<id>, and the mirror keeps a local copy.
-import { canonicalJson, entryId, renderFlower, schemas, specHash } from '@petal/core';
+import {
+  canonicalJson,
+  entryId,
+  NotImplementedError,
+  renderFlower,
+  schemas,
+  specHash,
+} from '@petal/core';
 import type { Entry, Nep413Proof } from '@petal/core/types';
 import { issueNonce, verifyNep413 } from '@petal/near/auth';
 import { MAP_LIMITS, mapKeys } from '@petal/near/map';
@@ -179,6 +186,7 @@ export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Pro
         ctx.rpc,
       );
     } catch (err) {
+      if (err instanceof NotImplementedError) throw err;
       throw new ToolFailure(
         'source_failed',
         `Could not check the proof against NEAR RPC: ${(err as Error).message}`,
@@ -215,6 +223,7 @@ export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Pro
     try {
       ({ tx_hash } = await writer.write({ [key]: entry }));
     } catch (err) {
+      if (err instanceof NotImplementedError) throw err;
       throw new ToolFailure(
         'source_failed',
         `Writing to the shared map failed: ${(err as Error).message}`,

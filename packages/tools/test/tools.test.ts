@@ -384,6 +384,20 @@ describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
     expect(out.error?.code).toBe('source_failed');
   });
 
+  test('get_flower with the map down is source_failed; list_flowers still answers', async () => {
+    const r = rig();
+    const down = {
+      ...r.ctx.map,
+      reader: {
+        latest: async () => Promise.reject(new Error('kv.test.fastnear.com unreachable')),
+        get: async () => Promise.reject(new Error('kv.test.fastnear.com unreachable')),
+      },
+    };
+    const run = runner({ ...r.ctx, map: down });
+    expect((await run('get_flower', { id: 'a'.repeat(24) })).error?.code).toBe('source_failed');
+    expect((await run('list_flowers', {})).flowers).toEqual([]);
+  });
+
   test('NOW is the clock the tools see', () => {
     expect(rig().ctx.now().toISOString()).toBe(NOW);
   });

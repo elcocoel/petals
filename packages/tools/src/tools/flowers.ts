@@ -162,8 +162,13 @@ export const getFlower = defineTool<{ id: string }, object>({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
   async run({ id }, ctx) {
     let hidden = false;
+    let mapError: Error | null = null;
+    const key = mapKeys.spec(id);
     for (const w of ctx.map.trustedWriters) {
-      const row = await ctx.map.reader.get(mapKeys.spec(id), w).catch(() => null);
+      const row = await ctx.map.reader.get(key, w).catch((err: Error) => {
+        mapError = err;
+        return null;
+      });
       if (!row) continue;
       const found = fromRow(row);
       if (found) return result(found);
@@ -171,6 +176,13 @@ export const getFlower = defineTool<{ id: string }, object>({
     }
     const fixture = (await fixtureEntries(ctx)).find((f) => f.entry.id === id);
     if (fixture) return result(fixture);
+    if (mapError) {
+      throw new ToolFailure(
+        'source_failed',
+        `The shared map could not be read: ${(mapError as Error).message}`,
+        'Try again in a moment; GET /api/v1/health says whether the map is up.',
+      );
+    }
     throw new ToolFailure(
       'not_found',
       hidden
