@@ -11,5 +11,8 @@
   },
   "dependencies": {
     "@petal/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@petal/near": "workspace:*"
   }
 }

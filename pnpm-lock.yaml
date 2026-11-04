@@ -105,6 +105,10 @@ importers:
       '@petal/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      '@petal/near':
+        specifier: workspace:*
+        version: link:../near
 
   packages/near:
     dependencies:
