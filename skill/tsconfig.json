@@ -1,4 +1,4 @@
 {
   "extends": "../tsconfig.base.json",
-  "include": ["petal/src", "ironclaw/src"]
+  "include": ["build.ts", "petal/src", "ironclaw/src"]
 }
