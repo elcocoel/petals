@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:flower:v1",
+  "title": "Petal spec, interpretation and published flower entry v1",
+  "description": "$defs.spec is what the renderer draws. $defs.interpretation is the agent's argued reading. $defs.entry is what goes into the shared map under petal/v1/spec/<id>. See data-model.md.",
+  "$ref": "#/$defs/entry",
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "datetime": { "type": "string", "format": "date-time" },
+    "sourceIds": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+
+    "encoding": {
+      "type": "object",
+      "required": ["by", "meaning", "sources"],
+      "additionalProperties": false,
+      "properties": {
+        "by": { "type": "string", "description": "what drives the primitive, from the network's capabilities (e.g. share, kind, backers, identity_status)" },
+        "scale": { "enum": ["sqrt", "linear", "log", "log-band", "equal"] },
+        "max_ratio": { "type": "number", "minimum": 1, "maximum": 3, "description": "width only: widest side / narrowest side" },
+        "meaning": { "type": "string", "minLength": 3, "description": "plain words shown in the legend" },
+        "sources": { "$ref": "#/$defs/sourceIds" }
+      }
+    },
+
+    "orderEncoding": {
+      "type": "object",
+      "required": ["by", "meaning", "sources"],
+      "additionalProperties": false,
+      "description": "order is a primitive like any other: it declares what drives it, what it means, and its sources (constitution I)",
+      "properties": {
+        "by": { "enum": ["measure_desc", "measure_asc", "id", "join_date", "last_active"], "description": "petals run clockwise from twelve o'clock in this order; default/v1 uses measure_desc" },
+        "meaning": { "type": "string", "minLength": 3, "description": "plain words for the legend, e.g. 'largest first, clockwise from the top'" },
+        "sources": { "$ref": "#/$defs/sourceIds" }
+      }
+    },
+
+    "spec": {
+      "type": "object",
+      "required": ["petal", "network", "snapshot", "labels", "selection", "encodings", "convention"],
+      "additionalProperties": false,
+      "properties": {
+        "petal": { "const": "spec/v1" },
+        "network": {
+          "type": "object",
+          "required": ["id", "chain", "population"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" },
+            "chain": { "type": "string" },
+            "population": { "type": "string" },
+            "params": { "type": "object", "additionalProperties": { "type": "string" } }
+          }
+        },
+        "snapshot": {
+          "type": "object",
+          "required": ["sha256", "as_of"],
+          "additionalProperties": false,
+          "properties": {
+            "sha256": { "$ref": "#/$defs/sha256" },
+            "as_of": { "$ref": "#/$defs/datetime" },
+            "block_height": { "type": "integer" }
+          }
+        },
+        "labels": {
+          "oneOf": [
+            { "const": "none" },
+            { "type": "object", "required": ["sha256"], "additionalProperties": false, "properties": { "sha256": { "$ref": "#/$defs/sha256" } } }
+          ]
+        },
+        "selection": {
+          "type": "object",
+          "required": ["measure", "petals", "tail"],
+          "additionalProperties": false,
+          "properties": {
+            "measure": { "type": "string" },
+            "petals": { "type": "integer", "minimum": 5, "maximum": 300, "description": "most petals to draw before the tail; a network with fewer included participants gets one petal each and no tail" },
+            "tail": {
+              "type": "object",
+              "required": ["group", "label"],
+              "additionalProperties": false,
+              "properties": { "group": { "type": "boolean" }, "label": { "type": "string" } }
+            }
+          }
+        },
+        "encodings": {
+          "type": "object",
+          "required": ["width", "height", "colour", "outline", "segments", "order"],
+          "additionalProperties": false,
+          "properties": {
+            "width": { "$ref": "#/$defs/encoding" },
+            "height": { "$ref": "#/$defs/encoding" },
+            "colour": { "$ref": "#/$defs/encoding" },
+            "outline": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/encoding" }] },
+            "segments": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/encoding" }] },
+            "lines": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/encoding" }] },
+            "markings": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/encoding" }] },
+            "order": { "$ref": "#/$defs/orderEncoding" }
+          }
+        },
+        "convention": {
+          "type": "object",
+          "required": ["id", "variation_of", "changes"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string", "description": "default/v1, or a named convention" },
+            "variation_of": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }], "description": "spec_sha256 of the spec this one changes" },
+            "changes": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+
+    "interpretation": {
+      "type": "object",
+      "required": ["summary", "power_means", "mappings", "conflicts", "unknowns", "inferred", "documents"],
+      "additionalProperties": false,
+      "properties": {
+        "summary": { "type": "string", "minLength": 20 },
+        "power_means": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["claim", "sources"],
+            "additionalProperties": false,
+            "properties": {
+              "claim": { "type": "string" },
+              "sources": { "$ref": "#/$defs/sourceIds" },
+              "figures": { "type": "array", "items": { "type": "string", "pattern": "^fig:" } }
+            }
+          }
+        },
+        "mappings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["primitive", "why", "sources"],
+            "additionalProperties": false,
+            "properties": {
+              "primitive": { "enum": ["width", "height", "colour", "outline", "segments", "lines", "markings", "order"] },
+              "why": { "type": "string" },
+              "sources": { "$ref": "#/$defs/sourceIds" }
+            }
+          }
+        },
+        "conflicts": { "type": "array", "items": { "type": "string" } },
+        "unknowns": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "inferred": { "type": "array", "items": { "type": "string" } },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "url", "fetched_at"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "kind": { "enum": ["docs", "forum", "constitution", "chain", "news", "other"] },
+              "url": { "type": "string" },
+              "title": { "type": "string" },
+              "fetched_at": { "$ref": "#/$defs/datetime" }
+            }
+          }
+        }
+      }
+    },
+
+    "nep413Proof": {
+      "type": "object",
+      "required": ["type", "account_id", "public_key", "signature", "message", "nonce", "recipient"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "nep413" },
+        "account_id": { "type": "string" },
+        "public_key": { "type": "string", "pattern": "^ed25519:" },
+        "signature": { "type": "string", "description": "base64" },
+        "message": { "type": "string", "description": "JSON text: {\"petal\":\"publish/v1\",\"entry_sha256\":\"...\"}" },
+        "nonce": { "type": "string", "description": "base64 of 32 bytes issued by Petal's server" },
+        "recipient": { "type": "string" }
+      }
+    },
+
+    "modelSignature": {
+      "type": "object",
+      "required": ["provider", "model", "completion_id", "signature_kind", "text", "signature", "signing_address", "signing_algo", "request_sha256", "response_sha256", "fetched_at"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "const": "near-ai-cloud" },
+        "model": { "type": "string", "description": "canonical model id, requested with x-no-aliasing: true" },
+        "completion_id": { "type": "string" },
+        "signature_kind": { "enum": ["provider_tee", "gateway"] },
+        "text": { "type": "string", "description": "what was signed, as returned: model:sha256(request):sha256(response) for provider_tee" },
+        "signature": { "type": "string" },
+        "signing_address": { "type": "string" },
+        "signing_algo": { "enum": ["ecdsa", "ed25519"] },
+        "request_sha256": { "$ref": "#/$defs/sha256" },
+        "response_sha256": { "$ref": "#/$defs/sha256" },
+        "attestation": {
+          "type": "object",
+          "description": "the attestation report fetched before the completion, stored by Petal because the report endpoint needs a key",
+          "additionalProperties": false,
+          "properties": {
+            "nonce": { "type": "string" },
+            "report_sha256": { "$ref": "#/$defs/sha256" },
+            "report_url": { "type": "string", "description": "where anyone can read the full report: Petal's API at /api/v1/attestations/<report_sha256> (http-api.md)" }
+          }
+        },
+        "fetched_at": { "$ref": "#/$defs/datetime" }
+      }
+    },
+
+    "correction": {
+      "type": "object",
+      "description": "a request to correct or remove an identity link or label (FR-022); key petal/v1/correction/<flower_id>/<id>; see shared-map.md",
+      "required": ["petal", "id", "flower_id", "target", "request", "reason", "requester", "proof", "written_at"],
+      "additionalProperties": false,
+      "properties": {
+        "petal": { "const": "correction/v1" },
+        "id": { "type": "string", "pattern": "^[0-9a-f]{24}$", "description": "first 24 hex of SHA-256 of the canonical request without id and proof" },
+        "flower_id": { "type": "string", "pattern": "^[0-9a-f]{24}$" },
+        "target": {
+          "type": "object",
+          "required": ["participant", "caip2", "address"],
+          "additionalProperties": false,
+          "properties": {
+            "participant": { "type": "string" },
+            "caip2": { "type": "string" },
+            "address": { "type": "string" },
+            "label_key": { "type": "string" }
+          }
+        },
+        "request": { "enum": ["correct", "remove"] },
+        "reason": { "type": "string", "minLength": 3 },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "url"],
+            "additionalProperties": false,
+            "properties": { "kind": { "type": "string" }, "url": { "type": "string" }, "note": { "type": "string" } }
+          }
+        },
+        "requester": { "type": "string", "description": "NEAR account of the person asking" },
+        "proof": { "$ref": "#/$defs/nep413Proof" },
+        "written_at": { "$ref": "#/$defs/datetime" }
+      }
+    },
+
+    "entry": {
+      "type": "object",
+      "required": ["petal", "id", "spec", "spec_sha256", "interpretation", "snapshot", "render_sha256", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "petal": { "const": "flower/v1" },
+        "id": { "type": "string", "pattern": "^[0-9a-f]{24}$" },
+        "title": { "type": "string" },
+        "spec": { "$ref": "#/$defs/spec" },
+        "spec_sha256": { "$ref": "#/$defs/sha256" },
+        "interpretation": { "$ref": "#/$defs/interpretation" },
+        "snapshot": {
+          "type": "object",
+          "required": ["sha256", "urls"],
+          "additionalProperties": false,
+          "properties": {
+            "sha256": { "$ref": "#/$defs/sha256" },
+            "urls": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "render_sha256": { "$ref": "#/$defs/sha256" },
+        "provenance": {
+          "type": "object",
+          "required": ["maker", "agent", "tools_version", "created_at"],
+          "additionalProperties": false,
+          "properties": {
+            "maker": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/nep413Proof" }], "description": "null only for hero fixtures shipped in the repo" },
+            "agent": {
+              "type": "object",
+              "required": ["kind"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "enum": ["petal-agent", "own-agent", "hand-written"] },
+                "name": { "type": "string", "description": "e.g. claude-code, codex, ironclaw" },
+                "model": { "type": "string" },
+                "signature": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/modelSignature" }] }
+              }
+            },
+            "tools_version": { "type": "string" },
+            "created_at": { "$ref": "#/$defs/datetime" }
+          }
+        }
+      }
+    }
+  }
+}

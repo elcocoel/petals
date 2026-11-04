@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:snapshot:v1",
+  "title": "Petal snapshot (common table) v1",
+  "description": "One network population at one moment. Every input module outputs this. Named by the SHA-256 of its RFC 8785 canonical JSON bytes. See data-model.md.",
+  "type": "object",
+  "required": ["petal", "network", "snapshot", "coverage", "sources", "participants", "holdings", "relationships", "events", "module"],
+  "additionalProperties": false,
+  "properties": {
+    "petal": { "const": "snapshot/v1" },
+    "network": {
+      "type": "object",
+      "required": ["id", "chain", "population", "title"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "chain": { "type": "string", "description": "CAIP-2 chain id, or 'none' for non-chain networks", "pattern": "^([-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,32}|none)$" },
+        "population": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "params": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "required": ["as_of", "final"],
+      "additionalProperties": false,
+      "properties": {
+        "as_of": { "$ref": "#/$defs/datetime" },
+        "block_height": { "type": "integer", "minimum": 0 },
+        "block_hash": { "type": "string" },
+        "epoch": { "type": "object", "additionalProperties": true },
+        "window": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "from": { "$ref": "#/$defs/datetime" },
+            "to": { "$ref": "#/$defs/datetime" },
+            "from_block": { "type": "integer" },
+            "to_block": { "type": "integer" },
+            "note": { "type": "string" }
+          }
+        },
+        "final": { "type": "boolean", "description": "true when every read was at a final block; only final snapshots are reused forever" }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["participants_total", "participants_included", "amount_total", "amount_included", "unit", "measure"],
+      "additionalProperties": false,
+      "properties": {
+        "participants_total": { "type": "integer", "minimum": 0 },
+        "participants_included": { "type": "integer", "minimum": 0 },
+        "amount_total": { "$ref": "#/$defs/decimal" },
+        "amount_included": { "$ref": "#/$defs/decimal" },
+        "unit": { "type": "string" },
+        "measure": { "type": "string", "description": "the holdings measure that the totals refer to" },
+        "grouped": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rule", "rows_folded", "amount"],
+            "additionalProperties": false,
+            "properties": {
+              "rule": { "type": "string" },
+              "rows_folded": { "type": "integer", "minimum": 0 },
+              "amount": { "$ref": "#/$defs/decimal" }
+            }
+          }
+        },
+        "partial": { "type": "boolean" },
+        "failed_sources": { "type": "array", "items": { "type": "string" } },
+        "note": { "type": "string" }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "url", "fetched_at"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "enum": ["chain", "api", "docs", "forum", "constitution", "dataset"] },
+          "url": { "type": "string" },
+          "method": { "type": "string" },
+          "fetched_at": { "$ref": "#/$defs/datetime" },
+          "block_height": { "type": "integer" }
+        }
+      }
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "kind", "identity", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "kind": { "$ref": "#/$defs/kind" },
+          "identity": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identity" }] },
+          "roles": { "type": "array", "items": { "type": "string" } },
+          "count": { "type": "integer", "minimum": 1, "description": "only for kind=group: how many accounts the row folds" },
+          "source": { "type": "string" },
+          "detail": { "type": "object" }
+        }
+      }
+    },
+    "holdings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["participant", "asset", "measure", "amount", "unit", "as_of", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "participant": { "type": "string" },
+          "asset": { "type": "string" },
+          "measure": { "type": "string" },
+          "amount": { "$ref": "#/$defs/decimal" },
+          "amount_raw": { "type": "string", "pattern": "^[0-9]+$" },
+          "unit": { "type": "string" },
+          "as_of": { "$ref": "#/$defs/datetime" },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "type", "as_of", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "type": { "type": "string", "description": "delegates_to, owned_by, member_of_role, holds_role:*, proposed, voted:*, ..." },
+          "amount": { "$ref": "#/$defs/decimal" },
+          "amount_raw": { "type": "string", "pattern": "^[0-9]+$" },
+          "unit": { "type": "string" },
+          "role": { "type": "string" },
+          "bps": { "type": "integer", "minimum": 0, "maximum": 10000 },
+          "as_of": { "$ref": "#/$defs/datetime" },
+          "date_is": { "type": "string", "description": "when as_of is a proxy, say what it is (e.g. 'proposal submission_time')" },
+          "source": { "type": "string" },
+          "detail": { "type": "object" }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["participant", "type", "at", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "participant": { "type": "string" },
+          "type": { "type": "string" },
+          "at": { "$ref": "#/$defs/datetime" },
+          "detail": { "type": "object" },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "module": {
+      "type": "object",
+      "required": ["id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "version": { "type": "string" },
+        "imported_from": { "type": "string", "description": "set when built from a stored file, e.g. research/data/near/producers.json" }
+      }
+    }
+  },
+  "$defs": {
+    "datetime": { "type": "string", "format": "date-time" },
+    "decimal": { "type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?$" },
+    "kind": {
+      "enum": ["person", "organisation", "mining_pool", "validator", "staking_pool", "staking_entity", "delegator", "exchange", "custodian", "contract", "treasury", "group", "unknown"]
+    },
+    "identity": {
+      "type": "object",
+      "required": ["name", "source", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "source": { "type": "string" },
+        "status": { "enum": ["self-declared", "verified", "inferred"] },
+        "url": { "type": "string" }
+      }
+    }
+  }
+}
