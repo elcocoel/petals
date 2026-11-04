@@ -207,21 +207,29 @@ class Cli {
     if (flags.get('help')) return this.help('api');
     const rawPort = flags.get('port');
     const port = rawPort === undefined ? DEFAULT_PORT : Number(rawPort);
-    if (!Number.isInteger(port) || port <= 0 || port > 65535) {
-      throw new UsageError(`--port must be a port number, got ${String(rawPort)}`);
+    if (!Number.isInteger(port) || port < 0 || port > 65535) {
+      throw new UsageError(
+        `--port must be a port number (0: any free port), got ${String(rawPort)}`,
+      );
     }
     const host = flags.get('host');
     const petalApp = deps.petalApp ?? (await import('@petal/agent')).petalApp;
     const serve = deps.serve ?? ((await import('@hono/node-server')).serve as Serve);
     const app = petalApp(this.config(flags));
-    serve(
+    const server = serve(
       {
         fetch: (request) => app.fetch(request),
         port,
         ...(typeof host === 'string' ? { hostname: host } : {}),
       },
       (info) => this.sys.stderr(`petal api on http://localhost:${info.port}\n`),
-    );
+    ) as { on?: (event: 'error', listener: (e: Error & { code?: string }) => void) => void };
+    // A busy port is the usual failure: say so as JSON instead of a stack trace.
+    server?.on?.('error', (e) => {
+      const hint = e.code === 'EADDRINUSE' ? 'Another server has the port; try --port.' : undefined;
+      this.sys.stderr(errorJson('internal', `petal api: ${e.message}`, hint));
+      process.exitCode = 1;
+    });
     return 0;
   }
 

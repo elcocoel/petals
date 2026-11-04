@@ -71,6 +71,53 @@ describe('petal api', () => {
     expect(r.served[0]).toMatchObject({ port: 9999, hostname: '127.0.0.1' });
   });
 
+  test('serves over real HTTP with @hono/node-server', async () => {
+    const { serve } = await import('@hono/node-server');
+    let server: { close(cb?: () => void): void } | undefined;
+    const listening = new Promise<number>((done) => {
+      void run(['api', '--port', '0', '--host', '127.0.0.1'], {
+        deps: {
+          petalApp: () => ({
+            fetch: (req) => Response.json({ path: new URL(req.url).pathname }),
+          }),
+          serve: (options, onListen) => {
+            server = serve(options, (info) => {
+              onListen?.(info);
+              done(info.port);
+            });
+            return server;
+          },
+        },
+      });
+    });
+    const port = await listening;
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/api/v1/health`);
+      expect(await res.json()).toEqual({ path: '/api/v1/health' });
+    } finally {
+      await new Promise<void>((done) => server?.close(() => done()));
+    }
+  });
+
+  test('a busy port is reported as JSON on stderr', async () => {
+    const before = process.exitCode;
+    const busy = Object.assign(new Error('listen EADDRINUSE: :::8787'), { code: 'EADDRINUSE' });
+    const r = await run(['api'], {
+      deps: {
+        petalApp: () => ({ fetch: () => new Response('') }),
+        serve: () => ({ on: (_event: 'error', listener: (e: Error) => void) => listener(busy) }),
+      },
+    });
+    const exitCode = process.exitCode;
+    process.exitCode = before;
+    expect(exitCode).toBe(1);
+    expect(JSON.parse(r.stderr).error).toEqual({
+      code: 'internal',
+      message: 'petal api: listen EADDRINUSE: :::8787',
+      hint: 'Another server has the port; try --port.',
+    });
+  });
+
   test('a bad port is a usage error', async () => {
     const r = await start(['--port', 'eighty']);
     expect(r.code).toBe(2);
