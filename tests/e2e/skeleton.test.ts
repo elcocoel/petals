@@ -347,7 +347,7 @@ describe('quickstart, recorded', () => {
     // the fixture is the shipped entry, labelled what it is: no maker, no transaction
     const shipped = committedSkeletonEntries()[0]?.entry as Entry;
     const fixture = flowers.find((f) => f.where === 'fixture');
-    expect(fixture).toMatchObject({ id: shipped.id, maker: null });
+    expect(fixture).toMatchObject({ id: shipped.id, maker: null, published_at: null });
     expect(fixture).not.toHaveProperty('tx_hash');
     const opened = await call(`/api/v1/flowers/${shipped.id}`);
     expect(opened.json).toMatchObject({ where: 'fixture', entry: shipped });

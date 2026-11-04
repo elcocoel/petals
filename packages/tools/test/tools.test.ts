@@ -405,7 +405,7 @@ describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
     const list = (await run('list_flowers', {})).flowers as Record<string, unknown>[];
     expect(list).toHaveLength(shipped.length);
     for (const f of list) {
-      expect(f).toMatchObject({ where: 'fixture', maker: null });
+      expect(f).toMatchObject({ where: 'fixture', maker: null, published_at: null });
       expect(f).not.toHaveProperty('tx_hash');
       const got = await run('get_flower', { id: f.id });
       expect(got).toMatchObject({
