@@ -13,8 +13,9 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
+    "@hono/node-server": "^2.1.6",
+    "@petal/agent": "workspace:*",
     "@petal/core": "workspace:*",
-    "@petal/tools": "workspace:*",
-    "@petal/agent": "workspace:*"
+    "@petal/tools": "workspace:*"
   }
 }
