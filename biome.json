@@ -21,6 +21,7 @@
     "indentWidth": 2,
     "lineWidth": 100
   },
+  "markdown": { "formatter": { "formatEmbeds": false } },
   "javascript": {
     "formatter": { "quoteStyle": "single", "semicolons": "always", "trailingCommas": "all" }
   },
