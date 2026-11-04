@@ -29,6 +29,13 @@ export const sampleSnapshot: Snapshot = {
     amount_included: '3000',
     unit: 'NEAR',
     measure: 'validator_stake_current_epoch',
+    grouped: [
+      {
+        rule: 'delegates_to rows under 1,000 NEAR, one group row per pool',
+        rows_folded: 12,
+        amount: '1000.5',
+      },
+    ],
   },
   sources: [
     {

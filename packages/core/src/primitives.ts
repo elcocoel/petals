@@ -69,3 +69,14 @@ export const PRIMITIVES: {
   { id: 'extrusion', status: 'unavailable', by: [], note: 'declared in the vocabulary, not built' },
   { id: 'opacity', status: 'unavailable', by: [], note: 'declared in the vocabulary, not built' },
 ];
+
+export function primitive(id: string): (typeof PRIMITIVES)[number] | undefined {
+  return PRIMITIVES.find((p) => p.id === id);
+}
+
+/** Can this build draw `primitive` driven by `by`? `m:<name>` matches the `m:<metric>` entry. */
+export function drawable(id: string, by: string): boolean {
+  const p = primitive(id);
+  if (p?.status !== 'available') return false;
+  return p.by.includes(by) || (by.startsWith('m:') && by.length > 2 && p.by.includes('m:<metric>'));
+}
