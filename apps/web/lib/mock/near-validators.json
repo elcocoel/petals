@@ -1,0 +1,1688 @@
+{
+  "note": "MOCK: canned tool answers for the web API mock (apps/web/lib/api-mock.ts), made by apps/web/scripts/mock-data.ts from the NEAR validators fixture. Not the real tools; the placeholder SVG is not the renderer.",
+  "snapshot": {
+    "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
+    "reused": true,
+    "where": "fixture",
+    "network": {
+      "chain": "near:mainnet",
+      "description": "Validators and staking pools, and the delegators behind them",
+      "id": "near-validators",
+      "population": "validators",
+      "title": "NEAR validators"
+    },
+    "snapshot": {
+      "as_of": "2026-11-03T19:42:00Z",
+      "block_height": 222915356,
+      "final": true
+    },
+    "coverage": {
+      "amount_included": "581927623.046559802978815461048199",
+      "amount_total": "594477001.44562013581214899703825",
+      "grouped": [
+        {
+          "amount": "66539.465936236312743964164021",
+          "rows_folded": 309,
+          "rule": "delegates_to rows under 1,000 NEAR staked by lockups (backer class lockup): one group row per pool"
+        },
+        {
+          "amount": "29353.35820741672995353993813",
+          "rows_folded": 70,
+          "rule": "delegates_to rows under 1,000 NEAR staked by liquid-staking contracts (backer class liquid): one group row per pool"
+        },
+        {
+          "amount": "0.254741159725112954077923",
+          "rows_folded": 6,
+          "rule": "delegates_to rows under 1,000 NEAR staked by accounts with 1M+ NEAR (backer class large): one group row per pool"
+        },
+        {
+          "amount": "7105082.221727716081084986661352",
+          "rows_folded": 277384,
+          "rule": "delegates_to rows under 1,000 NEAR staked by other delegators (backer class other): one group row per pool"
+        }
+      ],
+      "measure": "delegated_stake",
+      "note": "All known staking pools are participants (pool.near/poolv1.near factory list from NearBlocks plus anything in RPC validators/proposals/kickouts). Delegators were crawled with get_accounts for every non-idle pool; the 424 idle pools (no seat, no proposal; ~6656 delegation records holding very little stake) were not crawled and their delegators are missing. Delegation rows with zero staked and zero unstaked were dropped. Liquid-staking contracts (Meta Pool, LiNEAR, ...) appear as delegators to many pools; their own token holders are NOT listed (that would need their contract state or token-holder APIs). Pool identities are self-declared in pool-details.near (via NearBlocks). A named .near account id is a self-declared identity, not a verified one. Lockup contracts (*.lockup.near) are marked account_type=lockup; their owners were not resolved. participants_total = included + idle-pool delegation records (approx.). Pool owners (get_owner_id) are included as kind unknown. Petal import: 8,319 of 286,088 delegates_to rows (98.76% of the stake they carry) have at least 1,000 NEAR staked and stay individual; the rest are folded into 565 group rows, one per pool and backer class (coverage.grouped). Small delegators appear only inside those groups. Backer classes: lockup (lockup contracts), liquid (liquid-staking contracts), large (1,000,000+ NEAR staked across all pools), other. Spike breakdown: {\"pools_known\":862,\"pools_in_scope_non_idle\":438,\"pools_delegators_crawled\":437,\"pools_idle_not_crawled\":424,\"pools_skipped_by_call_cap\":0,\"pools_crawl_errors\":{\"lst-pool.near\":{\"get_accounts\":\"wasm execution failed with error: MethodResolveError(MethodNotFound)\"}},\"validators_seated_current_epoch\":371,\"validators_seated_next_epoch\":371,\"current_proposals\":424,\"kicked_out_prev_epoch\":15,\"delegation_records_in_scope_pools (get_accounts rows)\":287095,\"delegation_records_in_scope_pools (nearblocks delegators_count)\":287122,\"delegation_records_in_idle_pools (nearblocks delegators_count)\":6656,\"delegation_records_fetched\":287095,\"delegation_records_zero_balance_dropped\":1007,\"delegation_relationships_written\":286088,\"unique_delegator_accounts\":241875,\"validator_stake_current_epoch_NEAR\":\"593372642.814240027020784486594744\",\"all_pools_staked_NEAR\":\"594477001.44562013581214899703825\",\"delegated_stake_in_crawled_pools_NEAR\":\"581927623.046559802978815461048199\",\"total_supply_NEAR\":\"1310729252.319008176842390343440205\",\"epoch_seat_price_NEAR\":\"9493.962285027840432332551785\",\"liquid_staking_contracts_checked\":[\"meta-pool.near\",\"linear-protocol.near\",\"v2-nearx.stader-labs.near\",\"lst-pool.near\",\"lst.rhealab.near\"]}",
+      "participants_included": 242744,
+      "participants_total": 249400,
+      "unit": "NEAR"
+    },
+    "sources": [
+      {
+        "fetched_at": "2026-11-03T19:42:00Z",
+        "id": "fastnear-rpc-validators",
+        "kind": "chain",
+        "method": "validators [null] (current epoch)",
+        "url": "https://rpc.mainnet.fastnear.com"
+      },
+      {
+        "fetched_at": "2026-11-03T19:42:00Z",
+        "id": "fastnear-rpc-block",
+        "kind": "chain",
+        "method": "block {finality: final} header.total_supply",
+        "url": "https://rpc.mainnet.fastnear.com"
+      },
+      {
+        "fetched_at": "2026-11-03T19:42:00Z",
+        "id": "fastnear-rpc-staking-pool-views",
+        "kind": "chain",
+        "method": "query call_function: get_total_staked_balance, get_number_of_accounts, get_owner_id, get_reward_fee_fraction, get_accounts{from_index,limit}",
+        "url": "https://rpc.mainnet.fastnear.com"
+      },
+      {
+        "fetched_at": "2026-11-03T19:42:00Z",
+        "id": "nearblocks-kitwallet-pools",
+        "kind": "api",
+        "method": "GET (all pool.near + poolv1.near factory pools)",
+        "url": "https://api.nearblocks.io/v3/kitwallet/stakingPools"
+      },
+      {
+        "fetched_at": "2026-11-03T19:42:00Z",
+        "id": "nearblocks-validators",
+        "kind": "api",
+        "method": "GET paginated; pool metadata self-declared in pool-details.near; staking_status; delegators_count",
+        "url": "https://api.nearblocks.io/v3/validators?limit=100"
+      },
+      {
+        "fetched_at": "2026-11-03T19:42:00Z",
+        "id": "nearblocks-validators-info",
+        "kind": "api",
+        "method": "GET epoch seat price, total stake, epoch start",
+        "url": "https://api.nearblocks.io/v3/validators/info"
+      },
+      {
+        "fetched_at": "2026-11-03T19:42:00Z",
+        "id": "account-id",
+        "kind": "docs",
+        "method": "a named account id is a self-declared name, not verified",
+        "url": "https://docs.near.org/protocol/accounts-contracts/account-id"
+      },
+      {
+        "fetched_at": "2026-11-03T19:42:00Z",
+        "id": "fastnear-rpc-liquid-staking",
+        "kind": "chain",
+        "method": "query call_function on liquid-staking contracts (ft_metadata, get_contract_state, get_summary, ...)",
+        "url": "https://rpc.mainnet.fastnear.com"
+      }
+    ],
+    "counts": {
+      "participants": 8487,
+      "holdings": 3154,
+      "relationships": 9326,
+      "events": 15
+    },
+    "body_url": "/api/v1/snapshots/72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
+    "tools_version": "tools/v1"
+  },
+  "describe": {
+    "measures": [
+      {
+        "id": "validator_stake_current_epoch",
+        "unit": "NEAR",
+        "total": "593372642.814240027020784486594744"
+      }
+    ],
+    "kinds_present": ["delegator", "group", "staking_entity", "staking_pool", "unknown"],
+    "segment_options": [
+      {
+        "by": "backers",
+        "label": "who backs each pool"
+      }
+    ],
+    "line_options": [],
+    "has_fusions": false,
+    "primitives": [
+      {
+        "id": "width",
+        "status": "available",
+        "note": "share of power, compressed into a band (max_ratio 1.5, 2 or 3; default 2), or equal"
+      },
+      {
+        "id": "height",
+        "status": "available",
+        "note": "share (sqrt or linear), amount (log), a metric (m:<name>), or equal"
+      },
+      {
+        "id": "segments",
+        "status": "available",
+        "note": "backers: who backs a NEAR pool (lockup, liquid staking, 1M+ NEAR, other). time, ops and roles come in Phase B"
+      },
+      {
+        "id": "colour",
+        "status": "available",
+        "note": "kind of account, identity (named or anonymous), or a single colour"
+      },
+      {
+        "id": "outline",
+        "status": "available",
+        "note": "solid for self-declared or verified identity, dashed for inferred, none for unknown"
+      },
+      {
+        "id": "order",
+        "status": "available",
+        "note": "measure_desc: largest first, clockwise from the top (default/v1). measure_asc, id, join_date and last_active come in Phase B"
+      },
+      {
+        "id": "lines",
+        "status": "unavailable",
+        "note": "inner lines; not available yet (Phase B)"
+      },
+      {
+        "id": "markings",
+        "status": "unavailable",
+        "note": "fusion dots for common control with evidence; not available yet (Phase B)"
+      },
+      {
+        "id": "texture",
+        "status": "unavailable",
+        "note": "declared in the vocabulary, not built. The tail hatch marks grouping; it is not texture"
+      },
+      {
+        "id": "extrusion",
+        "status": "unavailable",
+        "note": "declared in the vocabulary, not built"
+      },
+      {
+        "id": "opacity",
+        "status": "unavailable",
+        "note": "declared in the vocabulary, not built"
+      }
+    ],
+    "top": [
+      {
+        "id": "astro-stakers.poolv1.near",
+        "label": "astro-stakers.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "astrostakers.com",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "share": 0.056071
+      },
+      {
+        "id": "figment.poolv1.near",
+        "label": "figment.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "share": 0.047041
+      },
+      {
+        "id": "ledgerbyfigment.poolv1.near",
+        "label": "ledgerbyfigment.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "share": 0.038708
+      },
+      {
+        "id": "staked.poolv1.near",
+        "label": "staked.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "share": 0.035424
+      },
+      {
+        "id": "binancenode1.poolv1.near",
+        "label": "binancenode1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "share": 0.033925
+      },
+      {
+        "id": "bitwise_1.poolv1.near",
+        "label": "bitwise_1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "share": 0.03361
+      },
+      {
+        "id": "sumerian.poolv1.near",
+        "label": "sumerian.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "share": 0.031642
+      },
+      {
+        "id": "zavodil.poolv1.near",
+        "label": "NEAR Zavodil node",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "NEAR Zavodil node",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "share": 0.030223
+      },
+      {
+        "id": "bitwise_2.poolv1.near",
+        "label": "bitwise_2.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "share": 0.028452
+      },
+      {
+        "id": "liver.pool.near",
+        "label": "liver.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "share": 0.027403
+      }
+    ],
+    "coverage_note": "all 371 seated validators; small delegations folded into declared groups",
+    "sources": [
+      {
+        "id": "fastnear-rpc-validators",
+        "url": "https://rpc.mainnet.fastnear.com"
+      },
+      {
+        "id": "fastnear-rpc-block",
+        "url": "https://rpc.mainnet.fastnear.com"
+      },
+      {
+        "id": "fastnear-rpc-staking-pool-views",
+        "url": "https://rpc.mainnet.fastnear.com"
+      },
+      {
+        "id": "nearblocks-kitwallet-pools",
+        "url": "https://api.nearblocks.io/v3/kitwallet/stakingPools"
+      },
+      {
+        "id": "nearblocks-validators",
+        "url": "https://api.nearblocks.io/v3/validators?limit=100"
+      },
+      {
+        "id": "nearblocks-validators-info",
+        "url": "https://api.nearblocks.io/v3/validators/info"
+      },
+      {
+        "id": "account-id",
+        "url": "https://docs.near.org/protocol/accounts-contracts/account-id"
+      },
+      {
+        "id": "fastnear-rpc-liquid-staking",
+        "url": "https://rpc.mainnet.fastnear.com"
+      }
+    ],
+    "tools_version": "tools/v1"
+  },
+  "figures": {
+    "measure": "validator_stake_current_epoch",
+    "unit": "NEAR",
+    "total": "593372642.814240027020784486594744",
+    "participants_total": 371,
+    "participants_included": 371,
+    "shares": [
+      {
+        "id": "astro-stakers.poolv1.near",
+        "label": "astro-stakers.poolv1.near",
+        "amount": "33270925.619217119134459443495696",
+        "share": 0.056071,
+        "rank": 1
+      },
+      {
+        "id": "figment.poolv1.near",
+        "label": "figment.poolv1.near",
+        "amount": "27913093.179334048342469037509325",
+        "share": 0.047041,
+        "rank": 2
+      },
+      {
+        "id": "ledgerbyfigment.poolv1.near",
+        "label": "ledgerbyfigment.poolv1.near",
+        "amount": "22968074.415665397701473933025448",
+        "share": 0.038708,
+        "rank": 3
+      },
+      {
+        "id": "staked.poolv1.near",
+        "label": "staked.poolv1.near",
+        "amount": "21019461.615609740426136322462901",
+        "share": 0.035424,
+        "rank": 4
+      },
+      {
+        "id": "binancenode1.poolv1.near",
+        "label": "binancenode1.poolv1.near",
+        "amount": "20129876.800994643581130761469535",
+        "share": 0.033925,
+        "rank": 5
+      },
+      {
+        "id": "bitwise_1.poolv1.near",
+        "label": "bitwise_1.poolv1.near",
+        "amount": "19943140.704942240992389987117569",
+        "share": 0.03361,
+        "rank": 6
+      },
+      {
+        "id": "sumerian.poolv1.near",
+        "label": "sumerian.poolv1.near",
+        "amount": "18775665.056471701150314337355771",
+        "share": 0.031642,
+        "rank": 7
+      },
+      {
+        "id": "zavodil.poolv1.near",
+        "label": "NEAR Zavodil node",
+        "amount": "17933730.896789004919365015729872",
+        "share": 0.030223,
+        "rank": 8
+      },
+      {
+        "id": "bitwise_2.poolv1.near",
+        "label": "bitwise_2.poolv1.near",
+        "amount": "16882458.081487101984385976318512",
+        "share": 0.028452,
+        "rank": 9
+      },
+      {
+        "id": "liver.pool.near",
+        "label": "liver.pool.near",
+        "amount": "16260482.03659489246424050624609",
+        "share": 0.027403,
+        "rank": 10
+      },
+      {
+        "id": "cnear-1.poolv1.near",
+        "label": "cnear-1.poolv1.near",
+        "amount": "15890175.006251099670791631794178",
+        "share": 0.026779,
+        "rank": 11
+      },
+      {
+        "id": "cnear-3.poolv1.near",
+        "label": "cnear-3.poolv1.near",
+        "amount": "15878520.812551079715963656988638",
+        "share": 0.02676,
+        "rank": 12
+      },
+      {
+        "id": "cnear-2.poolv1.near",
+        "label": "cnear-2.poolv1.near",
+        "amount": "15877070.793064234667812451547991",
+        "share": 0.026757,
+        "rank": 13
+      },
+      {
+        "id": "kiln-1.poolv1.near",
+        "label": "kiln-1.poolv1.near",
+        "amount": "12942299.179865240911606239452277",
+        "share": 0.021811,
+        "rank": 14
+      },
+      {
+        "id": "svrn-ai.poolv1.near",
+        "label": "svrn-ai.poolv1.near",
+        "amount": "12070361.342828718676435134437269",
+        "share": 0.020342,
+        "rank": 15
+      },
+      {
+        "id": "svrn.pool.near",
+        "label": "svrn.pool.near",
+        "amount": "12038256.127931304434863634617524",
+        "share": 0.020288,
+        "rank": 16
+      },
+      {
+        "id": "epic.poolv1.near",
+        "label": "epic.poolv1.near",
+        "amount": "11946704.480966975672211342749402",
+        "share": 0.020134,
+        "rank": 17
+      },
+      {
+        "id": "svrn-luganodes.pool.near",
+        "label": "svrn-luganodes.pool.near",
+        "amount": "11450515.629831278899001967455256",
+        "share": 0.019297,
+        "rank": 18
+      },
+      {
+        "id": "nearvana.poolv1.near",
+        "label": "nearvana.poolv1.near",
+        "amount": "10450315.532727950127670215262853",
+        "share": 0.017612,
+        "rank": 19
+      },
+      {
+        "id": "stake1.poolv1.near",
+        "label": "stake1.poolv1.near",
+        "amount": "10427998.746268443055822903683133",
+        "share": 0.017574,
+        "rank": 20
+      },
+      {
+        "id": "svrn_bitwise.poolv1.near",
+        "label": "svrn_bitwise.poolv1.near",
+        "amount": "10408500.242110231119269477153201",
+        "share": 0.017541,
+        "rank": 21
+      },
+      {
+        "id": "metapool01.pool.near",
+        "label": "metapool01.pool.near",
+        "amount": "9189223.193722989219825985712941",
+        "share": 0.015486,
+        "rank": 22
+      },
+      {
+        "id": "p2p-org.poolv1.near",
+        "label": "p2p-org.poolv1.near",
+        "amount": "8006152.072840550750212200750831",
+        "share": 0.013493,
+        "rank": 23
+      },
+      {
+        "id": "dragonfly.poolv1.near",
+        "label": "dragonfly.poolv1.near",
+        "amount": "7905852.949330173331521427775486",
+        "share": 0.013324,
+        "rank": 24
+      },
+      {
+        "id": "allnodes.poolv1.near",
+        "label": "allnodes.poolv1.near",
+        "amount": "6816543.341740560299908655967888",
+        "share": 0.011488,
+        "rank": 25
+      },
+      {
+        "id": "bisontrails.poolv1.near",
+        "label": "bisontrails.poolv1.near",
+        "amount": "6791152.954741812230366568862154",
+        "share": 0.011445,
+        "rank": 26
+      },
+      {
+        "id": "macrodatarefinement.poolv1.near",
+        "label": "macrodatarefinement.poolv1.near",
+        "amount": "6715115.629803803051670691693202",
+        "share": 0.011317,
+        "rank": 27
+      },
+      {
+        "id": "aca87218e28c41f5a693dee3dff12238.poolv1.near",
+        "label": "aca87218e28c41f5a693dee3dff12238.poolv1.near",
+        "amount": "6372941.874469208041373281977169",
+        "share": 0.01074,
+        "rank": 28
+      },
+      {
+        "id": "silentnodes.pool.near",
+        "label": "silentnodes.pool.near",
+        "amount": "6060510.873985015542441343901243",
+        "share": 0.010214,
+        "rank": 29
+      },
+      {
+        "id": "d1.poolv1.near",
+        "label": "d1.poolv1.near",
+        "amount": "6055333.926943943246468662854505",
+        "share": 0.010205,
+        "rank": 30
+      },
+      {
+        "id": "svrn-twinstake.poolv1.near",
+        "label": "svrn-twinstake.poolv1.near",
+        "amount": "6012798.909343807524422065436924",
+        "share": 0.010133,
+        "rank": 31
+      },
+      {
+        "id": "stakin.poolv1.near",
+        "label": "stakin.poolv1.near",
+        "amount": "5667030.921169736965215249965995",
+        "share": 0.009551,
+        "rank": 32
+      },
+      {
+        "id": "lst-pool.near",
+        "label": "lst-pool.near",
+        "amount": "5508197.267993764220521559004658",
+        "share": 0.009283,
+        "rank": 33
+      },
+      {
+        "id": "legends.poolv1.near",
+        "label": "legends.poolv1.near",
+        "amount": "4945840.890197288568975893155146",
+        "share": 0.008335,
+        "rank": 34
+      },
+      {
+        "id": "northernlights.poolv1.near",
+        "label": "northernlights.poolv1.near",
+        "amount": "4580984.681269728721165367534074",
+        "share": 0.00772,
+        "rank": 35
+      },
+      {
+        "id": "republic.poolv1.near",
+        "label": "republic.poolv1.near",
+        "amount": "4312823.490289835864225245864107",
+        "share": 0.007268,
+        "rank": 36
+      },
+      {
+        "id": "okx-earn.poolv1.near",
+        "label": "okx-earn.poolv1.near",
+        "amount": "4146538.615703218939123512508341",
+        "share": 0.006988,
+        "rank": 37
+      },
+      {
+        "id": "rekt.poolv1.near",
+        "label": "rekt.poolv1.near",
+        "amount": "3788400.750767566893722901348579",
+        "share": 0.006385,
+        "rank": 38
+      },
+      {
+        "id": "ni.poolv1.near",
+        "label": "Nobodyinc",
+        "amount": "3543294.245169339298163589276221",
+        "share": 0.005971,
+        "rank": 39
+      },
+      {
+        "id": "everstake.poolv1.near",
+        "label": "Everstake",
+        "amount": "3386933.123984446062623819779142",
+        "share": 0.005708,
+        "rank": 40
+      },
+      {
+        "id": "gtnode-0.poolv1.near",
+        "label": "gtnode-0.poolv1.near",
+        "amount": "3311535.15457256358483040857886",
+        "share": 0.005581,
+        "rank": 41
+      },
+      {
+        "id": "nearfans.poolv1.near",
+        "label": "nearfans.poolv1.near",
+        "amount": "3118091.471593407896375228251549",
+        "share": 0.005255,
+        "rank": 42
+      },
+      {
+        "id": "nearone.pool.near",
+        "label": "nearone.pool.near",
+        "amount": "3026120.128644614887595818477262",
+        "share": 0.0051,
+        "rank": 43
+      },
+      {
+        "id": "x.poolv1.near",
+        "label": "x.poolv1.near",
+        "amount": "2949867.516275668119149752614991",
+        "share": 0.004971,
+        "rank": 44
+      },
+      {
+        "id": "here.poolv1.near",
+        "label": "here.poolv1.near",
+        "amount": "2638034.192826928957808318473171",
+        "share": 0.004446,
+        "rank": 45
+      },
+      {
+        "id": "twinstake.poolv1.near",
+        "label": "twinstake.poolv1.near",
+        "amount": "2432372.304551444056492728805856",
+        "share": 0.004099,
+        "rank": 46
+      },
+      {
+        "id": "bitcoinsuisse.poolv1.near",
+        "label": "bitcoinsuisse.poolv1.near",
+        "amount": "2338185.183731293082101343533543",
+        "share": 0.003941,
+        "rank": 47
+      },
+      {
+        "id": "lux.poolv1.near",
+        "label": "lux.poolv1.near",
+        "amount": "2267456.956140057158515471274212",
+        "share": 0.003821,
+        "rank": 48
+      },
+      {
+        "id": "anonymous.poolv1.near",
+        "label": "anonymous.poolv1.near",
+        "amount": "2252976.48465842759328256662772",
+        "share": 0.003797,
+        "rank": 49
+      },
+      {
+        "id": "erm.poolv1.near",
+        "label": "erm.poolv1.near",
+        "amount": "2251031.082102724881739511352468",
+        "share": 0.003794,
+        "rank": 50
+      },
+      {
+        "id": "staking4all.poolv1.near",
+        "label": "staking4all.poolv1.near",
+        "amount": "2235108.663122235008986486623386",
+        "share": 0.003767,
+        "rank": 51
+      },
+      {
+        "id": "dsrvlabs.poolv1.near",
+        "label": "DSRV",
+        "amount": "2140785.182430330678845789050493",
+        "share": 0.003608,
+        "rank": 52
+      },
+      {
+        "id": "blockdaemon.poolv1.near",
+        "label": "blockdaemon.poolv1.near",
+        "amount": "2132418.24641290220849463994588",
+        "share": 0.003594,
+        "rank": 53
+      },
+      {
+        "id": "moonlet.poolv1.near",
+        "label": "Moonlet.io",
+        "amount": "2053486.185997635659398514892839",
+        "share": 0.003461,
+        "rank": 54
+      },
+      {
+        "id": "cryptium.poolv1.near",
+        "label": "Cryptium Labs",
+        "amount": "2047509.608037713231567095623813",
+        "share": 0.003451,
+        "rank": 55
+      },
+      {
+        "id": "buildlinks.poolv1.near",
+        "label": "buildlinks.poolv1.near",
+        "amount": "2037117.300671929631469710390305",
+        "share": 0.003433,
+        "rank": 56
+      },
+      {
+        "id": "npro.poolv1.near",
+        "label": "NPRO Validator",
+        "amount": "2035394.842327415888647091333088",
+        "share": 0.00343,
+        "rank": 57
+      },
+      {
+        "id": "baziliknear.poolv1.near",
+        "label": "baziliknear.poolv1.near",
+        "amount": "2018296.714766828254391970603977",
+        "share": 0.003401,
+        "rank": 58
+      },
+      {
+        "id": "sofarsonear.poolv1.near",
+        "label": "sofarsonear.poolv1.near",
+        "amount": "1996066.183043201352616378295561",
+        "share": 0.003364,
+        "rank": 59
+      },
+      {
+        "id": "chorusone.poolv1.near",
+        "label": "chorusone.poolv1.near",
+        "amount": "1938442.658457211882645987449132",
+        "share": 0.003267,
+        "rank": 60
+      }
+    ],
+    "top_k_share": {
+      "1": 0.056071,
+      "5": 0.211168,
+      "10": 0.362499,
+      "100": 0.938285
+    },
+    "nakamoto": {
+      "threshold": 0.333333,
+      "count": 9
+    },
+    "hhi": 0.021471,
+    "gini": 0.836217,
+    "tail": {
+      "count": 311,
+      "amount": "81869050.738906256586067675155591",
+      "share": 0.137972
+    },
+    "fusions": [],
+    "figure_ids": [
+      "fig:total",
+      "fig:shares",
+      "fig:top_k_share.1",
+      "fig:top_k_share.5",
+      "fig:top_k_share.10",
+      "fig:top_k_share.100",
+      "fig:nakamoto",
+      "fig:hhi",
+      "fig:gini",
+      "fig:tail"
+    ],
+    "tools_version": "tools/v1"
+  },
+  "spec": {
+    "petal": "spec/v1",
+    "network": {
+      "id": "near-validators",
+      "chain": "near:mainnet",
+      "population": "validators"
+    },
+    "snapshot": {
+      "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
+      "as_of": "2026-11-03T19:42:00Z",
+      "block_height": 222915356
+    },
+    "labels": "none",
+    "selection": {
+      "measure": "validator_stake_current_epoch",
+      "petals": 60,
+      "tail": {
+        "group": true,
+        "label": "everyone else"
+      }
+    },
+    "encodings": {
+      "width": {
+        "by": "share",
+        "scale": "log",
+        "max_ratio": 2,
+        "meaning": "share of the measure, in a 2x band",
+        "sources": ["fastnear-rpc-validators"]
+      },
+      "height": {
+        "by": "share",
+        "scale": "sqrt",
+        "meaning": "square root of share of the measure",
+        "sources": ["fastnear-rpc-validators"]
+      },
+      "colour": {
+        "by": "kind",
+        "meaning": "kind of account",
+        "sources": ["nearblocks-validators", "fastnear-rpc-liquid-staking"]
+      },
+      "outline": {
+        "by": "identity_status",
+        "meaning": "identity: solid when self-declared or verified, dashed when inferred",
+        "sources": ["nearblocks-validators", "account-id"]
+      },
+      "segments": {
+        "by": "backers",
+        "meaning": "who backs the pool: other delegators, accounts with 1M+ NEAR, liquid-staking contracts, lockups",
+        "sources": ["fastnear-rpc-staking-pool-views"]
+      },
+      "lines": null,
+      "markings": null,
+      "order": {
+        "by": "measure_desc",
+        "meaning": "largest first, clockwise from the top",
+        "sources": ["fastnear-rpc-validators"]
+      }
+    },
+    "convention": {
+      "id": "default/v1",
+      "variation_of": null,
+      "changes": []
+    }
+  },
+  "legend": [
+    {
+      "primitive": "width",
+      "meaning": "share of the measure, in a 2x band",
+      "sources": ["fastnear-rpc-validators"]
+    },
+    {
+      "primitive": "height",
+      "meaning": "square root of share of the measure",
+      "sources": ["fastnear-rpc-validators"]
+    },
+    {
+      "primitive": "colour",
+      "meaning": "kind of account",
+      "sources": ["nearblocks-validators", "fastnear-rpc-liquid-staking"],
+      "keys": [
+        {
+          "swatch": "var(--k-staking_pool)",
+          "label": "staking pool"
+        },
+        {
+          "swatch": "var(--k-staking_entity)",
+          "label": "liquid-staking entity"
+        }
+      ]
+    },
+    {
+      "primitive": "outline",
+      "meaning": "identity: solid when self-declared or verified, dashed when inferred",
+      "sources": ["nearblocks-validators", "account-id"]
+    },
+    {
+      "primitive": "segments",
+      "meaning": "who backs the pool: other delegators, accounts with 1M+ NEAR, liquid-staking contracts, lockups",
+      "sources": ["fastnear-rpc-staking-pool-views"],
+      "keys": [
+        {
+          "swatch": "var(--seg-other)",
+          "label": "other delegators"
+        },
+        {
+          "swatch": "var(--seg-large)",
+          "label": "accounts with 1M+ NEAR"
+        },
+        {
+          "swatch": "var(--seg-liquid)",
+          "label": "liquid-staking contracts"
+        },
+        {
+          "swatch": "var(--seg-lockup)",
+          "label": "lockups"
+        }
+      ]
+    },
+    {
+      "primitive": "order",
+      "meaning": "largest first, clockwise from the top",
+      "sources": ["fastnear-rpc-validators"]
+    },
+    {
+      "primitive": "tail",
+      "meaning": "everyone else, grouped and hatched",
+      "sources": []
+    }
+  ],
+  "petals": [
+    {
+      "index": 0,
+      "id": "astro-stakers.poolv1.near",
+      "label": "astro-stakers.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "astrostakers.com",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "33270925.619217119134459443495696",
+      "share": 0.056071,
+      "rank": 1,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.056071,
+          "explains": "share of stake, in a 2x band"
+        },
+        {
+          "primitive": "height",
+          "value": 1,
+          "explains": "square root of share, relative to the largest"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind of account"
+        },
+        {
+          "primitive": "outline",
+          "value": "self-declared",
+          "explains": "how the name is known"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "backer classes behind the pool"
+        },
+        {
+          "primitive": "order",
+          "value": 1,
+          "explains": "largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "20286510.058892487125277299909503",
+          "frac": 0.609656
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "6479988.483543291891384534390095",
+          "frac": 0.194738
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "133377.952969495373935992653992",
+          "frac": 0.004008
+        },
+        {
+          "key": "lockup",
+          "label": "lockups",
+          "amount": "6375460.394951513021151169692321",
+          "frac": 0.191597
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": "figment.poolv1.near",
+      "label": "figment.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "27913093.179334048342469037509325",
+      "share": 0.047041,
+      "rank": 2,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.047041,
+          "explains": "share of stake, in a 2x band"
+        },
+        {
+          "primitive": "height",
+          "value": 0.915944,
+          "explains": "square root of share, relative to the largest"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind of account"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "how the name is known"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "backer classes behind the pool"
+        },
+        {
+          "primitive": "order",
+          "value": 2,
+          "explains": "largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "7096560.028122417823771677994918",
+          "frac": 0.254219
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "20481485.656423656203721044536632",
+          "frac": 0.733705
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "1409.001702702579908684667331",
+          "frac": 0.00005
+        },
+        {
+          "key": "lockup",
+          "label": "lockups",
+          "amount": "335678.663295694280284378975322",
+          "frac": 0.012025
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "id": "ledgerbyfigment.poolv1.near",
+      "label": "ledgerbyfigment.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "22968074.415665397701473933025448",
+      "share": 0.038708,
+      "rank": 3,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.038708,
+          "explains": "share of stake, in a 2x band"
+        },
+        {
+          "primitive": "height",
+          "value": 0.830866,
+          "explains": "square root of share, relative to the largest"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind of account"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "how the name is known"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "backer classes behind the pool"
+        },
+        {
+          "primitive": "order",
+          "value": 3,
+          "explains": "largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "15914061.164753540953029210308682",
+          "frac": 0.690676
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "7047090.350813602381697409435922",
+          "frac": 0.305846
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "80147.860088176443776449851555",
+          "frac": 0.003478
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "id": "staked.poolv1.near",
+      "label": "staked.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "21019461.615609740426136322462901",
+      "share": 0.035424,
+      "rank": 4,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.035424,
+          "explains": "share of stake, in a 2x band"
+        },
+        {
+          "primitive": "height",
+          "value": 0.79484,
+          "explains": "square root of share, relative to the largest"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind of account"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "how the name is known"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "backer classes behind the pool"
+        },
+        {
+          "primitive": "order",
+          "value": 4,
+          "explains": "largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "2224948.28899111545245624791113",
+          "frac": 0.105831
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "18325936.476413015163848912875057",
+          "frac": 0.871684
+        },
+        {
+          "key": "lockup",
+          "label": "lockups",
+          "amount": "472704.928539873186093956863803",
+          "frac": 0.022485
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "id": "binancenode1.poolv1.near",
+      "label": "binancenode1.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "20129876.800994643581130761469535",
+      "share": 0.033925,
+      "rank": 5,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.033925,
+          "explains": "share of stake, in a 2x band"
+        },
+        {
+          "primitive": "height",
+          "value": 0.777841,
+          "explains": "square root of share, relative to the largest"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind of account"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "how the name is known"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "backer classes behind the pool"
+        },
+        {
+          "primitive": "order",
+          "value": 5,
+          "explains": "largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "557530.365625019268360026710704",
+          "frac": 0.027696
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "19274414.308681283787216101276019",
+          "frac": 0.957468
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "101382.869124995920875398398498",
+          "frac": 0.005036
+        },
+        {
+          "key": "lockup",
+          "label": "lockups",
+          "amount": "197290.552738237550926960638053",
+          "frac": 0.009801
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "id": "bitwise_1.poolv1.near",
+      "label": "bitwise_1.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "19943140.704942240992389987117569",
+      "share": 0.03361,
+      "rank": 6,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.03361,
+          "explains": "share of stake, in a 2x band"
+        },
+        {
+          "primitive": "height",
+          "value": 0.774221,
+          "explains": "square root of share, relative to the largest"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind of account"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "how the name is known"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "backer classes behind the pool"
+        },
+        {
+          "primitive": "order",
+          "value": 6,
+          "explains": "largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "757660.596071879857654486188799",
+          "frac": 0.050833
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "14147296.063641739689323962439654",
+          "frac": 0.949167
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "id": "sumerian.poolv1.near",
+      "label": "sumerian.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "18775665.056471701150314337355771",
+      "share": 0.031642,
+      "rank": 7,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.031642,
+          "explains": "share of stake, in a 2x band"
+        },
+        {
+          "primitive": "height",
+          "value": 0.751213,
+          "explains": "square root of share, relative to the largest"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind of account"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "how the name is known"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "backer classes behind the pool"
+        },
+        {
+          "primitive": "order",
+          "value": 7,
+          "explains": "largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "2246945.902155487044234460959823",
+          "frac": 0.119669
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "16526134.950984410891391338562621",
+          "frac": 0.88016
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "1069.301137642258336870369534",
+          "frac": 0.000057
+        },
+        {
+          "key": "lockup",
+          "label": "lockups",
+          "amount": "2124.878535605430616001514374",
+          "frac": 0.000113
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "id": "zavodil.poolv1.near",
+      "label": "NEAR Zavodil node",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "NEAR Zavodil node",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "17933730.896789004919365015729872",
+      "share": 0.030223,
+      "rank": 8,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.030223,
+          "explains": "share of stake, in a 2x band"
+        },
+        {
+          "primitive": "height",
+          "value": 0.734175,
+          "explains": "square root of share, relative to the largest"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind of account"
+        },
+        {
+          "primitive": "outline",
+          "value": "self-declared",
+          "explains": "how the name is known"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "backer classes behind the pool"
+        },
+        {
+          "primitive": "order",
+          "value": 8,
+          "explains": "largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "11279032.995329926684123407669187",
+          "frac": 0.627739
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "2098601.176074495582241100203583",
+          "frac": 0.116798
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "540690.897689972382857165162117",
+          "frac": 0.030092
+        },
+        {
+          "key": "lockup",
+          "label": "lockups",
+          "amount": "4049390.48273244599011554083401",
+          "frac": 0.22537
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "id": "bitwise_2.poolv1.near",
+      "label": "bitwise_2.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "16882458.081487101984385976318512",
+      "share": 0.028452,
+      "rank": 9,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.028452,
+          "explains": "share of stake, in a 2x band"
+        },
+        {
+          "primitive": "height",
+          "value": 0.71234,
+          "explains": "square root of share, relative to the largest"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind of account"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "how the name is known"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "backer classes behind the pool"
+        },
+        {
+          "primitive": "order",
+          "value": 9,
+          "explains": "largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "12795458.235856384791099175212981",
+          "frac": 0.802706
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "3142781.528080724953029120996467",
+          "frac": 0.197158
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "2160.527687637679903837986314",
+          "frac": 0.000136
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "id": "liver.pool.near",
+      "label": "liver.pool.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "16260482.03659489246424050624609",
+      "share": 0.027403,
+      "rank": 10,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.027403,
+          "explains": "share of stake, in a 2x band"
+        },
+        {
+          "primitive": "height",
+          "value": 0.699085,
+          "explains": "square root of share, relative to the largest"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind of account"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "how the name is known"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "backer classes behind the pool"
+        },
+        {
+          "primitive": "order",
+          "value": 10,
+          "explains": "largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "666554.997088047113381133053808",
+          "frac": 0.041002
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "4725798.827182650947629525963546",
+          "frac": 0.290703
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "116331.394020618514734447585528",
+          "frac": 0.007156
+        },
+        {
+          "key": "lockup",
+          "label": "lockups",
+          "amount": "10747789.582872858536733775560918",
+          "frac": 0.661139
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "id": "cnear-1.poolv1.near",
+      "label": "cnear-1.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "15890175.006251099670791631794178",
+      "share": 0.026779,
+      "rank": 11,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.026779,
+          "explains": "share of stake, in a 2x band"
+        },
+        {
+          "primitive": "height",
+          "value": 0.69108,
+          "explains": "square root of share, relative to the largest"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind of account"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "how the name is known"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "backer classes behind the pool"
+        },
+        {
+          "primitive": "order",
+          "value": 11,
+          "explains": "largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "53397.72675918245858176491979",
+          "frac": 0.00336
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "15837368",
+          "frac": 0.99664
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "id": "cnear-3.poolv1.near",
+      "label": "cnear-3.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "15878520.812551079715963656988638",
+      "share": 0.02676,
+      "rank": 12,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.02676,
+          "explains": "share of stake, in a 2x band"
+        },
+        {
+          "primitive": "height",
+          "value": 0.690834,
+          "explains": "square root of share, relative to the largest"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind of account"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "how the name is known"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "backer classes behind the pool"
+        },
+        {
+          "primitive": "order",
+          "value": 12,
+          "explains": "largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "41743.07780850194472205348242",
+          "frac": 0.002629
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "15837368",
+          "frac": 0.997371
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "id": "__tail",
+      "label": "everyone else (359 validators)",
+      "kind": "group",
+      "identity": null,
+      "amount": "346507038.588331956937663877081209",
+      "share": 0.583962,
+      "rank": 13,
+      "values": [
+        {
+          "primitive": "tail",
+          "value": 359,
+          "explains": "validators folded here"
+        }
+      ],
+      "count": 359
+    }
+  ],
+  "placeholder_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 800 800\" role=\"img\" aria-label=\"NEAR validators (placeholder drawing)\" data-petal=\"placeholder\">\n<style>.petal-seg{stroke:#fff;stroke-width:1}.k-staking_pool{fill:var(--k-staking_pool,#6b8f71)}.k-staking_entity{fill:var(--k-staking_entity,#c9a227)}.tail{fill:url(#hatch)}.core{fill:#eee}.note{font:14px sans-serif;fill:#888}</style>\n<defs><pattern id=\"hatch\" width=\"6\" height=\"6\" patternUnits=\"userSpaceOnUse\" patternTransform=\"rotate(45)\"><rect width=\"6\" height=\"6\" fill=\"#ddd\"/><line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"6\" stroke=\"#999\" stroke-width=\"2\"/></pattern></defs>\n<path class=\"core\" d=\"M400.00 278.40L456.51 292.33L500.07 330.92L520.71 385.34L513.70 443.12L480.64 491.02L429.10 518.07L370.90 518.07L319.36 491.02L286.30 443.12L279.29 385.34L299.93 330.92L343.49 292.33Z\"/>\n<path class=\"petal-seg k-staking_pool\" data-p=\"astro-stakers.poolv1.near\" data-i=\"0\" data-seg=\"all\" d=\"M401.22 278.41L455.43 291.77L515.47 48.17L461.26 34.81Z\"/>\n<path class=\"petal-seg k-staking_pool\" data-p=\"figment.poolv1.near\" data-i=\"1\" data-seg=\"all\" d=\"M457.58 292.90L499.38 329.93L651.77 157.92L609.97 120.89Z\"/>\n<path class=\"petal-seg k-staking_pool\" data-p=\"ledgerbyfigment.poolv1.near\" data-i=\"2\" data-seg=\"all\" d=\"M500.76 331.93L520.56 384.14L715.47 310.22L695.67 258.01Z\"/>\n<path class=\"petal-seg k-staking_pool\" data-p=\"staked.poolv1.near\" data-i=\"3\" data-seg=\"all\" d=\"M520.85 386.55L514.12 441.98L712.09 466.02L718.82 410.59Z\"/>\n<path class=\"petal-seg k-staking_pool\" data-p=\"binancenode1.poolv1.near\" data-i=\"4\" data-seg=\"all\" d=\"M513.26 444.25L481.54 490.21L642.15 601.07L673.87 555.11Z\"/>\n<path class=\"petal-seg k-staking_pool\" data-p=\"bitwise_1.poolv1.near\" data-i=\"5\" data-seg=\"all\" d=\"M479.72 491.82L430.28 517.77L520.55 689.77L569.99 663.82Z\"/>\n<path class=\"petal-seg k-staking_pool\" data-p=\"sumerian.poolv1.near\" data-i=\"6\" data-seg=\"all\" d=\"M427.92 518.35L372.08 518.35L372.08 706.82L427.92 706.82Z\"/>\n<path class=\"petal-seg k-staking_pool\" data-p=\"zavodil.poolv1.near\" data-i=\"7\" data-seg=\"all\" d=\"M369.72 517.77L320.28 491.82L234.68 654.92L284.12 680.87Z\"/>\n<path class=\"petal-seg k-staking_pool\" data-p=\"bitwise_2.poolv1.near\" data-i=\"8\" data-seg=\"all\" d=\"M318.46 490.21L286.74 444.25L139.66 545.78L171.37 591.73Z\"/>\n<path class=\"petal-seg k-staking_pool\" data-p=\"liver.pool.near\" data-i=\"9\" data-seg=\"all\" d=\"M285.88 441.98L279.15 386.55L105.03 407.69L111.76 463.12Z\"/>\n<path class=\"petal-seg k-staking_pool\" data-p=\"cnear-1.poolv1.near\" data-i=\"10\" data-seg=\"all\" d=\"M279.44 384.14L299.24 331.93L137.12 270.44L117.32 322.65Z\"/>\n<path class=\"petal-seg k-staking_pool\" data-p=\"cnear-3.poolv1.near\" data-i=\"11\" data-seg=\"all\" d=\"M300.62 329.93L342.42 292.90L227.48 163.16L185.69 200.19Z\"/>\n<path class=\"petal-seg tail\" data-p=\"__tail\" data-i=\"12\" data-seg=\"all\" d=\"M344.57 291.77L398.78 278.41L368.76 156.61L314.55 169.97Z\"/>\n<text class=\"note\" x=\"400\" y=\"792\" text-anchor=\"middle\">placeholder drawing from the API mock: renderFlower (W1) is not merged yet</text>\n</svg>"
+}

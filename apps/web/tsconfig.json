@@ -1,9 +1,22 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src", "test"],
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "types": ["node", "react", "react-dom"]
+  },
+  "include": ["app", "components", "lib", "lib/mock/*.json", "scripts", "test", "next.config.ts"],
   "references": [
     {
       "path": "../../packages/core"
+    },
+    {
+      "path": "../../packages/near"
+    },
+    {
+      "path": "../../packages/tools"
     },
     {
       "path": "../../packages/agent"
