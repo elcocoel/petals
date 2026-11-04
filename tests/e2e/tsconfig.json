@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["**/*.ts"],
+  "exclude": ["dist"],
+  "references": [
+    {
+      "path": "../../packages/core"
+    },
+    {
+      "path": "../../packages/inputs"
+    },
+    {
+      "path": "../../packages/near"
+    },
+    {
+      "path": "../../packages/tools"
+    },
+    {
+      "path": "../../packages/agent"
+    }
+  ]
+}

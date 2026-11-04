@@ -1,0 +1,19 @@
+{
+  "name": "@petal/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Schemas, types, canonical hashes, validation, counting, conventions and the SVG renderer. No network, no disk.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types/index.ts",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@noble/hashes": "^2.4.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "canonicalize": "^5.1.0"
+  }
+}

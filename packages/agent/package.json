@@ -1,0 +1,17 @@
+{
+  "name": "@petal/agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Petal's own agent on NEAR AI Cloud, the recorded client, the run store, agent routes and petalApp.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@petal/core": "workspace:*",
+    "@petal/tools": "workspace:*",
+    "hono": "^4.13.16"
+  }
+}

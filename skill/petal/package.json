@@ -1,0 +1,8 @@
+{
+  "name": "@petal/skill",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "The Petal Agent Skill (SKILL.md) for Claude Code, Codex and IronClaw. Consumes only the HTTP API or MCP. Not a workspace package."
+}

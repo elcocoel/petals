@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Every push needs Elco's OK; this hook only makes sure nothing outside the boundary leaves.
+cd "$(git rev-parse --show-toplevel)" || exit 1
+bash scripts/check-boundary.sh || exit 1
+bash scripts/check-secrets.sh || exit 1

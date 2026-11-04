@@ -1,0 +1,24 @@
+# dependencies and build output
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+
+# local state, never committed
+.petal/
+cache/
+out/
+.next/
+.vercel/
+
+# secrets: keys live in ../.secrets/, outside the repo
+.env*
+!.env.example
+*.key
+*.pem
+.secrets/
+
+# editors and OS
+.DS_Store
+.idea/
+.vscode/

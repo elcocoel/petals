@@ -1,0 +1,8 @@
+{
+  "name": "@petal/ironclaw",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "IronClaw extension package wrapping /mcp over HTTP, plus the skill. A hedge. Not a workspace package."
+}

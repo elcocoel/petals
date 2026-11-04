@@ -1,0 +1,22 @@
+{
+  "name": "@petal/near",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "NEAR as a platform: the shared map (FastData), accounts (NEP-413, keys), payments (1Click).",
+  "exports": {
+    ".": "./src/index.ts",
+    "./map": "./src/map/index.ts",
+    "./auth": "./src/auth/index.ts",
+    "./auth/testing": "./src/auth/testing.ts",
+    "./pay": "./src/pay/index.ts",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
+    "@petal/core": "workspace:*",
+    "@scure/base": "^2.4.0"
+  }
+}

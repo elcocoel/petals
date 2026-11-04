@@ -1,0 +1,19 @@
+{
+  "name": "@petal/tools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "One tool registry; HTTP tool routes (Hono) and MCP (stdio, /mcp).",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.4.0",
+    "@petal/core": "workspace:*",
+    "@petal/inputs": "workspace:*",
+    "@petal/near": "workspace:*",
+    "hono": "^4.13.16"
+  }
+}

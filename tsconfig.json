@@ -1,0 +1,35 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./packages/inputs"
+    },
+    {
+      "path": "./packages/near"
+    },
+    {
+      "path": "./packages/tools"
+    },
+    {
+      "path": "./packages/agent"
+    },
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./apps/cli"
+    },
+    {
+      "path": "./scripts"
+    },
+    {
+      "path": "./tests/e2e"
+    },
+    {
+      "path": "./skill"
+    }
+  ]
+}

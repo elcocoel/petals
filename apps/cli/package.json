@@ -1,0 +1,20 @@
+{
+  "name": "@petal/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "The petal CLI: thin, in-process tools, JSON out.",
+  "bin": {
+    "petal": "./src/index.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@petal/core": "workspace:*",
+    "@petal/tools": "workspace:*",
+    "@petal/agent": "workspace:*"
+  }
+}

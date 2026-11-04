@@ -1,0 +1,76 @@
+# Publication boundary for build/ (T010). Only what Elco approves enters the public repo.
+# scripts/check-boundary.sh enforces this file: in scripts/check.sh, as the git pre-commit
+# hook (core.hooksPath = scripts/git-hooks) and before every push.
+#
+# A path must match an [allow] line and no [deny] line. Patterns are bash globs matched on the
+# whole repo-relative path, case-insensitive; `*` also crosses `/`. A line ending in `/` means
+# "anything under this folder". Any addition to [allow] needs Elco's OK.
+# [deny-content] lines are fixed strings that must not appear in any file outside
+# [deny-content-exempt] (the approved planning docs may name what stays out).
+# Besides these lines, the check refuses any file byte-identical to a file in ../research/,
+# ../design/ or ../submission/ (when those folders exist next to the repo).
+
+[allow]
+packages/
+apps/
+skill/
+fixtures/
+scripts/
+tests/
+docs/
+specs/
+.specify/
+.claude/skills/speckit-*
+README.md
+LICENSE
+package.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+.nvmrc
+.npmrc
+tsconfig.json
+tsconfig.base.json
+biome.json
+vitest.config.ts
+.gitignore
+.env.example
+.publication-boundary
+
+[deny]
+# explorations kept out of the hackathon repo
+*atlas*
+*economy*
+*petal-concept*
+*petal-quest*
+*sentinel*
+*navgator*
+# copies of the project folders outside the repo
+research/*
+design/*
+submission/*
+.secrets/*
+*/.secrets/*
+# raw dumps
+*.csv
+# the unpublished GIP-150 article material (method only, never its findings or addresses)
+*gip-150*
+*gip150*
+*gno-raiders*
+*gno raiders*
+*power-network-map*
+*forensic-actor-mapping*
+# secrets by name
+.env
+*.env
+*.key
+*.pem
+
+[deny-content]
+GIP-150
+GNO Raiders
+
+[deny-content-exempt]
+specs/
+.specify/
+.publication-boundary
+scripts/check-boundary.sh

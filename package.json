@@ -1,0 +1,39 @@
+{
+  "name": "petal",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Petal: see who holds power in a network, drawn as a flower. NEAR first.",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "test": "vitest run --project '!e2e'",
+    "test:e2e": "vitest run --project e2e --passWithNoTests",
+    "dev": "pnpm --filter @petal/web dev",
+    "api": "node apps/cli/src/index.ts api",
+    "petal": "node apps/cli/src/index.ts",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "tsc -b",
+    "golden:update": "PETAL_GOLDEN_UPDATE=1 vitest run --project core",
+    "gen:types": "node scripts/gen-types.ts",
+    "import:spike": "node scripts/import-spike-data.ts",
+    "check": "bash scripts/check.sh",
+    "prepare": "git config core.hooksPath scripts/git-hooks 2>/dev/null || true"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.5",
+    "@petal/agent": "workspace:*",
+    "@petal/core": "workspace:*",
+    "@petal/inputs": "workspace:*",
+    "@petal/near": "workspace:*",
+    "@petal/tools": "workspace:*",
+    "@types/node": "^24.19.2",
+    "json-schema-to-typescript": "^16.0.0",
+    "typescript": "7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

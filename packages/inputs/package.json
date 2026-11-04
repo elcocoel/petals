@@ -1,0 +1,15 @@
+{
+  "name": "@petal/inputs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Input modules, keyless RPC pool and the content-addressed snapshot store.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@petal/core": "workspace:*"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@petal/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "The site: gallery, flower view, /make chat, publish, quote panel.",
+  "scripts": {
+    "dev": "node -e \"console.error('apps/web: not built yet (W6, milestone M1)'); process.exit(1)\""
+  },
+  "dependencies": {
+    "@petal/core": "workspace:*",
+    "@petal/agent": "workspace:*"
+  }
+}
