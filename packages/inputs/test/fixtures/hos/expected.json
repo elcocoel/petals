@@ -1,0 +1,46 @@
+{
+  "block_height": 223062323,
+  "as_of": "2026-11-04T19:53:04Z",
+  "sha256": "8d345532d351f197c9ea959139894e89fc79c3d6a87d419b84adc82b9ef239ef",
+  "bytes": 572982,
+  "counts": {
+    "participants": 518,
+    "holdings": 1747,
+    "relationships": 212,
+    "events": 30
+  },
+  "amount_total": "5360822.913241053982907639106457",
+  "amount_included": "5360822.913241053982907639106457",
+  "power_checks": [
+    {
+      "account": "cc96f55848f0ac487f1a185e72df91d33ec13b608fc8eb90d15dbd1bf363c807",
+      "ft_balance_of": "822733379963984608338300000002",
+      "computed": "822733379963984608338300000002"
+    },
+    {
+      "account": "4783b54876253b1f79e3241c11d683223d186ad217178927fcbd2fff2f646172",
+      "ft_balance_of": "686266019199721134894153072270",
+      "computed": "686266019199721134894153072270"
+    },
+    {
+      "account": "athis.near",
+      "ft_balance_of": "15443588972700000001",
+      "computed": "15443588972700000001"
+    },
+    {
+      "account": "lane.near",
+      "ft_balance_of": "0",
+      "computed": "0"
+    },
+    {
+      "account": "vinibarbosa.near",
+      "ft_balance_of": "335086050919194652219065380111",
+      "computed": "335086050919194652219065380111"
+    },
+    {
+      "account": "aaron.near",
+      "ft_balance_of": "4761851154250000000000000",
+      "computed": "4761851154250000000000000"
+    }
+  ]
+}
