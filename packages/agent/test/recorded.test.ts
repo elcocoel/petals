@@ -76,10 +76,12 @@ describe('recordedClient on the skeleton transcript', () => {
     expect(calls[5]?.args.spec).toEqual(SPEC);
   });
 
-  test('every number in the answer comes from a tool result', async () => {
+  test('every number in the answer comes from compute_figures', async () => {
     const { answer, last } = await replay();
     expect(answer).toContain('9 of 371 seated validators');
-    expect(answer).toContain('block 222915356');
+    expect(answer).toContain('found in its fixture (reused: true)');
+    // only compute_figures numbers: no block height (a get_snapshot value) in the answer
+    expect(answer).not.toContain('222915356');
     expect(answer).toContain('http://localhost:3000/f/draft');
     expect(answer).not.toMatch(/\{\{|\$from/);
     expect(last).toMatchObject({ model: 'recorded', signature: null, cost_usd: 0 });
