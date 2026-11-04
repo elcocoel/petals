@@ -8,6 +8,15 @@
     },
     {
       "path": "../packages/inputs"
+    },
+    {
+      "path": "../packages/near"
+    },
+    {
+      "path": "../packages/tools"
+    },
+    {
+      "path": "../packages/agent"
     }
   ]
 }

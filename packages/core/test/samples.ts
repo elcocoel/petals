@@ -155,7 +155,7 @@ export const sampleEntry: Entry = {
   spec: sampleSpec,
   spec_sha256: SHA_B,
   interpretation: sampleInterpretation,
-  snapshot: { sha256: SHA_A, urls: ['/api/v1/snapshots/' + SHA_A] },
+  snapshot: { sha256: SHA_A, urls: [`/api/v1/snapshots/${SHA_A}`] },
   render_sha256: SHA_B,
   provenance: {
     maker: null,
@@ -178,7 +178,7 @@ export const sampleCorrection: Correction = {
     account_id: 'someone.testnet',
     public_key: 'ed25519:11111111111111111111111111111111',
     signature: 'AAAA',
-    message: '{"petal":"correction/v1","correction_sha256":"' + SHA_A + '"}',
+    message: `{"petal":"correction/v1","correction_sha256":"${SHA_A}"}`,
     nonce: 'AAAA',
     recipient: 'petals.testnet',
   },
