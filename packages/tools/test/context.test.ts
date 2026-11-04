@@ -66,6 +66,18 @@ describe('configFromEnv', () => {
       trustedWriters: ['writer.petals.testnet'],
     });
     expect(configFromEnv({ PETAL_FAKE: '1' }, '/r').fake).toBe(true);
+    // a key file alone must never fall back to the fake map without saying so
+    expect(configFromEnv({ PETAL_WRITER_KEY_FILE: 'k.json' }, '/r').map).toEqual({
+      network: 'testnet',
+      receiver: 'petals.testnet',
+      writer: 'writer.petals.testnet',
+      keyFile: 'k.json',
+      trustedWriters: ['writer.petals.testnet'],
+    });
+    expect(configFromEnv({ PETAL_WRITER_ACCOUNT: 'w.testnet' }, '/r').map).toMatchObject({
+      writer: 'w.testnet',
+      trustedWriters: ['w.testnet'],
+    });
   });
 });
 

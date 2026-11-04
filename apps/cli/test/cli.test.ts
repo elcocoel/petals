@@ -354,8 +354,8 @@ describe('output', () => {
 describe('config', () => {
   test('--fake and --root reach the tools config', async () => {
     const r = await run(['networks', '--fake', '--root', 'elsewhere']);
-    expect(r.configs).toEqual([{ root: '/work/elsewhere', fake: true }]);
+    expect(r.configs).toEqual([expect.objectContaining({ root: '/work/elsewhere', fake: true })]);
     const plain = await run(['networks']);
-    expect(plain.configs).toEqual([{ root: '/repo' }]);
+    expect(plain.configs).toEqual([expect.objectContaining({ root: '/repo', fake: false })]);
   });
 });

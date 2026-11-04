@@ -113,14 +113,20 @@ const set = (v: string | undefined): string | undefined => (v?.trim() ? v.trim()
  * PETAL_LLM_DAILY_USD, PETAL_MAP_NETWORK, PETAL_MAP_RECEIVER, PETAL_WRITER_ACCOUNT,
  * PETAL_WRITER_KEY_FILE, PETAL_TRUSTED_WRITERS, FASTNEAR_API_KEY, PETAL_PAYOUT_ACCOUNT, PETAL_API
  * (public base URL), PETAL_REPO_URL, PETAL_LIVE=1; and PETAL_FAKE=1 (fakes everywhere),
- * PETAL_RPC_URL, PETAL_STATE_DIR, PETAL_FIXTURES_DIR. The map counts as configured when
- * PETAL_MAP_NETWORK or PETAL_MAP_RECEIVER is set; otherwise the fake map and the mirror are used.
+ * PETAL_RPC_URL, PETAL_STATE_DIR, PETAL_FIXTURES_DIR. The map counts as configured when any of
+ * PETAL_MAP_NETWORK, PETAL_MAP_RECEIVER, PETAL_WRITER_ACCOUNT or PETAL_WRITER_KEY_FILE is set;
+ * otherwise the fake map and the mirror are used.
  */
 export function configFromEnv(env: Env = process.env, root: string = process.cwd()): Config {
   const networkVar = set(env.PETAL_MAP_NETWORK);
   const receiverVar = set(env.PETAL_MAP_RECEIVER);
   let map: Config['map'] = null;
-  if (networkVar || receiverVar) {
+  if (
+    networkVar ||
+    receiverVar ||
+    set(env.PETAL_WRITER_ACCOUNT) ||
+    set(env.PETAL_WRITER_KEY_FILE)
+  ) {
     const network = networkVar === 'mainnet' ? 'mainnet' : 'testnet';
     const writer =
       set(env.PETAL_WRITER_ACCOUNT) ??
