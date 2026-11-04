@@ -26,6 +26,7 @@ Nothing under `../research/`, `../design/`, `../submission/` or `../.secrets/` i
 | `snapshots/test/two-participants.json` | The two largest seated validators, stake only (the 2-petal golden). |
 | `snapshots/test/tiny-backers.json` | Five seated pools whose backers cover every class, with owners, holdings and delegations; the rest folded into declared groups. |
 | `golden/inputs/house-of-stake-2026-11-04.json.gz` | `near-house-of-stake` at block 223,021,333, for goldens only (not indexed, so the quickstart's live pull stays live). |
+| `map/313ced42….json` | The skeleton's fixture flower: the recorded skeleton run as an entry (`provenance.maker: null`, model `recorded`), made by `node tests/e2e/skeleton-entry.ts --write`. Listed as `fixture`, never "on NEAR". A stand-in until the hero set (T115). |
 | `transcripts/skeleton.hand.json` | Hand-made agent run for "who stands behind NEAR's validators?" (`transcript/v1`, replayed by `recordedClient`). |
 | `transcripts/1click-dry-quote.json` | A 1Click dry quote reconstructed from the 4 Nov measurements (`recorded-quote/v1`, replayed by `fakeQuote()`); placeholders are named in its `note`. |
 

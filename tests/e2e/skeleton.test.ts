@@ -9,12 +9,8 @@
 // The steps run in quickstart order where they can; step 1's "map" flower needs step 3's publish,
 // so the gallery is checked after it.
 //
-// The fixture flower: the repo ships no hero entry yet (fixtures/map/ is empty until T115, and the
-// skeleton's stand-in waits on the tools tests, see skeleton-entry.ts). So the app reads its
-// fixtures from a temp folder: the shipped snapshots (a link), plus fixtures/map/ copied, plus the
-// skeleton entry made from this run if the repo has none. Once the repo ships it, the test checks
-// the shipped one is current instead.
-import { cpSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+// The fixture flower is the one the repo ships in fixtures/map/, read from where the app reads it.
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/client';
@@ -36,12 +32,7 @@ import {
   unbacked,
 } from './helpers.ts';
 import { fcSigner, hos, map, signer } from './rig.ts';
-import {
-  committedSkeletonEntries,
-  fileText,
-  MAP_FIXTURES,
-  skeletonEntry,
-} from './skeleton-entry.ts';
+import { committedSkeletonEntries, fileText, skeletonEntry } from './skeleton-entry.ts';
 
 vi.mock('@petal/tools', async (importOriginal) => {
   const real = await importOriginal<typeof import('@petal/tools')>();
@@ -55,19 +46,14 @@ vi.mock('@petal/tools', async (importOriginal) => {
 const QUESTION = 'who stands behind NEAR’s validators?';
 const GAP_MS = 10_000;
 
-let tmp: string;
-let fixturesDir: string;
+let stateDir: string;
 let app: ReturnType<typeof petalApp>;
 
 beforeAll(() => {
-  tmp = mkdtempSync(join(tmpdir(), 'petal-e2e-'));
-  fixturesDir = join(tmp, 'fixtures');
-  mkdirSync(fixturesDir);
-  symlinkSync(join(REPO, 'fixtures/snapshots'), join(fixturesDir, 'snapshots'), 'dir');
-  cpSync(MAP_FIXTURES, join(fixturesDir, 'map'), { recursive: true });
-  app = petalApp({ root: REPO, fake: true, stateDir: join(tmp, 'state'), fixturesDir });
+  stateDir = mkdtempSync(join(tmpdir(), 'petal-e2e-'));
+  app = petalApp({ root: REPO, fake: true, stateDir });
 });
-afterAll(() => rmSync(tmp, { recursive: true, force: true }));
+afterAll(() => rmSync(stateDir, { recursive: true, force: true }));
 
 type Json = Record<string, unknown>;
 
@@ -292,16 +278,26 @@ describe('quickstart, recorded', () => {
       recipient: fresh.json.recipient as string,
     };
 
-    // a tampered message: signed text that is not the prepared one
-    const tampered: Nep413Proof = {
-      ...signer.sign(payload),
-      message: payload.message.replace(/"entry_sha256":"[0-9a-f]/, '"entry_sha256":"0'),
-    };
+    // another entry's message: the first hash digit always changes (the hash differs per run)
+    const otherMessage = payload.message.replace(
+      /"entry_sha256":"([0-9a-f])/,
+      (_, c: string) => `"entry_sha256":"${c === '0' ? '1' : '0'}`,
+    );
+    expect(otherMessage).not.toBe(payload.message);
+
+    // a tampered message: the proof names text that is not the prepared one
     const t = await call('/api/v1/publish', {
       entry_sha256: fresh.json.entry_sha256,
-      proof: tampered,
+      proof: { ...signer.sign(payload), message: otherMessage },
     });
     expect([t.status, errorCode(t.json)]).toEqual([401, 'unauthorised']);
+
+    // and the other way: it names the prepared text, but the signature is over something else
+    const s = await call('/api/v1/publish', {
+      entry_sha256: fresh.json.entry_sha256,
+      proof: { ...signer.sign({ ...payload, message: otherMessage }), message: payload.message },
+    });
+    expect([s.status, errorCode(s.json)]).toEqual([401, 'unauthorised']);
 
     // a valid signature, but by a function-call key
     const fc = await call('/api/v1/publish', {
@@ -323,14 +319,14 @@ describe('quickstart, recorded', () => {
     expect(specs.map((r) => r.key)).toEqual([published?.key]);
   });
 
-  test('step 1: the fixture flower is the skeleton run (shipped and current, or added here)', () => {
-    const fresh = skeletonEntry(chat.flower as FlowerResult);
+  test('step 1: the shipped fixture flower is the skeleton run, current with the code', () => {
     const shipped = committedSkeletonEntries();
-    expect(shipped.length).toBeLessThanOrEqual(1);
-    const [one] = shipped;
+    expect(shipped).toHaveLength(1);
     // if this fails after a renderer or tool change: node tests/e2e/skeleton-entry.ts --write
-    if (one) expect(fileText(one.entry)).toBe(fileText(fresh));
-    else writeFileSync(join(fixturesDir, 'map', `${fresh.id}.json`), fileText(fresh));
+    expect(fileText(shipped[0]?.entry as Entry)).toBe(
+      fileText(skeletonEntry(chat.flower as FlowerResult)),
+    );
+    expect(shipped[0]?.entry.provenance.maker).toBeNull();
   });
 
   test('step 1: the gallery lists the published flower (map) and the fixture; each opens', async () => {
@@ -347,6 +343,15 @@ describe('quickstart, recorded', () => {
     const mine = flowers.find((f) => f.id === published?.id);
     expect(mine).toMatchObject({ where: 'map' });
     expect(mine?.tx_hash).toBeTruthy();
+
+    // the fixture is the shipped entry, labelled what it is: no maker, no transaction
+    const shipped = committedSkeletonEntries()[0]?.entry as Entry;
+    const fixture = flowers.find((f) => f.where === 'fixture');
+    expect(fixture).toMatchObject({ id: shipped.id, maker: null, published_at: null });
+    expect(fixture).not.toHaveProperty('tx_hash');
+    const opened = await call(`/api/v1/flowers/${shipped.id}`);
+    expect(opened.json).toMatchObject({ where: 'fixture', entry: shipped });
+    expect(opened.json).not.toHaveProperty('tx_hash');
 
     for (const f of flowers) {
       const one = await call(`/api/v1/flowers/${f.id}`);

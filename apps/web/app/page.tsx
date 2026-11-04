@@ -1,6 +1,7 @@
 // The gallery (T063): list_flowers, with "on NEAR" (and the transaction) or "fixture". No sign-in.
 import { QuotePanel } from '../components/QuotePanel.tsx';
 import { api } from '../lib/api.ts';
+import { type ApiHealth, apiLabel } from '../lib/api-label.ts';
 import { explorerTxUrl } from '../lib/publish.ts';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +19,7 @@ interface ListedFlower {
 
 export default async function Gallery() {
   const res = await api<{ flowers: ListedFlower[] }>('/api/v1/flowers');
-  const health = await api<{ mock?: boolean; map: string; llm: string }>('/api/v1/health');
+  const health = await api<ApiHealth>('/api/v1/health');
   return (
     <>
       <h1>Gallery</h1>
@@ -26,12 +27,7 @@ export default async function Gallery() {
         Flowers show who holds power in a network. Open one to read it; no account needed.{' '}
         <a href="/make">Make a flower</a>.
       </p>
-      {health.ok && (
-        <p className="muted">
-          API: {health.value.mock ? 'mock (fixtures)' : 'live'}; map {health.value.map}; agent{' '}
-          {health.value.llm}.
-        </p>
-      )}
+      {health.ok && <p className="muted">{apiLabel(health.value)}</p>}
       {!res.ok ? (
         <p className="error">
           Could not list flowers: {res.error.code}: {res.error.message}
@@ -42,6 +38,15 @@ export default async function Gallery() {
         <ul className="gallery">
           {res.value.flowers.map((f) => (
             <li key={`${f.where}:${f.id}`}>
+              <a href={`/f/${f.id}`}>
+                {/* biome-ignore lint/performance/noImgElement: an SVG from our own API */}
+                <img
+                  className="gallery-flower"
+                  src={`/api/v1/flowers/${f.id}/svg`}
+                  alt={`The flower: ${f.title ?? f.id}`}
+                />
+              </a>
+              <br />
               <a href={`/f/${f.id}`}>{f.title ?? f.id}</a>
               {f.where === 'map' ? (
                 <span className="badge">

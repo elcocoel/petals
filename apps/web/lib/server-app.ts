@@ -23,9 +23,10 @@ async function mock(): Promise<ServerApp> {
 
 /**
  * petalApp, labelled like the mock labels itself: every response carries `x-petal-api: real`, and
- * /api/v1/health adds `mock: false`, so the page and a curl can tell which API answered.
+ * /api/v1/health adds `mock: false` and `fake`, so the page and a curl can tell which API answered
+ * and whether it runs on fakes (PETAL_FAKE=1).
  */
-export function labelReal(inner: Hono): Hono {
+export function labelReal(inner: Hono, o: { fake: boolean }): Hono {
   const app = new Hono();
   app.all('*', async (c) => {
     const res = await inner.fetch(c.req.raw, c.env);
@@ -34,7 +35,7 @@ export function labelReal(inner: Hono): Hono {
     if (c.req.path === '/api/v1/health' && (headers.get('content-type') ?? '').includes('json')) {
       const body = (await res.json()) as Record<string, unknown>;
       headers.delete('content-length');
-      return new Response(JSON.stringify({ ...body, mock: false }), {
+      return new Response(JSON.stringify({ ...body, mock: false, fake: o.fake }), {
         status: res.status,
         headers,
       });
@@ -54,7 +55,8 @@ async function build(): Promise<ServerApp> {
     const { petalApp } = (await import(
       /* turbopackIgnore: true */ /* webpackIgnore: true */ '@petal/agent'
     )) as typeof import('@petal/agent');
-    return { app: labelReal(petalApp(await configFromEnv())), mode: 'real' };
+    const cfg = await configFromEnv();
+    return { app: labelReal(petalApp(cfg), { fake: cfg.fake === true }), mode: 'real' };
   } catch (e) {
     if (flag === '0' || !isStub(e)) throw e;
     console.warn(

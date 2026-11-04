@@ -1,5 +1,8 @@
 // The API mock answers the routes of contracts/http-api.md the way the web app expects, so the
 // pages can be built before petalApp lands: gallery, flower, chat SSE, runs, publish, quote.
+import { mkdirSync, mkdtempSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { schemas } from '@petal/core';
 import type { AgentEvent, Entry, Nep413Proof, Run } from '@petal/core/types';
 import { testSigner } from '@petal/near/auth/testing';
@@ -7,6 +10,7 @@ import { Ajv2020 } from 'ajv/dist/2020.js';
 import addFormatsModule from 'ajv-formats';
 import { describe, expect, test } from 'vitest';
 import { createMockApi } from '../lib/api-mock.ts';
+import { repoRoot } from '../lib/config.ts';
 import { entryDraftFromRun } from '../lib/entry.ts';
 import { type Prepared, proofFrom, publishMessage } from '../lib/publish.ts';
 import { readSse } from '../lib/sse.ts';
@@ -18,6 +22,15 @@ const validSpec = ajv.compile(schemas.spec);
 const validInterpretation = ajv.compile(schemas.interpretation);
 
 const QUESTION = "who stands behind NEAR's validators?";
+
+/** A repo root with the real snapshots and transcripts, and no hero entries. */
+function cleanRoot(): string {
+  const root = mkdtempSync(join(tmpdir(), 'petal-mock-'));
+  mkdirSync(join(root, 'fixtures'));
+  for (const d of ['snapshots', 'transcripts'])
+    symlinkSync(join(repoRoot(), 'fixtures', d), join(root, 'fixtures', d), 'dir');
+  return root;
+}
 
 function mock(opts: Parameters<typeof createMockApi>[0] = {}) {
   const { app, map } = createMockApi({ delayMs: 0, ...opts });
@@ -62,8 +75,19 @@ describe('API mock: reading', () => {
     expect(headers.get('x-petal-api')).toBe('mock');
   });
 
-  test('the gallery lists the fixture flower; get_flower verifies its hash', async () => {
+  test('hero entries in fixtures/map/ are listed too, as fixtures', async () => {
     const { call } = mock();
+    const list = await call<{ flowers: { id: string; where: string; title: string }[] }>(
+      '/api/v1/flowers',
+    );
+    expect(list.json.flowers.length).toBeGreaterThan(1);
+    expect(new Set(list.json.flowers.map((f) => f.where))).toEqual(new Set(['fixture']));
+    expect(list.json.flowers.some((f) => !f.title.includes('(API mock)'))).toBe(true);
+  });
+
+  test('the gallery lists the fixture flower; get_flower verifies its hash', async () => {
+    // a clean fixtures folder: only the mock's own flower, whatever hero entries the repo ships
+    const { call } = mock({ root: cleanRoot() });
     const list = await call<{ flowers: { id: string; where: string }[] }>('/api/v1/flowers');
     expect(list.json.flowers).toHaveLength(1);
     expect(list.json.flowers[0]).toMatchObject({ where: 'fixture', network: 'near-validators' });

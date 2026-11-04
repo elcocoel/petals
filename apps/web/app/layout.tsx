@@ -18,6 +18,7 @@ code{font-size:.9em;word-break:break-all}
 .box{border:1px solid #ccc;padding:.5rem 1rem;margin:1rem 0}
 .badge{display:inline-block;border:1px solid #888;padding:0 .4rem;margin-left:.4rem;font-size:.8em}
 .flower-svg{max-width:640px}
+.gallery-flower{width:320px;max-width:100%;height:auto}
 .flower-svg svg{width:100%;height:auto}
 .flower-svg [data-p]{cursor:pointer}
 .petal-selected{stroke:#000!important;stroke-width:2!important}

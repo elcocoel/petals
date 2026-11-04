@@ -87,7 +87,8 @@ function summaryOf(f: Found) {
     network: e.spec.network.id,
     as_of: e.spec.snapshot.as_of,
     maker: e.provenance.maker?.account_id ?? null,
-    published_at: (f.row && isoFromBlock(f.row.block_timestamp)) ?? e.provenance.created_at ?? null,
+    // a fixture ships with the repo: it was never published, so it has no date here
+    published_at: f.row ? (isoFromBlock(f.row.block_timestamp) ?? e.provenance.created_at) : null,
     where: f.where,
     ...(f.row ? { tx_hash: f.row.tx_hash } : {}),
   };

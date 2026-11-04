@@ -1,7 +1,7 @@
 // T047–T050: each tool's behaviour in process, on the real core, inputs and near packages, with
 // fakes only for the outside world (fakeMap, the test signer and fake RPC, the recorded quote).
 
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { canonicalJson, entryId, specHash } from '@petal/core';
 import type { Entry, ProgressEvent } from '@petal/core/types';
@@ -9,7 +9,7 @@ import { describe, expect, test } from 'vitest';
 import { callTool } from '../src/registry.ts';
 import type { ToolContext } from '../src/types.ts';
 import { entrySha256 } from '../src/verify.ts';
-import { flow, NOW, rig, testFixture, validatorsFixture } from './helpers.ts';
+import { FIXTURES, flow, NOW, rig, testFixture, validatorsFixture } from './helpers.ts';
 
 type Out = Record<string, unknown> & { error?: { code: string; message: string; hint?: string } };
 const runner = (ctx: ToolContext) => async (name: string, input: unknown) =>
@@ -395,6 +395,38 @@ describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
     const run = runner({ ...r.ctx, map: down });
     expect((await run('get_flower', { id: 'a'.repeat(24) })).error?.code).toBe('source_failed');
     expect((await run('list_flowers', {})).flowers).toEqual([]);
+  });
+
+  test('a shipped fixture flower lists as a fixture: no maker, no transaction, hash verified', async () => {
+    const r = await rig();
+    const run = runner({ ...r.ctx, config: { ...r.ctx.config, fixturesDir: FIXTURES } });
+    const shipped = readdirSync(join(FIXTURES, 'map')).filter((n) => n.endsWith('.json'));
+    expect(shipped.length).toBeGreaterThan(0);
+    const list = (await run('list_flowers', {})).flowers as Record<string, unknown>[];
+    expect(list).toHaveLength(shipped.length);
+    for (const f of list) {
+      expect(f).toMatchObject({ where: 'fixture', maker: null, published_at: null });
+      expect(f).not.toHaveProperty('tx_hash');
+      const got = await run('get_flower', { id: f.id });
+      expect(got).toMatchObject({
+        where: 'fixture',
+        verified: { entry_hash: true, maker_signature: false, model_signature: 'absent' },
+      });
+      expect(got).not.toHaveProperty('tx_hash');
+    }
+  });
+
+  test('a fixture whose content does not match its id is hidden', async () => {
+    const r = await rig();
+    const [name] = readdirSync(join(FIXTURES, 'map')).filter((n) => n.endsWith('.json'));
+    const entry = JSON.parse(readFileSync(join(FIXTURES, 'map', name as string), 'utf8')) as Entry;
+    const dir = r.ctx.config.fixturesDir as string;
+    mkdirSync(join(dir, 'map'), { recursive: true });
+    writeFileSync(
+      join(dir, 'map', 'tampered.json'),
+      JSON.stringify({ ...entry, title: 'tampered' }),
+    );
+    expect((await runner(r.ctx)('list_flowers', {})).flowers).toEqual([]);
   });
 
   test('NOW is the clock the tools see', async () => {

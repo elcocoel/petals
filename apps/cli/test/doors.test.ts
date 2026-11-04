@@ -3,6 +3,7 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import type { Config, ToolContext } from '@petal/tools';
+import { configFromEnv as toolsConfigFromEnv } from '@petal/tools';
 import { describe, expect, test } from 'vitest';
 import { configFromEnv, findRoot } from '../src/config.ts';
 import { run } from './fake-registry.ts';
@@ -23,7 +24,7 @@ describe('petal mcp', () => {
     expect(r.stdout).toBe('');
     expect(r.stderr).toBe('');
     expect(served).toHaveLength(1);
-    expect(served[0]?.config).toEqual({ root: '/repo', fake: true });
+    expect(served[0]?.config).toMatchObject({ root: '/repo', fake: true });
   });
 
   test('takes no arguments', async () => {
@@ -57,7 +58,7 @@ describe('petal api', () => {
   test('mounts petalApp on :8787 by default', async () => {
     const r = await start([]);
     expect(r.code).toBe(0);
-    expect(r.apps).toEqual([{ root: '/repo' }]);
+    expect(r.apps).toEqual([expect.objectContaining({ root: '/repo', fake: false })]);
     expect(r.served).toHaveLength(1);
     expect(r.served[0]?.port).toBe(8787);
     expect(r.served[0]).not.toHaveProperty('hostname');
@@ -126,64 +127,23 @@ describe('petal api', () => {
 });
 
 describe('config from the environment', () => {
-  test('only variables that are set are passed', () => {
-    expect(configFromEnv({}, '/repo')).toEqual({ root: '/repo' });
-    expect(configFromEnv({ PETAL_API: '', NEAR_AI_API_KEY: ' ' }, '/repo')).toEqual({
-      root: '/repo',
-    });
+  test('is the tools mapping: the same Config as every other door', () => {
+    const env = {
+      PETAL_API: 'http://localhost:9000',
+      NEAR_AI_API_KEY: 'k2',
+      PETAL_LLM_DAILY_USD: '2.5',
+      PETAL_LIVE: '1',
+      PETAL_WRITER_KEY_FILE: '../.secrets/w.json',
+      PETAL_TRUSTED_WRITERS: 'a.testnet, b.testnet',
+    };
+    expect(configFromEnv(env, '/repo/build')).toEqual(toolsConfigFromEnv(env, '/repo/build'));
   });
 
-  test('every variable in .env.example that the tools read', () => {
-    const cfg = configFromEnv(
-      {
-        PETAL_API: 'http://localhost:9000',
-        PETAL_REPO_URL: 'https://github.com/x/petal',
-        PETAL_PAYOUT_ACCOUNT: 'petal-demo.near',
-        FASTNEAR_API_KEY: 'k',
-        NEAR_AI_API_KEY: 'k2',
-        PETAL_LLM_DAILY_USD: '2.5',
-        PETAL_LIVE: '1',
-        PETAL_MAP_NETWORK: 'testnet',
-        PETAL_WRITER_KEY_FILE: '../.secrets/w.json',
-      },
-      '/repo/build',
-      { fake: true },
-    );
-    expect(cfg).toEqual({
-      root: '/repo/build',
-      apiBase: 'http://localhost:9000',
-      repoUrl: 'https://github.com/x/petal',
-      payoutAccount: 'petal-demo.near',
-      fastnearApiKey: 'k',
-      nearAiApiKey: 'k2',
-      llmDailyUsd: 2.5,
-      live: true,
-      fake: true,
-      map: {
-        network: 'testnet',
-        receiver: 'petals.testnet',
-        writer: 'writer.petals.testnet',
-        keyFile: '/repo/.secrets/w.json',
-        trustedWriters: ['writer.petals.testnet'],
-      },
-    });
-  });
-
-  test('map: explicit receiver, writer and trusted writers', () => {
-    const cfg = configFromEnv(
-      {
-        PETAL_MAP_NETWORK: 'mainnet',
-        PETAL_WRITER_ACCOUNT: 'w.near',
-        PETAL_TRUSTED_WRITERS: 'a.near, b.near',
-      },
-      '/r',
-    );
-    expect(cfg.map).toEqual({
-      network: 'mainnet',
-      receiver: 'petals.near',
-      writer: 'w.near',
-      trustedWriters: ['a.near', 'b.near'],
-    });
+  test('PETAL_FAKE=1 turns fake mode on, and so does --fake; neither is the default', () => {
+    expect(configFromEnv({}, '/repo').fake).toBe(false);
+    expect(configFromEnv({ PETAL_FAKE: '1' }, '/repo').fake).toBe(true);
+    expect(configFromEnv({}, '/repo', { fake: true }).fake).toBe(true);
+    expect(configFromEnv({ PETAL_FAKE: '1' }, '/repo', { fake: false }).fake).toBe(true);
   });
 
   test('the root: PETAL_ROOT, else the folder with pnpm-workspace.yaml', () => {
@@ -198,6 +158,18 @@ describe('the real entry point', () => {
       encoding: 'utf8',
     });
     expect(out).toMatch(/^petal: /);
+  });
+
+  test('PETAL_FAKE=1 reaches the tools: the recorded quote, with no flag and no network', () => {
+    const out = execFileSync(
+      process.execPath,
+      [join(ROOT, 'apps/cli/src/index.ts'), 'quote', '--purpose', 'sponsor_refresh'],
+      { encoding: 'utf8', env: { ...process.env, PETAL_FAKE: '1' } },
+    );
+    expect(JSON.parse(out)).toMatchObject({
+      dry: true,
+      correlation_id: '00000000-0000-4000-8000-000000000000',
+    });
   });
 
   test('pnpm -s petal keeps stdout clean (the MCP install command relies on it)', () => {

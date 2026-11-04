@@ -2,6 +2,7 @@
 // stub; 0 uses petalApp and fails loudly while it is a stub. Written to stay true after T058.
 import { petalApp } from '@petal/agent';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { apiLabel } from '../lib/api-label.ts';
 import { configFromEnv, repoRoot } from '../lib/config.ts';
 import { getApp } from '../lib/server-app.ts';
 
@@ -50,7 +51,12 @@ describe('the API switch', () => {
     const { app } = await getApp();
     const health = await app.request('/api/v1/health');
     expect(health.headers.get('x-petal-api')).toBe('real');
-    expect(await health.json()).toMatchObject({ ok: true, mock: false, llm: 'recorded' });
+    expect(await health.json()).toMatchObject({
+      ok: true,
+      mock: false,
+      fake: true,
+      llm: 'recorded',
+    });
     const networks = await app.request('/api/v1/networks');
     expect(networks.headers.get('x-petal-api')).toBe('real');
     expect(((await networks.json()) as { networks: unknown[] }).networks.length).toBeGreaterThan(0);
@@ -59,6 +65,28 @@ describe('the API switch', () => {
   test('one app per process, shared on globalThis', async () => {
     vi.stubEnv('PETAL_API_MOCK', '1');
     expect(await getApp()).toBe(await getApp());
+  });
+});
+
+describe('the gallery label tells the truth', () => {
+  const base = { map: 'mirror', llm: 'recorded' };
+  test('fake mode never reads as live or real alone', () => {
+    const label = apiLabel({ ...base, mock: false, fake: true });
+    expect(label).toMatch(/^Fake mode/);
+    expect(label).toMatch(/fake map/);
+    expect(label).toMatch(/recorded agent/);
+    expect(label).not.toMatch(/\blive\b/i);
+  });
+  test('the mock says it is the mock', () => {
+    expect(apiLabel({ ...base, mock: true })).toMatch(/^API mock/);
+  });
+  test('the real API reports map and agent as they are', () => {
+    expect(apiLabel({ map: 'up', llm: 'up', mock: false, fake: false })).toBe(
+      'API: real; map up; agent up.',
+    );
+    expect(apiLabel({ ...base, mock: false, fake: false })).toBe(
+      'API: real; map mirror; agent recorded.',
+    );
   });
 });
 

@@ -166,7 +166,9 @@ export async function rig(): Promise<TestRig> {
   const ctx: ToolContext = {
     config: {
       root: REPO,
-      fixturesDir: FIXTURES,
+      // a clean fixtures folder: list_flowers shows only what a test publishes, whatever hero
+      // entries the repo ships. The snapshot store above still reads the repo's snapshots.
+      fixturesDir: join(stateDir, 'fixtures'),
       stateDir,
       fake: true,
       apiBase: 'https://petal.test',
