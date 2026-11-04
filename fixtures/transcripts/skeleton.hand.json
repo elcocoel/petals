@@ -4,7 +4,7 @@
   "title": "Skeleton: who stands behind NEAR's validators?",
   "question": "who stands behind NEAR's validators?",
   "model": "recorded",
-  "note": "Hand-made (T020), in the tool order of quickstart step 2: get_snapshot, describe_snapshot, compute_figures, propose_spec with segments backers, validate_spec with the interpretation, render_flower, then the answer. {\"$from\": \"<call id>.<path>\"} takes a value from an earlier tool result in the conversation; {{<call id>.<path>}} puts one into text. Numbers in the answer come only from tool results.",
+  "note": "Hand-made (T020), in the tool order of quickstart step 2: get_snapshot, describe_snapshot, compute_figures, propose_spec with segments backers, validate_spec with the interpretation, render_flower, then the answer. {\"$from\": \"<call id>.<path>\"} takes a value from an earlier tool result in the conversation; {{<call id>.<path>}} puts one into text. Numbers in the answer come only from compute_figures (the prompt's rule; tests/e2e/skeleton.test.ts checks it), so the answer quotes no block height and no class threshold.",
   "turns": [
     {
       "content": null,
@@ -95,7 +95,7 @@
       "tool_calls": [{ "id": "call_6", "name": "render_flower", "arguments": { "spec": { "$from": "call_4.spec" } } }]
     },
     {
-      "content": "Here is the flower of NEAR's validators, from a stored snapshot of block {{call_1.snapshot.block_height}}. {{call_3.nakamoto.count}} of {{call_3.participants_included}} seated validators together hold more than a third of the stake (the Nakamoto coefficient). Each bar is cut into the pool's backers: other delegators, accounts with 1M+ NEAR, liquid-staking contracts and lockups. What the data can't tell: who controls the large unnamed accounts, who owns the lockups, and whether several pools share one operator. Open it here: {{call_6.view_url}}",
+      "content": "Here is the flower of NEAR's validators, drawn from a snapshot Petal found in its {{call_1.where}} (reused: {{call_1.reused}}). {{call_3.nakamoto.count}} of {{call_3.participants_included}} seated validators together hold more than a third of the stake (the Nakamoto coefficient). Each bar is cut into the pool's backers: other delegators, the largest accounts, liquid-staking contracts and lockups. What the data can't tell: who controls the large unnamed accounts, who owns the lockups, and whether several pools share one operator. Open it here: {{call_6.view_url}}",
       "tool_calls": []
     }
   ]

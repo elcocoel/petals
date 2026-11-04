@@ -135,7 +135,8 @@ describe('runAgent on the recorded skeleton run', () => {
       .map((e) => e.data.text)
       .join('\n');
     expect(text).toContain('9 of 371 seated validators');
-    expect(text).toContain('block 222915356');
+    expect(text).toContain('found in its fixture (reused: true)');
+    expect(text).not.toContain('222915356');
     expect(text).toContain(VIEW_URL);
   });
 
