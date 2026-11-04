@@ -12,7 +12,7 @@
 //
 // A final snapshot at a given block is never fetched again: `fresh` only skips non-final data
 // and the "latest" window.
-import { NotImplementedError, validateSnapshot } from '@petal/core';
+import { validateSnapshot } from '@petal/core';
 import type {
   MapIndex,
   Progress,
@@ -94,15 +94,9 @@ function moduleFor(req: SnapshotRequest): InputModule {
   return m;
 }
 
-/** validateSnapshot is W1's; until it lands (NotImplementedError) the schema check is skipped. */
+/** Every snapshot is validated before it is stored or served. */
 function check(network: string, s: Snapshot): void {
-  let r: ReturnType<typeof validateSnapshot>;
-  try {
-    r = validateSnapshot(s);
-  } catch (e) {
-    if (e instanceof NotImplementedError) return;
-    throw e;
-  }
+  const r = validateSnapshot(s);
   if (!r.ok) {
     const first = r.errors
       .slice(0, 3)
