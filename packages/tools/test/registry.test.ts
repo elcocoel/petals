@@ -1,0 +1,98 @@
+// T046: one registry; schemas; errors returned, never thrown; tools_version on every output.
+import { describe, expect, test, vi } from 'vitest';
+
+vi.mock('@petal/core', async (o) => (await import('./doubles/core.ts')).mockCore(await o()));
+vi.mock('@petal/inputs', async (o) => (await import('./doubles/inputs.ts')).mockInputs(await o()));
+vi.mock('@petal/near/auth', async (o) => (await import('./doubles/near.ts')).mockAuth(await o()));
+vi.mock('@petal/near/map', async (o) => (await import('./doubles/near.ts')).mockMap(await o()));
+
+import { NotImplementedError } from '@petal/core';
+import { compile, defineTool, TOOL_ERROR_SCHEMA } from '../src/define.ts';
+import { callTool, describeTool, registry } from '../src/registry.ts';
+import { rig } from './helpers.ts';
+
+const PHASE_A = [
+  'list_networks',
+  'get_network',
+  'get_snapshot',
+  'describe_snapshot',
+  'compute_figures',
+  'propose_spec',
+  'validate_spec',
+  'render_flower',
+  'list_flowers',
+  'get_flower',
+  'prepare_publish',
+  'publish_flower',
+  'quote_payment',
+];
+
+describe('registry', () => {
+  test('holds the Phase A tools of tools.md, once each', () => {
+    expect(registry.map((t) => t.name)).toEqual(PHASE_A);
+  });
+
+  test('every tool has object schemas that compile, a description, and tools_version out', () => {
+    for (const t of registry) {
+      expect(t.input.type, t.name).toBe('object');
+      expect(t.output.type, t.name).toBe('object');
+      expect(() => compile(t.input), t.name).not.toThrow();
+      expect(() => compile(t.output), t.name).not.toThrow();
+      expect((t.output.required as string[]).includes('tools_version'), t.name).toBe(true);
+      const d = describeTool(t);
+      expect(d.description.length, t.name).toBeGreaterThan(40);
+      expect(t.input.description, t.name).toBe(d.description);
+    }
+  });
+
+  test('a bad input is a bad_input, with tools_version', async () => {
+    const { ctx } = rig();
+    const out = await callTool('compute_figures', { sha256: 'nope' }, ctx);
+    expect(compile(TOOL_ERROR_SCHEMA)(out)).toBe(true);
+    expect(out).toMatchObject({ error: { code: 'bad_input' }, tools_version: 'tools/v1' });
+    expect((out as { error: { message: string } }).error.message).toMatch(/sha256|measure/);
+  });
+
+  test('an unknown tool is a bad_input naming the tools', async () => {
+    const out = await callTool('draw_texture', {}, rig().ctx);
+    expect(out).toMatchObject({
+      error: { code: 'bad_input', hint: expect.stringContaining('render_flower') },
+    });
+  });
+
+  test('a throw inside a tool comes back as a ToolError; a stub as internal "not built yet"', async () => {
+    const throwing = defineTool<object, object>({
+      name: 'x',
+      title: 'x',
+      description: 'x',
+      input: { type: 'object' },
+      output: { type: 'object' },
+      async run() {
+        throw new NotImplementedError('fileStore');
+      },
+    });
+    const out = await throwing.run({}, rig().ctx);
+    expect(out).toMatchObject({
+      error: { code: 'internal', message: 'not built yet: fileStore' },
+      tools_version: 'tools/v1',
+    });
+    const coded = defineTool<object, object>({
+      ...throwing,
+      failure: 'source_failed',
+      async run() {
+        throw Object.assign(new Error('rpc down'), { code: 'rate_limited', retry_after_s: 7 });
+      },
+    });
+    expect(await coded.run({}, rig().ctx)).toMatchObject({
+      error: { code: 'rate_limited', message: 'rpc down', retry_after_s: 7 },
+    });
+    const plain = defineTool<object, object>({
+      ...throwing,
+      failure: 'source_failed',
+      async run() {
+        throw new Error('boom');
+      },
+    });
+    expect(await plain.run({}, rig().ctx)).toMatchObject({ error: { code: 'source_failed' } });
+  });
+});
