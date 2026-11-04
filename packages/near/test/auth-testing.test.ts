@@ -14,7 +14,7 @@ import {
 } from '../src/auth/testing.ts';
 
 const nonce = new Uint8Array(32).fill(7);
-const message = '{"petal":"publish/v1","entry_sha256":"' + 'a'.repeat(64) + '"}';
+const message = `{"petal":"publish/v1","entry_sha256":"${'a'.repeat(64)}"}`;
 const recipient = 'petals.testnet';
 
 describe('NEP-413 payload', () => {
