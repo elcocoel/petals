@@ -278,16 +278,26 @@ describe('quickstart, recorded', () => {
       recipient: fresh.json.recipient as string,
     };
 
-    // a tampered message: signed text that is not the prepared one
-    const tampered: Nep413Proof = {
-      ...signer.sign(payload),
-      message: payload.message.replace(/"entry_sha256":"[0-9a-f]/, '"entry_sha256":"0'),
-    };
+    // another entry's message: the first hash digit always changes (the hash differs per run)
+    const otherMessage = payload.message.replace(
+      /"entry_sha256":"([0-9a-f])/,
+      (_, c: string) => `"entry_sha256":"${c === '0' ? '1' : '0'}`,
+    );
+    expect(otherMessage).not.toBe(payload.message);
+
+    // a tampered message: the proof names text that is not the prepared one
     const t = await call('/api/v1/publish', {
       entry_sha256: fresh.json.entry_sha256,
-      proof: tampered,
+      proof: { ...signer.sign(payload), message: otherMessage },
     });
     expect([t.status, errorCode(t.json)]).toEqual([401, 'unauthorised']);
+
+    // and the other way: it names the prepared text, but the signature is over something else
+    const s = await call('/api/v1/publish', {
+      entry_sha256: fresh.json.entry_sha256,
+      proof: { ...signer.sign({ ...payload, message: otherMessage }), message: payload.message },
+    });
+    expect([s.status, errorCode(s.json)]).toEqual([401, 'unauthorised']);
 
     // a valid signature, but by a function-call key
     const fc = await call('/api/v1/publish', {
