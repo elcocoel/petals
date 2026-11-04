@@ -108,6 +108,9 @@ importers:
 
   packages/agent:
     dependencies:
+      '@hono/node-server':
+        specifier: ^2.1.6
+        version: 2.1.6(hono@4.13.16)
       '@petal/core':
         specifier: workspace:*
         version: link:../core
@@ -117,6 +120,9 @@ importers:
       hono:
         specifier: ^4.13.16
         version: 4.13.16
+      openai:
+        specifier: ^7.50.0
+        version: 7.50.0(zod@4.6.7)
     devDependencies:
       ajv:
         specifier: ^8.20.0
@@ -1181,6 +1187,33 @@ packages:
     resolution: {integrity: sha512-5vvB5+W7ePv+p3uqxi+RcW1XAzLW0/hxt3/4X4Lc4qHudzOhmBiBwOY6DRob4WnanAEGvNcLjF+KNOufrUoEQw==}
     engines: {node: '>=12.20.0'}
 
+  openai@7.50.0:
+    resolution: {integrity: sha512-VFBqvO4pL3sXY1y3L1qo+9yUkE+sHOov044/mWAHThG+XUgUrMmQsigwY0ONfYBzLE7Rx4222mM6I+CTNw+Gsw==}
+    engines: {node: '>=22.0.0'}
+    peerDependencies:
+      '@aws-sdk/credential-provider-node': '>=3.972.0 <4'
+      '@smithy/hash-node': '>=4.3.0 <5'
+      '@smithy/signature-v4': '>=5.4.0 <6'
+      google-auth-library: '>=9.15.1 <12'
+      undici: '>=5 <9'
+      ws: ^8.21.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      '@aws-sdk/credential-provider-node':
+        optional: true
+      '@smithy/hash-node':
+        optional: true
+      '@smithy/signature-v4':
+        optional: true
+      google-auth-library:
+        optional: true
+      undici:
+        optional: true
+      ws:
+        optional: true
+      zod:
+        optional: true
+
   pbkdf2@3.1.7:
     resolution: {integrity: sha512-nS4mvFgVwUrecPTRdpdseM2fwpdfnX0/HibA8DgBRQtihUAzHQYJFU2l+OlEtiXtpqkrMvCPDwyXMUnASDt6Qw==}
     engines: {node: '>= 0.10'}
@@ -2184,6 +2217,10 @@ snapshots:
       - babel-plugin-macros
 
   obug@3.0.0: {}
+
+  openai@7.50.0(zod@4.6.7):
+    optionalDependencies:
+      zod: 4.6.7
 
   pbkdf2@3.1.7:
     dependencies:

@@ -1,0 +1,334 @@
+// nearAiClient (T055; research R10): Petal's model client on NEAR AI Cloud, through the `openai`
+// SDK at https://cloud-api.near.ai/v1. Every call is non-streamed, sent with the canonical model id,
+// `x-no-aliasing: true` and `Accept-Encoding: identity`, so it can get a `provider_tee` signature.
+// A capturing fetch keeps the exact request and response bytes and their SHA-256 (never
+// re-serialised JSON). Fallbacks, in order, when a model fails: Qwen/Qwen3.8-27B, then
+// deepseek-ai/DeepSeek-V4.1-Flash-1017. Never called in tests: they use faked HTTP.
+import { fileURLToPath } from 'node:url';
+import { sha256Hex } from '@petal/core';
+import type { ToolErrorCode } from '@petal/core/types';
+import OpenAI, { APIError } from 'openai';
+import type { LlmClient, LlmCompletion, LlmMessage, LlmRequest, LlmToolCall } from './llm.ts';
+import {
+  type AttestationRef,
+  type AttestationStore,
+  attestationStore,
+  buildSignature,
+  checkSignature,
+  fetchAttestation,
+  fetchSignature,
+  type NearAiHttp,
+} from './signature.ts';
+
+export const NEAR_AI_BASE_URL = 'https://cloud-api.near.ai/v1';
+export const DEFAULT_MODEL = 'z-ai/glm-5.3-flash';
+export const FALLBACK_MODELS: readonly string[] = [
+  'Qwen/Qwen3.8-27B',
+  'deepseek-ai/DeepSeek-V4.1-Flash-1017',
+];
+
+/** USD per million tokens (research R10, near.ai/models on 2026-11-04; re-check). */
+export const PRICES: Record<string, { in: number; out: number }> = {
+  'z-ai/glm-5.3-flash': { in: 0.08, out: 0.5 },
+  'Qwen/Qwen3.8-27B': { in: 0.04, out: 1.35 },
+  'deepseek-ai/DeepSeek-V4.1-Flash-1017': { in: 0.3, out: 1.2 },
+};
+/** An unknown model is priced at the dearest rates above, so spend is never under-counted. */
+const UNKNOWN_PRICE = { in: 0.3, out: 1.35 };
+
+export function costUsd(model: string, usage: { in: number; out: number }): number {
+  const p = PRICES[model] ?? UNKNOWN_PRICE;
+  return Math.round(((usage.in * p.in + usage.out * p.out) / 1e6) * 1e9) / 1e9;
+}
+
+/** A model call that failed, with the error code the agent reports (tools.md codes). */
+export class LlmCallError extends Error {
+  readonly code: ToolErrorCode;
+  readonly hint?: string;
+  readonly retryAfterS?: number;
+  /** whether another model might answer where this one failed */
+  readonly tryNext: boolean;
+  constructor(
+    code: ToolErrorCode,
+    message: string,
+    o: { hint?: string; retryAfterS?: number; tryNext?: boolean } = {},
+  ) {
+    super(message);
+    this.name = 'LlmCallError';
+    this.code = code;
+    this.hint = o.hint;
+    this.retryAfterS = o.retryAfterS;
+    this.tryNext = o.tryNext ?? false;
+  }
+}
+
+export interface NearAiOptions {
+  /** the key itself; default process.env[cfg.apiKeyEnv] */
+  apiKey?: string;
+  baseURL?: string;
+  /** the transport; tests pass a fake (never the real NEAR AI Cloud) */
+  fetch?: typeof fetch;
+  /** where attestation reports are kept; default <repo>/.petal/attestations */
+  attestationsDir?: string;
+  /** public base of Petal's API, for report_url; default relative (/api/v1/attestations/…) */
+  apiBase?: string;
+  /** default 6000; includes reasoning tokens */
+  maxCompletionTokens?: number;
+  /** per attempt, default 60 s */
+  timeoutMs?: number;
+  /** a report is reused for this long before a fresh one is fetched; default 10 min */
+  attestationTtlMs?: number;
+  /** after a model fails, the next one is tried first for this long; default 5 min */
+  stickyFallbackMs?: number;
+  /** waits between signature lookups (404 is often a race); default [300, 700, 1500] */
+  signatureDelaysMs?: number[];
+  now?: () => Date;
+  /** signature or attestation trouble that does not fail the call */
+  onWarning?: (message: string) => void;
+}
+
+/** A NEAR AI client plus what the health route reports. */
+export interface NearAiClient extends LlmClient {
+  readonly kind: 'near-ai-cloud';
+  /** "up" until a call fails with no model answering; "down" then, until one answers */
+  status(): 'up' | 'down';
+}
+
+const DEFAULT_ATTESTATIONS = fileURLToPath(
+  new URL('../../../.petal/attestations', import.meta.url),
+);
+
+function bodyBytes(body: unknown): Uint8Array {
+  if (typeof body === 'string') return new TextEncoder().encode(body);
+  if (body instanceof Uint8Array) return body;
+  if (body instanceof ArrayBuffer) return new Uint8Array(body);
+  return new Uint8Array();
+}
+
+function toOpenAi(m: LlmMessage): OpenAI.Chat.Completions.ChatCompletionMessageParam {
+  switch (m.role) {
+    case 'system':
+      return { role: 'system', content: m.content };
+    case 'user':
+      return { role: 'user', content: m.content };
+    case 'tool':
+      return { role: 'tool', tool_call_id: m.tool_call_id, content: m.content };
+    case 'assistant':
+      return m.tool_calls?.length
+        ? {
+            role: 'assistant',
+            content: m.content,
+            tool_calls: m.tool_calls.map((c) => ({
+              id: c.id,
+              type: 'function' as const,
+              function: { name: c.name, arguments: c.arguments },
+            })),
+          }
+        : { role: 'assistant', content: m.content ?? '' };
+  }
+}
+
+/** Sort an SDK or transport error into tools.md codes, and whether a fallback model may help. */
+function classify(e: unknown, model: string): LlmCallError {
+  if (e instanceof LlmCallError) return e;
+  if (e instanceof APIError && typeof e.status === 'number') {
+    const s = e.status;
+    const what = `${model}: HTTP ${s}${e.message ? ` (${e.message.slice(0, 200)})` : ''}`;
+    if (s === 401 || s === 403) {
+      return new LlmCallError('source_failed', `NEAR AI Cloud refused the server's key: ${what}`, {
+        hint: 'Check NEAR_AI_API_KEY.',
+      });
+    }
+    if (s === 402) {
+      return new LlmCallError('budget_exhausted', `NEAR AI Cloud credits are used up: ${what}`, {
+        hint: 'Bring your own agent: the Petal skill (skill/petal/SKILL.md) or MCP needs no server key.',
+      });
+    }
+    const retry = Number(e.headers?.get?.('retry-after'));
+    return new LlmCallError(s === 429 ? 'rate_limited' : 'source_failed', what, {
+      tryNext: true,
+      retryAfterS: Number.isFinite(retry) && retry > 0 ? retry : undefined,
+    });
+  }
+  const msg = e instanceof Error ? e.message : String(e);
+  return new LlmCallError('source_failed', `${model}: ${msg}`, { tryNext: true });
+}
+
+/** The full client. `nearAiClient` in index.ts is this with the contract's arguments only. */
+export function createNearAiClient(
+  cfg: { apiKeyEnv: 'NEAR_AI_API_KEY'; model: string; fallbacks: string[] },
+  o: NearAiOptions = {},
+): NearAiClient {
+  const baseURL = (o.baseURL ?? NEAR_AI_BASE_URL).replace(/\/+$/, '');
+  const transport = o.fetch ?? globalThis.fetch;
+  const now = o.now ?? (() => new Date());
+  const warn = o.onWarning ?? (() => {});
+  const store: AttestationStore = attestationStore(o.attestationsDir ?? DEFAULT_ATTESTATIONS);
+  const models = [cfg.model, ...cfg.fallbacks.filter((m) => m !== cfg.model)];
+  const attestTtl = o.attestationTtlMs ?? 10 * 60_000;
+  const stickyMs = o.stickyFallbackMs ?? 5 * 60_000;
+  const reports = new Map<string, { at: number; ref: Promise<AttestationRef | undefined> }>();
+  let start = 0; // index of the model tried first
+  let startUntil = 0;
+  let healthy = true;
+
+  const key = () => o.apiKey ?? process.env[cfg.apiKeyEnv] ?? '';
+  const http = (): NearAiHttp => ({ baseURL, apiKey: key(), fetch: transport });
+
+  /** The report fetched before the completion, reused for a while; never fails the call. */
+  function attestation(model: string): Promise<AttestationRef | undefined> {
+    const hit = reports.get(model);
+    if (hit && now().getTime() - hit.at < attestTtl) return hit.ref;
+    const ref = fetchAttestation(http(), model, store, { apiBase: o.apiBase }).catch((e) => {
+      warn(`no attestation report for ${model}: ${(e as Error).message}`);
+      reports.delete(model);
+      return undefined;
+    });
+    reports.set(model, { at: now().getTime(), ref });
+    return ref;
+  }
+
+  async function callModel(model: string, req: LlmRequest): Promise<LlmCompletion> {
+    const attested = await attestation(model);
+    let captured: { request: Uint8Array; response: Uint8Array } | undefined;
+    const capture: typeof fetch = async (input, init) => {
+      const res = await transport(input, init);
+      const response = new Uint8Array(await res.arrayBuffer());
+      captured = { request: bodyBytes(init?.body), response };
+      const nullBody = res.status === 204 || res.status === 304;
+      return new Response(nullBody ? null : response, {
+        status: res.status,
+        statusText: res.statusText,
+        headers: res.headers,
+      });
+    };
+    const client = new OpenAI({
+      apiKey: key(),
+      baseURL,
+      organization: null,
+      project: null,
+      maxRetries: 0,
+      timeout: o.timeoutMs ?? 60_000,
+      defaultHeaders: { 'x-no-aliasing': 'true', 'Accept-Encoding': 'identity' },
+      fetch: capture,
+    });
+    const completion = await client.chat.completions.create({
+      model,
+      messages: req.messages.map(toOpenAi),
+      stream: false,
+      max_completion_tokens: o.maxCompletionTokens ?? 6000,
+      ...(req.tools?.length
+        ? {
+            tool_choice: 'auto' as const,
+            tools: req.tools.map((t) => ({
+              type: 'function' as const,
+              function: { name: t.name, description: t.description, parameters: t.parameters },
+            })),
+          }
+        : {}),
+    });
+    const choice = completion.choices?.[0];
+    if (!choice?.message) {
+      throw new LlmCallError('source_failed', `${model}: the answer has no message`, {
+        tryNext: true,
+      });
+    }
+    const tool_calls: LlmToolCall[] = (choice.message.tool_calls ?? []).flatMap((c, i) =>
+      c.type === 'function'
+        ? [
+            {
+              id: c.id || `call_${i + 1}`,
+              name: c.function.name,
+              arguments: c.function.arguments ?? '',
+            },
+          ]
+        : [],
+    );
+    const content = choice.message.content ?? null;
+    const usage = {
+      in: completion.usage?.prompt_tokens ?? 0,
+      out: completion.usage?.completion_tokens ?? 0,
+    };
+    const signature = captured ? await sign(model, completion.id, captured, attested) : null;
+    return {
+      model,
+      completion_id: completion.id,
+      message: tool_calls.length
+        ? { role: 'assistant', content, tool_calls }
+        : { role: 'assistant', content },
+      usage,
+      cost_usd: costUsd(model, usage),
+      fallback_used: model !== cfg.model,
+      signature,
+    };
+  }
+
+  async function sign(
+    model: string,
+    completionId: string,
+    bytes: { request: Uint8Array; response: Uint8Array },
+    attested: AttestationRef | undefined,
+  ) {
+    const request_sha256 = sha256Hex(bytes.request);
+    const response_sha256 = sha256Hex(bytes.response);
+    try {
+      const raw = await fetchSignature(http(), completionId, model, {
+        delaysMs: o.signatureDelaysMs,
+      });
+      const sig = buildSignature({
+        model,
+        completion_id: completionId,
+        raw,
+        request_sha256,
+        response_sha256,
+        attestation: attested,
+        fetched_at: now(),
+      });
+      for (const p of checkSignature(sig, attested?.signing_addresses)) {
+        warn(`signature of ${completionId}: ${p}`);
+      }
+      return sig;
+    } catch (e) {
+      warn(`no signature for ${completionId}: ${(e as Error).message}`);
+      return null;
+    }
+  }
+
+  return {
+    kind: 'near-ai-cloud',
+    model: cfg.model,
+    status: () => (healthy ? 'up' : 'down'),
+    async complete(req) {
+      if (!key()) {
+        throw new LlmCallError('source_failed', `${cfg.apiKeyEnv} is not set`, {
+          hint: 'Without a key, Petal replays a recorded run (recordedClient).',
+        });
+      }
+      const first = now().getTime() < startUntil ? start : 0;
+      const order = [...models.slice(first), ...models.slice(0, first)];
+      const failures: LlmCallError[] = [];
+      for (const model of order) {
+        try {
+          const out = await callModel(model, req);
+          healthy = true;
+          return out;
+        } catch (e) {
+          const err = classify(e, model);
+          failures.push(err);
+          if (!err.tryNext) throw err;
+          // the next model goes first for a while, so each turn doesn't wait on a failing one
+          const next = (models.indexOf(model) + 1) % models.length;
+          start = next;
+          startUntil = now().getTime() + stickyMs;
+        }
+      }
+      healthy = false;
+      const last = failures[failures.length - 1];
+      throw new LlmCallError(
+        last?.code === 'rate_limited' ? 'rate_limited' : 'source_failed',
+        `NEAR AI Cloud: no model answered (${failures.map((f) => f.message).join('; ')})`,
+        { retryAfterS: last?.retryAfterS, hint: 'Try again in a minute, or bring your own agent.' },
+      );
+    },
+  };
+}
