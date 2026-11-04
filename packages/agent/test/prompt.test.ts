@@ -1,0 +1,85 @@
+// T054: the shared prompt. One source (prompt.md) for SYSTEM_PROMPT and skill/petal/SKILL.md.
+import { readFileSync } from 'node:fs';
+import { specHash } from '@petal/core';
+import { describe, expect, test } from 'vitest';
+import { SYSTEM_PROMPT as fromIndex } from '../src/index.ts';
+import { DEFAULT_BUDGET } from '../src/llm.ts';
+import { agentNotes, PROMPT_FILE, SYSTEM_PROMPT } from '../src/prompt.ts';
+import { SPEC } from './helpers.ts';
+
+describe('SYSTEM_PROMPT', () => {
+  test('is prompt.md, exported from the package', () => {
+    expect(SYSTEM_PROMPT).toBe(readFileSync(PROMPT_FILE, 'utf8').trim());
+    expect(fromIndex).toBe(SYSTEM_PROMPT);
+    expect(SYSTEM_PROMPT).not.toMatch(/not_implemented/);
+  });
+
+  test('walks the six steps in the skill order, list_flowers first', () => {
+    const steps = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf('## The six steps'));
+    const numbered = steps.split('\n## ')[0]?.match(/^\d\. /gm) ?? [];
+    expect(numbered).toEqual(['1. ', '2. ', '3. ', '4. ', '5. ', '6. ']);
+    const order = [
+      'list_networks',
+      'list_flowers',
+      'get_snapshot',
+      'describe_snapshot',
+      'compute_figures',
+      'propose_spec',
+      'validate_spec',
+      'render_flower',
+      'prepare_publish',
+      'sign_url',
+    ];
+    const at = order.map((t) => steps.indexOf(`\`${t}\``));
+    expect(at.every((i) => i >= 0)).toBe(true);
+    expect([...at].sort((a, b) => a - b)).toEqual(at);
+  });
+
+  test('says what T054 asks: tool figures only, sources, unknowns, unavailable primitives, keys', () => {
+    expect(SYSTEM_PROMPT).toMatch(/Quote only numbers these two tools return/);
+    expect(SYSTEM_PROMPT).toMatch(/Every mapping cites a source id/);
+    expect(SYSTEM_PROMPT).toMatch(/`unknowns`: .*Never empty/);
+    expect(SYSTEM_PROMPT).toMatch(/not available yet/);
+    expect(SYSTEM_PROMPT).toMatch(/unless the person asks for a fresh analysis/);
+    expect(SYSTEM_PROMPT).toMatch(/Never ask anyone for a key/);
+  });
+
+  test('keeps the six rules of the 7/7 skill', () => {
+    const rules = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf('## Rules'));
+    expect(rules.match(/^\d\. /gm)).toHaveLength(6);
+    expect(rules).toMatch(/Addresses are not people/);
+    expect(rules).toMatch(/Never call an inferred identity proven/);
+    expect(rules).toMatch(/under 200 words/);
+  });
+
+  test('marks the six rules for skill/build.ts: one begin line, one end line, rules between', () => {
+    const lines = SYSTEM_PROMPT.split('\n');
+    const begin = lines.indexOf('<!-- petal:shared:begin -->');
+    const end = lines.indexOf('<!-- petal:shared:end -->');
+    expect(lines.filter((l) => l.includes('petal:shared:'))).toHaveLength(2);
+    expect(begin).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(begin);
+    const block = lines.slice(begin + 1, end);
+    expect(block).toHaveLength(6);
+    expect(block.map((l) => l.slice(0, 3))).toEqual(['1. ', '2. ', '3. ', '4. ', '5. ', '6. ']);
+  });
+
+  test('is door-neutral: no transport, no agent-only limits', () => {
+    expect(SYSTEM_PROMPT).not.toMatch(/curl|localhost|\/api\/v1|tool rounds/);
+  });
+});
+
+describe('agentNotes', () => {
+  test('adds the limits and the date, never into the shared text', () => {
+    const notes = agentNotes({ budget: DEFAULT_BUDGET, today: new Date('2026-11-04T09:00:00Z') });
+    expect(notes).toMatch(/at most 8 tool rounds and 120 s/);
+    expect(notes).toMatch(/Today is 2026-11-04/);
+    expect(notes).not.toMatch(/draft/i);
+  });
+
+  test('names the draft spec by its hash, for variation_of', () => {
+    const notes = agentNotes({ budget: DEFAULT_BUDGET, today: new Date(), draftSpec: SPEC });
+    expect(notes).toContain(`variation_of\` set to ${specHash(SPEC)}`);
+    expect(notes).toContain(JSON.stringify(SPEC));
+  });
+});

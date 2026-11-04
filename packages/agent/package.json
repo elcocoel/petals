@@ -9,10 +9,15 @@
     ".": "./src/index.ts",
     "./package.json": "./package.json"
   },
+  "scripts": {
+    "api": "node src/serve.ts"
+  },
   "dependencies": {
+    "@hono/node-server": "^2.1.6",
     "@petal/core": "workspace:*",
     "@petal/tools": "workspace:*",
-    "hono": "^4.13.16"
+    "hono": "^4.13.16",
+    "openai": "^7.50.0"
   },
   "devDependencies": {
     "ajv": "^8.20.0",
