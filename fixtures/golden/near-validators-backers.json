@@ -1,0 +1,3981 @@
+{
+  "name": "near-validators-backers",
+  "spec_sha256": "0f475a0fb0f11115569b2f74cc9b884d0f6ba98cb101d7d49ed4c7b05c409cd4",
+  "render_sha256": "e61ae57c528708abb4b655ef4d0f251af35d6a9d8e96c5c44d166509b3dbbd1e",
+  "spec": {
+    "petal": "spec/v1",
+    "network": {
+      "id": "near-validators",
+      "chain": "near:mainnet",
+      "population": "validators"
+    },
+    "snapshot": {
+      "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
+      "as_of": "2026-11-03T19:42:00Z",
+      "block_height": 222915356
+    },
+    "labels": "none",
+    "selection": {
+      "measure": "validator_stake_current_epoch",
+      "petals": 60,
+      "tail": {
+        "group": true,
+        "label": "everyone else"
+      }
+    },
+    "encodings": {
+      "width": {
+        "by": "share",
+        "scale": "log",
+        "max_ratio": 2,
+        "meaning": "share of stake in the current epoch, in a 2x band",
+        "sources": [
+          "fastnear-rpc-validators"
+        ]
+      },
+      "height": {
+        "by": "share",
+        "scale": "sqrt",
+        "meaning": "square root of share of stake in the current epoch",
+        "sources": [
+          "fastnear-rpc-validators"
+        ]
+      },
+      "colour": {
+        "by": "kind",
+        "meaning": "kind of account",
+        "sources": [
+          "nearblocks-validators"
+        ]
+      },
+      "outline": {
+        "by": "identity_status",
+        "meaning": "identity: solid when self-declared or verified, dashed when inferred",
+        "sources": [
+          "fastnear-rpc-liquid-staking",
+          "nearblocks-validators"
+        ]
+      },
+      "segments": {
+        "by": "backers",
+        "meaning": "who backs the pool, bottom to top: other delegators, accounts with 1M+ NEAR, liquid-staking contracts, lockups",
+        "sources": [
+          "fastnear-rpc-staking-pool-views"
+        ]
+      },
+      "order": {
+        "by": "measure_desc",
+        "meaning": "largest first, clockwise from the top",
+        "sources": [
+          "fastnear-rpc-validators"
+        ]
+      }
+    },
+    "convention": {
+      "id": "default/v1",
+      "variation_of": null,
+      "changes": []
+    }
+  },
+  "legend": [
+    {
+      "primitive": "width",
+      "meaning": "share of stake in the current epoch, in a 2x band",
+      "sources": [
+        "fastnear-rpc-validators"
+      ]
+    },
+    {
+      "primitive": "height",
+      "meaning": "square root of share of stake in the current epoch",
+      "sources": [
+        "fastnear-rpc-validators"
+      ]
+    },
+    {
+      "primitive": "colour",
+      "meaning": "kind of account",
+      "sources": [
+        "nearblocks-validators"
+      ],
+      "keys": [
+        {
+          "swatch": "var(--k-pool)",
+          "label": "pool"
+        },
+        {
+          "swatch": "var(--k-entity)",
+          "label": "liquid staking"
+        }
+      ]
+    },
+    {
+      "primitive": "outline",
+      "meaning": "identity: solid when self-declared or verified, dashed when inferred",
+      "sources": [
+        "fastnear-rpc-liquid-staking",
+        "nearblocks-validators"
+      ],
+      "keys": [
+        {
+          "swatch": "var(--ink-2)",
+          "label": "solid: self-declared or verified"
+        }
+      ]
+    },
+    {
+      "primitive": "segments",
+      "meaning": "who backs the pool, bottom to top: other delegators, accounts with 1M+ NEAR, liquid-staking contracts, lockups",
+      "sources": [
+        "fastnear-rpc-staking-pool-views"
+      ],
+      "keys": [
+        {
+          "swatch": "var(--k-pool)",
+          "label": "other delegators"
+        },
+        {
+          "swatch": "var(--k-org)",
+          "label": "accounts with 1M+ NEAR"
+        },
+        {
+          "swatch": "var(--k-entity)",
+          "label": "liquid-staking contracts"
+        },
+        {
+          "swatch": "var(--k-contract)",
+          "label": "lockups (vesting)"
+        }
+      ]
+    },
+    {
+      "primitive": "order",
+      "meaning": "largest first, clockwise from the top",
+      "sources": [
+        "fastnear-rpc-validators"
+      ]
+    },
+    {
+      "primitive": "tail",
+      "meaning": "everyone else: 311 more participants grouped into one hatched petal, 13.8% of the total; its height is their average",
+      "sources": [
+        "fastnear-rpc-validators"
+      ],
+      "keys": [
+        {
+          "swatch": "var(--tail)",
+          "label": "everyone else"
+        }
+      ]
+    }
+  ],
+  "petals": [
+    {
+      "index": 0,
+      "id": "astro-stakers.poolv1.near",
+      "label": "astro-stakers.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "astrostakers.com",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "33270925.619217119134459443495696",
+      "share": 0.056071,
+      "rank": 1,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.056071,
+          "explains": "share 5.61%: side 1.76x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 1,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 61.0%, accounts with 1M+ NEAR 19.5%, liquid-staking contracts 0.40%, lockups (vesting) 19.2%"
+        },
+        {
+          "primitive": "order",
+          "value": 1,
+          "explains": "rank 1: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "20286510.058892487125277299909503",
+          "frac": 0.609656
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "6479988.483543291891384534390095",
+          "frac": 0.194738
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "133377.952969495373935992653992",
+          "frac": 0.004008
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "6375460.394951513021151169692321",
+          "frac": 0.191597
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": "figment.poolv1.near",
+      "label": "figment.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "27913093.179334048342469037509325",
+      "share": 0.047041,
+      "rank": 2,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.047041,
+          "explains": "share 4.70%: side 1.71x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.915944,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 25.4%, accounts with 1M+ NEAR 73.4%, liquid-staking contracts <0.1%, lockups (vesting) 1.20%"
+        },
+        {
+          "primitive": "order",
+          "value": 2,
+          "explains": "rank 2: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "7096560.028122417823771677994918",
+          "frac": 0.254219
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "20481485.656423656203721044536632",
+          "frac": 0.733705
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "1409.001702702579908684667331",
+          "frac": 0.00005
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "335678.663295694280284378975322",
+          "frac": 0.012025
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "id": "ledgerbyfigment.poolv1.near",
+      "label": "ledgerbyfigment.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "22968074.415665397701473933025448",
+      "share": 0.038708,
+      "rank": 3,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.038708,
+          "explains": "share 3.87%: side 1.66x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.830866,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 69.1%, accounts with 1M+ NEAR 30.6%, liquid-staking contracts 0.35%"
+        },
+        {
+          "primitive": "order",
+          "value": 3,
+          "explains": "rank 3: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "15914061.164753540953029210308682",
+          "frac": 0.690676
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "7047090.350813602381697409435922",
+          "frac": 0.305846
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "80147.860088176443776449851555",
+          "frac": 0.003478
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "id": "staked.poolv1.near",
+      "label": "staked.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "21019461.615609740426136322462901",
+      "share": 0.035424,
+      "rank": 4,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.035424,
+          "explains": "share 3.54%: side 1.64x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.79484,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 10.6%, accounts with 1M+ NEAR 87.2%, lockups (vesting) 2.25%"
+        },
+        {
+          "primitive": "order",
+          "value": 4,
+          "explains": "rank 4: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "2224948.28899111545245624791113",
+          "frac": 0.105831
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "18325936.476413015163848912875057",
+          "frac": 0.871684
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "472704.928539873186093956863803",
+          "frac": 0.022485
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "id": "binancenode1.poolv1.near",
+      "label": "binancenode1.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "20129876.800994643581130761469535",
+      "share": 0.033925,
+      "rank": 5,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.033925,
+          "explains": "share 3.39%: side 1.63x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.777841,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 2.77%, accounts with 1M+ NEAR 95.7%, liquid-staking contracts 0.50%, lockups (vesting) 0.98%"
+        },
+        {
+          "primitive": "order",
+          "value": 5,
+          "explains": "rank 5: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "557530.365625019268360026710704",
+          "frac": 0.027696
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "19274414.308681283787216101276019",
+          "frac": 0.957468
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "101382.869124995920875398398498",
+          "frac": 0.005036
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "197290.552738237550926960638053",
+          "frac": 0.009801
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "id": "bitwise_1.poolv1.near",
+      "label": "bitwise_1.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "19943140.704942240992389987117569",
+      "share": 0.03361,
+      "rank": 6,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.03361,
+          "explains": "share 3.36%: side 1.62x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.774221,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 5.08%, accounts with 1M+ NEAR 94.9%"
+        },
+        {
+          "primitive": "order",
+          "value": 6,
+          "explains": "rank 6: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "757660.596071879857654486188799",
+          "frac": 0.050833
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "14147296.063641739689323962439654",
+          "frac": 0.949167
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "id": "sumerian.poolv1.near",
+      "label": "sumerian.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "18775665.056471701150314337355771",
+      "share": 0.031642,
+      "rank": 7,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.031642,
+          "explains": "share 3.16%: side 1.61x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.751213,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 12.0%, accounts with 1M+ NEAR 88.0%, liquid-staking contracts <0.1%, lockups (vesting) <0.1%"
+        },
+        {
+          "primitive": "order",
+          "value": 7,
+          "explains": "rank 7: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "2246945.902155487044234460959823",
+          "frac": 0.119669
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "16526134.950984410891391338562621",
+          "frac": 0.88016
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "1069.301137642258336870369534",
+          "frac": 0.000057
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "2124.878535605430616001514374",
+          "frac": 0.000113
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "id": "zavodil.poolv1.near",
+      "label": "NEAR Zavodil node",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "NEAR Zavodil node",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "17933730.896789004919365015729872",
+      "share": 0.030223,
+      "rank": 8,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.030223,
+          "explains": "share 3.02%: side 1.59x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.734175,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 62.8%, accounts with 1M+ NEAR 11.7%, liquid-staking contracts 3.01%, lockups (vesting) 22.5%"
+        },
+        {
+          "primitive": "order",
+          "value": 8,
+          "explains": "rank 8: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "11279032.995329926684123407669187",
+          "frac": 0.627739
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "2098601.176074495582241100203583",
+          "frac": 0.116798
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "540690.897689972382857165162117",
+          "frac": 0.030092
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "4049390.48273244599011554083401",
+          "frac": 0.22537
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "id": "bitwise_2.poolv1.near",
+      "label": "bitwise_2.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "16882458.081487101984385976318512",
+      "share": 0.028452,
+      "rank": 9,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.028452,
+          "explains": "share 2.85%: side 1.58x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.71234,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 80.3%, accounts with 1M+ NEAR 19.7%, liquid-staking contracts <0.1%"
+        },
+        {
+          "primitive": "order",
+          "value": 9,
+          "explains": "rank 9: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "12795458.235856384791099175212981",
+          "frac": 0.802706
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "3142781.528080724953029120996467",
+          "frac": 0.197158
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "2160.527687637679903837986314",
+          "frac": 0.000136
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "id": "liver.pool.near",
+      "label": "liver.pool.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "16260482.03659489246424050624609",
+      "share": 0.027403,
+      "rank": 10,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.027403,
+          "explains": "share 2.74%: side 1.57x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.699085,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 4.10%, accounts with 1M+ NEAR 29.1%, liquid-staking contracts 0.72%, lockups (vesting) 66.1%"
+        },
+        {
+          "primitive": "order",
+          "value": 10,
+          "explains": "rank 10: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "666554.997088047113381133053808",
+          "frac": 0.041002
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "4725798.827182650947629525963546",
+          "frac": 0.290703
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "116331.394020618514734447585528",
+          "frac": 0.007156
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "10747789.582872858536733775560918",
+          "frac": 0.661139
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "id": "cnear-1.poolv1.near",
+      "label": "cnear-1.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "15890175.006251099670791631794178",
+      "share": 0.026779,
+      "rank": 11,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.026779,
+          "explains": "share 2.68%: side 1.56x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.69108,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 0.34%, accounts with 1M+ NEAR 99.7%"
+        },
+        {
+          "primitive": "order",
+          "value": 11,
+          "explains": "rank 11: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "53397.72675918245858176491979",
+          "frac": 0.00336
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "15837368",
+          "frac": 0.99664
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "id": "cnear-3.poolv1.near",
+      "label": "cnear-3.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "15878520.812551079715963656988638",
+      "share": 0.02676,
+      "rank": 12,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.02676,
+          "explains": "share 2.68%: side 1.56x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.690834,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 0.26%, accounts with 1M+ NEAR 99.7%"
+        },
+        {
+          "primitive": "order",
+          "value": 12,
+          "explains": "rank 12: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "41743.07780850194472205348242",
+          "frac": 0.002629
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "15837368",
+          "frac": 0.997371
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "id": "cnear-2.poolv1.near",
+      "label": "cnear-2.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "15877070.793064234667812451547991",
+      "share": 0.026757,
+      "rank": 13,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.026757,
+          "explains": "share 2.68%: side 1.56x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.690796,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 0.25%, accounts with 1M+ NEAR 99.7%"
+        },
+        {
+          "primitive": "order",
+          "value": 13,
+          "explains": "rank 13: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "40292.001680574152785588531728",
+          "frac": 0.002538
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "15837369",
+          "frac": 0.997462
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "id": "kiln-1.poolv1.near",
+      "label": "kiln-1.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://kiln.fi",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "12942299.179865240911606239452277",
+      "share": 0.021811,
+      "rank": 14,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.021811,
+          "explains": "share 2.18%: side 1.51x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.62369,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 14.7%, accounts with 1M+ NEAR 84.4%, liquid-staking contracts 0.87%"
+        },
+        {
+          "primitive": "order",
+          "value": 14,
+          "explains": "rank 14: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "1904964.230108291900886914574644",
+          "frac": 0.14703
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "10938860.400533533253234189201048",
+          "frac": 0.844291
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "112445.429368874933253251126819",
+          "frac": 0.008679
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "id": "svrn-ai.poolv1.near",
+      "label": "svrn-ai.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "12070361.342828718676435134437269",
+      "share": 0.020342,
+      "rank": 15,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.020342,
+          "explains": "share 2.03%: side 1.49x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.602321,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 0.47%, accounts with 1M+ NEAR 99.5%"
+        },
+        {
+          "primitive": "order",
+          "value": 15,
+          "explains": "rank 15: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "56361.279425226995275340988734",
+          "frac": 0.004669
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "12014441.57",
+          "frac": 0.995331
+        }
+      ]
+    },
+    {
+      "index": 15,
+      "id": "svrn.pool.near",
+      "label": "svrn.pool.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "12038256.127931304434863634617524",
+      "share": 0.020288,
+      "rank": 16,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.020288,
+          "explains": "share 2.03%: side 1.49x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.601521,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 0.64%, accounts with 1M+ NEAR 99.4%"
+        },
+        {
+          "primitive": "order",
+          "value": 16,
+          "explains": "rank 16: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "77034.810426792804762176232548",
+          "frac": 0.006399
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "11961661.57",
+          "frac": 0.993601
+        }
+      ]
+    },
+    {
+      "index": 16,
+      "id": "epic.poolv1.near",
+      "label": "epic.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://epicsteak.com",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "11946704.480966975672211342749402",
+      "share": 0.020134,
+      "rank": 17,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.020134,
+          "explains": "share 2.01%: side 1.49x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.599233,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 36.2%, accounts with 1M+ NEAR 50.6%, liquid-staking contracts 1.49%, lockups (vesting) 11.6%"
+        },
+        {
+          "primitive": "order",
+          "value": 17,
+          "explains": "rank 17: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "4272074.893466325652855071814",
+          "frac": 0.362326
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "5970580.368683433981368600566911",
+          "frac": 0.506381
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "176037.205179918320576310957251",
+          "frac": 0.01493
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "1371985.030938854819667765954055",
+          "frac": 0.116362
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "id": "svrn-luganodes.pool.near",
+      "label": "svrn-luganodes.pool.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "11450515.629831278899001967455256",
+      "share": 0.019297,
+      "rank": 18,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.019297,
+          "explains": "share 1.93%: side 1.47x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.586646,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators <0.1%, accounts with 1M+ NEAR 100.0%"
+        },
+        {
+          "primitive": "order",
+          "value": 18,
+          "explains": "rank 18: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "14.923356007581493877973889",
+          "frac": 0.000001
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "11396398",
+          "frac": 0.999999
+        }
+      ]
+    },
+    {
+      "index": 18,
+      "id": "nearvana.poolv1.near",
+      "label": "nearvana.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "10450315.532727950127670215262853",
+      "share": 0.017612,
+      "rank": 19,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.017612,
+          "explains": "share 1.76%: side 1.45x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.560448,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators <0.1%, accounts with 1M+ NEAR 99.9%, liquid-staking contracts <0.1%"
+        },
+        {
+          "primitive": "order",
+          "value": 19,
+          "explains": "rank 19: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "9693.965456042598005498047711",
+          "frac": 0.000928
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "10438837.944321818451099438733112",
+          "frac": 0.998866
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "2160.527596600845867410310937",
+          "frac": 0.000207
+        }
+      ]
+    },
+    {
+      "index": 19,
+      "id": "stake1.poolv1.near",
+      "label": "stake1.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "10427998.746268443055822903683133",
+      "share": 0.017574,
+      "rank": 20,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.017574,
+          "explains": "share 1.76%: side 1.45x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.559843,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 15.0%, accounts with 1M+ NEAR 82.6%, liquid-staking contracts 2.32%, lockups (vesting) <0.1%"
+        },
+        {
+          "primitive": "order",
+          "value": 20,
+          "explains": "rank 20: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "1569211.667199686884480015177661",
+          "frac": 0.150475
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "8617370.809240072482643127626846",
+          "frac": 0.82634
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "241779.599789795039410117320379",
+          "frac": 0.023185
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "0.001840861248127259252368",
+          "frac": 0
+        }
+      ]
+    },
+    {
+      "index": 20,
+      "id": "svrn_bitwise.poolv1.near",
+      "label": "svrn_bitwise.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "10408500.242110231119269477153201",
+      "share": 0.017541,
+      "rank": 21,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.017541,
+          "explains": "share 1.75%: side 1.45x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.559317,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 0.48%, accounts with 1M+ NEAR 99.5%"
+        },
+        {
+          "primitive": "order",
+          "value": 21,
+          "explains": "rank 21: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "50187.83118912885299200090214",
+          "frac": 0.004822
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "10358689",
+          "frac": 0.995178
+        }
+      ]
+    },
+    {
+      "index": 21,
+      "id": "metapool01.pool.near",
+      "label": "metapool01.pool.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "9189223.193722989219825985712941",
+      "share": 0.015486,
+      "rank": 22,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.015486,
+          "explains": "share 1.55%: side 1.42x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.525534,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators <0.1%, liquid-staking contracts 100.0%"
+        },
+        {
+          "primitive": "order",
+          "value": 22,
+          "explains": "rank 22: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "1749.367788620585407852250868",
+          "frac": 0.00019
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "9187814.466853410139245976934892",
+          "frac": 0.99981
+        }
+      ]
+    },
+    {
+      "index": 22,
+      "id": "p2p-org.poolv1.near",
+      "label": "p2p-org.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://p2p.org/near",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "8006152.072840550750212200750831",
+      "share": 0.013493,
+      "rank": 23,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.013493,
+          "explains": "share 1.35%: side 1.38x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.490552,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 48.0%, accounts with 1M+ NEAR 48.9%, liquid-staking contracts 0.26%, lockups (vesting) 2.82%"
+        },
+        {
+          "primitive": "order",
+          "value": 23,
+          "explains": "rank 23: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "3844673.493882260909041699275125",
+          "frac": 0.480199
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "3915281.968062856634893082692487",
+          "frac": 0.489018
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "20456.313435829181378958072266",
+          "frac": 0.002555
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "226005.932232678201848682737862",
+          "frac": 0.028228
+        }
+      ]
+    },
+    {
+      "index": 23,
+      "id": "dragonfly.poolv1.near",
+      "label": "dragonfly.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "7905852.949330173331521427775486",
+      "share": 0.013324,
+      "rank": 24,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.013324,
+          "explains": "share 1.33%: side 1.38x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.48747,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 2.01%, accounts with 1M+ NEAR 95.2%, liquid-staking contracts 2.81%"
+        },
+        {
+          "primitive": "order",
+          "value": 24,
+          "explains": "rank 24: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "159114.258270646665245351800523",
+          "frac": 0.020126
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "7524772.904865315357327900808491",
+          "frac": 0.95177
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "222194.741502019638259322746428",
+          "frac": 0.028104
+        }
+      ]
+    },
+    {
+      "index": 24,
+      "id": "allnodes.poolv1.near",
+      "label": "allnodes.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://www.allnodes.com/near",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "6816543.341740560299908655967888",
+      "share": 0.011488,
+      "rank": 25,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.011488,
+          "explains": "share 1.15%: side 1.34x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.45264,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 95.6%, liquid-staking contracts 4.38%, lockups (vesting) <0.1%"
+        },
+        {
+          "primitive": "order",
+          "value": 25,
+          "explains": "rank 25: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "6518138.37500264892520525824999",
+          "frac": 0.956077
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "298897.456098948832090744477676",
+          "frac": 0.043842
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "548.53973430823948372512979",
+          "frac": 0.00008
+        }
+      ]
+    },
+    {
+      "index": 25,
+      "id": "bisontrails.poolv1.near",
+      "label": "bisontrails.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "6791152.954741812230366568862154",
+      "share": 0.011445,
+      "rank": 26,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.011445,
+          "explains": "share 1.14%: side 1.33x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.451792,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 70.4%, accounts with 1M+ NEAR 26.5%, liquid-staking contracts <0.1%, lockups (vesting) 3.10%"
+        },
+        {
+          "primitive": "order",
+          "value": 26,
+          "explains": "rank 26: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "4779682.415720450623493432369028",
+          "frac": 0.703788
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "1797901.53084635913167553397029",
+          "frac": 0.264733
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "3045.79472724842685238449145",
+          "frac": 0.000448
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "210738.111622730111196264233545",
+          "frac": 0.03103
+        }
+      ]
+    },
+    {
+      "index": 26,
+      "id": "macrodatarefinement.poolv1.near",
+      "label": "macrodatarefinement.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "6715115.629803803051670691693202",
+      "share": 0.011317,
+      "rank": 27,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.011317,
+          "explains": "share 1.13%: side 1.33x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.449259,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators <0.1%, accounts with 1M+ NEAR 98.1%, liquid-staking contracts 1.94%"
+        },
+        {
+          "primitive": "order",
+          "value": 27,
+          "explains": "rank 27: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "99.764724996351178097956895",
+          "frac": 0.000015
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "6585270.558778941209608453104471",
+          "frac": 0.98063
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "129974.693436216900907737740899",
+          "frac": 0.019355
+        }
+      ]
+    },
+    {
+      "index": 27,
+      "id": "aca87218e28c41f5a693dee3dff12238.poolv1.near",
+      "label": "aca87218e28c41f5a693dee3dff12238.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "6372941.874469208041373281977169",
+      "share": 0.01074,
+      "rank": 28,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.01074,
+          "explains": "share 1.07%: side 1.32x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.437656,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators <0.1%, accounts with 1M+ NEAR 99.9%, liquid-staking contracts <0.1%"
+        },
+        {
+          "primitive": "order",
+          "value": 28,
+          "explains": "rank 28: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "2469.580252756505709999592494",
+          "frac": 0.000387
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "6366360.554596114704958595774972",
+          "frac": 0.998935
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "4318.63348570126266061155588",
+          "frac": 0.000678
+        }
+      ]
+    },
+    {
+      "index": 28,
+      "id": "silentnodes.pool.near",
+      "label": "silentnodes.pool.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "6060510.873985015542441343901243",
+      "share": 0.010214,
+      "rank": 29,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.010214,
+          "explains": "share 1.02%: side 1.30x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.426804,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators <0.1%, accounts with 1M+ NEAR 100.0%"
+        },
+        {
+          "primitive": "order",
+          "value": 29,
+          "explains": "rank 29: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "1903.616972591090206684713145",
+          "frac": 0.000314
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "6058840",
+          "frac": 0.999686
+        }
+      ]
+    },
+    {
+      "index": 29,
+      "id": "d1.poolv1.near",
+      "label": "d1.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://d1.ventures",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "6055333.926943943246468662854505",
+      "share": 0.010205,
+      "rank": 30,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.010205,
+          "explains": "share 1.02%: side 1.30x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.426616,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 3.43%, liquid-staking contracts 6.44%, lockups (vesting) 90.1%"
+        },
+        {
+          "primitive": "order",
+          "value": 30,
+          "explains": "rank 30: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "207740.76267404875928250657741",
+          "frac": 0.034306
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "390269.78451269133802133675671",
+          "frac": 0.064449
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "5457508.638512418802315494243137",
+          "frac": 0.901245
+        }
+      ]
+    },
+    {
+      "index": 30,
+      "id": "svrn-twinstake.poolv1.near",
+      "label": "svrn-twinstake.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "6012798.909343807524422065436924",
+      "share": 0.010133,
+      "rank": 31,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.010133,
+          "explains": "share 1.01%: side 1.30x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.425109,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators <0.1%, accounts with 1M+ NEAR 100.0%"
+        },
+        {
+          "primitive": "order",
+          "value": 31,
+          "explains": "rank 31: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "1180.288500672393207861537188",
+          "frac": 0.000196
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "6011823.5",
+          "frac": 0.999804
+        }
+      ]
+    },
+    {
+      "index": 31,
+      "id": "stakin.poolv1.near",
+      "label": "stakin.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://stakin.com",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "5667030.921169736965215249965995",
+      "share": 0.009551,
+      "rank": 32,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.009551,
+          "explains": "share 0.96%: side 1.29x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.41272,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 42.7%, accounts with 1M+ NEAR 48.0%, liquid-staking contracts 3.27%, lockups (vesting) 6.02%"
+        },
+        {
+          "primitive": "order",
+          "value": 32,
+          "explains": "rank 32: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "2421268.261726689174865165987533",
+          "frac": 0.427251
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "2719437.478011625301603270323935",
+          "frac": 0.479865
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "185225.652663031430458558917479",
+          "frac": 0.032684
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "341156.100289981044772045544676",
+          "frac": 0.0602
+        }
+      ]
+    },
+    {
+      "index": 32,
+      "id": "lst-pool.near",
+      "label": "lst-pool.near",
+      "kind": "staking_entity",
+      "identity": {
+        "name": "Liquid Staking NEAR Token",
+        "source": "fastnear-rpc-liquid-staking",
+        "status": "self-declared"
+      },
+      "amount": "5508197.267993764220521559004658",
+      "share": 0.009283,
+      "rank": 33,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.009283,
+          "explains": "share 0.93%: side 1.28x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.406888,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_entity",
+          "explains": "kind: liquid staking"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (fastnear-rpc-liquid-staking)"
+        },
+        {
+          "primitive": "segments",
+          "value": 0,
+          "explains": "no backers recorded"
+        },
+        {
+          "primitive": "order",
+          "value": 33,
+          "explains": "rank 33: largest first, clockwise from the top"
+        }
+      ]
+    },
+    {
+      "index": 33,
+      "id": "legends.poolv1.near",
+      "label": "legends.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://legends.llc",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "4945840.890197288568975893155146",
+      "share": 0.008335,
+      "rank": 34,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.008335,
+          "explains": "share 0.83%: side 1.25x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.385553,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 10.4%, accounts with 1M+ NEAR 88.6%, lockups (vesting) 1.00%"
+        },
+        {
+          "primitive": "order",
+          "value": 34,
+          "explains": "rank 34: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "513389.366049916097604341784166",
+          "frac": 0.1038
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "4382985.900030655750265103582031",
+          "frac": 0.886176
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "49579.851681890548969649384317",
+          "frac": 0.010024
+        }
+      ]
+    },
+    {
+      "index": 34,
+      "id": "northernlights.poolv1.near",
+      "label": "northernlights.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "4580984.681269728721165367534074",
+      "share": 0.00772,
+      "rank": 35,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.00772,
+          "explains": "share 0.77%: side 1.23x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.371056,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 0.12%, liquid-staking contracts 0.93%, lockups (vesting) 99.0%"
+        },
+        {
+          "primitive": "order",
+          "value": 35,
+          "explains": "rank 35: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "5375.0045601696244239703788",
+          "frac": 0.001173
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "42644.742520524306472325689619",
+          "frac": 0.009309
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "4533093.182436151508160066389546",
+          "frac": 0.989518
+        }
+      ]
+    },
+    {
+      "index": 35,
+      "id": "republic.poolv1.near",
+      "label": "republic.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "4312823.490289835864225245864107",
+      "share": 0.007268,
+      "rank": 36,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.007268,
+          "explains": "share 0.73%: side 1.21x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.36003,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 0.25%, accounts with 1M+ NEAR 99.6%, liquid-staking contracts 0.19%"
+        },
+        {
+          "primitive": "order",
+          "value": 36,
+          "explains": "rank 36: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "10863.491137134598098725545472",
+          "frac": 0.002519
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "4294057.659007233066167374774175",
+          "frac": 0.99562
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "8027.14122817788196848321623",
+          "frac": 0.001861
+        }
+      ]
+    },
+    {
+      "index": 36,
+      "id": "okx-earn.poolv1.near",
+      "label": "okx-earn.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "4146538.615703218939123512508341",
+      "share": 0.006988,
+      "rank": 37,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.006988,
+          "explains": "share 0.70%: side 1.20x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.353026,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 21.7%, accounts with 1M+ NEAR 74.9%, liquid-staking contracts 3.37%"
+        },
+        {
+          "primitive": "order",
+          "value": 37,
+          "explains": "rank 37: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "901764.82991851501500311275079",
+          "frac": 0.217468
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "3105348.604890495126468564873247",
+          "frac": 0.748879
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "139550.328259087733960286180008",
+          "frac": 0.033654
+        }
+      ]
+    },
+    {
+      "index": 37,
+      "id": "rekt.poolv1.near",
+      "label": "rekt.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "3788400.750767566893722901348579",
+      "share": 0.006385,
+      "rank": 38,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.006385,
+          "explains": "share 0.64%: side 1.18x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.337451,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 22.8%, liquid-staking contracts 8.77%, lockups (vesting) 68.4%"
+        },
+        {
+          "primitive": "order",
+          "value": 38,
+          "explains": "rank 38: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "864815.853197568662460106506086",
+          "frac": 0.228274
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "332109.92194736880594858146756",
+          "frac": 0.087663
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "2591570.153484682473475871472832",
+          "frac": 0.684063
+        }
+      ]
+    },
+    {
+      "index": 38,
+      "id": "ni.poolv1.near",
+      "label": "Nobodyinc",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "Nobodyinc",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "3543294.245169339298163589276221",
+      "share": 0.005971,
+      "rank": 39,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.005971,
+          "explains": "share 0.60%: side 1.16x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.326328,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 2.40%, accounts with 1M+ NEAR 86.4%, liquid-staking contracts 7.03%, lockups (vesting) 4.20%"
+        },
+        {
+          "primitive": "order",
+          "value": 39,
+          "explains": "rank 39: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "85018.155615898318771831228796",
+          "frac": 0.023993
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "3060584.44032099360947299461136",
+          "frac": 0.863745
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "248983.692044218839697417485699",
+          "frac": 0.070267
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "148801.728266314525565839060307",
+          "frac": 0.041994
+        }
+      ]
+    },
+    {
+      "index": 39,
+      "id": "everstake.poolv1.near",
+      "label": "Everstake",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "Everstake",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "3386933.123984446062623819779142",
+      "share": 0.005708,
+      "rank": 40,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.005708,
+          "explains": "share 0.57%: side 1.15x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.31906,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 46.8%, accounts with 1M+ NEAR 33.9%, liquid-staking contracts 9.11%, lockups (vesting) 10.2%"
+        },
+        {
+          "primitive": "order",
+          "value": 40,
+          "explains": "rank 40: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "1584798.088276613960240085464739",
+          "frac": 0.467904
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "1147436.281841718405290039986357",
+          "frac": 0.338775
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "308586.779466315867164698314804",
+          "frac": 0.091109
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "346192.597775466214671360915297",
+          "frac": 0.102212
+        }
+      ]
+    },
+    {
+      "index": 40,
+      "id": "gtnode-0.poolv1.near",
+      "label": "gtnode-0.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "3311535.15457256358483040857886",
+      "share": 0.005581,
+      "rank": 41,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.005581,
+          "explains": "share 0.56%: side 1.14x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.315491,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 16.1%, accounts with 1M+ NEAR 77.8%, liquid-staking contracts 6.13%"
+        },
+        {
+          "primitive": "order",
+          "value": 41,
+          "explains": "rank 41: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "533650.109370405774797990754673",
+          "frac": 0.161144
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "2574976.131397555422330178346061",
+          "frac": 0.777555
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "203005.896923174668223011676339",
+          "frac": 0.061301
+        }
+      ]
+    },
+    {
+      "index": 41,
+      "id": "nearfans.poolv1.near",
+      "label": "nearfans.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "3118091.471593407896375228251549",
+      "share": 0.005255,
+      "rank": 42,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.005255,
+          "explains": "share 0.53%: side 1.13x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.306138,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 48.8%, liquid-staking contracts 5.97%, lockups (vesting) 45.3%"
+        },
+        {
+          "primitive": "order",
+          "value": 42,
+          "explains": "rank 42: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "1520183.039410299212389938184958",
+          "frac": 0.487525
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "186225.90168144375180431684751",
+          "frac": 0.059723
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "1411753.279272475822721664816807",
+          "frac": 0.452752
+        }
+      ]
+    },
+    {
+      "index": 42,
+      "id": "nearone.pool.near",
+      "label": "nearone.pool.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "3026120.128644614887595818477262",
+      "share": 0.0051,
+      "rank": 43,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.0051,
+          "explains": "share 0.51%: side 1.12x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.301589,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 0.17%, accounts with 1M+ NEAR 99.8%"
+        },
+        {
+          "primitive": "order",
+          "value": 43,
+          "explains": "rank 43: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "5046.653973228871644421869032",
+          "frac": 0.001668
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "3021186.967684823716324524522067",
+          "frac": 0.998332
+        }
+      ]
+    },
+    {
+      "index": 43,
+      "id": "x.poolv1.near",
+      "label": "x.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "2949867.516275668119149752614991",
+      "share": 0.004971,
+      "rank": 44,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.004971,
+          "explains": "share 0.50%: side 1.11x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.297751,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 44.3%, lockups (vesting) 55.7%"
+        },
+        {
+          "primitive": "order",
+          "value": 44,
+          "explains": "rank 44: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "1306931.74776165195968605336793",
+          "frac": 0.443035
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "1643021",
+          "frac": 0.556965
+        }
+      ]
+    },
+    {
+      "index": 44,
+      "id": "here.poolv1.near",
+      "label": "here.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "2638034.192826928957808318473171",
+      "share": 0.004446,
+      "rank": 45,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.004446,
+          "explains": "share 0.44%: side 1.08x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.281589,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 49.2%, accounts with 1M+ NEAR 39.3%, liquid-staking contracts 9.24%, lockups (vesting) 2.28%"
+        },
+        {
+          "primitive": "order",
+          "value": 45,
+          "explains": "rank 45: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "1298469.90572879325944131901807",
+          "frac": 0.492123
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "1035976.194661906807504262657562",
+          "frac": 0.392637
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "243774.857738818960969952202292",
+          "frac": 0.092391
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "60285.815474850260619635670185",
+          "frac": 0.022848
+        }
+      ]
+    },
+    {
+      "index": 45,
+      "id": "twinstake.poolv1.near",
+      "label": "twinstake.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://www.twinstake.io",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "2432372.304551444056492728805856",
+      "share": 0.004099,
+      "rank": 46,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.004099,
+          "explains": "share 0.41%: side 1.06x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.270377,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 99.8%, liquid-staking contracts 0.16%"
+        },
+        {
+          "primitive": "order",
+          "value": 46,
+          "explains": "rank 46: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "2428511.089859403239363981230822",
+          "frac": 0.99839
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "3915.968396965582195837764635",
+          "frac": 0.00161
+        }
+      ]
+    },
+    {
+      "index": 46,
+      "id": "bitcoinsuisse.poolv1.near",
+      "label": "bitcoinsuisse.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "2338185.183731293082101343533543",
+      "share": 0.003941,
+      "rank": 47,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003941,
+          "explains": "share 0.39%: side 1.05x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.265115,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 55.5%, accounts with 1M+ NEAR 44.5%"
+        },
+        {
+          "primitive": "order",
+          "value": 47,
+          "explains": "rank 47: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "1298630.520986173115007233634661",
+          "frac": 0.555386
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "1039616",
+          "frac": 0.444614
+        }
+      ]
+    },
+    {
+      "index": 47,
+      "id": "lux.poolv1.near",
+      "label": "lux.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://lux8.net",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "2267456.956140057158515471274212",
+      "share": 0.003821,
+      "rank": 48,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003821,
+          "explains": "share 0.38%: side 1.04x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.261047,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 0.58%, liquid-staking contracts 6.52%, lockups (vesting) 92.9%"
+        },
+        {
+          "primitive": "order",
+          "value": 48,
+          "explains": "rank 48: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "13077.825116990483752917880327",
+          "frac": 0.005768
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "147760.728058720656579974904467",
+          "frac": 0.065165
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "2106655.358662668068260986598095",
+          "frac": 0.929068
+        }
+      ]
+    },
+    {
+      "index": 48,
+      "id": "anonymous.poolv1.near",
+      "label": "anonymous.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "2252976.48465842759328256662772",
+      "share": 0.003797,
+      "rank": 49,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003797,
+          "explains": "share 0.38%: side 1.04x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.260226,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 0.15%, lockups (vesting) 99.9%"
+        },
+        {
+          "primitive": "order",
+          "value": 49,
+          "explains": "rank 49: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "3334.493390777507948794232558",
+          "frac": 0.00148
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "2249700",
+          "frac": 0.99852
+        }
+      ]
+    },
+    {
+      "index": 49,
+      "id": "erm.poolv1.near",
+      "label": "erm.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://t.me/narniec",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "2251031.082102724881739511352468",
+      "share": 0.003794,
+      "rank": 50,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003794,
+          "explains": "share 0.38%: side 1.04x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.260123,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 0.27%, liquid-staking contracts 0.54%, lockups (vesting) 99.2%"
+        },
+        {
+          "primitive": "order",
+          "value": 50,
+          "explains": "rank 50: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "6113.098376551023441518836479",
+          "frac": 0.002716
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "12068.414352654573881422934201",
+          "frac": 0.005361
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "2232887.090249632419513274609565",
+          "frac": 0.991923
+        }
+      ]
+    },
+    {
+      "index": 50,
+      "id": "staking4all.poolv1.near",
+      "label": "staking4all.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://www.staking4all.org/",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "2235108.663122235008986486623386",
+      "share": 0.003767,
+      "rank": 51,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003767,
+          "explains": "share 0.38%: side 1.04x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.259196,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 37.0%, accounts with 1M+ NEAR 49.5%, liquid-staking contracts 13.5%"
+        },
+        {
+          "primitive": "order",
+          "value": 51,
+          "explains": "rank 51: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "752504.287461917546308224817131",
+          "frac": 0.370022
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "1006800.301558244998441519656162",
+          "frac": 0.495064
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "274370.436523888587009809580594",
+          "frac": 0.134914
+        }
+      ]
+    },
+    {
+      "index": 51,
+      "id": "dsrvlabs.poolv1.near",
+      "label": "DSRV",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "DSRV",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "2140785.182430330678845789050493",
+      "share": 0.003608,
+      "rank": 52,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003608,
+          "explains": "share 0.36%: side 1.03x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.253667,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 2.13%, lockups (vesting) 97.9%"
+        },
+        {
+          "primitive": "order",
+          "value": 52,
+          "explains": "rank 52: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "45515.570092574382683573673583",
+          "frac": 0.021261
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "2095303.829840291504327584462628",
+          "frac": 0.978739
+        }
+      ]
+    },
+    {
+      "index": 52,
+      "id": "blockdaemon.poolv1.near",
+      "label": "blockdaemon.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "2132418.24641290220849463994588",
+      "share": 0.003594,
+      "rank": 53,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003594,
+          "explains": "share 0.36%: side 1.03x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.253174,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 41.1%, accounts with 1M+ NEAR 50.3%, liquid-staking contracts 8.63%, lockups (vesting) <0.1%"
+        },
+        {
+          "primitive": "order",
+          "value": 53,
+          "explains": "rank 53: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "877001.18808152453820303399443",
+          "frac": 0.411037
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "1072431.630871337323699271539935",
+          "frac": 0.502632
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "184049.629114169850119036042091",
+          "frac": 0.086261
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "150.887786267121106207601488",
+          "frac": 0.000071
+        }
+      ]
+    },
+    {
+      "index": 53,
+      "id": "moonlet.poolv1.near",
+      "label": "Moonlet.io",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "Moonlet.io",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "2053486.185997635659398514892839",
+      "share": 0.003461,
+      "rank": 54,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003461,
+          "explains": "share 0.35%: side 1.02x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.248446,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 6.93%, liquid-staking contracts 18.3%, lockups (vesting) 74.7%"
+        },
+        {
+          "primitive": "order",
+          "value": 54,
+          "explains": "rank 54: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "142291.881881182891750421252326",
+          "frac": 0.069292
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "376586.727730973979856035789773",
+          "frac": 0.183386
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "1534636.258658842186965635176462",
+          "frac": 0.747322
+        }
+      ]
+    },
+    {
+      "index": 54,
+      "id": "cryptium.poolv1.near",
+      "label": "Cryptium Labs",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "Cryptium Labs",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "2047509.608037713231567095623813",
+      "share": 0.003451,
+      "rank": 55,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003451,
+          "explains": "share 0.35%: side 1.01x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.248087,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 61.1%, liquid-staking contracts 13.1%, lockups (vesting) 25.9%"
+        },
+        {
+          "primitive": "order",
+          "value": 55,
+          "explains": "rank 55: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "1250309.213273733020648590711547",
+          "frac": 0.61064
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "267402.441513137949240922475496",
+          "frac": 0.130597
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "529826.555200723294149444352888",
+          "frac": 0.258763
+        }
+      ]
+    },
+    {
+      "index": 55,
+      "id": "buildlinks.poolv1.near",
+      "label": "buildlinks.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://www.buildlinks.org",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "2037117.300671929631469710390305",
+      "share": 0.003433,
+      "rank": 56,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003433,
+          "explains": "share 0.34%: side 1.01x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.247439,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 2.41%, liquid-staking contracts 16.7%, lockups (vesting) 80.9%"
+        },
+        {
+          "primitive": "order",
+          "value": 56,
+          "explains": "rank 56: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "49165.708411357530887084104506",
+          "frac": 0.024135
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "340073.673591937304469256504193",
+          "frac": 0.166936
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "1647906.07445183172826330103844",
+          "frac": 0.808929
+        }
+      ]
+    },
+    {
+      "index": 56,
+      "id": "npro.poolv1.near",
+      "label": "NPRO Validator",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "NPRO Validator",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "2035394.842327415888647091333088",
+      "share": 0.00343,
+      "rank": 57,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.00343,
+          "explains": "share 0.34%: side 1.01x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.247331,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 1,
+          "explains": "other delegators 100.0%"
+        },
+        {
+          "primitive": "order",
+          "value": 57,
+          "explains": "rank 57: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "2034612.661605998826034130026947",
+          "frac": 1
+        }
+      ]
+    },
+    {
+      "index": 57,
+      "id": "baziliknear.poolv1.near",
+      "label": "baziliknear.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "2018296.714766828254391970603977",
+      "share": 0.003401,
+      "rank": 58,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003401,
+          "explains": "share 0.34%: side 1.01x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.246283,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 3,
+          "explains": "other delegators 0.73%, liquid-staking contracts 2.97%, lockups (vesting) 96.3%"
+        },
+        {
+          "primitive": "order",
+          "value": 58,
+          "explains": "rank 58: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "14716.154041638474513619956928",
+          "frac": 0.007291
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "59903.046001881009366214344157",
+          "frac": 0.02968
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "1943704.722200035071144360452929",
+          "frac": 0.963029
+        }
+      ]
+    },
+    {
+      "index": 58,
+      "id": "sofarsonear.poolv1.near",
+      "label": "sofarsonear.poolv1.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "amount": "1996066.183043201352616378295561",
+      "share": 0.003364,
+      "rank": 59,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003364,
+          "explains": "share 0.34%: side 1.01x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.24494,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "no source names this account"
+        },
+        {
+          "primitive": "segments",
+          "value": 2,
+          "explains": "other delegators 1.22%, accounts with 1M+ NEAR 98.8%"
+        },
+        {
+          "primitive": "order",
+          "value": 59,
+          "explains": "rank 59: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "24394.342873706855559382794728",
+          "frac": 0.012221
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "1971715.010081382881683068602396",
+          "frac": 0.987779
+        }
+      ]
+    },
+    {
+      "index": 59,
+      "id": "chorusone.poolv1.near",
+      "label": "chorusone.poolv1.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "https://chorus.one/",
+        "source": "nearblocks-validators",
+        "status": "self-declared"
+      },
+      "amount": "1938442.658457211882645987449132",
+      "share": 0.003267,
+      "rank": 60,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.003267,
+          "explains": "share 0.33%: side 1.00x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.241382,
+          "explains": "square root of its share, relative to the largest petal"
+        },
+        {
+          "primitive": "colour",
+          "value": "staking_pool",
+          "explains": "kind: pool"
+        },
+        {
+          "primitive": "outline",
+          "value": "solid",
+          "explains": "identity self-declared (nearblocks-validators)"
+        },
+        {
+          "primitive": "segments",
+          "value": 4,
+          "explains": "other delegators 87.8%, accounts with 1M+ NEAR <0.1%, liquid-staking contracts <0.1%, lockups (vesting) 12.2%"
+        },
+        {
+          "primitive": "order",
+          "value": 60,
+          "explains": "rank 60: largest first, clockwise from the top"
+        }
+      ],
+      "segments": [
+        {
+          "key": "other",
+          "label": "other delegators",
+          "amount": "1701794.794346997433313446196661",
+          "frac": 0.877907
+        },
+        {
+          "key": "large",
+          "label": "accounts with 1M+ NEAR",
+          "amount": "0.000000004602714487057116",
+          "frac": 0
+        },
+        {
+          "key": "liquid",
+          "label": "liquid-staking contracts",
+          "amount": "43.758969174987810066225495",
+          "frac": 0.000023
+        },
+        {
+          "key": "lockup",
+          "label": "lockups (vesting)",
+          "amount": "236628.950119060375811501686845",
+          "frac": 0.12207
+        }
+      ]
+    },
+    {
+      "index": 60,
+      "id": "__tail",
+      "label": "everyone else",
+      "kind": "group",
+      "identity": null,
+      "amount": "81869050.738906256586067675155591",
+      "share": 0.137972,
+      "rank": 61,
+      "values": [
+        {
+          "primitive": "width",
+          "value": 0.137972,
+          "explains": "share 13.8%: side 2.00x the narrowest"
+        },
+        {
+          "primitive": "height",
+          "value": 0.08895,
+          "explains": "square root of its share, relative to the largest petal (average member)"
+        },
+        {
+          "primitive": "colour",
+          "value": "tail",
+          "explains": "hatched: grouped, not one account"
+        },
+        {
+          "primitive": "outline",
+          "value": "none",
+          "explains": "grouped: no single identity"
+        },
+        {
+          "primitive": "segments",
+          "value": 0,
+          "explains": "grouped: not split"
+        },
+        {
+          "primitive": "order",
+          "value": 61,
+          "explains": "after the top 60: largest first, clockwise from the top"
+        }
+      ],
+      "count": 311
+    }
+  ]
+}

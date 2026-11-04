@@ -1,4 +1,4 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src", "test", "schema/*.json"]
+  "include": ["src", "test", "scripts", "schema/*.json"]
 }
