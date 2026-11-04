@@ -1,0 +1,243 @@
+// prepare_publish and publish_flower (tools.md; shared-map.md, Writing, Phase A relayed
+// publish). The maker signs one NEP-413 message naming the entry hash; Petal's writer writes
+// petal/v1/spec/<id>, and the mirror keeps a local copy.
+import {
+  canonicalJson,
+  entryId,
+  NotImplementedError,
+  renderFlower,
+  schemas,
+  specHash,
+} from '@petal/core';
+import type { Entry, Nep413Proof } from '@petal/core/types';
+import { issueNonce, verifyNep413 } from '@petal/near/auth';
+import { MAP_LIMITS, mapKeys } from '@petal/near/map';
+import { compile, defineTool, describeErrors } from '../define.ts';
+import { draftStore } from '../drafts.ts';
+import { ToolFailure } from '../errors.ts';
+import type { ToolContext } from '../types.ts';
+import { draftOf, entrySha256, publishMessage } from '../verify.ts';
+import { base, DATETIME, ENTRY_ID, galleryUrl, obj, SHA256 } from './shared.ts';
+import { checkSpec, summarise } from './specs.ts';
+
+const checkEntrySchema = compile(schemas.entry as Record<string, unknown>);
+
+function writerAccount(ctx: ToolContext): string {
+  return ctx.config.map?.writer ?? ctx.map.trustedWriters[0] ?? 'unknown';
+}
+
+function explorerUrl(ctx: ToolContext, tx: string): string {
+  const net = ctx.config.map?.network ?? 'testnet';
+  return net === 'mainnet'
+    ? `https://nearblocks.io/txns/${tx}`
+    : `https://testnet.nearblocks.io/txns/${tx}`;
+}
+
+export const preparePublish = defineTool<{ entry: Partial<Entry> }, object>({
+  name: 'prepare_publish',
+  title: 'Prepare to publish',
+  description:
+    'Get the exact NEP-413 message a maker signs to publish a flower, with a fresh nonce. Pass ' +
+    'the entry without id and maker (spec, spec_sha256, interpretation, snapshot, render_sha256, ' +
+    'provenance). Hand sign_url to the human: their wallet signs; never ask anyone for a key.',
+  input: obj(
+    ['entry'],
+    { entry: { type: 'object', description: 'flower/v1 entry without id and provenance.maker' } },
+    { additionalProperties: false },
+  ),
+  output: obj(['entry_sha256', 'nonce', 'recipient', 'message', 'expires_at', 'sign_url'], {
+    entry_sha256: SHA256,
+    nonce: { type: 'string' },
+    recipient: { type: 'string' },
+    message: { type: 'string' },
+    expires_at: DATETIME,
+    sign_url: { type: 'string' },
+  }),
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: false },
+  async run({ entry }, ctx) {
+    if (typeof entry.provenance !== 'object' || entry.provenance === null) {
+      throw new ToolFailure('bad_input', 'entry.provenance is missing.', 'See $defs.entry.');
+    }
+    const draft = draftOf(entry);
+    if (!checkEntrySchema({ ...draft, id: '0'.repeat(24) })) {
+      throw new ToolFailure(
+        'bad_input',
+        `The entry does not match flower/v1: ${describeErrors(checkEntrySchema.errors)}`,
+        'Build it from propose_spec, validate_spec and render_flower results.',
+      );
+    }
+    if (draft.spec_sha256 !== specHash(draft.spec)) {
+      throw new ToolFailure('bad_input', 'spec_sha256 is not the hash of the spec.');
+    }
+    if (draft.snapshot.sha256 !== draft.spec.snapshot.sha256) {
+      throw new ToolFailure('bad_input', "snapshot.sha256 is not the spec's snapshot.");
+    }
+    const { validation, snapshot } = await checkSpec(ctx, draft.spec, draft.interpretation);
+    if (!validation.valid || !snapshot) {
+      throw new ToolFailure(
+        'invalid_spec',
+        `The spec or interpretation is not valid: ${summarise(validation)}`,
+        'validate_spec with the interpretation lists every error.',
+      );
+    }
+    if (renderFlower(draft.spec, snapshot).render_sha256 !== draft.render_sha256) {
+      throw new ToolFailure(
+        'bad_input',
+        "render_sha256 is not what Petal's renderer draws for this spec.",
+        'Take render_sha256 from render_flower (default size).',
+      );
+    }
+    const entry_sha256 = entrySha256(draft);
+    const { nonce, expires_at } = issueNonce();
+    const recipient = ctx.map.receiver;
+    const message = publishMessage(entry_sha256);
+    await draftStore(ctx.config).put({
+      entry_sha256,
+      entry: draft,
+      nonce,
+      expires_at,
+      recipient,
+      message,
+      created_at: ctx.now().toISOString(),
+    });
+    // The publish page (W6) rebuilds the message from the entry hash; the URL carries the rest,
+    // since no route reads a prepared draft back.
+    const q = new URLSearchParams({ nonce, recipient, expires_at });
+    return {
+      entry_sha256,
+      nonce,
+      recipient,
+      message,
+      expires_at,
+      sign_url: `${base(ctx)}/publish/${entry_sha256}?${q}`,
+    };
+  },
+});
+
+const PROOF = obj(
+  ['type', 'account_id', 'public_key', 'signature', 'message', 'nonce', 'recipient'],
+  {
+    type: { const: 'nep413' },
+    account_id: { type: 'string', minLength: 1 },
+    public_key: { type: 'string', pattern: '^ed25519:' },
+    signature: { type: 'string', minLength: 1 },
+    message: { type: 'string', minLength: 1 },
+    nonce: { type: 'string', minLength: 1 },
+    recipient: { type: 'string', minLength: 1 },
+  },
+  { additionalProperties: false, description: "the wallet's NEP-413 signMessage result" },
+);
+
+const unauthorised = (message: string) =>
+  new ToolFailure('unauthorised', message, 'Call prepare_publish again and sign the new message.');
+
+export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Proof }, object>({
+  name: 'publish_flower',
+  title: 'Publish a flower',
+  description:
+    "Publish a prepared flower to the shared map on NEAR with the maker's NEP-413 proof. Checks " +
+    'the nonce is fresh and unused, the signature, and that the key is a full-access key of the ' +
+    "account; then Petal's writer writes petal/v1/spec/<id>.",
+  input: obj(
+    ['entry_sha256', 'proof'],
+    { entry_sha256: SHA256, proof: PROOF },
+    {
+      additionalProperties: false,
+    },
+  ),
+  output: obj(['id', 'key', 'receiver', 'writer', 'tx_hash', 'explorer_url', 'gallery_url'], {
+    id: ENTRY_ID,
+    key: { type: 'string' },
+    receiver: { type: 'string' },
+    writer: { type: 'string' },
+    tx_hash: { type: 'string' },
+    explorer_url: { type: 'string' },
+    gallery_url: { type: 'string' },
+  }),
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
+  async run({ entry_sha256, proof }, ctx) {
+    const drafts = draftStore(ctx.config);
+    const draft = await drafts.get(entry_sha256);
+    if (!draft) {
+      throw new ToolFailure(
+        'not_found',
+        `No prepared draft ${entry_sha256}.`,
+        'Call prepare_publish first; it returns the entry_sha256 and the message to sign.',
+      );
+    }
+    if (draft.used_at) throw unauthorised('This draft was already published; the nonce is used.');
+    if (ctx.now().getTime() > Date.parse(draft.expires_at)) {
+      throw unauthorised('The nonce has expired.');
+    }
+    if (proof.nonce !== draft.nonce) throw unauthorised('The proof is for another nonce.');
+    if (proof.message !== draft.message || proof.recipient !== draft.recipient) {
+      throw unauthorised('The proof signs another message or recipient.');
+    }
+    let check: { ok: boolean; reason?: string };
+    try {
+      check = await verifyNep413(
+        proof,
+        { message: draft.message, recipient: draft.recipient },
+        ctx.rpc,
+      );
+    } catch (err) {
+      if (err instanceof NotImplementedError) throw err;
+      throw new ToolFailure(
+        'source_failed',
+        `Could not check the proof against NEAR RPC: ${(err as Error).message}`,
+        'Try again in a moment.',
+      );
+    }
+    if (!check.ok) throw unauthorised(`The proof did not verify: ${check.reason ?? 'bad proof'}.`);
+
+    const signed = { ...draft.entry, provenance: { ...draft.entry.provenance, maker: proof } };
+    const entry: Entry = { ...signed, id: entryId(signed) };
+    if (!checkEntrySchema(entry)) {
+      throw new ToolFailure(
+        'internal',
+        `The final entry is not valid: ${describeErrors(checkEntrySchema.errors)}`,
+      );
+    }
+    if (new TextEncoder().encode(canonicalJson(entry)).length > MAP_LIMITS.valueBytes) {
+      throw new ToolFailure(
+        'bad_input',
+        `The entry is over ${MAP_LIMITS.valueBytes} bytes, the map's limit.`,
+      );
+    }
+    const writer = ctx.map.writer;
+    if (!writer) {
+      throw new ToolFailure(
+        'source_failed',
+        "Petal's map writer is not configured on this server, so nothing was written.",
+        'Set PETAL_WRITER_ACCOUNT and PETAL_WRITER_KEY_FILE (testnet only).',
+      );
+    }
+    await drafts.put({ ...draft, used_at: ctx.now().toISOString() });
+    const key = mapKeys.spec(entry.id);
+    let tx_hash: string;
+    try {
+      ({ tx_hash } = await writer.write({ [key]: entry }));
+    } catch (err) {
+      if (err instanceof NotImplementedError) throw err;
+      throw new ToolFailure(
+        'source_failed',
+        `Writing to the shared map failed: ${(err as Error).message}`,
+        'The entry stays in the local mirror as pending and is retried.',
+      );
+    }
+    return {
+      id: entry.id,
+      key,
+      receiver: ctx.map.receiver,
+      writer: writerAccount(ctx),
+      tx_hash,
+      explorer_url: explorerUrl(ctx, tx_hash),
+      gallery_url: galleryUrl(ctx, entry.id),
+    };
+  },
+});

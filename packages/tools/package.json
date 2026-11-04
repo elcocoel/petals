@@ -11,9 +11,17 @@
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.4.0",
+    "@noble/curves": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
     "@petal/core": "workspace:*",
     "@petal/inputs": "workspace:*",
     "@petal/near": "workspace:*",
+    "@scure/base": "^2.4.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "hono": "^4.13.16"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.4.0"
   }
 }
