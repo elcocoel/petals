@@ -85,7 +85,7 @@ Licence: decided, **MIT** (Elco, 2026-11-04). No gate left.
 - [X] T020 [P] [W0] Hand-made skeleton transcript `fixtures/transcripts/skeleton.hand.json` (the tool order of quickstart step 2) and `recordedClient` in `packages/agent/src/recorded.ts`. Deps: T016.
 - [X] T021 [P] [W0] Recorded 1Click dry quote `fixtures/transcripts/1click-dry-quote.json` (shape from `../research/near-map-pay.md`, 4 Nov) and `fakeQuote()` in `packages/near/src/pay/fake.ts`. Deps: T016.
 - [X] T022 [P] [W0] Test NEP-413 signer and a fake RPC whose `view_access_key` answers full-access or function-call, in `packages/near/src/auth/testing.ts`. noble 2.x imports need `.js` subpaths: `@noble/curves/ed25519.js`, `@noble/hashes/sha2.js`. Deps: T016.
-- [ ] T023 [W0] Freeze the contracts at `packages/v1`: every package compiles against the stubs, `scripts/check.sh` passes, commit. From here, contract changes go through the lead and bump the version. Deps: T017–T022.
+- [X] T023 [W0] Freeze the contracts at `packages/v1`: every package compiles against the stubs, `scripts/check.sh` passes, commit. From here, contract changes go through the lead and bump the version. Deps: T017–T022.
 
 **Parallel dispatch**: the lead runs T012–T016 in order. Then three agents at once: A does T017 (slowest: large CSVs), B does T018 and T019, C does T020–T022. Merge T017 first (others don't touch it), then B, then C. The lead closes with T023.
 
