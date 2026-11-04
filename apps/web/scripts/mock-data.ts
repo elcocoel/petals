@@ -5,6 +5,7 @@
 // (tools, petalApp) land; then the web app uses petalApp and this file is not read. The
 // placeholder SVG is not the renderer: it is a plain polygon with one straight bar per petal,
 // labelled as a placeholder, so the flower view has something with data-p to click.
+import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -312,6 +313,10 @@ const out = {
 };
 const file = join(here, '../lib/mock/near-validators.json');
 writeFileSync(file, `${JSON.stringify(out, null, 2)}\n`);
+// Keep the file as `pnpm lint` wants it.
+execFileSync(join(root, 'node_modules/.bin/biome'), ['format', '--write', file], {
+  stdio: 'ignore',
+});
 console.log(
   `wrote ${file}: nakamoto ${nakamoto}, ${rows.length} validators, ${svg.length} svg bytes`,
 );

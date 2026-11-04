@@ -122,13 +122,7 @@
         "total": "593372642.814240027020784486594744"
       }
     ],
-    "kinds_present": [
-      "delegator",
-      "group",
-      "staking_entity",
-      "staking_pool",
-      "unknown"
-    ],
+    "kinds_present": ["delegator", "group", "staking_entity", "staking_pool", "unknown"],
     "segment_options": [
       {
         "by": "backers",
@@ -798,49 +792,35 @@
         "scale": "log",
         "max_ratio": 2,
         "meaning": "share of the measure, in a 2x band",
-        "sources": [
-          "fastnear-rpc-validators"
-        ]
+        "sources": ["fastnear-rpc-validators"]
       },
       "height": {
         "by": "share",
         "scale": "sqrt",
         "meaning": "square root of share of the measure",
-        "sources": [
-          "fastnear-rpc-validators"
-        ]
+        "sources": ["fastnear-rpc-validators"]
       },
       "colour": {
         "by": "kind",
         "meaning": "kind of account",
-        "sources": [
-          "nearblocks-validators",
-          "fastnear-rpc-liquid-staking"
-        ]
+        "sources": ["nearblocks-validators", "fastnear-rpc-liquid-staking"]
       },
       "outline": {
         "by": "identity_status",
         "meaning": "identity: solid when self-declared or verified, dashed when inferred",
-        "sources": [
-          "nearblocks-validators",
-          "account-id"
-        ]
+        "sources": ["nearblocks-validators", "account-id"]
       },
       "segments": {
         "by": "backers",
         "meaning": "who backs the pool: other delegators, accounts with 1M+ NEAR, liquid-staking contracts, lockups",
-        "sources": [
-          "fastnear-rpc-staking-pool-views"
-        ]
+        "sources": ["fastnear-rpc-staking-pool-views"]
       },
       "lines": null,
       "markings": null,
       "order": {
         "by": "measure_desc",
         "meaning": "largest first, clockwise from the top",
-        "sources": [
-          "fastnear-rpc-validators"
-        ]
+        "sources": ["fastnear-rpc-validators"]
       }
     },
     "convention": {
@@ -853,24 +833,17 @@
     {
       "primitive": "width",
       "meaning": "share of the measure, in a 2x band",
-      "sources": [
-        "fastnear-rpc-validators"
-      ]
+      "sources": ["fastnear-rpc-validators"]
     },
     {
       "primitive": "height",
       "meaning": "square root of share of the measure",
-      "sources": [
-        "fastnear-rpc-validators"
-      ]
+      "sources": ["fastnear-rpc-validators"]
     },
     {
       "primitive": "colour",
       "meaning": "kind of account",
-      "sources": [
-        "nearblocks-validators",
-        "fastnear-rpc-liquid-staking"
-      ],
+      "sources": ["nearblocks-validators", "fastnear-rpc-liquid-staking"],
       "keys": [
         {
           "swatch": "var(--k-staking_pool)",
@@ -885,17 +858,12 @@
     {
       "primitive": "outline",
       "meaning": "identity: solid when self-declared or verified, dashed when inferred",
-      "sources": [
-        "nearblocks-validators",
-        "account-id"
-      ]
+      "sources": ["nearblocks-validators", "account-id"]
     },
     {
       "primitive": "segments",
       "meaning": "who backs the pool: other delegators, accounts with 1M+ NEAR, liquid-staking contracts, lockups",
-      "sources": [
-        "fastnear-rpc-staking-pool-views"
-      ],
+      "sources": ["fastnear-rpc-staking-pool-views"],
       "keys": [
         {
           "swatch": "var(--seg-other)",
@@ -918,9 +886,7 @@
     {
       "primitive": "order",
       "meaning": "largest first, clockwise from the top",
-      "sources": [
-        "fastnear-rpc-validators"
-      ]
+      "sources": ["fastnear-rpc-validators"]
     },
     {
       "primitive": "tail",
