@@ -6,9 +6,10 @@
 //   node tests/e2e/skeleton-entry.ts          print the entry
 //   node tests/e2e/skeleton-entry.ts --write  write fixtures/map/<id>.json (and drop an older one)
 //
-// Not shipped yet: four tools tests (tools.test.ts publish/list_flowers, contract/parity.test.ts)
-// read the repo's fixtures/ and count every flower, so any entry in fixtures/map/ turns them red.
-// Once they count only their own flowers, run `--write` and commit the file. Until then
+// Not shipped yet: four tools tests (tools.test.ts:308, :365, :397, contract/parity.test.ts:113)
+// and one web test (apps/web/test/api-mock.test.ts:68) read the repo's fixtures/ and count every
+// flower, so any entry in fixtures/map/ turns them red. Once they count only their own flowers,
+// run `--write` and commit the file. Until then
 // skeleton.test.ts adds this entry to its own temp fixtures; once shipped, it checks the
 // committed file is what this makes from the current code.
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
