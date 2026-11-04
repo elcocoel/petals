@@ -75,7 +75,7 @@ Without `NEAR_AI_API_KEY`, the server answers with a recorded transcript (`recor
 ## MCP
 
 - **Remote**: `ALL /mcp`, Streamable HTTP, stateless, built with `@modelcontextprotocol/server` v2 (raw JSON Schema through `fromJsonSchema()`).
-- **Local**: `petal mcp` over stdio (the CLI in `apps/cli` calls `serveStdio`), for Claude Code and Codex. The one install command: `claude mcp add petal -- pnpm --dir <repo> petal mcp`, where `<repo>` is the root of the clone (locally, the `build/` folder).
+- **Local**: `petal mcp` over stdio (the CLI in `apps/cli` calls `serveStdio`), for Claude Code and Codex. The one install command: `claude mcp add petal -- pnpm -s --dir <repo> petal mcp`, where `<repo>` is the root of the clone (locally, the `build/` folder).
 - Same tool names, input schemas and outputs as [tools.md](./tools.md). Progress goes out as `notifications/progress`.
 - IronClaw loads it only through a packaged extension: `skill/ironclaw/` wraps `/mcp` over HTTP and ships the skill. It is a hedge, never on the demo's critical path; the skill and the HTTP API work without it.
 

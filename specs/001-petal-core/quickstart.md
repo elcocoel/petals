@@ -61,7 +61,7 @@ Negative checks: a tampered message, a reused nonce, or a function-call key inst
 
 ## Step 4: the same request through the maker's own agent
 
-1. Install the skill: copy `skill/petal/` to `~/.claude/skills/petal/`, or add the tools with `claude mcp add petal -- pnpm --dir <repo> petal mcp`, where `<repo>` is the root of the clone (locally, the `build/` folder).
+1. Install the skill: copy `skill/petal/` to `~/.claude/skills/petal/`, or add the tools with `claude mcp add petal -- pnpm -s --dir <repo> petal mcp`, where `<repo>` is the root of the clone (locally, the `build/` folder).
 2. In Claude Code, ask: **who stands behind NEAR's validators?**
 3. **Expect**: the agent follows the skill's order (list networks → snapshot → figures → propose → validate → render) and returns a `view_url`, the legend and an interpretation.
 4. **Expect**: its `spec_sha256` equals the one from step 2. The interpretation's wording may differ; the spec may not.

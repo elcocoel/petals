@@ -164,7 +164,7 @@ Licence: decided, **MIT** (Elco, 2026-11-04). No gate left.
 ### M1 · W7 Doors: skill and CLI (`skill/`, `apps/cli`): second wave.
 
 - [ ] T068 [P] [US1] [W7] `skill/petal/SKILL.md` in the Agent Skills format (as NEAR's `near/agent-skills`: frontmatter with name and description, then instructions), built from `packages/agent/src/prompt.md` by `skill/build.ts`: the six steps; `curl` calls to `PETAL_API` (default `http://localhost:8787`); MCP names where configured; publish only through `prepare_publish` and `sign_url`; never ask for a key. Deps: T054.
-- [ ] T069 [P] [US1] [W7] `skill/petal/README.md`: install in Claude Code (`~/.claude/skills/petal/`, or `claude mcp add petal -- pnpm --dir <repo> petal mcp`, where `<repo>` is the clone's root), Codex, and IronClaw (`~/.ironclaw/skills/`). Deps: T068.
+- [ ] T069 [P] [US1] [W7] `skill/petal/README.md`: install in Claude Code (`~/.claude/skills/petal/`, or `claude mcp add petal -- pnpm -s --dir <repo> petal mcp`, where `<repo>` is the clone's root), Codex, and IronClaw (`~/.ironclaw/skills/`). Deps: T068.
 - [ ] T070 [US1] [W7] The `petal` CLI in `apps/cli/src/main.ts` (bin `petal`, root script `pnpm petal`): thin; one subcommand per registry tool, generated from the registry (`networks`, `snapshot`, `describe`, `figures`, `propose`, `validate`, `render`, and later ones such as `compare`), calling it in process and printing JSON (`render` can write the SVG to a file); plus `mcp` (stdio, `serveStdio`) and `api` (`petalApp` on :8787). Parity test: the CLI and HTTP return the same JSON, in `apps/cli/test/parity.test.ts`. Deps: T046, T051, T058. Real when T047–T048 land.
 
 ### M2 · W8 Integration (lead, `tests/e2e`): third wave.
@@ -423,7 +423,7 @@ The coordinator cleared these, and they are already applied in `contracts/`, `da
 - **F4** Runs are stored and resumable: the `run` event, `GET /api/v1/agent/runs/:id`, chat with `run_id` (R19).
 - **F5** `compare_figures` and `POST /api/v1/figures/compare` count what changed between two dates (US5, FR-025).
 - **F6** `petals` is 5–300 everywhere, as a cap: a network with fewer included participants gets one petal each and no tail.
-- **F7** One MCP install command: `claude mcp add petal -- pnpm --dir <repo> petal mcp`, `<repo>` being the clone's root.
+- **F7** One MCP install command: `claude mcp add petal -- pnpm -s --dir <repo> petal mcp`, `<repo>` being the clone's root. `-s` keeps pnpm's script banner off stdout, which would otherwise corrupt MCP over stdio (found in M0; coordinator, 4 Nov). The CLI needs Node 24 on the PATH that the MCP client spawns.
 - **Also**: correction requests (FR-022) as signed map entries under `petal/v1/correction/<flower-id>/<id>` with a GitHub-issue fallback (shared-map.md, R20); five thin doors over one tools core (packages.md, R11); `PRIMITIVES` with each primitive's status in this build (FR-032); milestones instead of days (plan, Roadmap).
 
 ## Notes
