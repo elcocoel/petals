@@ -13,51 +13,9 @@ import { utf8ToBytes } from '@noble/hashes/utils.js';
 import type { Nep413Proof } from '@petal/core/types';
 import { base58, base64 } from '@scure/base';
 import type { AccessKeyPermission, AccessKeyView, Rpc, RpcQuery } from './index.ts';
+import { type Nep413Payload, nep413Hash, nonceBytes } from './nep413.ts';
 
-/** 2^31 + 413: the NEP-413 prefix tag. */
-export const NEP413_TAG = 2147484061;
-
-export interface Nep413Payload {
-  message: string;
-  /** 32 bytes, or their base64 */
-  nonce: Uint8Array | string;
-  recipient: string;
-  callbackUrl?: string | null;
-}
-
-function u32(n: number): Uint8Array {
-  const b = new Uint8Array(4);
-  new DataView(b.buffer).setUint32(0, n, true);
-  return b;
-}
-function str(s: string): Uint8Array {
-  const bytes = utf8ToBytes(s);
-  return concat(u32(bytes.length), bytes);
-}
-function concat(...parts: Uint8Array[]): Uint8Array {
-  const out = new Uint8Array(parts.reduce((a, p) => a + p.length, 0));
-  let i = 0;
-  for (const p of parts) {
-    out.set(p, i);
-    i += p.length;
-  }
-  return out;
-}
-const nonceBytes = (n: Uint8Array | string) => (typeof n === 'string' ? base64.decode(n) : n);
-
-/** The borsh bytes a NEP-413 signature covers, before hashing. */
-export function nep413Payload(p: Nep413Payload): Uint8Array {
-  const nonce = nonceBytes(p.nonce);
-  if (nonce.length !== 32)
-    throw new Error(`NEP-413 nonce must be exactly 32 bytes, got ${nonce.length}`);
-  const callback =
-    p.callbackUrl == null ? new Uint8Array([0]) : concat(new Uint8Array([1]), str(p.callbackUrl));
-  return concat(u32(NEP413_TAG), str(p.message), nonce, str(p.recipient), callback);
-}
-
-export function nep413Hash(p: Nep413Payload): Uint8Array {
-  return sha256(nep413Payload(p));
-}
+export { NEP413_TAG, type Nep413Payload, nep413Hash, nep413Payload } from './nep413.ts';
 
 export interface TestSigner {
   accountId: string;
