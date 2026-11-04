@@ -1,0 +1,49 @@
+{
+  "petal": "recorded-http/v1",
+  "recorded_on": "2026-11-04",
+  "note": "A prefix read for one writer, two rows per page, with metadata: row shape and page_token.",
+  "request": {
+    "method": "POST",
+    "url": "https://kv.main.fastnear.com/v0/latest/social/mob.near",
+    "body": {
+      "key_prefix": "profile/",
+      "limit": 2,
+      "include_metadata": true
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {
+      "entries": [
+        {
+          "receipt_id": "9NAedoxRzFijdJCuoHVz9ats6kYgfACZngMd8L1unfWw",
+          "action_index": 0,
+          "tx_hash": "9pYrTdMtDDWdaAb54E3aMKFyzTEMQXu1Hbm7Kb28i1nz",
+          "signer_id": "mob.near",
+          "predecessor_id": "mob.near",
+          "current_account_id": "social",
+          "block_height": 217852715,
+          "block_timestamp": 1790730707115975400,
+          "key": "profile/about",
+          "value": "Founder of near.social and fastnear.com"
+        },
+        {
+          "receipt_id": "9NAedoxRzFijdJCuoHVz9ats6kYgfACZngMd8L1unfWw",
+          "action_index": 0,
+          "tx_hash": "9pYrTdMtDDWdaAb54E3aMKFyzTEMQXu1Hbm7Kb28i1nz",
+          "signer_id": "mob.near",
+          "predecessor_id": "mob.near",
+          "current_account_id": "social",
+          "block_height": 217852715,
+          "block_timestamp": 1790730707115975400,
+          "key": "profile/avatar",
+          "value": "fastfs://mob.near/social/media/16bf6b5c883730a8b4a6aaaa256aa08ec594933f1fe875f668ad18ba13b49f6c.webp"
+        }
+      ],
+      "page_token": "eyJrIjoicHJvZmlsZS9hdmF0YXIifQ"
+    }
+  }
+}

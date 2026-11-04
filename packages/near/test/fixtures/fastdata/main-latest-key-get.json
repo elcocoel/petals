@@ -1,0 +1,27 @@
+{
+  "petal": "recorded-http/v1",
+  "recorded_on": "2026-11-04",
+  "note": "The GET form of the same read (no metadata).",
+  "request": {
+    "method": "GET",
+    "url": "https://kv.main.fastnear.com/v0/latest/social/mob.near/profile%2Fname"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {
+      "entries": [
+        {
+          "predecessor_id": "mob.near",
+          "current_account_id": "social",
+          "block_height": 217852715,
+          "block_timestamp": 1790730707115975400,
+          "key": "profile/name",
+          "value": "Eugene The Dream"
+        }
+      ]
+    }
+  }
+}
