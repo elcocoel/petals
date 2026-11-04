@@ -4,6 +4,7 @@
 // A capturing fetch keeps the exact request and response bytes and their SHA-256 (never
 // re-serialised JSON). Fallbacks, in order, when a model fails: Qwen/Qwen3.8-27B, then
 // deepseek-ai/DeepSeek-V4.1-Flash-1017. Never called in tests: they use faked HTTP.
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sha256Hex } from '@petal/core';
 import type { ToolErrorCode } from '@petal/core/types';
@@ -94,8 +95,15 @@ export interface NearAiClient extends LlmClient {
   status(): 'up' | 'down';
 }
 
-const DEFAULT_ATTESTATIONS = fileURLToPath(
-  new URL('../../../.petal/attestations', import.meta.url),
+// A joined path, not new URL('…', import.meta.url): bundlers (Next's Turbopack, for the web
+// app's API mock) read that form as an asset to copy, and .petal/ may not exist yet.
+const DEFAULT_ATTESTATIONS = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  '..',
+  '.petal',
+  'attestations',
 );
 
 function bodyBytes(body: unknown): Uint8Array {

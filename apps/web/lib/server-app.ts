@@ -5,7 +5,7 @@
 //   0      petalApp from @petal/agent, and fail loudly if it is not built
 //   unset  petalApp; while it is still a stub (not_implemented), the mock, with a warning
 // /api/v1/health says which one answers (`mock: true`), and so does the x-petal-api header.
-import type { Hono } from 'hono';
+import { Hono } from 'hono';
 import { configFromEnv } from './config.ts';
 
 export type ApiMode = 'mock' | 'real';
@@ -21,12 +21,40 @@ async function mock(): Promise<ServerApp> {
   return { app: createMockApi().app, mode: 'mock' };
 }
 
+/**
+ * petalApp, labelled like the mock labels itself: every response carries `x-petal-api: real`, and
+ * /api/v1/health adds `mock: false`, so the page and a curl can tell which API answered.
+ */
+export function labelReal(inner: Hono): Hono {
+  const app = new Hono();
+  app.all('*', async (c) => {
+    const res = await inner.fetch(c.req.raw, c.env);
+    const headers = new Headers(res.headers);
+    headers.set('x-petal-api', 'real');
+    if (c.req.path === '/api/v1/health' && (headers.get('content-type') ?? '').includes('json')) {
+      const body = (await res.json()) as Record<string, unknown>;
+      headers.delete('content-length');
+      return new Response(JSON.stringify({ ...body, mock: false }), {
+        status: res.status,
+        headers,
+      });
+    }
+    return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+  });
+  return app;
+}
+
 async function build(): Promise<ServerApp> {
   const flag = process.env.PETAL_API_MOCK?.trim();
   if (flag === '1') return mock();
   try {
-    const { petalApp } = await import('@petal/agent');
-    return { app: petalApp(configFromEnv()), mode: 'real' };
+    // Loaded by Node itself, never bundled. The @petal/* packages are workspace links, which
+    // Turbopack resolves to their source folders and bundles despite serverExternalPackages; a
+    // bundled @petal/agent fails on its new URL(..., import.meta.url) paths (fixtures, .petal/).
+    const { petalApp } = (await import(
+      /* turbopackIgnore: true */ /* webpackIgnore: true */ '@petal/agent'
+    )) as typeof import('@petal/agent');
+    return { app: labelReal(petalApp(await configFromEnv())), mode: 'real' };
   } catch (e) {
     if (flag === '0' || !isStub(e)) throw e;
     console.warn(
