@@ -9,9 +9,10 @@ import { hexToBytes } from '@noble/hashes/utils.js';
 import { canonicalJson, sha256Hex } from '@petal/core';
 import type { MapRow } from '@petal/core/types';
 import { base58 } from '@scure/base';
-import { MAP_LIMITS, type MapReader, type MapWriter } from './index.ts';
+import type { MapReader, MapWriter } from './index.ts';
+import { checkWrite } from './limits.ts';
 
-export const MAP_KEY_PREFIX = 'petal/v1/';
+export { checkWrite, MAP_KEY_PREFIX } from './limits.ts';
 
 export interface FakeMapOptions {
   /** default writer.petals.testnet */
@@ -40,25 +41,6 @@ export type FakeMap = MapWriter &
     /** every accepted write, in order */
     writes(): FakeWrite[];
   };
-
-const utf8 = (s: string) => new TextEncoder().encode(s).length;
-
-/** The checks every Petal map writer makes before sending. Throws on the first problem. */
-export function checkWrite(entries: Record<string, unknown>): void {
-  const keys = Object.keys(entries);
-  if (keys.length === 0) throw new Error('map write: no keys');
-  if (keys.length > MAP_LIMITS.keysPerWrite)
-    throw new Error(`map write: ${keys.length} keys, at most ${MAP_LIMITS.keysPerWrite} per call`);
-  for (const key of keys) {
-    if (!key.startsWith(MAP_KEY_PREFIX))
-      throw new Error(`map write: key outside ${MAP_KEY_PREFIX}: ${key}`);
-    if (utf8(key) > MAP_LIMITS.keyBytes)
-      throw new Error(`map write: key over ${MAP_LIMITS.keyBytes} bytes: ${key.slice(0, 60)}…`);
-    const value = entries[key];
-    if (value !== null && utf8(canonicalJson(value)) > MAP_LIMITS.valueBytes)
-      throw new Error(`map write: value over ${MAP_LIMITS.valueBytes} bytes at ${key}`);
-  }
-}
 
 export function fakeMap(opts: FakeMapOptions = {}): FakeMap {
   const receiver = opts.receiver ?? 'petals.testnet';

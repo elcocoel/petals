@@ -1,0 +1,50 @@
+{
+  "petal": "recorded-http/v1",
+  "recorded_on": "2026-11-04",
+  "note": "The next page of the read above, following page_token.",
+  "request": {
+    "method": "POST",
+    "url": "https://kv.main.fastnear.com/v0/latest/social/mob.near",
+    "body": {
+      "key_prefix": "profile/",
+      "limit": 2,
+      "include_metadata": true,
+      "page_token": "eyJrIjoicHJvZmlsZS9hdmF0YXIifQ"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {
+      "entries": [
+        {
+          "receipt_id": "9NAedoxRzFijdJCuoHVz9ats6kYgfACZngMd8L1unfWw",
+          "action_index": 0,
+          "tx_hash": "9pYrTdMtDDWdaAb54E3aMKFyzTEMQXu1Hbm7Kb28i1nz",
+          "signer_id": "mob.near",
+          "predecessor_id": "mob.near",
+          "current_account_id": "social",
+          "block_height": 217852715,
+          "block_timestamp": 1790730707115975400,
+          "key": "profile/banner",
+          "value": "fastfs://mob.near/social/media/022bdba42446049533225b78b6a7d425e397b36aed344acd661514dcb42b2c42.webp"
+        },
+        {
+          "receipt_id": "9NAedoxRzFijdJCuoHVz9ats6kYgfACZngMd8L1unfWw",
+          "action_index": 0,
+          "tx_hash": "9pYrTdMtDDWdaAb54E3aMKFyzTEMQXu1Hbm7Kb28i1nz",
+          "signer_id": "mob.near",
+          "predecessor_id": "mob.near",
+          "current_account_id": "social",
+          "block_height": 217852715,
+          "block_timestamp": 1790730707115975400,
+          "key": "profile/links/github",
+          "value": "evgenykuzyakov"
+        }
+      ],
+      "page_token": "eyJrIjoicHJvZmlsZS9saW5rcy9naXRodWIifQ"
+    }
+  }
+}

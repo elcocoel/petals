@@ -1,0 +1,35 @@
+{
+  "petal": "recorded-http/v1",
+  "recorded_on": "2026-11-04",
+  "note": "One exact key by one writer, with metadata (how get() reads a row).",
+  "request": {
+    "method": "POST",
+    "url": "https://kv.main.fastnear.com/v0/latest/social/mob.near",
+    "body": {
+      "key": "profile/name",
+      "include_metadata": true
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {
+      "entries": [
+        {
+          "receipt_id": "9NAedoxRzFijdJCuoHVz9ats6kYgfACZngMd8L1unfWw",
+          "action_index": 0,
+          "tx_hash": "9pYrTdMtDDWdaAb54E3aMKFyzTEMQXu1Hbm7Kb28i1nz",
+          "signer_id": "mob.near",
+          "predecessor_id": "mob.near",
+          "current_account_id": "social",
+          "block_height": 217852715,
+          "block_timestamp": 1790730707115975400,
+          "key": "profile/name",
+          "value": "Eugene The Dream"
+        }
+      ]
+    }
+  }
+}

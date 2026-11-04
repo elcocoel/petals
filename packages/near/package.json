@@ -17,6 +17,7 @@
     "@noble/curves": "^2.4.0",
     "@noble/hashes": "^2.4.0",
     "@petal/core": "workspace:*",
-    "@scure/base": "^2.4.0"
+    "@scure/base": "^2.4.0",
+    "near-api-js": "^7.4.0"
   }
 }

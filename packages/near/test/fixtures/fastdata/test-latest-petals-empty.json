@@ -1,0 +1,23 @@
+{
+  "petal": "recorded-http/v1",
+  "recorded_on": "2026-11-04",
+  "note": "The gallery read on Petal's own testnet map before anything is written: one call per trusted writer.",
+  "request": {
+    "method": "POST",
+    "url": "https://kv.test.fastnear.com/v0/latest/petals.testnet/writer.petals.testnet",
+    "body": {
+      "key_prefix": "petal/v1/spec/",
+      "limit": 200,
+      "include_metadata": true
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {
+      "entries": []
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "petal": "recorded-http/v1",
+  "recorded_on": "2026-11-04",
+  "note": "The exact request quote1Click sends for { purpose: \"sponsor_refresh\", amount_usd: 1 }: DRY, so no deposit address and no money.",
+  "request": {
+    "method": "POST",
+    "url": "https://1click.chaindefuser.com/v0/quote",
+    "body": {
+      "dry": true,
+      "swapType": "EXACT_OUTPUT",
+      "slippageTolerance": 100,
+      "originAsset": "nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near",
+      "depositType": "ORIGIN_CHAIN",
+      "destinationAsset": "nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
+      "amount": "1000000",
+      "refundTo": "0x2527D02599Ba641c19FEa793cD0F167589a0f10D",
+      "refundType": "ORIGIN_CHAIN",
+      "recipient": "petal-demo.near",
+      "recipientType": "INTENTS",
+      "deadline": "2026-11-04T19:55:39.687Z",
+      "referral": "petal"
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "content-type": "application/json; charset=utf-8",
+      "x-ratelimit-limit-unauth": "1200",
+      "x-ratelimit-remaining-unauth": "1199",
+      "x-ratelimit-reset-unauth": "60"
+    },
+    "body": {
+      "quote": {
+        "amountIn": "1010226",
+        "amountInFormatted": "1.010226",
+        "amountInUsd": "1.009933034460",
+        "minAmountIn": "1000123",
+        "amountOut": "1000000",
+        "amountOutFormatted": "1.0",
+        "amountOutUsd": "0.999710000000",
+        "minAmountOut": "1000000",
+        "timeEstimate": 35,
+        "refundFee": "2400",
+        "withdrawFee": "0"
+      },
+      "quoteRequest": {
+        "dry": true,
+        "depositMode": "SIMPLE",
+        "swapType": "EXACT_OUTPUT",
+        "slippageTolerance": 100,
+        "originAsset": "nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near",
+        "depositType": "ORIGIN_CHAIN",
+        "destinationAsset": "nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
+        "amount": "1000000",
+        "refundTo": "0x2527D02599Ba641c19FEa793cD0F167589a0f10D",
+        "refundType": "ORIGIN_CHAIN",
+        "recipient": "petal-demo.near",
+        "recipientType": "INTENTS",
+        "deadline": "2026-11-04T19:55:39.687Z",
+        "confidentiality": "public",
+        "referral": "petal",
+        "quoteWaitingTimeMs": 0,
+        "insured": false,
+        "appFees": [
+          {
+            "recipient": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+            "fee": 1
+          }
+        ]
+      },
+      "signature": "ed25519:2CfRZGnso59zaqd3Mq7U9nL6USdzgUJ2poFXEdzaxydNfrVpAnQxvseeweDKWF3w6iF4TrNWoCqjvcADaxcLqQ5G",
+      "timestamp": "2026-11-04T19:45:39.856Z",
+      "correlationId": "3a8c7989-2ae3-46c9-8da4-3c748fe7f035"
+    }
+  }
+}
