@@ -85,7 +85,7 @@ describe('SKILL.md: the Agent Skills format', () => {
 
   test('publish only through prepare_publish and sign_url; never ask for a key', () => {
     expect(shared).toMatch(/`prepare_publish` with the entry, then give the person the `sign_url`/);
-    expect(shared).toMatch(/Never ask for a private key, a seed phrase or a signature/);
+    expect(shared).toMatch(/Never ask anyone for a key, a seed phrase or a signature/);
     expect(shared).toMatch(/never sign or call `publish_flower` yourself/);
   });
 

@@ -52,7 +52,7 @@ describe('SYSTEM_PROMPT', () => {
     expect(rules).toMatch(/under 200 words/);
   });
 
-  test('marks the six rules for skill/build.ts: one begin line, one end line, rules between', () => {
+  test('marks the shared text for skill/build.ts: one begin line, one end line, steps to rules between', () => {
     const lines = SYSTEM_PROMPT.split('\n');
     const begin = lines.indexOf('<!-- petal:shared:begin -->');
     const end = lines.indexOf('<!-- petal:shared:end -->');
@@ -60,8 +60,10 @@ describe('SYSTEM_PROMPT', () => {
     expect(begin).toBeGreaterThan(0);
     expect(end).toBeGreaterThan(begin);
     const block = lines.slice(begin + 1, end);
-    expect(block).toHaveLength(6);
-    expect(block.map((l) => l.slice(0, 3))).toEqual(['1. ', '2. ', '3. ', '4. ', '5. ', '6. ']);
+    expect(block[0]).toBe('## The six steps');
+    const rules = block.slice(block.indexOf('## Rules') + 1).filter((l) => /^\d\. /.test(l));
+    expect(rules.map((l) => l.slice(0, 3))).toEqual(['1. ', '2. ', '3. ', '4. ', '5. ', '6. ']);
+    expect(lines[end - 1]?.slice(0, 3)).toBe('6. ');
   });
 
   test('is door-neutral: no transport, no agent-only limits', () => {
