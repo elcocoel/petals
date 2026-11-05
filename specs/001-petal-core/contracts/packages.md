@@ -116,6 +116,8 @@ export interface RunStore {                             // runs you can leave an
   create(input: ChatInput): Promise<string>;            // run_id
   append(runId: string, e: AgentEvent): Promise<void>;
   get(runId: string): Promise<Run | null>;              // status, events, flower, messages
+  saveThread?(runId: string, thread: LlmMessage[]): Promise<void>; // T166: the full conversation for follow-ups, trimmed at 40k characters
+  thread?(runId: string): Promise<LlmMessage[] | null>;
 }
 export function fileRunStore(dir: string): RunStore;    // .petal/runs/ locally
 export function agentRoutes(deps: { tools: ToolContext; llm: LlmClient; budget: Budget; runs: RunStore }): Hono;

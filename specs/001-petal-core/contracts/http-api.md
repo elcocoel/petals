@@ -14,7 +14,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 - JSON in and out, UTF-8. `tools_version` in every response.
 - No account, key or payment is needed for anything except publishing (FR-030).
 - CORS: open, so agents and other sites can call it.
-- Rate limits per IP (in memory in Phase A): 60 tool calls per minute; 10 agent chats per hour. Over the limit: `429` with `{ error: { code: "rate_limited", retry_after_s } }`.
+- Rate limits per IP (in memory in Phase A): 60 tool calls per minute; 10 new agent chats per hour, plus 60 follow-ups per hour on an existing run. Over the limit: `429` with `{ error: { code: "rate_limited", retry_after_s } }`.
 - Errors: HTTP status from the error code (`bad_input` 400, `unauthorised` 401, `not_found` 404, `cannot_read` 422, `invalid_spec` 422, `rate_limited` 429, `budget_exhausted` 429, `source_failed` 502, `internal` 500), body `{ error: { code, message, hint } }`.
 - Long tools (`get_snapshot` on a live pull) accept `Accept: text/event-stream` and then stream `progress` events before the final `result` event.
 
@@ -65,9 +65,9 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `signature` | `ModelSignature` for the completion that proposed the spec |
 | `error` | `{ code, message, hint }` |
 | `heartbeat` | `{}` every 10 s, so idle connections stay open |
-| `done` | `{ turns, model, fallback_used, tokens: { in, out }, cost_usd }` |
+| `done` | `{ turns, model, fallback_used, tokens: { in, out }, cost_usd, signature? }`; `signature` is the completion that wrote the answer, `null` when it got none (T168) |
 
-Limits per chat: 8 tool rounds, 120 s wall time, $0.05. A daily cap (`PETAL_LLM_DAILY_USD`, default 3) protects the one server key; past it, the agent returns `budget_exhausted` and points to the skill (bring your own agent).
+Limits per chat: 8 tool rounds, 120 s wall time, $0.05. A daily cap (`PETAL_LLM_DAILY_USD`, default 3) protects the one server key; past it, including mid-way through a chat, the agent returns `budget_exhausted` and points to the skill (bring your own agent).
 
 Model calls inside a chat are not streamed, so each one can carry a TEE signature (streamed completions get a weaker gateway signature). Progress comes from Petal's own events instead.
 

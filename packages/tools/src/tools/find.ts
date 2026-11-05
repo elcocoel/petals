@@ -666,6 +666,7 @@ function nextStep(
   shown: Working[],
   l: Lookup,
   rivals: number,
+  noDao: boolean,
 ): string {
   const failed = l.sources.filter((s) => s.status === 'failed').map((s) => s.id);
   if (shown.length === 0) {
@@ -675,6 +676,8 @@ function nextStep(
       `If you know its address yourself, call find_target with that address: the chain confirms what it is. Petal reads: ${readable(ctx)}.`
     );
   }
+  if (noDao)
+    return `No DAO answers to "${p.core}" in these sources. What is listed only shares the name, so don't present it as the DAO. Ask one clear question: do they mean one of these, or do they have the DAO's address? If you know its address yourself, call find_target with that address: the chain confirms what it is.`;
   if (rivals > 0)
     return 'Different things carry this name. Ask one clear question: which one to draw, if any, naming each with its chain and the evidence that separates them. Do not pick for the person.';
   if (shown.every((c) => c.draw.length === 0))
@@ -785,6 +788,10 @@ export function makeFindTarget(
       const top = all.find((c) => c.exact);
       const named = (c: Working) => `${c.name}|${c.symbol}`.toLowerCase();
       const askedDao = /\bdao\b/i.test(p.name);
+      // Asked for a DAO, and only market tokens carry the name: that is not a clear match.
+      const noDao =
+        askedDao &&
+        !all.some((c) => c.exact && (c.evidence.snapshot_space !== undefined || c.held));
       const rivals = all.filter(
         (c) =>
           c !== top &&
@@ -805,8 +812,8 @@ export function makeFindTarget(
         chain: p.chain,
         candidates: shown.map(({ exact: _e, program: _p, blocked: _b, votes: _v, ...c }) => c),
         more: all.length - shown.length,
-        ambiguous: rivals > 0,
-        next: nextStep(ctx, p, shown, l, rivals),
+        ambiguous: rivals > 0 || (noDao && shown.length > 0),
+        next: nextStep(ctx, p, shown, l, rivals, noDao),
         sources: l.sources,
         calls: l.calls,
       };

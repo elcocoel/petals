@@ -121,6 +121,31 @@ describe('the three names', () => {
 });
 
 describe('what it says when it can draw nothing', () => {
+  test('Nouns DAO: a market token that only shares the name is not presented as the DAO', async () => {
+    // Found by hand on merged main: the Solana NOUNS token came back as "one clear match".
+    const onlyAToken: typeof fetch = async (input) => {
+      if (!String(input).includes('jup.ag')) throw new Error('down');
+      const token = {
+        id: 'NoUnS1111',
+        name: 'NOUNS',
+        symbol: 'NOUNS',
+        holderCount: 900,
+        liquidity: 50_000,
+      };
+      return new Response(JSON.stringify([token]), { status: 200 });
+    };
+    const o = (await makeFindTarget({ fetch: onlyAToken }).run(
+      { query: 'Nouns DAO' },
+      ctx,
+    )) as Json;
+    expect(o.ambiguous).toBe(true);
+    expect(o.next).not.toMatch(/one clear match/i);
+    expect(o.next).toMatch(/no DAO/i);
+    expect(o.next).toMatch(/one clear question/i);
+    // the token stays listed: it may be what they meant, and they can say so
+    expect(o.candidates.map((c: Json) => c.address)).toContain('NoUnS1111');
+  });
+
   test('a chain we cannot read, a Moloch v2 and a mint too large for a chat each say why', async () => {
     const mc = (await find('MetaCartel')).candidates as Json[];
     expect(mc.find((c) => c.chain === 'gnosis')?.cannot_draw).toMatch(/can't read gnosis/);
