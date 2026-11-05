@@ -1,6 +1,6 @@
 'use client';
 // Petals / Ask box 52:1861, and the workspace's Question composer 39:930, which is the same control at
-// another size, as is the small one in the landing's step 1 (67:2512). Always on ground, whatever
+// another size. The landing's step 1 draws it whole, under figure-scale. Always on ground, whatever
 // section holds it: Figma's box stays white on the mint and ink sections too. It grows with what's
 // typed; Enter asks and Shift+Enter starts a line. The action is the one Button. With `to` it's a plain
 // GET form, so it still asks before any JavaScript has run.
@@ -9,25 +9,16 @@ import { Button } from './Button.tsx';
 
 const SIZES = {
   hero: {
-    form: 'min-h-ask-box-height max-w-ask-box-width border py-ask-box-block pr-ask-box-inset pl-block-gap',
-    gap: 'gap-ask-box-gap',
-    field: 'py-ask-box-field-block type-body placeholder:text-primary',
+    form: 'border py-space-8 pr-space-8 pl-block-gap',
+    gap: 'gap-space-16',
+    field: 'py-text-gap type-body placeholder:text-primary',
     arrow: true,
-    button: 'ask',
   },
   composer: {
-    form: 'min-h-composer-height border py-composer-block pr-composer-inset-end pl-control-inset',
+    form: 'border py-space-16 pr-text-gap pl-block-gap',
     gap: 'gap-text-gap',
-    field: 'py-composer-field-block type-label placeholder:text-muted',
+    field: 'py-text-gap type-label placeholder:text-muted',
     arrow: false,
-    button: 'default',
-  },
-  small: {
-    form: 'min-h-ask-box-small-height max-w-ask-box-small-width border-ask-small py-ask-box-small-block pr-ask-box-small-end pl-ask-box-small-start',
-    gap: 'gap-ask-box-small-gap',
-    field: 'py-small-field-block type-body-small placeholder:text-primary',
-    arrow: true,
-    button: 'small',
   },
 } as const;
 
@@ -75,7 +66,7 @@ export function AskBox({
       action={to}
       method={to ? 'get' : undefined}
       onSubmit={onSubmit}
-      className={`flex w-full items-end border-primary focus-within:outline-1 focus-within:outline-primary ${look.gap} ${look.form}`}
+      className={`flex w-full items-end border-primary focus-within:outline focus-within:outline-primary ${look.gap} ${look.form}`}
     >
       <textarea
         ref={boxRef}
@@ -95,9 +86,9 @@ export function AskBox({
             e.currentTarget.form?.requestSubmit();
           }
         }}
-        className={`max-h-composer-max-height min-w-0 flex-1 resize-none bg-transparent field-sizing-content text-primary outline-none ${look.field}`}
+        className={`max-h-ask-box-max-height min-w-0 flex-1 resize-none bg-transparent field-sizing-content text-primary outline-none ${look.field}`}
       />
-      <Button type="submit" size={look.button} arrow={look.arrow} disabled={disabled || !canAsk}>
+      <Button type="submit" arrow={look.arrow} disabled={disabled || !canAsk}>
         {action}
       </Button>
     </form>

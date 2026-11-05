@@ -8,8 +8,10 @@ import {
   contrastMinimum,
   contrastPairs,
   cornerRadius,
+  figureScale,
   fonts,
   kebab,
+  opacity,
   type Paint,
   type Primitive,
   paintCss,
@@ -18,6 +20,8 @@ import {
   rendererVariables,
   roleUtilities,
   type SurfaceName,
+  splitText,
+  stroke,
   type Tokens,
   tokens,
   wordmark,
@@ -42,7 +46,7 @@ const axes = (a: Record<string, number>) =>
 
 /** The whole generated stylesheet. Pure, so a test can emit from a changed copy of the tokens. */
 export function emitCss(t: Tokens = tokens): string {
-  const spacing = { ...t.layout, ...t.sizes };
+  const spacing = { ...t.layout, ...t.sizes, ...t.quarantine };
   const typeNames = Object.keys(t.type).map(kebab);
   const utilities = [
     ...typeNames.map((n) => `type-${n}`),
@@ -70,6 +74,13 @@ export function emitCss(t: Tokens = tokens): string {
       '--default-font-family: var(--font-sans);',
       '--default-mono-font-family: var(--font-mono);',
       ...Object.entries(spacing).map(([n, px]) => `--spacing-${kebab(n)}: ${px}px;`),
+      `--grid-template-columns-split: minmax(0, ${splitText}fr) minmax(0, ${12 - splitText}fr);`,
+      `--grid-template-columns-split-flip: minmax(0, ${12 - splitText}fr) minmax(0, ${splitText}fr);`,
+      `--stroke: ${stroke}px;`,
+      `--default-border-width: ${stroke}px;`,
+      `--default-outline-width: ${stroke}px;`,
+      `--border-width-heavy: ${stroke * 2}px;`,
+      ...Object.entries(opacity).map(([n, v]) => `--opacity-${n}: ${v * 100}%;`),
     ]),
     // inline: a utility must read the role where it's used, or it would stop flipping with the surface.
     block(
@@ -106,8 +117,14 @@ export function emitCss(t: Tokens = tokens): string {
         ...(s.axes ? [`font-variation-settings: ${axes(s.axes)};`] : []),
       ]),
     ),
-    // Figma's 0.56 stroke on the small Ask box. Tailwind's border widths don't read the spacing scale.
-    block('@utility border-ask-small', ['border-width: var(--spacing-ask-box-small-border);']),
+    block('@utility figure-scale', [`zoom: ${figureScale};`]),
+    // Non-scaling, so Stroke is the same width on a drawing at any of its sizes.
+    block('@utility figure-stroke', [
+      'stroke-width: var(--stroke);',
+      'vector-effect: non-scaling-stroke;',
+    ]),
+    block('@utility figure-faint', ['stroke-opacity: var(--opacity-figure-line);']),
+    block('@utility opacity-inactive', ['opacity: var(--opacity-inactive);']),
     block('@utility wordmark', [
       'display: inline-grid;',
       'font-family: var(--font-pixel);',
@@ -120,7 +137,7 @@ export function emitCss(t: Tokens = tokens): string {
       block(`@utility wordmark-${layer}`, [
         'grid-area: 1 / 1;',
         'text-box: inherit;',
-        `color: var(--wordmark-${layer});`,
+        `color: var(--${wordmark.roles[layer as keyof typeof wordmark.roles]});`,
         `font-variation-settings: ${axes(a)};`,
       ]),
     ),
@@ -175,12 +192,14 @@ export interface ContrastResult {
 
 export function contrastTable(t: Tokens = tokens): ContrastResult[] {
   return (Object.entries(t.surfaces) as [SurfaceName, Roles][]).flatMap(([surface, roles]) =>
-    contrastPairs.map(({ text, on }) => ({
-      surface,
-      text,
-      on,
-      ratio: contrast(roles[text], roles[on], t),
-    })),
+    contrastPairs
+      .filter((pair) => !pair.surfaces || pair.surfaces.includes(surface))
+      .map(({ text, on }) => ({
+        surface,
+        text,
+        on,
+        ratio: contrast(roles[text], roles[on], t),
+      })),
   );
 }
 

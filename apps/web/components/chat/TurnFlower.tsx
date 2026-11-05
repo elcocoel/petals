@@ -2,7 +2,7 @@
 // turn that made it and brings it back. Mint, like a selected petal, marks the one that's open.
 
 import { Button } from '../ui/Button.tsx';
-import { Eyebrow } from '../ui/Eyebrow.tsx';
+import { Mono } from '../ui/Mono.tsx';
 
 export function TurnFlower({
   title,
@@ -24,7 +24,9 @@ export function TurnFlower({
       {thumb ? <img src={thumb} alt="" className="size-turn-flower-thumb shrink-0" /> : null}
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="type-label">{title}</span>
-        <Eyebrow as="span">{sub}</Eyebrow>
+        <Mono as="span" tone="muted">
+          {sub}
+        </Mono>
       </span>
       <span className="shrink-0 type-caption text-muted">{open ? 'In the panel' : 'Show'}</span>
     </Button>

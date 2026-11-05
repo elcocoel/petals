@@ -58,42 +58,42 @@ describe('AnsweredBy', () => {
     [
       done({ model: 'm/x' }),
       sig('provider_tee'),
-      '<p data-quiet="true" class="type-mono-small wrap-anywhere text-muted">Answered by <code>m/x</code>. Enclave signature: yes (provider_tee, signer <code>0xabc</code>, <a href="/api/v1/attestations/r">attestation report</a>). 2 model calls, $0.0123.</p>',
+      '<p data-quiet="true" class="type-mono wrap-anywhere text-muted">Answered by <code>m/x</code>. Enclave signature: yes (provider_tee, signer <code>0xabc</code>, <a href="/api/v1/attestations/r">attestation report</a>). 2 model calls, $0.0123.</p>',
     ],
     [
       done({ model: 'm/x' }),
       { signature_kind: 'provider_tee', signing_address: '0xabc' } as ModelSignature,
-      '<p data-quiet="true" class="type-mono-small wrap-anywhere text-muted">Answered by <code>m/x</code>. Enclave signature: yes (provider_tee, signer <code>0xabc</code>). 2 model calls, $0.0123.</p>',
+      '<p data-quiet="true" class="type-mono wrap-anywhere text-muted">Answered by <code>m/x</code>. Enclave signature: yes (provider_tee, signer <code>0xabc</code>). 2 model calls, $0.0123.</p>',
     ],
     [
       done({ model: 'm/x' }),
       sig('gateway'),
-      '<p data-quiet="true" class="type-mono-small wrap-anywhere text-muted">Answered by <code>m/x</code>. Enclave signature: no. It has only a gateway signature, which does not prove which model answered. 2 model calls, $0.0123.</p>',
+      '<p data-quiet="true" class="type-mono wrap-anywhere text-muted">Answered by <code>m/x</code>. Enclave signature: no. It has only a gateway signature, which does not prove which model answered. 2 model calls, $0.0123.</p>',
     ],
     [
       done({ model: 'm/x' }),
       null,
-      '<p data-quiet="true" class="type-mono-small wrap-anywhere text-muted">Answered by <code>m/x</code>. Enclave signature: no. NEAR AI gave no signature for this answer, so nothing proves which model wrote it. Only models with enclave attestation get one. 2 model calls, $0.0123.</p>',
+      '<p data-quiet="true" class="type-mono wrap-anywhere text-muted">Answered by <code>m/x</code>. Enclave signature: no. NEAR AI gave no signature for this answer, so nothing proves which model wrote it. Only models with enclave attestation get one. 2 model calls, $0.0123.</p>',
     ],
     [
       done({ model: 'm/x', fallback_used: true }),
       sig('provider_tee'),
-      '<p data-quiet="true" class="type-mono-small wrap-anywhere text-muted">Answered by <code>m/x</code> (a fallback: the first-choice model did not answer). Enclave signature: yes (provider_tee, signer <code>0xabc</code>, <a href="/api/v1/attestations/r">attestation report</a>). 2 model calls, $0.0123.</p>',
+      '<p data-quiet="true" class="type-mono wrap-anywhere text-muted">Answered by <code>m/x</code> (a fallback: the first-choice model did not answer). Enclave signature: yes (provider_tee, signer <code>0xabc</code>, <a href="/api/v1/attestations/r">attestation report</a>). 2 model calls, $0.0123.</p>',
     ],
     [
       done({ model: 'm/x', turns: 1, cost_usd: 0 }),
       null,
-      '<p data-quiet="true" class="type-mono-small wrap-anywhere text-muted">Answered by <code>m/x</code>. Enclave signature: no. NEAR AI gave no signature for this answer, so nothing proves which model wrote it. Only models with enclave attestation get one. 1 model call, $0.0000.</p>',
+      '<p data-quiet="true" class="type-mono wrap-anywhere text-muted">Answered by <code>m/x</code>. Enclave signature: no. NEAR AI gave no signature for this answer, so nothing proves which model wrote it. Only models with enclave attestation get one. 1 model call, $0.0000.</p>',
     ],
     [
       done({ model: 'recorded' }),
       null,
-      '<p data-quiet="true" class="type-mono-small wrap-anywhere text-muted">Recorded run: no model answered just now.</p>',
+      '<p data-quiet="true" class="type-mono wrap-anywhere text-muted">Recorded run: no model answered just now.</p>',
     ],
     [
       done({ turns: 0 }),
       null,
-      '<p data-quiet="true" class="type-mono-small wrap-anywhere text-muted">No model answered.</p>',
+      '<p data-quiet="true" class="type-mono wrap-anywhere text-muted">No model answered.</p>',
     ],
   ])('renders what it always rendered (%#)', (d, s, markup) => {
     expect(text(d, s)).toBe(markup);

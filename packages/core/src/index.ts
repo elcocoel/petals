@@ -47,6 +47,7 @@ export { PRIMITIVES } from './primitives.ts';
 export { readFlower, readingHash } from './reading/index.ts';
 export { renderFlower, SKINS } from './render/index.ts';
 export type { Skin } from './render/types.ts';
+export { runSignal, setRunSignalSource } from './run-signal.ts';
 export { schemas } from './schema/index.ts';
 export { backerSegments } from './segments/backers.ts';
 export { selectPetals } from './select.ts';

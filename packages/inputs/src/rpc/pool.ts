@@ -13,6 +13,7 @@
 // endpoint has failed, the error names each one and why. A JSON-RPC handler error (unknown
 // account, unknown block, a contract error) is an answer, not an outage: it is thrown as
 // RpcError at once.
+import { runSignal } from '@petal/core';
 import { InputError, type SourceFailure } from '../errors.ts';
 
 export const USER_AGENT = 'petal/0.1 (NEAR hackathon; keyless public reads; +https://petal)';
@@ -241,7 +242,7 @@ export function rpcPool(opts: RpcPoolOptions = {}): RpcPool {
           ...e.headers,
         },
         body,
-        signal: ctrl.signal,
+        signal: runSignal(ctrl.signal),
       });
     } catch (err) {
       clearTimeout(timer);

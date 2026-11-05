@@ -1,7 +1,7 @@
-// A section's call to action: Figma's CTA frames, 28 between a button and a link, 12 between buttons.
+// A section's call to action: 32 between a button and a link, 12 between buttons.
 import type { ReactNode } from 'react';
 
-const GAPS = { wide: 'gap-space-28', tight: 'gap-text-gap' } as const;
+const GAPS = { wide: 'gap-space-32', tight: 'gap-text-gap' } as const;
 
 export function ActionRow({
   gap = 'wide',

@@ -100,7 +100,7 @@ describe('SYSTEM_PROMPT', () => {
 describe('agentNotes', () => {
   test('adds the limits and the date, never into the shared text', () => {
     const notes = agentNotes({ budget: DEFAULT_BUDGET, today: new Date('2026-11-04T09:00:00Z') });
-    expect(notes).toMatch(/at most 8 tool rounds and 120 s/);
+    expect(notes).toMatch(/at most 8 tool rounds and 300 s/);
     expect(notes).toMatch(/Today is 2026-11-04/);
     expect(notes).not.toMatch(/draft/i);
   });
