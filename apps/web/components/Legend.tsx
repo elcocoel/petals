@@ -3,6 +3,9 @@
 import type { LegendItem } from '@petal/core/types';
 import { SourceList } from './Sources.tsx';
 
+/** A swatch comes from the renderer as var(--k-pool); the generated CSS has a rule per colour. */
+const swatchKey = (swatch: string) => /^var\(--([\w-]+)\)$/.exec(swatch)?.[1];
+
 export function Legend({
   items,
   sources,
@@ -27,7 +30,7 @@ export function Legend({
               <ul>
                 {item.keys.map((k) => (
                   <li key={k.label}>
-                    <span className="swatch" style={{ background: `${k.swatch}` }} /> {k.label}
+                    <span className="swatch" data-swatch={swatchKey(k.swatch)} /> {k.label}
                   </li>
                 ))}
               </ul>

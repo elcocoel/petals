@@ -1,0 +1,256 @@
+// The one source of every design value (T175). `emit.ts` turns it into CSS; nothing else is edited.
+// Keys are Figma's names, so an agent can hold this file next to Figma (file "Petals", collection
+// "Petals · brand", local text styles) and compare by eye. Values read on 2026-11-05.
+// Code uses roles (--text-primary, text-primary), never primitives.
+
+/** Figma: Ink, Gray, Mint, Ground. */
+export const primitives = {
+  Ink: '#171717',
+  Gray: '#C7C7C7',
+  Mint: '#8BC9BD',
+  Ground: '#FFFFFF',
+} as const;
+
+export type Primitive = keyof typeof primitives;
+export type Paint = Primitive | { of: Primitive; alpha: number };
+
+export const surfaceNames = ['ground', 'ink', 'mint'] as const;
+export type SurfaceName = (typeof surfaceNames)[number];
+
+/** What one `data-surface` attribute flips. Every surface sets every role. */
+export interface Roles {
+  surface: Paint;
+  'text-primary': Paint;
+  'text-muted': Paint;
+  hairline: Paint;
+  'action-background': Paint;
+  'action-text': Paint;
+  /** The arrow inside an action. Plain accent would vanish: Mint on Mint on ink, Ink on Ink on mint. */
+  'action-accent': Paint;
+  accent: Paint;
+  'wordmark-back': Paint;
+  'wordmark-middle': Paint;
+  'wordmark-front': Paint;
+}
+export type Role = keyof Roles;
+
+export const surfaces: Record<SurfaceName, Roles> = {
+  ground: {
+    surface: 'Ground',
+    'text-primary': 'Ink',
+    'text-muted': { of: 'Ink', alpha: 0.6 },
+    hairline: 'Gray',
+    'action-background': 'Ink',
+    'action-text': 'Ground',
+    'action-accent': 'Mint',
+    accent: 'Mint',
+    'wordmark-back': 'Mint',
+    'wordmark-middle': 'Gray',
+    'wordmark-front': 'Ink',
+  },
+  ink: {
+    surface: 'Ink',
+    'text-primary': 'Ground',
+    'text-muted': { of: 'Ground', alpha: 0.7 },
+    hairline: { of: 'Ground', alpha: 0.3 },
+    'action-background': 'Mint',
+    'action-text': 'Ink',
+    'action-accent': 'Ink',
+    accent: 'Mint',
+    'wordmark-back': 'Mint',
+    'wordmark-middle': 'Gray',
+    'wordmark-front': 'Ground',
+  },
+  mint: {
+    surface: 'Mint',
+    'text-primary': 'Ink',
+    'text-muted': { of: 'Ink', alpha: 0.7 },
+    hairline: { of: 'Ink', alpha: 0.4 },
+    'action-background': 'Ink',
+    'action-text': 'Ground',
+    'action-accent': 'Mint',
+    accent: 'Ink',
+    'wordmark-back': 'Ground',
+    'wordmark-middle': 'Gray',
+    'wordmark-front': 'Ink',
+  },
+};
+
+/** The Tailwind colour name of each role: bg-action, text-on-action, border-hairline. */
+export const roleUtilities: Record<Role, string> = {
+  surface: 'surface',
+  'text-primary': 'primary',
+  'text-muted': 'muted',
+  hairline: 'hairline',
+  'action-background': 'action',
+  'action-text': 'on-action',
+  'action-accent': 'action-accent',
+  accent: 'accent',
+  'wordmark-back': 'wordmark-back',
+  'wordmark-middle': 'wordmark-middle',
+  'wordmark-front': 'wordmark-front',
+};
+
+/**
+ * Checked on every surface at body-text contrast. Hairlines, accent and the wordmark layers are
+ * decoration, not text, so they aren't pairs.
+ */
+export const contrastMinimum = 4.5;
+export const contrastPairs: readonly { text: Role; on: Role }[] = [
+  { text: 'text-primary', on: 'surface' },
+  { text: 'text-muted', on: 'surface' },
+  { text: 'action-text', on: 'action-background' },
+  { text: 'action-accent', on: 'action-background' },
+];
+
+/** Figma: Layout/… variables, then the landing page's section padding. Pixels. */
+export const layout = {
+  'Page inset': 72,
+  'Section inset': 64,
+  'Column gap': 48,
+  'Block gap': 24,
+  'Text gap': 12,
+  'Control inset': 20,
+  'Control height': 48,
+  'Section padding': 112,
+} as const;
+
+/**
+ * Pixels read off Figma's components (hard values there, not variables), and the two page widths
+ * the old pages already had. All of them become spacing utilities: h-ask-box-height.
+ */
+export const sizes = {
+  'Ask box height': 64,
+  'Ask box width': 600,
+  'Ask box inset': 8,
+  'Ask box gap': 16,
+  'Starter height': 36,
+  'Starter inset start': 16,
+  'Starter inset end': 14,
+  'Arrow gap': 10,
+  'Content width': 960,
+  'Flower width': 640,
+  'Gallery flower width': 320,
+} as const;
+
+export const cornerRadius = 0;
+
+/** Not from Figma, which has one frame width: Tailwind's own three, under the same names. */
+export const breakpoints = { sm: 640, md: 768, lg: 1024 } as const;
+
+/** `variable` is what next/font sets in apps/web/app/layout.tsx. Figma: Type/Reading family. */
+export const fonts = {
+  sans: { family: 'Mona Sans', variable: '--font-mona-sans', fallback: 'system-ui, sans-serif' },
+  mono: { family: 'Geist Mono', variable: '--font-geist-mono', fallback: 'monospace' },
+  pixel: { family: 'Bitcount Grid Single', variable: '--font-bitcount', fallback: 'monospace' },
+} as const;
+
+export interface TypeStyle {
+  font: keyof typeof fonts;
+  size: number;
+  line: number;
+  weight: number;
+  /** In em: Figma's -2% is -0.02. */
+  tracking: number;
+}
+
+/**
+ * Figma: Petals / <name>. The three mono styles consolidate Figma's nine loose Geist Mono sizes.
+ * Text case is written in the copy, never transformed.
+ */
+export const type = {
+  Display: { font: 'sans', size: 88, line: 90, weight: 600, tracking: -0.02 },
+  'Display compact': { font: 'sans', size: 64, line: 68, weight: 600, tracking: -0.02 },
+  Title: { font: 'sans', size: 44, line: 50, weight: 600, tracking: 0 },
+  Heading: { font: 'sans', size: 28, line: 34, weight: 600, tracking: 0 },
+  Lead: { font: 'sans', size: 22, line: 31, weight: 400, tracking: 0 },
+  Body: { font: 'sans', size: 18, line: 27, weight: 400, tracking: 0 },
+  Label: { font: 'sans', size: 16, line: 22, weight: 500, tracking: 0 },
+  Caption: { font: 'sans', size: 14, line: 20, weight: 500, tracking: 0 },
+  'Mono label': { font: 'mono', size: 12, line: 17, weight: 400, tracking: 0.04 },
+  'Mono small': { font: 'mono', size: 11, line: 16, weight: 400, tracking: 0.04 },
+  'Mono code': { font: 'mono', size: 15, line: 24, weight: 400, tracking: 0 },
+} as const satisfies Record<string, TypeStyle>;
+
+/** Figma: Petals / Wordmark, 12:12. Three layers of live text at one origin, back to front. */
+export const wordmark = {
+  layers: {
+    back: { CRSV: 0.11, ELSH: 81, ELXP: 0, slnt: -8, wght: 358 },
+    middle: { CRSV: 0.11, ELSH: 50, ELXP: 90, slnt: -8, wght: 358 },
+    front: { CRSV: 0.5, ELSH: 17, ELXP: 63, slnt: -8, wght: 337 },
+  },
+  /** Font size in pixels. Display is the component's own size, Nav the one in the page frames. */
+  sizes: { Nav: 50, Display: 269.722 },
+} as const;
+
+/**
+ * Chart colours. The first twelve are the renderer's light values (packages/core render/style.ts),
+ * which page CSS overrides by name, so a flower's colours move from here without changing its
+ * hashed bytes. The renderer's own --ink follows --text-primary instead.
+ */
+export const chart = {
+  'ink-2': '#52514e',
+  hair: '#e1e0d9',
+  unknown: '#c9c7bf',
+  tail: '#b8b6ae',
+  'k-pool': '#2a78d6',
+  'k-exchange': '#eb6834',
+  'k-entity': '#1baf7a',
+  'k-custodian': '#eda100',
+  'k-contract': '#e87ba4',
+  'k-treasury': '#008300',
+  'k-org': '#4a3aa7',
+  'k-delegator': '#e34948',
+  'everyone-else': '#666661',
+  selected: primitives.Mint,
+  // Only the API mock's legend names these (apps/web/lib/mock/near-validators.json).
+  'k-staking_pool': '#6b8f71',
+  'k-staking_entity': '#c9a227',
+  'seg-other': '#9bb7a0',
+  'seg-large': '#557a5c',
+  'seg-liquid': '#c9a227',
+  'seg-lockup': '#7a6a9b',
+} as const;
+
+/** The chart keys the renderer reads as CSS variables of the same name. */
+export const rendererVariables = [
+  'ink-2',
+  'hair',
+  'unknown',
+  'tail',
+  'k-pool',
+  'k-exchange',
+  'k-entity',
+  'k-custodian',
+  'k-contract',
+  'k-treasury',
+  'k-org',
+  'k-delegator',
+] as const satisfies readonly (keyof typeof chart)[];
+
+export interface Tokens {
+  primitives: Record<Primitive, string>;
+  surfaces: Record<SurfaceName, Roles>;
+  layout: Record<string, number>;
+  sizes: Record<string, number>;
+  type: Record<string, TypeStyle>;
+  chart: Record<string, string>;
+}
+
+/** Everything `emit.ts` reads. A test can hand it a changed copy. */
+export const tokens: Tokens = { primitives, surfaces, layout, sizes, type, chart };
+
+/** Figma's name as a CSS name: "Display compact" becomes display-compact. */
+export const kebab = (name: string) => name.toLowerCase().replaceAll(' ', '-');
+
+/** A paint as CSS: a hex, or the primitive at an alpha. */
+export function paintCss(paint: Paint, from: Record<Primitive, string> = primitives): string {
+  if (typeof paint === 'string') return from[paint];
+  const hex = from[paint.of];
+  const [r, g, b] = [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
+  return `rgb(${r} ${g} ${b} / ${paint.alpha})`;
+}
+
+/** A paint in words, for the lab: "Ink", "Ink at 60%". */
+export const paintName = (paint: Paint) =>
+  typeof paint === 'string' ? paint : `${paint.of} at ${Math.round(paint.alpha * 100)}%`;

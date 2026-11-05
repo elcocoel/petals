@@ -16,5 +16,6 @@ export PETAL_MAP_NETWORK=testnet
 export PETAL_MAP_RECEIVER=petals.testnet
 export PETAL_WRITER_ACCOUNT=petals-writer.testnet
 export PETAL_WRITER_KEY_FILE="$secrets/petal-writer.testnet.json"
+export PETAL_LAB=1
 [ -f apps/web/.next/BUILD_ID ] || pnpm --filter @petal/web build
 PORT="${PORT:-3080}" exec pnpm --filter @petal/web start

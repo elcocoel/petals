@@ -1,0 +1,252 @@
+/* Base elements on tokens, plus the class names the existing pages already use. New looks go in a
+   component (components/ui/) with utilities, never here: scripts/check-literals.ts holds the list
+   of class names allowed in this file. */
+@import "tailwindcss";
+@import "./tokens.generated.css";
+
+@layer base {
+  body {
+    @apply bg-surface type-body text-primary;
+  }
+
+  h1 {
+    @apply type-title;
+    margin-block-end: var(--spacing-block-gap);
+  }
+
+  h2 {
+    @apply type-heading;
+    margin-block: var(--spacing-column-gap) var(--spacing-text-gap);
+  }
+
+  h3 {
+    @apply type-lead;
+    margin-block: var(--spacing-block-gap) var(--spacing-text-gap);
+  }
+
+  h4,
+  h5,
+  h6 {
+    @apply type-label;
+    margin-block: var(--spacing-block-gap) var(--spacing-text-gap);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+  }
+
+  /* The one Button's primary look. A raw <button> gets it too, so nothing drifts on the way to
+     components/ui/Button.tsx, whose variants override this with utilities. */
+  button,
+  a[data-button] {
+    @apply inline-flex h-control-height cursor-pointer items-center justify-center gap-arrow-gap bg-action px-control-inset type-label whitespace-nowrap text-on-action no-underline;
+  }
+
+  button:hover,
+  a[data-button]:hover {
+    opacity: 0.85;
+  }
+
+  button:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  code {
+    @apply type-mono-code;
+    overflow-wrap: anywhere;
+  }
+
+  pre {
+    @apply type-mono-code;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  hr {
+    border-color: var(--hairline);
+    margin-block: var(--spacing-block-gap);
+  }
+
+  table {
+    @apply type-caption;
+    border-collapse: collapse;
+  }
+
+  td,
+  th {
+    border: 1px solid var(--hairline);
+    padding: calc(var(--spacing-text-gap) / 2) var(--spacing-text-gap);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  textarea {
+    @apply type-body;
+    width: 100%;
+    border: 1px solid var(--text-primary);
+    padding: var(--spacing-text-gap);
+  }
+
+  summary {
+    cursor: pointer;
+  }
+
+  main p,
+  main ul,
+  main ol,
+  main table,
+  main pre {
+    margin-block-end: var(--spacing-text-gap);
+  }
+
+  main ul,
+  main ol {
+    padding-inline-start: var(--spacing-block-gap);
+  }
+
+  main ul {
+    list-style: square;
+  }
+
+  main ol {
+    list-style: decimal;
+  }
+
+  .muted {
+    color: var(--text-muted);
+  }
+
+  /* Figma has no error colour yet, so an error stays on the palette: a rule and a heavier weight. */
+  .error {
+    @apply type-label;
+    border-inline-start: 2px solid var(--text-primary);
+    padding-inline-start: var(--spacing-text-gap);
+  }
+
+  .box {
+    border: 1px solid var(--hairline);
+    padding: var(--spacing-block-gap);
+    margin-block: var(--spacing-block-gap);
+  }
+
+  .box > :first-child {
+    margin-block-start: 0;
+  }
+
+  .badge {
+    @apply type-mono-small;
+    display: inline-block;
+    border: 1px solid var(--hairline);
+    padding-inline: calc(var(--spacing-text-gap) / 2);
+    margin-inline-start: calc(var(--spacing-text-gap) / 2);
+  }
+
+  .gallery {
+    display: grid;
+    gap: var(--spacing-column-gap);
+    grid-template-columns: repeat(auto-fill, minmax(var(--spacing-gallery-flower-width), 1fr));
+    list-style: none;
+    padding: 0;
+  }
+
+  .gallery-flower {
+    width: var(--spacing-gallery-flower-width);
+    max-width: 100%;
+    height: auto;
+  }
+
+  .swatch {
+    display: inline-block;
+    width: var(--spacing-text-gap);
+    height: var(--spacing-text-gap);
+    border: 1px solid var(--hairline);
+    vertical-align: middle;
+  }
+
+  .legend {
+    @apply type-caption;
+  }
+
+  .events li {
+    margin-block: calc(var(--spacing-text-gap) / 2);
+    overflow-wrap: anywhere;
+  }
+
+  .thread {
+    padding-block-end: calc(var(--spacing-section-padding) + var(--spacing-column-gap));
+  }
+
+  .you {
+    border: 1px solid var(--hairline);
+    padding: var(--spacing-text-gap) var(--spacing-control-inset);
+    margin-block: var(--spacing-block-gap) var(--spacing-text-gap);
+    overflow-wrap: anywhere;
+  }
+
+  .md p {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .steps {
+    margin-block: var(--spacing-text-gap);
+  }
+
+  .composer {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    background-color: var(--surface);
+    border-block-start: 1px solid var(--hairline);
+    padding: var(--spacing-text-gap) var(--spacing-block-gap);
+  }
+
+  .composer-row {
+    display: flex;
+    gap: var(--spacing-text-gap);
+    align-items: flex-end;
+    max-width: var(--spacing-content-width);
+    margin-inline: auto;
+  }
+
+  .composer-note {
+    @apply type-caption;
+    max-width: var(--spacing-content-width);
+    margin: calc(var(--spacing-text-gap) / 2) auto 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Outside any layer on purpose. A flower's own embedded <style> is unlayered, and an unlayered rule
+   beats every layer. Page CSS only: the SVG's bytes are hashed and stay as they are. */
+.flower-svg {
+  max-width: var(--spacing-flower-width);
+}
+
+.flower-svg svg {
+  width: 100%;
+  height: auto;
+}
+
+.flower-svg [data-p] {
+  cursor: pointer;
+}
+
+.flower-svg svg[data-petal] text {
+  font-family: var(--font-mono);
+}
+
+.flower-svg svg[data-petal] .petal-centre {
+  font-family: var(--font-sans);
+}
+
+.flower-svg svg[data-petal] .petal-selected {
+  fill: var(--chart-selected);
+}
