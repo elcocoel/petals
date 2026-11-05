@@ -8,12 +8,14 @@ import { fakeRelations } from './illustrative.ts';
 import { newLive, noteAt, stepLive } from './live.ts';
 import { type Focus, type Marks, marks } from './marks.ts';
 import { type FlowerReading, modelOf } from './model.ts';
+import { scatter } from './order.ts';
 import { createScene } from './scene.ts';
 
 export interface BenchOptions {
   reading: FlowerReading;
   hover: HoverWay;
   relations: boolean;
+  scatter: boolean;
   probe: boolean;
 }
 
@@ -28,7 +30,11 @@ export function useFlowerBench(svg: RefObject<SVGSVGElement | null>, options: Be
   useEffect(() => {
     const node = svg.current;
     if (!node) return;
-    const m = modelOf(options.reading);
+    const m = modelOf(
+      options.scatter
+        ? { ...options.reading, petals: scatter(options.reading.petals) }
+        : options.reading,
+    );
     const motion = quiet();
     const box = node.getBoundingClientRect();
     const live = newLive(m, options.hover, box.width, box.height, motion.matches);
@@ -52,11 +58,13 @@ export function useFlowerBench(svg: RefObject<SVGSVGElement | null>, options: Be
       const focus: Focus | null =
         presence > 0.001
           ? {
-              index: live.focusIndex,
+              index: live.noteIndex,
               presence,
-              open: live.open.x[live.focusIndex] as number,
+              open: live.open.x[live.noteIndex] as number,
               chase: noteAt(live),
               side: live.noteSide.x,
+              band: live.noteIndex === live.focusIndex ? live.band : -1,
+              named: live.named.x,
             }
           : null;
       const mk = marks(m, live.camera, focus, live.ring, scratch);
@@ -67,7 +75,10 @@ export function useFlowerBench(svg: RefObject<SVGSVGElement | null>, options: Be
         accent: live.accent,
         ringMoved: stepped.ringMoved || last === null,
         accentMoved: stepped.accentMoved,
-        focusIndex: focus ? live.focusIndex : -1,
+        focusIndex: focus ? live.noteIndex : -1,
+        raised: focus ? live.focusIndex : -1,
+        bandsMoved: stepped.bandsMoved,
+        band: focus ? (focus.band ?? -1) : -1,
       });
       last = mk;
       if (stepped.moving) wake();

@@ -104,3 +104,27 @@ export function advanceAll(ch: Channel, c: Step): boolean {
   }
   return moved;
 }
+
+/** Steps a channel with one step on the way up and another on the way down. True if any of it moved. */
+export function advanceBothWays(ch: Channel, up: Step, down: Step): boolean {
+  const { x, v, t } = ch;
+  let moved = false;
+  for (let i = 0; i < x.length; i++) {
+    const target = t[i] as number;
+    const e = (x[i] as number) - target;
+    const vi = v[i] as number;
+    if (e === 0 && vi === 0) continue;
+    moved = true;
+    const c = e < 0 ? up : down;
+    const nx = target + c.a * e + c.b * vi;
+    const nv = c.c * e + c.d * vi;
+    if (Math.abs(nx - target) < REST_X && Math.abs(nv) < REST_V) {
+      x[i] = target;
+      v[i] = 0;
+    } else {
+      x[i] = nx;
+      v[i] = nv;
+    }
+  }
+  return moved;
+}

@@ -10,8 +10,10 @@ export type Driver =
   | 'titleRoom'
   /** The flower's radius over (rank + 2): how much room each rank gets if the ones above it show. */
   | 'radiusPerRank'
-  /** This petal's side as drawn, swollen or not. */
+  /** This petal's side on the polygon, as drawn. */
   | 'petalSide'
+  /** This petal's end as drawn, the widest part of it. */
+  | 'petalEnd'
   /** The focused petal's side at rest, ignoring how it's swollen. */
   | 'focusSide'
   /** A band's size across its label. */
@@ -50,14 +52,12 @@ export const DETAIL = {
   /** Everyone's note, once its own petal is wide enough to earn one. */
   allNotes: { driver: 'petalSide', fadeIn: [26, 40] },
   /** The second line on the pointed-at note. */
-  kind: { driver: 'petalSide', fadeIn: [14, 26] },
+  kind: { driver: 'petalEnd', fadeIn: [14, 26] },
 
-  /** The bands inside a petal: first tones and cuts, on any petal that gets wide enough. */
-  segments: { driver: 'petalSide', fadeIn: [18, 34] },
-  /** A band's words on the petal being pointed at, as soon as they fit. */
-  focusSegmentLabels: { driver: 'bandAcross', fadeIn: [15, 23] },
-  /** On any other petal only once it's wide enough to say so without becoming a table. */
-  segmentLabels: { driver: 'bandAcross', fadeIn: [56, 84] },
+  /** The bands of the petal in direct focus, and only that petal, with their names in its note. */
+  segments: { driver: 'petalEnd', fadeIn: [18, 34] },
+  /** A band of that petal saying its own name, once it's big enough to hold it. */
+  segmentLabels: { driver: 'bandAcross', fadeIn: [15, 23] },
 
   /** The crossing into an account (crossing.js, opens side 24 to 72 px). */
   account: { driver: 'focusSide', fadeIn: [24, 72] },

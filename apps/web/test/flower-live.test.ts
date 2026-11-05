@@ -5,16 +5,19 @@ import type { Reading } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
 import { fitView, flyTo, zoomWheel } from '../lab/flower/camera.ts';
 import { openAt } from '../lab/flower/detail.ts';
-import { type HoverWay, heightOf } from '../lab/flower/hover.ts';
+import { flareGain, type HoverWay, heightOf, riseGain } from '../lab/flower/hover.ts';
 import { type Live, newLive, noteAt, stepLive, tipOf } from '../lab/flower/live.ts';
-import { modelOf } from '../lab/flower/model.ts';
-import { SHAPE } from '../lab/flower/ring.ts';
+import { bandUnder, modelOf, pick } from '../lab/flower/model.ts';
+import { leftAt, pointIn, rightAt, SHAPE, widthBefore } from '../lab/flower/ring.ts';
 
 const GOLDEN = join(import.meta.dirname, '..', '..', '..', 'fixtures', 'golden');
 const reading: Reading = JSON.parse(
   readFileSync(join(GOLDEN, 'near-validators-default.reading.json'), 'utf8'),
 ).reading;
 const model = modelOf(reading);
+const backers = modelOf(
+  JSON.parse(readFileSync(join(GOLDEN, 'near-validators-backers.reading.json'), 'utf8')).reading,
+);
 
 const FRAME = 1 / 60;
 const W = 1440;
@@ -76,25 +79,116 @@ describe('at rest', () => {
 });
 
 describe('hover: dock', () => {
-  test('the pointer leads: lit on the first frame, moving on the first frame', () => {
+  test('the pointer leads: on the first frame the petal is moving and the note names it', () => {
     const l = start();
     pointAt(l, 20);
     const h0 = l.ring.h[20] as number;
     stepLive(l, FRAME);
-    expect(l.accent.x[20]).toBeGreaterThan(0.9);
+    expect(l.accent.x[20]).toBeGreaterThan(0);
     expect(l.ring.h[20]).toBeGreaterThan(h0);
+    expect(l.noteIndex).toBe(20);
   });
 
-  test('neighbours swell with a falloff, and the far side barely moves in height', () => {
+  test('calm: a touch takes its time, with hardly any overshoot', () => {
     const l = start();
     pointAt(l, 30);
+    run(l, 6);
+    const rise = (i: number) => (l.ring.h[i] as number) - (model.height[i] as number);
+    const whole = riseGain((model.ring.len[30] as number) * l.camera.k) * model.L;
+    expect(rise(30)).toBeLessThan(whole * 0.5);
+    let top = 0;
+    for (let f = 0; f < 120; f++) {
+      stepLive(l, FRAME);
+      top = Math.max(top, rise(30));
+    }
+    expect(top).toBeLessThan(whole * 1.04);
+    expect(rise(30)).toBeCloseTo(whole, 2);
+  });
+
+  test('direct focus carries the weight: 15% next to it, 5% next to that, then nothing', () => {
+    const l = start();
+    pointAt(l, 30);
+    run(l, 240);
+    const rise = (i: number) => (l.ring.h[i] as number) - (model.height[i] as number);
+    expect(rise(29) / rise(30)).toBeCloseTo(0.15, 2);
+    expect(rise(31) / rise(30)).toBeCloseTo(0.15, 2);
+    expect(rise(28) / rise(30)).toBeCloseTo(0.05, 2);
+    expect(rise(32) / rise(30)).toBeCloseTo(0.05, 2);
+    for (const i of [33, 27, 40, 0, 60]) expect(rise(i)).toBe(0);
+  });
+
+  test('the circle holds still: no angle changes, no one steps back, only the focus widens', () => {
+    const l = start();
+    pointAt(l, 30);
+    run(l, 240);
+    expect(l.rotation.x).toBeCloseTo(0, 9);
+    for (let i = 0; i <= model.n; i++)
+      expect(l.ring.start[i]).toBeCloseTo(model.ring.start[i] as number, 9);
+    for (let i = 0; i < model.n; i++) {
+      expect(l.ring.h[i]).toBeGreaterThanOrEqual((model.height[i] as number) - 1e-9);
+      expect(l.ring.flare[i]).toBe(i === 30 ? flareTarget(l, 30) : 0);
+    }
+    expect(flareTarget(l, 30)).toBeGreaterThan(0.5);
+  });
+
+  test('its size is in petals, not pixels: the same falloff at any zoom', () => {
+    const l = start();
+    pointAt(l, 30);
+    run(l, 30);
+    zoomTo(l, 2.2);
+    pointAt(l, 30);
+    run(l, 240);
+    const rise = (i: number) => (l.ring.h[i] as number) - (model.height[i] as number);
+    expect(rise(29) / rise(30)).toBeCloseTo(0.15, 2);
+    expect(rise(33)).toBe(0);
+  });
+
+  test('on its own wider tip, over a neighbour, the focus stays', () => {
+    const l = start();
+    pointAt(l, 30);
+    run(l, 240);
+    const r = l.ring;
+    const top = r.h[30] as number;
+    const [lx, ly] = leftAt(r, 30, top * 0.97);
+    const [rx, ry] = rightAt(r, 30, top * 0.97);
+    const wx = lx + (rx - lx) * 0.05;
+    const wy = ly + (ry - ly) * 0.05;
+    const c = l.camera;
+    l.pointer.x = wx * c.k + c.x;
+    l.pointer.y = wy * c.k + c.y;
+    expect(pick(model, wx, wy, l.reach)?.index).not.toBe(30);
+    run(l, 30);
+    expect(l.focusIndex).toBe(30);
+    // and past the edge it hands over
+    l.pointer.x = (lx - (rx - lx) * 0.1) * c.k + c.x;
+    l.pointer.y = (ly - (ry - ly) * 0.1) * c.k + c.y;
+    run(l, 2);
+    expect(l.focusIndex).not.toBe(30);
+  });
+
+  test('passing petals do not flash: a fast sweep names few of them, and lands on the last', () => {
+    const l = start();
+    const names = new Set<number>();
+    for (let i = 0; i < 30; i++) {
+      pointAt(l, 5 + i);
+      stepLive(l, FRAME);
+      names.add(l.noteIndex);
+    }
+    expect(names.size).toBeLessThan(8);
+    run(l, 20);
+    expect(l.noteIndex).toBe(34);
+  });
+
+  test('a passing petal stays pale; one you stop on comes up', () => {
+    const l = start();
+    pointAt(l, 5);
+    stepLive(l, FRAME);
+    stepLive(l, FRAME);
+    pointAt(l, 6);
+    stepLive(l, FRAME);
+    expect(l.accent.x[5]).toBeLessThan(0.35);
     run(l, 60);
-    const extra = (i: number) => (l.widths[i] as number) / (model.width[i] as number);
-    expect(extra(30)).toBeGreaterThan(extra(32));
-    expect(extra(32)).toBeGreaterThan(extra(36));
-    expect(extra(28)).toBeGreaterThan(extra(24));
-    expect(extra(0)).toBeCloseTo(1, 3);
-    expect(l.ring.h[0]).toBeCloseTo(model.height[0] as number, 2);
+    expect(l.accent.x[6]).toBeCloseTo(1, 1);
   });
 
   test('what is under the pointer is what is drawn under the pointer', () => {
@@ -122,6 +216,45 @@ describe('hover: dock', () => {
       stepLive(l, FRAME);
       expect(l.ring.start[model.n]).toBeCloseTo(Math.PI * 2, 9);
     }
+  });
+});
+
+const flareTarget = (l: Live, i: number) =>
+  flareGain(
+    (model.ring.len[i] as number) * l.camera.k,
+    widthBefore(model.ring, i, model.height[i] as number) * l.camera.k,
+  );
+
+describe('the bands under the pointer', () => {
+  test('a point up a bar is on the band its height falls in', () => {
+    const segs = [{ frac: 0.5 }, { frac: 0.3 }, { frac: 0.2 }];
+    expect(bandUnder(segs, 0.1)).toBe(0);
+    expect(bandUnder(segs, 0.6)).toBe(1);
+    expect(bandUnder(segs, 0.95)).toBe(2);
+    expect(bandUnder(segs, 1.4)).toBe(2);
+    expect(bandUnder(segs, -1)).toBe(0);
+    expect(bandUnder([], 0.5)).toBe(-1);
+  });
+
+  test('following the pointer up the focus, with its bands named on that petal alone', () => {
+    const l = newLive(backers, 'dock', W, H, false);
+    run(l, 90);
+    const seen = new Set<number>();
+    for (const up of [0.15, 0.5, 0.75, 0.97]) {
+      const r = backers.ring;
+      const h = (backers.height[7] as number) * up;
+      const wx = ((r.ax[7] as number) + (r.bx[7] as number)) / 2 + (r.nx[7] as number) * h;
+      const wy = ((r.ay[7] as number) + (r.by[7] as number)) / 2 + (r.ny[7] as number) * h;
+      l.pointer.x = wx * l.camera.k + l.camera.x;
+      l.pointer.y = wy * l.camera.k + l.camera.y;
+      l.pointer.inside = true;
+      run(l, 40);
+      expect(l.focusIndex).toBe(7);
+      seen.add(l.band);
+    }
+    expect(seen.size).toBeGreaterThan(1);
+    expect(l.named.x[7]).toBeCloseTo(1, 1);
+    for (const i of [5, 6, 8, 9, 30]) expect(l.named.x[i]).toBe(0);
   });
 });
 
@@ -199,7 +332,7 @@ describe('reduced motion', () => {
     stepLive(l, FRAME);
     expect(l.accent.x[30]).toBeGreaterThan(0.9);
     expect(l.ring.h[30]).toBeCloseTo(
-      heightOf(model.height[30] as number, model.L, l.height.t[30] as number),
+      heightOf('dock', model.height[30] as number, model.L, l.height.t[30] as number),
       6,
     );
     const again = stepLive(l, FRAME);
@@ -245,11 +378,10 @@ describe('the crossing', () => {
     // where the pointed-at point of the petal is drawn, on screen
     const r = l.ring;
     const up = (l.up * (r.h[20] as number)) / (model.height[20] as number);
-    const wx = ((r.ax[20] as number) + (r.bx[20] as number)) / 2 + (r.nx[20] as number) * up + r.ox;
-    const wy = ((r.ay[20] as number) + (r.by[20] as number)) / 2 + (r.ny[20] as number) * up + r.oy;
+    const [px, py] = pointIn(r, 20, l.along, up);
     const c = l.camera;
-    const sx = wx * c.k + c.x;
-    const sy = wy * c.k + c.y;
+    const sx = (px + r.ox) * c.k + c.x;
+    const sy = (py + r.oy) * c.k + c.y;
     expect(Math.hypot(sx - l.pointer.x, sy - l.pointer.y)).toBeLessThan(3);
   });
 

@@ -9,17 +9,19 @@ export function FlowerBench({
   reading,
   hover,
   relations,
+  scatter,
   probe,
 }: {
   reading: FlowerReading;
   hover: HoverWay;
   relations: boolean;
+  scatter: boolean;
   probe: boolean;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const options = useMemo(
-    () => ({ reading, hover, relations, probe }),
-    [reading, hover, relations, probe],
+    () => ({ reading, hover, relations, scatter, probe }),
+    [reading, hover, relations, scatter, probe],
   );
   useFlowerBench(svg, options);
   return (

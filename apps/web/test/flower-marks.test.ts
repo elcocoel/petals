@@ -10,7 +10,7 @@ import { fakeRelations } from '../lab/flower/illustrative.ts';
 import { newLive, noteAt, stepLive } from '../lab/flower/live.ts';
 import { type Focus, type Marks, marks } from '../lab/flower/marks.ts';
 import { type Model, modelOf } from '../lab/flower/model.ts';
-import { SHAPE } from '../lab/flower/ring.ts';
+import { SHAPE, widthBefore } from '../lab/flower/ring.ts';
 import { syntheticReading } from '../lab/flower/synthetic.ts';
 import { amount, kindWord, LINE, noteText, pct, textWidth } from '../lab/flower/words.ts';
 
@@ -58,6 +58,15 @@ function texts(m: Marks): Text[] {
     if (m.focus.subOpacity > 0.01) {
       box(m.focus.sub, m.focus.subOpacity, m.focus.x, m.focus.y + 4 + LINE, textWidth(m.focus.sub));
     }
+    m.focus.bands.forEach((b, i) => {
+      box(
+        b.text,
+        b.opacity,
+        m.focus?.x ?? 0,
+        (m.focus?.y ?? 0) + 4 + LINE * (i + 2),
+        textWidth(b.text),
+      );
+    });
   }
   const half = textWidth(m.title) / 2;
   box('title', m.titleInside.opacity, m.titleInside.x - half, m.titleInside.y, half * 2);
@@ -202,14 +211,72 @@ describe('marks', () => {
     expect(rankFadesIn(6)).toBeLessThan(rankFadesIn(14));
   });
 
-  test('bands show on a petal only as it gets wide enough, by its own drawn size', () => {
-    const widest = 0;
-    expect(marks(backers, at(0.5), null).segments[widest]).toBe(0);
-    expect(marks(backers, at(8), null).segments[widest]).toBe(1);
-    const narrow = backers.n - 3;
-    const part = 26 / (backers.ring.len[widest] as number);
-    expect(marks(backers, at(part), null).segments[widest]).toBeGreaterThan(0);
-    expect(marks(backers, at(part), null).segments[narrow]).toBe(0);
+  test('no line without a name: bands only on the petal in direct focus, at any zoom', () => {
+    for (const k of KS) {
+      const none = marks(backers, at(k), null);
+      expect([...none.segments].every((x) => x === 0)).toBe(true);
+      for (const i of [0, 7, 20, 44]) {
+        const m = marks(backers, at(k), pointing(i));
+        m.segments.forEach((shown, j) => {
+          if (j !== i) expect(shown).toBe(0);
+        });
+        // whenever it shows them, its note names them, or the panel has taken them over
+        if ((m.segments[i] as number) > 0.2 && m.focus) {
+          const names = backers.petals[i]?.segments.map((s) => `${s.label} ${pct(s.frac)}`);
+          expect(m.focus.bands.map((b) => b.text)).toEqual(names);
+          const listed = m.focus.bands[0]?.opacity ?? 0;
+          const panelled = m.panel?.lines.some((l) => l.text === names?.[0]) ?? false;
+          expect(listed > 0 || panelled).toBe(true);
+        }
+      }
+    }
+  });
+
+  test('a band comes in with the petal: not yet far out, there once its end is wide enough', () => {
+    expect(marks(backers, at(0.4), pointing(0)).segments[0]).toBe(0);
+    const fit = marks(backers, at(1.33), pointing(0));
+    expect(fit.segments[0]).toBe(1);
+    expect(fit.focus?.bands[0]?.opacity).toBeGreaterThan(0.9);
+    const part = 26 / widthBefore(backers.ring, 0, backers.height[0] as number);
+    const partly = marks(backers, at(part), pointing(0)).segments[0] as number;
+    expect(partly).toBeGreaterThan(0);
+    expect(partly).toBeLessThan(1);
+  });
+
+  test('its note lists them in stack order; the one under the pointer stands out', () => {
+    const p = backers.petals[7];
+    const m = marks(backers, at(1.33), { index: 7, presence: 1, band: 2 });
+    expect(m.focus?.bands.map((b) => b.text)).toEqual(
+      p?.segments.map((s) => `${s.label} ${pct(s.frac)}`),
+    );
+    expect(m.focus?.bands.map((b) => b.strong)).toEqual(p?.segments.map((_, j) => j === 2));
+    // nobody stands out without a pointer on the petal
+    const quiet = marks(backers, at(1.33), { index: 7, presence: 1 });
+    expect(quiet.focus?.bands.some((b) => b.strong)).toBe(false);
+  });
+
+  test('a petal without bands lists none', () => {
+    const m = marks(plain, at(2), pointing(7));
+    expect(m.focus?.bands).toEqual([]);
+    expect([...m.segments].every((x) => x === 0)).toBe(true);
+  });
+
+  test('the words on a band up close are only ever on the focus', () => {
+    for (const k of KS) {
+      const m = marks(backers, at(k), pointing(9));
+      const own = backers.petals[9]?.segments.map((s) => `${s.label} ${pct(s.frac)}`);
+      for (const l of m.labels) expect(own).toContain(l.text);
+    }
+    expect(KS.some((k) => marks(backers, at(k), pointing(9)).labels.length > 0)).toBe(true);
+  });
+
+  test('the panel keeps the list, with the band under the pointer strong', () => {
+    const m = marks(backers, at(9), { index: 9, presence: 1, band: 0 });
+    const p = backers.petals[9];
+    const first = `${p?.segments[0]?.label} ${pct(p?.segments[0]?.frac ?? 0)}`;
+    const second = `${p?.segments[1]?.label} ${pct(p?.segments[1]?.frac ?? 0)}`;
+    expect(m.panel?.lines.find((l) => l.text === first)?.muted).toBe(false);
+    expect(m.panel?.lines.find((l) => l.text === second)?.muted).toBe(true);
   });
 
   test('the crossing: the account opens with the zoom, by its own side, and comes with a panel', () => {
@@ -269,11 +336,13 @@ describe('text never overlaps', () => {
         l.locked = false;
         stepLive(l, 1 / 60);
         const focus: Focus = {
-          index: l.focusIndex,
+          index: l.noteIndex,
           presence: l.presence.x,
-          open: l.open.x[l.focusIndex] as number,
+          open: l.open.x[l.noteIndex] as number,
           chase: noteAt(l),
           side: l.noteSide.x,
+          band: l.band,
+          named: l.named.x,
         };
         const mk = marks(backers, c, focus, l.ring);
         for (const hit of collisions(mk)) hits.push(`k=${k} at ${i}: ${hit}`);

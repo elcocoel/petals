@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
   advance,
   advanceAll,
+  advanceBothWays,
   channel,
   SNAP,
   type Spring,
@@ -108,6 +109,27 @@ describe('a channel', () => {
     one.forEach((s, i) => {
       expect(ch.x[i]).toBeCloseTo(s.x, 10);
     });
+  });
+
+  test('can go up on one spring and down on another', () => {
+    const up = stepOf({ response: 0.2, damping: 1 }, 1 / 60);
+    const down = stepOf({ response: 0.8, damping: 1 }, 1 / 60);
+    const ch = channel(2);
+    ch.x[1] = 1;
+    ch.t[0] = 1;
+    ch.t[1] = 0;
+    const rising = spring(0);
+    rising.t = 1;
+    const falling = spring(1);
+    falling.t = 0;
+    for (let f = 0; f < 10; f++) {
+      advanceBothWays(ch, up, down);
+      advance(rising, up);
+      advance(falling, down);
+    }
+    expect(ch.x[0]).toBeCloseTo(rising.x, 10);
+    expect(ch.x[1]).toBeCloseTo(falling.x, 10);
+    expect(ch.x[0] as number).toBeGreaterThan(1 - (ch.x[1] as number));
   });
 
   test('reports when all of it has stopped', () => {

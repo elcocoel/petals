@@ -1,5 +1,5 @@
 // The flower bench (design/flower-language.md): one real flower, filling the window, no site around it.
-// Chosen with the URL: ?flower=, ?hover=dock|lift, ?relations=1. In production it stays hidden unless
+// Chosen with the URL: ?flower=, ?hover=dock|lift, ?relations=1, ?order=scatter. In production it stays hidden unless
 // PETAL_LAB=1, like the lab, and it's read on each request so a build doesn't freeze the choice.
 import { notFound } from 'next/navigation';
 import { FlowerBench } from '../../../lab/flower/FlowerBench.tsx';
@@ -29,6 +29,7 @@ export default async function FlowerLab({ searchParams }: { searchParams: Promis
       reading={reading}
       hover={hover}
       relations={q.relations === '1'}
+      scatter={q.order === 'scatter'}
       probe={q.probe === '1'}
     />
   );

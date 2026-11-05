@@ -54,6 +54,17 @@ export function modelOf(reading: FlowerReading): Model {
 
 const priority = (p: ReadingPetal | undefined): number => (p?.tail ? 1.5 : (p?.rank ?? 0));
 
+/** Which band a point `fraction` of the way up a bar is on, or -1 if the bar has none. */
+export function bandUnder(segments: readonly { frac: number }[], fraction: number): number {
+  if (segments.length === 0) return -1;
+  let done = 0;
+  for (let i = 0; i < segments.length; i++) {
+    done += (segments[i] as { frac: number }).frac;
+    if (fraction < done) return i;
+  }
+  return segments.length - 1;
+}
+
 export interface Picked {
   index: number;
   /** The pointer's angle about the centre, clockwise from twelve, at rest. */

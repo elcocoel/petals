@@ -1,13 +1,18 @@
 // What the pointer asks of the petals, as targets for their springs. Pure.
 //
-// Dock: a bump around the pointer's angle, in petals' own terms. Lift: only the petal under it, and
-// the others step back. In both, neighbours make room because the widths share one circle, so the
-// polygon stays closed whatever happens. `way` only changes the targets, never the machinery.
+// Dock: direct focus carries the weight. The petal under the pointer rises and its tip widens over its
+// neighbours, the next one rises 15% of that, the next 5%, and past that nothing moves. Nothing changes
+// width on the circle, so the polygon and the line between wedges hold still. Lift: only the
+// petal under it, wider on the circle, and the others step back. `way` only changes the targets.
 import { DETAIL, fade, ramp } from './detail.ts';
 import {
-  DOCK_CUTOFF,
-  DOCK_SIGMA,
-  DOCK_SIGMA_PX,
+  DOCK_FALLOFF,
+  DOCK_RISE,
+  DOCK_RISE_NEAR,
+  FLARE_MAX,
+  FLARE_MIN_TIP_PX,
+  FLARE_NEAR,
+  FLARE_WIDE,
   LIFT_LONGEST,
   LIFT_OWN,
   SETTLE,
@@ -19,73 +24,82 @@ import {
   SWELL_WIDE_BELOW_PX,
 } from './feel.ts';
 import type { Model } from './model.ts';
+import { widthBefore } from './ring.ts';
 
 export type HoverWay = 'dock' | 'lift';
 
-const TAU = Math.PI * 2;
-
 /** How much the pointer counts at this distance from the centre, in world units: it fades out over
- * the middle of the polygon and past the bars' tips, so travel in and out is as continuous as any. */
+ * the middle of the polygon and past the tips, so travel in and out is as continuous as any. */
 export function reachOf(m: Pick<Model, 'r0' | 'R'>): (r: number) => number {
   const { r0, R } = m;
   return (r) => ramp(r0 * 0.25, r0 * 0.7, r) * (1 - ramp(R * 1.12, R * 1.6, r));
 }
 
-/** The swell's extra width at full strength for a petal of this size on screen. */
+const nearness = (sidePx: number) => ramp(SWELL_WIDE_BELOW_PX, SWELL_NEAR_ABOVE_PX, sidePx);
+
+/** Lift: the swell's extra width at full strength for a petal of this size on screen. */
 export function swellGain(sidePx: number): number {
-  const gain =
-    SWELL_WIDE + (SWELL_NEAR - SWELL_WIDE) * ramp(SWELL_WIDE_BELOW_PX, SWELL_NEAR_ABOVE_PX, sidePx);
+  const gain = SWELL_WIDE + (SWELL_NEAR - SWELL_WIDE) * nearness(sidePx);
   return Math.min(SWELL_MAX, Math.max(gain, SWELL_MIN_PX / (sidePx || 1) - 1));
 }
 
-/** The height a petal is drawn, from its own and its swell. Below zero it's stepping back. */
-export function heightOf(H: number, L: number, g: number): number {
-  return g >= 0 ? H * (1 + LIFT_OWN * g) + L * LIFT_LONGEST * g : H * Math.max(0, 1 + g);
+/** Dock: the flare at full strength for a petal of this size on screen. */
+export function flareGain(sidePx: number, tipPx: number): number {
+  const gain = FLARE_WIDE + (FLARE_NEAR - FLARE_WIDE) * nearness(sidePx);
+  return Math.min(FLARE_MAX, Math.max(gain, FLARE_MIN_TIP_PX / (tipPx || 1) - 1));
+}
+
+/** Dock: how far the focus rises, as a share of the longest bar. */
+export const riseGain = (sidePx: number): number =>
+  DOCK_RISE + (DOCK_RISE_NEAR - DOCK_RISE) * nearness(sidePx);
+
+/** The height a petal is drawn, from its own and its spring. Below zero it's folded or stepping back. */
+export function heightOf(way: HoverWay, H: number, L: number, g: number): number {
+  if (g < 0) return H * Math.max(0, 1 + g);
+  return way === 'dock' ? H + L * g : H * (1 + LIFT_OWN * g) + L * LIFT_LONGEST * g;
 }
 
 export interface HoverFocus {
   index: number;
-  angle: number;
   reach: number;
 }
 
-/** Writes each petal's width and height targets. */
+export interface HoverTargets {
+  /** Extra width on the circle. */
+  width: Float64Array;
+  /** See heightOf. */
+  height: Float64Array;
+  /** Extra width at the tip, over the neighbours. */
+  flare: Float64Array;
+}
+
+/** Writes each petal's targets. */
 export function hoverTargets(
   way: HoverWay,
   m: Model,
   focus: HoverFocus | null,
   k: number,
-  outWidth: Float64Array,
-  outHeight: Float64Array,
+  out: HoverTargets,
 ): void {
+  out.width.fill(0);
+  out.height.fill(0);
+  out.flare.fill(0);
   const gain = focus ? focus.reach * fade(DETAIL.hover, m.R * k) : 0;
-  if (gain <= 0 || !focus) {
-    outWidth.fill(0);
-    outHeight.fill(0);
-    return;
-  }
-  const { len } = m.ring;
+  if (gain <= 0 || !focus) return;
+  const sidePx = (m.ring.len[focus.index] as number) * k;
   if (way === 'lift') {
-    outWidth.fill(0);
-    outHeight.fill(-SETTLE * gain);
-    outWidth[focus.index] = swellGain((len[focus.index] as number) * k) * gain;
-    outHeight[focus.index] = gain;
+    out.height.fill(-SETTLE * gain);
+    out.width[focus.index] = swellGain(sidePx) * gain;
+    out.height[focus.index] = gain;
     return;
   }
-  const middle = (m.r0 + m.R) / 2;
-  const sigma = Math.max(DOCK_SIGMA[0], Math.min(DOCK_SIGMA[1], DOCK_SIGMA_PX / (k * middle)));
-  const cutoff = sigma * DOCK_CUTOFF;
-  const { mid } = m;
-  for (let i = 0; i < m.n; i++) {
-    let d = Math.abs((mid[i] as number) - focus.angle);
-    if (d > Math.PI) d = TAU - d;
-    if (d > cutoff) {
-      outWidth[i] = 0;
-      outHeight[i] = 0;
-      continue;
-    }
-    const g = Math.exp((-d * d) / (2 * sigma * sigma)) * gain;
-    outWidth[i] = swellGain((len[i] as number) * k) * g;
-    outHeight[i] = g;
+  const tipPx = widthBefore(m.ring, focus.index, m.height[focus.index] as number) * k;
+  out.flare[focus.index] = flareGain(sidePx, tipPx) * gain;
+  const rise = riseGain(sidePx) * gain;
+  // Furthest first, so on a tiny flower the nearest petal's share is the one that stays.
+  for (let d = DOCK_FALLOFF.length - 1; d >= 0; d--) {
+    const share = DOCK_FALLOFF[d] as number;
+    out.height[(focus.index + d) % m.n] = rise * share;
+    out.height[(focus.index - d + m.n * d) % m.n] = rise * share;
   }
 }

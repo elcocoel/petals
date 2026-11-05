@@ -5,7 +5,7 @@ import type { View } from './camera.ts';
 import { DETAIL, fade, openAt, ramp } from './detail.ts';
 import { RECEDE } from './feel.ts';
 import type { Model } from './model.ts';
-import type { Ring } from './ring.ts';
+import { type Ring, widthAt } from './ring.ts';
 import { amount, kindWord, LINE, pct, textWidth } from './words.ts';
 
 /** How close, in px, a text may come to a higher one before it starts to give way. */
@@ -44,6 +44,10 @@ export interface Focus {
   chase?: { x: number; y: number };
   /** -1 to 1: which side its text is on. Defaults to the petal's. */
   side?: number;
+  /** Which of its bands the pointer is on. Defaults to none. */
+  band?: number;
+  /** How much of each petal's bands show. Defaults to the focus's alone. */
+  named?: Float64Array;
 }
 
 export interface NoteMark {
@@ -66,6 +70,8 @@ export interface FocusMark extends NoteMark {
   /** The kind, on the second line. */
   sub: string;
   subOpacity: number;
+  /** Its bands in stack order, under the kind, the one under the pointer strong. */
+  bands: { text: string; opacity: number; strong: boolean }[];
   /** The text's scale: one tag, growing. */
   scale: number;
   /** How much of the rule is left, as the note turns into the panel's header. */
@@ -133,16 +139,27 @@ function roomFor(box: Omit<Box, 'opacity'>, above: Box[]): number {
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
+/** A band as words: the data's label and its share of its petal. */
+const bandLine = (seg: { label: string; frac: number }) => `${seg.label} ${pct(seg.frac)}`;
+
 /** The account's panel, in the corner its petal points at, so the note has little way to travel. */
-function panelOf(m: Model, v: View, i: number, opacity: number): PanelMark {
+function panelOf(m: Model, v: View, i: number, opacity: number, band: number): PanelMark {
   const p = m.petals[i];
   const lines: string[] = [];
-  if (p && p.id !== p.name && !p.tail) lines.push(p.id);
+  const quiet = new Set<string>();
+  if (p && p.id !== p.name && !p.tail) {
+    lines.push(p.id);
+    quiet.add(p.id);
+  }
   if (p) {
     lines.push(amount(p.amount));
     lines.push(kindWord(p.kind));
     // A tall bar's bands don't all fit the window at once. Here they do.
-    for (const seg of p.segments) lines.push(`${seg.label} ${pct(seg.frac)}`);
+    p.segments.forEach((seg, j) => {
+      const line = bandLine(seg);
+      lines.push(line);
+      if (j !== band) quiet.add(line);
+    });
   }
   const header = textWidth(m.fullNotes[i] ?? '', PANEL_HEADER);
   const inner = Math.max(header, ...lines.map((s) => textWidth(s)));
@@ -163,7 +180,7 @@ function panelOf(m: Model, v: View, i: number, opacity: number): PanelMark {
       text,
       x: x + PANEL_PAD,
       y: y + PANEL_PAD + LINE * PANEL_HEADER + at * LINE + 8,
-      muted: text === p?.id,
+      muted: quiet.has(text),
       opacity,
     })),
   };
@@ -192,11 +209,24 @@ export function marks(
   const open = focus ? (focus.open ?? openAt(m.ring.len[fi] as number, k)) : 0;
   const recede = 1 - RECEDE * open;
   const panelOpacity = fade(DETAIL.panel, open) * presence;
+  const band = focus?.band ?? -1;
+
+  // Bands show on the petal in direct focus, as soon as its note can name them, and nowhere else.
+  const segments = scratch ?? new Float64Array(m.n);
+  segments.fill(0);
+  const hover = fade(DETAIL.hover, radius);
+  for (let i = 0; i < m.n; i++) {
+    if (!m.petals[i]?.segments.length) continue;
+    const named = focus?.named ? (focus.named[i] as number) * hover : i === fi ? presence : 0;
+    if (named <= 0) continue;
+    const end = widthAt(ring, i, ring.h[i] as number) * k;
+    segments[i] = named * fade(DETAIL.segments, end);
+  }
 
   // The panel comes first: nothing may sit under it.
   let panel: PanelMark | null = null;
   if (focus && panelOpacity > 0.001) {
-    panel = panelOf(m, v, fi, panelOpacity);
+    panel = panelOf(m, v, fi, panelOpacity, band);
     claim(
       {
         x0: panel.x,
@@ -243,7 +273,10 @@ export function marks(
     const left0 = clamp(left1, INSET, v.width - INSET - width);
     const slidX = Math.abs(left1 - left0);
     const off = Math.min(slidX, halfBar + LINE);
-    const elbowY1 = clamp(elbowY0 + (ny > 0 ? off : -off), INSET + LINE, v.height - INSET - LINE);
+    const listed = m.petals[fi]?.segments ?? [];
+    const shown = segments[fi] as number;
+    const below = LINE * (1 + listed.length * ramp(0, 0.2, shown));
+    const elbowY1 = clamp(elbowY0 + (ny > 0 ? off : -off), INSET + LINE, v.height - INSET - below);
     const slidY = Math.abs(elbowY0 - elbowY1);
     const elbowX1 =
       clamp(left0 + (nx >= 0 ? 1 : -1) * Math.min(slidY, halfBar), INSET, v.width - INSET - width) +
@@ -258,12 +291,15 @@ export function marks(
     const cornerY = panel ? panel.y + ((m.ring.ny[fi] as number) >= 0 ? 0 : panel.height) : elbowY1;
     const x = lerp(leftFinal, panelX, e);
     const y = lerp(elbowY1 - 4, panelY, e);
+    // Its box holds its list too, which can be wider than its name.
+    const widest = listed.reduce((w, seg) => Math.max(w, textWidth(bandLine(seg))), width * scale);
     const box = {
       x0: x - 1,
       y0: y - LINE * scale,
-      x1: x + width * scale + 1,
-      y1: y + LINE + 8,
+      x1: x + (shown > 0 ? widest : width * scale) + 1,
+      y1: y + below + 8,
     };
+    const leaving = 1 - ramp(0, 0.18, e);
     focusMark = {
       index: fi,
       text,
@@ -277,8 +313,12 @@ export function marks(
       elbowY: lerp(elbowY1, cornerY, e),
       ruleX: elbowX1 + s * width,
       sub: kindWord(m.petals[fi]?.kind ?? ''),
-      subOpacity:
-        fade(DETAIL.kind, (ring.len[fi] as number) * k) * presence * (1 - ramp(0, 0.18, e)),
+      subOpacity: fade(DETAIL.kind, widthAt(ring, fi, h) * k) * presence * leaving,
+      bands: listed.map((seg, j) => ({
+        text: bandLine(seg),
+        opacity: shown * leaving,
+        strong: j === band,
+      })),
       scale,
       rule: 1 - e,
     };
@@ -379,17 +419,13 @@ export function marks(
     dots.push({ x: tipX, y: tipY });
   }
 
-  // Bands, and their labels if the band is big enough for them.
-  const segments = scratch ?? new Float64Array(m.n);
-  segments.fill(0);
+  // A band of the focused petal says its name, if it's big enough to hold it.
   const labels: LabelMark[] = [];
-  for (let i = 0; i < m.n; i++) {
-    const p = m.petals[i];
-    if (!p || p.segments.length === 0) continue;
-    const sidePx = (ring.len[i] as number) * k;
-    const shown = fade(DETAIL.segments, sidePx);
-    segments[i] = shown;
-    if (shown <= 0 || labels.length >= LABEL_POOL) continue;
+  const fp0 = fi >= 0 ? m.petals[fi] : undefined;
+  if (fp0 && (segments[fi] as number) > 0) {
+    const i = fi;
+    const p = fp0;
+    const shown = segments[fi] as number;
     const h = ring.h[i] as number;
     const nx = ring.nx[i] as number;
     const ny = ring.ny[i] as number;
@@ -402,13 +438,13 @@ export function marks(
       const h0 = h * done;
       done += seg.frac;
       const h1 = h * done;
-      const text = `${seg.label} ${pct(seg.frac)}`;
+      const text = bandLine(seg);
       const need = textWidth(text);
       const bandPx = (h1 - h0) * k;
+      const sidePx = widthAt(ring, i, (h0 + h1) / 2) * k;
       const thick = across ? bandPx : sidePx;
       const long = across ? sidePx : bandPx;
-      const row = i === fi ? DETAIL.focusSegmentLabels : DETAIL.segmentLabels;
-      const fits = fade(row, thick) * ramp(1.04, 1.24, long / need) * (i === fi ? 1 : 1 - open);
+      const fits = fade(DETAIL.segmentLabels, thick) * ramp(1.04, 1.24, long / need);
       if (fits <= 0.005) continue;
       const mid = visibleMiddle(mx, my, nx * k, ny * k, h0, h1, v);
       if (!mid) continue;

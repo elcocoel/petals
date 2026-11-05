@@ -2,20 +2,24 @@
 // detail.ts. All of these started as guesses; the report says which ones were tuned by eye.
 import type { SpringSpec } from './spring.ts';
 
-/** The bar's height is the bounciest thing: it's what makes a sweep feel alive. */
-export const HEIGHT: SpringSpec = { response: 0.3, damping: 0.56 };
-/** The width is steadier, or the whole polygon would wobble. */
-export const WIDTH: SpringSpec = { response: 0.26, damping: 0.85 };
+/** Hover is calm: slow, and hardly any bounce. */
+export const HEIGHT: SpringSpec = { response: 0.58, damping: 0.9 };
+export const WIDTH: SpringSpec = { response: 0.5, damping: 1 };
 /** How a petal hands the crossing to another one, when the pointer moves on part-way. */
 export const OPEN: SpringSpec = { response: 0.22, damping: 1 };
-/** Accent rises at once with the pointer and fades behind it, like a comet's tail. */
-export const ACCENT_FADE: SpringSpec = { response: 0.4, damping: 1 };
+/** Accent comes up soon enough that a petal the pointer only passes stays pale, and leaves slowly. */
+export const ACCENT_RISE: SpringSpec = { response: 0.3, damping: 1 };
+export const ACCENT_FADE: SpringSpec = { response: 0.8, damping: 1 };
+/** A band shows once the pointer has stopped long enough to read its name. */
+export const BANDS: SpringSpec = { response: 0.3, damping: 1 };
 /** Keeps what's under the pointer under the pointer. */
 export const ROTATION: SpringSpec = { response: 0.2, damping: 1 };
 export const OFFSET: SpringSpec = { response: 0.16, damping: 1 };
 /** The travelling note follows its petal. */
-export const NOTE: SpringSpec = { response: 0.2, damping: 0.78 };
-export const PRESENCE: SpringSpec = { response: 0.16, damping: 1 };
+export const NOTE: SpringSpec = { response: 0.4, damping: 0.95 };
+export const PRESENCE: SpringSpec = { response: 0.3, damping: 1 };
+/** A note says one name for at least this long, in seconds, however fast the pointer goes by. */
+export const NOTE_HOLD = 0.14;
 /** A mouse wheel's notch is a jump; this takes the jump out. A pinch doesn't go through it. */
 export const WHEEL: SpringSpec = { response: 0.1, damping: 1 };
 export const FLY: SpringSpec = { response: 0.62, damping: 0.94 };
@@ -38,20 +42,31 @@ export const PAN_DECAY = 0.16;
 /** The flower fills this share of the window's short side, at rest. */
 export const FIT = 0.415;
 
-/** Dock: how wide the swell is, in px along the ring, and its limits in radians. */
-export const DOCK_SIGMA_PX = 72;
-export const DOCK_SIGMA: [number, number] = [0.05, 0.34];
-/** Dock: past this many sigmas a petal doesn't feel the pointer at all. */
-export const DOCK_CUTOFF = 3;
-/** The swell's peak width, as extra on the petal's own. Falls off as the petal gets big on screen. */
+/** The line between two wedges, in world units: the same width from base to tip. */
+export const GUTTER = 0.6;
+
+/** Dock: how much of the focus's rise each petal gets, by how many petals away it is. Past the last
+ * one nothing moves. */
+export const DOCK_FALLOFF = [1, 0.15, 0.05];
+/** Dock: how far the focus rises, as a share of the longest bar. Less once it's big on screen. */
+export const DOCK_RISE = 0.28;
+export const DOCK_RISE_NEAR = 0.1;
+/** Dock: how much wider the focus's tip gets, as extra on its own, drawn over its neighbours. Falls
+ * off as the petal gets big on screen, and its tip reaches at least FLARE_MIN_TIP_PX across. */
+export const FLARE_WIDE = 0.7;
+export const FLARE_NEAR = 0.2;
+export const FLARE_MIN_TIP_PX = 40;
+export const FLARE_MAX = 6;
+
+/** Lift: the swell's peak width, as extra on the petal's own. Falls off as it gets big on screen. */
 export const SWELL_WIDE = 1.5;
 export const SWELL_NEAR = 0.3;
 export const SWELL_WIDE_BELOW_PX = 16;
 export const SWELL_NEAR_ABOVE_PX = 70;
-/** A petal under the pointer is at least this many px wide, however many petals there are. */
+/** Lift: a petal under the pointer is at least this many px wide, however many petals there are. */
 export const SWELL_MIN_PX = 16;
 export const SWELL_MAX = 9;
-/** The height: a share of its own, plus a share of the longest bar, so a short petal grows too. */
+/** Lift: the height, a share of its own, plus a share of the longest bar. */
 export const LIFT_OWN = 0.16;
 export const LIFT_LONGEST = 0.11;
 /** Lift: the others step back by this much of their height. */
