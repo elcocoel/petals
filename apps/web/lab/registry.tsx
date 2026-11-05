@@ -3,7 +3,8 @@
 // holds this list to what components/ exports (apps/web/test/lab-registry.test.ts).
 //
 // Biggest first, in the page's order: Sections, Blocks, Controls and Marks are what the landing page's
-// imports reach; the other groups aren't on it and stay closed on the page.
+// imports reach; the other groups aren't on it and stay closed on the page. So does any state the landing
+// doesn't draw: it's registered here with its component, and `closedIn` says where it's drawn.
 //
 // QuotePanel, PublishFlow, CopyPrompt and Flower still keep their later states in hooks, so only the
 // first state shows here until they take them as props, as the chat's views do. Their controls are
@@ -94,25 +95,25 @@ export interface LabState {
   figmaNode?: string;
   /** Takes the whole width instead of sitting in a row with the others. */
   wide?: boolean;
+  /** The surfaces the landing page draws this on. Ground alone unless it says so. */
+  surfaces?: readonly SurfaceName[];
+  /** The landing page doesn't draw this state, so it's drawn in this closed group instead. */
+  closedIn?: ClosedGroup;
 }
+
+export type ClosedGroup =
+  | 'The workspace'
+  | 'The conversation'
+  | 'The flower'
+  | 'Reading'
+  | 'Actions';
 
 export interface LabEntry {
   id: string;
-  group:
-    | 'Sections'
-    | 'Blocks'
-    | 'Controls'
-    | 'Marks'
-    | 'The workspace'
-    | 'The conversation'
-    | 'The flower'
-    | 'Reading'
-    | 'Actions';
+  group: 'Sections' | 'Blocks' | 'Controls' | 'Marks' | ClosedGroup;
   figmaName: string | null;
   figmaNode: string | null;
   source: string;
-  /** Where it's shown. Ground alone unless the surface matters. */
-  surfaces?: readonly SurfaceName[];
   states: LabState[];
 }
 
@@ -260,7 +261,7 @@ const panelView = (selected: string | null = null) =>
     sources: SOURCE_URLS,
     units: { validator_stake_current_epoch: 'NEAR' },
   });
-const ICONS: IconName[] = ['home', 'plus', 'gallery', 'connect', 'arrow', 'back'];
+const RAIL_ICONS: IconName[] = ['home', 'plus', 'gallery', 'connect'];
 
 export const registry: LabEntry[] = [
   {
@@ -368,7 +369,6 @@ export const registry: LabEntry[] = [
     figmaName: 'Petals / FAQ item',
     figmaNode: '67:2538',
     source: 'apps/web/components/ui/FaqItem.tsx',
-    surfaces: surfaceNames,
     states: [
       {
         name: 'open',
@@ -410,7 +410,6 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/ui/Callout.tsx',
-    surfaces: surfaceNames,
     states: [
       {
         name: 'with an action',
@@ -459,10 +458,10 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/ui/Terminal.tsx',
-    surfaces: surfaceNames,
     states: [
       {
         name: 'each kind of line',
+        surfaces: ['ink'],
         wide: true,
         figmaName: 'Terminal',
         figmaNode: '66:2325',
@@ -476,7 +475,6 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/ui/AskBlock.tsx',
-    surfaces: surfaceNames,
     states: [
       {
         name: 'with a label',
@@ -492,6 +490,7 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'without one',
+        surfaces: ['mint'],
         wide: true,
         render: () => (
           <AskBlock
@@ -509,7 +508,6 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/ui/SectionHead.tsx',
-    surfaces: surfaceNames,
     states: [
       {
         name: 'display',
@@ -527,6 +525,7 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'compact, title alone',
+        surfaces: ['mint'],
         wide: true,
         figmaName: 'Ask',
         figmaNode: '66:2337',
@@ -534,6 +533,7 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'title, with a paragraph',
+        surfaces: ['ground', 'ink'],
         wide: true,
         figmaName: 'Intro',
         figmaNode: '66:2290',
@@ -565,7 +565,7 @@ export const registry: LabEntry[] = [
         name: kind,
         wide: true,
         render: () => (
-          <Section kind={kind}>
+          <Section kind={kind} padding="bar">
             <Mono>{landingCopy.gallery.caption}</Mono>
           </Section>
         ),
@@ -574,7 +574,7 @@ export const registry: LabEntry[] = [
         name: 'split',
         wide: true,
         render: () => (
-          <Section layout="split">
+          <Section padding="bar" layout="split">
             <Mono>{landingCopy.hero.caption}</Mono>
             <Mono>{landingCopy.gallery.caption}</Mono>
           </Section>
@@ -584,7 +584,7 @@ export const registry: LabEntry[] = [
         name: 'split, figure first',
         wide: true,
         render: () => (
-          <Section layout="split" figure="start">
+          <Section padding="bar" layout="split" figure="start">
             <Mono>{landingCopy.hero.caption}</Mono>
             <Mono>{landingCopy.gallery.caption}</Mono>
           </Section>
@@ -595,6 +595,7 @@ export const registry: LabEntry[] = [
         wide: true,
         render: () => (
           <Section
+            padding="bar"
             layout="columns"
             head={<Mono>{landingCopy.gallery.eyebrow}</Mono>}
             foot={<Mono>{landingCopy.gallery.caption}</Mono>}
@@ -613,7 +614,6 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/ui/ActionRow.tsx',
-    surfaces: surfaceNames,
     states: [
       {
         name: 'a button and a link',
@@ -649,10 +649,10 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/ui/MetaRow.tsx',
-    surfaces: surfaceNames,
     states: [
       {
         name: 'two captions',
+        surfaces: ['ground', 'ink'],
         wide: true,
         render: () => <MetaRow start={FIGURE.start} end={FIGURE.end} />,
       },
@@ -680,7 +680,6 @@ export const registry: LabEntry[] = [
     figmaName: 'Petals / Ask box',
     figmaNode: '52:1861',
     source: 'apps/web/components/ui/AskBox.tsx',
-    surfaces: surfaceNames,
     states: [
       {
         name: 'empty',
@@ -702,6 +701,7 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'disabled',
+        closedIn: 'The conversation',
         wide: true,
         render: () => (
           <AskBox label="Ask" placeholder="Ask about any network, or paste an address." disabled />
@@ -720,6 +720,7 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'composer, nothing to ask yet',
+        closedIn: 'The conversation',
         wide: true,
         figmaName: 'Question composer',
         figmaNode: '39:930',
@@ -729,6 +730,7 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'composer, filled',
+        closedIn: 'The conversation',
         wide: true,
         figmaName: 'Question composer',
         figmaNode: '39:930',
@@ -749,14 +751,22 @@ export const registry: LabEntry[] = [
     figmaName: 'Petals / Button',
     figmaNode: '23:161',
     source: 'apps/web/components/ui/Button.tsx',
-    surfaces: surfaceNames,
     states: [
-      { name: 'primary', render: () => <Button>Explore</Button> },
+      { name: 'primary', closedIn: 'Actions', render: () => <Button>Explore</Button> },
       { name: 'primary, arrow', render: () => <Button arrow>Ask</Button> },
-      { name: 'primary, link', render: () => <Button href="#button">Explore</Button> },
-      { name: 'primary, disabled', render: () => <Button disabled>Explore</Button> },
+      {
+        name: 'primary, link',
+        surfaces: ['ground', 'ink'],
+        render: () => <Button href="#button">Explore</Button>,
+      },
+      {
+        name: 'primary, disabled',
+        closedIn: 'Actions',
+        render: () => <Button disabled>Explore</Button>,
+      },
       {
         name: 'secondary',
+        closedIn: 'Actions',
         ...SECONDARY,
         render: () => <Button variant="secondary">Support Petals</Button>,
       },
@@ -771,6 +781,7 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'secondary, disabled',
+        closedIn: 'Actions',
         ...SECONDARY,
         render: () => (
           <Button variant="secondary" disabled>
@@ -780,11 +791,13 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'starter',
+        closedIn: 'Actions',
         ...STARTER,
         render: () => <Button variant="starter">Who decides in this DAO?</Button>,
       },
       {
         name: 'starter, link',
+        surfaces: ['ground', 'mint'],
         ...STARTER,
         render: () => (
           <Button variant="starter" href="#button">
@@ -794,13 +807,19 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'link',
+        closedIn: 'The workspace',
         figmaName: 'Petals / Link',
         figmaNode: '23:159',
         render: () => <Button variant="link">Close detail</Button>,
       },
-      { name: 'quiet', render: () => <Button variant="quiet">Interpretation and sources</Button> },
+      {
+        name: 'quiet',
+        closedIn: 'The workspace',
+        render: () => <Button variant="quiet">Interpretation and sources</Button>,
+      },
       {
         name: 'quiet, on',
+        closedIn: 'The workspace',
         render: () => (
           <Button variant="quiet" pressed>
             Interpretation and sources
@@ -809,11 +828,13 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'row',
+        closedIn: 'The conversation',
         wide: true,
         render: () => <Button variant="row">Something that opens</Button>,
       },
       {
         name: 'row, open',
+        closedIn: 'The conversation',
         wide: true,
         render: () => (
           <Button variant="row" pressed>
@@ -829,11 +850,11 @@ export const registry: LabEntry[] = [
     figmaName: 'Petals / Link',
     figmaNode: '23:159',
     source: 'apps/web/components/ui/TextLink.tsx',
-    surfaces: surfaceNames,
     states: [
       { name: 'default', render: () => <TextLink href="#textlink">Explore</TextLink> },
       {
         name: 'quiet',
+        closedIn: 'The workspace',
         render: () => (
           <TextLink variant="quiet" href="#textlink">
             Publish on NEAR
@@ -842,6 +863,7 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'in the rail',
+        closedIn: 'The workspace',
         figmaName: 'Workspace / Navigation rail',
         figmaNode: '43:748',
         render: () => (
@@ -876,12 +898,12 @@ export const registry: LabEntry[] = [
     figmaName: 'Petals / Wordmark',
     figmaNode: '12:12',
     source: 'apps/web/components/ui/Wordmark.tsx',
-    surfaces: surfaceNames,
     states: [
       { name: 'nav', render: () => <Wordmark /> },
       { name: 'footer', wide: true, render: () => <Wordmark size="footer" /> },
       {
         name: 'workspace',
+        closedIn: 'The workspace',
         figmaName: 'Workspace header',
         figmaNode: '39:863',
         render: () => <Wordmark size="workspace" />,
@@ -894,10 +916,15 @@ export const registry: LabEntry[] = [
     figmaName: 'Workspace / Navigation rail',
     figmaNode: '43:748',
     source: 'apps/web/components/ui/Icon.tsx',
-    surfaces: surfaceNames,
     states: [
-      ...ICONS.map((name) => ({ name, render: () => <Icon name={name} /> })),
+      { name: 'arrow', surfaces: ['ground', 'mint'], render: () => <Icon name="arrow" /> },
       { name: 'arrow, accent', render: () => <Icon name="arrow" accent /> },
+      { name: 'back', surfaces: ['ink'], render: () => <Icon name="back" /> },
+      ...RAIL_ICONS.map((name) => ({
+        name,
+        closedIn: 'The workspace' as const,
+        render: () => <Icon name={name} />,
+      })),
     ],
   },
   {
@@ -906,24 +933,27 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/ui/Drawing.tsx',
-    surfaces: surfaceNames,
     states: [
       ...KINDS.map(({ kind, size, name, figmaName, node }) => ({
         name,
         figmaName,
         figmaNode: node,
+        ...(kind === 'cell' ? { surfaces: ['mint'] as const } : {}),
         render: () => <Drawing kind={kind} size={size} />,
       })),
       {
         name: 'small, beside a speaker',
+        closedIn: 'The conversation',
         render: () => <Drawing kind="cell" size="cell-small" />,
       },
       {
         name: 'medium, beside a status',
+        closedIn: 'The conversation',
         render: () => <Drawing kind="cell" size="cell-medium" />,
       },
       {
         name: 'large, opening a panel',
+        closedIn: 'The workspace',
         render: () => <Drawing kind="cell" size="cell-large" />,
       },
     ],
@@ -934,9 +964,12 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/ui/Mono.tsx',
-    surfaces: surfaceNames,
     states: [
-      { name: 'a line', render: () => <Mono>{landingCopy.community.caption}</Mono> },
+      {
+        name: 'a line',
+        surfaces: ['ground', 'ink'],
+        render: () => <Mono>{landingCopy.community.caption}</Mono>,
+      },
       {
         name: 'under a figure',
         render: () => <Mono as="figcaption">{landingCopy.hero.caption}</Mono>,
@@ -944,10 +977,12 @@ export const registry: LabEntry[] = [
       { name: 'above a section', render: () => <Mono>THE ATLAS</Mono> },
       {
         name: 'above a section, on ink',
+        surfaces: ['ink'],
         render: () => <Mono tone="accent">FOR BUILDERS</Mono>,
       },
       {
         name: 'beside the work',
+        closedIn: 'The conversation',
         render: () => <Mono tone="muted">01 ONE PETAL HOLDS 18% OF THE SAY</Mono>,
       },
     ],

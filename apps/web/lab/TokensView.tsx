@@ -3,6 +3,7 @@
 import {
   chart,
   cornerRadius,
+  figureScale,
   fonts,
   kebab,
   layout,
@@ -13,10 +14,12 @@ import {
   quarantine,
   type Roles,
   sizes,
+  splitText,
   stroke,
   surfaceNames,
   surfaces,
   type,
+  wordmark,
 } from '@petal/tokens';
 import { Mono } from '../components/ui/Mono.tsx';
 
@@ -60,11 +63,20 @@ function TokenTable({ rows }: { rows: [name: string, value: number, css: string]
 const spacingRows = (values: Record<string, number>): [string, number, string][] =>
   Object.entries(values).map(([name, px]) => [name, px, kebab(name)]);
 
-const SWATCH_GRID = 'grid grid-cols-2 gap-block-gap md:grid-cols-4';
+const SWATCH_GRID = 'grid grid-cols-2 gap-block-gap md:grid-cols-5';
 
-/** Sizes only the workspace and the old pages use. Not the system, so it goes in the closed part. */
-export function QuarantineTable() {
-  return <TokenTable rows={spacingRows(quarantine)} />;
+/** What only the workspace and the old pages use: sizes and the flower's palette. Not the system. */
+export function QuarantineView() {
+  return (
+    <div className="flex flex-col gap-block-gap">
+      <TokenTable rows={spacingRows(quarantine)} />
+      <div className={SWATCH_GRID}>
+        {Object.entries(chart).map(([name, hex]) => (
+          <Swatch key={name} swatch={name} name={`--chart-${name}`} value={hex} />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function TokensView() {
@@ -107,15 +119,12 @@ export function TokensView() {
           </div>
         </div>
       ))}
-      <div className={SWATCH_GRID}>
-        {Object.entries(chart).map(([name, hex]) => (
-          <Swatch key={name} swatch={name} name={`--chart-${name}`} value={hex} />
-        ))}
-      </div>
       <TokenTable
         rows={[
           ['Stroke', stroke, 'border'],
           ['Corner radius', cornerRadius, 'border-radius'],
+          ['Split, text in twelfths', splitText, 'grid-cols-split'],
+          ['Figure scale', figureScale, 'figure-scale'],
           ...Object.entries(opacity).map(([name, value]): [string, number, string] => [
             `Opacity ${name}`,
             value,
@@ -124,7 +133,16 @@ export function TokensView() {
         ]}
       />
       <TokenTable rows={spacingRows(layout)} />
-      <TokenTable rows={spacingRows(sizes)} />
+      <TokenTable
+        rows={[
+          ...spacingRows(sizes),
+          ...Object.entries(wordmark.sizes).map(([name, px]): [string, number, string] => [
+            `Wordmark ${name}`,
+            px,
+            `wordmark-${kebab(name)}`,
+          ]),
+        ]}
+      />
     </section>
   );
 }
