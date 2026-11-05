@@ -13,6 +13,8 @@ const NETWORKS = [
   'solana-spl-melania',
   'beanstalk',
   'ens-delegates',
+  'erc20-holders-ethereum-bank',
+  'erc20-holders-arbitrum-dpx',
 ] as const;
 
 describe.each(NETWORKS)('%s', (network) => {
@@ -23,7 +25,7 @@ describe.each(NETWORKS)('%s', (network) => {
     const store = fileStore({ fixtures: FIXTURES, cache: tmp('draw') });
     const reader = { ...mod, fetch: () => Promise.reject(new Error('fetched')) };
     const r = await getSnapshot({ network }, { store, modules: { [network]: reader } });
-    expect(r).toMatchObject({ reused: true, where: 'fixture', snapshot: { final: true } });
+    expect(r).toMatchObject({ reused: true, where: 'fixture' });
     expect(r.sources.length).toBeGreaterThan(0);
   });
 

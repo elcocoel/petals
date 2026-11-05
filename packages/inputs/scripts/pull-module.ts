@@ -4,6 +4,8 @@
 //   node packages/inputs/scripts/pull-module.ts solana-spl-trump       live: one call of ~553 MB
 //   ... solana-spl-trump --from-dump <answer.json> <supply.json>       reuse a stored answer
 //   ... solana-spl-test --mint <address>                               any mint, small ones only
+//   ... erc20-holders-ethereum-bank                                    any listed target; on Base
+//       set ENVIO_API_TOKEN in the environment first (HyperSync), and it is never printed
 // A live run also writes the small recording the tests replay, when the module has one.
 import { createReadStream, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -16,6 +18,14 @@ import {
   pullBeanstalk,
   readBeanstalkList,
 } from '../src/modules/beanstalk.ts';
+import {
+  BANK_ETHEREUM,
+  DPX_ARBITRUM,
+  type HolderTarget,
+  PEPE_ETHEREUM,
+  pullErc20Holders,
+  SEAM_BASE,
+} from '../src/modules/erc20-holders.ts';
 import { ENS_TOKEN, pullErc20Votes } from '../src/modules/erc20-votes.ts';
 import { pullMolochV1 } from '../src/modules/moloch-v1.ts';
 import {
@@ -93,6 +103,62 @@ if (network === 'moloch-v1') {
   console.log(checks, `${((Date.now() - started) / 1000).toFixed(0)} s`);
   console.log(`peak memory ${(process.resourceUsage().maxRSS / 1024).toFixed(0)} MB`);
   console.log(storeFixture(snapshot), JSON.stringify(reader.stats()));
+} else if (network?.startsWith('erc20-holders-')) {
+  // ENVIO_API_TOKEN comes from the environment and is used only where a chain has no keyless logs.
+  const targets = [PEPE_ETHEREUM, BANK_ETHEREUM, DPX_ARBITRUM, SEAM_BASE];
+  const target = targets.find((t) => t.id === network) as HolderTarget | undefined;
+  if (!target) throw new Error(`no token for ${network}`);
+  const rec = recorded(network, (q) => q.method === 'eth_getLogs');
+  const pages: Record<string, unknown> = {};
+  const inner = rec.fetch;
+  // The Blockscout pages are kept with only the fields the module reads: no tags in the repo.
+  const fetchAll: typeof fetch = async (input, init) => {
+    if (init?.method === 'POST') return inner(input, init);
+    if (replay) {
+      const page = ((rec.rec?.blockscout ?? {}) as Record<string, unknown>)[String(input)];
+      return new Response(JSON.stringify(page), { status: 200 });
+    }
+    const res = await fetch(input, init);
+    if (!res.ok) return res;
+    const body = (await res.json()) as {
+      items?: { address: { hash: string; is_contract: boolean }; value: string }[];
+      next_page_params?: unknown;
+      holders_count?: string;
+      holders?: string;
+      total_supply?: string;
+    };
+    const kept = body.items
+      ? {
+          items: body.items.map((r) => ({
+            address: { hash: r.address.hash, is_contract: r.address.is_contract },
+            value: r.value,
+          })),
+          next_page_params: body.next_page_params,
+        }
+      : { holders_count: body.holders_count ?? body.holders, total_supply: body.total_supply };
+    pages[String(input)] = kept;
+    return new Response(JSON.stringify(kept), { status: 200 });
+  };
+  const started = Date.now();
+  const token = process.env.ENVIO_API_TOKEN;
+  const { snapshot, checks } = await pullErc20Holders(target, {
+    fetch: fetchAll,
+    onProgress: log,
+    maxLogCalls: 400,
+    ...(token ? { hypersyncToken: token } : {}),
+    ...(replay && rec.rec?.block ? { block: rec.rec.block as number } : {}),
+  });
+  rec.save(
+    `${target.title}: the block and the state reads of pullErc20Holders. Public chain data.`,
+    {
+      block: checks.block,
+      blockscout: pages,
+      checks,
+    },
+  );
+  console.log(checks, `${((Date.now() - started) / 1000).toFixed(0)} s`);
+  console.log(`peak memory ${(process.resourceUsage().maxRSS / 1024).toFixed(0)} MB`);
+  console.log(storeFixture(snapshot));
 } else if (network?.startsWith('solana-spl-')) {
   const argAfter = (flag: string, n = 1) => {
     const i = process.argv.indexOf(flag);

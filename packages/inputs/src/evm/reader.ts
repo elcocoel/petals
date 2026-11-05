@@ -1,14 +1,5 @@
-// Keyless Ethereum reader (T156): log paging, Multicall3 and a paced RPC pool, on the same pool
-// code as NEAR (../rpc/pool.ts).
-//
-// Endpoints, measured 2026-11-05:
-//   tenderly  mainnet.gateway.tenderly.co  the gateway Tenderly's docs name. Old logs over wide
-//             ranges (cap 20,000 results per query; the error says which range fits) and old
-//             state back to 2016. The docs say public endpoints are rate-limited.
-//   drpc      eth.drpc.org                 old state yes, logs only 10,000 blocks at a time, so
-//             it backs up state reads and never serves logs.
-// Refused when tested: publicnode (403 on old state), BlockPI (5,000 blocks), 1RPC (50 blocks),
-// Cloudflare ("too large").
+// Keyless reader for Ethereum and its L2s (T156): log paging, Multicall3 and a paced RPC pool, on
+// the same pool code as NEAR (../rpc/pool.ts). Which endpoints a chain uses, and why: ./chains.ts.
 import { InputError } from '../errors.ts';
 import {
   type RpcEndpoint,
@@ -18,17 +9,20 @@ import {
   type RpcPoolStats,
   rpcPool,
 } from '../rpc/pool.ts';
+import { ETHEREUM, type EvmChain } from './chains.ts';
 
-export const ETHEREUM_CHAIN = 'eip155:1';
+export const ETHEREUM_CHAIN = ETHEREUM.caip2;
+export const EVM_ENDPOINTS = ETHEREUM.endpoints;
 
-export const EVM_ENDPOINTS: readonly RpcEndpoint[] = [
-  { id: 'tenderly', url: 'https://mainnet.gateway.tenderly.co', intervalMs: 250 },
-  { id: 'drpc', url: 'https://eth.drpc.org', intervalMs: 400 },
-];
-
-/** Multicall3 exists from this block on; Multicall2 before it. */
-export const MULTICALL3 = { address: '0xca11bde05977b3631167028862be2a173976ca11', from: 14353601 };
-export const MULTICALL2 = { address: '0x5ba1e12693dc8f9c48aad8770482f4739beed696', from: 12336033 };
+/** Multicall3 and Multicall2 keep one address on every chain; `from` is Ethereum's first block. */
+export const MULTICALL3 = {
+  address: '0xca11bde05977b3631167028862be2a173976ca11',
+  from: ETHEREUM.multicall3_from,
+};
+export const MULTICALL2 = {
+  address: '0x5ba1e12693dc8f9c48aad8770482f4739beed696',
+  from: ETHEREUM.multicall2_from as number,
+};
 
 const AGGREGATE3 = '82ad56cb'; // aggregate3((address,bool,bytes)[])
 const TRY_AGGREGATE = 'bce38bd7'; // tryAggregate(bool,(address,bytes)[])
@@ -84,6 +78,9 @@ export interface LogFilter {
 }
 
 export interface EvmReaderOptions {
+  /** default Ethereum */
+  chain?: EvmChain;
+  /** default the chain's */
   endpoints?: readonly RpcEndpoint[];
   fetch?: typeof globalThis.fetch;
   sleep?: RpcPoolOptions['sleep'];
@@ -151,17 +148,17 @@ function toBlock(b: { number: string; hash: string; timestamp: string }): EvmBlo
   };
 }
 
-const failed = (what: string) =>
-  new InputError('source_failed', `Ethereum read failed: ${what}`, {
-    hint: 'the public Ethereum RPC endpoints did not answer as expected; try again later',
-  });
-
 export function evmReader(opts: EvmReaderOptions = {}): EvmReader {
-  const endpoints = opts.endpoints ?? EVM_ENDPOINTS;
+  const chain = opts.chain ?? ETHEREUM;
+  const endpoints = opts.endpoints ?? chain.endpoints;
+  const failed = (what: string) =>
+    new InputError('source_failed', `${chain.name} read failed: ${what}`, {
+      hint: `the public ${chain.name} RPC endpoints did not answer as expected; try again later`,
+    });
   const sleep = opts.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   const maxLogCalls = opts.maxLogCalls ?? 400;
   const common: RpcPoolOptions = {
-    chainName: 'Ethereum',
+    chainName: chain.name,
     timeoutMs: 120_000,
     rounds: 3,
     maxWaitMs: 60_000,
@@ -208,14 +205,15 @@ export function evmReader(opts: EvmReaderOptions = {}): EvmReader {
 
     async multicall(calls, block, batch = 400) {
       const out: EvmCallResult[] = [];
-      if (block < MULTICALL2.from) {
+      const useThree = block >= chain.multicall3_from;
+      const useTwo = chain.multicall2_from !== undefined && block >= chain.multicall2_from;
+      if (!useThree && !useTwo) {
         for (const c of calls) {
           const data = await callWithData(c.to, c.data, block);
           out.push({ ok: data !== '0x', data });
         }
         return out;
       }
-      const useThree = block >= MULTICALL3.from;
       const target = useThree ? MULTICALL3.address : MULTICALL2.address;
       for (let i = 0; i < calls.length; i += batch) {
         const part = calls.slice(i, i + batch);

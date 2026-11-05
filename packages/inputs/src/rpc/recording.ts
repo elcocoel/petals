@@ -62,8 +62,8 @@ export function recordingFetch(
   const calls: RecordedCall[] = [];
   const wrapped: typeof fetch = async (input, init) => {
     const res = await inner(input, init);
-    if (!res.ok) return res;
-    const req = JSON.parse(String(init?.body)) as { method: string; params: unknown };
+    if (!res.ok || typeof init?.body !== 'string') return res;
+    const req = JSON.parse(init.body) as { method: string; params: unknown };
     if (skip(req)) return res;
     const text = await res.text();
     try {
