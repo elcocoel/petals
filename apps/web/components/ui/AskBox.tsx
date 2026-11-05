@@ -9,16 +9,16 @@ import { Button } from './Button.tsx';
 
 const SIZES = {
   hero: {
-    form: 'min-h-ask-box-height max-w-ask-box-width border py-ask-box-block pr-ask-box-inset pl-block-gap',
-    gap: 'gap-ask-box-gap',
-    field: 'py-ask-box-field-block type-body placeholder:text-primary',
+    form: 'min-h-ask-box-height max-w-ask-box-width border py-space-8 pr-space-8 pl-block-gap',
+    gap: 'gap-space-16',
+    field: 'py-text-gap type-body placeholder:text-primary',
     arrow: true,
-    button: 'ask',
+    button: 'default',
   },
   composer: {
-    form: 'min-h-composer-height border py-composer-block pr-composer-inset-end pl-control-inset',
+    form: 'min-h-composer-height border py-space-16 pr-text-gap pl-block-gap',
     gap: 'gap-text-gap',
-    field: 'py-composer-field-block type-label placeholder:text-muted',
+    field: 'py-text-gap type-label placeholder:text-muted',
     arrow: false,
     button: 'default',
   },

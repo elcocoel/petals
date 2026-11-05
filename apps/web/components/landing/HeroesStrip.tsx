@@ -7,11 +7,11 @@ export function HeroesStrip({ thumbs }: { thumbs: readonly ThumbKind[] }) {
     <div className="flex flex-wrap items-end gap-text-gap">
       {thumbs.map((kind, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: the same kind can appear twice, and nothing moves
-        <div key={i} className="flex flex-col gap-space-6">
+        <div key={i} className="flex flex-col gap-space-8">
           <div className={i === 0 ? '' : 'opacity-55'}>
             <Thumb kind={kind} size="strip" />
           </div>
-          <div className={`h-space-2 w-full ${i === 0 ? 'bg-accent' : 'bg-hairline'}`} />
+          <div className={`h-space-4 w-full ${i === 0 ? 'bg-accent' : 'bg-hairline'}`} />
         </div>
       ))}
     </div>

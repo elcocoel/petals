@@ -7,7 +7,7 @@ const number = (i: number) => String(i + 1).padStart(2, '0');
 
 function Line({ i, children }: { i: number; children: ReactNode }) {
   return (
-    <div className="flex items-start gap-space-20 border-t border-hairline py-space-14">
+    <div className="flex items-start gap-block-gap border-t border-hairline py-space-16">
       <p className="my-0 type-mono-small">{number(i)}</p>
       {children}
     </div>
@@ -25,7 +25,7 @@ export function Transcript({
 }) {
   return (
     <div className="border-y border-primary">
-      <div className="py-space-14">
+      <div className="py-space-16">
         <MetaRow start={start} end={end} />
       </div>
       {lines.map((line, i) => (

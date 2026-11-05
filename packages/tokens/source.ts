@@ -140,32 +140,29 @@ export const contrastPairs: readonly { text: Role; on: Role }[] = [
   { text: 'eyebrow', on: 'surface' },
 ];
 
-/** Figma: Layout/… variables, then the landing page's section padding. Pixels. */
+/**
+ * The ladder: every gap, inset and padding is one of these nine. Nothing else makes space. `0` isn't a
+ * step: clearing Tailwind's numeric scale takes zero with it, and m-0, min-h-0, inset-0 and px-0 read it.
+ */
 export const layout = {
-  /** Clearing Tailwind's numeric scale takes zero with it: m-0, min-h-0, inset-0 and px-0 read this. */
   '0': 0,
-  'Page inset': 72,
-  'Section inset': 64,
-  'Column gap': 48,
-  'Block gap': 24,
+  'Space 4': 4,
+  'Space 8': 8,
   'Text gap': 12,
-  'Control inset': 20,
-  'Control height': 48,
+  'Space 16': 16,
+  'Block gap': 24,
+  'Space 32': 32,
+  'Column gap': 48,
+  'Page inset': 72,
   'Section padding': 112,
 } as const;
 
-/**
- * Pixels read off Figma's components (hard values there, not variables), and the two page widths
- * the old pages already had. All of them become spacing utilities: h-ask-box-height.
- */
+/** The size of a thing, not the space around it. Pixels. All of them become utilities: h-control-height. */
 export const sizes = {
+  'Control height': 48,
   'Ask box height': 64,
   /** The most it takes. Every instance on the landing page fills its column (584, 640). */
   'Ask box width': 640,
-  'Ask box inset': 8,
-  /** With the border, what makes the box 64 around a 48 button. */
-  'Ask box block': 7,
-  'Ask box gap': 16,
   /** Figma's step 1 instance (67:2512) is the Ask box at 0.56: these are its values at that scale. */
   'Ask box small height': 35.84,
   'Ask box small width': 336,
@@ -179,11 +176,7 @@ export const sizes = {
   'Button small height': 26.88,
   'Button small inset': 12.32,
   'Button small gap': 5.6,
-  'Ask box field block': 10.5,
   'Starter height': 36,
-  'Starter inset start': 16,
-  'Starter inset end': 14,
-  'Arrow gap': 10,
   'Content width': 960,
   'Flower width': 640,
   'Gallery flower width': 320,
@@ -212,50 +205,18 @@ export const sizes = {
   'Thumb card': 240,
   'Cursor width': 12,
   'Cursor height': 26,
-  /** Figma's loose "Space" frames and auto-layout gaps on that page, named by their pixels. */
-  'Space 2': 2,
-  'Space 4': 4,
-  'Space 6': 6,
-  'Space 8': 8,
-  'Space 10': 10,
-  'Space 14': 14,
-  'Space 16': 16,
-  'Space 20': 20,
-  'Space 22': 22,
-  'Space 26': 26,
-  'Space 28': 28,
-  'Space 32': 32,
-  'Space 36': 36,
-  'Space 40': 40,
-  'Space 44': 44,
-  'Space 56': 56,
-  'Space 96': 96,
   // The workspace frames (Interface page, e.g. 39:862, at 1440 x 900).
   'Workspace header height': 80,
-  'Workspace inset': 40,
-  'Workspace inset end': 32,
   'Workspace rule': 20,
   // Figma's is 164, which "Use your own AI" doesn't fit.
   'Rail width': 180,
-  'Rail text inset': 22,
-  'Rail top': 31,
-  'Rail item gap': 8,
-  'Rail item block': 9,
   'Icon size': 18,
-  'Icon gap': 9,
   'Conversation width': 580,
   // Figma's is 696, beside its narrower rail: the two columns fill a 1440 window.
   'Panel width': 680,
-  'Speech gap': 8,
   'Composer height': 76,
-  'Composer inset end': 12,
-  'Composer block': 14,
-  'Composer field block': 13,
   'Composer max height': 200,
-  'Detail inset': 16,
-  'Detail gap': 4,
   'Detail height': 117,
-  'Title gap': 7,
   'Swatch size': 9,
   'Cell small': 16.72,
   'Cell medium': 27.28,

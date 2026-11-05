@@ -17,7 +17,7 @@ export function FlowerShelf({
   onStarter?: (question: string) => void;
 }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-block-gap overflow-y-auto p-workspace-inset">
+    <div className="flex min-h-0 flex-1 flex-col gap-block-gap overflow-y-auto p-column-gap">
       {view.pending ? null : <Cell size="large" />}
       <div className="flex flex-col gap-text-gap">
         <h2 className={`m-0 ${view.pending ? 'type-heading' : 'type-title'}`}>{view.heading}</h2>

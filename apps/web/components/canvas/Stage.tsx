@@ -29,7 +29,7 @@ export function Stage({
   const stage = useStage({ fitKey, pickAttribute, onPick });
   return (
     <div
-      className={`flex min-h-stage-height min-w-0 flex-1 flex-col ${bleed ? '-mx-workspace-inset' : ''}`}
+      className={`flex min-h-stage-height min-w-0 flex-1 flex-col ${bleed ? '-mx-column-gap' : ''}`}
     >
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <svg
@@ -42,7 +42,7 @@ export function Stage({
         </svg>
       </div>
       <div
-        className={`flex items-center justify-between gap-block-gap ${bleed ? 'px-workspace-inset' : ''}`}
+        className={`flex items-center justify-between gap-block-gap ${bleed ? 'px-column-gap' : ''}`}
       >
         <p className="type-mono-small text-muted">{HINT}</p>
         <Button variant="quiet" onClick={stage.fit}>

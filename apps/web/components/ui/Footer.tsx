@@ -10,7 +10,7 @@ export function Footer() {
   const copy = landingCopy.footer;
   return (
     <Section as="footer" padding="footer" rule="top">
-      <div className="flex flex-col gap-space-56">
+      <div className="flex flex-col gap-column-gap">
         <div className="flex flex-col gap-block-gap lg:flex-row lg:items-end lg:justify-between">
           <div className="flex md:min-h-footer-wordmark-height md:items-end">
             <Wordmark size="footer" />

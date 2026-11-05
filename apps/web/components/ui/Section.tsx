@@ -6,11 +6,11 @@ import type { ReactNode } from 'react';
 import { Surface } from './Surface.tsx';
 
 const PADDING = {
-  section: 'px-block-gap py-section-inset md:px-page-inset md:py-section-padding',
+  section: 'px-block-gap py-page-inset md:px-page-inset md:py-section-padding',
   // Figma lets the hero's figure run closer to the edge than the page inset.
-  hero: 'px-block-gap py-section-inset md:pt-space-56 md:pr-block-gap md:pb-page-inset md:pl-page-inset',
-  nav: 'px-block-gap py-space-22 md:px-page-inset',
-  footer: 'px-block-gap pt-page-inset pb-space-40 md:px-page-inset',
+  hero: 'px-block-gap py-page-inset md:pt-column-gap md:pr-block-gap md:pb-page-inset md:pl-page-inset',
+  nav: 'px-block-gap py-block-gap md:px-page-inset',
+  footer: 'px-block-gap pt-page-inset pb-column-gap md:px-page-inset',
 } as const;
 
 const RULES = { top: 'border-t border-hairline', bottom: 'border-b border-hairline' } as const;

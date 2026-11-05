@@ -7,14 +7,14 @@ import type { MouseEventHandler, ReactNode } from 'react';
 import { Arrow } from './Arrow.tsx';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'starter' | 'link' | 'quiet' | 'row' | 'tile';
-export type ButtonSize = 'default' | 'ask' | 'small';
+export type ButtonSize = 'default' | 'small';
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: '',
   secondary: 'border border-primary bg-transparent text-primary',
   // One line at any width Figma draws. Narrower than its question, it wraps instead of overflowing.
   starter:
-    'h-auto min-h-starter-height border border-starter-border bg-transparent py-space-6 pr-starter-inset-end pl-starter-inset-start type-caption whitespace-normal text-primary',
+    'h-auto min-h-starter-height border border-starter-border bg-transparent px-space-16 py-space-8 type-caption whitespace-normal text-primary',
   link: 'h-auto bg-transparent px-0 type-label text-primary hover:underline',
   quiet: 'h-auto bg-transparent px-0 type-caption text-muted hover:text-primary hover:underline',
   row: 'h-auto w-full justify-start gap-text-gap border border-hairline bg-transparent p-text-gap text-left whitespace-normal text-primary aria-pressed:border-l-2 aria-pressed:border-l-accent',
@@ -23,8 +23,6 @@ const VARIANTS: Record<ButtonVariant, string> = {
 
 const SIZES: Record<ButtonSize, string> = {
   default: '',
-  /** Figma's Submit in the Ask box (52:1863), a little wider than the Button. */
-  ask: 'px-space-22',
   small: 'h-button-small-height gap-button-small-gap px-button-small-inset type-label-small',
 };
 

@@ -4,7 +4,7 @@ import { Caption } from './Caption.tsx';
 
 export function MetaRow({ start, end }: { start: ReactNode; end: ReactNode }) {
   return (
-    <div className="flex flex-wrap justify-between gap-x-block-gap gap-y-space-6">
+    <div className="flex flex-wrap justify-between gap-x-block-gap gap-y-space-8">
       <Caption>{start}</Caption>
       <Caption>{end}</Caption>
     </div>

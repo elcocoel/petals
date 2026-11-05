@@ -13,10 +13,10 @@ const copy = landingCopy.community;
 export function JoinCommunity() {
   return (
     <Section id="community">
-      <div className="flex flex-col gap-section-inset lg:flex-row lg:items-center lg:gap-space-96">
+      <div className="flex flex-col gap-page-inset lg:flex-row lg:items-center lg:gap-section-padding">
         <div className="w-full min-w-0 lg:max-w-community-pitch-width lg:flex-1">
           <SectionHead eyebrow={copy.eyebrow} title={copy.title} body={copy.body} />
-          <div className="mt-space-36">
+          <div className="mt-space-32">
             <ActionRow gap="tight">
               <Button href={siteLinks.community}>{copy.join}</Button>
               <Button variant="secondary" href={siteLinks.community}>

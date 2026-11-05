@@ -20,7 +20,7 @@ export function AskBlock({
   return (
     <div className="flex flex-col gap-space-16">
       <AskBox placeholder={placeholder} label={action} action={action} to={siteLinks.make} />
-      <div className="flex flex-col gap-space-10">
+      <div className="flex flex-col gap-text-gap">
         {starterLabel && <Caption>{starterLabel}</Caption>}
         <div className="flex flex-wrap gap-space-8">
           {starters.map((question) => (

@@ -46,7 +46,7 @@
      components/ui/Button.tsx, whose variants override this with utilities. */
   button,
   a[data-button] {
-    @apply inline-flex h-control-height cursor-pointer items-center justify-center gap-arrow-gap bg-action px-control-inset type-label whitespace-nowrap text-on-action no-underline;
+    @apply inline-flex h-control-height cursor-pointer items-center justify-center gap-text-gap bg-action px-block-gap type-label whitespace-nowrap text-on-action no-underline;
   }
 
   button:hover,

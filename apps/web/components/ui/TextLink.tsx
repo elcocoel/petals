@@ -8,7 +8,7 @@ import { Icon, type IconName } from './Icon.tsx';
 const VARIANTS = {
   label: 'type-label text-primary',
   quiet: 'type-caption text-muted hover:text-primary',
-  rail: 'flex items-center gap-icon-gap py-rail-item-block type-label whitespace-nowrap text-primary',
+  rail: 'flex items-center gap-space-8 py-space-8 type-label whitespace-nowrap text-primary',
   mono: 'type-mono-tiny text-primary',
 } as const;
 

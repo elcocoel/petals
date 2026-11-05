@@ -4,8 +4,8 @@ import type { ReactNode } from 'react';
 import { TextLink } from './TextLink.tsx';
 
 const SIZES = {
-  default: 'gap-space-8 px-space-16 py-space-14',
-  compact: 'gap-space-6 px-text-gap py-space-10',
+  default: 'gap-space-8 p-space-16',
+  compact: 'gap-space-8 p-text-gap',
 } as const;
 
 export function Callout({

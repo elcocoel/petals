@@ -7,20 +7,20 @@ const SIZES = {
   display: {
     Tag: 'h1',
     title: 'type-display-compact md:type-display',
-    gap: 'mt-space-28',
-    body: 'mt-space-28 type-lead',
+    gap: 'mt-space-32',
+    body: 'mt-space-32 type-lead',
   },
   compact: {
     Tag: 'h2',
     title: 'type-title md:type-display-compact',
     gap: 'mt-block-gap',
-    body: 'mt-space-20 type-body',
+    body: 'mt-block-gap type-body',
   },
   title: {
     Tag: 'h2',
     title: 'type-title',
     gap: 'mt-block-gap',
-    body: 'mt-space-20 type-body',
+    body: 'mt-block-gap type-body',
   },
 } as const;
 

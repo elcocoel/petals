@@ -40,9 +40,9 @@ function OpenFlower({
   actions: FlowerPanelActions;
 }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-text-gap px-workspace-inset pt-workspace-inset pb-text-gap">
+    <div className="flex min-h-0 flex-1 flex-col gap-text-gap px-column-gap pt-column-gap pb-text-gap">
       <header className="flex items-start justify-between gap-text-gap">
-        <div className="flex min-w-0 flex-col gap-title-gap">
+        <div className="flex min-w-0 flex-col gap-space-8">
           <h1 className="m-0 type-title">{view.title}</h1>
           <p className="type-label whitespace-pre-wrap">
             {view.where}
@@ -151,7 +151,7 @@ export function FlowerPanel({
           {...(actions.onStarter ? { onStarter: actions.onStarter } : {})}
         />
       ) : (
-        <div className="p-workspace-inset">
+        <div className="p-column-gap">
           <p className={view.kind === 'failed' ? 'error' : 'type-body text-muted'}>{view.text}</p>
           {view.kind === 'failed' && (
             <Button variant="link" onClick={actions.onShelf}>

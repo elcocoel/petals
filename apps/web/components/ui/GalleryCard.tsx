@@ -19,7 +19,7 @@ export function GalleryCard({
       <span className="flex h-card-flower-height items-center overflow-hidden border border-hairline pl-card-thumb-inset max-md:justify-center max-md:pl-0">
         <Thumb kind={thumb} size="card" />
       </span>
-      <span className="pt-space-20 pb-space-8 type-heading">{title}</span>
+      <span className="pt-block-gap pb-space-8 type-heading">{title}</span>
       <span className="type-mono-note">{note}</span>
     </a>
   );

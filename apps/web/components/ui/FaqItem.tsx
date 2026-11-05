@@ -18,14 +18,14 @@ export function FaqItem({
   open?: boolean;
 }) {
   return (
-    <details open={open} className="border-b border-hairline pt-space-22 pb-space-26">
+    <details open={open} className="border-b border-hairline py-block-gap">
       <summary className="flex list-none items-center gap-block-gap [&::-webkit-details-marker]:hidden">
         <Glyph kind={glyph} />
         <span className="type-mono-label">{index}</span>
         <span className="min-w-0 flex-1 type-lead">{question}</span>
         <span className="type-mono-sign">{landingCopy.questions.sign}</span>
       </summary>
-      <p className="mt-space-10 mb-0 type-body md:pr-space-40 md:pl-faq-answer-inset">{answer}</p>
+      <p className="mt-text-gap mb-0 type-body md:pr-column-gap md:pl-faq-answer-inset">{answer}</p>
     </details>
   );
 }

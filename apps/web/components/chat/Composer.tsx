@@ -16,7 +16,7 @@ export function Composer({
   onSend: () => void;
 }) {
   return (
-    <div className="flex shrink-0 flex-col gap-speech-gap pt-text-gap pr-workspace-inset-end pb-workspace-inset-end pl-workspace-inset">
+    <div className="flex shrink-0 flex-col gap-space-8 pt-text-gap pr-space-32 pb-space-32 pl-column-gap">
       {view.about && (
         <p data-quiet className="type-mono-small text-muted">
           {view.about}

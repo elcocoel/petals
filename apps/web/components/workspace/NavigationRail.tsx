@@ -6,9 +6,9 @@ export function NavigationRail() {
   return (
     <nav
       aria-label="Workspace"
-      className="flex shrink-0 flex-wrap justify-between gap-x-block-gap bg-panel px-rail-text-inset py-text-gap wide:w-rail-width wide:flex-col wide:flex-nowrap wide:pt-rail-top wide:pr-0 wide:pb-rail-top"
+      className="flex shrink-0 flex-wrap justify-between gap-x-block-gap bg-panel px-block-gap py-text-gap wide:w-rail-width wide:flex-col wide:flex-nowrap wide:pt-space-32 wide:pr-0 wide:pb-space-32"
     >
-      <div className="flex flex-wrap gap-x-block-gap wide:flex-col wide:gap-rail-item-gap">
+      <div className="flex flex-wrap gap-x-block-gap wide:flex-col wide:gap-space-8">
         <TextLink variant="rail" icon="home" href="/">
           Home
         </TextLink>
@@ -16,7 +16,7 @@ export function NavigationRail() {
           New question
         </TextLink>
       </div>
-      <div className="flex flex-wrap gap-x-block-gap wide:flex-col wide:gap-rail-item-gap">
+      <div className="flex flex-wrap gap-x-block-gap wide:flex-col wide:gap-space-8">
         <TextLink variant="rail" icon="gallery" href="/gallery">
           Gallery
         </TextLink>

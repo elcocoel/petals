@@ -15,7 +15,7 @@ export function Nav() {
         <a href={siteLinks.home} aria-label="Petals, home" className="flex no-underline">
           <Wordmark />
         </a>
-        <div className="flex flex-wrap items-center gap-x-space-36 gap-y-text-gap">
+        <div className="flex flex-wrap items-center gap-x-space-32 gap-y-text-gap">
           <TextLink href={siteLinks.howItWorks}>{copy.howItWorks}</TextLink>
           <TextLink href={siteLinks.gallery}>{copy.gallery}</TextLink>
           <TextLink href={siteLinks.connect}>{copy.docs}</TextLink>

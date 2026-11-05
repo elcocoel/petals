@@ -18,15 +18,15 @@ const copy = landingCopy.flowerRead;
 export function FlowerRead() {
   return (
     <Section rule="top">
-      <div className="flex flex-col gap-section-inset lg:flex-row lg:items-center">
-        <figure className="flex w-full min-w-0 flex-col gap-space-20 lg:max-w-figure-width lg:flex-1">
+      <div className="flex flex-col gap-page-inset lg:flex-row lg:items-center">
+        <figure className="flex w-full min-w-0 flex-col gap-block-gap lg:max-w-figure-width lg:flex-1">
           <Drawing drawing={readingFlower} className="h-auto w-full" />
           <HeroesStrip thumbs={['blocs', 'even', 'tower', 'blocs', 'even']} />
           <Caption as="figcaption">{copy.caption}</Caption>
         </figure>
         <div className="w-full min-w-0 lg:flex-1">
           <SectionHead eyebrow={copy.eyebrow} title={copy.title} />
-          <div className="mt-space-40">
+          <div className="mt-column-gap">
             <Transcript
               start={copy.transcript.start}
               end={copy.transcript.end}

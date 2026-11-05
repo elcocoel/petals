@@ -17,9 +17,9 @@ export function Speech({
   children: ReactNode;
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-speech-gap">
+    <div className="flex min-w-0 flex-col gap-space-8">
       {speaker && (
-        <p className="flex items-center gap-icon-gap type-caption">
+        <p className="flex items-center gap-space-8 type-caption">
           {agent && <Cell />}
           {speaker}
         </p>

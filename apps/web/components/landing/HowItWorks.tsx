@@ -19,7 +19,7 @@ export function HowItWorks() {
   return (
     <Section rule="top" id="how-it-works">
       <SectionHead eyebrow={copy.eyebrow} title={copy.title} />
-      <div className="mt-space-56 flex flex-col gap-column-gap md:flex-row">
+      <div className="mt-column-gap flex flex-col gap-column-gap md:flex-row">
         <Step {...ask}>
           <AskBox
             size="small"

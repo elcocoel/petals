@@ -17,7 +17,7 @@ const NOTES = [
   { text: copy.notes.two, x: 0, y: 620, width: 180, height: 32 },
   { text: copy.notes.four, x: 552, y: 684, width: 168, height: 48 },
 ];
-const REMARK = { x: 460, y: 78, width: 244, height: 118 };
+const REMARK = { x: 460, y: 78, width: 244, height: 120 };
 
 function Remark() {
   return (

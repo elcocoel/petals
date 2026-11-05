@@ -3,7 +3,7 @@ import { Wordmark } from '../ui/Wordmark.tsx';
 
 export function WorkspaceHeader({ section }: { section: string }) {
   return (
-    <header className="flex h-workspace-header-height shrink-0 items-center gap-block-gap border-b border-hairline pl-rail-text-inset">
+    <header className="flex h-workspace-header-height shrink-0 items-center gap-block-gap border-b border-hairline pl-block-gap">
       <a href="/" aria-label="Petals, home">
         <Wordmark size="workspace" />
       </a>
