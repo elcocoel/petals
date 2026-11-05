@@ -432,7 +432,7 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 - [ ] T183 [W6] Workspace v1 to the Figma frames: rail, conversation, flower panel on the canvas stage, composer, petal detail, legend, Stop. Done when Elco can hold a full flower conversation in it.
 - [ ] T184 [W6] Gallery, flower page and connect page in the system.
 - [ ] T185 [W6] Landing page on `/`, from Elco's rewritten copy, with the conversation one step in.
-- [ ] T186 [W8] Witnessed deploy: the site reports its commit, candidate then promote then automatic rollback, nothing ships that isn't on `main`.
+- [X] T186 [W8] Witnessed deploy: the site reports its commit, candidate then promote then automatic rollback, nothing ships that isn't on `main`.
 - [ ] T187 [W8] [Elco] Elco's judgement of frontend v1, then split coordination into fronts: frontend, backend, hosting, data, agent and tooling.
 
 ---
