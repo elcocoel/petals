@@ -5,6 +5,10 @@
 //   node scripts/try-agent.ts claude "Who holds UNI on Base?" yes
 //   node scripts/try-agent.ts codex "Who holds the shares of Moloch DAO?" "top ten only"
 //   node scripts/try-agent.ts claude --model sonnet "Who holds UNI on Base?"
+//   node scripts/try-agent.ts codex --bare "<the copied prompt>" "Who holds UNI on Base?"
+//
+// --bare is the paste test: no Petal tools and no skill, only web requests, as for someone who has
+// installed nothing. The first thing you say is the copied prompt.
 //
 // Each extra argument is the next thing you say. The default models are small on purpose: Petal's
 // own agent runs a small model too, and a test should not use up a subscription.
@@ -116,8 +120,29 @@ function petalServer(state: string) {
 
 export function claudeArgs(
   say: string,
-  o: { model: string; skill: string; session: string; first: boolean; state: string },
+  o: {
+    model: string;
+    skill: string;
+    session: string;
+    first: boolean;
+    state: string;
+    bare?: boolean;
+  },
 ): string[] {
+  const load = o.bare
+    ? ['--allowedTools', 'WebFetch', 'Bash(curl *)']
+    : [
+        '--mcp-config',
+        JSON.stringify({ mcpServers: { petal: petalServer(o.state) } }),
+        '--append-system-prompt',
+        o.skill,
+        // The skill's own way to hand over a drawing: `petal render --out`, into this run's folder.
+        '--allowedTools',
+        'mcp__petal',
+        'Bash(pnpm *)',
+        'Bash(grep *)',
+        'Write',
+      ];
   return [
     '-p',
     say,
@@ -129,32 +154,28 @@ export function claudeArgs(
     '--max-turns',
     '20',
     '--strict-mcp-config',
-    '--mcp-config',
-    JSON.stringify({ mcpServers: { petal: petalServer(o.state) } }),
     '--setting-sources',
     'project',
-    '--append-system-prompt',
-    o.skill,
     ...(o.first ? ['--session-id', o.session] : ['--resume', o.session]),
-    // The skill's own way to hand over a drawing: `petal render --out`, into this run's folder.
-    '--allowedTools',
-    'mcp__petal',
-    'Bash(pnpm *)',
-    'Bash(grep *)',
-    'Write',
+    ...load,
   ];
 }
 
 export function codexArgs(
   say: string,
-  o: { model?: string; session?: string; path: string; state: string },
+  o: { model?: string; session?: string; path: string; state: string; bare?: boolean },
 ): string[] {
   const server = petalServer(o.state);
+  const load = o.bare
+    ? ['sandbox_workspace_write.network_access=true']
+    : [
+        `mcp_servers.petal.command="${server.command}"`,
+        `mcp_servers.petal.args=${JSON.stringify(server.args)}`,
+        `mcp_servers.petal.env={PATH=${JSON.stringify(o.path)},PETAL_STATE_DIR=${JSON.stringify(o.state)}}`,
+        'mcp_servers.petal.default_tools_approval_mode="approve"',
+      ];
   const config = [
-    `mcp_servers.petal.command="${server.command}"`,
-    `mcp_servers.petal.args=${JSON.stringify(server.args)}`,
-    `mcp_servers.petal.env={PATH=${JSON.stringify(o.path)},PETAL_STATE_DIR=${JSON.stringify(o.state)}}`,
-    'mcp_servers.petal.default_tools_approval_mode="approve"',
+    ...load,
     'sandbox_mode="workspace-write"',
     'model_reasoning_effort="low"',
   ].flatMap((c) => ['-c', c]);
@@ -175,16 +196,19 @@ function main(argv: string[]): number {
   const a = argv[0] as Agent;
   const at = argv.indexOf('--model');
   const model = at > 0 ? argv[at + 1] : undefined;
-  const said = argv.slice(1).filter((_, i) => i + 1 !== at && i + 1 !== at + 1);
+  const bare = argv.includes('--bare');
+  const said = argv.slice(1).filter((w, i) => i + 1 !== at && i + 1 !== at + 1 && w !== '--bare');
   if ((a !== 'claude' && a !== 'codex') || said.length === 0) {
-    console.error('usage: node scripts/try-agent.ts <claude|codex> [--model m] "first" ["next" …]');
+    console.error(
+      'usage: node scripts/try-agent.ts <claude|codex> [--model m] [--bare] "first" ["next" …]',
+    );
     return 2;
   }
   const claudeModel = model ?? 'haiku';
   const skill = readFileSync(join(REPO, 'skill/petal/SKILL.md'), 'utf8');
   // Outside any project, so the agent sees only the skill, not a repo's own instructions.
   const cwd = mkdtempSync(join(tmpdir(), 'petal-try-'));
-  if (a === 'codex') writeFileSync(join(cwd, 'AGENTS.md'), skill);
+  if (a === 'codex' && !bare) writeFileSync(join(cwd, 'AGENTS.md'), skill);
   const state = join(cwd, '.petal');
   const env = { ...agentEnv(process.env), PETAL_STATE_DIR: state };
 
@@ -201,12 +225,14 @@ function main(argv: string[]): number {
             session: session as string,
             first: i === 0,
             state,
+            bare,
           })
         : codexArgs(say, {
             ...(model ? { model } : {}),
             ...(session ? { session } : {}),
             path: process.env.PATH ?? '',
             state,
+            bare,
           });
     const r = spawnSync(a, args, {
       cwd,

@@ -139,6 +139,16 @@ describe('what it says when it can draw nothing', () => {
     const spelled = await propose({ dao, chain: 'ethereum' });
     expect(spelled.spec_sha256).toBe(plain.spec_sha256);
     expect(spelled.spec.network.params).toEqual({ dao });
+    // Found through the paste test: agents on HTTP send only the sha256, or keep an address's case.
+    expect((await propose({ dao: dao.toUpperCase().replace('0X', '0x') })).spec_sha256).toBe(
+      plain.spec_sha256,
+    );
+    const none = (await callTool(
+      'propose_spec',
+      { network: 'moloch-v1', sha256: snap.sha256 },
+      ctx,
+    )) as Json;
+    expect(none.spec_sha256).toBe(plain.spec_sha256);
   });
 
   test('Nouns DAO: a market token that only shares the name is not presented as the DAO', async () => {

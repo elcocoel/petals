@@ -117,9 +117,12 @@ export function buildSpec(
 ): { spec: Spec; changed: string[]; defaults: string[] } {
   if (input.network !== descriptor.id)
     throw bad(`network ${input.network} is not ${descriptor.id}`, [descriptor.id]);
-  // A parameter left at its default names the same flower as one left out: one spec, one hash.
+  // One flower, one hash: the target comes from the snapshot it was drawn from, however the caller
+  // wrote it or if they left it out, and a parameter at its default is the same as one left out.
   const params = Object.fromEntries(
-    Object.entries(input.params ?? {}).filter(([k, v]) => descriptor.params[k]?.default !== v),
+    Object.entries({ ...input.params, ...snapshot.network.params }).filter(
+      ([k, v]) => descriptor.params[k]?.default !== v,
+    ),
   );
   if (snapshot.network.id !== descriptor.id)
     throw bad(`snapshot ${input.sha256} is of ${snapshot.network.id}, not ${descriptor.id}`);
