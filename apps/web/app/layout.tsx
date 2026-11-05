@@ -50,6 +50,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <strong>Petal</strong>
           </a>
           <a href="/gallery">Gallery</a>
+          <a href="/connect">Use your own AI</a>
         </nav>
         <main>{children}</main>
       </body>

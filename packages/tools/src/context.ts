@@ -5,7 +5,7 @@
 // the tool call that needs it, as a ToolError, never here.
 import { join, resolve } from 'node:path';
 import type { QuoteRequest, QuoteResult } from '@petal/core/types';
-import { fileStore, modules } from '@petal/inputs';
+import { fileStore, lastingStore, vercelBlob, modules } from '@petal/inputs';
 import type { Rpc } from '@petal/near/auth';
 import {
   fakeMap,
@@ -50,9 +50,13 @@ export function createContext(cfg: Config): ToolContext {
   const stateDir = stateDirOf({ root, ...(cfg.stateDir ? { stateDir: cfg.stateDir } : {}) });
   const config: Config = { ...cfg, root, fixturesDir, stateDir };
 
-  const store = deferred(() =>
-    fileStore({ fixtures: join(fixturesDir, 'snapshots'), cache: join(stateDir, 'cache') }),
-  );
+  const store = deferred(() => {
+    const local = fileStore({
+      fixtures: join(fixturesDir, 'snapshots'),
+      cache: join(stateDir, 'cache'),
+    });
+    return cfg.blobToken ? lastingStore(local, vercelBlob(cfg.blobToken)) : local;
+  });
 
   let map: ToolContext['map'];
   const m = cfg.fake ? null : (cfg.map ?? null);
@@ -160,6 +164,7 @@ export function configFromEnv(env: Env = process.env, root: string = process.cwd
     ['nearAiApiKey', set(env.NEAR_AI_API_KEY)],
     ['payoutAccount', set(env.PETAL_PAYOUT_ACCOUNT)],
     ['apiBase', set(env.PETAL_API)?.replace(/\/+$/, '')],
+    ['blobToken', set(env.BLOB_READ_WRITE_TOKEN)],
     ['repoUrl', set(env.PETAL_REPO_URL)],
   ];
   for (const [k, v] of optional)

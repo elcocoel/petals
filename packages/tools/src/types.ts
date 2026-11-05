@@ -31,6 +31,8 @@ export interface Config {
   nearAiApiKey?: string;
   llmDailyUsd?: number;
   payoutAccount?: string;
+  /** a shared blob store, so snapshots outlive one server (BLOB_READ_WRITE_TOKEN) */
+  blobToken?: string;
   /** public base URL, for view_url, sign_url, body_url */
   apiBase?: string;
   repoUrl?: string;

@@ -1,12 +1,9 @@
 // The first thing anyone sees: the agent, already talking (M-Talk). `/` and `/make` are the same
 // page; ?run=<id> reopens a stored conversation.
-import { headers } from 'next/headers';
-import { agentPrompt, originFrom } from '../lib/agent-prompt.ts';
 import { api } from '../lib/api.ts';
 import type { ApiHealth } from '../lib/api-label.ts';
 import { type OpeningFlower, openingMessage } from '../lib/opening.ts';
 import { Chat } from './Chat.tsx';
-import { CopyPrompt } from './CopyPrompt.tsx';
 
 export async function AgentHome({
   searchParams,
@@ -20,7 +17,6 @@ export async function AgentHome({
     api<{ flowers: OpeningFlower[] }>('/api/v1/flowers'),
   ]);
   const recorded = health.ok && health.value.llm === 'recorded';
-  const origin = originFrom(await headers());
   return (
     <>
       {recorded && (
@@ -30,20 +26,6 @@ export async function AgentHome({
           agent switches on once a NEAR AI key is set.
         </p>
       )}
-      <details>
-        <summary>Use your own agent</summary>
-        <p>Paste this into your own agent. It can use Petal with nothing to install:</p>
-        <CopyPrompt prompt={agentPrompt(origin)} />
-        <p className="muted">
-          Agents that can make web requests can start straight away. Chat apps without that may need
-          a connector: add <code>{origin}/mcp</code> in their settings.
-        </p>
-        <p className="muted">
-          From a terminal, in a clone of Petal: <code>pnpm petal connect claude</code> or{' '}
-          <code>pnpm petal connect codex</code>. <code>--dry-run</code> shows what it would change,
-          and <code>--remove</code> undoes it.
-        </p>
-      </details>
       <Chat
         initialRun={run}
         recorded={recorded}
