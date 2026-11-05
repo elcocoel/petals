@@ -391,7 +391,7 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 - [ ] T158 [P] [W2] `solana-spl-holders` module in `packages/inputs/src/modules/solana-spl-holders.ts`, any SPL mint, TRUMP as the test: wallets not token accounts, stream parser for the large response, top petals plus a declared tail. Check: the folded total against `getTokenSupply`, any difference stated. Keyless only; no launch history, no labels. Deps: T034.
 - [ ] T159 [W2] Beanstalk stored module in `packages/inputs/src/modules/beanstalk.ts`, on T156: the block before and the attack block. Check: 79.63% reproduced from the fixture. Deps: T156.
 - [ ] T160 [W2] `erc20-votes` module in `packages/inputs/src/modules/erc20-votes.ts`, on T156, ENS as the test: delegates and votes. Check: `getVotes` for all drawn delegates. Backer segments wait (`segments/backers.ts` holds NEAR labels). Deps: T156.
-- [ ] T161 [Elco] Envio token in `../.secrets/envio.env` (`ENVIO_API_TOKEN=`): a fallback for Ethereum logs, not a blocker. Deps: none.
+- [X] T161 [Elco] Envio token in `../.secrets/envio.env` (`ENVIO_API_TOKEN=`): a fallback for Ethereum logs, not a blocker. Deps: none.
 
 ---
 
