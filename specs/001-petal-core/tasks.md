@@ -424,15 +424,16 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 - [ ] T175 [W6] Tokens: `packages/tokens` (TypeScript source with roles and three surfaces, `emit --check`), Tailwind v4 theme generated from it, fonts by `next/font`, the old inline CSS moved, a strict literal scan in `scripts/check.sh`.
 - [ ] T176 [W6] `/lab`: every component in every state from saved fixtures, off in production unless `PETAL_LAB=1`, with a registry (component, Figma name and node, source) and a test that every exported component appears once.
 - [ ] T177 [W8] Figma as a collaboration space, by hand (Elco: no connection on this plan, no rocket science): an agent carries one real change from Figma to code and one back, and a short how-to says how. Component names match; the registry holds Figma names and nodes. No sync tooling.
-- [ ] T178 [W6] MVVM+: split `Chat.tsx` into adapter, pure projection, ViewModels and pure views, `apps/web/test/layers.test.ts`, turn stages each witnessed, and a question that isn't lost until accepted. No visual change.
+- [X] T178 [W6] MVVM+: split `Chat.tsx` into adapter, pure projection, ViewModels and pure views, `apps/web/test/layers.test.ts`, turn stages each witnessed, and a question that isn't lost until accepted. No visual change.
 - [ ] T179 [W1] The reading: `readFlower(spec, snapshot)` as the pure translator, `renderFlower` becomes reading plus a named skin, golden SVGs byte-identical, new golden readings.
 - [ ] T180 [W1] [W3] Identity without the drawing: an entry's `id` and signature no longer cover the SVG bytes (`map/v2`), `render_sha256` becomes a receipt, and v1 entries still verify.
 - [ ] T181 [W1] [W4] The recipe: `recipeOf(spec)`, `recipe_sha256`, `choicesFromSpec`, a semantic `diffSpecs`, and variations that build on their parent, proven with a failing test first.
 - [ ] T182 [W6] Canvas proof: `../research/spikes/canvas/`, zooming 40, 200 and 1,000 flowers across rendering modes, with frame times and a recommendation.
 - [ ] T183 [W6] Workspace v1 to the Figma frames: rail, conversation, flower panel on the canvas stage, composer, petal detail, legend, Stop. Done when Elco can hold a full flower conversation in it.
 - [ ] T184 [W6] Gallery, flower page and connect page in the system.
-- [ ] T185 [W6] Landing page on `/`, from Elco's rewritten copy, with the conversation one step in.
+- [ ] T185 [W6] Landing page on `/`, with the sketch copy as a placeholder and the conversation one step in. The copy gets its own pass later.
 - [X] T186 [W8] Witnessed deploy: the site reports its commit, candidate then promote then automatic rollback, nothing ships that isn't on `main`.
+- [ ] T188 [W6] The three levels in sketch, on one canvas: an account, a group, relations between groups (Elco's definitions in `../design/frontend-foundation.md`). Thin and real where cheap: for example the accounts two stored groups have in common. Crossing the boundaries elegantly is the design problem (Elco), so try more than one way to cross. Unsolved on purpose: this is to surface what Elco has to design for.
 - [ ] T187 [W8] [Elco] Elco's judgement of frontend v1, then split coordination into fronts: frontend, backend, hosting, data, agent and tooling.
 
 ---

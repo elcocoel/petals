@@ -1,10 +1,12 @@
 // Saved data for the lab, read from the repo's fixtures/ when a state renders. No network, no model.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Entry, ModelSignature, PetalDetail, Spec } from '@petal/core/types';
+import type { Entry, FlowerResult, ModelSignature, PetalDetail, Spec } from '@petal/core/types';
 import { repoRoot } from '../lib/config.ts';
 import type { Rendered } from '../lib/flower-data.ts';
+import { parseMarkdown } from '../lib/markdown.ts';
 import type { Prepared } from '../lib/publish.ts';
+import type { FlowerRow, Row, StepRow } from '../lib/thread-view.ts';
 
 const read = (path: string) => readFileSync(join(repoRoot(), 'fixtures', path), 'utf8');
 
@@ -88,3 +90,49 @@ near validators --limit 60
 | astro-stakers.poolv1.near | 5.61% |
 | everyone else | 13.8% |
 `;
+
+/** A flower as it arrives in the thread, from the golden and the fixture flower's reading. */
+export function flowerRow(overrides: Partial<FlowerRow> = {}): FlowerRow {
+  const { spec, rendered } = golden('near-validators-default');
+  const flower: FlowerResult = {
+    spec,
+    spec_sha256: rendered.spec_sha256,
+    render_sha256: rendered.render_sha256,
+    view_url: '#flowercard',
+    legend: rendered.legend,
+    interpretation: entry().interpretation,
+    validation: { valid: true, errors: [], warnings: [] },
+  };
+  return {
+    kind: 'flower',
+    key: 'flower',
+    flower,
+    signature: null,
+    model: 'recorded',
+    showLink: true,
+    publishUrl: '#flowercard',
+    checks: 'Checks passed',
+    ...overrides,
+  };
+}
+
+/** One of each kind of step. */
+export const STEPS: StepRow[] = [
+  { kind: 'stage', stage: 'reading', message: 'Reading the network' },
+  { kind: 'progress', text: 'Reading validators (40/60)' },
+  { kind: 'tool', name: 'get_snapshot', status: 'ok: 371 validators (120 ms)', args: '{}' },
+  { kind: 'tool', name: 'render_flower', status: '…', args: '{}' },
+];
+
+/** One turn, using every row but the flower's, in the order a person reads them. */
+export const TURN_ROWS: Row[] = [
+  { kind: 'note', key: 'note', text: 'A note from the thread.' },
+  { kind: 'user', key: 'user', text: 'Who decides in this DAO?' },
+  { kind: 'steps', key: 'steps', summary: '2 tool calls', steps: STEPS },
+  { kind: 'message', key: 'message', blocks: parseMarkdown('An answer, with **bold** text.') },
+  {
+    kind: 'done',
+    key: 'done',
+    line: [{ t: 'text', v: 'Recorded run: no model answered just now.' }],
+  },
+];

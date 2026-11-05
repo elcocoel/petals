@@ -8,7 +8,13 @@ import { TokensView } from '../../lab/TokensView.tsx';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Lab · Petals', robots: { index: false } };
 
-const GROUPS: LabEntry['group'][] = ['Primitives', 'The flower', 'Reading', 'Actions'];
+const GROUPS: LabEntry['group'][] = [
+  'Primitives',
+  'The conversation',
+  'The flower',
+  'Reading',
+  'Actions',
+];
 
 export default function Lab() {
   if (process.env.NODE_ENV === 'production' && process.env.PETAL_LAB !== '1') notFound();

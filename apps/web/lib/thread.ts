@@ -1,5 +1,6 @@
 // The conversation on /make as a list of items, folded from the agent's events (http-api.md, Agent
-// chat), live or from a stored run. Pure, so a reload and a live chat read the same.
+// chat), live or from a stored run. Pure, so a reload and a live chat read the same. Below the list:
+// the stages of a turn, the backup of a question, and the one reducer the chat's state goes through.
 import type { AgentEvent, FlowerResult, ModelSignature, Run } from '@petal/core/types';
 
 export type Done = Extract<AgentEvent, { event: 'done' }>['data'];
@@ -123,4 +124,185 @@ export function blocksOf(items: Item[]): Block[] {
     } else out.push(x);
   }
   return out;
+}
+
+/**
+ * Where a turn stands. Each stage is set only by the event that witnesses it: the browser saw the
+ * question go, `run` says the server took it, the first `stage` or `tool_call` says the work began,
+ * and `done` or `error` say how it ended. `lost` is the stream ending with none of those. Calls
+ * aren't streamed and a chat can run 120 s, so this is how a person knows their words landed.
+ */
+export type TurnStage = 'idle' | 'sending' | 'accepted' | 'working' | 'done' | 'error' | 'lost';
+
+/** The agent's events, and the two things only the browser can see. */
+export type Witness = AgentEvent | { event: 'sent' } | { event: 'ended' };
+
+export function witness(stage: TurnStage, w: Witness): TurnStage {
+  switch (w.event) {
+    case 'sent':
+      return 'sending';
+    case 'run':
+      return 'accepted';
+    case 'stage':
+    case 'tool_call':
+      return stage === 'accepted' ? 'working' : stage;
+    case 'error':
+      return 'error';
+    case 'done':
+      // the server ends every failed chat with `done`; that doesn't undo the failure
+      return stage === 'error' ? 'error' : 'done';
+    case 'ended':
+      if (stage === 'sending') return 'error';
+      return stage === 'accepted' || stage === 'working' ? 'lost' : stage;
+    default:
+      return stage;
+  }
+}
+
+/** The stage of a stored run's last turn: its events, read the way a live chat reads them. */
+export function turnOfRun(run: Pick<Run, 'status' | 'events'>): TurnStage {
+  const stage = run.events.reduce<TurnStage>(witness, 'idle');
+  // reopened by a follow-up, its `run` event not stored yet: the status is the witness
+  return run.status === 'running' && (stage === 'idle' || stage === 'done') ? 'accepted' : stage;
+}
+
+/** The part of localStorage a backup needs. Injected, so nothing here touches a browser. */
+export interface QuestionStore {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+}
+
+export interface QuestionBackup {
+  keep(text: string): void;
+  read(): string | null;
+  clear(): void;
+}
+
+/**
+ * A question waiting for the server to accept it, per conversation. Storage that is missing or
+ * refuses (private mode, quota) only loses the backup, never the question being sent.
+ */
+export function questionBackup(store: QuestionStore | null, runId: string | null): QuestionBackup {
+  const key = `petal.unaccepted.${runId ?? 'new'}`;
+  const attempt = <T>(f: () => T, otherwise: T): T => {
+    try {
+      return f();
+    } catch {
+      return otherwise;
+    }
+  };
+  return {
+    keep: (text) => attempt(() => store?.setItem(key, text), undefined),
+    read: () => attempt(() => store?.getItem(key) ?? null, null),
+    clear: () => attempt(() => store?.removeItem(key), undefined),
+  };
+}
+
+/** Words coming back to the box. Anything typed meanwhile stays; restoring twice is restoring once. */
+export function joinQuestion(back: string, box: string): string {
+  return !box.trim() || box === back ? back : `${back}\n${box}`;
+}
+
+/** The chat's state. What a person reads is projected from it in thread-view.ts. */
+export interface ChatState {
+  question: string;
+  /** the box shows a question that was never accepted, so its backup follows the box */
+  restored: boolean;
+  items: Item[];
+  runId: string | null;
+  /** a stream or a read is open: the box can't send */
+  busy: boolean;
+  turn: TurnStage;
+  /** the stage when the last question left: a refused question changes nothing about it */
+  before: TurnStage;
+  /** following the run again also ended without `done` */
+  lostAgain: boolean;
+}
+
+export type ChatAction =
+  | { type: 'typed'; text: string }
+  | { type: 'restored'; text: string }
+  | { type: 'sent'; text: string; startOver: boolean }
+  | { type: 'event'; event: AgentEvent }
+  /** never accepted; `text` is what goes back to the box (null when it has no words of its own) */
+  | { type: 'refused'; text: string | null; message: string }
+  | { type: 'opening' }
+  | { type: 'opened'; run: Pick<Run, 'status' | 'messages' | 'events'> }
+  | { type: 'unreadable'; code: string; message: string }
+  | { type: 'ended'; again: boolean };
+
+export function initialChat(o: { initialRun?: string; greeting?: string }): ChatState {
+  return {
+    question: '',
+    restored: false,
+    items: o.greeting ? [{ kind: 'message', text: o.greeting }] : [],
+    runId: o.initialRun ?? null,
+    busy: Boolean(o.initialRun),
+    turn: 'idle',
+    before: 'idle',
+    lostAgain: false,
+  };
+}
+
+export function chatReducer(s: ChatState, a: ChatAction): ChatState {
+  switch (a.type) {
+    case 'typed':
+      return { ...s, question: a.text, restored: s.restored && a.text.trim() !== '' };
+    case 'restored':
+      return { ...s, question: joinQuestion(a.text, s.question), restored: true };
+    case 'sent':
+      return {
+        ...s,
+        question: '',
+        restored: false,
+        items: [...(a.startOver ? [] : s.items), { kind: 'user', text: a.text }],
+        busy: true,
+        turn: witness(s.turn, { event: 'sent' }),
+        before: s.turn,
+        lostAgain: false,
+      };
+    case 'event':
+      return {
+        ...s,
+        items: fold(s.items, a.event),
+        runId: a.event.event === 'run' ? a.event.data.run_id : s.runId,
+        turn: witness(s.turn, a.event),
+      };
+    case 'refused':
+      return {
+        ...s,
+        question: a.text === null ? s.question : joinQuestion(a.text, s.question),
+        restored: a.text !== null,
+        items: [...s.items, { kind: 'error', code: 'client', message: a.message }],
+        busy: false,
+        turn: s.before === 'lost' ? 'lost' : witness(s.turn, { event: 'ended' }),
+      };
+    case 'opening':
+      return { ...s, busy: true };
+    case 'opened':
+      return { ...s, items: threadFromRun(a.run), turn: turnOfRun(a.run) };
+    case 'unreadable': {
+      // opening a link: this is all there is to show
+      if (s.turn !== 'lost') {
+        const row: Item = { kind: 'error', code: a.code, message: a.message };
+        return { ...s, items: [row], busy: false, turn: 'error' };
+      }
+      // following a lost run again: what already arrived stays
+      const gone = a.code === 'not_found';
+      const message = gone
+        ? 'The server no longer has this run, so it can’t be followed. What’s above is all that arrived.'
+        : a.message;
+      return {
+        ...s,
+        items: [...s.items, { kind: 'error', code: a.code, message }],
+        busy: false,
+        turn: gone ? 'error' : 'lost',
+      };
+    }
+    case 'ended': {
+      const turn = witness(s.turn, { event: 'ended' });
+      return { ...s, busy: false, turn, lostAgain: a.again && turn === 'lost' };
+    }
+  }
 }

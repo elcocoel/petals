@@ -60,7 +60,7 @@
 
   code {
     @apply type-mono-code;
-    word-break: break-all;
+    overflow-wrap: anywhere;
   }
 
   pre {

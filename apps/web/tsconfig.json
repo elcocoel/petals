@@ -15,6 +15,7 @@
     "lib/mock/*.json",
     "scripts",
     "test",
+    "viewmodels",
     "next.config.ts"
   ],
   "references": [

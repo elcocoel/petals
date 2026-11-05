@@ -1,30 +1,9 @@
 'use client';
 // The publish steps (T066): prepare_publish, sign in the wallet (NEP-413, one prompt), then
 // publish_flower. Shows the key, the writer and the explorer link, and why the receipt "fails".
-import { useState } from 'react';
-import { type EntryDraft, type Prepared, type Published, proofFrom } from '../lib/publish.ts';
-import { signPrepared } from '../lib/wallet.ts';
+import type { EntryDraft, Prepared } from '../lib/publish.ts';
+import { usePublishFlow } from '../viewmodels/usePublishFlow.ts';
 import { Button } from './ui/Button.tsx';
-
-type Step = 'ready' | 'preparing' | 'signing' | 'publishing' | 'done' | 'failed';
-
-async function postJson<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(path, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  const json = (await res.json().catch(() => ({}))) as T & {
-    error?: { code: string; message: string; hint?: string };
-  };
-  if (!res.ok || json.error) {
-    const e = json.error;
-    throw new Error(
-      e ? `${e.code}: ${e.message}${e.hint ? ` (${e.hint})` : ''}` : `HTTP ${res.status}`,
-    );
-  }
-  return json;
-}
 
 export function PublishFlow({
   draft,
@@ -33,39 +12,10 @@ export function PublishFlow({
   draft?: EntryDraft;
   prepared?: Prepared;
 }) {
-  const [step, setStep] = useState<Step>('ready');
-  const [prepared, setPrepared] = useState<Prepared | null>(given ?? null);
-  const [published, setPublished] = useState<Published | null>(null);
-  const [account, setAccount] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  async function publish() {
-    setError(null);
-    try {
-      let p = prepared;
-      if (draft) {
-        setStep('preparing');
-        p = await postJson<Prepared>('/api/v1/publish/prepare', { entry: draft });
-        setPrepared(p);
-      }
-      if (!p) throw new Error('Nothing to sign.');
-      setStep('signing');
-      const signed = await signPrepared(p);
-      setAccount(signed.accountId);
-      setStep('publishing');
-      const out = await postJson<Published>('/api/v1/publish', {
-        entry_sha256: p.entry_sha256,
-        proof: proofFrom(signed, p),
-      });
-      setPublished(out);
-      setStep('done');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      setStep('failed');
-    }
-  }
-
-  const working = step === 'preparing' || step === 'signing' || step === 'publishing';
+  const { step, prepared, published, account, error, working, publish } = usePublishFlow({
+    ...(draft ? { draft } : {}),
+    ...(given ? { prepared: given } : {}),
+  });
   return (
     <section className="box">
       <h2>Publish on NEAR (testnet)</h2>

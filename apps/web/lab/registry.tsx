@@ -2,12 +2,17 @@
 // figmaNode are how an agent finds the matching frame by hand; null means Figma has none yet. A test
 // holds this list to what components/ exports (apps/web/test/lab-registry.test.ts).
 //
-// QuotePanel, PublishFlow, CopyPrompt and Flower keep their later states in useState, so only the
-// first state shows here until they're split like Chat. Their controls are live on the page.
+// QuotePanel, PublishFlow, CopyPrompt and Flower still keep their later states in hooks, so only the
+// first state shows here until they take them as props, as the chat's views do. Their controls are
+// live on the page.
 import type { SurfaceName } from '@petal/tokens';
 import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
 import { CopyPrompt } from '../components/CopyPrompt.tsx';
+import { AnsweredBy } from '../components/chat/AnsweredBy.tsx';
+import { FlowerCard } from '../components/chat/FlowerCard.tsx';
+import { Steps } from '../components/chat/Steps.tsx';
+import { Thread } from '../components/chat/Thread.tsx';
 import { Flower } from '../components/Flower.tsx';
 import { FlowerSheet } from '../components/FlowerSheet.tsx';
 import { Interpretation, SignatureLine } from '../components/Interpretation.tsx';
@@ -25,7 +30,20 @@ import { TextLink } from '../components/ui/TextLink.tsx';
 import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { parseMarkdown } from '../lib/markdown.ts';
 import { openingMessage } from '../lib/opening.ts';
-import { entry, golden, MARKDOWN, petal, prepared, signature } from './fixtures.ts';
+import type { Done } from '../lib/thread.ts';
+import { answeredBy, composerView, threadView } from '../lib/thread-view.ts';
+import {
+  entry,
+  flowerRow,
+  golden,
+  MARKDOWN,
+  petal,
+  prepared,
+  STEPS,
+  signature,
+  TURN_ROWS,
+} from './fixtures.ts';
+import { LabComposer } from './LabComposer.tsx';
 
 export interface LabState {
   name: string;
@@ -39,7 +57,7 @@ export interface LabState {
 
 export interface LabEntry {
   id: string;
-  group: 'Primitives' | 'The flower' | 'Reading' | 'Actions';
+  group: 'Primitives' | 'The conversation' | 'The flower' | 'Reading' | 'Actions';
   figmaName: string | null;
   figmaNode: string | null;
   source: string;
@@ -51,6 +69,21 @@ export interface LabEntry {
 const SOURCE_URLS = { 'fastnear-rpc-validators': 'https://rpc.fastnear.com' };
 const STARTER = { figmaName: 'Petals / Starter question', figmaNode: '52:1866' };
 const SECONDARY = { figmaName: 'Petals / Button secondary', figmaNode: '52:1869' };
+
+const DONE: Done = {
+  turns: 3,
+  model: 'deepseek-ai/DeepSeek-V4.1-Flash-1017',
+  fallback_used: false,
+  tokens: { in: 0, out: 0 },
+  cost_usd: 0.0012,
+};
+const atRest = { question: '', runId: null, busy: false, recorded: false };
+const drawn = () => {
+  const { svg, petals } = golden('near-validators-default').rendered;
+  return { svg, petals };
+};
+const inTurn = (turn: Parameters<typeof threadView>[0]['turn'], busy = true, lostAgain = false) =>
+  threadView({ items: [], busy, runId: 'run', turn, lostAgain, recorded: false });
 
 export const registry: LabEntry[] = [
   {
@@ -185,6 +218,174 @@ export const registry: LabEntry[] = [
         </Surface>
       ),
     })),
+  },
+  {
+    id: 'Thread',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/Thread.tsx',
+    states: [
+      {
+        name: 'a whole turn',
+        wide: true,
+        render: () => (
+          <Thread
+            rows={[...TURN_ROWS, flowerRow()]}
+            renderFlower={(row) => (
+              <FlowerCard key={row.key} row={row} drawn={drawn()} failed={null} />
+            )}
+          />
+        ),
+      },
+      {
+        name: 'an error',
+        wide: true,
+        render: () => (
+          <Thread
+            rows={[{ kind: 'error', key: 'error', text: 'code: A message from the run.' }]}
+            renderFlower={() => null}
+          />
+        ),
+      },
+      ...(['sending', 'accepted', 'working'] as const).map((turn) => ({
+        name: turn,
+        wide: true,
+        render: () => <Thread rows={inTurn(turn)} renderFlower={() => null} />,
+      })),
+      {
+        name: 'lost',
+        wide: true,
+        render: () => <Thread rows={inTurn('lost', false)} renderFlower={() => null} />,
+      },
+      {
+        name: 'lost, following again',
+        wide: true,
+        render: () => <Thread rows={inTurn('lost')} renderFlower={() => null} />,
+      },
+      {
+        name: 'lost twice',
+        wide: true,
+        render: () => <Thread rows={inTurn('lost', false, true)} renderFlower={() => null} />,
+      },
+    ],
+  },
+  {
+    id: 'Composer',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/Composer.tsx',
+    states: [
+      { name: 'empty', wide: true, render: () => <LabComposer view={composerView(atRest)} /> },
+      {
+        name: 'typing',
+        wide: true,
+        render: () => (
+          <LabComposer view={composerView({ ...atRest, question: 'Who decides in this DAO?' })} />
+        ),
+      },
+      {
+        name: 'working',
+        wide: true,
+        render: () => <LabComposer view={composerView({ ...atRest, busy: true })} />,
+      },
+      {
+        name: 'a follow-up, with the run’s link',
+        wide: true,
+        render: () => <LabComposer view={composerView({ ...atRest, runId: 'run-id' })} />,
+      },
+      {
+        name: 'recorded',
+        wide: true,
+        render: () => <LabComposer view={composerView({ ...atRest, recorded: true })} />,
+      },
+    ],
+  },
+  {
+    id: 'Steps',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/Steps.tsx',
+    states: [
+      {
+        name: 'each kind',
+        wide: true,
+        render: () => <Steps summary="2 tool calls" steps={STEPS} />,
+      },
+    ],
+  },
+  {
+    id: 'FlowerCard',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/FlowerCard.tsx',
+    states: [
+      {
+        name: 'drawing',
+        wide: true,
+        render: () => <FlowerCard row={flowerRow()} drawn={null} failed={null} />,
+      },
+      {
+        name: 'could not be drawn',
+        wide: true,
+        render: () => (
+          <FlowerCard row={flowerRow()} drawn={null} failed="A message from the run." />
+        ),
+      },
+      {
+        name: 'drawn, with its links',
+        wide: true,
+        render: () => <FlowerCard row={flowerRow()} drawn={drawn()} failed={null} />,
+      },
+      {
+        name: 'drawn, already linked from the answer',
+        wide: true,
+        render: () => (
+          <FlowerCard
+            row={flowerRow({ showLink: false, publishUrl: undefined })}
+            drawn={drawn()}
+            failed={null}
+          />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'AnsweredBy',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/AnsweredBy.tsx',
+    states: [
+      {
+        name: 'recorded',
+        wide: true,
+        render: () => <AnsweredBy line={answeredBy({ ...DONE, model: 'recorded' }, null)} />,
+      },
+      {
+        name: 'no model',
+        wide: true,
+        render: () => <AnsweredBy line={answeredBy({ ...DONE, turns: 0 }, null)} />,
+      },
+      {
+        name: 'no signature',
+        wide: true,
+        render: () => <AnsweredBy line={answeredBy(DONE, null)} />,
+      },
+      {
+        name: 'an enclave signature',
+        wide: true,
+        render: () => <AnsweredBy line={answeredBy(DONE, signature())} />,
+      },
+      {
+        name: 'a fallback model',
+        wide: true,
+        render: () => <AnsweredBy line={answeredBy({ ...DONE, fallback_used: true }, null)} />,
+      },
+    ],
   },
   {
     id: 'Flower',
@@ -401,6 +602,5 @@ export const registry: LabEntry[] = [
 /** Exported by components/ but not drawn here, each for a stated reason. */
 export const NOT_IN_LAB: Record<string, string> = {
   AgentHome: 'a server page: it fetches, so it has no state to show from props',
-  Chat: 'being split by T178; its views join when they exist',
-  AnsweredBy: 'part of Chat.tsx, being split by T178',
+  Chat: 'wires the ViewModel to its views, and each of those views is here',
 };
