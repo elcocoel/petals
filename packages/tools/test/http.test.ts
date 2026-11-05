@@ -165,7 +165,18 @@ describe('SSE, bodies, health', () => {
       llm: 'recorded',
       version: 'api/v1',
       tools_version: 'tools/v1',
+      commit: null,
     });
+  });
+
+  test('health reports the deployed commit, so a deploy can witness it', async () => {
+    const { call } = await setup();
+    process.env.PETAL_COMMIT = 'abc123def456';
+    try {
+      expect((await call('/api/v1/health')).body).toMatchObject({ commit: 'abc123def456' });
+    } finally {
+      delete process.env.PETAL_COMMIT;
+    }
   });
 
   test("a published flower's SVG, immutable", async () => {

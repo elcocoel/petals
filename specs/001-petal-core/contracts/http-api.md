@@ -44,7 +44,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `POST /api/v1/agent/chat` | Petal's agent, SSE (below). Agent route. |
 | `GET /api/v1/agent/runs/:id` | a stored run: `{ run_id, status: "running" \| "done" \| "failed", messages, events, flower? }`; with `Accept: text/event-stream`, replays stored events, then streams new ones until `done`. Agent route. |
 | `GET /api/v1/attestations/:sha256` | the NEAR AI attestation report Petal stored for a model signature (`report_sha256`), `application/json`, immutable cache headers. Agent route. |
-| `GET /api/v1/health` | `{ ok, map: "up"|"down"|"mirror", llm: "up"|"down"|"recorded", version }` |
+| `GET /api/v1/health` | `{ ok, map: "up"|"down"|"mirror", llm: "up"|"down"|"recorded", version, commit }`; `commit` is what a deploy witnesses, null locally |
 | `ALL /mcp` | MCP Streamable HTTP, stateless |
 
 ## Agent chat (SSE)
