@@ -2,6 +2,9 @@
 // figmaNode are how an agent finds the matching frame by hand; null means Figma has none yet. A test
 // holds this list to what components/ exports (apps/web/test/lab-registry.test.ts).
 //
+// Biggest first, in the page's order: Sections, Blocks, Controls and Marks are what the landing page's
+// imports reach; the other groups aren't on it and stay closed on the page.
+//
 // QuotePanel, PublishFlow, CopyPrompt and Flower still keep their later states in hooks, so only the
 // first state shows here until they take them as props, as the chat's views do. Their controls are
 // live on the page.
@@ -111,13 +114,15 @@ export interface LabState {
 export interface LabEntry {
   id: string;
   group:
-    | 'Primitives'
+    | 'Sections'
+    | 'Blocks'
+    | 'Controls'
+    | 'Marks'
     | 'The workspace'
     | 'The conversation'
     | 'The flower'
     | 'Reading'
-    | 'Actions'
-    | 'Landing';
+    | 'Actions';
   figmaName: string | null;
   figmaNode: string | null;
   source: string;
@@ -156,7 +161,7 @@ const section = (
   render: () => ReactNode,
 ): LabEntry => ({
   id,
-  group: 'Landing',
+  group: 'Sections',
   figmaName: null,
   figmaNode: null,
   source,
@@ -222,8 +227,464 @@ const ICONS: IconName[] = ['home', 'plus', 'gallery', 'connect'];
 
 export const registry: LabEntry[] = [
   {
+    id: 'Nav',
+    group: 'Sections',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Nav.tsx',
+    states: [
+      {
+        name: 'the one nav',
+        wide: true,
+        figmaName: 'Nav',
+        figmaNode: '66:2181',
+        render: () => <Nav />,
+      },
+    ],
+  },
+  section('Hero', 'apps/web/components/landing/Hero.tsx', 'Hero', '66:2188', () => <Hero />),
+  section(
+    'FlowerRead',
+    'apps/web/components/landing/FlowerRead.tsx',
+    'A flower, already read',
+    '66:2232',
+    () => <FlowerRead />,
+  ),
+  section(
+    'HowItWorks',
+    'apps/web/components/landing/HowItWorks.tsx',
+    'How it works',
+    '66:2268',
+    () => <HowItWorks />,
+  ),
+  section(
+    'Questions',
+    'apps/web/components/landing/Questions.tsx',
+    'Questions Petals answers',
+    '66:2289',
+    () => <Questions />,
+  ),
+  section(
+    'GallerySection',
+    'apps/web/components/landing/GallerySection.tsx',
+    'The atlas',
+    '66:2303',
+    () => <GallerySection />,
+  ),
+  section(
+    'ForBuilders',
+    'apps/web/components/landing/ForBuilders.tsx',
+    'For builders',
+    '66:2316',
+    () => <ForBuilders />,
+  ),
+  section(
+    'ClosingAsk',
+    'apps/web/components/landing/ClosingAsk.tsx',
+    'Closing ask',
+    '66:2336',
+    () => <ClosingAsk />,
+  ),
+  section(
+    'JoinCommunity',
+    'apps/web/components/landing/JoinCommunity.tsx',
+    'Join the community',
+    '66:2346',
+    () => <JoinCommunity />,
+  ),
+  {
+    id: 'Footer',
+    group: 'Sections',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Footer.tsx',
+    states: [
+      {
+        name: 'the footer',
+        wide: true,
+        figmaName: 'Footer',
+        figmaNode: '66:2360',
+        render: () => <Footer />,
+      },
+    ],
+  },
+  {
+    id: 'GalleryCard',
+    group: 'Blocks',
+    figmaName: 'Petals / Atlas card',
+    figmaNode: '52:1876',
+    source: 'apps/web/components/ui/GalleryCard.tsx',
+    states: landingCopy.gallery.cards.map((card, i) => ({
+      name: card.title,
+      render: () => (
+        <GalleryCard
+          thumb={(['blocs', 'even', 'tower'] as const)[i] ?? 'even'}
+          href="#gallerycard"
+          {...card}
+        />
+      ),
+    })),
+  },
+  {
+    id: 'FaqItem',
+    group: 'Blocks',
+    figmaName: 'Petals / FAQ item',
+    figmaNode: '67:2538',
+    source: 'apps/web/components/ui/FaqItem.tsx',
+    surfaces: surfaceNames,
+    states: [
+      {
+        name: 'open',
+        wide: true,
+        render: () => <FaqItem glyph="concentration" {...FAQ} />,
+      },
+      {
+        name: 'closed',
+        wide: true,
+        render: () => <FaqItem glyph="concentration" {...FAQ} open={false} />,
+      },
+    ],
+  },
+  {
+    id: 'Step',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/Step.tsx',
+    states: [
+      {
+        name: 'with a picture',
+        figmaName: 'Step 02',
+        figmaNode: '66:2279',
+        render: () => {
+          const see = landingCopy.howItWorks.steps[1];
+          return (
+            <Step {...see}>
+              <Thumb kind="even" size="step" />
+            </Step>
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: 'Callout',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Callout.tsx',
+    surfaces: surfaceNames,
+    states: [
+      {
+        name: 'with an action',
+        figmaName: 'Agent line',
+        figmaNode: '66:2228',
+        render: () => (
+          <Callout
+            who={landingCopy.hero.callout.who}
+            action={{ label: landingCopy.hero.callout.action, href: '#callout' }}
+          >
+            {landingCopy.hero.callout.text}
+          </Callout>
+        ),
+      },
+      {
+        name: 'compact, without one',
+        figmaName: 'Callout',
+        figmaNode: '67:2529',
+        render: () => (
+          <Callout size="compact" who={landingCopy.howItWorks.stepThree.who}>
+            {landingCopy.howItWorks.stepThree.text}
+          </Callout>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'Transcript',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Transcript.tsx',
+    states: [
+      {
+        name: 'three lines and the cursor',
+        wide: true,
+        figmaName: 'Transcript',
+        figmaNode: '66:2248',
+        render: () => <Transcript {...FIGURE} />,
+      },
+    ],
+  },
+  {
+    id: 'Terminal',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Terminal.tsx',
+    surfaces: surfaceNames,
+    states: [
+      {
+        name: 'each kind of line',
+        wide: true,
+        figmaName: 'Terminal',
+        figmaNode: '66:2325',
+        render: () => <Terminal {...TERMINAL} />,
+      },
+    ],
+  },
+  {
+    id: 'AskBlock',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/AskBlock.tsx',
+    surfaces: surfaceNames,
+    states: [
+      {
+        name: 'with a label',
+        wide: true,
+        render: () => (
+          <AskBlock
+            placeholder={ASK.placeholder}
+            action={ASK.action}
+            starterLabel={landingCopy.hero.starterLabel}
+            starters={landingCopy.hero.starters}
+          />
+        ),
+      },
+      {
+        name: 'without one',
+        wide: true,
+        render: () => (
+          <AskBlock
+            placeholder={ASK.placeholder}
+            action={ASK.action}
+            starters={landingCopy.closing.starters}
+          />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'SectionHead',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/SectionHead.tsx',
+    surfaces: surfaceNames,
+    states: [
+      {
+        name: 'display',
+        wide: true,
+        figmaName: 'Pitch',
+        figmaNode: '66:2189',
+        render: () => (
+          <SectionHead
+            size="display"
+            eyebrow={landingCopy.hero.eyebrow}
+            title={landingCopy.hero.title}
+            body={landingCopy.hero.body}
+          />
+        ),
+      },
+      {
+        name: 'compact, title alone',
+        wide: true,
+        figmaName: 'Ask',
+        figmaNode: '66:2337',
+        render: () => <SectionHead size="compact" title={landingCopy.closing.title} />,
+      },
+      {
+        name: 'title, with a paragraph',
+        wide: true,
+        figmaName: 'Intro',
+        figmaNode: '66:2290',
+        render: () => (
+          <SectionHead
+            eyebrow={landingCopy.questions.eyebrow}
+            title={landingCopy.questions.title}
+            body={landingCopy.questions.body}
+          />
+        ),
+      },
+      {
+        name: 'title, no paragraph',
+        wide: true,
+        render: () => (
+          <SectionHead eyebrow={landingCopy.gallery.eyebrow} title={landingCopy.gallery.title} />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'Section',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Section.tsx',
+    states: surfaceNames.map((kind) => ({
+      name: kind,
+      wide: true,
+      render: () => (
+        <Section kind={kind}>
+          <Caption>{landingCopy.gallery.caption}</Caption>
+        </Section>
+      ),
+    })),
+  },
+  {
+    id: 'ActionRow',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ActionRow.tsx',
+    surfaces: surfaceNames,
+    states: [
+      {
+        name: 'a button and a link',
+        figmaName: 'CTA',
+        figmaNode: '66:2265',
+        render: () => (
+          <ActionRow>
+            <Button href="#actionrow">{landingCopy.howItWorks.ask}</Button>
+            <TextLink href="#actionrow" arrow>
+              {landingCopy.howItWorks.gallery}
+            </TextLink>
+          </ActionRow>
+        ),
+      },
+      {
+        name: 'two buttons',
+        figmaName: 'CTAs',
+        figmaNode: '66:2354',
+        render: () => (
+          <ActionRow gap="tight">
+            <Button href="#actionrow">{landingCopy.community.join}</Button>
+            <Button variant="secondary" href="#actionrow">
+              {landingCopy.community.support}
+            </Button>
+          </ActionRow>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'MetaRow',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/MetaRow.tsx',
+    surfaces: surfaceNames,
+    states: [
+      {
+        name: 'two captions',
+        wide: true,
+        render: () => <MetaRow start={FIGURE.start} end={FIGURE.end} />,
+      },
+    ],
+  },
+  {
+    id: 'AnnotatedFlower',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/AnnotatedFlower.tsx',
+    states: [
+      {
+        name: 'as designed',
+        wide: true,
+        figmaName: 'Figure · annotated flower',
+        figmaNode: '66:2206',
+        render: () => <AnnotatedFlower />,
+      },
+    ],
+  },
+  {
+    id: 'HeroesStrip',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/HeroesStrip.tsx',
+    states: [
+      {
+        name: 'the first one current',
+        figmaName: 'Heroes strip',
+        figmaNode: '66:2396',
+        render: () => <HeroesStrip thumbs={['blocs', 'even', 'tower', 'blocs', 'even']} />,
+      },
+    ],
+  },
+  {
+    id: 'AskBox',
+    group: 'Controls',
+    figmaName: 'Petals / Ask box',
+    figmaNode: '52:1861',
+    source: 'apps/web/components/ui/AskBox.tsx',
+    surfaces: surfaceNames,
+    states: [
+      {
+        name: 'empty',
+        wide: true,
+        render: () => (
+          <AskBox label="Ask" placeholder="Ask about any network, or paste an address." />
+        ),
+      },
+      {
+        name: 'filled',
+        wide: true,
+        render: () => (
+          <AskBox
+            label="Ask"
+            placeholder="Ask about any network, or paste an address."
+            defaultValue="Who decides in NEAR’s House of Stake?"
+          />
+        ),
+      },
+      {
+        name: 'disabled',
+        wide: true,
+        render: () => (
+          <AskBox label="Ask" placeholder="Ask about any network, or paste an address." disabled />
+        ),
+      },
+      {
+        name: 'small',
+        wide: true,
+        figmaName: 'Petals / Ask box',
+        figmaNode: '67:2512',
+        render: () => (
+          <AskBox label="Ask" placeholder="Who decides in this DAO?" size="small" to="#askbox" />
+        ),
+      },
+      {
+        name: 'composer, nothing to ask yet',
+        wide: true,
+        figmaName: 'Question composer',
+        figmaNode: '39:930',
+        render: () => (
+          <AskBox size="composer" label="Ask" placeholder="Ask about this wallet…" canAsk={false} />
+        ),
+      },
+      {
+        name: 'composer, filled',
+        wide: true,
+        figmaName: 'Question composer',
+        figmaNode: '39:930',
+        render: () => (
+          <AskBox
+            size="composer"
+            label="Ask"
+            placeholder="Ask about this wallet…"
+            defaultValue="Who is behind this account?"
+          />
+        ),
+      },
+    ],
+  },
+  {
     id: 'Button',
-    group: 'Primitives',
+    group: 'Controls',
     figmaName: 'Petals / Button',
     figmaNode: '23:161',
     source: 'apps/web/components/ui/Button.tsx',
@@ -313,7 +774,7 @@ export const registry: LabEntry[] = [
   },
   {
     id: 'TextLink',
-    group: 'Primitives',
+    group: 'Controls',
     figmaName: 'Petals / Link',
     figmaNode: '23:159',
     source: 'apps/web/components/ui/TextLink.tsx',
@@ -359,53 +820,8 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'Arrow',
-    group: 'Primitives',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/Arrow.tsx',
-    surfaces: surfaceNames,
-    states: [
-      { name: 'plain', render: () => <Arrow /> },
-      { name: 'accent', render: () => <Arrow accent /> },
-      { name: 'back', render: () => <Arrow back /> },
-    ],
-  },
-  {
-    id: 'Cell',
-    group: 'Primitives',
-    figmaName: 'Petals / Cell',
-    figmaNode: '12:16',
-    source: 'apps/web/components/ui/Cell.tsx',
-    surfaces: surfaceNames,
-    states: [
-      { name: 'small, beside a speaker', render: () => <Cell /> },
-      { name: 'medium, beside a status', render: () => <Cell size="medium" /> },
-      { name: 'large, opening a panel', render: () => <Cell size="large" /> },
-      { name: 'as wide as its parent', wide: true, render: () => <Cell size="fill" /> },
-    ],
-  },
-  {
-    id: 'CellRepeat',
-    group: 'Primitives',
-    figmaName: 'Petals / Cell repeat',
-    figmaNode: '24:209',
-    source: 'apps/web/components/ui/Cell.tsx',
-    surfaces: surfaceNames,
-    states: [{ name: 'as wide as its parent', wide: true, render: () => <CellRepeat /> }],
-  },
-  {
-    id: 'Icon',
-    group: 'Primitives',
-    figmaName: 'Workspace / Navigation rail',
-    figmaNode: '43:748',
-    source: 'apps/web/components/ui/Icon.tsx',
-    surfaces: surfaceNames,
-    states: ICONS.map((name) => ({ name, render: () => <Icon name={name} /> })),
-  },
-  {
     id: 'Wordmark',
-    group: 'Primitives',
+    group: 'Marks',
     figmaName: 'Petals / Wordmark',
     figmaNode: '12:12',
     source: 'apps/web/components/ui/Wordmark.tsx',
@@ -423,387 +839,47 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'AskBox',
-    group: 'Primitives',
-    figmaName: 'Petals / Ask box',
-    figmaNode: '52:1861',
-    source: 'apps/web/components/ui/AskBox.tsx',
+    id: 'Cell',
+    group: 'Marks',
+    figmaName: 'Petals / Cell',
+    figmaNode: '12:16',
+    source: 'apps/web/components/ui/Cell.tsx',
     surfaces: surfaceNames,
     states: [
-      {
-        name: 'empty',
-        wide: true,
-        render: () => (
-          <AskBox label="Ask" placeholder="Ask about any network, or paste an address." />
-        ),
-      },
-      {
-        name: 'filled',
-        wide: true,
-        render: () => (
-          <AskBox
-            label="Ask"
-            placeholder="Ask about any network, or paste an address."
-            defaultValue="Who decides in NEAR’s House of Stake?"
-          />
-        ),
-      },
-      {
-        name: 'disabled',
-        wide: true,
-        render: () => (
-          <AskBox label="Ask" placeholder="Ask about any network, or paste an address." disabled />
-        ),
-      },
-      {
-        name: 'small',
-        wide: true,
-        figmaName: 'Petals / Ask box',
-        figmaNode: '67:2512',
-        render: () => (
-          <AskBox label="Ask" placeholder="Who decides in this DAO?" size="small" to="#askbox" />
-        ),
-      },
-      {
-        name: 'composer, nothing to ask yet',
-        wide: true,
-        figmaName: 'Question composer',
-        figmaNode: '39:930',
-        render: () => (
-          <AskBox size="composer" label="Ask" placeholder="Ask about this wallet…" canAsk={false} />
-        ),
-      },
-      {
-        name: 'composer, filled',
-        wide: true,
-        figmaName: 'Question composer',
-        figmaNode: '39:930',
-        render: () => (
-          <AskBox
-            size="composer"
-            label="Ask"
-            placeholder="Ask about this wallet…"
-            defaultValue="Who is behind this account?"
-          />
-        ),
-      },
+      { name: 'small, beside a speaker', render: () => <Cell /> },
+      { name: 'medium, beside a status', render: () => <Cell size="medium" /> },
+      { name: 'large, opening a panel', render: () => <Cell size="large" /> },
+      { name: 'as wide as its parent', wide: true, render: () => <Cell size="fill" /> },
     ],
   },
   {
-    id: 'Eyebrow',
-    group: 'Primitives',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/Eyebrow.tsx',
+    id: 'CellRepeat',
+    group: 'Marks',
+    figmaName: 'Petals / Cell repeat',
+    figmaNode: '24:209',
+    source: 'apps/web/components/ui/Cell.tsx',
     surfaces: surfaceNames,
-    states: [
-      { name: 'default', render: () => <Eyebrow>01 ONE PETAL HOLDS 18% OF THE SAY</Eyebrow> },
-      { name: 'above a section', render: () => <Eyebrow tone="section">FOR BUILDERS</Eyebrow> },
-    ],
+    states: [{ name: 'as wide as its parent', wide: true, render: () => <CellRepeat /> }],
   },
   {
-    id: 'Surface',
-    group: 'Primitives',
+    id: 'Thumb',
+    group: 'Marks',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/ui/Surface.tsx',
-    states: surfaceNames.map((kind) => ({
-      name: kind,
-      render: () => (
-        <Surface kind={kind} className="border border-hairline p-block-gap">
-          The {kind} surface
-        </Surface>
-      ),
-    })),
-  },
-  {
-    id: 'Caption',
-    group: 'Primitives',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/Caption.tsx',
+    source: 'apps/web/components/ui/Thumb.tsx',
     surfaces: surfaceNames,
-    states: [
-      { name: 'a line', render: () => <Caption>{landingCopy.community.caption}</Caption> },
-      {
-        name: 'under a figure',
-        render: () => <Caption as="figcaption">{landingCopy.hero.caption}</Caption>,
-      },
-    ],
-  },
-  {
-    id: 'MetaRow',
-    group: 'Primitives',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/MetaRow.tsx',
-    surfaces: surfaceNames,
-    states: [
-      {
-        name: 'two captions',
-        wide: true,
-        render: () => <MetaRow start={FIGURE.start} end={FIGURE.end} />,
-      },
-    ],
-  },
-  {
-    id: 'ActionRow',
-    group: 'Primitives',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/ActionRow.tsx',
-    surfaces: surfaceNames,
-    states: [
-      {
-        name: 'a button and a link',
-        figmaName: 'CTA',
-        figmaNode: '66:2265',
-        render: () => (
-          <ActionRow>
-            <Button href="#actionrow">{landingCopy.howItWorks.ask}</Button>
-            <TextLink href="#actionrow" arrow>
-              {landingCopy.howItWorks.gallery}
-            </TextLink>
-          </ActionRow>
-        ),
-      },
-      {
-        name: 'two buttons',
-        figmaName: 'CTAs',
-        figmaNode: '66:2354',
-        render: () => (
-          <ActionRow gap="tight">
-            <Button href="#actionrow">{landingCopy.community.join}</Button>
-            <Button variant="secondary" href="#actionrow">
-              {landingCopy.community.support}
-            </Button>
-          </ActionRow>
-        ),
-      },
-    ],
-  },
-  {
-    id: 'AskBlock',
-    group: 'Landing',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/AskBlock.tsx',
-    surfaces: surfaceNames,
-    states: [
-      {
-        name: 'with a label',
-        wide: true,
-        render: () => (
-          <AskBlock
-            placeholder={ASK.placeholder}
-            action={ASK.action}
-            starterLabel={landingCopy.hero.starterLabel}
-            starters={landingCopy.hero.starters}
-          />
-        ),
-      },
-      {
-        name: 'without one',
-        wide: true,
-        render: () => (
-          <AskBlock
-            placeholder={ASK.placeholder}
-            action={ASK.action}
-            starters={landingCopy.closing.starters}
-          />
-        ),
-      },
-    ],
-  },
-  {
-    id: 'Section',
-    group: 'Primitives',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/Section.tsx',
-    states: surfaceNames.map((kind) => ({
-      name: kind,
-      wide: true,
-      render: () => (
-        <Section kind={kind}>
-          <Caption>{landingCopy.gallery.caption}</Caption>
-        </Section>
-      ),
-    })),
-  },
-  {
-    id: 'SectionHead',
-    group: 'Primitives',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/SectionHead.tsx',
-    surfaces: surfaceNames,
-    states: [
-      {
-        name: 'display',
-        wide: true,
-        figmaName: 'Pitch',
-        figmaNode: '66:2189',
-        render: () => (
-          <SectionHead
-            size="display"
-            eyebrow={landingCopy.hero.eyebrow}
-            title={landingCopy.hero.title}
-            body={landingCopy.hero.body}
-          />
-        ),
-      },
-      {
-        name: 'compact, title alone',
-        wide: true,
-        figmaName: 'Ask',
-        figmaNode: '66:2337',
-        render: () => <SectionHead size="compact" title={landingCopy.closing.title} />,
-      },
-      {
-        name: 'title, with a paragraph',
-        wide: true,
-        figmaName: 'Intro',
-        figmaNode: '66:2290',
-        render: () => (
-          <SectionHead
-            eyebrow={landingCopy.questions.eyebrow}
-            title={landingCopy.questions.title}
-            body={landingCopy.questions.body}
-          />
-        ),
-      },
-      {
-        name: 'title, no paragraph',
-        wide: true,
-        render: () => (
-          <SectionHead eyebrow={landingCopy.gallery.eyebrow} title={landingCopy.gallery.title} />
-        ),
-      },
-    ],
-  },
-  {
-    id: 'Numeral',
-    group: 'Primitives',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/Numeral.tsx',
-    surfaces: surfaceNames,
-    states: [
-      {
-        name: 'default',
-        figmaName: '01',
-        figmaNode: '66:2275',
-        render: () => <Numeral>01</Numeral>,
-      },
-    ],
-  },
-  {
-    id: 'Callout',
-    group: 'Primitives',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/Callout.tsx',
-    surfaces: surfaceNames,
-    states: [
-      {
-        name: 'with an action',
-        figmaName: 'Agent line',
-        figmaNode: '66:2228',
-        render: () => (
-          <Callout
-            who={landingCopy.hero.callout.who}
-            action={{ label: landingCopy.hero.callout.action, href: '#callout' }}
-          >
-            {landingCopy.hero.callout.text}
-          </Callout>
-        ),
-      },
-      {
-        name: 'compact, without one',
-        figmaName: 'Callout',
-        figmaNode: '67:2529',
-        render: () => (
-          <Callout size="compact" who={landingCopy.howItWorks.stepThree.who}>
-            {landingCopy.howItWorks.stepThree.text}
-          </Callout>
-        ),
-      },
-    ],
-  },
-  {
-    id: 'Transcript',
-    group: 'Landing',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/Transcript.tsx',
-    states: [
-      {
-        name: 'three lines and the cursor',
-        wide: true,
-        figmaName: 'Transcript',
-        figmaNode: '66:2248',
-        render: () => <Transcript {...FIGURE} />,
-      },
-    ],
-  },
-  {
-    id: 'Terminal',
-    group: 'Landing',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/Terminal.tsx',
-    surfaces: surfaceNames,
-    states: [
-      {
-        name: 'each kind of line',
-        wide: true,
-        figmaName: 'Terminal',
-        figmaNode: '66:2325',
-        render: () => <Terminal {...TERMINAL} />,
-      },
-    ],
-  },
-  {
-    id: 'FaqItem',
-    group: 'Landing',
-    figmaName: 'Petals / FAQ item',
-    figmaNode: '67:2538',
-    source: 'apps/web/components/ui/FaqItem.tsx',
-    surfaces: surfaceNames,
-    states: [
-      {
-        name: 'open',
-        wide: true,
-        render: () => <FaqItem glyph="concentration" {...FAQ} />,
-      },
-      {
-        name: 'closed',
-        wide: true,
-        render: () => <FaqItem glyph="concentration" {...FAQ} open={false} />,
-      },
-    ],
-  },
-  {
-    id: 'GalleryCard',
-    group: 'Landing',
-    figmaName: 'Petals / Atlas card',
-    figmaNode: '52:1876',
-    source: 'apps/web/components/ui/GalleryCard.tsx',
-    states: landingCopy.gallery.cards.map((card, i) => ({
-      name: card.title,
-      render: () => (
-        <GalleryCard
-          thumb={(['blocs', 'even', 'tower'] as const)[i] ?? 'even'}
-          href="#gallerycard"
-          {...card}
-        />
-      ),
-    })),
+    states: THUMBS.flatMap(({ kind, name, node }) =>
+      (['strip', 'step', 'card'] as const).map((size) => ({
+        name: `${name}, ${size}`,
+        figmaName: `Petals / Thumb / ${name}`,
+        figmaNode: node,
+        render: () => <Thumb kind={kind} size={size} />,
+      })),
+    ),
   },
   {
     id: 'Glyph',
-    group: 'Primitives',
+    group: 'Marks',
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/ui/Glyph.tsx',
@@ -824,24 +900,46 @@ export const registry: LabEntry[] = [
     ]),
   },
   {
-    id: 'Thumb',
-    group: 'Primitives',
+    id: 'Numeral',
+    group: 'Marks',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/ui/Thumb.tsx',
+    source: 'apps/web/components/ui/Numeral.tsx',
     surfaces: surfaceNames,
-    states: THUMBS.flatMap(({ kind, name, node }) =>
-      (['strip', 'step', 'card'] as const).map((size) => ({
-        name: `${name}, ${size}`,
-        figmaName: `Petals / Thumb / ${name}`,
-        figmaNode: node,
-        render: () => <Thumb kind={kind} size={size} />,
-      })),
-    ),
+    states: [
+      {
+        name: 'default',
+        figmaName: '01',
+        figmaNode: '66:2275',
+        render: () => <Numeral>01</Numeral>,
+      },
+    ],
+  },
+  {
+    id: 'Icon',
+    group: 'Marks',
+    figmaName: 'Workspace / Navigation rail',
+    figmaNode: '43:748',
+    source: 'apps/web/components/ui/Icon.tsx',
+    surfaces: surfaceNames,
+    states: ICONS.map((name) => ({ name, render: () => <Icon name={name} /> })),
+  },
+  {
+    id: 'Arrow',
+    group: 'Marks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Arrow.tsx',
+    surfaces: surfaceNames,
+    states: [
+      { name: 'plain', render: () => <Arrow /> },
+      { name: 'accent', render: () => <Arrow accent /> },
+      { name: 'back', render: () => <Arrow back /> },
+    ],
   },
   {
     id: 'Drawing',
-    group: 'Primitives',
+    group: 'Marks',
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/ui/Drawing.tsx',
@@ -877,36 +975,46 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'Nav',
-    group: 'Primitives',
+    id: 'Eyebrow',
+    group: 'Marks',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/ui/Nav.tsx',
+    source: 'apps/web/components/ui/Eyebrow.tsx',
+    surfaces: surfaceNames,
     states: [
+      { name: 'default', render: () => <Eyebrow>01 ONE PETAL HOLDS 18% OF THE SAY</Eyebrow> },
+      { name: 'above a section', render: () => <Eyebrow tone="section">FOR BUILDERS</Eyebrow> },
+    ],
+  },
+  {
+    id: 'Caption',
+    group: 'Marks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Caption.tsx',
+    surfaces: surfaceNames,
+    states: [
+      { name: 'a line', render: () => <Caption>{landingCopy.community.caption}</Caption> },
       {
-        name: 'the one nav',
-        wide: true,
-        figmaName: 'Nav',
-        figmaNode: '66:2181',
-        render: () => <Nav />,
+        name: 'under a figure',
+        render: () => <Caption as="figcaption">{landingCopy.hero.caption}</Caption>,
       },
     ],
   },
   {
-    id: 'Footer',
-    group: 'Landing',
+    id: 'Surface',
+    group: 'Marks',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/ui/Footer.tsx',
-    states: [
-      {
-        name: 'the footer',
-        wide: true,
-        figmaName: 'Footer',
-        figmaNode: '66:2360',
-        render: () => <Footer />,
-      },
-    ],
+    source: 'apps/web/components/ui/Surface.tsx',
+    states: surfaceNames.map((kind) => ({
+      name: kind,
+      render: () => (
+        <Surface kind={kind} className="border border-hairline p-block-gap">
+          The {kind} surface
+        </Surface>
+      ),
+    })),
   },
   {
     id: 'WorkspaceHeader',
@@ -1591,105 +1699,11 @@ export const registry: LabEntry[] = [
       },
     ],
   },
-  section('Hero', 'apps/web/components/landing/Hero.tsx', 'Hero', '66:2188', () => <Hero />),
-  section(
-    'AnnotatedFlower',
-    'apps/web/components/landing/AnnotatedFlower.tsx',
-    'Figure · annotated flower',
-    '66:2206',
-    () => <AnnotatedFlower />,
-  ),
-  {
-    id: 'HeroesStrip',
-    group: 'Landing',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/landing/HeroesStrip.tsx',
-    states: [
-      {
-        name: 'the first one current',
-        figmaName: 'Heroes strip',
-        figmaNode: '66:2396',
-        render: () => <HeroesStrip thumbs={['blocs', 'even', 'tower', 'blocs', 'even']} />,
-      },
-    ],
-  },
-  section(
-    'FlowerRead',
-    'apps/web/components/landing/FlowerRead.tsx',
-    'A flower, already read',
-    '66:2232',
-    () => <FlowerRead />,
-  ),
-  {
-    id: 'Step',
-    group: 'Landing',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/landing/Step.tsx',
-    states: [
-      {
-        name: 'with a picture',
-        figmaName: 'Step 02',
-        figmaNode: '66:2279',
-        render: () => {
-          const see = landingCopy.howItWorks.steps[1];
-          return (
-            <Step {...see}>
-              <Thumb kind="even" size="step" />
-            </Step>
-          );
-        },
-      },
-    ],
-  },
-  section(
-    'HowItWorks',
-    'apps/web/components/landing/HowItWorks.tsx',
-    'How it works',
-    '66:2268',
-    () => <HowItWorks />,
-  ),
-  section(
-    'Questions',
-    'apps/web/components/landing/Questions.tsx',
-    'Questions Petals answers',
-    '66:2289',
-    () => <Questions />,
-  ),
-  section(
-    'GallerySection',
-    'apps/web/components/landing/GallerySection.tsx',
-    'The atlas',
-    '66:2303',
-    () => <GallerySection />,
-  ),
-  section(
-    'ForBuilders',
-    'apps/web/components/landing/ForBuilders.tsx',
-    'For builders',
-    '66:2316',
-    () => <ForBuilders />,
-  ),
-  section(
-    'ClosingAsk',
-    'apps/web/components/landing/ClosingAsk.tsx',
-    'Closing ask',
-    '66:2336',
-    () => <ClosingAsk />,
-  ),
-  section(
-    'JoinCommunity',
-    'apps/web/components/landing/JoinCommunity.tsx',
-    'Join the community',
-    '66:2346',
-    () => <JoinCommunity />,
-  ),
 ];
 
 /** Exported by components/ but not drawn here, each for a stated reason. */
 export const NOT_IN_LAB: Record<string, string> = {
   AgentHome: 'a server page: it fetches, so it has no state to show from props',
   Workspace: 'wires the ViewModel to its views, and each of those views is here',
-  SiteChrome: 'the site’s own nav, around this page already',
+  SiteChrome: 'the Nav, drawn here, around a reading column; it holds no state of its own',
 };
