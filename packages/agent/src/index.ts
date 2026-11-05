@@ -61,7 +61,7 @@ export function nearAiClient(cfg: {
   return createNearAiClient(cfg);
 }
 
-/** /api/v1/agent/chat, /api/v1/agent/runs/:id, /api/v1/attestations/:sha256 */
+/** /api/v1/agent/chat, /api/v1/agent/runs/:id, its /stop, /api/v1/attestations/:sha256 */
 export function agentRoutes(deps: {
   tools: ToolContext;
   llm: LlmClient;

@@ -4,6 +4,7 @@
 // its hash. Data gathered once is kept, for everyone (constitution IV).
 import { promisify } from 'node:util';
 import { gunzip as gunzipCb, gzip as gzipCb } from 'node:zlib';
+import { runSignal } from '@petal/core';
 import type { Snapshot } from '@petal/core/types';
 import type { SnapshotStore } from '../index.ts';
 import { encodeSnapshot } from './file-store.ts';
@@ -71,7 +72,7 @@ export function vercelBlob(token: string): BlobClient {
       const { head, BlobNotFoundError } = await import('@vercel/blob');
       try {
         const { url } = await head(path, { token });
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: runSignal() });
         return res.ok ? new Uint8Array(await res.arrayBuffer()) : null;
       } catch (e) {
         if (e instanceof BlobNotFoundError) return null;

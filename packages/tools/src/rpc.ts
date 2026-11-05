@@ -1,5 +1,6 @@
 // A minimal NEAR JSON-RPC `query` client: what verifyNep413 needs (view_access_key). Errors look
 // like near-api-js's (a `type` such as AccessKeyDoesNotExist), so either can stand behind `Rpc`.
+import { runSignal } from '@petal/core';
 import type { Rpc, RpcQuery } from '@petal/near/auth';
 
 export const RPC_URLS = {
@@ -32,7 +33,7 @@ export function jsonRpc(
         method: 'POST',
         headers,
         body: JSON.stringify({ jsonrpc: '2.0', id: 'petal', method: 'query', params }),
-        signal: AbortSignal.timeout(timeoutMs),
+        signal: runSignal(AbortSignal.timeout(timeoutMs)),
       });
       if (!res.ok) throw rpcError(`NEAR RPC answered ${res.status}`, 'RpcHttpError');
       const body = (await res.json()) as { result?: unknown; error?: RpcErrorBody };

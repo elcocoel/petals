@@ -10,6 +10,7 @@
 // No target is named in this file. What Petal holds comes from its modules and stored snapshots; the
 // rest from public sources, keyless, at most MAX_CALLS calls and TIMEOUT_MS each. A source that is
 // down costs its own answer only, and `sources` says who answered.
+import { runSignal } from '@petal/core';
 import type { IndexRow, Params } from '@petal/core/types';
 import { type ContractIdentity, EVM_CHAINS, identifyContracts, TOKEN_PROGRAM } from '@petal/inputs';
 import { defineTool, type PetalTool } from '../define.ts';
@@ -221,7 +222,7 @@ const getJson = async <T>(f: typeof globalThis.fetch, url: string, init?: Reques
       'user-agent': 'petal/0.1 (keyless public reads)',
       ...init?.headers,
     },
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: runSignal(AbortSignal.timeout(TIMEOUT_MS)),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return (await res.json()) as T;

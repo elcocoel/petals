@@ -3,6 +3,7 @@
 // (EXACT_OUTPUT). A dry quote creates no deposit address, so no money can move. This module never
 // sends a request without `dry: true` and refuses any answer that carries a deposit address.
 // Keyless: 1Click allowed 1,200 dry quotes per 60 s without a JWT on 2026-11-04.
+import { runSignal } from '@petal/core';
 import type { QuoteRequest, QuoteResult } from '@petal/core/types';
 import { describe, NearError } from '../errors.ts';
 import { BASE_USDC, type OneClickQuoteResponse, toQuoteResult } from './fake.ts';
@@ -117,7 +118,7 @@ export async function quote1Click(req: QuoteRequest, deps: QuoteDeps = {}): Prom
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'application/json' },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(deps.timeoutMs ?? 10_000),
+      signal: runSignal(AbortSignal.timeout(deps.timeoutMs ?? 10_000)),
     });
   } catch (e) {
     throw new NearError('source_failed', `1Click quote: ${describe(e)}`, { cause: e });

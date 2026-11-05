@@ -202,7 +202,7 @@ describe('runAgent on the recorded skeleton run', () => {
     const system = llm.requests[0]?.messages[0];
     expect(system?.role).toBe('system');
     expect(system?.content).toMatch(/^# Petal/);
-    expect(system?.content).toMatch(/at most 8 tool rounds and 120 s/);
+    expect(system?.content).toMatch(/at most 8 tool rounds and 300 s/);
   });
 
   test('the contract export runs on the @petal/tools registry (empty until W4 lands)', async () => {

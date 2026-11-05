@@ -5,7 +5,7 @@
 //   POST /v0/history/{receiver}/{writer} { key, include_metadata, limit }, newest first
 //   → { entries: KvRow[], page_token? }; a missing key gives entries: []
 // Rows carry block_timestamp in nanoseconds; MapRow carries milliseconds.
-import { canonicalJson } from '@petal/core';
+import { canonicalJson, runSignal } from '@petal/core';
 import type { MapRow } from '@petal/core/types';
 import { describe, NearError } from '../errors.ts';
 import { KV_URLS } from '../network.ts';
@@ -66,7 +66,7 @@ export function kvClient(network: 'testnet' | 'mainnet', deps: KvDeps = {}): KvC
           method: 'POST',
           headers,
           body: JSON.stringify(body),
-          signal: AbortSignal.timeout(deps.timeoutMs ?? 10_000),
+          signal: runSignal(AbortSignal.timeout(deps.timeoutMs ?? 10_000)),
         });
       } catch (e) {
         throw new NearError('source_failed', `FastData ${path}: ${describe(e)}`, { cause: e });

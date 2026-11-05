@@ -4,6 +4,7 @@
 //
 // The free plan allows 15 queries a minute, and one query returns about 2,000 logs, so about
 // 30,000 logs a minute. The server answers 429 until its window resets; this waits for that.
+import { runSignal } from '@petal/core';
 import { InputError } from '../errors.ts';
 import type { EvmChain } from './chains.ts';
 import type { EvmLog, LogFilter } from './reader.ts';
@@ -69,7 +70,7 @@ export async function* hypersyncLogPages(
           },
           max_num_logs: 100_000,
         }),
-        signal: AbortSignal.timeout(QUERY_TIMEOUT_MS),
+        signal: runSignal(AbortSignal.timeout(QUERY_TIMEOUT_MS)),
       });
     } catch {
       if (++retries > MAX_RETRIES) throw failed(chain, `no answer at block ${next}`);
