@@ -4,6 +4,7 @@
 // coverage of a network Petal can't read yet (purpose sponsor_coverage).
 import type { QuoteResult } from '@petal/core/types';
 import { useState } from 'react';
+import { Button } from './ui/Button.tsx';
 
 const LABEL = 'Dry quote. Paying is not switched on.';
 
@@ -49,9 +50,9 @@ export function QuotePanel({
           ? 'What 1 USD toward a fresh snapshot would cost, paid in USDC from Base through NEAR Intents.'
           : 'What 1 USD toward new coverage would cost, paid in USDC from Base through NEAR Intents.'}
       </p>
-      <button type="button" onClick={ask} disabled={busy}>
+      <Button onClick={ask} disabled={busy}>
         {busy ? 'Asking 1Click…' : 'Get a dry quote'}
-      </button>
+      </Button>
       {error && <p className="error">{error}</p>}
       {quote && (
         <div>

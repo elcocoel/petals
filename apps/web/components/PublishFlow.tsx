@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { type EntryDraft, type Prepared, type Published, proofFrom } from '../lib/publish.ts';
 import { signPrepared } from '../lib/wallet.ts';
+import { Button } from './ui/Button.tsx';
 
 type Step = 'ready' | 'preparing' | 'signing' | 'publishing' | 'done' | 'failed';
 
@@ -81,7 +82,7 @@ export function PublishFlow({
         </p>
       )}
       {step !== 'done' && (
-        <button type="button" onClick={publish} disabled={working}>
+        <Button onClick={publish} disabled={working}>
           {step === 'preparing'
             ? 'Preparing…'
             : step === 'signing'
@@ -89,7 +90,7 @@ export function PublishFlow({
               : step === 'publishing'
                 ? 'Publishing…'
                 : 'Sign in and publish'}
-        </button>
+        </Button>
       )}
       {error && <p className="error">{error}</p>}
       {published && (

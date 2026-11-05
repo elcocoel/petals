@@ -20,6 +20,7 @@
     "typecheck": "tsc -b",
     "golden:update": "PETAL_GOLDEN_UPDATE=1 vitest run --project core",
     "gen:types": "node scripts/gen-types.ts",
+    "tokens": "node packages/tokens/emit.ts",
     "import:spike": "node scripts/import-spike-data.ts",
     "check": "bash scripts/check.sh",
     "prepare": "git config core.hooksPath scripts/git-hooks 2>/dev/null || true"

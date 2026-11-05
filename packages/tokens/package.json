@@ -1,0 +1,15 @@
+{
+  "name": "@petal/tokens",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "The design tokens: one typed source, emitted as CSS and a Tailwind theme, checked for staleness and contrast.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.3.4"
+  }
+}

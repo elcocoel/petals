@@ -20,7 +20,7 @@ export async function AgentHome({
   return (
     <>
       {recorded && (
-        <p style={{ border: '2px solid currentColor', padding: '0.75rem' }}>
+        <p className="border-2 border-primary p-text-gap">
           <strong>Recorded demo. No AI is running.</strong> This plays back one saved run about
           NEAR’s validators. It can’t read a question yet, so there’s nothing to type. The real
           agent switches on once a NEAR AI key is set.

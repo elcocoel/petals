@@ -7,8 +7,20 @@
     "jsx": "react-jsx",
     "types": ["node", "react", "react-dom"]
   },
-  "include": ["app", "components", "lib", "lib/mock/*.json", "scripts", "test", "next.config.ts"],
+  "include": [
+    "app",
+    "components",
+    "lab",
+    "lib",
+    "lib/mock/*.json",
+    "scripts",
+    "test",
+    "next.config.ts"
+  ],
   "references": [
+    {
+      "path": "../../packages/tokens"
+    },
     {
       "path": "../../packages/core"
     },
