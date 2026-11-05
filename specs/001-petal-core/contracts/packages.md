@@ -44,6 +44,9 @@ export function readFlower(spec: Spec, s: Snapshot): Reading;     // the facts a
 export function readingHash(reading: Reading): string;
 export const SKINS: Record<string, Skin>;                         // a reading becomes a drawing; 'render/v1'
 export function renderFlower(spec: Spec, s: Snapshot, o?: RenderOptions): RenderResult;
+// exact decimals, for what counts beside compute_figures (additive, T198)
+export function exactValues(rows: { amount?: string; amount_raw?: string }[]): { values: bigint[]; scale: number };
+export function formatDecimal(v: bigint, s: number): string;
 ```
 
 ## `@petal/inputs` (W2) — reads public sources and disk
@@ -101,6 +104,33 @@ export const mapKeys: {                                 // builders for every ke
 Modules: `@petal/near/map`, `@petal/near/auth`, `@petal/near/pay`. NEAR as a *data source* (RPC reads of validators, DAOs) stays in `@petal/inputs`. Writer keys are read from a file outside the repo (`PETAL_WRITER_KEY_FILE`, under `.secrets/`), never from the repo.
 
 `MapRow` = `{ key, value, writer, receiver, tx_hash, block_height, block_timestamp }`.
+
+## `@petal/relations` (T198) — relations between groups, in an index that can be deleted
+
+Additive. `core` ← `relations` ← `tools`. SQLite through `node:sqlite`, no graph engine (SYS-070). Public derived data only.
+
+```ts
+export interface SnapshotSource { list(): Promise<{ sha256: string }[]>; get(sha256: string): Promise<Snapshot | null> } // @petal/inputs' SnapshotStore fits
+export function stateIndex(stateDir: string): RelationsIndex;     // <stateDir>/index.db, one per process; memory when the folder can't be written
+export class RelationsIndex {
+  constructor(path: string, opts?: { log?: (line: string) => void });
+  answer<T>(source: SnapshotSource, fn: (q: Queries) => T): Promise<T>; // sync with what's stored, then ask; a broken file rebuilds once
+  sync(source: SnapshotSource): Promise<void>;                    // first build, or just the snapshots stored since
+  rebuild(source: SnapshotSource, onSnapshot?: (s) => void): Promise<RebuildReport>; // a new file, renamed into place
+  addSnapshot(sha256: string, s: Snapshot): Promise<void>;
+  fingerprint(): Promise<string>;                                 // a hash of every row: same fingerprint, same answers
+  readonly skipped: SkippedSnapshot[];
+  close(): void;
+}
+export class Queries {                                            // result shapes: tools.md
+  accountGroups(account, { limit? });
+  sharedAccounts(groupA, groupB, { limit? });
+  relatedGroups(group, { by?: 'count' | 'share', limit? });
+  overview({ minShared?, kind?, limit? });
+  path(accountA, accountB, { maxDepth?, budget?, includeInferred? });
+}
+export function groupsOf(s: Snapshot): ProjectedGroup[];          // one snapshot to its groups; pure
+```
 
 ## `@petal/tools` (W4) — one registry, two adapters
 

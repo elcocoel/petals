@@ -194,6 +194,35 @@ export function httpApp(ctx: ToolContext): Hono {
   app.post('/api/v1/publish', limit, async (c) => answer(c, 'publish_flower', await body(c)));
   app.post('/api/v1/quote', limit, async (c) => answer(c, 'quote_payment', await body(c)));
 
+  // -- relations between groups
+  app.get('/api/v1/relations/account-groups', limit, (c) =>
+    answer(c, 'account_groups', pick(c.req.query(), ['account', 'limit'], ['limit'])),
+  );
+  app.get('/api/v1/relations/shared', limit, (c) =>
+    answer(c, 'shared_accounts', pick(c.req.query(), ['group_a', 'group_b', 'limit'], ['limit'])),
+  );
+  app.get('/api/v1/relations/related', limit, (c) =>
+    answer(c, 'related_groups', pick(c.req.query(), ['group', 'by', 'limit'], ['limit'])),
+  );
+  app.get('/api/v1/relations/overview', limit, (c) =>
+    answer(
+      c,
+      'relations_overview',
+      pick(c.req.query(), ['min_shared', 'kind', 'limit'], ['min_shared', 'limit']),
+    ),
+  );
+  app.get('/api/v1/relations/path', limit, (c) => {
+    const q = c.req.query();
+    const numbers = ['max_depth', 'budget'];
+    const input = pick(q, ['account_a', 'account_b', ...numbers], numbers);
+    // true and false become booleans; anything else stays a string for the schema to refuse
+    if (q.include_inferred !== undefined) {
+      const flag = q.include_inferred;
+      input.include_inferred = flag === 'true' ? true : flag === 'false' ? false : flag;
+    }
+    return answer(c, 'power_path', input);
+  });
+
   // -- health and MCP
   app.get('/api/v1/health', async (c) =>
     c.json({

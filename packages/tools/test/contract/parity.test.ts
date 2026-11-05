@@ -63,6 +63,30 @@ describe('every door returns the same JSON', () => {
     }
   });
 
+  test('the relations tools', async () => {
+    const overview = await same('relations_overview', { kind: 'holdings' });
+    const pairs = overview[0]?.pairs as { a: string; b: string; shared: number }[];
+    expect(pairs.length).toBeGreaterThan(0);
+    const { a, b } = pairs[0] as { a: string; b: string };
+    const [shared] = await same('shared_accounts', { group_a: a, group_b: b, limit: 3 });
+    const accounts = (shared as Json).accounts as { account_a: string }[];
+    const account = accounts[0]?.account_a as string;
+    await same('related_groups', { group: a, by: 'share', limit: 3 });
+    await same('account_groups', { account, limit: 5 });
+    await same('power_path', { account_a: account, account_b: account });
+    await same('power_path', {
+      account_a: account,
+      account_b: 'no-such-account-here.near',
+      max_depth: 2,
+    });
+    await same('power_path', { account_a: account, account_b: account, include_inferred: true });
+    // the errors too
+    const [missing] = await same('related_groups', { group: 'no-such-group' });
+    expect(missing?.error).toMatchObject({ code: 'not_found' });
+    const [wrong] = await same('related_groups', { group: a, by: 'size' });
+    expect(wrong?.error).toMatchObject({ code: 'bad_input' });
+  });
+
   test('the same choices give the same spec_sha256 through every door', async () => {
     const choices = { measure: 'validator_stake_current_epoch', segments: 'backers', width: 'r2' };
     const outs = await same('propose_spec', {

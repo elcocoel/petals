@@ -21,10 +21,15 @@ const PHASE_A = [
   'publish_flower',
   'quote_payment',
   'find_target',
+  'account_groups',
+  'shared_accounts',
+  'related_groups',
+  'relations_overview',
+  'power_path',
 ];
 
 describe('registry', () => {
-  test('holds the Phase A tools of tools.md and find_target, once each', () => {
+  test('holds the Phase A tools of tools.md, find_target and the relations tools, once each', () => {
     expect(registry.map((t) => t.name)).toEqual(PHASE_A);
   });
 

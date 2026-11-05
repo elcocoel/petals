@@ -13,6 +13,9 @@
       "path": "../packages/near"
     },
     {
+      "path": "../packages/relations"
+    },
+    {
       "path": "../packages/tools"
     },
     {

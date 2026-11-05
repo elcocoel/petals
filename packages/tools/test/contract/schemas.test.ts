@@ -51,6 +51,20 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     const got = await run('get_flower', { id: pub.id });
     await run('quote_payment', { purpose: 'sponsor_refresh' });
     await run('find_target', { query: 'near validators' });
+    const overview = await run('relations_overview', { kind: 'holdings' });
+    const pair = (overview.pairs as { a: string; b: string }[])[0] as { a: string; b: string };
+    const shared = await run('shared_accounts', { group_a: pair.a, group_b: pair.b });
+    await run('related_groups', { group: pair.a, by: 'share', limit: 3 });
+    const member = (shared.accounts as { account_a: string; account_b: string }[])[0] as {
+      account_a: string;
+      account_b: string;
+    };
+    await run('account_groups', { account: member.account_a });
+    await run('power_path', {
+      account_a: member.account_a,
+      account_b: member.account_b,
+      include_inferred: true,
+    });
 
     expect([...covered].sort()).toEqual(registry.map((t) => t.name).sort());
     // the documents inside the outputs are the contract's own schemas

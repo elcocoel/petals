@@ -41,6 +41,11 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `POST /api/v1/figures/compare` | `compare_figures` (Phase B) |
 | `POST /api/v1/corrections/prepare` | `prepare_correction` (Phase B) |
 | `POST /api/v1/corrections` | `submit_correction` (Phase B) |
+| `GET /api/v1/relations/account-groups?account=&limit=` | `account_groups` |
+| `GET /api/v1/relations/shared?group_a=&group_b=&limit=` | `shared_accounts` |
+| `GET /api/v1/relations/related?group=&by=&limit=` | `related_groups` |
+| `GET /api/v1/relations/overview?min_shared=&kind=&limit=` | `relations_overview` |
+| `GET /api/v1/relations/path?account_a=&account_b=&max_depth=&budget=&include_inferred=` | `power_path` |
 | `POST /api/v1/agent/chat` | Petal's agent, SSE (below). With `Accept: application/json` alone: `202 { run_id, status: "running" }` at once, and the run goes on unwatched. Agent route. |
 | `GET /api/v1/agent/runs/:id` | a stored run: `{ run_id, status: "running" \| "done" \| "failed" \| "stopped" \| "interrupted", messages, events, flower? }`; with `Accept: text/event-stream`, replays stored events from the cursor (`Last-Event-ID`, or `?from=<seq>`), then streams new ones until the run ends. Agent route. |
 | `POST /api/v1/agent/runs/:id/stop` | Stop (below). `{ run_id, status, stopped, already_finished }`. Agent route. |

@@ -134,6 +134,40 @@ describe.runIf(ready)('the CLI and HTTP agree (real registry, fake mode)', () =>
     );
   });
 
+  test('the relations tools', async () => {
+    const q = (o: Record<string, string>) => new URLSearchParams(o).toString();
+    const overview = (await http(
+      'GET',
+      `/api/v1/relations/overview?${q({ kind: 'holdings' })}`,
+    )) as { pairs: { a: string; b: string }[] };
+    expect(await cli(['relations-overview', '--kind', 'holdings'])).toEqual(overview);
+    const { a, b } = overview.pairs[0] as { a: string; b: string };
+
+    const shared = (await http(
+      'GET',
+      `/api/v1/relations/shared?${q({ group_a: a, group_b: b, limit: '2' })}`,
+    )) as { shared: number; accounts: { account_a: string; account_b: string }[] };
+    expect(shared.shared).toBeGreaterThan(0);
+    expect(await cli(['shared-accounts', a, b, '--limit', '2'])).toEqual(shared);
+
+    expect(await cli(['related-groups', a, '--by', 'share'])).toEqual(
+      await http('GET', `/api/v1/relations/related?${q({ group: a, by: 'share' })}`),
+    );
+
+    const account = shared.accounts[0]?.account_a as string;
+    expect(await cli(['account-groups', account])).toEqual(
+      await http('GET', `/api/v1/relations/account-groups?${q({ account })}`),
+    );
+
+    const other = shared.accounts[1]?.account_a ?? account;
+    expect(await cli(['power-path', account, other, '--max-depth', '2'])).toEqual(
+      await http(
+        'GET',
+        `/api/v1/relations/path?${q({ account_a: account, account_b: other, max_depth: '2' })}`,
+      ),
+    );
+  });
+
   test('the shorthand gives what the long way gives over HTTP', async () => {
     const { sha256 } = (await http('POST', '/api/v1/snapshots', {
       network: 'near-validators',

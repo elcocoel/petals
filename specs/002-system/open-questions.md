@@ -56,10 +56,10 @@ Everything we know we'll have to solve. Each has a working default, so nothing h
 
 | # | Question | Default | Bites |
 |---|---|---|---|
-| 26 | What identifies a group over time, so two dates of one group connect? | The module and its parameters. For now `group:` refs are scoped to one snapshot, so they can't falsely join. `holds` points at the asset, which does connect across dates | With relations |
-| 27 | Is the same EVM address on Ethereum and Base one account? It often is, but that's still a claim | Separate refs. `same_address` is an inferred claim that says nothing about control, and `declares_same_controller` is full only when both accounts say so. Nothing merges | With relations |
-| 28 | Super-node groups connect everything in traversal. How do paths stay meaningful? | Awaiting the graph measurements | With relations |
-| 29 | Overlap between a full read and a window read is only a lower bound. How is that shown? | Reported as "at least" | With relations |
+| 26 | What identifies a group over time, so two dates of one group connect? | The module and its parameters, leaving out `window_days`, which is how it was read. In claims, `group:` refs are scoped to one snapshot for now, so they can't falsely join. `holds` points at the asset, which does connect across dates | With relations |
+| 27 | Is the same EVM address on Ethereum and Base one account? It often is, but that's still a claim | Separate refs, and separate account ids in the relations index, where a match is marked `inferred` with its method and paths don't walk it unless asked. `same_address` is an inferred claim that says nothing about control, and `declares_same_controller` is full only when both accounts say so. Nothing merges | With relations |
+| 28 | Super-node groups connect everything in traversal. How do paths stay meaningful? | Group sizes on every hop, and how many groups each shared account is in. No score yet | With relations |
+| 29 | Overlap between a full read and a window read is only a lower bound. How is that shown? | `at_least`, with the coverage facts of each side | With relations |
 | 30 | Is "network", "group" or something else the right word in code? And what replaces "atlas", if anything? | Keep `network` in code | When Elco decides |
 
 ## Runtime

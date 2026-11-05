@@ -40,7 +40,17 @@ const DESCRIPTIONS: Record<string, string> = {
 };
 
 /** Tools that need the person's own NEP-413 signature: the agent hands over a link instead. */
-const NOT_FOR_THE_AGENT = new Set(['publish_flower', 'submit_correction']);
+const NOT_FOR_THE_AGENT = new Set([
+  'publish_flower',
+  'submit_correction',
+  // Every door has these. Petal's own agent waits: they add 4.6 KB to each model call, so giving
+  // them to it is a reviewed step, with prompt text, once it has a reason to use them.
+  'account_groups',
+  'shared_accounts',
+  'related_groups',
+  'relations_overview',
+  'power_path',
+]);
 
 export function forAgent(t: AnyTool): boolean {
   return !NOT_FOR_THE_AGENT.has(t.name);

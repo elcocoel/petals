@@ -26,6 +26,9 @@ importers:
       '@petal/near':
         specifier: workspace:*
         version: link:packages/near
+      '@petal/relations':
+        specifier: workspace:*
+        version: link:packages/relations
       '@petal/store':
         specifier: workspace:*
         version: link:packages/store
@@ -222,6 +225,12 @@ importers:
         specifier: ^7.4.0
         version: 7.4.0
 
+  packages/relations:
+    dependencies:
+      '@petal/core':
+        specifier: workspace:*
+        version: link:../core
+
   packages/store: {}
 
   packages/tokens:
@@ -250,6 +259,9 @@ importers:
       '@petal/near':
         specifier: workspace:*
         version: link:../near
+      '@petal/relations':
+        specifier: workspace:*
+        version: link:../relations
       '@petal/store':
         specifier: workspace:*
         version: link:../store
