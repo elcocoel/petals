@@ -68,7 +68,8 @@ export function PublishFlow({
           </ul>
           <p>The receipt shows as failed because the receiver has no contract; that is expected.</p>
           <p>
-            <a href={published.gallery_url}>Open the published flower</a> · <a href="/">Gallery</a>
+            <a href={published.gallery_url}>Open the published flower</a> ·{' '}
+            <a href="/gallery">Gallery</a>
           </p>
         </div>
       )}

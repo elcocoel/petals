@@ -4,42 +4,33 @@
 // Its primary look is the base style of every <button> in app/globals.css. Variation goes through
 // these props, so there's no className: a one-off look needs a new variant here.
 import type { MouseEventHandler, ReactNode } from 'react';
+import { Arrow } from './Arrow.tsx';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'starter' | 'link' | 'quiet' | 'row' | 'tile';
+export type ButtonSize = 'default' | 'ask' | 'small';
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: '',
   secondary: 'border border-primary bg-transparent text-primary',
+  // One line at any width Figma draws. Narrower than its question, it wraps instead of overflowing.
   starter:
-    'h-starter-height border border-hairline bg-transparent pr-starter-inset-end pl-starter-inset-start type-caption text-primary',
+    'h-auto min-h-starter-height border border-starter-border bg-transparent py-space-6 pr-starter-inset-end pl-starter-inset-start type-caption whitespace-normal text-primary',
   link: 'h-auto bg-transparent px-0 type-label text-primary hover:underline',
   quiet: 'h-auto bg-transparent px-0 type-caption text-muted hover:text-primary hover:underline',
   row: 'h-auto w-full justify-start gap-text-gap border border-hairline bg-transparent p-text-gap text-left whitespace-normal text-primary aria-pressed:border-l-2 aria-pressed:border-l-accent',
   tile: 'h-auto w-tile-width flex-col items-start gap-text-gap bg-transparent px-0 text-left whitespace-normal text-primary',
 };
 
-/**
- * Figma sets this in Geist Mono, but Google's Geist Mono has no U+2192 and the text fell back to
- * Arial, so it's drawn. In em, so it scales with the label: 10 wide at Label, like Figma's.
- */
-function Arrow({ variant }: { variant: ButtonVariant }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 10 10"
-      width="0.625em"
-      height="0.625em"
-      fill="none"
-      stroke="currentColor"
-      className={variant === 'primary' ? 'shrink-0 text-action-accent' : 'shrink-0'}
-    >
-      <path d="M0 5h9.5M5.5 1l4 4-4 4" />
-    </svg>
-  );
-}
+const SIZES: Record<ButtonSize, string> = {
+  default: '',
+  /** Figma's Submit in the Ask box (52:1863), a little wider than the Button. */
+  ask: 'px-space-22',
+  small: 'h-button-small-height gap-button-small-gap px-button-small-inset type-label-small',
+};
 
 export type ButtonProps = {
   variant?: ButtonVariant;
+  size?: ButtonSize;
   /** A trailing arrow. A starter question always has one. */
   arrow?: boolean;
   children: ReactNode;
@@ -55,12 +46,18 @@ export type ButtonProps = {
     }
 );
 
-export function Button({ variant = 'primary', arrow, children, ...rest }: ButtonProps) {
-  const look = VARIANTS[variant];
+export function Button({
+  variant = 'primary',
+  size = 'default',
+  arrow,
+  children,
+  ...rest
+}: ButtonProps) {
+  const look = `${VARIANTS[variant]} ${SIZES[size]}`.trim();
   const content = (
     <>
       {children}
-      {(arrow ?? variant === 'starter') && <Arrow variant={variant} />}
+      {(arrow ?? variant === 'starter') && <Arrow accent={variant === 'primary'} />}
     </>
   );
   if (rest.href !== undefined) {

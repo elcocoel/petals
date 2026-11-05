@@ -1,9 +1,9 @@
 // The lab (T176): every token and every registered component, from saved fixtures. In production it
 // stays hidden unless PETAL_LAB=1, and it's read on each request so a build doesn't freeze the choice.
 import { notFound } from 'next/navigation';
-import { LabEntryView } from '../../lab/LabEntryView.tsx';
-import { type LabEntry, NOT_IN_LAB, registry } from '../../lab/registry.tsx';
-import { TokensView } from '../../lab/TokensView.tsx';
+import { LabEntryView } from '../../../lab/LabEntryView.tsx';
+import { type LabEntry, NOT_IN_LAB, registry } from '../../../lab/registry.tsx';
+import { TokensView } from '../../../lab/TokensView.tsx';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Lab · Petals', robots: { index: false } };
@@ -15,6 +15,7 @@ const GROUPS: LabEntry['group'][] = [
   'The flower',
   'Reading',
   'Actions',
+  'Landing',
 ];
 
 export default function Lab() {

@@ -103,8 +103,11 @@ export function emitCss(t: Tokens = tokens): string {
         `line-height: ${s.line}px;`,
         `font-weight: ${s.weight};`,
         `letter-spacing: ${s.tracking}em;`,
+        ...(s.axes ? [`font-variation-settings: ${axes(s.axes)};`] : []),
       ]),
     ),
+    // Figma's 0.56 stroke on the small Ask box. Tailwind's border widths don't read the spacing scale.
+    block('@utility border-ask-small', ['border-width: var(--spacing-ask-box-small-border);']),
     block('@utility wordmark', [
       'display: inline-grid;',
       'font-family: var(--font-pixel);',

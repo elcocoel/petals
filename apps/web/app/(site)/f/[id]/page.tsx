@@ -2,12 +2,12 @@
 // sources and unknowns, the model signature (or why there is none), who published it and when,
 // and petal details on click. Plus "Sponsor a refresh" (T067).
 import type { Entry } from '@petal/core/types';
-import { FlowerSheet } from '../../../components/FlowerSheet.tsx';
-import { Interpretation, SignatureLine } from '../../../components/Interpretation.tsx';
-import { QuotePanel } from '../../../components/QuotePanel.tsx';
-import { api } from '../../../lib/api.ts';
-import { renderSpec, sourceUrls } from '../../../lib/flower-data.ts';
-import { explorerTxUrl } from '../../../lib/publish.ts';
+import { FlowerSheet } from '../../../../components/FlowerSheet.tsx';
+import { Interpretation, SignatureLine } from '../../../../components/Interpretation.tsx';
+import { QuotePanel } from '../../../../components/QuotePanel.tsx';
+import { api } from '../../../../lib/api.ts';
+import { renderSpec, sourceUrls } from '../../../../lib/flower-data.ts';
+import { explorerTxUrl } from '../../../../lib/publish.ts';
 
 export const dynamic = 'force-dynamic';
 
