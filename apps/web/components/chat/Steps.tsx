@@ -1,20 +1,20 @@
-// Stages, progress and tool calls between the answers, collapsed.
+// Stages, progress and tool calls between the answers: kept quiet, and open for anyone who wants them.
 import type { StepRow } from '../../lib/thread-view.ts';
 
 export function Steps({ summary, steps }: { summary: string; steps: StepRow[] }) {
   return (
-    <details className="steps">
-      <summary className="muted">{summary}</summary>
-      <ol className="events">
+    <details>
+      <summary className="type-caption text-muted">{summary}</summary>
+      <ol data-quiet className="events type-mono-small text-muted">
         {steps.map((s, k) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: the list only grows, in event order
           <li key={k}>
             {s.kind === 'stage' && (
               <>
-                <em>{s.stage}</em>: {s.message}
+                {s.stage}: {s.message}
               </>
             )}
-            {s.kind === 'progress' && <span className="muted">{s.text}</span>}
+            {s.kind === 'progress' && s.text}
             {s.kind === 'tool' && (
               <details>
                 <summary>

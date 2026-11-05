@@ -19,23 +19,18 @@ const GLOBALS = 'apps/web/app/globals.css';
 export const GLOBAL_CLASSES = new Set([
   'badge',
   'box',
-  'composer',
-  'composer-note',
-  'composer-row',
   'error',
   'events',
   'flower-svg',
   'gallery',
-  'gallery-flower',
   'legend',
   'md',
   'muted',
   'petal-centre',
+  'petal-outline',
+  'petal-poly',
   'petal-selected',
-  'steps',
   'swatch',
-  'thread',
-  'you',
 ]);
 
 export interface Finding {

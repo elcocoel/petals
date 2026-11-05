@@ -4,6 +4,7 @@
 import type {
   AgentEvent,
   ChatMessage,
+  Entry,
   LegendItem,
   Nep413Proof,
   PetalDetail,
@@ -96,6 +97,46 @@ export async function drawFlower(specJson: string): Promise<Drawn> {
     return { svg: json.svg, petals: json.petals ?? [], legend: json.legend ?? [] };
   }
   throw new Error(json.error?.message ?? `HTTP ${res.status}`);
+}
+
+/** A stored flower: what /f/[id] reads, for the panel. */
+export interface StoredFlower {
+  entry: Entry;
+  where: 'map' | 'fixture';
+  tx_hash?: string;
+}
+
+/** Throws with the reason when it can't be read. */
+export async function readFlower(id: string): Promise<StoredFlower> {
+  const res = await fetch(`/api/v1/flowers/${encodeURIComponent(id)}`);
+  const json = (await res.json()) as StoredFlower & { error?: { message: string } };
+  if (!res.ok || json.error) throw new Error(json.error?.message ?? `HTTP ${res.status}`);
+  return json;
+}
+
+/** What a snapshot says about itself that a flower's text can use. */
+export interface SnapshotFacts {
+  /** source id to its URL, so a source can be a link */
+  sources: Record<string, string>;
+  /** measure id to its unit */
+  units: Record<string, string>;
+}
+
+/** Facts only decorate a flower, so a snapshot that can't be described just has none. */
+export async function readSnapshotFacts(sha256: string): Promise<SnapshotFacts> {
+  const none: SnapshotFacts = { sources: {}, units: {} };
+  const res = await fetch(`/api/v1/snapshots/${encodeURIComponent(sha256)}/describe`).catch(
+    () => null,
+  );
+  if (!res?.ok) return none;
+  const json = (await res.json().catch(() => ({}))) as {
+    sources?: { id: string; url: string }[];
+    measures?: { id: string; unit: string }[];
+  };
+  return {
+    sources: Object.fromEntries((json.sources ?? []).map((s) => [s.id, s.url])),
+    units: Object.fromEntries((json.measures ?? []).map((m) => [m.id, m.unit])),
+  };
 }
 
 export interface QuoteRequest {

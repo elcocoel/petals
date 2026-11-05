@@ -1,6 +1,8 @@
-// The box stays fixed at the bottom.
+// The box at the bottom of the conversation. It's the one AskBox; the words and decisions come from
+// composerView in lib/thread-view.ts.
 import type { Ref } from 'react';
 import type { ComposerView } from '../../lib/thread-view.ts';
+import { AskBox } from '../ui/AskBox.tsx';
 
 export function Composer({
   view,
@@ -14,39 +16,33 @@ export function Composer({
   onSend: () => void;
 }) {
   return (
-    <form
-      className="composer"
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSend();
-      }}
-    >
-      <div className="composer-row">
-        <textarea
-          ref={boxRef}
-          id="q"
-          rows={2}
-          aria-label={view.label}
-          placeholder={view.placeholder}
-          value={view.value}
-          readOnly={view.readOnly}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-              e.preventDefault();
-              onSend();
-            }
-          }}
-        />
-        <button type="submit" disabled={view.disabled}>
-          {view.button}
-        </button>
-      </div>
-      {view.run && (
-        <p className="muted composer-note">
-          Run <a href={view.run.href}>{view.run.id}</a>: you can leave and come back to this link.
+    <div className="flex shrink-0 flex-col gap-speech-gap pt-text-gap pr-workspace-inset-end pb-workspace-inset-end pl-workspace-inset">
+      {view.about && (
+        <p data-quiet className="type-mono-small text-muted">
+          {view.about}
         </p>
       )}
-    </form>
+      <AskBox
+        size="composer"
+        id="q"
+        label={view.label}
+        placeholder={view.placeholder}
+        action={view.button}
+        value={view.value}
+        readOnly={view.readOnly}
+        canAsk={!view.disabled}
+        boxRef={boxRef}
+        onChange={(e) => onChange(e.target.value)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSend();
+        }}
+      />
+      {view.run && (
+        <p className="type-mono-small text-muted">
+          Run <a href={view.run.href}>{view.run.id}</a>. You can leave and come back.
+        </p>
+      )}
+    </div>
   );
 }

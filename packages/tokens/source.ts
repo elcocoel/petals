@@ -23,6 +23,8 @@ export interface Roles {
   'text-primary': Paint;
   'text-muted': Paint;
   hairline: Paint;
+  /** A tool area beside the page, like the workspace's navigation rail. */
+  panel: Paint;
   'action-background': Paint;
   'action-text': Paint;
   /** The arrow inside an action. Plain accent would vanish: Mint on Mint on ink, Ink on Ink on mint. */
@@ -40,6 +42,7 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'text-primary': 'Ink',
     'text-muted': { of: 'Ink', alpha: 0.6 },
     hairline: 'Gray',
+    panel: 'Gray',
     'action-background': 'Ink',
     'action-text': 'Ground',
     'action-accent': 'Mint',
@@ -53,6 +56,7 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'text-primary': 'Ground',
     'text-muted': { of: 'Ground', alpha: 0.7 },
     hairline: { of: 'Ground', alpha: 0.3 },
+    panel: 'Ink',
     'action-background': 'Mint',
     'action-text': 'Ink',
     'action-accent': 'Ink',
@@ -66,6 +70,7 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'text-primary': 'Ink',
     'text-muted': { of: 'Ink', alpha: 0.7 },
     hairline: { of: 'Ink', alpha: 0.4 },
+    panel: 'Mint',
     'action-background': 'Ink',
     'action-text': 'Ground',
     'action-accent': 'Mint',
@@ -82,6 +87,7 @@ export const roleUtilities: Record<Role, string> = {
   'text-primary': 'primary',
   'text-muted': 'muted',
   hairline: 'hairline',
+  panel: 'panel',
   'action-background': 'action',
   'action-text': 'on-action',
   'action-accent': 'action-accent',
@@ -99,12 +105,15 @@ export const contrastMinimum = 4.5;
 export const contrastPairs: readonly { text: Role; on: Role }[] = [
   { text: 'text-primary', on: 'surface' },
   { text: 'text-muted', on: 'surface' },
+  { text: 'text-primary', on: 'panel' },
   { text: 'action-text', on: 'action-background' },
   { text: 'action-accent', on: 'action-background' },
 ];
 
 /** Figma: Layout/… variables, then the landing page's section padding. Pixels. */
 export const layout = {
+  /** Clearing Tailwind's numeric scale takes zero with it: m-0, min-h-0, inset-0 and px-0 read this. */
+  '0': 0,
   'Page inset': 72,
   'Section inset': 64,
   'Column gap': 48,
@@ -124,6 +133,7 @@ export const sizes = {
   'Ask box width': 600,
   'Ask box inset': 8,
   'Ask box gap': 16,
+  'Ask box field block': 10.5,
   'Starter height': 36,
   'Starter inset start': 16,
   'Starter inset end': 14,
@@ -131,12 +141,49 @@ export const sizes = {
   'Content width': 960,
   'Flower width': 640,
   'Gallery flower width': 320,
+  // The workspace frames (Interface page, e.g. 39:862, at 1440 x 900).
+  'Workspace header height': 80,
+  'Workspace inset': 40,
+  'Workspace inset end': 32,
+  'Workspace rule': 20,
+  // Figma's is 164, which "Use your own AI" doesn't fit.
+  'Rail width': 180,
+  'Rail text inset': 22,
+  'Rail top': 31,
+  'Rail item gap': 8,
+  'Rail item block': 9,
+  'Icon size': 18,
+  'Icon gap': 9,
+  'Conversation width': 580,
+  // Figma's is 696, beside its narrower rail: the two columns fill a 1440 window.
+  'Panel width': 680,
+  'Speech gap': 8,
+  'Composer height': 76,
+  'Composer inset end': 12,
+  'Composer block': 14,
+  'Composer field block': 13,
+  'Composer max height': 200,
+  'Detail inset': 16,
+  'Detail gap': 4,
+  'Detail height': 117,
+  'Title gap': 7,
+  'Swatch size': 9,
+  'Cell small': 16.72,
+  'Cell medium': 27.28,
+  'Cell large': 40.48,
+  // Not in Figma yet: what the frames don't draw.
+  'Stage height': 280,
+  'Turn flower thumb': 48,
+  'Tile width': 280,
 } as const;
 
 export const cornerRadius = 0;
 
-/** Not from Figma, which has one frame width: Tailwind's own three, under the same names. */
-export const breakpoints = { sm: 640, md: 768, lg: 1024 } as const;
+/**
+ * Not from Figma, which has one frame width: Tailwind's own three, under the same names, and `wide`,
+ * where the workspace's columns sit side by side instead of stacking.
+ */
+export const breakpoints = { sm: 640, md: 768, wide: 900, lg: 1024 } as const;
 
 /** `variable` is what next/font sets in apps/web/app/layout.tsx. Figma: Type/Reading family. */
 export const fonts = {
@@ -179,8 +226,8 @@ export const wordmark = {
     middle: { CRSV: 0.11, ELSH: 50, ELXP: 90, slnt: -8, wght: 358 },
     front: { CRSV: 0.5, ELSH: 17, ELXP: 63, slnt: -8, wght: 337 },
   },
-  /** Font size in pixels. Display is the component's own size, Nav the one in the page frames. */
-  sizes: { Nav: 50, Display: 269.722 },
+  /** Font size in pixels. Display is the component's own size, the others those in the page frames. */
+  sizes: { Nav: 50, Workspace: 33.18, Display: 269.722 },
 } as const;
 
 /**

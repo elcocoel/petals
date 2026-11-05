@@ -1,6 +1,10 @@
 // Petals / Wordmark 12:12: three layers of live text at one origin. Sizes and axes come from the
 // tokens, and each layer is em-based, so it scales as one. Only the front layer is read aloud.
-const SIZES = { nav: 'wordmark-nav', display: 'wordmark-display' } as const;
+const SIZES = {
+  nav: 'wordmark-nav',
+  workspace: 'wordmark-workspace',
+  display: 'wordmark-display',
+} as const;
 
 export function Wordmark({ size = 'nav' }: { size?: keyof typeof SIZES }) {
   return (

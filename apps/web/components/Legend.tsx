@@ -1,10 +1,22 @@
 // The legend (T064, FR-011): one line for every primitive the flower uses, with its meaning and
 // sources, straight from the render result (the web never re-derives it).
 import type { LegendItem } from '@petal/core/types';
+import { type LegendKey, swatchKey } from '../lib/flower-view.ts';
 import { SourceList } from './Sources.tsx';
 
-/** A swatch comes from the renderer as var(--k-pool); the generated CSS has a rule per colour. */
-const swatchKey = (swatch: string) => /^var\(--([\w-]+)\)$/.exec(swatch)?.[1];
+/** Figma's "Flower legend" 40:764: the colours in one quiet line, under the drawing. */
+export function LegendKeys({ keys }: { keys: LegendKey[] }) {
+  return (
+    <ul className="flex flex-wrap items-center gap-x-block-gap gap-y-speech-gap type-caption">
+      {keys.map((k) => (
+        <li key={k.label} className="flex items-center gap-icon-gap">
+          <span className="swatch" data-swatch={k.swatch} />
+          {k.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function Legend({
   items,

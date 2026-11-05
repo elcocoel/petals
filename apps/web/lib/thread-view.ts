@@ -2,8 +2,10 @@
 // decision made and every word chosen. The views under components/chat only lay these out, so a
 // redesign replaces them without touching a decision.
 import type { FlowerResult, ModelSignature } from '@petal/core/types';
+import { aboutLabel, readAbout } from './ask-about.ts';
+import { chainLabel, dateLabel, networkLabel } from './flower-view.ts';
 import { type Block as MarkdownBlock, parseMarkdown } from './markdown.ts';
-import { blocksOf, type ChatState, type Done, type Step } from './thread.ts';
+import { blocksOf, type ChatState, type Done, type Opened, type Step } from './thread.ts';
 
 /** What the recorded run (fixtures/transcripts/skeleton.json) was really asked. */
 export const RECORDED_QUESTION =
@@ -81,9 +83,20 @@ function stepRow(s: Step): StepRow {
   }
 }
 
-export interface FlowerRow {
-  kind: 'flower';
+/** Where a flower is in the thread, and whether it is the one in the panel. */
+export interface FlowerLink {
   key: string;
+  /** the network's id in words, until the drawing can name the flower */
+  title: string;
+  /** a quiet line: how many petals, and the date */
+  sub: string;
+  open: boolean;
+}
+
+export interface FlowerRow extends FlowerLink {
+  kind: 'flower';
+  /** which of the thread's flowers, from 0 */
+  index: number;
   flower: FlowerResult;
   signature: ModelSignature | null;
   /** what the signature line says when there is no signature */
@@ -95,37 +108,59 @@ export interface FlowerRow {
   checks: string;
 }
 
+/** A stored flower opened in this thread. */
+export interface StoredRow extends FlowerLink {
+  kind: 'stored';
+  id: string;
+  /** its drawing, as an image */
+  image: string;
+}
+
 export interface TurnRow {
   kind: 'turn';
   key: string;
   stage: ChatState['turn'];
   text: string;
+  /** what the agent is doing now, in its own words */
+  headline?: string;
   /** a lost turn offers to follow its run again */
   refollow?: { label: string; disabled: boolean };
 }
 
 export type Row =
-  | { kind: 'user' | 'note' | 'error'; key: string; text: string }
+  /** `about` is what the question carried, kept quiet; `label` says who is speaking */
+  | { kind: 'user'; key: string; text: string; label: string; about?: string }
+  | { kind: 'note' | 'error'; key: string; text: string }
   | { kind: 'steps'; key: string; summary: string; steps: StepRow[] }
-  | { kind: 'message'; key: string; blocks: MarkdownBlock[] }
+  /** `speaker` is set where the agent starts speaking, and not on what follows it */
+  | { kind: 'message'; key: string; blocks: MarkdownBlock[]; speaker?: string }
   | { kind: 'done'; key: string; line: Segment[] }
   | FlowerRow
+  | StoredRow
   | TurnRow;
 
 export type ThreadInput = Pick<ChatState, 'items' | 'busy' | 'runId' | 'turn' | 'lostAgain'> & {
   recorded: boolean;
+  open?: Opened;
 };
 
+const AGENT = 'Petals';
+
 /** Plain words for the stages that need them. A turn at rest has its own rows, so it shows nothing. */
-function turnRow(v: Pick<ThreadInput, 'turn' | 'busy' | 'lostAgain'>): TurnRow | null {
+function turnRow(v: Pick<ThreadInput, 'items' | 'turn' | 'busy' | 'lostAgain'>): TurnRow | null {
   const row = (text: string): TurnRow => ({ kind: 'turn', key: 'turn', stage: v.turn, text });
   switch (v.turn) {
     case 'sending':
       return row('Sending your question…');
     case 'accepted':
-      return row('Your question landed. The agent is about to start…');
-    case 'working':
-      return row('The agent is working on it. This can take a while.');
+      return row('Your question landed. Petals is about to start…');
+    case 'working': {
+      const latest = v.items.findLast((x) => x.kind === 'stage' || x.kind === 'progress');
+      return {
+        ...row('Petals is working on it. This can take a while.'),
+        ...(latest ? { headline: `${(latest as { message: string }).message}…` } : {}),
+      };
+    }
     case 'lost':
       return {
         ...row(
@@ -143,39 +178,112 @@ function turnRow(v: Pick<ThreadInput, 'turn' | 'busy' | 'lostAgain'>): TurnRow |
   }
 }
 
+/** Which of the thread's flowers the panel holds, or -1 for none of them. */
+export function openFlowerIndex(open: Opened | undefined, count: number): number {
+  switch (open?.kind) {
+    case 'stored':
+    case 'shelf':
+      return -1;
+    case 'turn':
+      return open.index < count ? open.index : count - 1;
+    default:
+      return count - 1;
+  }
+}
+
+const flowerSub = (spec: FlowerResult['spec'], asOf = spec.snapshot?.as_of) =>
+  [
+    spec.selection && `${spec.selection.petals} petals`,
+    spec.network && chainLabel(spec.network.chain),
+    asOf && dateLabel(asOf),
+  ]
+    .filter(Boolean)
+    .join('  ·  ');
+
 export function threadView(v: ThreadInput): Row[] {
   const blocks = blocksOf(v.items);
   const lastFlower = blocks.findLastIndex((b) => b.kind === 'flower');
+  const count = blocks.filter((b) => b.kind === 'flower').length;
+  const inPanel = openFlowerIndex(v.open, count);
   // one link per flower per turn: a fresh Set at each question
   let seen = new Set<string>();
+  // the first question is the one the conversation is about
+  let asked = false;
+  // the agent's name goes where it starts speaking
+  let spoke = false;
+  let flowers = 0;
   const rows: Row[] = [];
   blocks.forEach((b, i) => {
     const key = `${i}-${b.kind}`;
     switch (b.kind) {
-      case 'user':
+      case 'user': {
         seen = new Set();
-        rows.push({ kind: 'user', key, text: b.text });
+        spoke = false;
+        const { about, words } = readAbout(b.text);
+        rows.push({
+          kind: 'user',
+          key,
+          text: words,
+          label: asked ? 'You' : 'Original question',
+          ...(about ? { about: aboutLabel(about) } : {}),
+        });
+        asked = true;
         break;
+      }
+      case 'stored': {
+        spoke = false;
+        if (b.question) {
+          rows.push({
+            kind: 'user',
+            key: `${key}-question`,
+            text: b.question,
+            label: 'Original question',
+          });
+          asked = true;
+        }
+        rows.push({
+          kind: 'message',
+          key: `${key}-summary`,
+          blocks: parseMarkdown(b.summary, seen),
+          speaker: AGENT,
+        });
+        rows.push({
+          kind: 'stored',
+          key,
+          id: b.id,
+          image: `/api/v1/flowers/${encodeURIComponent(b.id)}/svg`,
+          title: networkLabel(b.network),
+          sub: dateLabel(b.asOf),
+          open: v.open?.kind === 'stored' && v.open.id === b.id,
+        });
+        break;
+      }
       case 'note':
         rows.push({ kind: 'note', key, text: b.text });
         break;
       case 'steps': {
         const tools = b.steps.filter((s) => s.kind === 'tool').length;
-        const latest = b.steps.findLast((s) => s.kind === 'stage' || s.kind === 'progress');
-        const running = v.busy && i === blocks.length - 1;
-        if (!tools && !running) break;
-        const now = running && latest ? `${(latest as { message: string }).message}… ` : '';
+        if (!tools) break;
         rows.push({
           kind: 'steps',
           key,
-          summary: `${now}${tools} ${tools === 1 ? 'tool call' : 'tool calls'}`,
+          summary: `${tools} ${tools === 1 ? 'tool call' : 'tool calls'}`,
           steps: b.steps.map(stepRow),
         });
         break;
       }
-      case 'message':
-        rows.push({ kind: 'message', key, blocks: parseMarkdown(b.text, seen) });
+      case 'message': {
+        // an opening with a stored flower right after it gives way to that flower's own words
+        if (i === 0 && blocks[1]?.kind === 'stored') break;
+        rows.push({
+          kind: 'message',
+          key,
+          blocks: parseMarkdown(b.text, seen),
+          ...(spoke ? {} : { speaker: AGENT }),
+        });
+        spoke = true;
         break;
+      }
       case 'flower': {
         // does this turn's own text link to it?
         const from = blocks.findLastIndex((x, n) => n <= i && x.kind === 'user');
@@ -184,9 +292,14 @@ export function threadView(v: ThreadInput): Row[] {
           .slice(Math.max(from, 0), next === -1 ? undefined : next)
           .some((x) => x.kind === 'message' && x.text.includes(b.flower.view_url));
         const { valid, warnings } = b.flower.validation;
+        const index = flowers++;
         rows.push({
           kind: 'flower',
           key,
+          index,
+          title: b.flower.spec.network ? networkLabel(b.flower.spec.network.id) : 'Flower',
+          sub: flowerSub(b.flower.spec),
+          open: index === inPanel,
           flower: b.flower,
           signature: b.signature,
           model: v.recorded ? 'recorded' : b.signature?.model,
@@ -217,29 +330,54 @@ export function threadView(v: ThreadInput): Row[] {
   return rows;
 }
 
+/** What the next question will be about. */
+export type ComposerTarget =
+  | { kind: 'none' }
+  | { kind: 'flower' }
+  | { kind: 'wallet' | 'group'; line: string };
+
 export interface ComposerView {
   value: string;
   readOnly: boolean;
   label: string;
   placeholder: string;
   button: string;
+  /** the send button only: the box stays open for typing */
   disabled: boolean;
+  /** what the question will carry, shown quietly while there is a selection */
+  about?: string;
   /** the run's own link, once there is one */
   run?: { id: string; href: string };
 }
 
+const PLACEHOLDER: Record<'flower' | 'wallet' | 'group', string> = {
+  flower: 'Ask about this flower…',
+  wallet: 'Ask about this wallet…',
+  group: 'Ask about everyone else…',
+};
+
 export function composerView(
-  v: Pick<ChatState, 'question' | 'runId' | 'busy'> & { recorded: boolean },
+  v: Pick<ChatState, 'question' | 'runId' | 'busy'> & {
+    recorded: boolean;
+    target?: ComposerTarget;
+  },
 ): ComposerView {
+  const target = v.target ?? { kind: 'none' };
   return {
     value: v.recorded ? RECORDED_QUESTION : v.question,
     readOnly: v.recorded,
-    label: v.recorded ? 'The saved question' : 'Ask Petal’s agent about a network',
-    placeholder: v.runId
-      ? 'Ask a follow-up…'
-      : 'A DAO, a token, a contract address, or a question…',
-    button: v.busy ? 'Working…' : v.recorded ? 'Play the recorded run' : 'Send',
-    disabled: v.busy,
+    label: v.recorded ? 'The saved question' : 'Ask Petals about a network',
+    placeholder:
+      target.kind !== 'none'
+        ? PLACEHOLDER[target.kind]
+        : v.runId
+          ? 'Ask a follow-up…'
+          : 'Ask about any network, or paste an address.',
+    button: v.busy ? 'Working…' : v.recorded ? 'Play the recorded run' : 'Ask',
+    disabled: v.busy || (!v.recorded && !v.question.trim()),
+    ...(target.kind === 'wallet' || target.kind === 'group'
+      ? { about: aboutLabel(target.line) }
+      : {}),
     ...(v.runId ? { run: { id: v.runId, href: `/make?run=${encodeURIComponent(v.runId)}` } } : {}),
   };
 }

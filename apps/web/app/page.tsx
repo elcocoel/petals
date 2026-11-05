@@ -1,6 +1,13 @@
-// The front door is the agent, already talking (M-Talk). The gallery is at /gallery.
-import { AgentHome } from '../components/AgentHome.tsx';
+// `/` shows the workspace until the landing page replaces this one file. Nothing else depends on it.
+import MakeLayout from './make/layout.tsx';
+import MakePage from './make/page.tsx';
 
 export const dynamic = 'force-dynamic';
 
-export default AgentHome;
+export default function Home(props: Parameters<typeof MakePage>[0]) {
+  return (
+    <MakeLayout>
+      <MakePage {...props} />
+    </MakeLayout>
+  );
+}

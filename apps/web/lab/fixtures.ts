@@ -106,6 +106,10 @@ export function flowerRow(overrides: Partial<FlowerRow> = {}): FlowerRow {
   return {
     kind: 'flower',
     key: 'flower',
+    index: 0,
+    title: 'Near validators',
+    sub: '60 petals  ·  NEAR  ·  3 Nov 2026',
+    open: true,
     flower,
     signature: null,
     model: 'recorded',
@@ -127,9 +131,14 @@ export const STEPS: StepRow[] = [
 /** One turn, using every row but the flower's, in the order a person reads them. */
 export const TURN_ROWS: Row[] = [
   { kind: 'note', key: 'note', text: 'A note from the thread.' },
-  { kind: 'user', key: 'user', text: 'Who decides in this DAO?' },
+  { kind: 'user', key: 'user', text: 'Who decides in this DAO?', label: 'Original question' },
   { kind: 'steps', key: 'steps', summary: '2 tool calls', steps: STEPS },
-  { kind: 'message', key: 'message', blocks: parseMarkdown('An answer, with **bold** text.') },
+  {
+    kind: 'message',
+    key: 'message',
+    speaker: 'Petals',
+    blocks: parseMarkdown('An answer, with **bold** text.'),
+  },
   {
     kind: 'done',
     key: 'done',

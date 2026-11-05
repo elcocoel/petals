@@ -1,5 +1,5 @@
-// Scrolled to the latest, also when a flower finishes drawing, unless the reader scrolled up. A view
-// hook: it knows the window and nothing about the chat.
+// Scrolled to the latest, also when a row grows, unless the reader scrolled up. A view hook: it knows
+// the column it scrolls and nothing about the chat.
 import { type RefObject, useEffect } from 'react';
 
 export function useFollowScroll(
@@ -7,19 +7,22 @@ export function useFollowScroll(
   following: RefObject<boolean>,
 ) {
   useEffect(() => {
+    const column = thread.current;
+    const content = column?.firstElementChild;
+    if (!column || !content) return;
     const toEnd = () => {
-      if (following.current) window.scrollTo(0, document.documentElement.scrollHeight);
+      if (following.current) column.scrollTop = column.scrollHeight;
     };
     const onScroll = () => {
-      const left = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+      const left = column.scrollHeight - column.clientHeight - column.scrollTop;
       following.current = left < 120;
     };
     const watch = new ResizeObserver(toEnd);
-    if (thread.current) watch.observe(thread.current);
-    window.addEventListener('scroll', onScroll, { passive: true });
+    watch.observe(content);
+    column.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       watch.disconnect();
-      window.removeEventListener('scroll', onScroll);
+      column.removeEventListener('scroll', onScroll);
     };
   }, [thread, following]);
 }

@@ -72,14 +72,16 @@ describe('the steps', () => {
 
   test('stages alone are hidden once nothing is running', () => {
     expect(kinds(view([you('q'), stage]))).toEqual(['user']);
-    expect(kinds(view([you('q'), stage], { busy: true }))).toEqual(['user', 'steps']);
+    expect(kinds(view([you('q'), stage], { busy: true }))).toEqual(['user']);
+    expect(view([you('q'), stage], { busy: true, turn: 'working' }).at(-1)).toMatchObject({
+      kind: 'turn',
+      headline: 'Reading the question…',
+    });
   });
 
-  test('tool calls are counted; the latest stage shows only while it is the last thing running', () => {
+  test('tool calls are counted, and what is happening now is the status row’s to say', () => {
     const items = [you('q'), stage, tool('1'), tool('2')];
-    expect(view(items, { busy: true })[1]).toMatchObject({
-      summary: 'Reading the question… 2 tool calls',
-    });
+    expect(view(items, { busy: true })[1]).toMatchObject({ summary: '2 tool calls' });
     expect(view(items)[1]).toMatchObject({ summary: '2 tool calls' });
     expect(view([you('q'), stage, tool('1'), say('a')], { busy: true })[1]).toMatchObject({
       summary: '1 tool call',
@@ -224,9 +226,10 @@ describe('the composer', () => {
     expect(composer()).toMatchObject({
       value: '',
       readOnly: false,
-      button: 'Send',
-      label: 'Ask Petal’s agent about a network',
-      placeholder: 'A DAO, a token, a contract address, or a question…',
+      button: 'Ask',
+      disabled: true,
+      label: 'Ask Petals about a network',
+      placeholder: 'Ask about any network, or paste an address.',
     });
     expect(composer({ runId: 'r1' })).toMatchObject({
       placeholder: 'Ask a follow-up…',
@@ -258,32 +261,33 @@ describe('the views only lay it out', () => {
       }),
     );
 
-  test('the thread keeps its markup and its class names', () => {
-    expect(thread(view([you('hi')]))).toBe(
-      '<div class="thread"><p class="you"><strong>You:</strong> hi</p></div>',
-    );
-    expect(thread(view([{ kind: 'note', text: 'n' }]))).toBe(
-      '<div class="thread"><p class="muted">n</p></div>',
-    );
-    expect(thread(view([{ kind: 'error', code: 'c', message: 'm' }]))).toBe(
-      '<div class="thread"><p class="error">c: m</p></div>',
+  test('who is speaking, then what they said', () => {
+    const out = thread(view([you('hi'), say('hello'), you('and?')]));
+    expect(out).toContain('Original question');
+    expect(out).toContain('hi');
+    expect(out).toContain('>Petals<');
+    expect(out).toContain('hello');
+    expect(out).toContain('>You<');
+    expect(thread(view([{ kind: 'note', text: 'n' }]))).toContain('n</p>');
+    expect(thread(view([{ kind: 'error', code: 'c', message: 'm' }]))).toContain(
+      '<p class="error">c: m</p>',
     );
   });
 
   test('a flower is drawn by whoever composes the thread', () => {
-    expect(thread(view([flowerItem()]))).toBe('<div class="thread"><i>flower</i></div>');
+    expect(thread(view([flowerItem()]))).toContain('<i>flower</i>');
   });
 
   test('a stage is a line of plain text; lost adds one button', () => {
-    expect(thread(view([], { turn: 'working' }))).toBe(
-      '<div class="thread"><p class="muted" role="status" data-turn-stage="working">The agent is working on it. This can take a while.</p></div>',
-    );
+    const working = thread(view([], { turn: 'working' }));
+    expect(working).toContain('data-turn-stage="working"');
+    expect(working).toContain('Petals is working on it. This can take a while.');
     const lost = thread(view([], { turn: 'lost' }));
     expect(lost).toContain('data-turn-stage="lost"');
-    expect(lost).toContain('<button type="button">Follow the run again</button>');
+    expect(lost).toContain('Follow the run again</button>');
   });
 
-  test('the composer keeps its markup', () => {
+  test('the composer is the one AskBox, and says what the run is', () => {
     const out = renderToStaticMarkup(
       createElement(Composer, {
         view: composerView({ question: 'q', runId: 'r1', busy: true, recorded: false }),
@@ -291,12 +295,9 @@ describe('the views only lay it out', () => {
         onSend: () => {},
       }),
     );
-    expect(out).toContain(
-      '<form class="composer"><div class="composer-row"><textarea id="q" rows="2"',
-    );
-    expect(out).toContain('<button type="submit" disabled="">Working…</button>');
-    expect(out).toContain(
-      '<p class="muted composer-note">Run <a href="/make?run=r1">r1</a>: you can leave and come back to this link.</p>',
-    );
+    expect(out).toContain('id="q"');
+    expect(out).toContain('Working…</button>');
+    expect(out).toMatch(/<button type="submit" disabled=""/);
+    expect(out).toContain('Run <a href="/make?run=r1">r1</a>');
   });
 });

@@ -1,9 +1,11 @@
-// The first thing anyone sees: the agent, already talking (M-Talk). `/` and `/make` are the same
-// page; ?run=<id> reopens a stored conversation.
+// The workspace's page: the agent, already talking (M-Talk). ?run=<id> reopens a stored conversation,
+// and the rest of the address says what the panel held (lib/workspace-url.ts).
 import { api } from '../lib/api.ts';
 import type { ApiHealth } from '../lib/api-label.ts';
-import { type OpeningFlower, openingMessage } from '../lib/opening.ts';
-import { Chat } from './Chat.tsx';
+import type { ListedFlower } from '../lib/flower-view.ts';
+import { openingMessage } from '../lib/opening.ts';
+import { openFromParams } from '../lib/workspace-url.ts';
+import { Workspace } from './Workspace.tsx';
 
 export async function AgentHome({
   searchParams,
@@ -14,23 +16,19 @@ export async function AgentHome({
   const run = Array.isArray(q.run) ? q.run[0] : q.run;
   const [health, listed] = await Promise.all([
     api<ApiHealth>('/api/v1/health'),
-    api<{ flowers: OpeningFlower[] }>('/api/v1/flowers'),
+    api<{ flowers: ListedFlower[] }>('/api/v1/flowers'),
   ]);
   const recorded = health.ok && health.value.llm === 'recorded';
+  const flowers = listed.ok ? listed.value.flowers : [];
+  const { open, petal } = openFromParams(q);
   return (
-    <>
-      {recorded && (
-        <p className="border-2 border-primary p-text-gap">
-          <strong>Recorded demo. No AI is running.</strong> This plays back one saved run about
-          NEAR’s validators. It can’t read a question yet, so there’s nothing to type. The real
-          agent switches on once a NEAR AI key is set.
-        </p>
-      )}
-      <Chat
-        initialRun={run}
-        recorded={recorded}
-        opening={openingMessage(listed.ok ? listed.value.flowers : [])}
-      />
-    </>
+    <Workspace
+      initialRun={run}
+      recorded={recorded}
+      opening={openingMessage(flowers)}
+      shelf={flowers}
+      initialOpen={open}
+      initialPetal={petal}
+    />
   );
 }
