@@ -29,6 +29,7 @@ Milestones, not days. If one takes a night, so be it. Only two dates are fixed: 
 | [ ] 🌰 | **M0 Seed** · foundation (lead) | T001–T023 | `scripts/check.sh` passes; validators fixture imported; contracts frozen at `packages/v1` |
 | [ ] 🌱 | **M1 Sprout** · parts in parallel | T024–T070 | each part passes its own tests on fakes; `pnpm petal render near-validators` draws; `/make` answers and draws |
 | [ ] 🌷 | **M2 Bud** · skeleton proven | T071–T075 | quickstart passes live once; `pnpm test:e2e` green; **Elco has seen it** |
+| [ ] 🗣️ | **M-Talk** · the agent finds things out (next) | T164–T169 | Elco names a network in plain words, the agent finds it or asks; follow-ups keep the thread; different agents connect |
 | [ ] 🌿 | **M3 Stem** · core path (US1) | T076–T090 | a DAO nobody prepared renders live, with a cited interpretation |
 | [ ] 💬 | **M4** · talk to change (US2) | T091–T097 | one plain request redraws a labelled variation; the default is unchanged |
 | [ ] 📜 | **M5** · publish in full (US7) | T098–T107 | a direct write and an agent-key write both show the maker as author |
