@@ -1,0 +1,817 @@
+/* Version 2, the joy layer. One stylesheet, one rule for every rule in it: its selector goes through
+   [data-b="<parent>"] under :root[data-version="2"], and the comment above it names its child in
+   packages/tokens/behaviours.ts. Values only say var(): radius, shadow, gradient, duration and easing
+   literals live in packages/tokens/versions/. Off the version, or with ?off=<parent>, this file is
+   silent and the page is v1. Hover moves things with transform and opacity only, so it never shifts
+   layout: a shadow deepens by fading in a pseudo-element that already has the deeper one.
+   Enforced by apps/web/test/behaviours.test.ts and scripts/check-literals.ts. */
+
+/* ----- surface ----- */
+
+/* surface.ground */
+:root[data-version="2"] body[data-b="surface"],
+:root[data-version="2"] [data-b="surface"][data-surface="ground"] {
+  --surface: var(--joy-paint-ground);
+}
+
+/* surface.band */
+:root[data-version="2"] :is(section, footer)[data-b="surface"] {
+  --hairline: var(--joy-paint-hairline);
+  --text-muted: var(--joy-paint-muted);
+  position: relative;
+  overflow: clip;
+  background-image: var(--joy-texture-grain), var(--joy-gradient-band);
+  scroll-margin-top: var(--joy-move-nav-clear);
+}
+
+/* surface.band */
+:root[data-version="2"] :is(section, footer)[data-b="surface"] > div {
+  position: relative;
+}
+
+/* surface.reveal */
+:root[data-version="2"][data-joy] :is(section, footer)[data-b="surface"]:not([data-seen]) > div {
+  opacity: 0;
+}
+
+/* surface.reveal */
+:root[data-version="2"] :is(section, footer)[data-b="surface"][data-seen] > div {
+  animation: surface-reveal var(--joy-dur-reveal) var(--joy-ease-reveal) backwards;
+}
+
+/* surface.reveal */
+@keyframes surface-reveal {
+  from {
+    opacity: 0;
+  }
+}
+
+/* surface.spotlight */
+:root[data-version="2"] [data-b="surface"] > [data-spot] {
+  position: absolute;
+  top: var(--joy-light-spot-offset);
+  left: var(--joy-light-spot-offset);
+  width: var(--joy-light-spot-size);
+  height: var(--joy-light-spot-size);
+  background-image: var(--joy-gradient-spot);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--joy-dur-slow) var(--joy-ease-color);
+}
+
+/* surface.spotlight */
+:root[data-version="2"] [data-b="surface"] > [data-spot][data-on] {
+  opacity: 1;
+  will-change: translate;
+}
+
+/* surface.stick */
+:root[data-version="2"] nav[data-b="surface"] {
+  position: sticky;
+  top: var(--joy-move-zero);
+  z-index: var(--joy-move-z);
+  background-color: transparent;
+  border-color: transparent;
+  pointer-events: none;
+}
+
+/* surface.stick */
+:root[data-version="2"] nav[data-b="surface"]::before {
+  content: "";
+  position: absolute;
+  top: var(--joy-move-nav-shift);
+  right: var(--joy-move-zero);
+  bottom: var(--joy-move-zero);
+  left: var(--joy-move-zero);
+  background-color: var(--joy-glass-nav);
+  backdrop-filter: var(--joy-glass-blur);
+  border-bottom: var(--stroke) solid var(--joy-paint-nav-line);
+  transition: translate var(--joy-dur-base) var(--joy-ease-move);
+}
+
+/* surface.stick */
+:root[data-version="2"] nav[data-b="surface"] > div {
+  position: relative;
+  pointer-events: auto;
+  transition: translate var(--joy-dur-base) var(--joy-ease-move);
+}
+
+/* surface.stick */
+:root[data-version="2"] nav[data-b="surface"][data-tight]::before {
+  translate: 0 var(--joy-move-nav-shift);
+}
+
+/* surface.stick */
+:root[data-version="2"] nav[data-b="surface"][data-tight] > div {
+  translate: 0 var(--joy-move-nav-row);
+}
+
+/* ----- action ----- */
+
+/* action.shape */
+:root[data-version="2"] [data-b="action"] {
+  --b-rest: var(--joy-shadow-action);
+  --b-lift: var(--joy-shadow-action-lift);
+  --b-press: var(--joy-shadow-action-press);
+  --b-sheen: var(--joy-gradient-sheen);
+  --b-wash: var(--joy-paint-action-wash);
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--joy-radius-sm);
+  background-image: var(--joy-gradient-gloss);
+  box-shadow: var(--b-rest);
+  transition:
+    translate var(--joy-dur-spring) var(--joy-ease-spring),
+    scale var(--joy-dur-quick) var(--joy-ease-move),
+    box-shadow var(--joy-dur-quick) var(--joy-ease-color);
+}
+
+/* action.chip */
+:root[data-version="2"] [data-b="action"]:is([data-kind="secondary"], [data-kind="starter"]) {
+  --b-rest: var(--joy-shadow-chip);
+  --b-lift: var(--joy-shadow-chip-lift);
+  --b-press: var(--joy-shadow-chip-press);
+  --b-sheen: var(--joy-gradient-chip-sheen);
+  --b-wash: var(--joy-paint-chip-wash);
+  background-image: var(--joy-glass-fill);
+  border-color: var(--joy-paint-edge-strong);
+}
+
+/* action.chip */
+:root[data-version="2"] [data-b="action"][data-kind="starter"] {
+  border-color: var(--joy-paint-edge);
+  border-radius: var(--joy-radius-pill);
+}
+
+/* action.lift */
+:root[data-version="2"] [data-b="action"]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: var(--joy-move-zero);
+  border-radius: inherit;
+  box-shadow: var(--b-lift);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--joy-dur-base) var(--joy-ease-color);
+}
+
+/* action.sheen */
+:root[data-version="2"] [data-b="action"]::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: var(--joy-move-zero);
+  border-radius: inherit;
+  background-color: var(--b-wash);
+  background-image: var(--b-sheen);
+  background-repeat: no-repeat;
+  background-size: var(--joy-light-sheen-size) var(--joy-light-sheen-size);
+  background-position: calc(var(--b-x, var(--joy-move-zero)) + var(--joy-light-sheen-offset))
+    calc(var(--b-y, var(--joy-move-zero)) + var(--joy-light-sheen-offset));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--joy-dur-base) var(--joy-ease-color);
+}
+
+/* action.slide */
+:root[data-version="2"] [data-b="action"] svg {
+  transition: translate var(--joy-dur-spring) var(--joy-ease-spring);
+}
+
+@media (hover: hover) {
+  /* action.lift */
+  :root[data-version="2"] [data-b="action"]:not(:disabled):hover {
+    translate: 0 var(--joy-move-lift);
+    opacity: 1;
+  }
+
+  /* action.lift */
+  :root[data-version="2"] [data-b="action"]:not(:disabled):hover::before {
+    opacity: 1;
+  }
+
+  /* action.sheen */
+  :root[data-version="2"] [data-b="action"]:not(:disabled):hover::after {
+    opacity: 1;
+  }
+
+  /* action.slide */
+  :root[data-version="2"] [data-b="action"]:not(:disabled):hover svg {
+    translate: var(--joy-move-slide) 0;
+  }
+}
+
+/* action.magnet */
+:root[data-version="2"] [data-b="action"][data-pull] {
+  transform: translate(var(--b-mx), var(--b-my));
+}
+
+/* action.press */
+:root[data-version="2"] [data-b="action"]:not(:disabled):active {
+  translate: 0 var(--joy-move-press);
+  scale: var(--joy-move-press-scale);
+  box-shadow: var(--b-press);
+  transition-duration: var(--joy-dur-quick);
+}
+
+/* action.press */
+:root[data-version="2"] [data-b="action"]:not(:disabled):active::before {
+  opacity: 0;
+}
+
+/* action.ring */
+:root[data-version="2"] [data-b="action"]:focus-visible {
+  outline-color: transparent;
+  box-shadow: var(--b-rest), var(--joy-shadow-ring);
+}
+
+/* action.arrive */
+:root[data-version="2"][data-joy] [data-b="action"][data-kind="starter"]:not([data-seen]) {
+  opacity: 0;
+}
+
+/* action.arrive */
+:root[data-version="2"] [data-b="action"][data-kind="starter"][data-seen] {
+  animation: action-arrive var(--joy-dur-reveal) var(--joy-ease-reveal) backwards;
+  animation-delay: calc(var(--i, var(--joy-move-none)) * var(--joy-move-stagger));
+}
+
+/* action.arrive */
+@keyframes action-arrive {
+  from {
+    opacity: 0;
+    translate: 0 var(--joy-move-rise-small);
+  }
+}
+
+/* ----- link ----- */
+
+/* link.underline */
+:root[data-version="2"] [data-b="link"]:not([data-kind="card"]) {
+  position: relative;
+}
+
+/* link.underline */
+:root[data-version="2"] [data-b="link"]:not([data-kind="card"])::after {
+  content: "";
+  position: absolute;
+  right: var(--joy-move-zero);
+  bottom: var(--joy-move-underline-at);
+  left: var(--joy-move-zero);
+  height: var(--stroke);
+  background-color: currentColor;
+  scale: 0 1;
+  transform-origin: right center;
+  pointer-events: none;
+  transition: scale var(--joy-dur-slow) var(--joy-ease-move);
+}
+
+/* link.slide */
+:root[data-version="2"] [data-b="link"] svg {
+  transition: translate var(--joy-dur-spring) var(--joy-ease-spring);
+}
+
+/* link.card */
+:root[data-version="2"] [data-b="link"][data-kind="card"] > span:nth-child(2) {
+  position: relative;
+  align-self: flex-start;
+}
+
+/* link.card */
+:root[data-version="2"] [data-b="link"][data-kind="card"] > span:nth-child(2)::after {
+  content: "";
+  position: absolute;
+  right: var(--joy-move-zero);
+  bottom: var(--joy-move-zero);
+  left: var(--joy-move-zero);
+  height: var(--stroke);
+  background-color: currentColor;
+  scale: 0 1;
+  transform-origin: right center;
+  pointer-events: none;
+  transition: scale var(--joy-dur-slow) var(--joy-ease-move);
+}
+
+/* link.underline */
+:root[data-version="2"] [data-b="link"]:hover {
+  text-decoration-line: none;
+}
+
+@media (hover: hover) {
+  /* link.underline */
+  :root[data-version="2"] [data-b="link"]:not([data-kind="card"]):hover::after {
+    scale: 1 1;
+    transform-origin: left center;
+  }
+
+  /* link.slide */
+  :root[data-version="2"] [data-b="link"]:hover svg {
+    translate: var(--joy-move-slide) 0;
+  }
+
+  /* link.card */
+  :root[data-version="2"] [data-b="link"][data-kind="card"]:hover > span:nth-child(2)::after {
+    scale: 1 1;
+    transform-origin: left center;
+  }
+}
+
+/* ----- field ----- */
+
+/* field.well */
+:root[data-version="2"] [data-b="field"] {
+  position: relative;
+  isolation: isolate;
+  border-color: var(--joy-paint-edge-strong);
+  border-radius: var(--joy-radius-field);
+  background-image: var(--joy-glass-field);
+  box-shadow: var(--joy-shadow-field);
+  transition:
+    translate var(--joy-dur-base) var(--joy-ease-move),
+    box-shadow var(--joy-dur-slow) var(--joy-ease-color),
+    border-color var(--joy-dur-slow) var(--joy-ease-color);
+}
+
+/* field.warm */
+:root[data-version="2"] [data-b="field"]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: var(--joy-move-zero);
+  border-radius: inherit;
+  box-shadow: var(--joy-shadow-field-lift);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--joy-dur-slow) var(--joy-ease-color);
+}
+
+@media (hover: hover) {
+  /* field.warm */
+  :root[data-version="2"] [data-b="field"]:hover::before {
+    opacity: 1;
+  }
+
+  /* field.warm */
+  :root[data-version="2"] [data-b="field"]:hover {
+    translate: 0 var(--joy-move-lift);
+  }
+}
+
+/* field.nest */
+:root[data-version="2"] [data-b="field"] [data-b="action"] {
+  border-radius: var(--joy-radius-field-nested);
+}
+
+/* field.focus */
+:root[data-version="2"] [data-b="field"]:focus-within {
+  outline-style: none;
+  border-color: var(--joy-paint-edge-strong);
+  box-shadow: var(--joy-shadow-field), var(--joy-shadow-field-ring);
+}
+
+/* field.focus */
+:root[data-version="2"] [data-b="field"]:focus-within::before {
+  opacity: 0;
+}
+
+/* field.focus */
+:root[data-version="2"] [data-surface="mint"] [data-b="field"]:focus-within {
+  box-shadow: var(--joy-shadow-field), var(--joy-shadow-field-ring-on-mint);
+}
+
+/* ----- box ----- */
+
+/* box.glass */
+:root[data-version="2"] [data-b="box"] {
+  position: relative;
+  isolation: isolate;
+  border-color: var(--joy-paint-edge);
+  border-radius: var(--joy-radius-lg);
+  background-color: transparent;
+  background-image: var(--joy-gradient-glow), var(--joy-glass-fill);
+  box-shadow: var(--joy-shadow-box);
+  overflow: visible;
+  transition: translate var(--joy-dur-spring) var(--joy-ease-spring);
+}
+
+/* box.glass */
+:root[data-version="2"] [data-b="box"][data-kind="note"] {
+  border-radius: var(--joy-radius-md);
+}
+
+/* box.glass */
+:root[data-version="2"] [data-b="box"][data-kind="term"] > :first-child {
+  border-color: var(--joy-paint-edge);
+}
+
+/* box.paper */
+:root[data-version="2"] [data-b="box"][data-kind="plate"] {
+  background-image:
+    var(--joy-gradient-glow), var(--joy-gradient-paper-fade), var(--joy-texture-rules),
+    var(--joy-glass-fill);
+  background-position: center;
+}
+
+/* box.rise */
+:root[data-version="2"][data-joy] [data-b="box"]:not([data-seen]) {
+  opacity: 0;
+}
+
+/* box.rise */
+:root[data-version="2"] [data-b="box"][data-seen] {
+  animation: box-rise var(--joy-dur-reveal) var(--joy-ease-reveal) backwards;
+  animation-delay: calc(var(--i, var(--joy-move-none)) * var(--joy-move-stagger-row));
+}
+
+/* box.rise */
+@keyframes box-rise {
+  from {
+    opacity: 0;
+    translate: 0 var(--joy-move-rise);
+  }
+}
+
+/* box.lift */
+:root[data-version="2"] [data-b="box"]::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: var(--joy-move-zero);
+  border-radius: inherit;
+  box-shadow: var(--joy-shadow-box-lift);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--joy-dur-slow) var(--joy-ease-color);
+}
+
+/* box.spot */
+:root[data-version="2"] [data-b="box"]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: var(--joy-move-zero);
+  border-radius: inherit;
+  background-image: var(--joy-gradient-box-spot);
+  background-repeat: no-repeat;
+  background-size: var(--joy-light-box-size) var(--joy-light-box-size);
+  background-position: calc(var(--b-x, var(--joy-move-zero)) + var(--joy-light-box-offset))
+    calc(var(--b-y, var(--joy-move-zero)) + var(--joy-light-box-offset));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--joy-dur-slow) var(--joy-ease-color);
+}
+
+/* box.swell */
+:root[data-version="2"] [data-b="box"] [data-b="figure"] {
+  transition: scale var(--joy-dur-spring) var(--joy-ease-spring);
+}
+
+@media (hover: hover) {
+  /* box.lift */
+  :root[data-version="2"] :is([data-b="box"]:hover, a:hover > [data-b="box"]) {
+    translate: 0 var(--joy-move-lift-box);
+  }
+
+  /* box.lift */
+  :root[data-version="2"] :is([data-b="box"]:hover, a:hover > [data-b="box"])::after {
+    opacity: 1;
+  }
+
+  /* box.spot */
+  :root[data-version="2"] [data-b="box"]:hover::before {
+    opacity: 1;
+  }
+
+  /* box.swell */
+  :root[data-version="2"] :is([data-b="box"]:hover, a:hover > [data-b="box"]) [data-b="figure"] {
+    scale: var(--joy-move-swell);
+  }
+}
+
+/* box.tilt */
+:root[data-version="2"] [data-b="box"][data-tilt] {
+  transform: perspective(var(--joy-move-perspective))
+    rotateX(calc(var(--b-ry) * var(--joy-move-tilt)))
+    rotateY(calc(var(--b-rx) * var(--joy-move-tilt)));
+}
+
+/* box.type */
+:root[data-version="2"][data-joy] [data-b="box"][data-kind="term"]:not([data-seen]) p {
+  opacity: 0;
+}
+
+/* box.type */
+:root[data-version="2"] [data-b="box"][data-kind="term"][data-seen] > :last-child > p {
+  animation: box-type var(--joy-dur-slow) var(--joy-ease-reveal) backwards;
+  animation-delay: calc(var(--i, var(--joy-move-none)) * var(--joy-move-stagger-row));
+}
+
+/* box.type */
+@keyframes box-type {
+  from {
+    opacity: 0;
+    translate: var(--joy-move-wash-bleed) 0;
+  }
+}
+
+/* ----- row ----- */
+
+/* row.arrive */
+:root[data-version="2"][data-joy] [data-b="row"]:not([data-seen]) {
+  opacity: 0;
+}
+
+/* row.arrive */
+:root[data-version="2"] [data-b="row"][data-seen] {
+  animation: row-arrive var(--joy-dur-reveal) var(--joy-ease-reveal) backwards;
+  animation-delay: calc(var(--i, var(--joy-move-none)) * var(--joy-move-stagger-row));
+}
+
+/* row.arrive */
+@keyframes row-arrive {
+  from {
+    opacity: 0;
+    translate: 0 var(--joy-move-rise-small);
+  }
+}
+
+/* row.wash */
+:root[data-version="2"] [data-b="row"] {
+  position: relative;
+  isolation: isolate;
+}
+
+/* row.wash */
+:root[data-version="2"] [data-b="row"]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: var(--joy-move-zero);
+  right: var(--joy-move-wash-bleed);
+  bottom: var(--joy-move-zero);
+  left: var(--joy-move-wash-bleed);
+  border-radius: var(--joy-radius-sm);
+  background-image: var(--joy-gradient-row-wash);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--joy-dur-base) var(--joy-ease-color);
+}
+
+/* row.indent */
+:root[data-version="2"] [data-b="row"] > :is(summary, p) {
+  transition: translate var(--joy-dur-spring) var(--joy-ease-spring);
+}
+
+/* row.swell */
+:root[data-version="2"] [data-b="row"] [data-b="figure"] {
+  transition: scale var(--joy-dur-spring) var(--joy-ease-spring);
+}
+
+@media (hover: hover) {
+  /* row.wash */
+  :root[data-version="2"] [data-b="row"]:hover::before {
+    opacity: 1;
+  }
+
+  /* row.indent */
+  :root[data-version="2"] [data-b="row"]:hover > :is(summary, p) {
+    translate: var(--joy-move-indent) 0;
+  }
+
+  /* row.swell */
+  :root[data-version="2"] [data-b="row"]:hover [data-b="figure"] {
+    scale: var(--joy-move-swell-glyph);
+  }
+}
+
+/* row.fold */
+:root[data-version="2"] details[data-b="row"] {
+  interpolate-size: allow-keywords;
+}
+
+/* row.fold */
+:root[data-version="2"] details[data-b="row"]::details-content {
+  height: var(--joy-move-fold-closed);
+  overflow: clip;
+  opacity: 0;
+  transition:
+    height var(--joy-dur-fold) var(--joy-ease-move),
+    opacity var(--joy-dur-fold) var(--joy-ease-color),
+    content-visibility var(--joy-dur-fold) allow-discrete;
+}
+
+/* row.fold */
+:root[data-version="2"] details[data-b="row"][open]::details-content {
+  height: auto;
+  opacity: 1;
+}
+
+/* row.sign */
+:root[data-version="2"] [data-b="row"] [data-sign] {
+  position: relative;
+}
+
+/* row.sign */
+:root[data-version="2"] [data-b="row"] [data-sign]::after {
+  content: attr(data-sign);
+  position: absolute;
+  top: var(--joy-move-zero);
+  left: var(--joy-move-zero);
+  rotate: var(--joy-move-sign-turn);
+  transition:
+    rotate var(--joy-dur-spring) var(--joy-ease-spring),
+    opacity var(--joy-move-none-s);
+}
+
+/* row.sign */
+:root[data-version="2"] details[data-b="row"][open] [data-sign]::after {
+  rotate: var(--joy-move-sign-rest);
+  opacity: 0;
+  transition-delay: var(--joy-move-none-s), var(--joy-dur-base);
+}
+
+/* row.cursor */
+:root[data-version="2"] [data-b="row"] > span {
+  animation: row-cursor var(--joy-dur-blink) var(--joy-ease-blink) infinite;
+}
+
+/* row.cursor */
+@keyframes row-cursor {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ----- figure ----- */
+
+/* figure.arrive */
+:root[data-version="2"][data-joy] [data-b="figure"]:not([data-seen]) {
+  opacity: 0;
+}
+
+/* figure.arrive */
+:root[data-version="2"] [data-b="figure"][data-seen]:not([data-split]) {
+  transform-origin: center;
+  animation: figure-arrive var(--joy-dur-reveal) var(--joy-ease-spring) backwards;
+  animation-delay: calc(var(--i, var(--joy-move-none)) * var(--joy-move-stagger));
+}
+
+/* figure.arrive */
+@keyframes figure-arrive {
+  from {
+    opacity: 0;
+    scale: var(--joy-move-arrive-from);
+  }
+}
+
+/* figure.bloom */
+:root[data-version="2"] [data-b="figure"] [data-part="petal"] {
+  transform-box: view-box;
+  transform-origin: center;
+  animation: figure-bloom var(--joy-dur-bloom) var(--joy-ease-spring) backwards;
+  animation-delay: calc(var(--a) * var(--joy-dur-sweep));
+}
+
+/* figure.bloom */
+@keyframes figure-bloom {
+  from {
+    opacity: 0;
+    scale: var(--joy-move-bloom-from);
+  }
+}
+
+/* figure.draw */
+:root[data-version="2"] [data-b="figure"] [data-part="line"] {
+  stroke-dasharray: var(--len);
+  animation: figure-draw var(--joy-dur-draw) var(--joy-ease-draw) backwards;
+  animation-delay: calc(var(--a) * var(--joy-dur-sweep));
+}
+
+/* figure.draw */
+@keyframes figure-draw {
+  from {
+    stroke-dashoffset: var(--len);
+  }
+}
+
+/* figure.draw */
+:root[data-version="2"] [data-b="figure"] [data-part="dot"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: figure-bloom var(--joy-dur-bloom) var(--joy-ease-spring) backwards;
+  animation-delay: var(--joy-dur-draw);
+}
+
+/* figure.notes */
+:root[data-version="2"] [data-b="figure"] foreignObject {
+  overflow: visible;
+}
+
+/* figure.notes */
+:root[data-version="2"][data-joy] [data-b="figure"]:not([data-seen]) foreignObject {
+  opacity: 0;
+}
+
+/* figure.notes */
+:root[data-version="2"] [data-b="figure"][data-seen] foreignObject {
+  animation: figure-notes var(--joy-dur-reveal) var(--joy-ease-reveal) backwards;
+  animation-delay: calc(
+    var(--joy-dur-notes) +
+    var(--i, var(--joy-move-none)) *
+    var(--joy-move-stagger-row)
+  );
+}
+
+/* figure.notes */
+@keyframes figure-notes {
+  from {
+    opacity: 0;
+  }
+}
+
+/* figure.link */
+:root[data-version="2"] [data-b="figure"] :is([data-part], foreignObject) {
+  transition: opacity var(--joy-dur-base) var(--joy-ease-color);
+}
+
+/* figure.link */
+:root[data-version="2"]
+  [data-b="figure"][data-linking]
+  :is([data-part], foreignObject):not([data-lit]) {
+  opacity: var(--joy-move-dim);
+}
+
+/* figure.field */
+:root[data-version="2"] [data-b="figure"] > use {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* figure.wake */
+:root[data-version="2"] div:has(> [data-b="figure"]:hover) {
+  opacity: 1;
+}
+
+/* figure.wake */
+:root[data-version="2"] div:has(> [data-b="figure"]) {
+  transition: opacity var(--joy-dur-base) var(--joy-ease-color);
+}
+
+/* ----- mark ----- */
+
+/* mark.arrive */
+:root[data-version="2"][data-joy] [data-b="mark"]:not([data-seen]):not(nav *) {
+  opacity: 0;
+}
+
+/* mark.arrive */
+:root[data-version="2"] [data-b="mark"][data-seen]:not(nav *) {
+  animation: mark-arrive var(--joy-dur-reveal) var(--joy-ease-reveal) backwards;
+}
+
+/* mark.arrive */
+@keyframes mark-arrive {
+  from {
+    opacity: 0;
+  }
+}
+
+/* mark.tight */
+:root[data-version="2"] nav[data-tight] [data-b="mark"] {
+  scale: var(--joy-move-nav-mark);
+}
+
+/* mark.tight */
+:root[data-version="2"] nav [data-b="mark"] {
+  transform-origin: left center;
+  transition: scale var(--joy-dur-base) var(--joy-ease-move);
+}
+
+/* ----- head ----- */
+
+/* head.rise */
+:root[data-version="2"] [data-b="head"] [data-line] {
+  display: inline-block;
+}
+
+/* head.rise */
+:root[data-version="2"][data-joy] [data-b="head"]:not([data-seen]) > * {
+  opacity: 0;
+}
+
+/* head.rise */
+:root[data-version="2"] [data-b="head"][data-seen] > :not(:has([data-line])),
+:root[data-version="2"] [data-b="head"][data-seen] [data-line] {
+  animation: head-rise var(--joy-dur-reveal) var(--joy-ease-reveal) backwards;
+  animation-delay: calc(var(--i, var(--joy-move-none)) * var(--joy-move-stagger));
+}
+
+/* head.rise */
+@keyframes head-rise {
+  from {
+    opacity: 0;
+    translate: 0 var(--joy-move-rise);
+    filter: var(--joy-move-blur);
+  }
+}

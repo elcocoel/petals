@@ -15,8 +15,17 @@ export function GalleryCard({
   href: string;
 }) {
   return (
-    <a href={href} className="flex flex-col no-underline hover:underline">
-      <span className="flex h-figure-height items-center justify-center overflow-hidden border border-hairline">
+    <a
+      href={href}
+      data-b="link"
+      data-kind="card"
+      className="flex flex-col no-underline hover:underline"
+    >
+      <span
+        data-b="box"
+        data-kind="plate"
+        className="flex h-figure-height items-center justify-center overflow-hidden border border-hairline"
+      >
         <Drawing kind={thumb} size={240} />
       </span>
       <span className="pt-block-gap pb-space-8 type-heading">{title}</span>

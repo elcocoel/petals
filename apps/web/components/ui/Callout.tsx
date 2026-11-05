@@ -21,6 +21,8 @@ export function Callout({
 }) {
   return (
     <div
+      data-b="box"
+      data-kind="note"
       className={`flex flex-col items-start border border-primary bg-surface text-primary ${SIZES[size]}`}
     >
       <p className="my-0 type-mono">{who}</p>

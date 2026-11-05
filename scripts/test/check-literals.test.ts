@@ -23,6 +23,11 @@ describe('raw values', () => {
     ['a variable shorthand', '<p className="bg-(--primitive-ink)" />'],
     ['a primitive', '.x { color: var(--primitive-ink) }'],
     ['a rounded corner', '<p className="rounded-full" />'],
+    ['a linear gradient', '.x { background: linear-gradient(red, blue) }'],
+    ['a radial gradient in a string', 'const g = "radial-gradient(circle, a, b)";'],
+    ['a shadow literal', '.x { box-shadow: 0 1px 2px black }'],
+    ['a radius literal', '.x { border-radius: 8px }'],
+    ['a corner radius literal', '.x { border-top-left-radius: 8px }'],
   ])('fails on %s', (_name, text) => {
     expect(rules(text)).not.toEqual([]);
   });
@@ -36,6 +41,8 @@ describe('raw values', () => {
     ['a generic', 'const x: Array<string> = [];'],
     ['an index signature', 'type M = { [key: string]: number };'],
     ['an attribute selector', '[data-surface="ink"] { display: block }'],
+    ['a shadow through a variable', '.x { box-shadow: var(--joy-shadow-box) }'],
+    ['a radius through a variable', '.x { border-radius: var(--joy-radius-sm) }'],
   ])('passes %s', (_name, text) => {
     expect(rules(text)).toEqual([]);
   });
@@ -102,5 +109,50 @@ describe('the tree', () => {
     expect(scanTree(root)).toEqual([]);
     writeFileSync(join(root, 'apps/web/app/bad.tsx'), 'export const a = "#222";\n');
     expect(scanTree(root)).toMatchObject([{ file: 'apps/web/app/bad.tsx', line: 1 }]);
+  });
+});
+
+describe('a version stylesheet', () => {
+  const SHEET = 'apps/web/app/versions/v2.css';
+  const rule = (body: string) => rules(`a {\n  ${body}\n}\n`, SHEET);
+  const LITERAL = 'a literal in a version stylesheet, say var() and put it in the token file';
+
+  test.each([
+    ['a size', 'translate: 0 -1px;'],
+    ['a duration', 'transition: opacity 0.2s ease;'],
+    ['a millisecond', 'animation-delay: 70ms;'],
+    ['a percentage', 'width: 50%;'],
+    ['a number', 'scale: 1.04;'],
+    ['an angle', 'rotate: 45deg;'],
+    ['an easing', 'transition-timing-function: cubic-bezier(.2, .7, .2, 1);'],
+    ['a linear() easing', 'transition-timing-function: linear(0, 1);'],
+    ['a filter', 'filter: blur(6px);'],
+    ['a texture', 'background-image: url("x.png");'],
+    ['a literal beside a var', 'translate: var(--x) 2px;'],
+    ['a literal in calc', 'width: calc(var(--x) * 2);'],
+  ])('fails on %s', (_name, body) => {
+    expect(rule(body)).toContain(LITERAL);
+  });
+
+  test.each([
+    ['var()', 'translate: var(--joy-move-lift);'],
+    ['var() with a fallback', 'translate: var(--x, var(--joy-move-zero));'],
+    ['calc of vars', 'width: calc(var(--a) * var(--b));'],
+    ['zero and one', 'opacity: 0;'],
+    ['one', 'scale: 1 1;'],
+    ['a keyword', 'position: absolute;'],
+    ['an empty string', 'content: "";'],
+    ['attr()', 'content: attr(data-sign);'],
+    ['a font axis name, by a string', 'font-variation-settings: "ELSH" var(--x);'],
+  ])('passes %s', (_name, body) => {
+    expect(rule(body)).toEqual([]);
+  });
+
+  test('the rule is only for the stylesheet', () => {
+    expect(rules('a {\n  translate: 0 -1px;\n}\n', 'apps/web/app/globals.css')).toEqual([]);
+  });
+
+  test('a selector may carry a number', () => {
+    expect(rules('a:nth-child(2) {\n  opacity: 0;\n}\n', SHEET)).toEqual([]);
   });
 });

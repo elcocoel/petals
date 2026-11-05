@@ -9,7 +9,7 @@ const SIZES = {
 
 export function Wordmark({ size = 'nav' }: { size?: keyof typeof SIZES }) {
   return (
-    <span className={`wordmark ${SIZES[size]}`}>
+    <span data-b="mark" data-kind="wordmark" className={`wordmark ${SIZES[size]}`}>
       <span aria-hidden="true" className="wordmark-back select-none">
         Petals
       </span>

@@ -14,7 +14,7 @@ export function Terminal({
   lines: readonly { text: string; accent?: boolean; returned?: boolean }[];
 }) {
   return (
-    <div className="border border-primary">
+    <div data-b="box" data-kind="term" className="border border-primary">
       <div className="border-b border-primary px-block-gap py-space-16">
         <MetaRow start={start} end={end} />
       </div>

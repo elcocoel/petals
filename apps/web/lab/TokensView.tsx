@@ -22,6 +22,7 @@ import {
   wordmark,
 } from '@petal/tokens';
 import { Mono } from '../components/ui/Mono.tsx';
+import { BehavioursView } from './BehavioursView.tsx';
 
 const SAMPLE = 'Power has a shape.';
 
@@ -143,6 +144,7 @@ export function TokensView() {
           ]),
         ]}
       />
+      <BehavioursView />
     </section>
   );
 }

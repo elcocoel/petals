@@ -63,6 +63,7 @@ export function AskBox({
   return (
     <form
       data-surface="ground"
+      data-b="field"
       action={to}
       method={to ? 'get' : undefined}
       onSubmit={onSubmit}

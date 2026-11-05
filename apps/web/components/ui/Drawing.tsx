@@ -55,7 +55,13 @@ function CellRepeat({ className }: { className: string }) {
     y: AT.y + Math.floor(i / REPEAT.columns) * AT.stepY,
   }));
   return (
-    <svg aria-hidden="true" viewBox={`0 0 ${REPEAT.width} ${REPEAT.height}`} className={className}>
+    <svg
+      data-b="figure"
+      data-kind="cell-repeat"
+      aria-hidden="true"
+      viewBox={`0 0 ${REPEAT.width} ${REPEAT.height}`}
+      className={className}
+    >
       <symbol id={id} viewBox={`0 0 ${cell.width} ${cell.height}`}>
         {marks(cell)}
       </symbol>
@@ -86,6 +92,8 @@ export function Drawing({
   const drawing = drawings[kind];
   return (
     <svg
+      data-b="figure"
+      data-kind={kind}
       aria-hidden="true"
       viewBox={`0 0 ${drawing.width} ${drawing.height}`}
       className={width === undefined ? className : undefined}

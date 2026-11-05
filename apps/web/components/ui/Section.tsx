@@ -58,7 +58,7 @@ export function Section({
       children
     );
   return (
-    <Tag data-surface={kind} id={id} className={rule && RULES[rule]}>
+    <Tag data-surface={kind} data-b="surface" id={id} className={rule && RULES[rule]}>
       <div className={`mx-auto w-full max-w-page-width antialiased ${PADDING[padding]}`}>
         {head && <div className="mb-column-gap">{head}</div>}
         {body}
