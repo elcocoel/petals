@@ -659,9 +659,9 @@ describe('the folder the person is in', () => {
   });
 });
 
-describe('/make shows the command', () => {
+describe('the agent page shows the command', () => {
   test('a plain section', () => {
-    const page = readFileSync(join(ROOT, 'apps/web/app/make/page.tsx'), 'utf8');
+    const page = readFileSync(join(ROOT, 'apps/web/components/AgentHome.tsx'), 'utf8');
     expect(page).toContain('Use your own agent');
     expect(page).toContain('pnpm petal connect claude');
     expect(page).toContain('pnpm petal connect codex');

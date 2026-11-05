@@ -86,7 +86,7 @@ describe('SYSTEM_PROMPT', () => {
     expect(begin).toBeGreaterThan(0);
     expect(end).toBeGreaterThan(begin);
     const block = lines.slice(begin + 1, end);
-    expect(block[0]).toBe('## The six steps');
+    expect(block[0]).toBe('## Talk first');
     const rules = block.slice(block.indexOf('## Rules') + 1).filter((l) => /^\d\. /.test(l));
     expect(rules.map((l) => l.slice(0, 3))).toEqual(['1. ', '2. ', '3. ', '4. ', '5. ', '6. ']);
     expect(lines[end - 1]?.slice(0, 3)).toBe('6. ');
