@@ -8,23 +8,31 @@ Already exist in `specs/001-petal-core/`: snapshot, recipe, spec, reading, entry
 
 ## Public, attributed: claim
 
+Built. The full contract, with every verb and rule, is [contracts/claims.md](./contracts/claims.md).
+
 ```ts
 type Claim = {
   petal: 'claim/v1';
-  id: string;                 // hash of the canonical claim, without id and signature
+  id: string;                 // hash of the canonical claim, without id and proof
   subject: EntityRef;
-  verb: string;               // 'holds', 'controls', 'delegates_to', 'voted', 'paid', 'same_as', 'challenges', 'confidence'...
+  verb: Verb;                 // a closed list per version. 'holds', 'delegates_to', 'challenges', 'confidence'...
   object: EntityRef | { value: string; unit?: string };
+  qualifiers?: Record<string, string>;
   valid_from?: string;
   valid_to?: string;
-  kind: 'observed' | 'sourced' | 'inferred';
-  evidence: { snapshot_sha256?: string; url?: string; claim_id?: string; note?: string }[];
-  by: EntityRef;              // a NEAR account, a tool, or a named model and version
-  signature?: unknown;        // required for what goes on the map
+  issued_at: string;
+  as_of?: { chain: string; block: number };
+  kind: 'observed' | 'declared' | 'sourced' | 'inferred';
+  method?: string;            // required if inferred
+  evidence: { snapshot_sha256?: string; url?: string; url_sha256?: string; retrieved_at?: string; claim_id?: string; note?: string }[];
+  by: EntityRef;              // an account, a named tool, or a named model and version
+  via?: EntityRef;
+  proof?: Proof;              // tx, nep413 or nearai
 };
 
-// Namespaced, and may be anything: 'near:mainnet:alice.near', 'eip155:1:0xabc…',
-// 'solana:…:…', 'group:<id>', 'entity:<id>' for something with no address.
+// Namespaced, with one spelling each: 'near:mainnet:alice.near', 'eip155:1:0xabc…', 'solana:…:…',
+// 'group:<snapshot sha256>:<key>', 'asset:…', 'proposal:…', 'claim:<id>', 'tool:…', 'model:…'.
+// No natural person, and no free 'entity:' for now: see the contract.
 type EntityRef = string;
 ```
 
@@ -37,11 +45,19 @@ type EntityRef = string;
 ```ts
 type Lens = {
   kinds?: Claim['kind'][];
-  trusted?: EntityRef[];
-  minConfidence?: number;
+  trusted?: EntityRef[] | 'everyone';   // absent or empty counts nobody's word about anyone else
+  minConfidence?: 'low' | 'medium' | 'high';
   showDisputed?: boolean;
+  showRetracted?: boolean;
 };
-type Shown = { claim: Claim; show: 'plain' | 'caveated' | 'contested' | 'hidden'; why: string };
+type Shown = {
+  claim: Claim;
+  show: 'plain' | 'caveated' | 'contested' | 'hidden';
+  why: string;
+  beside: string[];                     // answers from the subject's own account
+  challenges: { counted: number; outside: number };
+  confidence?: { band: 'low' | 'medium' | 'high'; raters: number };
+};
 function applyPolicy(claims: Claim[], lens: Lens): Shown[];
 ```
 
