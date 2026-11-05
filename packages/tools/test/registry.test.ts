@@ -20,10 +20,11 @@ const PHASE_A = [
   'prepare_publish',
   'publish_flower',
   'quote_payment',
+  'find_target',
 ];
 
 describe('registry', () => {
-  test('holds the Phase A tools of tools.md, once each', () => {
+  test('holds the Phase A tools of tools.md and find_target, once each', () => {
     expect(registry.map((t) => t.name)).toEqual(PHASE_A);
   });
 

@@ -50,6 +50,7 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     await run('list_flowers', {});
     const got = await run('get_flower', { id: pub.id });
     await run('quote_payment', { purpose: 'sponsor_refresh' });
+    await run('find_target', { query: 'near validators' });
 
     expect([...covered].sort()).toEqual(registry.map((t) => t.name).sort());
     // the documents inside the outputs are the contract's own schemas

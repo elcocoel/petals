@@ -5,6 +5,7 @@ import type { ToolError } from '@petal/core/types';
 import { type PetalTool, versioned } from './define.ts';
 import { toolError } from './errors.ts';
 import { computeFiguresTool } from './tools/figures.ts';
+import { findTarget } from './tools/find.ts';
 import { getFlower, listFlowers } from './tools/flowers.ts';
 import { getNetwork, listNetworks } from './tools/networks.ts';
 import { preparePublish, publishFlower } from './tools/publish.ts';
@@ -29,6 +30,7 @@ export const registry: Tool<any, any>[] = [
   preparePublish,
   publishFlower,
   quotePayment,
+  findTarget,
 ];
 
 /** Title, description and hints, for doors that list them (MCP, the agent's tool list). */

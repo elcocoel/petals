@@ -13,6 +13,7 @@ import type {
 
 export { InputError, isInputError, type SourceFailure } from './errors.ts';
 export { ARBITRUM, BASE, ETHEREUM, EVM_CHAINS, type EvmChain } from './evm/chains.ts';
+export { type ContractIdentity, identifyContracts, type Ledger } from './evm/identify.ts';
 export {
   EVM_ENDPOINTS,
   type EvmReader,
@@ -57,6 +58,7 @@ export {
   SPL_DESCRIPTOR,
   solanaSplHolders,
   splMint,
+  TOKEN_PROGRAM,
 } from './modules/solana-spl-holders.ts';
 export { modules } from './registry.ts';
 export {

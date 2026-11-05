@@ -33,6 +33,7 @@ The agent interprets; the tools count (FR-025). Any number an agent quotes must 
 | `quote_payment` | A (dry) | calls NEAR Intents 1Click with `dry: true`; no money moves (FR-031) |
 | `find_documents` | B | fetches public docs and forum pages for citations |
 | `get_labels` | B | reads the label layer |
+| `find_target` | M-Talk | at most 5 keyless calls to public sources and the chain |
 | `compare_figures` | B | none |
 | `prepare_correction` | B | issues a nonce |
 | `submit_correction` | B | writes a correction request to the shared map (FR-022) |
@@ -42,6 +43,14 @@ The agent interprets; the tools count (FR-025). Any number an agent quotes must 
 Input: `{ "query"?: string }`
 Output: `{ "networks": Network[], "cannot_read_hint": string }` where `Network` is the descriptor in [data-model.md](../data-model.md#network) (`id`, `chain`, `population`, `kind`, `title`, `params` schema, `capabilities`, `live`, `cost`).
 Phase A networks: `near-validators` (stored delegator crawl + live validator set), `near-house-of-stake` (live, ~10 calls). Phase B adds `near-sputnik-dao` (live, any DAO by account), `bitcoin-mining-pools`, `ethereum-staking`, `ethereum-miners-premerge` (fixtures from step 1).
+
+### find_target (M-Talk, T164; additive, still tools/v1)
+
+From plain words or an address to candidates. A token is a ledger of holdings, and transferability is a property of it: Moloch shares are a token that can't be transferred. No target is named in code.
+Input: `{ "query": string, "chain"?: string, "limit"?: int (1-12, default 6) }`. "UNI on Base" also names the chain.
+Output: `{ "query", "chain", "candidates": Candidate[], "more": int, "ambiguous": boolean, "next": string, "sources": [{ "id", "url", "status": "answered" | "failed" | "skipped", "hits", "ms"?, "note"? }], "calls": int }`.
+`Candidate`: `{ "name", "symbol", "kind": "token" | "dao" | "network", "chain", "address": string | null, "ledger": "erc20" | "moloch-v1" | "moloch-v2" | "spl" | "other" | null, "transferable": boolean | null, "confirmed": { "by": "chain", "chain", "url", "answered": [signature] } | null, "draw": [{ "module", "params", "shows", "stored"?: { "sha256", "as_of", "block_height" }, "note"? }], "cannot_draw": string | null, "evidence": { "liquidity_usd"?, "volume_24h_usd"?, "holders"?, "verified"?, "followers"?, "proposals"?, "snapshot_space"? }, "sources": [{ "id", "url" }] }`.
+Behaviour: Petal's modules and stored snapshots, then GeckoTerminal, Jupiter and Snapshot's hub; each EVM chain is then asked about its best candidate (`identifyContracts`, one eth_call). An EVM address that neither the chain confirmed nor a stored snapshot holds gets `cannot_draw`, never `draw`; Solana candidates are not confirmed here, the module's first read checks the mint. At most 5 calls and 4 s each; a source that is down costs only its own answer. `ambiguous` is true when different things carry the name: the caller asks, it does not pick. In fake mode no outbound call is made.
 
 ### get_network
 

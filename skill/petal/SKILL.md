@@ -26,7 +26,7 @@ If the `petal` MCP server is configured, call the same tools by name instead (in
 ## Flow
 
 ```
-list_networks → get_snapshot → describe_snapshot + compute_figures
+find_target (a name) or list_networks → get_snapshot → describe_snapshot + compute_figures
   → propose_spec → validate_spec → render_flower → (asked to publish) prepare_publish → sign_url
 ```
 
@@ -36,8 +36,8 @@ list_networks → get_snapshot → describe_snapshot + compute_figures
 <!-- petal:shared:begin -->
 ## The six steps
 
-1. **Find the network, and check the map.** Call `list_networks` and pick the network the question is about. If Petal can't read it, say so plainly, say what it can read instead (its `cannot_read_hint`), and stop. Then call `list_flowers` for that network. If a flower there already answers the question (same network, same date, the mapping the question needs), offer it with its link, unless the person asks for a fresh analysis.
-2. **Get the snapshot.** Call `get_snapshot`. Say whether it was reused (`reused: true`) or freshly read, and give its date (`as_of`) and block.
+1. **Find the target, and check the map.** When the person names something (a network, a DAO, a token, a ticker, an address), call `find_target` with their words. When they ask what Petal can show, call `list_networks`. Then call `list_flowers` for that network. If a flower there already answers the question (same network, same date, the mapping the question needs), offer it with its link, unless the person asks for a fresh analysis. **Then stop and ask.** Never go from a question straight to a new map. Say what you found, with its chain and address, and whether Petal already holds it (a `stored` entry in `draw`), then ask a plain yes or no before starting a new read and drawing. Go on only after a yes in this chat. A person who asks for a flower that already exists is simply shown it.
+2. **Get the snapshot, after the yes.** A candidate's `draw` says what to read: its `module` is the `network`, its `params` the `params`. Call `get_snapshot`. Say whether it was reused (`reused: true`) or freshly read, and give its date (`as_of`) and block.
 3. **Count.** Call `describe_snapshot` for the measures, segment options, primitives and sources, and `compute_figures` for the numbers. Quote only numbers these two tools return.
 4. **Propose and validate.** Call `propose_spec` with the fewest choices the question needs; the defaults fill the rest. Then call `validate_spec` with the spec exactly as `propose_spec` returned it, and your interpretation. On errors, fix the cause and try again.
 5. **Draw.** Call `render_flower` with the validated spec. Hand back its `view_url`, the legend, your interpretation, and what the data can't tell.
@@ -50,7 +50,21 @@ list_networks → get_snapshot → describe_snapshot + compute_figures
 - Who stands behind each validator or pool: `segments: "backers"`, where the network offers it.
 - Named or anonymous: `colour: "identity"`.
 - Use only the measures, segment options and primitives `describe_snapshot` lists for this snapshot.
-- If the question is ambiguous, pick the most likely reading, say which one you picked, and offer the other.
+- If the mapping a question needs is ambiguous, pick the most likely reading, say which one you picked, and offer the other. An ambiguous target is different: see below.
+
+## Finding the target
+
+- A token is a ledger of holdings, and transferability is a property of it. Moloch shares are a token that can't be transferred: no market lists them because they have no trading pool, and they are still a token. Never say something isn't a token because a market site doesn't list it.
+- If you remember an address, pass it to `find_target`, and use it only once the chain has confirmed it (`confirmed`). Say so when the chain confirmed a candidate, and give a link from its `sources`.
+- `ambiguous: true` means different things carry this name, and copycats are common. Ask which one to draw, if any, naming each with its chain and the evidence that separates them (liquidity, holders). Never pick for the person. Naming one is the yes.
+- For votes or delegates, use the candidate's `erc20-votes` entry in `draw`. If it has none, say so and offer its holders.
+
+## Never a dead end
+
+Every answer ends in a flower, one clear question, or a refusal that says what would work.
+
+- Nothing found: ask what it is, and its chain or address.
+- `cannot_draw`, or a module refuses: say why in plain words, then what would work: another candidate in the list, what the error's `hint` names, or a network from `list_networks`.
 
 ## What Petal can't read or draw
 
@@ -115,6 +129,7 @@ JSON in and out; send `content-type: application/json`. Every answer carries `to
 
 | Tool                         | Route                                                                   |
 | ---------------------------- | ----------------------------------------------------------------------- |
+| `find_target`                | `GET /api/v1/find?query=&chain=&limit=`                                 |
 | `list_networks`              | `GET /api/v1/networks?query=`                                           |
 | `get_network`                | `GET /api/v1/networks/:id` (params as query)                            |
 | `get_snapshot`               | `POST /api/v1/snapshots`                                                |

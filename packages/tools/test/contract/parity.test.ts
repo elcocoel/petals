@@ -54,6 +54,7 @@ describe('every door returns the same JSON', () => {
       ['render_flower', { spec: f.spec, include_svg: true }],
       ['render_flower', { spec: f.spec, include_svg: false }],
       ['quote_payment', { purpose: 'sponsor_refresh', amount_usd: 1 }],
+      ['find_target', { query: 'near validators' }],
     ];
     for (const [tool, input] of calls) {
       const [out] = await same(tool, input);

@@ -28,7 +28,8 @@ const passThrough: jsonSchemaValidator = {
 export const SERVER_INFO = { name: 'petal', title: 'Petal', version: TOOLS_VERSION };
 
 const INSTRUCTIONS =
-  'Petal draws who holds power in a network as a flower. Work in this order: list_networks, ' +
+  'Petal draws who holds power in a network as a flower. Work in this order: find_target for a ' +
+  'name or an address (follow its next), or list_networks, then ' +
   'get_snapshot (say whether it was reused), describe_snapshot and compute_figures (quote only ' +
   'these numbers), propose_spec with the fewest choices, validate_spec with the interpretation, ' +
   'render_flower (hand back view_url, the legend, the interpretation and what the data cannot ' +
