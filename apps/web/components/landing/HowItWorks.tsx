@@ -17,37 +17,39 @@ const [ask, see, question] = copy.steps;
 
 export function HowItWorks() {
   return (
-    <Section rule="top" id="how-it-works">
-      <SectionHead eyebrow={copy.eyebrow} title={copy.title} />
-      <div className="mt-column-gap flex flex-col gap-column-gap md:flex-row">
-        <Step {...ask}>
-          <div className="w-full figure-scale">
-            <AskBox
-              placeholder={copy.stepOneQuestion}
-              label={landingCopy.ask.action}
-              action={landingCopy.ask.action}
-              to={siteLinks.make}
-            />
-          </div>
-        </Step>
-        <Step {...see}>
-          <Thumb kind="even" size="step" />
-        </Step>
-        <Step {...question}>
-          <Glyph kind="concentration" size="step" />
-          <Callout size="compact" who={copy.stepThree.who}>
-            {copy.stepThree.text}
-          </Callout>
-        </Step>
-      </div>
-      <div className="mt-column-gap">
+    <Section
+      rule="top"
+      id="how-it-works"
+      layout="columns"
+      head={<SectionHead eyebrow={copy.eyebrow} title={copy.title} />}
+      foot={
         <ActionRow>
           <Button href={siteLinks.make}>{copy.ask}</Button>
           <TextLink href={siteLinks.gallery} arrow>
             {copy.gallery}
           </TextLink>
         </ActionRow>
-      </div>
+      }
+    >
+      <Step {...ask}>
+        <div className="w-full figure-scale">
+          <AskBox
+            placeholder={copy.stepOneQuestion}
+            label={landingCopy.ask.action}
+            action={landingCopy.ask.action}
+            to={siteLinks.make}
+          />
+        </div>
+      </Step>
+      <Step {...see}>
+        <Thumb kind="even" size="step" />
+      </Step>
+      <Step {...question}>
+        <Glyph kind="concentration" size="step" />
+        <Callout size="compact" who={copy.stepThree.who}>
+          {copy.stepThree.text}
+        </Callout>
+      </Step>
     </Section>
   );
 }

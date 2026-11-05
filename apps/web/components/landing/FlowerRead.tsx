@@ -17,30 +17,28 @@ const copy = landingCopy.flowerRead;
 
 export function FlowerRead() {
   return (
-    <Section rule="top">
-      <div className="flex flex-col gap-page-inset lg:flex-row lg:items-center">
-        <figure className="flex w-full min-w-0 flex-col gap-block-gap lg:max-w-figure-width lg:flex-1">
-          <Drawing drawing={readingFlower} className="h-auto w-full" />
-          <HeroesStrip thumbs={['blocs', 'even', 'tower', 'blocs', 'even']} />
-          <Caption as="figcaption">{copy.caption}</Caption>
-        </figure>
-        <div className="w-full min-w-0 lg:flex-1">
-          <SectionHead eyebrow={copy.eyebrow} title={copy.title} />
-          <div className="mt-column-gap">
-            <Transcript
-              start={copy.transcript.start}
-              end={copy.transcript.end}
-              lines={copy.transcript.lines}
-            />
-          </div>
-          <div className="mt-space-32">
-            <ActionRow>
-              <Button href={siteLinks.gallery}>{copy.open}</Button>
-              <TextLink href={siteLinks.make} arrow>
-                {copy.keepAsking}
-              </TextLink>
-            </ActionRow>
-          </div>
+    <Section rule="top" layout="split" figure="start">
+      <figure className="flex flex-col gap-block-gap">
+        <Drawing drawing={readingFlower} className="h-auto w-full" />
+        <HeroesStrip thumbs={['blocs', 'even', 'tower', 'blocs', 'even']} />
+        <Caption as="figcaption">{copy.caption}</Caption>
+      </figure>
+      <div>
+        <SectionHead eyebrow={copy.eyebrow} title={copy.title} />
+        <div className="mt-column-gap">
+          <Transcript
+            start={copy.transcript.start}
+            end={copy.transcript.end}
+            lines={copy.transcript.lines}
+          />
+        </div>
+        <div className="mt-space-32">
+          <ActionRow>
+            <Button href={siteLinks.gallery}>{copy.open}</Button>
+            <TextLink href={siteLinks.make} arrow>
+              {copy.keepAsking}
+            </TextLink>
+          </ActionRow>
         </div>
       </div>
     </Section>

@@ -131,14 +131,6 @@ export const sizes = {
   'Ask box max height': 200,
   'Content width': 960,
   'Page width': 1440,
-  'Hero pitch width': 584,
-  'Hero figure width': 720,
-  'Figure width': 480,
-  'Intro width': 456,
-  'Builders pitch width': 520,
-  'Closing ask width': 640,
-  'Community pitch width': 560,
-  'Cell repeat width': 624,
   /** The four sizes a drawing comes in. */
   'Drawing 48': 48,
   'Drawing 72': 72,
@@ -170,6 +162,12 @@ export const quarantine = {
   'Flower width': 640,
   'Gallery flower width': 320,
 } as const;
+
+/**
+ * How a split section divides the page, in twelfths: the text takes this many and the figure the rest,
+ * with Column gap between. Change it and every split section moves.
+ */
+export const splitText = 5;
 
 /** A real control drawn inside a figure, at this scale, so it follows the type and the ladder. */
 export const figureScale = 0.56;

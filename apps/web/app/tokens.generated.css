@@ -25,14 +25,6 @@
   --spacing-ask-box-max-height: 200px;
   --spacing-content-width: 960px;
   --spacing-page-width: 1440px;
-  --spacing-hero-pitch-width: 584px;
-  --spacing-hero-figure-width: 720px;
-  --spacing-figure-width: 480px;
-  --spacing-intro-width: 456px;
-  --spacing-builders-pitch-width: 520px;
-  --spacing-closing-ask-width: 640px;
-  --spacing-community-pitch-width: 560px;
-  --spacing-cell-repeat-width: 624px;
   --spacing-drawing-48: 48px;
   --spacing-drawing-72: 72px;
   --spacing-drawing-144: 144px;
@@ -54,6 +46,8 @@
   --spacing-tile-width: 280px;
   --spacing-flower-width: 640px;
   --spacing-gallery-flower-width: 320px;
+  --grid-template-columns-split: minmax(0, 5fr) minmax(0, 7fr);
+  --grid-template-columns-split-flip: minmax(0, 7fr) minmax(0, 5fr);
   --stroke: 1px;
   --default-border-width: 1px;
   --default-outline-width: 1px;

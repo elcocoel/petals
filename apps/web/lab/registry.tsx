@@ -522,15 +522,52 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/ui/Section.tsx',
-    states: surfaceNames.map((kind) => ({
-      name: kind,
-      wide: true,
-      render: () => (
-        <Section kind={kind}>
-          <Caption>{landingCopy.gallery.caption}</Caption>
-        </Section>
-      ),
-    })),
+    states: [
+      ...surfaceNames.map((kind) => ({
+        name: kind,
+        wide: true,
+        render: () => (
+          <Section kind={kind}>
+            <Caption>{landingCopy.gallery.caption}</Caption>
+          </Section>
+        ),
+      })),
+      {
+        name: 'split',
+        wide: true,
+        render: () => (
+          <Section layout="split">
+            <Caption>{landingCopy.hero.caption}</Caption>
+            <Caption>{landingCopy.gallery.caption}</Caption>
+          </Section>
+        ),
+      },
+      {
+        name: 'split, figure first',
+        wide: true,
+        render: () => (
+          <Section layout="split" figure="start">
+            <Caption>{landingCopy.hero.caption}</Caption>
+            <Caption>{landingCopy.gallery.caption}</Caption>
+          </Section>
+        ),
+      },
+      {
+        name: 'columns',
+        wide: true,
+        render: () => (
+          <Section
+            layout="columns"
+            head={<Caption>{landingCopy.gallery.eyebrow}</Caption>}
+            foot={<Caption>{landingCopy.gallery.caption}</Caption>}
+          >
+            {landingCopy.gallery.cards.map((card) => (
+              <Caption key={card.title}>{card.title}</Caption>
+            ))}
+          </Section>
+        ),
+      },
+    ],
   },
   {
     id: 'ActionRow',

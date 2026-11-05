@@ -1,40 +1,67 @@
 // The landing page's shell, one of them for every band: a surface edge to edge, its content in a
-// column as wide as Figma's frame, so a wider window gets more band and no longer lines. Nav and
-// Footer are this too. Grayscale smoothing is how Figma draws type; macOS's default thickens it.
+// column as wide as the page, so a wider window gets more band and no longer lines. There are two
+// kinds of section. `split` is text and a figure, divided by one ratio (splitText in packages/tokens),
+// and the figure can take either side. `columns` is three equal columns under a head and over a foot.
+// Nav and Footer are this too, with `bar` padding. Grayscale smoothing is how Figma draws type; macOS's
+// default thickens it.
 import type { SurfaceName } from '@petal/tokens';
 import type { ReactNode } from 'react';
 import { Surface } from './Surface.tsx';
 
 const PADDING = {
   section: 'px-block-gap py-page-inset md:px-page-inset md:py-section-padding',
-  // Figma lets the hero's figure run closer to the edge than the page inset.
-  hero: 'px-block-gap py-page-inset md:pt-column-gap md:pr-block-gap md:pb-page-inset md:pl-page-inset',
-  nav: 'px-block-gap py-block-gap md:px-page-inset',
-  footer: 'px-block-gap pt-page-inset pb-column-gap md:px-page-inset',
+  bar: 'px-block-gap py-block-gap md:px-page-inset',
 } as const;
 
 const RULES = { top: 'border-t border-hairline', bottom: 'border-b border-hairline' } as const;
+
+const SPLIT = {
+  end: 'grid grid-cols-1 items-start gap-column-gap lg:grid-cols-split',
+  start: 'grid grid-cols-1 items-start gap-column-gap lg:grid-cols-split-flip',
+} as const;
+const COLUMNS = 'grid grid-cols-1 gap-column-gap md:grid-cols-3';
 
 export function Section({
   kind = 'ground',
   as = 'section',
   padding = 'section',
+  layout,
+  figure = 'end',
   rule,
   id,
+  head,
+  foot,
   children,
 }: {
   kind?: SurfaceName;
   as?: 'section' | 'footer' | 'nav';
   padding?: keyof typeof PADDING;
+  /** Lays out the children: two of them for `split`, three for `columns`. */
+  layout?: 'split' | 'columns';
+  /** Which side a split's figure takes: the first child at `start`, the second at `end`. */
+  figure?: keyof typeof SPLIT;
   /** A hairline on this edge, the whole width of the window. */
   rule?: keyof typeof RULES;
   id?: string;
+  /** What sits over and under a layout's columns. */
+  head?: ReactNode;
+  foot?: ReactNode;
   children: ReactNode;
 }) {
+  const body =
+    layout === 'split' ? (
+      <div className={SPLIT[figure]}>{children}</div>
+    ) : layout === 'columns' ? (
+      <div className={COLUMNS}>{children}</div>
+    ) : (
+      children
+    );
   return (
     <Surface kind={kind} as={as} id={id} className={rule && RULES[rule]}>
       <div className={`mx-auto w-full max-w-page-width antialiased ${PADDING[padding]}`}>
-        {children}
+        {head && <div className="mb-column-gap">{head}</div>}
+        {body}
+        {foot && <div className="mt-column-gap">{foot}</div>}
       </div>
     </Surface>
   );

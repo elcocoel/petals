@@ -10,23 +10,19 @@ const copy = landingCopy.builders;
 
 export function ForBuilders() {
   return (
-    <Section kind="ink">
-      <div className="flex flex-col gap-page-inset lg:flex-row lg:items-center lg:gap-section-padding">
-        <div className="w-full min-w-0 lg:max-w-builders-pitch-width lg:flex-1">
-          <SectionHead
-            eyebrow={copy.eyebrow}
-            eyebrowTone="accent"
-            title={copy.title}
-            body={copy.body}
-          />
-          <div className="mt-space-32">
-            <Button href={siteLinks.connect}>{copy.action}</Button>
-          </div>
-        </div>
-        <div className="w-full min-w-0 lg:flex-1">
-          <Terminal {...copy.terminal} />
+    <Section kind="ink" layout="split">
+      <div>
+        <SectionHead
+          eyebrow={copy.eyebrow}
+          eyebrowTone="accent"
+          title={copy.title}
+          body={copy.body}
+        />
+        <div className="mt-space-32">
+          <Button href={siteLinks.connect}>{copy.action}</Button>
         </div>
       </div>
+      <Terminal {...copy.terminal} />
     </Section>
   );
 }
