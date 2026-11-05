@@ -409,6 +409,8 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 - [ ] T167 [W7] Agent matrix, real runs through `petal connect`: Claude Code (done 5 Nov), Codex (a real model run), one more MCP client (Cursor or Claude Desktop), and T135 IronClaw if cheap. Record per agent: installs, same `spec_sha256`, time, what was awkward. Deps: T075.
 - [X] T168 [P] [W5] Choose the model: `PETAL_MODEL` (today a constant, `DEFAULT_MODEL` in `packages/agent/src/near-ai.ts`), and `/make` shows the model and whether the answer got an enclave signature. A picker only if Elco wants one. About 10 of the 64 listed models mention enclave attestation; anything else gets no `provider_tee` signature, so say so. Deps: T060.
 - [ ] T169 [W8] [Elco] Elco's engagement test: use it freely; each thing that makes them stop engaging becomes a task here. Deps: T164–T166.
+- [X] T170 [W6] The agent speaks first: `/` is the conversation, the gallery moves to `/gallery`, `/make` stays as the same page. The opening is written text with real gallery entries in `apps/web/lib/opening.ts`, so opening the app costs no model call, and it goes to the model with the first question. Shared rules gain "Talk first". Deps: T166.
+- [X] T171 [W8] Test on your own agent's subscription: `scripts/try-agent.ts` runs a conversation through Claude Code or Codex with Petal's skill and tools loaded for that run only, no API keys, no NEAR AI, its own state folder. Deps: T164.
 
 ---
 
