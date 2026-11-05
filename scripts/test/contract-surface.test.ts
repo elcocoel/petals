@@ -29,6 +29,9 @@ const surface: [string, Record<string, unknown>, string[]][] = [
       'DEFAULT_CONVENTION',
       'buildSpec',
       'renderFlower',
+      'readFlower',
+      'readingHash',
+      'SKINS',
     ],
   ],
   ['@petal/inputs', inputs, ['modules', 'fileStore', 'getSnapshot', 'importSpike']],
@@ -69,6 +72,7 @@ describe('packages/v1 surface', () => {
       api: 'api/v1',
       map: 'map/v1',
       render: 'render/v1',
+      reading: 'reading/v1',
       convention: 'default/v1',
     });
   });

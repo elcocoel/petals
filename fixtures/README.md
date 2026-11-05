@@ -10,7 +10,7 @@ Agents never read raw snapshot bodies; they use `describe_snapshot` and `compute
 |---|---|---|
 | `snapshots/` | Content-addressed snapshots (`snapshot/v1`, `packages/core/schema/snapshot.schema.json`): `<sha256>.json.gz`, where `<sha256>` is the SHA-256 of the RFC 8785 canonical JSON of the uncompressed document. `index.json` maps (chain, population, block) to the hash. This is the first place `get_snapshot` looks. | W2 |
 | `snapshots/test/` | Small, hand-sized, schema-valid snapshots for unit tests (plain `.json`, not in `index.json`). | W2 |
-| `golden/` | Golden render files: `<name>.svg` plus `<name>.json` (legend and petals). `pnpm golden:update` rewrites them; a person reviews the diff. | W1 |
+| `golden/` | Golden render files: `<name>.svg` plus `<name>.json` (legend and petals), and `<name>.reading.json`, the reading under the drawing (T179). A new skin changes the first two and leaves the reading alone. `pnpm golden:update` rewrites them; a person reviews the diff. | W1 |
 | `golden/inputs/` | Snapshots used only as golden-test inputs. Outside the store's lookup path, so a live pull stays live. | W1 |
 | `transcripts/` | Recorded runs: agent transcripts replayed by `recordedClient`, and the recorded 1Click dry quote replayed by `fakeQuote()`. | W5 |
 | `map/` | Hero flower entries (`flower/v1`) as they would sit on the shared map; the mirror for the hero set. | W5 |

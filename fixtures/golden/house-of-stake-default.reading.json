@@ -1,0 +1,3793 @@
+{
+  "name": "house-of-stake-default",
+  "reading_sha256": "bf3f3099216d6309518155b910548364f4a4316d64517b9a9cfa10e03a2fb7ff",
+  "reading": {
+    "petal": "reading/v1",
+    "spec_sha256": "6214e7c5f051370c7893b2e54203224ffbfa537b82c680a2e8b1c23236382569",
+    "title": "NEAR House of Stake",
+    "chain": "near:mainnet",
+    "encodings": {
+      "width": {
+        "by": "share",
+        "scale": "log",
+        "max_ratio": 2,
+        "meaning": "share of voting power (veNEAR), in a 2x band",
+        "sources": [
+          "fastnear-venear-accounts"
+        ]
+      },
+      "height": {
+        "by": "share",
+        "scale": "sqrt",
+        "meaning": "square root of share of voting power (veNEAR)",
+        "sources": [
+          "fastnear-venear-accounts"
+        ]
+      },
+      "colour": {
+        "by": "kind",
+        "meaning": "kind of account",
+        "sources": [
+          "fastnear-venear-accounts"
+        ]
+      },
+      "outline": {
+        "by": "identity_status",
+        "meaning": "identity: solid when self-declared or verified, dashed when inferred",
+        "sources": [
+          "fastnear-venear-accounts"
+        ]
+      },
+      "segments": null,
+      "order": {
+        "by": "measure_desc",
+        "meaning": "largest first, clockwise from the top",
+        "sources": [
+          "fastnear-venear-accounts"
+        ]
+      }
+    },
+    "petals": [
+      {
+        "index": 0,
+        "id": "cc96f55848f0ac487f1a185e72df91d33ec13b608fc8eb90d15dbd1bf363c807",
+        "label": "cc96f558…c807",
+        "kind": "person",
+        "identity": null,
+        "amount": "822504.048370567851438300000002",
+        "share": 0.153472,
+        "rank": 1,
+        "name": "cc96f558…c807",
+        "width": 2,
+        "height": 1,
+        "colour": "person",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 1,
+        "id": "4783b54876253b1f79e3241c11d683223d186ad217178927fcbd2fff2f646172",
+        "label": "4783b548…6172",
+        "kind": "person",
+        "identity": null,
+        "amount": "686075.28727623152129415307227",
+        "share": 0.128015,
+        "rank": 2,
+        "name": "4783b548…6172",
+        "width": 1.9828165745836515,
+        "height": 0.9133050392186711,
+        "colour": "person",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 2,
+        "id": "spareuni818.near",
+        "label": "spareuni818.near",
+        "kind": "person",
+        "identity": {
+          "name": "spareuni818.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "446176.957183256608126700000001",
+        "share": 0.083253,
+        "rank": 3,
+        "name": "spareuni818.near",
+        "width": 1.9420525637837132,
+        "height": 0.7365213994808598,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 3,
+        "id": "delegatetoyuen.near",
+        "label": "delegatetoyuen.near",
+        "kind": "person",
+        "identity": {
+          "name": "delegatetoyuen.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "407375.663468507378734514564068",
+        "share": 0.076013,
+        "rank": 4,
+        "name": "delegatetoyuen.near",
+        "width": 1.9334329554018508,
+        "height": 0.7037677478774232,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 4,
+        "id": "tony_bc.near",
+        "label": "tony_bc.near",
+        "kind": "person",
+        "identity": {
+          "name": "tony_bc.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "355062.211733838838481488118812",
+        "share": 0.066251,
+        "rank": 5,
+        "name": "tony_bc.near",
+        "width": 1.9204103033961029,
+        "height": 0.6570246182913296,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 5,
+        "id": "vinibarbosa.near",
+        "label": "vinibarbosa.near",
+        "kind": "person",
+        "identity": {
+          "name": "vinibarbosa.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "335001.898236464548819065380111",
+        "share": 0.062508,
+        "rank": 6,
+        "name": "vinibarbosa.near",
+        "width": 1.9149004856861516,
+        "height": 0.638194747272496,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 6,
+        "id": "klausbravegov.near",
+        "label": "klausbravegov.near",
+        "kind": "person",
+        "identity": {
+          "name": "klausbravegov.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "334971.004785672429099345689561",
+        "share": 0.062503,
+        "rank": 7,
+        "name": "klausbravegov.near",
+        "width": 1.9148929069917533,
+        "height": 0.6381692222392986,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 7,
+        "id": "hos.chicago.near",
+        "label": "hos.chicago.near",
+        "kind": "person",
+        "identity": {
+          "name": "hos.chicago.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "326812.084097810627820768921284",
+        "share": 0.06098,
+        "rank": 8,
+        "name": "hos.chicago.near",
+        "width": 1.9125557527543897,
+        "height": 0.6303461921317093,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 8,
+        "id": "india.sputnik-dao.near",
+        "label": "india.sputnik-dao.near",
+        "kind": "organisation",
+        "identity": {
+          "name": "india.sputnik-dao.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "323504.511707920588972800000001",
+        "share": 0.060363,
+        "rank": 9,
+        "name": "india.sputnik-dao.near",
+        "width": 1.911592263670179,
+        "height": 0.6271491406519801,
+        "colour": "organisation",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 9,
+        "id": "alan777.near",
+        "label": "alan777.near",
+        "kind": "person",
+        "identity": {
+          "name": "alan777.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "306807.306318430916199677112063",
+        "share": 0.057247,
+        "rank": 10,
+        "name": "alan777.near",
+        "width": 1.9065708330402515,
+        "height": 0.6107476293901364,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 10,
+        "id": "vote.mob.near",
+        "label": "vote.mob.near",
+        "kind": "person",
+        "identity": {
+          "name": "vote.mob.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "305950.660468024484244900000001",
+        "share": 0.057088,
+        "rank": 11,
+        "name": "vote.mob.near",
+        "width": 1.9063073268464616,
+        "height": 0.6098988827715665,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 11,
+        "id": "charles-hos.near",
+        "label": "charles-hos.near",
+        "kind": "person",
+        "identity": {
+          "name": "charles-hos.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "304619.933881363085",
+        "share": 0.056839,
+        "rank": 12,
+        "name": "charles-hos.near",
+        "width": 1.9058931879738354,
+        "height": 0.6085673351551562,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 12,
+        "id": "zaki.near",
+        "label": "zaki.near",
+        "kind": "person",
+        "identity": {
+          "name": "zaki.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "228985.672775991654461400000001",
+        "share": 0.042727,
+        "rank": 13,
+        "name": "zaki.near",
+        "width": 1.8788546055797126,
+        "height": 0.5276386785126277,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 13,
+        "id": "aurora_hos.near",
+        "label": "aurora_hos.near",
+        "kind": "person",
+        "identity": {
+          "name": "aurora_hos.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "106333.431399517592",
+        "share": 0.019841,
+        "rank": 14,
+        "name": "aurora_hos.near",
+        "width": 1.8061798488708907,
+        "height": 0.35955654795314185,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 14,
+        "id": "lllllli.near",
+        "label": "lllllli.near",
+        "kind": "person",
+        "identity": {
+          "name": "lllllli.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "22382.630268917589856830420014",
+        "share": 0.004176,
+        "rank": 15,
+        "name": "lllllli.near",
+        "width": 1.6585342074447869,
+        "height": 0.16495507008259844,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 15,
+        "id": "yadira.near",
+        "label": "yadira.near",
+        "kind": "person",
+        "identity": {
+          "name": "yadira.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "14365.873754672723495342429584",
+        "share": 0.002681,
+        "rank": 16,
+        "name": "yadira.near",
+        "width": 1.6165479572685841,
+        "height": 0.13217028626160796,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 16,
+        "id": "chicagonode.sputnik-dao.near",
+        "label": "chicagonode.sputnik-dao.near",
+        "kind": "organisation",
+        "identity": {
+          "name": "chicagonode.sputnik-dao.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "8139.314587808886946631078717",
+        "share": 0.001519,
+        "rank": 17,
+        "name": "chicagonode.sputnik-dao.near",
+        "width": 1.5627214520213877,
+        "height": 0.09948653623687148,
+        "colour": "organisation",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 17,
+        "id": "cryptoape.near",
+        "label": "cryptoape.near",
+        "kind": "person",
+        "identity": {
+          "name": "cryptoape.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "4198.958350998525",
+        "share": 0.000783,
+        "rank": 18,
+        "name": "cryptoape.near",
+        "width": 1.4999383045632644,
+        "height": 0.07142764058728635,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 18,
+        "id": "bluegirl.near",
+        "label": "bluegirl.near",
+        "kind": "person",
+        "identity": {
+          "name": "bluegirl.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "3774.404310426615000000003598",
+        "share": 0.000704,
+        "rank": 19,
+        "name": "bluegirl.near",
+        "width": 1.4898620799445248,
+        "height": 0.06772854614785964,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 19,
+        "id": "spewy.near",
+        "label": "spewy.near",
+        "kind": "person",
+        "identity": {
+          "name": "spewy.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "2535.915488370387263500000002",
+        "share": 0.000473,
+        "rank": 20,
+        "name": "spewy.near",
+        "width": 1.452184793662161,
+        "height": 0.05551572221311758,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 20,
+        "id": "delegate.sleet.near",
+        "label": "delegate.sleet.near",
+        "kind": "person",
+        "identity": {
+          "name": "delegate.sleet.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "2068.001550770235418300000001",
+        "share": 0.000386,
+        "rank": 21,
+        "name": "delegate.sleet.near",
+        "width": 1.4329277190707745,
+        "height": 0.050150939811432996,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 21,
+        "id": "vadim.near",
+        "label": "vadim.near",
+        "kind": "person",
+        "identity": {
+          "name": "vadim.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "1843.105632934365463926523102",
+        "share": 0.000344,
+        "rank": 22,
+        "name": "vadim.near",
+        "width": 1.4220138450156663,
+        "height": 0.04734396697934297,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 22,
+        "id": "hmtri1011.near",
+        "label": "hmtri1011.near",
+        "kind": "person",
+        "identity": {
+          "name": "hmtri1011.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "1720.476570911457948095206598",
+        "share": 0.000321,
+        "rank": 23,
+        "name": "hmtri1011.near",
+        "width": 1.4154576468589237,
+        "height": 0.045733868619974895,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 23,
+        "id": "james.near",
+        "label": "james.near",
+        "kind": "person",
+        "identity": {
+          "name": "james.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "1358.507630161965295000000001",
+        "share": 0.000253,
+        "rank": 24,
+        "name": "james.near",
+        "width": 1.3929041549857244,
+        "height": 0.04060183708050569,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 24,
+        "id": "axianetwork.near",
+        "label": "axianetwork.near",
+        "kind": "person",
+        "identity": {
+          "name": "axianetwork.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "991.513916089188151800000002",
+        "share": 0.000185,
+        "rank": 25,
+        "name": "axianetwork.near",
+        "width": 1.363246714460813,
+        "height": 0.034719326169652676,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 25,
+        "id": "machinewash.near",
+        "label": "machinewash.near",
+        "kind": "person",
+        "identity": {
+          "name": "machinewash.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "747.222557718853126700000001",
+        "share": 0.000139,
+        "rank": 26,
+        "name": "machinewash.near",
+        "width": 1.336161687538317,
+        "height": 0.03009489439906281,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 26,
+        "id": "fiatisabubble.near",
+        "label": "fiatisabubble.near",
+        "kind": "person",
+        "identity": {
+          "name": "fiatisabubble.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "632.373093930038453353228395",
+        "share": 0.000118,
+        "rank": 27,
+        "name": "fiatisabubble.near",
+        "width": 1.3206439581550866,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 27,
+        "id": "hos.slimedragon.near",
+        "label": "hos.slimedragon.near",
+        "kind": "person",
+        "identity": {
+          "name": "hos.slimedragon.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "490.775226001209270000000001",
+        "share": 0.000092,
+        "rank": 28,
+        "name": "hos.slimedragon.near",
+        "width": 1.2970630447252254,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 28,
+        "id": "1920804333ced7e8357b5b22b69b3ce03aff94c04836ba604019e0c363f2d7b3",
+        "label": "19208043…d7b3",
+        "kind": "person",
+        "identity": null,
+        "amount": "446.38178271507055",
+        "share": 0.000083,
+        "rank": 29,
+        "name": "19208043…d7b3",
+        "width": 1.287309546524194,
+        "height": 0.03,
+        "colour": "person",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 29,
+        "id": "kolosun.tg",
+        "label": "kolosun.tg",
+        "kind": "person",
+        "identity": {
+          "name": "kolosun.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "394.2548643096329",
+        "share": 0.000074,
+        "rank": 30,
+        "name": "kolosun.tg",
+        "width": 1.2764354828274673,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 30,
+        "id": "griff.near",
+        "label": "griff.near",
+        "kind": "person",
+        "identity": {
+          "name": "griff.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "380.987545174890295000000001",
+        "share": 0.000071,
+        "rank": 31,
+        "name": "griff.near",
+        "width": 1.272514563995121,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 31,
+        "id": "simpletag3424.near",
+        "label": "simpletag3424.near",
+        "kind": "person",
+        "identity": {
+          "name": "simpletag3424.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "209.049133800638742214105163",
+        "share": 0.000039,
+        "rank": 32,
+        "name": "simpletag3424.near",
+        "width": 1.215752894679692,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 32,
+        "id": "bearmans.near",
+        "label": "bearmans.near",
+        "kind": "person",
+        "identity": {
+          "name": "bearmans.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "159.914596890463905293857013",
+        "share": 0.00003,
+        "rank": 33,
+        "name": "bearmans.near",
+        "width": 1.1908959752078405,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 33,
+        "id": "undermines.near",
+        "label": "undermines.near",
+        "kind": "person",
+        "identity": {
+          "name": "undermines.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "153.882629117452616500000001",
+        "share": 0.000029,
+        "rank": 34,
+        "name": "undermines.near",
+        "width": 1.1876840738397803,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 34,
+        "id": "m1halich228.tg",
+        "label": "m1halich228.tg",
+        "kind": "person",
+        "identity": {
+          "name": "m1halich228.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "135.24451476017",
+        "share": 0.000025,
+        "rank": 35,
+        "name": "m1halich228.tg",
+        "width": 1.1736224632666916,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 35,
+        "id": "lyprovidad2150.near",
+        "label": "lyprovidad2150.near",
+        "kind": "person",
+        "identity": {
+          "name": "lyprovidad2150.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "127.928881230658172600000001",
+        "share": 0.000024,
+        "rank": 36,
+        "name": "lyprovidad2150.near",
+        "width": 1.169754905188499,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 36,
+        "id": "jaguarcat.near",
+        "label": "jaguarcat.near",
+        "kind": "person",
+        "identity": {
+          "name": "jaguarcat.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "124.097123330606411800000001",
+        "share": 0.000023,
+        "rank": 37,
+        "name": "jaguarcat.near",
+        "width": 1.1657227214972168,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 37,
+        "id": "jp_daug.tg",
+        "label": "jp_daug.tg",
+        "kind": "person",
+        "identity": {
+          "name": "jp_daug.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "122.000452667032464697935343",
+        "share": 0.000023,
+        "rank": 38,
+        "name": "jp_daug.tg",
+        "width": 1.1657227214972168,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 38,
+        "id": "ramgor.near",
+        "label": "ramgor.near",
+        "kind": "person",
+        "identity": {
+          "name": "ramgor.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "95.864777688466889217908397",
+        "share": 0.000018,
+        "rank": 39,
+        "name": "ramgor.near",
+        "width": 1.142499325534985,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 39,
+        "id": "coffee-crush_gov.near",
+        "label": "coffee-crush_gov.near",
+        "kind": "person",
+        "identity": {
+          "name": "coffee-crush_gov.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "86.068037090015875351402255",
+        "share": 0.000016,
+        "rank": 40,
+        "name": "coffee-crush_gov.near",
+        "width": 1.1313403232280086,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 40,
+        "id": "ray012803.tg",
+        "label": "ray012803.tg",
+        "kind": "person",
+        "identity": {
+          "name": "ray012803.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "84.084283070828338600001",
+        "share": 0.000016,
+        "rank": 41,
+        "name": "ray012803.tg",
+        "width": 1.1313403232280086,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 41,
+        "id": "tanegov.near",
+        "label": "tanegov.near",
+        "kind": "person",
+        "identity": {
+          "name": "tanegov.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "61.709266318212766400000001",
+        "share": 0.000012,
+        "rank": 42,
+        "name": "tanegov.near",
+        "width": 1.1040847435744947,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 42,
+        "id": "kentf.near",
+        "label": "kentf.near",
+        "kind": "person",
+        "identity": {
+          "name": "kentf.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "46.520364862822507599999994",
+        "share": 0.000009,
+        "rank": 43,
+        "name": "kentf.near",
+        "width": 1.0768291639209806,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 43,
+        "id": "edwinck.near",
+        "label": "edwinck.near",
+        "kind": "person",
+        "identity": {
+          "name": "edwinck.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "45.88482031917",
+        "share": 0.000009,
+        "rank": 44,
+        "name": "edwinck.near",
+        "width": 1.0768291639209806,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 44,
+        "id": "zorakrizovnikov.tg",
+        "label": "zorakrizovnikov.tg",
+        "kind": "person",
+        "identity": {
+          "name": "zorakrizovnikov.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "45.447353689507835900000001",
+        "share": 0.000008,
+        "rank": 45,
+        "name": "zorakrizovnikov.tg",
+        "width": 1.0656701616140043,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 45,
+        "id": "nearweek.near",
+        "label": "nearweek.near",
+        "kind": "person",
+        "identity": {
+          "name": "nearweek.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "42.498541071678249200000001",
+        "share": 0.000008,
+        "rank": 46,
+        "name": "nearweek.near",
+        "width": 1.0656701616140043,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 46,
+        "id": "blaze.near",
+        "label": "blaze.near",
+        "kind": "person",
+        "identity": {
+          "name": "blaze.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "41.280115434209154700000013",
+        "share": 0.000008,
+        "rank": 47,
+        "name": "blaze.near",
+        "width": 1.0656701616140043,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 47,
+        "id": "profit.near",
+        "label": "profit.near",
+        "kind": "person",
+        "identity": {
+          "name": "profit.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "38.967827872512889328429947",
+        "share": 0.000007,
+        "rank": 48,
+        "name": "profit.near",
+        "width": 1.0530191282113848,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 48,
+        "id": "vikashxd.near",
+        "label": "vikashxd.near",
+        "kind": "person",
+        "identity": {
+          "name": "vikashxd.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "33.327417523695604700000001",
+        "share": 0.000006,
+        "rank": 49,
+        "name": "vikashxd.near",
+        "width": 1.0384145819604904,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 49,
+        "id": "truekale619.near",
+        "label": "truekale619.near",
+        "kind": "person",
+        "identity": {
+          "name": "truekale619.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "30.571574314439448900000001",
+        "share": 0.000006,
+        "rank": 50,
+        "name": "truekale619.near",
+        "width": 1.0384145819604904,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 50,
+        "id": "kinguin.near",
+        "label": "kinguin.near",
+        "kind": "person",
+        "identity": {
+          "name": "kinguin.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "29.663118104016115296803512",
+        "share": 0.000006,
+        "rank": 51,
+        "name": "kinguin.near",
+        "width": 1.0384145819604904,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 51,
+        "id": "monza.near",
+        "label": "monza.near",
+        "kind": "person",
+        "identity": {
+          "name": "monza.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "28.941068255250295000000001",
+        "share": 0.000005,
+        "rank": 52,
+        "name": "monza.near",
+        "width": 1.0211410700193415,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 52,
+        "id": "bright-key.near",
+        "label": "bright-key.near",
+        "kind": "person",
+        "identity": {
+          "name": "bright-key.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "28.783765099774178900000001",
+        "share": 0.000005,
+        "rank": 53,
+        "name": "bright-key.near",
+        "width": 1.0211410700193415,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 53,
+        "id": "479fceb8679be8c39437dbdf3d94c7cf2b1a16eb3babd1f7e6da15e8ca526a72",
+        "label": "479fceb8…6a72",
+        "kind": "person",
+        "identity": null,
+        "amount": "26.07326527311671270641278",
+        "share": 0.000005,
+        "rank": 54,
+        "name": "479fceb8…6a72",
+        "width": 1.0211410700193415,
+        "height": 0.03,
+        "colour": "person",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 54,
+        "id": "9e54f4e56afa295e7b60c88ca6157e83e01623d008a42998ee46beab6b72d141",
+        "label": "9e54f4e5…d141",
+        "kind": "person",
+        "identity": null,
+        "amount": "21.961987737630388536014476",
+        "share": 0.000004,
+        "rank": 55,
+        "name": "9e54f4e5…d141",
+        "width": 1,
+        "height": 0.03,
+        "colour": "person",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 55,
+        "id": "mapogov.near",
+        "label": "mapogov.near",
+        "kind": "person",
+        "identity": {
+          "name": "mapogov.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "20.2934761544824169",
+        "share": 0.000004,
+        "rank": 56,
+        "name": "mapogov.near",
+        "width": 1,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 56,
+        "id": "wisezip1714.near",
+        "label": "wisezip1714.near",
+        "kind": "person",
+        "identity": {
+          "name": "wisezip1714.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "19.990966186824108300000002",
+        "share": 0.000004,
+        "rank": 57,
+        "name": "wisezip1714.near",
+        "width": 1,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 57,
+        "id": "freytipp1894.tg",
+        "label": "freytipp1894.tg",
+        "kind": "person",
+        "identity": {
+          "name": "freytipp1894.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "19.694149507678938700000001",
+        "share": 0.000004,
+        "rank": 58,
+        "name": "freytipp1894.tg",
+        "width": 1,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 58,
+        "id": "lyubov_minsk.tg",
+        "label": "lyubov_minsk.tg",
+        "kind": "person",
+        "identity": {
+          "name": "lyubov_minsk.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "19.690803839329178900000001",
+        "share": 0.000004,
+        "rank": 59,
+        "name": "lyubov_minsk.tg",
+        "width": 1,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 59,
+        "id": "hexie.near",
+        "label": "hexie.near",
+        "kind": "person",
+        "identity": {
+          "name": "hexie.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "19.435104732279064565876763",
+        "share": 0.000004,
+        "rank": 60,
+        "name": "hexie.near",
+        "width": 1,
+        "height": 0.03,
+        "colour": "person",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 60,
+        "id": "__tail",
+        "label": "everyone else",
+        "kind": "group",
+        "identity": null,
+        "amount": "749.107410909584060238611595",
+        "share": 0.00014,
+        "rank": 61,
+        "tail": true,
+        "count": 406,
+        "name": "everyone else",
+        "width": 1.3368408446867432,
+        "height": 0.03,
+        "colour": "tail",
+        "outline": null,
+        "segments": []
+      }
+    ],
+    "legend": [
+      {
+        "primitive": "width",
+        "meaning": "share of voting power (veNEAR), in a 2x band",
+        "sources": [
+          "fastnear-venear-accounts"
+        ]
+      },
+      {
+        "primitive": "height",
+        "meaning": "square root of share of voting power (veNEAR)",
+        "sources": [
+          "fastnear-venear-accounts"
+        ]
+      },
+      {
+        "primitive": "colour",
+        "meaning": "kind of account",
+        "sources": [
+          "fastnear-venear-accounts"
+        ],
+        "keys": [
+          {
+            "key": "organisation",
+            "label": "person or organisation"
+          }
+        ]
+      },
+      {
+        "primitive": "outline",
+        "meaning": "identity: solid when self-declared or verified, dashed when inferred",
+        "sources": [
+          "fastnear-venear-accounts"
+        ],
+        "keys": [
+          {
+            "key": "asserted",
+            "label": "self-declared or verified"
+          }
+        ]
+      },
+      {
+        "primitive": "order",
+        "meaning": "largest first, clockwise from the top",
+        "sources": [
+          "fastnear-venear-accounts"
+        ]
+      },
+      {
+        "primitive": "tail",
+        "meaning": "everyone else: 406 more participants grouped into one hatched petal, <0.1% of the total; its height is their average",
+        "sources": [
+          "fastnear-venear-accounts"
+        ],
+        "keys": [
+          {
+            "key": "tail",
+            "label": "everyone else"
+          }
+        ]
+      }
+    ],
+    "details": [
+      {
+        "index": 0,
+        "id": "cc96f55848f0ac487f1a185e72df91d33ec13b608fc8eb90d15dbd1bf363c807",
+        "label": "cc96f558…c807",
+        "kind": "person",
+        "identity": null,
+        "amount": "822504.048370567851438300000002",
+        "share": 0.153472,
+        "rank": 1,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.153472,
+            "explains": "share 15.3%: side 2.00x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 1,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 1,
+            "explains": "rank 1: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 1,
+        "id": "4783b54876253b1f79e3241c11d683223d186ad217178927fcbd2fff2f646172",
+        "label": "4783b548…6172",
+        "kind": "person",
+        "identity": null,
+        "amount": "686075.28727623152129415307227",
+        "share": 0.128015,
+        "rank": 2,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.128015,
+            "explains": "share 12.8%: side 1.98x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.913305,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 2,
+            "explains": "rank 2: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 2,
+        "id": "spareuni818.near",
+        "label": "spareuni818.near",
+        "kind": "person",
+        "identity": {
+          "name": "spareuni818.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "446176.957183256608126700000001",
+        "share": 0.083253,
+        "rank": 3,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.083253,
+            "explains": "share 8.33%: side 1.94x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.736521,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 3,
+            "explains": "rank 3: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 3,
+        "id": "delegatetoyuen.near",
+        "label": "delegatetoyuen.near",
+        "kind": "person",
+        "identity": {
+          "name": "delegatetoyuen.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "407375.663468507378734514564068",
+        "share": 0.076013,
+        "rank": 4,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.076013,
+            "explains": "share 7.60%: side 1.93x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.703768,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 4,
+            "explains": "rank 4: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 4,
+        "id": "tony_bc.near",
+        "label": "tony_bc.near",
+        "kind": "person",
+        "identity": {
+          "name": "tony_bc.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "355062.211733838838481488118812",
+        "share": 0.066251,
+        "rank": 5,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.066251,
+            "explains": "share 6.63%: side 1.92x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.657025,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 5,
+            "explains": "rank 5: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 5,
+        "id": "vinibarbosa.near",
+        "label": "vinibarbosa.near",
+        "kind": "person",
+        "identity": {
+          "name": "vinibarbosa.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "335001.898236464548819065380111",
+        "share": 0.062508,
+        "rank": 6,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.062508,
+            "explains": "share 6.25%: side 1.91x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.638195,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 6,
+            "explains": "rank 6: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 6,
+        "id": "klausbravegov.near",
+        "label": "klausbravegov.near",
+        "kind": "person",
+        "identity": {
+          "name": "klausbravegov.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "334971.004785672429099345689561",
+        "share": 0.062503,
+        "rank": 7,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.062503,
+            "explains": "share 6.25%: side 1.91x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.638169,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 7,
+            "explains": "rank 7: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 7,
+        "id": "hos.chicago.near",
+        "label": "hos.chicago.near",
+        "kind": "person",
+        "identity": {
+          "name": "hos.chicago.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "326812.084097810627820768921284",
+        "share": 0.06098,
+        "rank": 8,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.06098,
+            "explains": "share 6.10%: side 1.91x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.630346,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 8,
+            "explains": "rank 8: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 8,
+        "id": "india.sputnik-dao.near",
+        "label": "india.sputnik-dao.near",
+        "kind": "organisation",
+        "identity": {
+          "name": "india.sputnik-dao.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "323504.511707920588972800000001",
+        "share": 0.060363,
+        "rank": 9,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.060363,
+            "explains": "share 6.04%: side 1.91x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.627149,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "organisation",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 9,
+            "explains": "rank 9: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 9,
+        "id": "alan777.near",
+        "label": "alan777.near",
+        "kind": "person",
+        "identity": {
+          "name": "alan777.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "306807.306318430916199677112063",
+        "share": 0.057247,
+        "rank": 10,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.057247,
+            "explains": "share 5.72%: side 1.91x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.610748,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 10,
+            "explains": "rank 10: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 10,
+        "id": "vote.mob.near",
+        "label": "vote.mob.near",
+        "kind": "person",
+        "identity": {
+          "name": "vote.mob.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "305950.660468024484244900000001",
+        "share": 0.057088,
+        "rank": 11,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.057088,
+            "explains": "share 5.71%: side 1.91x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.609899,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 11,
+            "explains": "rank 11: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 11,
+        "id": "charles-hos.near",
+        "label": "charles-hos.near",
+        "kind": "person",
+        "identity": {
+          "name": "charles-hos.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "304619.933881363085",
+        "share": 0.056839,
+        "rank": 12,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.056839,
+            "explains": "share 5.68%: side 1.91x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.608567,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 12,
+            "explains": "rank 12: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 12,
+        "id": "zaki.near",
+        "label": "zaki.near",
+        "kind": "person",
+        "identity": {
+          "name": "zaki.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "228985.672775991654461400000001",
+        "share": 0.042727,
+        "rank": 13,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.042727,
+            "explains": "share 4.27%: side 1.88x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.527639,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 13,
+            "explains": "rank 13: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 13,
+        "id": "aurora_hos.near",
+        "label": "aurora_hos.near",
+        "kind": "person",
+        "identity": {
+          "name": "aurora_hos.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "106333.431399517592",
+        "share": 0.019841,
+        "rank": 14,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.019841,
+            "explains": "share 1.98%: side 1.81x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.359557,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 14,
+            "explains": "rank 14: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 14,
+        "id": "lllllli.near",
+        "label": "lllllli.near",
+        "kind": "person",
+        "identity": {
+          "name": "lllllli.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "22382.630268917589856830420014",
+        "share": 0.004176,
+        "rank": 15,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.004176,
+            "explains": "share 0.42%: side 1.66x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.164955,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 15,
+            "explains": "rank 15: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 15,
+        "id": "yadira.near",
+        "label": "yadira.near",
+        "kind": "person",
+        "identity": {
+          "name": "yadira.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "14365.873754672723495342429584",
+        "share": 0.002681,
+        "rank": 16,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.002681,
+            "explains": "share 0.27%: side 1.62x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.13217,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 16,
+            "explains": "rank 16: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 16,
+        "id": "chicagonode.sputnik-dao.near",
+        "label": "chicagonode.sputnik-dao.near",
+        "kind": "organisation",
+        "identity": {
+          "name": "chicagonode.sputnik-dao.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "8139.314587808886946631078717",
+        "share": 0.001519,
+        "rank": 17,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.001519,
+            "explains": "share 0.15%: side 1.56x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.099487,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "organisation",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 17,
+            "explains": "rank 17: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 17,
+        "id": "cryptoape.near",
+        "label": "cryptoape.near",
+        "kind": "person",
+        "identity": {
+          "name": "cryptoape.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "4198.958350998525",
+        "share": 0.000783,
+        "rank": 18,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000783,
+            "explains": "share <0.1%: side 1.50x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.071428,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 18,
+            "explains": "rank 18: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 18,
+        "id": "bluegirl.near",
+        "label": "bluegirl.near",
+        "kind": "person",
+        "identity": {
+          "name": "bluegirl.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "3774.404310426615000000003598",
+        "share": 0.000704,
+        "rank": 19,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000704,
+            "explains": "share <0.1%: side 1.49x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.067729,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 19,
+            "explains": "rank 19: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 19,
+        "id": "spewy.near",
+        "label": "spewy.near",
+        "kind": "person",
+        "identity": {
+          "name": "spewy.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "2535.915488370387263500000002",
+        "share": 0.000473,
+        "rank": 20,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000473,
+            "explains": "share <0.1%: side 1.45x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.055516,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 20,
+            "explains": "rank 20: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 20,
+        "id": "delegate.sleet.near",
+        "label": "delegate.sleet.near",
+        "kind": "person",
+        "identity": {
+          "name": "delegate.sleet.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "2068.001550770235418300000001",
+        "share": 0.000386,
+        "rank": 21,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000386,
+            "explains": "share <0.1%: side 1.43x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.050151,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 21,
+            "explains": "rank 21: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 21,
+        "id": "vadim.near",
+        "label": "vadim.near",
+        "kind": "person",
+        "identity": {
+          "name": "vadim.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "1843.105632934365463926523102",
+        "share": 0.000344,
+        "rank": 22,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000344,
+            "explains": "share <0.1%: side 1.42x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.047344,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 22,
+            "explains": "rank 22: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 22,
+        "id": "hmtri1011.near",
+        "label": "hmtri1011.near",
+        "kind": "person",
+        "identity": {
+          "name": "hmtri1011.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "1720.476570911457948095206598",
+        "share": 0.000321,
+        "rank": 23,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000321,
+            "explains": "share <0.1%: side 1.42x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.045734,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 23,
+            "explains": "rank 23: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 23,
+        "id": "james.near",
+        "label": "james.near",
+        "kind": "person",
+        "identity": {
+          "name": "james.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "1358.507630161965295000000001",
+        "share": 0.000253,
+        "rank": 24,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000253,
+            "explains": "share <0.1%: side 1.39x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.040602,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 24,
+            "explains": "rank 24: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 24,
+        "id": "axianetwork.near",
+        "label": "axianetwork.near",
+        "kind": "person",
+        "identity": {
+          "name": "axianetwork.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "991.513916089188151800000002",
+        "share": 0.000185,
+        "rank": 25,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000185,
+            "explains": "share <0.1%: side 1.36x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.034719,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 25,
+            "explains": "rank 25: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 25,
+        "id": "machinewash.near",
+        "label": "machinewash.near",
+        "kind": "person",
+        "identity": {
+          "name": "machinewash.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "747.222557718853126700000001",
+        "share": 0.000139,
+        "rank": 26,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000139,
+            "explains": "share <0.1%: side 1.34x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.030095,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 26,
+            "explains": "rank 26: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 26,
+        "id": "fiatisabubble.near",
+        "label": "fiatisabubble.near",
+        "kind": "person",
+        "identity": {
+          "name": "fiatisabubble.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "632.373093930038453353228395",
+        "share": 0.000118,
+        "rank": 27,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000118,
+            "explains": "share <0.1%: side 1.32x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 27,
+            "explains": "rank 27: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 27,
+        "id": "hos.slimedragon.near",
+        "label": "hos.slimedragon.near",
+        "kind": "person",
+        "identity": {
+          "name": "hos.slimedragon.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "490.775226001209270000000001",
+        "share": 0.000092,
+        "rank": 28,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000092,
+            "explains": "share <0.1%: side 1.30x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 28,
+            "explains": "rank 28: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 28,
+        "id": "1920804333ced7e8357b5b22b69b3ce03aff94c04836ba604019e0c363f2d7b3",
+        "label": "19208043…d7b3",
+        "kind": "person",
+        "identity": null,
+        "amount": "446.38178271507055",
+        "share": 0.000083,
+        "rank": 29,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000083,
+            "explains": "share <0.1%: side 1.29x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 29,
+            "explains": "rank 29: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 29,
+        "id": "kolosun.tg",
+        "label": "kolosun.tg",
+        "kind": "person",
+        "identity": {
+          "name": "kolosun.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "394.2548643096329",
+        "share": 0.000074,
+        "rank": 30,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000074,
+            "explains": "share <0.1%: side 1.28x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 30,
+            "explains": "rank 30: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 30,
+        "id": "griff.near",
+        "label": "griff.near",
+        "kind": "person",
+        "identity": {
+          "name": "griff.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "380.987545174890295000000001",
+        "share": 0.000071,
+        "rank": 31,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000071,
+            "explains": "share <0.1%: side 1.27x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 31,
+            "explains": "rank 31: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 31,
+        "id": "simpletag3424.near",
+        "label": "simpletag3424.near",
+        "kind": "person",
+        "identity": {
+          "name": "simpletag3424.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "209.049133800638742214105163",
+        "share": 0.000039,
+        "rank": 32,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000039,
+            "explains": "share <0.1%: side 1.22x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 32,
+            "explains": "rank 32: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 32,
+        "id": "bearmans.near",
+        "label": "bearmans.near",
+        "kind": "person",
+        "identity": {
+          "name": "bearmans.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "159.914596890463905293857013",
+        "share": 0.00003,
+        "rank": 33,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.00003,
+            "explains": "share <0.1%: side 1.19x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 33,
+            "explains": "rank 33: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 33,
+        "id": "undermines.near",
+        "label": "undermines.near",
+        "kind": "person",
+        "identity": {
+          "name": "undermines.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "153.882629117452616500000001",
+        "share": 0.000029,
+        "rank": 34,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000029,
+            "explains": "share <0.1%: side 1.19x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 34,
+            "explains": "rank 34: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 34,
+        "id": "m1halich228.tg",
+        "label": "m1halich228.tg",
+        "kind": "person",
+        "identity": {
+          "name": "m1halich228.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "135.24451476017",
+        "share": 0.000025,
+        "rank": 35,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000025,
+            "explains": "share <0.1%: side 1.17x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 35,
+            "explains": "rank 35: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 35,
+        "id": "lyprovidad2150.near",
+        "label": "lyprovidad2150.near",
+        "kind": "person",
+        "identity": {
+          "name": "lyprovidad2150.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "127.928881230658172600000001",
+        "share": 0.000024,
+        "rank": 36,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000024,
+            "explains": "share <0.1%: side 1.17x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 36,
+            "explains": "rank 36: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 36,
+        "id": "jaguarcat.near",
+        "label": "jaguarcat.near",
+        "kind": "person",
+        "identity": {
+          "name": "jaguarcat.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "124.097123330606411800000001",
+        "share": 0.000023,
+        "rank": 37,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000023,
+            "explains": "share <0.1%: side 1.17x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 37,
+            "explains": "rank 37: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 37,
+        "id": "jp_daug.tg",
+        "label": "jp_daug.tg",
+        "kind": "person",
+        "identity": {
+          "name": "jp_daug.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "122.000452667032464697935343",
+        "share": 0.000023,
+        "rank": 38,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000023,
+            "explains": "share <0.1%: side 1.17x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 38,
+            "explains": "rank 38: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 38,
+        "id": "ramgor.near",
+        "label": "ramgor.near",
+        "kind": "person",
+        "identity": {
+          "name": "ramgor.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "95.864777688466889217908397",
+        "share": 0.000018,
+        "rank": 39,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000018,
+            "explains": "share <0.1%: side 1.14x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 39,
+            "explains": "rank 39: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 39,
+        "id": "coffee-crush_gov.near",
+        "label": "coffee-crush_gov.near",
+        "kind": "person",
+        "identity": {
+          "name": "coffee-crush_gov.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "86.068037090015875351402255",
+        "share": 0.000016,
+        "rank": 40,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000016,
+            "explains": "share <0.1%: side 1.13x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 40,
+            "explains": "rank 40: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 40,
+        "id": "ray012803.tg",
+        "label": "ray012803.tg",
+        "kind": "person",
+        "identity": {
+          "name": "ray012803.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "84.084283070828338600001",
+        "share": 0.000016,
+        "rank": 41,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000016,
+            "explains": "share <0.1%: side 1.13x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 41,
+            "explains": "rank 41: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 41,
+        "id": "tanegov.near",
+        "label": "tanegov.near",
+        "kind": "person",
+        "identity": {
+          "name": "tanegov.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "61.709266318212766400000001",
+        "share": 0.000012,
+        "rank": 42,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000012,
+            "explains": "share <0.1%: side 1.10x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 42,
+            "explains": "rank 42: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 42,
+        "id": "kentf.near",
+        "label": "kentf.near",
+        "kind": "person",
+        "identity": {
+          "name": "kentf.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "46.520364862822507599999994",
+        "share": 0.000009,
+        "rank": 43,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000009,
+            "explains": "share <0.1%: side 1.08x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 43,
+            "explains": "rank 43: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 43,
+        "id": "edwinck.near",
+        "label": "edwinck.near",
+        "kind": "person",
+        "identity": {
+          "name": "edwinck.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "45.88482031917",
+        "share": 0.000009,
+        "rank": 44,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000009,
+            "explains": "share <0.1%: side 1.08x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 44,
+            "explains": "rank 44: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 44,
+        "id": "zorakrizovnikov.tg",
+        "label": "zorakrizovnikov.tg",
+        "kind": "person",
+        "identity": {
+          "name": "zorakrizovnikov.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "45.447353689507835900000001",
+        "share": 0.000008,
+        "rank": 45,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000008,
+            "explains": "share <0.1%: side 1.07x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 45,
+            "explains": "rank 45: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 45,
+        "id": "nearweek.near",
+        "label": "nearweek.near",
+        "kind": "person",
+        "identity": {
+          "name": "nearweek.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "42.498541071678249200000001",
+        "share": 0.000008,
+        "rank": 46,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000008,
+            "explains": "share <0.1%: side 1.07x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 46,
+            "explains": "rank 46: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 46,
+        "id": "blaze.near",
+        "label": "blaze.near",
+        "kind": "person",
+        "identity": {
+          "name": "blaze.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "41.280115434209154700000013",
+        "share": 0.000008,
+        "rank": 47,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000008,
+            "explains": "share <0.1%: side 1.07x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 47,
+            "explains": "rank 47: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 47,
+        "id": "profit.near",
+        "label": "profit.near",
+        "kind": "person",
+        "identity": {
+          "name": "profit.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "38.967827872512889328429947",
+        "share": 0.000007,
+        "rank": 48,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000007,
+            "explains": "share <0.1%: side 1.05x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 48,
+            "explains": "rank 48: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 48,
+        "id": "vikashxd.near",
+        "label": "vikashxd.near",
+        "kind": "person",
+        "identity": {
+          "name": "vikashxd.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "33.327417523695604700000001",
+        "share": 0.000006,
+        "rank": 49,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000006,
+            "explains": "share <0.1%: side 1.04x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 49,
+            "explains": "rank 49: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 49,
+        "id": "truekale619.near",
+        "label": "truekale619.near",
+        "kind": "person",
+        "identity": {
+          "name": "truekale619.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "30.571574314439448900000001",
+        "share": 0.000006,
+        "rank": 50,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000006,
+            "explains": "share <0.1%: side 1.04x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 50,
+            "explains": "rank 50: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 50,
+        "id": "kinguin.near",
+        "label": "kinguin.near",
+        "kind": "person",
+        "identity": {
+          "name": "kinguin.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "29.663118104016115296803512",
+        "share": 0.000006,
+        "rank": 51,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000006,
+            "explains": "share <0.1%: side 1.04x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 51,
+            "explains": "rank 51: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 51,
+        "id": "monza.near",
+        "label": "monza.near",
+        "kind": "person",
+        "identity": {
+          "name": "monza.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "28.941068255250295000000001",
+        "share": 0.000005,
+        "rank": 52,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000005,
+            "explains": "share <0.1%: side 1.02x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 52,
+            "explains": "rank 52: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 52,
+        "id": "bright-key.near",
+        "label": "bright-key.near",
+        "kind": "person",
+        "identity": {
+          "name": "bright-key.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "28.783765099774178900000001",
+        "share": 0.000005,
+        "rank": 53,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000005,
+            "explains": "share <0.1%: side 1.02x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 53,
+            "explains": "rank 53: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 53,
+        "id": "479fceb8679be8c39437dbdf3d94c7cf2b1a16eb3babd1f7e6da15e8ca526a72",
+        "label": "479fceb8…6a72",
+        "kind": "person",
+        "identity": null,
+        "amount": "26.07326527311671270641278",
+        "share": 0.000005,
+        "rank": 54,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000005,
+            "explains": "share <0.1%: side 1.02x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 54,
+            "explains": "rank 54: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 54,
+        "id": "9e54f4e56afa295e7b60c88ca6157e83e01623d008a42998ee46beab6b72d141",
+        "label": "9e54f4e5…d141",
+        "kind": "person",
+        "identity": null,
+        "amount": "21.961987737630388536014476",
+        "share": 0.000004,
+        "rank": 55,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000004,
+            "explains": "share <0.1%: side 1.00x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 55,
+            "explains": "rank 55: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 55,
+        "id": "mapogov.near",
+        "label": "mapogov.near",
+        "kind": "person",
+        "identity": {
+          "name": "mapogov.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "20.2934761544824169",
+        "share": 0.000004,
+        "rank": 56,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000004,
+            "explains": "share <0.1%: side 1.00x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 56,
+            "explains": "rank 56: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 56,
+        "id": "wisezip1714.near",
+        "label": "wisezip1714.near",
+        "kind": "person",
+        "identity": {
+          "name": "wisezip1714.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "19.990966186824108300000002",
+        "share": 0.000004,
+        "rank": 57,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000004,
+            "explains": "share <0.1%: side 1.00x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 57,
+            "explains": "rank 57: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 57,
+        "id": "freytipp1894.tg",
+        "label": "freytipp1894.tg",
+        "kind": "person",
+        "identity": {
+          "name": "freytipp1894.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "19.694149507678938700000001",
+        "share": 0.000004,
+        "rank": 58,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000004,
+            "explains": "share <0.1%: side 1.00x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 58,
+            "explains": "rank 58: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 58,
+        "id": "lyubov_minsk.tg",
+        "label": "lyubov_minsk.tg",
+        "kind": "person",
+        "identity": {
+          "name": "lyubov_minsk.tg",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "19.690803839329178900000001",
+        "share": 0.000004,
+        "rank": 59,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000004,
+            "explains": "share <0.1%: side 1.00x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 59,
+            "explains": "rank 59: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 59,
+        "id": "hexie.near",
+        "label": "hexie.near",
+        "kind": "person",
+        "identity": {
+          "name": "hexie.near",
+          "source": "account-id",
+          "status": "self-declared"
+        },
+        "amount": "19.435104732279064565876763",
+        "share": 0.000004,
+        "rank": 60,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.000004,
+            "explains": "share <0.1%: side 1.00x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "person",
+            "explains": "kind: person or organisation"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (account-id)"
+          },
+          {
+            "primitive": "order",
+            "value": 60,
+            "explains": "rank 60: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 60,
+        "id": "__tail",
+        "label": "everyone else",
+        "kind": "group",
+        "identity": null,
+        "amount": "749.107410909584060238611595",
+        "share": 0.00014,
+        "rank": 61,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.00014,
+            "explains": "share <0.1%: side 1.34x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.03,
+            "explains": "square root of its share, relative to the largest petal (average member)"
+          },
+          {
+            "primitive": "colour",
+            "value": "tail",
+            "explains": "hatched: grouped, not one account"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "grouped: no single identity"
+          },
+          {
+            "primitive": "order",
+            "value": 61,
+            "explains": "after the top 60: largest first, clockwise from the top"
+          }
+        ],
+        "count": 406
+      }
+    ]
+  }
+}

@@ -1,0 +1,3535 @@
+{
+  "name": "near-validators-default",
+  "reading_sha256": "56dc7989e6fa3dfa79f43f5571f4721f480dd88f5b4f74a68647ddb3a720e89c",
+  "reading": {
+    "petal": "reading/v1",
+    "spec_sha256": "f87072c9a4815077c7e562047140ace6456b92edd6c66b4f1740f7379d1c85e3",
+    "title": "NEAR validators",
+    "chain": "near:mainnet",
+    "encodings": {
+      "width": {
+        "by": "share",
+        "scale": "log",
+        "max_ratio": 2,
+        "meaning": "share of stake in the current epoch, in a 2x band",
+        "sources": [
+          "fastnear-rpc-validators"
+        ]
+      },
+      "height": {
+        "by": "share",
+        "scale": "sqrt",
+        "meaning": "square root of share of stake in the current epoch",
+        "sources": [
+          "fastnear-rpc-validators"
+        ]
+      },
+      "colour": {
+        "by": "kind",
+        "meaning": "kind of account",
+        "sources": [
+          "nearblocks-validators"
+        ]
+      },
+      "outline": {
+        "by": "identity_status",
+        "meaning": "identity: solid when self-declared or verified, dashed when inferred",
+        "sources": [
+          "fastnear-rpc-liquid-staking",
+          "nearblocks-validators"
+        ]
+      },
+      "segments": null,
+      "order": {
+        "by": "measure_desc",
+        "meaning": "largest first, clockwise from the top",
+        "sources": [
+          "fastnear-rpc-validators"
+        ]
+      }
+    },
+    "petals": [
+      {
+        "index": 0,
+        "id": "astro-stakers.poolv1.near",
+        "label": "astro-stakers.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "astrostakers.com",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "33270925.619217119134459443495696",
+        "share": 0.056071,
+        "rank": 1,
+        "name": "astrostakers.com",
+        "width": 1.7594472213644097,
+        "height": 1,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 1,
+        "id": "figment.poolv1.near",
+        "label": "figment.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "27913093.179334048342469037509325",
+        "share": 0.047041,
+        "rank": 2,
+        "name": "figment.poolv1.near",
+        "width": 1.712535438584093,
+        "height": 0.9159444213975526,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 2,
+        "id": "ledgerbyfigment.poolv1.near",
+        "label": "ledgerbyfigment.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "22968074.415665397701473933025448",
+        "share": 0.038708,
+        "rank": 3,
+        "name": "ledgerbyfigment.poolv1.near",
+        "width": 1.6604478189579956,
+        "height": 0.830866435980224,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 3,
+        "id": "staked.poolv1.near",
+        "label": "staked.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "21019461.615609740426136322462901",
+        "share": 0.035424,
+        "rank": 4,
+        "name": "staked.poolv1.near",
+        "width": 1.6367629379583621,
+        "height": 0.794839879418581,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 4,
+        "id": "binancenode1.poolv1.near",
+        "label": "binancenode1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "20129876.800994643581130761469535",
+        "share": 0.033925,
+        "rank": 5,
+        "name": "binancenode1.poolv1.near",
+        "width": 1.6252119661667728,
+        "height": 0.7778409037948206,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 5,
+        "id": "bitwise_1.poolv1.near",
+        "label": "bitwise_1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "19943140.704942240992389987117569",
+        "share": 0.03361,
+        "rank": 6,
+        "name": "bitwise_1.poolv1.near",
+        "width": 1.6227198158053984,
+        "height": 0.7742212825040715,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 6,
+        "id": "sumerian.poolv1.near",
+        "label": "sumerian.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "18775665.056471701150314337355771",
+        "share": 0.031642,
+        "rank": 7,
+        "name": "sumerian.poolv1.near",
+        "width": 1.6066002832851667,
+        "height": 0.7512125111062612,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 7,
+        "id": "zavodil.poolv1.near",
+        "label": "NEAR Zavodil node",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "NEAR Zavodil node",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "17933730.896789004919365015729872",
+        "share": 0.030223,
+        "rank": 8,
+        "name": "NEAR Zavodil node",
+        "width": 1.5943427522940694,
+        "height": 0.7341750724740804,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 8,
+        "id": "bitwise_2.poolv1.near",
+        "label": "bitwise_2.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "16882458.081487101984385976318512",
+        "share": 0.028452,
+        "rank": 9,
+        "name": "bitwise_2.poolv1.near",
+        "width": 1.5782108032300683,
+        "height": 0.7123398642873063,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 9,
+        "id": "liver.pool.near",
+        "label": "liver.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "16260482.03659489246424050624609",
+        "share": 0.027403,
+        "rank": 10,
+        "name": "liver.pool.near",
+        "width": 1.568174958270805,
+        "height": 0.6990848725324866,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 10,
+        "id": "cnear-1.poolv1.near",
+        "label": "cnear-1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "15890175.006251099670791631794178",
+        "share": 0.026779,
+        "rank": 11,
+        "name": "cnear-1.poolv1.near",
+        "width": 1.5620212316012452,
+        "height": 0.6910795261928185,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 11,
+        "id": "cnear-3.poolv1.near",
+        "label": "cnear-3.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "15878520.812551079715963656988638",
+        "share": 0.02676,
+        "rank": 12,
+        "name": "cnear-3.poolv1.near",
+        "width": 1.5618316165505544,
+        "height": 0.6908343183641957,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 12,
+        "id": "cnear-2.poolv1.near",
+        "label": "cnear-2.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "15877070.793064234667812451547991",
+        "share": 0.026757,
+        "rank": 13,
+        "name": "cnear-2.poolv1.near",
+        "width": 1.5618016650257065,
+        "height": 0.6907955933820547,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 13,
+        "id": "kiln-1.poolv1.near",
+        "label": "kiln-1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://kiln.fi",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "12942299.179865240911606239452277",
+        "share": 0.021811,
+        "rank": 14,
+        "name": "https://kiln.fi",
+        "width": 1.5072005594736657,
+        "height": 0.6236897950304905,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 14,
+        "id": "svrn-ai.poolv1.near",
+        "label": "svrn-ai.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "12070361.342828718676435134437269",
+        "share": 0.020342,
+        "rank": 15,
+        "name": "svrn-ai.poolv1.near",
+        "width": 1.4885728843570867,
+        "height": 0.6023205409613345,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 15,
+        "id": "svrn.pool.near",
+        "label": "svrn.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "12038256.127931304434863634617524",
+        "share": 0.020288,
+        "rank": 16,
+        "name": "svrn.pool.near",
+        "width": 1.4878627563592213,
+        "height": 0.6015205477605149,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 16,
+        "id": "epic.poolv1.near",
+        "label": "epic.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://epicsteak.com",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "11946704.480966975672211342749402",
+        "share": 0.020134,
+        "rank": 17,
+        "name": "https://epicsteak.com",
+        "width": 1.4858271468695772,
+        "height": 0.5992332196818951,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 17,
+        "id": "svrn-luganodes.pool.near",
+        "label": "svrn-luganodes.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "11450515.629831278899001967455256",
+        "share": 0.019297,
+        "rank": 18,
+        "name": "svrn-luganodes.pool.near",
+        "width": 1.4744837702767173,
+        "height": 0.5866455053435057,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 18,
+        "id": "nearvana.poolv1.near",
+        "label": "nearvana.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "10450315.532727950127670215262853",
+        "share": 0.017612,
+        "rank": 19,
+        "name": "nearvana.poolv1.near",
+        "width": 1.4500742604805743,
+        "height": 0.5604478243647106,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 19,
+        "id": "stake1.poolv1.near",
+        "label": "stake1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "10427998.746268443055822903683133",
+        "share": 0.017574,
+        "rank": 20,
+        "name": "stake1.poolv1.near",
+        "width": 1.4494972239478843,
+        "height": 0.5598428812165092,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 20,
+        "id": "svrn_bitwise.poolv1.near",
+        "label": "svrn_bitwise.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "10408500.242110231119269477153201",
+        "share": 0.017541,
+        "rank": 21,
+        "name": "svrn_bitwise.poolv1.near",
+        "width": 1.4489951001124797,
+        "height": 0.5593170050325342,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 21,
+        "id": "metapool01.pool.near",
+        "label": "metapool01.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "9189223.193722989219825985712941",
+        "share": 0.015486,
+        "rank": 22,
+        "name": "metapool01.pool.near",
+        "width": 1.415706651951003,
+        "height": 0.5255335864269819,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 22,
+        "id": "p2p-org.poolv1.near",
+        "label": "p2p-org.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://p2p.org/near",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "8006152.072840550750212200750831",
+        "share": 0.013493,
+        "rank": 23,
+        "name": "https://p2p.org/near",
+        "width": 1.3789022749740178,
+        "height": 0.4905520662912834,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 23,
+        "id": "dragonfly.poolv1.near",
+        "label": "dragonfly.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "7905852.949330173331521427775486",
+        "share": 0.013324,
+        "rank": 24,
+        "name": "dragonfly.poolv1.near",
+        "width": 1.375535053328556,
+        "height": 0.48747030059951146,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 24,
+        "id": "allnodes.poolv1.near",
+        "label": "allnodes.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://www.allnodes.com/near",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "6816543.341740560299908655967888",
+        "share": 0.011488,
+        "rank": 25,
+        "name": "https://www.allnodes.com/near",
+        "width": 1.3359259610179226,
+        "height": 0.45264013813166987,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 25,
+        "id": "bisontrails.poolv1.near",
+        "label": "bisontrails.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "6791152.954741812230366568862154",
+        "share": 0.011445,
+        "rank": 26,
+        "name": "bisontrails.poolv1.near",
+        "width": 1.3349241229362783,
+        "height": 0.4517922197265301,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 26,
+        "id": "macrodatarefinement.poolv1.near",
+        "label": "macrodatarefinement.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "6715115.629803803051670691693202",
+        "share": 0.011317,
+        "rank": 27,
+        "name": "macrodatarefinement.poolv1.near",
+        "width": 1.3319194751429917,
+        "height": 0.44925871144514146,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 27,
+        "id": "aca87218e28c41f5a693dee3dff12238.poolv1.near",
+        "label": "aca87218e28c41f5a693dee3dff12238.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "6372941.874469208041373281977169",
+        "share": 0.01074,
+        "rank": 28,
+        "name": "aca87218e28c41f5a693dee3dff12238.poolv1.near",
+        "width": 1.31793912955218,
+        "height": 0.4376561039169746,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 28,
+        "id": "silentnodes.pool.near",
+        "label": "silentnodes.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "6060510.873985015542441343901243",
+        "share": 0.010214,
+        "rank": 29,
+        "name": "silentnodes.pool.near",
+        "width": 1.3045238571932323,
+        "height": 0.42680428989691427,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 29,
+        "id": "d1.poolv1.near",
+        "label": "d1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://d1.ventures",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "6055333.926943943246468662854505",
+        "share": 0.010205,
+        "rank": 30,
+        "name": "https://d1.ventures",
+        "width": 1.304288353614595,
+        "height": 0.42661621053756865,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 30,
+        "id": "svrn-twinstake.poolv1.near",
+        "label": "svrn-twinstake.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "6012798.909343807524422065436924",
+        "share": 0.010133,
+        "rank": 31,
+        "name": "svrn-twinstake.poolv1.near",
+        "width": 1.3023968136991744,
+        "height": 0.42510858006589575,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 31,
+        "id": "stakin.poolv1.near",
+        "label": "stakin.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://stakin.com",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "5667030.921169736965215249965995",
+        "share": 0.009551,
+        "rank": 32,
+        "name": "https://stakin.com",
+        "width": 1.2865943182249369,
+        "height": 0.41271976894253837,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 32,
+        "id": "lst-pool.near",
+        "label": "lst-pool.near",
+        "kind": "staking_entity",
+        "identity": {
+          "name": "Liquid Staking NEAR Token",
+          "source": "fastnear-rpc-liquid-staking",
+          "status": "self-declared"
+        },
+        "amount": "5508197.267993764220521559004658",
+        "share": 0.009283,
+        "rank": 33,
+        "name": "Liquid Staking NEAR Token",
+        "width": 1.2789908631344307,
+        "height": 0.40688813365493626,
+        "colour": "staking_entity",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 33,
+        "id": "legends.poolv1.near",
+        "label": "legends.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://legends.llc",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "4945840.890197288568975893155146",
+        "share": 0.008335,
+        "rank": 34,
+        "name": "https://legends.llc",
+        "width": 1.2502128472380405,
+        "height": 0.38555261341774927,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 34,
+        "id": "northernlights.poolv1.near",
+        "label": "northernlights.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "4580984.681269728721165367534074",
+        "share": 0.00772,
+        "rank": 35,
+        "name": "northernlights.poolv1.near",
+        "width": 1.2297358249869188,
+        "height": 0.37105603486988065,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 35,
+        "id": "republic.poolv1.near",
+        "label": "republic.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "4312823.490289835864225245864107",
+        "share": 0.007268,
+        "rank": 36,
+        "name": "republic.poolv1.near",
+        "width": 1.213617648588817,
+        "height": 0.3600296833626545,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 36,
+        "id": "okx-earn.poolv1.near",
+        "label": "okx-earn.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "4146538.615703218939123512508341",
+        "share": 0.006988,
+        "rank": 37,
+        "name": "okx-earn.poolv1.near",
+        "width": 1.2031220879678108,
+        "height": 0.35302649215150433,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 37,
+        "id": "rekt.poolv1.near",
+        "label": "rekt.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "3788400.750767566893722901348579",
+        "share": 0.006385,
+        "rank": 38,
+        "name": "rekt.poolv1.near",
+        "width": 1.1790134595464847,
+        "height": 0.337451451079307,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 38,
+        "id": "ni.poolv1.near",
+        "label": "Nobodyinc",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "Nobodyinc",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "3543294.245169339298163589276221",
+        "share": 0.005971,
+        "rank": 39,
+        "name": "Nobodyinc",
+        "width": 1.1611043297706662,
+        "height": 0.3263280342090154,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 39,
+        "id": "everstake.poolv1.near",
+        "label": "Everstake",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "Everstake",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "3386933.123984446062623819779142",
+        "share": 0.005708,
+        "rank": 40,
+        "name": "Everstake",
+        "width": 1.14907024794825,
+        "height": 0.31906034570286557,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 40,
+        "id": "gtnode-0.poolv1.near",
+        "label": "gtnode-0.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "3311535.15457256358483040857886",
+        "share": 0.005581,
+        "rank": 41,
+        "name": "gtnode-0.poolv1.near",
+        "width": 1.1430591194363706,
+        "height": 0.3154909170406892,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 41,
+        "id": "nearfans.poolv1.near",
+        "label": "nearfans.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "3118091.471593407896375228251549",
+        "share": 0.005255,
+        "rank": 42,
+        "name": "nearfans.poolv1.near",
+        "width": 1.1269797458953068,
+        "height": 0.3061379779734425,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 42,
+        "id": "nearone.pool.near",
+        "label": "nearone.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "3026120.128644614887595818477262",
+        "share": 0.0051,
+        "rank": 43,
+        "name": "nearone.pool.near",
+        "width": 1.1189813393187462,
+        "height": 0.3015893055442603,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 43,
+        "id": "x.poolv1.near",
+        "label": "x.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "2949867.516275668119149752614991",
+        "share": 0.004971,
+        "rank": 44,
+        "name": "x.poolv1.near",
+        "width": 1.1121370192563427,
+        "height": 0.29775065859099864,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 44,
+        "id": "here.poolv1.near",
+        "label": "here.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "2638034.192826928957808318473171",
+        "share": 0.004446,
+        "rank": 45,
+        "name": "here.poolv1.near",
+        "width": 1.0823184552758356,
+        "height": 0.28158893053743483,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 45,
+        "id": "twinstake.poolv1.near",
+        "label": "twinstake.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://www.twinstake.io",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2432372.304551444056492728805856",
+        "share": 0.004099,
+        "rank": 46,
+        "name": "https://www.twinstake.io",
+        "width": 1.060609158985593,
+        "height": 0.2703770394617541,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 46,
+        "id": "bitcoinsuisse.poolv1.near",
+        "label": "bitcoinsuisse.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "2338185.183731293082101343533543",
+        "share": 0.003941,
+        "rank": 47,
+        "name": "bitcoinsuisse.poolv1.near",
+        "width": 1.0501077784320232,
+        "height": 0.26511485725143,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 47,
+        "id": "lux.poolv1.near",
+        "label": "lux.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://lux8.net",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2267456.956140057158515471274212",
+        "share": 0.003821,
+        "rank": 48,
+        "name": "https://lux8.net",
+        "width": 1.041846796850172,
+        "height": 0.261047397591174,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 48,
+        "id": "anonymous.poolv1.near",
+        "label": "anonymous.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "2252976.48465842759328256662772",
+        "share": 0.003797,
+        "rank": 49,
+        "name": "anonymous.poolv1.near",
+        "width": 1.040163498287054,
+        "height": 0.2602262766129896,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 49,
+        "id": "erm.poolv1.near",
+        "label": "erm.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://t.me/narniec",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2251031.082102724881739511352468",
+        "share": 0.003794,
+        "rank": 50,
+        "name": "https://t.me/narniec",
+        "width": 1.0399523382505573,
+        "height": 0.2601234542408703,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 50,
+        "id": "staking4all.poolv1.near",
+        "label": "staking4all.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://www.staking4all.org/",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2235108.663122235008986486623386",
+        "share": 0.003767,
+        "rank": 51,
+        "name": "https://www.staking4all.org/",
+        "width": 1.038044349478878,
+        "height": 0.2591962173784173,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 51,
+        "id": "dsrvlabs.poolv1.near",
+        "label": "DSRV",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "DSRV",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2140785.182430330678845789050493",
+        "share": 0.003608,
+        "rank": 52,
+        "name": "DSRV",
+        "width": 1.0265233052720335,
+        "height": 0.25366708229370954,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 52,
+        "id": "blockdaemon.poolv1.near",
+        "label": "blockdaemon.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "2132418.24641290220849463994588",
+        "share": 0.003594,
+        "rank": 53,
+        "name": "blockdaemon.poolv1.near",
+        "width": 1.025484665597101,
+        "height": 0.2531744560620853,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 53,
+        "id": "moonlet.poolv1.near",
+        "label": "Moonlet.io",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "Moonlet.io",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2053486.185997635659398514892839",
+        "share": 0.003461,
+        "rank": 54,
+        "name": "Moonlet.io",
+        "width": 1.0154108146267826,
+        "height": 0.24844579398766165,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 54,
+        "id": "cryptium.poolv1.near",
+        "label": "Cryptium Labs",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "Cryptium Labs",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2047509.608037713231567095623813",
+        "share": 0.003451,
+        "rank": 55,
+        "name": "Cryptium Labs",
+        "width": 1.0146378030180068,
+        "height": 0.24808661237149848,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 55,
+        "id": "buildlinks.poolv1.near",
+        "label": "buildlinks.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://www.buildlinks.org",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2037117.300671929631469710390305",
+        "share": 0.003433,
+        "rank": 56,
+        "name": "https://www.buildlinks.org",
+        "width": 1.0132407204439484,
+        "height": 0.2474387715698934,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 56,
+        "id": "npro.poolv1.near",
+        "label": "NPRO Validator",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "NPRO Validator",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2035394.842327415888647091333088",
+        "share": 0.00343,
+        "rank": 57,
+        "name": "NPRO Validator",
+        "width": 1.0130071613800276,
+        "height": 0.2473306331257005,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 57,
+        "id": "baziliknear.poolv1.near",
+        "label": "baziliknear.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "2018296.714766828254391970603977",
+        "share": 0.003401,
+        "rank": 58,
+        "name": "baziliknear.poolv1.near",
+        "width": 1.0107388338476393,
+        "height": 0.2462828468996548,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 58,
+        "id": "sofarsonear.poolv1.near",
+        "label": "sofarsonear.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "1996066.183043201352616378295561",
+        "share": 0.003364,
+        "rank": 59,
+        "name": "sofarsonear.poolv1.near",
+        "width": 1.0078165143471087,
+        "height": 0.24493950890349023,
+        "colour": "staking_pool",
+        "outline": null,
+        "segments": []
+      },
+      {
+        "index": 59,
+        "id": "chorusone.poolv1.near",
+        "label": "chorusone.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://chorus.one/",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "1938442.658457211882645987449132",
+        "share": 0.003267,
+        "rank": 60,
+        "name": "https://chorus.one/",
+        "width": 1,
+        "height": 0.24138229739068753,
+        "colour": "staking_pool",
+        "outline": "asserted",
+        "segments": []
+      },
+      {
+        "index": 60,
+        "id": "__tail",
+        "label": "everyone else",
+        "kind": "group",
+        "identity": null,
+        "amount": "81869050.738906256586067675155591",
+        "share": 0.137972,
+        "rank": 61,
+        "tail": true,
+        "count": 311,
+        "name": "everyone else",
+        "width": 2,
+        "height": 0.08895003730364973,
+        "colour": "tail",
+        "outline": null,
+        "segments": []
+      }
+    ],
+    "legend": [
+      {
+        "primitive": "width",
+        "meaning": "share of stake in the current epoch, in a 2x band",
+        "sources": [
+          "fastnear-rpc-validators"
+        ]
+      },
+      {
+        "primitive": "height",
+        "meaning": "square root of share of stake in the current epoch",
+        "sources": [
+          "fastnear-rpc-validators"
+        ]
+      },
+      {
+        "primitive": "colour",
+        "meaning": "kind of account",
+        "sources": [
+          "nearblocks-validators"
+        ],
+        "keys": [
+          {
+            "key": "staking_pool",
+            "label": "pool"
+          },
+          {
+            "key": "staking_entity",
+            "label": "liquid staking"
+          }
+        ]
+      },
+      {
+        "primitive": "outline",
+        "meaning": "identity: solid when self-declared or verified, dashed when inferred",
+        "sources": [
+          "fastnear-rpc-liquid-staking",
+          "nearblocks-validators"
+        ],
+        "keys": [
+          {
+            "key": "asserted",
+            "label": "self-declared or verified"
+          }
+        ]
+      },
+      {
+        "primitive": "order",
+        "meaning": "largest first, clockwise from the top",
+        "sources": [
+          "fastnear-rpc-validators"
+        ]
+      },
+      {
+        "primitive": "tail",
+        "meaning": "everyone else: 311 more participants grouped into one hatched petal, 13.8% of the total; its height is their average",
+        "sources": [
+          "fastnear-rpc-validators"
+        ],
+        "keys": [
+          {
+            "key": "tail",
+            "label": "everyone else"
+          }
+        ]
+      }
+    ],
+    "details": [
+      {
+        "index": 0,
+        "id": "astro-stakers.poolv1.near",
+        "label": "astro-stakers.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "astrostakers.com",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "33270925.619217119134459443495696",
+        "share": 0.056071,
+        "rank": 1,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.056071,
+            "explains": "share 5.61%: side 1.76x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 1,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 1,
+            "explains": "rank 1: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 1,
+        "id": "figment.poolv1.near",
+        "label": "figment.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "27913093.179334048342469037509325",
+        "share": 0.047041,
+        "rank": 2,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.047041,
+            "explains": "share 4.70%: side 1.71x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.915944,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 2,
+            "explains": "rank 2: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 2,
+        "id": "ledgerbyfigment.poolv1.near",
+        "label": "ledgerbyfigment.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "22968074.415665397701473933025448",
+        "share": 0.038708,
+        "rank": 3,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.038708,
+            "explains": "share 3.87%: side 1.66x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.830866,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 3,
+            "explains": "rank 3: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 3,
+        "id": "staked.poolv1.near",
+        "label": "staked.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "21019461.615609740426136322462901",
+        "share": 0.035424,
+        "rank": 4,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.035424,
+            "explains": "share 3.54%: side 1.64x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.79484,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 4,
+            "explains": "rank 4: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 4,
+        "id": "binancenode1.poolv1.near",
+        "label": "binancenode1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "20129876.800994643581130761469535",
+        "share": 0.033925,
+        "rank": 5,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.033925,
+            "explains": "share 3.39%: side 1.63x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.777841,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 5,
+            "explains": "rank 5: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 5,
+        "id": "bitwise_1.poolv1.near",
+        "label": "bitwise_1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "19943140.704942240992389987117569",
+        "share": 0.03361,
+        "rank": 6,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.03361,
+            "explains": "share 3.36%: side 1.62x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.774221,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 6,
+            "explains": "rank 6: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 6,
+        "id": "sumerian.poolv1.near",
+        "label": "sumerian.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "18775665.056471701150314337355771",
+        "share": 0.031642,
+        "rank": 7,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.031642,
+            "explains": "share 3.16%: side 1.61x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.751213,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 7,
+            "explains": "rank 7: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 7,
+        "id": "zavodil.poolv1.near",
+        "label": "NEAR Zavodil node",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "NEAR Zavodil node",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "17933730.896789004919365015729872",
+        "share": 0.030223,
+        "rank": 8,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.030223,
+            "explains": "share 3.02%: side 1.59x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.734175,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 8,
+            "explains": "rank 8: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 8,
+        "id": "bitwise_2.poolv1.near",
+        "label": "bitwise_2.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "16882458.081487101984385976318512",
+        "share": 0.028452,
+        "rank": 9,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.028452,
+            "explains": "share 2.85%: side 1.58x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.71234,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 9,
+            "explains": "rank 9: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 9,
+        "id": "liver.pool.near",
+        "label": "liver.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "16260482.03659489246424050624609",
+        "share": 0.027403,
+        "rank": 10,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.027403,
+            "explains": "share 2.74%: side 1.57x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.699085,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 10,
+            "explains": "rank 10: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 10,
+        "id": "cnear-1.poolv1.near",
+        "label": "cnear-1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "15890175.006251099670791631794178",
+        "share": 0.026779,
+        "rank": 11,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.026779,
+            "explains": "share 2.68%: side 1.56x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.69108,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 11,
+            "explains": "rank 11: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 11,
+        "id": "cnear-3.poolv1.near",
+        "label": "cnear-3.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "15878520.812551079715963656988638",
+        "share": 0.02676,
+        "rank": 12,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.02676,
+            "explains": "share 2.68%: side 1.56x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.690834,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 12,
+            "explains": "rank 12: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 12,
+        "id": "cnear-2.poolv1.near",
+        "label": "cnear-2.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "15877070.793064234667812451547991",
+        "share": 0.026757,
+        "rank": 13,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.026757,
+            "explains": "share 2.68%: side 1.56x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.690796,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 13,
+            "explains": "rank 13: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 13,
+        "id": "kiln-1.poolv1.near",
+        "label": "kiln-1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://kiln.fi",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "12942299.179865240911606239452277",
+        "share": 0.021811,
+        "rank": 14,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.021811,
+            "explains": "share 2.18%: side 1.51x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.62369,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 14,
+            "explains": "rank 14: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 14,
+        "id": "svrn-ai.poolv1.near",
+        "label": "svrn-ai.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "12070361.342828718676435134437269",
+        "share": 0.020342,
+        "rank": 15,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.020342,
+            "explains": "share 2.03%: side 1.49x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.602321,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 15,
+            "explains": "rank 15: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 15,
+        "id": "svrn.pool.near",
+        "label": "svrn.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "12038256.127931304434863634617524",
+        "share": 0.020288,
+        "rank": 16,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.020288,
+            "explains": "share 2.03%: side 1.49x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.601521,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 16,
+            "explains": "rank 16: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 16,
+        "id": "epic.poolv1.near",
+        "label": "epic.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://epicsteak.com",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "11946704.480966975672211342749402",
+        "share": 0.020134,
+        "rank": 17,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.020134,
+            "explains": "share 2.01%: side 1.49x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.599233,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 17,
+            "explains": "rank 17: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 17,
+        "id": "svrn-luganodes.pool.near",
+        "label": "svrn-luganodes.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "11450515.629831278899001967455256",
+        "share": 0.019297,
+        "rank": 18,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.019297,
+            "explains": "share 1.93%: side 1.47x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.586646,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 18,
+            "explains": "rank 18: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 18,
+        "id": "nearvana.poolv1.near",
+        "label": "nearvana.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "10450315.532727950127670215262853",
+        "share": 0.017612,
+        "rank": 19,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.017612,
+            "explains": "share 1.76%: side 1.45x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.560448,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 19,
+            "explains": "rank 19: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 19,
+        "id": "stake1.poolv1.near",
+        "label": "stake1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "10427998.746268443055822903683133",
+        "share": 0.017574,
+        "rank": 20,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.017574,
+            "explains": "share 1.76%: side 1.45x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.559843,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 20,
+            "explains": "rank 20: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 20,
+        "id": "svrn_bitwise.poolv1.near",
+        "label": "svrn_bitwise.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "10408500.242110231119269477153201",
+        "share": 0.017541,
+        "rank": 21,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.017541,
+            "explains": "share 1.75%: side 1.45x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.559317,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 21,
+            "explains": "rank 21: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 21,
+        "id": "metapool01.pool.near",
+        "label": "metapool01.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "9189223.193722989219825985712941",
+        "share": 0.015486,
+        "rank": 22,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.015486,
+            "explains": "share 1.55%: side 1.42x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.525534,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 22,
+            "explains": "rank 22: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 22,
+        "id": "p2p-org.poolv1.near",
+        "label": "p2p-org.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://p2p.org/near",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "8006152.072840550750212200750831",
+        "share": 0.013493,
+        "rank": 23,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.013493,
+            "explains": "share 1.35%: side 1.38x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.490552,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 23,
+            "explains": "rank 23: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 23,
+        "id": "dragonfly.poolv1.near",
+        "label": "dragonfly.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "7905852.949330173331521427775486",
+        "share": 0.013324,
+        "rank": 24,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.013324,
+            "explains": "share 1.33%: side 1.38x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.48747,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 24,
+            "explains": "rank 24: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 24,
+        "id": "allnodes.poolv1.near",
+        "label": "allnodes.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://www.allnodes.com/near",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "6816543.341740560299908655967888",
+        "share": 0.011488,
+        "rank": 25,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.011488,
+            "explains": "share 1.15%: side 1.34x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.45264,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 25,
+            "explains": "rank 25: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 25,
+        "id": "bisontrails.poolv1.near",
+        "label": "bisontrails.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "6791152.954741812230366568862154",
+        "share": 0.011445,
+        "rank": 26,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.011445,
+            "explains": "share 1.14%: side 1.33x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.451792,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 26,
+            "explains": "rank 26: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 26,
+        "id": "macrodatarefinement.poolv1.near",
+        "label": "macrodatarefinement.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "6715115.629803803051670691693202",
+        "share": 0.011317,
+        "rank": 27,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.011317,
+            "explains": "share 1.13%: side 1.33x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.449259,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 27,
+            "explains": "rank 27: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 27,
+        "id": "aca87218e28c41f5a693dee3dff12238.poolv1.near",
+        "label": "aca87218e28c41f5a693dee3dff12238.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "6372941.874469208041373281977169",
+        "share": 0.01074,
+        "rank": 28,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.01074,
+            "explains": "share 1.07%: side 1.32x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.437656,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 28,
+            "explains": "rank 28: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 28,
+        "id": "silentnodes.pool.near",
+        "label": "silentnodes.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "6060510.873985015542441343901243",
+        "share": 0.010214,
+        "rank": 29,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.010214,
+            "explains": "share 1.02%: side 1.30x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.426804,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 29,
+            "explains": "rank 29: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 29,
+        "id": "d1.poolv1.near",
+        "label": "d1.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://d1.ventures",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "6055333.926943943246468662854505",
+        "share": 0.010205,
+        "rank": 30,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.010205,
+            "explains": "share 1.02%: side 1.30x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.426616,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 30,
+            "explains": "rank 30: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 30,
+        "id": "svrn-twinstake.poolv1.near",
+        "label": "svrn-twinstake.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "6012798.909343807524422065436924",
+        "share": 0.010133,
+        "rank": 31,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.010133,
+            "explains": "share 1.01%: side 1.30x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.425109,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 31,
+            "explains": "rank 31: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 31,
+        "id": "stakin.poolv1.near",
+        "label": "stakin.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://stakin.com",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "5667030.921169736965215249965995",
+        "share": 0.009551,
+        "rank": 32,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.009551,
+            "explains": "share 0.96%: side 1.29x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.41272,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 32,
+            "explains": "rank 32: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 32,
+        "id": "lst-pool.near",
+        "label": "lst-pool.near",
+        "kind": "staking_entity",
+        "identity": {
+          "name": "Liquid Staking NEAR Token",
+          "source": "fastnear-rpc-liquid-staking",
+          "status": "self-declared"
+        },
+        "amount": "5508197.267993764220521559004658",
+        "share": 0.009283,
+        "rank": 33,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.009283,
+            "explains": "share 0.93%: side 1.28x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.406888,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_entity",
+            "explains": "kind: liquid staking"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (fastnear-rpc-liquid-staking)"
+          },
+          {
+            "primitive": "order",
+            "value": 33,
+            "explains": "rank 33: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 33,
+        "id": "legends.poolv1.near",
+        "label": "legends.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://legends.llc",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "4945840.890197288568975893155146",
+        "share": 0.008335,
+        "rank": 34,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.008335,
+            "explains": "share 0.83%: side 1.25x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.385553,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 34,
+            "explains": "rank 34: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 34,
+        "id": "northernlights.poolv1.near",
+        "label": "northernlights.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "4580984.681269728721165367534074",
+        "share": 0.00772,
+        "rank": 35,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.00772,
+            "explains": "share 0.77%: side 1.23x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.371056,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 35,
+            "explains": "rank 35: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 35,
+        "id": "republic.poolv1.near",
+        "label": "republic.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "4312823.490289835864225245864107",
+        "share": 0.007268,
+        "rank": 36,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.007268,
+            "explains": "share 0.73%: side 1.21x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.36003,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 36,
+            "explains": "rank 36: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 36,
+        "id": "okx-earn.poolv1.near",
+        "label": "okx-earn.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "4146538.615703218939123512508341",
+        "share": 0.006988,
+        "rank": 37,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.006988,
+            "explains": "share 0.70%: side 1.20x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.353026,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 37,
+            "explains": "rank 37: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 37,
+        "id": "rekt.poolv1.near",
+        "label": "rekt.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "3788400.750767566893722901348579",
+        "share": 0.006385,
+        "rank": 38,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.006385,
+            "explains": "share 0.64%: side 1.18x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.337451,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 38,
+            "explains": "rank 38: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 38,
+        "id": "ni.poolv1.near",
+        "label": "Nobodyinc",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "Nobodyinc",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "3543294.245169339298163589276221",
+        "share": 0.005971,
+        "rank": 39,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.005971,
+            "explains": "share 0.60%: side 1.16x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.326328,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 39,
+            "explains": "rank 39: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 39,
+        "id": "everstake.poolv1.near",
+        "label": "Everstake",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "Everstake",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "3386933.123984446062623819779142",
+        "share": 0.005708,
+        "rank": 40,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.005708,
+            "explains": "share 0.57%: side 1.15x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.31906,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 40,
+            "explains": "rank 40: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 40,
+        "id": "gtnode-0.poolv1.near",
+        "label": "gtnode-0.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "3311535.15457256358483040857886",
+        "share": 0.005581,
+        "rank": 41,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.005581,
+            "explains": "share 0.56%: side 1.14x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.315491,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 41,
+            "explains": "rank 41: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 41,
+        "id": "nearfans.poolv1.near",
+        "label": "nearfans.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "3118091.471593407896375228251549",
+        "share": 0.005255,
+        "rank": 42,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.005255,
+            "explains": "share 0.53%: side 1.13x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.306138,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 42,
+            "explains": "rank 42: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 42,
+        "id": "nearone.pool.near",
+        "label": "nearone.pool.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "3026120.128644614887595818477262",
+        "share": 0.0051,
+        "rank": 43,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.0051,
+            "explains": "share 0.51%: side 1.12x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.301589,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 43,
+            "explains": "rank 43: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 43,
+        "id": "x.poolv1.near",
+        "label": "x.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "2949867.516275668119149752614991",
+        "share": 0.004971,
+        "rank": 44,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.004971,
+            "explains": "share 0.50%: side 1.11x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.297751,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 44,
+            "explains": "rank 44: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 44,
+        "id": "here.poolv1.near",
+        "label": "here.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "2638034.192826928957808318473171",
+        "share": 0.004446,
+        "rank": 45,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.004446,
+            "explains": "share 0.44%: side 1.08x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.281589,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 45,
+            "explains": "rank 45: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 45,
+        "id": "twinstake.poolv1.near",
+        "label": "twinstake.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://www.twinstake.io",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2432372.304551444056492728805856",
+        "share": 0.004099,
+        "rank": 46,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.004099,
+            "explains": "share 0.41%: side 1.06x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.270377,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 46,
+            "explains": "rank 46: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 46,
+        "id": "bitcoinsuisse.poolv1.near",
+        "label": "bitcoinsuisse.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "2338185.183731293082101343533543",
+        "share": 0.003941,
+        "rank": 47,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003941,
+            "explains": "share 0.39%: side 1.05x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.265115,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 47,
+            "explains": "rank 47: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 47,
+        "id": "lux.poolv1.near",
+        "label": "lux.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://lux8.net",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2267456.956140057158515471274212",
+        "share": 0.003821,
+        "rank": 48,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003821,
+            "explains": "share 0.38%: side 1.04x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.261047,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 48,
+            "explains": "rank 48: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 48,
+        "id": "anonymous.poolv1.near",
+        "label": "anonymous.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "2252976.48465842759328256662772",
+        "share": 0.003797,
+        "rank": 49,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003797,
+            "explains": "share 0.38%: side 1.04x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.260226,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 49,
+            "explains": "rank 49: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 49,
+        "id": "erm.poolv1.near",
+        "label": "erm.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://t.me/narniec",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2251031.082102724881739511352468",
+        "share": 0.003794,
+        "rank": 50,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003794,
+            "explains": "share 0.38%: side 1.04x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.260123,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 50,
+            "explains": "rank 50: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 50,
+        "id": "staking4all.poolv1.near",
+        "label": "staking4all.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://www.staking4all.org/",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2235108.663122235008986486623386",
+        "share": 0.003767,
+        "rank": 51,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003767,
+            "explains": "share 0.38%: side 1.04x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.259196,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 51,
+            "explains": "rank 51: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 51,
+        "id": "dsrvlabs.poolv1.near",
+        "label": "DSRV",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "DSRV",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2140785.182430330678845789050493",
+        "share": 0.003608,
+        "rank": 52,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003608,
+            "explains": "share 0.36%: side 1.03x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.253667,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 52,
+            "explains": "rank 52: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 52,
+        "id": "blockdaemon.poolv1.near",
+        "label": "blockdaemon.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "2132418.24641290220849463994588",
+        "share": 0.003594,
+        "rank": 53,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003594,
+            "explains": "share 0.36%: side 1.03x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.253174,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 53,
+            "explains": "rank 53: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 53,
+        "id": "moonlet.poolv1.near",
+        "label": "Moonlet.io",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "Moonlet.io",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2053486.185997635659398514892839",
+        "share": 0.003461,
+        "rank": 54,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003461,
+            "explains": "share 0.35%: side 1.02x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.248446,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 54,
+            "explains": "rank 54: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 54,
+        "id": "cryptium.poolv1.near",
+        "label": "Cryptium Labs",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "Cryptium Labs",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2047509.608037713231567095623813",
+        "share": 0.003451,
+        "rank": 55,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003451,
+            "explains": "share 0.35%: side 1.01x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.248087,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 55,
+            "explains": "rank 55: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 55,
+        "id": "buildlinks.poolv1.near",
+        "label": "buildlinks.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://www.buildlinks.org",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2037117.300671929631469710390305",
+        "share": 0.003433,
+        "rank": 56,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003433,
+            "explains": "share 0.34%: side 1.01x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.247439,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 56,
+            "explains": "rank 56: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 56,
+        "id": "npro.poolv1.near",
+        "label": "NPRO Validator",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "NPRO Validator",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "2035394.842327415888647091333088",
+        "share": 0.00343,
+        "rank": 57,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.00343,
+            "explains": "share 0.34%: side 1.01x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.247331,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 57,
+            "explains": "rank 57: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 57,
+        "id": "baziliknear.poolv1.near",
+        "label": "baziliknear.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "2018296.714766828254391970603977",
+        "share": 0.003401,
+        "rank": 58,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003401,
+            "explains": "share 0.34%: side 1.01x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.246283,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 58,
+            "explains": "rank 58: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 58,
+        "id": "sofarsonear.poolv1.near",
+        "label": "sofarsonear.poolv1.near",
+        "kind": "staking_pool",
+        "identity": null,
+        "amount": "1996066.183043201352616378295561",
+        "share": 0.003364,
+        "rank": 59,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003364,
+            "explains": "share 0.34%: side 1.01x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.24494,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "no source names this account"
+          },
+          {
+            "primitive": "order",
+            "value": 59,
+            "explains": "rank 59: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 59,
+        "id": "chorusone.poolv1.near",
+        "label": "chorusone.poolv1.near",
+        "kind": "staking_pool",
+        "identity": {
+          "name": "https://chorus.one/",
+          "source": "nearblocks-validators",
+          "status": "self-declared"
+        },
+        "amount": "1938442.658457211882645987449132",
+        "share": 0.003267,
+        "rank": 60,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.003267,
+            "explains": "share 0.33%: side 1.00x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.241382,
+            "explains": "square root of its share, relative to the largest petal"
+          },
+          {
+            "primitive": "colour",
+            "value": "staking_pool",
+            "explains": "kind: pool"
+          },
+          {
+            "primitive": "outline",
+            "value": "solid",
+            "explains": "identity self-declared (nearblocks-validators)"
+          },
+          {
+            "primitive": "order",
+            "value": 60,
+            "explains": "rank 60: largest first, clockwise from the top"
+          }
+        ]
+      },
+      {
+        "index": 60,
+        "id": "__tail",
+        "label": "everyone else",
+        "kind": "group",
+        "identity": null,
+        "amount": "81869050.738906256586067675155591",
+        "share": 0.137972,
+        "rank": 61,
+        "values": [
+          {
+            "primitive": "width",
+            "value": 0.137972,
+            "explains": "share 13.8%: side 2.00x the narrowest"
+          },
+          {
+            "primitive": "height",
+            "value": 0.08895,
+            "explains": "square root of its share, relative to the largest petal (average member)"
+          },
+          {
+            "primitive": "colour",
+            "value": "tail",
+            "explains": "hatched: grouped, not one account"
+          },
+          {
+            "primitive": "outline",
+            "value": "none",
+            "explains": "grouped: no single identity"
+          },
+          {
+            "primitive": "order",
+            "value": 61,
+            "explains": "after the top 60: largest first, clockwise from the top"
+          }
+        ],
+        "count": 311
+      }
+    ]
+  }
+}

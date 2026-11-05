@@ -33,6 +33,9 @@ export const DEFAULT_CONVENTION: Convention;                      // default/v1 
 export function buildSpec(input: ProposeInput, descriptor: NetworkDescriptor, snapshot: Snapshot): { spec: Spec; changed: string[]; defaults: string[] };
 
 // rendering (renderer.md)
+export function readFlower(spec: Spec, s: Snapshot): Reading;     // the facts a drawing needs, no pixels (reading/v1)
+export function readingHash(reading: Reading): string;
+export const SKINS: Record<string, Skin>;                         // a reading becomes a drawing; 'render/v1'
 export function renderFlower(spec: Spec, s: Snapshot, o?: RenderOptions): RenderResult;
 ```
 

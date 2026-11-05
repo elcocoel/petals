@@ -440,6 +440,46 @@ export interface RenderResult {
 }
 
 // ---------------------------------------------------------------------------------------------
+// The reading (renderer.md, reading/v1): all a drawing needs, and no pixels
+
+/** One petal as read: the row, and what each encoding resolves to for it. */
+export interface ReadingPetal extends PetalRow {
+  /** what a label calls it: the identity's name, unless that name is only inferred */
+  name: string;
+  /** the width encoding: a factor in [1, max_ratio] */
+  width: number;
+  /** the height encoding: a value in [0.03, 1], unrounded */
+  height: number;
+  /** the colour encoding: a kind, `named`, `anonymous` or `single`; `tail` for the tail */
+  colour: string;
+  /** the outline encoding: `asserted` (self-declared or verified), `inferred`, or none */
+  outline: 'asserted' | 'inferred' | null;
+  /** the segments encoding, bottom to top, as fractions of the bar; empty when not split */
+  segments: Segment[];
+}
+
+/** A legend line before it has a look: each key says what it stands for, not its swatch. */
+export interface ReadingLegendItem {
+  primitive: SpecPrimitive | 'tail';
+  meaning: string;
+  sources: string[];
+  keys?: { key: string; label: string }[];
+}
+
+export interface Reading {
+  petal: 'reading/v1';
+  spec_sha256: Sha256;
+  title: string;
+  /** CAIP-2. A petal's `id` is the snapshot's account id, so two readings on one chain compare */
+  chain: string;
+  /** what each encoding is driven by and what it means, as the spec says */
+  encodings: Spec['encodings'];
+  petals: ReadingPetal[];
+  legend: ReadingLegendItem[];
+  details: PetalDetail[];
+}
+
+// ---------------------------------------------------------------------------------------------
 // The shared map (shared-map.md; packages.md @petal/near)
 
 /** One row read from FastData KV. */

@@ -5,31 +5,28 @@
 import { BACKER_ORDER, type BackerClass } from '../segments/backers.ts';
 import type { Kind } from '../types/index.ts';
 
-/** Fill class and legend label per kind of account. */
-export const KIND_STYLE: Record<Kind, { cls: string; swatch: string; label: string }> = {
-  mining_pool: { cls: 'c-pool', swatch: 'var(--k-pool)', label: 'pool' },
-  staking_pool: { cls: 'c-pool', swatch: 'var(--k-pool)', label: 'pool' },
-  validator: { cls: 'c-pool', swatch: 'var(--k-pool)', label: 'pool' },
-  exchange: { cls: 'c-exchange', swatch: 'var(--k-exchange)', label: 'exchange' },
-  custodian: { cls: 'c-custodian', swatch: 'var(--k-custodian)', label: 'custodian' },
-  staking_entity: { cls: 'c-entity', swatch: 'var(--k-entity)', label: 'liquid staking' },
-  contract: { cls: 'c-contract', swatch: 'var(--k-contract)', label: 'contract' },
-  treasury: { cls: 'c-treasury', swatch: 'var(--k-treasury)', label: 'treasury' },
-  organisation: { cls: 'c-org', swatch: 'var(--k-org)', label: 'person or organisation' },
-  person: { cls: 'c-org', swatch: 'var(--k-org)', label: 'person or organisation' },
-  delegator: { cls: 'c-delegator', swatch: 'var(--k-delegator)', label: 'delegator' },
-  group: { cls: 'c-unknown', swatch: 'var(--unknown)', label: 'group' },
-  unknown: { cls: 'c-unknown', swatch: 'var(--unknown)', label: 'unknown' },
+/** Fill class and legend swatch per kind of account. */
+export const KIND_STYLE: Record<Kind, { cls: string; swatch: string }> = {
+  mining_pool: { cls: 'c-pool', swatch: 'var(--k-pool)' },
+  staking_pool: { cls: 'c-pool', swatch: 'var(--k-pool)' },
+  validator: { cls: 'c-pool', swatch: 'var(--k-pool)' },
+  exchange: { cls: 'c-exchange', swatch: 'var(--k-exchange)' },
+  custodian: { cls: 'c-custodian', swatch: 'var(--k-custodian)' },
+  staking_entity: { cls: 'c-entity', swatch: 'var(--k-entity)' },
+  contract: { cls: 'c-contract', swatch: 'var(--k-contract)' },
+  treasury: { cls: 'c-treasury', swatch: 'var(--k-treasury)' },
+  organisation: { cls: 'c-org', swatch: 'var(--k-org)' },
+  person: { cls: 'c-org', swatch: 'var(--k-org)' },
+  delegator: { cls: 'c-delegator', swatch: 'var(--k-delegator)' },
+  group: { cls: 'c-unknown', swatch: 'var(--unknown)' },
+  unknown: { cls: 'c-unknown', swatch: 'var(--unknown)' },
 };
-
-/** Legend order of kinds (first wins when two kinds share a label). */
-export const KIND_ORDER: Kind[] = Object.keys(KIND_STYLE) as Kind[];
 
 export const IDENTITY_STYLE = {
-  named: { cls: 'c-pool', swatch: 'var(--k-pool)', label: 'named' },
-  anonymous: { cls: 'c-unknown', swatch: 'var(--unknown)', label: 'anonymous' },
+  named: { cls: 'c-pool', swatch: 'var(--k-pool)' },
+  anonymous: { cls: 'c-unknown', swatch: 'var(--unknown)' },
 };
-export const SINGLE_STYLE = { cls: 'c-pool', swatch: 'var(--k-pool)', label: 'every petal' };
+export const SINGLE_STYLE = { cls: 'c-pool', swatch: 'var(--k-pool)' };
 
 export const SEGMENT_STYLE: Record<BackerClass, { cls: string; swatch: string }> = {
   other: { cls: 'c-seg-other', swatch: 'var(--k-pool)' },

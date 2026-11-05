@@ -1,9 +1,10 @@
 // The golden flowers (T031; renderer.md, Golden tests): name, snapshot, choices. Shared by
 // golden.test.ts, the fresh-process check (golden-child.ts) and scripts/render-fixture.ts.
 import { buildSpec } from '../src/convention/index.ts';
+import { readFlower } from '../src/reading/index.ts';
 import { renderFlower } from '../src/render/index.ts';
 import { snapshotSha256 } from '../src/tables.ts';
-import type { ProposeChoices, RenderResult, Snapshot, Spec } from '../src/types/index.ts';
+import type { ProposeChoices, Reading, RenderResult, Snapshot, Spec } from '../src/types/index.ts';
 import { descriptorFor } from './descriptors.ts';
 import { houseOfStake, validators } from './load.ts';
 
@@ -48,4 +49,8 @@ export function goldenSpec(c: GoldenCase): Spec {
 export function renderGolden(c: GoldenCase): { spec: Spec; result: RenderResult } {
   const spec = goldenSpec(c);
   return { spec, result: renderFlower(spec, c.snapshot()) };
+}
+
+export function readGolden(c: GoldenCase): Reading {
+  return readFlower(goldenSpec(c), c.snapshot());
 }
