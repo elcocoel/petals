@@ -72,6 +72,7 @@ export {
   rpcPool,
 } from './rpc/pool.ts';
 export { fileStore } from './store/file-store.ts';
+export { type BlobClient, lastingStore, vercelBlob } from './store/lasting-store.ts';
 
 export interface InputModule {
   /** id, chain, population, capabilities, live, cost */

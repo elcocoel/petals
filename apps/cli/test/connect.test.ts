@@ -659,11 +659,11 @@ describe('the folder the person is in', () => {
   });
 });
 
-describe('the agent page shows the command', () => {
-  test('a plain section', () => {
-    const page = readFileSync(join(ROOT, 'apps/web/components/AgentHome.tsx'), 'utf8');
-    expect(page).toContain('Use your own agent');
-    expect(page).toContain('pnpm petal connect claude');
-    expect(page).toContain('pnpm petal connect codex');
+describe('the doors page offers terminals a one-liner with no clone', () => {
+  test('hosted commands, not petal connect', () => {
+    const page = readFileSync(join(ROOT, 'apps/web/lib/doors.ts'), 'utf8');
+    expect(page).toContain('claude mcp add --transport http petal');
+    expect(page).toContain('codex mcp add petal --url');
+    expect(page).not.toContain('pnpm');
   });
 });

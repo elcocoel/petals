@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@noble/hashes": "^2.4.0",
-    "@petal/core": "workspace:*"
+    "@petal/core": "workspace:*",
+    "@vercel/blob": "^2.8.2"
   },
   "devDependencies": {
     "@petal/near": "workspace:*"
