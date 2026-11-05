@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@petal/agent':
+        specifier: workspace:*
+        version: link:packages/agent
     devDependencies:
       '@biomejs/biome':
         specifier: 2.6.5
@@ -14,9 +18,6 @@ importers:
       '@modelcontextprotocol/client':
         specifier: ^2.4.0
         version: 2.4.0
-      '@petal/agent':
-        specifier: workspace:*
-        version: link:packages/agent
       '@petal/core':
         specifier: workspace:*
         version: link:packages/core
@@ -156,6 +157,9 @@ importers:
       '@petal/core':
         specifier: workspace:*
         version: link:../core
+      '@petal/near':
+        specifier: workspace:*
+        version: link:../near
       '@petal/store':
         specifier: workspace:*
         version: link:../store

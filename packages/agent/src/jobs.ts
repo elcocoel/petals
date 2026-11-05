@@ -4,7 +4,7 @@
 // no timer per viewer. Stop aborts the job's signal and waits for the job to say how it ended.
 import type { AgentEvent, ChatInput } from '@petal/core/types';
 import { Channel } from './channel.ts';
-import type { LlmMessage } from './llm.ts';
+import type { Budget, LlmMessage } from './llm.ts';
 import { type RunDeps, type RunOptions, startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
 import type { EarlierFlower } from './thread.ts';
@@ -53,7 +53,12 @@ export function runJobs(
     running: (runId: string) => jobs.has(runId),
 
     /** Starts the chat; the promise is the job, and it ends after `done`. */
-    start(runId: string, input: ChatInput, earlier: Earlier = {}): Promise<void> {
+    start(
+      runId: string,
+      input: ChatInput,
+      earlier: Earlier = {},
+      budget: Budget = deps.budget,
+    ): Promise<void> {
       const job = new Job();
       jobs.set(runId, job);
       const keep = async (e: AgentEvent) => {
@@ -72,7 +77,7 @@ export function runJobs(
               ...(input.draft ? { draft: input.draft } : {}),
               ...earlier,
             },
-            { tools: deps.tools, llm: deps.llm, budget: deps.budget },
+            { tools: deps.tools, llm: deps.llm, budget },
             {
               runId,
               ...(o.registry ? { registry: o.registry } : {}),

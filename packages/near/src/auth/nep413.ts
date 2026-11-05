@@ -5,7 +5,10 @@
 //   3. the nonce was issued here, is fresh and unused (reserved while checking, spent on success);
 //   4. near-api-js v7 `verifyMessage`: view_access_key, which must be a FULL-ACCESS key of the
 //      account (a function-call key, such as an agent's, cannot sign for the maker), then the
-//      signature again.
+//      signature again;
+//   5. only when that key is missing and the account id is the hex of the signing key: view_account.
+//      A new person's implicit account doesn't exist until its first transfer, so it has no keys to
+//      look up. It passes only while the account doesn't exist, or a rotated-away key still would.
 // A failed check returns { ok: false, reason }. An RPC that cannot answer throws a NearError
 // (source_failed), and the nonce is released, so the maker can try again without signing again.
 //
@@ -15,7 +18,13 @@ import { sha256 } from '@noble/hashes/sha2.js';
 import { utf8ToBytes } from '@noble/hashes/utils.js';
 import type { Nep413Proof } from '@petal/core/types';
 import { base58, base64 } from '@scure/base';
-import { JsonRpcProvider, type Provider, PublicKey } from 'near-api-js';
+import {
+  JsonRpcProvider,
+  KeyType,
+  keyToImplicitAddress,
+  type Provider,
+  PublicKey,
+} from 'near-api-js';
 import { verifyMessage } from 'near-api-js/nep413';
 import { AccessKeyDoesNotExistError, AccountDoesNotExistError } from 'near-api-js/rpc-errors';
 import { describe, NearError } from '../errors.ts';
@@ -88,6 +97,11 @@ class RpcFailure extends Error {
   }
 }
 
+const rpcFailed = (e: unknown) =>
+  new NearError('source_failed', `NEP-413 check: RPC failed: ${describe(e)}`, {
+    cause: e instanceof RpcFailure ? e.inner : e,
+  });
+
 const missingKey = (e: unknown) =>
   e instanceof AccessKeyDoesNotExistError ||
   (e as { type?: unknown }).type === 'AccessKeyDoesNotExist' ||
@@ -123,19 +137,37 @@ function providerFor(rpc: Rpc): Provider {
 /** ed25519, secp256k1 (with recovery byte), ML-DSA-65 */
 const SIGNATURE_SIZES = [64, 65, 3309];
 
-/** base64 per NEP-413; base58 from some older wallets (unverified). A base58 string can also
- * parse as base64, so the decoding whose length is a signature size wins. */
+/** base64 per NEP-413; base58 from some older wallets (unverified); ed25519: and base58 from
+ * near-cli-rs (seen). A base58 string can also parse as base64, so the decoding whose length is a
+ * signature size wins. */
 function decodeSignature(s: string): Uint8Array | null {
+  const body = s.replace(/^ed25519:/, '');
   const tries: Uint8Array[] = [];
   for (const codec of [base64, base58]) {
     try {
-      tries.push(codec.decode(s));
+      tries.push(codec.decode(body));
     } catch {}
   }
   return tries.find((b) => SIGNATURE_SIZES.includes(b.length)) ?? tries[0] ?? null;
 }
 
 const fail = (reason: string) => ({ ok: false, reason });
+
+/** An implicit account's id is the hex of its ed25519 key. */
+function isImplicitOf(accountId: string, key: PublicKey): boolean {
+  return key.keyType === KeyType.ED25519 && accountId === keyToImplicitAddress(key);
+}
+
+/** Answered by the chain, or a RpcFailure when it can't say. */
+async function accountExists(rpc: Rpc, accountId: string): Promise<boolean> {
+  try {
+    await rpc.query({ request_type: 'view_account', finality: 'final', account_id: accountId });
+    return true;
+  } catch (e) {
+    if (missingAccount(e)) return false;
+    throw new RpcFailure(e);
+  }
+}
 
 /** Checks the signature, then view_access_key: the key must be a full-access key of account_id. */
 export async function verifyNep413(
@@ -193,13 +225,25 @@ export async function verifyNep413(
       provider: providerFor(rpc),
     });
   } catch (e) {
+    try {
+      const unfunded =
+        e instanceof RpcFailure &&
+        (missingKey(e.inner) || missingAccount(e.inner)) &&
+        isImplicitOf(p.account_id, publicKey) &&
+        !(await accountExists(rpc, p.account_id));
+      if (unfunded) {
+        nonces.spend(p.nonce);
+        return { ok: true };
+      }
+    } catch (lookup) {
+      nonces.release(p.nonce);
+      throw rpcFailed(lookup);
+    }
     nonces.release(p.nonce);
     if (e instanceof RpcFailure) {
       if (missingKey(e.inner)) return fail(`the key is not a key of ${p.account_id}`);
       if (missingAccount(e.inner)) return fail(`the account ${p.account_id} does not exist`);
-      throw new NearError('source_failed', `NEP-413 check: RPC failed: ${e.message}`, {
-        cause: e.inner,
-      });
+      throw rpcFailed(e);
     }
     if (/FullAccess/.test(describe(e)))
       return fail(`the key is not a full-access key of ${p.account_id}`);

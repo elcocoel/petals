@@ -10,6 +10,7 @@ import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
+import type { RouteAuth } from './auth-routes.ts';
 import { type Earlier, type Observed, runJobs } from './jobs.ts';
 import type { Budget, LlmClient } from './llm.ts';
 import { RECORDED_ATTESTATIONS } from './recorded.ts';
@@ -22,6 +23,7 @@ import type { AnyTool } from './tool-defs.ts';
 export const STATUS: Record<ToolErrorCode, number> = {
   bad_input: 400,
   unauthorised: 401,
+  invite_required: 403,
   not_found: 404,
   cannot_read: 422,
   invalid_spec: 422,
@@ -51,6 +53,8 @@ export interface AgentRouteOptions {
   /** keeps a background run alive on a serverless host (Vercel's waitUntil, Next's after) */
   waitUntil?: (p: Promise<unknown>) => void;
   clock?: () => number;
+  /** sessions, run owners and who pays; none: every run is public and unowned, as before T193 */
+  auth?: RouteAuth;
 }
 
 export function stateDirOf(config: Config): string {
@@ -59,7 +63,13 @@ export function stateDirOf(config: Config): string {
 
 type ErrorBody = ToolError['error'];
 
-function fail(c: Context, code: ToolErrorCode, message: string, hint?: string, retry?: number) {
+export function fail(
+  c: Context,
+  code: ToolErrorCode,
+  message: string,
+  hint?: string,
+  retry?: number,
+) {
   const error: ErrorBody = { code, message };
   if (hint) error.hint = hint;
   if (retry !== undefined) error.retry_after_s = retry;
@@ -67,7 +77,7 @@ function fail(c: Context, code: ToolErrorCode, message: string, hint?: string, r
 }
 
 /** The caller's address: proxy headers first, then the Node socket. */
-function clientIp(c: Context): string {
+export function clientIp(c: Context): string {
   const fwd = c.req.header('x-forwarded-for')?.split(',')[0]?.trim();
   const h = fwd || c.req.header('x-real-ip') || c.req.header('cf-connecting-ip');
   if (h) return h;
@@ -76,7 +86,7 @@ function clientIp(c: Context): string {
 }
 
 /** In memory, per process (Phase A). Returns null, or the seconds to wait. */
-function limiter(max: number, windowMs: number, clock: () => number) {
+export function limiter(max: number, windowMs: number, clock: () => number) {
   const hits = new Map<string, number[]>();
   return (key: string): number | null => {
     const now = clock();
@@ -202,6 +212,12 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
     }
   }
 
+  /** A run with an owner is that owner's alone: to anyone else, it doesn't exist (SYS-014). */
+  async function mayRead(c: Context, runId: string): Promise<boolean> {
+    const owner = await deps.runs.ownerOf?.(runId);
+    return !owner || owner === o.auth?.subjectOf(c);
+  }
+
   const app = new Hono();
   app.use('/api/v1/agent/*', cors());
   app.use('/api/v1/attestations/*', cors());
@@ -219,6 +235,10 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
       } catch {
         raw = undefined;
       }
+      // Before the rate limit: a refused chat costs nothing, and shouldn't use up the allowance.
+      const admitted = o.auth?.admitChat(c, deps.llm, deps.budget) ?? {};
+      if (admitted.refused) return admitted.refused;
+      const owner = admitted.subject ? { owner: admitted.subject } : undefined;
       // A follow-up is not a new chat: only the daily cap and this wider limit bound a conversation.
       const followUp = !!(raw as { run_id?: unknown } | undefined)?.run_id;
       const wait = (followUp ? followUpLimit : chatLimit)(clientIp(c));
@@ -236,6 +256,7 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
       let runId: string;
       if (parsed.run_id) {
         const id = parsed.run_id;
+        if (!(await mayRead(c, id))) return fail(c, 'not_found', `no run ${id}`);
         if (jobs.running(id)) {
           return fail(
             c,
@@ -258,12 +279,12 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
           flowers: flowersOf(stored.events),
           ...(said ? { thread: [...said, ...fresh] } : {}),
         };
-        runId = await deps.runs.create(input);
+        runId = await deps.runs.create(input, owner);
         storedBefore = runId === id ? stored.events.length : 0;
       } else {
-        runId = await deps.runs.create(input);
+        runId = await deps.runs.create(input, owner);
       }
-      keepAlive(c, jobs.start(runId, input, earlier));
+      keepAlive(c, jobs.start(runId, input, earlier, admitted.budget));
       if (wantsJson(c)) {
         return c.json({ run_id: runId, status: 'running', tools_version: TOOLS_VERSION }, 202);
       }
@@ -275,6 +296,8 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
   app.get('/api/v1/agent/runs/:id', async (c) => {
     const id = c.req.param('id');
     if (!RUN_ID.test(id)) return fail(c, 'bad_input', 'that is not a run id');
+    if (!(await mayRead(c, id))) return fail(c, 'not_found', `no run ${id}`);
+    c.header('Cache-Control', 'no-store');
     const run = await deps.runs.get(id);
     if (!run) return fail(c, 'not_found', `no run ${id}`);
     if (!wantsSse(c)) return c.json({ ...run, tools_version: TOOLS_VERSION });
@@ -285,11 +308,14 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
     return sse(c, view.events, view.leave);
   });
 
-  // Reports what it witnessed: the run stopped, or it had already finished. Whoever holds a run's id
-  // may stop it, as they may continue it today; owners will tighten both (SYS-014).
+  // Reports what it witnessed: the run stopped, or it had already finished. An owned run answers only
+  // to its owner, and an unowned one to whoever holds its id (SYS-014).
   app.post('/api/v1/agent/runs/:id/stop', async (c) => {
+    const foreign = o.auth?.refuseForeign(c);
+    if (foreign) return foreign;
     const id = c.req.param('id');
     if (!RUN_ID.test(id)) return fail(c, 'bad_input', 'that is not a run id');
+    if (!(await mayRead(c, id))) return fail(c, 'not_found', `no run ${id}`);
     if (!(await deps.runs.get(id))) return fail(c, 'not_found', `no run ${id}`);
     const hadJob = await jobs.stop(id);
     const status = (await deps.runs.get(id))?.status;

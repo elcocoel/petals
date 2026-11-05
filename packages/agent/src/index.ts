@@ -12,8 +12,18 @@ import { createAgentRoutes } from './routes.ts';
 import { startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
 
+/** petalApp with its options; serveApi, from @petal/agent/serve, runs it under Node. */
+export { buildPetalApp, type PetalAppOptions } from './app.ts';
 /** The daily spend ledger; fileLedger is for scripts that run the agent outside the server (T060). */
 export { fileLedger, storeLedger } from './budget.ts';
+/** Sponsored invites; scripts/mint-invite.ts makes and revokes them. */
+export {
+  hashToken,
+  inviteState,
+  mintInvite,
+  openPrivateStore,
+  revokeInvite,
+} from './invites.ts';
 export type * from './llm.ts';
 export { DEFAULT_BUDGET } from './llm.ts';
 /** nearAiClient with its options (attestations folder, warnings); same scripts. */

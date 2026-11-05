@@ -51,7 +51,10 @@ export default async function PublishPage({
     );
   }
 
-  const got = await api<Run>(`/api/v1/agent/runs/${encodeURIComponent(target.run_id)}`);
+  // A run with an owner answers only to that owner's session (T193).
+  const got = await api<Run>(`/api/v1/agent/runs/${encodeURIComponent(target.run_id)}`, {
+    cookie: (await headers()).get('cookie'),
+  });
   if (!got.ok) {
     return (
       <>

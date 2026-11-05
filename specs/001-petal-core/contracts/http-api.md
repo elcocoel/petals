@@ -6,16 +6,17 @@ One Hono app, `petalApp(cfg)` from `@petal/agent`, made of two parts:
 
 - **Tool routes**: `httpApp(ctx)` from `@petal/tools`. Every tool in [tools.md](./tools.md) has one route; bodies and responses are the tool's input and output. Also `/api/v1/health` and `/mcp`.
 - **Agent routes**: `agentRoutes(...)` from `@petal/agent`: chat, runs and attestation reports. They live with the agent because the agent imports the tools; one-way dependencies, no cycle.
+- **Auth routes**: from `@petal/agent`: sign-in, the session and invites ([below](#sign-in-sessions-and-invites)). Mounted before the tool routes, so their open CORS doesn't answer for them.
 
 Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localhost:8787`. On a host it is mounted in the web app at `/api/[[...route]]` with `@hono/vercel`. The HTTP API is the base door; the skill, the CLI, MCP and the IronClaw package sit beside it over the same tools ([packages.md](./packages.md#the-five-doors)).
 
 ## Rules
 
 - JSON in and out, UTF-8. `tools_version` in every response.
-- No account, key or payment is needed for anything except publishing (FR-030).
-- CORS: open, so agents and other sites can call it.
+- No account, key or payment is needed for anything except publishing and Petal's own agent (FR-030, SYS-051).
+- CORS: open on the tool and agent routes, so agents and other sites can call them, with no `Access-Control-Allow-Credentials`, so a browser never sends a session across origins. The auth routes and `/api/v1/me` send no CORS headers.
 - Rate limits per IP (in memory in Phase A): 60 tool calls per minute; 10 new agent chats per hour, plus 60 follow-ups per hour on an existing run. Over the limit: `429` with `{ error: { code: "rate_limited", retry_after_s } }`.
-- Errors: HTTP status from the error code (`bad_input` 400, `unauthorised` 401, `not_found` 404, `cannot_read` 422, `invalid_spec` 422, `rate_limited` 429, `budget_exhausted` 429, `source_failed` 502, `internal` 500), body `{ error: { code, message, hint } }`.
+- Errors: HTTP status from the error code (`bad_input` 400, `unauthorised` 401, `invite_required` 403, `not_found` 404, `cannot_read` 422, `invalid_spec` 422, `rate_limited` 429, `budget_exhausted` 429, `source_failed` 502, `internal` 500), body `{ error: { code, message, hint } }`.
 - Long tools (`get_snapshot` on a live pull) accept `Accept: text/event-stream` and then stream `progress` events before the final `result` event.
 
 ## Routes
@@ -46,11 +47,17 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `GET /api/v1/relations/related?group=&by=&limit=` | `related_groups` |
 | `GET /api/v1/relations/overview?min_shared=&kind=&limit=` | `relations_overview` |
 | `GET /api/v1/relations/path?account_a=&account_b=&max_depth=&budget=&include_inferred=` | `power_path` |
-| `POST /api/v1/agent/chat` | Petal's agent, SSE (below). With `Accept: application/json` alone: `202 { run_id, status: "running" }` at once, and the run goes on unwatched. Agent route. |
+| `POST /api/v1/agent/chat` | Petal's agent, SSE (below). With `Accept: application/json` alone: `202 { run_id, status: "running" }` at once, and the run goes on unwatched. Agent route. Refused without a sponsored invite when gated. |
 | `GET /api/v1/agent/runs/:id` | a stored run: `{ run_id, status: "running" \| "done" \| "failed" \| "stopped" \| "interrupted", messages, events, flower? }`; with `Accept: text/event-stream`, replays stored events from the cursor (`Last-Event-ID`, or `?from=<seq>`), then streams new ones until the run ends. Agent route. |
 | `POST /api/v1/agent/runs/:id/stop` | Stop (below). `{ run_id, status, stopped, already_finished }`. Agent route. |
 | `GET /api/v1/attestations/:sha256` | the NEAR AI attestation report Petal stored for a model signature (`report_sha256`), `application/json`, immutable cache headers. Agent route. |
-| `GET /api/v1/health` | `{ ok, map: "up"|"down"|"mirror", llm: "up"|"down"|"recorded", version, commit }`; `commit` is what a deploy witnesses, null locally |
+| `GET /api/v1/health` | `{ ok, map: "up"|"down"|"mirror", llm: "up"|"down"|"recorded", agent_access: "gated"|"open", version, commit }`; `commit` is what a deploy witnesses, null locally |
+| `POST /api/v1/auth/challenge` | `{ nonce, message, recipient, expires_at }` ([below](#sign-in-sessions-and-invites)) |
+| `POST /api/v1/auth/verify` | body `{ network, proof }`: `{ person_id, network, wallets, claimed_runs }`, and sets the session |
+| `POST /api/v1/auth/logout` | `{ ok: true }`, and clears the session |
+| `POST /api/v1/auth/invite` | body `{ token }`: `{ invite }`, and holds it in this session |
+| `GET /api/v1/auth/invite` | `{ invite }` this session holds, or `{ invite: null }` |
+| `GET /api/v1/me` | `{ person_id, network, wallets }`, to that person only; `401` to anyone else |
 | `ALL /mcp` | MCP Streamable HTTP, stateless |
 
 ## Agent chat (SSE)
@@ -84,6 +91,34 @@ Limits per chat: 8 tool rounds, 300 s wall time (`PETAL_RUN_MAX_S`), $0.05. A da
 Model calls inside a chat are not streamed, so each one can carry a TEE signature (streamed completions get a weaker gateway signature). Progress comes from Petal's own events instead.
 
 Without `NEAR_AI_API_KEY`, the server answers with a recorded transcript (`recordedClient`) and says so in `done.model = "recorded"`. That keeps the judge path working with no credentials (SC-009).
+
+## Sign-in, sessions and invites
+
+The server reads three settings. `PETAL_API` is the site's public address: the recipient, the allowed Origin and the cookie's name all come from it, never from a request. `PETAL_AGENT_ACCESS` is `gated`, the default and what anything unrecognised means, or `open`. `PETAL_WALLET_KEY` seals wallet addresses, and is 32 bytes as hex or base64. A server that is gated and has a model key refuses to start without it. Elsewhere (`open`, `NODE_ENV` development or test, no model key) a throwaway key is made at the first sign-in, with one warning line, and wallets sealed under it can't be read after a restart.
+
+**A person** is a private id, `prs_<hex>`, with wallets attached. A wallet is a binding, `near:<network>:<account>`: testnet and mainnet are different wallets, so different people, even for the same implicit account. Addresses are stored sealed, with a keyed hash as the unique index.
+
+**Sign-in, NEP-413 only.**
+
+1. `POST /api/v1/auth/challenge`, no body: `{ nonce, message, recipient, expires_at }`. `recipient` is the site's hostname; `message` is a plain sentence naming it; `nonce` is 32 bytes as base64, valid 5 minutes, single use. These go to the wallet as they are.
+2. `POST /api/v1/auth/verify`, body `{ "network": "testnet" | "mainnet", "proof": Nep413Proof }`, where a proof is `{ type: "nep413", account_id, public_key, signature, message, nonce, recipient }`. A signature may be base64, base58, or `ed25519:` and base58. The key must be a full-access key of the account, read with `view_access_key` on that network. An implicit account that doesn't exist yet passes when its id is the hex of the signing key, and only while `view_account` says it doesn't exist.
+3. On success, in one step: the person is found or created, the wallet bound, an anonymous session's runs and explorations move to them, and a new session replaces the old one, keeping its invite. `{ person_id, network, wallets: [{ caip10, network, account_id, proved_at }], claimed_runs }`. A first sign-in reads the same as a returning one.
+
+Refused with `unauthorised` (401): another message, another recipient, a bad signature, a nonce that's unknown, used or expired, a key that isn't a full-access key of the account. NEAR's RPC not answering is `source_failed` (502), and the same proof can be sent again. A person signing in with another wallet changes person; nothing is merged. Linking a second wallet (SYS-023) isn't built yet.
+
+**A session** is an opaque 256-bit value, of which only the hash is stored, with a subject that is a person id or an anonymous handle (`anon_<hex>`). It lasts 30 days from when it's made. The cookie is HttpOnly, SameSite=Lax, Path=/: `__Host-petal_session` and Secure when `PETAL_API` is `https://`, otherwise plain `petal_session`. A session can read and continue its subject's runs and draw on an invite, and can't approve anything irreversible: publishing still takes a signature.
+
+**Origin.** A POST to an auth route, to `/api/v1/agent/chat` on a real model, or to `.../stop` answers `unauthorised` when its `Origin` isn't the site's. On a local site (no `PETAL_API`, or `localhost`, `127.0.0.1`), a local page matching the `Host` it asked is the site. With no `Origin` and no `Sec-Fetch-Site: cross-site` it isn't a browser, and it passes.
+
+**Run owners (SYS-014).** A chat on a real model creates its run with the session's subject as owner, opening an anonymous session if there is none. Once a run has an owner, only that owner may read, follow, continue or stop it. To anyone else it answers exactly as a run that never existed: `404 { error: { code: "not_found", message: "no run <id>" } }`. The owner never appears in a run. A recorded run opens no session and has no owner; it and any run older than owners stay open to whoever holds the link, and continuing one leaves it unowned. There is no way back to an anonymous session's work once its cookie is lost.
+
+**Who pays (SYS-050 to SYS-052).** With `agent_access: "gated"`, a chat on a real model needs a session holding an active invite. Without one it spends nothing, stores nothing, and answers `403 { error: { code: "invite_required", message, hint } }`, with `hint` pointing to `/connect`. The recorded demo, reading a run, and every tool need no session. `open` is for an operator's own tool: no invite is asked for, and the daily cap still applies.
+
+**Invites.** `scripts/mint-invite.ts <usd> [days]` makes one and prints its token once; only a hash of the token is stored. `--revoke <id>` ends it. `POST /api/v1/auth/invite`, body `{ token }`, puts it in this session, opening an anonymous one if needed. Several sessions can redeem one token, and they draw on one budget. `{ invite: { status: "active" | "spent" | "revoked" | "expired", budget_usd, spent_usd, left_usd, expires_at } }`. A token that is unknown, revoked or expired answers `unauthorised`; a spent one `budget_exhausted`.
+
+Each model call of a chat reserves against the invite and the daily cap, then settles both, so the last call can pass the budget by what it costs. When the budget ends, the chat's stream carries `error` with `budget_exhausted` and a plain message, then `done`, and the next chat answers `429` with the same message before any model call. An invite revoked or expired mid-chat stops at the next call the same way, and the next chat answers `403 invite_required`. A restart gives back every hold on an invite.
+
+**402 from NEAR AI.** `budget_exhausted` with a plain message for each kind: `api_key_limit_exceeded` (the key's own lifetime limit), `insufficient_credits`, `no_credits`, `no_limit_configured` (the sponsor account) and any other (unknown). None is retried on another model, and the figures in NEAR AI's message stay out of the event.
 
 ## MCP
 

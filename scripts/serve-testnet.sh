@@ -5,17 +5,21 @@
 cd "$(dirname "$0")/.." || exit 1
 source ~/.nvm/nvm.sh && nvm use >/dev/null || exit 1
 secrets="$(cd .. && pwd)/.secrets"
-if [ -f "$secrets/near-ai.env" ]; then
-  set -a
-  # shellcheck disable=SC1091
-  source "$secrets/near-ai.env"
-  set +a
-fi
+for env_file in near-ai.env petal-wallet.env; do
+  if [ -f "$secrets/$env_file" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "$secrets/$env_file"
+    set +a
+  fi
+done
 export PETAL_API_MOCK=0
 export PETAL_MAP_NETWORK=testnet
 export PETAL_MAP_RECEIVER=petals.testnet
 export PETAL_WRITER_ACCOUNT=petals-writer.testnet
 export PETAL_WRITER_KEY_FILE="$secrets/petal-writer.testnet.json"
 export PETAL_LAB=1
+# Elco's own tool: no sponsored invite. Without petal-wallet.env, sign-ins last until a restart.
+export PETAL_AGENT_ACCESS=open
 [ -f apps/web/.next/BUILD_ID ] || pnpm --filter @petal/web build
 PORT="${PORT:-3080}" exec pnpm --filter @petal/web start

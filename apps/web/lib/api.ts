@@ -9,12 +9,17 @@ export type ApiResult<T> =
 
 export async function api<T>(
   path: string,
-  init?: { method?: string; body?: unknown },
+  init?: { method?: string; body?: unknown; cookie?: string | null },
 ): Promise<ApiResult<T>> {
   const { app } = await getApp();
   const res = await app.request(path, {
     method: init?.method ?? (init?.body === undefined ? 'GET' : 'POST'),
-    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    headers: {
+      'content-type': 'application/json',
+      accept: 'application/json',
+      // in process, so the caller's own session comes along only when a page passes it on
+      ...(init?.cookie ? { cookie: init.cookie } : {}),
+    },
     body: init?.body === undefined ? undefined : JSON.stringify(init.body),
   });
   const text = await res.text();

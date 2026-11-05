@@ -317,7 +317,8 @@ export function interruptRuns(
   for (const id of ids) {
     appendEvent(store, id, { event: 'error', data: { code: 'interrupted', message: INTERRUPTED } });
   }
-  const releasedUsd = store.ledger.releaseHolds();
+  // an invite's holds too: otherwise a crash would eat into a judge's budget for good
+  const releasedUsd = store.ledger.releaseHolds() + store.credit.releaseHolds();
   if (ids.length || releasedUsd) {
     log(`petal: ${ids.length} runs interrupted by a restart, $${releasedUsd} of holds released.`);
   }

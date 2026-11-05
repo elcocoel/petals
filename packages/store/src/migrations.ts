@@ -129,4 +129,11 @@ export const MIGRATIONS: readonly string[] = [
     PRIMARY KEY (exploration, seq)
   );
   `,
+  // 2: sign-in. near:testnet: and near:mainnet: are different wallets, so every binding and session
+  // says which. A session can hold a sponsored invite, anonymous or signed in.
+  `
+  ALTER TABLE wallet_binding ADD COLUMN network TEXT NOT NULL DEFAULT 'unknown';
+  ALTER TABLE session ADD COLUMN network TEXT;
+  ALTER TABLE session ADD COLUMN invite TEXT REFERENCES invite(id);
+  `,
 ];

@@ -47,6 +47,9 @@ const chat = (app: ReturnType<typeof petalApp>) =>
     }),
   });
 
+/** These tests are about the model and the store, not who may ask: T196 has its own. */
+const OPEN = { PETAL_AGENT_ACCESS: 'open', NODE_ENV: 'test' };
+
 describe('petalApp', () => {
   test('with no key: the tool routes, and the agent replaying the recorded run', async () => {
     const root = tmpRoot();
@@ -56,6 +59,7 @@ describe('petalApp', () => {
       ok: true,
       map: 'mirror',
       llm: 'recorded',
+      agent_access: 'gated',
       version: 'api/v1',
       tools_version: 'tools/v1',
     });
@@ -82,7 +86,10 @@ describe('petalApp', () => {
     const fake = fakeNearAi();
     const app = buildPetalApp(
       { root, stateDir, nearAiApiKey: 'sk-test', llmDailyUsd: 1 },
-      { nearAi: { fetch: fake.fetch, baseURL: 'https://near-ai.test/v1', signatureDelaysMs: [0] } },
+      {
+        nearAi: { fetch: fake.fetch, baseURL: 'https://near-ai.test/v1', signatureDelaysMs: [0] },
+        env: OPEN,
+      },
     );
     expect((await bodyOf(app.request('/api/v1/health'))).llm).toBe('up');
     const es = parseSse(await (await chat(app)).text());
@@ -129,7 +136,10 @@ describe('petalApp', () => {
     const fake = fakeNearAi();
     const app = buildPetalApp(
       { ...unwritable(), nearAiApiKey: 'sk-test', llmDailyUsd: 1 },
-      { nearAi: { fetch: fake.fetch, baseURL: 'https://near-ai.test/v1', signatureDelaysMs: [0] } },
+      {
+        nearAi: { fetch: fake.fetch, baseURL: 'https://near-ai.test/v1', signatureDelaysMs: [0] },
+        env: OPEN,
+      },
     );
     warn.mockRestore();
     const es = parseSse(await (await chat(app)).text());
@@ -149,7 +159,10 @@ describe('petalApp', () => {
     const fake = fakeNearAi();
     const app = buildPetalApp(
       { root, stateDir, nearAiApiKey: 'sk-test', llmDailyUsd: 1 },
-      { nearAi: { fetch: fake.fetch, baseURL: 'https://near-ai.test/v1', signatureDelaysMs: [0] } },
+      {
+        nearAi: { fetch: fake.fetch, baseURL: 'https://near-ai.test/v1', signatureDelaysMs: [0] },
+        env: OPEN,
+      },
     );
     stateStore(stateDir).close();
     const res = await chat(app);
@@ -178,7 +191,10 @@ describe('petalApp', () => {
     const fake = fakeNearAi();
     const app = buildPetalApp(
       { root, stateDir, nearAiApiKey: 'sk-test', llmDailyUsd: 0.5 },
-      { nearAi: { fetch: fake.fetch, baseURL: 'https://near-ai.test/v1', signatureDelaysMs: [0] } },
+      {
+        nearAi: { fetch: fake.fetch, baseURL: 'https://near-ai.test/v1', signatureDelaysMs: [0] },
+        env: OPEN,
+      },
     );
     expect(log.mock.calls.flat().join()).toMatch(/imported 1 runs/);
     log.mockRestore();

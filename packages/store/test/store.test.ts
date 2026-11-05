@@ -104,6 +104,7 @@ describe('a restart loses nothing', () => {
     s.person.create({ id: 'p1', created_at: AT });
     s.walletBinding.bind({
       person: 'p1',
+      network: 'testnet',
       caip10_encrypted: 'enc',
       caip10_hash: 'h1',
       proved_at: AT,
@@ -428,7 +429,7 @@ describe('the thin tables', () => {
     const { person, walletBinding, session } = openStore(':memory:');
     person.create({ id: 'p1', created_at: AT });
     person.create({ id: 'p2', created_at: AT });
-    const wallet = { caip10_encrypted: 'e', caip10_hash: 'h', proved_at: AT };
+    const wallet = { network: 'testnet', caip10_encrypted: 'e', caip10_hash: 'h', proved_at: AT };
     expect(walletBinding.bind({ ...wallet, person: 'p1' })).toBe(true);
     expect(walletBinding.bind({ ...wallet, person: 'p2' })).toBe(false);
     expect(walletBinding.ofPerson('p2')).toEqual([]);
@@ -440,6 +441,62 @@ describe('the thin tables', () => {
     session.put({ hash: 's', subject: 'p2', expires_at: LATER });
     session.delete('s');
     expect(session.get('s', AT)).toBeNull();
+  });
+
+  test('a binding and a session say their network; a session can hold an invite', () => {
+    const { person, walletBinding, session, invite } = openStore(':memory:');
+    person.create({ id: 'p1', created_at: AT });
+    walletBinding.bind({
+      person: 'p1',
+      network: 'mainnet',
+      caip10_encrypted: 'e',
+      caip10_hash: 'h',
+      proved_at: AT,
+    });
+    expect(walletBinding.byHash('h')).toMatchObject({ network: 'mainnet' });
+    session.put({ hash: 's', subject: 'p1', network: 'mainnet', expires_at: LATER });
+    expect(session.get('s', AT)).toMatchObject({ network: 'mainnet', invite: null });
+    invite.create({ id: 'i1', token_hash: 't1', budget_usd: 5, expires_at: null });
+    session.setInvite('s', 'i1');
+    expect(session.get('s', AT)).toMatchObject({ invite: 'i1' });
+    session.put({ hash: 'anon', subject: 'anon_1', expires_at: LATER });
+    expect(session.get('anon', AT)).toMatchObject({ network: null, invite: null });
+  });
+
+  test('moveOwner moves everything of one owner, in one statement, and nobody else’s', () => {
+    const { run, exploration } = openStore(':memory:');
+    for (const [id, owner] of [
+      ['a', 'anon_1'],
+      ['b', 'anon_1'],
+      ['c', 'anon_2'],
+      ['d', null],
+    ] as const) {
+      run.insert(runRow(id, owner));
+    }
+    expect(run.moveOwner('anon_1', 'prs_1')).toBe(2);
+    expect(run.moveOwner('anon_1', 'prs_1')).toBe(0);
+    expect(
+      run
+        .listByOwner('prs_1')
+        .map((r) => r.id)
+        .sort(),
+    ).toEqual(['a', 'b']);
+    expect(run.get('c')?.owner).toBe('anon_2');
+    expect(run.get('d')?.owner).toBeNull();
+    exploration.create({
+      id: 'x',
+      owner: 'anon_1',
+      question: 'q',
+      target: null,
+      head: null,
+      visibility: 'private',
+      share_token_hash: null,
+      forked_from: null,
+      created_at: AT,
+      updated_at: AT,
+    });
+    expect(exploration.moveOwner('anon_1', 'prs_1')).toBe(1);
+    expect(exploration.get('x')?.owner).toBe('prs_1');
   });
 
   test('an invite is found by its token hash, spent and revoked', () => {

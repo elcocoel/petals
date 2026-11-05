@@ -258,6 +258,8 @@ export function fakeNearAi(
     llm?: LlmClient;
     /** model -> HTTP status it fails with */
     fail?: Record<string, number>;
+    /** the `error.type` of those failures, as NEAR AI's 402s carry one */
+    failType?: string;
     /** models whose answer is all reasoning: cut off by the token limit, with empty content */
     truncate?: string[];
     signatureMisses?: number;
@@ -294,10 +296,8 @@ export function fakeNearAi(
       const req = JSON.parse(body ?? '{}') as { model: string; messages: OpenAiMessage[] };
       const status = o.fail?.[req.model];
       if (status) {
-        return new Response(JSON.stringify({ error: { message: `${req.model} is down` } }), {
-          status,
-          headers: json,
-        });
+        const error = { message: `${req.model} is down`, type: o.failType };
+        return new Response(JSON.stringify({ error }), { status, headers: json });
       }
       const id = `chatcmpl-${++n}`;
       if (o.truncate?.includes(req.model)) {

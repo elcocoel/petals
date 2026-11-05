@@ -445,11 +445,31 @@ describe('the boot scan', () => {
   const REPO = fileURLToPath(new URL('../../../', import.meta.url));
   afterEach(() => vi.unstubAllEnvs());
 
+  /** These tests are about the run, not who may ask: T196 has its own. */
+  const OPEN = { PETAL_AGENT_ACCESS: 'open', NODE_ENV: 'test' };
+  /** One browser's cookie, across restarts: an owned run answers only to its session (T193). */
+  const oneBrowser = () => {
+    let cookie = '';
+    return (app: App): App => {
+      const request: App['request'] = async (path, init = {}) => {
+        const headers = new Headers(init.headers);
+        if (cookie) headers.set('cookie', cookie);
+        const res = await app.request(path, { ...init, headers });
+        cookie = res.headers.getSetCookie()[0]?.split(';')[0] ?? cookie;
+        return res;
+      };
+      return Object.assign(Object.create(app), { request }) as App;
+    };
+  };
+
   test('a restart: `interrupted`, a plain error, no hold left, and a follow-up has the work so far', async () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     const stateDir = join(tmpRoot(), '.petal');
     const m = heldModel();
-    const dead = buildPetalApp({ root: REPO, fake: true, stateDir }, { llm: m.llm });
+    const browser = oneBrowser();
+    const dead = browser(
+      buildPetalApp({ root: REPO, fake: true, stateDir }, { llm: m.llm, env: OPEN }),
+    );
     const id = await startRun(dead);
     (await m.call(0)).give(answer({ content: 'looking', tool: 'list_networks' }));
     const inFlight = await m.call(1);
@@ -458,7 +478,9 @@ describe('the boot scan', () => {
 
     // the process is gone: its app never hears another thing
     const again = heldModel();
-    const app = buildPetalApp({ root: REPO, fake: true, stateDir }, { llm: again.llm });
+    const app = browser(
+      buildPetalApp({ root: REPO, fake: true, stateDir }, { llm: again.llm, env: OPEN }),
+    );
     expect(inFlight.signal?.aborted).toBe(false);
     const run = await read(app, id);
     expect(run.status).toBe('interrupted');
@@ -515,7 +537,9 @@ describe('the boot scan', () => {
     vi.stubEnv('PETAL_RUN_MAX_S', '0.05');
     const stateDir = join(tmpRoot(), '.petal');
     const m = heldModel();
-    const app = buildPetalApp({ root: REPO, fake: true, stateDir }, { llm: m.llm });
+    const app = oneBrowser()(
+      buildPetalApp({ root: REPO, fake: true, stateDir }, { llm: m.llm, env: OPEN }),
+    );
     const id = await startRun(app);
     await until(async () => (await read(app, id)).status !== 'running', 'the limit');
     expect(JSON.stringify((await read(app, id)).events)).toContain('ran past its 0.05 s');

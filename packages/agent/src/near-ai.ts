@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { sha256Hex } from '@petal/core';
 import type { ToolErrorCode } from '@petal/core/types';
 import OpenAI, { APIError } from 'openai';
+import { CONNECT_HINT } from './invites.ts';
 import type { LlmClient, LlmCompletion, LlmMessage, LlmRequest, LlmToolCall } from './llm.ts';
 import {
   type AttestationRef,
@@ -162,6 +163,21 @@ function toOpenAi(m: LlmMessage): OpenAI.Chat.Completions.ChatCompletionMessageP
   }
 }
 
+/**
+ * NEAR AI answers 402 four ways (near-ai.md, section 2): `api_key_limit_exceeded` is this key's own
+ * lifetime cap, and the rest are the organization behind it. None gets better on another model. The
+ * body holds spend figures, so they stay out of what a viewer of the run reads.
+ */
+function paymentRefused(type: string | null | undefined): LlmCallError {
+  const message =
+    type === 'api_key_limit_exceeded'
+      ? "The sponsored key behind Petal's agent has reached its spending limit, so the agent stopped here."
+      : type === 'insufficient_credits' || type === 'no_credits' || type === 'no_limit_configured'
+        ? "Petal's sponsor account is out of NEAR AI credit, so the agent stopped here."
+        : "NEAR AI Cloud refused to bill Petal's sponsor account, so the agent stopped here.";
+  return new LlmCallError('budget_exhausted', message, { hint: CONNECT_HINT });
+}
+
 /** Sort an SDK or transport error into tools.md codes, and whether a fallback model may help. */
 function classify(e: unknown, model: string): LlmCallError {
   if (e instanceof LlmCallError) return e;
@@ -173,11 +189,7 @@ function classify(e: unknown, model: string): LlmCallError {
         hint: 'Check NEAR_AI_API_KEY.',
       });
     }
-    if (s === 402) {
-      return new LlmCallError('budget_exhausted', `NEAR AI Cloud credits are used up: ${what}`, {
-        hint: 'Bring your own agent: the Petal skill (skill/petal/SKILL.md) or MCP needs no server key.',
-      });
-    }
+    if (s === 402) return paymentRefused(e.type);
     const retry = Number(e.headers?.get?.('retry-after'));
     return new LlmCallError(s === 429 ? 'rate_limited' : 'source_failed', what, {
       tryNext: true,

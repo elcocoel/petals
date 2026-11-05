@@ -7,6 +7,7 @@
   "description": "Petal's own agent on NEAR AI Cloud, the recorded client, the run store, agent routes and petalApp.",
   "exports": {
     ".": "./src/index.ts",
+    "./serve": "./src/serve.ts",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -15,6 +16,7 @@
   "dependencies": {
     "@hono/node-server": "^2.1.6",
     "@petal/core": "workspace:*",
+    "@petal/near": "workspace:*",
     "@petal/store": "workspace:*",
     "@petal/tools": "workspace:*",
     "hono": "^4.13.16",

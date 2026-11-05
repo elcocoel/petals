@@ -4,21 +4,28 @@
 // "recorded" (SC-009: the judge path works with no credentials).
 import { join } from 'node:path';
 import { TOOLS_VERSION } from '@petal/core';
+import { durableNonceStore, nearRpc, type Rpc } from '@petal/near/auth';
 import { stateStore } from '@petal/store';
 import { type Config, createContext, httpApp } from '@petal/tools';
 import { Hono } from 'hono';
+import { agentAccess, createAuth, type Network, siteOf } from './auth-routes.ts';
 import { closedLedger, importLedgerFile, serverBudget, storeLedger } from './budget.ts';
 import { DEFAULT_BUDGET, type LlmClient, runMaxSeconds } from './llm.ts';
 import { chosenModel, createNearAiClient, FALLBACK_MODELS, type NearAiOptions } from './near-ai.ts';
 import { recordedClient, SKELETON_TRANSCRIPT } from './recorded.ts';
 import { type AgentRouteOptions, createAgentRoutes, stateDirOf } from './routes.ts';
 import { importRunFiles, interruptRuns, sqliteRunStore } from './runs.ts';
+import { walletCipherFrom } from './wallet-cipher.ts';
 
 export interface PetalAppOptions extends AgentRouteOptions {
   /** the model client; default from the config (NEAR AI Cloud with a key, else recorded) */
   llm?: LlmClient;
   /** passed to nearAiClient when the app builds one */
   nearAi?: NearAiOptions;
+  /** where PETAL_AGENT_ACCESS, PETAL_WALLET_KEY and NODE_ENV are read; default process.env */
+  env?: Record<string, string | undefined>;
+  /** NEAR RPC per network, for sign-in; default the public RPC, or the context's in fake mode */
+  rpcFor?: (network: Network) => Rpc;
 }
 
 /** "recorded", or the NEAR AI client's own up/down. */
@@ -71,6 +78,19 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   });
   const runs = sqliteRunStore(store);
 
+  const env = o.env ?? process.env;
+  const access = agentAccess(env);
+  const auth = createAuth({
+    store,
+    // the same table as publish's nonces: nonceStore(cfg) in @petal/tools opens this very store
+    nonces: durableNonceStore(store.challenge),
+    cipher: walletCipherFrom(env, { gated: access === 'gated', spends: llm.kind !== 'recorded' }),
+    rpcFor: o.rpcFor ?? (config.fake ? () => ctx.rpc : nearRpc),
+    access,
+    site: siteOf(config.apiBase),
+    ...(o.clock ? { clock: o.clock } : {}),
+  });
+
   const app = new Hono();
   // The tool side owns /api/v1/health; only the agent knows which model mode it is in.
   app.use('/api/v1/health', async (c, next) => {
@@ -86,9 +106,14 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     const status = c.res.status;
     // unset first: Hono's setter would copy the old headers, content-length included
     c.res = undefined;
-    c.res = new Response(JSON.stringify({ ...body, llm: llmHealth(llm) }), { status, headers });
+    c.res = new Response(JSON.stringify({ ...body, llm: llmHealth(llm), agent_access: access }), {
+      status,
+      headers,
+    });
   });
-  app.route('/', createAgentRoutes({ tools: ctx, llm, budget, runs }, o));
+  // Before the tool routes, whose open CORS must not answer for them.
+  app.route('/', auth.routes);
+  app.route('/', createAgentRoutes({ tools: ctx, llm, budget, runs }, { ...o, auth: auth.gate }));
   app.route('/', httpApp(ctx));
   // A store that fails mid-request (a full disk, say) ends in the API's own error shape: no chat
   // starts, so nothing is spent, and the caller is told plainly.

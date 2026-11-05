@@ -89,8 +89,8 @@ In `<stateDir>/private.db`, through `@petal/store`. `ledger`, `credit` and `invi
 
 ```
 person(id, created_at)
-wallet_binding(person, caip10_encrypted, caip10_hash UNIQUE, proved_at)
-session(hash, subject, expires_at)             -- subject: a person id or an anonymous handle
+wallet_binding(person, network, caip10_encrypted, caip10_hash UNIQUE, proved_at)  -- near:testnet: and near:mainnet: differ
+session(hash, subject, network, invite, expires_at)  -- subject: a person id (prs_) or an anonymous handle (anon_)
 challenge(nonce UNIQUE, expires_at, state, used_at)  -- state: issued, checking, used
 grant(id, person, client, scopes, token_hash, expires_at, revoked_at)
 exploration(id, owner, question, target, head, visibility, share_token_hash, forked_from, created_at, updated_at)
@@ -100,7 +100,7 @@ run(id, owner, exploration, status, model, body, created_at, updated_at)  -- bod
 run_event(run, seq, type, data, at)            -- append-only; seq from 0 is the place in Run.events
 run_thread(run, messages, updated_at)          -- each round
 approval(id, request_hash, signer, proof, expires_at, used_at)
-invite(id, token_hash, budget_usd, spent_usd, expires_at, revoked_at)
+invite(id, token_hash, budget_usd, spent_usd, expires_at, revoked_at)  -- its budget is credit account invite:<id>; a session holds it
 ledger(day, usd, reserved_usd)                 -- the cap counts usd + reserved_usd
 credit(account_key, balance_usd, reserved_usd) -- a generic account balance
 credit_entry(id UNIQUE, account_key, delta_usd, reason, at)  -- an id counts once
