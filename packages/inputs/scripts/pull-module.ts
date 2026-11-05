@@ -16,6 +16,7 @@ import {
   pullBeanstalk,
   readBeanstalkList,
 } from '../src/modules/beanstalk.ts';
+import { ENS_TOKEN, pullErc20Votes } from '../src/modules/erc20-votes.ts';
 import { pullMolochV1 } from '../src/modules/moloch-v1.ts';
 import {
   MELANIA,
@@ -36,27 +37,23 @@ const replay = process.argv.includes('--replay');
 const testFixtures = join(import.meta.dirname, '..', 'test', 'fixtures');
 const log = (e: { message: string }) => console.log(`  ${e.message}`);
 
-function recorded(name: string) {
+function recorded(name: string, skip?: Parameters<typeof recordingFetch>[1]) {
   const path = join(testFixtures, name, 'recording.json.gz');
   if (replay) {
     const rec = JSON.parse(gunzipSync(readFileSync(path)).toString('utf8')) as Recording;
     return { fetch: replayFetch(rec).fetch, save: () => {}, rec };
   }
-  const r = recordingFetch();
+  const r = recordingFetch(globalThis.fetch, skip);
   return {
     fetch: r.fetch,
     rec: undefined,
-    save: (
-      note: string,
-      extra: Record<string, unknown> = {},
-      keep: (c: Recording['calls'][number]) => boolean = () => true,
-    ) => {
+    save: (note: string, extra: Record<string, unknown> = {}) => {
       mkdirSync(join(testFixtures, name), { recursive: true });
       const rec: Recording = {
         petal: RECORDING_FORMAT,
         note,
         recorded_at: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
-        calls: r.calls.filter(keep),
+        calls: r.calls,
         ...extra,
       };
       writeFileSync(path, gzipSync(JSON.stringify(rec), { level: 9 }));
@@ -73,7 +70,10 @@ if (network === 'moloch-v1') {
   console.log(storeFixture(snapshot), JSON.stringify(reader.stats()));
 } else if (network === 'beanstalk') {
   // The deposit logs (tens of thousands) stay out of the recording: it keeps the address list.
-  const rec = recorded('beanstalk');
+  const rec = recorded('beanstalk', (q) => {
+    const filter = (q.params as { topics?: unknown[] }[])[0];
+    return q.method === 'eth_getLogs' && Array.isArray(filter?.topics?.[0]);
+  });
   const reader = evmReader({ fetch: rec.fetch });
   const list = rec.rec ? (rec.rec.list as BeanstalkList) : await readBeanstalkList(reader, log);
   for (const block of [BEANSTALK_BEFORE, BEANSTALK_ATTACK]) {
@@ -81,15 +81,18 @@ if (network === 'moloch-v1') {
     console.log(checks);
     console.log(storeFixture(snapshot));
   }
-  rec.save(
-    'Beanstalk at two blocks, read keyless by pullBeanstalk. Public chain data.',
-    { list },
-    (c) => {
-      const q = (c.request.params as { topics?: unknown[] }[])[0];
-      return !(c.request.method === 'eth_getLogs' && Array.isArray(q?.topics?.[0]));
-    },
-  );
+  rec.save('Beanstalk at two blocks, read keyless by pullBeanstalk. Public chain data.', { list });
   console.log(JSON.stringify(reader.stats()));
+} else if (network === 'ens-delegates') {
+  // The logs (hundreds of MB) stay out of the recording: it keeps the block and the state reads.
+  const rec = recorded('ens-delegates', (q) => q.method === 'eth_getLogs');
+  const reader = evmReader({ fetch: rec.fetch });
+  const started = Date.now();
+  const { snapshot, checks } = await pullErc20Votes(ENS_TOKEN, { reader, onProgress: log });
+  rec.save('ENS delegates: the block and the state reads of pullErc20Votes. Public chain data.');
+  console.log(checks, `${((Date.now() - started) / 1000).toFixed(0)} s`);
+  console.log(`peak memory ${(process.resourceUsage().maxRSS / 1024).toFixed(0)} MB`);
+  console.log(storeFixture(snapshot), JSON.stringify(reader.stats()));
 } else if (network?.startsWith('solana-spl-')) {
   const argAfter = (flag: string, n = 1) => {
     const i = process.argv.indexOf(flag);

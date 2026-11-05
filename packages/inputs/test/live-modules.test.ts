@@ -4,6 +4,7 @@ import { validateSnapshot } from '@petal/core';
 import { describe, expect, test } from 'vitest';
 import { evmReader } from '../src/evm/reader.ts';
 import { BEANSTALK_ATTACK, pullBeanstalk, readBeanstalkList } from '../src/modules/beanstalk.ts';
+import { checkGetVotes, ENS_TOKEN, VOTES_CHECKED } from '../src/modules/erc20-votes.ts';
 import { MOLOCH_V1_BLOCK, pullMolochV1 } from '../src/modules/moloch-v1.ts';
 import { pullSplHolders } from '../src/modules/solana-spl-holders.ts';
 import { indexRows, storedSnapshot } from './helpers/recordings.ts';
@@ -28,6 +29,22 @@ describe.skipIf(process.env.PETAL_LIVE !== '1')('live modules (PETAL_LIVE=1)', (
     const list = await readBeanstalkList(reader);
     const { checks } = await pullBeanstalk({ reader, block: BEANSTALK_ATTACK, list });
     expect(checks.largest_share).toBe('79.63');
+  });
+
+  test('ens-delegates: getVotes at the stored block, 1 call', { timeout: 60_000 }, async () => {
+    const row = indexRows('ens-delegates')[0];
+    if (!row) throw new Error('no stored ens-delegates snapshot');
+    const s = storedSnapshot(row);
+    const check = await checkGetVotes(
+      evmReader(),
+      ENS_TOKEN,
+      row.block_height as number,
+      s.holdings.slice(0, VOTES_CHECKED).map((h) => ({
+        address: h.participant,
+        votes: BigInt(h.amount_raw ?? '0'),
+      })),
+    );
+    expect(check.mismatches).toEqual([]);
   });
 
   test('solana-spl-holders: a small mint, under 1 MB, through the official RPC', {

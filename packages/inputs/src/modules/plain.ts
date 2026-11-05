@@ -54,3 +54,9 @@ export const grouped = (n: number | bigint): string =>
 
 /** The date part of an ISO time, for notes. */
 export const dayOf = (iso: string): string => iso.slice(0, 10);
+
+/** a / b as a percentage with two decimals, rounded half up: "79.63". */
+export function percent2(a: bigint, b: bigint): string {
+  const hundredths = (a * 10_000n + b / 2n) / b;
+  return `${hundredths / 100n}.${(hundredths % 100n).toString().padStart(2, '0')}`;
+}

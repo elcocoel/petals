@@ -36,6 +36,23 @@
       }
     },
     {
+      "sha256": "029e42fc120265a5fdb0e95d6ef46e27aff583a104cbc5b485ef12065e65fed5",
+      "network": "ens-delegates",
+      "chain": "eip155:1",
+      "population": "ens-delegates",
+      "block_height": 26348717,
+      "as_of": "2026-11-05T12:45:11Z",
+      "final": true,
+      "bytes": 3548204,
+      "gz_bytes": 588667,
+      "file": "029e42fc120265a5fdb0e95d6ef46e27aff583a104cbc5b485ef12065e65fed5.json.gz",
+      "where": "fixture",
+      "module": {
+        "id": "erc20-votes",
+        "version": "evm/1"
+      }
+    },
+    {
       "sha256": "8ab2bfd1234e4ff5382b8fc429552b39412c7880a6986973423b34e5482c10ba",
       "network": "moloch-v1",
       "chain": "eip155:1",

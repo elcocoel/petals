@@ -32,6 +32,7 @@ export {
   pullBeanstalk,
   readBeanstalkList,
 } from './modules/beanstalk.ts';
+export { ENS_TOKEN, erc20Votes, pullErc20Votes, type VotesToken } from './modules/erc20-votes.ts';
 export { MOLOCH_V1_DESCRIPTOR, molochV1, pullMolochV1 } from './modules/moloch-v1.ts';
 export { HOUSE_OF_STAKE_DESCRIPTOR, nearHouseOfStake } from './modules/near-house-of-stake.ts';
 export { NEAR_VALIDATORS_DESCRIPTOR, nearValidators } from './modules/near-validators.ts';

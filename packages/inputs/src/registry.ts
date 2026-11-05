@@ -2,6 +2,7 @@
 // Creating a module makes no network call; live modules open the RPC pool on first use.
 import type { InputModule } from './index.ts';
 import { beanstalk } from './modules/beanstalk.ts';
+import { ENS_TOKEN, erc20Votes } from './modules/erc20-votes.ts';
 import { molochV1 } from './modules/moloch-v1.ts';
 import { nearHouseOfStake } from './modules/near-house-of-stake.ts';
 import { nearValidators } from './modules/near-validators.ts';
@@ -15,4 +16,5 @@ export const modules: Record<string, InputModule> = {
   'solana-spl-trump': solanaSplHolders(TRUMP),
   'solana-spl-melania': solanaSplHolders(MELANIA),
   beanstalk: beanstalk(),
+  'ens-delegates': erc20Votes(ENS_TOKEN),
 };

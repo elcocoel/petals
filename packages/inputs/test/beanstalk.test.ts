@@ -10,9 +10,9 @@ import {
   BEANSTALK_DESCRIPTOR,
   type BeanstalkList,
   beanstalk,
-  percent2,
   pullBeanstalk,
 } from '../src/modules/beanstalk.ts';
+import { percent2 } from '../src/modules/plain.ts';
 import { replayFetch } from '../src/rpc/recording.ts';
 import { encodeSnapshot } from '../src/store/file-store.ts';
 import { indexRows, loadRecording, noSleep, storedSnapshot } from './helpers/recordings.ts';

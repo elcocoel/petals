@@ -20,7 +20,7 @@ import { InputError } from '../errors.ts';
 import { addressOf, encodeCall, eventTopic, shortAddress, wordAt } from '../evm/abi.ts';
 import { ETHEREUM_CHAIN, EVM_ENDPOINTS, type EvmReader } from '../evm/reader.ts';
 import type { InputModule } from '../index.ts';
-import { dayOf, grouped, plainCapabilities } from './plain.ts';
+import { dayOf, grouped, percent2, plainCapabilities } from './plain.ts';
 import { storedReads } from './stored.ts';
 
 export const BEANSTALK_ID = 'beanstalk';
@@ -138,12 +138,6 @@ export interface BeanstalkChecks {
   remainder_raw: string;
   largest: string;
   largest_share: string;
-}
-
-/** a / b as a percentage with two decimals, rounded half up: "79.63". */
-export function percent2(a: bigint, b: bigint): string {
-  const hundredths = (a * 10_000n + b / 2n) / b;
-  return `${hundredths / 100n}.${(hundredths % 100n).toString().padStart(2, '0')}`;
 }
 
 /** Read one block. `list` is the same for both blocks, so it is read once. */

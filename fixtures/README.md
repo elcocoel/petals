@@ -26,6 +26,7 @@ Nothing under `../research/`, `../design/`, `../submission/` or `../.secrets/` i
 | `snapshots/6c3dfbfa….json.gz` | `solana-spl-trump` at Solana slot 465,695,924 (2026-11-05): 691,983 wallets from 1,949,263 token accounts. The 1,000 largest stay individual; the other 690,983 are folded into rank bands, each no larger than the smallest individual wallet, declared in `coverage.grouped`. Imported from a stored answer of the same call. |
 | `snapshots/6af05eb7….json.gz` | `solana-spl-melania` at slot 465,695,433, the same way: 222,279 wallets from 639,927 token accounts. |
 | `snapshots/1d063af1….json.gz`, `snapshots/bddcf0dd….json.gz` | `beanstalk` at Ethereum blocks 14,602,789 and 14,602,790 (2022-04-17): voting roots of 2,035 and 2,036 addresses, read keyless. The rows sum to `totalRoots()` less a remainder stated in `coverage.note`. |
+| `snapshots/029e42fc….json.gz` | `ens-delegates` (module `erc20-votes`) at Ethereum block 26,348,717 (2026-11-05): all 8,561 delegates with votes, read keyless. |
 | `snapshots/index.json` | `{ "petal": "snapshot-index/v1", "snapshots": IndexRow[] }` (`IndexRow` in `@petal/core/types`): sha256, network, chain, population, block_height, as_of, final, bytes, gz_bytes, file, where, module. |
 | `snapshots/test/two-participants.json` | The two largest seated validators, stake only (the 2-petal golden). |
 | `snapshots/test/tiny-backers.json` | Five seated pools whose backers cover every class, with owners, holdings and delegations; the rest folded into declared groups. |

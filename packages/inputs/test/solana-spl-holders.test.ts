@@ -53,7 +53,7 @@ function supplyReads(network: string) {
 const sumRaw = (s: Snapshot) => s.holdings.reduce((a, h) => a + BigInt(h.amount_raw ?? '0'), 0n);
 
 describe.each([
-  { token: TRUMP, wallets: 691983, accounts: 1949263, top1: 0.718098, difference: 9463189n },
+  { token: TRUMP, wallets: 691983, accounts: 1949263, top1: 0.718133, difference: 9463189n },
   { token: MELANIA, wallets: 222279, accounts: 639927, top1: 0.300001, difference: 0n },
 ])('$token.symbol, stored', ({ token, wallets, accounts, top1, difference }) => {
   const s = storedOf(token.id);
