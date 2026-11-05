@@ -3,9 +3,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Reading } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
-import type { View } from '../lab/flower/camera.ts';
+import { fitView, type View } from '../lab/flower/camera.ts';
 import { DETAIL, fade, openAt, type Row, ramp } from '../lab/flower/detail.ts';
+import type { HoverWay } from '../lab/flower/hover.ts';
 import { fakeRelations } from '../lab/flower/illustrative.ts';
+import { newLive, noteAt, stepLive } from '../lab/flower/live.ts';
 import { type Focus, type Marks, marks } from '../lab/flower/marks.ts';
 import { type Model, modelOf } from '../lab/flower/model.ts';
 import { SHAPE } from '../lab/flower/ring.ts';
@@ -246,6 +248,40 @@ describe('text never overlaps', () => {
     expect(hits).toEqual([]);
   });
 
+  test.each(['dock', 'lift'] as HoverWay[])('%s: on a swollen flower too', (way) => {
+    const hits: string[] = [];
+    for (const k of [0.9, 1.33, 1.8, 2.6, 3.6, 5, 7, 11]) {
+      const l = newLive(backers, way, W, H, true);
+      const fit = fitView(W, H);
+      const c = l.camera;
+      c.k = k;
+      c.raw = { x: Math.log(k), v: 0, t: Math.log(k) };
+      c.x = W / 2 - (W / 2 - fit.x) * (k / fit.k);
+      c.y = H / 2 - (H / 2 - fit.y) * (k / fit.k);
+      for (const i of [0, 4, 12, 24, 40, 60]) {
+        const r = backers.ring;
+        const h = (backers.height[i] as number) * 0.6;
+        const wx = ((r.ax[i] as number) + (r.bx[i] as number)) / 2 + (r.nx[i] as number) * h;
+        const wy = ((r.ay[i] as number) + (r.by[i] as number)) / 2 + (r.ny[i] as number) * h;
+        l.pointer.x = wx * c.k + c.x;
+        l.pointer.y = wy * c.k + c.y;
+        l.pointer.inside = true;
+        l.locked = false;
+        stepLive(l, 1 / 60);
+        const focus: Focus = {
+          index: l.focusIndex,
+          presence: l.presence.x,
+          open: l.open.x[l.focusIndex] as number,
+          chase: noteAt(l),
+          side: l.noteSide.x,
+        };
+        const mk = marks(backers, c, focus, l.ring);
+        for (const hit of collisions(mk)) hits.push(`k=${k} at ${i}: ${hit}`);
+      }
+    }
+    expect(hits).toEqual([]);
+  });
+
   test('nothing is drawn off the window', () => {
     for (const k of KS) {
       const m = marks(backers, at(k), pointing(11));
@@ -265,6 +301,7 @@ describe('words come only from the data', () => {
     const allowed = new Set<string>([m.title]);
     for (const p of m.petals) {
       allowed.add(noteText(p));
+      allowed.add(noteText(p, true));
       allowed.add(p.id);
       allowed.add(amount(p.amount));
       allowed.add(kindWord(p.kind));

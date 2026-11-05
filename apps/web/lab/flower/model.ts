@@ -13,6 +13,8 @@ export interface Model extends Rest, Shape {
   n: number;
   notes: string[];
   noteWidths: Float64Array;
+  /** The same notes with the name in full, for the one being pointed at. */
+  fullNotes: string[];
   /** Who gets a note first: the tail, then by rank. The tail is a big claim in small print. */
   order: Int32Array;
   /** The rank a note's priority counts as. */
@@ -24,7 +26,7 @@ export function modelOf(reading: FlowerReading): Model {
   const petals = reading.petals;
   const rest = restOf(petals);
   const n = petals.length;
-  const notes = petals.map(noteText);
+  const notes = petals.map((p) => noteText(p));
   const order = Int32Array.from(
     petals.map((_, i) => i).sort((a, b) => priority(petals[a]) - priority(petals[b])),
   );
@@ -43,6 +45,7 @@ export function modelOf(reading: FlowerReading): Model {
     n,
     notes,
     noteWidths: Float64Array.from(notes, (s) => textWidth(s)),
+    fullNotes: petals.map((p) => noteText(p, true)),
     order,
     rankOf,
     meanSide: side / (n || 1),

@@ -40,7 +40,7 @@ export interface Focus {
   presence: number;
   /** How far this account has opened. Defaults to what the zoom says. */
   open?: number;
-  /** The world point the note's elbow is chasing. Defaults to the tip. */
+  /** The world point the note has got to, on its way to the tip. Defaults to the tip. */
   chase?: { x: number; y: number };
   /** -1 to 1: which side its text is on. Defaults to the petal's. */
   side?: number;
@@ -141,8 +141,10 @@ function panelOf(m: Model, v: View, i: number, opacity: number): PanelMark {
   if (p) {
     lines.push(amount(p.amount));
     lines.push(kindWord(p.kind));
+    // A tall bar's bands don't all fit the window at once. Here they do.
+    for (const seg of p.segments) lines.push(`${seg.label} ${pct(seg.frac)}`);
   }
-  const header = textWidth(m.notes[i] ?? '', PANEL_HEADER);
+  const header = textWidth(m.fullNotes[i] ?? '', PANEL_HEADER);
   const inner = Math.max(header, ...lines.map((s) => textWidth(s)));
   const width = Math.min(v.width - 2 * INSET, inner + 2 * PANEL_PAD);
   const height = 2 * PANEL_PAD + LINE * PANEL_HEADER + lines.length * LINE;
@@ -161,7 +163,7 @@ function panelOf(m: Model, v: View, i: number, opacity: number): PanelMark {
       text,
       x: x + PANEL_PAD,
       y: y + PANEL_PAD + LINE * PANEL_HEADER + at * LINE + 8,
-      muted: at === 0 && lines.length === 3,
+      muted: text === p?.id,
       opacity,
     })),
   };
@@ -214,30 +216,47 @@ export function marks(
     const ny = ring.ny[fi] as number;
     const mx = ((ring.ax[fi] as number) + (ring.bx[fi] as number)) / 2;
     const my = ((ring.ay[fi] as number) + (ring.by[fi] as number)) / 2;
-    // The dot sits on the highest point of the bar's axis that's on screen.
-    const dot = axisDot(toX(mx), toY(my), nx * k, ny * k, h, v);
-    const chase = focus.chase ?? { x: mx + nx * h, y: my + ny * h };
+    const tipWorldX = mx + nx * h;
+    const tipWorldY = my + ny * h;
+    const chase = focus.chase ?? { x: tipWorldX, y: tipWorldY };
     const cx = toX(chase.x);
     const cy = toY(chase.y);
+    // The dot sits on the highest point of the bar's axis that's on screen, and travels with the
+    // note: the leader stays short, whatever the note is on its way to.
+    const onAxis = axisDot(toX(mx), toY(my), nx * k, ny * k, h, v);
+    const dot = {
+      x: onAxis.x + (chase.x - tipWorldX) * k,
+      y: onAxis.y + (chase.y - tipWorldY) * k,
+    };
     const ox = toX(m.cx);
     const oy = toY(m.cy);
     const dist = Math.hypot(cx - ox, cy - oy) || 1;
-    const text = m.notes[fi] ?? '';
+    const text = m.fullNotes[fi] ?? '';
     const width = textWidth(text);
     const s = focus.side ?? ((m.ring.nx[fi] as number) >= -0.02 ? 1 : -1);
     const elbowX0 = cx + ((cx - ox) / dist) * FOCUS_LIFT;
     const elbowY0 = cy + ((cy - oy) / dist) * FOCUS_LIFT;
-    const elbowY1 = clamp(elbowY0, INSET + LINE, v.height - INSET - LINE);
-    const left0 = clamp(elbowX0 - (width * (1 - s)) / 2, INSET, v.width - INSET - width);
-    const elbowX1 = left0 + (width * (1 - s)) / 2;
+    // Near the window's edge the note slides back along itself, and steps off its bar's end so it
+    // doesn't lie across it. How far is how much it had to slide, so there's no jump.
+    const halfBar = ((ring.len[fi] as number) * k) / 2 + 8;
+    const left1 = elbowX0 - (width * (1 - s)) / 2;
+    const left0 = clamp(left1, INSET, v.width - INSET - width);
+    const slidX = Math.abs(left1 - left0);
+    const off = Math.min(slidX, halfBar + LINE);
+    const elbowY1 = clamp(elbowY0 + (ny > 0 ? off : -off), INSET + LINE, v.height - INSET - LINE);
+    const slidY = Math.abs(elbowY0 - elbowY1);
+    const elbowX1 =
+      clamp(left0 + (nx >= 0 ? 1 : -1) * Math.min(slidY, halfBar), INSET, v.width - INSET - width) +
+      (width * (1 - s)) / 2;
+    const leftFinal = elbowX1 - (width * (1 - s)) / 2;
     const e = fade(DETAIL.panel, open);
     const scale = lerp(1, PANEL_HEADER, e);
-    const panelX = panel ? panel.x + PANEL_PAD : left0;
+    const panelX = panel ? panel.x + PANEL_PAD : leftFinal;
     const panelY = panel ? panel.y + PANEL_PAD + LINE : elbowY1 - 4;
     // The leader lands on the panel's corner that faces the flower.
     const cornerX = panel ? panel.x + ((m.ring.nx[fi] as number) >= 0 ? 0 : panel.width) : elbowX1;
     const cornerY = panel ? panel.y + ((m.ring.ny[fi] as number) >= 0 ? 0 : panel.height) : elbowY1;
-    const x = lerp(left0, panelX, e);
+    const x = lerp(leftFinal, panelX, e);
     const y = lerp(elbowY1 - 4, panelY, e);
     const box = {
       x0: x - 1,
@@ -259,7 +278,7 @@ export function marks(
       ruleX: elbowX1 + s * width,
       sub: kindWord(m.petals[fi]?.kind ?? ''),
       subOpacity:
-        fade(DETAIL.kind, (ring.len[fi] as number) * k) * presence * (1 - fade(DETAIL.panel, open)),
+        fade(DETAIL.kind, (ring.len[fi] as number) * k) * presence * (1 - ramp(0, 0.18, e)),
       scale,
       rule: 1 - e,
     };
@@ -273,7 +292,8 @@ export function marks(
           x1: line.x + textWidth(line.text),
           y1: line.y + 4,
         };
-        line.opacity = panel.opacity * roomFor(lineBox, [{ ...box, opacity: presence }]);
+        const name = { ...box, y1: y + 4, opacity: presence };
+        line.opacity = panel.opacity * roomFor(lineBox, [name]);
       }
     }
   }

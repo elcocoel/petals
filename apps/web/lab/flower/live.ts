@@ -56,9 +56,10 @@ export interface Live {
   rotation: Spring;
   ox: Spring;
   oy: Spring;
-  /** The travelling note: a world point chasing the petal's tip, its side, and whether it's there. */
-  noteX: Spring;
-  noteY: Spring;
+  /** The travelling note orbits the flower to its petal's tip, by angle and radius, so on a long
+   * jump it runs round the rim and never across the middle. Its side, and whether it's there. */
+  noteAngle: Spring;
+  noteRadius: Spring;
   noteSide: Spring;
   presence: Spring;
   /** The petal the note is about; it stays until another one is pointed at. */
@@ -103,8 +104,8 @@ export function newLive(
     rotation: spring(),
     ox: spring(),
     oy: spring(),
-    noteX: spring(m.cx),
-    noteY: spring(m.cy),
+    noteAngle: spring(0),
+    noteRadius: spring(m.R),
     noteSide: spring(1),
     presence: spring(),
     focusIndex: 0,
@@ -246,13 +247,24 @@ export function stepLive(l: Live, dt: number): Stepped {
   ring.ox = l.ox.x;
   ring.oy = l.oy.x;
 
-  // The travelling note chases its petal's tip.
+  // The travelling note goes to its petal's tip, the short way round.
   const tip = tipOf(ring, index);
-  l.noteX.t = tip.x;
-  l.noteY.t = tip.y;
+  const dx = tip.x - m.cx;
+  const dy = tip.y - m.cy;
+  const toward = Math.atan2(dx, -dy);
+  const turns = Math.round((l.noteAngle.x - toward) / TAU);
+  l.noteAngle.t = toward + turns * TAU;
+  l.noteRadius.t = Math.sqrt(dx * dx + dy * dy);
+  // Arriving out of nowhere, it starts where it's going.
+  if (l.presence.x === 0 && reach > 0) {
+    l.noteAngle.x = l.noteAngle.t;
+    l.noteAngle.v = 0;
+    l.noteRadius.x = l.noteRadius.t;
+    l.noteRadius.v = 0;
+  }
   const noteStep = snap ? SNAP : stepOf(NOTE, dt);
-  const f = advance(l.noteX, noteStep);
-  const g = advance(l.noteY, noteStep);
+  const f = advance(l.noteAngle, noteStep);
+  const g = advance(l.noteRadius, noteStep);
   const h = advance(l.noteSide, noteStep);
   const j = advance(l.presence, snap ? SNAP : stepOf(PRESENCE, dt));
 
@@ -294,6 +306,13 @@ function alongOf(m: Model, angle: number, at: number): number {
   const s0 = m.ring.start[at] as number;
   const s1 = m.ring.start[at + 1] as number;
   return (angle - s0) / (s1 - s0 || 1);
+}
+
+/** The world point the note has got to. */
+export function noteAt(l: Live): { x: number; y: number } {
+  const a = l.noteAngle.x;
+  const r = l.noteRadius.x;
+  return { x: l.m.cx + r * Math.sin(a), y: l.m.cy - r * Math.cos(a) };
 }
 
 /** The tip of a petal's bar, at the middle of its top edge. */

@@ -5,7 +5,7 @@ import { type RefObject, useEffect } from 'react';
 import { fitView, flyTo, letGo, panBy, resize, zoomWheel } from './camera.ts';
 import type { HoverWay } from './hover.ts';
 import { fakeRelations } from './illustrative.ts';
-import { newLive, stepLive } from './live.ts';
+import { newLive, noteAt, stepLive } from './live.ts';
 import { type Focus, type Marks, marks } from './marks.ts';
 import { type FlowerReading, modelOf } from './model.ts';
 import { createScene } from './scene.ts';
@@ -19,6 +19,8 @@ export interface BenchOptions {
 
 /** A frame is never longer than this for the springs, so a stall doesn't fling anything. */
 const LONGEST_FRAME = 1 / 15;
+/** The fastest a drag can throw the camera, in px/s. */
+const LONGEST_THROW = 2400;
 
 const quiet = () => window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -53,7 +55,7 @@ export function useFlowerBench(svg: RefObject<SVGSVGElement | null>, options: Be
               index: live.focusIndex,
               presence,
               open: live.open.x[live.focusIndex] as number,
-              chase: { x: live.noteX.x, y: live.noteY.x },
+              chase: noteAt(live),
               side: live.noteSide.x,
             }
           : null;
@@ -89,6 +91,7 @@ export function useFlowerBench(svg: RefObject<SVGSVGElement | null>, options: Be
       live.pointer.x = p.x;
       live.pointer.y = p.y;
       live.pointer.inside = true;
+      node.style.cursor = last && scene.onMap(p.x, p.y, last) ? 'pointer' : '';
       if (dragFrom && e.pointerId === dragFrom.id) {
         const dx = p.x - dragFrom.x;
         const dy = p.y - dragFrom.y;
@@ -123,7 +126,11 @@ export function useFlowerBench(svg: RefObject<SVGSVGElement | null>, options: Be
       if (!dragFrom || e.pointerId !== dragFrom.id) return;
       // A hand that stopped before it lifted throws nothing.
       const stale = e.timeStamp - dragFrom.t > 60;
-      if (live.pointer.dragging && !stale) letGo(live.camera, dragFrom.vx, dragFrom.vy);
+      if (live.pointer.dragging && !stale) {
+        const speed = Math.hypot(dragFrom.vx, dragFrom.vy) || 1;
+        const cap = Math.min(1, LONGEST_THROW / speed);
+        letGo(live.camera, dragFrom.vx * cap, dragFrom.vy * cap);
+      }
       live.pointer.dragging = false;
       dragFrom = null;
       wake();

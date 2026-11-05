@@ -26,10 +26,13 @@ export const kindWord = (kind: string): string => kind.replace(/_/g, ' ');
 const short = (name: string, max: number) =>
   name.length > max ? `${name.slice(0, max - 1)}…` : name;
 
-export function noteText(p: Pick<ReadingPetal, 'name' | 'share' | 'tail' | 'count'>): string {
-  return p.tail
-    ? `${p.name} (${p.count ?? 0}) ${pct(p.share)}`
-    : `${short(p.name, 24)} ${pct(p.share)}`;
+/** What a petal's note says. Only the note being pointed at can afford a long name in full. */
+export function noteText(
+  p: Pick<ReadingPetal, 'name' | 'share' | 'tail' | 'count'>,
+  full = false,
+): string {
+  if (p.tail) return `${p.name} (${p.count ?? 0}) ${pct(p.share)}`;
+  return `${full ? p.name : short(p.name, 24)} ${pct(p.share)}`;
 }
 
 export const textWidth = (s: string, scale = 1): number => s.length * CHAR * scale;

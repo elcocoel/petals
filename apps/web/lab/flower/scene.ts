@@ -87,7 +87,8 @@ export interface Scene {
 }
 
 export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelations | null): Scene {
-  const root = el('g', { class: MONO }, svg);
+  // Nothing in the drawing hit-tests: the pointer is read geometrically, against the rest flower.
+  const root = el('g', { class: MONO, 'pointer-events': 'none' }, svg);
   const world = slot(el('g', {}, root));
   const worldNode = world.node;
 
@@ -192,7 +193,7 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
   const panelBox = slot(
     el('rect', { fill: GROUND, stroke: INK, 'stroke-width': 1 }, panelGroup.node),
   );
-  const panelLines = Array.from({ length: 4 }, () =>
+  const panelLines = Array.from({ length: 8 }, () =>
     slot(el('text', { 'text-rendering': 'geometricPrecision' }, panelGroup.node)),
   );
 
@@ -212,7 +213,7 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
   );
 
   // The way back: the flower at rest, small, with this account lit.
-  const mapGroup = slot(el('g', { opacity: 0, class: 'cursor-pointer' }, screen));
+  const mapGroup = slot(el('g', { opacity: 0 }, screen));
   const mapScale = 1 / (SHAPE.R * 2);
   const mapInner = el('g', {}, mapGroup.node);
   el('path', { fill: PETAL, d: silhouettePath(m.ring) }, mapInner);

@@ -9,7 +9,7 @@ export const WIDTH: SpringSpec = { response: 0.26, damping: 0.85 };
 /** How a petal hands the crossing to another one, when the pointer moves on part-way. */
 export const OPEN: SpringSpec = { response: 0.22, damping: 1 };
 /** Accent rises at once with the pointer and fades behind it, like a comet's tail. */
-export const ACCENT_FADE: SpringSpec = { response: 0.5, damping: 1 };
+export const ACCENT_FADE: SpringSpec = { response: 0.4, damping: 1 };
 /** Keeps what's under the pointer under the pointer. */
 export const ROTATION: SpringSpec = { response: 0.2, damping: 1 };
 export const OFFSET: SpringSpec = { response: 0.16, damping: 1 };
@@ -36,7 +36,7 @@ export const RELEASE_AFTER = 0.09;
 export const PAN_DECAY = 0.16;
 
 /** The flower fills this share of the window's short side, at rest. */
-export const FIT = 0.44;
+export const FIT = 0.415;
 
 /** Dock: how wide the swell is, in px along the ring, and its limits in radians. */
 export const DOCK_SIGMA_PX = 72;

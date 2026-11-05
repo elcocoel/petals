@@ -34,5 +34,5 @@ export function fakeRelations(n: number, count = 34): FakeRelations {
     if (b === a) b = (a + 1 + Math.floor(r() * (n - 1))) % n;
     pairs.push([a, b]);
   }
-  return { pairs, ring: 1.24 };
+  return { pairs, ring: 0.96 };
 }

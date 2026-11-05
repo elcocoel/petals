@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 import { fitView, flyTo, zoomWheel } from '../lab/flower/camera.ts';
 import { openAt } from '../lab/flower/detail.ts';
 import { type HoverWay, heightOf } from '../lab/flower/hover.ts';
-import { type Live, newLive, stepLive, tipOf } from '../lab/flower/live.ts';
+import { type Live, newLive, noteAt, stepLive, tipOf } from '../lab/flower/live.ts';
 import { modelOf } from '../lab/flower/model.ts';
 import { SHAPE } from '../lab/flower/ring.ts';
 
@@ -287,13 +287,40 @@ describe('the crossing', () => {
     expect(l.open.x[20]).toBe(0);
     expect(l.camera.k).toBeCloseTo(fitView(W, H).k, 2);
   });
+});
 
-  test('the note chases the tip it belongs to', () => {
+describe('the travelling note', () => {
+  test('lands on the tip of the petal it belongs to', () => {
     const l = start();
     pointAt(l, 20);
     run(l, 90);
     const tip = tipOf(l.ring, 20);
-    expect(l.noteX.x).toBeCloseTo(tip.x, 1);
-    expect(l.noteY.x).toBeCloseTo(tip.y, 1);
+    const at = noteAt(l);
+    expect(at.x).toBeCloseTo(tip.x, 1);
+    expect(at.y).toBeCloseTo(tip.y, 1);
+  });
+
+  test('on a jump across the flower it runs round the rim, never through the middle', () => {
+    const l = start();
+    pointAt(l, 5);
+    run(l, 90);
+    pointAt(l, 35);
+    let closest = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < 60; i++) {
+      stepLive(l, FRAME);
+      const at = noteAt(l);
+      closest = Math.min(closest, Math.hypot(at.x - SHAPE.cx, at.y - SHAPE.cy));
+    }
+    expect(closest).toBeGreaterThan(SHAPE.r0);
+  });
+
+  test("takes the short way over twelve o'clock", () => {
+    const l = start();
+    pointAt(l, 59);
+    run(l, 90);
+    const before = l.noteAngle.x;
+    pointAt(l, 1);
+    run(l, 60);
+    expect(Math.abs(l.noteAngle.x - before)).toBeLessThan(1.5);
   });
 });
