@@ -1,7 +1,16 @@
 // propose_spec and validate_spec (tools.md; data-model.md, Petal spec). The agent passes
 // choices; core's buildSpec fills every default and standard meaning, so the same choices give
 // the same spec_sha256 on every door. Unavailable primitives are refused, never imitated (FR-032).
-import { buildSpec, PRIMITIVES, schemas, specHash, validateSpec } from '@petal/core';
+import {
+  buildSpec,
+  diffSpecs,
+  PRIMITIVES,
+  recipeHash,
+  recipeOf,
+  schemas,
+  specHash,
+  validateSpec,
+} from '@petal/core';
 import type {
   Capabilities,
   Interpretation,
@@ -243,8 +252,29 @@ type ProposeIn = {
   sha256: string;
   choices?: ProposeChoices & Record<string, unknown>;
   variation_of?: string;
+  parent?: Spec;
   meanings?: Record<string, string>;
 };
+
+const RECIPE = obj(['petal', 'choices'], {
+  petal: { const: 'recipe/v1' },
+  choices: { type: 'object' },
+  meanings: { type: 'object', additionalProperties: { type: 'string' } },
+});
+const DIFF_CHANGE = obj(['what', 'from', 'to', 'says'], {
+  what: { type: 'string' },
+  from: {},
+  to: {},
+  says: { type: 'string' },
+});
+const CHANGES = { type: 'array', items: DIFF_CHANGE };
+const DIFF = obj(['same_recipe', 'subject', 'data', 'design', 'says'], {
+  same_recipe: { type: 'boolean' },
+  subject: CHANGES,
+  data: CHANGES,
+  design: CHANGES,
+  says: { type: 'string' },
+});
 
 export const proposeSpec = defineTool<ProposeIn, object>({
   name: 'propose_spec',
@@ -252,7 +282,9 @@ export const proposeSpec = defineTool<ProposeIn, object>({
   description:
     'Build the full canonical Petal spec from a few choices, starting from default/v1 and the ' +
     "network's defaults, with the standard meaning and sources for each primitive. The same " +
-    'choices always give the same spec_sha256. Pass the fewest choices the question needs.',
+    'choices always give the same spec_sha256. Pass the fewest choices the question needs. To ' +
+    'change a flower, pass it as `parent` and only the choices that change: they go on top of its ' +
+    'recipe. Returns the `recipe`, reusable on another network or date, and with a parent a `diff`.',
   input: obj(
     ['network', 'sha256'],
     {
@@ -260,7 +292,14 @@ export const proposeSpec = defineTool<ProposeIn, object>({
       params: PARAMS,
       sha256: SHA256,
       choices: CHOICES,
-      variation_of: SHA256,
+      variation_of: {
+        ...SHA256,
+        description: 'spec_sha256 of the parent; optional when `parent` is passed',
+      },
+      parent: {
+        type: 'object',
+        description: 'the spec this one changes, as propose_spec returned it',
+      },
       meanings: {
         type: 'object',
         additionalProperties: { type: 'string', minLength: 1 },
@@ -270,12 +309,15 @@ export const proposeSpec = defineTool<ProposeIn, object>({
     { additionalProperties: false },
   ),
   output: obj(
-    ['spec', 'spec_sha256', 'defaults_applied', 'changed_from_default'],
+    ['spec', 'spec_sha256', 'defaults_applied', 'changed_from_default', 'recipe', 'recipe_sha256'],
     {
       spec: { $ref: '#/$defs/spec' },
       spec_sha256: SHA256,
       defaults_applied: { type: 'array', items: { type: 'string' } },
       changed_from_default: { type: 'array', items: { type: 'string' } },
+      recipe: RECIPE,
+      recipe_sha256: SHA256,
+      diff: DIFF,
     },
     { $defs: FLOWER_DEFS },
   ),
@@ -292,12 +334,26 @@ export const proposeSpec = defineTool<ProposeIn, object>({
       );
     }
     checkChoices(input.choices ?? {}, d, s, input.meanings);
+    if (input.parent) {
+      const issues = schemaIssues(input.parent);
+      if (issues.length) {
+        throw new ToolFailure(
+          'bad_input',
+          `parent is not a spec: ${issues[0]?.path} ${issues[0]?.message}`,
+          'Pass the spec exactly as propose_spec returned it.',
+        );
+      }
+    }
     const { spec, changed, defaults } = buildSpec(input, d, s);
+    const recipe = recipeOf(spec, d);
     return {
       spec,
       spec_sha256: specHash(spec),
       defaults_applied: defaults,
       changed_from_default: changed,
+      recipe,
+      recipe_sha256: recipeHash(recipe),
+      ...(input.parent ? { diff: diffSpecs(input.parent, spec) } : {}),
     };
   },
 });

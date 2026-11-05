@@ -18,7 +18,7 @@ export function agentNotes(o: { budget: Budget; today: Date; draftSpec?: Spec })
     '## In this chat',
     '',
     `You run inside Petal's own site and call the tools directly. You have at most ${o.budget.toolRounds} tool rounds and ${o.budget.wallSeconds} s, so don't call a tool twice for the same answer, and call tools together when one doesn't need the other's result (\`describe_snapshot\` and \`compute_figures\`, for example). Never guess an id: use the ones the tools returned. Today is ${o.today.toISOString().slice(0, 10)}.`,
-    'Name a spec by its `spec_sha256` in `validate_spec` and `render_flower`; never copy the spec.',
+    'Name a spec by its `spec_sha256` in `validate_spec` and `render_flower`, and a parent by `variation_of` in `propose_spec`; never copy the spec.',
   ];
   if (o.draftSpec) {
     let hash = '';

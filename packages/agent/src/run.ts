@@ -302,6 +302,12 @@ async function loop(
         const { spec_sha256: _ref, ...rest } = a;
         args = { ...rest, spec: known };
       }
+      // A variation names its parent the same way: the tool builds on the spec this hash stands for.
+      if (call.name === 'propose_spec') {
+        const named = typeof a.parent === 'string' ? a.parent : a.parent ? null : a.variation_of;
+        const parent = typeof named === 'string' ? specs.get(named.trim()) : undefined;
+        if (parent) args = { ...(args as Obj), parent };
+      }
       if (call.name === 'render_flower') args = { ...(args as Obj), include_svg: false };
     }
     emit({

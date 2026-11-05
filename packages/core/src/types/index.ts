@@ -402,8 +402,39 @@ export interface ProposeInput {
   params?: Params;
   sha256: Sha256;
   choices?: ProposeChoices;
+  /** spec_sha256 of the spec this one changes; comes with `parent`, and must be its hash */
   variation_of?: Sha256;
+  /** the spec this one changes: its recipe is the start, `choices` and `meanings` go on top */
+  parent?: Spec;
   meanings?: Partial<Record<SpecPrimitive, string>>;
+}
+
+/** recipe/v1: the reusable part of a flower, with no target and no date. buildSpec compiles it. */
+export interface Recipe {
+  petal: 'recipe/v1';
+  /** what it says beyond the network's defaults, so the same choices are one recipe anywhere */
+  choices: ProposeChoices;
+  /** words that replace a primitive's standard meaning */
+  meanings?: Partial<Record<SpecPrimitive, string>>;
+}
+
+/** One change between two specs: a primitive, or the network, snapshot, labels, measure or petals. */
+export interface DiffChange {
+  what: string;
+  from: unknown;
+  to: unknown;
+  /** plain words: the meaning it has now, or what kind of change it is */
+  says: string;
+}
+
+/** diffSpecs: what changed, apart by subject (network), data (snapshot) and design (the recipe). */
+export interface SpecDiff {
+  same_recipe: boolean;
+  subject: DiffChange[];
+  data: DiffChange[];
+  design: DiffChange[];
+  /** the whole of it, e.g. "same recipe, newer data" */
+  says: string;
 }
 
 // ---------------------------------------------------------------------------------------------

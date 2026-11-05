@@ -122,7 +122,12 @@ describe('a follow-up keeps the thread', () => {
       'validate_spec',
       'render_flower',
     ]);
-    expect(tools.calls[before]?.args).toMatchObject({ choices: { petals: 10 } });
+    // the model names the parent; the loop hands the tool the spec it stands for
+    expect(tools.calls[before]?.args).toMatchObject({
+      choices: { petals: 10 },
+      variation_of: SPEC_SHA,
+      parent: expect.objectContaining({ petal: 'spec/v1' }),
+    });
     expect(named(two.events, 'error')).toHaveLength(0);
     expect(named(two.events, 'flower')).toHaveLength(1);
     expect(JSON.stringify(named(two.events, 'message'))).toContain(VIEW_URL);

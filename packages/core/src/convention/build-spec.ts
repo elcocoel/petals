@@ -1,7 +1,8 @@
 // propose_spec's core (tools.md): start from default/v1 and the population's defaults, apply the
 // agent's few choices, fill every standard meaning and source id, so the same choices give the
 // same spec bytes. A choice that does not apply, or names a primitive this build cannot draw,
-// is refused with bad_input (FR-032): nothing is imitated.
+// is refused with bad_input (FR-032): nothing is imitated. With a `parent`, its recipe is the start
+// and these choices go on top, so a variation changes only what it says it changes.
 //
 // Meanings and sources, first match wins:
 //   meaning   input.meanings[primitive]  >  descriptor `<primitive>:<choice>`  >  descriptor
@@ -9,6 +10,7 @@
 //   sources   descriptor `<primitive>:<choice>`  >  `<primitive>:<by>`  >  the snapshot rows that
 //             feed the primitive (holdings of the measure, participants, delegations)
 import { BadInputError } from '../errors.ts';
+import { specHash } from '../hash.ts';
 import { drawable, primitive } from '../primitives.ts';
 import { holdingMeasures, measureTable, participantsById } from '../tables.ts';
 import type {
@@ -20,7 +22,9 @@ import type {
   Spec,
   SpecPrimitive,
 } from '../types/index.ts';
-import { DEFAULT_CHOICES, DEFAULT_CONVENTION, STANDARD_MEANINGS } from './default.ts';
+import { DEFAULT_CHOICES, DEFAULT_CONVENTION } from './default.ts';
+import { recipeOf } from './recipe.ts';
+import { shape, standardMeaning } from './shape.ts';
 
 /** Fields propose_spec accepts, in the order `changed` and `defaults` list them. */
 const FIELDS = [
@@ -54,28 +58,6 @@ const bad = (message: string, allowed?: string[], hint?: string) =>
     hint: hint ?? (allowed ? `allowed: ${allowed.join(', ')}` : message),
   });
 
-/** What a choice draws: the encoding minus meaning and sources. null = primitive unused. */
-function shape(field: SpecPrimitive, choice: string): Omit<Encoding, 'meaning' | 'sources'> | null {
-  switch (field) {
-    case 'width':
-      return choice === 'equal'
-        ? { by: 'equal', scale: 'equal' }
-        : { by: 'share', scale: 'log', max_ratio: Number(choice.slice(1)) };
-    case 'height':
-      if (choice === 'sqrt' || choice === 'linear') return { by: 'share', scale: choice };
-      if (choice === 'log') return { by: 'amount', scale: 'log' };
-      if (choice === 'equal') return { by: 'equal', scale: 'equal' };
-      return { by: choice, scale: 'linear' }; // m:<metric>
-    case 'outline':
-    case 'segments':
-    case 'lines':
-    case 'markings':
-      return choice === 'none' ? null : { by: choice };
-    default:
-      return { by: choice };
-  }
-}
-
 function uniqSorted(xs: Iterable<string>): string[] {
   return [...new Set(xs)].sort();
 }
@@ -104,10 +86,40 @@ function derivedSources(field: SpecPrimitive, by: string, s: Snapshot, measure: 
   return out;
 }
 
-function measureLabel(d: NetworkDescriptor, measure: string): string {
-  return (
-    d.capabilities.measures.find((m) => m.id === measure)?.label ?? measure.replaceAll('_', ' ')
-  );
+/** A parent's recipe with the new choices and meanings on top. A parent's override of a primitive's
+ * words stays only while that primitive's choice does. */
+function onParent(input: ProposeInput, d: NetworkDescriptor) {
+  const { parent } = input;
+  if (!parent) {
+    if (input.variation_of)
+      throw bad(
+        `variation_of ${input.variation_of} names a parent, but the parent itself was not passed, so its choices would be lost`,
+        undefined,
+        'Pass `parent`: the spec this one changes, as propose_spec returned it. Then send only the choices that change.',
+      );
+    return { choices: input.choices ?? {}, meanings: input.meanings, variationOf: null };
+  }
+  const variationOf = specHash(parent);
+  if (input.variation_of && input.variation_of !== variationOf)
+    throw bad(
+      `variation_of ${input.variation_of} is not the hash of parent (${variationOf})`,
+      undefined,
+      'Pass the parent exactly as propose_spec returned it.',
+    );
+  if (parent.network.id !== d.id)
+    throw bad(
+      `the parent is a flower of ${parent.network.id}, not ${d.id}`,
+      undefined,
+      "To use a flower's recipe on another network, pass its recipe's choices and meanings, without a parent.",
+    );
+  const recipe = recipeOf(parent, d);
+  const changed = Object.keys(input.choices ?? {});
+  const kept = Object.entries(recipe.meanings ?? {}).filter(([k]) => !changed.includes(k));
+  return {
+    choices: { ...recipe.choices, ...input.choices },
+    meanings: { ...Object.fromEntries(kept), ...input.meanings },
+    variationOf,
+  };
 }
 
 export function buildSpec(
@@ -128,7 +140,9 @@ export function buildSpec(
     throw bad(`snapshot ${input.sha256} is of ${snapshot.network.id}, not ${descriptor.id}`);
 
   const caps = descriptor.capabilities;
-  const choices = (input.choices ?? {}) as Record<string, unknown>;
+  const merged = onParent(input, descriptor);
+  const choices = merged.choices as Record<string, unknown>;
+  const variationOf = merged.variationOf;
   for (const k of Object.keys(choices)) {
     if ((FIELDS as readonly string[]).includes(k)) continue;
     const p = primitive(k);
@@ -163,7 +177,6 @@ export function buildSpec(
   note('measure', choices.measure !== undefined, measure, defaultMeasure);
   note('petals', choices.petals !== undefined, petals, defaultPetals);
 
-  const label = measureLabel(descriptor, measure);
   const encodings: Partial<Record<SpecPrimitive, Encoding | null>> = {};
   const changes: string[] = [];
 
@@ -216,26 +229,25 @@ export function buildSpec(
     }
     note(field, chosen, choice, base);
 
-    const override = input.meanings?.[field];
-    if (override !== undefined && !changed.includes(field)) changed.push(field);
+    const override = merged.meanings?.[field];
     if (!enc) {
+      if (override !== undefined && !changed.includes(field)) changed.push(field);
       encodings[field] = null;
-      if (changed.includes(field) && input.variation_of) changes.push(`${field}=${choice}`);
+      if (changed.includes(field) && variationOf) changes.push(`${field}=${choice}`);
       continue;
     }
+    const standard = standardMeaning(descriptor, field, choice, enc.by, measure);
+    // An override that says what the standard says is no override: one flower, one recipe.
+    if (override !== undefined && override !== standard && !changed.includes(field))
+      changed.push(field);
     const entry =
       caps.meanings[`${field}:${choice}`] ?? caps.meanings[`${field}:${enc.by}`] ?? undefined;
-    const standard = STANDARD_MEANINGS[metric !== null ? 'height:m:' : `${field}:${choice}`] ?? '';
-    const metricLabel = metric !== null ? measureLabel(descriptor, metric) : '';
-    const meaning =
-      override ??
-      entry?.meaning ??
-      standard.replace('the measure', label).replace('the metric', metricLabel);
+    const meaning = override ?? standard;
     const sources = (
       entry?.sources?.length ? [...entry.sources] : derivedSources(field, enc.by, snapshot, measure)
     ) as SourceIds;
     encodings[field] = { ...enc, meaning, sources };
-    if (changed.includes(field) && input.variation_of) changes.push(`${field}=${choice}`);
+    if (changed.includes(field) && variationOf) changes.push(`${field}=${choice}`);
   }
 
   const order = encodings.order as Encoding;
@@ -271,8 +283,8 @@ export function buildSpec(
     },
     convention: {
       id: DEFAULT_CONVENTION.id,
-      variation_of: input.variation_of ?? null,
-      changes: input.variation_of
+      variation_of: variationOf,
+      changes: variationOf
         ? [
             ...(changed.includes('measure') ? [`measure=${measure}`] : []),
             ...(changed.includes('petals') ? [`petals=${petals}`] : []),

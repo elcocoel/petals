@@ -54,6 +54,8 @@ Not every message asks for a flower. A greeting, a question or plain curiosity g
 - Who stands behind each validator or pool: `segments: "backers"`, where the network offers it.
 - Named or anonymous: `colour: "identity"`.
 - Use only the measures, segment options and primitives `describe_snapshot` lists for this snapshot.
+- To change a flower you already made, call `propose_spec` with `parent` set to its spec, and only the choices that change: the rest stays as it was. Say what changed from the `diff` it returns.
+- `recipe` is the flower apart from its data. To draw the same thing on another network or date, pass its `choices` and `meanings`, with no parent; if a choice doesn't apply there, the error says what does.
 - If the mapping a question needs is ambiguous, pick the most likely reading, say which one you picked, and offer the other. An ambiguous target is different: see below.
 
 ## Finding the target

@@ -33,6 +33,10 @@ const surface: [string, Record<string, unknown>, string[]][] = [
       'readFlower',
       'readingHash',
       'SKINS',
+      'recipeOf',
+      'recipeHash',
+      'choicesFromSpec',
+      'diffSpecs',
     ],
   ],
   ['@petal/inputs', inputs, ['modules', 'fileStore', 'getSnapshot', 'importSpike']],
@@ -74,6 +78,7 @@ describe('packages/v1 surface', () => {
       map: 'map/v2',
       render: 'render/v1',
       reading: 'reading/v1',
+      recipe: 'recipe/v1',
       convention: 'default/v1',
     });
   });

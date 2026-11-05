@@ -78,6 +78,11 @@ const NAMES_ITS_SPEC = new Set(['validate_spec', 'render_flower']);
 
 function agentParameters(t: AnyTool): Record<string, unknown> {
   const p = parameters(t.input);
+  if (t.name === 'propose_spec') {
+    // named here too: variation_of is enough, and the loop fills in the parent
+    const { parent: _copied, ...own } = (p.properties ?? {}) as Record<string, unknown>;
+    return { ...p, properties: own };
+  }
   if (!NAMES_ITS_SPEC.has(t.name)) return p;
   const {
     include_svg: _svg,
