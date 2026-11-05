@@ -55,7 +55,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | Event | Data |
 |---|---|
 | `run` | `{ run_id, resume_url }`, always the first event; `resume_url` is `/make?run=<run_id>` |
-| `stage` | `{ stage: "thinking" \| "reading_map" \| "fetching" \| "counting" \| "proposing" \| "validating" \| "drawing", message }` |
+| `stage` | `{ stage: "recorded" (v1.1, additive: first stage of a recorded run) \| "thinking" \| "reading_map" \| "fetching" \| "counting" \| "proposing" \| "validating" \| "drawing", message }` |
 | `progress` | `{ stage, message, done?, total? }` (forwarded from tools) |
 | `tool_call` | `{ id, name, args }` |
 | `tool_result` | `{ id, name, ok, summary, ms }` (summaries, never raw snapshot bodies) |

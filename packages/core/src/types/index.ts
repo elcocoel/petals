@@ -498,6 +498,7 @@ export interface ChatInput {
 }
 
 export type Stage =
+  | 'recorded'
   | 'thinking'
   | 'reading_map'
   | 'fetching'

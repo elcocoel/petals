@@ -107,7 +107,7 @@ describe('runAgent on the recorded skeleton run', () => {
     const es = await collect(run(recordedClient(SKELETON_TRANSCRIPT)).events);
     expect(es[0]?.event).toBe('run');
     expect(es[1]?.event).toBe('stage');
-    expect((es[1]?.data as { message: string }).message).toMatch(
+    expect(pick(es, 'stage')[0]?.data.message).toMatch(
       /no AI model is running.*your question was not read/,
     );
   });

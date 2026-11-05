@@ -81,6 +81,8 @@ export const STAGE_OF: Record<string, Stage> = {
 };
 
 export const STAGE_MESSAGE: Record<Stage, string> = {
+  recorded:
+    'Recorded run: no AI model is running here. This replays one saved run; your question was not read.',
   thinking: 'Thinking',
   reading_map: 'Reading the shared map',
   fetching: 'Finding the snapshot',
