@@ -202,6 +202,8 @@ export function httpApp(ctx: ToolContext): Hono {
       llm: ctx.config.nearAiApiKey ? 'up' : 'recorded',
       version: API_VERSION,
       tools_version: TOOLS_VERSION,
+      // The deployed commit, so a deploy can witness what is really running. Unset locally.
+      commit: process.env.PETAL_COMMIT ?? null,
     }),
   );
   app.all('/mcp', limit, (c) => mcp.fetch(c.req.raw));

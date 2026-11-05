@@ -1,5 +1,5 @@
 // T036: the live House of Stake module, on recorded responses (test/fixtures/hos/).
-import { describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { InputError } from '../src/errors.ts';
 import { modules } from '../src/index.ts';
 import {
@@ -15,6 +15,15 @@ import { expected, recording, replayedHos, unpaced } from './helpers/hos.ts';
 import { snapshotProblems } from './helpers/schema.ts';
 
 const at = { block_height: expected.block_height, as_of: expected.as_of };
+
+// The recording is from 2026-11-04. A block more than a day old rightly goes to archival nodes, so
+// replaying it against today's clock would change which endpoint answers. Pin the clock.
+beforeEach(() => {
+  vi.useFakeTimers({ now: Date.parse('2026-11-04T20:00:00Z'), toFake: ['Date'] });
+});
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('near-house-of-stake on recorded responses', () => {
   test('is registered, live, cheap', () => {

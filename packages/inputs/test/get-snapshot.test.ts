@@ -3,7 +3,7 @@ import { copyFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { At, ProgressEvent, ResolvedAt, Snapshot } from '@petal/core/types';
 import { fakeMap } from '@petal/near';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { RECORD_WAIT_MS } from '../src/get-snapshot.ts';
 import { fileStore, getSnapshot, type InputModule, LATEST_REUSE_S, modules } from '../src/index.ts';
 import { HOUSE_OF_STAKE_DESCRIPTOR } from '../src/modules/near-house-of-stake.ts';
@@ -49,6 +49,15 @@ function fakeLive(head: { block: number; ms: number }, final = true) {
   modules['test-live'] = mod;
   return { fetches: () => fetches };
 }
+
+// The recording is from 2026-11-04. A block more than a day old rightly goes to archival nodes, so
+// replaying it against today's clock would change which endpoint answers. Pin the clock.
+beforeEach(() => {
+  vi.useFakeTimers({ now: Date.parse('2026-11-04T20:00:00Z'), toFake: ['Date'] });
+});
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('getSnapshot', () => {
   test('NEAR validators: found in the fixtures, final, reused', async () => {
