@@ -4,25 +4,29 @@ import { validateSnapshot } from '@petal/core';
 import { describe, expect, test } from 'vitest';
 import { evmReader } from '../src/evm/reader.ts';
 import { BEANSTALK_ATTACK, pullBeanstalk, readBeanstalkList } from '../src/modules/beanstalk.ts';
-import { BANK_ETHEREUM, pullErc20Holders, SEAM_BASE } from '../src/modules/erc20-holders.ts';
-import { checkGetVotes, ENS_TOKEN, VOTES_CHECKED } from '../src/modules/erc20-votes.ts';
-import { MOLOCH_V1_BLOCK, pullMolochV1 } from '../src/modules/moloch-v1.ts';
+import { holdersTarget, pullErc20Holders } from '../src/modules/erc20-holders.ts';
+import { checkGetVotes, VOTES_CHECKED } from '../src/modules/erc20-votes.ts';
+import { pullMolochV1 } from '../src/modules/moloch-v1.ts';
 import { pullSplHolders } from '../src/modules/solana-spl-holders.ts';
-import { indexRows, storedSnapshot } from './helpers/recordings.ts';
+import { rowFor, storedSnapshot } from './helpers/recordings.ts';
+import { BANK, ENS, MOLOCH, SEAM, SMALL_MINT } from './helpers/targets.ts';
 
 describe.skipIf(process.env.PETAL_LIVE !== '1')('live modules (PETAL_LIVE=1)', () => {
   test('moloch-v1: about 12 calls, the same members as the fixture', {
     timeout: 120_000,
   }, async () => {
     const reader = evmReader();
-    const { snapshot, checks } = await pullMolochV1({ reader });
+    const { snapshot, checks } = await pullMolochV1({
+      reader,
+      dao: MOLOCH.params.dao,
+      block: MOLOCH.block,
+      fromBlock: MOLOCH.fromBlock,
+    });
     expect(checks.mismatches).toEqual([]);
     expect(checks.head_mismatches).toEqual([]);
     expect(validateSnapshot(snapshot).ok).toBe(true);
-    expect(snapshot.snapshot.block_height).toBe(MOLOCH_V1_BLOCK);
-    const stored = indexRows('moloch-v1')[0];
-    if (!stored) throw new Error('no stored moloch-v1 snapshot');
-    expect(snapshot.holdings).toEqual(storedSnapshot(stored).holdings);
+    expect(snapshot.snapshot.block_height).toBe(MOLOCH.block);
+    expect(snapshot.holdings).toEqual(storedSnapshot(rowFor('moloch-v1', MOLOCH.params)).holdings);
   });
 
   test('beanstalk: about 22 calls, 79.63% again', { timeout: 180_000 }, async () => {
@@ -33,12 +37,11 @@ describe.skipIf(process.env.PETAL_LIVE !== '1')('live modules (PETAL_LIVE=1)', (
   });
 
   test('ens-delegates: getVotes at the stored block, 1 call', { timeout: 60_000 }, async () => {
-    const row = indexRows('ens-delegates')[0];
-    if (!row) throw new Error('no stored ens-delegates snapshot');
+    const row = rowFor('erc20-votes', ENS);
     const s = storedSnapshot(row);
     const check = await checkGetVotes(
       evmReader(),
-      ENS_TOKEN,
+      ENS.token,
       row.block_height as number,
       s.holdings.slice(0, VOTES_CHECKED).map((h) => ({
         address: h.participant,
@@ -49,7 +52,10 @@ describe.skipIf(process.env.PETAL_LIVE !== '1')('live modules (PETAL_LIVE=1)', (
   });
 
   test('erc20-holders: a week of logs on Ethereum, a few calls', { timeout: 120_000 }, async () => {
-    const { snapshot, checks } = await pullErc20Holders(BANK_ETHEREUM, {});
+    const { snapshot, checks } = await pullErc20Holders(
+      holdersTarget({ ...BANK, window_days: '7' }),
+      {},
+    );
     expect(checks.window?.days).toBe(7);
     expect(checks.drawn_vs_supply_raw).toBe('0');
     expect(validateSnapshot(snapshot).ok).toBe(true);
@@ -61,7 +67,7 @@ describe.skipIf(process.env.PETAL_LIVE !== '1')('live modules (PETAL_LIVE=1)', (
     const token = process.env.ENVIO_API_TOKEN;
     delete process.env.ENVIO_API_TOKEN;
     try {
-      await expect(pullErc20Holders(SEAM_BASE, { full: true })).rejects.toMatchObject({
+      await expect(pullErc20Holders(holdersTarget(SEAM), { full: true })).rejects.toMatchObject({
         code: 'cannot_read',
       });
     } finally {
@@ -72,13 +78,7 @@ describe.skipIf(process.env.PETAL_LIVE !== '1')('live modules (PETAL_LIVE=1)', (
   test('solana-spl-holders: a small mint, under 1 MB, through the official RPC', {
     timeout: 120_000,
   }, async () => {
-    const { snapshot, checks } = await pullSplHolders({
-      id: 'solana-spl-test',
-      symbol: 'TEST',
-      mint: 'DfXhF62rZowkpcrw4j4RN1Y41XwgYoAXHvxNiAJWwUBL',
-      title: 'Test token holders',
-      population: 'test-holders',
-    });
+    const { snapshot, checks } = await pullSplHolders(SMALL_MINT);
     expect(checks.wallets).toBeGreaterThan(0);
     expect(validateSnapshot(snapshot).ok).toBe(true);
   });

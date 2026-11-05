@@ -1,11 +1,10 @@
-// moloch-v1 (T157): members and shares of the original Moloch DAO, by replaying its events.
-//
-// Stored: fixtures/snapshots/ holds the snapshot at block 13,199,430, the block before proposal
-// 143 granted 1,000,000,000,000 shares that were ragequit 20,624 blocks later. pullMolochV1 reads
-// the same thing from the chain again (about 8 calls), run by scripts/pull-module.ts.
+// moloch-v1 (T157): members and shares of a Moloch v1 DAO, by replaying its events. The target is a
+// parameter: `dao`, the contract address, and optionally `chain`. A fixture with the same parameters
+// answers first; otherwise pullMolochV1 reads it in about 12 keyless calls.
 //
 // Check: the replay equals members() for every address that ever held shares, at the snapshot's
-// block and at the head, and the sum equals totalShares(). A mismatch throws.
+// block and at the head, and the sum equals totalShares(). A mismatch throws, and so does a contract
+// that is not a Moloch v1.
 //
 // Names come only from proposal text of the form "Membership Proposal: X" or "Member Proposal: X"
 // on a proposal the members passed, and are marked self-declared. Much of the text on chain is
@@ -13,24 +12,22 @@
 import type {
   Holding,
   NetworkDescriptor,
+  Params,
   Participant,
   Progress,
   Snapshot,
 } from '@petal/core/types';
 import { InputError } from '../errors.ts';
 import { addressOf, encodeCall, eventTopic, shortAddress, stringAt, wordAt } from '../evm/abi.ts';
-import { ETHEREUM_CHAIN, EVM_ENDPOINTS, type EvmLog, type EvmReader } from '../evm/reader.ts';
+import { ETHEREUM, EVM_CHAINS, type EvmChain } from '../evm/chains.ts';
+import { EVM_ENDPOINTS, type EvmLog, type EvmReader, evmReader } from '../evm/reader.ts';
 import { fromBaseUnits } from '../import/spike.ts';
 import type { InputModule } from '../index.ts';
 import { dayOf, grouped, plainCapabilities } from './plain.ts';
-import { storedReads } from './stored.ts';
+import { paramModule } from './stored.ts';
 
 export const MOLOCH_V1_ID = 'moloch-v1';
 export const MOLOCH_V1_VERSION = 'evm/1';
-export const MOLOCH_V1_ADDRESS = '0x1fd169a4f5c59acf79d0fd5d91d1201ef1bce9f1';
-/** The block before proposal 143 was processed. */
-export const MOLOCH_V1_BLOCK = 13199430;
-const SUMMONED_AT = 7218566;
 const README = 'https://raw.githubusercontent.com/MolochVentures/moloch/master/README.md';
 /** When the README was last read for this module. */
 const DOCS_CHECKED_AT = '2026-11-05T12:00:00Z';
@@ -53,13 +50,26 @@ const TOPIC = {
 
 export const MOLOCH_V1_DESCRIPTOR: NetworkDescriptor = {
   id: MOLOCH_V1_ID,
-  chain: ETHEREUM_CHAIN,
-  population: 'moloch-v1-members',
+  chain: ETHEREUM.caip2,
+  population: 'moloch-v1',
   kind: 'dao',
   title: 'Moloch v1 members',
   description:
-    'Members of the original Moloch DAO on Ethereum and their shares, by replay of its events, on the block before proposal 143. A share is a vote and a claim on the guild bank; ragequit lets a member leave with their part.',
-  params: {},
+    'Members of a Moloch v1 DAO and their shares, by replay of its events. A share is a vote and a claim on the guild bank; ragequit lets a member leave with their part. Give the DAO contract address.',
+  params: {
+    dao: {
+      required: true,
+      description: 'the DAO contract address',
+      pattern: '^0x[0-9a-fA-F]{40}$',
+      example: '0x1fd169A4f5c59ACf79d0Fd5d91D1201EF1Bce9f1',
+    },
+    chain: {
+      required: false,
+      description: 'ethereum (default), base or arbitrum',
+      pattern: '^(ethereum|base|arbitrum)$',
+      example: 'ethereum',
+    },
+  },
   capabilities: plainCapabilities({
     measure: { id: 'shares', unit: 'shares', label: 'Moloch v1 shares' },
     sources: [S.logs, S.members],
@@ -69,13 +79,13 @@ export const MOLOCH_V1_DESCRIPTOR: NetworkDescriptor = {
         'named (the text of a passed proposal says "Membership Proposal: <name>", self-declared) or anonymous',
       sources: [S.proposals],
     },
-    defaults: { colour: 'identity', petals: 70 },
+    defaults: { colour: 'identity' },
   }),
-  live: false,
+  live: true,
   cost: {
-    calls: 0,
-    seconds: 0,
-    note: 'stored: served from the fixture at block 13,199,430 (2021-09-10). pullMolochV1 reads it again in about 8 keyless calls.',
+    calls: 12,
+    seconds: 5,
+    note: "a replay of the contract's whole log history, usually one call, plus state checks",
   },
   sources: [
     { id: S.logs, kind: 'chain', url: EVM_ENDPOINTS[0]?.url ?? '' },
@@ -153,13 +163,13 @@ export interface MolochChecks {
 }
 
 /** Replay vs members() for these addresses at one block, and the sum vs totalShares(). */
-async function checkAgainstContract(reader: EvmReader, replay: Replay, block: number) {
+async function checkAgainstContract(reader: EvmReader, dao: string, replay: Replay, block: number) {
   const addresses = [...replay.shares.keys()];
   const answers = await reader.multicall(
     [
-      { to: MOLOCH_V1_ADDRESS, data: encodeCall('totalShares()') },
+      { to: dao, data: encodeCall('totalShares()') },
       ...addresses.map((a) => ({
-        to: MOLOCH_V1_ADDRESS,
+        to: dao,
         data: encodeCall('members(address)', a),
       })),
     ],
@@ -189,26 +199,36 @@ function fail(checks: MolochChecks): never {
 /** Read the snapshot from the chain and check it. Throws when the check fails. */
 export async function pullMolochV1(opts: {
   reader: EvmReader;
+  dao: string;
+  chain?: EvmChain;
+  /** the block to read, default the head */
   block?: number;
   /** the head to check against, default the finalized block */
   head?: number | 'finalized';
+  /** a block before the DAO was summoned, default 0 */
+  fromBlock?: number;
+  /** a sentence about this DAO, for a stored fixture */
+  note?: string;
   onProgress?: Progress;
 }): Promise<{ snapshot: Snapshot; checks: MolochChecks }> {
   const { reader, onProgress } = opts;
-  const block = opts.block ?? MOLOCH_V1_BLOCK;
+  const dao = opts.dao.toLowerCase();
+  const chain = opts.chain ?? ETHEREUM;
   const say = (message: string) => onProgress?.({ stage: 'fetching', message });
 
-  const at = await reader.block(block);
   const head = await reader.block(opts.head ?? 'finalized');
+  const block = opts.block ?? head.number;
+  const at = block === head.number ? head : await reader.block(block);
   say(`reading every Moloch v1 log up to block ${head.number}`);
-  const logs = await reader.logs({ address: MOLOCH_V1_ADDRESS }, SUMMONED_AT, head.number);
+  const logs = await reader.logs({ address: dao }, opts.fromBlock ?? 0, head.number);
 
   const now = replayMoloch(logs, block);
   const later = replayMoloch(logs, head.number);
   say(`checking ${now.shares.size} addresses against members() at block ${block}`);
-  const here = await checkAgainstContract(reader, now, block);
+  const here = await checkAgainstContract(reader, dao, now, block);
+  const pinned = block !== head.number;
   say(`checking ${later.shares.size} addresses against members() at block ${head.number}`);
-  const there = await checkAgainstContract(reader, later, head.number);
+  const there = pinned ? await checkAgainstContract(reader, dao, later, head.number) : here;
   const checks: MolochChecks = {
     block,
     addresses: here.addresses,
@@ -235,7 +255,7 @@ export async function pullMolochV1(opts: {
   say(`reading the text of ${indexes.length} passed proposals`);
   const texts = await reader.multicall(
     indexes.map((i) => ({
-      to: MOLOCH_V1_ADDRESS,
+      to: dao,
       data: encodeCall('proposalQueue(uint256)', i),
     })),
     block,
@@ -260,8 +280,8 @@ export async function pullMolochV1(opts: {
   // the guild bank, at this block and at the head
   const [bankAnswer, tokenAnswer] = await reader.multicall(
     [
-      { to: MOLOCH_V1_ADDRESS, data: encodeCall('guildBank()') },
-      { to: MOLOCH_V1_ADDRESS, data: encodeCall('approvedToken()') },
+      { to: dao, data: encodeCall('guildBank()') },
+      { to: dao, data: encodeCall('approvedToken()') },
     ],
     block,
   );
@@ -276,7 +296,7 @@ export async function pullMolochV1(opts: {
     return wordAt(r.data, 0);
   };
   const bankHere = await bankAt(block);
-  const bankThere = await bankAt(head.number);
+  const bankThere = pinned ? await bankAt(head.number) : bankHere;
 
   const members = [...now.shares.entries()]
     .filter(([, n]) => n > 0n)
@@ -308,14 +328,14 @@ export async function pullMolochV1(opts: {
     source: S.logs,
   }));
   const left = now.shares.size - members.length;
-  const weth = (n: bigint) => fromBaseUnits(n, 18);
+  const bankText = (n: bigint) => fromBaseUnits(n, 18);
 
   const sources: Snapshot['sources'] = [
     {
       id: S.logs,
       kind: 'chain',
       url: reader.servedBy('logs'),
-      method: `eth_getLogs on ${MOLOCH_V1_ADDRESS}, replayed: SummonComplete, ProcessProposal (passed), Ragequit, SubmitVote`,
+      method: `eth_getLogs on ${dao}, replayed: SummonComplete, ProcessProposal (passed), Ragequit, SubmitVote`,
       fetched_at: at.as_of,
       block_height: block,
     },
@@ -358,10 +378,11 @@ export async function pullMolochV1(opts: {
     petal: 'snapshot/v1',
     network: {
       id: MOLOCH_V1_ID,
-      chain: ETHEREUM_CHAIN,
-      population: MOLOCH_V1_DESCRIPTOR.population,
+      chain: chain.caip2,
+      population: `moloch-v1-${chain.id}-${dao}`,
       title: MOLOCH_V1_DESCRIPTOR.title,
       description: MOLOCH_V1_DESCRIPTOR.description,
+      params: { dao, chain: chain.id },
     },
     snapshot: { as_of: at.as_of, block_height: block, block_hash: at.hash, final: true },
     coverage: {
@@ -374,10 +395,12 @@ export async function pullMolochV1(opts: {
       note:
         `Members with shares at block ${grouped(block)} (${dayOf(at.as_of)}). ` +
         `Check: the replay equals members() for all ${here.addresses} addresses seen by this block, and totalShares() is ${grouped(here.contract)}. ` +
-        `Last check: block ${grouped(head.number)} (${dayOf(head.as_of)}), replay equals members() for all ${there.addresses} addresses, totalShares() is ${grouped(there.contract)}. ` +
+        (pinned
+          ? `Last check: block ${grouped(head.number)} (${dayOf(head.as_of)}), replay equals members() for all ${there.addresses} addresses, totalShares() is ${grouped(there.contract)}. `
+          : '') +
         `Last action on the contract: block ${grouped(later.last_event_block)} (${dayOf(lastAction.as_of)}). ` +
-        'This date is before proposal 143, whose on-chain title is "Shares for V2 Migration": it granted 1,000,000,000,000 shares at block 13,199,431, and they were ragequit at block 13,220,055. ' +
-        `A share is not money: the guild bank held ${weth(bankHere)} WETH at this block and ${weth(bankThere)} at the last check. ` +
+        (opts.note ? `${opts.note} ` : '') +
+        `A share is not money: the guild bank held ${bankText(bankHere)} of token ${token} at this block${pinned ? ` and ${bankText(bankThere)} at the last check` : ''}, read as 18 decimals. ` +
         `${left} other addresses held shares earlier and hold none here. ` +
         'Names are text from passed proposals of the form "Membership Proposal: X", self-declared and unverified; every other address is unnamed.',
     },
@@ -391,12 +414,45 @@ export async function pullMolochV1(opts: {
   return { snapshot, checks };
 }
 
-/** The stored module. `fixtures` is the folder holding index.json (default: this repo's). */
+/** The target in a request's parameters. */
+export function molochTarget(params: Params | undefined): {
+  chain: EvmChain;
+  dao: string;
+  population: string;
+} {
+  const chain = EVM_CHAINS[params?.chain ?? 'ethereum'];
+  const dao = String(params?.dao ?? '').toLowerCase();
+  if (!chain || !/^0x[0-9a-f]{40}$/.test(dao))
+    throw new InputError('bad_input', 'moloch-v1 needs a dao address', {
+      hint: 'dao: 0x and 40 hex digits; chain: ethereum, base or arbitrum',
+    });
+  return { chain, dao, population: `moloch-v1-${chain.id}-${dao}` };
+}
+
+/** Any Moloch v1 DAO. `fixtures` is the folder holding index.json (default: this repo's). */
 export function molochV1(opts: { fixtures?: string } = {}): InputModule {
-  const reads = storedReads(MOLOCH_V1_ID, opts);
-  return {
+  return paramModule({
     descriptor: MOLOCH_V1_DESCRIPTOR,
-    resolveAt: (at) => reads.resolveAt(at),
-    fetch: (at, _params, onProgress) => reads.fetch(at, onProgress),
-  };
+    keyFor: (params) => {
+      const t = molochTarget(params);
+      return { chain: t.chain.caip2, population: t.population };
+    },
+    pinnable: true,
+    head: async (params, block) => {
+      const b = await evmReader({ chain: molochTarget(params).chain }).block(block ?? 'finalized');
+      return { block_height: b.number, as_of: b.as_of };
+    },
+    pull: async (at, params, onProgress) => {
+      const { chain, dao } = molochTarget(params);
+      const { snapshot } = await pullMolochV1({
+        reader: evmReader({ chain }),
+        dao,
+        chain,
+        block: at.block_height,
+        ...(onProgress ? { onProgress } : {}),
+      });
+      return snapshot;
+    },
+    ...opts,
+  });
 }

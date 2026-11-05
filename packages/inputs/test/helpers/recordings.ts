@@ -19,6 +19,15 @@ export function indexRows(network: string): IndexRow[] {
   return index.snapshots.filter((r) => r.network === network);
 }
 
+/** The stored row of a module for these parameters. */
+export function rowFor(network: string, params: Record<string, string>): IndexRow {
+  const row = indexRows(network).find((r) =>
+    Object.entries(params).every(([k, v]) => r.params?.[k] === v),
+  );
+  if (!row) throw new Error(`no stored ${network} for ${JSON.stringify(params)}`);
+  return row;
+}
+
 export function storedSnapshot(row: IndexRow): Snapshot {
   return JSON.parse(
     gunzipSync(readFileSync(join(FIXTURES, row.file))).toString('utf8'),

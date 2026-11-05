@@ -19,25 +19,22 @@
 // No labels: Blockscout shows tags and names; they are not read. Kind says only whether Blockscout
 // marks the address as a contract.
 import type {
-  At,
   Holding,
   NetworkDescriptor,
   Params,
   Participant,
   Progress,
-  ResolvedAt,
   Snapshot,
 } from '@petal/core/types';
 import { InputError } from '../errors.ts';
 import { addressOf, encodeCall, eventTopic, shortAddress, stringAt, wordAt } from '../evm/abi.ts';
-import { ARBITRUM, BASE, ETHEREUM, EVM_CHAINS, type EvmChain } from '../evm/chains.ts';
+import { ETHEREUM, EVM_CHAINS, type EvmChain } from '../evm/chains.ts';
 import { type HyperSyncStats, hypersyncLogPages } from '../evm/hypersync.ts';
 import { type EvmLog, type EvmReader, evmReader } from '../evm/reader.ts';
 import { fromBaseUnits } from '../import/spike.ts';
 import type { InputModule } from '../index.ts';
-import { parseAt } from './at.ts';
 import { dayOf, grouped, percent2, plainCapabilities } from './plain.ts';
-import { storedReads } from './stored.ts';
+import { paramModule } from './stored.ts';
 
 export const ERC20_HOLDERS_ID = 'erc20-holders';
 export const ERC20_HOLDERS_VERSION = 'evm/1';
@@ -62,67 +59,13 @@ const MAX_WINDOW_CALLS = 400;
 const S = { list: 'erc20-holder-list', state: 'erc20-state' } as const;
 
 export interface HolderTarget {
-  /** the network id */
-  id: string;
-  /** how the stored data set was listed; default Blockscout where it answers, else a replay */
-  list?: 'blockscout' | 'replay';
   chain: EvmChain;
   /** lowercase */
   token: string;
-  /** e.g. PEPE holders, Ethereum */
-  title: string;
   population: string;
   /** a block before the token's first transfer, default 0 */
   from_block?: number;
-  /** how the stored data set was read, for its description */
-  about?: string;
 }
-
-const stored = (
-  chain: EvmChain,
-  symbol: string,
-  token: string,
-  list: 'blockscout' | 'replay',
-  extra: Partial<HolderTarget> = {},
-): HolderTarget => ({
-  id: `erc20-holders-${chain.id}-${symbol.toLowerCase()}`,
-  list,
-  chain,
-  token: token.toLowerCase(),
-  title: `${symbol} holders, ${chain.name}`,
-  population: `erc20-holders-${chain.id}-${token.toLowerCase()}`,
-  ...extra,
-});
-
-export const PEPE_ETHEREUM = stored(
-  ETHEREUM,
-  'PEPE',
-  '0x6982508145454Ce325dDbE47a25d4ec3d2311933',
-  'blockscout',
-);
-export const BANK_ETHEREUM = stored(
-  ETHEREUM,
-  'BANK',
-  '0x2d94AA3e47d9D5024503Ca8491fcE9A2fb4DA198',
-  'replay',
-);
-export const DPX_ARBITRUM = stored(
-  ARBITRUM,
-  'DPX',
-  '0x6C2C06790b3E3E3c38e12Ee22F8183b37a13EE55',
-  'replay',
-);
-export const SEAM_BASE = stored(
-  BASE,
-  'SEAM',
-  '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85',
-  'replay',
-  {
-    title: 'SEAM active holders, Base',
-    about:
-      'Addresses that moved SEAM on Base in the last 7 days and what they hold, read from the chain. Not every holder: the rest of the supply is not attributed.',
-  },
-);
 
 const capabilities = (unit: string, label: string) =>
   plainCapabilities({
@@ -134,32 +77,6 @@ const capabilities = (unit: string, label: string) =>
     },
     identity: { meaning: 'anonymous: names and tags are not read', sources: [S.list] },
   });
-
-export function holdersDescriptor(t: HolderTarget): NetworkDescriptor {
-  const symbol = t.title.split(' ')[0] ?? 'token';
-  return {
-    id: t.id,
-    chain: t.chain.caip2,
-    population: t.population,
-    kind: 'other',
-    title: t.title,
-    description:
-      t.about ??
-      `The largest holders of ${symbol} on ${t.chain.name} at one block, read from the chain, plus a declared tail. Balances only: no votes, no names.`,
-    params: {},
-    capabilities: capabilities(symbol, `${symbol} balance`),
-    live: false,
-    cost: {
-      calls: 0,
-      seconds: 0,
-      note: 'stored: served from the fixture. pullErc20Holders reads it again; cost depends on the chain and the token.',
-    },
-    sources: [
-      { id: S.list, kind: 'api', url: t.chain.blockscout ?? t.chain.endpoints[0]?.url ?? '' },
-      { id: S.state, kind: 'chain', url: t.chain.endpoints[0]?.url ?? '' },
-    ],
-  };
-}
 
 /** Running state of a Transfer replay: balance per address (lowercase, no zero address). */
 export interface TransferReplay {
@@ -372,7 +289,7 @@ async function listFromBlockscout(
 }
 
 async function listFromReplay(
-  target: Pick<HolderTarget, 'id' | 'chain' | 'token' | 'from_block'>,
+  target: Pick<HolderTarget, 'chain' | 'token' | 'from_block'>,
   reader: EvmReader,
   block: number,
   keep: number,
@@ -515,7 +432,7 @@ export async function pullErc20Holders(
 
   say(`listing the holders of ${symbol} on ${chain.name}`);
   const hypersync: HyperSyncStats = { queries: 0, rate_limit_waits: 0 };
-  const asked = opts.list ?? target.list;
+  const asked = opts.list;
   const source = asked ?? (chain.blockscout ? 'blockscout' : 'replay');
   const replayList = () => listFromReplay(target, reader, at.number, keep, opts, hypersync);
   let list: HolderList;
@@ -686,14 +603,18 @@ export async function pullErc20Holders(
   const snapshot: Snapshot = {
     petal: 'snapshot/v1',
     network: {
-      id: target.id,
+      id: ERC20_HOLDERS_ID,
       chain: chain.caip2,
       population: target.population,
-      title: target.title,
+      title: `${symbol} ${w ? 'active holders' : 'holders'}, ${chain.name}`,
       description: w
         ? `Addresses that moved ${symbol} on ${chain.name} in the last ${w.days} days and what they hold, read from the chain. Not every holder: the rest of the supply is not attributed.`
         : `The largest holders of ${symbol} on ${chain.name} at one block, read from the chain, plus a declared tail. Balances only: no votes, no names.`,
-      params: { chain: chain.id, token, ...(w ? { window_days: String(w.days) } : {}) },
+      params: {
+        chain: chain.id,
+        token,
+        window_days: opts.full ? 'full' : String(w?.days ?? opts.windowDays ?? DEFAULT_WINDOW_DAYS),
+      },
     },
     snapshot: {
       as_of: at.as_of,
@@ -739,37 +660,26 @@ export async function pullErc20Holders(
   return { snapshot, checks };
 }
 
-/** A stored token. `fixtures` is the folder holding index.json. */
-export function erc20HoldersStored(t: HolderTarget, opts: { fixtures?: string } = {}): InputModule {
-  const reads = storedReads(t.id, opts);
-  return {
-    descriptor: holdersDescriptor(t),
-    resolveAt: (at) => reads.resolveAt(at),
-    fetch: (at, _params, onProgress) => reads.fetch(at, onProgress),
-  };
-}
-
 const TOKEN_PATTERN = '^0x[0-9a-fA-F]{40}$';
 
-const WINDOW_PATTERN = '^([1-9]|[12][0-9]|30)$';
+// 1 to 30 days, or "full": only a stored fixture can answer that, a live read refuses it.
+const WINDOW_PATTERN = '^([1-9]|[12][0-9]|30|full)$';
 
-const windowOf = (params: Params | undefined): number =>
-  params?.window_days === undefined ? DEFAULT_WINDOW_DAYS : Number(params.window_days);
+const windowOf = (params: Params | undefined): string =>
+  params?.window_days ?? String(DEFAULT_WINDOW_DAYS);
 
-export function liveTarget(params: Params | undefined): HolderTarget {
+export function holdersTarget(params: Params | undefined): HolderTarget {
   const chain = EVM_CHAINS[String(params?.chain)];
   const token = String(params?.token ?? '').toLowerCase();
   if (!chain || !new RegExp(TOKEN_PATTERN).test(token))
     throw new InputError('bad_input', 'erc20-holders needs a chain and a token address', {
       hint: `chain: ${Object.keys(EVM_CHAINS).join(', ')}; token: 0x and 40 hex digits`,
     });
+  const window = windowOf(params);
   return {
-    id: ERC20_HOLDERS_ID,
     chain,
     token,
-    title: 'ERC-20 holders',
-    // not the stored targets' population: a stored data set carries another network id
-    population: `erc20-token-${chain.id}-${token}-${windowOf(params)}d`,
+    population: `erc20-token-${chain.id}-${token}-${window === 'full' ? 'full' : `${window}d`}`,
   };
 }
 
@@ -792,11 +702,12 @@ export const ERC20_HOLDERS_DESCRIPTOR: NetworkDescriptor = {
       required: true,
       description: 'the token contract address',
       pattern: TOKEN_PATTERN,
-      example: PEPE_ETHEREUM.token,
+      example: '0x6982508145454ce325ddbe47a25d4ec3d2311933',
     },
     window_days: {
       required: false,
-      description: 'days of Transfer logs to read where a replay is used, 1 to 30, default 7',
+      description:
+        'days of Transfer logs to read where a replay is used, 1 to 30, default 7; "full" only finds a stored whole-history read',
       pattern: WINDOW_PATTERN,
       example: '7',
     },
@@ -814,37 +725,38 @@ export const ERC20_HOLDERS_DESCRIPTOR: NetworkDescriptor = {
   ],
 };
 
-/** Any token, read now. Only "latest": the holder lists have no history. */
-export function erc20HoldersLive(
-  opts: { fetch?: typeof globalThis.fetch; sleep?: (ms: number) => Promise<void> } = {},
+/** Any token, read now. `fixtures` is the folder holding index.json (default: this repo's). */
+export function erc20Holders(
+  opts: {
+    fixtures?: string;
+    fetch?: typeof globalThis.fetch;
+    sleep?: (ms: number) => Promise<void>;
+  } = {},
 ): InputModule {
-  return {
+  return paramModule({
     descriptor: ERC20_HOLDERS_DESCRIPTOR,
     keyFor: (params) => {
-      const t = liveTarget(params);
+      const t = holdersTarget(params);
       return { chain: t.chain.caip2, population: t.population };
     },
-    async resolveAt(at: At, params?: Params): Promise<ResolvedAt> {
-      const t = liveTarget(params);
-      if (parseAt(at).kind !== 'latest')
-        throw new InputError(
-          'cannot_read',
-          'erc20-holders reads the latest block only: the holder lists have no history',
-          { hint: 'ask for "latest"' },
-        );
+    pinnable: false,
+    head: async (params) => {
       const b = await evmReader({
-        chain: t.chain,
+        chain: holdersTarget(params).chain,
         ...(opts.fetch ? { fetch: opts.fetch } : {}),
         ...(opts.sleep ? { sleep: opts.sleep } : {}),
       }).block('finalized');
       return { block_height: b.number, as_of: b.as_of };
     },
-    async fetch(at, params, onProgress) {
-      const target = liveTarget(params);
+    pull: async (at, params, onProgress) => {
+      if (windowOf(params) === 'full')
+        throw new InputError('cannot_read', 'no stored whole-history read of this token', {
+          hint: 'a whole history is an offline pull (pull-module.ts --full), never in a chat; or leave out window_days',
+        });
       const token = process.env.ENVIO_API_TOKEN;
-      const { snapshot } = await pullErc20Holders(target, {
+      const { snapshot } = await pullErc20Holders(holdersTarget(params), {
         block: at.block_height,
-        windowDays: windowOf(params),
+        windowDays: Number(windowOf(params)),
         ...(token ? { hypersyncToken: token } : {}),
         ...(opts.fetch ? { fetch: opts.fetch } : {}),
         ...(opts.sleep ? { sleep: opts.sleep } : {}),
@@ -852,5 +764,6 @@ export function erc20HoldersLive(
       });
       return snapshot;
     },
-  };
+    ...(opts.fixtures ? { fixtures: opts.fixtures } : {}),
+  });
 }

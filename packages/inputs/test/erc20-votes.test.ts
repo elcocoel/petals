@@ -4,25 +4,26 @@
 import { computeFigures, validateSnapshot } from '@petal/core';
 import { describe, expect, test } from 'vitest';
 import { encodeCall, eventTopic } from '../src/evm/abi.ts';
+import { ETHEREUM } from '../src/evm/chains.ts';
 import type { EvmLog, EvmReader } from '../src/evm/reader.ts';
 import { evmReader } from '../src/evm/reader.ts';
 import { modules } from '../src/index.ts';
 import {
   applyVotesLogs,
   checkGetVotes,
-  ENS_TOKEN,
+  ERC20_VOTES_DESCRIPTOR,
   newVotesReplay,
   pullErc20Votes,
   VOTES_CHECKED,
   type VotesToken,
-  votesDescriptor,
+  votesTarget,
 } from '../src/modules/erc20-votes.ts';
 import { replayFetch } from '../src/rpc/recording.ts';
 import { encodeSnapshot } from '../src/store/file-store.ts';
-import { indexRows, loadRecording, noSleep, storedSnapshot } from './helpers/recordings.ts';
+import { loadRecording, noSleep, rowFor, storedSnapshot } from './helpers/recordings.ts';
+import { ENS } from './helpers/targets.ts';
 
-const row = indexRows('ens-delegates')[0];
-if (!row) throw new Error('no stored ens-delegates snapshot');
+const row = rowFor('erc20-votes', ENS);
 const stored = storedSnapshot(row);
 const block = row.block_height as number;
 
@@ -35,20 +36,23 @@ const top = () =>
 const replayReader = () =>
   evmReader({ fetch: replayFetch(loadRecording('ens-delegates')).fetch, sleep: noSleep });
 
-describe('ens-delegates, stored', () => {
-  test('is registered, stored only, and valid', async () => {
-    const mod = modules['ens-delegates'];
+describe('ENS as the test parameter, stored', () => {
+  test('is registered, takes its target as a parameter, and is valid', async () => {
+    const mod = modules['erc20-votes'];
     if (!mod) throw new Error('not registered');
-    expect(mod.descriptor).toMatchObject({ chain: 'eip155:1', live: false, kind: 'dao' });
+    expect(mod.descriptor).toMatchObject({ chain: 'eip155:1', live: true, kind: 'dao' });
+    expect(mod.descriptor.params.token?.required).toBe(true);
+    expect(votesTarget({ token: ENS.token }).population).toBe(row.population);
+    expect(() => votesTarget({})).toThrow(/needs a token/);
     expect(validateSnapshot(stored).ok).toBe(true);
-    const at = await mod.resolveAt('latest');
+    const at = await mod.resolveAt('latest', ENS);
     expect(at.block_height).toBe(block);
-    expect(encodeSnapshot(await mod.fetch(at, undefined)).sha256).toBe(row.sha256);
+    expect(encodeSnapshot(await mod.fetch(at, ENS)).sha256).toBe(row.sha256);
   });
 
   test('check: getVotes equals the stored votes for all 400, offline', async () => {
     expect(VOTES_CHECKED).toBeGreaterThanOrEqual(300); // a flower draws at most 300 petals
-    const check = await checkGetVotes(replayReader(), ENS_TOKEN, block, top());
+    const check = await checkGetVotes(replayReader(), ENS.token, block, top());
     expect(check).toEqual({ block, checked: 400, mismatches: [] });
   });
 
@@ -57,7 +61,7 @@ describe('ens-delegates, stored', () => {
     const first = rows[0];
     if (!first) throw new Error('no rows');
     first.votes += 1n;
-    const check = await checkGetVotes(replayReader(), ENS_TOKEN, block, rows);
+    const check = await checkGetVotes(replayReader(), ENS.token, block, rows);
     expect(check.mismatches).toEqual([first.address]);
   });
 
@@ -91,21 +95,18 @@ describe('ens-delegates, stored', () => {
   });
 });
 
+const TOKEN_ADDRESS = '0x00000000000000000000000000000000000000aa';
 const TOKEN: VotesToken = {
-  id: 'test-votes',
-  symbol: 'TV',
-  address: '0x00000000000000000000000000000000000000aa',
-  from_block: 1,
-  title: 'Test votes',
+  chain: ETHEREUM,
+  token: TOKEN_ADDRESS,
   population: 'test-votes',
-  docs: { url: 'https://example.test/token', says: 'names the token' },
 };
 const A = `0x${'a'.repeat(40)}`;
 const B = `0x${'b'.repeat(40)}`;
 const C = `0x${'c'.repeat(40)}`;
 const word = (n: bigint) => n.toString(16).padStart(64, '0');
 const change = (delegate: string, from: bigint, to: bigint, blockNumber = 5): EvmLog => ({
-  address: TOKEN.address,
+  address: TOKEN_ADDRESS,
   topics: [
     eventTopic('DelegateVotesChanged(address,uint256,uint256)'),
     `0x${delegate.slice(2).padStart(64, '0')}`,
@@ -180,11 +181,15 @@ describe('pullErc20Votes on a small made-up token', () => {
     expect(checks).toMatchObject({ logs: 4, breaks: 0, delegates: 2, checked: 2, mismatches: [] });
     expect(snapshot.coverage.amount_total).toBe('8');
     expect(snapshot.coverage.note).toMatch(/8\.00% of totalSupply/);
-    expect(snapshot.network).toMatchObject({ id: 'test-votes', params: { token: TOKEN.address } });
-    expect(votesDescriptor(TOKEN).capabilities.segments).toEqual([]);
+    expect(snapshot.network).toMatchObject({
+      id: 'erc20-votes',
+      title: 'TV delegates',
+      params: { token: TOKEN_ADDRESS, chain: 'ethereum' },
+    });
+    expect(ERC20_VOTES_DESCRIPTOR.capabilities.segments).toEqual([]);
   });
 
-  test('throws when getVotes disagrees, when a page is missing, or on the wrong token', async () => {
+  test('throws when getVotes disagrees, or when a page is missing', async () => {
     await expect(
       pullErc20Votes(TOKEN, { reader: fakeReader(pages, { [A]: 1n, [B]: 5n * 10n ** 18n }) }),
     ).rejects.toThrow(/1 getVotes mismatches/);
@@ -193,8 +198,5 @@ describe('pullErc20Votes on a small made-up token', () => {
         reader: fakeReader([[change(A, 9n, 3n)]], { [A]: 3n }),
       }),
     ).rejects.toThrow(/1 breaks/);
-    await expect(
-      pullErc20Votes(TOKEN, { reader: fakeReader(pages, { [A]: 1n, [B]: 1n }, 'NOPE') }),
-    ).rejects.toThrow(/its symbol is NOPE/);
   });
 });

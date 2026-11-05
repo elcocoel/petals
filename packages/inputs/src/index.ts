@@ -34,28 +34,29 @@ export {
   readBeanstalkList,
 } from './modules/beanstalk.ts';
 export {
-  BANK_ETHEREUM,
   DEFAULT_WINDOW_DAYS,
-  DPX_ARBITRUM,
   ERC20_HOLDERS_DESCRIPTOR,
-  erc20HoldersLive,
-  erc20HoldersStored,
+  erc20Holders,
   type HolderTarget,
-  PEPE_ETHEREUM,
+  holdersTarget,
   pullErc20Holders,
   REPLAY_LOG_BUDGET,
-  SEAM_BASE,
 } from './modules/erc20-holders.ts';
-export { ENS_TOKEN, erc20Votes, pullErc20Votes, type VotesToken } from './modules/erc20-votes.ts';
-export { MOLOCH_V1_DESCRIPTOR, molochV1, pullMolochV1 } from './modules/moloch-v1.ts';
+export {
+  ERC20_VOTES_DESCRIPTOR,
+  erc20Votes,
+  pullErc20Votes,
+  type VotesToken,
+  votesTarget,
+} from './modules/erc20-votes.ts';
+export { MOLOCH_V1_DESCRIPTOR, molochTarget, molochV1, pullMolochV1 } from './modules/moloch-v1.ts';
 export { HOUSE_OF_STAKE_DESCRIPTOR, nearHouseOfStake } from './modules/near-house-of-stake.ts';
 export { NEAR_VALIDATORS_DESCRIPTOR, nearValidators } from './modules/near-validators.ts';
 export {
-  MELANIA,
   pullSplHolders,
-  type SplToken,
+  SPL_DESCRIPTOR,
   solanaSplHolders,
-  TRUMP,
+  splMint,
 } from './modules/solana-spl-holders.ts';
 export { modules } from './registry.ts';
 export {

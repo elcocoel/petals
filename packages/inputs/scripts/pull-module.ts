@@ -1,16 +1,19 @@
-// Read a stored module's snapshot from its public sources and write it to fixtures/snapshots/.
-//   node packages/inputs/scripts/pull-module.ts moloch-v1              live, keyless
-//   node packages/inputs/scripts/pull-module.ts moloch-v1 --replay     offline, from the recording
-//   node packages/inputs/scripts/pull-module.ts solana-spl-trump       live: one call of ~553 MB
-//   ... solana-spl-trump --from-dump <answer.json> <supply.json>       reuse a stored answer
-//   ... solana-spl-test --mint <address>                               any mint, small ones only
-//   ... erc20-holders-base-seam                                        the last 7 days of logs
-//   ... erc20-holders-arbitrum-dpx --full                              every log: long, offline only
-//       ENVIO_API_TOKEN from the environment routes Base through HyperSync; it is never printed
-// A live run also writes the small recording the tests replay, when the module has one.
+// Read any target of a module offline, and keep it as a fixture if asked.
+//   node packages/inputs/scripts/pull-module.ts <module> --params '<json>' [--full] [--store]
+// --full   lifts the guards: a whole history for erc20-holders, a scan over 200 MB for
+//          solana-spl-holders. Long, and offline only: a chat cannot ask for it.
+// --store  writes the result to fixtures/snapshots/, keyed by its parameters.
+// ENVIO_API_TOKEN from the environment routes Base through HyperSync. It is never printed.
+//   ... solana-spl-holders --params '{"mint":"..."}' --from-dump <answer.json> <supply.json>
+//   ... solana-spl-holders --params '{"mint":"..."}' --record <name>   keep a test recording
+// The two fixtures the tests replay:
+//   ... moloch-fixture [--replay]    moloch-v1 at the block before proposal 143
+//   ... beanstalk [--replay]         the one-off Beanstalk data set
 import { createReadStream, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
+import { validateSnapshot } from '@petal/core';
+import type { Snapshot } from '@petal/core/types';
 import { evmReader } from '../src/evm/reader.ts';
 import {
   BEANSTALK_ATTACK,
@@ -19,32 +22,27 @@ import {
   pullBeanstalk,
   readBeanstalkList,
 } from '../src/modules/beanstalk.ts';
-import {
-  BANK_ETHEREUM,
-  DPX_ARBITRUM,
-  type HolderTarget,
-  PEPE_ETHEREUM,
-  pullErc20Holders,
-  SEAM_BASE,
-} from '../src/modules/erc20-holders.ts';
-import { ENS_TOKEN, pullErc20Votes } from '../src/modules/erc20-votes.ts';
-import { pullMolochV1 } from '../src/modules/moloch-v1.ts';
-import {
-  MELANIA,
-  pullSplHolders,
-  type SplToken,
-  TRUMP,
-} from '../src/modules/solana-spl-holders.ts';
+import { holdersTarget, pullErc20Holders } from '../src/modules/erc20-holders.ts';
+import { pullErc20Votes, votesTarget } from '../src/modules/erc20-votes.ts';
+import { molochTarget, pullMolochV1 } from '../src/modules/moloch-v1.ts';
+import { pullSplHolders, splMint } from '../src/modules/solana-spl-holders.ts';
 import {
   RECORDING_FORMAT,
   type Recording,
   recordingFetch,
   replayFetch,
 } from '../src/rpc/recording.ts';
+import { MOLOCH } from '../test/helpers/targets.ts';
 import { storeFixture } from './fixture-store.ts';
 
-const network = process.argv[2];
-const replay = process.argv.includes('--replay');
+const module = process.argv[2];
+const has = (flag: string) => process.argv.includes(flag);
+const argAfter = (flag: string, n = 1) => {
+  const i = process.argv.indexOf(flag);
+  return i < 0 ? undefined : process.argv[i + n];
+};
+const replay = has('--replay');
+const params = JSON.parse(argAfter('--params') ?? '{}') as Record<string, string>;
 const testFixtures = join(import.meta.dirname, '..', 'test', 'fixtures');
 const log = (e: { message: string }) => console.log(`  ${e.message}`);
 
@@ -72,14 +70,29 @@ function recorded(name: string, skip?: Parameters<typeof recordingFetch>[1]) {
   };
 }
 
-if (network === 'moloch-v1') {
+function finish(snapshot: Snapshot, checks: unknown) {
+  console.log(checks);
+  const check = validateSnapshot(snapshot);
+  console.log(
+    `schema-valid: ${check.ok}; peak memory ${(process.resourceUsage().maxRSS / 1024).toFixed(0)} MB`,
+  );
+  if (has('--store')) console.log(storeFixture(snapshot));
+}
+
+if (module === 'moloch-fixture') {
   const rec = recorded('moloch-v1');
   const reader = evmReader({ fetch: rec.fetch });
-  const { snapshot, checks } = await pullMolochV1({ reader, onProgress: log });
+  const { snapshot, checks } = await pullMolochV1({
+    reader,
+    dao: MOLOCH.params.dao,
+    block: MOLOCH.block,
+    fromBlock: MOLOCH.fromBlock,
+    note: MOLOCH.note,
+    onProgress: log,
+  });
   rec.save('Moloch v1, read keyless by pullMolochV1. Public chain data.');
-  console.log(checks);
-  console.log(storeFixture(snapshot), JSON.stringify(reader.stats()));
-} else if (network === 'beanstalk') {
+  console.log(checks, storeFixture(snapshot), JSON.stringify(reader.stats()));
+} else if (module === 'beanstalk') {
   // The deposit logs (tens of thousands) stay out of the recording: it keeps the address list.
   const rec = recorded('beanstalk', (q) => {
     const filter = (q.params as { topics?: unknown[] }[])[0];
@@ -94,97 +107,42 @@ if (network === 'moloch-v1') {
   }
   rec.save('Beanstalk at two blocks, read keyless by pullBeanstalk. Public chain data.', { list });
   console.log(JSON.stringify(reader.stats()));
-} else if (network === 'ens-delegates') {
-  // The logs (hundreds of MB) stay out of the recording: it keeps the block and the state reads.
-  const rec = recorded('ens-delegates', (q) => q.method === 'eth_getLogs');
-  const reader = evmReader({ fetch: rec.fetch });
-  const started = Date.now();
-  const { snapshot, checks } = await pullErc20Votes(ENS_TOKEN, { reader, onProgress: log });
-  rec.save('ENS delegates: the block and the state reads of pullErc20Votes. Public chain data.');
-  console.log(checks, `${((Date.now() - started) / 1000).toFixed(0)} s`);
-  console.log(`peak memory ${(process.resourceUsage().maxRSS / 1024).toFixed(0)} MB`);
-  console.log(storeFixture(snapshot), JSON.stringify(reader.stats()));
-} else if (network?.startsWith('erc20-holders-')) {
-  // ENVIO_API_TOKEN comes from the environment and is used only where a chain has no keyless logs.
-  const targets = [PEPE_ETHEREUM, BANK_ETHEREUM, DPX_ARBITRUM, SEAM_BASE];
-  const target = targets.find((t) => t.id === network) as HolderTarget | undefined;
-  if (!target) throw new Error(`no token for ${network}`);
-  const rec = recorded(network, (q) => q.method === 'eth_getLogs');
-  const pages: Record<string, unknown> = {};
-  const inner = rec.fetch;
-  // The Blockscout pages are kept with only the fields the module reads: no tags in the repo.
-  const fetchAll: typeof fetch = async (input, init) => {
-    if (init?.method === 'POST') return inner(input, init);
-    if (replay) {
-      const page = ((rec.rec?.blockscout ?? {}) as Record<string, unknown>)[String(input)];
-      return new Response(JSON.stringify(page), { status: 200 });
-    }
-    const res = await fetch(input, init);
-    if (!res.ok) return res;
-    const body = (await res.json()) as {
-      items?: { address: { hash: string; is_contract: boolean }; value: string }[];
-      next_page_params?: unknown;
-      holders_count?: string;
-      holders?: string;
-      total_supply?: string;
-    };
-    const kept = body.items
-      ? {
-          items: body.items.map((r) => ({
-            address: { hash: r.address.hash, is_contract: r.address.is_contract },
-            value: r.value,
-          })),
-          next_page_params: body.next_page_params,
-        }
-      : { holders_count: body.holders_count ?? body.holders, total_supply: body.total_supply };
-    pages[String(input)] = kept;
-    return new Response(JSON.stringify(kept), { status: 200 });
-  };
-  const started = Date.now();
+} else if (module === 'moloch-v1') {
+  const { chain, dao } = molochTarget(params);
+  const reader = evmReader({ chain });
+  const { snapshot, checks } = await pullMolochV1({ reader, dao, chain, onProgress: log });
+  finish(snapshot, checks);
+} else if (module === 'erc20-votes') {
+  const target = votesTarget(params);
+  const reader = evmReader({ chain: target.chain, maxLogCalls: 2000 });
+  const { snapshot, checks } = await pullErc20Votes(target, { reader, onProgress: log });
+  finish(snapshot, checks);
+} else if (module === 'erc20-holders') {
   const token = process.env.ENVIO_API_TOKEN;
-  const { snapshot, checks } = await pullErc20Holders(target, {
-    fetch: fetchAll,
+  const { snapshot, checks } = await pullErc20Holders(holdersTarget(params), {
     onProgress: log,
-    ...(process.argv.includes('--full') ? { full: true, maxLogCalls: 2000 } : {}),
+    ...(has('--full') ? { full: true, maxLogCalls: 2000 } : {}),
+    ...(params.window_days && params.window_days !== 'full'
+      ? { windowDays: Number(params.window_days) }
+      : {}),
     ...(token ? { hypersyncToken: token } : {}),
-    ...(replay && rec.rec?.block ? { block: rec.rec.block as number } : {}),
   });
-  rec.save(
-    `${target.title}: the block and the state reads of pullErc20Holders. Public chain data.`,
-    {
-      block: checks.block,
-      blockscout: pages,
-      checks,
-    },
-  );
-  console.log(checks, `${((Date.now() - started) / 1000).toFixed(0)} s`);
-  console.log(`peak memory ${(process.resourceUsage().maxRSS / 1024).toFixed(0)} MB`);
-  console.log(storeFixture(snapshot));
-} else if (network?.startsWith('solana-spl-')) {
-  const argAfter = (flag: string, n = 1) => {
-    const i = process.argv.indexOf(flag);
-    return i < 0 ? undefined : process.argv[i + n];
-  };
-  const tokens: Record<string, SplToken> = {
-    'solana-spl-trump': TRUMP,
-    'solana-spl-melania': MELANIA,
-  };
-  const mint = argAfter('--mint');
-  const token: SplToken | undefined = mint
-    ? { id: network, symbol: 'TEST', mint, title: 'Test token holders', population: 'test-holders' }
-    : tokens[network];
-  if (!token) throw new Error(`no token for ${network}`);
+  finish(snapshot, checks);
+} else if (module === 'solana-spl-holders') {
+  const mint = splMint(params);
+  const name = argAfter('--record');
+  const rec = name ? recorded(name) : undefined;
   const answer = argAfter('--from-dump');
-  const rec = recorded(network);
   const supplyPath = argAfter('--from-dump', 2);
   const supply = supplyPath
     ? (JSON.parse(readFileSync(supplyPath, 'utf8')) as {
         result: { context: { slot: number }; value: { amount: string; decimals: number } };
       })
     : undefined;
-  const { snapshot, checks } = await pullSplHolders(token, {
-    fetch: rec.fetch,
+  const { snapshot, checks } = await pullSplHolders(mint, {
     onProgress: log,
+    ...(rec ? { fetch: rec.fetch } : {}),
+    ...(has('--full') ? { maxBytes: Number.POSITIVE_INFINITY } : {}),
     ...(answer && supply
       ? {
           stored: {
@@ -200,14 +158,9 @@ if (network === 'moloch-v1') {
         }
       : {}),
   });
-  rec.save(
-    `${token.symbol} holders: supply, block time and owner programs, read keyless. Public chain data.`,
-    supply ? { supply_before: supply } : {},
-  );
-  console.log(checks);
-  console.log(`peak memory ${(process.resourceUsage().maxRSS / 1024).toFixed(0)} MB`);
-  if (!mint) console.log(storeFixture(snapshot));
+  rec?.save(`Holders of ${mint}, read keyless. Public chain data.`);
+  finish(snapshot, checks);
 } else {
-  console.error('usage: pull-module.ts <network> [--replay]');
+  console.error("usage: pull-module.ts <module> --params '<json>' [--full] [--store]");
   process.exit(2);
 }

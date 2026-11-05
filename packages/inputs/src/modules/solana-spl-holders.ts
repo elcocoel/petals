@@ -1,9 +1,9 @@
 // solana-spl-holders (T158): who holds an SPL token at one moment, as wallets (owners), not token
-// accounts. Any mint on the classic Token Program; TRUMP is the test, MELANIA comes with it.
-//
-// Stored: a network per token, served from fixtures/snapshots/. pullSplHolders reads it again:
-// one getProgramAccounts call (about 553 MB for TRUMP, streamed by scanHolders), getTokenSupply
-// before and after, the slot's time and the owner program of the top 100 wallets.
+// accounts. The target is a parameter: `mint`, any mint on the classic Token Program. A fixture with
+// the same parameter answers first. Otherwise pullSplHolders reads it: one getProgramAccounts call,
+// streamed by scanHolders, getTokenSupply before and after, the slot's time and the owner program
+// of the top 100 wallets. It reads current state, not history. A scan over 200 MB stops and says so
+// unless the offline pull lifts that: a large token's answer is hundreds of MB.
 //
 // Providers, tested 2026-11-05: the official RPC is documented and answers this call for a mint
 // with 404 token accounts in 0.3 s. Its size limit on a large answer was not tested, because a
@@ -17,6 +17,7 @@
 import type {
   Holding,
   NetworkDescriptor,
+  Params,
   Participant,
   Progress,
   Snapshot,
@@ -32,7 +33,7 @@ import {
   scanHolders,
 } from '../solana/holders.ts';
 import { dayOf, grouped, plainCapabilities } from './plain.ts';
-import { storedReads } from './stored.ts';
+import { paramModule } from './stored.ts';
 
 export const SOLANA_CHAIN = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
 export const SOLANA_OFFICIAL = 'https://api.mainnet-beta.solana.com';
@@ -44,8 +45,12 @@ const SYSTEM_PROGRAM = '11111111111111111111111111111111';
 /** Wallets kept individually in a snapshot; the rest are folded into rank bands. */
 export const SPL_KEEP = 1000;
 const OWNER_LOOKUP = 100;
+/** A mint's symbol is not on the token account or the mint. */
+const UNIT = 'tokens';
 const MAX_DIFFERENCE_DIVISOR = 10_000n;
 const STREAM_IDLE_MS = 60_000;
+/** Where a scan stops unless the caller lifts it: about 30 s of reading on what was measured. */
+const SCAN_BYTE_BUDGET = 200_000_000;
 
 const SOLANA_ENDPOINTS: readonly RpcEndpoint[] = [
   { id: 'solana-official', url: SOLANA_OFFICIAL, intervalMs: 500 },
@@ -60,66 +65,59 @@ const S = {
   owners: 'spl-wallet-owner-program',
 } as const;
 
-export interface SplToken {
-  /** the network id, e.g. solana-spl-trump */
-  id: string;
-  symbol: string;
-  mint: string;
-  title: string;
-  population: string;
+const MINT_PATTERN = '^[1-9A-HJ-NP-Za-km-z]{32,44}$';
+
+/** The mint in a request's parameters. */
+export function splMint(params: Params | undefined): string {
+  const mint = String(params?.mint ?? '');
+  if (!new RegExp(MINT_PATTERN).test(mint))
+    throw new InputError('bad_input', 'solana-spl-holders needs a mint address', {
+      hint: 'mint: a base58 public key',
+    });
+  return mint;
 }
 
-export const TRUMP: SplToken = {
-  id: 'solana-spl-trump',
-  symbol: 'TRUMP',
-  mint: '6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN',
-  title: 'TRUMP token holders',
-  population: 'trump-holders',
-};
-
-export const MELANIA: SplToken = {
-  id: 'solana-spl-melania',
-  symbol: 'MELANIA',
-  mint: 'FUAfBo2jgks6gB4Z4LfZkqSZgzNucisEHqnNebaRxM1P',
-  title: 'MELANIA token holders',
-  population: 'melania-holders',
-};
-
-export function splDescriptor(t: SplToken): NetworkDescriptor {
-  return {
-    id: t.id,
-    chain: SOLANA_CHAIN,
-    population: t.population,
-    kind: 'other',
-    title: t.title,
-    description: `Wallets holding the ${t.symbol} SPL token on Solana at one moment, read from the chain. Holdings only: no votes, no names, no launch history.`,
-    params: {},
-    capabilities: plainCapabilities({
-      measure: { id: 'token_balance', unit: t.symbol, label: `${t.symbol} balance` },
-      sources: [S.scan],
-      kind: {
-        meaning:
-          'contract when a program owns the address (read for the top 100 wallets), unknown otherwise',
-        sources: [S.owners],
-      },
-      identity: {
-        meaning: 'anonymous: no source read here names a wallet',
-        sources: [S.scan],
-      },
-    }),
-    live: false,
-    cost: {
-      calls: 0,
-      seconds: 0,
-      note: 'stored: served from the fixture. pullSplHolders reads it again in about 6 keyless calls; the holder scan alone can be hundreds of MB.',
+export const SPL_DESCRIPTOR: NetworkDescriptor = {
+  id: SPL_MODULE_ID,
+  chain: SOLANA_CHAIN,
+  population: 'spl-holders',
+  kind: 'other',
+  title: 'SPL token holders',
+  description:
+    'Wallets holding an SPL token on Solana at one moment, read from the chain. Holdings only: no votes, no names, no launch history. Give the mint address.',
+  params: {
+    mint: {
+      required: true,
+      description: 'the token mint address',
+      pattern: MINT_PATTERN,
+      example: '6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN',
     },
-    sources: [
-      { id: S.scan, kind: 'chain', url: SOLANA_OFFICIAL },
-      { id: S.supply, kind: 'chain', url: SOLANA_OFFICIAL },
-      { id: S.owners, kind: 'chain', url: SOLANA_OFFICIAL },
-    ],
-  };
-}
+  },
+  capabilities: plainCapabilities({
+    measure: { id: 'token_balance', unit: 'tokens', label: 'token balance' },
+    sources: [S.scan],
+    kind: {
+      meaning:
+        'contract when a program owns the address (read for the top 100 wallets), unknown otherwise',
+      sources: [S.owners],
+    },
+    identity: {
+      meaning: 'anonymous: no source read here names a wallet',
+      sources: [S.scan],
+    },
+  }),
+  live: true,
+  cost: {
+    calls: 6,
+    seconds: 5,
+    note: 'a read of current state, not history. About 6 keyless calls; the holder scan grows with the token, and stops at 200 MB.',
+  },
+  sources: [
+    { id: S.scan, kind: 'chain', url: SOLANA_OFFICIAL },
+    { id: S.supply, kind: 'chain', url: SOLANA_OFFICIAL },
+    { id: S.owners, kind: 'chain', url: SOLANA_OFFICIAL },
+  ],
+};
 
 interface Supply {
   slot: number;
@@ -158,6 +156,8 @@ export interface PullSplOptions {
   scanUrls?: readonly string[];
   stored?: StoredScan;
   keep?: number;
+  /** the size where a scan stops, default 200 MB. Offline pulls lift it */
+  maxBytes?: number;
   onProgress?: Progress;
 }
 
@@ -198,8 +198,10 @@ async function scanFromEndpoints(
 ): Promise<{ scan: HolderScan; url: string }> {
   const doFetch = opts.fetch ?? globalThis.fetch;
   const failures: string[] = [];
+  const maxBytes = opts.maxBytes ?? SCAN_BYTE_BUDGET;
   for (const url of opts.scanUrls ?? HOLDER_SCAN_URLS) {
     const ctrl = new AbortController();
+    let tooLarge = false;
     let idle = setTimeout(() => ctrl.abort(), STREAM_IDLE_MS);
     try {
       opts.onProgress?.({ stage: 'fetching', message: `scanning holders through ${url}` });
@@ -213,12 +215,23 @@ async function scanFromEndpoints(
         failures.push(`${url}: HTTP ${res.status}`);
         continue;
       }
-      const scan = await scanHolders(res.body as AsyncIterable<Uint8Array>, () => {
+      const scan = await scanHolders(res.body as AsyncIterable<Uint8Array>, (bytes) => {
         clearTimeout(idle);
         idle = setTimeout(() => ctrl.abort(), STREAM_IDLE_MS);
+        if (bytes > maxBytes) {
+          tooLarge = true;
+          ctrl.abort();
+          throw new Error('over the size budget');
+        }
       });
       return { scan, url };
     } catch (e) {
+      if (tooLarge)
+        throw new InputError(
+          'cannot_read',
+          `the holder list of ${mint} is over ${maxBytes / 1_000_000} MB: stopped there`,
+          { hint: 'read it offline with pull-module.ts --full, never in a chat' },
+        );
       failures.push(`${url}: ${(e as Error).message}`);
     } finally {
       clearTimeout(idle);
@@ -301,7 +314,7 @@ function differenceSentence(
 
 /** Read every holder of a token and build its snapshot. Throws when the check fails. */
 export async function pullSplHolders(
-  token: SplToken,
+  mint: string,
   opts: PullSplOptions = {},
 ): Promise<{ snapshot: Snapshot; checks: SplChecks }> {
   const rpc = pool(opts);
@@ -310,23 +323,20 @@ export async function pullSplHolders(
 
   const { result: mintAccount } = await rpc.call<{ value: { owner: string } | null }>(
     'getAccountInfo',
-    [
-      token.mint,
-      { commitment: 'finalized', encoding: 'base64', dataSlice: { offset: 0, length: 0 } },
-    ],
+    [mint, { commitment: 'finalized', encoding: 'base64', dataSlice: { offset: 0, length: 0 } }],
   );
   if (mintAccount.value?.owner !== TOKEN_PROGRAM)
     throw new InputError(
       'cannot_read',
-      `${token.mint} is not a mint of the classic Token Program (owner ${mintAccount.value?.owner ?? 'none'})`,
+      `${mint} is not a mint of the classic Token Program (owner ${mintAccount.value?.owner ?? 'none'})`,
       { hint: 'Token-2022 mints are not read by this module yet' },
     );
 
-  const before = opts.stored?.supply_before ?? (await readSupply(rpc, token.mint));
+  const before = opts.stored?.supply_before ?? (await readSupply(rpc, mint));
   const { scan, url } = opts.stored
     ? { scan: await scanHolders(opts.stored.body), url: opts.stored.url }
-    : await scanFromEndpoints(token.mint, opts);
-  const after = await readSupply(rpc, token.mint);
+    : await scanFromEndpoints(mint, opts);
+  const after = await readSupply(rpc, mint);
   say(
     `${grouped(scan.token_accounts)} token accounts, ${grouped(scan.wallets.size)} wallets at slot ${grouped(scan.slot)}`,
   );
@@ -357,7 +367,7 @@ export async function pullSplHolders(
   if (off * MAX_DIFFERENCE_DIVISOR > near.amount)
     throw new InputError(
       'source_failed',
-      `${token.symbol}: the wallets sum to ${folded.total}, the supply is ${near.amount}: too far apart to be a moving chain`,
+      `${mint}: the wallets sum to ${folded.total}, the supply is ${near.amount}: too far apart to be a moving chain`,
     );
 
   const asOf = await slotTime(rpc, scan.slot);
@@ -371,11 +381,11 @@ export async function pullSplHolders(
   const holdings: Holding[] = [];
   const hold = (id: string, raw: bigint): Holding => ({
     participant: id,
-    asset: token.mint,
+    asset: mint,
     measure: 'token_balance',
     amount: fromBaseUnits(raw, decimals),
     amount_raw: raw.toString(),
-    unit: token.symbol,
+    unit: UNIT,
     as_of: asOf,
     source: S.scan,
   });
@@ -435,12 +445,12 @@ export async function pullSplHolders(
   const snapshot: Snapshot = {
     petal: 'snapshot/v1',
     network: {
-      id: token.id,
+      id: SPL_MODULE_ID,
       chain: SOLANA_CHAIN,
-      population: token.population,
-      title: token.title,
-      description: splDescriptor(token).description,
-      params: { mint: token.mint },
+      population: `spl-holders-${mint}`,
+      title: `SPL holders ${short(mint)}`,
+      description: SPL_DESCRIPTOR.description,
+      params: { mint },
     },
     snapshot: { as_of: asOf, block_height: scan.slot, final: true },
     coverage: {
@@ -448,7 +458,7 @@ export async function pullSplHolders(
       participants_included: walletCount,
       amount_total: total,
       amount_included: total,
-      unit: token.symbol,
+      unit: UNIT,
       measure: 'token_balance',
       ...(folded.bands.length > 0
         ? {
@@ -464,7 +474,7 @@ export async function pullSplHolders(
       note:
         `Balances at Solana slot ${grouped(scan.slot)} (${dayOf(asOf)}); block_height here is the slot. ` +
         `Participants are wallets, the owners of token accounts: ${grouped(scan.token_accounts)} token accounts, ${grouped(scan.nonzero_accounts)} with a balance, ${grouped(walletCount)} wallets. ` +
-        `${differenceSentence(folded.total, near, far, decimals, token.symbol)} ` +
+        `${differenceSentence(folded.total, near, far, decimals, UNIT)} ` +
         'One moment only: no launch history, because no keyless source gives holdings at a past date, so launch-day holdings and early buyers are not shown. ' +
         'No labels: nothing here names a wallet or ties one to a person or a company. Kind says only whether a program owns the address, read for the top 100 wallets. ' +
         'Not known: who controls a wallet, whether one wallet holds for many people, or whether many wallets belong to one. These are balances, not votes.',
@@ -483,13 +493,27 @@ export async function pullSplHolders(
   return { snapshot, checks };
 }
 
-/** The stored module for one token. `fixtures` is the folder holding index.json. */
-export function solanaSplHolders(token: SplToken, opts: { fixtures?: string } = {}): InputModule {
-  const reads = storedReads(token.id, opts);
-  const descriptor = splDescriptor(token);
-  return {
-    descriptor,
-    resolveAt: (at) => reads.resolveAt(at),
-    fetch: (at, _params, onProgress) => reads.fetch(at, onProgress),
-  };
+/** Any SPL mint. `fixtures` is the folder holding index.json (default: this repo's). */
+export function solanaSplHolders(
+  opts: { fixtures?: string; fetch?: typeof globalThis.fetch } = {},
+): InputModule {
+  const { fixtures, ...pullOpts } = opts;
+  return paramModule({
+    descriptor: SPL_DESCRIPTOR,
+    keyFor: (params) => ({ chain: SOLANA_CHAIN, population: `spl-holders-${splMint(params)}` }),
+    pinnable: false,
+    head: async () => {
+      const rpc = pool(pullOpts);
+      const { result: slot } = await rpc.call<number>('getSlot', [{ commitment: 'finalized' }]);
+      return { block_height: slot, as_of: await slotTime(rpc, slot) };
+    },
+    pull: async (_at, params, onProgress) => {
+      const { snapshot } = await pullSplHolders(splMint(params), {
+        ...pullOpts,
+        ...(onProgress ? { onProgress } : {}),
+      });
+      return snapshot;
+    },
+    ...(fixtures ? { fixtures } : {}),
+  });
 }

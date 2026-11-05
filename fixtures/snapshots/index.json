@@ -36,16 +36,86 @@
       }
     },
     {
-      "sha256": "029e42fc120265a5fdb0e95d6ef46e27aff583a104cbc5b485ef12065e65fed5",
-      "network": "ens-delegates",
+      "sha256": "ebacaf5cc54a9493784c9678748efdae92a7390533a48cdce8564e56a8a357ef",
+      "network": "erc20-holders",
       "chain": "eip155:1",
-      "population": "ens-delegates",
+      "population": "erc20-token-ethereum-0x2d94aa3e47d9d5024503ca8491fce9a2fb4da198-full",
+      "params": {
+        "chain": "ethereum",
+        "token": "0x2d94aa3e47d9d5024503ca8491fce9a2fb4da198",
+        "window_days": "full"
+      },
+      "block_height": 26348909,
+      "as_of": "2026-11-05T13:23:35Z",
+      "final": true,
+      "bytes": 374940,
+      "gz_bytes": 32037,
+      "file": "ebacaf5cc54a9493784c9678748efdae92a7390533a48cdce8564e56a8a357ef.json.gz",
+      "where": "fixture",
+      "module": {
+        "id": "erc20-holders",
+        "version": "evm/1"
+      }
+    },
+    {
+      "sha256": "b82956b9f3d18e32ebcbd6fe1138e8a2a967402f958071d485a3a94dbbfd8fdb",
+      "network": "erc20-holders",
+      "chain": "eip155:8453",
+      "population": "erc20-token-base-0x1c7a460413dd4e964f96d8dfc56e7223ce88cd85-7d",
+      "params": {
+        "chain": "base",
+        "token": "0x1c7a460413dd4e964f96d8dfc56e7223ce88cd85",
+        "window_days": "7"
+      },
+      "block_height": 53548781,
+      "as_of": "2026-11-05T13:55:09Z",
+      "final": true,
+      "bytes": 67554,
+      "gz_bytes": 12021,
+      "file": "b82956b9f3d18e32ebcbd6fe1138e8a2a967402f958071d485a3a94dbbfd8fdb.json.gz",
+      "where": "fixture",
+      "module": {
+        "id": "erc20-holders",
+        "version": "evm/1"
+      }
+    },
+    {
+      "sha256": "3f3f097d0cbda4b5741e6204f1fcb08970af5228268956c0d8dbc09866cfc2dd",
+      "network": "erc20-holders",
+      "chain": "eip155:42161",
+      "population": "erc20-token-arbitrum-0x6c2c06790b3e3e3c38e12ee22f8183b37a13ee55-full",
+      "params": {
+        "chain": "arbitrum",
+        "token": "0x6c2c06790b3e3e3c38e12ee22f8183b37a13ee55",
+        "window_days": "full"
+      },
+      "block_height": 521483627,
+      "as_of": "2026-11-05T13:09:33Z",
+      "final": true,
+      "bytes": 242603,
+      "gz_bytes": 27854,
+      "file": "3f3f097d0cbda4b5741e6204f1fcb08970af5228268956c0d8dbc09866cfc2dd.json.gz",
+      "where": "fixture",
+      "module": {
+        "id": "erc20-holders",
+        "version": "evm/1"
+      }
+    },
+    {
+      "sha256": "ad9aedfde8f1f5e667b2577a8a31284ce5f5fe6e8c253e9d5eff8080a3559fd4",
+      "network": "erc20-votes",
+      "chain": "eip155:1",
+      "population": "erc20-votes-ethereum-0xc18360217d8f7ab5e7c516566761ea12ce7f9d72",
+      "params": {
+        "token": "0xc18360217d8f7ab5e7c516566761ea12ce7f9d72",
+        "chain": "ethereum"
+      },
       "block_height": 26348717,
       "as_of": "2026-11-05T12:45:11Z",
       "final": true,
-      "bytes": 3548204,
-      "gz_bytes": 588667,
-      "file": "029e42fc120265a5fdb0e95d6ef46e27aff583a104cbc5b485ef12065e65fed5.json.gz",
+      "bytes": 3548271,
+      "gz_bytes": 588677,
+      "file": "ad9aedfde8f1f5e667b2577a8a31284ce5f5fe6e8c253e9d5eff8080a3559fd4.json.gz",
       "where": "fixture",
       "module": {
         "id": "erc20-votes",
@@ -53,67 +123,20 @@
       }
     },
     {
-      "sha256": "c4c9a2cdf48fa5586e32981f0165a583a5470b5ad81b451f29855acefb6d5c34",
-      "network": "erc20-holders-arbitrum-dpx",
-      "chain": "eip155:42161",
-      "population": "erc20-holders-arbitrum-0x6c2c06790b3e3e3c38e12ee22f8183b37a13ee55",
-      "block_height": 521483627,
-      "as_of": "2026-11-05T13:09:33Z",
-      "final": true,
-      "bytes": 242592,
-      "gz_bytes": 27835,
-      "file": "c4c9a2cdf48fa5586e32981f0165a583a5470b5ad81b451f29855acefb6d5c34.json.gz",
-      "where": "fixture",
-      "module": {
-        "id": "erc20-holders",
-        "version": "evm/1"
-      }
-    },
-    {
-      "sha256": "ed9319cdf2d7ef561a5ec4975461e6e16b9be2ca39eeafafb92b5981a811079e",
-      "network": "erc20-holders-base-seam",
-      "chain": "eip155:8453",
-      "population": "erc20-holders-base-0x1c7a460413dd4e964f96d8dfc56e7223ce88cd85",
-      "block_height": 53548781,
-      "as_of": "2026-11-05T13:55:09Z",
-      "final": true,
-      "bytes": 67563,
-      "gz_bytes": 12020,
-      "file": "ed9319cdf2d7ef561a5ec4975461e6e16b9be2ca39eeafafb92b5981a811079e.json.gz",
-      "where": "fixture",
-      "module": {
-        "id": "erc20-holders",
-        "version": "evm/1"
-      }
-    },
-    {
-      "sha256": "92f5abc5a5e1dbf8341ba2e610a71f7447cddabbc13a16dd6154aa10a0d14444",
-      "network": "erc20-holders-ethereum-bank",
-      "chain": "eip155:1",
-      "population": "erc20-holders-ethereum-0x2d94aa3e47d9d5024503ca8491fce9a2fb4da198",
-      "block_height": 26348909,
-      "as_of": "2026-11-05T13:23:35Z",
-      "final": true,
-      "bytes": 374930,
-      "gz_bytes": 32014,
-      "file": "92f5abc5a5e1dbf8341ba2e610a71f7447cddabbc13a16dd6154aa10a0d14444.json.gz",
-      "where": "fixture",
-      "module": {
-        "id": "erc20-holders",
-        "version": "evm/1"
-      }
-    },
-    {
-      "sha256": "8ab2bfd1234e4ff5382b8fc429552b39412c7880a6986973423b34e5482c10ba",
+      "sha256": "c46437a2afb76cc7c3b07195da499a80a93bd3f09f2ce342436a366c68009a9c",
       "network": "moloch-v1",
       "chain": "eip155:1",
-      "population": "moloch-v1-members",
+      "population": "moloch-v1-ethereum-0x1fd169a4f5c59acf79d0fd5d91d1201ef1bce9f1",
+      "params": {
+        "dao": "0x1fd169a4f5c59acf79d0fd5d91d1201ef1bce9f1",
+        "chain": "ethereum"
+      },
       "block_height": 13199430,
       "as_of": "2021-09-10T17:39:54Z",
       "final": true,
-      "bytes": 36200,
-      "gz_bytes": 5279,
-      "file": "8ab2bfd1234e4ff5382b8fc429552b39412c7880a6986973423b34e5482c10ba.json.gz",
+      "bytes": 36370,
+      "gz_bytes": 5337,
+      "file": "c46437a2afb76cc7c3b07195da499a80a93bd3f09f2ce342436a366c68009a9c.json.gz",
       "where": "fixture",
       "module": {
         "id": "moloch-v1",
@@ -139,39 +162,45 @@
       }
     },
     {
-      "sha256": "6af05eb73dab4ed020fdde988c612d28b050322461af482cf3b697eb1158d0e5",
-      "network": "solana-spl-melania",
+      "sha256": "3e695e667644db1a71b7b3fc334b378e4aa3e18ecf87fa7fc076e6262666f580",
+      "network": "solana-spl-holders",
       "chain": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-      "population": "melania-holders",
+      "population": "spl-holders-FUAfBo2jgks6gB4Z4LfZkqSZgzNucisEHqnNebaRxM1P",
+      "params": {
+        "mint": "FUAfBo2jgks6gB4Z4LfZkqSZgzNucisEHqnNebaRxM1P"
+      },
       "block_height": 465695433,
       "as_of": "2026-11-05T11:52:47Z",
       "final": true,
-      "bytes": 1722102,
-      "gz_bytes": 204213,
-      "file": "6af05eb73dab4ed020fdde988c612d28b050322461af482cf3b697eb1158d0e5.json.gz",
+      "bytes": 1722143,
+      "gz_bytes": 204212,
+      "file": "3e695e667644db1a71b7b3fc334b378e4aa3e18ecf87fa7fc076e6262666f580.json.gz",
       "where": "fixture",
       "module": {
         "id": "solana-spl-holders",
-        "version": "solana/1",
-        "imported_from": "hero-spike/data/gpa.MEL.json"
+        "imported_from": "hero-spike/data/gpa.MEL.json",
+        "version": "solana/1"
       }
     },
     {
-      "sha256": "6c3dfbfa8c9a98eb5bfddb400d259fb6bf88ae8bbb57864ad49943b417e82e8f",
-      "network": "solana-spl-trump",
+      "sha256": "486ef8b70faa2fdf99515ca9486d9a3344bfe1a42e7cbb1b0723fea2f5fb8cdd",
+      "network": "solana-spl-holders",
       "chain": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-      "population": "trump-holders",
+      "population": "spl-holders-6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+      "params": {
+        "mint": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN"
+      },
       "block_height": 465695924,
       "as_of": "2026-11-05T11:54:31Z",
       "final": true,
-      "bytes": 1645653,
-      "gz_bytes": 201049,
-      "file": "6c3dfbfa8c9a98eb5bfddb400d259fb6bf88ae8bbb57864ad49943b417e82e8f.json.gz",
+      "bytes": 1645698,
+      "gz_bytes": 201048,
+      "file": "486ef8b70faa2fdf99515ca9486d9a3344bfe1a42e7cbb1b0723fea2f5fb8cdd.json.gz",
       "where": "fixture",
       "module": {
         "id": "solana-spl-holders",
-        "version": "solana/1",
-        "imported_from": "hero-spike/data/gpa.TRUMP.json"
+        "imported_from": "hero-spike/data/gpa.TRUMP.json",
+        "version": "solana/1"
       }
     }
   ]

@@ -10,25 +10,23 @@ import { decodeAggregate, type EvmLog, type EvmReader, evmReader } from '../src/
 import { fileStore, getSnapshot, InputError, modules } from '../src/index.ts';
 import {
   applyTransfers,
-  BANK_ETHEREUM,
   DEFAULT_WINDOW_DAYS,
-  DPX_ARBITRUM,
   ERC20_HOLDERS_DESCRIPTOR,
-  erc20HoldersLive,
+  erc20Holders,
   HOLDERS_KEPT,
   type HolderTarget,
-  liveTarget,
+  holdersTarget,
   newTransferReplay,
   pullErc20Holders,
   REPLAY_LOG_BUDGET,
-  SEAM_BASE,
   tailSlices,
   tokenText,
 } from '../src/modules/erc20-holders.ts';
 import { type Recording, replayFetch } from '../src/rpc/recording.ts';
 import { encodeSnapshot } from '../src/store/file-store.ts';
-import { indexRows, loadRecording, noSleep, storedSnapshot } from './helpers/recordings.ts';
+import { loadRecording, noSleep, rowFor, storedSnapshot } from './helpers/recordings.ts';
 import { FIXTURES, tmp } from './helpers/snapshots.ts';
+import { BANK, DPX, SEAM } from './helpers/targets.ts';
 
 const word = (n: bigint) => n.toString(16).padStart(64, '0');
 const addr = (n: number) => `0x${n.toString(16).padStart(40, '0')}`;
@@ -46,10 +44,8 @@ const transfer = (from: string, to: string, value: bigint): EvmLog => ({
 
 const TOKEN = addr(0xaa);
 const target = (chain: EvmChain): HolderTarget => ({
-  id: 'test-holders',
   chain,
   token: TOKEN,
-  title: 'TT holders, Test',
   population: `erc20-holders-test-${TOKEN}`,
 });
 
@@ -226,7 +222,11 @@ describe('pullErc20Holders, through a holders list', () => {
     expect(s.participants[0]).toMatchObject({ id: addr(1), kind: 'contract', identity: null });
     expect(s.participants[1]?.kind).toBe('unknown');
     expect(s.snapshot.final).toBe(false); // the list is not pinned to the block
-    expect(s.network.params).toEqual({ chain: 'ethereum', token: TOKEN });
+    expect(s.network).toMatchObject({
+      id: 'erc20-holders',
+      title: 'TT holders, Ethereum',
+      params: { chain: 'ethereum', token: TOKEN, window_days: '7' },
+    });
     expect(s.coverage.note).toMatch(/by construction/);
   });
 
@@ -797,10 +797,9 @@ describe('the reader on other chains', () => {
 describe('the list path on real recorded chain data', () => {
   // BANK's real balances and supply, recorded, with a Blockscout that lists the same holders: the
   // list path end to end, because Blockscout itself stopped answering this client mid-build.
-  const row = indexRows(BANK_ETHEREUM.id)[0];
-  if (!row) throw new Error('no stored BANK');
+  const row = rowFor('erc20-holders', BANK);
   const s = storedSnapshot(row);
-  const recording = loadRecording(BANK_ETHEREUM.id);
+  const recording = loadRecording('erc20-holders-ethereum-bank');
   const listed = s.holdings.filter((h) => !h.participant.startsWith('group:'));
 
   const blockscout = (values: (raw: string) => string, supply: string): typeof fetch =>
@@ -821,7 +820,7 @@ describe('the list path on real recorded chain data', () => {
   const supply = '1000000000000000000000000000';
 
   test('gives the same amounts as the replay, marked not final', async () => {
-    const { snapshot, checks } = await pullErc20Holders(BANK_ETHEREUM, {
+    const { snapshot, checks } = await pullErc20Holders(holdersTarget(BANK), {
       list: 'blockscout',
       fetch: blockscout((raw) => raw, supply),
       sleep: noSleep,
@@ -843,7 +842,7 @@ describe('the list path on real recorded chain data', () => {
   });
 
   test('the chain wins over the list, and the difference is stated', async () => {
-    const { snapshot, checks } = await pullErc20Holders(BANK_ETHEREUM, {
+    const { snapshot, checks } = await pullErc20Holders(holdersTarget(BANK), {
       list: 'blockscout',
       fetch: blockscout((raw) => (BigInt(raw) + 1n).toString(), '1000000000000000000000000005'),
       sleep: noSleep,
@@ -861,20 +860,17 @@ describe('erc20-holders, any token', () => {
     expect(ERC20_HOLDERS_DESCRIPTOR.params.chain?.required).toBe(true);
     expect(ERC20_HOLDERS_DESCRIPTOR.params.token?.required).toBe(true);
     expect(
-      liveTarget({ chain: 'base', token: TOKEN.toUpperCase().replace('0X', '0x') }),
-    ).toMatchObject({
-      chain: BASE,
-      token: TOKEN,
-    });
+      holdersTarget({ chain: 'base', token: TOKEN.toUpperCase().replace('0X', '0x') }),
+    ).toMatchObject({ chain: BASE, token: TOKEN });
     for (const params of [
       { chain: 'polygon', token: TOKEN },
       { chain: 'base', token: '0x12' },
       undefined,
     ])
-      expect(() => liveTarget(params)).toThrow(/needs a chain and a token/);
+      expect(() => holdersTarget(params)).toThrow(/needs a chain and a token/);
   });
 
-  test('a chat can pick a window, and can never ask for a whole history', async () => {
+  test('a chat can pick a window, and can never start a whole history', async () => {
     const mod = modules['erc20-holders'];
     if (!mod?.keyFor) throw new Error('not registered');
     expect(ERC20_HOLDERS_DESCRIPTOR.params.window_days?.required).toBe(false);
@@ -895,26 +891,37 @@ describe('erc20-holders, any token', () => {
       await expect(
         getSnapshot({ network: 'erc20-holders', params }, { store }),
       ).rejects.toMatchObject({ code: 'bad_input' });
+    await expect(
+      erc20Holders().fetch(
+        { block_height: 1, as_of: '2026-11-05T00:00:00Z' },
+        {
+          chain: 'base',
+          token: TOKEN,
+          window_days: 'full',
+        },
+      ),
+    ).rejects.toMatchObject({ code: 'cannot_read', hint: expect.stringContaining('--full') });
   });
 
-  test('a live read is never mistaken for a stored data set of the same token', () => {
-    const live = liveTarget({ chain: 'ethereum', token: BANK_ETHEREUM.token });
-    expect(live.population).not.toBe(BANK_ETHEREUM.population);
-    expect(live.id).not.toBe(BANK_ETHEREUM.id);
-  });
-
-  test('reads only the latest block', async () => {
-    const mod = erc20HoldersLive({ sleep: noSleep });
+  test('reads only the latest block, unless a fixture holds another', async () => {
+    const mod = erc20Holders({ sleep: noSleep });
     await expect(
       mod.resolveAt({ block_height: 5 }, { chain: 'ethereum', token: TOKEN }),
     ).rejects.toMatchObject({ code: 'cannot_read' });
+    const row = rowFor('erc20-holders', DPX);
+    await expect(mod.resolveAt({ block_height: row.block_height as number }, DPX)).resolves.toEqual(
+      {
+        block_height: row.block_height,
+        as_of: row.as_of,
+      },
+    );
   });
 
   test('two tokens read at the same block are not taken for one another', async () => {
     const block = 777;
     const make = (token: string): Snapshot =>
       ({
-        ...storedSnapshot(indexRows(DPX_ARBITRUM.id)[0] as never),
+        ...storedSnapshot(rowFor('erc20-holders', DPX)),
         network: {
           id: 'erc20-holders',
           chain: 'eip155:1',
@@ -926,7 +933,7 @@ describe('erc20-holders, any token', () => {
       }) as Snapshot;
     const fetched: string[] = [];
     const mod = {
-      ...erc20HoldersLive(),
+      ...erc20Holders(),
       resolveAt: async () => ({ block_height: block, as_of: '2026-11-05T00:00:00Z' }),
       fetch: async (_at: unknown, params: { token?: string } | undefined) => {
         fetched.push(params?.token ?? '');
@@ -956,26 +963,25 @@ describe('erc20-holders, any token', () => {
 });
 
 describe.each([
-  { target: BANK_ETHEREUM, chain: ETHEREUM, mode: 'full' },
-  { target: DPX_ARBITRUM, chain: ARBITRUM, mode: 'full' },
-  { target: SEAM_BASE, chain: BASE, mode: 'window' },
-])('$target.id, stored', ({ target: t, chain, mode }) => {
-  const row = indexRows(t.id)[0];
-  if (!row) throw new Error(`no stored ${t.id}`);
+  { name: 'erc20-holders-ethereum-bank', params: BANK, chain: ETHEREUM, mode: 'full' },
+  { name: 'erc20-holders-arbitrum-dpx', params: DPX, chain: ARBITRUM, mode: 'full' },
+  { name: 'erc20-holders-base-seam', params: SEAM, chain: BASE, mode: 'window' },
+])('$name as test parameters, stored', ({ name, params, chain, mode }) => {
+  const row = rowFor('erc20-holders', params);
   const s = storedSnapshot(row);
-  const recording = loadRecording(t.id);
+  const recording = loadRecording(name);
   const checks = recording.checks as Record<string, string | number>;
 
-  test('is registered and valid, on the right chain', async () => {
-    const mod = modules[t.id];
+  test('answers the same parameters, valid, on the right chain', async () => {
+    const mod = modules['erc20-holders'];
     if (!mod) throw new Error('not registered');
-    expect(mod.descriptor).toMatchObject({ chain: chain.caip2, live: false });
     expect(validateSnapshot(s).ok).toBe(true);
     expect(s.network.chain).toBe(chain.caip2);
-    expect(s.network.params).toMatchObject({ chain: chain.id, token: t.token });
+    expect(s.network.params).toEqual(params);
+    expect(mod.keyFor?.(params).population).toBe(row.population);
     expect(s.snapshot.final).toBe(true);
-    const at = await mod.resolveAt('latest');
-    expect(encodeSnapshot(await mod.fetch(at, undefined)).sha256).toBe(row.sha256);
+    const at = await mod.resolveAt('latest', params);
+    expect(encodeSnapshot(await mod.fetch(at, params)).sha256).toBe(row.sha256);
   });
 
   test('check: drawn holdings plus the tail equal totalSupply, from the recording', () => {

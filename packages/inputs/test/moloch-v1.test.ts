@@ -6,19 +6,29 @@ import { eventTopic } from '../src/evm/abi.ts';
 import { evmReader } from '../src/evm/reader.ts';
 import { modules } from '../src/index.ts';
 import {
-  MOLOCH_V1_BLOCK,
   MOLOCH_V1_DESCRIPTOR,
+  molochTarget,
   molochV1,
   nameFromProposal,
   pullMolochV1,
 } from '../src/modules/moloch-v1.ts';
 import { replayFetch } from '../src/rpc/recording.ts';
 import { encodeSnapshot } from '../src/store/file-store.ts';
-import { indexRows, loadRecording, noSleep, storedSnapshot } from './helpers/recordings.ts';
+import { loadRecording, noSleep, rowFor, storedSnapshot } from './helpers/recordings.ts';
+import { MOLOCH } from './helpers/targets.ts';
 
 const recording = loadRecording('moloch-v1');
-const row = indexRows('moloch-v1')[0];
-if (!row) throw new Error('no stored moloch-v1 snapshot');
+const row = rowFor('moloch-v1', MOLOCH.params);
+const MOLOCH_V1_BLOCK = MOLOCH.block;
+const pull = (reader: ReturnType<typeof evmReader>) =>
+  pullMolochV1({
+    reader,
+    dao: MOLOCH.params.dao,
+    block: MOLOCH.block,
+    head: 'finalized',
+    fromBlock: MOLOCH.fromBlock,
+    note: MOLOCH.note,
+  });
 const stored = storedSnapshot(row);
 
 const replayReader = (rec = recording) => {
@@ -27,21 +37,26 @@ const replayReader = (rec = recording) => {
 };
 
 describe('moloch-v1', () => {
-  test('is registered, stored only', () => {
+  test('is registered, and takes its target as a parameter', () => {
     expect(modules['moloch-v1']?.descriptor).toBe(MOLOCH_V1_DESCRIPTOR);
-    expect(MOLOCH_V1_DESCRIPTOR).toMatchObject({ chain: 'eip155:1', live: false, kind: 'dao' });
-    expect(MOLOCH_V1_DESCRIPTOR.cost.calls).toBe(0);
+    expect(MOLOCH_V1_DESCRIPTOR).toMatchObject({ chain: 'eip155:1', live: true, kind: 'dao' });
+    expect(MOLOCH_V1_DESCRIPTOR.params.dao?.required).toBe(true);
+    expect(molochTarget({ dao: MOLOCH.params.dao }).population).toBe(row.population);
+    expect(() => molochTarget({ dao: '0x12' })).toThrow(/needs a dao/);
+    expect(() => molochTarget(undefined)).toThrow(/needs a dao/);
   });
 
   test('serves the stored snapshot, valid, at the block before proposal 143', async () => {
     const mod = molochV1();
-    const at = await mod.resolveAt('latest');
+    const at = await mod.resolveAt('latest', MOLOCH.params);
     expect(at.block_height).toBe(MOLOCH_V1_BLOCK);
-    const s = await mod.fetch(at, undefined);
+    const s = await mod.fetch(at, MOLOCH.params);
     expect(validateSnapshot(s).ok).toBe(true);
     expect(encodeSnapshot(s).sha256).toBe(row.sha256);
     expect(s.snapshot).toMatchObject({ block_height: MOLOCH_V1_BLOCK, final: true });
-    await expect(mod.resolveAt({ block_height: 1 })).rejects.toMatchObject({ code: 'cannot_read' });
+    await expect(mod.resolveAt('2001-01-01', MOLOCH.params)).rejects.toMatchObject({
+      code: 'cannot_read',
+    });
   });
 
   test('check: replay equals members() for all 108 addresses, offline', async () => {
@@ -53,7 +68,7 @@ describe('moloch-v1', () => {
     );
     if (!finalized) throw new Error('no finalized block in the recording');
     const head = (finalized.response as { result: { number: string } }).result.number;
-    const { snapshot, checks } = await pullMolochV1({ reader, head: 'finalized' });
+    const { snapshot, checks } = await pull(reader);
     expect(replay.missing).toEqual([]);
     expect(checks).toMatchObject({
       block: MOLOCH_V1_BLOCK,
@@ -81,9 +96,7 @@ describe('moloch-v1', () => {
     if (!one) throw new Error('no ragequit in the recording');
     one.data = `0x${(BigInt(one.data) + 7n).toString(16).padStart(64, '0')}`;
     const { reader } = replayReader(rec);
-    await expect(pullMolochV1({ reader, head: 'finalized' })).rejects.toThrow(
-      /does not match the contract/,
-    );
+    await expect(pull(reader)).rejects.toThrow(/does not match the contract/);
   });
 
   test('70 members; the figures match the research', () => {

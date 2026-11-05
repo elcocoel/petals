@@ -1,100 +1,102 @@
-// erc20-votes (T160): delegates and their votes on an ERC20Votes token, read from the chain.
-// Any token that emits DelegateVotesChanged and answers getVotes; ENS is the test, others are
-// untested.
-//
-// Stored: a network per token, served from fixtures/snapshots/. pullErc20Votes reads it again by
-// paging every DelegateVotesChanged log (about 50 keyless calls for ENS) and keeping only the
-// latest balance per delegate, so memory holds one page at a time.
+// erc20-votes (T160): delegates and their votes on an ERC20Votes token, read from the chain. The
+// target is a parameter: `token`, and optionally `chain`. A fixture with the same parameters answers
+// first; otherwise pullErc20Votes pages every DelegateVotesChanged log and keeps only the latest
+// balance per delegate, so memory holds one page at a time. This replays the token's whole history.
 //
 // Check: getVotes at the block equals the replay for the 400 largest delegates, which covers every
 // delegate a flower can draw (at most 300 petals). A second one comes free: each log's previous
 // balance must equal the balance replayed so far, so a missing page cannot pass unnoticed.
+//
+// A Compound-style token (getCurrentVotes, not getVotes) fails the check and is refused.
 //
 // Plain flower only: delegates and votes. Backer segments wait, because segments/backers.ts holds
 // NEAR labels. No names: reverse ENS records are not read here.
 import type {
   Holding,
   NetworkDescriptor,
+  Params,
   Participant,
   Progress,
   Snapshot,
 } from '@petal/core/types';
 import { InputError } from '../errors.ts';
 import { addressOf, encodeCall, eventTopic, shortAddress, stringAt, wordAt } from '../evm/abi.ts';
-import { ETHEREUM_CHAIN, EVM_ENDPOINTS, type EvmLog, type EvmReader } from '../evm/reader.ts';
+import { ETHEREUM, EVM_CHAINS, type EvmChain } from '../evm/chains.ts';
+import { EVM_ENDPOINTS, type EvmLog, type EvmReader, evmReader } from '../evm/reader.ts';
 import { fromBaseUnits } from '../import/spike.ts';
 import type { InputModule } from '../index.ts';
 import { dayOf, grouped, percent2, plainCapabilities } from './plain.ts';
-import { storedReads } from './stored.ts';
+import { paramModule } from './stored.ts';
 
 export const ERC20_VOTES_MODULE = 'erc20-votes';
 export const ERC20_VOTES_VERSION = 'evm/1';
 /** Delegates checked against getVotes. A flower draws at most 300. */
 export const VOTES_CHECKED = 400;
 const VOTES_CHANGED = eventTopic('DelegateVotesChanged(address,uint256,uint256)');
-/** When the token's documents were last read. */
-const DOCS_CHECKED_AT = '2026-11-05T12:00:00Z';
+/** A read through get_snapshot stops here and says so: about 600,000 logs, about a minute. */
+const MAX_LOG_CALLS = 60;
 
-const S = {
-  logs: 'erc20-votes-logs',
-  state: 'erc20-votes-state',
-  docs: 'erc20-votes-token-docs',
-} as const;
+const S = { logs: 'erc20-votes-logs', state: 'erc20-votes-state' } as const;
 
 export interface VotesToken {
-  /** the network id, e.g. ens-delegates */
-  id: string;
-  symbol: string;
-  address: string;
-  /** the token's deployment block, or earlier */
-  from_block: number;
-  title: string;
+  chain: EvmChain;
+  /** lowercase */
+  token: string;
   population: string;
-  /** a page that names this contract as the token */
-  docs: { url: string; says: string };
+  /** a block before the token's first delegation, default 0 */
+  from_block?: number;
 }
 
-export const ENS_TOKEN: VotesToken = {
-  id: 'ens-delegates',
-  symbol: 'ENS',
-  address: '0xc18360217d8f7ab5e7c516566761ea12ce7f9d72',
-  from_block: 13533418,
-  title: 'ENS delegates',
-  population: 'ens-delegates',
-  docs: {
-    url: 'https://docs.ens.domains/dao/token',
-    says: 'names the ENS token, token.ensdao.eth',
-  },
-};
+/** The target in a request's parameters. */
+export function votesTarget(params: Params | undefined): VotesToken {
+  const chain = EVM_CHAINS[params?.chain ?? 'ethereum'];
+  const token = String(params?.token ?? '').toLowerCase();
+  if (!chain || !/^0x[0-9a-f]{40}$/.test(token))
+    throw new InputError('bad_input', 'erc20-votes needs a token address', {
+      hint: 'token: 0x and 40 hex digits; chain: ethereum, base or arbitrum',
+    });
+  return { chain, token, population: `erc20-votes-${chain.id}-${token}` };
+}
 
-export function votesDescriptor(t: VotesToken): NetworkDescriptor {
-  return {
-    id: t.id,
-    chain: ETHEREUM_CHAIN,
-    population: t.population,
-    kind: 'dao',
-    title: t.title,
-    description: `Delegates on the ${t.symbol} token on Ethereum and the votes delegated to each, at one block. Holders who set no delegate carry no votes and are not here. Whether a delegate has voted is not read.`,
-    params: {},
-    capabilities: plainCapabilities({
-      measure: { id: 'delegated_votes', unit: t.symbol, label: `${t.symbol} delegated votes` },
-      sources: [S.logs, S.state],
-      kind: { meaning: 'every delegate is an address of unknown kind', sources: [S.logs] },
-      identity: { meaning: 'anonymous: names are not read here', sources: [S.logs] },
-    }),
-    live: false,
-    cost: {
-      calls: 0,
-      seconds: 0,
-      note: 'stored: served from the fixture. pullErc20Votes reads it again by paging every DelegateVotesChanged log, about 50 keyless calls for ENS.',
+export const ERC20_VOTES_DESCRIPTOR: NetworkDescriptor = {
+  id: ERC20_VOTES_MODULE,
+  chain: ETHEREUM.caip2,
+  population: 'erc20-votes',
+  kind: 'dao',
+  title: 'ERC20Votes delegates',
+  description:
+    'Delegates on an ERC20Votes token and the votes delegated to each, at one block. Holders who set no delegate carry no votes and are not here. Whether a delegate has voted is not read. Give the token address.',
+  params: {
+    token: {
+      required: true,
+      description: 'the token contract address; it must answer getVotes',
+      pattern: '^0x[0-9a-fA-F]{40}$',
+      example: '0xc18360217d8f7ab5e7c516566761ea12ce7f9d72',
     },
-    sources: [
-      { id: S.logs, kind: 'chain', url: EVM_ENDPOINTS[0]?.url ?? '' },
-      { id: S.state, kind: 'chain', url: EVM_ENDPOINTS[0]?.url ?? '' },
-      { id: S.docs, kind: 'docs', url: t.docs.url },
-    ],
-  };
-}
+    chain: {
+      required: false,
+      description: 'ethereum (default), base or arbitrum',
+      pattern: '^(ethereum|base|arbitrum)$',
+      example: 'ethereum',
+    },
+  },
+  capabilities: plainCapabilities({
+    measure: { id: 'delegated_votes', unit: 'votes', label: 'delegated votes' },
+    sources: [S.logs, S.state],
+    kind: { meaning: 'every delegate is an address of unknown kind', sources: [S.logs] },
+    identity: { meaning: 'anonymous: names are not read here', sources: [S.logs] },
+  }),
+  live: true,
+  cost: {
+    calls: 50,
+    seconds: 30,
+    note: "a replay of the token's whole delegation history: 2 calls per 20,000 logs. Stops at 60 log calls and says so.",
+  },
+  sources: [
+    { id: S.logs, kind: 'chain', url: EVM_ENDPOINTS[0]?.url ?? '' },
+    { id: S.state, kind: 'chain', url: EVM_ENDPOINTS[0]?.url ?? '' },
+  ],
+};
 
 /** Running state of the replay: the latest balance per delegate. */
 export interface VotesReplay {
@@ -129,12 +131,12 @@ export interface VotesCheck {
 /** getVotes at the block against the replayed votes of the given delegates. */
 export async function checkGetVotes(
   reader: EvmReader,
-  token: Pick<VotesToken, 'address'>,
+  token: string,
   block: number,
   rows: { address: string; votes: bigint }[],
 ): Promise<VotesCheck> {
   const answers = await reader.multicall(
-    rows.map((r) => ({ to: token.address, data: encodeCall('getVotes(address)', r.address) })),
+    rows.map((r) => ({ to: token, data: encodeCall('getVotes(address)', r.address) })),
     block,
   );
   const mismatches = rows
@@ -165,8 +167,8 @@ export async function pullErc20Votes(
 
   const replay = newVotesReplay();
   for await (const page of reader.logPages(
-    { address: token.address, topics: [VOTES_CHANGED] },
-    token.from_block,
+    { address: token.token, topics: [VOTES_CHANGED] },
+    token.from_block ?? 0,
     at.number,
   )) {
     applyVotesLogs(replay, page);
@@ -183,25 +185,20 @@ export async function pullErc20Votes(
 
   const facts = await reader.multicall(
     ['decimals()', 'totalSupply()', 'symbol()'].map((sig) => ({
-      to: token.address,
+      to: token.token,
       data: encodeCall(sig),
     })),
     at.number,
   );
   const [decimalsAnswer, supplyAnswer, symbolAnswer] = facts;
   if (!decimalsAnswer?.ok || !supplyAnswer?.ok || !symbolAnswer?.ok)
-    throw new InputError('source_failed', `${token.id}: decimals() or totalSupply() failed`);
+    throw new InputError('source_failed', `${token.token}: decimals() or totalSupply() failed`);
   const decimals = Number(wordAt(decimalsAnswer.data, 0));
   const supply = wordAt(supplyAnswer.data, 0);
-  const onChainSymbol = stringAt(symbolAnswer.data, 0);
-  if (onChainSymbol !== token.symbol)
-    throw new InputError(
-      'source_failed',
-      `${token.id}: the contract says its symbol is ${onChainSymbol}, not ${token.symbol}`,
-    );
+  const symbol = stringAt(symbolAnswer.data, 0);
 
   say(`checking the ${Math.min(VOTES_CHECKED, rows.length)} largest delegates against getVotes`);
-  const check = await checkGetVotes(reader, token, at.number, rows.slice(0, VOTES_CHECKED));
+  const check = await checkGetVotes(reader, token.token, at.number, rows.slice(0, VOTES_CHECKED));
   const checks: VotesChecks = {
     ...check,
     logs: replay.logs,
@@ -213,7 +210,7 @@ export async function pullErc20Votes(
   if (check.mismatches.length > 0 || replay.breaks > 0)
     throw new InputError(
       'source_failed',
-      `${token.id}: the replay does not match the contract: ${check.mismatches.length} getVotes mismatches, ${replay.breaks} breaks in ${replay.logs} logs`,
+      `${token.token}: the replay does not match the contract: ${check.mismatches.length} getVotes mismatches, ${replay.breaks} breaks in ${replay.logs} logs`,
     );
 
   const participants: Participant[] = rows.map(({ address }) => ({
@@ -225,11 +222,11 @@ export async function pullErc20Votes(
   }));
   const holdings: Holding[] = rows.map(({ address, votes }) => ({
     participant: address,
-    asset: token.address,
+    asset: token.token,
     measure: 'delegated_votes',
     amount: fromBaseUnits(votes, decimals),
     amount_raw: votes.toString(),
-    unit: token.symbol,
+    unit: symbol,
     as_of: at.as_of,
     source: S.logs,
   }));
@@ -238,7 +235,7 @@ export async function pullErc20Votes(
       id: S.logs,
       kind: 'chain',
       url: reader.servedBy('logs'),
-      method: `eth_getLogs on ${token.address}: DelegateVotesChanged, replayed to the latest balance per delegate`,
+      method: `eth_getLogs on ${token.token}: DelegateVotesChanged, replayed to the latest balance per delegate`,
       fetched_at: at.as_of,
       block_height: at.number,
     },
@@ -251,24 +248,17 @@ export async function pullErc20Votes(
       fetched_at: at.as_of,
       block_height: at.number,
     },
-    {
-      id: S.docs,
-      kind: 'docs',
-      url: token.docs.url,
-      method: token.docs.says,
-      fetched_at: DOCS_CHECKED_AT,
-    },
   ];
   const total = fromBaseUnits(sum, decimals);
   const snapshot: Snapshot = {
     petal: 'snapshot/v1',
     network: {
-      id: token.id,
-      chain: ETHEREUM_CHAIN,
+      id: ERC20_VOTES_MODULE,
+      chain: token.chain.caip2,
       population: token.population,
-      title: token.title,
-      description: votesDescriptor(token).description,
-      params: { token: token.address },
+      title: `${symbol} delegates`,
+      description: ERC20_VOTES_DESCRIPTOR.description,
+      params: { token: token.token, chain: token.chain.id },
     },
     snapshot: { as_of: at.as_of, block_height: at.number, block_hash: at.hash, final: true },
     coverage: {
@@ -276,12 +266,12 @@ export async function pullErc20Votes(
       participants_included: rows.length,
       amount_total: total,
       amount_included: total,
-      unit: token.symbol,
+      unit: symbol,
       measure: 'delegated_votes',
       note:
         `Delegated votes at block ${grouped(at.number)} (${dayOf(at.as_of)}), by replay of ${grouped(replay.logs)} DelegateVotesChanged logs; each log's previous balance equals the replayed one. ` +
         `Check: getVotes equals the replay for the ${grouped(check.checked)} largest delegates, which covers every delegate a flower can draw. ` +
-        `All delegated votes are ${total} ${token.symbol}, ${percent2(sum, supply)}% of totalSupply() ${fromBaseUnits(supply, decimals)}: tokens with no delegate set carry no votes and are not here. ` +
+        `All delegated votes are ${total} ${symbol}, ${percent2(sum, supply)}% of totalSupply() ${fromBaseUnits(supply, decimals)}: tokens with no delegate set carry no votes and are not here. ` +
         'Having votes is not having used them: VoteCast and off-chain Snapshot votes are not read here. Anyone can delegate to anyone without consent, and a large backer may be the delegate itself. ' +
         'No names: reverse records are not read, so every delegate is an address. Who backs each delegate is not split out.',
     },
@@ -295,12 +285,28 @@ export async function pullErc20Votes(
   return { snapshot, checks };
 }
 
-/** The stored module for one token. `fixtures` is the folder holding index.json. */
-export function erc20Votes(token: VotesToken, opts: { fixtures?: string } = {}): InputModule {
-  const reads = storedReads(token.id, opts);
-  return {
-    descriptor: votesDescriptor(token),
-    resolveAt: (at) => reads.resolveAt(at),
-    fetch: (at, _params, onProgress) => reads.fetch(at, onProgress),
-  };
+/** Any ERC20Votes token. `fixtures` is the folder holding index.json (default: this repo's). */
+export function erc20Votes(opts: { fixtures?: string } = {}): InputModule {
+  return paramModule({
+    descriptor: ERC20_VOTES_DESCRIPTOR,
+    keyFor: (params) => {
+      const t = votesTarget(params);
+      return { chain: t.chain.caip2, population: t.population };
+    },
+    pinnable: true,
+    head: async (params, block) => {
+      const b = await evmReader({ chain: votesTarget(params).chain }).block(block ?? 'finalized');
+      return { block_height: b.number, as_of: b.as_of };
+    },
+    pull: async (at, params, onProgress) => {
+      const target = votesTarget(params);
+      const { snapshot } = await pullErc20Votes(target, {
+        reader: evmReader({ chain: target.chain, maxLogCalls: MAX_LOG_CALLS }),
+        block: at.block_height,
+        ...(onProgress ? { onProgress } : {}),
+      });
+      return snapshot;
+    },
+    ...opts,
+  });
 }

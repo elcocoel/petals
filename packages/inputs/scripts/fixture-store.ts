@@ -26,6 +26,7 @@ export function storeFixture(s: Snapshot): { sha256: string; bytes: number; gz_b
     network: s.network.id,
     chain: s.network.chain,
     population: s.network.population,
+    ...(s.network.params ? { params: s.network.params as Record<string, string> } : {}),
     block_height: s.snapshot.block_height ?? null,
     as_of: s.snapshot.as_of,
     final: s.snapshot.final,
@@ -39,7 +40,7 @@ export function storeFixture(s: Snapshot): { sha256: string; bytes: number; gz_b
     ...index.snapshots.filter(
       (r) =>
         r.sha256 !== row.sha256 &&
-        !(r.network === row.network && r.block_height === row.block_height),
+        !(r.population === row.population && r.block_height === row.block_height),
     ),
     row,
   ].sort(
