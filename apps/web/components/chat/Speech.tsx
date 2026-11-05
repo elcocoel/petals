@@ -1,7 +1,7 @@
 // One turn's words: who is speaking, then what they said (Figma's "You" 39:894 and "Petals" 39:898). A
 // speaker is left out where the same one goes on speaking.
 import type { ReactNode } from 'react';
-import { Cell } from '../ui/Cell.tsx';
+import { Drawing } from '../ui/Drawing.tsx';
 
 export function Speech({
   speaker,
@@ -20,7 +20,7 @@ export function Speech({
     <div className="flex min-w-0 flex-col gap-space-8">
       {speaker && (
         <p className="flex items-center gap-space-8 type-caption">
-          {agent && <Cell />}
+          {agent && <Drawing kind="cell" size="cell-small" />}
           {speaker}
         </p>
       )}

@@ -1,7 +1,7 @@
 // Figma's Petals / Atlas card 52:1876, called GalleryCard in code: .publication-boundary refuses the
 // word in a path. A thumb in a box, a title, a note; the whole card is the link.
 import type { ThumbKind } from '../../lib/figures.ts';
-import { Thumb } from './Thumb.tsx';
+import { Drawing } from './Drawing.tsx';
 
 export function GalleryCard({
   thumb,
@@ -17,7 +17,7 @@ export function GalleryCard({
   return (
     <a href={href} className="flex flex-col no-underline hover:underline">
       <span className="flex h-figure-height items-center justify-center overflow-hidden border border-hairline">
-        <Thumb kind={thumb} size="card" />
+        <Drawing kind={thumb} size={240} />
       </span>
       <span className="pt-block-gap pb-space-8 type-heading">{title}</span>
       <span className="type-mono">{note}</span>

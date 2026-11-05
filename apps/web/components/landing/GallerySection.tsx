@@ -2,8 +2,8 @@
 import type { ThumbKind } from '../../lib/figures.ts';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
-import { Caption } from '../ui/Caption.tsx';
 import { GalleryCard } from '../ui/GalleryCard.tsx';
+import { Mono } from '../ui/Mono.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 import { TextLink } from '../ui/TextLink.tsx';
@@ -24,7 +24,7 @@ export function GallerySection() {
           </TextLink>
         </div>
       }
-      foot={<Caption>{copy.caption}</Caption>}
+      foot={<Mono>{copy.caption}</Mono>}
     >
       {copy.cards.map((card, i) => (
         <GalleryCard

@@ -3,8 +3,8 @@ import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
-import { Caption } from '../ui/Caption.tsx';
-import { CellRepeat } from '../ui/Cell.tsx';
+import { Drawing } from '../ui/Drawing.tsx';
+import { Mono } from '../ui/Mono.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 
@@ -24,10 +24,10 @@ export function JoinCommunity() {
           </ActionRow>
         </div>
         <div className="mt-space-16">
-          <Caption>{copy.caption}</Caption>
+          <Mono>{copy.caption}</Mono>
         </div>
       </div>
-      <CellRepeat />
+      <Drawing kind="cell-repeat" />
     </Section>
   );
 }

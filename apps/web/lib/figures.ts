@@ -309,3 +309,14 @@ export const cell: FigureDrawing = {
     },
   ],
 };
+
+/** Every drawing by the name a page asks for it. `cell-repeat` is the cell, 7 by 4, from one symbol. */
+export const drawings = {
+  ...thumbs,
+  ...glyphs,
+  cell,
+  'hero-flower': heroFlower,
+  'hero-leaders': heroLeaders,
+  'reading-flower': readingFlower,
+};
+export type DrawingKind = keyof typeof drawings | 'cell-repeat';

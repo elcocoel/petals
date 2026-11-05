@@ -1,12 +1,12 @@
-// The landing page's shell, one of them for every band: a surface edge to edge, its content in a
-// column as wide as the page, so a wider window gets more band and no longer lines. There are two
+// The landing page's shell, one of them for every band: a surface edge to edge (data-surface flips every
+// role inside, and the generated CSS paints the background and text), its content in a column as wide as
+// the page, so a wider window gets more band and no longer lines. There are two
 // kinds of section. `split` is text and a figure, divided by one ratio (splitText in packages/tokens),
 // and the figure can take either side. `columns` is three equal columns under a head and over a foot.
 // Nav and Footer are this too, with `bar` padding. Grayscale smoothing is how Figma draws type; macOS's
 // default thickens it.
 import type { SurfaceName } from '@petal/tokens';
 import type { ReactNode } from 'react';
-import { Surface } from './Surface.tsx';
 
 const PADDING = {
   section: 'px-block-gap py-page-inset md:px-page-inset md:py-section-padding',
@@ -48,6 +48,7 @@ export function Section({
   foot?: ReactNode;
   children: ReactNode;
 }) {
+  const Tag = as;
   const body =
     layout === 'split' ? (
       <div className={SPLIT[figure]}>{children}</div>
@@ -57,12 +58,12 @@ export function Section({
       children
     );
   return (
-    <Surface kind={kind} as={as} id={id} className={rule && RULES[rule]}>
+    <Tag data-surface={kind} id={id} className={rule && RULES[rule]}>
       <div className={`mx-auto w-full max-w-page-width antialiased ${PADDING[padding]}`}>
         {head && <div className="mb-column-gap">{head}</div>}
         {body}
         {foot && <div className="mt-column-gap">{foot}</div>}
       </div>
-    </Surface>
+    </Tag>
   );
 }

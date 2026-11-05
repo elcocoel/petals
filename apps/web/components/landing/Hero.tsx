@@ -1,7 +1,7 @@
 // Figma's Hero (66:2188).
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { AskBlock } from '../ui/AskBlock.tsx';
-import { Caption } from '../ui/Caption.tsx';
+import { Mono } from '../ui/Mono.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 import { AnnotatedFlower } from './AnnotatedFlower.tsx';
@@ -22,7 +22,7 @@ export function Hero() {
           />
         </div>
         <div className="mt-column-gap">
-          <Caption>{copy.caption}</Caption>
+          <Mono>{copy.caption}</Mono>
         </div>
       </div>
       <AnnotatedFlower />

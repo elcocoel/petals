@@ -240,8 +240,8 @@ export const wordmark = {
   },
   /** The role that paints each layer. */
   roles: { back: 'figure-accent', middle: 'figure-petal', front: 'text-primary' },
-  /** Font size in pixels. Display is the component's own size, the others those in the page frames. */
-  sizes: { Nav: 36.67, Footer: 155.56, Workspace: 33.18, Display: 269.722 },
+  /** Font size in pixels, those in the page frames. */
+  sizes: { Nav: 36.67, Footer: 155.56, Workspace: 33.18 },
 } as const;
 
 /**

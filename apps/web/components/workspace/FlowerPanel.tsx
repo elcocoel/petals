@@ -12,7 +12,7 @@ import { Legend, LegendKeys } from '../Legend.tsx';
 import { PetalDetails } from '../PetalDetails.tsx';
 import { QuotePanel } from '../QuotePanel.tsx';
 import { Button } from '../ui/Button.tsx';
-import { Cell } from '../ui/Cell.tsx';
+import { Drawing } from '../ui/Drawing.tsx';
 import { TextLink } from '../ui/TextLink.tsx';
 import { FlowerShelf } from './FlowerShelf.tsx';
 import { ReadingKey } from './ReadingKey.tsx';
@@ -70,7 +70,7 @@ function OpenFlower({
         </Stage>
       ) : (
         <div className="flex min-h-stage-height flex-1 items-center gap-text-gap type-lead">
-          <Cell size="medium" />
+          <Drawing kind="cell" size="cell-medium" />
           Drawing…
         </div>
       )}

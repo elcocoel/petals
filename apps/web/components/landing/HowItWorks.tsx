@@ -5,11 +5,10 @@ import { ActionRow } from '../ui/ActionRow.tsx';
 import { AskBox } from '../ui/AskBox.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Callout } from '../ui/Callout.tsx';
-import { Glyph } from '../ui/Glyph.tsx';
+import { Drawing } from '../ui/Drawing.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 import { TextLink } from '../ui/TextLink.tsx';
-import { Thumb } from '../ui/Thumb.tsx';
 import { Step } from './Step.tsx';
 
 const copy = landingCopy.howItWorks;
@@ -42,10 +41,10 @@ export function HowItWorks() {
         </div>
       </Step>
       <Step {...see}>
-        <Thumb kind="even" size="step" />
+        <Drawing kind="even" size={144} />
       </Step>
       <Step {...question}>
-        <Glyph kind="concentration" size="step" />
+        <Drawing kind="concentration" size={144} />
         <Callout size="compact" who={copy.stepThree.who}>
           {copy.stepThree.text}
         </Callout>

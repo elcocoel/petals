@@ -70,7 +70,7 @@
   --color-figure-accent: var(--figure-accent);
 }
 
-@source inline("type-display type-display-compact type-title type-heading type-lead type-body type-label type-caption type-mono type-mono-code type-pixel-numeral wordmark wordmark-back wordmark-middle wordmark-front wordmark-nav wordmark-footer wordmark-workspace wordmark-display");
+@source inline("type-display type-display-compact type-title type-heading type-lead type-body type-label type-caption type-mono type-mono-code type-pixel-numeral wordmark wordmark-back wordmark-middle wordmark-front wordmark-nav wordmark-footer wordmark-workspace");
 
 @layer base {
 *, ::before, ::after {
@@ -392,10 +392,6 @@
 
 @utility wordmark-workspace {
   font-size: 33.18px;
-}
-
-@utility wordmark-display {
-  font-size: 269.722px;
 }
 
 .flower-svg svg[data-petal] {

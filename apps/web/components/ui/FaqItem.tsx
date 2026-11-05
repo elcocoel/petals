@@ -2,7 +2,7 @@
 // so it needs no JavaScript. The answer lines up under the question on one twelve-column grid.
 import type { GlyphKind } from '../../lib/figures.ts';
 import { landingCopy } from '../../lib/landing-copy.ts';
-import { Glyph } from './Glyph.tsx';
+import { Drawing } from './Drawing.tsx';
 
 export function FaqItem({
   glyph,
@@ -21,7 +21,7 @@ export function FaqItem({
     <details open={open} className="border-b border-hairline py-block-gap">
       <summary className="flex list-none items-center gap-block-gap md:grid md:grid-cols-12 [&::-webkit-details-marker]:hidden">
         <span className="flex items-center gap-text-gap md:col-span-2">
-          <Glyph kind={glyph} />
+          <Drawing kind={glyph} size={48} />
           <span className="type-mono">{index}</span>
         </span>
         <span className="min-w-0 flex-1 type-lead md:col-span-9">{question}</span>

@@ -3,7 +3,7 @@
 import { askHref, siteLinks } from '../../lib/site-links.ts';
 import { AskBox } from './AskBox.tsx';
 import { Button } from './Button.tsx';
-import { Caption } from './Caption.tsx';
+import { Mono } from './Mono.tsx';
 
 export function AskBlock({
   placeholder,
@@ -21,7 +21,7 @@ export function AskBlock({
     <div className="flex flex-col gap-space-16">
       <AskBox placeholder={placeholder} label={action} action={action} to={siteLinks.make} />
       <div className="flex flex-col gap-text-gap">
-        {starterLabel && <Caption>{starterLabel}</Caption>}
+        {starterLabel && <Mono>{starterLabel}</Mono>}
         <div className="flex flex-wrap gap-space-8">
           {starters.map((question) => (
             <Button key={question} variant="starter" href={askHref(question)}>

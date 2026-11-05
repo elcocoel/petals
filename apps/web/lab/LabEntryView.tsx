@@ -1,8 +1,7 @@
 // One registry entry: each state on each surface it matters on, then its names and source. A section
 // draws edge to edge, exactly as on the landing page, with its names in the column under it.
 import { Fragment } from 'react';
-import { Eyebrow } from '../components/ui/Eyebrow.tsx';
-import { Surface } from '../components/ui/Surface.tsx';
+import { Mono } from '../components/ui/Mono.tsx';
 import type { LabEntry, LabState } from './registry.tsx';
 
 /** The site's reading column, which the lab's own words sit in. */
@@ -14,7 +13,7 @@ const stateLine = (state: LabState) =>
 function StateView({ state }: { state: LabState }) {
   return (
     <div className={`flex flex-col items-start gap-text-gap ${state.wide ? 'w-full' : ''}`}>
-      <Eyebrow>{stateLine(state)}</Eyebrow>
+      <Mono tone="muted">{stateLine(state)}</Mono>
       {state.render()}
     </div>
   );
@@ -24,15 +23,15 @@ export function LabEntryView({ entry }: { entry: LabEntry }) {
   return (
     <article id={entry.id.toLowerCase()} className="flex flex-col gap-text-gap">
       {(entry.surfaces ?? ['ground']).map((kind) => (
-        <Surface
+        <div
           key={kind}
-          kind={kind}
+          data-surface={kind}
           className="flex flex-wrap items-start gap-block-gap overflow-x-auto border border-hairline p-block-gap"
         >
           {entry.states.map((state) => (
             <StateView key={state.name} state={state} />
           ))}
-        </Surface>
+        </div>
       ))}
       <h3>{entry.id}</h3>
       <p className="type-mono text-muted">

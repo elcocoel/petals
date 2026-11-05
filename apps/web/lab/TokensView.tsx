@@ -18,8 +18,7 @@ import {
   surfaces,
   type,
 } from '@petal/tokens';
-import { Eyebrow } from '../components/ui/Eyebrow.tsx';
-import { Surface } from '../components/ui/Surface.tsx';
+import { Mono } from '../components/ui/Mono.tsx';
 
 const SAMPLE = 'Power has a shape.';
 
@@ -99,14 +98,14 @@ export function TokensView() {
         ))}
       </div>
       {surfaceNames.map((kind) => (
-        <Surface key={kind} kind={kind} className="flex flex-col gap-block-gap p-block-gap">
-          <Eyebrow>data-surface="{kind}"</Eyebrow>
+        <div key={kind} data-surface={kind} className="flex flex-col gap-block-gap p-block-gap">
+          <Mono tone="muted">data-surface="{kind}"</Mono>
           <div className={SWATCH_GRID}>
             {(Object.entries(surfaces[kind]) as [keyof Roles, Paint][]).map(([role, paint]) => (
               <Swatch key={role} swatch={role} name={`--${role}`} value={paintName(paint)} />
             ))}
           </div>
-        </Surface>
+        </div>
       ))}
       <div className={SWATCH_GRID}>
         {Object.entries(chart).map(([name, hex]) => (

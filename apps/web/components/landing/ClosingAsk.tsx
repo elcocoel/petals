@@ -1,7 +1,7 @@
 // Figma's Closing ask (66:2336): the mint band.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { AskBlock } from '../ui/AskBlock.tsx';
-import { Cell } from '../ui/Cell.tsx';
+import { Drawing } from '../ui/Drawing.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 
@@ -20,8 +20,8 @@ export function ClosingAsk() {
           />
         </div>
       </div>
-      <div className="w-full max-w-drawing-240 lg:justify-self-end">
-        <Cell size="fill" />
+      <div className="lg:justify-self-end">
+        <Drawing kind="cell" size={240} />
       </div>
     </Section>
   );
