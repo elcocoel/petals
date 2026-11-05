@@ -83,7 +83,7 @@
   td,
   th {
     border: var(--stroke) solid var(--hairline);
-    padding: calc(var(--spacing-text-gap) / 2) var(--spacing-text-gap);
+    padding: var(--spacing-space-8) var(--spacing-text-gap);
     text-align: left;
     vertical-align: top;
   }
@@ -164,8 +164,8 @@
     @apply type-mono;
     display: inline-block;
     border: var(--stroke) solid var(--hairline);
-    padding-inline: calc(var(--spacing-text-gap) / 2);
-    margin-inline-start: calc(var(--spacing-text-gap) / 2);
+    padding-inline: var(--spacing-space-8);
+    margin-inline-start: var(--spacing-space-8);
   }
 
   .gallery {
@@ -189,7 +189,7 @@
   }
 
   .events li {
-    margin-block: calc(var(--spacing-text-gap) / 2);
+    margin-block: var(--spacing-space-8);
     overflow-wrap: anywhere;
   }
 
