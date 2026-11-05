@@ -117,6 +117,10 @@ export function buildSpec(
 ): { spec: Spec; changed: string[]; defaults: string[] } {
   if (input.network !== descriptor.id)
     throw bad(`network ${input.network} is not ${descriptor.id}`, [descriptor.id]);
+  // A parameter left at its default names the same flower as one left out: one spec, one hash.
+  const params = Object.fromEntries(
+    Object.entries(input.params ?? {}).filter(([k, v]) => descriptor.params[k]?.default !== v),
+  );
   if (snapshot.network.id !== descriptor.id)
     throw bad(`snapshot ${input.sha256} is of ${snapshot.network.id}, not ${descriptor.id}`);
 
@@ -238,7 +242,7 @@ export function buildSpec(
       id: descriptor.id,
       chain: snapshot.network.chain,
       population: snapshot.network.population,
-      ...(input.params && Object.keys(input.params).length ? { params: { ...input.params } } : {}),
+      ...(Object.keys(params).length ? { params } : {}),
     },
     snapshot: {
       sha256: input.sha256,

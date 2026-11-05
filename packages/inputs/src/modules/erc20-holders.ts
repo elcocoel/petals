@@ -710,6 +710,7 @@ export const ERC20_HOLDERS_DESCRIPTOR: NetworkDescriptor = {
         'days of Transfer logs to read where a replay is used, 1 to 30, default 7; "full" only finds a stored whole-history read',
       pattern: WINDOW_PATTERN,
       example: '7',
+      default: '7',
     },
   },
   capabilities: capabilities('token', 'token balance'),

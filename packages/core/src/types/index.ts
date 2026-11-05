@@ -140,6 +140,8 @@ export interface ParamSpec {
   required: boolean;
   pattern?: string;
   example?: string;
+  /** what leaving it out means; a spec that names this value is the same spec without it */
+  default?: string;
 }
 
 /** What a network population can show, from its input module (not from data). */

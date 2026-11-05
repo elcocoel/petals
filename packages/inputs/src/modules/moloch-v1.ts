@@ -68,6 +68,7 @@ export const MOLOCH_V1_DESCRIPTOR: NetworkDescriptor = {
       description: 'ethereum (default), base or arbitrum',
       pattern: '^(ethereum|base|arbitrum)$',
       example: 'ethereum',
+      default: 'ethereum',
     },
   },
   capabilities: plainCapabilities({

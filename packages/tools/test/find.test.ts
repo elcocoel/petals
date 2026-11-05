@@ -121,6 +121,26 @@ describe('the three names', () => {
 });
 
 describe('what it says when it can draw nothing', () => {
+  test('a parameter at its default names the same flower: one spec, one hash', async () => {
+    // Found by hand: find_target spells out chain "ethereum", and the hash no longer matched.
+    const dao = '0x1fd169a4f5c59acf79d0fd5d91d1201ef1bce9f1';
+    const snap = (await callTool(
+      'get_snapshot',
+      { network: 'moloch-v1', params: { dao } },
+      ctx,
+    )) as Json;
+    const propose = async (params: Json) =>
+      (await callTool(
+        'propose_spec',
+        { network: 'moloch-v1', params, sha256: snap.sha256 },
+        ctx,
+      )) as Json;
+    const plain = await propose({ dao });
+    const spelled = await propose({ dao, chain: 'ethereum' });
+    expect(spelled.spec_sha256).toBe(plain.spec_sha256);
+    expect(spelled.spec.network.params).toEqual({ dao });
+  });
+
   test('Nouns DAO: a market token that only shares the name is not presented as the DAO', async () => {
     // Found by hand on merged main: the Solana NOUNS token came back as "one clear match".
     const onlyAToken: typeof fetch = async (input) => {
