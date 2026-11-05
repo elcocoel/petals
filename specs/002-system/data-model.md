@@ -81,7 +81,7 @@ group_overlap(a, b, a_obs, b_obs, shared, weight, share_a, share_b, inferred)  -
 meta(key, value)
 ```
 
-A `relation` row for claims isn't built yet. Claims would feed these tables: an observed `holds` is a `membership`, a `same_as` an `adj` row with `inferred`, and a claim's kind and author would go alongside (T197).
+The index reads snapshots only, for now. Claims would feed the same tables: `holds`, `member_of` and `delegates_to` are `membership` rows of a group, and an inferred `same_address` claim is an `adj` row with `inferred = 1`. A claim's id, kind and author would be new columns beside them.
 
 ## Private
 

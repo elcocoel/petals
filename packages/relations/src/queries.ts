@@ -554,7 +554,7 @@ export class Queries {
       members_total: r.members_total,
       complete: r.complete === 1,
     }));
-    const latestGroups = this.#get<{ n: number }>('SELECT count(*) AS n FROM grp')?.n ?? 0;
+    const everyGroup = this.#get<{ n: number }>('SELECT count(*) AS n FROM grp')?.n ?? 0;
     const pairFilter = `go.a < go.b AND go.shared >= ?1 AND (?2 IS NULL OR (ga.kind = ?2 AND gb.kind = ?2))`;
     const pairJoins =
       'FROM group_overlap go JOIN grp ga ON ga.id = go.a JOIN grp gb ON gb.id = go.b';
@@ -605,7 +605,7 @@ export class Queries {
       basis: 'the latest stored observation of each group',
       groups,
       /** groups of another kind, left out by the kind asked for */
-      groups_left_out: latestGroups - groups.length,
+      groups_left_out: everyGroup - groups.length,
       pairs,
       pairs_total: pairsTotal,
       pairs_more: Math.max(0, pairsTotal - pairs.length),

@@ -115,7 +115,6 @@ export class RelationsIndex {
         return fn(this.#queries as Queries);
       } catch (e) {
         if (!isBrokenIndex(e)) throw e;
-        this.#disconnect();
         await this.#rebuild(source);
         return fn(this.#queries as Queries);
       }
@@ -235,7 +234,6 @@ export class RelationsIndex {
       // A read-only file can still answer, until a new snapshot needs writing: then a new file,
       // or memory where the folder refuses too.
       if (!isBrokenIndex(e) && !isUnwritable(e)) throw e;
-      this.#disconnect();
       await this.#rebuild(source);
     }
   }
