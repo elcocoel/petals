@@ -41,6 +41,11 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `POST /api/v1/figures/compare` | `compare_figures` (Phase B) |
 | `POST /api/v1/corrections/prepare` | `prepare_correction` (Phase B) |
 | `POST /api/v1/corrections` | `submit_correction` (Phase B) |
+| `GET /api/v1/relations/account-groups?account=&limit=` | `account_groups` |
+| `GET /api/v1/relations/shared?group_a=&group_b=&limit=` | `shared_accounts` |
+| `GET /api/v1/relations/related?group=&by=&limit=` | `related_groups` |
+| `GET /api/v1/relations/overview?min_shared=&kind=&limit=` | `relations_overview` |
+| `GET /api/v1/relations/path?account_a=&account_b=&max_depth=&budget=&include_inferred=` | `power_path` |
 | `POST /api/v1/agent/chat` | Petal's agent, SSE (below). Agent route. |
 | `GET /api/v1/agent/runs/:id` | a stored run: `{ run_id, status: "running" \| "done" \| "failed", messages, events, flower? }`; with `Accept: text/event-stream`, replays stored events, then streams new ones until `done`. Agent route. |
 | `GET /api/v1/attestations/:sha256` | the NEAR AI attestation report Petal stored for a model signature (`report_sha256`), `application/json`, immutable cache headers. Agent route. |

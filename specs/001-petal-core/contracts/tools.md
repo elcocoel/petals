@@ -37,6 +37,11 @@ The agent interprets; the tools count (FR-025). Any number an agent quotes must 
 | `compare_figures` | B | none |
 | `prepare_correction` | B | issues a nonce |
 | `submit_correction` | B | writes a correction request to the shared map (FR-022) |
+| `account_groups` | M-System | none; the first call may build the derived index |
+| `shared_accounts` | M-System | none; the first call may build the derived index |
+| `related_groups` | M-System | none; the first call may build the derived index |
+| `relations_overview` | M-System | none; the first call may build the derived index |
+| `power_path` | M-System | none; the first call may build the derived index |
 
 ### list_networks
 
@@ -136,6 +141,46 @@ Errors: `bad_input` (different networks, or `a` is not earlier than `b`), `not_f
 `prepare_correction` input: `{ "flower_id", "target": { "participant", "caip2", "address", "label_key"? }, "request": "correct" | "remove", "reason", "evidence"?: [...] }` → `{ "correction_sha256", "nonce", "recipient", "message", "expires_at", "issue_url" }`. `message` is the NEP-413 text; `issue_url` is the GitHub fallback for people without a NEAR account.
 `submit_correction` input: `{ "correction_sha256", "proof": Nep413Proof }` → `{ "id", "key", "tx_hash", "explorer_url" }`. Verifies like `publish_flower`, then writes `petal/v1/correction/<flower-id>/<id>` ([shared-map.md](./shared-map.md#correction-requests-fr-022)).
 Errors: `unauthorised`, `not_found`, `source_failed`.
+
+### Relations between groups (M-System, T198; additive, still tools/v1)
+
+Read-only, public, and with no sign-in. They read `<stateDir>/index.db`, which holds only what stored snapshots say and can be deleted at any time (SYS-003): it builds on first use, takes in snapshots stored since on each call, and a missing, stale or corrupt file is rebuilt rather than failing. `pnpm relations:rebuild` deletes and rebuilds it and says what it read.
+
+**Names.** A group is a module and its parameters over time (`group_id`: `erc20-holders/eip155:1/token:0x…/token_balance`, `near-validators/near:mainnet/validators/delegators:<pool>`). `window_days` is how a read was made, so it isn't part of the id. A group has one `observation` per stored date. Where a tool takes a group, it takes a `group_id` (its latest date), `<group_id>@<sha256>` (that date), or a snapshot's `sha256` (that snapshot's main group, at that date). An account is `chain:address`, one id per chain. A bare address also works, and stands for that address on every chain it appears on.
+
+**What every result says** (SYS-071), in the data:
+- `at_least`: true when coverage on either side is partial. Overlap is then a lower bound, and absence isn't proof. `coverage` on each group gives `members_named`, `members_total` (null when the snapshot states coverage for another measure), `tail_accounts`, `amount_total`, `amount_named`, `named_share`, `window`, `complete`, `why_partial[]`.
+- `as_of` on everything, and `as_of_a`, `as_of_b`, `gap_seconds`, `gap_days` on every pair. Two reads can be years apart, so a shared account need not have been in both at once.
+- `match`: `{ status: "observed" }` on one chain. `{ status: "inferred", method: "same_evm_address" | "same_address_string" }` when one address on two chains is taken for one account. Equal strings outside the EVM chains are no match, and nor are folded `group:*` rows.
+- `does_not_show` and `absence`: shared membership isn't coordination, and doesn't show a common owner or controller.
+- `not_read`, only when non-empty: `[{ sha256, reason }]`, stored snapshots the index could not read.
+- `identity`, where a snapshot holds a label: `{ name, source, status }` exactly as stored. Never upgraded, and never used to say two accounts are one person.
+- Amounts are decimal strings, and shares are numbers rounded to 6 decimals, the same as `compute_figures`. `weight` is the sum, over shared accounts, of the smaller of the two shares: units don't add up across groups.
+
+`Group` (a group at one date): `{ group_id, title, kind: "holdings" | "delegators", chain, module, measure, unit, as_of, block_height, final, snapshot_sha256, latest, observations, coverage }`.
+
+#### account_groups
+Input: `{ account, limit?: int (1-1000, default 100) }`.
+Output: `{ asked, accounts: string[], groups: [{ group: Group, account, match, amount, share, rank, identity, account_kind }], total, more, anchor_of: Group[], at_least, index: { snapshots, groups, observations, observations_partial }, absence, does_not_show }`. Every date of every group, largest share first. `anchor_of` lists groups about this account, such as a pool's delegators, which it isn't a member of. An unknown account is an empty answer with `at_least`, not an error.
+
+#### shared_accounts
+Input: `{ group_a, group_b, limit?: int (0-1000, default 50) }`.
+Output: `{ a: Group, b: Group, same_group, shared, at_least, match, as_of_a, as_of_b, gap_seconds, gap_days, weight, share_of_a, share_of_b, accounts: [{ account_a, account_b, match, amount_a, amount_b, share_a, share_b, rank_a, rank_b, as_of_a, as_of_b, identity_a, identity_b, groups_observed }], more, absence, does_not_show }`. `shared` counts all of them, and `accounts` is capped, largest smaller-share first. `groups_observed` lets a reader spot an account that's in nearly everything.
+Errors: `not_found` (with near matches in `hint`); `bad_input` when both name one group at one date. Two dates of a group can be compared by naming them, and then `same_group` is true.
+
+#### related_groups
+Input: `{ group, by?: "count" | "share" (default count), limit?: int (1-200, default 20) }`.
+Output: `{ group: Group, by, basis, related: [{ group: Group, shared, at_least, match, as_of_a, as_of_b, gap_seconds, gap_days, weight, share_of_a, share_of_b }], total, more, absence, does_not_show }`. Precomputed between the latest date of each group. A group is never related to itself or to another date of itself. Pairs with nothing seen in common aren't listed.
+Errors: `not_found`.
+
+#### relations_overview
+Input: `{ min_shared?: int (default 1), kind?: "holdings" | "delegators" | "all" (default holdings), limit?: int (0-5000, default 500) }`.
+Output: `{ min_shared, kind, basis, groups: [{ id, title, kind, chain, module, unit, as_of, snapshot_sha256, observations, members_named, members_total, complete }], groups_left_out, pairs: [{ a, b, shared, weight, at_least, match, as_of_a, as_of_b, gap_seconds, gap_days }], pairs_total, pairs_more, accounts, index, absence, does_not_show }`. Each pair once, largest first. For a far-zoom map. `kind: "all"` is hundreds of kilobytes on today's data, so it isn't the default.
+
+#### power_path
+Input: `{ account_a, account_b, max_depth?: int (1-6, default 3; how many shared groups), budget?: int (default 2,000,000; edges read before giving up), include_inferred?: boolean (default false) }`.
+Output: `{ from: { asked, accounts, match | null }, to: { asked, accounts, match | null }, max_depth, budget, walked, found, reason: "found" | "same_account" | "unknown_account" | "no_path" | "depth_limit" | "budget", gave_up, hops, touched, note, does_not_show }`.
+A hop is `{ via: "group", from, to, group: Group, from_in_group, to_in_group }`, with `{ role: "member", share, rank }` or `{ role: "anchor" }` on each end, or, when inference is allowed, `{ via: "same_address", from, to, match }`. `gave_up` is true for `depth_limit` and `budget`: a path may exist. It is one shortest path among possibly many, chosen the same way each time. It isn't scored: group sizes are there so a reader can judge, since a huge group connects nearly anything.
 
 ## Types referenced
 

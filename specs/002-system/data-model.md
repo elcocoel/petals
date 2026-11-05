@@ -49,13 +49,23 @@ A pure function. Surfaces get `Shown[]` and decide how it looks, not what's true
 
 ## Derived index (rebuildable)
 
+In `<stateDir>/index.db`, through `@petal/relations`. Integer ids are hashes of what they name, so they don't depend on the order snapshots arrived in. Answers never show them.
+
 ```
-node(id, kind, chain, address)
-group(id, snapshot_sha256, as_of, measure, coverage)
-membership(account, group, amount, share, rank, as_of)
-relation(subject, verb, object, kind, by, as_of, claim_id)
-group_overlap(a, b, shared, shared_amount, computed_at)
+snapshot(sha256, network, title, as_of)
+grp(id, key, module, chain, kind, measure, unit, title)                 -- a group over time: its module and parameters
+observation(id, group_id, snapshot_sha256, as_of, as_of_s, block_height, final, anchor_account,
+            members_named, members_total, tail_accounts, amount_total, amount_named, named_share,
+            read_window, complete, why_partial, latest)                 -- a group at a date
+node(id, scope, address)                                                -- an address where it means one thing: eip155, or one chain
+account(id, node_id, chain)                                             -- one id per chain
+membership(observation_id, node_id, account_id, amount, share, rnk, kind, identity)  -- amount is an exact decimal string
+adj(src, dst, inferred)                                                 -- accounts positive, observations negative; inferred joins one address on two chains
+group_overlap(a, b, a_obs, b_obs, shared, weight, share_a, share_b, inferred)  -- latest date of each group, both directions
+meta(key, value)
 ```
+
+A `relation` row for claims isn't built yet. Claims would feed these tables: an observed `holds` is a `membership`, a `same_as` an `adj` row with `inferred`, and a claim's kind and author would go alongside (T197).
 
 ## Private
 

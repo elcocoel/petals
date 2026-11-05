@@ -22,6 +22,7 @@
     "gen:types": "node scripts/gen-types.ts",
     "tokens": "node packages/tokens/emit.ts",
     "import:spike": "node scripts/import-spike-data.ts",
+    "relations:rebuild": "node scripts/relations-rebuild.ts",
     "check": "bash scripts/check.sh",
     "prepare": "git config core.hooksPath scripts/git-hooks 2>/dev/null || true"
   },
@@ -32,6 +33,7 @@
     "@petal/core": "workspace:*",
     "@petal/inputs": "workspace:*",
     "@petal/near": "workspace:*",
+    "@petal/relations": "workspace:*",
     "@petal/store": "workspace:*",
     "@petal/tools": "workspace:*",
     "@types/node": "^24.19.2",

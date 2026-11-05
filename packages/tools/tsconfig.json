@@ -12,6 +12,9 @@
       "path": "../near"
     },
     {
+      "path": "../relations"
+    },
+    {
       "path": "../store"
     }
   ]

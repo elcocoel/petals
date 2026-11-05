@@ -8,6 +8,7 @@ export {
   recipeHash,
   recipeOf,
 } from './convention/index.ts';
+export { exactValues, formatDecimal } from './decimal.ts';
 export { BadInputError, InvalidSpecError } from './errors.ts';
 export { compareFigures, computeFigures } from './figures/index.ts';
 export { canonicalJson, entryId, sha256Hex, signedPart, specHash } from './hash.ts';

@@ -48,6 +48,11 @@ export const ROUTES: Record<
   publish_flower: (i) => ({ method: 'POST', path: '/api/v1/publish', body: i }),
   quote_payment: (i) => ({ method: 'POST', path: '/api/v1/quote', body: i }),
   find_target: (i) => ({ method: 'GET', path: `/api/v1/find${qs({ query: i.query })}` }),
+  account_groups: (i) => ({ method: 'GET', path: `/api/v1/relations/account-groups${qs(i)}` }),
+  shared_accounts: (i) => ({ method: 'GET', path: `/api/v1/relations/shared${qs(i)}` }),
+  related_groups: (i) => ({ method: 'GET', path: `/api/v1/relations/related${qs(i)}` }),
+  relations_overview: (i) => ({ method: 'GET', path: `/api/v1/relations/overview${qs(i)}` }),
+  power_path: (i) => ({ method: 'GET', path: `/api/v1/relations/path${qs(i)}` }),
 };
 
 let ip = 0;

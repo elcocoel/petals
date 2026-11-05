@@ -15,6 +15,7 @@ export default defineConfig({
       unit('tokens', 'packages/tokens'),
       unit('core', 'packages/core'),
       unit('store', 'packages/store'),
+      unit('relations', 'packages/relations'),
       unit('inputs', 'packages/inputs'),
       unit('near', 'packages/near'),
       unit('tools', 'packages/tools'),

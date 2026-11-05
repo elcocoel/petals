@@ -10,6 +10,13 @@ import { getFlower, listFlowers } from './tools/flowers.ts';
 import { getNetwork, listNetworks } from './tools/networks.ts';
 import { preparePublish, publishFlower } from './tools/publish.ts';
 import { quotePayment } from './tools/quote.ts';
+import {
+  accountGroupsTool,
+  powerPathTool,
+  relatedGroupsTool,
+  relationsOverviewTool,
+  sharedAccountsTool,
+} from './tools/relations.ts';
 import { renderFlowerTool } from './tools/render.ts';
 import { describeSnapshot, getSnapshotTool } from './tools/snapshots.ts';
 import { proposeSpec, validateSpecTool } from './tools/specs.ts';
@@ -31,6 +38,11 @@ export const registry: Tool<any, any>[] = [
   publishFlower,
   quotePayment,
   findTarget,
+  accountGroupsTool,
+  sharedAccountsTool,
+  relatedGroupsTool,
+  relationsOverviewTool,
+  powerPathTool,
 ];
 
 /** Title, description and hints, for doors that list them (MCP, the agent's tool list). */
