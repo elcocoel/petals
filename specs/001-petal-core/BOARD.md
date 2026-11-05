@@ -36,6 +36,7 @@ Milestones, not days. If one takes a night, so be it. Only two dates are fixed: 
 | [ ] 🔗 | **M7** · fusions (US4) | T119–T123 | a known cluster fuses, with its evidence; look-alikes don't |
 | [ ] 🕰️ | **M8** · two dates (US5) | T124–T131 | two dates side by side, with what changed and a pivotal moment |
 | [ ] 📤 | **M9** · share (US6) | T132–T134 | a shared link opens the identical flower in a fresh browser |
+| [ ] 🧩 | **M-Modules** · Ethereum and Solana data | T156–T161 | one schema-valid data set per module, keyless, drawn by the CLI |
 | [ ] 🚀 | **M-Ship** · README, demo, submit | T135–T155 | frozen 12 Nov; judge path passes from a clean clone; submitted 13 Nov |
 
 **If behind at the freeze, cut from the end:** stretch → T131, T130 → M9 extras → M8 → M7. **Never cut** M3, M5's publish path, M6, the README.
@@ -83,6 +84,7 @@ Why: see plan.md, "Doors".
 | end of M2 | sign the first publish in your wallet; see the skeleton | T073, T075 |
 | M5 | approve a maker write and an agent key in your wallet | T107 |
 | M6 | confirm the hero set; the beauty review | T108, T117 |
+| any time | Envio token (a fallback, not a blocker) | T161 |
 | M-Ship | host; demo video; `petals.near`; submission facts | T136, T145, T147, T148 |
 
 **Always asked at the time** (🔒 Elco OK): push · make public · deploy · post on X · any mainnet spend · send the submission.

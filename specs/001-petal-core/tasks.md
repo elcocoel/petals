@@ -380,6 +380,21 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 
 ---
 
+## Phase 12: Data modules, Ethereum and Solana · M-Modules
+
+**Goal** (Elco, 2026-11-05): know how to get data from each new system, keyless. Heroes are not decided here (T108 stays open) and nothing is labelled by hand. Details and evidence: `../research/hero-candidates.md`.
+
+**Done when**: each module produces one schema-valid stored snapshot with its arithmetic check passing, and `pnpm petal render <network>` draws it.
+
+- [ ] T156 [P] [W2] `evm` reader in `packages/inputs/src/evm/`: log paging, Multicall3, keccak from `@noble/hashes`, keyless RPC pool with pacing. Deps: T034.
+- [ ] T157 [W2] `moloch-v1` module in `packages/inputs/src/modules/moloch-v1.ts`, on T156: members and shares by replay. Check: replay equals `members()` for all 108 addresses. Names found in proposal text are identities marked self-declared. Deps: T156.
+- [ ] T158 [P] [W2] `solana-spl-holders` module in `packages/inputs/src/modules/solana-spl-holders.ts`, any SPL mint, TRUMP as the test: wallets not token accounts, stream parser for the large response, top petals plus a declared tail. Check: the folded total against `getTokenSupply`, any difference stated. Keyless only; no launch history, no labels. Deps: T034.
+- [ ] T159 [W2] Beanstalk stored module in `packages/inputs/src/modules/beanstalk.ts`, on T156: the block before and the attack block. Check: 79.63% reproduced from the fixture. Deps: T156.
+- [ ] T160 [W2] `erc20-votes` module in `packages/inputs/src/modules/erc20-votes.ts`, on T156, ENS as the test: delegates and votes. Check: `getVotes` for all drawn delegates. Backer segments wait (`segments/backers.ts` holds NEAR labels). Deps: T156.
+- [ ] T161 [Elco] Envio token in `../.secrets/envio.env` (`ENVIO_API_TOKEN=`): a fallback for Ethereum logs, not a blocker. Deps: none.
+
+---
+
 ## Dependencies and execution order
 
 ### Milestones
