@@ -119,14 +119,17 @@ if (module === 'moloch-fixture') {
   finish(snapshot, checks);
 } else if (module === 'erc20-holders') {
   const token = process.env.ENVIO_API_TOKEN;
-  const { snapshot, checks } = await pullErc20Holders(holdersTarget(params), {
-    onProgress: log,
-    ...(has('--full') ? { full: true, maxLogCalls: 2000 } : {}),
-    ...(params.window_days && params.window_days !== 'full'
-      ? { windowDays: Number(params.window_days) }
-      : {}),
-    ...(token ? { hypersyncToken: token } : {}),
-  });
+  const { snapshot, checks } = await pullErc20Holders(
+    holdersTarget(has('--full') ? { ...params, window_days: 'full' } : params),
+    {
+      onProgress: log,
+      ...(has('--full') ? { full: true, maxLogCalls: 2000 } : {}),
+      ...(params.window_days && params.window_days !== 'full'
+        ? { windowDays: Number(params.window_days) }
+        : {}),
+      ...(token ? { hypersyncToken: token } : {}),
+    },
+  );
   finish(snapshot, checks);
 } else if (module === 'solana-spl-holders') {
   const mint = splMint(params);
