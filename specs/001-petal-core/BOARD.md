@@ -1,6 +1,6 @@
 # 🌸 Petal board
 
-One page to keep the overview. Detail lives in [tasks.md](./tasks.md) (172 tasks) and [plan.md](./plan.md). Live status: the private tracker [elcocoel/petal-board](https://github.com/elcocoel/petal-board) (30 issues, one milestone each). Tick a milestone here when its "done when" line is true.
+One page to keep the overview. Detail lives in [tasks.md](./tasks.md) (173 tasks) and [plan.md](./plan.md). Live status: the private tracker [elcocoel/petal-board](https://github.com/elcocoel/petal-board) (30 issues, one milestone each). Tick a milestone here when its "done when" line is true.
 
 Milestones, not days. If one takes a night, so be it. Only two dates are fixed: **freeze 12 Nov**, **submit 13 Nov**.
 
