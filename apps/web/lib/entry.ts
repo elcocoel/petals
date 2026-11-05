@@ -34,7 +34,8 @@ export function entryDraftFromRun(run: Run, origin: string): EntryDraft | null {
       agent: {
         kind: 'petal-agent',
         ...(done?.model ? { model: done.model } : {}),
-        signature: signature as ModelSignature | null,
+        // a replay publishes no signature: the recorded one was made for the original run
+        signature: done?.model === 'recorded' ? null : (signature as ModelSignature | null),
       },
       tools_version: TOOLS_VERSION,
       created_at: run.updated_at,

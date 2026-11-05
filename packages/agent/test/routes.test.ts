@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { agentRoutes } from '../src/index.ts';
 import { DEFAULT_BUDGET, type LlmClient } from '../src/llm.ts';
 import { createNearAiClient, DEFAULT_MODEL, FALLBACK_MODELS } from '../src/near-ai.ts';
-import { recordedClient, SKELETON_TRANSCRIPT } from '../src/recorded.ts';
+import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
 import { type AgentRouteOptions, createAgentRoutes } from '../src/routes.ts';
 import { fileRunStore } from '../src/runs.ts';
 import {
@@ -87,7 +87,7 @@ describe('POST /api/v1/agent/chat', () => {
     expect(n[n.indexOf('flower') + 1]).toBe('signature');
     expect(es.map((e) => e.id)).toEqual(es.map((_, i) => String(i)));
     const done = data<{ model: string; turns: number; tokens: { in: number } }>(es, 'done');
-    expect(done).toMatchObject({ model: 'z-ai/glm-5.3-flash', turns: 7, fallback_used: false });
+    expect(done).toMatchObject({ model: DEFAULT_MODEL, turns: 7, fallback_used: false });
     expect(done.tokens.in).toBe(7000);
     const propose = es.find(
       (e) => e.event === 'tool_call' && (e.data as { name: string }).name === 'propose_spec',
@@ -110,7 +110,7 @@ describe('POST /api/v1/agent/chat', () => {
     const ex = fake.exchanges.get('chatcmpl-5');
     expect(sig.request_sha256).toBe(sha256Hex(ex?.request ?? ''));
     expect(sig.response_sha256).toBe(sha256Hex(ex?.response ?? ''));
-    expect(sig.text).toBe(`z-ai/glm-5.3-flash:${sig.request_sha256}:${sig.response_sha256}`);
+    expect(sig.text).toBe(`${DEFAULT_MODEL}:${sig.request_sha256}:${sig.response_sha256}`);
     expect(new TextDecoder().decode(ex?.response)).toContain('validate_spec');
     expect(sig.attestation.report_url).toBe(
       `/api/v1/attestations/${sig.attestation.report_sha256}`,
@@ -118,7 +118,7 @@ describe('POST /api/v1/agent/chat', () => {
   });
 
   test('a recorded run (no key) says so: done.model = "recorded", no signature event', async () => {
-    const { app } = setup({ llm: recordedClient(SKELETON_TRANSCRIPT) });
+    const { app } = setup({ llm: recordedClient(HAND_TRANSCRIPT) });
     const es = parseSse(await (await chat(app)).text());
     expect(data<{ model: string }>(es, 'done').model).toBe('recorded');
     expect(inOrder(names(es), ['run', 'stage', 'tool_call', 'tool_result', 'flower', 'done'])).toBe(
@@ -178,7 +178,7 @@ describe('runs you can leave and come back to', () => {
   });
 
   test('with Accept: text/event-stream a finished run is replayed through done', async () => {
-    const { app } = setup({ llm: recordedClient(SKELETON_TRANSCRIPT) });
+    const { app } = setup({ llm: recordedClient(HAND_TRANSCRIPT) });
     const live = parseSse(await (await chat(app)).text());
     const { run_id } = data<{ run_id: string }>(live, 'run');
     const res = await app.request(`/api/v1/agent/runs/${run_id}`, {

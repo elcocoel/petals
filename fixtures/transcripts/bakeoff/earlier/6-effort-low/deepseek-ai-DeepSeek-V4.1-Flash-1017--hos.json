@@ -1,0 +1,639 @@
+{
+  "petal": "transcript/v1",
+  "kind": "recorded",
+  "title": "Bake-off (hos): deepseek-ai/DeepSeek-V4.1-Flash-1017",
+  "question": "Who holds power in NEAR’s House of Stake? Make me a fresh flower, not an existing one.",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+  "note": "A real run on NEAR AI Cloud (T060), kept with the signature each completion got. A hash or link the model copied from a tool result is written as a reference to that result ($from, {{…}}), so it replays on recordedClient.",
+  "turns": [
+    {
+      "content": "I'll look for the network first.\n\n",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-a8bec6d7fe1374b7",
+          "name": "list_networks",
+          "arguments": {
+            "query": "House of Stake NEAR"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-46d6a7c8-d809-4d59-9dfe-2ac9cf1261cd",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:1678ec720cbd34f42aa339ba6b11f4c36f851b9f651cc71fcb568b58a11fafd1:9da7e1d5c879ab48dee6d42c5807232b58e1ac3f147c7bc509f99b9da177839e",
+        "signature": "0x34e4fc90ccf6cb8c3643b48d0f633578ae55e8fa0ee7aff9681d11700196f2a3527188c3112f6e79c647fa4e386ce3511ea8948d93f770851ad62fdcba7427151c",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "1678ec720cbd34f42aa339ba6b11f4c36f851b9f651cc71fcb568b58a11fafd1",
+        "response_sha256": "9da7e1d5c879ab48dee6d42c5807232b58e1ac3f147c7bc509f99b9da177839e",
+        "fetched_at": "2026-11-05T12:25:05.783Z",
+        "attestation": {
+          "nonce": "e347915a0e7e3d0c0f6286ef77b34ec66043f2df4dcdcf62894f741417dedcfa",
+          "report_sha256": "98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e",
+          "report_url": "/api/v1/attestations/98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-84762d871e94bfd1",
+          "name": "get_network",
+          "arguments": {
+            "id": "near-house-of-stake"
+          }
+        },
+        {
+          "id": "chatcmpl-tool-b522072864539941",
+          "name": "list_flowers",
+          "arguments": {
+            "network": "near-house-of-stake"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-70a21b68-210d-4514-be85-3bbf258d1ae8",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:acf07e1626081a783b6ba2d90c7be43770cb034e972ec3804a03f724a5a6177f:55c3b54c07ea5eeda1f99b1c33cfd5be4a85b5c967502715b85d4631f1eeca4a",
+        "signature": "0xb0114c9e43d051dfcb6dca09c4edd5873bfc1d63582e5e448fc230c064bd61fb0a226601253004eb5f89df29ea2450eadb0cbca81986efd08a1c5e79fd39731a1b",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "acf07e1626081a783b6ba2d90c7be43770cb034e972ec3804a03f724a5a6177f",
+        "response_sha256": "55c3b54c07ea5eeda1f99b1c33cfd5be4a85b5c967502715b85d4631f1eeca4a",
+        "fetched_at": "2026-11-05T12:25:07.183Z",
+        "attestation": {
+          "nonce": "e347915a0e7e3d0c0f6286ef77b34ec66043f2df4dcdcf62894f741417dedcfa",
+          "report_sha256": "98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e",
+          "report_url": "/api/v1/attestations/98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e"
+        }
+      }
+    },
+    {
+      "content": "No existing flowers on this network — a fresh one it is.\n\n",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-93edec156166b162",
+          "name": "get_snapshot",
+          "arguments": {
+            "network": "near-house-of-stake",
+            "fresh": true
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-bd8bb4e4-8d9b-425a-80ad-f48f66f394e2",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:9b0c0cade9b51e45027218e38aa02424148cc054535e97fc292cb8cab0c3e1dd:a66f958b88dbbfa2b2d22c40a90a736cc43447e7b650422f819597b433717cd3",
+        "signature": "0x86722963aa36077dbf5421fb8a6978a4601978a5a89ca281e97edbf5c740522d4c5baf96ee0be8c6c1f382befb6411abb5a0427213b8c47285a5f174f502ffba1b",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "9b0c0cade9b51e45027218e38aa02424148cc054535e97fc292cb8cab0c3e1dd",
+        "response_sha256": "a66f958b88dbbfa2b2d22c40a90a736cc43447e7b650422f819597b433717cd3",
+        "fetched_at": "2026-11-05T12:25:14.421Z",
+        "attestation": {
+          "nonce": "e347915a0e7e3d0c0f6286ef77b34ec66043f2df4dcdcf62894f741417dedcfa",
+          "report_sha256": "98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e",
+          "report_url": "/api/v1/attestations/98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-a53dba0b06582362",
+          "name": "describe_snapshot",
+          "arguments": {
+            "sha256": {
+              "$from": "chatcmpl-tool-93edec156166b162.sha256"
+            },
+            "top": 10
+          }
+        },
+        {
+          "id": "chatcmpl-tool-926e6bfd2e398c5b",
+          "name": "compute_figures",
+          "arguments": {
+            "sha256": {
+              "$from": "chatcmpl-tool-93edec156166b162.sha256"
+            },
+            "measure": "voting_power"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-53322ac3-77af-44b5-b96a-8b4624f62990",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:171310e0e8a5d103c6858f0887de2cbffc84500fdd9d9a7afa3ff6b561feb4f7:e1ab4c75a12bce14ddc73cf70b9e16ce8802bdebbbfdaf7e65bcbfe4996d288e",
+        "signature": "0x3aa3e6fa53c05abc38d537699add966488f5fa08e47726a82cd77f4a21f865b40ef89bdceb11bafe3ee1cf39a878e6c6aa1c7af3da825490508f94b2ac2100e51c",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "171310e0e8a5d103c6858f0887de2cbffc84500fdd9d9a7afa3ff6b561feb4f7",
+        "response_sha256": "e1ab4c75a12bce14ddc73cf70b9e16ce8802bdebbbfdaf7e65bcbfe4996d288e",
+        "fetched_at": "2026-11-05T12:25:29.201Z",
+        "attestation": {
+          "nonce": "e347915a0e7e3d0c0f6286ef77b34ec66043f2df4dcdcf62894f741417dedcfa",
+          "report_sha256": "98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e",
+          "report_url": "/api/v1/attestations/98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e"
+        }
+      }
+    },
+    {
+      "content": "Data in hand. Now the spec — I'll keep the defaults and add `colour: \"identity\"` since you're asking *who*.\n\n",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-928f7865e19c44a3",
+          "name": "propose_spec",
+          "arguments": {
+            "network": "near-house-of-stake",
+            "sha256": {
+              "$from": "chatcmpl-tool-93edec156166b162.sha256"
+            },
+            "choices": {
+              "measure": "voting_power",
+              "colour": "identity"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-fe4a4963-5714-45e1-b671-96806590ea10",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:84afe9430958692d83785cb1f850b5b83f5f1d8043737f3f93623129e92edde4:af7b1fc0ab37e19ef79de3eebd1e373e96d2c61312f239d11657445f3aaf53bd",
+        "signature": "0x8e55ff9c74dc7e9bd021de4e5dada5f99b6b23d0fc9c5795ceed374baada10a27788a0bc68adf83471a81c4a8cd839ee6ea63d915fc351cfc230251862e580321c",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "84afe9430958692d83785cb1f850b5b83f5f1d8043737f3f93623129e92edde4",
+        "response_sha256": "af7b1fc0ab37e19ef79de3eebd1e373e96d2c61312f239d11657445f3aaf53bd",
+        "fetched_at": "2026-11-05T12:25:36.719Z",
+        "attestation": {
+          "nonce": "e347915a0e7e3d0c0f6286ef77b34ec66043f2df4dcdcf62894f741417dedcfa",
+          "report_sha256": "98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e",
+          "report_url": "/api/v1/attestations/98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-aaa701da60eef8c1",
+          "name": "validate_spec",
+          "arguments": {
+            "spec": {
+              "$from": "chatcmpl-tool-928f7865e19c44a3.spec_sha256"
+            },
+            "interpretation": {
+              "summary": "In NEAR's House of Stake power is veNEAR voting power: NEAR locked in lockups, grown by lock time, plus delegated-in veNEAR minus delegated-out. All 519 participants are covered, 465 of them holding nonzero voting power, totalling about 5.36M veNEAR. Power is extremely concentrated: the top 10 accounts hold 81.1% and five accounts together pass half of all voting power. The two largest holders are anonymous implicit accounts, so the flower can show how much they hold but not who they are.",
+              "power_means": [
+                {
+                  "claim": "Voting power in the House of Stake is veNEAR, which combines NEAR locked in a lockup, extra veNEAR from lock duration, and net incoming delegations.",
+                  "sources": [
+                    "venear-accounts",
+                    "hos-source",
+                    "hos-constitution"
+                  ],
+                  "figures": [
+                    "fig:total"
+                  ]
+                },
+                {
+                  "claim": "The distribution is highly concentrated: the top 5 accounts hold 50.7% of voting power and the top 10 hold 81.1%, giving a Nakamoto coefficient of 5 at the 50% threshold.",
+                  "sources": [
+                    "venear-accounts"
+                  ],
+                  "figures": [
+                    "fig:top_k_share.5",
+                    "fig:top_k_share.10",
+                    "fig:nakamoto"
+                  ]
+                },
+                {
+                  "claim": "The Gini coefficient over included participants is 0.976 and HHI is 0.084, while 405 small accounts together hold 0.014% — a long thin tail.",
+                  "sources": [
+                    "venear-accounts"
+                  ],
+                  "figures": [
+                    "fig:gini",
+                    "fig:hhi",
+                    "fig:tail"
+                  ]
+                },
+                {
+                  "claim": "The two largest holders (15.3% and 12.8%) are anonymous implicit accounts; several named accounts such as spareuni818.near and delegatetoyuen.near follow.",
+                  "sources": [
+                    "venear-accounts",
+                    "account-id"
+                  ],
+                  "figures": [
+                    "fig:shares"
+                  ]
+                }
+              ],
+              "mappings": [
+                {
+                  "primitive": "width",
+                  "why": "Each petal's width scales with that account's share of veNEAR voting power, compressed into a 2x band so the tail stays visible.",
+                  "sources": [
+                    "venear-accounts",
+                    "hos-source"
+                  ]
+                },
+                {
+                  "primitive": "height",
+                  "why": "Square root of the voting-power share, so mid-sized holders are not flattened by the two dominant accounts.",
+                  "sources": [
+                    "venear-accounts",
+                    "hos-source"
+                  ]
+                },
+                {
+                  "primitive": "colour",
+                  "why": "Named or anonymous, so you can see that the top two holders are unidentifiable implicit accounts.",
+                  "sources": [
+                    "account-id"
+                  ]
+                },
+                {
+                  "primitive": "outline",
+                  "why": "Solid where the name is a self-declared account id, none where the account is unknown — a name here is self-declared, not verified.",
+                  "sources": [
+                    "account-id"
+                  ]
+                },
+                {
+                  "primitive": "order",
+                  "why": "Largest voting power first, clockwise from the top.",
+                  "sources": [
+                    "venear-accounts"
+                  ]
+                }
+              ],
+              "conflicts": [
+                "Other kinds of power in the House of Stake: roles in the venear.dao and vote.dao configs (with a max_delegations cap of 8), and the ability to author the 30 vote.dao proposals. This flower draws only veNEAR voting power.",
+                "Delegation is a second channel: 145 accounts delegate to 42 delegates, and delegated-in veNEAR (3.34M) is counted inside voting power here."
+              ],
+              "unknowns": [
+                "Who controls the two largest anonymous implicit accounts — addresses are not people.",
+                "Per-voter votes on the 30 proposals were not read, so actual voting behaviour is not shown.",
+                "Each holder's lockup contract and its staking, and any off-chain delegate profiles, are not included.",
+                "Delegation relationships are counted as current, not as they stood at each past proposal.",
+                "Whether any named account is the same person or entity as another is not determined."
+              ],
+              "inferred": [
+                "That the concentration measured today fairly represents influence over future votes is an inference: it assumes holders vote as they hold, which the snapshot does not check."
+              ],
+              "documents": []
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-aee4efde-0a2d-4903-8dbc-9f8205f63bee",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:42aafbf44ac712ff9dcf34a37553c19b321df60bbdeb088e283746c9703c0492:6ba068f532da47156bb1545f1214b96c2cf4a8b831ba6d31536bee3d3a859473",
+        "signature": "0x7d3f3960b009f304a8f2e0751e91dd5094d6626e250854257e0e68ae1add02ed6733e49a2c341b05e5776ce05f039cb2520b7c7c179236f943253435f808bff71c",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "42aafbf44ac712ff9dcf34a37553c19b321df60bbdeb088e283746c9703c0492",
+        "response_sha256": "6ba068f532da47156bb1545f1214b96c2cf4a8b831ba6d31536bee3d3a859473",
+        "fetched_at": "2026-11-05T12:25:54.385Z",
+        "attestation": {
+          "nonce": "e347915a0e7e3d0c0f6286ef77b34ec66043f2df4dcdcf62894f741417dedcfa",
+          "report_sha256": "98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e",
+          "report_url": "/api/v1/attestations/98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-9f6b661352a86d77",
+          "name": "render_flower",
+          "arguments": {
+            "spec": {
+              "$from": "chatcmpl-tool-928f7865e19c44a3.spec_sha256"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-36f8c94f-9570-4966-9deb-4340ee646e44",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:940552a2132644de3a4e9acd0e844a8ced714dc5a5e0325649fd51fd3b6feae6:1262ed8f39d94759a7cceeacf51dbb19e332b8e5e18e5138f0e450f232e9d720",
+        "signature": "0xbab8f90a1bc8bd5debc0908db5123b4faf9a0454bb7c9e6bd134c2a24679c30e7a42f9a00905039e3450c5f328dd582504a57c4d34a8f7bf39a624b7c56c2dd71c",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "940552a2132644de3a4e9acd0e844a8ced714dc5a5e0325649fd51fd3b6feae6",
+        "response_sha256": "1262ed8f39d94759a7cceeacf51dbb19e332b8e5e18e5138f0e450f232e9d720",
+        "fetched_at": "2026-11-05T12:25:55.850Z",
+        "attestation": {
+          "nonce": "e347915a0e7e3d0c0f6286ef77b34ec66043f2df4dcdcf62894f741417dedcfa",
+          "report_sha256": "98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e",
+          "report_url": "/api/v1/attestations/98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e"
+        }
+      }
+    },
+    {
+      "content": "**Flower:** [{{chatcmpl-tool-9f6b661352a86d77.view_url}}]({{chatcmpl-tool-9f6b661352a86d77.view_url}}) — fresh read, block 223165625, 2026-11-05T12:25Z (not reused). No existing flower covered this network.\n\n**What you'll see:** 60 petals plus a hatched \"everyone else\" tail. Five accounts together pass half of all veNEAR; the two biggest are anonymous.\n\n**Mapping**\n- **Width** — share of veNEAR voting power, in a 2× band (`venear-accounts`, `hos-source`)\n- **Height** — √share, so mid-size holders stay visible (`venear-accounts`)\n- **Colour** — named vs anonymous (`account-id`)\n- **Outline** — solid = self-declared name, none = unknown (`account-id`)\n- **Order** — most power first, clockwise (`venear-accounts`)\n\n**Changed from the default:** colour (identity).\n\n**Numbers:** 5,364,537.6 veNEAR across 519 participants (465 with power). Top 5 = 50.7% (`fig:top_k_share.5`), top 10 = 81.1%, Nakamoto = 5, Gini 0.976 (`fig:gini`).\n\n**What this can't tell you:** who controls the top two anonymous accounts — addresses are not people; per-voter votes on the 30 proposals (not read); lockup contracts and off-chain delegate profiles; and delegation is current, not as it stood at each proposal. Roles in venear.dao/vote.dao are a separate kind of power this flower doesn't draw.",
+      "tool_calls": [],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-41cc6eda-6bd5-4fe6-b960-35b39757dd44",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:e52e6106b517956c3488b1eef5ad4c6694fc7b2dd8c2b384bd0c2e5230563d43:8f6031ef55585eb8a500c131941ca8a5370d35d783ea2ac279f2290c6754de7e",
+        "signature": "0xe9480a2ac940480854db34b36f75f989c893cd7c366d617cf24a6b769c79ad906939c1ed4e874d7698e219a6d43d6827472d5c2ac351822b44ba28668137c26c1b",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "e52e6106b517956c3488b1eef5ad4c6694fc7b2dd8c2b384bd0c2e5230563d43",
+        "response_sha256": "8f6031ef55585eb8a500c131941ca8a5370d35d783ea2ac279f2290c6754de7e",
+        "fetched_at": "2026-11-05T12:26:01.281Z",
+        "attestation": {
+          "nonce": "e347915a0e7e3d0c0f6286ef77b34ec66043f2df4dcdcf62894f741417dedcfa",
+          "report_sha256": "98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e",
+          "report_url": "/api/v1/attestations/98be322812d73e6c5f0027ca50462396f6d6eda9b58c828ab8362d45fab4a04e"
+        }
+      }
+    }
+  ],
+  "run": {
+    "started_at": "2026-11-05T12:25:02.908Z",
+    "success": true,
+    "wall_ms": 58375,
+    "longest_gap_ms": 8001,
+    "turns": 8,
+    "tokens": {
+      "in": 62817,
+      "out": 2247
+    },
+    "cost_usd": 0.021541,
+    "per_turn": [
+      {
+        "ms": 2875,
+        "in": 4639,
+        "out": 58,
+        "usd": 0.0014613,
+        "tools": [
+          "list_networks"
+        ]
+      },
+      {
+        "ms": 1398,
+        "in": 4918,
+        "out": 93,
+        "usd": 0.001587,
+        "tools": [
+          "get_network",
+          "list_flowers"
+        ]
+      },
+      {
+        "ms": 6777,
+        "in": 6239,
+        "out": 86,
+        "usd": 0.0019749,
+        "tools": [
+          "get_snapshot"
+        ]
+      },
+      {
+        "ms": 4174,
+        "in": 6527,
+        "out": 194,
+        "usd": 0.0021909,
+        "tools": [
+          "describe_snapshot",
+          "compute_figures"
+        ]
+      },
+      {
+        "ms": 7502,
+        "in": 9017,
+        "out": 315,
+        "usd": 0.0030831,
+        "tools": [
+          "propose_spec"
+        ]
+      },
+      {
+        "ms": 17663,
+        "in": 9642,
+        "out": 1069,
+        "usd": 0.0041754,
+        "tools": [
+          "validate_spec"
+        ]
+      },
+      {
+        "ms": 1420,
+        "in": 10673,
+        "out": 76,
+        "usd": 0.0032931,
+        "tools": [
+          "render_flower"
+        ]
+      },
+      {
+        "ms": 5423,
+        "in": 11162,
+        "out": 356,
+        "usd": 0.0037758,
+        "tools": []
+      }
+    ],
+    "tool_ms": [
+      {
+        "name": "list_networks",
+        "ok": true,
+        "ms": 0,
+        "summary": "1 networks: near-house-of-stake"
+      },
+      {
+        "name": "get_network",
+        "ok": true,
+        "ms": 285,
+        "summary": "near-house-of-stake: 14 snapshots mapped"
+      },
+      {
+        "name": "list_flowers",
+        "ok": true,
+        "ms": 175,
+        "summary": "0 flowers"
+      },
+      {
+        "name": "get_snapshot",
+        "ok": true,
+        "ms": 10605,
+        "summary": "read fresh from fetched: block 223165625, 2026-11-05T12:25:12Z (5e14d5083f3a…)"
+      },
+      {
+        "name": "describe_snapshot",
+        "ok": true,
+        "ms": 14,
+        "summary": "7 measures; largest: cc96f558…c807, 4783b548…6172, spareuni818.near"
+      },
+      {
+        "name": "compute_figures",
+        "ok": true,
+        "ms": 0,
+        "summary": "Nakamoto 5 at 0.5; 465 included; top 10 hold 81.1%"
+      },
+      {
+        "name": "propose_spec",
+        "ok": true,
+        "ms": 3,
+        "summary": "spec 8f640282ac18…; changed from default: colour"
+      },
+      {
+        "name": "validate_spec",
+        "ok": true,
+        "ms": 43,
+        "summary": "valid"
+      },
+      {
+        "name": "render_flower",
+        "ok": true,
+        "ms": 7,
+        "summary": "drawn: render 307fb20c48bc…, 6 legend lines"
+      }
+    ],
+    "validate_tries": 1,
+    "errors": [],
+    "warnings": [],
+    "unbacked_numbers": [],
+    "unbacked_in_interpretation": [],
+    "signature_kind": "provider_tee",
+    "signature_id": "chatcmpl-aee4efde-0a2d-4903-8dbc-9f8205f63bee",
+    "spec_sha256": "8f640282ac18e70b6669a2d6e016ec3340450c32ec5094ea7ea7a5134063cdd7",
+    "proposed": [
+      {
+        "network": "near-house-of-stake",
+        "sha256": "5e14d5083f3a0f3451e9f9edb7f5c9feb357d751b50c9f1e14ea5de664741c56",
+        "choices": {
+          "measure": "voting_power",
+          "colour": "identity"
+        }
+      }
+    ],
+    "interpretation": {
+      "summary": "In NEAR's House of Stake power is veNEAR voting power: NEAR locked in lockups, grown by lock time, plus delegated-in veNEAR minus delegated-out. All 519 participants are covered, 465 of them holding nonzero voting power, totalling about 5.36M veNEAR. Power is extremely concentrated: the top 10 accounts hold 81.1% and five accounts together pass half of all voting power. The two largest holders are anonymous implicit accounts, so the flower can show how much they hold but not who they are.",
+      "power_means": [
+        {
+          "claim": "Voting power in the House of Stake is veNEAR, which combines NEAR locked in a lockup, extra veNEAR from lock duration, and net incoming delegations.",
+          "sources": [
+            "venear-accounts",
+            "hos-source",
+            "hos-constitution"
+          ],
+          "figures": [
+            "fig:total"
+          ]
+        },
+        {
+          "claim": "The distribution is highly concentrated: the top 5 accounts hold 50.7% of voting power and the top 10 hold 81.1%, giving a Nakamoto coefficient of 5 at the 50% threshold.",
+          "sources": [
+            "venear-accounts"
+          ],
+          "figures": [
+            "fig:top_k_share.5",
+            "fig:top_k_share.10",
+            "fig:nakamoto"
+          ]
+        },
+        {
+          "claim": "The Gini coefficient over included participants is 0.976 and HHI is 0.084, while 405 small accounts together hold 0.014% — a long thin tail.",
+          "sources": [
+            "venear-accounts"
+          ],
+          "figures": [
+            "fig:gini",
+            "fig:hhi",
+            "fig:tail"
+          ]
+        },
+        {
+          "claim": "The two largest holders (15.3% and 12.8%) are anonymous implicit accounts; several named accounts such as spareuni818.near and delegatetoyuen.near follow.",
+          "sources": [
+            "venear-accounts",
+            "account-id"
+          ],
+          "figures": [
+            "fig:shares"
+          ]
+        }
+      ],
+      "mappings": [
+        {
+          "primitive": "width",
+          "why": "Each petal's width scales with that account's share of veNEAR voting power, compressed into a 2x band so the tail stays visible.",
+          "sources": [
+            "venear-accounts",
+            "hos-source"
+          ]
+        },
+        {
+          "primitive": "height",
+          "why": "Square root of the voting-power share, so mid-sized holders are not flattened by the two dominant accounts.",
+          "sources": [
+            "venear-accounts",
+            "hos-source"
+          ]
+        },
+        {
+          "primitive": "colour",
+          "why": "Named or anonymous, so you can see that the top two holders are unidentifiable implicit accounts.",
+          "sources": [
+            "account-id"
+          ]
+        },
+        {
+          "primitive": "outline",
+          "why": "Solid where the name is a self-declared account id, none where the account is unknown — a name here is self-declared, not verified.",
+          "sources": [
+            "account-id"
+          ]
+        },
+        {
+          "primitive": "order",
+          "why": "Largest voting power first, clockwise from the top.",
+          "sources": [
+            "venear-accounts"
+          ]
+        }
+      ],
+      "conflicts": [
+        "Other kinds of power in the House of Stake: roles in the venear.dao and vote.dao configs (with a max_delegations cap of 8), and the ability to author the 30 vote.dao proposals. This flower draws only veNEAR voting power.",
+        "Delegation is a second channel: 145 accounts delegate to 42 delegates, and delegated-in veNEAR (3.34M) is counted inside voting power here."
+      ],
+      "unknowns": [
+        "Who controls the two largest anonymous implicit accounts — addresses are not people.",
+        "Per-voter votes on the 30 proposals were not read, so actual voting behaviour is not shown.",
+        "Each holder's lockup contract and its staking, and any off-chain delegate profiles, are not included.",
+        "Delegation relationships are counted as current, not as they stood at each past proposal.",
+        "Whether any named account is the same person or entity as another is not determined."
+      ],
+      "inferred": [
+        "That the concentration measured today fairly represents influence over future votes is an inference: it assumes holders vote as they hold, which the snapshot does not check."
+      ],
+      "documents": []
+    },
+    "answer": "I'll look for the network first.\nNo existing flowers on this network — a fresh one it is.\nData in hand. Now the spec — I'll keep the defaults and add `colour: \"identity\"` since you're asking *who*.\n**Flower:** [/draft?spec=eyJjb252ZW50aW9uIjp7ImNoYW5nZXMiOltdLCJpZCI6ImRlZmF1bHQvdjEiLCJ2YXJpYXRpb25fb2YiOm51bGx9LCJlbmNvZGluZ3MiOnsiY29sb3VyIjp7ImJ5IjoiaWRlbnRpdHkiLCJtZWFuaW5nIjoibmFtZWQgKGEgbmFtZWQgYWNjb3VudCBpZCwgc2VsZi1kZWNsYXJlZCkgb3IgYW5vbnltb3VzIChhbiBpbXBsaWNpdCBhY2NvdW50KSIsInNvdXJjZXMiOlsiYWNjb3VudC1pZCJdfSwiaGVpZ2h0Ijp7ImJ5Ijoic2hhcmUiLCJtZWFuaW5nIjoic3F1YXJlIHJvb3Qgb2YgdGhlIGFjY291bnQncyBzaGFyZSBvZiB2ZU5FQVIgdm90aW5nIHBvd2VyIiwic2NhbGUiOiJzcXJ0Iiwic291cmNlcyI6WyJ2ZW5lYXItYWNjb3VudHMiLCJob3Mtc291cmNlIl19LCJvcmRlciI6eyJieSI6Im1lYXN1cmVfZGVzYyIsIm1lYW5pbmciOiJtb3N0IHZvdGluZyBwb3dlciBmaXJzdCwgY2xvY2t3aXNlIGZyb20gdGhlIHRvcCIsInNvdXJjZXMiOlsidmVuZWFyLWFjY291bnRzIl19LCJvdXRsaW5lIjp7ImJ5IjoiaWRlbnRpdHlfc3RhdHVzIiwibWVhbmluZyI6InNvbGlkIHdoZW4gdGhlIG5hbWUgaXMgc2VsZi1kZWNsYXJlZCAoYSBuYW1lZCBhY2NvdW50IGlkKSwgbm9uZSB3aGVuIHVua25vd24iLCJzb3VyY2VzIjpbImFjY291bnQtaWQiXX0sInNlZ21lbnRzIjpudWxsLCJ3aWR0aCI6eyJieSI6InNoYXJlIiwibWF4X3JhdGlvIjoyLCJtZWFuaW5nIjoidGhlIGFjY291bnQncyBzaGFyZSBvZiB2ZU5FQVIgdm90aW5nIHBvd2VyLCBjb21wcmVzc2VkIGludG8gYSBiYW5kIiwic2NhbGUiOiJsb2ciLCJzb3VyY2VzIjpbInZlbmVhci1hY2NvdW50cyIsImhvcy1zb3VyY2UiXX19LCJsYWJlbHMiOiJub25lIiwibmV0d29yayI6eyJjaGFpbiI6Im5lYXI6bWFpbm5ldCIsImlkIjoibmVhci1ob3VzZS1vZi1zdGFrZSIsInBvcHVsYXRpb24iOiJob3VzZS1vZi1zdGFrZSJ9LCJwZXRhbCI6InNwZWMvdjEiLCJzZWxlY3Rpb24iOnsibWVhc3VyZSI6InZvdGluZ19wb3dlciIsInBldGFscyI6NjAsInRhaWwiOnsiZ3JvdXAiOnRydWUsImxhYmVsIjoiZXZlcnlvbmUgZWxzZSJ9fSwic25hcHNob3QiOnsiYXNfb2YiOiIyMDI2LTExLTA1VDEyOjI1OjEyWiIsImJsb2NrX2hlaWdodCI6MjIzMTY1NjI1LCJzaGEyNTYiOiI1ZTE0ZDUwODNmM2EwZjM0NTFlOWY5ZWRiN2Y1YzlmZWIzNTdkNzUxYjUwYzlmMWUxNGVhNWRlNjY0NzQxYzU2In19](/draft?spec=eyJjb252ZW50aW9uIjp7ImNoYW5nZXMiOltdLCJpZCI6ImRlZmF1bHQvdjEiLCJ2YXJpYXRpb25fb2YiOm51bGx9LCJlbmNvZGluZ3MiOnsiY29sb3VyIjp7ImJ5IjoiaWRlbnRpdHkiLCJtZWFuaW5nIjoibmFtZWQgKGEgbmFtZWQgYWNjb3VudCBpZCwgc2VsZi1kZWNsYXJlZCkgb3IgYW5vbnltb3VzIChhbiBpbXBsaWNpdCBhY2NvdW50KSIsInNvdXJjZXMiOlsiYWNjb3VudC1pZCJdfSwiaGVpZ2h0Ijp7ImJ5Ijoic2hhcmUiLCJtZWFuaW5nIjoic3F1YXJlIHJvb3Qgb2YgdGhlIGFjY291bnQncyBzaGFyZSBvZiB2ZU5FQVIgdm90aW5nIHBvd2VyIiwic2NhbGUiOiJzcXJ0Iiwic291cmNlcyI6WyJ2ZW5lYXItYWNjb3VudHMiLCJob3Mtc291cmNlIl19LCJvcmRlciI6eyJieSI6Im1lYXN1cmVfZGVzYyIsIm1lYW5pbmciOiJtb3N0IHZvdGluZyBwb3dlciBmaXJzdCwgY2xvY2t3aXNlIGZyb20gdGhlIHRvcCIsInNvdXJjZXMiOlsidmVuZWFyLWFjY291bnRzIl19LCJvdXRsaW5lIjp7ImJ5IjoiaWRlbnRpdHlfc3RhdHVzIiwibWVhbmluZyI6InNvbGlkIHdoZW4gdGhlIG5hbWUgaXMgc2VsZi1kZWNsYXJlZCAoYSBuYW1lZCBhY2NvdW50IGlkKSwgbm9uZSB3aGVuIHVua25vd24iLCJzb3VyY2VzIjpbImFjY291bnQtaWQiXX0sInNlZ21lbnRzIjpudWxsLCJ3aWR0aCI6eyJieSI6InNoYXJlIiwibWF4X3JhdGlvIjoyLCJtZWFuaW5nIjoidGhlIGFjY291bnQncyBzaGFyZSBvZiB2ZU5FQVIgdm90aW5nIHBvd2VyLCBjb21wcmVzc2VkIGludG8gYSBiYW5kIiwic2NhbGUiOiJsb2ciLCJzb3VyY2VzIjpbInZlbmVhci1hY2NvdW50cyIsImhvcy1zb3VyY2UiXX19LCJsYWJlbHMiOiJub25lIiwibmV0d29yayI6eyJjaGFpbiI6Im5lYXI6bWFpbm5ldCIsImlkIjoibmVhci1ob3VzZS1vZi1zdGFrZSIsInBvcHVsYXRpb24iOiJob3VzZS1vZi1zdGFrZSJ9LCJwZXRhbCI6InNwZWMvdjEiLCJzZWxlY3Rpb24iOnsibWVhc3VyZSI6InZvdGluZ19wb3dlciIsInBldGFscyI6NjAsInRhaWwiOnsiZ3JvdXAiOnRydWUsImxhYmVsIjoiZXZlcnlvbmUgZWxzZSJ9fSwic25hcHNob3QiOnsiYXNfb2YiOiIyMDI2LTExLTA1VDEyOjI1OjEyWiIsImJsb2NrX2hlaWdodCI6MjIzMTY1NjI1LCJzaGEyNTYiOiI1ZTE0ZDUwODNmM2EwZjM0NTFlOWY5ZWRiN2Y1YzlmZWIzNTdkNzUxYjUwYzlmMWUxNGVhNWRlNjY0NzQxYzU2In19) — fresh read, block 223165625, 2026-11-05T12:25Z (not reused). No existing flower covered this network.\n\n**What you'll see:** 60 petals plus a hatched \"everyone else\" tail. Five accounts together pass half of all veNEAR; the two biggest are anonymous.\n\n**Mapping**\n- **Width** — share of veNEAR voting power, in a 2× band (`venear-accounts`, `hos-source`)\n- **Height** — √share, so mid-size holders stay visible (`venear-accounts`)\n- **Colour** — named vs anonymous (`account-id`)\n- **Outline** — solid = self-declared name, none = unknown (`account-id`)\n- **Order** — most power first, clockwise (`venear-accounts`)\n\n**Changed from the default:** colour (identity).\n\n**Numbers:** 5,364,537.6 veNEAR across 519 participants (465 with power). Top 5 = 50.7% (`fig:top_k_share.5`), top 10 = 81.1%, Nakamoto = 5, Gini 0.976 (`fig:gini`).\n\n**What this can't tell you:** who controls the top two anonymous accounts — addresses are not people; per-voter votes on the 30 proposals (not read); lockup contracts and off-chain delegate profiles; and delegation is current, not as it stood at each proposal. Roles in venear.dao/vote.dao are a separate kind of power this flower doesn't draw."
+  }
+}

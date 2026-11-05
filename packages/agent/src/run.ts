@@ -22,7 +22,7 @@ import type { Budget, LlmClient, LlmCompletion, LlmMessage, LlmToolCall } from '
 import { LlmCallError } from './near-ai.ts';
 import { agentNotes, SYSTEM_PROMPT } from './prompt.ts';
 import { newRunId } from './runs.ts';
-import { forModel, isToolError, summarize } from './summary.ts';
+import { draftLink, forModel, isToolError, summarize } from './summary.ts';
 import { type AnyTool, llmTools, STAGE_MESSAGE, STAGE_OF } from './tool-defs.ts';
 
 export interface RunInput {
@@ -218,6 +218,13 @@ async function loop(
     string,
     { interpretation: Interpretation; validation: Validation; signature: ModelSignature | null }
   >();
+  // The short link the model was given for each flower, and the real one (summary.ts, draftLink).
+  const links = new Map<string, string>();
+  const withLinks = (text: string) => {
+    let out = text;
+    for (const [short, url] of links) out = out.replaceAll(short, url);
+    return out;
+  };
   const draftSpec = input.draft?.spec;
   const draftHash = hashOf(draftSpec);
   if (draftSpec && draftHash) specs.set(draftHash, draftSpec);
@@ -236,10 +243,12 @@ async function loop(
 
   async function callTool(call: LlmToolCall, by: LlmCompletion): Promise<unknown> {
     let args: unknown;
+    let notJson = '';
     try {
       args = call.arguments.trim() ? JSON.parse(call.arguments) : {};
-    } catch {
+    } catch (e) {
       args = undefined;
+      notJson = (e as Error).message;
     }
     // A spec may be named by its spec_sha256 instead of being copied: copying long JSON is where
     // small models slip.
@@ -263,12 +272,22 @@ async function loop(
     const t0 = clock();
     let out: unknown;
     if (!args || typeof args !== 'object' || Array.isArray(args)) {
-      out = toolError('bad_input', `the arguments of ${call.name} are not a JSON object`);
+      out = toolError(
+        'bad_input',
+        `the arguments of ${call.name} are not a JSON object${notJson ? ` (${notJson})` : ''}`,
+        'Send the same call again as one valid JSON object.',
+      );
     } else if (!tool || !tools.some((d) => d.name === call.name)) {
       out = toolError(
         'not_found',
         `no tool named ${call.name}`,
         `Tools: ${tools.map((d) => d.name).join(', ')}`,
+      );
+    } else if (typeof (args as Obj).spec === 'string') {
+      out = toolError(
+        'bad_input',
+        `No spec named ${String((args as Obj).spec)} in this chat.`,
+        'Pass the spec_sha256 that propose_spec returned.',
       );
     } else if (
       call.name === 'render_flower' &&
@@ -331,6 +350,9 @@ async function loop(
       const h = hashOf(args.spec);
       const v = h ? passed.get(h) : undefined;
       if (!h || !v) return;
+      if (typeof out.spec_sha256 === 'string' && typeof out.view_url === 'string') {
+        links.set(draftLink(out.spec_sha256), out.view_url);
+      }
       const flower: FlowerResult = {
         spec: args.spec as Spec,
         spec_sha256: typeof out.spec_sha256 === 'string' ? out.spec_sha256 : h,
@@ -383,7 +405,7 @@ async function loop(
 
       messages.push(c.message);
       const text = c.message.content?.trim();
-      if (text) emit({ event: 'message', data: { text } });
+      if (text) emit({ event: 'message', data: { text: withLinks(text) } });
       const calls = c.message.tool_calls ?? [];
       if (!calls.length) {
         if (!text) fail('source_failed', 'The model gave an empty answer.');
@@ -412,6 +434,8 @@ async function loop(
     if (e instanceof Timeout) {
       fail('budget_exhausted', `The chat ran past its ${budget.wallSeconds} s.`, SKILL_HINT);
     } else if (e instanceof LlmCallError) {
+      totals.usd += e.costUsd;
+      await spend(e.costUsd);
       fail(e.code, e.message, e.hint, e.retryAfterS);
     } else {
       fail('source_failed', `The model call failed: ${(e as Error)?.message ?? String(e)}`);

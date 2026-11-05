@@ -28,6 +28,29 @@ const rulesOf = (spec: unknown, c: Parameters<typeof validateSpec>[1] = ctx) => 
 };
 
 describe('validateSpec', () => {
+  test('an interpretation error says what was expected: all of them, with path and allowed values', () => {
+    const v = validateSpec(base(), {
+      ...ctx,
+      interpretation: {
+        ...sampleInterpretation,
+        conflicts: 'not a list',
+        extra: 1,
+        documents: [{ id: 'x', kind: 'blog' }],
+      } as unknown as Interpretation,
+    });
+    const said = v.errors.map((e) => `${e.path}: ${e.message}`);
+    expect(said).toEqual(
+      expect.arrayContaining([
+        '/interpretation/conflicts: must be array',
+        '/interpretation: must NOT have additional properties: extra',
+        "/interpretation/documents/0: must have required property 'url'",
+        "/interpretation/documents/0: must have required property 'fetched_at'",
+        '/interpretation/documents/0/kind: must be equal to one of the allowed values: docs, forum, constitution, chain, news, other',
+      ]),
+    );
+    expect(v.errors.every((e) => e.rule === 'interpretation')).toBe(true);
+  });
+
   test('a built spec is valid, with no warnings', () => {
     expect(validateSpec(base(), ctx)).toEqual({ valid: true, errors: [], warnings: [] });
   });

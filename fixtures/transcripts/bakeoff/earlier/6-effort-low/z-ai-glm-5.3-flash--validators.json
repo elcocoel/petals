@@ -1,0 +1,550 @@
+{
+  "petal": "transcript/v1",
+  "kind": "recorded",
+  "title": "Bake-off (validators): z-ai/glm-5.3-flash",
+  "question": "Who stands behind NEAR’s validators? Make me a fresh flower with their backers, not an existing one.",
+  "model": "z-ai/glm-5.3-flash",
+  "note": "A real run on NEAR AI Cloud (T060), kept with the signature each completion got. A hash or link the model copied from a tool result is written as a reference to that result ($from, {{…}}), so it replays on recordedClient.",
+  "turns": [
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_57afaae129a54072a754a248",
+          "name": "list_networks",
+          "arguments": {
+            "query": "near"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "z-ai/glm-5.3-flash",
+        "completion_id": "1e6ec064b24042fc9e04f05773c1593a",
+        "signature_kind": "provider_tee",
+        "text": "z-ai/glm-5.3-flash:4b207ed843de9ee71a2137610599cb389300d26273c65e388bb0de29e901c814:95a70fe8e929e600a27aba1f71c761259587281649c10a099d4a46e695faaa85",
+        "signature": "0x197c939c028ec6785a15cef727770693fc41be33c5d0a63a35983ef8bb8400af2d0269e16b3557196eb9fd87623d18ebd5e72251b20838b0678501a66da0fa7b1b",
+        "signing_address": "0x3b753b4406613c5e70ae640508632b600424fa0c",
+        "signing_algo": "ecdsa",
+        "request_sha256": "4b207ed843de9ee71a2137610599cb389300d26273c65e388bb0de29e901c814",
+        "response_sha256": "95a70fe8e929e600a27aba1f71c761259587281649c10a099d4a46e695faaa85",
+        "fetched_at": "2026-11-05T12:26:05.721Z",
+        "attestation": {
+          "nonce": "8596d4db3f5b17eb6ebb4b1d32c3e35df1ad3471af81b32c40debfbf862ceb33",
+          "report_sha256": "ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383",
+          "report_url": "/api/v1/attestations/ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_fdbdc9d84ae64a39918be5ff",
+          "name": "get_snapshot",
+          "arguments": {
+            "network": "near-validators"
+          }
+        },
+        {
+          "id": "call_2885f4e5c8a244b999784c87",
+          "name": "list_flowers",
+          "arguments": {
+            "network": "near-validators"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "z-ai/glm-5.3-flash",
+        "completion_id": "78800943a9354b1082adfbf98c1770fb",
+        "signature_kind": "provider_tee",
+        "text": "z-ai/glm-5.3-flash:eaa00a5745112b62cb8e43ff0c8a0502ce8a57a5d3212b399cbecb23e99666d2:0cbb617d19b7174b3b03495e66b015b4e47e93e875a9116f85d439c5743f29af",
+        "signature": "0x2463877a198720fa156152e250c604472a9286346eb946e67ae4816375c59cb70bac36735e57249e84214ccefff8ad9f8e4ea9b2c90c5c9c91f41d525c016d8c1b",
+        "signing_address": "0x3b753b4406613c5e70ae640508632b600424fa0c",
+        "signing_algo": "ecdsa",
+        "request_sha256": "eaa00a5745112b62cb8e43ff0c8a0502ce8a57a5d3212b399cbecb23e99666d2",
+        "response_sha256": "0cbb617d19b7174b3b03495e66b015b4e47e93e875a9116f85d439c5743f29af",
+        "fetched_at": "2026-11-05T12:26:06.725Z",
+        "attestation": {
+          "nonce": "8596d4db3f5b17eb6ebb4b1d32c3e35df1ad3471af81b32c40debfbf862ceb33",
+          "report_sha256": "ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383",
+          "report_url": "/api/v1/attestations/ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_b8cca53e4cb140dbab243581",
+          "name": "describe_snapshot",
+          "arguments": {
+            "sha256": {
+              "$from": "call_fdbdc9d84ae64a39918be5ff.sha256"
+            }
+          }
+        },
+        {
+          "id": "call_80158003d4dd443ebd18f746",
+          "name": "compute_figures",
+          "arguments": {
+            "measure": "validator_stake_current_epoch",
+            "sha256": {
+              "$from": "call_fdbdc9d84ae64a39918be5ff.sha256"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "z-ai/glm-5.3-flash",
+        "completion_id": "9c683cd379e340b38fe50d51d830da6a",
+        "signature_kind": "provider_tee",
+        "text": "z-ai/glm-5.3-flash:248074fb498c7d4caa101f434b1f340bf38c0beff641a047e8b992879dc926a7:13522fe89024f443cdf536e3277222fcd0091144cfb9395317f0f6ea8826cb08",
+        "signature": "0x0ad5e87237de8daa6e878d3c02396ae04801aab87799f2098c4f41082b10372d5e3dfd158d8f3d7c0be7873bc4b207418705d98218e7a92a2483bf11f02455d61c",
+        "signing_address": "0x3b753b4406613c5e70ae640508632b600424fa0c",
+        "signing_algo": "ecdsa",
+        "request_sha256": "248074fb498c7d4caa101f434b1f340bf38c0beff641a047e8b992879dc926a7",
+        "response_sha256": "13522fe89024f443cdf536e3277222fcd0091144cfb9395317f0f6ea8826cb08",
+        "fetched_at": "2026-11-05T12:26:08.960Z",
+        "attestation": {
+          "nonce": "8596d4db3f5b17eb6ebb4b1d32c3e35df1ad3471af81b32c40debfbf862ceb33",
+          "report_sha256": "ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383",
+          "report_url": "/api/v1/attestations/ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_0067ec9f8e434fa298ace0fc",
+          "name": "propose_spec",
+          "arguments": {
+            "choices": {
+              "colour": "kind",
+              "height": "sqrt",
+              "measure": "validator_stake_current_epoch",
+              "segments": "backers",
+              "width": "r2"
+            },
+            "network": "near-validators",
+            "sha256": {
+              "$from": "call_fdbdc9d84ae64a39918be5ff.sha256"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "z-ai/glm-5.3-flash",
+        "completion_id": "e93d6511268c4bb488371505738daa5c",
+        "signature_kind": "provider_tee",
+        "text": "z-ai/glm-5.3-flash:178c6009fc42d5c1fd0576a62049d7fa2d1c50847316a158858f9ba7576890c7:b0ea8f936b93200ba03be796bc672dff94ce78b155703b6df5691639cc57783b",
+        "signature": "0x9f9621fedaf85ce407b9a43d5ff920ba764857d798807974022de8e010e5ad6918f0f1017a2a35e1a84b72f4fcf6362bdd18568cbe3782d15d5760a7e99674361c",
+        "signing_address": "0x3b753b4406613c5e70ae640508632b600424fa0c",
+        "signing_algo": "ecdsa",
+        "request_sha256": "178c6009fc42d5c1fd0576a62049d7fa2d1c50847316a158858f9ba7576890c7",
+        "response_sha256": "b0ea8f936b93200ba03be796bc672dff94ce78b155703b6df5691639cc57783b",
+        "fetched_at": "2026-11-05T12:26:11.971Z",
+        "attestation": {
+          "nonce": "8596d4db3f5b17eb6ebb4b1d32c3e35df1ad3471af81b32c40debfbf862ceb33",
+          "report_sha256": "ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383",
+          "report_url": "/api/v1/attestations/ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_2875a00278064087989341cf",
+          "name": "validate_spec",
+          "arguments": {
+            "interpretation": {
+              "conflicts": [
+                "Pool-owner control (get_owner_id) is a separate kind of power not drawn here; block-production power tracks stake via seat prices, and this flower draws stake shares."
+              ],
+              "documents": [],
+              "inferred": [
+                "Large delegations routed through liquid-staking contracts are treated as liquid-staking backing, though ultimate holders of those tokens are unseen."
+              ],
+              "mappings": [
+                {
+                  "primitive": "segments",
+                  "sources": [
+                    "fastnear-rpc-staking-pool-views",
+                    "fastnear-rpc-liquid-staking"
+                  ],
+                  "why": "The question asks who stands behind validators: each pool's side is split into backer classes — other delegators, 1M+ NEAR accounts, liquid-staking contracts and lockups."
+                },
+                {
+                  "primitive": "height",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ],
+                  "why": "Bar height shows the pool's stake this epoch on a sqrt scale."
+                },
+                {
+                  "primitive": "width",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ],
+                  "why": "Side width shows the pool's share, compressed into a 2x band."
+                },
+                {
+                  "primitive": "colour",
+                  "sources": [
+                    "nearblocks-validators",
+                    "fastnear-rpc-liquid-staking"
+                  ],
+                  "why": "Colour marks kind of account (staking pool, liquid-staking contract, unknown)."
+                },
+                {
+                  "primitive": "outline",
+                  "sources": [
+                    "nearblocks-validators",
+                    "account-id"
+                  ],
+                  "why": "Solid outline for self-declared or verified names, dashed for inferred, none for unknown."
+                }
+              ],
+              "power_means": [
+                {
+                  "claim": "Power on NEAR mainnet this epoch is delegated stake: a validator's seat and block share track its share of ~593M NEAR staked across 371 pools. Nine pools reach one third (Nakamoto 9), and the largest five hold about 21% (fig:top_k_share.5).",
+                  "figures": [
+                    "fig:total",
+                    "fig:participants_included",
+                    "fig:nakamoto",
+                    "fig:top_k_share.5"
+                  ],
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ]
+                },
+                {
+                  "claim": "Behind each pool sit delegators; most stake is routed via liquid-staking contracts and lockups or large accounts, while small delegations are folded per pool and class.",
+                  "sources": [
+                    "fastnear-rpc-staking-pool-views",
+                    "fastnear-rpc-liquid-staking"
+                  ]
+                }
+              ],
+              "summary": "This flower shows who stands behind NEAR's validators: each of the 60 largest staking pools is a side, with its stake in the current epoch as height and its delegations split into backer classes as inner segments. Stake is concentrated but not dominated: 9 pools reach a third of the ~593M NEAR staked (Nakamoto 9), and the tail of 311 pools holds ~14%. Colour marks the account kind, outline the identity status.",
+              "unknowns": [
+                "Pool identities are self-declared (pool-details.near), not verified; addresses are not people.",
+                "Owners of lockup contracts were not resolved.",
+                "Token holders behind liquid-staking contracts (Meta Pool, LiNEAR, ...) are not listed; their backing is unseen.",
+                "424 idle pools and their delegators were not crawled.",
+                "Votes on governance proposals are not in this snapshot."
+              ]
+            },
+            "spec": {
+              "$from": "call_0067ec9f8e434fa298ace0fc.spec_sha256"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "z-ai/glm-5.3-flash",
+        "completion_id": "8df395345733416b98f59987f47fce4b",
+        "signature_kind": "provider_tee",
+        "text": "z-ai/glm-5.3-flash:d77a67ef98d1563503ba99a659a12bb48002841d6fce9125ddf4f0eb3bae99b7:15ec3bda44d84b8aaf7fe1185e4129bc8847b2a5793d76e77277b90ce666bf2f",
+        "signature": "0x765402fe7b511aa24d4222bbb8c9699214e284d4728db2d3e4fb8b99b20398c548e98be562396f9c1226dcf2401c444eecbbe7764a571766da775d08e5aaee881b",
+        "signing_address": "0x3b753b4406613c5e70ae640508632b600424fa0c",
+        "signing_algo": "ecdsa",
+        "request_sha256": "d77a67ef98d1563503ba99a659a12bb48002841d6fce9125ddf4f0eb3bae99b7",
+        "response_sha256": "15ec3bda44d84b8aaf7fe1185e4129bc8847b2a5793d76e77277b90ce666bf2f",
+        "fetched_at": "2026-11-05T12:26:28.864Z",
+        "attestation": {
+          "nonce": "8596d4db3f5b17eb6ebb4b1d32c3e35df1ad3471af81b32c40debfbf862ceb33",
+          "report_sha256": "ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383",
+          "report_url": "/api/v1/attestations/ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_ea1b35ac3fd8402c9e0e2c0c",
+          "name": "render_flower",
+          "arguments": {
+            "spec": {
+              "$from": "call_0067ec9f8e434fa298ace0fc.spec_sha256"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "z-ai/glm-5.3-flash",
+        "completion_id": "09f37218d31048f68a540ad862850440",
+        "signature_kind": "provider_tee",
+        "text": "z-ai/glm-5.3-flash:2b2917781df0fbf676e50871223aa5aa24f1d38de7011adbf7dce3401337b9d1:4282ce0119e2f813810750543ea599601dc28730fe9d232838ead1ff428101bf",
+        "signature": "0x27a6ab4e52bba14211817be77ebbdde7d25de6e79407cdd6487218d41f5d37ff1dff4b9de098e74707d3e6a4220e5233d39e1b2b1389d1faf4461d479410fee31b",
+        "signing_address": "0x3b753b4406613c5e70ae640508632b600424fa0c",
+        "signing_algo": "ecdsa",
+        "request_sha256": "2b2917781df0fbf676e50871223aa5aa24f1d38de7011adbf7dce3401337b9d1",
+        "response_sha256": "4282ce0119e2f813810750543ea599601dc28730fe9d232838ead1ff428101bf",
+        "fetched_at": "2026-11-05T12:26:30.192Z",
+        "attestation": {
+          "nonce": "8596d4db3f5b17eb6ebb4b1d32c3e35df1ad3471af81b32c40debfbf862ceb33",
+          "report_sha256": "ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383",
+          "report_url": "/api/v1/attestations/ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383"
+        }
+      }
+    },
+    {
+      "content": "Here's your fresh flower (there is an existing published one for this snapshot, but you asked for a new build).\n\n**Flower**: [{{call_ea1b35ac3fd8402c9e0e2c0c.view_url}}]({{call_ea1b35ac3fd8402c9e0e2c0c.view_url}})\n\n**What you'll see**: 60 sides, one per top NEAR staking pool (astro-stakers at 5.6% leads; figment, ledgerbyfigment, staked, binancenode1 follow), largest first clockwise. Each side's bar is split into who backs that pool: other delegators, 1M+ NEAR accounts, liquid-staking contracts, and lockups.\n\n**Mapping**\n- Height: sqrt of each pool's stake this epoch — fastnear-rpc-validators\n- Segments: backer classes per pool — fastnear-rpc-staking-pool-views, fastnear-rpc-liquid-staking\n- Colour: account kind (pool vs liquid staking); Outline: identity status; Width: share, 2× band\n\n**Changed from default**: added `segments: \"backers\"`, `colour: \"kind\"`.\n\n**Numbers**: 371 pools hold ~593M NEAR; 9 reach a third (Nakamoto 9); top 5 hold ~21%; tail of 311 pools ~13.8%; Gini 0.836.\n\n**Can't tell you**: pool names are self-declared, addresses aren't people, lockup owners weren't resolved, and token holders *behind* liquid-staking contracts are unseen — so \"who backs the backers\" stops there.",
+      "tool_calls": [],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "z-ai/glm-5.3-flash",
+        "completion_id": "12a21a9a547447af8fb68dea490ad985",
+        "signature_kind": "provider_tee",
+        "text": "z-ai/glm-5.3-flash:b66a208c471697ff50159307afd6dca34bf0d00cf8bad72a2c2b502c531be337:6e09898dfe881725af4161f8c210e4c4acad45f80037efa626d8b4d78fd20e9f",
+        "signature": "0xb694963f3c4be2b6fdcb61ed39bd94f7871b9742c12624dc0e313c95ab60951216ba1abedf0cc4ecf5acd592de055046e6096aee5510e468e6631d4eec2059a21c",
+        "signing_address": "0x3b753b4406613c5e70ae640508632b600424fa0c",
+        "signing_algo": "ecdsa",
+        "request_sha256": "b66a208c471697ff50159307afd6dca34bf0d00cf8bad72a2c2b502c531be337",
+        "response_sha256": "6e09898dfe881725af4161f8c210e4c4acad45f80037efa626d8b4d78fd20e9f",
+        "fetched_at": "2026-11-05T12:26:37.796Z",
+        "attestation": {
+          "nonce": "8596d4db3f5b17eb6ebb4b1d32c3e35df1ad3471af81b32c40debfbf862ceb33",
+          "report_sha256": "ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383",
+          "report_url": "/api/v1/attestations/ae4728ce57e6cddf928b57ef767f2d22d9f9f498432a61e7fd1a7993ef5be383"
+        }
+      }
+    }
+  ],
+  "run": {
+    "started_at": "2026-11-05T12:26:01.529Z",
+    "success": true,
+    "wall_ms": 36268,
+    "longest_gap_ms": 8002,
+    "turns": 7,
+    "tokens": {
+      "in": 51199,
+      "out": 1446
+    },
+    "cost_usd": 0.004819,
+    "per_turn": [
+      {
+        "ms": 4191,
+        "in": 4397,
+        "out": 44,
+        "usd": 0.00037376,
+        "tools": [
+          "list_networks"
+        ]
+      },
+      {
+        "ms": 1002,
+        "in": 4764,
+        "out": 27,
+        "usd": 0.00039462,
+        "tools": [
+          "get_snapshot",
+          "list_flowers"
+        ]
+      },
+      {
+        "ms": 2019,
+        "in": 5216,
+        "out": 125,
+        "usd": 0.00047978,
+        "tools": [
+          "describe_snapshot",
+          "compute_figures"
+        ]
+      },
+      {
+        "ms": 2967,
+        "in": 8184,
+        "out": 108,
+        "usd": 0.00070872,
+        "tools": [
+          "propose_spec"
+        ]
+      },
+      {
+        "ms": 16890,
+        "in": 8815,
+        "out": 749,
+        "usd": 0.0010797,
+        "tools": [
+          "validate_spec"
+        ]
+      },
+      {
+        "ms": 1225,
+        "in": 9605,
+        "out": 56,
+        "usd": 0.0007964,
+        "tools": [
+          "render_flower"
+        ]
+      },
+      {
+        "ms": 7586,
+        "in": 10218,
+        "out": 337,
+        "usd": 0.00098594,
+        "tools": []
+      }
+    ],
+    "tool_ms": [
+      {
+        "name": "list_networks",
+        "ok": true,
+        "ms": 1,
+        "summary": "2 networks: near-validators, near-house-of-stake"
+      },
+      {
+        "name": "get_snapshot",
+        "ok": true,
+        "ms": 32,
+        "summary": "reused from fixture: block 222915356, 2026-11-03T19:42:00Z (72a6d9676d96…)"
+      },
+      {
+        "name": "list_flowers",
+        "ok": true,
+        "ms": 184,
+        "summary": "2 flowers"
+      },
+      {
+        "name": "describe_snapshot",
+        "ok": true,
+        "ms": 42,
+        "summary": "14 measures; largest: astro-stakers.poolv1.near, figment.poolv1.near, ledgerbyfigment.poolv1.near"
+      },
+      {
+        "name": "compute_figures",
+        "ok": true,
+        "ms": 1,
+        "summary": "Nakamoto 9 at 0.333333; 371 included; top 10 hold 36.2%"
+      },
+      {
+        "name": "propose_spec",
+        "ok": true,
+        "ms": 2,
+        "summary": "spec 897a01ac9a1f…; changed from default: segments"
+      },
+      {
+        "name": "validate_spec",
+        "ok": true,
+        "ms": 103,
+        "summary": "valid, 1 warnings"
+      },
+      {
+        "name": "render_flower",
+        "ok": true,
+        "ms": 16,
+        "summary": "drawn: render 31cdd4a612bc…, 7 legend lines"
+      }
+    ],
+    "validate_tries": 1,
+    "errors": [],
+    "warnings": [],
+    "unbacked_numbers": [],
+    "unbacked_in_interpretation": [],
+    "signature_kind": "provider_tee",
+    "signature_id": "8df395345733416b98f59987f47fce4b",
+    "spec_sha256": "897a01ac9a1f1150e84dbb7aa7baebffa14d2f8674a882e1fcc9016f259a7e04",
+    "proposed": [
+      {
+        "choices": {
+          "colour": "kind",
+          "height": "sqrt",
+          "measure": "validator_stake_current_epoch",
+          "segments": "backers",
+          "width": "r2"
+        },
+        "network": "near-validators",
+        "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec"
+      }
+    ],
+    "interpretation": {
+      "conflicts": [
+        "Pool-owner control (get_owner_id) is a separate kind of power not drawn here; block-production power tracks stake via seat prices, and this flower draws stake shares."
+      ],
+      "documents": [],
+      "inferred": [
+        "Large delegations routed through liquid-staking contracts are treated as liquid-staking backing, though ultimate holders of those tokens are unseen."
+      ],
+      "mappings": [
+        {
+          "primitive": "segments",
+          "sources": [
+            "fastnear-rpc-staking-pool-views",
+            "fastnear-rpc-liquid-staking"
+          ],
+          "why": "The question asks who stands behind validators: each pool's side is split into backer classes — other delegators, 1M+ NEAR accounts, liquid-staking contracts and lockups."
+        },
+        {
+          "primitive": "height",
+          "sources": [
+            "fastnear-rpc-validators"
+          ],
+          "why": "Bar height shows the pool's stake this epoch on a sqrt scale."
+        },
+        {
+          "primitive": "width",
+          "sources": [
+            "fastnear-rpc-validators"
+          ],
+          "why": "Side width shows the pool's share, compressed into a 2x band."
+        },
+        {
+          "primitive": "colour",
+          "sources": [
+            "nearblocks-validators",
+            "fastnear-rpc-liquid-staking"
+          ],
+          "why": "Colour marks kind of account (staking pool, liquid-staking contract, unknown)."
+        },
+        {
+          "primitive": "outline",
+          "sources": [
+            "nearblocks-validators",
+            "account-id"
+          ],
+          "why": "Solid outline for self-declared or verified names, dashed for inferred, none for unknown."
+        }
+      ],
+      "power_means": [
+        {
+          "claim": "Power on NEAR mainnet this epoch is delegated stake: a validator's seat and block share track its share of ~593M NEAR staked across 371 pools. Nine pools reach one third (Nakamoto 9), and the largest five hold about 21% (fig:top_k_share.5).",
+          "figures": [
+            "fig:total",
+            "fig:participants_included",
+            "fig:nakamoto",
+            "fig:top_k_share.5"
+          ],
+          "sources": [
+            "fastnear-rpc-validators"
+          ]
+        },
+        {
+          "claim": "Behind each pool sit delegators; most stake is routed via liquid-staking contracts and lockups or large accounts, while small delegations are folded per pool and class.",
+          "sources": [
+            "fastnear-rpc-staking-pool-views",
+            "fastnear-rpc-liquid-staking"
+          ]
+        }
+      ],
+      "summary": "This flower shows who stands behind NEAR's validators: each of the 60 largest staking pools is a side, with its stake in the current epoch as height and its delegations split into backer classes as inner segments. Stake is concentrated but not dominated: 9 pools reach a third of the ~593M NEAR staked (Nakamoto 9), and the tail of 311 pools holds ~14%. Colour marks the account kind, outline the identity status.",
+      "unknowns": [
+        "Pool identities are self-declared (pool-details.near), not verified; addresses are not people.",
+        "Owners of lockup contracts were not resolved.",
+        "Token holders behind liquid-staking contracts (Meta Pool, LiNEAR, ...) are not listed; their backing is unseen.",
+        "424 idle pools and their delegators were not crawled.",
+        "Votes on governance proposals are not in this snapshot."
+      ]
+    },
+    "answer": "Here's your fresh flower (there is an existing published one for this snapshot, but you asked for a new build).\n\n**Flower**: [/draft?spec=eyJjb252ZW50aW9uIjp7ImNoYW5nZXMiOltdLCJpZCI6ImRlZmF1bHQvdjEiLCJ2YXJpYXRpb25fb2YiOm51bGx9LCJlbmNvZGluZ3MiOnsiY29sb3VyIjp7ImJ5Ijoia2luZCIsIm1lYW5pbmciOiJraW5kIG9mIGFjY291bnQ6IHN0YWtpbmcgcG9vbCwgbGlxdWlkLXN0YWtpbmcgY29udHJhY3QsIG9yIHVua25vd24iLCJzb3VyY2VzIjpbIm5lYXJibG9ja3MtdmFsaWRhdG9ycyIsImZhc3RuZWFyLXJwYy1saXF1aWQtc3Rha2luZyJdfSwiaGVpZ2h0Ijp7ImJ5Ijoic2hhcmUiLCJtZWFuaW5nIjoic3F1YXJlIHJvb3Qgb2YgdGhlIHZhbGlkYXRvcidzIHNoYXJlIG9mIHN0YWtlIHRoaXMgZXBvY2giLCJzY2FsZSI6InNxcnQiLCJzb3VyY2VzIjpbImZhc3RuZWFyLXJwYy12YWxpZGF0b3JzIl19LCJvcmRlciI6eyJieSI6Im1lYXN1cmVfZGVzYyIsIm1lYW5pbmciOiJsYXJnZXN0IHN0YWtlIGZpcnN0LCBjbG9ja3dpc2UgZnJvbSB0aGUgdG9wIiwic291cmNlcyI6WyJmYXN0bmVhci1ycGMtdmFsaWRhdG9ycyJdfSwib3V0bGluZSI6eyJieSI6ImlkZW50aXR5X3N0YXR1cyIsIm1lYW5pbmciOiJzb2xpZCB3aGVuIHRoZSBuYW1lIGlzIHNlbGYtZGVjbGFyZWQgKHBvb2wtZGV0YWlscy5uZWFyIG9yIGEgbmFtZWQgYWNjb3VudCBpZCkgb3IgdmVyaWZpZWQsIGRhc2hlZCB3aGVuIGluZmVycmVkLCBub25lIHdoZW4gdW5rbm93biIsInNvdXJjZXMiOlsibmVhcmJsb2Nrcy12YWxpZGF0b3JzIiwiYWNjb3VudC1pZCJdfSwic2VnbWVudHMiOnsiYnkiOiJiYWNrZXJzIiwibWVhbmluZyI6IndobyBzdGFuZHMgYmVoaW5kIGVhY2ggcG9vbDogaXRzIGRlbGVnYXRpb25zIHNwbGl0IGludG8gb3RoZXIgZGVsZWdhdG9ycywgYWNjb3VudHMgd2l0aCAxTSsgTkVBUiwgbGlxdWlkLXN0YWtpbmcgY29udHJhY3RzIGFuZCBsb2NrdXBzIChkZWxlZ2F0aW9ucyB1bmRlciAxLDAwMCBORUFSIGFyZSBmb2xkZWQgcGVyIHBvb2wgYW5kIGNsYXNzLCBhcyBjb3ZlcmFnZSBkZWNsYXJlcykiLCJzb3VyY2VzIjpbImZhc3RuZWFyLXJwYy1zdGFraW5nLXBvb2wtdmlld3MiLCJmYXN0bmVhci1ycGMtbGlxdWlkLXN0YWtpbmciXX0sIndpZHRoIjp7ImJ5Ijoic2hhcmUiLCJtYXhfcmF0aW8iOjIsIm1lYW5pbmciOiJ0aGUgdmFsaWRhdG9yJ3Mgc2hhcmUgb2Ygc3Rha2UgdGhpcyBlcG9jaCwgY29tcHJlc3NlZCBpbnRvIGEgYmFuZCIsInNjYWxlIjoibG9nIiwic291cmNlcyI6WyJmYXN0bmVhci1ycGMtdmFsaWRhdG9ycyJdfX0sImxhYmVscyI6Im5vbmUiLCJuZXR3b3JrIjp7ImNoYWluIjoibmVhcjptYWlubmV0IiwiaWQiOiJuZWFyLXZhbGlkYXRvcnMiLCJwb3B1bGF0aW9uIjoidmFsaWRhdG9ycyJ9LCJwZXRhbCI6InNwZWMvdjEiLCJzZWxlY3Rpb24iOnsibWVhc3VyZSI6InZhbGlkYXRvcl9zdGFrZV9jdXJyZW50X2Vwb2NoIiwicGV0YWxzIjo2MCwidGFpbCI6eyJncm91cCI6dHJ1ZSwibGFiZWwiOiJldmVyeW9uZSBlbHNlIn19LCJzbmFwc2hvdCI6eyJhc19vZiI6IjIwMjYtMTEtMDNUMTk6NDI6MDBaIiwiYmxvY2tfaGVpZ2h0IjoyMjI5MTUzNTYsInNoYTI1NiI6IjcyYTZkOTY3NmQ5NjdkNjM3MTJkYzgyYmNiYjkwMjgyZDJmNjFlNWNhNjQ5NWMzZTJlNTRhNGY5YWY3N2U5ZWMifX0](/draft?spec=eyJjb252ZW50aW9uIjp7ImNoYW5nZXMiOltdLCJpZCI6ImRlZmF1bHQvdjEiLCJ2YXJpYXRpb25fb2YiOm51bGx9LCJlbmNvZGluZ3MiOnsiY29sb3VyIjp7ImJ5Ijoia2luZCIsIm1lYW5pbmciOiJraW5kIG9mIGFjY291bnQ6IHN0YWtpbmcgcG9vbCwgbGlxdWlkLXN0YWtpbmcgY29udHJhY3QsIG9yIHVua25vd24iLCJzb3VyY2VzIjpbIm5lYXJibG9ja3MtdmFsaWRhdG9ycyIsImZhc3RuZWFyLXJwYy1saXF1aWQtc3Rha2luZyJdfSwiaGVpZ2h0Ijp7ImJ5Ijoic2hhcmUiLCJtZWFuaW5nIjoic3F1YXJlIHJvb3Qgb2YgdGhlIHZhbGlkYXRvcidzIHNoYXJlIG9mIHN0YWtlIHRoaXMgZXBvY2giLCJzY2FsZSI6InNxcnQiLCJzb3VyY2VzIjpbImZhc3RuZWFyLXJwYy12YWxpZGF0b3JzIl19LCJvcmRlciI6eyJieSI6Im1lYXN1cmVfZGVzYyIsIm1lYW5pbmciOiJsYXJnZXN0IHN0YWtlIGZpcnN0LCBjbG9ja3dpc2UgZnJvbSB0aGUgdG9wIiwic291cmNlcyI6WyJmYXN0bmVhci1ycGMtdmFsaWRhdG9ycyJdfSwib3V0bGluZSI6eyJieSI6ImlkZW50aXR5X3N0YXR1cyIsIm1lYW5pbmciOiJzb2xpZCB3aGVuIHRoZSBuYW1lIGlzIHNlbGYtZGVjbGFyZWQgKHBvb2wtZGV0YWlscy5uZWFyIG9yIGEgbmFtZWQgYWNjb3VudCBpZCkgb3IgdmVyaWZpZWQsIGRhc2hlZCB3aGVuIGluZmVycmVkLCBub25lIHdoZW4gdW5rbm93biIsInNvdXJjZXMiOlsibmVhcmJsb2Nrcy12YWxpZGF0b3JzIiwiYWNjb3VudC1pZCJdfSwic2VnbWVudHMiOnsiYnkiOiJiYWNrZXJzIiwibWVhbmluZyI6IndobyBzdGFuZHMgYmVoaW5kIGVhY2ggcG9vbDogaXRzIGRlbGVnYXRpb25zIHNwbGl0IGludG8gb3RoZXIgZGVsZWdhdG9ycywgYWNjb3VudHMgd2l0aCAxTSsgTkVBUiwgbGlxdWlkLXN0YWtpbmcgY29udHJhY3RzIGFuZCBsb2NrdXBzIChkZWxlZ2F0aW9ucyB1bmRlciAxLDAwMCBORUFSIGFyZSBmb2xkZWQgcGVyIHBvb2wgYW5kIGNsYXNzLCBhcyBjb3ZlcmFnZSBkZWNsYXJlcykiLCJzb3VyY2VzIjpbImZhc3RuZWFyLXJwYy1zdGFraW5nLXBvb2wtdmlld3MiLCJmYXN0bmVhci1ycGMtbGlxdWlkLXN0YWtpbmciXX0sIndpZHRoIjp7ImJ5Ijoic2hhcmUiLCJtYXhfcmF0aW8iOjIsIm1lYW5pbmciOiJ0aGUgdmFsaWRhdG9yJ3Mgc2hhcmUgb2Ygc3Rha2UgdGhpcyBlcG9jaCwgY29tcHJlc3NlZCBpbnRvIGEgYmFuZCIsInNjYWxlIjoibG9nIiwic291cmNlcyI6WyJmYXN0bmVhci1ycGMtdmFsaWRhdG9ycyJdfX0sImxhYmVscyI6Im5vbmUiLCJuZXR3b3JrIjp7ImNoYWluIjoibmVhcjptYWlubmV0IiwiaWQiOiJuZWFyLXZhbGlkYXRvcnMiLCJwb3B1bGF0aW9uIjoidmFsaWRhdG9ycyJ9LCJwZXRhbCI6InNwZWMvdjEiLCJzZWxlY3Rpb24iOnsibWVhc3VyZSI6InZhbGlkYXRvcl9zdGFrZV9jdXJyZW50X2Vwb2NoIiwicGV0YWxzIjo2MCwidGFpbCI6eyJncm91cCI6dHJ1ZSwibGFiZWwiOiJldmVyeW9uZSBlbHNlIn19LCJzbmFwc2hvdCI6eyJhc19vZiI6IjIwMjYtMTEtMDNUMTk6NDI6MDBaIiwiYmxvY2tfaGVpZ2h0IjoyMjI5MTUzNTYsInNoYTI1NiI6IjcyYTZkOTY3NmQ5NjdkNjM3MTJkYzgyYmNiYjkwMjgyZDJmNjFlNWNhNjQ5NWMzZTJlNTRhNGY5YWY3N2U5ZWMifX0)\n\n**What you'll see**: 60 sides, one per top NEAR staking pool (astro-stakers at 5.6% leads; figment, ledgerbyfigment, staked, binancenode1 follow), largest first clockwise. Each side's bar is split into who backs that pool: other delegators, 1M+ NEAR accounts, liquid-staking contracts, and lockups.\n\n**Mapping**\n- Height: sqrt of each pool's stake this epoch — fastnear-rpc-validators\n- Segments: backer classes per pool — fastnear-rpc-staking-pool-views, fastnear-rpc-liquid-staking\n- Colour: account kind (pool vs liquid staking); Outline: identity status; Width: share, 2× band\n\n**Changed from default**: added `segments: \"backers\"`, `colour: \"kind\"`.\n\n**Numbers**: 371 pools hold ~593M NEAR; 9 reach a third (Nakamoto 9); top 5 hold ~21%; tail of 311 pools ~13.8%; Gini 0.836.\n\n**Can't tell you**: pool names are self-declared, addresses aren't people, lockup owners weren't resolved, and token holders *behind* liquid-staking contracts are unseen — so \"who backs the backers\" stops there."
+  }
+}

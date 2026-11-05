@@ -52,17 +52,44 @@ function describe(t: AnyTool): string {
   return DESCRIPTIONS[t.name] ?? t.name.replaceAll('_', ' ');
 }
 
-/** OpenAI-style function parameters: an object schema, without $schema/$id that some reject. */
+/**
+ * OpenAI-style function parameters: an object schema, without $schema/$id that some reject and
+ * without the top-level description, which the function's own description already says (every
+ * turn pays for every byte of these).
+ */
 function parameters(schema: Record<string, unknown> | undefined): Record<string, unknown> {
-  const { $schema: _s, $id: _i, ...rest } = schema ?? {};
+  const { $schema: _s, $id: _i, description: _d, ...rest } = schema ?? {};
   return rest.type ? rest : { type: 'object', properties: {}, ...rest };
+}
+
+/**
+ * In this door a spec is named, not copied: the loop fills it in from its spec_sha256 (run.ts).
+ * Copying long JSON costs tokens and is where small models slip. The HTTP, MCP and CLI doors still
+ * take the spec itself.
+ */
+const SPEC_BY_HASH = {
+  type: 'string',
+  pattern: '^[0-9a-f]{64}$',
+  description: 'the spec_sha256 propose_spec returned; the loop fills in the spec itself',
+};
+const NAMES_ITS_SPEC = new Set(['validate_spec', 'render_flower']);
+
+function agentParameters(t: AnyTool): Record<string, unknown> {
+  const p = parameters(t.input);
+  if (!NAMES_ITS_SPEC.has(t.name)) return p;
+  const {
+    include_svg: _svg,
+    size: _size,
+    ...own
+  } = (p.properties ?? {}) as Record<string, unknown>;
+  return { ...p, properties: { ...own, spec: SPEC_BY_HASH } };
 }
 
 export function llmTools(registry: readonly AnyTool[]): LlmToolDef[] {
   return registry.filter(forAgent).map((t) => ({
     name: t.name,
     description: describe(t),
-    parameters: parameters(t.input),
+    parameters: agentParameters(t),
   }));
 }
 

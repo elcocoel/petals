@@ -17,7 +17,7 @@ import { Client } from '@modelcontextprotocol/client';
 import { getDefaultEnvironment, StdioClientTransport } from '@modelcontextprotocol/client/stdio';
 import { petalApp } from '@petal/agent';
 import { entryId } from '@petal/core';
-import type { Entry, FlowerResult, Nep413Proof } from '@petal/core/types';
+import type { Entry, FlowerResult, ModelSignature, Nep413Proof } from '@petal/core/types';
 import type { Config } from '@petal/tools';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import {
@@ -111,9 +111,14 @@ describe('quickstart, recorded', () => {
     expect(
       inOrder(names, ['run', 'stage', 'tool_call', 'tool_result', 'flower', 'message', 'done']),
     ).toBe(true);
-    // a recorded run carries no model signature (step 2.6: "recorded run, no signature")
-    expect(names).not.toContain('signature');
+    // it says it is a recording, first and last
+    const first = events.find((e) => e.event === 'stage')?.data as { stage: string };
+    expect(first.stage).toBe('recorded');
     expect(events.at(-1)?.data).toMatchObject({ model: 'recorded', fallback_used: false });
+    // and it shows the signature the real run got when it was recorded (T061)
+    const sig = events.find((e) => e.event === 'signature')?.data as ModelSignature;
+    expect(sig).toMatchObject({ provider: 'near-ai-cloud', signature_kind: 'provider_tee' });
+    expect(sig.text).toBe(`${sig.model}:${sig.request_sha256}:${sig.response_sha256}`);
 
     // no wait over 10 s: from the request to the first event, and between any two
     expect(longestGap(events)).toBeLessThanOrEqual(GAP_MS);
@@ -127,6 +132,10 @@ describe('quickstart, recorded', () => {
       .filter((e) => e.event === 'tool_call')
       .map((e) => e.data as { id: string; name: string; args: Json });
     expect(calls.map((c) => c.name)).toEqual([
+      'list_networks',
+      // the first one guessed the network id, was told it can't be read, and asked again
+      'list_flowers',
+      'list_flowers',
       'get_snapshot',
       'describe_snapshot',
       'compute_figures',
@@ -145,7 +154,9 @@ describe('quickstart, recorded', () => {
     const results = events
       .filter((e) => e.event === 'tool_result')
       .map((e) => e.data as { name: string; ok: boolean; summary: string });
-    expect(results.every((r) => r.ok)).toBe(true);
+    expect(results.filter((r) => !r.ok).map((r) => r.summary)).toEqual([
+      expect.stringMatching(/^cannot_read: .*"near"/),
+    ]);
     // the snapshot was reused from the fixture (step 2.2)
     expect(results.find((r) => r.name === 'get_snapshot')?.summary).toMatch(/^reused from fixture/);
     expect(results.find((r) => r.name === 'validate_spec')?.summary).toBe('valid');
@@ -177,20 +188,26 @@ describe('quickstart, recorded', () => {
     expect(answer.text).toContain(flower.view_url);
   });
 
-  test('step 2.5: every number in the answer is in compute_figures', async () => {
+  // Quickstart step 2.5 names compute_figures; the answer of a real run also gives the snapshot's
+  // block and date (the prompt's step 2) and what its coverage note says (424 idle pools). Each is
+  // checked against the tool that returned it, and anything else in the answer fails.
+  test('step 2.5: every number in the answer comes from the tools that count', async () => {
     expect(chat.answer && chat.figuresArgs).toBeTruthy();
-    // the same call the agent made; compute_figures is deterministic
+    // the same calls the agent made; these tools are deterministic
     const { status, json: figures } = await call('/api/v1/figures', chat.figuresArgs);
     expect(status).toBe(200);
+    const sha = (chat.figuresArgs as { sha256: string }).sha256;
+    const described = await call(`/api/v1/snapshots/${sha}/describe`);
+    expect(described.status).toBe(200);
+    const snapshot = await call('/api/v1/snapshots', { network: 'near-validators' });
+    expect(snapshot.status).toBe(200);
     const quoted = numbersIn(chat.answer as string);
-    // the skeleton answer quotes the Nakamoto coefficient and the validators counted
-    expect(quoted.map((q) => q.value)).toEqual(
-      expect.arrayContaining([
-        (figures.nakamoto as { count: number }).count,
-        figures.participants_included as number,
-      ]),
-    );
-    expect(unbacked(chat.answer as string, figures)).toEqual([]);
+    // the skeleton answer quotes the Nakamoto coefficient and the top-10 share, as tools gave them
+    expect(quoted.map((q) => q.value)).toContain((figures.nakamoto as { count: number }).count);
+    expect(quoted.map((q) => q.text)).toContain('36.2%');
+    expect(unbacked(chat.answer as string, [figures, described.json, snapshot.json])).toEqual([]);
+    // a number no tool returned does fail
+    expect(unbacked('9 pools hold 41.7%', [figures]).map((q) => q.text)).toEqual(['41.7%']);
   });
 
   test('step 2: the run can be left and reopened: GET /api/v1/agent/runs/:id has the flower', async () => {

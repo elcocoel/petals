@@ -2,8 +2,8 @@
 // SDK at https://cloud-api.near.ai/v1. Every call is non-streamed, sent with the canonical model id,
 // `x-no-aliasing: true` and `Accept-Encoding: identity`, so it can get a `provider_tee` signature.
 // A capturing fetch keeps the exact request and response bytes and their SHA-256 (never
-// re-serialised JSON). Fallbacks, in order, when a model fails: Qwen/Qwen3.8-27B, then
-// deepseek-ai/DeepSeek-V4.1-Flash-1017. Never called in tests: they use faked HTTP.
+// re-serialised JSON). The model and its fallbacks come from the bake-off (T060, research R10).
+// Never called in tests: they use faked HTTP.
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sha256Hex } from '@petal/core';
@@ -22,13 +22,13 @@ import {
 } from './signature.ts';
 
 export const NEAR_AI_BASE_URL = 'https://cloud-api.near.ai/v1';
-export const DEFAULT_MODEL = 'z-ai/glm-5.3-flash';
-export const FALLBACK_MODELS: readonly string[] = [
-  'Qwen/Qwen3.8-27B',
-  'deepseek-ai/DeepSeek-V4.1-Flash-1017',
-];
+export const DEFAULT_MODEL = 'deepseek-ai/DeepSeek-V4.1-Flash-1017';
+export const FALLBACK_MODELS: readonly string[] = ['z-ai/glm-5.3-flash', 'Qwen/Qwen3.8-27B'];
 
-/** USD per million tokens (research R10, near.ai/models on 2026-11-04; re-check). */
+/**
+ * USD per million tokens (research R10; GET /v1/models on 2026-11-05). Cached input is cheaper on
+ * NEAR AI (input_cache_read); it is priced in full here, so spend is never under-counted.
+ */
 export const PRICES: Record<string, { in: number; out: number }> = {
   'z-ai/glm-5.3-flash': { in: 0.08, out: 0.5 },
   'Qwen/Qwen3.8-27B': { in: 0.04, out: 1.35 },
@@ -42,6 +42,18 @@ export function costUsd(model: string, usage: { in: number; out: number }): numb
   return Math.round(((usage.in * p.in + usage.out * p.out) / 1e6) * 1e9) / 1e9;
 }
 
+/**
+ * Includes reasoning tokens: a low limit returns empty content, because the reasoning used it all.
+ * An unused limit costs nothing, and each chat is capped in dollars anyway (Budget).
+ */
+export const MAX_COMPLETION_TOKENS = 16_000;
+
+/**
+ * T060: most of a chat's time was the model reasoning. At the models' own default a flower took
+ * 63-92 s and often hit the 120 s limit; at "low" it takes 26-58 s, and the tools check the rest.
+ */
+export const REASONING_EFFORT = 'low';
+
 /** A model call that failed, with the error code the agent reports (tools.md codes). */
 export class LlmCallError extends Error {
   readonly code: ToolErrorCode;
@@ -49,10 +61,12 @@ export class LlmCallError extends Error {
   readonly retryAfterS?: number;
   /** whether another model might answer where this one failed */
   readonly tryNext: boolean;
+  /** what the failed call still cost */
+  readonly costUsd: number;
   constructor(
     code: ToolErrorCode,
     message: string,
-    o: { hint?: string; retryAfterS?: number; tryNext?: boolean } = {},
+    o: { hint?: string; retryAfterS?: number; tryNext?: boolean; costUsd?: number } = {},
   ) {
     super(message);
     this.name = 'LlmCallError';
@@ -60,6 +74,7 @@ export class LlmCallError extends Error {
     this.hint = o.hint;
     this.retryAfterS = o.retryAfterS;
     this.tryNext = o.tryNext ?? false;
+    this.costUsd = o.costUsd ?? 0;
   }
 }
 
@@ -73,8 +88,10 @@ export interface NearAiOptions {
   attestationsDir?: string;
   /** public base of Petal's API, for report_url; default relative (/api/v1/attestations/…) */
   apiBase?: string;
-  /** default 6000; includes reasoning tokens */
+  /** default MAX_COMPLETION_TOKENS; includes reasoning tokens */
   maxCompletionTokens?: number;
+  /** how long the model reasons before it answers; default REASONING_EFFORT, null the model's own */
+  reasoningEffort?: 'low' | 'medium' | 'high' | null;
   /** per attempt, default 60 s */
   timeoutMs?: number;
   /** a report is reused for this long before a fresh one is fetched; default 10 min */
@@ -220,11 +237,13 @@ export function createNearAiClient(
       defaultHeaders: { 'x-no-aliasing': 'true', 'Accept-Encoding': 'identity' },
       fetch: capture,
     });
+    const effort = o.reasoningEffort === undefined ? REASONING_EFFORT : o.reasoningEffort;
     const completion = await client.chat.completions.create({
       model,
       messages: req.messages.map(toOpenAi),
       stream: false,
-      max_completion_tokens: o.maxCompletionTokens ?? 6000,
+      max_completion_tokens: o.maxCompletionTokens ?? MAX_COMPLETION_TOKENS,
+      ...(effort ? { reasoning_effort: effort } : {}),
       ...(req.tools?.length
         ? {
             tool_choice: 'auto' as const,
@@ -257,6 +276,12 @@ export function createNearAiClient(
       in: completion.usage?.prompt_tokens ?? 0,
       out: completion.usage?.completion_tokens ?? 0,
     };
+    if (choice.finish_reason === 'length' && !content?.trim() && !tool_calls.length) {
+      throw new LlmCallError('source_failed', `${model}: used its token limit before answering`, {
+        tryNext: true,
+        costUsd: costUsd(model, usage),
+      });
+    }
     const signature = captured ? await sign(model, completion.id, captured, attested) : null;
     return {
       model,
@@ -315,14 +340,16 @@ export function createNearAiClient(
       const first = now().getTime() < startUntil ? start : 0;
       const order = [...models.slice(first), ...models.slice(0, first)];
       const failures: LlmCallError[] = [];
+      let lost = 0; // what failed attempts still cost, so spend is never under-counted
       for (const model of order) {
         try {
           const out = await callModel(model, req);
           healthy = true;
-          return out;
+          return lost ? { ...out, cost_usd: out.cost_usd + lost } : out;
         } catch (e) {
           const err = classify(e, model);
           failures.push(err);
+          lost += err.costUsd;
           if (!err.tryNext) throw err;
           // the next model goes first for a while, so each turn doesn't wait on a failing one
           const next = (models.indexOf(model) + 1) % models.length;
@@ -335,7 +362,11 @@ export function createNearAiClient(
       throw new LlmCallError(
         last?.code === 'rate_limited' ? 'rate_limited' : 'source_failed',
         `NEAR AI Cloud: no model answered (${failures.map((f) => f.message).join('; ')})`,
-        { retryAfterS: last?.retryAfterS, hint: 'Try again in a minute, or bring your own agent.' },
+        {
+          retryAfterS: last?.retryAfterS,
+          hint: 'Try again in a minute, or bring your own agent.',
+          costUsd: lost,
+        },
       );
     },
   };

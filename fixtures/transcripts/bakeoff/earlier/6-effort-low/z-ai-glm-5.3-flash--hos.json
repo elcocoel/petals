@@ -1,0 +1,272 @@
+{
+  "petal": "transcript/v1",
+  "kind": "recorded",
+  "title": "Bake-off (hos): z-ai/glm-5.3-flash",
+  "question": "Who holds power in NEAR’s House of Stake? Make me a fresh flower, not an existing one.",
+  "model": "z-ai/glm-5.3-flash",
+  "note": "A real run on NEAR AI Cloud (T060), kept with the signature each completion got. A hash or link the model copied from a tool result is written as a reference to that result ($from, {{…}}), so it replays on recordedClient.",
+  "turns": [
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_b8341703f51f416f8db12526",
+          "name": "list_networks",
+          "arguments": {
+            "query": "House of Stake"
+          }
+        },
+        {
+          "id": "call_3e6dc34cffce45f2b06648c0",
+          "name": "list_flowers",
+          "arguments": {
+            "network": "house-of-stake"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "z-ai/glm-5.3-flash",
+        "completion_id": "8a277e99f6fd4ef8aa423e9c7efb24ef",
+        "signature_kind": "provider_tee",
+        "text": "z-ai/glm-5.3-flash:444de29af6f074cd2e428ccc346bada4665f1903800801fcc2ade6fded141661:b1d393c2ef8953d8d7ee5c354f77c60404660aea73c5301afa2cf8884357c0c8",
+        "signature": "0xf7118b83bf0c3cd2ae2f22f9077bcdfc89cff3a0bf3b91107e15c15c0c55ec0c72bc94281d2b7bdd0c70d631109a9dd6839e96ef5a57dd97c8f44323d80654431c",
+        "signing_address": "0x3b753b4406613c5e70ae640508632b600424fa0c",
+        "signing_algo": "ecdsa",
+        "request_sha256": "444de29af6f074cd2e428ccc346bada4665f1903800801fcc2ade6fded141661",
+        "response_sha256": "b1d393c2ef8953d8d7ee5c354f77c60404660aea73c5301afa2cf8884357c0c8",
+        "fetched_at": "2026-11-05T12:26:40.441Z",
+        "attestation": {
+          "nonce": "2372d4b3d8b754ea8076c0d569904f7041bd9c00bb5f5b5b7f8b186a9ba576b1",
+          "report_sha256": "17de9d61b93fd02189c805490a8b60af9abb77b319ed3b5154b3e0cffb59d0c8",
+          "report_url": "/api/v1/attestations/17de9d61b93fd02189c805490a8b60af9abb77b319ed3b5154b3e0cffb59d0c8"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_32685aa507274196b74f1484",
+          "name": "get_snapshot",
+          "arguments": {
+            "network": "near-house-of-stake"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "z-ai/glm-5.3-flash",
+        "completion_id": "fa4d8e27c2754ff19da0c7a350299f23",
+        "signature_kind": "provider_tee",
+        "text": "z-ai/glm-5.3-flash:6478afd7624f694a570d4b296463e2a14aa064acf898d873c56f345c6801f800:55a50231861d2a573fa1cc88e467aced9ce06a70d5e1f75b65d056a126033136",
+        "signature": "0xb79f4e0b7be97f37f6c97068a07272279343cb9babbde4c1464ba91333c01408265ae56ad2deb469ecb7e4bc6dafbe4be02634eb82fb1c2d054f115100d7f4b91c",
+        "signing_address": "0x3b753b4406613c5e70ae640508632b600424fa0c",
+        "signing_algo": "ecdsa",
+        "request_sha256": "6478afd7624f694a570d4b296463e2a14aa064acf898d873c56f345c6801f800",
+        "response_sha256": "55a50231861d2a573fa1cc88e467aced9ce06a70d5e1f75b65d056a126033136",
+        "fetched_at": "2026-11-05T12:26:41.732Z",
+        "attestation": {
+          "nonce": "2372d4b3d8b754ea8076c0d569904f7041bd9c00bb5f5b5b7f8b186a9ba576b1",
+          "report_sha256": "17de9d61b93fd02189c805490a8b60af9abb77b319ed3b5154b3e0cffb59d0c8",
+          "report_url": "/api/v1/attestations/17de9d61b93fd02189c805490a8b60af9abb77b319ed3b5154b3e0cffb59d0c8"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_d4594610b8324e098393b901",
+          "name": "describe_snapshot",
+          "arguments": {
+            "sha256": {
+              "$from": "call_32685aa507274196b74f1484.sha256"
+            }
+          }
+        },
+        {
+          "id": "call_f2357baec1b9415592c285bd",
+          "name": "compute_figures",
+          "arguments": {
+            "measure": "voting_power",
+            "sha256": {
+              "$from": "call_32685aa507274196b74f1484.sha256"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "z-ai/glm-5.3-flash",
+        "completion_id": "0062d670257949ba962dcb9d8f3c30fa",
+        "signature_kind": "provider_tee",
+        "text": "z-ai/glm-5.3-flash:21bd7e650a4cbdc5ae16fa63eb4ed454e59a844f0137a299601b5325f3b54c41:ab01aa65109d0a3c35829cb667fd9802bdbe4f655471fc36b879180fb0d80627",
+        "signature": "0x427ca41f54d61b6836900c8033a85dbeae83863fe57caf3f62565f019a73175c442c19fffacd3b1c07ecb34cf7652157f72d720763b029b58a11b9e36a5960e31b",
+        "signing_address": "0x3b753b4406613c5e70ae640508632b600424fa0c",
+        "signing_algo": "ecdsa",
+        "request_sha256": "21bd7e650a4cbdc5ae16fa63eb4ed454e59a844f0137a299601b5325f3b54c41",
+        "response_sha256": "ab01aa65109d0a3c35829cb667fd9802bdbe4f655471fc36b879180fb0d80627",
+        "fetched_at": "2026-11-05T12:28:28.305Z",
+        "attestation": {
+          "nonce": "2372d4b3d8b754ea8076c0d569904f7041bd9c00bb5f5b5b7f8b186a9ba576b1",
+          "report_sha256": "17de9d61b93fd02189c805490a8b60af9abb77b319ed3b5154b3e0cffb59d0c8",
+          "report_url": "/api/v1/attestations/17de9d61b93fd02189c805490a8b60af9abb77b319ed3b5154b3e0cffb59d0c8"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_2dc88aecfeea4a20a0ed76e2",
+          "name": "propose_spec",
+          "arguments": {
+            "choices": {
+              "colour": "identity",
+              "measure": "voting_power"
+            },
+            "network": "near-house-of-stake",
+            "sha256": {
+              "$from": "call_32685aa507274196b74f1484.sha256"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "z-ai/glm-5.3-flash",
+        "completion_id": "97de0ebfae954ad79c582c66f4c4a74d",
+        "signature_kind": "provider_tee",
+        "text": "z-ai/glm-5.3-flash:da90e110571a39d6145c061167cf2db03ad5ef3ccb5e26c814060d47ebfb1868:73cc25ee3b0958ae86394f259a1f6ed44ba228bcec586fb4e3b40d84d4e43808",
+        "signature": "0x631487936c23e998de9b000b20d586a74e7c0ba809f281d4350aa8eca2f1beb2304888c9e113d4e1db329f4341dd0d48f68edfbf4df3ca39328c432f0140453b1c",
+        "signing_address": "0x3b753b4406613c5e70ae640508632b600424fa0c",
+        "signing_algo": "ecdsa",
+        "request_sha256": "da90e110571a39d6145c061167cf2db03ad5ef3ccb5e26c814060d47ebfb1868",
+        "response_sha256": "73cc25ee3b0958ae86394f259a1f6ed44ba228bcec586fb4e3b40d84d4e43808",
+        "fetched_at": "2026-11-05T12:28:29.755Z",
+        "attestation": {
+          "nonce": "2372d4b3d8b754ea8076c0d569904f7041bd9c00bb5f5b5b7f8b186a9ba576b1",
+          "report_sha256": "17de9d61b93fd02189c805490a8b60af9abb77b319ed3b5154b3e0cffb59d0c8",
+          "report_url": "/api/v1/attestations/17de9d61b93fd02189c805490a8b60af9abb77b319ed3b5154b3e0cffb59d0c8"
+        }
+      }
+    }
+  ],
+  "run": {
+    "started_at": "2026-11-05T12:26:38.048Z",
+    "success": false,
+    "wall_ms": 120002,
+    "longest_gap_ms": 8002,
+    "turns": 4,
+    "tokens": {
+      "in": 21326,
+      "out": 262
+    },
+    "cost_usd": 0.001837,
+    "per_turn": [
+      {
+        "ms": 2393,
+        "in": 4397,
+        "out": 29,
+        "usd": 0.00036626,
+        "tools": [
+          "list_networks",
+          "list_flowers"
+        ]
+      },
+      {
+        "ms": 1032,
+        "in": 4642,
+        "out": 16,
+        "usd": 0.00037936,
+        "tools": [
+          "get_snapshot"
+        ]
+      },
+      {
+        "ms": 3008,
+        "in": 4865,
+        "out": 127,
+        "usd": 0.0004527,
+        "tools": [
+          "describe_snapshot",
+          "compute_figures"
+        ]
+      },
+      {
+        "ms": 1436,
+        "in": 7422,
+        "out": 90,
+        "usd": 0.00063876,
+        "tools": [
+          "propose_spec"
+        ]
+      }
+    ],
+    "tool_ms": [
+      {
+        "name": "list_networks",
+        "ok": true,
+        "ms": 0,
+        "summary": "1 networks: near-house-of-stake"
+      },
+      {
+        "name": "list_flowers",
+        "ok": true,
+        "ms": 257,
+        "summary": "0 flowers"
+      },
+      {
+        "name": "get_snapshot",
+        "ok": true,
+        "ms": 103563,
+        "summary": "read fresh from fetched: block 223165776, 2026-11-05T12:26:39Z (ac40a05c1a1d…)"
+      },
+      {
+        "name": "describe_snapshot",
+        "ok": true,
+        "ms": 12,
+        "summary": "7 measures; largest: cc96f558…c807, 4783b548…6172, spareuni818.near"
+      },
+      {
+        "name": "compute_figures",
+        "ok": true,
+        "ms": 1,
+        "summary": "Nakamoto 5 at 0.5; 465 included; top 10 hold 81.1%"
+      },
+      {
+        "name": "propose_spec",
+        "ok": true,
+        "ms": 2,
+        "summary": "spec 25482211f3df…; changed from default: colour"
+      }
+    ],
+    "validate_tries": 0,
+    "errors": [
+      {
+        "code": "budget_exhausted",
+        "message": "The chat ran past its 120 s.",
+        "hint": "Bring your own agent: install the Petal skill (skill/petal/SKILL.md), or add the MCP server with `claude mcp add petal -- pnpm -s --dir <repo> petal mcp`, and ask it the same question."
+      }
+    ],
+    "warnings": [],
+    "unbacked_numbers": [],
+    "unbacked_in_interpretation": [],
+    "signature_kind": null,
+    "signature_id": null,
+    "spec_sha256": null,
+    "proposed": [
+      {
+        "choices": {
+          "colour": "identity",
+          "measure": "voting_power"
+        },
+        "network": "near-house-of-stake",
+        "sha256": "ac40a05c1a1d043a39c3f30c2f1481d9fb5c3e6726c9a2e69815ceb00a1b4527"
+      }
+    ],
+    "interpretation": null,
+    "answer": ""
+  }
+}

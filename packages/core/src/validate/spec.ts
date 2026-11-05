@@ -69,12 +69,18 @@ function ruleOf(e: ErrorObject): string {
 
 function schemaIssues(errors: ErrorObject[] | null | undefined, prefix = ''): ValidationIssue[] {
   return (errors ?? []).map((e) => {
-    const extra = (e.params as { additionalProperty?: unknown }).additionalProperty;
+    const { additionalProperty: extra, allowedValues: allowed } = e.params as {
+      additionalProperty?: unknown;
+      allowedValues?: unknown[];
+    };
     const rule = prefix ? 'interpretation' : ruleOf(e);
+    // Whoever fixes this (often a model) needs what was expected, not only that it was wrong.
+    const detail =
+      extra !== undefined ? `: ${String(extra)}` : allowed ? `: ${allowed.join(', ')}` : '';
     const message =
       rule === 'unavailable'
         ? `${String(extra)} is declared in the vocabulary but not available in this build`
-        : `${e.message ?? 'invalid'}${extra !== undefined ? `: ${String(extra)}` : ''}`;
+        : `${e.message ?? 'invalid'}${detail}`;
     return { path: `${prefix}${e.instancePath}`, rule, message };
   });
 }

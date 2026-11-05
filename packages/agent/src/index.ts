@@ -12,11 +12,22 @@ import { createAgentRoutes } from './routes.ts';
 import { startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
 
+/** The daily spend ledger; for scripts that run the agent outside the server (T060). */
+export { fileLedger } from './budget.ts';
 export type * from './llm.ts';
 export { DEFAULT_BUDGET } from './llm.ts';
+/** nearAiClient with its options (attestations folder, warnings); same scripts. */
+export {
+  createNearAiClient,
+  DEFAULT_MODEL,
+  FALLBACK_MODELS,
+  type NearAiOptions,
+} from './near-ai.ts';
 export { SYSTEM_PROMPT } from './prompt.ts';
 export {
+  HAND_TRANSCRIPT,
   loadTranscript,
+  RECORDED_ATTESTATIONS,
   recordedClient,
   SKELETON_TRANSCRIPT,
   type Transcript,

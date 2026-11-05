@@ -1,13 +1,15 @@
 // T057: runAgent on recordedClient and scripted models, with a fake registry (W4 builds the real
 // one in parallel).
+import { specHash } from '@petal/core';
 import type { AgentEvent } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
 import { memoryLedger } from '../src/budget.ts';
 import { runAgent } from '../src/index.ts';
 import { type Budget, DEFAULT_BUDGET, type LlmClient } from '../src/llm.ts';
 import { LlmCallError } from '../src/near-ai.ts';
-import { recordedClient, SKELETON_TRANSCRIPT } from '../src/recorded.ts';
+import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
 import { type RunOptions, SKILL_HINT, startRun } from '../src/run.ts';
+import { draftLink } from '../src/summary.ts';
 import {
   collect,
   fakeContext,
@@ -69,7 +71,7 @@ function signedSkeleton(): ReturnType<typeof scriptedLlm> {
 
 describe('runAgent on the recorded skeleton run', () => {
   test('events: run first, done last, the quickstart tool order, then the flower', async () => {
-    const { events, tools } = run(recordedClient(SKELETON_TRANSCRIPT));
+    const { events, tools } = run(recordedClient(HAND_TRANSCRIPT));
     const es = await collect(events);
     const n = names(es);
     expect(n[0]).toBe('run');
@@ -104,7 +106,7 @@ describe('runAgent on the recorded skeleton run', () => {
   });
 
   test('a recorded run says so first: it did not read the question', async () => {
-    const es = await collect(run(recordedClient(SKELETON_TRANSCRIPT)).events);
+    const es = await collect(run(recordedClient(HAND_TRANSCRIPT)).events);
     expect(es[0]?.event).toBe('run');
     expect(es[1]?.event).toBe('stage');
     expect(pick(es, 'stage')[0]?.data.message).toMatch(
@@ -113,7 +115,7 @@ describe('runAgent on the recorded skeleton run', () => {
   });
 
   test('stages follow the tools: fetching, counting, proposing, validating, drawing', async () => {
-    const es = await collect(run(recordedClient(SKELETON_TRANSCRIPT)).events);
+    const es = await collect(run(recordedClient(HAND_TRANSCRIPT)).events);
     // "thinking" sits between model calls, so a stage can come back after it: collapse repeats
     const stages = pick(es, 'stage')
       .map((e) => e.data.stage)
@@ -125,7 +127,7 @@ describe('runAgent on the recorded skeleton run', () => {
   });
 
   test('the flower carries the validated spec, the interpretation and the render', async () => {
-    const es = await collect(run(recordedClient(SKELETON_TRANSCRIPT)).events);
+    const es = await collect(run(recordedClient(HAND_TRANSCRIPT)).events);
     const flower = pick(es, 'flower')[0]?.data;
     expect(flower).toMatchObject({
       spec: SPEC,
@@ -140,7 +142,7 @@ describe('runAgent on the recorded skeleton run', () => {
   });
 
   test('the answer quotes only tool figures', async () => {
-    const es = await collect(run(recordedClient(SKELETON_TRANSCRIPT)).events);
+    const es = await collect(run(recordedClient(HAND_TRANSCRIPT)).events);
     const text = pick(es, 'message')
       .map((e) => e.data.text)
       .join('\n');
@@ -151,7 +153,7 @@ describe('runAgent on the recorded skeleton run', () => {
   });
 
   test('tool progress is forwarded; summaries are one line, never raw bodies', async () => {
-    const es = await collect(run(recordedClient(SKELETON_TRANSCRIPT)).events);
+    const es = await collect(run(recordedClient(HAND_TRANSCRIPT)).events);
     expect(pick(es, 'progress')[0]?.data).toEqual({
       stage: 'fetching',
       message: 'found in the fixtures',
@@ -170,7 +172,7 @@ describe('runAgent on the recorded skeleton run', () => {
   });
 
   test('render_flower is asked without SVG, and the model never reads SVG or petal details', async () => {
-    const inner = recordedClient(SKELETON_TRANSCRIPT);
+    const inner = recordedClient(HAND_TRANSCRIPT);
     const seen: string[] = [];
     const spy: LlmClient = {
       ...inner,
@@ -183,7 +185,7 @@ describe('runAgent on the recorded skeleton run', () => {
     await collect(events);
     expect(tools.calls.find((c) => c.name === 'render_flower')?.args.include_svg).toBe(false);
     const last = seen.at(-1) ?? '';
-    expect(last).toContain('petals_drawn');
+    expect(last).not.toContain('a.poolv1.near\\"}]'); // the fake's petal details
     expect(last).not.toContain('<svg');
   });
 
@@ -288,6 +290,85 @@ describe('the flower and its signature', () => {
   });
 });
 
+describe('what the model reads and sends', () => {
+  test('a failed validate_spec reaches the model whole: every error, its path and message', async () => {
+    const errors = Array.from({ length: 8 }, (_, i) => ({
+      path: `/interpretation/documents/${i}`,
+      rule: 'interpretation',
+      message: `must have required property 'kind' (${i})`,
+    }));
+    const tools = fakeRegistry();
+    const real = tools.registry.find((t) => t.name === 'validate_spec');
+    if (!real) throw new Error('no validate_spec');
+    real.run = async () => ({ valid: false, errors, warnings: [] });
+    const llm = scriptedLlm([
+      { calls: [{ id: 'v1', name: 'validate_spec', args: { spec: SPEC } }] },
+      { content: 'I could not fix it.' },
+    ]);
+    await collect(run(llm, { tools }).events);
+    const back = llm.requests[1]?.messages.find((m) => m.role === 'tool');
+    expect(JSON.parse(back?.content as string)).toEqual({ valid: false, errors, warnings: [] });
+  });
+
+  test('a spec is named by its spec_sha256: the tool gets the spec itself, and so does the event', async () => {
+    const llm = scriptedLlm([
+      { calls: [{ name: 'propose_spec', args: { network: 'near-validators' } }] },
+      {
+        calls: [
+          { name: 'validate_spec', args: { spec: SPEC_SHA, interpretation: INTERPRETATION } },
+        ],
+      },
+      { calls: [{ name: 'render_flower', args: { spec: SPEC_SHA } }] },
+      { content: 'done' },
+    ]);
+    const { events, tools } = run(llm);
+    const es = await collect(events);
+    for (const name of ['validate_spec', 'render_flower']) {
+      expect(tools.calls.find((c) => c.name === name)?.args.spec).toEqual(SPEC);
+    }
+    expect(pick(es, 'tool_call').find((e) => e.data.name === 'render_flower')?.data.args).toEqual({
+      spec: SPEC,
+      include_svg: false,
+    });
+    expect(pick(es, 'flower')).toHaveLength(1);
+  });
+
+  test('a hash no tool returned is refused with a hint, before any tool runs', async () => {
+    const llm = scriptedLlm([
+      { calls: [{ name: 'validate_spec', args: { spec: 'a'.repeat(64) } }] },
+      { content: 'ok' },
+    ]);
+    const { events, tools } = run(llm);
+    await collect(events);
+    expect(tools.calls.find((c) => c.name === 'validate_spec')).toBeUndefined();
+    const back = JSON.parse(llm.requests[1]?.messages.at(-1)?.content as string);
+    expect(back.error).toMatchObject({
+      code: 'bad_input',
+      hint: expect.stringMatching(/propose_spec/),
+    });
+  });
+
+  test('the model gets a short link to the flower; the person gets the real one', async () => {
+    const short = draftLink(specHash(SPEC as never));
+    const llm = scriptedLlm([
+      { calls: [{ name: 'validate_spec', args: { spec: SPEC, interpretation: INTERPRETATION } }] },
+      { calls: [{ id: 'r', name: 'render_flower', args: { spec: SPEC } }] },
+      { content: `**Flower**: ${short}` },
+    ]);
+    const es = await collect(run(llm).events);
+    const seen = llm.requests[2]?.messages.find((m) => m.role === 'tool' && m.tool_call_id === 'r');
+    expect(JSON.parse(seen?.content as string).view_url).toBe(short);
+    expect(pick(es, 'message').at(-1)?.data.text).toBe(`**Flower**: ${VIEW_URL}`);
+    expect(pick(es, 'flower')[0]?.data.view_url).toBe(VIEW_URL);
+  });
+
+  test('the limits say to name the spec, not copy it', async () => {
+    const llm = scriptedLlm([{ content: 'hello' }]);
+    await collect(run(llm).events);
+    expect(llm.requests[0]?.messages[0]?.content).toMatch(/Name a spec by its `spec_sha256`/);
+  });
+});
+
 describe('tool trouble goes back to the model, not to the user', () => {
   test('bad JSON, an unknown tool, a proof-only tool and a tool that throws', async () => {
     const llm = scriptedLlm([
@@ -300,7 +381,7 @@ describe('tool trouble goes back to the model, not to the user', () => {
     const { events, tools } = run(llm);
     const es = await collect(events);
     expect(pick(es, 'tool_result').map((e) => e.data.summary)).toEqual([
-      'bad_input: the arguments of get_snapshot are not a JSON object',
+      expect.stringMatching(/^bad_input: the arguments of get_snapshot are not a JSON object \(/),
       'not_found: no tool named no_such_tool',
       'not_found: no tool named publish_flower',
       'internal: explode failed: boom',
@@ -313,7 +394,7 @@ describe('tool trouble goes back to the model, not to the user', () => {
 
 describe('limits', () => {
   test('tool rounds: one last call without tools, then budget_exhausted', async () => {
-    const llm = recordedClient(SKELETON_TRANSCRIPT);
+    const llm = recordedClient(HAND_TRANSCRIPT);
     const seen: (string[] | undefined)[] = [];
     const spy: LlmClient = {
       ...llm,
@@ -377,9 +458,7 @@ describe('limits', () => {
     );
     expect(await ledger.spentToday()).toBeCloseTo(0.01, 9);
     await ledger.add(5);
-    const es = await collect(
-      run(recordedClient(SKELETON_TRANSCRIPT), { budget: { ledger } }).events,
-    );
+    const es = await collect(run(recordedClient(HAND_TRANSCRIPT), { budget: { ledger } }).events);
     expect(pick(es, 'flower')).toHaveLength(1);
   });
 

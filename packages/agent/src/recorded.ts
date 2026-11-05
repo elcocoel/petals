@@ -1,5 +1,5 @@
-// recordedClient: replays a transcript instead of calling a model (T020). Tests and judges with
-// no NEAR_AI_API_KEY use it; the server says so in done.model = "recorded".
+// recordedClient: replays a transcript instead of calling a model (T020, T061). Tests and judges
+// with no NEAR_AI_API_KEY use it; the server says so in done.model = "recorded".
 //
 // Transcript format (fixtures/transcripts/*.json, petal "transcript/v1"): `turns[i]` is the
 // model's i-th reply in the conversation. A reply is picked by counting the assistant messages
@@ -8,13 +8,19 @@
 //   { "$from": "call_1.sha256" }     the value at that path in the result of tool call call_1
 //   "text {{call_3.nakamoto.count}}" the same, put into text
 // Tool results are read from the request's `tool` messages (JSON text), as a model would see them.
+// A reply of a real run also carries the `signature` its completion got when it was recorded: the
+// model really signed those bytes then, and nothing is being signed now.
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { ModelSignature } from '@petal/core/types';
 import type { LlmClient, LlmCompletion, LlmMessage, LlmToolCall } from './llm.ts';
 
 export interface TranscriptTurn {
   content?: string | null;
   tool_calls?: { id: string; name: string; arguments: unknown }[];
+  /** kind "recorded": the signature the real completion got when it was recorded (additive) */
+  signature?: ModelSignature | null;
 }
 
 export interface Transcript {
@@ -28,9 +34,28 @@ export interface Transcript {
   turns: TranscriptTurn[];
 }
 
-/** The hand-made skeleton run (quickstart step 2). */
+/** The real skeleton run, recorded on NEAR AI Cloud with its signatures (T061). */
 export const SKELETON_TRANSCRIPT: string = fileURLToPath(
+  new URL('../../../fixtures/transcripts/skeleton.json', import.meta.url),
+);
+
+/** The hand-made run of T020: scripted, for tests of the loop that use fake tools. */
+export const HAND_TRANSCRIPT: string = fileURLToPath(
   new URL('../../../fixtures/transcripts/skeleton.hand.json', import.meta.url),
+);
+
+/**
+ * The attestation reports the recorded signatures name, kept byte for byte. A joined path, for
+ * the reason DEFAULT_ATTESTATIONS in near-ai.ts gives: bundlers would copy a new URL() folder.
+ */
+export const RECORDED_ATTESTATIONS: string = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  '..',
+  'fixtures',
+  'transcripts',
+  'attestations',
 );
 
 export function loadTranscript(file: string): Transcript {
@@ -118,7 +143,7 @@ export function recordedClient(transcriptFile: string): LlmClient {
         usage: { in: 0, out: 0 },
         cost_usd: 0,
         fallback_used: false,
-        signature: null,
+        signature: step.signature ?? null,
       };
     },
   };

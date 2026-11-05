@@ -26,8 +26,11 @@ Nothing under `../research/`, `../design/`, `../submission/` or `../.secrets/` i
 | `snapshots/test/two-participants.json` | The two largest seated validators, stake only (the 2-petal golden). |
 | `snapshots/test/tiny-backers.json` | Five seated pools whose backers cover every class, with owners, holdings and delegations; the rest folded into declared groups. |
 | `golden/inputs/house-of-stake-2026-11-04.json.gz` | `near-house-of-stake` at block 223,021,333, for goldens only (not indexed, so the quickstart's live pull stays live). |
-| `map/313ced42….json` | The skeleton's fixture flower: the recorded skeleton run as an entry (`provenance.maker: null`, model `recorded`), made by `node tests/e2e/skeleton-entry.ts --write`. Listed as `fixture`, never "on NEAR". A stand-in until the hero set (T115). |
-| `transcripts/skeleton.hand.json` | Hand-made agent run for "who stands behind NEAR's validators?" (`transcript/v1`, replayed by `recordedClient`). |
+| `map/3394fb87….json` | The skeleton's fixture flower: the recorded skeleton run as an entry (`provenance.maker: null`, model `recorded`), made by `node tests/e2e/skeleton-entry.ts --write`. Listed as `fixture`, never "on NEAR". A stand-in until the hero set (T115). |
+| `transcripts/skeleton.json` | The real skeleton run (T061): the agent on NEAR AI Cloud on 5 Nov 2026, with the `provider_tee` signature of each reply. `recordedClient` replays it when no model key is set; the run still says it is recorded (first stage `recorded`, `done.model: "recorded"`). Remake it with `node tests/e2e/bakeoff.ts --skeleton` (spends real money), then `node tests/e2e/skeleton-entry.ts --write`. |
+| `transcripts/attestations/<sha256>.json` | The attestation report those signatures name, byte for byte, served at `/api/v1/attestations/<sha256>` so a clean clone can show it. |
+| `transcripts/skeleton.hand.json` | The hand-made run of T020: scripted, for tests of the agent loop that use fake tools, and for the API mock. |
+| `transcripts/bakeoff/` | The model bake-off (T060; research.md R10): one transcript per model and question, with timings, tokens and checks under `run`. `earlier/` holds the day's other rounds. |
 | `transcripts/1click-dry-quote.json` | A 1Click dry quote reconstructed from the 4 Nov measurements (`recorded-quote/v1`, replayed by `fakeQuote()`); placeholders are named in its `note`. |
 
 Test snapshots use their own network ids (`test-*`) and no block height, so they never collide with a real store lookup.
@@ -47,4 +50,4 @@ Group rows: `id` = `group:<pool>:<class>`, `kind: group`, `count` = accounts fol
 
 ### Transcript format (`transcript/v1`)
 
-`{ petal, kind: "hand" | "recorded", title, question, model, note, turns: [{ content, tool_calls: [{ id, name, arguments }] }] }`. `turns[i]` is the model's i-th reply. Inside a reply, `{ "$from": "call_1.sha256" }` is replaced by that value from an earlier tool result, and `{{call_3.nakamoto.count}}` puts one into text, so a hand-made run never hard-codes a hash or a number.
+`{ petal, kind: "hand" | "recorded", title, question, model, note, turns: [{ content, tool_calls: [{ id, name, arguments }], signature? }], run? }`. `turns[i]` is the model's i-th reply. In a real run, `signature` is what that completion got when it was recorded, and `run` holds what was measured. Inside a reply, `{ "$from": "call_1.sha256" }` is replaced by that value from an earlier tool result, and `{{call_3.nakamoto.count}}` puts one into text, so a hand-made run never hard-codes a hash or a number.

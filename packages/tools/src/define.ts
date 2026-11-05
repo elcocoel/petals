@@ -24,6 +24,25 @@ export const FLOWER_DEFS: Record<string, unknown> = (
   schemas.spec as { $defs: Record<string, unknown> }
 ).$defs;
 
+/**
+ * A schema with every local `$ref` (`#/$defs/x`) replaced by its definition, so it can be handed
+ * on its own to a client that does not follow references (many model tool-call templates don't).
+ */
+export function inlineRefs<T>(schema: T, defs: Record<string, unknown> = FLOWER_DEFS): T {
+  if (Array.isArray(schema)) return schema.map((x) => inlineRefs(x, defs)) as T;
+  if (!schema || typeof schema !== 'object') return schema;
+  const { $ref: ref, ...rest } = schema as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  if (typeof ref === 'string') {
+    const name = /^#\/\$defs\/(.+)$/.exec(ref)?.[1];
+    const def = name === undefined ? undefined : defs[name];
+    if (def === undefined) throw new Error(`inlineRefs: cannot resolve ${ref}`);
+    Object.assign(out, inlineRefs(def, defs));
+  }
+  for (const [k, v] of Object.entries(rest)) out[k] = inlineRefs(v, defs);
+  return out as T;
+}
+
 /** MCP-style hints, also listed by the MCP door. */
 export interface ToolAnnotations {
   readOnlyHint?: boolean;
@@ -47,6 +66,11 @@ export interface ToolDef<I, O> {
   description: string;
   /** an object schema; `description` is set from the tool's description */
   input: JSONSchema;
+  /**
+   * What the door lets through, when that is looser than what `input` documents: a tool whose
+   * job is to report a bad document (validate_spec) must get it, not refuse it as bad_input.
+   */
+  accepts?: JSONSchema;
   /** the success shape; `tools_version` is added */
   output: JSONSchema;
   annotations?: ToolAnnotations;
@@ -114,7 +138,7 @@ export function defineTool<I, O extends object>(def: ToolDef<I, O>): PetalTool<I
     required: [...((def.output.required as string[] | undefined) ?? []), 'tools_version'],
     properties: { ...((def.output.properties as object | undefined) ?? {}), ...VERSION_PROP },
   };
-  const check = compile(input);
+  const check = compile(def.accepts ?? input);
   const hint = `See the input schema of ${def.name} (MCP tools/list, or contracts/tools.md).`;
   return {
     name: def.name,

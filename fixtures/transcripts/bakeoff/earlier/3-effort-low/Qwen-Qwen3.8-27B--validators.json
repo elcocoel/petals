@@ -1,0 +1,543 @@
+{
+  "petal": "transcript/v1",
+  "kind": "recorded",
+  "title": "Bake-off (validators): Qwen/Qwen3.8-27B",
+  "question": "Who stands behind NEAR’s validators? Make me a fresh flower with their backers, not an existing one.",
+  "model": "Qwen/Qwen3.8-27B",
+  "note": "A real run on NEAR AI Cloud (T060), kept with the signature each completion got. A hash or link the model copied from a tool result is written as a reference to that result ($from, {{…}}), so it replays on recordedClient.",
+  "turns": [
+    {
+      "content": "\n\n\n",
+      "tool_calls": [
+        {
+          "id": "call_7770fa4590af4bf5a3d23e24",
+          "name": "list_networks",
+          "arguments": {
+            "query": "near"
+          }
+        },
+        {
+          "id": "call_818858f8835d40beb844b268",
+          "name": "list_flowers",
+          "arguments": {
+            "network": "near"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "6133fcac53534503a1bf11e5a12d1e76",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:8c0771c7091086d11821c90e4c6cb70bf5633abeb8a43babaebd5d98eab824b5:2f9cf16fb6150c797950e19237cd60c8c3a0628d9037e8404a357d01373dfd4d",
+        "signature": "0x92796c076ac829121630922c1aa8bada423635a97bf35c5207eee0c047fbccd123396c3d1de55aa87cea240cbc0261274673396d2a245a665555fda56cad97fd1b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "8c0771c7091086d11821c90e4c6cb70bf5633abeb8a43babaebd5d98eab824b5",
+        "response_sha256": "2f9cf16fb6150c797950e19237cd60c8c3a0628d9037e8404a357d01373dfd4d",
+        "fetched_at": "2026-11-05T12:13:48.461Z",
+        "attestation": {
+          "nonce": "9dbaaf7f492f21128e9f5aeaf131dc0912641e7b4bc96bdd7de31eaea4bcae03",
+          "report_sha256": "aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390",
+          "report_url": "/api/v1/attestations/aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390"
+        }
+      }
+    },
+    {
+      "content": "\n\nThe right network is `near-validators` (readable, has `backers` segments), and no existing flowers for it — so I'll build a fresh one.\n\n",
+      "tool_calls": [
+        {
+          "id": "call_162e3a3920e44f68b3e495fb",
+          "name": "get_snapshot",
+          "arguments": {
+            "network": "near-validators"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "598b4353b36b4c0dbb32964516dfbb86",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:debdedf4158fbef97ad8b0a446361a7607a26ac491125b001b7ce0e106032c38:91b29947ca7b3600ead86a19f868c1efaa58978525a01e69135d7f52d1931a49",
+        "signature": "0xdf843390adb8959aae980616cbf9806c017c1cb60475c6393aa4ba3b48b212340b3e39095ee2556beb056ca4eb3f48c10b296c82f103c1d50aafdcc1e2e904b91b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "debdedf4158fbef97ad8b0a446361a7607a26ac491125b001b7ce0e106032c38",
+        "response_sha256": "91b29947ca7b3600ead86a19f868c1efaa58978525a01e69135d7f52d1931a49",
+        "fetched_at": "2026-11-05T12:13:52.377Z",
+        "attestation": {
+          "nonce": "9dbaaf7f492f21128e9f5aeaf131dc0912641e7b4bc96bdd7de31eaea4bcae03",
+          "report_sha256": "aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390",
+          "report_url": "/api/v1/attestations/aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390"
+        }
+      }
+    },
+    {
+      "content": "\n\n\n",
+      "tool_calls": [
+        {
+          "id": "call_934b046167af4053aa0436f0",
+          "name": "describe_snapshot",
+          "arguments": {
+            "sha256": {
+              "$from": "call_162e3a3920e44f68b3e495fb.sha256"
+            }
+          }
+        },
+        {
+          "id": "call_91e550c25af944a7886fa313",
+          "name": "compute_figures",
+          "arguments": {
+            "sha256": {
+              "$from": "call_162e3a3920e44f68b3e495fb.sha256"
+            },
+            "measure": "validator_stake_current_epoch"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "e486f91503e54d7cb8280281f3f8feac",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:6127fabc3b263bbf2e8ef8e62a890c30ee9836276caa20ace3322db2164ef9e7:646da80f6fdd4bc3fdd5882f41123243e0901fb36389a51698c874abb1d5d632",
+        "signature": "0x71da5fa28efeeeee0e304590d4aa812219bb89228d61f38778800edb94ca837e2a9a6d068eb4d41ff77254716d87a5bc8e37decd8c808abf3844ef5dbd32792e1c",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "6127fabc3b263bbf2e8ef8e62a890c30ee9836276caa20ace3322db2164ef9e7",
+        "response_sha256": "646da80f6fdd4bc3fdd5882f41123243e0901fb36389a51698c874abb1d5d632",
+        "fetched_at": "2026-11-05T12:13:57.905Z",
+        "attestation": {
+          "nonce": "9dbaaf7f492f21128e9f5aeaf131dc0912641e7b4bc96bdd7de31eaea4bcae03",
+          "report_sha256": "aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390",
+          "report_url": "/api/v1/attestations/aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390"
+        }
+      }
+    },
+    {
+      "content": "\n\nSnapshot reused (fixture, final) as of 2026-11-03, block 222,915,356. 371 validators, 593.37M NEAR staked. Now I'll build the spec — the question needs `segments: \"backers\"`; the rest I'll leave to defaults.\n\n",
+      "tool_calls": [
+        {
+          "id": "call_e7beb99f88cc4268bd251c63",
+          "name": "propose_spec",
+          "arguments": {
+            "network": "near-validators",
+            "sha256": {
+              "$from": "call_162e3a3920e44f68b3e495fb.sha256"
+            },
+            "choices": {
+              "measure": "validator_stake_current_epoch",
+              "segments": "backers"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "4e0618191a2346a5a21ff4bcea7f5bb8",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:7065c5da04dcbaf821054cb58647cc321872f522ba53aaea4182e2870941dfd4:cc2e57722dd24ceb0063a41559e0cbe68b2e1d5fec58f795aad083efc26714b8",
+        "signature": "0x8b8594471c300b7e6db3fae72dad954a71a564c5abf02573afb66bd4a3e0252d512efc0656188cba2900a2a8304581a2f84b34db53ad62f832ef4a53cf5f7fcd1b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "7065c5da04dcbaf821054cb58647cc321872f522ba53aaea4182e2870941dfd4",
+        "response_sha256": "cc2e57722dd24ceb0063a41559e0cbe68b2e1d5fec58f795aad083efc26714b8",
+        "fetched_at": "2026-11-05T12:14:08.518Z",
+        "attestation": {
+          "nonce": "9dbaaf7f492f21128e9f5aeaf131dc0912641e7b4bc96bdd7de31eaea4bcae03",
+          "report_sha256": "aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390",
+          "report_url": "/api/v1/attestations/aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390"
+        }
+      }
+    },
+    {
+      "content": "\n\n",
+      "tool_calls": [
+        {
+          "id": "call_61557c2dddb244d699baa187",
+          "name": "validate_spec",
+          "arguments": {
+            "spec": {
+              "$from": "call_e7beb99f88cc4268bd251c63.spec_sha256"
+            },
+            "interpretation": {
+              "summary": "This flower shows NEAR's 371 active validators as a ring, each side's bar sized by its current-epoch stake, largest first. Each bar is split into the backer classes that stand behind it: other delegators, accounts holding 1M+ NEAR, liquid-staking contracts, and lockups. Stake is concentrated: the top 10 pools hold about 36% and the Nakamoto coefficient is 9.",
+              "power_means": [
+                {
+                  "claim": "Power here is validator stake in the current epoch: how much NEAR is staked to a pool and thus entitles its operator to produce blocks and chunks. Total is about 593.37M NEAR across 371 pools; the top pool (astro-stakers) holds ~5.6%, the top 10 hold ~36.2%, and 9 pools would be needed to reach a third of all stake.",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ],
+                  "figures": [
+                    "fig:total",
+                    "fig:participants_total",
+                    "fig:top_k_share.10",
+                    "fig:nakamoto"
+                  ]
+                }
+              ],
+              "mappings": [
+                {
+                  "primitive": "width",
+                  "why": "Each side's width is the validator's share of current-epoch stake, compressed into a band so small pools stay visible beside the large ones.",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ]
+                },
+                {
+                  "primitive": "height",
+                  "why": "Each bar's height is the square root of that stake share, so a validator's slice stands straight out in proportion to its power.",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ]
+                },
+                {
+                  "primitive": "colour",
+                  "why": "Colour marks the kind of account (staking pool, liquid-staking contract, or unknown) so the eye can pick out non-pool actors.",
+                  "sources": [
+                    "nearblocks-validators",
+                    "fastnear-rpc-liquid-staking"
+                  ]
+                },
+                {
+                  "primitive": "outline",
+                  "why": "A solid outline means the name is self-declared or verified, dashed means inferred, none means unknown; pool names are self-declared in pool-details.near, not verified.",
+                  "sources": [
+                    "nearblocks-validators",
+                    "account-id"
+                  ]
+                },
+                {
+                  "primitive": "segments",
+                  "why": "The question asks who stands behind each validator, so each bar is segmented by backer class: other delegators, accounts with 1M+ NEAR, liquid-staking contracts, and lockups.",
+                  "sources": [
+                    "fastnear-rpc-staking-pool-views",
+                    "fastnear-rpc-liquid-staking"
+                  ]
+                },
+                {
+                  "primitive": "order",
+                  "why": "Validators are ordered largest-stake first, clockwise from the top, so the most powerful pools sit together at the top.",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ]
+                }
+              ],
+              "conflicts": [
+                "Stake is not the only kind of power on NEAR: governance votes (e.g. House of Stake / veNEAR), protocol role, and off-chain influence (exchanges, liquid-staking control of token holders) also matter. This flower draws only staking power and its delegators."
+              ],
+              "unknowns": [
+                "Lockup contract owners were not resolved, so 'lockup' backers are opaque to a single controller.",
+                "Liquid-staking contracts appear as a backer class, but their own token holders are not listed (would need contract state / token-holder APIs), so we cannot say who really backs e.g. Meta Pool or LiNEAR.",
+                "Pool identities are self-declared (pool-details.near); a named .near account is a self-declared identity, not a verified one, and several listed operators (figment, staked, bitwise) have no self-declared identity here.",
+                "Idle pools (~424, ~6656 delegation records) were not crawled, so their delegators are missing from the backer breakdown.",
+                "Delegations under 1,000 NEAR are folded per pool and class, so small individual backers are grouped rather than named."
+              ],
+              "inferred": [
+                "figment.poolv1.near and ledgerbyfigment.poolv1.near may be run by the same operator (Figment), but this is inference from naming, not evidence in the snapshot."
+              ],
+              "documents": []
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "f30f47f0acbd495c98b1b55b38aac62f",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:a023aa648de41acb4cfd901c31055daf07c762a2bc021892ac0a6af9252d701f:4cf1a4be7b12d86a6d0718ba4102ef466cde6a9e4212c1efffb525802f74e575",
+        "signature": "0xaaa51841a4a22582176da0c944e0015085d80ed3e867bd952b95ce75dd16f0922b2a9fc98dff26148afb0a1e4dac9564a6cf13057d037f28340c21f1613b4f711c",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "a023aa648de41acb4cfd901c31055daf07c762a2bc021892ac0a6af9252d701f",
+        "response_sha256": "4cf1a4be7b12d86a6d0718ba4102ef466cde6a9e4212c1efffb525802f74e575",
+        "fetched_at": "2026-11-05T12:14:36.982Z",
+        "attestation": {
+          "nonce": "9dbaaf7f492f21128e9f5aeaf131dc0912641e7b4bc96bdd7de31eaea4bcae03",
+          "report_sha256": "aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390",
+          "report_url": "/api/v1/attestations/aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390"
+        }
+      }
+    },
+    {
+      "content": "\n\nValid. Drawing it now.\n\n",
+      "tool_calls": [
+        {
+          "id": "call_e9ab852204b74ee683c71ce2",
+          "name": "render_flower",
+          "arguments": {
+            "spec": {
+              "$from": "call_e7beb99f88cc4268bd251c63.spec_sha256"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "76e7a42ba3d94a6e8bb5aaa41a656bd5",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:d3b12269d61520fbb3388b6a81a20c0db74520047c59617b93fdf70f89f514c9:231ae2dd66459d20da0d04442c5d17fce94866b4e29e4e853e651c480c200945",
+        "signature": "0x133c6a1e6465149a42c0b564ea1f5fb7960841f3957d70d6159263860a80ad8549ede388fcad24b6fcaadace5ac8f964ac046a425551a2bddb80f30fc597f7211b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "d3b12269d61520fbb3388b6a81a20c0db74520047c59617b93fdf70f89f514c9",
+        "response_sha256": "231ae2dd66459d20da0d04442c5d17fce94866b4e29e4e853e651c480c200945",
+        "fetched_at": "2026-11-05T12:14:40.675Z",
+        "attestation": {
+          "nonce": "9dbaaf7f492f21128e9f5aeaf131dc0912641e7b4bc96bdd7de31eaea4bcae03",
+          "report_sha256": "aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390",
+          "report_url": "/api/v1/attestations/aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390"
+        }
+      }
+    },
+    {
+      "content": "\n\nYour fresh flower is ready — no existing one was used (there were none for this network). Snapshot reused from the fixture, final, as of **2026‑11‑03**, block 222,915,356.\n\n**Flower**: {{call_e9ab852204b74ee683c71ce2.view_url}}\n\n**What you'll see**: NEAR's 371 validators as a ring, each bar sized by current‑epoch stake and largest first. Each bar is split into who backs it — other delegators, 1M+ NEAR accounts, liquid‑staking contracts, and lockups. The big pools at the top are mostly retail delegators; a few show a blue liquid‑staking slice.\n\n**Mapping**:\n- **Width/height** — share of current‑epoch stake (band / √), source `fastnear-rpc-validators`\n- **Segments** — backer classes (the answer to your question), sources `fastnear-rpc-staking-pool-views`, `fastnear-rpc-liquid-staking`\n- **Colour** — pool vs liquid‑staking vs unknown; **Outline** — solid = self‑declared name, dashed = inferred, none = unknown\n- **Order** — largest stake first\n\n**Changed from default**: only `segments: backers`; the rest are defaults.\n\n**What this can't tell you**: lockup owners aren't resolved (vesting backers are opaque); liquid‑staking token holders aren't listed, so we can't see who really backs Meta Pool or LiNEAR; pool names are self‑declared, not verified; stake is one kind of power, not governance (veNEAR) or off‑chain control. Addresses are holders, not confirmed people.",
+      "tool_calls": [],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "3c2d4ea3371240c59bc43a866c122ebb",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:45cd165f3a297dd7dc832b40a9dc70efbea4705f4dbadeed74325e267f3a01bd:e71b050b6a824f7fcd27ad89e0373caaa362ccb41e463b3019386a7409313c40",
+        "signature": "0xb8db61f72f13bfabf6b73608e11dcc6f37a4fc0594492c8889d47b7b5942407657f7c59f0b68e2dc7c05c3d16deced5bb6b271d9ee400dc0cbcf50e0f4259f951c",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "45cd165f3a297dd7dc832b40a9dc70efbea4705f4dbadeed74325e267f3a01bd",
+        "response_sha256": "e71b050b6a824f7fcd27ad89e0373caaa362ccb41e463b3019386a7409313c40",
+        "fetched_at": "2026-11-05T12:14:49.930Z",
+        "attestation": {
+          "nonce": "9dbaaf7f492f21128e9f5aeaf131dc0912641e7b4bc96bdd7de31eaea4bcae03",
+          "report_sha256": "aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390",
+          "report_url": "/api/v1/attestations/aa60ed5fc082572b9348203f8d14cdd3ac5e1201c3a0acc05863a1497b6db390"
+        }
+      }
+    }
+  ],
+  "run": {
+    "started_at": "2026-11-05T12:13:43.732Z",
+    "success": true,
+    "wall_ms": 66197,
+    "longest_gap_ms": 8001,
+    "turns": 7,
+    "tokens": {
+      "in": 57493,
+      "out": 2746
+    },
+    "cost_usd": 0.006007,
+    "per_turn": [
+      {
+        "ms": 4728,
+        "in": 4871,
+        "out": 117,
+        "usd": 0.00035279,
+        "tools": [
+          "list_networks",
+          "list_flowers"
+        ]
+      },
+      {
+        "ms": 3752,
+        "in": 5320,
+        "out": 157,
+        "usd": 0.00042475,
+        "tools": [
+          "get_snapshot"
+        ]
+      },
+      {
+        "ms": 5477,
+        "in": 5650,
+        "out": 270,
+        "usd": 0.0005905,
+        "tools": [
+          "describe_snapshot",
+          "compute_figures"
+        ]
+      },
+      {
+        "ms": 10571,
+        "in": 9135,
+        "out": 578,
+        "usd": 0.0011457,
+        "tools": [
+          "propose_spec"
+        ]
+      },
+      {
+        "ms": 28460,
+        "in": 9929,
+        "out": 1136,
+        "usd": 0.00193076,
+        "tools": [
+          "validate_spec"
+        ]
+      },
+      {
+        "ms": 3584,
+        "in": 10948,
+        "out": 100,
+        "usd": 0.00057292,
+        "tools": [
+          "render_flower"
+        ]
+      },
+      {
+        "ms": 9240,
+        "in": 11640,
+        "out": 388,
+        "usd": 0.0009894,
+        "tools": []
+      }
+    ],
+    "tool_ms": [
+      {
+        "name": "list_networks",
+        "ok": true,
+        "ms": 1,
+        "summary": "2 networks: near-validators, near-house-of-stake"
+      },
+      {
+        "name": "list_flowers",
+        "ok": true,
+        "ms": 162,
+        "summary": "0 flowers"
+      },
+      {
+        "name": "get_snapshot",
+        "ok": true,
+        "ms": 49,
+        "summary": "reused from fixture: block 222915356, 2026-11-03T19:42:00Z (72a6d9676d96…)"
+      },
+      {
+        "name": "describe_snapshot",
+        "ok": true,
+        "ms": 41,
+        "summary": "14 measures; largest: astro-stakers.poolv1.near, figment.poolv1.near, ledgerbyfigment.poolv1.near"
+      },
+      {
+        "name": "compute_figures",
+        "ok": true,
+        "ms": 0,
+        "summary": "Nakamoto 9 at 0.333333; 371 included; top 10 hold 36.2%"
+      },
+      {
+        "name": "propose_spec",
+        "ok": true,
+        "ms": 2,
+        "summary": "spec 897a01ac9a1f…; changed from default: segments"
+      },
+      {
+        "name": "validate_spec",
+        "ok": true,
+        "ms": 108,
+        "summary": "valid"
+      },
+      {
+        "name": "render_flower",
+        "ok": true,
+        "ms": 13,
+        "summary": "drawn: render 31cdd4a612bc…, 7 legend lines"
+      }
+    ],
+    "validate_tries": 1,
+    "errors": [],
+    "warnings": [],
+    "unbacked_numbers": [],
+    "signature_kind": "provider_tee",
+    "signature_id": "f30f47f0acbd495c98b1b55b38aac62f",
+    "spec_sha256": "897a01ac9a1f1150e84dbb7aa7baebffa14d2f8674a882e1fcc9016f259a7e04",
+    "proposed": [
+      {
+        "network": "near-validators",
+        "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
+        "choices": {
+          "measure": "validator_stake_current_epoch",
+          "segments": "backers"
+        }
+      }
+    ],
+    "interpretation": {
+      "summary": "This flower shows NEAR's 371 active validators as a ring, each side's bar sized by its current-epoch stake, largest first. Each bar is split into the backer classes that stand behind it: other delegators, accounts holding 1M+ NEAR, liquid-staking contracts, and lockups. Stake is concentrated: the top 10 pools hold about 36% and the Nakamoto coefficient is 9.",
+      "power_means": [
+        {
+          "claim": "Power here is validator stake in the current epoch: how much NEAR is staked to a pool and thus entitles its operator to produce blocks and chunks. Total is about 593.37M NEAR across 371 pools; the top pool (astro-stakers) holds ~5.6%, the top 10 hold ~36.2%, and 9 pools would be needed to reach a third of all stake.",
+          "sources": [
+            "fastnear-rpc-validators"
+          ],
+          "figures": [
+            "fig:total",
+            "fig:participants_total",
+            "fig:top_k_share.10",
+            "fig:nakamoto"
+          ]
+        }
+      ],
+      "mappings": [
+        {
+          "primitive": "width",
+          "why": "Each side's width is the validator's share of current-epoch stake, compressed into a band so small pools stay visible beside the large ones.",
+          "sources": [
+            "fastnear-rpc-validators"
+          ]
+        },
+        {
+          "primitive": "height",
+          "why": "Each bar's height is the square root of that stake share, so a validator's slice stands straight out in proportion to its power.",
+          "sources": [
+            "fastnear-rpc-validators"
+          ]
+        },
+        {
+          "primitive": "colour",
+          "why": "Colour marks the kind of account (staking pool, liquid-staking contract, or unknown) so the eye can pick out non-pool actors.",
+          "sources": [
+            "nearblocks-validators",
+            "fastnear-rpc-liquid-staking"
+          ]
+        },
+        {
+          "primitive": "outline",
+          "why": "A solid outline means the name is self-declared or verified, dashed means inferred, none means unknown; pool names are self-declared in pool-details.near, not verified.",
+          "sources": [
+            "nearblocks-validators",
+            "account-id"
+          ]
+        },
+        {
+          "primitive": "segments",
+          "why": "The question asks who stands behind each validator, so each bar is segmented by backer class: other delegators, accounts with 1M+ NEAR, liquid-staking contracts, and lockups.",
+          "sources": [
+            "fastnear-rpc-staking-pool-views",
+            "fastnear-rpc-liquid-staking"
+          ]
+        },
+        {
+          "primitive": "order",
+          "why": "Validators are ordered largest-stake first, clockwise from the top, so the most powerful pools sit together at the top.",
+          "sources": [
+            "fastnear-rpc-validators"
+          ]
+        }
+      ],
+      "conflicts": [
+        "Stake is not the only kind of power on NEAR: governance votes (e.g. House of Stake / veNEAR), protocol role, and off-chain influence (exchanges, liquid-staking control of token holders) also matter. This flower draws only staking power and its delegators."
+      ],
+      "unknowns": [
+        "Lockup contract owners were not resolved, so 'lockup' backers are opaque to a single controller.",
+        "Liquid-staking contracts appear as a backer class, but their own token holders are not listed (would need contract state / token-holder APIs), so we cannot say who really backs e.g. Meta Pool or LiNEAR.",
+        "Pool identities are self-declared (pool-details.near); a named .near account is a self-declared identity, not a verified one, and several listed operators (figment, staked, bitwise) have no self-declared identity here.",
+        "Idle pools (~424, ~6656 delegation records) were not crawled, so their delegators are missing from the backer breakdown.",
+        "Delegations under 1,000 NEAR are folded per pool and class, so small individual backers are grouped rather than named."
+      ],
+      "inferred": [
+        "figment.poolv1.near and ledgerbyfigment.poolv1.near may be run by the same operator (Figment), but this is inference from naming, not evidence in the snapshot."
+      ],
+      "documents": []
+    },
+    "answer": "The right network is `near-validators` (readable, has `backers` segments), and no existing flowers for it — so I'll build a fresh one.\nSnapshot reused (fixture, final) as of 2026-11-03, block 222,915,356. 371 validators, 593.37M NEAR staked. Now I'll build the spec — the question needs `segments: \"backers\"`; the rest I'll leave to defaults.\nValid. Drawing it now.\nYour fresh flower is ready — no existing one was used (there were none for this network). Snapshot reused from the fixture, final, as of **2026‑11‑03**, block 222,915,356.\n\n**Flower**: /draft?spec=eyJjb252ZW50aW9uIjp7ImNoYW5nZXMiOltdLCJpZCI6ImRlZmF1bHQvdjEiLCJ2YXJpYXRpb25fb2YiOm51bGx9LCJlbmNvZGluZ3MiOnsiY29sb3VyIjp7ImJ5Ijoia2luZCIsIm1lYW5pbmciOiJraW5kIG9mIGFjY291bnQ6IHN0YWtpbmcgcG9vbCwgbGlxdWlkLXN0YWtpbmcgY29udHJhY3QsIG9yIHVua25vd24iLCJzb3VyY2VzIjpbIm5lYXJibG9ja3MtdmFsaWRhdG9ycyIsImZhc3RuZWFyLXJwYy1saXF1aWQtc3Rha2luZyJdfSwiaGVpZ2h0Ijp7ImJ5Ijoic2hhcmUiLCJtZWFuaW5nIjoic3F1YXJlIHJvb3Qgb2YgdGhlIHZhbGlkYXRvcidzIHNoYXJlIG9mIHN0YWtlIHRoaXMgZXBvY2giLCJzY2FsZSI6InNxcnQiLCJzb3VyY2VzIjpbImZhc3RuZWFyLXJwYy12YWxpZGF0b3JzIl19LCJvcmRlciI6eyJieSI6Im1lYXN1cmVfZGVzYyIsIm1lYW5pbmciOiJsYXJnZXN0IHN0YWtlIGZpcnN0LCBjbG9ja3dpc2UgZnJvbSB0aGUgdG9wIiwic291cmNlcyI6WyJmYXN0bmVhci1ycGMtdmFsaWRhdG9ycyJdfSwib3V0bGluZSI6eyJieSI6ImlkZW50aXR5X3N0YXR1cyIsIm1lYW5pbmciOiJzb2xpZCB3aGVuIHRoZSBuYW1lIGlzIHNlbGYtZGVjbGFyZWQgKHBvb2wtZGV0YWlscy5uZWFyIG9yIGEgbmFtZWQgYWNjb3VudCBpZCkgb3IgdmVyaWZpZWQsIGRhc2hlZCB3aGVuIGluZmVycmVkLCBub25lIHdoZW4gdW5rbm93biIsInNvdXJjZXMiOlsibmVhcmJsb2Nrcy12YWxpZGF0b3JzIiwiYWNjb3VudC1pZCJdfSwic2VnbWVudHMiOnsiYnkiOiJiYWNrZXJzIiwibWVhbmluZyI6IndobyBzdGFuZHMgYmVoaW5kIGVhY2ggcG9vbDogaXRzIGRlbGVnYXRpb25zIHNwbGl0IGludG8gb3RoZXIgZGVsZWdhdG9ycywgYWNjb3VudHMgd2l0aCAxTSsgTkVBUiwgbGlxdWlkLXN0YWtpbmcgY29udHJhY3RzIGFuZCBsb2NrdXBzIChkZWxlZ2F0aW9ucyB1bmRlciAxLDAwMCBORUFSIGFyZSBmb2xkZWQgcGVyIHBvb2wgYW5kIGNsYXNzLCBhcyBjb3ZlcmFnZSBkZWNsYXJlcykiLCJzb3VyY2VzIjpbImZhc3RuZWFyLXJwYy1zdGFraW5nLXBvb2wtdmlld3MiLCJmYXN0bmVhci1ycGMtbGlxdWlkLXN0YWtpbmciXX0sIndpZHRoIjp7ImJ5Ijoic2hhcmUiLCJtYXhfcmF0aW8iOjIsIm1lYW5pbmciOiJ0aGUgdmFsaWRhdG9yJ3Mgc2hhcmUgb2Ygc3Rha2UgdGhpcyBlcG9jaCwgY29tcHJlc3NlZCBpbnRvIGEgYmFuZCIsInNjYWxlIjoibG9nIiwic291cmNlcyI6WyJmYXN0bmVhci1ycGMtdmFsaWRhdG9ycyJdfX0sImxhYmVscyI6Im5vbmUiLCJuZXR3b3JrIjp7ImNoYWluIjoibmVhcjptYWlubmV0IiwiaWQiOiJuZWFyLXZhbGlkYXRvcnMiLCJwb3B1bGF0aW9uIjoidmFsaWRhdG9ycyJ9LCJwZXRhbCI6InNwZWMvdjEiLCJzZWxlY3Rpb24iOnsibWVhc3VyZSI6InZhbGlkYXRvcl9zdGFrZV9jdXJyZW50X2Vwb2NoIiwicGV0YWxzIjo2MCwidGFpbCI6eyJncm91cCI6dHJ1ZSwibGFiZWwiOiJldmVyeW9uZSBlbHNlIn19LCJzbmFwc2hvdCI6eyJhc19vZiI6IjIwMjYtMTEtMDNUMTk6NDI6MDBaIiwiYmxvY2tfaGVpZ2h0IjoyMjI5MTUzNTYsInNoYTI1NiI6IjcyYTZkOTY3NmQ5NjdkNjM3MTJkYzgyYmNiYjkwMjgyZDJmNjFlNWNhNjQ5NWMzZTJlNTRhNGY5YWY3N2U5ZWMifX0\n\n**What you'll see**: NEAR's 371 validators as a ring, each bar sized by current‑epoch stake and largest first. Each bar is split into who backs it — other delegators, 1M+ NEAR accounts, liquid‑staking contracts, and lockups. The big pools at the top are mostly retail delegators; a few show a blue liquid‑staking slice.\n\n**Mapping**:\n- **Width/height** — share of current‑epoch stake (band / √), source `fastnear-rpc-validators`\n- **Segments** — backer classes (the answer to your question), sources `fastnear-rpc-staking-pool-views`, `fastnear-rpc-liquid-staking`\n- **Colour** — pool vs liquid‑staking vs unknown; **Outline** — solid = self‑declared name, dashed = inferred, none = unknown\n- **Order** — largest stake first\n\n**Changed from default**: only `segments: backers`; the rest are defaults.\n\n**What this can't tell you**: lockup owners aren't resolved (vesting backers are opaque); liquid‑staking token holders aren't listed, so we can't see who really backs Meta Pool or LiNEAR; pool names are self‑declared, not verified; stake is one kind of power, not governance (veNEAR) or off‑chain control. Addresses are holders, not confirmed people."
+  }
+}

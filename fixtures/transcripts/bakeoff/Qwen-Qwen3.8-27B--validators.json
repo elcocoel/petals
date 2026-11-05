@@ -1,0 +1,566 @@
+{
+  "petal": "transcript/v1",
+  "kind": "recorded",
+  "title": "Bake-off (validators): Qwen/Qwen3.8-27B",
+  "question": "Who stands behind NEAR’s validators? Make me a fresh flower with their backers, not an existing one.",
+  "model": "Qwen/Qwen3.8-27B",
+  "note": "A real run on NEAR AI Cloud (T060), kept with the signature each completion got. A hash or link the model copied from a tool result is written as a reference to that result ($from, {{…}}), so it replays on recordedClient.",
+  "turns": [
+    {
+      "content": "\n\n\n",
+      "tool_calls": [
+        {
+          "id": "call_75dc13630a0547948e34c4a0",
+          "name": "list_networks",
+          "arguments": {
+            "query": "NEAR"
+          }
+        },
+        {
+          "id": "call_834dac5fb4504ed19d1f776b",
+          "name": "list_flowers",
+          "arguments": {
+            "network": "near"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "efa074e5fb5241f1bf98ae049bb194af",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:0f773de6e7a960ca6030baa63c47f2cfa587e7f37854419367055198e05f967f:7d2f8147fbb16f66845a5b504931d72de0cfe31c3a0924a71f328f8865eb4bd2",
+        "signature": "0x13f3acde229e4cb0dcad72fcc78fc690ad660c26e6570e37fb10b5b71a2f8dc760cad5e98468681527d06479af9d7834346f88779ce94f32c6c42bbeb190f37d1b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "0f773de6e7a960ca6030baa63c47f2cfa587e7f37854419367055198e05f967f",
+        "response_sha256": "7d2f8147fbb16f66845a5b504931d72de0cfe31c3a0924a71f328f8865eb4bd2",
+        "fetched_at": "2026-11-05T12:42:11.141Z",
+        "attestation": {
+          "nonce": "1f2ff5a55471e69010b56ab159bae2df0740995a781a49c2fe761a8a5afbb41d",
+          "report_sha256": "709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea",
+          "report_url": "/api/v1/attestations/709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea"
+        }
+      }
+    },
+    {
+      "content": "\n\n\n",
+      "tool_calls": [
+        {
+          "id": "call_de9aec3bc3674ca487599a1d",
+          "name": "list_flowers",
+          "arguments": {
+            "network": "near-validators"
+          }
+        },
+        {
+          "id": "call_45181d72aa2b437986b2f9ad",
+          "name": "get_snapshot",
+          "arguments": {
+            "network": "near-validators"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "82043e9307c0459c8d579194c814cc64",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:5b3001197ae20cc9d57e09dc4446084e44202974264cd73eb702ae52f421a08d:2c74e6859debe142f4ac9da7abb022f16b6594c9d63582c7107ecf8a71db55d4",
+        "signature": "0x1a32970357fe8b430311c98525e568aedd96b58768580eefa01da632d56d6bbf492bce66390c1634fb66ba4f67ee66b69ea349f72440360094c384c981c423aa1c",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "5b3001197ae20cc9d57e09dc4446084e44202974264cd73eb702ae52f421a08d",
+        "response_sha256": "2c74e6859debe142f4ac9da7abb022f16b6594c9d63582c7107ecf8a71db55d4",
+        "fetched_at": "2026-11-05T12:42:13.884Z",
+        "attestation": {
+          "nonce": "1f2ff5a55471e69010b56ab159bae2df0740995a781a49c2fe761a8a5afbb41d",
+          "report_sha256": "709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea",
+          "report_url": "/api/v1/attestations/709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea"
+        }
+      }
+    },
+    {
+      "content": "\n\nYou asked for a fresh flower, so I'll make a new one (there are two existing for the same data, but you wanted fresh). Let me read the snapshot.\n\n\n",
+      "tool_calls": [
+        {
+          "id": "call_a321752eb562473492ff3e37",
+          "name": "describe_snapshot",
+          "arguments": {
+            "sha256": {
+              "$from": "call_45181d72aa2b437986b2f9ad.sha256"
+            },
+            "top": 15
+          }
+        },
+        {
+          "id": "call_6c1fc4c3a12b41dcbd77cd46",
+          "name": "compute_figures",
+          "arguments": {
+            "sha256": {
+              "$from": "call_45181d72aa2b437986b2f9ad.sha256"
+            },
+            "measure": "validator_stake_current_epoch",
+            "top_k": [
+              1,
+              5,
+              10,
+              50,
+              100
+            ]
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "63e601b8950a4ce5b12c16343cfc8294",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:bd3891334316d742c522d4f55bbea391c23b81da41b29a31afc31c5197ad0a1f:7b9037db5e5c4112120dd9d41775fc9d5c900264f74f6e1e2dd0ebd5efc5b171",
+        "signature": "0x6395bf2e532c8f2eb8050a6f0e3ed0d75d73f57a72452388882bdbd257784c841b60beb6e361e7eed8cf87d8b10f3d8cde13618eaa34fb03739538fc73d7f32c1c",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "bd3891334316d742c522d4f55bbea391c23b81da41b29a31afc31c5197ad0a1f",
+        "response_sha256": "7b9037db5e5c4112120dd9d41775fc9d5c900264f74f6e1e2dd0ebd5efc5b171",
+        "fetched_at": "2026-11-05T12:42:20.827Z",
+        "attestation": {
+          "nonce": "1f2ff5a55471e69010b56ab159bae2df0740995a781a49c2fe761a8a5afbb41d",
+          "report_sha256": "709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea",
+          "report_url": "/api/v1/attestations/709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea"
+        }
+      }
+    },
+    {
+      "content": "\n\nI have everything I need. The snapshot is reused (fixture, final block), 8,487 participants, 371 validator pools. Now I'll build a fresh flower with the backers segment on.\n\n",
+      "tool_calls": [
+        {
+          "id": "call_346787b79b3a4d6a8b39b695",
+          "name": "propose_spec",
+          "arguments": {
+            "network": "near-validators",
+            "sha256": {
+              "$from": "call_45181d72aa2b437986b2f9ad.sha256"
+            },
+            "choices": {
+              "segments": "backers"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "8b551b72e18c4c08a83241c797940d87",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:265bb155f0382e8a3b3187157ae708709b4e906bf21ba6b3511cf768d52364cf:51b22c3baa8debaff360e63705b83279050a478d8e5cb5ab800b01c454a5842f",
+        "signature": "0xe7e4dd90b2ec2f96e662c31f2ec06f3d987cb73f87cbb4bbaf8841793a8a73af6dd1e64ff74a847b08e9b50d4d4c21f58c1881d9595ec2586f6a2fc1dd410a551b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "265bb155f0382e8a3b3187157ae708709b4e906bf21ba6b3511cf768d52364cf",
+        "response_sha256": "51b22c3baa8debaff360e63705b83279050a478d8e5cb5ab800b01c454a5842f",
+        "fetched_at": "2026-11-05T12:42:28.813Z",
+        "attestation": {
+          "nonce": "1f2ff5a55471e69010b56ab159bae2df0740995a781a49c2fe761a8a5afbb41d",
+          "report_sha256": "709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea",
+          "report_url": "/api/v1/attestations/709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea"
+        }
+      }
+    },
+    {
+      "content": "\n\n",
+      "tool_calls": [
+        {
+          "id": "call_6d7abf4699a14ce387df1587",
+          "name": "validate_spec",
+          "arguments": {
+            "spec": {
+              "$from": "call_346787b79b3a4d6a8b39b695.spec_sha256"
+            },
+            "interpretation": {
+              "summary": "Each bar is one NEAR staking pool, ordered by how much stake it holds this epoch, and the bar is split into the classes of accounts that delegate to it: other delegators, accounts holding 1M+ NEAR, liquid-staking contracts and lockups. Together the pools hold about 593M NEAR of delegated stake, held by 371 pools. Power is uneven: the top pool alone has ~5.6% and the top 10 hold ~36%, so a small set of pools dominates block production rights.",
+              "power_means": [
+                {
+                  "claim": "Power here is the stake delegated to a pool this epoch (validator_stake_current_epoch): more stake means more voting weight and more block/chunk production rights.",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ],
+                  "figures": [
+                    "fig:total",
+                    "fig:shares",
+                    "fig:top_k_share.10",
+                    "fig:nakamoto"
+                  ]
+                }
+              ],
+              "mappings": [
+                {
+                  "primitive": "width",
+                  "why": "Each pool's share of stake this epoch, compressed into a log band so small pools stay visible against the largest.",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ]
+                },
+                {
+                  "primitive": "height",
+                  "why": "Square root of the pool's stake share, standing straight out, so the largest pools stand tallest.",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ]
+                },
+                {
+                  "primitive": "colour",
+                  "why": "Kind of account, so pools can be told apart from liquid-staking and other kinds at a glance.",
+                  "sources": [
+                    "nearblocks-validators",
+                    "fastnear-rpc-liquid-staking"
+                  ]
+                },
+                {
+                  "primitive": "outline",
+                  "why": "Solid for self-declared or verified identity, dashed for inferred, none for unknown, so a named pool is not read as verified.",
+                  "sources": [
+                    "nearblocks-validators",
+                    "account-id"
+                  ]
+                },
+                {
+                  "primitive": "segments",
+                  "why": "The point of the question: split each pool's delegations into its backers, i.e. other delegators, 1M+ NEAR accounts, liquid-staking contracts and lockups.",
+                  "sources": [
+                    "fastnear-rpc-staking-pool-views",
+                    "fastnear-rpc-liquid-staking"
+                  ]
+                },
+                {
+                  "primitive": "order",
+                  "why": "Largest stake first, clockwise from the top, so the biggest pools lead the ring.",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ]
+                }
+              ],
+              "conflicts": [
+                "Petal draws delegated stake, which is NEAR's consensus power. It does not draw governance voting power (House of Stake/veNEAR), operator skill or block-production performance, which are separate forms of influence."
+              ],
+              "unknowns": [
+                "Lockup contract owners were not resolved, so a lockup backer is a contract, not a person.",
+                "Liquid-staking contract holders (e.g. Meta Pool, LiNEAR) are not broken down to their underlying token holders.",
+                "Delegations under 1,000 NEAR are folded into a group row per pool and class, so individual small backers are not named.",
+                "424 idle pools (no seat, no proposal) were not crawled, so their delegators are missing.",
+                "A named account id or a pool-details.near name is self-declared, not verified, so identities are not proven.",
+                "Addresses are not people; this flower is about staking pools and the accounts behind them."
+              ],
+              "inferred": [
+                "Some pools (e.g. figment, ledgerbyfigment, bitwise_1/bitwise_2) appear related by name but Petal marks no common-control fusion, so any shared operator is unproven."
+              ],
+              "documents": []
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "beb0a13478724809bd95d5130a7b6bd7",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:b7e6e45853371d21e8838c3c709d2adfb4245125a7a8c3cb48a247b8a5c5f6af:88be7d46fa3f47bff10c60673dc5d92ca640ee87db75acb7e608cbc69f76c492",
+        "signature": "0x0cd26797b72f31d5d38c9a3ea46e56b148444ba654407def824be827878517e45007c108a97978bbdd18a8dffca30d0f9df290375958f64add2afbf7439f8e9e1c",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "b7e6e45853371d21e8838c3c709d2adfb4245125a7a8c3cb48a247b8a5c5f6af",
+        "response_sha256": "88be7d46fa3f47bff10c60673dc5d92ca640ee87db75acb7e608cbc69f76c492",
+        "fetched_at": "2026-11-05T12:42:47.071Z",
+        "attestation": {
+          "nonce": "1f2ff5a55471e69010b56ab159bae2df0740995a781a49c2fe761a8a5afbb41d",
+          "report_sha256": "709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea",
+          "report_url": "/api/v1/attestations/709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea"
+        }
+      }
+    },
+    {
+      "content": "\n\n",
+      "tool_calls": [
+        {
+          "id": "call_fa9b6719bb9f41ba92dda0c4",
+          "name": "render_flower",
+          "arguments": {
+            "spec": {
+              "$from": "call_346787b79b3a4d6a8b39b695.spec_sha256"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "0832ea7970034f1e901615a2b4154c8b",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:e6eb7a86316b2e99ce0b2540694d8a843153576ab9e7d0691156096630aaa2b9:28edeffed42a91ec63dbafaafc7e249be8c018c3cc4e0fdece19508d6a23f518",
+        "signature": "0xb53a3562d254f8fae6d47239fc8a0450f57c9bac8a48cc9ab6da90f2443d833e6c8772607e6c0b6f2acf463589d78fe7bc6592c7bfddbcfac7ec3a4ceefb429b1c",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "e6eb7a86316b2e99ce0b2540694d8a843153576ab9e7d0691156096630aaa2b9",
+        "response_sha256": "28edeffed42a91ec63dbafaafc7e249be8c018c3cc4e0fdece19508d6a23f518",
+        "fetched_at": "2026-11-05T12:42:49.962Z",
+        "attestation": {
+          "nonce": "1f2ff5a55471e69010b56ab159bae2df0740995a781a49c2fe761a8a5afbb41d",
+          "report_sha256": "709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea",
+          "report_url": "/api/v1/attestations/709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea"
+        }
+      }
+    },
+    {
+      "content": "\n\nDone — a fresh flower, built from the stored final block.\n\n**Flower**: {{call_fa9b6719bb9f41ba92dda0c4.view_url}}\n\n**What you'll see**: 60 bars, one per NEAR staking pool, ordered by stake this epoch, largest at top. Each bar is split into the backers behind that pool — other delegators, 1M+ NEAR accounts, liquid-staking contracts and lockups. The hatched tail is 311 more pools (13.8%).\n\n**Data**: reused fixture, final block 222,915,356 (2026-11-03), 371 pools, ~593M NEAR. Top pool holds 5.6%, top 10 hold 36% — power is concentrated.\n\n**Mapping**\n- *width / height*: stake share this epoch (log band / √) — `fastnear-rpc-validators`\n- *colour*: account kind (pool vs liquid staking) — `nearblocks-validators`, `fastnear-rpc-liquid-staking`\n- *outline*: solid = self-declared/verified, dashed = inferred — `nearblocks-validators`, `account-id`\n- *segments*: the backers breakdown — `fastnear-rpc-staking-pool-views`, `fastnear-rpc-liquid-staking`\n- *order*: largest first — `fastnear-rpc-validators`\n\n**Changed from default**: only `segments: backers`.\n\n**What this can't tell you**: lockup owners aren't resolved; liquid-staking token holders aren't broken down; delegations under 1,000 NEAR are folded per class; 424 idle pools weren't crawled; names are self-declared, not verified. Addresses aren't people.\n\nTwo older flowers exist for this same data — I made a new one as you asked. Want me to publish this?",
+      "tool_calls": [],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "0fd2f2533f8f46149d774599edd0c9d1",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:2a25e674d0a80e917e1e8eb90577883033b6c51d5e6b3f6c04e1d958170ac9f9:304d71a7f8b52cae851d0b1a1c71da368d946e06fb9c0621902699c31af8f8e8",
+        "signature": "0xe32716cefd8aa0a4cf8d20d6456d7443488dd0e41a293850841992fc718c41b27b44526760da772f6921bfe3c506fab5ce73b648a8838e446097c2d063516ae21c",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "2a25e674d0a80e917e1e8eb90577883033b6c51d5e6b3f6c04e1d958170ac9f9",
+        "response_sha256": "304d71a7f8b52cae851d0b1a1c71da368d946e06fb9c0621902699c31af8f8e8",
+        "fetched_at": "2026-11-05T12:42:58.860Z",
+        "attestation": {
+          "nonce": "1f2ff5a55471e69010b56ab159bae2df0740995a781a49c2fe761a8a5afbb41d",
+          "report_sha256": "709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea",
+          "report_url": "/api/v1/attestations/709226be0119778a82be1a3d817584f2a936878ff3c1f850241073954b5531ea"
+        }
+      }
+    }
+  ],
+  "run": {
+    "started_at": "2026-11-05T12:42:05.327Z",
+    "success": true,
+    "wall_ms": 53532,
+    "longest_gap_ms": 8001,
+    "turns": 7,
+    "tokens": {
+      "in": 60143,
+      "out": 2485
+    },
+    "cost_usd": 0.00576,
+    "per_turn": [
+      {
+        "ms": 5813,
+        "in": 4895,
+        "out": 173,
+        "usd": 0.00042935,
+        "tools": [
+          "list_networks",
+          "list_flowers"
+        ]
+      },
+      {
+        "ms": 2740,
+        "in": 5404,
+        "out": 82,
+        "usd": 0.00032686,
+        "tools": [
+          "list_flowers",
+          "get_snapshot"
+        ]
+      },
+      {
+        "ms": 6709,
+        "in": 5965,
+        "out": 323,
+        "usd": 0.00067465,
+        "tools": [
+          "describe_snapshot",
+          "compute_figures"
+        ]
+      },
+      {
+        "ms": 7951,
+        "in": 9787,
+        "out": 384,
+        "usd": 0.00090988,
+        "tools": [
+          "propose_spec"
+        ]
+      },
+      {
+        "ms": 18256,
+        "in": 10537,
+        "out": 989,
+        "usd": 0.00175663,
+        "tools": [
+          "validate_spec"
+        ]
+      },
+      {
+        "ms": 2771,
+        "in": 11435,
+        "out": 90,
+        "usd": 0.0005789,
+        "tools": [
+          "render_flower"
+        ]
+      },
+      {
+        "ms": 8887,
+        "in": 12120,
+        "out": 444,
+        "usd": 0.0010842,
+        "tools": []
+      }
+    ],
+    "tool_ms": [
+      {
+        "name": "list_networks",
+        "ok": true,
+        "ms": 0,
+        "summary": "2 networks: near-validators, near-house-of-stake"
+      },
+      {
+        "name": "list_flowers",
+        "ok": false,
+        "ms": 1,
+        "summary": "cannot_read: Petal can't read the network \"near\" yet."
+      },
+      {
+        "name": "list_flowers",
+        "ok": true,
+        "ms": 199,
+        "summary": "2 flowers"
+      },
+      {
+        "name": "get_snapshot",
+        "ok": true,
+        "ms": 35,
+        "summary": "reused from fixture: block 222915356, 2026-11-03T19:42:00Z (72a6d9676d96…)"
+      },
+      {
+        "name": "describe_snapshot",
+        "ok": true,
+        "ms": 33,
+        "summary": "14 measures; largest: astro-stakers.poolv1.near, figment.poolv1.near, ledgerbyfigment.poolv1.near"
+      },
+      {
+        "name": "compute_figures",
+        "ok": true,
+        "ms": 0,
+        "summary": "Nakamoto 9 at 0.333333; 371 included; top 10 hold 36.2%"
+      },
+      {
+        "name": "propose_spec",
+        "ok": true,
+        "ms": 2,
+        "summary": "spec 897a01ac9a1f…; changed from default: segments"
+      },
+      {
+        "name": "validate_spec",
+        "ok": true,
+        "ms": 118,
+        "summary": "valid"
+      },
+      {
+        "name": "render_flower",
+        "ok": true,
+        "ms": 10,
+        "summary": "drawn: render 31cdd4a612bc…, 7 legend lines"
+      }
+    ],
+    "validate_tries": 1,
+    "errors": [],
+    "warnings": [],
+    "unbacked_numbers": [],
+    "unbacked_in_interpretation": [],
+    "signature_kind": "provider_tee",
+    "signature_id": "beb0a13478724809bd95d5130a7b6bd7",
+    "spec_sha256": "897a01ac9a1f1150e84dbb7aa7baebffa14d2f8674a882e1fcc9016f259a7e04",
+    "proposed": [
+      {
+        "network": "near-validators",
+        "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
+        "choices": {
+          "segments": "backers"
+        }
+      }
+    ],
+    "interpretation": {
+      "summary": "Each bar is one NEAR staking pool, ordered by how much stake it holds this epoch, and the bar is split into the classes of accounts that delegate to it: other delegators, accounts holding 1M+ NEAR, liquid-staking contracts and lockups. Together the pools hold about 593M NEAR of delegated stake, held by 371 pools. Power is uneven: the top pool alone has ~5.6% and the top 10 hold ~36%, so a small set of pools dominates block production rights.",
+      "power_means": [
+        {
+          "claim": "Power here is the stake delegated to a pool this epoch (validator_stake_current_epoch): more stake means more voting weight and more block/chunk production rights.",
+          "sources": [
+            "fastnear-rpc-validators"
+          ],
+          "figures": [
+            "fig:total",
+            "fig:shares",
+            "fig:top_k_share.10",
+            "fig:nakamoto"
+          ]
+        }
+      ],
+      "mappings": [
+        {
+          "primitive": "width",
+          "why": "Each pool's share of stake this epoch, compressed into a log band so small pools stay visible against the largest.",
+          "sources": [
+            "fastnear-rpc-validators"
+          ]
+        },
+        {
+          "primitive": "height",
+          "why": "Square root of the pool's stake share, standing straight out, so the largest pools stand tallest.",
+          "sources": [
+            "fastnear-rpc-validators"
+          ]
+        },
+        {
+          "primitive": "colour",
+          "why": "Kind of account, so pools can be told apart from liquid-staking and other kinds at a glance.",
+          "sources": [
+            "nearblocks-validators",
+            "fastnear-rpc-liquid-staking"
+          ]
+        },
+        {
+          "primitive": "outline",
+          "why": "Solid for self-declared or verified identity, dashed for inferred, none for unknown, so a named pool is not read as verified.",
+          "sources": [
+            "nearblocks-validators",
+            "account-id"
+          ]
+        },
+        {
+          "primitive": "segments",
+          "why": "The point of the question: split each pool's delegations into its backers, i.e. other delegators, 1M+ NEAR accounts, liquid-staking contracts and lockups.",
+          "sources": [
+            "fastnear-rpc-staking-pool-views",
+            "fastnear-rpc-liquid-staking"
+          ]
+        },
+        {
+          "primitive": "order",
+          "why": "Largest stake first, clockwise from the top, so the biggest pools lead the ring.",
+          "sources": [
+            "fastnear-rpc-validators"
+          ]
+        }
+      ],
+      "conflicts": [
+        "Petal draws delegated stake, which is NEAR's consensus power. It does not draw governance voting power (House of Stake/veNEAR), operator skill or block-production performance, which are separate forms of influence."
+      ],
+      "unknowns": [
+        "Lockup contract owners were not resolved, so a lockup backer is a contract, not a person.",
+        "Liquid-staking contract holders (e.g. Meta Pool, LiNEAR) are not broken down to their underlying token holders.",
+        "Delegations under 1,000 NEAR are folded into a group row per pool and class, so individual small backers are not named.",
+        "424 idle pools (no seat, no proposal) were not crawled, so their delegators are missing.",
+        "A named account id or a pool-details.near name is self-declared, not verified, so identities are not proven.",
+        "Addresses are not people; this flower is about staking pools and the accounts behind them."
+      ],
+      "inferred": [
+        "Some pools (e.g. figment, ledgerbyfigment, bitwise_1/bitwise_2) appear related by name but Petal marks no common-control fusion, so any shared operator is unproven."
+      ],
+      "documents": []
+    },
+    "answer": "You asked for a fresh flower, so I'll make a new one (there are two existing for the same data, but you wanted fresh). Let me read the snapshot.\nI have everything I need. The snapshot is reused (fixture, final block), 8,487 participants, 371 validator pools. Now I'll build a fresh flower with the backers segment on.\nDone — a fresh flower, built from the stored final block.\n\n**Flower**: /draft?spec=eyJjb252ZW50aW9uIjp7ImNoYW5nZXMiOltdLCJpZCI6ImRlZmF1bHQvdjEiLCJ2YXJpYXRpb25fb2YiOm51bGx9LCJlbmNvZGluZ3MiOnsiY29sb3VyIjp7ImJ5Ijoia2luZCIsIm1lYW5pbmciOiJraW5kIG9mIGFjY291bnQ6IHN0YWtpbmcgcG9vbCwgbGlxdWlkLXN0YWtpbmcgY29udHJhY3QsIG9yIHVua25vd24iLCJzb3VyY2VzIjpbIm5lYXJibG9ja3MtdmFsaWRhdG9ycyIsImZhc3RuZWFyLXJwYy1saXF1aWQtc3Rha2luZyJdfSwiaGVpZ2h0Ijp7ImJ5Ijoic2hhcmUiLCJtZWFuaW5nIjoic3F1YXJlIHJvb3Qgb2YgdGhlIHZhbGlkYXRvcidzIHNoYXJlIG9mIHN0YWtlIHRoaXMgZXBvY2giLCJzY2FsZSI6InNxcnQiLCJzb3VyY2VzIjpbImZhc3RuZWFyLXJwYy12YWxpZGF0b3JzIl19LCJvcmRlciI6eyJieSI6Im1lYXN1cmVfZGVzYyIsIm1lYW5pbmciOiJsYXJnZXN0IHN0YWtlIGZpcnN0LCBjbG9ja3dpc2UgZnJvbSB0aGUgdG9wIiwic291cmNlcyI6WyJmYXN0bmVhci1ycGMtdmFsaWRhdG9ycyJdfSwib3V0bGluZSI6eyJieSI6ImlkZW50aXR5X3N0YXR1cyIsIm1lYW5pbmciOiJzb2xpZCB3aGVuIHRoZSBuYW1lIGlzIHNlbGYtZGVjbGFyZWQgKHBvb2wtZGV0YWlscy5uZWFyIG9yIGEgbmFtZWQgYWNjb3VudCBpZCkgb3IgdmVyaWZpZWQsIGRhc2hlZCB3aGVuIGluZmVycmVkLCBub25lIHdoZW4gdW5rbm93biIsInNvdXJjZXMiOlsibmVhcmJsb2Nrcy12YWxpZGF0b3JzIiwiYWNjb3VudC1pZCJdfSwic2VnbWVudHMiOnsiYnkiOiJiYWNrZXJzIiwibWVhbmluZyI6IndobyBzdGFuZHMgYmVoaW5kIGVhY2ggcG9vbDogaXRzIGRlbGVnYXRpb25zIHNwbGl0IGludG8gb3RoZXIgZGVsZWdhdG9ycywgYWNjb3VudHMgd2l0aCAxTSsgTkVBUiwgbGlxdWlkLXN0YWtpbmcgY29udHJhY3RzIGFuZCBsb2NrdXBzIChkZWxlZ2F0aW9ucyB1bmRlciAxLDAwMCBORUFSIGFyZSBmb2xkZWQgcGVyIHBvb2wgYW5kIGNsYXNzLCBhcyBjb3ZlcmFnZSBkZWNsYXJlcykiLCJzb3VyY2VzIjpbImZhc3RuZWFyLXJwYy1zdGFraW5nLXBvb2wtdmlld3MiLCJmYXN0bmVhci1ycGMtbGlxdWlkLXN0YWtpbmciXX0sIndpZHRoIjp7ImJ5Ijoic2hhcmUiLCJtYXhfcmF0aW8iOjIsIm1lYW5pbmciOiJ0aGUgdmFsaWRhdG9yJ3Mgc2hhcmUgb2Ygc3Rha2UgdGhpcyBlcG9jaCwgY29tcHJlc3NlZCBpbnRvIGEgYmFuZCIsInNjYWxlIjoibG9nIiwic291cmNlcyI6WyJmYXN0bmVhci1ycGMtdmFsaWRhdG9ycyJdfX0sImxhYmVscyI6Im5vbmUiLCJuZXR3b3JrIjp7ImNoYWluIjoibmVhcjptYWlubmV0IiwiaWQiOiJuZWFyLXZhbGlkYXRvcnMiLCJwb3B1bGF0aW9uIjoidmFsaWRhdG9ycyJ9LCJwZXRhbCI6InNwZWMvdjEiLCJzZWxlY3Rpb24iOnsibWVhc3VyZSI6InZhbGlkYXRvcl9zdGFrZV9jdXJyZW50X2Vwb2NoIiwicGV0YWxzIjo2MCwidGFpbCI6eyJncm91cCI6dHJ1ZSwibGFiZWwiOiJldmVyeW9uZSBlbHNlIn19LCJzbmFwc2hvdCI6eyJhc19vZiI6IjIwMjYtMTEtMDNUMTk6NDI6MDBaIiwiYmxvY2tfaGVpZ2h0IjoyMjI5MTUzNTYsInNoYTI1NiI6IjcyYTZkOTY3NmQ5NjdkNjM3MTJkYzgyYmNiYjkwMjgyZDJmNjFlNWNhNjQ5NWMzZTJlNTRhNGY5YWY3N2U5ZWMifX0\n\n**What you'll see**: 60 bars, one per NEAR staking pool, ordered by stake this epoch, largest at top. Each bar is split into the backers behind that pool — other delegators, 1M+ NEAR accounts, liquid-staking contracts and lockups. The hatched tail is 311 more pools (13.8%).\n\n**Data**: reused fixture, final block 222,915,356 (2026-11-03), 371 pools, ~593M NEAR. Top pool holds 5.6%, top 10 hold 36% — power is concentrated.\n\n**Mapping**\n- *width / height*: stake share this epoch (log band / √) — `fastnear-rpc-validators`\n- *colour*: account kind (pool vs liquid staking) — `nearblocks-validators`, `fastnear-rpc-liquid-staking`\n- *outline*: solid = self-declared/verified, dashed = inferred — `nearblocks-validators`, `account-id`\n- *segments*: the backers breakdown — `fastnear-rpc-staking-pool-views`, `fastnear-rpc-liquid-staking`\n- *order*: largest first — `fastnear-rpc-validators`\n\n**Changed from default**: only `segments: backers`.\n\n**What this can't tell you**: lockup owners aren't resolved; liquid-staking token holders aren't broken down; delegations under 1,000 NEAR are folded per class; 424 idle pools weren't crawled; names are self-declared, not verified. Addresses aren't people.\n\nTwo older flowers exist for this same data — I made a new one as you asked. Want me to publish this?"
+  }
+}

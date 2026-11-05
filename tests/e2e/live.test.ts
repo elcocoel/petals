@@ -1,4 +1,5 @@
 // T072: the live end-to-end run, `PETAL_LIVE=1 pnpm test:e2e`. Skipped unless PETAL_LIVE=1.
+// It calls the model once, about $0.02 on the default model.
 // NEAR AI Cloud for the agent, the testnet shared map, the live House of Stake read and a live
 // 1Click dry quote (no money moves, FR-031). Nothing here signs: publishing with a wallet is T073,
 // so this stops at prepare_publish and its sign_url.
@@ -13,6 +14,7 @@ import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/client';
 import { getDefaultEnvironment, StdioClientTransport } from '@modelcontextprotocol/client/stdio';
 import { petalApp } from '@petal/agent';
+import { sha256Hex } from '@petal/core';
 import type { FlowerResult, ModelSignature } from '@petal/core/types';
 import { fastDataReader, mapKeys } from '@petal/near/map';
 import { configFromEnv } from '@petal/tools';
@@ -28,7 +30,10 @@ import {
 } from './helpers.ts';
 
 const LIVE = process.env.PETAL_LIVE === '1';
-const QUESTION = 'who stands behind NEAR’s validators?';
+// "Fresh": the map holds a published flower for this question, and without the word the agent
+// rightly offers that instead of drawing (the six steps, step 1).
+const QUESTION =
+  'Who stands behind NEAR’s validators? Make me a fresh flower with their backers, not an existing one.';
 const CHAT_MS = 120_000;
 const GAP_MS = 10_000;
 
@@ -97,8 +102,17 @@ describe.skipIf(!LIVE)('quickstart, live (PETAL_LIVE=1)', () => {
     expect(events.at(-1)?.at).toBeLessThanOrEqual(CHAT_MS);
     expect(longestGap(events)).toBeLessThanOrEqual(GAP_MS);
     expect(inOrder(names, ['run', 'tool_call', 'tool_result', 'flower', 'done'])).toBe(true);
-    const done = events.at(-1)?.data as { model: string };
+    const done = events.at(-1)?.data as {
+      model: string;
+      turns: number;
+      tokens: { in: number; out: number };
+      cost_usd: number;
+    };
     expect(done.model).not.toBe('recorded');
+    // what this live run took and spent, for the record
+    console.info(
+      `T072 chat: ${events.at(-1)?.at} ms, longest gap ${longestGap(events)} ms, ${done.turns} turns, ${done.tokens.in}+${done.tokens.out} tokens, $${done.cost_usd} on ${done.model}`,
+    );
 
     const calls = events
       .filter((e) => e.event === 'tool_call')
@@ -118,17 +132,33 @@ describe.skipIf(!LIVE)('quickstart, live (PETAL_LIVE=1)', () => {
 
     // step 2.6: a model signature from the TEE, for the completion that proposed the spec
     const sig = events.find((e) => e.event === 'signature')?.data as ModelSignature | undefined;
-    expect(sig).toMatchObject({ provider: 'near-ai-cloud', signature_kind: 'provider_tee' });
+    expect(sig).toMatchObject({
+      provider: 'near-ai-cloud',
+      signature_kind: 'provider_tee',
+      model: done.model,
+    });
     expect(sig?.signing_address).toBeTruthy();
+    expect(sig?.signature).toBeTruthy();
+    // what the enclave signed names this model and the hashes of the exact bytes of this call
+    expect(sig?.text).toBe(`${done.model}:${sig?.request_sha256}:${sig?.response_sha256}`);
+    // the report fetched before the completion is served, and is the one it names
+    const report = await app.request(sig?.attestation?.report_url ?? '/no-report');
+    expect(report.status).toBe(200);
+    expect(sha256Hex(new Uint8Array(await report.arrayBuffer()))).toBe(
+      sig?.attestation?.report_sha256,
+    );
   });
 
-  test('step 2.5: every number in the answer comes from compute_figures or describe_snapshot', async () => {
+  // The numbers the prompt lets the agent quote: the figures, and (its step 2) the snapshot's own
+  // block and date. Anything else in the answer fails.
+  test('step 2.5: every number in the answer comes from the tools that count', async () => {
     const calls = chat.events
       .filter((e) => e.event === 'tool_call')
       .map((e) => e.data as { name: string; args: Json });
     // the agent's own calls, made again: both tools are deterministic
     const outputs: unknown[] = [];
     for (const c of calls) {
+      if (c.name === 'get_snapshot') outputs.push((await call('/api/v1/snapshots', c.args)).json);
       if (c.name === 'compute_figures') outputs.push((await call('/api/v1/figures', c.args)).json);
       if (c.name === 'describe_snapshot') {
         const top = c.args.top === undefined ? '' : `?top=${c.args.top}`;

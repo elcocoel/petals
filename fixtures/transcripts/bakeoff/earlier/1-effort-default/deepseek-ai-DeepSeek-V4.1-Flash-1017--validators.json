@@ -1,0 +1,412 @@
+{
+  "petal": "transcript/v1",
+  "kind": "recorded",
+  "title": "Bake-off (validators): deepseek-ai/DeepSeek-V4.1-Flash-1017",
+  "question": "Who stands behind NEAR’s validators? Make me a fresh flower with their backers, not an existing one.",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+  "note": "A real run on NEAR AI Cloud (T060), kept with its signatures.",
+  "turns": [
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-b021a9c8e8f7d93a",
+          "name": "list_networks",
+          "arguments": {
+            "query": "near"
+          }
+        },
+        {
+          "id": "chatcmpl-tool-9fe916f5c3917ef6",
+          "name": "list_flowers",
+          "arguments": {}
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-2eccab7b-42bf-4ceb-8791-01a8b6982434",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:2ee323e108822667f97ef18da71414fdb1603973c32ad3fdbe34a15232b52a71:d4c3da72b66a8aab6d509e2e19dc0edca0f2b592f79b996588f4df1a961bbbe2",
+        "signature": "0xc868c81b78b3138cae3933a6b3e661b004dddda152fb39c39bb500c79fb148a35d805ad2fb6c2873c16684255dacc84bcfd3c937cc71a7d835c21ee34dcf55161b",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "2ee323e108822667f97ef18da71414fdb1603973c32ad3fdbe34a15232b52a71",
+        "response_sha256": "d4c3da72b66a8aab6d509e2e19dc0edca0f2b592f79b996588f4df1a961bbbe2",
+        "fetched_at": "2026-11-05T11:56:48.070Z",
+        "attestation": {
+          "nonce": "5fcee0109cf0db2543540f5e5feda28cd4b69bc5a80f03ad9bda46b51be055da",
+          "report_sha256": "ab8d114ddd065bd4daac2a15bd42dfb81605a06e12c59643a3dd5e9c41ef42bc",
+          "report_url": "/api/v1/attestations/ab8d114ddd065bd4daac2a15bd42dfb81605a06e12c59643a3dd5e9c41ef42bc"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-b4a505fd2ce01a68",
+          "name": "get_snapshot",
+          "arguments": {
+            "network": "near-validators"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-c5f8d243-ca39-44f7-8e51-e5ffd1a96f06",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:66de7adf634771a81e5e48a9bfcfad761a0c676610637e64e00ec9caecbf6943:2213779d72c57675d815e421629a2183e747b05d09e02d3c24fccc26e56ede84",
+        "signature": "0x9b157a786e1a2fb0c9e6c763da4df847191e0270e27839aa593b30450a5cb8081e8eb03189748d1813dbab87a0f72df67cb61b4e92f03ecf200b9e1188ce17221b",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "66de7adf634771a81e5e48a9bfcfad761a0c676610637e64e00ec9caecbf6943",
+        "response_sha256": "2213779d72c57675d815e421629a2183e747b05d09e02d3c24fccc26e56ede84",
+        "fetched_at": "2026-11-05T11:56:49.692Z",
+        "attestation": {
+          "nonce": "5fcee0109cf0db2543540f5e5feda28cd4b69bc5a80f03ad9bda46b51be055da",
+          "report_sha256": "ab8d114ddd065bd4daac2a15bd42dfb81605a06e12c59643a3dd5e9c41ef42bc",
+          "report_url": "/api/v1/attestations/ab8d114ddd065bd4daac2a15bd42dfb81605a06e12c59643a3dd5e9c41ef42bc"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-b6aaa1e5f7d3e7c4",
+          "name": "describe_snapshot",
+          "arguments": {
+            "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
+            "top": 10
+          }
+        },
+        {
+          "id": "chatcmpl-tool-ac761d2eb2353c0f",
+          "name": "compute_figures",
+          "arguments": {
+            "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
+            "measure": "pool_contract_stake"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-d32fde94-722d-4c7a-8fb8-3d802759c4c0",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:27f18478283f1f82996e5ac2937abf68b03735c5921ecef2329842c7d9de0783:701cf71cb246207ce1f704f95d195aea595545bbf1e978c0883fc9b2902bced3",
+        "signature": "0x0e1b4dcc41dbb7ea4db0d2368506e50bbc9ae102560d282bb7e70a5480b70aaa5f280b969c0a6eeb4bcd7c17d45d6769f7bccc7d02619b8bb27fc0b9fbaf66a91b",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "27f18478283f1f82996e5ac2937abf68b03735c5921ecef2329842c7d9de0783",
+        "response_sha256": "701cf71cb246207ce1f704f95d195aea595545bbf1e978c0883fc9b2902bced3",
+        "fetched_at": "2026-11-05T11:57:03.090Z",
+        "attestation": {
+          "nonce": "5fcee0109cf0db2543540f5e5feda28cd4b69bc5a80f03ad9bda46b51be055da",
+          "report_sha256": "ab8d114ddd065bd4daac2a15bd42dfb81605a06e12c59643a3dd5e9c41ef42bc",
+          "report_url": "/api/v1/attestations/ab8d114ddd065bd4daac2a15bd42dfb81605a06e12c59643a3dd5e9c41ef42bc"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-945be1c7b07a93c5",
+          "name": "compute_figures",
+          "arguments": {
+            "measure": "validator_stake_current_epoch",
+            "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec"
+          }
+        },
+        {
+          "id": "chatcmpl-tool-adbdddb68c1fbc7d",
+          "name": "propose_spec",
+          "arguments": {
+            "network": "near-validators",
+            "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
+            "choices": {
+              "segments": "backers",
+              "colour": "identity",
+              "petals": 60
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-f5b4d062-e5d9-4408-acfd-0e94af0c8eef",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:89aa449c46b49780e0b6e9167c30c3376ec2bd990ded3b65670e780f140b777e:6ed986bebf7070740eb22af5e56fa447b75e231ff3ab4d60ff6ff570ee551f97",
+        "signature": "0xb079ad41e582c051067de41113ffd7af642eca36d4b3518a3a6f8d3e6a8f5f18012826a0131e4592b1c05573fdf49b339e421895bab736c2b073adf2290b1b541c",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "89aa449c46b49780e0b6e9167c30c3376ec2bd990ded3b65670e780f140b777e",
+        "response_sha256": "6ed986bebf7070740eb22af5e56fa447b75e231ff3ab4d60ff6ff570ee551f97",
+        "fetched_at": "2026-11-05T11:57:13.676Z",
+        "attestation": {
+          "nonce": "5fcee0109cf0db2543540f5e5feda28cd4b69bc5a80f03ad9bda46b51be055da",
+          "report_sha256": "ab8d114ddd065bd4daac2a15bd42dfb81605a06e12c59643a3dd5e9c41ef42bc",
+          "report_url": "/api/v1/attestations/ab8d114ddd065bd4daac2a15bd42dfb81605a06e12c59643a3dd5e9c41ef42bc"
+        }
+      }
+    },
+    {
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-a7e6f5b063872932",
+          "name": "validate_spec",
+          "arguments": {
+            "spec": "e39996053b39dc32bf52de8769a8cc25efe41df4f4cefb04f2d0d15349a737bf",
+            "interpretation": {
+              "summary": "Each petal is a NEAR validator or staking pool, sized by its share of the 593,372,642.814 NEAR staked in the current epoch, and its side is split into who stands behind it: other delegators, accounts holding 1M+ NEAR, liquid-staking contracts and lockups. Power here means delegated stake: the top 10 pools hold 36.25% of the epoch's stake and 9 pools together pass a third.",
+              "power_means": [
+                {
+                  "claim": "Power in NEAR validation is delegated stake: 9 of 371 validators together hold more than a third of the 593,372,642.814 NEAR staked this epoch, and the 311 smallest hold 13.8%.",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ],
+                  "figures": [
+                    "fig:total",
+                    "fig:participants_included",
+                    "fig:nakamoto",
+                    "fig:top_k_share.10",
+                    "fig:tail"
+                  ]
+                },
+                {
+                  "claim": "Behind the pools sit delegators: 5,819,27,623 NEAR of roughly 594.48M delegated NEAR was included in the backer split after folding sub-1,000 NEAR delegations into per-pool groups.",
+                  "sources": [
+                    "fastnear-rpc-staking-pool-views",
+                    "fastnear-rpc-liquid-staking"
+                  ]
+                }
+              ],
+              "mappings": [
+                {
+                  "primitive": "width",
+                  "why": "Validator's share of this epoch's stake, compressed into a band, so the largest petals stay comparable.",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ]
+                },
+                {
+                  "primitive": "height",
+                  "why": "Square root of the validator's share, so mid-sized pools are still readable next to the leaders.",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ]
+                },
+                {
+                  "primitive": "segments",
+                  "why": "The side of each petal is split by backer class: other delegators, 1M+ NEAR accounts, liquid-staking contracts and lockups; sub-1,000 NEAR delegations are folded per pool and class.",
+                  "sources": [
+                    "fastnear-rpc-staking-pool-views",
+                    "fastnear-rpc-liquid-staking"
+                  ]
+                },
+                {
+                  "primitive": "colour",
+                  "why": "Whether a pool is named or anonymous; names come from self-declared pool-details.near entries or named account ids.",
+                  "sources": [
+                    "nearblocks-validators",
+                    "account-id"
+                  ]
+                },
+                {
+                  "primitive": "outline",
+                  "why": "Solid for self-declared or verified names, dashed for inferred, none when unknown.",
+                  "sources": [
+                    "nearblocks-validators",
+                    "account-id"
+                  ]
+                },
+                {
+                  "primitive": "order",
+                  "why": "Largest stake first, clockwise from the top.",
+                  "sources": [
+                    "fastnear-rpc-validators"
+                  ]
+                }
+              ],
+              "conflicts": [
+                "Validator stake is also shaped by protocol seat rules, kickouts and produced-block performance; this flower draws only delegated stake and who backs it, not uptime or governance influence."
+              ],
+              "unknowns": [
+                "Liquid-staking contract delegations (Meta Pool, LiNEAR and others) are shown as one backer segment; their own token holders are not resolved.",
+                "Lockup contracts are marked as lockups, but their owners are not resolved.",
+                "The 424 idle pools (no seat, no proposal) were not crawled, so their delegators are missing from the backer split.",
+                "Addresses are not people: a delegator account may be a contract, an exchange or a custodian.",
+                "Pool names are self-declared in pool-details.near and are not verified identity."
+              ],
+              "inferred": [
+                "Grouping a delegation as liquid-staking, lockup or 1M+ backer relies on account type and balance heuristics, not on a declared ownership proof."
+              ],
+              "documents": []
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "completion_id": "chatcmpl-ba64a826-b69b-4fcd-a700-6aeb18c4329e",
+        "signature_kind": "provider_tee",
+        "text": "deepseek-ai/DeepSeek-V4.1-Flash-1017:84ec310819e030e640eb2238ee306305d5aca25269dda777df9008f8cf12d8c7:050906ee85a8879d133dc046b742877ba95523af830cb1738cbc7f42ec4aaa3e",
+        "signature": "0x5e03239124076b105332c589e5e6c1539dd8f1ae3734cec9ee43841f7a4330b67cc49cb3340be10c6a4d66a82c14dae588050be9bc1f1d09d9dd780e049352481b",
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "signing_algo": "ecdsa",
+        "request_sha256": "84ec310819e030e640eb2238ee306305d5aca25269dda777df9008f8cf12d8c7",
+        "response_sha256": "050906ee85a8879d133dc046b742877ba95523af830cb1738cbc7f42ec4aaa3e",
+        "fetched_at": "2026-11-05T11:58:02.156Z",
+        "attestation": {
+          "nonce": "5fcee0109cf0db2543540f5e5feda28cd4b69bc5a80f03ad9bda46b51be055da",
+          "report_sha256": "ab8d114ddd065bd4daac2a15bd42dfb81605a06e12c59643a3dd5e9c41ef42bc",
+          "report_url": "/api/v1/attestations/ab8d114ddd065bd4daac2a15bd42dfb81605a06e12c59643a3dd5e9c41ef42bc"
+        }
+      }
+    }
+  ],
+  "run": {
+    "started_at": "2026-11-05T11:56:30.692Z",
+    "success": false,
+    "wall_ms": 120003,
+    "longest_gap_ms": 8002,
+    "turns": 5,
+    "tokens": {
+      "in": 34103,
+      "out": 1798
+    },
+    "cost_usd": 0.012389,
+    "per_turn": [
+      {
+        "ms": 17377,
+        "in": 4641,
+        "out": 222,
+        "usd": 0.0016587,
+        "tools": [
+          "list_networks",
+          "list_flowers"
+        ]
+      },
+      {
+        "ms": 1394,
+        "in": 5291,
+        "out": 61,
+        "usd": 0.0016605,
+        "tools": [
+          "get_snapshot"
+        ]
+      },
+      {
+        "ms": 13355,
+        "in": 5574,
+        "out": 189,
+        "usd": 0.001899,
+        "tools": [
+          "describe_snapshot",
+          "compute_figures"
+        ]
+      },
+      {
+        "ms": 10537,
+        "in": 8519,
+        "out": 355,
+        "usd": 0.0029817,
+        "tools": [
+          "compute_figures",
+          "propose_spec"
+        ]
+      },
+      {
+        "ms": 48476,
+        "in": 10078,
+        "out": 971,
+        "usd": 0.0041886,
+        "tools": [
+          "validate_spec"
+        ]
+      }
+    ],
+    "tool_ms": [
+      {
+        "name": "list_networks",
+        "ok": true,
+        "ms": 1,
+        "summary": "2 networks: near-validators, near-house-of-stake"
+      },
+      {
+        "name": "list_flowers",
+        "ok": true,
+        "ms": 226,
+        "summary": "2 flowers"
+      },
+      {
+        "name": "get_snapshot",
+        "ok": true,
+        "ms": 41,
+        "summary": "reused from fixture: block 222915356, 2026-11-03T19:42:00Z (72a6d9676d96…)"
+      },
+      {
+        "name": "describe_snapshot",
+        "ok": true,
+        "ms": 47,
+        "summary": "14 measures; largest: astro-stakers.poolv1.near, figment.poolv1.near, ledgerbyfigment.poolv1.near"
+      },
+      {
+        "name": "compute_figures",
+        "ok": true,
+        "ms": 1,
+        "summary": "Nakamoto 3 at 0.333333; 491 included; top 10 hold 69.7%"
+      },
+      {
+        "name": "compute_figures",
+        "ok": true,
+        "ms": 1,
+        "summary": "Nakamoto 9 at 0.333333; 371 included; top 10 hold 36.2%"
+      },
+      {
+        "name": "propose_spec",
+        "ok": true,
+        "ms": 1,
+        "summary": "spec e39996053b39…; changed from default: colour, segments"
+      },
+      {
+        "name": "validate_spec",
+        "ok": true,
+        "ms": 118,
+        "summary": "valid"
+      }
+    ],
+    "validate_tries": 1,
+    "errors": [
+      {
+        "code": "budget_exhausted",
+        "message": "The chat ran past its 120 s.",
+        "hint": "Bring your own agent: install the Petal skill (skill/petal/SKILL.md), or add the MCP server with `claude mcp add petal -- pnpm -s --dir <repo> petal mcp`, and ask it the same question."
+      }
+    ],
+    "warnings": [],
+    "unbacked_numbers": [],
+    "signature_kind": null,
+    "signature_id": null,
+    "spec_sha256": null,
+    "proposed": [
+      {
+        "network": "near-validators",
+        "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
+        "choices": {
+          "segments": "backers",
+          "colour": "identity",
+          "petals": 60
+        }
+      }
+    ],
+    "interpretation": null,
+    "answer": ""
+  }
+}
