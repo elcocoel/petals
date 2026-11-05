@@ -37,6 +37,17 @@ export const SEGMENT_STYLE: Record<BackerClass, { cls: string; swatch: string }>
 
 export const TAIL_SWATCH = 'var(--tail)';
 
+/** The look of a colour key from the reading. */
+export function colourStyle(key: string): { cls: string; swatch: string } {
+  if (key === 'single') return SINGLE_STYLE;
+  if (key === 'named') return IDENTITY_STYLE.named;
+  if (key === 'anonymous') return IDENTITY_STYLE.anonymous;
+  return KIND_STYLE[key as Kind] ?? KIND_STYLE.unknown;
+}
+
+/** The look of an outline key from the reading. */
+export const OUTLINE = { asserted: 'solid', inferred: 'dashed' } as const;
+
 const LIGHT =
   '--ink:#0b0b0b;--ink-2:#52514e;--hair:#e1e0d9;--unknown:#c9c7bf;--tail:#b8b6ae;' +
   '--k-pool:#2a78d6;--k-exchange:#eb6834;--k-entity:#1baf7a;--k-custodian:#eda100;' +

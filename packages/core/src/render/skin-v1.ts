@@ -3,20 +3,12 @@
 
 import { pct } from '../reading/words.ts';
 import type { BackerClass } from '../segments/backers.ts';
-import type { LegendItem, Reading, ReadingPetal } from '../types/index.ts';
+import type { ReadingPetal } from '../types/index.ts';
 import { layout, type PetalGeo } from './geometry.ts';
-import { IDENTITY_STYLE, KIND_STYLE, SEGMENT_STYLE, SINGLE_STYLE, TAIL_SWATCH } from './style.ts';
+import { legendItem } from './legend.ts';
+import { colourStyle, OUTLINE, SEGMENT_STYLE } from './style.ts';
 import { type BarSegment, type DrawnPetal, writeSvg } from './svg.ts';
 import type { Skin } from './types.ts';
-
-function colourStyle(key: string): { cls: string; swatch: string } {
-  if (key === 'single') return SINGLE_STYLE;
-  if (key === 'named') return IDENTITY_STYLE.named;
-  if (key === 'anonymous') return IDENTITY_STYLE.anonymous;
-  return KIND_STYLE[key as keyof typeof KIND_STYLE] ?? KIND_STYLE.unknown;
-}
-
-const OUTLINE = { asserted: 'solid', inferred: 'dashed' } as const;
 
 const MAX_NAME = 22;
 function labelText(r: ReadingPetal): string {
@@ -39,24 +31,6 @@ function barsOf(g: PetalGeo, r: ReadingPetal, hatchId: string): BarSegment[] {
       cls: SEGMENT_STYLE[x.key as BackerClass]?.cls ?? 'c-unknown',
     };
   });
-}
-
-/** The swatch for a legend key, and the words this look adds to it. */
-function dress(item: Reading['legend'][number]): LegendItem {
-  const { keys, ...rest } = item;
-  if (!keys) return rest;
-  const dressed = keys.map(({ key, label }) => {
-    if (item.primitive === 'outline')
-      return {
-        swatch: 'var(--ink-2)',
-        label: `${OUTLINE[key as keyof typeof OUTLINE]}: ${label}`,
-      };
-    if (item.primitive === 'segments')
-      return { swatch: SEGMENT_STYLE[key as BackerClass].swatch, label };
-    if (item.primitive === 'tail') return { swatch: TAIL_SWATCH, label };
-    return { swatch: colourStyle(key).swatch, label };
-  });
-  return { ...rest, keys: dressed };
 }
 
 export const skinV1: Skin = (reading, { size, thumb }) => {
@@ -86,7 +60,7 @@ export const skinV1: Skin = (reading, { size, thumb }) => {
       hatchId,
       petals: drawn,
     }),
-    legend: reading.legend.map(dress),
+    legend: reading.legend.map(legendItem),
     petals: reading.details,
   };
 };
