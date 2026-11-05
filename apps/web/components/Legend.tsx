@@ -7,9 +7,9 @@ import { SourceList } from './Sources.tsx';
 /** Figma's "Flower legend" 40:764: the colours in one quiet line, under the drawing. */
 export function LegendKeys({ keys }: { keys: LegendKey[] }) {
   return (
-    <ul className="flex flex-wrap items-center gap-x-block-gap gap-y-speech-gap type-caption">
+    <ul className="flex flex-wrap items-center gap-x-block-gap gap-y-space-8 type-caption">
       {keys.map((k) => (
-        <li key={k.label} className="flex items-center gap-icon-gap">
+        <li key={k.label} className="flex items-center gap-space-8">
           <span className="swatch" data-swatch={k.swatch} />
           {k.label}
         </li>
