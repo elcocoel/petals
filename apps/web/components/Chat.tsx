@@ -41,7 +41,13 @@ interface Drawn {
   legend: LegendItem[];
 }
 
-export function Chat({ initialRun }: { initialRun?: string }) {
+export function Chat({
+  initialRun,
+  recorded = false,
+}: {
+  initialRun?: string;
+  recorded?: boolean;
+}) {
   const [question, setQuestion] = useState(QUESTION);
   const [history, setHistory] = useState<ChatMessage[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -201,10 +207,18 @@ export function Chat({ initialRun }: { initialRun?: string }) {
           void send();
         }}
       >
-        <label htmlFor="q">Ask Petal’s agent about a network</label>
-        <textarea id="q" rows={2} value={question} onChange={(e) => setQuestion(e.target.value)} />
+        <label htmlFor="q">
+          {recorded ? 'The saved question' : 'Ask Petal’s agent about a network'}
+        </label>
+        <textarea
+          id="q"
+          rows={2}
+          value={recorded ? QUESTION : question}
+          readOnly={recorded}
+          onChange={(e) => setQuestion(e.target.value)}
+        />
         <button type="submit" disabled={busy}>
-          {busy ? 'Working…' : 'Send'}
+          {busy ? 'Working…' : recorded ? 'Play the recorded run' : 'Send'}
         </button>
       </form>
       {runId && (

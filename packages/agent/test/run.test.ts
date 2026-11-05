@@ -103,15 +103,25 @@ describe('runAgent on the recorded skeleton run', () => {
     });
   });
 
+  test('a recorded run says so first: it did not read the question', async () => {
+    const es = await collect(run(recordedClient(SKELETON_TRANSCRIPT)).events);
+    expect(es[0]?.event).toBe('run');
+    expect(es[1]?.event).toBe('stage');
+    expect((es[1]?.data as { message: string }).message).toMatch(
+      /no AI model is running.*your question was not read/,
+    );
+  });
+
   test('stages follow the tools: fetching, counting, proposing, validating, drawing', async () => {
     const es = await collect(run(recordedClient(SKELETON_TRANSCRIPT)).events);
     // "thinking" sits between model calls, so a stage can come back after it: collapse repeats
     const stages = pick(es, 'stage')
       .map((e) => e.data.stage)
-      .filter((s) => s !== 'thinking')
+      .filter((s) => s !== 'thinking' && s !== 'recorded')
       .filter((s, i, all) => s !== all[i - 1]);
     expect(stages).toEqual(['fetching', 'counting', 'proposing', 'validating', 'drawing']);
-    expect(pick(es, 'stage')[0]?.data.stage).toBe('thinking');
+    expect(pick(es, 'stage')[0]?.data.stage).toBe('recorded');
+    expect(pick(es, 'stage')[1]?.data.stage).toBe('thinking');
   });
 
   test('the flower carries the validated spec, the interpretation and the render', async () => {

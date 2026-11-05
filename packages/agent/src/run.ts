@@ -194,6 +194,12 @@ async function loop(
     event: 'run',
     data: { run_id: runId, resume_url: `/make?run=${encodeURIComponent(runId)}` },
   });
+  if (llm.kind === 'recorded') {
+    setStage(
+      'recorded',
+      'Recorded run: no AI model is running here. This replays one saved run; your question was not read.',
+    );
+  }
   setStage('thinking', 'Reading the question');
 
   if (llm.kind !== 'recorded' && budget.ledger) {
