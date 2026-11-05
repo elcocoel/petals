@@ -29,6 +29,13 @@ export {
 export { MOLOCH_V1_DESCRIPTOR, molochV1, pullMolochV1 } from './modules/moloch-v1.ts';
 export { HOUSE_OF_STAKE_DESCRIPTOR, nearHouseOfStake } from './modules/near-house-of-stake.ts';
 export { NEAR_VALIDATORS_DESCRIPTOR, nearValidators } from './modules/near-validators.ts';
+export {
+  MELANIA,
+  pullSplHolders,
+  type SplToken,
+  solanaSplHolders,
+  TRUMP,
+} from './modules/solana-spl-holders.ts';
 export { modules } from './registry.ts';
 export {
   type BlockInfo,

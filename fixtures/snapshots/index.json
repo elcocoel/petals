@@ -35,6 +35,42 @@
         "version": "spike-import/1",
         "imported_from": "research/data/near/producers.json"
       }
+    },
+    {
+      "sha256": "6af05eb73dab4ed020fdde988c612d28b050322461af482cf3b697eb1158d0e5",
+      "network": "solana-spl-melania",
+      "chain": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+      "population": "melania-holders",
+      "block_height": 465695433,
+      "as_of": "2026-11-05T11:52:47Z",
+      "final": true,
+      "bytes": 1722102,
+      "gz_bytes": 204213,
+      "file": "6af05eb73dab4ed020fdde988c612d28b050322461af482cf3b697eb1158d0e5.json.gz",
+      "where": "fixture",
+      "module": {
+        "id": "solana-spl-holders",
+        "version": "solana/1",
+        "imported_from": "hero-spike/data/gpa.MEL.json"
+      }
+    },
+    {
+      "sha256": "6c3dfbfa8c9a98eb5bfddb400d259fb6bf88ae8bbb57864ad49943b417e82e8f",
+      "network": "solana-spl-trump",
+      "chain": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+      "population": "trump-holders",
+      "block_height": 465695924,
+      "as_of": "2026-11-05T11:54:31Z",
+      "final": true,
+      "bytes": 1645653,
+      "gz_bytes": 201049,
+      "file": "6c3dfbfa8c9a98eb5bfddb400d259fb6bf88ae8bbb57864ad49943b417e82e8f.json.gz",
+      "where": "fixture",
+      "module": {
+        "id": "solana-spl-holders",
+        "version": "solana/1",
+        "imported_from": "hero-spike/data/gpa.TRUMP.json"
+      }
     }
   ]
 }

@@ -4,8 +4,8 @@ import { validateSnapshot } from '@petal/core';
 import { describe, expect, test } from 'vitest';
 import { evmReader } from '../src/evm/reader.ts';
 import { MOLOCH_V1_BLOCK, pullMolochV1 } from '../src/modules/moloch-v1.ts';
-import { encodeSnapshot } from '../src/store/file-store.ts';
-import { indexRows } from './helpers/recordings.ts';
+import { pullSplHolders } from '../src/modules/solana-spl-holders.ts';
+import { indexRows, storedSnapshot } from './helpers/recordings.ts';
 
 describe.skipIf(process.env.PETAL_LIVE !== '1')('live modules (PETAL_LIVE=1)', () => {
   test('moloch-v1: about 12 calls, the same members as the fixture', {
@@ -18,6 +18,21 @@ describe.skipIf(process.env.PETAL_LIVE !== '1')('live modules (PETAL_LIVE=1)', (
     expect(validateSnapshot(snapshot).ok).toBe(true);
     expect(snapshot.snapshot.block_height).toBe(MOLOCH_V1_BLOCK);
     const stored = indexRows('moloch-v1')[0];
-    expect(stored?.bytes).toBeCloseTo(encodeSnapshot(snapshot).canonical.length, -2);
+    if (!stored) throw new Error('no stored moloch-v1 snapshot');
+    expect(snapshot.holdings).toEqual(storedSnapshot(stored).holdings);
+  });
+
+  test('solana-spl-holders: a small mint, under 1 MB, through the official RPC', {
+    timeout: 120_000,
+  }, async () => {
+    const { snapshot, checks } = await pullSplHolders({
+      id: 'solana-spl-test',
+      symbol: 'TEST',
+      mint: 'DfXhF62rZowkpcrw4j4RN1Y41XwgYoAXHvxNiAJWwUBL',
+      title: 'Test token holders',
+      population: 'test-holders',
+    });
+    expect(checks.wallets).toBeGreaterThan(0);
+    expect(validateSnapshot(snapshot).ok).toBe(true);
   });
 });
