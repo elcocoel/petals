@@ -26,11 +26,13 @@ const SIZES = {
 
 export function SectionHead({
   eyebrow,
+  eyebrowTone = 'primary',
   title,
   body,
   size = 'title',
 }: {
   eyebrow?: ReactNode;
+  eyebrowTone?: 'primary' | 'accent';
   title: ReactNode;
   body?: ReactNode;
   size?: keyof typeof SIZES;
@@ -38,7 +40,7 @@ export function SectionHead({
   const { Tag, title: titleType, gap, body: bodyType } = SIZES[size];
   return (
     <div>
-      {eyebrow && <Eyebrow tone="section">{eyebrow}</Eyebrow>}
+      {eyebrow && <Eyebrow tone={eyebrowTone}>{eyebrow}</Eyebrow>}
       <Tag className={`my-0 whitespace-pre-line ${titleType} ${eyebrow ? gap : ''}`}>{title}</Tag>
       {body && <p className={`mb-0 text-pretty ${bodyType}`}>{body}</p>}
     </div>

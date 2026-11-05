@@ -48,7 +48,7 @@ describe('emit', () => {
 describe('contrast', () => {
   test('every declared pair passes on every surface', () => {
     expect(contrastFailures()).toEqual([]);
-    expect(contrastTable()).toHaveLength(18);
+    expect(contrastTable()).toHaveLength(14);
   });
 
   test('known values', () => {

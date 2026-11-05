@@ -975,7 +975,11 @@ export const registry: LabEntry[] = [
     surfaces: surfaceNames,
     states: [
       { name: 'default', render: () => <Eyebrow>01 ONE PETAL HOLDS 18% OF THE SAY</Eyebrow> },
-      { name: 'above a section', render: () => <Eyebrow tone="section">FOR BUILDERS</Eyebrow> },
+      { name: 'above a section', render: () => <Eyebrow tone="primary">THE ATLAS</Eyebrow> },
+      {
+        name: 'above a section, on ink',
+        render: () => <Eyebrow tone="accent">FOR BUILDERS</Eyebrow>,
+      },
     ],
   },
   {

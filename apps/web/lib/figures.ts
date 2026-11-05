@@ -4,7 +4,7 @@
 // does the same job. Nodes: hero flower 66:2207, leaders 66:2215, reading flower 66:2234, thumbs
 // 56:1934 56:1939 56:1945, glyphs 54:1886 54:1892 54:1897 54:1902 54:1906 54:1912, cell 66:2345.
 
-/** Figma paints these Ink, Gray, Mint and Ground. Each is a role: --figure-line and so on. */
+/** Figma paints these Ink, Gray, Mint and Ground. Each is a role, see PAINT in Drawing.tsx. */
 export type FigurePaint = 'line' | 'petal' | 'accent' | 'surface';
 
 export interface FigureMark {

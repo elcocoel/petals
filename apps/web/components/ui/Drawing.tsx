@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import type { FigureDrawing, FigurePaint } from '../../lib/figures.ts';
 
 const PAINT: Record<FigurePaint, string> = {
-  line: 'var(--figure-line)',
+  line: 'var(--text-primary)',
   petal: 'var(--figure-petal)',
   accent: 'var(--figure-accent)',
   surface: 'var(--surface)',

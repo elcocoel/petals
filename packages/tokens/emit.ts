@@ -120,7 +120,7 @@ export function emitCss(t: Tokens = tokens): string {
       block(`@utility wordmark-${layer}`, [
         'grid-area: 1 / 1;',
         'text-box: inherit;',
-        `color: var(--wordmark-${layer});`,
+        `color: var(--${wordmark.roles[layer as keyof typeof wordmark.roles]});`,
         `font-variation-settings: ${axes(a)};`,
       ]),
     ),
@@ -175,12 +175,14 @@ export interface ContrastResult {
 
 export function contrastTable(t: Tokens = tokens): ContrastResult[] {
   return (Object.entries(t.surfaces) as [SurfaceName, Roles][]).flatMap(([surface, roles]) =>
-    contrastPairs.map(({ text, on }) => ({
-      surface,
-      text,
-      on,
-      ratio: contrast(roles[text], roles[on], t),
-    })),
+    contrastPairs
+      .filter((pair) => !pair.surfaces || pair.surfaces.includes(surface))
+      .map(({ text, on }) => ({
+        surface,
+        text,
+        on,
+        ratio: contrast(roles[text], roles[on], t),
+      })),
   );
 }
 

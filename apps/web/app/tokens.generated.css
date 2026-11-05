@@ -61,17 +61,10 @@
   --color-primary: var(--text-primary);
   --color-muted: var(--text-muted);
   --color-hairline: var(--hairline);
-  --color-panel: var(--panel);
   --color-action: var(--action-background);
   --color-on-action: var(--action-text);
   --color-action-accent: var(--action-accent);
   --color-accent: var(--accent);
-  --color-wordmark-back: var(--wordmark-back);
-  --color-wordmark-middle: var(--wordmark-middle);
-  --color-wordmark-front: var(--wordmark-front);
-  --color-starter-border: var(--starter-border);
-  --color-eyebrow: var(--eyebrow);
-  --color-figure-line: var(--figure-line);
   --color-figure-petal: var(--figure-petal);
   --color-figure-accent: var(--figure-accent);
 }
@@ -113,17 +106,10 @@
   --text-primary: #171717;
   --text-muted: rgb(23 23 23 / 0.6);
   --hairline: #C7C7C7;
-  --panel: #C7C7C7;
   --action-background: #171717;
   --action-text: #FFFFFF;
   --action-accent: #8BC9BD;
   --accent: #8BC9BD;
-  --wordmark-back: #8BC9BD;
-  --wordmark-middle: #C7C7C7;
-  --wordmark-front: #171717;
-  --starter-border: #C7C7C7;
-  --eyebrow: #171717;
-  --figure-line: #171717;
   --figure-petal: #C7C7C7;
   --figure-accent: #8BC9BD;
 }
@@ -132,17 +118,10 @@
   --text-primary: #FFFFFF;
   --text-muted: rgb(255 255 255 / 0.7);
   --hairline: rgb(255 255 255 / 0.3);
-  --panel: #171717;
   --action-background: #8BC9BD;
   --action-text: #171717;
   --action-accent: #171717;
   --accent: #8BC9BD;
-  --wordmark-back: #8BC9BD;
-  --wordmark-middle: #C7C7C7;
-  --wordmark-front: #FFFFFF;
-  --starter-border: rgb(255 255 255 / 0.3);
-  --eyebrow: #8BC9BD;
-  --figure-line: #FFFFFF;
   --figure-petal: #C7C7C7;
   --figure-accent: #8BC9BD;
 }
@@ -151,17 +130,10 @@
   --text-primary: #171717;
   --text-muted: rgb(23 23 23 / 0.7);
   --hairline: rgb(23 23 23 / 0.4);
-  --panel: #8BC9BD;
   --action-background: #171717;
   --action-text: #FFFFFF;
   --action-accent: #8BC9BD;
   --accent: #171717;
-  --wordmark-back: #FFFFFF;
-  --wordmark-middle: #C7C7C7;
-  --wordmark-front: #171717;
-  --starter-border: #171717;
-  --eyebrow: #171717;
-  --figure-line: #171717;
   --figure-petal: #C7C7C7;
   --figure-accent: #8BC9BD;
 }
@@ -193,9 +165,6 @@
 [data-swatch="hairline"] {
   background-color: var(--hairline);
 }
-[data-swatch="panel"] {
-  background-color: var(--panel);
-}
 [data-swatch="action-background"] {
   background-color: var(--action-background);
 }
@@ -207,24 +176,6 @@
 }
 [data-swatch="accent"] {
   background-color: var(--accent);
-}
-[data-swatch="wordmark-back"] {
-  background-color: var(--wordmark-back);
-}
-[data-swatch="wordmark-middle"] {
-  background-color: var(--wordmark-middle);
-}
-[data-swatch="wordmark-front"] {
-  background-color: var(--wordmark-front);
-}
-[data-swatch="starter-border"] {
-  background-color: var(--starter-border);
-}
-[data-swatch="eyebrow"] {
-  background-color: var(--eyebrow);
-}
-[data-swatch="figure-line"] {
-  background-color: var(--figure-line);
 }
 [data-swatch="figure-petal"] {
   background-color: var(--figure-petal);
@@ -399,21 +350,21 @@
 @utility wordmark-back {
   grid-area: 1 / 1;
   text-box: inherit;
-  color: var(--wordmark-back);
+  color: var(--figure-accent);
   font-variation-settings: "CRSV" 0.11, "ELSH" 81, "ELXP" 0, "slnt" -8, "wght" 358;
 }
 
 @utility wordmark-middle {
   grid-area: 1 / 1;
   text-box: inherit;
-  color: var(--wordmark-middle);
+  color: var(--figure-petal);
   font-variation-settings: "CRSV" 0.11, "ELSH" 50, "ELXP" 90, "slnt" -8, "wght" 358;
 }
 
 @utility wordmark-front {
   grid-area: 1 / 1;
   text-box: inherit;
-  color: var(--wordmark-front);
+  color: var(--text-primary);
   font-variation-settings: "CRSV" 0.5, "ELSH" 17, "ELXP" 63, "slnt" -8, "wght" 337;
 }
 

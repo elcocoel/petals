@@ -1,8 +1,8 @@
-// The small mono label. Muted beside the work; above a section it takes the surface's eyebrow role,
-// Ink on ground and mint, Mint on ink (Figma's landing frame). Case is written in the copy.
+// The small mono label. Muted beside the work, text-primary above a section, and accent where a section
+// asks for it, For Builders on ink. Case is written in the copy.
 import type { ReactNode } from 'react';
 
-const TONES = { muted: 'text-muted', section: 'text-eyebrow' } as const;
+const TONES = { muted: 'text-muted', primary: 'text-primary', accent: 'text-accent' } as const;
 
 export function Eyebrow({
   as: Tag = 'p',

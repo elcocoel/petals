@@ -13,7 +13,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
   secondary: 'border border-primary bg-transparent text-primary',
   // One line at any width Figma draws. Narrower than its question, it wraps instead of overflowing.
   starter:
-    'h-auto border border-starter-border bg-transparent px-space-16 py-space-8 type-caption whitespace-normal text-primary',
+    'h-auto border border-hairline bg-transparent px-space-16 py-space-8 type-caption whitespace-normal text-primary',
   link: 'h-auto bg-transparent px-0 type-label text-primary hover:underline',
   quiet: 'h-auto bg-transparent px-0 type-caption text-muted hover:text-primary hover:underline',
   row: 'h-auto w-full justify-start gap-text-gap border border-hairline bg-transparent p-text-gap text-left whitespace-normal text-primary aria-pressed:border-l-2 aria-pressed:border-l-accent',

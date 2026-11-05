@@ -20,27 +20,19 @@ export type SurfaceName = (typeof surfaceNames)[number];
 /** What one `data-surface` attribute flips. Every surface sets every role. */
 export interface Roles {
   surface: Paint;
+  /** Words, the lines in a drawing, and the wordmark's front layer. */
   'text-primary': Paint;
   'text-muted': Paint;
+  /** A quiet rule, a starter question's border, and the rail behind the workspace. */
   hairline: Paint;
-  /** A tool area beside the page, like the workspace's navigation rail. */
-  panel: Paint;
   'action-background': Paint;
   'action-text': Paint;
   /** The arrow inside an action. Plain accent would vanish: Mint on Mint on ink, Ink on Ink on mint. */
   'action-accent': Paint;
   accent: Paint;
-  'wordmark-back': Paint;
-  'wordmark-middle': Paint;
-  'wordmark-front': Paint;
-  /** A starter question's border (66:2199, 66:2343): Gray on ground, Ink on mint. */
-  'starter-border': Paint;
-  /** The small mono label above a heading: Ink on ground and mint, Mint on ink (Figma, 66:2318). */
-  eyebrow: Paint;
-  /** Illustrations. Figma paints these Ink, Gray and Mint; lib/figures.ts names them by use. */
-  'figure-line': Paint;
+  /** A drawing's quiet petals and the wordmark's middle layer. */
   'figure-petal': Paint;
-  /** Mint on every surface: on mint it vanishes, as the closing section's cell does (66:2345). */
+  /** Mint on every surface, so on mint it vanishes, as the closing section's cell does (66:2345). */
   'figure-accent': Paint;
 }
 export type Role = keyof Roles;
@@ -51,17 +43,10 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'text-primary': 'Ink',
     'text-muted': { of: 'Ink', alpha: 0.6 },
     hairline: 'Gray',
-    panel: 'Gray',
     'action-background': 'Ink',
     'action-text': 'Ground',
     'action-accent': 'Mint',
     accent: 'Mint',
-    'wordmark-back': 'Mint',
-    'wordmark-middle': 'Gray',
-    'wordmark-front': 'Ink',
-    'starter-border': 'Gray',
-    eyebrow: 'Ink',
-    'figure-line': 'Ink',
     'figure-petal': 'Gray',
     'figure-accent': 'Mint',
   },
@@ -70,17 +55,10 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'text-primary': 'Ground',
     'text-muted': { of: 'Ground', alpha: 0.7 },
     hairline: { of: 'Ground', alpha: 0.3 },
-    panel: 'Ink',
     'action-background': 'Mint',
     'action-text': 'Ink',
     'action-accent': 'Ink',
     accent: 'Mint',
-    'wordmark-back': 'Mint',
-    'wordmark-middle': 'Gray',
-    'wordmark-front': 'Ground',
-    'starter-border': { of: 'Ground', alpha: 0.3 },
-    eyebrow: 'Mint',
-    'figure-line': 'Ground',
     'figure-petal': 'Gray',
     'figure-accent': 'Mint',
   },
@@ -89,17 +67,10 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'text-primary': 'Ink',
     'text-muted': { of: 'Ink', alpha: 0.7 },
     hairline: { of: 'Ink', alpha: 0.4 },
-    panel: 'Mint',
     'action-background': 'Ink',
     'action-text': 'Ground',
     'action-accent': 'Mint',
     accent: 'Ink',
-    'wordmark-back': 'Ground',
-    'wordmark-middle': 'Gray',
-    'wordmark-front': 'Ink',
-    'starter-border': 'Ink',
-    eyebrow: 'Ink',
-    'figure-line': 'Ink',
     'figure-petal': 'Gray',
     'figure-accent': 'Mint',
   },
@@ -111,34 +82,30 @@ export const roleUtilities: Record<Role, string> = {
   'text-primary': 'primary',
   'text-muted': 'muted',
   hairline: 'hairline',
-  panel: 'panel',
   'action-background': 'action',
   'action-text': 'on-action',
   'action-accent': 'action-accent',
   accent: 'accent',
-  'wordmark-back': 'wordmark-back',
-  'wordmark-middle': 'wordmark-middle',
-  'wordmark-front': 'wordmark-front',
-  'starter-border': 'starter-border',
-  eyebrow: 'eyebrow',
-  'figure-line': 'figure-line',
   'figure-petal': 'figure-petal',
   'figure-accent': 'figure-accent',
 };
 
 /**
- * Checked on every surface at body-text contrast. Hairlines, accent and the wordmark layers are
- * decoration, not text, so they aren't pairs.
+ * Checked at body-text contrast, on every surface unless the pair names the ones it's drawn on. Hairlines
+ * and the figures are decoration, not text, so they aren't pairs.
  */
 export const contrastMinimum = 4.5;
-export const contrastPairs: readonly { text: Role; on: Role }[] = [
-  { text: 'text-primary', on: 'surface' },
-  { text: 'text-muted', on: 'surface' },
-  { text: 'text-primary', on: 'panel' },
-  { text: 'action-text', on: 'action-background' },
-  { text: 'action-accent', on: 'action-background' },
-  { text: 'eyebrow', on: 'surface' },
-];
+export const contrastPairs: readonly { text: Role; on: Role; surfaces?: readonly SurfaceName[] }[] =
+  [
+    { text: 'text-primary', on: 'surface' },
+    { text: 'text-muted', on: 'surface' },
+    { text: 'action-text', on: 'action-background' },
+    { text: 'action-accent', on: 'action-background' },
+    // The workspace's rail, which is only ever on ground.
+    { text: 'text-primary', on: 'hairline', surfaces: ['ground'] },
+    // The mono line above For Builders' heading, the one place accent is words.
+    { text: 'accent', on: 'surface', surfaces: ['ink'] },
+  ];
 
 /**
  * The ladder: every gap, inset and padding is one of these nine. Nothing else makes space. `0` isn't a
@@ -267,6 +234,8 @@ export const wordmark = {
     middle: { CRSV: 0.11, ELSH: 50, ELXP: 90, slnt: -8, wght: 358 },
     front: { CRSV: 0.5, ELSH: 17, ELXP: 63, slnt: -8, wght: 337 },
   },
+  /** The role that paints each layer. */
+  roles: { back: 'figure-accent', middle: 'figure-petal', front: 'text-primary' },
   /** Font size in pixels. Display is the component's own size, the others those in the page frames. */
   sizes: { Nav: 36.67, Footer: 155.56, Workspace: 33.18, Display: 269.722 },
 } as const;
