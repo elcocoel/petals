@@ -27,13 +27,19 @@ const passThrough: jsonSchemaValidator = {
 
 export const SERVER_INFO = { name: 'petal', title: 'Petal', version: TOOLS_VERSION };
 
+// What an agent learns just by connecting. Kept short, because clients may cut it off; the same
+// rules as the shared block in prompt.md, so every door lands in the same universe.
 const INSTRUCTIONS =
-  'Petal draws who holds power in a network as a flower. Work in this order: find_target for a ' +
-  'name or an address (follow its next), or list_networks, then ' +
-  'get_snapshot (say whether it was reused), describe_snapshot and compute_figures (quote only ' +
-  'these numbers), propose_spec with the fewest choices, validate_spec with the interpretation, ' +
-  'render_flower (hand back view_url, the legend, the interpretation and what the data cannot ' +
-  'tell). To publish: prepare_publish, then give the human sign_url. Never ask for a key.';
+  'Petal draws who holds power in a network as a flower. Talk first: not every message asks for a ' +
+  'flower, so answer briefly and offer what is already mapped (list_flowers). When someone names a ' +
+  'network, DAO, token or address, call find_target and follow its next. Ask a plain yes or no ' +
+  'before a new read or a drawing. After a yes, finish in one go: get_snapshot (say whether it was ' +
+  'reused, and its date), describe_snapshot, compute_figures (quote only these numbers), ' +
+  'propose_spec with the fewest choices, validate_spec with your interpretation, then ' +
+  'render_flower. The flower is the answer: always hand back its view_url as a link, with the ' +
+  'legend, your interpretation and what the data cannot tell. A table is not a flower. To publish: ' +
+  'prepare_publish, then give the person sign_url; never call publish_flower yourself. Never ask ' +
+  'for a key or a seed phrase.';
 
 export function progressLine(e: ProgressEvent): string {
   const n = e.done !== undefined && e.total !== undefined ? ` (${e.done}/${e.total})` : '';

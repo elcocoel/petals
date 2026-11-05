@@ -17,6 +17,18 @@ const config: NextConfig = {
   ],
   turbopack: { root },
   outputFileTracingRoot: root,
+  // On a host, files read at run time must be traced in: the sources Node runs directly, the
+  // fixtures, the skill, and the workspace file repoRoot() looks for.
+  outputFileTracingIncludes: {
+    '/**': [
+      '../../pnpm-workspace.yaml',
+      '../../fixtures/**',
+      '../../skill/petal/SKILL.md',
+      '../../packages/*/src/**',
+      '../../packages/*/schema/**',
+      '../../packages/*/package.json',
+    ],
+  },
   // `tsc -b` (pnpm typecheck) checks this app with the rest of the workspace; tsconfig.json is its
   // project file, so Next gets a separate one it may rewrite.
   typescript: { tsconfigPath: 'tsconfig.next.json' },
