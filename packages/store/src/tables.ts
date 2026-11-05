@@ -292,6 +292,8 @@ export function tables(db: Db) {
       /** Every run of `from` now belongs to `to`, in one statement. Returns how many moved. */
       moveOwner: (from: string, to: string): number =>
         db.run('UPDATE run SET owner = ? WHERE owner = ?', to, from),
+      idsWithStatus: (status: string) =>
+        db.all<{ id: string }>('SELECT id FROM run WHERE status = ?', status).map((r) => r.id),
       /** Newest first. */
       listByOwner: (owner: string, limit = 50) =>
         db.all<RunSummaryRow>(
@@ -368,6 +370,14 @@ export function tables(db: Db) {
             reserved_usd: Math.max(0, r.reserved_usd - heldUsd),
           });
         }),
+      /** Every hold on every day given back, and how much that was: for when no call can be in flight. */
+      releaseHolds: (): number =>
+        db.tx(() => {
+          const held =
+            db.get<{ usd: number }>('SELECT SUM(reserved_usd) AS usd FROM ledger')?.usd ?? 0;
+          db.run('UPDATE ledger SET reserved_usd = 0 WHERE reserved_usd <> 0');
+          return held;
+        }),
       /** A day's starting figure, if the day has none yet. */
       seed(day: string, usd: number) {
         db.run(
@@ -414,6 +424,14 @@ export function tables(db: Db) {
           if (!r) return null;
           const held = holdable(usd, r.balance_usd - r.reserved_usd);
           if (held !== null) writeCredit({ ...r, reserved_usd: r.reserved_usd + held });
+          return held;
+        }),
+      /** Every hold given back, and how much that was: for when no call can be in flight. */
+      releaseHolds: (): number =>
+        db.tx(() => {
+          const held =
+            db.get<{ usd: number }>('SELECT SUM(reserved_usd) AS usd FROM credit')?.usd ?? 0;
+          db.run('UPDATE credit SET reserved_usd = 0 WHERE reserved_usd <> 0');
           return held;
         }),
       /** Swaps a hold for what was really spent. */
@@ -506,6 +524,8 @@ export function tables(db: Db) {
       get: (id: string) => db.get<ExplorationRow>('SELECT * FROM exploration WHERE id = ?', id),
       byShareToken: (hash: string) =>
         db.get<ExplorationRow>('SELECT * FROM exploration WHERE share_token_hash = ?', hash),
+      idsWithStatus: (status: string) =>
+        db.all<{ id: string }>('SELECT id FROM run WHERE status = ?', status).map((r) => r.id),
       /** Newest first. */
       listByOwner: (owner: string, limit = 50) =>
         db.all<ExplorationRow>(

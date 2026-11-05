@@ -7,6 +7,7 @@
   "description": "Petal's own agent on NEAR AI Cloud, the recorded client, the run store, agent routes and petalApp.",
   "exports": {
     ".": "./src/index.ts",
+    "./serve": "./src/serve.ts",
     "./package.json": "./package.json"
   },
   "scripts": {

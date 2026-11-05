@@ -1,30 +1,22 @@
 // agentRoutes (T058; http-api.md): POST /api/v1/agent/chat (SSE), GET /api/v1/agent/runs/:id
-// (JSON, or SSE replay), GET /api/v1/attestations/:sha256 (the stored report, byte for byte).
-// A chat is a run: it runs in the background and is stored event by event, so it keeps going when
-// the browser disconnects, and the SSE stream only follows it.
+// (JSON, or SSE replay), POST /api/v1/agent/runs/:id/stop, GET /api/v1/attestations/:sha256 (the
+// stored report, byte for byte). A chat is a run: a job in this process (jobs.ts), stored event by
+// event, so it keeps going when the browser disconnects, and the SSE stream only observes it.
 import { join } from 'node:path';
 import { sha256Hex, TOOLS_VERSION } from '@petal/core';
-import type {
-  AgentEvent,
-  ChatInput,
-  ChatMessage,
-  Draft,
-  ToolError,
-  ToolErrorCode,
-} from '@petal/core/types';
+import type { ChatInput, ChatMessage, Draft, ToolError, ToolErrorCode } from '@petal/core/types';
 import type { Config, ToolContext } from '@petal/tools';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
 import type { RouteAuth } from './auth-routes.ts';
-import { Channel } from './channel.ts';
-import type { Budget, LlmClient, LlmMessage } from './llm.ts';
+import { type Earlier, type Observed, runJobs } from './jobs.ts';
+import type { Budget, LlmClient } from './llm.ts';
 import { RECORDED_ATTESTATIONS } from './recorded.ts';
-import { startRun } from './run.ts';
 import { RUN_ID, type RunStore } from './runs.ts';
 import { attestationStore } from './signature.ts';
-import { type EarlierFlower, flowersOf } from './thread.ts';
+import { flowersOf } from './thread.ts';
 import type { AnyTool } from './tool-defs.ts';
 
 /** HTTP status per error code (http-api.md, Rules). */
@@ -160,56 +152,39 @@ function merge(stored: ChatMessage[], sent: ChatMessage[]): ChatMessage[] {
   return prefix ? sent : [...stored, ...sent];
 }
 
-/** A chat running in this process: its events so far, and who follows them. */
-class LiveRun {
-  readonly events: AgentEvent[] = [];
-  /** how many stored events the run had before this chat (earlier chats of the same run) */
-  readonly storedBefore: number;
-  running = true;
-  /** the background chat; it ends after `done` */
-  task?: Promise<void>;
-  #subs = new Set<Channel<AgentEvent>>();
-  constructor(storedBefore: number) {
-    this.storedBefore = storedBefore;
-  }
-  push(e: AgentEvent) {
-    if (e.event !== 'heartbeat') this.events.push(e);
-    for (const s of this.#subs) s.push(e);
-  }
-  finish() {
-    this.running = false;
-    for (const s of this.#subs) s.close();
-    this.#subs.clear();
-  }
-  /** this chat's events from `from` on, then live ones until the chat ends */
-  follow(from = 0): Channel<AgentEvent> {
-    const ch = new Channel<AgentEvent>();
-    for (const e of this.events.slice(from)) ch.push(e);
-    if (!this.running) ch.close();
-    else {
-      this.#subs.add(ch);
-      ch.onReturn = () => this.#subs.delete(ch);
-    }
-    return ch;
-  }
-}
-
 function wantsSse(c: Context): boolean {
   return (c.req.header('accept') ?? '').includes('text/event-stream');
 }
 
-/** Write events as SSE; `id` is the event's index in this stream. */
-function sse(c: Context, events: AsyncIterable<AgentEvent> | AgentEvent[], stop?: () => void) {
+/** A caller who asks only for JSON gets the run id at once, and observes the run separately. */
+function wantsJson(c: Context): boolean {
+  const accept = c.req.header('accept') ?? '';
+  return accept.includes('application/json') && !accept.includes('text/event-stream');
+}
+
+/** Where a viewer starts: past Last-Event-ID, else at ?from=, else the start. Null if unreadable. */
+function cursorOf(c: Context): number | null {
+  const last = c.req.header('last-event-id');
+  const raw = last ?? c.req.query('from') ?? '0';
+  if (!/^\d{1,15}$/.test(raw)) return null;
+  return Number(raw) + (last === undefined ? 0 : 1);
+}
+
+/** Write events as SSE; `id` is the event's seq in the run's log. Leaving touches nothing but this. */
+function sse(c: Context, events: AsyncIterable<Observed>, leave: () => void) {
   return streamSSE(c, async (stream) => {
-    let seq = 0;
     let open = true;
     stream.onAbort(() => {
       open = false;
-      stop?.();
+      leave();
     });
-    for await (const e of events) {
+    for await (const { seq, event: e } of events) {
       if (!open) break;
-      await stream.writeSSE({ event: e.event, data: JSON.stringify(e.data), id: String(seq++) });
+      await stream.writeSSE({
+        event: e.event,
+        data: JSON.stringify(e.data),
+        ...(seq === undefined ? {} : { id: String(seq) }),
+      });
     }
   });
 }
@@ -217,7 +192,7 @@ function sse(c: Context, events: AsyncIterable<AgentEvent> | AgentEvent[], stop?
 /** The full routes; `agentRoutes` in index.ts is this with the contract's arguments only. */
 export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {}): Hono {
   const clock = o.clock ?? Date.now;
-  const live = new Map<string, LiveRun>();
+  const jobs = runJobs(deps, o);
   const perHour = o.chatsPerHour ?? 10;
   const chatLimit = limiter(perHour, 3_600_000, clock);
   const followUpsPerHour = o.followUpsPerHour ?? 60;
@@ -241,58 +216,6 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
   async function mayRead(c: Context, runId: string): Promise<boolean> {
     const owner = await deps.runs.ownerOf?.(runId);
     return !owner || owner === o.auth?.subjectOf(c);
-  }
-
-  function start(
-    runId: string,
-    input: ChatInput,
-    storedBefore: number,
-    earlier: { thread?: LlmMessage[]; flowers?: EarlierFlower[] } = {},
-    budget: Budget = deps.budget,
-  ): LiveRun {
-    const run = new LiveRun(storedBefore);
-    live.set(runId, run);
-    const keep = async (e: AgentEvent) => {
-      if (e.event !== 'heartbeat') {
-        // a store that fails must not stop the chat; the stream still carries every event
-        await deps.runs.append(runId, e).catch(() => {});
-      }
-      run.push(e);
-    };
-    run.task = (async () => {
-      try {
-        const events = startRun(
-          { messages: input.messages, ...(input.draft ? { draft: input.draft } : {}), ...earlier },
-          { tools: deps.tools, llm: deps.llm, budget },
-          {
-            runId,
-            registry: o.registry,
-            heartbeatMs: o.heartbeatMs,
-            onThread: (t) => deps.runs.saveThread?.(runId, t),
-          },
-        );
-        for await (const e of events) await keep(e);
-      } catch (e) {
-        await keep({ event: 'error', data: { code: 'internal', message: String(e) } });
-        await keep({
-          event: 'done',
-          data: {
-            turns: 0,
-            model: deps.llm.model,
-            fallback_used: false,
-            tokens: { in: 0, out: 0 },
-            cost_usd: 0,
-          },
-        });
-      } finally {
-        run.finish();
-        const t = setTimeout(() => {
-          if (live.get(runId) === run) live.delete(runId);
-        }, 60_000);
-        t.unref?.();
-      }
-    })();
-    return run;
   }
 
   const app = new Hono();
@@ -329,12 +252,12 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
 
       let input: ChatInput = parsed;
       let storedBefore = 0;
-      let earlier: { thread?: LlmMessage[]; flowers?: EarlierFlower[] } = {};
+      let earlier: Earlier = {};
       let runId: string;
       if (parsed.run_id) {
         const id = parsed.run_id;
         if (!(await mayRead(c, id))) return fail(c, 'not_found', `no run ${id}`);
-        if (live.get(id)?.running) {
+        if (jobs.running(id)) {
           return fail(
             c,
             'bad_input',
@@ -361,10 +284,12 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
       } else {
         runId = await deps.runs.create(input, owner);
       }
-      const run = start(runId, input, storedBefore, earlier, admitted.budget);
-      if (run.task) keepAlive(c, run.task);
-      const follow = run.follow();
-      return sse(c, follow, () => void follow.return());
+      keepAlive(c, jobs.start(runId, input, earlier, admitted.budget));
+      if (wantsJson(c)) {
+        return c.json({ run_id: runId, status: 'running', tools_version: TOOLS_VERSION }, 202);
+      }
+      const view = jobs.observe(runId, storedBefore);
+      return sse(c, view.events, view.leave);
     },
   );
 
@@ -377,34 +302,31 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
     if (!run) return fail(c, 'not_found', `no run ${id}`);
     if (!wantsSse(c)) return c.json({ ...run, tools_version: TOOLS_VERSION });
 
-    const here = live.get(id);
-    if (here?.running) {
-      // earlier chats of this run from the store, this one from memory, then live
-      const follow = here.follow();
-      async function* replay() {
-        yield* run?.events.slice(0, here?.storedBefore) ?? [];
-        yield* follow;
-      }
-      return sse(c, replay(), () => void follow.return());
-    }
-    if (run.status !== 'running') return sse(c, run.events);
+    const from = cursorOf(c);
+    if (from === null) return fail(c, 'bad_input', 'the cursor must be a whole number');
+    const view = jobs.observe(id, from);
+    return sse(c, view.events, view.leave);
+  });
 
-    // running in another process (or one that stopped): follow the store until it ends
-    const store = deps.runs;
-    const stale = (deps.budget.wallSeconds + 60) * 1000;
-    async function* poll() {
-      let sent = 0;
-      let cur = run;
-      while (cur) {
-        yield* cur.events.slice(sent);
-        sent = cur.events.length;
-        if (cur.status !== 'running') return;
-        if (clock() - Date.parse(cur.updated_at) > stale) return;
-        await new Promise((r) => setTimeout(r, 1000));
-        cur = await store.get(id);
-      }
-    }
-    return sse(c, poll());
+  // Reports what it witnessed: the run stopped, or it had already finished. An owned run answers only
+  // to its owner, and an unowned one to whoever holds its id (SYS-014).
+  app.post('/api/v1/agent/runs/:id/stop', async (c) => {
+    const foreign = o.auth?.refuseForeign(c);
+    if (foreign) return foreign;
+    const id = c.req.param('id');
+    if (!RUN_ID.test(id)) return fail(c, 'bad_input', 'that is not a run id');
+    if (!(await mayRead(c, id))) return fail(c, 'not_found', `no run ${id}`);
+    if (!(await deps.runs.get(id))) return fail(c, 'not_found', `no run ${id}`);
+    const hadJob = await jobs.stop(id);
+    const status = (await deps.runs.get(id))?.status;
+    const stopped = hadJob && status === 'stopped';
+    return c.json({
+      run_id: id,
+      status,
+      stopped,
+      already_finished: !stopped && status !== 'running',
+      tools_version: TOOLS_VERSION,
+    });
   });
 
   app.get('/api/v1/attestations/:sha256', (c) => {

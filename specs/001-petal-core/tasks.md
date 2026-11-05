@@ -443,7 +443,7 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 **Goal** (Elco, 2026-11-05): "we need to solve the core system questions and I'll solve their visual facts with the frontend." Spec: `specs/002-system/`. Undecided: `specs/002-system/open-questions.md`. No surfaces: any page needed to test this stays off the product until designed. Tasks are listed, not started; Elco sets the order.
 
 - [X] T189 [W8] Stores: private data behind interfaces on SQLite, with the ledger failing closed (reserve then settle), and durable nonces. Done when a restart loses nothing and a store failure stops spending.
-- [ ] T190 [W5] Durable runs: the loop outside the request, an event log with reconnect by cursor, a thread saved each round, a real Stop, and a restart scan. Done when a killed process leaves no run stuck.
+- [X] T190 [W5] Durable runs: the loop outside the request, an event log with reconnect by cursor, a thread saved each round, a real Stop, and a restart scan. Done when a killed process leaves no run stuck.
 - [ ] T191 [W8] Host: a container on Elco's machine, its own data only, a new tunnel address, nightly backups. The keyless Vercel copy stays as the always-on fallback. Done when the site survives a restart of the container, and reaches the public address.
 - [ ] T192 [W3] Sign-in with a NEAR wallet: challenge, verify, session, person, wallet binding. Done with a real Meteor signature on testnet.
 - [ ] T193 [W5] Run owners: an anonymous handle, a claim on sign-in, owner-only once claimed.

@@ -48,6 +48,35 @@ function client(fake = fakeNearAi(), o: NearAiOptions = {}) {
 const paths = (fake: ReturnType<typeof fakeNearAi>) =>
   fake.log.map((l) => `${l.method} ${l.url.pathname}`);
 
+test('Stop aborts the model’s fetch, tries no fallback, and says nothing about the model', async () => {
+  const ai: string[] = [];
+  const hanging: typeof fetch = (url, init) => {
+    if (!String(url).endsWith('/chat/completions')) {
+      return Promise.resolve(new Response('{}', { status: 404 }));
+    }
+    ai.push(String(url));
+    return new Promise((_, reject) => {
+      init?.signal?.addEventListener('abort', () =>
+        reject(new DOMException('aborted', 'AbortError')),
+      );
+    });
+  };
+  const llm = createNearAiClient(CFG, {
+    apiKey: 'sk-test',
+    baseURL: 'https://near-ai.test/v1',
+    fetch: hanging,
+    attestationsDir: join(tmpRoot(), 'attestations'),
+    signatureDelaysMs: [0],
+  });
+  const stop = new AbortController();
+  const call = llm.complete(ASK, { signal: stop.signal });
+  while (!ai.length) await new Promise((r) => setTimeout(r, 1));
+  stop.abort();
+  await expect(call).rejects.toMatchObject({ name: 'LlmCallError', costUsd: 0 });
+  expect(ai).toHaveLength(1);
+  expect(llm.status()).toBe('up');
+});
+
 describe('PETAL_MODEL (T168)', () => {
   test('it replaces the default; unset, empty or blank leaves the default', () => {
     expect(chosenModel({ PETAL_MODEL: ' z-ai/glm-5.3 ' })).toBe('z-ai/glm-5.3');

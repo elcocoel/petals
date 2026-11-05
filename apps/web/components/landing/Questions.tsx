@@ -17,16 +17,12 @@ const GLYPHS: readonly GlyphKind[] = [
 
 export function Questions() {
   return (
-    <Section rule="top">
-      <div className="flex flex-col gap-section-inset lg:flex-row lg:items-start">
-        <div className="w-full min-w-0 lg:max-w-intro-width lg:flex-1">
-          <SectionHead eyebrow={copy.eyebrow} title={copy.title} body={copy.body} />
-        </div>
-        <div className="w-full min-w-0 border-t border-hairline lg:flex-1">
-          {copy.items.map((item, i) => (
-            <FaqItem key={item.index} glyph={GLYPHS[i] ?? 'concentration'} {...item} />
-          ))}
-        </div>
+    <Section rule="top" layout="split">
+      <SectionHead eyebrow={copy.eyebrow} title={copy.title} body={copy.body} />
+      <div className="border-t border-hairline">
+        {copy.items.map((item, i) => (
+          <FaqItem key={item.index} glyph={GLYPHS[i] ?? 'concentration'} {...item} />
+        ))}
       </div>
     </Section>
   );

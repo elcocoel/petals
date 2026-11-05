@@ -42,7 +42,8 @@ export interface LlmCompletion {
 export interface LlmClient {
   readonly kind: 'near-ai-cloud' | 'recorded';
   readonly model: string;
-  complete(req: LlmRequest): Promise<LlmCompletion>;
+  /** `signal` is Stop: a client that talks to a model passes it to the model's fetch. */
+  complete(req: LlmRequest, o?: { signal?: AbortSignal }): Promise<LlmCompletion>;
 }
 
 /** Money set aside for one model call, until it is settled. */
@@ -68,7 +69,7 @@ export interface BudgetLedger {
   refusal?(): { message: string; hint?: string } | null;
 }
 
-/** Limits per chat and per day (http-api.md: 8 tool rounds, 120 s, $0.05; daily cap $3). */
+/** Limits per chat and per day (http-api.md: 8 tool rounds, 300 s, $0.05; daily cap $3). */
 export interface Budget {
   toolRounds: number;
   wallSeconds: number;
@@ -79,7 +80,13 @@ export interface Budget {
 
 export const DEFAULT_BUDGET: Budget = {
   toolRounds: 8,
-  wallSeconds: 120,
+  wallSeconds: 300,
   usdPerChat: 0.05,
   usdPerDay: 3,
 };
+
+/** PETAL_RUN_MAX_S, else the default. The limit is what a person waits for; the dollars stay capped. */
+export function runMaxSeconds(env: Record<string, string | undefined> = process.env): number {
+  const s = Number(env.PETAL_RUN_MAX_S);
+  return Number.isFinite(s) && s > 0 ? s : DEFAULT_BUDGET.wallSeconds;
+}

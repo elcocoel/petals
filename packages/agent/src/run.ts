@@ -3,9 +3,12 @@
 // stage, progress, tool_call, tool_result, message…, `flower` and its `signature` as soon as the
 // flower is drawn, and `done` last. A heartbeat goes out whenever nothing else has for a while, so
 // no gap reaches 10 s. Limits per chat: tool rounds, wall time and dollars (Budget), and the daily
-// cap shared by every run on the server.
-import { specHash } from '@petal/core';
+// cap shared by every run on the server. The thread is saved as it grows, so a crash keeps the work,
+// and `opts.signal` is Stop (T190).
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { setRunSignalSource, specHash } from '@petal/core';
 import type {
+  AgentError,
   AgentEvent,
   ChatMessage,
   FlowerResult,
@@ -59,8 +62,10 @@ export interface RunOptions {
   clock?: () => number;
   /** today's date in the system message; default new Date() */
   today?: () => Date;
-  /** told what the model has read, once the chat ends and before `done`; the store keeps it */
+  /** told what the model has read, each time that grows and before `done`; the store keeps it */
   onThread?: (thread: LlmMessage[]) => Promise<void> | void;
+  /** Stop: aborts the model call and the tool in progress, and the chat ends as `stopped` */
+  signal?: AbortSignal;
 }
 
 export const DEFAULT_HEARTBEAT_MS = 8000;
@@ -68,6 +73,17 @@ export const DEFAULT_HEARTBEAT_MS = 8000;
 /** The spend ledger can't be read or written, so nothing more is bought (SYS-004). */
 export const LEDGER_DOWN =
   "Petal's agent stopped because it can't check its spending record right now. Nothing more will be spent. Try again in a little while.";
+
+/** What a run's readers are told when someone stops it. */
+export const STOPPED =
+  'This run was stopped. What it did so far is kept: send a message to carry on from there.';
+
+/** A stopped call gets this long to say what it cost. One that honours the signal needs far less. */
+const STOP_GRACE_MS = 2000;
+
+/** Each tool runs inside this, so its fetches find the run's signal through runSignal(). */
+const toolScope = new AsyncLocalStorage<AbortSignal>();
+setRunSignalSource(() => toolScope.getStore());
 
 export const SKILL_HINT =
   'Bring your own agent: install the Petal skill (skill/petal/SKILL.md), or add the MCP server with `claude mcp add petal -- pnpm -s --dir <repo> petal mcp`, and ask it the same question.';
@@ -125,14 +141,36 @@ export function startRun(
 }
 
 class Timeout extends Error {}
+class Stopped extends Error {}
 
-/** p, or a Timeout once the deadline passes. */
-function before<T>(p: Promise<T>, deadline: number, clock: () => number): Promise<T> {
+/** p, or a Timeout once the deadline passes, or Stopped once the signal fires. */
+function before<T>(
+  p: Promise<T>,
+  deadline: number,
+  clock: () => number,
+  signal?: AbortSignal,
+): Promise<T> {
   const left = deadline - clock();
   if (left <= 0) return Promise.reject(new Timeout());
   let t: ReturnType<typeof setTimeout> | undefined;
+  let onStop = () => {};
   const late = new Promise<never>((_, reject) => {
     t = setTimeout(() => reject(new Timeout()), left);
+    onStop = () => reject(new Stopped());
+    if (signal?.aborted) onStop();
+    else signal?.addEventListener('abort', onStop, { once: true });
+  });
+  return Promise.race([p, late]).finally(() => {
+    clearTimeout(t);
+    signal?.removeEventListener('abort', onStop);
+  });
+}
+
+/** Waits for p, for at most ms. */
+function within(p: Promise<unknown>, ms: number): Promise<unknown> {
+  let t: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise((r) => {
+    t = setTimeout(r, ms);
   });
   return Promise.race([p, late]).finally(() => clearTimeout(t));
 }
@@ -171,6 +209,7 @@ async function loop(
   stopped: () => boolean,
 ): Promise<void> {
   const { llm, budget } = deps;
+  const signal = opts.signal;
   const clock = opts.clock ?? Date.now;
   const registry = opts.registry ?? defaultRegistry;
   const runId = opts.runId ?? newRunId();
@@ -191,7 +230,7 @@ async function loop(
     stage = s;
     emit({ event: 'stage', data: { stage: s, message } });
   };
-  const fail = (code: ToolError['error']['code'], message: string, hint?: string, retry?: number) =>
+  const fail = (code: AgentError['code'], message: string, hint?: string, retry?: number) =>
     emit({
       event: 'error',
       data: {
@@ -290,8 +329,12 @@ async function loop(
   ].join('\n\n');
   const messages: LlmMessage[] = [{ role: 'system', content: system }, ...conversation];
 
+  // A store that fails here must not stop the chat: only a crash would then lose this much.
+  const saveThread = () =>
+    Promise.resolve(opts.onThread?.(closeThread(messages.slice(1)))).catch(() => {});
+
   async function finish() {
-    await Promise.resolve(opts.onThread?.(closeThread(messages.slice(1)))).catch(() => {});
+    await saveThread();
     done();
   }
 
@@ -362,10 +405,14 @@ async function loop(
     } else {
       const ctx = withProgress(deps.tools, (e) => emit({ event: 'progress', data: e }));
       try {
-        out = await before(tool.run(args, ctx), deadline, clock);
+        const running = signal
+          ? toolScope.run(signal, () => tool.run(args, ctx))
+          : tool.run(args, ctx);
+        out = await before(running, deadline, clock, signal);
       } catch (e) {
         if (e instanceof Timeout) throw e;
-        out = toolError('internal', `${call.name} failed: ${(e as Error)?.message ?? String(e)}`);
+        const why = e instanceof Stopped ? 'stopped' : (e as Error)?.message;
+        out = toolError('internal', `${call.name} failed: ${why ?? String(e)}`);
       }
     }
     const ok = !isToolError(out);
@@ -430,6 +477,7 @@ async function loop(
   let rounds = 0;
   try {
     while (!stopped()) {
+      signal?.throwIfAborted();
       // The daily cap holds for every call, not only when a chat starts, and across chats.
       let hold: SpendHold | null = null;
       if (ledger) {
@@ -468,16 +516,23 @@ async function loop(
       let pending: Promise<LlmCompletion> | undefined;
       let c: LlmCompletion;
       try {
-        pending = llm.complete(req);
-        c = await before(pending, deadline, clock);
+        pending = llm.complete(req, signal ? { signal } : {});
+        c = await before(pending, deadline, clock, signal);
       } catch (e) {
         const costOf = (err: unknown) => (err instanceof LlmCallError ? err.costUsd : 0);
         // a late answer is still paid for, so its hold stands until it arrives
-        if (e instanceof Timeout && pending) {
-          pending.then(
-            (late) => settle(hold, late.cost_usd),
-            (err) => settle(hold, costOf(err)),
+        if ((e instanceof Timeout || e instanceof Stopped) && pending) {
+          const settled = pending.then(
+            (late) => {
+              totals.usd += late.cost_usd;
+              return settle(hold, late.cost_usd);
+            },
+            (err) => {
+              totals.usd += costOf(err);
+              return settle(hold, costOf(err));
+            },
           );
+          if (e instanceof Stopped) await within(settled, STOP_GRACE_MS);
         } else {
           await settle(hold, costOf(e));
         }
@@ -496,6 +551,7 @@ async function loop(
       messages.push(c.message);
       const text = c.message.content?.trim();
       if (text) emit({ event: 'message', data: { text: withLinks(text) } });
+      await saveThread();
       // this answer is already paid for, so it is shown; nothing more is bought
       if (ledgerDown) break;
       const calls = c.message.tool_calls ?? [];
@@ -510,12 +566,14 @@ async function loop(
       rounds++;
       for (const call of calls) {
         if (stopped()) return;
+        signal?.throwIfAborted();
         const out = await callTool(call, c);
         messages.push({
           role: 'tool',
           tool_call_id: call.id,
           content: JSON.stringify(forModel(call.name, out)),
         });
+        await saveThread();
       }
       if (totals.usd >= budget.usdPerChat) {
         fail('budget_exhausted', `The chat used its $${budget.usdPerChat} budget.`, SKILL_HINT);
@@ -523,7 +581,11 @@ async function loop(
       }
     }
   } catch (e) {
-    if (e instanceof Timeout) {
+    // whatever the failure looks like, after Stop it is Stop's doing
+    if (signal?.aborted) {
+      if (e instanceof LlmCallError) totals.usd += e.costUsd;
+      fail('stopped', STOPPED);
+    } else if (e instanceof Timeout) {
       fail('budget_exhausted', `The chat ran past its ${budget.wallSeconds} s.`, SKILL_HINT);
     } else if (e instanceof LlmCallError) {
       totals.usd += e.costUsd;

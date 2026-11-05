@@ -99,15 +99,17 @@ export interface AuthDeps {
 /** What a chat may do: refused, or who owns its run and which budget it draws on. */
 export interface ChatAdmission {
   refused?: Response;
-  /** Null for a recorded run: it spends nothing and stays readable by link. */
+  /** None for a recorded run: it spends nothing and stays readable by link. */
   subject?: string;
   budget?: Budget;
 }
 
-/** What the agent routes need. No session at all is a subject of null. */
+/** What the agent routes need. With no session, the subject is null. */
 export interface RouteAuth {
   admitChat(c: Context, llm: LlmClient, budget: Budget): ChatAdmission;
   subjectOf(c: Context): string | null;
+  /** A refusal for a POST from another site; null for one that's fine. */
+  refuseForeign(c: Context): Response | null;
 }
 
 export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
@@ -345,6 +347,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
 
   const gate: RouteAuth = {
     subjectOf: (c) => sessionOf(c)?.subject ?? null,
+    refuseForeign: (c) => (originAllowed(c) ? null : badOrigin(c)),
 
     admitChat(c, llm, budget) {
       // A recorded run spends nothing: anyone may watch it, from anywhere, and no one owns it.

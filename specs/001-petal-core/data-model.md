@@ -218,7 +218,7 @@ Sign-in to Petal's site. `anonymous ──► nonce issued (5 min) ──► sig
 
 One chat with Petal's agent, stored so the maker can leave and come back (spec edge case: long generation). `{ run_id, status, messages[], events[], draft?, flower?, created_at, updated_at }`, kept by `RunStore` (`.petal/runs/<run_id>.json` locally). Not published; not on the map.
 
-State: `running ──► done (flower) | failed (error, explained)`. A run keeps going when the browser disconnects; `GET /api/v1/agent/runs/:id` returns it, and a new chat with `run_id` continues from its messages and draft.
+State: `running ──► done (flower) | failed (error, explained) | stopped (Stop) | interrupted (a restart)`. A run keeps going when the browser disconnects; `GET /api/v1/agent/runs/:id` returns it, and a new chat with `run_id` continues from its messages and draft, whichever way it ended.
 
 ### Payment quote
 

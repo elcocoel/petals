@@ -5,7 +5,6 @@ const SIZES = {
   workspace: 'wordmark-workspace',
   // 560 wide: on a phone it takes the nav's size rather than scroll the page.
   footer: 'wordmark-nav md:wordmark-footer',
-  display: 'wordmark-display',
 } as const;
 
 export function Wordmark({ size = 'nav' }: { size?: keyof typeof SIZES }) {

@@ -1,5 +1,7 @@
 // T192, T193, T196: sign-in, run owners and who pays, through petalApp over HTTP shapes. Browsers are
 // cookie jars. The NEP-413 signer and RPC are the test ones; the chain itself is in tests/e2e/auth-path.ts.
+import { spawnSync } from 'node:child_process';
+import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   fakeRpc,
@@ -542,12 +544,13 @@ describe('T192: what is kept', () => {
     );
     s.close();
 
-    const { readFileSync, readdirSync } = await import('node:fs');
-    for (const name of readdirSync(stateDir)) {
-      const bytes = readFileSync(join(stateDir, name));
-      expect(bytes.includes('maker.testnet'), name).toBe(false);
-      expect(bytes.includes(b.jar.get(COOKIE) ?? 'x'), name).toBe(false);
-    }
+    // grep, not readFileSync: closing a descriptor on a SQLite file in this process drops its locks
+    const files = readdirSync(stateDir).filter((f) => f.startsWith('private.db'));
+    const onDisk = (needle: string) =>
+      spawnSync('grep', ['-lF', needle, ...files], { cwd: stateDir, encoding: 'utf8' }).stdout;
+    expect(files.length).toBeGreaterThan(0);
+    expect(onDisk('maker.testnet')).toBe('');
+    expect(onDisk(b.jar.get(COOKIE) ?? 'x')).toBe('');
     expect(lines.join('\n')).not.toContain('maker.testnet');
   });
 
@@ -650,6 +653,32 @@ describe('T193: run owners', () => {
     const cont = await stranger.chat({ ...QUESTION, run_id: id });
     expect(cont.status).toBe(404);
     expect(((await cont.json()) as Err).error.message).toBe(`no run ${id}`);
+    await reader?.cancel();
+  });
+
+  test('Stop answers to the owner, and to no one else or any other site', async () => {
+    const llm = scriptedLlm(answers(3), { delayMs: 200 });
+    const { app } = setup({ access: 'open', llm });
+    const mine = new Browser(app);
+    const res = await mine.chat();
+    const reader = res.body?.getReader();
+    const first = new TextDecoder().decode((await reader?.read())?.value);
+    const id = /"run_id":"([^"]+)"/.exec(first)?.[1] ?? '';
+    const stop = `/api/v1/agent/runs/${id}/stop`;
+
+    const stranger = await new Browser(app).post(stop);
+    expect(stranger.status).toBe(404);
+    expect(await stranger.json()).toEqual(notFoundBody(id));
+
+    const elsewhere = new Browser(app, 'https://evil.example');
+    elsewhere.jar = mine.jar;
+    const foreign = await elsewhere.post(stop);
+    expect(foreign.status).toBe(401);
+    expect(((await foreign.json()) as Err).error.message).toMatch(/another site/);
+
+    const stopped = await mine.post(stop);
+    expect(stopped.status).toBe(200);
+    expect(await stopped.json()).toMatchObject({ run_id: id, status: 'stopped', stopped: true });
     await reader?.cancel();
   });
 
@@ -980,6 +1009,50 @@ describe('T196: who pays', () => {
     const after = store();
     expect(after.credit.get(`invite:${id}`)?.reserved_usd).toBe(0);
     expect(after.credit.get(`invite:${id}`)?.balance_usd).toBeCloseTo(0.96, 9);
+    after.close();
+  });
+
+  test('a stop pays for the call in flight, on both the invite and the day', async () => {
+    const llm = scriptedLlm(answers(1), { costUsd: 0.01, delayMs: 50 });
+    const { app, store } = setup({ llm });
+    const s = store();
+    const { token, id } = mintInvite(s, { usd: 1 });
+    s.close();
+    const b = new Browser(app);
+    await b.post('/api/v1/auth/invite', { token });
+    const res = await b.chat();
+    const reader = res.body?.getReader();
+    const first = new TextDecoder().decode((await reader?.read())?.value);
+    const run = /"run_id":"([^"]+)"/.exec(first)?.[1] ?? '';
+    await b.post(`/api/v1/agent/runs/${run}/stop`);
+    await reader?.cancel();
+    await new Promise((r) => setTimeout(r, 120));
+    const after = store();
+    const today = new Date().toISOString().slice(0, 10);
+    expect(after.credit.get(`invite:${id}`)?.reserved_usd).toBe(0);
+    expect(after.ledger.get(today).reserved_usd).toBe(0);
+    expect(after.invite.get(id)?.spent_usd).toBeCloseTo(after.ledger.get(today).usd, 9);
+    after.close();
+  });
+
+  test('a restart gives back an invite’s holds, since no call survives it', async () => {
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { store, stateDir } = setup();
+    const s = store();
+    const { id } = mintInvite(s, { usd: 1 });
+    expect(s.credit.reserve(`invite:${id}`, 0.05)).toBe(0.05);
+    s.close();
+    const root = tmpRoot();
+    buildPetalApp(
+      { root, stateDir, apiBase: SITE },
+      {
+        llm: scriptedLlm([]),
+        registry: fakeRegistry().registry,
+        env: { PETAL_WALLET_KEY: WALLET_KEY, NODE_ENV: 'test' },
+      },
+    );
+    const after = store();
+    expect(after.credit.get(`invite:${id}`)).toMatchObject({ balance_usd: 1, reserved_usd: 0 });
     after.close();
   });
 

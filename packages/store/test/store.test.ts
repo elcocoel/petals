@@ -228,6 +228,17 @@ describe('the ledger', () => {
     expect(ledger.get(DAY)).toMatchObject({ usd: 0.01, reserved_usd: 0 });
   });
 
+  test('releaseHolds gives back every hold on every day, and keeps what was spent', () => {
+    const { ledger } = openStore(':memory:');
+    expect(ledger.releaseHolds()).toBe(0);
+    ledger.add(DAY, 0.25);
+    ledger.reserve(DAY, 0.05, 3);
+    ledger.reserve('2026-11-04', 0.05, 3);
+    expect(ledger.releaseHolds()).toBeCloseTo(0.1, 9);
+    expect(ledger.get(DAY)).toMatchObject({ usd: 0.25, reserved_usd: 0 });
+    expect(ledger.get('2026-11-04').reserved_usd).toBe(0);
+  });
+
   test('near the cap a hold shrinks to what is left; at the cap there is none', () => {
     const { ledger } = openStore(':memory:');
     ledger.add(DAY, 2.99);
@@ -379,6 +390,15 @@ describe('single use', () => {
 });
 
 describe('the thin tables', () => {
+  test('idsWithStatus finds a run by status, owner or not', () => {
+    const { run } = openStore(':memory:');
+    run.insert({ ...runRow('r1'), status: 'running' });
+    run.insert({ ...runRow('r2', 'p1'), status: 'running' });
+    run.insert({ ...runRow('r3'), status: 'done' });
+    expect(run.idsWithStatus('running').sort()).toEqual(['r1', 'r2']);
+    expect(run.idsWithStatus('stopped')).toEqual([]);
+  });
+
   test('a run has an optional owner, listed newest first, claimed by compare and swap', () => {
     const { run } = openStore(':memory:');
     run.insert(runRow('r1'));

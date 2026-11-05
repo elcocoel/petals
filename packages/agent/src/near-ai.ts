@@ -220,7 +220,11 @@ export function createNearAiClient(
   let healthy = true;
 
   const key = () => o.apiKey ?? process.env[cfg.apiKeyEnv] ?? '';
-  const http = (): NearAiHttp => ({ baseURL, apiKey: key(), fetch: transport });
+  const http = (signal?: AbortSignal): NearAiHttp => ({
+    baseURL,
+    apiKey: key(),
+    fetch: signal ? (url, init) => transport(url, { ...init, signal }) : transport,
+  });
 
   /** The report fetched before the completion, reused for a while; never fails the call. */
   function attestation(model: string): Promise<AttestationRef | undefined> {
@@ -265,9 +269,15 @@ export function createNearAiClient(
     return asked;
   }
 
-  async function callModel(model: string, req: LlmRequest): Promise<LlmCompletion> {
+  async function callModel(
+    model: string,
+    req: LlmRequest,
+    signal?: AbortSignal,
+  ): Promise<LlmCompletion> {
+    // these two are shared with other runs, so Stop doesn't cancel them: it just buys nothing after
     const attested = await attestation(model);
     const listed = await listedPrice(model);
+    signal?.throwIfAborted();
     let captured: { request: Uint8Array; response: Uint8Array } | undefined;
     const capture: typeof fetch = async (input, init) => {
       const res = await transport(input, init);
@@ -291,22 +301,25 @@ export function createNearAiClient(
       fetch: capture,
     });
     const effort = o.reasoningEffort === undefined ? REASONING_EFFORT : o.reasoningEffort;
-    const completion = await client.chat.completions.create({
-      model,
-      messages: req.messages.map(toOpenAi),
-      stream: false,
-      max_completion_tokens: o.maxCompletionTokens ?? MAX_COMPLETION_TOKENS,
-      ...(effort ? { reasoning_effort: effort } : {}),
-      ...(req.tools?.length
-        ? {
-            tool_choice: 'auto' as const,
-            tools: req.tools.map((t) => ({
-              type: 'function' as const,
-              function: { name: t.name, description: t.description, parameters: t.parameters },
-            })),
-          }
-        : {}),
-    });
+    const completion = await client.chat.completions.create(
+      {
+        model,
+        messages: req.messages.map(toOpenAi),
+        stream: false,
+        max_completion_tokens: o.maxCompletionTokens ?? MAX_COMPLETION_TOKENS,
+        ...(effort ? { reasoning_effort: effort } : {}),
+        ...(req.tools?.length
+          ? {
+              tool_choice: 'auto' as const,
+              tools: req.tools.map((t) => ({
+                type: 'function' as const,
+                function: { name: t.name, description: t.description, parameters: t.parameters },
+              })),
+            }
+          : {}),
+      },
+      signal ? { signal } : {},
+    );
     const choice = completion.choices?.[0];
     if (!choice?.message) {
       throw new LlmCallError('source_failed', `${model}: the answer has no message`, {
@@ -335,7 +348,9 @@ export function createNearAiClient(
         costUsd: costUsd(model, usage, listed),
       });
     }
-    const signature = captured ? await sign(model, completion.id, captured, attested) : null;
+    const signature = captured
+      ? await sign(model, completion.id, captured, attested, signal)
+      : null;
     return {
       model,
       completion_id: completion.id,
@@ -354,12 +369,13 @@ export function createNearAiClient(
     completionId: string,
     bytes: { request: Uint8Array; response: Uint8Array },
     attested: AttestationRef | undefined,
+    signal?: AbortSignal,
   ) {
     const request_sha256 = sha256Hex(bytes.request);
     const response_sha256 = sha256Hex(bytes.response);
     try {
       // With no report the model has no enclave to sign in: one look is enough, not a 2.5 s wait.
-      const raw = await fetchSignature(http(), completionId, model, {
+      const raw = await fetchSignature(http(signal), completionId, model, {
         delaysMs: attested ? o.signatureDelaysMs : [],
       });
       const sig = buildSignature({
@@ -385,7 +401,7 @@ export function createNearAiClient(
     kind: 'near-ai-cloud',
     model: cfg.model,
     status: () => (healthy ? 'up' : 'down'),
-    async complete(req) {
+    async complete(req, { signal } = {}) {
       if (!key()) {
         throw new LlmCallError('source_failed', `${cfg.apiKeyEnv} is not set`, {
           hint: 'Without a key, Petal replays a recorded run (recordedClient).',
@@ -397,13 +413,17 @@ export function createNearAiClient(
       let lost = 0; // what failed attempts still cost, so spend is never under-counted
       for (const model of order) {
         try {
-          const out = await callModel(model, req);
+          const out = await callModel(model, req, signal);
           healthy = true;
           return lost ? { ...out, cost_usd: out.cost_usd + lost } : out;
         } catch (e) {
           const err = classify(e, model);
           failures.push(err);
           lost += err.costUsd;
+          // Stop says nothing about this model, so no fallback, and its health stands
+          if (signal?.aborted) {
+            throw new LlmCallError('source_failed', `${model}: stopped`, { costUsd: lost });
+          }
           if (!err.tryNext) throw err;
           // the next model goes first for a while, so each turn doesn't wait on a failing one
           const next = (models.indexOf(model) + 1) % models.length;

@@ -15,7 +15,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { serveApi } from '@petal/agent';
+import { serveApi } from '@petal/agent/serve';
 import { openStore } from '@petal/store';
 
 const REPO = resolve(import.meta.dirname, '..', '..');

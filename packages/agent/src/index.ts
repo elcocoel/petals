@@ -12,7 +12,7 @@ import { createAgentRoutes } from './routes.ts';
 import { startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
 
-/** petalApp with its options, and under Node: for scripts that prove a whole path on a real server. */
+/** petalApp with its options; serveApi, from @petal/agent/serve, runs it under Node. */
 export { buildPetalApp, type PetalAppOptions } from './app.ts';
 /** The daily spend ledger; fileLedger is for scripts that run the agent outside the server (T060). */
 export { fileLedger, storeLedger } from './budget.ts';
@@ -53,7 +53,6 @@ export {
   type RunSummary,
   sqliteRunStore,
 } from './runs.ts';
-export { serveApi } from './serve.ts';
 
 /** The agent loop: events in the order of http-api.md (run first, done last). */
 export function runAgent(
@@ -72,7 +71,7 @@ export function nearAiClient(cfg: {
   return createNearAiClient(cfg);
 }
 
-/** /api/v1/agent/chat, /api/v1/agent/runs/:id, /api/v1/attestations/:sha256 */
+/** /api/v1/agent/chat, /api/v1/agent/runs/:id, its /stop, /api/v1/attestations/:sha256 */
 export function agentRoutes(deps: {
   tools: ToolContext;
   llm: LlmClient;

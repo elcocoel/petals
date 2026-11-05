@@ -2,14 +2,13 @@
 // items are this link with an icon, a quiet one is the same link a size down, and a mono one is the
 // action line of a note box (Figma's "ASK WHY", 66:2231).
 import type { ReactNode } from 'react';
-import { Arrow } from './Arrow.tsx';
 import { Icon, type IconName } from './Icon.tsx';
 
 const VARIANTS = {
   label: 'type-label text-primary',
   quiet: 'type-caption text-muted hover:text-primary',
-  rail: 'flex items-center gap-icon-gap py-rail-item-block type-label whitespace-nowrap text-primary',
-  mono: 'type-mono-tiny text-primary',
+  rail: 'flex items-center gap-space-8 py-space-8 type-label whitespace-nowrap text-primary',
+  mono: 'type-mono text-primary',
 } as const;
 
 export function TextLink({
@@ -42,7 +41,7 @@ export function TextLink({
     >
       {icon && <Icon name={icon} />}
       {children}
-      {arrow && <Arrow />}
+      {arrow && <Icon name="arrow" />}
     </a>
   );
 }
