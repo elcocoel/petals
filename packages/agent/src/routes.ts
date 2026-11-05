@@ -18,11 +18,12 @@ import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
 import { Channel } from './channel.ts';
-import type { Budget, LlmClient } from './llm.ts';
+import type { Budget, LlmClient, LlmMessage } from './llm.ts';
 import { RECORDED_ATTESTATIONS } from './recorded.ts';
 import { startRun } from './run.ts';
 import { RUN_ID, type RunStore } from './runs.ts';
 import { attestationStore } from './signature.ts';
+import { type EarlierFlower, flowersOf } from './thread.ts';
 import type { AnyTool } from './tool-defs.ts';
 
 /** HTTP status per error code (http-api.md, Rules). */
@@ -49,8 +50,10 @@ export interface AgentRouteOptions {
   /** default the @petal/tools registry */
   registry?: readonly AnyTool[];
   heartbeatMs?: number;
-  /** chats per IP per hour; default 10 */
+  /** new chats per IP per hour; default 10 */
   chatsPerHour?: number;
+  /** follow-ups per IP per hour, on top: a conversation is many messages; default 60 */
+  followUpsPerHour?: number;
   /** default <stateDir>/attestations */
   attestationsDir?: string;
   /** keeps a background run alive on a serverless host (Vercel's waitUntil, Next's after) */
@@ -207,6 +210,8 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
   const live = new Map<string, LiveRun>();
   const perHour = o.chatsPerHour ?? 10;
   const chatLimit = limiter(perHour, 3_600_000, clock);
+  const followUpsPerHour = o.followUpsPerHour ?? 60;
+  const followUpLimit = limiter(followUpsPerHour, 3_600_000, clock);
   const reports = attestationStore(
     o.attestationsDir ?? join(stateDirOf(deps.tools.config), 'attestations'),
   );
@@ -222,7 +227,12 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
     }
   }
 
-  function start(runId: string, input: ChatInput, storedBefore: number): LiveRun {
+  function start(
+    runId: string,
+    input: ChatInput,
+    storedBefore: number,
+    earlier: { thread?: LlmMessage[]; flowers?: EarlierFlower[] } = {},
+  ): LiveRun {
     const run = new LiveRun(storedBefore);
     live.set(runId, run);
     const keep = async (e: AgentEvent) => {
@@ -235,9 +245,14 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
     run.task = (async () => {
       try {
         const events = startRun(
-          { messages: input.messages, ...(input.draft ? { draft: input.draft } : {}) },
+          { messages: input.messages, ...(input.draft ? { draft: input.draft } : {}), ...earlier },
           { tools: deps.tools, llm: deps.llm, budget: deps.budget },
-          { runId, registry: o.registry, heartbeatMs: o.heartbeatMs },
+          {
+            runId,
+            registry: o.registry,
+            heartbeatMs: o.heartbeatMs,
+            onThread: (t) => deps.runs.saveThread?.(runId, t),
+          },
         );
         for await (const e of events) await keep(e);
       } catch (e) {
@@ -274,27 +289,26 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
       onError: (c) => fail(c, 'bad_input', 'the body is larger than 512 KiB'),
     }),
     async (c) => {
-      const wait = chatLimit(clientIp(c));
-      if (wait !== null) {
-        return fail(
-          c,
-          'rate_limited',
-          `At most ${perHour} chats an hour from one address.`,
-          undefined,
-          wait,
-        );
-      }
       let raw: unknown;
       try {
         raw = await c.req.json();
       } catch {
-        return fail(c, 'bad_input', 'the body is not JSON');
+        raw = undefined;
       }
+      // A follow-up is not a new chat: only the daily cap and this wider limit bound a conversation.
+      const followUp = !!(raw as { run_id?: unknown } | undefined)?.run_id;
+      const wait = (followUp ? followUpLimit : chatLimit)(clientIp(c));
+      if (wait !== null) {
+        const n = followUp ? `${followUpsPerHour} follow-ups` : `${perHour} chats`;
+        return fail(c, 'rate_limited', `At most ${n} an hour from one address.`, undefined, wait);
+      }
+      if (raw === undefined) return fail(c, 'bad_input', 'the body is not JSON');
       const parsed = parseChat(raw);
       if (typeof parsed === 'string') return fail(c, 'bad_input', parsed);
 
       let input: ChatInput = parsed;
       let storedBefore = 0;
+      let earlier: { thread?: LlmMessage[]; flowers?: EarlierFlower[] } = {};
       let runId: string;
       if (parsed.run_id) {
         const id = parsed.run_id;
@@ -314,12 +328,18 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
           ...(draft ? { draft } : {}),
           run_id: id,
         };
+        const said = await deps.runs.thread?.(id);
+        const fresh = input.messages.slice(stored.messages.length);
+        earlier = {
+          flowers: flowersOf(stored.events),
+          ...(said ? { thread: [...said, ...fresh] } : {}),
+        };
         runId = await deps.runs.create(input);
         storedBefore = runId === id ? stored.events.length : 0;
       } else {
         runId = await deps.runs.create(input);
       }
-      const run = start(runId, input, storedBefore);
+      const run = start(runId, input, storedBefore, earlier);
       if (run.task) keepAlive(c, run.task);
       const follow = run.follow();
       return sse(c, follow, () => void follow.return());

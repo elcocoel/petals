@@ -23,11 +23,16 @@ import { LlmCallError } from './near-ai.ts';
 import { agentNotes, SYSTEM_PROMPT } from './prompt.ts';
 import { newRunId } from './runs.ts';
 import { draftLink, forModel, isToolError, summarize } from './summary.ts';
+import { closeThread, type EarlierFlower, followUpNotes, specsIn, trimThread } from './thread.ts';
 import { type AnyTool, llmTools, STAGE_MESSAGE, STAGE_OF } from './tool-defs.ts';
 
 export interface RunInput {
   messages: ChatMessage[];
   draft?: { spec?: Spec; entry?: unknown };
+  /** a continued run: what the model read before, plus the new messages; replaces `messages` for it */
+  thread?: LlmMessage[];
+  /** a continued run: the flowers drawn so far, which this chat can still name and redraw */
+  flowers?: EarlierFlower[];
 }
 
 export interface RunDeps {
@@ -47,6 +52,8 @@ export interface RunOptions {
   clock?: () => number;
   /** today's date in the system message; default new Date() */
   today?: () => Date;
+  /** told what the model has read, once the chat ends and before `done`; the store keeps it */
+  onThread?: (thread: LlmMessage[]) => Promise<void> | void;
 }
 
 export const DEFAULT_HEARTBEAT_MS = 8000;
@@ -157,7 +164,15 @@ async function loop(
   const registry = opts.registry ?? defaultRegistry;
   const runId = opts.runId ?? newRunId();
   const deadline = clock() + budget.wallSeconds * 1000;
-  const totals = { turns: 0, in: 0, out: 0, usd: 0, fallback: false, model: llm.model };
+  const totals = {
+    turns: 0,
+    in: 0,
+    out: 0,
+    usd: 0,
+    fallback: false,
+    model: llm.model,
+    signature: null as ModelSignature | null,
+  };
   let stage: Stage | undefined;
 
   const setStage = (s: Stage, message = STAGE_MESSAGE[s]) => {
@@ -184,6 +199,7 @@ async function loop(
         fallback_used: totals.fallback,
         tokens: { in: totals.in, out: totals.out },
         cost_usd: Math.round(totals.usd * 1e6) / 1e6,
+        signature: totals.signature,
       },
     });
   const spend = async (usd: number) => {
@@ -207,7 +223,7 @@ async function loop(
         `Petal's agent has used today's budget ($${budget.usdPerDay}); it starts again tomorrow (UTC).`,
         SKILL_HINT,
       );
-      return done();
+      return finish();
     }
   }
 
@@ -228,18 +244,44 @@ async function loop(
   const draftSpec = input.draft?.spec;
   const draftHash = hashOf(draftSpec);
   if (draftSpec && draftHash) specs.set(draftHash, draftSpec);
+  // A follow-up can still name, redraw and link what earlier chats of this run made.
+  const earlier = llm.kind === 'recorded' ? [] : (input.flowers ?? []);
+  for (const { flower, signature } of earlier) {
+    specs.set(flower.spec_sha256, flower.spec);
+    passed.set(flower.spec_sha256, {
+      interpretation: flower.interpretation,
+      validation: flower.validation,
+      signature,
+    });
+    links.set(draftLink(flower.spec_sha256), flower.view_url);
+  }
+  for (const [hash, spec] of specsIn(input.thread ?? [])) specs.set(hash, spec);
   const hasValidator = registry.some((t) => t.name === 'validate_spec');
   const tools = llmTools(registry);
 
-  const system = `${SYSTEM_PROMPT}\n\n${agentNotes({
-    budget,
-    today: (opts.today ?? (() => new Date()))(),
-    draftSpec,
-  })}`;
-  const messages: LlmMessage[] = [
-    { role: 'system', content: system },
-    ...input.messages.map((m): LlmMessage => ({ role: m.role, content: m.content })),
-  ];
+  // A recorded run replays one saved run from its start: it reads no thread, so a second chat
+  // replays it again instead of asking the transcript for a reply it does not have.
+  const said: LlmMessage[] =
+    input.thread ??
+    input.messages.map((m): LlmMessage => {
+      let content = m.content;
+      for (const [short, url] of links) content = content.replaceAll(url, short);
+      return { role: m.role, content };
+    });
+  const conversation =
+    llm.kind === 'recorded' ? said.filter((m) => m.role === 'user').slice(-1) : trimThread(said);
+  const followUp = conversation.some((m) => m.role === 'assistant');
+  const system = [
+    SYSTEM_PROMPT,
+    agentNotes({ budget, today: (opts.today ?? (() => new Date()))(), draftSpec }),
+    ...(followUp ? [followUpNotes(earlier)] : []),
+  ].join('\n\n');
+  const messages: LlmMessage[] = [{ role: 'system', content: system }, ...conversation];
+
+  async function finish() {
+    await Promise.resolve(opts.onThread?.(closeThread(messages.slice(1)))).catch(() => {});
+    done();
+  }
 
   async function callTool(call: LlmToolCall, by: LlmCompletion): Promise<unknown> {
     let args: unknown;
@@ -370,6 +412,18 @@ async function loop(
   let rounds = 0;
   try {
     while (!stopped()) {
+      // The daily cap holds inside a chat too, not only when it starts.
+      if (totals.turns > 0 && llm.kind !== 'recorded' && budget.ledger) {
+        const spent = await budget.ledger.spentToday().catch(() => 0);
+        if (spent >= budget.usdPerDay) {
+          fail(
+            'budget_exhausted',
+            `Petal's agent has used today's budget ($${budget.usdPerDay}); it starts again tomorrow (UTC).`,
+            SKILL_HINT,
+          );
+          break;
+        }
+      }
       const last = rounds >= budget.toolRounds;
       if (totals.turns > 0) setStage('thinking');
       // Out of tool rounds: one last call without tools. A user turn, not a second system
@@ -400,6 +454,7 @@ async function loop(
       totals.usd += c.cost_usd;
       totals.fallback ||= c.fallback_used;
       totals.model = c.model;
+      totals.signature = c.signature;
       await spend(c.cost_usd);
       if (stopped()) return;
 
@@ -441,5 +496,5 @@ async function loop(
       fail('source_failed', `The model call failed: ${(e as Error)?.message ?? String(e)}`);
     }
   }
-  if (!stopped()) done();
+  if (!stopped()) await finish();
 }

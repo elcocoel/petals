@@ -1,47 +1,146 @@
 'use client';
-// The maker chat (T065): POST /api/v1/agent/chat and read its SSE stream (http-api.md, Agent
-// chat): stages, tool calls with their results, the agent's messages, and the flower inline.
-// The run_id from the first `run` event goes into the URL (/make?run=<id>), so the run can be
-// found again; opening that URL loads the stored run (GET /api/v1/agent/runs/:id).
+// The maker chat (T065, T166): reads like every AI chat. The box stays fixed at the bottom, the
+// thread grows above it with the newest at the bottom, scrolled to the latest. POST
+// /api/v1/agent/chat and read its SSE stream (http-api.md, Agent chat). The run_id from the first
+// `run` event goes into the URL (/make?run=<id>); the next message sends it, so the server continues
+// the run and the model keeps what it read. Opening that URL loads the stored run.
 import type {
   AgentEvent,
-  ChatMessage,
   FlowerResult,
   LegendItem,
   ModelSignature,
   PetalDetail,
   Run,
 } from '@petal/core/types';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { parseMarkdown } from '../lib/markdown.ts';
 import { readSse } from '../lib/sse.ts';
+import { blocksOf, type Done, fold, type Item, threadFromRun } from '../lib/thread.ts';
 import { Flower } from './Flower.tsx';
 import { Interpretation, SignatureLine } from './Interpretation.tsx';
 import { Legend } from './Legend.tsx';
+import { Markdown } from './Markdown.tsx';
 
 const QUESTION = "who stands behind NEAR's validators?";
 /** What the recorded run (fixtures/transcripts/skeleton.json) was really asked. */
 const RECORDED_QUESTION =
   "Who stands behind NEAR's validators? Make me a fresh flower with their backers, not an existing one.";
 
-type Item =
-  | { kind: 'user'; text: string }
-  | { kind: 'stage'; stage: string; message: string }
-  | { kind: 'progress'; message: string; done?: number; total?: number }
-  | {
-      kind: 'tool';
-      id: string;
-      name: string;
-      args: unknown;
-      result?: { ok: boolean; summary: string; ms: number };
-    }
-  | { kind: 'message'; text: string }
-  | { kind: 'error'; code: string; message: string; hint?: string };
-
-type Done = Extract<AgentEvent, { event: 'done' }>['data'];
 interface Drawn {
   svg: string;
   petals: PetalDetail[];
   legend: LegendItem[];
+}
+
+/** A flower in the thread, where it was made. It draws itself from its spec. */
+function FlowerCard({
+  flower,
+  signature,
+  recorded,
+  showLink,
+  publishUrl,
+}: {
+  flower: FlowerResult;
+  signature: ModelSignature | null;
+  recorded: boolean;
+  /** the answer below has no link to this flower, so the card gives it */
+  showLink: boolean;
+  /** only on the run's latest flower: publishing takes the run's draft */
+  publishUrl?: string;
+}) {
+  const [drawn, setDrawn] = useState<Drawn | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
+  const specJson = JSON.stringify(flower.spec);
+
+  useEffect(() => {
+    let gone = false;
+    void (async () => {
+      const res = await fetch('/api/v1/render', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: `{"spec":${specJson},"include_svg":true}`,
+      });
+      const json = (await res.json()) as Partial<Drawn> & { error?: { message: string } };
+      if (gone) return;
+      if (res.ok && json.svg) {
+        setDrawn({ svg: json.svg, petals: json.petals ?? [], legend: json.legend ?? [] });
+      } else setFailed(json.error?.message ?? `HTTP ${res.status}`);
+    })();
+    return () => {
+      gone = true;
+    };
+  }, [specJson]);
+
+  return (
+    <section className="box">
+      {failed && <p className="error">The flower could not be drawn: {failed}</p>}
+      {drawn ? (
+        <Flower svg={drawn.svg} petals={drawn.petals} />
+      ) : (
+        !failed && <p className="muted">Drawing…</p>
+      )}
+      <Legend items={flower.legend} />
+      {(showLink || publishUrl) && (
+        <p>
+          {showLink && (
+            <a href={flower.view_url} target="_blank" rel="noreferrer">
+              Open the flower
+            </a>
+          )}
+          {showLink && publishUrl && ' · '}
+          {publishUrl && <a href={publishUrl}>Publish on NEAR</a>}
+        </p>
+      )}
+      <details>
+        <summary>Interpretation, signature and checks</summary>
+        <Interpretation reading={flower.interpretation} />
+        <SignatureLine signature={signature} model={recorded ? 'recorded' : signature?.model} />
+        <p>
+          Valid: {String(flower.validation.valid)}
+          {flower.validation.warnings.length > 0 &&
+            ` (${flower.validation.warnings.map((w) => w.message).join('; ')})`}
+          . spec_sha256 <code>{flower.spec_sha256}</code>
+        </p>
+      </details>
+    </section>
+  );
+}
+
+/** T168: which model really answered, and whether the answer has an enclave signature. */
+export function AnsweredBy({ done, signature }: { done: Done; signature: ModelSignature | null }) {
+  if (done.model === 'recorded') {
+    return <p className="muted">Recorded run: no model answered just now.</p>;
+  }
+  if (done.turns === 0) return <p className="muted">No model answered.</p>;
+  return (
+    <p className="muted">
+      Answered by <code>{done.model}</code>
+      {done.fallback_used ? ' (a fallback: the first-choice model did not answer)' : ''}.{' '}
+      {signature?.signature_kind === 'provider_tee' ? (
+        <>
+          Enclave signature: yes ({signature.signature_kind}, signer{' '}
+          <code>{signature.signing_address}</code>
+          {signature.attestation?.report_url && (
+            <>
+              , <a href={signature.attestation.report_url}>attestation report</a>
+            </>
+          )}
+          ).
+        </>
+      ) : signature ? (
+        <>
+          Enclave signature: no. It has only a gateway signature, which does not prove which model
+          answered.
+        </>
+      ) : (
+        <>
+          Enclave signature: no. NEAR AI gave no signature for this answer, so nothing proves which
+          model wrote it. Only models with enclave attestation get one.
+        </>
+      )}{' '}
+      {done.turns} model {done.turns === 1 ? 'call' : 'calls'}, ${done.cost_usd.toFixed(4)}.
+    </p>
+  );
 }
 
 export function Chat({
@@ -51,115 +150,73 @@ export function Chat({
   initialRun?: string;
   recorded?: boolean;
 }) {
-  const [question, setQuestion] = useState(QUESTION);
-  const [history, setHistory] = useState<ChatMessage[]>([]);
+  // the default question only on a new chat; a reopened run shows its own
+  const [question, setQuestion] = useState(initialRun ? '' : QUESTION);
   const [items, setItems] = useState<Item[]>([]);
   const [runId, setRunId] = useState<string | null>(initialRun ?? null);
-  const [flower, setFlower] = useState<FlowerResult | null>(null);
-  const [drawn, setDrawn] = useState<Drawn | null>(null);
-  const [signature, setSignature] = useState<ModelSignature | null>(null);
-  const [done, setDone] = useState<Done | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(Boolean(initialRun));
+  const thread = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLTextAreaElement>(null);
+  const following = useRef(true);
 
-  const draw = useCallback(async (f: FlowerResult) => {
-    const res = await fetch('/api/v1/render', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ spec: f.spec, include_svg: true }),
-    });
-    const json = (await res.json()) as Partial<Drawn> & { error?: { message: string } };
-    if (res.ok && json.svg) {
-      setDrawn({ svg: json.svg, petals: json.petals ?? [], legend: json.legend ?? f.legend });
-    } else {
-      setItems((xs) => [
-        ...xs,
-        { kind: 'error', code: 'render', message: json.error?.message ?? `HTTP ${res.status}` },
-      ]);
+  const apply = useCallback((e: AgentEvent) => {
+    if (e.event === 'run') {
+      setRunId(e.data.run_id);
+      window.history.replaceState(null, '', `/make?run=${encodeURIComponent(e.data.run_id)}`);
     }
+    setItems((xs) => fold(xs, e));
   }, []);
 
-  const apply = useCallback(
-    (e: AgentEvent) => {
-      switch (e.event) {
-        case 'run':
-          setRunId(e.data.run_id);
-          window.history.replaceState(null, '', `/make?run=${encodeURIComponent(e.data.run_id)}`);
-          break;
-        case 'stage':
-          setItems((xs) => [...xs, { kind: 'stage', ...e.data }]);
-          break;
-        case 'progress':
-          setItems((xs) => [...xs, { kind: 'progress', ...e.data }]);
-          break;
-        case 'tool_call':
-          setItems((xs) => [...xs, { kind: 'tool', ...e.data }]);
-          break;
-        case 'tool_result': {
-          const { id, ok, summary, ms } = e.data;
-          setItems((xs) =>
-            xs.map((x) =>
-              x.kind === 'tool' && x.id === id ? { ...x, result: { ok, summary, ms } } : x,
-            ),
-          );
-          break;
-        }
-        case 'message':
-          setItems((xs) => [...xs, { kind: 'message', text: e.data.text }]);
-          setHistory((h) => [...h, { role: 'assistant', content: e.data.text }]);
-          break;
-        case 'flower':
-          setFlower(e.data);
-          void draw(e.data);
-          break;
-        case 'signature':
-          setSignature(e.data);
-          break;
-        case 'error':
-          setItems((xs) => [...xs, { kind: 'error', ...e.data }]);
-          break;
-        case 'done':
-          setDone(e.data);
-          break;
-        case 'heartbeat':
-          break;
-      }
-    },
-    [draw],
-  );
-
-  const reset = () => {
-    setFlower(null);
-    setDrawn(null);
-    setSignature(null);
-    setDone(null);
-  };
+  // Scrolled to the latest, also when a flower finishes drawing, unless the reader scrolled up.
+  useEffect(() => {
+    const toEnd = () => {
+      if (following.current) window.scrollTo(0, document.documentElement.scrollHeight);
+    };
+    const onScroll = () => {
+      const left = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+      following.current = left < 120;
+    };
+    const watch = new ResizeObserver(toEnd);
+    if (thread.current) watch.observe(thread.current);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      watch.disconnect();
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
 
   useEffect(() => {
     if (!initialRun) return;
     let gone = false;
+    const url = `/api/v1/agent/runs/${encodeURIComponent(initialRun)}`;
     void (async () => {
-      const res = await fetch(`/api/v1/agent/runs/${encodeURIComponent(initialRun)}`);
-      const json = (await res.json()) as Run & { error?: { code: string; message: string } };
-      if (gone) return;
-      if (!res.ok || json.error) {
-        setItems([
-          {
-            kind: 'error',
-            code: json.error?.code ?? 'not_found',
-            message: json.error?.message ?? `HTTP ${res.status}`,
-          },
-        ]);
-        return;
-      }
-      const user = json.messages.filter((m) => m.role === 'user').at(-1);
-      setItems(user ? [{ kind: 'user', text: user.content }] : []);
-      setHistory(json.messages.filter((m) => m.role === 'user'));
-      for (const e of json.events) apply(e);
-      if (json.status === 'running') {
-        setItems((xs) => [
-          ...xs,
-          { kind: 'progress', message: 'Still running: reload to see more.' },
-        ]);
+      try {
+        const res = await fetch(url);
+        const json = (await res.json()) as Run & { error?: { code: string; message: string } };
+        if (gone) return;
+        if (!res.ok || json.error) {
+          setItems([
+            {
+              kind: 'error',
+              code: json.error?.code ?? 'not_found',
+              message: json.error?.message ?? `HTTP ${res.status}`,
+            },
+          ]);
+          return;
+        }
+        setItems(threadFromRun(json));
+        if (json.status !== 'running') return;
+        // still going: the stream replays what was stored, then follows it to the end
+        const live = await fetch(url, { headers: { accept: 'text/event-stream' } });
+        if (!live.body) return;
+        let skip = json.events.length;
+        for await (const m of readSse(live.body)) {
+          if (gone) return;
+          if (m.event === 'heartbeat' || skip-- > 0) continue;
+          apply({ event: m.event, data: JSON.parse(m.data) } as AgentEvent);
+        }
+      } finally {
+        if (!gone) setBusy(false);
       }
     })();
     return () => {
@@ -168,23 +225,30 @@ export function Chat({
   }, [initialRun, apply]);
 
   async function send() {
-    const text = question.trim();
+    const text = recorded ? RECORDED_QUESTION : question.trim();
     if (!text || busy) return;
-    const messages: ChatMessage[] = [...history, { role: 'user', content: text }];
-    setHistory(messages);
+    // a recorded run can't go on from what was said: each play starts over
+    const continuing = recorded ? null : runId;
+    if (recorded) setItems([]);
     setItems((xs) => [...xs, { kind: 'user', text }]);
-    reset();
+    setQuestion('');
     setBusy(true);
+    following.current = true;
     try {
       const res = await fetch('/api/v1/agent/chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json', accept: 'text/event-stream' },
-        body: JSON.stringify({ messages }),
+        // only what is new: the server holds the conversation
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: text }],
+          ...(continuing ? { run_id: continuing } : {}),
+        }),
       });
       if (!res.ok || !res.body) {
         const json = (await res.json().catch(() => ({}))) as {
           error?: { code: string; message: string };
         };
+        if (!recorded) setQuestion(text);
         throw new Error(
           json.error ? `${json.error.code}: ${json.error.message}` : `HTTP ${res.status}`,
         );
@@ -199,117 +263,148 @@ export function Chat({
       ]);
     } finally {
       setBusy(false);
+      box.current?.focus();
     }
   }
 
+  const blocks = blocksOf(items);
+  const lastFlower = blocks.findLastIndex((b) => b.kind === 'flower');
+  // one link per flower per turn: a fresh Set at each question, rebuilt on every render
+  let seen = new Set<string>();
+
   return (
     <>
+      <div className="thread" ref={thread}>
+        {blocks.map((b, i) => {
+          const key = `${i}-${b.kind}`;
+          switch (b.kind) {
+            case 'user':
+              seen = new Set();
+              return (
+                <p key={key} className="you">
+                  <strong>You:</strong> {b.text}
+                </p>
+              );
+            case 'note':
+              return (
+                <p key={key} className="muted">
+                  {b.text}
+                </p>
+              );
+            case 'steps': {
+              const tools = b.steps.filter((s) => s.kind === 'tool').length;
+              const latest = b.steps.findLast((s) => s.kind === 'stage' || s.kind === 'progress');
+              const running = busy && i === blocks.length - 1;
+              if (!tools && !running) return null;
+              return (
+                <details key={key} className="steps">
+                  <summary className="muted">
+                    {running && latest ? `${(latest as { message: string }).message}… ` : ''}
+                    {tools} {tools === 1 ? 'tool call' : 'tool calls'}
+                  </summary>
+                  <ol className="events">
+                    {b.steps.map((s, k) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: the list only grows, in event order
+                      <li key={k}>
+                        {s.kind === 'stage' && (
+                          <>
+                            <em>{s.stage}</em>: {s.message}
+                          </>
+                        )}
+                        {s.kind === 'progress' && (
+                          <span className="muted">
+                            {s.message}
+                            {s.total ? ` (${s.done ?? 0}/${s.total})` : ''}
+                          </span>
+                        )}
+                        {s.kind === 'tool' && (
+                          <details>
+                            <summary>
+                              <code>{s.name}</code>{' '}
+                              {s.result
+                                ? `${s.result.ok ? 'ok' : 'failed'}: ${s.result.summary} (${s.result.ms} ms)`
+                                : '…'}
+                            </summary>
+                            <pre>{JSON.stringify(s.args, null, 2)}</pre>
+                          </details>
+                        )}
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+              );
+            }
+            case 'message':
+              return <Markdown key={key} blocks={parseMarkdown(b.text, seen)} />;
+            case 'flower': {
+              // does this turn's own text link to it?
+              const from = blocks.findLastIndex((x, n) => n <= i && x.kind === 'user');
+              const next = blocks.findIndex((x, n) => n > i && x.kind === 'user');
+              const linked = blocks
+                .slice(Math.max(from, 0), next === -1 ? undefined : next)
+                .some((x) => x.kind === 'message' && x.text.includes(b.flower.view_url));
+              return (
+                <FlowerCard
+                  key={key}
+                  flower={b.flower}
+                  signature={b.signature}
+                  recorded={recorded}
+                  showLink={!linked}
+                  {...(i === lastFlower && runId
+                    ? { publishUrl: `/publish/${encodeURIComponent(runId)}` }
+                    : {})}
+                />
+              );
+            }
+            case 'error':
+              return (
+                <p key={key} className="error">
+                  {b.code}: {b.message}
+                  {b.hint ? ` (${b.hint})` : ''}
+                </p>
+              );
+            case 'done':
+              return <AnsweredBy key={key} done={b.done} signature={b.signature} />;
+            default:
+              return null;
+          }
+        })}
+      </div>
       <form
+        className="composer"
         onSubmit={(e) => {
           e.preventDefault();
           void send();
         }}
       >
-        <label htmlFor="q">
-          {recorded ? 'The saved question' : 'Ask Petal’s agent about a network'}
-        </label>
-        <textarea
-          id="q"
-          rows={2}
-          value={recorded ? RECORDED_QUESTION : question}
-          readOnly={recorded}
-          onChange={(e) => setQuestion(e.target.value)}
-        />
-        <button type="submit" disabled={busy}>
-          {busy ? 'Working…' : recorded ? 'Play the recorded run' : 'Send'}
-        </button>
+        <div className="composer-row">
+          <textarea
+            ref={box}
+            id="q"
+            rows={2}
+            aria-label={recorded ? 'The saved question' : 'Ask Petal’s agent about a network'}
+            placeholder={runId ? 'Ask a follow-up…' : 'Ask about a network…'}
+            value={recorded ? RECORDED_QUESTION : question}
+            readOnly={recorded}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                void send();
+              }
+            }}
+          />
+          <button type="submit" disabled={busy}>
+            {busy ? 'Working…' : recorded ? 'Play the recorded run' : 'Send'}
+          </button>
+        </div>
+        {runId && (
+          <p className="muted composer-note">
+            Run <a href={`/make?run=${encodeURIComponent(runId)}`}>{runId}</a>: you can leave and
+            come back to this link.
+          </p>
+        )}
       </form>
-      {runId && (
-        <p className="muted">
-          Run <a href={`/make?run=${encodeURIComponent(runId)}`}>{runId}</a>: you can leave and come
-          back to this link.
-        </p>
-      )}
-      <ol className="events">
-        {items.map((x, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: the list only grows, in event order
-          <li key={i}>
-            {x.kind === 'user' && (
-              <>
-                <strong>You:</strong> {x.text}
-              </>
-            )}
-            {x.kind === 'stage' && (
-              <>
-                <em>{x.stage}</em>: {x.message}
-              </>
-            )}
-            {x.kind === 'progress' && (
-              <span className="muted">
-                {x.message}
-                {x.total ? ` (${x.done ?? 0}/${x.total})` : ''}
-              </span>
-            )}
-            {x.kind === 'tool' && (
-              <details>
-                <summary>
-                  <code>{x.name}</code>{' '}
-                  {x.result
-                    ? `${x.result.ok ? 'ok' : 'failed'}: ${x.result.summary} (${x.result.ms} ms)`
-                    : '…'}
-                </summary>
-                <pre>{JSON.stringify(x.args, null, 2)}</pre>
-              </details>
-            )}
-            {x.kind === 'message' && (
-              <>
-                <strong>Petal:</strong> {x.text}
-              </>
-            )}
-            {x.kind === 'error' && (
-              <span className="error">
-                {x.code}: {x.message}
-                {x.hint ? ` (${x.hint})` : ''}
-              </span>
-            )}
-          </li>
-        ))}
-      </ol>
-      {flower && (
-        <section className="box">
-          <h2>The flower</h2>
-          {drawn ? (
-            <Flower svg={drawn.svg} petals={drawn.petals} />
-          ) : (
-            <p className="muted">Drawing…</p>
-          )}
-          <Legend items={flower.legend} />
-          <Interpretation reading={flower.interpretation} />
-          <SignatureLine signature={signature} model={recorded ? 'recorded' : done?.model} />
-          <p>
-            Valid: {String(flower.validation.valid)}
-            {flower.validation.warnings.length > 0 &&
-              ` (${flower.validation.warnings.map((w) => w.message).join('; ')})`}
-            . spec_sha256 <code>{flower.spec_sha256}</code>
-          </p>
-          <p>
-            <a href={flower.view_url}>Open as a draft</a>
-            {runId && (
-              <>
-                {' · '}
-                <a href={`/publish/${encodeURIComponent(runId)}`}>Publish on NEAR</a>
-              </>
-            )}
-          </p>
-        </section>
-      )}
-      {done && (
-        <p className="muted">
-          Done: model {done.model}
-          {done.fallback_used ? ' (fallback)' : ''}, {done.turns} turns, tokens {done.tokens.in} in
-          / {done.tokens.out} out, ${done.cost_usd.toFixed(4)}.
-        </p>
-      )}
     </>
   );
 }

@@ -541,6 +541,8 @@ export type AgentEvent =
         fallback_used: boolean;
         tokens: { in: number; out: number };
         cost_usd: number;
+        /** additive (T168): the completion that wrote the answer; null when it got no signature */
+        signature?: ModelSignature | null;
       };
     };
 

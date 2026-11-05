@@ -29,6 +29,13 @@ table{border-collapse:collapse}td,th{border:1px solid #ddd;padding:.2rem .5rem;t
 ol.events li{margin:.2rem 0;overflow-wrap:anywhere}
 pre{white-space:pre-wrap;overflow-wrap:anywhere}
 textarea{width:100%;font:inherit}
+.thread{padding-bottom:9rem}
+.you{background:#f2f2f2;padding:.5rem .75rem;margin:1.5rem 0 .75rem;overflow-wrap:anywhere}
+.md p{white-space:pre-wrap;overflow-wrap:anywhere}
+.steps{margin:.5rem 0}
+.composer{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #ccc;padding:.5rem 1rem}
+.composer-row{display:flex;gap:.5rem;align-items:flex-end;max-width:60rem;margin:0 auto}
+.composer-note{max-width:60rem;margin:.25rem auto 0;font-size:.8em;overflow-wrap:anywhere}
 `;
 
 export default function RootLayout({ children }: { children: ReactNode }) {

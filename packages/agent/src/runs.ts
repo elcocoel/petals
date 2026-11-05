@@ -7,11 +7,19 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { TOOLS_VERSION } from '@petal/core';
 import type { AgentEvent, ChatInput, Draft, Entry, Run } from '@petal/core/types';
+import type { LlmMessage } from './llm.ts';
 
 export interface RunStore {
   create(input: ChatInput): Promise<string>;
   append(runId: string, e: AgentEvent): Promise<void>;
   get(runId: string): Promise<Run | null>;
+  /**
+   * What the model has read in this run, tool calls and results included (thread.ts). Kept beside
+   * the run, not in it: it is the model's context, and GET /api/v1/agent/runs/:id does not show it.
+   * Optional: a store without it continues runs from their prose alone.
+   */
+  saveThread?(runId: string, thread: LlmMessage[]): Promise<void>;
+  thread?(runId: string): Promise<LlmMessage[] | null>;
 }
 
 /** Run ids are file names: letters, digits, _ and - only. */
@@ -83,6 +91,7 @@ export function applyEvent(run: Run, e: AgentEvent, at: string): void {
 
 export function fileRunStore(dir: string): RunStore {
   const file = (id: string) => join(dir, `${id}.json`);
+  const threadFile = (id: string) => join(dir, `${id}.thread.json`);
   const cache = new Map<string, Run>();
   const chains = new Map<string, Promise<unknown>>();
 
@@ -108,12 +117,14 @@ export function fileRunStore(dir: string): RunStore {
     }
   }
 
-  async function save(run: Run): Promise<void> {
+  async function write(id: string, path: string, value: unknown): Promise<void> {
     await mkdir(dir, { recursive: true });
-    const tmp = join(dir, `.${run.run_id}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`);
-    await writeFile(tmp, JSON.stringify(run));
-    await rename(tmp, file(run.run_id));
+    const tmp = join(dir, `.${id}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`);
+    await writeFile(tmp, JSON.stringify(value));
+    await rename(tmp, path);
   }
+
+  const save = (run: Run) => write(run.run_id, file(run.run_id), run);
 
   return {
     async create(input) {
@@ -166,6 +177,20 @@ export function fileRunStore(dir: string): RunStore {
       await chains.get(runId);
       const run = await load(runId);
       return run ? (JSON.parse(JSON.stringify(run)) as Run) : null;
+    },
+
+    saveThread(runId, thread) {
+      return serial(runId, () => write(runId, threadFile(runId), thread));
+    },
+
+    async thread(runId) {
+      if (!RUN_ID.test(runId)) return null;
+      await chains.get(runId);
+      try {
+        return JSON.parse(await readFile(threadFile(runId), 'utf8')) as LlmMessage[];
+      } catch {
+        return null;
+      }
     },
   };
 }
