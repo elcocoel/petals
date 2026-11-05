@@ -11,6 +11,7 @@ import { fileStore, getSnapshot, InputError, modules } from '../src/index.ts';
 import {
   applyTransfers,
   BANK_ETHEREUM,
+  DEFAULT_WINDOW_DAYS,
   DPX_ARBITRUM,
   ERC20_HOLDERS_DESCRIPTOR,
   erc20HoldersLive,
@@ -19,6 +20,8 @@ import {
   liveTarget,
   newTransferReplay,
   pullErc20Holders,
+  REPLAY_LOG_BUDGET,
+  SEAM_BASE,
   tailSlices,
   tokenText,
 } from '../src/modules/erc20-holders.ts';
@@ -54,6 +57,8 @@ function fakeReader(
   balances: Record<string, bigint>,
   supply: bigint,
   pages: EvmLog[][] = [],
+  head = 100,
+  ranges: [number, number][] = [],
 ): EvmReader {
   const text = Buffer.from('TT').toString('hex').padEnd(64, '0');
   const answers = new Map<string, string>([
@@ -65,8 +70,8 @@ function fakeReader(
     ),
   ]);
   return {
-    block: async () => ({
-      number: 100,
+    block: async (ref) => ({
+      number: typeof ref === 'number' ? ref : head,
       hash: '0xh',
       timestamp: 86400,
       as_of: '1970-01-02T00:00:00Z',
@@ -74,7 +79,8 @@ function fakeReader(
     call: async () => '0x',
     multicall: async (calls) =>
       calls.map((c) => ({ ok: answers.has(c.data), data: answers.get(c.data) ?? '0x' })),
-    logPages: async function* () {
+    logPages: async function* (_filter, from, to) {
+      ranges.push([from, to]);
       yield* pages;
     },
     logs: async () => pages.flat(),
@@ -152,6 +158,11 @@ describe('tailSlices', () => {
   test('nothing left means no slices; an unknown count still gives a valid row', () => {
     expect(tailSlices(0n, 10, 5n)).toEqual([]);
     expect(tailSlices(9n, 0, 5n)).toEqual([{ amount: 9n, count: 1 }]);
+    const unknown = tailSlices(10n, null, 5n);
+    expect(unknown).toEqual([
+      { amount: 5n, count: 1 },
+      { amount: 5n, count: 1 },
+    ]);
   });
 });
 
@@ -301,7 +312,7 @@ describe('pullErc20Holders, through a holders list', () => {
       sleep: noSleep,
       onProgress: (e) => said.push(e.message),
     });
-    expect(checks).toMatchObject({ list: 'replay', replay_vs_supply_raw: '0' });
+    expect(checks).toMatchObject({ list: 'replay', window: { days: 7 }, tail_raw: '0' });
     expect(said.join(' ')).toMatch(/did not answer.*reading the Transfer logs instead/);
     await expect(
       pullErc20Holders(target(ETHEREUM), {
@@ -337,7 +348,7 @@ describe('pullErc20Holders, through a holders list', () => {
   });
 });
 
-describe('pullErc20Holders, through a replay', () => {
+describe('pullErc20Holders, a full replay (the offline flag)', () => {
   const pages = [
     [transfer(ZERO, addr(1), 600n), transfer(ZERO, addr(2), 300n)],
     [transfer(ZERO, addr(3), 100n), transfer(addr(1), addr(4), 50n)],
@@ -347,6 +358,7 @@ describe('pullErc20Holders, through a replay', () => {
 
   test('keyless where the chain has wide logs: the sum is a real check', async () => {
     const { snapshot: s, checks } = await pullErc20Holders(arb, {
+      full: true,
       reader: fakeReader(balances, 1000n, pages),
     });
     expect(checks).toMatchObject({
@@ -364,6 +376,7 @@ describe('pullErc20Holders, through a replay', () => {
 
   test('keeps the top and folds the rest', async () => {
     const { checks, snapshot: s } = await pullErc20Holders(arb, {
+      full: true,
       reader: fakeReader(balances, 1000n, pages),
       keep: 2,
     });
@@ -373,6 +386,7 @@ describe('pullErc20Holders, through a replay', () => {
 
   test('a small difference from the supply is stated; a large one throws', async () => {
     const { checks, snapshot: s } = await pullErc20Holders(arb, {
+      full: true,
       reader: fakeReader({ [addr(1)]: 1_000_000n }, 1_000_001n, [
         [transfer(ZERO, addr(1), 1_000_000n)],
       ]),
@@ -381,12 +395,13 @@ describe('pullErc20Holders, through a replay', () => {
     expect(checks.replay_vs_supply_raw).toBe('-1');
     expect(s.coverage.note).toMatch(/1 below totalSupply/);
     await expect(
-      pullErc20Holders(arb, { reader: fakeReader(balances, 2000n, pages) }),
+      pullErc20Holders(arb, { full: true, reader: fakeReader(balances, 2000n, pages) }),
     ).rejects.toThrow(/the replay sums to 1000/);
   });
 
   test('on a chain with no keyless logs, it says so and asks for no key silently', async () => {
     const err = (await pullErc20Holders(target(BASE), {
+      full: true,
       reader: fakeReader(balances, 1000n, pages),
     }).catch((e) => e)) as InputError;
     expect(err).toBeInstanceOf(InputError);
@@ -421,6 +436,7 @@ describe('pullErc20Holders, through a replay', () => {
       });
     };
     const { snapshot: s, checks } = await pullErc20Holders(target(BASE), {
+      full: true,
       reader: fakeReader({ [addr(1)]: 1000n }, 1000n),
       hypersyncToken: secret,
       hypersyncFetch,
@@ -431,6 +447,172 @@ describe('pullErc20Holders, through a replay', () => {
     expect(list).toMatchObject({ url: 'https://base.hypersync.xyz', kind: 'api' });
     expect(list?.method).toMatch(/not keyless/);
     expect(JSON.stringify(s)).not.toContain(secret);
+  });
+});
+
+describe('pullErc20Holders, the default: a window of Transfer logs', () => {
+  const seen = [
+    [transfer(addr(1), addr(2), 5n), transfer(addr(3), addr(4), 1n)],
+    [transfer(addr(4), addr(5), 1n)],
+  ];
+  // addr(4) passed its tokens on, so it has moved tokens and holds none
+  const balances = {
+    [addr(1)]: 300n,
+    [addr(2)]: 400n,
+    [addr(3)]: 50n,
+    [addr(4)]: 0n,
+    [addr(5)]: 1n,
+  };
+  const HEAD = 1_000_000;
+
+  test("reads only the last 7 days, by the chain's block time", async () => {
+    expect(DEFAULT_WINDOW_DAYS).toBe(7);
+    for (const [chain, blocks] of [
+      [ETHEREUM, 50_400],
+      [BASE, 302_400],
+    ] as const) {
+      const ranges: [number, number][] = [];
+      await pullErc20Holders(target(chain), {
+        list: 'replay',
+        reader: fakeReader(balances, 1000n, seen, HEAD, ranges),
+      });
+      expect(ranges).toEqual([[HEAD - blocks, HEAD]]);
+    }
+    const ranges: [number, number][] = [];
+    await pullErc20Holders(target(ARBITRUM), {
+      windowDays: 1,
+      reader: fakeReader(balances, 1000n, seen, 100_000_000, ranges),
+    });
+    expect(ranges).toEqual([[100_000_000 - 345_600, 100_000_000]]);
+  });
+
+  test('participants are addresses seen in the window, with balanceOf; the rest is not read', async () => {
+    const { snapshot: s, checks } = await pullErc20Holders(target(BASE), {
+      reader: fakeReader(balances, 1000n, seen, HEAD),
+    });
+    expect(validateSnapshot(s).ok).toBe(true);
+    expect(checks).toMatchObject({
+      list: 'replay',
+      holders_total: null,
+      window: { days: 7, from_block: HEAD - 302_400, with_balance: 4 },
+      listed: 4,
+      tail_raw: '249',
+      drawn_vs_supply_raw: '0',
+    });
+    expect(s.holdings.map((h) => [h.participant, h.amount_raw])).toEqual([
+      [addr(2), '400'],
+      [addr(1), '300'],
+      [addr(3), '50'],
+      [addr(5), '1'],
+      ['group:not-read', '249'],
+    ]);
+    expect(s.holdings.reduce((a, h) => a + BigInt(h.amount_raw ?? '0'), 0n)).toBe(1000n);
+    expect(s.coverage).toMatchObject({
+      participants_total: 4,
+      participants_included: 4,
+      amount_total: '1000',
+      amount_included: '751',
+    });
+    expect(s.coverage.grouped?.[0]).toMatchObject({ rows_folded: 0, amount: '249' });
+    expect(s.participants.at(-1)).toMatchObject({ id: 'group:not-read', kind: 'group', count: 1 });
+    expect(s.snapshot.final).toBe(true);
+    expect(s.network.params).toEqual({ chain: 'base', token: TOKEN, window_days: '7' });
+    const note = s.coverage.note ?? '';
+    expect(note).toMatch(/only addresses in a Transfer log between block 697,600/);
+    expect(note).toMatch(/not every holder/i);
+    expect(note).toMatch(/it was not read, it is not attributed to anyone/);
+    expect(note).toMatch(/how many addresses hold it is not known/);
+  });
+
+  test('keeps the largest of what it saw', async () => {
+    const { snapshot: s, checks } = await pullErc20Holders(target(BASE), {
+      reader: fakeReader(balances, 1000n, seen, HEAD),
+      keep: 2,
+    });
+    expect(checks).toMatchObject({ listed: 2, tail_raw: '300' });
+    expect(s.coverage).toMatchObject({ participants_total: 4, participants_included: 2 });
+  });
+
+  test('Base needs no token for a window, and uses HyperSync when there is one', async () => {
+    const keyless = await pullErc20Holders(target(BASE), {
+      reader: fakeReader(balances, 1000n, seen, HEAD),
+    });
+    expect(keyless.snapshot.sources.find((x) => x.id === 'erc20-holder-list')?.kind).toBe('chain');
+    const hypersyncFetch: typeof fetch = async () =>
+      Response.json({
+        data: [
+          {
+            logs: [
+              {
+                topic0: TRANSFER,
+                topic1: topicOf(addr(1)),
+                topic2: topicOf(addr(2)),
+                data: `0x${word(5n)}`,
+              },
+            ],
+          },
+        ],
+        next_block: HEAD + 1,
+      });
+    const { snapshot } = await pullErc20Holders(target(BASE), {
+      reader: fakeReader(balances, 1000n, [], HEAD),
+      hypersyncToken: 'not-a-real-token',
+      hypersyncFetch,
+    });
+    const list = snapshot.sources.find((x) => x.id === 'erc20-holder-list');
+    expect(list).toMatchObject({ url: BASE.hypersync, kind: 'api' });
+  });
+
+  test('the budget stops a replay early and says why and what it would take', async () => {
+    const pages = [[transfer(addr(1), addr(2), 1n)], [transfer(addr(1), addr(2), 1n)]];
+    let read = 0;
+    const counted = fakeReader(balances, 1000n, pages, HEAD);
+    const reader: EvmReader = {
+      ...counted,
+      logPages: async function* () {
+        for (const p of pages) {
+          read++;
+          yield p;
+        }
+      },
+    };
+    const err = (await pullErc20Holders(target(ARBITRUM), { reader, maxLogs: 0 }).catch(
+      (e) => e,
+    )) as InputError;
+    expect(err).toBeInstanceOf(InputError);
+    expect(err.code).toBe('cannot_read');
+    expect(err.message).toMatch(/more than 0 Transfer logs in the last 7 days/);
+    expect(err.hint).toMatch(/shorter window_days/);
+    expect(err.hint).toMatch(/pull-module\.ts --full/);
+    expect(read).toBe(1); // stopped at the first page over the budget
+    expect(REPLAY_LOG_BUDGET.rpc).toBeLessThanOrEqual(200_000);
+    expect(REPLAY_LOG_BUDGET.hypersync).toBeLessThanOrEqual(30_000);
+  });
+
+  test('only the offline flag lifts the budget', async () => {
+    const pages = [[transfer(ZERO, addr(1), 1000n)]];
+    const { checks } = await pullErc20Holders(target(ARBITRUM), {
+      reader: fakeReader({ [addr(1)]: 1000n }, 1000n, pages, HEAD),
+      maxLogs: 0,
+      full: true,
+    });
+    expect(checks.replay_vs_supply_raw).toBe('0');
+  });
+
+  test('too many addresses, or too many keyless calls, stop it too', async () => {
+    const crowd = Array.from({ length: 20_001 }, (_, i) => transfer(ZERO, addr(i + 1), 1n));
+    await expect(
+      pullErc20Holders(target(ARBITRUM), { reader: fakeReader({}, 1000n, [crowd], HEAD) }),
+    ).rejects.toMatchObject({ code: 'cannot_read', message: expect.stringContaining('20,001') });
+    await expect(
+      pullErc20Holders(target(BASE), {
+        reader: fakeReader({}, 1000n, [], HEAD),
+        windowDays: 30,
+      }),
+    ).rejects.toMatchObject({
+      code: 'cannot_read',
+      message: expect.stringContaining('keyless log calls'),
+    });
   });
 });
 
@@ -545,20 +727,7 @@ describe('hypersyncLogPages', () => {
     expect((err as InputError).message).not.toContain(secret);
   });
 
-  test('stops at a query budget, and on a walk that does not advance', async () => {
-    const fetch: typeof globalThis.fetch = async (_u, init) =>
-      page(JSON.parse(String(init?.body)).from_block + 1);
-    await expect(
-      (async () => {
-        for await (const _ of hypersyncLogPages(BASE, filter, 0, 10, {
-          token: secret,
-          fetch,
-          maxQueries: 2,
-        })) {
-          /* drain */
-        }
-      })(),
-    ).rejects.toThrow(/stopped after 2 queries/);
+  test('stops on a walk that does not advance', async () => {
     const stuck: typeof globalThis.fetch = async () => page(0);
     await expect(
       (async () => {
@@ -594,6 +763,22 @@ describe('the reader on other chains', () => {
     await reader.block(1);
     expect(urls).toEqual([url]);
     expect(reader.servedBy('state')).toBe(url);
+  });
+
+  test('walks a narrow endpoint in chunks it accepts, in block order', async () => {
+    const ranges: [string, string][] = [];
+    const fetch: typeof globalThis.fetch = async (_u, init) => {
+      const b = JSON.parse(String(init?.body));
+      ranges.push([b.params[0].fromBlock, b.params[0].toBlock]);
+      return Response.json({ jsonrpc: '2.0', id: b.id, result: [] });
+    };
+    const reader = evmReader({ chain: BASE, fetch, sleep: noSleep });
+    await reader.logs({ address: TOKEN }, 0, 2499);
+    expect(ranges).toEqual([
+      ['0x0', '0x3e7'],
+      ['0x3e8', '0x7cf'],
+      ['0x7d0', '0x9c3'],
+    ]);
   });
 
   test('before Multicall3 on an L2 it reads one by one: no Multicall2 there', async () => {
@@ -689,6 +874,29 @@ describe('erc20-holders, any token', () => {
       expect(() => liveTarget(params)).toThrow(/needs a chain and a token/);
   });
 
+  test('a chat can pick a window, and can never ask for a whole history', async () => {
+    const mod = modules['erc20-holders'];
+    if (!mod?.keyFor) throw new Error('not registered');
+    expect(ERC20_HOLDERS_DESCRIPTOR.params.window_days?.required).toBe(false);
+    expect(Object.keys(ERC20_HOLDERS_DESCRIPTOR.params).sort()).toEqual([
+      'chain',
+      'token',
+      'window_days',
+    ]);
+    const seven = mod.keyFor({ chain: 'base', token: TOKEN });
+    expect(mod.keyFor({ chain: 'base', token: TOKEN, window_days: '7' })).toEqual(seven);
+    expect(mod.keyFor({ chain: 'base', token: TOKEN, window_days: '2' })).not.toEqual(seven);
+    const store = fileStore({ fixtures: FIXTURES, cache: tmp('holders-full') });
+    const refused: Record<string, string>[] = [
+      { chain: 'base', token: TOKEN, full: 'true' },
+      { chain: 'base', token: TOKEN, window_days: '31' },
+    ];
+    for (const params of refused)
+      await expect(
+        getSnapshot({ network: 'erc20-holders', params }, { store }),
+      ).rejects.toMatchObject({ code: 'bad_input' });
+  });
+
   test('a live read is never mistaken for a stored data set of the same token', () => {
     const live = liveTarget({ chain: 'ethereum', token: BANK_ETHEREUM.token });
     expect(live.population).not.toBe(BANK_ETHEREUM.population);
@@ -710,7 +918,7 @@ describe('erc20-holders, any token', () => {
         network: {
           id: 'erc20-holders',
           chain: 'eip155:1',
-          population: `erc20-token-ethereum-${token}`,
+          population: `erc20-token-ethereum-${token}-7d`,
           title: 'x',
           params: { chain: 'ethereum', token },
         },
@@ -748,9 +956,10 @@ describe('erc20-holders, any token', () => {
 });
 
 describe.each([
-  { target: BANK_ETHEREUM, chain: ETHEREUM, list: 'replay', final: true },
-  { target: DPX_ARBITRUM, chain: ARBITRUM, list: 'replay', final: true },
-])('$target.id, stored', ({ target: t, chain, list, final }) => {
+  { target: BANK_ETHEREUM, chain: ETHEREUM, mode: 'full' },
+  { target: DPX_ARBITRUM, chain: ARBITRUM, mode: 'full' },
+  { target: SEAM_BASE, chain: BASE, mode: 'window' },
+])('$target.id, stored', ({ target: t, chain, mode }) => {
   const row = indexRows(t.id)[0];
   if (!row) throw new Error(`no stored ${t.id}`);
   const s = storedSnapshot(row);
@@ -763,8 +972,8 @@ describe.each([
     expect(mod.descriptor).toMatchObject({ chain: chain.caip2, live: false });
     expect(validateSnapshot(s).ok).toBe(true);
     expect(s.network.chain).toBe(chain.caip2);
-    expect(s.network.params).toEqual({ chain: chain.id, token: t.token });
-    expect(s.snapshot.final).toBe(final);
+    expect(s.network.params).toMatchObject({ chain: chain.id, token: t.token });
+    expect(s.snapshot.final).toBe(true);
     const at = await mod.resolveAt('latest');
     expect(encodeSnapshot(await mod.fetch(at, undefined)).sha256).toBe(row.sha256);
   });
@@ -774,31 +983,37 @@ describe.each([
     expect(state.supply).toBe(BigInt(checks.total_supply_raw as string));
     const sum = s.holdings.reduce((a, h) => a + BigInt(h.amount_raw ?? '0'), 0n);
     expect(sum).toBe(state.supply);
-    expect(s.coverage.amount_total).toBe(s.coverage.amount_included);
+    if (mode === 'full') expect(s.coverage.amount_total).toBe(s.coverage.amount_included);
     expect(checks.drawn_vs_supply_raw).toBe('0');
   });
 
   test('check: every listed amount is balanceOf at the block, from the recording', () => {
     const state = recordedState(recording);
     const listed = s.holdings.filter((h) => !h.participant.startsWith('group:'));
-    expect(listed.length).toBe(HOLDERS_KEPT);
-    expect(state.balances.size).toBe(HOLDERS_KEPT);
+    if (mode === 'full') expect(listed.length).toBe(HOLDERS_KEPT);
+    expect(listed.length).toBeGreaterThan(60);
+    expect(state.balances.size).toBeGreaterThanOrEqual(listed.length);
     for (const h of listed)
       expect(state.balances.get(h.participant)).toBe(BigInt(h.amount_raw ?? '-1'));
   });
 
-  test('states the list source and what the check can and cannot show', () => {
-    expect(checks.list).toBe(list);
+  test('states how it was read and what the check can and cannot show', () => {
     const note = s.coverage.note ?? '';
-    if (list === 'blockscout') {
-      expect(note).toMatch(/by construction/);
-      expect(note).toMatch(/not pinned to it/);
-      expect(s.sources.find((x) => x.id === 'erc20-holder-list')?.url).toBe(chain.blockscout);
+    expect(checks.list).toBe('replay');
+    if (mode === 'window') {
+      expect(note).toMatch(/only addresses in a Transfer log between block/);
+      expect(note).toMatch(/the last 7 days/);
+      expect(note).toMatch(/This is not every holder/);
+      expect(note).toMatch(/it was not read, it is not attributed to anyone/);
+      expect(checks.window).toBeDefined();
+      expect(s.participants.filter((p) => p.kind === 'group').map((p) => p.id)).toEqual([
+        'group:not-read',
+      ]);
     } else {
       expect(note).toMatch(/every Transfer log up to this block/);
+      expect(note).toMatch(/equal to totalSupply/);
       expect(checks.replay_vs_supply_raw).toBe('0');
       expect(checks.balance_differences).toBe(0);
-      expect(note).toMatch(/equal to totalSupply/);
     }
     expect(note).toMatch(/No labels/);
     expect(note).toMatch(/Not known: who controls an address/);
@@ -806,14 +1021,18 @@ describe.each([
     for (const p of s.participants) expect(p.identity).toBeNull();
   });
 
-  test('the top petals are holders, and the tail is declared', () => {
+  test('the tail is declared', () => {
     const f = computeFigures(s, { measure: 'token_balance', petals: 60 });
-    for (const r of f.shares) expect(r.id.startsWith('group:')).toBe(false);
     expect(f.participants_total).toBe(s.coverage.participants_total);
-    const bands = s.participants.filter((p) => p.kind === 'group');
-    if (bands.length > 0) {
-      const g = s.coverage.grouped?.[0];
-      expect(g?.rows_folded).toBe(bands.reduce((a, b) => a + (b.count ?? 0), 0));
+    if (mode === 'full') {
+      for (const r of f.shares) expect(r.id.startsWith('group:')).toBe(false);
+      const bands = s.participants.filter((p) => p.kind === 'group');
+      expect(s.coverage.grouped?.[0]?.rows_folded).toBe(
+        bands.reduce((a, b) => a + (b.count ?? 0), 0),
+      );
+    } else {
+      expect(s.coverage.grouped?.[0]?.rows_folded).toBe(0);
+      expect(f.shares.some((r) => r.id === 'group:not-read')).toBe(true);
     }
   });
 

@@ -9,8 +9,8 @@
 //   Arbitrum  Blockscout answers 403 (a Cloudflare challenge page). Tenderly serves wide logs.
 //   Base      Blockscout answers 403 (the same). No keyless endpoint serves wide logs: Tenderly
 //             1,000 blocks, dRPC under 10,000 on the free plan, 1RPC and Nodies 50, publicnode 403
-//             on old blocks, the official RPC 429 at once, BlockPI wants a key. So on Base the
-//             holder list needs HyperSync and its token.
+//             on old blocks, the official RPC 429 at once, BlockPI wants a key. So a week of logs
+//             is 303 calls keyless, and a whole history needs HyperSync and its token.
 // State reads (balanceOf, totalSupply at a finalized block) work keyless on all three.
 import type { RpcEndpoint } from '../rpc/pool.ts';
 
@@ -30,6 +30,10 @@ export interface EvmChain {
   blockscout?: string;
   /** whether the first endpoint serves eth_getLogs over wide ranges without a key */
   wide_logs: boolean;
+  /** the widest eth_getLogs range the first endpoint takes, where it is narrow */
+  log_chunk_blocks?: number;
+  /** seconds per block on average, to turn days into blocks */
+  block_seconds: number;
   hypersync: string;
 }
 
@@ -45,6 +49,7 @@ export const ETHEREUM: EvmChain = {
   multicall2_from: 12336033,
   blockscout: 'https://eth.blockscout.com',
   wide_logs: true,
+  block_seconds: 12,
   hypersync: 'https://eth.hypersync.xyz',
 };
 
@@ -58,6 +63,8 @@ export const BASE: EvmChain = {
   ],
   multicall3_from: 5022,
   wide_logs: false,
+  log_chunk_blocks: 1000,
+  block_seconds: 2,
   hypersync: 'https://base.hypersync.xyz',
 };
 
@@ -71,6 +78,7 @@ export const ARBITRUM: EvmChain = {
   ],
   multicall3_from: 7654707,
   wide_logs: true,
+  block_seconds: 0.25,
   hypersync: 'https://arbitrum.hypersync.xyz',
 };
 

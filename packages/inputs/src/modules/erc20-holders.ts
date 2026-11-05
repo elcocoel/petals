@@ -1,16 +1,20 @@
-// erc20-holders (T162): the largest holders of any ERC-20 token on Ethereum or an L2, chosen by
-// chain and token address, plus a declared tail. One code path; only where the list comes from
-// differs by chain (./evm/chains.ts says why):
-//   blockscout  the holders pages of an explorer that answers keyless: seconds, any token.
-//   replay      every Transfer log, summed per address: keyless logs where the chain has them,
-//               HyperSync and its token where it has none. Cost grows with the token's history.
+// erc20-holders (T162): the holders of any ERC-20 token on Ethereum or an L2, chosen by chain and
+// token address, plus a declared tail. One code path; only where the list of addresses comes from
+// differs (./evm/chains.ts says why by chain):
+//   blockscout  the holders pages of an explorer that answers keyless: the true top, any token.
+//   window      the default where Blockscout does not answer: the addresses in Transfer logs of
+//               the last 7 days. Not every holder: an address that did not move tokens in the
+//               window is missing, however much it holds, and the coverage says so.
+//   full        every Transfer log, summed per address: every holder. Only with an explicit flag
+//               on the offline pull-module.ts, never in a chat. Cost grows with the token's history.
 // Either way the amounts in the snapshot are balanceOf at one finalized block, read from the chain.
 //
-// The check, plainly. Listed holders plus the tail equal totalSupply() in every snapshot. With a
-// replay that is a real test: the replayed balances are summed on their own and compared with
-// totalSupply(). With Blockscout the tail is totalSupply() minus the listed holders, so the sum
-// holds by construction and cannot fail; what can fail there are Blockscout's own supply and
-// balances against the chain, and whether the tail fits under the smallest listed holder.
+// The check, plainly. Drawn holdings plus the tail equal totalSupply() in every snapshot. Only with
+// a full replay is that a real test, because the replayed balances are summed on their own. With
+// Blockscout and with a window the tail is what the drawn holdings leave, so the sum cannot fail;
+// there the tail is declared as such, and each drawn balance is what the chain answers.
+//
+// No count of a token's logs exists before reading them, so a window replay stops at a log budget.
 //
 // No labels: Blockscout shows tags and names; they are not read. Kind says only whether Blockscout
 // marks the address as a contract.
@@ -46,9 +50,14 @@ const BLOCKSCOUT_PAUSE_MS = 800;
 const BLOCKSCOUT_TIMEOUT_MS = 20_000;
 const TRANSFER = eventTopic('Transfer(address,address,uint256)');
 const ZERO_TOPIC = `0x${'0'.repeat(64)}`;
-/** A read in a chat stops here and says so, instead of walking for minutes. */
-const LIVE_LOG_CALLS = 20;
-const LIVE_HYPERSYNC_QUERIES = 15;
+export const DEFAULT_WINDOW_DAYS = 7;
+/**
+ * Where a window replay stops and says so. A chat's tool call has 120 s: about 200,000 logs is
+ * under 40 s on a keyless gateway, and 30,000 is one minute's budget on HyperSync's free plan.
+ */
+export const REPLAY_LOG_BUDGET = { rpc: 200_000, hypersync: 30_000 };
+const MAX_WINDOW_ADDRESSES = 20_000;
+const MAX_WINDOW_CALLS = 400;
 
 const S = { list: 'erc20-holder-list', state: 'erc20-state' } as const;
 
@@ -65,6 +74,8 @@ export interface HolderTarget {
   population: string;
   /** a block before the token's first transfer, default 0 */
   from_block?: number;
+  /** how the stored data set was read, for its description */
+  about?: string;
 }
 
 const stored = (
@@ -72,6 +83,7 @@ const stored = (
   symbol: string,
   token: string,
   list: 'blockscout' | 'replay',
+  extra: Partial<HolderTarget> = {},
 ): HolderTarget => ({
   id: `erc20-holders-${chain.id}-${symbol.toLowerCase()}`,
   list,
@@ -79,6 +91,7 @@ const stored = (
   token: token.toLowerCase(),
   title: `${symbol} holders, ${chain.name}`,
   population: `erc20-holders-${chain.id}-${token.toLowerCase()}`,
+  ...extra,
 });
 
 export const PEPE_ETHEREUM = stored(
@@ -104,6 +117,11 @@ export const SEAM_BASE = stored(
   'SEAM',
   '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85',
   'replay',
+  {
+    title: 'SEAM active holders, Base',
+    about:
+      'Addresses that moved SEAM on Base in the last 7 days and what they hold, read from the chain. Not every holder: the rest of the supply is not attributed.',
+  },
 );
 
 const capabilities = (unit: string, label: string) =>
@@ -125,7 +143,9 @@ export function holdersDescriptor(t: HolderTarget): NetworkDescriptor {
     population: t.population,
     kind: 'other',
     title: t.title,
-    description: `The largest holders of ${symbol} on ${t.chain.name} at one block, read from the chain, plus a declared tail. Balances only: no votes, no names.`,
+    description:
+      t.about ??
+      `The largest holders of ${symbol} on ${t.chain.name} at one block, read from the chain, plus a declared tail. Balances only: no votes, no names.`,
     params: {},
     capabilities: capabilities(symbol, `${symbol} balance`),
     live: false,
@@ -180,24 +200,23 @@ export function applyTransfers(r: TransferReplay, page: EvmLog[]): TransferRepla
 /**
  * The tail as equal slices, each no larger than `floor` where that takes at most `max` slices, so
  * a slice does not outrank the listed holders. Nothing is known about the holders in a slice: it
- * is a piece of a total. The amounts and counts add up exactly.
+ * is a piece of a total. `count` is how many holders the tail has, or null when that is not known;
+ * a group row must carry a number, so then each slice counts as 1. The amounts add up exactly.
  */
 export function tailSlices(
   amount: bigint,
-  count: number,
+  count: number | null,
   floor: bigint,
   max = MAX_SLICES,
 ): { amount: bigint; count: number }[] {
   if (amount <= 0n) return [];
   const wanted = floor > 0n ? (amount + floor - 1n) / floor : 1n;
-  const slices = Math.max(
-    1,
-    Math.min(Number(wanted > BigInt(max) ? BigInt(max) : wanted), count || 1),
-  );
+  const capped = Number(wanted > BigInt(max) ? BigInt(max) : wanted);
+  const slices = Math.max(1, count === null ? capped : Math.min(capped, count || 1));
   const each = amount / BigInt(slices);
   const extra = Number(amount % BigInt(slices));
-  const people = Math.floor(count / slices);
-  const morePeople = count % slices;
+  const people = Math.floor((count ?? 0) / slices);
+  const morePeople = (count ?? 0) % slices;
   return Array.from({ length: slices }, (_, i) => ({
     amount: each + (i < extra ? 1n : 0n),
     count: Math.max(1, people + (i < morePeople ? 1 : 0)),
@@ -214,7 +233,10 @@ export function tokenText(data: string): string {
 export interface HoldersChecks {
   block: number;
   list: 'blockscout' | 'replay';
-  holders_total: number;
+  /** every holder, where the list knows them; null for a window */
+  holders_total: number | null;
+  /** a window replay: which blocks, and how many addresses with a balance it found */
+  window?: { days: number; from_block: number; from_as_of: string; with_balance: number };
   listed: number;
   listed_sum_raw: string;
   tail_raw: string;
@@ -239,15 +261,17 @@ export interface HoldersChecks {
 
 interface ListedHolder {
   address: string;
-  /** what the list says the holder has */
-  listed: bigint;
+  /** what the list says the holder has; a window does not know */
+  listed?: bigint;
   is_contract?: boolean;
 }
 
 interface HolderList {
   source: 'blockscout' | 'replay';
   holders: ListedHolder[];
-  total: number;
+  /** every holder, when the source knows them */
+  total: number | null;
+  window?: { days: number; from_block: number; from_as_of: string };
   /** the tail's own sum, when the source knows it */
   sum?: bigint;
   logs?: number;
@@ -268,8 +292,13 @@ export interface PullHoldersOptions {
   list?: 'blockscout' | 'replay';
   block?: number;
   keep?: number;
+  /** a replay's window, default 7 days */
+  windowDays?: number;
+  /** read every Transfer log there is. Offline only (pull-module.ts --full), never in a chat */
+  full?: boolean;
+  /** overrides REPLAY_LOG_BUDGET */
+  maxLogs?: number;
   maxLogCalls?: number;
-  maxQueries?: number;
   onProgress?: Progress;
 }
 
@@ -343,7 +372,7 @@ async function listFromBlockscout(
 }
 
 async function listFromReplay(
-  target: Pick<HolderTarget, 'chain' | 'token' | 'from_block'>,
+  target: Pick<HolderTarget, 'id' | 'chain' | 'token' | 'from_block'>,
   reader: EvmReader,
   block: number,
   keep: number,
@@ -352,27 +381,49 @@ async function listFromReplay(
 ): Promise<HolderList> {
   const { chain, token } = target;
   const filter = { address: token, topics: [TRANSFER] };
-  const from = target.from_block ?? 0;
-  const useRpc = chain.wide_logs;
-  if (!useRpc && !opts.hypersyncToken)
+  const full = opts.full === true;
+  const days = opts.windowDays ?? DEFAULT_WINDOW_DAYS;
+  const from = full
+    ? (target.from_block ?? 0)
+    : Math.max(0, block - Math.ceil((days * 86_400) / chain.block_seconds));
+  const useHyperSync = !chain.wide_logs && Boolean(opts.hypersyncToken);
+  const offline = 'read the whole history offline with pull-module.ts --full, never in a chat';
+  if (full && !chain.wide_logs && !useHyperSync)
     throw new InputError(
       'cannot_read',
-      `${chain.name} has no keyless route to a token's holders: Blockscout answers 403 and no keyless endpoint serves wide logs`,
+      `${chain.name} has no keyless route to a token's whole history: Blockscout answers 403 and no keyless endpoint serves wide logs`,
       { hint: 'pull it with ENVIO_API_TOKEN set (HyperSync), or read a stored snapshot' },
     );
-  const pages = useRpc
-    ? reader.logPages(filter, from, block)
-    : hypersyncLogPages(chain, filter, from, block, {
+  // The one size known before reading: how many calls a narrow endpoint needs for this range.
+  const chunkCalls = chain.log_chunk_blocks
+    ? Math.ceil((block - from + 1) / chain.log_chunk_blocks)
+    : 0;
+  if (!full && !useHyperSync && chunkCalls > MAX_WINDOW_CALLS)
+    throw new InputError(
+      'cannot_read',
+      `${days} days on ${chain.name} is ${grouped(chunkCalls)} keyless log calls, over the limit of ${MAX_WINDOW_CALLS}`,
+      { hint: 'ask for a shorter window_days, or set ENVIO_API_TOKEN (HyperSync)' },
+    );
+  const pages = useHyperSync
+    ? hypersyncLogPages(chain, filter, from, block, {
         token: opts.hypersyncToken as string,
         stats,
         ...(opts.hypersyncFetch ? { fetch: opts.hypersyncFetch } : {}),
         ...(opts.sleep ? { sleep: opts.sleep } : {}),
-        ...(opts.maxQueries !== undefined ? { maxQueries: opts.maxQueries } : {}),
-      });
+      })
+    : reader.logPages(filter, from, block);
+  const budget =
+    opts.maxLogs ?? (useHyperSync ? REPLAY_LOG_BUDGET.hypersync : REPLAY_LOG_BUDGET.rpc);
   const replay = newTransferReplay();
   let shown = 0;
   for await (const page of pages) {
     applyTransfers(replay, page);
+    if (!full && replay.logs > budget)
+      throw new InputError(
+        'cannot_read',
+        `${token} on ${chain.name} has more than ${grouped(budget)} Transfer logs in the last ${days} days: stopped there, with ${grouped(replay.logs)} read`,
+        { hint: `ask for a shorter window_days, or ${offline}` },
+      );
     if (replay.logs - shown >= 50_000) {
       shown = replay.logs;
       opts.onProgress?.({
@@ -380,6 +431,31 @@ async function listFromReplay(
         message: `${grouped(replay.logs)} logs, ${grouped(replay.balances.size)} addresses`,
       });
     }
+  }
+  const route = useHyperSync
+    ? `HyperSync with an Envio API token (not keyless): Transfer logs of ${token}`
+    : `eth_getLogs on ${token}: Transfer logs`;
+  const where = {
+    url: useHyperSync ? chain.hypersync : reader.servedBy('logs'),
+    kind: (useHyperSync ? 'api' : 'chain') as 'api' | 'chain',
+  };
+  if (!full) {
+    if (replay.balances.size > MAX_WINDOW_ADDRESSES)
+      throw new InputError(
+        'cannot_read',
+        `${grouped(replay.balances.size)} addresses moved ${token} on ${chain.name} in the last ${days} days, over the limit of ${grouped(MAX_WINDOW_ADDRESSES)}`,
+        { hint: `ask for a shorter window_days, or ${offline}` },
+      );
+    const start = await reader.block(from);
+    return {
+      source: 'replay',
+      holders: [...replay.balances.keys()].sort().map((address) => ({ address })),
+      total: null,
+      logs: replay.logs,
+      window: { days, from_block: from, from_as_of: start.as_of },
+      method: `${route} of the last ${days} days, for the addresses in them`,
+      ...where,
+    };
   }
   const positive = [...replay.balances.entries()].filter(([, v]) => v > 0n);
   const top = positive
@@ -392,11 +468,8 @@ async function listFromReplay(
     total: positive.length,
     sum: positive.reduce((a, [, v]) => a + v, 0n),
     logs: replay.logs,
-    url: useRpc ? reader.servedBy('logs') : chain.hypersync,
-    method: useRpc
-      ? `eth_getLogs on ${token}: every Transfer up to the block, summed per address`
-      : `HyperSync with an Envio API token (not keyless): every Transfer of ${token} up to the block, summed per address`,
-    kind: useRpc ? 'chain' : 'api',
+    method: `${route}, every one up to the block, summed per address`,
+    ...where,
   };
 }
 
@@ -467,7 +540,7 @@ export async function pullErc20Holders(
     })),
     at.number,
   );
-  const rows = list.holders
+  const withBalance = list.holders
     .map((h, i) => {
       const a = answers[i];
       if (!a?.ok) checkFailed(target, `balanceOf(${h.address}) failed`);
@@ -477,6 +550,7 @@ export async function pullErc20Holders(
     .sort((x, y) =>
       x.amount > y.amount ? -1 : x.amount < y.amount ? 1 : x.address < y.address ? -1 : 1,
     );
+  const rows = withBalance.slice(0, keep);
   const listedSum = rows.reduce((a, r) => a + r.amount, 0n);
   const tail = supply - listedSum;
   if (tail < 0n)
@@ -488,11 +562,12 @@ export async function pullErc20Holders(
   )
     checkFailed(target, `the replay sums to ${list.sum}, totalSupply() is ${supply}`);
 
-  const tailHolders = Math.max(0, list.total - rows.length);
+  const tailHolders = list.total === null ? null : Math.max(0, list.total - rows.length);
   const smallest = rows.at(-1)?.amount ?? 0n;
   // The tail is everyone smaller than the smallest listed holder, so it must fit under it. Twice
-  // over, because a list that is not pinned to the block can be off by what moved since.
-  if (tail > 0n && tail > BigInt(tailHolders || 1) * smallest * 2n)
+  // over, because a list that is not pinned to the block can be off by what moved since. A window
+  // makes no such claim: its holders are the active ones, not the top.
+  if (tailHolders !== null && tail > 0n && tail > BigInt(tailHolders || 1) * smallest * 2n)
     checkFailed(
       target,
       `${tail} is left over for ${tailHolders} holders smaller than ${smallest}: the list is not the top`,
@@ -501,17 +576,24 @@ export async function pullErc20Holders(
   let differences = 0;
   let differenceSum = 0n;
   for (const r of rows)
-    if (r.listed !== r.amount) {
+    if (r.listed !== undefined && r.listed !== r.amount) {
       differences++;
       differenceSum += r.listed > r.amount ? r.listed - r.amount : r.amount - r.listed;
     }
-  const sliceRows = tailSlices(tail, tailHolders, smallest);
+  // A window's tail is not read at all, so it stays one row: nothing to slice it by, and a petal
+  // saying how much was not read is the honest picture.
+  const sliceRows = list.window
+    ? tail > 0n
+      ? [{ amount: tail, count: 1 }]
+      : []
+    : tailSlices(tail, tailHolders, smallest);
   const largestSlice = sliceRows[0]?.amount ?? 0n;
   const noSliceOutranks = rows.filter((r) => r.amount >= largestSlice).length;
   const checks: HoldersChecks = {
     block: at.number,
     list: list.source,
     holders_total: list.total,
+    ...(list.window ? { window: { ...list.window, with_balance: withBalance.length } } : {}),
     listed: rows.length,
     listed_sum_raw: listedSum.toString(),
     tail_raw: tail.toString(),
@@ -556,10 +638,12 @@ export async function pullErc20Holders(
     holdings.push(hold(r.address, r.amount));
   }
   sliceRows.forEach((slice, i) => {
-    const id = `group:tail-${i + 1}`;
+    const id = list.window ? 'group:not-read' : `group:tail-${i + 1}`;
     participants.push({
       id,
-      label: `part ${i + 1} of ${sliceRows.length} of the other holders`,
+      label: list.window
+        ? 'supply not read'
+        : `part ${i + 1} of ${sliceRows.length} of the other holders`,
       kind: 'group',
       identity: null,
       count: slice.count,
@@ -570,11 +654,14 @@ export async function pullErc20Holders(
   });
 
   const percent = supply > 0n ? percent2(tail, supply) : '0.00';
-  const provenance =
-    list.source === 'blockscout'
-      ? `Who: the ${rows.length} largest of ${grouped(list.total)} holders on Blockscout, read after this block and not pinned to it, so this is not a final snapshot. ` +
+  const w = list.window;
+  const provenance = w
+    ? `Who: only addresses in a Transfer log between block ${grouped(w.from_block)} (${w.from_as_of}) and this block, the last ${w.days} days: ${grouped(list.logs ?? 0)} logs, ${grouped(withBalance.length)} addresses with a balance, the largest ${rows.length} drawn. This is not every holder: an address that did not move tokens in the window is missing, however much it holds, so the largest holders may not be here. ` +
+      `Check: drawn holdings plus the tail equal totalSupply() by construction, and each drawn amount is what balanceOf answers at this block. The tail is totalSupply() minus the drawn holdings: it was not read, it is not attributed to anyone, and how many addresses hold it is not known. `
+    : list.source === 'blockscout'
+      ? `Who: the ${rows.length} largest of ${grouped(list.total ?? 0)} holders on Blockscout, read after this block and not pinned to it, so this is not a final snapshot. ` +
         `Check: listed holders plus the tail equal totalSupply() by construction, because the tail is what the listed holders leave. Independent of that: Blockscout's total supply differs from totalSupply() by ${amountText(list.source_supply !== undefined ? (list.source_supply > supply ? list.source_supply - supply : supply - list.source_supply) : 0n)}, and balanceOf differs from Blockscout's figure for ${differences} of ${rows.length} holders, by ${amountText(differenceSum)} in all. `
-      : `Who: every Transfer log up to this block, ${grouped(list.logs ?? 0)} logs, summed per address: ${grouped(list.total)} holders. ` +
+      : `Who: every Transfer log up to this block, ${grouped(list.logs ?? 0)} logs, summed per address: ${grouped(list.total ?? 0)} holders. ` +
         `Check: the replayed balances sum to ${amountText(list.sum ?? 0n)}, ${replayDifference === 0n ? 'equal to' : `${amountText((replayDifference ?? 0n) < 0n ? -(replayDifference ?? 0n) : (replayDifference ?? 0n))} ${(replayDifference ?? 0n) > 0n ? 'above' : 'below'}`} totalSupply(), and balanceOf differs from the replay for ${differences} of ${rows.length} listed holders. `;
   const sources: Snapshot['sources'] = [
     {
@@ -603,28 +690,33 @@ export async function pullErc20Holders(
       chain: chain.caip2,
       population: target.population,
       title: target.title,
-      description: `The largest holders of ${symbol} on ${chain.name} at one block, read from the chain, plus a declared tail. Balances only: no votes, no names.`,
-      params: { chain: chain.id, token },
+      description: w
+        ? `Addresses that moved ${symbol} on ${chain.name} in the last ${w.days} days and what they hold, read from the chain. Not every holder: the rest of the supply is not attributed.`
+        : `The largest holders of ${symbol} on ${chain.name} at one block, read from the chain, plus a declared tail. Balances only: no votes, no names.`,
+      params: { chain: chain.id, token, ...(w ? { window_days: String(w.days) } : {}) },
     },
     snapshot: {
       as_of: at.as_of,
       block_height: at.number,
       block_hash: at.hash,
+      // Blockscout's list is not pinned to the block; everything in a replay is.
       final: list.source === 'replay',
     },
     coverage: {
-      participants_total: list.total,
-      participants_included: list.total,
+      participants_total: list.total ?? withBalance.length,
+      participants_included: list.total ?? rows.length,
       amount_total: total,
-      amount_included: total,
+      amount_included: w ? amountText(listedSum) : total,
       unit: symbol,
       measure: 'token_balance',
       ...(sliceRows.length > 0
         ? {
             grouped: [
               {
-                rule: `the other ${grouped(tailHolders)} holders are stored as ${grouped(sliceRows.length)} equal slices of their total, none larger than the holder ranked ${grouped(noSliceOutranks)}. A slice is a piece of a total and describes no real holder`,
-                rows_folded: tailHolders,
+                rule: w
+                  ? 'totalSupply() minus the drawn holdings was not read and is one row. It describes no real holder, and it counts as 1 only because a group row must carry a number'
+                  : `the other ${grouped(tailHolders ?? 0)} holders are stored as ${grouped(sliceRows.length)} equal slices of their total, none larger than the holder ranked ${grouped(noSliceOutranks)}. A slice is a piece of a total and describes no real holder`,
+                rows_folded: tailHolders ?? 0,
                 amount: amountText(tail),
               },
             ],
@@ -659,6 +751,11 @@ export function erc20HoldersStored(t: HolderTarget, opts: { fixtures?: string } 
 
 const TOKEN_PATTERN = '^0x[0-9a-fA-F]{40}$';
 
+const WINDOW_PATTERN = '^([1-9]|[12][0-9]|30)$';
+
+const windowOf = (params: Params | undefined): number =>
+  params?.window_days === undefined ? DEFAULT_WINDOW_DAYS : Number(params.window_days);
+
 export function liveTarget(params: Params | undefined): HolderTarget {
   const chain = EVM_CHAINS[String(params?.chain)];
   const token = String(params?.token ?? '').toLowerCase();
@@ -672,7 +769,7 @@ export function liveTarget(params: Params | undefined): HolderTarget {
     token,
     title: 'ERC-20 holders',
     // not the stored targets' population: a stored data set carries another network id
-    population: `erc20-token-${chain.id}-${token}`,
+    population: `erc20-token-${chain.id}-${token}-${windowOf(params)}d`,
   };
 }
 
@@ -683,7 +780,7 @@ export const ERC20_HOLDERS_DESCRIPTOR: NetworkDescriptor = {
   kind: 'other',
   title: 'ERC-20 holders, any token',
   description:
-    'The largest holders of any ERC-20 token on Ethereum, Base or Arbitrum, chosen by chain and token address, read now. Ethereum answers in seconds for any token. Arbitrum only for a token with a short history. Base only with an Envio token, and only a short history.',
+    'Holders of any ERC-20 token on Ethereum, Base or Arbitrum, chosen by chain and token address, read now. Where Blockscout answers: the largest holders. Otherwise only the addresses that moved the token in the last window_days, default 7, and the rest of the supply is not attributed.',
   params: {
     chain: {
       required: true,
@@ -697,13 +794,19 @@ export const ERC20_HOLDERS_DESCRIPTOR: NetworkDescriptor = {
       pattern: TOKEN_PATTERN,
       example: PEPE_ETHEREUM.token,
     },
+    window_days: {
+      required: false,
+      description: 'days of Transfer logs to read where a replay is used, 1 to 30, default 7',
+      pattern: WINDOW_PATTERN,
+      example: '7',
+    },
   },
   capabilities: capabilities('token', 'token balance'),
   live: true,
   cost: {
     calls: 10,
     seconds: 8,
-    note: 'Ethereum, any token: about 10 keyless calls in about 8 s. Arbitrum: 2 calls per 20,000 Transfer logs, stopped at 20 calls. Base: HyperSync with a token, 15 queries a minute, about 2,000 logs a query, stopped at 15 queries.',
+    note: 'Ethereum through Blockscout: about 10 keyless calls in about 8 s. A week of logs: a few keyless calls on Arbitrum and Ethereum; on Base 303 keyless calls in about 80 s, or a few HyperSync queries with a token. Stops at 200,000 logs (30,000 on HyperSync) and says so.',
   },
   sources: [
     { id: S.list, kind: 'api', url: ETHEREUM.blockscout ?? '' },
@@ -741,8 +844,7 @@ export function erc20HoldersLive(
       const token = process.env.ENVIO_API_TOKEN;
       const { snapshot } = await pullErc20Holders(target, {
         block: at.block_height,
-        maxLogCalls: LIVE_LOG_CALLS,
-        maxQueries: LIVE_HYPERSYNC_QUERIES,
+        windowDays: windowOf(params),
         ...(token ? { hypersyncToken: token } : {}),
         ...(opts.fetch ? { fetch: opts.fetch } : {}),
         ...(opts.sleep ? { sleep: opts.sleep } : {}),

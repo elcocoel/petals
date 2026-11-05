@@ -15,6 +15,7 @@ const NETWORKS = [
   'ens-delegates',
   'erc20-holders-ethereum-bank',
   'erc20-holders-arbitrum-dpx',
+  'erc20-holders-base-seam',
 ] as const;
 
 describe.each(NETWORKS)('%s', (network) => {
@@ -57,7 +58,9 @@ describe.each(NETWORKS)('%s', (network) => {
         expect(drawn.svg.startsWith('<svg')).toBe(true);
         expect(drawn.legend.length).toBeGreaterThan(0);
         for (const item of drawn.legend) expect(item.meaning.length).toBeGreaterThan(0);
-        expect(drawn.petals[0]?.id).not.toMatch(/^group:/);
+        // the one exception: a window's supply not read is a petal, and says so
+        if (network !== 'erc20-holders-base-seam')
+          expect(drawn.petals[0]?.id).not.toMatch(/^group:/);
       }
     }
   });

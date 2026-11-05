@@ -29,6 +29,7 @@ Nothing under `../research/`, `../design/`, `../submission/` or `../.secrets/` i
 | `snapshots/029e42fc….json.gz` | `ens-delegates` (module `erc20-votes`) at Ethereum block 26,348,717 (2026-11-05): all 8,561 delegates with votes, read keyless. |
 | `snapshots/92f5abc5….json.gz` | `erc20-holders-ethereum-bank` (module `erc20-holders`) at Ethereum block 26,348,909: BANK, 5,571 holders by replay of 75,770 Transfer logs, read keyless. The 300 largest stay individual; the rest are equal slices of their total, none larger than the smallest listed holder, declared in `coverage.grouped`. A slice describes no real holder. |
 | `snapshots/c4c9a2cd….json.gz` | `erc20-holders-arbitrum-dpx` at Arbitrum block 521,483,627, the same way: DPX, 262,682 holders from 2,422,221 Transfer logs, read keyless. |
+| `snapshots/ed9319cd….json.gz` | `erc20-holders-base-seam` at Base block 53,548,781: addresses that moved SEAM in the last 7 days and what they hold, read keyless. Not every holder: `group:not-read` is the rest of the supply, and it is not attributed. |
 | `snapshots/index.json` | `{ "petal": "snapshot-index/v1", "snapshots": IndexRow[] }` (`IndexRow` in `@petal/core/types`): sha256, network, chain, population, block_height, as_of, final, bytes, gz_bytes, file, where, module. |
 | `snapshots/test/two-participants.json` | The two largest seated validators, stake only (the 2-petal golden). |
 | `snapshots/test/tiny-backers.json` | Five seated pools whose backers cover every class, with owners, holdings and delegations; the rest folded into declared groups. |

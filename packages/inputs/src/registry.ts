@@ -7,6 +7,7 @@ import {
   DPX_ARBITRUM,
   erc20HoldersLive,
   erc20HoldersStored,
+  SEAM_BASE,
 } from './modules/erc20-holders.ts';
 import { ENS_TOKEN, erc20Votes } from './modules/erc20-votes.ts';
 import { molochV1 } from './modules/moloch-v1.ts';
@@ -26,4 +27,5 @@ export const modules: Record<string, InputModule> = {
   'erc20-holders': erc20HoldersLive(),
   [BANK_ETHEREUM.id]: erc20HoldersStored(BANK_ETHEREUM),
   [DPX_ARBITRUM.id]: erc20HoldersStored(DPX_ARBITRUM),
+  [SEAM_BASE.id]: erc20HoldersStored(SEAM_BASE),
 };

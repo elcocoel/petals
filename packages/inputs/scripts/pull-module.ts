@@ -4,8 +4,9 @@
 //   node packages/inputs/scripts/pull-module.ts solana-spl-trump       live: one call of ~553 MB
 //   ... solana-spl-trump --from-dump <answer.json> <supply.json>       reuse a stored answer
 //   ... solana-spl-test --mint <address>                               any mint, small ones only
-//   ... erc20-holders-ethereum-bank                                    any listed target; on Base
-//       set ENVIO_API_TOKEN in the environment first (HyperSync), and it is never printed
+//   ... erc20-holders-base-seam                                        the last 7 days of logs
+//   ... erc20-holders-arbitrum-dpx --full                              every log: long, offline only
+//       ENVIO_API_TOKEN from the environment routes Base through HyperSync; it is never printed
 // A live run also writes the small recording the tests replay, when the module has one.
 import { createReadStream, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -144,7 +145,7 @@ if (network === 'moloch-v1') {
   const { snapshot, checks } = await pullErc20Holders(target, {
     fetch: fetchAll,
     onProgress: log,
-    maxLogCalls: 400,
+    ...(process.argv.includes('--full') ? { full: true, maxLogCalls: 2000 } : {}),
     ...(token ? { hypersyncToken: token } : {}),
     ...(replay && rec.rec?.block ? { block: rec.rec.block as number } : {}),
   });

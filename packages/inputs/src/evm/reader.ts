@@ -229,9 +229,16 @@ export function evmReader(opts: EvmReaderOptions = {}): EvmReader {
     },
 
     async *logPages(filter, from, to) {
-      const stack: [number, number][] = [[from, to]];
+      const chunk = chain.log_chunk_blocks ?? Number.POSITIVE_INFINITY;
+      const stack: [number, number][] = [];
+      let cursor = from;
       let calls = 0;
-      while (stack.length > 0) {
+      while (stack.length > 0 || cursor <= to) {
+        if (stack.length === 0) {
+          const end = Math.min(cursor + chunk - 1, to);
+          stack.push([cursor, end]);
+          cursor = end + 1;
+        }
         const [a, b] = stack.pop() as [number, number];
         if (++calls > maxLogCalls)
           throw failed(`log walk over ${maxLogCalls} calls at blocks ${a} to ${b}`);

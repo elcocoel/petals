@@ -70,6 +70,23 @@
       }
     },
     {
+      "sha256": "ed9319cdf2d7ef561a5ec4975461e6e16b9be2ca39eeafafb92b5981a811079e",
+      "network": "erc20-holders-base-seam",
+      "chain": "eip155:8453",
+      "population": "erc20-holders-base-0x1c7a460413dd4e964f96d8dfc56e7223ce88cd85",
+      "block_height": 53548781,
+      "as_of": "2026-11-05T13:55:09Z",
+      "final": true,
+      "bytes": 67563,
+      "gz_bytes": 12020,
+      "file": "ed9319cdf2d7ef561a5ec4975461e6e16b9be2ca39eeafafb92b5981a811079e.json.gz",
+      "where": "fixture",
+      "module": {
+        "id": "erc20-holders",
+        "version": "evm/1"
+      }
+    },
+    {
       "sha256": "92f5abc5a5e1dbf8341ba2e610a71f7447cddabbc13a16dd6154aa10a0d14444",
       "network": "erc20-holders-ethereum-bank",
       "chain": "eip155:1",

@@ -35,6 +35,7 @@ export {
 } from './modules/beanstalk.ts';
 export {
   BANK_ETHEREUM,
+  DEFAULT_WINDOW_DAYS,
   DPX_ARBITRUM,
   ERC20_HOLDERS_DESCRIPTOR,
   erc20HoldersLive,
@@ -42,6 +43,7 @@ export {
   type HolderTarget,
   PEPE_ETHEREUM,
   pullErc20Holders,
+  REPLAY_LOG_BUDGET,
   SEAM_BASE,
 } from './modules/erc20-holders.ts';
 export { ENS_TOKEN, erc20Votes, pullErc20Votes, type VotesToken } from './modules/erc20-votes.ts';

@@ -48,20 +48,22 @@ describe.skipIf(process.env.PETAL_LIVE !== '1')('live modules (PETAL_LIVE=1)', (
     expect(check.mismatches).toEqual([]);
   });
 
-  test('erc20-holders: a short-history token on Ethereum, about 14 calls', {
-    timeout: 120_000,
-  }, async () => {
+  test('erc20-holders: a week of logs on Ethereum, a few calls', { timeout: 120_000 }, async () => {
     const { snapshot, checks } = await pullErc20Holders(BANK_ETHEREUM, {});
-    expect(checks.replay_vs_supply_raw).toBe('0');
-    expect(checks.balance_differences).toBe(0);
+    expect(checks.window?.days).toBe(7);
+    expect(checks.drawn_vs_supply_raw).toBe('0');
     expect(validateSnapshot(snapshot).ok).toBe(true);
   });
 
-  test('erc20-holders: Base refuses a keyless read, plainly', { timeout: 60_000 }, async () => {
+  test('erc20-holders: a whole history on Base without a token is refused', {
+    timeout: 60_000,
+  }, async () => {
     const token = process.env.ENVIO_API_TOKEN;
     delete process.env.ENVIO_API_TOKEN;
     try {
-      await expect(pullErc20Holders(SEAM_BASE, {})).rejects.toMatchObject({ code: 'cannot_read' });
+      await expect(pullErc20Holders(SEAM_BASE, { full: true })).rejects.toMatchObject({
+        code: 'cannot_read',
+      });
     } finally {
       if (token) process.env.ENVIO_API_TOKEN = token;
     }

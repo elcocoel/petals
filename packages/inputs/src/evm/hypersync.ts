@@ -17,8 +17,6 @@ export interface HyperSyncOptions {
   token: string;
   fetch?: typeof globalThis.fetch;
   sleep?: (ms: number) => Promise<void>;
-  /** stops a walk that would take too long, e.g. in a chat */
-  maxQueries?: number;
   stats?: HyperSyncStats;
 }
 
@@ -53,12 +51,6 @@ export async function* hypersyncLogPages(
   let next = from;
   let retries = 0;
   while (next <= to) {
-    if (opts.maxQueries !== undefined && stats.queries >= opts.maxQueries)
-      throw failed(
-        chain,
-        `stopped after ${opts.maxQueries} queries at block ${next}`,
-        'too many logs for one read; pull it as a stored snapshot',
-      );
     stats.queries++;
     let res: Response;
     try {
