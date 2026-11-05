@@ -17,6 +17,15 @@ export function findRoot(env: Env, from: string): string {
   }
 }
 
+/**
+ * The folder the person ran the command in. `pnpm -s --dir <repo> petal ...` runs the script in
+ * <repo>, so `--out flower.svg` and `@spec.json` would land there; pnpm keeps the caller's folder
+ * in INIT_CWD. Only for our own `petal` script: another script's INIT_CWD says nothing about us.
+ */
+export function callerCwd(env: Env, cwd: string): string {
+  return env.npm_lifecycle_event === 'petal' && env.INIT_CWD ? env.INIT_CWD : cwd;
+}
+
 /** The environment's Config; the --fake flag turns fake mode on as PETAL_FAKE=1 does. */
 export function configFromEnv(env: Env, root: string, opts: { fake?: boolean } = {}): Config {
   const cfg = toolsConfigFromEnv(env, root);

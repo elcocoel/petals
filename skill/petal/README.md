@@ -19,6 +19,26 @@ curl -s http://localhost:8787/api/v1/health
 
 To use an API somewhere else, set `PETAL_API` to its base URL in the agent's environment. The skill falls back to `http://localhost:8787`.
 
+## One command
+
+From your clone, with Node 24 active and `pnpm install` done:
+
+```bash
+pnpm petal connect claude                # or: codex
+```
+
+It installs the skill and registers the MCP server with Node 24 on its PATH, using the agent's own `mcp add`. Then start a new session of your agent, in any folder, and ask it who stands behind NEAR's validators.
+
+- `--dry-run` prints exactly what it would change, and changes nothing.
+- `--remove` undoes it.
+- `--project` (Claude Code only) installs for one folder instead of every folder. Run it from that folder, with `pnpm -s --dir <repo> petal connect claude --project`.
+- Running it twice is fine. It never overwrites a skill or a server that isn't Petal's: it stops and says so.
+- `petal connect <any other name>` prints what's supported, plus the MCP command and the skill's path to give another agent by hand.
+
+Without a Petal site running, the flower's `view_url` opens nothing, so the skill has the agent save a local SVG and hand back its path.
+
+The sections below do the same by hand.
+
 ## Claude Code
 
 Install the skill for every project:
@@ -53,10 +73,12 @@ Then ask: **who stands behind NEAR's validators?** The agent should run the tool
 ## Codex
 
 ```bash
-mkdir -p ~/.codex/skills/petal
-cp <repo>/skill/petal/SKILL.md ~/.codex/skills/petal/
+mkdir -p ~/.agents/skills/petal
+cp <repo>/skill/petal/SKILL.md ~/.agents/skills/petal/
 codex mcp add petal -- pnpm -s --dir <repo> petal mcp            # optional
 ```
+
+Codex's `mcp add` replaces a server of the same name without asking. `petal connect codex` checks first.
 
 The Node 24 rule above applies here too. Give the server a PATH with `--env PATH=...`, or use the HTTP endpoint with `codex mcp add petal --url http://localhost:8787/mcp`. If Codex's sandbox blocks the skill's `curl` calls to localhost, use the MCP server or allow network access for the session.
 

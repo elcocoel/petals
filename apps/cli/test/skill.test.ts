@@ -96,6 +96,19 @@ describe('SKILL.md: the Agent Skills format', () => {
     expect(SKILL).toMatch(/coordinator syncs the wording at merge/);
   });
 
+  test('says how to get the flower when no Petal site is running', () => {
+    const own = SKILL.slice(SKILL.indexOf(END));
+    expect(own).toContain('## When no Petal site is running');
+    expect(own).toContain(
+      `pnpm -s --dir "<repo>" petal render @spec.json --out flower.svg | grep '"spec_sha256"'`,
+    );
+    expect(own).toContain('"include_svg": true');
+    expect(own).toMatch(/its full path goes on the \*\*Flower\*\* line/);
+    expect(shared).not.toContain('<repo>'); // the shared block is Petal's own prompt too
+    // a real `claude -p` run with Bash(pnpm *) allowed was stopped at a redirect, so none here
+    expect(own).not.toMatch(/petal render[^\n]*> /);
+  });
+
   test('nothing local or out of bounds', () => {
     for (const text of [SKILL, README]) {
       expect(text).not.toMatch(/\/Users\/|file:\/\/|\.secrets/);
@@ -106,8 +119,9 @@ describe('SKILL.md: the Agent Skills format', () => {
 describe('README.md: install in Claude Code, Codex and IronClaw', () => {
   test.each([
     'claude mcp add petal -- pnpm -s --dir <repo> petal mcp',
+    'pnpm petal connect claude',
     '~/.claude/skills/petal',
-    '~/.codex/skills/petal',
+    '~/.agents/skills/petal',
     '~/.ironclaw/skills/petal',
     'claude mcp add --transport http petal http://localhost:8787/mcp',
     'pnpm api',

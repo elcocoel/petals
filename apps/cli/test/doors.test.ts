@@ -1,6 +1,8 @@
 // T070: the two doors the CLI starts (`petal mcp`, `petal api`), the config it hands the
 // tools, and the real entry point.
 import { execFileSync, spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Config, ToolContext } from '@petal/tools';
 import { configFromEnv as toolsConfigFromEnv } from '@petal/tools';
@@ -170,6 +172,28 @@ describe('the real entry point', () => {
       dry: true,
       correlation_id: '00000000-0000-4000-8000-000000000000',
     });
+  });
+
+  test('pnpm --dir: relative --out and @file stay in the folder the person is in', () => {
+    // The skill's way to a local flower when no site runs. The fake config keeps it offline.
+    const dir = mkdtempSync(join(tmpdir(), 'w7-render-'));
+    const env = { ...process.env, PETAL_FAKE: '1' };
+    const petal = (...args: string[]) =>
+      spawnSync('pnpm', ['-s', '--dir', ROOT, 'petal', ...args], {
+        cwd: dir,
+        env,
+        encoding: 'utf8',
+        maxBuffer: 1 << 24,
+      });
+    const proposed = petal('propose', 'near-validators', '--segments', 'backers', '--quiet');
+    expect(proposed.status, proposed.stderr).toBe(0);
+    writeFileSync(join(dir, 'spec.json'), JSON.stringify(JSON.parse(proposed.stdout).spec));
+
+    const r = petal('render', '@spec.json', '--out', 'flower.svg', '--quiet');
+    expect(r.status, r.stderr).toBe(0);
+    expect(readFileSync(join(dir, 'flower.svg'), 'utf8')).toMatch(/^<svg/);
+    expect(existsSync(join(ROOT, 'flower.svg'))).toBe(false);
+    expect(JSON.parse(r.stdout).spec_sha256).toMatch(/^[0-9a-f]{64}$/);
   });
 
   test('pnpm -s petal keeps stdout clean (the MCP install command relies on it)', () => {

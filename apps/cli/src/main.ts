@@ -6,7 +6,8 @@
 // first calls get_snapshot and, for a spec or a missing measure, propose_spec with the default
 // convention. So `petal figures near-validators` prints the figures the default flower quotes.
 import { readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { homedir } from 'node:os';
+import { dirname, resolve } from 'node:path';
 import { TOOLS_VERSION } from '@petal/core';
 import type { ToolError } from '@petal/core/types';
 import type { Config, JSONSchema, Tool, ToolContext } from '@petal/tools';
@@ -22,7 +23,8 @@ import {
   UsageError,
 } from './args.ts';
 import { commandName, positionalFields } from './commands.ts';
-import { configFromEnv, type Env, findRoot } from './config.ts';
+import { callerCwd, configFromEnv, type Env, findRoot } from './config.ts';
+import { CONNECT_HELP, connect, type RunCommand, spawnCommand } from './connect.ts';
 
 /** Any registry tool, called with an input built from argv. */
 export type AnyTool = Tool<never, unknown>;
@@ -56,6 +58,11 @@ export interface CliDeps {
   readStdin?: () => Promise<string>;
   readFile?: (path: string) => string;
   writeFile?: (path: string, data: string) => void;
+  /** `petal connect`: the home folder, the agents' CLIs, and the node to put on the PATH */
+  home?: string;
+  runCommand?: RunCommand;
+  nodeBin?: string;
+  nodeVersion?: string;
 }
 
 const SHA256 = /^[0-9a-f]{64}$/i;
@@ -93,7 +100,7 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
   const stdout = deps.stdout ?? ((t: string) => void process.stdout.write(t));
   const stderr = deps.stderr ?? ((t: string) => void process.stderr.write(t));
   const env = deps.env ?? process.env;
-  const cwd = deps.cwd ?? process.cwd();
+  const cwd = deps.cwd ?? callerCwd(env, process.cwd());
   const io: Io = {
     readFile: deps.readFile ?? ((p: string) => readFileSync(resolve(cwd, p), 'utf8')),
     readStdin: deps.readStdin ?? (() => readAll(process.stdin)),
@@ -101,8 +108,21 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
   const writeFile = deps.writeFile ?? ((p: string, d: string) => writeFileSync(resolve(cwd, p), d));
 
   try {
-    const tools = await loadTools(deps);
     const [command = 'help', ...rest] = argv;
+    if (command === 'connect') {
+      return connect(rest, {
+        env,
+        cwd,
+        root: deps.root ?? findRoot(env, import.meta.dirname),
+        home: deps.home ?? homedir(),
+        nodeBin: deps.nodeBin ?? dirname(process.execPath),
+        nodeVersion: deps.nodeVersion ?? process.version,
+        runCommand: deps.runCommand ?? spawnCommand(env),
+        stdout,
+        stderr,
+      });
+    }
+    const tools = await loadTools(deps);
     const cli = new Cli(tools, { env, cwd, root: deps.root, io, stdout, stderr, writeFile });
     if (command === 'help' || command === '--help' || command === '-h') return cli.help(rest[0]);
     if (command === 'mcp') return await cli.mcp(rest);
@@ -464,6 +484,11 @@ class Cli {
       p('petal mcp [--fake] [--root <dir>]\n\n');
       p("MCP over stdio (serveStdio): the registry's tools for Claude Code and Codex.\n");
       p('  claude mcp add petal -- pnpm -s --dir <repo> petal mcp\n');
+      p('`petal connect claude` does this for you, with Node 24 on the PATH.\n');
+      return 0;
+    }
+    if (command === 'connect') {
+      p(CONNECT_HELP);
       return 0;
     }
     if (command === 'api') {
@@ -490,6 +515,7 @@ class Cli {
     p('\nDoors:\n');
     p('  mcp                 MCP over stdio (serveStdio), for Claude Code and Codex\n');
     p(`  api                 the HTTP API (petalApp) on http://localhost:${DEFAULT_PORT}\n`);
+    p('  connect <agent>     give your own agent (claude, codex) the skill and the tools\n');
     p('  help [command]      this text, or one command and its flags\n');
     p('\nShorthand: a network id in place of a sha256 or a spec first takes the snapshot\n');
     p(
