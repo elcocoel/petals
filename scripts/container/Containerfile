@@ -1,0 +1,23 @@
+# The app as one container, built from a clean `git archive` of a commit, so nothing local (.petal,
+# secrets) can travel in. Node runs the workspace's TypeScript sources directly, so the image keeps
+# the workspace layout. Environment and mounts are set at run time, outside the repo.
+
+FROM docker.io/library/node:24.14.0-bookworm-slim AS build
+ENV NEXT_TELEMETRY_DISABLED=1 CI=true
+WORKDIR /app
+COPY . .
+RUN corepack enable pnpm && pnpm install --frozen-lockfile
+RUN pnpm --filter @petal/web build && test -f apps/web/.next/BUILD_ID
+# Build tools aren't needed to serve. Next writes its cache under .next, and nowhere else in /app.
+RUN pnpm install --frozen-lockfile --prod && rm -rf apps/web/.next/cache \
+  && mkdir apps/web/.next/cache && chown -R node:node apps/web/.next
+
+FROM docker.io/library/node:24.14.0-bookworm-slim
+ARG PETAL_COMMIT=unknown
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PETAL_COMMIT=$PETAL_COMMIT PORT=3090 PETAL_STATE_DIR=/data
+COPY --from=build /app /app
+RUN mkdir -p /data /secrets && chown node:node /data
+USER node
+WORKDIR /app/apps/web
+EXPOSE 3090
+ENTRYPOINT ["/bin/bash", "/app/scripts/container/entry.sh"]
