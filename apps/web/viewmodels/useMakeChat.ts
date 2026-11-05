@@ -7,15 +7,17 @@
 // so Stop needs server work first, and a button here would claim what nothing can witness.
 import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { type AgentClient, agentClient } from '../lib/agent-client.ts';
+import { withAbout } from '../lib/ask-about.ts';
 import {
   type ChatAction,
   type ChatState,
   chatReducer,
   initialChat,
+  type Opened,
   type QuestionStore,
   questionBackup,
 } from '../lib/thread.ts';
-import { composerView, RECORDED_QUESTION, threadView } from '../lib/thread-view.ts';
+import { RECORDED_QUESTION, threadView } from '../lib/thread-view.ts';
 
 export interface ChatDeps {
   client: AgentClient;
@@ -34,13 +36,21 @@ const messageOf = (e: unknown) => (e instanceof Error ? e.message : String(e));
  */
 export async function sendQuestion(
   deps: ChatDeps,
-  q: { text: string; recorded: boolean; greeting?: string; runId: string | null },
+  q: {
+    text: string;
+    recorded: boolean;
+    greeting?: string | undefined;
+    runId: string | null;
+    /** what it's about (lib/ask-about.ts): it goes with the words, and a failure gives back only them */
+    about?: string | undefined;
+  },
 ): Promise<void> {
   // a recorded run can't go on from what was said: each play starts over, with no words of its own
   const continuing = q.recorded ? null : q.runId;
   const backup = q.recorded ? null : questionBackup(deps.store, continuing);
   backup?.keep(q.text);
-  deps.dispatch({ type: 'sent', text: q.text, startOver: q.recorded });
+  const said = q.about && !q.recorded ? withAbout(q.about, q.text) : q.text;
+  deps.dispatch({ type: 'sent', text: said, startOver: q.recorded });
   let accepted = false;
   let failure: string | null = null;
   try {
@@ -49,7 +59,7 @@ export async function sendQuestion(
         // the model should know what it has already said to this person
         ...(q.greeting && !continuing ? [{ role: 'assistant' as const, content: q.greeting }] : []),
         // only what is new: the server holds the conversation
-        { role: 'user' as const, content: q.text },
+        { role: 'user' as const, content: said },
       ],
       ...(continuing ? { run_id: continuing } : {}),
     });
@@ -140,27 +150,37 @@ function browserStore(): QuestionStore | null {
   }
 }
 
-const showRunInUrl = (runId: string) => {
-  window.history.replaceState(null, '', `/make?run=${encodeURIComponent(runId)}`);
-};
-
 export function useMakeChat({
   initialRun,
   recorded = false,
   opening,
+  initialOpen,
+  initialPetal,
 }: {
-  initialRun?: string;
+  initialRun?: string | undefined;
   recorded?: boolean;
   /** what the agent says first, on a new chat: written text, so opening the app costs no model call */
-  opening?: string;
+  opening?: string | undefined;
+  initialOpen?: Opened;
+  initialPetal?: string | null;
 }) {
   const greeting = opening && !initialRun && !recorded ? opening : undefined;
-  const [chat, dispatch] = useReducer(chatReducer, { initialRun, greeting }, initialChat);
+  const [chat, dispatch] = useReducer(
+    chatReducer,
+    {
+      ...(initialRun ? { initialRun } : {}),
+      ...(greeting ? { greeting } : {}),
+      ...(initialOpen ? { open: initialOpen } : {}),
+      ...(initialPetal ? { petal: initialPetal } : {}),
+    },
+    initialChat,
+  );
   const box = useRef<HTMLTextAreaElement>(null);
   const thread = useRef<HTMLDivElement>(null);
   const following = useRef(true);
   const deps = useMemo<ChatDeps>(
-    () => ({ client: agentClient, store: browserStore(), dispatch, onRun: showRunInUrl }),
+    // the address follows the state (useWorkspace), so there is nothing to do on a run here
+    () => ({ client: agentClient, store: browserStore(), dispatch, onRun: () => {} }),
     [],
   );
 
@@ -181,21 +201,22 @@ export function useMakeChat({
     };
   }, [deps, initialRun]);
 
-  const { items, busy, runId, turn, lostAgain, question } = chat;
+  const { items, busy, runId, turn, lostAgain, question, open } = chat;
   const rows = useMemo(
-    () => threadView({ items, busy, runId, turn, lostAgain, recorded }),
-    [items, busy, runId, turn, lostAgain, recorded],
+    () => threadView({ items, busy, runId, turn, lostAgain, recorded, open }),
+    [items, busy, runId, turn, lostAgain, recorded, open],
   );
 
   return {
-    state: { ...chat, rows, composer: composerView({ question, runId, busy, recorded }) },
+    state: { ...chat, rows, recorded },
+    dispatch,
     actions: {
       setQuestion: (text: string) => typeQuestion(deps, chat, text),
-      send: async () => {
+      send: async (about?: string) => {
         const text = recorded ? RECORDED_QUESTION : question.trim();
         if (!text || busy) return;
         following.current = true;
-        await sendQuestion(deps, { text, recorded, greeting, runId });
+        await sendQuestion(deps, { text, recorded, greeting, runId, about });
         box.current?.focus();
       },
       refollow: () => {

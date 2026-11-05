@@ -106,7 +106,17 @@ const all =
 const MAY_CALL_THE_NETWORK = new Set(['lib/agent-client.ts']);
 
 /** The pure projection of the foundation doc's table: same input, same output, and nothing else. */
-const PROJECTION = ['lib/thread.ts', 'lib/thread-view.ts', 'lib/sse.ts', 'lib/markdown.ts'];
+const PROJECTION = [
+  'lib/thread.ts',
+  'lib/thread-view.ts',
+  'lib/panel-view.ts',
+  'lib/flower-view.ts',
+  'lib/ask-about.ts',
+  'lib/stage.ts',
+  'lib/workspace-url.ts',
+  'lib/sse.ts',
+  'lib/markdown.ts',
+];
 
 /** The one file in components/chat that isn't a view: it follows the window's scroll. */
 const VIEW_HOOKS = new Set(['components/chat/useFollowScroll.ts']);
@@ -181,10 +191,13 @@ const RULES: Rule[] = [
     good: "// fetch( lives in the adapter\nconst s = 'fetch(';",
   },
   {
-    name: 'components/chat views take props only: no ViewModel, no state, no effects',
-    files: () => sourcesIn('components/chat').filter((f) => !VIEW_HOOKS.has(f)),
+    name: 'components/chat and components/workspace views take props only: no ViewModel, no state, no effects',
+    files: () =>
+      [...sourcesIn('components/chat'), ...sourcesIn('components/workspace')].filter(
+        (f) => !VIEW_HOOKS.has(f),
+      ),
     check: all(
-      importing(/(?:^|\/)viewmodels(?:\/|$)/, 'Chat.tsx does the wiring'),
+      importing(/(?:^|\/)viewmodels(?:\/|$)/, 'Workspace.tsx does the wiring'),
       using(/\buse(?:State|Reducer|Effect|LayoutEffect|Ref)\b/, 'a view holds nothing'),
     ),
     bad: "import { useMakeChat } from '../../viewmodels/useMakeChat.ts';",
@@ -198,10 +211,19 @@ describe('the layers', () => {
       expect.arrayContaining(['lib/agent-client.ts', 'lib/thread.ts', 'lib/thread-view.ts']),
     );
     expect(sourcesIn('components')).toEqual(
-      expect.arrayContaining(['components/Chat.tsx', 'components/chat/Thread.tsx']),
+      expect.arrayContaining([
+        'components/Workspace.tsx',
+        'components/chat/Thread.tsx',
+        'components/workspace/FlowerPanel.tsx',
+      ]),
     );
     expect(sourcesIn('viewmodels')).toEqual(
-      expect.arrayContaining(['viewmodels/useMakeChat.ts', 'viewmodels/useDrawnFlower.ts']),
+      expect.arrayContaining([
+        'viewmodels/useMakeChat.ts',
+        'viewmodels/useDrawnFlower.ts',
+        'viewmodels/useWorkspace.ts',
+        'viewmodels/useStage.ts',
+      ]),
     );
   });
 

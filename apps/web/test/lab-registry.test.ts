@@ -80,7 +80,7 @@ describe('the registry', () => {
     expect(inFile).toBe(entry.source);
     if (entry.figmaNode !== null) {
       expect(entry.figmaNode).toMatch(/^\d+:\d+$/);
-      expect(entry.figmaName).toMatch(/^Petals \/ /);
+      expect(entry.figmaName).toMatch(/^(?:Petals \/ |Workspace|Make a flower \/ )/);
     } else {
       expect(entry.figmaName).toBeNull();
     }

@@ -17,7 +17,7 @@ export function openingMessage(flowers: OpeningFlower[]): string {
     ? `Or start from what's already mapped: ${links.join(', ')}, or the whole [gallery](/gallery).`
     : '';
   return [
-    "Hi. I'm Petal's agent. I dig into who holds power in a network, then draw what I find as a flower.",
+    "Hi. I'm Petals. I dig into who holds power in a network, then draw what I find as a flower.",
     'Give me somewhere to start: a DAO, a token or a contract address. Moloch DAO and UNI on Base are good first cases.',
     mapped,
     'What are you curious about?',

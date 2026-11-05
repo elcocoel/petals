@@ -9,14 +9,19 @@ import type { SurfaceName } from '@petal/tokens';
 import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
 import { CopyPrompt } from '../components/CopyPrompt.tsx';
+import { Stage } from '../components/canvas/Stage.tsx';
+import { StagedFlower } from '../components/canvas/StagedFlower.tsx';
 import { AnsweredBy } from '../components/chat/AnsweredBy.tsx';
-import { FlowerCard } from '../components/chat/FlowerCard.tsx';
+import { Speech } from '../components/chat/Speech.tsx';
 import { Steps } from '../components/chat/Steps.tsx';
 import { Thread } from '../components/chat/Thread.tsx';
+import { TurnFlower } from '../components/chat/TurnFlower.tsx';
+import { TurnStatus } from '../components/chat/TurnStatus.tsx';
 import { Flower } from '../components/Flower.tsx';
 import { FlowerSheet } from '../components/FlowerSheet.tsx';
+import { FlowerTile } from '../components/FlowerTile.tsx';
 import { Interpretation, SignatureLine } from '../components/Interpretation.tsx';
-import { Legend } from '../components/Legend.tsx';
+import { Legend, LegendKeys } from '../components/Legend.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
 import { PublishFlow } from '../components/PublishFlow.tsx';
@@ -24,14 +29,24 @@ import { QuotePanel } from '../components/QuotePanel.tsx';
 import { SourceList } from '../components/Sources.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
 import { Button } from '../components/ui/Button.tsx';
+import { Cell } from '../components/ui/Cell.tsx';
 import { Eyebrow } from '../components/ui/Eyebrow.tsx';
+import { Icon, type IconName } from '../components/ui/Icon.tsx';
 import { Surface } from '../components/ui/Surface.tsx';
 import { TextLink } from '../components/ui/TextLink.tsx';
 import { Wordmark } from '../components/ui/Wordmark.tsx';
+import { FlowerPanel } from '../components/workspace/FlowerPanel.tsx';
+import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
+import { NavigationRail } from '../components/workspace/NavigationRail.tsx';
+import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
+import { WorkspaceFrame } from '../components/workspace/WorkspaceFrame.tsx';
+import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader.tsx';
+import { legendKeys, readingKey, svgImage } from '../lib/flower-view.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
 import { openingMessage } from '../lib/opening.ts';
+import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
 import type { Done } from '../lib/thread.ts';
-import { answeredBy, composerView, threadView } from '../lib/thread-view.ts';
+import { answeredBy, composerView, type TurnRow, threadView } from '../lib/thread-view.ts';
 import {
   entry,
   flowerRow,
@@ -43,7 +58,7 @@ import {
   signature,
   TURN_ROWS,
 } from './fixtures.ts';
-import { LabComposer } from './LabComposer.tsx';
+import { LabComposer, LabPetalClose } from './LabComposer.tsx';
 
 export interface LabState {
   name: string;
@@ -57,7 +72,7 @@ export interface LabState {
 
 export interface LabEntry {
   id: string;
-  group: 'Primitives' | 'The conversation' | 'The flower' | 'Reading' | 'Actions';
+  group: 'Primitives' | 'The workspace' | 'The conversation' | 'The flower' | 'Reading' | 'Actions';
   figmaName: string | null;
   figmaNode: string | null;
   source: string;
@@ -84,6 +99,48 @@ const drawn = () => {
 };
 const inTurn = (turn: Parameters<typeof threadView>[0]['turn'], busy = true, lostAgain = false) =>
   threadView({ items: [], busy, runId: 'run', turn, lostAgain, recorded: false });
+const turnRow = (turn: Parameters<typeof threadView>[0]['turn'], o: Partial<TurnRow> = {}) =>
+  ({ ...(inTurn(turn, false)[0] as TurnRow), ...o }) as TurnRow;
+
+const ONE_PETAL = { figmaName: 'Make a flower / One petal', figmaNode: '39:862' };
+
+const LISTED = [
+  {
+    id: '3394fb875bf97c1af8191566',
+    title: 'Who stands behind NEAR’s validators?',
+    network: 'near-validators',
+    as_of: '2026-11-03T19:42:00Z',
+    maker: null,
+    published_at: null,
+    where: 'fixture' as const,
+  },
+];
+
+/** A stored flower as the panel gets it, from the fixtures. */
+const panelFlower = (): PanelFlower => {
+  const { spec, rendered } = golden('near-validators-default');
+  return {
+    key: rendered.spec_sha256,
+    spec,
+    legend: rendered.legend,
+    interpretation: entry().interpretation,
+    signature: null,
+    model: 'recorded',
+    checks: 'Checks passed',
+    viewUrl: '#flowerpanel',
+    publishUrl: '#flowerpanel',
+    earlier: false,
+  };
+};
+const panelView = (selected: string | null = null) =>
+  flowerPanelView({
+    flower: panelFlower(),
+    drawing: drawn(),
+    selected,
+    sources: SOURCE_URLS,
+    units: { validator_stake_current_epoch: 'NEAR' },
+  });
+const ICONS: IconName[] = ['home', 'plus', 'gallery', 'connect'];
 
 export const registry: LabEntry[] = [
   {
@@ -135,6 +192,35 @@ export const registry: LabEntry[] = [
           </Button>
         ),
       },
+      {
+        name: 'link',
+        figmaName: 'Petals / Link',
+        figmaNode: '23:159',
+        render: () => <Button variant="link">Close detail</Button>,
+      },
+      { name: 'quiet', render: () => <Button variant="quiet">Interpretation and sources</Button> },
+      {
+        name: 'quiet, on',
+        render: () => (
+          <Button variant="quiet" pressed>
+            Interpretation and sources
+          </Button>
+        ),
+      },
+      {
+        name: 'row',
+        wide: true,
+        render: () => <Button variant="row">Something that opens</Button>,
+      },
+      {
+        name: 'row, open',
+        wide: true,
+        render: () => (
+          <Button variant="row" pressed>
+            The one that’s open
+          </Button>
+        ),
+      },
     ],
   },
   {
@@ -144,7 +230,49 @@ export const registry: LabEntry[] = [
     figmaNode: '23:159',
     source: 'apps/web/components/ui/TextLink.tsx',
     surfaces: surfaceNames,
-    states: [{ name: 'default', render: () => <TextLink href="#textlink">Explore</TextLink> }],
+    states: [
+      { name: 'default', render: () => <TextLink href="#textlink">Explore</TextLink> },
+      {
+        name: 'quiet',
+        render: () => (
+          <TextLink variant="quiet" href="#textlink">
+            Publish on NEAR
+          </TextLink>
+        ),
+      },
+      {
+        name: 'in the rail',
+        figmaName: 'Workspace / Navigation rail',
+        figmaNode: '43:748',
+        render: () => (
+          <TextLink variant="rail" icon="home" href="#textlink">
+            Home
+          </TextLink>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'Cell',
+    group: 'Primitives',
+    figmaName: 'Petals / Cell',
+    figmaNode: '12:16',
+    source: 'apps/web/components/ui/Cell.tsx',
+    surfaces: surfaceNames,
+    states: [
+      { name: 'small, beside a speaker', render: () => <Cell /> },
+      { name: 'medium, beside a status', render: () => <Cell size="medium" /> },
+      { name: 'large, opening a panel', render: () => <Cell size="large" /> },
+    ],
+  },
+  {
+    id: 'Icon',
+    group: 'Primitives',
+    figmaName: 'Workspace / Navigation rail',
+    figmaNode: '43:748',
+    source: 'apps/web/components/ui/Icon.tsx',
+    surfaces: surfaceNames,
+    states: ICONS.map((name) => ({ name, render: () => <Icon name={name} /> })),
   },
   {
     id: 'Wordmark',
@@ -155,6 +283,12 @@ export const registry: LabEntry[] = [
     surfaces: surfaceNames,
     states: [
       { name: 'nav', render: () => <Wordmark /> },
+      {
+        name: 'workspace',
+        figmaName: 'Workspace header',
+        figmaNode: '39:863',
+        render: () => <Wordmark size="workspace" />,
+      },
       { name: 'display', wide: true, render: () => <Wordmark size="display" /> },
     ],
   },
@@ -191,6 +325,29 @@ export const registry: LabEntry[] = [
           <AskBox label="Ask" placeholder="Ask about any network, or paste an address." disabled />
         ),
       },
+      {
+        name: 'composer, nothing to ask yet',
+        wide: true,
+        figmaName: 'Question composer',
+        figmaNode: '39:930',
+        render: () => (
+          <AskBox size="composer" label="Ask" placeholder="Ask about this wallet…" canAsk={false} />
+        ),
+      },
+      {
+        name: 'composer, filled',
+        wide: true,
+        figmaName: 'Question composer',
+        figmaNode: '39:930',
+        render: () => (
+          <AskBox
+            size="composer"
+            label="Ask"
+            placeholder="Ask about this wallet…"
+            defaultValue="Who is behind this account?"
+          />
+        ),
+      },
     ],
   },
   {
@@ -220,6 +377,170 @@ export const registry: LabEntry[] = [
     })),
   },
   {
+    id: 'WorkspaceHeader',
+    group: 'The workspace',
+    figmaName: 'Workspace header',
+    figmaNode: '39:863',
+    source: 'apps/web/components/workspace/WorkspaceHeader.tsx',
+    states: [
+      {
+        name: 'default',
+        wide: true,
+        render: () => <WorkspaceHeader section="Make a flower" />,
+      },
+    ],
+  },
+  {
+    id: 'NavigationRail',
+    group: 'The workspace',
+    figmaName: 'Workspace / Navigation rail',
+    figmaNode: '43:748',
+    source: 'apps/web/components/workspace/NavigationRail.tsx',
+    states: [{ name: 'default', render: () => <NavigationRail /> }],
+  },
+  {
+    id: 'WorkspaceFrame',
+    group: 'The workspace',
+    figmaName: 'Make a flower / New question',
+    figmaNode: '43:736',
+    source: 'apps/web/components/workspace/WorkspaceFrame.tsx',
+    states: [
+      {
+        name: 'the frame',
+        wide: true,
+        render: () => (
+          <div className="h-section-padding w-full overflow-hidden border border-hairline">
+            <WorkspaceFrame section="Make a flower">
+              <p className="p-text-gap">The page’s columns.</p>
+            </WorkspaceFrame>
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'ReadingKey',
+    group: 'The workspace',
+    figmaName: 'Make a flower / One petal',
+    figmaNode: '39:887',
+    source: 'apps/web/components/workspace/ReadingKey.tsx',
+    states: [
+      {
+        name: 'NEAR validators',
+        wide: true,
+        render: () => <ReadingKey view={readingKey(golden('near-validators-default').spec)} />,
+      },
+    ],
+  },
+  {
+    id: 'FlowerShelf',
+    group: 'The workspace',
+    figmaName: 'Make a flower / New question',
+    figmaNode: '43:736',
+    source: 'apps/web/components/workspace/FlowerShelf.tsx',
+    states: [
+      {
+        name: 'before any flower',
+        wide: true,
+        render: () => <FlowerShelf view={shelfView(LISTED, false)} />,
+      },
+      {
+        name: 'while the first one is made',
+        wide: true,
+        render: () => <FlowerShelf view={shelfView(LISTED, true)} />,
+      },
+      {
+        name: 'nothing stored',
+        wide: true,
+        render: () => <FlowerShelf view={shelfView([], false)} />,
+      },
+    ],
+  },
+  {
+    id: 'FlowerPanel',
+    group: 'The workspace',
+    figmaName: 'Make a flower / One petal',
+    figmaNode: '39:862',
+    source: 'apps/web/components/workspace/FlowerPanel.tsx',
+    states: [
+      {
+        name: 'a flower open',
+        wide: true,
+        render: () => (
+          <div className="flex h-flower-width w-full flex-col overflow-auto border border-hairline">
+            <FlowerPanel view={panelView()} />
+          </div>
+        ),
+      },
+      {
+        name: 'a petal selected',
+        wide: true,
+        ...ONE_PETAL,
+        render: () => (
+          <div className="flex h-flower-width w-full flex-col overflow-auto border border-hairline">
+            <FlowerPanel
+              view={panelView('astro-stakers.poolv1.near')}
+              petal={petal('near-validators-default', (p) => p.rank === 1)}
+              unit="NEAR"
+            />
+          </div>
+        ),
+      },
+      {
+        name: 'opening',
+        wide: true,
+        render: () => <FlowerPanel view={{ kind: 'loading', text: 'Opening the flower…' }} />,
+      },
+      {
+        name: 'could not be read',
+        wide: true,
+        render: () => <FlowerPanel view={{ kind: 'failed', text: 'A message from the server.' }} />,
+      },
+    ],
+  },
+  {
+    id: 'Stage',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/canvas/Stage.tsx',
+    states: [
+      {
+        name: 'anything in its world',
+        wide: true,
+        render: () => (
+          <div className="flex h-tile-width w-full flex-col border border-hairline">
+            <Stage label="Three squares" fitKey="squares">
+              <rect className="fill-accent" x="0" y="0" width="100" height="100" />
+              <rect className="fill-hairline" x="120" y="0" width="100" height="100" />
+              <rect className="fill-primary" x="240" y="0" width="100" height="100" />
+            </Stage>
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'StagedFlower',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/canvas/StagedFlower.tsx',
+    states: [
+      {
+        name: 'a flower on a stage',
+        wide: true,
+        render: () => (
+          <div className="flex h-tile-width w-full flex-col border border-hairline">
+            <Stage label="NEAR validators" fitKey="flower">
+              <StagedFlower svg={drawn().svg} selected="astro-stakers.poolv1.near" />
+            </Stage>
+          </div>
+        ),
+      },
+    ],
+  },
+  {
     id: 'Thread',
     group: 'The conversation',
     figmaName: null,
@@ -231,9 +552,10 @@ export const registry: LabEntry[] = [
         wide: true,
         render: () => (
           <Thread
+            heading="Conversation"
             rows={[...TURN_ROWS, flowerRow()]}
             renderFlower={(row) => (
-              <FlowerCard key={row.key} row={row} drawn={drawn()} failed={null} />
+              <TurnFlower key={row.key} title={row.title} sub={row.sub} open={row.open} />
             )}
           />
         ),
@@ -296,6 +618,33 @@ export const registry: LabEntry[] = [
         render: () => <LabComposer view={composerView({ ...atRest, runId: 'run-id' })} />,
       },
       {
+        name: 'about this flower',
+        wide: true,
+        render: () => (
+          <LabComposer
+            view={composerView({ ...atRest, runId: 'run-id', target: { kind: 'flower' } })}
+          />
+        ),
+      },
+      {
+        name: 'about a wallet',
+        wide: true,
+        figmaName: 'Question composer',
+        figmaNode: '39:930',
+        render: () => (
+          <LabComposer
+            view={composerView({
+              ...atRest,
+              runId: 'run-id',
+              target: {
+                kind: 'wallet',
+                line: '[About account astro-stakers.poolv1.near, in the near-validators flower, data as of 2026-11-03]',
+              },
+            })}
+          />
+        ),
+      },
+      {
         name: 'recorded',
         wide: true,
         render: () => <LabComposer view={composerView({ ...atRest, recorded: true })} />,
@@ -317,37 +666,90 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'FlowerCard',
+    id: 'Speech',
+    group: 'The conversation',
+    figmaName: 'Make a flower / One petal',
+    figmaNode: '39:862',
+    source: 'apps/web/components/chat/Speech.tsx',
+    states: [
+      {
+        name: 'the first question',
+        wide: true,
+        render: () => (
+          <Speech speaker="Original question">Who holds the JTO token on Solana?</Speech>
+        ),
+      },
+      {
+        name: 'a question about a petal',
+        wide: true,
+        render: () => (
+          <Speech speaker="You" note="About account astro-stakers.poolv1.near">
+            Who is behind this one?
+          </Speech>
+        ),
+      },
+      {
+        name: 'the agent',
+        wide: true,
+        render: () => (
+          <Speech speaker="Petals" agent>
+            <Markdown blocks={parseMarkdown('Those ten hold **48.55%** between them.')} />
+          </Speech>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'TurnStatus',
+    group: 'The conversation',
+    figmaName: 'Make a flower / Reading the record',
+    figmaNode: '39:668',
+    source: 'apps/web/components/chat/TurnStatus.tsx',
+    states: [
+      { name: 'sending', wide: true, render: () => <TurnStatus row={turnRow('sending')} /> },
+      {
+        name: 'working',
+        wide: true,
+        render: () => (
+          <TurnStatus row={turnRow('working', { headline: 'Reading the shared map…' })} />
+        ),
+      },
+      { name: 'lost', wide: true, render: () => <TurnStatus row={turnRow('lost')} /> },
+    ],
+  },
+  {
+    id: 'TurnFlower',
     group: 'The conversation',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/chat/FlowerCard.tsx',
+    source: 'apps/web/components/chat/TurnFlower.tsx',
     states: [
       {
         name: 'drawing',
         wide: true,
-        render: () => <FlowerCard row={flowerRow()} drawn={null} failed={null} />,
+        render: () => <TurnFlower title="Near validators" sub="60 petals" open={false} />,
       },
       {
-        name: 'could not be drawn',
+        name: 'earlier, can come back',
         wide: true,
         render: () => (
-          <FlowerCard row={flowerRow()} drawn={null} failed="A message from the run." />
+          <TurnFlower
+            title="NEAR validators"
+            sub="60 petals  ·  NEAR  ·  3 Nov 2026"
+            open={false}
+            thumb={svgImage(drawn().svg)}
+          />
         ),
       },
       {
-        name: 'drawn, with its links',
-        wide: true,
-        render: () => <FlowerCard row={flowerRow()} drawn={drawn()} failed={null} />,
-      },
-      {
-        name: 'drawn, already linked from the answer',
+        name: 'in the panel',
         wide: true,
         render: () => (
-          <FlowerCard
-            row={flowerRow({ showLink: false, publishUrl: undefined })}
-            drawn={drawn()}
-            failed={null}
+          <TurnFlower
+            title="NEAR validators"
+            sub="10 petals  ·  NEAR  ·  3 Nov 2026"
+            open
+            thumb={svgImage(drawn().svg)}
           />
         ),
       },
@@ -456,6 +858,57 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'LegendKeys',
+    group: 'The flower',
+    figmaName: 'Make a flower / One petal',
+    figmaNode: '40:764',
+    source: 'apps/web/components/Legend.tsx',
+    states: [
+      {
+        name: 'by kind',
+        wide: true,
+        render: () => (
+          <LegendKeys keys={legendKeys(golden('near-validators-default').rendered.legend)} />
+        ),
+      },
+      {
+        name: 'a petal selected',
+        wide: true,
+        render: () => (
+          <LegendKeys keys={legendKeys(golden('near-validators-default').rendered.legend, true)} />
+        ),
+      },
+      {
+        name: 'with backers',
+        wide: true,
+        render: () => (
+          <LegendKeys keys={legendKeys(golden('near-validators-backers').rendered.legend)} />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'FlowerTile',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/FlowerTile.tsx',
+    states: [
+      {
+        name: 'a stored flower',
+        render: () => (
+          <FlowerTile
+            title="Who stands behind NEAR’s validators?"
+            where="Near validators   /   3 Nov 2026"
+            badge="Fixture"
+            image={svgImage(drawn().svg)}
+            href="#flowertile"
+          />
+        ),
+      },
+    ],
+  },
+  {
     id: 'PetalDetails',
     group: 'The flower',
     figmaName: null,
@@ -467,7 +920,16 @@ export const registry: LabEntry[] = [
         name: 'a named petal',
         wide: true,
         render: () => (
-          <PetalDetails petal={petal('near-validators-default', (p) => p.rank === 1)} />
+          <PetalDetails petal={petal('near-validators-default', (p) => p.rank === 1)} unit="NEAR" />
+        ),
+      },
+      {
+        name: 'a named petal, can be closed',
+        wide: true,
+        figmaName: 'Selected petal detail',
+        figmaNode: '39:924',
+        render: () => (
+          <LabPetalClose petal={petal('near-validators-default', (p) => p.rank === 1)} />
         ),
       },
       {
@@ -602,5 +1064,6 @@ export const registry: LabEntry[] = [
 /** Exported by components/ but not drawn here, each for a stated reason. */
 export const NOT_IN_LAB: Record<string, string> = {
   AgentHome: 'a server page: it fetches, so it has no state to show from props',
-  Chat: 'wires the ViewModel to its views, and each of those views is here',
+  Workspace: 'wires the ViewModel to its views, and each of those views is here',
+  SiteChrome: 'the site’s own nav, around this page already',
 };

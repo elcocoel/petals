@@ -87,36 +87,55 @@
     vertical-align: top;
   }
 
-  textarea {
-    @apply type-body;
-    width: 100%;
-    border: 1px solid var(--text-primary);
-    padding: var(--spacing-text-gap);
-  }
-
   summary {
     cursor: pointer;
   }
 
-  main p,
-  main ul,
-  main ol,
-  main table,
-  main pre {
+  /* The site's pages and the agent's words read as prose. The workspace lays out its own spacing. */
+  main:where(:not([data-workspace])) p,
+  main:where(:not([data-workspace])) ul,
+  main:where(:not([data-workspace])) ol,
+  main:where(:not([data-workspace])) table,
+  main:where(:not([data-workspace])) pre,
+  .md p,
+  .md ul,
+  .md ol,
+  .md table,
+  .md pre {
     margin-block-end: var(--spacing-text-gap);
   }
 
-  main ul,
-  main ol {
+  main:where(:not([data-workspace])) ul,
+  main:where(:not([data-workspace])) ol,
+  .md ul,
+  .md ol {
     padding-inline-start: var(--spacing-block-gap);
   }
 
-  main ul {
+  main:where(:not([data-workspace])) ul,
+  .md ul {
     list-style: square;
   }
 
-  main ol {
+  main:where(:not([data-workspace])) ol,
+  .md ol {
     list-style: decimal;
+  }
+
+  .md > :last-child {
+    margin-block-end: 0;
+  }
+
+  .md table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  /* Small mono lines keep their size when a bit of code runs through them. */
+  [data-quiet] code,
+  [data-quiet] pre {
+    font: inherit;
+    letter-spacing: inherit;
   }
 
   .muted {
@@ -156,17 +175,11 @@
     padding: 0;
   }
 
-  .gallery-flower {
-    width: var(--spacing-gallery-flower-width);
-    max-width: 100%;
-    height: auto;
-  }
-
   .swatch {
     display: inline-block;
-    width: var(--spacing-text-gap);
-    height: var(--spacing-text-gap);
-    border: 1px solid var(--hairline);
+    flex-shrink: 0;
+    width: var(--spacing-swatch-size);
+    height: var(--spacing-swatch-size);
     vertical-align: middle;
   }
 
@@ -179,64 +192,40 @@
     overflow-wrap: anywhere;
   }
 
-  .thread {
-    padding-block-end: calc(var(--spacing-section-padding) + var(--spacing-column-gap));
-  }
-
-  .you {
-    border: 1px solid var(--hairline);
-    padding: var(--spacing-text-gap) var(--spacing-control-inset);
-    margin-block: var(--spacing-block-gap) var(--spacing-text-gap);
-    overflow-wrap: anywhere;
-  }
-
   .md p {
     white-space: pre-wrap;
-    overflow-wrap: anywhere;
-  }
-
-  .steps {
-    margin-block: var(--spacing-text-gap);
-  }
-
-  .composer {
-    position: fixed;
-    inset-inline: 0;
-    bottom: 0;
-    background-color: var(--surface);
-    border-block-start: 1px solid var(--hairline);
-    padding: var(--spacing-text-gap) var(--spacing-block-gap);
-  }
-
-  .composer-row {
-    display: flex;
-    gap: var(--spacing-text-gap);
-    align-items: flex-end;
-    max-width: var(--spacing-content-width);
-    margin-inline: auto;
-  }
-
-  .composer-note {
-    @apply type-caption;
-    max-width: var(--spacing-content-width);
-    margin: calc(var(--spacing-text-gap) / 2) auto 0;
     overflow-wrap: anywhere;
   }
 }
 
 /* Outside any layer on purpose. A flower's own embedded <style> is unlayered, and an unlayered rule
    beats every layer. Page CSS only: the SVG's bytes are hashed and stay as they are. */
-.flower-svg {
+div.flower-svg {
   max-width: var(--spacing-flower-width);
 }
 
-.flower-svg svg {
+/* On a stage the drawing is in a <g> and keeps the size the stage's world gives it. */
+div.flower-svg svg {
   width: 100%;
   height: auto;
 }
 
+.flower-svg svg {
+  overflow: visible;
+}
+
 .flower-svg [data-p] {
   cursor: pointer;
+}
+
+.flower-svg [data-p]:hover {
+  opacity: 0.8;
+}
+
+/* A line stays a line at any zoom. Page CSS, so the drawing's own bytes don't change. */
+.flower-svg svg[data-petal] .petal-outline,
+.flower-svg svg[data-petal] .petal-poly {
+  vector-effect: non-scaling-stroke;
 }
 
 .flower-svg svg[data-petal] text {
