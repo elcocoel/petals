@@ -18,7 +18,14 @@ import type {
 } from '@petal/core/types';
 import { registry as defaultRegistry, type ToolContext } from '@petal/tools';
 import { Channel } from './channel.ts';
-import type { Budget, LlmClient, LlmCompletion, LlmMessage, LlmToolCall } from './llm.ts';
+import type {
+  Budget,
+  LlmClient,
+  LlmCompletion,
+  LlmMessage,
+  LlmToolCall,
+  SpendHold,
+} from './llm.ts';
 import { LlmCallError } from './near-ai.ts';
 import { agentNotes, SYSTEM_PROMPT } from './prompt.ts';
 import { newRunId } from './runs.ts';
@@ -57,6 +64,10 @@ export interface RunOptions {
 }
 
 export const DEFAULT_HEARTBEAT_MS = 8000;
+
+/** The spend ledger can't be read or written, so nothing more is bought (SYS-004). */
+export const LEDGER_DOWN =
+  "Petal's agent stopped because it can't check its spending record right now. Nothing more will be spent. Try again in a little while.";
 
 export const SKILL_HINT =
   'Bring your own agent: install the Petal skill (skill/petal/SKILL.md), or add the MCP server with `claude mcp add petal -- pnpm -s --dir <repo> petal mcp`, and ask it the same question.';
@@ -202,8 +213,21 @@ async function loop(
         signature: totals.signature,
       },
     });
-  const spend = async (usd: number) => {
-    if (usd > 0) await budget.ledger?.add(usd).catch(() => {});
+  // The ledger is the cap: a recorded run never spends, and every other model call goes between a
+  // reserve and a settle. If either fails, the chat stops before it buys anything more.
+  const ledger = llm.kind === 'recorded' ? undefined : budget.ledger;
+  let ledgerDown = false;
+  const ledgerFailed = (e: unknown) => {
+    ledgerDown = true;
+    console.error(`petal: the spend ledger failed, so run ${runId} stops: ${String(e)}`);
+  };
+  const settle = async (hold: SpendHold | null, usd: number) => {
+    if (!hold) return;
+    try {
+      await ledger?.settle(hold, usd);
+    } catch (e) {
+      ledgerFailed(e);
+    }
   };
 
   emit({
@@ -214,18 +238,6 @@ async function loop(
     setStage('recorded');
   }
   setStage('thinking', 'Reading the question');
-
-  if (llm.kind !== 'recorded' && budget.ledger) {
-    const spent = await budget.ledger.spentToday().catch(() => 0);
-    if (spent >= budget.usdPerDay) {
-      fail(
-        'budget_exhausted',
-        `Petal's agent has used today's budget ($${budget.usdPerDay}); it starts again tomorrow (UTC).`,
-        SKILL_HINT,
-      );
-      return finish();
-    }
-  }
 
   // What the loop remembers, so the flower event can carry the spec, its validation, the
   // interpretation that passed, and the signature of the completion that wrote them.
@@ -418,10 +430,16 @@ async function loop(
   let rounds = 0;
   try {
     while (!stopped()) {
-      // The daily cap holds inside a chat too, not only when it starts.
-      if (totals.turns > 0 && llm.kind !== 'recorded' && budget.ledger) {
-        const spent = await budget.ledger.spentToday().catch(() => 0);
-        if (spent >= budget.usdPerDay) {
+      // The daily cap holds for every call, not only when a chat starts, and across chats.
+      let hold: SpendHold | null = null;
+      if (ledger) {
+        try {
+          hold = await ledger.reserve(budget.usdPerChat, budget.usdPerDay);
+        } catch (e) {
+          ledgerFailed(e);
+          break;
+        }
+        if (!hold) {
           fail(
             'budget_exhausted',
             `Petal's agent has used today's budget ($${budget.usdPerDay}); it starts again tomorrow (UTC).`,
@@ -445,13 +463,22 @@ async function loop(
             ],
           }
         : { messages, tools };
-      const pending = llm.complete(req);
+      let pending: Promise<LlmCompletion> | undefined;
       let c: LlmCompletion;
       try {
+        pending = llm.complete(req);
         c = await before(pending, deadline, clock);
       } catch (e) {
-        // a late answer is still paid for
-        if (e instanceof Timeout) pending.then((late) => spend(late.cost_usd)).catch(() => {});
+        const costOf = (err: unknown) => (err instanceof LlmCallError ? err.costUsd : 0);
+        // a late answer is still paid for, so its hold stands until it arrives
+        if (e instanceof Timeout && pending) {
+          pending.then(
+            (late) => settle(hold, late.cost_usd),
+            (err) => settle(hold, costOf(err)),
+          );
+        } else {
+          await settle(hold, costOf(e));
+        }
         throw e;
       }
       totals.turns++;
@@ -461,12 +488,14 @@ async function loop(
       totals.fallback ||= c.fallback_used;
       totals.model = c.model;
       totals.signature = c.signature;
-      await spend(c.cost_usd);
+      await settle(hold, c.cost_usd);
       if (stopped()) return;
 
       messages.push(c.message);
       const text = c.message.content?.trim();
       if (text) emit({ event: 'message', data: { text: withLinks(text) } });
+      // this answer is already paid for, so it is shown; nothing more is bought
+      if (ledgerDown) break;
       const calls = c.message.tool_calls ?? [];
       if (!calls.length) {
         if (!text) fail('source_failed', 'The model gave an empty answer.');
@@ -496,11 +525,11 @@ async function loop(
       fail('budget_exhausted', `The chat ran past its ${budget.wallSeconds} s.`, SKILL_HINT);
     } else if (e instanceof LlmCallError) {
       totals.usd += e.costUsd;
-      await spend(e.costUsd);
       fail(e.code, e.message, e.hint, e.retryAfterS);
     } else {
       fail('source_failed', `The model call failed: ${(e as Error)?.message ?? String(e)}`);
     }
   }
+  if (ledgerDown) fail('internal', LEDGER_DOWN, SKILL_HINT);
   if (!stopped()) await finish();
 }

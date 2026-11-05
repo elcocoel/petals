@@ -12,10 +12,10 @@ import {
   specHash,
 } from '@petal/core';
 import type { Entry, EntryV2, Nep413Proof } from '@petal/core/types';
-import { issueNonce, verifyNep413 } from '@petal/near/auth';
+import { verifyNep413 } from '@petal/near/auth';
 import { MAP_LIMITS, mapKeys } from '@petal/near/map';
 import { compile, defineTool, describeErrors } from '../define.ts';
-import { draftStore } from '../drafts.ts';
+import { draftStore, nonceStore } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
 import type { ToolContext } from '../types.ts';
 import { type DraftEntry, draftOf, entrySha256, publishMessage } from '../verify.ts';
@@ -109,7 +109,7 @@ export const preparePublish = defineTool<{ entry: Partial<Entry> }, object>({
       },
     };
     const entry_sha256 = entrySha256(draft);
-    const { nonce, expires_at } = issueNonce();
+    const { nonce, expires_at } = nonceStore(ctx.config).issue();
     const recipient = ctx.map.receiver;
     const message = publishMessage(entry_sha256);
     await draftStore(ctx.config).put({
@@ -205,6 +205,7 @@ export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Pro
         proof,
         { message: draft.message, recipient: draft.recipient },
         ctx.rpc,
+        { nonces: nonceStore(ctx.config) },
       );
     } catch (err) {
       if (err instanceof NotImplementedError) throw err;
@@ -238,7 +239,9 @@ export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Pro
         'Set PETAL_WRITER_ACCOUNT and PETAL_WRITER_KEY_FILE (testnet only).',
       );
     }
-    await drafts.put({ ...draft, used_at: ctx.now().toISOString() });
+    if (!(await drafts.claim(entry_sha256, ctx.now().toISOString()))) {
+      throw unauthorised('This draft was already published; the nonce is used.');
+    }
     const key = mapKeys.spec(entry.id);
     let tx_hash: string;
     try {

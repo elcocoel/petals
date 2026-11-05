@@ -1,60 +1,62 @@
-// The daily spend ledger behind PETAL_LLM_DAILY_USD (T057): one per server, shared by every run,
-// so the one server key can't be drained. Days are UTC.
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+// The daily spend ledger behind PETAL_LLM_DAILY_USD (T057, T189): one per server, shared by every
+// run, so the one server key can't be drained. Days are UTC. Reserve then settle, each one
+// transaction in the private store. Nothing here swallows an error: a ledger that can't be read or
+// written rejects, and the run stops spending (SYS-004).
+import { readFileSync } from 'node:fs';
+import { openStore, type Store } from '@petal/store';
 import type { Budget } from './llm.ts';
 
 export type Ledger = NonNullable<Budget['ledger']>;
 
 const day = (d: Date) => d.toISOString().slice(0, 10);
 
-export function memoryLedger(now: () => Date = () => new Date()): Ledger {
-  let state = { day: day(now()), usd: 0 };
-  const roll = () => {
-    if (state.day !== day(now())) state = { day: day(now()), usd: 0 };
-  };
+export function storeLedger(store: Store, now: () => Date = () => new Date()): Ledger {
   return {
     async spentToday() {
-      roll();
-      return state.usd;
+      const r = store.ledger.get(day(now()));
+      return r.usd + r.reserved_usd;
     },
     async add(usd) {
-      roll();
-      state.usd += usd;
+      store.ledger.add(day(now()), usd);
+    },
+    async reserve(usd, capUsd) {
+      const today = day(now());
+      const held = store.ledger.reserve(today, usd, capUsd);
+      return held === null ? null : { day: today, usd: held };
+    },
+    async settle(hold, actualUsd) {
+      store.ledger.settle(hold.day, hold.usd, actualUsd);
     },
   };
 }
 
-/** .petal/llm-ledger.json: survives a restart. Writes are serialised in process. */
+/** For tests: it ends with the process, so it must never guard real spend. */
+export function memoryLedger(now: () => Date = () => new Date()): Ledger {
+  return storeLedger(openStore(':memory:'), now);
+}
+
+/** A SQLite file at `path` that survives a restart; for scripts outside the server (T060). */
 export function fileLedger(path: string, now: () => Date = () => new Date()): Ledger {
-  let chain: Promise<unknown> = Promise.resolve();
-  const read = (): { day: string; usd: number } => {
-    try {
-      const j = JSON.parse(readFileSync(path, 'utf8')) as { day?: unknown; usd?: unknown };
-      if (j.day === day(now()) && typeof j.usd === 'number') return { day: j.day, usd: j.usd };
-    } catch {
-      // no ledger yet, or unreadable: start the day at zero
-    }
-    return { day: day(now()), usd: 0 };
-  };
-  return {
-    async spentToday() {
-      await chain;
-      return read().usd;
-    },
-    add(usd) {
-      const next = chain.then(() => {
-        const s = read();
-        s.usd += usd;
-        mkdirSync(dirname(path), { recursive: true });
-        const tmp = `${path}.${process.pid}.tmp`;
-        writeFileSync(tmp, JSON.stringify(s));
-        renameSync(tmp, path);
-      });
-      chain = next.catch(() => {});
-      return next;
-    },
-  };
+  return storeLedger(openStore(path), now);
+}
+
+/** Refuses everything. For a server that can't keep a ledger: a cap that forgets is no cap. */
+export function closedLedger(reason: string): Ledger {
+  const refuse = () => Promise.reject(new Error(reason));
+  return { spentToday: refuse, add: refuse, reserve: refuse, settle: refuse };
+}
+
+/** Today's figure from the old .petal/llm-ledger.json, so moving to the store can't reset the cap. */
+export function importLedgerFile(store: Store, path: string): void {
+  let old: { day?: unknown; usd?: unknown };
+  try {
+    old = JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return;
+  }
+  if (typeof old.day === 'string' && typeof old.usd === 'number') {
+    store.ledger.seed(old.day, old.usd);
+  }
 }
 
 /** The server's budget: the per-chat limits of http-api.md and the daily cap from the config. */

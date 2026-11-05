@@ -45,14 +45,34 @@ export interface LlmClient {
   complete(req: LlmRequest): Promise<LlmCompletion>;
 }
 
+/** Money set aside for one model call, until it is settled. */
+export interface SpendHold {
+  /** the UTC day it counts against */
+  day: string;
+  usd: number;
+}
+
+/**
+ * Spend across chats, shared by every run on this server. Any of these may reject when the store is
+ * down, and a caller must then stop spending: the ledger is the cap (SYS-004).
+ */
+export interface BudgetLedger {
+  /** spent today, plus what is held for calls in flight */
+  spentToday(): Promise<number>;
+  add(usd: number): Promise<void>;
+  /** holds up to `usd` under today's cap, atomically; null when nothing is left */
+  reserve(usd: number, capUsd: number): Promise<SpendHold | null>;
+  /** swaps a hold for what the call really cost */
+  settle(hold: SpendHold, actualUsd: number): Promise<void>;
+}
+
 /** Limits per chat and per day (http-api.md: 8 tool rounds, 120 s, $0.05; daily cap $3). */
 export interface Budget {
   toolRounds: number;
   wallSeconds: number;
   usdPerChat: number;
   usdPerDay: number;
-  /** spend already used today, across chats; shared by every run on this server */
-  ledger?: { spentToday(): Promise<number>; add(usd: number): Promise<void> };
+  ledger?: BudgetLedger;
 }
 
 export const DEFAULT_BUDGET: Budget = {

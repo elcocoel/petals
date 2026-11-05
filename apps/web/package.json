@@ -20,6 +20,7 @@
     "@petal/agent": "workspace:*",
     "@petal/core": "workspace:*",
     "@petal/near": "workspace:*",
+    "@petal/store": "workspace:*",
     "@petal/tokens": "workspace:*",
     "@petal/tools": "workspace:*",
     "d3-selection": "^3.0.1",

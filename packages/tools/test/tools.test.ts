@@ -7,6 +7,7 @@ import { canonicalJson, entryId, specHash } from '@petal/core';
 import type { Entry, ProgressEvent } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
 import { FLOWER_DEFS, inlineRefs } from '../src/define.ts';
+import { draftStore } from '../src/drafts.ts';
 import { callTool, findTool } from '../src/registry.ts';
 import type { ToolContext } from '../src/types.ts';
 import { entrySha256 } from '../src/verify.ts';
@@ -312,8 +313,8 @@ describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
       recipient: 'petals.testnet',
       expires_at: prep.expires_at,
     });
-    const kept = JSON.parse(readFileSync(join(r.stateDir, 'drafts', `${sha}.json`), 'utf8'));
-    expect(kept.nonce).toBe(prep.nonce);
+    const kept = await draftStore(r.ctx.config).get(sha);
+    expect(kept?.nonce).toBe(prep.nonce);
   });
 
   test('without a public base URL, view_url and sign_url stay relative (the web base)', async () => {

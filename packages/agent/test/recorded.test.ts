@@ -1,7 +1,7 @@
 // T020: the hand-made skeleton transcript replays in quickstart step 2's tool order, takes every
 // value from tool results, and its interpretation is schema-valid with sources the fixture has.
 // T061: the real run replays on the real tools, with the signatures it got when it was recorded.
-import { readFileSync } from 'node:fs';
+import { chmodSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { schemas, sha256Hex } from '@petal/core';
@@ -9,7 +9,7 @@ import type { FlowerResult, ModelSignature, Snapshot, Stage } from '@petal/core/
 import { createContext } from '@petal/tools';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import addFormatsModule from 'ajv-formats';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { buildPetalApp } from '../src/app.ts';
 import { DEFAULT_BUDGET, type LlmMessage } from '../src/llm.ts';
 import { DEFAULT_MODEL } from '../src/near-ai.ts';
@@ -21,7 +21,7 @@ import {
   SKELETON_TRANSCRIPT,
 } from '../src/recorded.ts';
 import { startRun } from '../src/run.ts';
-import { collect, tmpRoot } from './helpers.ts';
+import { collect, parseSse, tmpRoot } from './helpers.ts';
 
 const SHA = '72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec';
 const SPEC = { petal: 'spec/v1', marker: 'the proposed spec' };
@@ -140,6 +140,26 @@ describe('recordedClient on the hand-made transcript', () => {
     expect(ids.length).toBeGreaterThan(0);
     for (const id of ids) expect(known.has(id), id).toBe(true);
   });
+});
+
+test('a keyless server with a read-only state folder starts, and the recorded chat draws (T189)', async () => {
+  const REPO = join(import.meta.dirname, '..', '..', '..');
+  const readOnly = tmpRoot();
+  chmodSync(readOnly, 0o555);
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const app = buildPetalApp({ root: REPO, fake: true, stateDir: join(readOnly, 'state') });
+  expect(warn.mock.calls.filter(([l]) => /in memory/.test(String(l)))).toHaveLength(1);
+  warn.mockRestore();
+  expect((await app.request('/api/v1/health')).status).toBe(200);
+  const res = await app.request('/api/v1/agent/chat', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ messages: [{ role: 'user', content: 'who stands behind NEAR?' }] }),
+  });
+  const names = parseSse(await res.text()).map((e) => e.event);
+  expect(names).toContain('flower');
+  expect(names.at(-1)).toBe('done');
+  expect(names).not.toContain('error');
 });
 
 describe('the recorded skeleton run (T061)', () => {

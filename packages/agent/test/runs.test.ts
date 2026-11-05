@@ -1,10 +1,11 @@
-// T058: fileRunStore and the daily ledger.
+// T058, T189: the run stores and the daily ledger.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AgentEvent } from '@petal/core/types';
+import { openStore } from '@petal/store';
 import { describe, expect, test } from 'vitest';
 import { fileLedger, memoryLedger, serverBudget } from '../src/budget.ts';
-import { fileRunStore } from '../src/index.ts';
+import { fileRunStore, type RunStore, sqliteRunStore } from '../src/index.ts';
 import { DEFAULT_BUDGET } from '../src/llm.ts';
 import {
   fakeSignature,
@@ -43,10 +44,25 @@ const runEvent = (id: string): AgentEvent => ({
   data: { run_id: id, resume_url: `/make?run=${id}` },
 });
 
-describe('fileRunStore', () => {
-  test('a run in .petal/runs/<id>.json: messages, events, flower, a draft entry, status', async () => {
-    const dir = join(tmpRoot(), 'runs');
-    const runs = fileRunStore(dir);
+const STORES: [string, () => RunStore][] = [
+  ['fileRunStore', () => fileRunStore(join(tmpRoot(), 'runs'))],
+  ['sqliteRunStore', () => sqliteRunStore(openStore(':memory:'))],
+];
+
+test('fileRunStore keeps a run in .petal/runs/<id>.json, for any process to read', async () => {
+  const dir = join(tmpRoot(), 'runs');
+  const runs = fileRunStore(dir);
+  const id = await runs.create({ messages: [{ role: 'user', content: 'q' }] });
+  await runs.append(id, runEvent(id));
+  await runs.append(id, done);
+  const run = await runs.get(id);
+  expect(JSON.parse(readFileSync(join(dir, `${id}.json`), 'utf8'))).toEqual(run);
+  expect(await fileRunStore(dir).get(id)).toEqual(run);
+});
+
+describe.each(STORES)('%s', (_name, make) => {
+  test('a run: messages, events, flower, a draft entry, status', async () => {
+    const runs = make();
     const id = await runs.create({ messages: [{ role: 'user', content: 'q' }] });
     expect(id).toMatch(/^[0-9a-f]{24}$/);
     expect((await runs.get(id))?.status).toBe('running');
@@ -87,14 +103,10 @@ describe('fileRunStore', () => {
       },
     });
     expect(run?.draft?.entry?.provenance).not.toHaveProperty('maker');
-    const onDisk = JSON.parse(readFileSync(join(dir, `${id}.json`), 'utf8'));
-    expect(onDisk).toEqual(run);
-    // a second store on the same folder (another process) sees the same run
-    expect(await fileRunStore(dir).get(id)).toEqual(run);
   });
 
   test('an error with no flower fails the run; a flower despite an error still counts', async () => {
-    const runs = fileRunStore(join(tmpRoot(), 'runs'));
+    const runs = make();
     const a = await runs.create({ messages: [{ role: 'user', content: 'q' }] });
     for (const e of [
       runEvent(a),
@@ -117,7 +129,7 @@ describe('fileRunStore', () => {
   });
 
   test('create with run_id continues that run: same id, the full messages, running again', async () => {
-    const runs = fileRunStore(join(tmpRoot(), 'runs'));
+    const runs = make();
     const id = await runs.create({ messages: [{ role: 'user', content: 'q1' }] });
     await runs.append(id, runEvent(id));
     await runs.append(id, done);
@@ -135,7 +147,7 @@ describe('fileRunStore', () => {
   });
 
   test('appends from many events at once land in order', async () => {
-    const runs = fileRunStore(join(tmpRoot(), 'runs'));
+    const runs = make();
     const id = await runs.create({ messages: [{ role: 'user', content: 'q' }] });
     await Promise.all(
       Array.from({ length: 30 }, (_, i) =>
@@ -149,7 +161,7 @@ describe('fileRunStore', () => {
   });
 
   test('ids that are not file names are refused', async () => {
-    const runs = fileRunStore(join(tmpRoot(), 'runs'));
+    const runs = make();
     expect(await runs.get('../../etc/passwd')).toBeNull();
     expect(await runs.get('nosuchrun')).toBeNull();
     await expect(runs.append('nosuchrun', done)).rejects.toThrow(/no run/);
@@ -158,7 +170,7 @@ describe('fileRunStore', () => {
 
 describe('ledgers', () => {
   test('the file ledger adds up across instances and starts again each UTC day', async () => {
-    const path = join(tmpRoot(), 'llm-ledger.json');
+    const path = join(tmpRoot(), 'ledger.db');
     let now = new Date('2026-11-04T23:00:00Z');
     const a = fileLedger(path, () => now);
     await Promise.all([a.add(0.01), a.add(0.02)]);
@@ -176,6 +188,21 @@ describe('ledgers', () => {
     expect(await l.spentToday()).toBe(2);
     now = new Date('2026-11-05T10:00:00Z');
     expect(await l.spentToday()).toBe(0);
+  });
+
+  test('reserve then settle: a hold counts as spent until it is settled, against its own day', async () => {
+    let now = new Date('2026-11-04T23:59:00Z');
+    const l = memoryLedger(() => now);
+    const hold = await l.reserve(0.05, 3);
+    expect(hold).toEqual({ day: '2026-11-04', usd: 0.05 });
+    expect(await l.spentToday()).toBeCloseTo(0.05, 9);
+    now = new Date('2026-11-05T00:01:00Z');
+    expect(await l.spentToday()).toBe(0);
+    await l.settle(hold as NonNullable<typeof hold>, 0.01);
+    expect(await l.spentToday()).toBe(0);
+    now = new Date('2026-11-04T23:59:30Z');
+    expect(await l.spentToday()).toBeCloseTo(0.01, 9);
+    expect(await l.reserve(1, 0.01)).toBeNull();
   });
 
   test('serverBudget: the per-chat limits stay, the daily cap comes from the config', () => {
