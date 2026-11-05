@@ -33,14 +33,16 @@ A person starts exploring, leaves, and finds their work again later, from the sa
 
 ### Story 2: Their spend, not ours (P1)
 
-A person's work costs them, not Petal: through their own agent, or from their own wallet.
+A person's work costs them, not Petal: through their own agent, or from their own wallet. Like any crypto app, Petal's own agent answers after you connect a wallet and approve the spend.
 
-**Independent test:** with no sponsor, Petal's own model budget doesn't move, whatever a visitor does.
+**Independent test:** with no wallet and no invite, Petal's model budget doesn't move, whatever a visitor does.
 
 **Acceptance:**
 1. **Given** a visitor with no sign-in, **when** they browse flowers, **then** it works and costs Petal no model spend.
 2. **Given** someone's own agent connected through a door, **when** it works, **then** its model bill is theirs, and all tools answer.
-3. **Given** sponsored access, **when** its budget or the global cap is reached, **then** the work stops with a plain message, across any restart.
+3. **Given** a connected wallet with credit, **when** they chat, **then** each chat draws down their credit, and at zero the agent stops and says so.
+4. **Given** a top-up transaction, **when** it's claimed twice, **then** it counts once.
+5. **Given** sponsored access, **when** its budget or the global cap is reached, **then** the work stops with a plain message, across any restart.
 
 ### Story 3: An approval that means something (P1)
 
@@ -129,10 +131,10 @@ A mapping that spends needs a yes from the wallet.
 
 ### Who pays
 
-- **SYS-050**: Access MUST distinguish viewing, own agent, sponsored and own wallet. Only sponsored spends Petal's budget.
-- **SYS-051**: Sponsored access MUST use a revocable invite with its own budget, on top of per-chat and global caps, using reserve then settle. It MUST NOT involve a personal wallet on the host.
-- **SYS-052**: A call that would really spend MUST return `approval_required` with a server-held request. Terms MUST NOT come from the URL. Approval MUST be signed, single use, expiring and stored.
-- **SYS-053**: Paying from a wallet is not required for the first version. See `open-questions.md`.
+- **SYS-050**: Access MUST distinguish viewing, own agent, connected wallet and sponsored. Viewing and own agent spend no Petal budget. Petal's own agent MUST need a connected wallet with credit, or a sponsored invite, including for its first answer.
+- **SYS-051**: A wallet's credit MUST come from a verified transfer to Petal's account, credited once per transaction. A chat MUST reserve then settle against it. Testnet credit MUST be limited to an allowlist of wallets.
+- **SYS-052**: Sponsored access MUST use a revocable invite with its own budget, on top of per-chat and global caps. It MUST NOT involve a personal wallet on the host.
+- **SYS-053**: Per-action wallet approval (`approval_required`, a server-held request, a signature, single use) is the next resolution for spending and irreversible acts. Publishing and wallet linking already need a signature.
 
 ### Claims
 
