@@ -10,7 +10,6 @@ import {
   cornerRadius,
   fonts,
   kebab,
-  motion,
   type Paint,
   type Primitive,
   paintCss,
@@ -71,8 +70,6 @@ export function emitCss(t: Tokens = tokens): string {
       '--default-font-family: var(--font-sans);',
       '--default-mono-font-family: var(--font-mono);',
       ...Object.entries(spacing).map(([n, px]) => `--spacing-${kebab(n)}: ${px}px;`),
-      `--animate-blink: blink ${motion['Cursor blink']}ms step-end infinite;`,
-      '@keyframes blink { 50% { opacity: 0; } }',
     ]),
     // inline: a utility must read the role where it's used, or it would stop flipping with the surface.
     block(
@@ -109,6 +106,8 @@ export function emitCss(t: Tokens = tokens): string {
         ...(s.axes ? [`font-variation-settings: ${axes(s.axes)};`] : []),
       ]),
     ),
+    // Figma's 0.56 stroke on the small Ask box. Tailwind's border widths don't read the spacing scale.
+    block('@utility border-ask-small', ['border-width: var(--spacing-ask-box-small-border);']),
     block('@utility wordmark', [
       'display: inline-grid;',
       'font-family: var(--font-pixel);',

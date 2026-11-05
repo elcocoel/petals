@@ -23,6 +23,8 @@ export interface Roles {
   'text-primary': Paint;
   'text-muted': Paint;
   hairline: Paint;
+  /** A tool area beside the page, like the workspace's navigation rail. */
+  panel: Paint;
   'action-background': Paint;
   'action-text': Paint;
   /** The arrow inside an action. Plain accent would vanish: Mint on Mint on ink, Ink on Ink on mint. */
@@ -31,6 +33,8 @@ export interface Roles {
   'wordmark-back': Paint;
   'wordmark-middle': Paint;
   'wordmark-front': Paint;
+  /** A starter question's border (66:2199, 66:2343): Gray on ground, Ink on mint. */
+  'starter-border': Paint;
   /** The small mono label above a heading: Ink on ground and mint, Mint on ink (Figma, 66:2318). */
   eyebrow: Paint;
   /** Illustrations. Figma paints these Ink, Gray and Mint; lib/figures.ts names them by use. */
@@ -47,6 +51,7 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'text-primary': 'Ink',
     'text-muted': { of: 'Ink', alpha: 0.6 },
     hairline: 'Gray',
+    panel: 'Gray',
     'action-background': 'Ink',
     'action-text': 'Ground',
     'action-accent': 'Mint',
@@ -54,6 +59,7 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'wordmark-back': 'Mint',
     'wordmark-middle': 'Gray',
     'wordmark-front': 'Ink',
+    'starter-border': 'Gray',
     eyebrow: 'Ink',
     'figure-line': 'Ink',
     'figure-petal': 'Gray',
@@ -64,6 +70,7 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'text-primary': 'Ground',
     'text-muted': { of: 'Ground', alpha: 0.7 },
     hairline: { of: 'Ground', alpha: 0.3 },
+    panel: 'Ink',
     'action-background': 'Mint',
     'action-text': 'Ink',
     'action-accent': 'Ink',
@@ -71,6 +78,7 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'wordmark-back': 'Mint',
     'wordmark-middle': 'Gray',
     'wordmark-front': 'Ground',
+    'starter-border': { of: 'Ground', alpha: 0.3 },
     eyebrow: 'Mint',
     'figure-line': 'Ground',
     'figure-petal': 'Gray',
@@ -80,7 +88,8 @@ export const surfaces: Record<SurfaceName, Roles> = {
     surface: 'Mint',
     'text-primary': 'Ink',
     'text-muted': { of: 'Ink', alpha: 0.7 },
-    hairline: 'Ink',
+    hairline: { of: 'Ink', alpha: 0.4 },
+    panel: 'Mint',
     'action-background': 'Ink',
     'action-text': 'Ground',
     'action-accent': 'Mint',
@@ -88,6 +97,7 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'wordmark-back': 'Ground',
     'wordmark-middle': 'Gray',
     'wordmark-front': 'Ink',
+    'starter-border': 'Ink',
     eyebrow: 'Ink',
     'figure-line': 'Ink',
     'figure-petal': 'Gray',
@@ -101,6 +111,7 @@ export const roleUtilities: Record<Role, string> = {
   'text-primary': 'primary',
   'text-muted': 'muted',
   hairline: 'hairline',
+  panel: 'panel',
   'action-background': 'action',
   'action-text': 'on-action',
   'action-accent': 'action-accent',
@@ -108,6 +119,7 @@ export const roleUtilities: Record<Role, string> = {
   'wordmark-back': 'wordmark-back',
   'wordmark-middle': 'wordmark-middle',
   'wordmark-front': 'wordmark-front',
+  'starter-border': 'starter-border',
   eyebrow: 'eyebrow',
   'figure-line': 'figure-line',
   'figure-petal': 'figure-petal',
@@ -122,6 +134,7 @@ export const contrastMinimum = 4.5;
 export const contrastPairs: readonly { text: Role; on: Role }[] = [
   { text: 'text-primary', on: 'surface' },
   { text: 'text-muted', on: 'surface' },
+  { text: 'text-primary', on: 'panel' },
   { text: 'action-text', on: 'action-background' },
   { text: 'action-accent', on: 'action-background' },
   { text: 'eyebrow', on: 'surface' },
@@ -129,6 +142,8 @@ export const contrastPairs: readonly { text: Role; on: Role }[] = [
 
 /** Figma: Layout/… variables, then the landing page's section padding. Pixels. */
 export const layout = {
+  /** Clearing Tailwind's numeric scale takes zero with it: m-0, min-h-0, inset-0 and px-0 read this. */
+  '0': 0,
   'Page inset': 72,
   'Section inset': 64,
   'Column gap': 48,
@@ -144,11 +159,12 @@ export const layout = {
  * the old pages already had. All of them become spacing utilities: h-ask-box-height.
  */
 export const sizes = {
-  None: 0,
   'Ask box height': 64,
   /** The most it takes. Every instance on the landing page fills its column (584, 640). */
   'Ask box width': 640,
   'Ask box inset': 8,
+  /** With the border, what makes the box 64 around a 48 button. */
+  'Ask box block': 7,
   'Ask box gap': 16,
   /** Figma's step 1 instance (67:2512) is the Ask box at 0.56: these are its values at that scale. */
   'Ask box small height': 35.84,
@@ -156,9 +172,14 @@ export const sizes = {
   'Ask box small start': 13.44,
   'Ask box small end': 4.48,
   'Ask box small gap': 8.96,
+  'Ask box small block': 3.48,
+  'Ask box small border': 0.56,
+  /** Named without "ask": the secret scan reads sk- and twenty more characters as a key. */
+  'Small field block': 5.88,
   'Button small height': 26.88,
   'Button small inset': 12.32,
   'Button small gap': 5.6,
+  'Ask box field block': 10.5,
   'Starter height': 36,
   'Starter inset start': 16,
   'Starter inset end': 14,
@@ -180,6 +201,10 @@ export const sizes = {
   'Visual height': 220,
   'Card flower height': 300,
   'FAQ answer inset': 114,
+  /** Figma's thumb sits here in the card, a little left of centre: the component is 408, the card 416. */
+  'Card thumb inset': 83,
+  /** Figma's wordmark box at this size. A browser's cap height comes up 5.3 shorter. */
+  'Footer wordmark height': 98.62,
   'Glyph row': 48,
   'Glyph step': 144,
   'Thumb strip': 72,
@@ -189,6 +214,7 @@ export const sizes = {
   'Cursor height': 26,
   /** Figma's loose "Space" frames and auto-layout gaps on that page, named by their pixels. */
   'Space 2': 2,
+  'Space 4': 4,
   'Space 6': 6,
   'Space 8': 8,
   'Space 10': 10,
@@ -204,15 +230,49 @@ export const sizes = {
   'Space 44': 44,
   'Space 56': 56,
   'Space 96': 96,
+  // The workspace frames (Interface page, e.g. 39:862, at 1440 x 900).
+  'Workspace header height': 80,
+  'Workspace inset': 40,
+  'Workspace inset end': 32,
+  'Workspace rule': 20,
+  // Figma's is 164, which "Use your own AI" doesn't fit.
+  'Rail width': 180,
+  'Rail text inset': 22,
+  'Rail top': 31,
+  'Rail item gap': 8,
+  'Rail item block': 9,
+  'Icon size': 18,
+  'Icon gap': 9,
+  'Conversation width': 580,
+  // Figma's is 696, beside its narrower rail: the two columns fill a 1440 window.
+  'Panel width': 680,
+  'Speech gap': 8,
+  'Composer height': 76,
+  'Composer inset end': 12,
+  'Composer block': 14,
+  'Composer field block': 13,
+  'Composer max height': 200,
+  'Detail inset': 16,
+  'Detail gap': 4,
+  'Detail height': 117,
+  'Title gap': 7,
+  'Swatch size': 9,
+  'Cell small': 16.72,
+  'Cell medium': 27.28,
+  'Cell large': 40.48,
+  // Not in Figma yet: what the frames don't draw.
+  'Stage height': 280,
+  'Turn flower thumb': 48,
+  'Tile width': 280,
 } as const;
-
-/** Not in Figma, which is still: how fast the transcript's cursor blinks, in milliseconds. */
-export const motion = { 'Cursor blink': 1200 } as const;
 
 export const cornerRadius = 0;
 
-/** Not from Figma, which has one frame width: Tailwind's own three, under the same names. */
-export const breakpoints = { sm: 640, md: 768, lg: 1024 } as const;
+/**
+ * Not from Figma, which has one frame width: Tailwind's own three, under the same names, and `wide`,
+ * where the workspace's columns sit side by side instead of stacking.
+ */
+export const breakpoints = { sm: 640, md: 768, wide: 900, lg: 1024 } as const;
 
 /** `variable` is what next/font sets in apps/web/app/layout.tsx. Figma: Type/Reading family. */
 export const fonts = {
@@ -253,6 +313,10 @@ export const type = {
   'Mono code': { font: 'mono', size: 15, line: 24, weight: 400, tracking: 0 },
   /** Figma's 10/15, the label and action of its note boxes (66:2229, 67:2530). */
   'Mono tiny': { font: 'mono', size: 10, line: 15, weight: 400, tracking: 0.04 },
+  /** Figma's 12 on a normal line, a gallery card's note (52:1880). */
+  'Mono note': { font: 'mono', size: 12, line: 16, weight: 400, tracking: 0.04 },
+  /** Figma's 16/21, the sign on a FAQ item (67:2546). */
+  'Mono sign': { font: 'mono', size: 16, line: 21, weight: 400, tracking: 0.04 },
   /** The step numbers (66:2275): Bitcount Grid Single with its axes at rest. */
   'Pixel numeral': {
     font: 'pixel',
@@ -271,8 +335,8 @@ export const wordmark = {
     middle: { CRSV: 0.11, ELSH: 50, ELXP: 90, slnt: -8, wght: 358 },
     front: { CRSV: 0.5, ELSH: 17, ELXP: 63, slnt: -8, wght: 337 },
   },
-  /** Font size in pixels. Display is the component's own size, the others its landing instances. */
-  sizes: { Nav: 36.67, Footer: 155.56, Display: 269.722 },
+  /** Font size in pixels. Display is the component's own size, the others those in the page frames. */
+  sizes: { Nav: 36.67, Footer: 155.56, Workspace: 33.18, Display: 269.722 },
 } as const;
 
 /**

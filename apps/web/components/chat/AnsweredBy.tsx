@@ -1,9 +1,9 @@
-// T168: which model answered, in the words thread-view.ts chose. Only the layout is here.
+// T168: which model answered, in the words thread-view.ts chose, kept quiet in mono.
 import type { Segment } from '../../lib/thread-view.ts';
 
 export function AnsweredBy({ line }: { line: Segment[] }) {
   return (
-    <p className="muted">
+    <p data-quiet className="type-mono-small wrap-anywhere text-muted">
       {line.map((s, i) => {
         // biome-ignore lint/suspicious/noArrayIndexKey: a line is whole, it never reorders
         if (s.t === 'code') return <code key={i}>{s.v}</code>;

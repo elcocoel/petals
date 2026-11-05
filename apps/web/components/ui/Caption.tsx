@@ -9,5 +9,5 @@ export function Caption({
   as?: 'p' | 'figcaption';
   children: ReactNode;
 }) {
-  return <Tag className="my-none type-mono-small whitespace-pre-wrap">{children}</Tag>;
+  return <Tag className="my-0 type-mono-small whitespace-pre-wrap">{children}</Tag>;
 }

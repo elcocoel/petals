@@ -12,7 +12,7 @@ export function Nav() {
   return (
     <Section as="nav" padding="nav" rule="bottom">
       <div className="flex flex-wrap items-center justify-between gap-x-block-gap gap-y-text-gap">
-        <a href={siteLinks.home} aria-label="Petals, home">
+        <a href={siteLinks.home} aria-label="Petals, home" className="flex no-underline">
           <Wordmark />
         </a>
         <div className="flex flex-wrap items-center gap-x-space-36 gap-y-text-gap">

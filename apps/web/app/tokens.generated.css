@@ -4,12 +4,14 @@
   --*: initial;
   --breakpoint-sm: 40rem;
   --breakpoint-md: 48rem;
+  --breakpoint-wide: 56.25rem;
   --breakpoint-lg: 64rem;
   --font-sans: var(--font-mona-sans), "Mona Sans", system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), "Geist Mono", monospace;
   --font-pixel: var(--font-bitcount), "Bitcount Grid Single", monospace;
   --default-font-family: var(--font-sans);
   --default-mono-font-family: var(--font-mono);
+  --spacing-0: 0px;
   --spacing-page-inset: 72px;
   --spacing-section-inset: 64px;
   --spacing-column-gap: 48px;
@@ -18,19 +20,23 @@
   --spacing-control-inset: 20px;
   --spacing-control-height: 48px;
   --spacing-section-padding: 112px;
-  --spacing-none: 0px;
   --spacing-ask-box-height: 64px;
   --spacing-ask-box-width: 640px;
   --spacing-ask-box-inset: 8px;
+  --spacing-ask-box-block: 7px;
   --spacing-ask-box-gap: 16px;
   --spacing-ask-box-small-height: 35.84px;
   --spacing-ask-box-small-width: 336px;
   --spacing-ask-box-small-start: 13.44px;
   --spacing-ask-box-small-end: 4.48px;
   --spacing-ask-box-small-gap: 8.96px;
+  --spacing-ask-box-small-block: 3.48px;
+  --spacing-ask-box-small-border: 0.56px;
+  --spacing-small-field-block: 5.88px;
   --spacing-button-small-height: 26.88px;
   --spacing-button-small-inset: 12.32px;
   --spacing-button-small-gap: 5.6px;
+  --spacing-ask-box-field-block: 10.5px;
   --spacing-starter-height: 36px;
   --spacing-starter-inset-start: 16px;
   --spacing-starter-inset-end: 14px;
@@ -51,6 +57,8 @@
   --spacing-visual-height: 220px;
   --spacing-card-flower-height: 300px;
   --spacing-faq-answer-inset: 114px;
+  --spacing-card-thumb-inset: 83px;
+  --spacing-footer-wordmark-height: 98.62px;
   --spacing-glyph-row: 48px;
   --spacing-glyph-step: 144px;
   --spacing-thumb-strip: 72px;
@@ -59,6 +67,7 @@
   --spacing-cursor-width: 12px;
   --spacing-cursor-height: 26px;
   --spacing-space-2: 2px;
+  --spacing-space-4: 4px;
   --spacing-space-6: 6px;
   --spacing-space-8: 8px;
   --spacing-space-10: 10px;
@@ -74,8 +83,36 @@
   --spacing-space-44: 44px;
   --spacing-space-56: 56px;
   --spacing-space-96: 96px;
-  --animate-blink: blink 1200ms step-end infinite;
-  @keyframes blink { 50% { opacity: 0; } }
+  --spacing-workspace-header-height: 80px;
+  --spacing-workspace-inset: 40px;
+  --spacing-workspace-inset-end: 32px;
+  --spacing-workspace-rule: 20px;
+  --spacing-rail-width: 180px;
+  --spacing-rail-text-inset: 22px;
+  --spacing-rail-top: 31px;
+  --spacing-rail-item-gap: 8px;
+  --spacing-rail-item-block: 9px;
+  --spacing-icon-size: 18px;
+  --spacing-icon-gap: 9px;
+  --spacing-conversation-width: 580px;
+  --spacing-panel-width: 680px;
+  --spacing-speech-gap: 8px;
+  --spacing-composer-height: 76px;
+  --spacing-composer-inset-end: 12px;
+  --spacing-composer-block: 14px;
+  --spacing-composer-field-block: 13px;
+  --spacing-composer-max-height: 200px;
+  --spacing-detail-inset: 16px;
+  --spacing-detail-gap: 4px;
+  --spacing-detail-height: 117px;
+  --spacing-title-gap: 7px;
+  --spacing-swatch-size: 9px;
+  --spacing-cell-small: 16.72px;
+  --spacing-cell-medium: 27.28px;
+  --spacing-cell-large: 40.48px;
+  --spacing-stage-height: 280px;
+  --spacing-turn-flower-thumb: 48px;
+  --spacing-tile-width: 280px;
 }
 
 @theme inline {
@@ -83,6 +120,7 @@
   --color-primary: var(--text-primary);
   --color-muted: var(--text-muted);
   --color-hairline: var(--hairline);
+  --color-panel: var(--panel);
   --color-action: var(--action-background);
   --color-on-action: var(--action-text);
   --color-action-accent: var(--action-accent);
@@ -90,13 +128,14 @@
   --color-wordmark-back: var(--wordmark-back);
   --color-wordmark-middle: var(--wordmark-middle);
   --color-wordmark-front: var(--wordmark-front);
+  --color-starter-border: var(--starter-border);
   --color-eyebrow: var(--eyebrow);
   --color-figure-line: var(--figure-line);
   --color-figure-petal: var(--figure-petal);
   --color-figure-accent: var(--figure-accent);
 }
 
-@source inline("type-display type-display-compact type-title type-heading type-lead type-body type-label type-caption type-body-small type-label-small type-mono-label type-mono-small type-mono-code type-mono-tiny type-pixel-numeral wordmark wordmark-back wordmark-middle wordmark-front wordmark-nav wordmark-footer wordmark-display");
+@source inline("type-display type-display-compact type-title type-heading type-lead type-body type-label type-caption type-body-small type-label-small type-mono-label type-mono-small type-mono-code type-mono-tiny type-mono-note type-mono-sign type-pixel-numeral wordmark wordmark-back wordmark-middle wordmark-front wordmark-nav wordmark-footer wordmark-workspace wordmark-display");
 
 @layer base {
 *, ::before, ::after {
@@ -133,6 +172,7 @@
   --text-primary: #171717;
   --text-muted: rgb(23 23 23 / 0.6);
   --hairline: #C7C7C7;
+  --panel: #C7C7C7;
   --action-background: #171717;
   --action-text: #FFFFFF;
   --action-accent: #8BC9BD;
@@ -140,6 +180,7 @@
   --wordmark-back: #8BC9BD;
   --wordmark-middle: #C7C7C7;
   --wordmark-front: #171717;
+  --starter-border: #C7C7C7;
   --eyebrow: #171717;
   --figure-line: #171717;
   --figure-petal: #C7C7C7;
@@ -150,6 +191,7 @@
   --text-primary: #FFFFFF;
   --text-muted: rgb(255 255 255 / 0.7);
   --hairline: rgb(255 255 255 / 0.3);
+  --panel: #171717;
   --action-background: #8BC9BD;
   --action-text: #171717;
   --action-accent: #171717;
@@ -157,6 +199,7 @@
   --wordmark-back: #8BC9BD;
   --wordmark-middle: #C7C7C7;
   --wordmark-front: #FFFFFF;
+  --starter-border: rgb(255 255 255 / 0.3);
   --eyebrow: #8BC9BD;
   --figure-line: #FFFFFF;
   --figure-petal: #C7C7C7;
@@ -166,7 +209,8 @@
   --surface: #8BC9BD;
   --text-primary: #171717;
   --text-muted: rgb(23 23 23 / 0.7);
-  --hairline: #171717;
+  --hairline: rgb(23 23 23 / 0.4);
+  --panel: #8BC9BD;
   --action-background: #171717;
   --action-text: #FFFFFF;
   --action-accent: #8BC9BD;
@@ -174,6 +218,7 @@
   --wordmark-back: #FFFFFF;
   --wordmark-middle: #C7C7C7;
   --wordmark-front: #171717;
+  --starter-border: #171717;
   --eyebrow: #171717;
   --figure-line: #171717;
   --figure-petal: #C7C7C7;
@@ -207,6 +252,9 @@
 [data-swatch="hairline"] {
   background-color: var(--hairline);
 }
+[data-swatch="panel"] {
+  background-color: var(--panel);
+}
 [data-swatch="action-background"] {
   background-color: var(--action-background);
 }
@@ -227,6 +275,9 @@
 }
 [data-swatch="wordmark-front"] {
   background-color: var(--wordmark-front);
+}
+[data-swatch="starter-border"] {
+  background-color: var(--starter-border);
 }
 [data-swatch="eyebrow"] {
   background-color: var(--eyebrow);
@@ -414,6 +465,22 @@
   letter-spacing: 0.04em;
 }
 
+@utility type-mono-note {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+@utility type-mono-sign {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  line-height: 21px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
 @utility type-pixel-numeral {
   font-family: var(--font-pixel);
   font-size: 64px;
@@ -421,6 +488,10 @@
   font-weight: 400;
   letter-spacing: 0em;
   font-variation-settings: "CRSV" 0, "ELSH" 0, "ELXP" 0;
+}
+
+@utility border-ask-small {
+  border-width: var(--spacing-ask-box-small-border);
 }
 
 @utility wordmark {
@@ -459,6 +530,10 @@
 
 @utility wordmark-footer {
   font-size: 155.56px;
+}
+
+@utility wordmark-workspace {
+  font-size: 33.18px;
 }
 
 @utility wordmark-display {

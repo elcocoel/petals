@@ -1,21 +1,13 @@
 // The gallery (T063): list_flowers, with "on NEAR" (and the transaction) or "fixture". No sign-in.
+import { FlowerTile } from '../../../components/FlowerTile.tsx';
 import { QuotePanel } from '../../../components/QuotePanel.tsx';
+import { TextLink } from '../../../components/ui/TextLink.tsx';
 import { api } from '../../../lib/api.ts';
 import { type ApiHealth, apiLabel } from '../../../lib/api-label.ts';
+import { dateLabel, type ListedFlower, networkLabel } from '../../../lib/flower-view.ts';
 import { explorerTxUrl } from '../../../lib/publish.ts';
 
 export const dynamic = 'force-dynamic';
-
-interface ListedFlower {
-  id: string;
-  title: string | null;
-  network: string;
-  as_of: string;
-  maker: string | null;
-  published_at: string | null;
-  where: 'map' | 'fixture';
-  tx_hash?: string;
-}
 
 export default async function Gallery() {
   const res = await api<{ flowers: ListedFlower[] }>('/api/v1/flowers');
@@ -38,37 +30,26 @@ export default async function Gallery() {
         <ul className="gallery">
           {res.value.flowers.map((f) => (
             <li key={`${f.where}:${f.id}`}>
-              <a href={`/f/${f.id}`}>
-                {/* biome-ignore lint/performance/noImgElement: an SVG from our own API */}
-                <img
-                  className="gallery-flower"
-                  src={`/api/v1/flowers/${f.id}/svg`}
-                  alt={`The flower: ${f.title ?? f.id}`}
-                />
-              </a>
-              <br />
-              <a href={`/f/${f.id}`}>{f.title ?? f.id}</a>
-              {f.where === 'map' ? (
-                <span className="badge">
-                  on NEAR
-                  {f.tx_hash && (
-                    <>
-                      {' '}
-                      <a href={explorerTxUrl(f.tx_hash)} rel="noreferrer">
-                        tx
-                      </a>
-                    </>
-                  )}
-                </span>
-              ) : (
-                <span className="badge">fixture</span>
-              )}
-              <br />
-              <span className="muted">
-                {f.network}, data as of {f.as_of}
-                {f.maker ? `, signed by ${f.maker}` : ''}
-                {f.published_at ? `, published ${f.published_at}` : ''}
-              </span>
+              <FlowerTile
+                title={f.title ?? f.id}
+                where={`${networkLabel(f.network)}   /   ${dateLabel(f.as_of)}`}
+                badge={f.where === 'map' ? 'on NEAR' : 'fixture'}
+                image={`/api/v1/flowers/${f.id}/svg`}
+                href={`/f/${f.id}`}
+              >
+                {f.tx_hash && (
+                  <TextLink variant="quiet" href={explorerTxUrl(f.tx_hash)} rel="noreferrer">
+                    Transaction
+                  </TextLink>
+                )}
+                {(f.maker || f.published_at) && (
+                  <span className="type-caption text-muted">
+                    {f.maker ? `Signed by ${f.maker}` : ''}
+                    {f.maker && f.published_at ? ', ' : ''}
+                    {f.published_at ? `published ${f.published_at}` : ''}
+                  </span>
+                )}
+              </FlowerTile>
             </li>
           ))}
         </ul>

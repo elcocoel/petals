@@ -2,5 +2,5 @@
 import type { ReactNode } from 'react';
 
 export function Numeral({ children }: { children: ReactNode }) {
-  return <p className="my-none type-pixel-numeral text-accent">{children}</p>;
+  return <p className="my-0 type-pixel-numeral text-accent">{children}</p>;
 }

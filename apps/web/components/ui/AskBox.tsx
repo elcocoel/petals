@@ -1,17 +1,33 @@
-// Petals / Ask box 52:1861. Always on ground, whatever section holds it: Figma's box stays white on
-// the mint and ink sections too. Fixed height, one line; the action is the one Button. It fills its
-// column, up to the token. With `to` it's a plain GET form, so it asks with no JavaScript.
-import type { ChangeEventHandler, FormEventHandler } from 'react';
+'use client';
+// Petals / Ask box 52:1861, and the workspace's Question composer 39:930, which is the same control at
+// another size, as is the small one in the landing's step 1 (67:2512). Always on ground, whatever
+// section holds it: Figma's box stays white on the mint and ink sections too. It grows with what's
+// typed; Enter asks and Shift+Enter starts a line. The action is the one Button. With `to` it's a plain
+// GET form, so it still asks before any JavaScript has run.
+import type { ChangeEventHandler, FormEventHandler, Ref } from 'react';
 import { Button } from './Button.tsx';
 
 const SIZES = {
-  default: {
-    box: 'h-ask-box-height max-w-ask-box-width gap-ask-box-gap pr-ask-box-inset pl-block-gap',
-    field: 'type-body',
+  hero: {
+    form: 'min-h-ask-box-height max-w-ask-box-width border py-ask-box-block pr-ask-box-inset pl-block-gap',
+    gap: 'gap-ask-box-gap',
+    field: 'py-ask-box-field-block type-body placeholder:text-primary',
+    arrow: true,
+    button: 'ask',
+  },
+  composer: {
+    form: 'min-h-composer-height border py-composer-block pr-composer-inset-end pl-control-inset',
+    gap: 'gap-text-gap',
+    field: 'py-composer-field-block type-label placeholder:text-muted',
+    arrow: false,
+    button: 'default',
   },
   small: {
-    box: 'h-ask-box-small-height max-w-ask-box-small-width gap-ask-box-small-gap pr-ask-box-small-end pl-ask-box-small-start',
-    field: 'type-body-small',
+    form: 'min-h-ask-box-small-height max-w-ask-box-small-width border-ask-small py-ask-box-small-block pr-ask-box-small-end pl-ask-box-small-start',
+    gap: 'gap-ask-box-small-gap',
+    field: 'py-small-field-block type-body-small placeholder:text-primary',
+    arrow: true,
+    button: 'small',
   },
 } as const;
 
@@ -20,11 +36,15 @@ export function AskBox({
   label,
   action = 'Ask',
   to,
-  size = 'default',
   name = 'q',
+  id,
+  size = 'hero',
   value,
   defaultValue,
   disabled,
+  readOnly,
+  canAsk = true,
+  boxRef,
   onChange,
   onSubmit,
 }: {
@@ -35,33 +55,49 @@ export function AskBox({
   action?: string;
   /** The address the question goes to, as ?q=. */
   to?: string;
-  size?: keyof typeof SIZES;
   name?: string;
+  id?: string;
+  size?: keyof typeof SIZES;
   value?: string;
   defaultValue?: string;
   disabled?: boolean;
-  onChange?: ChangeEventHandler<HTMLInputElement>;
+  readOnly?: boolean;
+  /** False keeps the action off and the box open: there's nothing to ask yet, or it's still busy. */
+  canAsk?: boolean;
+  boxRef?: Ref<HTMLTextAreaElement>;
+  onChange?: ChangeEventHandler<HTMLTextAreaElement>;
   onSubmit?: FormEventHandler<HTMLFormElement>;
 }) {
+  const look = SIZES[size];
   return (
     <form
       data-surface="ground"
       action={to}
       method={to ? 'get' : undefined}
       onSubmit={onSubmit}
-      className={`flex w-full items-center border border-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary ${SIZES[size].box}`}
+      className={`flex w-full items-end border-primary focus-within:outline-1 focus-within:outline-primary ${look.gap} ${look.form}`}
     >
-      <input
+      <textarea
+        ref={boxRef}
+        id={id}
         name={name}
+        rows={1}
         aria-label={label}
         placeholder={placeholder}
         value={value}
         defaultValue={defaultValue}
         disabled={disabled}
+        readOnly={readOnly}
         onChange={onChange}
-        className={`min-w-0 flex-1 bg-transparent text-ellipsis text-primary outline-none placeholder:text-primary ${SIZES[size].field}`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+            e.currentTarget.form?.requestSubmit();
+          }
+        }}
+        className={`max-h-composer-max-height min-w-0 flex-1 resize-none bg-transparent field-sizing-content text-primary outline-none ${look.field}`}
       />
-      <Button type="submit" size={size} arrow disabled={disabled}>
+      <Button type="submit" size={look.button} arrow={look.arrow} disabled={disabled || !canAsk}>
         {action}
       </Button>
     </form>

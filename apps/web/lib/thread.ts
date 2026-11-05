@@ -2,6 +2,7 @@
 // chat), live or from a stored run. Pure, so a reload and a live chat read the same. Below the list:
 // the stages of a turn, the backup of a question, and the one reducer the chat's state goes through.
 import type { AgentEvent, FlowerResult, ModelSignature, Run } from '@petal/core/types';
+import { readAbout } from './ask-about.ts';
 
 export type Done = Extract<AgentEvent, { event: 'done' }>['data'];
 
@@ -22,8 +23,19 @@ export type Item =
   | { kind: 'note'; text: string }
   | { kind: 'message'; text: string }
   | { kind: 'flower'; flower: FlowerResult; signature: ModelSignature | null }
+  /** a stored flower was opened here: what it was asked and what it found */
+  | StoredItem
   | { kind: 'error'; code: string; message: string; hint?: string }
   | { kind: 'done'; done: Done; signature: ModelSignature | null };
+
+export interface StoredItem {
+  kind: 'stored';
+  id: string;
+  question: string | null;
+  summary: string;
+  network: string;
+  asOf: string;
+}
 
 /** One event into the list. `run` and heartbeats add nothing to read. */
 export function fold(items: Item[], e: AgentEvent): Item[] {
@@ -204,6 +216,26 @@ export function joinQuestion(back: string, box: string): string {
   return !box.trim() || box === back ? back : `${back}\n${box}`;
 }
 
+/**
+ * What the flower panel holds. `latest` follows the thread's newest flower; a new flower takes the
+ * panel back from any other choice.
+ */
+export type Opened =
+  | { kind: 'latest' }
+  | { kind: 'turn'; index: number }
+  | { kind: 'stored'; id: string }
+  | { kind: 'shelf' };
+
+/** The panel's extra reading, one at a time. */
+export type PanelSection = 'reading' | 'quote' | null;
+
+/** A stored flower's row sits before the first question about it, or at the end. Once each. */
+function placeStored(items: Item[], stored: StoredItem): Item[] {
+  if (items.some((x) => x.kind === 'stored' && x.id === stored.id)) return items;
+  const at = items.findIndex((x) => x.kind === 'user' && readAbout(x.text).flower === stored.id);
+  return at === -1 ? [...items, stored] : [...items.slice(0, at), stored, ...items.slice(at)];
+}
+
 /** The chat's state. What a person reads is projected from it in thread-view.ts. */
 export interface ChatState {
   question: string;
@@ -218,6 +250,10 @@ export interface ChatState {
   before: TurnStage;
   /** following the run again also ended without `done` */
   lostAgain: boolean;
+  open: Opened;
+  /** the selected petal of the open flower */
+  petal: string | null;
+  section: PanelSection;
 }
 
 export type ChatAction =
@@ -230,9 +266,18 @@ export type ChatAction =
   | { type: 'opening' }
   | { type: 'opened'; run: Pick<Run, 'status' | 'messages' | 'events'> }
   | { type: 'unreadable'; code: string; message: string }
-  | { type: 'ended'; again: boolean };
+  | { type: 'ended'; again: boolean }
+  | { type: 'open'; open: Opened }
+  | { type: 'stored-read'; stored: StoredItem }
+  | { type: 'select'; petal: string | null }
+  | { type: 'section'; section: PanelSection };
 
-export function initialChat(o: { initialRun?: string; greeting?: string }): ChatState {
+export function initialChat(o: {
+  initialRun?: string;
+  greeting?: string;
+  open?: Opened;
+  petal?: string | null;
+}): ChatState {
   return {
     question: '',
     restored: false,
@@ -242,6 +287,9 @@ export function initialChat(o: { initialRun?: string; greeting?: string }): Chat
     turn: 'idle',
     before: 'idle',
     lostAgain: false,
+    open: o.open ?? { kind: 'latest' },
+    petal: o.petal ?? null,
+    section: null,
   };
 }
 
@@ -268,6 +316,10 @@ export function chatReducer(s: ChatState, a: ChatAction): ChatState {
         items: fold(s.items, a.event),
         runId: a.event.event === 'run' ? a.event.data.run_id : s.runId,
         turn: witness(s.turn, a.event),
+        // the newest flower opens as it is drawn, whatever was open
+        ...(a.event.event === 'flower'
+          ? { open: { kind: 'latest' } as const, petal: null, section: null }
+          : {}),
       };
     case 'refused':
       return {
@@ -281,7 +333,14 @@ export function chatReducer(s: ChatState, a: ChatAction): ChatState {
     case 'opening':
       return { ...s, busy: true };
     case 'opened':
-      return { ...s, items: threadFromRun(a.run), turn: turnOfRun(a.run) };
+      return {
+        ...s,
+        // a stored flower may have been read while the run was on its way
+        items: s.items
+          .filter((x): x is StoredItem => x.kind === 'stored')
+          .reduce(placeStored, threadFromRun(a.run)),
+        turn: turnOfRun(a.run),
+      };
     case 'unreadable': {
       // opening a link: this is all there is to show
       if (s.turn !== 'lost') {
@@ -304,5 +363,13 @@ export function chatReducer(s: ChatState, a: ChatAction): ChatState {
       const turn = witness(s.turn, { event: 'ended' });
       return { ...s, busy: false, turn, lostAgain: a.again && turn === 'lost' };
     }
+    case 'open':
+      return { ...s, open: a.open, petal: null, section: null };
+    case 'stored-read':
+      return { ...s, items: placeStored(s.items, a.stored) };
+    case 'select':
+      return { ...s, petal: a.petal };
+    case 'section':
+      return { ...s, section: s.section === a.section ? null : a.section };
   }
 }

@@ -1,8 +1,7 @@
-// /make wears the same chrome as the rest of the site. It stays outside (site) because the workspace
-// is being rebuilt here (T183).
+// The workspace's frame: its own header and rail, in place of the site's nav.
 import type { ReactNode } from 'react';
-import { SiteChrome } from '../../components/ui/SiteChrome.tsx';
+import { WorkspaceFrame } from '../../components/workspace/WorkspaceFrame.tsx';
 
 export default function MakeLayout({ children }: { children: ReactNode }) {
-  return <SiteChrome>{children}</SiteChrome>;
+  return <WorkspaceFrame section="Make a flower">{children}</WorkspaceFrame>;
 }

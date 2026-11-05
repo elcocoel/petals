@@ -1,33 +1,46 @@
-// Petals / Link 23:159: a label you can follow, no box. Underlined only under the pointer.
-// The mono variant is the action line of a note box (Figma's "ASK WHY", 66:2231).
+// Petals / Link 23:159: a label you can follow, no box. Underlined only under the pointer. The rail's
+// items are this link with an icon, a quiet one is the same link a size down, and a mono one is the
+// action line of a note box (Figma's "ASK WHY", 66:2231).
 import type { ReactNode } from 'react';
 import { Arrow } from './Arrow.tsx';
+import { Icon, type IconName } from './Icon.tsx';
 
 const VARIANTS = {
-  label: { type: 'type-label', gap: 'gap-space-6' },
-  mono: { type: 'type-mono-tiny', gap: 'gap-text-gap' },
+  label: 'type-label text-primary',
+  quiet: 'type-caption text-muted hover:text-primary',
+  rail: 'flex items-center gap-icon-gap py-rail-item-block type-label whitespace-nowrap text-primary',
+  mono: 'type-mono-tiny text-primary',
 } as const;
 
 export function TextLink({
   href,
   rel,
+  target,
   variant = 'label',
+  icon,
   arrow,
   children,
 }: {
   href: string;
   rel?: string;
+  target?: string;
   variant?: keyof typeof VARIANTS;
+  icon?: IconName;
   /** A trailing arrow, drawn. */
   arrow?: boolean;
   children: ReactNode;
 }) {
+  const withArrow = arrow
+    ? `inline-flex items-center ${variant === 'mono' ? 'gap-text-gap' : 'gap-space-4'}`
+    : '';
   return (
     <a
       href={href}
       rel={rel}
-      className={`text-primary no-underline hover:underline ${VARIANTS[variant].type} ${arrow ? `inline-flex items-center ${VARIANTS[variant].gap}` : ''}`}
+      target={target}
+      className={`no-underline hover:underline ${VARIANTS[variant]} ${withArrow}`}
     >
+      {icon && <Icon name={icon} />}
       {children}
       {arrow && <Arrow />}
     </a>

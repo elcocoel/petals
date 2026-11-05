@@ -1,15 +1,19 @@
 'use client';
-// Composer's handlers go on DOM elements, which can't cross from a server page, so its lab states
-// render from here. It's fixed to the window in use: the transform makes this stage its containing
-// block, so each state stays in its own box. Nothing is sent.
+// Views whose handlers go on DOM elements, which can't cross from a server page, so their lab states
+// render from here. Nothing is sent, and closing a detail closes nothing.
+import type { PetalDetail } from '@petal/core/types';
 import { Composer } from '../components/chat/Composer.tsx';
+import { PetalDetails } from '../components/PetalDetails.tsx';
 import type { ComposerView } from '../lib/thread-view.ts';
 
 export function LabComposer({ view }: { view: ComposerView }) {
   return (
-    <div className="w-full transform-gpu pt-column-gap">
-      <div className="h-section-padding" />
+    <div className="w-full">
       <Composer view={view} onChange={() => {}} onSend={() => {}} />
     </div>
   );
+}
+
+export function LabPetalClose({ petal }: { petal: PetalDetail }) {
+  return <PetalDetails petal={petal} unit="NEAR" onClose={() => {}} />;
 }

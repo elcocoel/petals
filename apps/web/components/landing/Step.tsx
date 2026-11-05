@@ -22,8 +22,8 @@ export function Step({
       <div className="mt-column-gap">
         <Numeral>{numeral}</Numeral>
       </div>
-      <h3 className="mt-space-36 mb-none type-heading">{title}</h3>
-      <p className="mt-space-14 mb-none type-body">{body}</p>
+      <h3 className="mt-space-36 mb-0 type-heading">{title}</h3>
+      <p className="mt-space-14 mb-0 type-body">{body}</p>
     </div>
   );
 }

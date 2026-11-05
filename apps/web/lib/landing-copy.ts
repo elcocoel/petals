@@ -83,6 +83,7 @@ export const landingCopy = {
     eyebrow: 'FAQ',
     title: 'Questions Petals answers.',
     body: 'Each answer is a pattern of power you will start to see everywhere. Ask any of these about a network you care about.',
+    sign: '−',
     items: [
       {
         index: '01',

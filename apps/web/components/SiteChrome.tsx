@@ -1,7 +1,7 @@
-// The nav and the reading column, around every page that isn't the landing: app/(site)/layout.tsx and
-// app/make/layout.tsx.
+// The nav and the reading column, around every page in app/(site). The workspace has its own frame, and
+// the landing page draws its own bands.
 import type { ReactNode } from 'react';
-import { Nav } from './Nav.tsx';
+import { Nav } from './ui/Nav.tsx';
 
 export function SiteChrome({ children }: { children: ReactNode }) {
   return (

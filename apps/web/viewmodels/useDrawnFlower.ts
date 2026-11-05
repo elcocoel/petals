@@ -1,26 +1,28 @@
-// A flower draws itself from its spec, where it was made in the thread.
-import { useEffect, useState } from 'react';
-import { type Drawn, drawFlower } from '../lib/agent-client.ts';
+// Flowers draw themselves from their specs. Each one is drawn once and kept, so a row can show its
+// picture and clicking back to an earlier flower is immediate.
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { drawFlower } from '../lib/agent-client.ts';
+import type { Drawing } from '../lib/panel-view.ts';
 
-export function useDrawnFlower(spec: unknown): { drawn: Drawn | null; failed: string | null } {
-  const [drawn, setDrawn] = useState<Drawn | null>(null);
-  const [failed, setFailed] = useState<string | null>(null);
-  const specJson = JSON.stringify(spec);
+export function useDrawnFlowers(specs: { key: string; spec: unknown }[]): Record<string, Drawing> {
+  const [drawn, setDrawn] = useState<Record<string, Drawing>>({});
+  const asked = useRef(new Set<string>());
+  const wanted = useMemo(() => new Map(specs.map((s) => [s.key, JSON.stringify(s.spec)])), [specs]);
 
   useEffect(() => {
-    let gone = false;
-    void (async () => {
-      try {
-        const out = await drawFlower(specJson);
-        if (!gone) setDrawn(out);
-      } catch (e) {
-        if (!gone) setFailed(e instanceof Error ? e.message : String(e));
-      }
-    })();
-    return () => {
-      gone = true;
-    };
-  }, [specJson]);
+    for (const [key, specJson] of wanted) {
+      if (asked.current.has(key)) continue;
+      asked.current.add(key);
+      void drawFlower(specJson).then(
+        (out) => setDrawn((d) => ({ ...d, [key]: out })),
+        (e) =>
+          setDrawn((d) => ({
+            ...d,
+            [key]: { failed: e instanceof Error ? e.message : String(e) },
+          })),
+      );
+    }
+  }, [wanted]);
 
-  return { drawn, failed };
+  return drawn;
 }

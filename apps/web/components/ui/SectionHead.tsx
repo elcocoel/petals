@@ -38,11 +38,9 @@ export function SectionHead({
   const { Tag, title: titleType, gap, body: bodyType } = SIZES[size];
   return (
     <div>
-      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-      <Tag className={`my-none whitespace-pre-line ${titleType} ${eyebrow ? gap : ''}`}>
-        {title}
-      </Tag>
-      {body && <p className={`mb-none text-pretty ${bodyType}`}>{body}</p>}
+      {eyebrow && <Eyebrow tone="section">{eyebrow}</Eyebrow>}
+      <Tag className={`my-0 whitespace-pre-line ${titleType} ${eyebrow ? gap : ''}`}>{title}</Tag>
+      {body && <p className={`mb-0 text-pretty ${bodyType}`}>{body}</p>}
     </div>
   );
 }

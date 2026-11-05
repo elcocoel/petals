@@ -1,11 +1,20 @@
-// Petals / Cell 12:16, and Petals / Cell repeat 24:209: 7 by 4 of the same cell, from one <symbol>.
-// Both scale with their column. Mint on mint vanishes, as it does in Figma's closing section.
+// Petals / Cell 12:16: the agent's small mark beside what it says, and the same drawing large on a page.
+// Petals / Cell repeat 24:209: 7 by 4 of it, from one <symbol>. Both are lib/figures.ts in role paints:
+// the same layers as the wordmark, except that on mint the back vanishes, as in Figma's closing section.
 import { useId } from 'react';
 import { cell } from '../../lib/figures.ts';
 import { Drawing, drawMarks } from './Drawing.tsx';
 
-export function Cell() {
-  return <Drawing drawing={cell} className="h-auto w-full" />;
+const SIZES = {
+  small: 'w-cell-small',
+  medium: 'w-cell-medium',
+  large: 'w-cell-large',
+  /** As wide as its parent. */
+  fill: 'w-full',
+} as const;
+
+export function Cell({ size = 'small' }: { size?: keyof typeof SIZES }) {
+  return <Drawing drawing={cell} className={`h-auto shrink-0 ${SIZES[size]}`} />;
 }
 
 /** The repeat's own geometry, from its component in Figma. */

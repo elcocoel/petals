@@ -34,7 +34,9 @@ export function HowItWorks() {
         </Step>
         <Step {...question}>
           <Glyph kind="concentration" size="step" />
-          <Callout who={copy.stepThree.who}>{copy.stepThree.text}</Callout>
+          <Callout size="compact" who={copy.stepThree.who}>
+            {copy.stepThree.text}
+          </Callout>
         </Step>
       </div>
       <div className="mt-column-gap">

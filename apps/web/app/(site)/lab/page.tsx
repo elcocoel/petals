@@ -10,6 +10,7 @@ export const metadata = { title: 'Lab · Petals', robots: { index: false } };
 
 const GROUPS: LabEntry['group'][] = [
   'Primitives',
+  'The workspace',
   'The conversation',
   'The flower',
   'Reading',

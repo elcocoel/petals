@@ -1,5 +1,5 @@
 // A reading written out line by line (Figma's Transcript, 66:2248): numbered lines between two rules,
-// ending on the next number and a cursor. The cursor only blinks when motion is welcome.
+// ending on the next number and a cursor.
 import type { ReactNode } from 'react';
 import { MetaRow } from './MetaRow.tsx';
 
@@ -8,7 +8,7 @@ const number = (i: number) => String(i + 1).padStart(2, '0');
 function Line({ i, children }: { i: number; children: ReactNode }) {
   return (
     <div className="flex items-start gap-space-20 border-t border-hairline py-space-14">
-      <p className="my-none type-mono-small">{number(i)}</p>
+      <p className="my-0 type-mono-small">{number(i)}</p>
       {children}
     </div>
   );
@@ -30,11 +30,11 @@ export function Transcript({
       </div>
       {lines.map((line, i) => (
         <Line key={line} i={i}>
-          <p className="my-none min-w-0 flex-1 type-lead">{line}</p>
+          <p className="my-0 min-w-0 flex-1 type-lead">{line}</p>
         </Line>
       ))}
       <Line i={lines.length}>
-        <span className="h-cursor-height w-cursor-width bg-accent motion-safe:animate-blink" />
+        <span className="h-cursor-height w-cursor-width bg-accent" />
       </Line>
     </div>
   );

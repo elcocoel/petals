@@ -20,7 +20,7 @@ export function Terminal({
       </div>
       <div className="flex flex-col gap-text-gap px-block-gap pt-space-28 pb-space-32 type-mono-code">
         {lines.map(({ text, accent, returned }) => (
-          <p key={text} className={`my-none whitespace-pre-wrap ${accent ? 'text-accent' : ''}`}>
+          <p key={text} className={`my-0 whitespace-pre-wrap ${accent ? 'text-accent' : ''}`}>
             {returned && (
               <>
                 <Arrow back />{' '}

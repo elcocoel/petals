@@ -1,6 +1,6 @@
 // The landing page's shell, one of them for every band: a surface edge to edge, its content in a
 // column as wide as Figma's frame, so a wider window gets more band and no longer lines. Nav and
-// Footer are this too.
+// Footer are this too. Grayscale smoothing is how Figma draws type; macOS's default thickens it.
 import type { SurfaceName } from '@petal/tokens';
 import type { ReactNode } from 'react';
 import { Surface } from './Surface.tsx';
@@ -33,7 +33,9 @@ export function Section({
 }) {
   return (
     <Surface kind={kind} as={as} id={id} className={rule && RULES[rule]}>
-      <div className={`mx-auto w-full max-w-page-width ${PADDING[padding]}`}>{children}</div>
+      <div className={`mx-auto w-full max-w-page-width antialiased ${PADDING[padding]}`}>
+        {children}
+      </div>
     </Surface>
   );
 }

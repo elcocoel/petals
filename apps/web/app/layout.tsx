@@ -1,5 +1,5 @@
-// The root: html, body, fonts, metadata. The nav and the reading column are in SiteChrome, and the
-// landing page draws its own. Styling lives in globals.css and the generated tokens.
+// The root: html, body and fonts. The site's nav and the workspace's frame are their own layouts.
+// Styling lives in globals.css and the generated tokens.
 import { Bitcount_Grid_Single, Geist_Mono, Mona_Sans } from 'next/font/google';
 import type { ReactNode } from 'react';
 import './globals.css';
