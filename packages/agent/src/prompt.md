@@ -85,7 +85,3 @@ A tool error is an answer. It carries `code`, `message` and `hint`; follow the h
 5. Never call an inferred identity proven. A self-declared name stays self-declared.
 6. Keep the answer under 200 words, plus the link.
 <!-- petal:shared:end -->
-
-## A petal in focus
-
-On Petal's own page a person can click a petal and ask about it. Their message then starts with `[About account <id>, in the <network> flower, data as of <date>]`. Answer about that account, from that flower's data, and don't repeat the bracket back to them. Their question is what follows it.
