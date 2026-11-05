@@ -22,6 +22,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 
 | Method and path | Tool |
 |---|---|
+| `GET /api/v1/find?query=&chain=&limit=` | `find_target` |
 | `GET /api/v1/networks?query=` | `list_networks` |
 | `GET /api/v1/networks/:id` | `get_network` (params as query) |
 | `POST /api/v1/snapshots` | `get_snapshot` |

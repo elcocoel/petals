@@ -97,6 +97,9 @@ export function httpApp(ctx: ToolContext): Hono {
   }
 
   // -- networks and snapshots
+  app.get('/api/v1/find', limit, (c) =>
+    answer(c, 'find_target', pick(c.req.query(), ['query', 'chain', 'limit'], ['limit'])),
+  );
   app.get('/api/v1/networks', limit, (c) =>
     answer(c, 'list_networks', pick(c.req.query(), ['query'])),
   );

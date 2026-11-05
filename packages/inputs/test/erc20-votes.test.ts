@@ -23,6 +23,7 @@ import { encodeSnapshot } from '../src/store/file-store.ts';
 import { loadRecording, noSleep, rowFor, storedSnapshot } from './helpers/recordings.ts';
 import { ENS } from './helpers/targets.ts';
 
+const ZERO = `0x${'0'.repeat(40)}`;
 const row = rowFor('erc20-votes', ENS);
 const stored = storedSnapshot(row);
 const block = row.block_height as number;
@@ -53,7 +54,7 @@ describe('ENS as the test parameter, stored', () => {
   test('check: getVotes equals the stored votes for all 400, offline', async () => {
     expect(VOTES_CHECKED).toBeGreaterThanOrEqual(300); // a flower draws at most 300 petals
     const check = await checkGetVotes(replayReader(), ENS.token, block, top());
-    expect(check).toEqual({ block, checked: 400, mismatches: [] });
+    expect(check).toEqual({ block, checked: 400, mismatches: [], fn: 'getVotes' });
   });
 
   test('a stored row that differs from getVotes is caught', async () => {
@@ -163,6 +164,28 @@ function fakeReader(pages: EvmLog[][], votes: Record<string, bigint>, symbol = '
     stats: () => ({ calls: {}, http_429: {}, failures: {} }),
   };
 }
+
+describe('a Compound-style token', () => {
+  test('has no getVotes, so getCurrentVotes answers the check', async () => {
+    const asked: string[] = [];
+    const reader = {
+      multicall: async (calls: { data: string }[]) => {
+        const first = calls[0]?.data ?? '';
+        asked.push(first.slice(0, 10));
+        const compound = first.startsWith(
+          encodeCall('getCurrentVotes(address)', ZERO).slice(0, 10),
+        );
+        return calls.map(() => ({
+          ok: compound,
+          data: compound ? `0x${7n.toString(16).padStart(64, '0')}` : '0x',
+        }));
+      },
+    } as unknown as EvmReader;
+    const check = await checkGetVotes(reader, '0xtoken', 1, [{ address: ZERO, votes: 7n }]);
+    expect(check).toMatchObject({ fn: 'getCurrentVotes', checked: 1, mismatches: [] });
+    expect(asked).toHaveLength(2);
+  });
+});
 
 describe('pullErc20Votes on a small made-up token', () => {
   const pages = [

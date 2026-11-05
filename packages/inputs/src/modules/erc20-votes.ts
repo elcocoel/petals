@@ -3,11 +3,10 @@
 // first; otherwise pullErc20Votes pages every DelegateVotesChanged log and keeps only the latest
 // balance per delegate, so memory holds one page at a time. This replays the token's whole history.
 //
-// Check: getVotes at the block equals the replay for the 400 largest delegates, which covers every
-// delegate a flower can draw (at most 300 petals). A second one comes free: each log's previous
-// balance must equal the balance replayed so far, so a missing page cannot pass unnoticed.
-//
-// A Compound-style token (getCurrentVotes, not getVotes) fails the check and is refused.
+// Check: getVotes at the block (getCurrentVotes on a Compound-style token such as UNI) equals the
+// replay for the 400 largest delegates, which covers every delegate a flower can draw (at most 300
+// petals). A second one comes free: each log's previous balance must equal the balance replayed so
+// far, so a missing page cannot pass unnoticed.
 //
 // Plain flower only: delegates and votes. Backer segments wait, because segments/backers.ts holds
 // NEAR labels. No names: reverse ENS records are not read here.
@@ -69,7 +68,7 @@ export const ERC20_VOTES_DESCRIPTOR: NetworkDescriptor = {
   params: {
     token: {
       required: true,
-      description: 'the token contract address; it must answer getVotes',
+      description: 'the token contract address; it must answer getVotes or getCurrentVotes',
       pattern: '^0x[0-9a-fA-F]{40}$',
       example: '0xc18360217d8f7ab5e7c516566761ea12ce7f9d72',
     },
@@ -124,28 +123,40 @@ export function applyVotesLogs(r: VotesReplay, page: EvmLog[]): VotesReplay {
 export interface VotesCheck {
   block: number;
   checked: number;
-  /** delegates whose getVotes differs from the replay */
+  /** delegates whose votes on the contract differ from the replay */
   mismatches: string[];
+  /** which function answered: getVotes or getCurrentVotes */
+  fn: string;
 }
 
-/** getVotes at the block against the replayed votes of the given delegates. */
+/**
+ * The replayed votes against the contract at the block: getVotes, or getCurrentVotes on a
+ * Compound-style token (UNI, COMP), which has no getVotes.
+ */
 export async function checkGetVotes(
   reader: EvmReader,
   token: string,
   block: number,
   rows: { address: string; votes: bigint }[],
 ): Promise<VotesCheck> {
-  const answers = await reader.multicall(
-    rows.map((r) => ({ to: token, data: encodeCall('getVotes(address)', r.address) })),
-    block,
-  );
+  const ask = (fn: string) =>
+    reader.multicall(
+      rows.map((r) => ({ to: token, data: encodeCall(`${fn}(address)`, r.address) })),
+      block,
+    );
+  let fn = 'getVotes';
+  let answers = await ask(fn);
+  if (rows.length > 0 && answers.every((a) => !a.ok)) {
+    fn = 'getCurrentVotes';
+    answers = await ask(fn);
+  }
   const mismatches = rows
     .filter((r, i) => {
       const a = answers[i];
       return !a?.ok || wordAt(a.data, 0) !== r.votes;
     })
     .map((r) => r.address);
-  return { block, checked: rows.length, mismatches };
+  return { block, checked: rows.length, mismatches, fn };
 }
 
 export interface VotesChecks extends VotesCheck {
@@ -197,7 +208,9 @@ export async function pullErc20Votes(
   const supply = wordAt(supplyAnswer.data, 0);
   const symbol = stringAt(symbolAnswer.data, 0);
 
-  say(`checking the ${Math.min(VOTES_CHECKED, rows.length)} largest delegates against getVotes`);
+  say(
+    `checking the ${Math.min(VOTES_CHECKED, rows.length)} largest delegates against the contract`,
+  );
   const check = await checkGetVotes(reader, token.token, at.number, rows.slice(0, VOTES_CHECKED));
   const checks: VotesChecks = {
     ...check,
@@ -243,8 +256,7 @@ export async function pullErc20Votes(
       id: S.state,
       kind: 'chain',
       url: reader.servedBy('state'),
-      method:
-        'getVotes(address), totalSupply(), decimals() and symbol() through Multicall3, pinned to the block',
+      method: `${check.fn}(address), totalSupply(), decimals() and symbol() through Multicall3, pinned to the block`,
       fetched_at: at.as_of,
       block_height: at.number,
     },
@@ -270,7 +282,7 @@ export async function pullErc20Votes(
       measure: 'delegated_votes',
       note:
         `Delegated votes at block ${grouped(at.number)} (${dayOf(at.as_of)}), by replay of ${grouped(replay.logs)} DelegateVotesChanged logs; each log's previous balance equals the replayed one. ` +
-        `Check: getVotes equals the replay for the ${grouped(check.checked)} largest delegates, which covers every delegate a flower can draw. ` +
+        `Check: ${check.fn} equals the replay for the ${grouped(check.checked)} largest delegates, which covers every delegate a flower can draw. ` +
         `All delegated votes are ${total} ${symbol}, ${percent2(sum, supply)}% of totalSupply() ${fromBaseUnits(supply, decimals)}: tokens with no delegate set carry no votes and are not here. ` +
         'Having votes is not having used them: VoteCast and off-chain Snapshot votes are not read here. Anyone can delegate to anyone without consent, and a large backer may be the delegate itself. ' +
         'No names: reverse records are not read, so every delegate is an address. Who backs each delegate is not split out.',

@@ -10,6 +10,8 @@ export type AnyTool = Tool<any, any>;
 
 /** One line per tool, from contracts/tools.md, for registries that carry no description. */
 const DESCRIPTIONS: Record<string, string> = {
+  find_target:
+    'From a plain name or an address to candidates: what would draw each one, or why nothing can.',
   list_networks:
     "The networks Petal can read. If the question is about one it can't read, say so and use cannot_read_hint.",
   get_network: 'One network: its descriptor and the snapshots already mapped.',
@@ -94,6 +96,7 @@ export function llmTools(registry: readonly AnyTool[]): LlmToolDef[] {
 }
 
 export const STAGE_OF: Record<string, Stage> = {
+  find_target: 'fetching',
   list_flowers: 'reading_map',
   get_flower: 'reading_map',
   list_networks: 'fetching',

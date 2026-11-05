@@ -19,6 +19,7 @@ describe('SYSTEM_PROMPT', () => {
     const numbered = steps.split('\n## ')[0]?.match(/^\d\. /gm) ?? [];
     expect(numbered).toEqual(['1. ', '2. ', '3. ', '4. ', '5. ', '6. ']);
     const order = [
+      'find_target',
       'list_networks',
       'list_flowers',
       'get_snapshot',
@@ -42,6 +43,31 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/not available yet/);
     expect(SYSTEM_PROMPT).toMatch(/unless the person asks for a fresh analysis/);
     expect(SYSTEM_PROMPT).toMatch(/Never ask anyone for a key/);
+  });
+
+  test('steers T165: a name goes through find_target, and nothing ends in a dead end', () => {
+    expect(SYSTEM_PROMPT).toMatch(/call `find_target` with their words/);
+    expect(SYSTEM_PROMPT).toMatch(
+      /a flower, one clear question, or a refusal that says what would work/,
+    );
+    expect(SYSTEM_PROMPT).toMatch(/`ambiguous: true`.*Never pick for the person/);
+    expect(SYSTEM_PROMPT).toMatch(/If you remember an address, pass it to `find_target`/);
+    expect(SYSTEM_PROMPT).not.toMatch(/and stop\./);
+  });
+
+  test('a new map starts only after a plain yes; a flower that exists is simply shown', () => {
+    expect(SYSTEM_PROMPT).toMatch(/Never go from a question straight to a new map/);
+    expect(SYSTEM_PROMPT).toMatch(/ask a plain yes or no before starting a new read and drawing/);
+    expect(SYSTEM_PROMPT).toMatch(/Get the snapshot, after the yes/);
+    expect(SYSTEM_PROMPT).toMatch(/asks for a flower that already exists is simply shown it/);
+  });
+
+  test('a token is a ledger of holdings; Moloch shares are one, transferable or not', () => {
+    expect(SYSTEM_PROMPT).toMatch(
+      /A token is a ledger of holdings, and transferability is a property/,
+    );
+    expect(SYSTEM_PROMPT).toMatch(/Moloch shares are a token/);
+    expect(SYSTEM_PROMPT).not.toMatch(/Moloch[^.]*(isn't|is not|not) a token/i);
   });
 
   test('keeps the six rules of the 7/7 skill', () => {

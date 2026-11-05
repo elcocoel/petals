@@ -18,6 +18,12 @@ const obj = (x: unknown): Obj => (x && typeof x === 'object' ? (x as Obj) : {});
 
 function line(name: string, out: Obj): string {
   switch (name) {
+    case 'find_target': {
+      const said = arr(out.sources)
+        .filter((s) => obj(s).status === 'answered')
+        .map((s) => obj(s).id);
+      return `${arr(out.candidates).length} candidates${out.ambiguous ? ', several things share this name' : ''}; ${out.calls ?? '?'} calls; answered: ${said.join(', ') || 'none'}`;
+    }
     case 'list_networks': {
       const ids = arr(out.networks).map((n) => obj(n).id);
       return `${ids.length} networks: ${ids.join(', ')}`;

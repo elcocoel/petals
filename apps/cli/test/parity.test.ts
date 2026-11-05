@@ -94,6 +94,12 @@ describe.runIf(ready)('the CLI and HTTP agree (real registry, fake mode)', () =>
     expect(await cli(['networks'])).toEqual(await http('GET', '/api/v1/networks'));
   });
 
+  test('find', async () => {
+    const out = await cli(['find', 'house of stake']);
+    expect(out).toEqual(await http('GET', '/api/v1/find?query=house%20of%20stake'));
+    expect((out as { calls: number }).calls).toBe(0);
+  });
+
   test('snapshot, describe, propose, figures, validate, render', async () => {
     const snapBody = { network: 'near-validators' };
     const snap = (await http('POST', '/api/v1/snapshots', snapBody)) as { sha256: string };

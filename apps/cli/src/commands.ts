@@ -5,6 +5,7 @@ import type { JSONSchema } from '@petal/tools';
 
 /** Short names for the tools in contracts/tools.md. */
 const SHORT: Record<string, string> = {
+  find_target: 'find',
   list_networks: 'networks',
   get_network: 'network',
   get_snapshot: 'snapshot',
@@ -27,6 +28,7 @@ const SHORT: Record<string, string> = {
 
 /** Which input fields bare words fill, in order. Unlisted tools use the schema's `required`. */
 const POSITIONAL: Record<string, string[]> = {
+  find_target: ['query'],
   list_networks: ['query'],
   get_network: ['id'],
   get_snapshot: ['network'],
