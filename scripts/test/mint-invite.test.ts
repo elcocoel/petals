@@ -39,5 +39,6 @@ describe('mint-invite', () => {
     expect(() => run(['ten'], env)).toThrow(/more than \$0/);
     expect(() => run(['1', '-3'], env)).toThrow(/days/);
     expect(() => run([], env)).toThrow(/usage/);
+    expect(() => run(['1'], { PETAL_STATE_DIR: join(dir, 'nowhere') })).toThrow(/no state folder/);
   });
 });

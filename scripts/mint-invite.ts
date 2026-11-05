@@ -4,6 +4,7 @@
 // It writes to the server's own private.db, so run it where the server runs: PETAL_STATE_DIR says
 // where, default .petal. For the container, from inside it, because SQLite's write-ahead log doesn't
 // work across the VM's mount: container exec petals node /app/scripts/mint-invite.ts 5 14
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { mintInvite, openPrivateStore, revokeInvite } from '@petal/agent';
 
@@ -13,7 +14,12 @@ const REPO = resolve(import.meta.dirname, '..');
 export function run(args: string[], env: NodeJS.ProcessEnv = process.env): string {
   const [first, second] = args;
   if (!first) throw new Error(USAGE);
-  const store = openPrivateStore(resolve(REPO, env.PETAL_STATE_DIR?.trim() || '.petal'));
+  const stateDir = resolve(REPO, env.PETAL_STATE_DIR?.trim() || '.petal');
+  // Not made here: a mistyped folder would hold an invite no server ever sees.
+  if (!existsSync(stateDir)) {
+    throw new Error(`no state folder at ${stateDir}: set PETAL_STATE_DIR to the server's own`);
+  }
+  const store = openPrivateStore(stateDir);
   try {
     if (first === '--revoke') {
       if (!second) throw new Error(USAGE);
