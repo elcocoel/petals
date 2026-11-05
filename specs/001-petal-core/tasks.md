@@ -421,8 +421,8 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 **Goal** (Elco, 2026-11-05): "we have a systems skeleton, now we need a frontend v1 for that skeleton". Connect the skeleton to its interaction surfaces so they evolve together, with one behaviour in one component, so a change applies everywhere. Harvest and reasoning: `../design/frontend-foundation.md`. After Elco's judgement, coordination splits into fronts (T187).
 
 - [X] T174 [W8] Harvest Saint Elmo Systems, Harness and Fire into `../design/frontend-foundation.md`.
-- [ ] T175 [W6] Tokens: `packages/tokens` (TypeScript source with roles and three surfaces, `emit --check`), Tailwind v4 theme generated from it, fonts by `next/font`, the old inline CSS moved, a strict literal scan in `scripts/check.sh`.
-- [ ] T176 [W6] `/lab`: every component in every state from saved fixtures, off in production unless `PETAL_LAB=1`, with a registry (component, Figma name and node, source) and a test that every exported component appears once.
+- [X] T175 [W6] Tokens: `packages/tokens` (TypeScript source with roles and three surfaces, `emit --check`), Tailwind v4 theme generated from it, fonts by `next/font`, the old inline CSS moved, a strict literal scan in `scripts/check.sh`.
+- [X] T176 [W6] `/lab`: every component in every state from saved fixtures, off in production unless `PETAL_LAB=1`, with a registry (component, Figma name and node, source) and a test that every exported component appears once.
 - [ ] T177 [W8] Figma as a collaboration space, by hand (Elco: no connection on this plan, no rocket science): an agent carries one real change from Figma to code and one back, and a short how-to says how. Component names match; the registry holds Figma names and nodes. No sync tooling.
 - [X] T178 [W6] MVVM+: split `Chat.tsx` into adapter, pure projection, ViewModels and pure views, `apps/web/test/layers.test.ts`, turn stages each witnessed, and a question that isn't lost until accepted. No visual change.
 - [ ] T179 [W1] The reading: `readFlower(spec, snapshot)` as the pure translator, `renderFlower` becomes reading plus a named skin, golden SVGs byte-identical, new golden readings.
