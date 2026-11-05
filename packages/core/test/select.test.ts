@@ -43,6 +43,23 @@ describe('selectPetals', () => {
     });
   });
 
+  test('the tail counts the participants it folds, not rows: a group row counts its members', () => {
+    const v = validators();
+    const measure = v.holdings[0]?.measure ?? '';
+    const plain = selectPetals(v, { ...sel(2), measure });
+    const folded = plain[1]?.id; // second by the measure, so sel(1) folds it into the tail
+    const s = {
+      ...v,
+      participants: v.participants.map((p) =>
+        p.id === folded ? { ...p, kind: 'group' as const, count: 5000 } : p,
+      ),
+    };
+    const before = selectPetals(v, { ...sel(1), measure }).at(-1)?.count ?? 0;
+    const tail = selectPetals(s, { ...sel(1), measure }).at(-1);
+    expect(tail?.id).toBe(TAIL_ID);
+    expect(tail?.count).toBe(before - 1 + 5000);
+  });
+
   test('petals is a cap: two participants give two petals and no tail', () => {
     const rows = selectPetals(twoParticipants(), sel(60));
     expect(rows.map((r) => [r.id, r.rank, r.tail])).toEqual([

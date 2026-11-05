@@ -43,7 +43,7 @@ export function selectPetals(s: Snapshot, sel: Spec['selection']): PetalRow[] {
       share: ratio6(amount, t.total),
       rank: n + 1,
       tail: true,
-      count: rest.length,
+      count: rest.reduce((acc, r) => acc + (people.get(r.id)?.count ?? 1), 0),
     });
   }
   return out;

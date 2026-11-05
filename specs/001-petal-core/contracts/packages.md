@@ -53,7 +53,7 @@ export interface SnapshotStore {                        // content-addressed, co
   list(networkId?: string): Promise<IndexRow[]>;
 }
 export function fileStore(dirs: { fixtures: string; cache: string }): SnapshotStore;
-export function getSnapshot(req: SnapshotRequest, deps: { store: SnapshotStore; map?: MapIndex; onProgress?: Progress; modules?: Record<string, InputModule> }): Promise<SnapshotResult>; // modules: v1.1, additive (defaults to the built-in registry)
+export function getSnapshot(req: SnapshotRequest, deps: { store: SnapshotStore; map?: MapIndex; onProgress?: Progress; modules?: Record<string, InputModule> }): Promise<SnapshotResult>; // modules: v1.1, additive (defaults to the built-in registry); InputModule.keyFor: v1.1, additive, ratified 5 Nov (keeps two targets of one module apart)
 
 // offline import of step 1 and step 2 data into fixtures (scripts/import-spike-data.ts)
 export function importSpike(path: string, rules: GroupingRules): Promise<Snapshot>;
