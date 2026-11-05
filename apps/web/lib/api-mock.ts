@@ -24,6 +24,7 @@ import type {
   ChatInput,
   ChatMessage,
   Entry,
+  EntryWithoutId,
   Figures,
   FlowerResult,
   Interpretation,
@@ -459,7 +460,7 @@ function heroEntries(root: string): FixtureFlower[] {
   return files.flatMap((f) => {
     try {
       const e = JSON.parse(readFileSync(join(dir, f), 'utf8')) as Entry;
-      return e.petal === 'flower/v1' && e.id ? [{ entry: e }] : [];
+      return (e.petal === 'flower/v1' || e.petal === 'flower/v2') && e.id ? [{ entry: e }] : [];
     } catch {
       return [];
     }
@@ -474,7 +475,7 @@ async function skeletonEntry(deps: Parameters<typeof produce>[2]): Promise<Entry
   await produce(run, question, { ...deps, delayMs: 0 });
   const f = run.flower;
   if (!f) throw new Error('api mock: the skeleton replay made no flower');
-  const draft: Omit<Entry, 'id'> = {
+  const draft: EntryWithoutId = {
     petal: 'flower/v1',
     title: 'Who stands behind NEAR’s validators? (API mock)',
     spec: f.spec,
@@ -690,12 +691,12 @@ export function createMockApi(opts: MockOptions = {}): MockApi {
     const b = await body(c);
     const entry = b?.entry as (EntryDraft & { id?: string }) | undefined;
     if (
-      entry?.petal !== 'flower/v1' ||
+      (entry?.petal !== 'flower/v1' && entry?.petal !== 'flower/v2') ||
       entry.spec?.petal !== 'spec/v1' ||
       !entry.interpretation ||
       !entry.provenance
     ) {
-      return reply(c, fail('bad_input', 'entry must be a flower/v1 entry without id and maker'));
+      return reply(c, fail('bad_input', 'entry must be a flower entry without id and maker'));
     }
     const { id: _id, ...rest } = entry;
     const { maker: _maker, ...provenance } = rest.provenance as EntryDraft['provenance'] & {
@@ -733,10 +734,10 @@ export function createMockApi(opts: MockOptions = {}): MockApi {
     }
     // Mock: no view_access_key check (the real publish_flower requires a full-access key).
     draft.used = true;
-    const final: Omit<Entry, 'id'> = {
+    const final = {
       ...draft.entry,
       provenance: { ...draft.entry.provenance, maker: proof },
-    };
+    } as EntryWithoutId;
     const id = entryId(final);
     const key = `${SPEC_PREFIX}${id}`;
     const { tx_hash } = await map.write({ [key]: { ...final, id } });

@@ -6,11 +6,12 @@
 import type {
   Correction,
   Encoding,
+  EntryV1,
+  EntryV2,
   Interpretation,
   ModelSignature,
   Nep413Proof,
   OrderEncoding,
-  PetalSpecInterpretationAndPublishedFlowerEntryV1,
   Sha256,
   SourceIds,
   Spec,
@@ -31,6 +32,8 @@ export type {
   Datetime,
   Decimal,
   Encoding,
+  EntryV1,
+  EntryV2,
   Identity,
   Interpretation,
   Kind,
@@ -44,8 +47,10 @@ export type {
 
 /** snapshot/v1, the common table (common-table.schema.json). */
 export type Snapshot = PetalSnapshotCommonTableV1;
-/** flower/v1, a published flower entry (petal-spec.schema.json, $defs.entry). */
-export type Entry = PetalSpecInterpretationAndPublishedFlowerEntryV1;
+/** A published flower entry; its `petal` says how to verify it (shared-map.md, Entry versions). */
+export type Entry = EntryV1 | EntryV2;
+/** An entry before it has an id. */
+export type EntryWithoutId = Omit<EntryV1, 'id'> | Omit<EntryV2, 'id'>;
 
 export type SnapshotNetwork = Snapshot['network'];
 export type SnapshotMoment = Snapshot['snapshot'];
@@ -397,8 +402,39 @@ export interface ProposeInput {
   params?: Params;
   sha256: Sha256;
   choices?: ProposeChoices;
+  /** spec_sha256 of the spec this one changes; comes with `parent`, and must be its hash */
   variation_of?: Sha256;
+  /** the spec this one changes: its recipe is the start, `choices` and `meanings` go on top */
+  parent?: Spec;
   meanings?: Partial<Record<SpecPrimitive, string>>;
+}
+
+/** recipe/v1: the reusable part of a flower, with no target and no date. buildSpec compiles it. */
+export interface Recipe {
+  petal: 'recipe/v1';
+  /** what it says beyond the network's defaults, so the same choices are one recipe anywhere */
+  choices: ProposeChoices;
+  /** words that replace a primitive's standard meaning */
+  meanings?: Partial<Record<SpecPrimitive, string>>;
+}
+
+/** One change between two specs: a primitive, or the network, snapshot, labels, measure or petals. */
+export interface DiffChange {
+  what: string;
+  from: unknown;
+  to: unknown;
+  /** plain words: the meaning it has now, or what kind of change it is */
+  says: string;
+}
+
+/** diffSpecs: what changed, apart by subject (network), data (snapshot) and design (the recipe). */
+export interface SpecDiff {
+  same_recipe: boolean;
+  subject: DiffChange[];
+  data: DiffChange[];
+  design: DiffChange[];
+  /** the whole of it, e.g. "same recipe, newer data" */
+  says: string;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -437,6 +473,46 @@ export interface RenderResult {
   legend: LegendItem[];
   petals: PetalDetail[];
   render_sha256: Sha256;
+}
+
+// ---------------------------------------------------------------------------------------------
+// The reading (renderer.md, reading/v1): all a drawing needs, and no pixels
+
+/** One petal as read: the row, and what each encoding resolves to for it. */
+export interface ReadingPetal extends PetalRow {
+  /** what a label calls it: the identity's name, unless that name is only inferred */
+  name: string;
+  /** the width encoding: a factor in [1, max_ratio] */
+  width: number;
+  /** the height encoding: a value in [0.03, 1], unrounded */
+  height: number;
+  /** the colour encoding: a kind, `named`, `anonymous` or `single`; `tail` for the tail */
+  colour: string;
+  /** the outline encoding: `asserted` (self-declared or verified), `inferred`, or none */
+  outline: 'asserted' | 'inferred' | null;
+  /** the segments encoding, bottom to top, as fractions of the bar; empty when not split */
+  segments: Segment[];
+}
+
+/** A legend line before it has a look: each key says what it stands for, not its swatch. */
+export interface ReadingLegendItem {
+  primitive: SpecPrimitive | 'tail';
+  meaning: string;
+  sources: string[];
+  keys?: { key: string; label: string }[];
+}
+
+export interface Reading {
+  petal: 'reading/v1';
+  spec_sha256: Sha256;
+  title: string;
+  /** CAIP-2. A petal's `id` is the snapshot's account id, so two readings on one chain compare */
+  chain: string;
+  /** what each encoding is driven by and what it means, as the spec says */
+  encodings: Spec['encodings'];
+  petals: ReadingPetal[];
+  legend: ReadingLegendItem[];
+  details: PetalDetail[];
 }
 
 // ---------------------------------------------------------------------------------------------

@@ -333,10 +333,6 @@ describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
     const r = await rig();
     const run = runner(r.ctx);
     const f = await flow(run);
-    const bad = await run('prepare_publish', {
-      entry: { ...f.draft, render_sha256: 'f'.repeat(64) },
-    });
-    expect(bad.error?.code).toBe('bad_input');
     const bad2 = await run('prepare_publish', {
       entry: { ...f.draft, spec_sha256: 'f'.repeat(64) },
     });

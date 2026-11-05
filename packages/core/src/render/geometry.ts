@@ -2,7 +2,7 @@
 // a polygon with one side per petal, bars standing straight out along each side's normal, cut
 // into stacked parallelograms. Straight edges only: no curves, no rounded petals (constitution I).
 // Pure numbers here; ./svg.ts writes them out.
-import type { Encoding, PetalRow } from '../types/index.ts';
+import type { PetalRow } from '../types/index.ts';
 
 export type Pt = [number, number];
 
@@ -17,11 +17,7 @@ export interface Side {
 export interface PetalGeo {
   row: PetalRow;
   sides: Side[];
-  /** width factor in [1, max_ratio] */
-  w: number;
-  /** height in [0, 1] before clamping (from the height encoding) */
-  h: number;
-  /** bar height in px: clamp(h, 0.03, 1) x (R - r0) */
+  /** bar height in px: the height the reading resolved, x (R - r0) */
   H: number;
 }
 
@@ -45,52 +41,6 @@ const at = (cx: number, cy: number, r: number, a: number): Pt => [
   cy - r * Math.cos(a),
 ];
 export const along = (p: Pt, n: Pt, k: number): Pt => [p[0] + n[0] * k, p[1] + n[1] * k];
-
-/** Width: log share mapped onto [1, max_ratio], so the widest side is at most max_ratio times the
- * narrowest. `equal` gives every side the same length. The tail takes part like any petal. */
-export function widthFactors(rows: PetalRow[], width: Encoding): number[] {
-  if (width.by === 'equal') return rows.map(() => 1);
-  const ratio = width.max_ratio ?? 2;
-  const ls = rows.map((r) => Math.log(Math.max(r.share, 1e-12)));
-  const lo = Math.min(...ls);
-  const hi = Math.max(...ls);
-  return ls.map((l) => (hi > lo ? 1 + ((ratio - 1) * (l - lo)) / (hi - lo) : 1));
-}
-
-/**
- * Height in [0, 1] per petal: `sqrt` share / max share, `linear` share / max share, `log` amount
- * between the smallest and largest petal, `m:<metric>` metric / max metric, `equal` 0.82.
- * The tail stands for its average member (its mean share, mean amount, mean metric).
- */
-export function heightValues(
-  rows: PetalRow[],
-  height: Encoding,
-  metric: (row: PetalRow) => number,
-): number[] {
-  const real = rows.filter((r) => !r.tail);
-  const per = (r: PetalRow, x: number) => (r.tail && r.count ? x / r.count : x);
-  if (height.by === 'equal') return rows.map(() => 0.82);
-  if (height.by === 'share') {
-    const max = Math.max(...real.map((r) => r.share)) || 1;
-    return rows.map((r) => {
-      const x = per(r, r.share) / max;
-      return height.scale === 'linear' ? x : Math.sqrt(x);
-    });
-  }
-  if (height.by === 'amount') {
-    const amounts = real.map((r) => Number(r.amount)).filter((a) => a > 0);
-    const lo = Math.min(...amounts);
-    const hi = Math.max(...amounts);
-    return rows.map((r) => {
-      const a = per(r, Number(r.amount));
-      return hi > lo && a > 0 ? Math.max(0, Math.log(a / lo) / Math.log(hi / lo)) : 1;
-    });
-  }
-  // m:<metric>; metric() already averages the tail
-  const values = rows.map(metric);
-  const max = Math.max(...real.map(metric)) || 1;
-  return values.map((v) => v / max);
-}
 
 export function layout(
   rows: PetalRow[],
@@ -129,7 +79,7 @@ export function layout(
       sides.push({ p0, p1, n: [Math.sin(mid), -Math.cos(mid)], len });
     }
     a += w;
-    return { row, sides, w: wf, h, H: Math.max(0.03, Math.min(1, h)) * L };
+    return { row, sides, H: h * L };
   });
   return { size, cx, cy, R, r0, petals };
 }

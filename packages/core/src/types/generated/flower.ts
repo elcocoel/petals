@@ -18,39 +18,56 @@ export type Datetime = string;
  * via the `definition` "sourceIds".
  */
 export type SourceIds = [string, ...string[]];
+/**
+ * A published flower. Its `petal` says how to verify it (shared-map.md, Entry versions).
+ *
+ * This interface was referenced by `PetalSpecInterpretationAndPublishedFlowerEntryV1`'s JSON-Schema
+ * via the `definition` "entry".
+ */
+export type Entry = EntryV1 | EntryV2;
 
 /**
  * $defs.spec is what the renderer draws. $defs.interpretation is the agent's argued reading. $defs.entry is what goes into the shared map under petal/v1/spec/<id>. See data-model.md.
  */
 export interface PetalSpecInterpretationAndPublishedFlowerEntryV1 {
-  petal: 'flower/v1';
-  id: string;
-  title?: string;
-  spec: Spec;
-  spec_sha256: Sha256;
-  interpretation: Interpretation;
-  snapshot: {
-    sha256: Sha256;
-    urls: string[];
-  };
-  render_sha256: Sha256;
-  provenance: {
-    /**
-     * null only for hero fixtures shipped in the repo
-     */
-    maker: null | Nep413Proof;
-    agent: {
-      kind: 'petal-agent' | 'own-agent' | 'hand-written';
-      /**
-       * e.g. claude-code, codex, ironclaw
-       */
-      name?: string;
-      model?: string;
-      signature?: null | ModelSignature;
-    };
-    tools_version: string;
-    created_at: Datetime;
-  };
+  [k: string]: unknown | undefined;
+}
+/**
+ * This interface was referenced by `PetalSpecInterpretationAndPublishedFlowerEntryV1`'s JSON-Schema
+ * via the `definition` "encoding".
+ */
+export interface Encoding {
+  /**
+   * what drives the primitive, from the network's capabilities (e.g. share, kind, backers, identity_status)
+   */
+  by: string;
+  scale?: 'sqrt' | 'linear' | 'log' | 'log-band' | 'equal';
+  /**
+   * width only: widest side / narrowest side
+   */
+  max_ratio?: number;
+  /**
+   * plain words shown in the legend
+   */
+  meaning: string;
+  sources: SourceIds;
+}
+/**
+ * order is a primitive like any other: it declares what drives it, what it means, and its sources (constitution I)
+ *
+ * This interface was referenced by `PetalSpecInterpretationAndPublishedFlowerEntryV1`'s JSON-Schema
+ * via the `definition` "orderEncoding".
+ */
+export interface OrderEncoding {
+  /**
+   * petals run clockwise from twelve o'clock in this order; default/v1 uses measure_desc
+   */
+  by: 'measure_desc' | 'measure_asc' | 'id' | 'join_date' | 'last_active';
+  /**
+   * plain words for the legend, e.g. 'largest first, clockwise from the top'
+   */
+  meaning: string;
+  sources: SourceIds;
 }
 /**
  * This interface was referenced by `PetalSpecInterpretationAndPublishedFlowerEntryV1`'s JSON-Schema
@@ -108,43 +125,6 @@ export interface Spec {
     variation_of: null | Sha256;
     changes: string[];
   };
-}
-/**
- * This interface was referenced by `PetalSpecInterpretationAndPublishedFlowerEntryV1`'s JSON-Schema
- * via the `definition` "encoding".
- */
-export interface Encoding {
-  /**
-   * what drives the primitive, from the network's capabilities (e.g. share, kind, backers, identity_status)
-   */
-  by: string;
-  scale?: 'sqrt' | 'linear' | 'log' | 'log-band' | 'equal';
-  /**
-   * width only: widest side / narrowest side
-   */
-  max_ratio?: number;
-  /**
-   * plain words shown in the legend
-   */
-  meaning: string;
-  sources: SourceIds;
-}
-/**
- * order is a primitive like any other: it declares what drives it, what it means, and its sources (constitution I)
- *
- * This interface was referenced by `PetalSpecInterpretationAndPublishedFlowerEntryV1`'s JSON-Schema
- * via the `definition` "orderEncoding".
- */
-export interface OrderEncoding {
-  /**
-   * petals run clockwise from twelve o'clock in this order; default/v1 uses measure_desc
-   */
-  by: 'measure_desc' | 'measure_asc' | 'id' | 'join_date' | 'last_active';
-  /**
-   * plain words for the legend, e.g. 'largest first, clockwise from the top'
-   */
-  meaning: string;
-  sources: SourceIds;
 }
 /**
  * This interface was referenced by `PetalSpecInterpretationAndPublishedFlowerEntryV1`'s JSON-Schema
@@ -287,35 +267,70 @@ export interface Correction {
 }
 /**
  * This interface was referenced by `PetalSpecInterpretationAndPublishedFlowerEntryV1`'s JSON-Schema
- * via the `definition` "entry".
+ * via the `definition` "entryProvenance".
  */
-export interface Entry {
+export interface EntryProvenance {
+  /**
+   * null only for hero fixtures shipped in the repo
+   */
+  maker: null | Nep413Proof;
+  agent: {
+    kind: 'petal-agent' | 'own-agent' | 'hand-written';
+    /**
+     * e.g. claude-code, codex, ironclaw
+     */
+    name?: string;
+    model?: string;
+    signature?: null | ModelSignature;
+  };
+  tools_version: string;
+  created_at: Datetime;
+}
+/**
+ * This interface was referenced by `PetalSpecInterpretationAndPublishedFlowerEntryV1`'s JSON-Schema
+ * via the `definition` "entrySnapshot".
+ */
+export interface EntrySnapshot {
+  sha256: Sha256;
+  urls: string[];
+}
+/**
+ * id and signature cover everything but id, render_sha256 included. Still read and verified, no longer written.
+ *
+ * This interface was referenced by `PetalSpecInterpretationAndPublishedFlowerEntryV1`'s JSON-Schema
+ * via the `definition` "entryV1".
+ */
+export interface EntryV1 {
   petal: 'flower/v1';
   id: string;
   title?: string;
   spec: Spec;
   spec_sha256: Sha256;
   interpretation: Interpretation;
-  snapshot: {
-    sha256: Sha256;
-    urls: string[];
-  };
+  snapshot: EntrySnapshot;
   render_sha256: Sha256;
-  provenance: {
-    /**
-     * null only for hero fixtures shipped in the repo
-     */
-    maker: null | Nep413Proof;
-    agent: {
-      kind: 'petal-agent' | 'own-agent' | 'hand-written';
-      /**
-       * e.g. claude-code, codex, ironclaw
-       */
-      name?: string;
-      model?: string;
-      signature?: null | ModelSignature;
-    };
-    tools_version: string;
-    created_at: Datetime;
+  provenance: EntryProvenance;
+}
+/**
+ * id and signature cover everything but id and drawn_with, so the same facts drawn by another renderer stay the same flower.
+ *
+ * This interface was referenced by `PetalSpecInterpretationAndPublishedFlowerEntryV1`'s JSON-Schema
+ * via the `definition` "entryV2".
+ */
+export interface EntryV2 {
+  petal: 'flower/v2';
+  id: string;
+  title?: string;
+  spec: Spec;
+  spec_sha256: Sha256;
+  interpretation: Interpretation;
+  snapshot: EntrySnapshot;
+  provenance: EntryProvenance;
+  /**
+   * a receipt, outside what is hashed and signed: which renderer drew this when it was prepared, and the hash of those bytes. A drawing that differs from it later is normal.
+   */
+  drawn_with?: {
+    render: string;
+    sha256: Sha256;
   };
 }

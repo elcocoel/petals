@@ -5,9 +5,11 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { createAjv, type SchemaName, schemaId } from '../src/schema/ajv.ts';
 import { schemas } from '../src/schema/index.ts';
+import type { EntryV1, EntryV2 } from '../src/types/index.ts';
 import {
   sampleCorrection,
   sampleEntry,
+  sampleEntryV2,
   sampleInterpretation,
   sampleSnapshot,
   sampleSpec,
@@ -47,6 +49,8 @@ describe('sample documents validate', () => {
     ['spec', sampleSpec],
     ['interpretation', sampleInterpretation],
     ['entry', sampleEntry],
+    ['entry', sampleEntryV2],
+    ['entryV2', sampleEntryV2],
     ['correction', sampleCorrection],
   ] as const)('%s', (name, doc) => {
     const r = validate(name, doc);
@@ -110,6 +114,14 @@ describe('schemas reject', () => {
     const i = clone(sampleInterpretation);
     i.unknowns = [] as unknown as typeof i.unknowns;
     expect(validate('interpretation', i).ok).toBe(false);
+  });
+
+  test('flower/v2 carries no render_sha256; flower/v1 still needs one', () => {
+    expect(validate('entry', { ...sampleEntryV2, render_sha256: 'a'.repeat(64) }).ok).toBe(false);
+    const { render_sha256: _drawing, ...noDrawing } = sampleEntry as EntryV1;
+    expect(validate('entry', noDrawing).ok).toBe(false);
+    const { drawn_with: _receipt, ...noReceipt } = sampleEntryV2 as EntryV2;
+    expect(validate('entry', noReceipt).ok).toBe(true);
   });
 
   test('an entry id that is not 24 hex characters', () => {

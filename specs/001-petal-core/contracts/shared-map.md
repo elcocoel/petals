@@ -1,6 +1,6 @@
 # Contract: the shared map on NEAR (FastData KV)
 
-**Version**: map/v1 | **Owner**: workstream W3 (NEAR adapters, `@petal/near/map`) | **Consumers**: tools (`get_snapshot`, `list_flowers`, `get_flower`, `publish_flower`), web
+**Version**: map/v2 | **Owner**: workstream W3 (NEAR adapters, `@petal/near/map`) | **Consumers**: tools (`get_snapshot`, `list_flowers`, `get_flower`, `publish_flower`), web
 
 The shared map is a set of keys written with `__fastdata_kv` function calls to a receiver account that has no contract. The FastData indexer records every write with its writer (`predecessor_id`), signer, tx hash, block and time. Writes go to **testnet** during the build. Mainnet only with Elco's OK.
 
@@ -28,14 +28,30 @@ All keys start with `petal/v1/`. Keys ≤ 1,024 bytes; values ≤ 256 KiB; ≤ 2
 
 | Key | Value | Phase | Written by |
 |---|---|---|---|
-| `petal/v1/spec/<id>` | Entry (`flower/v1`, [petal-spec.schema.json](./petal-spec.schema.json)) | A | Petal's writer, for a maker who signed it |
+| `petal/v1/spec/<id>` | Entry (`flower/v2`; older rows are `flower/v1`, [petal-spec.schema.json](./petal-spec.schema.json), see [Entry versions](#entry-versions)) | A | Petal's writer, for a maker who signed it |
 | `petal/v1/snapshot/<sha256>` | `{ "petal": "snapshot-ref/v1", sha256, bytes, gz_bytes, rows, network: { id, chain, population }, as_of, block_height, final, module: { id, version }, urls[] }` | A | Petal's writer, once per final snapshot |
 | `petal/v1/index/<caip2>/<population>/<block_height>` | `{ "sha256": "…" }` | A | Petal's writer |
 | `petal/v1/label/<caip2>/<address>` | `{ tag, value, status, evidence[], written_at }` | B | Petal's writer, or a maker directly |
 | `petal/v1/correction/<flower-id>/<id>` | Correction request (below): `{ "petal": "correction/v1", flower_id, target, request, reason, evidence[], requester, proof, written_at }` | B | Petal's writer, for a requester who signed it |
 | `petal/v1/vouch/<account>` | `{ since, note }` — trusted writers | B | the receiver account (Elco) |
 
-`<id>` is the entry id (24 hex). `<caip2>` is e.g. `near:mainnet`. The snapshot body is never on the map: `urls[]` points to Petal's API (`/api/v1/snapshots/<sha256>`) and, once the repo is public, the fixture file in the repo. FastFS (files up to 32 MiB, gas only) is a Phase B test for bodies.
+The `petal/v1/` prefix names the folder layout, which map/v2 doesn't change, so a reader lists every version with one read. `<id>` is the entry id (24 hex). `<caip2>` is e.g. `near:mainnet`. The snapshot body is never on the map: `urls[]` points to Petal's API (`/api/v1/snapshots/<sha256>`) and, once the repo is public, the fixture file in the repo. FastFS (files up to 32 MiB, gas only) is a Phase B test for bodies.
+
+## Entry versions
+
+An entry's `petal` field says how to verify it. Every version stays readable.
+
+| | `flower/v2` (written now) | `flower/v1` (read only) |
+|---|---|---|
+| The signed part | the entry without `id` and without `drawn_with` | the entry without `id` |
+| Covers | `petal`, `title`, `spec`, `spec_sha256`, `interpretation`, `snapshot` (hash and urls), `provenance` | the same, plus `render_sha256`, the exact SVG bytes |
+| The drawing | `drawn_with: { render, sha256 }`, a receipt beside the signed part | `render_sha256`, inside the signed part |
+
+- `id` is the first 24 hex characters of the SHA-256 of the canonical signed part. `entry_sha256` is the same hash over the full value, with `provenance.maker` set to `null`.
+- So the same facts drawn by another renderer are the same flower: the same `id` and the same signature. A drawing that differs from the receipt is normal. Nothing checks it, and publishing never refuses over it.
+- `prepare_publish` writes the receipt itself, from the renderer it runs then. It is not signed, so it says what Petal's renderer drew when the flower was prepared; it proves nothing about what the maker saw. It may be absent.
+- A v1 row keeps verifying by its own rule, for good. Rewriting its drawing's hash breaks it, as it always did.
+- The signed message is still `{"petal":"publish/v1","entry_sha256":"…"}`. Its form didn't change, and `petal` is inside the hash, so a v1 signature can't be passed off as a v2 one.
 
 ## Writing (Phase A: relayed publish)
 
@@ -75,7 +91,7 @@ What happens next: the flower shows open requests next to the identity link they
 ## Trust and verification
 
 - Anyone can write under `petals.testnet`. Readers only show rows from trusted writers. Phase A: `PETAL_TRUSTED_WRITERS=petals-writer.testnet`. Phase B: vouch entries, plus rows where writer = the entry's maker after verification, marked "written by the maker".
-- For every entry the reader recomputes `entry_sha256` and `id`, checks `spec_sha256`, and verifies the maker's NEP-413 signature with the stored public key. A row that fails is hidden and logged.
+- For every entry the reader recomputes `entry_sha256` and `id` by the entry's own version ([Entry versions](#entry-versions)), checks `spec_sha256`, and verifies the maker's NEP-413 signature with the stored public key. A row that fails is hidden and logged.
 - Stored values come back re-serialised with sorted keys, so always hash the canonical JSON (RFC 8785) of the parsed value, never the raw bytes.
 
 ## Retention and mirror

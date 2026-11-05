@@ -13,6 +13,10 @@ import { ENTRY_ID, moduleFor, obj } from './shared.ts';
 /** Shared-map prefix of published flowers (shared-map.md, Keys and values). */
 const SPEC_PREFIX = 'petal/v1/spec/';
 
+/** Both versions stay readable; verifyEntry checks each by its own rule. */
+const isEntry = (x: { petal?: unknown } | null): boolean =>
+  x?.petal === 'flower/v1' || x?.petal === 'flower/v2';
+
 interface Found {
   entry: Entry;
   where: 'map' | 'fixture';
@@ -29,7 +33,7 @@ function isoFromBlock(ts: number): string | null {
 
 function fromRow(row: MapRow): Found | null {
   const entry = row.value as Entry | null;
-  if (!entry || typeof entry !== 'object' || entry.petal !== 'flower/v1') return null;
+  if (!entry || typeof entry !== 'object' || !isEntry(entry)) return null;
   if (row.key !== `${SPEC_PREFIX}${entry.id}`) return null;
   const verified = verifyEntry(entry, {
     id: row.key.slice(SPEC_PREFIX.length),
@@ -40,7 +44,7 @@ function fromRow(row: MapRow): Found | null {
   return { entry, where: 'map', verified, row };
 }
 
-/** Hero entries shipped in the repo: fixtures/map/*.json (flower/v1). */
+/** Hero entries shipped in the repo: fixtures/map/*.json. */
 async function fixtureEntries(ctx: ToolContext): Promise<Found[]> {
   const dir = join(resolve(ctx.config.root, ctx.config.fixturesDir ?? 'fixtures'), 'map');
   let names: string[];
@@ -53,7 +57,7 @@ async function fixtureEntries(ctx: ToolContext): Promise<Found[]> {
   for (const name of names) {
     try {
       const entry = JSON.parse(await readFile(join(dir, name), 'utf8')) as Entry;
-      if (entry?.petal !== 'flower/v1') continue;
+      if (!isEntry(entry)) continue;
       const verified = verifyEntry(entry);
       if (verified.entry_hash) out.push({ entry, where: 'fixture', verified });
     } catch {

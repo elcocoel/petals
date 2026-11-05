@@ -8,11 +8,12 @@ Each workstream owns one directory and builds against these signatures. Dependen
 
 ```ts
 // schema and identity
-export const schemas: { snapshot: object; spec: object; interpretation: object; entry: object; correction: object };
+export const schemas: { snapshot: object; spec: object; interpretation: object; entry: object; entryV2: object; correction: object };
 export function canonicalJson(value: unknown): string;          // RFC 8785
 export function sha256Hex(bytes: Uint8Array | string): string;
 export function specHash(spec: Spec): string;                    // sha256 of canonicalJson(spec)
-export function entryId(entryWithoutId: Omit<Entry, 'id'>): string; // first 24 hex
+export function signedPart(entry: EntryWithoutId): object;       // what id and signature cover, by the entry's version
+export function entryId(entryWithoutId: EntryWithoutId): string; // first 24 hex of the signed part
 
 // validation
 export function validateSnapshot(x: unknown): Result<Snapshot>;
@@ -32,7 +33,16 @@ export const PRIMITIVES: { id: string; status: 'available' | 'unavailable'; by: 
 export const DEFAULT_CONVENTION: Convention;                      // default/v1 (order: measure_desc, "largest first, clockwise from the top")
 export function buildSpec(input: ProposeInput, descriptor: NetworkDescriptor, snapshot: Snapshot): { spec: Spec; changed: string[]; defaults: string[] };
 
+// the recipe (recipe/v1, tools.md propose_spec): buildSpec compiles it, these read it back
+export function choicesFromSpec(spec: Spec): ProposeChoices;      // every choice, spelled out
+export function recipeOf(spec: Spec, descriptor: NetworkDescriptor): Recipe;  // what it says beyond the defaults
+export function recipeHash(recipe: Recipe): string;               // recipe_sha256: no network, snapshot or date
+export function diffSpecs(a: Spec, b: Spec): SpecDiff;            // subject, data, design
+
 // rendering (renderer.md)
+export function readFlower(spec: Spec, s: Snapshot): Reading;     // the facts a drawing needs, no pixels (reading/v1)
+export function readingHash(reading: Reading): string;
+export const SKINS: Record<string, Skin>;                         // a reading becomes a drawing; 'render/v1'
 export function renderFlower(spec: Spec, s: Snapshot, o?: RenderOptions): RenderResult;
 ```
 

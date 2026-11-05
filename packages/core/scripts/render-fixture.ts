@@ -6,7 +6,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { specHash } from '../src/hash.ts';
-import { GOLDEN_CASES, renderGolden } from '../test/golden-cases.ts';
+import { readingHash } from '../src/reading/index.ts';
+import { GOLDEN_CASES, readGolden, renderGolden } from '../test/golden-cases.ts';
 import { REPO } from '../test/load.ts';
 
 const OUT: Record<string, string> = {
@@ -19,7 +20,14 @@ if (process.argv.includes('--hashes')) {
   const hashes = Object.fromEntries(
     GOLDEN_CASES.map((c) => {
       const { spec, result } = renderGolden(c);
-      return [c.name, { spec_sha256: specHash(spec), render_sha256: result.render_sha256 }];
+      return [
+        c.name,
+        {
+          spec_sha256: specHash(spec),
+          render_sha256: result.render_sha256,
+          reading_sha256: readingHash(readGolden(c)),
+        },
+      ];
     }),
   );
   process.stdout.write(`${JSON.stringify(hashes)}\n`);

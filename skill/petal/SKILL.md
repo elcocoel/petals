@@ -54,6 +54,8 @@ Not every message asks for a flower. A greeting, a question or plain curiosity g
 - Who stands behind each validator or pool: `segments: "backers"`, where the network offers it.
 - Named or anonymous: `colour: "identity"`.
 - Use only the measures, segment options and primitives `describe_snapshot` lists for this snapshot.
+- To change a flower you already made, call `propose_spec` with `parent` set to its spec, and only the choices that change: the rest stays as it was. Say what changed from the `diff` it returns.
+- `recipe` is the flower apart from its data. To draw the same thing on another network or date, pass its `choices` and `meanings`, with no parent; if a choice doesn't apply there, the error says what does.
 - If the mapping a question needs is ambiguous, pick the most likely reading, say which one you picked, and offer the other. An ambiguous target is different: see below.
 
 ## Finding the target
@@ -191,7 +193,7 @@ Use only values `describe_snapshot` lists for this network (`measures`, `segment
 
 ## Publishing
 
-`prepare_publish` takes `{ "entry": ... }`: the entry without `id` and without `provenance.maker`, that is `"petal": "flower/v1"`, a `title`, the `spec` and `spec_sha256`, your `interpretation`, `snapshot` (`sha256`, `urls`), `render_sha256`, and `provenance` with `agent: { "kind": "own-agent", "name": "<your agent>" }`, `tools_version` and `created_at`. It answers with a `sign_url`. Give that link to the person: the page shows the draft, they sign the NEP-413 message in their own NEAR wallet, and the flower is written to Petal's shared map on NEAR (testnet during the build).
+`prepare_publish` takes `{ "entry": ... }`: the entry without `id` and without `provenance.maker`, that is `"petal": "flower/v2"`, a `title`, the `spec` and `spec_sha256`, your `interpretation`, `snapshot` (`sha256`, `urls`), and `provenance` with `agent: { "kind": "own-agent", "name": "<your agent>" }`, `tools_version` and `created_at`. It answers with a `sign_url`. Give that link to the person: the page shows the draft, they sign the NEP-413 message in their own NEAR wallet, and the flower is written to Petal's shared map on NEAR (testnet during the build).
 
 ## Resources
 

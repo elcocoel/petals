@@ -48,6 +48,8 @@ export default async function FlowerPage({ params }: { params: Promise<{ id: str
   ]);
   const maker = entry.provenance.maker;
   const agent = entry.provenance.agent;
+  // What drew it when it was published. Today's renderer may draw it differently; that is normal.
+  const firstDrawn = entry.petal === 'flower/v1' ? entry.render_sha256 : entry.drawn_with?.sha256;
   return (
     <>
       <h1>{entry.title ?? `Flower ${entry.id}`}</h1>
@@ -68,10 +70,9 @@ export default async function FlowerPage({ params }: { params: Promise<{ id: str
           Could not draw it: {rendered.error.code}: {rendered.error.message}
         </p>
       )}
-      {rendered.ok && rendered.value.render_sha256 !== entry.render_sha256 && (
+      {rendered.ok && firstDrawn && rendered.value.render_sha256 !== firstDrawn && (
         <p className="muted">
-          This drawing’s render_sha256 differs from the one in the entry (
-          <code>{entry.render_sha256}</code>): the renderer has changed since it was made.
+          Same facts, today’s look. It was first drawn as <code>{firstDrawn}</code>.
         </p>
       )}
       <Interpretation reading={entry.interpretation} sources={sources} />

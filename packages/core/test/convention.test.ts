@@ -194,11 +194,11 @@ describe('buildSpec', () => {
 
   test('a variation records variation_of and its changes', () => {
     const s = validators();
-    const parent = specHash(propose(s).spec);
-    const { spec } = propose(s, { segments: 'backers' }, { variation_of: parent });
+    const parent = propose(s).spec;
+    const { spec } = propose(s, { segments: 'backers' }, { parent });
     expect(spec.convention).toEqual({
       id: 'default/v1',
-      variation_of: parent,
+      variation_of: specHash(parent),
       changes: ['segments=backers'],
     });
   });

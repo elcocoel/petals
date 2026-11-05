@@ -6,6 +6,7 @@ import { join, relative } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { buildSpec } from '../src/convention/index.ts';
 import { computeFigures } from '../src/figures/index.ts';
+import { readFlower, readingHash } from '../src/reading/index.ts';
 import { renderFlower } from '../src/render/index.ts';
 import { snapshotSha256 } from '../src/tables.ts';
 import { validateSnapshot, validateSpec } from '../src/validate/index.ts';
@@ -42,6 +43,17 @@ describe('static scan of packages/core/src', () => {
 
   test('finds the sources', () => {
     expect(sources.length).toBeGreaterThan(10);
+    expect(sources.map((f) => relative(SRC, f))).toEqual(
+      expect.arrayContaining(['reading/index.ts', 'reading/encodings.ts', 'reading/legend.ts']),
+    );
+  });
+
+  test('the reading knows nothing of a drawing: reading/ imports nothing from render/', () => {
+    const bad = sources
+      .filter((f) => relative(SRC, f).startsWith('reading/'))
+      .filter((f) => /from\s+['"][^'"]*render\//.test(readFileSync(f, 'utf8')))
+      .map((f) => relative(SRC, f));
+    expect(bad).toEqual([]);
   });
 
   test.each(FORBIDDEN)('no %s', (_what, pattern) => {
@@ -103,5 +115,8 @@ describe('the pipeline runs with the clock, randomness and network trapped', () 
     const b = renderFlower(spec, structuredClone(s));
     expect(b.svg).toBe(a.svg);
     expect(b.render_sha256).toBe(a.render_sha256);
+    expect(readingHash(readFlower(spec, structuredClone(s)))).toBe(
+      readingHash(readFlower(spec, s)),
+    );
   });
 });

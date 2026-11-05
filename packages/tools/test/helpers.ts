@@ -308,13 +308,12 @@ export async function flow(run: Run) {
   const spec = proposed.spec as Record<string, unknown>;
   const rendered = await run('render_flower', { spec });
   const draft = {
-    petal: 'flower/v1',
+    petal: 'flower/v2',
     title: "Who stands behind NEAR's validators",
     spec,
     spec_sha256: proposed.spec_sha256,
     interpretation: INTERPRETATION,
     snapshot: { sha256, urls: [snap.body_url] },
-    render_sha256: rendered.render_sha256,
     provenance: {
       maker: null,
       agent: { kind: 'own-agent', name: 'vitest' },

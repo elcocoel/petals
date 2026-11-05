@@ -1,8 +1,10 @@
 # Contract: the renderer
 
-**Version**: render/v1 | **Owner**: workstream W1 (Core) | **Consumers**: tools (`render_flower`), web, golden tests
+**Version**: render/v1, reading/v1 | **Owner**: workstream W1 (Core) | **Consumers**: tools (`render_flower`), web, golden tests
 
 A pure function. Same spec and same snapshot give the same SVG bytes, on any machine running Node 24 (FR-010, SC-005).
+
+`renderFlower` is three steps: validate, `readFlower` (the facts, no pixels), then a named skin (`SKINS['render/v1']`, the look). The look can change without the reading changing; see [The reading](#the-reading).
 
 ```ts
 // packages/core/src/render/index.ts
@@ -14,6 +16,51 @@ export function renderFlower(
 ```
 
 The renderer does not fetch, read the clock, use randomness, read the DOM or depend on locale. It never changes the spec. It refuses a spec that `validateSpec` rejects, and it never draws a primitive that `PRIMITIVES` marks `unavailable` in this build (FR-032): an unbuilt primitive is declared unavailable, never imitated.
+
+## The reading
+
+```ts
+// packages/core/src/reading/index.ts
+export function readFlower(spec: Spec, snapshot: Snapshot): Reading;   // a spec validateSpec accepted
+export function readingHash(reading: Reading): string;                 // sha256 of the canonical reading
+```
+
+A `Reading` holds all a drawing needs and no pixels: no coordinate, CSS class or colour. `reading/` imports nothing from `render/`.
+
+```ts
+type Reading = {
+  petal: 'reading/v1';
+  spec_sha256: string;
+  title: string;
+  chain: string;                  // CAIP-2: with a petal's id, which account this is
+  encodings: Spec['encodings'];   // what drives each primitive and what it means, as the spec says
+  petals: ReadingPetal[];         // in drawing order, the tail last
+  legend: ReadingLegendItem[];    // every primitive used, then the tail
+  details: PetalDetail[];         // why each petal looks the way it does (FR-012)
+};
+
+type ReadingPetal = PetalRow & {  // index, id, label, kind, identity, amount, share, rank, tail?, count?
+  name: string;                   // what a label calls it: the identity's name, unless only inferred
+  width: number;                  // the width encoding: a factor in [1, max_ratio]
+  height: number;                 // the height encoding: [0.03, 1], unrounded; a bar never vanishes
+  colour: string;                 // a kind, 'named', 'anonymous' or 'single'; 'tail' for the tail
+  outline: 'asserted' | 'inferred' | null;  // asserted: self-declared or verified
+  segments: Segment[];            // bottom to top, as fractions of the bar; [] when not split
+};
+
+type ReadingLegendItem = {
+  primitive: LegendItem['primitive'];
+  meaning: string;
+  sources: string[];
+  keys?: { key: string; label: string }[];  // what a key stands for; the skin adds its swatch
+};
+```
+
+A petal's `id` is the snapshot's account id, untouched, so the same account in two readings on one `chain` has the same `id`. That keeps a later level free to draw relations between flowers. `__tail` (`tail: true`) and `kind: 'group'` rows are folded rows, not accounts.
+
+A skin is `(reading, { size, thumb }) => { svg, legend, petals }`. It reads nothing else: no spec, no snapshot. Polygon, bars, labels, swatches and the words `solid:` and `dashed:` on legend keys are `render/v1`'s. Geometry below is that skin's.
+
+**Known leak, on purpose:** the words in `details` and the tail's legend line name the `render/v1` look in places ("hatched", "solid", "side"), as `spec.encodings` meanings do. A later skin returns its own `legend` and `petals`, so it can say otherwise; the reading is reworded as `reading/v2` when a second skin exists.
 
 ## Geometry (ported from `research/spikes/flower/index.html`, `draw()`)
 
@@ -69,6 +116,7 @@ Every primitive used appears in `legend` (FR-011). `legend` and `petals` are par
 
 ## Golden tests (SC-005)
 
+- `fixtures/golden/<name>.reading.json` locks the reading (T179), so a later skin can change the drawing while the reading stays put.
 - `fixtures/golden/<name>.svg` plus `<name>.json` (legend and petals) for: NEAR validators default, NEAR validators `segments=backers`, House of Stake default, a 2-participant flower (`petals` is a cap of 5–300, so two participants give two petals and no tail; each side is split into sub-sides so the polygon stays closed), a 1,000-participant flower with the tail grouped (SC-006), and a thumbnail.
 - The test renders each and compares bytes. Updating a golden file is a reviewed change (`pnpm golden:update` writes them; the diff is checked by a person).
 - A second test renders each twice in one process and once in a fresh process, and compares hashes.

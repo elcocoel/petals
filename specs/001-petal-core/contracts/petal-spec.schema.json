@@ -246,8 +246,41 @@
       }
     },
 
-    "entry": {
+    "entryProvenance": {
       "type": "object",
+      "required": ["maker", "agent", "tools_version", "created_at"],
+      "additionalProperties": false,
+      "properties": {
+        "maker": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/nep413Proof" }], "description": "null only for hero fixtures shipped in the repo" },
+        "agent": {
+          "type": "object",
+          "required": ["kind"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "enum": ["petal-agent", "own-agent", "hand-written"] },
+            "name": { "type": "string", "description": "e.g. claude-code, codex, ironclaw" },
+            "model": { "type": "string" },
+            "signature": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/modelSignature" }] }
+          }
+        },
+        "tools_version": { "type": "string" },
+        "created_at": { "$ref": "#/$defs/datetime" }
+      }
+    },
+
+    "entrySnapshot": {
+      "type": "object",
+      "required": ["sha256", "urls"],
+      "additionalProperties": false,
+      "properties": {
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "urls": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "entryV1": {
+      "type": "object",
+      "description": "id and signature cover everything but id, render_sha256 included. Still read and verified, no longer written.",
       "required": ["petal", "id", "spec", "spec_sha256", "interpretation", "snapshot", "render_sha256", "provenance"],
       "additionalProperties": false,
       "properties": {
@@ -257,38 +290,42 @@
         "spec": { "$ref": "#/$defs/spec" },
         "spec_sha256": { "$ref": "#/$defs/sha256" },
         "interpretation": { "$ref": "#/$defs/interpretation" },
-        "snapshot": {
-          "type": "object",
-          "required": ["sha256", "urls"],
-          "additionalProperties": false,
-          "properties": {
-            "sha256": { "$ref": "#/$defs/sha256" },
-            "urls": { "type": "array", "items": { "type": "string" } }
-          }
-        },
+        "snapshot": { "$ref": "#/$defs/entrySnapshot" },
         "render_sha256": { "$ref": "#/$defs/sha256" },
-        "provenance": {
+        "provenance": { "$ref": "#/$defs/entryProvenance" }
+      }
+    },
+
+    "entryV2": {
+      "type": "object",
+      "description": "id and signature cover everything but id and drawn_with, so the same facts drawn by another renderer stay the same flower.",
+      "required": ["petal", "id", "spec", "spec_sha256", "interpretation", "snapshot", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "petal": { "const": "flower/v2" },
+        "id": { "type": "string", "pattern": "^[0-9a-f]{24}$" },
+        "title": { "type": "string" },
+        "spec": { "$ref": "#/$defs/spec" },
+        "spec_sha256": { "$ref": "#/$defs/sha256" },
+        "interpretation": { "$ref": "#/$defs/interpretation" },
+        "snapshot": { "$ref": "#/$defs/entrySnapshot" },
+        "provenance": { "$ref": "#/$defs/entryProvenance" },
+        "drawn_with": {
           "type": "object",
-          "required": ["maker", "agent", "tools_version", "created_at"],
+          "description": "a receipt, outside what is hashed and signed: which renderer drew this when it was prepared, and the hash of those bytes. A drawing that differs from it later is normal.",
+          "required": ["render", "sha256"],
           "additionalProperties": false,
           "properties": {
-            "maker": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/nep413Proof" }], "description": "null only for hero fixtures shipped in the repo" },
-            "agent": {
-              "type": "object",
-              "required": ["kind"],
-              "additionalProperties": false,
-              "properties": {
-                "kind": { "enum": ["petal-agent", "own-agent", "hand-written"] },
-                "name": { "type": "string", "description": "e.g. claude-code, codex, ironclaw" },
-                "model": { "type": "string" },
-                "signature": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/modelSignature" }] }
-              }
-            },
-            "tools_version": { "type": "string" },
-            "created_at": { "$ref": "#/$defs/datetime" }
+            "render": { "type": "string" },
+            "sha256": { "$ref": "#/$defs/sha256" }
           }
         }
       }
+    },
+
+    "entry": {
+      "description": "A published flower. Its `petal` says how to verify it (shared-map.md, Entry versions).",
+      "oneOf": [{ "$ref": "#/$defs/entryV1" }, { "$ref": "#/$defs/entryV2" }]
     }
   }
 }

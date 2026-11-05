@@ -1,5 +1,6 @@
 // Server only. The entry a maker publishes, built from a finished run of Petal's agent: the
-// flower event (spec, interpretation, render hash), the signature event (if any) and the model.
+// flower event (spec, interpretation), the signature event (if any) and the model. The drawing is
+// not part of it: prepare_publish adds a receipt beside what the maker signs.
 import { TOOLS_VERSION } from '@petal/core';
 import type { AgentEvent, ModelSignature, Run } from '@petal/core/types';
 import type { EntryDraft } from './publish.ts';
@@ -23,13 +24,12 @@ export function entryDraftFromRun(run: Run, origin: string): EntryDraft | null {
   const sha = flower.spec.snapshot.sha256;
   const title = titleFrom(run.messages.filter((m) => m.role === 'user').at(-1)?.content);
   return {
-    petal: 'flower/v1',
+    petal: 'flower/v2',
     ...(title ? { title } : {}),
     spec: flower.spec,
     spec_sha256: flower.spec_sha256,
     interpretation: flower.interpretation,
     snapshot: { sha256: sha, urls: [`${origin}/api/v1/snapshots/${sha}`] },
-    render_sha256: flower.render_sha256,
     provenance: {
       agent: {
         kind: 'petal-agent',
