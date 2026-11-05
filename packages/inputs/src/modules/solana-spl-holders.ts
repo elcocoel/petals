@@ -14,6 +14,7 @@
 // in 10,000 throws: that is a broken read, not a moving chain.
 //
 // What this does not hold: labels, launch history, or anything about who controls a wallet.
+import { runSignal } from '@petal/core';
 import type {
   Holding,
   NetworkDescriptor,
@@ -209,7 +210,7 @@ async function scanFromEndpoints(
         method: 'POST',
         headers: { 'content-type': 'application/json', 'user-agent': 'petal/0.1 (keyless reads)' },
         body: holderScanRequest(mint),
-        signal: ctrl.signal,
+        signal: runSignal(ctrl.signal),
       });
       if (!res.ok || !res.body) {
         failures.push(`${url}: HTTP ${res.status}`);

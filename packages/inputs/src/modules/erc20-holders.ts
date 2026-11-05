@@ -18,6 +18,7 @@
 //
 // No labels: Blockscout shows tags and names; they are not read. Kind says only whether Blockscout
 // marks the address as a contract.
+import { runSignal } from '@petal/core';
 import type {
   Holding,
   NetworkDescriptor,
@@ -239,7 +240,7 @@ async function listFromBlockscout(
     try {
       res = await doFetch(url, {
         headers: { accept: 'application/json', 'user-agent': 'petal/0.1 (keyless public reads)' },
-        signal: AbortSignal.timeout(BLOCKSCOUT_TIMEOUT_MS),
+        signal: runSignal(AbortSignal.timeout(BLOCKSCOUT_TIMEOUT_MS)),
       });
     } catch (e) {
       throw new InputError(
