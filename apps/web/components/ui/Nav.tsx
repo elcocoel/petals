@@ -10,12 +10,12 @@ import { Wordmark } from './Wordmark.tsx';
 export function Nav() {
   const copy = landingCopy.nav;
   return (
-    <Section as="nav" padding="nav" rule="bottom">
+    <Section as="nav" padding="bar" rule="bottom">
       <div className="flex flex-wrap items-center justify-between gap-x-block-gap gap-y-text-gap">
         <a href={siteLinks.home} aria-label="Petals, home" className="flex no-underline">
           <Wordmark />
         </a>
-        <div className="flex flex-wrap items-center gap-x-space-36 gap-y-text-gap">
+        <div className="flex flex-wrap items-center gap-x-space-32 gap-y-text-gap">
           <TextLink href={siteLinks.howItWorks}>{copy.howItWorks}</TextLink>
           <TextLink href={siteLinks.gallery}>{copy.gallery}</TextLink>
           <TextLink href={siteLinks.connect}>{copy.docs}</TextLink>

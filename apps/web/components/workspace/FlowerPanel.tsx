@@ -12,7 +12,7 @@ import { Legend, LegendKeys } from '../Legend.tsx';
 import { PetalDetails } from '../PetalDetails.tsx';
 import { QuotePanel } from '../QuotePanel.tsx';
 import { Button } from '../ui/Button.tsx';
-import { Cell } from '../ui/Cell.tsx';
+import { Drawing } from '../ui/Drawing.tsx';
 import { TextLink } from '../ui/TextLink.tsx';
 import { FlowerShelf } from './FlowerShelf.tsx';
 import { ReadingKey } from './ReadingKey.tsx';
@@ -40,9 +40,9 @@ function OpenFlower({
   actions: FlowerPanelActions;
 }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-text-gap px-workspace-inset pt-workspace-inset pb-text-gap">
+    <div className="flex min-h-0 flex-1 flex-col gap-text-gap px-column-gap pt-column-gap pb-text-gap">
       <header className="flex items-start justify-between gap-text-gap">
-        <div className="flex min-w-0 flex-col gap-title-gap">
+        <div className="flex min-w-0 flex-col gap-space-8">
           <h1 className="m-0 type-title">{view.title}</h1>
           <p className="type-label whitespace-pre-wrap">
             {view.where}
@@ -70,7 +70,7 @@ function OpenFlower({
         </Stage>
       ) : (
         <div className="flex min-h-stage-height flex-1 items-center gap-text-gap type-lead">
-          <Cell size="medium" />
+          <Drawing kind="cell" size="cell-medium" />
           Drawing…
         </div>
       )}
@@ -112,7 +112,7 @@ function OpenFlower({
             <Interpretation reading={view.interpretation} sources={view.sources} />
             <Legend items={view.legend} sources={view.sources} />
             <SignatureLine signature={view.signature} model={view.model} />
-            <p data-quiet className="type-mono-small wrap-anywhere text-muted">
+            <p data-quiet className="type-mono wrap-anywhere text-muted">
               {view.checks}. spec_sha256 {view.hashes}
             </p>
           </div>
@@ -151,7 +151,7 @@ export function FlowerPanel({
           {...(actions.onStarter ? { onStarter: actions.onStarter } : {})}
         />
       ) : (
-        <div className="p-workspace-inset">
+        <div className="p-column-gap">
           <p className={view.kind === 'failed' ? 'error' : 'type-body text-muted'}>{view.text}</p>
           {view.kind === 'failed' && (
             <Button variant="link" onClick={actions.onShelf}>

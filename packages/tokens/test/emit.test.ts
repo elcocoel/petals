@@ -48,7 +48,7 @@ describe('emit', () => {
 describe('contrast', () => {
   test('every declared pair passes on every surface', () => {
     expect(contrastFailures()).toEqual([]);
-    expect(contrastTable()).toHaveLength(18);
+    expect(contrastTable()).toHaveLength(14);
   });
 
   test('known values', () => {
@@ -85,7 +85,7 @@ describe('Tailwind theme', () => {
       'gap-block-gap',
       'font-mono',
       'type-body',
-      'type-mono-label',
+      'type-mono',
       'wordmark-front',
       'md:px-page-inset',
     ];

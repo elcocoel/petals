@@ -32,7 +32,7 @@ export function Workspace(props: {
           {...(state.recorded
             ? {
                 notice: (
-                  <p className="border-2 border-primary p-text-gap type-caption">
+                  <p className="border-heavy border-primary p-text-gap type-caption">
                     <strong>Recorded demo. No AI is running.</strong> This plays back one saved run
                     about NEAR’s validators. It can’t read a question yet, so there’s nothing to
                     type. The real agent switches on once a NEAR AI key is set.
