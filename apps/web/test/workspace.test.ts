@@ -451,6 +451,7 @@ describe('the panel', () => {
     expect(pending.note).toBe('Your flower will appear here.');
     expect(pending.starter).toBeUndefined();
     expect(shelfView([], false).note).toBe('Your flower will appear here.');
+    expect(shelfView(listed, false, true).starter).toBeUndefined();
   });
 
   test('the shelf draws from its view', () => {

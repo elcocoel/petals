@@ -100,7 +100,12 @@ export type PanelView =
 
 const STARTER = 'Who holds the UNI token on Base?';
 
-export function shelfView(listed: ListedFlower[], working: boolean): ShelfView {
+export function shelfView(
+  listed: ListedFlower[],
+  working: boolean,
+  /** a recorded run has its one question, so there's nothing to start from */
+  recorded = false,
+): ShelfView {
   return {
     kind: 'shelf',
     pending: working,
@@ -117,7 +122,7 @@ export function shelfView(listed: ListedFlower[], working: boolean): ShelfView {
       badge: f.where === 'map' ? 'On NEAR' : 'Fixture',
       image: `/api/v1/flowers/${encodeURIComponent(f.id)}/svg`,
     })),
-    ...(working ? {} : { starter: { label: `Try “${STARTER}”`, question: STARTER } }),
+    ...(working || recorded ? {} : { starter: { label: `Try “${STARTER}”`, question: STARTER } }),
   };
 }
 

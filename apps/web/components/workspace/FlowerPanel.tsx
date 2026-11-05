@@ -41,7 +41,7 @@ function OpenFlower({
 }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-text-gap px-workspace-inset pt-workspace-inset pb-text-gap">
-      <header className="flex items-start justify-between gap-block-gap">
+      <header className="flex items-start justify-between gap-text-gap">
         <div className="flex min-w-0 flex-col gap-title-gap">
           <h1 className="m-0 type-title">{view.title}</h1>
           <p className="type-label whitespace-pre-wrap">

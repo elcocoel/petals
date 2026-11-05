@@ -127,8 +127,20 @@ export function useWorkspace(props: {
     if (storedId) return { kind: 'loading', text: 'Opening the flower…' };
     // a stored run on its way back: its flowers will be here in a moment
     if (runId && items.length === 0 && busy) return { kind: 'loading', text: 'Opening…' };
-    return shelfView(shelf, busy);
-  }, [panelFlower, drawing, petal, facts, stored, storedId, runId, items.length, busy, shelf]);
+    return shelfView(shelf, busy, recorded);
+  }, [
+    panelFlower,
+    drawing,
+    petal,
+    facts,
+    stored,
+    storedId,
+    runId,
+    items.length,
+    busy,
+    shelf,
+    recorded,
+  ]);
 
   const target = useMemo(
     () => composerTarget(panelFlower, selectedPetal),

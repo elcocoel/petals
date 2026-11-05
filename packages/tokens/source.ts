@@ -155,7 +155,8 @@ export const sizes = {
   'Icon size': 18,
   'Icon gap': 9,
   'Conversation width': 580,
-  'Panel width': 696,
+  // Figma's is 696, beside its narrower rail: the two columns fill a 1440 window.
+  'Panel width': 680,
   'Speech gap': 8,
   'Composer height': 76,
   'Composer inset end': 12,
