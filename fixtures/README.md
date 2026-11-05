@@ -22,6 +22,7 @@ Nothing under `../research/`, `../design/`, `../submission/` or `../.secrets/` i
 | File | What |
 |---|---|
 | `snapshots/72a6d967….json.gz` | `near-validators` at block 222,915,356 (2026-11-03), imported from the step 1 crawl by `pnpm import:spike`. All 371 seated validators, 862 pools, owners and liquid-staking contracts; the 8,319 delegations of at least 1,000 NEAR stay individual (98.76% of delegated stake); the other 277,769 are folded into 565 `group` rows, one per pool and backer class, declared in `coverage.grouped`. 6.4 MB canonical, 0.83 MB gzipped. |
+| `snapshots/8ab2bfd1….json.gz` | `moloch-v1` at Ethereum block 13,199,430 (2021-09-10), the block before proposal 143: 70 members, 3,760 shares, read keyless by `packages/inputs/scripts/pull-module.ts`. |
 | `snapshots/index.json` | `{ "petal": "snapshot-index/v1", "snapshots": IndexRow[] }` (`IndexRow` in `@petal/core/types`): sha256, network, chain, population, block_height, as_of, final, bytes, gz_bytes, file, where, module. |
 | `snapshots/test/two-participants.json` | The two largest seated validators, stake only (the 2-petal golden). |
 | `snapshots/test/tiny-backers.json` | Five seated pools whose backers cover every class, with owners, holdings and delegations; the rest folded into declared groups. |

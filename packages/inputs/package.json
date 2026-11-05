@@ -10,6 +10,7 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
+    "@noble/hashes": "^2.4.0",
     "@petal/core": "workspace:*"
   },
   "devDependencies": {

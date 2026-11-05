@@ -12,6 +12,12 @@ import type {
 } from '@petal/core/types';
 
 export { InputError, isInputError, type SourceFailure } from './errors.ts';
+export {
+  EVM_ENDPOINTS,
+  type EvmReader,
+  type EvmReaderOptions,
+  evmReader,
+} from './evm/reader.ts';
 export { getSnapshot, LATEST_REUSE_S } from './get-snapshot.ts';
 export {
   BACKER_CLASSES,
@@ -20,6 +26,7 @@ export {
   NEAR_VALIDATORS_RULES,
   NO_GROUPING,
 } from './import/spike.ts';
+export { MOLOCH_V1_DESCRIPTOR, molochV1, pullMolochV1 } from './modules/moloch-v1.ts';
 export { HOUSE_OF_STAKE_DESCRIPTOR, nearHouseOfStake } from './modules/near-house-of-stake.ts';
 export { NEAR_VALIDATORS_DESCRIPTOR, nearValidators } from './modules/near-validators.ts';
 export { modules } from './registry.ts';

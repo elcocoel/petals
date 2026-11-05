@@ -2,6 +2,23 @@
   "petal": "snapshot-index/v1",
   "snapshots": [
     {
+      "sha256": "8ab2bfd1234e4ff5382b8fc429552b39412c7880a6986973423b34e5482c10ba",
+      "network": "moloch-v1",
+      "chain": "eip155:1",
+      "population": "moloch-v1-members",
+      "block_height": 13199430,
+      "as_of": "2021-09-10T17:39:54Z",
+      "final": true,
+      "bytes": 36200,
+      "gz_bytes": 5279,
+      "file": "8ab2bfd1234e4ff5382b8fc429552b39412c7880a6986973423b34e5482c10ba.json.gz",
+      "where": "fixture",
+      "module": {
+        "id": "moloch-v1",
+        "version": "evm/1"
+      }
+    },
+    {
       "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
       "network": "near-validators",
       "chain": "near:mainnet",
