@@ -78,9 +78,78 @@ export function summarize(name: string, out: unknown): string {
   }
 }
 
-/** What the model reads back: render_flower without the SVG and the per-petal details. */
+// ---------------------------------------------------------------------------------------------
+// What the model reads back. Every byte here is sent again on every later turn, so each tool's
+// result is cut to what the next step needs. The doors keep the full outputs (tools.md); the
+// tool_call and flower events are not affected. Never a snapshot body, either way.
+
+/** compute_figures: enough shares for the answer; describe_snapshot lists more on request. */
+export const SHARES_FOR_MODEL = 10;
+/** describe_snapshot: long coverage notes end in raw import details. */
+export const COVERAGE_NOTE_FOR_MODEL = 2000;
+
+/**
+ * render_flower's view_url holds the whole spec in base64 (about 2 KB). The model gets this short
+ * link and writes that into its answer; the loop puts the real one into the message (run.ts), so
+ * no model has to copy 2 KB of base64 without a slip.
+ */
+export function draftLink(specSha256: string): string {
+  return `/draft?flower=${specSha256.slice(0, 8)}`;
+}
+
+function cutAtSentence(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const end = text.lastIndexOf('. ', max);
+  return `${text.slice(0, end > 0 ? end + 1 : max)} (shortened)`;
+}
+
+function networkForModel(n: unknown): Obj {
+  const { id, title, description, live, params, cost, capabilities } = obj(n);
+  const caps = obj(capabilities);
+  return {
+    id,
+    title,
+    description,
+    live,
+    params,
+    cost,
+    measures: arr(caps.measures).map((m) => obj(m).id),
+    segments: caps.segments,
+  };
+}
+
 export function forModel(name: string, out: unknown): unknown {
-  if (name !== 'render_flower' || isToolError(out)) return out;
-  const { svg: _svg, petals, ...rest } = obj(out);
-  return Array.isArray(petals) ? { ...rest, petals_drawn: petals.length } : rest;
+  if (isToolError(out)) return out;
+  const o = obj(out);
+  switch (name) {
+    case 'list_networks':
+      return { ...o, networks: arr(o.networks).map(networkForModel) };
+    case 'get_network':
+      return { ...o, network: networkForModel(o.network) };
+    case 'get_snapshot': {
+      // coverage comes back from describe_snapshot as coverage_note; the body is never read
+      const { coverage: _coverage, body_url: _body, ...rest } = o;
+      return { ...rest, sources: arr(o.sources).map((s) => obj(s).id) };
+    }
+    case 'describe_snapshot':
+      return typeof o.coverage_note === 'string'
+        ? { ...o, coverage_note: cutAtSentence(o.coverage_note, COVERAGE_NOTE_FOR_MODEL) }
+        : o;
+    case 'compute_figures': {
+      const shares = arr(o.shares);
+      if (shares.length <= SHARES_FOR_MODEL) return o;
+      return {
+        ...o,
+        shares: shares.slice(0, SHARES_FOR_MODEL),
+        shares_note: `the largest ${SHARES_FOR_MODEL} of ${shares.length} shares; describe_snapshot with top up to 50 lists more`,
+      };
+    }
+    case 'render_flower': {
+      const { svg: _svg, petals: _petals, ...rest } = o;
+      const link = typeof o.spec_sha256 === 'string' ? draftLink(o.spec_sha256) : o.view_url;
+      return { ...rest, view_url: link };
+    }
+    default:
+      return out;
+  }
 }

@@ -162,10 +162,13 @@ const LINK = /(?:https?:\/\/|\/)[^\s)]*\?[^\s)]*|https?:\/\/[^\s)]+/g;
 const NUMBER = /(?<![\w.])(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?(\s?%|\s?[kKmMbB](?![a-zA-Z]))?/g;
 const SCALE: Record<string, number> = { k: 1e3, m: 1e6, b: 1e9 };
 
+/** Nor do hash prefixes ("spec 460cf9ae"): hex with both letters and digits has no numeric value. */
+const HASH = /\b(?=[0-9a-f]*[a-f])(?=[0-9a-f]*[0-9])[0-9a-f]{6,}\b/g;
+
 /** Every number written in `text`, with its unit (%, k, M, B) applied. */
 export function numbersIn(text: string): Quoted[] {
   const out: Quoted[] = [];
-  for (const m of text.replace(LINK, ' ').matchAll(NUMBER)) {
+  for (const m of text.replace(LINK, ' ').replace(HASH, ' ').matchAll(NUMBER)) {
     const [whole, int = '', frac = '', unit = ''] = m;
     const u = unit.trim().toLowerCase();
     const scale = u === '%' ? 0.01 : (SCALE[u] ?? 1);
@@ -176,11 +179,15 @@ export function numbersIn(text: string): Quoted[] {
   return out;
 }
 
-/** Every number in a tool output: numeric values, numeric strings and numeric keys. */
+/**
+ * Every number in a tool output: numeric values, numeric strings, numeric keys, and numbers written
+ * in its text (a coverage note's "424 idle pools", an as_of date).
+ */
 export function numbersOf(x: unknown, out: number[] = []): number[] {
   if (typeof x === 'number') out.push(x);
   else if (typeof x === 'string') {
     if (/^-?\d+(\.\d+)?$/.test(x)) out.push(Number(x));
+    else for (const q of numbersIn(x)) out.push(q.value);
   } else if (Array.isArray(x)) for (const v of x) numbersOf(v, out);
   else if (x && typeof x === 'object')
     for (const [k, v] of Object.entries(x)) {
@@ -190,12 +197,16 @@ export function numbersOf(x: unknown, out: number[] = []): number[] {
   return out;
 }
 
+/** A whole number may drop the decimals of a large amount (5,364,426 for 5364426.7); a count can't. */
+const AMOUNT = 1000;
+
 /** The quoted numbers that match no figure (empty when the answer is clean). */
 export function unbacked(text: string, figures: unknown): Quoted[] {
   const known = numbersOf(figures);
-  return numbersIn(text).filter(
-    (q) => !known.some((f) => Math.abs(f - q.value) <= q.tolerance + 1e-12),
-  );
+  const matches = (q: Quoted, f: number) =>
+    Math.abs(f - q.value) <= q.tolerance + 1e-12 ||
+    (Number.isInteger(q.value) && !Number.isInteger(f) && f >= AMOUNT && Math.abs(f - q.value) < 1);
+  return numbersIn(text).filter((q) => !known.some((f) => matches(q, f)));
 }
 
 // ---------------------------------------------------------------------------------------------

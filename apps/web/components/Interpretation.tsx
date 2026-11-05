@@ -104,6 +104,12 @@ export function SignatureLine({
   }
   return (
     <p>
+      {model === 'recorded' && (
+        <>
+          Recorded run: nothing is running now. This signature was made when the run was recorded,
+          on {signature.fetched_at.slice(0, 10)}.{' '}
+        </>
+      )}
       Model signature: {signature.signature_kind} by <code>{signature.model}</code>, signing address{' '}
       <code>{signature.signing_address}</code> ({signature.signing_algo}), completion{' '}
       <code>{signature.completion_id}</code>

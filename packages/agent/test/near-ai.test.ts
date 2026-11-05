@@ -11,6 +11,7 @@ import {
   DEFAULT_MODEL,
   FALLBACK_MODELS,
   LlmCallError,
+  MAX_COMPLETION_TOKENS,
   type NearAiOptions,
 } from '../src/near-ai.ts';
 import { fakeNearAi, SIGNER, tmpRoot } from './helpers.ts';
@@ -50,7 +51,7 @@ describe('nearAiClient', () => {
   test('one non-streamed call with the canonical id, x-no-aliasing and Accept-Encoding: identity', async () => {
     const { llm, fake } = client();
     expect(llm.kind).toBe('near-ai-cloud');
-    expect(llm.model).toBe('z-ai/glm-5.3-flash');
+    expect(llm.model).toBe('deepseek-ai/DeepSeek-V4.1-Flash-1017');
     await llm.complete(ASK);
     const call = fake.log.find((l) => l.url.pathname.endsWith('/chat/completions'));
     expect(call?.method).toBe('POST');
@@ -58,11 +59,43 @@ describe('nearAiClient', () => {
     expect(call?.headers.get('accept-encoding')).toBe('identity');
     expect(call?.headers.get('authorization')).toBe('Bearer sk-test');
     const body = JSON.parse(call?.body ?? '{}');
-    expect(body).toMatchObject({ model: 'z-ai/glm-5.3-flash', stream: false, tool_choice: 'auto' });
+    expect(body).toMatchObject({
+      model: 'deepseek-ai/DeepSeek-V4.1-Flash-1017',
+      stream: false,
+      tool_choice: 'auto',
+    });
     expect(body.tools[0]).toEqual({
       type: 'function',
       function: { name: 'get_snapshot', description: 'snapshot', parameters: { type: 'object' } },
     });
+  });
+
+  test('asks for a generous token limit and low reasoning, so reasoning never eats the answer', async () => {
+    const { llm, fake } = client();
+    await llm.complete(ASK);
+    const call = fake.log.find((l) => l.url.pathname.endsWith('/chat/completions'));
+    expect(JSON.parse(call?.body ?? '{}')).toMatchObject({
+      max_completion_tokens: MAX_COMPLETION_TOKENS,
+      reasoning_effort: 'low',
+    });
+    expect(MAX_COMPLETION_TOKENS).toBeGreaterThanOrEqual(16_000);
+  });
+
+  test('reasoningEffort null leaves it to the model', async () => {
+    const { llm, fake } = client(fakeNearAi(), { reasoningEffort: null });
+    await llm.complete(ASK);
+    const call = fake.log.find((l) => l.url.pathname.endsWith('/chat/completions'));
+    expect(JSON.parse(call?.body ?? '{}')).not.toHaveProperty('reasoning_effort');
+  });
+
+  test('an answer cut off by the token limit moves to the next model, and its cost still counts', async () => {
+    const fake = fakeNearAi({ truncate: [DEFAULT_MODEL] });
+    const { llm } = client(fake);
+    const c = await llm.complete(ASK);
+    expect(c.model).toBe(FALLBACK_MODELS[0]);
+    expect(c.fallback_used).toBe(true);
+    const own = costUsd(FALLBACK_MODELS[0] as string, c.usage);
+    expect(c.cost_usd).toBeCloseTo(own + costUsd(DEFAULT_MODEL, c.usage), 9);
   });
 
   test('fetches the attestation report before the completion, the signature right after', async () => {
@@ -83,7 +116,7 @@ describe('nearAiClient', () => {
     const sig = c.signature;
     expect(sig).toMatchObject({
       provider: 'near-ai-cloud',
-      model: 'z-ai/glm-5.3-flash',
+      model: 'deepseek-ai/DeepSeek-V4.1-Flash-1017',
       completion_id: 'chatcmpl-1',
       signature_kind: 'provider_tee',
       signing_address: SIGNER,
@@ -91,7 +124,9 @@ describe('nearAiClient', () => {
       request_sha256: sha256Hex(ex?.request ?? ''),
       response_sha256: sha256Hex(ex?.response ?? ''),
     });
-    expect(sig?.text).toBe(`z-ai/glm-5.3-flash:${sig?.request_sha256}:${sig?.response_sha256}`);
+    expect(sig?.text).toBe(
+      `deepseek-ai/DeepSeek-V4.1-Flash-1017:${sig?.request_sha256}:${sig?.response_sha256}`,
+    );
     const sha = sha256Hex(fake.report);
     expect(sig?.attestation).toEqual({
       nonce: expect.stringMatching(/^[0-9a-f]{64}$/),
@@ -113,7 +148,7 @@ describe('nearAiClient', () => {
       },
     ]);
     expect(c.usage).toEqual({ in: 1000, out: 100 });
-    expect(c.cost_usd).toBeCloseTo((1000 * 0.08 + 100 * 0.5) / 1e6, 12);
+    expect(c.cost_usd).toBeCloseTo((1000 * 0.3 + 100 * 1.2) / 1e6, 12);
     expect(c.fallback_used).toBe(false);
     expect(costUsd('someone/unknown', { in: 1e6, out: 1e6 })).toBeCloseTo(1.65, 9);
   });
@@ -149,23 +184,25 @@ describe('nearAiClient', () => {
     ]);
   });
 
-  test('falls back to Qwen when GLM fails, and keeps Qwen first for a while', async () => {
-    const { llm, fake } = client(fakeNearAi({ fail: { 'z-ai/glm-5.3-flash': 503 } }));
+  test('falls back to GLM when the default fails, and keeps GLM first for a while', async () => {
+    const { llm, fake } = client(
+      fakeNearAi({ fail: { 'deepseek-ai/DeepSeek-V4.1-Flash-1017': 503 } }),
+    );
     const c = await llm.complete(ASK);
-    expect(c.model).toBe('Qwen/Qwen3.8-27B');
+    expect(c.model).toBe('z-ai/glm-5.3-flash');
     expect(c.fallback_used).toBe(true);
-    expect(c.signature?.model).toBe('Qwen/Qwen3.8-27B');
+    expect(c.signature?.model).toBe('z-ai/glm-5.3-flash');
     fake.log.length = 0;
     await llm.complete(ASK);
     const asked = fake.log.filter((l) => l.body).map((l) => JSON.parse(l.body ?? '{}').model);
-    expect(asked).toEqual(['Qwen/Qwen3.8-27B']);
+    expect(asked).toEqual(['z-ai/glm-5.3-flash']);
   });
 
-  test('then DeepSeek; when no model answers it is down, with source_failed', async () => {
+  test('then Qwen; when no model answers it is down, with source_failed', async () => {
     const all = {
-      'z-ai/glm-5.3-flash': 500,
-      'Qwen/Qwen3.8-27B': 502,
-      'deepseek-ai/DeepSeek-V4.1-Flash-1017': 503,
+      'deepseek-ai/DeepSeek-V4.1-Flash-1017': 500,
+      'z-ai/glm-5.3-flash': 502,
+      'Qwen/Qwen3.8-27B': 503,
     };
     const { llm, fake } = client(fakeNearAi({ fail: all }));
     const err = await llm.complete(ASK).catch((e: unknown) => e);
@@ -175,9 +212,9 @@ describe('nearAiClient', () => {
     expect(llm.status()).toBe('down');
     const asked = fake.log.filter((l) => l.body).map((l) => JSON.parse(l.body ?? '{}').model);
     expect(asked).toEqual([
+      'deepseek-ai/DeepSeek-V4.1-Flash-1017',
       'z-ai/glm-5.3-flash',
       'Qwen/Qwen3.8-27B',
-      'deepseek-ai/DeepSeek-V4.1-Flash-1017',
     ]);
   });
 
@@ -186,7 +223,9 @@ describe('nearAiClient', () => {
       [401, 'source_failed'],
       [402, 'budget_exhausted'],
     ] as const) {
-      const { llm, fake } = client(fakeNearAi({ fail: { 'z-ai/glm-5.3-flash': status } }));
+      const { llm, fake } = client(
+        fakeNearAi({ fail: { 'deepseek-ai/DeepSeek-V4.1-Flash-1017': status } }),
+      );
       const err = (await llm.complete(ASK).catch((e: unknown) => e)) as LlmCallError;
       expect(err.code).toBe(code);
       expect(fake.log.filter((l) => l.body)).toHaveLength(1);

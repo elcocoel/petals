@@ -122,6 +122,15 @@ describe('rpcPool', () => {
     expect(h.sent.at(-1)?.headers['User-Agent']).toMatch(/petal/);
   });
 
+  test('a node that hangs is left alone: the next calls go straight to the next node', async () => {
+    const h = harness((url) => (url.includes('drpc') ? 'hang' : ok({ v: 2 })));
+    const pool = h.pool({ timeoutMs: 20 });
+    for (let i = 0; i < 4; i++) {
+      expect((await pool.call('query', viewParams)).endpoint.id).toBe('fastnear');
+    }
+    expect(h.hosts().filter((x) => x.includes('drpc'))).toHaveLength(1);
+  });
+
   test('a JSON-RPC handler error is an answer: thrown at once, no failover', async () => {
     const h = harness(() => ({
       body: {

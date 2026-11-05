@@ -8,7 +8,7 @@ import { defineTool, FLOWER_DEFS } from '../define.ts';
 import { ToolFailure } from '../errors.ts';
 import type { ToolContext } from '../types.ts';
 import { type Verified, verifyEntry } from '../verify.ts';
-import { ENTRY_ID, obj } from './shared.ts';
+import { ENTRY_ID, moduleFor, obj } from './shared.ts';
 
 /** Shared-map prefix of published flowers (shared-map.md, Keys and values). */
 const SPEC_PREFIX = 'petal/v1/spec/';
@@ -114,6 +114,9 @@ export const listFlowers = defineTool<{ network?: string; maker?: string; limit?
     output: obj(['flowers'], { flowers: { type: 'array', items: FLOWER_ROW } }),
     annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
     async run({ network, maker, limit = 50 }, ctx) {
+      // A filter by a network that isn't one says so: an empty list would read as "no flowers",
+      // and an agent guessing an id then tells the person nothing is published.
+      if (network) moduleFor(ctx, network);
       // When the map is unreachable the fixtures still answer; health says map: down.
       const fromMap = await mapEntries(ctx).catch(() => [] as Found[]);
       const seen = new Set(fromMap.map((f) => f.entry.id));

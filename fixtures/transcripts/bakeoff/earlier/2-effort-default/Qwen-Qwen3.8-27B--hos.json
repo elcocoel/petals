@@ -1,0 +1,270 @@
+{
+  "petal": "transcript/v1",
+  "kind": "recorded",
+  "title": "Bake-off (hos): Qwen/Qwen3.8-27B",
+  "question": "Who holds power in NEAR’s House of Stake? Make me a fresh flower, not an existing one.",
+  "model": "Qwen/Qwen3.8-27B",
+  "note": "A real run on NEAR AI Cloud (T060), kept with the signature each completion got. A hash or link the model copied from a tool result is written as a reference to that result ($from, {{…}}), so it replays on recordedClient.",
+  "turns": [
+    {
+      "content": "\n\n\n",
+      "tool_calls": [
+        {
+          "id": "call_5ad40458c11a45febea6d7c3",
+          "name": "list_networks",
+          "arguments": {
+            "query": "NEAR"
+          }
+        },
+        {
+          "id": "call_59223d456dd04cc6ab4494e0",
+          "name": "list_flowers",
+          "arguments": {}
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "cedbbad1d7964f6a9fcd4568e6b0f559",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:039dc66f43825541360f434a96b54f542bac0e191e87b0ad46b633ff16d7e6b7:546063b8ec1787eb4f0ede49ffeddfb3e11ed4914241d44056b56d4b35110e4e",
+        "signature": "0x8f9925a24cedbd49e943c4eb62099f7552c200067228f4a61b3d9bf13866f192641ccc6ee85936f706cf4eb4813f5ebd3cb013563c88d98d2d81a66844315a4a1b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "039dc66f43825541360f434a96b54f542bac0e191e87b0ad46b633ff16d7e6b7",
+        "response_sha256": "546063b8ec1787eb4f0ede49ffeddfb3e11ed4914241d44056b56d4b35110e4e",
+        "fetched_at": "2026-11-05T12:04:52.494Z",
+        "attestation": {
+          "nonce": "58c7a60de43c9fdfecc40ea0cf2d35070dc7f14f7514d684b5f7e8bfeb955c8a",
+          "report_sha256": "5f02acf73fe0188817137a6f6c6179d325370bcd49c191f24941729c39a39c2c",
+          "report_url": "/api/v1/attestations/5f02acf73fe0188817137a6f6c6179d325370bcd49c191f24941729c39a39c2c"
+        }
+      }
+    },
+    {
+      "content": "\n\n",
+      "tool_calls": [
+        {
+          "id": "call_4b5de0483a8c4ad1972f0b3d",
+          "name": "get_snapshot",
+          "arguments": {
+            "network": "near-house-of-stake"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "7521e2509ed2498380087ecd85753f2a",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:6c319b022fd1b5a234d5ecc7163013dbdc2690bd109fcd311f51ecf163cf3950:f2716f1c4fb5322cb1a702b597e197f0686df785f2cc420cb061fc819b7ee1b5",
+        "signature": "0x8f8e6dab41d42e459c506de1bf611b3e9171db587ac09854ebb6c11c74ed748153b7ebffcb05a5dc700f9df780b8d64a8922fc0dc80521d1761affc1c0f130321b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "6c319b022fd1b5a234d5ecc7163013dbdc2690bd109fcd311f51ecf163cf3950",
+        "response_sha256": "f2716f1c4fb5322cb1a702b597e197f0686df785f2cc420cb061fc819b7ee1b5",
+        "fetched_at": "2026-11-05T12:04:58.923Z",
+        "attestation": {
+          "nonce": "58c7a60de43c9fdfecc40ea0cf2d35070dc7f14f7514d684b5f7e8bfeb955c8a",
+          "report_sha256": "5f02acf73fe0188817137a6f6c6179d325370bcd49c191f24941729c39a39c2c",
+          "report_url": "/api/v1/attestations/5f02acf73fe0188817137a6f6c6179d325370bcd49c191f24941729c39a39c2c"
+        }
+      }
+    },
+    {
+      "content": "\n\nFresh snapshot read (not reused): final block **223,163,500**, as of **2026-11-05 12:04 UTC**. Now counting.\n\n\n",
+      "tool_calls": [
+        {
+          "id": "call_cbccfe86d2784b7993bdec62",
+          "name": "describe_snapshot",
+          "arguments": {
+            "sha256": {
+              "$from": "call_4b5de0483a8c4ad1972f0b3d.sha256"
+            }
+          }
+        },
+        {
+          "id": "call_9f1f6a5a06554242ac01d9cb",
+          "name": "compute_figures",
+          "arguments": {
+            "sha256": {
+              "$from": "call_4b5de0483a8c4ad1972f0b3d.sha256"
+            },
+            "measure": "voting_power"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "87b5d8c275174dc4b5e3f2b504bddd29",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:4094c68925e28ff160f9ef1cb42cf77a0c01a9472c09c0e20cecf3212ac5a489:498820ff40740580d63733f8baa7f4936f1359d3ab53c2b62d775b1b173fb968",
+        "signature": "0xdc43f3f1a61d903a0446a580fb4a7d8c1a5f439f2bfa07c9aae11964f71848022ced7ae265e884b16979b419e7bc9b754cf3e5c4e440e3b5e9b2d9e61582184d1c",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "4094c68925e28ff160f9ef1cb42cf77a0c01a9472c09c0e20cecf3212ac5a489",
+        "response_sha256": "498820ff40740580d63733f8baa7f4936f1359d3ab53c2b62d775b1b173fb968",
+        "fetched_at": "2026-11-05T12:05:19.895Z",
+        "attestation": {
+          "nonce": "58c7a60de43c9fdfecc40ea0cf2d35070dc7f14f7514d684b5f7e8bfeb955c8a",
+          "report_sha256": "5f02acf73fe0188817137a6f6c6179d325370bcd49c191f24941729c39a39c2c",
+          "report_url": "/api/v1/attestations/5f02acf73fe0188817137a6f6c6179d325370bcd49c191f24941729c39a39c2c"
+        }
+      }
+    },
+    {
+      "content": "\n\nI've calculated the numbers. Concentration is extremely high — the top 5 hold about 51% of voting power. This is a question about \"who is the biggest and how concentrated,\" so the default mapping is appropriate. I'll propose a spec.\n\n",
+      "tool_calls": [
+        {
+          "id": "call_6ef55f92e55943db88c3b93b",
+          "name": "propose_spec",
+          "arguments": {
+            "network": "near-house-of-stake",
+            "sha256": {
+              "$from": "call_4b5de0483a8c4ad1972f0b3d.sha256"
+            },
+            "choices": {
+              "measure": "voting_power"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "8d7d6b92da384c91960fd22793234b7f",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:6297897fd170148d35e198b92602632a58042636cc33d49720882d9438ae5646:79fd4b8fa988768002b730d95bf493f24d48235382555f81b0d0c7cce1b767a7",
+        "signature": "0x40d8b04cd6687a7eabca4c557ddc53ed8e0407bb574771add1430d02e8136c5a1b1b36e8739843ee8a49c0c19d3d7907f42cf53dc5bc6319668fcc67949898d21b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "6297897fd170148d35e198b92602632a58042636cc33d49720882d9438ae5646",
+        "response_sha256": "79fd4b8fa988768002b730d95bf493f24d48235382555f81b0d0c7cce1b767a7",
+        "fetched_at": "2026-11-05T12:06:10.476Z",
+        "attestation": {
+          "nonce": "58c7a60de43c9fdfecc40ea0cf2d35070dc7f14f7514d684b5f7e8bfeb955c8a",
+          "report_sha256": "5f02acf73fe0188817137a6f6c6179d325370bcd49c191f24941729c39a39c2c",
+          "report_url": "/api/v1/attestations/5f02acf73fe0188817137a6f6c6179d325370bcd49c191f24941729c39a39c2c"
+        }
+      }
+    }
+  ],
+  "run": {
+    "started_at": "2026-11-05T12:04:43.603Z",
+    "success": false,
+    "wall_ms": 120001,
+    "longest_gap_ms": 8002,
+    "turns": 4,
+    "tokens": {
+      "in": 25132,
+      "out": 1975
+    },
+    "cost_usd": 0.003672,
+    "per_turn": [
+      {
+        "ms": 8890,
+        "in": 4883,
+        "out": 221,
+        "usd": 0.00049367,
+        "tools": [
+          "list_networks",
+          "list_flowers"
+        ]
+      },
+      {
+        "ms": 6261,
+        "in": 5539,
+        "out": 66,
+        "usd": 0.00031066,
+        "tools": [
+          "get_snapshot"
+        ]
+      },
+      {
+        "ms": 10052,
+        "in": 5813,
+        "out": 296,
+        "usd": 0.00063212,
+        "tools": [
+          "describe_snapshot",
+          "compute_figures"
+        ]
+      },
+      {
+        "ms": 50565,
+        "in": 8897,
+        "out": 1392,
+        "usd": 0.00223508,
+        "tools": [
+          "propose_spec"
+        ]
+      }
+    ],
+    "tool_ms": [
+      {
+        "name": "list_networks",
+        "ok": true,
+        "ms": 0,
+        "summary": "2 networks: near-validators, near-house-of-stake"
+      },
+      {
+        "name": "list_flowers",
+        "ok": true,
+        "ms": 166,
+        "summary": "2 flowers"
+      },
+      {
+        "name": "get_snapshot",
+        "ok": true,
+        "ms": 10919,
+        "summary": "read fresh from fetched: block 223163500, 2026-11-05T12:04:57Z (2dedbb3e80bc…)"
+      },
+      {
+        "name": "describe_snapshot",
+        "ok": true,
+        "ms": 13,
+        "summary": "7 measures; largest: cc96f558…c807, 4783b548…6172, spareuni818.near"
+      },
+      {
+        "name": "compute_figures",
+        "ok": true,
+        "ms": 1,
+        "summary": "Nakamoto 5 at 0.5; 465 included; top 10 hold 81.1%"
+      },
+      {
+        "name": "propose_spec",
+        "ok": true,
+        "ms": 1,
+        "summary": "spec a4d2567b3a45…; changed from default: none"
+      }
+    ],
+    "validate_tries": 0,
+    "errors": [
+      {
+        "code": "budget_exhausted",
+        "message": "The chat ran past its 120 s.",
+        "hint": "Bring your own agent: install the Petal skill (skill/petal/SKILL.md), or add the MCP server with `claude mcp add petal -- pnpm -s --dir <repo> petal mcp`, and ask it the same question."
+      }
+    ],
+    "warnings": [],
+    "unbacked_numbers": [
+      "223,163,500",
+      "2026"
+    ],
+    "signature_kind": null,
+    "signature_id": null,
+    "spec_sha256": null,
+    "proposed": [
+      {
+        "network": "near-house-of-stake",
+        "sha256": "2dedbb3e80bc6861389dcb2ce3109e7de3dcc4514b07df6dab3593284b5b8302",
+        "choices": {
+          "measure": "voting_power"
+        }
+      }
+    ],
+    "interpretation": null,
+    "answer": "Fresh snapshot read (not reused): final block **223,163,500**, as of **2026-11-05 12:04 UTC**. Now counting.\nI've calculated the numbers. Concentration is extremely high — the top 5 hold about 51% of voting power. This is a question about \"who is the biggest and how concentrated,\" so the default mapping is appropriate. I'll propose a spec."
+  }
+}

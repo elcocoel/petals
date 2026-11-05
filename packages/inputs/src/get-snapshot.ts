@@ -29,6 +29,12 @@ import { modules } from './registry.ts';
 /** How old a stored final snapshot may be and still answer "latest". */
 export const LATEST_REUSE_S = 600;
 
+/**
+ * How long a read waits for its fingerprint to reach the map. The write goes on behind the read
+ * (the mirror keeps it if it fails), so a slow chain never holds up the person waiting for data.
+ */
+export const RECORD_WAIT_MS = 2000;
+
 export const bodyUrl = (sha256: string) => `/api/v1/snapshots/${sha256}`;
 
 const rowsOf = (s: Snapshot) =>
@@ -224,20 +230,28 @@ export async function getSnapshot(
         module: s.module,
         urls: [bodyUrl(put.sha256)],
       };
-      try {
-        const tx = await map.record(ref);
-        say(
-          'recording',
-          tx
-            ? `fingerprint written to the map (tx ${tx.tx_hash})`
-            : 'no map configured; fingerprint not written',
-        );
-      } catch (e) {
-        say(
-          'recording',
-          `the fingerprint could not be written to the map: ${(e as Error).message}`,
-        );
-      }
+      const writing = map.record(ref).then(
+        (tx) =>
+          say(
+            'recording',
+            tx
+              ? `fingerprint written to the map (tx ${tx.tx_hash})`
+              : 'no map configured; fingerprint not written',
+          ),
+        (e: unknown) =>
+          say(
+            'recording',
+            `the fingerprint could not be written to the map: ${(e as Error).message}`,
+          ),
+      );
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const late = new Promise<'late'>((r) => {
+        timer = setTimeout(() => r('late'), RECORD_WAIT_MS);
+      });
+      const first = await Promise.race([writing, late]);
+      clearTimeout(timer);
+      if (first === 'late')
+        say('recording', 'the fingerprint is on its way to the map; not waiting');
     }
   }
   return result(s, put.sha256, false, 'fetched');

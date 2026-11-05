@@ -80,55 +80,64 @@
   },
   "spec_sha256": "897a01ac9a1f1150e84dbb7aa7baebffa14d2f8674a882e1fcc9016f259a7e04",
   "interpretation": {
-    "summary": "Stake decides who produces NEAR's blocks. 9 of the 371 seated validators together hold more than a third of it, enough to stall the chain. Behind each pool stand its backers: many small delegators, a few large accounts, liquid-staking contracts and lockups.",
+    "summary": "NEAR's validator stake is spread thin at the top but broad at the base: the largest pool, astro-stakers.poolv1.near, holds only 5.6% of the 593.4M NEAR staked this epoch. Nine pools together pass a third of stake. Behind each pool sit delegators, and the flower splits every pool's delegations into four backer classes so you can see whether a pool is retail, large holders, liquid staking or lockups. Several of the biggest pools are operator brands (Figment, Binance, Bitwise) that appear as separate pool accounts.",
     "power_means": [
       {
-        "claim": "A validator's power is its stake in the current epoch: it sets how many blocks and chunks the validator produces.",
+        "claim": "Power here is stake delegated to a validator this epoch; no single pool dominates, and the top 10 hold 36.2% of stake.",
         "sources": [
           "fastnear-rpc-validators"
         ],
         "figures": [
           "fig:total",
-          "fig:shares"
-        ]
-      },
-      {
-        "claim": "9 validators together pass the one-third threshold that BFT consensus needs to halt.",
-        "sources": [
-          "fastnear-rpc-validators"
-        ],
-        "figures": [
+          "fig:top_k_share.10",
           "fig:nakamoto"
         ]
       },
       {
-        "claim": "Stake is lent to a pool by its delegators; they can move it, so they share the pool's power.",
+        "claim": "The base is long: 311 pools share 13.8% of stake, and Gini over included participants is 0.836.",
         "sources": [
-          "fastnear-rpc-staking-pool-views"
+          "fastnear-rpc-validators"
         ],
         "figures": [
-          "fig:top_k_share.10"
+          "fig:tail",
+          "fig:gini",
+          "fig:hhi"
+        ]
+      },
+      {
+        "claim": "Behind each pool are delegations from other delegators, accounts with 1M+ NEAR, liquid-staking contracts and lockups; these classes are what the segments show.",
+        "sources": [
+          "fastnear-rpc-staking-pool-views",
+          "fastnear-rpc-liquid-staking"
         ]
       }
     ],
     "mappings": [
       {
-        "primitive": "width",
-        "why": "Share of stake is the power that counts here, compressed into a band so small validators stay visible.",
+        "primitive": "segments",
+        "why": "Each petal's bar is divided by who delegated to that pool: other delegators, 1M+ NEAR accounts, liquid-staking contracts, or lockups, with sub-1,000 NEAR rows folded per pool and class.",
+        "sources": [
+          "fastnear-rpc-staking-pool-views",
+          "fastnear-rpc-liquid-staking"
+        ]
+      },
+      {
+        "primitive": "height",
+        "why": "Square root of the pool's share of current-epoch stake, so mid-sized pools stay legible next to the largest.",
         "sources": [
           "fastnear-rpc-validators"
         ]
       },
       {
-        "primitive": "height",
-        "why": "Bar height repeats the share, on a square-root scale, so the largest validators stand out.",
+        "primitive": "width",
+        "why": "Share of stake this epoch compressed into a 2x band, so the sides stay comparable without one pool swallowing the shape.",
         "sources": [
           "fastnear-rpc-validators"
         ]
       },
       {
         "primitive": "colour",
-        "why": "Kind of account tells pools from liquid-staking entities.",
+        "why": "Kind of account, to separate staking pools from liquid-staking contracts and unknowns.",
         "sources": [
           "nearblocks-validators",
           "fastnear-rpc-liquid-staking"
@@ -136,37 +145,32 @@
       },
       {
         "primitive": "outline",
-        "why": "Pool names are self-declared on-chain, so they are drawn as self-declared, never verified.",
+        "why": "Solid where the pool's name is self-declared or verified, dashed where inferred, none where unknown.",
         "sources": [
           "nearblocks-validators",
           "account-id"
         ]
       },
       {
-        "primitive": "segments",
-        "why": "Each bar is cut into the backers of the pool: other delegators, accounts with 1M+ NEAR, liquid-staking contracts and lockups.",
-        "sources": [
-          "fastnear-rpc-staking-pool-views"
-        ]
-      },
-      {
         "primitive": "order",
-        "why": "Largest first, clockwise from the top, so the validators that matter most are read first.",
+        "why": "Largest stake first, clockwise from the top.",
         "sources": [
           "fastnear-rpc-validators"
         ]
       }
     ],
     "conflicts": [
-      "House of Stake voting power (veNEAR) is a second kind of power on NEAR; this flower draws block-production stake only."
+      "Stake is one kind of power; governance weight (veNEAR in House of Stake) and pool ownership/operator control are separate, and this flower draws stake and its backers only."
     ],
     "unknowns": [
-      "Who controls the large implicit (hex) delegators: most of the biggest delegators have no public name.",
-      "Who owns the lockup contracts: their owners were not resolved.",
-      "Whether several pools are run by one operator: pools are not merged without evidence."
+      "Liquid-staking contracts appear as single delegators; their own token holders (the real ultimate backers) are not listed.",
+      "Owners of lockup contracts were not resolved, so a lockup's beneficiary is unknown.",
+      "424 idle pools were not crawled, so their delegators are missing from the backer split.",
+      "Pool names are self-declared in pool-details.near; they are not verified identities.",
+      "Addresses are not people: backer categories are account classes, not natural persons."
     ],
     "inferred": [
-      "A named .near account is a self-declared name, not a verified identity."
+      "Grouping Figment, Binance and Bitwise pool accounts under one operator brand is an inference from account naming, not a proven common owner."
     ],
     "documents": []
   },
@@ -187,5 +191,5 @@
     "created_at": "2026-11-03T19:42:00Z",
     "maker": null
   },
-  "id": "313ced42e40fad5accc2bfc1"
+  "id": "3394fb875bf97c1af8191566"
 }

@@ -77,11 +77,37 @@ Inputs: the step 1 and step 2 research (`research/data-sources.md`, `research/ne
 
 ## R10. The brain: NEAR AI Cloud
 
-- **Decision**: Petal's agent calls NEAR AI Cloud (`https://cloud-api.near.ai/v1`, OpenAI-compatible) with the `openai` npm SDK and a small loop of our own. Primary `z-ai/glm-5.3-flash` (TEE, tools, $0.08 in / $0.50 out per million tokens, listed and ready today). Fallbacks `Qwen/Qwen3.8-27B`, then `deepseek-ai/DeepSeek-V4.1-Flash-1017`.
-- **Signatures**: model calls are **not streamed**, sent with the canonical model id, `x-no-aliasing: true` and `Accept-Encoding: identity`, so they get a `provider_tee` signature over `model:sha256(request):sha256(response)`. Petal keeps the exact request and response hashes, fetches `GET /v1/signature/{id}` right away (retention is not documented), and fetches the attestation report before the completion. Both endpoints need a key, so Petal stores the signature and the report hash with the entry and serves the report for anyone to check at `GET /api/v1/attestations/<report_sha256>`. Progress to the browser comes from Petal's own events, not token streaming.
-- **Budget**: about $0.01 per flower. Per-chat cap $0.05, daily cap $3 (configurable). Without a key, a recorded transcript replays, so judges always see the flow (SC-009).
-- **Open**: whether GLM-flash interprets as well as a top model. W5 runs the skeleton question on all three models in M1 (T060) and keeps the best that passes.
+- **Decision**: Petal's agent calls NEAR AI Cloud (`https://cloud-api.near.ai/v1`, OpenAI-compatible) with the `openai` npm SDK and a small loop of our own. Primary `deepseek-ai/DeepSeek-V4.1-Flash-1017` (TEE, tools, $0.30 in / $1.20 out per million tokens), chosen in the bake-off below, called with `reasoning_effort: "low"`. Fallbacks `z-ai/glm-5.3-flash`, then `Qwen/Qwen3.8-27B`. Prices checked at `GET /v1/models` on 5 Nov.
+- **Signatures**: model calls are **not streamed**, sent with the canonical model id, `x-no-aliasing: true` and `Accept-Encoding: identity`, so they get a `provider_tee` signature over `model:sha256(request):sha256(response)`. Petal keeps the exact request and response hashes, fetches `GET /v1/signature/{id}` right away (retention is not documented), and fetches the attestation report before the completion (`provider=near` works on all three models). Both endpoints need a key, so Petal stores the signature and the report hash with the entry and serves the report for anyone to check at `GET /api/v1/attestations/<report_sha256>`. Progress to the browser comes from Petal's own events, not token streaming.
+- **Budget**: about $0.02 per flower on the primary, counted at full input price (cached input is cheaper on NEAR AI, so the real bill is at or below this). Per-chat cap $0.05, daily cap $3 (configurable). `max_completion_tokens` is 16,000: it includes reasoning tokens, and a low limit returned empty content. Without a key, a recorded transcript replays, so judges always see the flow (SC-009).
 - **Alternatives**: Anthropic or OpenAI APIs directly (~$0.15 per flower, no TEE signature); the Vercel AI SDK (more abstraction than the loop needs); hosted IronClaw as the brain (needs a login).
+
+### The bake-off (T060, 5 Nov 2026)
+
+Each model got the same two questions for a flower nobody had drawn: "Who stands behind NEAR's validators? Make me a fresh flower with their backers, not an existing one." and "Who holds power in NEAR's House of Stake? Make me a fresh flower, not an existing one." House of Stake is read live. Testnet map, writer key on, `reasoning_effort: "low"`, final code. Run with `node tests/e2e/bakeoff.ts`; the transcripts are in `fixtures/transcripts/bakeoff/`.
+
+| Model | Question | Flower | Wall | Turns | Cost | `validate_spec` tries | Only tool numbers | Signature | Reading of the interpretation |
+|---|---|---|---|---|---|---|---|---|---|
+| DeepSeek V4.1 Flash | validators | yes | 32.9 s | 7 | $0.0189 | 1 | yes | `provider_tee` | Best. Fewest choices (`segments: backers` only). Names House of Stake as a separate power, and that liquid-staking holders carry the real weight. Six specific unknowns. |
+| DeepSeek V4.1 Flash | House of Stake | yes | 43.3 s | 7 | $0.0173 | 1 | yes | `provider_tee` | Good. Three cited power claims, tail quantified. One guess about delegates, correctly marked as inferred. |
+| GLM 5.3 Flash | validators | yes | 37.9 s | 8 | $0.0060 | 2 (a warning, no error) | yes | `provider_tee` | Correct and cited, but a single power claim, and it spells out a default as a choice. |
+| GLM 5.3 Flash | House of Stake | yes | 35.1 s | 7 | $0.0044 | 1 | yes | `provider_tee` | Correct, thinner. Spells out defaults (`height`, `width`) as choices. |
+| Qwen 3.8 27B | validators | yes | 53.5 s | 7 | $0.0058 | 1 | yes | `provider_tee` | Good, fewest choices; one overstatement ("dominates block production rights"). Guessed a network id first and recovered. |
+| Qwen 3.8 27B | House of Stake | yes | 52.2 s | 7 | $0.0052 | 1 | yes | `provider_tee` | Clean, default mapping, one power claim. |
+
+Longest gap between events: 8 s in every run (the heartbeat).
+
+**Why DeepSeek**: all three pass on these rules, so the choice is on the reading, which is the product. DeepSeek's was the fullest and the most disciplined across the low-effort runs, at about 3.5 times GLM's price per flower, and as fast. GLM is the fallback, and the choice to make if cost matters more than the reading: it is one line (`DEFAULT_MODEL` in `packages/agent/src/near-ai.ts`).
+
+**Reasoning effort matters more than the model for time.** Every run of the day, by effort (`earlier/` in the same folder; earlier prompts and tool trims, so read these for time, not for wording):
+
+| Model | Own default effort | `medium` | `low` |
+|---|---|---|---|
+| DeepSeek | 77.8 s; validators hit the 120 s limit | not run | 32.9-64.7 s, 9 of 9 |
+| GLM | 66.4-88.4 s, 5 of 5 | 68.1-92.4 s, 2 of 2 | 25.7-43.7 s, 7 of 8 |
+| Qwen | 63.2-72.4 s; one hit the 120 s limit | not run | 52.2-66.2 s, 3 of 4 |
+
+The two `low` runs that missed the limit lost most of their time before the model was at fault: a House of Stake read took 103 s (GLM) and 41 s (Qwen), where it normally takes 8-11 s. The likely cause is an RPC node hanging on each call of the read. It was not reproduced; the pool now leaves a hung node alone for 30 s, and the read no longer waits for its map write.
 
 ## R11. Tools: one core, five thin doors
 

@@ -59,17 +59,17 @@ list_networks → get_snapshot → describe_snapshot + compute_figures
 
 ## The interpretation
 
-`validate_spec` checks it. Its fields:
+`validate_spec` checks it against a strict schema. All seven fields are required, and no others are allowed:
 
-- `summary`: two to four plain sentences.
-- `power_means`: what power is in this network, each claim with `sources` and the `figures` ids (`fig:…`) from `compute_figures`.
-- `mappings`: one per primitive the flower uses (`width`, `height`, `colour`, `outline`, `segments`, `order`…), each with `why` and `sources`.
-- `conflicts`: other kinds of power in this network, and which one this flower draws.
-- `unknowns`: what Petal could not determine or did not check. Never empty.
-- `inferred`: statements that are inference, not fact.
-- `documents`: documents you cited; `[]` if none.
+- `summary`: a string, two to four plain sentences.
+- `power_means`: an array, at least one item, on what power is in this network. Each item is `{ "claim": string, "sources": [source ids], "figures": ["fig:…"] }`; `figures` is optional and takes ids from `compute_figures`.
+- `mappings`: an array, one item per primitive the flower uses. Each item is `{ "primitive": "width" | "height" | "colour" | "outline" | "segments" | "order", "why": string, "sources": [source ids] }`.
+- `conflicts`: an array of strings, `[]` if none: other kinds of power in this network, and which one this flower draws.
+- `unknowns`: an array of strings: what Petal could not determine or did not check. Never empty.
+- `inferred`: an array of strings, `[]` if none: statements that are inference, not fact.
+- `documents`: `[]` unless you cite a document you read yourself, and then each item is `{ "id": string, "kind": "docs" | "forum" | "constitution" | "chain" | "news" | "other", "url": string, "fetched_at": ISO date-time, "title": optional string }`. The snapshot's sources are not documents: cite them by id in `sources`.
 
-Source ids come from the snapshot's `sources`.
+Source ids come from the snapshot's `sources`. Every error `validate_spec` returns names its path and what was expected: fix them all in one go.
 
 ## The answer
 

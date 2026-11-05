@@ -19,6 +19,7 @@ import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
 import { Channel } from './channel.ts';
 import type { Budget, LlmClient } from './llm.ts';
+import { RECORDED_ATTESTATIONS } from './recorded.ts';
 import { startRun } from './run.ts';
 import { RUN_ID, type RunStore } from './runs.ts';
 import { attestationStore } from './signature.ts';
@@ -209,6 +210,8 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
   const reports = attestationStore(
     o.attestationsDir ?? join(stateDirOf(deps.tools.config), 'attestations'),
   );
+  // A recorded run names a report no server fetched: it ships with the transcript (T061).
+  const recordedReports = attestationStore(RECORDED_ATTESTATIONS);
 
   function keepAlive(c: Context, p: Promise<unknown>) {
     if (o.waitUntil) return o.waitUntil(p);
@@ -363,7 +366,7 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
   app.get('/api/v1/attestations/:sha256', (c) => {
     const sha = c.req.param('sha256').toLowerCase();
     if (!/^[0-9a-f]{64}$/.test(sha)) return fail(c, 'bad_input', 'that is not a SHA-256');
-    const bytes = reports.get(sha);
+    const bytes = reports.get(sha) ?? recordedReports.get(sha);
     if (!bytes) return fail(c, 'not_found', `no attestation report ${sha}`);
     if (sha256Hex(bytes) !== sha) {
       return fail(c, 'internal', 'the stored report does not match its hash');

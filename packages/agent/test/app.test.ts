@@ -6,7 +6,7 @@ import type { Config } from '@petal/tools';
 import { describe, expect, test, vi } from 'vitest';
 import { buildPetalApp, llmHealth } from '../src/app.ts';
 import { petalApp } from '../src/index.ts';
-import { recordedClient, SKELETON_TRANSCRIPT } from '../src/recorded.ts';
+import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
 import { configFromEnv } from '../src/serve.ts';
 import { bodyOf, fakeNearAi, inOrder, parseSse, runIdOf, tmpRoot } from './helpers.ts';
 
@@ -99,7 +99,7 @@ describe('petalApp', () => {
   });
 
   test('llmHealth and configFromEnv', () => {
-    expect(llmHealth(recordedClient(SKELETON_TRANSCRIPT))).toBe('recorded');
+    expect(llmHealth(recordedClient(HAND_TRANSCRIPT))).toBe('recorded');
     const cfg = configFromEnv({ NEAR_AI_API_KEY: '', PETAL_LLM_DAILY_USD: '2.5' }, 8787);
     expect(cfg).toMatchObject({
       nearAiApiKey: undefined,

@@ -8,7 +8,7 @@ import { sha256Hex, specHash } from '@petal/core';
 import type { AgentEvent, ModelSignature, Spec } from '@petal/core/types';
 import type { ToolContext } from '@petal/tools';
 import type { LlmClient, LlmCompletion, LlmMessage, LlmRequest, LlmToolCall } from '../src/llm.ts';
-import { recordedClient, SKELETON_TRANSCRIPT } from '../src/recorded.ts';
+import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
 import type { AnyTool } from '../src/tool-defs.ts';
 
 export const SHA = '72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec';
@@ -178,7 +178,7 @@ export function scriptedLlm(
 
 /** recordedClient, slowed down. */
 export function slowRecorded(delayMs: number): LlmClient {
-  const inner = recordedClient(SKELETON_TRANSCRIPT);
+  const inner = recordedClient(HAND_TRANSCRIPT);
   return {
     kind: inner.kind,
     model: inner.model,
@@ -258,12 +258,14 @@ export function fakeNearAi(
     llm?: LlmClient;
     /** model -> HTTP status it fails with */
     fail?: Record<string, number>;
+    /** models whose answer is all reasoning: cut off by the token limit, with empty content */
+    truncate?: string[];
     signatureMisses?: number;
     noSignature?: boolean;
     reportStatus?: number;
   } = {},
 ): FakeNearAi {
-  const llm = o.llm ?? recordedClient(SKELETON_TRANSCRIPT);
+  const llm = o.llm ?? recordedClient(HAND_TRANSCRIPT);
   const log: FakeNearAi['log'] = [];
   const exchanges: FakeNearAi['exchanges'] = new Map();
   const enc = new TextEncoder();
@@ -297,8 +299,27 @@ export function fakeNearAi(
           headers: json,
         });
       }
-      const r = await llm.complete({ messages: req.messages.map(fromOpenAi) });
       const id = `chatcmpl-${++n}`;
+      if (o.truncate?.includes(req.model)) {
+        return new Response(
+          JSON.stringify({
+            id,
+            object: 'chat.completion',
+            created: 1762257600,
+            model: req.model,
+            choices: [
+              {
+                index: 0,
+                finish_reason: 'length',
+                message: { role: 'assistant', content: null },
+              },
+            ],
+            usage: { prompt_tokens: 1000, completion_tokens: 100, total_tokens: 1100 },
+          }),
+          { headers: json },
+        );
+      }
+      const r = await llm.complete({ messages: req.messages.map(fromOpenAi) });
       const res = enc.encode(
         JSON.stringify({
           id,

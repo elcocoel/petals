@@ -1,0 +1,547 @@
+{
+  "petal": "transcript/v1",
+  "kind": "recorded",
+  "title": "Bake-off (hos): Qwen/Qwen3.8-27B",
+  "question": "Who holds power in NEAR’s House of Stake? Make me a fresh flower, not an existing one.",
+  "model": "Qwen/Qwen3.8-27B",
+  "note": "A real run on NEAR AI Cloud (T060), kept with the signature each completion got. A hash or link the model copied from a tool result is written as a reference to that result ($from, {{…}}), so it replays on recordedClient.",
+  "turns": [
+    {
+      "content": "\n\n",
+      "tool_calls": [
+        {
+          "id": "call_ab6c4129685742b4b564a686",
+          "name": "list_networks",
+          "arguments": {
+            "query": "House of Stake"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "35d1731a86ce41fdbea877567cdc7fd7",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:c0d968eedbda7ca48e5280879d367c052643c39827bbd99678b89ee0a4850051:9d2a33c7f83f6b45b1cc848fb1a66963c799ae09c06b92cbda21d35db1737850",
+        "signature": "0x28fa40d4b1fdd506cdebfbfb238333bc6002fa3f750c5773083f36501f43d86e2b8dd2e97ecf40434b56506c2a04de70b409fc6a15a1ef51ef7da4830f196d141b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "c0d968eedbda7ca48e5280879d367c052643c39827bbd99678b89ee0a4850051",
+        "response_sha256": "9d2a33c7f83f6b45b1cc848fb1a66963c799ae09c06b92cbda21d35db1737850",
+        "fetched_at": "2026-11-05T12:15:00.176Z",
+        "attestation": {
+          "nonce": "0577f94ba8bec2a6196bf3f8f0c8f07725055c32a44b13c0a1a0f58ae8a34ba5",
+          "report_sha256": "402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11",
+          "report_url": "/api/v1/attestations/402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11"
+        }
+      }
+    },
+    {
+      "content": "\n\n\n",
+      "tool_calls": [
+        {
+          "id": "call_e3070952a07942bb9937956e",
+          "name": "list_flowers",
+          "arguments": {
+            "network": "near-house-of-stake"
+          }
+        },
+        {
+          "id": "call_890be98f2b584725b9aaaced",
+          "name": "get_snapshot",
+          "arguments": {
+            "network": "near-house-of-stake"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "60d69f7d8ba84b8b83769892dd6f782e",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:a2be4e7196772ee4e170f904afe4990f87e41a6741e3659f08a3b9135f67321e:876d3a6733a2161c2d42ea5ce759d7d8374bd113dcfa127635cc22cb9ffbafcf",
+        "signature": "0xcce42d238bbc7a1efebcccdfb7952add456f2c6aebc6ef0daad99fe744c9e254761f40b79e07b71e7b7b3a20b85ebe4570274c4c0bb7654147c1ec80112978711b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "a2be4e7196772ee4e170f904afe4990f87e41a6741e3659f08a3b9135f67321e",
+        "response_sha256": "876d3a6733a2161c2d42ea5ce759d7d8374bd113dcfa127635cc22cb9ffbafcf",
+        "fetched_at": "2026-11-05T12:15:03.636Z",
+        "attestation": {
+          "nonce": "0577f94ba8bec2a6196bf3f8f0c8f07725055c32a44b13c0a1a0f58ae8a34ba5",
+          "report_sha256": "402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11",
+          "report_url": "/api/v1/attestations/402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11"
+        }
+      }
+    },
+    {
+      "content": "\n\n",
+      "tool_calls": [
+        {
+          "id": "call_db760d1daad8404ab67420b6",
+          "name": "describe_snapshot",
+          "arguments": {
+            "sha256": {
+              "$from": "call_890be98f2b584725b9aaaced.sha256"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "0a1573c64a1741808d2c481f0789a9c6",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:e6a8f368f98a3a4d8a5b68cb24b5811b0c7ebf4aa7a6b760341b52aa90c311f2:fee4065501202b23bc43d8ea6dfee45247d6d4adbfe73b6c72eb64b0ca915a9d",
+        "signature": "0xfdf0ce14bf85c0362e1fdf75955d21b84c5765dde09924b097b0552f791b978b43413330da1be154d32e2836ad1ca8a3af2ca231b875fdda2ed823274232be381c",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "e6a8f368f98a3a4d8a5b68cb24b5811b0c7ebf4aa7a6b760341b52aa90c311f2",
+        "response_sha256": "fee4065501202b23bc43d8ea6dfee45247d6d4adbfe73b6c72eb64b0ca915a9d",
+        "fetched_at": "2026-11-05T12:15:49.293Z",
+        "attestation": {
+          "nonce": "0577f94ba8bec2a6196bf3f8f0c8f07725055c32a44b13c0a1a0f58ae8a34ba5",
+          "report_sha256": "402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11",
+          "report_url": "/api/v1/attestations/402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11"
+        }
+      }
+    },
+    {
+      "content": "\n\nNo existing flowers for this network, and the snapshot was freshly read at block 223164556 (2026-11-05T12:15:01Z). Now counting the power.\n\n",
+      "tool_calls": [
+        {
+          "id": "call_fedeec44ad1345199fd5eeb4",
+          "name": "compute_figures",
+          "arguments": {
+            "sha256": {
+              "$from": "call_890be98f2b584725b9aaaced.sha256"
+            },
+            "measure": "voting_power"
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "8528435274014f368b7b240b20a263b8",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:a08fd3559f1aed79ded3d9477f0d44f215f2cde50922f155e6b626205624163d:5b4bbf8be352876dc20181e952e88e31af539a8b30f14dec15ee618a15dd08fa",
+        "signature": "0xfbe37fd6e80d3df6049d3cb6af3cad3596c30d00a505043f35c1b44d5d358855655d5ec58208bc882674dcb89d06d9bcbf7b62d76409a3e63ce84c963843f6751b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "a08fd3559f1aed79ded3d9477f0d44f215f2cde50922f155e6b626205624163d",
+        "response_sha256": "5b4bbf8be352876dc20181e952e88e31af539a8b30f14dec15ee618a15dd08fa",
+        "fetched_at": "2026-11-05T12:16:02.046Z",
+        "attestation": {
+          "nonce": "0577f94ba8bec2a6196bf3f8f0c8f07725055c32a44b13c0a1a0f58ae8a34ba5",
+          "report_sha256": "402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11",
+          "report_url": "/api/v1/attestations/402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11"
+        }
+      }
+    },
+    {
+      "content": "\n\nNow I have what I need. The question \"who holds power\" fits the default convention — largest holders first, by voting power. Let me propose the spec.\n\n",
+      "tool_calls": [
+        {
+          "id": "call_f6458f91a4dc47b59fafbece",
+          "name": "propose_spec",
+          "arguments": {
+            "network": "near-house-of-stake",
+            "sha256": {
+              "$from": "call_890be98f2b584725b9aaaced.sha256"
+            },
+            "choices": {
+              "measure": "voting_power",
+              "petals": 60
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "e8a026e65e3e4fd6845fe33712382aa2",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:3b76347096ad1eb83d35b1a4dc019542ed817c2fcd8c853a240d84973afe732a:0574a9dd86df933478934e93b56970fe9a732e2000c10be5441ef4bc39c65445",
+        "signature": "0x7b7750572fcc8b30685194e3ee43f3e81ebabc9fb57994fa13bd4b5c3491d1632ad09f059eed1f58968c6432df129519c8469afc867c2da97ea482e8373b68c41b",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "3b76347096ad1eb83d35b1a4dc019542ed817c2fcd8c853a240d84973afe732a",
+        "response_sha256": "0574a9dd86df933478934e93b56970fe9a732e2000c10be5441ef4bc39c65445",
+        "fetched_at": "2026-11-05T12:16:08.997Z",
+        "attestation": {
+          "nonce": "0577f94ba8bec2a6196bf3f8f0c8f07725055c32a44b13c0a1a0f58ae8a34ba5",
+          "report_sha256": "402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11",
+          "report_url": "/api/v1/attestations/402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11"
+        }
+      }
+    },
+    {
+      "content": "\n\n",
+      "tool_calls": [
+        {
+          "id": "call_912a2477542b4df4ad51790e",
+          "name": "validate_spec",
+          "arguments": {
+            "spec": {
+              "$from": "call_f6458f91a4dc47b59fafbece.spec_sha256"
+            },
+            "interpretation": {
+              "summary": "Power in NEAR's House of Stake is veNEAR voting power: the value of locked NEAR, adjusted for delegations in and out, as defined by the contract and interim constitution. It is extremely concentrated: 519 accounts hold it, but the top 10 hold ~81% and the top 5 the Nakamoto coefficient reaches 5 at the 50% threshold. The two largest holders are anonymous addresses, so the most powerful hands are unattributed.",
+              "power_means": [
+                {
+                  "claim": "Voting power is each account's veNEAR (own locked NEAR, grown to the block time, minus outgoing delegations plus incoming), per the contract rule and interim constitution.",
+                  "sources": [
+                    "venear-accounts",
+                    "hos-source",
+                    "hos-constitution",
+                    "hos-config"
+                  ],
+                  "figures": [
+                    "fig:total",
+                    "fig:nakamoto",
+                    "fig:hhi",
+                    "fig:gini",
+                    "fig:top_k_share.5",
+                    "fig:top_k_share.10"
+                  ]
+                }
+              ],
+              "mappings": [
+                {
+                  "primitive": "width",
+                  "why": "each petal's width shows the account's share of veNEAR voting power, compressed into a band so the giant top holders stay legible",
+                  "sources": [
+                    "venear-accounts",
+                    "hos-source"
+                  ]
+                },
+                {
+                  "primitive": "height",
+                  "why": "bar height is the square root of the account's share of voting power, so large and small holders are both visible at a glance",
+                  "sources": [
+                    "venear-accounts",
+                    "hos-source"
+                  ]
+                },
+                {
+                  "primitive": "colour",
+                  "why": "colours mark the kind of account (DAO, lockup, treasury, or unknown) read from the account id and config",
+                  "sources": [
+                    "account-id",
+                    "hos-config"
+                  ]
+                },
+                {
+                  "primitive": "outline",
+                  "why": "a solid outline marks a self-declared name; no outline marks an unknown (e.g. a bare hash) identity",
+                  "sources": [
+                    "account-id"
+                  ]
+                },
+                {
+                  "primitive": "order",
+                  "why": "petals are ordered most-voting-power-first clockwise from the top, so power reads left-to-right around the flower",
+                  "sources": [
+                    "venear-accounts"
+                  ]
+                }
+              ],
+              "conflicts": [
+                "Drafting power: proposals_made records who puts proposals to vote, which is a different measure of influence than balance (not drawn).",
+                "Delegated influence: delegated_in_venear captures how much power others hand you; the flower draws the net voting_power each account exercises, not the delegations behind it (no backers segment exists for this network)."
+              ],
+              "unknowns": [
+                "Which real person or organisation controls the two largest anonymous hash addresses (cc96f558…, 4783b548…); the snapshot only has the account id, and a self-declared name stays self-declared.",
+                "Per-voter votes were not read (Noted as slow), so how each holder actually voted on proposals is not shown.",
+                "Each holder's underlying lockup contract and staking, and off-chain delegate profiles, were not read.",
+                "Whether large anonymous holders are coordinated (common control) — fusion markings are not built yet, so no common-control claim is drawn."
+              ],
+              "inferred": [
+                "With 405 accounts holding only ~0.014% of voting power, the long tail is effectively negligible in any single vote (inference from fig:tail)."
+              ],
+              "documents": []
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "cc3c8735d00841d4bb93cb30624503ff",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:0360841783efd129435819aeff6fd1fc30eaf4cd85f27ad7e9fc1c96b8640c26:b4fb356e6e60ba607d36903dcb85135d0666ca14c5b983befeaf33188fb1cf7e",
+        "signature": "0xa4bf24bb005d4e1854b24e312b5231fa8211fb672a824e533aa11c5ae02c6091099ff5d363b5470d96d3668f1acc536533ee1426ac9af598987d8688eaf6ba5d1c",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "0360841783efd129435819aeff6fd1fc30eaf4cd85f27ad7e9fc1c96b8640c26",
+        "response_sha256": "b4fb356e6e60ba607d36903dcb85135d0666ca14c5b983befeaf33188fb1cf7e",
+        "fetched_at": "2026-11-05T12:16:34.166Z",
+        "attestation": {
+          "nonce": "0577f94ba8bec2a6196bf3f8f0c8f07725055c32a44b13c0a1a0f58ae8a34ba5",
+          "report_sha256": "402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11",
+          "report_url": "/api/v1/attestations/402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11"
+        }
+      }
+    },
+    {
+      "content": "\n\nValid. Drawing it now.\n\n",
+      "tool_calls": [
+        {
+          "id": "call_d0c011d63a18439781cc6c93",
+          "name": "render_flower",
+          "arguments": {
+            "spec": {
+              "$from": "call_f6458f91a4dc47b59fafbece.spec_sha256"
+            }
+          }
+        }
+      ],
+      "signature": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B",
+        "completion_id": "b660cb2a84204bfb8dd827e70b5ad5cd",
+        "signature_kind": "provider_tee",
+        "text": "Qwen/Qwen3.8-27B:6fd139575667d7e71d46544b0efca11059ddce0d4611f54c7f09fec1aed50723:0ac4b99741ac5d0132fce75d43fb600c2b427cfbc74dbd0d91b3fab256761dad",
+        "signature": "0xb5f2938f2d8ad3c217082bda5d72ee6485a7e7586d78b0406e7130b105a686fa642c62b060cb6269f6f9ae99d9bbb5da52e1e594f220903ee835f6fe63740d901c",
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "signing_algo": "ecdsa",
+        "request_sha256": "6fd139575667d7e71d46544b0efca11059ddce0d4611f54c7f09fec1aed50723",
+        "response_sha256": "0ac4b99741ac5d0132fce75d43fb600c2b427cfbc74dbd0d91b3fab256761dad",
+        "fetched_at": "2026-11-05T12:16:37.698Z",
+        "attestation": {
+          "nonce": "0577f94ba8bec2a6196bf3f8f0c8f07725055c32a44b13c0a1a0f58ae8a34ba5",
+          "report_sha256": "402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11",
+          "report_url": "/api/v1/attestations/402948ebc1815567f63ac31fbf457b6f16ba1898e33b3333cc73c700de5fdb11"
+        }
+      }
+    }
+  ],
+  "run": {
+    "started_at": "2026-11-05T12:14:50.277Z",
+    "success": false,
+    "wall_ms": 120001,
+    "longest_gap_ms": 8002,
+    "turns": 7,
+    "tokens": {
+      "in": 50596,
+      "out": 2131
+    },
+    "cost_usd": 0.004901,
+    "per_turn": [
+      {
+        "ms": 9898,
+        "in": 4871,
+        "out": 134,
+        "usd": 0.00037574,
+        "tools": [
+          "list_networks"
+        ]
+      },
+      {
+        "ms": 3457,
+        "in": 5118,
+        "out": 108,
+        "usd": 0.00035052,
+        "tools": [
+          "list_flowers",
+          "get_snapshot"
+        ]
+      },
+      {
+        "ms": 3866,
+        "in": 5446,
+        "out": 116,
+        "usd": 0.00037444,
+        "tools": [
+          "describe_snapshot"
+        ]
+      },
+      {
+        "ms": 12742,
+        "in": 7277,
+        "out": 258,
+        "usd": 0.00063938,
+        "tools": [
+          "compute_figures"
+        ]
+      },
+      {
+        "ms": 6947,
+        "in": 8562,
+        "out": 241,
+        "usd": 0.00066783,
+        "tools": [
+          "propose_spec"
+        ]
+      },
+      {
+        "ms": 25165,
+        "in": 9236,
+        "out": 1174,
+        "usd": 0.00195434,
+        "tools": [
+          "validate_spec"
+        ]
+      },
+      {
+        "ms": 3499,
+        "in": 10086,
+        "out": 100,
+        "usd": 0.00053844,
+        "tools": [
+          "render_flower"
+        ]
+      }
+    ],
+    "tool_ms": [
+      {
+        "name": "list_networks",
+        "ok": true,
+        "ms": 1,
+        "summary": "1 networks: near-house-of-stake"
+      },
+      {
+        "name": "list_flowers",
+        "ok": true,
+        "ms": 235,
+        "summary": "0 flowers"
+      },
+      {
+        "name": "get_snapshot",
+        "ok": true,
+        "ms": 41554,
+        "summary": "read fresh from fetched: block 223164556, 2026-11-05T12:15:01Z (b8363b8f622d…)"
+      },
+      {
+        "name": "describe_snapshot",
+        "ok": true,
+        "ms": 11,
+        "summary": "7 measures; largest: cc96f558…c807, 4783b548…6172, spareuni818.near"
+      },
+      {
+        "name": "compute_figures",
+        "ok": true,
+        "ms": 2,
+        "summary": "Nakamoto 5 at 0.5; 465 included; top 10 hold 81.1%"
+      },
+      {
+        "name": "propose_spec",
+        "ok": true,
+        "ms": 2,
+        "summary": "spec e62fa4d419f9…; changed from default: none"
+      },
+      {
+        "name": "validate_spec",
+        "ok": true,
+        "ms": 32,
+        "summary": "valid"
+      },
+      {
+        "name": "render_flower",
+        "ok": true,
+        "ms": 5,
+        "summary": "drawn: render b5c9683b6121…, 6 legend lines"
+      }
+    ],
+    "validate_tries": 1,
+    "errors": [
+      {
+        "code": "budget_exhausted",
+        "message": "The chat ran past its 120 s.",
+        "hint": "Bring your own agent: install the Petal skill (skill/petal/SKILL.md), or add the MCP server with `claude mcp add petal -- pnpm -s --dir <repo> petal mcp`, and ask it the same question."
+      }
+    ],
+    "warnings": [],
+    "unbacked_numbers": [],
+    "signature_kind": "provider_tee",
+    "signature_id": "cc3c8735d00841d4bb93cb30624503ff",
+    "spec_sha256": "e62fa4d419f93fdb43c263d82517a8e7d99cd504f880bbc22837c41b9f307873",
+    "proposed": [
+      {
+        "network": "near-house-of-stake",
+        "sha256": "b8363b8f622d8223367f00fc8069f6b66a8e678f1b09fc3530b76ce47c238af0",
+        "choices": {
+          "measure": "voting_power",
+          "petals": 60
+        }
+      }
+    ],
+    "interpretation": {
+      "summary": "Power in NEAR's House of Stake is veNEAR voting power: the value of locked NEAR, adjusted for delegations in and out, as defined by the contract and interim constitution. It is extremely concentrated: 519 accounts hold it, but the top 10 hold ~81% and the top 5 the Nakamoto coefficient reaches 5 at the 50% threshold. The two largest holders are anonymous addresses, so the most powerful hands are unattributed.",
+      "power_means": [
+        {
+          "claim": "Voting power is each account's veNEAR (own locked NEAR, grown to the block time, minus outgoing delegations plus incoming), per the contract rule and interim constitution.",
+          "sources": [
+            "venear-accounts",
+            "hos-source",
+            "hos-constitution",
+            "hos-config"
+          ],
+          "figures": [
+            "fig:total",
+            "fig:nakamoto",
+            "fig:hhi",
+            "fig:gini",
+            "fig:top_k_share.5",
+            "fig:top_k_share.10"
+          ]
+        }
+      ],
+      "mappings": [
+        {
+          "primitive": "width",
+          "why": "each petal's width shows the account's share of veNEAR voting power, compressed into a band so the giant top holders stay legible",
+          "sources": [
+            "venear-accounts",
+            "hos-source"
+          ]
+        },
+        {
+          "primitive": "height",
+          "why": "bar height is the square root of the account's share of voting power, so large and small holders are both visible at a glance",
+          "sources": [
+            "venear-accounts",
+            "hos-source"
+          ]
+        },
+        {
+          "primitive": "colour",
+          "why": "colours mark the kind of account (DAO, lockup, treasury, or unknown) read from the account id and config",
+          "sources": [
+            "account-id",
+            "hos-config"
+          ]
+        },
+        {
+          "primitive": "outline",
+          "why": "a solid outline marks a self-declared name; no outline marks an unknown (e.g. a bare hash) identity",
+          "sources": [
+            "account-id"
+          ]
+        },
+        {
+          "primitive": "order",
+          "why": "petals are ordered most-voting-power-first clockwise from the top, so power reads left-to-right around the flower",
+          "sources": [
+            "venear-accounts"
+          ]
+        }
+      ],
+      "conflicts": [
+        "Drafting power: proposals_made records who puts proposals to vote, which is a different measure of influence than balance (not drawn).",
+        "Delegated influence: delegated_in_venear captures how much power others hand you; the flower draws the net voting_power each account exercises, not the delegations behind it (no backers segment exists for this network)."
+      ],
+      "unknowns": [
+        "Which real person or organisation controls the two largest anonymous hash addresses (cc96f558…, 4783b548…); the snapshot only has the account id, and a self-declared name stays self-declared.",
+        "Per-voter votes were not read (Noted as slow), so how each holder actually voted on proposals is not shown.",
+        "Each holder's underlying lockup contract and staking, and off-chain delegate profiles, were not read.",
+        "Whether large anonymous holders are coordinated (common control) — fusion markings are not built yet, so no common-control claim is drawn."
+      ],
+      "inferred": [
+        "With 405 accounts holding only ~0.014% of voting power, the long tail is effectively negligible in any single vote (inference from fig:tail)."
+      ],
+      "documents": []
+    },
+    "answer": "No existing flowers for this network, and the snapshot was freshly read at block 223164556 (2026-11-05T12:15:01Z). Now counting the power.\nNow I have what I need. The question \"who holds power\" fits the default convention — largest holders first, by voting power. Let me propose the spec.\nValid. Drawing it now."
+  }
+}

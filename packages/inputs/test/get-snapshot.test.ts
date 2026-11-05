@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { At, ProgressEvent, ResolvedAt, Snapshot } from '@petal/core/types';
 import { fakeMap } from '@petal/near';
 import { afterEach, describe, expect, test } from 'vitest';
+import { RECORD_WAIT_MS } from '../src/get-snapshot.ts';
 import { fileStore, getSnapshot, type InputModule, LATEST_REUSE_S, modules } from '../src/index.ts';
 import { HOUSE_OF_STAKE_DESCRIPTOR } from '../src/modules/near-house-of-stake.ts';
 import { expected, recording, replayedHos } from './helpers/hos.ts';
@@ -233,6 +234,30 @@ describe('getSnapshot', () => {
     expect(r.reused).toBe(false);
     expect(events.some((m) => m.includes('kv down'))).toBe(true);
     expect(events.some((m) => m.includes('could not be written to the map: rpc down'))).toBe(true);
+  });
+
+  test('a slow map write does not hold up the read: it goes on behind it', async () => {
+    fakeLive({ block: 8, ms: Date.parse('2026-11-04T12:00:00Z') });
+    const events: string[] = [];
+    let finish: (tx: { tx_hash: string }) => void = () => {};
+    const t0 = Date.now();
+    const r = await getSnapshot(
+      { network: 'test-live' },
+      {
+        store: store(),
+        map: {
+          lookup: async () => null,
+          record: () => new Promise((done) => (finish = done)),
+        },
+        onProgress: (e) => events.push(e.message),
+      },
+    );
+    expect(r.reused).toBe(false);
+    expect(Date.now() - t0).toBeLessThan(RECORD_WAIT_MS + 1000);
+    expect(events.at(-1)).toMatch(/on its way to the map/);
+    finish({ tx_hash: 'abc' });
+    await new Promise((done) => setImmediate(done));
+    expect(events.at(-1)).toMatch(/written to the map \(tx abc\)/);
   });
 
   test('errors: unknown network, unknown parameter, a source that fails', async () => {

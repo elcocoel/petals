@@ -19,6 +19,9 @@ import { Interpretation, SignatureLine } from './Interpretation.tsx';
 import { Legend } from './Legend.tsx';
 
 const QUESTION = "who stands behind NEAR's validators?";
+/** What the recorded run (fixtures/transcripts/skeleton.json) was really asked. */
+const RECORDED_QUESTION =
+  "Who stands behind NEAR's validators? Make me a fresh flower with their backers, not an existing one.";
 
 type Item =
   | { kind: 'user'; text: string }
@@ -213,7 +216,7 @@ export function Chat({
         <textarea
           id="q"
           rows={2}
-          value={recorded ? QUESTION : question}
+          value={recorded ? RECORDED_QUESTION : question}
           readOnly={recorded}
           onChange={(e) => setQuestion(e.target.value)}
         />
@@ -282,7 +285,7 @@ export function Chat({
           )}
           <Legend items={flower.legend} />
           <Interpretation reading={flower.interpretation} />
-          <SignatureLine signature={signature} model={done?.model} />
+          <SignatureLine signature={signature} model={recorded ? 'recorded' : done?.model} />
           <p>
             Valid: {String(flower.validation.valid)}
             {flower.validation.warnings.length > 0 &&

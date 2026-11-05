@@ -14,7 +14,7 @@ import type {
   Validation,
   ValidationIssue,
 } from '@petal/core/types';
-import { compile, defineTool, FLOWER_DEFS } from '../define.ts';
+import { compile, defineTool, FLOWER_DEFS, inlineRefs } from '../define.ts';
 import { ToolFailure } from '../errors.ts';
 import type { ToolContext } from '../types.ts';
 import {
@@ -302,6 +302,18 @@ export const proposeSpec = defineTool<ProposeIn, object>({
   },
 });
 
+/**
+ * The Interpretation exactly as the core schema defines it, with its references resolved, so every
+ * door shows the real shape and no copy of it can drift.
+ */
+const INTERPRETATION_INPUT = {
+  ...inlineRefs(FLOWER_DEFS.interpretation as Record<string, unknown>),
+  description:
+    'Your reading of the flower. Every field is required and no others are allowed. conflicts, ' +
+    'unknowns and inferred are arrays of plain strings. documents is [] unless you cite a ' +
+    'document; a source id is cited in sources, not here.',
+};
+
 export const validateSpecTool = defineTool<
   { spec: unknown; interpretation?: Interpretation },
   Validation
@@ -317,11 +329,14 @@ export const validateSpecTool = defineTool<
     ['spec'],
     {
       spec: { type: 'object', description: 'a spec (spec/v1), as propose_spec returns it' },
-      interpretation: {
-        type: 'object',
-        description: 'the interpretation (summary, power_means, mappings, unknowns, ...)',
-      },
+      interpretation: INTERPRETATION_INPUT,
     },
+    { additionalProperties: false },
+  ),
+  // A wrong interpretation is this tool's answer ({ valid: false, errors }), not a bad input.
+  accepts: obj(
+    ['spec'],
+    { spec: { type: 'object' }, interpretation: { type: 'object' } },
     { additionalProperties: false },
   ),
   output: { ...VALIDATION_SCHEMA, $defs: { issue: ISSUE } },

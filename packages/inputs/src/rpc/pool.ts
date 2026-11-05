@@ -118,7 +118,7 @@ export interface RpcPoolOptions {
   sleep?: (ms: number) => Promise<void>;
   /** default: Date.now */
   now?: () => number;
-  /** per request, default 20 s */
+  /** per request, default 10 s; a view call normally answers in under 1 s */
   timeoutMs?: number;
   /** passes over the endpoint list before giving up, default 2 */
   rounds?: number;
@@ -179,6 +179,12 @@ function checkPinned(method: string, params: unknown): void {
 
 const realSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
+/**
+ * A node that hangs is left alone for this long. Otherwise every call of a read waits out the full
+ * timeout before moving on, and a 16-call read takes minutes while the next node is healthy.
+ */
+const HANG_PAUSE_MS = 30_000;
+
 type Attempt =
   | { ok: true; result: unknown }
   | { ok: false; reason: string; rate_limited?: boolean; retry_after_ms?: number };
@@ -188,7 +194,7 @@ export function rpcPool(opts: RpcPoolOptions = {}): RpcPool {
   const doFetch = opts.fetch ?? ((...a: Parameters<typeof fetch>) => globalThis.fetch(...a));
   const sleep = opts.sleep ?? realSleep;
   const now = opts.now ?? Date.now;
-  const timeoutMs = opts.timeoutMs ?? 20_000;
+  const timeoutMs = opts.timeoutMs ?? 10_000;
   const rounds = opts.rounds ?? 2;
   const maxWaitMs = opts.maxWaitMs ?? 30_000;
 
@@ -232,8 +238,9 @@ export function rpcPool(opts: RpcPoolOptions = {}): RpcPool {
       });
     } catch (err) {
       clearTimeout(timer);
-      const msg = ctrl.signal.aborted ? `timed out after ${timeoutMs} ms` : String(err);
-      return { ok: false, reason: msg };
+      if (!ctrl.signal.aborted) return { ok: false, reason: String(err) };
+      pausedUntil.set(e.id, now() + HANG_PAUSE_MS);
+      return { ok: false, reason: `timed out after ${timeoutMs} ms` };
     }
     try {
       if (res.status === 429) {

@@ -6,10 +6,19 @@ import { join } from 'node:path';
 import { canonicalJson, entryId, specHash } from '@petal/core';
 import type { Entry, ProgressEvent } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
-import { callTool } from '../src/registry.ts';
+import { FLOWER_DEFS, inlineRefs } from '../src/define.ts';
+import { callTool, findTool } from '../src/registry.ts';
 import type { ToolContext } from '../src/types.ts';
 import { entrySha256 } from '../src/verify.ts';
-import { FIXTURES, flow, NOW, rig, testFixture, validatorsFixture } from './helpers.ts';
+import {
+  FIXTURES,
+  flow,
+  INTERPRETATION,
+  NOW,
+  rig,
+  testFixture,
+  validatorsFixture,
+} from './helpers.ts';
 
 type Out = Record<string, unknown> & { error?: { code: string; message: string; hint?: string } };
 const runner = (ctx: ToolContext) => async (name: string, input: unknown) =>
@@ -203,6 +212,67 @@ describe('propose_spec, validate_spec, render_flower', () => {
     expect(junk.valid).toBe(false);
   });
 
+  test('validate_spec shows the real Interpretation, whole, with no references to follow', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: walking a JSON Schema
+    const input = findTool('validate_spec')?.input as Record<string, any>;
+    const shown = input.properties.interpretation;
+    const { description, ...shape } = shown;
+    expect(shape).toEqual(inlineRefs(FLOWER_DEFS.interpretation));
+    expect(description).toMatch(/documents is \[\] unless/);
+    expect(JSON.stringify(input)).not.toContain('$ref');
+    expect(shown.required).toEqual([
+      'summary',
+      'power_means',
+      'mappings',
+      'conflicts',
+      'unknowns',
+      'inferred',
+      'documents',
+    ]);
+    expect(shown.properties.conflicts).toEqual({ type: 'array', items: { type: 'string' } });
+    expect(shown.properties.documents.items.required).toEqual(['id', 'kind', 'url', 'fetched_at']);
+    expect(shown.properties.power_means.items.required).toEqual(['claim', 'sources']);
+    expect(shown.properties.mappings.items.required).toEqual(['primitive', 'why', 'sources']);
+    expect(shown.properties.documents.items.properties.fetched_at).toEqual({
+      type: 'string',
+      format: 'date-time',
+    });
+  });
+
+  test('validate_spec answers a wrong interpretation with every error, never a bad_input', async () => {
+    const run = runner((await rig()).ctx);
+    const { spec } = await flow(run);
+    const v = await run('validate_spec', {
+      spec,
+      interpretation: {
+        ...INTERPRETATION,
+        summary: 'short',
+        conflicts: 'a string',
+        inferred: 'a string',
+        unknowns: 'a string',
+        power_means: [{ claim: 'no sources' }],
+        mappings: [{ primitive: 'texture', why: 'y', sources: [] }],
+        documents: [{ id: 'x' }],
+      },
+    });
+    expect(v.error).toBeUndefined();
+    expect(v.valid).toBe(false);
+    const errors = v.errors as { path: string; rule: string; message: string }[];
+    expect(errors.length).toBeGreaterThan(5);
+    for (const e of errors) {
+      expect(e.rule).toBe('interpretation');
+      expect(e.path).toMatch(/^\/interpretation/);
+      expect(e.message.length).toBeGreaterThan(0);
+    }
+  });
+
+  test('inlineRefs resolves local references and refuses an unknown one', () => {
+    expect(inlineRefs({ a: { $ref: '#/$defs/x' } }, { x: { type: 'string' } })).toEqual({
+      a: { type: 'string' },
+    });
+    expect(() => inlineRefs({ $ref: '#/$defs/nope' }, {})).toThrow(/cannot resolve/);
+  });
+
   test('render_flower: hashes, legend, petals, a draft view_url; svg only when asked', async () => {
     const run = runner((await rig()).ctx);
     const { spec, rendered } = await flow(run);
@@ -381,6 +451,12 @@ describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
     });
     const out = await runner(ctx)('publish_flower', { entry_sha256: prep.entry_sha256, proof });
     expect(out.error?.code).toBe('source_failed');
+  });
+
+  test('list_flowers refuses a network it cannot read, rather than saying there are no flowers', async () => {
+    const out = await runner((await rig()).ctx)('list_flowers', { network: 'near' });
+    expect(out.error?.code).toBe('cannot_read');
+    expect(out.error?.hint).toMatch(/near-validators/);
   });
 
   test('get_flower with the map down is source_failed; list_flowers still answers', async () => {
