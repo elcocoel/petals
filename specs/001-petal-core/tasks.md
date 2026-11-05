@@ -446,10 +446,10 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 - [X] T190 [W5] Durable runs: the loop outside the request, an event log with reconnect by cursor, a thread saved each round, a real Stop, and a restart scan. Done when a killed process leaves no run stuck.
 - [ ] T191 [W8] Host: a container on Elco's machine, its own data only, a new tunnel address, nightly backups. The keyless Vercel copy stays as the always-on fallback. Done when the site survives a restart of the container, and reaches the public address.
 - [ ] T192 [W3] Sign-in with a NEAR wallet: challenge, verify, session, person, wallet binding. Done with a real Meteor signature on testnet.
-- [ ] T193 [W5] Run owners: an anonymous handle, a claim on sign-in, owner-only once claimed.
+- [X] T193 [W5] Run owners: an anonymous handle, a claim on sign-in, owner-only once claimed.
 - [ ] T194 [W4] Explorations: the ref and steps, `list_explorations`, `get_exploration`, `save_step`, `add_note`, share links, and hash-based draft links.
 - [ ] T195 [W7] Proof of coming back: start on the site, continue in Claude Code and in the Claude app, using a link.
-- [ ] T196 [W4] Who pays: Petal's own agent refuses to spend without a sponsored invite, and says what to do instead. Invites with budgets (reserve then settle). Clean messages for each kind of 402. Petal holds no one's money.
+- [X] T196 [W4] Who pays: Petal's own agent refuses to spend without a sponsored invite, and says what to do instead. Invites with budgets (reserve then settle). Clean messages for each kind of 402. Petal holds no one's money.
 - [X] T197 [W1] Claims: the shape, kinds, and `applyPolicy` as a pure function with lenses. Existing labels and corrections read as claims. Observed claims derive from snapshots.
 - [X] T198 [W2] Relations index: rebuildable, with accounts in common between groups, dated and marked as a lower bound where coverage is partial. Depends on the graph measurements.
 - [ ] T199 [W7] Agents acting for a person: OAuth (DCR and CIMD) with Claude's and ChatGPT's signals, and link approval for HTTP agents.
