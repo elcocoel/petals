@@ -21,15 +21,23 @@ Everything we know we'll have to solve. Each has a working default, so nothing h
 
 | # | Question | Default | Bites |
 |---|---|---|---|
-| 9 | Chains can't forget. A wrong claim about a real person can be hidden, not erased. What may go on chain? Who may name a person? | Claims naming a natural person stay off chain until decided | Before any open writing |
+| 9 | Chains can't forget. A wrong claim about a real person can be hidden, not erased. What may go on chain? Who may name a person? Constitution line 56 allows links "wherever public evidence allows" and promises removal, and both hold only off chain | Claims name accounts, contracts and groups. `validateClaim` refuses a natural person, and the rule is in plain words in `claims/people.ts`, for Elco to change | Before any open writing |
 | 10 | Open writing invites junk. What keeps it down without a maintainer? | Readers' lenses, plus evidence that can be inspected | Before any open writing |
-| 11 | What's the default lens a new reader sees? | Observed, and self-declared names, plainly marked | When claims show up |
-| 12 | Confidence: a number or plain bands? Who's allowed to set one? | Bands, by named classifiers only | When a classifier arrives |
+| 11 | What's the default lens a new reader sees? | `DEFAULT_LENS`: observed plus declared, nobody trusted. Observed because a hash proves it, declared because it's the account's own word about itself. Sourced and inferred stay off, because each is someone's word about someone else. Inferred, if asked for, is always caveated, because it can be wrong about someone who never spoke. With nobody trusted, no outside writer can change what shows: the reader is told challenges exist and can choose to count them. The cost: a new reader never sees `contested` until they trust someone | When claims show up |
+| 12 | Confidence: a number or plain bands? Who's allowed to set one? | Bands, by a named person or a named model and version. `minConfidence` is a band too, not the sketch's number. The lowest counted rating stands until its rater replaces it | When a classifier arrives |
 | 13 | How is a claimer's standing computed without becoming a popularity contest? | Not computed yet | With the social layer |
 | 14 | Which classifier? `typesafe/jev-1.13` on NEAR AI looks suited and cheap, but it's untested and may have no enclave signature | Untested, nothing depends on it | When a classifier arrives |
 | 15 | Can a PII filter help screen claims before they become permanent? NEAR AI lists `openai/privacy-filter` | Untested | With question 9 |
-| 16 | How do existing labels and corrections become claims? | Readers treat them as claims, and nothing is rewritten | With the claims task |
+| 16 | ~~How do existing labels and corrections become claims?~~ Built: `claimsFromMap` reads them as claims, nothing is rewritten, and their text stays on the row. No label rows exist yet, so this has only run on invented rows | | Done |
 | 17 | Should private claims exist, such as someone's own notes or a theory they aren't ready to publish? | Notes stay in the exploration | With explorations |
+| 17a | A snapshot's `self-declared` isn't always the account's own word. Moloch's 19 names come from proposal text the member may not have written. Should that status change? | Claims read it as `declared` only when the account wrote the row, otherwise `sourced`. The snapshot's field stays as it is | When names show beside claims |
+| 17b | Is an API's report of a chain observed? 491 `pool_contract_stake` rows in the NEAR snapshot come from NearBlocks | `sourced`, so the default lens leaves them off. Flowers don't change: they don't read claims yet | When the UI reads claims |
+| 17c | `applyPolicy` can't check a proof, and it trusts `by`. A stored claim pretending to be a snapshot read would show as proved | The reader checks first: validate, match the writer, verify the proof, compare ids against the snapshot (`contracts/claims.md`). Not built, because no reader of stored claims exists | The first reader of stored claims |
+| 17d | A crowd can't flip a fact, but it can inflate "1000 writers outside this lens challenge it". Should that count show at all? | It shows distinct writers, in `why` | Before any open writing |
+| 17e | The policy has no clock, so a `valid_to` in the past isn't weighed. Add a date to the lens? | No. Snapshot claims are single moments | When claims can expire |
+| 17f | Today's label row has no `method` or `grounds`, so an `inferred` label can't be read as a claim. Add them to the row? | It's listed in `skipped`, and stays valid on the map | When labels are written |
+| 17g | Free text a machine can't judge: a lower-case name in a note, a name as a `role`, an account id or a token symbol that's someone's name (`TRUMP` is a stored unit), a name inside a URL | Shape checks and a small word list, as a net. A symbol stays, because it's the token's own word | Before any open writing |
+| 17h | What do a chain's `events` become? 15 `kicked_out_prev_epoch` rows in the NEAR snapshot have no claim | They stay rows: they aren't relations between accounts | With relations |
 
 ## Identity and agents
 
@@ -48,8 +56,8 @@ Everything we know we'll have to solve. Each has a working default, so nothing h
 
 | # | Question | Default | Bites |
 |---|---|---|---|
-| 26 | What identifies a group over time, so two dates of one group connect? | The module and its parameters, leaving out `window_days`, which is how it was read | With relations |
-| 27 | Is the same EVM address on Ethereum and Base one account? It often is, but that's still a claim | Separate ids; a match is marked `inferred` with its method, and paths don't walk it unless asked. Sameness claims come with T197 | With relations |
+| 26 | What identifies a group over time, so two dates of one group connect? | The module and its parameters, leaving out `window_days`, which is how it was read. In claims, `group:` refs are scoped to one snapshot for now, so they can't falsely join. `holds` points at the asset, which does connect across dates | With relations |
+| 27 | Is the same EVM address on Ethereum and Base one account? It often is, but that's still a claim | Separate refs, and separate account ids in the relations index, where a match is marked `inferred` with its method and paths don't walk it unless asked. `same_address` is an inferred claim that says nothing about control, and `declares_same_controller` is full only when both accounts say so. Nothing merges | With relations |
 | 28 | Super-node groups connect everything in traversal. How do paths stay meaningful? | Group sizes on every hop, and how many groups each shared account is in. No score yet | With relations |
 | 29 | Overlap between a full read and a window read is only a lower bound. How is that shown? | `at_least`, with the coverage facts of each side | With relations |
 | 30 | Is "network", "group" or something else the right word in code? And what replaces "atlas", if anything? | Keep `network` in code | When Elco decides |

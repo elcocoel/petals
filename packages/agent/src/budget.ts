@@ -60,10 +60,14 @@ export function importLedgerFile(store: Store, path: string): void {
 }
 
 /** The server's budget: the per-chat limits of http-api.md and the daily cap from the config. */
-export function serverBudget(base: Budget, o: { usdPerDay?: number; ledger: Ledger }): Budget {
+export function serverBudget(
+  base: Budget,
+  o: { usdPerDay?: number; wallSeconds?: number; ledger: Ledger },
+): Budget {
   const perDay = o.usdPerDay;
   return {
     ...base,
+    wallSeconds: o.wallSeconds ?? base.wallSeconds,
     usdPerDay:
       typeof perDay === 'number' && Number.isFinite(perDay) && perDay >= 0
         ? perDay

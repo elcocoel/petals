@@ -24,6 +24,29 @@ import type {
   PetalSnapshotCommonTableV1,
 } from './generated/snapshot.ts';
 
+// claim/v1 (specs/002-system/contracts/claims.md)
+export type {
+  Claim,
+  ClaimDraft,
+  ClaimEvidence,
+  ClaimerRecord,
+  ClaimKind,
+  ClaimProof,
+  ClaimValue,
+  ConfidenceBand,
+  DistinctCounts,
+  EntityRef,
+  Lens,
+  MapRead,
+  ParsedRef,
+  ShowAs,
+  Shown,
+  SkippedRow,
+  SnapshotRead,
+  Verb,
+  VerbRule,
+} from '../claims/index.ts';
+
 // ---------------------------------------------------------------------------------------------
 // Generated (contracts/*.schema.json)
 
@@ -596,6 +619,14 @@ export interface FlowerResult {
   validation: Validation;
 }
 
+/**
+ * An `error` event. Besides the tool codes, two say how a run ended early (T190): `stopped`, someone
+ * pressed Stop; `interrupted`, the server restarted during it, and no `done` follows.
+ */
+export type AgentError = Omit<ToolError['error'], 'code'> & {
+  code: ToolErrorCode | 'stopped' | 'interrupted';
+};
+
 /** One SSE event of a chat, in order: run, stage/progress/tool_call/tool_result/message…, flower, signature, done. */
 export type AgentEvent =
   | { event: 'run'; data: { run_id: string; resume_url: string } }
@@ -609,7 +640,7 @@ export type AgentEvent =
   | { event: 'message'; data: { text: string } }
   | { event: 'flower'; data: FlowerResult }
   | { event: 'signature'; data: ModelSignature }
-  | { event: 'error'; data: ToolError['error'] }
+  | { event: 'error'; data: AgentError }
   | { event: 'heartbeat'; data: Record<string, never> }
   | {
       event: 'done';
@@ -629,7 +660,8 @@ export type AgentEventName = AgentEvent['event'];
 /** A stored chat (RunStore; GET /api/v1/agent/runs/:id). */
 export interface Run {
   run_id: string;
-  status: 'running' | 'done' | 'failed';
+  /** additive (T190): `stopped` by a person; `interrupted` by a restart. Both can be continued. */
+  status: 'running' | 'done' | 'failed' | 'stopped' | 'interrupted';
   messages: ChatMessage[];
   events: AgentEvent[];
   draft?: Draft;

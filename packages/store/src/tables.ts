@@ -277,6 +277,8 @@ export function tables(db: Db) {
         (from === null
           ? db.run('UPDATE run SET owner = ? WHERE id = ? AND owner IS NULL', owner, id)
           : db.run('UPDATE run SET owner = ? WHERE id = ? AND owner = ?', owner, id, from)) === 1,
+      idsWithStatus: (status: string) =>
+        db.all<{ id: string }>('SELECT id FROM run WHERE status = ?', status).map((r) => r.id),
       /** Newest first. */
       listByOwner: (owner: string, limit = 50) =>
         db.all<RunSummaryRow>(
@@ -352,6 +354,14 @@ export function tables(db: Db) {
             usd: r.usd + actualUsd,
             reserved_usd: Math.max(0, r.reserved_usd - heldUsd),
           });
+        }),
+      /** Every hold on every day given back, and how much that was: for when no call can be in flight. */
+      releaseHolds: (): number =>
+        db.tx(() => {
+          const held =
+            db.get<{ usd: number }>('SELECT SUM(reserved_usd) AS usd FROM ledger')?.usd ?? 0;
+          db.run('UPDATE ledger SET reserved_usd = 0 WHERE reserved_usd <> 0');
+          return held;
         }),
       /** A day's starting figure, if the day has none yet. */
       seed(day: string, usd: number) {
@@ -491,6 +501,8 @@ export function tables(db: Db) {
       get: (id: string) => db.get<ExplorationRow>('SELECT * FROM exploration WHERE id = ?', id),
       byShareToken: (hash: string) =>
         db.get<ExplorationRow>('SELECT * FROM exploration WHERE share_token_hash = ?', hash),
+      idsWithStatus: (status: string) =>
+        db.all<{ id: string }>('SELECT id FROM run WHERE status = ?', status).map((r) => r.id),
       /** Newest first. */
       listByOwner: (owner: string, limit = 50) =>
         db.all<ExplorationRow>(

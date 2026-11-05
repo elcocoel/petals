@@ -8,11 +8,11 @@ import { stateStore } from '@petal/store';
 import { type Config, createContext, httpApp } from '@petal/tools';
 import { Hono } from 'hono';
 import { closedLedger, importLedgerFile, serverBudget, storeLedger } from './budget.ts';
-import { DEFAULT_BUDGET, type LlmClient } from './llm.ts';
+import { DEFAULT_BUDGET, type LlmClient, runMaxSeconds } from './llm.ts';
 import { chosenModel, createNearAiClient, FALLBACK_MODELS, type NearAiOptions } from './near-ai.ts';
 import { recordedClient, SKELETON_TRANSCRIPT } from './recorded.ts';
 import { type AgentRouteOptions, createAgentRoutes, stateDirOf } from './routes.ts';
-import { importRunFiles, sqliteRunStore } from './runs.ts';
+import { importRunFiles, interruptRuns, sqliteRunStore } from './runs.ts';
 
 export interface PetalAppOptions extends AgentRouteOptions {
   /** the model client; default from the config (NEAR AI Cloud with a key, else recorded) */
@@ -58,8 +58,15 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     // the old files stay where they are, and the next start tries again
     console.warn(`petal: couldn't import the old run files: ${(e as Error).message}`);
   }
+  try {
+    interruptRuns(store);
+  } catch (e) {
+    // the server still starts; the next boot scans again
+    console.warn(`petal: couldn't scan for interrupted runs: ${(e as Error).message}`);
+  }
   const budget = serverBudget(DEFAULT_BUDGET, {
     usdPerDay: config.llmDailyUsd,
+    wallSeconds: runMaxSeconds(),
     ledger: store.durable ? storeLedger(store) : closedLedger(`${stateDir} can't be written`),
   });
   const runs = sqliteRunStore(store);

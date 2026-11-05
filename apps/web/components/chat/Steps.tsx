@@ -5,7 +5,7 @@ export function Steps({ summary, steps }: { summary: string; steps: StepRow[] })
   return (
     <details>
       <summary className="type-caption text-muted">{summary}</summary>
-      <ol data-quiet className="events type-mono-small text-muted">
+      <ol data-quiet className="events type-mono text-muted">
         {steps.map((s, k) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: the list only grows, in event order
           <li key={k}>

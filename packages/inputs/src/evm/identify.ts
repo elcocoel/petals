@@ -5,6 +5,7 @@
 // with transfer(); Moloch shares are a token too, kept in members(), with no transfer function: they
 // change by passed proposals and ragequit. Which ledger an address keeps is read from what it
 // answers, never assumed.
+import { runSignal } from '@petal/core';
 import { encodeCall, stringAt } from './abi.ts';
 import type { EvmChain } from './chains.ts';
 import { decodeAggregate, encodeAggregate3, MULTICALL3 } from './reader.ts';
@@ -75,7 +76,7 @@ export async function identifyContracts(
       method: 'eth_call',
       params: [{ to: MULTICALL3.address, data: encodeAggregate3(calls) }, 'latest'],
     }),
-    signal: AbortSignal.timeout(opts.timeoutMs ?? 4000),
+    signal: runSignal(AbortSignal.timeout(opts.timeoutMs ?? 4000)),
   });
   if (!res.ok) throw new Error(`${chain.name} answered HTTP ${res.status}`);
   const body = (await res.json()) as { result?: string; error?: { message?: string } };

@@ -21,14 +21,14 @@ export function PetalDetails({
   return (
     <section
       aria-live="polite"
-      className="flex min-h-detail-height flex-col items-start gap-detail-gap border-l-2 border-accent pl-detail-inset"
+      className="flex min-h-detail-height flex-col items-start gap-space-4 border-l-heavy border-accent pl-space-16"
     >
       <h3 className="m-0 type-heading wrap-anywhere">{view.heading}</h3>
-      {view.full && <p className="type-mono-small wrap-anywhere text-muted">{view.full}</p>}
+      {view.full && <p className="type-mono wrap-anywhere text-muted">{view.full}</p>}
       <p className="type-label whitespace-pre-wrap">{view.stats}</p>
       <p className="type-body">
         {view.says}
-        {view.source && <span className="type-mono-small text-muted"> {view.source}</span>}
+        {view.source && <span className="type-mono text-muted"> {view.source}</span>}
       </p>
       {(view.values.length > 0 || view.segments.length > 0) && (
         <details>

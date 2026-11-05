@@ -30,7 +30,7 @@ export function Thread({
 }) {
   return (
     <div
-      className="min-h-0 flex-1 overflow-y-auto pt-workspace-inset pr-workspace-inset-end pl-workspace-inset"
+      className="min-h-0 flex-1 overflow-y-auto pt-column-gap pr-space-32 pl-column-gap"
       ref={threadRef}
     >
       <div className="flex flex-col gap-block-gap pb-block-gap">

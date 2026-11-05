@@ -4,6 +4,14 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import {
+  applyPolicy,
+  claimerRecord,
+  claimsFromMap,
+  DEFAULT_LENS,
+  observedClaims,
+  validateClaim,
+} from '../src/claims/index.ts';
 import { buildSpec } from '../src/convention/index.ts';
 import { computeFigures } from '../src/figures/index.ts';
 import { readFlower, readingHash } from '../src/reading/index.ts';
@@ -44,8 +52,24 @@ describe('static scan of packages/core/src', () => {
   test('finds the sources', () => {
     expect(sources.length).toBeGreaterThan(10);
     expect(sources.map((f) => relative(SRC, f))).toEqual(
-      expect.arrayContaining(['reading/index.ts', 'reading/encodings.ts', 'reading/legend.ts']),
+      expect.arrayContaining([
+        'reading/index.ts',
+        'reading/encodings.ts',
+        'reading/legend.ts',
+        'claims/index.ts',
+        'claims/observed.ts',
+        'claims/policy.ts',
+        'claims/validate.ts',
+      ]),
     );
+  });
+
+  test('the claims know nothing of a drawing or a reading', () => {
+    const bad = sources
+      .filter((f) => relative(SRC, f).startsWith('claims/'))
+      .filter((f) => /from\s+['"][^'"]*(render|reading)\//.test(readFileSync(f, 'utf8')))
+      .map((f) => relative(SRC, f));
+    expect(bad).toEqual([]);
   });
 
   test('the reading knows nothing of a drawing: reading/ imports nothing from render/', () => {
@@ -118,5 +142,30 @@ describe('the pipeline runs with the clock, randomness and network trapped', () 
     expect(readingHash(readFlower(spec, structuredClone(s)))).toBe(
       readingHash(readFlower(spec, s)),
     );
+
+    // Everything is a claim: read, check, derive and apply a lens, with all of the above trapped.
+    const claims = observedClaims(s);
+    expect(claims.length).toBeGreaterThan(0);
+    expect(claims.every((c) => validateClaim(c).ok)).toBe(true);
+    const shown = applyPolicy(claims, DEFAULT_LENS);
+    expect(applyPolicy(claims, DEFAULT_LENS)).toEqual(shown);
+    expect(claimerRecord(claims, 'tool:petal/observed-claims@1').claims).toBe(shown.length);
+    const key = 'petal/v1/label/near:testnet/tern.pool.example.testnet';
+    const label = {
+      tag: 'identity',
+      status: 'verified',
+      evidence: [{ url: 'https://example.org/post' }],
+      written_at: '2026-11-05T10:00:00Z',
+    };
+    const row = {
+      key,
+      value: label,
+      writer: 'petals-writer.testnet',
+      receiver: 'petals.testnet',
+      tx_hash: 'tx',
+      block_height: 1,
+      block_timestamp: 1,
+    };
+    expect(claimsFromMap([row]).claims).toHaveLength(1);
   });
 });

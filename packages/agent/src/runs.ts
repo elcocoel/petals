@@ -1,7 +1,7 @@
 // Run stores (T058, T189; research R19): every chat is a run, so a maker can leave and come back.
 // A store folds events into the run as they arrive: messages from `message`, the flower and a draft
-// entry from `flower` and `signature`, the status from `done`. A ChatInput with run_id continues
-// that run: same id, the full message list, status running.
+// entry from `flower` and `signature`, the status from `done`, or from the `error` of a restart. A
+// ChatInput with run_id continues that run: same id, the full message list, status running.
 //
 // sqliteRunStore is what the app uses: run, run_event and run_thread in the private store.
 // fileRunStore, .petal/runs/<run_id>.json, is the older form. importRunFiles brings its files over
@@ -37,7 +37,7 @@ export interface RunStore {
   saveThread?(runId: string, thread: LlmMessage[]): Promise<void>;
   thread?(runId: string): Promise<LlmMessage[] | null>;
   /** The log from sequence number `from` on, oldest first: how a viewer reconnects by cursor. */
-  eventsFrom?(runId: string, from?: number): Promise<RunEventAt[]>;
+  eventsFrom(runId: string, from?: number): Promise<RunEventAt[]>;
   ownerOf?(runId: string): Promise<string | null>;
   /** Compare and swap: false unless the current owner is `from` (default none). */
   setOwner?(runId: string, owner: string, from?: string): Promise<boolean>;
@@ -96,6 +96,10 @@ export function applyEvent(run: Run, e: AgentEvent, at: string): void {
       }
       break;
     }
+    case 'error':
+      // no `done` follows this one: nothing is left that could say what the chat cost
+      if (e.data.code === 'interrupted') run.status = 'interrupted';
+      break;
     case 'done': {
       // this chat's events: from its own `run` event on
       let from = run.events.length - 1;
@@ -103,7 +107,8 @@ export function applyEvent(run: Run, e: AgentEvent, at: string): void {
       const chat = run.events.slice(from);
       const drew = chat.some((x) => x.event === 'flower');
       const failed = chat.some((x) => x.event === 'error');
-      run.status = failed && !drew ? 'failed' : 'done';
+      const stopped = chat.some((x) => x.event === 'error' && x.data.code === 'stopped');
+      run.status = stopped ? 'stopped' : failed && !drew ? 'failed' : 'done';
       const agent = run.draft?.entry?.provenance?.agent;
       if (drew && agent && !agent.model) agent.model = e.data.model;
       break;
@@ -201,6 +206,13 @@ export function fileRunStore(dir: string): RunStore {
       return run ? (JSON.parse(JSON.stringify(run)) as Run) : null;
     },
 
+    async eventsFrom(runId, from = 0) {
+      if (!RUN_ID.test(runId)) return [];
+      await chains.get(runId);
+      const run = await load(runId);
+      return (run?.events ?? []).map((event, seq) => ({ seq, event })).slice(from);
+    },
+
     saveThread(runId, thread) {
       return serial(runId, () => write(runId, threadFile(runId), thread));
     },
@@ -241,14 +253,83 @@ function runOf(row: RunRow, events: AgentEvent[]): Run {
   };
 }
 
-/** Each write is one transaction, so a crash leaves a run as it was after its last whole event. */
+const eventOf = (type: string, data: string) =>
+  ({ event: type, data: JSON.parse(data) }) as AgentEvent;
+
+/** One transaction, so a crash leaves a run as it was after its last whole event. */
+function appendEvent(store: Store, runId: string, e: AgentEvent): void {
+  if (e.event === 'heartbeat') return;
+  store.tx(() => {
+    const row = store.run.get(runId);
+    if (!row) throw new Error(`sqliteRunStore: no run ${runId}`);
+    const at = new Date().toISOString();
+    // only `done` looks back over the log, to judge this chat
+    const events =
+      e.event === 'done' ? store.runEvent.list(runId).map((r) => eventOf(r.type, r.data)) : [];
+    const run = runOf(row, events);
+    applyEvent(run, e, at);
+    store.runEvent.append(runId, e.event, JSON.stringify(e.data), at);
+    store.run.update(runId, {
+      status: run.status,
+      model: e.event === 'done' ? e.data.model : row.model,
+      body: bodyOf(run),
+      updated_at: at,
+    });
+  });
+}
+
+/** What the person reads on a run a restart cut short. */
+export const INTERRUPTED =
+  'The server restarted while this was running, so it stopped here. What it did so far is kept: send a message to carry on from there.';
+
+/** The process that last started a chat on this store. */
+const RUNS_PID = 'runs_pid';
+
+function isAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code === 'EPERM';
+  }
+}
+
+/**
+ * The boot scan (T190, SYS-012). One process runs every run, so before it serves nothing is in
+ * flight: a run still `running` lost its process, and any hold on the ledger lost its call. What such
+ * a call really cost can't be known, so it isn't counted. Nothing is resumed: that would spend money
+ * with nobody watching. A person's next message continues the run from its saved thread.
+ *
+ * Building the app isn't always a restart: scripts/check.sh builds it on build/.petal, with Elco's
+ * server up on the same folder. So a process that started a chat here and is still alive keeps its
+ * runs, and this scan leaves them for the next boot.
+ */
+export function interruptRuns(
+  store: Store,
+  log: (line: string) => void = console.log,
+): { interrupted: number; releasedUsd: number } {
+  const holder = Number(store.meta.get(RUNS_PID));
+  if (holder && holder !== process.pid && isAlive(holder)) {
+    log(`petal: process ${holder} is running this store's runs, so they are left to it.`);
+    return { interrupted: 0, releasedUsd: 0 };
+  }
+  const ids = store.run.idsWithStatus('running');
+  for (const id of ids) {
+    appendEvent(store, id, { event: 'error', data: { code: 'interrupted', message: INTERRUPTED } });
+  }
+  const releasedUsd = store.ledger.releaseHolds();
+  if (ids.length || releasedUsd) {
+    log(`petal: ${ids.length} runs interrupted by a restart, $${releasedUsd} of holds released.`);
+  }
+  return { interrupted: ids.length, releasedUsd };
+}
+
 export function sqliteRunStore(store: Store): Required<RunStore> {
-  const eventOf = (type: string, data: string) =>
-    ({ event: type, data: JSON.parse(data) }) as AgentEvent;
   const eventsOf = (id: string) => store.runEvent.list(id).map((r) => eventOf(r.type, r.data));
 
   return {
     async create(input, o) {
+      store.meta.set(RUNS_PID, String(process.pid));
       const at = new Date().toISOString();
       const reopen = input.run_id && RUN_ID.test(input.run_id) ? input.run_id : undefined;
       if (reopen) {
@@ -291,22 +372,7 @@ export function sqliteRunStore(store: Store): Required<RunStore> {
     },
 
     async append(runId, e) {
-      if (e.event === 'heartbeat') return;
-      store.tx(() => {
-        const row = store.run.get(runId);
-        if (!row) throw new Error(`sqliteRunStore: no run ${runId}`);
-        const at = new Date().toISOString();
-        // only `done` looks back over the log, to judge this chat
-        const run = runOf(row, e.event === 'done' ? eventsOf(runId) : []);
-        applyEvent(run, e, at);
-        store.runEvent.append(runId, e.event, JSON.stringify(e.data), at);
-        store.run.update(runId, {
-          status: run.status,
-          model: e.event === 'done' ? e.data.model : row.model,
-          body: bodyOf(run),
-          updated_at: at,
-        });
-      });
+      appendEvent(store, runId, e);
     },
 
     async get(runId) {

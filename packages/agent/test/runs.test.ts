@@ -6,7 +6,7 @@ import { openStore } from '@petal/store';
 import { describe, expect, test } from 'vitest';
 import { fileLedger, memoryLedger, serverBudget } from '../src/budget.ts';
 import { fileRunStore, type RunStore, sqliteRunStore } from '../src/index.ts';
-import { DEFAULT_BUDGET } from '../src/llm.ts';
+import { DEFAULT_BUDGET, runMaxSeconds } from '../src/llm.ts';
 import {
   fakeSignature,
   INTERPRETATION,
@@ -61,6 +61,26 @@ test('fileRunStore keeps a run in .petal/runs/<id>.json, for any process to read
 });
 
 describe.each(STORES)('%s', (_name, make) => {
+  test('stopped and interrupted fold from the events, and survive a later chat only until it ends', async () => {
+    const runs = make();
+    const id = await runs.create({ messages: [{ role: 'user', content: 'q' }] });
+    await runs.append(id, runEvent(id));
+    await runs.append(id, { event: 'error', data: { code: 'stopped', message: 'stopped' } });
+    await runs.append(id, done);
+    expect((await runs.get(id))?.status).toBe('stopped');
+    await runs.create({ messages: [{ role: 'user', content: 'q' }], run_id: id });
+    await runs.append(id, runEvent(id));
+    await runs.append(id, { event: 'error', data: { code: 'interrupted', message: 'gone' } });
+    expect((await runs.get(id))?.status).toBe('interrupted');
+    await runs.create({ messages: [{ role: 'user', content: 'q' }], run_id: id });
+    await runs.append(id, runEvent(id));
+    await runs.append(id, done);
+    expect((await runs.get(id))?.status).toBe('done');
+    const log = await runs.eventsFrom(id, 5);
+    expect(log.map((e) => e.seq)).toEqual([5, 6]);
+    expect(log.map((e) => e.event.event)).toEqual(['run', 'done']);
+  });
+
   test('a run: messages, events, flower, a draft entry, status', async () => {
     const runs = make();
     const id = await runs.create({ messages: [{ role: 'user', content: 'q' }] });
@@ -205,11 +225,18 @@ describe('ledgers', () => {
     expect(await l.reserve(1, 0.01)).toBeNull();
   });
 
+  test('runMaxSeconds: PETAL_RUN_MAX_S, else 300', () => {
+    expect(runMaxSeconds({})).toBe(300);
+    expect(runMaxSeconds({ PETAL_RUN_MAX_S: '90' })).toBe(90);
+    expect(runMaxSeconds({ PETAL_RUN_MAX_S: 'nope' })).toBe(300);
+    expect(runMaxSeconds({ PETAL_RUN_MAX_S: '0' })).toBe(300);
+  });
+
   test('serverBudget: the per-chat limits stay, the daily cap comes from the config', () => {
     const ledger = memoryLedger();
     expect(serverBudget(DEFAULT_BUDGET, { usdPerDay: 1.5, ledger })).toMatchObject({
       toolRounds: 8,
-      wallSeconds: 120,
+      wallSeconds: 300,
       usdPerChat: 0.05,
       usdPerDay: 1.5,
     });
