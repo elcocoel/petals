@@ -29,9 +29,8 @@ export default async function MakePage({
           and draws. Every number it quotes comes from the tools.
         </p>
       )}
-      <Chat initialRun={run} recorded={recorded} />
-      <section>
-        <h2>Use your own agent</h2>
+      <details>
+        <summary>Use your own agent</summary>
         <p>
           Claude Code or Codex can run this search instead of this chat. In a clone of Petal, run:
         </p>
@@ -43,7 +42,8 @@ export default async function MakePage({
           Then ask it who stands behind NEAR’s validators. <code>--dry-run</code> shows what it
           would change, and <code>--remove</code> undoes it.
         </p>
-      </section>
+      </details>
+      <Chat initialRun={run} recorded={recorded} />
     </>
   );
 }

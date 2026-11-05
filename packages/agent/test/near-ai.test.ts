@@ -6,6 +6,7 @@ import { describe, expect, test } from 'vitest';
 import { nearAiClient } from '../src/index.ts';
 import type { LlmMessage, LlmRequest } from '../src/llm.ts';
 import {
+  chosenModel,
   costUsd,
   createNearAiClient,
   DEFAULT_MODEL,
@@ -46,6 +47,76 @@ function client(fake = fakeNearAi(), o: NearAiOptions = {}) {
 
 const paths = (fake: ReturnType<typeof fakeNearAi>) =>
   fake.log.map((l) => `${l.method} ${l.url.pathname}`);
+
+describe('PETAL_MODEL (T168)', () => {
+  test('it replaces the default; unset, empty or blank leaves the default', () => {
+    expect(chosenModel({ PETAL_MODEL: ' z-ai/glm-5.3 ' })).toBe('z-ai/glm-5.3');
+    expect(chosenModel({})).toBe(DEFAULT_MODEL);
+    expect(chosenModel({ PETAL_MODEL: '' })).toBe(DEFAULT_MODEL);
+    expect(chosenModel({ PETAL_MODEL: '  ' })).toBe(DEFAULT_MODEL);
+  });
+
+  const listed = (fake: ReturnType<typeof fakeNearAi>, model: string, pricing: object) => {
+    const inner = fake.fetch;
+    const fetch: typeof globalThis.fetch = async (url, init) =>
+      String(url).endsWith('/models')
+        ? new Response(JSON.stringify({ data: [{ id: model, pricing }] }))
+        : inner(url, init);
+    return { ...fake, fetch };
+  };
+
+  test('a model outside PRICES is counted at the price NEAR AI lists, asked once', async () => {
+    const fake = listed(fakeNearAi(), 'anthropic/x', { input: 10, output: 50 });
+    let asked = 0;
+    const count: typeof fetch = async (u, i) => {
+      if (String(u).endsWith('/models')) asked++;
+      return fake.fetch(u, i);
+    };
+    const llm = createNearAiClient(
+      { ...CFG, model: 'anthropic/x' },
+      {
+        apiKey: 'k',
+        baseURL: 'https://near-ai.test/v1',
+        fetch: count,
+        attestationsDir: join(tmpRoot(), 'a'),
+      },
+    );
+    const c = await llm.complete(ASK);
+    await llm.complete(ASK);
+    expect(c.model).toBe('anthropic/x');
+    // 1000 in and 100 out, at $10 and $50 a million
+    expect(c.cost_usd).toBeCloseTo(0.015, 9);
+    expect(asked).toBe(1);
+  });
+
+  test('the default asks for no list, and what fails to list warns and uses the default rates', async () => {
+    const { llm, fake } = client();
+    await llm.complete(ASK);
+    expect(paths(fake).some((p) => p.endsWith('/models'))).toBe(false);
+    const warnings: string[] = [];
+    const unknown = createNearAiClient(
+      { ...CFG, model: 'nobody/x' },
+      {
+        apiKey: 'k',
+        baseURL: 'https://near-ai.test/v1',
+        fetch: fakeNearAi().fetch,
+        attestationsDir: join(tmpRoot(), 'a'),
+        onWarning: (w) => warnings.push(w),
+      },
+    );
+    const c = await unknown.complete(ASK);
+    expect(c.cost_usd).toBeCloseTo((1000 * 0.3 + 100 * 1.35) / 1e6, 9);
+    expect(warnings.join(' ')).toMatch(/no price for nobody\/x/);
+  });
+
+  test('a model with no report gets one look for a signature, not the 2.5 s of retries', async () => {
+    const fake = fakeNearAi({ reportStatus: 503, noSignature: true });
+    const { llm } = client(fake, { signatureDelaysMs: [0, 0, 0] });
+    const c = await llm.complete(ASK);
+    expect(c.signature).toBeNull();
+    expect(paths(fake).filter((p) => p.includes('/signature/'))).toHaveLength(1);
+  });
+});
 
 describe('nearAiClient', () => {
   test('one non-streamed call with the canonical id, x-no-aliasing and Accept-Encoding: identity', async () => {

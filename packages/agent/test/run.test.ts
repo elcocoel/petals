@@ -102,6 +102,7 @@ describe('runAgent on the recorded skeleton run', () => {
       fallback_used: false,
       tokens: { in: 0, out: 0 },
       cost_usd: 0,
+      signature: null,
     });
   });
 
@@ -449,6 +450,26 @@ describe('limits', () => {
       code: 'budget_exhausted',
       hint: SKILL_HINT,
     });
+  });
+
+  test('the daily cap holds inside a chat: no further model call once it is reached', async () => {
+    const ledger = memoryLedger();
+    const llm = scriptedLlm(
+      [{ calls: [{ name: 'list_networks', args: {} }] }, { content: 'never asked' }],
+      { costUsd: 0.01 },
+    );
+    const es = await collect(run(llm, { budget: { ledger, usdPerDay: 0.005 } }).events);
+    expect(llm.requests).toHaveLength(1);
+    expect(pick(es, 'error')[0]?.data.code).toBe('budget_exhausted');
+    expect(es.at(-1)?.event).toBe('done');
+  });
+
+  test('done carries the signature of the completion that wrote the answer', async () => {
+    const llm = scriptedLlm([{ content: 'hello', signature: fakeSignature('c9') }]);
+    const es = await collect(run(llm).events);
+    expect(pick(es, 'done')[0]?.data.signature?.completion_id).toBe('c9');
+    const none = await collect(run(scriptedLlm([{ content: 'hello' }])).events);
+    expect(pick(none, 'done')[0]?.data.signature).toBeNull();
   });
 
   test('spend goes to the shared ledger; the recorded client ignores the daily cap', async () => {

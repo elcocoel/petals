@@ -18,6 +18,7 @@ export type * from './llm.ts';
 export { DEFAULT_BUDGET } from './llm.ts';
 /** nearAiClient with its options (attestations folder, warnings); same scripts. */
 export {
+  chosenModel,
   createNearAiClient,
   DEFAULT_MODEL,
   FALLBACK_MODELS,

@@ -7,12 +7,7 @@ import { type Config, createContext, httpApp } from '@petal/tools';
 import { Hono } from 'hono';
 import { fileLedger, serverBudget } from './budget.ts';
 import { DEFAULT_BUDGET, type LlmClient } from './llm.ts';
-import {
-  createNearAiClient,
-  DEFAULT_MODEL,
-  FALLBACK_MODELS,
-  type NearAiOptions,
-} from './near-ai.ts';
+import { chosenModel, createNearAiClient, FALLBACK_MODELS, type NearAiOptions } from './near-ai.ts';
 import { recordedClient, SKELETON_TRANSCRIPT } from './recorded.ts';
 import { type AgentRouteOptions, createAgentRoutes, stateDirOf } from './routes.ts';
 import { fileRunStore } from './runs.ts';
@@ -41,7 +36,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     o.llm ??
     (key
       ? createNearAiClient(
-          { apiKeyEnv: 'NEAR_AI_API_KEY', model: DEFAULT_MODEL, fallbacks: [...FALLBACK_MODELS] },
+          { apiKeyEnv: 'NEAR_AI_API_KEY', model: chosenModel(), fallbacks: [...FALLBACK_MODELS] },
           {
             apiKey: key,
             attestationsDir: join(stateDir, 'attestations'),

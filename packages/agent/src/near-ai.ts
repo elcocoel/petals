@@ -25,6 +25,11 @@ export const NEAR_AI_BASE_URL = 'https://cloud-api.near.ai/v1';
 export const DEFAULT_MODEL = 'deepseek-ai/DeepSeek-V4.1-Flash-1017';
 export const FALLBACK_MODELS: readonly string[] = ['z-ai/glm-5.3-flash', 'Qwen/Qwen3.8-27B'];
 
+/** The model asked first: PETAL_MODEL, else DEFAULT_MODEL (T168). */
+export function chosenModel(env: Record<string, string | undefined> = process.env): string {
+  return env.PETAL_MODEL?.trim() || DEFAULT_MODEL;
+}
+
 /**
  * USD per million tokens (research R10; GET /v1/models on 2026-11-05). Cached input is cheaper on
  * NEAR AI (input_cache_read); it is priced in full here, so spend is never under-counted.
@@ -34,11 +39,15 @@ export const PRICES: Record<string, { in: number; out: number }> = {
   'Qwen/Qwen3.8-27B': { in: 0.04, out: 1.35 },
   'deepseek-ai/DeepSeek-V4.1-Flash-1017': { in: 0.3, out: 1.2 },
 };
-/** An unknown model is priced at the dearest rates above, so spend is never under-counted. */
+/** A model missing from PRICES and from NEAR AI's list: the dearest rates above. */
 const UNKNOWN_PRICE = { in: 0.3, out: 1.35 };
 
-export function costUsd(model: string, usage: { in: number; out: number }): number {
-  const p = PRICES[model] ?? UNKNOWN_PRICE;
+export function costUsd(
+  model: string,
+  usage: { in: number; out: number },
+  listed?: { in: number; out: number },
+): number {
+  const p = PRICES[model] ?? listed ?? UNKNOWN_PRICE;
   return Math.round(((usage.in * p.in + usage.out * p.out) / 1e6) * 1e9) / 1e9;
 }
 
@@ -193,6 +202,7 @@ export function createNearAiClient(
   const attestTtl = o.attestationTtlMs ?? 10 * 60_000;
   const stickyMs = o.stickyFallbackMs ?? 5 * 60_000;
   const reports = new Map<string, { at: number; ref: Promise<AttestationRef | undefined> }>();
+  const prices = new Map<string, Promise<{ in: number; out: number } | undefined>>();
   let start = 0; // index of the model tried first
   let startUntil = 0;
   let healthy = true;
@@ -213,8 +223,39 @@ export function createNearAiClient(
     return ref;
   }
 
+  /**
+   * PETAL_MODEL can name any listed model, some at 30 times the default's price, so spend and the
+   * caps must use its real price. GET /v1/models costs no inference; asked once per model.
+   */
+  function listedPrice(model: string) {
+    if (PRICES[model]) return Promise.resolve(undefined);
+    const known = prices.get(model);
+    if (known) return known;
+    const asked = (async () => {
+      try {
+        const res = await transport(`${baseURL}/models`, {
+          headers: { Authorization: `Bearer ${key()}` },
+        });
+        const list = (await res.json()) as {
+          data?: { id: string; pricing?: { input?: unknown; output?: unknown } }[];
+        };
+        const p = list.data?.find((m) => m.id === model)?.pricing;
+        if (typeof p?.input === 'number' && typeof p.output === 'number') {
+          return { in: p.input, out: p.output };
+        }
+      } catch {
+        // falls through to the warning
+      }
+      warn(`no price for ${model} on NEAR AI's list: counting it at the default rates`);
+      return undefined;
+    })();
+    prices.set(model, asked);
+    return asked;
+  }
+
   async function callModel(model: string, req: LlmRequest): Promise<LlmCompletion> {
     const attested = await attestation(model);
+    const listed = await listedPrice(model);
     let captured: { request: Uint8Array; response: Uint8Array } | undefined;
     const capture: typeof fetch = async (input, init) => {
       const res = await transport(input, init);
@@ -279,7 +320,7 @@ export function createNearAiClient(
     if (choice.finish_reason === 'length' && !content?.trim() && !tool_calls.length) {
       throw new LlmCallError('source_failed', `${model}: used its token limit before answering`, {
         tryNext: true,
-        costUsd: costUsd(model, usage),
+        costUsd: costUsd(model, usage, listed),
       });
     }
     const signature = captured ? await sign(model, completion.id, captured, attested) : null;
@@ -290,7 +331,7 @@ export function createNearAiClient(
         ? { role: 'assistant', content, tool_calls }
         : { role: 'assistant', content },
       usage,
-      cost_usd: costUsd(model, usage),
+      cost_usd: costUsd(model, usage, listed),
       fallback_used: model !== cfg.model,
       signature,
     };
@@ -305,8 +346,9 @@ export function createNearAiClient(
     const request_sha256 = sha256Hex(bytes.request);
     const response_sha256 = sha256Hex(bytes.response);
     try {
+      // With no report the model has no enclave to sign in: one look is enough, not a 2.5 s wait.
       const raw = await fetchSignature(http(), completionId, model, {
-        delaysMs: o.signatureDelaysMs,
+        delaysMs: attested ? o.signatureDelaysMs : [],
       });
       const sig = buildSignature({
         model,
