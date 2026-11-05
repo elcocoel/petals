@@ -16,6 +16,7 @@
     "components",
     "lib",
     "lib/mock/*.json",
+    "viewmodels",
     "next.config.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts"
