@@ -38,8 +38,8 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 2px;
+    outline: var(--border-width-heavy) solid var(--text-primary);
+    outline-offset: var(--border-width-heavy);
   }
 
   /* The one Button's primary look. A raw <button> gets it too, so nothing drifts on the way to
@@ -51,11 +51,11 @@
 
   button:hover,
   a[data-button]:hover {
-    opacity: 0.85;
+    opacity: var(--opacity-hover);
   }
 
   button:disabled {
-    @apply cursor-not-allowed opacity-50;
+    @apply cursor-not-allowed opacity-inactive;
   }
 
   code {
@@ -70,6 +70,7 @@
   }
 
   hr {
+    border-top-width: var(--stroke);
     border-color: var(--hairline);
     margin-block: var(--spacing-block-gap);
   }
@@ -81,7 +82,7 @@
 
   td,
   th {
-    border: 1px solid var(--hairline);
+    border: var(--stroke) solid var(--hairline);
     padding: calc(var(--spacing-text-gap) / 2) var(--spacing-text-gap);
     text-align: left;
     vertical-align: top;
@@ -145,12 +146,12 @@
   /* Figma has no error colour yet, so an error stays on the palette: a rule and a heavier weight. */
   .error {
     @apply type-label;
-    border-inline-start: 2px solid var(--text-primary);
+    border-inline-start: var(--border-width-heavy) solid var(--text-primary);
     padding-inline-start: var(--spacing-text-gap);
   }
 
   .box {
-    border: 1px solid var(--hairline);
+    border: var(--stroke) solid var(--hairline);
     padding: var(--spacing-block-gap);
     margin-block: var(--spacing-block-gap);
   }
@@ -162,7 +163,7 @@
   .badge {
     @apply type-mono;
     display: inline-block;
-    border: 1px solid var(--hairline);
+    border: var(--stroke) solid var(--hairline);
     padding-inline: calc(var(--spacing-text-gap) / 2);
     margin-inline-start: calc(var(--spacing-text-gap) / 2);
   }
@@ -219,7 +220,7 @@ div.flower-svg svg {
 }
 
 .flower-svg [data-p]:hover {
-  opacity: 0.8;
+  opacity: var(--opacity-hover);
 }
 
 /* A line stays a line at any zoom. Page CSS, so the drawing's own bytes don't change. */

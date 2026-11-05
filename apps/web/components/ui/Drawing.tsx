@@ -19,8 +19,9 @@ export function drawMarks(drawing: FigureDrawing): ReactNode {
       d={mark.d}
       fill={mark.fill ? PAINT[mark.fill] : 'none'}
       stroke={mark.stroke ? PAINT[mark.stroke] : undefined}
-      strokeWidth={mark.strokeWidth}
-      strokeOpacity={mark.strokeOpacity}
+      className={
+        mark.stroke ? `figure-stroke ${mark.faint ? 'figure-faint' : ''}`.trim() : undefined
+      }
     />
   ));
 }

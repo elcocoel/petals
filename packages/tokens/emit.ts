@@ -11,6 +11,7 @@ import {
   figureScale,
   fonts,
   kebab,
+  opacity,
   type Paint,
   type Primitive,
   paintCss,
@@ -19,6 +20,7 @@ import {
   rendererVariables,
   roleUtilities,
   type SurfaceName,
+  stroke,
   type Tokens,
   tokens,
   wordmark,
@@ -71,6 +73,11 @@ export function emitCss(t: Tokens = tokens): string {
       '--default-font-family: var(--font-sans);',
       '--default-mono-font-family: var(--font-mono);',
       ...Object.entries(spacing).map(([n, px]) => `--spacing-${kebab(n)}: ${px}px;`),
+      `--stroke: ${stroke}px;`,
+      `--default-border-width: ${stroke}px;`,
+      `--default-outline-width: ${stroke}px;`,
+      `--border-width-heavy: ${stroke * 2}px;`,
+      ...Object.entries(opacity).map(([n, v]) => `--opacity-${n}: ${v * 100}%;`),
     ]),
     // inline: a utility must read the role where it's used, or it would stop flipping with the surface.
     block(
@@ -108,6 +115,13 @@ export function emitCss(t: Tokens = tokens): string {
       ]),
     ),
     block('@utility figure-scale', [`zoom: ${figureScale};`]),
+    // Non-scaling, so Stroke is the same width on a drawing at any of its sizes.
+    block('@utility figure-stroke', [
+      'stroke-width: var(--stroke);',
+      'vector-effect: non-scaling-stroke;',
+    ]),
+    block('@utility figure-faint', ['stroke-opacity: var(--opacity-figure-line);']),
+    block('@utility opacity-inactive', ['opacity: var(--opacity-inactive);']),
     block('@utility wordmark', [
       'display: inline-grid;',
       'font-family: var(--font-pixel);',

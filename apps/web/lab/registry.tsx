@@ -42,7 +42,6 @@ import { PublishFlow } from '../components/PublishFlow.tsx';
 import { QuotePanel } from '../components/QuotePanel.tsx';
 import { SourceList } from '../components/Sources.tsx';
 import { ActionRow } from '../components/ui/ActionRow.tsx';
-import { Arrow } from '../components/ui/Arrow.tsx';
 import { AskBlock } from '../components/ui/AskBlock.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
 import { Button } from '../components/ui/Button.tsx';
@@ -223,7 +222,7 @@ const panelView = (selected: string | null = null) =>
     sources: SOURCE_URLS,
     units: { validator_stake_current_epoch: 'NEAR' },
   });
-const ICONS: IconName[] = ['home', 'plus', 'gallery', 'connect'];
+const ICONS: IconName[] = ['home', 'plus', 'gallery', 'connect', 'arrow', 'back'];
 
 export const registry: LabEntry[] = [
   {
@@ -914,19 +913,9 @@ export const registry: LabEntry[] = [
     figmaNode: '43:748',
     source: 'apps/web/components/ui/Icon.tsx',
     surfaces: surfaceNames,
-    states: ICONS.map((name) => ({ name, render: () => <Icon name={name} /> })),
-  },
-  {
-    id: 'Arrow',
-    group: 'Marks',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/ui/Arrow.tsx',
-    surfaces: surfaceNames,
     states: [
-      { name: 'plain', render: () => <Arrow /> },
-      { name: 'accent', render: () => <Arrow accent /> },
-      { name: 'back', render: () => <Arrow back /> },
+      ...ICONS.map((name) => ({ name, render: () => <Icon name={name} /> })),
+      { name: 'arrow, accent', render: () => <Icon name="arrow" accent /> },
     ],
   },
   {

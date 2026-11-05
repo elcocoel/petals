@@ -1,6 +1,6 @@
 // The terminal on the builders' band (66:2325): a bar, then mono lines, some in the accent. It's an
 // illustration, not a shell, and its bar says so.
-import { Arrow } from './Arrow.tsx';
+import { Icon } from './Icon.tsx';
 import { MetaRow } from './MetaRow.tsx';
 
 export function Terminal({
@@ -23,7 +23,7 @@ export function Terminal({
           <p key={text} className={`my-0 whitespace-pre-wrap ${accent ? 'text-accent' : ''}`}>
             {returned && (
               <>
-                <Arrow back />{' '}
+                <Icon name="back" />{' '}
               </>
             )}
             {text}

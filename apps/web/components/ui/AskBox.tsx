@@ -66,7 +66,7 @@ export function AskBox({
       action={to}
       method={to ? 'get' : undefined}
       onSubmit={onSubmit}
-      className={`flex w-full items-end border-primary focus-within:outline-1 focus-within:outline-primary ${look.gap} ${look.form}`}
+      className={`flex w-full items-end border-primary focus-within:outline focus-within:outline-primary ${look.gap} ${look.form}`}
     >
       <textarea
         ref={boxRef}

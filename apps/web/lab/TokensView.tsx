@@ -6,12 +6,14 @@ import {
   fonts,
   kebab,
   layout,
+  opacity,
   type Paint,
   paintName,
   primitives,
   quarantine,
   type Roles,
   sizes,
+  stroke,
   surfaceNames,
   surfaces,
   type,
@@ -111,7 +113,17 @@ export function TokensView() {
           <Swatch key={name} swatch={name} name={`--chart-${name}`} value={hex} />
         ))}
       </div>
-      <TokenTable rows={[['cornerRadius', cornerRadius, 'border-radius']]} />
+      <TokenTable
+        rows={[
+          ['Stroke', stroke, 'border'],
+          ['Corner radius', cornerRadius, 'border-radius'],
+          ...Object.entries(opacity).map(([name, value]): [string, number, string] => [
+            `Opacity ${name}`,
+            value,
+            `opacity-${name}`,
+          ]),
+        ]}
+      />
       <TokenTable rows={spacingRows(layout)} />
       <TokenTable rows={spacingRows(sizes)} />
     </section>

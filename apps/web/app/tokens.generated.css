@@ -54,6 +54,13 @@
   --spacing-tile-width: 280px;
   --spacing-flower-width: 640px;
   --spacing-gallery-flower-width: 320px;
+  --stroke: 1px;
+  --default-border-width: 1px;
+  --default-outline-width: 1px;
+  --border-width-heavy: 2px;
+  --opacity-inactive: 50%;
+  --opacity-hover: 85%;
+  --opacity-figure-line: 40%;
 }
 
 @theme inline {
@@ -336,6 +343,19 @@
 
 @utility figure-scale {
   zoom: 0.56;
+}
+
+@utility figure-stroke {
+  stroke-width: var(--stroke);
+  vector-effect: non-scaling-stroke;
+}
+
+@utility figure-faint {
+  stroke-opacity: var(--opacity-figure-line);
+}
+
+@utility opacity-inactive {
+  opacity: var(--opacity-inactive);
 }
 
 @utility wordmark {

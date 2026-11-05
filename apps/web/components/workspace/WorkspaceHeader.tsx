@@ -7,7 +7,7 @@ export function WorkspaceHeader({ section }: { section: string }) {
       <a href="/" aria-label="Petals, home">
         <Wordmark size="workspace" />
       </a>
-      <span aria-hidden="true" className="h-workspace-rule w-px bg-hairline" />
+      <span aria-hidden="true" className="h-workspace-rule border-l border-hairline" />
       <p className="type-label">{section}</p>
     </header>
   );

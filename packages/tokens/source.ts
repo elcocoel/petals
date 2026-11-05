@@ -174,7 +174,13 @@ export const quarantine = {
 /** A real control drawn inside a figure, at this scale, so it follows the type and the ladder. */
 export const figureScale = 0.56;
 
+/** Every line's width in pixels: borders, outlines, drawings, icons. A heavy line or a focus ring is twice it. */
+export const stroke = 1;
+
 export const cornerRadius = 0;
+
+/** Something switched off or set back, something under the pointer, and a drawing's faint lines. */
+export const opacity = { inactive: 0.5, hover: 0.85, 'figure-line': 0.4 } as const;
 
 /**
  * Not from Figma, which has one frame width: Tailwind's own three, under the same names, and `wide`,

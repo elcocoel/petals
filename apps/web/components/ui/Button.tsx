@@ -4,7 +4,7 @@
 // Its primary look is the base style of every <button> in app/globals.css. Variation goes through
 // these props, so there's no className: a one-off look needs a new variant here.
 import type { MouseEventHandler, ReactNode } from 'react';
-import { Arrow } from './Arrow.tsx';
+import { Icon } from './Icon.tsx';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'starter' | 'link' | 'quiet' | 'row' | 'tile';
 
@@ -16,7 +16,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
     'h-auto border border-hairline bg-transparent px-space-16 py-space-8 type-caption whitespace-normal text-primary',
   link: 'h-auto bg-transparent px-0 type-label text-primary hover:underline',
   quiet: 'h-auto bg-transparent px-0 type-caption text-muted hover:text-primary hover:underline',
-  row: 'h-auto w-full justify-start gap-text-gap border border-hairline bg-transparent p-text-gap text-left whitespace-normal text-primary aria-pressed:border-l-2 aria-pressed:border-l-accent',
+  row: 'h-auto w-full justify-start gap-text-gap border border-hairline bg-transparent p-text-gap text-left whitespace-normal text-primary aria-pressed:border-l-heavy aria-pressed:border-l-accent',
   tile: 'h-auto w-tile-width flex-col items-start gap-text-gap bg-transparent px-0 text-left whitespace-normal text-primary',
 };
 
@@ -42,7 +42,7 @@ export function Button({ variant = 'primary', arrow, children, ...rest }: Button
   const content = (
     <>
       {children}
-      {(arrow ?? variant === 'starter') && <Arrow accent={variant === 'primary'} />}
+      {(arrow ?? variant === 'starter') && <Icon name="arrow" accent={variant === 'primary'} />}
     </>
   );
   if (rest.href !== undefined) {
