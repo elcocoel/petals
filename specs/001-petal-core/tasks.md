@@ -425,9 +425,9 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 - [X] T176 [W6] `/lab`: every component in every state from saved fixtures, off in production unless `PETAL_LAB=1`, with a registry (component, Figma name and node, source) and a test that every exported component appears once.
 - [ ] T177 [W8] Figma as a collaboration space, by hand (Elco: no connection on this plan, no rocket science): an agent carries one real change from Figma to code and one back, and a short how-to says how. Component names match; the registry holds Figma names and nodes. No sync tooling.
 - [X] T178 [W6] MVVM+: split `Chat.tsx` into adapter, pure projection, ViewModels and pure views, `apps/web/test/layers.test.ts`, turn stages each witnessed, and a question that isn't lost until accepted. No visual change.
-- [ ] T179 [W1] The reading: `readFlower(spec, snapshot)` as the pure translator, `renderFlower` becomes reading plus a named skin, golden SVGs byte-identical, new golden readings.
-- [ ] T180 [W1] [W3] Identity without the drawing: an entry's `id` and signature no longer cover the SVG bytes (`map/v2`), `render_sha256` becomes a receipt, and v1 entries still verify.
-- [ ] T181 [W1] [W4] The recipe: `recipeOf(spec)`, `recipe_sha256`, `choicesFromSpec`, a semantic `diffSpecs`, and variations that build on their parent, proven with a failing test first.
+- [X] T179 [W1] The reading: `readFlower(spec, snapshot)` as the pure translator, `renderFlower` becomes reading plus a named skin, golden SVGs byte-identical, new golden readings.
+- [X] T180 [W1] [W3] Identity without the drawing: an entry's `id` and signature no longer cover the SVG bytes (`map/v2`), `render_sha256` becomes a receipt, and v1 entries still verify.
+- [X] T181 [W1] [W4] The recipe: `recipeOf(spec)`, `recipe_sha256`, `choicesFromSpec`, a semantic `diffSpecs`, and variations that build on their parent, proven with a failing test first.
 - [ ] T182 [W6] Canvas proof: `../research/spikes/canvas/`, zooming 40, 200 and 1,000 flowers across rendering modes, with frame times and a recommendation.
 - [ ] T183 [W6] Workspace v1 to the Figma frames: rail, conversation, flower panel on the canvas stage, composer, petal detail, legend, Stop. Done when Elco can hold a full flower conversation in it.
 - [ ] T184 [W6] Gallery, flower page and connect page in the system.
