@@ -433,7 +433,7 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 - [ ] T184 [W6] Gallery, flower page and connect page in the system.
 - [ ] T185 [W6] Landing page on `/`, with the sketch copy as a placeholder and the conversation one step in. The copy gets its own pass later.
 - [X] T186 [W8] Witnessed deploy: the site reports its commit, candidate then promote then automatic rollback, nothing ships that isn't on `main`.
-- [ ] T188 [W6] The three levels in sketch, on one canvas: an account, a group, relations between groups (Elco's definitions in `../design/frontend-foundation.md`). Thin and real where cheap: for example the accounts two stored groups have in common. Unsolved on purpose: this is to surface what Elco has to design for.
+- [ ] T188 [W6] The three levels in sketch, on one canvas: an account, a group, relations between groups (Elco's definitions in `../design/frontend-foundation.md`). Thin and real where cheap: for example the accounts two stored groups have in common. Crossing the boundaries elegantly is the design problem (Elco), so try more than one way to cross. Unsolved on purpose: this is to surface what Elco has to design for.
 - [ ] T187 [W8] [Elco] Elco's judgement of frontend v1, then split coordination into fronts: frontend, backend, hosting, data, agent and tooling.
 
 ---
