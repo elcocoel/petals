@@ -3,6 +3,7 @@
 import { validateSnapshot } from '@petal/core';
 import { describe, expect, test } from 'vitest';
 import { evmReader } from '../src/evm/reader.ts';
+import { BEANSTALK_ATTACK, pullBeanstalk, readBeanstalkList } from '../src/modules/beanstalk.ts';
 import { MOLOCH_V1_BLOCK, pullMolochV1 } from '../src/modules/moloch-v1.ts';
 import { pullSplHolders } from '../src/modules/solana-spl-holders.ts';
 import { indexRows, storedSnapshot } from './helpers/recordings.ts';
@@ -20,6 +21,13 @@ describe.skipIf(process.env.PETAL_LIVE !== '1')('live modules (PETAL_LIVE=1)', (
     const stored = indexRows('moloch-v1')[0];
     if (!stored) throw new Error('no stored moloch-v1 snapshot');
     expect(snapshot.holdings).toEqual(storedSnapshot(stored).holdings);
+  });
+
+  test('beanstalk: about 22 calls, 79.63% again', { timeout: 180_000 }, async () => {
+    const reader = evmReader();
+    const list = await readBeanstalkList(reader);
+    const { checks } = await pullBeanstalk({ reader, block: BEANSTALK_ATTACK, list });
+    expect(checks.largest_share).toBe('79.63');
   });
 
   test('solana-spl-holders: a small mint, under 1 MB, through the official RPC', {

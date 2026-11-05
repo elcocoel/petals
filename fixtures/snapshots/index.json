@@ -2,6 +2,40 @@
   "petal": "snapshot-index/v1",
   "snapshots": [
     {
+      "sha256": "1d063af105432e239b0cb4817911217c85aeae07e94d3cf59faa0badd90b8e20",
+      "network": "beanstalk",
+      "chain": "eip155:1",
+      "population": "beanstalk-silo",
+      "block_height": 14602789,
+      "as_of": "2022-04-17T12:24:02Z",
+      "final": true,
+      "bytes": 1027887,
+      "gz_bytes": 167049,
+      "file": "1d063af105432e239b0cb4817911217c85aeae07e94d3cf59faa0badd90b8e20.json.gz",
+      "where": "fixture",
+      "module": {
+        "id": "beanstalk",
+        "version": "evm/1"
+      }
+    },
+    {
+      "sha256": "bddcf0ddf8ad1d31bb5e39892aa175de0df8f4793c689fa9773f07f33f1a2441",
+      "network": "beanstalk",
+      "chain": "eip155:1",
+      "population": "beanstalk-silo",
+      "block_height": 14602790,
+      "as_of": "2022-04-17T12:24:16Z",
+      "final": true,
+      "bytes": 1028497,
+      "gz_bytes": 167182,
+      "file": "bddcf0ddf8ad1d31bb5e39892aa175de0df8f4793c689fa9773f07f33f1a2441.json.gz",
+      "where": "fixture",
+      "module": {
+        "id": "beanstalk",
+        "version": "evm/1"
+      }
+    },
+    {
       "sha256": "8ab2bfd1234e4ff5382b8fc429552b39412c7880a6986973423b34e5482c10ba",
       "network": "moloch-v1",
       "chain": "eip155:1",
