@@ -1,6 +1,9 @@
 {
   "name": "@petal/web",
   "version": "0.0.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
   "private": true,
   "type": "module",
   "license": "MIT",
