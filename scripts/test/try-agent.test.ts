@@ -52,6 +52,23 @@ describe('try-agent', () => {
     ]);
   });
 
+  test('--bare is someone with nothing installed: no Petal tools, no skill, only the web', () => {
+    const c = claudeArgs('prompt', {
+      model: 'haiku',
+      skill: 'SKILL',
+      session: 's',
+      first: true,
+      state: '/t',
+      bare: true,
+    });
+    expect(c).not.toContain('--mcp-config');
+    expect(c).not.toContain('SKILL');
+    expect(c.slice(c.indexOf('--allowedTools') + 1)).toEqual(['WebFetch', 'Bash(curl *)']);
+    const k = codexArgs('prompt', { path: '/bin', state: '/t', bare: true }).join(' ');
+    expect(k).not.toContain('mcp_servers');
+    expect(k).toContain('sandbox_workspace_write.network_access=true');
+  });
+
   test('reads a Claude Code run', () => {
     const t = readClaude(
       [
