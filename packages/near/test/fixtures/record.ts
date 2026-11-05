@@ -60,7 +60,7 @@ await record({
   file: 'fastdata/test-latest-petals-empty.json',
   note: "The gallery read on Petal's own testnet map before anything is written: one call per trusted writer.",
   method: 'POST',
-  url: `${TEST_KV}/v0/latest/petals.testnet/writer.petals.testnet`,
+  url: `${TEST_KV}/v0/latest/petals.testnet/petals-writer.testnet`,
   body: { key_prefix: 'petal/v1/spec/', limit: 200, include_metadata: true },
 });
 

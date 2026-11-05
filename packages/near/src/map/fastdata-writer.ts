@@ -11,7 +11,7 @@
 //   a row with this transaction's hash appears (up to 30 s).
 //
 // The key file (PETAL_WRITER_KEY_FILE, outside the repo) is the near-cli JSON form:
-//   { "account_id": "writer.petals.testnet", "public_key": "ed25519:…", "private_key": "ed25519:…" }
+//   { "account_id": "petals-writer.testnet", "public_key": "ed25519:…", "private_key": "ed25519:…" }
 // It is read on the first write, and the key is checked on chain first: Petal refuses to write
 // with a full-access key or with a function-call key that allows anything but __fastdata_kv on
 // the receiver.

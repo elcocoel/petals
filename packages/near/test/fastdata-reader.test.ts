@@ -70,7 +70,7 @@ describe('fastDataReader on recorded FastData responses (2026-11-04)', () => {
       { network: 'testnet', receiver: 'petals.testnet' },
       { fetch: f, apiKey: '' },
     );
-    expect(await reader.latest('petal/v1/spec/', { writers: ['writer.petals.testnet'] })).toEqual(
+    expect(await reader.latest('petal/v1/spec/', { writers: ['petals-writer.testnet'] })).toEqual(
       [],
     );
     expect(f.calls).toHaveLength(1);
@@ -217,7 +217,7 @@ mapSuite('fastDataReader + fastDataWriter (fake chain, fake KV)', async () => {
   const someone = seededKey('someone');
   const chain = fakeChain(
     {
-      'writer.petals.testnet': { [petal.publicKey]: functionCall('petals.testnet') },
+      'petals-writer.testnet': { [petal.publicKey]: functionCall('petals.testnet') },
       'someone.testnet': { [someone.publicKey]: functionCall('petals.testnet') },
     },
     kv,
@@ -247,12 +247,12 @@ mapSuite('fastDataReader + fastDataWriter (fake chain, fake KV)', async () => {
       deps,
     );
   return {
-    writer: await writerFor('writer.petals.testnet', petal),
+    writer: await writerFor('petals-writer.testnet', petal),
     reader: fastDataReader(
       { network: 'testnet', receiver: 'petals.testnet' },
       { fetch: kv.fetch, apiKey: '' },
     ),
-    writerAccount: 'writer.petals.testnet',
+    writerAccount: 'petals-writer.testnet',
     receiver: 'petals.testnet',
     other: { writer: await writerFor('someone.testnet', someone), account: 'someone.testnet' },
   };

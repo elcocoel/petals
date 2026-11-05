@@ -105,7 +105,7 @@ describe('config from the environment', () => {
     expect(cfg.map).toMatchObject({
       network: 'testnet',
       receiver: 'petals.testnet',
-      writer: 'writer.petals.testnet',
+      writer: 'petals-writer.testnet',
       trustedWriters: ['a.testnet', 'b.testnet'],
     });
     expect(cfg.live).toBe(true);

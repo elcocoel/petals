@@ -288,7 +288,7 @@ describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
     expect(pub).toMatchObject({
       key: `petal/v1/spec/${pub.id}`,
       receiver: 'petals.testnet',
-      writer: 'writer.petals.testnet',
+      writer: 'petals-writer.testnet',
       explorer_url: `https://testnet.nearblocks.io/txns/${pub.tx_hash}`,
       gallery_url: `https://petal.test/f/${pub.id}`,
     });

@@ -15,7 +15,7 @@ import { checkWrite } from './limits.ts';
 export { checkWrite, MAP_KEY_PREFIX } from './limits.ts';
 
 export interface FakeMapOptions {
-  /** default writer.petals.testnet */
+  /** default petals-writer.testnet */
   writer?: string;
   /** default petals.testnet */
   receiver?: string;
@@ -44,7 +44,7 @@ export type FakeMap = MapWriter &
 
 export function fakeMap(opts: FakeMapOptions = {}): FakeMap {
   const receiver = opts.receiver ?? 'petals.testnet';
-  const writer = opts.writer ?? 'writer.petals.testnet';
+  const writer = opts.writer ?? 'petals-writer.testnet';
   const startBlock = opts.startBlock ?? 200_000_000;
   const startTime = opts.startTime ?? Date.UTC(2026, 10, 4);
   const rows = new Map<string, MapRow>(); // `${writer}\n${key}`

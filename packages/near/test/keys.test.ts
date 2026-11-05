@@ -29,7 +29,7 @@ describe('mapKeys: every key in shared-map.md', () => {
       mapKeys.index('near:mainnet', 'house-of-stake', 0),
       mapKeys.label('near:testnet', 'a.testnet'),
       mapKeys.correction(id, id),
-      mapKeys.vouch('writer.petals.testnet'),
+      mapKeys.vouch('petals-writer.testnet'),
     ];
     expect(() => checkWrite(Object.fromEntries(keys.map((k) => [k, 1])))).not.toThrow();
   });

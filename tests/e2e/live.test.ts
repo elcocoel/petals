@@ -6,7 +6,7 @@
 // The keys come from the environment only; this file never reads ../.secrets/. For example:
 //   set -a; source ../.secrets/near-ai.env; set +a
 //   PETAL_LIVE=1 PETAL_WRITER_KEY_FILE=../.secrets/petal-writer.testnet.json pnpm test:e2e
-// The map defaults to testnet (petals.testnet, writer.petals.testnet) when no PETAL_MAP_* is set.
+// The map defaults to testnet (petals.testnet, petals-writer.testnet) when no PETAL_MAP_* is set.
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

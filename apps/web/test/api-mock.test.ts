@@ -250,7 +250,7 @@ describe('API mock: publish (relayed, NEP-413)', () => {
     }>('/api/v1/publish', { entry_sha256: p.entry_sha256, proof });
     expect(out.status).toBe(200);
     expect(out.json.key).toBe(`petal/v1/spec/${out.json.id}`);
-    expect(out.json.writer).toBe('writer.petals.testnet');
+    expect(out.json.writer).toBe('petals-writer.testnet');
     expect(out.json.explorer_url).toBe(`https://testnet.nearblocks.io/txns/${out.json.tx_hash}`);
 
     const list = await m.call<{

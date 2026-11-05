@@ -16,7 +16,7 @@ mapSuite('fakeMap', () => {
 describe('fakeMap specifics', () => {
   test('defaults to the testnet accounts in shared-map.md', () => {
     const m = fakeMap();
-    expect([m.writer, m.receiver]).toEqual(['writer.petals.testnet', 'petals.testnet']);
+    expect([m.writer, m.receiver]).toEqual(['petals-writer.testnet', 'petals.testnet']);
   });
 
   test('records every write, with deterministic fake transaction hashes', async () => {
@@ -28,7 +28,7 @@ describe('fakeMap specifics', () => {
     expect(ta.tx_hash.startsWith('fake')).toBe(true);
     await a.as('maker.testnet').write({ 'petal/v1/spec/y': 1 });
     expect(a.writes().map((w) => [w.writer, w.keys])).toEqual([
-      ['writer.petals.testnet', ['petal/v1/spec/x']],
+      ['petals-writer.testnet', ['petal/v1/spec/x']],
       ['maker.testnet', ['petal/v1/spec/y']],
     ]);
   });

@@ -28,9 +28,9 @@ describe('configFromEnv', () => {
         PETAL_LLM_DAILY_USD: '2.5',
         PETAL_MAP_NETWORK: 'testnet',
         PETAL_MAP_RECEIVER: 'petals.testnet',
-        PETAL_WRITER_ACCOUNT: 'writer.petals.testnet',
+        PETAL_WRITER_ACCOUNT: 'petals-writer.testnet',
         PETAL_WRITER_KEY_FILE: '../.secrets/petal-writer.testnet.json',
-        PETAL_TRUSTED_WRITERS: 'writer.petals.testnet, other.testnet',
+        PETAL_TRUSTED_WRITERS: 'petals-writer.testnet, other.testnet',
         FASTNEAR_API_KEY: 'f',
         PETAL_PAYOUT_ACCOUNT: 'petal-demo.near',
         PETAL_API: 'http://localhost:3000/',
@@ -45,9 +45,9 @@ describe('configFromEnv', () => {
       map: {
         network: 'testnet',
         receiver: 'petals.testnet',
-        writer: 'writer.petals.testnet',
+        writer: 'petals-writer.testnet',
         keyFile: '../.secrets/petal-writer.testnet.json',
-        trustedWriters: ['writer.petals.testnet', 'other.testnet'],
+        trustedWriters: ['petals-writer.testnet', 'other.testnet'],
       },
       fastnearApiKey: 'f',
       payoutAccount: 'petal-demo.near',
@@ -62,17 +62,17 @@ describe('configFromEnv', () => {
     expect(configFromEnv({ PETAL_MAP_NETWORK: 'testnet' }, '/r').map).toEqual({
       network: 'testnet',
       receiver: 'petals.testnet',
-      writer: 'writer.petals.testnet',
-      trustedWriters: ['writer.petals.testnet'],
+      writer: 'petals-writer.testnet',
+      trustedWriters: ['petals-writer.testnet'],
     });
     expect(configFromEnv({ PETAL_FAKE: '1' }, '/r').fake).toBe(true);
     // a key file alone must never fall back to the fake map without saying so
     expect(configFromEnv({ PETAL_WRITER_KEY_FILE: 'k.json' }, '/r').map).toEqual({
       network: 'testnet',
       receiver: 'petals.testnet',
-      writer: 'writer.petals.testnet',
+      writer: 'petals-writer.testnet',
       keyFile: 'k.json',
-      trustedWriters: ['writer.petals.testnet'],
+      trustedWriters: ['petals-writer.testnet'],
     });
     expect(configFromEnv({ PETAL_WRITER_ACCOUNT: 'w.testnet' }, '/r').map).toMatchObject({
       writer: 'w.testnet',
@@ -87,10 +87,10 @@ describe('createContext', () => {
   test('fake mode: the fake map, the recorded dry quote, RPC off; making it never throws', async () => {
     const ctx = createContext({ root: REPO, stateDir: stateDir(), fake: true });
     expect(ctx.map.receiver).toBe('petals.testnet');
-    expect(ctx.map.trustedWriters).toEqual(['writer.petals.testnet']);
+    expect(ctx.map.trustedWriters).toEqual(['petals-writer.testnet']);
     const w = await ctx.map.writer?.write({ 'petal/v1/spec/x': { a: 1 } });
     expect(w?.tx_hash).toMatch(/^fake/);
-    expect((await ctx.map.reader.get('petal/v1/spec/x', 'writer.petals.testnet'))?.value).toEqual({
+    expect((await ctx.map.reader.get('petal/v1/spec/x', 'petals-writer.testnet'))?.value).toEqual({
       a: 1,
     });
     expect(await ctx.quote({ purpose: 'sponsor_refresh' })).toMatchObject({ dry: true });
@@ -125,7 +125,7 @@ describe('createContext', () => {
       recipient: prep.recipient as string,
     });
     const pub = await run('publish_flower', { entry_sha256: prep.entry_sha256, proof });
-    expect(pub).toMatchObject({ key: `petal/v1/spec/${pub.id}`, writer: 'writer.petals.testnet' });
+    expect(pub).toMatchObject({ key: `petal/v1/spec/${pub.id}`, writer: 'petals-writer.testnet' });
     const records = readdirSync(join(dir, 'mirror')).filter((n) => n.endsWith('.json'));
     expect(records).toHaveLength(1);
     const rec = JSON.parse(readFileSync(join(dir, 'mirror', records[0] as string), 'utf8'));
@@ -143,10 +143,10 @@ describe('createContext', () => {
     const base = { network: 'testnet' as const, receiver: 'petals.testnet', trustedWriters: [] };
     const withKey = createContext({
       root: REPO,
-      map: { ...base, writer: 'writer.petals.testnet', keyFile: '/nowhere/key.json' },
+      map: { ...base, writer: 'petals-writer.testnet', keyFile: '/nowhere/key.json' },
     });
     expect(withKey.map.writer).not.toBeNull();
-    expect(withKey.map.trustedWriters).toEqual(['writer.petals.testnet']);
+    expect(withKey.map.trustedWriters).toEqual(['petals-writer.testnet']);
     expect(
       createContext({ root: REPO, map: { ...base, writer: 'w.testnet' } }).map.writer,
     ).toBeNull();

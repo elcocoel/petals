@@ -132,7 +132,7 @@ Each workstream owns one directory and builds against [contracts/packages.md](./
 
 1. **Licence**: decided, MIT (2026-11-04). **Publication boundary**: approve the allowlist of what enters `build/` at the task gate; anything new needs his OK.
 2. **NEAR AI Cloud key.** `.secrets/near-ai.env` exists, but `NEAR_AI_API_KEY` is empty (length checked only). Needed before M1 ends (the bake-off).
-3. **Testnet accounts**: `petals.testnet` (receiver, no contract) and `writer.petals.testnet`, with a function-call key limited to `petals.testnet` and `__fastdata_kv` saved in `.secrets/`; and a one-time OK for the build to sign testnet transactions with it. Needed before M2.
+3. **Testnet accounts**: `petals.testnet` (receiver, no contract) and `petals-writer.testnet`, with a function-call key limited to `petals.testnet` and `__fastdata_kv` saved in `.secrets/`; and a one-time OK for the build to sign testnet transactions with it. Needed before M2.
 4. **Mainnet project account** (`petals.near` is free): payout and any later mainnet map.
 5. **Hosting and any deploy** (Vercel proposed), and the lasting store for snapshot bodies and runs (C3); a hosted URL before the freeze.
 6. **Any mainnet spend** (one ~$1 Intents payment). Stretch.

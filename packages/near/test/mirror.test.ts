@@ -204,7 +204,7 @@ describe('mirrorReader: the mirror read as a map (KV unreachable)', () => {
     await m.write({ 'petal/v1/spec/b': null });
     f.state.down = true;
     await m.write({ 'petal/v1/spec/c': 2 }).catch(() => {});
-    const r = mirrorReader(dir, { writer: 'writer.petals.testnet', receiver: 'petals.testnet' });
+    const r = mirrorReader(dir, { writer: 'petals-writer.testnet', receiver: 'petals.testnet' });
     const rows = await r.latest('petal/v1/spec/');
     expect(rows.map((x) => [x.key, x.value])).toEqual([
       ['petal/v1/spec/a', 1],
@@ -213,10 +213,10 @@ describe('mirrorReader: the mirror read as a map (KV unreachable)', () => {
     expect(rows[1]).toMatchObject({
       tx_hash: '',
       block_height: 0,
-      writer: 'writer.petals.testnet',
+      writer: 'petals-writer.testnet',
     });
     expect(rows[0]?.tx_hash).not.toBe('');
-    expect(await r.get('petal/v1/spec/b', 'writer.petals.testnet')).toBeNull();
+    expect(await r.get('petal/v1/spec/b', 'petals-writer.testnet')).toBeNull();
     expect(await r.get('petal/v1/spec/a', 'someone.testnet')).toBeNull();
     expect(await r.latest('petal/v1/spec/', { writers: ['someone.testnet'] })).toEqual([]);
     expect(await r.latest('petal/v1/spec/', { limit: 1 })).toHaveLength(1);
@@ -232,13 +232,13 @@ describe('mirror around the FastData writer', () => {
     const kv = fakeFastData();
     const k = seededKey('writer');
     const chain = fakeChain(
-      { 'writer.petals.testnet': { [k.publicKey]: functionCall('petals.testnet') } },
+      { 'petals-writer.testnet': { [k.publicKey]: functionCall('petals.testnet') } },
       kv,
     );
     const keyFile = join(dir, 'key.json');
     await writeFile(keyFile, JSON.stringify({ private_key: k.secretKey }));
     const inner = fastDataWriter(
-      { network: 'testnet', receiver: 'petals.testnet', writer: 'writer.petals.testnet', keyFile },
+      { network: 'testnet', receiver: 'petals.testnet', writer: 'petals-writer.testnet', keyFile },
       { provider: chain.provider, kv: { fetch: kv.fetch, apiKey: '' }, sleep: async () => {} },
     );
     const mirrorDir = join(dir, 'mirror');
@@ -253,7 +253,7 @@ describe('mirror around the FastData writer', () => {
       { network: 'testnet', receiver: 'petals.testnet' },
       { fetch: kv.fetch, apiKey: '' },
     );
-    const row = await reader.get('petal/v1/spec/x', 'writer.petals.testnet');
+    const row = await reader.get('petal/v1/spec/x', 'petals-writer.testnet');
     const files = await readdir(mirrorDir);
     const rec = JSON.parse(
       await readFile(join(mirrorDir, files[0] as string), 'utf8'),

@@ -4,7 +4,7 @@
   "note": "The gallery read on Petal's own testnet map before anything is written: one call per trusted writer.",
   "request": {
     "method": "POST",
-    "url": "https://kv.test.fastnear.com/v0/latest/petals.testnet/writer.petals.testnet",
+    "url": "https://kv.test.fastnear.com/v0/latest/petals.testnet/petals-writer.testnet",
     "body": {
       "key_prefix": "petal/v1/spec/",
       "limit": 200,

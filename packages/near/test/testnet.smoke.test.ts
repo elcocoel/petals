@@ -6,7 +6,7 @@
 //   PETAL_LIVE=1 PETAL_WRITER_KEY_FILE=../.secrets/petal-writer.testnet.json \
 //     pnpm vitest run --project near test/testnet.smoke.test.ts
 //
-// Optional: PETAL_MAP_RECEIVER (petals.testnet), PETAL_WRITER_ACCOUNT (writer.petals.testnet),
+// Optional: PETAL_MAP_RECEIVER (petals.testnet), PETAL_WRITER_ACCOUNT (petals-writer.testnet),
 // FASTNEAR_API_KEY. The key goes under petal/v1/test/, which no gallery reads.
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -20,7 +20,7 @@ import { explorerTxUrl } from '../src/network.ts';
 
 const LIVE = process.env.PETAL_LIVE === '1';
 const receiver = process.env.PETAL_MAP_RECEIVER ?? 'petals.testnet';
-const writerAccount = process.env.PETAL_WRITER_ACCOUNT ?? 'writer.petals.testnet';
+const writerAccount = process.env.PETAL_WRITER_ACCOUNT ?? 'petals-writer.testnet';
 const keyFile = process.env.PETAL_WRITER_KEY_FILE;
 
 describe.skipIf(!LIVE)('testnet smoke (PETAL_LIVE=1): the shared map on FastData', () => {

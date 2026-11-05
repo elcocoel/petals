@@ -130,7 +130,7 @@ export function configFromEnv(env: Env = process.env, root: string = process.cwd
     const network = networkVar === 'mainnet' ? 'mainnet' : 'testnet';
     const writer =
       set(env.PETAL_WRITER_ACCOUNT) ??
-      (network === 'testnet' ? 'writer.petals.testnet' : undefined);
+      (network === 'testnet' ? 'petals-writer.testnet' : undefined);
     const trusted = (set(env.PETAL_TRUSTED_WRITERS) ?? writer ?? '')
       .split(',')
       .map((s) => s.trim())

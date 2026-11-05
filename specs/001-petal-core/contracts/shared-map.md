@@ -9,7 +9,7 @@ The shared map is a set of keys written with `__fastdata_kv` function calls to a
 | Role | Testnet | Mainnet (later, needs OK) | Keys |
 |---|---|---|---|
 | Receiver: the map's namespace | `petals.testnet` | `petals.near` (free on 2026-11-04) | full-access key stays with Elco. **No contract is ever deployed.** |
-| Petal's writer | `writer.petals.testnet` | `writer.petals.near` | full-access key stays with Elco. Petal's server holds only a **function-call key**: receiver `petals.testnet`, method `__fastdata_kv`, allowance 1 NEAR. It cannot move funds or add keys. |
+| Petal's writer | `petals-writer.testnet` | `writer.petals.near` | full-access key stays with Elco. Petal's server holds only a **function-call key**: receiver `petals.testnet`, method `__fastdata_kv`, allowance 1 NEAR. It cannot move funds or add keys. |
 | Maker | any `.testnet` account | any `.near` account | the maker's wallet. Signs NEP-413 messages (no gas). Phase B: may add a function-call key for their own agent. |
 
 ## Endpoints
@@ -74,7 +74,7 @@ What happens next: the flower shows open requests next to the identity link they
 
 ## Trust and verification
 
-- Anyone can write under `petals.testnet`. Readers only show rows from trusted writers. Phase A: `PETAL_TRUSTED_WRITERS=writer.petals.testnet`. Phase B: vouch entries, plus rows where writer = the entry's maker after verification, marked "written by the maker".
+- Anyone can write under `petals.testnet`. Readers only show rows from trusted writers. Phase A: `PETAL_TRUSTED_WRITERS=petals-writer.testnet`. Phase B: vouch entries, plus rows where writer = the entry's maker after verification, marked "written by the maker".
 - For every entry the reader recomputes `entry_sha256` and `id`, checks `spec_sha256`, and verifies the maker's NEP-413 signature with the stored public key. A row that fails is hidden and logged.
 - Stored values come back re-serialised with sorted keys, so always hash the canonical JSON (RFC 8785) of the parsed value, never the raw bytes.
 

@@ -102,7 +102,7 @@ describe('every door returns the same JSON', () => {
       expect(pub, d.name).toMatchObject({
         key: `petal/v1/spec/${pub.id}`,
         receiver: 'petals.testnet',
-        writer: 'writer.petals.testnet',
+        writer: 'petals-writer.testnet',
         tools_version: 'tools/v1',
       });
       ids.push(pub.id as string);

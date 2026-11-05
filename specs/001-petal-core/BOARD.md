@@ -79,7 +79,7 @@ Why: see plan.md, "Doors".
 |---|---|---|
 | **now** | approve the task list; OK the publication boundary; confirm relayed publish (C4) and the skeleton-first exception (C1) | T001 |
 | before M1 ends | NEAR AI Cloud key in `.secrets/near-ai.env` (the file exists, the key is empty) | T059 |
-| before M2 | testnet `petals.testnet` + `writer.petals.testnet`, a limited writer key, one OK to sign testnet | T043 |
+| before M2 | testnet `petals.testnet` + `petals-writer.testnet`, a limited writer key, one OK to sign testnet | T043 |
 | end of M2 | sign the first publish in your wallet; see the skeleton | T073, T075 |
 | M5 | approve a maker write and an agent key in your wallet | T107 |
 | M6 | confirm the hero set; the beauty review | T108, T117 |

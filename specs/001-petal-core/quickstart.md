@@ -10,7 +10,7 @@ This is the end-to-end check for Phase A. When all five steps pass, every part o
 |---|---|---|
 | Node 24 (`nvm use`; the default `node` on Elco's PATH is 22) and pnpm 10 | everything | nothing runs |
 | `NEAR_AI_API_KEY` in `../.secrets/near-ai.env` (outside the repo) | live agent in step 2 | the agent replays a recorded run and says so |
-| Testnet receiver `petals.testnet` and writer `writer.petals.testnet`, the writer's function-call key file in `../.secrets/` | map reads and writes in steps 1 and 3 | gallery shows fixtures only; publish uses the fake map |
+| Testnet receiver `petals.testnet` and writer `petals-writer.testnet`, the writer's function-call key file in `../.secrets/` | map reads and writes in steps 1 and 3 | gallery shows fixtures only; publish uses the fake map |
 | A Meteor (or Intear) wallet with any `.testnet` account | signing in step 3 | step 3 can't be checked |
 | Claude Code with the Petal skill | step 4 | step 4 can't be checked |
 
@@ -26,7 +26,7 @@ pnpm test               # unit, golden, contract and schema tests; must be green
 pnpm dev                # site and API on http://localhost:3000 (API also standalone on :8787 via `pnpm api`)
 ```
 
-Environment (all optional; see `.env.example`): `NEAR_AI_API_KEY`, `PETAL_MAP_NETWORK=testnet`, `PETAL_MAP_RECEIVER=petals.testnet`, `PETAL_WRITER_ACCOUNT=writer.petals.testnet`, `PETAL_WRITER_KEY_FILE=../.secrets/petal-writer.testnet.json`, `PETAL_TRUSTED_WRITERS=writer.petals.testnet`, `PETAL_LLM_DAILY_USD=3`, `FASTNEAR_API_KEY`.
+Environment (all optional; see `.env.example`): `NEAR_AI_API_KEY`, `PETAL_MAP_NETWORK=testnet`, `PETAL_MAP_RECEIVER=petals.testnet`, `PETAL_WRITER_ACCOUNT=petals-writer.testnet`, `PETAL_WRITER_KEY_FILE=../.secrets/petal-writer.testnet.json`, `PETAL_TRUSTED_WRITERS=petals-writer.testnet`, `PETAL_LLM_DAILY_USD=3`, `FASTNEAR_API_KEY`.
 
 `GET /api/v1/health` reports `map: up | down | mirror` and `llm: up | down | recorded`, so you know which mode you are in.
 
@@ -52,9 +52,9 @@ Check by API: `POST /api/v1/agent/chat` streams `run`, `stage`, `tool_call`, `to
 ## Step 3: the maker publishes on NEAR
 
 1. Press **Publish**. The wallet asks for one signature (NEP-413 message naming the entry hash). No gas, no transaction in the wallet.
-2. **Expect**: the site shows "Published", the key `petal/v1/spec/<id>`, the writer `writer.petals.testnet`, and a testnet explorer link. The receipt shows as failed on the explorer because the receiver has no contract; that is expected and the page says so.
+2. **Expect**: the site shows "Published", the key `petal/v1/spec/<id>`, the writer `petals-writer.testnet`, and a testnet explorer link. The receipt shows as failed on the explorer because the receiver has no contract; that is expected and the page says so.
 3. **Expect**: within 30 s the flower appears in the gallery with the maker's account as author and "signed by <account>" verified.
-4. Read it back directly: `curl https://kv.test.fastnear.com/v0/latest/petals.testnet/writer.petals.testnet/petal%2Fv1%2Fspec%2F<id>` returns the entry. Its recomputed hash matches its id.
+4. Read it back directly: `curl https://kv.test.fastnear.com/v0/latest/petals.testnet/petals-writer.testnet/petal%2Fv1%2Fspec%2F<id>` returns the entry. Its recomputed hash matches its id.
 5. Reuse: ask for House of Stake twice (`POST /api/v1/snapshots {"network":"near-house-of-stake"}`). **Expect** the first call to fetch live (`reused: false`, about 10 s, a new `petal/v1/snapshot/<sha256>` and index key on the map) and the second to return the same `sha256` with `reused: true` in well under a second. Asking for NEAR validators again also says `reused: true`.
 
 Negative checks: a tampered message, a reused nonce, or a function-call key instead of a full-access key all return `unauthorised`.

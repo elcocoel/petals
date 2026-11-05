@@ -15,7 +15,7 @@ import {
 import { type FakeChain, fakeChain, seededKey } from './helpers/fake-chain.ts';
 import { type FakeFastData, fakeFastData } from './helpers/fake-fastdata.ts';
 
-const WRITER = 'writer.petals.testnet';
+const WRITER = 'petals-writer.testnet';
 const RECEIVER = 'petals.testnet';
 const key = seededKey('writer');
 
@@ -219,7 +219,7 @@ describe('fastDataWriter refuses before sending', () => {
     chain = fakeChain({}, kv);
     await expect((await writer()).write({ 'petal/v1/spec/x': 1 })).rejects.toMatchObject({
       code: 'internal',
-      message: expect.stringMatching(/is not a key of writer.petals.testnet/),
+      message: expect.stringMatching(/is not a key of petals-writer.testnet/),
     });
   });
 
