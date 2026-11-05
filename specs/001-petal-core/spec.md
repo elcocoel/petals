@@ -174,7 +174,7 @@ A maker who likes their flower publishes it. They sign in with a NEAR account, a
 - **FR-027**: Makers MUST be able to publish a flower to a shared map on NEAR, signed by their NEAR account, and see it in the published gallery.
 - **FR-028**: Data gathered for a network at a given date MUST be kept and reused, never fetched again, once it is final on its chain; the shared map records its fingerprint.
 - **FR-029**: Agents MUST be able to publish on a maker's behalf only with a key limited to publishing that cannot move funds.
-- **FR-030**: Viewing flowers and making a flower with Petal's agent MUST need no account, key or payment from the user; signing in is needed only to publish.
+- **FR-030** (amended 2026-11-05 by Elco, see `specs/002-system/`): Viewing flowers and making a flower with one's own agent MUST need no account, key or payment. Using Petal's own agent spends budget, so it needs sponsorship or the person's own payment.
 - **FR-031**: Petal SHOULD show what it would cost to sponsor new coverage or a refresh, quoted through NEAR Intents so it can be paid from any chain; no payment is taken in the build without Elco's explicit approval.
 - **FR-032**: The build MAY implement a subset of the primitive vocabulary; any primitive not yet implemented is declared unavailable to the agent and the user, never imitated.
 
@@ -218,7 +218,7 @@ A maker who likes their flower publishes it. They sign in with a NEAR account, a
 - The hackathon build showcases as much of NEAR as is genuinely useful (decided 2026-11-04): NEAR AI Cloud as the brain of Petal's agent, NEAR for the shared map, NEAR accounts and limited keys for publishing, NEAR Intents for payment, an IronClaw skill, and NEAR's own governance as data. Non-NEAR alternatives are documented for later.
 - Development writes to NEAR testnet; reads of chain data use mainnet.
 - The hero set's five systems are chosen during planning, based on data completeness.
-- All data used is public; Petal stores no private user data and needs no sign-in to view.
+- All map data is public, and viewing needs no sign-in. Private workspaces exist as of `specs/002-system/` (amended 2026-11-05).
 - Who may trigger new analyses and how Petal is paid for are decided after the architecture and are post-hackathon.
 - Wallet messaging and peer-to-peer coordination between governors are out of scope for the hackathon build and described as roadmap.
 - Creative competitions and saved searches are out of scope for the hackathon build.
