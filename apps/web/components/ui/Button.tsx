@@ -12,11 +12,25 @@ const VARIANTS: Record<ButtonVariant, string> = {
     'h-starter-height border border-hairline bg-transparent pr-starter-inset-end pl-starter-inset-start type-caption text-primary',
 };
 
-const ARROWS: Record<ButtonVariant, string> = {
-  primary: 'type-mono-code text-action-accent',
-  secondary: 'type-mono-code',
-  starter: 'type-mono-label',
-};
+/**
+ * Figma sets this in Geist Mono, but Google's Geist Mono has no U+2192 and the text fell back to
+ * Arial, so it's drawn. In em, so it scales with the label: 10 wide at Label, like Figma's.
+ */
+function Arrow({ variant }: { variant: ButtonVariant }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 10 10"
+      width="0.625em"
+      height="0.625em"
+      fill="none"
+      stroke="currentColor"
+      className={variant === 'primary' ? 'shrink-0 text-action-accent' : 'shrink-0'}
+    >
+      <path d="M0 5h9.5M5.5 1l4 4-4 4" />
+    </svg>
+  );
+}
 
 export type ButtonProps = {
   variant?: ButtonVariant;
@@ -38,11 +52,7 @@ export function Button({ variant = 'primary', arrow, children, ...rest }: Button
   const content = (
     <>
       {children}
-      {(arrow ?? variant === 'starter') && (
-        <span aria-hidden="true" className={ARROWS[variant]}>
-          →
-        </span>
-      )}
+      {(arrow ?? variant === 'starter') && <Arrow variant={variant} />}
     </>
   );
   if (rest.href !== undefined) {

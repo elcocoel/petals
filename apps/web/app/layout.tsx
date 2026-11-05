@@ -7,8 +7,7 @@ import './globals.css';
 
 // Each `variable` is the one packages/tokens/source.ts names under `fonts`.
 const monaSans = Mona_Sans({ subsets: ['latin'], variable: '--font-mona-sans' });
-// symbols2 holds the arrow: latin has no U+2192.
-const geistMono = Geist_Mono({ subsets: ['latin', 'symbols2'], variable: '--font-geist-mono' });
+const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' });
 // The wordmark's layers set these axes. Block rather than swap: three stacked copies in a fallback
 // font would flash as a smear.
 const bitcount = Bitcount_Grid_Single({
