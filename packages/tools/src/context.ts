@@ -5,7 +5,7 @@
 // the tool call that needs it, as a ToolError, never here.
 import { join, resolve } from 'node:path';
 import type { QuoteRequest, QuoteResult } from '@petal/core/types';
-import { fileStore, lastingStore, vercelBlob, modules } from '@petal/inputs';
+import { fileStore, lastingStore, modules, vercelBlob } from '@petal/inputs';
 import type { Rpc } from '@petal/near/auth';
 import {
   fakeMap,
