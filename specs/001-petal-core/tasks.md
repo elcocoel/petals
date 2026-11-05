@@ -411,6 +411,7 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 - [ ] T169 [W8] [Elco] Elco's engagement test: use it freely; each thing that makes them stop engaging becomes a task here. Deps: T164–T166.
 - [X] T170 [W6] The agent speaks first: `/` is the conversation, the gallery moves to `/gallery`, `/make` stays as the same page. The opening is written text with real gallery entries in `apps/web/lib/opening.ts`, so opening the app costs no model call, and it goes to the model with the first question. Shared rules gain "Talk first". Deps: T166.
 - [X] T171 [W8] Test on your own agent's subscription: `scripts/try-agent.ts` runs a conversation through Claude Code or Codex with Petal's skill and tools loaded for that run only, no API keys, no NEAR AI, its own state folder. Deps: T164.
+- [X] T172 [W7] Any agent with nothing installed: a copy-prompt button in `apps/web/components/CopyPrompt.tsx`, `/skill.md` (the skill with this site's address and no local commands, `apps/web/lib/agent-prompt.ts`) and `/mcp` through the site. `scripts/try-agent.ts --bare` is the paste test. A spec's target now comes from its snapshot, so one flower has one hash. Real chat apps need a public URL: Elco OK. Deps: T170.
 
 ---
 
