@@ -136,7 +136,7 @@ async function main() {
   const question = QUESTIONS[which];
   if (!question) throw new Error(`bakeoff: --question is one of ${Object.keys(QUESTIONS)}`);
   const out = resolve(REPO, arg('out', 'fixtures/transcripts/bakeoff'));
-  const ledgerPath = resolve(arg('ledger', join(tmpdir(), 'petal-bakeoff-ledger.json')));
+  const ledgerPath = resolve(arg('ledger', join(tmpdir(), 'petal-bakeoff-ledger.db')));
   const stopAt = Number(arg('stop-at-usd', '0.8'));
 
   const env = { ...process.env };

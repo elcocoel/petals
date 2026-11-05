@@ -12,11 +12,13 @@ export {
 export {
   createNonceStore,
   defaultNonces,
+  durableNonceStore,
   issueNonce,
   NONCE_BYTES,
   NONCE_TTL_MS,
   type NonceCheck,
   type NonceStore,
+  type NonceTable,
 } from './nonce.ts';
 export type { Nep413Proof };
 

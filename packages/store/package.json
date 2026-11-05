@@ -1,0 +1,12 @@
+{
+  "name": "@petal/store",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Private data in SQLite through node:sqlite: people, sessions, runs, the ledger, credit, explorations.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  }
+}

@@ -1,10 +1,14 @@
 // issueNonce (T041): 32 random bytes (base64), valid 5 minutes, used once. NEP-413 nonces are
 // exactly 32 bytes; the docs' UUID example is 36 bytes and wallets reject it.
 //
-// The store is in memory, in the process that issues and verifies (Petal's server, or `petal mcp`).
 // A nonce is reserved while its proof is checked, so two requests with one proof cannot both pass;
 // it is spent when the proof passes, and released when a check could not finish (RPC down), so the
 // maker does not have to sign again.
+//
+// Two forms. createNonceStore is in memory, for tests and for places with no store. On a server,
+// durableNonceStore keeps them in a table this package doesn't know (@petal/store's `challenge`
+// fits), so they survive a restart and hold across processes. It is injected: verifyNep413 takes it
+// as `nonces`.
 import { base64 } from '@scure/base';
 
 export const NONCE_BYTES = 32;
@@ -43,7 +47,7 @@ export function createNonceStore(ttlMs = NONCE_TTL_MS): NonceStore {
     issue() {
       const now = Date.now();
       prune(now);
-      const nonce = base64.encode(crypto.getRandomValues(new Uint8Array(NONCE_BYTES)));
+      const nonce = newNonce();
       const expires = now + ttlMs;
       slots.set(nonce, { expires, state: 'issued' });
       return { nonce, expires_at: new Date(expires).toISOString() };
@@ -64,6 +68,38 @@ export function createNonceStore(ttlMs = NONCE_TTL_MS): NonceStore {
       const slot = slots.get(nonce);
       if (slot?.state === 'checking') slot.state = 'issued';
     },
+  };
+}
+
+const newNonce = () => base64.encode(crypto.getRandomValues(new Uint8Array(NONCE_BYTES)));
+
+/** What durableNonceStore needs. `reserve` must be atomic: one caller gets 'ok', from any process. */
+export interface NonceTable {
+  /** Keep a new nonce; a good moment to clear out the expired ones. Times are ISO strings. */
+  put(nonce: string, expiresAt: string, now: string): void;
+  reserve(nonce: string, now: string): NonceCheck;
+  spend(nonce: string, now: string): void;
+  /** Back to issued, only if it is being checked: a spent nonce is never released. */
+  release(nonce: string): void;
+}
+
+export function durableNonceStore(
+  table: NonceTable,
+  ttlMs = NONCE_TTL_MS,
+  now: () => number = Date.now,
+): NonceStore {
+  const iso = (ms: number) => new Date(ms).toISOString();
+  return {
+    issue() {
+      const at = now();
+      const nonce = newNonce();
+      const expires_at = iso(at + ttlMs);
+      table.put(nonce, expires_at, iso(at));
+      return { nonce, expires_at };
+    },
+    reserve: (nonce) => table.reserve(nonce, iso(now())),
+    spend: (nonce) => table.spend(nonce, iso(now())),
+    release: (nonce) => table.release(nonce),
   };
 }
 

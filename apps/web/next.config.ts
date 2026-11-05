@@ -54,6 +54,7 @@ const config: NextConfig = {
     '@petal/core',
     '@petal/inputs',
     '@petal/near',
+    '@petal/store',
     '@petal/tools',
     '@petal/agent',
   ],

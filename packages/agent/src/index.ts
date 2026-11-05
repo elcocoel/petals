@@ -12,8 +12,8 @@ import { createAgentRoutes } from './routes.ts';
 import { startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
 
-/** The daily spend ledger; for scripts that run the agent outside the server (T060). */
-export { fileLedger } from './budget.ts';
+/** The daily spend ledger; fileLedger is for scripts that run the agent outside the server (T060). */
+export { fileLedger, storeLedger } from './budget.ts';
 export type * from './llm.ts';
 export { DEFAULT_BUDGET } from './llm.ts';
 /** nearAiClient with its options (attestations folder, warnings); same scripts. */
@@ -35,7 +35,14 @@ export {
   type TranscriptTurn,
 } from './recorded.ts';
 /** Runs you can leave and come back to (F4). */
-export { fileRunStore, type RunStore } from './runs.ts';
+export {
+  fileRunStore,
+  importRunFiles,
+  type RunEventAt,
+  type RunStore,
+  type RunSummary,
+  sqliteRunStore,
+} from './runs.ts';
 
 /** The agent loop: events in the order of http-api.md (run first, done last). */
 export function runAgent(

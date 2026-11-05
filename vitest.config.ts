@@ -14,6 +14,7 @@ export default defineConfig({
     projects: [
       unit('tokens', 'packages/tokens'),
       unit('core', 'packages/core'),
+      unit('store', 'packages/store'),
       unit('inputs', 'packages/inputs'),
       unit('near', 'packages/near'),
       unit('tools', 'packages/tools'),

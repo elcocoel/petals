@@ -59,23 +59,32 @@ group_overlap(a, b, shared, shared_amount, computed_at)
 
 ## Private
 
+In `<stateDir>/private.db`, through `@petal/store`. `ledger`, `credit` and `invite` money is in USD; times are ISO strings.
+
 ```
 person(id, created_at)
 wallet_binding(person, caip10_encrypted, caip10_hash UNIQUE, proved_at)
-session(hash, person_or_anonymous, expires_at)
-challenge(nonce UNIQUE, expires_at, used_at)
+session(hash, subject, expires_at)             -- subject: a person id or an anonymous handle
+challenge(nonce UNIQUE, expires_at, state, used_at)  -- state: issued, checking, used
 grant(id, person, client, scopes, token_hash, expires_at, revoked_at)
 exploration(id, owner, question, target, head, visibility, share_token_hash, forked_from, created_at, updated_at)
 step(exploration, seq, parent, spec_sha256, recipe_sha256, snapshot_sha256, door, note, at)
-note(exploration, seq, by, text, at)
-run(id, owner, exploration, status, model, created_at, lease_until)
-run_event(run, seq, type, data, at)            -- append-only
-run_thread(run, messages)                      -- each round
+note(exploration, seq, author, text, at)
+run(id, owner, exploration, status, model, body, created_at, updated_at)  -- body: messages, draft, flower
+run_event(run, seq, type, data, at)            -- append-only; seq from 0 is the place in Run.events
+run_thread(run, messages, updated_at)          -- each round
 approval(id, request_hash, signer, proof, expires_at, used_at)
 invite(id, token_hash, budget_usd, spent_usd, expires_at, revoked_at)
-ledger(day, usd, reserved_usd)
-draft(sha256, body, created_at)                -- put-if-absent
+ledger(day, usd, reserved_usd)                 -- the cap counts usd + reserved_usd
+credit(account_key, balance_usd, reserved_usd) -- a generic account balance
+credit_entry(id UNIQUE, account_key, delta_usd, reason, at)  -- an id counts once
+draft(sha256, body, created_at)                -- hash-addressed draft links; put-if-absent
+publish_draft(entry_sha256, body, used_at)     -- prepared for a signature; used_at is claimed atomically
+meta(key, value)
+schema_migration(version, applied_at)
 ```
+
+Not built yet: `grant`, `approval`. A run's `owner` never appears in what a reader of the run sees.
 
 What the store must offer: point reads, put-if-absent with expiry, compare-and-swap on refs, ordered list by owner, a unique secondary index, atomic counters, read-your-writes.
 

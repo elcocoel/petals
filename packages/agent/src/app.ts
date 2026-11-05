@@ -3,14 +3,16 @@
 // cfg.fake, the agent replays the recorded skeleton run: done.model = "recorded", health.llm =
 // "recorded" (SC-009: the judge path works with no credentials).
 import { join } from 'node:path';
+import { TOOLS_VERSION } from '@petal/core';
+import { stateStore } from '@petal/store';
 import { type Config, createContext, httpApp } from '@petal/tools';
 import { Hono } from 'hono';
-import { fileLedger, serverBudget } from './budget.ts';
+import { closedLedger, importLedgerFile, serverBudget, storeLedger } from './budget.ts';
 import { DEFAULT_BUDGET, type LlmClient } from './llm.ts';
 import { chosenModel, createNearAiClient, FALLBACK_MODELS, type NearAiOptions } from './near-ai.ts';
 import { recordedClient, SKELETON_TRANSCRIPT } from './recorded.ts';
 import { type AgentRouteOptions, createAgentRoutes, stateDirOf } from './routes.ts';
-import { fileRunStore } from './runs.ts';
+import { importRunFiles, sqliteRunStore } from './runs.ts';
 
 export interface PetalAppOptions extends AgentRouteOptions {
   /** the model client; default from the config (NEAR AI Cloud with a key, else recorded) */
@@ -45,11 +47,22 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
           },
         )
       : recordedClient(SKELETON_TRANSCRIPT));
+  // <stateDir>/private.db, or memory when that can't be written: the keyless public copy must still
+  // start. Memory is fine for a recorded run, which spends nothing. It can't guard real spend,
+  // because a restart would forget the day's total, so a server with a key then refuses to spend.
+  const store = stateStore(stateDir);
+  try {
+    importLedgerFile(store, join(stateDir, 'llm-ledger.json'));
+    importRunFiles(store, join(stateDir, 'runs'));
+  } catch (e) {
+    // the old files stay where they are, and the next start tries again
+    console.warn(`petal: couldn't import the old run files: ${(e as Error).message}`);
+  }
   const budget = serverBudget(DEFAULT_BUDGET, {
     usdPerDay: config.llmDailyUsd,
-    ledger: fileLedger(join(stateDir, 'llm-ledger.json')),
+    ledger: store.durable ? storeLedger(store) : closedLedger(`${stateDir} can't be written`),
   });
-  const runs = fileRunStore(join(stateDir, 'runs'));
+  const runs = sqliteRunStore(store);
 
   const app = new Hono();
   // The tool side owns /api/v1/health; only the agent knows which model mode it is in.
@@ -70,5 +83,21 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   });
   app.route('/', createAgentRoutes({ tools: ctx, llm, budget, runs }, o));
   app.route('/', httpApp(ctx));
+  // A store that fails mid-request (a full disk, say) ends in the API's own error shape: no chat
+  // starts, so nothing is spent, and the caller is told plainly.
+  app.onError((e, c) => {
+    console.error(`petal: ${c.req.method} ${c.req.path} failed: ${String(e)}`);
+    return c.json(
+      {
+        error: {
+          code: 'internal',
+          message:
+            "Petal can't reach its records right now, so nothing was started. Try again in a little while.",
+        },
+        tools_version: TOOLS_VERSION,
+      },
+      500,
+    );
+  });
   return app;
 }
