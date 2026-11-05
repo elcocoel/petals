@@ -10,6 +10,7 @@ import {
   cornerRadius,
   fonts,
   kebab,
+  motion,
   type Paint,
   type Primitive,
   paintCss,
@@ -70,6 +71,8 @@ export function emitCss(t: Tokens = tokens): string {
       '--default-font-family: var(--font-sans);',
       '--default-mono-font-family: var(--font-mono);',
       ...Object.entries(spacing).map(([n, px]) => `--spacing-${kebab(n)}: ${px}px;`),
+      `--animate-blink: blink ${motion['Cursor blink']}ms step-end infinite;`,
+      '@keyframes blink { 50% { opacity: 0; } }',
     ]),
     // inline: a utility must read the role where it's used, or it would stop flipping with the surface.
     block(
@@ -103,6 +106,7 @@ export function emitCss(t: Tokens = tokens): string {
         `line-height: ${s.line}px;`,
         `font-weight: ${s.weight};`,
         `letter-spacing: ${s.tracking}em;`,
+        ...(s.axes ? [`font-variation-settings: ${axes(s.axes)};`] : []),
       ]),
     ),
     block('@utility wordmark', [

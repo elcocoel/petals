@@ -1,8 +1,8 @@
 // The draft view (T064): a flower from its spec alone (/draft?spec=, the view_url render_flower
 // returns). Not published, so there is no interpretation, maker or signature to show.
-import { FlowerSheet } from '../../components/FlowerSheet.tsx';
-import { decodeDraft } from '../../lib/draft.ts';
-import { renderSpec, sourceUrls } from '../../lib/flower-data.ts';
+import { FlowerSheet } from '../../../components/FlowerSheet.tsx';
+import { decodeDraft } from '../../../lib/draft.ts';
+import { renderSpec, sourceUrls } from '../../../lib/flower-data.ts';
 
 export const dynamic = 'force-dynamic';
 

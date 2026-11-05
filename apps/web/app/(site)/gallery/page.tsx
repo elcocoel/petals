@@ -1,8 +1,8 @@
 // The gallery (T063): list_flowers, with "on NEAR" (and the transaction) or "fixture". No sign-in.
-import { QuotePanel } from '../../components/QuotePanel.tsx';
-import { api } from '../../lib/api.ts';
-import { type ApiHealth, apiLabel } from '../../lib/api-label.ts';
-import { explorerTxUrl } from '../../lib/publish.ts';
+import { QuotePanel } from '../../../components/QuotePanel.tsx';
+import { api } from '../../../lib/api.ts';
+import { type ApiHealth, apiLabel } from '../../../lib/api-label.ts';
+import { explorerTxUrl } from '../../../lib/publish.ts';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +25,7 @@ export default async function Gallery() {
       <h1>Gallery</h1>
       <p>
         Flowers show who holds power in a network. Open one to read it; no account needed.{' '}
-        <a href="/">Talk to the agent</a>.
+        <a href="/make">Talk to the agent</a>.
       </p>
       {health.ok && <p className="muted">{apiLabel(health.value)}</p>}
       {!res.ok ? (

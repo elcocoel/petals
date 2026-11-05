@@ -2,5 +2,5 @@
 import type { ReactNode } from 'react';
 
 export function Eyebrow({ children }: { children: ReactNode }) {
-  return <p className="type-mono-label text-muted">{children}</p>;
+  return <p className="my-none type-mono-label whitespace-pre-wrap text-eyebrow">{children}</p>;
 }

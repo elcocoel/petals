@@ -6,16 +6,18 @@ import type { ReactNode } from 'react';
 export function Surface({
   kind,
   as: Tag = 'div',
+  id,
   className,
   children,
 }: {
   kind: SurfaceName;
-  as?: 'div' | 'section' | 'footer';
+  as?: 'div' | 'section' | 'footer' | 'nav';
+  id?: string;
   className?: string;
   children: ReactNode;
 }) {
   return (
-    <Tag data-surface={kind} className={className}>
+    <Tag data-surface={kind} id={id} className={className}>
       {children}
     </Tag>
   );

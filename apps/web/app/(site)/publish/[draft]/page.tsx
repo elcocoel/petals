@@ -3,12 +3,12 @@
 // for a maker whose own agent made the flower; the page signs that prepared entry as it is.
 import type { Run } from '@petal/core/types';
 import { headers } from 'next/headers';
-import { FlowerSheet } from '../../../components/FlowerSheet.tsx';
-import { PublishFlow } from '../../../components/PublishFlow.tsx';
-import { api } from '../../../lib/api.ts';
-import { entryDraftFromRun } from '../../../lib/entry.ts';
-import { renderSpec, sourceUrls } from '../../../lib/flower-data.ts';
-import { publishTarget } from '../../../lib/publish.ts';
+import { FlowerSheet } from '../../../../components/FlowerSheet.tsx';
+import { PublishFlow } from '../../../../components/PublishFlow.tsx';
+import { api } from '../../../../lib/api.ts';
+import { entryDraftFromRun } from '../../../../lib/entry.ts';
+import { renderSpec, sourceUrls } from '../../../../lib/flower-data.ts';
+import { publishTarget } from '../../../../lib/publish.ts';
 
 export const dynamic = 'force-dynamic';
 

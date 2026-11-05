@@ -31,6 +31,13 @@ export interface Roles {
   'wordmark-back': Paint;
   'wordmark-middle': Paint;
   'wordmark-front': Paint;
+  /** The small mono label above a heading: Ink on ground and mint, Mint on ink (Figma, 66:2318). */
+  eyebrow: Paint;
+  /** Illustrations. Figma paints these Ink, Gray and Mint; lib/figures.ts names them by use. */
+  'figure-line': Paint;
+  'figure-petal': Paint;
+  /** Mint on every surface: on mint it vanishes, as the closing section's cell does (66:2345). */
+  'figure-accent': Paint;
 }
 export type Role = keyof Roles;
 
@@ -47,6 +54,10 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'wordmark-back': 'Mint',
     'wordmark-middle': 'Gray',
     'wordmark-front': 'Ink',
+    eyebrow: 'Ink',
+    'figure-line': 'Ink',
+    'figure-petal': 'Gray',
+    'figure-accent': 'Mint',
   },
   ink: {
     surface: 'Ink',
@@ -60,12 +71,16 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'wordmark-back': 'Mint',
     'wordmark-middle': 'Gray',
     'wordmark-front': 'Ground',
+    eyebrow: 'Mint',
+    'figure-line': 'Ground',
+    'figure-petal': 'Gray',
+    'figure-accent': 'Mint',
   },
   mint: {
     surface: 'Mint',
     'text-primary': 'Ink',
     'text-muted': { of: 'Ink', alpha: 0.7 },
-    hairline: { of: 'Ink', alpha: 0.4 },
+    hairline: 'Ink',
     'action-background': 'Ink',
     'action-text': 'Ground',
     'action-accent': 'Mint',
@@ -73,6 +88,10 @@ export const surfaces: Record<SurfaceName, Roles> = {
     'wordmark-back': 'Ground',
     'wordmark-middle': 'Gray',
     'wordmark-front': 'Ink',
+    eyebrow: 'Ink',
+    'figure-line': 'Ink',
+    'figure-petal': 'Gray',
+    'figure-accent': 'Mint',
   },
 };
 
@@ -89,6 +108,10 @@ export const roleUtilities: Record<Role, string> = {
   'wordmark-back': 'wordmark-back',
   'wordmark-middle': 'wordmark-middle',
   'wordmark-front': 'wordmark-front',
+  eyebrow: 'eyebrow',
+  'figure-line': 'figure-line',
+  'figure-petal': 'figure-petal',
+  'figure-accent': 'figure-accent',
 };
 
 /**
@@ -101,6 +124,7 @@ export const contrastPairs: readonly { text: Role; on: Role }[] = [
   { text: 'text-muted', on: 'surface' },
   { text: 'action-text', on: 'action-background' },
   { text: 'action-accent', on: 'action-background' },
+  { text: 'eyebrow', on: 'surface' },
 ];
 
 /** Figma: Layout/… variables, then the landing page's section padding. Pixels. */
@@ -120,10 +144,21 @@ export const layout = {
  * the old pages already had. All of them become spacing utilities: h-ask-box-height.
  */
 export const sizes = {
+  None: 0,
   'Ask box height': 64,
-  'Ask box width': 600,
+  /** The most it takes. Every instance on the landing page fills its column (584, 640). */
+  'Ask box width': 640,
   'Ask box inset': 8,
   'Ask box gap': 16,
+  /** Figma's step 1 instance (67:2512) is the Ask box at 0.56: these are its values at that scale. */
+  'Ask box small height': 35.84,
+  'Ask box small width': 336,
+  'Ask box small start': 13.44,
+  'Ask box small end': 4.48,
+  'Ask box small gap': 8.96,
+  'Button small height': 26.88,
+  'Button small inset': 12.32,
+  'Button small gap': 5.6,
   'Starter height': 36,
   'Starter inset start': 16,
   'Starter inset end': 14,
@@ -131,7 +166,48 @@ export const sizes = {
   'Content width': 960,
   'Flower width': 640,
   'Gallery flower width': 320,
+  /** Landing frame 66:2180. Figma's column widths, read off its sections. */
+  'Page width': 1440,
+  'Hero pitch width': 584,
+  'Hero figure width': 720,
+  'Figure width': 480,
+  'Intro width': 456,
+  'Builders pitch width': 520,
+  'Closing ask width': 640,
+  'Community pitch width': 560,
+  'Cell width': 300,
+  'Cell repeat width': 624,
+  'Visual height': 220,
+  'Card flower height': 300,
+  'FAQ answer inset': 114,
+  'Glyph row': 48,
+  'Glyph step': 144,
+  'Thumb strip': 72,
+  'Thumb step': 192,
+  'Thumb card': 240,
+  'Cursor width': 12,
+  'Cursor height': 26,
+  /** Figma's loose "Space" frames and auto-layout gaps on that page, named by their pixels. */
+  'Space 2': 2,
+  'Space 6': 6,
+  'Space 8': 8,
+  'Space 10': 10,
+  'Space 14': 14,
+  'Space 16': 16,
+  'Space 20': 20,
+  'Space 22': 22,
+  'Space 26': 26,
+  'Space 28': 28,
+  'Space 32': 32,
+  'Space 36': 36,
+  'Space 40': 40,
+  'Space 44': 44,
+  'Space 56': 56,
+  'Space 96': 96,
 } as const;
+
+/** Not in Figma, which is still: how fast the transcript's cursor blinks, in milliseconds. */
+export const motion = { 'Cursor blink': 1200 } as const;
 
 export const cornerRadius = 0;
 
@@ -152,6 +228,8 @@ export interface TypeStyle {
   weight: number;
   /** In em: Figma's -2% is -0.02. */
   tracking: number;
+  /** Variable font axes, where the style sets them. */
+  axes?: Record<string, number>;
 }
 
 /**
@@ -167,9 +245,23 @@ export const type = {
   Body: { font: 'sans', size: 18, line: 27, weight: 400, tracking: 0 },
   Label: { font: 'sans', size: 16, line: 22, weight: 500, tracking: 0 },
   Caption: { font: 'sans', size: 14, line: 20, weight: 500, tracking: 0 },
+  /** Body and Label at the 0.56 of Figma's small Ask box (67:2512). */
+  'Body small': { font: 'sans', size: 10.08, line: 15.12, weight: 400, tracking: 0 },
+  'Label small': { font: 'sans', size: 8.96, line: 12.32, weight: 500, tracking: 0 },
   'Mono label': { font: 'mono', size: 12, line: 17, weight: 400, tracking: 0.04 },
   'Mono small': { font: 'mono', size: 11, line: 16, weight: 400, tracking: 0.04 },
   'Mono code': { font: 'mono', size: 15, line: 24, weight: 400, tracking: 0 },
+  /** Figma's 10/15, the label and action of its note boxes (66:2229, 67:2530). */
+  'Mono tiny': { font: 'mono', size: 10, line: 15, weight: 400, tracking: 0.04 },
+  /** The step numbers (66:2275): Bitcount Grid Single with its axes at rest. */
+  'Pixel numeral': {
+    font: 'pixel',
+    size: 64,
+    line: 68,
+    weight: 400,
+    tracking: 0,
+    axes: { CRSV: 0, ELSH: 0, ELXP: 0 },
+  },
 } as const satisfies Record<string, TypeStyle>;
 
 /** Figma: Petals / Wordmark, 12:12. Three layers of live text at one origin, back to front. */
@@ -179,8 +271,8 @@ export const wordmark = {
     middle: { CRSV: 0.11, ELSH: 50, ELXP: 90, slnt: -8, wght: 358 },
     front: { CRSV: 0.5, ELSH: 17, ELXP: 63, slnt: -8, wght: 337 },
   },
-  /** Font size in pixels. Display is the component's own size, Nav the one in the page frames. */
-  sizes: { Nav: 50, Display: 269.722 },
+  /** Font size in pixels. Display is the component's own size, the others its landing instances. */
+  sizes: { Nav: 36.67, Footer: 155.56, Display: 269.722 },
 } as const;
 
 /**
