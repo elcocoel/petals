@@ -6,16 +6,14 @@ Everything we know we'll have to solve. Each has a working default, so nothing h
 
 | # | Question | Default for now | Bites |
 |---|---|---|---|
-| 1 | ~~Who pays for a first answer?~~ Decided: connect a wallet and approve the spend first, like any crypto app. Viewing and the written opening stay free | Prepaid credit from a wallet | Done |
-| 2 | Beyond one top-up transfer: connect subscriptions or API keys of any service? Per-chat signatures? Paying from other chains through Intents? | One transfer, then draw down. The rest mapped | After the vertical line |
-| 3 | Payment needs mainnet, and Intents is mainnet only | Dry quote only | When real payment starts |
-| 4 | Do voluntary donations fit first, before any pay-per-use? | Allowed, not built | Later |
+| 1 | ~~Who pays for a first answer?~~ Decided: the person, as in any crypto app. Viewing and the written opening stay free | Their agent, their wallet, their money. Judges on an invite | Done |
+| 2 | How does a person's wallet fund NEAR's agent directly, so Petal never holds money? Their own NEAR AI key from the browser (CORS allows it), NEAR AI's wallet sign-in, staking for inference, connecting subscriptions | Own agent only, for now | After the vertical line |
+| 3 | Payment needs mainnet: Intents has no testnet and no plans for one | Dry quote only | When real payment starts |
+| 4 | Do voluntary donations fit first? Or a cut per transaction in a commercial version? 1Click `appFees` tops out at 2.5% to Petal, and only on payments through a quote Petal built | Not built | Later |
 | 5 | Fresh chain reads cost shared rate limits more than dollars. How are they limited, per what? | A low limit per caller | Before going public |
 | 6 | Does NEAR AI's per-key `spendLimit` reset or last for the key's lifetime, and what happens at the limit? | Use it as a backstop once tested | First hosted key |
 | 7 | How should sponsored invites look to their holder: one per person, or one shared? | One per holder, revocable | Before submission |
 | 8 | Can a sponsored person publish, and as whom? A shared demo account, plainly labelled? | Yes, plainly labelled | Before submission |
-| 8a | Testnet NEAR is free, so testnet credit could burn real model credit. Who may use it? | An allowlist of wallets. Public means mainnet | Before going public |
-| 8b | How is credit priced? NEAR's price moves, and model prices vary | A fixed rate in config | Before mainnet |
 | 8c | A complimentary first dollar per account? Could be drained by many accounts | No | Later |
 | 8d | How does a person choose the model behind the agent? Fire's rule: offer, choice and receipt are three facts | The default model. `PETAL_MODEL` is server-wide | After the vertical line |
 
