@@ -138,7 +138,7 @@ A mapping that spends needs a yes from the wallet.
 ### Claims
 
 - **SYS-060**: A claim MUST state subject, verb, object, validity dates, kind, evidence and who says so, and MUST be immutable. Changing your mind is a new claim.
-- **SYS-061**: Kind (observed, sourced, inferred) MUST be stated. "Disputed" MUST be derived from challenges. Confidence MUST be a claim about a claim, attributed to a named person or a named model and version, and never overwrite anything.
+- **SYS-061**: Kind (observed, declared, sourced, inferred) MUST be stated. "Disputed" MUST be derived from challenges. Confidence MUST be a claim about a claim, attributed to a named person or a named model and version, and never overwrite anything.
 - **SYS-062**: Standing of a claimer MUST be derived from their record and rebuildable. It MUST NOT be a stored verdict, and repetition or payment MUST NOT raise it by themselves.
 - **SYS-063**: What shows MUST come from one pure policy function: claims and a lens in, and for each claim whether it's shown, how, and why. Surfaces MUST NOT decide this themselves.
 - **SYS-064**: Observed claims derivable from a snapshot MUST NOT be stored one by one: the snapshot's hash proves them.
