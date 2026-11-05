@@ -4,7 +4,7 @@
 import { fileURLToPath } from 'node:url';
 import { serve } from '@hono/node-server';
 import type { Config } from '@petal/tools';
-import { buildPetalApp } from './app.ts';
+import { buildPetalApp, type PetalAppOptions } from './app.ts';
 
 export const DEFAULT_PORT = 8787;
 const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -20,10 +20,10 @@ export function configFromEnv(env: NodeJS.ProcessEnv = process.env, port = DEFAU
   };
 }
 
-export function serveApi(o: { cfg?: Config; port?: number } = {}) {
+export function serveApi(o: { cfg?: Config; port?: number; options?: PetalAppOptions } = {}) {
   const port = o.port ?? (Number(process.env.PORT) || DEFAULT_PORT);
   const cfg = o.cfg ?? configFromEnv(process.env, port);
-  const app = buildPetalApp(cfg);
+  const app = buildPetalApp(cfg, o.options);
   const mode = cfg.nearAiApiKey && !cfg.fake ? 'NEAR AI Cloud' : 'recorded run, no NEAR_AI_API_KEY';
   const server = serve({ fetch: app.fetch, port }, (info) => {
     console.log(`Petal API on http://localhost:${info.port} (agent: ${mode})`);

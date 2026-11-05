@@ -105,6 +105,7 @@ export const TOOL_ERROR_SCHEMA: JSONSchema = {
             'rate_limited',
             'invalid_spec',
             'unauthorised',
+            'invite_required',
             'budget_exhausted',
             'internal',
           ],

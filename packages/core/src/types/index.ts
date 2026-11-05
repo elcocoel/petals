@@ -129,6 +129,7 @@ export type ToolErrorCode =
   | 'rate_limited'
   | 'invalid_spec'
   | 'unauthorised'
+  | 'invite_required'
   | 'budget_exhausted'
   | 'internal';
 /** Errors are returned, not thrown across a door. */

@@ -440,10 +440,12 @@ async function loop(
           break;
         }
         if (!hold) {
+          const why = ledger.refusal?.();
           fail(
             'budget_exhausted',
-            `Petal's agent has used today's budget ($${budget.usdPerDay}); it starts again tomorrow (UTC).`,
-            SKILL_HINT,
+            why?.message ??
+              `Petal's agent has used today's budget ($${budget.usdPerDay}); it starts again tomorrow (UTC).`,
+            why?.hint ?? SKILL_HINT,
           );
           break;
         }

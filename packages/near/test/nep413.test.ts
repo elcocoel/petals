@@ -1,8 +1,15 @@
 import { base58, base64 } from '@scure/base';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import type { Rpc, RpcQuery } from '../src/auth/index.ts';
 import { nearRpc, verifyNep413 } from '../src/auth/nep413.ts';
 import { createNonceStore, issueNonce, NONCE_TTL_MS } from '../src/auth/nonce.ts';
-import { fakeRpc, fakeRpcFor, testSigner } from '../src/auth/testing.ts';
+import {
+  fakeRpc,
+  fakeRpcFor,
+  functionCall,
+  implicitSigner,
+  testSigner,
+} from '../src/auth/testing.ts';
 import { NearError } from '../src/errors.ts';
 
 const recipient = 'petals.testnet';
@@ -175,6 +182,15 @@ describe('verifyNep413', () => {
     expect(await verifyNep413(b58, expect_, fakeRpcFor([maker]))).toEqual({ ok: true });
   });
 
+  test('near-cli-rs’s form, ed25519: and base58, is read too', async () => {
+    const proof = signed();
+    const cli = {
+      ...proof,
+      signature: `ed25519:${base58.encode(base64.decode(proof.signature))}`,
+    };
+    expect(await verifyNep413(cli, expect_, fakeRpcFor([maker]))).toEqual({ ok: true });
+  });
+
   test('a separate nonce store keeps its own nonces', async () => {
     const store = createNonceStore();
     const { nonce } = store.issue();
@@ -183,6 +199,78 @@ describe('verifyNep413', () => {
     expect(await verifyNep413(proof, expect_, fakeRpcFor([maker]), { nonces: store })).toEqual({
       ok: true,
     });
+  });
+});
+
+// near-identity.md, item 2: a new person's implicit account doesn't exist until its first transfer,
+// so it has no keys to look up. NEAR Auth's rule: accept an account id equal to the hex of the public
+// key "only while the account doesn't exist".
+describe('verifyNep413, implicit accounts', () => {
+  const newcomer = implicitSigner('newcomer');
+
+  test('an unfunded implicit account passes, after view_access_key and then view_account', async () => {
+    const rpc = fakeRpc({});
+    expect(await verifyNep413(signed(newcomer), expect_, rpc)).toEqual({ ok: true });
+    expect(rpc.calls.map((c) => c.request_type)).toEqual(['view_access_key', 'view_account']);
+    expect(rpc.calls[1]).toMatchObject({ finality: 'final', account_id: newcomer.accountId });
+  });
+
+  test('its nonce is spent like any other', async () => {
+    const proof = signed(newcomer);
+    const rpc = fakeRpc({});
+    expect(await verifyNep413(proof, expect_, rpc)).toEqual({ ok: true });
+    expect(await verifyNep413(proof, expect_, rpc)).toMatchObject({
+      ok: false,
+      reason: expect.stringMatching(/already used/),
+    });
+  });
+
+  test('once the account exists, a rotated-away key no longer passes', async () => {
+    const rpc = fakeRpc({ [newcomer.accountId]: { 'ed25519:someOtherKey': 'FullAccess' } });
+    expect(await verifyNep413(signed(newcomer), expect_, rpc)).toMatchObject({
+      ok: false,
+      reason: expect.stringMatching(/not a key of/),
+    });
+    expect(rpc.calls.map((c) => c.request_type)).toEqual(['view_access_key', 'view_account']);
+  });
+
+  test('an account id that is the hex of another key gets no such pass', async () => {
+    const pretender = testSigner(newcomer.accountId, 'pretender');
+    const rpc = fakeRpc({});
+    expect(await verifyNep413(signed(pretender), expect_, rpc)).toMatchObject({
+      ok: false,
+      reason: expect.stringMatching(/not a key of/),
+    });
+    expect(rpc.calls.map((c) => c.request_type)).toEqual(['view_access_key']);
+  });
+
+  test('a named account with a missing key is never looked up as implicit', async () => {
+    const rpc = fakeRpc({});
+    expect(await verifyNep413(signed(maker), expect_, rpc)).toMatchObject({ ok: false });
+    expect(rpc.calls.map((c) => c.request_type)).toEqual(['view_access_key']);
+  });
+
+  test('a function-call key on its own existing implicit account is still refused', async () => {
+    const rpc = fakeRpc({ [newcomer.accountId]: { [newcomer.publicKey]: functionCall() } });
+    expect(await verifyNep413(signed(newcomer), expect_, rpc)).toMatchObject({
+      ok: false,
+      reason: expect.stringMatching(/full-access/),
+    });
+  });
+
+  test('view_account that cannot answer: source_failed, and the nonce can be tried again', async () => {
+    const proof = signed(newcomer);
+    const missing = fakeRpc({});
+    const down: Rpc = {
+      async query<T>(params: RpcQuery): Promise<T> {
+        if (params.request_type === 'view_account') throw new Error('fetch failed');
+        return missing.query<T>(params);
+      },
+    };
+    const err = await verifyNep413(proof, expect_, down).catch((e) => e);
+    expect(err).toBeInstanceOf(NearError);
+    expect(err).toMatchObject({ code: 'source_failed' });
+    expect(await verifyNep413(proof, expect_, fakeRpc({}))).toEqual({ ok: true });
   });
 });
 

@@ -47,6 +47,15 @@ export function testSigner(accountId = 'maker.testnet', seed: string = accountId
   };
 }
 
+/** A signer whose account is implicit: its id is the hex of its public key, as on NEAR. */
+export function implicitSigner(seed = 'implicit'): TestSigner {
+  const secretKey = sha256(utf8ToBytes(`petal-test-signer:${seed}`));
+  const hex = Array.from(ed25519.getPublicKey(secretKey), (b) =>
+    b.toString(16).padStart(2, '0'),
+  ).join('');
+  return testSigner(hex, seed);
+}
+
 /** Check a proof's signature only (no RPC); what verifyNep413 does before view_access_key. */
 export function signatureMatches(
   proof: Nep413Proof,
@@ -87,7 +96,8 @@ export type FakeRpc = Rpc & { calls: RpcQuery[] };
 
 /**
  * A fake NEAR RPC. `keys[account][publicKey]` is the key's permission; anything else answers like
- * NEAR does for a missing key (an error of type AccessKeyDoesNotExist).
+ * NEAR does for a missing key (an error of type AccessKeyDoesNotExist). An account exists when it
+ * has an entry in `keys`; view_account answers for it, or fails like NEAR for a missing account.
  */
 export function fakeRpc(keys: Record<string, Record<string, AccessKeyPermission>>): FakeRpc {
   const calls: RpcQuery[] = [];
@@ -95,8 +105,14 @@ export function fakeRpc(keys: Record<string, Record<string, AccessKeyPermission>
     calls,
     async query<T = unknown>(params: RpcQuery): Promise<T> {
       calls.push(params);
+      if (params.request_type === 'view_account') {
+        if (keys[String(params.account_id)]) return { amount: '0', block_height: 1 } as T;
+        throw Object.assign(new Error(`account ${String(params.account_id)} does not exist`), {
+          type: 'AccountDoesNotExist',
+        });
+      }
       if (params.request_type !== 'view_access_key') {
-        throw new Error(`fakeRpc: only view_access_key is faked, not ${params.request_type}`);
+        throw new Error(`fakeRpc: ${params.request_type} is not faked`);
       }
       const permission = keys[String(params.account_id)]?.[String(params.public_key)];
       if (!permission) {

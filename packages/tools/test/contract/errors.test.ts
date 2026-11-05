@@ -44,6 +44,7 @@ describe('one test per error code', () => {
     expect(HTTP_STATUS).toEqual({
       bad_input: 400,
       unauthorised: 401,
+      invite_required: 403,
       not_found: 404,
       cannot_read: 422,
       invalid_spec: 422,

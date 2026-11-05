@@ -303,6 +303,27 @@ describe('nearAiClient', () => {
     }
   });
 
+  test('each kind of 402 says what it is, no figures, and no other model is tried', async () => {
+    const said: Record<string, RegExp> = {
+      api_key_limit_exceeded: /sponsored key .* spending limit/,
+      insufficient_credits: /sponsor account is out/,
+      no_credits: /sponsor account is out/,
+      no_limit_configured: /sponsor account is out/,
+      something_new: /refused to bill/,
+    };
+    for (const [failType, message] of Object.entries(said)) {
+      const { llm, fake } = client(
+        fakeNearAi({ fail: { 'deepseek-ai/DeepSeek-V4.1-Flash-1017': 402 }, failType }),
+      );
+      const err = (await llm.complete(ASK).catch((e: unknown) => e)) as LlmCallError;
+      expect(err.code).toBe('budget_exhausted');
+      expect(err.message).toMatch(message);
+      expect(err.message).not.toMatch(/HTTP|402|is down/);
+      expect(err.hint).toMatch(/\/connect/);
+      expect(fake.log.filter((l) => l.body)).toHaveLength(1);
+    }
+  });
+
   test('a late signature is waited for; a missing one leaves signature null, not an error', async () => {
     const late = client(fakeNearAi({ signatureMisses: 2 }));
     expect((await late.llm.complete(ASK)).signature).not.toBeNull();

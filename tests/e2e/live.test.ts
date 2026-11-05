@@ -47,6 +47,8 @@ describe.skipIf(!LIVE)('quickstart, live (PETAL_LIVE=1)', () => {
 
   beforeAll(() => {
     tmp = mkdtempSync(join(tmpdir(), 'petal-e2e-live-'));
+    // this run is its operator's own, so it needs no sponsored invite (T196)
+    process.env.PETAL_AGENT_ACCESS = 'open';
     // a fresh state folder: an empty cache, so House of Stake is really fetched
     app = petalApp({ ...configFromEnv(env, REPO), stateDir: join(tmp, 'state'), live: true });
   });

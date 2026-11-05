@@ -10,14 +10,16 @@ export const ERROR_CODES: readonly ToolErrorCode[] = [
   'rate_limited',
   'invalid_spec',
   'unauthorised',
+  'invite_required',
   'budget_exhausted',
   'internal',
 ];
 
 /** HTTP status per error code (http-api.md, Rules). */
-export const HTTP_STATUS: Record<ToolErrorCode, 400 | 401 | 404 | 422 | 429 | 500 | 502> = {
+export const HTTP_STATUS: Record<ToolErrorCode, 400 | 401 | 403 | 404 | 422 | 429 | 500 | 502> = {
   bad_input: 400,
   unauthorised: 401,
+  invite_required: 403,
   not_found: 404,
   cannot_read: 422,
   invalid_spec: 422,

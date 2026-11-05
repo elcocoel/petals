@@ -9,6 +9,8 @@ export interface PersonRow {
 }
 export interface WalletBindingRow {
   person: string;
+  /** near:testnet: and near:mainnet: are different wallets */
+  network: string;
   caip10_encrypted: string;
   caip10_hash: string;
   proved_at: string;
@@ -17,6 +19,10 @@ export interface WalletBindingRow {
 export interface SessionRow {
   hash: string;
   subject: string;
+  /** the network of the wallet that signed in; null for an anonymous handle */
+  network: string | null;
+  /** the sponsored invite this session holds */
+  invite: string | null;
   expires_at: string;
 }
 export type ChallengeCheck = 'ok' | 'unknown' | 'used' | 'expired';
@@ -183,9 +189,10 @@ export function tables(db: Db) {
       /** False when this wallet is already bound, to anyone. */
       bind: (r: WalletBindingRow) =>
         db.run(
-          `INSERT INTO wallet_binding (person, caip10_encrypted, caip10_hash, proved_at)
-           VALUES (?, ?, ?, ?) ON CONFLICT (caip10_hash) DO NOTHING`,
+          `INSERT INTO wallet_binding (person, network, caip10_encrypted, caip10_hash, proved_at)
+           VALUES (?, ?, ?, ?, ?) ON CONFLICT (caip10_hash) DO NOTHING`,
           r.person,
+          r.network,
           r.caip10_encrypted,
           r.caip10_hash,
           r.proved_at,
@@ -197,13 +204,18 @@ export function tables(db: Db) {
     },
 
     session: {
-      put(r: SessionRow) {
+      put(r: Pick<SessionRow, 'hash' | 'subject' | 'expires_at'> & Partial<SessionRow>) {
         db.run(
-          'INSERT INTO session (hash, subject, expires_at) VALUES (?, ?, ?)',
+          'INSERT INTO session (hash, subject, network, invite, expires_at) VALUES (?, ?, ?, ?, ?)',
           r.hash,
           r.subject,
+          r.network ?? null,
+          r.invite ?? null,
           r.expires_at,
         );
+      },
+      setInvite(hash: string, invite: string) {
+        db.run('UPDATE session SET invite = ? WHERE hash = ?', invite, hash);
       },
       /** Null once expired. */
       get: (hash: string, now: string) =>
@@ -277,6 +289,9 @@ export function tables(db: Db) {
         (from === null
           ? db.run('UPDATE run SET owner = ? WHERE id = ? AND owner IS NULL', owner, id)
           : db.run('UPDATE run SET owner = ? WHERE id = ? AND owner = ?', owner, id, from)) === 1,
+      /** Every run of `from` now belongs to `to`, in one statement. Returns how many moved. */
+      moveOwner: (from: string, to: string): number =>
+        db.run('UPDATE run SET owner = ? WHERE owner = ?', to, from),
       /** Newest first. */
       listByOwner: (owner: string, limit = 50) =>
         db.all<RunSummaryRow>(
@@ -523,6 +538,9 @@ export function tables(db: Db) {
           id,
         );
       },
+      /** Every exploration of `from` now belongs to `to`, in one statement. */
+      moveOwner: (from: string, to: string): number =>
+        db.run('UPDATE exploration SET owner = ? WHERE owner = ?', to, from),
       /** Compare and swap: false unless the current owner is `from` (default none). */
       setOwner: (id: string, owner: string, from: string | null = null) =>
         (from === null
