@@ -100,10 +100,7 @@ describe('the contrast gate on v2', () => {
 });
 
 describe('an alternative', () => {
-  const alt = inherit(v2, 'a', {
-    groups: { radius: { sm: '4px' } },
-    script: { magnet: 0 },
-  });
+  const alt = inherit(v2, 'a', { groups: { radius: { sm: '4px' } } });
 
   test('sits over its parent, and v2 stylesheet still applies because data-version is still 2', () => {
     expect(rootSelector(alt)).toBe(':root[data-version="2"][data-alt="a"]');
@@ -115,8 +112,8 @@ describe('an alternative', () => {
     const css = emitVersion(alt);
     expect(css).toContain('--joy-radius-sm: 4px;');
     expect(css).not.toContain('--joy-radius-md');
-    expect(alt.script.magnet).toBe(0);
-    expect(alt.script.follow).toBe(v2.script.follow);
+    expect(css).not.toContain('prefers-reduced-motion');
+    expect(css).not.toContain('data-surface');
   });
 });
 

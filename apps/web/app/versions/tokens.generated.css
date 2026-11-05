@@ -62,6 +62,7 @@
   --joy-move-nav-mark: .88;
   --joy-move-nav-clear: 84px;
   --joy-move-underline-at: -3px;
+  --joy-move-card-underline: 6px;
   --joy-move-sign-turn: 90deg;
   --joy-move-sign-rest: 0deg;
   --joy-move-none-s: 0s;
@@ -81,7 +82,6 @@
   --joy-paint-hairline: rgb(23 23 23 / 0.14);
   --joy-paint-edge: rgb(23 23 23 / 0.1);
   --joy-paint-edge-strong: rgb(23 23 23 / 0.32);
-  --joy-paint-wash: rgb(139 201 189 / 0.2);
   --joy-paint-action-wash: rgb(255 255 255 / 0.06);
   --joy-paint-chip-wash: rgb(139 201 189 / 0.22);
   --joy-shadow-box: 0 1px 2px rgb(23 23 23 / 0.06), 0 22px 62px rgb(23 23 23 / 0.07), inset 0 1px 0 rgb(255 255 255 / 0.9);
@@ -99,9 +99,9 @@
   --joy-gradient-gloss: linear-gradient(180deg, rgb(255 255 255 / 0.16), transparent 62%);
   --joy-gradient-sheen: radial-gradient(circle closest-side, rgb(255 255 255 / 0.15), transparent);
   --joy-gradient-chip-sheen: radial-gradient(circle closest-side, rgb(139 201 189 / 0.34), transparent);
-  --joy-gradient-spot: radial-gradient(circle closest-side, rgb(139 201 189 / 0.26), transparent);
+  --joy-gradient-spot: radial-gradient(circle closest-side, rgb(139 201 189 / 0.17), transparent);
   --joy-gradient-box-spot: radial-gradient(circle closest-side, rgb(139 201 189 / 0.34), transparent);
-  --joy-gradient-row-wash: linear-gradient(90deg, rgb(139 201 189 / 0.2), transparent 88%);
+  --joy-gradient-row-wash: linear-gradient(90deg, rgb(139 201 189 / 0.15), transparent 88%);
   --joy-glass-fill: linear-gradient(145deg, rgb(255 255 255 / 0.96), rgb(255 255 255 / 0.76));
   --joy-texture-grain: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'220'%20height%3D'220'%3E%3Cfilter%20id%3D'n'%3E%3CfeTurbulence%20type%3D'fractalNoise'%20baseFrequency%3D'.85'%20numOctaves%3D'2'%20stitchTiles%3D'stitch'%2F%3E%3CfeColorMatrix%20values%3D'0%200%200%200%200.09%200%200%200%200%200.09%200%200%200%200%200.09%200%200%200%200.05%200'%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D'100%25'%20height%3D'100%25'%20filter%3D'url(%23n)'%2F%3E%3C%2Fsvg%3E");
   --joy-texture-rules: repeating-linear-gradient(90deg, rgb(23 23 23 / 0.06) 0 1px, transparent 1px 24px), repeating-linear-gradient(0deg, rgb(23 23 23 / 0.06) 0 1px, transparent 1px 24px);
@@ -112,7 +112,6 @@
   --joy-paint-hairline: rgb(255 255 255 / 0.18);
   --joy-paint-edge: rgb(255 255 255 / 0.16);
   --joy-paint-edge-strong: rgb(255 255 255 / 0.4);
-  --joy-paint-wash: rgb(139 201 189 / 0.14);
   --joy-paint-action-wash: rgb(255 255 255 / 0.14);
   --joy-paint-chip-wash: rgb(139 201 189 / 0.18);
   --joy-shadow-box: 0 1px 2px rgb(23 23 23 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.12);
@@ -143,7 +142,6 @@
   --joy-paint-hairline: rgb(23 23 23 / 0.22);
   --joy-paint-edge: rgb(23 23 23 / 0.14);
   --joy-paint-edge-strong: rgb(23 23 23 / 0.4);
-  --joy-paint-wash: rgb(255 255 255 / 0.28);
   --joy-paint-action-wash: rgb(255 255 255 / 0.08);
   --joy-paint-chip-wash: rgb(255 255 255 / 0.4);
   --joy-shadow-box: 0 1px 2px rgb(23 23 23 / 0.1), 0 22px 62px rgb(23 23 23 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.6);

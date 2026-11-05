@@ -42,8 +42,9 @@ function write(el: Element, name: string, value: string) {
   styled.style.setProperty(name, value);
 }
 function eraseWritten() {
+  // Asking first makes Chrome write the attribute out: otherwise removing it leaves style="".
   for (const el of written) {
-    el.removeAttribute('style');
+    if (el.hasAttribute('style')) el.removeAttribute('style');
   }
   written.clear();
 }
@@ -303,7 +304,8 @@ function tilt(joy: Joy): Stop {
   if (joy.reduced || !joy.fine) return () => {};
   return follow(
     joy,
-    BOX,
+    // A terminal is all words, and words on a tilted layer go soft. It lifts and glows instead.
+    `${BOX}:not([data-kind="term"])`,
     (f) => {
       f.el.setAttribute('data-tilt', '');
       write(f.el, '--b-rx', f.x.toFixed(3));
@@ -410,6 +412,7 @@ function splitDrawing(joy: Joy, svg: SVGSVGElement): void {
     }
   });
   drawn.set(svg, entry);
+  svg.setAttribute('data-split', '');
   if (kind === 'hero-leaders') return;
   // Hundreds of tiny sub-paths have done their job once they've drawn.
   window.setTimeout(() => {
@@ -427,6 +430,7 @@ function splitDrawing(joy: Joy, svg: SVGSVGElement): void {
 
 function undoDrawings() {
   for (const { svg } of drawn.values()) {
+    svg.removeAttribute('data-split');
     svg.querySelectorAll(':scope > g[data-layer]').forEach((g) => {
       g.remove();
     });
@@ -512,41 +516,53 @@ function parallax(joy: Joy): Stop {
 }
 
 function link(joy: Joy): Stop {
-  const root = document.querySelector('[data-b="figure"][data-kind="annotated"]');
-  if (!root) return () => {};
-  let current: string | null = null;
-  const set = (note: string | null) => {
-    if (note === current) return;
-    for (const el of root.querySelectorAll('[data-lit]')) el.removeAttribute('data-lit');
-    for (const { petals } of drawn.values()) for (const petal of petals) petal.lit = false;
-    current = note;
-    if (note === null) {
-      root.removeAttribute('data-linking');
-      joy.wake();
-      return;
-    }
-    root.setAttribute('data-linking', note);
-    for (const el of root.querySelectorAll(`[data-note="${note}"], [data-link="${note}"]`)) {
-      el.setAttribute('data-lit', '');
-    }
-    for (const { petals } of drawn.values()) {
-      for (const petal of petals) petal.lit = petal.el.hasAttribute('data-lit');
-    }
-    joy.wake();
-  };
-  const over = (e: Event) => {
-    const hit = (e.target as Element).closest('[data-note], [data-link]');
-    set(hit?.getAttribute('data-note') ?? hit?.getAttribute('data-link') ?? null);
-  };
-  const out = (e: Event) => {
-    if (!root.contains((e as PointerEvent).relatedTarget as Node | null)) set(null);
-  };
-  root.addEventListener('pointerover', over);
-  root.addEventListener('pointerout', out);
+  const stops = [...document.querySelectorAll('[data-b="figure"][data-kind="annotated"]')].map(
+    (root) => {
+      let current: string | null = null;
+      let hold = 0;
+      const set = (note: string | null) => {
+        window.clearTimeout(hold);
+        if (note === current) return;
+        for (const el of root.querySelectorAll('[data-lit]')) el.removeAttribute('data-lit');
+        current = note;
+        if (note === null) root.removeAttribute('data-linking');
+        else {
+          root.setAttribute('data-linking', note);
+          for (const el of root.querySelectorAll(`[data-note="${note}"], [data-link="${note}"]`)) {
+            el.setAttribute('data-lit', '');
+          }
+        }
+        for (const { petals, svg } of drawn.values()) {
+          if (!root.contains(svg)) continue;
+          for (const petal of petals) petal.lit = petal.el.hasAttribute('data-lit');
+        }
+        joy.wake();
+      };
+      /** Slipping off a petal into the gap beside it isn't leaving. */
+      const release = () => {
+        window.clearTimeout(hold);
+        if (current !== null) hold = window.setTimeout(() => set(null), S.linkHold);
+      };
+      const over = (e: Event) => {
+        const hit = (e.target as Element).closest('[data-note], [data-link]');
+        const note = hit?.getAttribute('data-note') ?? hit?.getAttribute('data-link') ?? null;
+        if (note === null) release();
+        else set(note);
+      };
+      const out = (e: Event) => {
+        if (!root.contains((e as PointerEvent).relatedTarget as Node | null)) release();
+      };
+      root.addEventListener('pointerover', over);
+      root.addEventListener('pointerout', out);
+      return () => {
+        root.removeEventListener('pointerover', over);
+        root.removeEventListener('pointerout', out);
+        set(null);
+      };
+    },
+  );
   return () => {
-    root.removeEventListener('pointerover', over);
-    root.removeEventListener('pointerout', out);
-    set(null);
+    for (const stop of stops) stop();
   };
 }
 
@@ -820,6 +836,7 @@ function start(): Stop {
   addEventListener('pointermove', moved, { passive: true });
   document.documentElement.addEventListener('pointerleave', left);
   addEventListener('scroll', scrolled, { passive: true });
+  addEventListener('resize', scrolled, { passive: true });
   addEventListener('scrollend', scrollEnded, { passive: true });
 
   let pending = 0;
@@ -842,6 +859,7 @@ function start(): Stop {
     removeEventListener('pointermove', moved);
     document.documentElement.removeEventListener('pointerleave', left);
     removeEventListener('scroll', scrolled);
+    removeEventListener('resize', scrolled);
     removeEventListener('scrollend', scrollEnded);
     stopReveals();
     for (const stop of stops) stop();

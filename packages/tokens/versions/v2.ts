@@ -2,11 +2,10 @@
 // from source.ts (v1) and adds; it never changes a v1 token. Every value that gives the page softness or
 // motion is here: apps/web/app/versions/v2.css only says var(). Measured from dearsaintelmo.com for the
 // way it feels, on Petals' own palette: nothing here is Saint Elmo's paper or ember.
-import { type Paint, surfaces, type wordmark } from '../source.ts';
+import { type Paint, paintCss, surfaces, type wordmark } from '../source.ts';
 import {
   type ContrastCase,
   flatCss,
-  paintCss,
   springEasing,
   type TokenValue,
   type Version,
@@ -63,7 +62,6 @@ const groups = {
     hairline: { ground: c(ink(0.14)), ink: c(ground(0.18)), mint: c(ink(0.22)) },
     edge: { ground: c(ink(0.1)), ink: c(ground(0.16)), mint: c(ink(0.14)) },
     'edge-strong': { ground: c(ink(0.32)), ink: c(ground(0.4)), mint: c(ink(0.4)) },
-    wash: { ground: c(mint(0.2)), ink: c(mint(0.14)), mint: c(ground(0.28)) },
     'action-wash': {
       ground: c(ground(0.06)),
       ink: c(ground(0.14)),
@@ -172,11 +170,11 @@ const groups = {
     sheen: { ground: blob(ground(0.15)), ink: blob(ground(0.42)), mint: blob(ground(0.15)) },
     'chip-sheen': { ground: blob(mint(0.34)), ink: blob(mint(0.26)), mint: blob(ground(0.5)) },
     /** The page's own spotlight, under the content. */
-    spot: { ground: blob(mint(0.26)), ink: blob(mint(0.1)), mint: blob(ground(0.3)) },
+    spot: { ground: blob(mint(0.17)), ink: blob(mint(0.1)), mint: blob(ground(0.3)) },
     /** A box's spotlight, inside it. */
     'box-spot': { ground: blob(mint(0.34)), ink: blob(mint(0.06)), mint: blob(ground(0.42)) },
     'row-wash': {
-      ground: `linear-gradient(90deg, ${c(mint(0.2))}, transparent 88%)`,
+      ground: `linear-gradient(90deg, ${c(mint(0.15))}, transparent 88%)`,
       ink: `linear-gradient(90deg, ${c(mint(0.14))}, transparent 88%)`,
       mint: `linear-gradient(90deg, ${c(ground(0.3))}, transparent 88%)`,
     },
@@ -254,6 +252,7 @@ const groups = {
     'nav-mark': '.88',
     'nav-clear': '84px',
     'underline-at': '-3px',
+    'card-underline': '6px',
     'sign-turn': '90deg',
     'sign-rest': '0deg',
     'none-s': '0s',
@@ -294,6 +293,8 @@ export interface V2Script {
   /** How close the pointer has to be, in pixels, for a cell in a field to open, and how much. */
   fieldReach: number;
   fieldOpen: number;
+  /** How long a note stays lit after the pointer slips off what lit it, so crossing a gap doesn't flicker. */
+  linkHold: number;
   /** Past this many pixels of scroll the nav tightens. */
   tightAt: number;
   /** How long after a reveal a drawing's lines go back to one path. */
@@ -313,11 +314,11 @@ const TERMINAL: readonly Paint[] = [...INK_BAND, ground(0.03), mint(0.05), mint(
 const contrast: ContrastCase[] = [
   { name: 'ground: text-primary', text: TEXT.ground['text-primary'], over: GROUND_BAND },
   { name: 'ground: muted', text: MUTED.ground, over: GROUND_BAND },
-  { name: 'ground: muted on a row wash', text: MUTED.ground, over: [...GROUND_BAND, mint(0.2)] },
+  { name: 'ground: muted on a row wash', text: MUTED.ground, over: [...GROUND_BAND, mint(0.15)] },
   {
     name: 'ground: muted under the spotlight',
     text: MUTED.ground,
-    over: [...GROUND_BAND, mint(0.26)],
+    over: [...GROUND_BAND, mint(0.17)],
   },
   // Primary on ground: gloss and sheen together at their brightest. The hard case.
   {
@@ -404,7 +405,8 @@ export const v2: Version<V2Script> = {
     },
     numeralOpen: { CRSV: 0, ELSH: 80, ELXP: 40 },
     fieldReach: 150,
-    fieldOpen: 0.16,
+    fieldOpen: 0.09,
+    linkHold: 140,
     tightAt: 12,
     settleMs: 3200,
   },

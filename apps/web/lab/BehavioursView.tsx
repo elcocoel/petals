@@ -66,7 +66,9 @@ export function BehavioursView() {
               <tr key={`${group}.${name}`}>
                 <td className="type-mono">{group}</td>
                 <td className="type-mono">{tokenName(group, name)}</td>
-                <td className="type-mono whitespace-pre-wrap">{short(valueLine(value))}</td>
+                <td className="type-mono break-all whitespace-pre-wrap">
+                  {short(valueLine(value))}
+                </td>
               </tr>
             )),
           )}

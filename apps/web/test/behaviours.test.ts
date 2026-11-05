@@ -3,7 +3,7 @@
 // `data-b` names a parent. A rule with no parent fails here, by name.
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { behaviours, parentOf, parents } from '@petal/tokens';
+import { behaviours, parentOf, parents, tokenName, v2 } from '@petal/tokens';
 import { describe, expect, test } from 'vitest';
 import { REVEALED, SCRIPTED } from '../app/versions/JoyLayer.tsx';
 
@@ -167,6 +167,55 @@ describe('the stylesheet', () => {
     ],
   ])('fails on %s', (_name, css, expected) => {
     expect(audit(css).join('\n')).toContain(expected);
+  });
+});
+
+describe('the tokens', () => {
+  const declared = Object.entries(v2.groups).flatMap(([group, values]) =>
+    Object.keys(values).map((name) => tokenName(group, name)),
+  );
+  const named = new Set([...SHEET.matchAll(/--joy-[\w-]+/g)].map((m) => m[0]));
+
+  test('every token the stylesheet reads exists', () => {
+    expect([...named].filter((name) => !declared.includes(name))).toEqual([]);
+  });
+
+  test('every token has a purpose: the stylesheet reads it', () => {
+    expect(declared.filter((name) => !named.has(name))).toEqual([]);
+  });
+});
+
+describe('hover', () => {
+  /** Every declaration of every rule whose selector says :hover. */
+  const hoverDeclarations = (css: string) =>
+    [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]*:hover[^{}]*)\{([^{}]*)\}/g)].flatMap(
+      (m) =>
+        (m[2] ?? '')
+          .split(';')
+          .map((d) => d.split(':')[0]?.trim() ?? '')
+          .filter(Boolean)
+          .map((property) => ({ selector: (m[1] ?? '').trim(), property })),
+    );
+  /** `text-decoration-line` isn't movement: it takes away v1's underline, in favour of the drawn one. */
+  const MOVES = new Set([
+    'translate',
+    'scale',
+    'rotate',
+    'transform',
+    'transform-origin',
+    'opacity',
+    'text-decoration-line',
+  ]);
+
+  test('moves things with transform and opacity only, so it can never shift layout', () => {
+    const found = hoverDeclarations(SHEET);
+    expect(found.length).toBeGreaterThan(10);
+    expect(found.filter(({ property }) => !MOVES.has(property))).toEqual([]);
+  });
+
+  test('a rule that paints on hover is caught', () => {
+    const css = ':root[data-version="2"] [data-b="box"]:hover { box-shadow: var(--x); }';
+    expect(hoverDeclarations(css)).toEqual([expect.objectContaining({ property: 'box-shadow' })]);
   });
 });
 

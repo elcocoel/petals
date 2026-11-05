@@ -5,7 +5,6 @@
 import {
   type Paint,
   type Primitive,
-  paintCss,
   primitives,
   type SurfaceName,
   surfaceNames,
@@ -59,22 +58,28 @@ export function emitVersion(v: Version): string {
   ][];
   const onSurface = (kind: SurfaceName) =>
     flipping.filter(([, value]) => value[kind] !== undefined).map(([n, v]) => `${n}: ${v[kind]};`);
+  const reduced = Object.entries(v.reduced).map(([n, value]) => `  ${n}: ${value};`);
+  // An alternative writes only what it changes, so any of these can be empty.
+  const flips = flipping.length > 0;
   return [
     `/* Version ${v.id}${v.alt ?? ''}, from ${v.inherits}. */`,
-    block(
-      root,
-      same.map(([n, value]) => `${n}: ${value};`),
-    ),
-    block(`${root},\n${root} [data-surface="ground"]`, onSurface('ground')),
+    same.length > 0
+      ? block(
+          root,
+          same.map(([n, value]) => `${n}: ${value};`),
+        )
+      : '',
+    flips ? block(`${root},\n${root} [data-surface="ground"]`, onSurface('ground')) : '',
     ...surfaceNames
-      .filter((kind) => kind !== 'ground')
+      .filter((kind) => flips && kind !== 'ground')
       .map((kind) => block(`${root} [data-surface="${kind}"]`, onSurface(kind))),
-    `@media (prefers-reduced-motion: reduce) {\n${block(
-      `  ${root}`,
-      Object.entries(v.reduced).map(([n, value]) => `  ${n}: ${value};`),
-    ).replace(/\n}$/, '\n  }')}\n}`,
+    reduced.length > 0
+      ? `@media (prefers-reduced-motion: reduce) {\n${block(`  ${root}`, reduced).replace(/\n}$/, '\n  }')}\n}`
+      : '',
     '',
-  ].join('\n\n');
+  ]
+    .filter((part, i, all) => part !== '' || i === all.length - 1)
+    .join('\n\n');
 }
 
 /**
@@ -84,7 +89,7 @@ export function emitVersion(v: Version): string {
 export function inherit<S>(
   parent: Version<S>,
   alt: string,
-  changes: { groups?: TokenGroups; reduced?: Record<string, string>; script?: Partial<S> },
+  changes: { groups?: TokenGroups; reduced?: Record<string, string> },
 ): Version<S> {
   return {
     ...parent,
@@ -92,7 +97,6 @@ export function inherit<S>(
     inherits: `v${parent.id}${parent.alt ?? ''}`,
     groups: changes.groups ?? {},
     reduced: changes.reduced ?? {},
-    script: { ...parent.script, ...changes.script },
   };
 }
 
@@ -150,5 +154,3 @@ export function springEasing(damping = 0.58, frequency = 9, samples = 28): strin
   );
   return `linear(${points.join(', ')})`;
 }
-
-export { paintCss };

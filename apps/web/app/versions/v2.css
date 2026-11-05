@@ -29,23 +29,6 @@
   position: relative;
 }
 
-/* surface.reveal */
-:root[data-version="2"][data-joy] :is(section, footer)[data-b="surface"]:not([data-seen]) > div {
-  opacity: 0;
-}
-
-/* surface.reveal */
-:root[data-version="2"] :is(section, footer)[data-b="surface"][data-seen] > div {
-  animation: surface-reveal var(--joy-dur-reveal) var(--joy-ease-reveal) backwards;
-}
-
-/* surface.reveal */
-@keyframes surface-reveal {
-  from {
-    opacity: 0;
-  }
-}
-
 /* surface.spotlight */
 :root[data-version="2"] [data-b="surface"] > [data-spot] {
   position: absolute;
@@ -65,45 +48,65 @@
   will-change: translate;
 }
 
-/* surface.stick */
-:root[data-version="2"] nav[data-b="surface"] {
-  position: sticky;
-  top: var(--joy-move-zero);
-  z-index: var(--joy-move-z);
-  background-color: transparent;
-  border-color: transparent;
-  pointer-events: none;
+/* The nav only stays where it is one row. On a phone it wraps to three and would eat the screen. */
+@media (width >= 48rem) {
+  /* surface.stick */
+  :root[data-version="2"] nav[data-b="surface"] {
+    position: sticky;
+    top: var(--joy-move-zero);
+    z-index: var(--joy-move-z);
+    background-color: transparent;
+    border-color: transparent;
+    pointer-events: none;
+  }
+
+  /* surface.stick */
+  :root[data-version="2"] nav[data-b="surface"]::before {
+    content: "";
+    position: absolute;
+    top: var(--joy-move-nav-shift);
+    right: var(--joy-move-zero);
+    bottom: var(--joy-move-zero);
+    left: var(--joy-move-zero);
+    background-color: var(--joy-glass-nav);
+    backdrop-filter: var(--joy-glass-blur);
+    border-bottom: var(--stroke) solid var(--joy-paint-nav-line);
+    transition: translate var(--joy-dur-base) var(--joy-ease-move);
+  }
+
+  /* surface.stick */
+  :root[data-version="2"] nav[data-b="surface"] > div {
+    position: relative;
+    pointer-events: auto;
+    transition: translate var(--joy-dur-base) var(--joy-ease-move);
+  }
+
+  /* surface.stick */
+  :root[data-version="2"] nav[data-b="surface"][data-tight]::before {
+    translate: 0 var(--joy-move-nav-shift);
+  }
+
+  /* surface.stick */
+  :root[data-version="2"] nav[data-b="surface"][data-tight] > div {
+    translate: 0 var(--joy-move-nav-row);
+  }
 }
 
-/* surface.stick */
-:root[data-version="2"] nav[data-b="surface"]::before {
-  content: "";
-  position: absolute;
-  top: var(--joy-move-nav-shift);
-  right: var(--joy-move-zero);
-  bottom: var(--joy-move-zero);
-  left: var(--joy-move-zero);
-  background-color: var(--joy-glass-nav);
-  backdrop-filter: var(--joy-glass-blur);
-  border-bottom: var(--stroke) solid var(--joy-paint-nav-line);
-  transition: translate var(--joy-dur-base) var(--joy-ease-move);
+/* surface.reveal */
+:root[data-version="2"] :is(section, footer)[data-b="surface"][data-seen] > div {
+  animation: surface-reveal var(--joy-dur-reveal) var(--joy-ease-reveal) backwards;
 }
 
-/* surface.stick */
-:root[data-version="2"] nav[data-b="surface"] > div {
-  position: relative;
-  pointer-events: auto;
-  transition: translate var(--joy-dur-base) var(--joy-ease-move);
+/* surface.reveal */
+@keyframes surface-reveal {
+  from {
+    opacity: 0;
+  }
 }
 
-/* surface.stick */
-:root[data-version="2"] nav[data-b="surface"][data-tight]::before {
-  translate: 0 var(--joy-move-nav-shift);
-}
-
-/* surface.stick */
-:root[data-version="2"] nav[data-b="surface"][data-tight] > div {
-  translate: 0 var(--joy-move-nav-row);
+/* surface.reveal */
+:root[data-version="2"][data-joy] :is(section, footer)[data-b="surface"]:not([data-seen]) > div {
+  opacity: 0;
 }
 
 /* ----- action ----- */
@@ -283,7 +286,7 @@
   content: "";
   position: absolute;
   right: var(--joy-move-zero);
-  bottom: var(--joy-move-zero);
+  bottom: var(--joy-move-card-underline);
   left: var(--joy-move-zero);
   height: var(--stroke);
   background-color: currentColor;
@@ -398,6 +401,11 @@
 /* box.glass */
 :root[data-version="2"] [data-b="box"][data-kind="note"] {
   border-radius: var(--joy-radius-md);
+}
+
+/* box.glass */
+:root[data-version="2"] [data-b="box"][data-kind="term"] {
+  border-radius: var(--joy-radius-xl);
 }
 
 /* box.glass */
@@ -579,6 +587,11 @@
     translate: var(--joy-move-indent) 0;
   }
 
+  /* row.indent */
+  :root[data-version="2"] details[data-b="row"]:hover::details-content {
+    translate: var(--joy-move-indent) 0;
+  }
+
   /* row.swell */
   :root[data-version="2"] [data-b="row"]:hover [data-b="figure"] {
     scale: var(--joy-move-swell-glyph);
@@ -598,6 +611,7 @@
   transition:
     height var(--joy-dur-fold) var(--joy-ease-move),
     opacity var(--joy-dur-fold) var(--joy-ease-color),
+    translate var(--joy-dur-spring) var(--joy-ease-spring),
     content-visibility var(--joy-dur-fold) allow-discrete;
 }
 
@@ -651,7 +665,7 @@
 }
 
 /* figure.arrive */
-:root[data-version="2"] [data-b="figure"][data-seen]:not([data-split]) {
+:root[data-version="2"] [data-b="figure"][data-seen]:not([data-split], [data-kind="annotated"]) {
   transform-origin: center;
   animation: figure-arrive var(--joy-dur-reveal) var(--joy-ease-spring) backwards;
   animation-delay: calc(var(--i, var(--joy-move-none)) * var(--joy-move-stagger));
@@ -709,11 +723,6 @@
 }
 
 /* figure.notes */
-:root[data-version="2"][data-joy] [data-b="figure"]:not([data-seen]) foreignObject {
-  opacity: 0;
-}
-
-/* figure.notes */
 :root[data-version="2"] [data-b="figure"][data-seen] foreignObject {
   animation: figure-notes var(--joy-dur-reveal) var(--joy-ease-reveal) backwards;
   animation-delay: calc(
@@ -724,10 +733,20 @@
 }
 
 /* figure.notes */
+:root[data-version="2"][data-joy] [data-b="figure"]:not([data-seen]) foreignObject {
+  opacity: 0;
+}
+
+/* figure.notes */
 @keyframes figure-notes {
   from {
     opacity: 0;
   }
+}
+
+/* figure.link */
+:root[data-version="2"] [data-b="figure"] :is([data-part="line"], [data-part="settled"]) {
+  pointer-events: none;
 }
 
 /* figure.link */
@@ -778,14 +797,14 @@
 }
 
 /* mark.tight */
-:root[data-version="2"] nav[data-tight] [data-b="mark"] {
-  scale: var(--joy-move-nav-mark);
-}
-
-/* mark.tight */
 :root[data-version="2"] nav [data-b="mark"] {
   transform-origin: left center;
   transition: scale var(--joy-dur-base) var(--joy-ease-move);
+}
+
+/* mark.tight */
+:root[data-version="2"] nav[data-tight] [data-b="mark"] {
+  scale: var(--joy-move-nav-mark);
 }
 
 /* ----- head ----- */
