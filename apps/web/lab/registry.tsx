@@ -654,7 +654,9 @@ export const registry: LabEntry[] = [
         figmaName: 'Petals / Ask box',
         figmaNode: '67:2512',
         render: () => (
-          <AskBox label="Ask" placeholder="Who decides in this DAO?" size="small" to="#askbox" />
+          <div className="w-full figure-scale">
+            <AskBox label="Ask" placeholder="Who decides in this DAO?" to="#askbox" />
+          </div>
         ),
       },
       {
@@ -694,16 +696,6 @@ export const registry: LabEntry[] = [
       { name: 'primary, arrow', render: () => <Button arrow>Ask</Button> },
       { name: 'primary, link', render: () => <Button href="#button">Explore</Button> },
       { name: 'primary, disabled', render: () => <Button disabled>Explore</Button> },
-      {
-        name: 'primary, small, arrow',
-        figmaName: 'Petals / Ask box',
-        figmaNode: '67:2512',
-        render: () => (
-          <Button size="small" arrow>
-            Ask
-          </Button>
-        ),
-      },
       {
         name: 'secondary',
         ...SECONDARY,

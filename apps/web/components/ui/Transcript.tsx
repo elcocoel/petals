@@ -34,7 +34,7 @@ export function Transcript({
         </Line>
       ))}
       <Line i={lines.length}>
-        <span className="h-cursor-height w-cursor-width bg-accent" />
+        <span className="h-lh w-text-gap bg-accent type-lead" />
       </Line>
     </div>
   );

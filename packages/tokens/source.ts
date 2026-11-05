@@ -160,27 +160,9 @@ export const layout = {
 /** The size of a thing, not the space around it. Pixels. All of them become utilities: h-control-height. */
 export const sizes = {
   'Control height': 48,
-  'Ask box height': 64,
-  /** The most it takes. Every instance on the landing page fills its column (584, 640). */
-  'Ask box width': 640,
-  /** Figma's step 1 instance (67:2512) is the Ask box at 0.56: these are its values at that scale. */
-  'Ask box small height': 35.84,
-  'Ask box small width': 336,
-  'Ask box small start': 13.44,
-  'Ask box small end': 4.48,
-  'Ask box small gap': 8.96,
-  'Ask box small block': 3.48,
-  'Ask box small border': 0.56,
-  /** Named without "ask": the secret scan reads sk- and twenty more characters as a key. */
-  'Small field block': 5.88,
-  'Button small height': 26.88,
-  'Button small inset': 12.32,
-  'Button small gap': 5.6,
-  'Starter height': 36,
+  /** How far a question grows before the box scrolls. */
+  'Ask box max height': 200,
   'Content width': 960,
-  'Flower width': 640,
-  'Gallery flower width': 320,
-  /** Landing frame 66:2180. Figma's column widths, read off its sections. */
   'Page width': 1440,
   'Hero pitch width': 584,
   'Hero figure width': 720,
@@ -189,43 +171,41 @@ export const sizes = {
   'Builders pitch width': 520,
   'Closing ask width': 640,
   'Community pitch width': 560,
-  'Cell width': 300,
   'Cell repeat width': 624,
-  'Visual height': 220,
-  'Card flower height': 300,
-  'FAQ answer inset': 114,
-  /** Figma's thumb sits here in the card, a little left of centre: the component is 408, the card 416. */
-  'Card thumb inset': 83,
-  /** Figma's wordmark box at this size. A browser's cap height comes up 5.3 shorter. */
-  'Footer wordmark height': 98.62,
-  'Glyph row': 48,
-  'Glyph step': 144,
-  'Thumb strip': 72,
-  'Thumb step': 192,
-  'Thumb card': 240,
-  'Cursor width': 12,
-  'Cursor height': 26,
-  // The workspace frames (Interface page, e.g. 39:862, at 1440 x 900).
+  /** The four sizes a drawing comes in. */
+  'Drawing 48': 48,
+  'Drawing 72': 72,
+  'Drawing 144': 144,
+  'Drawing 240': 240,
+  /** The box around a picture: a step's and a gallery card's. Drawing 240 with Block gap above and below. */
+  'Figure height': 288,
+  'Icon size': 18,
+} as const;
+
+/**
+ * Not the system: structural sizes only the workspace and the old pages use, kept apart so they aren't
+ * counted as design decisions. They still become utilities. The surfaces stage decides each one.
+ */
+export const quarantine = {
   'Workspace header height': 80,
   'Workspace rule': 20,
-  // Figma's is 164, which "Use your own AI" doesn't fit.
   'Rail width': 180,
-  'Icon size': 18,
   'Conversation width': 580,
-  // Figma's is 696, beside its narrower rail: the two columns fill a 1440 window.
   'Panel width': 680,
-  'Composer height': 76,
-  'Composer max height': 200,
   'Detail height': 117,
   'Swatch size': 9,
   'Cell small': 16.72,
   'Cell medium': 27.28,
   'Cell large': 40.48,
-  // Not in Figma yet: what the frames don't draw.
   'Stage height': 280,
   'Turn flower thumb': 48,
   'Tile width': 280,
+  'Flower width': 640,
+  'Gallery flower width': 320,
 } as const;
+
+/** A real control drawn inside a figure, at this scale, so it follows the type and the ladder. */
+export const figureScale = 0.56;
 
 export const cornerRadius = 0;
 
@@ -266,9 +246,6 @@ export const type = {
   Body: { font: 'sans', size: 18, line: 27, weight: 400, tracking: 0 },
   Label: { font: 'sans', size: 16, line: 22, weight: 500, tracking: 0 },
   Caption: { font: 'sans', size: 14, line: 20, weight: 500, tracking: 0 },
-  /** Body and Label at the 0.56 of Figma's small Ask box (67:2512). */
-  'Body small': { font: 'sans', size: 10.08, line: 15.12, weight: 400, tracking: 0 },
-  'Label small': { font: 'sans', size: 8.96, line: 12.32, weight: 500, tracking: 0 },
   'Mono label': { font: 'mono', size: 12, line: 17, weight: 400, tracking: 0.04 },
   'Mono small': { font: 'mono', size: 11, line: 16, weight: 400, tracking: 0.04 },
   'Mono code': { font: 'mono', size: 15, line: 24, weight: 400, tracking: 0 },
@@ -350,12 +327,13 @@ export interface Tokens {
   surfaces: Record<SurfaceName, Roles>;
   layout: Record<string, number>;
   sizes: Record<string, number>;
+  quarantine: Record<string, number>;
   type: Record<string, TypeStyle>;
   chart: Record<string, string>;
 }
 
 /** Everything `emit.ts` reads. A test can hand it a changed copy. */
-export const tokens: Tokens = { primitives, surfaces, layout, sizes, type, chart };
+export const tokens: Tokens = { primitives, surfaces, layout, sizes, quarantine, type, chart };
 
 /** Figma's name as a CSS name: "Display compact" becomes display-compact. */
 export const kebab = (name: string) => name.toLowerCase().replaceAll(' ', '-');

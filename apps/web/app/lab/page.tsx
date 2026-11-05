@@ -4,7 +4,7 @@
 import { notFound } from 'next/navigation';
 import { LAB_COLUMN, LabEntryView, LabSectionView } from '../../lab/LabEntryView.tsx';
 import { type LabEntry, registry } from '../../lab/registry.tsx';
-import { TokensView } from '../../lab/TokensView.tsx';
+import { QuarantineTable, TokensView } from '../../lab/TokensView.tsx';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Lab · Petals', robots: { index: false } };
@@ -54,6 +54,10 @@ export default function Lab() {
               </div>
             </details>
           ))}
+          <details>
+            <summary>Quarantine</summary>
+            <QuarantineTable />
+          </details>
         </section>
       </div>
     </main>

@@ -16,7 +16,7 @@ export function Step({
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col border-t border-primary pt-block-gap">
-      <div className="flex h-visual-height items-center justify-center gap-space-16 overflow-hidden border border-hairline px-text-gap">
+      <div className="flex h-figure-height items-center justify-center gap-space-16 overflow-hidden border border-hairline px-text-gap">
         {children}
       </div>
       <div className="mt-column-gap">

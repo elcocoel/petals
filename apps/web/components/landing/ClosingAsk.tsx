@@ -21,7 +21,7 @@ export function ClosingAsk() {
             />
           </div>
         </div>
-        <div className="w-full max-w-cell-width shrink-0">
+        <div className="w-full max-w-drawing-240 shrink-0">
           <Cell size="fill" />
         </div>
       </div>

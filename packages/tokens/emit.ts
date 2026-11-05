@@ -8,6 +8,7 @@ import {
   contrastMinimum,
   contrastPairs,
   cornerRadius,
+  figureScale,
   fonts,
   kebab,
   type Paint,
@@ -42,7 +43,7 @@ const axes = (a: Record<string, number>) =>
 
 /** The whole generated stylesheet. Pure, so a test can emit from a changed copy of the tokens. */
 export function emitCss(t: Tokens = tokens): string {
-  const spacing = { ...t.layout, ...t.sizes };
+  const spacing = { ...t.layout, ...t.sizes, ...t.quarantine };
   const typeNames = Object.keys(t.type).map(kebab);
   const utilities = [
     ...typeNames.map((n) => `type-${n}`),
@@ -106,8 +107,7 @@ export function emitCss(t: Tokens = tokens): string {
         ...(s.axes ? [`font-variation-settings: ${axes(s.axes)};`] : []),
       ]),
     ),
-    // Figma's 0.56 stroke on the small Ask box. Tailwind's border widths don't read the spacing scale.
-    block('@utility border-ask-small', ['border-width: var(--spacing-ask-box-small-border);']),
+    block('@utility figure-scale', [`zoom: ${figureScale};`]),
     block('@utility wordmark', [
       'display: inline-grid;',
       'font-family: var(--font-pixel);',

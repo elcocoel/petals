@@ -21,13 +21,14 @@ export function HowItWorks() {
       <SectionHead eyebrow={copy.eyebrow} title={copy.title} />
       <div className="mt-column-gap flex flex-col gap-column-gap md:flex-row">
         <Step {...ask}>
-          <AskBox
-            size="small"
-            placeholder={copy.stepOneQuestion}
-            label={landingCopy.ask.action}
-            action={landingCopy.ask.action}
-            to={siteLinks.make}
-          />
+          <div className="w-full figure-scale">
+            <AskBox
+              placeholder={copy.stepOneQuestion}
+              label={landingCopy.ask.action}
+              action={landingCopy.ask.action}
+              to={siteLinks.make}
+            />
+          </div>
         </Step>
         <Step {...see}>
           <Thumb kind="even" size="step" />

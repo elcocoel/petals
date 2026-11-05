@@ -22,23 +22,8 @@
   --spacing-page-inset: 72px;
   --spacing-section-padding: 112px;
   --spacing-control-height: 48px;
-  --spacing-ask-box-height: 64px;
-  --spacing-ask-box-width: 640px;
-  --spacing-ask-box-small-height: 35.84px;
-  --spacing-ask-box-small-width: 336px;
-  --spacing-ask-box-small-start: 13.44px;
-  --spacing-ask-box-small-end: 4.48px;
-  --spacing-ask-box-small-gap: 8.96px;
-  --spacing-ask-box-small-block: 3.48px;
-  --spacing-ask-box-small-border: 0.56px;
-  --spacing-small-field-block: 5.88px;
-  --spacing-button-small-height: 26.88px;
-  --spacing-button-small-inset: 12.32px;
-  --spacing-button-small-gap: 5.6px;
-  --spacing-starter-height: 36px;
+  --spacing-ask-box-max-height: 200px;
   --spacing-content-width: 960px;
-  --spacing-flower-width: 640px;
-  --spacing-gallery-flower-width: 320px;
   --spacing-page-width: 1440px;
   --spacing-hero-pitch-width: 584px;
   --spacing-hero-figure-width: 720px;
@@ -47,28 +32,18 @@
   --spacing-builders-pitch-width: 520px;
   --spacing-closing-ask-width: 640px;
   --spacing-community-pitch-width: 560px;
-  --spacing-cell-width: 300px;
   --spacing-cell-repeat-width: 624px;
-  --spacing-visual-height: 220px;
-  --spacing-card-flower-height: 300px;
-  --spacing-faq-answer-inset: 114px;
-  --spacing-card-thumb-inset: 83px;
-  --spacing-footer-wordmark-height: 98.62px;
-  --spacing-glyph-row: 48px;
-  --spacing-glyph-step: 144px;
-  --spacing-thumb-strip: 72px;
-  --spacing-thumb-step: 192px;
-  --spacing-thumb-card: 240px;
-  --spacing-cursor-width: 12px;
-  --spacing-cursor-height: 26px;
+  --spacing-drawing-48: 48px;
+  --spacing-drawing-72: 72px;
+  --spacing-drawing-144: 144px;
+  --spacing-drawing-240: 240px;
+  --spacing-figure-height: 288px;
+  --spacing-icon-size: 18px;
   --spacing-workspace-header-height: 80px;
   --spacing-workspace-rule: 20px;
   --spacing-rail-width: 180px;
-  --spacing-icon-size: 18px;
   --spacing-conversation-width: 580px;
   --spacing-panel-width: 680px;
-  --spacing-composer-height: 76px;
-  --spacing-composer-max-height: 200px;
   --spacing-detail-height: 117px;
   --spacing-swatch-size: 9px;
   --spacing-cell-small: 16.72px;
@@ -77,6 +52,8 @@
   --spacing-stage-height: 280px;
   --spacing-turn-flower-thumb: 48px;
   --spacing-tile-width: 280px;
+  --spacing-flower-width: 640px;
+  --spacing-gallery-flower-width: 320px;
 }
 
 @theme inline {
@@ -99,7 +76,7 @@
   --color-figure-accent: var(--figure-accent);
 }
 
-@source inline("type-display type-display-compact type-title type-heading type-lead type-body type-label type-caption type-body-small type-label-small type-mono-label type-mono-small type-mono-code type-mono-tiny type-mono-note type-mono-sign type-pixel-numeral wordmark wordmark-back wordmark-middle wordmark-front wordmark-nav wordmark-footer wordmark-workspace wordmark-display");
+@source inline("type-display type-display-compact type-title type-heading type-lead type-body type-label type-caption type-mono-label type-mono-small type-mono-code type-mono-tiny type-mono-note type-mono-sign type-pixel-numeral wordmark wordmark-back wordmark-middle wordmark-front wordmark-nav wordmark-footer wordmark-workspace wordmark-display");
 
 @layer base {
 *, ::before, ::after {
@@ -381,22 +358,6 @@
   letter-spacing: 0em;
 }
 
-@utility type-body-small {
-  font-family: var(--font-sans);
-  font-size: 10.08px;
-  line-height: 15.12px;
-  font-weight: 400;
-  letter-spacing: 0em;
-}
-
-@utility type-label-small {
-  font-family: var(--font-sans);
-  font-size: 8.96px;
-  line-height: 12.32px;
-  font-weight: 500;
-  letter-spacing: 0em;
-}
-
 @utility type-mono-label {
   font-family: var(--font-mono);
   font-size: 12px;
@@ -454,8 +415,8 @@
   font-variation-settings: "CRSV" 0, "ELSH" 0, "ELXP" 0;
 }
 
-@utility border-ask-small {
-  border-width: var(--spacing-ask-box-small-border);
+@utility figure-scale {
+  zoom: 0.56;
 }
 
 @utility wordmark {

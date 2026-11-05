@@ -9,6 +9,7 @@ import {
   type Paint,
   paintName,
   primitives,
+  quarantine,
   type Roles,
   sizes,
   surfaceNames,
@@ -60,6 +61,11 @@ const spacingRows = (values: Record<string, number>): [string, number, string][]
 
 const SWATCH_GRID = 'grid grid-cols-2 gap-block-gap md:grid-cols-4';
 
+/** Sizes only the workspace and the old pages use. Not the system, so it goes in the closed part. */
+export function QuarantineTable() {
+  return <TokenTable rows={spacingRows(quarantine)} />;
+}
+
 export function TokensView() {
   return (
     <section id="tokens" className="flex flex-col gap-column-gap">
@@ -105,12 +111,7 @@ export function TokensView() {
           <Swatch key={name} swatch={name} name={`--chart-${name}`} value={hex} />
         ))}
       </div>
-      <TokenTable
-        rows={[
-          ['Ask box small border', sizes['Ask box small border'], 'border-ask-small'],
-          ['cornerRadius', cornerRadius, 'border-radius'],
-        ]}
-      />
+      <TokenTable rows={[['cornerRadius', cornerRadius, 'border-radius']]} />
       <TokenTable rows={spacingRows(layout)} />
       <TokenTable rows={spacingRows(sizes)} />
     </section>

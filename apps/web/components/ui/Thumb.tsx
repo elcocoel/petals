@@ -3,9 +3,9 @@ import { type ThumbKind, thumbs } from '../../lib/figures.ts';
 import { Drawing } from './Drawing.tsx';
 
 const SIZES = {
-  strip: 'size-thumb-strip',
-  step: 'size-thumb-step',
-  card: 'size-thumb-card',
+  strip: 'size-drawing-72',
+  step: 'size-drawing-144',
+  card: 'size-drawing-240',
 } as const;
 
 export function Thumb({ kind, size = 'card' }: { kind: ThumbKind; size?: keyof typeof SIZES }) {
