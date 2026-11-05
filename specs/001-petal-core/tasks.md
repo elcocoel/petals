@@ -173,7 +173,7 @@ Licence: decided, **MIT** (Elco, 2026-11-04). No gate left.
 - [X] T072 [US1] [W8] [Elco OK] Live run `PETAL_LIVE=1 pnpm test:e2e`: NEAR AI Cloud, testnet map, live dry quote. The chat ends within 120 s (typically 60 s) with no progress gap over 10 s. Signing covered by T043. Deps: T071, T044, T061.
 - [X] T073 [US7] [W8] [Elco] First flower on NEAR: Elco signs the skeleton flower's publish message in his wallet (quickstart step 3). It shows in the gallery as "on NEAR" with "signed by <account>" verified, and the `kv.test.fastnear.com` read returns it. Deps: T066, T072.
 - [X] T074 [US1] [W8] Clean-checkout check: golden tests pass twice in a row (SC-005); `scripts/check-secrets.sh` and `scripts/check-boundary.sh` find nothing; fixtures within budget. Deps: T031, T071.
-- [ ] T075 [US1] [W8] [Elco] Show Elco the skeleton: quickstart steps 1–5 live, step 4 in Claude Code with the skill. Each gap becomes a task in M3 (T076). Deps: T069, T073, T074.
+- [X] T075 [US1] [W8] [Elco] Show Elco the skeleton: quickstart steps 1–5 live, step 4 in Claude Code with the skill. Each gap becomes a task in M3 (T076). Deps: T069, T073, T074.
 
 **Parallel dispatch (Phase 3)**:
 
