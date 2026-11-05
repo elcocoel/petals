@@ -99,11 +99,12 @@ Errors: `invalid_spec` (render refuses anything `validate_spec` rejects).
 ### list_flowers / get_flower
 
 `list_flowers` input: `{ "network"?: string, "maker"?: string, "limit"?: int }` → `{ "flowers": [{ "id", "title", "network", "as_of", "maker", "published_at", "where": "map" | "fixture", "tx_hash"? }] }`. Reads the shared map (trusted writers only, [shared-map.md](./shared-map.md)) and the hero fixtures.
-`get_flower` input: `{ "id": string }` → `{ "entry": Entry, "where", "tx_hash"?, "verified": { "entry_hash": bool, "maker_signature": bool, "model_signature": "present" | "absent" }, "corrections": [{ "id", "target", "request", "status": "open" | "accepted" | "declined" }] }`.
+`get_flower` input: `{ "id": string }` → `{ "entry": Entry (`flower/v1` or `flower/v2`, each verified by its own rule), "where", "tx_hash"?, "verified": { "entry_hash": bool, "maker_signature": bool, "model_signature": "present" | "absent" }, "corrections": [{ "id", "target", "request", "status": "open" | "accepted" | "declined" }] }`.
 
 ### prepare_publish
 
-Input: `{ "entry": Entry without id and provenance.maker }` (spec, interpretation, snapshot, render hash, agent provenance)
+Input: `{ "entry": Entry without id and provenance.maker }` (`petal: "flower/v2"`, spec, interpretation, snapshot, agent provenance). A draft in the older `flower/v1` form is lifted to `flower/v2`, not refused.
+Behaviour: checks the spec and the interpretation, then adds the receipt `drawn_with: { render, sha256 }` from what the renderer draws now, replacing any receipt in the draft. A drawing is never a reason to refuse ([shared-map.md](./shared-map.md#entry-versions)).
 Output: `{ "entry_sha256", "nonce", "recipient", "message", "expires_at", "sign_url" }`. `message` is the exact text the maker signs with NEP-413. `sign_url` opens the site's publish page with the draft loaded, for a maker whose own agent made the flower (the agent hands the link to the human).
 
 ### publish_flower

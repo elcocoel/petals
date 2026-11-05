@@ -3,7 +3,7 @@
 export { buildSpec, DEFAULT_CONVENTION } from './convention/index.ts';
 export { BadInputError, InvalidSpecError } from './errors.ts';
 export { compareFigures, computeFigures } from './figures/index.ts';
-export { canonicalJson, entryId, sha256Hex, specHash } from './hash.ts';
+export { canonicalJson, entryId, sha256Hex, signedPart, specHash } from './hash.ts';
 export { NotImplementedError, notImplemented } from './not-implemented.ts';
 export { PRIMITIVES } from './primitives.ts';
 export { readFlower, readingHash } from './reading/index.ts';

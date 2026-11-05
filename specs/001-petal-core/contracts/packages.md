@@ -8,11 +8,12 @@ Each workstream owns one directory and builds against these signatures. Dependen
 
 ```ts
 // schema and identity
-export const schemas: { snapshot: object; spec: object; interpretation: object; entry: object; correction: object };
+export const schemas: { snapshot: object; spec: object; interpretation: object; entry: object; entryV2: object; correction: object };
 export function canonicalJson(value: unknown): string;          // RFC 8785
 export function sha256Hex(bytes: Uint8Array | string): string;
 export function specHash(spec: Spec): string;                    // sha256 of canonicalJson(spec)
-export function entryId(entryWithoutId: Omit<Entry, 'id'>): string; // first 24 hex
+export function signedPart(entry: EntryWithoutId): object;       // what id and signature cover, by the entry's version
+export function entryId(entryWithoutId: EntryWithoutId): string; // first 24 hex of the signed part
 
 // validation
 export function validateSnapshot(x: unknown): Result<Snapshot>;

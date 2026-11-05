@@ -13,7 +13,7 @@ Agents never read raw snapshot bodies; they use `describe_snapshot` and `compute
 | `golden/` | Golden render files: `<name>.svg` plus `<name>.json` (legend and petals), and `<name>.reading.json`, the reading under the drawing (T179). A new skin changes the first two and leaves the reading alone. `pnpm golden:update` rewrites them; a person reviews the diff. | W1 |
 | `golden/inputs/` | Snapshots used only as golden-test inputs. Outside the store's lookup path, so a live pull stays live. | W1 |
 | `transcripts/` | Recorded runs: agent transcripts replayed by `recordedClient`, and the recorded 1Click dry quote replayed by `fakeQuote()`. | W5 |
-| `map/` | Hero flower entries (`flower/v1`) as they would sit on the shared map; the mirror for the hero set. | W5 |
+| `map/` | Hero flower entries as they would sit on the shared map; the mirror for the hero set. | W5 |
 
 Nothing under `../research/`, `../design/`, `../submission/` or `../.secrets/` is ever copied here. Fixtures are produced by scripts (`scripts/import-spike-data.ts`) that transform public data, so they can be rebuilt.
 

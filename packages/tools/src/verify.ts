@@ -5,8 +5,8 @@
 import { ed25519 } from '@noble/curves/ed25519.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { utf8ToBytes } from '@noble/hashes/utils.js';
-import { canonicalJson, entryId, sha256Hex, specHash } from '@petal/core';
-import type { Entry, Nep413Proof } from '@petal/core/types';
+import { canonicalJson, entryId, sha256Hex, signedPart, specHash } from '@petal/core';
+import type { Entry, EntryWithoutId, Nep413Proof } from '@petal/core/types';
 import { base58, base64 } from '@scure/base';
 
 /** 2^31 + 413, the NEP-413 prefix tag. */
@@ -57,7 +57,7 @@ export function nep413SignatureOk(
 }
 
 /** A draft entry: no id, no maker yet. This is what the maker signs (prepare_publish). */
-export type DraftEntry = Omit<Entry, 'id'>;
+export type DraftEntry = EntryWithoutId;
 
 /** Normalise an entry or draft to the signed form: `id` dropped, `provenance.maker` null. */
 export function draftOf(entry: Partial<Entry> | DraftEntry): DraftEntry {
@@ -65,9 +65,9 @@ export function draftOf(entry: Partial<Entry> | DraftEntry): DraftEntry {
   return { ...rest, provenance: { ...rest.provenance, maker: null } };
 }
 
-/** entry_sha256: SHA-256 of the canonical draft (no id, maker null). */
+/** entry_sha256: SHA-256 of the canonical signed part of the draft (maker null). */
 export function entrySha256(entry: Partial<Entry> | DraftEntry): string {
-  return sha256Hex(canonicalJson(draftOf(entry)));
+  return sha256Hex(canonicalJson(signedPart(draftOf(entry))));
 }
 
 /** The exact text a maker signs with NEP-413 to publish (shared-map.md, Writing). */
@@ -81,7 +81,7 @@ export interface Verified {
   model_signature: 'present' | 'absent';
 }
 
-/** Recompute id and spec hash; check the maker's signature over this entry's hash. */
+/** Recompute id and spec hash; check the maker's signature over this entry's hash, by its version. */
 export function verifyEntry(
   entry: Entry,
   opts: { id?: string; recipient?: string } = {},

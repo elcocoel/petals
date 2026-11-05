@@ -36,11 +36,10 @@ function draftEntry(
   at: string,
 ): Partial<Entry> {
   return {
-    petal: 'flower/v1',
+    petal: 'flower/v2',
     spec: f.spec,
     spec_sha256: f.spec_sha256,
     interpretation: f.interpretation,
-    render_sha256: f.render_sha256,
     // provenance.maker is added by publish_flower once the maker has signed
     provenance: {
       agent: { kind: 'petal-agent' },

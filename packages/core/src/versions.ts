@@ -2,7 +2,7 @@
 export const PACKAGES_VERSION = 'packages/v1';
 export const TOOLS_VERSION = 'tools/v1';
 export const API_VERSION = 'api/v1';
-export const MAP_VERSION = 'map/v1';
+export const MAP_VERSION = 'map/v2';
 export const RENDER_VERSION = 'render/v1';
 export const READING_VERSION = 'reading/v1';
 export const CONVENTION_VERSION = 'default/v1';

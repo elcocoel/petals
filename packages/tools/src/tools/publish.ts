@@ -1,26 +1,46 @@
 // prepare_publish and publish_flower (tools.md; shared-map.md, Writing, Phase A relayed
 // publish). The maker signs one NEP-413 message naming the entry hash; Petal's writer writes
-// petal/v1/spec/<id>, and the mirror keeps a local copy.
+// petal/v1/spec/<id>, and the mirror keeps a local copy. What is signed is the facts and the
+// recipe's build; the drawing is only a receipt beside them, so nothing is refused over it.
 import {
   canonicalJson,
   entryId,
   NotImplementedError,
+  RENDER_VERSION,
   renderFlower,
   schemas,
   specHash,
 } from '@petal/core';
-import type { Entry, Nep413Proof } from '@petal/core/types';
+import type { Entry, EntryV2, Nep413Proof } from '@petal/core/types';
 import { issueNonce, verifyNep413 } from '@petal/near/auth';
 import { MAP_LIMITS, mapKeys } from '@petal/near/map';
 import { compile, defineTool, describeErrors } from '../define.ts';
 import { draftStore } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
 import type { ToolContext } from '../types.ts';
-import { draftOf, entrySha256, publishMessage } from '../verify.ts';
+import { type DraftEntry, draftOf, entrySha256, publishMessage } from '../verify.ts';
 import { base, DATETIME, ENTRY_ID, galleryUrl, obj, SHA256 } from './shared.ts';
 import { checkSpec, summarise } from './specs.ts';
 
 const checkEntrySchema = compile(schemas.entry as Record<string, unknown>);
+const checkDraftSchema = compile(schemas.entryV2 as Record<string, unknown>);
+
+/** Everything prepared from here on is flower/v2. A draft in the older form is lifted, not refused,
+ * and any receipt it came with is dropped: prepare_publish writes its own. */
+function asV2(entry: DraftEntry): Omit<EntryV2, 'id'> {
+  const {
+    render_sha256: _drawing,
+    drawn_with: _receipt,
+    ...rest
+  } = entry as DraftEntry & {
+    render_sha256?: string;
+    drawn_with?: EntryV2['drawn_with'];
+  };
+  return (rest.petal === 'flower/v1' ? { ...rest, petal: 'flower/v2' } : rest) as Omit<
+    EntryV2,
+    'id'
+  >;
+}
 
 function writerAccount(ctx: ToolContext): string {
   return ctx.config.map?.writer ?? ctx.map.trustedWriters[0] ?? 'unknown';
@@ -38,11 +58,12 @@ export const preparePublish = defineTool<{ entry: Partial<Entry> }, object>({
   title: 'Prepare to publish',
   description:
     'Get the exact NEP-413 message a maker signs to publish a flower, with a fresh nonce. Pass ' +
-    'the entry without id and maker (spec, spec_sha256, interpretation, snapshot, render_sha256, ' +
-    'provenance). Hand sign_url to the human: their wallet signs; never ask anyone for a key.',
+    'the entry without id and maker (petal, spec, spec_sha256, interpretation, snapshot, ' +
+    'provenance). Petal adds the drawing receipt itself. Hand sign_url to the human: their wallet ' +
+    'signs; never ask anyone for a key.',
   input: obj(
     ['entry'],
-    { entry: { type: 'object', description: 'flower/v1 entry without id and provenance.maker' } },
+    { entry: { type: 'object', description: 'flower/v2 entry without id and provenance.maker' } },
     { additionalProperties: false },
   ),
   output: obj(['entry_sha256', 'nonce', 'recipient', 'message', 'expires_at', 'sign_url'], {
@@ -58,21 +79,21 @@ export const preparePublish = defineTool<{ entry: Partial<Entry> }, object>({
     if (typeof entry.provenance !== 'object' || entry.provenance === null) {
       throw new ToolFailure('bad_input', 'entry.provenance is missing.', 'See $defs.entry.');
     }
-    const draft = draftOf(entry);
-    if (!checkEntrySchema({ ...draft, id: '0'.repeat(24) })) {
+    const lifted = asV2(draftOf(entry));
+    if (!checkDraftSchema({ ...lifted, id: '0'.repeat(24) })) {
       throw new ToolFailure(
         'bad_input',
-        `The entry does not match flower/v1: ${describeErrors(checkEntrySchema.errors)}`,
-        'Build it from propose_spec, validate_spec and render_flower results.',
+        `The entry does not match flower/v2: ${describeErrors(checkDraftSchema.errors)}`,
+        'Build it from propose_spec and validate_spec results.',
       );
     }
-    if (draft.spec_sha256 !== specHash(draft.spec)) {
+    if (lifted.spec_sha256 !== specHash(lifted.spec)) {
       throw new ToolFailure('bad_input', 'spec_sha256 is not the hash of the spec.');
     }
-    if (draft.snapshot.sha256 !== draft.spec.snapshot.sha256) {
+    if (lifted.snapshot.sha256 !== lifted.spec.snapshot.sha256) {
       throw new ToolFailure('bad_input', "snapshot.sha256 is not the spec's snapshot.");
     }
-    const { validation, snapshot } = await checkSpec(ctx, draft.spec, draft.interpretation);
+    const { validation, snapshot } = await checkSpec(ctx, lifted.spec, lifted.interpretation);
     if (!validation.valid || !snapshot) {
       throw new ToolFailure(
         'invalid_spec',
@@ -80,13 +101,13 @@ export const preparePublish = defineTool<{ entry: Partial<Entry> }, object>({
         'validate_spec with the interpretation lists every error.',
       );
     }
-    if (renderFlower(draft.spec, snapshot).render_sha256 !== draft.render_sha256) {
-      throw new ToolFailure(
-        'bad_input',
-        "render_sha256 is not what Petal's renderer draws for this spec.",
-        'Take render_sha256 from render_flower (default size).',
-      );
-    }
+    const draft: Omit<EntryV2, 'id'> = {
+      ...lifted,
+      drawn_with: {
+        render: RENDER_VERSION,
+        sha256: renderFlower(lifted.spec, snapshot).render_sha256,
+      },
+    };
     const entry_sha256 = entrySha256(draft);
     const { nonce, expires_at } = issueNonce();
     const recipient = ctx.map.receiver;
@@ -196,7 +217,7 @@ export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Pro
     if (!check.ok) throw unauthorised(`The proof did not verify: ${check.reason ?? 'bad proof'}.`);
 
     const signed = { ...draft.entry, provenance: { ...draft.entry.provenance, maker: proof } };
-    const entry: Entry = { ...signed, id: entryId(signed) };
+    const entry = { ...signed, id: entryId(signed) } as Entry;
     if (!checkEntrySchema(entry)) {
       throw new ToolFailure(
         'internal',

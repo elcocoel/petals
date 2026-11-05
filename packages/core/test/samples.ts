@@ -155,6 +155,23 @@ export const sampleInterpretation: Interpretation = {
   documents: [],
 };
 
+export const sampleEntryV2: Entry = {
+  petal: 'flower/v2',
+  id: '0123456789abcdef01234567',
+  title: 'Two sample pools',
+  spec: sampleSpec,
+  spec_sha256: SHA_B,
+  interpretation: sampleInterpretation,
+  snapshot: { sha256: SHA_A, urls: [`/api/v1/snapshots/${SHA_A}`] },
+  provenance: {
+    maker: null,
+    agent: { kind: 'hand-written' },
+    tools_version: 'tools/v1',
+    created_at: '2026-11-04T12:00:00Z',
+  },
+  drawn_with: { render: 'render/v1', sha256: SHA_B },
+};
+
 export const sampleEntry: Entry = {
   petal: 'flower/v1',
   id: '0123456789abcdef01234567',

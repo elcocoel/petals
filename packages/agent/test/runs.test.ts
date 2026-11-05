@@ -76,9 +76,8 @@ describe('fileRunStore', () => {
     expect(run?.flower?.view_url).toBe(VIEW_URL);
     expect(run?.draft?.spec).toEqual(SPEC);
     expect(run?.draft?.entry).toMatchObject({
-      petal: 'flower/v1',
+      petal: 'flower/v2',
       spec_sha256: SPEC_SHA,
-      render_sha256: RENDER_SHA,
       provenance: {
         agent: {
           kind: 'petal-agent',

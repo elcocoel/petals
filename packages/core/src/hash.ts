@@ -4,7 +4,7 @@
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils.js';
 import canonicalize from 'canonicalize';
-import type { Entry, Spec } from './types/index.ts';
+import type { EntryWithoutId, Spec } from './types/index.ts';
 
 /** RFC 8785 canonical JSON. Throws on values JSON cannot carry (undefined, NaN, Infinity). */
 export function canonicalJson(value: unknown): string {
@@ -24,10 +24,19 @@ export function specHash(spec: Spec): string {
 }
 
 /**
- * A flower's id: the first 24 hex characters of SHA-256 over the canonical entry without `id`.
- * An `id` passed by mistake is ignored, so a stored entry can be checked against its own id.
+ * What an entry's id and the maker's signature cover (shared-map.md, Entry versions). flower/v1:
+ * all of it but `id`, the hash of its drawing included. flower/v2: `drawn_with` stays out too, so
+ * the same facts drawn by another renderer are the same flower. An `id` passed by mistake is
+ * ignored, so a stored entry can be checked against its own id.
  */
-export function entryId(entryWithoutId: Omit<Entry, 'id'>): string {
-  const { id: _ignored, ...rest } = entryWithoutId as Omit<Entry, 'id'> & { id?: string };
-  return sha256Hex(canonicalJson(rest)).slice(0, 24);
+export function signedPart(entry: EntryWithoutId): object {
+  const { id: _ignored, ...rest } = entry as EntryWithoutId & { id?: string };
+  if (rest.petal !== 'flower/v2') return rest;
+  const { drawn_with: _receipt, ...signed } = rest;
+  return signed;
+}
+
+/** A flower's id: the first 24 hex characters of SHA-256 over its canonical signed part. */
+export function entryId(entryWithoutId: EntryWithoutId): string {
+  return sha256Hex(canonicalJson(signedPart(entryWithoutId))).slice(0, 24);
 }

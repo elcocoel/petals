@@ -1,6 +1,7 @@
 // Generate TypeScript types from the contract schemas (T014). `pnpm gen:types`.
 // One file per schema: both schemas define `Datetime`, so one combined file would not compile
-// (TS2300). `unreachableDefinitions` emits $defs that the root does not reach (Correction).
+// (TS2300). `unreachableDefinitions` emits $defs that the root does not reach (Correction), but
+// not when the root is a union, as the flower schema's entry is, so a root `$ref` is left out here.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { compile, type JSONSchema } from 'json-schema-to-typescript';
@@ -13,7 +14,8 @@ const jobs = [
 
 for (const job of jobs) {
   const schema = JSON.parse(readFileSync(join(core, 'schema', job.schema), 'utf8')) as JSONSchema;
-  const ts = await compile(schema, job.schema, {
+  const { $ref: _root, ...all } = schema;
+  const ts = await compile(all, job.schema, {
     unreachableDefinitions: true,
     additionalProperties: false,
     strictIndexSignatures: true,

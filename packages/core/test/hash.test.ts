@@ -1,6 +1,7 @@
 // T015: RFC 8785 vectors, SHA-256, spec hashes and entry ids.
 import { describe, expect, test } from 'vitest';
-import { canonicalJson, entryId, sha256Hex, specHash } from '../src/hash.ts';
+import { canonicalJson, entryId, sha256Hex, signedPart, specHash } from '../src/hash.ts';
+import type { EntryV1 } from '../src/types/index.ts';
 import { sampleEntry, sampleSpec } from './samples.ts';
 
 describe('canonicalJson (RFC 8785)', () => {
@@ -92,5 +93,34 @@ describe('specHash and entryId', () => {
     expect(id).toBe(sha256Hex(canonicalJson(withoutId)).slice(0, 24));
     expect(entryId(sampleEntry)).toBe(id);
     expect(entryId(resorted(withoutId))).toBe(id);
+  });
+
+  test('flower/v1: the id still covers the hash of the drawing', () => {
+    const { id: _, ...withoutId } = sampleEntry as EntryV1;
+    expect(entryId({ ...withoutId, render_sha256: 'f'.repeat(64) })).not.toBe(entryId(withoutId));
+  });
+
+  test('flower/v2: the id covers the facts and the build, and not the receipt', () => {
+    const { id: _, render_sha256: _drawing, ...rest } = sampleEntry as EntryV1;
+    const v2 = {
+      ...rest,
+      petal: 'flower/v2' as const,
+      drawn_with: { render: 'render/v1', sha256: 'a'.repeat(64) },
+    };
+    const { drawn_with: _receipt, ...signed } = v2;
+    const id = entryId(v2);
+    expect(id).toBe(sha256Hex(canonicalJson(signed)).slice(0, 24));
+    expect(entryId(signed)).toBe(id);
+    expect(signedPart(v2)).not.toHaveProperty('drawn_with');
+    // another renderer's receipt: the same flower
+    expect(entryId({ ...v2, drawn_with: { render: 'render/v9', sha256: 'b'.repeat(64) } })).toBe(
+      id,
+    );
+    // anything else it says: another flower
+    expect(entryId({ ...v2, title: 'Another title' })).not.toBe(id);
+    expect(entryId({ ...v2, spec_sha256: 'c'.repeat(64) })).not.toBe(id);
+    expect(entryId({ ...v2, snapshot: { ...v2.snapshot, sha256: 'd'.repeat(64) } })).not.toBe(id);
+    // the same words under the other version hash differently
+    expect(entryId({ ...signed, petal: 'flower/v1', render_sha256: 'a'.repeat(64) })).not.toBe(id);
   });
 });

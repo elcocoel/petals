@@ -191,7 +191,7 @@ Use only values `describe_snapshot` lists for this network (`measures`, `segment
 
 ## Publishing
 
-`prepare_publish` takes `{ "entry": ... }`: the entry without `id` and without `provenance.maker`, that is `"petal": "flower/v1"`, a `title`, the `spec` and `spec_sha256`, your `interpretation`, `snapshot` (`sha256`, `urls`), `render_sha256`, and `provenance` with `agent: { "kind": "own-agent", "name": "<your agent>" }`, `tools_version` and `created_at`. It answers with a `sign_url`. Give that link to the person: the page shows the draft, they sign the NEP-413 message in their own NEAR wallet, and the flower is written to Petal's shared map on NEAR (testnet during the build).
+`prepare_publish` takes `{ "entry": ... }`: the entry without `id` and without `provenance.maker`, that is `"petal": "flower/v2"`, a `title`, the `spec` and `spec_sha256`, your `interpretation`, `snapshot` (`sha256`, `urls`), and `provenance` with `agent: { "kind": "own-agent", "name": "<your agent>" }`, `tools_version` and `created_at`. It answers with a `sign_url`. Give that link to the person: the page shows the draft, they sign the NEP-413 message in their own NEAR wallet, and the flower is written to Petal's shared map on NEAR (testnet during the build).
 
 ## Resources
 

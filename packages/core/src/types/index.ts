@@ -6,11 +6,12 @@
 import type {
   Correction,
   Encoding,
+  EntryV1,
+  EntryV2,
   Interpretation,
   ModelSignature,
   Nep413Proof,
   OrderEncoding,
-  PetalSpecInterpretationAndPublishedFlowerEntryV1,
   Sha256,
   SourceIds,
   Spec,
@@ -31,6 +32,8 @@ export type {
   Datetime,
   Decimal,
   Encoding,
+  EntryV1,
+  EntryV2,
   Identity,
   Interpretation,
   Kind,
@@ -44,8 +47,10 @@ export type {
 
 /** snapshot/v1, the common table (common-table.schema.json). */
 export type Snapshot = PetalSnapshotCommonTableV1;
-/** flower/v1, a published flower entry (petal-spec.schema.json, $defs.entry). */
-export type Entry = PetalSpecInterpretationAndPublishedFlowerEntryV1;
+/** A published flower entry; its `petal` says how to verify it (shared-map.md, Entry versions). */
+export type Entry = EntryV1 | EntryV2;
+/** An entry before it has an id. */
+export type EntryWithoutId = Omit<EntryV1, 'id'> | Omit<EntryV2, 'id'>;
 
 export type SnapshotNetwork = Snapshot['network'];
 export type SnapshotMoment = Snapshot['snapshot'];

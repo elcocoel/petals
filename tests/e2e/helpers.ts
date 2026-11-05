@@ -224,13 +224,12 @@ export function entryDraft(
 ): EntryDraft {
   const sha = flower.spec.snapshot.sha256;
   return {
-    petal: 'flower/v1',
+    petal: 'flower/v2',
     title: o.title,
     spec: flower.spec,
     spec_sha256: flower.spec_sha256,
     interpretation: flower.interpretation,
     snapshot: { sha256: sha, urls: [`/api/v1/snapshots/${sha}`] },
-    render_sha256: flower.render_sha256,
     provenance: {
       agent: { kind: 'petal-agent', model: o.model, signature: o.signature },
       tools_version: TOOLS_VERSION,

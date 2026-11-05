@@ -29,6 +29,12 @@ const runOn = (model: string): Run =>
   }) as unknown as Run;
 
 describe('entryDraftFromRun', () => {
+  test('a draft is flower/v2 and carries no drawing: the maker signs the facts', () => {
+    const draft = entryDraftFromRun(runOn('deepseek-ai/x'), 'http://x');
+    expect(draft?.petal).toBe('flower/v2');
+    expect(draft).not.toHaveProperty('render_sha256');
+  });
+
   test('a real run publishes the signature of the completion that wrote it', () => {
     const agent = entryDraftFromRun(runOn('deepseek-ai/x'), 'http://x')?.provenance.agent;
     expect(agent).toMatchObject({ model: 'deepseek-ai/x', signature });
