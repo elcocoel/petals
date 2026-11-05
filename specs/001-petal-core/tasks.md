@@ -431,8 +431,9 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 - [ ] T182 [W6] Canvas proof: `../research/spikes/canvas/`, zooming 40, 200 and 1,000 flowers across rendering modes, with frame times and a recommendation.
 - [ ] T183 [W6] Workspace v1 to the Figma frames: rail, conversation, flower panel on the canvas stage, composer, petal detail, legend, Stop. Done when Elco can hold a full flower conversation in it.
 - [ ] T184 [W6] Gallery, flower page and connect page in the system.
-- [ ] T185 [W6] Landing page on `/`, from Elco's rewritten copy, with the conversation one step in.
+- [ ] T185 [W6] Landing page on `/`, with the sketch copy as a placeholder and the conversation one step in. The copy gets its own pass later.
 - [X] T186 [W8] Witnessed deploy: the site reports its commit, candidate then promote then automatic rollback, nothing ships that isn't on `main`.
+- [ ] T188 [W6] The three levels in sketch, on one canvas: an account, a group, relations between groups (Elco's definitions in `../design/frontend-foundation.md`). Thin and real where cheap: for example the accounts two stored groups have in common. Unsolved on purpose: this is to surface what Elco has to design for.
 - [ ] T187 [W8] [Elco] Elco's judgement of frontend v1, then split coordination into fronts: frontend, backend, hosting, data, agent and tooling.
 
 ---
