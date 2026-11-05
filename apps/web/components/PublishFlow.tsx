@@ -3,6 +3,7 @@
 // publish_flower. Shows the key, the writer and the explorer link, and why the receipt "fails".
 import type { EntryDraft, Prepared } from '../lib/publish.ts';
 import { usePublishFlow } from '../viewmodels/usePublishFlow.ts';
+import { Button } from './ui/Button.tsx';
 
 export function PublishFlow({
   draft,
@@ -31,7 +32,7 @@ export function PublishFlow({
         </p>
       )}
       {step !== 'done' && (
-        <button type="button" onClick={publish} disabled={working}>
+        <Button onClick={publish} disabled={working}>
           {step === 'preparing'
             ? 'Preparing…'
             : step === 'signing'
@@ -39,7 +40,7 @@ export function PublishFlow({
               : step === 'publishing'
                 ? 'Publishing…'
                 : 'Sign in and publish'}
-        </button>
+        </Button>
       )}
       {error && <p className="error">{error}</p>}
       {published && (

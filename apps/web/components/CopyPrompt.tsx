@@ -1,6 +1,7 @@
 'use client';
 // One click, then paste into any agent (lib/agent-prompt.ts).
 import { useState } from 'react';
+import { Button } from './ui/Button.tsx';
 
 export function CopyPrompt({
   prompt,
@@ -21,9 +22,7 @@ export function CopyPrompt({
   return (
     <div className="box">
       <pre>{prompt}</pre>
-      <button type="button" onClick={() => void copy()}>
-        {state === 'copied' ? 'Copied' : label}
-      </button>
+      <Button onClick={() => void copy()}>{state === 'copied' ? 'Copied' : label}</Button>
       {state === 'failed' && <span className="muted"> Couldn't copy: select the text above.</span>}
     </div>
   );

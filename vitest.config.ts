@@ -12,6 +12,7 @@ const unit = (name: string, root: string) => ({
 export default defineConfig({
   test: {
     projects: [
+      unit('tokens', 'packages/tokens'),
       unit('core', 'packages/core'),
       unit('inputs', 'packages/inputs'),
       unit('near', 'packages/near'),

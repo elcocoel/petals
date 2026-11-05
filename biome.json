@@ -12,7 +12,8 @@
       "!.claude",
       "!fixtures",
       "!packages/core/schema",
-      "!packages/core/src/types/generated"
+      "!packages/core/src/types/generated",
+      "!**/*.generated.css"
     ]
   },
   "formatter": {
@@ -21,6 +22,7 @@
     "indentWidth": 2,
     "lineWidth": 100
   },
+  "css": { "parser": { "tailwindDirectives": true } },
   "markdown": { "formatter": { "formatEmbeds": false } },
   "javascript": {
     "formatter": { "quoteStyle": "single", "semicolons": "always", "trailingCommas": "all" }

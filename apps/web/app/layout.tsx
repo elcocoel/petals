@@ -1,58 +1,42 @@
-// The site shell. Deliberately plain: the beauty pass is M6 (constitution VI); UI comments wait in
-// design/ui-notes.md.
+// The site shell: fonts, tokens, the nav. Styling lives in globals.css and the generated tokens.
+import { Bitcount_Grid_Single, Geist_Mono, Mona_Sans } from 'next/font/google';
 import type { ReactNode } from 'react';
+import { TextLink } from '../components/ui/TextLink.tsx';
+import { Wordmark } from '../components/ui/Wordmark.tsx';
+import './globals.css';
+
+// Each `variable` is the one packages/tokens/source.ts names under `fonts`.
+const monaSans = Mona_Sans({ subsets: ['latin'], variable: '--font-mona-sans' });
+const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' });
+// The wordmark's layers set these axes. Block rather than swap: three stacked copies in a fallback
+// font would flash as a smear.
+const bitcount = Bitcount_Grid_Single({
+  subsets: ['latin'],
+  weight: 'variable',
+  axes: ['CRSV', 'ELSH', 'ELXP', 'slnt'],
+  variable: '--font-bitcount',
+  display: 'block',
+});
 
 export const metadata = {
-  title: 'Petal',
+  title: 'Petals',
   description: 'See who holds power in a network, drawn as a flower. NEAR first.',
 };
 
-// .legend: the renderer sets its colour variables on the svg only (core's render/style.ts, light
-// theme), and the legend's swatches name those variables from outside it.
-const CSS = `
-body{font:16px/1.5 system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;color:#222}
-nav a{margin-right:1rem}
-code{font-size:.9em;word-break:break-all}
-.muted{color:#666}
-.error{color:#b00020}
-.box{border:1px solid #ccc;padding:.5rem 1rem;margin:1rem 0}
-.badge{display:inline-block;border:1px solid #888;padding:0 .4rem;margin-left:.4rem;font-size:.8em}
-.flower-svg{max-width:640px}
-.gallery-flower{width:320px;max-width:100%;height:auto}
-.flower-svg svg{width:100%;height:auto}
-.flower-svg [data-p]{cursor:pointer}
-.petal-selected{stroke:#000!important;stroke-width:2!important}
-.swatch{display:inline-block;width:.9em;height:.9em;border:1px solid #888;vertical-align:middle}
-:root{--k-staking_pool:#6b8f71;--k-staking_entity:#c9a227;--seg-other:#9bb7a0;--seg-large:#557a5c;--seg-liquid:#c9a227;--seg-lockup:#7a6a9b}
-.legend{--ink-2:#52514e;--unknown:#c9c7bf;--tail:#b8b6ae;--k-pool:#2a78d6;--k-exchange:#eb6834;--k-entity:#1baf7a;--k-custodian:#eda100;--k-contract:#e87ba4;--k-treasury:#008300;--k-org:#4a3aa7;--k-delegator:#e34948}
-table{border-collapse:collapse}td,th{border:1px solid #ddd;padding:.2rem .5rem;text-align:left}
-ol.events li{margin:.2rem 0;overflow-wrap:anywhere}
-pre{white-space:pre-wrap;overflow-wrap:anywhere}
-textarea{width:100%;font:inherit}
-.thread{padding-bottom:9rem}
-.you{background:#f2f2f2;padding:.5rem .75rem;margin:1.5rem 0 .75rem;overflow-wrap:anywhere}
-.md p{white-space:pre-wrap;overflow-wrap:anywhere}
-.steps{margin:.5rem 0}
-.composer{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #ccc;padding:.5rem 1rem}
-.composer-row{display:flex;gap:.5rem;align-items:flex-end;max-width:60rem;margin:0 auto}
-.composer-note{max-width:60rem;margin:.25rem auto 0;font-size:.8em;overflow-wrap:anywhere}
-`;
-
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <style>{CSS}</style>
-      </head>
+    <html lang="en" className={`${monaSans.variable} ${geistMono.variable} ${bitcount.variable}`}>
       <body>
-        <nav>
-          <a href="/">
-            <strong>Petal</strong>
+        <nav className="flex flex-wrap items-center justify-between gap-block-gap border-b border-hairline px-block-gap py-block-gap md:px-page-inset">
+          <a href="/" aria-label="Petals, home">
+            <Wordmark />
           </a>
-          <a href="/gallery">Gallery</a>
-          <a href="/connect">Use your own AI</a>
+          <div className="flex flex-wrap gap-block-gap">
+            <TextLink href="/gallery">Gallery</TextLink>
+            <TextLink href="/connect">Use your own AI</TextLink>
+          </div>
         </nav>
-        <main>{children}</main>
+        <main className="mx-auto max-w-content-width px-block-gap py-column-gap">{children}</main>
       </body>
     </html>
   );

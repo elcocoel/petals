@@ -10,6 +10,7 @@
   "include": [
     "app",
     "components",
+    "lab",
     "lib",
     "lib/mock/*.json",
     "scripts",
@@ -18,6 +19,9 @@
     "next.config.ts"
   ],
   "references": [
+    {
+      "path": "../../packages/tokens"
+    },
     {
       "path": "../../packages/core"
     },

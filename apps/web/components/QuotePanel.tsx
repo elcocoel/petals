@@ -3,6 +3,7 @@
 // No deposit address is asked for or shown, and no money moves. The same panel quotes new
 // coverage of a network Petal can't read yet (purpose sponsor_coverage).
 import { useQuote } from '../viewmodels/useQuote.ts';
+import { Button } from './ui/Button.tsx';
 
 const LABEL = 'Dry quote. Paying is not switched on.';
 
@@ -27,9 +28,9 @@ export function QuotePanel({
           ? 'What 1 USD toward a fresh snapshot would cost, paid in USDC from Base through NEAR Intents.'
           : 'What 1 USD toward new coverage would cost, paid in USDC from Base through NEAR Intents.'}
       </p>
-      <button type="button" onClick={ask} disabled={busy}>
+      <Button onClick={ask} disabled={busy}>
         {busy ? 'Asking 1Click…' : 'Get a dry quote'}
-      </button>
+      </Button>
       {error && <p className="error">{error}</p>}
       {quote && (
         <div>
