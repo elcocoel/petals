@@ -9,6 +9,7 @@
 //
 // --bare is the paste test: no Petal tools and no skill, only web requests, as for someone who has
 // installed nothing. The first thing you say is the copied prompt.
+// --url <mcp url> is the connector test: one URL and nothing else, no prompt and no skill.
 //
 // Each extra argument is the next thing you say. The default models are small on purpose: Petal's
 // own agent runs a small model too, and a test should not use up a subscription.
@@ -127,22 +128,30 @@ export function claudeArgs(
     first: boolean;
     state: string;
     bare?: boolean;
+    url?: string;
   },
 ): string[] {
-  const load = o.bare
-    ? ['--allowedTools', 'WebFetch', 'Bash(curl *)']
-    : [
+  const load = o.url
+    ? [
         '--mcp-config',
-        JSON.stringify({ mcpServers: { petal: petalServer(o.state) } }),
-        '--append-system-prompt',
-        o.skill,
-        // The skill's own way to hand over a drawing: `petal render --out`, into this run's folder.
+        JSON.stringify({ mcpServers: { petal: { type: 'http', url: o.url } } }),
         '--allowedTools',
         'mcp__petal',
-        'Bash(pnpm *)',
-        'Bash(grep *)',
-        'Write',
-      ];
+      ]
+    : o.bare
+      ? ['--allowedTools', 'WebFetch', 'Bash(curl *)']
+      : [
+          '--mcp-config',
+          JSON.stringify({ mcpServers: { petal: petalServer(o.state) } }),
+          '--append-system-prompt',
+          o.skill,
+          // The skill's own way to hand over a drawing: `petal render --out`, into this run's folder.
+          '--allowedTools',
+          'mcp__petal',
+          'Bash(pnpm *)',
+          'Bash(grep *)',
+          'Write',
+        ];
   return [
     '-p',
     say,
@@ -163,17 +172,29 @@ export function claudeArgs(
 
 export function codexArgs(
   say: string,
-  o: { model?: string; session?: string; path: string; state: string; bare?: boolean },
+  o: {
+    model?: string;
+    session?: string;
+    path: string;
+    state: string;
+    bare?: boolean;
+    url?: string;
+  },
 ): string[] {
   const server = petalServer(o.state);
-  const load = o.bare
-    ? ['sandbox_workspace_write.network_access=true']
-    : [
-        `mcp_servers.petal.command="${server.command}"`,
-        `mcp_servers.petal.args=${JSON.stringify(server.args)}`,
-        `mcp_servers.petal.env={PATH=${JSON.stringify(o.path)},PETAL_STATE_DIR=${JSON.stringify(o.state)}}`,
+  const load = o.url
+    ? [
+        `mcp_servers.petal.url="${o.url}"`,
         'mcp_servers.petal.default_tools_approval_mode="approve"',
-      ];
+      ]
+    : o.bare
+      ? ['sandbox_workspace_write.network_access=true']
+      : [
+          `mcp_servers.petal.command="${server.command}"`,
+          `mcp_servers.petal.args=${JSON.stringify(server.args)}`,
+          `mcp_servers.petal.env={PATH=${JSON.stringify(o.path)},PETAL_STATE_DIR=${JSON.stringify(o.state)}}`,
+          'mcp_servers.petal.default_tools_approval_mode="approve"',
+        ];
   const config = [
     ...load,
     'sandbox_mode="workspace-write"',
@@ -197,10 +218,21 @@ function main(argv: string[]): number {
   const at = argv.indexOf('--model');
   const model = at > 0 ? argv[at + 1] : undefined;
   const bare = argv.includes('--bare');
-  const said = argv.slice(1).filter((w, i) => i + 1 !== at && i + 1 !== at + 1 && w !== '--bare');
+  const urlAt = argv.indexOf('--url');
+  const url = urlAt > 0 ? argv[urlAt + 1] : undefined;
+  const said = argv
+    .slice(1)
+    .filter(
+      (w, i) =>
+        i + 1 !== at &&
+        i + 1 !== at + 1 &&
+        w !== '--bare' &&
+        i + 1 !== urlAt &&
+        i + 1 !== urlAt + 1,
+    );
   if ((a !== 'claude' && a !== 'codex') || said.length === 0) {
     console.error(
-      'usage: node scripts/try-agent.ts <claude|codex> [--model m] [--bare] "first" ["next" …]',
+      'usage: node scripts/try-agent.ts <claude|codex> [--model m] [--bare | --url u] "first" ["next" …]',
     );
     return 2;
   }
@@ -208,7 +240,7 @@ function main(argv: string[]): number {
   const skill = readFileSync(join(REPO, 'skill/petal/SKILL.md'), 'utf8');
   // Outside any project, so the agent sees only the skill, not a repo's own instructions.
   const cwd = mkdtempSync(join(tmpdir(), 'petal-try-'));
-  if (a === 'codex' && !bare) writeFileSync(join(cwd, 'AGENTS.md'), skill);
+  if (a === 'codex' && !bare && !url) writeFileSync(join(cwd, 'AGENTS.md'), skill);
   const state = join(cwd, '.petal');
   const env = { ...agentEnv(process.env), PETAL_STATE_DIR: state };
 
@@ -226,6 +258,7 @@ function main(argv: string[]): number {
             first: i === 0,
             state,
             bare,
+            ...(url ? { url } : {}),
           })
         : codexArgs(say, {
             ...(model ? { model } : {}),
@@ -233,6 +266,7 @@ function main(argv: string[]): number {
             path: process.env.PATH ?? '',
             state,
             bare,
+            ...(url ? { url } : {}),
           });
     const r = spawnSync(a, args, {
       cwd,

@@ -69,6 +69,23 @@ describe('try-agent', () => {
     expect(k).toContain('sandbox_workspace_write.network_access=true');
   });
 
+  test('--url is one URL and nothing else: no prompt, no skill, no local server', () => {
+    const c = claudeArgs('hi', {
+      model: 'haiku',
+      skill: 'SKILL',
+      session: 's',
+      first: true,
+      state: '/t',
+      url: 'https://x.dev/mcp',
+    });
+    expect(c.join(' ')).toContain('"type":"http","url":"https://x.dev/mcp"');
+    expect(c).not.toContain('SKILL');
+    expect(c.join(' ')).not.toContain('petal mcp');
+    const k = codexArgs('hi', { path: '/bin', state: '/t', url: 'https://x.dev/mcp' }).join(' ');
+    expect(k).toContain('mcp_servers.petal.url="https://x.dev/mcp"');
+    expect(k).not.toContain('mcp_servers.petal.command');
+  });
+
   test('reads a Claude Code run', () => {
     const t = readClaude(
       [
