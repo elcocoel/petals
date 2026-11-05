@@ -47,7 +47,7 @@ const POSITIONAL: Record<string, string[]> = {
 };
 
 /** Commands the CLI adds beside the tools: they start a door, they are not tools. */
-export const BUILTINS = ['mcp', 'api', 'help'] as const;
+export const BUILTINS = ['mcp', 'api', 'connect', 'help'] as const;
 
 export function commandName(tool: string): string {
   return SHORT[tool] ?? tool.replaceAll('_', '-');

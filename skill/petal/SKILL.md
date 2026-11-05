@@ -95,6 +95,20 @@ A tool error is an answer. It carries `code`, `message` and `hint`; follow the h
 6. Keep the answer under 200 words, plus the link.
 <!-- petal:shared:end -->
 
+## When no Petal site is running
+
+A `view_url` that starts with `/` (`/draft?spec=…`) is a path on a Petal site, and it opens nothing unless one is running. Unless you know one is, don't hand it back as the link. Hand back a local file instead: its full path goes on the **Flower** line of the answer.
+
+Save the spec exactly as `propose_spec` returned it as `spec.json` in your working folder, then run:
+
+```bash
+pnpm -s --dir "<repo>" petal render @spec.json --out flower.svg | grep '"spec_sha256"'
+```
+
+`<repo>` is the root of the Petal clone. Relative paths stay in your working folder. `flower.svg` is the drawing. The line it prints must match the `spec_sha256` from `render_flower`. Keep the `grep`, because the full answer is over 100 KB. Run the command as written, on its own: a `>`, a `cd` or a `$?` can make an agent's permission check stop it.
+
+If you can't run a command, or a sandbox blocks this one, call `render_flower` again with `"include_svg": true` and save its `svg` field as `flower.svg`, unchanged. It's about 30 KB, so use the command when you can.
+
 ## Calling the tools over HTTP
 
 JSON in and out; send `content-type: application/json`. Every answer carries `tools_version`.
@@ -162,6 +176,6 @@ Use only values `describe_snapshot` lists for this network (`measures`, `segment
 
 ## Resources
 
-- Install guide: [README.md](README.md) (Claude Code, Codex, IronClaw).
+- Install guide: `skill/petal/README.md` in the Petal repo (Claude Code, Codex, IronClaw).
 - Tool contract: `specs/001-petal-core/contracts/tools.md`. HTTP and MCP: `specs/001-petal-core/contracts/http-api.md`. Both in the Petal repo.
 - From a terminal in a clone: `pnpm petal help` lists the same tools as CLI commands.

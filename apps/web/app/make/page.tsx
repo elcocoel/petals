@@ -30,6 +30,20 @@ export default async function MakePage({
         </p>
       )}
       <Chat initialRun={run} recorded={recorded} />
+      <section>
+        <h2>Use your own agent</h2>
+        <p>
+          Claude Code or Codex can run this search instead of this chat. In a clone of Petal, run:
+        </p>
+        <pre>
+          <code>pnpm petal connect claude</code>
+        </pre>
+        <p className="muted">
+          Or <code>pnpm petal connect codex</code>. It gives your agent Petal’s skill and tools.
+          Then ask it who stands behind NEAR’s validators. <code>--dry-run</code> shows what it
+          would change, and <code>--remove</code> undoes it.
+        </p>
+      </section>
     </>
   );
 }
