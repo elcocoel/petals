@@ -515,6 +515,7 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
           'transform',
           `translate(${n3(map.x + mapBase.tx(map.size))} ${n3(map.y + mapBase.ty(map.size))}) scale(${n3(scale)})`,
         );
+        mapLit.set('display', map.litIndex >= 0 ? 'inline' : 'none');
         if (map.litIndex >= 0) {
           mapLit.set('d', bandPath(m.ring, map.litIndex, 0, m.height[map.litIndex] as number));
           mapLit.set('stroke-width', n3(1 / scale));
