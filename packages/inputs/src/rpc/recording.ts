@@ -48,18 +48,25 @@ function expand(response: unknown): unknown {
   return response;
 }
 
-/** Wraps a fetch and keeps every JSON-RPC answer it sees (successful HTTP only). */
-export function recordingFetch(inner: typeof fetch = globalThis.fetch): {
+/**
+ * Wraps a fetch and keeps every JSON-RPC answer it sees (successful HTTP only). `skip` leaves
+ * requests out, so a walk over hundreds of MB of logs is not held in memory to be thrown away.
+ */
+export function recordingFetch(
+  inner: typeof fetch = globalThis.fetch,
+  skip: (request: { method: string; params: unknown }) => boolean = () => false,
+): {
   fetch: typeof fetch;
   calls: RecordedCall[];
 } {
   const calls: RecordedCall[] = [];
   const wrapped: typeof fetch = async (input, init) => {
     const res = await inner(input, init);
-    if (!res.ok) return res;
+    if (!res.ok || typeof init?.body !== 'string') return res;
+    const req = JSON.parse(init.body) as { method: string; params: unknown };
+    if (skip(req)) return res;
     const text = await res.text();
     try {
-      const req = JSON.parse(String(init?.body)) as { method: string; params: unknown };
       calls.push({
         endpoint: String(input),
         request: { method: req.method, params: req.params },

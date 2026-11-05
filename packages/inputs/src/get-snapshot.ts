@@ -137,7 +137,8 @@ export async function getSnapshot(
 
   say('resolving', `resolving ${latest ? 'latest' : JSON.stringify(req.at)} for ${d.id}`);
   const at = await mod.resolveAt(req.at ?? 'latest', req.params);
-  const key = { chain: d.chain, population: d.population, block_height: at.block_height };
+  const scope = mod.keyFor?.(req.params) ?? { chain: d.chain, population: d.population };
+  const key = { ...scope, block_height: at.block_height };
   say(
     'reading_map',
     `looking for ${d.id} at block ${at.block_height} in fixtures, cache and the map`,
@@ -168,8 +169,8 @@ export async function getSnapshot(
       .filter(
         (r) =>
           r.final &&
-          r.chain === d.chain &&
-          r.population === d.population &&
+          r.chain === key.chain &&
+          r.population === key.population &&
           r.block_height !== null &&
           r.block_height <= at.block_height &&
           headMs - Date.parse(r.as_of) <= LATEST_REUSE_S * 1000,

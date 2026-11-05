@@ -124,6 +124,13 @@ export interface RpcPoolOptions {
   rounds?: number;
   /** the longest the pool waits for a paused endpoint before giving up, default 30 s */
   maxWaitMs?: number;
+  /**
+   * JSON-RPC errors outside NEAR's list that are still a real answer, thrown as RpcError at once
+   * instead of moving on to the next endpoint (an EVM range cap, a revert).
+   */
+  isAnswer?: (error: Record<string, unknown>) => boolean;
+  /** names the chain in the "no endpoint answered" hint, default NEAR */
+  chainName?: string;
 }
 
 /** A JSON-RPC error answer, e.g. UNKNOWN_BLOCK or a contract error. */
@@ -262,7 +269,7 @@ export function rpcPool(opts: RpcPoolOptions = {}): RpcPool {
       if (json?.error) {
         const cause = (json.error.cause as { name?: string } | undefined)?.name;
         const name = cause ?? (json.error.name as string | undefined) ?? 'RPC_ERROR';
-        if (DEFINITIVE.has(name)) {
+        if (DEFINITIVE.has(name) || opts.isAnswer?.(json.error)) {
           strikes429.delete(e.id);
           const info = json.error.cause as { info?: unknown } | undefined;
           const message = String(json.error.data ?? json.error.message ?? name);
@@ -351,7 +358,7 @@ export function rpcPool(opts: RpcPoolOptions = {}): RpcPool {
       'source_failed',
       `rpc ${method} failed on ${names.join(', ')}: ${detail}`,
       {
-        hint: 'the public NEAR RPC endpoints did not answer; try again later',
+        hint: `the public ${opts.chainName ?? 'NEAR'} RPC endpoints did not answer; try again later`,
         failures,
       },
     );
