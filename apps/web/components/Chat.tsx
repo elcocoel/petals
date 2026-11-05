@@ -21,7 +21,6 @@ import { Interpretation, SignatureLine } from './Interpretation.tsx';
 import { Legend } from './Legend.tsx';
 import { Markdown } from './Markdown.tsx';
 
-const QUESTION = "who stands behind NEAR's validators?";
 /** What the recorded run (fixtures/transcripts/skeleton.json) was really asked. */
 const RECORDED_QUESTION =
   "Who stands behind NEAR's validators? Make me a fresh flower with their backers, not an existing one.";
@@ -146,18 +145,25 @@ export function AnsweredBy({ done, signature }: { done: Done; signature: ModelSi
 export function Chat({
   initialRun,
   recorded = false,
+  opening,
 }: {
   initialRun?: string;
   recorded?: boolean;
+  /** what the agent says first, on a new chat: written text, so opening the app costs no model call */
+  opening?: string;
 }) {
-  // the default question only on a new chat; a reopened run shows its own
-  const [question, setQuestion] = useState(initialRun ? '' : QUESTION);
-  const [items, setItems] = useState<Item[]>([]);
+  const greeting = opening && !initialRun && !recorded ? opening : undefined;
+  const [question, setQuestion] = useState('');
+  const [items, setItems] = useState<Item[]>(greeting ? [{ kind: 'message', text: greeting }] : []);
   const [runId, setRunId] = useState<string | null>(initialRun ?? null);
   const [busy, setBusy] = useState(Boolean(initialRun));
   const thread = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLTextAreaElement>(null);
   const following = useRef(true);
+
+  useEffect(() => {
+    if (!recorded) box.current?.focus();
+  }, [recorded]);
 
   const apply = useCallback((e: AgentEvent) => {
     if (e.event === 'run') {
@@ -240,7 +246,11 @@ export function Chat({
         headers: { 'content-type': 'application/json', accept: 'text/event-stream' },
         // only what is new: the server holds the conversation
         body: JSON.stringify({
-          messages: [{ role: 'user', content: text }],
+          messages: [
+            // the model should know what it has already said to this person
+            ...(greeting && !continuing ? [{ role: 'assistant', content: greeting }] : []),
+            { role: 'user', content: text },
+          ],
           ...(continuing ? { run_id: continuing } : {}),
         }),
       });
@@ -383,7 +393,9 @@ export function Chat({
             id="q"
             rows={2}
             aria-label={recorded ? 'The saved question' : 'Ask Petal’s agent about a network'}
-            placeholder={runId ? 'Ask a follow-up…' : 'Ask about a network…'}
+            placeholder={
+              runId ? 'Ask a follow-up…' : 'A DAO, a token, a contract address, or a question…'
+            }
             value={recorded ? RECORDED_QUESTION : question}
             readOnly={recorded}
             onChange={(e) => setQuestion(e.target.value)}

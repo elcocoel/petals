@@ -36,7 +36,7 @@ export default async function FlowerPage({ params }: { params: Promise<{ id: str
           {got.error.code}: {got.error.message}
         </p>
         <p>
-          <a href="/">Back to the gallery</a>
+          <a href="/gallery">Back to the gallery</a>
         </p>
       </>
     );

@@ -49,8 +49,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <a href="/">
             <strong>Petal</strong>
           </a>
-          <a href="/">Gallery</a>
-          <a href="/make">Make a flower</a>
+          <a href="/gallery">Gallery</a>
         </nav>
         <main>{children}</main>
       </body>
