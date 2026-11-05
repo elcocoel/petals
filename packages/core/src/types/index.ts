@@ -24,6 +24,29 @@ import type {
   PetalSnapshotCommonTableV1,
 } from './generated/snapshot.ts';
 
+// claim/v1 (specs/002-system/contracts/claims.md)
+export type {
+  Claim,
+  ClaimDraft,
+  ClaimEvidence,
+  ClaimerRecord,
+  ClaimKind,
+  ClaimProof,
+  ClaimValue,
+  ConfidenceBand,
+  DistinctCounts,
+  EntityRef,
+  Lens,
+  MapRead,
+  ParsedRef,
+  ShowAs,
+  Shown,
+  SkippedRow,
+  SnapshotRead,
+  Verb,
+  VerbRule,
+} from '../claims/index.ts';
+
 // ---------------------------------------------------------------------------------------------
 // Generated (contracts/*.schema.json)
 
