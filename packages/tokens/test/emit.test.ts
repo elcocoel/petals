@@ -85,7 +85,7 @@ describe('Tailwind theme', () => {
       'gap-block-gap',
       'font-mono',
       'type-body',
-      'type-mono-label',
+      'type-mono',
       'wordmark-front',
       'md:px-page-inset',
     ];

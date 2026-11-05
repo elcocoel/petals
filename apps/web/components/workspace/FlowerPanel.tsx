@@ -112,7 +112,7 @@ function OpenFlower({
             <Interpretation reading={view.interpretation} sources={view.sources} />
             <Legend items={view.legend} sources={view.sources} />
             <SignatureLine signature={view.signature} model={view.model} />
-            <p data-quiet className="type-mono-small wrap-anywhere text-muted">
+            <p data-quiet className="type-mono wrap-anywhere text-muted">
               {view.checks}. spec_sha256 {view.hashes}
             </p>
           </div>

@@ -13,7 +13,5 @@ export function Eyebrow({
   tone?: keyof typeof TONES;
   children: ReactNode;
 }) {
-  return (
-    <Tag className={`my-0 type-mono-label whitespace-pre-wrap ${TONES[tone]}`}>{children}</Tag>
-  );
+  return <Tag className={`my-0 type-mono whitespace-pre-wrap ${TONES[tone]}`}>{children}</Tag>;
 }

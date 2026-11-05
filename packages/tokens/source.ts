@@ -234,7 +234,7 @@ export interface TypeStyle {
 }
 
 /**
- * Figma: Petals / <name>. The three mono styles consolidate Figma's nine loose Geist Mono sizes.
+ * Figma: Petals / <name>. Mono and Mono code consolidate Figma's nine loose Geist Mono sizes.
  * Text case is written in the copy, never transformed.
  */
 export const type = {
@@ -246,15 +246,9 @@ export const type = {
   Body: { font: 'sans', size: 18, line: 27, weight: 400, tracking: 0 },
   Label: { font: 'sans', size: 16, line: 22, weight: 500, tracking: 0 },
   Caption: { font: 'sans', size: 14, line: 20, weight: 500, tracking: 0 },
-  'Mono label': { font: 'mono', size: 12, line: 17, weight: 400, tracking: 0.04 },
-  'Mono small': { font: 'mono', size: 11, line: 16, weight: 400, tracking: 0.04 },
+  /** Every small mono line: an eyebrow, a caption, a note, an index. */
+  Mono: { font: 'mono', size: 11, line: 16, weight: 400, tracking: 0.04 },
   'Mono code': { font: 'mono', size: 15, line: 24, weight: 400, tracking: 0 },
-  /** Figma's 10/15, the label and action of its note boxes (66:2229, 67:2530). */
-  'Mono tiny': { font: 'mono', size: 10, line: 15, weight: 400, tracking: 0.04 },
-  /** Figma's 12 on a normal line, a gallery card's note (52:1880). */
-  'Mono note': { font: 'mono', size: 12, line: 16, weight: 400, tracking: 0.04 },
-  /** Figma's 16/21, the sign on a FAQ item (67:2546). */
-  'Mono sign': { font: 'mono', size: 16, line: 21, weight: 400, tracking: 0.04 },
   /** The step numbers (66:2275): Bitcount Grid Single with its axes at rest. */
   'Pixel numeral': {
     font: 'pixel',

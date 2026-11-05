@@ -20,7 +20,7 @@ export function GalleryCard({
         <Thumb kind={thumb} size="card" />
       </span>
       <span className="pt-block-gap pb-space-8 type-heading">{title}</span>
-      <span className="type-mono-note">{note}</span>
+      <span className="type-mono">{note}</span>
     </a>
   );
 }

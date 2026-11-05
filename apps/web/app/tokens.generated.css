@@ -76,7 +76,7 @@
   --color-figure-accent: var(--figure-accent);
 }
 
-@source inline("type-display type-display-compact type-title type-heading type-lead type-body type-label type-caption type-mono-label type-mono-small type-mono-code type-mono-tiny type-mono-note type-mono-sign type-pixel-numeral wordmark wordmark-back wordmark-middle wordmark-front wordmark-nav wordmark-footer wordmark-workspace wordmark-display");
+@source inline("type-display type-display-compact type-title type-heading type-lead type-body type-label type-caption type-mono type-mono-code type-pixel-numeral wordmark wordmark-back wordmark-middle wordmark-front wordmark-nav wordmark-footer wordmark-workspace wordmark-display");
 
 @layer base {
 *, ::before, ::after {
@@ -358,15 +358,7 @@
   letter-spacing: 0em;
 }
 
-@utility type-mono-label {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 17px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-}
-
-@utility type-mono-small {
+@utility type-mono {
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 16px;
@@ -380,30 +372,6 @@
   line-height: 24px;
   font-weight: 400;
   letter-spacing: 0em;
-}
-
-@utility type-mono-tiny {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  line-height: 15px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-}
-
-@utility type-mono-note {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-}
-
-@utility type-mono-sign {
-  font-family: var(--font-mono);
-  font-size: 16px;
-  line-height: 21px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
 }
 
 @utility type-pixel-numeral {

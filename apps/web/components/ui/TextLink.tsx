@@ -9,7 +9,7 @@ const VARIANTS = {
   label: 'type-label text-primary',
   quiet: 'type-caption text-muted hover:text-primary',
   rail: 'flex items-center gap-space-8 py-space-8 type-label whitespace-nowrap text-primary',
-  mono: 'type-mono-tiny text-primary',
+  mono: 'type-mono text-primary',
 } as const;
 
 export function TextLink({

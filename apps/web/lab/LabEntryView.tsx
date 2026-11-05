@@ -35,7 +35,7 @@ export function LabEntryView({ entry }: { entry: LabEntry }) {
         </Surface>
       ))}
       <h3>{entry.id}</h3>
-      <p className="type-mono-small text-muted">
+      <p className="type-mono text-muted">
         {entry.figmaNode
           ? `${entry.figmaName} ${entry.figmaNode}`
           : entry.states.some((s) => s.figmaNode)
@@ -55,7 +55,7 @@ export function LabSectionView({ entry }: { entry: LabEntry }) {
       ))}
       <div className={LAB_COLUMN}>
         <h3>{entry.id}</h3>
-        <p className="type-mono-small text-muted">
+        <p className="type-mono text-muted">
           {entry.states.map(stateLine).join(', ')} · {entry.source}
         </p>
       </div>

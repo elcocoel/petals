@@ -18,7 +18,7 @@ export function Composer({
   return (
     <div className="flex shrink-0 flex-col gap-space-8 pt-text-gap pr-space-32 pb-space-32 pl-column-gap">
       {view.about && (
-        <p data-quiet className="type-mono-small text-muted">
+        <p data-quiet className="type-mono text-muted">
           {view.about}
         </p>
       )}
@@ -39,7 +39,7 @@ export function Composer({
         }}
       />
       {view.run && (
-        <p className="type-mono-small text-muted">
+        <p className="type-mono text-muted">
           Run <a href={view.run.href}>{view.run.id}</a>. You can leave and come back.
         </p>
       )}

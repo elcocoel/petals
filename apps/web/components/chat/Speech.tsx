@@ -25,7 +25,7 @@ export function Speech({
         </p>
       )}
       {note && (
-        <p data-quiet className="type-mono-small text-muted">
+        <p data-quiet className="type-mono text-muted">
           {note}
         </p>
       )}

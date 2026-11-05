@@ -160,7 +160,7 @@
   }
 
   .badge {
-    @apply type-mono-small;
+    @apply type-mono;
     display: inline-block;
     border: 1px solid var(--hairline);
     padding-inline: calc(var(--spacing-text-gap) / 2);

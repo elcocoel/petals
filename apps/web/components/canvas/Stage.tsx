@@ -44,7 +44,7 @@ export function Stage({
       <div
         className={`flex items-center justify-between gap-block-gap ${bleed ? 'px-column-gap' : ''}`}
       >
-        <p className="type-mono-small text-muted">{HINT}</p>
+        <p className="type-mono text-muted">{HINT}</p>
         <Button variant="quiet" onClick={stage.fit}>
           Fit
         </Button>

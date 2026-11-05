@@ -34,7 +34,7 @@ function Swatch({ swatch, name, value }: { swatch: string; name: string; value: 
       <div data-swatch={swatch} className="h-control-height w-full border border-hairline" />
       <div>
         <p className="type-caption">{name}</p>
-        <p className="type-mono-small text-muted">{value}</p>
+        <p className="type-mono text-muted">{value}</p>
       </div>
     </div>
   );
@@ -48,7 +48,7 @@ function TokenTable({ rows }: { rows: [name: string, value: number, css: string]
           <tr key={name}>
             <td>{name}</td>
             <td>{value}</td>
-            <td className="type-mono-small">{css}</td>
+            <td className="type-mono">{css}</td>
           </tr>
         ))}
       </tbody>
@@ -73,7 +73,7 @@ export function TokensView() {
       <div className="flex flex-col gap-block-gap">
         {Object.entries(type).map(([name, s]) => (
           <div key={name} className="flex flex-col gap-text-gap">
-            <p className="type-mono-small text-muted">
+            <p className="type-mono text-muted">
               {name}, {s.size}/{s.line}, {s.weight}
               {s.tracking ? `, ${s.tracking * 100}%` : ''} · type-{kebab(name)}
             </p>
@@ -83,7 +83,7 @@ export function TokensView() {
         {(Object.entries(fonts) as [keyof typeof fonts, (typeof fonts)[keyof typeof fonts]][]).map(
           ([name, font]) => (
             <div key={name} className="flex flex-col gap-text-gap">
-              <p className="type-mono-small text-muted">
+              <p className="type-mono text-muted">
                 {name}, {font.family} · {FONT_CLASS[name]}
               </p>
               <p className={FONT_CLASS[name]}>{SAMPLE}</p>

@@ -8,7 +8,7 @@ const number = (i: number) => String(i + 1).padStart(2, '0');
 function Line({ i, children }: { i: number; children: ReactNode }) {
   return (
     <div className="flex items-start gap-block-gap border-t border-hairline py-space-16">
-      <p className="my-0 type-mono-small">{number(i)}</p>
+      <p className="my-0 type-mono">{number(i)}</p>
       {children}
     </div>
   );

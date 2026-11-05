@@ -23,7 +23,7 @@ export function Callout({
     <div
       className={`flex flex-col items-start border border-primary bg-surface text-primary ${SIZES[size]}`}
     >
-      <p className="my-0 type-mono-tiny">{who}</p>
+      <p className="my-0 type-mono">{who}</p>
       <p className="my-0 type-caption">{children}</p>
       {action && (
         <TextLink href={action.href} variant="mono" arrow>
