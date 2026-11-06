@@ -423,6 +423,130 @@ describe('work from other doors (the pane is never empty)', () => {
   });
 });
 
+describe("the binding: an agent's work reaches a person's workspace", () => {
+  /** What an agent does: no session, so it gets an exploration with no owner, and a continue link. */
+  async function agentStarts(app: App) {
+    const agent = new Browser(app, null);
+    const started = await agent.post('/api/v1/explorations', { question: 'Who holds the DAO?' });
+    expect(started.status).toBe(200);
+    expect(agent.jar.size).toBe(0);
+    const out = await body(started);
+    const token = String(out.link.url).split('/').at(-1) as string;
+    const noted = await agent.post(`/api/v1/explorations/${token}/notes`, {
+      text: 'the delegate looks concentrated',
+    });
+    expect(noted.status).toBe(200);
+    return { id: out.exploration as string, token, agent };
+  }
+
+  test('a browser with no session claims it, comes back, and sees it as a conversation', async () => {
+    const { app } = setup();
+    const { id, token } = await agentStarts(app);
+
+    const browser = new Browser(app);
+    expect((await body(await browser.get('/api/v1/conversations'))).conversations).toEqual([]);
+
+    const claimed = await browser.post(`/api/v1/explorations/${token}/claim`);
+    expect(claimed.status).toBe(200);
+    expect(await body(claimed)).toMatchObject({ exploration: id, claimed: true });
+    // the session outlives the browser: closing it doesn't lose the work
+    const cookie = claimed.headers.getSetCookie().join(';');
+    expect(cookie).toMatch(/Max-Age=\d+/);
+    expect(cookie).toMatch(/HttpOnly/);
+    expect(browser.jar.size).toBe(1);
+
+    // the browser closes and comes back: all it has is its cookie
+    const back = new Browser(app);
+    back.jar = new Map(browser.jar);
+    const { conversations } = await body(await back.get('/api/v1/conversations'));
+    expect(conversations).toHaveLength(1);
+    expect(conversations[0]).toMatchObject({
+      id,
+      run_id: null,
+      door: 'http',
+      title: 'Who holds the DAO?',
+      status: 'elsewhere',
+    });
+    const { conversation } = await body(await back.get(`/api/v1/conversations/${id}`));
+    expect(conversation.door_turns.map((t: Out) => [t.kind, t.text])).toEqual([
+      ['note', 'the delegate looks concentrated'],
+    ]);
+
+    // claiming again changes nothing, and opens nothing
+    const again = await back.post(`/api/v1/explorations/${token}/claim`);
+    expect(await body(again)).toMatchObject({ exploration: id, claimed: false });
+    expect(again.headers.getSetCookie()).toEqual([]);
+
+    // what the agent saves after the claim shows up here too
+    const agent = new Browser(app, null);
+    await agent.post(`/api/v1/explorations/${token}/notes`, { text: 'and one more thing' });
+    const later = await body(await back.get(`/api/v1/conversations/${id}`));
+    expect(later.conversation.door_turns.map((t: Out) => t.text)).toContain('and one more thing');
+  });
+
+  test('a browser that already has a session claims it into that session', async () => {
+    const { app, invite } = setup();
+    const b = await signedIn(app, invite);
+    const before = new Map(b.jar);
+    const { id, token } = await agentStarts(app);
+    const claimed = await b.post(`/api/v1/explorations/${token}/claim`);
+    expect((await body(claimed)).claimed).toBe(true);
+    expect(claimed.headers.getSetCookie()).toEqual([]);
+    expect(b.jar).toEqual(before);
+    expect((await body(await b.get('/api/v1/conversations'))).conversations[0].id).toBe(id);
+  });
+
+  test("what can't be claimed opens no session", async () => {
+    const { app } = setup();
+    const { id, token, agent } = await agentStarts(app);
+    const refused = async (path: string, status: number) => {
+      const b = new Browser(app);
+      expect((await b.post(path)).status).toBe(status);
+      expect(b.jar.size).toBe(0);
+    };
+    await refused(`/api/v1/explorations/${'x'.repeat(43)}/claim`, 404);
+    await refused(`/api/v1/explorations/${id}/claim`, 404);
+
+    // a read link holds no right to it
+    const owner = new Browser(app);
+    await owner.post(`/api/v1/explorations/${token}/claim`);
+    const made = await owner.post(`/api/v1/explorations/${id}/links`, { scope: 'read' });
+    const read = String((await body(made)).url)
+      .split('/')
+      .at(-1) as string;
+    await refused(`/api/v1/explorations/${read}/claim`, 401);
+
+    // once it's someone's, the same continue link claims nothing, and they keep it
+    await refused(`/api/v1/explorations/${token}/claim`, 401);
+    expect((await body(await owner.get('/api/v1/conversations'))).conversations).toHaveLength(1);
+    expect(agent.jar.size).toBe(0);
+  });
+
+  test('a claim from another site is refused', async () => {
+    const { app } = setup();
+    const { token } = await agentStarts(app);
+    const foreign = new Browser(app, 'https://evil.example');
+    expect((await foreign.post(`/api/v1/explorations/${token}/claim`)).status).toBe(401);
+    expect(foreign.jar.size).toBe(0);
+  });
+
+  test('continuing it starts a run on it, and signing in keeps it', async () => {
+    const { app, invite, maker } = setup();
+    const b = await signedIn(app, invite);
+    const { id, token } = await agentStarts(app);
+    await b.post(`/api/v1/explorations/${token}/claim`);
+    const run = await b.chat(ask('carry on', { exploration: id }));
+    const { conversations } = await body(await b.get('/api/v1/conversations'));
+    expect(conversations.map((c: Out) => c.id)).toEqual([run]);
+
+    const ch = await body(await b.post('/api/v1/auth/challenge'));
+    const proof = maker.sign({ message: ch.message, nonce: ch.nonce, recipient: ch.recipient });
+    const verified = await b.post('/api/v1/auth/verify', { network: 'testnet', proof });
+    expect((await body(verified)).claimed_explorations).toBe(1);
+    expect((await body(await b.get('/api/v1/conversations'))).conversations[0].id).toBe(run);
+  });
+});
+
 describe('a conversation with many shapes', () => {
   test('its flowers are listed in order, each by its hash, with no words of its own', async () => {
     const { app, invite, store } = setup();
