@@ -2,6 +2,7 @@
 // nothing groups accounts by a common funder. This exists to judge the feel of lines inside the
 // polygon and a dotted ring, on a private bench, and it's off by default (?relations=1). A real flower
 // can't claim any of this.
+import type { FakeRelations } from '../../flower/scene.ts';
 
 /** A fixed seed, so it's the same drawing every time. */
 const SEED = 20261105;
@@ -15,13 +16,6 @@ function random(seed: number): () => number {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
-}
-
-export interface FakeRelations {
-  /** Pairs of petal indices, the same seed the same pairs. */
-  pairs: [number, number][];
-  /** The dotted ring's radius, as a share of R. */
-  ring: number;
 }
 
 export function fakeRelations(n: number, count = 34): FakeRelations {

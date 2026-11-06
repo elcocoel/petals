@@ -3,16 +3,16 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Reading } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
-import { fitView, type View } from '../lab/flower/camera.ts';
-import { DETAIL, fade, openAt, type Row, ramp } from '../lab/flower/detail.ts';
-import type { HoverWay } from '../lab/flower/hover.ts';
+import { fitView, type View } from '../flower/camera.ts';
+import { DETAIL, fade, openAt, type Row, ramp } from '../flower/detail.ts';
+import type { HoverWay } from '../flower/hover.ts';
+import { newLive, noteAt, stepLive } from '../flower/live.ts';
+import { type Focus, type Marks, marks } from '../flower/marks.ts';
+import { type Model, modelOf } from '../flower/model.ts';
+import { SHAPE, widthBefore } from '../flower/ring.ts';
+import { amount, kindWord, LINE, noteText, pct, textWidth } from '../flower/words.ts';
 import { fakeRelations } from '../lab/flower/illustrative.ts';
-import { newLive, noteAt, stepLive } from '../lab/flower/live.ts';
-import { type Focus, type Marks, marks } from '../lab/flower/marks.ts';
-import { type Model, modelOf } from '../lab/flower/model.ts';
-import { SHAPE, widthBefore } from '../lab/flower/ring.ts';
 import { syntheticReading } from '../lab/flower/synthetic.ts';
-import { amount, kindWord, LINE, noteText, pct, textWidth } from '../lab/flower/words.ts';
 
 const GOLDEN = join(import.meta.dirname, '..', '..', '..', 'fixtures', 'golden');
 const reading = (name: string): Reading =>
@@ -154,6 +154,13 @@ describe('the table', () => {
 });
 
 describe('marks', () => {
+  test('the zoom readout is an instrument: there only when a bench asks for it', () => {
+    expect(marks(backers, at(2.3), null).readout).toBeNull();
+    expect(marks(backers, at(2.3), null, backers.ring, undefined, true).readout?.text).toBe(
+      '2.30x',
+    );
+  });
+
   test('are pure: the same input, the same output', () => {
     const v = at(2.3);
     const a = marks(backers, v, pointing(7));
@@ -420,6 +427,21 @@ describe('the synthetic flowers', () => {
       expect(p.width).toBeLessThanOrEqual(2);
       expect(p.height).toBeGreaterThan(0);
       expect(p.height).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
+describe('a small flower', () => {
+  // A note looks a dozen bars each way, and a flower can have fewer than that.
+  test.each([3, 5, 11, 12, 13, 24])('with %i petals has every number it draws', (n) => {
+    const m = modelOf(syntheticReading(n));
+    for (const k of KS) {
+      const drawn = marks(m, at(k), null);
+      for (const note of drawn.notes) {
+        for (const value of [note.x, note.y, note.opacity, note.elbowY]) {
+          expect(Number.isFinite(value)).toBe(true);
+        }
+      }
     }
   });
 });

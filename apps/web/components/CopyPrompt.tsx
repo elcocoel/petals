@@ -9,17 +9,25 @@ export function CopyPrompt({
   label = 'Copy this prompt',
   variant,
   bare,
+  originIn,
 }: {
   prompt: string;
   label?: string;
   variant?: ButtonVariant;
   /** Where the prompt can be read, for when the browser won't copy. */
   bare?: { readHref: string };
+  /**
+   * An address written in the prompt that gives way, on copying, to the one this page is on, so an agent
+   * connects to the server its person is looking at. It lets a static page hand out the right prompt.
+   */
+  originIn?: string;
 }) {
   const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
   async function copy() {
     try {
-      await navigator.clipboard.writeText(prompt);
+      await navigator.clipboard.writeText(
+        originIn ? prompt.replaceAll(originIn, window.location.origin) : prompt,
+      );
       setState('copied');
     } catch {
       if (bare) window.location.assign(bare.readHref);

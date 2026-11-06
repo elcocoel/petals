@@ -10,8 +10,8 @@ import {
   softLimit,
   stepCamera,
   zoomWheel,
-} from '../lab/flower/camera.ts';
-import { PINCH_GAIN, SOFT_EDGE, ZOOM_LIMITS } from '../lab/flower/feel.ts';
+} from '../flower/camera.ts';
+import { PINCH_GAIN, SOFT_EDGE, ZOOM_LIMITS } from '../flower/feel.ts';
 
 const FRAME = 1 / 60;
 const worldAt = (c: Camera, sx: number, sy: number) =>

@@ -12,6 +12,7 @@ export const SCANNED = [
   'apps/web/app',
   'apps/web/components',
   'apps/web/viewmodels',
+  'apps/web/flower',
   'apps/web/lab',
 ];
 const UI = 'apps/web/components/ui/';

@@ -3,12 +3,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Reading } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
-import { fitView, flyTo, zoomWheel } from '../lab/flower/camera.ts';
-import { openAt } from '../lab/flower/detail.ts';
-import { flareGain, type HoverWay, heightOf, riseGain } from '../lab/flower/hover.ts';
-import { type Live, newLive, noteAt, stepLive, tipOf } from '../lab/flower/live.ts';
-import { bandUnder, modelOf, pick } from '../lab/flower/model.ts';
-import { leftAt, pointIn, rightAt, SHAPE, widthBefore } from '../lab/flower/ring.ts';
+import { fitView, flyTo, zoomWheel } from '../flower/camera.ts';
+import { openAt } from '../flower/detail.ts';
+import { flareGain, type HoverWay, heightOf, riseGain } from '../flower/hover.ts';
+import { type Live, newLive, noteAt, stepLive, tipOf } from '../flower/live.ts';
+import { bandUnder, modelOf, pick } from '../flower/model.ts';
+import { leftAt, pointIn, rightAt, SHAPE, widthBefore } from '../flower/ring.ts';
 
 const GOLDEN = join(import.meta.dirname, '..', '..', '..', 'fixtures', 'golden');
 const reading: Reading = JSON.parse(

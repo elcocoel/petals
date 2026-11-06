@@ -34,14 +34,16 @@ export function capitalisedExports(text: string): string[] {
   return [...direct, ...listed];
 }
 
-const exported = files(join(app, 'components'))
-  .filter((p) => /\.tsx?$/.test(p))
-  .flatMap((p) =>
-    capitalisedExports(readFileSync(p, 'utf8')).map((name) => ({
-      name,
-      file: relative(repo, p),
-    })),
-  );
+const exported = [
+  ...files(join(app, 'components')).filter((p) => /\.tsx?$/.test(p)),
+  // Its other files are the flower's numbers and geometry, with capitals of their own.
+  ...files(join(app, 'flower')).filter((p) => /\.tsx$/.test(p)),
+].flatMap((p) =>
+  capitalisedExports(readFileSync(p, 'utf8')).map((name) => ({
+    name,
+    file: relative(repo, p),
+  })),
+);
 
 describe('the registry', () => {
   test('reads the exports the way they are written', () => {

@@ -14,7 +14,6 @@ import {
   dateLabel,
   type LegendKey,
   type ListedFlower,
-  legendKeys,
   networkLabel,
   type PetalView,
   petalView,
@@ -22,15 +21,17 @@ import {
   readingKey,
   svgTitle,
 } from './flower-view.ts';
+import type { ChatAction, Opened } from './thread.ts';
 import type { ComposerTarget } from './thread-view.ts';
 
 /** A flower ready for the panel, wherever it came from. */
 export interface PanelFlower {
-  /** names this flower for the stage: a new key is a new fit */
+  /** names this flower: a new key is a new scene on the canvas */
   key: string;
   spec: Spec;
   legend: LegendItem[];
-  interpretation: Interpretation;
+  /** null: another agent drew it, and nothing here has its reading */
+  interpretation: Interpretation | null;
   signature: ModelSignature | null;
   model?: string;
   checks: string;
@@ -54,7 +55,12 @@ export interface Drawing {
 export interface CanvasFlower {
   key: string;
   reading: DrawnReading;
+  /** Its id, where it's a stored flower: what opens it, once someone chooses it. */
+  stored?: string;
 }
+
+/** What a click on the canvas landed on. Every petal is by its id: an order can change, an id can't. */
+export type CanvasHit = { kind: 'petal'; id: string } | { kind: 'centre' } | { kind: 'ground' };
 
 /**
  * What the canvas holds next: the open flower once its reading is in hand, and otherwise what it already
@@ -65,9 +71,24 @@ export function nextCanvas(
   held: CanvasFlower | null,
   key: string | null | undefined,
   reading: DrawnReading | undefined,
+  stored?: string,
 ): CanvasFlower | null {
   if (!key || !reading || held?.key === key) return held;
-  return { key, reading };
+  return { key, reading, ...(stored ? { stored } : {}) };
+}
+
+/**
+ * What's on the canvas right now. The conversation's flower, or the stand-in until it has one, unless
+ * what the address brought back isn't known yet. The very flower that's already standing there keeps the
+ * same object, so its arrival leaves the scene and the camera alone.
+ */
+export function canvasShown(
+  canvas: CanvasFlower | null,
+  comingBack: boolean,
+  standIn: CanvasFlower | null,
+): CanvasFlower | null {
+  const shown = canvas ?? (comingBack ? null : standIn);
+  return shown && shown.key === standIn?.key ? standIn : shown;
 }
 
 export interface Tile {
@@ -99,10 +120,11 @@ export interface FlowerPanelView {
   failed: string | null;
   keys: LegendKey[];
   legend: LegendItem[];
+  /** Where the rows that aren't true of the canvas got their facts. */
+  legendSources: string[];
   reading: ReadingKeyView;
   petal: PetalView | null;
-  selected: string | null;
-  interpretation: Interpretation;
+  interpretation: Interpretation | null;
   signature: ModelSignature | null;
   model?: string;
   checks: string;
@@ -121,6 +143,46 @@ export type PanelView =
   | FlowerPanelView;
 
 const STARTER = 'Who holds the UNI token on Base?';
+
+/**
+ * The live canvas paints gray, with one accent for attention, and draws no outline, line or marking. So
+ * of what a render says about its drawing, these aren't true of it. Their sources still stand.
+ */
+const NOT_ON_CANVAS = new Set<string>(['colour', 'outline', 'lines', 'markings']);
+
+/**
+ * What a flower says about itself, for what's on the canvas: no row about what it doesn't draw, no swatch
+ * of a colour it doesn't use and no hatching. The sources only those rows named are kept, on their own.
+ */
+export function canvasReading(
+  items: LegendItem[],
+  reading: Interpretation | null,
+): { legend: LegendItem[]; interpretation: Interpretation | null; sources: string[] } {
+  const drawn = (x: { primitive: string }) => !NOT_ON_CANVAS.has(x.primitive);
+  const legend = items.filter(drawn).map(({ keys: _swatches, ...item }) => ({
+    ...item,
+    meaning: item.meaning.replace('one hatched petal', 'one petal'),
+  }));
+  const mappings = reading?.mappings.filter(drawn) ?? [];
+  const still = new Set([...legend, ...mappings].flatMap((x) => x.sources));
+  const gone = [...items, ...(reading?.mappings ?? [])].filter((x) => !drawn(x));
+  return {
+    legend,
+    // Nothing draws on it being non-empty: that's a rule for what an agent must write.
+    interpretation: reading && { ...reading, mappings: mappings as Interpretation['mappings'] },
+    sources: [...new Set(gone.flatMap((x) => x.sources))].filter((id) => !still.has(id)),
+  };
+}
+
+/** One petal's record, saying only why it looks this way on the canvas. */
+export const canvasPetal = (petal: PetalDetail): PetalDetail => ({
+  ...petal,
+  values: petal.values.filter((v) => !NOT_ON_CANVAS.has(v.primitive)),
+});
+
+/** The only colour the canvas gives a meaning to, and only once there's something picked. */
+const canvasKeys = (selected: boolean): LegendKey[] =>
+  selected ? [{ label: 'Selected', swatch: 'selected' }] : [];
 
 export function shelfView(
   listed: ListedFlower[],
@@ -157,8 +219,13 @@ export function flowerPanelView(v: {
 }): FlowerPanelView {
   const { flower, drawing, selected, sources, units } = v;
   const { spec } = flower;
-  const petal = drawing?.petals?.find((p) => p.id === selected) ?? null;
-  const legend = drawing?.legend ?? flower.legend;
+  const found = drawing?.petals?.find((p) => p.id === selected);
+  const petal = found ? canvasPetal(found) : null;
+  const {
+    legend,
+    interpretation,
+    sources: legendSources,
+  } = canvasReading(drawing?.legend ?? flower.legend, flower.interpretation);
   return {
     kind: 'flower',
     key: flower.key,
@@ -167,12 +234,12 @@ export function flowerPanelView(v: {
     date: dateLabel(spec.snapshot.as_of),
     svg: drawing?.svg ?? null,
     failed: drawing?.failed ?? null,
-    keys: legendKeys(legend, petal !== null),
+    keys: canvasKeys(petal !== null),
     legend,
+    legendSources,
     reading: readingKey(spec),
     petal: petal && petalView(petal, units[spec.selection.measure]),
-    selected: petal?.id ?? null,
-    interpretation: flower.interpretation,
+    interpretation,
     signature: flower.signature,
     ...(flower.model ? { model: flower.model } : {}),
     checks: flower.checks,
@@ -182,6 +249,55 @@ export function flowerPanelView(v: {
     ...(flower.publishUrl ? { publishUrl: flower.publishUrl } : {}),
     network: spec.network.id,
   };
+}
+
+/**
+ * What has to open for the flower on the canvas to be the panel's, or null if it already is. It may be
+ * the stand-in, which only becomes a flower of this conversation here, or one the shelf stepped away from.
+ */
+function openingFor(
+  shown: CanvasFlower | null,
+  panelKey: string | undefined,
+  turnKeys: string[],
+): Opened | null {
+  if (!shown || shown.key === panelKey) return null;
+  const at = turnKeys.lastIndexOf(shown.key);
+  if (at !== -1)
+    return at === turnKeys.length - 1 ? { kind: 'latest' } : { kind: 'turn', index: at };
+  return shown.stored ? { kind: 'stored', id: shown.stored } : null;
+}
+
+/**
+ * What a click on the canvas asks for: what the chat should do, in order, and whether the box opens. The
+ * ground only lets go of a petal. A petal or the centre means someone chose this flower, so it's opened
+ * first, and only then, because opening adds to the thread and changes what the next question is about.
+ */
+export function pickPlan(
+  hit: CanvasHit,
+  shown: CanvasFlower | null,
+  panelKey: string | undefined,
+  turnKeys: string[],
+): { actions: ChatAction[]; opensBox: boolean } {
+  const select = (petal: string | null): ChatAction => ({ type: 'select', petal });
+  if (hit.kind === 'ground') return { actions: [select(null)], opensBox: false };
+  const open = openingFor(shown, panelKey, turnKeys);
+  return {
+    actions: [
+      ...(open ? [{ type: 'open', open } as const] : []),
+      select(hit.kind === 'petal' ? hit.id : null),
+    ],
+    opensBox: true,
+  };
+}
+
+/** Whether the address asks for the box. A run alone only brings its flower back to the canvas. */
+export const addressOpensBox = (open: Opened | undefined, petal: string | null | undefined) =>
+  open?.kind === 'stored' || open?.kind === 'shelf' || Boolean(petal);
+
+/** A flower that couldn't be drawn or read, as something that can happen once. It's never silent. */
+export function panelFailure(view: PanelView): string | null {
+  if (view.kind === 'failed') return view.text;
+  return view.kind === 'flower' && view.failed ? `${view.key} ${view.failed}` : null;
 }
 
 /** What the next question is about, from what the panel holds. */
