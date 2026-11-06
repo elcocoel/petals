@@ -855,18 +855,27 @@ export function revokeLink(ctx: ToolContext, id: string, linkId: string) {
 }
 
 /** A person holding a continue link takes an exploration nobody owns. Only that one link's holder. */
-export function claimExploration(ctx: ToolContext, ref: string) {
+/**
+ * A session takes an unowned exploration, with its continue link. `newSubject` is how a browser with no
+ * session gets one: it's only called once the claim is sure to succeed, so a bad link, a read link or
+ * someone else's exploration never opens a session. With none, as with httpApp alone, it takes a session.
+ */
+export function claimExploration(ctx: ToolContext, ref: string, newSubject?: () => string) {
   const subject = ctx.caller?.subject;
   const o = open(ctx, ref);
   if (!o.link) throw missing();
-  if (!subject) {
+  if (!subject && !newSubject) {
     throw new ToolFailure('unauthorised', 'Sign in first, then claim this.');
   }
   if (o.as !== 'continue') {
     throw new ToolFailure('unauthorised', 'Only a continue link can claim an exploration.');
   }
-  if (o.row.owner === subject) return { exploration: o.row.id, claimed: false };
-  if (o.row.owner !== null || !storeOf(ctx).exploration.setOwner(o.row.id, subject)) {
+  if (subject && o.row.owner === subject) return { exploration: o.row.id, claimed: false };
+  if (o.row.owner !== null) {
+    throw new ToolFailure('unauthorised', 'This exploration already has an owner.');
+  }
+  const owner = subject ?? (newSubject as () => string)();
+  if (!storeOf(ctx).exploration.setOwner(o.row.id, owner)) {
     throw new ToolFailure('unauthorised', 'This exploration already has an owner.');
   }
   return { exploration: o.row.id, claimed: true };
