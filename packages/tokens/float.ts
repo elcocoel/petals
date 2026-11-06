@@ -7,6 +7,13 @@ export const floatBox = {
   /** Where a box starts: how wide, and its input's height, which fits a question and the run's line. */
   width: 480,
   'input-height': 216,
+  /** A recorded run's input: its saved question is long, and the button to play it stays in sight. */
+  'recorded-input-height': 312,
+  /** The flower's own box, on the right: wide enough to read a petal, tall enough for the rest. */
+  'panel-width': 440,
+  'panel-height': 640,
+  /** The list of conversations, beside the output: wide enough for a question's first words. */
+  'list-width': 320,
   /** Where the column of boxes stops above the window's bottom: the flower's small map has that corner. */
   floor: 168,
   /** The smallest a hand can make it, which still shows its bar and a line or two. */

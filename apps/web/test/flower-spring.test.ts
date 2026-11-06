@@ -10,7 +10,7 @@ import {
   type SpringSpec,
   spring,
   stepOf,
-} from '../lab/flower/spring.ts';
+} from '../flower/spring.ts';
 
 const SPECS: SpringSpec[] = [
   { response: 0.3, damping: 0.56 },

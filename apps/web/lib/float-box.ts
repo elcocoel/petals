@@ -47,16 +47,28 @@ export function sized(from: Rect, edge: Edge, dx: number, dy: number, win: Size)
 }
 
 /**
- * Where the conversation's two boxes start: on the left, because a sorted flower's small side is there
+ * Where the conversation's boxes start: on the left, because a sorted flower's small side is there
  * and its biggest names are upper right. Output above, input directly under it, stopping above the
- * corner the flower's small map has.
+ * corner the flower's small map has. The flower's own box waits on the right, at the top, closed until
+ * something asks for it. The list of conversations waits beside the output, as tall as it.
  */
-export function conversationBoxes(win: Size): { output: Rect; input: Rect } {
-  const { inset, gap, width, floor, 'input-height': inputH, 'min-height': minH } = floatBox;
+export function conversationBoxes(
+  win: Size,
+  inputH: number = floatBox['input-height'],
+): { output: Rect; input: Rect; panel: Rect; list: Rect } {
+  const { inset, gap, width, floor, 'min-height': minH } = floatBox;
   const w = Math.min(width, win.w - inset * 2);
   const outputH = Math.max(minH, win.h - inset - floor - gap - inputH);
+  const panelW = Math.min(floatBox['panel-width'], win.w - inset * 2);
+  const panelH = Math.min(floatBox['panel-height'], win.h - inset * 2);
   return {
     output: kept({ x: inset, y: inset, w, h: outputH }, win),
     input: kept({ x: inset, y: inset + outputH + gap, w, h: inputH }, win),
+    panel: kept({ x: win.w - inset - panelW, y: inset, w: panelW, h: panelH }, win),
+    list: kept({ x: inset + w + gap, y: inset, w: floatBox['list-width'], h: outputH }, win),
   };
 }
+
+/** The same, with a recorded run's input: a read-only saved question and the button that plays it. */
+export const recordedBoxes = (win: Size) =>
+  conversationBoxes(win, floatBox['recorded-input-height']);

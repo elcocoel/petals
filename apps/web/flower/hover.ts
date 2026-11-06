@@ -93,9 +93,11 @@ export function hoverTargets(
     out.height[focus.index] = gain;
     return;
   }
+  // figure.petal-focus
   const tipPx = widthBefore(m.ring, focus.index, m.height[focus.index] as number) * k;
   out.flare[focus.index] = flareGain(sidePx, tipPx) * gain;
   const rise = riseGain(sidePx) * gain;
+  // figure.petal-neighbour
   // Furthest first, so on a tiny flower the nearest petal's share is the one that stays.
   for (let d = DOCK_FALLOFF.length - 1; d >= 0; d--) {
     const share = DOCK_FALLOFF[d] as number;

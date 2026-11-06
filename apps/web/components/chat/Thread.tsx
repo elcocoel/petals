@@ -58,7 +58,11 @@ export function Thread({
               return <Steps key={row.key} summary={row.summary} steps={row.steps} />;
             case 'message':
               return (
-                <Speech key={row.key} agent {...(row.speaker ? { speaker: row.speaker } : {})}>
+                <Speech
+                  key={row.key}
+                  agent={!row.foreign}
+                  {...(row.speaker ? { speaker: row.speaker } : {})}
+                >
                   <Markdown blocks={row.blocks} onLink={onLink} />
                 </Speech>
               );

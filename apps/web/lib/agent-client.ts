@@ -12,6 +12,8 @@ import type {
   Reading,
   Run,
 } from '@petal/core/types';
+import type { ListedConversation } from './conversation-list.ts';
+import type { ElsewhereRead } from './elsewhere.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
 
@@ -79,6 +81,35 @@ export const agentClient: AgentClient = {
     if (res.body) yield* eventsOf(res.body, skip);
   },
 };
+
+/** A person's conversations, newest first. Nothing to show is the same as none: no session, or no answer. */
+export async function listConversations(): Promise<ListedConversation[]> {
+  const res = await fetch('/api/v1/conversations');
+  if (!res.ok) return [];
+  const json = (await res.json()) as { conversations?: ListedConversation[] };
+  return json.conversations ?? [];
+}
+
+/** Where a conversation in another agent stands, by its exploration's id or a link's token. */
+export async function readElsewhere(ref: string): Promise<ElsewhereRead> {
+  const res = await fetch(`/api/v1/explorations/${encodeURIComponent(ref)}`, { cache: 'no-store' });
+  const json = (await res.json()) as Record<string, unknown> & { error?: { message: string } };
+  if (!res.ok || json.error) return { failed: json.error?.message ?? `HTTP ${res.status}` };
+  return { packet: json as unknown as Extract<ElsewhereRead, { packet: unknown }>['packet'] };
+}
+
+/**
+ * Makes an agent's work this browser's, by the continue link the agent holds, so it joins their list.
+ * Returns its id, or null if this link can't: a read link stays read-only.
+ */
+export async function claimElsewhere(token: string): Promise<string | null> {
+  const res = await fetch(`/api/v1/explorations/${encodeURIComponent(token)}/claim`, {
+    method: 'POST',
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { exploration?: string };
+  return json.exploration ?? null;
+}
 
 /** All a live drawing needs from a reading: render_flower's opt-in `reading`. */
 export type DrawnReading = Pick<Reading, 'title' | 'petals'>;

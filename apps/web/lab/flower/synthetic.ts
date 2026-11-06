@@ -2,7 +2,7 @@
 // say what they are. Shaped like a real reading: a long tail of shares, widths in a 2x band on a log
 // scale, heights by square root, some bars cut in bands.
 import type { ReadingPetal } from '@petal/core/types';
-import type { FlowerReading } from './model.ts';
+import type { FlowerReading } from '../../flower/model.ts';
 
 export function syntheticReading(n: number): FlowerReading {
   const raw = Array.from({ length: n - 1 }, (_, i) => 1 / (i + 3) ** 1.1);

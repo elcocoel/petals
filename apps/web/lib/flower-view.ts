@@ -1,7 +1,7 @@
-// How a flower reads beside its drawing: its title and date, the reading key, the compact legend and
-// one petal's detail. Pure, from the spec and what the render returned; the renderer's numbers and
-// words are never re-derived here, only laid out.
-import type { LegendItem, PetalDetail, Spec } from '@petal/core/types';
+// How a flower reads beside its drawing: its title and date, the reading key and one petal's detail.
+// Pure, from the spec and what the render returned; the renderer's numbers and words are never
+// re-derived here, only laid out.
+import type { PetalDetail, Spec } from '@petal/core/types';
 
 /** A row of GET /api/v1/flowers. */
 export interface ListedFlower {
@@ -28,6 +28,8 @@ const CHAINS: Record<string, string> = {
   near: 'NEAR',
   'eip155:1': 'Ethereum',
   'eip155:8453': 'Base',
+  'eip155:42161': 'Arbitrum',
+  'eip155:100': 'Gnosis',
 };
 
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -91,17 +93,6 @@ export interface LegendKey {
 
 /** A swatch comes from the renderer as var(--k-pool); the generated CSS has a rule per colour. */
 export const swatchKey = (swatch: string) => /^var\(--([\w-]+)\)$/.exec(swatch)?.[1];
-
-/** The compact legend (Figma's "Flower legend", 40:764): the colours, and only those. */
-export function legendKeys(items: LegendItem[], selected = false): LegendKey[] {
-  const seen = new Set<string>();
-  const keys = items
-    .filter((i) => i.primitive === 'colour' || i.primitive === 'segments' || i.primitive === 'tail')
-    .flatMap((i) => i.keys ?? [])
-    .filter((k) => !seen.has(k.label) && seen.add(k.label))
-    .map((k) => ({ label: capital(k.label), swatch: swatchKey(k.swatch) }));
-  return selected ? [...keys, { label: 'Selected', swatch: 'selected' }] : keys;
-}
 
 /** A drawing as an image source: an SVG in an <img> runs nothing and loads nothing. */
 export const svgImage = (svg: string) =>

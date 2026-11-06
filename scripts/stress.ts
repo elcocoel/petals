@@ -4,12 +4,14 @@
 //   node scripts/stress.ts --door claude --model sonnet --out <dir> [--cases a,b] [--jobs 4] [--web]
 //   set -a; source ../.secrets/near-ai.env; set +a
 //   node scripts/stress.ts --door near --model <NEAR AI id> --out <dir> --stop-at-usd 0.20 --cases a,b
-//   node scripts/stress.ts --door loop --model sonnet --out <dir> [--cases a,b]
+//   node scripts/stress.ts --door loop --model sonnet --out <dir> [--cases a,b] [--window tokens]
 //
 // `loop` is the control: Petal's own loop, gate, prompt and trimmed tool results exactly as `near` has
 // them, at no NEAR AI cost, with a subscription model answering each call. Only the model differs, so
 // a failure both share is the tools, the prompt or the loop, not the model. Earlier turns reach it as
 // a written transcript, not as API messages: a small difference from `near`, worth a live check.
+// Its tokens are estimates from the text, and --window compacts threads against a smaller window, so a
+// long conversation can show what compaction does.
 // `near` is Petal's own agent: the real loop, the real yes gate, the real follow-up thread, on NEAR AI.
 // It spends real money, under a ledger shared across its runs (--ledger), and refuses past --stop-at-usd.
 // A model call holds up to the cap until it settles, so run this door with --jobs 1.
@@ -34,7 +36,13 @@ import {
   startRun,
 } from '@petal/agent';
 import type { AgentEvent } from '@petal/core/types';
-import { configFromEnv, createContext } from '@petal/tools';
+import {
+  configFromEnv,
+  createContext,
+  makeReadPage,
+  type PublicPage,
+  registry,
+} from '@petal/tools';
 import { CASES, type Case } from './stress-cases.ts';
 import { agentEnv, claudeArgs, readClaude } from './try-agent.ts';
 
@@ -52,6 +60,7 @@ const { values: o } = parseArgs({
     ledger: { type: 'string' },
     'stop-at-usd': { type: 'string', default: '0.1' },
     tag: { type: 'string' },
+    window: { type: 'string' },
   },
 });
 
@@ -75,6 +84,8 @@ interface Told {
 }
 
 const wordsOf = (text: string) => text.split(/\s+/).filter(Boolean).length;
+/** What Petal's own text measured (near-ai.md). */
+const tokensIn = (text: string) => Math.round(text.length / 3.7);
 const short = (text: string) => text.replace(/\/draft\?spec=[\w=&;%-]+/g, '/draft?spec=…');
 
 const STUB_TOOLS = join(import.meta.dirname, 'stress-stub-tools.ts');
@@ -178,7 +189,10 @@ function subscriptionClient(model: string): LlmClient {
           content: text.join('\n\n') || null,
           ...(toolCalls.length ? { tool_calls: toolCalls } : {}),
         },
-        usage: { in: 0, out: 0 },
+        usage: {
+          in: tokensIn(JSON.stringify(req)),
+          out: tokensIn(text.join('') + toolCalls.map((c) => c.arguments).join('')),
+        },
         cost_usd: 0,
         fallback_used: false,
         signature: null,
@@ -186,6 +200,22 @@ function subscriptionClient(model: string): LlmClient {
     },
   };
 }
+
+const stubPages =
+  (pages: Record<string, string>) =>
+  async (url: string): Promise<PublicPage> => {
+    const body = pages[url];
+    if (body === undefined) throw new Error('no such page in this test');
+    return {
+      status: 200,
+      location: null,
+      contentType: 'text/html',
+      body: Buffer.from(body),
+      truncated: false,
+      final_url: url,
+      redirects: 0,
+    };
+  };
 
 async function loopConversation(
   c: Case,
@@ -208,8 +238,6 @@ async function loopConversation(
           {
             apiKey: config.nearAiApiKey as string,
             attestationsDir: join(stateDir, 'attestations'),
-            // NEAR AI refuses reasoning_effort for Anthropic's models (HTTP 400, seen 6 Nov)
-            ...(model.startsWith('anthropic/') ? { reasoningEffort: null } : {}),
             onWarning: (w) => warnings.push(w),
           },
         );
@@ -227,6 +255,14 @@ async function loopConversation(
           ledger: fileLedger(ledgerPath),
         }),
   };
+  // A case's stub pages stand in for read_page, which rightly refuses to read this machine.
+  const stubbed = c.pages
+    ? {
+        registry: registry.map((t) =>
+          t.name === 'read_page' ? makeReadPage({ fetchPage: stubPages(c.pages ?? {}) }) : t,
+        ),
+      }
+    : {};
   const told: Told[] = [];
   let thread: LlmMessage[] = [];
   const all: AgentEvent[] = [];
@@ -243,9 +279,11 @@ async function loopConversation(
       },
       { tools, llm, budget },
       {
+        ...stubbed,
         onThread: (t) => {
           thread = t;
         },
+        ...(o.window ? { windowTokens: Number(o.window) } : {}),
       },
     );
     for await (const e of run) events.push(e);

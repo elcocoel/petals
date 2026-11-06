@@ -1,7 +1,7 @@
 // A whole person's journey in a real browser, with no real wallet and no model spend. Run by hand;
 // `pnpm test:e2e` doesn't.
 //
-//   node tests/e2e/journey-server.ts [--web-port 3190] [--state <dir>] [--seed]
+//   node tests/e2e/journey-server.ts [--web-port 3190] [--stub-port 3189] [--state <dir>] [--seed]
 //
 // With --seed there's also a small workspace to come back to (workspace-seed.ts): conversations, work from
 // another door, follows and notes, under one session, and a link on this server that hands you that
@@ -30,17 +30,18 @@ import { stubModel } from './stub-model.ts';
 import { seedSnippet, WALLET_NAME, walletScript } from './test-wallet.ts';
 import { SESSION_COOKIE, type SeedResult, seedWorkspace } from './workspace-seed.ts';
 
-const PORT = 3189;
-const BASE = `http://127.0.0.1:${PORT}`;
-
 const { values } = parseArgs({
   options: {
     'web-port': { type: 'string', default: '3190' },
+    // lanes run side by side, and each needs its own stub
+    'stub-port': { type: 'string', default: '3189' },
     state: { type: 'string' },
     seed: { type: 'boolean', default: false },
   },
 });
 const webPort = values['web-port'];
+const PORT = Number(values['stub-port']);
+const BASE = `http://127.0.0.1:${PORT}`;
 
 interface Prepared {
   stateDir: string;
@@ -123,7 +124,7 @@ ${seed ? seededLines(seed) : ''}
 A new map waits for a yes, so the first question asks, and "yes" draws the flower.
 
 The stub's call count: ${BASE}/calls
-To come back later as the same people: node tests/e2e/journey-server.ts --web-port ${webPort} --state ${quoted(stateDir)}${seed ? ' --seed' : ''}
+To come back later as the same people: node tests/e2e/journey-server.ts --web-port ${webPort} --stub-port ${PORT} --state ${quoted(stateDir)}${seed ? ' --seed' : ''}
 That keeps the wallet key and the data, and prints a new invite.
 Ctrl-C stops this server. The site is yours to stop.
 `;

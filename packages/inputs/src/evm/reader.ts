@@ -2,6 +2,7 @@
 // the same pool code as NEAR (../rpc/pool.ts). Which endpoints a chain uses, and why: ./chains.ts.
 import { InputError } from '../errors.ts';
 import {
+  endpointHealth,
   type RpcEndpoint,
   RpcError,
   type RpcPool,
@@ -86,6 +87,8 @@ export interface EvmReaderOptions {
   sleep?: RpcPoolOptions['sleep'];
   /** stops a runaway log walk, default 400 eth_getLogs calls */
   maxLogCalls?: number;
+  /** a log query that's only an attempt: this long, one try, and none if the endpoint looks down */
+  logTimeoutMs?: number;
 }
 
 const hexBlock = (n: number) => `0x${n.toString(16)}`;
@@ -168,10 +171,21 @@ export function evmReader(opts: EvmReaderOptions = {}): EvmReader {
     ...(opts.fetch ? { fetch: opts.fetch } : {}),
     ...(opts.sleep ? { sleep: opts.sleep } : {}),
   };
-  // State reads may fail over. Log reads stay on the first endpoint: the next one's range cap
-  // would turn one outage into thousands of tiny queries.
+  // State reads may fail over. Log reads stay on the first endpoint, because the next one's range cap
+  // would turn one outage into thousands of tiny queries, unless the chain names where they may go
+  // and the range that takes. maxLogCalls still ends the walk.
+  const fallback = opts.endpoints ? undefined : chain.log_fallback;
   const state: RpcPool = rpcPool({ ...common, endpoints });
-  const logsPool: RpcPool = rpcPool({ ...common, endpoints: endpoints.slice(0, 1) });
+  const logsPool: RpcPool = rpcPool({
+    ...common,
+    endpoints: endpoints.slice(0, 1),
+    ...(fallback ? { rounds: 1, timeoutMs: 30_000 } : {}),
+    ...(opts.logTimeoutMs ? { rounds: 1, timeoutMs: opts.logTimeoutMs } : {}),
+  });
+  const fallbackPool = fallback
+    ? rpcPool({ ...common, endpoints: [fallback.endpoint], timeoutMs: 30_000 })
+    : null;
+  const health = opts.fetch ? new Map<string, number>() : endpointHealth;
   const served = { logs: new Set<string>(), state: new Set<string>() };
 
   async function stateCall<T>(method: string, params: unknown): Promise<T> {
@@ -229,7 +243,15 @@ export function evmReader(opts: EvmReaderOptions = {}): EvmReader {
     },
 
     async *logPages(filter, from, to) {
-      const chunk = chain.log_chunk_blocks ?? Number.POSITIVE_INFINITY;
+      let pool = logsPool;
+      let chunk = chain.log_chunk_blocks ?? Number.POSITIVE_INFINITY;
+      const first = endpoints[0]?.url ?? '';
+      if (fallback && fallbackPool && (health.get(first) ?? 0) > Date.now()) {
+        pool = fallbackPool;
+        chunk = fallback.chunk_blocks;
+      }
+      if (opts.logTimeoutMs && (health.get(first) ?? 0) > Date.now())
+        throw failed(`${first} looks down, so this attempt was not made`);
       const stack: [number, number][] = [];
       let cursor = from;
       let calls = 0;
@@ -249,7 +271,7 @@ export function evmReader(opts: EvmReaderOptions = {}): EvmReader {
           toBlock: hexBlock(b),
         };
         try {
-          const { result, endpoint } = await logsPool.call<EvmLog[]>('eth_getLogs', [query]);
+          const { result, endpoint } = await pool.call<EvmLog[]>('eth_getLogs', [query]);
           served.logs.add(endpoint.url);
           yield [...result].sort(
             (x, y) =>
@@ -257,6 +279,14 @@ export function evmReader(opts: EvmReaderOptions = {}): EvmReader {
               Number.parseInt(x.logIndex, 16) - Number.parseInt(y.logIndex, 16),
           );
         } catch (e) {
+          if (fallback && fallbackPool && pool !== fallbackPool && !(e instanceof RpcError)) {
+            // Down, not refusing: what's left goes to the other endpoint, in the ranges it takes.
+            pool = fallbackPool;
+            chunk = fallback.chunk_blocks;
+            stack.length = 0;
+            cursor = a;
+            continue;
+          }
           if (!(e instanceof RpcError) || !RANGE_CAP.test(e.message)) throw e;
           if (a === b) throw failed(`block ${a} alone holds more logs than one query returns`);
           // Tenderly says which range fits; otherwise halve.

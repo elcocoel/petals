@@ -7,6 +7,9 @@
 import type { ChangeEventHandler, FormEventHandler, Ref } from 'react';
 import { Button } from './Button.tsx';
 
+/** A plain GET form puts the question in its address, and a server refuses a long enough address. */
+const LONGEST_ASKED_BY_ADDRESS = 1500;
+
 const SIZES = {
   hero: {
     form: 'border py-space-8 pr-space-8 pl-block-gap',
@@ -15,9 +18,10 @@ const SIZES = {
     arrow: true,
   },
   composer: {
-    form: 'border py-space-16 pr-text-gap pl-block-gap',
+    // A box can be sized narrower than the words and a long button: the button goes under them.
+    form: 'flex-wrap justify-end border py-space-16 pr-text-gap pl-block-gap',
     gap: 'gap-text-gap',
-    field: 'py-text-gap type-label placeholder:text-muted',
+    field: 'basis-drawing-72 py-text-gap type-label placeholder:text-muted',
     arrow: false,
   },
 } as const;
@@ -67,7 +71,7 @@ export function AskBox({
       action={to}
       method={to ? 'get' : undefined}
       onSubmit={onSubmit}
-      className={`flex w-full items-end border-primary focus-within:outline focus-within:outline-primary ${look.gap} ${look.form}`}
+      className={`flex w-full items-end border-primary focus-within:outline focus-within:outline-primary has-disabled:border-hairline has-disabled:bg-surface has-disabled:opacity-60 ${look.gap} ${look.form}`}
     >
       <textarea
         ref={boxRef}
@@ -76,6 +80,7 @@ export function AskBox({
         rows={1}
         aria-label={label}
         placeholder={placeholder}
+        maxLength={to === undefined ? undefined : LONGEST_ASKED_BY_ADDRESS}
         value={value}
         defaultValue={defaultValue}
         disabled={disabled}

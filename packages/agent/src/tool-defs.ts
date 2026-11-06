@@ -43,6 +43,8 @@ const DESCRIPTIONS: Record<string, string> = {
 const NOT_FOR_THE_AGENT = new Set([
   'publish_flower',
   'submit_correction',
+  // Models offer it when they're stuck, and it helps nobody. It stays on the doors.
+  'quote_payment',
   // Every door has these. Petal's own agent waits: they add 4.6 KB to each model call, so giving
   // them to it is a reviewed step, with prompt text, once it has a reason to use them.
   'account_groups',
@@ -120,6 +122,9 @@ export function llmTools(registry: readonly AnyTool[]): LlmToolDef[] {
 
 export const STAGE_OF: Record<string, Stage> = {
   find_target: 'fetching',
+  read_chain: 'fetching',
+  read_page: 'fetching',
+  search: 'fetching',
   list_flowers: 'reading_map',
   get_flower: 'reading_map',
   list_networks: 'fetching',

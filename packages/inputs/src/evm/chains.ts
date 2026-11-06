@@ -11,7 +11,10 @@
 //             1,000 blocks, dRPC under 10,000 on the free plan, 1RPC and Nodies 50, publicnode 403
 //             on old blocks, the official RPC 429 at once, BlockPI wants a key. So a week of logs
 //             is 303 calls keyless, and a whole history needs HyperSync and its token.
-// State reads (balanceOf, totalSupply at a finalized block) work keyless on all three.
+//   Gnosis    Blockscout redirects to Gnosisscan, whose API is blocked. The official RPC and Tenderly
+//             serve eth_getLogs over the whole chain (tested 2026-11-06: 169 logs from block 0 in about
+//             a second); dRPC stops at 10,000 blocks and 1RPC at 50.
+// State reads (balanceOf, totalSupply at a finalized block) work keyless on all of them.
 import type { RpcEndpoint } from '../rpc/pool.ts';
 
 export interface EvmChain {
@@ -32,6 +35,8 @@ export interface EvmChain {
   wide_logs: boolean;
   /** the widest eth_getLogs range the first endpoint takes, where it is narrow */
   log_chunk_blocks?: number;
+  /** where log reads go when the first endpoint is down, with the range it takes */
+  log_fallback?: { endpoint: RpcEndpoint; chunk_blocks: number };
   /** seconds per block on average, to turn days into blocks */
   block_seconds: number;
   hypersync: string;
@@ -60,10 +65,15 @@ export const BASE: EvmChain = {
   endpoints: [
     { id: 'tenderly-base', url: 'https://base.gateway.tenderly.co', intervalMs: 250 },
     { id: 'base-official', url: 'https://mainnet.base.org', intervalMs: 1000 },
+    { id: 'drpc-base', url: 'https://base.drpc.org', intervalMs: 400 },
   ],
   multicall3_from: 5022,
   wide_logs: false,
   log_chunk_blocks: 1000,
+  log_fallback: {
+    endpoint: { id: 'drpc-base', url: 'https://base.drpc.org', intervalMs: 400 },
+    chunk_blocks: 9000,
+  },
   block_seconds: 2,
   hypersync: 'https://base.hypersync.xyz',
 };
@@ -75,15 +85,40 @@ export const ARBITRUM: EvmChain = {
   endpoints: [
     { id: 'tenderly-arbitrum', url: 'https://arbitrum.gateway.tenderly.co', intervalMs: 250 },
     { id: 'arbitrum-official', url: 'https://arb1.arbitrum.io/rpc', intervalMs: 500 },
+    { id: 'drpc-arbitrum', url: 'https://arbitrum.drpc.org', intervalMs: 400 },
   ],
   multicall3_from: 7654707,
   wide_logs: true,
+  log_fallback: {
+    endpoint: { id: 'drpc-arbitrum', url: 'https://arbitrum.drpc.org', intervalMs: 400 },
+    chunk_blocks: 9000,
+  },
   block_seconds: 0.25,
   hypersync: 'https://arbitrum.hypersync.xyz',
+};
+
+export const GNOSIS: EvmChain = {
+  id: 'gnosis',
+  name: 'Gnosis',
+  caip2: 'eip155:100',
+  endpoints: [
+    { id: 'gnosis-official', url: 'https://rpc.gnosischain.com', intervalMs: 250 },
+    { id: 'tenderly-gnosis', url: 'https://gnosis.gateway.tenderly.co', intervalMs: 250 },
+    { id: 'drpc-gnosis', url: 'https://gnosis.drpc.org', intervalMs: 400 },
+  ],
+  multicall3_from: 21022491,
+  wide_logs: true,
+  block_seconds: 5,
+  hypersync: 'https://gnosis.hypersync.xyz',
 };
 
 export const EVM_CHAINS: Record<string, EvmChain> = {
   ethereum: ETHEREUM,
   base: BASE,
   arbitrum: ARBITRUM,
+  gnosis: GNOSIS,
 };
+
+/** For a module's `chain` parameter: every chain above, and only those. */
+export const EVM_CHAIN_PATTERN = `^(${Object.keys(EVM_CHAINS).join('|')})$`;
+export const EVM_CHAIN_WORDS = Object.keys(EVM_CHAINS).join(', ');

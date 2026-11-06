@@ -6,7 +6,6 @@ import { Thread } from './Thread.tsx';
 import { TurnFlower } from './TurnFlower.tsx';
 
 export function ConversationThread({
-  heading,
   recorded,
   rows,
   thumbs,
@@ -18,7 +17,6 @@ export function ConversationThread({
   onRefollow,
   onLink,
 }: {
-  heading?: string;
   recorded: boolean;
   rows: Row[];
   /** Each drawn flower's picture, by its spec's hash. */
@@ -33,7 +31,6 @@ export function ConversationThread({
 }) {
   return (
     <Thread
-      {...(heading ? { heading } : {})}
       {...(className ? { className } : {})}
       {...(recorded
         ? {

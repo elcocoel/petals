@@ -1,5 +1,5 @@
 // T183: the workspace's decisions, without a browser: which flower is in the panel, what a question
-// carries, what the address holds, how a flower reads beside its drawing, and what the stage fits.
+// carries, what the address holds, how a flower reads beside its drawing, and what a click on it does.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AgentEvent, FlowerResult, LegendItem, PetalDetail, Spec } from '@petal/core/types';
@@ -7,7 +7,9 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { PetalDetails } from '../components/PetalDetails.tsx';
+import { AskBox } from '../components/ui/AskBox.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
+import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { DrawnReading } from '../lib/agent-client.ts';
 import { aboutLabel, aboutLine, readAbout, withAbout } from '../lib/ask-about.ts';
 import { repoRoot } from '../lib/config.ts';
@@ -16,7 +18,6 @@ import {
   chainLabel,
   dateLabel,
   type ListedFlower,
-  legendKeys,
   networkLabel,
   petalView,
   readingKey,
@@ -24,15 +25,21 @@ import {
   svgTitle,
 } from '../lib/flower-view.ts';
 import {
+  addressOpensBox,
   type CanvasFlower,
+  canvasPetal,
+  canvasReading,
+  canvasShown,
   composerTarget,
   flowerPanelView,
   nextCanvas,
   type PanelFlower,
+  type PanelView,
+  panelFailure,
+  pickPlan,
   questionPrefix,
   shelfView,
 } from '../lib/panel-view.ts';
-import { fitView } from '../lib/stage.ts';
 import {
   type ChatAction,
   type ChatState,
@@ -61,6 +68,15 @@ const flower = (sha = 'a'.repeat(64)): FlowerResult =>
     interpretation: {},
     validation: { valid: true, errors: [], warnings: [] },
   }) as unknown as FlowerResult;
+const noReading = {
+  summary: '',
+  power_means: [],
+  mappings: [],
+  conflicts: [],
+  unknowns: [],
+  inferred: [],
+  documents: [],
+} as unknown as NonNullable<PanelFlower['interpretation']>;
 const flowerEvent = (sha?: string): AgentEvent => ({ event: 'flower', data: flower(sha) });
 const reduce = (s: ChatState, ...actions: ChatAction[]) => actions.reduce(chatReducer, s);
 const flowerItem = (sha?: string): Item => ({
@@ -309,13 +325,15 @@ describe('the address', () => {
 
   test('a fresh page has nothing to say', () => {
     expect(workspaceUrl({ runId: null, open: { kind: 'latest' }, petal: null })).toBeNull();
-    // another surface gives its own page, and its own options go along
-    expect(workspaceUrl({ runId: 'r', open: { kind: 'latest' }, petal: null, base: '/a' })).toBe(
-      '/a?run=r',
-    );
-    expect(
-      workspaceUrl({ runId: 'r', open: { kind: 'latest' }, petal: null, base: '/a?box=ink' }),
-    ).toBe('/a?box=ink&run=r');
+  });
+
+  test('a question waiting goes along when the address has to change, and only then', () => {
+    const fresh = { runId: null, open: { kind: 'latest' }, petal: null, asked: 'a b&c' } as const;
+    expect(workspaceUrl(fresh)).toBeNull();
+    const url = workspaceUrl({ ...fresh, runId: 'r' }) as string;
+    expect(url).toBe('/make?run=r&q=a+b%26c');
+    expect(new URL(url, 'http://x').searchParams.get('q')).toBe('a b&c');
+    expect(workspaceUrl({ ...fresh, runId: 'r', asked: null })).toBe('/make?run=r');
   });
 
   test('nonsense falls back to the newest', () => {
@@ -345,16 +363,6 @@ describe('how a flower reads', () => {
     expect(key.body).toBe('A taller petal holds more. Largest first, clockwise from the top.');
     expect(key.note).toContain('Snapshot at block 222,915,356');
     expect(key.note).toContain('3 Nov 2026');
-  });
-
-  test('the legend line has the colours and the group, not the outline', () => {
-    expect(legendKeys(legend).map((k) => k.label)).toEqual([
-      'Pool',
-      'Liquid staking',
-      'Everyone else',
-    ]);
-    expect(legendKeys(legend, true).at(-1)).toEqual({ label: 'Selected', swatch: 'selected' });
-    expect(legendKeys(legend)[0]?.swatch).toBe('k-pool');
   });
 
   test('a named account stays whole; a hash shows its ends', () => {
@@ -391,7 +399,7 @@ describe('the panel', () => {
     key: 'k',
     spec,
     legend,
-    interpretation: {} as never,
+    interpretation: noReading,
     signature: null,
     checks: 'ok',
     viewUrl: '/x',
@@ -421,9 +429,9 @@ describe('the panel', () => {
       units: { [spec.selection.measure]: 'NEAR' },
     });
     expect(drawn.title).toBe('Named by the renderer');
-    expect(drawn.selected).toBe(first.id);
+    expect(drawn.petal?.id).toBe(first.id);
     expect(drawn.petal?.stats).toContain('NEAR');
-    expect(drawn.keys.at(-1)?.label).toBe('Selected');
+    expect(drawn.keys).toEqual([{ label: 'Selected', swatch: 'selected' }]);
   });
 
   test('a petal this drawing does not have selects nothing', () => {
@@ -434,8 +442,8 @@ describe('the panel', () => {
       sources: {},
       units: {},
     });
-    expect(view.selected).toBeNull();
     expect(view.petal).toBeNull();
+    expect(view.keys).toEqual([]);
   });
 
   const listed: ListedFlower[] = [
@@ -474,21 +482,6 @@ describe('the panel', () => {
   });
 });
 
-describe('the stage', () => {
-  test('fit centres the whole box in the window', () => {
-    const v = fitView({ x: 100, y: 200, width: 400, height: 200 }, { width: 824, height: 624 });
-    expect(v?.k).toBe(2);
-    // the box's corners land inside the window, centred
-    expect(100 * (v?.k as number) + (v?.x as number)).toBe(12);
-    expect(200 * (v?.k as number) + (v?.y as number)).toBe(112);
-  });
-
-  test('nothing to fit, or nowhere to fit it, is no answer', () => {
-    expect(fitView({ x: 0, y: 0, width: 0, height: 10 }, { width: 10, height: 10 })).toBeNull();
-    expect(fitView({ x: 0, y: 0, width: 10, height: 10 }, { width: 0, height: 10 })).toBeNull();
-  });
-});
-
 describe('what a live canvas holds (T200)', () => {
   const reading: DrawnReading = { title: 'A', petals: [] };
   const other: DrawnReading = { title: 'B', petals: [] };
@@ -497,6 +490,27 @@ describe('what a live canvas holds (T200)', () => {
     expect(nextCanvas(null, null, undefined)).toBeNull();
     expect(nextCanvas(null, 'a', undefined)).toBeNull();
     expect(nextCanvas(null, 'a', reading)).toEqual({ key: 'a', reading });
+  });
+
+  test('the stand-in holds the canvas until the conversation draws its own', () => {
+    const standIn: CanvasFlower = { key: 'stand-in', reading };
+    const drawn: CanvasFlower = { key: 'drawn', reading: other };
+    expect(canvasShown(null, false, standIn)).toBe(standIn);
+    expect(canvasShown(drawn, false, standIn)).toBe(drawn);
+  });
+
+  test('nothing stands in while the address is coming back, and a drawn flower needs no stand-in', () => {
+    const standIn: CanvasFlower = { key: 'stand-in', reading };
+    expect(canvasShown(null, true, standIn)).toBeNull();
+    const drawn: CanvasFlower = { key: 'drawn', reading: other };
+    expect(canvasShown(drawn, true, standIn)).toBe(drawn);
+    expect(canvasShown(drawn, false, null)).toBe(drawn);
+    expect(canvasShown(null, false, null)).toBeNull();
+  });
+
+  test('the very flower already standing there changes nothing: the same scene, the same camera', () => {
+    const standIn: CanvasFlower = { key: 'same', reading };
+    expect(canvasShown({ key: 'same', reading: { ...reading } }, false, standIn)).toBe(standIn);
   });
 
   test('the same object until the flower really changes', () => {
@@ -551,5 +565,341 @@ describe('what a live canvas holds (T200)', () => {
     const again = await played(first.s, first.held, true);
     expect(again.seen.length).toBeGreaterThan(3);
     expect(new Set(again.seen)).toEqual(new Set([first.held]));
+  });
+});
+
+describe('the legend of what the canvas draws (T202)', () => {
+  const backers = JSON.parse(
+    readFileSync(join(repoRoot(), 'fixtures/golden/near-validators-backers.json'), 'utf8'),
+  ) as { legend: LegendItem[]; petals: PetalDetail[] };
+  const ofLegend = (items: LegendItem[]) => canvasReading(items, noReading);
+
+  test('no swatch of a colour it does not paint, whichever flower', () => {
+    for (const items of [legend, backers.legend]) {
+      expect(ofLegend(items).legend.filter((i) => i.keys)).toEqual([]);
+    }
+  });
+
+  test('colour and outline go, because the canvas draws neither; the rest keep their meaning', () => {
+    const { legend: kept } = ofLegend(backers.legend);
+    expect(kept.map((i) => i.primitive)).toEqual(['width', 'height', 'segments', 'order', 'tail']);
+    expect(kept[0]?.meaning).toBe('share of stake in the current epoch, in a 2x band');
+    expect(kept.find((i) => i.primitive === 'segments')?.meaning).toContain('who backs the pool');
+  });
+
+  test('the tail is one petal, not a hatched one, and it says the same otherwise', () => {
+    const was = legend.find((i) => i.primitive === 'tail')?.meaning as string;
+    const now = ofLegend(legend).legend.find((i) => i.primitive === 'tail')?.meaning;
+    expect(was).toContain('one hatched petal');
+    expect(now).toBe(was.replace('one hatched petal', 'one petal'));
+  });
+
+  test('no source is lost with what went: each is still somewhere, once', () => {
+    const { legend: kept, sources } = ofLegend(legend);
+    const before = new Set(legend.flatMap((i) => i.sources));
+    expect(new Set([...kept.flatMap((i) => i.sources), ...sources])).toEqual(before);
+    expect(sources).toContain('nearblocks-validators');
+    expect(new Set(sources).size).toBe(sources.length);
+    for (const id of sources) expect(kept.flatMap((i) => i.sources)).not.toContain(id);
+  });
+
+  test('the agent’s own why goes the same way for what is not drawn, and only that', () => {
+    const reading = {
+      ...noReading,
+      summary: 'Its words stay.',
+      mappings: [
+        { primitive: 'height', why: 'Square root.', sources: ['a'] },
+        { primitive: 'colour', why: 'Kind of account.', sources: ['a', 'b'] },
+        { primitive: 'outline', why: 'Solid where declared.', sources: ['c'] },
+      ],
+    } as PanelFlower['interpretation'];
+    const { interpretation, sources } = canvasReading([], reading);
+    expect(interpretation?.summary).toBe('Its words stay.');
+    expect(interpretation?.mappings.map((m) => m.primitive)).toEqual(['height']);
+    expect(sources).toEqual(['b', 'c']);
+  });
+
+  test('a petal says why it looks this way only for what the canvas draws', () => {
+    const shown = canvasPetal(first).values.map((v) => v.primitive);
+    expect(shown).toEqual(['width', 'height', 'order']);
+    expect(
+      canvasPetal(tail)
+        .values.map((v) => v.explains)
+        .join(),
+    ).not.toContain('hatched');
+    expect(first.values.map((v) => v.primitive)).toContain('colour');
+  });
+
+  test('nothing but the selection has a colour on the panel', () => {
+    const at = (selected: string | null) =>
+      flowerPanelView({
+        flower: {
+          key: 'k',
+          spec,
+          legend,
+          interpretation: noReading,
+          signature: null,
+          checks: 'ok',
+          viewUrl: '/x',
+          earlier: false,
+        },
+        drawing: { svg: '<svg></svg>', petals, legend },
+        selected,
+        sources: {},
+        units: {},
+      });
+    expect(at(null).keys).toEqual([]);
+    expect(at(first.id).keys).toEqual([{ label: 'Selected', swatch: 'selected' }]);
+    expect(at(first.id).petal?.values.map((v) => v.primitive)).toEqual([
+      'width',
+      'height',
+      'order',
+    ]);
+  });
+});
+
+describe('a click on the canvas (T202)', () => {
+  const reading: DrawnReading = { title: 'A', petals: [] };
+  const standIn: CanvasFlower = { key: 'sha-stand-in', reading, stored: 'stand-in' };
+  const play = (s: ChatState, plan: ReturnType<typeof pickPlan>) => reduce(s, ...plan.actions);
+
+  test('a petal on the stand-in opens it, and only then selects', () => {
+    const plan = pickPlan({ kind: 'petal', id: first.id }, standIn, undefined, []);
+    expect(plan.opensBox).toBe(true);
+    const s = play(initialChat({}), plan);
+    expect(s.open).toEqual({ kind: 'stored', id: 'stand-in' });
+    expect(s.petal).toBe(first.id);
+    expect(workspaceUrl({ runId: null, open: s.open, petal: s.petal })).toBe(
+      `/make?stored=stand-in&petal=${encodeURIComponent(first.id)}`,
+    );
+  });
+
+  test('the centre of the stand-in opens it too, with no petal', () => {
+    const s = play(initialChat({}), pickPlan({ kind: 'centre' }, standIn, undefined, []));
+    expect(s.open).toEqual({ kind: 'stored', id: 'stand-in' });
+    expect(s.petal).toBeNull();
+  });
+
+  test('the ground never opens it: the stand-in stays only a picture', () => {
+    const plan = pickPlan({ kind: 'ground' }, standIn, undefined, []);
+    expect(plan.opensBox).toBe(false);
+    const s = play(initialChat({}), plan);
+    expect(s.open).toEqual({ kind: 'latest' });
+    expect(s.items).toEqual([]);
+  });
+
+  test('the flower already open only changes the petal, and keeps the extra reading', () => {
+    const drawn: CanvasFlower = { key: 'k', reading };
+    const before = reduce(initialChat({ petal: 'x' }), { type: 'section', section: 'reading' });
+    const s = play(before, pickPlan({ kind: 'petal', id: 'y' }, drawn, 'k', ['k']));
+    expect(s).toMatchObject({ open: { kind: 'latest' }, petal: 'y', section: 'reading' });
+    const clear = play(s, pickPlan({ kind: 'ground' }, drawn, 'k', ['k']));
+    expect(clear).toMatchObject({ open: { kind: 'latest' }, petal: null, section: 'reading' });
+    const centre = play(s, pickPlan({ kind: 'centre' }, drawn, 'k', ['k']));
+    expect(centre).toMatchObject({ petal: null, section: 'reading' });
+  });
+
+  test('from the shelf, the flower still on the canvas comes back, whichever turn it was', () => {
+    const shelf = initialChat({ open: { kind: 'shelf' } });
+    const keys = ['old', 'new'];
+    const on = (key: string): CanvasFlower => ({ key, reading });
+    const hit = { kind: 'petal', id: 'y' } as const;
+    expect(play(shelf, pickPlan(hit, on('new'), undefined, keys)).open).toEqual({ kind: 'latest' });
+    expect(play(shelf, pickPlan(hit, on('old'), undefined, keys)).open).toEqual({
+      kind: 'turn',
+      index: 0,
+    });
+    const stored = { ...on('s'), stored: 'id' };
+    expect(play(shelf, pickPlan(hit, stored, undefined, keys)).open).toEqual({
+      kind: 'stored',
+      id: 'id',
+    });
+  });
+
+  test('a stored flower on the canvas remembers its id', () => {
+    expect(nextCanvas(null, 'k', reading, 'id')).toEqual({ key: 'k', reading, stored: 'id' });
+  });
+
+  test('the words sent carry the petal that was clicked, with a fake client', async () => {
+    const panelFlower: PanelFlower = {
+      key: 'sha-stand-in',
+      spec,
+      legend,
+      interpretation: {} as never,
+      signature: null,
+      checks: 'ok',
+      viewUrl: '/x',
+      stored: { id: 'stand-in', title: 'Who stands behind NEAR’s validators?' },
+      earlier: false,
+    };
+    const opened = play(
+      initialChat({}),
+      pickPlan({ kind: 'petal', id: first.id }, standIn, undefined, []),
+    );
+    const petal = petals.find((p) => p.id === opened.petal) ?? null;
+    const target = composerTarget(panelFlower, petal);
+    const view = composerView({
+      question: 'Who is this?',
+      runId: null,
+      busy: false,
+      recorded: false,
+      target,
+    });
+    expect(view.placeholder).toBe('Ask about this wallet…');
+    expect(view.about).toBe(`About account ${first.id}`);
+
+    const sent: string[] = [];
+    const deps: ChatDeps = {
+      client: {
+        async *chat(r) {
+          sent.push(r.messages.at(-1)?.content ?? '');
+          yield { event: 'run', data: { run_id: 'r', resume_url: '/make?run=r' } };
+        },
+        readRun: () => Promise.reject(new Error('unused')),
+        followRun: () => {
+          throw new Error('unused');
+        },
+      },
+      store: null,
+      dispatch: () => {},
+      onRun: () => {},
+    };
+    await sendQuestion(deps, {
+      text: 'Who is this?',
+      recorded: false,
+      runId: null,
+      about: questionPrefix(panelFlower, target),
+    });
+    expect(sent).toEqual([
+      `[About account ${first.id}, in the near-validators flower, data as of ${spec.snapshot.as_of.slice(0, 10)}] Who is this?`,
+    ]);
+  });
+
+  test('with no petal, the next question is about the flower that was chosen', () => {
+    const chosen = { key: 'k', spec, stored: { id: 'stand-in', title: 'Who?' } } as PanelFlower;
+    expect(questionPrefix(chosen, composerTarget(chosen, null))).toContain('About flower stand-in');
+  });
+});
+
+describe('when the box opens (T202)', () => {
+  test('only an address that asks for it', () => {
+    expect(addressOpensBox({ kind: 'latest' }, null)).toBe(false);
+    expect(addressOpensBox(undefined, undefined)).toBe(false);
+    expect(addressOpensBox({ kind: 'turn', index: 0 }, null)).toBe(false);
+    expect(addressOpensBox({ kind: 'latest' }, first.id)).toBe(true);
+    expect(addressOpensBox({ kind: 'stored', id: 'x' }, null)).toBe(true);
+    expect(addressOpensBox({ kind: 'shelf' }, null)).toBe(true);
+  });
+
+  test('a failure is something that can happen, and nothing else is', () => {
+    const flowerView = (failed: string | null) =>
+      ({ kind: 'flower', key: 'k', failed }) as unknown as PanelView;
+    expect(panelFailure({ kind: 'failed', text: 'gone' })).toBe('gone');
+    expect(panelFailure(flowerView('bad spec'))).toBe('k bad spec');
+    expect(panelFailure(flowerView(null))).toBeNull();
+    expect(panelFailure({ kind: 'loading', text: 'Opening…' })).toBeNull();
+  });
+});
+
+describe('the panel in its box (T202)', () => {
+  const view = (more: Partial<PanelFlower> = {}, selected: string | null = null) =>
+    flowerPanelView({
+      flower: {
+        key: 'k',
+        spec,
+        legend,
+        interpretation: { ...noReading, summary: 'The argued reading.' },
+        signature: null,
+        checks: 'Valid: true',
+        viewUrl: '/draft?spec=x',
+        publishUrl: '/publish/r',
+        earlier: false,
+        ...more,
+      },
+      drawing: { svg: '<svg></svg>', petals, legend },
+      selected,
+      sources: {},
+      units: {},
+    });
+  const html = (v: PanelView, more: { petal?: PetalDetail; section?: 'reading' | 'quote' } = {}) =>
+    renderToStaticMarkup(
+      createElement(FlowerPanel, { view: v, ...more, actions: { onCloseDetail: () => {} } }),
+    );
+
+  test('no stage: the canvas is the stage, so no drawing here and none of its words', () => {
+    const out = html(view());
+    expect(out).not.toContain('<svg');
+    expect(out).not.toContain('Double-click');
+    expect(out).not.toContain('>Fit<');
+  });
+
+  test.each([
+    'Explore another flower',
+    'Interpretation and sources',
+    'Publish on NEAR',
+    'Sponsor a refresh',
+    'Open as a page',
+  ])('keeps its word: %s', (word) => {
+    expect(html(view())).toContain(word);
+  });
+
+  test('the reading key, or the petal in its place', () => {
+    expect(html(view())).toContain('60 largest');
+    const out = html(view({}, first.id), { petal: canvasPetal(first) });
+    expect(out).not.toContain('60 largest');
+    expect(out).toContain('Close detail');
+    expect(out).toContain('Selected');
+  });
+
+  test('the reading: its interpretation, its legend without a swatch, every source, its signature', () => {
+    const out = html(view(), { section: 'reading' });
+    expect(out).toContain('The argued reading.');
+    expect(out).toContain('Legend');
+    expect(out).not.toContain('data-swatch');
+    expect(out).toContain('nearblocks-validators');
+    expect(out).toContain('No model signature.');
+    expect(out).toContain('spec_sha256 k');
+  });
+
+  test('says when it failed, is drawing, is loading, or has nothing yet', () => {
+    const failed = flowerPanelView({
+      flower: {
+        key: 'k',
+        spec,
+        legend,
+        interpretation: noReading,
+        signature: null,
+        checks: 'ok',
+        viewUrl: '/x',
+        earlier: false,
+      },
+      drawing: { failed: 'bad spec' },
+      selected: null,
+      sources: {},
+      units: {},
+    });
+    expect(html(failed)).toContain('The flower could not be drawn: bad spec');
+    const drawing = { ...view(), svg: null };
+    expect(html(drawing)).toContain('Drawing…');
+    expect(html({ kind: 'loading', text: 'Opening the flower…' })).toContain('Opening the flower…');
+    const out = html({ kind: 'failed', text: 'It is gone.' });
+    expect(out).toContain('It is gone.');
+    expect(out).toContain('Explore another flower');
+    expect(html(shelfView([], false))).toContain('What would you like to map?');
+  });
+});
+
+describe('the landing’s ask box', () => {
+  const html = (to?: string) =>
+    renderToStaticMarkup(
+      createElement(AskBox, { label: 'Ask', placeholder: 'Ask', ...(to ? { to } : {}) }),
+    );
+
+  test('stops before its address gets too long for a server', () => {
+    expect(html('/make')).toContain('maxLength="1500"');
+  });
+
+  test('the composer has no address, so no limit', () => {
+    expect(html().toLowerCase()).not.toContain('maxlength');
   });
 });

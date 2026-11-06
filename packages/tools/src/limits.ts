@@ -29,6 +29,10 @@ export interface Limits {
   publishesPerDay: number;
   /** PETAL_FINGERPRINTS_PER_DAY: snapshot fingerprints written by Petal's writer */
   fingerprintsPerDay: number;
+  /** PETAL_PAGE_READS_PER_DAY: pages read_page fetches, from this machine, for anyone */
+  pageReadsPerDay: number;
+  /** PETAL_SEARCHES_PER_DAY: searches, on an unofficial route that can refuse this machine */
+  searchesPerDay: number;
 }
 
 export const DEFAULT_LIMITS: Readonly<Limits> = {
@@ -44,6 +48,8 @@ export const DEFAULT_LIMITS: Readonly<Limits> = {
   freshRunPerDay: 100,
   publishesPerDay: 20,
   fingerprintsPerDay: 20,
+  pageReadsPerDay: 500,
+  searchesPerDay: 100,
 };
 
 const ENV: Record<keyof Limits, string> = {
@@ -58,6 +64,8 @@ const ENV: Record<keyof Limits, string> = {
   freshRunPerDay: 'PETAL_FRESH_RUN_PER_DAY',
   publishesPerDay: 'PETAL_PUBLISHES_PER_DAY',
   fingerprintsPerDay: 'PETAL_FINGERPRINTS_PER_DAY',
+  pageReadsPerDay: 'PETAL_PAGE_READS_PER_DAY',
+  searchesPerDay: 'PETAL_SEARCHES_PER_DAY',
 };
 
 export interface LimitsConfig {

@@ -33,6 +33,7 @@ export function Composer({
         action={view.button}
         value={view.value}
         readOnly={view.readOnly}
+        disabled={view.away}
         canAsk={!view.disabled}
         boxRef={boxRef}
         onChange={(e) => onChange(e.target.value)}

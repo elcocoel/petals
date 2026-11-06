@@ -1,7 +1,6 @@
-// The workspace's frame: its own header and rail, in place of the site's nav.
+// The workspace lays out its own spacing, so nothing in it reads as the site's prose (app/globals.css).
 import type { ReactNode } from 'react';
-import { WorkspaceFrame } from '../../components/workspace/WorkspaceFrame.tsx';
 
 export default function MakeLayout({ children }: { children: ReactNode }) {
-  return <WorkspaceFrame section="Make a flower">{children}</WorkspaceFrame>;
+  return <main data-workspace>{children}</main>;
 }
