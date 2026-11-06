@@ -896,7 +896,7 @@ describe('the landing’s ask box', () => {
     );
 
   test('stops before its address gets too long for a server', () => {
-    expect(html('/make')).toContain('maxLength="4000"');
+    expect(html('/make')).toContain('maxLength="1500"');
   });
 
   test('the composer has no address, so no limit', () => {

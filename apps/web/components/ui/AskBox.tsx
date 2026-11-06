@@ -8,7 +8,7 @@ import type { ChangeEventHandler, FormEventHandler, Ref } from 'react';
 import { Button } from './Button.tsx';
 
 /** A plain GET form puts the question in its address, and a server refuses a long enough address. */
-const LONGEST_ASKED_BY_ADDRESS = 4000;
+const LONGEST_ASKED_BY_ADDRESS = 1500;
 
 const SIZES = {
   hero: {
