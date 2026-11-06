@@ -103,6 +103,7 @@ function agentParameters(t: AnyTool): Record<string, unknown> {
   if (!NAMES_ITS_SPEC.has(t.name)) return p;
   const {
     include_svg: _svg,
+    include_reading: _reading,
     size: _size,
     ...own
   } = (p.properties ?? {}) as Record<string, unknown>;

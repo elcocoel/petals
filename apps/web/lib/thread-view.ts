@@ -6,6 +6,7 @@ import { aboutLabel, readAbout } from './ask-about.ts';
 import { chainLabel, dateLabel, networkLabel } from './flower-view.ts';
 import { type Block as MarkdownBlock, parseMarkdown } from './markdown.ts';
 import { blocksOf, type ChatState, type Done, type Opened, type Step } from './thread.ts';
+import { workspaceUrl } from './workspace-url.ts';
 
 /** What the recorded run (fixtures/transcripts/skeleton.json) was really asked. */
 export const RECORDED_QUESTION =
@@ -360,9 +361,14 @@ export function composerView(
   v: Pick<ChatState, 'question' | 'runId' | 'busy'> & {
     recorded: boolean;
     target?: ComposerTarget;
+    /** the page this conversation lives on (lib/workspace-url.ts) */
+    base?: string | undefined;
   },
 ): ComposerView {
   const target = v.target ?? { kind: 'none' };
+  const runHref =
+    v.runId &&
+    workspaceUrl({ runId: v.runId, open: { kind: 'latest' }, petal: null, base: v.base });
   return {
     value: v.recorded ? RECORDED_QUESTION : v.question,
     readOnly: v.recorded,
@@ -378,6 +384,6 @@ export function composerView(
     ...(target.kind === 'wallet' || target.kind === 'group'
       ? { about: aboutLabel(target.line) }
       : {}),
-    ...(v.runId ? { run: { id: v.runId, href: `/make?run=${encodeURIComponent(v.runId)}` } } : {}),
+    ...(v.runId && runHref ? { run: { id: v.runId, href: runHref } } : {}),
   };
 }

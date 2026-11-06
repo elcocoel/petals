@@ -191,6 +191,9 @@ const WASH: Record<ToneName | 'mint', { low: Paint; high: Paint }> = {
   mint: { low: ink(0.03), high: ground(0.05) },
 };
 
+/** A floating box's glass, its strongest and weakest stop on each surface it's drawn on. */
+const FLOAT = { ground: [0.96, 0.76], ink: [0.94, 0.82] } as const;
+
 const FIELD_RADIUS = 26;
 const FIELD_INSET = 8;
 
@@ -338,6 +341,15 @@ const groups = {
       ground: glass(ground(0.96), ground(0.76)),
       ink: glass(ground(0.03), ground(0.01)),
       mint: glass(ground(0.62), ground(0.32)),
+    },
+    /**
+     * A box over a canvas, whose words hold over Ink and the palest paint alike. On ground it's the glass
+     * of `fill`. Ink's `fill` is only clear because the band behind it is ink, so this brings its own.
+     */
+    float: {
+      ground: glass(ground(FLOAT.ground[0]), ground(FLOAT.ground[1])),
+      ink: glass(ink(FLOAT.ink[0]), ink(FLOAT.ink[1])),
+      mint: glass(ground(FLOAT.ground[0]), ground(FLOAT.ground[1])),
     },
     field: glass(ground(1), ground(0.9)),
     nav: c(ground(0.82)),
@@ -493,6 +505,38 @@ const PAPER_WORST: readonly Paint[] = [...GROUND_BAND, gray(STAR_ALPHA), mint(0.
 const TERMINAL: readonly Paint[] = [...INK_BAND, ground(0.03), mint(0.05), mint(0.06)];
 
 /**
+ * A floating box over a flower: the flower's darkest paint, its palest, then the glass at its weakest
+ * stop, then the corner's glow. The flower moves under it, so all of them hold, on either glass.
+ */
+const FLOWER_PAINTS: readonly (readonly [string, readonly Paint[]])[] = [
+  ['the flower’s Ink', ['Ink']],
+  ['the flower’s Gray', ['Gray']],
+  ['the flower’s ground', TINT],
+];
+const floatCases: ContrastCase[] = FLOWER_PAINTS.flatMap(([paint, under]) => [
+  {
+    name: `float: text-primary over ${paint}`,
+    text: TEXT.ground['text-primary'],
+    over: [...under, ground(FLOAT.ground[1]), mint(0.2)],
+  },
+  {
+    name: `float: muted over ${paint}`,
+    text: MUTED.ground,
+    over: [...under, ground(FLOAT.ground[1]), mint(0.2)],
+  },
+  {
+    name: `float, ink: text-primary over ${paint}`,
+    text: TEXT.ink['text-primary'],
+    over: [...under, ink(FLOAT.ink[1]), mint(0.05)],
+  },
+  {
+    name: `float, ink: muted over ${paint}`,
+    text: MUTED.ink,
+    over: [...under, ink(FLOAT.ink[1]), mint(0.05)],
+  },
+]);
+
+/**
  * Every text on what's really behind it, at the worst stop of what's behind it. The grain is counted at
  * its strongest, which is a little over twice its alpha's mean. All of them hold to source.ts's minimum.
  */
@@ -548,6 +592,7 @@ const contrast: ContrastCase[] = [
     text: TEXT.mint['action-text'],
     over: [TEXT.mint['action-background'], ground(0.16), ground(0.08), ground(0.15)],
   },
+  ...floatCases,
   // The textures, each at the darkest thing it can put behind a word: a felt's darkest fibre, a dot's core
   // with its off-register ink, a star's middle, under the field at its strongest and the spotlight.
   { name: 'mint: text-primary on felt', text: TEXT.mint['text-primary'], over: MINT_WORST },

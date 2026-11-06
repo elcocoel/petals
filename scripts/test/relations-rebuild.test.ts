@@ -15,7 +15,8 @@ function rebuild(stateDir: string) {
   });
 }
 
-test('prints plain lines, and a second run says it changed nothing', () => {
+// Two real processes: about 2.3 s alone, past the default 5 s when the whole suite shares a busy machine.
+test('prints plain lines, and a second run says it changed nothing', { timeout: 30_000 }, () => {
   const stateDir = mkdtempSync(join(tmpdir(), 'petal-relations-script-'));
   const first = rebuild(stateDir);
   expect(first.status).toBe(0);

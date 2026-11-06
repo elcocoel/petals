@@ -1,4 +1,5 @@
-// What the address holds, so a reload brings back the panel as well as the thread.
+// What the address holds, so a reload brings back the panel as well as the thread. The page it's on is
+// its own business: `base` is /make unless a surface says otherwise, and may carry that surface's options.
 //   /make?run=<id>           the thread, with its newest flower open
 //   &flower=<n>              an earlier flower of the thread (from 0)
 //   &stored=<id>             a stored flower
@@ -6,10 +7,13 @@
 //   &petal=<account>         the selected petal
 import type { Opened } from './thread.ts';
 
+export const WORKSPACE_BASE = '/make';
+
 export function workspaceUrl(v: {
   runId: string | null;
   open: Opened;
   petal: string | null;
+  base?: string | undefined;
 }): string | null {
   const q = new URLSearchParams();
   if (v.runId) q.set('run', v.runId);
@@ -18,7 +22,8 @@ export function workspaceUrl(v: {
   if (v.open.kind === 'shelf') q.set('shelf', '1');
   if (v.petal) q.set('petal', v.petal);
   const text = q.toString();
-  return text ? `/make?${text}` : null;
+  const base = v.base ?? WORKSPACE_BASE;
+  return text ? `${base}${base.includes('?') ? '&' : '?'}${text}` : null;
 }
 
 type Param = string | string[] | undefined;

@@ -1,11 +1,13 @@
 // The ViewModel of the workspace: the conversation (useMakeChat) and the panel beside it. Which flower
 // is open and which petal is selected are in the chat's reducer, so a new flower can take the panel;
 // this draws what's needed, projects the panel, keeps the address in step and hears Escape.
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { type ListedFlower, svgImage } from '../lib/flower-view.ts';
 import {
+  type CanvasFlower,
   composerTarget,
   flowerPanelView,
+  nextCanvas,
   type PanelFlower,
   type PanelView,
   questionPrefix,
@@ -28,8 +30,10 @@ export function useWorkspace(props: {
   shelf: ListedFlower[];
   initialOpen?: Opened;
   initialPetal?: string | null;
+  /** The page this conversation lives on, when it isn't /make (lib/workspace-url.ts). */
+  base?: string;
 }) {
-  const { shelf, ...chatProps } = props;
+  const { shelf, base, ...chatProps } = props;
   const { state: chat, dispatch, actions: chatActions, refs } = useMakeChat(chatProps);
   const { rows, open, petal, section, busy, runId, question, items, recorded } = chat;
 
@@ -113,6 +117,11 @@ export function useWorkspace(props: {
   const drawing = panelFlower ? drawings[panelFlower.key] : undefined;
   const selectedPetal = drawing?.petals?.find((p) => p.id === petal) ?? null;
 
+  // Adjusted during render, as React allows, so the canvas never paints a frame behind the panel.
+  const [canvas, setCanvas] = useState<CanvasFlower | null>(null);
+  const nextHeld = nextCanvas(canvas, panelFlower?.key, drawing?.reading);
+  if (nextHeld !== canvas) setCanvas(nextHeld);
+
   const panel = useMemo<PanelView>(() => {
     if (panelFlower) {
       return flowerPanelView({
@@ -146,13 +155,13 @@ export function useWorkspace(props: {
     () => composerTarget(panelFlower, selectedPetal),
     [panelFlower, selectedPetal],
   );
-  const composer = composerView({ question, runId, busy, recorded, target });
+  const composer = composerView({ question, runId, busy, recorded, target, base });
 
   // the address holds what a reload needs
   useEffect(() => {
-    const url = workspaceUrl({ runId, open, petal });
+    const url = workspaceUrl({ runId, open, petal, base });
     if (url) window.history.replaceState(null, '', url);
-  }, [runId, open, petal]);
+  }, [runId, open, petal, base]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -169,6 +178,7 @@ export function useWorkspace(props: {
       rows,
       composer,
       panel,
+      canvas,
       petal: selectedPetal,
       unit: panelFlower && facts.units[panelFlower.spec.selection.measure],
       section,

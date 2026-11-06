@@ -2,6 +2,7 @@
 // pointer, wheel and keyboard wired into it. All the state is in live.ts, the choices in marks.ts and
 // the drawing in scene.ts. React mounts this once and never renders per frame.
 import { type RefObject, useEffect } from 'react';
+import { keepCursor } from '../../viewmodels/useFloatBoxes.ts';
 import { fitView, flyTo, letGo, panBy, resize, zoomWheel } from './camera.ts';
 import type { HoverWay } from './hover.ts';
 import { fakeRelations } from './illustrative.ts';
@@ -182,6 +183,8 @@ export function useFlowerBench(svg: RefObject<SVGSVGElement | null>, options: Be
     node.addEventListener('pointermove', onMove);
     node.addEventListener('pointerleave', onLeave);
     node.addEventListener('pointerdown', onDown);
+    // Moving around the flower leaves the cursor where it was, so a chat can carry on.
+    node.addEventListener('mousedown', keepCursor);
     node.addEventListener('pointerup', onUp);
     node.addEventListener('pointercancel', onUp);
     node.addEventListener('wheel', onWheel, { passive: false });
@@ -231,6 +234,7 @@ export function useFlowerBench(svg: RefObject<SVGSVGElement | null>, options: Be
       node.removeEventListener('pointermove', onMove);
       node.removeEventListener('pointerleave', onLeave);
       node.removeEventListener('pointerdown', onDown);
+      node.removeEventListener('mousedown', keepCursor);
       node.removeEventListener('pointerup', onUp);
       node.removeEventListener('pointercancel', onUp);
       node.removeEventListener('wheel', onWheel);

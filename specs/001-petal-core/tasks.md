@@ -454,6 +454,7 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 - [X] T198 [W2] Relations index: rebuildable, with accounts in common between groups, dated and marked as a lower bound where coverage is partial. Depends on the graph measurements.
 - [ ] T199 [W7] Agents acting for a person: OAuth (DCR and CIMD) with Claude's and ChatGPT's signals, and link approval for HTTP agents.
 - [X] T300 [W8] Harden before public: disk, limits, stalls, spend accounting, publish caps, container lock.
+- [X] T200 [W6] The interaction page, blocked in at /lab/interaction: the live flower fills the window, with input and output as two boxes moved and sized by hand, on the ViewModels that work. `/make` stays until this replaces it (design/interaction-surface.md).
 
 ---
 

@@ -3,8 +3,7 @@
 // PETAL_LAB=1, like the lab, and it's read on each request so a build doesn't freeze the choice.
 import { notFound } from 'next/navigation';
 import { FlowerBench } from '../../../lab/flower/FlowerBench.tsx';
-import type { HoverWay } from '../../../lab/flower/hover.ts';
-import { DEFAULT_FLOWER, readingOf } from '../../../lab/flower/readings.ts';
+import { benchChoice } from '../../../lab/flower/readings.ts';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
@@ -18,19 +17,16 @@ type Query = Record<string, string | string[] | undefined>;
 
 export default async function FlowerLab({ searchParams }: { searchParams: Promise<Query> }) {
   if (process.env.NODE_ENV === 'production' && process.env.PETAL_LAB !== '1') notFound();
-  const q = await searchParams;
-  const name = typeof q.flower === 'string' ? q.flower : DEFAULT_FLOWER;
-  const reading = await readingOf(name);
-  if (!reading) notFound();
-  const hover: HoverWay = q.hover === 'lift' ? 'lift' : 'dock';
+  const bench = await benchChoice(await searchParams);
+  if (!bench) notFound();
   return (
     <FlowerBench
-      key={name}
-      reading={reading}
-      hover={hover}
-      relations={q.relations === '1'}
-      scatter={q.order === 'scatter'}
-      probe={q.probe === '1'}
+      key={bench.name}
+      reading={bench.reading}
+      hover={bench.hover}
+      relations={bench.relations}
+      scatter={bench.scatter}
+      probe={bench.probe}
     />
   );
 }

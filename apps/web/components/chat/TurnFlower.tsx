@@ -9,6 +9,7 @@ export function TurnFlower({
   sub,
   open,
   thumb,
+  openWord = 'In the panel',
   onOpen,
 }: {
   title: string;
@@ -16,6 +17,8 @@ export function TurnFlower({
   open: boolean;
   /** An image of the drawing, once it's drawn. */
   thumb?: string;
+  /** What the open row says about where its flower is. Where there's no panel, it isn't "In the panel". */
+  openWord?: string;
   onOpen?: () => void;
 }) {
   return (
@@ -28,7 +31,7 @@ export function TurnFlower({
           {sub}
         </Mono>
       </span>
-      <span className="shrink-0 type-caption text-muted">{open ? 'In the panel' : 'Show'}</span>
+      <span className="shrink-0 type-caption text-muted">{open ? openWord : 'Show'}</span>
     </Button>
   );
 }

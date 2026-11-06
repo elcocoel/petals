@@ -442,13 +442,29 @@
 }
 
 /* box.glass */
-:root[data-version="2"] [data-b="box"][data-kind="term"] {
+:root[data-version="2"] [data-b="box"]:is([data-kind="term"], [data-kind="float"]) {
   border-radius: var(--joy-radius-xl);
 }
 
 /* box.glass */
-:root[data-version="2"] [data-b="box"][data-kind="term"] > :first-child {
+:root[data-version="2"] [data-b="box"]:is([data-kind="term"], [data-kind="float"]) > :first-child {
   border-color: var(--joy-paint-edge);
+}
+
+/* A box over a canvas brings its own words and its own glass. Nothing behind it can be counted on. */
+/* box.glass */
+:root[data-version="2"] [data-b="box"][data-kind="float"] {
+  --text-muted: var(--joy-paint-muted);
+  --hairline: var(--joy-paint-hairline);
+  background-image: var(--joy-gradient-glow), var(--joy-glass-float);
+  backdrop-filter: var(--joy-glass-blur);
+}
+
+/* The thread scrolls under the box's soft foot. */
+/* box.glass */
+:root[data-version="2"] [data-b="box"][data-kind="float"] > :last-child {
+  border-end-start-radius: inherit;
+  border-end-end-radius: inherit;
 }
 
 /* box.paper */
@@ -459,8 +475,10 @@
   background-position: center;
 }
 
+/* A box that floats is there from the start, wherever a hand puts it. It's read and dragged, so none of
+   what follows moves or lights it: no rise, no lift, no spot, no tilt (JoyLayer leaves it out too). */
 /* box.rise */
-:root[data-version="2"][data-joy] [data-b="box"]:not([data-seen]) {
+:root[data-version="2"][data-joy] [data-b="box"]:not([data-seen], [data-kind="float"]) {
   opacity: 0;
 }
 
@@ -515,17 +533,19 @@
 
 @media (hover: hover) {
   /* box.lift */
-  :root[data-version="2"] :is([data-b="box"]:hover, a:hover > [data-b="box"]) {
+  :root[data-version="2"]
+    :is([data-b="box"]:not([data-kind="float"]):hover, a:hover > [data-b="box"]) {
     translate: 0 var(--joy-move-lift-box);
   }
 
   /* box.lift */
-  :root[data-version="2"] :is([data-b="box"]:hover, a:hover > [data-b="box"])::after {
+  :root[data-version="2"]
+    :is([data-b="box"]:not([data-kind="float"]):hover, a:hover > [data-b="box"])::after {
     opacity: 1;
   }
 
   /* box.spot */
-  :root[data-version="2"] [data-b="box"]:hover::before {
+  :root[data-version="2"] [data-b="box"]:not([data-kind="float"]):hover::before {
     opacity: 1;
   }
 

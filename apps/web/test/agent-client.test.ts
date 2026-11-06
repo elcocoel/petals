@@ -148,11 +148,17 @@ describe('followRun', () => {
 });
 
 describe('drawFlower', () => {
+  test('carries the reading when it comes back', async () => {
+    const reading = { title: 'A flower', petals: [] };
+    serve(json({ svg: '<svg/>', petals: [], legend: [], reading }));
+    expect(await drawFlower('{"a":1}')).toEqual({ svg: '<svg/>', petals: [], legend: [], reading });
+  });
+
   test('posts the spec as it was given and returns the drawing', async () => {
     const calls = serve(json({ svg: '<svg/>' }));
     expect(await drawFlower('{"a":1}')).toEqual({ svg: '<svg/>', petals: [], legend: [] });
     expect(calls[0]?.url).toBe('/api/v1/render');
-    expect(calls[0]?.init?.body).toBe('{"spec":{"a":1},"include_svg":true}');
+    expect(calls[0]?.init?.body).toBe('{"spec":{"a":1},"include_svg":true,"include_reading":true}');
   });
 
   test('throws the server’s message, or the status', async () => {

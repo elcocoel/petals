@@ -7,16 +7,19 @@ import { AskBox } from '../ui/AskBox.tsx';
 export function Composer({
   view,
   boxRef,
+  className = 'pt-text-gap pr-space-32 pb-space-32 pl-column-gap',
   onChange,
   onSend,
 }: {
   view: ComposerView;
   boxRef?: Ref<HTMLTextAreaElement>;
+  /** Where it sits in whatever holds it. By default, at the foot of the conversation's column. */
+  className?: string;
   onChange: (text: string) => void;
   onSend: () => void;
 }) {
   return (
-    <div className="flex shrink-0 flex-col gap-space-8 pt-text-gap pr-space-32 pb-space-32 pl-column-gap">
+    <div className={`flex shrink-0 flex-col gap-space-8 ${className}`}>
       {view.about && (
         <p data-quiet className="type-mono text-muted">
           {view.about}
