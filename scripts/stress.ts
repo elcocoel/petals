@@ -34,7 +34,13 @@ import {
   startRun,
 } from '@petal/agent';
 import type { AgentEvent } from '@petal/core/types';
-import { configFromEnv, createContext } from '@petal/tools';
+import {
+  configFromEnv,
+  createContext,
+  makeReadPage,
+  type PublicPage,
+  registry,
+} from '@petal/tools';
 import { CASES, type Case } from './stress-cases.ts';
 import { agentEnv, claudeArgs, readClaude } from './try-agent.ts';
 
@@ -187,6 +193,22 @@ function subscriptionClient(model: string): LlmClient {
   };
 }
 
+const stubPages =
+  (pages: Record<string, string>) =>
+  async (url: string): Promise<PublicPage> => {
+    const body = pages[url];
+    if (body === undefined) throw new Error('no such page in this test');
+    return {
+      status: 200,
+      location: null,
+      contentType: 'text/html',
+      body: Buffer.from(body),
+      truncated: false,
+      final_url: url,
+      redirects: 0,
+    };
+  };
+
 async function loopConversation(
   c: Case,
   model: string,
@@ -227,6 +249,14 @@ async function loopConversation(
           ledger: fileLedger(ledgerPath),
         }),
   };
+  // A case's stub pages stand in for read_page, which rightly refuses to read this machine.
+  const stubbed = c.pages
+    ? {
+        registry: registry.map((t) =>
+          t.name === 'read_page' ? makeReadPage({ fetchPage: stubPages(c.pages ?? {}) }) : t,
+        ),
+      }
+    : {};
   const told: Told[] = [];
   let thread: LlmMessage[] = [];
   const all: AgentEvent[] = [];
@@ -243,6 +273,7 @@ async function loopConversation(
       },
       { tools, llm, budget },
       {
+        ...stubbed,
         onThread: (t) => {
           thread = t;
         },

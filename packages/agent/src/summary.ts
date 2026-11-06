@@ -24,6 +24,22 @@ function line(name: string, out: Obj): string {
         .map((s) => obj(s).id);
       return `${arr(out.candidates).length} candidates${out.ambiguous ? ', several things share this name' : ''}; ${out.calls ?? '?'} calls; answered: ${said.join(', ') || 'none'}`;
     }
+    case 'read_chain': {
+      const said = arr(out.read).map((r) => {
+        const x = obj(r);
+        if (x.status !== 'answered') return `${x.chain} ${x.status}`;
+        const verified = obj(x.verified_source).name;
+        const calls = arr(x.calls).filter((c) => obj(c).ok).length;
+        return `${x.chain} ${x.kind}${verified ? ` ${verified}` : ''}${x.kind === 'contract' ? `, ${calls} calls answered` : ''}`;
+      });
+      return said.join('; ') || 'nothing read';
+    }
+    case 'read_page':
+      return `${out.status}: ${out.final_url ?? out.url ?? '?'}, ${String(out.text ?? '').length} characters, ${arr(out.addresses).length} addresses`;
+    case 'search':
+      return out.status === 'answered'
+        ? `${arr(out.results).length} results; first: ${obj(arr(out.results)[0]).url ?? 'none'}`
+        : `search ${out.status}`;
     case 'list_networks': {
       const ids = arr(out.networks).map((n) => obj(n).id);
       return `${ids.length} networks: ${ids.join(', ')}`;

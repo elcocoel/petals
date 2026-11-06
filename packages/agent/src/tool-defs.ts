@@ -120,6 +120,9 @@ export function llmTools(registry: readonly AnyTool[]): LlmToolDef[] {
 
 export const STAGE_OF: Record<string, Stage> = {
   find_target: 'fetching',
+  read_chain: 'fetching',
+  read_page: 'fetching',
+  search: 'fetching',
   list_flowers: 'reading_map',
   get_flower: 'reading_map',
   list_networks: 'fetching',

@@ -51,7 +51,8 @@ const CHAINS: { id: string; words: string[]; gecko?: string; evm?: string }[] = 
   { id: 'avalanche', words: ['avalanche', 'avax'], gecko: 'avax', evm: '43114' },
   { id: 'near', words: ['near'] },
 ];
-const chainByWord = (w: string) => CHAINS.find((c) => c.words.includes(w.trim().toLowerCase()));
+export const chainByWord = (w: string) =>
+  CHAINS.find((c) => c.words.includes(w.trim().toLowerCase()));
 
 /** Words that say what is wanted of a target, not which target. */
 const TRAILING = new Set(
@@ -684,6 +685,7 @@ function score(c: Working, asked: string | null): number {
   );
 }
 
+/** What this lookup found and what didn't answer, and how a draw goes. It tells no one to give up. */
 function nextStep(
   ctx: ToolContext,
   p: Parsed,
@@ -692,25 +694,25 @@ function nextStep(
   rivals: number,
   noDao: boolean,
 ): string {
+  const answered = l.sources.filter((s) => s.status === 'answered').map((s) => s.id);
   const failed = l.sources.filter((s) => s.status === 'failed').map((s) => s.id);
-  if (shown.length === 0) {
-    const down = failed.length ? ` These did not answer: ${failed.join(', ')}.` : '';
-    return (
-      `Nothing answers to "${p.core}"${p.chain ? ` on ${p.chain}` : ''}.${down} Ask one clear question: what is it, and does the person know its chain or address? ` +
-      `If you know its address yourself, call find_target with that address: the chain confirms what it is. Petal reads: ${readable(ctx)}.`
-    );
-  }
+  const down = failed.length
+    ? ` Did not answer: ${failed.join(', ')}, which says nothing about what they would have said.`
+    : '';
+  const checked = `Checked: ${answered.join(', ') || 'nothing'}.${down}`;
+  const open = `Not tried here: read_chain on an address, read_page on a page, search for a name.`;
+  if (shown.length === 0)
+    return `Nothing in these sources answers to "${p.core}"${p.chain ? ` on ${p.chain}` : ''}. ${checked} This lookup knows only these lists and Petal's own modules (${readable(ctx)}), so that isn't the same as not existing. ${open}`;
   if (noDao)
-    return `No DAO answers to "${p.core}" in these sources. What is listed only shares the name, so don't present it as the DAO. Ask one clear question: do they mean one of these, or do they have the DAO's address? If you know its address yourself, call find_target with that address: the chain confirms what it is.`;
+    return `No DAO answers to "${p.core}" in these sources, and what's listed only shares the name, so it isn't the DAO. ${checked} A DAO with no trading pool and no Snapshot space isn't in these lists. ${open}`;
   if (rivals > 0)
-    return 'Different things carry this name. Ask one clear question: which one to draw, if any, naming each with its chain and the evidence that separates them. Do not pick for the person.';
+    return `Different things carry this name, and the evidence listed is what separates them. None was picked: naming one is for the person. ${checked}`;
   if (shown.every((c) => c.draw.length === 0))
-    return `Found, but no module can draw it. Say why in plain words (cannot_draw), and what would work. Petal reads: ${readable(ctx)}.`;
+    return `Found, and no module can draw it: cannot_draw says why for each. ${checked} ${open}`;
   if (shown[0]?.draw.length === 0)
-    return 'The best match cannot be drawn: say why in plain words (its cannot_draw), then offer the ones listed that can.';
-  const also =
-    shown.length > 1 ? ' The others are listed: say they exist, and offer them if they fit.' : '';
-  return `One clear match, first in the list. Say what it is, with its chain and address, and whether Petal already holds it (stored).${also} Then ask a plain yes or no before starting a new read and drawing. Once the person has said yes, read it: draw[0], or the entry of draw the question asks for, with module as network and params as params in get_snapshot.`;
+    return `The best match can't be drawn (its cannot_draw says why), and others listed can. ${checked} ${open}`;
+  const also = shown.length > 1 ? ' Others are listed, and may fit better.' : '';
+  return `One clear match, first in the list, with its chain and address, and whether Petal already holds it (stored).${also} ${checked} A new read and drawing take a plain yes or no before starting a new read. After a yes, read it: draw[0], or the entry of draw the question asks for, with module as network and params as params in get_snapshot.`;
 }
 
 export function makeFindTarget(
@@ -802,10 +804,13 @@ export function makeFindTarget(
         (a, b) => score(b, p.chain) - score(a, p.chain),
       );
       await confirmOnChain(l, byEvidence);
-      // An address given by hand stays only where the chain knows it.
+      // An address given by hand stays only where the chain knows it. A chain that was down says
+      // nothing, so it's only worth a line when no chain knows it: `sources` names it either way.
       let all = byEvidence;
-      if (EVM_ADDRESS.test(p.core))
-        all = all.filter((c) => !c.confirmed || c.confirmed.answered.length);
+      if (EVM_ADDRESS.test(p.core)) {
+        const known = all.some((c) => c.confirmed?.answered.length);
+        all = all.filter((c) => (c.confirmed ? c.confirmed.answered.length : !known));
+      }
       for (const c of all) plan(c, ctx, rows);
       all.sort((a, b) => score(b, p.chain) - score(a, p.chain));
 

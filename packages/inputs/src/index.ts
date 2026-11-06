@@ -12,6 +12,16 @@ import type {
 } from '@petal/core/types';
 
 export { InputError, isInputError, type SourceFailure } from './errors.ts';
+export { encodeCall, eventTopic, selector } from './evm/abi.ts';
+export {
+  addressFrom,
+  decodeValues,
+  encodeArguments,
+  guessValue,
+  type ParsedSignature,
+  parseSignature,
+  revertReason,
+} from './evm/abi-values.ts';
 export {
   type AskOptions,
   askChain,
@@ -19,13 +29,16 @@ export {
   type EndpointFailure,
   Reverted,
 } from './evm/ask.ts';
-export { ARBITRUM, BASE, ETHEREUM, EVM_CHAINS, type EvmChain } from './evm/chains.ts';
+export { ARBITRUM, BASE, ETHEREUM, EVM_CHAINS, type EvmChain, GNOSIS } from './evm/chains.ts';
 export { type ContractIdentity, identifyContracts, type Ledger } from './evm/identify.ts';
 export {
+  decodeAggregate,
   EVM_ENDPOINTS,
   type EvmReader,
   type EvmReaderOptions,
+  encodeAggregate3,
   evmReader,
+  MULTICALL3,
 } from './evm/reader.ts';
 export { type FreshGate, getSnapshot, LATEST_REUSE_S } from './get-snapshot.ts';
 export {

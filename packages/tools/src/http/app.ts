@@ -94,6 +94,11 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   app.get('/api/v1/find', limit, (c) =>
     answer(c, 'find_target', pick(c.req.query(), ['query', 'chain', 'limit'], ['limit'])),
   );
+  app.post('/api/v1/read-chain', limit, async (c) => answer(c, 'read_chain', await body(c)));
+  app.get('/api/v1/read-page', limit, (c) =>
+    answer(c, 'read_page', pick(c.req.query(), ['url', 'start'], ['start'])),
+  );
+  app.get('/api/v1/search', limit, (c) => answer(c, 'search', pick(c.req.query(), ['query'])));
   app.get('/api/v1/networks', limit, (c) =>
     answer(c, 'list_networks', pick(c.req.query(), ['query'])),
   );

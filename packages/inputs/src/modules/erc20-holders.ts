@@ -29,7 +29,13 @@ import type {
 } from '@petal/core/types';
 import { InputError } from '../errors.ts';
 import { addressOf, encodeCall, eventTopic, shortAddress, stringAt, wordAt } from '../evm/abi.ts';
-import { ETHEREUM, EVM_CHAINS, type EvmChain } from '../evm/chains.ts';
+import {
+  ETHEREUM,
+  EVM_CHAIN_PATTERN,
+  EVM_CHAIN_WORDS,
+  EVM_CHAINS,
+  type EvmChain,
+} from '../evm/chains.ts';
 import { type HyperSyncStats, hypersyncLogPages } from '../evm/hypersync.ts';
 import { type EvmLog, type EvmReader, evmReader } from '../evm/reader.ts';
 import { fromBaseUnits } from '../import/spike.ts';
@@ -690,13 +696,12 @@ export const ERC20_HOLDERS_DESCRIPTOR: NetworkDescriptor = {
   population: 'erc20-holders',
   kind: 'other',
   title: 'ERC-20 holders, any token',
-  description:
-    'Holders of any ERC-20 token on Ethereum, Base or Arbitrum, chosen by chain and token address, read now. Where Blockscout answers: the largest holders. Otherwise only the addresses that moved the token in the last window_days, default 7, and the rest of the supply is not attributed.',
+  description: `Holders of any ERC-20 token on ${EVM_CHAIN_WORDS}, chosen by chain and token address, read now. Where Blockscout answers: the largest holders. Otherwise only the addresses that moved the token in the last window_days, default 7, and the rest of the supply is not attributed.`,
   params: {
     chain: {
       required: true,
-      description: 'ethereum, base or arbitrum',
-      pattern: '^(ethereum|base|arbitrum)$',
+      description: EVM_CHAIN_WORDS,
+      pattern: EVM_CHAIN_PATTERN,
       example: 'ethereum',
     },
     token: {
