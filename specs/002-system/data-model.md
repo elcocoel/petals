@@ -93,9 +93,10 @@ wallet_binding(person, network, caip10_encrypted, caip10_hash UNIQUE, proved_at)
 session(hash, subject, network, invite, expires_at)  -- subject: a person id (prs_) or an anonymous handle (anon_)
 challenge(nonce UNIQUE, expires_at, state, used_at)  -- state: issued, checking, used
 grant(id, person, client, scopes, token_hash, expires_at, revoked_at)
-exploration(id, owner, question, target, head, visibility, share_token_hash, forked_from, created_at, updated_at)
-step(exploration, seq, parent, spec_sha256, recipe_sha256, snapshot_sha256, door, note, at)
-note(exploration, seq, author, text, at)
+exploration(id, owner, question, target, head, visibility, share_token_hash, forked_from, created_at, updated_at)  -- owner may be null; head is a spec_sha256; share_token_hash is unused, see exploration_link
+exploration_link(id, exploration, scope, token_hash UNIQUE, created_at, revoked_at)  -- scope: read or continue
+step(exploration, seq, parent, spec_sha256, recipe_sha256, snapshot_sha256, door, author, note, at)  -- door: site, http, mcp, cli
+note(exploration, seq, author, door, text, at)  -- author: owner or link:<id>; fork: in front when a fork copied it; never a person id
 run(id, owner, exploration, status, model, body, created_at, updated_at)  -- body: messages, draft, flower
 run_event(run, seq, type, data, at)            -- append-only; seq from 0 is the place in Run.events
 run_thread(run, messages, updated_at)          -- each round
@@ -110,7 +111,22 @@ meta(key, value)
 schema_migration(version, applied_at)
 ```
 
-Not built yet: `grant`, `approval`. A run's `owner` never appears in what a reader of the run sees.
+Not built yet: `grant`, `approval`. A run's `owner` never appears in what a reader of the run sees, and an exploration's never appears in its resume packet.
+
+## An exploration
+
+A private, door-independent ref over public objects, like a git branch. Public objects hold no personal data; the question, notes and order live only in the ref.
+
+| Git | Petals |
+|---|---|
+| Blob | Snapshot, by hash |
+| Tree | Recipe, by hash: derived from the spec and its network's defaults, so it isn't stored |
+| Commit | Spec, by hash in `draft`, with `convention.variation_of` as its parent |
+| Tag | A flower published on NEAR |
+| Branch | The exploration, and `head` is where it points |
+| Reflog | Its steps |
+
+A step's parent is its spec's `variation_of`, or else the head it followed. Saving the head again adds no step. A spec's `meanings` are free text, so a `draft` row is only as free of personal data as what an agent wrote there.
 
 What the store must offer: point reads, put-if-absent with expiry, compare-and-swap on refs, ordered list by owner, a unique secondary index, atomic counters, read-your-writes.
 

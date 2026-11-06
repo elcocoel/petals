@@ -151,7 +151,8 @@ export function forModel(name: string, out: unknown): unknown {
       };
     }
     case 'render_flower': {
-      const { svg: _svg, petals: _petals, ...rest } = o;
+      // short_url is for the other doors. Here the loop puts the real link in (run.ts).
+      const { svg: _svg, petals: _petals, short_url: _short, ...rest } = o;
       const link = typeof o.spec_sha256 === 'string' ? draftLink(o.spec_sha256) : o.view_url;
       return { ...rest, view_url: link };
     }

@@ -52,6 +52,16 @@ Everything we know we'll have to solve. Each has a working default, so nothing h
 | 24 | Are function-call keys worth scheduling for agents writing as the maker? They can't sign NEP-413 and don't work in Claude or ChatGPT | After explorations | Later |
 | 25 | What's the recovery story for someone with one lost wallet? | Export, and honesty | Before any public promise |
 
+## Coming back
+
+| # | Question | Default | Bites |
+|---|---|---|---|
+| 25a | Anyone can start an exploration or store a spec with no sign-in, up to the tool rate limit. What stops someone filling the disk? | 60 calls a minute per address, a size limit on each row, and 500 steps and 500 notes on each exploration. No limit on how many unowned explorations exist, and nothing expires | Before going public |
+| 25b | An unowned exploration's link can't be revoked by anyone: no owner exists until it's claimed. Should its holder be able to? | No. Whoever holds it can claim it, then revoke it | When someone asks |
+| 25c | A link is a capability in a URL, so it lands in browser history and chat logs, and any proxy's logs. Does a `continue` link need an expiry? | No expiry, revocable. Petal's own logs don't print it | Before going public |
+| 25d | A fork copies notes and the question, so a read link's holder keeps them after it's revoked. Fine? | Yes: they could already read them. Authors stay marked `fork:` | When sharing shows up in the UI |
+| 25e | Conversations don't travel, but a site's run could pick up what another agent saved. Should a follow-up on the site tell the model about steps it didn't draw? | No prompt text. The site's chat already takes `draft: { spec }`, so the frontend can pass the packet's `current.spec` | When the frontend shows explorations |
+
 ## Data and the map
 
 | # | Question | Default | Bites |

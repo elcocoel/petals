@@ -2,7 +2,9 @@
 // asked only observes it: a viewer coming or going never touches the work. Viewers read the store's
 // log by cursor, so each sees every event once wherever it joins; a job only wakes them, so there is
 // no timer per viewer. Stop aborts the job's signal and waits for the job to say how it ended.
+// Each flower is also saved as a step of the run's exploration (SYS-041).
 import type { AgentEvent, ChatInput } from '@petal/core/types';
+import { saveRunStep } from '@petal/tools';
 import { Channel } from './channel.ts';
 import type { Budget, LlmMessage } from './llm.ts';
 import { type RunDeps, type RunOptions, startRun } from './run.ts';
@@ -67,6 +69,14 @@ export function runJobs(
         await runs.append(runId, e).catch(() => {
           job.unsaved.push(e);
         });
+        if (e.event === 'flower') {
+          try {
+            saveRunStep(deps.tools, runId, e.data.spec);
+          } catch (err) {
+            // the flower is drawn and in the run's log: a step that can't be saved doesn't undo that
+            console.warn(`petal: run ${runId} couldn't save a step: ${(err as Error).message}`);
+          }
+        }
         job.wake('new');
       };
       job.task = (async () => {

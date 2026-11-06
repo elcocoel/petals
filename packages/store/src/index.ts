@@ -6,6 +6,7 @@ export type {
   CreditEntryRow,
   CreditRow,
   DraftRow,
+  ExplorationLinkRow,
   ExplorationRow,
   InviteRow,
   LedgerRow,

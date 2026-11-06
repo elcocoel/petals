@@ -218,12 +218,13 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         });
       }
       let claimed = 0;
+      let explorations = 0;
       if (old && !isPerson(old.subject)) {
         claimed = store.run.moveOwner(old.subject, person);
-        store.exploration.moveOwner(old.subject, person);
+        explorations = store.exploration.moveOwner(old.subject, person);
       }
       if (old) store.session.delete(old.hash);
-      return { person, claimed };
+      return { person, claimed, explorations };
     });
     openSession(c, out.person, { network, invite: old?.invite });
     return out;
@@ -293,12 +294,13 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       );
     }
     if (!check.ok) return fail(c, 'unauthorised', `The signature was refused: ${check.reason}.`);
-    const { person, claimed } = signIn(c, network, proof.account_id);
+    const { person, claimed, explorations } = signIn(c, network, proof.account_id);
     return ok(c, {
       person_id: person,
       network,
       wallets: walletsOf(person),
       claimed_runs: claimed,
+      claimed_explorations: explorations,
     });
   });
 

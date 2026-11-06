@@ -64,11 +64,12 @@ export function mcpServer(ctx: ToolContext): McpServer {
       },
       async (args, extra) => {
         const token = extra.mcpReq._meta?.progressToken;
-        let runCtx = ctx;
+        // no session on this door yet, so a caller gets at an exploration through a link
+        let runCtx: ToolContext = { ...ctx, caller: { door: 'mcp' } };
         if (token !== undefined) {
           let n = 0;
           runCtx = {
-            ...ctx,
+            ...runCtx,
             onProgress: (e) => {
               ctx.onProgress?.(e);
               n += 1;

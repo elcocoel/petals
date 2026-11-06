@@ -248,6 +248,7 @@ function runOf(row: RunRow, events: AgentEvent[]): Run {
     events,
     ...(body.draft ? { draft: body.draft } : {}),
     ...(body.flower ? { flower: body.flower } : {}),
+    ...(row.exploration ? { exploration: row.exploration } : {}),
     created_at: row.created_at,
     updated_at: row.updated_at,
   };

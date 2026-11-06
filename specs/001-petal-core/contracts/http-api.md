@@ -14,7 +14,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 
 - JSON in and out, UTF-8. `tools_version` in every response.
 - No account, key or payment is needed for anything except publishing and Petal's own agent (FR-030, SYS-051).
-- CORS: open on the tool and agent routes, so agents and other sites can call them, with no `Access-Control-Allow-Credentials`, so a browser never sends a session across origins. The auth routes and `/api/v1/me` send no CORS headers.
+- CORS: open on the tool and agent routes, so agents and other sites can call them, with no `Access-Control-Allow-Credentials`, so a browser never sends a session across origins. The auth routes, `/api/v1/me` and `/api/v1/explorations` send no CORS headers.
 - Rate limits per IP (in memory in Phase A): 60 tool calls per minute; 10 new agent chats per hour, plus 60 follow-ups per hour on an existing run. Over the limit: `429` with `{ error: { code: "rate_limited", retry_after_s } }`.
 - Errors: HTTP status from the error code (`bad_input` 400, `unauthorised` 401, `invite_required` 403, `not_found` 404, `cannot_read` 422, `invalid_spec` 422, `rate_limited` 429, `budget_exhausted` 429, `source_failed` 502, `internal` 500), body `{ error: { code, message, hint } }`.
 - Long tools (`get_snapshot` on a live pull) accept `Accept: text/event-stream` and then stream `progress` events before the final `result` event.
@@ -47,13 +47,24 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `GET /api/v1/relations/related?group=&by=&limit=` | `related_groups` |
 | `GET /api/v1/relations/overview?min_shared=&kind=&limit=` | `relations_overview` |
 | `GET /api/v1/relations/path?account_a=&account_b=&max_depth=&budget=&include_inferred=` | `power_path` |
+| `GET /api/v1/explorations?limit=` | `list_explorations` ([below](#explorations-and-links)) |
+| `POST /api/v1/explorations` | `start_exploration` |
+| `GET /api/v1/explorations/:ref` | `get_exploration`; `:ref` is an id or a link's token |
+| `POST /api/v1/explorations/:ref/steps` | `save_step`, body without `exploration` |
+| `POST /api/v1/explorations/:ref/notes` | `add_note`, body without `exploration` |
+| `POST /api/v1/explorations/:ref/claim` | a session takes an unowned exploration with its continue link: `{ exploration, claimed }` |
+| `GET /api/v1/explorations/:id/links` | owner only: `{ links: [{ id, scope, created_at, revoked_at }] }`, with no tokens |
+| `POST /api/v1/explorations/:id/links` | owner only, body `{ scope: "read" \| "continue" }`: `{ id, scope, url, created_at }`, its token shown this once |
+| `POST /api/v1/explorations/:id/links/:link/revoke` | owner only: `{ id, revoked_at }` |
+| `GET /d/:hash` | a short draft link: `302` to `/draft?spec=`, relative, with the spec hashed again on read. `404` for an unknown hash |
+| `GET /s/:token` | a link's resume packet as markdown, `text/plain`, `no-store`, for an agent that can only fetch a URL. `404`, plain text, for anything else |
 | `POST /api/v1/agent/chat` | Petal's agent, SSE (below). With `Accept: application/json` alone: `202 { run_id, status: "running" }` at once, and the run goes on unwatched. Agent route. Refused without a sponsored invite when gated. |
-| `GET /api/v1/agent/runs/:id` | a stored run: `{ run_id, status: "running" \| "done" \| "failed" \| "stopped" \| "interrupted", messages, events, flower? }`; with `Accept: text/event-stream`, replays stored events from the cursor (`Last-Event-ID`, or `?from=<seq>`), then streams new ones until the run ends. Agent route. |
+| `GET /api/v1/agent/runs/:id` | a stored run: `{ run_id, status: "running" \| "done" \| "failed" \| "stopped" \| "interrupted", messages, events, flower?, exploration? }`; with `Accept: text/event-stream`, replays stored events from the cursor (`Last-Event-ID`, or `?from=<seq>`), then streams new ones until the run ends. Agent route. |
 | `POST /api/v1/agent/runs/:id/stop` | Stop (below). `{ run_id, status, stopped, already_finished }`. Agent route. |
 | `GET /api/v1/attestations/:sha256` | the NEAR AI attestation report Petal stored for a model signature (`report_sha256`), `application/json`, immutable cache headers. Agent route. |
 | `GET /api/v1/health` | `{ ok, map: "up"|"down"|"mirror", llm: "up"|"down"|"recorded", agent_access: "gated"|"open", version, commit }`; `commit` is what a deploy witnesses, null locally |
 | `POST /api/v1/auth/challenge` | `{ nonce, message, recipient, expires_at }` ([below](#sign-in-sessions-and-invites)) |
-| `POST /api/v1/auth/verify` | body `{ network, proof }`: `{ person_id, network, wallets, claimed_runs }`, and sets the session |
+| `POST /api/v1/auth/verify` | body `{ network, proof }`: `{ person_id, network, wallets, claimed_runs, claimed_explorations }`, and sets the session |
 | `POST /api/v1/auth/logout` | `{ ok: true }`, and clears the session |
 | `POST /api/v1/auth/invite` | body `{ token }`: `{ invite }`, and holds it in this session |
 | `GET /api/v1/auth/invite` | `{ invite }` this session holds, or `{ invite: null }` |
@@ -102,7 +113,7 @@ The server reads three settings. `PETAL_API` is the site's public address: the r
 
 1. `POST /api/v1/auth/challenge`, no body: `{ nonce, message, recipient, expires_at }`. `recipient` is the site's hostname; `message` is a plain sentence naming it; `nonce` is 32 bytes as base64, valid 5 minutes, single use. These go to the wallet as they are.
 2. `POST /api/v1/auth/verify`, body `{ "network": "testnet" | "mainnet", "proof": Nep413Proof }`, where a proof is `{ type: "nep413", account_id, public_key, signature, message, nonce, recipient }`. A signature may be base64, base58, or `ed25519:` and base58. The key must be a full-access key of the account, read with `view_access_key` on that network. An implicit account that doesn't exist yet passes when its id is the hex of the signing key, and only while `view_account` says it doesn't exist.
-3. On success, in one step: the person is found or created, the wallet bound, an anonymous session's runs and explorations move to them, and a new session replaces the old one, keeping its invite. `{ person_id, network, wallets: [{ caip10, network, account_id, proved_at }], claimed_runs }`. A first sign-in reads the same as a returning one.
+3. On success, in one step: the person is found or created, the wallet bound, an anonymous session's runs and explorations move to them, and a new session replaces the old one, keeping its invite. `{ person_id, network, wallets: [{ caip10, network, account_id, proved_at }], claimed_runs, claimed_explorations }`. A first sign-in reads the same as a returning one.
 
 Refused with `unauthorised` (401): another message, another recipient, a bad signature, a nonce that's unknown, used or expired, a key that isn't a full-access key of the account. NEAR's RPC not answering is `source_failed` (502), and the same proof can be sent again. A person signing in with another wallet changes person; nothing is merged. Linking a second wallet (SYS-023) isn't built yet.
 
@@ -119,6 +130,14 @@ Refused with `unauthorised` (401): another message, another recipient, a bad sig
 Each model call of a chat reserves against the invite and the daily cap, then settles both, so the last call can pass the budget by what it costs. When the budget ends, the chat's stream carries `error` with `budget_exhausted` and a plain message, then `done`, and the next chat answers `429` with the same message before any model call. An invite revoked or expired mid-chat stops at the next call the same way, and the next chat answers `403 invite_required`. A restart gives back every hold on an invite.
 
 **402 from NEAR AI.** `budget_exhausted` with a plain message for each kind: `api_key_limit_exceeded` (the key's own lifetime limit), `insufficient_credits`, `no_credits`, `no_limit_configured` (the sponsor account) and any other (unknown). None is retried on another model, and the figures in NEAR AI's message stay out of the event.
+
+## Explorations and links
+
+The tools are in [tools.md](./tools.md#explorations-m-system-t194-additive-still-toolsv1); these routes add a session. They read the cookie, so they send no CORS headers, `Cache-Control: no-store`, and a POST from another site answers `unauthorised`. To anyone without access an exploration answers `404`, one body whatever the reason.
+
+A link is 32 random bytes in base64url, and only its hash is stored. Making, listing and revoking links takes the owner's session, an anonymous one included, and never a link. An exploration moves with its anonymous session at sign-in. A site's run makes one at its first flower, and each new flower is a step, door `site`.
+
+**In the web app:** `apps/web/app/d/[hash]/route.ts` and `apps/web/app/s/[token]/route.ts` are route handlers with no page, which pass to this app as `/mcp`'s does.
 
 ## MCP
 
