@@ -84,10 +84,12 @@ describe('rpcPool', () => {
         return new Response(JSON.stringify(ok({}).body));
       }) as typeof fetch,
     });
+    const start = Date.now();
     await Promise.all([1, 2, 3].map(() => pool.call('query', viewParams)));
     expect(times).toHaveLength(3);
-    for (let i = 1; i < times.length; i++)
-      expect((times[i] ?? 0) - (times[i - 1] ?? 0)).toBeGreaterThanOrEqual(35);
+    // From the start, not between calls: a stalled machine can bunch two up, but a slot never comes early.
+    for (let i = 0; i < times.length; i++)
+      expect((times[i] ?? 0) - start).toBeGreaterThanOrEqual(i * 40 - 5);
   });
 
   test('a 429 pauses that endpoint and the call moves on to the next', async () => {
