@@ -335,7 +335,9 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       from: s.author ?? 'owner',
       at: s.at,
       spec_sha256: s.spec_sha256,
-      short_url: s.spec_sha256 ? `${(tools.config.apiBase ?? '').replace(/\/+$/, '')}/d/${s.spec_sha256}` : null,
+      short_url: s.spec_sha256
+        ? `${(tools.config.apiBase ?? '').replace(/\/+$/, '')}/d/${s.spec_sha256}`
+        : null,
       text: s.note,
     }));
     const notes = store.note.list(exploration).map((n) => ({
@@ -498,7 +500,10 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
    * A change, and what search held for it goes. A later search can't be left to notice by time: a change
    * in the millisecond it last looked would read as no change.
    */
-  function saveFollow(known: FollowRow, row: Pick<FollowRow, 'label' | 'spec_sha256' | 'updated_at'>) {
+  function saveFollow(
+    known: FollowRow,
+    row: Pick<FollowRow, 'label' | 'spec_sha256' | 'updated_at'>,
+  ) {
     store.tx(() => {
       store.follow.update(known.id, row);
       store.search.forget(known.owner, 'follow', known.id);
@@ -754,7 +759,14 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
         const about = `exploration:${e.id}`;
         store.search.forgetAbout(owner, about);
         store.search.put(
-          { owner, kind: 'exploration', ref: e.id, title: e.question, about: null, at: e.updated_at },
+          {
+            owner,
+            kind: 'exploration',
+            ref: e.id,
+            title: e.question,
+            about: null,
+            at: e.updated_at,
+          },
           null,
         );
         const noted = store.note.list(e.id);

@@ -384,7 +384,9 @@ describe('work from other doors (the pane is never empty)', () => {
     const id = doorWork(db, null);
     expect((await body(await b.get('/api/v1/conversations'))).conversations).toEqual([]);
     expect((await b.get(`/api/v1/conversations/${id}`)).status).toBe(404);
-    expect((await b.post('/api/v1/agent/chat', ask('go on', { exploration: id }))).status).toBe(404);
+    expect((await b.post('/api/v1/agent/chat', ask('go on', { exploration: id }))).status).toBe(
+      404,
+    );
   });
 
   test('continuing starts a run on that exploration, and the list then shows the run', async () => {
