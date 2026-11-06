@@ -10,10 +10,10 @@ export default async function Connect() {
   const origin = originFrom(await headers());
   return (
     <>
-      <h1>Use Petal from your own AI</h1>
+      <h1>Use Petals from your own AI</h1>
       <p>
         Nothing to install. Every door here reaches the same tools, the same rules and the same
-        flowers. Or just <a href="/make">talk to Petal’s agent here</a>.
+        flowers. Or just <a href="/make">talk to Petals’ agent here</a>.
       </p>
       {doors(origin).map((d) => (
         <section key={d.id} id={d.id}>
