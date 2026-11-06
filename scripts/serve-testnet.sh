@@ -22,6 +22,6 @@ export PETAL_LAB=1
 # Elco's own tool: no sponsored invite. Without petal-wallet.env, sign-ins last until a restart.
 export PETAL_AGENT_ACCESS=open
 [ -f apps/web/.next/BUILD_ID ] || pnpm --filter @petal/web build
-# Localhost only: this copy spends on an open agent, and the container can reach any host port bound
-# to all interfaces through its gateway.
-PORT="${PORT:-3080}" exec pnpm --filter @petal/web start --hostname 127.0.0.1
+# Localhost only, from the package's start script: this copy spends on an open agent, and the container
+# can reach any host port bound to all interfaces through its gateway.
+PORT="${PORT:-3080}" exec pnpm --filter @petal/web start

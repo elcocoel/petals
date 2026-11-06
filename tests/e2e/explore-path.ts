@@ -595,7 +595,11 @@ async function realClaude(owner: Browser, id: string) {
   console.log('\n# a real Claude with only web requests, reading /s/<token>');
   const bare = await ask(['--bare']);
   check('try-agent exited 0', bare.code === 0, bare.code);
-  check('it read the packet', /validators/i.test(bare.text), { wrote_back: bare.added });
+  // Its words vary: what shows it read the packet is the topic, or the current spec named from it.
+  const head = (await owner.json(`/explorations/${id}`)).current.spec_sha256.slice(0, 8);
+  check('it read the packet', /validators/i.test(bare.text) || bare.text.includes(head), {
+    wrote_back: bare.added,
+  });
 }
 
 /** Through a web app someone else started: Next's route handlers, the same store. */
