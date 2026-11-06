@@ -19,7 +19,7 @@ import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { versioned } from '../define.ts';
 import { specBody } from '../drafts.ts';
-import { fromThrown, toolError } from '../errors.ts';
+import { fromThrown, isToolError, toolError } from '../errors.ts';
 import { findTool } from '../registry.ts';
 import {
   claimExploration,
@@ -54,10 +54,12 @@ export function explorationRoutes(
     ...ctx,
     caller: { subject: gate?.subjectOf(c) ?? null, door: 'http' },
   });
-  const tool = (c: Context, name: string, input: unknown) => {
+  /** A body that wasn't JSON comes here as its error. */
+  const answer = async (c: Context, name: string, input: unknown) => {
+    if (isToolError(input)) return respond(c, input);
     const t = findTool(name);
-    if (!t) return Promise.resolve(versioned(toolError('internal', `No tool ${name}.`)));
-    return t.run(input, asCaller(c));
+    if (!t) return fail(c, toolError('internal', `No tool ${name}.`));
+    return respond(c, await t.run(input, asCaller(c)));
   };
   /** Runs `f`, and turns what it throws into the usual error. */
   const attempt = (c: Context, f: () => object) => {
@@ -70,7 +72,7 @@ export function explorationRoutes(
   /** The body, with the ref from the path; a body that isn't an object stays for the schema to refuse. */
   const withRef = async (c: Context) => {
     const b = await body(c);
-    if (!b || typeof b !== 'object' || Array.isArray(b) || 'error' in b) return b;
+    if (!b || typeof b !== 'object' || Array.isArray(b) || isToolError(b)) return b;
     return { ...b, exploration: c.req.param('ref') };
   };
 
@@ -90,31 +92,23 @@ export function explorationRoutes(
     onError: (c) => fail(c, toolError('bad_input', 'The body is larger than 256 KiB.')),
   });
 
-  // Answered here, so httpApp's open CORS can't answer a preflight for these.
-  app.options('/api/v1/explorations', (c) => c.body(null, 204));
+  // Answered here, so httpApp's open CORS can't answer a preflight for these. In Hono, /a/* is /a too.
   app.options('/api/v1/explorations/*', (c) => c.body(null, 204));
-  for (const path of ['/api/v1/explorations', '/api/v1/explorations/*']) {
-    app.use(path, noCache, sameSite, limit, small);
-  }
+  app.use('/api/v1/explorations/*', noCache, sameSite, limit, small);
 
   app.get('/api/v1/explorations', async (c) => {
     const raw = c.req.query('limit');
     const input = raw === undefined ? {} : { limit: /^\d+$/.test(raw) ? Number(raw) : raw };
-    return respond(c, await tool(c, 'list_explorations', input));
+    return answer(c, 'list_explorations', input);
   });
-  app.post('/api/v1/explorations', async (c) => {
-    const input = await body(c);
-    return respond(c, await tool(c, 'start_exploration', input));
-  });
-  app.get('/api/v1/explorations/:ref', async (c) =>
-    respond(c, await tool(c, 'get_exploration', { exploration: c.req.param('ref') })),
+  app.post('/api/v1/explorations', async (c) => answer(c, 'start_exploration', await body(c)));
+  app.get('/api/v1/explorations/:ref', (c) =>
+    answer(c, 'get_exploration', { exploration: c.req.param('ref') }),
   );
   app.post('/api/v1/explorations/:ref/steps', async (c) =>
-    respond(c, await tool(c, 'save_step', await withRef(c))),
+    answer(c, 'save_step', await withRef(c)),
   );
-  app.post('/api/v1/explorations/:ref/notes', async (c) =>
-    respond(c, await tool(c, 'add_note', await withRef(c))),
-  );
+  app.post('/api/v1/explorations/:ref/notes', async (c) => answer(c, 'add_note', await withRef(c)));
   app.post('/api/v1/explorations/:ref/claim', (c) =>
     attempt(c, () => claimExploration(asCaller(c), c.req.param('ref'))),
   );

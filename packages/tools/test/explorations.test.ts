@@ -144,6 +144,34 @@ describe('private by default', () => {
   });
 });
 
+describe('the HTTP door', () => {
+  test('a body that is not JSON says so, on each route that takes one', async () => {
+    const app = door();
+    for (const path of [
+      '/api/v1/explorations',
+      `/api/v1/explorations/exp_${'0'.repeat(24)}/notes`,
+    ]) {
+      const res = await app.request(path, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: 'not json',
+      });
+      expect(res.status, path).toBe(400);
+      expect(((await res.json()) as Out).error.message, path).toMatch(/not JSON/);
+    }
+    const list = await app.request('/api/v1/explorations', { headers: person('prs_a') });
+    expect(list.headers.get('cache-control')).toBe('no-store');
+  });
+
+  test('each request counts once against the limit, the bare path too', async () => {
+    const app = door();
+    const call = () =>
+      app.request('/api/v1/explorations', { headers: { 'x-forwarded-for': '10.9.9.9' } });
+    for (let i = 0; i < 60; i++) expect((await call()).status).toBe(401);
+    expect((await call()).status).toBe(429);
+  });
+});
+
 describe('links', () => {
   async function owned() {
     const app = door();
