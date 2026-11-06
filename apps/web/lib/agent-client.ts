@@ -12,6 +12,7 @@ import type {
   Reading,
   Run,
 } from '@petal/core/types';
+import type { Settings } from './composer-options.ts';
 import type { ListedConversation } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
@@ -20,6 +21,8 @@ import { readSse } from './sse.ts';
 export interface ChatRequest {
   messages: ChatMessage[];
   run_id?: string;
+  /** a pick for this conversation, from here on */
+  settings?: Settings;
 }
 
 export type RunRead = { ok: true; run: Run } | { ok: false; code: string; message: string };
@@ -97,6 +100,91 @@ export async function readElsewhere(ref: string): Promise<ElsewhereRead> {
   if (!res.ok || json.error) return { failed: json.error?.message ?? `HTTP ${res.status}` };
   return { packet: json as unknown as Extract<ElsewhereRead, { packet: unknown }>['packet'] };
 }
+
+/** What the composer shows of a conversation: its settings, and which model answered last. */
+export interface ConversationFacts {
+  settings: Settings;
+  answered: string | null;
+}
+
+export async function readConversationFacts(id: string): Promise<ConversationFacts | null> {
+  const res = await fetch(`/api/v1/conversations/${encodeURIComponent(id)}`);
+  if (!res.ok) return null;
+  const { conversation } = (await res.json()) as {
+    conversation: { settings: Settings; turns: { model: string }[] };
+  };
+  return { settings: conversation.settings, answered: conversation.turns.at(-1)?.model ?? null };
+}
+
+/** A pick on a conversation that's already going, kept now rather than at its next message. */
+export async function saveSettings(id: string, settings: Settings): Promise<void> {
+  await fetch(`/api/v1/conversations/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ settings }),
+  });
+}
+
+export interface Challenge {
+  nonce: string;
+  message: string;
+  recipient: string;
+  expires_at: string;
+}
+
+/** What signing in asks of the server. A flow takes this, so a test can hand it a fake. */
+export interface SessionClient {
+  /** The account they're connected with, or null if no one is. */
+  me(): Promise<string | null>;
+  challenge(): Promise<Challenge>;
+  verify(network: string, proof: Nep413Proof): Promise<void>;
+  logout(): Promise<void>;
+}
+
+class Refused extends Error {
+  code: string;
+  constructor(code: string, message: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
+/** Why the server refused, for a flow that says different things to different refusals. */
+export const refusalCode = (e: unknown) => (e instanceof Refused ? e.code : null);
+
+async function sessionPost<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const json = (await res.json().catch(() => ({}))) as T & {
+    error?: { code: string; message: string };
+  };
+  if (!res.ok || json.error) {
+    throw new Refused(json.error?.code ?? 'internal', json.error?.message ?? `HTTP ${res.status}`);
+  }
+  return json;
+}
+
+export const sessionClient: SessionClient = {
+  async me() {
+    const res = await fetch('/api/v1/me');
+    if (!res.ok) return null;
+    const { network, wallets } = (await res.json()) as {
+      network: string;
+      wallets: { network: string; account_id: string }[];
+    };
+    return (wallets.find((w) => w.network === network) ?? wallets[0])?.account_id ?? null;
+  },
+  challenge: () => sessionPost<Challenge>('/api/v1/auth/challenge', {}),
+  async verify(network, proof) {
+    await sessionPost('/api/v1/auth/verify', { network, proof });
+  },
+  async logout() {
+    await sessionPost('/api/v1/auth/logout', {});
+  },
+};
 
 /**
  * Makes an agent's work this browser's, by the continue link the agent holds, so it joins their list.

@@ -8,11 +8,16 @@
 import type { SurfaceName } from '@petal/tokens';
 import { useEffect } from 'react';
 import { Composer } from '../components/chat/Composer.tsx';
+import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
+import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
+import { WhoIsHere } from '../components/chat/WhoIsHere.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
+import type { Catalogue } from '../lib/composer-options.ts';
+import { doorWords } from '../lib/door-words.ts';
 import { conversationBoxes, recordedBoxes } from '../lib/float-box.ts';
 import type { ListedFlower } from '../lib/flower-view.ts';
 import type { CanvasFlower } from '../lib/panel-view.ts';
@@ -22,7 +27,7 @@ import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
 import { FlowerPanel } from './FlowerPanel.tsx';
 
-const BOXES = ['output', 'input', 'panel', 'list'] as const;
+const BOXES = ['output', 'input', 'panel', 'list', 'options'] as const;
 
 export function InteractionSurface({
   scatter,
@@ -35,6 +40,7 @@ export function InteractionSurface({
   probe: boolean;
   surface: SurfaceName;
   initialRun?: string | undefined;
+  catalogue?: Catalogue | null;
   initialQuestion: string | null;
   recorded: boolean;
   opening: string;
@@ -53,6 +59,10 @@ export function InteractionSurface({
   useEffect(() => {
     if (state.listOpen) raiseList();
   }, [state.listOpen, raiseList]);
+  const raiseOptions = hands.options.raise;
+  useEffect(() => {
+    if (state.modelsOpen) raiseOptions();
+  }, [state.modelsOpen, raiseOptions]);
   const { onCanvas, panel } = state;
   return (
     <>
@@ -71,7 +81,7 @@ export function InteractionSurface({
         surface={surface}
         hand={hands.output}
         control={
-          state.conversations.length > 0 ? (
+          state.hasList ? (
             <Button variant="link" onClick={actions.toggleList}>
               Conversations
             </Button>
@@ -92,18 +102,45 @@ export function InteractionSurface({
         />
       </FloatBox>
       <FloatBox
-        label={state.composer.label}
-        title={state.composer.label}
+        label={state.needsWallet ? doorWords.connect : state.composer.label}
+        title={state.needsWallet ? doorWords.connect : state.composer.label}
         surface={surface}
         hand={hands.input}
       >
-        <Composer
-          view={state.composer}
-          boxRef={refs.box}
-          className="px-block-gap pt-text-gap pb-block-gap"
-          onChange={actions.setQuestion}
-          onSend={() => void actions.send()}
-        />
+        {state.needsWallet && (
+          <ConnectWallet
+            question={state.question}
+            busy={state.session.busy}
+            failed={state.session.failed}
+            onConnect={state.session.connect}
+          />
+        )}
+        {/* Hidden, not gone, so what's in it and the way to it stay while someone connects. */}
+        <div hidden={!state.composerShown}>
+          <Composer
+            view={state.composer}
+            boxRef={refs.box}
+            className="px-block-gap pt-text-gap pb-block-gap"
+            controls={
+              state.pill && (
+                <Button variant="pill" pressed={state.modelsOpen} onClick={actions.toggleModels}>
+                  {state.pill}
+                </Button>
+              )
+            }
+            onChange={actions.setQuestion}
+            onSend={() => void actions.send()}
+          />
+        </div>
+      </FloatBox>
+      <FloatBox
+        label="Model"
+        title="Model"
+        surface={surface}
+        hand={hands.options}
+        closed={!state.modelsOpen}
+      >
+        <ModelOptions options={state.models} onPick={actions.pickModel} />
       </FloatBox>
       <FloatBox
         label="Conversations"
@@ -117,6 +154,9 @@ export function InteractionSurface({
           </Button>
         }
       >
+        {state.session.account && (
+          <WhoIsHere account={state.session.account} onDisconnect={state.session.disconnect} />
+        )}
         <ConversationList rows={state.conversations} />
       </FloatBox>
       <FloatBox
