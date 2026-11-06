@@ -36,12 +36,12 @@ const grain = ([r, g, b]: [number, number, number], alpha: number) => {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 ${r} 0 0 0 0 ${g} 0 0 0 0 ${b} 0 0 0 ${alpha} 0'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 };
-const INK_GRAIN: [number, number, number] = [0.09, 0.09, 0.09];
 const LIGHT_GRAIN: [number, number, number] = [1, 1, 1];
 
 // Elco's soft textures, drawn by code: Brand guide, "Image generations", 33:646, 33:647 and 33:648. Each
-// is a PNG of megabytes there; each tile here is under 2 KB and stays sharp at any density. They hold still.
-// What moves is a soft tone over them, drawn by apps/web/app/versions/drift.ts from `script.drift` below.
+// is a PNG of megabytes there; each tile here is under 2 KB and stays sharp at any density. Elco, on the
+// first pass: "Everything has a texture", so they're faint now, and only where a band needs one. What
+// moves is in apps/web/app/versions/drift.ts, from `script.drift` below, or runs in the compositor.
 
 /** An SVG as a CSS image, escaping only what url("") really needs, so a small tile stays small. */
 const tile = (width: number, height: number, body: string) => {
@@ -72,6 +72,21 @@ const felt = (alpha: number) => {
   );
 };
 
+/**
+ * Static seen from far away, for the stone band: the felt's two-sided noise, but with no slant and no
+ * length to it. Elco on the felt there: "It looks right now like brushed metal". Its tile stitches, so two
+ * of them can slide over each other in the compositor with no edge.
+ */
+const speckle = (alpha: number) => {
+  const row = '2.4 0 0 0 -.7';
+  const flip = "type='discrete' tableValues='.09 1'";
+  return tile(
+    256,
+    256,
+    `<filter id='f' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='2' seed='9' stitchTiles='stitch'/><feColorMatrix values='${row} ${row} ${row} ${row}'/><feComponentTransfer><feFuncR ${flip}/><feFuncG ${flip}/><feFuncB ${flip}/><feFuncA type='table' tableValues='${alpha} 0 ${alpha}'/></feComponentTransfer></filter><rect width='256' height='256' filter='url(#f)'/>`,
+  );
+};
+
 /** A seeded walk, so the emitted CSS is the same every time. */
 const walk = (seed: number) => {
   let at = seed;
@@ -86,9 +101,10 @@ const walk = (seed: number) => {
  * across the rows so it doesn't smear dots into dashes. The lattice is a square one turned 26.6 degrees,
  * basis (6,3) and (-3,6), which fits a 45px cell. Each dot is nudged on its own, and slow noise bends the
  * whole thing, so no row stays straight and the cell doesn't show. Elco's second ink is blue; ours aren't.
+ * Elco: "Especially the green dotted one". It's barely there now, so content reads as on a clean page.
  */
-const SCREEN_DOT = 0.72;
-const SCREEN_OFFSET = 0.12;
+const SCREEN_DOT = 0.15;
+const SCREEN_OFFSET = 0.02;
 const screen = () => {
   const next = walk(11);
   const cell = 45;
@@ -108,86 +124,94 @@ const screen = () => {
   return tile(
     315,
     315,
-    `<defs><pattern id='d' width='${cell}' height='${cell}' patternUnits='userSpaceOnUse'><path d='${d}' stroke='#000' stroke-width='${width}' stroke-linecap='round'/></pattern><filter id='s' filterUnits='userSpaceOnUse' x='-20' y='-20' width='355' height='355' color-interpolation-filters='sRGB'><feTurbulence x='0' y='0' width='315' height='315' type='fractalNoise' baseFrequency='.06' numOctaves='1' seed='4' stitchTiles='stitch' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='5' xChannelSelector='R' yChannelSelector='G'/><feGaussianBlur stdDeviation='.2' result='g'/><feColorMatrix in='g' values='${inkIn('Ink', SCREEN_OFFSET)}'/><feOffset dx='-.5' dy='.8' result='o'/><feColorMatrix in='g' values='${inkIn('Mint', SCREEN_DOT)}'/><feMerge><feMergeNode in='o'/><feMergeNode/></feMerge></filter></defs><rect x='-20' y='-20' width='355' height='355' fill='url(#d)' filter='url(#s)'/>`,
+    `<defs><pattern id='d' width='${cell}' height='${cell}' patternUnits='userSpaceOnUse'><path d='${d}' stroke='#000' stroke-width='${width}' stroke-linecap='round'/></pattern><filter id='s' filterUnits='userSpaceOnUse' x='-20' y='-20' width='355' height='355' color-interpolation-filters='sRGB'><feTurbulence x='0' y='0' width='315' height='315' type='fractalNoise' baseFrequency='.06' numOctaves='1' seed='4' stitchTiles='stitch' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='5' xChannelSelector='R' yChannelSelector='G'/><feGaussianBlur stdDeviation='.35' result='g'/><feColorMatrix in='g' values='${inkIn('Ink', SCREEN_OFFSET)}'/><feOffset dx='-.5' dy='.8' result='o'/><feColorMatrix in='g' values='${inkIn('Mint', SCREEN_DOT)}'/><feMerge><feMergeNode in='o'/><feMergeNode/></feMerge></filter></defs><rect x='-20' y='-20' width='355' height='355' fill='url(#d)' filter='url(#s)'/>`,
   );
 };
 
 /**
- * Texture 01, Countergrain: sparse four-point stars, the shape the wordmark's cells open into, over finer
- * specks. Two tiles whose sizes share no factor, so together they repeat only every 31,439px.
+ * Texture 01, Countergrain: four-point stars, the shape the wordmark's cells open into. Far fewer than his,
+ * and a mask keeps them to the corners (`star-fade`), so content stays clean: Elco, "there's not so many of
+ * them, or at least some form of a gradient opacity". The script reads where they are, to connect them.
  */
 const STAR_ALPHA = 0.6;
+const STAR_TILE = 233;
+const STARS: readonly (readonly [number, number])[] = (() => {
+  const next = walk(5);
+  const side = 3;
+  const step = STAR_TILE / side;
+  return Array.from({ length: 7 }, (_, i) => {
+    const edge = 6;
+    const at = (cell: number) =>
+      Math.round(Math.min(STAR_TILE - edge, Math.max(edge, (cell + next()) * step)));
+    return [at(i % side), at(Math.floor(i / side))] as const;
+  });
+})();
 const countergrain = () => {
-  const stars = (size: number, count: number) => {
-    const next = walk(5);
-    const side = Math.ceil(Math.sqrt(count));
-    const step = size / side;
-    let d = '';
-    for (let i = 0; i < count; i++) {
-      const r = 3.2 + next() * 1.6;
-      const x = Math.min(size - r - 1, Math.max(r + 1, ((i % side) + next()) * step));
-      const y = Math.min(size - r - 1, Math.max(r + 1, (Math.floor(i / side) + next()) * step));
-      const turn = ((45 + (next() - 0.5) * 26) * Math.PI) / 180;
-      const at = (angle: number, reach: number) =>
-        `${(x + Math.cos(angle) * reach).toFixed(1)} ${(y + Math.sin(angle) * reach).toFixed(1)}`;
-      d += `M${at(turn, r)}`;
-      for (let k = 1; k <= 4; k++) {
-        const angle = turn + (k * Math.PI) / 2;
-        d += `Q${at(angle - Math.PI / 4, r * 0.17)} ${at(angle, r)}`;
-      }
-      d += 'z';
+  const next = walk(29);
+  let d = '';
+  for (const [x, y] of STARS) {
+    const r = 3.2 + next() * 1.6;
+    const turn = ((45 + (next() - 0.5) * 26) * Math.PI) / 180;
+    const at = (angle: number, reach: number) =>
+      `${(x + Math.cos(angle) * reach).toFixed(1)} ${(y + Math.sin(angle) * reach).toFixed(1)}`;
+    d += `M${at(turn, r)}`;
+    for (let k = 1; k <= 4; k++) {
+      const angle = turn + (k * Math.PI) / 2;
+      d += `Q${at(angle - Math.PI / 4, r * 0.17)} ${at(angle, r)}`;
     }
-    return tile(
-      size,
-      size,
-      `<path d='${d}' fill='${primitives.Gray}' fill-opacity='${STAR_ALPHA}'/>`,
-    );
-  };
-  const specks = (size: number, count: number) => {
-    const next = walk(29);
-    let d = '';
-    for (let i = 0; i < count; i++) {
-      d += `M${(2 + next() * (size - 4)).toFixed(1)} ${(2 + next() * (size - 4)).toFixed(1)}h0`;
-    }
-    return tile(
-      size,
-      size,
-      `<path d='${d}' stroke='${primitives.Gray}' stroke-opacity='.7' stroke-width='1.7' stroke-linecap='round'/>`,
-    );
-  };
-  return `${stars(149, 16)}, ${specks(211, 26)}`;
+    d += 'z';
+  }
+  return tile(
+    STAR_TILE,
+    STAR_TILE,
+    `<path d='${d}' fill='${primitives.Gray}' fill-opacity='${STAR_ALPHA}'/>`,
+  );
 };
+
+/**
+ * Where the stars show on a band, as ellipses in fractions of it, each fading from its centre. The stylesheet
+ * draws this as a mask, and the script reads it, so a line only ever connects stars that can be seen.
+ */
+const STAR_FADE = [
+  { x: 1, y: 0, across: 0.62, down: 0.34 },
+  { x: 1, y: 1, across: 0.62, down: 0.26 },
+] as const;
 
 const glass = (from: Paint, to: Paint) => `linear-gradient(145deg, ${c(from)}, ${c(to)})`;
 const glow = (paint: Paint, at = '100% 0%', reach = '46%') =>
   `radial-gradient(circle at ${at}, ${c(paint)}, transparent ${reach})`;
-const blob = (paint: Paint) => `radial-gradient(circle closest-side, ${c(paint)}, transparent)`;
 const rules = (paint: Paint, step: number) =>
   `repeating-linear-gradient(90deg, ${c(paint)} 0 1px, transparent 1px ${step}px), repeating-linear-gradient(0deg, ${c(paint)} 0 1px, transparent 1px ${step}px)`;
+
+/** How much Ground an action's gloss starts from. Elco: "The shine is all too much". */
+const GLOSS = { ground: 0.05, ink: 0.08, mint: 0.05 } as const;
+/** How much Gray a hairline between two stars comes to, at its fullest. */
+const CONNECT = 0.75;
 
 /** Muted words get a little firmer, because what's behind them is no longer plain. */
 const MUTED = { ground: ink(0.68), ink: ground(0.8), mint: ink(0.8) } as const;
 
 /**
  * The light grounds a band can take, `<Section tone>`, so a long page has a rhythm. Each is a role-compatible
- * ground: words and actions stay what they are on ground. No tone at all is the plain ground of v2.
+ * ground: words and actions stay what they are on ground. No tone at all is the plain ground of v2, with
+ * nothing behind it: Elco wants texture to "exist where they need to exist".
  */
 export const tones = ['paper', 'mist', 'stone'] as const;
 export type ToneName = (typeof tones)[number];
 const MIST: readonly Paint[] = ['Ground', mint(0.08)];
 const STONE: readonly Paint[] = ['Ground', gray(0.28), mint(0.03)];
 const MINT_FELT = 0.115;
-const STONE_FELT = 0.075;
+const STONE_SPECKLE = 0.028;
 
 /**
  * What the moving field lays over a textured band, at its two ends. `low` lays Ground over the still tile,
  * so its stars and dots sink, and `high` lets them come forward. The mint band's two ends balance, so it
  * stays Mint.
  */
-const WASH: Record<ToneName | 'mint', { low: Paint; high: Paint }> = {
+type Washed = Exclude<ToneName, 'stone'> | 'mint';
+const WASH: Record<Washed, { low: Paint; high: Paint }> = {
   paper: { low: ground(0.86), high: ground(0) },
-  mist: { low: ground(0.5), high: mint(0.03) },
-  stone: { low: ground(0.2), high: gray(0.1) },
+  mist: { low: ground(0.5), high: ground(0) },
   mint: { low: ink(0.03), high: ground(0.05) },
 };
 
@@ -215,12 +239,16 @@ const groups = {
     hairline: { ground: c(ink(0.14)), ink: c(ground(0.18)), mint: c(ink(0.22)) },
     edge: { ground: c(ink(0.1)), ink: c(ground(0.16)), mint: c(ink(0.14)) },
     'edge-strong': { ground: c(ink(0.32)), ink: c(ground(0.4)), mint: c(ink(0.4)) },
-    'action-wash': {
-      ground: c(ground(0.06)),
-      ink: c(ground(0.14)),
-      mint: c(ground(0.08)),
+    /**
+     * A row's card when the pointer's on it: its own band, a little lighter, so it's soft on any of them.
+     * Solid on purpose: it's laid over the separators, so they go with an opacity alone, and no line doubles
+     * up with the card's own stroke.
+     */
+    'row-fill': {
+      ground: `color-mix(in srgb, var(--surface) 50%, ${primitives.Ground})`,
+      ink: `color-mix(in srgb, var(--surface) 95%, ${primitives.Ground})`,
+      mint: `color-mix(in srgb, var(--surface) 80%, ${primitives.Ground})`,
     },
-    'chip-wash': { ground: c(mint(0.22)), ink: c(mint(0.18)), mint: c(ground(0.4)) },
     'nav-line': c(ink(0.12)),
     mist: flatCss(MIST),
     stone: flatCss(STONE),
@@ -248,19 +276,19 @@ const groups = {
       ground: shadow(
         ['0 1px 2px', ink(0.24)],
         ['0 10px 24px', ink(0.14)],
-        ['inset 0 1px 0', ground(0.2)],
+        ['inset 0 1px 0', ground(0.12)],
       ),
-      ink: shadow(['0 1px 2px', ink(0.6)], ['inset 0 1px 0', ground(0.5)]),
+      ink: shadow(['0 1px 2px', ink(0.6)], ['inset 0 1px 0', ground(0.2)]),
       mint: shadow(
         ['0 1px 2px', ink(0.3)],
         ['0 10px 24px', ink(0.2)],
-        ['inset 0 1px 0', ground(0.2)],
+        ['inset 0 1px 0', ground(0.12)],
       ),
     },
     'action-lift': {
-      ground: shadow(['0 2px 5px', ink(0.2)], ['0 18px 40px', ink(0.24)]),
-      ink: shadow(['0 2px 5px', ink(0.6)], ['0 14px 44px', mint(0.32)]),
-      mint: shadow(['0 2px 5px', ink(0.26)], ['0 18px 40px', ink(0.3)]),
+      ground: shadow(['0 2px 4px', ink(0.08)], ['0 12px 26px', ink(0.07)]),
+      ink: shadow(['0 2px 4px', ink(0.4)], ['0 12px 26px', ink(0.3)]),
+      mint: shadow(['0 2px 4px', ink(0.1)], ['0 12px 26px', ink(0.08)]),
     },
     'action-press': {
       ground: shadow(['0 0 1px', ink(0.4)], ['inset 0 1px 3px', ink(0.7)]),
@@ -281,9 +309,9 @@ const groups = {
       ),
     },
     'chip-lift': {
-      ground: shadow(['0 2px 4px', ink(0.06)], ['0 12px 28px', ink(0.11)]),
-      ink: shadow(['0 2px 4px', ink(0.5)], ['0 12px 28px', mint(0.18)]),
-      mint: shadow(['0 2px 4px', ink(0.08)], ['0 12px 28px', ink(0.14)]),
+      ground: shadow(['0 2px 4px', ink(0.04)], ['0 8px 18px', ink(0.05)]),
+      ink: shadow(['0 2px 4px', ink(0.4)], ['0 8px 18px', ink(0.3)]),
+      mint: shadow(['0 2px 4px', ink(0.05)], ['0 8px 18px', ink(0.06)]),
     },
     'chip-press': {
       ground: shadow(['0 0 1px', ink(0.14)], ['inset 0 1px 2px', ink(0.1)]),
@@ -311,30 +339,25 @@ const groups = {
   },
   gradient: {
     band: {
-      ground: `radial-gradient(90% 70% at 88% 0%, ${c(mint(0.08))}, transparent)`,
+      ground: 'none',
       ink: `radial-gradient(80% 100% at 90% 0%, ${c(mint(0.1))}, transparent), linear-gradient(180deg, ${c(ground(0.03))}, transparent 60%)`,
       mint: `radial-gradient(70% 100% at 84% 0%, ${c(ground(0.34))}, transparent), linear-gradient(165deg, ${c(ground(0.1))}, ${c(ink(0.05))})`,
     },
     glow: { ground: glow(mint(0.2)), ink: glow(mint(0.05)), mint: glow(ground(0.4)) },
     gloss: {
-      ground: `linear-gradient(180deg, ${c(ground(0.16))}, transparent 62%)`,
-      ink: `linear-gradient(180deg, ${c(ground(0.3))}, transparent 70%)`,
-      mint: `linear-gradient(180deg, ${c(ground(0.16))}, transparent 62%)`,
-    },
-    /** The sheen inside an action, which follows the pointer. */
-    sheen: { ground: blob(ground(0.15)), ink: blob(ground(0.42)), mint: blob(ground(0.15)) },
-    'chip-sheen': { ground: blob(mint(0.34)), ink: blob(mint(0.26)), mint: blob(ground(0.5)) },
-    /** The page's own spotlight, under the content. */
-    spot: { ground: blob(mint(0.17)), ink: blob(mint(0.1)), mint: blob(ground(0.3)) },
-    /** A box's spotlight, inside it. */
-    'box-spot': { ground: blob(mint(0.34)), ink: blob(mint(0.06)), mint: blob(ground(0.42)) },
-    'row-wash': {
-      ground: `linear-gradient(90deg, ${c(mint(0.15))}, transparent 88%)`,
-      ink: `linear-gradient(90deg, ${c(mint(0.14))}, transparent 88%)`,
-      mint: `linear-gradient(90deg, ${c(ground(0.3))}, transparent 88%)`,
+      ground: `linear-gradient(180deg, ${c(ground(GLOSS.ground))}, transparent 62%)`,
+      ink: `linear-gradient(180deg, ${c(ground(GLOSS.ink))}, transparent 70%)`,
+      mint: `linear-gradient(180deg, ${c(ground(GLOSS.mint))}, transparent 62%)`,
     },
     /** Lays over ruled paper, so its lines fade out before the box's edge. */
     'paper-fade': `radial-gradient(closest-side, transparent 28%, ${c(ground(0.92))} 100%)`,
+    /** Where the stars show: a mask, so only its alpha counts. See STAR_FADE. */
+    'star-fade': STAR_FADE.map(
+      ({ x, y, across, down }) =>
+        `radial-gradient(${across * 100}% ${down * 100}% at ${x * 100}% ${y * 100}%, ${primitives.Ink}, transparent)`,
+    ).join(', '),
+    /** A hairline between two stars, soft at both ends. */
+    connect: `linear-gradient(90deg, transparent, ${c(gray(CONNECT))} 22%, ${c(gray(CONNECT))} 78%, transparent)`,
   },
   glass: {
     fill: {
@@ -357,13 +380,13 @@ const groups = {
   },
   texture: {
     grain: {
-      ground: grain(INK_GRAIN, 0.05),
+      ground: 'none',
       ink: grain(LIGHT_GRAIN, 0.06),
       mint: felt(MINT_FELT),
     },
     countergrain: countergrain(),
     screen: screen(),
-    felt: felt(STONE_FELT),
+    speckle: speckle(STONE_SPECKLE),
     rules: {
       ground: rules(ink(0.06), 24),
       ink: rules(ground(0.05), 24),
@@ -381,7 +404,12 @@ const groups = {
     draw: '1.5s',
     notes: '1.1s',
     blink: '1.06s',
-    fold: '.42s',
+    fold: '.62s',
+    /** A hairline between stars: fades in, holds, fades out. */
+    connect: '18s',
+    /** Two layers of static, sliding against each other, on lengths that never line up. */
+    'static-a': '83s',
+    'static-b': '127s',
   },
   ease: {
     color: 'ease',
@@ -390,6 +418,7 @@ const groups = {
     spring: springEasing(),
     draw: 'cubic-bezier(.45, .05, .2, 1)',
     blink: 'steps(1)',
+    drift: 'ease-in-out',
   },
   // How far things move. Reduced motion takes all of these to nothing.
   move: {
@@ -402,10 +431,9 @@ const groups = {
     rise: '20px',
     'rise-small': '10px',
     blur: 'blur(6px)',
-    indent: '8px',
-    'wash-bleed': '-12px',
+    bleed: '-12px',
     swell: '1.035',
-    'swell-glyph': '1.14',
+    'swell-glyph': '1.06',
     slide: '3px',
     tilt: '3deg',
     perspective: '900px',
@@ -426,22 +454,16 @@ const groups = {
     'fold-closed': '0px',
     z: '40',
     whole: '100%',
-  },
-  // Sizes of the pools of light, each with the offset that centres it on the pointer.
-  light: {
-    'spot-size': '900px',
-    'spot-offset': '-450px',
-    'sheen-size': '170px',
-    'sheen-offset': '-85px',
-    'box-size': '420px',
-    'box-offset': '-210px',
+    /** How far a layer of static slides each way, and how far past the band it's cut to, so it never shows an edge. */
+    'static-reach': '40px',
+    'static-back': '-40px',
+    'static-past': '-40px',
   },
 } satisfies Record<string, Record<string, TokenValue>>;
 
 /** The behaviours JoyLayer runs, in numbers CSS has no use for. */
 export interface V2Script {
-  /** Most of how far a primary leans, in pixels, and how quickly it follows. */
-  magnet: number;
+  /** How quickly what follows the pointer gets there, a fraction of the distance per frame. */
   follow: number;
   /** How far a petal leans out, as a fraction of its size, and over how wide an angle. */
   lean: number;
@@ -475,34 +497,33 @@ export interface V2Script {
     frameMs: number;
     /** The two waves it's made of: how long each is, in pixels, and how many seconds one takes to pass. */
     waves: readonly [{ length: number; period: number }, { length: number; period: number }];
-    /** How far the pointer reaches, in pixels, how far it bends the waves, in radians, and how much it brings the texture forward. */
-    reach: number;
-    bend: number;
-    raise: number;
-    /** How long it takes to answer the pointer and the scroll, as a time constant. Slow on purpose. */
-    leanMs: number;
-    scrollMs: number;
-    /** How much slower than the page the waves scroll, as a fraction of it. */
-    parallax: number;
-    wash: Record<ToneName | 'mint', { low: Paint; high: Paint }>;
+    wash: Record<'paper' | 'mist' | 'mint', { low: Paint; high: Paint }>;
   };
+  /** The hairline that now and then connects two stars. See apps/web/app/versions/drift.ts. */
+  connect: {
+    /** The star tile, and the stars in it. */
+    tile: number;
+    stars: readonly (readonly [number, number])[];
+    /** Where they show, and how strongly they must to be connected. */
+    fade: readonly { x: number; y: number; across: number; down: number }[];
+    least: number;
+    /** How near two stars have to be, in pixels, and how long to wait between lines. */
+    nearest: number;
+    farthest: number;
+    waitMs: readonly [number, number];
+  };
+  /** A folded row: how long a pointer has to rest to open it, how long it stays after it leaves, how long it takes. */
+  peek: { restMs: number; stayMs: number; foldMs: number };
 }
 
 const TEXT = surfaces;
-const GROUND_BAND: readonly Paint[] = [...TINT, mint(0.08), ink(0.03)];
 const INK_BAND: readonly Paint[] = ['Ink', mint(0.1), ground(0.03), ground(0.03)];
 const MINT_BAND: readonly Paint[] = ['Mint', ink(0.05), ink(0.035)];
 const MINT_WORST: readonly Paint[] = [...MINT_BAND, ink(MINT_FELT), WASH.mint.low];
-const MIST_WORST: readonly Paint[] = [
-  ...MIST,
-  ink(SCREEN_OFFSET),
-  mint(SCREEN_DOT),
-  WASH.mist.high,
-  mint(0.17),
-];
-const STONE_WORST: readonly Paint[] = [...STONE, ink(STONE_FELT), WASH.stone.high, mint(0.17)];
-const PAPER_WORST: readonly Paint[] = [...GROUND_BAND, gray(STAR_ALPHA), mint(0.17)];
-const TERMINAL: readonly Paint[] = [...INK_BAND, ground(0.03), mint(0.05), mint(0.06)];
+const MIST_WORST: readonly Paint[] = [...MIST, ink(SCREEN_OFFSET), mint(SCREEN_DOT)];
+const STONE_WORST: readonly Paint[] = [...STONE, ink(STONE_SPECKLE), ink(STONE_SPECKLE)];
+const PAPER_WORST: readonly Paint[] = [...TINT, gray(STAR_ALPHA)];
+const TERMINAL: readonly Paint[] = [...INK_BAND, ground(0.03), mint(0.05)];
 
 /**
  * A floating box over a flower: the flower's darkest paint, its palest, then the glass at its weakest
@@ -541,29 +562,27 @@ const floatCases: ContrastCase[] = FLOWER_PAINTS.flatMap(([paint, under]) => [
  * its strongest, which is a little over twice its alpha's mean. All of them hold to source.ts's minimum.
  */
 const contrast: ContrastCase[] = [
-  { name: 'ground: text-primary', text: TEXT.ground['text-primary'], over: GROUND_BAND },
-  { name: 'ground: muted', text: MUTED.ground, over: GROUND_BAND },
-  { name: 'ground: muted on a row wash', text: MUTED.ground, over: [...GROUND_BAND, mint(0.15)] },
+  { name: 'ground: text-primary', text: TEXT.ground['text-primary'], over: TINT },
+  { name: 'ground: muted', text: MUTED.ground, over: TINT },
+  // A card lightens its band, so on ground its darkest is half of the darkest tone, and on mint a fifth Ground.
+  { name: 'ground: muted on a row card', text: MUTED.ground, over: [...STONE, ground(0.5)] },
+  { name: 'ink: muted on a row card', text: MUTED.ink, over: ['Ink', ground(0.05)] },
+  { name: 'mint: muted on a row card', text: MUTED.mint, over: ['Mint', ground(0.2)] },
+  // Primary on ground, on its gloss.
   {
-    name: 'ground: muted under the spotlight',
-    text: MUTED.ground,
-    over: [...GROUND_BAND, mint(0.17)],
-  },
-  // Primary on ground: gloss and sheen together at their brightest. The hard case.
-  {
-    name: 'ground: action-text on gloss and sheen',
+    name: 'ground: action-text on gloss',
     text: TEXT.ground['action-text'],
-    over: [TEXT.ground['action-background'], ground(0.16), ground(0.06), ground(0.15)],
+    over: [TEXT.ground['action-background'], ground(GLOSS.ground)],
   },
   {
     name: 'ground: action-accent on gloss',
     text: TEXT.ground['action-accent'],
-    over: [TEXT.ground['action-background'], ground(0.16)],
+    over: [TEXT.ground['action-background'], ground(GLOSS.ground)],
   },
   {
-    name: 'ground: text-primary on a chip wash',
+    name: 'ground: text-primary on a chip',
     text: TEXT.ground['text-primary'],
-    over: [...TINT, ground(0.76), mint(0.22), mint(0.34)],
+    over: [...TINT, ground(0.76)],
   },
   // The nav's glass when the ink band passes under it.
   {
@@ -575,32 +594,32 @@ const contrast: ContrastCase[] = [
   { name: 'ink: text-primary', text: TEXT.ink['text-primary'], over: [...INK_BAND, mint(0.1)] },
   { name: 'ink: muted', text: MUTED.ink, over: [...INK_BAND, mint(0.1)] },
   { name: 'ink: accent', text: TEXT.ink.accent, over: [...INK_BAND, mint(0.1)] },
-  // Glass on the ink band: the terminal, under its own spotlight.
+  // Glass on the ink band: the terminal.
   { name: 'ink: text-primary on glass', text: TEXT.ink['text-primary'], over: TERMINAL },
   { name: 'ink: muted on glass', text: MUTED.ink, over: TERMINAL },
   { name: 'ink: accent on glass', text: TEXT.ink.accent, over: TERMINAL },
   {
-    name: 'ink: action-text on gloss and sheen',
+    name: 'ink: action-text on gloss',
     text: TEXT.ink['action-text'],
-    over: [TEXT.ink['action-background'], ground(0.3), ground(0.14), ground(0.42)],
+    over: [TEXT.ink['action-background'], ground(GLOSS.ink)],
   },
   // The mint band: darkest where the gradient ends, and the grain on top.
   { name: 'mint: text-primary', text: TEXT.mint['text-primary'], over: MINT_BAND },
   { name: 'mint: muted', text: MUTED.mint, over: MINT_BAND },
   {
-    name: 'mint: action-text on gloss and sheen',
+    name: 'mint: action-text on gloss',
     text: TEXT.mint['action-text'],
-    over: [TEXT.mint['action-background'], ground(0.16), ground(0.08), ground(0.15)],
+    over: [TEXT.mint['action-background'], ground(GLOSS.mint)],
   },
   ...floatCases,
   // The textures, each at the darkest thing it can put behind a word: a felt's darkest fibre, a dot's core
-  // with its off-register ink, a star's middle, under the field at its strongest and the spotlight.
+  // with its off-register ink, a star's middle, both layers of static dark at once.
   { name: 'mint: text-primary on felt', text: TEXT.mint['text-primary'], over: MINT_WORST },
   { name: 'mint: muted on felt', text: MUTED.mint, over: MINT_WORST },
   { name: 'mist: text-primary on a dot', text: TEXT.ground['text-primary'], over: MIST_WORST },
   { name: 'mist: muted on a dot', text: MUTED.ground, over: MIST_WORST },
-  { name: 'stone: text-primary on felt', text: TEXT.ground['text-primary'], over: STONE_WORST },
-  { name: 'stone: muted on felt', text: MUTED.ground, over: STONE_WORST },
+  { name: 'stone: text-primary on static', text: TEXT.ground['text-primary'], over: STONE_WORST },
+  { name: 'stone: muted on static', text: MUTED.ground, over: STONE_WORST },
   { name: 'paper: text-primary on a star', text: TEXT.ground['text-primary'], over: PAPER_WORST },
   { name: 'paper: muted on a star', text: MUTED.ground, over: PAPER_WORST },
 ];
@@ -618,7 +637,6 @@ export const v2: Version<V2Script> = {
     '--joy-move-rise': '0px',
     '--joy-move-rise-small': '0px',
     '--joy-move-blur': 'none',
-    '--joy-move-indent': '0px',
     '--joy-move-swell': '1',
     '--joy-move-swell-glyph': '1',
     '--joy-move-slide': '0px',
@@ -630,7 +648,6 @@ export const v2: Version<V2Script> = {
   },
   contrast,
   script: {
-    magnet: 5,
     follow: 0.16,
     lean: 0.09,
     leanWidth: 0.34,
@@ -651,19 +668,23 @@ export const v2: Version<V2Script> = {
     settleMs: 3200,
     drift: {
       cell: 24,
-      frameMs: 33,
+      frameMs: 250,
       waves: [
-        { length: 720, period: 64 },
-        { length: 520, period: 86 },
+        { length: 720, period: 160 },
+        { length: 520, period: 215 },
       ],
-      reach: 340,
-      bend: 1.1,
-      raise: 0.55,
-      leanMs: 1100,
-      scrollMs: 800,
-      parallax: 0.14,
       wash: WASH,
     },
+    connect: {
+      tile: STAR_TILE,
+      stars: STARS,
+      fade: STAR_FADE,
+      least: 0.3,
+      nearest: 70,
+      farthest: 190,
+      waitMs: [14000, 34000],
+    },
+    peek: { restMs: 200, stayMs: 1200, foldMs: Number.parseFloat(groups.dur.fold) * 1000 },
   },
 };
 

@@ -10,7 +10,7 @@ const copy = landingCopy.hero;
 
 export function Hero() {
   return (
-    <Section tone="paper" layout="split">
+    <Section layout="split">
       <div>
         <SectionHead size="display" eyebrow={copy.eyebrow} title={copy.title} body={copy.body} />
         <div className="mt-column-gap">

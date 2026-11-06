@@ -1,5 +1,6 @@
 // Petals / FAQ item 67:2538: native <details>, open by default as in Figma's frame (its Open property),
-// so it needs no JavaScript. The answer lines up under the question on one twelve-column grid.
+// so it needs no JavaScript. The answer lines up under the question on one twelve-column grid. In version
+// 2 it starts folded and answers a pointer at rest: apps/web/app/versions/peek.ts, `row.peek`.
 import type { GlyphKind } from '../../lib/figures.ts';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { Drawing } from './Drawing.tsx';
