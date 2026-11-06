@@ -5,7 +5,6 @@
 // no gap reaches 10 s. Limits per chat: tool rounds, wall time and dollars (Budget), and the daily
 // cap shared by every run on the server. The thread is saved as it grows, so a crash keeps the work,
 // and `opts.signal` is Stop (T190).
-import { specHash } from '@petal/core';
 import type {
   AgentError,
   AgentEvent,
@@ -19,6 +18,7 @@ import type {
   Validation,
 } from '@petal/core/types';
 import { registry as defaultRegistry, type ToolContext, withRunSignal } from '@petal/tools';
+import { approvalRequired, hashOf, yesGate } from './approval.ts';
 import { Channel } from './channel.ts';
 import type {
   Budget,
@@ -178,15 +178,6 @@ function within(p: Promise<unknown>, ms: number): Promise<unknown> {
 
 type Obj = Record<string, unknown>;
 
-function hashOf(spec: unknown): string | undefined {
-  if (!spec || typeof spec !== 'object') return undefined;
-  try {
-    return specHash(spec as Spec);
-  } catch {
-    return undefined;
-  }
-}
-
 function toolError(code: ToolError['error']['code'], message: string, hint?: string): ToolError {
   return { error: hint ? { code, message, hint } : { code, message } };
 }
@@ -330,6 +321,11 @@ async function loop(
   ].join('\n\n');
   const messages: LlmMessage[] = [{ role: 'system', content: system }, ...conversation];
 
+  // The yes (approval.ts). A recorded run spends nothing and its transcript is fixed, so it isn't held.
+  const gate = llm.kind === 'recorded' ? null : yesGate(said, earlier, draftSpec);
+  // What this chat was refused. Its next model call gets no tools, so the model has to speak.
+  const refused = new Set<string>();
+
   // A store that fails here must not stop the chat: only a crash would then lose this much.
   const saveThread = () =>
     Promise.resolve(opts.onThread?.(closeThread(messages.slice(1)))).catch(() => {});
@@ -370,7 +366,9 @@ async function loop(
       event: 'tool_call',
       data: { id: call.id, name: call.name, args: args ?? call.arguments },
     });
-    setStage(STAGE_OF[call.name] ?? 'thinking');
+    const callable = !!args && typeof args === 'object' && !Array.isArray(args);
+    const held = callable ? gate?.check(call.name, args as Obj, messages.slice(1)) : null;
+    if (!held) setStage(STAGE_OF[call.name] ?? 'thinking');
 
     const tool = registry.find((t) => t.name === call.name);
     const t0 = clock();
@@ -403,6 +401,10 @@ async function loop(
         'render_flower draws only a spec that passed validate_spec with your interpretation.',
         'Call validate_spec with { spec, interpretation } first, fix any errors, then render_flower with the same spec.',
       );
+    } else if (held) {
+      if (!refused.has(held.target_key)) emit({ event: 'approval_required', data: held });
+      refused.add(held.target_key);
+      out = approvalRequired(held);
     } else {
       const ctx = withProgress(deps.tools, (e) => emit({ event: 'progress', data: e }));
       try {
@@ -428,7 +430,10 @@ async function loop(
         ms: clock() - t0,
       },
     });
-    if (ok) remember(call.name, args as Obj, out as Obj, by);
+    if (ok) {
+      remember(call.name, args as Obj, out as Obj, by);
+      gate?.passed(call.name, args as Obj, out as Obj);
+    }
     return out;
   }
 
@@ -504,17 +509,20 @@ async function loop(
       if (totals.turns > 0) setStage('thinking');
       // Out of tool rounds: one last call without tools. A user turn, not a second system
       // message, because some chat templates (Qwen's) accept a system message only first.
-      const req = last
-        ? {
-            messages: [
-              ...messages,
-              {
-                role: 'user' as const,
-                content: `(Petal: the ${budget.toolRounds} tool rounds are used. Answer now with what the tools gave you.)`,
-              },
-            ],
-          }
-        : { messages, tools };
+      // Refused: the same, but the tool's answer already says what to ask, so nothing is added.
+      const req = refused.size
+        ? { messages }
+        : last
+          ? {
+              messages: [
+                ...messages,
+                {
+                  role: 'user' as const,
+                  content: `(Petal: the ${budget.toolRounds} tool rounds are used. Answer now with what the tools gave you.)`,
+                },
+              ],
+            }
+          : { messages, tools };
       let pending: Promise<LlmCompletion> | undefined;
       let c: LlmCompletion;
       try {
@@ -557,13 +565,17 @@ async function loop(
       await settle(hold, paid);
       if (stopped()) return;
 
-      messages.push(c.message);
-      const text = c.message.content?.trim();
+      // It was offered no tools, so a call in this answer isn't one: its words stand, nothing follows.
+      const answer: LlmCompletion['message'] = refused.size
+        ? { role: 'assistant', content: c.message.content }
+        : c.message;
+      messages.push(answer);
+      const text = answer.content?.trim();
       if (text) emit({ event: 'message', data: { text: withLinks(text) } });
       await saveThread();
       // this answer is already paid for, so it is shown; nothing more is bought
       if (ledgerDown) break;
-      const calls = c.message.tool_calls ?? [];
+      const calls = answer.tool_calls ?? [];
       if (!calls.length) {
         if (!text) fail('source_failed', 'The model gave an empty answer.');
         break;

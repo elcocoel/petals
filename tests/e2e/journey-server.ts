@@ -98,6 +98,8 @@ Petals journey server: a stub model and test wallets on ${BASE}. It spends nothi
 
    ${redeem}
 
+A new map waits for a yes, so the first question asks, and "yes" draws the flower.
+
 The stub's call count: ${BASE}/calls
 To come back later as the same people: node tests/e2e/journey-server.ts --web-port ${webPort} --state ${quoted(stateDir)}
 That keeps the wallet key and the data, and prints a new invite.

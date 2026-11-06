@@ -11,6 +11,7 @@ import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
 import { type AgentRouteOptions, createAgentRoutes } from '../src/routes.ts';
 import { fileRunStore } from '../src/runs.ts';
 import {
+  agreed,
   bodyOf,
   fakeContext,
   fakeNearAi,
@@ -24,7 +25,7 @@ import {
   tmpRoot,
 } from './helpers.ts';
 
-const QUESTION = { messages: [{ role: 'user', content: 'who stands behind NEAR’s validators?' }] };
+const QUESTION = { messages: agreed('who stands behind NEAR’s validators?') };
 
 function setup(o: { llm?: LlmClient; opts?: AgentRouteOptions } = {}) {
   const root = tmpRoot();
@@ -209,7 +210,9 @@ describe('runs you can leave and come back to', () => {
   test('a chat with run_id continues the run: same id, earlier messages kept', async () => {
     const llm = scriptedLlm([{ content: 'first answer' }, { content: 'second answer' }]);
     const { app } = setup({ llm });
-    const one = parseSse(await (await chat(app)).text());
+    const one = parseSse(
+      await (await chat(app, { messages: QUESTION.messages.slice(0, 1) })).text(),
+    );
     const { run_id } = data<{ run_id: string }>(one, 'run');
     const two = parseSse(
       await (await chat(app, { messages: [{ role: 'user', content: 'and now?' }], run_id })).text(),

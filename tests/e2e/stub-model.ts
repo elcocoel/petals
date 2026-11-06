@@ -1,7 +1,9 @@
 // The stub model for the paths run by hand (explore-path.ts, journey-server.ts): OpenAI's shape, behind
 // the real NEAR AI client. Each question replays the recorded skeleton, so it spends $0 of NEAR AI.
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { recordedClient, SKELETON_TRANSCRIPT } from '@petal/agent';
+import { type LlmCompletion, recordedClient, SKELETON_TRANSCRIPT } from '@petal/agent';
+
+const ASKING = 'I can read that for you. Shall I draw it? Yes or no.';
 
 export interface StubModel {
   /** chat completions asked for so far */
@@ -31,11 +33,18 @@ export function stubModel(): StubModel {
         }
         calls++;
         try {
-          const asked = JSON.parse(body) as { model: string; messages: { role: string }[] };
+          const asked = JSON.parse(body) as {
+            model: string;
+            messages: { role: string }[];
+            tools?: unknown[];
+          };
           const from = asked.messages.findLastIndex((m) => m.role === 'user');
-          const said = await replay.complete({
-            messages: asked.messages.slice(from).map((m) => ({ ...m })) as never,
-          });
+          // Offered no tools, it was refused for want of a yes (J4), so it asks. A yes replays again.
+          const said: Pick<LlmCompletion, 'message'> = asked.tools?.length
+            ? await replay.complete({
+                messages: asked.messages.slice(from).map((m) => ({ ...m })) as never,
+              })
+            : { message: { role: 'assistant', content: ASKING } };
           send(200, {
             id: `stub-${calls}`,
             object: 'chat.completion',
