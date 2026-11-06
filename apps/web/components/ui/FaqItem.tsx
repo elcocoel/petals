@@ -5,6 +5,9 @@ import type { GlyphKind } from '../../lib/figures.ts';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { Drawing } from './Drawing.tsx';
 
+/** An answer runs on as paragraphs, and a paragraph can be a list. */
+export type AnswerBlock = string | { readonly list: readonly string[] };
+
 export function FaqItem({
   glyph,
   index,
@@ -15,7 +18,7 @@ export function FaqItem({
   glyph: GlyphKind;
   index: string;
   question: string;
-  answer: string;
+  answer: readonly AnswerBlock[];
   open?: boolean;
 }) {
   return (
@@ -31,7 +34,21 @@ export function FaqItem({
         </span>
       </summary>
       <div className="mt-text-gap md:grid md:grid-cols-12 md:gap-x-block-gap">
-        <p className="mb-0 type-body md:col-span-9 md:col-start-3">{answer}</p>
+        <div className="flex flex-col gap-text-gap type-body md:col-span-9 md:col-start-3">
+          {answer.map((block) =>
+            typeof block === 'string' ? (
+              <p key={block} className="my-0">
+                {block}
+              </p>
+            ) : (
+              <ul key={block.list[0]} className="my-0 list-disc pl-block-gap">
+                {block.list.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            ),
+          )}
+        </div>
       </div>
     </details>
   );
