@@ -8,7 +8,8 @@ export function originFrom(headers: Headers, fallback = 'http://localhost:3080')
   const host = headers.get('x-forwarded-host') ?? headers.get('host');
   if (!host) return fallback;
   const proto =
-    headers.get('x-forwarded-proto') ?? (host.startsWith('localhost') ? 'http' : 'https');
+    headers.get('x-forwarded-proto') ??
+    (/^(localhost|127\.0\.0\.1)\b/.test(host) ? 'http' : 'https');
   return `${proto}://${host}`;
 }
 

@@ -3,7 +3,7 @@
 // errors come back as isError with the same ToolError, progress as notifications/progress.
 import { describe, expect, test } from 'vitest';
 
-import { httpApp } from '../src/http/app.ts';
+import { httpApp, SITE_HEADER } from '../src/http/app.ts';
 import { mcpServer, progressLine } from '../src/mcp/server.ts';
 import { describeTool, registry } from '../src/registry.ts';
 import { httpMcpClient, progressOf, rig, stdioMcpClient, validatorsFixture } from './helpers.ts';
@@ -92,5 +92,44 @@ describe('MCP', () => {
     const { client, closed } = await stdioMcpClient((await rig()).ctx);
     await client.close();
     await expect(closed).resolves.toBeUndefined();
+  });
+
+  test("a site's /mcp hands back links that open, and the flower stays the same flower", async () => {
+    const SITE = 'http://localhost:3080';
+    const draw = async (client: Awaited<ReturnType<typeof httpMcpClient>>, spec: unknown) => {
+      const { structuredContent } = await client.callTool({
+        name: 'render_flower',
+        arguments: { spec, include_svg: false },
+      });
+      await client.close();
+      return structuredContent as { view_url: string; spec_sha256: string };
+    };
+    const r = await rig();
+    const { sha256 } = validatorsFixture();
+    const direct = await httpMcpClient(httpApp(r.ctx));
+    await direct.callTool({ name: 'get_snapshot', arguments: { network: 'near-validators' } });
+    const proposed = await direct.callTool({
+      name: 'propose_spec',
+      arguments: { network: 'near-validators', sha256 },
+    });
+    await direct.close();
+    const { spec } = proposed.structuredContent as { spec: unknown };
+
+    const { apiBase: _drop, ...config } = r.ctx.config;
+    const noAddress = { ...r.ctx, config };
+    const header = () => ({ [SITE_HEADER]: SITE });
+
+    const named = await draw(await httpMcpClient(httpApp(noAddress), header), spec);
+    expect(named.view_url.startsWith(`${SITE}/draft?spec=`)).toBe(true);
+
+    // a bare API, or the stdio door's next of kin: no pages, so no address to give
+    const bare = await draw(await httpMcpClient(httpApp(noAddress)), spec);
+    expect(bare.view_url.startsWith('/draft?spec=')).toBe(true);
+
+    // an address the site was given wins over anything a caller says
+    const set = await draw(await httpMcpClient(httpApp(r.ctx), header), spec);
+    expect(set.view_url.startsWith('https://petal.test/draft?spec=')).toBe(true);
+
+    expect(new Set([named, bare, set].map((d) => d.spec_sha256)).size).toBe(1);
   });
 });
