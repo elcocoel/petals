@@ -676,6 +676,11 @@ export type AgentEvent =
          * holding. `tokens.in` adds up every call in the chat, so it can't say that.
          */
         context_tokens?: number;
+        /**
+         * additive (T370): what the conversation picked, when it picked. `model` is what answered, so
+         * they differ after a fallback, and with `turns: 0` nothing answered at all.
+         */
+        picked?: string;
       };
     };
 

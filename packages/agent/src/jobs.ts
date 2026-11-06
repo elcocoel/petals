@@ -60,6 +60,7 @@ export function runJobs(
       input: ChatInput,
       earlier: Earlier = {},
       budget: Budget = deps.budget,
+      pick?: RunOptions['pick'],
     ): Promise<void> {
       const job = new Job();
       jobs.set(runId, job);
@@ -93,6 +94,7 @@ export function runJobs(
               ...(o.registry ? { registry: o.registry } : {}),
               ...(o.heartbeatMs ? { heartbeatMs: o.heartbeatMs } : {}),
               signal: job.abort.signal,
+              ...(pick ? { pick } : {}),
               onThread: (t) => runs.saveThread?.(runId, t),
             },
           );

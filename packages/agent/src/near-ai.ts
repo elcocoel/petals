@@ -11,7 +11,14 @@ import type { ToolErrorCode } from '@petal/core/types';
 import OpenAI, { APIError } from 'openai';
 import { modelOf } from './catalogue.ts';
 import { CONNECT_HINT } from './invites.ts';
-import type { LlmClient, LlmCompletion, LlmMessage, LlmRequest, LlmToolCall } from './llm.ts';
+import type {
+  LlmCallOptions,
+  LlmClient,
+  LlmCompletion,
+  LlmMessage,
+  LlmRequest,
+  LlmToolCall,
+} from './llm.ts';
 import {
   type AttestationRef,
   type AttestationStore,
@@ -49,7 +56,7 @@ export function costUsd(
   usage: { in: number; out: number },
   listed?: { in: number; out: number },
 ): number {
-  const p = PRICES[model] ?? listed ?? UNKNOWN_PRICE;
+  const p = PRICES[model] ?? modelOf(model)?.usd_per_million ?? listed ?? UNKNOWN_PRICE;
   return Math.round(((usage.in * p.in + usage.out * p.out) / 1e6) * 1e9) / 1e9;
 }
 
@@ -68,12 +75,19 @@ type Effort = 'low' | 'medium' | 'high';
  * Anthropic's models on NEAR AI answer the field with a 400 ("Extra inputs are not permitted", 6 Nov),
  * so a model the catalogue gives no efforts never gets it. PETAL_MODEL can name a model the catalogue
  * doesn't list, and for that one nobody knows: slow beats a 400 on every call, so nothing is sent
- * unless a caller asks.
+ * unless a caller asks. A fallback that doesn't offer what the pick asked for takes its own default.
  */
-export function effortFor(model: string, asked?: Effort | null): Effort | null {
+export function effortFor(model: string, asked?: string | null): string | null {
   const listed = modelOf(model);
   if (listed && !listed.efforts.length) return null;
-  return asked === undefined ? ((listed?.default_effort as Effort | null) ?? null) : asked;
+  if (asked === undefined) return listed?.default_effort ?? null;
+  return listed && asked && !listed.efforts.includes(asked) ? listed.default_effort : asked;
+}
+
+/** Two listed models that promise the same. One the catalogue doesn't list promises nothing to break. */
+function samePromise(a: string, b: string): boolean {
+  const [x, y] = [modelOf(a), modelOf(b)];
+  return !x || !y || x.promise === y.promise;
 }
 
 /** A model call that failed, with the error code the agent reports (tools.md codes). */
@@ -247,13 +261,24 @@ export function createNearAiClient(
   const now = o.now ?? (() => new Date());
   const warn = o.onWarning ?? (() => {});
   const store: AttestationStore = attestationStore(o.attestationsDir ?? DEFAULT_ATTESTATIONS);
-  const models = [cfg.model, ...cfg.fallbacks.filter((m) => m !== cfg.model)];
+  /**
+   * What a chat on `head` tries, in order. The server's own model has the server's list, and a pick has
+   * its catalogue row. Either way nothing crosses a promise: a signed pick never becomes unsigned, and a
+   * passed-through model with no fallback fails plainly.
+   */
+  const chainOf = (head: string) => [
+    head,
+    ...(head === cfg.model ? cfg.fallbacks : (modelOf(head)?.fallbacks ?? [])).filter(
+      (m) => m !== head && samePromise(head, m),
+    ),
+  ];
   const attestTtl = o.attestationTtlMs ?? 10 * 60_000;
   const stickyMs = o.stickyFallbackMs ?? 5 * 60_000;
   const reports = new Map<string, { at: number; ref: Promise<AttestationRef | undefined> }>();
   const prices = new Map<string, Promise<{ in: number; out: number } | undefined>>();
-  let start = 0; // index of the model tried first
-  let startUntil = 0;
+  // After a model fails, the next one goes first for a while, each chain apart: one pick's trouble says
+  // nothing about another's.
+  const sticky = new Map<string, { start: number; until: number }>();
   let healthy = true;
 
   const key = () => o.apiKey ?? process.env[cfg.apiKeyEnv] ?? '';
@@ -281,7 +306,7 @@ export function createNearAiClient(
    * caps must use its real price. GET /v1/models costs no inference; asked once per model.
    */
   function listedPrice(model: string) {
-    if (PRICES[model]) return Promise.resolve(undefined);
+    if (PRICES[model] || modelOf(model)) return Promise.resolve(undefined);
     const known = prices.get(model);
     if (known) return known;
     const asked = (async () => {
@@ -309,8 +334,9 @@ export function createNearAiClient(
   async function callModel(
     model: string,
     req: LlmRequest,
-    signal?: AbortSignal,
+    call: { head: string; signal?: AbortSignal; effort?: string | null },
   ): Promise<LlmCompletion> {
+    const { signal } = call;
     // these two are shared with other runs, so Stop doesn't cancel them: it just buys nothing after
     const attested = await attestation(model);
     const listed = await listedPrice(model);
@@ -337,14 +363,14 @@ export function createNearAiClient(
       defaultHeaders: { 'x-no-aliasing': 'true', 'Accept-Encoding': 'identity' },
       fetch: capture,
     });
-    const effort = effortFor(model, o.reasoningEffort);
+    const effort = effortFor(model, call.effort !== undefined ? call.effort : o.reasoningEffort);
     const completion = await client.chat.completions.create(
       {
         model,
         messages: req.messages.map(toOpenAi),
         stream: false,
         max_completion_tokens: o.maxCompletionTokens ?? MAX_COMPLETION_TOKENS,
-        ...(effort ? { reasoning_effort: effort } : {}),
+        ...(effort ? { reasoning_effort: effort as Effort } : {}),
         ...(req.tools?.length
           ? {
               tool_choice: 'auto' as const,
@@ -395,7 +421,7 @@ export function createNearAiClient(
       usage,
       cost_usd: costUsd(model, usage, listed),
       ...(known ? {} : { cost_unknown: true }),
-      fallback_used: model !== cfg.model,
+      fallback_used: model !== call.head,
       signature,
     };
   }
@@ -437,20 +463,27 @@ export function createNearAiClient(
     kind: 'near-ai-cloud',
     model: cfg.model,
     status: () => (healthy ? 'up' : 'down'),
-    async complete(req, { signal } = {}) {
+    async complete(req, { signal, model: picked, effort }: LlmCallOptions = {}) {
       if (!key()) {
         throw new LlmCallError('source_failed', `${cfg.apiKeyEnv} is not set`, {
           hint: 'Without a key, Petal replays a recorded run (recordedClient).',
         });
       }
-      const first = now().getTime() < startUntil ? start : 0;
+      const head = picked ?? cfg.model;
+      const models = chainOf(head);
+      const stuck = sticky.get(head);
+      const first = stuck && now().getTime() < stuck.until ? stuck.start : 0;
       const order = [...models.slice(first), ...models.slice(0, first)];
       const failures: LlmCallError[] = [];
       let lost = 0; // what failed attempts still cost, so spend is never under-counted
       let unknown = false; // and one of them may have cost more than anyone can say
       for (const model of order) {
         try {
-          const out = await callModel(model, req, signal);
+          const out = await callModel(model, req, {
+            head,
+            ...(signal ? { signal } : {}),
+            ...(effort !== undefined ? { effort } : {}),
+          });
           healthy = true;
           return {
             ...out,
@@ -479,11 +512,11 @@ export function createNearAiClient(
           }
           // the next model goes first for a while, so each turn doesn't wait on a failing one
           const next = (models.indexOf(model) + 1) % models.length;
-          start = next;
-          startUntil = now().getTime() + stickyMs;
+          sticky.set(head, { start: next, until: now().getTime() + stickyMs });
         }
       }
-      healthy = false;
+      // a pick failing says that pick is down. What the health route reports is the server's own model
+      if (head === cfg.model) healthy = false;
       const last = failures[failures.length - 1];
       throw new LlmCallError(
         last?.code === 'rate_limited' ? 'rate_limited' : 'source_failed',

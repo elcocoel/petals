@@ -293,7 +293,8 @@ function appendEvent(store: Store, runId: string, e: AgentEvent): void {
     store.runEvent.append(runId, e.event, JSON.stringify(e.data), at);
     store.run.update(runId, {
       status: run.status,
-      model: e.event === 'done' ? e.data.model : row.model,
+      // what answered: a chat where no model did leaves it as it was
+      model: e.event === 'done' && e.data.turns > 0 ? e.data.model : row.model,
       body: bodyOf(run),
       updated_at: at,
     });
