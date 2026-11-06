@@ -1,12 +1,19 @@
-// surface.drift: the part of a textured band that moves. The tile under it holds still and carries the
-// detail; this is a soft tone over it, slow, leaning a little to the pointer and lagging behind the scroll.
-// Where it lays Ground the tile sinks, and where it lifts the tile comes forward, which reads as the bands
-// in Elco's Offset screen (Figma 33:648). It's soft enough to draw on a canvas of a few dozen cells a side
-// and let the compositor stretch it, so it costs under a millisecond and needs no GPU. With reduced motion
-// it's drawn once and holds; without a canvas there's only the tile.
+// What moves on a textured band: three children of `surface`, and nothing here answers the pointer (Elco:
+// the colour behind the mouse "affects my capacity to judge things"). Elco: "All of them need to be softer
+// and softly in motion", and nothing should catch the eye, so every cycle runs to minutes.
+//
+// surface.drift: the tile holds still and carries the detail, and a soft tone moves over it. Where it lays
+// Ground the tile sinks, and where it lifts the tile comes forward, like the bands in Elco's Offset screen
+// (Figma 33:648). It's soft enough to draw on a canvas of a few dozen cells a side and let the compositor
+// stretch it, and slow enough to draw four times a second, off a plain timer, only while its band is on
+// screen. With reduced motion it's drawn once and holds; without a canvas there's only the tile.
+//
+// surface.shimmer runs in the compositor, from the stylesheet. This only starts it while its band is on
+// screen. surface.connect draws its line by a CSS animation too: this only says which stars, and when.
 import { type Paint, primitives, type ToneName, v2 } from '@petal/tokens';
 
 const D = v2.script.drift;
+const C = v2.script.connect;
 const TAU = Math.PI * 2;
 const [WAVE_A, WAVE_B] = D.waves;
 
@@ -15,20 +22,17 @@ type Stop = () => void;
 /** What it needs of JoyLayer. */
 interface Host {
   reduced: boolean;
-  pointer: { x: number; y: number };
   onChange: (run: () => void) => void;
-  onScroll: (run: () => void) => void;
 }
 
 /**
  * The field at a point in a band, from 0 (`low`) to 1 (`high`): two long waves, each bent by a slower one.
- * `near` is how close the pointer is, from 0 to 1. Pure, so a test can hold it to being calm.
+ * Pure, so a test can hold it to being calm.
  */
-export function toneAt(x: number, y: number, seconds: number, seed: number, near = 0): number {
+export function toneAt(x: number, y: number, seconds: number, seed: number): number {
   const a = Math.sin(
     TAU * ((x * 0.8 - y * 0.6) / WAVE_A.length - seconds / WAVE_A.period) +
       seed +
-      near * D.bend +
       1.1 *
         Math.sin(
           TAU * ((x * 0.3 + y * 0.7) / (WAVE_A.length * 2.2) + seconds / (WAVE_A.period * 1.6)) +
@@ -44,8 +48,7 @@ export function toneAt(x: number, y: number, seconds: number, seed: number, near
         ),
   );
   const v = 0.5 + 0.5 * (0.62 * a + 0.38 * b);
-  const eased = v * v * (3 - 2 * v);
-  return eased + (1 - eased) * near * D.raise;
+  return v * v * (3 - 2 * v);
 }
 
 /** A paint as canvas numbers: red, green and blue from 0 to 255, alpha too. */
@@ -71,30 +74,17 @@ interface Band {
   width: number;
   height: number;
   visible: boolean;
-  /** The pointer's place in the band, eased, and how present it is. */
-  leanX: number;
-  leanY: number;
-  lean: number;
 }
 
-/** Eases `from` toward `to` over a time constant, whatever the frame rate. */
-const ease = (from: number, to: number, ms: number, constant: number) =>
-  from + (to - from) * (1 - Math.exp(-ms / constant));
-
-function draw(band: Band, seconds: number, scrolled: number) {
-  const { image, width, height, low, high, seed, leanX, leanY, lean } = band;
+function draw(band: Band, seconds: number) {
+  const { image, width, height, low, high, seed } = band;
   if (!image) return;
   const { data, width: across, height: down } = image;
-  const reach = D.reach * D.reach;
-  const shift = scrolled * D.parallax;
   let at = 0;
   for (let j = 0; j < down; j++) {
     const y = ((j + 0.5) / down) * height;
     for (let i = 0; i < across; i++) {
-      const x = ((i + 0.5) / across) * width;
-      const near =
-        lean > 0.002 ? lean * Math.exp(-((x - leanX) ** 2 + (y - leanY) ** 2) / reach) : 0;
-      const v = toneAt(x, y - shift, seconds, seed, near);
+      const v = toneAt(((i + 0.5) / across) * width, y, seconds, seed);
       data[at++] = low[0] + (high[0] - low[0]) * v;
       data[at++] = low[1] + (high[1] - low[1]) * v;
       data[at++] = low[2] + (high[2] - low[2]) * v;
@@ -106,47 +96,25 @@ function draw(band: Band, seconds: number, scrolled: number) {
 
 export function drift(host: Host): Stop {
   const bands = new Map<Element, Band>();
-  let raf = 0;
-  let last = 0;
-  let scrolled = window.scrollY;
-  let target = scrolled;
+  let timer = 0;
 
-  const tick = (now: number) => {
-    raf = 0;
-    const ms = Math.min(now - last, 200);
-    if (ms >= D.frameMs) {
-      last = now;
-      scrolled = ease(scrolled, target, ms, D.scrollMs);
-      for (const band of bands.values()) {
-        if (!band.visible) continue;
-        const box = band.el.getBoundingClientRect();
-        const x = host.pointer.x - box.left;
-        const y = host.pointer.y - box.top;
-        const over = x >= 0 && y >= 0 && x <= box.width && y <= box.height;
-        if (over) {
-          // Arriving, it starts where the pointer came in, rather than sliding over from a corner.
-          const arriving = band.lean < 0.01;
-          band.leanX = arriving ? x : ease(band.leanX, x, ms, D.leanMs);
-          band.leanY = arriving ? y : ease(band.leanY, y, ms, D.leanMs);
-        }
-        band.lean = ease(band.lean, over ? 1 : 0, ms, D.leanMs);
-        draw(band, now / 1000, scrolled);
-      }
-    }
-    for (const band of bands.values()) {
-      if (band.visible) {
-        raf = requestAnimationFrame(tick);
-        break;
-      }
+  const tick = () => {
+    if (document.hidden) return;
+    const seconds = performance.now() / 1000;
+    for (const band of bands.values()) if (band.visible) draw(band, seconds);
+  };
+  /** The timer only runs while a band is on screen. Off screen, nothing is drawn at all. */
+  const pace = () => {
+    const wanted = !host.reduced && [...bands.values()].some((band) => band.visible);
+    if (wanted && !timer) timer = window.setInterval(tick, D.frameMs);
+    if (!wanted && timer) {
+      window.clearInterval(timer);
+      timer = 0;
     }
   };
-  const wake = () => {
-    if (!raf && !host.reduced) raf = requestAnimationFrame(tick);
-  };
-
-  /** Drawn once, for a band that isn't going to move, and once to fill a new canvas before it fades in. */
+  /** Once, for a band that isn't going to move, and once to fill a new canvas before it fades in. */
   const still = (band: Band) => {
-    draw(band, host.reduced ? 0 : performance.now() / 1000, scrolled);
+    draw(band, host.reduced ? 0 : performance.now() / 1000);
     band.canvas.setAttribute('data-on', '');
   };
 
@@ -170,11 +138,9 @@ export function drift(host: Host): Stop {
       const band = bands.get(entry.target);
       if (!band) continue;
       band.visible = entry.isIntersecting;
-      if (band.visible && !host.reduced && !band.canvas.hasAttribute('data-on')) {
-        still(band);
-      }
+      if (band.visible && !host.reduced && !band.canvas.hasAttribute('data-on')) still(band);
     }
-    wake();
+    pace();
   });
 
   const scan = () => {
@@ -186,7 +152,7 @@ export function drift(host: Host): Stop {
       bands.delete(el);
     }
     const found = document.querySelectorAll(
-      ':is(section, footer)[data-b="surface"]:is([data-tone], [data-surface="mint"])',
+      ':is(section, footer)[data-b="surface"]:is([data-tone="paper"], [data-tone="mist"], [data-surface="mint"])',
     );
     for (const el of found) {
       if (bands.has(el)) continue;
@@ -197,7 +163,8 @@ export function drift(host: Host): Stop {
       canvas.setAttribute('data-drift', '');
       canvas.setAttribute('aria-hidden', 'true');
       el.prepend(canvas);
-      const wash = D.wash[(el.getAttribute('data-tone') ?? 'mint') as ToneName | 'mint'];
+      const tone = el.getAttribute('data-tone') as Exclude<ToneName, 'stone'> | null;
+      const wash = D.wash[tone ?? 'mint'];
       bands.set(el, {
         el,
         canvas,
@@ -209,26 +176,203 @@ export function drift(host: Host): Stop {
         width: 0,
         height: 0,
         visible: false,
-        leanX: 0,
-        leanY: 0,
-        lean: 0,
       });
       sized.observe(el);
       seen.observe(el);
     }
+    pace();
   };
 
   scan();
   host.onChange(scan);
-  host.onScroll(() => {
-    target = window.scrollY;
-  });
 
   return () => {
-    cancelAnimationFrame(raf);
+    window.clearInterval(timer);
     sized.disconnect();
     seen.disconnect();
     for (const band of bands.values()) band.canvas.remove();
     bands.clear();
+  };
+}
+
+/** Lets the stone band's static run while it's on screen. The compositor does the rest. */
+export function shimmer(host: Host): Stop {
+  if (host.reduced) return () => {};
+  const seen = new IntersectionObserver((entries) => {
+    for (const entry of entries) entry.target.toggleAttribute('data-near', entry.isIntersecting);
+  });
+  const scan = () => {
+    for (const el of document.querySelectorAll('[data-b="surface"][data-tone="stone"]')) {
+      seen.observe(el);
+    }
+  };
+  scan();
+  host.onChange(scan);
+  return () => {
+    seen.disconnect();
+    for (const el of document.querySelectorAll('[data-near]')) el.removeAttribute('data-near');
+  };
+}
+
+// ----- surface.connect -----------------------------------------------------------------------------
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface Keepout {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+/** How strongly the star mask shows at a place on a band: 0 to 1, the strongest of its ellipses. */
+export function fadeAt(x: number, y: number, width: number, height: number): number {
+  let most = 0;
+  for (const e of C.fade) {
+    const dx = (x / width - e.x) / e.across;
+    const dy = (y / height - e.y) / e.down;
+    most = Math.max(most, 1 - Math.hypot(dx, dy));
+  }
+  return most;
+}
+
+/** Every star on a band that can really be seen, in the band's own pixels. */
+export function starsOn(width: number, height: number): Point[] {
+  const out: Point[] = [];
+  for (let row = 0; row * C.tile < height; row++) {
+    for (let column = 0; column * C.tile < width; column++) {
+      for (const [x, y] of C.stars) {
+        const at = { x: x + column * C.tile, y: y + row * C.tile };
+        if (at.x > width || at.y > height) continue;
+        if (fadeAt(at.x, at.y, width, height) >= C.least) out.push(at);
+      }
+    }
+  }
+  return out;
+}
+
+/** Does a line between two points touch any of these, or come within `margin` of it? */
+export function crosses(a: Point, b: Point, keepouts: readonly Keepout[], margin = 14): boolean {
+  const steps = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 6);
+  for (let i = 0; i <= steps; i++) {
+    const x = a.x + ((b.x - a.x) * i) / steps;
+    const y = a.y + ((b.y - a.y) * i) / steps;
+    for (const k of keepouts) {
+      if (
+        x > k.left - margin &&
+        x < k.right + margin &&
+        y > k.top - margin &&
+        y < k.bottom + margin
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** Two near stars whose line is clear of everything to keep out of, or none if there's no such pair. */
+export function pick(
+  stars: readonly Point[],
+  keepouts: readonly Keepout[],
+  random: () => number = Math.random,
+): [Point, Point] | null {
+  const pairs: [Point, Point][] = [];
+  for (let i = 0; i < stars.length; i++) {
+    for (let j = i + 1; j < stars.length; j++) {
+      const a = stars[i] as Point;
+      const b = stars[j] as Point;
+      const apart = Math.hypot(b.x - a.x, b.y - a.y);
+      if (apart < C.nearest || apart > C.farthest || crosses(a, b, keepouts)) continue;
+      pairs.push([a, b]);
+    }
+  }
+  return pairs[Math.floor(random() * pairs.length)] ?? null;
+}
+
+/** What a line mustn't cross, in a band's own pixels: boxes and controls whole, and text line by line. */
+function keepoutsOf(band: Element, box: DOMRect): Keepout[] {
+  const out: Keepout[] = [];
+  const add = (r: DOMRect | DOMRectReadOnly) => {
+    out.push({
+      left: r.left - box.left,
+      top: r.top - box.top,
+      right: r.right - box.left,
+      bottom: r.bottom - box.top,
+    });
+  };
+  const whole = '[data-b="box"], [data-b="action"], [data-b="link"], [data-b="figure"]';
+  for (const el of band.querySelectorAll(whole)) add(el.getBoundingClientRect());
+  for (const el of band.querySelectorAll('h1, h2, h3, p')) {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    for (const line of range.getClientRects()) add(line);
+  }
+  return out;
+}
+
+export function connect(host: Host): Stop {
+  if (host.reduced) return () => {};
+  const lines = new Map<Element, { line: HTMLElement; timer: number; near: boolean }>();
+
+  const wait = (band: Element) => {
+    const state = lines.get(band);
+    if (!state?.near) return;
+    window.clearTimeout(state.timer);
+    const [least, most] = C.waitMs;
+    state.timer = window.setTimeout(() => show(band), least + Math.random() * (most - least));
+  };
+  const show = (band: Element) => {
+    const state = lines.get(band);
+    if (!state?.near || document.hidden) return wait(band);
+    const box = band.getBoundingClientRect();
+    const pair = pick(starsOn(box.width, box.height), keepoutsOf(band, box));
+    if (!pair) return wait(band);
+    const [a, b] = pair;
+    const { style } = state.line;
+    style.setProperty('--b-x', `${a.x.toFixed(1)}px`);
+    style.setProperty('--b-y', `${a.y.toFixed(1)}px`);
+    style.setProperty('--b-long', `${Math.hypot(b.x - a.x, b.y - a.y).toFixed(1)}px`);
+    style.setProperty('--b-turn', `${Math.atan2(b.y - a.y, b.x - a.x).toFixed(4)}rad`);
+    state.line.setAttribute('data-on', '');
+  };
+
+  const seen = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      const state = lines.get(entry.target);
+      if (!state) continue;
+      state.near = entry.isIntersecting;
+      if (state.near) wait(entry.target);
+      else window.clearTimeout(state.timer);
+    }
+  });
+  const scan = () => {
+    for (const band of document.querySelectorAll('[data-b="surface"][data-tone="paper"]')) {
+      if (lines.has(band)) continue;
+      const line = document.createElement('span');
+      line.setAttribute('data-connect', '');
+      line.setAttribute('aria-hidden', 'true');
+      line.addEventListener('animationend', () => {
+        line.removeAttribute('data-on');
+        wait(band);
+      });
+      band.append(line);
+      lines.set(band, { line, timer: 0, near: false });
+      seen.observe(band);
+    }
+  };
+  scan();
+  host.onChange(scan);
+
+  return () => {
+    seen.disconnect();
+    for (const { line, timer } of lines.values()) {
+      window.clearTimeout(timer);
+      line.remove();
+    }
+    lines.clear();
   };
 }

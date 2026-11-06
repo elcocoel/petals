@@ -7,7 +7,8 @@
 // element under the pointer. Nothing here writes to <html>, which would restyle the whole page.
 import { type BehaviourName, type as typeStyles, v2, wordmark } from '@petal/tokens';
 import { useEffect } from 'react';
-import { drift } from './drift.ts';
+import { connect, drift, shimmer } from './drift.ts';
+import { peek } from './peek.ts';
 
 const S = v2.script;
 const NS = 'http://www.w3.org/2000/svg';
@@ -145,38 +146,6 @@ function startReveals(hooks: Map<string, (el: Element) => void>, onChange: Joy['
 
 // ----- surface -----------------------------------------------------------------------------------
 
-function spotlight(joy: Joy): Stop {
-  if (joy.reduced || !joy.fine) return () => {};
-  const spots = new Map<Element, HTMLElement>();
-  let active: Element | null = null;
-  const off = joy.frame(() => {
-    const band = joy.pointer.target?.closest('section[data-b="surface"], footer[data-b="surface"]');
-    const next = band ?? null;
-    if (next !== active) {
-      if (active) spots.get(active)?.removeAttribute('data-on');
-      active = next;
-      if (next && !spots.has(next)) {
-        const spot = document.createElement('span');
-        spot.setAttribute('data-spot', '');
-        spot.setAttribute('aria-hidden', 'true');
-        next.prepend(spot);
-        spots.set(next, spot);
-      }
-      if (next) spots.get(next)?.setAttribute('data-on', '');
-    }
-    if (next) {
-      const box = next.getBoundingClientRect();
-      const spot = spots.get(next) as HTMLElement;
-      spot.style.translate = `${px(joy.pointer.x - box.left)} ${px(joy.pointer.y - box.top)}`;
-    }
-    return false;
-  });
-  return () => {
-    off();
-    for (const spot of spots.values()) spot.remove();
-  };
-}
-
 function stick(joy: Joy): Stop {
   let tight = false;
   const update = () => {
@@ -207,9 +176,9 @@ interface Following {
 }
 
 /**
- * What's under the pointer gets the pointer's place inside it, right away (`--b-x`, `--b-y`), and a
- * position from -1 to 1 that eases there and eases home when the pointer leaves. Reading the box only on
- * entering means what this moves can't feed back into it.
+ * What's under the pointer gets a position from -1 to 1 that eases to where the pointer is inside it,
+ * and eases home when the pointer leaves. Reading the box only on entering means what this moves can't
+ * feed back into it.
  */
 function follow(
   joy: Joy,
@@ -238,8 +207,6 @@ function follow(
     if (current?.box) {
       const { x, y } = joy.pointer;
       const { left, top, width, height } = current.box;
-      write(current.el, '--b-x', px(x - left));
-      write(current.el, '--b-y', px(y - top));
       current.toX = clamp(((x - left) / width) * 2 - 1, -1, 1);
       current.toY = clamp(((y - top) / height) * 2 - 1, -1, 1);
     }
@@ -263,51 +230,14 @@ function follow(
   };
 }
 
-/** The sheen and the lean are one follower: the sheen needs only `--b-x` and `--b-y`. */
-const ACTION = '[data-b="action"]:not(:disabled)';
-
-function sheen(joy: Joy): Stop {
-  if (joy.reduced || !joy.fine) return () => {};
-  return follow(
-    joy,
-    ACTION,
-    () => {},
-    () => {},
-  );
-}
-
-function magnet(joy: Joy): Stop {
-  if (joy.reduced || !joy.fine) return () => {};
-  return follow(
-    joy,
-    `${ACTION}[data-kind="primary"]`,
-    (f) => {
-      f.el.setAttribute('data-pull', '');
-      write(f.el, '--b-mx', px(f.x * S.magnet));
-      write(f.el, '--b-my', px(f.y * S.magnet));
-    },
-    (el) => el.removeAttribute('data-pull'),
-  );
-}
-
-// A box that floats is read and dragged, so it neither tilts nor lights up under the pointer.
+// A box that floats is read and dragged, so it doesn't tilt under the pointer.
 const BOX = '[data-b="box"]:not(foreignObject *, [data-kind="float"])';
-
-function boxSpot(joy: Joy): Stop {
-  if (joy.reduced || !joy.fine) return () => {};
-  return follow(
-    joy,
-    BOX,
-    () => {},
-    () => {},
-  );
-}
 
 function tilt(joy: Joy): Stop {
   if (joy.reduced || !joy.fine) return () => {};
   return follow(
     joy,
-    // A terminal is all words, and words on a tilted layer go soft. It lifts and glows instead.
+    // A terminal is all words, and words on a tilted layer go soft. It lifts instead.
     `${BOX}:not([data-kind="term"])`,
     (f) => {
       f.el.setAttribute('data-tilt', '');
@@ -751,12 +681,11 @@ function markArrive(joy: Joy): Stop {
 /** Every scripted child in the table, in the order they start. CSS alone runs the others. */
 export const SCRIPTED: Partial<Record<BehaviourName, (joy: Joy) => Stop>> = {
   'surface.drift': drift,
-  'surface.spotlight': spotlight,
+  'surface.shimmer': shimmer,
+  'surface.connect': connect,
   'surface.stick': stick,
-  'action.sheen': sheen,
-  'action.magnet': magnet,
-  'box.spot': boxSpot,
   'box.tilt': tilt,
+  'row.peek': peek,
   'figure.bloom': bloom,
   'figure.lean': lean,
   'figure.parallax': parallax,

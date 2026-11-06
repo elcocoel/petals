@@ -30,9 +30,19 @@
 }
 
 /* surface.tone */
-:root[data-version="2"] [data-b="surface"][data-tone="paper"] {
-  background-image:
-    var(--joy-texture-countergrain), var(--joy-texture-grain), var(--joy-gradient-band);
+:root[data-version="2"] [data-b="surface"][data-tone] {
+  isolation: isolate;
+}
+
+/* surface.tone */
+:root[data-version="2"] [data-b="surface"][data-tone="paper"]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: var(--joy-move-zero);
+  background-image: var(--joy-texture-countergrain);
+  mask-image: var(--joy-gradient-star-fade);
+  pointer-events: none;
 }
 
 /* surface.tone */
@@ -44,11 +54,10 @@
 /* surface.tone */
 :root[data-version="2"] [data-b="surface"][data-tone="stone"] {
   --surface: var(--joy-paint-stone);
-  background-image: var(--joy-texture-felt), var(--joy-gradient-band);
 }
 
 /* surface.drift */
-:root[data-version="2"] [data-b="surface"]:is([data-tone], [data-surface="mint"]) {
+:root[data-version="2"] [data-b="surface"][data-surface="mint"] {
   isolation: isolate;
 }
 
@@ -70,23 +79,87 @@
   opacity: 1;
 }
 
-/* surface.spotlight */
-:root[data-version="2"] [data-b="surface"] > [data-spot] {
+/* surface.shimmer */
+:root[data-version="2"] [data-b="surface"][data-tone="stone"]::before,
+:root[data-version="2"] [data-b="surface"][data-tone="stone"]::after {
+  content: "";
   position: absolute;
-  top: var(--joy-light-spot-offset);
-  left: var(--joy-light-spot-offset);
-  width: var(--joy-light-spot-size);
-  height: var(--joy-light-spot-size);
-  background-image: var(--joy-gradient-spot);
-  opacity: 0;
+  z-index: -1;
+  inset: var(--joy-move-static-past);
+  background-image: var(--joy-texture-speckle);
   pointer-events: none;
-  transition: opacity var(--joy-dur-slow) var(--joy-ease-color);
 }
 
-/* surface.spotlight */
-:root[data-version="2"] [data-b="surface"] > [data-spot][data-on] {
-  opacity: 1;
-  will-change: translate;
+@media (prefers-reduced-motion: no-preference) {
+  /* surface.shimmer */
+  :root[data-version="2"] [data-b="surface"][data-tone="stone"]::before {
+    animation: surface-shimmer var(--joy-dur-static-a) var(--joy-ease-drift) infinite alternate
+      paused;
+    will-change: translate;
+  }
+
+  /* surface.shimmer */
+  :root[data-version="2"] [data-b="surface"][data-tone="stone"]::after {
+    animation: surface-shimmer-back var(--joy-dur-static-b) var(--joy-ease-drift) infinite alternate
+      paused;
+    will-change: translate;
+  }
+
+  /* surface.shimmer */
+  :root[data-version="2"] [data-b="surface"][data-tone="stone"][data-near]::before,
+  :root[data-version="2"] [data-b="surface"][data-tone="stone"][data-near]::after {
+    animation-play-state: running;
+  }
+}
+
+/* surface.shimmer */
+@keyframes surface-shimmer {
+  from {
+    translate: var(--joy-move-static-back) var(--joy-move-static-back);
+  }
+  to {
+    translate: var(--joy-move-static-reach) var(--joy-move-static-reach);
+  }
+}
+
+/* surface.shimmer */
+@keyframes surface-shimmer-back {
+  from {
+    translate: var(--joy-move-static-reach) var(--joy-move-static-back);
+  }
+  to {
+    translate: var(--joy-move-static-back) var(--joy-move-static-reach);
+  }
+}
+
+/* surface.connect */
+:root[data-version="2"] [data-b="surface"] > [data-connect] {
+  position: absolute;
+  z-index: -1;
+  top: var(--joy-move-zero);
+  left: var(--joy-move-zero);
+  width: var(--b-long);
+  height: var(--stroke);
+  background-image: var(--joy-gradient-connect);
+  transform-origin: left center;
+  translate: var(--b-x) var(--b-y);
+  rotate: var(--b-turn);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* surface.connect */
+:root[data-version="2"] [data-b="surface"] > [data-connect][data-on] {
+  will-change: opacity;
+  animation: surface-connect var(--joy-dur-connect) var(--joy-ease-color) both;
+}
+
+/* surface.connect */
+@keyframes surface-connect {
+  35%,
+  65% {
+    opacity: 1;
+  }
 }
 
 /* The nav only stays where it is one row. On a phone it wraps to three and would eat the screen. */
@@ -154,15 +227,13 @@
   --b-rest: var(--joy-shadow-action);
   --b-lift: var(--joy-shadow-action-lift);
   --b-press: var(--joy-shadow-action-press);
-  --b-sheen: var(--joy-gradient-sheen);
-  --b-wash: var(--joy-paint-action-wash);
   position: relative;
   isolation: isolate;
   border-radius: var(--joy-radius-sm);
   background-image: var(--joy-gradient-gloss);
   box-shadow: var(--b-rest);
   transition:
-    translate var(--joy-dur-spring) var(--joy-ease-spring),
+    translate var(--joy-dur-slow) var(--joy-ease-move),
     scale var(--joy-dur-quick) var(--joy-ease-move),
     box-shadow var(--joy-dur-quick) var(--joy-ease-color);
 }
@@ -172,8 +243,6 @@
   --b-rest: var(--joy-shadow-chip);
   --b-lift: var(--joy-shadow-chip-lift);
   --b-press: var(--joy-shadow-chip-press);
-  --b-sheen: var(--joy-gradient-chip-sheen);
-  --b-wash: var(--joy-paint-chip-wash);
   background-image: var(--joy-glass-fill);
   border-color: var(--joy-paint-edge-strong);
 }
@@ -194,30 +263,7 @@
   box-shadow: var(--b-lift);
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--joy-dur-base) var(--joy-ease-color);
-}
-
-/* action.sheen */
-:root[data-version="2"] [data-b="action"]::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: var(--joy-move-zero);
-  border-radius: inherit;
-  background-color: var(--b-wash);
-  background-image: var(--b-sheen);
-  background-repeat: no-repeat;
-  background-size: var(--joy-light-sheen-size) var(--joy-light-sheen-size);
-  background-position: calc(var(--b-x, var(--joy-move-zero)) + var(--joy-light-sheen-offset))
-    calc(var(--b-y, var(--joy-move-zero)) + var(--joy-light-sheen-offset));
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--joy-dur-base) var(--joy-ease-color);
-}
-
-/* action.slide */
-:root[data-version="2"] [data-b="action"] svg {
-  transition: translate var(--joy-dur-spring) var(--joy-ease-spring);
+  transition: opacity var(--joy-dur-slow) var(--joy-ease-color);
 }
 
 @media (hover: hover) {
@@ -231,21 +277,6 @@
   :root[data-version="2"] [data-b="action"]:not(:disabled):hover::before {
     opacity: 1;
   }
-
-  /* action.sheen */
-  :root[data-version="2"] [data-b="action"]:not(:disabled):hover::after {
-    opacity: 1;
-  }
-
-  /* action.slide */
-  :root[data-version="2"] [data-b="action"]:not(:disabled):hover svg {
-    translate: var(--joy-move-slide) 0;
-  }
-}
-
-/* action.magnet */
-:root[data-version="2"] [data-b="action"][data-pull] {
-  transform: translate(var(--b-mx), var(--b-my));
 }
 
 /* action.press */
@@ -404,6 +435,14 @@
   border-radius: var(--joy-radius-field-nested);
 }
 
+@media (hover: hover) {
+  /* A button in a field rises with the field, or the two would add up to twice the lift. */
+  /* field.nest */
+  :root[data-version="2"] [data-b="field"] [data-b="action"]:not(:disabled):hover {
+    translate: 0 var(--joy-move-zero);
+  }
+}
+
 /* field.focus */
 :root[data-version="2"] [data-b="field"]:focus-within {
   outline-style: none;
@@ -476,7 +515,7 @@
 }
 
 /* A box that floats is there from the start, wherever a hand puts it. It's read and dragged, so none of
-   what follows moves or lights it: no rise, no lift, no spot, no tilt (JoyLayer leaves it out too). */
+   what follows moves or lights it: no rise, no lift, no tilt (JoyLayer leaves it out too). */
 /* box.rise */
 :root[data-version="2"][data-joy] [data-b="box"]:not([data-seen], [data-kind="float"]) {
   opacity: 0;
@@ -509,23 +548,6 @@
   transition: opacity var(--joy-dur-slow) var(--joy-ease-color);
 }
 
-/* box.spot */
-:root[data-version="2"] [data-b="box"]::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: var(--joy-move-zero);
-  border-radius: inherit;
-  background-image: var(--joy-gradient-box-spot);
-  background-repeat: no-repeat;
-  background-size: var(--joy-light-box-size) var(--joy-light-box-size);
-  background-position: calc(var(--b-x, var(--joy-move-zero)) + var(--joy-light-box-offset))
-    calc(var(--b-y, var(--joy-move-zero)) + var(--joy-light-box-offset));
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--joy-dur-slow) var(--joy-ease-color);
-}
-
 /* box.swell */
 :root[data-version="2"] [data-b="box"] [data-b="figure"] {
   transition: scale var(--joy-dur-spring) var(--joy-ease-spring);
@@ -541,11 +563,6 @@
   /* box.lift */
   :root[data-version="2"]
     :is([data-b="box"]:not([data-kind="float"]):hover, a:hover > [data-b="box"])::after {
-    opacity: 1;
-  }
-
-  /* box.spot */
-  :root[data-version="2"] [data-b="box"]:not([data-kind="float"]):hover::before {
     opacity: 1;
   }
 
@@ -577,7 +594,7 @@
 @keyframes box-type {
   from {
     opacity: 0;
-    translate: var(--joy-move-wash-bleed) 0;
+    translate: var(--joy-move-bleed) 0;
   }
 }
 
@@ -602,52 +619,46 @@
   }
 }
 
-/* row.wash */
+/* row.card */
 :root[data-version="2"] [data-b="row"] {
   position: relative;
   isolation: isolate;
 }
 
-/* row.wash */
+/* The card is solid and a stroke wider than the row's padding box on each edge, so it lies over the
+   separators above and below it. They go with its opacity, with no second line and no change of layout. */
+/* row.card */
 :root[data-version="2"] [data-b="row"]::before {
   content: "";
   position: absolute;
   z-index: -1;
-  top: var(--joy-move-zero);
-  right: var(--joy-move-wash-bleed);
-  bottom: var(--joy-move-zero);
-  left: var(--joy-move-wash-bleed);
+  top: calc(var(--stroke) * -1);
+  right: var(--joy-move-bleed);
+  bottom: calc(var(--stroke) * -1);
+  left: var(--joy-move-bleed);
+  border: var(--stroke) solid var(--hairline);
   border-radius: var(--joy-radius-sm);
-  background-image: var(--joy-gradient-row-wash);
+  background-color: var(--joy-paint-row-fill);
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--joy-dur-base) var(--joy-ease-color);
-}
-
-/* row.indent */
-:root[data-version="2"] [data-b="row"] > :is(summary, p) {
-  transition: translate var(--joy-dur-spring) var(--joy-ease-spring);
+  transition: opacity var(--joy-dur-slow) var(--joy-ease-color);
 }
 
 /* row.swell */
 :root[data-version="2"] [data-b="row"] [data-b="figure"] {
-  transition: scale var(--joy-dur-spring) var(--joy-ease-spring);
+  transition: scale var(--joy-dur-slow) var(--joy-ease-move);
 }
 
 @media (hover: hover) {
-  /* row.wash */
-  :root[data-version="2"] [data-b="row"]:hover::before {
+  /* A transcript's cursor line has nothing on it to hold in a card. */
+  /* row.card */
+  :root[data-version="2"] [data-b="row"]:not(:has(> span)):hover {
+    z-index: 1;
+  }
+
+  /* row.card */
+  :root[data-version="2"] [data-b="row"]:not(:has(> span)):hover::before {
     opacity: 1;
-  }
-
-  /* row.indent */
-  :root[data-version="2"] [data-b="row"]:hover > :is(summary, p) {
-    translate: var(--joy-move-indent) 0;
-  }
-
-  /* row.indent */
-  :root[data-version="2"] details[data-b="row"]:hover::details-content {
-    translate: var(--joy-move-indent) 0;
   }
 
   /* row.swell */
@@ -661,20 +672,23 @@
   interpolate-size: allow-keywords;
 }
 
+/* `hidden`, not `clip`: it holds the answer's top margin inside. With `clip` the margin leaks out through
+   the folded box, and a row pops by that much at both ends of every fold. */
 /* row.fold */
 :root[data-version="2"] details[data-b="row"]::details-content {
   height: var(--joy-move-fold-closed);
-  overflow: clip;
+  overflow: hidden;
   opacity: 0;
   transition:
     height var(--joy-dur-fold) var(--joy-ease-move),
     opacity var(--joy-dur-fold) var(--joy-ease-color),
-    translate var(--joy-dur-spring) var(--joy-ease-spring),
     content-visibility var(--joy-dur-fold) allow-discrete;
 }
 
+/* The server sends a row open, so without JavaScript the answers can be read. While JoyLayer is on its way
+   a row reads as folded whatever it says, so there's no flash of open items before it folds them. */
 /* row.fold */
-:root[data-version="2"] details[data-b="row"][open]::details-content {
+:root[data-version="2"]:not([data-joy="wait"]) details[data-b="row"][open]::details-content {
   height: auto;
   opacity: 1;
 }
@@ -692,12 +706,12 @@
   left: var(--joy-move-zero);
   rotate: var(--joy-move-sign-turn);
   transition:
-    rotate var(--joy-dur-spring) var(--joy-ease-spring),
+    rotate var(--joy-dur-slow) var(--joy-ease-move),
     opacity var(--joy-move-none-s);
 }
 
 /* row.sign */
-:root[data-version="2"] details[data-b="row"][open] [data-sign]::after {
+:root[data-version="2"]:not([data-joy="wait"]) details[data-b="row"][open] [data-sign]::after {
   rotate: var(--joy-move-sign-rest);
   opacity: 0;
   transition-delay: var(--joy-move-none-s), var(--joy-dur-base);
