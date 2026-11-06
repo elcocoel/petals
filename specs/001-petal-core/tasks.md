@@ -349,7 +349,7 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 **Done when (M-Ship)**: frozen on **12 Nov**; the judge path passes from a clean clone; submitted on **13 Nov** with Elco's OK.
 
 - [ ] T135 [P] [W7] IronClaw package in `skill/ironclaw/`: an extension manifest that wraps `/mcp` over HTTP, in the format IronClaw documents at the time, plus the skill; try it in a local IronClaw. About half a day; stop if it costs more. A hedge (no commits on IronClaw's main since 2026-09-10), never on the demo's critical path. Deps: T051, T069.
-- [ ] T136 [Elco] Hosting: Elco picks the host (Vercel proposed) and the lasting store for snapshots and runs (T104), and puts the NEAR AI key and the writer key in the host's secret settings, never in the repo. Blocks T137. Stand-in: the local judge path (T138). Deps: none.
+- [X] T136 [Elco] Hosting: Elco picks the host (Vercel proposed) and the lasting store for snapshots and runs (T104), and puts the NEAR AI key and the writer key in the host's secret settings, never in the repo. Blocks T137. Stand-in: the local judge path (T138). Deps: none.
 - [ ] T137 [W8] [Elco OK] Deploy a hosted preview (`apps/web/vercel.json`, function max duration 300 s). Deps: T136, T090.
 - [ ] T138 [W8] Judge path from a clean clone with no keys (SC-009) in `tests/e2e/judge-path.spec.ts`: `pnpm install && pnpm dev`; hero flowers open fully; `/make` replays the recorded run; `pnpm petal figures near-validators` prints the figures the flower quotes. Deps: T061, T070, T116.
 - [ ] T139 [W8] **Freeze on 12 Nov**: bug fixes only from here; tag `v0.1.0-freeze` locally (no push). Deps: T090, T097, T107, T117, T123, T128, T134, T138 (or the cut list).

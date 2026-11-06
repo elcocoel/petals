@@ -54,4 +54,13 @@ describe('entry.sh', () => {
     expect(env.PETAL_FAKE).toBeUndefined();
     expect(env.PETAL_API_MOCK).not.toBe('1');
   });
+
+  test('neither can send the model’s calls, and its key, to another address', () => {
+    const stub = 'http://127.0.0.1:3189/v1';
+    const fromFile = start(`PETAL_NEAR_AI_BASE_URL=${stub}\nNEAR_AI_API_KEY=k\n`);
+    expect(fromFile.PETAL_NEAR_AI_BASE_URL).toBeUndefined();
+    expect(fromFile.NEAR_AI_API_KEY).toBe('k');
+    const fromRun = start('', { PETAL_NEAR_AI_BASE_URL: stub });
+    expect(fromRun.PETAL_NEAR_AI_BASE_URL).toBeUndefined();
+  });
 });

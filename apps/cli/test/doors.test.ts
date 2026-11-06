@@ -63,15 +63,15 @@ describe('petal api', () => {
     expect(r.apps).toEqual([expect.objectContaining({ root: '/repo', fake: false })]);
     expect(r.served).toHaveLength(1);
     expect(r.served[0]?.port).toBe(8787);
-    expect(r.served[0]).not.toHaveProperty('hostname');
+    expect(r.served[0]?.hostname).toBe('127.0.0.1');
     expect(r.stderr).toBe('petal api on http://localhost:8787\n');
     const res = (await r.served[0]?.fetch(new Request('http://x/api/v1/health'))) as Response;
     expect(await res.json()).toEqual({ ok: true });
   });
 
   test('--port and --host', async () => {
-    const r = await start(['--port', '9999', '--host', '127.0.0.1']);
-    expect(r.served[0]).toMatchObject({ port: 9999, hostname: '127.0.0.1' });
+    const r = await start(['--port', '9999', '--host', '0.0.0.0']);
+    expect(r.served[0]).toMatchObject({ port: 9999, hostname: '0.0.0.0' });
   });
 
   test('serves over real HTTP with @hono/node-server', async () => {
