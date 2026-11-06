@@ -20,6 +20,9 @@ const qs = (o: Record<string, unknown> = {}) => {
   return s ? `?${s}` : '';
 };
 
+/** An exploration's place in a path: its id, or a link's token. Agents may be handed the whole URL. */
+const tokenOf = (i: Json) => String(i.exploration).split('/').pop();
+
 /** http-api.md, Routes: tool → method, path and body. */
 export const ROUTES: Record<
   string,
@@ -53,6 +56,19 @@ export const ROUTES: Record<
   related_groups: (i) => ({ method: 'GET', path: `/api/v1/relations/related${qs(i)}` }),
   relations_overview: (i) => ({ method: 'GET', path: `/api/v1/relations/overview${qs(i)}` }),
   power_path: (i) => ({ method: 'GET', path: `/api/v1/relations/path${qs(i)}` }),
+  list_explorations: (i) => ({ method: 'GET', path: `/api/v1/explorations${qs(i)}` }),
+  get_exploration: (i) => ({ method: 'GET', path: `/api/v1/explorations/${tokenOf(i)}` }),
+  start_exploration: (i) => ({ method: 'POST', path: '/api/v1/explorations', body: i }),
+  save_step: ({ exploration: _ref, ...b }) => ({
+    method: 'POST',
+    path: `/api/v1/explorations/${tokenOf({ exploration: _ref })}/steps`,
+    body: b,
+  }),
+  add_note: ({ exploration: _ref, ...b }) => ({
+    method: 'POST',
+    path: `/api/v1/explorations/${tokenOf({ exploration: _ref })}/notes`,
+    body: b,
+  }),
 };
 
 let ip = 0;

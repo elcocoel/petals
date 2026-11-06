@@ -87,6 +87,31 @@ describe('every door returns the same JSON', () => {
     expect(wrong?.error).toMatchObject({ code: 'bad_input' });
   });
 
+  test('the exploration tools: reads and errors the same, writes the same but for the door', async () => {
+    const [refused] = await same('list_explorations', {});
+    expect(refused?.error).toMatchObject({ code: 'unauthorised' });
+    const [gone] = await same('get_exploration', { exploration: 'exp_'.padEnd(28, '0') });
+    expect(gone?.error).toMatchObject({ code: 'not_found' });
+
+    const started = await callTool('start_exploration', { question: 'who?' }, r.ctx);
+    const { link } = started as { link: { url: string } };
+    const exploration = link.url;
+    const [empty] = await same('get_exploration', { exploration });
+    expect(empty?.access).toMatchObject({ as: 'continue' });
+    const doorsSeen: unknown[] = [];
+    for (const d of all) {
+      const noted = await d.call('add_note', { exploration, text: `from ${d.name}` });
+      const { door } = noted.note as { door: string };
+      doorsSeen.push(door);
+    }
+    expect(doorsSeen).toEqual(['unknown', 'http', 'mcp', 'mcp']);
+    const saved = await all[1]?.call('save_step', { exploration, spec: f.spec });
+    expect(saved).toMatchObject({ head: f.proposed.spec_sha256, step: { door: 'http' } });
+    const [back] = await same('get_exploration', { exploration });
+    expect(back?.steps).toHaveLength(1);
+    expect(back?.notes).toHaveLength(all.length);
+  });
+
   test('the same choices give the same spec_sha256 through every door', async () => {
     const choices = { measure: 'validator_stake_current_epoch', segments: 'backers', width: 'r2' };
     const outs = await same('propose_spec', {

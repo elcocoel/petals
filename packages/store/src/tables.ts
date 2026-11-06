@@ -107,15 +107,28 @@ export interface StepRow {
   recipe_sha256: string | null;
   snapshot_sha256: string | null;
   door: string | null;
+  /** who wrote it, as a reader may see it: `owner` or `link:<id>`, never a person id */
+  author: string | null;
   note: string | null;
   at: string;
 }
 export interface NoteRow {
   exploration: string;
   seq: number;
+  /** who wrote it, as a reader may see it: `owner` or `link:<id>`, never a person id */
   author: string;
+  door: string | null;
   text: string;
   at: string;
+}
+/** A way into an exploration without being its owner. Only the token's hash is stored. */
+export interface ExplorationLinkRow {
+  id: string;
+  exploration: string;
+  scope: string;
+  token_hash: string;
+  created_at: string;
+  revoked_at: string | null;
 }
 
 /** How much of `wanted` fits in what is left, or null when nothing is. */
@@ -302,6 +315,15 @@ export function tables(db: Db) {
           owner,
           limit,
         ),
+      setExploration(id: string, exploration: string) {
+        db.run('UPDATE run SET exploration = ? WHERE id = ?', exploration, id);
+      },
+      /** The run that last worked on this exploration, if any. */
+      latestOfExploration: (exploration: string) =>
+        db.get<{ id: string }>(
+          'SELECT id FROM run WHERE exploration = ? ORDER BY updated_at DESC LIMIT 1',
+          exploration,
+        )?.id ?? null,
     },
 
     runEvent: {
@@ -558,6 +580,13 @@ export function tables(db: Db) {
           id,
         );
       },
+      /** What it's about now: the target of its latest step. */
+      setTarget(id: string, target: string | null) {
+        db.run('UPDATE exploration SET target = ? WHERE id = ?', target, id);
+      },
+      touch(id: string, at: string) {
+        db.run('UPDATE exploration SET updated_at = ? WHERE id = ?', at, id);
+      },
       /** Every exploration of `from` now belongs to `to`, in one statement. */
       moveOwner: (from: string, to: string): number =>
         db.run('UPDATE exploration SET owner = ? WHERE owner = ?', to, from),
@@ -573,15 +602,48 @@ export function tables(db: Db) {
             )) === 1,
     },
 
+    /** Ways into an exploration: a token's hash, a scope, and a time it stopped working. */
+    explorationLink: {
+      create(r: Omit<ExplorationLinkRow, 'revoked_at'>) {
+        db.run(
+          `INSERT INTO exploration_link (id, exploration, scope, token_hash, created_at)
+           VALUES (?, ?, ?, ?, ?)`,
+          r.id,
+          r.exploration,
+          r.scope,
+          r.token_hash,
+          r.created_at,
+        );
+      },
+      /** Revoked links too: the caller decides what that means. */
+      byTokenHash: (hash: string) =>
+        db.get<ExplorationLinkRow>('SELECT * FROM exploration_link WHERE token_hash = ?', hash),
+      /** Oldest first. */
+      list: (exploration: string) =>
+        db.all<ExplorationLinkRow>(
+          'SELECT * FROM exploration_link WHERE exploration = ? ORDER BY created_at, id',
+          exploration,
+        ),
+      /** False when this exploration has no such link, or it's already revoked. */
+      revoke: (exploration: string, id: string, at: string) =>
+        db.run(
+          `UPDATE exploration_link SET revoked_at = ?
+           WHERE id = ? AND exploration = ? AND revoked_at IS NULL`,
+          at,
+          id,
+          exploration,
+        ) === 1,
+    },
+
     step: {
       /** Returns the step's sequence number: 0, 1, 2… within the exploration. */
-      append: (r: Omit<StepRow, 'seq'>): number =>
+      append: (r: Omit<StepRow, 'seq' | 'author'> & { author?: string | null }): number =>
         db.tx(() => {
           const seq = nextSeq('step', 'exploration', r.exploration);
           db.run(
             `INSERT INTO step (exploration, seq, parent, spec_sha256, recipe_sha256,
-               snapshot_sha256, door, note, at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+               snapshot_sha256, door, author, note, at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             r.exploration,
             seq,
             r.parent,
@@ -589,6 +651,7 @@ export function tables(db: Db) {
             r.recipe_sha256,
             r.snapshot_sha256,
             r.door,
+            r.author ?? null,
             r.note,
             r.at,
           );
@@ -596,18 +659,26 @@ export function tables(db: Db) {
         }),
       list: (exploration: string) =>
         db.all<StepRow>('SELECT * FROM step WHERE exploration = ? ORDER BY seq', exploration),
+      count: (exploration: string) =>
+        (
+          db.get<{ n: number }>(
+            'SELECT COUNT(*) AS n FROM step WHERE exploration = ?',
+            exploration,
+          ) as { n: number }
+        ).n,
     },
 
     note: {
       /** Returns the note's sequence number: 0, 1, 2… within the exploration. */
-      append: (r: Omit<NoteRow, 'seq'>): number =>
+      append: (r: Omit<NoteRow, 'seq' | 'door'> & { door?: string | null }): number =>
         db.tx(() => {
           const seq = nextSeq('note', 'exploration', r.exploration);
           db.run(
-            'INSERT INTO note (exploration, seq, author, text, at) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO note (exploration, seq, author, door, text, at) VALUES (?, ?, ?, ?, ?, ?)',
             r.exploration,
             seq,
             r.author,
+            r.door ?? null,
             r.text,
             r.at,
           );
@@ -615,6 +686,13 @@ export function tables(db: Db) {
         }),
       list: (exploration: string) =>
         db.all<NoteRow>('SELECT * FROM note WHERE exploration = ? ORDER BY seq', exploration),
+      count: (exploration: string) =>
+        (
+          db.get<{ n: number }>(
+            'SELECT COUNT(*) AS n FROM note WHERE exploration = ?',
+            exploration,
+          ) as { n: number }
+        ).n,
     },
   };
 }

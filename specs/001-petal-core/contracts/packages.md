@@ -138,7 +138,8 @@ export function groupsOf(s: Snapshot): ProjectedGroup[];          // one snapsho
 export type Tool<I, O> = { name: string; input: JSONSchema; output: JSONSchema; run(i: I, ctx: ToolContext): Promise<O | ToolError> };
 export const registry: Tool<any, any>[];                // names and shapes in tools.md
 export function createContext(cfg: Config): ToolContext; // wires store, modules, map reader/writer, rpc, onProgress
-export function httpApp(ctx: ToolContext): Hono;       // the tool routes in http-api.md; no agent routes (one-way dependency)
+export function httpApp(ctx: ToolContext, o?: { gate?: SessionGate }): Hono; // the tool routes in http-api.md; no agent routes (one-way dependency). `gate`, additive: who a request's session is, from the agent package
+export function saveRunStep(ctx: ToolContext, runId: string, spec: Spec): void; // additive (T194): a flower of a run is a step of its exploration
 export function mcpServer(ctx: ToolContext): McpServer; // Streamable HTTP at /mcp
 export function serveStdio(ctx: ToolContext): Promise<void>; // MCP over stdio, used by `petal mcp`
 ```

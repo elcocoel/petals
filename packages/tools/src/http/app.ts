@@ -4,47 +4,23 @@
 // HTTP statuses, reads query strings, and streams progress as SSE when asked.
 import { gzipSync } from 'node:zlib';
 import { API_VERSION, canonicalJson, sha256Hex, TOOLS_VERSION } from '@petal/core';
-import type { ToolError } from '@petal/core/types';
 import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
 import { versioned } from '../define.ts';
-import { fromThrown, HTTP_STATUS, isToolError, toolError } from '../errors.ts';
+import { fromThrown, isToolError, toolError } from '../errors.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
 import { findTool } from '../registry.ts';
 import { findSnapshot } from '../tools/shared.ts';
 import type { ToolContext } from '../types.ts';
+import { explorationRoutes, type SessionGate } from './explorations.ts';
 import { rateLimit } from './rate-limit.ts';
+import { body, fail, respond } from './reply.ts';
 
 const IMMUTABLE = 'public, max-age=31536000, immutable';
 const SHA = /^[0-9a-f]{64}$/;
 
 type Out = Record<string, unknown>;
-
-function respond(c: Context, out: unknown): Response {
-  if (isToolError(out)) {
-    const status = HTTP_STATUS[out.error.code];
-    if (out.error.retry_after_s !== undefined)
-      c.header('Retry-After', String(out.error.retry_after_s));
-    return c.json(out, status);
-  }
-  return c.json(out as Out, 200);
-}
-
-const fail = (c: Context, e: ToolError) => respond(c, versioned(e));
-
-/** The JSON body, {} when empty; a ToolError when it is not JSON. */
-async function body(c: Context): Promise<unknown> {
-  const text = await c.req.text();
-  if (!text.trim()) return {};
-  try {
-    return JSON.parse(text);
-  } catch {
-    return versioned(
-      toolError('bad_input', 'The request body is not JSON.', 'Send application/json.'),
-    );
-  }
-}
 
 /** Query numbers: digits become a number; anything else stays a string for the schema to refuse. */
 const num = (v: string) => (/^\d+$/.test(v) ? Number(v) : v);
@@ -60,15 +36,17 @@ function pick(q: Record<string, string>, keys: string[], numeric: string[] = [])
 
 const wantsSse = (c: Context) => (c.req.header('accept') ?? '').includes('text/event-stream');
 
-export function httpApp(ctx: ToolContext): Hono {
+export function httpApp(ctx: ToolContext, o: { gate?: SessionGate } = {}): Hono {
   const app = new Hono();
-  app.use('*', cors({ origin: '*', exposeHeaders: ['Retry-After', 'ETag'] }));
   const limit = rateLimit({
     max: 60,
     windowMs: 60_000,
     now: () => ctx.now().getTime(),
     what: 'tool calls',
   });
+  // First: these read a session, so the open CORS below doesn't reach them.
+  app.route('/', explorationRoutes(ctx, limit, o.gate));
+  app.use('*', cors({ origin: '*', exposeHeaders: ['Retry-After', 'ETag'] }));
   const mcp = mcpHttpHandler(ctx);
 
   const run = (name: string, input: unknown, runCtx: ToolContext = ctx): Promise<unknown> => {

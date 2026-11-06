@@ -25,7 +25,7 @@ The agent interprets; the tools count (FR-025). Any number an agent quotes must 
 | `compute_figures` | A | none |
 | `propose_spec` | A | none |
 | `validate_spec` | A | none |
-| `render_flower` | A | none (writes a render cache) |
+| `render_flower` | A | stores the spec body under its hash, put-if-absent (SYS-043) |
 | `list_flowers` | A | reads the map and fixtures |
 | `get_flower` | A | reads the map and fixtures |
 | `prepare_publish` | A | issues a nonce |
@@ -42,6 +42,11 @@ The agent interprets; the tools count (FR-025). Any number an agent quotes must 
 | `related_groups` | M-System | none; the first call may build the derived index |
 | `relations_overview` | M-System | none; the first call may build the derived index |
 | `power_path` | M-System | none; the first call may build the derived index |
+| `list_explorations` | M-System | none |
+| `get_exploration` | M-System | none |
+| `start_exploration` | M-System | writes to the private store |
+| `save_step` | M-System | writes to the private store; stores the spec body under its hash |
+| `add_note` | M-System | writes to the private store |
 
 ### list_networks
 
@@ -101,7 +106,7 @@ Output: `{ "valid": boolean, "errors": [{ "path", "rule", "message" }], "warning
 ### render_flower
 
 Input: `{ "spec": Spec, "include_svg"?: boolean (default false for MCP, true for HTTP), "size"?: int (default 800) }`
-Output: `{ "spec_sha256", "render_sha256", "svg"?: string, "legend": LegendItem[], "petals": PetalDetail[], "view_url": string }`. See [renderer.md](./renderer.md) for `LegendItem`, `PetalDetail` and determinism. `view_url` opens the flower on the site from the spec alone (draft, not published).
+Output: `{ "spec_sha256", "render_sha256", "svg"?: string, "legend": LegendItem[], "petals": PetalDetail[], "view_url": string, "short_url"?: string }`. See [renderer.md](./renderer.md) for `LegendItem`, `PetalDetail` and determinism. `view_url` opens the flower on the site from the spec alone (draft, not published). `short_url` (M-System, additive) is `/d/<spec_sha256>`, which redirects to the same place, with the body stored under its hash and hashed again on read. It's absent when nothing lasting can hold the body, so `view_url` is always there as the fallback. Petal's own agent is shown neither: its loop puts the link in.
 Errors: `invalid_spec` (render refuses anything `validate_spec` rejects).
 
 ### list_flowers / get_flower
@@ -181,6 +186,43 @@ Output: `{ min_shared, kind, basis, groups: [{ id, title, kind, chain, module, u
 Input: `{ account_a, account_b, max_depth?: int (1-6, default 3; how many shared groups), budget?: int (default 2,000,000; edges read before giving up), include_inferred?: boolean (default false) }`.
 Output: `{ from: { asked, accounts, match | null }, to: { asked, accounts, match | null }, max_depth, budget, walked, found, reason: "found" | "same_account" | "unknown_account" | "no_path" | "depth_limit" | "budget", gave_up, hops, touched, note, does_not_show }`.
 A hop is `{ via: "group", from, to, group: Group, from_in_group, to_in_group }`, with `{ role: "member", share, rank }` or `{ role: "anchor" }` on each end, or, when inference is allowed, `{ via: "same_address", from, to, match }`. `gave_up` is true for `depth_limit` and `budget`: a path may exist. It is one shortest path among possibly many, chosen the same way each time. It isn't scored: group sizes are there so a reader can judge, since a huge group connects nearly anything.
+
+### Explorations (M-System, T194; additive, still tools/v1)
+
+A private, door-independent ref over public objects, like a git branch ([data-model](../../002-system/data-model.md#an-exploration)). Conversations don't travel, but work and notes do. Every door has these except Petal's own agent, whose run saves steps by itself and which would pay 2.7 KB on every model call to list them.
+
+**Whose.** Where a tool takes `exploration`, it takes an id (`exp_…`), which only its owner's session can open, or a link (`/s/<token>`, the whole URL or the token). A `read` link opens the packet. A `continue` link can also `save_step` and `add_note`. Anyone else, a revoked link, and nothing at all get one answer: `not_found`, with one fixed message. HTTP is the only door with a session so far; MCP and the CLI have links.
+
+**Who wrote what.** A step and a note say which `door` (`site`, `http`, `mcp`, `cli`) and `from` whom (`owner`, `link:<id>`, and `fork:` in front when a fork copied it). The door sets these; a caller can't.
+
+**Untrusted.** Notes, step notes, the question and the target are data from whoever wrote them. The packet says so in `untrusted`, and on each note. Nothing here spends, so a note can't cause spending.
+
+#### get_exploration
+
+Input: `{ "exploration": string }`
+Output, the resume packet: `{ "exploration", "access": { "as": "owner" | "read" | "continue", "can": string[], "cannot"?: string[] }, "question", "target": string | null, "current": { "spec_sha256", "spec", "recipe", "recipe_sha256", "snapshot_sha256", "as_of", "block_height", "network", "short_url" } | null, "steps": Step[] (the last 20), "steps_total", "notes": Note[] (the last 30), "notes_total", "untrusted": { "fields": string[], "says" }, "free": string[], "spends": string[], "next", "forked_from": string | null, "run_id"?: string | null (owner only: the conversation on the site), "created_at", "updated_at" }`.
+`Step`: `{ "seq", "parent", "spec_sha256", "recipe_sha256", "snapshot_sha256", "as_of", "door", "from", "note", "at", "diff": SpecDiff | null }`, where `diff` is `diffSpecs` against its parent. `Note`: `{ "seq", "untrusted": true, "from", "door", "at", "text" }`.
+To use a recipe on another target: `propose_spec` with that `network` and `sha256`, `choices: recipe.choices` and `meanings: recipe.meanings`. What doesn't apply there is refused with what's allowed.
+
+#### list_explorations
+
+Input: `{ "limit"?: int (1-200, default 50) }`
+Output: `{ "explorations": [{ "exploration", "question", "target", "head", "short_url"?, "steps", "notes", "forked_from", "run_id", "created_at", "updated_at" }] }`, newest first. Errors: `unauthorised` with no session.
+
+#### start_exploration
+
+Input: `{ "question"?: string (required unless forking), "target"?: string, "fork_of"?: string (a link, or an id of your own) }`
+Output: `{ "exploration", "owned": boolean, "forked_from": string | null, "link"?: { "id", "scope": "continue", "url", "created_at" }, "next" }`. With a session it's that subject's. With none it has no owner, and `link` is its only key, shown once: its holder can claim it after signing in. A fork copies the steps and notes, so it stands alone once a link is revoked. Errors: `source_failed` on a store that won't last, as on the keyless copy.
+
+#### save_step
+
+Input: `{ "exploration": string, "spec"?: Spec, "spec_sha256"?: string (one `render_flower` stored), "note"?: string }`
+Output: `{ "exploration", "step": Step, "head", "unchanged": boolean, "short_url" }`. The spec must pass `validate_spec`. Its parent is its `variation_of`, or else the head. Saving the head again adds no step, and a note with it stays as a note. Errors: `unauthorised` on a read link, `invalid_spec`, `not_found`.
+
+#### add_note
+
+Input: `{ "exploration": string, "text": string (2,000 characters at most) }`
+Output: `{ "exploration", "note": Note }`. Errors: `unauthorised` on a read link.
 
 ## Types referenced
 

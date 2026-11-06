@@ -418,7 +418,7 @@ class Cli {
     }
 
     const cfg = this.config(cliFlags);
-    const ctx = this.tools.createContext(cfg);
+    const ctx: ToolContext = { ...this.tools.createContext(cfg), caller: { door: 'cli' } };
     if (cliFlags.get('quiet') !== true) {
       ctx.onProgress ??= (e) => {
         const count = e.total !== undefined ? ` (${e.done ?? 0}/${e.total})` : '';

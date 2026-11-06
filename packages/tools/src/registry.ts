@@ -4,6 +4,13 @@
 import type { ToolError } from '@petal/core/types';
 import { type PetalTool, versioned } from './define.ts';
 import { toolError } from './errors.ts';
+import {
+  addNote,
+  getExploration,
+  listExplorations,
+  saveStep,
+  startExploration,
+} from './tools/explorations.ts';
 import { computeFiguresTool } from './tools/figures.ts';
 import { findTarget } from './tools/find.ts';
 import { getFlower, listFlowers } from './tools/flowers.ts';
@@ -43,6 +50,11 @@ export const registry: Tool<any, any>[] = [
   relatedGroupsTool,
   relationsOverviewTool,
   powerPathTool,
+  listExplorations,
+  getExploration,
+  startExploration,
+  saveStep,
+  addNote,
 ];
 
 /** Title, description and hints, for doors that list them (MCP, the agent's tool list). */

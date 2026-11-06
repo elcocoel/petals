@@ -190,9 +190,10 @@ export const bodyUrl = (ctx: ToolContext, sha256: string) =>
 export const galleryUrl = (ctx: ToolContext, id: string) => `${base(ctx)}/f/${id}`;
 
 /** The draft view opens a flower from the spec alone: base64url of its canonical JSON. */
-export function viewUrl(ctx: ToolContext, specJson: string): string {
-  return `${base(ctx)}/draft?spec=${Buffer.from(specJson, 'utf8').toString('base64url')}`;
-}
+export const draftPath = (specJson: string) =>
+  `/draft?spec=${Buffer.from(specJson, 'utf8').toString('base64url')}`;
+
+export const viewUrl = (ctx: ToolContext, specJson: string) => `${base(ctx)}${draftPath(specJson)}`;
 
 export function snapshotOf(spec: unknown): string | null {
   const sha = (spec as Partial<Spec> | null)?.snapshot?.sha256;

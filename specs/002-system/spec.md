@@ -123,10 +123,11 @@ A mapping that spends needs a yes from the wallet.
 
 ### Coming back
 
-- **SYS-040**: An exploration MUST be a private, door-independent ref over public objects: `{ question, target, head, steps, notes, threads?, visibility }`. Each step records parent, spec, recipe, snapshot and door.
-- **SYS-041**: `list_explorations`, `get_exploration`, `save_step` and `add_note` MUST exist for agents, and the site's own run MUST save steps automatically.
-- **SYS-042**: A share link MUST be revocable and read-only, and a non-owner MAY fork.
+- **SYS-040**: An exploration MUST be a private, door-independent ref over public objects: `{ question, target, head, steps, notes, threads?, visibility }`. Each step records parent, spec, recipe, snapshot, door and who wrote it. To anyone without access it MUST answer exactly as one that doesn't exist.
+- **SYS-041**: `list_explorations`, `get_exploration`, `save_step`, `add_note` and `start_exploration` MUST exist for agents, and the site's own run MUST save steps automatically. `get_exploration` returns a resume packet, in which notes are untrusted data from whoever wrote them.
+- **SYS-042**: A link MUST be a token stored only as a hash, and revocable by the owner. There are two kinds. `read`: whoever holds it gets the resume packet, and a non-owner MAY fork, keeping `forked_from`. `continue`: it MAY also `save_step` and `add_note` on the same exploration, which is how a person hands work to their own agent before OAuth exists. Neither MAY grant spending, publishing, linking a wallet, seeing wallets or making more links. Each step and note MUST record the door and the link that wrote it.
 - **SYS-043**: A draft link MUST carry only a hash, with the body stored put-if-absent and re-hashed on read. The long `/draft?spec=` form stays as a fallback.
+- **SYS-044**: An agent with no sign-in MAY start an exploration. It has no owner, and the `continue` link returned is its only key. A person holding that link MAY claim it once signed in, and then it's theirs alone.
 
 ### Who pays
 

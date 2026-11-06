@@ -42,6 +42,14 @@ export interface Config {
   fake?: boolean;
 }
 
+/** Who is calling and through what. A door sets this; a caller can't name itself. */
+export interface Caller {
+  /** the session's subject: a person id or an anonymous handle. None: nobody signed in */
+  subject?: string | null;
+  /** http, mcp, cli or site */
+  door?: string;
+}
+
 /** What every tool run gets: store, modules, map reader/writer, rpc, quotes, progress. */
 export interface ToolContext {
   config: Config;
@@ -52,6 +60,8 @@ export interface ToolContext {
   quote(req: QuoteRequest): Promise<QuoteResult>;
   onProgress?: Progress;
   now(): Date;
+  /** additive (T194): only the exploration tools read it */
+  caller?: Caller;
 }
 
 export type Tool<I, O> = {

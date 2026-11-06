@@ -545,6 +545,50 @@ describe('the thin tables', () => {
     expect(note.append({ exploration: 'x', author: 'p1', text: 'a', at: AT })).toBe(0);
     expect(note.append({ exploration: 'x', author: 'p1', text: 'b', at: AT })).toBe(1);
     expect(note.list('x').map((n) => n.text)).toEqual(['a', 'b']);
+    expect(step.count('x')).toBe(2);
+    expect(note.count('x')).toBe(2);
+  });
+
+  test('a link is found by its hash, stops when revoked, and belongs to one exploration', () => {
+    const { exploration, explorationLink: link } = openStore(':memory:');
+    const row = {
+      owner: 'p1',
+      question: 'who?',
+      target: null,
+      head: null,
+      visibility: 'private',
+      share_token_hash: null,
+      forked_from: null,
+      created_at: AT,
+      updated_at: AT,
+    };
+    exploration.create({ ...row, id: 'x' });
+    exploration.create({ ...row, id: 'y' });
+    link.create({ id: 'l1', exploration: 'x', scope: 'read', token_hash: 'h1', created_at: AT });
+    link.create({
+      id: 'l2',
+      exploration: 'x',
+      scope: 'continue',
+      token_hash: 'h2',
+      created_at: AT,
+    });
+    expect(() =>
+      link.create({ id: 'l3', exploration: 'y', scope: 'read', token_hash: 'h1', created_at: AT }),
+    ).toThrow();
+    expect(link.byTokenHash('h2')).toMatchObject({ id: 'l2', scope: 'continue', revoked_at: null });
+    expect(link.list('x').map((l) => l.id)).toEqual(['l1', 'l2']);
+    expect(link.revoke('y', 'l1', LATER)).toBe(false);
+    expect(link.revoke('x', 'l1', LATER)).toBe(true);
+    expect(link.revoke('x', 'l1', LATER)).toBe(false);
+    expect(link.byTokenHash('h1')?.revoked_at).toBe(LATER);
+  });
+
+  test('a run can be found from its exploration', () => {
+    const { run } = openStore(':memory:');
+    run.insert(runRow('a'));
+    expect(run.latestOfExploration('x')).toBeNull();
+    run.setExploration('a', 'x');
+    expect(run.latestOfExploration('x')).toBe('a');
   });
 });
 

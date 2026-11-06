@@ -2,8 +2,9 @@
 import { canonicalJson, renderFlower, specHash } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { defineTool } from '../define.ts';
+import { putSpecBody } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
-import { obj, SHA256, viewUrl } from './shared.ts';
+import { base, obj, SHA256, viewUrl } from './shared.ts';
 import { checkSpec, summarise } from './specs.ts';
 
 export const LEGEND_ITEM = obj(['primitive', 'meaning', 'sources'], {
@@ -79,6 +80,7 @@ export const renderFlowerTool = defineTool<
     legend: { type: 'array', items: LEGEND_ITEM },
     petals: { type: 'array', items: PETAL_DETAIL },
     view_url: { type: 'string' },
+    short_url: { type: 'string' },
   }),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   async run({ spec, include_svg = false, size }, ctx) {
@@ -91,6 +93,7 @@ export const renderFlowerTool = defineTool<
       );
     }
     const r = renderFlower(spec, snapshot, size !== undefined ? { size } : {});
+    const stored = putSpecBody(ctx.config, spec, ctx.now().toISOString());
     return {
       spec_sha256: specHash(spec),
       render_sha256: r.render_sha256,
@@ -98,6 +101,7 @@ export const renderFlowerTool = defineTool<
       legend: r.legend,
       petals: r.petals,
       view_url: viewUrl(ctx, canonicalJson(spec)),
+      ...(stored ? { short_url: `${base(ctx)}/d/${stored}` } : {}),
     };
   },
 });

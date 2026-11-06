@@ -26,10 +26,15 @@ const PHASE_A = [
   'related_groups',
   'relations_overview',
   'power_path',
+  'list_explorations',
+  'get_exploration',
+  'start_exploration',
+  'save_step',
+  'add_note',
 ];
 
 describe('registry', () => {
-  test('holds the Phase A tools of tools.md, find_target and the relations tools, once each', () => {
+  test('holds the Phase A tools of tools.md, find_target, the relations and exploration tools, once each', () => {
     expect(registry.map((t) => t.name)).toEqual(PHASE_A);
   });
 

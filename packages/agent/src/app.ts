@@ -114,7 +114,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   // Before the tool routes, whose open CORS must not answer for them.
   app.route('/', auth.routes);
   app.route('/', createAgentRoutes({ tools: ctx, llm, budget, runs }, { ...o, auth: auth.gate }));
-  app.route('/', httpApp(ctx));
+  app.route('/', httpApp(ctx, { gate: auth.gate }));
   // A store that fails mid-request (a full disk, say) ends in the API's own error shape: no chat
   // starts, so nothing is spent, and the caller is told plainly.
   app.onError((e, c) => {

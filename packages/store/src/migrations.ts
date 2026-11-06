@@ -136,4 +136,21 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE session ADD COLUMN network TEXT;
   ALTER TABLE session ADD COLUMN invite TEXT REFERENCES invite(id);
   `,
+  // 3: coming back. An exploration has any number of links, each a token stored only as a hash, each
+  // revocable, so share_token_hash (one token, no scope) stays unused. Steps and notes say which door
+  // and who wrote them, and a run can be found from its exploration.
+  `
+  CREATE TABLE exploration_link (
+    id TEXT PRIMARY KEY,
+    exploration TEXT NOT NULL REFERENCES exploration(id),
+    scope TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    revoked_at TEXT
+  );
+  CREATE INDEX exploration_link_exploration ON exploration_link(exploration);
+  ALTER TABLE step ADD COLUMN author TEXT;
+  ALTER TABLE note ADD COLUMN door TEXT;
+  CREATE INDEX run_exploration ON run(exploration, updated_at);
+  `,
 ];

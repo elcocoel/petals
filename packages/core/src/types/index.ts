@@ -667,6 +667,8 @@ export interface Run {
   events: AgentEvent[];
   draft?: Draft;
   flower?: FlowerResult;
+  /** additive (T194): the exploration its flowers are saved in, once it has drawn one */
+  exploration?: string;
   created_at: Datetime;
   updated_at: Datetime;
 }

@@ -50,6 +50,13 @@ const NOT_FOR_THE_AGENT = new Set([
   'related_groups',
   'relations_overview',
   'power_path',
+  // Every door has these too. Petal's own agent doesn't need them: its run saves steps by itself
+  // (jobs.ts), so they would only add 2.7 KB, about 685 tokens, to each model call.
+  'list_explorations',
+  'get_exploration',
+  'start_exploration',
+  'save_step',
+  'add_note',
 ]);
 
 export function forAgent(t: AnyTool): boolean {

@@ -571,7 +571,14 @@ describe('T192: what is kept', () => {
     // and a first sign-in reads like a returning one
     const first = (await (await new Browser(app).signIn()).json()) as Record<string, unknown>;
     expect(Object.keys(first).sort()).toEqual(
-      ['claimed_runs', 'network', 'person_id', 'tools_version', 'wallets'].sort(),
+      [
+        'claimed_explorations',
+        'claimed_runs',
+        'network',
+        'person_id',
+        'tools_version',
+        'wallets',
+      ].sort(),
     );
   });
 });

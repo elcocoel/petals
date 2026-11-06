@@ -15,13 +15,13 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     const r = await rig();
     const covered = new Set<string>();
     const checkError = compile(TOOL_ERROR_SCHEMA);
-    const run = async (name: string, input: unknown): Promise<Json> => {
+    const run = async (name: string, input: unknown, ctx = r.ctx): Promise<Json> => {
       const tool = findTool(name);
       if (!tool) throw new Error(name);
       const inOk = compile(tool.input);
       expect(typeof input, name).toBe('object');
       expect(inOk(input), `${name} input: ${describeErrors(inOk.errors)}`).toBe(true);
-      const out = (await tool.run(input, r.ctx)) as Json;
+      const out = (await tool.run(input, ctx)) as Json;
       if (isToolError(out)) {
         expect(checkError(out), `${name} error: ${describeErrors(checkError.errors)}`).toBe(true);
         throw new Error(`${name} failed: ${JSON.stringify(out)}`);
@@ -65,6 +65,15 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
       account_b: member.account_b,
       include_inferred: true,
     });
+    const started = await run('start_exploration', { question: 'who holds it?' });
+    const exploration = (started.link as { url: string }).url;
+    await run('save_step', { exploration, spec: f.spec, note: 'a first look' });
+    await run('add_note', { exploration, text: 'a note' });
+    const fork = await run('start_exploration', { fork_of: exploration });
+    await run('get_exploration', { exploration: (fork.link as { url: string }).url });
+    const signedIn = { ...r.ctx, caller: { subject: 'prs_test', door: 'test' } };
+    await run('start_exploration', { question: 'mine' }, signedIn);
+    await run('list_explorations', {}, signedIn);
 
     expect([...covered].sort()).toEqual(registry.map((t) => t.name).sort());
     // the documents inside the outputs are the contract's own schemas
