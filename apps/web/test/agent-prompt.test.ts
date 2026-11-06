@@ -14,6 +14,7 @@ describe('agentPrompt', () => {
     expect(p).toMatch(/read-only/);
     expect(p).toMatch(/no account or key/);
     expect(p).toMatch(/If you can't open that link/);
+    expect(p).toMatch(/without asking me to choose/);
     expect(p.length).toBeLessThan(600);
   });
 });
@@ -31,8 +32,19 @@ describe('hostedSkill', () => {
   test('keeps the rules every agent shares, and says how to hand over a link', () => {
     expect(md).toContain('## Talk first');
     expect(md).toContain('## Calling the tools over HTTP');
-    expect(md).toContain(`Hand the person \`${ORIGIN}\` followed by that path`);
+    expect(md).toContain(`put \`${ORIGIN}\` in front of it`);
     expect(md).toContain(`${ORIGIN}/mcp`);
+  });
+
+  test('tells an agent how to set itself up, first, with nothing to install', () => {
+    expect(md.indexOf('## Set yourself up first')).toBeLessThan(md.indexOf('## Quick Start'));
+    expect(md).toMatch(/don't ask them to choose/);
+    expect(md).toContain(`claude mcp add --transport http petal ${ORIGIN}/mcp`);
+    expect(md).toContain(`codex mcp add petal --url ${ORIGIN}/mcp`);
+  });
+
+  test('prefers the link that fits on a line', () => {
+    expect(md).toMatch(/Hand the person `short_url`/);
   });
 
   test('fails loudly if the skill is reorganised, rather than serving local instructions', () => {
