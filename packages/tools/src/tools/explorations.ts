@@ -319,7 +319,7 @@ const noteItem = (n: NoteRow) => ({
   text: n.text,
 });
 
-function currentOf(ctx: ToolContext, row: ExplorationRow, spec: Spec | null) {
+function currentOf(ctx: ToolContext, row: Pick<ExplorationRow, 'head'>, spec: Spec | null) {
   if (!row.head || !spec) return null;
   const d = ctx.modules[spec.network?.id]?.descriptor;
   const recipe = d ? recipeOf(spec, d) : null;
@@ -870,4 +870,14 @@ export function claimExploration(ctx: ToolContext, ref: string) {
     throw new ToolFailure('unauthorised', 'This exploration already has an owner.');
   }
   return { exploration: o.row.id, claimed: true };
+}
+
+/**
+ * A flower by its hash, as an exploration's `current` holds it, and what it's a flower of: how the
+ * workspace opens a shape. Null when no spec is stored under this hash.
+ */
+export function shapeAt(ctx: ToolContext, sha256: string) {
+  const spec = specBody(ctx.config, sha256);
+  const current = currentOf(ctx, { head: sha256 }, spec);
+  return current && spec ? { ...current, target: targetOf(spec) } : null;
 }

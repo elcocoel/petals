@@ -36,10 +36,17 @@ export interface RunRow {
   model: string | null;
   /** JSON, in the shape the run store chooses */
   body: string;
+  /** a conversation's name: its first question until a person renames it; null on an older run */
+  title?: string | null;
+  /** JSON: the provider, model, effort and permissions picked. `model` above is what answered */
+  settings?: string | null;
+  hidden_at?: string | null;
   created_at: string;
   updated_at: string;
 }
 export type RunSummaryRow = Omit<RunRow, 'body'>;
+/** A run in a person's list. `body` comes only when there's no title to show without it. */
+export type ConversationRow = RunSummaryRow & { body: string | null };
 export interface RunEventRow {
   run: string;
   seq: number;
@@ -122,6 +129,49 @@ export interface NoteRow {
   text: string;
   at: string;
 }
+/** A bookmark on something a person is following. It points, and proves nothing about who owns it. */
+export interface FollowRow {
+  id: string;
+  owner: string;
+  /** `account` or `network` */
+  kind: string;
+  /** an account's EntityRef, or `network:<target_key>` */
+  ref: string;
+  label: string | null;
+  /** the flower it last opened as */
+  spec_sha256: string | null;
+  created_at: string;
+  updated_at: string;
+}
+/**
+ * A person's own note, private to them. It keeps what a claim would need if it's ever published:
+ * `about` is the subject, `author` the `by`, `created_at` the `issued_at`, `evidence` the evidence.
+ */
+export interface WorkspaceNoteRow {
+  id: string;
+  owner: string;
+  /** `owner` today; never a person id */
+  author: string;
+  about: string;
+  text: string;
+  /** JSON: a list in the shape of a claim's evidence */
+  evidence: string;
+  created_at: string;
+  updated_at: string;
+}
+/** One thing search can find. With no text it's only a marker: indexed as of `at`, and never a hit. */
+export interface SearchDoc {
+  owner: string;
+  kind: string;
+  ref: string;
+  title: string;
+  about: string | null;
+  at: string;
+}
+export type SearchHit = Omit<SearchDoc, 'owner'> & { snippet: string };
+/** What marks a match inside a hit's snippet. Stripped from anything indexed, so no text can forge one. */
+export const SEARCH_HIT_OPEN = '\uE000';
+export const SEARCH_HIT_CLOSE = '\uE001';
 /** A way into an exploration without being its owner. Only the token's hash is stored. */
 export interface ExplorationLinkRow {
   id: string;
@@ -297,14 +347,17 @@ export function tables(db: Db) {
     run: {
       insert(r: RunRow) {
         db.run(
-          `INSERT INTO run (id, owner, exploration, status, model, body, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO run (id, owner, exploration, status, model, body, title, settings,
+                            created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           r.id,
           r.owner,
           r.exploration,
           r.status,
           r.model,
           r.body,
+          r.title ?? null,
+          r.settings ?? null,
           r.created_at,
           r.updated_at,
         );
@@ -341,6 +394,26 @@ export function tables(db: Db) {
       setExploration(id: string, exploration: string) {
         db.run('UPDATE run SET exploration = ? WHERE id = ?', exploration, id);
       },
+      /** A person's list, newest first: the hidden ones, or the rest. */
+      conversations: (owner: string, limit: number, hidden: boolean) =>
+        db.all<ConversationRow>(
+          `SELECT id, owner, exploration, status, model, title, settings, hidden_at, created_at,
+                  updated_at, CASE WHEN title IS NULL THEN body END AS body
+           FROM run WHERE owner = ? AND hidden_at IS ${hidden ? 'NOT ' : ''}NULL
+           ORDER BY updated_at DESC LIMIT ?`,
+          owner,
+          limit,
+        ),
+      // These three leave updated_at alone: renaming or hiding one isn't talking in it.
+      setTitle(id: string, title: string) {
+        db.run('UPDATE run SET title = ? WHERE id = ?', title, id);
+      },
+      setSettings(id: string, settings: string) {
+        db.run('UPDATE run SET settings = ? WHERE id = ?', settings, id);
+      },
+      setHidden(id: string, at: string | null) {
+        db.run('UPDATE run SET hidden_at = ? WHERE id = ?', at, id);
+      },
       /** The run that last worked on this exploration, if any. */
       latestOfExploration: (exploration: string) =>
         db.get<{ id: string }>(
@@ -350,6 +423,13 @@ export function tables(db: Db) {
     },
 
     runEvent: {
+      /** Only the events of one type, oldest first: a turn's figures are in its `done`. */
+      ofType: (run: string, type: string) =>
+        db.all<RunEventRow>(
+          'SELECT * FROM run_event WHERE run = ? AND type = ? ORDER BY seq',
+          run,
+          type,
+        ),
       /** Append-only. Returns the event's sequence number: 0, 1, 2… within the run. */
       append: (run: string, type: string, data: string, at: string): number =>
         db.tx(() => {
@@ -631,6 +711,15 @@ export function tables(db: Db) {
       touch(id: string, at: string) {
         db.run('UPDATE exploration SET updated_at = ? WHERE id = ?', at, id);
       },
+      /** Work from another door: theirs, and no conversation on this site has touched it. */
+      withoutRun: (owner: string, limit: number) =>
+        db.all<ExplorationRow>(
+          `SELECT * FROM exploration e WHERE e.owner = ?
+             AND NOT EXISTS (SELECT 1 FROM run r WHERE r.exploration = e.id)
+           ORDER BY e.updated_at DESC LIMIT ?`,
+          owner,
+          limit,
+        ),
       /** Every exploration of `from` now belongs to `to`, in one statement. */
       moveOwner: (from: string, to: string): number =>
         db.run('UPDATE exploration SET owner = ? WHERE owner = ?', to, from),
@@ -756,6 +845,221 @@ export function tables(db: Db) {
             exploration,
           ) as { n: number }
         ).n,
+    },
+
+    follow: {
+      /** False when this owner already follows this ref: the row they have stands. */
+      insert: (r: FollowRow) =>
+        db.run(
+          `INSERT INTO follow (id, owner, kind, ref, label, spec_sha256, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (owner, ref) DO NOTHING`,
+          r.id,
+          r.owner,
+          r.kind,
+          r.ref,
+          r.label,
+          r.spec_sha256,
+          r.created_at,
+          r.updated_at,
+        ) === 1,
+      get: (id: string) => db.get<FollowRow>('SELECT * FROM follow WHERE id = ?', id),
+      byRef: (owner: string, ref: string) =>
+        db.get<FollowRow>('SELECT * FROM follow WHERE owner = ? AND ref = ?', owner, ref),
+      /** Newest first. */
+      list: (owner: string, limit: number) =>
+        db.all<FollowRow>(
+          'SELECT * FROM follow WHERE owner = ? ORDER BY updated_at DESC LIMIT ?',
+          owner,
+          limit,
+        ),
+      count: (owner: string) =>
+        (
+          db.get<{ n: number }>('SELECT COUNT(*) AS n FROM follow WHERE owner = ?', owner) as {
+            n: number;
+          }
+        ).n,
+      update(id: string, f: Pick<FollowRow, 'label' | 'spec_sha256' | 'updated_at'>) {
+        db.run(
+          'UPDATE follow SET label = ?, spec_sha256 = ?, updated_at = ? WHERE id = ?',
+          f.label,
+          f.spec_sha256,
+          f.updated_at,
+          id,
+        );
+      },
+      delete(id: string) {
+        db.run('DELETE FROM follow WHERE id = ?', id);
+      },
+      /** At sign-in. What the person already follows stays as it is, so nothing is followed twice. */
+      moveOwner(from: string, to: string) {
+        db.run('UPDATE OR IGNORE follow SET owner = ? WHERE owner = ?', to, from);
+        db.run('DELETE FROM follow WHERE owner = ?', from);
+      },
+    },
+
+    workspaceNote: {
+      insert(r: WorkspaceNoteRow) {
+        db.run(
+          `INSERT INTO workspace_note (id, owner, author, about, text, evidence, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          r.id,
+          r.owner,
+          r.author,
+          r.about,
+          r.text,
+          r.evidence,
+          r.created_at,
+          r.updated_at,
+        );
+      },
+      get: (id: string) => db.get<WorkspaceNoteRow>('SELECT * FROM workspace_note WHERE id = ?', id),
+      /** Newest first; `about` narrows it to one thing. */
+      list: (owner: string, about: string | null, limit: number) =>
+        about === null
+          ? db.all<WorkspaceNoteRow>(
+              'SELECT * FROM workspace_note WHERE owner = ? ORDER BY updated_at DESC LIMIT ?',
+              owner,
+              limit,
+            )
+          : db.all<WorkspaceNoteRow>(
+              `SELECT * FROM workspace_note WHERE owner = ? AND about = ?
+               ORDER BY updated_at DESC LIMIT ?`,
+              owner,
+              about,
+              limit,
+            ),
+      count: (owner: string) =>
+        (
+          db.get<{ n: number }>(
+            'SELECT COUNT(*) AS n FROM workspace_note WHERE owner = ?',
+            owner,
+          ) as { n: number }
+        ).n,
+      update(id: string, f: Pick<WorkspaceNoteRow, 'text' | 'evidence' | 'updated_at'>) {
+        db.run(
+          'UPDATE workspace_note SET text = ?, evidence = ?, updated_at = ? WHERE id = ?',
+          f.text,
+          f.evidence,
+          f.updated_at,
+          id,
+        );
+      },
+      delete(id: string) {
+        db.run('DELETE FROM workspace_note WHERE id = ?', id);
+      },
+      moveOwner(from: string, to: string) {
+        db.run('UPDATE workspace_note SET owner = ? WHERE owner = ?', to, from);
+      },
+    },
+
+    /** Derived: deleting all of it loses nothing, because a search catches up on what's missing. */
+    search: {
+      /** One document, new or replacing what's there. No text makes it a marker. */
+      put: (doc: SearchDoc, text: string | null) =>
+        db.tx(() => {
+          const clean = (s: string) => s.replaceAll(SEARCH_HIT_OPEN, ' ').replaceAll(SEARCH_HIT_CLOSE, ' ');
+          const { id } = db.get<{ id: number }>(
+            `INSERT INTO search_doc (owner, kind, ref, title, about, at) VALUES (?, ?, ?, ?, ?, ?)
+             ON CONFLICT (owner, kind, ref) DO UPDATE SET
+               title = excluded.title, about = excluded.about, at = excluded.at
+             RETURNING id`,
+            doc.owner,
+            doc.kind,
+            doc.ref,
+            doc.title,
+            doc.about,
+            doc.at,
+          ) as { id: number };
+          db.run('DELETE FROM search WHERE rowid = ?', id);
+          if (text !== null) {
+            db.run(
+              'INSERT INTO search (rowid, title, text) VALUES (?, ?, ?)',
+              id,
+              clean(doc.title),
+              clean(text),
+            );
+          }
+        }),
+      forget(owner: string, kind: string, ref: string) {
+        db.tx(() => {
+          db.run(
+            `DELETE FROM search WHERE rowid IN
+               (SELECT id FROM search_doc WHERE owner = ? AND kind = ? AND ref = ?)`,
+            owner,
+            kind,
+            ref,
+          );
+          db.run('DELETE FROM search_doc WHERE owner = ? AND kind = ? AND ref = ?', owner, kind, ref);
+        });
+      },
+      /** Everything indexed as being about this one thing. */
+      forgetAbout(owner: string, about: string) {
+        db.tx(() => {
+          db.run(
+            `DELETE FROM search WHERE rowid IN
+               (SELECT id FROM search_doc WHERE owner = ? AND about = ?)`,
+            owner,
+            about,
+          );
+          db.run('DELETE FROM search_doc WHERE owner = ? AND about = ?', owner, about);
+        });
+      },
+      /** At sign-in the work moves to another owner, and a search there indexes it again. */
+      forgetOwner(owner: string) {
+        db.tx(() => {
+          db.run(
+            'DELETE FROM search WHERE rowid IN (SELECT id FROM search_doc WHERE owner = ?)',
+            owner,
+          );
+          db.run('DELETE FROM search_doc WHERE owner = ?', owner);
+        });
+      },
+      // What changed since it was indexed, or was never indexed. Each is bounded by what one owner has.
+      staleRuns: (owner: string) =>
+        db.all<RunRow>(
+          `SELECT r.* FROM run r
+           LEFT JOIN search_doc d ON d.owner = r.owner AND d.kind = 'conversation' AND d.ref = r.id
+           WHERE r.owner = ? AND (d.id IS NULL OR d.at < r.updated_at)`,
+          owner,
+        ),
+      staleExplorations: (owner: string) =>
+        db.all<ExplorationRow>(
+          `SELECT e.* FROM exploration e
+           LEFT JOIN search_doc d ON d.owner = e.owner AND d.kind = 'exploration' AND d.ref = e.id
+           WHERE e.owner = ? AND (d.id IS NULL OR d.at < e.updated_at)`,
+          owner,
+        ),
+      staleFollows: (owner: string) =>
+        db.all<FollowRow>(
+          `SELECT f.* FROM follow f
+           LEFT JOIN search_doc d ON d.owner = f.owner AND d.kind = 'follow' AND d.ref = f.id
+           WHERE f.owner = ? AND (d.id IS NULL OR d.at < f.updated_at)`,
+          owner,
+        ),
+      staleNotes: (owner: string) =>
+        db.all<WorkspaceNoteRow>(
+          `SELECT n.* FROM workspace_note n
+           LEFT JOIN search_doc d ON d.owner = n.owner AND d.kind = 'note' AND d.ref = n.id
+           WHERE n.owner = ? AND (d.id IS NULL OR d.at < n.updated_at)`,
+          owner,
+        ),
+      /**
+       * Best first. `match` is FTS5 syntax, and a bad one throws, so it must never be a person's words
+       * as typed. A marker has no row in `search`, so it can't be a hit.
+       */
+      query: (owner: string, match: string, kinds: readonly string[], limit: number) =>
+        db.all<SearchHit>(
+          `SELECT d.kind, d.ref, d.title, d.about, d.at,
+                  snippet(search, -1, '${SEARCH_HIT_OPEN}', '${SEARCH_HIT_CLOSE}', '…', 16) AS snippet
+           FROM search JOIN search_doc d ON d.id = search.rowid
+           WHERE search MATCH ? AND d.owner = ?
+             AND d.kind IN (${kinds.map(() => '?').join(', ')})
+           ORDER BY search.rank LIMIT ?`,
+          match,
+          owner,
+          ...kinds,
+          limit,
+        ),
     },
   };
 }

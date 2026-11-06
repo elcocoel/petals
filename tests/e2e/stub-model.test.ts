@@ -69,3 +69,25 @@ test('the first question asks, and the yes draws the flower', async () => {
   expect(second.map((e) => e.event)).not.toContain('approval_required');
   expect(second.map((e) => e.event)).not.toContain('error');
 });
+
+test("its token counts are sized to what it's sent, so a composer's figures move", async () => {
+  const events = await say('Who stands behind NEAR’s validators?');
+  const done = events.findLast((e) => e.event === 'done')?.data as {
+    tokens: { in: number };
+    context_tokens: number;
+  };
+  expect(done.context_tokens).toBeGreaterThan(1000);
+  expect(done.tokens.in).toBeGreaterThanOrEqual(done.context_tokens);
+});
+
+test("it refuses reasoning_effort on Anthropic's models, as NEAR AI does", async () => {
+  const { port } = server.address() as AddressInfo;
+  const ask = (model: string, reasoning_effort?: string) =>
+    fetch(`http://127.0.0.1:${port}/v1/chat/completions`, {
+      method: 'POST',
+      body: JSON.stringify({ model, messages: [], ...(reasoning_effort ? { reasoning_effort } : {}) }),
+    }).then((r) => r.status);
+  expect(await ask('anthropic/claude-haiku-5-5', 'low')).toBe(400);
+  expect(await ask('anthropic/claude-haiku-5-5')).toBe(200);
+  expect(await ask('z-ai/glm-5.3-flash', 'low')).toBe(200);
+});
