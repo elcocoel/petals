@@ -89,6 +89,7 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/The mapping is on the page with the flower/);
     expect(SYSTEM_PROMPT).toMatch(/A follow-up never repeats the mapping or a caveat/);
     expect(SYSTEM_PROMPT).toMatch(/under 60 words/);
+    expect(SYSTEM_PROMPT).toMatch(/under 40 words/);
   });
 
   test('what was working stays: nothing invented, no keys, addresses are not people', () => {
