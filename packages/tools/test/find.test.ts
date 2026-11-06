@@ -1,9 +1,10 @@
 // T164, T165: find_target on real answers recorded once (record-find.ts), with no model and no
-// network. Every request ends in a yes or no before drawing, one clear question, or a refusal that
-// says what works.
+// network. Every request ends in a yes or no before drawing, more looking, or a refusal that says
+// what works.
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
+import { EVM_CHAINS } from '@petal/inputs';
 import { describe, expect, test } from 'vitest';
 import { createContext } from '../src/context.ts';
 import { compile, describeErrors } from '../src/define.ts';
@@ -14,6 +15,9 @@ import { REPO } from './helpers.ts';
 
 // biome-ignore lint/suspicious/noExplicitAny: walking tool outputs
 type Json = Record<string, any>;
+
+const word = (n: number) => n.toString(16).padStart(64, '0');
+const NOTHING_ANSWERS = `0x${word(32)}${word(0)}`;
 
 const recorded = JSON.parse(
   gunzipSync(readFileSync(join(import.meta.dirname, 'fixtures/find-target.json.gz'))).toString(),
@@ -26,6 +30,9 @@ const replay =
     const url = String(input);
     if (down?.test(url)) throw new Error('down');
     const hit = recorded.calls[`${url} ${typeof init?.body === 'string' ? init.body : ''}`];
+    // Recorded before Gnosis was added: there, an address that answers nothing, not an outage.
+    if (!hit && url === EVM_CHAINS.gnosis?.endpoints[0]?.url)
+      return new Response(JSON.stringify({ result: NOTHING_ANSWERS }));
     if (!hit) throw new Error(`not recorded: ${url}`);
     return new Response(hit.body, { status: hit.status });
   };
@@ -59,8 +66,11 @@ describe('the set: no dead ends', () => {
       expect(o.candidates[0].draw[0].module).toBe(module);
       expect(o.candidates[0].chain).toBe(chain);
     }
-    if (outcome === 'ask') expect(o.next).toMatch(/one clear question/i);
-    if (outcome === 'refuse') expect(o.next).toMatch(/say why in plain words/i);
+    // what it found and what didn't answer: nothing here tells the model to stop or to ask for an address
+    expect(o.next).not.toMatch(/ask (one|for|what)|send me|the address\?/i);
+    if (outcome === 'ask')
+      expect(o.next).toMatch(/Nothing in these sources|Different things|No DAO/);
+    if (outcome === 'refuse') expect(o.next).toMatch(/cannot_draw says why/);
   });
 });
 
@@ -96,7 +106,7 @@ describe('the three names', () => {
     expect(top.evidence.holders).toBeGreaterThan(100_000);
     expect(top.evidence.liquidity_usd).toBeGreaterThan(second.evidence.liquidity_usd);
     expect(top.draw[0].stored).toBeDefined();
-    expect(o.next).toMatch(/do not pick/i);
+    expect(o.next).toMatch(/None was picked/);
   });
 
   test('UNI on Base: the chain is read from the words, and the read is kept short', async () => {
@@ -171,14 +181,14 @@ describe('what it says when it can draw nothing', () => {
     expect(o.ambiguous).toBe(true);
     expect(o.next).not.toMatch(/one clear match/i);
     expect(o.next).toMatch(/no DAO/i);
-    expect(o.next).toMatch(/one clear question/i);
+    expect(o.next).toMatch(/only shares the name/);
     // the token stays listed: it may be what they meant, and they can say so
     expect(o.candidates.map((c: Json) => c.address)).toContain('NoUnS1111');
   });
 
   test('a chain we cannot read, a Moloch v2 and a mint too large for a chat each say why', async () => {
     const mc = (await find('MetaCartel')).candidates as Json[];
-    expect(mc.find((c) => c.chain === 'gnosis')?.cannot_draw).toMatch(/can't read gnosis/);
+    expect(mc.find((c) => c.chain === 'gnosis')?.cannot_draw).toMatch(/gnosis does not confirm it/);
     const v2 = mc.find((c) => c.ledger === 'moloch-v2');
     expect(v2?.transferable).toBe(false);
     expect(v2?.cannot_draw).toMatch(/shares are a token too/);
@@ -190,7 +200,7 @@ describe('what it says when it can draw nothing', () => {
   test('a misremembered address is never drawn', async () => {
     const o = await find('0x000000000000000000000000000000000000dead');
     expect(o.candidates).toEqual([]);
-    expect(o.next).toMatch(/one clear question/i);
+    expect(o.next).toMatch(/Nothing in these sources/);
   });
 });
 
@@ -206,7 +216,10 @@ describe('bounds', () => {
     const o = await find('UNI on Base', /tenderly/);
     expect(o.candidates[0].confirmed).toBeNull();
     expect(o.candidates[0].draw).toEqual([]);
-    expect(o.candidates[0].cannot_draw).toMatch(/not confirmed/);
+    // down is said as down: nothing here reads as if the address weren't there
+    expect(o.candidates[0].cannot_draw).toMatch(/did not answer just now/);
+    expect(o.candidates[0].cannot_draw).toMatch(/says nothing about this address/);
+    expect(o.sources.find((s: Json) => s.id === 'chain:base').status).toBe('failed');
   });
 
   test('in fake mode it makes no call and still knows what Petal holds', async () => {

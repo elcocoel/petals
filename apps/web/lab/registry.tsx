@@ -355,16 +355,24 @@ export const registry: LabEntry[] = [
     figmaName: 'Petals / Atlas card',
     figmaNode: '52:1876',
     source: 'apps/web/components/ui/GalleryCard.tsx',
-    states: specimen.cards.map((card, i) => ({
-      name: card.title,
-      render: () => (
-        <GalleryCard
-          thumb={(['blocs', 'even', 'tower'] as const)[i] ?? 'even'}
-          href="#gallerycard"
-          {...card}
-        />
-      ),
-    })),
+    states: [
+      ...specimen.cards.map((card, i) => ({
+        name: card.title,
+        render: () => (
+          <GalleryCard
+            thumb={(['blocs', 'even', 'tower'] as const)[i] ?? 'even'}
+            href="#gallerycard"
+            {...card}
+          />
+        ),
+      })),
+      {
+        name: 'a picture only',
+        render: () => (
+          <GalleryCard thumb="even" label={landingCopy.gallery.open} href="#gallerycard" />
+        ),
+      },
+    ],
   },
   {
     id: 'FaqItem',

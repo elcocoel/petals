@@ -891,16 +891,6 @@ describe('erc20-holders, any token', () => {
       await expect(
         getSnapshot({ network: 'erc20-holders', params }, { store }),
       ).rejects.toMatchObject({ code: 'bad_input' });
-    await expect(
-      erc20Holders().fetch(
-        { block_height: 1, as_of: '2026-11-05T00:00:00Z' },
-        {
-          chain: 'base',
-          token: TOKEN,
-          window_days: 'full',
-        },
-      ),
-    ).rejects.toMatchObject({ code: 'cannot_read', hint: expect.stringContaining('--full') });
   });
 
   test('reads only the latest block, unless a fixture holds another', async () => {
@@ -959,6 +949,179 @@ describe('erc20-holders, any token', () => {
     expect(fetched).toEqual([a, b]);
     expect(second.sha256).not.toBe(first.sha256);
     expect(again).toMatchObject({ sha256: first.sha256, reused: true });
+  });
+});
+
+/** One answer of a string, as a contract gives it. */
+const stringAnswer = (text: string) => {
+  const hex = Buffer.from(text).toString('hex');
+  return `${word(32n)}${word(BigInt(text.length))}${hex.padEnd(64, '0')}`;
+};
+/** What Multicall3 answers: (bool, bytes)[], each call successful. */
+function aggregateAnswer(answers: string[]): string {
+  const tuples = answers.map((a) => `${word(1n)}${word(64n)}${word(BigInt(a.length / 2))}${a}`);
+  let offset = tuples.length * 32;
+  const offsets = tuples.map((t) => {
+    const here = offset;
+    offset += t.length / 2;
+    return word(BigInt(here));
+  });
+  return `0x${word(32n)}${word(BigInt(tuples.length))}${offsets.join('')}${tuples.join('')}`;
+}
+
+describe('in a chat, whole history first where a chain serves wide logs', () => {
+  const GNOSIS_TOKEN = addr(77);
+  const params = { chain: 'gnosis', token: GNOSIS_TOKEN };
+  const block = 30_000_000;
+  const OVER_CAP = { error: { code: -32602, message: 'Query returned more than 50000 results.' } };
+
+  /** One fake node: the logs it serves over a whole range, and the balances it answers. */
+  function node(o: {
+    whole?: unknown;
+    recent?: EvmLog[];
+    balances?: Record<string, bigint>;
+    supply?: bigint;
+  }) {
+    const queries: { from: number; to: number }[] = [];
+    const fetch: typeof globalThis.fetch = async (_url, init) => {
+      const {
+        id,
+        method,
+        params: p,
+      } = JSON.parse(String(init?.body)) as {
+        id: string;
+        method: string;
+        params: never[];
+      };
+      const reply = (r: object) => Response.json({ jsonrpc: '2.0', id, ...r });
+      if (method === 'eth_getBlockByNumber')
+        return reply({
+          result: { number: `0x${block.toString(16)}`, hash: '0xh', timestamp: '0x5f5e100' },
+        });
+      if (method === 'eth_getLogs') {
+        const q = p[0] as { fromBlock: string; toBlock: string };
+        const from = Number(q.fromBlock);
+        queries.push({ from, to: Number(q.toBlock) });
+        if (from === 0 && o.whole !== undefined)
+          return reply('error' in (o.whole as object) ? (o.whole as object) : { result: o.whole });
+        return reply({ result: o.recent ?? [] });
+      }
+      if (method === 'eth_call') {
+        const data = (p[0] as { data: string }).data;
+        // a Multicall3 aggregate3: symbol, decimals, totalSupply, or a balanceOf for each address
+        const calls = Number(BigInt(`0x${data.slice(74, 138)}`));
+        const answers: string[] = [];
+        for (let i = 0; i < calls; i++) {
+          const at = 138 + 2 * Number(BigInt(`0x${data.slice(138 + 64 * i, 202 + 64 * i)}`));
+          const call = data.slice(at + 64 * 4, at + 64 * 4 + 72);
+          if (call.startsWith('95d89b41')) answers.push(stringAnswer('RG'));
+          else if (call.startsWith('313ce567')) answers.push(word(0n));
+          else if (call.startsWith('18160ddd')) answers.push(word(o.supply ?? 1000n));
+          else answers.push(word(o.balances?.[`0x${call.slice(32)}`] ?? 0n));
+        }
+        return reply({ result: aggregateAnswer(answers) });
+      }
+      return reply({ error: { code: -32601, message: `no ${method}` } });
+    };
+    return { fetch, queries };
+  }
+  const read = async (mod: ReturnType<typeof erc20Holders>, p: Record<string, string> = params) =>
+    mod.fetch({ block_height: block, as_of: '2026-11-06T00:00:00Z' }, p);
+
+  test('a quiet token is read whole, in one query, with every holder and no unread petal', async () => {
+    const n = node({
+      whole: [transfer(ZERO, addr(1), 600n), transfer(ZERO, addr(2), 400n)],
+      balances: { [addr(1)]: 600n, [addr(2)]: 400n },
+    });
+    const s = await read(erc20Holders({ fetch: n.fetch, sleep: noSleep }));
+    expect(n.queries).toEqual([{ from: 0, to: block }]);
+    expect(s.holdings.map((h) => h.participant)).toEqual([addr(1), addr(2)]);
+    expect(s.participants.some((p) => p.id === 'group:not-read')).toBe(false);
+    expect(s.network.params).toEqual({ ...params, window_days: 'full' });
+    expect(s.network.title).toBe('RG holders, Gnosis');
+    expect(s.coverage.note).toMatch(/Who: every Transfer log/);
+    expect(s.coverage.note).not.toMatch(/Only a window/);
+    expect(validateSnapshot(s).ok).toBe(true);
+  });
+
+  test.each([
+    ['the node refuses the range', OVER_CAP],
+    [
+      'it comes back over the budget',
+      Array.from({ length: 20_001 }, () => transfer(addr(1), addr(2), 0n)),
+    ],
+  ])('a busy token gets the window, and says so plainly: %s', async (_why, whole) => {
+    const n = node({
+      whole,
+      recent: [transfer(addr(1), addr(2), 5n)],
+      balances: { [addr(1)]: 300n, [addr(2)]: 400n },
+    });
+    const s = await read(erc20Holders({ fetch: n.fetch, sleep: noSleep }));
+    expect(n.queries[0]).toEqual({ from: 0, to: block });
+    expect(n.queries.length).toBeGreaterThan(1);
+    expect(s.network.params).toEqual({ ...params, window_days: '7' });
+    expect(s.network.population).toMatch(/-7d$/);
+    expect(s.coverage.note).toMatch(/^Only a window, not every holder: the last 7 days/);
+    expect(s.coverage.note).toMatch(/its history is too long to read whole/);
+    expect(s.network.description).toMatch(/^Only a window, not every holder/);
+    expect(s.participants.at(-1)?.id).toBe('group:not-read');
+  });
+
+  test('a whole read that does not add up gets the window too, and says why', async () => {
+    const n = node({
+      whole: [transfer(ZERO, addr(1), 10n)],
+      recent: [transfer(ZERO, addr(1), 10n)],
+      balances: { [addr(1)]: 10n },
+      supply: 1000n,
+    });
+    const s = await read(erc20Holders({ fetch: n.fetch, sleep: noSleep }));
+    expect(s.network.params?.window_days).toBe('7');
+    expect(s.coverage.note).toMatch(/whole history could not be read/);
+    expect(s.coverage.note).toMatch(/the replay sums to/);
+  });
+
+  test('a window asked for by name is that window: no whole read is tried', async () => {
+    const n = node({ recent: [transfer(addr(1), addr(2), 5n)], balances: { [addr(2)]: 5n } });
+    const s = await read(erc20Holders({ fetch: n.fetch, sleep: noSleep }), {
+      ...params,
+      window_days: '2',
+    });
+    expect(n.queries.every((q) => q.from > 0)).toBe(true);
+    expect(s.network.params?.window_days).toBe('2');
+    expect(s.coverage.note).toMatch(/^Only a window/);
+    expect(s.coverage.note).not.toMatch(/because/);
+  });
+
+  test('whole history asked for by name is that, or a refusal that says why', async () => {
+    const n = node({ whole: OVER_CAP });
+    await expect(
+      read(erc20Holders({ fetch: n.fetch, sleep: noSleep }), { ...params, window_days: 'full' }),
+    ).rejects.toMatchObject({
+      code: 'cannot_read',
+      message: expect.stringContaining('too long to read whole'),
+      hint: expect.stringContaining('window_days'),
+    });
+    expect(n.queries).toHaveLength(1);
+  });
+
+  test('whole history asked for on a narrow chain is refused, and says what would work', async () => {
+    const n = node({});
+    await expect(
+      read(erc20Holders({ fetch: n.fetch, sleep: noSleep }), {
+        chain: 'base',
+        token: TOKEN,
+        window_days: 'full',
+      }),
+    ).rejects.toMatchObject({ code: 'cannot_read', hint: expect.stringContaining('--full') });
+    expect(n.queries).toEqual([]);
+  });
+
+  test('keyed as what it tries: whole on a wide chain, a window on a narrow one or with an explorer', () => {
+    const mod = erc20Holders();
+    expect(mod.keyFor?.(params).population).toMatch(/-full$/);
+    expect(mod.keyFor?.({ chain: 'arbitrum', token: TOKEN }).population).toMatch(/-full$/);
+    expect(mod.keyFor?.({ chain: 'base', token: TOKEN }).population).toMatch(/-7d$/);
+    expect(mod.keyFor?.({ chain: 'ethereum', token: TOKEN }).population).toMatch(/-7d$/);
   });
 });
 
