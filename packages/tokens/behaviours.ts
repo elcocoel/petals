@@ -170,6 +170,79 @@ export const behaviours = [
     purpose: 'Eyebrow, title lines and body rise in softly, staggered',
     via: 'both',
   },
+  // The live flower, apps/web/flower. It's drawn by script in every version and carries no `data-b`, so
+  // `?off=` leaves it alone; its parents say what kind of thing each part is.
+  { name: 'surface.canvas', purpose: 'One flower on the ground, filling the window', via: 'view' },
+  {
+    name: 'figure.flower-ring',
+    purpose: 'A closed polygon in an ink line, whose sides share the circle by the reading',
+    via: 'view',
+  },
+  {
+    name: 'figure.flower-silhouette',
+    purpose: 'The whole flower as one shape, while its petals are too small to tell apart',
+    via: 'view',
+  },
+  {
+    name: 'figure.petal-wedge',
+    purpose: 'A petal at rest: its whole angle, straight edges, its height exactly as the reading',
+    via: 'view',
+  },
+  {
+    name: 'figure.petal-focus',
+    purpose: 'The one under the pointer rises, widens over its neighbours and takes the accent',
+    via: 'view',
+  },
+  {
+    name: 'figure.petal-neighbour',
+    purpose: 'Petals one and two away rise a little of what the focus does, and no others move',
+    via: 'view',
+  },
+  {
+    name: 'figure.petal-bands',
+    purpose: 'Straight cuts in the focused petal only, each named in its note',
+    via: 'view',
+  },
+  {
+    name: 'figure.account-opening',
+    purpose: 'With the zoom as the clock, a petal widens into an account and the rest recede',
+    via: 'view',
+  },
+  {
+    name: 'figure.way-back-map',
+    purpose: 'The flower small in a corner, this account lit, once the flower no longer fits',
+    via: 'view',
+  },
+  {
+    name: 'figure.relations-sketch',
+    purpose: 'Seeded lines and a dotted ring to judge a feel; no data behind them, off by default',
+    via: 'view',
+  },
+  {
+    name: 'mark.petal-note',
+    purpose: 'A name and share in mono on a hairline leader, by rank, as far as there is room',
+    via: 'view',
+  },
+  {
+    name: 'mark.focus-note',
+    purpose: 'One note that travels round the rim to the focus, with its kind and bands listed',
+    via: 'view',
+  },
+  {
+    name: 'mark.band-label',
+    purpose: 'A band of the focused petal saying its name, once it is big enough to hold it',
+    via: 'view',
+  },
+  {
+    name: 'head.flower-title',
+    purpose: 'The flower’s name: under it when small, inside the polygon once it fits',
+    via: 'view',
+  },
+  {
+    name: 'box.account-panel',
+    purpose: 'The open account in a hairline box: the note, landed, with its id, amount and kind',
+    via: 'view',
+  },
 ] as const satisfies readonly Behaviour[];
 
 export type BehaviourName = (typeof behaviours)[number]['name'];

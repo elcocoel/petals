@@ -225,7 +225,7 @@ describe('the table against what uses it', () => {
   );
   const scripted = new Set<string>([...Object.keys(SCRIPTED), ...REVEALED]);
 
-  /** `// box.move` on a line of its own, in a component or a ViewModel. */
+  /** `// box.move` on a line of its own, in a component, a ViewModel or the live flower. */
   const markedInViews = (() => {
     const sources = (dir: string): string[] =>
       readdirSync(join(app, dir), { withFileTypes: true }).flatMap((d) =>
@@ -235,7 +235,7 @@ describe('the table against what uses it', () => {
             ? [join(dir, d.name)]
             : [],
       );
-    const text = [...sources('components'), ...sources('viewmodels')]
+    const text = [...sources('components'), ...sources('viewmodels'), ...sources('flower')]
       .map((p) => readFileSync(join(app, p), 'utf8'))
       .join('\n');
     const parentNames = Object.keys(parents).join('|');
@@ -305,7 +305,9 @@ describe('components', () => {
           ? [join(dir, d.name)]
           : [],
     );
-  const files = sources('components').map((p) => readFileSync(join(app, p), 'utf8'));
+  const files = [...sources('components'), ...sources('flower')].map((p) =>
+    readFileSync(join(app, p), 'utf8'),
+  );
   const used = files.flatMap((text) =>
     [...text.matchAll(/data-b="([a-z]+)"/g)].map((m) => m[1] as string),
   );

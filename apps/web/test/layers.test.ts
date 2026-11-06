@@ -205,16 +205,27 @@ const RULES: Rule[] = [
     good: "// useState is not used\nconst s = 'useEffect';",
   },
   {
-    name: 'nothing outside lab/ and app/lab reaches into lab/: the flower leaves it only when it replaces /make',
+    name: 'nothing outside lab/ and app/lab reaches into lab/',
     files: () => [
       ...sourcesIn('lib'),
       ...sourcesIn('components'),
       ...sourcesIn('viewmodels'),
+      ...sourcesIn('flower'),
       ...sourcesIn('app').filter((f) => !f.startsWith('app/lab/')),
     ],
     check: importing(/(?:^|\/)lab\//, 'the lab reaches out, nothing reaches in'),
-    bad: "import { FlowerBench } from '../lab/flower/FlowerBench.tsx';",
-    good: "// lab/ is not imported\nconst s = '../lab/flower/FlowerBench.tsx';",
+    bad: "import { fakeRelations } from '../lab/flower/illustrative.ts';",
+    good: "// lab/ is not imported\nconst s = '../lab/flower/illustrative.ts';",
+  },
+  {
+    name: 'flower/ has no fetch( and does not reach for the adapter',
+    files: () => sourcesIn('flower'),
+    check: all(
+      using(NETWORK, 'the flower is drawn from what it is handed'),
+      importing(ADAPTER, 'the flower is drawn from what it is handed'),
+    ),
+    bad: "const r = await fetch('/api/v1/render');",
+    good: "// no fetch( here\nconst s = 'fetch(';",
   },
 ];
 
@@ -236,6 +247,14 @@ describe('the layers', () => {
         'viewmodels/useDrawnFlower.ts',
         'viewmodels/useWorkspace.ts',
         'viewmodels/useStage.ts',
+      ]),
+    );
+    expect(sourcesIn('flower')).toEqual(
+      expect.arrayContaining([
+        'flower/InteractionSurface.tsx',
+        'flower/FlowerCanvas.tsx',
+        'flower/useFlowerCanvas.ts',
+        'flower/scene.ts',
       ]),
     );
   });

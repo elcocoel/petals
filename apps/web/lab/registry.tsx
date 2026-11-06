@@ -1699,9 +1699,8 @@ export const registry: LabEntry[] = [
 
 /** Exported by components/ but not drawn here, each for a stated reason. */
 export const NOT_IN_LAB: Record<string, string> = {
-  AgentHome: 'a server page: it fetches, so it has no state to show from props',
   Workspace: 'wires the ViewModel to its views, and each of those views is here',
   ConversationThread: 'Thread and TurnFlower wired together, and each of those is here',
-  FloatBox: 'a BarBox fixed to the window and placed by hand: it lives at /lab/interaction',
+  FloatBox: 'a BarBox fixed to the window and placed by hand: it lives at /make',
   SiteChrome: 'the Nav, drawn here, around a reading column; it holds no state of its own',
 };

@@ -51,8 +51,11 @@ export function sized(from: Rect, edge: Edge, dx: number, dy: number, win: Size)
  * and its biggest names are upper right. Output above, input directly under it, stopping above the
  * corner the flower's small map has.
  */
-export function conversationBoxes(win: Size): { output: Rect; input: Rect } {
-  const { inset, gap, width, floor, 'input-height': inputH, 'min-height': minH } = floatBox;
+export function conversationBoxes(
+  win: Size,
+  inputH: number = floatBox['input-height'],
+): { output: Rect; input: Rect } {
+  const { inset, gap, width, floor, 'min-height': minH } = floatBox;
   const w = Math.min(width, win.w - inset * 2);
   const outputH = Math.max(minH, win.h - inset - floor - gap - inputH);
   return {
@@ -60,3 +63,7 @@ export function conversationBoxes(win: Size): { output: Rect; input: Rect } {
     input: kept({ x: inset, y: inset + outputH + gap, w, h: inputH }, win),
   };
 }
+
+/** The same, with a recorded run's input: a read-only saved question and the button that plays it. */
+export const recordedBoxes = (win: Size) =>
+  conversationBoxes(win, floatBox['recorded-input-height']);

@@ -361,14 +361,11 @@ export function composerView(
   v: Pick<ChatState, 'question' | 'runId' | 'busy'> & {
     recorded: boolean;
     target?: ComposerTarget;
-    /** the page this conversation lives on (lib/workspace-url.ts) */
-    base?: string | undefined;
   },
 ): ComposerView {
   const target = v.target ?? { kind: 'none' };
   const runHref =
-    v.runId &&
-    workspaceUrl({ runId: v.runId, open: { kind: 'latest' }, petal: null, base: v.base });
+    v.runId && workspaceUrl({ runId: v.runId, open: { kind: 'latest' }, petal: null });
   return {
     value: v.recorded ? RECORDED_QUESTION : v.question,
     readOnly: v.recorded,

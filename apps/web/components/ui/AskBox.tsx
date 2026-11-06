@@ -15,9 +15,10 @@ const SIZES = {
     arrow: true,
   },
   composer: {
-    form: 'border py-space-16 pr-text-gap pl-block-gap',
+    // A box can be sized narrower than the words and a long button: the button goes under them.
+    form: 'flex-wrap justify-end border py-space-16 pr-text-gap pl-block-gap',
     gap: 'gap-text-gap',
-    field: 'py-text-gap type-label placeholder:text-muted',
+    field: 'basis-drawing-72 py-text-gap type-label placeholder:text-muted',
     arrow: false,
   },
 } as const;

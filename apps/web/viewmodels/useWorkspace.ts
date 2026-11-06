@@ -25,17 +25,16 @@ const STORED_LINK = /^\/f\/([^/?#]+)$/;
 
 export function useWorkspace(props: {
   initialRun?: string | undefined;
+  initialQuestion?: string | null;
   recorded?: boolean;
   opening?: string;
   shelf: ListedFlower[];
   initialOpen?: Opened;
   initialPetal?: string | null;
-  /** The page this conversation lives on, when it isn't /make (lib/workspace-url.ts). */
-  base?: string;
 }) {
-  const { shelf, base, ...chatProps } = props;
+  const { shelf, ...chatProps } = props;
   const { state: chat, dispatch, actions: chatActions, refs } = useMakeChat(chatProps);
-  const { rows, open, petal, section, busy, runId, question, items, recorded } = chat;
+  const { rows, open, petal, section, busy, runId, question, items, recorded, asked } = chat;
 
   const turnFlowers = useMemo(
     () => rows.filter((r): r is FlowerRow => r.kind === 'flower'),
@@ -151,17 +150,24 @@ export function useWorkspace(props: {
     recorded,
   ]);
 
+  // What the address brought back isn't known until it's here, so nothing should stand in for it yet.
+  // It only ever ends: later, a flower on its way takes over from whatever is on the canvas.
+  const [comingBack, setComingBack] = useState(
+    Boolean(props.initialRun) || props.initialOpen?.kind === 'stored',
+  );
+  if (comingBack && panel.kind !== 'loading' && (!panelFlower || drawing)) setComingBack(false);
+
   const target = useMemo(
     () => composerTarget(panelFlower, selectedPetal),
     [panelFlower, selectedPetal],
   );
-  const composer = composerView({ question, runId, busy, recorded, target, base });
+  const composer = composerView({ question, runId, busy, recorded, target });
 
   // the address holds what a reload needs
   useEffect(() => {
-    const url = workspaceUrl({ runId, open, petal, base });
+    const url = workspaceUrl({ runId, open, petal, asked });
     if (url) window.history.replaceState(null, '', url);
-  }, [runId, open, petal, base]);
+  }, [runId, open, petal, asked]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -179,6 +185,7 @@ export function useWorkspace(props: {
       composer,
       panel,
       canvas,
+      comingBack,
       petal: selectedPetal,
       unit: panelFlower && facts.units[panelFlower.spec.selection.measure],
       section,

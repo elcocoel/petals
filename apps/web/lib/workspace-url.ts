@@ -1,19 +1,18 @@
-// What the address holds, so a reload brings back the panel as well as the thread. The page it's on is
-// its own business: `base` is /make unless a surface says otherwise, and may carry that surface's options.
+// What the address holds, so a reload brings back the panel as well as the thread.
 //   /make?run=<id>           the thread, with its newest flower open
 //   &flower=<n>              an earlier flower of the thread (from 0)
 //   &stored=<id>             a stored flower
 //   &shelf=1                 the shelf, with the thread's flowers closed
 //   &petal=<account>         the selected petal
+//   &q=<words>               a question that came with the link and waits in the box, until the server
+//                            accepts one. It stays because it has to survive leaving and coming back.
 import type { Opened } from './thread.ts';
-
-export const WORKSPACE_BASE = '/make';
 
 export function workspaceUrl(v: {
   runId: string | null;
   open: Opened;
   petal: string | null;
-  base?: string | undefined;
+  asked?: string | null;
 }): string | null {
   const q = new URLSearchParams();
   if (v.runId) q.set('run', v.runId);
@@ -21,9 +20,10 @@ export function workspaceUrl(v: {
   if (v.open.kind === 'stored') q.set('stored', v.open.id);
   if (v.open.kind === 'shelf') q.set('shelf', '1');
   if (v.petal) q.set('petal', v.petal);
-  const text = q.toString();
-  const base = v.base ?? WORKSPACE_BASE;
-  return text ? `${base}${base.includes('?') ? '&' : '?'}${text}` : null;
+  // Alone it says nothing new: the address it came in already holds it.
+  if (!q.toString()) return null;
+  if (v.asked) q.set('q', v.asked);
+  return `/make?${q.toString()}`;
 }
 
 type Param = string | string[] | undefined;
@@ -44,4 +44,13 @@ export function openFromParams(q: Record<string, Param>): {
         ? { kind: 'turn', index }
         : { kind: 'latest' };
   return { open, petal: one(q.petal) ?? null };
+}
+
+/**
+ * The words a link brought for the box, or null: an empty ask box arrives as ?q=. A form sends a
+ * textarea's line ends as CRLF, and the box and the backup compare what they hold, so they're made one.
+ */
+export function questionFromParams(q: Record<string, Param>): string | null {
+  const words = one(q.q)?.replace(/\r\n?/g, '\n').trim();
+  return words ? words : null;
 }

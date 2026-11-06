@@ -8,13 +8,14 @@ import { Thread } from '../components/chat/Thread.tsx';
 import { TurnFlower } from '../components/chat/TurnFlower.tsx';
 import { FloatBox, type FloatHand } from '../components/ui/FloatBox.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
-import { MAP_BOTTOM, MAP_SIZE } from '../lab/flower/marks.ts';
+import { MAP_BOTTOM, MAP_SIZE } from '../flower/marks.ts';
 import {
   conversationBoxes,
   type Edge,
   kept,
   moved,
   type Rect,
+  recordedBoxes,
   type Size,
   sized,
 } from '../lib/float-box.ts';
@@ -44,10 +45,38 @@ describe('where the conversation starts', () => {
     [1024, 600],
     [640, 400],
     [320, 240],
+    [768, 1024],
+    [390, 844],
   ])('every bar is in a %i x %i window', (w, h) => {
-    const { output, input } = conversationBoxes({ w, h });
-    expect(barInside(output, { w, h })).toBe(true);
-    expect(barInside(input, { w, h })).toBe(true);
+    for (const place of [conversationBoxes, recordedBoxes]) {
+      const { output, input } = place({ w, h });
+      expect(barInside(output, { w, h })).toBe(true);
+      expect(barInside(input, { w, h })).toBe(true);
+    }
+  });
+
+  test.each([
+    [768, 1024],
+    [390, 844],
+  ])('both fit a %i x %i window, with nothing past its sides', (w, h) => {
+    for (const place of [conversationBoxes, recordedBoxes]) {
+      const { output, input } = place({ w, h });
+      for (const box of [output, input]) {
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.w).toBeLessThanOrEqual(w);
+        expect(box.y + box.h).toBeLessThanOrEqual(h);
+      }
+    }
+  });
+
+  test('a recorded run takes more of the column for its input, and stops in the same place', () => {
+    const live = conversationBoxes(WIN);
+    const recorded = recordedBoxes(WIN);
+    expect(recorded.input.h).toBe(floatBox['recorded-input-height']);
+    expect(recorded.input.h).toBeGreaterThan(live.input.h);
+    expect(recorded.input.y + recorded.input.h).toBe(live.input.y + live.input.h);
+    expect(recorded.output.y).toBe(live.output.y);
+    expect(recorded.input.y).toBe(recorded.output.y + recorded.output.h + floatBox.gap);
   });
 });
 

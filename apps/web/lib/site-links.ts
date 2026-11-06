@@ -1,6 +1,6 @@
 // Where the site's words point, in one place. Landing anchors start with / so they work from any page.
 
-/** /make reads q and asks it (the receiver lands with the workspace, T183). */
+/** /make puts q in its box, unsent: one press asks it. */
 export const askHref = (question: string) => `/make?q=${encodeURIComponent(question)}`;
 
 export const siteLinks = {

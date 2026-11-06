@@ -1,9 +1,8 @@
 // The drawing: one SVG, built once, then attributes written on it. React doesn't touch it after it
 // mounts, so a frame costs what it costs here and nothing else. Colours are token roles; no other
-// colour appears on this bench.
+// colour appears on this flower.
 import type { View } from './camera.ts';
 import { GUTTER } from './feel.ts';
-import type { FakeRelations } from './illustrative.ts';
 import { LABEL_POOL, type Marks, NOTE_POOL } from './marks.ts';
 import type { Model } from './model.ts';
 import {
@@ -18,6 +17,14 @@ import {
 } from './ring.ts';
 import type { Channel } from './spring.ts';
 import { LINE, MONO } from './words.ts';
+
+/** Lines to judge a feel, with no data behind them. Only the lab's bench hands the scene any. */
+export interface FakeRelations {
+  /** Pairs of petal indices, the same seed the same pairs. */
+  pairs: [number, number][];
+  /** The dotted ring's radius, as a share of R. */
+  ring: number;
+}
 
 /** The most bands a note lists. The reading's kinds of backer are four. */
 const NOTE_BANDS = 6;
@@ -109,6 +116,7 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
   const world = slot(el('g', {}, root));
   const worldNode = world.node;
 
+  // figure.relations-sketch
   const relationsLayer = relations
     ? {
         all: slot(
@@ -154,8 +162,11 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
       }
     : null;
 
+  // figure.flower-silhouette
   const silhouette = slot(el('path', { fill: PETAL }, worldNode));
+  // figure.petal-wedge
   const petalsGroup = slot(el('g', { fill: PETAL }, worldNode));
+  // figure.flower-ring
   const polygon = slot(
     el(
       'path',
@@ -189,6 +200,7 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
       petalsGroup.node,
     ),
   );
+  // figure.petal-bands
   const bands: (Slot<SVGPathElement>[] | undefined)[] = new Array(m.n);
   const shown = new Uint8Array(m.n).fill(1);
   const bandsOn = new Uint8Array(m.n);

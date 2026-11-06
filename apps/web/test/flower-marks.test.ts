@@ -3,16 +3,16 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Reading } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
-import { fitView, type View } from '../lab/flower/camera.ts';
-import { DETAIL, fade, openAt, type Row, ramp } from '../lab/flower/detail.ts';
-import type { HoverWay } from '../lab/flower/hover.ts';
+import { fitView, type View } from '../flower/camera.ts';
+import { DETAIL, fade, openAt, type Row, ramp } from '../flower/detail.ts';
+import type { HoverWay } from '../flower/hover.ts';
+import { newLive, noteAt, stepLive } from '../flower/live.ts';
+import { type Focus, type Marks, marks } from '../flower/marks.ts';
+import { type Model, modelOf } from '../flower/model.ts';
+import { SHAPE, widthBefore } from '../flower/ring.ts';
+import { amount, kindWord, LINE, noteText, pct, textWidth } from '../flower/words.ts';
 import { fakeRelations } from '../lab/flower/illustrative.ts';
-import { newLive, noteAt, stepLive } from '../lab/flower/live.ts';
-import { type Focus, type Marks, marks } from '../lab/flower/marks.ts';
-import { type Model, modelOf } from '../lab/flower/model.ts';
-import { SHAPE, widthBefore } from '../lab/flower/ring.ts';
 import { syntheticReading } from '../lab/flower/synthetic.ts';
-import { amount, kindWord, LINE, noteText, pct, textWidth } from '../lab/flower/words.ts';
 
 const GOLDEN = join(import.meta.dirname, '..', '..', '..', 'fixtures', 'golden');
 const reading = (name: string): Reading =>
@@ -154,6 +154,13 @@ describe('the table', () => {
 });
 
 describe('marks', () => {
+  test('the zoom readout is an instrument: there only when a bench asks for it', () => {
+    expect(marks(backers, at(2.3), null).readout).toBeNull();
+    expect(marks(backers, at(2.3), null, backers.ring, undefined, true).readout?.text).toBe(
+      '2.30x',
+    );
+  });
+
   test('are pure: the same input, the same output', () => {
     const v = at(2.3);
     const a = marks(backers, v, pointing(7));

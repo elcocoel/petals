@@ -1,23 +1,23 @@
-// The bench's ViewModel: one requestAnimationFrame loop that sleeps when nothing moves, and the
+// The live flower's ViewModel: one requestAnimationFrame loop that sleeps when nothing moves, and the
 // pointer, wheel and keyboard wired into it. All the state is in live.ts, the choices in marks.ts and
 // the drawing in scene.ts. React mounts this once and never renders per frame.
 import { type RefObject, useEffect } from 'react';
-import { keepCursor } from '../../viewmodels/useFloatBoxes.ts';
 import { fitView, flyTo, letGo, panBy, resize, zoomWheel } from './camera.ts';
 import type { HoverWay } from './hover.ts';
-import { fakeRelations } from './illustrative.ts';
 import { newLive, noteAt, stepLive } from './live.ts';
 import { type Focus, type Marks, marks } from './marks.ts';
 import { type FlowerReading, modelOf } from './model.ts';
 import { scatter } from './order.ts';
-import { createScene } from './scene.ts';
+import { createScene, type FakeRelations } from './scene.ts';
 
-export interface BenchOptions {
-  reading: FlowerReading;
+export interface CanvasOptions {
+  /** With none, there's nothing to draw and nothing to move. */
+  reading: FlowerReading | null;
   hover: HoverWay;
-  relations: boolean;
+  relations: FakeRelations | null;
   scatter: boolean;
   probe: boolean;
+  readout: boolean;
 }
 
 /** A frame is never longer than this for the springs, so a stall doesn't fling anything. */
@@ -27,20 +27,19 @@ const LONGEST_THROW = 2400;
 
 const quiet = () => window.matchMedia('(prefers-reduced-motion: reduce)');
 
-export function useFlowerBench(svg: RefObject<SVGSVGElement | null>, options: BenchOptions): void {
+export function useFlowerCanvas(
+  svg: RefObject<SVGSVGElement | null>,
+  options: CanvasOptions,
+): void {
   useEffect(() => {
     const node = svg.current;
-    if (!node) return;
-    const m = modelOf(
-      options.scatter
-        ? { ...options.reading, petals: scatter(options.reading.petals) }
-        : options.reading,
-    );
+    const { reading } = options;
+    if (!node || !reading) return;
+    const m = modelOf(options.scatter ? { ...reading, petals: scatter(reading.petals) } : reading);
     const motion = quiet();
     const box = node.getBoundingClientRect();
     const live = newLive(m, options.hover, box.width, box.height, motion.matches);
-    const relations = options.relations ? fakeRelations(m.n) : null;
-    const scene = createScene(node, m, relations);
+    const scene = createScene(node, m, options.relations);
     const scratch = new Float64Array(m.n);
     let last: Marks | null = null;
     let raf = 0;
@@ -68,7 +67,7 @@ export function useFlowerBench(svg: RefObject<SVGSVGElement | null>, options: Be
               named: live.named.x,
             }
           : null;
-      const mk = marks(m, live.camera, focus, live.ring, scratch);
+      const mk = marks(m, live.camera, focus, live.ring, scratch, options.readout);
       scene.draw({
         marks: mk,
         ring: live.ring,
@@ -183,8 +182,6 @@ export function useFlowerBench(svg: RefObject<SVGSVGElement | null>, options: Be
     node.addEventListener('pointermove', onMove);
     node.addEventListener('pointerleave', onLeave);
     node.addEventListener('pointerdown', onDown);
-    // Moving around the flower leaves the cursor where it was, so a chat can carry on.
-    node.addEventListener('mousedown', keepCursor);
     node.addEventListener('pointerup', onUp);
     node.addEventListener('pointercancel', onUp);
     node.addEventListener('wheel', onWheel, { passive: false });
@@ -234,7 +231,6 @@ export function useFlowerBench(svg: RefObject<SVGSVGElement | null>, options: Be
       node.removeEventListener('pointermove', onMove);
       node.removeEventListener('pointerleave', onLeave);
       node.removeEventListener('pointerdown', onDown);
-      node.removeEventListener('mousedown', keepCursor);
       node.removeEventListener('pointerup', onUp);
       node.removeEventListener('pointercancel', onUp);
       node.removeEventListener('wheel', onWheel);

@@ -5,7 +5,7 @@
 // sides, bases flush on the polygon, straight ends, and a line of constant width between neighbours.
 // Heights are exactly the reading's.
 // Written for 60 frames a second: arrays filled in place instead of objects, and no sub-sides. layout()
-// splits a side wider than 0.9 pi, and the tail when it's wider than 0.45 rad; no flower on this bench
+// splits a side wider than 0.9 pi, and the tail when it's wider than 0.45 rad; no flower here
 // gets near that, 4x open included.
 import type { ReadingPetal } from '@petal/core/types';
 import { GUTTER } from './feel.ts';

@@ -31,8 +31,6 @@ export const MAP_SIZE = 96;
 const MAP_INSET = 28;
 /** The map sits this far up, clear of Next's badge in development. */
 export const MAP_BOTTOM = 64;
-/** A tiny readout of zoom and share while we tune. Set to false and it's gone. */
-const READOUT = true;
 
 export interface Focus {
   index: number;
@@ -192,6 +190,8 @@ export function marks(
   focus: Focus | null,
   ring: Ring = m.ring,
   scratch?: Float64Array,
+  /** A tiny readout of zoom and share while we tune. Only the lab's bench asks for it. */
+  readout = false,
 ): Marks {
   const { k } = v;
   const toX = (x: number) => (x + ring.ox) * k + v.x;
@@ -203,6 +203,7 @@ export function marks(
     if (opacity > 0.01) placed.push({ ...box, opacity });
   };
 
+  // figure.account-opening
   // The account.
   const fi = focus?.index ?? -1;
   const presence = focus ? focus.presence * fade(DETAIL.hover, radius) : 0;
@@ -223,6 +224,7 @@ export function marks(
     segments[i] = named * fade(DETAIL.segments, end);
   }
 
+  // box.account-panel
   // The panel comes first: nothing may sit under it.
   let panel: PanelMark | null = null;
   if (focus && panelOpacity > 0.001) {
@@ -238,6 +240,7 @@ export function marks(
     );
   }
 
+  // mark.focus-note
   // The one note that travels with the pointer, turning into the panel's header as the account opens.
   let focusMark: FocusMark | null = null;
   if (focus && presence > 0.001) {
@@ -338,6 +341,7 @@ export function marks(
     }
   }
 
+  // head.flower-title
   // The title: outside while the flower's too small to hold it, inside once it can.
   const room = polygonRadius - m.titleWidth / 2;
   const inside = fade(DETAIL.titleInside, room) * (1 - open);
@@ -358,6 +362,7 @@ export function marks(
   claim(titleBox(titleInside.y), titleInside.opacity);
   claim(titleBox(titleOutside.y), titleOutside.opacity);
 
+  // figure.way-back-map
   // The small map claims its corner.
   const mapOpacity = fade(DETAIL.wayBack, radius / (Math.min(v.width, v.height) / 2));
   const map = {
@@ -371,6 +376,7 @@ export function marks(
     claim({ x0: map.x, y0: map.y, x1: map.x + MAP_SIZE, y1: map.y + MAP_SIZE }, mapOpacity);
   }
 
+  // mark.petal-note
   // Everyone else's notes, in order of rank, each only if it has earned it and has the room.
   const notes: NoteMark[] = [];
   const dots: { x: number; y: number }[] = [];
@@ -419,6 +425,7 @@ export function marks(
     dots.push({ x: tipX, y: tipY });
   }
 
+  // mark.band-label
   // A band of the focused petal says its name, if it's big enough to hold it.
   const labels: LabelMark[] = [];
   const fp0 = fi >= 0 ? m.petals[fi] : undefined;
@@ -482,7 +489,7 @@ export function marks(
     panel,
     map,
     relations: fade(DETAIL.relations, radius),
-    readout: READOUT
+    readout: readout
       ? {
           text: `${k < 1 ? k.toFixed(3) : k.toFixed(2)}x${fp && presence > 0.5 ? ` ${pct(fp.share)}` : ''}`,
           x: v.width - INSET,

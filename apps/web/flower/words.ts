@@ -1,4 +1,4 @@
-// The only words on the bench, and all of them come from the reading.
+// The only words on the flower, and all of them come from the reading.
 import type { ReadingPetal } from '@petal/core/types';
 
 /** The mono type class, in one place because it's being renamed. */

@@ -7,6 +7,8 @@ export const floatBox = {
   /** Where a box starts: how wide, and its input's height, which fits a question and the run's line. */
   width: 480,
   'input-height': 216,
+  /** A recorded run's input: its saved question is long, and the button to play it stays in sight. */
+  'recorded-input-height': 312,
   /** Where the column of boxes stops above the window's bottom: the flower's small map has that corner. */
   floor: 168,
   /** The smallest a hand can make it, which still shows its bar and a line or two. */

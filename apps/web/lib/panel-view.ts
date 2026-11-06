@@ -70,6 +70,20 @@ export function nextCanvas(
   return { key, reading };
 }
 
+/**
+ * What's on the canvas right now. The conversation's flower, or the stand-in until it has one, unless
+ * what the address brought back isn't known yet. The very flower that's already standing there keeps the
+ * same object, so its arrival leaves the scene and the camera alone.
+ */
+export function canvasShown(
+  canvas: CanvasFlower | null,
+  comingBack: boolean,
+  standIn: CanvasFlower | null,
+): CanvasFlower | null {
+  const shown = canvas ?? (comingBack ? null : standIn);
+  return shown && shown.key === standIn?.key ? standIn : shown;
+}
+
 export interface Tile {
   id: string;
   title: string;

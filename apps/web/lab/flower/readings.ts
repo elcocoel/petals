@@ -4,9 +4,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import type { Reading, Snapshot, Spec, ToolError } from '@petal/core/types';
+import type { HoverWay } from '../../flower/hover.ts';
+import type { FlowerReading } from '../../flower/model.ts';
 import { configFromEnv, repoRoot } from '../../lib/config.ts';
-import type { HoverWay } from './hover.ts';
-import type { FlowerReading } from './model.ts';
+import { fakeRelations } from './illustrative.ts';
 import { syntheticReading } from './synthetic.ts';
 
 /** Golden readings, as locked. */
@@ -76,7 +77,7 @@ export async function benchChoice(q: Record<string, string | string[] | undefine
     name,
     reading,
     hover,
-    relations: q.relations === '1',
+    relations: q.relations === '1' ? fakeRelations(reading.petals.length) : null,
     scatter: q.order === 'scatter',
     probe: q.probe === '1',
   };

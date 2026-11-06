@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Reading } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
-import { GUTTER } from '../lab/flower/feel.ts';
+import { GUTTER } from '../flower/feel.ts';
 import {
   bandPath,
   insideWedge,
@@ -18,7 +18,7 @@ import {
   SHAPE,
   widthAt,
   widthBefore,
-} from '../lab/flower/ring.ts';
+} from '../flower/ring.ts';
 
 const GOLDEN = join(import.meta.dirname, '..', '..', '..', 'fixtures', 'golden');
 const reading = (name: string): Reading =>

@@ -25,6 +25,7 @@ import {
 } from '../lib/flower-view.ts';
 import {
   type CanvasFlower,
+  canvasShown,
   composerTarget,
   flowerPanelView,
   nextCanvas,
@@ -309,13 +310,15 @@ describe('the address', () => {
 
   test('a fresh page has nothing to say', () => {
     expect(workspaceUrl({ runId: null, open: { kind: 'latest' }, petal: null })).toBeNull();
-    // another surface gives its own page, and its own options go along
-    expect(workspaceUrl({ runId: 'r', open: { kind: 'latest' }, petal: null, base: '/a' })).toBe(
-      '/a?run=r',
-    );
-    expect(
-      workspaceUrl({ runId: 'r', open: { kind: 'latest' }, petal: null, base: '/a?box=ink' }),
-    ).toBe('/a?box=ink&run=r');
+  });
+
+  test('a question waiting goes along when the address has to change, and only then', () => {
+    const fresh = { runId: null, open: { kind: 'latest' }, petal: null, asked: 'a b&c' } as const;
+    expect(workspaceUrl(fresh)).toBeNull();
+    const url = workspaceUrl({ ...fresh, runId: 'r' }) as string;
+    expect(url).toBe('/make?run=r&q=a+b%26c');
+    expect(new URL(url, 'http://x').searchParams.get('q')).toBe('a b&c');
+    expect(workspaceUrl({ ...fresh, runId: 'r', asked: null })).toBe('/make?run=r');
   });
 
   test('nonsense falls back to the newest', () => {
@@ -497,6 +500,27 @@ describe('what a live canvas holds (T200)', () => {
     expect(nextCanvas(null, null, undefined)).toBeNull();
     expect(nextCanvas(null, 'a', undefined)).toBeNull();
     expect(nextCanvas(null, 'a', reading)).toEqual({ key: 'a', reading });
+  });
+
+  test('the stand-in holds the canvas until the conversation draws its own', () => {
+    const standIn: CanvasFlower = { key: 'stand-in', reading };
+    const drawn: CanvasFlower = { key: 'drawn', reading: other };
+    expect(canvasShown(null, false, standIn)).toBe(standIn);
+    expect(canvasShown(drawn, false, standIn)).toBe(drawn);
+  });
+
+  test('nothing stands in while the address is coming back, and a drawn flower needs no stand-in', () => {
+    const standIn: CanvasFlower = { key: 'stand-in', reading };
+    expect(canvasShown(null, true, standIn)).toBeNull();
+    const drawn: CanvasFlower = { key: 'drawn', reading: other };
+    expect(canvasShown(drawn, true, standIn)).toBe(drawn);
+    expect(canvasShown(drawn, false, null)).toBe(drawn);
+    expect(canvasShown(null, false, null)).toBeNull();
+  });
+
+  test('the very flower already standing there changes nothing: the same scene, the same camera', () => {
+    const standIn: CanvasFlower = { key: 'same', reading };
+    expect(canvasShown({ key: 'same', reading: { ...reading } }, false, standIn)).toBe(standIn);
   });
 
   test('the same object until the flower really changes', () => {
