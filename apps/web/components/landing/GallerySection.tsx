@@ -14,6 +14,7 @@ const THUMBS: readonly ThumbKind[] = ['blocs', 'even', 'tower'];
 export function GallerySection() {
   return (
     <Section
+      tone="mist"
       rule="top"
       layout="columns"
       head={

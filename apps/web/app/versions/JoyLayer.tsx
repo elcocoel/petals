@@ -7,6 +7,7 @@
 // element under the pointer. Nothing here writes to <html>, which would restyle the whole page.
 import { type BehaviourName, type as typeStyles, v2, wordmark } from '@petal/tokens';
 import { useEffect } from 'react';
+import { drift } from './drift.ts';
 
 const S = v2.script;
 const NS = 'http://www.w3.org/2000/svg';
@@ -749,6 +750,7 @@ function markArrive(joy: Joy): Stop {
 
 /** Every scripted child in the table, in the order they start. CSS alone runs the others. */
 export const SCRIPTED: Partial<Record<BehaviourName, (joy: Joy) => Stop>> = {
+  'surface.drift': drift,
   'surface.spotlight': spotlight,
   'surface.stick': stick,
   'action.sheen': sheen,

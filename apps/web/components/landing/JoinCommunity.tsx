@@ -12,7 +12,7 @@ const copy = landingCopy.community;
 
 export function JoinCommunity() {
   return (
-    <Section id="community" layout="split">
+    <Section tone="paper" id="community" layout="split">
       <div>
         <SectionHead eyebrow={copy.eyebrow} title={copy.title} body={copy.body} />
         <div className="mt-space-32">

@@ -29,6 +29,47 @@
   position: relative;
 }
 
+/* surface.tone */
+:root[data-version="2"] [data-b="surface"][data-tone="paper"] {
+  background-image:
+    var(--joy-texture-countergrain), var(--joy-texture-grain), var(--joy-gradient-band);
+}
+
+/* surface.tone */
+:root[data-version="2"] [data-b="surface"][data-tone="mist"] {
+  --surface: var(--joy-paint-mist);
+  background-image: var(--joy-texture-screen);
+}
+
+/* surface.tone */
+:root[data-version="2"] [data-b="surface"][data-tone="stone"] {
+  --surface: var(--joy-paint-stone);
+  background-image: var(--joy-texture-felt), var(--joy-gradient-band);
+}
+
+/* surface.drift */
+:root[data-version="2"] [data-b="surface"]:is([data-tone], [data-surface="mint"]) {
+  isolation: isolate;
+}
+
+/* surface.drift */
+:root[data-version="2"] [data-b="surface"] > canvas[data-drift] {
+  position: absolute;
+  z-index: -1;
+  inset: var(--joy-move-zero);
+  width: var(--joy-move-whole);
+  height: var(--joy-move-whole);
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+  transition: opacity var(--joy-dur-bloom) var(--joy-ease-color);
+}
+
+/* surface.drift */
+:root[data-version="2"] [data-b="surface"] > canvas[data-drift][data-on] {
+  opacity: 1;
+}
+
 /* surface.spotlight */
 :root[data-version="2"] [data-b="surface"] > [data-spot] {
   position: absolute;

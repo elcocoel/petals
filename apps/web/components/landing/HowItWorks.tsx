@@ -17,6 +17,7 @@ const [ask, see, question] = copy.steps;
 export function HowItWorks() {
   return (
     <Section
+      tone="paper"
       rule="top"
       id="how-it-works"
       layout="columns"

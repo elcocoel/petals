@@ -2,7 +2,14 @@
 // from source.ts (v1) and adds; it never changes a v1 token. Every value that gives the page softness or
 // motion is here: apps/web/app/versions/v2.css only says var(). Measured from dearsaintelmo.com for the
 // way it feels, on Petals' own palette: nothing here is Saint Elmo's paper or ember.
-import { type Paint, paintCss, surfaces, type wordmark } from '../source.ts';
+import {
+  type Paint,
+  type Primitive,
+  paintCss,
+  primitives,
+  surfaces,
+  type wordmark,
+} from '../source.ts';
 import {
   type ContrastCase,
   flatCss,
@@ -14,6 +21,7 @@ import {
 const ink = (alpha: number): Paint => ({ of: 'Ink', alpha });
 const ground = (alpha: number): Paint => ({ of: 'Ground', alpha });
 const mint = (alpha: number): Paint => ({ of: 'Mint', alpha });
+const gray = (alpha: number): Paint => ({ of: 'Gray', alpha });
 const c = (paint: Paint) => paintCss(paint);
 
 /** Ground with a breath of Mint. Solid, so what sits on it composites the same way everywhere. */
@@ -31,6 +39,125 @@ const grain = ([r, g, b]: [number, number, number], alpha: number) => {
 const INK_GRAIN: [number, number, number] = [0.09, 0.09, 0.09];
 const LIGHT_GRAIN: [number, number, number] = [1, 1, 1];
 
+// Elco's soft textures, drawn by code: Brand guide, "Image generations", 33:646, 33:647 and 33:648. Each
+// is a PNG of megabytes there; each tile here is under 2 KB and stays sharp at any density. They hold still.
+// What moves is a soft tone over them, drawn by apps/web/app/versions/drift.ts from `script.drift` below.
+
+/** An SVG as a CSS image, escaping only what url("") really needs, so a small tile stays small. */
+const tile = (width: number, height: number, body: string) => {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}'>${body}</svg>`;
+  return `url("data:image/svg+xml,${svg.replace(/[%#<>"]/g, (ch) => encodeURIComponent(ch))}")`;
+};
+
+/** A colour matrix that turns what it's given into one primitive, at that primitive's alpha. */
+const inkIn = (of: Primitive, alpha: number) => {
+  const [r, g, b] = [1, 3, 5].map((at) =>
+    (Number.parseInt(primitives[of].slice(at, at + 2), 16) / 255).toFixed(3),
+  );
+  return `0 0 0 0 ${r} 0 0 0 0 ${g} 0 0 0 0 ${b} 0 0 0 ${alpha} 0`;
+};
+
+/**
+ * Texture 02, Mint noise: short fibres lying on a slant, both lighter and darker than what's under them,
+ * so a felt changes no colour on average. Its tile doesn't stitch, because the slant wouldn't repeat: the
+ * fibres are too fine and too faint for an edge to show.
+ */
+const felt = (alpha: number) => {
+  const row = '2.4 0 0 0 -.7';
+  const flip = "type='discrete' tableValues='.09 1'";
+  return tile(
+    300,
+    300,
+    `<filter id='f' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='.2 .85' numOctaves='2' seed='7'/><feColorMatrix values='${row} ${row} ${row} ${row}'/><feComponentTransfer><feFuncR ${flip}/><feFuncG ${flip}/><feFuncB ${flip}/><feFuncA type='table' tableValues='${alpha} 0 ${alpha}'/></feComponentTransfer></filter><rect x='-300' y='-300' width='900' height='900' filter='url(#f)' transform='rotate(-20 150 150)'/>`,
+  );
+};
+
+/** A seeded walk, so the emitted CSS is the same every time. */
+const walk = (seed: number) => {
+  let at = seed;
+  return () => {
+    at = (at * 16807) % 2147483647;
+    return at / 2147483647;
+  };
+};
+
+/**
+ * Texture 03, Offset screen: a stochastic dot screen, in Mint with Ink printed a little off register,
+ * across the rows so it doesn't smear dots into dashes. The lattice is a square one turned 26.6 degrees,
+ * basis (6,3) and (-3,6), which fits a 45px cell. Each dot is nudged on its own, and slow noise bends the
+ * whole thing, so no row stays straight and the cell doesn't show. Elco's second ink is blue; ours aren't.
+ */
+const SCREEN_DOT = 0.72;
+const SCREEN_OFFSET = 0.12;
+const screen = () => {
+  const next = walk(11);
+  const cell = 45;
+  const width = 2.6;
+  const inside = (v: number) => Math.min(cell - width / 2 - 0.1, Math.max(width / 2 + 0.1, v));
+  let d = '';
+  for (let u = -cell; u < cell; u++) {
+    for (let v = -cell; v < cell; v++) {
+      const x = u * 6 - v * 3;
+      const y = u * 3 + v * 6;
+      if (x < 0 || y < 0 || x >= cell || y >= cell) continue;
+      const dotX = inside(x + 1.5 + (next() - 0.5) * 4);
+      const dotY = inside(y + 1.5 + (next() - 0.5) * 4);
+      d += `M${dotX.toFixed(1)} ${dotY.toFixed(1)}h0`;
+    }
+  }
+  return tile(
+    315,
+    315,
+    `<defs><pattern id='d' width='${cell}' height='${cell}' patternUnits='userSpaceOnUse'><path d='${d}' stroke='#000' stroke-width='${width}' stroke-linecap='round'/></pattern><filter id='s' filterUnits='userSpaceOnUse' x='-20' y='-20' width='355' height='355' color-interpolation-filters='sRGB'><feTurbulence x='0' y='0' width='315' height='315' type='fractalNoise' baseFrequency='.06' numOctaves='1' seed='4' stitchTiles='stitch' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='5' xChannelSelector='R' yChannelSelector='G'/><feGaussianBlur stdDeviation='.2' result='g'/><feColorMatrix in='g' values='${inkIn('Ink', SCREEN_OFFSET)}'/><feOffset dx='-.5' dy='.8' result='o'/><feColorMatrix in='g' values='${inkIn('Mint', SCREEN_DOT)}'/><feMerge><feMergeNode in='o'/><feMergeNode/></feMerge></filter></defs><rect x='-20' y='-20' width='355' height='355' fill='url(#d)' filter='url(#s)'/>`,
+  );
+};
+
+/**
+ * Texture 01, Countergrain: sparse four-point stars, the shape the wordmark's cells open into, over finer
+ * specks. Two tiles whose sizes share no factor, so together they repeat only every 31,439px.
+ */
+const STAR_ALPHA = 0.6;
+const countergrain = () => {
+  const stars = (size: number, count: number) => {
+    const next = walk(5);
+    const side = Math.ceil(Math.sqrt(count));
+    const step = size / side;
+    let d = '';
+    for (let i = 0; i < count; i++) {
+      const r = 3.2 + next() * 1.6;
+      const x = Math.min(size - r - 1, Math.max(r + 1, ((i % side) + next()) * step));
+      const y = Math.min(size - r - 1, Math.max(r + 1, (Math.floor(i / side) + next()) * step));
+      const turn = ((45 + (next() - 0.5) * 26) * Math.PI) / 180;
+      const at = (angle: number, reach: number) =>
+        `${(x + Math.cos(angle) * reach).toFixed(1)} ${(y + Math.sin(angle) * reach).toFixed(1)}`;
+      d += `M${at(turn, r)}`;
+      for (let k = 1; k <= 4; k++) {
+        const angle = turn + (k * Math.PI) / 2;
+        d += `Q${at(angle - Math.PI / 4, r * 0.17)} ${at(angle, r)}`;
+      }
+      d += 'z';
+    }
+    return tile(
+      size,
+      size,
+      `<path d='${d}' fill='${primitives.Gray}' fill-opacity='${STAR_ALPHA}'/>`,
+    );
+  };
+  const specks = (size: number, count: number) => {
+    const next = walk(29);
+    let d = '';
+    for (let i = 0; i < count; i++) {
+      d += `M${(2 + next() * (size - 4)).toFixed(1)} ${(2 + next() * (size - 4)).toFixed(1)}h0`;
+    }
+    return tile(
+      size,
+      size,
+      `<path d='${d}' stroke='${primitives.Gray}' stroke-opacity='.7' stroke-width='1.7' stroke-linecap='round'/>`,
+    );
+  };
+  return `${stars(149, 16)}, ${specks(211, 26)}`;
+};
+
 const glass = (from: Paint, to: Paint) => `linear-gradient(145deg, ${c(from)}, ${c(to)})`;
 const glow = (paint: Paint, at = '100% 0%', reach = '46%') =>
   `radial-gradient(circle at ${at}, ${c(paint)}, transparent ${reach})`;
@@ -40,6 +167,29 @@ const rules = (paint: Paint, step: number) =>
 
 /** Muted words get a little firmer, because what's behind them is no longer plain. */
 const MUTED = { ground: ink(0.68), ink: ground(0.8), mint: ink(0.8) } as const;
+
+/**
+ * The light grounds a band can take, `<Section tone>`, so a long page has a rhythm. Each is a role-compatible
+ * ground: words and actions stay what they are on ground. No tone at all is the plain ground of v2.
+ */
+export const tones = ['paper', 'mist', 'stone'] as const;
+export type ToneName = (typeof tones)[number];
+const MIST: readonly Paint[] = ['Ground', mint(0.08)];
+const STONE: readonly Paint[] = ['Ground', gray(0.28), mint(0.03)];
+const MINT_FELT = 0.115;
+const STONE_FELT = 0.075;
+
+/**
+ * What the moving field lays over a textured band, at its two ends. `low` lays Ground over the still tile,
+ * so its stars and dots sink, and `high` lets them come forward. The mint band's two ends balance, so it
+ * stays Mint.
+ */
+const WASH: Record<ToneName | 'mint', { low: Paint; high: Paint }> = {
+  paper: { low: ground(0.86), high: ground(0) },
+  mist: { low: ground(0.5), high: mint(0.03) },
+  stone: { low: ground(0.2), high: gray(0.1) },
+  mint: { low: ink(0.03), high: ground(0.05) },
+};
 
 /** A floating box's glass, its strongest and weakest stop on each surface it's drawn on. */
 const FLOAT = { ground: [0.96, 0.76], ink: [0.94, 0.82] } as const;
@@ -72,6 +222,8 @@ const groups = {
     },
     'chip-wash': { ground: c(mint(0.22)), ink: c(mint(0.18)), mint: c(ground(0.4)) },
     'nav-line': c(ink(0.12)),
+    mist: flatCss(MIST),
+    stone: flatCss(STONE),
   },
   shadow: {
     box: {
@@ -207,8 +359,11 @@ const groups = {
     grain: {
       ground: grain(INK_GRAIN, 0.05),
       ink: grain(LIGHT_GRAIN, 0.06),
-      mint: grain(INK_GRAIN, 0.07),
+      mint: felt(MINT_FELT),
     },
+    countergrain: countergrain(),
+    screen: screen(),
+    felt: felt(STONE_FELT),
     rules: {
       ground: rules(ink(0.06), 24),
       ink: rules(ground(0.05), 24),
@@ -270,6 +425,7 @@ const groups = {
     'none-s': '0s',
     'fold-closed': '0px',
     z: '40',
+    whole: '100%',
   },
   // Sizes of the pools of light, each with the offset that centres it on the pointer.
   light: {
@@ -311,12 +467,41 @@ export interface V2Script {
   tightAt: number;
   /** How long after a reveal a drawing's lines go back to one path. */
   settleMs: number;
+  /** The soft tone that moves over a textured band. See apps/web/app/versions/drift.ts. */
+  drift: {
+    /** How much page, in pixels, one cell of its canvas covers. It's soft, so this is why it's cheap. */
+    cell: number;
+    /** How long between drawings. It moves too slowly to need every frame. */
+    frameMs: number;
+    /** The two waves it's made of: how long each is, in pixels, and how many seconds one takes to pass. */
+    waves: readonly [{ length: number; period: number }, { length: number; period: number }];
+    /** How far the pointer reaches, in pixels, how far it bends the waves, in radians, and how much it brings the texture forward. */
+    reach: number;
+    bend: number;
+    raise: number;
+    /** How long it takes to answer the pointer and the scroll, as a time constant. Slow on purpose. */
+    leanMs: number;
+    scrollMs: number;
+    /** How much slower than the page the waves scroll, as a fraction of it. */
+    parallax: number;
+    wash: Record<ToneName | 'mint', { low: Paint; high: Paint }>;
+  };
 }
 
 const TEXT = surfaces;
 const GROUND_BAND: readonly Paint[] = [...TINT, mint(0.08), ink(0.03)];
 const INK_BAND: readonly Paint[] = ['Ink', mint(0.1), ground(0.03), ground(0.03)];
 const MINT_BAND: readonly Paint[] = ['Mint', ink(0.05), ink(0.035)];
+const MINT_WORST: readonly Paint[] = [...MINT_BAND, ink(MINT_FELT), WASH.mint.low];
+const MIST_WORST: readonly Paint[] = [
+  ...MIST,
+  ink(SCREEN_OFFSET),
+  mint(SCREEN_DOT),
+  WASH.mist.high,
+  mint(0.17),
+];
+const STONE_WORST: readonly Paint[] = [...STONE, ink(STONE_FELT), WASH.stone.high, mint(0.17)];
+const PAPER_WORST: readonly Paint[] = [...GROUND_BAND, gray(STAR_ALPHA), mint(0.17)];
 const TERMINAL: readonly Paint[] = [...INK_BAND, ground(0.03), mint(0.05), mint(0.06)];
 
 /**
@@ -408,6 +593,16 @@ const contrast: ContrastCase[] = [
     over: [TEXT.mint['action-background'], ground(0.16), ground(0.08), ground(0.15)],
   },
   ...floatCases,
+  // The textures, each at the darkest thing it can put behind a word: a felt's darkest fibre, a dot's core
+  // with its off-register ink, a star's middle, under the field at its strongest and the spotlight.
+  { name: 'mint: text-primary on felt', text: TEXT.mint['text-primary'], over: MINT_WORST },
+  { name: 'mint: muted on felt', text: MUTED.mint, over: MINT_WORST },
+  { name: 'mist: text-primary on a dot', text: TEXT.ground['text-primary'], over: MIST_WORST },
+  { name: 'mist: muted on a dot', text: MUTED.ground, over: MIST_WORST },
+  { name: 'stone: text-primary on felt', text: TEXT.ground['text-primary'], over: STONE_WORST },
+  { name: 'stone: muted on felt', text: MUTED.ground, over: STONE_WORST },
+  { name: 'paper: text-primary on a star', text: TEXT.ground['text-primary'], over: PAPER_WORST },
+  { name: 'paper: muted on a star', text: MUTED.ground, over: PAPER_WORST },
 ];
 
 export const v2: Version<V2Script> = {
@@ -454,6 +649,21 @@ export const v2: Version<V2Script> = {
     linkHold: 140,
     tightAt: 12,
     settleMs: 3200,
+    drift: {
+      cell: 24,
+      frameMs: 33,
+      waves: [
+        { length: 720, period: 64 },
+        { length: 520, period: 86 },
+      ],
+      reach: 340,
+      bend: 1.1,
+      raise: 0.55,
+      leanMs: 1100,
+      scrollMs: 800,
+      parallax: 0.14,
+      wash: WASH,
+    },
   },
 };
 
