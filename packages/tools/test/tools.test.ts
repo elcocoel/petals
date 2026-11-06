@@ -3,12 +3,13 @@
 
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { canonicalJson, entryId, specHash } from '@petal/core';
-import type { Entry, ProgressEvent } from '@petal/core/types';
+import { canonicalJson, entryId, readFlower, specHash } from '@petal/core';
+import type { Entry, ProgressEvent, Snapshot } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
 import { FLOWER_DEFS, inlineRefs } from '../src/define.ts';
 import { draftStore } from '../src/drafts.ts';
 import { callTool, findTool } from '../src/registry.ts';
+import { checkSpec } from '../src/tools/specs.ts';
 import type { ToolContext } from '../src/types.ts';
 import { entrySha256 } from '../src/verify.ts';
 import {
@@ -286,6 +287,20 @@ describe('propose_spec, validate_spec, render_flower', () => {
     const withSvg = await run('render_flower', { spec, include_svg: true });
     expect(withSvg.svg).toMatch(/^<svg /);
     expect(withSvg.render_sha256).toBe(rendered.render_sha256);
+  });
+
+  test('render_flower: a reading only when asked, and it is the real one from readFlower', async () => {
+    const r = await rig();
+    const run = runner(r.ctx);
+    const { spec, rendered } = await flow(run);
+    expect(rendered).not.toHaveProperty('reading');
+    const asked = await run('render_flower', { spec, include_reading: true });
+    const snapshot = (await checkSpec(r.ctx, spec as never)).snapshot as Snapshot;
+    const real = readFlower(spec as never, snapshot);
+    expect(asked.reading).toEqual({ title: real.title, petals: real.petals });
+    // the rest of the answer doesn't move
+    const { reading: _reading, ...rest } = asked;
+    expect(rest).toEqual(rendered);
   });
 });
 

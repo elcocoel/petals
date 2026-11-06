@@ -47,6 +47,11 @@ describe('llmTools on the real registry', () => {
     expect(Object.keys((def('render_flower').parameters as Json).properties)).toEqual(['spec']);
   });
 
+  test('a reading is never offered: the model is told nothing new about render_flower', () => {
+    expect(JSON.stringify(def('render_flower'))).not.toMatch(/reading/);
+    expect(JSON.stringify(def('validate_spec'))).not.toMatch(/include_reading/);
+  });
+
   test('the description is said once, and only the agent’s tools are offered', () => {
     for (const t of tools) expect(t.parameters).not.toHaveProperty('description');
     expect(tools.map((t) => t.name)).not.toContain('publish_flower');
@@ -123,6 +128,25 @@ describe('forModel on the real tools (near-validators fixture)', () => {
     expect(r.view_url.length).toBeLessThan(40);
 
     for (const out of [s, d, f, r]) expect(JSON.stringify(out)).not.toMatch(/"participants":\[/);
+  });
+
+  test('the agent reads the same result whether or not a reading came back', async () => {
+    const snap = await run('get_snapshot', { network: 'near-validators' });
+    const { spec } = await run('propose_spec', {
+      network: 'near-validators',
+      sha256: snap.sha256,
+      choices: { segments: 'backers' },
+    });
+    const plain = await run('render_flower', { spec });
+    const withReading = await run('render_flower', { spec, include_reading: true });
+    // it really came back, and it's big enough to matter
+    expect(plain).not.toHaveProperty('reading');
+    expect(withReading.reading.petals.length).toBeGreaterThan(0);
+    expect(JSON.stringify(withReading.reading).length).toBeGreaterThan(5000);
+    const read = forModel('render_flower', withReading) as Json;
+    expect(read).not.toHaveProperty('reading');
+    expect(read).toEqual(forModel('render_flower', plain));
+    expect(JSON.stringify(read).length).toBe(size('render_flower', plain));
   });
 
   test('a tool error goes through whole', () => {

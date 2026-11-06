@@ -151,8 +151,9 @@ export function forModel(name: string, out: unknown): unknown {
       };
     }
     case 'render_flower': {
-      // short_url is for the other doors. Here the loop puts the real link in (run.ts).
-      const { svg: _svg, petals: _petals, short_url: _short, ...rest } = o;
+      // short_url is for the other doors. Here the loop puts the real link in (run.ts). A reading is
+      // for a page drawing the flower, and it would add real size to every result the model reads.
+      const { svg: _svg, petals: _petals, short_url: _short, reading: _reading, ...rest } = o;
       const link = typeof o.spec_sha256 === 'string' ? draftLink(o.spec_sha256) : o.view_url;
       return { ...rest, view_url: link };
     }
