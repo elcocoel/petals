@@ -8,6 +8,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { PetalDetails } from '../components/PetalDetails.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
+import type { DrawnReading } from '../lib/agent-client.ts';
 import { aboutLabel, aboutLine, readAbout, withAbout } from '../lib/ask-about.ts';
 import { repoRoot } from '../lib/config.ts';
 import {
@@ -23,8 +24,10 @@ import {
   svgTitle,
 } from '../lib/flower-view.ts';
 import {
+  type CanvasFlower,
   composerTarget,
   flowerPanelView,
+  nextCanvas,
   type PanelFlower,
   questionPrefix,
   shelfView,
@@ -306,6 +309,13 @@ describe('the address', () => {
 
   test('a fresh page has nothing to say', () => {
     expect(workspaceUrl({ runId: null, open: { kind: 'latest' }, petal: null })).toBeNull();
+    // another surface gives its own page, and its own options go along
+    expect(workspaceUrl({ runId: 'r', open: { kind: 'latest' }, petal: null, base: '/a' })).toBe(
+      '/a?run=r',
+    );
+    expect(
+      workspaceUrl({ runId: 'r', open: { kind: 'latest' }, petal: null, base: '/a?box=ink' }),
+    ).toBe('/a?box=ink&run=r');
   });
 
   test('nonsense falls back to the newest', () => {
@@ -476,5 +486,70 @@ describe('the stage', () => {
   test('nothing to fit, or nowhere to fit it, is no answer', () => {
     expect(fitView({ x: 0, y: 0, width: 0, height: 10 }, { width: 10, height: 10 })).toBeNull();
     expect(fitView({ x: 0, y: 0, width: 10, height: 10 }, { width: 0, height: 10 })).toBeNull();
+  });
+});
+
+describe('what a live canvas holds (T200)', () => {
+  const reading: DrawnReading = { title: 'A', petals: [] };
+  const other: DrawnReading = { title: 'B', petals: [] };
+
+  test('nothing until a flower has its reading, then that flower', () => {
+    expect(nextCanvas(null, null, undefined)).toBeNull();
+    expect(nextCanvas(null, 'a', undefined)).toBeNull();
+    expect(nextCanvas(null, 'a', reading)).toEqual({ key: 'a', reading });
+  });
+
+  test('the same object until the flower really changes', () => {
+    const held = nextCanvas(null, 'a', reading) as CanvasFlower;
+    expect(nextCanvas(held, 'a', reading)).toBe(held);
+    // even a new reading object for the same flower: only a new flower rebuilds the scene
+    expect(nextCanvas(held, 'a', { ...reading })).toBe(held);
+    expect(nextCanvas(held, null, undefined)).toBe(held);
+    expect(nextCanvas(held, 'b', undefined)).toBe(held);
+    expect(nextCanvas(held, 'b', other)).toEqual({ key: 'b', reading: other });
+  });
+
+  /** A turn through the real flow and reducer, with the canvas followed as useWorkspace does. */
+  async function played(s0: ChatState, held0: CanvasFlower | null, recorded: boolean) {
+    const sha = flower().spec_sha256;
+    const drawings: Record<string, DrawnReading> = { [sha]: reading };
+    let s = s0;
+    let held = held0;
+    const seen: (CanvasFlower | null)[] = [];
+    const deps: ChatDeps = {
+      client: {
+        async *chat() {
+          yield { event: 'run', data: { run_id: 'r', resume_url: '/make?run=r' } };
+          yield { event: 'message', data: { text: 'Reading it.' } };
+          yield flowerEvent();
+          yield { event: 'message', data: { text: 'Here it is.' } };
+        },
+        readRun: async () => ({ ok: false, code: 'not_found', message: 'none' }),
+        async *followRun() {},
+      },
+      store: null,
+      onRun: () => {},
+      dispatch: (a: ChatAction) => {
+        s = chatReducer(s, a);
+        const flowers = threadView({ ...s, recorded }).filter(
+          (r): r is FlowerRow => r.kind === 'flower',
+        );
+        const row = flowers[openFlowerIndex(s.open, flowers.length)];
+        const key = row?.flower.spec_sha256;
+        held = nextCanvas(held, key, key ? drawings[key] : undefined);
+        seen.push(held);
+      },
+    };
+    await sendQuestion(deps, { text: 'q', recorded, runId: s.runId });
+    return { s, seen, held };
+  }
+
+  test('a whole turn on the same flower never gives the canvas a new object', async () => {
+    const first = await played(initialChat({}), null, true);
+    expect(first.held?.key).toBe(flower().spec_sha256);
+    // again: a recorded run starts over, so the thread has no flower for a while
+    const again = await played(first.s, first.held, true);
+    expect(again.seen.length).toBeGreaterThan(3);
+    expect(new Set(again.seen)).toEqual(new Set([first.held]));
   });
 });

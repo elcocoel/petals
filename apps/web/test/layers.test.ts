@@ -114,6 +114,7 @@ const PROJECTION = [
   'lib/ask-about.ts',
   'lib/stage.ts',
   'lib/workspace-url.ts',
+  'lib/float-box.ts',
   'lib/sse.ts',
   'lib/markdown.ts',
 ];
@@ -202,6 +203,18 @@ const RULES: Rule[] = [
     ),
     bad: "import { useMakeChat } from '../../viewmodels/useMakeChat.ts';",
     good: "// useState is not used\nconst s = 'useEffect';",
+  },
+  {
+    name: 'nothing outside lab/ and app/lab reaches into lab/: the flower leaves it only when it replaces /make',
+    files: () => [
+      ...sourcesIn('lib'),
+      ...sourcesIn('components'),
+      ...sourcesIn('viewmodels'),
+      ...sourcesIn('app').filter((f) => !f.startsWith('app/lab/')),
+    ],
+    check: importing(/(?:^|\/)lab\//, 'the lab reaches out, nothing reaches in'),
+    bad: "import { FlowerBench } from '../lab/flower/FlowerBench.tsx';",
+    good: "// lab/ is not imported\nconst s = '../lab/flower/FlowerBench.tsx';",
   },
 ];
 

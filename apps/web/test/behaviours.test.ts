@@ -225,9 +225,32 @@ describe('the table against what uses it', () => {
   );
   const scripted = new Set<string>([...Object.keys(SCRIPTED), ...REVEALED]);
 
+  /** `// box.move` on a line of its own, in a component or a ViewModel. */
+  const markedInViews = (() => {
+    const sources = (dir: string): string[] =>
+      readdirSync(join(app, dir), { withFileTypes: true }).flatMap((d) =>
+        d.isDirectory()
+          ? sources(join(dir, d.name))
+          : /\.tsx?$/.test(d.name)
+            ? [join(dir, d.name)]
+            : [],
+      );
+    const text = [...sources('components'), ...sources('viewmodels')]
+      .map((p) => readFileSync(join(app, p), 'utf8'))
+      .join('\n');
+    const parentNames = Object.keys(parents).join('|');
+    const mark = new RegExp(`^\\s*// ((?:${parentNames})\\.[a-z-]+)$`, 'gm');
+    return new Set([...text.matchAll(mark)].map((m) => m[1] as string));
+  })();
+
   test.each(behaviours.map((b) => [b.name, b.via] as const))('%s is used (%s)', (name, via) => {
-    if (via !== 'script') expect(usedInSheet.has(name), `${name} in v2.css`).toBe(true);
-    if (via !== 'css') expect(scripted.has(name), `${name} in JoyLayer`).toBe(true);
+    if (via === 'css' || via === 'both') {
+      expect(usedInSheet.has(name), `${name} in v2.css`).toBe(true);
+    }
+    if (via === 'script' || via === 'both') {
+      expect(scripted.has(name), `${name} in JoyLayer`).toBe(true);
+    }
+    if (via === 'view') expect(markedInViews.has(name), `${name} marked in a view`).toBe(true);
   });
 
   test('nothing is used that the table does not list as living there', () => {
@@ -238,6 +261,38 @@ describe('the table against what uses it', () => {
     for (const child of scripted) {
       expect(['script', 'both'], `${child} in JoyLayer`).toContain(table.get(child));
     }
+    for (const child of markedInViews) {
+      expect(['view'], `${child} marked in a view`).toContain(table.get(child));
+    }
+  });
+});
+
+describe('a box that floats', () => {
+  const rules = parse(SHEET).rules;
+  const JOY = readFileSync(join(app, 'app/versions/JoyLayer.tsx'), 'utf8');
+
+  test('takes the glass, as one kind of box', () => {
+    const glass = rules.filter((r) => r.child === 'box.glass').map((r) => r.selector);
+    expect(glass.some((s) => s.includes('[data-kind="float"]'))).toBe(true);
+  });
+
+  test.each(['box.rise', 'box.lift', 'box.spot'])('leaves out %s', (child) => {
+    const holding = rules.filter(
+      (r) =>
+        r.child === child && /\[data-b="box"\](?::not\([^)]*\))?:(?:hover|not)/.test(r.selector),
+    );
+    expect(holding.length).toBeGreaterThan(0);
+    const offenders = holding.filter(
+      ({ selector }) =>
+        (selector.includes(':hover') || selector.includes(':not([data-seen]')) &&
+        !selector.includes('[data-kind="float"]'),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  test("isn't watched for a reveal, and doesn't follow the pointer", () => {
+    expect(JOY).toContain(`'box.rise': '[data-b="box"]:not([data-kind="float"])'`);
+    expect(JOY).toContain(`const BOX = '[data-b="box"]:not(foreignObject *, [data-kind="float"])'`);
   });
 });
 

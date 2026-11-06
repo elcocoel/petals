@@ -44,6 +44,7 @@ import { SourceList } from '../components/Sources.tsx';
 import { ActionRow } from '../components/ui/ActionRow.tsx';
 import { AskBlock } from '../components/ui/AskBlock.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
+import { BarBox } from '../components/ui/BarBox.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Callout } from '../components/ui/Callout.tsx';
 import { Drawing } from '../components/ui/Drawing.tsx';
@@ -449,6 +450,30 @@ export const registry: LabEntry[] = [
         figmaName: 'Transcript',
         figmaNode: '66:2248',
         render: () => <Transcript {...FIGURE} />,
+      },
+    ],
+  },
+  {
+    id: 'BarBox',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/BarBox.tsx',
+    states: [
+      {
+        name: 'the glass of a box over a canvas',
+        surfaces: ['ground', 'ink'],
+        wide: true,
+        closedIn: 'The conversation',
+        render: () => (
+          <BarBox
+            kind="float"
+            className="bg-surface"
+            bar={<MetaRow start={TERMINAL.start} end={TERMINAL.end} />}
+          >
+            <p className="px-block-gap py-space-16 type-mono-code">{TERMINAL.lines[0]?.text}</p>
+          </BarBox>
+        ),
       },
     ],
   },
@@ -1676,5 +1701,7 @@ export const registry: LabEntry[] = [
 export const NOT_IN_LAB: Record<string, string> = {
   AgentHome: 'a server page: it fetches, so it has no state to show from props',
   Workspace: 'wires the ViewModel to its views, and each of those views is here',
+  ConversationThread: 'Thread and TurnFlower wired together, and each of those is here',
+  FloatBox: 'a BarBox fixed to the window and placed by hand: it lives at /lab/interaction',
   SiteChrome: 'the Nav, drawn here, around a reading column; it holds no state of its own',
 };

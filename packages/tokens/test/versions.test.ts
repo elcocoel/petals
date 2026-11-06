@@ -93,6 +93,17 @@ describe('the contrast gate on v2', () => {
     expect(versionContrastFailures([failing])).toMatchObject([{ name: 'too much glow' }]);
   });
 
+  test('a floating box is checked over the flower’s darkest and palest paint, on either glass', () => {
+    const names = v2.contrast.map((c) => c.name);
+    for (const glass of ['float', 'float, ink']) {
+      for (const text of ['text-primary', 'muted']) {
+        for (const paint of ['the flower’s Ink', 'the flower’s ground']) {
+          expect(names).toContain(`${glass}: ${text} over ${paint}`);
+        }
+      }
+    }
+  });
+
   test('known values', () => {
     expect(stackContrast({ name: '', text: 'Ink', over: ['Ground'] })).toBeCloseTo(17.93, 1);
     expect(flatten(['Ground', { of: 'Ink', alpha: 1 }])).toEqual([23, 23, 23]);

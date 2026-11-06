@@ -7,6 +7,7 @@ import type {
   PetalDetail,
   Spec,
 } from '@petal/core/types';
+import type { DrawnReading } from './agent-client.ts';
 import { aboutLine } from './ask-about.ts';
 import {
   chainLabel,
@@ -45,7 +46,28 @@ export interface Drawing {
   svg?: string;
   petals?: PetalDetail[];
   legend?: LegendItem[];
+  reading?: DrawnReading;
   failed?: string;
+}
+
+/** The flower a live canvas holds: the key says when it's really another flower. */
+export interface CanvasFlower {
+  key: string;
+  reading: DrawnReading;
+}
+
+/**
+ * What the canvas holds next: the open flower once its reading is in hand, and otherwise what it already
+ * held, so nothing flickers between flowers. A new object only when the flower really changes: a live
+ * bench rebuilds its scene on a new reading, and that would throw away where the camera is.
+ */
+export function nextCanvas(
+  held: CanvasFlower | null,
+  key: string | null | undefined,
+  reading: DrawnReading | undefined,
+): CanvasFlower | null {
+  if (!key || !reading || held?.key === key) return held;
+  return { key, reading };
 }
 
 export interface Tile {
