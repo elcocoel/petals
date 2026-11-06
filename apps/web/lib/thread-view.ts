@@ -133,8 +133,11 @@ export type Row =
   | { kind: 'user'; key: string; text: string; label: string; about?: string }
   | { kind: 'note' | 'error'; key: string; text: string }
   | { kind: 'steps'; key: string; summary: string; steps: StepRow[] }
-  /** `speaker` is set where the agent starts speaking, and not on what follows it */
-  | { kind: 'message'; key: string; blocks: MarkdownBlock[]; speaker?: string }
+  /**
+   * `speaker` is set where the agent starts speaking, and not on what follows it. `foreign` is another
+   * agent's words, which don't carry Petals' mark.
+   */
+  | { kind: 'message'; key: string; blocks: MarkdownBlock[]; speaker?: string; foreign?: boolean }
   | { kind: 'done'; key: string; line: Segment[] }
   | FlowerRow
   | StoredRow
@@ -349,6 +352,8 @@ export interface ComposerView {
   about?: string;
   /** the run's own link, once there is one */
   run?: { id: string; href: string };
+  /** the conversation is happening somewhere else, so nothing can be typed here */
+  away?: boolean;
 }
 
 const PLACEHOLDER: Record<'flower' | 'wallet' | 'group', string> = {
@@ -361,8 +366,21 @@ export function composerView(
   v: Pick<ChatState, 'question' | 'runId' | 'busy'> & {
     recorded: boolean;
     target?: ComposerTarget;
+    /** where it's happening, if not here */
+    elsewhere?: string | undefined;
   },
 ): ComposerView {
+  if (v.elsewhere) {
+    return {
+      value: '',
+      readOnly: true,
+      label: `${v.elsewhere.charAt(0).toUpperCase()}${v.elsewhere.slice(1)}`,
+      placeholder: `This conversation is happening in ${v.elsewhere}.`,
+      button: 'Ask',
+      disabled: true,
+      away: true,
+    };
+  }
   const target = v.target ?? { kind: 'none' };
   const runHref =
     v.runId && workspaceUrl({ runId: v.runId, open: { kind: 'latest' }, petal: null });

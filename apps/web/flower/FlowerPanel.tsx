@@ -91,7 +91,9 @@ function OpenFlower({
       </div>
       {section === 'reading' && (
         <div>
-          <Interpretation reading={view.interpretation} sources={view.sources} />
+          {view.interpretation && (
+            <Interpretation reading={view.interpretation} sources={view.sources} />
+          )}
           <Legend items={view.legend} sources={view.sources} />
           {view.legendSources.length > 0 && (
             <p className="type-caption">
@@ -100,7 +102,7 @@ function OpenFlower({
           )}
           <SignatureLine signature={view.signature} model={view.model} />
           <p data-quiet className="type-mono wrap-anywhere text-muted">
-            {view.checks}. spec_sha256 {view.hashes}
+            {view.checks && `${view.checks}. `}spec_sha256 {view.hashes}
           </p>
         </div>
       )}

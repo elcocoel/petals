@@ -30,7 +30,8 @@ export interface PanelFlower {
   key: string;
   spec: Spec;
   legend: LegendItem[];
-  interpretation: Interpretation;
+  /** null: another agent drew it, and nothing here has its reading */
+  interpretation: Interpretation | null;
   signature: ModelSignature | null;
   model?: string;
   checks: string;
@@ -123,7 +124,7 @@ export interface FlowerPanelView {
   legendSources: string[];
   reading: ReadingKeyView;
   petal: PetalView | null;
-  interpretation: Interpretation;
+  interpretation: Interpretation | null;
   signature: ModelSignature | null;
   model?: string;
   checks: string;
@@ -155,20 +156,20 @@ const NOT_ON_CANVAS = new Set<string>(['colour', 'outline', 'lines', 'markings']
  */
 export function canvasReading(
   items: LegendItem[],
-  reading: Interpretation,
-): { legend: LegendItem[]; interpretation: Interpretation; sources: string[] } {
+  reading: Interpretation | null,
+): { legend: LegendItem[]; interpretation: Interpretation | null; sources: string[] } {
   const drawn = (x: { primitive: string }) => !NOT_ON_CANVAS.has(x.primitive);
   const legend = items.filter(drawn).map(({ keys: _swatches, ...item }) => ({
     ...item,
     meaning: item.meaning.replace('one hatched petal', 'one petal'),
   }));
-  const mappings = reading.mappings.filter(drawn);
+  const mappings = reading?.mappings.filter(drawn) ?? [];
   const still = new Set([...legend, ...mappings].flatMap((x) => x.sources));
-  const gone = [...items, ...reading.mappings].filter((x) => !drawn(x));
+  const gone = [...items, ...(reading?.mappings ?? [])].filter((x) => !drawn(x));
   return {
     legend,
     // Nothing draws on it being non-empty: that's a rule for what an agent must write.
-    interpretation: { ...reading, mappings: mappings as Interpretation['mappings'] },
+    interpretation: reading && { ...reading, mappings: mappings as Interpretation['mappings'] },
     sources: [...new Set(gone.flatMap((x) => x.sources))].filter((id) => !still.has(id)),
   };
 }

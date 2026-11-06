@@ -45,6 +45,7 @@ async function standInFlower(flowers: ListedFlower[]): Promise<CanvasFlower | nu
 
 export async function workspaceHome(q: Record<string, string | string[] | undefined>) {
   const run = Array.isArray(q.run) ? q.run[0] : q.run;
+  const elsewhere = Array.isArray(q.elsewhere) ? q.elsewhere[0] : q.elsewhere;
   const [health, listed] = await Promise.all([
     api<ApiHealth>('/api/v1/health'),
     api<{ flowers: ListedFlower[] }>('/api/v1/flowers'),
@@ -54,6 +55,7 @@ export async function workspaceHome(q: Record<string, string | string[] | undefi
   const { open, petal } = openFromParams(q);
   return {
     initialRun: run,
+    initialElsewhere: elsewhere,
     initialQuestion: questionFromParams(q),
     recorded,
     opening: openingMessage(flowers),

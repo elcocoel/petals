@@ -13,6 +13,7 @@ import type {
   Run,
 } from '@petal/core/types';
 import type { ListedConversation } from './conversation-list.ts';
+import type { ElsewhereRead } from './elsewhere.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
 
@@ -87,6 +88,14 @@ export async function listConversations(): Promise<ListedConversation[]> {
   if (!res.ok) return [];
   const json = (await res.json()) as { conversations?: ListedConversation[] };
   return json.conversations ?? [];
+}
+
+/** Where a conversation in another agent stands, by its exploration's id or a link's token. */
+export async function readElsewhere(ref: string): Promise<ElsewhereRead> {
+  const res = await fetch(`/api/v1/explorations/${encodeURIComponent(ref)}`, { cache: 'no-store' });
+  const json = (await res.json()) as Record<string, unknown> & { error?: { message: string } };
+  if (!res.ok || json.error) return { failed: json.error?.message ?? `HTTP ${res.status}` };
+  return { packet: json as unknown as Extract<ElsewhereRead, { packet: unknown }>['packet'] };
 }
 
 /** All a live drawing needs from a reading: render_flower's opt-in `reading`. */

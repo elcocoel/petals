@@ -540,7 +540,9 @@ function clearOfBars(
   let out = elbowY;
   for (let d = -NEIGHBOURS; d <= NEIGHBOURS; d++) {
     if (d === 0) continue;
-    const j = (i + d + m.n) % m.n;
+    // A small flower is shorter than this reach, so it comes round again: past itself, and to itself.
+    const j = (((i + d) % m.n) + m.n) % m.n;
+    if (j === i) continue;
     const h = ring.h[j] as number;
     const tipX = toX(
       ((ring.ax[j] as number) + (ring.bx[j] as number)) / 2 + (ring.nx[j] as number) * h,

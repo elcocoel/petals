@@ -430,3 +430,18 @@ describe('the synthetic flowers', () => {
     }
   });
 });
+
+describe('a small flower', () => {
+  // A note looks a dozen bars each way, and a flower can have fewer than that.
+  test.each([3, 5, 11, 12, 13, 24])('with %i petals has every number it draws', (n) => {
+    const m = modelOf(syntheticReading(n));
+    for (const k of KS) {
+      const drawn = marks(m, at(k), null);
+      for (const note of drawn.notes) {
+        for (const value of [note.x, note.y, note.opacity, note.elbowY]) {
+          expect(Number.isFinite(value)).toBe(true);
+        }
+      }
+    }
+  });
+});

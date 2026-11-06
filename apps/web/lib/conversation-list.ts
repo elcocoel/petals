@@ -1,6 +1,7 @@
 // The list of a person's conversations as they read it. Pure, so a row's words and where it goes are
 // decided here and the view only lays them out.
 import { readAbout } from './ask-about.ts';
+import { WHERE } from './elsewhere.ts';
 import { dateLabel } from './flower-view.ts';
 
 /** What the list needs from GET /api/v1/conversations (design/workspace-data.md). */
@@ -21,26 +22,34 @@ export interface ConversationRow {
   current: boolean;
 }
 
+const capital = (s: string) => `${s.charAt(0).toUpperCase()}${s.slice(1)}`;
+
 /**
- * Newest first, as the server sends them. Work from another door has no run to open, so it waits for the
- * page that follows it (design/interaction-surface.md, item 5).
+ * Newest first, as the server sends them. Work from another door has no run here, so it opens as what it
+ * is: a conversation happening somewhere else.
  */
 export function conversationRows(
   listed: readonly ListedConversation[],
-  runId: string | null,
+  open: { runId: string | null; elsewhere?: string | undefined },
 ): ConversationRow[] {
-  return listed.flatMap((c) =>
-    c.run_id
-      ? [
-          {
-            key: c.id,
-            // a first question asked about a flower carries that at its start, for the model
-            title: readAbout(c.title).words,
-            sub: c.status === 'running' ? 'Working…' : dateLabel(c.updated_at),
-            href: `/make?run=${encodeURIComponent(c.run_id)}`,
-            current: c.run_id === runId,
-          },
-        ]
-      : [],
-  );
+  return listed.map((c) => {
+    // a first question asked about a flower carries that at its start, for the model
+    const title = readAbout(c.title).words;
+    if (!c.run_id) {
+      return {
+        key: c.id,
+        title,
+        sub: `${capital(WHERE)}  ·  ${dateLabel(c.updated_at)}`,
+        href: `/make?elsewhere=${encodeURIComponent(c.id)}`,
+        current: c.id === open.elsewhere,
+      };
+    }
+    return {
+      key: c.id,
+      title,
+      sub: c.status === 'running' ? 'Working…' : dateLabel(c.updated_at),
+      href: `/make?run=${encodeURIComponent(c.run_id)}`,
+      current: c.run_id === open.runId,
+    };
+  });
 }

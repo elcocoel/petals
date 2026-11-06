@@ -4,6 +4,7 @@
 // open, keeps the address in step and hears Escape.
 import { useEffect, useMemo, useState } from 'react';
 import { conversationRows } from '../lib/conversation-list.ts';
+import { elsewhereFlower, elsewhereRows, WHERE } from '../lib/elsewhere.ts';
 import { type ListedFlower, svgImage } from '../lib/flower-view.ts';
 import {
   addressOpensBox,
@@ -26,6 +27,7 @@ import { composerView, type FlowerRow, openFlowerIndex } from '../lib/thread-vie
 import { workspaceUrl } from '../lib/workspace-url.ts';
 import { useConversations } from './useConversations.ts';
 import { useDrawnFlowers } from './useDrawnFlower.ts';
+import { useElsewhere } from './useElsewhere.ts';
 import { useMakeChat } from './useMakeChat.ts';
 import { useSnapshotFacts } from './useSnapshotFacts.ts';
 import { useStoredFlower } from './useStoredFlower.ts';
@@ -34,6 +36,8 @@ const STORED_LINK = /^\/f\/([^/?#]+)$/;
 
 export function useWorkspace(props: {
   initialRun?: string | undefined;
+  /** a conversation happening in another agent: nothing in this page's chat is that conversation */
+  initialElsewhere?: string | undefined;
   initialQuestion?: string | null;
   recorded?: boolean;
   opening?: string;
@@ -43,7 +47,7 @@ export function useWorkspace(props: {
   /** What stands on the canvas until the conversation draws its own. */
   standIn: CanvasFlower | null;
 }) {
-  const { shelf, standIn, ...chatProps } = props;
+  const { shelf, standIn, initialElsewhere, ...chatProps } = props;
   const { state: chat, dispatch, actions: chatActions, refs } = useMakeChat(chatProps);
   const { rows, open, petal, section, busy, runId, question, items, recorded, asked } = chat;
 
@@ -72,8 +76,16 @@ export function useWorkspace(props: {
     });
   }, [storedId, storedFlower, dispatch]);
 
+  const elsewhere = useElsewhere(initialElsewhere ?? null);
+  const elsewherePacket = elsewhere && 'packet' in elsewhere ? elsewhere.packet : null;
+  const shownRows = useMemo(
+    () => (initialElsewhere ? elsewhereRows(elsewhere) : rows),
+    [initialElsewhere, elsewhere, rows],
+  );
+
   const inPanel = openFlowerIndex(open, turnFlowers.length);
   const panelFlower = useMemo<PanelFlower | null>(() => {
+    if (initialElsewhere) return elsewhereFlower(elsewherePacket);
     if (open.kind === 'stored') {
       if (!storedFlower || !storedId) return null;
       const { entry } = storedFlower;
@@ -104,16 +116,19 @@ export function useWorkspace(props: {
       ...(row.publishUrl ? { publishUrl: row.publishUrl } : {}),
       earlier: inPanel !== turnFlowers.length - 1,
     };
-  }, [open.kind, storedFlower, storedId, turnFlowers, inPanel]);
+  }, [initialElsewhere, elsewherePacket, open.kind, storedFlower, storedId, turnFlowers, inPanel]);
 
   const toDraw = useMemo(
     () => [
       ...turnFlowers.map((r) => ({ key: r.flower.spec_sha256, spec: r.flower.spec })),
+      ...(elsewherePacket?.current
+        ? [{ key: elsewherePacket.current.spec_sha256, spec: elsewherePacket.current.spec }]
+        : []),
       ...(storedFlower
         ? [{ key: storedFlower.entry.spec_sha256, spec: storedFlower.entry.spec }]
         : []),
     ],
-    [turnFlowers, storedFlower],
+    [turnFlowers, elsewherePacket, storedFlower],
   );
   const drawings = useDrawnFlowers(toDraw);
   const thumbs = useMemo(
@@ -142,6 +157,7 @@ export function useWorkspace(props: {
         units: facts.units,
       });
     }
+    if (initialElsewhere && !elsewhere) return { kind: 'loading', text: 'Opening…' };
     if (stored && 'failed' in stored) return { kind: 'failed', text: stored.failed };
     if (storedId) return { kind: 'loading', text: 'Opening the flower…' };
     // a stored run on its way back: its flowers will be here in a moment
@@ -149,6 +165,8 @@ export function useWorkspace(props: {
     return shelfView(shelf, busy, recorded);
   }, [
     panelFlower,
+    initialElsewhere,
+    elsewhere,
     drawing,
     petal,
     facts,
@@ -164,7 +182,7 @@ export function useWorkspace(props: {
   // What the address brought back isn't known until it's here, so nothing should stand in for it yet.
   // It only ever ends: later, a flower on its way takes over from whatever is on the canvas.
   const [comingBack, setComingBack] = useState(
-    Boolean(props.initialRun) || props.initialOpen?.kind === 'stored',
+    Boolean(props.initialRun || initialElsewhere) || props.initialOpen?.kind === 'stored',
   );
   if (comingBack && panel.kind !== 'loading' && (!panelFlower || drawing)) setComingBack(false);
 
@@ -180,11 +198,15 @@ export function useWorkspace(props: {
 
   // Read when the page opens, and again when a turn starts or ends here: nothing runs on a timer.
   const listed = useConversations(recorded ? null : `${runId}:${busy}`);
-  const conversations = useMemo(() => conversationRows(listed, runId), [listed, runId]);
+  const conversations = useMemo(
+    () => conversationRows(listed, { runId, elsewhere: initialElsewhere }),
+    [listed, runId, initialElsewhere],
+  );
   // box.close
   // Coming back with nothing in hand, the list is what there is to do. A person's choice wins from then on.
   const [listChoice, setListChoice] = useState<boolean | null>(null);
-  const cameBare = !props.initialRun && !props.initialQuestion && !props.initialPetal;
+  const cameBare =
+    !props.initialRun && !initialElsewhere && !props.initialQuestion && !props.initialPetal;
   const nothingOpened = (props.initialOpen?.kind ?? 'latest') === 'latest';
   const listOpen = listChoice ?? (cameBare && nothingOpened && conversations.length > 0);
 
@@ -198,13 +220,20 @@ export function useWorkspace(props: {
     () => composerTarget(panelFlower, selectedPetal),
     [panelFlower, selectedPetal],
   );
-  const composer = composerView({ question, runId, busy, recorded, target });
+  const composer = composerView({
+    question,
+    runId,
+    busy,
+    recorded,
+    target,
+    elsewhere: initialElsewhere ? WHERE : undefined,
+  });
 
   // the address holds what a reload needs
   useEffect(() => {
-    const url = workspaceUrl({ runId, open, petal, asked });
+    const url = workspaceUrl({ runId, open, petal, asked, elsewhere: initialElsewhere ?? null });
     if (url) window.history.replaceState(null, '', url);
-  }, [runId, open, petal, asked]);
+  }, [runId, open, petal, asked, initialElsewhere]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -226,7 +255,7 @@ export function useWorkspace(props: {
 
   return {
     state: {
-      rows,
+      rows: shownRows,
       composer,
       panel,
       onCanvas,
@@ -239,7 +268,9 @@ export function useWorkspace(props: {
       heading:
         open.kind === 'stored'
           ? 'Continue this flower'
-          : (conversations.find((c) => c.current)?.title ?? 'Conversation'),
+          : (conversations.find((c) => c.current)?.title ??
+            elsewherePacket?.question ??
+            'Conversation'),
       conversations,
       listOpen,
       recorded,

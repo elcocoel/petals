@@ -76,7 +76,7 @@ const noReading = {
   unknowns: [],
   inferred: [],
   documents: [],
-} as unknown as PanelFlower['interpretation'];
+} as unknown as NonNullable<PanelFlower['interpretation']>;
 const flowerEvent = (sha?: string): AgentEvent => ({ event: 'flower', data: flower(sha) });
 const reduce = (s: ChatState, ...actions: ChatAction[]) => actions.reduce(chatReducer, s);
 const flowerItem = (sha?: string): Item => ({
@@ -614,8 +614,8 @@ describe('the legend of what the canvas draws (T202)', () => {
       ],
     } as PanelFlower['interpretation'];
     const { interpretation, sources } = canvasReading([], reading);
-    expect(interpretation.summary).toBe('Its words stay.');
-    expect(interpretation.mappings.map((m) => m.primitive)).toEqual(['height']);
+    expect(interpretation?.summary).toBe('Its words stay.');
+    expect(interpretation?.mappings.map((m) => m.primitive)).toEqual(['height']);
     expect(sources).toEqual(['b', 'c']);
   });
 

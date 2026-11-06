@@ -1,5 +1,6 @@
 // What the address holds, so a reload brings back the panel as well as the thread.
 //   /make?run=<id>           the thread, with its newest flower open
+//   /make?elsewhere=<ref>    a conversation happening in another agent: an exploration's id, or a link's token
 //   &flower=<n>              an earlier flower of the thread (from 0)
 //   &stored=<id>             a stored flower
 //   &shelf=1                 the shelf, with the thread's flowers closed
@@ -13,9 +14,11 @@ export function workspaceUrl(v: {
   open: Opened;
   petal: string | null;
   asked?: string | null;
+  elsewhere?: string | null;
 }): string | null {
   const q = new URLSearchParams();
   if (v.runId) q.set('run', v.runId);
+  if (v.elsewhere) q.set('elsewhere', v.elsewhere);
   if (v.open.kind === 'turn') q.set('flower', String(v.open.index));
   if (v.open.kind === 'stored') q.set('stored', v.open.id);
   if (v.open.kind === 'shelf') q.set('shelf', '1');
