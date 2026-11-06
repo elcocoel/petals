@@ -6,8 +6,7 @@ import type { ListedFlower } from '../lib/flower-view.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import { Composer } from './chat/Composer.tsx';
-import { Thread } from './chat/Thread.tsx';
-import { TurnFlower } from './chat/TurnFlower.tsx';
+import { ConversationThread } from './chat/ConversationThread.tsx';
 import { useFollowScroll } from './chat/useFollowScroll.ts';
 import { FlowerPanel } from './workspace/FlowerPanel.tsx';
 
@@ -27,36 +26,14 @@ export function Workspace(props: {
         aria-label="Conversation"
         className="flex h-dvh min-h-0 min-w-0 flex-col border-b border-hairline wide:h-auto wide:basis-conversation-width wide:border-r wide:border-b-0"
       >
-        <Thread
+        <ConversationThread
           heading={state.heading}
-          {...(state.recorded
-            ? {
-                notice: (
-                  <p className="border-heavy border-primary p-text-gap type-caption">
-                    <strong>Recorded demo. No AI is running.</strong> This plays back one saved run
-                    about NEAR’s validators. It can’t read a question yet, so there’s nothing to
-                    type. The real agent switches on once a NEAR AI key is set.
-                  </p>
-                ),
-              }
-            : {})}
+          recorded={state.recorded}
           rows={state.rows}
+          thumbs={state.thumbs}
           threadRef={refs.thread}
-          renderFlower={(row) => {
-            const thumb = row.kind === 'stored' ? row.image : state.thumbs[row.flower.spec_sha256];
-            return (
-              <TurnFlower
-                key={row.key}
-                title={row.title}
-                sub={row.sub}
-                open={row.open}
-                {...(thumb ? { thumb } : {})}
-                onOpen={() =>
-                  row.kind === 'flower' ? actions.openTurn(row.index) : actions.openStored(row.id)
-                }
-              />
-            );
-          }}
+          onOpenTurn={actions.openTurn}
+          onOpenStored={actions.openStored}
           onRefollow={actions.refollow}
           onLink={actions.followLink}
         />

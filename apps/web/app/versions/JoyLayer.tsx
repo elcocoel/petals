@@ -80,7 +80,8 @@ function frames() {
 const REVEALS = {
   'surface.reveal': ':is(section, footer)[data-b="surface"]',
   'action.arrive': '[data-b="action"][data-kind="starter"]',
-  'box.rise': '[data-b="box"]',
+  // a box that floats is there from the start: it can be anywhere, and it's mounted any time
+  'box.rise': '[data-b="box"]:not([data-kind="float"])',
   'row.arrive': '[data-b="row"]',
   'figure.arrive': '[data-b="figure"]',
   'mark.arrive': '[data-b="mark"]',
@@ -288,7 +289,8 @@ function magnet(joy: Joy): Stop {
   );
 }
 
-const BOX = '[data-b="box"]:not(foreignObject *)';
+// A box that floats is read and dragged, so it neither tilts nor lights up under the pointer.
+const BOX = '[data-b="box"]:not(foreignObject *, [data-kind="float"])';
 
 function boxSpot(joy: Joy): Stop {
   if (joy.reduced || !joy.fine) return () => {};

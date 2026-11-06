@@ -14,6 +14,7 @@ import {
   API_VERSION,
   canonicalJson,
   entryId,
+  readFlower,
   renderFlower,
   sha256Hex,
   specHash,
@@ -140,6 +141,17 @@ async function render(spec: Spec, root: string): Promise<RenderResult> {
   return { svg, legend: data.legend, petals: data.petals, render_sha256: sha256Hex(svg) };
 }
 
+/** render_flower's opt-in reading, once render() has the snapshot. A placeholder drawing has none. */
+async function readingFor(spec: Spec) {
+  if (spec.snapshot?.sha256 !== SHA || !snapshotBody) return {};
+  try {
+    const { title, petals } = readFlower(spec, await snapshotBody);
+    return { reading: { title, petals } };
+  } catch {
+    return {};
+  }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Canned tools, by tools.md name. The chat replay and the HTTP routes share them.
 
@@ -240,6 +252,7 @@ function makeTools(root: string): Record<string, (a: Json) => Promise<Out>> {
         spec_sha256: specHash(spec),
         render_sha256: r.render_sha256,
         ...(a.include_svg === false ? {} : { svg: r.svg }),
+        ...(a.include_reading === true ? await readingFor(spec) : {}),
         legend: r.legend,
         petals: r.petals,
         view_url: draftUrl(spec),

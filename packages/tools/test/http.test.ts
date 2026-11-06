@@ -82,6 +82,17 @@ describe('tool routes', () => {
     expect(sha256Hex(svg)).toBe(out.render_sha256);
   });
 
+  test('render: a reading comes over HTTP only when asked', async () => {
+    const { app, run } = await setup();
+    const { spec } = await flow(run);
+    const plain = await app.request('/api/v1/render', json({ spec }));
+    expect(await plain.json()).not.toHaveProperty('reading');
+    const asked = await app.request('/api/v1/render', json({ spec, include_reading: true }));
+    const { reading } = (await asked.json()) as { reading: { title: string; petals: unknown[] } };
+    expect(reading.title).toEqual(expect.any(String));
+    expect(reading.petals.length).toBeGreaterThan(0);
+  });
+
   test('CORS is open', async () => {
     const { app } = await setup();
     const res = await app.request('/api/v1/networks', {

@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import type { Reading, Snapshot, Spec, ToolError } from '@petal/core/types';
 import { configFromEnv, repoRoot } from '../../lib/config.ts';
+import type { HoverWay } from './hover.ts';
 import type { FlowerReading } from './model.ts';
 import { syntheticReading } from './synthetic.ts';
 
@@ -63,4 +64,20 @@ export async function readingOf(name: string): Promise<FlowerReading | null> {
     ),
   ) as Snapshot;
   return slim(core.readFlower(proposed.spec, snapshot));
+}
+
+/** What the address chose for a bench, or null if there's no such flower. */
+export async function benchChoice(q: Record<string, string | string[] | undefined>) {
+  const name = typeof q.flower === 'string' ? q.flower : DEFAULT_FLOWER;
+  const reading = await readingOf(name);
+  if (!reading) return null;
+  const hover: HoverWay = q.hover === 'lift' ? 'lift' : 'dock';
+  return {
+    name,
+    reading,
+    hover,
+    relations: q.relations === '1',
+    scatter: q.order === 'scatter',
+    probe: q.probe === '1',
+  };
 }

@@ -104,6 +104,23 @@ describe('API mock: reading', () => {
     expect((await call('/api/v1/flowers/000000000000000000000000')).status).toBe(404);
   });
 
+  test('render returns the real reading only when asked', async () => {
+    const { call } = mock();
+    const proposed = await call<{ spec: unknown }>('/api/v1/specs/propose', {
+      network: 'near-validators',
+      sha256: '72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec',
+      choices: { segments: 'backers' },
+    });
+    const plain = await call('/api/v1/render', { spec: proposed.json.spec });
+    expect(plain.json).not.toHaveProperty('reading');
+    const asked = await call<{ reading?: { title: string; petals: unknown[] } }>('/api/v1/render', {
+      spec: proposed.json.spec,
+      include_reading: true,
+    });
+    expect(asked.json.reading?.title).toEqual(expect.any(String));
+    expect(asked.json.reading?.petals.length).toBeGreaterThan(0);
+  });
+
   test('render returns the SVG with data-p, the legend and petal details', async () => {
     const { app, call } = mock();
     const proposed = await call<{ spec: unknown }>('/api/v1/specs/propose', {

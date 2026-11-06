@@ -8,7 +8,7 @@ export const parents = {
   action: 'Button primary, secondary and starter',
   link: 'TextLink, GalleryCard, Button link and quiet',
   field: 'AskBox',
-  box: 'A figure box, Callout, Terminal',
+  box: 'A figure box, Callout, Terminal, FloatBox',
   row: 'FaqItem, a Transcript line',
   figure: 'Drawing, AnnotatedFlower',
   mark: 'Wordmark, the pixel numerals',
@@ -22,8 +22,11 @@ export interface Behaviour {
   name: `${Parent}.${string}`;
   /** What it's for, in a line. */
   purpose: string;
-  /** Where it lives: the stylesheet, JoyLayer, or both. */
-  via: 'css' | 'script' | 'both';
+  /**
+   * Where it lives: the stylesheet, JoyLayer, or both. `view` is a component and its ViewModel, marked
+   * there in a comment, because it holds in every version: a hand can move a box under ?v=1 too.
+   */
+  via: 'css' | 'script' | 'both' | 'view';
 }
 
 export const behaviours = [
@@ -93,6 +96,22 @@ export const behaviours = [
   { name: 'box.spot', purpose: 'A spotlight inside follows the pointer', via: 'both' },
   { name: 'box.swell', purpose: 'The drawing inside swells a little', via: 'css' },
   { name: 'box.type', purpose: "A terminal's lines come in one by one", via: 'css' },
+  {
+    name: 'box.move',
+    purpose: 'Dragged by its bar, comes above the other, and its bar never leaves the window',
+    via: 'view',
+  },
+  {
+    name: 'box.size',
+    purpose: 'Sized by hand from its edges and corners, shown only by the cursor',
+    via: 'view',
+  },
+  {
+    name: 'box.hold',
+    purpose:
+      'A wheel or a pinch stays in it, and pressing the canvas leaves the cursor in it, so a chat carries on',
+    via: 'view',
+  },
   // row
   { name: 'row.arrive', purpose: 'Rows arrive one by one', via: 'both' },
   { name: 'row.wash', purpose: 'A wash under the row you are reading', via: 'css' },

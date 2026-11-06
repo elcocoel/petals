@@ -510,3 +510,4 @@ The coordinator cleared these, and they are already applied in `contracts/`, `da
 - Agents never read raw snapshot bodies; they use `describe_snapshot` and `compute_figures`.
 - Nothing public, signed or spent without Elco. T043 gives one OK for testnet signing with the writer key; every other [Elco OK] is asked at the time.
 - No UI polish before the beauty pass in M6. UI comments wait in `../design/ui-notes.md`.
+- [ ] T200 [F1] The interaction page, blocked in at /lab/interaction: the live flower fills the window, with input and output as two boxes moved and sized by hand, on the ViewModels that work. `/make` stays until this replaces it (design/interaction-surface.md).

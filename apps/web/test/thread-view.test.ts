@@ -235,6 +235,10 @@ describe('the composer', () => {
       placeholder: 'Ask a follow-up…',
       run: { id: 'r1', href: '/make?run=r1' },
     });
+    // a conversation on another page links back to that page
+    expect(composer({ runId: 'r1', base: '/lab/interaction?box=ink' })).toMatchObject({
+      run: { id: 'r1', href: '/lab/interaction?box=ink&run=r1' },
+    });
     expect(composer({ recorded: true, question: 'ignored' })).toMatchObject({
       value: RECORDED_QUESTION,
       readOnly: true,

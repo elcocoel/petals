@@ -9,6 +9,7 @@ import type {
   Nep413Proof,
   PetalDetail,
   QuoteResult,
+  Reading,
   Run,
 } from '@petal/core/types';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
@@ -79,10 +80,14 @@ export const agentClient: AgentClient = {
   },
 };
 
+/** All a live drawing needs from a reading: render_flower's opt-in `reading`. */
+export type DrawnReading = Pick<Reading, 'title' | 'petals'>;
+
 export interface Drawn {
   svg: string;
   petals: PetalDetail[];
   legend: LegendItem[];
+  reading?: DrawnReading;
 }
 
 /** The flower's SVG for a spec, given as JSON text. Throws with the reason when it can't be drawn. */
@@ -90,11 +95,16 @@ export async function drawFlower(specJson: string): Promise<Drawn> {
   const res = await fetch('/api/v1/render', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: `{"spec":${specJson},"include_svg":true}`,
+    body: `{"spec":${specJson},"include_svg":true,"include_reading":true}`,
   });
   const json = (await res.json()) as Partial<Drawn> & { error?: { message: string } };
   if (res.ok && json.svg) {
-    return { svg: json.svg, petals: json.petals ?? [], legend: json.legend ?? [] };
+    return {
+      svg: json.svg,
+      petals: json.petals ?? [],
+      legend: json.legend ?? [],
+      ...(json.reading ? { reading: json.reading } : {}),
+    };
   }
   throw new Error(json.error?.message ?? `HTTP ${res.status}`);
 }

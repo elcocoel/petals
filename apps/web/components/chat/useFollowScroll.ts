@@ -19,6 +19,8 @@ export function useFollowScroll(
     };
     const watch = new ResizeObserver(toEnd);
     watch.observe(content);
+    // the column itself can change too, when a person sizes what holds it
+    watch.observe(column);
     column.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       watch.disconnect();

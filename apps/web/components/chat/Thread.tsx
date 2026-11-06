@@ -14,6 +14,7 @@ export function Thread({
   notice,
   rows,
   threadRef,
+  className = 'pt-column-gap pr-space-32 pl-column-gap',
   renderFlower,
   onRefollow,
   onLink,
@@ -23,16 +24,15 @@ export function Thread({
   notice?: ReactNode;
   rows: Row[];
   threadRef?: Ref<HTMLDivElement>;
+  /** Where it sits in whatever holds it. By default, the conversation's column. */
+  className?: string;
   renderFlower: (row: FlowerRow | StoredRow) => ReactNode;
   onRefollow?: () => void;
   /** A link in the agent's words: true when it was handled here and shouldn't navigate. */
   onLink?: (href: string) => boolean;
 }) {
   return (
-    <div
-      className="min-h-0 flex-1 overflow-y-auto pt-column-gap pr-space-32 pl-column-gap"
-      ref={threadRef}
-    >
+    <div className={`min-h-0 flex-1 overflow-y-auto ${className}`} ref={threadRef}>
       <div className="flex flex-col gap-block-gap pb-block-gap">
         {heading && <h2 className="m-0 type-heading">{heading}</h2>}
         {notice}

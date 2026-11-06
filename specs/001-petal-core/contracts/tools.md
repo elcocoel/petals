@@ -105,8 +105,9 @@ Output: `{ "valid": boolean, "errors": [{ "path", "rule", "message" }], "warning
 
 ### render_flower
 
-Input: `{ "spec": Spec, "include_svg"?: boolean (default false for MCP, true for HTTP), "size"?: int (default 800) }`
-Output: `{ "spec_sha256", "render_sha256", "svg"?: string, "legend": LegendItem[], "petals": PetalDetail[], "view_url": string, "short_url"?: string }`. See [renderer.md](./renderer.md) for `LegendItem`, `PetalDetail` and determinism. `view_url` opens the flower on the site from the spec alone (draft, not published). `short_url` (M-System, additive) is `/d/<spec_sha256>`, which redirects to the same place, with the body stored under its hash and hashed again on read. It's absent when nothing lasting can hold the body, so `view_url` is always there as the fallback. Petal's own agent is shown neither: its loop puts the link in.
+Input: `{ "spec": Spec, "include_svg"?: boolean (default false for MCP, true for HTTP), "include_reading"?: boolean (default false), "size"?: int (default 800) }`
+Output: `{ "spec_sha256", "render_sha256", "svg"?: string, "reading"?: { "title", "petals" }, "legend": LegendItem[], "petals": PetalDetail[], "view_url": string, "short_url"?: string }`. See [renderer.md](./renderer.md) for `LegendItem`, `PetalDetail` and determinism. `view_url` opens the flower on the site from the spec alone (draft, not published). `short_url` (M-System, additive) is `/d/<spec_sha256>`, which redirects to the same place, with the body stored under its hash and hashed again on read. It's absent when nothing lasting can hold the body, so `view_url` is always there as the fallback. Petal's own agent is shown neither: its loop puts the link in.
+`reading` (T200, additive, opt-in) is the `title` and `petals` of `readFlower` on the same spec and snapshot, for a live drawing of the flower. Petal's own agent neither is offered `include_reading` nor reads `reading`, so what the model sees and pays for doesn't change.
 Errors: `invalid_spec` (render refuses anything `validate_spec` rejects).
 
 ### list_flowers / get_flower
