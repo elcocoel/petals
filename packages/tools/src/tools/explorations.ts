@@ -609,6 +609,17 @@ function issueLink(
   return { id, scope, url: `${base(ctx)}/s/${token}`, created_at: at };
 }
 
+/**
+ * The page that follows an exploration while someone talks to their own agent (apps/web/app/lab/follow).
+ * Only where that page opens: a site with an address, showing its lab. It holds a read link of its own,
+ * so a page left open or passed on can't write or claim, and the agent keeps the continue link.
+ */
+function followUrl(ctx: ToolContext, store: Store, exploration: string, at: string) {
+  if (process.env.PETAL_LAB !== '1' || !base(ctx)) return null;
+  const { url } = issueLink(ctx, store, exploration, 'read', at);
+  return `${base(ctx)}/lab/follow?t=${url.slice(url.lastIndexOf('/') + 1)}`;
+}
+
 /** The steps and notes come along, so a fork stands on its own once a link is revoked. */
 function copyInto(store: Store, id: string, from: ExplorationRow): void {
   const was = (who: string | null) => `fork:${who ?? 'owner'}`;
@@ -672,6 +683,7 @@ export const startExploration = defineTool<StartIn, object>({
       url: { type: 'string' },
       created_at: DATETIME,
     }),
+    follow_url: { type: 'string' },
     next: { type: 'string' },
   }),
   annotations: WRITES,
@@ -686,7 +698,7 @@ export const startExploration = defineTool<StartIn, object>({
     admitExploration(ctx, store, owner === null, source !== null);
     const at = ctx.now().toISOString();
     const id = newExplorationId();
-    const link = store.tx(() => {
+    const { link, follow } = store.tx(() => {
       newExploration(store, {
         id,
         owner,
@@ -697,16 +709,24 @@ export const startExploration = defineTool<StartIn, object>({
         ...(source ? { forked_from: source.id } : {}),
       });
       if (source) copyInto(store, id, source);
-      return owner ? null : issueLink(ctx, store, id, 'continue', at);
+      if (owner) return { link: null, follow: null };
+      return {
+        link: issueLink(ctx, store, id, 'continue', at),
+        follow: followUrl(ctx, store, id, at),
+      };
     });
+    const keep = link
+      ? 'Keep link.url: nothing else opens this. Pass it as exploration to save_step and add_note. Whoever holds it can claim this after signing in.'
+      : 'Pass exploration to save_step and add_note.';
     return {
       exploration: id,
       owned: owner !== null,
       forked_from: source?.id ?? null,
       ...(link ? { link } : {}),
-      next: link
-        ? 'Keep link.url: nothing else opens this. Pass it as exploration to save_step and add_note. Whoever holds it can claim this after signing in.'
-        : 'Pass exploration to save_step and add_note.',
+      ...(follow ? { follow_url: follow } : {}),
+      next: follow
+        ? `${keep} Give the person follow_url, not link.url: it is a page that shows each flower you save_step, as you save it.`
+        : keep,
     };
   },
 });

@@ -7,7 +7,7 @@ import type { Spec } from '@petal/core/types';
 import { modules } from '@petal/inputs';
 import { openStore } from '@petal/store';
 import { Hono } from 'hono';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { httpApp } from '../src/http/app.ts';
 import { callTool } from '../src/registry.ts';
 import type { ToolContext } from '../src/types.ts';
@@ -364,6 +364,70 @@ describe('with no login', () => {
     expect(byId).toMatchObject(NOT_THERE);
     const noQuestion = await run('start_exploration', {});
     expect(noQuestion.error.code).toBe('bad_input');
+  });
+
+  describe('the follow page (T402)', () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    test('a read link of its own, where the lab shows: it reads and follows, and writes nothing', async () => {
+      vi.stubEnv('PETAL_LAB', '1');
+      const app = door();
+      const started = await run('start_exploration', { question: 'who holds it?' });
+      expect(started.link.scope).toBe('continue');
+      expect(started.next).toMatch(/follow_url/);
+      const { origin, pathname, searchParams } = new URL(started.follow_url);
+      expect(`${origin}${pathname}`).toBe('https://petal.test/lab/follow');
+      const token = searchParams.get('t') as string;
+      expect(token).not.toBe(started.link.url.split('/').pop());
+
+      // What the page reads, with no session: nothing yet, then each flower as the agent saves it.
+      const head = async () => {
+        const res = await app.request(`/api/v1/explorations/${token}`);
+        expect(res.status).toBe(200);
+        return ((await res.json()) as Out).current?.spec_sha256 ?? null;
+      };
+      expect(await head()).toBeNull();
+      await run('save_step', { exploration: started.link.url, spec });
+      expect(await head()).toBe(sha);
+
+      const packet = await run('get_exploration', { exploration: token });
+      expect(packet.access.as).toBe('read');
+      const write = await run('save_step', { exploration: token, spec });
+      expect(write.error.code).toBe('unauthorised');
+      const claim = await post(app, `/api/v1/explorations/${token}/claim`, {}, 'prs_a');
+      expect(claim.status).toBe(401);
+
+      // Nobody can stop it until someone claims it, with the continue link the agent holds.
+      const id = started.exploration;
+      const continueToken = started.link.url.split('/').pop();
+      expect((await post(app, `/api/v1/explorations/${continueToken}/claim`, {}, 'prs_a')).ok).toBe(
+        true,
+      );
+      const listed = await app.request(`/api/v1/explorations/${id}/links`, {
+        headers: person('prs_a'),
+      });
+      const { links } = (await listed.json()) as Out;
+      const read = links.find((l: Out) => l.scope === 'read');
+      await post(app, `/api/v1/explorations/${id}/links/${read.id}/revoke`, {}, 'prs_a');
+      expect((await app.request(`/api/v1/explorations/${token}`)).status).toBe(404);
+    });
+
+    test('nothing to open: no address, no lab, or an owner with their own exploration', async () => {
+      const noLab = await run('start_exploration', { question: 'q' });
+      expect(noLab.follow_url).toBeUndefined();
+      expect(noLab.next).not.toMatch(/follow_url/);
+
+      vi.stubEnv('PETAL_LAB', '1');
+      const owned = await run('start_exploration', { question: 'q' }, as('prs_a'));
+      expect(owned.follow_url).toBeUndefined();
+      const noAddress: ToolContext = {
+        ...anonymous,
+        config: { ...anonymous.config, apiBase: '' },
+      };
+      const bare = await run('start_exploration', { question: 'q' }, noAddress);
+      expect(bare.follow_url).toBeUndefined();
+      expect(bare.link.scope).toBe('continue');
+    });
   });
 
   test('whoever holds the link and signs in can claim it; then it is theirs alone', async () => {
