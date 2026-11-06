@@ -39,6 +39,12 @@ export const RELEASE_AFTER = 0.09;
 /** Drag inertia: how long the velocity takes to fall by 1/e, in seconds. */
 export const PAN_DECAY = 0.16;
 
+/** figure.pick: a press that travels no further than this, in px, and lifts within this, in ms, is a click. */
+export const CLICK_SLOP = 4;
+export const CLICK_LONGEST = 450;
+/** figure.pick: a click takes a petal only where hover has lit it at least this much. */
+export const CLICK_LIT = 0.5;
+
 /** The flower fills this share of the window's short side, at rest. */
 export const FIT = 0.415;
 

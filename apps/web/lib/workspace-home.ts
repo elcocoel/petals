@@ -17,9 +17,9 @@ import { openFromParams, questionFromParams } from './workspace-url.ts';
 let kept: { id: string; flower: CanvasFlower } | null = null;
 
 /**
- * The first flower the API lists, which is the first one the agent's opening names. Only a picture: it
- * isn't opened, so it adds no row to the thread and changes no question. No flower, or an API that
- * can't give one, is empty ground.
+ * The first flower the API lists, which is the first one the agent's opening names. Only a picture until
+ * someone chooses it: it isn't opened, so it adds no row to the thread and changes no question. No flower,
+ * or an API that can't give one, is empty ground.
  */
 async function standInFlower(flowers: ListedFlower[]): Promise<CanvasFlower | null> {
   const first = flowers[0];
@@ -35,7 +35,7 @@ async function standInFlower(flowers: ListedFlower[]): Promise<CanvasFlower | nu
     });
     if (!drawn.ok || !drawn.value.reading) return null;
     const { title, petals } = drawn.value.reading;
-    const flower = { key, reading: { title, petals } };
+    const flower = { key, reading: { title, petals }, stored: first.id };
     kept = { id: first.id, flower };
     return flower;
   } catch {

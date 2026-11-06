@@ -2,11 +2,12 @@
 // it the pointer and the clock; marks.ts and scene.ts read what it holds. Time comes in as dt, so a
 // test can run it at 60 and at 120 Hz without a browser.
 import { type Camera, newCamera, stepCamera } from './camera.ts';
-import { openAt } from './detail.ts';
+import { DETAIL, fade, openAt } from './detail.ts';
 import {
   ACCENT_FADE,
   ACCENT_RISE,
   BANDS,
+  CLICK_LIT,
   HEIGHT,
   LOCK_AT,
   NOTE,
@@ -19,7 +20,7 @@ import {
   WIDTH,
 } from './feel.ts';
 import { type HoverWay, heightOf, hoverTargets, reachOf } from './hover.ts';
-import { bandUnder, type Model, pick } from './model.ts';
+import { bandUnder, type Model, type Picked, pick } from './model.ts';
 import { insideWedge, lay, newRing, pointIn, type Ring } from './ring.ts';
 import {
   advance,
@@ -72,6 +73,8 @@ export interface Live {
   presence: Spring;
   /** The petal under the pointer; it stays until another one is pointed at. */
   focusIndex: number;
+  /** The petal a click chose, or -1: it keeps its accent whatever the pointer does. */
+  chosen: number;
   /** The petal the note names: the focus, but not faster than one name every NOTE_HOLD. */
   noteIndex: number;
   noteHold: number;
@@ -122,6 +125,7 @@ export function newLive(
     noteSide: spring(1),
     presence: spring(),
     focusIndex: 0,
+    chosen: -1,
     noteIndex: 0,
     noteHold: 0,
     band: -1,
@@ -159,6 +163,35 @@ export interface Stepped {
 /** Where the note's text goes for this petal: the side its rest normal points to. */
 const sideOf = (m: Model, i: number): number => ((m.ring.nx[i] as number) >= -0.02 ? 1 : -1);
 
+/** Hit-testing follows the shape: on its own wider tip, over a neighbour's angle, the focus stays. */
+const focusStays = (l: Live, under: Picked, index: number, px: number, py: number): boolean =>
+  under.index !== index &&
+  l.presence.t > 0 &&
+  insideWedge(l.ring, index, px - l.ring.ox, py - l.ring.oy);
+
+/** What a click lands on. Every angle belongs to someone, so "ground" is only where hover lights no one. */
+export type Clicked = { kind: 'petal'; index: number } | { kind: 'centre' } | { kind: 'ground' };
+
+/**
+ * figure.pick: a click takes what hover has lit at that point, with the same pick and the same rule.
+ * Where nothing is lit it's the flower's centre or the ground. A flower too small to answer the pointer
+ * has no petals to tell apart, so all of it counts as its centre.
+ */
+export function clickedAt(l: Live, x: number, y: number): Clicked {
+  const { m, camera: cam } = l;
+  if (l.locked) return { kind: 'petal', index: l.focusIndex };
+  const px = (x - cam.x) / cam.k;
+  const py = (y - cam.y) / cam.k;
+  const answers = fade(DETAIL.hover, m.R * cam.k);
+  const under = pick(m, px, py, l.reach);
+  if (under && under.reach * answers >= CLICK_LIT) {
+    const stays = focusStays(l, under, l.focusIndex, px, py);
+    return { kind: 'petal', index: stays ? l.focusIndex : under.index };
+  }
+  const centre = answers >= CLICK_LIT ? m.r0 : m.R;
+  return Math.hypot(px - m.cx, py - m.cy) < centre ? { kind: 'centre' } : { kind: 'ground' };
+}
+
 /** One frame of the whole flower. */
 export function stepLive(l: Live, dt: number): Stepped {
   const { m, camera: cam, pointer, ring } = l;
@@ -180,12 +213,7 @@ export function stepLive(l: Live, dt: number): Stepped {
   }
   if (!l.locked && picked && !pointer.dragging) {
     reach = picked.reach;
-    // Hit-testing follows the shape: on its own wider tip, over a neighbour's angle, the focus stays.
-    const stays =
-      picked.index !== index &&
-      l.presence.t > 0 &&
-      insideWedge(ring, index, px - ring.ox, py - ring.oy);
-    if (!stays) {
+    if (!focusStays(l, picked, index, px, py)) {
       index = picked.index;
       l.focusIndex = index;
       l.angle = picked.angle;
@@ -229,6 +257,8 @@ export function stepLive(l: Live, dt: number): Stepped {
     l.accent.t[index] = reach;
     l.named.t[index] = reach;
   }
+  // figure.petal-picked
+  if (l.chosen >= 0) l.accent.t[l.chosen] = 1;
   l.presence.t = reach;
 
   // Springs.

@@ -80,6 +80,31 @@ describe('where the conversation starts', () => {
   });
 });
 
+describe("where the flower's own box starts", () => {
+  test('on the right, at the top, sized to read', () => {
+    const { panel } = conversationBoxes(WIN);
+    expect(panel.x + panel.w).toBe(WIN.w - floatBox.inset);
+    expect(panel.y).toBe(floatBox.inset);
+    expect(panel.w).toBe(floatBox['panel-width']);
+    expect(panel.h).toBe(floatBox['panel-height']);
+  });
+
+  test.each([
+    [1440, 900],
+    [1024, 600],
+    [768, 1024],
+    [390, 844],
+    [320, 240],
+  ])('its bar and all of it are in a %i x %i window', (w, h) => {
+    for (const place of [conversationBoxes, recordedBoxes]) {
+      const { panel } = place({ w, h });
+      expect(barInside(panel, { w, h })).toBe(true);
+      expect(panel.x + panel.w).toBeLessThanOrEqual(w);
+      expect(panel.y + panel.h).toBeLessThanOrEqual(h);
+    }
+  });
+});
+
 describe('moving', () => {
   test('follows the hand', () => {
     expect(moved(BOX, 20, -30, WIN)).toEqual({ ...BOX, x: 320, y: 170 });

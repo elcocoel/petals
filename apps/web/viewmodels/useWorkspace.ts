@@ -1,15 +1,22 @@
-// The ViewModel of the workspace: the conversation (useMakeChat) and the panel beside it. Which flower
-// is open and which petal is selected are in the chat's reducer, so a new flower can take the panel;
-// this draws what's needed, projects the panel, keeps the address in step and hears Escape.
+// The ViewModel of the workspace: the conversation (useMakeChat), the flower on the canvas under it and
+// the panel that opens over it. Which flower is open and which petal is selected are in the chat's reducer,
+// so a new flower can take them; this draws what's needed, projects the panel, says whether its box is
+// open, keeps the address in step and hears Escape.
 import { useEffect, useMemo, useState } from 'react';
 import { type ListedFlower, svgImage } from '../lib/flower-view.ts';
 import {
+  addressOpensBox,
   type CanvasFlower,
+  type CanvasHit,
+  canvasPetal,
+  canvasShown,
   composerTarget,
   flowerPanelView,
   nextCanvas,
   type PanelFlower,
   type PanelView,
+  panelFailure,
+  pickPlan,
   questionPrefix,
   shelfView,
 } from '../lib/panel-view.ts';
@@ -31,8 +38,10 @@ export function useWorkspace(props: {
   shelf: ListedFlower[];
   initialOpen?: Opened;
   initialPetal?: string | null;
+  /** What stands on the canvas until the conversation draws its own. */
+  standIn: CanvasFlower | null;
 }) {
-  const { shelf, ...chatProps } = props;
+  const { shelf, standIn, ...chatProps } = props;
   const { state: chat, dispatch, actions: chatActions, refs } = useMakeChat(chatProps);
   const { rows, open, petal, section, busy, runId, question, items, recorded, asked } = chat;
 
@@ -118,7 +127,7 @@ export function useWorkspace(props: {
 
   // Adjusted during render, as React allows, so the canvas never paints a frame behind the panel.
   const [canvas, setCanvas] = useState<CanvasFlower | null>(null);
-  const nextHeld = nextCanvas(canvas, panelFlower?.key, drawing?.reading);
+  const nextHeld = nextCanvas(canvas, panelFlower?.key, drawing?.reading, panelFlower?.stored?.id);
   if (nextHeld !== canvas) setCanvas(nextHeld);
 
   const panel = useMemo<PanelView>(() => {
@@ -157,6 +166,22 @@ export function useWorkspace(props: {
   );
   if (comingBack && panel.kind !== 'loading' && (!panelFlower || drawing)) setComingBack(false);
 
+  // box.close
+  // Closed so the flower stays clear, until something asks for it. It can't stay closed on a failure.
+  const [boxOpen, setBoxOpen] = useState(addressOpensBox(props.initialOpen, props.initialPetal));
+  const failure = panelFailure(panel);
+  const [saidFailure, setSaidFailure] = useState<string | null>(null);
+  if (failure !== saidFailure) {
+    setSaidFailure(failure);
+    if (failure) setBoxOpen(true);
+  }
+
+  const onCanvas = canvasShown(canvas, comingBack, standIn);
+  // The canvas's flower is the panel's, or is on its way there: only then does it have a selected petal.
+  const canvasIsOpen =
+    Boolean(onCanvas) &&
+    (onCanvas?.key === panelFlower?.key || (storedId !== null && onCanvas?.stored === storedId));
+
   const target = useMemo(
     () => composerTarget(panelFlower, selectedPetal),
     [panelFlower, selectedPetal],
@@ -177,16 +202,25 @@ export function useWorkspace(props: {
     return () => window.removeEventListener('keydown', onKey);
   }, [dispatch]);
 
-  const openStored = (id: string) => dispatch({ type: 'open', open: { kind: 'stored', id } });
+  const openStored = (id: string) => {
+    dispatch({ type: 'open', open: { kind: 'stored', id } });
+    setBoxOpen(true);
+  };
+  const select = (id: string | null) => {
+    dispatch({ type: 'select', petal: id });
+    // you've picked who you're asking about: the next thing is to ask
+    if (id) refs.box.current?.focus({ preventScroll: true });
+  };
 
   return {
     state: {
       rows,
       composer,
       panel,
-      canvas,
-      comingBack,
-      petal: selectedPetal,
+      onCanvas,
+      selected: canvasIsOpen ? petal : null,
+      boxOpen,
+      petal: selectedPetal && canvasPetal(selectedPetal),
       unit: panelFlower && facts.units[panelFlower.spec.selection.measure],
       section,
       thumbs,
@@ -197,19 +231,33 @@ export function useWorkspace(props: {
       setQuestion: chatActions.setQuestion,
       send: () => chatActions.send(questionPrefix(panelFlower, target)),
       refollow: chatActions.refollow,
-      openTurn: (index: number) =>
+      openTurn: (index: number) => {
         dispatch({
           type: 'open',
           // the newest is what `latest` already means, and it keeps following
           open: index === turnFlowers.length - 1 ? { kind: 'latest' } : { kind: 'turn', index },
-        }),
+        });
+        // still being drawn, and someone asked for it: it shouldn't be silent
+        const asked = turnFlowers[index];
+        if (asked && !drawings[asked.flower.spec_sha256]) setBoxOpen(true);
+      },
       openStored,
       showShelf: () => dispatch({ type: 'open', open: { kind: 'shelf' } }),
-      select: (id: string | null) => {
-        dispatch({ type: 'select', petal: id });
-        // you've picked who you're asking about: the next thing is to ask
-        if (id) refs.box.current?.focus({ preventScroll: true });
+      /** A click on the canvas. */
+      pick: (hit: CanvasHit) => {
+        const { actions: asked, opensBox } = pickPlan(
+          hit,
+          onCanvas,
+          panelFlower?.key,
+          turnFlowers.map((r) => r.flower.spec_sha256),
+        );
+        for (const action of asked) {
+          if (action.type === 'select') select(action.petal);
+          else dispatch(action);
+        }
+        if (opensBox) setBoxOpen(true);
       },
+      closeBox: () => setBoxOpen(false),
       closeDetail: () => dispatch({ type: 'select', petal: null }),
       setSection: (next: PanelSection) => dispatch({ type: 'section', section: next }),
       startFrom: (text: string) => {

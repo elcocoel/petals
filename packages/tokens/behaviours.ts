@@ -128,6 +128,11 @@ export const behaviours = [
       'A wheel or a pinch stays in it, and pressing the canvas leaves the cursor in it, so a chat carries on',
     via: 'view',
   },
+  {
+    name: 'box.close',
+    purpose: 'Stays closed until asked for, opens above the others, and closes from its bar',
+    via: 'view',
+  },
   // row
   { name: 'row.arrive', purpose: 'Rows arrive one by one', via: 'both' },
   {
@@ -209,6 +214,18 @@ export const behaviours = [
   {
     name: 'figure.petal-focus',
     purpose: 'The one under the pointer rises, widens over its neighbours and takes the accent',
+    via: 'view',
+  },
+  {
+    name: 'figure.pick',
+    purpose:
+      'A press that stays put takes what hover has lit, the centre or the ground; a drag never',
+    via: 'view',
+  },
+  {
+    name: 'figure.petal-picked',
+    purpose:
+      'The picked petal keeps its accent and note once the pointer leaves, at its true height',
     via: 'view',
   },
   {

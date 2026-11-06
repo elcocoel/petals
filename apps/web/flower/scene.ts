@@ -519,7 +519,7 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
       lastLit = focusIndex;
       if (relationsLayer) writeRelations(ring, focusIndex, mk.relations * mk.recede);
 
-      // Notes keep their slot while they're on, so a text is only ever written when one appears.
+      // Notes keep their slot while they're on, so a text is only written when it changes.
       const seen = new Set<number>();
       for (const note of mk.notes) seen.add(note.index);
       for (const s of noteSlots) {
@@ -538,10 +538,11 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
           slotOf[note.index] = at;
           const s = noteSlots[at] as NoteSlot;
           s.owner = note.index;
-          s.text.text(note.text);
           s.group.set('display', 'inline');
         }
         const s = noteSlots[at] as NoteSlot;
+        // A petal just chosen keeps its slot and says its name in full. Unchanged text writes nothing.
+        s.text.text(note.text);
         s.group.set('opacity', o2(note.opacity));
         s.leader.set(
           'd',

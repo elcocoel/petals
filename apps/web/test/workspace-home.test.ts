@@ -68,6 +68,7 @@ describe('the stand-in', () => {
     expect(home.standIn).toEqual({
       key: 'sha-first',
       reading: { title: reading.title, petals: reading.petals },
+      stored: 'first',
     });
   });
 

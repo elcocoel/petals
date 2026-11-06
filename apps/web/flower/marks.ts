@@ -192,6 +192,8 @@ export function marks(
   scratch?: Float64Array,
   /** A tiny readout of zoom and share while we tune. Only the lab's bench asks for it. */
   readout = false,
+  /** The petal a click chose, or -1. */
+  chosen = -1,
 ): Marks {
   const { k } = v;
   const toX = (x: number) => (x + ring.ox) * k + v.x;
@@ -370,7 +372,7 @@ export function marks(
     x: MAP_INSET,
     y: v.height - MAP_BOTTOM - MAP_SIZE,
     size: MAP_SIZE,
-    litIndex: fi,
+    litIndex: fi >= 0 ? fi : chosen,
   };
   if (mapOpacity > 0.01) {
     claim({ x0: map.x, y0: map.y, x1: map.x + MAP_SIZE, y1: map.y + MAP_SIZE }, mapOpacity);
@@ -380,38 +382,40 @@ export function marks(
   // Everyone else's notes, in order of rank, each only if it has earned it and has the room.
   const notes: NoteMark[] = [];
   const dots: { x: number; y: number }[] = [];
-  for (let at = 0; at < m.n && notes.length < NOTE_POOL; at++) {
-    const i = m.order[at] as number;
-    if (i === fi && focusMark) continue;
-    const side = (ring.len[i] as number) * k;
-    const wish =
-      Math.max(
-        fade(DETAIL.topNotes, radius / ((m.rankOf[i] as number) + 2)),
-        fade(DETAIL.allNotes, side),
-      ) *
-      (1 - open);
-    if (wish <= 0.005) continue;
+  const noteOn = (
+    i: number,
+    wish: number,
+    text: string,
+    width: number,
+    lift: number,
+    kept = false,
+  ) => {
+    if (wish <= 0.005) return;
     const h = ring.h[i] as number;
     const nx = ring.nx[i] as number;
     const ny = ring.ny[i] as number;
     const tipX = toX(((ring.ax[i] as number) + (ring.bx[i] as number)) / 2 + nx * h);
     const tipY = toY(((ring.ay[i] as number) + (ring.by[i] as number)) / 2 + ny * h);
-    if (tipX < -40 || tipY < -40 || tipX > v.width + 40 || tipY > v.height + 40) continue;
-    const lift = LIFT + (i % 3) * LIFT_STAGGER;
-    const elbowX = tipX + nx * lift;
+    if (tipX < -40 || tipY < -40 || tipX > v.width + 40 || tipY > v.height + 40) return;
     const s = (m.ring.nx[i] as number) >= -0.02 ? 1 : -1;
-    const width = m.noteWidths[i] as number;
-    const x = s > 0 ? elbowX : elbowX - width;
-    const elbowY = clearOfBars(m, ring, toX, toY, i, x, x + width, tipY + ny * lift, ny);
+    const reach = tipX + nx * lift;
+    const fromEnd = s > 0 ? reach : reach - width;
+    // Everyone else fades at the window's edge. A note that's kept slides along it, as the focus's does.
+    const x = kept ? clamp(fromEnd, INSET, v.width - INSET - width) : fromEnd;
+    const elbowX = kept ? (s > 0 ? x : x + width) : reach;
+    const rule = clearOfBars(m, ring, toX, toY, i, x, x + width, tipY + ny * lift, ny);
+    const elbowY = kept ? clamp(rule, INSET + LINE, v.height - INSET) : rule;
     const y = elbowY - 4;
     const box = { x0: x - 1, y0: y - LINE + 4, x1: x + width + 1, y1: elbowY + 2 };
-    const edge = ramp(0, INSET, Math.min(box.x0, box.y0, v.width - box.x1, v.height - box.y1));
+    const edge = kept
+      ? 1
+      : ramp(0, INSET, Math.min(box.x0, box.y0, v.width - box.x1, v.height - box.y1));
     const opacity = wish * edge * roomFor(box, placed);
-    if (opacity <= 0.01) continue;
+    if (opacity <= 0.01) return;
     placed.push({ ...box, opacity });
     notes.push({
       index: i,
-      text: m.notes[i] ?? '',
+      text,
       width,
       opacity,
       x,
@@ -423,6 +427,27 @@ export function marks(
       ruleX: elbowX + s * width,
     });
     dots.push({ x: tipX, y: tipY });
+  };
+  // figure.petal-picked
+  // The chosen petal keeps its name, in full, before anyone else's. When the pointer's on it the note
+  // that travels says it instead, and the two hand over as the pointer comes and goes.
+  if (chosen >= 0) {
+    const held =
+      fade(DETAIL.hover, radius) * (1 - open) * (chosen === fi ? 1 - (focus?.presence ?? 0) : 1);
+    const text = m.fullNotes[chosen] ?? '';
+    noteOn(chosen, held, text, textWidth(text), FOCUS_LIFT, true);
+  }
+  for (let at = 0; at < m.n && notes.length < NOTE_POOL; at++) {
+    const i = m.order[at] as number;
+    if (i === chosen || (i === fi && focusMark)) continue;
+    const side = (ring.len[i] as number) * k;
+    const wish =
+      Math.max(
+        fade(DETAIL.topNotes, radius / ((m.rankOf[i] as number) + 2)),
+        fade(DETAIL.allNotes, side),
+      ) *
+      (1 - open);
+    noteOn(i, wish, m.notes[i] ?? '', m.noteWidths[i] as number, LIFT + (i % 3) * LIFT_STAGGER);
   }
 
   // mark.band-label

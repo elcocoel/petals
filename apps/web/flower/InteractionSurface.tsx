@@ -1,25 +1,29 @@
 'use client';
 // The page where people work (design/interaction-surface.md): the live flower fills the window, and the
-// conversation floats above it in two boxes a hand can move and size. This only wires the ViewModels to
-// the views. The camera isn't told about the boxes. Until the conversation has a flower, the canvas holds
-// a stand-in the server chose, which is only that: it never joins the conversation or the address.
+// conversation floats above it in two boxes a hand can move and size. A third, the same box, shows the
+// flower's own details once something asks for them. This only wires the ViewModels to the views. The
+// camera isn't told about the boxes. Until the conversation has a flower, the canvas holds a stand-in the
+// server chose, which is only that until someone chooses it: until then it never joins the conversation
+// or the address.
 import type { SurfaceName } from '@petal/tokens';
+import { useEffect } from 'react';
 import { Composer } from '../components/chat/Composer.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
+import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { conversationBoxes, recordedBoxes } from '../lib/float-box.ts';
 import type { ListedFlower } from '../lib/flower-view.ts';
-import { type CanvasFlower, canvasShown } from '../lib/panel-view.ts';
+import type { CanvasFlower } from '../lib/panel-view.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
+import { FlowerPanel } from './FlowerPanel.tsx';
 
-const BOXES = ['output', 'input'] as const;
+const BOXES = ['output', 'input', 'panel'] as const;
 
 export function InteractionSurface({
-  standIn,
   scatter,
   probe,
   surface,
@@ -40,7 +44,11 @@ export function InteractionSurface({
   const { state, actions, refs } = useWorkspace(workspace);
   useFollowScroll(refs.thread, refs.following);
   const hands = useFloatBoxes(BOXES, workspace.recorded ? recordedBoxes : conversationBoxes);
-  const onCanvas = canvasShown(state.canvas, state.comingBack, standIn);
+  const raisePanel = hands.panel.raise;
+  useEffect(() => {
+    if (state.boxOpen) raisePanel();
+  }, [state.boxOpen, raisePanel]);
+  const { onCanvas, panel } = state;
   return (
     <>
       {/* A new flower is a new scene. Anything else, a whole turn included, leaves the camera alone. */}
@@ -49,6 +57,8 @@ export function InteractionSurface({
         reading={onCanvas?.reading ?? null}
         scatter={scatter}
         probe={probe}
+        selected={state.selected}
+        onPick={actions.pick}
       />
       <FloatBox label={state.heading} title={state.heading} surface={surface} hand={hands.output}>
         <ConversationThread
@@ -77,6 +87,34 @@ export function InteractionSurface({
           onChange={actions.setQuestion}
           onSend={() => void actions.send()}
         />
+      </FloatBox>
+      <FloatBox
+        label="Flower"
+        title={panel.kind === 'flower' ? panel.title : undefined}
+        surface={surface}
+        hand={hands.panel}
+        closed={!state.boxOpen}
+        control={
+          <Button variant="link" onClick={actions.closeBox}>
+            Close detail
+          </Button>
+        }
+      >
+        {state.boxOpen && (
+          <FlowerPanel
+            view={panel}
+            petal={state.petal}
+            unit={state.unit || undefined}
+            section={state.section}
+            actions={{
+              onCloseDetail: actions.closeDetail,
+              onSection: actions.setSection,
+              onShelf: actions.showShelf,
+              onOpenStored: actions.openStored,
+              onStarter: actions.startFrom,
+            }}
+          />
+        )}
       </FloatBox>
     </>
   );

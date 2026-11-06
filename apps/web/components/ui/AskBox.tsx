@@ -7,6 +7,9 @@
 import type { ChangeEventHandler, FormEventHandler, Ref } from 'react';
 import { Button } from './Button.tsx';
 
+/** A plain GET form puts the question in its address, and a server refuses a long enough address. */
+const LONGEST_ASKED_BY_ADDRESS = 4000;
+
 const SIZES = {
   hero: {
     form: 'border py-space-8 pr-space-8 pl-block-gap',
@@ -77,6 +80,7 @@ export function AskBox({
         rows={1}
         aria-label={label}
         placeholder={placeholder}
+        maxLength={to === undefined ? undefined : LONGEST_ASKED_BY_ADDRESS}
         value={value}
         defaultValue={defaultValue}
         disabled={disabled}
