@@ -8,6 +8,15 @@ import { Icon } from './Icon.tsx';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'starter' | 'link' | 'quiet' | 'row' | 'tile';
 
+/** The behaviour each variant inherits (packages/tokens/behaviours.ts). `row` and `tile` stay v1. */
+const BEHAVIOUR: Partial<Record<ButtonVariant, 'action' | 'link'>> = {
+  primary: 'action',
+  secondary: 'action',
+  starter: 'action',
+  link: 'link',
+  quiet: 'link',
+};
+
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: '',
   secondary: 'border border-primary bg-transparent text-primary',
@@ -47,7 +56,13 @@ export function Button({ variant = 'primary', arrow, children, ...rest }: Button
   );
   if (rest.href !== undefined) {
     return (
-      <a href={rest.href} data-button="" className={look}>
+      <a
+        href={rest.href}
+        data-button=""
+        data-b={BEHAVIOUR[variant]}
+        data-kind={variant}
+        className={look}
+      >
         {content}
       </a>
     );
@@ -59,6 +74,8 @@ export function Button({ variant = 'primary', arrow, children, ...rest }: Button
       disabled={disabled}
       aria-pressed={pressed}
       onClick={onClick}
+      data-b={BEHAVIOUR[variant]}
+      data-kind={variant}
       className={look}
     >
       {content}

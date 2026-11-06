@@ -2,6 +2,8 @@
 // behaviour lives in one component. Fails on raw colours, arbitrary Tailwind values, inline colour
 // or size styles, primitives used directly, rounded corners, a raw <button> or <a> styled with
 // utilities outside components/ui/, and a class name in globals.css that isn't on the list below.
+// A version's softness has one home too: radius, shadow and gradient literals live only in
+// packages/tokens/versions/, and a version's stylesheet says var() and nothing else.
 // One escape, which should be rare: a same-line `token-exempt: reason` comment.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -14,6 +16,7 @@ export const SCANNED = [
 ];
 const UI = 'apps/web/components/ui/';
 const GLOBALS = 'apps/web/app/globals.css';
+const VERSION_SHEETS = 'apps/web/app/versions/';
 
 /** What globals.css may style: the classes the pages already had, and the renderer's. */
 export const GLOBAL_CLASSES = new Set([
@@ -49,6 +52,19 @@ const LINE_RULES: [string, RegExp][] = [
   ['primitive used directly, use a role', /var\(--primitive-/],
   // Tailwind keeps rounded-full and rounded-none whatever the theme says.
   ['corner radius is 0 everywhere', /\brounded-[a-z0-9]/],
+  // A version's softness lives in packages/tokens/versions/ and arrives as var().
+  [
+    'gradient literal, it belongs in packages/tokens/versions',
+    /\b(?:repeating-)?(?:linear|radial|conic)-gradient\(/,
+  ],
+  [
+    'shadow literal, it belongs in packages/tokens/versions',
+    /\bbox-shadow\s*:\s*(?!\s*(?:var\(|none\b|inherit\b))/,
+  ],
+  [
+    'radius literal, it belongs in packages/tokens/versions',
+    /\bborder(?:-[a-z]+)*-radius\s*:\s*(?!\s*(?:var\(|inherit\b))/,
+  ],
 ];
 
 const STYLE_KEY =
@@ -90,6 +106,43 @@ function selectorClasses(text: string): { name: string; line: number }[] {
   return out;
 }
 
+/** A value with every var(…) taken out, however deeply they nest. */
+function withoutVars(value: string): string {
+  let out = '';
+  let i = 0;
+  while (i < value.length) {
+    if (value.startsWith('var(', i)) {
+      let depth = 1;
+      i += 4;
+      while (i < value.length && depth > 0) {
+        if (value[i] === '(') depth++;
+        if (value[i] === ')') depth--;
+        i++;
+      }
+    } else {
+      out += value[i++];
+    }
+  }
+  return out;
+}
+
+/** What may be left of a value in a version's stylesheet: words, 0 and 1, and nothing that's a size. */
+const SHEET_LITERAL =
+  /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|url|cubic-bezier|linear|steps|blur|(?:repeating-)?(?:linear|radial|conic)-gradient)\(|(?<![\w.])(?!(?:0|1)(?![\w.%]))\d*\.?\d+/i;
+
+/** A version's stylesheet says var(): the values are in packages/tokens/versions/. */
+function sheetLiterals(text: string): { line: number; value: string }[] {
+  const noComments = text.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '));
+  const out: { line: number; value: string }[] = [];
+  for (const m of noComments.matchAll(/(?<=[{;]\s*)(-*[a-z][\w-]*)\s*:\s*([^;{}]+);/g)) {
+    const value = (m[2] ?? '').trim();
+    if (SHEET_LITERAL.test(withoutVars(value).replace(/"[^"]*"/g, ''))) {
+      out.push({ line: lineOf(noComments, m.index), value });
+    }
+  }
+  return out;
+}
+
 /** Every finding in one file's text. `file` is repo-relative. */
 export function scanText(text: string, file: string): Finding[] {
   const lines = text.split('\n');
@@ -110,6 +163,11 @@ export function scanText(text: string, file: string): Finding[] {
   if (!file.startsWith(UI) && /\.[jt]sx$/.test(file)) {
     for (const m of text.matchAll(STYLED_CONTROL)) {
       add(lineOf(text, m.index), 'styled raw control, use components/ui/Button or TextLink');
+    }
+  }
+  if (file.startsWith(VERSION_SHEETS) && file.endsWith('.css')) {
+    for (const { line } of sheetLiterals(text)) {
+      add(line, 'a literal in a version stylesheet, say var() and put it in the token file');
     }
   }
   if (file === GLOBALS) {

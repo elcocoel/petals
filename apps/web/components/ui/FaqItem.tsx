@@ -18,14 +18,16 @@ export function FaqItem({
   open?: boolean;
 }) {
   return (
-    <details open={open} className="border-b border-hairline py-block-gap">
+    <details open={open} data-b="row" className="border-b border-hairline py-block-gap">
       <summary className="flex list-none items-center gap-block-gap md:grid md:grid-cols-12 [&::-webkit-details-marker]:hidden">
         <span className="flex items-center gap-text-gap md:col-span-2">
           <Drawing kind={glyph} size={48} />
           <span className="type-mono">{index}</span>
         </span>
         <span className="min-w-0 flex-1 type-lead md:col-span-9">{question}</span>
-        <span className="type-mono-code md:justify-self-end">{landingCopy.questions.sign}</span>
+        <span data-sign={landingCopy.questions.sign} className="type-mono-code md:justify-self-end">
+          {landingCopy.questions.sign}
+        </span>
       </summary>
       <div className="mt-text-gap md:grid md:grid-cols-12 md:gap-x-block-gap">
         <p className="mb-0 type-body md:col-span-9 md:col-start-3">{answer}</p>

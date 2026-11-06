@@ -37,6 +37,7 @@ export function TextLink({
       href={href}
       rel={rel}
       target={target}
+      data-b="link"
       className={`no-underline hover:underline ${VARIANTS[variant]} ${withArrow}`}
     >
       {icon && <Icon name={icon} />}

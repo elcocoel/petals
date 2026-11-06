@@ -11,10 +11,10 @@ import { Mono } from '../ui/Mono.tsx';
 const copy = landingCopy.hero;
 
 const NOTES = [
-  { text: copy.notes.one, x: 460, y: 44, width: 260, height: 16 },
-  { text: copy.notes.three, x: 0, y: 116, width: 180, height: 32 },
-  { text: copy.notes.two, x: 0, y: 620, width: 180, height: 32 },
-  { text: copy.notes.four, x: 552, y: 684, width: 168, height: 48 },
+  { note: 'one', text: copy.notes.one, x: 460, y: 44, width: 260, height: 16 },
+  { note: 'three', text: copy.notes.three, x: 0, y: 116, width: 180, height: 32 },
+  { note: 'two', text: copy.notes.two, x: 0, y: 620, width: 180, height: 32 },
+  { note: 'four', text: copy.notes.four, x: 552, y: 684, width: 168, height: 48 },
 ];
 const REMARK = { x: 460, y: 78, width: 244, height: 122 };
 
@@ -29,12 +29,18 @@ function Remark() {
 export function AnnotatedFlower() {
   return (
     <div className="flex w-full flex-col gap-block-gap">
-      <svg role="presentation" viewBox="0 0 720 740" className="h-auto w-full">
+      <svg
+        data-b="figure"
+        data-kind="annotated"
+        role="presentation"
+        viewBox="0 0 720 740"
+        className="h-auto w-full"
+      >
         <Drawing kind="hero-flower" x={20} y={20} width={680} height={680} />
         <g className="max-md:hidden">
           <Drawing kind="hero-leaders" width={720} height={720} />
-          {NOTES.map(({ text, ...at }) => (
-            <foreignObject key={text} {...at}>
+          {NOTES.map(({ note, text, ...at }) => (
+            <foreignObject key={text} data-note={note} {...at}>
               <Mono>{text}</Mono>
             </foreignObject>
           ))}

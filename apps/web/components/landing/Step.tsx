@@ -15,11 +15,17 @@ export function Step({
 }) {
   return (
     <div className="flex flex-col border-t border-primary pt-block-gap">
-      <div className="flex h-figure-height items-center justify-center gap-space-16 overflow-hidden border border-hairline px-text-gap">
+      <div
+        data-b="box"
+        data-kind="plate"
+        className="flex h-figure-height items-center justify-center gap-space-16 overflow-hidden border border-hairline px-text-gap"
+      >
         {children}
       </div>
       <div className="mt-column-gap">
-        <p className="my-0 type-pixel-numeral text-accent">{numeral}</p>
+        <p data-b="mark" data-kind="numeral" className="my-0 type-pixel-numeral text-accent">
+          {numeral}
+        </p>
       </div>
       <h3 className="mt-space-32 mb-0 type-heading">{title}</h3>
       <p className="mt-space-16 mb-0 type-body">{body}</p>
