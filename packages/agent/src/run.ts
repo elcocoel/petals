@@ -214,6 +214,7 @@ async function loop(
     fallback: false,
     model: llm.model,
     signature: null as ModelSignature | null,
+    context: 0,
   };
   let stage: Stage | undefined;
 
@@ -242,6 +243,7 @@ async function loop(
         tokens: { in: totals.in, out: totals.out },
         cost_usd: Math.round(totals.usd * 1e6) / 1e6,
         signature: totals.signature,
+        ...(totals.context ? { context_tokens: totals.context } : {}),
       },
     });
   // The ledger is the cap: a recorded run never spends, and every other model call goes between a
@@ -558,6 +560,7 @@ async function loop(
       totals.turns++;
       totals.in += c.usage.in;
       totals.out += c.usage.out;
+      totals.context = c.usage.in;
       totals.usd += paid;
       totals.fallback ||= c.fallback_used;
       totals.model = c.model;

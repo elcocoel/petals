@@ -665,3 +665,109 @@ describe('stateStore', () => {
     store.close();
   });
 });
+
+describe('migration 5, the workspace', () => {
+  test('adds to a populated store without changing a row that was there', () => {
+    const path = join(mkdtempSync(join(tmpdir(), 'petal-store-')), 'private.db');
+    openStore(path, MIGRATIONS.slice(0, 4)).close();
+    const at = '2026-11-01T00:00:00.000Z';
+    // by hand: today's insert names columns this older schema doesn't have yet
+    const raw = new DatabaseSync(path);
+    const insert = raw.prepare(
+      'INSERT INTO run (id, owner, exploration, status, model, body, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    );
+    const body = JSON.stringify({ messages: [{ role: 'user', content: 'a question' }] });
+    insert.run('run-with-owner', 'prs_a', 'exp_a', 'done', 'some/model', body, at, at);
+    insert.run('run-with-no-owner', null, null, 'interrupted', null, '{"messages":[]}', at, at);
+    raw.prepare('INSERT INTO run_event (run, seq, type, data, at) VALUES (?, 0, ?, ?, ?)').run(
+      'run-with-owner',
+      'done',
+      '{"turns":1}',
+      at,
+    );
+    raw.prepare('INSERT INTO run_thread (run, messages, updated_at) VALUES (?, ?, ?)').run(
+      'run-with-owner',
+      '[]',
+      at,
+    );
+    raw
+      .prepare(
+        'INSERT INTO exploration (id, owner, question, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+      )
+      .run('exp_a', 'prs_a', 'a question', at, at);
+    raw
+      .prepare('INSERT INTO note (exploration, seq, author, text, at) VALUES (?, 0, ?, ?, ?)')
+      .run('exp_a', 'owner', 'a note', at);
+    const before = {
+      run: { ...raw.prepare('SELECT * FROM run WHERE id = ?').get('run-with-owner') },
+      note: raw.prepare('SELECT * FROM note').all().map((r) => ({ ...r })),
+    };
+    raw.close();
+
+    const store = openStore(path);
+    const run = store.run.get('run-with-owner');
+    expect(run).toMatchObject(before.run as object);
+    expect(run).toMatchObject({ title: null, settings: null, hidden_at: null });
+    expect(store.run.get('run-with-no-owner')?.status).toBe('interrupted');
+    expect(store.run.get('run-with-no-owner')?.owner).toBeNull();
+    expect(store.runEvent.list('run-with-owner')).toHaveLength(1);
+    expect(store.runThread.get('run-with-owner')).toBe('[]');
+    expect(store.note.list('exp_a')).toEqual(before.note);
+    // the new tables are there and empty, and an old run shows in the list with no title of its own
+    expect(store.follow.count('prs_a')).toBe(0);
+    expect(store.workspaceNote.count('prs_a')).toBe(0);
+    const [listed] = store.run.conversations('prs_a', 10, false);
+    expect(listed?.id).toBe('run-with-owner');
+    expect(listed?.body).toContain('a question');
+    store.close();
+
+    // and opening it again applies nothing twice
+    const again = openStore(path);
+    expect(again.run.get('run-with-owner')?.title).toBeNull();
+    again.close();
+  });
+
+  test('a run that has a title leaves its body out of the list', () => {
+    const store = openStore(':memory:');
+    const at = '2026-11-01T00:00:00.000Z';
+    store.run.insert({
+      id: 'titled',
+      owner: 'prs_a',
+      exploration: null,
+      status: 'done',
+      model: null,
+      title: 'a name',
+      body: '{"messages":[]}',
+      created_at: at,
+      updated_at: at,
+    });
+    expect(store.run.conversations('prs_a', 10, false)[0]?.body).toBeNull();
+    store.run.setHidden('titled', at);
+    expect(store.run.conversations('prs_a', 10, false)).toEqual([]);
+    expect(store.run.conversations('prs_a', 10, true)[0]?.id).toBe('titled');
+    store.close();
+  });
+
+  test('search takes a person-safe match, finds by owner, and forgets', () => {
+    const store = openStore(':memory:');
+    const doc = { kind: 'note', title: 'a title', about: null, at: 'now' };
+    store.search.put({ ...doc, owner: 'a', ref: 'n1' }, 'validadores do norte');
+    store.search.put({ ...doc, owner: 'b', ref: 'n2' }, 'validadores do sul');
+    store.search.put({ ...doc, owner: 'a', ref: 'marker', kind: 'exploration' }, null);
+    const hits = (owner: string, q = '"validadores"') =>
+      store.search.query(owner, q, ['note', 'exploration'], 10);
+    expect(hits('a').map((h) => h.ref)).toEqual(['n1']);
+    expect(hits('b').map((h) => h.ref)).toEqual(['n2']);
+    store.search.put({ ...doc, owner: 'a', ref: 'n1' }, 'outra coisa');
+    expect(hits('a')).toEqual([]);
+    store.search.put({ ...doc, owner: 'a', ref: 'n1' }, 'validadores de novo');
+    store.search.forget('a', 'note', 'n1');
+    expect(hits('a')).toEqual([]);
+    store.search.put({ ...doc, owner: 'b', ref: 'n3', about: 'x' }, 'validadores');
+    store.search.forgetAbout('b', 'x');
+    expect(hits('b').map((h) => h.ref)).toEqual(['n2']);
+    store.search.forgetOwner('b');
+    expect(hits('b')).toEqual([]);
+    store.close();
+  });
+});
