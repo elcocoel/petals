@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { type AgentClient, agentClient } from '../lib/agent-client.ts';
 import { withAbout } from '../lib/ask-about.ts';
+import type { Settings } from '../lib/composer-options.ts';
 import {
   type ChatAction,
   type ChatState,
@@ -43,6 +44,8 @@ export async function sendQuestion(
     runId: string | null;
     /** what it's about (lib/ask-about.ts): it goes with the words, and a failure gives back only them */
     about?: string | undefined;
+    /** a pick the server should hold from this message on */
+    settings?: Settings | undefined;
   },
 ): Promise<void> {
   // a recorded run can't go on from what was said: each play starts over, with no words of its own
@@ -62,6 +65,7 @@ export async function sendQuestion(
         { role: 'user' as const, content: said },
       ],
       ...(continuing ? { run_id: continuing } : {}),
+      ...(q.settings && !q.recorded ? { settings: q.settings } : {}),
     });
     for await (const event of events) {
       if (event.event === 'run') {
@@ -233,11 +237,11 @@ export function useMakeChat({
     dispatch,
     actions: {
       setQuestion: (text: string) => typeQuestion(deps, chat, text),
-      send: async (about?: string) => {
+      send: async (about?: string, settings?: Settings) => {
         const text = recorded ? RECORDED_QUESTION : question.trim();
         if (!text || busy) return;
         following.current = true;
-        await sendQuestion(deps, { text, recorded, greeting, runId, about });
+        await sendQuestion(deps, { text, recorded, greeting, runId, about, settings });
         box.current?.focus();
       },
       refollow: () => {

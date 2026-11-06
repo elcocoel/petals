@@ -29,6 +29,8 @@ type Access = 'owner' | LinkScope;
 
 const QUESTION_MAX = 2000;
 const NOTE_MAX = 2000;
+/** A mirrored reply comes word for word, so the page gets all of it. */
+const NOTE_TEXT_MAX = 8000;
 const TARGET_MAX = 300;
 const CLIENT_MAX = 80;
 /**
@@ -847,7 +849,7 @@ export const addNote = defineTool<{ exploration: string; text: string }, object>
     'Leave a note for whoever carries on this exploration, on the owner session or a continue link. The next agent reads it as untrusted data from you.',
   input: obj(
     ['exploration', 'text'],
-    { exploration: REF, text: { type: 'string', minLength: 1, maxLength: NOTE_MAX } },
+    { exploration: REF, text: { type: 'string', minLength: 1, maxLength: NOTE_TEXT_MAX } },
     { additionalProperties: false },
   ),
   output: obj(['exploration', 'note'], {

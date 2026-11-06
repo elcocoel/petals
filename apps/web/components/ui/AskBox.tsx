@@ -4,7 +4,7 @@
 // section holds it: Figma's box stays white on the mint and ink sections too. It grows with what's
 // typed; Enter asks and Shift+Enter starts a line. The action is the one Button. With `to` it's a plain
 // GET form, so it still asks before any JavaScript has run.
-import type { ChangeEventHandler, FormEventHandler, Ref } from 'react';
+import type { ChangeEventHandler, FormEventHandler, ReactNode, Ref } from 'react';
 import { Button } from './Button.tsx';
 
 /** A plain GET form puts the question in its address, and a server refuses a long enough address. */
@@ -39,6 +39,7 @@ export function AskBox({
   disabled,
   readOnly,
   canAsk = true,
+  controls,
   boxRef,
   onChange,
   onSubmit,
@@ -59,11 +60,18 @@ export function AskBox({
   readOnly?: boolean;
   /** False keeps the action off and the box open: there's nothing to ask yet, or it's still busy. */
   canAsk?: boolean;
+  /** Settings under the field, on the action's line. */
+  controls?: ReactNode;
   boxRef?: Ref<HTMLTextAreaElement>;
   onChange?: ChangeEventHandler<HTMLTextAreaElement>;
   onSubmit?: FormEventHandler<HTMLFormElement>;
 }) {
   const look = SIZES[size];
+  const button = (
+    <Button type="submit" arrow={look.arrow} disabled={disabled || !canAsk}>
+      {action}
+    </Button>
+  );
   return (
     <form
       data-surface="ground"
@@ -92,11 +100,16 @@ export function AskBox({
             e.currentTarget.form?.requestSubmit();
           }
         }}
-        className={`max-h-ask-box-max-height min-w-0 flex-1 resize-none bg-transparent field-sizing-content text-primary outline-none ${look.field}`}
+        className={`max-h-ask-box-max-height min-w-0 flex-1 resize-none bg-transparent field-sizing-content text-primary outline-none ${controls ? 'basis-full' : ''} ${look.field}`}
       />
-      <Button type="submit" arrow={look.arrow} disabled={disabled || !canAsk}>
-        {action}
-      </Button>
+      {controls ? (
+        <div className="flex w-full items-end justify-between gap-text-gap">
+          <div className="flex min-w-0 flex-wrap items-center gap-space-8">{controls}</div>
+          {button}
+        </div>
+      ) : (
+        button
+      )}
     </form>
   );
 }

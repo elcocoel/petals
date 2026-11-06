@@ -14,12 +14,15 @@ import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
 import { CopyPrompt } from '../components/CopyPrompt.tsx';
 import { AnsweredBy } from '../components/chat/AnsweredBy.tsx';
+import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
+import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { Speech } from '../components/chat/Speech.tsx';
 import { Steps } from '../components/chat/Steps.tsx';
 import { Thread } from '../components/chat/Thread.tsx';
 import { TurnFlower } from '../components/chat/TurnFlower.tsx';
 import { TurnStatus } from '../components/chat/TurnStatus.tsx';
+import { WhoIsHere } from '../components/chat/WhoIsHere.tsx';
 import { Flower } from '../components/Flower.tsx';
 import { FlowerSheet } from '../components/FlowerSheet.tsx';
 import { FlowerTile } from '../components/FlowerTile.tsx';
@@ -1289,6 +1292,78 @@ export const registry: LabEntry[] = [
         ),
       },
       { name: 'lost', wide: true, render: () => <TurnStatus row={turnRow('lost')} /> },
+    ],
+  },
+  {
+    id: 'ConnectWallet',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/ConnectWallet.tsx',
+    states: [
+      {
+        name: 'nothing waiting',
+        wide: true,
+        render: () => <ConnectWallet question="" busy={false} failed={null} onConnect={() => {}} />,
+      },
+      {
+        name: 'a question waiting, and the last try failed',
+        wide: true,
+        render: () => (
+          <ConnectWallet
+            question="Who stands behind NEAR's validators?"
+            busy={false}
+            failed="NEAR didn't answer. Try again."
+            onConnect={() => {}}
+          />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'WhoIsHere',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/WhoIsHere.tsx',
+    states: [
+      {
+        name: 'connected',
+        wide: true,
+        render: () => <WhoIsHere account="elcocoel.near" onDisconnect={() => {}} />,
+      },
+    ],
+  },
+  {
+    id: 'ModelOptions',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/ModelOptions.tsx',
+    states: [
+      {
+        name: 'one picked',
+        wide: true,
+        render: () => (
+          <ModelOptions
+            options={[
+              {
+                id: 'a',
+                label: 'DeepSeek V4.1 Flash',
+                sub: 'Signed  ·  NEAR AI’s enclave  ·  $0.02 a flower',
+                on: true,
+              },
+              {
+                id: 'b',
+                label: 'Claude Haiku 5.5',
+                sub: 'Passed through  ·  Anthropic  ·  $0.007 a flower',
+                on: false,
+              },
+            ]}
+            onPick={() => {}}
+          />
+        ),
+      },
     ],
   },
   {
