@@ -32,6 +32,7 @@ export function UseAnywhere() {
           <CopyPrompt
             variant="secondary"
             prompt={agentPrompt(publicOrigin)}
+            originIn={publicOrigin}
             label={copy.actions.prompt}
             bare={{ readHref: siteLinks.doors.prompt }}
           />
