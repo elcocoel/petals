@@ -9,6 +9,7 @@
 // Recorded replays and stub models spent nothing and said nothing real, so they're left out, as are the
 // harness's own questions.
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
@@ -30,10 +31,15 @@ const clip = (s: unknown, n: number) => {
   return t.length > n ? `${t.slice(0, n)} …[${t.length}]` : t;
 };
 
-const stores = readdirSync(PROJECT)
-  .filter((d) => d === 'build' || d.startsWith('build.'))
-  .map((d) => ({ name: d, path: join(PROJECT, d, '.petal/private.db') }))
-  .filter((s) => existsSync(s.path));
+const HOME_DIR = join(homedir(), 'Library/Application Support/Petals');
+const stores = [
+  // Elco's app, since 6 Nov (scripts/serve-testnet.sh), and the container
+  { name: 'elco', path: join(HOME_DIR, 'elco/private.db') },
+  { name: 'container', path: join(HOME_DIR, 'data/private.db') },
+  ...readdirSync(PROJECT)
+    .filter((d) => d === 'build' || d.startsWith('build.'))
+    .map((d) => ({ name: d, path: join(PROJECT, d, '.petal/private.db') })),
+].filter((s) => existsSync(s.path));
 
 const all = process.argv.includes('--all');
 const seen: Record<string, string> =
