@@ -26,14 +26,17 @@ import { getCookie, setCookie } from 'hono/cookie';
 import { closedLedger } from './budget.ts';
 import {
   CONNECT_HINT,
+  CREDIT_SPENT,
   hashToken,
   INVITE_SPENT,
   inviteLedger,
   inviteRefusal,
   inviteState,
   NO_INVITE,
+  personCredit,
+  personLedger,
 } from './invites.ts';
-import type { Budget, LlmClient } from './llm.ts';
+import { type Budget, type LlmClient, PERSON_USD_PER_CHAT } from './llm.ts';
 import { fail, limiter } from './routes.ts';
 import type { WalletCipher } from './wallet-cipher.ts';
 
@@ -97,6 +100,8 @@ export interface AuthDeps {
   clock?: () => number;
   /** the data budget: a new wallet adds a person for good, so it's refused past that */
   full?: () => boolean;
+  /** where a chat stops when a person spends their own credit; default PERSON_USD_PER_CHAT */
+  personUsdPerChat?: number;
 }
 
 /** What a chat may do: refused, or who owns its run and which budget it draws on. */
@@ -124,6 +129,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
   const iso = () => now().toISOString();
   const limit = limiter(AUTH_POSTS_PER_MINUTE, 60_000, clock);
   const local = isLocalSite(site.origin ?? undefined);
+  const usdPerOwnChat = d.personUsdPerChat ?? PERSON_USD_PER_CHAT;
   const ok = (c: Context, body: Record<string, unknown>) =>
     c.json({ ...body, tools_version: TOOLS_VERSION });
 
@@ -354,10 +360,13 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     if (!session || !isPerson(session.subject)) {
       return fail(c, 'unauthorised', 'Not signed in.');
     }
+    const credit = personCredit(store, session.subject);
     return ok(c, {
       person_id: session.subject,
       network: session.network,
       wallets: walletsOf(session.subject),
+      // null: no credit of their own, so a chat needs an invite like anyone else's
+      credit: credit && { ...credit, usd_per_chat: usdPerOwnChat },
     });
   });
 
@@ -372,7 +381,23 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       if (!originAllowed(c)) return { refused: badOrigin(c) };
       const session = sessionOf(c);
       if (d.access === 'open') return { subject: (session ?? newHandle(c)).subject };
+      const day = budget.ledger ?? closedLedger('this server keeps no spend ledger');
+      // A person's own credit comes first and asks for no invite. It's theirs, so the wallet they came
+      // in with and the browser they're on don't matter. Their own money has a cap of its own.
+      const own =
+        session && isPerson(session.subject) ? personCredit(store, session.subject) : null;
+      if (session && own && own.left_usd > 0) {
+        return {
+          subject: session.subject,
+          budget: {
+            ...budget,
+            usdPerChat: usdPerOwnChat,
+            ledger: personLedger(store, session.subject, day, now),
+          },
+        };
+      }
       const id = session?.invite;
+      if (own && !id) return { refused: fail(c, 'budget_exhausted', CREDIT_SPENT, CONNECT_HINT) };
       if (!session || !id) {
         return { refused: fail(c, 'invite_required', NO_INVITE, CONNECT_HINT) };
       }
@@ -381,7 +406,6 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         const code = refusal === INVITE_SPENT ? 'budget_exhausted' : 'invite_required';
         return { refused: fail(c, code, refusal, CONNECT_HINT) };
       }
-      const day = budget.ledger ?? closedLedger('this server keeps no spend ledger');
       return {
         subject: session.subject,
         budget: { ...budget, ledger: inviteLedger(store, id, day, now) },

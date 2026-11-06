@@ -148,7 +148,7 @@ const server = createServer((req, res) => {
       'content-type': 'application/json',
       'access-control-allow-origin': '*',
     });
-    res.end(JSON.stringify({ calls: stub.calls }));
+    res.end(JSON.stringify({ calls: stub.calls, asked: stub.asked }));
     return;
   }
   if (path.startsWith('/wallet/')) {

@@ -26,12 +26,15 @@ export {
   modelOf,
   type Settings,
 } from './catalogue.ts';
-/** Sponsored invites; scripts/mint-invite.ts makes and revokes them. */
+/** Sponsored invites, scripts/mint-invite.ts, and a person's own credit, scripts/fund-person.ts. */
 export {
+  fundPerson,
   hashToken,
   inviteState,
   mintInvite,
   openPrivateStore,
+  type PersonCredit,
+  personCredit,
   revokeInvite,
 } from './invites.ts';
 export type * from './llm.ts';
@@ -66,6 +69,8 @@ export {
   sqliteRunStore,
 } from './runs.ts';
 export { flowersOf } from './thread.ts';
+/** How wallets are sealed and found; scripts/bind-wallet.ts adds one to a person. */
+export { parseWalletKey, type WalletCipher, walletCipher } from './wallet-cipher.ts';
 
 /** The agent loop: events in the order of http-api.md (run first, done last). */
 export function runAgent(
