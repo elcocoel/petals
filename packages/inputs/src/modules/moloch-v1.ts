@@ -19,7 +19,13 @@ import type {
 } from '@petal/core/types';
 import { InputError } from '../errors.ts';
 import { addressOf, encodeCall, eventTopic, shortAddress, stringAt, wordAt } from '../evm/abi.ts';
-import { ETHEREUM, EVM_CHAINS, type EvmChain } from '../evm/chains.ts';
+import {
+  ETHEREUM,
+  EVM_CHAIN_PATTERN,
+  EVM_CHAIN_WORDS,
+  EVM_CHAINS,
+  type EvmChain,
+} from '../evm/chains.ts';
 import { EVM_ENDPOINTS, type EvmLog, type EvmReader, evmReader } from '../evm/reader.ts';
 import { fromBaseUnits } from '../import/spike.ts';
 import type { InputModule } from '../index.ts';
@@ -65,8 +71,8 @@ export const MOLOCH_V1_DESCRIPTOR: NetworkDescriptor = {
     },
     chain: {
       required: false,
-      description: 'ethereum (default), base or arbitrum',
-      pattern: '^(ethereum|base|arbitrum)$',
+      description: `one of ${EVM_CHAIN_WORDS}; default ethereum`,
+      pattern: EVM_CHAIN_PATTERN,
       example: 'ethereum',
       default: 'ethereum',
     },
@@ -425,7 +431,7 @@ export function molochTarget(params: Params | undefined): {
   const dao = String(params?.dao ?? '').toLowerCase();
   if (!chain || !/^0x[0-9a-f]{40}$/.test(dao))
     throw new InputError('bad_input', 'moloch-v1 needs a dao address', {
-      hint: 'dao: 0x and 40 hex digits; chain: ethereum, base or arbitrum',
+      hint: `dao: 0x and 40 hex digits; chain: ${EVM_CHAIN_WORDS}`,
     });
   return { chain, dao, population: `moloch-v1-${chain.id}-${dao}` };
 }

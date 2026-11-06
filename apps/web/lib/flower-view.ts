@@ -28,6 +28,8 @@ const CHAINS: Record<string, string> = {
   near: 'NEAR',
   'eip155:1': 'Ethereum',
   'eip155:8453': 'Base',
+  'eip155:42161': 'Arbitrum',
+  'eip155:100': 'Gnosis',
 };
 
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
