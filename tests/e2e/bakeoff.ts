@@ -171,7 +171,14 @@ async function main() {
   const started = new Date().toISOString();
   const sent = Date.now();
   for await (const e of runAgent(
-    { messages: [{ role: 'user', content: question }] },
+    {
+      // A real model's first map waits for a yes (approval.ts), and a bake-off measures the drawing.
+      messages: [
+        { role: 'user', content: question },
+        { role: 'assistant', content: 'Shall I read it and draw it? Yes or no.' },
+        { role: 'user', content: 'yes' },
+      ],
+    },
     { tools, llm: client, budget },
   )) {
     events.push({ event: e.event, data: e.data, at: Date.now() - sent });

@@ -11,6 +11,7 @@ import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
 import { type RunOptions, SKILL_HINT, startRun } from '../src/run.ts';
 import { draftLink } from '../src/summary.ts';
 import {
+  agreed,
   collect,
   fakeContext,
   fakeRegistry,
@@ -25,7 +26,7 @@ import {
   VIEW_URL,
 } from './helpers.ts';
 
-const QUESTION = [{ role: 'user' as const, content: 'who stands behind NEAR’s validators?' }];
+const QUESTION = agreed('who stands behind NEAR’s validators?');
 
 function run(
   llm: LlmClient,

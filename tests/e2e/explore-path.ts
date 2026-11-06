@@ -154,7 +154,14 @@ class Browser {
     return (await res.json()) as Out;
   }
   async ask(content: string) {
-    const res = await this.post('/agent/chat', { messages: [{ role: 'user', content }] });
+    // A real model's first map waits for a yes (approval.ts): the agent asked, and the person said it.
+    const res = await this.post('/agent/chat', {
+      messages: [
+        { role: 'user', content },
+        { role: 'assistant', content: 'Shall I read it and draw it? Yes or no.' },
+        { role: 'user', content: 'yes' },
+      ],
+    });
     return events(await res.text());
   }
 }

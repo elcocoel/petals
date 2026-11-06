@@ -2,7 +2,7 @@
 // owners stay out of what readers see, and the old files come over once.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { AgentEvent, Run } from '@petal/core/types';
+import type { AgentEvent, ChatMessage, Run } from '@petal/core/types';
 import { openStore, type Store } from '@petal/store';
 import { describe, expect, test, vi } from 'vitest';
 import { importLedgerFile, storeLedger } from '../src/budget.ts';
@@ -10,6 +10,7 @@ import { DEFAULT_BUDGET } from '../src/llm.ts';
 import { startRun } from '../src/run.ts';
 import { fileRunStore, importRunFiles, type RunStore, sqliteRunStore } from '../src/runs.ts';
 import {
+  agreed,
   fakeContext,
   fakeRegistry,
   fakeSignature,
@@ -20,7 +21,7 @@ import {
   VIEW_URL,
 } from './helpers.ts';
 
-const QUESTION = [{ role: 'user' as const, content: 'who stands behind NEAR’s validators?' }];
+const QUESTION = agreed('who stands behind NEAR’s validators?') as ChatMessage[];
 const message = (text: string): AgentEvent => ({ event: 'message', data: { text } });
 const COST = 0.001;
 

@@ -10,7 +10,7 @@ import type { LlmClient, LlmCompletion, LlmMessage } from '../src/llm.ts';
 import { loadTranscript, SKELETON_TRANSCRIPT } from '../src/recorded.ts';
 import { forModel } from '../src/summary.ts';
 import { forAgent, llmTools } from '../src/tool-defs.ts';
-import { parseSse, tmpRoot } from './helpers.ts';
+import { agreed, parseSse, tmpRoot } from './helpers.ts';
 
 // biome-ignore lint/suspicious/noExplicitAny: walking tool outputs
 type Out = Record<string, any>;
@@ -35,7 +35,10 @@ function drawingLlm(): LlmClient {
     async complete(req): Promise<LlmCompletion> {
       const at = req.messages.findLastIndex((m) => m.role === 'user');
       const since = req.messages.slice(at + 1);
-      const asked = String(req.messages[at]?.content);
+      // what was asked, not the yes that lets it go ahead
+      const asked = String(
+        req.messages.findLast((m) => m.role === 'user' && m.content !== 'yes')?.content,
+      );
       const results = since.filter((m) => m.role === 'tool') as (LlmMessage & {
         content: string;
       })[];
@@ -134,7 +137,7 @@ class Browser {
   json = async (path: string) => (await (await this.get(path)).json()) as Out;
   async ask(content: string, run_id?: string) {
     const res = await this.post('/api/v1/agent/chat', {
-      messages: [{ role: 'user', content }],
+      messages: run_id ? [{ role: 'user', content }] : agreed(content),
       ...(run_id ? { run_id } : {}),
     });
     const events = parseSse(await res.text());

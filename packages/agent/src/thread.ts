@@ -109,7 +109,7 @@ export function followUpNotes(flowers: EarlierFlower[]): string {
   const lines = [
     '## This is a follow-up',
     '',
-    'The messages hold this conversation so far, with your earlier tool calls and their results where they were kept. Read them first. The person means what was said before: "the largest one" or "the top ten" is about the flower or network you just discussed. If the answer is already there, answer from it without calling a tool, and do not go through the six steps again. Numbers still come only from tool results, earlier ones included.',
+    'The messages hold this conversation so far, with your earlier tool calls and their results where they were kept. Read them first. The person means what was said before: "the largest one" or "the top ten" is about the flower or network you just discussed. If the answer is already there, answer from it without calling a tool, and do not go through the six steps again. Numbers still come only from tool results, earlier ones included. If you asked whether to draw something and the person said yes, go on and draw it: that is the next step, not a repeat.',
   ];
   if (flowers.length) {
     lines.push('', 'Flowers drawn so far, oldest first:');
