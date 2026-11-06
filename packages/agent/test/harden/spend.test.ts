@@ -284,7 +284,8 @@ describe('a restart', () => {
     expect(out.interrupted).toBe(1);
     expect(out.spentUsd).toBeCloseTo(0.05, 9);
     expectFullHold(store, id);
-    expect(store.credit.entries(`invite:${id}`).at(-1)).toMatchObject({ delta_usd: -0.05 });
+    const paid = store.credit.entries(`invite:${id}`).filter((e) => e.delta_usd < 0);
+    expect(paid).toMatchObject([{ delta_usd: -0.05, reason: 'held at a restart' }]);
   });
 });
 

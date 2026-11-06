@@ -184,10 +184,9 @@ describe('at the real limits', () => {
     LONG,
     async () => {
       const read = () => post(s, '/api/v1/snapshots', { network: 'slow-live', fresh: true });
-      const one = read();
-      const two = read();
-      await new Promise((r) => setTimeout(r, 100));
-      const third = await read();
+      const reads = [read(), read(), read()];
+      // the refusal comes at once, while the other two hold the two turns
+      const third = await Promise.race(reads);
       expect(third.status).toBe(429);
       expect(third.headers.get('retry-after')).toBeTruthy();
       const refused = (await third.json()) as Out;
@@ -206,8 +205,8 @@ describe('at the real limits', () => {
       expect(chat.status).toBe(200);
       expect(await chat.text()).toMatch(/event: flower/);
 
-      expect((await one).status).toBe(200);
-      expect((await two).status).toBe(200);
+      const statuses = (await Promise.all(reads)).map((r) => r.status).sort();
+      expect(statuses).toEqual([200, 200, 429]);
       const again = await read();
       expect(again.status).toBe(200);
     },

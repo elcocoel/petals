@@ -89,7 +89,7 @@ describe('explorations with nobody behind them', () => {
     expect((await run('start_exploration', { question: 'tomorrow' })).owned).toBe(false);
   });
 
-  test('a fork copies at most the caps, and the caps hold on every path', async () => {
+  test('the note cap holds on every path, the same spec with a note included', async () => {
     const start = await run('start_exploration', { question: 'mine' }, person('prs_a'));
     const id = start.exploration as string;
     const owner = person('prs_a');
@@ -105,6 +105,18 @@ describe('explorations with nobody behind them', () => {
     expect((await run('add_note', { exploration: id, text: 'one more' }, owner)).error?.code).toBe(
       'bad_input',
     );
+  });
+
+  test('a fork copies at most the caps, even from one that holds more', async () => {
+    const big = await run('start_exploration', { question: 'from before the caps' });
+    const s = db();
+    for (let i = 0; i < 150; i++) {
+      s.note.append({ exploration: big.exploration, author: 'link:x', text: `n${i}`, at: NOW });
+    }
+    const fork = await run('start_exploration', { fork_of: big.link.url });
+    expect(s.note.count(fork.exploration)).toBe(100);
+    expect(s.note.list(fork.exploration).at(-1)?.text).toBe('n149');
+    s.close();
   });
 
   test('one nobody claimed goes away after the expiry; a claimed one stays', async () => {
