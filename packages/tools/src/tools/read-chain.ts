@@ -48,6 +48,7 @@ const EXPLORER_TIMEOUT_MS = 4000;
 const SOURCIFY = 'https://sourcify.dev/server/v2/contract';
 const IMPLEMENTATION_SLOT = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
 const CLONE = /^0x363d3d373d3d3d363d73([0-9a-f]{40})5af43d82803e903d91602b57fd5bf3$/;
+const DELEGATED = /^0xef0100([0-9a-f]{40})$/;
 
 /** Asked when nothing was named: what most contracts answer. Only what answers is shown. */
 const FIRST_LOOK = [
@@ -441,7 +442,9 @@ async function readOne(c: AskCtx, address: string, input: ReadChainInput, withCa
     status: 'answered' as const,
     read_from: { by: 'chain' as const, url },
   };
-  if (code === '0x') {
+  // An account that has delegated its code (EIP-7702) is still an account: 0xef0100 and an address.
+  const delegated = DELEGATED.exec(code)?.[1];
+  if (code === '0x' || delegated) {
     const [balance, nonce] = await Promise.all([
       askChain<string>(c.chain, 'eth_getBalance', [address, 'latest'], ask),
       askChain<string>(c.chain, 'eth_getTransactionCount', [address, 'latest'], ask),
@@ -451,6 +454,7 @@ async function readOne(c: AskCtx, address: string, input: ReadChainInput, withCa
       kind: 'account' as const,
       native_balance: toUnits(BigInt(balance.result).toString(), 18),
       transactions_sent: Number(BigInt(nonce.result)),
+      ...(delegated ? { delegates_code_to: `0x${delegated}` } : {}),
     };
   }
   let implementation: { address: string; standard: string } | null = null;

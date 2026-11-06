@@ -148,7 +148,8 @@ const PRINTABLE = /^[\t\n\r\x20-\x7e -￿]*$/;
 
 function guessWord(w: string): { value: string; as: string } {
   const n = BigInt(`0x${w}`);
-  if (w.startsWith('0'.repeat(24)) && n >= 1n << 64n)
+  // Top 12 bytes empty and a value too large for an amount: a real amount stays well under 16 bytes.
+  if (w.startsWith('0'.repeat(24)) && n >= 1n << 128n)
     return { value: addressFrom(w), as: 'address' };
   // short text, left-aligned: an old token's bytes32 symbol
   if (!w.startsWith('00') && /00$/.test(w)) {

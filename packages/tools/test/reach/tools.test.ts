@@ -134,6 +134,11 @@ describe('ABI values', () => {
   test('with no declared type it guesses from the shape, and says so', () => {
     expect(guessValue(`0x${addressWord(DAO)}`)).toEqual({ value: DAO, as: 'address' });
     expect(guessValue(`0x${word(81716)}`)).toEqual({ value: '81716', as: 'number' });
+    // 81,716 shares in 18 decimals has the shape of an address, unless a size says otherwise
+    expect(guessValue(`0x${word(81716n * 10n ** 18n)}`)).toEqual({
+      value: '81716000000000000000000',
+      as: 'number',
+    });
     expect(guessValue(`0x${text('RG')}`)).toEqual({ value: 'RG', as: 'text' });
     expect(guessValue(`0x${word(32)}${word(1)}${addressWord(DAO)}`).as).toBe('list of address');
     expect(guessValue('0x')).toEqual({ value: null, as: 'nothing' });
@@ -219,6 +224,12 @@ describe('read_chain', () => {
   test('an address with no code is an account, with what can be said about it', async () => {
     const [r] = (await run({ address: DAO, chain: 'ethereum' }, fakeNode({ code: '0x' }))).read;
     expect(r).toMatchObject({ kind: 'account', native_balance: '1', transactions_sent: 5 });
+  });
+
+  test('an account that delegated its code (EIP-7702) is still an account', async () => {
+    const code = `0xef0100${IMPLEMENTATION.slice(2)}`;
+    const [r] = (await run({ address: DAO, chain: 'ethereum' }, fakeNode({ code }))).read;
+    expect(r).toMatchObject({ kind: 'account', delegates_code_to: IMPLEMENTATION });
   });
 
   test('with no chain, every chain is asked, and calls go only where there is a contract', async () => {
