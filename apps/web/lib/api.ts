@@ -2,6 +2,7 @@
 // that /api/[[...route]] serves, so pages and API always agree.
 import type { ToolError } from '@petal/core/types';
 import { getApp } from './server-app.ts';
+import { visitorAddress } from './visitor.ts';
 
 export type ApiResult<T> =
   | { ok: true; value: T }
@@ -17,6 +18,7 @@ export async function api<T>(
     headers: {
       'content-type': 'application/json',
       accept: 'application/json',
+      ...(await visitorAddress()),
       // in process, so the caller's own session comes along only when a page passes it on
       ...(init?.cookie ? { cookie: init.cookie } : {}),
     },
