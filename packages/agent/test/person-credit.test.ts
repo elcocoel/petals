@@ -9,7 +9,7 @@ import { DEFAULT_BUDGET } from '../src/index.ts';
 import { fundPerson, mintInvite, personCredit } from '../src/invites.ts';
 import type { BudgetLedger } from '../src/llm.ts';
 import { startRun } from '../src/run.ts';
-import { fakeRegistry, scriptedLlm, tmpRoot } from './helpers.ts';
+import { fakeRegistry, parseSse, scriptedLlm, tmpRoot } from './helpers.ts';
 
 const SITE = 'https://petals.example';
 const COOKIE = '__Host-petal_session';
@@ -17,7 +17,14 @@ const QUESTION = { messages: [{ role: 'user', content: 'who holds the power here
 const alice = testSigner('alice.near');
 const answers = (n: number) => Array.from({ length: n }, () => ({ content: 'an answer' }));
 
-function setup(o: { costUsd?: number; env?: Record<string, string> } = {}) {
+function setup(
+  o: {
+    costUsd?: number;
+    env?: Record<string, string>;
+    chatsPerHour?: number;
+    followUpsPerHour?: number;
+  } = {},
+) {
   const root = tmpRoot();
   const stateDir = join(root, 'state');
   const llm = scriptedLlm(answers(30), { costUsd: o.costUsd ?? 0.01 });
@@ -29,6 +36,8 @@ function setup(o: { costUsd?: number; env?: Record<string, string> } = {}) {
         llm,
         rpcFor: () => fakeRpcFor([alice]),
         registry: fakeRegistry().registry,
+        ...(o.chatsPerHour ? { chatsPerHour: o.chatsPerHour } : {}),
+        ...(o.followUpsPerHour ? { followUpsPerHour: o.followUpsPerHour } : {}),
         env: {
           PETAL_AGENT_ACCESS: 'gated',
           PETAL_WALLET_KEY: 'ab'.repeat(32),
@@ -125,6 +134,53 @@ describe('a person’s own credit', () => {
     await (await w.post('/api/v1/agent/chat', QUESTION)).text();
     withStore(w.store(), (s) => {
       expect(s.invite.get(invite.id)?.spent_usd).toBeCloseTo(0.02, 9);
+    });
+  });
+
+  describe('the limit on new chats', () => {
+    /** A chat, to its end, when it's let in. */
+    const chat = async (w: ReturnType<typeof setup>, json: unknown = QUESTION) => {
+      const res = await w.post('/api/v1/agent/chat', json);
+      const body = await res.text();
+      return { status: res.status, body };
+    };
+
+    test('doesn’t hold a person on their own credit, and uses up nothing of it', async () => {
+      const w = setup({ chatsPerHour: 2 });
+      const { person_id: person } = await w.signIn();
+      withStore(w.store(), (s) => fundPerson(s, person, 5));
+      for (let i = 0; i < 5; i++) expect((await chat(w)).status).toBe(200);
+    });
+
+    test('holds an invite, and holds the same person again once their credit ends', async () => {
+      const w = setup({ chatsPerHour: 2, costUsd: 0.02 });
+      const { person_id: person } = await w.signIn();
+      const invite = withStore(w.store(), (s) => {
+        fundPerson(s, person, 0.01);
+        return mintInvite(s, { usd: 1, days: 1 });
+      });
+      await w.post('/api/v1/auth/invite', { token: invite.token });
+      // On their own credit, which this one call ends: not counted.
+      expect((await chat(w)).status).toBe(200);
+      // On the invite: the whole allowance is still there, and then it's gone.
+      expect((await chat(w)).status).toBe(200);
+      expect((await chat(w)).status).toBe(200);
+      const third = await chat(w);
+      expect(third.status).toBe(429);
+      expect(third.body).toContain('rate_limited');
+    });
+
+    test('a stranger is refused for want of an invite, as before, and a follow-up on credit still counts', async () => {
+      const w = setup({ chatsPerHour: 1, followUpsPerHour: 1 });
+      expect((await chat(w)).status).toBe(403);
+      const { person_id: person } = await w.signIn();
+      withStore(w.store(), (s) => fundPerson(s, person, 5));
+      const first = parseSse((await chat(w)).body)[0]?.data as { run_id: string };
+      const more = { ...QUESTION, run_id: first.run_id };
+      expect((await chat(w, more)).status).toBe(200);
+      const over = await chat(w, more);
+      expect(over.status).toBe(429);
+      expect(over.body).toContain('follow-ups');
     });
   });
 

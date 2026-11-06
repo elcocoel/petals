@@ -110,6 +110,8 @@ export interface ChatAdmission {
   /** None for a recorded run: it spends nothing and stays readable by link. */
   subject?: string;
   budget?: Budget;
+  /** On a person's own credit: its end, the chat's cap and the day's cap bound it, so new chats aren't counted. */
+  ownCredit?: boolean;
 }
 
 /** What the agent routes need. With no session, the subject is null. */
@@ -389,6 +391,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       if (session && own && own.left_usd > 0) {
         return {
           subject: session.subject,
+          ownCredit: true,
           budget: {
             ...budget,
             usdPerChat: usdPerOwnChat,
