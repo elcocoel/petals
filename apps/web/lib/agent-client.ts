@@ -101,7 +101,6 @@ export async function readElsewhere(ref: string): Promise<ElsewhereRead> {
   return { packet: json as unknown as Extract<ElsewhereRead, { packet: unknown }>['packet'] };
 }
 
-<<<<<<< HEAD
 /** Calls `onChange` when the server signals a change, and once on connecting. Returns how to stop. */
 export function listenElsewhere(id: string, onChange: () => void): () => void {
   const live = new EventSource(`/api/v1/explorations/${encodeURIComponent(id)}/live`);
@@ -109,7 +108,6 @@ export function listenElsewhere(id: string, onChange: () => void): () => void {
   return () => live.close();
 }
 
-=======
 /** What the composer shows of a conversation: its settings, and which model answered last. */
 export interface ConversationFacts {
   settings: Settings;
@@ -195,7 +193,6 @@ export const sessionClient: SessionClient = {
   },
 };
 
->>>>>>> main
 /**
  * Makes an agent's work this browser's, by the continue link the agent holds, so it joins their list.
  * Returns its id, or null if this link can't: a read link stays read-only.
