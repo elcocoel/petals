@@ -41,6 +41,9 @@ function pick(q: Record<string, string>, keys: string[], numeric: string[] = [])
   return out;
 }
 
+/** Set by apps/web/app/mcp/route.ts. A bare API has no pages, so its links stay relative. */
+export const SITE_HEADER = 'x-petal-site';
+
 const wantsSse = (c: Context) => (c.req.header('accept') ?? '').includes('text/event-stream');
 
 class MismatchedSnapshot extends Error {}
@@ -257,7 +260,13 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
         );
       }
     }
-    return mcp.fetch(c.req.raw);
+    // With no address configured, a site's own /mcp says where it is, so a flower's link opens for
+    // whoever's agent hands it over. Only links change, and only in this caller's answer.
+    const site = ctx.config.apiBase ? undefined : c.req.header(SITE_HEADER);
+    const handler = site
+      ? mcpHttpHandler({ ...ctx, config: { ...ctx.config, apiBase: site } })
+      : mcp;
+    return handler.fetch(c.req.raw);
   });
 
   app.notFound((c) =>
