@@ -39,6 +39,27 @@ describe('a pointer', () => {
     expect(log).toEqual([]);
   });
 
+  test('sliding through slowly opens nothing either, until it really stops', () => {
+    const { peek, open } = rows();
+    peek.enter('a');
+    for (let i = 0; i < 20; i++) {
+      vi.advanceTimersByTime(restMs - 1);
+      peek.moved('a');
+    }
+    expect(open('a')).toBe(false);
+    vi.advanceTimersByTime(restMs);
+    expect(open('a')).toBe(true);
+  });
+
+  test('moving on a row that is already open changes nothing', () => {
+    const { peek, log } = rows();
+    peek.enter('a');
+    vi.advanceTimersByTime(restMs);
+    peek.moved('a');
+    vi.advanceTimersByTime(restMs * 3);
+    expect(log).toEqual(['open a']);
+  });
+
   test('at rest opens one, once it has rested', () => {
     const { peek, open } = rows();
     peek.enter('a');

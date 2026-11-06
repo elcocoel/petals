@@ -29,18 +29,27 @@ export function peekRows<Row>({ isOpen, setOpen }: PeekHands<Row>) {
     timers.delete(row);
   };
 
+  const startRest = (row: Row) => {
+    cancel(rest, row);
+    rest.set(
+      row,
+      setTimeout(() => {
+        rest.delete(row);
+        setOpen(row, true);
+      }, P.restMs),
+    );
+  };
+
   return {
     /** The pointer came onto a row. */
     enter(row: Row) {
       cancel(stay, row);
       if (isOpen(row) || shut.has(row) || rest.has(row)) return;
-      rest.set(
-        row,
-        setTimeout(() => {
-          rest.delete(row);
-          setOpen(row, true);
-        }, P.restMs),
-      );
+      startRest(row);
+    },
+    /** It's still travelling, so it isn't at rest yet, however slowly it's sliding through. */
+    moved(row: Row) {
+      if (rest.has(row)) startRest(row);
     },
     /** The pointer went off it. */
     leave(row: Row) {
@@ -151,9 +160,20 @@ export function peek(host: Host): Stop {
     over = row;
     if (row) rows.enter(row);
   };
-  const moved = (e: PointerEvent) => {
+  let stillX = 0;
+  let stillY = 0;
+  const crossed = (e: PointerEvent) => {
     if (e.pointerType === 'touch') return;
+    stillX = e.clientX;
+    stillY = e.clientY;
     onto((e.target as Element).closest<HTMLDetailsElement>(ROW));
+  };
+  const travelled = (e: PointerEvent) => {
+    if (!over || e.pointerType === 'touch') return;
+    if (Math.hypot(e.clientX - stillX, e.clientY - stillY) < P.stillPx) return;
+    stillX = e.clientX;
+    stillY = e.clientY;
+    rows.moved(over);
   };
   const left = () => onto(null);
   const pressed = (e: MouseEvent) => {
@@ -167,7 +187,8 @@ export function peek(host: Host): Stop {
   // With reduced motion the page doesn't move unless it's asked to: a row only opens by a click or Enter.
   const hovers = host.fine && !host.reduced;
   if (hovers) {
-    document.addEventListener('pointerover', moved, { passive: true });
+    document.addEventListener('pointerover', crossed, { passive: true });
+    document.addEventListener('pointermove', travelled, { passive: true });
     document.documentElement.addEventListener('pointerleave', left);
   }
   document.addEventListener('click', pressed);
@@ -175,7 +196,8 @@ export function peek(host: Host): Stop {
   return () => {
     hold();
     rows.stop();
-    document.removeEventListener('pointerover', moved);
+    document.removeEventListener('pointerover', crossed);
+    document.removeEventListener('pointermove', travelled);
     document.documentElement.removeEventListener('pointerleave', left);
     document.removeEventListener('click', pressed);
     for (const [row, open] of known) row.open = open;

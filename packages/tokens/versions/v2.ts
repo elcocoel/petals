@@ -512,8 +512,11 @@ export interface V2Script {
     farthest: number;
     waitMs: readonly [number, number];
   };
-  /** A folded row: how long a pointer has to rest to open it, how long it stays after it leaves, how long it takes. */
-  peek: { restMs: number; stayMs: number; foldMs: number };
+  /**
+   * A folded row: how long a pointer has to rest to open it, how far it can drift, in pixels, and still be at
+   * rest, how long the row stays after it leaves, and how long folding takes.
+   */
+  peek: { restMs: number; stillPx: number; stayMs: number; foldMs: number };
 }
 
 const TEXT = surfaces;
@@ -684,7 +687,12 @@ export const v2: Version<V2Script> = {
       farthest: 190,
       waitMs: [14000, 34000],
     },
-    peek: { restMs: 200, stayMs: 1200, foldMs: Number.parseFloat(groups.dur.fold) * 1000 },
+    peek: {
+      restMs: 200,
+      stillPx: 6,
+      stayMs: 1200,
+      foldMs: Number.parseFloat(groups.dur.fold) * 1000,
+    },
   },
 };
 
