@@ -20,12 +20,16 @@ export function configFromEnv(env: NodeJS.ProcessEnv = process.env, port = DEFAU
   };
 }
 
-export function serveApi(o: { cfg?: Config; port?: number; options?: PetalAppOptions } = {}) {
+export function serveApi(
+  o: { cfg?: Config; port?: number; hostname?: string; options?: PetalAppOptions } = {},
+) {
   const port = o.port ?? (Number(process.env.PORT) || DEFAULT_PORT);
   const cfg = o.cfg ?? configFromEnv(process.env, port);
   const app = buildPetalApp(cfg, o.options);
   const mode = cfg.nearAiApiKey && !cfg.fake ? 'NEAR AI Cloud' : 'recorded run, no NEAR_AI_API_KEY';
-  const server = serve({ fetch: app.fetch, port }, (info) => {
+  // Localhost unless told otherwise: a server holding a model key can be spent by whoever reaches it.
+  const hostname = o.hostname ?? '127.0.0.1';
+  const server = serve({ fetch: app.fetch, port, hostname }, (info) => {
     console.log(`Petal API on http://localhost:${info.port} (agent: ${mode})`);
   });
   return server;
