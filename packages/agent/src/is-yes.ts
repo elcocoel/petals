@@ -1,6 +1,7 @@
-// What counts as a yes (J4). A whole message has to be made of these words: one unknown word and it
-// isn't a yes, so a qualifier, a negative or a change of subject never slips through. When unsure the
-// agent asks again, which is cheap. Tolerant of what voice typing does: casing, punctuation, a filler.
+// What counts as a yes (J4). A message has to be made of these words, or be a plain yes and a few more
+// that say which ("yes, the second"), so a qualifier, a negative or a change of subject never slips
+// through. When unsure the agent asks again, which is cheap. Tolerant of what voice typing does: casing,
+// punctuation, a filler.
 
 const SAYS_YES = new Set([
   'yes',
@@ -89,6 +90,17 @@ const SOFTENERS = new Set([
   'well',
 ]);
 
+/** Only after one of these can a few more words follow: "ok, the second" may only mean "I see". */
+const PLAIN_YES = new Set(['yes', 'yeah', 'yep', 'yup', 'ya', 'sim', 'si']);
+const MOST_THAT_SAY_WHICH = 4;
+/** Any of these and it's a doubt or a question, however it started. */
+const BACKS_OUT = new Set(
+  (
+    'but however although though wait hold stop not no nope never later maybe perhaps unless if first ' +
+    'before what which how why when where who cost mas nao espera talvez pero qual quanto como porque'
+  ).split(' '),
+);
+
 const LONGEST_PHRASE = 3;
 const MAX_WORDS = 8;
 const MAX_CHARS = 80;
@@ -116,7 +128,14 @@ export function isYes(text: string): boolean {
         matched = n;
       }
     }
-    if (!matched) return false;
+    if (!matched) {
+      const first = words[0] ?? '';
+      return (
+        PLAIN_YES.has(first) &&
+        words.length - i <= MOST_THAT_SAY_WHICH &&
+        !words.some((w) => BACKS_OUT.has(w))
+      );
+    }
     i += matched;
   }
   return yes;
