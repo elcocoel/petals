@@ -64,10 +64,7 @@
   :root[data-version="2"] nav[data-b="surface"]::before {
     content: "";
     position: absolute;
-    top: var(--joy-move-nav-shift);
-    right: var(--joy-move-zero);
-    bottom: var(--joy-move-zero);
-    left: var(--joy-move-zero);
+    inset: var(--joy-move-zero);
     background-color: var(--joy-glass-nav);
     backdrop-filter: var(--joy-glass-blur);
     border-bottom: var(--stroke) solid var(--joy-paint-nav-line);
