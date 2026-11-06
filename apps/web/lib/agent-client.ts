@@ -141,7 +141,7 @@ export interface Challenge {
 
 /** What signing in asks of the server. A flow takes this, so a test can hand it a fake. */
 export interface SessionClient {
-  /** The account they're connected with, or null if no one is. */
+  /** The accounts of the person connected, in words, or null if no one is. */
   me(): Promise<string | null>;
   challenge(): Promise<Challenge>;
   verify(network: string, proof: Nep413Proof): Promise<void>;
@@ -182,7 +182,9 @@ export const sessionClient: SessionClient = {
       network: string;
       wallets: { network: string; account_id: string }[];
     };
-    return (wallets.find((w) => w.network === network) ?? wallets[0])?.account_id ?? null;
+    // A person can hold several, and the server doesn't say which one signed, so they're all named.
+    const here = wallets.filter((w) => w.network === network);
+    return (here.length > 0 ? here : wallets).map((w) => w.account_id).join('  ·  ') || null;
   },
   challenge: () => sessionPost<Challenge>('/api/v1/auth/challenge', {}),
   async verify(network, proof) {
