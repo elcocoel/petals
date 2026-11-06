@@ -1,0 +1,216 @@
+// The camera, with no DOM. Pinch and scroll zoom under the cursor, a drag pans, and everything that
+// moves it on its own (a notch of a wheel, the way back, a bounce off a limit) is a spring, so a hand
+// can take it over at any moment from where it is. The zoom's limits are soft: past them it gives way
+// less and less, and comes back when let go. d3-zoom isn't used here because it snaps to its extent.
+import {
+  BOUNCE_BACK,
+  FIT,
+  FLY,
+  NOTCH,
+  PAN_DECAY,
+  PINCH_GAIN,
+  RELEASE_AFTER,
+  SOFT_EDGE,
+  WHEEL,
+  WHEEL_GAIN,
+  ZOOM_LIMITS,
+} from './feel.ts';
+import { SHAPE } from './ring.ts';
+import { advance, SNAP, type Spring, type SpringSpec, spring, stepOf } from './spring.ts';
+
+export interface View {
+  k: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface Camera extends View {
+  /** The log of the scale, before the soft edge. */
+  raw: Spring;
+  spec: SpringSpec;
+  mode: 'anchor' | 'free' | 'fly';
+  /** Anchor: a screen point and the world point that stays under it. */
+  ax: number;
+  ay: number;
+  wx: number;
+  wy: number;
+  /** Fly: the world point at the window's centre. */
+  cx: Spring;
+  cy: Spring;
+  /** Free: a drag's leftover velocity, in px/s. */
+  vx: number;
+  vy: number;
+  sinceInput: number;
+  /** Has a person moved it? If not, a resize refits. */
+  touched: boolean;
+}
+
+const LN_LO = Math.log(ZOOM_LIMITS[0]);
+const LN_HI = Math.log(ZOOM_LIMITS[1]);
+/** How far raw may run past a limit; enough for the soft edge to use up nearly all its give. */
+const RAW_OVER = SOFT_EDGE * 6;
+
+/** Past a limit, each step gives less than the last: never stops moving, never leaves the edge's reach. */
+export function softLimit(raw: number, lo = LN_LO, hi = LN_HI, edge = SOFT_EDGE): number {
+  if (raw > hi) return hi + edge * (1 - 1 / (1 + (raw - hi) / edge));
+  if (raw < lo) return lo - edge * (1 - 1 / (1 + (lo - raw) / edge));
+  return raw;
+}
+
+/** The view that shows the whole flower in the window. */
+export function fitView(width: number, height: number): Omit<View, 'width' | 'height'> {
+  const k = (Math.min(width, height) * FIT) / SHAPE.R;
+  return { k, x: width / 2 - SHAPE.cx * k, y: height / 2 - SHAPE.cy * k };
+}
+
+export function newCamera(width: number, height: number): Camera {
+  const fit = fitView(width, height);
+  return {
+    ...fit,
+    width,
+    height,
+    raw: spring(Math.log(fit.k)),
+    spec: WHEEL,
+    mode: 'free',
+    ax: 0,
+    ay: 0,
+    wx: 0,
+    wy: 0,
+    cx: spring(SHAPE.cx),
+    cy: spring(SHAPE.cy),
+    vx: 0,
+    vy: 0,
+    sinceInput: 1,
+    touched: false,
+  };
+}
+
+export function resize(cam: Camera, width: number, height: number): void {
+  if (cam.touched) {
+    cam.x += (width - cam.width) / 2;
+    cam.y += (height - cam.height) / 2;
+    cam.width = width;
+    cam.height = height;
+    return;
+  }
+  cam.width = width;
+  cam.height = height;
+  const fit = fitView(width, height);
+  Object.assign(cam, fit);
+  cam.raw = spring(Math.log(fit.k));
+}
+
+export interface WheelInput {
+  deltaY: number;
+  /** 0 pixels, 1 lines, 2 pages. */
+  deltaMode: number;
+  /** Chrome reports a trackpad pinch as a wheel with ctrl. */
+  ctrlKey: boolean;
+  sx: number;
+  sy: number;
+}
+
+/** One wheel event. A finger moves it at once, in full; a mouse's notch goes through a spring. */
+export function zoomWheel(cam: Camera, e: WheelInput): void {
+  const pixels = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
+  const d = -pixels * (e.ctrlKey ? PINCH_GAIN : WHEEL_GAIN);
+  // The hand takes over from wherever the camera is. A fly stops there; nothing jumps.
+  if (cam.mode === 'fly') cam.raw.t = cam.raw.x;
+  cam.mode = 'anchor';
+  cam.spec = WHEEL;
+  cam.ax = e.sx;
+  cam.ay = e.sy;
+  cam.wx = (e.sx - cam.x) / cam.k;
+  cam.wy = (e.sy - cam.y) / cam.k;
+  cam.vx = 0;
+  cam.vy = 0;
+  cam.sinceInput = 0;
+  cam.touched = true;
+  const direct = e.ctrlKey || Math.abs(pixels) < NOTCH;
+  const t = Math.max(LN_LO - RAW_OVER, Math.min(LN_HI + RAW_OVER, cam.raw.t + d));
+  if (direct) cam.raw.x += t - cam.raw.t;
+  cam.raw.t = t;
+}
+
+export function panBy(cam: Camera, dx: number, dy: number): void {
+  if (cam.mode === 'fly') {
+    cam.raw.t = cam.raw.x;
+    cam.raw.v = 0;
+  }
+  cam.mode = 'free';
+  cam.x += dx;
+  cam.y += dy;
+  cam.vx = 0;
+  cam.vy = 0;
+  cam.sinceInput = 0;
+  cam.touched = true;
+}
+
+export function letGo(cam: Camera, vx: number, vy: number): void {
+  cam.vx = vx;
+  cam.vy = vy;
+}
+
+/** The way back: a spring on the scale and on the world point at the window's centre. */
+export function flyTo(cam: Camera, view: Omit<View, 'width' | 'height'>): void {
+  cam.cx.x = (cam.width / 2 - cam.x) / cam.k;
+  cam.cy.x = (cam.height / 2 - cam.y) / cam.k;
+  cam.cx.v = 0;
+  cam.cy.v = 0;
+  cam.cx.t = (cam.width / 2 - view.x) / view.k;
+  cam.cy.t = (cam.height / 2 - view.y) / view.k;
+  cam.raw.t = Math.log(view.k);
+  cam.spec = FLY;
+  cam.mode = 'fly';
+  cam.vx = 0;
+  cam.vy = 0;
+  cam.touched = false;
+}
+
+/** One frame. True while the camera is still moving. */
+export function stepCamera(cam: Camera, dt: number, calm: boolean): boolean {
+  cam.sinceInput += dt;
+  if (cam.mode !== 'fly' && cam.sinceInput > RELEASE_AFTER) {
+    const inside = Math.max(LN_LO, Math.min(LN_HI, cam.raw.t));
+    if (inside !== cam.raw.t) {
+      cam.raw.t = inside;
+      cam.spec = BOUNCE_BACK;
+    }
+  }
+  const step = calm ? SNAP : stepOf(cam.spec, dt);
+  let moving = advance(cam.raw, step);
+  const k = Math.exp(softLimit(cam.raw.x));
+  if (cam.mode === 'anchor') {
+    cam.k = k;
+    cam.x = cam.ax - cam.wx * k;
+    cam.y = cam.ay - cam.wy * k;
+  } else if (cam.mode === 'fly') {
+    const a = advance(cam.cx, step);
+    const b = advance(cam.cy, step);
+    moving = a || b || moving;
+    cam.k = k;
+    cam.x = cam.width / 2 - cam.cx.x * k;
+    cam.y = cam.height / 2 - cam.cy.x * k;
+  } else {
+    cam.k = k;
+    if (cam.vx !== 0 || cam.vy !== 0) {
+      if (calm) {
+        cam.vx = 0;
+        cam.vy = 0;
+      } else {
+        cam.x += cam.vx * dt;
+        cam.y += cam.vy * dt;
+        const fall = Math.exp(-dt / PAN_DECAY);
+        cam.vx *= fall;
+        cam.vy *= fall;
+        if (Math.hypot(cam.vx, cam.vy) < 4) {
+          cam.vx = 0;
+          cam.vy = 0;
+        } else moving = true;
+      }
+    }
+  }
+  return moving || (cam.mode !== 'fly' && cam.sinceInput <= RELEASE_AFTER);
+}
