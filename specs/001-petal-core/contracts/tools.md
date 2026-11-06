@@ -193,6 +193,8 @@ A private, door-independent ref over public objects, like a git branch ([data-mo
 
 **Whose.** Where a tool takes `exploration`, it takes an id (`exp_…`), which only its owner's session can open, or a link (`/s/<token>`, the whole URL or the token). A `read` link opens the packet. A `continue` link can also `save_step` and `add_note`. Anyone else, a revoked link, and nothing at all get one answer: `not_found`, with one fixed message. HTTP is the only door with a session so far; MCP and the CLI have links.
 
+**What it holds.** At most 100 steps and 100 notes. One nobody owns goes after 14 days with no write, on a later `start_exploration`. Limits are in `.env.example`.
+
 **Who wrote what.** A step and a note say which `door` (`site`, `http`, `mcp`, `cli`) and `from` whom (`owner`, `link:<id>`, and `fork:` in front when a fork copied it). The door sets these; a caller can't.
 
 **Untrusted.** Notes, step notes, the question and the target are data from whoever wrote them. The packet says so in `untrusted`, and on each note. Nothing here spends, so a note can't cause spending.

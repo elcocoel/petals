@@ -106,7 +106,8 @@ ledger(day, usd, reserved_usd)                 -- the cap counts usd + reserved_
 credit(account_key, balance_usd, reserved_usd) -- a generic account balance
 credit_entry(id UNIQUE, account_key, delta_usd, reason, at)  -- an id counts once
 draft(sha256, body, created_at)                -- hash-addressed draft links; put-if-absent
-publish_draft(entry_sha256, body, used_at)     -- prepared for a signature; used_at is claimed atomically
+publish_draft(entry_sha256, body, used_at, expires_at)     -- prepared for a signature; used_at, expires_at is claimed atomically
+daily_count(day, what, n)  -- the global daily caps (T300): one number a day for each thing capped
 meta(key, value)
 schema_migration(version, applied_at)
 ```

@@ -202,6 +202,24 @@ describe('fresh reads at the doors', () => {
     expect(h.resolved.calls).toBe(0);
   });
 
+  test('asked for by name, past the limit, it costs no call either', async () => {
+    (r.ctx.config as Out).limits = { freshPerDay: 1 };
+    const h = heldModule();
+    h.module.fetch = async (at) =>
+      ({
+        ...liveSnapshot(),
+        snapshot: { ...liveSnapshot().snapshot, block_height: at.block_height },
+      }) as Snapshot;
+    r.ctx.modules['test-live'] = h.module;
+    const app = httpApp(r.ctx);
+    const fresh = () =>
+      app.request('/api/v1/snapshots', json({ network: 'test-live', fresh: true }, fromSomeone()));
+    expect((await fresh()).status).toBe(200);
+    const asked = h.resolved.calls;
+    expect((await fresh()).status).toBe(429);
+    expect(h.resolved.calls).toBe(asked);
+  });
+
   test('in process, with no door, nothing is gated: a local command reads what it is told', async () => {
     (r.ctx.config as Out).limits = { freshPerDay: 0 };
     const out = (await callTool('get_snapshot', { network: 'test-live' }, r.ctx)) as Out;

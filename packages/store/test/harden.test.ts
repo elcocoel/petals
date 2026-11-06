@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { describe, expect, test } from 'vitest';
+import { MIGRATIONS } from '../src/migrations.ts';
 import { openStore } from '../src/open.ts';
 
 const DAY = '2026-11-06';
@@ -18,6 +19,25 @@ const plan = (path: string, sql: string) => {
   db.close();
   return rows.map((r) => r.detail).join(' ');
 };
+
+describe('the migration', () => {
+  test('a store from before it opens, keeps its rows, and clears a draft that has no expiry', () => {
+    const path = join(mkdtempSync(join(tmpdir(), 'petal-store-')), 'private.db');
+    const old = openStore(path, MIGRATIONS.slice(0, 3));
+    old.challenge.put('n', '2030-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
+    old.close();
+    const db = new DatabaseSync(path);
+    db.prepare('INSERT INTO publish_draft (entry_sha256, body) VALUES (?, ?)').run('e', '{}');
+    db.close();
+
+    const s = openStore(path);
+    expect(s.publishDraft.get('e')).toMatchObject({ body: '{}', expires_at: null });
+    expect(s.challenge.reserve('n', '2026-01-01T00:00:00.000Z')).toBe('ok');
+    s.publishDraft.deleteExpired('2026-01-01T00:00:00.000Z');
+    expect(s.publishDraft.get('e')).toBeNull();
+    s.close();
+  });
+});
 
 describe('pruning uses an index, so a request never scans a table a stranger can grow', () => {
   test.each([

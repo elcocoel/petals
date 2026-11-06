@@ -1,7 +1,7 @@
 // T300, finding 2: limits that can't be spoofed. One helper reads the address: cf-connecting-ip
 // (Cloudflare overwrites it), then the socket only on a local deployment. x-forwarded-for and
 // x-real-ip are anyone's to write, so they never name a caller.
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { httpApp } from '../../src/http/app.ts';
 import { clientAddress, rateLimit } from '../../src/http/rate-limit.ts';
 import { rig } from '../helpers.ts';
@@ -89,6 +89,22 @@ describe('the caller’s address', () => {
     expect(clientAddress(c({}, '127.0.0.1'), true)).toBe('127.0.0.1');
     expect(clientAddress(c({}, '127.0.0.1'), false)).not.toBe('127.0.0.1');
     expect(clientAddress(c({ 'x-forwarded-for': '1.1.1.1' }, '127.0.0.1'), true)).toBe('127.0.0.1');
+  });
+});
+
+describe('the keyless copy on Vercel', () => {
+  const c = (headers: Record<string, string>) =>
+    ({ req: { header: (k: string) => headers[k.toLowerCase()] }, env: undefined }) as never;
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  test('x-real-ip counts only there: Vercel overwrites it, so nobody can set it', () => {
+    const spoofed = c({ 'x-real-ip': '198.51.100.9', 'x-forwarded-for': '198.51.100.9' });
+    expect(clientAddress(spoofed, false)).toBe('unknown');
+    vi.stubEnv('VERCEL', '1');
+    expect(clientAddress(spoofed, false)).toBe('198.51.100.9');
   });
 });
 

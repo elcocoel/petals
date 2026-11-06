@@ -150,10 +150,10 @@ export async function getSnapshot(
   const gate = d.live ? deps.fresh : undefined;
   const scope = mod.keyFor?.(req.params) ?? { chain: d.chain, population: d.population };
   const rows = await store.list(d.id);
-  // Nothing stored for this target, so this can only be a fresh read: a refusal costs no call.
-  if (gate && !rows.some((r) => r.chain === scope.chain && r.population === scope.population)) {
-    gate.check();
-  }
+  // This can only be a fresh read: nothing stored for this target, or asked for by name. Refused here,
+  // it costs no call at all.
+  const stored = rows.some((r) => r.chain === scope.chain && r.population === scope.population);
+  if (gate && (!stored || (latest && req.fresh))) gate.check();
 
   say('resolving', `resolving ${latest ? 'latest' : JSON.stringify(req.at)} for ${d.id}`);
   const at = await mod.resolveAt(req.at ?? 'latest', req.params);
