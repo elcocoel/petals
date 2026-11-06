@@ -672,10 +672,12 @@
   interpolate-size: allow-keywords;
 }
 
+/* `hidden`, not `clip`: it holds the answer's top margin inside. With `clip` the margin leaks out through
+   the folded box, and a row pops by that much at both ends of every fold. */
 /* row.fold */
 :root[data-version="2"] details[data-b="row"]::details-content {
   height: var(--joy-move-fold-closed);
-  overflow: clip;
+  overflow: hidden;
   opacity: 0;
   transition:
     height var(--joy-dur-fold) var(--joy-ease-move),
