@@ -8,6 +8,7 @@
 import type { SurfaceName } from '@petal/tokens';
 import { useEffect } from 'react';
 import { Composer } from '../components/chat/Composer.tsx';
+import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { Button } from '../components/ui/Button.tsx';
@@ -21,7 +22,7 @@ import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
 import { FlowerPanel } from './FlowerPanel.tsx';
 
-const BOXES = ['output', 'input', 'panel'] as const;
+const BOXES = ['output', 'input', 'panel', 'list'] as const;
 
 export function InteractionSurface({
   scatter,
@@ -48,6 +49,10 @@ export function InteractionSurface({
   useEffect(() => {
     if (state.boxOpen) raisePanel();
   }, [state.boxOpen, raisePanel]);
+  const raiseList = hands.list.raise;
+  useEffect(() => {
+    if (state.listOpen) raiseList();
+  }, [state.listOpen, raiseList]);
   const { onCanvas, panel } = state;
   return (
     <>
@@ -60,7 +65,19 @@ export function InteractionSurface({
         selected={state.selected}
         onPick={actions.pick}
       />
-      <FloatBox label={state.heading} title={state.heading} surface={surface} hand={hands.output}>
+      <FloatBox
+        label={state.heading}
+        title={state.heading}
+        surface={surface}
+        hand={hands.output}
+        control={
+          state.conversations.length > 0 ? (
+            <Button variant="link" onClick={actions.toggleList}>
+              Conversations
+            </Button>
+          ) : undefined
+        }
+      >
         <ConversationThread
           recorded={state.recorded}
           rows={state.rows}
@@ -87,6 +104,20 @@ export function InteractionSurface({
           onChange={actions.setQuestion}
           onSend={() => void actions.send()}
         />
+      </FloatBox>
+      <FloatBox
+        label="Conversations"
+        title="Conversations"
+        surface={surface}
+        hand={hands.list}
+        closed={!state.listOpen}
+        control={
+          <Button variant="link" href="/make">
+            New
+          </Button>
+        }
+      >
+        <ConversationList rows={state.conversations} />
       </FloatBox>
       <FloatBox
         label="Flower"

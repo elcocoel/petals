@@ -71,7 +71,13 @@ export function FloatBox({
         bar={
           control ? (
             <div className="flex items-center justify-between gap-text-gap">
-              {title ? <Mono>{title}</Mono> : <span />}
+              {title ? (
+                <span className="min-w-0 truncate">
+                  <Mono as="span">{title}</Mono>
+                </span>
+              ) : (
+                <span />
+              )}
               <span className="shrink-0" onPointerDown={leaveBarAlone}>
                 {control}
               </span>

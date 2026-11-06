@@ -27,6 +27,14 @@ const barInside = (r: Rect, win: Size) =>
   r.x >= 0 && r.x + r.w <= win.w && r.y >= 0 && r.y + floatBox.bar <= win.h;
 
 describe('where the conversation starts', () => {
+  test('the list waits beside the output, as tall as it', () => {
+    const { output, list } = conversationBoxes(WIN);
+    expect(list.x).toBe(output.x + output.w + floatBox.gap);
+    expect(list.y).toBe(output.y);
+    expect(list.h).toBe(output.h);
+    expect(list.w).toBe(floatBox['list-width']);
+  });
+
   test('both on the left, output above, input directly under it, the same width', () => {
     const { output, input } = conversationBoxes(WIN);
     expect(output.x).toBe(input.x);

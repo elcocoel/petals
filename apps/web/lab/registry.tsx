@@ -14,6 +14,7 @@ import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
 import { CopyPrompt } from '../components/CopyPrompt.tsx';
 import { AnsweredBy } from '../components/chat/AnsweredBy.tsx';
+import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { Speech } from '../components/chat/Speech.tsx';
 import { Steps } from '../components/chat/Steps.tsx';
 import { Thread } from '../components/chat/Thread.tsx';
@@ -1280,6 +1281,39 @@ export const registry: LabEntry[] = [
         ),
       },
       { name: 'lost', wide: true, render: () => <TurnStatus row={turnRow('lost')} /> },
+    ],
+  },
+  {
+    id: 'ConversationList',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/ConversationList.tsx',
+    states: [
+      {
+        name: 'one open, one still going',
+        wide: true,
+        render: () => (
+          <ConversationList
+            rows={[
+              {
+                key: 'a',
+                title: 'How much of the stake do the top ten hold?',
+                sub: 'Working…',
+                href: '#a',
+                current: false,
+              },
+              {
+                key: 'b',
+                title: "Who stands behind NEAR's validators?",
+                sub: '6 Nov 2026',
+                href: '#b',
+                current: true,
+              },
+            ]}
+          />
+        ),
+      },
     ],
   },
   {

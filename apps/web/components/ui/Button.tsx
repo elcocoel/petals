@@ -25,7 +25,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
     'h-auto border border-hairline bg-transparent px-space-16 py-space-8 type-caption whitespace-normal text-primary',
   link: 'h-auto bg-transparent px-0 type-label text-primary hover:underline',
   quiet: 'h-auto bg-transparent px-0 type-caption text-muted hover:text-primary hover:underline',
-  row: 'h-auto w-full justify-start gap-text-gap border border-hairline bg-transparent p-text-gap text-left whitespace-normal text-primary aria-pressed:border-l-heavy aria-pressed:border-l-accent',
+  row: 'h-auto w-full justify-start gap-text-gap border border-hairline bg-transparent p-text-gap text-left whitespace-normal text-primary aria-pressed:border-l-heavy aria-pressed:border-l-accent data-current:border-l-heavy data-current:border-l-accent',
   tile: 'h-auto w-tile-width flex-col items-start gap-text-gap bg-transparent px-0 text-left whitespace-normal text-primary',
 };
 
@@ -35,7 +35,11 @@ export type ButtonProps = {
   arrow?: boolean;
   children: ReactNode;
 } & (
-  | { href: string }
+  | {
+      href: string;
+      /** The one of these you are on. */
+      current?: boolean;
+    }
   | {
       href?: undefined;
       type?: 'button' | 'submit';
@@ -58,6 +62,8 @@ export function Button({ variant = 'primary', arrow, children, ...rest }: Button
     return (
       <a
         href={rest.href}
+        aria-current={rest.current ? 'page' : undefined}
+        data-current={rest.current ? '' : undefined}
         data-button=""
         data-b={BEHAVIOUR[variant]}
         data-kind={variant}

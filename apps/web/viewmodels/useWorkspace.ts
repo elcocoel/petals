@@ -3,6 +3,7 @@
 // so a new flower can take them; this draws what's needed, projects the panel, says whether its box is
 // open, keeps the address in step and hears Escape.
 import { useEffect, useMemo, useState } from 'react';
+import { conversationRows } from '../lib/conversation-list.ts';
 import { type ListedFlower, svgImage } from '../lib/flower-view.ts';
 import {
   addressOpensBox,
@@ -23,6 +24,7 @@ import {
 import type { Opened, PanelSection } from '../lib/thread.ts';
 import { composerView, type FlowerRow, openFlowerIndex } from '../lib/thread-view.ts';
 import { workspaceUrl } from '../lib/workspace-url.ts';
+import { useConversations } from './useConversations.ts';
 import { useDrawnFlowers } from './useDrawnFlower.ts';
 import { useMakeChat } from './useMakeChat.ts';
 import { useSnapshotFacts } from './useSnapshotFacts.ts';
@@ -176,6 +178,16 @@ export function useWorkspace(props: {
     if (failure) setBoxOpen(true);
   }
 
+  // Read when the page opens, and again when a turn starts or ends here: nothing runs on a timer.
+  const listed = useConversations(recorded ? null : `${runId}:${busy}`);
+  const conversations = useMemo(() => conversationRows(listed, runId), [listed, runId]);
+  // box.close
+  // Coming back with nothing in hand, the list is what there is to do. A person's choice wins from then on.
+  const [listChoice, setListChoice] = useState<boolean | null>(null);
+  const cameBare = !props.initialRun && !props.initialQuestion && !props.initialPetal;
+  const nothingOpened = (props.initialOpen?.kind ?? 'latest') === 'latest';
+  const listOpen = listChoice ?? (cameBare && nothingOpened && conversations.length > 0);
+
   const onCanvas = canvasShown(canvas, comingBack, standIn);
   // The canvas's flower is the panel's, or is on its way there: only then does it have a selected petal.
   const canvasIsOpen =
@@ -224,7 +236,12 @@ export function useWorkspace(props: {
       unit: panelFlower && facts.units[panelFlower.spec.selection.measure],
       section,
       thumbs,
-      heading: open.kind === 'stored' ? 'Continue this flower' : 'Conversation',
+      heading:
+        open.kind === 'stored'
+          ? 'Continue this flower'
+          : (conversations.find((c) => c.current)?.title ?? 'Conversation'),
+      conversations,
+      listOpen,
       recorded,
     },
     actions: {
@@ -258,6 +275,7 @@ export function useWorkspace(props: {
         if (opensBox) setBoxOpen(true);
       },
       closeBox: () => setBoxOpen(false),
+      toggleList: () => setListChoice(!listOpen),
       closeDetail: () => dispatch({ type: 'select', petal: null }),
       setSection: (next: PanelSection) => dispatch({ type: 'section', section: next }),
       startFrom: (text: string) => {

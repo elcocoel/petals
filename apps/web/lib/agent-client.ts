@@ -12,6 +12,7 @@ import type {
   Reading,
   Run,
 } from '@petal/core/types';
+import type { ListedConversation } from './conversation-list.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
 
@@ -79,6 +80,14 @@ export const agentClient: AgentClient = {
     if (res.body) yield* eventsOf(res.body, skip);
   },
 };
+
+/** A person's conversations, newest first. Nothing to show is the same as none: no session, or no answer. */
+export async function listConversations(): Promise<ListedConversation[]> {
+  const res = await fetch('/api/v1/conversations');
+  if (!res.ok) return [];
+  const json = (await res.json()) as { conversations?: ListedConversation[] };
+  return json.conversations ?? [];
+}
 
 /** All a live drawing needs from a reading: render_flower's opt-in `reading`. */
 export type DrawnReading = Pick<Reading, 'title' | 'petals'>;
