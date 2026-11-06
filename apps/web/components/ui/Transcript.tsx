@@ -22,15 +22,18 @@ export function Transcript({
   end,
   lines,
 }: {
-  start: string;
-  end: string;
+  /** A header above the lines: what was read, and who by. Without it, the lines start at the rule. */
+  start?: string;
+  end?: string;
   lines: readonly string[];
 }) {
   return (
     <div className="border-y border-primary">
-      <div className="py-space-16">
-        <MetaRow start={start} end={end} />
-      </div>
+      {start && (
+        <div className="py-space-16">
+          <MetaRow start={start} end={end} />
+        </div>
+      )}
       {lines.map((line, i) => (
         <Line key={line} i={i}>
           <p className="my-0 min-w-0 flex-1 type-lead">{line}</p>

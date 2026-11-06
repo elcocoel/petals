@@ -517,6 +517,8 @@ export interface V2Script {
    * rest, how long the row stays after it leaves, and how long folding takes.
    */
   peek: { restMs: number; stillPx: number; stayMs: number; foldMs: number };
+  /** The ask box's placeholder: a letter in, a letter out, how long a whole line holds, and the pause between lines. */
+  typed: { typeMs: number; eraseMs: number; holdMs: number; gapMs: number };
 }
 
 const TEXT = surfaces;
@@ -693,6 +695,7 @@ export const v2: Version<V2Script> = {
       stayMs: 1200,
       foldMs: Number.parseFloat(groups.dur.fold) * 1000,
     },
+    typed: { typeMs: 45, eraseMs: 22, holdMs: 2200, gapMs: 350 },
   },
 };
 
