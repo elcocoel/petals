@@ -1,26 +1,40 @@
-// Browser only. Signing a prepared publish message with @hot-labs/near-connect 0.12, used
-// directly (research R9: near-connect-hooks needs ^0.11.1). One prompt does sign-in and the
-// NEP-413 signature together: connect({ signMessageParams }). Already connected: signMessage.
+// Browser only. Signing a prepared message with @hot-labs/near-connect 0.12, used directly
+// (research R9: near-connect-hooks needs ^0.11.1). One prompt does sign-in and the NEP-413 signature
+// together: connect({ signMessageParams }).
 // near-connect touches window, localStorage and IndexedDB, so it is imported only when used.
+import type { EventMap, NearConnector } from '@hot-labs/near-connect';
 import { base64ToBytes, type Prepared, type WalletSignature } from './publish.ts';
 
+type Network = 'testnet' | 'mainnet';
+
+// One connector per network for the life of the page: each one loads the wallet list and adds
+// window listeners. MyNearWallet is shutting down.
+const connectors = new Map<Network, NearConnector>();
+
+async function connectorFor(network: Network): Promise<NearConnector> {
+  const lib = await import('@hot-labs/near-connect');
+  let connector = connectors.get(network);
+  if (!connector) {
+    connector = new lib.NearConnector({ network, excludedWallets: ['mynearwallet'] });
+    connectors.set(network, connector);
+  }
+  return connector;
+}
+
+/**
+ * Always asks through connect(), the one call that names the network. wallet.signMessage on the
+ * connected wallet can't: near-connect remembers one wallet with no network in it, and Meteor signs
+ * with the last account it saw, so the testnet button asked for a mainnet signature.
+ */
 export async function signPrepared(
   p: Prepared,
-  network: 'testnet' | 'mainnet' = 'testnet',
+  network: Network = 'testnet',
 ): Promise<WalletSignature> {
-  const { NearConnector } = await import('@hot-labs/near-connect');
-  const connector = new NearConnector({ network });
-  const params = { message: p.message, recipient: p.recipient, nonce: base64ToBytes(p.nonce) };
-
-  const connected = await connector.getConnectedWallet().catch(() => null);
-  if (connected) {
-    const s = await connected.wallet.signMessage({ ...params, network });
-    return { accountId: s.accountId, publicKey: s.publicKey, signature: s.signature };
-  }
+  const connector = await connectorFor(network);
 
   // The signed message comes with the wallet:signInAndSignMessage event, emitted inside connect().
   let signed: WalletSignature | null = null;
-  connector.once('wallet:signInAndSignMessage', ({ accounts }) => {
+  const onSigned = ({ accounts }: EventMap['wallet:signInAndSignMessage']) => {
     const a = accounts[0];
     if (a) {
       signed = {
@@ -29,8 +43,19 @@ export async function signPrepared(
         signature: a.signedMessage.signature,
       };
     }
-  });
-  await connector.connect({ signMessageParams: params });
+  };
+  connector.on('wallet:signInAndSignMessage', onSigned);
+  try {
+    await connector.connect({
+      signMessageParams: {
+        message: p.message,
+        recipient: p.recipient,
+        nonce: base64ToBytes(p.nonce),
+      },
+    });
+  } finally {
+    connector.off('wallet:signInAndSignMessage', onSigned);
+  }
   if (!signed) throw new Error('The wallet signed in but returned no signed message.');
   return signed;
 }
