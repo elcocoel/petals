@@ -12,6 +12,13 @@ import type {
 } from '@petal/core/types';
 
 export { InputError, isInputError, type SourceFailure } from './errors.ts';
+export {
+  type AskOptions,
+  askChain,
+  ChainDown,
+  type EndpointFailure,
+  Reverted,
+} from './evm/ask.ts';
 export { ARBITRUM, BASE, ETHEREUM, EVM_CHAINS, type EvmChain } from './evm/chains.ts';
 export { type ContractIdentity, identifyContracts, type Ledger } from './evm/identify.ts';
 export {
@@ -65,6 +72,7 @@ export {
   type BlockInfo,
   type BlockRef,
   DEFAULT_ENDPOINTS,
+  endpointHealth,
   type RpcEndpoint,
   RpcError,
   type RpcPool,

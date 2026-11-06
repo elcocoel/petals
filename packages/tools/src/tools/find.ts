@@ -12,7 +12,14 @@
 // down costs its own answer only, and `sources` says who answered.
 import { runSignal } from '@petal/core';
 import type { IndexRow, Params } from '@petal/core/types';
-import { type ContractIdentity, EVM_CHAINS, identifyContracts, TOKEN_PROGRAM } from '@petal/inputs';
+import {
+  ChainDown,
+  type ContractIdentity,
+  EVM_CHAINS,
+  endpointHealth,
+  identifyContracts,
+  TOKEN_PROGRAM,
+} from '@petal/inputs';
 import { defineTool, type PetalTool } from '../define.ts';
 import type { ToolContext } from '../types.ts';
 import { bodyUrl, obj, readable } from './shared.ts';
@@ -122,6 +129,8 @@ interface Working extends Candidate {
   votes?: string;
   /** the stored snapshot this came from */
   held?: IndexRow;
+  /** this chain's endpoints didn't answer: nothing is known about the address there */
+  down?: string;
 }
 
 interface SourceRow {
@@ -142,9 +151,12 @@ class Lookup {
   found = new Map<string, Working>();
   fetcher: typeof globalThis.fetch | null;
   offline: string;
+  /** which endpoints look down: this process's own, unless a fetch was injected */
+  health: Map<string, number>;
   constructor(fetcher: typeof globalThis.fetch | null, offline: string) {
     this.fetcher = fetcher;
     this.offline = offline;
+    this.health = fetcher === globalThis.fetch ? endpointHealth : new Map();
   }
 
   /** One outbound call, counted and timed. Null when it was skipped or failed. */
@@ -485,36 +497,45 @@ async function fromPetal(l: Lookup, ctx: ToolContext, p: Parsed, rows: IndexRow[
 
 // --- The chain confirms
 
-/** Ask each chain about its best candidate, best chains first, within the call limit. */
+/**
+ * Ask each chain about its best candidate, all at once, each through whichever of its endpoints
+ * answers. A chain that doesn't answer is down, which says nothing about the address.
+ */
 async function confirmOnChain(l: Lookup, ranked: Working[]): Promise<void> {
   const byChain = new Map<string, Working[]>();
   for (const c of ranked)
     if (c.address?.startsWith('0x') && EVM_CHAINS[c.chain])
       byChain.set(c.chain, [...(byChain.get(c.chain) ?? []), c]);
-  for (const [chainId, list] of byChain) {
-    const chain = EVM_CHAINS[chainId];
-    if (!chain) continue;
-    const part = list.slice(0, 1);
-    const url = chain.endpoints[0]?.url ?? '';
-    const ids = await l.ask(
-      `chain:${chainId}`,
-      url,
-      (f) =>
-        identifyContracts(
-          chain,
-          part.map((c) => c.address as string),
-          {
-            fetch: f,
-            timeoutMs: TIMEOUT_MS,
-          },
-        ),
-      (x) => x.filter((i) => i.ledger).length,
-    );
-    if (!ids) continue;
-    part.forEach((c, i) => {
-      applyIdentity(c, ids[i] as ContractIdentity, chainId, url);
-    });
-  }
+  await Promise.all(
+    [...byChain].map(async ([chainId, list]) => {
+      const chain = EVM_CHAINS[chainId];
+      if (!chain) return;
+      const part = list.slice(0, 1);
+      let why: string | undefined;
+      const ids = await l.ask(
+        `chain:${chainId}`,
+        chain.endpoints[0]?.url ?? '',
+        (f) =>
+          identifyContracts(
+            chain,
+            part.map((c) => c.address as string),
+            { fetch: f, timeoutMs: TIMEOUT_MS, health: l.health },
+          ).catch((e: unknown) => {
+            if (e instanceof ChainDown) why = e.message;
+            throw e;
+          }),
+        (x) => x.filter((i) => i.ledger).length,
+      );
+      if (!ids) {
+        for (const c of part) if (why) c.down = why;
+        return;
+      }
+      part.forEach((c, i) => {
+        const id = ids[i] as ContractIdentity;
+        applyIdentity(c, id, chainId, id.served_by);
+      });
+    }),
+  );
 }
 
 function applyIdentity(c: Working, id: ContractIdentity, chain: string, url: string) {
@@ -592,7 +613,9 @@ function plan(c: Working, ctx: ToolContext, rows: IndexRow[]): void {
   } else if (c.address?.startsWith('0x') && EVM_CHAINS[c.chain]) {
     const chain = EVM_CHAINS[c.chain];
     if (!c.confirmed) {
-      c.blocked = `not confirmed: ${c.chain} was not asked in this lookup or did not answer, and nothing is drawn unconfirmed. Call find_target with this address and chain`;
+      c.blocked = c.down
+        ? `not checked, because ${c.down}. That says nothing about this address, and nothing is drawn unconfirmed: try again in a moment`
+        : `not confirmed: ${c.chain} was not asked in this lookup, and nothing is drawn unconfirmed. Call find_target with this address and chain`;
     } else if (c.ledger === 'moloch-v1') {
       if (has('moloch-v1'))
         out.push(
@@ -811,7 +834,9 @@ export function makeFindTarget(
       return {
         query,
         chain: p.chain,
-        candidates: shown.map(({ exact: _e, program: _p, blocked: _b, votes: _v, ...c }) => c),
+        candidates: shown.map(
+          ({ exact: _e, program: _p, blocked: _b, votes: _v, down: _d, ...c }) => c,
+        ),
         more: all.length - shown.length,
         ambiguous: rivals > 0 || (noDao && shown.length > 0),
         next: nextStep(ctx, p, shown, l, rivals, noDao),

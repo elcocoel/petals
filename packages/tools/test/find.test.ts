@@ -206,7 +206,10 @@ describe('bounds', () => {
     const o = await find('UNI on Base', /tenderly/);
     expect(o.candidates[0].confirmed).toBeNull();
     expect(o.candidates[0].draw).toEqual([]);
-    expect(o.candidates[0].cannot_draw).toMatch(/not confirmed/);
+    // down is said as down: nothing here reads as if the address weren't there
+    expect(o.candidates[0].cannot_draw).toMatch(/did not answer just now/);
+    expect(o.candidates[0].cannot_draw).toMatch(/says nothing about this address/);
+    expect(o.sources.find((s: Json) => s.id === 'chain:base').status).toBe('failed');
   });
 
   test('in fake mode it makes no call and still knows what Petal holds', async () => {
