@@ -240,7 +240,8 @@ class Cli {
       {
         fetch: (request) => app.fetch(request),
         port,
-        ...(typeof host === 'string' ? { hostname: host } : {}),
+        // Localhost unless told otherwise: a server holding a model key can be spent by whoever reaches it.
+        hostname: typeof host === 'string' ? host : '127.0.0.1',
       },
       (info) => this.sys.stderr(`petal api on http://localhost:${info.port}\n`),
     ) as { on?: (event: 'error', listener: (e: Error & { code?: string }) => void) => void };
