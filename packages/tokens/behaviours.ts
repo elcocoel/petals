@@ -108,7 +108,8 @@ export const behaviours = [
   },
   {
     name: 'box.hold',
-    purpose: 'A wheel or a pinch over it stays in it: no zoom underneath, no page moving',
+    purpose:
+      'A wheel or a pinch stays in it, and pressing the canvas leaves the cursor in it, so a chat carries on',
     via: 'view',
   },
   // row

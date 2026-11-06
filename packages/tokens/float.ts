@@ -4,9 +4,11 @@
 import { layout, sizes } from './source.ts';
 
 export const floatBox = {
-  /** Where a box starts: how wide, and its input's height, which fits the recorded run's long question. */
+  /** Where a box starts: how wide, and its input's height, which fits a question and the run's line. */
   width: 480,
-  'input-height': 304,
+  'input-height': 216,
+  /** Where the column of boxes stops above the window's bottom: the flower's small map has that corner. */
+  floor: 168,
   /** The smallest a hand can make it, which still shows its bar and a line or two. */
   'min-width': 280,
   'min-height': 144,

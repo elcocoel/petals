@@ -46,14 +46,17 @@ export function sized(from: Rect, edge: Edge, dx: number, dy: number, win: Size)
   return { x: left, y: top, w: right - left, h: bottom - top };
 }
 
-/** Where the conversation's two boxes start: on the right, output above, input directly under it. */
+/**
+ * Where the conversation's two boxes start: on the left, because a sorted flower's small side is there
+ * and its biggest names are upper right. Output above, input directly under it, stopping above the
+ * corner the flower's small map has.
+ */
 export function conversationBoxes(win: Size): { output: Rect; input: Rect } {
-  const { inset, gap, width, 'input-height': inputH, 'min-height': minH } = floatBox;
+  const { inset, gap, width, floor, 'input-height': inputH, 'min-height': minH } = floatBox;
   const w = Math.min(width, win.w - inset * 2);
-  const x = win.w - inset - w;
-  const outputH = Math.max(minH, win.h - inset * 2 - gap - inputH);
+  const outputH = Math.max(minH, win.h - inset - floor - gap - inputH);
   return {
-    output: kept({ x, y: inset, w, h: outputH }, win),
-    input: kept({ x, y: inset + outputH + gap, w, h: inputH }, win),
+    output: kept({ x: inset, y: inset, w, h: outputH }, win),
+    input: kept({ x: inset, y: inset + outputH + gap, w, h: inputH }, win),
   };
 }

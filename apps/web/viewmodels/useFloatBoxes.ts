@@ -21,6 +21,9 @@ interface Held {
   rect: Rect | null;
 }
 
+/** box.hold: pressing here leaves the cursor where it was, so what's being typed stays in focus. */
+export const keepCursor = (e: { preventDefault(): void }) => e.preventDefault();
+
 const windowSize = (): Size => ({ w: window.innerWidth, h: window.innerHeight });
 
 const paint = (el: HTMLElement, r: Rect) => {
@@ -106,7 +109,7 @@ export function useFloatBoxes<K extends string>(
           onPointerUp: release,
           onPointerCancel: release,
           // what's typed stays focused and no words get selected: a hand on a box's edge is only moving it
-          onMouseDown: (e) => e.preventDefault(),
+          onMouseDown: keepCursor,
         };
       };
 

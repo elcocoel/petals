@@ -30,7 +30,7 @@ const PANEL_BOTTOM = 40;
 export const MAP_SIZE = 96;
 const MAP_INSET = 28;
 /** The map sits this far up, clear of Next's badge in development. */
-const MAP_BOTTOM = 64;
+export const MAP_BOTTOM = 64;
 /** A tiny readout of zoom and share while we tune. Set to false and it's gone. */
 const READOUT = true;
 

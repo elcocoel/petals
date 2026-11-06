@@ -8,6 +8,7 @@ import { Thread } from '../components/chat/Thread.tsx';
 import { TurnFlower } from '../components/chat/TurnFlower.tsx';
 import { FloatBox, type FloatHand } from '../components/ui/FloatBox.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
+import { MAP_BOTTOM, MAP_SIZE } from '../lab/flower/marks.ts';
 import {
   conversationBoxes,
   type Edge,
@@ -25,13 +26,18 @@ const barInside = (r: Rect, win: Size) =>
   r.x >= 0 && r.x + r.w <= win.w && r.y >= 0 && r.y + floatBox.bar <= win.h;
 
 describe('where the conversation starts', () => {
-  test('both on the right, output above, input directly under it, the same width', () => {
+  test('both on the left, output above, input directly under it, the same width', () => {
     const { output, input } = conversationBoxes(WIN);
     expect(output.x).toBe(input.x);
     expect(output.w).toBe(input.w);
-    expect(output.x + output.w).toBe(WIN.w - floatBox.inset);
+    expect(output.x).toBe(floatBox.inset);
     expect(input.y).toBe(output.y + output.h + floatBox.gap);
-    expect(input.y + input.h).toBe(WIN.h - floatBox.inset);
+  });
+
+  test("they stop above the corner the flower's small map has", () => {
+    const { input } = conversationBoxes(WIN);
+    expect(input.y + input.h).toBe(WIN.h - floatBox.floor);
+    expect(floatBox.floor).toBeGreaterThanOrEqual(MAP_BOTTOM + MAP_SIZE);
   });
 
   test.each([
