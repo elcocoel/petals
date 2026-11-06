@@ -90,7 +90,7 @@ export function mirror(dir: string, inner: MapWriter): MapWriter;      // keeps 
 export function fakeMap(): MapWriter & MapReader;                      // in-memory, for tests and for W4–W6 until W3 lands
 
 export function issueNonce(): { nonce: string; expires_at: string };
-export function verifyNep413(proof: Nep413Proof, expect: { message: string; recipient: string }, rpc: Rpc): Promise<{ ok: boolean; reason?: string }>;
+export function verifyNep413(proof: Nep413Proof, expect: { message: string; recipient: string }, rpc: Rpc, opts?: { nonces?: NonceStore; allowUnfunded?: boolean }): Promise<{ ok: boolean; reason?: string }>;  // allowUnfunded: sign-in only
 // checks the signature, then view_access_key: the key must be a full-access key of account_id
 
 export function quote1Click(req: QuoteRequest): Promise<QuoteResult>;  // dry only (FR-031); a real payment needs Elco's OK

@@ -1,5 +1,5 @@
 // Sponsored invites (T196): the judge pool's size is Elco's to decide, so the amount is an argument.
-//   node scripts/mint-invite.ts <usd> [days]      makes one, and prints its token once
+//   node scripts/mint-invite.ts <usd> [days]      makes one, and prints its token once; days default to 14
 //   node scripts/mint-invite.ts --revoke <id>     the next model call on it is refused
 // It writes to the server's own private.db, so run it where the server runs: PETAL_STATE_DIR says
 // where, default .petal. For the container, from inside it, because SQLite's write-ahead log doesn't
@@ -33,7 +33,7 @@ export function run(args: string[], env: NodeJS.ProcessEnv = process.env): strin
     return [
       `invite  ${minted.id}`,
       `budget  $${minted.budget_usd}`,
-      `expires ${minted.expires_at ?? 'never'}`,
+      `expires ${minted.expires_at}`,
       `token   ${minted.token}`,
       "The token isn't stored and can't be shown again.",
     ].join('\n');

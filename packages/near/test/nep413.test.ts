@@ -207,10 +207,11 @@ describe('verifyNep413', () => {
 // key "only while the account doesn't exist".
 describe('verifyNep413, implicit accounts', () => {
   const newcomer = implicitSigner('newcomer');
+  const UNFUNDED = { allowUnfunded: true };
 
   test('an unfunded implicit account passes, after view_access_key and then view_account', async () => {
     const rpc = fakeRpc({});
-    expect(await verifyNep413(signed(newcomer), expect_, rpc)).toEqual({ ok: true });
+    expect(await verifyNep413(signed(newcomer), expect_, rpc, UNFUNDED)).toEqual({ ok: true });
     expect(rpc.calls.map((c) => c.request_type)).toEqual(['view_access_key', 'view_account']);
     expect(rpc.calls[1]).toMatchObject({ finality: 'final', account_id: newcomer.accountId });
   });
@@ -218,8 +219,8 @@ describe('verifyNep413, implicit accounts', () => {
   test('its nonce is spent like any other', async () => {
     const proof = signed(newcomer);
     const rpc = fakeRpc({});
-    expect(await verifyNep413(proof, expect_, rpc)).toEqual({ ok: true });
-    expect(await verifyNep413(proof, expect_, rpc)).toMatchObject({
+    expect(await verifyNep413(proof, expect_, rpc, UNFUNDED)).toEqual({ ok: true });
+    expect(await verifyNep413(proof, expect_, rpc, UNFUNDED)).toMatchObject({
       ok: false,
       reason: expect.stringMatching(/already used/),
     });
@@ -227,7 +228,7 @@ describe('verifyNep413, implicit accounts', () => {
 
   test('once the account exists, a rotated-away key no longer passes', async () => {
     const rpc = fakeRpc({ [newcomer.accountId]: { 'ed25519:someOtherKey': 'FullAccess' } });
-    expect(await verifyNep413(signed(newcomer), expect_, rpc)).toMatchObject({
+    expect(await verifyNep413(signed(newcomer), expect_, rpc, UNFUNDED)).toMatchObject({
       ok: false,
       reason: expect.stringMatching(/not a key of/),
     });
@@ -237,7 +238,7 @@ describe('verifyNep413, implicit accounts', () => {
   test('an account id that is the hex of another key gets no such pass', async () => {
     const pretender = testSigner(newcomer.accountId, 'pretender');
     const rpc = fakeRpc({});
-    expect(await verifyNep413(signed(pretender), expect_, rpc)).toMatchObject({
+    expect(await verifyNep413(signed(pretender), expect_, rpc, UNFUNDED)).toMatchObject({
       ok: false,
       reason: expect.stringMatching(/not a key of/),
     });
@@ -246,13 +247,13 @@ describe('verifyNep413, implicit accounts', () => {
 
   test('a named account with a missing key is never looked up as implicit', async () => {
     const rpc = fakeRpc({});
-    expect(await verifyNep413(signed(maker), expect_, rpc)).toMatchObject({ ok: false });
+    expect(await verifyNep413(signed(maker), expect_, rpc, UNFUNDED)).toMatchObject({ ok: false });
     expect(rpc.calls.map((c) => c.request_type)).toEqual(['view_access_key']);
   });
 
   test('a function-call key on its own existing implicit account is still refused', async () => {
     const rpc = fakeRpc({ [newcomer.accountId]: { [newcomer.publicKey]: functionCall() } });
-    expect(await verifyNep413(signed(newcomer), expect_, rpc)).toMatchObject({
+    expect(await verifyNep413(signed(newcomer), expect_, rpc, UNFUNDED)).toMatchObject({
       ok: false,
       reason: expect.stringMatching(/full-access/),
     });
@@ -267,10 +268,10 @@ describe('verifyNep413, implicit accounts', () => {
         return missing.query<T>(params);
       },
     };
-    const err = await verifyNep413(proof, expect_, down).catch((e) => e);
+    const err = await verifyNep413(proof, expect_, down, UNFUNDED).catch((e) => e);
     expect(err).toBeInstanceOf(NearError);
     expect(err).toMatchObject({ code: 'source_failed' });
-    expect(await verifyNep413(proof, expect_, fakeRpc({}))).toEqual({ ok: true });
+    expect(await verifyNep413(proof, expect_, fakeRpc({}), UNFUNDED)).toEqual({ ok: true });
   });
 });
 
@@ -278,5 +279,25 @@ describe('nearRpc', () => {
   test('builds an Rpc for a network or a URL without calling it', () => {
     expect(typeof nearRpc('testnet').query).toBe('function');
     expect(typeof nearRpc({ url: 'http://127.0.0.1:1' }).query).toBe('function');
+  });
+});
+
+// T300, finding 5: the rule is for sign-in. Anywhere else, a key with nothing on chain proves nothing.
+describe('verifyNep413, the unfunded rule is opt-in', () => {
+  const newcomer = implicitSigner('opted-out');
+
+  test('without allowUnfunded, an unfunded implicit account is refused', async () => {
+    const rpc = fakeRpc({});
+    const out = await verifyNep413(signed(newcomer), expect_, rpc);
+    expect(out).toMatchObject({
+      ok: false,
+      reason: expect.stringMatching(/not a key|does not exist/),
+    });
+  });
+
+  test('with it, the same proof passes', async () => {
+    const rpc = fakeRpc({});
+    const out = await verifyNep413(signed(newcomer), expect_, rpc, { allowUnfunded: true });
+    expect(out).toEqual({ ok: true });
   });
 });

@@ -82,10 +82,12 @@ export function fromThrown(err: unknown, fallback: ToolErrorCode = 'internal'): 
 export class ToolFailure extends Error {
   readonly code: ToolErrorCode;
   readonly hint?: string;
-  constructor(code: ToolErrorCode, message: string, hint?: string) {
+  readonly retry_after_s?: number;
+  constructor(code: ToolErrorCode, message: string, hint?: string, retryAfterS?: number) {
     super(message);
     this.name = 'ToolFailure';
     this.code = code;
     if (hint !== undefined) this.hint = hint;
+    if (retryAfterS !== undefined) this.retry_after_s = retryAfterS;
   }
 }

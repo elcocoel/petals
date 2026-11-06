@@ -17,8 +17,9 @@ import { diffSpecs, recipeHash, recipeOf } from '@petal/core';
 import type { Spec, SpecDiff } from '@petal/core/types';
 import type { ExplorationLinkRow, ExplorationRow, NoteRow, StepRow, Store } from '@petal/store';
 import { defineTool, type ToolAnnotations } from '../define.ts';
-import { keepSpecBody, privateStore, specBody } from '../drafts.ts';
+import { capSpecBodies, keepSpecBody, privateStore, specBody } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
+import { assertRoom, limitsOf, overToday, takeToday } from '../limits.ts';
 import type { JSONSchema, ToolContext } from '../types.ts';
 import { base, DATETIME, obj, SHA256 } from './shared.ts';
 import { checkSpec, summarise } from './specs.ts';
@@ -29,9 +30,14 @@ type Access = 'owner' | LinkScope;
 const QUESTION_MAX = 2000;
 const NOTE_MAX = 2000;
 const TARGET_MAX = 300;
-/** A continue link is someone else's write access: what it can add to this store has an end. */
-const STEPS_MAX = 500;
-const NOTES_MAX = 500;
+/**
+ * A continue link is someone else's write access: what it can add to this store has an end. A fork
+ * copies all of it, so these also bound what one fork can cost: about 1.2 MB at the longest notes.
+ */
+const STEPS_MAX = 100;
+const NOTES_MAX = 100;
+/** How many a request may clear away while it's here. No timers: expiry happens on the next write. */
+const UNCLAIMED_DELETED_AT_ONCE = 50;
 /** What a packet carries, newest last. The totals say how much more there is. */
 const STEPS_SHOWN = 20;
 const NOTES_SHOWN = 30;
@@ -119,7 +125,12 @@ interface StepInput {
   author: string;
   note: string | null;
   at: string;
+  /** called for a new spec body; the site's own run has none, because it is sponsored */
+  capped?: () => void;
 }
+
+const tooManyNotes = () =>
+  new ToolFailure('bad_input', `This exploration has ${NOTES_MAX} notes, the most it can hold.`);
 
 type WrittenStep = StepRow & { unchanged?: boolean };
 
@@ -138,10 +149,11 @@ function writeStep(
   return store.tx(() => {
     const row = store.exploration.get(id);
     if (!row) throw missing();
-    const sha = keepSpecBody(store, spec, s.at);
+    const sha = keepSpecBody(store, spec, s.at, s.capped);
     if (!sha) throw new ToolFailure('bad_input', 'That spec is too large to keep.');
     if (row.head === sha) {
       if (s.note) {
+        if (store.note.count(id) >= NOTES_MAX) throw tooManyNotes();
         const { door, author, note: text, at } = s;
         store.note.append({ exploration: id, door, author, text, at });
         store.exploration.touch(id, at);
@@ -600,11 +612,34 @@ function issueLink(
 /** The steps and notes come along, so a fork stands on its own once a link is revoked. */
 function copyInto(store: Store, id: string, from: ExplorationRow): void {
   const was = (who: string | null) => `fork:${who ?? 'owner'}`;
-  for (const s of store.step.list(from.id)) {
+  // the latest, if an older one holds more than a new one may
+  for (const s of store.step.list(from.id).slice(-STEPS_MAX)) {
     store.step.append({ ...s, exploration: id, author: was(s.author) });
   }
-  for (const n of store.note.list(from.id)) {
+  for (const n of store.note.list(from.id).slice(-NOTES_MAX)) {
     store.note.append({ ...n, exploration: id, author: was(n.author) });
+  }
+}
+
+/**
+ * What a stranger's new exploration costs, checked before it's made. Nobody behind it, or a fork, which
+ * copies rows: a daily cap on those together. A person's own new one is a single small row.
+ */
+function admitExploration(ctx: ToolContext, store: Store, sessionless: boolean, fork: boolean) {
+  const now = ctx.now();
+  const limits = limitsOf(ctx.config);
+  if (sessionless) {
+    const before = new Date(now.getTime() - limits.unclaimedDays * 86_400_000).toISOString();
+    store.exploration.deleteUnclaimed(before, UNCLAIMED_DELETED_AT_ONCE);
+  }
+  assertRoom(ctx.config, now);
+  if (!sessionless && !fork) return;
+  if (!takeToday(ctx.config, 'explorations', limits.explorationsPerDay, now)) {
+    throw overToday(
+      now,
+      `Petal has made ${limits.explorationsPerDay} explorations with no owner, or forks, today, so this one was not started.`,
+      'A link you already have still works.',
+    );
   }
 }
 
@@ -648,6 +683,7 @@ export const startExploration = defineTool<StartIn, object>({
       throw new ToolFailure('bad_input', 'A new exploration needs a question.');
     }
     const owner = ctx.caller?.subject ?? null;
+    admitExploration(ctx, store, owner === null, source !== null);
     const at = ctx.now().toISOString();
     const id = newExplorationId();
     const link = store.tx(() => {
@@ -705,6 +741,7 @@ export const saveStep = defineTool<
     const store = lastingStore(ctx);
     const o = open(ctx, exploration);
     writable(o);
+    assertRoom(ctx.config, ctx.now());
     const body = spec ?? (spec_sha256 ? specBody(ctx.config, spec_sha256) : null);
     if (!body) {
       throw spec_sha256
@@ -728,6 +765,7 @@ export const saveStep = defineTool<
       author: authorOf(o),
       note: note ?? null,
       at: ctx.now().toISOString(),
+      capped: capSpecBodies(ctx.config, ctx.now()),
     });
     return {
       exploration: o.row.id,
@@ -767,12 +805,8 @@ export const addNote = defineTool<{ exploration: string; text: string }, object>
     const store = lastingStore(ctx);
     const o = open(ctx, exploration);
     writable(o);
-    if (store.note.count(o.row.id) >= NOTES_MAX) {
-      throw new ToolFailure(
-        'bad_input',
-        `This exploration has ${NOTES_MAX} notes, the most it can hold.`,
-      );
-    }
+    assertRoom(ctx.config, ctx.now());
+    if (store.note.count(o.row.id) >= NOTES_MAX) throw tooManyNotes();
     const at = ctx.now().toISOString();
     const door = doorOf(ctx);
     const author = authorOf(o);
@@ -802,6 +836,7 @@ function ownedBy(ctx: ToolContext, id: string): ExplorationRow {
 export function makeLink(ctx: ToolContext, id: string, scope: LinkScope) {
   const store = lastingStore(ctx);
   ownedBy(ctx, id);
+  assertRoom(ctx.config, ctx.now());
   return issueLink(ctx, store, id, scope, ctx.now().toISOString());
 }
 

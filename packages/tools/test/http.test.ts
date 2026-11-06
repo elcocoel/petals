@@ -97,7 +97,7 @@ describe('tool routes', () => {
 
   test('60 tool calls a minute per IP, then 429 rate_limited with retry_after_s', async () => {
     const { app } = await setup();
-    const from = (ip: string) => ({ headers: { 'x-forwarded-for': ip } });
+    const from = (ip: string) => ({ headers: { 'cf-connecting-ip': ip } });
     for (let i = 0; i < 60; i++)
       expect((await app.request('/api/v1/networks', from('1.2.3.4'))).status).toBe(200);
     const over = await app.request('/api/v1/networks', from('1.2.3.4'));

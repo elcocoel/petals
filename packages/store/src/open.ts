@@ -26,6 +26,8 @@ export interface Store extends Tables {
   /** False for ':memory:': it ends with the process, so it can't hold anything that must last. */
   readonly durable: boolean;
   tx<T>(fn: () => T): T;
+  /** Bytes this file holds that SQLite will reuse: deleted rows don't shrink a database file. */
+  freeBytes(): number;
   close(): void;
 }
 
@@ -106,6 +108,11 @@ function connect(path: string, onClose: () => void, migrations: readonly string[
     path,
     durable: path !== ':memory:',
     tx: db.tx,
+    freeBytes() {
+      const free = db.get<{ freelist_count: number }>('PRAGMA freelist_count');
+      const page = db.get<{ page_size: number }>('PRAGMA page_size');
+      return (free?.freelist_count ?? 0) * (page?.page_size ?? 0);
+    },
     close() {
       if (!conn.isOpen) return;
       cache.clear();

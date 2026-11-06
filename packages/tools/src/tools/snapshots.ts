@@ -12,6 +12,8 @@ import type {
 import { getSnapshot as fetchOrReuse } from '@petal/inputs';
 import { mapKeys } from '@petal/near/map';
 import { defineTool } from '../define.ts';
+import { ToolFailure } from '../errors.ts';
+import { limitsOf, takeToday } from '../limits.ts';
 import type { ToolContext } from '../types.ts';
 import {
   bodyUrl,
@@ -42,6 +44,11 @@ export function mapIndex(ctx: ToolContext): MapIndex {
     },
     async record(ref: SnapshotRef) {
       if (!writer) return null;
+      // each costs the writer's allowance, so a stranger's fresh reads can't spend it down
+      const cap = limitsOf(ctx.config).fingerprintsPerDay;
+      if (!takeToday(ctx.config, 'fingerprints', cap, ctx.now())) {
+        throw new ToolFailure('rate_limited', `Petal has written ${cap} fingerprints today`);
+      }
       const entries: Record<string, unknown> = { [mapKeys.snapshot(ref.sha256)]: ref };
       if (ref.block_height !== null) {
         const key = mapKeys.index(ref.network.chain, ref.network.population, ref.block_height);
@@ -150,6 +157,7 @@ export const getSnapshotTool = defineTool<
       modules: ctx.modules,
       map: mapIndex(ctx),
       ...(ctx.onProgress ? { onProgress: ctx.onProgress } : {}),
+      ...(ctx.fresh ? { fresh: ctx.fresh } : {}),
     };
     const result = await fetchOrReuse(req, deps);
     // Tools own public URLs (Config.apiBase), so the body URL is set here.

@@ -188,7 +188,7 @@ describe('reserve then settle', () => {
     expect(await free.spentToday()).toBe(0);
   });
 
-  test('a call that runs out of time keeps its hold until the late answer settles it', async () => {
+  test('a call that runs out of time keeps its hold, and a late answer settles at that hold', async () => {
     const ledger = memoryLedger();
     let answer: (c: LlmCompletion) => void = () => {};
     const llm: LlmClient = {
@@ -212,7 +212,7 @@ describe('reserve then settle', () => {
       signature: null,
     });
     await new Promise((r) => setTimeout(r, 5));
-    expect(await ledger.spentToday()).toBeCloseTo(0.003, 9);
+    expect(await ledger.spentToday()).toBeCloseTo(DEFAULT_BUDGET.usdPerChat, 9);
   });
 
   test('a viewer who stops reading does not leave a hold behind', async () => {

@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { TOOLS_VERSION } from '@petal/core';
 import { durableNonceStore, nearRpc, type Rpc } from '@petal/near/auth';
 import { stateStore } from '@petal/store';
-import { type Config, createContext, httpApp } from '@petal/tools';
+import { type Config, createContext, freshGate, httpApp, overDataBudget } from '@petal/tools';
 import { Hono } from 'hono';
 import { agentAccess, createAuth, type Network, siteOf } from './auth-routes.ts';
 import { closedLedger, importLedgerFile, serverBudget, storeLedger } from './budget.ts';
@@ -89,6 +89,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     access,
     site: siteOf(config.apiBase),
     ...(o.clock ? { clock: o.clock } : {}),
+    full: () => overDataBudget(config, ctx.now()),
   });
 
   const app = new Hono();
@@ -113,7 +114,9 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   });
   // Before the tool routes, whose open CORS must not answer for them.
   app.route('/', auth.routes);
-  app.route('/', createAgentRoutes({ tools: ctx, llm, budget, runs }, { ...o, auth: auth.gate }));
+  // The agent's runs read fresh data apart from the doors, so strangers there can't starve a run.
+  const tools = { ...ctx, fresh: freshGate(ctx, 'run') };
+  app.route('/', createAgentRoutes({ tools, llm, budget, runs }, { ...o, auth: auth.gate }));
   app.route('/', httpApp(ctx, { gate: auth.gate }));
   // A store that fails mid-request (a full disk, say) ends in the API's own error shape: no chat
   // starts, so nothing is spent, and the caller is told plainly.

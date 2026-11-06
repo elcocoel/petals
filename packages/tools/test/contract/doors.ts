@@ -73,7 +73,7 @@ export const ROUTES: Record<
 
 let ip = 0;
 /** A new caller address per request, so the per-IP limit never trips a contract test. */
-const caller = () => ({ 'x-forwarded-for': `10.0.${(ip >> 8) & 255}.${ip++ & 255}` });
+const caller = () => ({ 'cf-connecting-ip': `10.0.${(ip >> 8) & 255}.${ip++ & 255}` });
 
 /** Every door on one context. `close` ends the MCP connections. */
 export async function doors(ctx: ToolContext): Promise<{ all: Door[]; close(): Promise<void> }> {

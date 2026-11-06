@@ -17,6 +17,7 @@ import { MAP_LIMITS, mapKeys } from '@petal/near/map';
 import { compile, defineTool, describeErrors } from '../define.ts';
 import { draftStore, nonceStore } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
+import { assertRoom, limitsOf, overToday, takeToday } from '../limits.ts';
 import type { ToolContext } from '../types.ts';
 import { type DraftEntry, draftOf, entrySha256, publishMessage } from '../verify.ts';
 import { base, DATETIME, ENTRY_ID, galleryUrl, obj, SHA256 } from './shared.ts';
@@ -24,6 +25,8 @@ import { checkSpec, summarise } from './specs.ts';
 
 const checkEntrySchema = compile(schemas.entry as Record<string, unknown>);
 const checkDraftSchema = compile(schemas.entryV2 as Record<string, unknown>);
+
+const entryBytes = (entry: unknown) => new TextEncoder().encode(canonicalJson(entry)).length;
 
 /** Everything prepared from here on is flower/v2. A draft in the older form is lifted, not refused,
  * and any receipt it came with is dropped: prepare_publish writes its own. */
@@ -108,6 +111,14 @@ export const preparePublish = defineTool<{ entry: Partial<Entry> }, object>({
         sha256: renderFlower(lifted.spec, snapshot).render_sha256,
       },
     };
+    // Before anything is kept: nothing else stands between a stranger's entry and the disk.
+    if (entryBytes(draft) > MAP_LIMITS.valueBytes) {
+      throw new ToolFailure(
+        'bad_input',
+        `The entry is over ${MAP_LIMITS.valueBytes} bytes, the map's limit.`,
+      );
+    }
+    assertRoom(ctx.config, ctx.now());
     const entry_sha256 = entrySha256(draft);
     const { nonce, expires_at } = nonceStore(ctx.config).issue();
     const recipient = ctx.map.receiver;
@@ -225,7 +236,7 @@ export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Pro
         `The final entry is not valid: ${describeErrors(checkEntrySchema.errors)}`,
       );
     }
-    if (new TextEncoder().encode(canonicalJson(entry)).length > MAP_LIMITS.valueBytes) {
+    if (entryBytes(entry) > MAP_LIMITS.valueBytes) {
       throw new ToolFailure(
         'bad_input',
         `The entry is over ${MAP_LIMITS.valueBytes} bytes, the map's limit.`,
@@ -238,6 +249,13 @@ export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Pro
         "Petal's map writer is not configured on this server, so nothing was written.",
         'Set PETAL_WRITER_ACCOUNT and PETAL_WRITER_KEY_FILE (testnet only).',
       );
+    }
+    assertRoom(ctx.config, ctx.now());
+    // After the proof, so a forged one can't use up the day's publishes. Before the claim, so a refused
+    // draft isn't spent. This is what stops anyone draining the writer's allowance by publishing.
+    const cap = limitsOf(ctx.config).publishesPerDay;
+    if (!takeToday(ctx.config, 'publishes', cap, ctx.now())) {
+      throw overToday(ctx.now(), `Petal has published ${cap} flowers today, so this one was not.`);
     }
     if (!(await drafts.claim(entry_sha256, ctx.now().toISOString()))) {
       throw unauthorised('This draft was already published; the nonce is used.');

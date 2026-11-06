@@ -137,6 +137,19 @@ export function fileStore(dirs: { fixtures: string; cache: string }): SnapshotSt
       return readSnapshotFile(cache, sha256, c?.file);
     },
 
+    async gz(sha256) {
+      if (!isSha256(sha256)) return null;
+      for (const dir of [fixtures, cache]) {
+        const row = (await readIndex(dir)).snapshots.find((r) => r.sha256 === sha256);
+        try {
+          return await readFile(join(dir, row?.file ?? `${sha256}.json.gz`));
+        } catch (e) {
+          if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e;
+        }
+      }
+      return null;
+    },
+
     put(s) {
       const run = queue.then(async () => {
         const { canonical, sha256 } = encodeSnapshot(s);

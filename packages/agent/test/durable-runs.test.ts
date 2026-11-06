@@ -320,11 +320,12 @@ describe('Stop', () => {
       event: 'error',
       data: { code: 'stopped', message: STOPPED },
     });
-    // what was used, what the aborted call said it cost, and nothing still held
+    // what was used, the aborted call at its full hold, since it can't say, and nothing still held
     const done = run.events.at(-1);
-    expect(done?.event === 'done' && done.data.cost_usd).toBeCloseTo(COST + 0.002, 9);
+    const hold = DEFAULT_BUDGET.usdPerChat;
+    expect(done?.event === 'done' && done.data.cost_usd).toBeCloseTo(COST + hold, 9);
     expect(store.ledger.get(DAY).reserved_usd).toBe(0);
-    expect(store.ledger.get(DAY).usd).toBeCloseTo(COST + 0.002, 9);
+    expect(store.ledger.get(DAY).usd).toBeCloseTo(COST + hold, 9);
     expect(m.calls).toHaveLength(2);
   });
 
@@ -378,7 +379,7 @@ describe('Stop', () => {
     expect(store.ledger.get(DAY).reserved_usd).toBeGreaterThan(0);
     call.give(answer());
     await until(() => store.ledger.get(DAY).reserved_usd === 0, 'the hold settles');
-    expect(store.ledger.get(DAY).usd).toBeCloseTo(COST, 9);
+    expect(store.ledger.get(DAY).usd).toBeCloseTo(DEFAULT_BUDGET.usdPerChat, 9);
   });
 
   test('after the end it says it had already finished; a second Stop says the same', async () => {
@@ -489,8 +490,9 @@ describe('the boot scan', () => {
       data: { code: 'interrupted', message: INTERRUPTED },
     });
     expect(names(parseSse(await (await watch(app, id)).text())).at(-1)).toBe('error');
+    // what the call in flight cost can't be known, so its hold counts as spent
     expect(db.ledger.get(DAY)).toMatchObject({ reserved_usd: 0 });
-    expect(db.ledger.get(DAY).usd).toBeCloseTo(COST, 9);
+    expect(db.ledger.get(DAY).usd).toBeCloseTo(COST + DEFAULT_BUDGET.usdPerChat, 9);
     expect(again.calls).toHaveLength(0); // nothing was resumed
 
     const before = run.events.length;
@@ -518,7 +520,7 @@ describe('the boot scan', () => {
     store.ledger.reserve(DAY, 0.05, 3);
     store.meta.set('runs_pid', String(live.pid));
     const log = vi.fn();
-    expect(interruptRuns(store, log)).toEqual({ interrupted: 0, releasedUsd: 0 });
+    expect(interruptRuns(store, log)).toEqual({ interrupted: 0, spentUsd: 0 });
     expect(log.mock.calls.flat().join()).toContain(String(live.pid));
     expect((await runs.get(id))?.status).toBe('running');
     expect(store.ledger.get(DAY).reserved_usd).toBe(0.05);
@@ -528,9 +530,9 @@ describe('the boot scan', () => {
       live.once('exit', r);
       live.kill('SIGKILL');
     });
-    expect(interruptRuns(store, log)).toEqual({ interrupted: 1, releasedUsd: 0.05 });
+    expect(interruptRuns(store, log)).toEqual({ interrupted: 1, spentUsd: 0.05 });
     expect((await runs.get(id))?.status).toBe('interrupted');
-    expect(store.ledger.get(DAY).reserved_usd).toBe(0);
+    expect(store.ledger.get(DAY)).toMatchObject({ usd: 0.05, reserved_usd: 0 });
   });
 
   test('PETAL_RUN_MAX_S sets the limit; a run past it ends, and says so', async () => {

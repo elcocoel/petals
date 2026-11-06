@@ -13,6 +13,7 @@ import { join } from 'node:path';
 import { TOOLS_VERSION } from '@petal/core';
 import type { AgentEvent, ChatInput, Draft, Entry, Run } from '@petal/core/types';
 import type { RunRow, Store } from '@petal/store';
+import { inviteOfAccount } from './invites.ts';
 import type { LlmMessage } from './llm.ts';
 
 /** A stored event and its place in the run's log: 0, 1, 2…, the same as its index in Run.events. */
@@ -298,8 +299,9 @@ function isAlive(pid: number): boolean {
 /**
  * The boot scan (T190, SYS-012). One process runs every run, so before it serves nothing is in
  * flight: a run still `running` lost its process, and any hold on the ledger lost its call. What such
- * a call really cost can't be known, so it isn't counted. Nothing is resumed: that would spend money
- * with nobody watching. A person's next message continues the run from its saved thread.
+ * a call really cost can't be known, but it may well have been billed, so its full hold counts as
+ * spent, on the day and on the invite. Nothing is resumed: that would spend money with nobody
+ * watching. A person's next message continues the run from its saved thread.
  *
  * Building the app isn't always a restart: scripts/check.sh builds it on build/.petal, with Elco's
  * server up on the same folder. So a process that started a chat here and is still alive keeps its
@@ -308,22 +310,31 @@ function isAlive(pid: number): boolean {
 export function interruptRuns(
   store: Store,
   log: (line: string) => void = console.log,
-): { interrupted: number; releasedUsd: number } {
+): { interrupted: number; spentUsd: number } {
   const holder = Number(store.meta.get(RUNS_PID));
   if (holder && holder !== process.pid && isAlive(holder)) {
     log(`petal: process ${holder} is running this store's runs, so they are left to it.`);
-    return { interrupted: 0, releasedUsd: 0 };
+    return { interrupted: 0, spentUsd: 0 };
   }
   const ids = store.run.idsWithStatus('running');
   for (const id of ids) {
     appendEvent(store, id, { event: 'error', data: { code: 'interrupted', message: INTERRUPTED } });
   }
-  // an invite's holds too: otherwise a crash would eat into a judge's budget for good
-  const releasedUsd = store.ledger.releaseHolds() + store.credit.releaseHolds();
-  if (ids.length || releasedUsd) {
-    log(`petal: ${ids.length} runs interrupted by a restart, $${releasedUsd} of holds released.`);
+  // The day's ledger and the invites hold the same money twice over, so the day's figure is the total.
+  const spentUsd = store.tx(() => {
+    const at = new Date().toISOString();
+    for (const { account_key, usd } of store.credit.spendHolds(at)) {
+      const invite = inviteOfAccount(account_key);
+      if (invite) store.invite.addSpent(invite, usd);
+    }
+    return store.ledger.spendHolds();
+  });
+  if (ids.length || spentUsd) {
+    log(
+      `petal: ${ids.length} runs interrupted by a restart, $${spentUsd} of holds counted as spent.`,
+    );
   }
-  return { interrupted: ids.length, releasedUsd };
+  return { interrupted: ids.length, spentUsd };
 }
 
 export function sqliteRunStore(store: Store): Required<RunStore> {

@@ -20,7 +20,7 @@ export {
   type EvmReaderOptions,
   evmReader,
 } from './evm/reader.ts';
-export { getSnapshot, LATEST_REUSE_S } from './get-snapshot.ts';
+export { type FreshGate, getSnapshot, LATEST_REUSE_S } from './get-snapshot.ts';
 export {
   BACKER_CLASSES,
   type BackerClass,
@@ -94,4 +94,6 @@ export interface SnapshotStore {
   put(s: Snapshot): Promise<{ sha256: string; bytes: number }>;
   lookup(key: { chain: string; population: string; block_height: number }): Promise<string | null>;
   list(networkId?: string): Promise<IndexRow[]>;
+  /** Additive (T300). The gzip file as stored, unchecked, so serving one costs no compression. */
+  gz?(sha256: string): Promise<Uint8Array | null>;
 }

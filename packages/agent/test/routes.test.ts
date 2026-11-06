@@ -54,7 +54,7 @@ function setup(o: { llm?: LlmClient; opts?: AgentRouteOptions } = {}) {
 const chat = (app: ReturnType<typeof setup>['app'], body: unknown = QUESTION, ip = '203.0.113.7') =>
   app.request('/api/v1/agent/chat', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
+    headers: { 'content-type': 'application/json', 'cf-connecting-ip': ip },
     body: typeof body === 'string' ? body : JSON.stringify(body),
   });
 
