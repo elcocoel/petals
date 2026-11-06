@@ -63,7 +63,14 @@ export function forAgent(t: AnyTool): boolean {
   return !NOT_FOR_THE_AGENT.has(t.name);
 }
 
+/** Here the model's own words win: the registry's description invites a quote to anyone stuck. */
+const IN_THIS_DOOR: Record<string, string> = {
+  quote_payment:
+    'A dry quote, only for someone who asks about paying for a refresh or new coverage. No money moves. Say "Dry quote. Paying is not switched on."',
+};
+
 function describe(t: AnyTool): string {
+  if (IN_THIS_DOOR[t.name]) return IN_THIS_DOOR[t.name] as string;
   const own = (t as { description?: unknown }).description;
   if (typeof own === 'string' && own) return own;
   const fromSchema = t.input?.description;

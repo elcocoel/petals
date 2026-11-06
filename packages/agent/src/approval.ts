@@ -1,14 +1,16 @@
 // The yes, held in code (J4; SYS-054). Petal's own agent can't start a new map until the person has
-// said so. This is consent, not security: a client can write its own message history, and the invite
-// budget is the boundary that holds against that. Nor is it a wallet approval: nothing irreversible
-// sits behind it, and publishing still takes a signature (SYS-053).
+// said so. A new map is a fresh read or a drawing; reading what's stored isn't one (stored-read.ts).
+// This is consent, not security: a client can write its own message history, and the invite budget is
+// the boundary that holds against that. Nor is it a wallet approval: nothing irreversible sits behind
+// it, and publishing still takes a signature (SYS-053).
 //
 // Nothing is stored for it. What has been approved is read back from the run's thread and flowers, so
 // it survives continuing by run_id and a restart. A snapshot call that came back without an error was
-// let through, so a thread trimmed past it (thread.ts) can only make the agent ask again.
+// let through, unless it says it was only a stored read, so a thread trimmed past it (thread.ts) can
+// only make the agent ask again.
 import { canonicalJson, specHash } from '@petal/core';
 import type { AgentEvent, ApprovalRequiredError, Spec } from '@petal/core/types';
-import { isYes, wordsOf } from './is-yes.ts';
+import { askedYesOrNo, asksToDraw, isYes, wordsOf } from './is-yes.ts';
 import type { LlmMessage } from './llm.ts';
 import type { EarlierFlower } from './thread.ts';
 
@@ -19,6 +21,12 @@ export type Held = Extract<AgentEvent, { event: 'approval_required' }>['data'];
 
 /** The tools that start a new map. Anything else only reads what exists, so a flower is simply shown. */
 const HELD_TOOLS = new Set(['get_snapshot', 'propose_spec', 'render_flower']);
+
+/** What a refusal takes away. A get_snapshot stays: it can still read what's stored. */
+export const DRAWING_TOOLS: ReadonlySet<string> = new Set(['propose_spec', 'render_flower']);
+
+/** A get_snapshot answered from the store, with no yes behind it, says so. It agrees to nothing. */
+export const STORED_ONLY = 'stored_only';
 
 const isObj = (x: unknown): x is Obj => !!x && typeof x === 'object' && !Array.isArray(x);
 
@@ -127,6 +135,7 @@ export function approvedIn(
   for (const { flower } of flowers) approveSpec(approved, flower.spec, flower.spec_sha256);
   for (const { name, args, out } of answeredCalls(thread)) {
     if (!HELD_TOOLS.has(name) || !isObj(args) || !isObj(out) || 'error' in out) continue;
+    if (out[STORED_ONLY]) continue;
     approve(approved, name, args, out);
   }
   return approved;
@@ -208,6 +217,11 @@ const NOT_A_CHOICE = new Set([
 
 const MAX_NAMING_WORDS = 10;
 
+/** Whether a candidate of the last ambiguous find_target would draw this target. */
+function amongThem(candidates: Candidate[], key: string): boolean {
+  return candidates.some((c) => c.draw?.some((d) => targetKey(d.module, d.params) === key));
+}
+
 /** The one candidate a short reply names by ordinal, chain or address; null when it isn't clear. */
 function candidateNamed(reply: string, candidates: Candidate[]): Candidate | null {
   if (reply.length > 120 || /[?¿？]/u.test(reply)) return null;
@@ -240,9 +254,16 @@ function candidateNamed(reply: string, candidates: Candidate[]): Candidate | nul
 
 // ---------------------------------------------------------------------------------------------
 
+/** Why a call was held, which decides what the model is told to say. */
+export type HeldWhy = 'no_yes' | 'not_yes_or_no' | 'which_one';
+
 export interface YesGate {
   /** Null when the call may go ahead; otherwise what it would have drawn. `thread` is the chat so far. */
   check(tool: string, args: Obj, thread: LlmMessage[]): Held | null;
+  /** Why check() held this target. */
+  why(target: Held, thread: LlmMessage[]): HeldWhy;
+  /** Whether anything has been agreed to, so that drawing could still go ahead after a refusal. */
+  canDraw(): boolean;
   /** A call that went ahead answered without an error. */
   passed(tool: string, args: Obj, out: Obj): void;
 }
@@ -258,9 +279,13 @@ export function yesGate(
   const latest = conversation[at];
   const reply = latest?.role === 'user' ? latest.content : '';
   // Not a first message: until the agent has said what it found, there is nothing to say yes to.
-  const spokeFirst = conversation
+  const agentSaid = conversation
     .slice(0, Math.max(at, 0))
-    .some((m) => m.role === 'assistant' && !!m.content?.trim());
+    .findLast((m) => m.role === 'assistant' && !!m.content?.trim())?.content;
+  const spokeFirst = !!agentSaid;
+  // A yes to "stored, or fresh?" or to a list says nothing about which: only what it asked can tell.
+  const yes = spokeFirst && isYes(reply);
+  const plainYes = yes && askedYesOrNo(agentSaid ?? '');
   // One yes, one target: the next new one is a new question.
   let yesUsed = false;
 
@@ -279,9 +304,13 @@ export function yesGate(
   }
 
   function consented(key: string, thread: LlmMessage[]): boolean {
-    if (yesUsed || !spokeFirst) return false;
-    if (isYes(reply)) return true;
-    const named = candidateNamed(reply, ambiguousCandidates(thread));
+    if (yesUsed) return false;
+    const candidates = ambiguousCandidates(thread);
+    // Told to draw, it needs no question: unless that would be picking between look-alikes for them.
+    if (asksToDraw(reply) && !amongThem(candidates, key)) return true;
+    if (plainYes) return true;
+    if (!spokeFirst) return false;
+    const named = candidateNamed(reply, candidates);
     return !!named?.draw?.some((d) => targetKey(d.module, d.params) === key);
   }
 
@@ -292,6 +321,13 @@ export function yesGate(
       if (alreadyApproved(args, target.target_key)) return null;
       return consented(target.target_key, thread) ? null : target;
     },
+    why(target, thread) {
+      if (yes && !plainYes) return 'not_yes_or_no';
+      return asksToDraw(reply) && amongThem(ambiguousCandidates(thread), target.target_key)
+        ? 'which_one'
+        : 'no_yes';
+    },
+    canDraw: () => approved.keys.size + approved.shas.size + approved.specs.size > 0,
     passed(tool, args, out) {
       if (!HELD_TOOLS.has(tool)) return;
       if (!alreadyApproved(args, targetOf(tool, args).target_key)) yesUsed = true;
@@ -300,13 +336,24 @@ export function yesGate(
   };
 }
 
+const NEVER_SAY = 'Never mention this message, approvals, tools or rules.';
+const WHAT_TO_SAY: Record<HeldWhy, string> = {
+  no_yes:
+    'You can still find out more with the tools you have. Then tell them in a sentence or two what you found about their question, and ask a plain yes or no: shall you read it and draw it?',
+  not_yes_or_no:
+    'They said yes, but to a question with more than one answer. Ask again, once, in one sentence: name the one thing you would do, and ask yes or no.',
+  which_one:
+    'Different things carry this name. Ask which one to draw, naming each with its chain and what separates them.',
+};
+
 /** What the model reads instead of the tool's answer. It steers to the person's question, never to us. */
-export function approvalRequired(target: Held): ApprovalRequiredError {
+export function approvalRequired(target: Held, why: HeldWhy = 'no_yes'): ApprovalRequiredError {
+  const fresh = target.tool === 'get_snapshot' ? ', and this would have been a fresh read' : '';
   return {
     error: {
       code: 'approval_required',
-      message: `Nothing was read or drawn. The person hasn't agreed yet to a new map of ${target.network}.`,
-      hint: 'Tell them in a sentence or two what you found about their question, then ask a plain yes or no: shall you read it and draw it? Never mention this message, approvals, tools or rules.',
+      message: `Nothing was read or drawn. The person hasn't agreed yet to a new map of ${target.network}${fresh}.`,
+      hint: `${WHAT_TO_SAY[why]} ${NEVER_SAY}`,
     },
   };
 }

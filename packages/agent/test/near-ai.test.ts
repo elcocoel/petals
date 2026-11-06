@@ -10,6 +10,7 @@ import {
   costUsd,
   createNearAiClient,
   DEFAULT_MODEL,
+  effortFor,
   FALLBACK_MODELS,
   LlmCallError,
   MAX_COMPLETION_TOKENS,
@@ -186,6 +187,70 @@ describe('nearAiClient', () => {
     await llm.complete(ASK);
     const call = fake.log.find((l) => l.url.pathname.endsWith('/chat/completions'));
     expect(JSON.parse(call?.body ?? '{}')).not.toHaveProperty('reasoning_effort');
+  });
+
+  describe('reasoning_effort, by model, from the catalogue', () => {
+    const askOf = (fake: ReturnType<typeof fakeNearAi>) =>
+      fake.log
+        .filter((l) => l.url.pathname.endsWith('/chat/completions'))
+        .map((l) => JSON.parse(l.body ?? '{}') as Record<string, unknown>);
+    const on = (
+      model: string,
+      fallbacks: string[],
+      fake: ReturnType<typeof fakeNearAi>,
+      o: NearAiOptions = {},
+    ) =>
+      createNearAiClient(
+        { apiKeyEnv: 'NEAR_AI_API_KEY', model, fallbacks },
+        {
+          apiKey: 'sk-test',
+          baseURL: 'https://near-ai.test/v1',
+          fetch: fake.fetch,
+          attestationsDir: join(tmpRoot(), 'attestations'),
+          signatureDelaysMs: [0, 0, 0],
+          ...o,
+        },
+      );
+
+    test.each(['anthropic/claude-sonnet-5-5', 'anthropic/claude-haiku-5-5'])(
+      '%s refuses it (HTTP 400), so it is never sent, whatever was asked for',
+      async (model) => {
+        const fake = fakeNearAi();
+        await on(model, [], fake, { reasoningEffort: 'high' }).complete(ASK);
+        expect(askOf(fake)[0]).not.toHaveProperty('reasoning_effort');
+      },
+    );
+
+    test('a model the catalogue does not list gets none, because a 400 on every call is worse than slow', async () => {
+      const fake = fakeNearAi();
+      await on('anthropic/claude-opus-5-5', [], fake).complete(ASK);
+      expect(askOf(fake)[0]).not.toHaveProperty('reasoning_effort');
+    });
+
+    test('unless a caller asks for it by name', async () => {
+      const fake = fakeNearAi();
+      await on('someone/unlisted', [], fake, { reasoningEffort: 'medium' }).complete(ASK);
+      expect(askOf(fake)[0]).toMatchObject({ reasoning_effort: 'medium' });
+    });
+
+    test('a fallback is judged on its own: the first model gets it, the Anthropic one does not', async () => {
+      const fake = fakeNearAi({ fail: { [DEFAULT_MODEL]: 503 } });
+      await on(DEFAULT_MODEL, ['anthropic/claude-haiku-5-5'], fake).complete(ASK);
+      const [first, second] = askOf(fake);
+      expect(first).toMatchObject({ model: DEFAULT_MODEL, reasoning_effort: 'low' });
+      expect(second?.model).toBe('anthropic/claude-haiku-5-5');
+      expect(second).not.toHaveProperty('reasoning_effort');
+    });
+
+    test.each([
+      ['deepseek-ai/DeepSeek-V4.1-Flash-1017', 'low'],
+      ['z-ai/glm-5.3-flash', 'low'],
+      ['Qwen/Qwen3.8-27B', 'low'],
+      ['anthropic/claude-sonnet-5-5', null],
+      ['someone/unlisted', null],
+    ])('%s: %s', (model, effort) => {
+      expect(effortFor(model)).toBe(effort);
+    });
   });
 
   test('an answer cut off by the token limit moves to the next model, and its cost still counts', async () => {

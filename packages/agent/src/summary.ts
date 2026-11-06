@@ -85,14 +85,13 @@ export function summarize(name: string, out: unknown): string {
 }
 
 // ---------------------------------------------------------------------------------------------
-// What the model reads back. Every byte here is sent again on every later turn, so each tool's
-// result is cut to what the next step needs. The doors keep the full outputs (tools.md); the
-// tool_call and flower events are not affected. Never a snapshot body, either way.
+// What the model reads back. Nothing it could use is cut for size alone: with 10 shares, Sonnet
+// couldn't say "the 20 equal holders add up to 53%", and could with all of them. What goes is what
+// no model can use (bodies, SVG, base64) and what another result already says. The doors keep the
+// full outputs (tools.md); the tool_call and flower events are not affected.
 
-/** compute_figures: enough shares for the answer; describe_snapshot lists more on request. */
-export const SHARES_FOR_MODEL = 10;
-/** describe_snapshot: long coverage notes end in raw import details. */
-export const COVERAGE_NOTE_FOR_MODEL = 2000;
+/** compute_figures: as many shares as a flower can have petals (specs: petals 5 to 300). */
+export const SHARES_FOR_MODEL = 300;
 
 /**
  * render_flower's view_url holds the whole spec in base64 (about 2 KB). The model gets this short
@@ -101,12 +100,6 @@ export const COVERAGE_NOTE_FOR_MODEL = 2000;
  */
 export function draftLink(specSha256: string): string {
   return `/draft?flower=${specSha256.slice(0, 8)}`;
-}
-
-function cutAtSentence(text: string, max: number): string {
-  if (text.length <= max) return text;
-  const end = text.lastIndexOf('. ', max);
-  return `${text.slice(0, end > 0 ? end + 1 : max)} (shortened)`;
 }
 
 function networkForModel(n: unknown): Obj {
@@ -124,12 +117,32 @@ function networkForModel(n: unknown): Obj {
   };
 }
 
+/** The tools offer every door a dry quote as a way forward. In this one it never is (prompt.md). */
+const QUOTE_OFFER = /[;.]?\s*(?:To ask for new coverage, )?quote_payment with purpose [^.]*\./g;
+const noQuote = (text: unknown) =>
+  typeof text === 'string' ? text.replace(QUOTE_OFFER, '.') : text;
+
+/** `next` tells every door to ask first. In this one the prompt and the gate decide (approval.ts). */
+const ASKS_FIRST = /^(?:One clear match|Different things carry this name)/;
+
 export function forModel(name: string, out: unknown): unknown {
-  if (isToolError(out)) return out;
+  if (isToolError(out)) {
+    const hint = noQuote(out.error.hint);
+    return hint === out.error.hint ? out : { ...out, error: { ...out.error, hint } };
+  }
   const o = obj(out);
   switch (name) {
+    case 'find_target': {
+      if (typeof o.next !== 'string' || !ASKS_FIRST.test(o.next)) return out;
+      const { next: _next, ...rest } = o;
+      return rest;
+    }
     case 'list_networks':
-      return { ...o, networks: arr(o.networks).map(networkForModel) };
+      return {
+        ...o,
+        networks: arr(o.networks).map(networkForModel),
+        cannot_read_hint: noQuote(o.cannot_read_hint),
+      };
     case 'get_network':
       return { ...o, network: networkForModel(o.network) };
     case 'get_snapshot': {
@@ -137,17 +150,13 @@ export function forModel(name: string, out: unknown): unknown {
       const { coverage: _coverage, body_url: _body, ...rest } = o;
       return { ...rest, sources: arr(o.sources).map((s) => obj(s).id) };
     }
-    case 'describe_snapshot':
-      return typeof o.coverage_note === 'string'
-        ? { ...o, coverage_note: cutAtSentence(o.coverage_note, COVERAGE_NOTE_FOR_MODEL) }
-        : o;
     case 'compute_figures': {
       const shares = arr(o.shares);
       if (shares.length <= SHARES_FOR_MODEL) return o;
       return {
         ...o,
         shares: shares.slice(0, SHARES_FOR_MODEL),
-        shares_note: `the largest ${SHARES_FOR_MODEL} of ${shares.length} shares; describe_snapshot with top up to 50 lists more`,
+        shares_note: `the largest ${SHARES_FOR_MODEL} of ${shares.length} shares`,
       };
     }
     case 'render_flower': {

@@ -103,7 +103,7 @@ describe('SKILL.md: the Agent Skills format', () => {
       `pnpm -s --dir "<repo>" petal render @spec.json --out flower.svg | grep '"spec_sha256"'`,
     );
     expect(own).toContain('"include_svg": true');
-    expect(own).toMatch(/its full path goes on the \*\*Flower\*\* line/);
+    expect(own).toMatch(/its full path takes the place of the link/);
     expect(shared).not.toContain('<repo>'); // the shared block is Petal's own prompt too
     // a real `claude -p` run with Bash(pnpm *) allowed was stopped at a redirect, so none here
     expect(own).not.toMatch(/petal render[^\n]*> /);

@@ -27,8 +27,9 @@ export interface CatalogueModel {
   /** tokens: how much the model can hold */
   context_window: number;
   /**
-   * tokens: where a conversation starts compacting. Older tool detail is dropped there, and the words
-   * stay. The wheel reads `context_tokens` over `context_window`, and this says where it starts to act.
+   * tokens: where a conversation starts compacting (thread.ts). Older tool detail is dropped there, and
+   * the words stay. The wheel reads `context_tokens` over `context_window`, and this says where it starts
+   * to act. Compaction counts from the text, so it can act a little before the model's own count gets here.
    */
   compacts_at_tokens: number;
   usd_per_million: { in: number; out: number; cached: number };
