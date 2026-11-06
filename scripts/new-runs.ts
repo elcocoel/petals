@@ -8,9 +8,10 @@
 //
 // Recorded replays and stub models spent nothing and said nothing real, so they're left out, as are the
 // harness's own questions.
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 const PROJECT = resolve(import.meta.dirname, '../..');
@@ -47,10 +48,39 @@ const seen: Record<string, string> =
 const next: Record<string, string> = existsSync(SEEN) ? JSON.parse(readFileSync(SEEN, 'utf8')) : {};
 let shown = 0;
 
+// The container's SQLite locks live in its own kernel, so nothing on this Mac may open a database it
+// holds (coordinator/backup.sh). That one is read from a copy made from inside it.
+const FOLDER_FILE = join(HOME_DIR, 'data-folder');
+const held = existsSync(FOLDER_FILE)
+  ? readFileSync(FOLDER_FILE, 'utf8').trim()
+  : join(HOME_DIR, 'data');
+const SNAP = `const { DatabaseSync, backup } = require("node:sqlite");
+backup(new DatabaseSync(process.argv[1], { readOnly: true, timeout: 15000 }), process.argv[2])
+  .catch((e) => { console.error(e.message); process.exit(1); });`;
+const COPY = '.read-copy.db';
+
+/** A path that's safe to open here; the second answer says there's a copy to remove afterwards. */
+function safePath(path: string): { path: string; copied: boolean } {
+  if (dirname(path) !== held) return { path, copied: false };
+  const up = spawnSync('/opt/homebrew/bin/container', ['inspect', 'petals'], { encoding: 'utf8' });
+  if (up.status !== 0 || !up.stdout.includes('"running"')) return { path, copied: false };
+  const made = spawnSync(
+    '/opt/homebrew/bin/container',
+    ['exec', 'petals', 'node', '--no-warnings', '-e', SNAP, '/data/private.db', `/data/${COPY}`],
+    { encoding: 'utf8' },
+  );
+  if (made.status !== 0) throw new Error(`couldn't copy from inside the container: ${made.stderr}`);
+  return { path: join(held, COPY), copied: true };
+}
+
 for (const store of stores) {
   let db: DatabaseSync;
+  let opened: { path: string; copied: boolean } = { path: store.path, copied: false };
   try {
-    db = new DatabaseSync(store.path, { readOnly: true });
+    opened = safePath(store.path);
+    // immutable: a copy needs no sidecar files, and none are left in the folder the container holds
+    const at = opened.copied ? `file:${encodeURI(opened.path)}?immutable=1` : opened.path;
+    db = new DatabaseSync(at, { readOnly: true });
   } catch (e) {
     console.log(`(can't read ${store.name}: ${String(e)})`);
     continue;
@@ -99,6 +129,7 @@ for (const store of stores) {
     console.log(`  spent $${usd.toFixed(4)}`);
   }
   db.close();
+  if (opened.copied) rmSync(opened.path, { force: true });
 }
 console.log(shown ? `\n${shown} conversations` : 'nothing new');
 if (process.argv.includes('--mark')) writeFileSync(SEEN, `${JSON.stringify(next, null, 1)}\n`);
