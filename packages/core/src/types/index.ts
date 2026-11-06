@@ -671,6 +671,11 @@ export type AgentEvent =
         cost_usd: number;
         /** additive (T168): the completion that wrote the answer; null when it got no signature */
         signature?: ModelSignature | null;
+        /**
+         * additive (T311): the prompt size of the chat's last model call, which is what the model is
+         * holding. `tokens.in` adds up every call in the chat, so it can't say that.
+         */
+        context_tokens?: number;
       };
     };
 

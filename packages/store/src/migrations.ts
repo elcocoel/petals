@@ -168,4 +168,55 @@ export const MIGRATIONS: readonly string[] = [
     PRIMARY KEY (day, what)
   );
   `,
+  // 5: the workspace (T310; design/workspace-data.md). A run is a conversation, so it gains what a
+  // person can change about one. A follow points at a wallet, address, DAO or network, and proves
+  // nothing. A workspace_note is a person's own, and private: it stands apart from `note`, which link
+  // holders read. search_doc and search are derived, and rebuild themselves if deleted. FTS5 is the one
+  // thing here that isn't portable, and only the store's `search` knows about it.
+  `
+  ALTER TABLE run ADD COLUMN title TEXT;
+  ALTER TABLE run ADD COLUMN settings TEXT;
+  ALTER TABLE run ADD COLUMN hidden_at TEXT;
+
+  CREATE TABLE follow (
+    id TEXT PRIMARY KEY,
+    owner TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    ref TEXT NOT NULL,
+    label TEXT,
+    spec_sha256 TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE (owner, ref)
+  );
+  CREATE INDEX follow_owner ON follow(owner, updated_at);
+
+  CREATE TABLE workspace_note (
+    id TEXT PRIMARY KEY,
+    owner TEXT NOT NULL,
+    author TEXT NOT NULL,
+    about TEXT NOT NULL,
+    text TEXT NOT NULL,
+    evidence TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE INDEX workspace_note_owner ON workspace_note(owner, updated_at);
+  CREATE INDEX workspace_note_about ON workspace_note(owner, about, updated_at);
+
+  CREATE TABLE search_doc (
+    id INTEGER PRIMARY KEY,
+    owner TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    ref TEXT NOT NULL,
+    title TEXT NOT NULL,
+    about TEXT,
+    at TEXT NOT NULL,
+    UNIQUE (owner, kind, ref)
+  );
+  CREATE INDEX search_doc_about ON search_doc(owner, about);
+  CREATE VIRTUAL TABLE search USING fts5(
+    title, text, tokenize = 'unicode61 remove_diacritics 2'
+  );
+  `,
 ];

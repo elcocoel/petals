@@ -12,7 +12,9 @@ import {
   DATA_FULL,
   isLocalSite,
   overDataBudget,
+  privateStore,
   remember,
+  specBody,
   type ToolContext,
 } from '@petal/tools';
 import { type Context, Hono } from 'hono';
@@ -20,6 +22,7 @@ import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
 import type { RouteAuth } from './auth-routes.ts';
+import { defaultSettings, resolveSettings, settingsOf } from './catalogue.ts';
 import { type Earlier, type Observed, runJobs } from './jobs.ts';
 import type { Budget, LlmClient } from './llm.ts';
 import { RECORDED_ATTESTATIONS } from './recorded.ts';
@@ -264,6 +267,11 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
       const parsed = parseChat(raw);
       if (typeof parsed === 'string') return fail(c, 'bad_input', parsed);
 
+      // Additive (T312): what the person picked, and an exploration from another door to pick up.
+      const asked = raw as { settings?: unknown; exploration?: unknown };
+      if (asked.exploration !== undefined && parsed.run_id) {
+        return fail(c, 'bad_input', 'a chat continues a run or an exploration, not both');
+      }
       let input: ChatInput = parsed;
       let storedBefore = 0;
       let earlier: Earlier = {};
@@ -281,6 +289,11 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
         }
         const stored = await deps.runs.get(id);
         if (!stored) return fail(c, 'not_found', `no run ${id}`);
+        const settings =
+          asked.settings === undefined
+            ? undefined
+            : resolveSettings(asked.settings, settingsOf(await deps.runs.settingsOf?.(id)));
+        if (typeof settings === 'string') return fail(c, 'bad_input', settings);
         const draft = parsed.draft ?? stored.draft;
         input = {
           messages: merge(stored.messages, parsed.messages),
@@ -293,10 +306,32 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
           flowers: flowersOf(stored.events),
           ...(said ? { thread: [...said, ...fresh] } : {}),
         };
-        runId = await deps.runs.create(input, owner);
+        runId = await deps.runs.create(input, { ...owner, ...(settings ? { settings } : {}) });
         storedBefore = runId === id ? stored.events.length : 0;
       } else {
-        runId = await deps.runs.create(input, owner);
+        const settings =
+          asked.settings === undefined
+            ? undefined
+            : resolveSettings(asked.settings, defaultSettings());
+        if (typeof settings === 'string') return fail(c, 'bad_input', settings);
+        let exploration: string | undefined;
+        if (asked.exploration !== undefined) {
+          // Only its owner can pick it up, and to anyone else it doesn't exist. Nothing is written on
+          // it here: a run points at it, and its flowers become steps as they do for any run.
+          const id = String(asked.exploration);
+          const row = privateStore(deps.tools.config).exploration.get(id);
+          if (!admitted.subject || row?.owner !== admitted.subject) {
+            return fail(c, 'not_found', `no exploration ${id}`);
+          }
+          exploration = row.id;
+          const spec = !parsed.draft && row.head ? specBody(deps.tools.config, row.head) : null;
+          if (spec) input = { ...input, draft: { spec } };
+        }
+        runId = await deps.runs.create(input, {
+          ...owner,
+          ...(settings ? { settings } : {}),
+          ...(exploration ? { exploration } : {}),
+        });
       }
       keepAlive(c, jobs.start(runId, input, earlier, admitted.budget));
       if (wantsJson(c)) {
