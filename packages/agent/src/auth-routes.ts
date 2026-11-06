@@ -113,6 +113,8 @@ export interface RouteAuth {
   subjectOf(c: Context): string | null;
   /** A refusal for a POST from another site; null for one that's fine. */
   refuseForeign(c: Context): Response | null;
+  /** Opens an anonymous session on this response, for a first write. Returns its subject. */
+  openAnonymous(c: Context): string;
 }
 
 export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
@@ -226,6 +228,9 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       if (old && !isPerson(old.subject)) {
         claimed = store.run.moveOwner(old.subject, person);
         explorations = store.exploration.moveOwner(old.subject, person);
+        store.follow.moveOwner(old.subject, person);
+        store.workspaceNote.moveOwner(old.subject, person);
+        store.search.forgetOwner(old.subject);
       }
       if (old) store.session.delete(old.hash);
       return { person, claimed, explorations };
@@ -359,6 +364,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
   const gate: RouteAuth = {
     subjectOf: (c) => sessionOf(c)?.subject ?? null,
     refuseForeign: (c) => (originAllowed(c) ? null : badOrigin(c)),
+    openAnonymous: (c) => newHandle(c).subject,
 
     admitChat(c, llm, budget) {
       // A recorded run spends nothing: anyone may watch it, from anywhere, and no one owns it.

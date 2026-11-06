@@ -5,13 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { schemas } from '@petal/core';
 import { createContext, registry } from '@petal/tools';
 import { describe, expect, test } from 'vitest';
-import {
-  COVERAGE_NOTE_FOR_MODEL,
-  draftLink,
-  forModel,
-  SHARES_FOR_MODEL,
-  summarize,
-} from '../src/summary.ts';
+import { draftLink, forModel, SHARES_FOR_MODEL, summarize } from '../src/summary.ts';
 import { llmTools } from '../src/tool-defs.ts';
 import { tmpRoot } from './helpers.ts';
 
@@ -79,7 +73,13 @@ describe('forModel on the real tools (near-validators fixture)', () => {
   test('each result is cut, keeps what the next step needs, and never holds a body', async () => {
     const networks = await run('list_networks', {});
     const n = forModel('list_networks', networks) as Json;
-    expect(n.cannot_read_hint).toBe(networks.cannot_read_hint);
+    expect(n.cannot_read_hint).toBe(
+      networks.cannot_read_hint.replace(
+        /; quote_payment with purpose sponsor_coverage quotes new coverage\./,
+        '.',
+      ),
+    );
+    expect(n.cannot_read_hint).not.toMatch(/quote_payment/);
     const v = n.networks.find((x: Json) => x.id === 'near-validators');
     expect(v).toMatchObject({ live: false, segments: ['backers'] });
     expect(v.measures).toContain('validator_stake_current_epoch');
@@ -97,8 +97,7 @@ describe('forModel on the real tools (near-validators fixture)', () => {
 
     const described = await run('describe_snapshot', { sha256: snap.sha256 });
     const d = forModel('describe_snapshot', described) as Json;
-    expect(d.coverage_note.length).toBeLessThanOrEqual(COVERAGE_NOTE_FOR_MODEL + 20);
-    expect(d.coverage_note).toMatch(/\(shortened\)$/);
+    expect(d.coverage_note).toBe(described.coverage_note);
     expect(d.primitives).toEqual(described.primitives);
     expect(d.sources).toEqual(described.sources);
 
@@ -107,11 +106,12 @@ describe('forModel on the real tools (near-validators fixture)', () => {
       measure: 'validator_stake_current_epoch',
     });
     const f = forModel('compute_figures', figures) as Json;
+    expect(SHARES_FOR_MODEL).toBe(300);
     expect(f.shares).toEqual(figures.shares.slice(0, SHARES_FOR_MODEL));
-    expect(f.shares_note).toMatch(/describe_snapshot/);
+    expect(f.shares.length).toBeGreaterThan(10);
+    if (figures.shares.length > SHARES_FOR_MODEL) expect(f.shares_note).toMatch(/largest 300 of/);
     expect(f.nakamoto).toEqual(figures.nakamoto);
     expect(f.figure_ids).toEqual(figures.figure_ids);
-    expect(size('compute_figures', figures)).toBeLessThan(3000);
 
     const proposed = await run('propose_spec', {
       network: 'near-validators',

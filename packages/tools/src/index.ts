@@ -3,7 +3,7 @@
 export { configFromEnv, createContext } from './context.ts';
 export type { PetalTool, ToolAnnotations } from './define.ts';
 export { TOOL_ERROR_SCHEMA } from './define.ts';
-export { nonceStore, privateStore } from './drafts.ts';
+export { nonceStore, privateStore, specBody } from './drafts.ts';
 export { HTTP_STATUS, isToolError } from './errors.ts';
 export { freshGate, withRunSignal } from './fresh.ts';
 export { httpApp } from './http/app.ts';
@@ -21,6 +21,6 @@ export { mcpServer } from './mcp/server.ts';
 export { serveStdio } from './mcp/stdio.ts';
 export type { PublicPage } from './public-fetch.ts';
 export { callTool, describeTool, findTool, registry } from './registry.ts';
-export { saveRunStep } from './tools/explorations.ts';
+export { saveRunStep, shapeAt } from './tools/explorations.ts';
 export { makeReadPage } from './tools/read-page.ts';
 export type { Caller, Config, JSONSchema, Tool, ToolContext } from './types.ts';

@@ -18,7 +18,7 @@ import type {
   Validation,
 } from '@petal/core/types';
 import { registry as defaultRegistry, type ToolContext, withRunSignal } from '@petal/tools';
-import { approvalRequired, hashOf, yesGate } from './approval.ts';
+import { approvalRequired, DRAWING_TOOLS, hashOf, STORED_ONLY, yesGate } from './approval.ts';
 import { Channel } from './channel.ts';
 import type {
   Budget,
@@ -31,8 +31,17 @@ import type {
 import { LlmCallError } from './near-ai.ts';
 import { agentNotes, SYSTEM_PROMPT } from './prompt.ts';
 import { newRunId } from './runs.ts';
+import { storedRead } from './stored-read.ts';
 import { draftLink, forModel, isToolError, summarize } from './summary.ts';
-import { closeThread, type EarlierFlower, followUpNotes, specsIn, trimThread } from './thread.ts';
+import {
+  closeThread,
+  compactionChars,
+  compactThread,
+  type EarlierFlower,
+  followUpNotes,
+  specsIn,
+  windowOf,
+} from './thread.ts';
 import { type AnyTool, llmTools, STAGE_MESSAGE, STAGE_OF } from './tool-defs.ts';
 
 export interface RunInput {
@@ -65,6 +74,8 @@ export interface RunOptions {
   onThread?: (thread: LlmMessage[]) => Promise<void> | void;
   /** Stop: aborts the model call and the tool in progress, and the chat ends as `stopped` */
   signal?: AbortSignal;
+  /** the window a thread is compacted against, in tokens; default the model's (near-ai.ts) */
+  windowTokens?: number;
 }
 
 export const DEFAULT_HEARTBEAT_MS = 8000;
@@ -214,6 +225,7 @@ async function loop(
     fallback: false,
     model: llm.model,
     signature: null as ModelSignature | null,
+    context: 0,
   };
   let stage: Stage | undefined;
 
@@ -242,6 +254,7 @@ async function loop(
         tokens: { in: totals.in, out: totals.out },
         cost_usd: Math.round(totals.usd * 1e6) / 1e6,
         signature: totals.signature,
+        ...(totals.context ? { context_tokens: totals.context } : {}),
       },
     });
   // The ledger is the cap: a recorded run never spends, and every other model call goes between a
@@ -312,7 +325,7 @@ async function loop(
       return { role: m.role, content };
     });
   const conversation =
-    llm.kind === 'recorded' ? said.filter((m) => m.role === 'user').slice(-1) : trimThread(said);
+    llm.kind === 'recorded' ? said.filter((m) => m.role === 'user').slice(-1) : said;
   const followUp = conversation.some((m) => m.role === 'assistant');
   const system = [
     SYSTEM_PROMPT,
@@ -320,11 +333,33 @@ async function loop(
     ...(followUp ? [followUpNotes(earlier)] : []),
   ].join('\n\n');
   const messages: LlmMessage[] = [{ role: 'system', content: system }, ...conversation];
+  // Sent with every call, and they count against the window too.
+  const reservedChars = system.length + JSON.stringify(tools).length;
+  /** Near the model's window, what it no longer needs goes. What's saved is the same as what's sent. */
+  const compact = () => {
+    const window = opts.windowTokens ?? windowOf(totals.model);
+    const thread = messages.slice(1);
+    const kept = compactThread(thread, compactionChars(window, reservedChars));
+    if (kept !== thread) messages.splice(1, thread.length, ...kept);
+  };
 
   // The yes (approval.ts). A recorded run spends nothing and its transcript is fixed, so it isn't held.
   const gate = llm.kind === 'recorded' ? null : yesGate(said, earlier, draftSpec);
-  // What this chat was refused. Its next model call gets no tools, so the model has to speak.
+  // What this chat was refused: its targets, one event each, and the calls themselves. From then on
+  // the model keeps what only reads, so it can still find out and answer, and bounded by the rounds as
+  // ever. It loses what draws, and asking again for what it was just refused isn't a call.
   const refused = new Set<string>();
+  const refusedCalls = new Set<string>();
+  const refusedCall = (name: string, target: string, args: Obj) =>
+    `${name} ${target} ${args.fresh === true}`;
+  const asksAgain = (call: LlmToolCall) => {
+    const args = parsedArgs(call);
+    if (!args) return false;
+    const held = gate?.check(call.name, args, messages.slice(1));
+    return !!held && refusedCalls.has(refusedCall(call.name, held.target_key, args));
+  };
+  // A model that answered a refusal with nothing but more of the same gets one call with no tools.
+  let mustSpeak = false;
 
   // A store that fails here must not stop the chat: only a crash would then lose this much.
   const saveThread = () =>
@@ -333,6 +368,16 @@ async function loop(
   async function finish() {
     await saveThread();
     done();
+  }
+
+  /** A call's arguments, when they are a JSON object. */
+  function parsedArgs(call: LlmToolCall): Obj | null {
+    try {
+      const args: unknown = JSON.parse(call.arguments.trim() || '{}');
+      return args && typeof args === 'object' && !Array.isArray(args) ? (args as Obj) : null;
+    } catch {
+      return null;
+    }
   }
 
   async function callTool(call: LlmToolCall, by: LlmCompletion): Promise<unknown> {
@@ -367,7 +412,11 @@ async function loop(
       data: { id: call.id, name: call.name, args: args ?? call.arguments },
     });
     const callable = !!args && typeof args === 'object' && !Array.isArray(args);
-    const held = callable ? gate?.check(call.name, args as Obj, messages.slice(1)) : null;
+    let held = callable ? gate?.check(call.name, args as Obj, messages.slice(1)) : null;
+    // No yes, but what's stored can answer: that isn't a new map, so it runs and agrees to nothing.
+    const stored =
+      held && call.name === 'get_snapshot' ? await storedRead(deps.tools, args as Obj) : null;
+    if (stored) held = null;
     if (!held) setStage(STAGE_OF[call.name] ?? 'thinking');
 
     const tool = registry.find((t) => t.name === call.name);
@@ -404,9 +453,10 @@ async function loop(
     } else if (held) {
       if (!refused.has(held.target_key)) emit({ event: 'approval_required', data: held });
       refused.add(held.target_key);
-      out = approvalRequired(held);
+      refusedCalls.add(refusedCall(call.name, held.target_key, args as Obj));
+      out = approvalRequired(held, gate?.why(held, messages.slice(1)));
     } else {
-      const ctx = withProgress(deps.tools, (e) => emit({ event: 'progress', data: e }));
+      const ctx = withProgress(stored ?? deps.tools, (e) => emit({ event: 'progress', data: e }));
       try {
         // inside this, its fetches find the run's signal through runSignal()
         const running = signal
@@ -430,10 +480,10 @@ async function loop(
         ms: clock() - t0,
       },
     });
-    if (ok) {
-      remember(call.name, args as Obj, out as Obj, by);
-      gate?.passed(call.name, args as Obj, out as Obj);
-    }
+    if (!ok) return out;
+    remember(call.name, args as Obj, out as Obj, by);
+    if (stored) return { ...(out as Obj), [STORED_ONLY]: true };
+    gate?.passed(call.name, args as Obj, out as Obj);
     return out;
   }
 
@@ -507,22 +557,24 @@ async function loop(
       }
       const last = rounds >= budget.toolRounds;
       if (totals.turns > 0) setStage('thinking');
+      compact();
       // Out of tool rounds: one last call without tools. A user turn, not a second system
       // message, because some chat templates (Qwen's) accept a system message only first.
-      // Refused: the same, but the tool's answer already says what to ask, so nothing is added.
-      const req = refused.size
-        ? { messages }
-        : last
-          ? {
-              messages: [
-                ...messages,
-                {
-                  role: 'user' as const,
-                  content: `(Petal: the ${budget.toolRounds} tool rounds are used. Answer now with what the tools gave you.)`,
-                },
-              ],
-            }
-          : { messages, tools };
+      const offered =
+        refused.size && !gate?.canDraw() ? tools.filter((t) => !DRAWING_TOOLS.has(t.name)) : tools;
+      const req = last
+        ? {
+            messages: [
+              ...messages,
+              {
+                role: 'user' as const,
+                content: `(Petal: the ${budget.toolRounds} tool rounds are used. Answer now with what the tools gave you.)`,
+              },
+            ],
+          }
+        : mustSpeak
+          ? { messages }
+          : { messages, tools: offered };
       let pending: Promise<LlmCompletion> | undefined;
       let c: LlmCompletion;
       try {
@@ -558,6 +610,7 @@ async function loop(
       totals.turns++;
       totals.in += c.usage.in;
       totals.out += c.usage.out;
+      totals.context = c.usage.in;
       totals.usd += paid;
       totals.fallback ||= c.fallback_used;
       totals.model = c.model;
@@ -565,12 +618,22 @@ async function loop(
       await settle(hold, paid);
       if (stopped()) return;
 
-      // It was offered no tools, so a call in this answer isn't one: its words stand, nothing follows.
-      const answer: LlmCompletion['message'] = refused.size
-        ? { role: 'assistant', content: c.message.content }
-        : c.message;
-      messages.push(answer);
+      // After a refusal, a call it wasn't offered, or that repeats the refusal, isn't one. Its words
+      // stand, and only what's left runs.
+      const kept = (c.message.tool_calls ?? []).filter(
+        (call) =>
+          !refused.size ||
+          (!mustSpeak && offered.some((t) => t.name === call.name) && !asksAgain(call)),
+      );
+      const answer: LlmCompletion['message'] = kept.length
+        ? { ...c.message, tool_calls: kept }
+        : { role: 'assistant', content: c.message.content };
       const text = answer.content?.trim();
+      if (refused.size && !text && !kept.length && !mustSpeak) {
+        mustSpeak = true;
+        continue;
+      }
+      messages.push(answer);
       if (text) emit({ event: 'message', data: { text: withLinks(text) } });
       await saveThread();
       // this answer is already paid for, so it is shown; nothing more is bought

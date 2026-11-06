@@ -87,6 +87,8 @@ export interface EvmReaderOptions {
   sleep?: RpcPoolOptions['sleep'];
   /** stops a runaway log walk, default 400 eth_getLogs calls */
   maxLogCalls?: number;
+  /** a log query that's only an attempt: this long, one try, and none if the endpoint looks down */
+  logTimeoutMs?: number;
 }
 
 const hexBlock = (n: number) => `0x${n.toString(16)}`;
@@ -178,6 +180,7 @@ export function evmReader(opts: EvmReaderOptions = {}): EvmReader {
     ...common,
     endpoints: endpoints.slice(0, 1),
     ...(fallback ? { rounds: 1, timeoutMs: 30_000 } : {}),
+    ...(opts.logTimeoutMs ? { rounds: 1, timeoutMs: opts.logTimeoutMs } : {}),
   });
   const fallbackPool = fallback
     ? rpcPool({ ...common, endpoints: [fallback.endpoint], timeoutMs: 30_000 })
@@ -247,6 +250,8 @@ export function evmReader(opts: EvmReaderOptions = {}): EvmReader {
         pool = fallbackPool;
         chunk = fallback.chunk_blocks;
       }
+      if (opts.logTimeoutMs && (health.get(first) ?? 0) > Date.now())
+        throw failed(`${first} looks down, so this attempt was not made`);
       const stack: [number, number][] = [];
       let cursor = from;
       let calls = 0;

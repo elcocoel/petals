@@ -636,7 +636,9 @@ function plan(c: Working, ctx: ToolContext, rows: IndexRow[]): void {
       };
       const note = narrow
         ? `one day of logs: a week on ${chain.name} is about 300 keyless calls and most of a chat's time; window_days asks for more`
-        : undefined;
+        : chain && !chain.blockscout
+          ? 'every holder if the token is quiet enough to read whole; otherwise the last 7 days, and the result says which'
+          : undefined;
       if (has('erc20-holders'))
         out.push(drawing(rows, 'erc20-holders', params, 'addresses and their balances', note));
       if (c.votes && has('erc20-votes'))

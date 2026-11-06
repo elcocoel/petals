@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { sha256Hex } from '@petal/core';
 import type { ToolErrorCode } from '@petal/core/types';
 import OpenAI, { APIError } from 'openai';
+import { modelOf } from './catalogue.ts';
 import { CONNECT_HINT } from './invites.ts';
 import type { LlmClient, LlmCompletion, LlmMessage, LlmRequest, LlmToolCall } from './llm.ts';
 import {
@@ -58,11 +59,22 @@ export function costUsd(
  */
 export const MAX_COMPLETION_TOKENS = 16_000;
 
+type Effort = 'low' | 'medium' | 'high';
+
 /**
+ * The `reasoning_effort` a call sends: the catalogue's default for the model, or what was asked for.
  * T060: most of a chat's time was the model reasoning. At the models' own default a flower took
  * 63-92 s and often hit the 120 s limit; at "low" it takes 26-58 s, and the tools check the rest.
+ * Anthropic's models on NEAR AI answer the field with a 400 ("Extra inputs are not permitted", 6 Nov),
+ * so a model the catalogue gives no efforts never gets it. PETAL_MODEL can name a model the catalogue
+ * doesn't list, and for that one nobody knows: slow beats a 400 on every call, so nothing is sent
+ * unless a caller asks.
  */
-export const REASONING_EFFORT = 'low';
+export function effortFor(model: string, asked?: Effort | null): Effort | null {
+  const listed = modelOf(model);
+  if (listed && !listed.efforts.length) return null;
+  return asked === undefined ? ((listed?.default_effort as Effort | null) ?? null) : asked;
+}
 
 /** A model call that failed, with the error code the agent reports (tools.md codes). */
 export class LlmCallError extends Error {
@@ -109,8 +121,8 @@ export interface NearAiOptions {
   apiBase?: string;
   /** default MAX_COMPLETION_TOKENS; includes reasoning tokens */
   maxCompletionTokens?: number;
-  /** how long the model reasons before it answers; default REASONING_EFFORT, null the model's own */
-  reasoningEffort?: 'low' | 'medium' | 'high' | null;
+  /** how long the model reasons before it answers; default effortFor's, null the model's own */
+  reasoningEffort?: Effort | null;
   /** per attempt, default 60 s */
   timeoutMs?: number;
   /** a report is reused for this long before a fresh one is fetched; default 10 min */
@@ -325,7 +337,7 @@ export function createNearAiClient(
       defaultHeaders: { 'x-no-aliasing': 'true', 'Accept-Encoding': 'identity' },
       fetch: capture,
     });
-    const effort = o.reasoningEffort === undefined ? REASONING_EFFORT : o.reasoningEffort;
+    const effort = effortFor(model, o.reasoningEffort);
     const completion = await client.chat.completions.create(
       {
         model,

@@ -224,6 +224,22 @@ export const CASES: Case[] = [
     want: 'A real comparison from figures, or asks once to read what it lacks.',
   },
   {
+    id: 'long-flowers',
+    group: 'follow-up',
+    turns: [
+      "Draw me a flower of NEAR's validators.",
+      'Now split each one by who stands behind it.',
+      'top ten only',
+      'Draw the Moloch v1 members.',
+      'top ten only',
+      "Now draw NEAR's House of Stake.",
+      'Colour it by named or anonymous.',
+      'Of the ones we drew, which is the most concentrated?',
+      'And how do the top ten of Moloch add up?',
+    ],
+    want: 'Seven flowers in one conversation, each a link and a sentence. The last two answer from the figures, with numbers, reading them again if the thread lost them. Replies stay short at the end.',
+  },
+  {
     id: 'what-can',
     group: 'vague',
     turns: ['what can you do?'],

@@ -5,8 +5,9 @@
 //   window      the default where Blockscout does not answer: the addresses in Transfer logs of
 //               the last 7 days. Not every holder: an address that did not move tokens in the
 //               window is missing, however much it holds, and the coverage says so.
-//   full        every Transfer log, summed per address: every holder. Only with an explicit flag
-//               on the offline pull-module.ts, never in a chat. Cost grows with the token's history.
+//   full        every Transfer log, summed per address: every holder. Unbounded only with an explicit
+//               flag on the offline pull-module.ts. In a chat, tried first on a chain with wide logs and
+//               no explorer, as one query under WHOLE_HISTORY_LOGS; a busy token then gets the window.
 // Either way the amounts in the snapshot are balanceOf at one finalized block, read from the chain.
 //
 // The check, plainly. Drawn holdings plus the tail equal totalSupply() in every snapshot. Only with
@@ -55,6 +56,13 @@ const BLOCKSCOUT_TIMEOUT_MS = 20_000;
 const TRANSFER = eventTopic('Transfer(address,address,uint256)');
 const ZERO_TOPIC = `0x${'0'.repeat(64)}`;
 export const DEFAULT_WINDOW_DAYS = 7;
+/**
+ * Whole history in a chat, on a chain whose endpoint serves wide logs: one query, this many logs at most.
+ * A quiet token is read in full for about the price of a window; a busy one costs one refused query and
+ * then gets the window. RaidGuild's shares: 316 logs, all 158 holders, in under a second.
+ */
+export const WHOLE_HISTORY_LOGS = 20_000;
+const WHOLE_HISTORY_TIMEOUT_MS = 15_000;
 /**
  * Where a window replay stops and says so. A chat's tool call has 120 s: about 200,000 logs is
  * under 40 s on a keyless gateway, and 30,000 is one minute's budget on HyperSync's free plan.
@@ -218,8 +226,12 @@ export interface PullHoldersOptions {
   keep?: number;
   /** a replay's window, default 7 days */
   windowDays?: number;
-  /** read every Transfer log there is. Offline only (pull-module.ts --full), never in a chat */
+  /** read every Transfer log there is: unbounded offline (pull-module.ts --full) */
   full?: boolean;
+  /** with `full`, in a chat: stop past this many logs */
+  wholeBudget?: number;
+  /** why this is a window, when a whole read was tried first */
+  windowWhy?: string;
   /** overrides REPLAY_LOG_BUDGET */
   maxLogs?: number;
   maxLogCalls?: number;
@@ -342,6 +354,12 @@ async function listFromReplay(
   let shown = 0;
   for await (const page of pages) {
     applyTransfers(replay, page);
+    if (full && opts.wholeBudget !== undefined && replay.logs > opts.wholeBudget)
+      throw new InputError(
+        'cannot_read',
+        `${token} on ${chain.name} has more than ${grouped(opts.wholeBudget)} Transfer logs in its history`,
+        { hint: `ask for a window_days, or ${offline}` },
+      );
     if (!full && replay.logs > budget)
       throw new InputError(
         'cannot_read',
@@ -615,7 +633,7 @@ export async function pullErc20Holders(
       population: target.population,
       title: `${symbol} ${w ? 'active holders' : 'holders'}, ${chain.name}`,
       description: w
-        ? `Addresses that moved ${symbol} on ${chain.name} in the last ${w.days} days and what they hold, read from the chain. Not every holder: the rest of the supply is not attributed.`
+        ? `Only a window, not every holder: addresses that moved ${symbol} on ${chain.name} in the last ${w.days} days and what they hold, read from the chain${opts.windowWhy ? `. It's a window because ${opts.windowWhy}` : ''}. The rest of the supply is not attributed.`
         : `The largest holders of ${symbol} on ${chain.name} at one block, read from the chain, plus a declared tail. Balances only: no votes, no names.`,
       params: {
         chain: chain.id,
@@ -651,6 +669,9 @@ export async function pullErc20Holders(
           }
         : {}),
       note:
+        (w
+          ? `Only a window, not every holder: the last ${w.days} days of Transfer logs${opts.windowWhy ? `, because ${opts.windowWhy}` : ''}. `
+          : '') +
         `Balances of ${symbol} on ${chain.name} at block ${grouped(at.number)} (${dayOf(at.as_of)}): balanceOf for the listed holders, totalSupply() for the whole. ` +
         provenance +
         `The tail is ${amountText(tail)} ${symbol}, ${percent}% of totalSupply(). ` +
@@ -669,11 +690,17 @@ export async function pullErc20Holders(
 
 const TOKEN_PATTERN = '^0x[0-9a-fA-F]{40}$';
 
-// 1 to 30 days, or "full": only a stored fixture can answer that, a live read refuses it.
+// 1 to 30 days, or "full": a stored read, or a live one where the whole history fits in one query.
 const WINDOW_PATTERN = '^([1-9]|[12][0-9]|30|full)$';
 
+/** A chain whose first endpoint can serve a token's whole history, and no explorer lists its holders. */
+const triesWhole = (chain: EvmChain | undefined): boolean =>
+  Boolean(chain?.wide_logs && !chain.blockscout);
+
+/** What a read of these parameters is keyed by. With no window asked for, whole history where it's tried. */
 const windowOf = (params: Params | undefined): string =>
-  params?.window_days ?? String(DEFAULT_WINDOW_DAYS);
+  params?.window_days ??
+  (triesWhole(EVM_CHAINS[String(params?.chain)]) ? 'full' : String(DEFAULT_WINDOW_DAYS));
 
 export function holdersTarget(params: Params | undefined): HolderTarget {
   const chain = EVM_CHAINS[String(params?.chain)];
@@ -696,7 +723,7 @@ export const ERC20_HOLDERS_DESCRIPTOR: NetworkDescriptor = {
   population: 'erc20-holders',
   kind: 'other',
   title: 'ERC-20 holders, any token',
-  description: `Holders of any ERC-20 token on ${EVM_CHAIN_WORDS}, chosen by chain and token address, read now. Where Blockscout answers: the largest holders. Otherwise only the addresses that moved the token in the last window_days, default 7, and the rest of the supply is not attributed.`,
+  description: `Holders of any ERC-20 token on ${EVM_CHAIN_WORDS}, chosen by chain and token address, read now. Where Blockscout answers: the largest holders. Where a chain serves wide logs: every holder, if the token's history is short enough to read in one query. Otherwise only the addresses that moved the token in the last window_days, default 7, and the result says so.`,
   params: {
     chain: {
       required: true,
@@ -713,7 +740,7 @@ export const ERC20_HOLDERS_DESCRIPTOR: NetworkDescriptor = {
     window_days: {
       required: false,
       description:
-        'days of Transfer logs to read where a replay is used, 1 to 30, default 7; "full" only finds a stored whole-history read',
+        'days of Transfer logs to read, 1 to 30; left out, whole history where it fits and otherwise 7; "full" asks for whole history, or a refusal',
       pattern: WINDOW_PATTERN,
       example: '7',
       default: '7',
@@ -756,20 +783,54 @@ export function erc20Holders(
       return { block_height: b.number, as_of: b.as_of };
     },
     pull: async (at, params, onProgress) => {
-      if (windowOf(params) === 'full')
-        throw new InputError('cannot_read', 'no stored whole-history read of this token', {
-          hint: 'a whole history is an offline pull (pull-module.ts --full), never in a chat; or leave out window_days',
-        });
       const token = process.env.ENVIO_API_TOKEN;
-      const { snapshot } = await pullErc20Holders(holdersTarget(params), {
+      const common: PullHoldersOptions = {
         block: at.block_height,
-        windowDays: Number(windowOf(params)),
         ...(token ? { hypersyncToken: token } : {}),
         ...(opts.fetch ? { fetch: opts.fetch } : {}),
         ...(opts.sleep ? { sleep: opts.sleep } : {}),
         ...(onProgress ? { onProgress } : {}),
-      });
-      return snapshot;
+      };
+      const window = async (days: number, why?: string) =>
+        (
+          await pullErc20Holders(holdersTarget({ ...params, window_days: String(days) }), {
+            ...common,
+            windowDays: days,
+            ...(why ? { windowWhy: why } : {}),
+          })
+        ).snapshot;
+      const asked = params?.window_days;
+      if (asked && asked !== 'full') return window(Number(asked));
+      const target = holdersTarget({ ...params, window_days: 'full' });
+      if (!asked && !triesWhole(target.chain)) return window(DEFAULT_WINDOW_DAYS);
+      try {
+        const { snapshot } = await pullErc20Holders(target, {
+          ...common,
+          full: true,
+          wholeBudget: WHOLE_HISTORY_LOGS,
+          // one query: a token that doesn't fit in one is too busy to read whole in a chat
+          reader: evmReader({
+            chain: target.chain,
+            endpoints: target.chain.endpoints,
+            maxLogCalls: 1,
+            logTimeoutMs: WHOLE_HISTORY_TIMEOUT_MS,
+            ...(opts.fetch ? { fetch: opts.fetch } : {}),
+            ...(opts.sleep ? { sleep: opts.sleep } : {}),
+          }),
+        });
+        return snapshot;
+      } catch (e) {
+        if (!(e instanceof InputError)) throw e;
+        const why = /more than|over 1 calls/.test(e.message)
+          ? `its history is too long to read whole in a chat (over ${grouped(WHOLE_HISTORY_LOGS)} Transfer logs, or more than one query holds)`
+          : `its whole history could not be read (${e.message})`;
+        if (asked)
+          throw new InputError('cannot_read', `Petal can't read this token whole: ${why}`, {
+            hint: 'leave out window_days for a window of recent logs, or read it offline with pull-module.ts --full',
+          });
+        onProgress?.({ stage: 'fetching', message: `reading a window, because ${why}` });
+        return window(DEFAULT_WINDOW_DAYS, why);
+      }
     },
     ...(opts.fixtures ? { fixtures: opts.fixtures } : {}),
   });
