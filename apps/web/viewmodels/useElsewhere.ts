@@ -27,7 +27,8 @@ export function useElsewhere(from: string | null): {
           if (!gone) setRead({ failed: e instanceof Error ? e.message : String(e) });
         },
       );
-    // Its first signal comes on connecting, so a page that was away reads what it missed.
+    // Its first signal also comes on connecting, so a page that was away reads what it missed. The first
+    // read doesn't wait for that: a page that can't connect still has to say why.
     let stop = () => {};
     const listen = () => {
       stop();
@@ -38,8 +39,10 @@ export function useElsewhere(from: string | null): {
       if (document.visibilityState === 'visible') look();
       listen();
     };
-    if (isOwnId(ref)) listen();
-    else {
+    if (isOwnId(ref)) {
+      look();
+      listen();
+    } else {
       const claim = claims.current.get(ref) ?? claimElsewhere(ref);
       claims.current.set(ref, claim);
       void claim.then(
