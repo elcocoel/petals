@@ -44,6 +44,8 @@ export {
   type Transcript,
   type TranscriptTurn,
 } from './recorded.ts';
+/** The loop with its options (onThread) and what a follow-up needs; scripts/stress.ts drives real chats. */
+export { startRun } from './run.ts';
 /** Runs you can leave and come back to (F4). */
 export {
   fileRunStore,
@@ -53,6 +55,7 @@ export {
   type RunSummary,
   sqliteRunStore,
 } from './runs.ts';
+export { flowersOf } from './thread.ts';
 
 /** The agent loop: events in the order of http-api.md (run first, done last). */
 export function runAgent(
