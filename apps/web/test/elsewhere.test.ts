@@ -78,6 +78,21 @@ describe('the composer', () => {
   });
 });
 
+describe('a conversation that can’t be read', () => {
+  test('says so, not where it’s happening', () => {
+    const view = composerView({
+      question: '',
+      runId: null,
+      busy: false,
+      recorded: false,
+      elsewhere: WHERE,
+      unavailable: true,
+    });
+    expect(view.placeholder).toBe('This conversation isn’t available here.');
+    expect(view.disabled).toBe(true);
+  });
+});
+
 describe('the address', () => {
   test('holds it, with a petal or without', () => {
     const none = { runId: null, open: openFromParams({}).open, petal: null };

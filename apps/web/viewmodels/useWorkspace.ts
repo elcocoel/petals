@@ -260,6 +260,7 @@ export function useWorkspace(props: {
     recorded,
     target,
     elsewhere: initialElsewhere ? whereOf(elsewhere) : undefined,
+    unavailable: Boolean(elsewhere && 'failed' in elsewhere),
   });
 
   // the address holds what a reload needs

@@ -368,6 +368,8 @@ export function composerView(
     target?: ComposerTarget;
     /** where it's happening, if not here */
     elsewhere?: string | undefined;
+    /** that conversation can't be read, so nothing can be said about where it's happening */
+    unavailable?: boolean;
   },
 ): ComposerView {
   if (v.elsewhere) {
@@ -375,7 +377,9 @@ export function composerView(
       value: '',
       readOnly: true,
       label: `${v.elsewhere.charAt(0).toUpperCase()}${v.elsewhere.slice(1)}`,
-      placeholder: `This conversation is happening in ${v.elsewhere}.`,
+      placeholder: v.unavailable
+        ? 'This conversation isn’t available here.'
+        : `This conversation is happening in ${v.elsewhere}.`,
       button: 'Ask',
       disabled: true,
       away: true,
