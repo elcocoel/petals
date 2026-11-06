@@ -15,12 +15,32 @@ describe('agentPrompt', () => {
     expect(p).toMatch(/no account or key/);
     expect(p).toMatch(/If you can't open that link/);
     expect(p).toMatch(/without asking me to choose/);
-    expect(p.length).toBeLessThan(600);
+    expect(p).toMatch(/I want to watch this conversation/);
+    expect(p).toMatch(/word for word/);
+    expect(p.length).toBeLessThan(800);
+  });
+});
+
+describe('agentPrompt on this machine', () => {
+  test('says so, for a web tool that refuses a local address, and only there', () => {
+    expect(agentPrompt('http://127.0.0.1:3090')).toMatch(/on this machine.*use curl/);
+    expect(agentPrompt('http://localhost:3080')).toMatch(/on this machine.*use curl/);
+    expect(agentPrompt(ORIGIN)).not.toMatch(/on this machine/);
   });
 });
 
 describe('hostedSkill', () => {
   const md = hostedSkill(SKILL, ORIGIN);
+
+  test('says how to let the person watch, on either door, and never mentions claiming', () => {
+    const at = md.indexOf('## Let them watch');
+    expect(at).toBeGreaterThan(-1);
+    const watch = md.slice(at, md.indexOf('\n## ', at + 1));
+    expect(watch).toContain(`POST ${ORIGIN}/api/v1/explorations/<token>/notes`);
+    expect(watch).toMatch(/open_url/);
+    expect(watch).toMatch(/word for word/);
+    expect(watch).not.toMatch(/claim/i);
+  });
 
   test('has this site address and needs no clone', () => {
     expect(md).toContain(`API="${ORIGIN}"`);

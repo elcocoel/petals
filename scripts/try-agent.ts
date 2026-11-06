@@ -6,16 +6,18 @@
 //   node scripts/try-agent.ts codex "Who holds the shares of Moloch DAO?" "top ten only"
 //   node scripts/try-agent.ts claude --model sonnet "Who holds UNI on Base?"
 //   node scripts/try-agent.ts codex --bare "<the copied prompt>" "Who holds UNI on Base?"
+//   node scripts/try-agent.ts claude --events /tmp/e.jsonl --url <u> "first" "next"
 //
 // --bare is the paste test: no Petal tools and no skill, only web requests, as for someone who has
 // installed nothing. The first thing you say is the copied prompt.
 // --url <mcp url> is the connector test: one URL and nothing else, no prompt and no skill.
+// --events <file> appends the agent's raw record after each turn, to count what it called.
 //
 // Each extra argument is the next thing you say. The default models are small on purpose: Petal's
 // own agent runs a small model too, and a test should not use up a subscription.
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -220,6 +222,8 @@ function main(argv: string[]): number {
   const bare = argv.includes('--bare');
   const urlAt = argv.indexOf('--url');
   const url = urlAt > 0 ? argv[urlAt + 1] : undefined;
+  const eventsAt = argv.indexOf('--events');
+  const events = eventsAt > 0 ? argv[eventsAt + 1] : undefined;
   const said = argv
     .slice(1)
     .filter(
@@ -228,11 +232,13 @@ function main(argv: string[]): number {
         i + 1 !== at + 1 &&
         w !== '--bare' &&
         i + 1 !== urlAt &&
-        i + 1 !== urlAt + 1,
+        i + 1 !== urlAt + 1 &&
+        i + 1 !== eventsAt &&
+        i + 1 !== eventsAt + 1,
     );
   if ((a !== 'claude' && a !== 'codex') || said.length === 0) {
     console.error(
-      'usage: node scripts/try-agent.ts <claude|codex> [--model m] [--bare | --url u] "first" ["next" …]',
+      'usage: node scripts/try-agent.ts <claude|codex> [--model m] [--bare | --url u] [--events file] "first" ["next" …]',
     );
     return 2;
   }
@@ -276,6 +282,7 @@ function main(argv: string[]): number {
       maxBuffer: 256 * 1024 * 1024,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
+    if (events) appendFileSync(events, r.stdout ?? '');
     const turn = a === 'claude' ? readClaude(r.stdout ?? '') : readCodex(r.stdout ?? '');
     session = turn.session ?? session;
     const spec = specOf(r.stdout ?? '');

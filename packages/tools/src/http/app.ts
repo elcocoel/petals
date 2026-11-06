@@ -11,11 +11,12 @@ import { streamSSE } from 'hono/streaming';
 import { versioned } from '../define.ts';
 import { fromThrown, isToolError, toolError } from '../errors.ts';
 import { freshGate } from '../fresh.ts';
+import { LiveHub } from '../live.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
 import { findTool } from '../registry.ts';
 import { findSnapshot } from '../tools/shared.ts';
 import type { ToolContext } from '../types.ts';
-import { explorationRoutes, type SessionGate } from './explorations.ts';
+import { explorationRoutes, type SessionGate, SITE_HEADER } from './explorations.ts';
 import { isLocalSite, rateLimit } from './rate-limit.ts';
 import { body, bodyCap, fail, respond } from './reply.ts';
 
@@ -41,8 +42,7 @@ function pick(q: Record<string, string>, keys: string[], numeric: string[] = [])
   return out;
 }
 
-/** Set by apps/web/app/mcp/route.ts. A bare API has no pages, so its links stay relative. */
-export const SITE_HEADER = 'x-petal-site';
+export { SITE_HEADER };
 
 const wantsSse = (c: Context) => (c.req.header('accept') ?? '').includes('text/event-stream');
 
@@ -51,7 +51,7 @@ class MismatchedSnapshot extends Error {}
 export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hono {
   const app = new Hono();
   // HTTP and MCP are one set of callers, whoever they say they are: fresh reads take turns between them.
-  const ctx: ToolContext = { ...given, fresh: freshGate(given, 'door') };
+  const ctx: ToolContext = { ...given, fresh: freshGate(given, 'door'), live: new LiveHub() };
   const limit = rateLimit({
     max: 60,
     windowMs: 60_000,

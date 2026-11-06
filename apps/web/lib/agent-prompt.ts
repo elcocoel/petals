@@ -13,11 +13,18 @@ export function originFrom(headers: Headers, fallback = 'http://localhost:3080')
   return `${proto}://${host}`;
 }
 
+/** On this machine, some agents' web tools refuse the address on principle (Hermes's, Claude's). */
+const isThisMachine = (origin: string) =>
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(origin);
+
 export function agentPrompt(origin: string): string {
+  const local = isThisMachine(origin)
+    ? " It's running on this machine, so if your web tool won't open a local address, use curl."
+    : '';
   return [
     `I'd like to use Petal with you. It maps who holds power in crypto networks (${origin}). It's public and read-only, with no account or key.`,
-    `Its instructions for you are at ${origin}/skill.md. Please read them and get yourself set up in whatever way works best from where you are, without asking me to choose anything. Then tell me in a line or two what you can do, and ask what I'm curious about.`,
-    `If you can't open that link or make web requests from here, say so, and send me to ${origin}, where I can talk to Petal's own agent.`,
+    `Its instructions for you are at ${origin}/skill.md.${local} Please read them and set yourself up in whatever way works from where you are, without asking me to choose anything. I want to watch this conversation on Petal's page in my browser, so please open that page for me, and post each flower and your replies there word for word. Then tell me in a line or two what you can do, and ask what I'm curious about.`,
+    `If you can't open that link or make web requests, use Petal's tools if you already have them. If not, say so, and send me to ${origin}, where I can talk to Petal's own agent.`,
   ].join('\n\n');
 }
 
@@ -37,10 +44,19 @@ Don't install anything to get going. If they ask to keep Petal for next time, ad
 
 - Claude Code: \`claude mcp add --transport http petal ${mcp}\`
 - Codex: \`codex mcp add petal --url ${mcp}\`
-- Hermes: \`hermes mcp add petal --url ${mcp}\`
+- Hermes: the person runs \`hermes mcp add petal --url ${mcp}\` themselves, in a terminal, because it asks a question you can't answer from inside. The HTTP routes need nothing.
 - Any other agent that takes MCP: add \`${mcp}\` as an HTTP server.
 - The Claude app: you can't do this one for them. It's under Customize, Connectors, +, Add custom connector, with that address.
 - ChatGPT: the same. It's under Settings, Apps & Connectors, with Developer mode on under Advanced, and depends on their plan.
+
+## Let them watch
+
+When they've asked to watch, this conversation gets one page on this site, where they see your work as it happens. Never start a second one for it. If a step fails, say so in a line and carry on with your answer.
+
+1. **Right away, before your first reply:** start it with \`start_exploration\`, with \`client\` set to the app you run in (\`Claude Code\`, \`Codex\`, \`Hermes\`) and \`question\` set to what they asked, or to \`A conversation about who holds power\` if they haven't asked yet. Over HTTP: \`POST ${origin}/api/v1/explorations\` with \`{ "question": "…", "client": "…" }\`.
+2. **Give them \`open_url\`** in that reply, in one line, and open it for them if you can. \`link.url\` is your key: keep it, and don't show it. Its last part is \`<token>\` below.
+3. **Each flower you draw:** save it, with \`exploration\` set to \`link.url\`: \`save_step\` with its \`spec_sha256\`. Over HTTP: \`POST ${origin}/api/v1/explorations/<token>/steps\` with \`{ "spec_sha256": "…" }\`.
+4. **Each reply:** before you finish it, post the person's words and then your reply word for word, as one note: \`add_note\` with \`text\`. Over HTTP: \`POST ${origin}/api/v1/explorations/<token>/notes\` with \`{ "text": "…" }\`. That note is all they see of what you said, so leave out only \`open_url\`, which is a key.
 
 `;
 }

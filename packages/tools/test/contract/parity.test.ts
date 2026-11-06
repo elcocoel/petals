@@ -107,7 +107,8 @@ describe('every door returns the same JSON', () => {
     expect(doorsSeen).toEqual(['unknown', 'http', 'mcp', 'mcp']);
     const saved = await all[1]?.call('save_step', { exploration, spec: f.spec });
     expect(saved).toMatchObject({ head: f.proposed.spec_sha256, step: { door: 'http' } });
-    const [back] = await same('get_exploration', { exploration });
+    // presence is one process's memory, and each door here is its own app
+    const [back] = await same('get_exploration', { exploration }, ['presence']);
     expect(back?.steps).toHaveLength(1);
     expect(back?.notes).toHaveLength(all.length);
   });

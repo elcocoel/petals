@@ -14,6 +14,7 @@ import { TOOLS_VERSION } from '@petal/core';
 import type { ProgressEvent } from '@petal/core/types';
 import { isToolError } from '../errors.ts';
 import { describeTool, registry } from '../registry.ts';
+import { openPageOn } from '../tools/explorations.ts';
 import type { ToolContext } from '../types.ts';
 
 /** Every argument is accepted here; the registry validates against the same schema. */
@@ -42,6 +43,23 @@ const INSTRUCTIONS =
   'prepare_publish, then give the person sign_url; never call publish_flower yourself. Never ask ' +
   'for a key or a seed phrase.';
 
+// Only where the page it hands over opens. Short, because an agent on MCP alone reads nothing else.
+const FOLLOW =
+  ' Before your first tool call on a question, call start_exploration with their question and client ' +
+  'set to the app you run in. Give them open_url, or open it for them if you can: it shows this work ' +
+  'as it happens. Pass link.url as exploration, not the exp_ id: save_step after each render_flower, ' +
+  "and before you finish each answer, add_note with text: the person's words, then your reply word " +
+  'for word.';
+
+/** What a request says its client is, on a protocol that says so on each request (2026-07-28 on). */
+function clientOf(meta: unknown): string | undefined {
+  const info = (meta as Record<string, { title?: unknown; name?: unknown }> | undefined)?.[
+    'io.modelcontextprotocol/clientInfo'
+  ];
+  const name = [info?.title, info?.name].find((v) => typeof v === 'string' && v.trim());
+  return (name as string | undefined)?.trim().slice(0, 80);
+}
+
 export function progressLine(e: ProgressEvent): string {
   const n = e.done !== undefined && e.total !== undefined ? ` (${e.done}/${e.total})` : '';
   return `${e.stage}: ${e.message}${n}`;
@@ -50,7 +68,7 @@ export function progressLine(e: ProgressEvent): string {
 export function mcpServer(ctx: ToolContext): McpServer {
   const server = new McpServer(SERVER_INFO, {
     capabilities: { tools: {} },
-    instructions: INSTRUCTIONS,
+    instructions: openPageOn(ctx) ? `${INSTRUCTIONS}${FOLLOW}` : INSTRUCTIONS,
   });
   for (const tool of registry) {
     const { title, description, annotations } = describeTool(tool);
@@ -66,7 +84,11 @@ export function mcpServer(ctx: ToolContext): McpServer {
       async (args, extra) => {
         const token = extra.mcpReq._meta?.progressToken;
         // no session on this door yet, so a caller gets at an exploration through a link
-        let runCtx: ToolContext = { ...ctx, caller: { door: 'mcp' } };
+        const client = clientOf(extra.mcpReq._meta);
+        let runCtx: ToolContext = {
+          ...ctx,
+          caller: { door: 'mcp', ...(client ? { client } : {}) },
+        };
         if (token !== undefined) {
           let n = 0;
           runCtx = {
