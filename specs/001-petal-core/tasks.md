@@ -511,3 +511,11 @@ The coordinator cleared these, and they are already applied in `contracts/`, `da
 - Agents never read raw snapshot bodies; they use `describe_snapshot` and `compute_figures`.
 - Nothing public, signed or spent without Elco. T043 gives one OK for testnet signing with the writer key; every other [Elco OK] is asked at the time.
 - No UI polish before the beauty pass in M6. UI comments wait in `../design/ui-notes.md`.
+
+---
+
+## Phase: Connectors · M-Journey
+
+CONNECTORS' tasks start at T400 (`design/connectors.md`).
+
+- [X] T400 [W7] A site's `/mcp` hands back links that open: with no address configured, the web route tells it where it is, so a person's agent gives a flower link, not a bare path. Only links change, a configured address wins, and a bare API stays relative.

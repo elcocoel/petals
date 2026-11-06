@@ -25,15 +25,15 @@ import { FlowerTile } from '../components/FlowerTile.tsx';
 import { Interpretation, SignatureLine } from '../components/Interpretation.tsx';
 import { Legend, LegendKeys } from '../components/Legend.tsx';
 import { AnnotatedFlower } from '../components/landing/AnnotatedFlower.tsx';
-import { ClosingAsk } from '../components/landing/ClosingAsk.tsx';
-import { FlowerRead } from '../components/landing/FlowerRead.tsx';
-import { ForBuilders } from '../components/landing/ForBuilders.tsx';
+import { BackIt } from '../components/landing/BackIt.tsx';
+import { BuildWithUs } from '../components/landing/BuildWithUs.tsx';
 import { GallerySection } from '../components/landing/GallerySection.tsx';
 import { Hero } from '../components/landing/Hero.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
-import { JoinCommunity } from '../components/landing/JoinCommunity.tsx';
+import { LiveReading } from '../components/landing/LiveReading.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Step } from '../components/landing/Step.tsx';
+import { UseAnywhere } from '../components/landing/UseAnywhere.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
 import { PublishFlow } from '../components/PublishFlow.tsx';
@@ -46,6 +46,7 @@ import { BarBox } from '../components/ui/BarBox.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Callout } from '../components/ui/Callout.tsx';
 import { Drawing } from '../components/ui/Drawing.tsx';
+import { EmptySlot } from '../components/ui/EmptySlot.tsx';
 import { FaqItem } from '../components/ui/FaqItem.tsx';
 import { Footer } from '../components/ui/Footer.tsx';
 import { GalleryCard } from '../components/ui/GalleryCard.tsx';
@@ -79,6 +80,7 @@ import {
   prepared,
   STEPS,
   signature,
+  specimen,
   TURN_ROWS,
 } from './fixtures.ts';
 import { LabComposer, LabPetalClose } from './LabComposer.tsx';
@@ -182,10 +184,10 @@ const KINDS: {
     node: '24:209',
   },
 ];
-const ASK = landingCopy.ask;
+const ASK = landingCopy.hero.ask;
 const FAQ = landingCopy.questions.items[0];
-const FIGURE = landingCopy.flowerRead.transcript;
-const TERMINAL = landingCopy.builders.terminal;
+const FIGURE = specimen.transcript;
+const TERMINAL = specimen.terminal;
 /** A section of the landing page: a frame in Figma, not a component, so its node is on the state. */
 const section = (
   id: string,
@@ -278,11 +280,11 @@ export const registry: LabEntry[] = [
   },
   section('Hero', 'apps/web/components/landing/Hero.tsx', 'Hero', '66:2188', () => <Hero />),
   section(
-    'FlowerRead',
-    'apps/web/components/landing/FlowerRead.tsx',
+    'LiveReading',
+    'apps/web/components/landing/LiveReading.tsx',
     'A flower, already read',
     '66:2232',
-    () => <FlowerRead />,
+    () => <LiveReading />,
   ),
   section(
     'HowItWorks',
@@ -292,11 +294,11 @@ export const registry: LabEntry[] = [
     () => <HowItWorks />,
   ),
   section(
-    'Questions',
-    'apps/web/components/landing/Questions.tsx',
-    'Questions Petals answers',
-    '66:2289',
-    () => <Questions />,
+    'UseAnywhere',
+    'apps/web/components/landing/UseAnywhere.tsx',
+    'Closing ask',
+    '66:2336',
+    () => <UseAnywhere />,
   ),
   section(
     'GallerySection',
@@ -306,25 +308,25 @@ export const registry: LabEntry[] = [
     () => <GallerySection />,
   ),
   section(
-    'ForBuilders',
-    'apps/web/components/landing/ForBuilders.tsx',
-    'For builders',
-    '66:2316',
-    () => <ForBuilders />,
+    'Questions',
+    'apps/web/components/landing/Questions.tsx',
+    'Questions Petals answers',
+    '66:2289',
+    () => <Questions />,
   ),
   section(
-    'ClosingAsk',
-    'apps/web/components/landing/ClosingAsk.tsx',
-    'Closing ask',
-    '66:2336',
-    () => <ClosingAsk />,
-  ),
-  section(
-    'JoinCommunity',
-    'apps/web/components/landing/JoinCommunity.tsx',
+    'BackIt',
+    'apps/web/components/landing/BackIt.tsx',
     'Join the community',
     '66:2346',
-    () => <JoinCommunity />,
+    () => <BackIt />,
+  ),
+  section(
+    'BuildWithUs',
+    'apps/web/components/landing/BuildWithUs.tsx',
+    'For builders',
+    '66:2316',
+    () => <BuildWithUs />,
   ),
   {
     id: 'Footer',
@@ -348,7 +350,7 @@ export const registry: LabEntry[] = [
     figmaName: 'Petals / Atlas card',
     figmaNode: '52:1876',
     source: 'apps/web/components/ui/GalleryCard.tsx',
-    states: landingCopy.gallery.cards.map((card, i) => ({
+    states: specimen.cards.map((card, i) => ({
       name: card.title,
       render: () => (
         <GalleryCard
@@ -413,10 +415,10 @@ export const registry: LabEntry[] = [
         figmaNode: '66:2228',
         render: () => (
           <Callout
-            who={landingCopy.hero.callout.who}
-            action={{ label: landingCopy.hero.callout.action, href: '#callout' }}
+            who={specimen.callout.who}
+            action={{ label: specimen.callout.action, href: '#callout' }}
           >
-            {landingCopy.hero.callout.text}
+            {specimen.callout.text}
           </Callout>
         ),
       },
@@ -425,8 +427,8 @@ export const registry: LabEntry[] = [
         figmaName: 'Callout',
         figmaNode: '67:2529',
         render: () => (
-          <Callout size="compact" who={landingCopy.howItWorks.stepThree.who}>
-            {landingCopy.howItWorks.stepThree.text}
+          <Callout size="compact" who={specimen.you.who}>
+            {specimen.you.text}
           </Callout>
         ),
       },
@@ -501,7 +503,8 @@ export const registry: LabEntry[] = [
         wide: true,
         render: () => (
           <AskBlock
-            placeholder={ASK.placeholder}
+            placeholder={ASK.placeholders[0]}
+            label={ASK.label}
             action={ASK.action}
             starterLabel={landingCopy.hero.starterLabel}
             starters={landingCopy.hero.starters}
@@ -514,9 +517,10 @@ export const registry: LabEntry[] = [
         wide: true,
         render: () => (
           <AskBlock
-            placeholder={ASK.placeholder}
+            placeholder={ASK.placeholders[0]}
+            label={ASK.label}
             action={ASK.action}
-            starters={landingCopy.closing.starters}
+            starters={landingCopy.hero.starters.slice(0, 2)}
           />
         ),
       },
@@ -549,7 +553,7 @@ export const registry: LabEntry[] = [
         wide: true,
         figmaName: 'Ask',
         figmaNode: '66:2337',
-        render: () => <SectionHead size="compact" title={landingCopy.closing.title} />,
+        render: () => <SectionHead size="compact" title={landingCopy.useAnywhere.title} />,
       },
       {
         name: 'title, with a paragraph',
@@ -559,9 +563,9 @@ export const registry: LabEntry[] = [
         figmaNode: '66:2290',
         render: () => (
           <SectionHead
-            eyebrow={landingCopy.questions.eyebrow}
-            title={landingCopy.questions.title}
-            body={landingCopy.questions.body}
+            eyebrow={specimen.head.eyebrow}
+            title={landingCopy.useAnywhere.title}
+            body={landingCopy.useAnywhere.body}
           />
         ),
       },
@@ -569,7 +573,7 @@ export const registry: LabEntry[] = [
         name: 'title, no paragraph',
         wide: true,
         render: () => (
-          <SectionHead eyebrow={landingCopy.gallery.eyebrow} title={landingCopy.gallery.title} />
+          <SectionHead eyebrow={specimen.head.eyebrow} title={landingCopy.gallery.title} />
         ),
       },
     ],
@@ -586,7 +590,7 @@ export const registry: LabEntry[] = [
         wide: true,
         render: () => (
           <Section kind={kind} padding="bar">
-            <Mono>{landingCopy.gallery.caption}</Mono>
+            <Mono>{specimen.caption}</Mono>
           </Section>
         ),
       })),
@@ -595,8 +599,8 @@ export const registry: LabEntry[] = [
         wide: true,
         render: () => (
           <Section padding="bar" layout="split">
-            <Mono>{landingCopy.hero.caption}</Mono>
-            <Mono>{landingCopy.gallery.caption}</Mono>
+            <Mono>{specimen.figureCaption}</Mono>
+            <Mono>{specimen.caption}</Mono>
           </Section>
         ),
       },
@@ -605,8 +609,8 @@ export const registry: LabEntry[] = [
         wide: true,
         render: () => (
           <Section padding="bar" layout="split" figure="start">
-            <Mono>{landingCopy.hero.caption}</Mono>
-            <Mono>{landingCopy.gallery.caption}</Mono>
+            <Mono>{specimen.figureCaption}</Mono>
+            <Mono>{specimen.caption}</Mono>
           </Section>
         ),
       },
@@ -617,10 +621,10 @@ export const registry: LabEntry[] = [
           <Section
             padding="bar"
             layout="columns"
-            head={<Mono>{landingCopy.gallery.eyebrow}</Mono>}
-            foot={<Mono>{landingCopy.gallery.caption}</Mono>}
+            head={<Mono>{specimen.head.eyebrow}</Mono>}
+            foot={<Mono>{specimen.caption}</Mono>}
           >
-            {landingCopy.gallery.cards.map((card) => (
+            {specimen.cards.map((card) => (
               <Mono key={card.title}>{card.title}</Mono>
             ))}
           </Section>
@@ -641,9 +645,9 @@ export const registry: LabEntry[] = [
         figmaNode: '66:2265',
         render: () => (
           <ActionRow>
-            <Button href="#actionrow">{landingCopy.howItWorks.ask}</Button>
+            <Button href="#actionrow">{landingCopy.howItWorks.action}</Button>
             <TextLink href="#actionrow" arrow>
-              {landingCopy.howItWorks.gallery}
+              {landingCopy.gallery.open}
             </TextLink>
           </ActionRow>
         ),
@@ -654,9 +658,9 @@ export const registry: LabEntry[] = [
         figmaNode: '66:2354',
         render: () => (
           <ActionRow gap="tight">
-            <Button href="#actionrow">{landingCopy.community.join}</Button>
+            <Button href="#actionrow">{landingCopy.builders.actions.github}</Button>
             <Button variant="secondary" href="#actionrow">
-              {landingCopy.community.support}
+              {landingCopy.builders.actions.docs}
             </Button>
           </ActionRow>
         ),
@@ -679,6 +683,14 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'EmptySlot',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/EmptySlot.tsx',
+    states: [{ name: 'a place held open', render: () => <EmptySlot /> }],
+  },
+  {
     id: 'AnnotatedFlower',
     group: 'Blocks',
     figmaName: null,
@@ -690,7 +702,19 @@ export const registry: LabEntry[] = [
         wide: true,
         figmaName: 'Figure · annotated flower',
         figmaNode: '66:2206',
-        render: () => <AnnotatedFlower />,
+        render: () => (
+          <AnnotatedFlower
+            notes={specimen.notes}
+            remark={
+              <Callout
+                who={specimen.callout.who}
+                action={{ label: specimen.callout.action, href: '#annotated' }}
+              >
+                {specimen.callout.text}
+              </Callout>
+            }
+          />
+        ),
       },
     ],
   },
@@ -988,11 +1012,11 @@ export const registry: LabEntry[] = [
       {
         name: 'a line',
         surfaces: ['ground', 'ink'],
-        render: () => <Mono>{landingCopy.community.caption}</Mono>,
+        render: () => <Mono>{landingCopy.footer.built}</Mono>,
       },
       {
         name: 'under a figure',
-        render: () => <Mono as="figcaption">{landingCopy.hero.caption}</Mono>,
+        render: () => <Mono as="figcaption">{specimen.figureCaption}</Mono>,
       },
       { name: 'above a section', render: () => <Mono>THE ATLAS</Mono> },
       {

@@ -100,6 +100,11 @@ export const behaviours = [
   { name: 'field.nest', purpose: 'The button inside keeps a concentric radius', via: 'css' },
   { name: 'field.warm', purpose: 'Hover lifts the well out of the page a little', via: 'css' },
   { name: 'field.focus', purpose: 'The focus ring grows and glows mint', via: 'css' },
+  {
+    name: 'field.type',
+    purpose: 'Its placeholder types its lines in and out, in order, until the box gets focus',
+    via: 'script',
+  },
   // box
   {
     name: 'box.glass',

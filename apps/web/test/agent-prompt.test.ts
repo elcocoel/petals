@@ -43,6 +43,7 @@ describe('hostedSkill', () => {
 describe('originFrom', () => {
   test('uses what the visitor reached, also behind a tunnel', () => {
     expect(originFrom(new Headers({ host: 'localhost:3080' }))).toBe('http://localhost:3080');
+    expect(originFrom(new Headers({ host: '127.0.0.1:3080' }))).toBe('http://127.0.0.1:3080');
     expect(
       originFrom(
         new Headers({ host: 'x', 'x-forwarded-host': 'a.dev', 'x-forwarded-proto': 'https' }),

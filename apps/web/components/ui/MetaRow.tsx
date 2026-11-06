@@ -2,11 +2,11 @@
 import type { ReactNode } from 'react';
 import { Mono } from './Mono.tsx';
 
-export function MetaRow({ start, end }: { start: ReactNode; end: ReactNode }) {
+export function MetaRow({ start, end }: { start: ReactNode; end?: ReactNode }) {
   return (
     <div className="flex flex-wrap justify-between gap-x-block-gap gap-y-space-8">
       <Mono>{start}</Mono>
-      <Mono>{end}</Mono>
+      {end && <Mono>{end}</Mono>}
     </div>
   );
 }

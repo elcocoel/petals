@@ -24,8 +24,8 @@ describe('doors', () => {
 
   test('the commands are what the agents accept', () => {
     const copy = (id: string) => all.find((d) => d.id === id)?.copy;
-    expect(copy('claude-code')).toBe(`claude mcp add --transport http petal ${ORIGIN}/mcp`);
-    expect(copy('codex')).toBe(`codex mcp add petal --url ${ORIGIN}/mcp`);
-    expect(copy('hermes')).toBe(`hermes mcp add petal --url ${ORIGIN}/mcp`);
+    expect(copy('claude-code')).toBe(`claude mcp add --transport http petals ${ORIGIN}/mcp`);
+    expect(copy('codex')).toBe(`codex mcp add petals --url ${ORIGIN}/mcp`);
+    expect(copy('hermes')).toBe(`hermes mcp add petals --url ${ORIGIN}/mcp`);
   });
 });

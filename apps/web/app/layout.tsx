@@ -1,12 +1,18 @@
 // The root: html, body and fonts. The site's nav and the workspace's frame are their own layouts.
 // Styling lives in globals.css and the generated tokens.
+
 import { Bitcount_Grid_Single, Geist_Mono, Mona_Sans } from 'next/font/google';
+import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
+import { readVisitorFrom } from '../lib/visitor.ts';
 import './globals.css';
 import './versions/tokens.generated.css';
 import './versions/v2.css';
 import { JoyLayer } from './versions/JoyLayer.tsx';
 import { SWITCH_SCRIPT } from './versions/switch.ts';
+
+// A page's call to the API is its visitor's: lib/visitor.ts.
+readVisitorFrom(headers);
 
 // Each `variable` is the one packages/tokens/source.ts names under `fonts`.
 const monaSans = Mona_Sans({ subsets: ['latin'], variable: '--font-mona-sans' });
