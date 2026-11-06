@@ -11,6 +11,8 @@ const unit = (name: string, root: string) => ({
 
 export default defineConfig({
   test: {
+    // Two coordinators' lanes share this machine, and at a load of 17 a test that takes 2 s can pass 5 s.
+    testTimeout: 20_000,
     projects: [
       unit('tokens', 'packages/tokens'),
       unit('core', 'packages/core'),
