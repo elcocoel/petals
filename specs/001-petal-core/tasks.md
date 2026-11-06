@@ -518,4 +518,4 @@ The coordinator cleared these, and they are already applied in `contracts/`, `da
 
 CONNECTORS' tasks start at T400 (`design/connectors.md`).
 
-- [ ] T400 [W7] A site's `/mcp` hands back links that open: with no address configured, the web route tells it where it is, so a person's agent gives a flower link, not a bare path. Only links change, a configured address wins, and a bare API stays relative.
+- [X] T400 [W7] A site's `/mcp` hands back links that open: with no address configured, the web route tells it where it is, so a person's agent gives a flower link, not a bare path. Only links change, a configured address wins, and a bare API stays relative.
