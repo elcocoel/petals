@@ -11,8 +11,9 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { TOOLS_VERSION } from '@petal/core';
-import type { AgentEvent, ChatInput, Draft, Entry, Run } from '@petal/core/types';
+import type { AgentEvent, ChatInput, ChatMessage, Draft, Entry, Run } from '@petal/core/types';
 import type { RunRow, Store } from '@petal/store';
+import type { Settings } from './catalogue.ts';
 import { inviteOfAccount } from './invites.ts';
 import type { LlmMessage } from './llm.ts';
 
@@ -25,9 +26,18 @@ export interface RunEventAt {
 /** A run in a list. No owner: whoever lists by owner already knows it. */
 export type RunSummary = Pick<Run, 'run_id' | 'status' | 'created_at' | 'updated_at'>;
 
+/** What a chat can ask of its run, besides its words. */
+export interface RunCreate {
+  /** a person id or an anonymous handle. It stays out of Run: readers see a Run */
+  owner?: string;
+  /** what the person picked; a follow-up's replaces what the run had */
+  settings?: Settings;
+  /** a new run that picks up an exploration from another door, so its flowers are steps there */
+  exploration?: string;
+}
+
 export interface RunStore {
-  /** `owner` is a person id or an anonymous handle. It stays out of Run: readers see a Run. */
-  create(input: ChatInput, o?: { owner?: string }): Promise<string>;
+  create(input: ChatInput, o?: RunCreate): Promise<string>;
   append(runId: string, e: AgentEvent): Promise<void>;
   get(runId: string): Promise<Run | null>;
   /**
@@ -44,6 +54,8 @@ export interface RunStore {
   setOwner?(runId: string, owner: string, from?: string): Promise<boolean>;
   /** Newest first. */
   listByOwner?(owner: string, limit?: number): Promise<RunSummary[]>;
+  /** What this run has picked; null when it hasn't. */
+  settingsOf?(runId: string): Promise<string | null>;
 }
 
 /** Run ids are file names: letters, digits, _ and - only. */
@@ -52,6 +64,14 @@ export const RUN_ID = /^[A-Za-z0-9_-]{6,64}$/;
 /** 24 hex characters: URL-safe, unguessable enough for a resume link. */
 export function newRunId(): string {
   return randomBytes(12).toString('hex');
+}
+
+const TITLE_MAX = 200;
+
+/** A conversation's first name: what the person first asked. */
+export function firstQuestion(messages: readonly ChatMessage[]): string {
+  const first = messages.find((m) => m.role === 'user')?.content ?? '';
+  return first.trim().slice(0, TITLE_MAX);
 }
 
 /** A draft entry from a drawn flower, for prepare_publish: no id, no provenance.maker yet. */
@@ -358,6 +378,7 @@ export function sqliteRunStore(store: Store): Required<RunStore> {
             body: bodyOf(run),
             updated_at: at,
           });
+          if (o?.settings) store.run.setSettings(reopen, JSON.stringify(o.settings));
           return true;
         });
         if (kept) return reopen;
@@ -366,9 +387,11 @@ export function sqliteRunStore(store: Store): Required<RunStore> {
       store.run.insert({
         id,
         owner: o?.owner ?? null,
-        exploration: null,
+        exploration: o?.exploration ?? null,
         status: 'running',
         model: null,
+        title: firstQuestion(input.messages) || null,
+        settings: o?.settings ? JSON.stringify(o.settings) : null,
         body: bodyOf({
           run_id: id,
           status: 'running',
@@ -416,6 +439,10 @@ export function sqliteRunStore(store: Store): Required<RunStore> {
 
     async setOwner(runId, owner, from) {
       return store.run.setOwner(runId, owner, from ?? null);
+    },
+
+    async settingsOf(runId) {
+      return store.run.get(runId)?.settings ?? null;
     },
 
     async listByOwner(owner, limit) {

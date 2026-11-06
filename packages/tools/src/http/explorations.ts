@@ -4,7 +4,8 @@
 //   GET  /api/v1/explorations/:ref                 get_exploration; :ref is an id or a link's token
 //   POST /api/v1/explorations/:ref/steps           save_step
 //   POST /api/v1/explorations/:ref/notes           add_note
-//   POST /api/v1/explorations/:ref/claim           a person takes an unowned one, with a continue link
+//   POST /api/v1/explorations/:ref/claim           a session takes an unowned one, with a continue link;
+//                                                  a browser with no session gets an anonymous one for it
 //   GET  /api/v1/explorations/:id/links            its links, with no tokens: owner only
 //   POST /api/v1/explorations/:id/links            a new link, shown once: owner only
 //   POST /api/v1/explorations/:id/links/:link/revoke
@@ -38,6 +39,8 @@ export interface SessionGate {
   subjectOf(c: Context): string | null;
   /** A refusal for a POST from another site; null for one that's fine. */
   refuseForeign(c: Context): Response | null;
+  /** Opens an anonymous session on this response, for a browser's first claim. Returns its subject. */
+  openAnonymous?(c: Context): string;
 }
 
 const SHA = /^[0-9a-f]{64}$/;
@@ -106,7 +109,13 @@ export function explorationRoutes(
   );
   app.post('/api/v1/explorations/:ref/notes', async (c) => answer(c, 'add_note', await withRef(c)));
   app.post('/api/v1/explorations/:ref/claim', (c) =>
-    attempt(c, () => claimExploration(asCaller(c), c.req.param('ref'))),
+    attempt(c, () =>
+      claimExploration(
+        asCaller(c),
+        c.req.param('ref'),
+        gate?.openAnonymous ? () => gate.openAnonymous?.(c) as string : undefined,
+      ),
+    ),
   );
 
   app.get('/api/v1/explorations/:ref/links', (c) =>

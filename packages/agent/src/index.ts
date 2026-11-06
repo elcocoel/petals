@@ -16,6 +16,16 @@ import type { RunStore } from './runs.ts';
 export { buildPetalApp, type PetalAppOptions } from './app.ts';
 /** The daily spend ledger; fileLedger is for scripts that run the agent outside the server (T060). */
 export { fileLedger, storeLedger } from './budget.ts';
+/** What each provider offers (T312). */
+export {
+  type CatalogueModel,
+  type CatalogueProvider,
+  catalogue,
+  defaultSettings,
+  type ModelPromise,
+  modelOf,
+  type Settings,
+} from './catalogue.ts';
 /** Sponsored invites; scripts/mint-invite.ts makes and revokes them. */
 export {
   hashToken,

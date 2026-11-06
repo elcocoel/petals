@@ -16,6 +16,7 @@ import { recordedClient, SKELETON_TRANSCRIPT } from './recorded.ts';
 import { type AgentRouteOptions, createAgentRoutes, stateDirOf } from './routes.ts';
 import { importRunFiles, interruptRuns, sqliteRunStore } from './runs.ts';
 import { walletCipherFrom } from './wallet-cipher.ts';
+import { workspaceRoutes } from './workspace.ts';
 
 export interface PetalAppOptions extends AgentRouteOptions {
   /** the model client; default from the config (NEAR AI Cloud with a key, else recorded) */
@@ -114,6 +115,17 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   });
   // Before the tool routes, whose open CORS must not answer for them.
   app.route('/', auth.routes);
+  app.route(
+    '/',
+    workspaceRoutes({
+      store,
+      tools: ctx,
+      gate: auth.gate,
+      llm,
+      ...(o.clock ? { clock: o.clock } : {}),
+      full: () => overDataBudget(config, ctx.now()),
+    }),
+  );
   // The agent's runs read fresh data apart from the doors, so strangers there can't starve a run.
   const tools = { ...ctx, fresh: freshGate(ctx, 'run') };
   app.route('/', createAgentRoutes({ tools, llm, budget, runs }, { ...o, auth: auth.gate }));
