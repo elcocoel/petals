@@ -11,6 +11,10 @@
 // a later run won't change a row. --adopt gives a store's unowned runs, from before runs had owners,
 // to that owner, recorded replays included: those were still someone's real questions.
 
+import { spawnSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { parseArgs } from 'node:util';
 
@@ -60,6 +64,7 @@ function copy(from: DatabaseSync, to: DatabaseSync, table: string, rows: Row[], 
 }
 
 function adopt(path: string, owner: string) {
+  refuseIfHeld(path);
   const db = new DatabaseSync(path);
   const rows = db.prepare('select id, body from run where owner is null').all() as Row[];
   const ids = rows
@@ -73,7 +78,21 @@ function adopt(path: string, owner: string) {
   db.close();
 }
 
+/** Writing to a database the container holds could corrupt it: its locks live in its own kernel. */
+function refuseIfHeld(path: string) {
+  const root = join(homedir(), 'Library/Application Support/Petals');
+  const file = join(root, 'data-folder');
+  const held = existsSync(file) ? readFileSync(file, 'utf8').trim() : join(root, 'data');
+  if (dirname(resolve(path)) !== held) return;
+  const up = spawnSync('/opt/homebrew/bin/container', ['inspect', 'petals'], { encoding: 'utf8' });
+  if (up.status === 0 && up.stdout.includes('"running"')) {
+    console.error(`refused: the running container holds ${path}. Stop it first.`);
+    process.exit(1);
+  }
+}
+
 function fold(fromPath: string, toPath: string) {
+  refuseIfHeld(toPath);
   const from = new DatabaseSync(fromPath, { readOnly: true });
   const to = new DatabaseSync(toPath);
   const prefixes = o.only?.split(',');

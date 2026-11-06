@@ -8,13 +8,14 @@ import { Thread } from '../components/chat/Thread.tsx';
 import { TurnFlower } from '../components/chat/TurnFlower.tsx';
 import { FloatBox, type FloatHand } from '../components/ui/FloatBox.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
-import { MAP_BOTTOM, MAP_SIZE } from '../lab/flower/marks.ts';
+import { MAP_BOTTOM, MAP_SIZE } from '../flower/marks.ts';
 import {
   conversationBoxes,
   type Edge,
   kept,
   moved,
   type Rect,
+  recordedBoxes,
   type Size,
   sized,
 } from '../lib/float-box.ts';
@@ -26,6 +27,14 @@ const barInside = (r: Rect, win: Size) =>
   r.x >= 0 && r.x + r.w <= win.w && r.y >= 0 && r.y + floatBox.bar <= win.h;
 
 describe('where the conversation starts', () => {
+  test('the list waits beside the output, as tall as it', () => {
+    const { output, list } = conversationBoxes(WIN);
+    expect(list.x).toBe(output.x + output.w + floatBox.gap);
+    expect(list.y).toBe(output.y);
+    expect(list.h).toBe(output.h);
+    expect(list.w).toBe(floatBox['list-width']);
+  });
+
   test('both on the left, output above, input directly under it, the same width', () => {
     const { output, input } = conversationBoxes(WIN);
     expect(output.x).toBe(input.x);
@@ -44,10 +53,63 @@ describe('where the conversation starts', () => {
     [1024, 600],
     [640, 400],
     [320, 240],
+    [768, 1024],
+    [390, 844],
   ])('every bar is in a %i x %i window', (w, h) => {
-    const { output, input } = conversationBoxes({ w, h });
-    expect(barInside(output, { w, h })).toBe(true);
-    expect(barInside(input, { w, h })).toBe(true);
+    for (const place of [conversationBoxes, recordedBoxes]) {
+      const { output, input } = place({ w, h });
+      expect(barInside(output, { w, h })).toBe(true);
+      expect(barInside(input, { w, h })).toBe(true);
+    }
+  });
+
+  test.each([
+    [768, 1024],
+    [390, 844],
+  ])('both fit a %i x %i window, with nothing past its sides', (w, h) => {
+    for (const place of [conversationBoxes, recordedBoxes]) {
+      const { output, input } = place({ w, h });
+      for (const box of [output, input]) {
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.w).toBeLessThanOrEqual(w);
+        expect(box.y + box.h).toBeLessThanOrEqual(h);
+      }
+    }
+  });
+
+  test('a recorded run takes more of the column for its input, and stops in the same place', () => {
+    const live = conversationBoxes(WIN);
+    const recorded = recordedBoxes(WIN);
+    expect(recorded.input.h).toBe(floatBox['recorded-input-height']);
+    expect(recorded.input.h).toBeGreaterThan(live.input.h);
+    expect(recorded.input.y + recorded.input.h).toBe(live.input.y + live.input.h);
+    expect(recorded.output.y).toBe(live.output.y);
+    expect(recorded.input.y).toBe(recorded.output.y + recorded.output.h + floatBox.gap);
+  });
+});
+
+describe("where the flower's own box starts", () => {
+  test('on the right, at the top, sized to read', () => {
+    const { panel } = conversationBoxes(WIN);
+    expect(panel.x + panel.w).toBe(WIN.w - floatBox.inset);
+    expect(panel.y).toBe(floatBox.inset);
+    expect(panel.w).toBe(floatBox['panel-width']);
+    expect(panel.h).toBe(floatBox['panel-height']);
+  });
+
+  test.each([
+    [1440, 900],
+    [1024, 600],
+    [768, 1024],
+    [390, 844],
+    [320, 240],
+  ])('its bar and all of it are in a %i x %i window', (w, h) => {
+    for (const place of [conversationBoxes, recordedBoxes]) {
+      const { panel } = place({ w, h });
+      expect(barInside(panel, { w, h })).toBe(true);
+      expect(panel.x + panel.w).toBeLessThanOrEqual(w);
+      expect(panel.y + panel.h).toBeLessThanOrEqual(h);
+    }
   });
 });
 

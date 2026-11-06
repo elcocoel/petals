@@ -1,18 +1,21 @@
 // The box at the bottom of the conversation. It's the one AskBox; the words and decisions come from
 // composerView in lib/thread-view.ts.
-import type { Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 import type { ComposerView } from '../../lib/thread-view.ts';
 import { AskBox } from '../ui/AskBox.tsx';
 
 export function Composer({
   view,
   boxRef,
+  controls,
   className = 'pt-text-gap pr-space-32 pb-space-32 pl-column-gap',
   onChange,
   onSend,
 }: {
   view: ComposerView;
   boxRef?: Ref<HTMLTextAreaElement>;
+  /** The conversation's settings, under the field. */
+  controls?: ReactNode;
   /** Where it sits in whatever holds it. By default, at the foot of the conversation's column. */
   className?: string;
   onChange: (text: string) => void;
@@ -33,7 +36,9 @@ export function Composer({
         action={view.button}
         value={view.value}
         readOnly={view.readOnly}
+        disabled={view.away}
         canAsk={!view.disabled}
+        controls={controls}
         boxRef={boxRef}
         onChange={(e) => onChange(e.target.value)}
         onSubmit={(e) => {

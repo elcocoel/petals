@@ -241,6 +241,8 @@ export interface ChatState {
   question: string;
   /** the box shows a question that was never accepted, so its backup follows the box */
   restored: boolean;
+  /** the question the address holds (?q=), until the server accepts one */
+  asked: string | null;
   items: Item[];
   runId: string | null;
   /** a stream or a read is open: the box can't send */
@@ -274,13 +276,16 @@ export type ChatAction =
 
 export function initialChat(o: {
   initialRun?: string;
+  /** words the address brought: they wait in the box, and nothing is sent */
+  question?: string;
   greeting?: string;
   open?: Opened;
   petal?: string | null;
 }): ChatState {
   return {
-    question: '',
+    question: o.question ?? '',
     restored: false,
+    asked: o.question ?? null,
     items: o.greeting ? [{ kind: 'message', text: o.greeting }] : [],
     runId: o.initialRun ?? null,
     busy: Boolean(o.initialRun),
@@ -316,6 +321,8 @@ export function chatReducer(s: ChatState, a: ChatAction): ChatState {
         items: fold(s.items, a.event),
         runId: a.event.event === 'run' ? a.event.data.run_id : s.runId,
         turn: witness(s.turn, a.event),
+        // the server took a question: only a `run` answering one that left, not one being followed
+        asked: a.event.event === 'run' && s.turn === 'sending' ? null : s.asked,
         // the newest flower opens as it is drawn, whatever was open
         ...(a.event.event === 'flower'
           ? { open: { kind: 'latest' } as const, petal: null, section: null }

@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { type AgentClient, agentClient } from '../lib/agent-client.ts';
 import { withAbout } from '../lib/ask-about.ts';
+import type { Settings } from '../lib/composer-options.ts';
 import {
   type ChatAction,
   type ChatState,
@@ -43,6 +44,8 @@ export async function sendQuestion(
     runId: string | null;
     /** what it's about (lib/ask-about.ts): it goes with the words, and a failure gives back only them */
     about?: string | undefined;
+    /** a pick the server should hold from this message on */
+    settings?: Settings | undefined;
   },
 ): Promise<void> {
   // a recorded run can't go on from what was said: each play starts over, with no words of its own
@@ -62,6 +65,7 @@ export async function sendQuestion(
         { role: 'user' as const, content: said },
       ],
       ...(continuing ? { run_id: continuing } : {}),
+      ...(q.settings && !q.recorded ? { settings: q.settings } : {}),
     });
     for await (const event of events) {
       if (event.event === 'run') {
@@ -123,8 +127,17 @@ export async function openRun(
   deps.dispatch({ type: 'ended', again: o.again ?? false });
 }
 
-/** A reload before acceptance: the words that were on their way. */
-export function restoreQuestion(deps: Pick<ChatDeps, 'store' | 'dispatch'>, runId: string | null) {
+/**
+ * A reload before acceptance: the words that were on their way. A question the address brought to a new
+ * conversation wins over them, so it arrives once and with nothing older stuck to it. In a run the
+ * backup belongs to that conversation, so it stays, and joining the same words twice is joining them once.
+ */
+export function restoreQuestion(
+  deps: Pick<ChatDeps, 'store' | 'dispatch'>,
+  runId: string | null,
+  asked: string | null = null,
+) {
+  if (asked && !runId) return;
   const text = questionBackup(deps.store, runId).read();
   if (text) deps.dispatch({ type: 'restored', text });
 }
@@ -152,12 +165,15 @@ function browserStore(): QuestionStore | null {
 
 export function useMakeChat({
   initialRun,
+  initialQuestion = null,
   recorded = false,
   opening,
   initialOpen,
   initialPetal,
 }: {
   initialRun?: string | undefined;
+  /** the words in the address (?q=). A recorded run has its own saved question, so it ignores them. */
+  initialQuestion?: string | null;
   recorded?: boolean;
   /** what the agent says first, on a new chat: written text, so opening the app costs no model call */
   opening?: string | undefined;
@@ -165,10 +181,12 @@ export function useMakeChat({
   initialPetal?: string | null;
 }) {
   const greeting = opening && !initialRun && !recorded ? opening : undefined;
+  const asked = recorded ? null : initialQuestion;
   const [chat, dispatch] = useReducer(
     chatReducer,
     {
       ...(initialRun ? { initialRun } : {}),
+      ...(asked ? { question: asked } : {}),
       ...(greeting ? { greeting } : {}),
       ...(initialOpen ? { open: initialOpen } : {}),
       ...(initialPetal ? { petal: initialPetal } : {}),
@@ -185,12 +203,19 @@ export function useMakeChat({
   );
 
   useEffect(() => {
-    if (!recorded) box.current?.focus();
+    const el = box.current;
+    if (recorded || !el) return;
+    el.focus();
+    // Words the address brought: the caret after them. However long they are, their end and the button
+    // stay in sight, in the field and in whatever box holds it.
+    el.setSelectionRange(el.value.length, el.value.length);
+    el.scrollTop = el.scrollHeight;
+    el.form?.scrollIntoView({ block: 'end' });
   }, [recorded]);
 
   useEffect(() => {
-    if (!recorded) restoreQuestion(deps, initialRun ?? null);
-  }, [deps, initialRun, recorded]);
+    if (!recorded) restoreQuestion(deps, initialRun ?? null, asked);
+  }, [deps, initialRun, recorded, asked]);
 
   useEffect(() => {
     if (!initialRun) return;
@@ -212,11 +237,11 @@ export function useMakeChat({
     dispatch,
     actions: {
       setQuestion: (text: string) => typeQuestion(deps, chat, text),
-      send: async (about?: string) => {
+      send: async (about?: string, settings?: Settings) => {
         const text = recorded ? RECORDED_QUESTION : question.trim();
         if (!text || busy) return;
         following.current = true;
-        await sendQuestion(deps, { text, recorded, greeting, runId, about });
+        await sendQuestion(deps, { text, recorded, greeting, runId, about, settings });
         box.current?.focus();
       },
       refollow: () => {

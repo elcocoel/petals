@@ -112,7 +112,6 @@ const PROJECTION = [
   'lib/panel-view.ts',
   'lib/flower-view.ts',
   'lib/ask-about.ts',
-  'lib/stage.ts',
   'lib/workspace-url.ts',
   'lib/float-box.ts',
   'lib/sse.ts',
@@ -192,29 +191,42 @@ const RULES: Rule[] = [
     good: "// fetch( lives in the adapter\nconst s = 'fetch(';",
   },
   {
-    name: 'components/chat and components/workspace views take props only: no ViewModel, no state, no effects',
+    name: 'components/chat, components/workspace and the panel take props only: no ViewModel, no state, no effects',
     files: () =>
-      [...sourcesIn('components/chat'), ...sourcesIn('components/workspace')].filter(
-        (f) => !VIEW_HOOKS.has(f),
-      ),
+      [
+        ...sourcesIn('components/chat'),
+        ...sourcesIn('components/workspace'),
+        'flower/FlowerPanel.tsx',
+      ].filter((f) => !VIEW_HOOKS.has(f)),
     check: all(
-      importing(/(?:^|\/)viewmodels(?:\/|$)/, 'Workspace.tsx does the wiring'),
+      importing(/(?:^|\/)viewmodels(?:\/|$)/, 'InteractionSurface.tsx does the wiring'),
       using(/\buse(?:State|Reducer|Effect|LayoutEffect|Ref)\b/, 'a view holds nothing'),
     ),
     bad: "import { useMakeChat } from '../../viewmodels/useMakeChat.ts';",
     good: "// useState is not used\nconst s = 'useEffect';",
   },
   {
-    name: 'nothing outside lab/ and app/lab reaches into lab/: the flower leaves it only when it replaces /make',
+    name: 'nothing outside lab/ and app/lab reaches into lab/',
     files: () => [
       ...sourcesIn('lib'),
       ...sourcesIn('components'),
       ...sourcesIn('viewmodels'),
+      ...sourcesIn('flower'),
       ...sourcesIn('app').filter((f) => !f.startsWith('app/lab/')),
     ],
     check: importing(/(?:^|\/)lab\//, 'the lab reaches out, nothing reaches in'),
-    bad: "import { FlowerBench } from '../lab/flower/FlowerBench.tsx';",
-    good: "// lab/ is not imported\nconst s = '../lab/flower/FlowerBench.tsx';",
+    bad: "import { fakeRelations } from '../lab/flower/illustrative.ts';",
+    good: "// lab/ is not imported\nconst s = '../lab/flower/illustrative.ts';",
+  },
+  {
+    name: 'flower/ has no fetch( and does not reach for the adapter',
+    files: () => sourcesIn('flower'),
+    check: all(
+      using(NETWORK, 'the flower is drawn from what it is handed'),
+      importing(ADAPTER, 'the flower is drawn from what it is handed'),
+    ),
+    bad: "const r = await fetch('/api/v1/render');",
+    good: "// no fetch( here\nconst s = 'fetch(';",
   },
 ];
 
@@ -225,9 +237,8 @@ describe('the layers', () => {
     );
     expect(sourcesIn('components')).toEqual(
       expect.arrayContaining([
-        'components/Workspace.tsx',
         'components/chat/Thread.tsx',
-        'components/workspace/FlowerPanel.tsx',
+        'components/workspace/FlowerShelf.tsx',
       ]),
     );
     expect(sourcesIn('viewmodels')).toEqual(
@@ -235,7 +246,15 @@ describe('the layers', () => {
         'viewmodels/useMakeChat.ts',
         'viewmodels/useDrawnFlower.ts',
         'viewmodels/useWorkspace.ts',
-        'viewmodels/useStage.ts',
+      ]),
+    );
+    expect(sourcesIn('flower')).toEqual(
+      expect.arrayContaining([
+        'flower/InteractionSurface.tsx',
+        'flower/FlowerPanel.tsx',
+        'flower/FlowerCanvas.tsx',
+        'flower/useFlowerCanvas.ts',
+        'flower/scene.ts',
       ]),
     );
   });

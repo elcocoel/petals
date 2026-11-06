@@ -239,7 +239,8 @@
 }
 
 /* action.chip */
-:root[data-version="2"] [data-b="action"]:is([data-kind="secondary"], [data-kind="starter"]) {
+:root[data-version="2"]
+  [data-b="action"]:is([data-kind="secondary"], [data-kind="starter"], [data-kind="pill"]) {
   --b-rest: var(--joy-shadow-chip);
   --b-lift: var(--joy-shadow-chip-lift);
   --b-press: var(--joy-shadow-chip-press);
@@ -248,7 +249,7 @@
 }
 
 /* action.chip */
-:root[data-version="2"] [data-b="action"][data-kind="starter"] {
+:root[data-version="2"] [data-b="action"]:is([data-kind="starter"], [data-kind="pill"]) {
   border-color: var(--joy-paint-edge);
   border-radius: var(--joy-radius-pill);
 }

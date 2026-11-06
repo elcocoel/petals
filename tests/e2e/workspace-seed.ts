@@ -138,8 +138,8 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
     settings: { model: 'z-ai/glm-5.3-flash', effort: 'medium' },
   });
   await say('yes', { run_id: second });
-  const spec = flower.spec as Spec & { choices?: Record<string, unknown> };
-  const variant = { ...spec, choices: { ...spec.choices, petals: 10 } } as Spec;
+  const spec = flower.spec as Spec;
+  const variant = { ...spec, selection: { ...spec.selection, petals: 10 } } as Spec;
   const variantSha = specHash(variant);
   const runs = sqliteRunStore(store);
   const secondRun = await runOf(second);
