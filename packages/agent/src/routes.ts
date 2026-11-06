@@ -5,7 +5,16 @@
 import { join } from 'node:path';
 import { sha256Hex, TOOLS_VERSION } from '@petal/core';
 import type { ChatInput, ChatMessage, Draft, ToolError, ToolErrorCode } from '@petal/core/types';
-import type { Config, ToolContext } from '@petal/tools';
+import {
+  bodyCap,
+  type Config,
+  clientAddress,
+  DATA_FULL,
+  isLocalSite,
+  overDataBudget,
+  remember,
+  type ToolContext,
+} from '@petal/tools';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
@@ -18,6 +27,12 @@ import { RUN_ID, type RunStore } from './runs.ts';
 import { attestationStore } from './signature.ts';
 import { flowersOf } from './thread.ts';
 import type { AnyTool } from './tool-defs.ts';
+
+/**
+ * The one route that may take more than the rest's 256 KiB: the site can send a whole conversation
+ * back, 100 messages of up to 20,000 characters, with its draft.
+ */
+export const CHAT_BODY_MAX_BYTES = 512 * 1024;
 
 /** HTTP status per error code (http-api.md, Rules). */
 export const STATUS: Record<ToolErrorCode, number> = {
@@ -76,30 +91,22 @@ export function fail(
   return c.json({ error, tools_version: TOOLS_VERSION }, STATUS[code] as 400);
 }
 
-/** The caller's address: proxy headers first, then the Node socket. */
-export function clientIp(c: Context): string {
-  const fwd = c.req.header('x-forwarded-for')?.split(',')[0]?.trim();
-  const h = fwd || c.req.header('x-real-ip') || c.req.header('cf-connecting-ip');
-  if (h) return h;
-  const env = c.env as { incoming?: { socket?: { remoteAddress?: string } } } | undefined;
-  return env?.incoming?.socket?.remoteAddress ?? 'unknown';
-}
-
 /** In memory, per process (Phase A). Returns null, or the seconds to wait. */
-export function limiter(max: number, windowMs: number, clock: () => number) {
-  const hits = new Map<string, number[]>();
+export function limiter(
+  max: number,
+  windowMs: number,
+  clock: () => number,
+  hits: Map<string, number[]> = new Map(),
+) {
   return (key: string): number | null => {
     const now = clock();
-    if (hits.size > 10_000) {
-      for (const [k, v] of hits) if (!v.some((t) => now - t < windowMs)) hits.delete(k);
-    }
     const list = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
     if (list.length >= max) {
-      hits.set(key, list);
+      remember(hits, key, list);
       return Math.max(1, Math.ceil(((list[0] ?? now) + windowMs - now) / 1000));
     }
     list.push(now);
-    hits.set(key, list);
+    remember(hits, key, list);
     return null;
   };
 }
@@ -221,27 +228,34 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
   const app = new Hono();
   app.use('/api/v1/agent/*', cors());
   app.use('/api/v1/attestations/*', cors());
+  app.use('/api/v1/agent/runs/*', bodyCap);
+  const local = isLocalSite(deps.tools.config.apiBase);
 
   app.post(
     '/api/v1/agent/chat',
     bodyLimit({
-      maxSize: 512 * 1024,
+      maxSize: CHAT_BODY_MAX_BYTES,
       onError: (c) => fail(c, 'bad_input', 'the body is larger than 512 KiB'),
     }),
     async (c) => {
+      // Before the rate limit: a refused chat costs nothing, and shouldn't use up the allowance.
+      // Before the body too, so a stranger's is never parsed.
+      const admitted = o.auth?.admitChat(c, deps.llm, deps.budget) ?? {};
+      if (admitted.refused) return admitted.refused;
+      // A sponsored chat is the invite's to pay for. Nobody's stands behind one with no budget.
+      if (!admitted.budget && overDataBudget(deps.tools.config, new Date(clock()))) {
+        return fail(c, 'budget_exhausted', DATA_FULL);
+      }
       let raw: unknown;
       try {
         raw = await c.req.json();
       } catch {
         raw = undefined;
       }
-      // Before the rate limit: a refused chat costs nothing, and shouldn't use up the allowance.
-      const admitted = o.auth?.admitChat(c, deps.llm, deps.budget) ?? {};
-      if (admitted.refused) return admitted.refused;
       const owner = admitted.subject ? { owner: admitted.subject } : undefined;
       // A follow-up is not a new chat: only the daily cap and this wider limit bound a conversation.
       const followUp = !!(raw as { run_id?: unknown } | undefined)?.run_id;
-      const wait = (followUp ? followUpLimit : chatLimit)(clientIp(c));
+      const wait = (followUp ? followUpLimit : chatLimit)(clientAddress(c, local));
       if (wait !== null) {
         const n = followUp ? `${followUpsPerHour} follow-ups` : `${perHour} chats`;
         return fail(c, 'rate_limited', `At most ${n} an hour from one address.`, undefined, wait);

@@ -6,9 +6,11 @@
 //   4. near-api-js v7 `verifyMessage`: view_access_key, which must be a FULL-ACCESS key of the
 //      account (a function-call key, such as an agent's, cannot sign for the maker), then the
 //      signature again;
-//   5. only when that key is missing and the account id is the hex of the signing key: view_account.
-//      A new person's implicit account doesn't exist until its first transfer, so it has no keys to
-//      look up. It passes only while the account doesn't exist, or a rotated-away key still would.
+//   5. only with `allowUnfunded`, when that key is missing and the account id is the hex of the signing
+//      key: view_account. A new person's implicit account doesn't exist until its first transfer, so
+//      it has no keys to look up. It passes only while the account doesn't exist, or a rotated-away
+//      key still would. Anyone can make such a key offline, so it proves nothing about an account:
+//      fine for signing in, where it only names a person, and refused for publishing (T300).
 // A failed check returns { ok: false, reason }. An RPC that cannot answer throws a NearError
 // (source_failed), and the nonce is released, so the maker can try again without signing again.
 //
@@ -174,7 +176,7 @@ export async function verifyNep413(
   proof: Nep413Proof,
   expect: { message: string; recipient: string },
   rpc: Rpc,
-  opts: { nonces?: NonceStore } = {},
+  opts: { nonces?: NonceStore; allowUnfunded?: boolean } = {},
 ): Promise<{ ok: boolean; reason?: string }> {
   const nonces = opts.nonces ?? defaultNonces;
   const p = (proof ?? {}) as Partial<Nep413Proof>;
@@ -227,6 +229,7 @@ export async function verifyNep413(
   } catch (e) {
     try {
       const unfunded =
+        opts.allowUnfunded === true &&
         e instanceof RpcFailure &&
         (missingKey(e.inner) || missingAccount(e.inner)) &&
         isImplicitOf(p.account_id, publicKey) &&

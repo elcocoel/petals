@@ -111,7 +111,7 @@ describe('one test per error code', () => {
 
   test('rate_limited 429: the 61st tool call in a minute from one address', async () => {
     const app = httpApp((await rig()).ctx);
-    const h = { headers: { 'x-forwarded-for': '9.9.9.9' } };
+    const h = { headers: { 'cf-connecting-ip': '9.9.9.9' } };
     for (let i = 0; i < 60; i++) await app.request('/api/v1/networks', h);
     const res = await app.request('/api/v1/networks', h);
     const body = (await res.json()) as Json;

@@ -13,10 +13,11 @@ import { fileRunStore } from '../src/runs.ts';
 import { configFromEnv } from '../src/serve.ts';
 import { bodyOf, fakeNearAi, inOrder, parseSse, runIdOf, tmpRoot } from './helpers.ts';
 
-vi.mock('@petal/tools', async () => {
+vi.mock('@petal/tools', async (importOriginal) => {
   const { Hono } = await import('hono');
   const { fakeRegistry, fakeContext } = await import('./helpers.ts');
   return {
+    ...(await importOriginal<typeof import('@petal/tools')>()),
     registry: fakeRegistry().registry,
     createContext: (cfg: Config) => ({ ...fakeContext(cfg.root), config: cfg }),
     httpApp: () => {

@@ -183,7 +183,7 @@ Input: `{ min_shared?: int (default 1), kind?: "holdings" | "delegators" | "all"
 Output: `{ min_shared, kind, basis, groups: [{ id, title, kind, chain, module, unit, as_of, snapshot_sha256, observations, members_named, members_total, complete }], groups_left_out, pairs: [{ a, b, shared, weight, at_least, match, as_of_a, as_of_b, gap_seconds, gap_days }], pairs_total, pairs_more, accounts, index, absence, does_not_show }`. Each pair once, largest first. For a far-zoom map. `kind: "all"` is hundreds of kilobytes on today's data, so it isn't the default.
 
 #### power_path
-Input: `{ account_a, account_b, max_depth?: int (1-6, default 3; how many shared groups), budget?: int (default 2,000,000; edges read before giving up), include_inferred?: boolean (default false) }`.
+Input: `{ account_a, account_b, max_depth?: int (1-6, default 3; how many shared groups), budget?: int (1-200,000, default 200,000; edges read before giving up), include_inferred?: boolean (default false) }`.
 Output: `{ from: { asked, accounts, match | null }, to: { asked, accounts, match | null }, max_depth, budget, walked, found, reason: "found" | "same_account" | "unknown_account" | "no_path" | "depth_limit" | "budget", gave_up, hops, touched, note, does_not_show }`.
 A hop is `{ via: "group", from, to, group: Group, from_in_group, to_in_group }`, with `{ role: "member", share, rank }` or `{ role: "anchor" }` on each end, or, when inference is allowed, `{ via: "same_address", from, to, match }`. `gave_up` is true for `depth_limit` and `budget`: a path may exist. It is one shortest path among possibly many, chosen the same way each time. It isn't scored: group sizes are there so a reader can judge, since a huge group connects nearly anything.
 
@@ -192,6 +192,8 @@ A hop is `{ via: "group", from, to, group: Group, from_in_group, to_in_group }`,
 A private, door-independent ref over public objects, like a git branch ([data-model](../../002-system/data-model.md#an-exploration)). Conversations don't travel, but work and notes do. Every door has these except Petal's own agent, whose run saves steps by itself and which would pay 2.7 KB on every model call to list them.
 
 **Whose.** Where a tool takes `exploration`, it takes an id (`exp_…`), which only its owner's session can open, or a link (`/s/<token>`, the whole URL or the token). A `read` link opens the packet. A `continue` link can also `save_step` and `add_note`. Anyone else, a revoked link, and nothing at all get one answer: `not_found`, with one fixed message. HTTP is the only door with a session so far; MCP and the CLI have links.
+
+**What it holds.** At most 100 steps and 100 notes. One nobody owns goes after 14 days with no write, on a later `start_exploration`. Limits are in `.env.example`.
 
 **Who wrote what.** A step and a note say which `door` (`site`, `http`, `mcp`, `cli`) and `from` whom (`owner`, `link:<id>`, and `fork:` in front when a fork copied it). The door sets these; a caller can't.
 

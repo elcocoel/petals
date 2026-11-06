@@ -19,6 +19,7 @@ import { TOOLS_VERSION } from '@petal/core';
 import type { Nep413Proof } from '@petal/core/types';
 import { type NonceStore, type Rpc, verifyNep413 } from '@petal/near/auth';
 import type { SessionRow, Store } from '@petal/store';
+import { clientAddress, DATA_FULL, isLocalSite } from '@petal/tools';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { getCookie, setCookie } from 'hono/cookie';
@@ -33,7 +34,7 @@ import {
   NO_INVITE,
 } from './invites.ts';
 import type { Budget, LlmClient } from './llm.ts';
-import { clientIp, fail, limiter } from './routes.ts';
+import { fail, limiter } from './routes.ts';
 import type { WalletCipher } from './wallet-cipher.ts';
 
 export type AgentAccess = 'gated' | 'open';
@@ -94,6 +95,8 @@ export interface AuthDeps {
   access: AgentAccess;
   site: Site;
   clock?: () => number;
+  /** the data budget: a new wallet adds a person for good, so it's refused past that */
+  full?: () => boolean;
 }
 
 /** What a chat may do: refused, or who owns its run and which budget it draws on. */
@@ -118,6 +121,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
   const now = () => new Date(clock());
   const iso = () => now().toISOString();
   const limit = limiter(AUTH_POSTS_PER_MINUTE, 60_000, clock);
+  const local = isLocalSite(site.origin ?? undefined);
   const ok = (c: Context, body: Record<string, unknown>) =>
     c.json({ ...body, tools_version: TOOLS_VERSION });
 
@@ -240,7 +244,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     c.header('Cache-Control', 'no-store');
     if (c.req.method === 'POST') {
       if (!originAllowed(c)) return badOrigin(c);
-      const wait = limit(clientIp(c));
+      const wait = limit(clientAddress(c, local));
       if (wait !== null) {
         return fail(c, 'rate_limited', 'Too many tries from one address.', undefined, wait);
       }
@@ -279,11 +283,12 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     }
     let check: { ok: boolean; reason?: string };
     try {
+      // The one place a key with nothing on chain will do: it names a person, and buys nothing.
       check = await verifyNep413(
         proof,
         { message: signInMessage(site.hostname), recipient: site.hostname },
         d.rpcFor(network),
-        { nonces: d.nonces },
+        { nonces: d.nonces, allowUnfunded: true },
       );
     } catch {
       // the error can name the account, so it isn't logged
@@ -294,6 +299,10 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       );
     }
     if (!check.ok) return fail(c, 'unauthorised', `The signature was refused: ${check.reason}.`);
+    const known = store.walletBinding.byHash(
+      d.cipher().index(`near:${network}:${proof.account_id}`),
+    );
+    if (!known && d.full?.()) return fail(c, 'budget_exhausted', DATA_FULL);
     const { person, claimed, explorations } = signIn(c, network, proof.account_id);
     return ok(c, {
       person_id: person,

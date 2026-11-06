@@ -125,8 +125,12 @@ export type PathHop =
 
 export const DEFAULT_MAX_DEPTH = 3;
 export const MAX_DEPTH = 6;
-export const DEFAULT_BUDGET = 2_000_000;
-export const MAX_BUDGET = 20_000_000;
+/**
+ * Edges one walk may read. It runs synchronously, so this is how long a stranger can hold the one
+ * event loop per request: measured on 2026-11-06, 200,000 edges took about 65 ms, and 2M took a second.
+ */
+export const MAX_BUDGET = 200_000;
+export const DEFAULT_BUDGET = MAX_BUDGET;
 
 const round6 = (x: number): number => Math.round(x * 1e6) / 1e6;
 

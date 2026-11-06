@@ -1,9 +1,10 @@
 // The tool contract types (packages.md, @petal/tools). Re-exported by index.ts; frozen at
 // packages/v1, so their shapes do not change here.
 import type { Progress, QuoteRequest, QuoteResult, ToolError } from '@petal/core/types';
-import type { InputModule, SnapshotStore } from '@petal/inputs';
+import type { FreshGate, InputModule, SnapshotStore } from '@petal/inputs';
 import type { Rpc } from '@petal/near/auth';
 import type { MapReader, MapWriter } from '@petal/near/map';
+import type { Limits } from './limits.ts';
 
 /** A JSON Schema (draft 2020-12) as a plain object; MCP takes it through fromJsonSchema(). */
 export type JSONSchema = Record<string, unknown>;
@@ -40,6 +41,8 @@ export interface Config {
   live?: boolean;
   /** fakes everywhere (fake map, recorded quote, fake RPC): tests and the keyless judge path */
   fake?: boolean;
+  /** additive (T300): overrides the defaults and PETAL_* variables of limits.ts */
+  limits?: Partial<Limits>;
 }
 
 /** Who is calling and through what. A door sets this; a caller can't name itself. */
@@ -62,6 +65,8 @@ export interface ToolContext {
   now(): Date;
   /** additive (T194): only the exploration tools read it */
   caller?: Caller;
+  /** additive (T300): whoever reads fresh data through this context takes turns here. None: no limit */
+  fresh?: FreshGate;
 }
 
 export type Tool<I, O> = {

@@ -5,8 +5,7 @@
 // no gap reaches 10 s. Limits per chat: tool rounds, wall time and dollars (Budget), and the daily
 // cap shared by every run on the server. The thread is saved as it grows, so a crash keeps the work,
 // and `opts.signal` is Stop (T190).
-import { AsyncLocalStorage } from 'node:async_hooks';
-import { setRunSignalSource, specHash } from '@petal/core';
+import { specHash } from '@petal/core';
 import type {
   AgentError,
   AgentEvent,
@@ -19,7 +18,7 @@ import type {
   ToolError,
   Validation,
 } from '@petal/core/types';
-import { registry as defaultRegistry, type ToolContext } from '@petal/tools';
+import { registry as defaultRegistry, type ToolContext, withRunSignal } from '@petal/tools';
 import { Channel } from './channel.ts';
 import type {
   Budget,
@@ -78,12 +77,14 @@ export const LEDGER_DOWN =
 export const STOPPED =
   'This run was stopped. What it did so far is kept: send a message to carry on from there.';
 
-/** A stopped call gets this long to say what it cost. One that honours the signal needs far less. */
+/** A stopped call gets this long to answer. One that honours the signal needs far less. */
 const STOP_GRACE_MS = 2000;
 
-/** Each tool runs inside this, so its fetches find the run's signal through runSignal(). */
-const toolScope = new AsyncLocalStorage<AbortSignal>();
-setRunSignalSource(() => toolScope.getStore());
+/**
+ * A round's calls past this aren't run, but each is answered, as the model's API requires. A reply can
+ * be steered by planted text, and each call could be a fresh read.
+ */
+export const MAX_TOOL_CALLS_PER_ROUND = 8;
 
 export const SKILL_HINT =
   'Bring your own agent: install the Petal skill (skill/petal/SKILL.md), or add the MCP server with `claude mcp add petal -- pnpm -s --dir <repo> petal mcp`, and ask it the same question.';
@@ -405,8 +406,9 @@ async function loop(
     } else {
       const ctx = withProgress(deps.tools, (e) => emit({ event: 'progress', data: e }));
       try {
+        // inside this, its fetches find the run's signal through runSignal()
         const running = signal
-          ? toolScope.run(signal, () => tool.run(args, ctx))
+          ? withRunSignal(signal, () => tool.run(args, ctx))
           : tool.run(args, ctx);
         out = await before(running, deadline, clock, signal);
       } catch (e) {
@@ -519,33 +521,40 @@ async function loop(
         pending = llm.complete(req, signal ? { signal } : {});
         c = await before(pending, deadline, clock, signal);
       } catch (e) {
-        const costOf = (err: unknown) => (err instanceof LlmCallError ? err.costUsd : 0);
-        // a late answer is still paid for, so its hold stands until it arrives
-        if ((e instanceof Timeout || e instanceof Stopped) && pending) {
-          const settled = pending.then(
-            (late) => {
-              totals.usd += late.cost_usd;
-              return settle(hold, late.cost_usd);
-            },
-            (err) => {
-              totals.usd += costOf(err);
-              return settle(hold, costOf(err));
-            },
+        const held = hold?.usd ?? 0;
+        // What a failure says it cost, if it can say. Anything else counts at the full hold.
+        const costOf = (err: unknown) =>
+          err instanceof LlmCallError && !err.costUnknown ? err.costUsd : held;
+        if (!pending) {
+          await settle(hold, 0); // it threw before it asked anything
+        } else if (e instanceof Timeout || e instanceof Stopped || signal?.aborted) {
+          // Nobody can say what a call cut off here cost, so it's the full hold, or more if it comes
+          // back saying so. That hold stands until the call ends, and a restart counts it as spent.
+          totals.usd += held;
+          const late = (usd: number) => {
+            totals.usd += Math.max(0, usd - held);
+            return settle(hold, Math.max(usd, held));
+          };
+          const ended = pending.then(
+            (answer) => late(answer.cost_usd),
+            (err) => late(err instanceof LlmCallError ? err.costUsd : 0),
           );
-          if (e instanceof Stopped) await within(settled, STOP_GRACE_MS);
+          if (!(e instanceof Timeout)) await within(ended, STOP_GRACE_MS);
         } else {
+          totals.usd += costOf(e);
           await settle(hold, costOf(e));
         }
         throw e;
       }
+      const paid = c.cost_unknown ? Math.max(c.cost_usd, hold?.usd ?? 0) : c.cost_usd;
       totals.turns++;
       totals.in += c.usage.in;
       totals.out += c.usage.out;
-      totals.usd += c.cost_usd;
+      totals.usd += paid;
       totals.fallback ||= c.fallback_used;
       totals.model = c.model;
       totals.signature = c.signature;
-      await settle(hold, c.cost_usd);
+      await settle(hold, paid);
       if (stopped()) return;
 
       messages.push(c.message);
@@ -564,10 +573,17 @@ async function loop(
         break;
       }
       rounds++;
-      for (const call of calls) {
+      for (const [i, call] of calls.entries()) {
         if (stopped()) return;
         signal?.throwIfAborted();
-        const out = await callTool(call, c);
+        const out =
+          i < MAX_TOOL_CALLS_PER_ROUND
+            ? await callTool(call, c)
+            : toolError(
+                'rate_limited',
+                `At most ${MAX_TOOL_CALLS_PER_ROUND} tool calls in one round, so ${call.name} was not run.`,
+                'Ask for it again in the next round.',
+              );
         messages.push({
           role: 'tool',
           tool_call_id: call.id,
@@ -583,12 +599,10 @@ async function loop(
   } catch (e) {
     // whatever the failure looks like, after Stop it is Stop's doing
     if (signal?.aborted) {
-      if (e instanceof LlmCallError) totals.usd += e.costUsd;
       fail('stopped', STOPPED);
     } else if (e instanceof Timeout) {
       fail('budget_exhausted', `The chat ran past its ${budget.wallSeconds} s.`, SKILL_HINT);
     } else if (e instanceof LlmCallError) {
-      totals.usd += e.costUsd;
       fail(e.code, e.message, e.hint, e.retryAfterS);
     } else {
       fail('source_failed', `The model call failed: ${(e as Error)?.message ?? String(e)}`);

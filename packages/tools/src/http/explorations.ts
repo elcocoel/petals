@@ -12,10 +12,10 @@
 //   GET  /s/:token                                 the resume packet, as markdown
 //
 // They read a session, so they answer before httpApp's open CORS, as the auth routes do, and a POST
-// from another site is refused. With no gate (httpApp alone), nobody is ever signed in.
+// from another site is refused. With no gate (httpApp alone), nobody is ever signed in. httpApp's body
+// limit, which comes first, covers them.
 import { canonicalJson } from '@petal/core';
 import { type Context, Hono, type MiddlewareHandler } from 'hono';
-import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { versioned } from '../define.ts';
 import { specBody } from '../drafts.ts';
@@ -87,14 +87,10 @@ export function explorationRoutes(
     }
     await next();
   };
-  const small = bodyLimit({
-    maxSize: 256 * 1024,
-    onError: (c) => fail(c, toolError('bad_input', 'The body is larger than 256 KiB.')),
-  });
 
   // Answered here, so httpApp's open CORS can't answer a preflight for these. In Hono, /a/* is /a too.
   app.options('/api/v1/explorations/*', (c) => c.body(null, 204));
-  app.use('/api/v1/explorations/*', noCache, sameSite, limit, small);
+  app.use('/api/v1/explorations/*', noCache, sameSite, limit);
 
   app.get('/api/v1/explorations', async (c) => {
     const raw = c.req.query('limit');

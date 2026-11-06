@@ -36,7 +36,7 @@ function setup(llm: LlmClient) {
 async function say(app: ReturnType<typeof setup>['app'], content: string, run_id?: string) {
   const res = await app.request('/api/v1/agent/chat', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-forwarded-for': '203.0.113.9' },
+    headers: { 'content-type': 'application/json', 'cf-connecting-ip': '203.0.113.9' },
     body: JSON.stringify({
       messages: [{ role: 'user', content }],
       ...(run_id ? { run_id } : {}),

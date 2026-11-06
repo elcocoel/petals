@@ -412,7 +412,7 @@ describe('T192: refusals', () => {
       Array.from({ length: 35 }, () =>
         b.request('/api/v1/auth/challenge', {
           method: 'POST',
-          headers: { 'x-forwarded-for': '203.0.113.9' },
+          headers: { 'cf-connecting-ip': '203.0.113.9' },
         }),
       ),
     );
@@ -1042,7 +1042,7 @@ describe('T196: who pays', () => {
     after.close();
   });
 
-  test('a restart gives back an invite’s holds, since no call survives it', async () => {
+  test('a restart counts an invite’s holds as spent, since what the call cost can’t be known', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     const { store, stateDir } = setup();
     const s = store();
@@ -1059,7 +1059,10 @@ describe('T196: who pays', () => {
       },
     );
     const after = store();
-    expect(after.credit.get(`invite:${id}`)).toMatchObject({ balance_usd: 1, reserved_usd: 0 });
+    const credit = after.credit.get(`invite:${id}`);
+    expect(credit?.reserved_usd).toBe(0);
+    expect(credit?.balance_usd).toBeCloseTo(0.95, 9);
+    expect(after.invite.get(id)?.spent_usd).toBeCloseTo(0.05, 9);
     after.close();
   });
 

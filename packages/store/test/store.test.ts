@@ -122,7 +122,7 @@ describe('a restart loses nothing', () => {
     s.credit.apply({ id: 'c1', account_key: 'a', delta_usd: 2, reason: 'test', at: AT });
     s.invite.create({ id: 'i1', token_hash: 't1', budget_usd: 5, expires_at: null });
     s.draft.put({ sha256: 'd1', body: 'x', created_at: AT });
-    s.publishDraft.put('e1', '{}');
+    s.publishDraft.put('e1', '{}', AT);
     s.publishDraft.claim('e1', AT);
     s.exploration.create({
       id: 'x1',
@@ -226,17 +226,6 @@ describe('the ledger', () => {
     expect(ledger.get(DAY)).toMatchObject({ usd: 0, reserved_usd: 0.05 });
     ledger.settle(DAY, 0.05, 0.01);
     expect(ledger.get(DAY)).toMatchObject({ usd: 0.01, reserved_usd: 0 });
-  });
-
-  test('releaseHolds gives back every hold on every day, and keeps what was spent', () => {
-    const { ledger } = openStore(':memory:');
-    expect(ledger.releaseHolds()).toBe(0);
-    ledger.add(DAY, 0.25);
-    ledger.reserve(DAY, 0.05, 3);
-    ledger.reserve('2026-11-04', 0.05, 3);
-    expect(ledger.releaseHolds()).toBeCloseTo(0.1, 9);
-    expect(ledger.get(DAY)).toMatchObject({ usd: 0.25, reserved_usd: 0 });
-    expect(ledger.get('2026-11-04').reserved_usd).toBe(0);
   });
 
   test('near the cap a hold shrinks to what is left; at the cap there is none', () => {
@@ -371,12 +360,12 @@ describe('single use', () => {
 
   test('a publish draft is claimed once, under concurrent async calls', async () => {
     const { publishDraft } = openStore(':memory:');
-    publishDraft.put('e1', '{}');
+    publishDraft.put('e1', '{}', AT);
     const out = await together(20, () => publishDraft.claim('e1', AT));
     expect(out.filter(Boolean)).toHaveLength(1);
     expect(publishDraft.get('e1')?.used_at).toBe(AT);
     // preparing again is a new nonce and a new chance, as it always was
-    publishDraft.put('e1', '{"again":true}');
+    publishDraft.put('e1', '{"again":true}', AT);
     expect(publishDraft.claim('e1', LATER)).toBe(true);
     expect(publishDraft.claim('missing', LATER)).toBe(false);
   });

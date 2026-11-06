@@ -121,7 +121,7 @@ class Browser {
   /** a public proxy names each caller; the limits are per caller */
   caller = `198.51.100.${++browsers % 250}`;
   async request(url: string, init: { method?: string; json?: unknown } = {}) {
-    const headers: Record<string, string> = { 'x-forwarded-for': this.caller };
+    const headers: Record<string, string> = { 'cf-connecting-ip': this.caller };
     if (this.cookies.size) {
       headers.cookie = [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; ');
     }

@@ -85,6 +85,7 @@ export interface PublishDraftRow {
   /** JSON */
   body: string;
   used_at: string | null;
+  expires_at: string | null;
 }
 
 export interface ExplorationRow {
@@ -177,7 +178,29 @@ export function tables(db: Db) {
     );
   };
 
+  const countOf = (what: string, day: string) =>
+    db.get<{ n: number }>('SELECT n FROM daily_count WHERE day = ? AND what = ?', day, what)?.n ??
+    0;
+
   return {
+    /** One number a day for each thing capped: the caps a restart must not reset. */
+    dailyCount: {
+      get: countOf,
+      /** Counts one more of `what` today, and true; false, and no change, at the cap. */
+      take: (what: string, day: string, cap: number): boolean =>
+        db.tx(() => {
+          db.run('DELETE FROM daily_count WHERE day < ?', day);
+          if (countOf(what, day) >= cap) return false;
+          db.run(
+            `INSERT INTO daily_count (day, what, n) VALUES (?, ?, 1)
+             ON CONFLICT (day, what) DO UPDATE SET n = n + 1`,
+            day,
+            what,
+          );
+          return true;
+        }),
+    },
+
     meta: {
       get: (key: string) =>
         db.get<{ value: string }>('SELECT value FROM meta WHERE key = ?', key)?.value ?? null,
@@ -392,12 +415,17 @@ export function tables(db: Db) {
             reserved_usd: Math.max(0, r.reserved_usd - heldUsd),
           });
         }),
-      /** Every hold on every day given back, and how much that was: for when no call can be in flight. */
-      releaseHolds: (): number =>
+      /**
+       * Every hold on every day counted as spent, and how much that was: for when no call can be in
+       * flight. What a call cut off by a crash really cost can't be known, so it's never less than this.
+       */
+      spendHolds: (): number =>
         db.tx(() => {
           const held =
             db.get<{ usd: number }>('SELECT SUM(reserved_usd) AS usd FROM ledger')?.usd ?? 0;
-          db.run('UPDATE ledger SET reserved_usd = 0 WHERE reserved_usd <> 0');
+          db.run(
+            'UPDATE ledger SET usd = usd + reserved_usd, reserved_usd = 0 WHERE reserved_usd <> 0',
+          );
           return held;
         }),
       /** A day's starting figure, if the day has none yet. */
@@ -448,13 +476,23 @@ export function tables(db: Db) {
           if (held !== null) writeCredit({ ...r, reserved_usd: r.reserved_usd + held });
           return held;
         }),
-      /** Every hold given back, and how much that was: for when no call can be in flight. */
-      releaseHolds: (): number =>
+      /** Every hold counted as spent, with an entry for each: the same rule as the ledger's. */
+      spendHolds: (at: string): { account_key: string; usd: number }[] =>
         db.tx(() => {
-          const held =
-            db.get<{ usd: number }>('SELECT SUM(reserved_usd) AS usd FROM credit')?.usd ?? 0;
-          db.run('UPDATE credit SET reserved_usd = 0 WHERE reserved_usd <> 0');
-          return held;
+          const held = db.all<CreditRow>('SELECT * FROM credit WHERE reserved_usd <> 0');
+          for (const r of held) {
+            db.run(
+              `INSERT INTO credit_entry (id, account_key, delta_usd, reason, at)
+               VALUES (?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`,
+              `crash:${r.account_key}:${at}`,
+              r.account_key,
+              -r.reserved_usd,
+              'held at a restart',
+              at,
+            );
+            writeCredit({ ...r, balance_usd: r.balance_usd - r.reserved_usd, reserved_usd: 0 });
+          }
+          return held.map((r) => ({ account_key: r.account_key, usd: r.reserved_usd }));
         }),
       /** Swaps a hold for what was really spent. */
       settle: (account: string, heldUsd: number, actualUsd: number) =>
@@ -506,13 +544,19 @@ export function tables(db: Db) {
     /** Entries prepared for a maker's signature (prepare_publish). */
     publishDraft: {
       /** A new prepare replaces the old one, used or not: it carries a new nonce. */
-      put(entrySha256: string, body: string) {
+      put(entrySha256: string, body: string, expiresAt: string) {
         db.run(
-          `INSERT INTO publish_draft (entry_sha256, body, used_at) VALUES (?, ?, NULL)
-           ON CONFLICT (entry_sha256) DO UPDATE SET body = excluded.body, used_at = NULL`,
+          `INSERT INTO publish_draft (entry_sha256, body, used_at, expires_at) VALUES (?, ?, NULL, ?)
+           ON CONFLICT (entry_sha256) DO UPDATE SET
+             body = excluded.body, used_at = NULL, expires_at = excluded.expires_at`,
           entrySha256,
           body,
+          expiresAt,
         );
+      },
+      /** A draft from before drafts said when they expire has none, and goes too. */
+      deleteExpired(now: string) {
+        db.run('DELETE FROM publish_draft WHERE expires_at <= ? OR expires_at IS NULL', now);
       },
       get: (entrySha256: string) =>
         db.get<PublishDraftRow>('SELECT * FROM publish_draft WHERE entry_sha256 = ?', entrySha256),
@@ -590,6 +634,25 @@ export function tables(db: Db) {
       /** Every exploration of `from` now belongs to `to`, in one statement. */
       moveOwner: (from: string, to: string): number =>
         db.run('UPDATE exploration SET owner = ? WHERE owner = ?', to, from),
+      /**
+       * Up to `limit` that nobody owns and nobody has touched since `before`, with their steps, notes
+       * and links. Returns how many went. A limit, so one request never waits on a long delete.
+       */
+      deleteUnclaimed: (before: string, limit: number): number =>
+        db.tx(() => {
+          const gone = db.all<{ id: string }>(
+            'SELECT id FROM exploration WHERE owner IS NULL AND updated_at < ? LIMIT ?',
+            before,
+            limit,
+          );
+          for (const { id } of gone) {
+            db.run('DELETE FROM step WHERE exploration = ?', id);
+            db.run('DELETE FROM note WHERE exploration = ?', id);
+            db.run('DELETE FROM exploration_link WHERE exploration = ?', id);
+            db.run('DELETE FROM exploration WHERE id = ?', id);
+          }
+          return gone.length;
+        }),
       /** Compare and swap: false unless the current owner is `from` (default none). */
       setOwner: (id: string, owner: string, from: string | null = null) =>
         (from === null

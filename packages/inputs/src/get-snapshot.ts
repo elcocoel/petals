@@ -35,6 +35,17 @@ export const LATEST_REUSE_S = 600;
  */
 export const RECORD_WAIT_MS = 2000;
 
+/**
+ * Additive (T300): who decides whether a read that would reach a public source may start. It throws a
+ * refusal in the caller's own words. No gate: nothing is refused.
+ */
+export interface FreshGate {
+  /** Throws when a read couldn't start now. Costs nothing. */
+  check(): void;
+  /** Runs the read, if it may start; counted, and stopped if it takes too long. */
+  run<T>(work: () => Promise<T>): Promise<T>;
+}
+
 export const bodyUrl = (sha256: string) => `/api/v1/snapshots/${sha256}`;
 
 const rowsOf = (s: Snapshot) =>
@@ -127,6 +138,7 @@ export async function getSnapshot(
     map?: MapIndex;
     onProgress?: Progress;
     modules?: Record<string, InputModule>;
+    fresh?: FreshGate;
   },
 ): Promise<SnapshotResult> {
   const { store, map, onProgress } = deps;
@@ -134,17 +146,23 @@ export async function getSnapshot(
   const mod = moduleFor(req, deps.modules ?? modules);
   const d = mod.descriptor;
   const latest = req.at === undefined || req.at === 'latest';
+  // Only a module that reads a public source has anything to gate.
+  const gate = d.live ? deps.fresh : undefined;
+  const scope = mod.keyFor?.(req.params) ?? { chain: d.chain, population: d.population };
+  const rows = await store.list(d.id);
+  // This can only be a fresh read: nothing stored for this target, or asked for by name. Refused here,
+  // it costs no call at all.
+  const stored = rows.some((r) => r.chain === scope.chain && r.population === scope.population);
+  if (gate && (!stored || (latest && req.fresh))) gate.check();
 
   say('resolving', `resolving ${latest ? 'latest' : JSON.stringify(req.at)} for ${d.id}`);
   const at = await mod.resolveAt(req.at ?? 'latest', req.params);
-  const scope = mod.keyFor?.(req.params) ?? { chain: d.chain, population: d.population };
   const key = { ...scope, block_height: at.block_height };
   say(
     'reading_map',
     `looking for ${d.id} at block ${at.block_height} in fixtures, cache and the map`,
   );
 
-  const rows = await store.list(d.id);
   const whereOf = (sha: string): SnapshotWhere =>
     rows.find((r) => r.sha256 === sha)?.where ?? 'cache';
   const found = (s: Snapshot, sha: string, where: SnapshotWhere) => {
@@ -205,9 +223,12 @@ export async function getSnapshot(
 
   // 4. fetch, check, store, record
   say('fetching', `fetching ${d.id} at block ${at.block_height}${d.live ? ' (live)' : ''}`);
-  const s = await mod.fetch(at, req.params, onProgress);
-  check(d.id, s);
-  const put = await store.put(s);
+  const read = async () => {
+    const s = await mod.fetch(at, req.params, onProgress);
+    check(d.id, s);
+    return { s, put: await store.put(s) };
+  };
+  const { s, put } = await (gate ? gate.run(read) : read());
   say('storing', `stored as ${put.sha256} (${put.bytes} bytes canonical)`);
 
   if (map && s.snapshot.final && mapSha !== put.sha256) {

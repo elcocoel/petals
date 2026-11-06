@@ -153,4 +153,19 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE note ADD COLUMN door TEXT;
   CREATE INDEX run_exploration ON run(exploration, updated_at);
   `,
+  // 4: hardening before public (T300). What a stranger's request prunes has an index, so no request
+  // scans a table a stranger can grow. A draft says when it expires, so an old one can go. The daily
+  // caps are counted here: one row a day for each thing capped, so a restart can't reset one.
+  `
+  CREATE INDEX challenge_expires ON challenge(expires_at);
+  CREATE INDEX session_expires ON session(expires_at);
+  ALTER TABLE publish_draft ADD COLUMN expires_at TEXT;
+  CREATE INDEX publish_draft_expires ON publish_draft(expires_at);
+  CREATE TABLE daily_count (
+    day TEXT NOT NULL,
+    what TEXT NOT NULL,
+    n INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, what)
+  );
+  `,
 ];

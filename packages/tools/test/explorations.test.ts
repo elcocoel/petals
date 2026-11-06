@@ -166,7 +166,7 @@ describe('the HTTP door', () => {
   test('each request counts once against the limit, the bare path too', async () => {
     const app = door();
     const call = () =>
-      app.request('/api/v1/explorations', { headers: { 'x-forwarded-for': '10.9.9.9' } });
+      app.request('/api/v1/explorations', { headers: { 'cf-connecting-ip': '10.9.9.9' } });
     for (let i = 0; i < 60; i++) expect((await call()).status).toBe(401);
     expect((await call()).status).toBe(429);
   });

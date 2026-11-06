@@ -73,10 +73,18 @@ export class LlmCallError extends Error {
   readonly tryNext: boolean;
   /** what the failed call still cost */
   readonly costUsd: number;
+  /** it may have been billed for more than that, and nobody can say: it counts at its full hold */
+  readonly costUnknown: boolean;
   constructor(
     code: ToolErrorCode,
     message: string,
-    o: { hint?: string; retryAfterS?: number; tryNext?: boolean; costUsd?: number } = {},
+    o: {
+      hint?: string;
+      retryAfterS?: number;
+      tryNext?: boolean;
+      costUsd?: number;
+      costUnknown?: boolean;
+    } = {},
   ) {
     super(message);
     this.name = 'LlmCallError';
@@ -85,6 +93,7 @@ export class LlmCallError extends Error {
     this.retryAfterS = o.retryAfterS;
     this.tryNext = o.tryNext ?? false;
     this.costUsd = o.costUsd ?? 0;
+    this.costUnknown = o.costUnknown ?? false;
   }
 }
 
@@ -194,10 +203,26 @@ function classify(e: unknown, model: string): LlmCallError {
     return new LlmCallError(s === 429 ? 'rate_limited' : 'source_failed', what, {
       tryNext: true,
       retryAfterS: Number.isFinite(retry) && retry > 0 ? retry : undefined,
+      // A timeout on their side: the model may have run. Any other status is a refusal.
+      costUnknown: s === 408 || s === 504,
     });
   }
+  // No answer at all, a timeout included: the model may have run and been billed.
   const msg = e instanceof Error ? e.message : String(e);
-  return new LlmCallError('source_failed', `${model}: ${msg}`, { tryNext: true });
+  return new LlmCallError('source_failed', `${model}: ${msg}`, {
+    tryNext: true,
+    costUnknown: true,
+  });
+}
+
+/** What the answer says it used. A count that's missing, or none at all, is no count. */
+function usageOf(usage: { prompt_tokens?: unknown; completion_tokens?: unknown } | undefined) {
+  const count = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) && n >= 0 ? n : null);
+  const [input, output] = [count(usage?.prompt_tokens), count(usage?.completion_tokens)];
+  return {
+    usage: { in: input ?? 0, out: output ?? 0 },
+    known: input !== null && output !== null && input + output > 0,
+  };
 }
 
 /** The full client. `nearAiClient` in index.ts is this with the contract's arguments only. */
@@ -338,14 +363,12 @@ export function createNearAiClient(
         : [],
     );
     const content = choice.message.content ?? null;
-    const usage = {
-      in: completion.usage?.prompt_tokens ?? 0,
-      out: completion.usage?.completion_tokens ?? 0,
-    };
+    const { usage, known } = usageOf(completion.usage);
     if (choice.finish_reason === 'length' && !content?.trim() && !tool_calls.length) {
       throw new LlmCallError('source_failed', `${model}: used its token limit before answering`, {
         tryNext: true,
         costUsd: costUsd(model, usage, listed),
+        costUnknown: !known,
       });
     }
     const signature = captured
@@ -359,6 +382,7 @@ export function createNearAiClient(
         : { role: 'assistant', content },
       usage,
       cost_usd: costUsd(model, usage, listed),
+      ...(known ? {} : { cost_unknown: true }),
       fallback_used: model !== cfg.model,
       signature,
     };
@@ -411,20 +435,36 @@ export function createNearAiClient(
       const order = [...models.slice(first), ...models.slice(0, first)];
       const failures: LlmCallError[] = [];
       let lost = 0; // what failed attempts still cost, so spend is never under-counted
+      let unknown = false; // and one of them may have cost more than anyone can say
       for (const model of order) {
         try {
           const out = await callModel(model, req, signal);
           healthy = true;
-          return lost ? { ...out, cost_usd: out.cost_usd + lost } : out;
+          return {
+            ...out,
+            cost_usd: out.cost_usd + lost,
+            ...(unknown ? { cost_unknown: true } : {}),
+          };
         } catch (e) {
           const err = classify(e, model);
           failures.push(err);
           lost += err.costUsd;
+          unknown ||= err.costUnknown;
           // Stop says nothing about this model, so no fallback, and its health stands
           if (signal?.aborted) {
-            throw new LlmCallError('source_failed', `${model}: stopped`, { costUsd: lost });
+            throw new LlmCallError('source_failed', `${model}: stopped`, {
+              costUsd: lost,
+              costUnknown: true,
+            });
           }
-          if (!err.tryNext) throw err;
+          if (!err.tryNext) {
+            throw new LlmCallError(err.code, err.message, {
+              ...(err.hint ? { hint: err.hint } : {}),
+              ...(err.retryAfterS ? { retryAfterS: err.retryAfterS } : {}),
+              costUsd: lost,
+              costUnknown: unknown,
+            });
+          }
           // the next model goes first for a while, so each turn doesn't wait on a failing one
           const next = (models.indexOf(model) + 1) % models.length;
           start = next;
@@ -440,6 +480,7 @@ export function createNearAiClient(
           retryAfterS: last?.retryAfterS,
           hint: 'Try again in a minute, or bring your own agent.',
           costUsd: lost,
+          costUnknown: unknown,
         },
       );
     },

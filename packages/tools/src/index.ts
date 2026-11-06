@@ -5,8 +5,18 @@ export type { PetalTool, ToolAnnotations } from './define.ts';
 export { TOOL_ERROR_SCHEMA } from './define.ts';
 export { nonceStore, privateStore } from './drafts.ts';
 export { HTTP_STATUS, isToolError } from './errors.ts';
+export { freshGate, withRunSignal } from './fresh.ts';
 export { httpApp } from './http/app.ts';
 export type { SessionGate } from './http/explorations.ts';
+export { clientAddress, isLocalSite, remember } from './http/rate-limit.ts';
+export { BODY_MAX_BYTES, bodyCap } from './http/reply.ts';
+export {
+  DATA_FULL,
+  DEFAULT_LIMITS,
+  type Limits,
+  limitsOf,
+  overDataBudget,
+} from './limits.ts';
 export { mcpServer } from './mcp/server.ts';
 export { serveStdio } from './mcp/stdio.ts';
 export { callTool, describeTool, findTool, registry } from './registry.ts';

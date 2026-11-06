@@ -34,6 +34,8 @@ export interface LlmCompletion {
   message: { role: 'assistant'; content: string | null; tool_calls?: LlmToolCall[] };
   usage: { in: number; out: number };
   cost_usd: number;
+  /** additive (T300): the answer didn't say what it used, so it counts at the call's full hold */
+  cost_unknown?: boolean;
   fallback_used: boolean;
   /** provider_tee when available; null for recorded runs ("recorded run, no signature") */
   signature: ModelSignature | null;
@@ -63,7 +65,7 @@ export interface BudgetLedger {
   add(usd: number): Promise<void>;
   /** holds up to `usd` under today's cap, atomically; null when nothing is left */
   reserve(usd: number, capUsd: number): Promise<SpendHold | null>;
-  /** swaps a hold for what the call really cost */
+  /** swaps a hold for what the call cost; the full hold when that can't be known */
   settle(hold: SpendHold, actualUsd: number): Promise<void>;
   /** why `reserve` last answered null, when the reason isn't today's cap (an invite's end) */
   refusal?(): { message: string; hint?: string } | null;

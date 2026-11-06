@@ -17,6 +17,9 @@ export const INVITE_SPENT =
 export const INVITE_CLOSED =
   "This invite isn't valid any more, so Petal's agent stopped here. You can carry on with your own agent.";
 
+/** An invite minted with no days given ends after this many. An open-ended one is never closed. */
+export const DEFAULT_INVITE_DAYS = 14;
+
 export type InviteStatus = 'active' | 'spent' | 'revoked' | 'expired';
 
 export interface InviteState {
@@ -29,6 +32,9 @@ export interface InviteState {
 }
 
 const accountOf = (id: string) => `invite:${id}`;
+/** The invite behind a credit account, if that's what it is. */
+export const inviteOfAccount = (account: string) =>
+  account.startsWith('invite:') ? account.slice('invite:'.length) : null;
 /** Under a billionth of a dollar is rounding dust from adding floats, not money to spend. */
 const DUST_USD = 1e-9;
 
@@ -40,7 +46,7 @@ export interface MintedInvite {
   /** The only copy. It isn't stored and can't be shown again. */
   token: string;
   budget_usd: number;
-  expires_at: string | null;
+  expires_at: string;
 }
 
 export function mintInvite(
@@ -54,8 +60,9 @@ export function mintInvite(
   const now = o.now ?? new Date();
   const id = `inv_${randomBytes(9).toString('hex')}`;
   const token = `petal_invite_${randomBytes(32).toString('base64url')}`;
-  const expires_at =
-    o.days === undefined ? null : new Date(now.getTime() + o.days * 86_400_000).toISOString();
+  const expires_at = new Date(
+    now.getTime() + (o.days ?? DEFAULT_INVITE_DAYS) * 86_400_000,
+  ).toISOString();
   store.tx(() => {
     store.invite.create({ id, token_hash: hashToken(token), budget_usd: o.usd, expires_at });
     store.credit.apply({

@@ -453,6 +453,7 @@ Critical path: T001 → T002 → T005 → T012 → T013 → T014 → T015 → T0
 - [X] T197 [W1] Claims: the shape, kinds, and `applyPolicy` as a pure function with lenses. Existing labels and corrections read as claims. Observed claims derive from snapshots.
 - [X] T198 [W2] Relations index: rebuildable, with accounts in common between groups, dated and marked as a lower bound where coverage is partial. Depends on the graph measurements.
 - [ ] T199 [W7] Agents acting for a person: OAuth (DCR and CIMD) with Claude's and ChatGPT's signals, and link approval for HTTP agents.
+- [ ] T300 [W8] Harden before public: disk, limits, stalls, spend accounting, publish caps, container lock.
 
 ---
 

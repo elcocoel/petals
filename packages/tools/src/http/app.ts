@@ -2,23 +2,30 @@
 // routes: they live in @petal/agent (agentRoutes), and petalApp joins the two (one-way deps).
 // Bodies and responses are the tools' inputs and outputs; the door only maps error codes to
 // HTTP statuses, reads query strings, and streams progress as SSE when asked.
-import { gzipSync } from 'node:zlib';
+import { promisify } from 'node:util';
+import { gunzip as gunzipCb, gzip as gzipCb } from 'node:zlib';
 import { API_VERSION, canonicalJson, sha256Hex, TOOLS_VERSION } from '@petal/core';
 import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
 import { versioned } from '../define.ts';
 import { fromThrown, isToolError, toolError } from '../errors.ts';
+import { freshGate } from '../fresh.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
 import { findTool } from '../registry.ts';
 import { findSnapshot } from '../tools/shared.ts';
 import type { ToolContext } from '../types.ts';
 import { explorationRoutes, type SessionGate } from './explorations.ts';
-import { rateLimit } from './rate-limit.ts';
-import { body, fail, respond } from './reply.ts';
+import { isLocalSite, rateLimit } from './rate-limit.ts';
+import { body, bodyCap, fail, respond } from './reply.ts';
 
 const IMMUTABLE = 'public, max-age=31536000, immutable';
 const SHA = /^[0-9a-f]{64}$/;
+const gzip = promisify(gzipCb);
+const gunzip = promisify(gunzipCb);
+
+/** Snapshots checked against their name, this process: at most this many are remembered. */
+const VERIFIED_MAX = 1000;
 
 type Out = Record<string, unknown>;
 
@@ -36,14 +43,20 @@ function pick(q: Record<string, string>, keys: string[], numeric: string[] = [])
 
 const wantsSse = (c: Context) => (c.req.header('accept') ?? '').includes('text/event-stream');
 
-export function httpApp(ctx: ToolContext, o: { gate?: SessionGate } = {}): Hono {
+class MismatchedSnapshot extends Error {}
+
+export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hono {
   const app = new Hono();
+  // HTTP and MCP are one set of callers, whoever they say they are: fresh reads take turns between them.
+  const ctx: ToolContext = { ...given, fresh: freshGate(given, 'door') };
   const limit = rateLimit({
     max: 60,
     windowMs: 60_000,
     now: () => ctx.now().getTime(),
     what: 'tool calls',
+    local: isLocalSite(ctx.config.apiBase),
   });
+  app.use('*', bodyCap);
   // First: these read a session, so the open CORS below doesn't reach them.
   app.route('/', explorationRoutes(ctx, limit, o.gate));
   app.use('*', cors({ origin: '*', exposeHeaders: ['Retry-After', 'ETag'] }));
@@ -93,22 +106,41 @@ export function httpApp(ctx: ToolContext, o: { gate?: SessionGate } = {}): Hono 
       ...pick(c.req.query(), ['top'], ['top']),
     }),
   );
+  // The stored .gz itself, so a request costs a file read and no compression on this thread. Its bytes
+  // are checked against the name once a process; a store with no such file makes one, off this thread.
+  const verified = new Set<string>();
+  async function storedGzip(sha: string): Promise<Uint8Array | null> {
+    const stored = await ctx.store.gz?.(sha);
+    if (stored) {
+      if (!verified.has(sha)) {
+        if (sha256Hex(new Uint8Array(await gunzip(stored))) !== sha) throw new MismatchedSnapshot();
+        if (verified.size >= VERIFIED_MAX) verified.clear();
+        verified.add(sha);
+      }
+      return stored;
+    }
+    const s = await findSnapshot(ctx, sha);
+    if (!s) return null;
+    const bytes = new TextEncoder().encode(canonicalJson(s));
+    if (sha256Hex(bytes) !== sha) throw new MismatchedSnapshot();
+    return new Uint8Array(await gzip(bytes));
+  }
+
   app.get('/api/v1/snapshots/:sha256', limit, async (c) => {
     const sha = c.req.param('sha256');
     if (!SHA.test(sha)) return fail(c, toolError('bad_input', 'Not a sha256.'));
     const etag = `"${sha}"`;
     if (c.req.header('if-none-match') === etag) return c.body(null, 304, { ETag: etag });
-    let s: unknown;
+    let gz: Uint8Array | null;
     try {
-      s = await findSnapshot(ctx, sha);
+      gz = await storedGzip(sha);
     } catch (err) {
+      if (err instanceof MismatchedSnapshot) {
+        return fail(c, toolError('internal', 'The stored snapshot does not match its hash.'));
+      }
       return fail(c, fromThrown(err));
     }
-    if (!s) return fail(c, toolError('not_found', `No snapshot ${sha}.`));
-    const bytes = new TextEncoder().encode(canonicalJson(s));
-    if (sha256Hex(bytes) !== sha) {
-      return fail(c, toolError('internal', 'The stored snapshot does not match its hash.'));
-    }
+    if (!gz) return fail(c, toolError('not_found', `No snapshot ${sha}.`));
     const headers: Record<string, string> = {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': IMMUTABLE,
@@ -117,9 +149,9 @@ export function httpApp(ctx: ToolContext, o: { gate?: SessionGate } = {}): Hono 
     };
     if ((c.req.header('accept-encoding') ?? '').includes('gzip')) {
       headers['Content-Encoding'] = 'gzip';
-      return c.body(gzipSync(bytes), 200, headers);
+      return c.body(gz as Uint8Array<ArrayBuffer>, 200, headers);
     }
-    return c.body(bytes, 200, headers);
+    return c.body(new Uint8Array(await gunzip(gz)), 200, headers);
   });
 
   // -- counting, specs, render
@@ -213,7 +245,20 @@ export function httpApp(ctx: ToolContext, o: { gate?: SessionGate } = {}): Hono 
       commit: process.env.PETAL_COMMIT ?? null,
     }),
   );
-  app.all('/mcp', limit, (c) => mcp.fetch(c.req.raw));
+  // One POST, one call against the limit: a batch of 100 would be 100 tool calls for one hit, and MCP
+  // itself has dropped batches.
+  app.all('/mcp', limit, async (c) => {
+    if (c.req.method === 'POST') {
+      const sent = await c.req.raw.clone().text();
+      if (sent.trimStart().startsWith('[')) {
+        return fail(
+          c,
+          toolError('bad_input', '/mcp takes one call at a time.', 'Send each as its own POST.'),
+        );
+      }
+    }
+    return mcp.fetch(c.req.raw);
+  });
 
   app.notFound((c) =>
     fail(

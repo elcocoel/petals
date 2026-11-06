@@ -130,7 +130,7 @@ class Browser {
     this.origin = origin;
   }
   async request(path: string, init: { method?: string; json?: unknown; accept?: string } = {}) {
-    const headers: Record<string, string> = { 'x-forwarded-for': this.caller };
+    const headers: Record<string, string> = { 'cf-connecting-ip': this.caller };
     if (this.cookies.size) {
       headers.cookie = [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; ');
     }
