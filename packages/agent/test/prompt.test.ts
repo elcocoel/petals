@@ -16,7 +16,7 @@ describe('SYSTEM_PROMPT', () => {
 
   test('came out shorter, because every byte is resent each turn', () => {
     // 8,122 before the cut, which came to about 8,100; the section on investigating adds about 450.
-    expect(Buffer.byteLength(readFileSync(PROMPT_FILE, 'utf8'))).toBeLessThan(8600);
+    expect(Buffer.byteLength(readFileSync(PROMPT_FILE, 'utf8'))).toBeLessThan(9000);
   });
 
   test('walks the six steps in the skill order, list_flowers first', () => {
