@@ -1,6 +1,7 @@
 // Test 1, lines 2 and 3 (coordinator/test-1.md), at $0: the real routes, the real NEAR AI client, the real
 // tools and SQLite, on the stub model. What isn't real: the model, and the chain behind sign-in (a fake RPC,
 // so it needs no network). tests/e2e/test1-path.ts does this over HTTP, through Next, on NEAR's real RPC.
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -9,8 +10,6 @@ import { join } from 'node:path';
 import { buildPetalApp, mintInvite, modelOf, openPrivateStore } from '@petal/agent';
 import { fakeRpc, fakeRpcFor, implicitSigner, testSigner } from '@petal/near/auth/testing';
 import { afterEach, describe, expect, test } from 'vitest';
-import { run as bindWallet } from '../../scripts/bind-wallet.ts';
-import { run as fundPerson } from '../../scripts/fund-person.ts';
 import { REPO, readSse } from './helpers.ts';
 import { stubModel } from './stub-model.ts';
 import { SESSION_COOKIE, seedWorkspace } from './workspace-seed.ts';
@@ -22,6 +21,23 @@ const QWEN = 'Qwen/Qwen3.8-27B';
 const HAIKU = 'anthropic/claude-haiku-5-5';
 const SONNET = 'anthropic/claude-sonnet-5-5';
 const QUESTION = 'Who stands behind NEAR’s validators?';
+
+/** A script as SYSTEMS runs it: its own process, its own environment, and its print or its error. */
+function script(name: string, args: string[], env: Record<string, string> = {}) {
+  const out = spawnSync(process.execPath, [join(REPO, 'scripts', name), ...args], {
+    env,
+    encoding: 'utf8',
+  });
+  if (out.status !== 0) {
+    throw new Error(
+      out.stderr.replace(/^.*(ExperimentalWarning|trace-warnings).*\n?/gm, '').trim(),
+    );
+  }
+  return out.stdout;
+}
+const bindWallet = (args: string[], env: Record<string, string> = {}) =>
+  script('bind-wallet.ts', args, env);
+const fundPerson = (args: string[]) => script('fund-person.ts', args);
 
 const closing: (() => void)[] = [];
 afterEach(() => {
@@ -136,7 +152,7 @@ function browser(w: W, cookie = '') {
       return {
         events,
         named,
-        run: (events[0]?.data as { run_id: string }).run_id,
+        run: (events[0]?.data as { run_id?: string } | undefined)?.run_id ?? '',
         done: named('done').at(-1)?.data as {
           model: string;
           picked?: string;
