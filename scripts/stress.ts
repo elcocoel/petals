@@ -216,8 +216,6 @@ async function loopConversation(
           {
             apiKey: config.nearAiApiKey as string,
             attestationsDir: join(stateDir, 'attestations'),
-            // NEAR AI refuses reasoning_effort for Anthropic's models (HTTP 400, seen 6 Nov)
-            ...(model.startsWith('anthropic/') ? { reasoningEffort: null } : {}),
             onWarning: (w) => warnings.push(w),
           },
         );

@@ -4,19 +4,30 @@
 // next chat starts from it. A thread can use the model's window: near full it is compacted, with no
 // model call, as an IDE does. What guards spending is the dollar caps (Budget), not the thread's size.
 import type { AgentEvent, FlowerResult, ModelSignature, Spec } from '@petal/core/types';
+import { COMPACT_AT_FRACTION, modelOf } from './catalogue.ts';
 import type { LlmMessage } from './llm.ts';
 import { draftLink } from './summary.ts';
 
-/** Compaction starts at this share of the model's window. */
-export const COMPACT_AT = 0.8;
-/** And goes down to this one: each compaction costs the cached prefix, so it should be a rare event. */
+/** Compaction goes down to this share of the window: it costs the cached prefix, so it should be rare. */
 export const COMPACT_TO = 0.6;
 /** Petal's own text measured 3.7 (16.5 KB, 4,430 tokens); a little under, so it starts early. */
 const CHARS_PER_TOKEN = 3.5;
+/**
+ * PETAL_MODEL can name a model the catalogue doesn't list. This is the lowest window the research names
+ * for a model with tools, so a thread on one is compacted too soon, not too late.
+ */
+const UNLISTED_WINDOW = 128_000;
 
-/** How long a thread can get in this window, with `reservedChars` going to the system and the tools. */
+export const windowOf = (model: string): number =>
+  modelOf(model)?.context_window ?? UNLISTED_WINDOW;
+
+/**
+ * How long a thread can get in this window, with `reservedChars` going to the system and the tools. So
+ * the whole call is measured, as `context_tokens` is, and it stops at the catalogue's
+ * `compacts_at_tokens`, as near as a count from the text can say.
+ */
 export function compactionChars(windowTokens: number, reservedChars = 0): number {
-  return Math.max(0, windowTokens * COMPACT_AT * CHARS_PER_TOKEN - reservedChars);
+  return Math.max(0, windowTokens * COMPACT_AT_FRACTION * CHARS_PER_TOKEN - reservedChars);
 }
 
 const sizeOf = (ms: LlmMessage[]) => ms.reduce((n, m) => n + JSON.stringify(m).length, 0);
@@ -74,7 +85,7 @@ function proseOnly(part: LlmMessage[]): LlmMessage[] {
 export function compactThread(thread: LlmMessage[], maxChars: number): LlmMessage[] {
   let size = sizeOf(thread);
   if (size <= maxChars) return thread;
-  const enough = maxChars * (COMPACT_TO / COMPACT_AT);
+  const enough = maxChars * (COMPACT_TO / COMPACT_AT_FRACTION);
   const parts = exchanges(thread);
   for (let i = 0; i < parts.length - 2 && size > enough; i++) {
     const short = proseOnly(parts[i] as LlmMessage[]);

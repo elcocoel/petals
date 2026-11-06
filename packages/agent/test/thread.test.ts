@@ -3,18 +3,19 @@
 import { join } from 'node:path';
 import type { Run } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
+import { COMPACT_AT_FRACTION, catalogue } from '../src/catalogue.ts';
 import { DEFAULT_BUDGET, type LlmClient, type LlmMessage } from '../src/llm.ts';
-import { contextWindow, DEFAULT_MODEL } from '../src/near-ai.ts';
+import { DEFAULT_MODEL } from '../src/near-ai.ts';
 import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
 import { createAgentRoutes } from '../src/routes.ts';
 import { startRun } from '../src/run.ts';
 import { fileRunStore } from '../src/runs.ts';
 import {
-  COMPACT_AT,
   COMPACT_TO,
   closeThread,
   compactionChars,
   compactThread,
+  windowOf,
 } from '../src/thread.ts';
 import {
   collect,
@@ -281,7 +282,7 @@ describe('compactThread', () => {
     const t = [...Array(10).keys()].flatMap((i) => exchange(`q${i}`, 1000));
     const max = size(t) - 10;
     const out = compactThread(t, max);
-    expect(size(out)).toBeLessThanOrEqual(max * (COMPACT_TO / COMPACT_AT));
+    expect(size(out)).toBeLessThanOrEqual(max * (COMPACT_TO / COMPACT_AT_FRACTION));
     expect(compactThread(out, max)).toBe(out);
   });
 
@@ -298,7 +299,7 @@ describe('compactThread', () => {
 
   test('a five-flower conversation is nowhere near a million tokens, so nothing is cut', () => {
     const t = [...Array(40).keys()].flatMap((i) => exchange(`q${i}`, 30_000));
-    expect(compactThread(t, compactionChars(contextWindow(DEFAULT_MODEL)))).toBe(t);
+    expect(compactThread(t, compactionChars(windowOf(DEFAULT_MODEL)))).toBe(t);
   });
 
   test.each([
@@ -307,8 +308,30 @@ describe('compactThread', () => {
     ['Qwen/Qwen3.8-27B', 262_000],
     ['anthropic/claude-sonnet-5-5', 1_000_000],
     ['someone/unlisted', 128_000],
-  ])('the window of %s is %d', (model, tokens) => {
-    expect(contextWindow(model)).toBe(tokens);
+  ])('the window of %s is %d: the catalogue, or a safe low one', (model, tokens) => {
+    expect(windowOf(model)).toBe(tokens);
+  });
+
+  test('each model starts compacting where the catalogue says, counted the same way', () => {
+    for (const m of catalogue('near-ai-cloud').providers[0]?.models ?? []) {
+      // at 3.5 characters a token, what this lets through is the catalogue's compacts_at_tokens
+      expect(compactionChars(windowOf(m.id)) / 3.5).toBeCloseTo(m.compacts_at_tokens, 0);
+      const reserved = 40_000;
+      expect(compactionChars(windowOf(m.id), reserved) + reserved).toBeCloseTo(
+        m.compacts_at_tokens * 3.5,
+        0,
+      );
+    }
+  });
+
+  test('past it, it acts; short of it, it leaves the thread alone', () => {
+    const window = 2_000;
+    const t = [...exchange('a', 8000), ...exchange('b', 100), ...exchange('c', 100)];
+    const room = compactionChars(window);
+    expect(size(t)).toBeGreaterThan(room);
+    expect(tools(compactThread(t, room))).toBe(2);
+    const short = [...exchange('a', 100), ...exchange('b', 100)];
+    expect(compactThread(short, room)).toBe(short);
   });
 });
 

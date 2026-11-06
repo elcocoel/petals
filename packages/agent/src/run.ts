@@ -28,7 +28,7 @@ import type {
   LlmToolCall,
   SpendHold,
 } from './llm.ts';
-import { contextWindow, LlmCallError } from './near-ai.ts';
+import { LlmCallError } from './near-ai.ts';
 import { agentNotes, SYSTEM_PROMPT } from './prompt.ts';
 import { newRunId } from './runs.ts';
 import { storedRead } from './stored-read.ts';
@@ -40,6 +40,7 @@ import {
   type EarlierFlower,
   followUpNotes,
   specsIn,
+  windowOf,
 } from './thread.ts';
 import { type AnyTool, llmTools, STAGE_MESSAGE, STAGE_OF } from './tool-defs.ts';
 
@@ -336,7 +337,7 @@ async function loop(
   const reservedChars = system.length + JSON.stringify(tools).length;
   /** Near the model's window, what it no longer needs goes. What's saved is the same as what's sent. */
   const compact = () => {
-    const window = opts.windowTokens ?? contextWindow(totals.model);
+    const window = opts.windowTokens ?? windowOf(totals.model);
     const thread = messages.slice(1);
     const kept = compactThread(thread, compactionChars(window, reservedChars));
     if (kept !== thread) messages.splice(1, thread.length, ...kept);
