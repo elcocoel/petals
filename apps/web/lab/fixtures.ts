@@ -145,3 +145,51 @@ export const TURN_ROWS: Row[] = [
     line: [{ t: 'text', v: 'Recorded run: no model answered just now.' }],
   },
 ];
+
+/**
+ * Words for specimens. They left the landing with copy v6, because they describe things Petals doesn't do
+ * yet, and they stay here only so the lab can show a part with text in it. Nothing here reaches the page.
+ */
+export const specimen = {
+  head: { eyebrow: 'THE ATLAS' },
+  caption: 'FIGURES ARE PLACEHOLDERS UNTIL THE ATLAS RENDERS.',
+  figureCaption: 'FIG. 1 — A SAMPLE NETWORK, 88 ACCOUNTS. ILLUSTRATIVE DATA.',
+  notes: {
+    one: '01  ONE PETAL HOLDS 18% OF THE VOTE',
+    two: '02  FOUR PETALS, ONE WALLET BEHIND THEM',
+    three: '03  DOTTED RING: WHAT IT TAKES TO PASS A VOTE',
+    four: '04  LINES INSIDE: WHO VOTES, PAYS AND SIGNS TOGETHER',
+  },
+  callout: {
+    who: 'PETALS',
+    text: 'This one petal outweighs the bottom sixty put together.',
+    action: 'ASK WHY',
+  },
+  you: { who: 'YOU', text: 'Why is this petal so big?' },
+  transcript: {
+    start: 'SAMPLE DAO  ·  54 ACCOUNTS  ·  5 NOV 2026',
+    end: 'MAPPED BY ANA.NEAR',
+    lines: [
+      'Three petals are taller than the rest of the flower combined.',
+      'Together they can pass any proposal.',
+      'Two of them were funded from the same wallet within the same hour.',
+    ],
+  },
+  terminal: {
+    start: 'AGENT SKILL  ·  API  ·  MCP',
+    end: 'ILLUSTRATIVE',
+    lines: [
+      { text: '# give your agent the Petals skill' },
+      { text: '$ petals connect claude', accent: true },
+      { text: ' ' },
+      { text: '> Who stands behind NEAR’s validators?' },
+      { text: '  reading the chain, the forum and the docs…' },
+      { text: 'flower.svg   reasoning.md   evidence.json', returned: true },
+    ],
+  },
+  cards: [
+    { title: 'House of Stake', note: 'TWO BLOCS HOLD MOST OF THE SAY' },
+    { title: 'NEAR validators', note: 'POWER SPREAD WIDE AND EVEN' },
+    { title: 'JTO holders', note: 'ONE PETAL TOWERS OVER THE REST' },
+  ],
+} as const;

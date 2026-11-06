@@ -9,6 +9,7 @@ import { type BehaviourName, type as typeStyles, v2, wordmark } from '@petal/tok
 import { useEffect } from 'react';
 import { connect, drift, shimmer } from './drift.ts';
 import { peek } from './peek.ts';
+import { typed } from './typed.ts';
 
 const S = v2.script;
 const NS = 'http://www.w3.org/2000/svg';
@@ -685,6 +686,7 @@ export const SCRIPTED: Partial<Record<BehaviourName, (joy: Joy) => Stop>> = {
   'surface.connect': connect,
   'surface.stick': stick,
   'box.tilt': tilt,
+  'field.type': typed,
   'row.peek': peek,
   'figure.bloom': bloom,
   'figure.lean': lean,

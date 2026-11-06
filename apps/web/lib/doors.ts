@@ -25,7 +25,7 @@ export function doors(origin: string): Door[] {
     {
       id: 'claude-app',
       title: 'The Claude app',
-      how: 'Open Customize, then Connectors, press +, choose Add custom connector, and paste this address. Then ask: “Using Petal, who holds the shares of Moloch DAO?”',
+      how: 'Open Customize, then Connectors, press +, choose Add custom connector, and paste this address. Then ask: “Using Petals, who holds the shares of Moloch DAO?”',
       copy: mcp,
       copyLabel: 'Copy the address',
     },
@@ -40,21 +40,21 @@ export function doors(origin: string): Door[] {
       id: 'claude-code',
       title: 'Claude Code',
       how: 'Run this once in a terminal.',
-      copy: `claude mcp add --transport http petal ${mcp}`,
+      copy: `claude mcp add --transport http petals ${mcp}`,
       copyLabel: 'Copy the command',
     },
     {
       id: 'codex',
       title: 'Codex',
       how: 'Run this once in a terminal.',
-      copy: `codex mcp add petal --url ${mcp}`,
+      copy: `codex mcp add petals --url ${mcp}`,
       copyLabel: 'Copy the command',
     },
     {
       id: 'hermes',
       title: 'Hermes',
       how: 'Run this once in a terminal.',
-      copy: `hermes mcp add petal --url ${mcp}`,
+      copy: `hermes mcp add petals --url ${mcp}`,
       copyLabel: 'Copy the command',
     },
     {

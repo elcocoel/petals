@@ -1,12 +1,13 @@
-// The landing page (T185), Figma frame 66:2180. Static: it only assembles. The conversation is at /make.
-import { ClosingAsk } from '../components/landing/ClosingAsk.tsx';
-import { FlowerRead } from '../components/landing/FlowerRead.tsx';
-import { ForBuilders } from '../components/landing/ForBuilders.tsx';
+// The landing page (T185), Figma frame 66:2180, in the order of the copy doc. Static: it only assembles.
+// The conversation is at /make.
+import { BackIt } from '../components/landing/BackIt.tsx';
+import { BuildWithUs } from '../components/landing/BuildWithUs.tsx';
 import { GallerySection } from '../components/landing/GallerySection.tsx';
 import { Hero } from '../components/landing/Hero.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
-import { JoinCommunity } from '../components/landing/JoinCommunity.tsx';
+import { LiveReading } from '../components/landing/LiveReading.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
+import { UseAnywhere } from '../components/landing/UseAnywhere.tsx';
 import { Footer } from '../components/ui/Footer.tsx';
 import { Nav } from '../components/ui/Nav.tsx';
 
@@ -16,13 +17,13 @@ export default function Landing() {
       <Nav />
       <main>
         <Hero />
-        <FlowerRead />
+        <LiveReading />
         <HowItWorks />
-        <Questions />
+        <UseAnywhere />
         <GallerySection />
-        <ForBuilders />
-        <ClosingAsk />
-        <JoinCommunity />
+        <Questions />
+        <BackIt />
+        <BuildWithUs />
       </main>
       <Footer />
     </>
