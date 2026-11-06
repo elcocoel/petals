@@ -68,6 +68,8 @@ Behaviour: Petal's modules and stored snapshots, then GeckoTerminal, Jupiter and
 
 `next` reports what was found and what didn't answer. It doesn't tell the caller to ask or to stop. A chain whose endpoints don't answer is said to be down, and that says nothing about the address. Each chain's endpoints are tried in order.
 
+Routes for the three tools below: `POST /api/v1/read-chain`, `GET /api/v1/read-page?url=&start=`, `GET /api/v1/search?query=`. http-api.md doesn't list them yet, so the skill's route table doesn't either: every other door has them.
+
 ### read_chain (M-Reach, T332; additive, still tools/v1)
 
 Any address on a chain Petal knows. Read-only: `eth_call`, `eth_getLogs`, `eth_getCode` and the like, never a transaction. Only the RPC endpoints in `EVM_CHAINS` are ever used: no input is a URL, and an unknown `chain` is `bad_input`. Explorers are Sourcify, and Blockscout where a chain lists it, with only a checked address in the URL.
