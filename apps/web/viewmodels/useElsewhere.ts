@@ -1,9 +1,10 @@
-// A conversation happening in another agent, read from the browser. It reads when the page opens and when
-// the person comes back to this tab: there is no timer, so a window left beside the agent stays as it was.
+// A conversation happening in another agent, read from the browser. It reads when the page opens, when
+// the person comes back to this tab, and when the server signals a change, while the tab is visible.
+// There is no timer: the server pushes only when the agent did something.
 // A link's token is claimed first if it can be, which puts the work in their list and leaves the token out
 // of the address from then on.
 import { useEffect, useRef, useState } from 'react';
-import { claimElsewhere, readElsewhere } from '../lib/agent-client.ts';
+import { claimElsewhere, listenElsewhere, readElsewhere } from '../lib/agent-client.ts';
 import { type ElsewhereRead, isOwnId } from '../lib/elsewhere.ts';
 
 export function useElsewhere(from: string | null): {
@@ -26,10 +27,18 @@ export function useElsewhere(from: string | null): {
           if (!gone) setRead({ failed: e instanceof Error ? e.message : String(e) });
         },
       );
+    // Its first signal comes on connecting, so a page that was away reads what it missed.
+    let stop = () => {};
+    const listen = () => {
+      stop();
+      stop = () => {};
+      if (document.visibilityState === 'visible' && isOwnId(ref)) stop = listenElsewhere(ref, look);
+    };
     const back = () => {
       if (document.visibilityState === 'visible') look();
+      listen();
     };
-    if (isOwnId(ref)) look();
+    if (isOwnId(ref)) listen();
     else {
       const claim = claims.current.get(ref) ?? claimElsewhere(ref);
       claims.current.set(ref, claim);
@@ -44,11 +53,13 @@ export function useElsewhere(from: string | null): {
         },
       );
     }
-    window.addEventListener('focus', back);
+    const focused = () => look();
+    window.addEventListener('focus', focused);
     document.addEventListener('visibilitychange', back);
     return () => {
       gone = true;
-      window.removeEventListener('focus', back);
+      stop();
+      window.removeEventListener('focus', focused);
       document.removeEventListener('visibilitychange', back);
     };
   }, [ref]);

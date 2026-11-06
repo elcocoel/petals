@@ -1,10 +1,12 @@
 // The tool contract types (packages.md, @petal/tools). Re-exported by index.ts; frozen at
 // packages/v1, so their shapes do not change here.
+
 import type { Progress, QuoteRequest, QuoteResult, ToolError } from '@petal/core/types';
 import type { FreshGate, InputModule, SnapshotStore } from '@petal/inputs';
 import type { Rpc } from '@petal/near/auth';
 import type { MapReader, MapWriter } from '@petal/near/map';
 import type { Limits } from './limits.ts';
+import type { LiveHub } from './live.ts';
 
 /** A JSON Schema (draft 2020-12) as a plain object; MCP takes it through fromJsonSchema(). */
 export type JSONSchema = Record<string, unknown>;
@@ -51,6 +53,8 @@ export interface Caller {
   subject?: string | null;
   /** http, mcp, cli or site */
   door?: string;
+  /** what the app at the other end calls itself, when its request says so (T404). Its own words */
+  client?: string;
 }
 
 /** What every tool run gets: store, modules, map reader/writer, rpc, quotes, progress. */
@@ -67,6 +71,8 @@ export interface ToolContext {
   caller?: Caller;
   /** additive (T300): whoever reads fresh data through this context takes turns here. None: no limit */
   fresh?: FreshGate;
+  /** additive (T404): told when an exploration changes, for a page that's following it */
+  live?: LiveHub;
 }
 
 export type Tool<I, O> = {

@@ -2,6 +2,7 @@
 //   GET  /api/v1/explorations                      list_explorations
 //   POST /api/v1/explorations                      start_exploration
 //   GET  /api/v1/explorations/:ref                 get_exploration; :ref is an id or a link's token
+//   GET  /api/v1/explorations/:ref/live            a signal (SSE) each time it changes: read it again
 //   POST /api/v1/explorations/:ref/steps           save_step
 //   POST /api/v1/explorations/:ref/notes           add_note
 //   POST /api/v1/explorations/:ref/claim           a session takes an unowned one, with a continue link;
@@ -18,12 +19,14 @@
 import { canonicalJson } from '@petal/core';
 import { type Context, Hono, type MiddlewareHandler } from 'hono';
 import { cors } from 'hono/cors';
+import { streamSSE } from 'hono/streaming';
 import { versioned } from '../define.ts';
 import { specBody } from '../drafts.ts';
 import { fromThrown, isToolError, toolError } from '../errors.ts';
 import { findTool } from '../registry.ts';
 import {
   claimExploration,
+  explorationIdOf,
   type LinkScope,
   listLinks,
   makeLink,
@@ -43,6 +46,9 @@ export interface SessionGate {
   openAnonymous?(c: Context): string;
 }
 
+/** Set by the web app's /mcp and /api routes. A bare API has no pages, so its links stay relative. */
+export const SITE_HEADER = 'x-petal-site';
+
 const SHA = /^[0-9a-f]{64}$/;
 const NEVER_STORE = 'no-store';
 
@@ -53,10 +59,16 @@ export function explorationRoutes(
 ): Hono {
   const app = new Hono();
 
-  const asCaller = (c: Context): ToolContext => ({
-    ...ctx,
-    caller: { subject: gate?.subjectOf(c) ?? null, door: 'http' },
-  });
+  // With no address configured, the address this person's agent came in by: its links have to open for
+  // them, and a browser's cookie on localhost is no use on 127.0.0.1. Only links change.
+  const asCaller = (c: Context): ToolContext => {
+    const site = ctx.config.apiBase ? undefined : c.req.header(SITE_HEADER);
+    return {
+      ...ctx,
+      ...(site ? { config: { ...ctx.config, apiBase: site } } : {}),
+      caller: { subject: gate?.subjectOf(c) ?? null, door: 'http' },
+    };
+  };
   /** A body that wasn't JSON comes here as its error. */
   const answer = async (c: Context, name: string, input: unknown) => {
     if (isToolError(input)) return respond(c, input);
@@ -81,7 +93,11 @@ export function explorationRoutes(
 
   const noCache: MiddlewareHandler = async (c, next) => {
     await next();
-    c.header('Cache-Control', NEVER_STORE);
+    // no-transform: a compressing proxy would hold a stream's events back
+    c.header(
+      'Cache-Control',
+      c.req.path.endsWith('/live') ? `${NEVER_STORE}, no-transform` : NEVER_STORE,
+    );
   };
   const sameSite: MiddlewareHandler = async (c, next) => {
     if (c.req.method === 'POST') {
@@ -104,6 +120,39 @@ export function explorationRoutes(
   app.get('/api/v1/explorations/:ref', (c) =>
     answer(c, 'get_exploration', { exploration: c.req.param('ref') }),
   );
+  // Pushed, not polled, and only a signal: the page reads the packet again, so there's one way to read.
+  // One on connecting, so a page that was away catches up. No timers: it wakes when something happened.
+  app.get('/api/v1/explorations/:ref/live', (c) => {
+    let id: string;
+    try {
+      id = explorationIdOf(asCaller(c), c.req.param('ref'));
+    } catch (e) {
+      return fail(c, fromThrown(e));
+    }
+    return streamSSE(c, async (stream) => {
+      let dirty = true;
+      let wake = () => {};
+      const off = ctx.live?.on(id, () => {
+        dirty = true;
+        wake();
+      });
+      stream.onAbort(() => wake());
+      try {
+        while (!stream.aborted) {
+          if (dirty) {
+            dirty = false;
+            await stream.writeSSE({ event: 'change', data: '{}' });
+          } else {
+            await new Promise<void>((resolve) => {
+              wake = resolve;
+            });
+          }
+        }
+      } finally {
+        off?.();
+      }
+    });
+  });
   app.post('/api/v1/explorations/:ref/steps', async (c) =>
     answer(c, 'save_step', await withRef(c)),
   );

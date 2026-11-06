@@ -9,6 +9,7 @@ import { openStore } from '@petal/store';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { httpApp } from '../src/http/app.ts';
+import { LiveHub } from '../src/live.ts';
 import { callTool } from '../src/registry.ts';
 import type { ToolContext } from '../src/types.ts';
 import { flow, rig, type TestRig } from './helpers.ts';
@@ -355,7 +356,8 @@ describe('with no login', () => {
   test('start_exploration returns a continue link, its only key', async () => {
     const started = await run('start_exploration', { question: 'who runs UNI?', target: 'UNI' });
     expect(started).toMatchObject({ owned: false, forked_from: null, link: { scope: 'continue' } });
-    expect(started.next).toMatch(/claim/);
+    expect(started.next).toMatch(/open_url/);
+    expect(started.next).not.toMatch(/claim|signing in/);
     const { url } = started.link;
     expect(await run('save_step', { exploration: url, spec })).toMatchObject({ unchanged: false });
     const packet = await run('get_exploration', { exploration: url });
@@ -364,6 +366,116 @@ describe('with no login', () => {
     expect(byId).toMatchObject(NOT_THERE);
     const noQuestion = await run('start_exploration', {});
     expect(noQuestion.error.code).toBe('bad_input');
+  });
+
+  describe('the page that follows it (T404)', () => {
+    test('open_url carries the continue link, and each write says what to do next', async () => {
+      const started = await run('start_exploration', { question: 'who holds it?' });
+      const token = started.link.url.split('/').pop();
+      expect(started.open_url).toBe(`https://petal.test/make?elsewhere=${token}`);
+      expect(started.next).toMatch(/open_url/);
+      expect(started.next).toMatch(/word for word/);
+      expect(started.next).not.toMatch(/claim/);
+      const saved = await run('save_step', { exploration: started.link.url, spec });
+      expect(saved.next).toMatch(/add_note/);
+      const noted = await run('add_note', { exploration: started.link.url, text: 'q and a' });
+      expect(noted.next).toMatch(/word for word/);
+    });
+
+    test('off with no site to open it, and for an owner, who has no link', async () => {
+      const bare: ToolContext = { ...anonymous, config: { ...anonymous.config, apiBase: '' } };
+      const noSite = await run('start_exploration', { question: 'q' }, bare);
+      expect(noSite.open_url).toBeUndefined();
+      expect(noSite.next).not.toMatch(/open_url|signing in/);
+      const saved = await run('save_step', { exploration: noSite.link.url, spec }, bare);
+      expect(saved.next).toBeUndefined();
+      const owned = await run('start_exploration', { question: 'q' }, as('prs_a'));
+      expect(owned.open_url).toBeUndefined();
+    });
+
+    test('over HTTP it takes the address the request came in by, when none is configured', async () => {
+      const bare: ToolContext = { ...r.ctx, config: { ...r.ctx.config, apiBase: '' } };
+      const app = httpApp(bare);
+      const start = (site?: string) =>
+        app.request('/api/v1/explorations', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            ...(site ? { 'x-petal-site': site } : {}),
+          },
+          body: JSON.stringify({ question: 'q' }),
+        });
+      const local = (await (await start('http://127.0.0.1:3090')).json()) as Out;
+      expect(local.open_url).toMatch(/^http:\/\/127\.0\.0\.1:3090\/make\?elsewhere=/);
+      expect(local.link.url).toMatch(/^http:\/\/127\.0\.0\.1:3090\/s\//);
+      expect(((await (await start()).json()) as Out).open_url).toBeUndefined();
+    });
+
+    test('two conversations are two explorations, each with its own link', async () => {
+      const a = await run('start_exploration', { question: 'first' });
+      const b = await run('start_exploration', { question: 'second' });
+      expect(a.exploration).not.toBe(b.exploration);
+      expect(a.open_url).not.toBe(b.open_url);
+    });
+
+    test('the packet names the app and its last call; a page reading it moves neither', async () => {
+      const mcp = {
+        ...anonymous,
+        live: new LiveHub(),
+        caller: { door: 'mcp', client: 'Claude Code' },
+      };
+      const started = await run('start_exploration', { question: 'q' }, mcp);
+      const { url } = started.link;
+      const first = await run(
+        'get_exploration',
+        { exploration: url },
+        { ...mcp, caller: { door: 'http' } },
+      );
+      expect(first.presence).toMatchObject({
+        client: 'Claude Code',
+        last_tool: 'start_exploration',
+      });
+      expect(first.untrusted.fields).toContain('presence.client');
+      // No name on this call, as on a client that said it only once: it keeps the name it had.
+      await run('add_note', { exploration: url, text: 'n' }, { ...mcp, caller: { door: 'mcp' } });
+      const second = await run(
+        'get_exploration',
+        { exploration: url },
+        { ...mcp, caller: { door: 'http' } },
+      );
+      expect(second.presence).toMatchObject({ client: 'Claude Code', last_tool: 'add_note' });
+    });
+
+    test('a client that says nothing can name itself, and with no hub the packet says none', async () => {
+      const mcp = { ...anonymous, live: new LiveHub(), caller: { door: 'mcp' } };
+      const started = await run('start_exploration', { question: 'q', client: 'Codex' }, mcp);
+      const packet = await run('get_exploration', { exploration: started.link.url }, mcp);
+      expect(packet.presence.client).toBe('Codex');
+      const none = await run('start_exploration', { question: 'q' });
+      expect((await run('get_exploration', { exploration: none.link.url })).presence).toBeNull();
+    });
+
+    test('live: a signal on connecting and on each change, nothing else, and it lets go', async () => {
+      const app = door();
+      const started = await run('start_exploration', { question: 'q' });
+      const token = started.link.url.split('/').pop();
+      expect((await app.request('/api/v1/explorations/nothing-here/live')).status).toBe(404);
+
+      const res = await app.request(`/api/v1/explorations/${token}/live`);
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toMatch(/event-stream/);
+      expect(res.headers.get('cache-control')).toMatch(/no-transform/);
+      const reader = (res.body as ReadableStream<Uint8Array>).getReader();
+      const next = async () => new TextDecoder().decode((await reader.read()).value);
+      expect(await next()).toMatch(/event: change/);
+      // httpApp has its own hub: writing through its door is what signals.
+      const saved = post(app, `/api/v1/explorations/${token}/notes`, { text: 'a note' });
+      expect((await saved).status).toBe(200);
+      const signal = await next();
+      expect(signal).toMatch(/event: change/);
+      expect(signal).not.toMatch(/a note/);
+      await reader.cancel();
+    });
   });
 
   test('whoever holds the link and signs in can claim it; then it is theirs alone', async () => {

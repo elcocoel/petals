@@ -12,7 +12,7 @@ import {
   withModel,
 } from '../lib/composer-options.ts';
 import { conversationRows } from '../lib/conversation-list.ts';
-import { elsewhereFlower, elsewhereRows, WHERE } from '../lib/elsewhere.ts';
+import { elsewhereFlower, elsewhereRows, whereOf } from '../lib/elsewhere.ts';
 import { type ListedFlower, svgImage } from '../lib/flower-view.ts';
 import {
   addressOpensBox,
@@ -259,7 +259,7 @@ export function useWorkspace(props: {
     busy,
     recorded,
     target,
-    elsewhere: initialElsewhere ? WHERE : undefined,
+    elsewhere: initialElsewhere ? whereOf(elsewhere) : undefined,
   });
 
   // the address holds what a reload needs

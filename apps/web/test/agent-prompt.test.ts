@@ -14,12 +14,33 @@ describe('agentPrompt', () => {
     expect(p).toMatch(/read-only/);
     expect(p).toMatch(/no account or key/);
     expect(p).toMatch(/If you can't open that link/);
-    expect(p.length).toBeLessThan(600);
+    expect(p).toMatch(/without asking me to choose/);
+    expect(p).toMatch(/I want to watch this conversation/);
+    expect(p).toMatch(/word for word/);
+    expect(p.length).toBeLessThan(800);
+  });
+});
+
+describe('agentPrompt on this machine', () => {
+  test('says so, for a web tool that refuses a local address, and only there', () => {
+    expect(agentPrompt('http://127.0.0.1:3090')).toMatch(/on this machine.*use curl/);
+    expect(agentPrompt('http://localhost:3080')).toMatch(/on this machine.*use curl/);
+    expect(agentPrompt(ORIGIN)).not.toMatch(/on this machine/);
   });
 });
 
 describe('hostedSkill', () => {
   const md = hostedSkill(SKILL, ORIGIN);
+
+  test('says how to let the person watch, on either door, and never mentions claiming', () => {
+    const at = md.indexOf('## Let them watch');
+    expect(at).toBeGreaterThan(-1);
+    const watch = md.slice(at, md.indexOf('\n## ', at + 1));
+    expect(watch).toContain(`POST ${ORIGIN}/api/v1/explorations/<token>/notes`);
+    expect(watch).toMatch(/open_url/);
+    expect(watch).toMatch(/word for word/);
+    expect(watch).not.toMatch(/claim/i);
+  });
 
   test('has this site address and needs no clone', () => {
     expect(md).toContain(`API="${ORIGIN}"`);
@@ -31,8 +52,19 @@ describe('hostedSkill', () => {
   test('keeps the rules every agent shares, and says how to hand over a link', () => {
     expect(md).toContain('## Talk first');
     expect(md).toContain('## Calling the tools over HTTP');
-    expect(md).toContain(`Hand the person \`${ORIGIN}\` followed by that path`);
+    expect(md).toContain(`put \`${ORIGIN}\` in front of it`);
     expect(md).toContain(`${ORIGIN}/mcp`);
+  });
+
+  test('tells an agent how to set itself up, first, with nothing to install', () => {
+    expect(md.indexOf('## Set yourself up first')).toBeLessThan(md.indexOf('## Quick Start'));
+    expect(md).toMatch(/don't ask them to choose/);
+    expect(md).toContain(`claude mcp add --transport http petal ${ORIGIN}/mcp`);
+    expect(md).toContain(`codex mcp add petal --url ${ORIGIN}/mcp`);
+  });
+
+  test('prefers the link that fits on a line', () => {
+    expect(md).toMatch(/Hand the person `short_url`/);
   });
 
   test('fails loudly if the skill is reorganised, rather than serving local instructions', () => {

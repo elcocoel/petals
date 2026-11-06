@@ -12,6 +12,8 @@ export interface ElsewherePacket {
   current: { spec_sha256: string; spec: Spec; short_url: string } | null;
   steps: { note: string | null; at: string }[];
   notes: { text: string; at: string }[];
+  /** the app at the other end, in this server's memory: null after a restart or if it never said */
+  presence?: { client: string | null; last_at: string; last_tool: string | null } | null;
 }
 
 export type ElsewhereRead = { packet: ElsewherePacket } | { failed: string };
@@ -19,8 +21,18 @@ export type ElsewhereRead = { packet: ElsewherePacket } | { failed: string };
 /** An exploration's own id. Anything else in the address is a link's token. */
 export const isOwnId = (ref: string) => ref.startsWith('exp_');
 
-/** Until the agent's own name reaches us (CONNECTORS). "mcp" isn't a word a person uses. */
+/** When the agent's own name hasn't reached us. "mcp" isn't a word a person uses. */
 export const WHERE = 'your own agent';
+
+/** The name the agent's app gave, for "happening in <name>". */
+export function whereOf(read: ElsewhereRead | null): string {
+  return (read && 'packet' in read && read.packet.presence?.client) || WHERE;
+}
+
+const speakerOf = (read: ElsewhereRead) => {
+  const name = whereOf(read);
+  return `${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+};
 
 /** The question, then what the agent wrote, oldest first. */
 export function elsewhereRows(read: ElsewhereRead | null): Row[] {
@@ -40,7 +52,7 @@ export function elsewhereRows(read: ElsewhereRead | null): Row[] {
         blocks: parseMarkdown(s.text, new Set()),
         foreign: true,
         // the agent's name goes where it starts speaking
-        ...(i === 0 ? { speaker: 'Your own agent' } : {}),
+        ...(i === 0 ? { speaker: speakerOf(read) } : {}),
       }),
     ),
   ];
