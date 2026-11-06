@@ -719,7 +719,7 @@ describe('a yes only answers a question a yes can answer', () => {
     'Do you want the stored one, or a fresh read?',
     'Is that the latest, or should we read it fresh?',
     '1. The validators\n2. The House of Stake\nShall I draw it?',
-    '- The validators\n- The House of Stake\nWant me to draw it?',
+    '- The validators\n- The House of Stake',
     'Which one would you like?',
     'Should I draw one of them?',
   ])('%j: a yes says nothing about which, so nothing runs', async (question) => {
@@ -734,6 +734,7 @@ describe('a yes only answers a question a yes can answer', () => {
     'Shall I read it and draw it, or not?',
     'Want me to draw it?',
     'Say the word and I will draw it.',
+    'It holds:\n- A, 27%\n- B, 13%\n\nDo you want me to draw this as a flower?',
   ])('%j: a yes counts', async (question) => {
     const { tools } = await after(question);
     expect(ran(tools)).toEqual(['get_snapshot']);

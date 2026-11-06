@@ -175,6 +175,7 @@ describe('askedYesOrNo: one thing for a yes to agree to', () => {
     '¿Lo dibujo, sí o no?',
     'Say the word and I will draw it.',
     'Moloch is stored. It costs nothing to read. Draw it?',
+    'It holds:\n- **Vitalik** 26.6%\n- **Lubin** 13.3%\n- Eight others 2.7%\n\nDo you want me to draw this as a flower?',
   ])('%j did', (said) => {
     expect(askedYesOrNo(said)).toBe(true);
   });
@@ -189,7 +190,7 @@ describe('askedYesOrNo: one thing for a yes to agree to', () => {
     'Quer o de 2021 ou um novo?',
     '¿Quieres el de 2021 o uno nuevo?',
     'Your options:\n1. Open it\n2. Draw a new one\nShall I?',
-    'They are:\n- UNI on Ethereum\n- UNI on Base\nShall I draw it?',
+    'They are:\n- UNI on Ethereum\n- UNI on Base',
   ])('%j did not', (said) => {
     expect(askedYesOrNo(said)).toBe(false);
   });

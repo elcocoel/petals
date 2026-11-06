@@ -146,7 +146,9 @@ export function isYes(text: string): boolean {
 // question at all (25ac). Both lean towards asking again, which costs one sentence.
 
 const YES_OR_NO = /\b(?:yes or no|or not|sim ou n[aã]o|ou n[aã]o|s[ií] o no|o no)\b/giu;
-const AN_ITEM = /^\s*(?:\d+[.)]|[-*•])\s/gmu;
+/** Numbered lines are options. Bullets may only be facts, so a plain question after them still counts. */
+const AN_OPTION = /^\s*\d+[.)]\s/gmu;
+const A_BULLET = /^\s*[-*•]\s/gmu;
 const MORE_THAN_ONE =
   /\b(?:or|ou|either|one of|any of|which one|which do|which would|which of|qual deles|qual prefere|cu[aá]l)\b/iu;
 /** In Portuguese "o" is "the", so it only means "or" in a sentence that opens with ¿. */
@@ -155,9 +157,10 @@ const SPANISH_OR = /¿.*\so\s/su;
 /** Whether what the agent last said leaves one thing for a yes to agree to. */
 export function askedYesOrNo(said: string): boolean {
   const text = said.replace(YES_OR_NO, ' ');
-  if ((text.match(AN_ITEM) ?? []).length > 1) return false;
+  if ((text.match(AN_OPTION) ?? []).length > 1) return false;
   const last = text.match(/[^.!?\n]*\?/gu)?.at(-1);
-  return !last || !(MORE_THAN_ONE.test(last) || SPANISH_OR.test(last));
+  if (!last) return (text.match(A_BULLET) ?? []).length < 2;
+  return !(MORE_THAN_ONE.test(last) || SPANISH_OR.test(last));
 }
 
 /** Said before the verb, these change nothing. */
