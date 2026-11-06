@@ -228,7 +228,8 @@ export function useWorkspace(props: {
   const hasList = conversations.length > 0 || Boolean(session.account);
   const listOpen = listChoice ?? (cameBare && nothingOpened && hasList);
 
-  const onCanvas = canvasShown(canvas, comingBack, standIn);
+  // Another agent's conversation has only its own flowers: a stand-in would read as one of them.
+  const onCanvas = canvasShown(canvas, comingBack, initialElsewhere ? null : standIn);
   // The canvas's flower is the panel's, or is on its way there: only then does it have a selected petal.
   const canvasIsOpen =
     Boolean(onCanvas) &&
