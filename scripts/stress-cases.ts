@@ -35,6 +35,17 @@ export const CASES: Case[] = [
     want: "Finds RaidGuild's active Moloch v3 DAO, or says what it checked and gives a route that works. Doesn't push an unrelated token, or the 2021 Moloch.",
   },
   {
+    id: 'raidguild-yes',
+    group: 'elco',
+    turns: [
+      "ok this is a first test, tell me more about raidguild - find the version of the dao that's active",
+      'both things you found are wrong - I want the moloch DAO that Raidguild is currently using, where governance is shares that are not transferable',
+      'goddamit - this stupid module, Raidguild is a Moloch V3',
+      'yes',
+    ],
+    want: "The same chat, carried on past Elco's words with a yes: it draws RaidGuild's real shares, says what share of them it read, and doesn't present a partial read as the whole DAO.",
+  },
+  {
     id: 'moloch-test',
     group: 'elco',
     required: true,
