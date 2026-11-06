@@ -19,6 +19,8 @@ export {
 } from './limits.ts';
 export { mcpServer } from './mcp/server.ts';
 export { serveStdio } from './mcp/stdio.ts';
+export type { PublicPage } from './public-fetch.ts';
 export { callTool, describeTool, findTool, registry } from './registry.ts';
 export { saveRunStep, shapeAt } from './tools/explorations.ts';
+export { makeReadPage } from './tools/read-page.ts';
 export type { Caller, Config, JSONSchema, Tool, ToolContext } from './types.ts';

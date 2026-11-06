@@ -1,7 +1,8 @@
-// Figma's Hero (66:2188). The figure's place is held open until the hero set is chosen (T108).
+// Figma's Hero (66:2188). The figure is a placeholder until the hero set is chosen (T108), as Elco asked on
+// 6 Nov: the drawing alone, without the notes that went with it, which described things Petals doesn't draw.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { AskBlock } from '../ui/AskBlock.tsx';
-import { EmptySlot } from '../ui/EmptySlot.tsx';
+import { Drawing } from '../ui/Drawing.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 
@@ -23,7 +24,7 @@ export function Hero() {
           />
         </div>
       </div>
-      <EmptySlot fill />
+      <Drawing kind="hero-flower" />
     </Section>
   );
 }

@@ -5,8 +5,8 @@
 // with transfer(); Moloch shares are a token too, kept in members(), with no transfer function: they
 // change by passed proposals and ragequit. Which ledger an address keeps is read from what it
 // answers, never assumed.
-import { runSignal } from '@petal/core';
 import { encodeCall, stringAt } from './abi.ts';
+import { type AskOptions, askChain } from './ask.ts';
 import type { EvmChain } from './chains.ts';
 import { decodeAggregate, encodeAggregate3, MULTICALL3 } from './reader.ts';
 
@@ -24,6 +24,8 @@ export interface ContractIdentity {
   votes: 'getVotes' | 'getCurrentVotes' | null;
   /** the calls it answered: the evidence, in plain signatures */
   answered: string[];
+  /** the endpoint that answered */
+  served_by: string;
 }
 
 const SOMEONE = '0x000000000000000000000000000000000000dead';
@@ -55,34 +57,24 @@ function symbolOf(data: string): string | null {
  * One eth_call through Multicall3, whatever the number of addresses. An old contract can burn all
  * the gas it is given on a call it doesn't know, which sinks the whole multicall (seen live: "out of
  * gas"), so ask about few addresses at a time. Tenderly refuses plain JSON-RPC batches with HTTP 429.
- * Throws when the endpoint does not answer.
+ * Tries each of the chain's endpoints, and throws ChainDown when none answers.
  */
 export async function identifyContracts(
   chain: EvmChain,
   addresses: string[],
-  opts: { fetch?: typeof globalThis.fetch; timeoutMs?: number } = {},
+  opts: AskOptions = {},
 ): Promise<ContractIdentity[]> {
   const list = addresses.map((a) => a.toLowerCase());
   const calls = list.flatMap((to) =>
     CALLS.map(([sig, ...args]) => ({ to, data: encodeCall(sig, ...args) })),
   );
-  const doFetch = opts.fetch ?? ((...a: Parameters<typeof fetch>) => globalThis.fetch(...a));
-  const res = await doFetch(chain.endpoints[0]?.url ?? '', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'user-agent': 'petal/0.1 (keyless reads)' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      id: 'petal',
-      method: 'eth_call',
-      params: [{ to: MULTICALL3.address, data: encodeAggregate3(calls) }, 'latest'],
-    }),
-    signal: runSignal(AbortSignal.timeout(opts.timeoutMs ?? 4000)),
-  });
-  if (!res.ok) throw new Error(`${chain.name} answered HTTP ${res.status}`);
-  const body = (await res.json()) as { result?: string; error?: { message?: string } };
-  if (!body.result || body.result === '0x')
-    throw new Error(`${chain.name}: ${body.error?.message ?? 'no answer to the multicall'}`);
-  const answers = decodeAggregate(body.result);
+  const { result, url } = await askChain<string>(
+    chain,
+    'eth_call',
+    [{ to: MULTICALL3.address, data: encodeAggregate3(calls) }, 'latest'],
+    { ...opts, accept: (r) => typeof r === 'string' && r !== '0x' },
+  );
+  const answers = decodeAggregate(result);
   return list.map((address, i) => {
     const part = answers.slice(i * CALLS.length, (i + 1) * CALLS.length);
     const data = (sig: string) => part[CALLS.findIndex(([s]) => s === sig)];
@@ -118,6 +110,7 @@ export async function identifyContracts(
           ? 'getCurrentVotes'
           : null,
       answered,
+      served_by: url,
     };
   });
 }

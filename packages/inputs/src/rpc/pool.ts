@@ -191,7 +191,14 @@ const realSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
  * A node that hangs is left alone for this long. Otherwise every call of a read waits out the full
  * timeout before moving on, and a 16-call read takes minutes while the next node is healthy.
  */
-const HANG_PAUSE_MS = 30_000;
+export const HANG_PAUSE_MS = 30_000;
+
+/**
+ * Endpoints that couldn't be reached, across this process: URL to the time to stop believing that. A
+ * pool or a quick ask tries the others first, instead of waiting out a dead connection on every call.
+ * An injected fetch gets its own map, so one test's outage isn't another's.
+ */
+export const endpointHealth = new Map<string, number>();
 
 type Attempt =
   | { ok: true; result: unknown }
@@ -205,6 +212,7 @@ export function rpcPool(opts: RpcPoolOptions = {}): RpcPool {
   const timeoutMs = opts.timeoutMs ?? 10_000;
   const rounds = opts.rounds ?? 2;
   const maxWaitMs = opts.maxWaitMs ?? 30_000;
+  const health = opts.fetch ? new Map<string, number>() : endpointHealth;
 
   const nextSlot = new Map<string, number>();
   const pausedUntil = new Map<string, number>();
@@ -246,6 +254,7 @@ export function rpcPool(opts: RpcPoolOptions = {}): RpcPool {
       });
     } catch (err) {
       clearTimeout(timer);
+      health.set(e.url, now() + HANG_PAUSE_MS);
       if (!ctrl.signal.aborted) return { ok: false, reason: String(err) };
       pausedUntil.set(e.id, now() + HANG_PAUSE_MS);
       return { ok: false, reason: `timed out after ${timeoutMs} ms` };
@@ -310,10 +319,10 @@ export function rpcPool(opts: RpcPoolOptions = {}): RpcPool {
       if (usable.length === 0) break;
       // Endpoints that are not paused first, in priority order; then paused ones, soonest first.
       const t = now();
-      const ready = usable.filter((e) => (pausedUntil.get(e.id) ?? 0) <= t);
-      const paused = usable
-        .filter((e) => (pausedUntil.get(e.id) ?? 0) > t)
-        .sort((a, b) => (pausedUntil.get(a.id) ?? 0) - (pausedUntil.get(b.id) ?? 0));
+      const until = (e: RpcEndpoint) =>
+        Math.max(pausedUntil.get(e.id) ?? 0, health.get(e.url) ?? 0);
+      const ready = usable.filter((e) => until(e) <= t);
+      const paused = usable.filter((e) => until(e) > t).sort((a, b) => until(a) - until(b));
       for (const e of [...ready, ...paused]) {
         const wait = (pausedUntil.get(e.id) ?? 0) - now();
         if (wait > maxWaitMs) {

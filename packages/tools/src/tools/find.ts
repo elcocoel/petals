@@ -12,7 +12,14 @@
 // down costs its own answer only, and `sources` says who answered.
 import { runSignal } from '@petal/core';
 import type { IndexRow, Params } from '@petal/core/types';
-import { type ContractIdentity, EVM_CHAINS, identifyContracts, TOKEN_PROGRAM } from '@petal/inputs';
+import {
+  ChainDown,
+  type ContractIdentity,
+  EVM_CHAINS,
+  endpointHealth,
+  identifyContracts,
+  TOKEN_PROGRAM,
+} from '@petal/inputs';
 import { defineTool, type PetalTool } from '../define.ts';
 import type { ToolContext } from '../types.ts';
 import { bodyUrl, obj, readable } from './shared.ts';
@@ -44,7 +51,8 @@ const CHAINS: { id: string; words: string[]; gecko?: string; evm?: string }[] = 
   { id: 'avalanche', words: ['avalanche', 'avax'], gecko: 'avax', evm: '43114' },
   { id: 'near', words: ['near'] },
 ];
-const chainByWord = (w: string) => CHAINS.find((c) => c.words.includes(w.trim().toLowerCase()));
+export const chainByWord = (w: string) =>
+  CHAINS.find((c) => c.words.includes(w.trim().toLowerCase()));
 
 /** Words that say what is wanted of a target, not which target. */
 const TRAILING = new Set(
@@ -122,6 +130,8 @@ interface Working extends Candidate {
   votes?: string;
   /** the stored snapshot this came from */
   held?: IndexRow;
+  /** this chain's endpoints didn't answer: nothing is known about the address there */
+  down?: string;
 }
 
 interface SourceRow {
@@ -142,9 +152,12 @@ class Lookup {
   found = new Map<string, Working>();
   fetcher: typeof globalThis.fetch | null;
   offline: string;
+  /** which endpoints look down: this process's own, unless a fetch was injected */
+  health: Map<string, number>;
   constructor(fetcher: typeof globalThis.fetch | null, offline: string) {
     this.fetcher = fetcher;
     this.offline = offline;
+    this.health = fetcher === globalThis.fetch ? endpointHealth : new Map();
   }
 
   /** One outbound call, counted and timed. Null when it was skipped or failed. */
@@ -485,36 +498,45 @@ async function fromPetal(l: Lookup, ctx: ToolContext, p: Parsed, rows: IndexRow[
 
 // --- The chain confirms
 
-/** Ask each chain about its best candidate, best chains first, within the call limit. */
+/**
+ * Ask each chain about its best candidate, all at once, each through whichever of its endpoints
+ * answers. A chain that doesn't answer is down, which says nothing about the address.
+ */
 async function confirmOnChain(l: Lookup, ranked: Working[]): Promise<void> {
   const byChain = new Map<string, Working[]>();
   for (const c of ranked)
     if (c.address?.startsWith('0x') && EVM_CHAINS[c.chain])
       byChain.set(c.chain, [...(byChain.get(c.chain) ?? []), c]);
-  for (const [chainId, list] of byChain) {
-    const chain = EVM_CHAINS[chainId];
-    if (!chain) continue;
-    const part = list.slice(0, 1);
-    const url = chain.endpoints[0]?.url ?? '';
-    const ids = await l.ask(
-      `chain:${chainId}`,
-      url,
-      (f) =>
-        identifyContracts(
-          chain,
-          part.map((c) => c.address as string),
-          {
-            fetch: f,
-            timeoutMs: TIMEOUT_MS,
-          },
-        ),
-      (x) => x.filter((i) => i.ledger).length,
-    );
-    if (!ids) continue;
-    part.forEach((c, i) => {
-      applyIdentity(c, ids[i] as ContractIdentity, chainId, url);
-    });
-  }
+  await Promise.all(
+    [...byChain].map(async ([chainId, list]) => {
+      const chain = EVM_CHAINS[chainId];
+      if (!chain) return;
+      const part = list.slice(0, 1);
+      let why: string | undefined;
+      const ids = await l.ask(
+        `chain:${chainId}`,
+        chain.endpoints[0]?.url ?? '',
+        (f) =>
+          identifyContracts(
+            chain,
+            part.map((c) => c.address as string),
+            { fetch: f, timeoutMs: TIMEOUT_MS, health: l.health },
+          ).catch((e: unknown) => {
+            if (e instanceof ChainDown) why = e.message;
+            throw e;
+          }),
+        (x) => x.filter((i) => i.ledger).length,
+      );
+      if (!ids) {
+        for (const c of part) if (why) c.down = why;
+        return;
+      }
+      part.forEach((c, i) => {
+        const id = ids[i] as ContractIdentity;
+        applyIdentity(c, id, chainId, id.served_by);
+      });
+    }),
+  );
 }
 
 function applyIdentity(c: Working, id: ContractIdentity, chain: string, url: string) {
@@ -592,7 +614,9 @@ function plan(c: Working, ctx: ToolContext, rows: IndexRow[]): void {
   } else if (c.address?.startsWith('0x') && EVM_CHAINS[c.chain]) {
     const chain = EVM_CHAINS[c.chain];
     if (!c.confirmed) {
-      c.blocked = `not confirmed: ${c.chain} was not asked in this lookup or did not answer, and nothing is drawn unconfirmed. Call find_target with this address and chain`;
+      c.blocked = c.down
+        ? `not checked, because ${c.down}. That says nothing about this address, and nothing is drawn unconfirmed: try again in a moment`
+        : `not confirmed: ${c.chain} was not asked in this lookup, and nothing is drawn unconfirmed. Call find_target with this address and chain`;
     } else if (c.ledger === 'moloch-v1') {
       if (has('moloch-v1'))
         out.push(
@@ -612,7 +636,9 @@ function plan(c: Working, ctx: ToolContext, rows: IndexRow[]): void {
       };
       const note = narrow
         ? `one day of logs: a week on ${chain.name} is about 300 keyless calls and most of a chat's time; window_days asks for more`
-        : undefined;
+        : chain && !chain.blockscout
+          ? 'every holder if the token is quiet enough to read whole; otherwise the last 7 days, and the result says which'
+          : undefined;
       if (has('erc20-holders'))
         out.push(drawing(rows, 'erc20-holders', params, 'addresses and their balances', note));
       if (c.votes && has('erc20-votes'))
@@ -661,6 +687,7 @@ function score(c: Working, asked: string | null): number {
   );
 }
 
+/** What this lookup found and what didn't answer, and how a draw goes. It tells no one to give up. */
 function nextStep(
   ctx: ToolContext,
   p: Parsed,
@@ -669,25 +696,25 @@ function nextStep(
   rivals: number,
   noDao: boolean,
 ): string {
+  const answered = l.sources.filter((s) => s.status === 'answered').map((s) => s.id);
   const failed = l.sources.filter((s) => s.status === 'failed').map((s) => s.id);
-  if (shown.length === 0) {
-    const down = failed.length ? ` These did not answer: ${failed.join(', ')}.` : '';
-    return (
-      `Nothing answers to "${p.core}"${p.chain ? ` on ${p.chain}` : ''}.${down} Ask one clear question: what is it, and does the person know its chain or address? ` +
-      `If you know its address yourself, call find_target with that address: the chain confirms what it is. Petal reads: ${readable(ctx)}.`
-    );
-  }
+  const down = failed.length
+    ? ` Did not answer: ${failed.join(', ')}, which says nothing about what they would have said.`
+    : '';
+  const checked = `Checked: ${answered.join(', ') || 'nothing'}.${down}`;
+  const open = `Not tried here: read_chain on an address, read_page on a page, search for a name.`;
+  if (shown.length === 0)
+    return `Nothing in these sources answers to "${p.core}"${p.chain ? ` on ${p.chain}` : ''}. ${checked} This lookup knows only these lists and Petal's own modules (${readable(ctx)}), so that isn't the same as not existing. ${open}`;
   if (noDao)
-    return `No DAO answers to "${p.core}" in these sources. What is listed only shares the name, so don't present it as the DAO. Ask one clear question: do they mean one of these, or do they have the DAO's address? If you know its address yourself, call find_target with that address: the chain confirms what it is.`;
+    return `No DAO answers to "${p.core}" in these sources, and what's listed only shares the name, so it isn't the DAO. ${checked} A DAO with no trading pool and no Snapshot space isn't in these lists. ${open}`;
   if (rivals > 0)
-    return 'Different things carry this name. Ask one clear question: which one to draw, if any, naming each with its chain and the evidence that separates them. Do not pick for the person.';
+    return `Different things carry this name, and the evidence listed is what separates them. None was picked: naming one is for the person. ${checked}`;
   if (shown.every((c) => c.draw.length === 0))
-    return `Found, but no module can draw it. Say why in plain words (cannot_draw), and what would work. Petal reads: ${readable(ctx)}.`;
+    return `Found, and no module can draw it: cannot_draw says why for each. ${checked} ${open}`;
   if (shown[0]?.draw.length === 0)
-    return 'The best match cannot be drawn: say why in plain words (its cannot_draw), then offer the ones listed that can.';
-  const also =
-    shown.length > 1 ? ' The others are listed: say they exist, and offer them if they fit.' : '';
-  return `One clear match, first in the list. Say what it is, with its chain and address, and whether Petal already holds it (stored).${also} Then ask a plain yes or no before starting a new read and drawing. Once the person has said yes, read it: draw[0], or the entry of draw the question asks for, with module as network and params as params in get_snapshot.`;
+    return `The best match can't be drawn (its cannot_draw says why), and others listed can. ${checked} ${open}`;
+  const also = shown.length > 1 ? ' Others are listed, and may fit better.' : '';
+  return `One clear match, first in the list, with its chain and address, and whether Petal already holds it (stored).${also} ${checked} A new read and drawing take a plain yes or no before starting a new read. After a yes, read it: draw[0], or the entry of draw the question asks for, with module as network and params as params in get_snapshot.`;
 }
 
 export function makeFindTarget(
@@ -779,10 +806,13 @@ export function makeFindTarget(
         (a, b) => score(b, p.chain) - score(a, p.chain),
       );
       await confirmOnChain(l, byEvidence);
-      // An address given by hand stays only where the chain knows it.
+      // An address given by hand stays only where the chain knows it. A chain that was down says
+      // nothing, so it's only worth a line when no chain knows it: `sources` names it either way.
       let all = byEvidence;
-      if (EVM_ADDRESS.test(p.core))
-        all = all.filter((c) => !c.confirmed || c.confirmed.answered.length);
+      if (EVM_ADDRESS.test(p.core)) {
+        const known = all.some((c) => c.confirmed?.answered.length);
+        all = all.filter((c) => (c.confirmed ? c.confirmed.answered.length : !known));
+      }
       for (const c of all) plan(c, ctx, rows);
       all.sort((a, b) => score(b, p.chain) - score(a, p.chain));
 
@@ -811,7 +841,9 @@ export function makeFindTarget(
       return {
         query,
         chain: p.chain,
-        candidates: shown.map(({ exact: _e, program: _p, blocked: _b, votes: _v, ...c }) => c),
+        candidates: shown.map(
+          ({ exact: _e, program: _p, blocked: _b, votes: _v, down: _d, ...c }) => c,
+        ),
         more: all.length - shown.length,
         ambiguous: rivals > 0 || (noDao && shown.length > 0),
         next: nextStep(ctx, p, shown, l, rivals, noDao),

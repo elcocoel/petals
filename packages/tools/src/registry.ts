@@ -17,6 +17,8 @@ import { getFlower, listFlowers } from './tools/flowers.ts';
 import { getNetwork, listNetworks } from './tools/networks.ts';
 import { preparePublish, publishFlower } from './tools/publish.ts';
 import { quotePayment } from './tools/quote.ts';
+import { readChain } from './tools/read-chain.ts';
+import { readPage } from './tools/read-page.ts';
 import {
   accountGroupsTool,
   powerPathTool,
@@ -25,6 +27,7 @@ import {
   sharedAccountsTool,
 } from './tools/relations.ts';
 import { renderFlowerTool } from './tools/render.ts';
+import { search } from './tools/search.ts';
 import { describeSnapshot, getSnapshotTool } from './tools/snapshots.ts';
 import { proposeSpec, validateSpecTool } from './tools/specs.ts';
 import type { Tool, ToolContext } from './types.ts';
@@ -45,6 +48,9 @@ export const registry: Tool<any, any>[] = [
   publishFlower,
   quotePayment,
   findTarget,
+  readChain,
+  readPage,
+  search,
   accountGroupsTool,
   sharedAccountsTool,
   relatedGroupsTool,

@@ -35,6 +35,9 @@ The agent interprets; the tools count (FR-025). Any number an agent quotes must 
 | `find_documents` | B | fetches public docs and forum pages for citations |
 | `get_labels` | B | reads the label layer |
 | `find_target` | M-Talk | at most 5 keyless calls to public sources and the chain |
+| `read_chain` | M-Reach | at most 12 view calls and one log query, on our own endpoints only |
+| `read_page` | M-Reach | fetches one public URL; a daily cap |
+| `search` | M-Reach | one query on an unofficial route; a daily cap and a spacing |
 | `compare_figures` | B | none |
 | `prepare_correction` | B | issues a nonce |
 | `submit_correction` | B | writes a correction request to the shared map (FR-022) |
@@ -62,6 +65,27 @@ Input: `{ "query": string, "chain"?: string, "limit"?: int (1-12, default 6) }`.
 Output: `{ "query", "chain", "candidates": Candidate[], "more": int, "ambiguous": boolean, "next": string, "sources": [{ "id", "url", "status": "answered" | "failed" | "skipped", "hits", "ms"?, "note"? }], "calls": int }`.
 `Candidate`: `{ "name", "symbol", "kind": "token" | "dao" | "network", "chain", "address": string | null, "ledger": "erc20" | "moloch-v1" | "moloch-v2" | "spl" | "other" | null, "transferable": boolean | null, "confirmed": { "by": "chain", "chain", "url", "answered": [signature] } | null, "draw": [{ "module", "params", "shows", "stored"?: { "sha256", "as_of", "block_height" }, "note"? }], "cannot_draw": string | null, "evidence": { "liquidity_usd"?, "volume_24h_usd"?, "holders"?, "verified"?, "followers"?, "proposals"?, "snapshot_space"? }, "sources": [{ "id", "url" }] }`.
 Behaviour: Petal's modules and stored snapshots, then GeckoTerminal, Jupiter and Snapshot's hub; each EVM chain is then asked about its best candidate (`identifyContracts`, one eth_call). An EVM address that neither the chain confirmed nor a stored snapshot holds gets `cannot_draw`, never `draw`; Solana candidates are not confirmed here, the module's first read checks the mint. At most 5 calls and 4 s each; a source that is down costs only its own answer. `ambiguous` is true when different things carry the name: the caller asks, it does not pick. In fake mode no outbound call is made.
+
+`next` reports what was found and what didn't answer. It doesn't tell the caller to ask or to stop. A chain whose endpoints don't answer is said to be down, and that says nothing about the address. Each chain's endpoints are tried in order.
+
+Routes for the three tools below: `POST /api/v1/read-chain`, `GET /api/v1/read-page?url=&start=`, `GET /api/v1/web-search?query=`. They're in http-api.md and the skill's table.
+
+### read_chain (M-Reach, T332; additive, still tools/v1)
+
+Any address on a chain Petal knows. Read-only: `eth_call`, `eth_getLogs`, `eth_getCode` and the like, never a transaction. Only the RPC endpoints in `EVM_CHAINS` are ever used: no input is a URL, and an unknown `chain` is `bad_input`. Explorers are Sourcify, and Blockscout where a chain lists it, with only a checked address in the URL.
+Input: `{ "address": string, "chain"?: string, "calls"?: (string | { "fn": string, "args"?: string[] })[] (at most 12), "logs"?: { "event": string, "from_block"?: int, "to_block"?: int } }`. A call is a signature, with `returns (...)` if known. With no `calls`, a first look. With no `chain`, every chain gets a look, and calls and logs go to at most two that hold a contract.
+Output: `{ "address", "read": [Reading], "says" }`. `Reading`: `{ "chain", "status": "answered" | "down" | "offline", "note"?, "read_from"?: { "by": "chain", "url", "block"? }, "kind"?: "contract" | "account", "code_bytes"?, "proxy_of"?: { "address", "standard" }, "verified_source"?: { "by", "url", "of", "name", "view_functions", "other_functions", "events" } | null, "calls"?: [{ "fn", "args"?, "ok", "value"?, "guessed_as"?, "in_units"?, "reverted"?, "error"?, "cut"? }], "logs"?: { "event", "ok", "from_block", "to_block", "count"?, "logs"?, "note"?, "error"? }, "native_balance"?, "transactions_sent"?, "delegates_code_to"? }`.
+Bounds: 12 calls; one log query a read, at most 100 logs shown; a range no wider than the chain's first endpoint takes; 20 log queries a minute across the process. Errors: `bad_input`, `rate_limited`.
+
+### read_page (M-Reach, T333; additive, still tools/v1)
+
+A public URL as plain text. What comes back is a page's words: `untrusted: true`, and `says` tells the reader they're data, not instructions and not proof. Only public addresses: http or https, ports 80 and 443, no credentials in the URL, checked after DNS and on every redirect, connecting to the address that was checked. No cookies. Limits: 10 s and 2 MB for the whole read, redirects included; a daily cap (`PETAL_PAGE_READS_PER_DAY`).
+Input: `{ "url": string, "start"?: int }`. Output: `{ "untrusted": true, "says", "url", "final_url"?, "status", "fetched_at"?, "title", "text", "addresses", "links", "next_start", "truncated"?, "note"? }`. `text` is at most 20,000 characters, and `next_start` reads on. Errors: `cannot_read` (not public), `source_failed` (no answer), `rate_limited`.
+
+### search (M-Reach, T334; additive, still tools/v1)
+
+Words to public pages, through DuckDuckGo Lite: an unofficial route with no agreement behind it, which can change or refuse at any time. Nothing in Petal depends on it. One at a time, four seconds apart, with a daily cap (`PETAL_SEARCHES_PER_DAY`).
+Input: `{ "query": string }`. Output: `{ "untrusted": true, "says", "query", "status": "answered" | "down" | "offline", "results": [{ "title", "url", "snippet" }], "note"? }`. Down is an answer, with a note saying it says nothing about the question, not an error.
 
 ### get_network
 

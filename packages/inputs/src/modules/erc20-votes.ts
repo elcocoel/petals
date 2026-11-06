@@ -20,7 +20,13 @@ import type {
 } from '@petal/core/types';
 import { InputError } from '../errors.ts';
 import { addressOf, encodeCall, eventTopic, shortAddress, stringAt, wordAt } from '../evm/abi.ts';
-import { ETHEREUM, EVM_CHAINS, type EvmChain } from '../evm/chains.ts';
+import {
+  ETHEREUM,
+  EVM_CHAIN_PATTERN,
+  EVM_CHAIN_WORDS,
+  EVM_CHAINS,
+  type EvmChain,
+} from '../evm/chains.ts';
 import { EVM_ENDPOINTS, type EvmLog, type EvmReader, evmReader } from '../evm/reader.ts';
 import { fromBaseUnits } from '../import/spike.ts';
 import type { InputModule } from '../index.ts';
@@ -52,7 +58,7 @@ export function votesTarget(params: Params | undefined): VotesToken {
   const token = String(params?.token ?? '').toLowerCase();
   if (!chain || !/^0x[0-9a-f]{40}$/.test(token))
     throw new InputError('bad_input', 'erc20-votes needs a token address', {
-      hint: 'token: 0x and 40 hex digits; chain: ethereum, base or arbitrum',
+      hint: `token: 0x and 40 hex digits; chain: ${EVM_CHAIN_WORDS}`,
     });
   return { chain, token, population: `erc20-votes-${chain.id}-${token}` };
 }
@@ -74,8 +80,8 @@ export const ERC20_VOTES_DESCRIPTOR: NetworkDescriptor = {
     },
     chain: {
       required: false,
-      description: 'ethereum (default), base or arbitrum',
-      pattern: '^(ethereum|base|arbitrum)$',
+      description: `one of ${EVM_CHAIN_WORDS}; default ethereum`,
+      pattern: EVM_CHAIN_PATTERN,
       example: 'ethereum',
       default: 'ethereum',
     },
