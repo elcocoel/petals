@@ -234,12 +234,83 @@ describe('nearAiClient', () => {
     });
 
     test('a fallback is judged on its own: the first model gets it, the Anthropic one does not', async () => {
-      const fake = fakeNearAi({ fail: { [DEFAULT_MODEL]: 503 } });
-      await on(DEFAULT_MODEL, ['anthropic/claude-haiku-5-5'], fake).complete(ASK);
+      const fake = fakeNearAi({ fail: { 'someone/unlisted': 503 } });
+      await on('someone/unlisted', ['anthropic/claude-haiku-5-5'], fake, {
+        reasoningEffort: 'medium',
+      }).complete(ASK);
       const [first, second] = askOf(fake);
-      expect(first).toMatchObject({ model: DEFAULT_MODEL, reasoning_effort: 'low' });
+      expect(first).toMatchObject({ model: 'someone/unlisted', reasoning_effort: 'medium' });
       expect(second?.model).toBe('anthropic/claude-haiku-5-5');
       expect(second).not.toHaveProperty('reasoning_effort');
+    });
+
+    describe('a conversation’s pick (T371)', () => {
+      const [GLM, QWEN] = FALLBACK_MODELS as [string, string];
+      const HAIKU = 'anthropic/claude-haiku-5-5';
+      const SONNET = 'anthropic/claude-sonnet-5-5';
+
+      test('names the model and its effort, call by call, on the one client', async () => {
+        const fake = fakeNearAi();
+        const llm = on(DEFAULT_MODEL, [...FALLBACK_MODELS], fake);
+        await llm.complete(ASK, { model: GLM, effort: 'high' });
+        const answered = await llm.complete(ASK, { model: HAIKU, effort: null });
+        await llm.complete(ASK);
+        const [high, passed, own] = askOf(fake);
+        expect(high).toMatchObject({ model: GLM, reasoning_effort: 'high' });
+        expect(passed?.model).toBe(HAIKU);
+        expect(passed).not.toHaveProperty('reasoning_effort');
+        expect(own).toMatchObject({ model: DEFAULT_MODEL, reasoning_effort: 'low' });
+        expect(answered).toMatchObject({ model: HAIKU, fallback_used: false });
+      });
+
+      test('a signed pick falls back only to signed models, and says so', async () => {
+        const fake = fakeNearAi({ fail: { [GLM]: 503 } });
+        const llm = on(DEFAULT_MODEL, [...FALLBACK_MODELS], fake);
+        const c = await llm.complete(ASK, { model: GLM, effort: 'medium' });
+        expect(c).toMatchObject({ model: QWEN, fallback_used: true });
+        expect(askOf(fake).map((a) => a.model)).toEqual([GLM, QWEN]);
+        expect(askOf(fake)[1]).toMatchObject({ reasoning_effort: 'medium' });
+      });
+
+      test('a signed model never becomes unsigned, even if the server’s own list says it may', async () => {
+        const fake = fakeNearAi({ fail: { [DEFAULT_MODEL]: 503 } });
+        const llm = on(DEFAULT_MODEL, [HAIKU], fake);
+        await expect(llm.complete(ASK)).rejects.toBeInstanceOf(LlmCallError);
+        expect(askOf(fake).map((a) => a.model)).toEqual([DEFAULT_MODEL]);
+      });
+
+      test('a passed-through pick with no fallback fails plainly, asking nothing else', async () => {
+        const fake = fakeNearAi({ fail: { [HAIKU]: 503 } });
+        const llm = on(DEFAULT_MODEL, [...FALLBACK_MODELS], fake);
+        await expect(llm.complete(ASK, { model: HAIKU, effort: null })).rejects.toThrow(/503/);
+        expect(askOf(fake).map((a) => a.model)).toEqual([HAIKU]);
+        // and the server's own model isn't reported down for it
+        expect(llm.status()).toBe('up');
+      });
+
+      test('the server’s own model on a passed-through PETAL_MODEL fails the same way', async () => {
+        const fake = fakeNearAi({ fail: { [HAIKU]: 503 } });
+        const llm = on(HAIKU, [...FALLBACK_MODELS], fake);
+        await expect(llm.complete(ASK)).rejects.toThrow(/503/);
+        expect(askOf(fake).map((a) => a.model)).toEqual([HAIKU]);
+      });
+
+      test('one pick’s trouble says nothing about another’s', async () => {
+        const fake = fakeNearAi({ fail: { [GLM]: 503 } });
+        const llm = on(DEFAULT_MODEL, [...FALLBACK_MODELS], fake);
+        await llm.complete(ASK, { model: GLM, effort: 'low' });
+        expect(await llm.complete(ASK)).toMatchObject({
+          model: DEFAULT_MODEL,
+          fallback_used: false,
+        });
+      });
+
+      test('what it costs comes from the catalogue, not a guess', async () => {
+        const fake = fakeNearAi();
+        const c = await on(DEFAULT_MODEL, [], fake).complete(ASK, { model: SONNET, effort: null });
+        expect(c.cost_usd).toBeCloseTo((c.usage.in * 2 + c.usage.out * 10) / 1e6, 9);
+        expect(paths(fake)).not.toContain('GET /v1/models');
+      });
     });
 
     test.each([

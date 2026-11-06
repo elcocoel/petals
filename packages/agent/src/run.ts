@@ -19,6 +19,7 @@ import type {
 } from '@petal/core/types';
 import { registry as defaultRegistry, type ToolContext, withRunSignal } from '@petal/tools';
 import { approvalRequired, DRAWING_TOOLS, hashOf, STORED_ONLY, yesGate } from './approval.ts';
+import { modelOf } from './catalogue.ts';
 import { Channel } from './channel.ts';
 import type {
   Budget,
@@ -76,6 +77,8 @@ export interface RunOptions {
   signal?: AbortSignal;
   /** the window a thread is compacted against, in tokens; default the model's (near-ai.ts) */
   windowTokens?: number;
+  /** what the conversation picked, already checked against the catalogue; default the client's model */
+  pick?: { model: string; effort: string | null };
 }
 
 export const DEFAULT_HEARTBEAT_MS = 8000;
@@ -217,13 +220,16 @@ async function loop(
   const registry = opts.registry ?? defaultRegistry;
   const runId = opts.runId ?? newRunId();
   const deadline = clock() + budget.wallSeconds * 1000;
+  // A recorded run replays what it replays, whatever was picked.
+  const pick = llm.kind === 'recorded' ? undefined : opts.pick;
   const totals = {
     turns: 0,
     in: 0,
     out: 0,
     usd: 0,
     fallback: false,
-    model: llm.model,
+    // until a model answers: `done` with no turns means nobody did, and its readers say so
+    model: pick?.model ?? llm.model,
     signature: null as ModelSignature | null,
     context: 0,
   };
@@ -255,11 +261,18 @@ async function loop(
         cost_usd: Math.round(totals.usd * 1e6) / 1e6,
         signature: totals.signature,
         ...(totals.context ? { context_tokens: totals.context } : {}),
+        ...(pick ? { picked: pick.model } : {}),
       },
     });
   // The ledger is the cap: a recorded run never spends, and every other model call goes between a
   // reserve and a settle. If either fails, the chat stops before it buys anything more.
   const ledger = llm.kind === 'recorded' ? undefined : budget.ledger;
+  // What one call holds: what a chat on this model is listed at, or the chat's cap if that's lower. A call
+  // cut off counts at its full hold, so a person's higher cap mustn't make every Stop cost that much.
+  const holdUsd = Math.min(
+    budget.usdPerChat,
+    modelOf(pick?.model ?? llm.model)?.usd_per_chat ?? budget.usdPerChat,
+  );
   let ledgerDown = false;
   const ledgerFailed = (e: unknown) => {
     ledgerDown = true;
@@ -539,7 +552,7 @@ async function loop(
       let hold: SpendHold | null = null;
       if (ledger) {
         try {
-          hold = await ledger.reserve(budget.usdPerChat, budget.usdPerDay);
+          hold = await ledger.reserve(holdUsd, budget.usdPerDay);
         } catch (e) {
           ledgerFailed(e);
           break;
@@ -578,7 +591,10 @@ async function loop(
       let pending: Promise<LlmCompletion> | undefined;
       let c: LlmCompletion;
       try {
-        pending = llm.complete(req, signal ? { signal } : {});
+        pending = llm.complete(req, {
+          ...(signal ? { signal } : {}),
+          ...(pick ? { model: pick.model, effort: pick.effort } : {}),
+        });
         c = await before(pending, deadline, clock, signal);
       } catch (e) {
         const held = hold?.usd ?? 0;

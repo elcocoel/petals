@@ -258,7 +258,12 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
       const owner = admitted.subject ? { owner: admitted.subject } : undefined;
       // A follow-up is not a new chat: only the daily cap and this wider limit bound a conversation.
       const followUp = !!(raw as { run_id?: unknown } | undefined)?.run_id;
-      const wait = (followUp ? followUpLimit : chatLimit)(clientAddress(c, local));
+      const address = clientAddress(c, local);
+      const wait = followUp
+        ? followUpLimit(address)
+        : admitted.ownCredit
+          ? null
+          : chatLimit(address);
       if (wait !== null) {
         const n = followUp ? `${followUpsPerHour} follow-ups` : `${perHour} chats`;
         return fail(c, 'rate_limited', `At most ${n} an hour from one address.`, undefined, wait);
@@ -333,7 +338,20 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
           ...(exploration ? { exploration } : {}),
         });
       }
-      keepAlive(c, jobs.start(runId, input, earlier, admitted.budget));
+      // What this conversation has picked, however it was set: this chat's body, or an earlier one's,
+      // or PATCH. None picked: the server's own model. Checked already, so a bad pick spent nothing.
+      const stored = await deps.runs.settingsOf?.(runId);
+      const pick = stored ? settingsOf(stored) : undefined;
+      keepAlive(
+        c,
+        jobs.start(
+          runId,
+          input,
+          earlier,
+          admitted.budget,
+          pick && { model: pick.model, effort: pick.effort },
+        ),
+      );
       if (wantsJson(c)) {
         return c.json({ run_id: runId, status: 'running', tools_version: TOOLS_VERSION }, 202);
       }

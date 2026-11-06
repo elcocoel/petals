@@ -273,6 +273,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     return store.runEvent.ofType(runId, 'done').map((e) => {
       const data = JSON.parse(e.data) as {
         model: string;
+        picked?: string;
         fallback_used: boolean;
         turns: number;
         tokens: { in: number; out: number };
@@ -282,7 +283,9 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       };
       return {
         at: e.at,
-        model: data.model,
+        // what answered, and null when nothing did. `picked` is what was asked for, if anything was
+        model: data.turns ? data.model : null,
+        picked: data.picked ?? null,
         fallback_used: data.fallback_used,
         model_calls: data.turns,
         tokens: data.tokens,

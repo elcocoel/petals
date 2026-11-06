@@ -9,16 +9,24 @@ const tokens = (text: string) => Math.ceil(text.length / 4);
 export interface StubModel {
   /** chat completions asked for so far */
   readonly calls: number;
+  /** what each of those named, in order. No effort: the field wasn't sent */
+  readonly asked: readonly { model: string; effort: string | null }[];
+  /** models that answer 503 for now, so a test can see who's asked next */
+  readonly down: Set<string>;
   handle(req: IncomingMessage, res: ServerResponse): void;
 }
 
 export function stubModel(): StubModel {
   const replay = recordedClient(SKELETON_TRANSCRIPT);
   let calls = 0;
+  const seen: { model: string; effort: string | null }[] = [];
+  const down = new Set<string>();
   return {
     get calls() {
       return calls;
     },
+    asked: seen,
+    down,
     handle(req, res) {
       let body = '';
       req.on('data', (d) => {
@@ -36,21 +44,26 @@ export function stubModel(): StubModel {
         try {
           const asked = JSON.parse(body) as {
             model: string;
-            messages: { role: string }[];
+            messages: { role: string; content?: string | null }[];
             tools?: unknown[];
             reasoning_effort?: string;
           };
+          seen.push({ model: asked.model, effort: asked.reasoning_effort ?? null });
+          if (down.has(asked.model)) return send(503, { error: { message: 'stub: down' } });
           // As NEAR AI does for Anthropic's models (HTTP 400, seen 2026-11-06).
           if (asked.reasoning_effort && asked.model.startsWith('anthropic/')) {
             return send(400, { error: { message: 'reasoning_effort is not supported' } });
           }
           const from = asked.messages.findLastIndex((m) => m.role === 'user');
-          // Offered no tools, it was refused for want of a yes (J4), so it asks. A yes replays again.
-          const said: Pick<LlmCompletion, 'message'> = asked.tools?.length
-            ? await replay.complete({
-                messages: asked.messages.slice(from).map((m) => ({ ...m })) as never,
-              })
-            : { message: { role: 'assistant', content: ASKING } };
+          // Refused for want of a yes (J4), or offered no tools after that, it asks. A real model keeps the
+          // tools that only read and may go on, but the recording has nothing to go on with. A yes replays.
+          const refused = asked.messages.at(-1)?.content?.includes('approval_required');
+          const said: Pick<LlmCompletion, 'message'> =
+            asked.tools?.length && !refused
+              ? await replay.complete({
+                  messages: asked.messages.slice(from).map((m) => ({ ...m })) as never,
+                })
+              : { message: { role: 'assistant', content: ASKING } };
           send(200, {
             id: `stub-${calls}`,
             object: 'chat.completion',

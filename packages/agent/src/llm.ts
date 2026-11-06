@@ -41,11 +41,21 @@ export interface LlmCompletion {
   signature: ModelSignature | null;
 }
 
+/** What one call can ask of a client, besides the words. */
+export interface LlmCallOptions {
+  /** Stop: a client that talks to a model passes it to the model's fetch. */
+  signal?: AbortSignal;
+  /** additive (T370): the conversation's pick, checked against the catalogue; default the client's own */
+  model?: string;
+  /** additive (T370): the pick's effort. Null: the model's own. Default the catalogue's for the model */
+  effort?: string | null;
+}
+
 export interface LlmClient {
   readonly kind: 'near-ai-cloud' | 'recorded';
   readonly model: string;
-  /** `signal` is Stop: a client that talks to a model passes it to the model's fetch. */
-  complete(req: LlmRequest, o?: { signal?: AbortSignal }): Promise<LlmCompletion>;
+  /** The model asked may not be the one that answers: `LlmCompletion.model` says which did. */
+  complete(req: LlmRequest, o?: LlmCallOptions): Promise<LlmCompletion>;
 }
 
 /** Money set aside for one model call, until it is settled. */
@@ -86,6 +96,18 @@ export const DEFAULT_BUDGET: Budget = {
   usdPerChat: 0.05,
   usdPerDay: 3,
 };
+
+/**
+ * Where a chat stops when a person spends their own credit. A flower costs more the later it comes in a
+ * conversation, about 2¢ for the first and 15¢ for the tenth, so the invite's 5¢ would cut it off.
+ */
+export const PERSON_USD_PER_CHAT = 0.5;
+
+/** PETAL_PERSON_USD_PER_CHAT, else the default. A typo mustn't lift the cap, so it means the default. */
+export function personUsdPerChat(env: Record<string, string | undefined> = process.env): number {
+  const usd = Number(env.PETAL_PERSON_USD_PER_CHAT);
+  return Number.isFinite(usd) && usd > 0 ? usd : PERSON_USD_PER_CHAT;
+}
 
 /** PETAL_RUN_MAX_S, else the default. The limit is what a person waits for; the dollars stay capped. */
 export function runMaxSeconds(env: Record<string, string | undefined> = process.env): number {

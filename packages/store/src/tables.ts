@@ -269,6 +269,7 @@ export function tables(db: Db) {
         db.run('INSERT INTO person (id, created_at) VALUES (?, ?)', r.id, r.created_at);
       },
       get: (id: string) => db.get<PersonRow>('SELECT * FROM person WHERE id = ?', id),
+      list: () => db.all<PersonRow>('SELECT * FROM person ORDER BY created_at, id'),
     },
 
     walletBinding: {
@@ -383,6 +384,16 @@ export function tables(db: Db) {
         db.run('UPDATE run SET owner = ? WHERE owner = ?', to, from),
       idsWithStatus: (status: string) =>
         db.all<{ id: string }>('SELECT id FROM run WHERE status = ?', status).map((r) => r.id),
+      /** How many runs each owner holds, none first. What a one-off script needs to see a store's shape. */
+      ownerCounts: () =>
+        db.all<{ owner: string | null; n: number }>(
+          'SELECT owner, count(*) AS n FROM run GROUP BY owner ORDER BY owner IS NOT NULL, owner',
+        ),
+      /** The runs nobody owns, older than owners: anyone with the id can read them. */
+      withoutOwner: () =>
+        db.all<{ id: string; exploration: string | null }>(
+          'SELECT id, exploration FROM run WHERE owner IS NULL',
+        ),
       /** Newest first. */
       listByOwner: (owner: string, limit = 50) =>
         db.all<RunSummaryRow>(

@@ -10,7 +10,7 @@ import { type Config, createContext, freshGate, httpApp, overDataBudget } from '
 import { Hono } from 'hono';
 import { agentAccess, createAuth, type Network, siteOf } from './auth-routes.ts';
 import { closedLedger, importLedgerFile, serverBudget, storeLedger } from './budget.ts';
-import { DEFAULT_BUDGET, type LlmClient, runMaxSeconds } from './llm.ts';
+import { DEFAULT_BUDGET, type LlmClient, personUsdPerChat, runMaxSeconds } from './llm.ts';
 import { chosenModel, createNearAiClient, FALLBACK_MODELS, type NearAiOptions } from './near-ai.ts';
 import { recordedClient, SKELETON_TRANSCRIPT } from './recorded.ts';
 import { type AgentRouteOptions, createAgentRoutes, stateDirOf } from './routes.ts';
@@ -91,6 +91,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     site: siteOf(config.apiBase),
     ...(o.clock ? { clock: o.clock } : {}),
     full: () => overDataBudget(config, ctx.now()),
+    personUsdPerChat: personUsdPerChat(env),
   });
 
   const app = new Hono();

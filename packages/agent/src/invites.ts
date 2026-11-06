@@ -16,6 +16,8 @@ export const INVITE_SPENT =
   "This invite's budget is used up, so Petal's agent stopped here. You can carry on with your own agent.";
 export const INVITE_CLOSED =
   "This invite isn't valid any more, so Petal's agent stopped here. You can carry on with your own agent.";
+export const CREDIT_SPENT =
+  "Your credit is used up, so Petal's agent stopped here and nothing more will be spent. You can carry on with your own agent.";
 
 /** An invite minted with no days given ends after this many. An open-ended one is never closed. */
 export const DEFAULT_INVITE_DAYS = 14;
@@ -109,32 +111,40 @@ export function inviteRefusal(state: InviteState | null): string | null {
   return state.status === 'active' ? null : INVITE_CLOSED;
 }
 
-type InviteHold = SpendHold & { inviteUsd: number };
+type AccountHold = SpendHold & { accountUsd: number };
 
-/** The day's ledger, with this invite's budget on top: a chat holds both or buys nothing. */
-export function inviteLedger(
+/**
+ * The day's ledger, with a credit account on top: a chat holds both or buys nothing. `refusal` says why the
+ * account can't pay right now, and `spent` what running out is called.
+ */
+function creditLedger(
   store: Store,
-  id: string,
+  account: string,
+  o: {
+    refusal: () => string | null;
+    spent: string;
+    /** told what each call really cost, inside the same transaction */
+    onSpend?: (usd: number) => void;
+  },
   day: BudgetLedger,
-  now: () => Date = () => new Date(),
+  now: () => Date,
 ): BudgetLedger {
-  const account = accountOf(id);
   let refused: string | null = null;
-  const reserveInvite = (usd: number): number | null =>
+  const reserveAccount = (usd: number): number | null =>
     store.tx(() => {
-      refused = inviteRefusal(inviteState(store, id, now()));
+      refused = o.refusal();
       if (refused) return null;
       const held = store.credit.reserve(account, usd);
-      if (held === null) refused = INVITE_SPENT;
+      if (held === null) refused = o.spent;
       return held;
     });
   return {
     spentToday: () => day.spentToday(),
     add: (usd) => day.add(usd),
     async reserve(usd, capUsd) {
-      const inviteUsd = reserveInvite(usd);
-      if (inviteUsd === null) return null;
-      const release = () => store.credit.settle(account, inviteUsd, 0);
+      const accountUsd = reserveAccount(usd);
+      if (accountUsd === null) return null;
+      const release = () => store.credit.settle(account, accountUsd, 0);
       let hold: SpendHold | null;
       try {
         hold = await day.reserve(usd, capUsd);
@@ -146,13 +156,13 @@ export function inviteLedger(
         release();
         return null;
       }
-      return { ...hold, inviteUsd } satisfies InviteHold;
+      return { ...hold, accountUsd } satisfies AccountHold;
     },
     async settle(hold, actualUsd) {
       await day.settle(hold, actualUsd);
       const at = now().toISOString();
       store.tx(() => {
-        store.credit.settle(account, (hold as InviteHold).inviteUsd, 0);
+        store.credit.settle(account, (hold as AccountHold).accountUsd, 0);
         if (actualUsd <= 0) return;
         store.credit.apply({
           id: randomUUID(),
@@ -161,11 +171,114 @@ export function inviteLedger(
           reason: 'model call',
           at,
         });
-        store.invite.addSpent(id, actualUsd);
+        o.onSpend?.(actualUsd);
       });
     },
     refusal: () => (refused ? { message: refused, hint: CONNECT_HINT } : null),
   };
+}
+
+/** The day's ledger, with this invite's budget on top. */
+export function inviteLedger(
+  store: Store,
+  id: string,
+  day: BudgetLedger,
+  now: () => Date = () => new Date(),
+): BudgetLedger {
+  return creditLedger(
+    store,
+    accountOf(id),
+    {
+      refusal: () => inviteRefusal(inviteState(store, id, now())),
+      spent: INVITE_SPENT,
+      onSpend: (usd) => store.invite.addSpent(id, usd),
+    },
+    day,
+    now,
+  );
+}
+
+// A person's own credit (T374). It belongs to the person, not to a session or a wallet: any of their wallets
+// and any browser reach it, and it needs no invite. scripts/fund-person.ts sets it.
+const personAccount = (person: string) => `person:${person}`;
+const FUNDED = 'funded';
+
+export interface PersonCredit {
+  /** everything ever put in */
+  funded_usd: number;
+  /** what the calls that have ended really cost */
+  spent_usd: number;
+  /** what the next chat can draw on: less what's spent, and what's held for calls now */
+  left_usd: number;
+}
+
+const fundedOf = (store: Store, account: string) =>
+  store.credit
+    .entries(account)
+    .filter((e) => e.reason === FUNDED)
+    .reduce((sum, e) => sum + e.delta_usd, 0);
+
+/** Null for a person with no credit account: they're treated as anyone else. */
+export function personCredit(store: Store, person: string): PersonCredit | null {
+  const account = personAccount(person);
+  const credit = store.credit.get(account);
+  if (!credit) return null;
+  const funded = fundedOf(store, account);
+  const free = credit.balance_usd - credit.reserved_usd;
+  return {
+    funded_usd: funded,
+    spent_usd: Math.max(0, funded - credit.balance_usd),
+    left_usd: free < DUST_USD ? 0 : free,
+  };
+}
+
+/**
+ * Sets what this person has been given in all, whatever they've spent, so it can be raised, lowered or
+ * run again with no change. What's spent stays spent.
+ */
+export function fundPerson(
+  store: Store,
+  person: string,
+  totalUsd: number,
+  now: Date = new Date(),
+): PersonCredit {
+  if (!Number.isFinite(totalUsd) || totalUsd < 0) {
+    throw new Error('the total must be a number of dollars, $0 or more');
+  }
+  if (!store.person.get(person)) throw new Error(`no person ${person}`);
+  const account = personAccount(person);
+  return store.tx(() => {
+    const change = totalUsd - fundedOf(store, account);
+    if (Math.abs(change) >= DUST_USD) {
+      store.credit.apply({
+        id: `fund:${randomUUID()}`,
+        account_key: account,
+        delta_usd: change,
+        reason: FUNDED,
+        at: now.toISOString(),
+      });
+    }
+    return personCredit(store, person) as PersonCredit;
+  });
+}
+
+/** The day's ledger, with this person's credit on top. */
+export function personLedger(
+  store: Store,
+  person: string,
+  day: BudgetLedger,
+  now: () => Date = () => new Date(),
+): BudgetLedger {
+  return creditLedger(
+    store,
+    personAccount(person),
+    {
+      refusal: () => ((personCredit(store, person)?.left_usd ?? 0) > 0 ? null : CREDIT_SPENT),
+      spent: CREDIT_SPENT,
+    },
+    day,
+    now,
+  );
 }
 
 /** <stateDir>/private.db for a script. Throws when it can't be written, so nothing is lost silently. */
