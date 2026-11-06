@@ -40,7 +40,7 @@ const INK_GRAIN: [number, number, number] = [0.09, 0.09, 0.09];
 const LIGHT_GRAIN: [number, number, number] = [1, 1, 1];
 
 // Elco's soft textures, drawn by code: Brand guide, "Image generations", 33:646, 33:647 and 33:648. Each
-// PNG there is about 2 MB; each tile here is about 1 KB and stays sharp at any density. They hold still.
+// is a PNG of megabytes there; each tile here is under 2 KB and stays sharp at any density. They hold still.
 // What moves is a soft tone over them, drawn by apps/web/app/versions/drift.ts from `script.drift` below.
 
 /** An SVG as a CSS image, escaping only what url("") really needs, so a small tile stays small. */
@@ -72,20 +72,6 @@ const felt = (alpha: number) => {
   );
 };
 
-/**
- * Texture 03, Offset screen: a dot screen, bent by slow noise so its rows wander, in Mint with Ink printed
- * a little off register. Its lattice is a square one turned 26.6 degrees, basis (6,3) and (-3,6), which
- * repeats every 15px, so the tile is seamless. Elco's second ink is blue; ours are Mint and Ink.
- */
-const SCREEN_DOT = 0.62;
-const SCREEN_OFFSET = 0.1;
-const screen = () =>
-  tile(
-    300,
-    300,
-    `<defs><pattern id='d' width='15' height='15' patternUnits='userSpaceOnUse'><path d='M1.5 1.5h0M7.5 4.5h0M13.5 7.5h0M4.5 10.5h0M10.5 13.5h0' stroke='#000' stroke-width='1.8' stroke-linecap='round'/></pattern><filter id='s' filterUnits='userSpaceOnUse' x='-20' y='-20' width='340' height='340' color-interpolation-filters='sRGB'><feTurbulence x='0' y='0' width='300' height='300' type='fractalNoise' baseFrequency='.045' numOctaves='1' seed='4' stitchTiles='stitch' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='5.5' xChannelSelector='R' yChannelSelector='G'/><feGaussianBlur stdDeviation='.2' result='g'/><feColorMatrix in='g' values='${inkIn('Ink', SCREEN_OFFSET)}'/><feOffset dx='.8' dy='.6' result='o'/><feColorMatrix in='g' values='${inkIn('Mint', SCREEN_DOT)}'/><feMerge><feMergeNode in='o'/><feMergeNode/></feMerge></filter></defs><rect x='-20' y='-20' width='340' height='340' fill='url(#d)' filter='url(#s)'/>`,
-  );
-
 /** A seeded walk, so the emitted CSS is the same every time. */
 const walk = (seed: number) => {
   let at = seed;
@@ -93,6 +79,37 @@ const walk = (seed: number) => {
     at = (at * 16807) % 2147483647;
     return at / 2147483647;
   };
+};
+
+/**
+ * Texture 03, Offset screen: a stochastic dot screen, in Mint with Ink printed a little off register,
+ * across the rows so it doesn't smear dots into dashes. The lattice is a square one turned 26.6 degrees,
+ * basis (6,3) and (-3,6), which fits a 45px cell. Each dot is nudged on its own, and slow noise bends the
+ * whole thing, so no row stays straight and the cell doesn't show. Elco's second ink is blue; ours aren't.
+ */
+const SCREEN_DOT = 0.72;
+const SCREEN_OFFSET = 0.12;
+const screen = () => {
+  const next = walk(11);
+  const cell = 45;
+  const width = 2.6;
+  const inside = (v: number) => Math.min(cell - width / 2 - 0.1, Math.max(width / 2 + 0.1, v));
+  let d = '';
+  for (let u = -cell; u < cell; u++) {
+    for (let v = -cell; v < cell; v++) {
+      const x = u * 6 - v * 3;
+      const y = u * 3 + v * 6;
+      if (x < 0 || y < 0 || x >= cell || y >= cell) continue;
+      const dotX = inside(x + 1.5 + (next() - 0.5) * 4);
+      const dotY = inside(y + 1.5 + (next() - 0.5) * 4);
+      d += `M${dotX.toFixed(1)} ${dotY.toFixed(1)}h0`;
+    }
+  }
+  return tile(
+    315,
+    315,
+    `<defs><pattern id='d' width='${cell}' height='${cell}' patternUnits='userSpaceOnUse'><path d='${d}' stroke='#000' stroke-width='${width}' stroke-linecap='round'/></pattern><filter id='s' filterUnits='userSpaceOnUse' x='-20' y='-20' width='355' height='355' color-interpolation-filters='sRGB'><feTurbulence x='0' y='0' width='315' height='315' type='fractalNoise' baseFrequency='.06' numOctaves='1' seed='4' stitchTiles='stitch' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='5' xChannelSelector='R' yChannelSelector='G'/><feGaussianBlur stdDeviation='.2' result='g'/><feColorMatrix in='g' values='${inkIn('Ink', SCREEN_OFFSET)}'/><feOffset dx='-.5' dy='.8' result='o'/><feColorMatrix in='g' values='${inkIn('Mint', SCREEN_DOT)}'/><feMerge><feMergeNode in='o'/><feMergeNode/></feMerge></filter></defs><rect x='-20' y='-20' width='355' height='355' fill='url(#d)' filter='url(#s)'/>`,
+  );
 };
 
 /**
@@ -169,7 +186,7 @@ const STONE_FELT = 0.075;
  */
 const WASH: Record<ToneName | 'mint', { low: Paint; high: Paint }> = {
   paper: { low: ground(0.86), high: ground(0) },
-  mist: { low: ground(0.6), high: mint(0.03) },
+  mist: { low: ground(0.5), high: mint(0.03) },
   stone: { low: ground(0.2), high: gray(0.1) },
   mint: { low: ink(0.03), high: ground(0.05) },
 };
