@@ -53,7 +53,7 @@ export const ROUTES: Record<
   find_target: (i) => ({ method: 'GET', path: `/api/v1/find${qs({ query: i.query })}` }),
   read_chain: (i) => ({ method: 'POST', path: '/api/v1/read-chain', body: i }),
   read_page: (i) => ({ method: 'GET', path: `/api/v1/read-page${qs(i)}` }),
-  search: (i) => ({ method: 'GET', path: `/api/v1/search${qs(i)}` }),
+  search: (i) => ({ method: 'GET', path: `/api/v1/web-search${qs(i)}` }),
   account_groups: (i) => ({ method: 'GET', path: `/api/v1/relations/account-groups${qs(i)}` }),
   shared_accounts: (i) => ({ method: 'GET', path: `/api/v1/relations/shared${qs(i)}` }),
   related_groups: (i) => ({ method: 'GET', path: `/api/v1/relations/related${qs(i)}` }),

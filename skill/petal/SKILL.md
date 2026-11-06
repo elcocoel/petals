@@ -146,6 +146,9 @@ JSON in and out; send `content-type: application/json`. Every answer carries `to
 | Tool                         | Route                                                                   |
 | ---------------------------- | ----------------------------------------------------------------------- |
 | `find_target`                | `GET /api/v1/find?query=&chain=&limit=`                                 |
+| `read_chain`                 | `POST /api/v1/read-chain`                                               |
+| `read_page`                  | `GET /api/v1/read-page?url=&start=`                                     |
+| `search`                     | `GET /api/v1/web-search?query=`                                         |
 | `list_networks`              | `GET /api/v1/networks?query=`                                           |
 | `get_network`                | `GET /api/v1/networks/:id` (params as query)                            |
 | `get_snapshot`               | `POST /api/v1/snapshots`                                                |

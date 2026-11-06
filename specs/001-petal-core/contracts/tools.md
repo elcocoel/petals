@@ -68,7 +68,7 @@ Behaviour: Petal's modules and stored snapshots, then GeckoTerminal, Jupiter and
 
 `next` reports what was found and what didn't answer. It doesn't tell the caller to ask or to stop. A chain whose endpoints don't answer is said to be down, and that says nothing about the address. Each chain's endpoints are tried in order.
 
-Routes for the three tools below: `POST /api/v1/read-chain`, `GET /api/v1/read-page?url=&start=`, `GET /api/v1/search?query=`. http-api.md doesn't list them yet, so the skill's route table doesn't either: every other door has them.
+Routes for the three tools below: `POST /api/v1/read-chain`, `GET /api/v1/read-page?url=&start=`, `GET /api/v1/web-search?query=`. They're in http-api.md and the skill's table.
 
 ### read_chain (M-Reach, T332; additive, still tools/v1)
 
