@@ -5,6 +5,7 @@ import type { Entry } from '@petal/core/types';
 import type { DrawnReading } from './agent-client.ts';
 import { api, post } from './api.ts';
 import type { ApiHealth } from './api-label.ts';
+import type { Catalogue } from './composer-options.ts';
 import type { ListedFlower } from './flower-view.ts';
 import { openingMessage } from './opening.ts';
 import type { CanvasFlower } from './panel-view.ts';
@@ -46,9 +47,10 @@ async function standInFlower(flowers: ListedFlower[]): Promise<CanvasFlower | nu
 export async function workspaceHome(q: Record<string, string | string[] | undefined>) {
   const run = Array.isArray(q.run) ? q.run[0] : q.run;
   const elsewhere = Array.isArray(q.elsewhere) ? q.elsewhere[0] : q.elsewhere;
-  const [health, listed] = await Promise.all([
+  const [health, listed, catalogue] = await Promise.all([
     api<ApiHealth>('/api/v1/health'),
     api<{ flowers: ListedFlower[] }>('/api/v1/flowers'),
+    api<Catalogue>('/api/v1/catalogue'),
   ]);
   const recorded = health.ok && health.value.llm === 'recorded';
   const flowers = listed.ok ? listed.value.flowers : [];
@@ -56,6 +58,7 @@ export async function workspaceHome(q: Record<string, string | string[] | undefi
   return {
     initialRun: run,
     initialElsewhere: elsewhere,
+    catalogue: catalogue.ok ? catalogue.value : null,
     initialQuestion: questionFromParams(q),
     recorded,
     opening: openingMessage(flowers),

@@ -3,6 +3,14 @@
 // so a new flower can take them; this draws what's needed, projects the panel, says whether its box is
 // open, keeps the address in step and hears Escape.
 import { useEffect, useMemo, useState } from 'react';
+import { saveSettings } from '../lib/agent-client.ts';
+import {
+  type Catalogue,
+  modelOptions,
+  modelPill,
+  type Settings,
+  withModel,
+} from '../lib/composer-options.ts';
 import { conversationRows } from '../lib/conversation-list.ts';
 import { elsewhereFlower, elsewhereRows, WHERE } from '../lib/elsewhere.ts';
 import { type ListedFlower, svgImage } from '../lib/flower-view.ts';
@@ -25,10 +33,12 @@ import {
 import type { Opened, PanelSection } from '../lib/thread.ts';
 import { composerView, type FlowerRow, openFlowerIndex } from '../lib/thread-view.ts';
 import { workspaceUrl } from '../lib/workspace-url.ts';
+import { useConversationFacts } from './useConversationFacts.ts';
 import { useConversations } from './useConversations.ts';
 import { useDrawnFlowers } from './useDrawnFlower.ts';
 import { useElsewhere } from './useElsewhere.ts';
 import { useMakeChat } from './useMakeChat.ts';
+import { useSession } from './useSession.ts';
 import { useSnapshotFacts } from './useSnapshotFacts.ts';
 import { useStoredFlower } from './useStoredFlower.ts';
 
@@ -46,8 +56,10 @@ export function useWorkspace(props: {
   initialPetal?: string | null;
   /** What stands on the canvas until the conversation draws its own. */
   standIn: CanvasFlower | null;
+  /** What a person can pick from. Null: the API couldn't say, so there's nothing to pick. */
+  catalogue?: Catalogue | null;
 }) {
-  const { shelf, standIn, initialElsewhere, ...chatProps } = props;
+  const { shelf, standIn, initialElsewhere, catalogue = null, ...chatProps } = props;
   const { state: chat, dispatch, actions: chatActions, refs } = useMakeChat(chatProps);
   const { rows, open, petal, section, busy, runId, question, items, recorded, asked } = chat;
 
@@ -197,6 +209,11 @@ export function useWorkspace(props: {
   }
 
   // Read when the page opens, and again when a turn starts or ends here: nothing runs on a timer.
+  const session = useSession(!recorded);
+  // Another agent's conversation needs no wallet here: nothing here is spent on it.
+  const needsWallet = !recorded && !initialElsewhere && session.known && !session.account;
+  // Until the server has said who's here, nothing offers to ask or to connect.
+  const composerShown = recorded || Boolean(initialElsewhere) || Boolean(session.account);
   const listed = useConversations(recorded ? null : `${runId}:${busy}:${elsewhereRef}`);
   const conversations = useMemo(
     () => conversationRows(listed, { runId, elsewhere: elsewhereRef ?? undefined }),
@@ -208,7 +225,8 @@ export function useWorkspace(props: {
   const cameBare =
     !props.initialRun && !initialElsewhere && !props.initialQuestion && !props.initialPetal;
   const nothingOpened = (props.initialOpen?.kind ?? 'latest') === 'latest';
-  const listOpen = listChoice ?? (cameBare && nothingOpened && conversations.length > 0);
+  const hasList = conversations.length > 0 || Boolean(session.account);
+  const listOpen = listChoice ?? (cameBare && nothingOpened && hasList);
 
   const onCanvas = canvasShown(canvas, comingBack, standIn);
   // The canvas's flower is the panel's, or is on its way there: only then does it have a selected petal.
@@ -220,6 +238,20 @@ export function useWorkspace(props: {
     () => composerTarget(panelFlower, selectedPetal),
     [panelFlower, selectedPetal],
   );
+  // A pick holds from now on. It's kept at once on a conversation that's going, and goes with the first
+  // message on a new one.
+  const conversation = useConversationFacts(initialElsewhere ? null : runId, busy);
+  const [picked, setPicked] = useState<Settings | null>(null);
+  const settings = picked ?? conversation?.settings ?? catalogue?.default ?? null;
+  const showModel = Boolean(catalogue && settings && !recorded && !initialElsewhere);
+  const [modelsOpen, setModelsOpen] = useState(false);
+
+  // The box's cursor once there's a box to be in, after the server says who's here.
+  const box = refs.box;
+  useEffect(() => {
+    if (session.account && !initialElsewhere) box.current?.focus();
+  }, [session.account, initialElsewhere, box]);
+
   const composer = composerView({
     question,
     runId,
@@ -272,12 +304,31 @@ export function useWorkspace(props: {
             elsewherePacket?.question ??
             'Conversation'),
       conversations,
+      hasList,
       listOpen,
+      session,
+      needsWallet,
+      composerShown,
+      question,
+      pill:
+        showModel && catalogue && settings
+          ? modelPill(catalogue, settings, conversation?.answered ?? null)
+          : null,
+      models: showModel && catalogue && settings ? modelOptions(catalogue, settings) : [],
+      modelsOpen: showModel && modelsOpen,
       recorded,
     },
     actions: {
       setQuestion: chatActions.setQuestion,
-      send: () => chatActions.send(questionPrefix(panelFlower, target)),
+      send: () => chatActions.send(questionPrefix(panelFlower, target), picked ?? undefined),
+      toggleModels: () => setModelsOpen(!modelsOpen),
+      pickModel: (id: string) => {
+        if (!catalogue || !settings) return;
+        const next = withModel(catalogue, settings, id);
+        setPicked(next);
+        setModelsOpen(false);
+        if (runId) void saveSettings(runId, next);
+      },
       refollow: chatActions.refollow,
       openTurn: (index: number) => {
         dispatch({

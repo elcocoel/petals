@@ -5,7 +5,14 @@
 import type { EventMap, NearConnector } from '@hot-labs/near-connect';
 import { base64ToBytes, type Prepared, type WalletSignature } from './publish.ts';
 
-type Network = 'testnet' | 'mainnet';
+export type Network = 'testnet' | 'mainnet';
+
+/**
+ * The one network a person signs in on. A working default: real people hold mainnet wallets, and NEAR
+ * Mobile and HOT are mainnet only. A testnet and a mainnet wallet are different people, even with the same
+ * key, so this is a one-line edit and nothing else may name it.
+ */
+export const SIGN_IN_NETWORK: Network = 'mainnet';
 
 // One connector per network for the life of the page: each one loads the wallet list and adds
 // window listeners. MyNearWallet is shutting down.

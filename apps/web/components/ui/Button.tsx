@@ -6,7 +6,15 @@
 import type { MouseEventHandler, ReactNode } from 'react';
 import { Icon } from './Icon.tsx';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'starter' | 'link' | 'quiet' | 'row' | 'tile';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'starter'
+  | 'link'
+  | 'quiet'
+  | 'row'
+  | 'tile'
+  | 'pill';
 
 /** The behaviour each variant inherits (packages/tokens/behaviours.ts). `row` and `tile` stay v1. */
 const BEHAVIOUR: Partial<Record<ButtonVariant, 'action' | 'link'>> = {
@@ -15,6 +23,7 @@ const BEHAVIOUR: Partial<Record<ButtonVariant, 'action' | 'link'>> = {
   starter: 'action',
   link: 'link',
   quiet: 'link',
+  pill: 'action',
 };
 
 const VARIANTS: Record<ButtonVariant, string> = {
@@ -26,6 +35,8 @@ const VARIANTS: Record<ButtonVariant, string> = {
   link: 'h-auto bg-transparent px-0 type-label text-primary hover:underline',
   quiet: 'h-auto bg-transparent px-0 type-caption text-muted hover:text-primary hover:underline',
   row: 'h-auto w-full justify-start gap-text-gap border border-hairline bg-transparent p-text-gap text-left whitespace-normal text-primary aria-pressed:border-l-heavy aria-pressed:border-l-accent data-current:border-l-heavy data-current:border-l-accent',
+  // A setting beside the field, that opens what it can be.
+  pill: 'h-auto justify-start gap-space-8 border border-hairline bg-transparent px-space-8 py-space-4 text-left type-mono whitespace-normal text-primary aria-pressed:border-primary',
   tile: 'h-auto w-tile-width flex-col items-start gap-text-gap bg-transparent px-0 text-left whitespace-normal text-primary',
 };
 
