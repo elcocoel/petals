@@ -13,6 +13,9 @@ for env_file in near-ai.env petal-wallet.env; do
     set +a
   fi
 done
+# Elco's real work lives outside any worktree, so a rebuild or a lane change can't split or lose it.
+export PETAL_STATE_DIR="${PETAL_STATE_DIR:-$HOME/Library/Application Support/Petals/elco}"
+mkdir -p "$PETAL_STATE_DIR" && chmod 700 "$PETAL_STATE_DIR"
 export PETAL_API_MOCK=0
 export PETAL_MAP_NETWORK=testnet
 export PETAL_MAP_RECEIVER=petals.testnet

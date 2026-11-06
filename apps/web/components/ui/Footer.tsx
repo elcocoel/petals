@@ -1,7 +1,8 @@
-// Figma's Footer (66:2360): the big wordmark, the links, the small print.
+// Figma's Footer (66:2360): the big wordmark, the links, the small print. GitHub goes public before
+// submission (T149, T150), and Community has no address yet.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
-import { MetaRow } from './MetaRow.tsx';
+import { Mono } from './Mono.tsx';
 import { Section } from './Section.tsx';
 import { TextLink } from './TextLink.tsx';
 import { Wordmark } from './Wordmark.tsx';
@@ -17,11 +18,11 @@ export function Footer() {
             <TextLink href={siteLinks.gallery}>{copy.links.gallery}</TextLink>
             <TextLink href={siteLinks.howItWorks}>{copy.links.howItWorks}</TextLink>
             <TextLink href={siteLinks.connect}>{copy.links.docs}</TextLink>
-            <TextLink href={siteLinks.community}>{copy.links.community}</TextLink>
             <TextLink href={siteLinks.noDestination}>{copy.links.github}</TextLink>
+            <TextLink href={siteLinks.noDestination}>{copy.links.community}</TextLink>
           </div>
         </div>
-        <MetaRow start={copy.built} end={copy.tagline} />
+        <Mono>{copy.built}</Mono>
       </div>
     </Section>
   );

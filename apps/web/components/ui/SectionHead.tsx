@@ -1,5 +1,5 @@
 // An eyebrow, a title, a paragraph: the head of nearly every section, with Figma's gaps per size.
-// A line break in the title is written in the copy.
+// A line break in the title or the paragraph is written in the copy.
 import { Fragment, type ReactNode } from 'react';
 import { Mono } from './Mono.tsx';
 
@@ -55,7 +55,7 @@ export function SectionHead({
       <Tag className={`my-0 whitespace-pre-line ${titleType} ${eyebrow ? gap : ''}`}>
         {typeof title === 'string' ? titleLines(title) : title}
       </Tag>
-      {body && <p className={`mb-0 text-pretty ${bodyType}`}>{body}</p>}
+      {body && <p className={`mb-0 whitespace-pre-line text-pretty ${bodyType}`}>{body}</p>}
     </div>
   );
 }

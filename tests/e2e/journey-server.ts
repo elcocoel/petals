@@ -1,7 +1,13 @@
 // A whole person's journey in a real browser, with no real wallet and no model spend. Run by hand;
 // `pnpm test:e2e` doesn't.
 //
-//   node tests/e2e/journey-server.ts [--web-port 3190] [--state <dir>]
+//   node tests/e2e/journey-server.ts [--web-port 3190] [--state <dir>] [--seed]
+//
+// With --seed there's also a small workspace to come back to (workspace-seed.ts): conversations, work from
+// another door, follows and notes, under one session, and a link on this server that hands you that
+// session and sends you to the site. A link, not a line to paste: a page can't overwrite an HttpOnly cookie
+// from an earlier visit, so the line would fail with no error. Cookies don't care about ports, so this
+// server can set the site's. It uses 127.0.0.1, so localhost's cookies, your real app's, are left alone.
 //
 // On 127.0.0.1:3189 it serves a stub model behind the real NEAR AI client (/v1, stub-model.ts), its call
 // count (/calls) and test wallets (/wallet/<name>.js, test-wallet.ts). It prepares a state folder, new
@@ -22,12 +28,17 @@ import { parseArgs } from 'node:util';
 import { mintInvite, openPrivateStore } from '@petal/agent';
 import { stubModel } from './stub-model.ts';
 import { seedSnippet, WALLET_NAME, walletScript } from './test-wallet.ts';
+import { SESSION_COOKIE, type SeedResult, seedWorkspace } from './workspace-seed.ts';
 
 const PORT = 3189;
 const BASE = `http://127.0.0.1:${PORT}`;
 
 const { values } = parseArgs({
-  options: { 'web-port': { type: 'string', default: '3190' }, state: { type: 'string' } },
+  options: {
+    'web-port': { type: 'string', default: '3190' },
+    state: { type: 'string' },
+    seed: { type: 'boolean', default: false },
+  },
 });
 const webPort = values['web-port'];
 
@@ -57,7 +68,18 @@ function prepareState(dir: string | undefined): Prepared {
 /** A value as a shell would need it typed. */
 const quoted = (s: string) => (/^[\w./:=-]+$/.test(s) ? s : `'${s.replaceAll("'", `'\\''`)}'`);
 
-function instructions({ stateDir, walletKey, invite }: Prepared): string {
+function seededLines(seed: SeedResult): string {
+  return `
+5. A workspace to come back to: ${seed.conversations} conversations, one of them from another door, ${seed.follows} follows and ${seed.notes} notes.
+   ${seed.fresh ? 'It was made just now.' : 'This folder already had it, so it was left as it was.'} Open this link. It gives this browser that session, which holds the invite, and sends you to the site:
+
+   http://127.0.0.1:${PORT}/session
+
+   Use the site at http://127.0.0.1:${webPort} from then on, not localhost. The cookie belongs to 127.0.0.1.
+`;
+}
+
+function instructions({ stateDir, walletKey, invite }: Prepared, seed: SeedResult | null): string {
   const env = {
     PETAL_API_MOCK: '0',
     PETAL_AGENT_ACCESS: 'gated',
@@ -97,19 +119,30 @@ Petals journey server: a stub model and test wallets on ${BASE}. It spends nothi
    To redeem it from the console:
 
    ${redeem}
-
+${seed ? seededLines(seed) : ''}
 A new map waits for a yes, so the first question asks, and "yes" draws the flower.
 
 The stub's call count: ${BASE}/calls
-To come back later as the same people: node tests/e2e/journey-server.ts --web-port ${webPort} --state ${quoted(stateDir)}
+To come back later as the same people: node tests/e2e/journey-server.ts --web-port ${webPort} --state ${quoted(stateDir)}${seed ? ' --seed' : ''}
 That keeps the wallet key and the data, and prints a new invite.
 Ctrl-C stops this server. The site is yours to stop.
 `;
 }
 
+let seededSession: string | null = null;
+
 const stub = stubModel();
 const server = createServer((req, res) => {
   const path = new URL(req.url ?? '/', BASE).pathname;
+  if (path === '/session' && seededSession) {
+    res.writeHead(302, {
+      'set-cookie': `${SESSION_COOKIE}=${seededSession}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 86_400}`,
+      location: `http://127.0.0.1:${webPort}/make`,
+      'cache-control': 'no-store',
+    });
+    res.end();
+    return;
+  }
   if (path === '/calls') {
     res.writeHead(200, {
       'content-type': 'application/json',
@@ -138,6 +171,16 @@ server.on('error', (e: NodeJS.ErrnoException) => {
   );
   process.exit(1);
 });
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(instructions(prepareState(values.state)));
+server.listen(PORT, '127.0.0.1', async () => {
+  const prepared = prepareState(values.state);
+  const seed = values.seed
+    ? await seedWorkspace({
+        stateDir: prepared.stateDir,
+        modelBase: `${BASE}/v1`,
+        walletKey: prepared.walletKey,
+        inviteId: prepared.invite.id,
+      })
+    : null;
+  seededSession = seed?.session ?? null;
+  console.log(instructions(prepared, seed));
 });

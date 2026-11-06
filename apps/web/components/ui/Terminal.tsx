@@ -1,5 +1,5 @@
-// The terminal on the builders' band (66:2325): a bar, then mono lines, some in the accent. It's an
-// illustration, not a shell, and its bar says so.
+// The terminal on the builders' band (66:2325): a bar, then mono lines, some in the accent. A picture of a
+// shell, not a shell. What's in it is real: the page passes the same command /connect hands out.
 import { BarBox } from './BarBox.tsx';
 import { Icon } from './Icon.tsx';
 import { MetaRow } from './MetaRow.tsx';
@@ -10,7 +10,7 @@ export function Terminal({
   lines,
 }: {
   start: string;
-  end: string;
+  end?: string;
   /** `returned`: what came back, after an arrow pointing home. */
   lines: readonly { text: string; accent?: boolean; returned?: boolean }[];
 }) {
