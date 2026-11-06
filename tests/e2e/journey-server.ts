@@ -122,7 +122,11 @@ Petals journey server: a stub model and test wallets on ${BASE}. It spends nothi
 ${seed ? seededLines(seed) : ''}
 A new map waits for a yes, so the first question asks, and "yes" draws the flower.
 
-The stub's call count: ${BASE}/calls
+A person's own credit needs no invite. Sign in, read the id from /api/v1/me, then, here on Node 24:
+
+   node scripts/fund-person.ts --state ${quoted(stateDir)} --person <prs_id> --total 5
+
+The stub's call count, and the model and effort each call named: ${BASE}/calls
 To come back later as the same people: node tests/e2e/journey-server.ts --web-port ${webPort} --state ${quoted(stateDir)}${seed ? ' --seed' : ''}
 That keeps the wallet key and the data, and prints a new invite.
 Ctrl-C stops this server. The site is yours to stop.
