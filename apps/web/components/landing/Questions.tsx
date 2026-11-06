@@ -17,7 +17,7 @@ const GLYPHS: readonly GlyphKind[] = [
 
 export function Questions() {
   return (
-    <Section rule="top" layout="split">
+    <Section tone="stone" rule="top" layout="split">
       <SectionHead eyebrow={copy.eyebrow} title={copy.title} body={copy.body} />
       <div className="border-t border-hairline">
         {copy.items.map((item, i) => (

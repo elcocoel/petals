@@ -18,7 +18,7 @@ const HEROES: readonly ThumbKind[] = ['blocs', 'even', 'tower', 'blocs', 'even']
 
 export function FlowerRead() {
   return (
-    <Section rule="top" layout="split" figure="start">
+    <Section tone="mist" rule="top" layout="split" figure="start">
       <figure className="flex flex-col gap-block-gap">
         <Drawing kind="reading-flower" />
         <div className="flex flex-wrap items-end gap-text-gap">

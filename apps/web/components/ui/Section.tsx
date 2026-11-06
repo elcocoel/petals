@@ -4,8 +4,8 @@
 // kinds of section. `split` is text and a figure, divided by one ratio (splitText in packages/tokens),
 // and the figure can take either side. `columns` is three equal columns under a head and over a foot.
 // Nav and Footer are this too, with `bar` padding. Grayscale smoothing is how Figma draws type; macOS's
-// default thickens it.
-import type { SurfaceName } from '@petal/tokens';
+// default thickens it. `tone` picks a light band's ground and texture in version 2, and says nothing in v1.
+import type { SurfaceName, ToneName } from '@petal/tokens';
 import type { ReactNode } from 'react';
 
 const PADDING = {
@@ -23,6 +23,7 @@ const COLUMNS = 'grid grid-cols-1 gap-column-gap md:grid-cols-3';
 
 export function Section({
   kind = 'ground',
+  tone,
   as = 'section',
   padding = 'section',
   layout,
@@ -34,6 +35,8 @@ export function Section({
   children,
 }: {
   kind?: SurfaceName;
+  /** Which light ground: for a `ground` band. Without one it's the plain ground. */
+  tone?: ToneName;
   as?: 'section' | 'footer' | 'nav';
   padding?: keyof typeof PADDING;
   /** Lays out the children: two of them for `split`, three for `columns`. */
@@ -58,7 +61,13 @@ export function Section({
       children
     );
   return (
-    <Tag data-surface={kind} data-b="surface" id={id} className={rule && RULES[rule]}>
+    <Tag
+      data-surface={kind}
+      data-tone={tone}
+      data-b="surface"
+      id={id}
+      className={rule && RULES[rule]}
+    >
       <div className={`mx-auto w-full max-w-page-width antialiased ${PADDING[padding]}`}>
         {head && <div className="mb-column-gap">{head}</div>}
         {body}

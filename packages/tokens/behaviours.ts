@@ -38,6 +38,16 @@ export const behaviours = [
     purpose: 'Grain on every band, a soft gradient on the ink and mint ones',
     via: 'css',
   },
+  {
+    name: 'surface.tone',
+    purpose: 'A light band takes one of three grounds and textures: paper, mist or stone',
+    via: 'css',
+  },
+  {
+    name: 'surface.drift',
+    purpose: 'A soft tone drifts over a textured band, leaning to the pointer and the scroll',
+    via: 'both',
+  },
   { name: 'surface.reveal', purpose: 'A section fades in as you arrive at it', via: 'both' },
   {
     name: 'surface.spotlight',
