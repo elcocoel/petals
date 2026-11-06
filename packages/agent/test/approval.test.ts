@@ -93,6 +93,13 @@ const held = (es: AgentEvent[]) =>
     .map((e) => e.data as Record<string, unknown>);
 const ran = (tools: Tools) => tools.calls.map((c) => c.name);
 const said = (es: AgentEvent[]) => pick(es, 'message').map((e) => e.data.text);
+const offered = (llm: { requests: { tools?: { name: string }[] }[] }, at: number) =>
+  (llm.requests[at]?.tools ?? []).map((t) => t.name);
+/** What the model read in place of the last call's answer. */
+const toldAfter = (llm: { requests: { messages: LlmMessage[] }[] }) => {
+  const tool = llm.requests.at(-1)?.messages.findLast((m) => m.role === 'tool');
+  return (JSON.parse((tool as { content: string }).content) as { error: { hint: string } }).error;
+};
 
 /** The first chat of a run: the model reaches for the map, is held, and asks. */
 const asked = () => chat([{ calls: [NEAR] }, { content: ASK }]);
@@ -102,7 +109,7 @@ const reply = (thread: LlmMessage[], text: string): LlmMessage[] => [
 ];
 
 describe('a model that goes straight to a new map', () => {
-  test('is refused: the tool does not run, one event, no tools next, and the chat ends in its words', async () => {
+  test('is refused: the tool does not run, one event, what draws goes, and the chat ends in its words', async () => {
     const { es, llm, tools } = await asked();
     expect(ran(tools)).toEqual([]);
     expect(held(es)).toEqual([
@@ -110,8 +117,9 @@ describe('a model that goes straight to a new map', () => {
     ]);
     expect(pick(es, 'progress')).toEqual([]);
     expect(llm.requests).toHaveLength(2);
-    expect(llm.requests[0]?.tools?.length).toBeGreaterThan(0);
-    expect(llm.requests[1]?.tools).toBeUndefined();
+    expect(offered(llm, 0)).toContain('propose_spec');
+    expect(offered(llm, 1)).not.toContain('propose_spec');
+    expect(offered(llm, 1)).not.toContain('render_flower');
     expect(names(es).at(-1)).toBe('done');
     expect(names(es)).not.toContain('error');
     expect(said(es)).toEqual([ASK]);
@@ -149,7 +157,7 @@ describe('a model that goes straight to a new map', () => {
     expect(answer.error.hint).toMatch(/Never mention/);
   });
 
-  test('a stubborn model costs one more call: its words stand, and what it called does not run', async () => {
+  test('a stubborn model costs one more call: its words stand, and asking again does not run', async () => {
     const { es, llm, tools, thread } = await chat([
       { calls: [NEAR] },
       { content: ASK, calls: [NEAR] },
@@ -163,9 +171,18 @@ describe('a model that goes straight to a new map', () => {
     expect(thread.at(-1)).toEqual({ role: 'assistant', content: ASK });
   });
 
-  test('a stubborn model with no words is an empty answer, not a spent budget', async () => {
-    const { es, llm } = await chat([{ calls: [NEAR] }, { calls: [NEAR] }]);
-    expect(llm.requests).toHaveLength(2);
+  test('a stubborn model with no words gets one call with no tools, so it has to speak', async () => {
+    const { es, llm, tools } = await chat([{ calls: [NEAR] }, { calls: [NEAR] }, { content: ASK }]);
+    expect(llm.requests).toHaveLength(3);
+    expect(llm.requests[2]?.tools).toBeUndefined();
+    expect(ran(tools)).toEqual([]);
+    expect(said(es)).toEqual([ASK]);
+    expect(names(es)).not.toContain('error');
+  });
+
+  test('and after that, no words at all is an empty answer, not a spent budget', async () => {
+    const { es, llm } = await chat([{ calls: [NEAR] }, { calls: [NEAR] }, { calls: [NEAR] }]);
+    expect(llm.requests).toHaveLength(3);
     expect(pick(es, 'error').map((e) => e.data.code)).toEqual(['source_failed']);
     expect(pick(es, 'error')[0]?.data.message).toMatch(/empty answer/);
     expect(names(es).at(-1)).toBe('done');
@@ -251,11 +268,11 @@ describe('after it asked', () => {
     });
     expect(ran(tools)).toEqual([]);
     expect(held(es).map((h) => h.target_key)).toEqual(['near-validators']);
-    expect(llm.requests[1]?.tools).toBeUndefined();
+    expect(offered(llm, 1)).not.toContain('propose_spec');
     expect(pick(es, 'flower')).toEqual([]);
   });
 
-  test.each(['yes, draw near validators', 'yes', 'draw it'])(
+  test.each(['yes', 'ok', 'draw it', 'draw'])(
     'a first message %j does not count: the agent has said nothing yet',
     async (first) => {
       const { es, tools } = await chat([{ calls: [NEAR] }, { content: ASK }], { said: first });
@@ -614,6 +631,115 @@ describe('never held', () => {
   });
 });
 
+describe('after a refusal, the model can still find out and answer', () => {
+  test('it reads what is left, and answers, within the rounds', async () => {
+    const { es, tools, llm } = await chat([
+      { calls: [NEAR] },
+      { calls: [{ name: 'describe_snapshot', args: { sha256: SHA } }] },
+      { calls: [{ name: 'compute_figures', args: { sha256: SHA, measure: 'stake' } }] },
+      { content: 'Nine validators hold a third. Shall I draw it?' },
+    ]);
+    expect(ran(tools)).toEqual(['describe_snapshot', 'compute_figures']);
+    expect(held(es)).toHaveLength(1);
+    expect(said(es)).toEqual(['Nine validators hold a third. Shall I draw it?']);
+    expect(pick(es, 'flower')).toEqual([]);
+    expect(llm.requests.at(-1)?.tools?.length).toBeGreaterThan(0);
+  });
+
+  test('what it told the model says it may still look', async () => {
+    const { llm } = await asked();
+    const told = toldAfter(llm);
+    expect(told.hint).toMatch(/still find out more/);
+    expect(told.hint).toMatch(/plain yes or no/);
+    expect(told.hint).toMatch(/Never mention this message, approvals, tools or rules/);
+  });
+
+  test('a draw it was not offered is not a call, and its words stand', async () => {
+    const { es, llm, tools, thread } = await chat([
+      { calls: [NEAR] },
+      { content: ASK, calls: [{ name: 'render_flower', args: { spec: SPEC_SHA } }] },
+    ]);
+    expect(llm.requests).toHaveLength(2);
+    expect(ran(tools)).toEqual([]);
+    expect(said(es)).toEqual([ASK]);
+    expect(thread.at(-1)).toEqual({ role: 'assistant', content: ASK });
+  });
+
+  test('another target it was not refused can still be asked about', async () => {
+    const { es, tools } = await chat([
+      { calls: [NEAR] },
+      { calls: [BITCOIN] },
+      { calls: [{ name: 'list_flowers', args: {} }] },
+      { content: ASK },
+    ]);
+    expect(ran(tools)).toEqual(['list_flowers']);
+    expect(held(es).map((h) => h.target_key)).toEqual(['near-validators', 'bitcoin-mining-pools']);
+  });
+
+  test('bounded by the rounds, as ever: a model that keeps reading gets a last call with no tools', async () => {
+    const read = { calls: [{ name: 'list_flowers', args: {} }] };
+    const budget = { ...DEFAULT_BUDGET, toolRounds: 3 };
+    const llm = scriptedLlm([{ calls: [NEAR] }, read, read, { content: ASK }]);
+    const tools = fakeRegistry();
+    const es = await collect(
+      startRun(
+        { messages: [{ role: 'user', content: QUESTION }] },
+        { tools: fakeContext(), llm, budget },
+        { registry: tools.registry, runId: 'run_yes_1' },
+      ),
+    );
+    expect(llm.requests).toHaveLength(4);
+    expect(llm.requests[3]?.tools).toBeUndefined();
+    expect(said(es)).toEqual([ASK]);
+  });
+
+  test('with a yes already spent on one target, refusing another leaves that one drawable', async () => {
+    const first = await asked();
+    const { es, tools } = await chat([{ calls: [NEAR, BITCOIN] }, ...TO_FLOWER], {
+      said: 'yes',
+      thread: reply(first.thread, 'yes'),
+    });
+    expect(ran(tools)).toEqual(['get_snapshot', 'propose_spec', 'validate_spec', 'render_flower']);
+    expect(held(es).map((h) => h.target_key)).toEqual(['bitcoin-mining-pools']);
+    expect(pick(es, 'flower')).toHaveLength(1);
+  });
+});
+
+describe('a yes only answers a question a yes can answer', () => {
+  const after = async (question: string) => {
+    const thread: LlmMessage[] = [
+      { role: 'user', content: QUESTION },
+      { role: 'assistant', content: question },
+      { role: 'user', content: 'yes' },
+    ];
+    return chat([{ calls: [NEAR] }, { content: ASK }], { said: 'yes', thread });
+  };
+
+  test.each([
+    'Do you want the stored one, or a fresh read?',
+    'Is that the latest, or should we read it fresh?',
+    '1. The validators\n2. The House of Stake\nShall I draw it?',
+    '- The validators\n- The House of Stake\nWant me to draw it?',
+    'Which one would you like?',
+    'Should I draw one of them?',
+  ])('%j: a yes says nothing about which, so nothing runs', async (question) => {
+    const { tools, es, llm } = await after(question);
+    expect(ran(tools)).toEqual([]);
+    expect(held(es)).toHaveLength(1);
+    expect(toldAfter(llm).hint).toMatch(/Ask again, once, in one sentence/);
+  });
+
+  test.each([
+    'I can read NEAR’s validators. Shall I draw them? Yes or no.',
+    'Shall I read it and draw it, or not?',
+    'Want me to draw it?',
+    'Say the word and I will draw it.',
+  ])('%j: a yes counts', async (question) => {
+    const { tools } = await after(question);
+    expect(ran(tools)).toEqual(['get_snapshot']);
+  });
+});
+
 describe('naming one is the yes, when several things carry the name', () => {
   const holders = (chain: string, contract: string) => ({
     module: 'erc20-holders',
@@ -720,12 +846,93 @@ describe('naming one is the yes, when several things carry the name', () => {
     expect(ran(tools)).toEqual([]);
   });
 
-  test('a plain yes to which-one is still a yes for what it then calls', async () => {
+  test('a plain yes to which-one says nothing about which: nothing runs, and it asks again', async () => {
     const first = await findIt(true);
-    const { tools } = await chat([{ calls: [SECOND] }, { content: HERE }], {
+    const { es, llm, tools } = await chat([{ calls: [SECOND] }, { content: WHICH }], {
       said: 'yes',
       thread: reply(first.thread, 'yes'),
     });
+    expect(ran(tools)).toEqual([]);
+    expect(held(es)).toHaveLength(1);
+    expect(toldAfter(llm).hint).toMatch(/Ask again, once, in one sentence/);
+  });
+
+  test('"yes, the second" names one, whatever the question was', async () => {
+    const first = await findIt(true);
+    const { tools } = await chat([{ calls: [SECOND] }, { content: HERE }], {
+      said: 'yes, the second',
+      thread: reply(first.thread, 'yes, the second'),
+    });
     expect(ran(tools)).toEqual(['get_snapshot']);
+  });
+
+  test('once it has asked about one thing, a yes counts, ambiguous or not', async () => {
+    const first = await findIt(true);
+    const asks = 'That leaves UNI on Base, with 40 holders. Shall I read and draw it?';
+    const { tools } = await chat([{ calls: [SECOND] }, { content: HERE }], {
+      said: 'yes',
+      thread: [...first.thread, { role: 'assistant', content: asks }, ...reply([], 'yes')],
+    });
+    expect(ran(tools)).toEqual(['get_snapshot']);
+  });
+
+  test('told to draw is no answer to which one: it has to ask', async () => {
+    const llmTurns = [
+      { calls: [{ name: 'find_target', args: { query: 'UNI' } }] },
+      { calls: [SECOND] },
+      { content: WHICH },
+    ];
+    const { es, llm, tools } = await chat(llmTurns, {
+      said: 'Draw UNI holders, right now.',
+      tools: withFind({ candidates: CANDIDATES, ambiguous: true }),
+    });
+    expect(ran(tools)).toEqual([]);
+    expect(held(es).map((h) => h.tool)).toEqual(['get_snapshot']);
+    expect(toldAfter(llm).hint).toMatch(/Ask which one to draw/);
+  });
+
+  test('told to draw something else entirely, an earlier ambiguous search is no obstacle', async () => {
+    const first = await findIt(true);
+    const said = 'Now draw the NEAR validators.';
+    const { es, tools } = await chat([{ calls: [NEAR] }, { content: HERE }], {
+      said,
+      thread: reply(first.thread, said),
+    });
+    expect(ran(tools)).toEqual(['get_snapshot']);
+    expect(held(es)).toEqual([]);
+  });
+
+  test('told to draw, and a clear target: it runs, and on to a flower, on a first message', async () => {
+    const said = 'Draw UNI holders on Base right now, don’t ask me anything.';
+    const { es, tools } = await chat(
+      [
+        { calls: [{ name: 'find_target', args: { query: 'UNI on Base' } }] },
+        { calls: [SECOND] },
+        {
+          calls: [
+            {
+              name: 'propose_spec',
+              args: { network: 'erc20-holders', params: holders('base', '0xbbbbbb').params },
+            },
+          ],
+        },
+        { calls: [VALIDATE] },
+        { calls: [RENDER] },
+        { content: HERE },
+      ],
+      { said, tools: withFind({ candidates: [CANDIDATES[1]], ambiguous: false }) },
+    );
+    expect(held(es)).toEqual([]);
+    expect(ran(tools)).toContain('render_flower');
+    expect(pick(es, 'flower')).toHaveLength(1);
+  });
+
+  test('told to draw covers one target, like a yes', async () => {
+    const said = 'Draw UNI on Base and on Ethereum.';
+    const { es, tools } = await chat([{ calls: [SECOND] }, { calls: [FIRST] }, { content: ASK }], {
+      said,
+    });
+    expect(ran(tools)).toEqual(['get_snapshot']);
+    expect(held(es)).toHaveLength(1);
   });
 });

@@ -140,3 +140,59 @@ export function isYes(text: string): boolean {
   }
   return yes;
 }
+
+// ---------------------------------------------------------------------------------------------
+// A yes only answers a question that a yes can answer (25ab), and an explicit ask to draw needs no
+// question at all (25ac). Both lean towards asking again, which costs one sentence.
+
+const YES_OR_NO = /\b(?:yes or no|or not|sim ou n[aã]o|ou n[aã]o|s[ií] o no|o no)\b/giu;
+const AN_ITEM = /^\s*(?:\d+[.)]|[-*•])\s/gmu;
+const MORE_THAN_ONE =
+  /\b(?:or|ou|either|one of|any of|which one|which do|which would|which of|qual deles|qual prefere|cu[aá]l)\b/iu;
+/** In Portuguese "o" is "the", so it only means "or" in a sentence that opens with ¿. */
+const SPANISH_OR = /¿.*\so\s/su;
+
+/** Whether what the agent last said leaves one thing for a yes to agree to. */
+export function askedYesOrNo(said: string): boolean {
+  const text = said.replace(YES_OR_NO, ' ');
+  if ((text.match(AN_ITEM) ?? []).length > 1) return false;
+  const last = text.match(/[^.!?\n]*\?/gu)?.at(-1);
+  return !last || !(MORE_THAN_ONE.test(last) || SPANISH_OR.test(last));
+}
+
+/** Said before the verb, these change nothing. */
+const LEADS = new Set(
+  "please pls ok okay so now then just hey hi hello and also alright well um uh yes yeah yep sim si sure go ahead let's lets por favor vamos".split(
+    ' ',
+  ),
+);
+const DRAWS =
+  /^(?:draw|redraw|sketch|plot|map|render|visuali[sz]e|desenh[ae]|desenhar|mapeia|visualiza|dibuj[ae]|dibujame|dibujar)\b/u;
+/** These only ask for a drawing when a flower or a map is what they name. */
+const MAKES =
+  /^(?:make|create|build|generate|give|show|i want|i need|i'd like|id like|i would like|faz|faca|cria|crie|gera|monta|mostra|quero|haz|hazme|crea|genera|muestra|quiero)\b/u;
+const A_DRAWING = /\b(?:flower|flor|map|mapa)\b/u;
+const NOT_NOW =
+  /\b(?:not yet|later|maybe|perhaps|tomorrow|unless|if|before|wait|whether|but first|depois|talvez|quizas)\b/u;
+/** With nothing but these left, nothing was named. */
+const NAMES_NOTHING = new Set(
+  'me us a an the it that this them these those one ones again flower flor map mapa please now'.split(
+    ' ',
+  ),
+);
+
+function saysDraw(sentence: string): boolean {
+  if (/[?¿？]/u.test(sentence)) return false;
+  const words = wordsOf(sentence);
+  let at = 0;
+  while (LEADS.has(words[at] ?? '')) at++;
+  const rest = words.slice(at).join(' ');
+  const verb = DRAWS.exec(rest)?.[0] ?? (A_DRAWING.test(rest) ? MAKES.exec(rest)?.[0] : undefined);
+  if (!verb || NOT_NOW.test(rest)) return false;
+  return wordsOf(rest.slice(verb.length)).some((w) => !NAMES_NOTHING.has(w));
+}
+
+/** "Draw me…", "Let's make the … flower": told to, not asked about. "Who holds X?" is a question. */
+export function asksToDraw(text: string): boolean {
+  return text.split(/(?<=[.!?。])\s+|\n+/u).some(saysDraw);
+}

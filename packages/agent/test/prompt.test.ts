@@ -14,6 +14,10 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).not.toMatch(/not_implemented/);
   });
 
+  test('came out shorter, because every byte is resent each turn', () => {
+    expect(Buffer.byteLength(readFileSync(PROMPT_FILE, 'utf8'))).toBeLessThan(8122);
+  });
+
   test('walks the six steps in the skill order, list_flowers first', () => {
     const steps = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf('## The six steps'));
     const numbered = steps.split('\n## ')[0]?.match(/^\d\. /gm) ?? [];
@@ -38,7 +42,7 @@ describe('SYSTEM_PROMPT', () => {
 
   test('says what T054 asks: tool figures only, sources, unknowns, unavailable primitives, keys', () => {
     expect(SYSTEM_PROMPT).toMatch(/Quote only numbers these two tools return/);
-    expect(SYSTEM_PROMPT).toMatch(/Every mapping cites a source id/);
+    expect(SYSTEM_PROMPT).toMatch(/Every mapping in the interpretation cites a source id/);
     expect(SYSTEM_PROMPT).toMatch(/`unknowns`: .*Never empty/);
     expect(SYSTEM_PROMPT).toMatch(/not available yet/);
     expect(SYSTEM_PROMPT).toMatch(/unless the person asks for a fresh analysis/);
@@ -58,8 +62,41 @@ describe('SYSTEM_PROMPT', () => {
   test('a new map starts only after a plain yes; a flower that exists is simply shown', () => {
     expect(SYSTEM_PROMPT).toMatch(/Never go from a question straight to a new map/);
     expect(SYSTEM_PROMPT).toMatch(/ask a plain yes or no before starting a new read and drawing/);
-    expect(SYSTEM_PROMPT).toMatch(/Get the snapshot, after the yes/);
-    expect(SYSTEM_PROMPT).toMatch(/asks for a flower that already exists is simply shown it/);
+    expect(SYSTEM_PROMPT).toMatch(/Propose and validate, after the yes/);
+    expect(SYSTEM_PROMPT).toMatch(/is simply shown, with its link/);
+  });
+
+  test('being told to draw is the yes, and a yes needs a yes-or-no question', () => {
+    expect(SYSTEM_PROMPT).toMatch(/Being told to draw is the yes/);
+    expect(SYSTEM_PROMPT).toMatch(/unless `ambiguous: true`/);
+    expect(SYSTEM_PROMPT).toMatch(/A yes counts only after a true yes-or-no question/);
+    expect(SYSTEM_PROMPT).toMatch(/ask again, once, in a sentence/);
+  });
+
+  test('talks: answers first, plain words, reads what is stored, picks a reading', () => {
+    expect(SYSTEM_PROMPT).toMatch(/Answer first, in sentences/);
+    expect(SYSTEM_PROMPT).toMatch(/"one line" means one line/);
+    expect(SYSTEM_PROMPT).toMatch(/No source ids, `fig:` ids, tool or module names, hashes/);
+    expect(SYSTEM_PROMPT).toMatch(/Read what's stored, then answer/);
+    expect(SYSTEM_PROMPT).toMatch(/Pick a reading/);
+    expect(SYSTEM_PROMPT).toMatch(/say no, then what's close/);
+    expect(SYSTEM_PROMPT).toMatch(/Never offer a payment quote/);
+  });
+
+  test('the report shape is gone: a flower is a link, a sentence, and what it can not tell', () => {
+    expect(SYSTEM_PROMPT).not.toMatch(/\*\*Flower\*\*|\*\*Mapping\*\*|\*\*What you'll see\*\*/);
+    expect(SYSTEM_PROMPT).toMatch(/the one thing it can't tell you/);
+    expect(SYSTEM_PROMPT).toMatch(/The mapping is on the page with the flower/);
+    expect(SYSTEM_PROMPT).toMatch(/A follow-up never repeats the mapping or a caveat/);
+    expect(SYSTEM_PROMPT).toMatch(/under 60 words/);
+  });
+
+  test('what was working stays: nothing invented, no keys, addresses are not people', () => {
+    expect(SYSTEM_PROMPT).toMatch(/Never invent data, numbers, sources or options/);
+    expect(SYSTEM_PROMPT).toMatch(/Never ask anyone for a key, a seed phrase or a signature/);
+    expect(SYSTEM_PROMPT).toMatch(/Addresses are not people/);
+    expect(SYSTEM_PROMPT).toMatch(/Never call an inferred identity proven/);
+    expect(SYSTEM_PROMPT).toMatch(/Publish, only when asked/);
   });
 
   test('a token is a ledger of holdings; Moloch shares are one, transferable or not', () => {
@@ -75,7 +112,7 @@ describe('SYSTEM_PROMPT', () => {
     expect(rules.match(/^\d\. /gm)).toHaveLength(6);
     expect(rules).toMatch(/Addresses are not people/);
     expect(rules).toMatch(/Never call an inferred identity proven/);
-    expect(rules).toMatch(/under 200 words/);
+    expect(rules).toMatch(/under 60 words/);
   });
 
   test('marks the shared text for skill/build.ts: one begin line, one end line, steps to rules between', () => {
@@ -103,6 +140,13 @@ describe('agentNotes', () => {
     expect(notes).toMatch(/at most 8 tool rounds and 300 s/);
     expect(notes).toMatch(/Today is 2026-11-04/);
     expect(notes).not.toMatch(/draft/i);
+  });
+
+  test('says what a refusal leaves, and never to mention it', () => {
+    const notes = agentNotes({ budget: DEFAULT_BUDGET, today: new Date() });
+    expect(notes).toMatch(/You keep the tools that only read/);
+    expect(notes).toMatch(/`stored_only`/);
+    expect(notes).toMatch(/Never mention approvals, tools or rules/);
   });
 
   test('names the draft spec by its hash, for variation_of', () => {

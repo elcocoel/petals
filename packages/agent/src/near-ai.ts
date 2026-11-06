@@ -52,6 +52,19 @@ export function costUsd(
   return Math.round(((usage.in * p.in + usage.out * p.out) / 1e6) * 1e9) / 1e9;
 }
 
+/** Tokens a model can read (research/connectors/near-agents-now.md, 6 Nov). */
+const CONTEXT_WINDOWS: Record<string, number> = {
+  'deepseek-ai/DeepSeek-V4.1-Flash-1017': 1_000_000,
+  'z-ai/glm-5.3-flash': 1_000_000,
+  'Qwen/Qwen3.8-27B': 262_000,
+  'anthropic/claude-haiku-5-5': 1_000_000,
+  'anthropic/claude-sonnet-5-5': 1_000_000,
+};
+/** A model not listed: the smallest window on NEAR AI's list, so a thread is compacted too soon, not late. */
+const UNKNOWN_WINDOW = 128_000;
+
+export const contextWindow = (model: string): number => CONTEXT_WINDOWS[model] ?? UNKNOWN_WINDOW;
+
 /**
  * Includes reasoning tokens: a low limit returns empty content, because the reasoning used it all.
  * An unused limit costs nothing, and each chat is capped in dollars anyway (Budget).
@@ -63,6 +76,12 @@ export const MAX_COMPLETION_TOKENS = 16_000;
  * 63-92 s and often hit the 120 s limit; at "low" it takes 26-58 s, and the tools check the rest.
  */
 export const REASONING_EFFORT = 'low';
+
+/**
+ * Anthropic's models on NEAR AI answer it with a 400, "reasoning_effort: Extra inputs are not
+ * permitted" (6 Nov), and so PETAL_MODEL=anthropic/* failed on every call.
+ */
+export const takesReasoningEffort = (model: string): boolean => !/^anthropic\//i.test(model);
 
 /** A model call that failed, with the error code the agent reports (tools.md codes). */
 export class LlmCallError extends Error {
@@ -325,7 +344,11 @@ export function createNearAiClient(
       defaultHeaders: { 'x-no-aliasing': 'true', 'Accept-Encoding': 'identity' },
       fetch: capture,
     });
-    const effort = o.reasoningEffort === undefined ? REASONING_EFFORT : o.reasoningEffort;
+    const effort = takesReasoningEffort(model)
+      ? o.reasoningEffort === undefined
+        ? REASONING_EFFORT
+        : o.reasoningEffort
+      : null;
     const completion = await client.chat.completions.create(
       {
         model,
