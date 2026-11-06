@@ -76,7 +76,7 @@ export function useWorkspace(props: {
     });
   }, [storedId, storedFlower, dispatch]);
 
-  const elsewhere = useElsewhere(initialElsewhere ?? null);
+  const { ref: elsewhereRef, read: elsewhere } = useElsewhere(initialElsewhere ?? null);
   const elsewherePacket = elsewhere && 'packet' in elsewhere ? elsewhere.packet : null;
   const shownRows = useMemo(
     () => (initialElsewhere ? elsewhereRows(elsewhere) : rows),
@@ -197,10 +197,10 @@ export function useWorkspace(props: {
   }
 
   // Read when the page opens, and again when a turn starts or ends here: nothing runs on a timer.
-  const listed = useConversations(recorded ? null : `${runId}:${busy}`);
+  const listed = useConversations(recorded ? null : `${runId}:${busy}:${elsewhereRef}`);
   const conversations = useMemo(
-    () => conversationRows(listed, { runId, elsewhere: initialElsewhere }),
-    [listed, runId, initialElsewhere],
+    () => conversationRows(listed, { runId, elsewhere: elsewhereRef ?? undefined }),
+    [listed, runId, elsewhereRef],
   );
   // box.close
   // Coming back with nothing in hand, the list is what there is to do. A person's choice wins from then on.
@@ -231,9 +231,9 @@ export function useWorkspace(props: {
 
   // the address holds what a reload needs
   useEffect(() => {
-    const url = workspaceUrl({ runId, open, petal, asked, elsewhere: initialElsewhere ?? null });
+    const url = workspaceUrl({ runId, open, petal, asked, elsewhere: elsewhereRef });
     if (url) window.history.replaceState(null, '', url);
-  }, [runId, open, petal, asked, initialElsewhere]);
+  }, [runId, open, petal, asked, elsewhereRef]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

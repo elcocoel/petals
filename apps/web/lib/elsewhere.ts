@@ -16,6 +16,9 @@ export interface ElsewherePacket {
 
 export type ElsewhereRead = { packet: ElsewherePacket } | { failed: string };
 
+/** An exploration's own id. Anything else in the address is a link's token. */
+export const isOwnId = (ref: string) => ref.startsWith('exp_');
+
 /** Until the agent's own name reaches us (CONNECTORS). "mcp" isn't a word a person uses. */
 export const WHERE = 'your own agent';
 

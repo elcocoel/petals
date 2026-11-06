@@ -98,6 +98,19 @@ export async function readElsewhere(ref: string): Promise<ElsewhereRead> {
   return { packet: json as unknown as Extract<ElsewhereRead, { packet: unknown }>['packet'] };
 }
 
+/**
+ * Makes an agent's work this browser's, by the continue link the agent holds, so it joins their list.
+ * Returns its id, or null if this link can't: a read link stays read-only.
+ */
+export async function claimElsewhere(token: string): Promise<string | null> {
+  const res = await fetch(`/api/v1/explorations/${encodeURIComponent(token)}/claim`, {
+    method: 'POST',
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { exploration?: string };
+  return json.exploration ?? null;
+}
+
 /** All a live drawing needs from a reading: render_flower's opt-in `reading`. */
 export type DrawnReading = Pick<Reading, 'title' | 'petals'>;
 
