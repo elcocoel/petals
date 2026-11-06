@@ -1,7 +1,6 @@
 // @petal/store (T189): private data, apart from public facts (SYS-002). Facts stay files by hash.
 export { MIGRATIONS } from './migrations.ts';
 export { openStore, type Store, stateStore } from './open.ts';
-export { SEARCH_HIT_CLOSE, SEARCH_HIT_OPEN } from './tables.ts';
 export type {
   ChallengeCheck,
   ConversationRow,
@@ -26,3 +25,4 @@ export type {
   WalletBindingRow,
   WorkspaceNoteRow,
 } from './tables.ts';
+export { SEARCH_HIT_CLOSE, SEARCH_HIT_OPEN } from './tables.ts';

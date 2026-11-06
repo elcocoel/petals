@@ -912,7 +912,8 @@ export function tables(db: Db) {
           r.updated_at,
         );
       },
-      get: (id: string) => db.get<WorkspaceNoteRow>('SELECT * FROM workspace_note WHERE id = ?', id),
+      get: (id: string) =>
+        db.get<WorkspaceNoteRow>('SELECT * FROM workspace_note WHERE id = ?', id),
       /** Newest first; `about` narrows it to one thing. */
       list: (owner: string, about: string | null, limit: number) =>
         about === null
@@ -957,7 +958,8 @@ export function tables(db: Db) {
       /** One document, new or replacing what's there. No text makes it a marker. */
       put: (doc: SearchDoc, text: string | null) =>
         db.tx(() => {
-          const clean = (s: string) => s.replaceAll(SEARCH_HIT_OPEN, ' ').replaceAll(SEARCH_HIT_CLOSE, ' ');
+          const clean = (s: string) =>
+            s.replaceAll(SEARCH_HIT_OPEN, ' ').replaceAll(SEARCH_HIT_CLOSE, ' ');
           const { id } = db.get<{ id: number }>(
             `INSERT INTO search_doc (owner, kind, ref, title, about, at) VALUES (?, ?, ?, ?, ?, ?)
              ON CONFLICT (owner, kind, ref) DO UPDATE SET
@@ -989,7 +991,12 @@ export function tables(db: Db) {
             kind,
             ref,
           );
-          db.run('DELETE FROM search_doc WHERE owner = ? AND kind = ? AND ref = ?', owner, kind, ref);
+          db.run(
+            'DELETE FROM search_doc WHERE owner = ? AND kind = ? AND ref = ?',
+            owner,
+            kind,
+            ref,
+          );
         });
       },
       /** Everything indexed as being about this one thing. */

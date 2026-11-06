@@ -679,17 +679,12 @@ describe('migration 5, the workspace', () => {
     const body = JSON.stringify({ messages: [{ role: 'user', content: 'a question' }] });
     insert.run('run-with-owner', 'prs_a', 'exp_a', 'done', 'some/model', body, at, at);
     insert.run('run-with-no-owner', null, null, 'interrupted', null, '{"messages":[]}', at, at);
-    raw.prepare('INSERT INTO run_event (run, seq, type, data, at) VALUES (?, 0, ?, ?, ?)').run(
-      'run-with-owner',
-      'done',
-      '{"turns":1}',
-      at,
-    );
-    raw.prepare('INSERT INTO run_thread (run, messages, updated_at) VALUES (?, ?, ?)').run(
-      'run-with-owner',
-      '[]',
-      at,
-    );
+    raw
+      .prepare('INSERT INTO run_event (run, seq, type, data, at) VALUES (?, 0, ?, ?, ?)')
+      .run('run-with-owner', 'done', '{"turns":1}', at);
+    raw
+      .prepare('INSERT INTO run_thread (run, messages, updated_at) VALUES (?, ?, ?)')
+      .run('run-with-owner', '[]', at);
     raw
       .prepare(
         'INSERT INTO exploration (id, owner, question, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
@@ -700,7 +695,10 @@ describe('migration 5, the workspace', () => {
       .run('exp_a', 'owner', 'a note', at);
     const before = {
       run: { ...raw.prepare('SELECT * FROM run WHERE id = ?').get('run-with-owner') },
-      note: raw.prepare('SELECT * FROM note').all().map((r) => ({ ...r })),
+      note: raw
+        .prepare('SELECT * FROM note')
+        .all()
+        .map((r) => ({ ...r })),
     };
     raw.close();
 

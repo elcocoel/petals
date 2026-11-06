@@ -85,7 +85,11 @@ test("it refuses reasoning_effort on Anthropic's models, as NEAR AI does", async
   const ask = (model: string, reasoning_effort?: string) =>
     fetch(`http://127.0.0.1:${port}/v1/chat/completions`, {
       method: 'POST',
-      body: JSON.stringify({ model, messages: [], ...(reasoning_effort ? { reasoning_effort } : {}) }),
+      body: JSON.stringify({
+        model,
+        messages: [],
+        ...(reasoning_effort ? { reasoning_effort } : {}),
+      }),
     }).then((r) => r.status);
   expect(await ask('anthropic/claude-haiku-5-5', 'low')).toBe(400);
   expect(await ask('anthropic/claude-haiku-5-5')).toBe(200);

@@ -82,6 +82,8 @@ test('one conversation holds two shapes, with figures per turn, and the pick apa
   expect(conversation.turns.length).toBeGreaterThanOrEqual(3);
   for (const t of conversation.turns) expect(t.cost_usd).toBeGreaterThanOrEqual(0);
   expect(conversation.turns.at(-1).context_tokens).toBe(6900);
+  expect(conversation.turns.at(-1).signed).toBe(true);
+  expect(conversation.turns[0].signed).toBe(false);
 });
 
 test('follows reopen as shapes, notes and search answer, and a chat goes on from here', async () => {
@@ -93,7 +95,9 @@ test('follows reopen as shapes, notes and search answer, and a chat goes on from
   expect((await get('/api/v1/search?q=climbing')).results[0].kind).toBe('note');
   expect((await get('/api/v1/search?q=Moloch')).results.length).toBeGreaterThan(0);
 
-  const hash = createHash('sha256').update(cookie.split('=')[1] as string).digest('hex');
+  const hash = createHash('sha256')
+    .update(cookie.split('=')[1] as string)
+    .digest('hex');
   const store = openPrivateStore(stateDir);
   expect(store.session.get(hash, new Date().toISOString())?.invite).toBe(options.inviteId);
   store.close();

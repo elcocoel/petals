@@ -8,7 +8,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { buildPetalApp, openPrivateStore, sqliteRunStore } from '@petal/agent';
 import { canonicalJson, specHash } from '@petal/core';
-import type { FlowerResult, Run, Spec } from '@petal/core/types';
+import type { FlowerResult, ModelSignature, Run, Spec } from '@petal/core/types';
 import { readSse } from './helpers.ts';
 
 const REPO = resolve(import.meta.dirname, '..', '..');
@@ -41,7 +41,9 @@ export interface SeedResult {
 /** The session this folder's seed belongs to: the same one each time, holding today's invite. */
 function holdSession(o: SeedOptions): string {
   const file = join(o.stateDir, 'journey-session');
-  const value = existsSync(file) ? readFileSync(file, 'utf8').trim() : randomBytes(32).toString('base64url');
+  const value = existsSync(file)
+    ? readFileSync(file, 'utf8').trim()
+    : randomBytes(32).toString('base64url');
   writeFileSync(file, value, { mode: 0o600 });
   const store = openPrivateStore(o.stateDir);
   try {
@@ -67,7 +69,9 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
   const subject = store.session.get(hashOf(session), new Date().toISOString())?.subject as string;
   const counted = (fresh: boolean): SeedResult => ({
     session,
-    conversations: store.run.listByOwner(subject, 100).length + store.exploration.withoutRun(subject, 100).length,
+    conversations:
+      store.run.listByOwner(subject, 100).length +
+      store.exploration.withoutRun(subject, 100).length,
     follows: store.follow.count(subject),
     notes: store.workspaceNote.count(subject),
     fresh,
@@ -116,7 +120,9 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
       }),
     );
     const events = await readSse(res, Date.now());
-    return (events[0]?.data as { run_id: string }).run_id;
+    const first = events[0]?.data as { run_id?: string } | undefined;
+    if (!first?.run_id) throw new Error('seed: a chat answered with no run');
+    return first.run_id;
   }
   const runOf = async (id: string) =>
     (await (await wanted(await call(`/api/v1/agent/runs/${id}`, 'GET'))).json()) as Run;
@@ -161,11 +167,16 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
       fallback_used: false,
       tokens: { in: 12_400, out: 310 },
       cost_usd: 0.0011,
-      signature: null,
+      // the stub never signs, so this one turn does, for a surface to see what `signed: true` looks like
+      signature: { signature_kind: 'provider_tee' } as ModelSignature,
       context_tokens: 6_900,
     },
   });
-  store.draft.put({ sha256: variantSha, body: canonicalJson(variant), created_at: new Date().toISOString() });
+  store.draft.put({
+    sha256: variantSha,
+    body: canonicalJson(variant),
+    created_at: new Date().toISOString(),
+  });
   const exploration = store.run.get(second)?.exploration as string;
   const at = new Date().toISOString();
   store.tx(() => {
