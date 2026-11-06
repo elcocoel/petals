@@ -36,8 +36,9 @@ const INSTRUCTIONS =
   'before a new read or a drawing. After a yes, finish in one go: get_snapshot (say whether it was ' +
   'reused, and its date), describe_snapshot, compute_figures (quote only these numbers), ' +
   'propose_spec with the fewest choices, validate_spec with your interpretation, then ' +
-  'render_flower. The flower is the answer: always hand back its view_url as a link, with the ' +
-  'legend, your interpretation and what the data cannot tell. A table is not a flower. To publish: ' +
+  'render_flower. The flower is the answer: always hand back a link to it, short_url if given and ' +
+  'otherwise view_url, with the legend, your interpretation and what the data cannot tell. A table ' +
+  'is not a flower. To publish: ' +
   'prepare_publish, then give the person sign_url; never call publish_flower yourself. Never ask ' +
   'for a key or a seed phrase.';
 
