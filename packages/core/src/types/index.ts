@@ -159,6 +159,14 @@ export type ToolErrorCode =
 export interface ToolError {
   error: { code: ToolErrorCode; message: string; hint?: string; retry_after_s?: number };
 }
+/**
+ * Additive (J4): what Petal's own agent loop answers a held tool with, until the person has said yes.
+ * It never crosses a door, so it has no HTTP status and isn't one of the ToolErrorCodes above, each of
+ * which has one. A wallet approval (SYS-053) would attach to the event of the same name.
+ */
+export interface ApprovalRequiredError {
+  error: { code: 'approval_required'; message: string; hint: string };
+}
 
 // ---------------------------------------------------------------------------------------------
 // Networks (data-model.md, Network; tools.md, list_networks)
@@ -639,6 +647,16 @@ export type AgentEvent =
       data: { id: string; name: string; ok: boolean; summary: string; ms: number };
     }
   | { event: 'message'; data: { text: string } }
+  /** additive (J4): a new map is waiting for a yes, at most once per target per chat */
+  | {
+      event: 'approval_required';
+      data: {
+        tool: string;
+        network: string;
+        params?: Record<string, unknown>;
+        target_key: string;
+      };
+    }
   | { event: 'flower'; data: FlowerResult }
   | { event: 'signature'; data: ModelSignature }
   | { event: 'error'; data: AgentError }

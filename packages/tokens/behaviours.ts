@@ -38,7 +38,8 @@ export const behaviours = [
   },
   {
     name: 'surface.band',
-    purpose: 'Grain on every band, a soft gradient on the ink and mint ones',
+    purpose:
+      'Grain and a soft gradient on the ink and mint bands; a plain band has nothing behind it',
     via: 'css',
   },
   {
@@ -48,15 +49,20 @@ export const behaviours = [
   },
   {
     name: 'surface.drift',
-    purpose: 'A soft tone drifts over a textured band, leaning to the pointer and the scroll',
+    purpose: 'A very soft tone drifts over a textured band, on cycles of minutes',
+    via: 'both',
+  },
+  {
+    name: 'surface.shimmer',
+    purpose: 'Two faint layers of static slide slowly against each other on the stone band',
+    via: 'both',
+  },
+  {
+    name: 'surface.connect',
+    purpose: 'Now and then a faint hairline fades in between two near stars, clear of the content',
     via: 'both',
   },
   { name: 'surface.reveal', purpose: 'A section fades in as you arrive at it', via: 'both' },
-  {
-    name: 'surface.spotlight',
-    purpose: 'A very soft glow behind the content follows the pointer',
-    via: 'both',
-  },
   {
     name: 'surface.stick',
     purpose: 'The nav stays, with blur, and tightens once you scroll',
@@ -65,7 +71,7 @@ export const behaviours = [
   // action
   {
     name: 'action.shape',
-    purpose: 'Soft corners, a layered shadow with an inner highlight, a gloss',
+    purpose: 'Soft corners, a layered shadow with an inner highlight, a faint gloss',
     via: 'css',
   },
   {
@@ -73,12 +79,13 @@ export const behaviours = [
     purpose: 'Secondary and starter become glass, the starter a pill',
     via: 'css',
   },
-  { name: 'action.lift', purpose: 'Rises on hover and the shadow deepens', via: 'css' },
+  {
+    name: 'action.lift',
+    purpose: 'Rises about a pixel on hover, softly, and the shadow deepens',
+    via: 'css',
+  },
   { name: 'action.press', purpose: 'Sinks when pressed and the shadow collapses', via: 'css' },
-  { name: 'action.slide', purpose: 'The arrow slides toward where it goes', via: 'css' },
   { name: 'action.ring', purpose: 'Keyboard focus is a mint ring', via: 'css' },
-  { name: 'action.sheen', purpose: 'A sheen and a wash follow the pointer inside', via: 'both' },
-  { name: 'action.magnet', purpose: 'A primary leans slightly toward the pointer', via: 'both' },
   { name: 'action.arrive', purpose: 'Starters arrive one after another', via: 'both' },
   // link
   { name: 'link.underline', purpose: 'The underline draws from the left, and leaves', via: 'css' },
@@ -103,7 +110,6 @@ export const behaviours = [
   { name: 'box.rise', purpose: 'Boxes rise in, one after another', via: 'both' },
   { name: 'box.lift', purpose: 'Lifts on hover and the shadow deepens', via: 'css' },
   { name: 'box.tilt', purpose: 'Tilts slightly toward the pointer', via: 'both' },
-  { name: 'box.spot', purpose: 'A spotlight inside follows the pointer', via: 'both' },
   { name: 'box.swell', purpose: 'The drawing inside swells a little', via: 'css' },
   { name: 'box.type', purpose: "A terminal's lines come in one by one", via: 'css' },
   {
@@ -124,10 +130,22 @@ export const behaviours = [
   },
   // row
   { name: 'row.arrive', purpose: 'Rows arrive one by one', via: 'both' },
-  { name: 'row.wash', purpose: 'A wash under the row you are reading', via: 'css' },
-  { name: 'row.indent', purpose: 'The row steps in a little', via: 'css' },
+  {
+    name: 'row.card',
+    purpose: 'The row you are on becomes a whole card: a stroke all round and a soft fill',
+    via: 'css',
+  },
   { name: 'row.swell', purpose: 'Its glyph swells', via: 'css' },
-  { name: 'row.fold', purpose: 'An answer opens with a real height animation', via: 'css' },
+  {
+    name: 'row.fold',
+    purpose: 'An answer starts folded, and opens and closes with a real height animation',
+    via: 'css',
+  },
+  {
+    name: 'row.peek',
+    purpose: 'A pointer at rest opens a folded row; it closes softly a little after it leaves',
+    via: 'script',
+  },
   { name: 'row.sign', purpose: 'The sign turns between plus and minus', via: 'css' },
   { name: 'row.cursor', purpose: "The transcript's cursor blinks", via: 'css' },
   // figure

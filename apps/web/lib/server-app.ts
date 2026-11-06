@@ -52,11 +52,18 @@ async function build(): Promise<ServerApp> {
     // Loaded by Node itself, never bundled. The @petal/* packages are workspace links, which
     // Turbopack resolves to their source folders and bundles despite serverExternalPackages; a
     // bundled @petal/agent fails on its new URL(..., import.meta.url) paths (fixtures, .petal/).
-    const { petalApp } = (await import(
+    const { buildPetalApp } = (await import(
       /* turbopackIgnore: true */ /* webpackIgnore: true */ '@petal/agent'
     )) as typeof import('@petal/agent');
     const cfg = await configFromEnv();
-    return { app: labelReal(petalApp(cfg), { fake: cfg.fake === true }), mode: 'real' };
+    // Test only: a stub in place of NEAR AI (tests/e2e/journey-server.ts). The key goes wherever this
+    // points, so scripts/container/entry.sh unsets it on the real host.
+    const baseURL = process.env.PETAL_NEAR_AI_BASE_URL?.trim();
+    const options = baseURL ? { nearAi: { baseURL, signatureDelaysMs: [0] } } : {};
+    return {
+      app: labelReal(buildPetalApp(cfg, options), { fake: cfg.fake === true }),
+      mode: 'real',
+    };
   } catch (e) {
     if (flag === '0' || !isStub(e)) throw e;
     console.warn(

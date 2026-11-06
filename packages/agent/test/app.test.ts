@@ -11,7 +11,7 @@ import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
 import { LEDGER_DOWN, SKILL_HINT } from '../src/run.ts';
 import { fileRunStore } from '../src/runs.ts';
 import { configFromEnv } from '../src/serve.ts';
-import { bodyOf, fakeNearAi, inOrder, parseSse, runIdOf, tmpRoot } from './helpers.ts';
+import { agreed, bodyOf, fakeNearAi, inOrder, parseSse, runIdOf, tmpRoot } from './helpers.ts';
 
 vi.mock('@petal/tools', async (importOriginal) => {
   const { Hono } = await import('hono');
@@ -44,7 +44,7 @@ const chat = (app: ReturnType<typeof petalApp>) =>
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
-      messages: [{ role: 'user', content: 'who stands behind NEAR’s validators?' }],
+      messages: agreed('who stands behind NEAR’s validators?'),
     }),
   });
 

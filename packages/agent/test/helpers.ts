@@ -11,6 +11,18 @@ import type { LlmClient, LlmCompletion, LlmMessage, LlmRequest, LlmToolCall } fr
 import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
 import type { AnyTool } from '../src/tool-defs.ts';
 
+/**
+ * What a real model needs before it starts a new map (approval.ts): the question, the agent asking
+ * about it, and the person's yes.
+ */
+export function agreed(question: string): { role: 'user' | 'assistant'; content: string }[] {
+  return [
+    { role: 'user', content: question },
+    { role: 'assistant', content: 'I can read that. Shall I draw it? Yes or no.' },
+    { role: 'user', content: 'yes' },
+  ];
+}
+
 export const SHA = '72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec';
 export const SPEC = { petal: 'spec/v1', marker: 'the proposed spec' } as unknown as Spec;
 export const SPEC_SHA = specHash(SPEC);
@@ -25,7 +37,7 @@ export function tmpRoot(): string {
 
 type Run = (args: Record<string, unknown>, ctx: ToolContext) => unknown;
 
-function tool(name: string, run: Run): AnyTool {
+export function tool(name: string, run: Run): AnyTool {
   return {
     name,
     input: { $schema: 'https://json-schema.org/draft/2020-12/schema', type: 'object' },
@@ -55,6 +67,7 @@ export function fakeRegistry(o: { failValidateOnce?: boolean } = {}): FakeTools 
       ...TV,
     })),
     t('list_flowers', () => ({ flowers: [], ...TV })),
+    t('get_flower', () => ({ entry: { id: 'flower_1' }, where: 'fixture', ...TV })),
     t('get_snapshot', (_a, ctx) => {
       ctx.onProgress?.({ stage: 'fetching', message: 'found in the fixtures', done: 1, total: 1 });
       return {
@@ -319,7 +332,9 @@ export function fakeNearAi(
           { headers: json },
         );
       }
-      const r = await llm.complete({ messages: req.messages.map(fromOpenAi) });
+      // The transcript answers this chat, which starts at the person's latest message.
+      const from = req.messages.findLastIndex((m) => m.role === 'user');
+      const r = await llm.complete({ messages: req.messages.slice(from).map(fromOpenAi) });
       const res = enc.encode(
         JSON.stringify({
           id,

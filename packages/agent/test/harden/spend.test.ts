@@ -11,6 +11,7 @@ import { createNearAiClient, LlmCallError } from '../../src/near-ai.ts';
 import { startRun } from '../../src/run.ts';
 import { interruptRuns, sqliteRunStore } from '../../src/runs.ts';
 import {
+  agreed,
   collect,
   fakeContext,
   fakeNearAi,
@@ -19,7 +20,7 @@ import {
   tmpRoot,
 } from '../helpers.ts';
 
-const QUESTION = [{ role: 'user' as const, content: 'who stands behind it?' }];
+const QUESTION = agreed('who stands behind it?');
 const HOLD = DEFAULT_BUDGET.usdPerChat;
 const DAY = new Date().toISOString().slice(0, 10);
 

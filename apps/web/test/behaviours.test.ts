@@ -196,7 +196,10 @@ describe('hover', () => {
           .filter(Boolean)
           .map((property) => ({ selector: (m[1] ?? '').trim(), property })),
     );
-  /** `text-decoration-line` isn't movement: it takes away v1's underline, in favour of the drawn one. */
+  /**
+   * `text-decoration-line` isn't movement: it takes away v1's underline, in favour of the drawn one. Nor is
+   * `z-index`: it says which row's card lies over its neighbour's separator, and can't shift layout.
+   */
   const MOVES = new Set([
     'translate',
     'scale',
@@ -205,6 +208,7 @@ describe('hover', () => {
     'transform-origin',
     'opacity',
     'text-decoration-line',
+    'z-index',
   ]);
 
   test('moves things with transform and opacity only, so it can never shift layout', () => {
@@ -276,7 +280,7 @@ describe('a box that floats', () => {
     expect(glass.some((s) => s.includes('[data-kind="float"]'))).toBe(true);
   });
 
-  test.each(['box.rise', 'box.lift', 'box.spot'])('leaves out %s', (child) => {
+  test.each(['box.rise', 'box.lift'])('leaves out %s', (child) => {
     const holding = rules.filter(
       (r) =>
         r.child === child && /\[data-b="box"\](?::not\([^)]*\))?:(?:hover|not)/.test(r.selector),

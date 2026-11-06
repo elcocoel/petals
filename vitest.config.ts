@@ -5,8 +5,11 @@
 //   pnpm vitest run --project near   one package
 import { defineConfig } from 'vitest/config';
 
+// Projects don't inherit from the root's `test`. Two coordinators' lanes share this machine, and at a
+// load of 17 a test that takes 2 s can pass the default 5 s.
+const testTimeout = 20_000;
 const unit = (name: string, root: string) => ({
-  test: { name, root, include: ['test/**/*.test.ts'] },
+  test: { name, root, testTimeout, include: ['test/**/*.test.ts'] },
 });
 
 export default defineConfig({
@@ -23,7 +26,7 @@ export default defineConfig({
       unit('web', 'apps/web'),
       unit('cli', 'apps/cli'),
       unit('scripts', 'scripts'),
-      { test: { name: 'e2e', root: 'tests/e2e', include: ['**/*.test.ts'] } },
+      { test: { name: 'e2e', root: 'tests/e2e', testTimeout, include: ['**/*.test.ts'] } },
     ],
   },
 });

@@ -48,6 +48,13 @@ async function say(app: ReturnType<typeof setup>['app'], content: string, run_id
 
 const named = (es: SseEvent[], name: string) => es.filter((e) => e.event === name);
 const first = <T>(es: SseEvent[], name: string) => named(es, name)[0]?.data as T;
+/** On a real model a flower takes a question, the agent asking about it, and a yes (approval.ts). */
+const ASKING = { content: 'I can read that. Shall I draw it? Yes or no.' };
+async function agreeAndDraw(app: ReturnType<typeof setup>['app'], content: string) {
+  const one = await say(app, content);
+  await say(app, 'yes', one.runId);
+  return one;
+}
 const FLOWER_TURNS = [
   { content: 'Looking.', calls: [{ name: 'get_snapshot', args: { network: 'near-validators' } }] },
   { calls: [{ name: 'describe_snapshot', args: { sha256: SHA } }] },
@@ -59,15 +66,17 @@ const FLOWER_TURNS = [
 
 describe('a follow-up keeps the thread', () => {
   test('the model receives the earlier tool calls and results, then the new question', async () => {
-    const llm = scriptedLlm([...FLOWER_TURNS, { content: 'A is the largest.' }]);
+    const llm = scriptedLlm([ASKING, ...FLOWER_TURNS, { content: 'A is the largest.' }]);
     const { app } = setup(llm);
-    const one = await say(app, 'who stands behind the validators?');
+    const one = await agreeAndDraw(app, 'who stands behind the validators?');
     const two = await say(app, 'who is the largest one?', one.runId);
     expect(two.runId).toBe(one.runId);
 
     const asked = llm.requests.at(-1)?.messages as LlmMessage[];
     expect(asked.map((m) => m.role)).toEqual([
       'system',
+      'user',
+      'assistant',
       'user',
       ...Array.from({ length: 5 }, () => ['assistant', 'tool']).flat(),
       'assistant',
@@ -91,6 +100,7 @@ describe('a follow-up keeps the thread', () => {
 
   test('a change goes straight to propose_spec, and the earlier spec can still be named', async () => {
     const llm = scriptedLlm([
+      ASKING,
       ...FLOWER_TURNS,
       {
         calls: [
@@ -114,7 +124,7 @@ describe('a follow-up keeps the thread', () => {
       { content: `Top ten: /draft?flower=${SPEC_SHA.slice(0, 8)}` },
     ]);
     const { app, tools } = setup(llm);
-    const one = await say(app, 'who stands behind the validators?');
+    const one = await agreeAndDraw(app, 'who stands behind the validators?');
     const before = tools.calls.length;
     const two = await say(app, 'what about the top ten only?', one.runId);
     expect(tools.calls.slice(before).map((c) => c.name)).toEqual([
@@ -135,26 +145,29 @@ describe('a follow-up keeps the thread', () => {
 
   test('redrawing an earlier flower needs no second validate_spec', async () => {
     const llm = scriptedLlm([
+      ASKING,
       ...FLOWER_TURNS,
       { calls: [{ name: 'render_flower', args: { spec: SPEC_SHA } }] },
       { content: 'Here it is again.' },
     ]);
     const { app } = setup(llm);
-    const one = await say(app, 'a flower');
+    const one = await agreeAndDraw(app, 'a flower');
     const two = await say(app, 'show it again', one.runId);
     expect(named(two.events, 'error')).toHaveLength(0);
     expect(named(two.events, 'flower')).toHaveLength(1);
   });
 
   test('the stored run stays what the API promised: no thread in its JSON', async () => {
-    const llm = scriptedLlm([...FLOWER_TURNS, { content: 'A.' }]);
+    const llm = scriptedLlm([ASKING, ...FLOWER_TURNS, { content: 'A.' }]);
     const { app, runs } = setup(llm);
-    const one = await say(app, 'a flower');
+    const one = await agreeAndDraw(app, 'a flower');
     await say(app, 'which one?', one.runId);
     const res = await app.request(`/api/v1/agent/runs/${one.runId}`);
     const run = (await res.json()) as Run;
     expect(run).not.toHaveProperty('thread');
     expect(run.messages.map((m) => m.role)).toEqual([
+      'user',
+      'assistant',
       'user',
       'assistant',
       'assistant',

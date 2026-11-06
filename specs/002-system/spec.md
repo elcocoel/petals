@@ -53,6 +53,7 @@ A mapping that spends needs a yes from the wallet.
 1. **Given** a tool call that would spend, **when** no approval exists, **then** it returns `approval_required` with a link, and nothing is spent.
 2. **Given** a signed approval, **when** it's used twice or changed, **then** it's refused.
 3. **Given** a chat that says "yes", **when** no signature exists, **then** it doesn't count where wallet approval is required.
+4. **Given** Petal's own agent on a real model, told to skip the question, **when** it reaches for a new map before the person has said yes, **then** the tool doesn't run, the model has to speak, and a yes afterwards lets it go on (SYS-054).
 
 ### Story 4: Runs that survive (P2)
 
@@ -135,6 +136,7 @@ A mapping that spends needs a yes from the wallet.
 - **SYS-051**: Petal's own agent MUST refuse to spend Petal's budget for anyone without a sponsored invite, including for a first answer, and say what they can do instead. How a person funds NEAR's agent directly is open: `open-questions.md`.
 - **SYS-052**: Sponsored access MUST use a revocable invite with its own budget, on top of per-chat and global caps, reserving then settling. It MUST NOT involve a personal wallet on the host.
 - **SYS-053**: Per-action wallet approval (`approval_required`, a server-held request, a signature, single use) is the next resolution for irreversible acts. Publishing and wallet linking already need a signature.
+- **SYS-054**: Petal's own agent on a real model MUST NOT start a new map (`get_snapshot`, `propose_spec`, `render_flower`) before the person's yes in the chat, enforced in its run loop and not only in its prompt. This yes is consent, not security or a wallet approval: nothing irreversible sits behind it, and a person's own agent stays free (SYS-030). Its `approval_required` event is where a wallet signature attaches later (SYS-053).
 
 ### Claims
 

@@ -17,9 +17,9 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
-import { recordedClient, SKELETON_TRANSCRIPT } from '@petal/agent';
 import { serveApi } from '@petal/agent/serve';
 import { openStore } from '@petal/store';
+import { stubModel } from './stub-model.ts';
 
 const REPO = resolve(import.meta.dirname, '..', '..');
 const NEAR = process.env.NEAR_CLI ?? '';
@@ -154,7 +154,14 @@ class Browser {
     return (await res.json()) as Out;
   }
   async ask(content: string) {
-    const res = await this.post('/agent/chat', { messages: [{ role: 'user', content }] });
+    // A real model's first map waits for a yes (approval.ts): the agent asked, and the person said it.
+    const res = await this.post('/agent/chat', {
+      messages: [
+        { role: 'user', content },
+        { role: 'assistant', content: 'Shall I read it and draw it? Yes or no.' },
+        { role: 'user', content: 'yes' },
+      ],
+    });
     return events(await res.text());
   }
 }
@@ -166,54 +173,8 @@ function events(text: string) {
   }));
 }
 
-// -- the stub model: OpenAI's shape, behind the real client. Each question replays the recorded run.
-const replay = recordedClient(SKELETON_TRANSCRIPT);
-let completions = 0;
-const stubServer = createServer((req, res) => {
-  let body = '';
-  req.on('data', (d) => {
-    body += d;
-  });
-  req.on('end', async () => {
-    const send = (status: number, value: unknown) => {
-      res.writeHead(status, { 'content-type': 'application/json' });
-      res.end(JSON.stringify(value));
-    };
-    if (!req.url?.endsWith('/chat/completions')) return send(404, { error: { message: 'stub' } });
-    completions++;
-    const asked = JSON.parse(body) as { model: string; messages: Out[] };
-    const from = asked.messages.findLastIndex((m) => m.role === 'user');
-    const said = await replay.complete({
-      messages: asked.messages.slice(from).map((m) => ({ ...m })) as never,
-    });
-    send(200, {
-      id: `stub-${completions}`,
-      object: 'chat.completion',
-      created: 1,
-      model: asked.model,
-      choices: [
-        {
-          index: 0,
-          finish_reason: said.message.tool_calls?.length ? 'tool_calls' : 'stop',
-          message: {
-            role: 'assistant',
-            content: said.message.content,
-            ...(said.message.tool_calls?.length
-              ? {
-                  tool_calls: said.message.tool_calls.map((c) => ({
-                    id: c.id,
-                    type: 'function',
-                    function: { name: c.name, arguments: c.arguments },
-                  })),
-                }
-              : {}),
-          },
-        },
-      ],
-      usage: { prompt_tokens: 100, completion_tokens: 10, total_tokens: 110 },
-    });
-  });
-});
+const stub = stubModel();
+const stubServer = createServer(stub.handle);
 
 function mint(usd: string): string {
   const r = spawnSync(process.execPath, ['scripts/mint-invite.ts', usd, '1'], {
@@ -294,7 +255,7 @@ async function wholePath() {
   const done = chat.find((e) => e.event === 'done')?.data as Out;
   check('a flower is drawn, through the real client, on the stub', !!flower?.spec_sha256, {
     model: done?.model,
-    calls: completions,
+    calls: stub.calls,
     cost_usd: done?.cost_usd,
   });
   check(
@@ -577,7 +538,7 @@ async function wholePath() {
     !onDisk(tokenOf(read.url)) && !onDisk(tokenOf(cont.url)),
   );
   db.close();
-  check('$0 of NEAR AI: only the stub answered', completions > 0, { stub_calls: completions });
+  check('$0 of NEAR AI: only the stub answered', stub.calls > 0, { stub_calls: stub.calls });
 
   console.log('\n# the sample packet, the spec cut');
   const sample = await anyone.json(`/explorations/${tokenOf(read.url)}`);
@@ -641,7 +602,11 @@ async function realClaude(owner: Browser, id: string) {
   console.log('\n# a real Claude with only web requests, reading /s/<token>');
   const bare = await ask(['--bare']);
   check('try-agent exited 0', bare.code === 0, bare.code);
-  check('it read the packet', /validators/i.test(bare.text), { wrote_back: bare.added });
+  // Its words vary: what shows it read the packet is the topic, or the current spec named from it.
+  const head = (await owner.json(`/explorations/${id}`)).current.spec_sha256.slice(0, 8);
+  check('it read the packet', /validators/i.test(bare.text) || bare.text.includes(head), {
+    wrote_back: bare.added,
+  });
 }
 
 /** Through a web app someone else started: Next's route handlers, the same store. */

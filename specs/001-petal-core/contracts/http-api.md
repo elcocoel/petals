@@ -93,11 +93,14 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `tool_call` | `{ id, name, args }` |
 | `tool_result` | `{ id, name, ok, summary, ms }` (summaries, never raw snapshot bodies) |
 | `message` | `{ text }` one complete assistant turn |
+| `approval_required` | `{ tool, network, params?, target_key }`, additive (J4): Petal's own agent reached for a new map before the person said yes, and the tool didn't run. At most once per target per chat, stored like the rest, so a surface can show Yes and No. A chip sends "Yes" as an ordinary message: no new field, no new route |
 | `flower` | `{ spec, spec_sha256, render_sha256, view_url, legend, interpretation, validation }` |
 | `signature` | `ModelSignature` for the completion that proposed the spec |
 | `error` | `{ code, message, hint }`; besides the tool codes, `stopped` (followed by `done`) and `interrupted` (last) |
 | `heartbeat` | `{}` every 10 s, so idle connections stay open |
 | `done` | `{ turns, model, fallback_used, tokens: { in, out }, cost_usd, signature? }`; `signature` is the completion that wrote the answer, `null` when it got none (T168) |
+
+**The yes (J4, SYS-054).** On a real model, `get_snapshot`, `propose_spec` and `render_flower` wait for the person. `target_key` is the `network`, plus its params in canonical form when it has any. A call goes ahead if its target, its snapshot, or the spec it varies is already approved in this run, including a flower already drawn and a `draft` the person sent. Otherwise it goes ahead if the latest user message is a yes and the agent has said something before it; a first message never counts, and one yes covers one new target. Otherwise the model's tool result is `{ error: { code: "approval_required", message, hint } }`, this event goes out, and the rest of the chat gets no tools, so the model has to speak. A reply naming a candidate by ordinal, chain or address counts for that candidate when the last `find_target` said `ambiguous: true`. What's approved is read back from the run's thread and flowers, so it survives `run_id` and a restart, with no new column. A recorded run isn't held. This is consent, not security: a client can write its own history, and the invite budget is the boundary. `approval_required` has no HTTP status, because it never leaves the loop: the tool routes and MCP are not held (SYS-030).
 
 Limits per chat: 8 tool rounds, 300 s wall time (`PETAL_RUN_MAX_S`), $0.05. A daily cap (`PETAL_LLM_DAILY_USD`, default 3) protects the one server key; past it, including mid-way through a chat, the agent returns `budget_exhausted` and points to the skill (bring your own agent).
 
