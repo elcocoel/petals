@@ -166,3 +166,42 @@ describe('look_up', () => {
     expect(((await callTool('look_up', {}, ctx)) as Json).error.code).toBe('bad_input');
   });
 });
+
+describe('figures leave out what a read did not read (T394)', () => {
+  // SEAM on Base, a 7-day window: 89.7% of the supply is one "supply not read" row. Sonnet called
+  // such a row the top holder (74.9% of UNI on Base), and Haiku said "top 5 hold 97%".
+  const WINDOW = 'b82956b9f3d18e32ebcbd6fe1138e8a2a967402f958071d485a3a94dbbfd8fdb';
+  const FULL = 'ebacaf5cc54a9493784c9678748efdae92a7390533a48cdce8564e56a8a357ef';
+  const run = async (name: string, input: Json) => (await callTool(name, input, ctx)) as Json;
+
+  test('it is no holder: out of shares, top-k and Nakamoto, and how much was read is said plainly', async () => {
+    const f = await run('compute_figures', { sha256: WINDOW, measure: 'token_balance' });
+    expect(f.error).toBeUndefined();
+    expect(f.shares.map((s: Json) => s.id)).not.toContain('group:not-read');
+    expect(f.shares[0]).toMatchObject({
+      id: '0x4b5c71082d027d16d2a146465d66f9eec11634f6',
+      rank: 1,
+    });
+    expect(f.top_k_share['1']).toBeCloseTo(0.622046, 6);
+    expect(f.total).toBe('10293908.6720867291539326');
+    expect(f.participants_included).toBe(157);
+    expect(f.not_read).toMatchObject({
+      amount: '89706091.3279132708460674',
+      whole: '100000000',
+      share_of_whole: 0.897061,
+    });
+    expect(f.not_read.says).toMatch(/are of what was read: 10\.29% of the whole 100000000 SEAM/);
+    expect(f.not_read.says).toMatch(/The other 89\.71% was not read\. It is no holder/);
+    expect(f.figure_ids).toContain('fig:not_read');
+    const d = await run('describe_snapshot', { sha256: WINDOW });
+    expect(d.top.map((t: Json) => t.id)).not.toContain('group:not-read');
+    expect(d.not_read.share_of_whole).toBe(0.897061);
+  });
+
+  test('a read that holds its whole supply is counted as before', async () => {
+    const f = await run('compute_figures', { sha256: FULL, measure: 'token_balance' });
+    expect(f.not_read).toBeUndefined();
+    expect(f.figure_ids).not.toContain('fig:not_read');
+    expect(f.total).toBe('1000000000');
+  });
+});

@@ -1,4 +1,5 @@
 // Pieces every tool uses: snapshots by hash, modules by network id, public URLs, schema bits.
+import { exactValues, formatDecimal } from '@petal/core';
 import type { NetworkDescriptor, Params, Snapshot, Spec } from '@petal/core/types';
 import type { InputModule, SnapshotStore } from '@petal/inputs';
 import { ToolFailure } from '../errors.ts';
@@ -165,6 +166,59 @@ export function defaultMeasure(s: Snapshot, d: NetworkDescriptor | null): string
   ];
   for (const c of candidates) if (c && present.includes(c)) return c;
   return present[0] ?? s.coverage.measure ?? '';
+}
+
+/** What a read left out, as figures say it: how much, of what whole, and that it's no holder. */
+export interface NotRead {
+  amount: string;
+  whole: string;
+  share_of_whole: number;
+  says: string;
+}
+
+/**
+ * The rows that stand for what a read did not read: group participants that hold exactly the part of
+ * the total its coverage says it didn't include (a window of holders: "supply not read"). They're no
+ * holder, so figures leave them out of shares, top-k and the Nakamoto coefficient, and say how much of
+ * the whole was read. The drawing keeps them: a petal saying how much wasn't read is honest there.
+ */
+export function notReadIn(
+  s: Snapshot,
+  measure: string,
+): { ids: Set<string>; notRead: NotRead } | null {
+  const c = s.coverage;
+  if (c.measure !== measure || !c.amount_total || !c.amount_included) return null;
+  const groups = new Set(s.participants.filter((p) => p.kind === 'group').map((p) => p.id));
+  const rows = s.holdings.filter((h) => h.measure === measure && groups.has(h.participant));
+  if (rows.length === 0) return null;
+  const { values, scale } = exactValues([
+    { amount: c.amount_total },
+    { amount: c.amount_included },
+    ...rows.map((r) => ({ amount: r.amount })),
+  ]);
+  const [whole = 0n, included = 0n, ...amounts] = values;
+  const missing = whole - included;
+  if (missing <= 0n || amounts.reduce((a, v) => a + v, 0n) !== missing) return null;
+  const share = Number((missing * 2_000_000n + whole) / (2n * whole)) / 1e6;
+  const pct = (x: number) => `${Math.round(x * 10000) / 100}%`;
+  const unit = c.unit ? ` ${c.unit}` : '';
+  return {
+    ids: new Set(rows.map((r) => r.participant)),
+    notRead: {
+      amount: formatDecimal(missing, scale),
+      whole: formatDecimal(whole, scale),
+      share_of_whole: share,
+      says: `Shares, top-k and the Nakamoto coefficient are of what was read: ${pct(1 - share)} of the whole ${formatDecimal(whole, scale)}${unit}. The other ${pct(share)} was not read. It is no holder, so no figure here counts it.`,
+    },
+  };
+}
+
+/** The snapshot as figures count it: without the rows that stand for what wasn't read. */
+export function withoutNotRead(s: Snapshot, measure: string, ids: Set<string>): Snapshot {
+  return {
+    ...s,
+    holdings: s.holdings.filter((h) => !(h.measure === measure && ids.has(h.participant))),
+  };
 }
 
 export function checkMeasure(s: Snapshot, measure: string): void {

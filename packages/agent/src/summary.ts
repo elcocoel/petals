@@ -73,7 +73,12 @@ function line(name: string, out: Obj): string {
     case 'compute_figures': {
       const n = obj(out.nakamoto);
       const top = obj(out.top_k_share);
-      return `Nakamoto ${n.count ?? '?'} at ${n.threshold ?? '?'}; ${out.participants_included ?? '?'} included; top 10 hold ${pct(top['10'])}`;
+      const read = obj(out.not_read);
+      const of =
+        typeof read.share_of_whole === 'number'
+          ? `; of what was read, ${pct(1 - read.share_of_whole)} of the whole`
+          : '';
+      return `Nakamoto ${n.count ?? '?'} at ${n.threshold ?? '?'}; ${out.participants_included ?? '?'} included; top 10 hold ${pct(top['10'])}${of}`;
     }
     case 'compare_figures': {
       const n = obj(out.nakamoto);
