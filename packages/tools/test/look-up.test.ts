@@ -99,6 +99,16 @@ describe('look_up', () => {
     expect((await look('linear')).flowers).toEqual([]);
   });
 
+  test("with the site's address (T400's header, or a configured one) every link opens from anywhere", async () => {
+    const sited = { ...ctx, config: { ...ctx.config, apiBase: 'https://petal.test/' } };
+    const o = (await makeLookUp().run({ query: 'validators' }, sited)) as Json;
+    expect(o.flowers[0].view_url).toBe(`https://petal.test/f/${FLOWER}`);
+    const list = (await callTool('list_flowers', {}, sited)) as Json;
+    for (const f of list.flowers) expect(f.view_url).toBe(`https://petal.test/f/${f.id}`);
+    const got = (await callTool('get_flower', { id: FLOWER }, sited)) as Json;
+    expect(got.view_url).toBe(`https://petal.test/f/${FLOWER}`);
+  });
+
   test('a guess never fails: an empty answer says what was searched and that it is not proof', async () => {
     const o = await look('zzqx-not-a-thing');
     expect(o.error).toBeUndefined();
