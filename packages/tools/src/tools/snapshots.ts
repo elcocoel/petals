@@ -24,9 +24,11 @@ import {
   loadSnapshot,
   measuresIn,
   moduleFor,
+  notReadIn,
   obj,
   PARAMS,
   SHA256,
+  withoutNotRead,
 } from './shared.ts';
 
 /** The shared map as getSnapshot needs it: lookup by block, record a final snapshot. */
@@ -245,6 +247,7 @@ export const describeSnapshot = defineTool<{ sha256: string; top?: number }, obj
         type: 'array',
         items: obj(['id', 'url'], { id: { type: 'string' }, url: { type: 'string' } }),
       },
+      not_read: { type: 'object', description: 'what the read left out, as in compute_figures' },
     },
   ),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
@@ -259,7 +262,12 @@ export const describeSnapshot = defineTool<{ sha256: string; top?: number }, obj
       total: computeFigures(s, { measure: m.id, petals: 5 }).total,
     }));
     const measure = defaultMeasure(s, d);
-    const figures = computeFigures(s, { measure, petals: Math.max(5, top) });
+    // the same as compute_figures: what wasn't read is no holder, so it isn't among the top
+    const left = notReadIn(s, measure);
+    const figures = computeFigures(left ? withoutNotRead(s, measure, left.ids) : s, {
+      measure,
+      petals: Math.max(5, top),
+    });
     const byId = new Map(s.participants.map((p) => [p.id, p]));
     const meaning = (p: string, by: string) => caps?.meanings[`${p}:${by}`]?.meaning ?? by;
     return {
@@ -282,6 +290,7 @@ export const describeSnapshot = defineTool<{ sha256: string; top?: number }, obj
       }),
       coverage_note: coverageNote(s),
       sources: s.sources.map((x) => ({ id: x.id, url: x.url })),
+      ...(left ? { not_read: left.notRead } : {}),
     };
   },
 });

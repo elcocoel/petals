@@ -20,6 +20,7 @@ const PHASE_A = [
   'prepare_publish',
   'publish_flower',
   'quote_payment',
+  'look_up',
   'find_target',
   'read_chain',
   'read_page',

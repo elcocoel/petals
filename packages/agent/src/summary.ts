@@ -24,6 +24,20 @@ function line(name: string, out: Obj): string {
         .map((s) => obj(s).id);
       return `${arr(out.candidates).length} candidates${out.ambiguous ? ', several things share this name' : ''}; ${out.calls ?? '?'} calls; answered: ${said.join(', ') || 'none'}`;
     }
+    case 'look_up': {
+      const kinds = arr(out.chain).map((c) => `${obj(c).chain} ${obj(c).kind}`);
+      const down = arr(out.searched)
+        .filter((x) => obj(x).status === 'down')
+        .map((x) => obj(x).id);
+      return [
+        `${arr(out.flowers).length} flowers`,
+        `${arr(out.stored).length} stored reads`,
+        `${arr(out.accounts).length} account rows`,
+        ...(kinds.length ? [`chain: ${kinds.join(', ')}`] : []),
+        `${arr(out.listed).length} listed${out.ambiguous ? ', several things share this name' : ''}`,
+        ...(down.length ? [`down: ${down.join(', ')}`] : []),
+      ].join('; ');
+    }
     case 'read_chain': {
       const said = arr(out.read).map((r) => {
         const x = obj(r);
@@ -59,7 +73,12 @@ function line(name: string, out: Obj): string {
     case 'compute_figures': {
       const n = obj(out.nakamoto);
       const top = obj(out.top_k_share);
-      return `Nakamoto ${n.count ?? '?'} at ${n.threshold ?? '?'}; ${out.participants_included ?? '?'} included; top 10 hold ${pct(top['10'])}`;
+      const read = obj(out.not_read);
+      const of =
+        typeof read.share_of_whole === 'number'
+          ? `; of what was read, ${pct(1 - read.share_of_whole)} of the whole`
+          : '';
+      return `Nakamoto ${n.count ?? '?'} at ${n.threshold ?? '?'}; ${out.participants_included ?? '?'} included; top 10 hold ${pct(top['10'])}${of}`;
     }
     case 'compare_figures': {
       const n = obj(out.nakamoto);
@@ -79,7 +98,7 @@ function line(name: string, out: Obj): string {
     case 'render_flower':
       return `drawn: render ${short(out.render_sha256)}, ${arr(out.legend).length} legend lines`;
     case 'list_flowers':
-      return `${arr(out.flowers).length} flowers`;
+      return `${arr(out.flowers).length} flowers${out.hint ? `; ${out.hint}` : ''}`;
     case 'get_flower':
       return `flower ${obj(out.entry).id ?? '?'} (${out.where ?? '?'})`;
     case 'prepare_publish':

@@ -150,11 +150,14 @@ interface Candidate {
   draw?: { module?: unknown; params?: unknown }[];
 }
 
-/** The last find_target's candidates, when it said it was ambiguous. */
+/** The last find_target's candidates, or look_up's listed ones, when it said it was ambiguous. */
 function ambiguousCandidates(thread: LlmMessage[]): Candidate[] {
   let last: Obj | undefined;
   for (const { name, out } of answeredCalls(thread)) {
-    if (name === 'find_target' && isObj(out) && !('error' in out)) last = out;
+    if (!isObj(out) || 'error' in out) continue;
+    if (name === 'find_target') last = out;
+    // look_up names find_target's candidates `listed`, with the same chain, address and draw
+    if (name === 'look_up') last = { ambiguous: out.ambiguous, candidates: out.listed };
   }
   return last?.ambiguous === true && Array.isArray(last.candidates)
     ? (last.candidates as Candidate[])

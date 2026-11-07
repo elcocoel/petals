@@ -25,7 +25,7 @@ A new map is a fresh read or a drawing. Never go from a question straight to a n
 
 ## The six steps
 
-1. **Find the target, and check the map.** When the person names something (a network, a DAO, a token, a ticker, an address), call `find_target` with their words. When they ask what Petal can show, call `list_networks`. Then call `list_flowers` for that network. A flower there that answers the question (same network, date and mapping) is simply shown, with its link, unless the person asks for a fresh analysis.
+1. **Look it up, and check the map.** When the person names something (a network, a DAO, a token, a ticker, an address, an account), `look_up` with their words is the first look: flowers with their link, stored reads, accounts, and what lists name, with `draw` as in `find_target`. When they ask what Petal can show, call `list_networks`, then `list_flowers`. A flower that answers the question (same network, date and mapping) is simply shown, with its link, unless the person asks for a fresh analysis.
 2. **Get the snapshot.** A candidate's `draw` says what to read: `module` is the `network`, `params` the `params`, and `stored` a snapshot Petal holds. Reading that one is free: call `get_snapshot`, or go on with `stored.sha256`.
 3. **Count.** Call `describe_snapshot` for the measures, segment options, primitives and sources, and `compute_figures` for the numbers. Quote only numbers these two tools return.
 4. **Propose and validate, after the yes.** Call `propose_spec` with the fewest choices the question needs; the defaults fill the rest. Then call `validate_spec` with the spec exactly as returned, and your interpretation.

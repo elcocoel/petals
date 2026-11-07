@@ -51,6 +51,9 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     const got = await run('get_flower', { id: pub.id });
     await run('quote_payment', { purpose: 'sponsor_refresh' });
     await run('find_target', { query: 'near validators' });
+    await run('look_up', { query: 'near validators' });
+    await run('look_up', { query: '0x000000000000000000000000000000000000dead' });
+    await run('look_up', { query: 'astro-stakers.poolv1.near' });
     await run('read_chain', { address: '0x000000000000000000000000000000000000dead' });
     await run('read_page', { url: 'https://example.org/' });
     await run('search', { query: 'near validators' });

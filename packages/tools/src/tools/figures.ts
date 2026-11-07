@@ -3,7 +3,8 @@
 import { computeFigures } from '@petal/core';
 import type { Figures } from '@petal/core/types';
 import { defineTool } from '../define.ts';
-import { checkMeasure, loadSnapshot, obj, SHA256 } from './shared.ts';
+import type { NotRead } from './shared.ts';
+import { checkMeasure, loadSnapshot, notReadIn, obj, SHA256, withoutNotRead } from './shared.ts';
 
 const SHARE_ROW = obj(['id', 'label', 'amount', 'share', 'rank'], {
   id: { type: 'string' },
@@ -50,6 +51,13 @@ export const FIGURES_SCHEMA = obj(
     }),
     fusions: { type: 'array', items: { type: 'object' } },
     figure_ids: { type: 'array', items: { type: 'string' } },
+    // additive (T394): what the read left out, which no figure counts as a holder
+    not_read: obj(['amount', 'whole', 'share_of_whole', 'says'], {
+      amount: { type: 'string' },
+      whole: { type: 'string' },
+      share_of_whole: { type: 'number' },
+      says: { type: 'string' },
+    }),
   },
 );
 
@@ -61,7 +69,7 @@ export const computeFiguresTool = defineTool<
     nakamoto_threshold?: number;
     top_k?: number[];
   },
-  Figures
+  Figures | (Figures & { not_read: NotRead })
 >({
   name: 'compute_figures',
   title: 'Compute figures',
@@ -91,11 +99,18 @@ export const computeFiguresTool = defineTool<
   async run({ sha256, measure, petals, nakamoto_threshold, top_k }, ctx) {
     const s = await loadSnapshot(ctx, sha256);
     checkMeasure(s, measure);
-    return computeFigures(s, {
+    const left = notReadIn(s, measure);
+    const figures = computeFigures(left ? withoutNotRead(s, measure, left.ids) : s, {
       measure,
       petals: petals ?? 60,
       ...(nakamoto_threshold !== undefined ? { nakamotoThreshold: nakamoto_threshold } : {}),
       ...(top_k ? { topK: top_k } : {}),
     });
+    if (!left) return figures;
+    return {
+      ...figures,
+      figure_ids: [...figures.figure_ids, 'fig:not_read'],
+      not_read: left.notRead,
+    };
   },
 });
