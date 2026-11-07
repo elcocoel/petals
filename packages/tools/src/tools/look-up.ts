@@ -363,7 +363,7 @@ export function makeLookUp(
     name: 'look_up',
     title: 'Look up',
     description:
-      'What Petal knows about any word: a name, ticker, address, account or flower id. Flowers with their view_url, stored reads with dates, where an account sits in them, what the chain says of an address, and what goes by that name in market and DAO lists. Each item says how it is known. Never fails on a guess.',
+      "What Petal knows about any word (a name, ticker, address, account): flowers with view_url, stored reads with dates, accounts in them, what the chain says of an address, and what market and DAO lists name, each marked how it's known. Never fails on a guess.",
     input: obj(
       ['query'],
       {

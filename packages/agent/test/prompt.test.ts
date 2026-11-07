@@ -24,6 +24,7 @@ describe('SYSTEM_PROMPT', () => {
     const numbered = steps.split('\n## ')[0]?.match(/^\d\. /gm) ?? [];
     expect(numbered).toEqual(['1. ', '2. ', '3. ', '4. ', '5. ', '6. ']);
     const order = [
+      'look_up',
       'find_target',
       'list_networks',
       'list_flowers',
@@ -50,8 +51,8 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/Never ask anyone for a key/);
   });
 
-  test('steers T165: a name goes through find_target, and nothing ends in a dead end', () => {
-    expect(SYSTEM_PROMPT).toMatch(/call `find_target` with their words/);
+  test('steers T165: a name goes through look_up first, and nothing ends in a dead end', () => {
+    expect(SYSTEM_PROMPT).toMatch(/`look_up` with their words is the first look/);
     expect(SYSTEM_PROMPT).toMatch(
       /a flower, one clear question, or a refusal that says what would work/,
     );

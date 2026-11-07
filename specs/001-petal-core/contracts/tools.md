@@ -34,6 +34,7 @@ The agent interprets; the tools count (FR-025). Any number an agent quotes must 
 | `quote_payment` | A (dry) | calls NEAR Intents 1Click with `dry: true`; no money moves (FR-031) |
 | `find_documents` | B | fetches public docs and forum pages for citations |
 | `get_labels` | B | reads the label layer |
+| `look_up` | M-Lookup | reads the map, the store and the relations index; for an address, `read_chain`'s first look; for a name, `find_target`'s searching |
 | `find_target` | M-Talk | at most 5 keyless calls to public sources and the chain |
 | `read_chain` | M-Reach | at most 12 view calls and one log query, on our own endpoints only |
 | `read_page` | M-Reach | fetches one public URL; a daily cap |
@@ -67,6 +68,13 @@ Output: `{ "query", "chain", "candidates": Candidate[], "more": int, "ambiguous"
 Behaviour: Petal's modules and stored snapshots, then GeckoTerminal, Jupiter and Snapshot's hub; each EVM chain is then asked about its best candidate (`identifyContracts`, one eth_call). An EVM address that neither the chain confirmed nor a stored snapshot holds gets `cannot_draw`, never `draw`; Solana candidates are not confirmed here, the module's first read checks the mint. At most 5 calls and 4 s each; a source that is down costs only its own answer. `ambiguous` is true when different things carry the name: the caller asks, it does not pick. In fake mode no outbound call is made.
 
 `next` reports what was found and what didn't answer. It doesn't tell the caller to ask or to stop. A chain whose endpoints don't answer is said to be down, and that says nothing about the address. Each chain's endpoints are tried in order.
+
+### look_up (M-Lookup, T390; additive, still tools/v1)
+
+One place to ask "what do we know about this?", with any word: a name, a ticker, an address, an account, a flower id, a snapshot hash. It reports and doesn't steer: there's no `next`, and every item says how it's known in `known`: `verified` (the chain answered just now), `stored` (a read Petal holds, on its date), `listed` (a market or DAO list names it, unconfirmed), `inferred` (the same address on another chain). It never fails on a guess: an unknown word gives empty lists and a `says` that names what was searched and what was down.
+Input: `{ "query": string, "chain"?: string }`.
+Output: `{ "query", "says", "flowers": [{ "id", "title", "network", "as_of", "where", "view_url", "known" }], "stored": [{ "network", "title", "params"?, "sha256", "as_of", "block_height", "known" }], "accounts": [{ "account", "role": "holder" | "delegator" | "backed", "in", "network", "sha256", "as_of", "known", "measure"?, "unit"?, "amount"?, "share"?, "rank"?, "of"?, "accounts"? }], "chain": [{ "chain", "kind": "contract" | "account", "known", "native_balance"?, "transactions_sent"?, "answers"?, "verified_source"?, "proxy_of"?, "delegates_code_to"? }], "listed": [{ "name", "symbol", "kind", "chain", "address", "ledger", "transferable", "known", "listed_by", "draw", "cannot_draw", "evidence" }], "ambiguous"?: true, "searched": [{ "id", "status": "answered" | "down" | "skipped", "note"? }] }`.
+Behaviour: flowers on the map and in the fixtures match by their words, their id, or because they draw a read found here. Stored reads match by their words, their hash, an address in their params, a listed candidate's `draw.stored`, or an account in them. An account (an EVM or NEAR account, `chain:address`, a Solana address) is looked for in the relations index, and each read it's in gives its share and rank by the measure a flower of that read uses (`role: "holder"`), its place in a delegators group (`delegator`), or the group that backs it (`backed`, with `accounts`). An EVM address gets `read_chain`'s first look on every chain, or the one named: no code is an account, with its balance and transactions sent. A name, and an address where a chain holds code, go through `find_target`'s searching; its candidates are `listed`, at most 5, with `draw` and `cannot_draw` as there. A NEAR account, a flower id or a hash is answered from what Petal holds.
 
 Routes for the three tools below: `POST /api/v1/read-chain`, `GET /api/v1/read-page?url=&start=`, `GET /api/v1/web-search?query=`. They're in http-api.md and the skill's table.
 
@@ -137,8 +145,8 @@ Errors: `invalid_spec` (render refuses anything `validate_spec` rejects).
 
 ### list_flowers / get_flower
 
-`list_flowers` input: `{ "network"?: string, "maker"?: string, "limit"?: int }` → `{ "flowers": [{ "id", "title", "network", "as_of", "maker", "published_at", "where": "map" | "fixture", "tx_hash"? }] }`. Reads the shared map (trusted writers only, [shared-map.md](./shared-map.md)) and the hero fixtures.
-`get_flower` input: `{ "id": string }` → `{ "entry": Entry (`flower/v1` or `flower/v2`, each verified by its own rule), "where", "tx_hash"?, "verified": { "entry_hash": bool, "maker_signature": bool, "model_signature": "present" | "absent" }, "corrections": [{ "id", "target", "request", "status": "open" | "accepted" | "declined" }] }`.
+`list_flowers` input: `{ "network"?: string, "maker"?: string, "limit"?: int }` → `{ "flowers": [{ "id", "title", "network", "as_of", "maker", "published_at", "where": "map" | "fixture", "tx_hash"?, "view_url" }], "hint"? }`. Reads the shared map (trusted writers only, [shared-map.md](./shared-map.md)) and the hero fixtures. Additive (T391): `view_url` is the flower's own page, `/f/<id>` after the public base, so no agent hands over a bare id or makes a link up. A `network` that is no id Petal reads is empty with a `hint` naming the ids that have flowers, not `cannot_read`: models guess ids ("near", "moloch").
+`get_flower` input: `{ "id": string }` → `{ "entry": Entry (`flower/v1` or `flower/v2`, each verified by its own rule), "where", "tx_hash"?, "view_url" (additive, T391), "verified": { "entry_hash": bool, "maker_signature": bool, "model_signature": "present" | "absent" }, "corrections": [{ "id", "target", "request", "status": "open" | "accepted" | "declined" }] }`.
 
 ### prepare_publish
 

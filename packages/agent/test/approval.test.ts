@@ -821,6 +821,21 @@ describe('naming one is the yes, when several things carry the name', () => {
     expect(ran(tools)).toEqual([]);
   });
 
+  test("look_up's listed candidates count the same way, when it says ambiguous", async () => {
+    const tools = fakeRegistry();
+    tools.registry.push(tool('look_up', () => ({ listed: CANDIDATES, ambiguous: true })));
+    const first = await chat(
+      [{ calls: [{ name: 'look_up', args: { query: 'UNI' } }] }, { content: WHICH }],
+      { said: 'draw UNI', tools },
+    );
+    const { es, tools: after } = await chat([{ calls: [SECOND] }, { content: HERE }], {
+      said: 'the one on base',
+      thread: reply(first.thread, 'the one on base'),
+    });
+    expect(ran(after)).toEqual(['get_snapshot']);
+    expect(held(es)).toEqual([]);
+  });
+
   test('only when the last find_target was ambiguous', async () => {
     const first = await findIt(false);
     const { tools } = await chat([{ calls: [FIRST] }, { content: WHICH }], {
