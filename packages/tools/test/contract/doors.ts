@@ -50,6 +50,7 @@ export const ROUTES: Record<
   prepare_publish: (i) => ({ method: 'POST', path: '/api/v1/publish/prepare', body: i }),
   publish_flower: (i) => ({ method: 'POST', path: '/api/v1/publish', body: i }),
   quote_payment: (i) => ({ method: 'POST', path: '/api/v1/quote', body: i }),
+  look_up: (i) => ({ method: 'GET', path: `/api/v1/look-up${qs(i)}` }),
   find_target: (i) => ({ method: 'GET', path: `/api/v1/find${qs({ query: i.query })}` }),
   read_chain: (i) => ({ method: 'POST', path: '/api/v1/read-chain', body: i }),
   read_page: (i) => ({ method: 'GET', path: `/api/v1/read-page${qs(i)}` }),

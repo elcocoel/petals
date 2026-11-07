@@ -14,6 +14,7 @@ import {
 import { computeFiguresTool } from './tools/figures.ts';
 import { findTarget } from './tools/find.ts';
 import { getFlower, listFlowers } from './tools/flowers.ts';
+import { lookUp } from './tools/look-up.ts';
 import { getNetwork, listNetworks } from './tools/networks.ts';
 import { preparePublish, publishFlower } from './tools/publish.ts';
 import { quotePayment } from './tools/quote.ts';
@@ -47,6 +48,7 @@ export const registry: Tool<any, any>[] = [
   preparePublish,
   publishFlower,
   quotePayment,
+  lookUp,
   findTarget,
   readChain,
   readPage,

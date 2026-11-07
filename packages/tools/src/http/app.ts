@@ -91,6 +91,9 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   }
 
   // -- networks and snapshots
+  app.get('/api/v1/look-up', limit, (c) =>
+    answer(c, 'look_up', pick(c.req.query(), ['query', 'chain'])),
+  );
   app.get('/api/v1/find', limit, (c) =>
     answer(c, 'find_target', pick(c.req.query(), ['query', 'chain', 'limit'], ['limit'])),
   );

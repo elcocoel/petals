@@ -8,7 +8,7 @@ import { defineTool, FLOWER_DEFS } from '../define.ts';
 import { ToolFailure } from '../errors.ts';
 import type { ToolContext } from '../types.ts';
 import { type Verified, verifyEntry } from '../verify.ts';
-import { ENTRY_ID, moduleFor, obj } from './shared.ts';
+import { ENTRY_ID, galleryUrl, obj } from './shared.ts';
 
 /** Shared-map prefix of published flowers (shared-map.md, Keys and values). */
 const SPEC_PREFIX = 'petal/v1/spec/';
@@ -17,7 +17,7 @@ const SPEC_PREFIX = 'petal/v1/spec/';
 const isEntry = (x: { petal?: unknown } | null): boolean =>
   x?.petal === 'flower/v1' || x?.petal === 'flower/v2';
 
-interface Found {
+export interface Found {
   entry: Entry;
   where: 'map' | 'fixture';
   verified: Verified;
@@ -72,18 +72,39 @@ async function mapEntries(ctx: ToolContext): Promise<Found[]> {
   return rows.map(fromRow).filter((f): f is Found => f !== null);
 }
 
-const FLOWER_ROW = obj(['id', 'title', 'network', 'as_of', 'maker', 'published_at', 'where'], {
-  id: ENTRY_ID,
-  title: { type: 'string' },
-  network: { type: 'string' },
-  as_of: { type: 'string' },
-  maker: { type: ['string', 'null'] },
-  published_at: { type: ['string', 'null'] },
-  where: { enum: ['map', 'fixture'] },
-  tx_hash: { type: 'string' },
-});
+/**
+ * Every flower Petal can show: the map's, then the fixtures it doesn't already hold. When the map is
+ * unreachable the fixtures still answer, and `map` says so: down is not the same as no flowers.
+ */
+export async function allFlowers(
+  ctx: ToolContext,
+): Promise<{ found: Found[]; map: 'answered' | 'down' }> {
+  let map: 'answered' | 'down' = 'answered';
+  const fromMap = await mapEntries(ctx).catch(() => {
+    map = 'down';
+    return [] as Found[];
+  });
+  const seen = new Set(fromMap.map((f) => f.entry.id));
+  const fixtures = (await fixtureEntries(ctx)).filter((f) => !seen.has(f.entry.id));
+  return { found: [...fromMap, ...fixtures], map };
+}
 
-function summaryOf(f: Found) {
+export const FLOWER_ROW = obj(
+  ['id', 'title', 'network', 'as_of', 'maker', 'published_at', 'where', 'view_url'],
+  {
+    id: ENTRY_ID,
+    title: { type: 'string' },
+    network: { type: 'string' },
+    as_of: { type: 'string' },
+    maker: { type: ['string', 'null'] },
+    published_at: { type: ['string', 'null'] },
+    where: { enum: ['map', 'fixture'] },
+    tx_hash: { type: 'string' },
+    view_url: { type: 'string', description: 'opens the flower on the site' },
+  },
+);
+
+export function summaryOf(f: Found, ctx: ToolContext) {
   const e = f.entry;
   return {
     id: e.id,
@@ -95,6 +116,8 @@ function summaryOf(f: Found) {
     published_at: f.row ? (isoFromBlock(f.row.block_timestamp) ?? e.provenance.created_at) : null,
     where: f.where,
     ...(f.row ? { tx_hash: f.row.tx_hash } : {}),
+    // the link to hand over, so no agent gives a bare id or makes one up
+    view_url: galleryUrl(ctx, e.id),
   };
 }
 
@@ -115,22 +138,29 @@ export const listFlowers = defineTool<{ network?: string; maker?: string; limit?
       },
       { additionalProperties: false },
     ),
-    output: obj(['flowers'], { flowers: { type: 'array', items: FLOWER_ROW } }),
+    output: obj(['flowers'], {
+      flowers: { type: 'array', items: FLOWER_ROW },
+      hint: { type: 'string' },
+    }),
     annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
     async run({ network, maker, limit = 50 }, ctx) {
-      // A filter by a network that isn't one says so: an empty list would read as "no flowers",
-      // and an agent guessing an id then tells the person nothing is published.
-      if (network) moduleFor(ctx, network);
       // When the map is unreachable the fixtures still answer; health says map: down.
-      const fromMap = await mapEntries(ctx).catch(() => [] as Found[]);
-      const seen = new Set(fromMap.map((f) => f.entry.id));
-      const all = [...fromMap, ...(await fixtureEntries(ctx)).filter((f) => !seen.has(f.entry.id))];
+      const { found } = await allFlowers(ctx);
+      const all = found.map((f) => summaryOf(f, ctx));
       const flowers = all
-        .map(summaryOf)
         .filter((f) => (network ? f.network === network : true))
         .filter((f) => (maker ? f.maker === maker : true))
         .sort((a, b) => (b.published_at ?? '').localeCompare(a.published_at ?? ''))
         .slice(0, limit);
+      // A guessed id ("near", "moloch") is no reason to fail: it's empty, and the hint says which
+      // ids have flowers, so "none for this id" never reads as "nothing is published".
+      if (network && flowers.length === 0 && !ctx.modules[network]) {
+        const have = [...new Set(all.map((f) => f.network))].sort();
+        const hint = `No network has the id "${network}". ${
+          have.length ? `Flowers are on: ${have.join(', ')}.` : 'No flowers are published yet.'
+        } look_up takes any word.`;
+        return { flowers, hint };
+      }
       return { flowers };
     },
   },
@@ -150,6 +180,7 @@ export const getFlower = defineTool<{ id: string }, object>({
       entry: { $ref: '#/$defs/entry' },
       where: { enum: ['map', 'fixture'] },
       tx_hash: { type: 'string' },
+      view_url: { type: 'string', description: 'opens the flower on the site' },
       verified: obj(['entry_hash', 'maker_signature', 'model_signature'], {
         entry_hash: { type: 'boolean' },
         maker_signature: { type: 'boolean' },
@@ -179,11 +210,11 @@ export const getFlower = defineTool<{ id: string }, object>({
       });
       if (!row) continue;
       const found = fromRow(row);
-      if (found) return result(found);
+      if (found) return result(found, ctx);
       hidden = true;
     }
     const fixture = (await fixtureEntries(ctx)).find((f) => f.entry.id === id);
-    if (fixture) return result(fixture);
+    if (fixture) return result(fixture, ctx);
     if (mapError) {
       throw new ToolFailure(
         'source_failed',
@@ -201,11 +232,12 @@ export const getFlower = defineTool<{ id: string }, object>({
   },
 });
 
-function result(f: Found) {
+function result(f: Found, ctx: ToolContext) {
   return {
     entry: f.entry,
     where: f.where,
     ...(f.row ? { tx_hash: f.row.tx_hash } : {}),
+    view_url: galleryUrl(ctx, f.entry.id),
     verified: f.verified,
     // Correction requests are read from the map from T082 (Phase B).
     corrections: [],

@@ -465,10 +465,17 @@ describe('prepare_publish, publish_flower, list_flowers, get_flower', () => {
     expect(out.error?.code).toBe('source_failed');
   });
 
-  test('list_flowers refuses a network it cannot read, rather than saying there are no flowers', async () => {
+  test('list_flowers on a guessed id is empty with a hint, not an error', async () => {
+    // 20 of 55 calls in the stress test guessed an id ("near", "moloch") and got cannot_read, so
+    // models missed flowers that exist. Empty with a hint never reads as "nothing is published".
     const out = await runner((await rig()).ctx)('list_flowers', { network: 'near' });
-    expect(out.error?.code).toBe('cannot_read');
-    expect(out.error?.hint).toMatch(/near-validators/);
+    expect(out.error).toBeUndefined();
+    expect(out.flowers).toEqual([]);
+    expect(out.hint).toMatch(/No network has the id "near"\..*look_up takes any word/);
+    // a real id with nothing drawn is just empty: nothing was guessed
+    const none = await runner((await rig()).ctx)('list_flowers', { network: 'near-validators' });
+    expect(none).toMatchObject({ flowers: [] });
+    expect(none.hint).toBeUndefined();
   });
 
   test('get_flower with the map down is source_failed; list_flowers still answers', async () => {
