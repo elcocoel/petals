@@ -66,6 +66,8 @@ describe('look_up', () => {
       of: 371,
     });
     expect(o.accounts[0].share).toBeCloseTo(0.056071, 6);
+    // what it calls itself, and that it only says so: never more than the read does
+    expect(o.accounts[0].identity).toEqual({ name: 'astrostakers.com', status: 'self-declared' });
     expect(o.accounts).toContainEqual(
       expect.objectContaining({ role: 'backed', accounts: 32355, known: 'stored' }),
     );
@@ -75,7 +77,9 @@ describe('look_up', () => {
     ]);
     // a NEAR account is answered by what Petal holds: no market list is asked about it
     expect(o.searched.map((s: Json) => s.id)).toEqual(['flowers', 'stored', 'accounts']);
-    expect(o.says).toMatch(/^Found 1 flower/);
+    expect(o.says).toMatch(
+      /^Found 1 flower, each with its view_url: a working link, to give exactly as it is/,
+    );
   });
 
   test('a name finds the flower and the read, with their link and date, however it is written', async () => {

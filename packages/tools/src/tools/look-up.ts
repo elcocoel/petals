@@ -119,6 +119,14 @@ interface AccountRow {
   rank?: number;
   of?: number;
   accounts?: number;
+  /** what the read says it calls itself, and how that's known (self-declared, say) */
+  identity?: { name: string; status: string };
+}
+
+/** The name a participant goes by in a read, never more than it says: a self-declared name stays so. */
+function identityOf(s: Snapshot, id: string): { identity?: { name: string; status: string } } {
+  const i = s.participants.find((p) => p.id === id)?.identity;
+  return i?.name ? { identity: { name: i.name, status: i.status } } : {};
 }
 
 /** Its share and rank by the measure a flower of this read uses, when it holds any of it. */
@@ -152,6 +160,7 @@ function asHolder(
     share: row.share,
     rank: row.rank,
     of: f.participants_included,
+    ...identityOf(s, row.id),
   };
 }
 
@@ -322,7 +331,11 @@ function sayIt(
   searched: Searched[],
 ): string {
   const parts: string[] = [];
-  if (found.flowers) parts.push(`${plural(found.flowers, 'flower')}, each with its view_url`);
+  // Models put an invented host in front of a relative link ("https://petal.example/f/…").
+  if (found.flowers)
+    parts.push(
+      `${plural(found.flowers, 'flower')}, each with its view_url: a working link, to give exactly as it is, with nothing in front`,
+    );
   if (found.stored) parts.push(plural(found.stored, 'stored read'));
   if (found.accounts)
     parts.push(`the account in ${plural(found.accounts, 'place')} in stored reads`);
