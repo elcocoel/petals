@@ -49,11 +49,19 @@ Elco's summary: "an infinite canvas of ways to see data, with ways to interact w
 
 `/make` on `main` is one canvas with five floating boxes over it: output, input, the flower's panel, the conversation list and the model box. Each conversation's flower is its own canvas. Switching conversation reloads the page. There is no lobby, profile, left menu or project, and flowers don't share a space.
 
+## Decided
+
+- **W1, 8 Nov: the map is public for now. Private maps come later, as a paid ("pro") feature, so the design leaves room for them.** Elco: "having private maps is an extra feature - I was thinking that this could be one of the "pro" features - for now the map is public". "So the possibilty should eventually exist to map privately."
+
+## Ideas, not decided
+
+- **Points for mapping** (Elco, 8 Nov): "I had a vision of incentivizing mapping via 'points' that could one day move us towards a TGE -> users pay for extra features, part of revenue goes to a DAO, part of revenue rewards work, part of revenue goes to Devs." Payments are `003-target`'s Q8, later, in their own spec.
+
 ## Questions to decide, one at a time
 
 Each gets references and trade-offs in plain words before Elco chooses.
 
-- **W1. Whose map is the canvas?** Only what you mapped; the shared public map; or the shared map with your own work as a layer over it.
+- ~~**W1. Whose map is the canvas?**~~ Decided above.
 - **W2. After connecting a wallet,** where does a person land: the lobby, the chat, or suggestions from what the wallet holds?
 - **W3. Lobby and canvas.** Is the lobby its own page, or the same canvas seen from far away?
 - **W4. What a project is.** A group of conversations, a network, a question, or something else, and how it differs from a conversation.
