@@ -72,3 +72,32 @@ test('a SQLite store copies into Postgres exactly, once, and its seals still ope
   ).toBe(true);
   await pg.close();
 });
+
+test('a source at an older migration compares the same: its missing columns are empty in the copy', async () => {
+  const file = join(mkdtempSync(join(tmpdir(), 'petal-copy-old-')), 'private.db');
+  const { MIGRATIONS } = await import('@petal/store');
+  const old = openStore(file, MIGRATIONS.slice(0, 5));
+  await old.person.create({ id: 'prs_old', created_at: AT });
+  await old.close();
+  // a row as the older code wrote it, with no credential column to fill
+  const { DatabaseSync } = await import('node:sqlite');
+  const raw = new DatabaseSync(file);
+  raw
+    .prepare('INSERT INTO session (hash, subject, expires_at) VALUES (?, ?, ?)')
+    .run('h', 'prs_old', AT);
+  raw.close();
+  const pg = await ownerConnection('pglite:');
+  await pg.raw.exec('CREATE ROLE petals_app');
+  await migrateAndGrant(pg.raw, 'petals_app');
+  const checks = await copyFromSqlite(pg.raw, file);
+  expect(checks.find((c) => c.table === 'session')).toMatchObject({
+    sqlite: 1,
+    postgres: 1,
+    same: true,
+  });
+  // a newer column that holds something is a difference
+  await pg.raw.exec("UPDATE session SET credential = 'wallet:x'");
+  const after = await compareWithSqlite(pg.raw, file);
+  expect(after.find((c) => c.table === 'session')?.same).toBe(false);
+  await pg.close();
+});
