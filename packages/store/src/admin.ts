@@ -66,10 +66,11 @@ const canonicalRows = (rows: Row[]) =>
     )
     .sort();
 
-/** SQLite's rows by table, from a file opened read-only. */
+/** SQLite's rows by table, from a file opened read-only, and each table's columns there. */
 function sqliteTables(file: string): {
   names: string[];
   rows: (t: string) => Row[];
+  columns: (t: string) => string[];
   close(): void;
 } {
   const { DatabaseSync } = process.getBuiltinModule('node:sqlite');
@@ -84,27 +85,48 @@ function sqliteTables(file: string): {
   return {
     names,
     rows: (t) => lite.prepare(`SELECT ${columnsOf(t)} FROM "${t}"`).all() as Row[],
+    columns: (t) =>
+      t === 'search'
+        ? ['rowid', 'title', 'text']
+        : (lite.prepare(`PRAGMA table_info("${t}")`).all() as { name: string }[]).map(
+            (c) => c.name,
+          ),
     close: () => lite.close(),
   };
 }
 
-/** Row for row, every table: what a copy, or a restore, must show before anything depends on it. */
+/**
+ * Row for row, every table: what a copy, or a restore, must show before anything depends on it. A source
+ * at an older migration lacks the newer columns: in the copy those must be empty, and the rest the same.
+ */
 export async function compareWithSqlite(raw: Raw, file: string): Promise<TableCheck[]> {
   const lite = sqliteTables(file);
   try {
     const out: TableCheck[] = [];
     for (const t of lite.names) {
+      const cols = new Set(lite.columns(t));
       const a = canonicalRows(lite.rows(t));
       const r = await raw.query(
         `SELECT COALESCE(json_agg(x), '[]'::json) AS rows FROM (SELECT ${columnsOf(t)} FROM "${t}") x`,
       );
       const value = r.rows[0]?.rows;
-      const b = canonicalRows((typeof value === 'string' ? JSON.parse(value) : value) as Row[]);
+      const pgRows = (typeof value === 'string' ? JSON.parse(value) : value) as Row[];
+      let newerFilled = false;
+      const projected = pgRows.map((row) =>
+        Object.fromEntries(
+          Object.entries(row).filter(([k, v]) => {
+            if (cols.has(k)) return true;
+            if (v !== null) newerFilled = true;
+            return false;
+          }),
+        ),
+      );
+      const b = canonicalRows(projected);
       out.push({
         table: t,
         sqlite: a.length,
         postgres: b.length,
-        same: a.length === b.length && a.every((x, i) => x === b[i]),
+        same: !newerFilled && a.length === b.length && a.every((x, i) => x === b[i]),
       });
     }
     return out;
