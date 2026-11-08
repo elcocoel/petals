@@ -113,6 +113,10 @@ Defined later, in its own spec, one step at a time.
 - **TGT-004**: For the first test, every link can sign in and is public. Private links, if they come, never go on chain, not even hashed. Whether a link can be private, and from whom, is Q6.
 - **TGT-005**: Every past action keeps the credential that authorised it. Revocation, recovery and control are in Details, after testing.
 
+### Privacy of work
+- **TGT-006**: An account's working process stays private from every other account. That covers conversations, notes, drafts, unpublished maps and investigation activity. Elco, 8 Nov: "definitely the working process should be private from user to user for sure, and search should search only what the searcher's RLS would allow, ideally only stuff inside their account."
+- **TGT-007**: Search returns only what the searcher may read, and by default only what's inside their own account. That holds for snippets, counts, suggestions and indexes as well as results. Discovering the public map is a separate surface, and never a way to search another account's private work.
+
 ### Permanence
 - **TGT-010**: What a person makes survives restarts, a move to another host, and the loss of a disk. That covers accounts, links, workspaces, conversations, flowers, notes and claims.
 - **TGT-011**: Public claims and published flowers can be verified without trusting Petals.
@@ -158,6 +162,8 @@ Each one gets its options explained in plain words, with trade-offs, before anyt
 - **Q7. The seam between website and server.** Researched on branch `sys/site-server-spec` (`specs/002-system/research.md`). The lean is one address.
 - **Q8. Payments.** Later, in its own spec.
 
+- **Q10. Keeping plain text away from the operator.** Elco: "If we can keep plain text away from the server, encrypted in the db and then only the author can actually read while being able to have an account space they can log in from anywhere, great. I dont see why we shouldn't aim for that." This is the direction to research, not a chosen design, and it doesn't block the first test. Before anything is built, Elco gets the options explained: what runs in the browser and what runs in the database, how a key unlocks on a new device, and what search can do over encrypted text. Ordinary Postgres search stays for content the server is allowed to read. Signing in isn't holding a decryption key, and linking another wallet doesn't by itself let it decrypt.
+
 ## What this replaces, once approved
 
 - `design/system-plan.md`'s server doing visitors' work on Elco's resources.
@@ -182,3 +188,4 @@ Open, to design together:
 - What happens when every credential is lost?
 
 - **Q9. Recovery and controllers.** Recovering after a lost wallet, revoking a stolen one, conflicts between controllers, and losing every credential. No recovery authority is invented in the meantime.
+- **Shared accounts and "only the author".** With accounts shared on purpose, does "only the author can read" mean every member of the account, or a private compartment for each author? It's to clarify with Elco. Neither is assumed meanwhile.
