@@ -61,6 +61,7 @@ import { Mono } from '../components/ui/Mono.tsx';
 import { Nav } from '../components/ui/Nav.tsx';
 import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
+import { SideRail } from '../components/ui/SideRail.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
 import { TextLink } from '../components/ui/TextLink.tsx';
 import { Transcript } from '../components/ui/Transcript.tsx';
@@ -1045,6 +1046,63 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'SideRail',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/SideRail.tsx',
+    states: [
+      {
+        name: 'open',
+        wide: true,
+        render: () => (
+          <SideRail
+            label="Your work"
+            title="Conversations"
+            open
+            foldLabel="Hide"
+            unfoldLabel="Menu"
+            onFold={() => {}}
+            onUnfold={() => {}}
+            control={
+              <Button variant="link" href="#new">
+                New
+              </Button>
+            }
+          >
+            <ConversationList
+              rows={[
+                {
+                  key: 'a',
+                  title: "Who stands behind NEAR's validators?",
+                  sub: '6 Nov 2026',
+                  href: '#a',
+                  current: false,
+                },
+              ]}
+            />
+          </SideRail>
+        ),
+      },
+      {
+        name: 'folded',
+        render: () => (
+          <SideRail
+            label="Your work"
+            title="Conversations"
+            open={false}
+            foldLabel="Hide"
+            unfoldLabel="Menu"
+            onFold={() => {}}
+            onUnfold={() => {}}
+          >
+            {null}
+          </SideRail>
+        ),
+      },
+    ],
+  },
+  {
     id: 'ReadingKey',
     group: 'The workspace',
     figmaName: 'Make a flower / One petal',
@@ -1750,4 +1808,6 @@ export const NOT_IN_LAB: Record<string, string> = {
   FloatBox: 'a BarBox fixed to the window and placed by hand: it lives at /make',
   SiteChrome: 'the Nav, drawn here, around a reading column; it holds no state of its own',
   FrontDoor: 'draws nothing: it opens the wallet when the landing is left for /make (proposal)',
+  Lobby:
+    'wires useLobby to the SideRail, the list and the tiles, each here, and it lives at /lobby',
 };
