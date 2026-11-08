@@ -1,6 +1,6 @@
 // Many doors, one tool universe (Elco, 5 Nov): whatever someone already uses, one clear way in,
 // and no repo to clone. Every door reaches the same tools, rules and flowers on this site.
-import { agentPrompt } from './agent-prompt.ts';
+import { agentPrompt, getFile, keepCommands } from './agent-prompt.ts';
 
 export interface Door {
   id: string;
@@ -14,6 +14,9 @@ export interface Door {
 
 export function doors(origin: string): Door[] {
   const mcp = `${origin}/mcp`;
+  // The tools run on the person's own computer, from one file this site serves (petal.mjs).
+  const file = getFile(origin);
+  const keep = keepCommands();
   return [
     {
       id: 'prompt',
@@ -40,21 +43,21 @@ export function doors(origin: string): Door[] {
       id: 'claude-code',
       title: 'Claude Code',
       how: 'Run this once in a terminal.',
-      copy: `claude mcp add --transport http petals ${mcp}`,
+      copy: `${file} && ${keep.claude}`,
       copyLabel: 'Copy the command',
     },
     {
       id: 'codex',
       title: 'Codex',
       how: 'Run this once in a terminal.',
-      copy: `codex mcp add petals --url ${mcp}`,
+      copy: `${file} && ${keep.codex}`,
       copyLabel: 'Copy the command',
     },
     {
       id: 'hermes',
       title: 'Hermes',
       how: 'Run this once in a terminal.',
-      copy: `hermes mcp add petals --url ${mcp}`,
+      copy: `${file} && ${keep.hermes}`,
       copyLabel: 'Copy the command',
     },
     {

@@ -17,5 +17,8 @@
     "@petal/agent": "workspace:*",
     "@petal/core": "workspace:*",
     "@petal/tools": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.7"
   }
 }
