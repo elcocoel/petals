@@ -53,6 +53,20 @@ Elco's summary: "an infinite canvas of ways to see data, with ways to interact w
 
 - **W1, 8 Nov: the map is public for now. Private maps come later, as a paid ("pro") feature, so the design leaves room for them.** Elco: "having private maps is an extra feature - I was thinking that this could be one of the "pro" features - for now the map is public". "So the possibilty should eventually exist to map privately."
 
+- **W4, 8 Nov: folders and conversations, defined by the person, as in any IDE. A conversation isn't tied to a flower or an investigation.** Elco:
+  > there is one mode of interaction where I'm looking at already published petals and adding to their mapping or asking about them. And there's also situations where I'm creating new mapping. I think that the best primitives we can have right now is folders and conversations and they could be whatever and it's up for the user to define them.
+
+  > they should be able to organize into folders and projects and rename them and add conversations and conversations are a disposable unit because then the agent, the context window gets full, etc. So the system here is very much how any IDE would work. But I don't think conversation is like it is right now attached to a petal or to an investigation. We need to be more flexible than this.
+
+  > especially now where we're still designing, it needs to be as flexible as possible, an open investigation space so I can do testing and then I can have a sensation of the user journey and we move forward from there.
+
+  So:
+  - **Two primitives:** folders and conversations. The person names, renames and arranges them; a folder can be a project or anything else.
+  - **A conversation is disposable.** When its context fills, you start another.
+  - **A conversation isn't attached** to a flower, a petal or an investigation.
+  - **Two modes of work:** asking about or adding to flowers already on the map, and making new mapping.
+  - **Ours to solve, in the tools and the skill:** making the difference understandable between just talking about something and using inference to read chain data and put something on the map.
+
 ## Ideas, not decided
 
 - **Points for mapping** (Elco, 8 Nov): "I had a vision of incentivizing mapping via 'points' that could one day move us towards a TGE -> users pay for extra features, part of revenue goes to a DAO, part of revenue rewards work, part of revenue goes to Devs." Payments are `003-target`'s Q8, later, in their own spec.
@@ -64,8 +78,8 @@ Each gets references and trade-offs in plain words before Elco chooses.
 - ~~**W1. Whose map is the canvas?**~~ Decided above.
 - **W2. After connecting a wallet,** where does a person land: the lobby, the chat, or suggestions from what the wallet holds?
 - **W3. Lobby and canvas.** Is the lobby its own page, or the same canvas seen from far away?
-- **W4. What a project is.** A group of conversations, a network, a question, or something else, and how it differs from a conversation.
-- **W5. The left menu, first version.** What's in it on day one, and what waits.
+- ~~**W4. What a project is.**~~ Decided above: folders and conversations.
+- **W5. The left menu, first version.** Folders and conversations, from W4. What else is in it on day one, and what waits.
 - **W6. The profile.** A page or a panel; overlaps `003-target`'s Q3 and Q6.
 - **W7. The meta layer.** Where notes, claims and challenges sit on the canvas, and who sees them; overlaps `003-target`'s Q4 to Q6.
 - **W8. The flower's layers.** What information shows on and around a flower, at what distance, and how. Elco's second thread; it follows W1 and W7.
