@@ -231,6 +231,27 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE follow ADD COLUMN credential TEXT;
   ALTER TABLE workspace_note ADD COLUMN credential TEXT;
   `,
+  // 7: folders (004-workspace, W4): a person's own, named and arranged as in any IDE, and nested. A
+  // conversation sits in one folder or at the top: a run if it's the site's, an exploration if it came
+  // from another door. A folder's parent is checked at the end of its transaction, so a copy can add a
+  // tree in any order.
+  `
+  CREATE TABLE folder (
+    id TEXT PRIMARY KEY,
+    owner TEXT NOT NULL,
+    name TEXT NOT NULL,
+    parent TEXT REFERENCES folder(id) DEFERRABLE INITIALLY DEFERRED,
+    position INTEGER NOT NULL,
+    credential TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE INDEX folder_owner ON folder(owner, parent, position);
+  ALTER TABLE run ADD COLUMN folder TEXT REFERENCES folder(id);
+  ALTER TABLE exploration ADD COLUMN folder TEXT REFERENCES folder(id);
+  CREATE INDEX run_folder ON run(folder);
+  CREATE INDEX exploration_folder ON exploration(folder);
+  `,
 ];
 
 /**

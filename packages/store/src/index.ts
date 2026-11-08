@@ -20,6 +20,7 @@ export type {
   DraftRow,
   ExplorationLinkRow,
   ExplorationRow,
+  FolderRow,
   FollowRow,
   InviteRow,
   LedgerRow,

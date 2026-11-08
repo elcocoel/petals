@@ -840,3 +840,214 @@ describe('signing in', () => {
     expect(await db.follow.list('anon_x', 10)).toEqual([]);
   });
 });
+
+describe('folders (004-workspace, W4)', () => {
+  const make = async (b: Browser, name: string, more: Out = {}) => {
+    const res = await b.post('/api/v1/folders', { name, ...more });
+    expect(res.status).toBe(201);
+    return (await body(res)).folder as Out;
+  };
+  const folders = async (b: Browser) =>
+    (await body(await b.get('/api/v1/folders'))).folders as Out[];
+  const listed = async (b: Browser) =>
+    Object.fromEntries(
+      ((await body(await b.get('/api/v1/conversations'))).conversations as Out[]).map((c) => [
+        c.id,
+        c.folder,
+      ]),
+    );
+
+  test('nothing here yet reads as empty, and opens no session', async () => {
+    const { app } = setup();
+    const b = new Browser(app);
+    expect(await folders(b)).toEqual([]);
+    expect(b.jar.size).toBe(0);
+  });
+
+  test('made, nested, renamed and reordered, and listed flat with each one naming its parent', async () => {
+    const { app } = setup();
+    const b = new Browser(app);
+    const projects = await make(b, 'Projects');
+    expect(b.jar.size).toBe(1);
+    expect(projects).toMatchObject({ name: 'Projects', parent: null, position: 0 });
+    const near = await make(b, '  NEAR  ', { parent: projects.id });
+    expect(near).toMatchObject({ name: 'NEAR', parent: projects.id, position: 0 });
+    const ideas = await make(b, 'Ideas');
+    expect(ideas.position).toBe(1);
+    expect((await folders(b)).map((f) => f.name)).toEqual(['Projects', 'Ideas', 'NEAR']);
+
+    const renamed = await body(await b.patch(`/api/v1/folders/${near.id}`, { name: 'Validators' }));
+    expect(renamed.folder).toMatchObject({ name: 'Validators', parent: projects.id, position: 0 });
+    await b.patch(`/api/v1/folders/${ideas.id}`, { position: -1 });
+    expect((await folders(b)).map((f) => f.name)).toEqual(['Ideas', 'Projects', 'Validators']);
+    // moved to the top, it goes after the last one there
+    const up = await body(await b.patch(`/api/v1/folders/${near.id}`, { parent: null }));
+    expect(up.folder).toMatchObject({ parent: null, position: 1 });
+  });
+
+  test('a conversation moves in and out, and so does work from another door', async () => {
+    const { app, invite, store } = setup();
+    const b = await signedIn(app, invite);
+    const db = store();
+    const f = await make(b, 'Validators');
+    const run = await b.chat(ask('who stakes the most?'));
+    const door = await doorWork(db, await subjectOf(db, b));
+
+    const moved = await body(await b.patch(`/api/v1/conversations/${run}`, { folder: f.id }));
+    expect(moved.conversation.folder).toBe(f.id);
+    const doorMoved = await b.patch(`/api/v1/conversations/${door}`, { folder: f.id });
+    expect(doorMoved.status).toBe(200);
+    expect((await body(doorMoved)).conversation).toMatchObject({ id: door, folder: f.id });
+    expect(await listed(b)).toEqual({ [run]: f.id, [door]: f.id });
+    expect((await body(await b.get(`/api/v1/conversations/${door}`))).conversation.folder).toBe(
+      f.id,
+    );
+    // another door's work still can't be renamed, even on its way into a folder
+    expect(
+      (await b.patch(`/api/v1/conversations/${door}`, { folder: f.id, title: 'x' })).status,
+    ).toBe(400);
+
+    await b.patch(`/api/v1/conversations/${run}`, { folder: null });
+    expect((await listed(b))[run]).toBeNull();
+    // continued here, the door's work keeps its place
+    const continued = await b.chat(ask('carry on', { exploration: door }));
+    expect((await listed(b))[continued]).toBe(f.id);
+  });
+
+  test("a folder can't go inside itself, and they nest eight deep at most", async () => {
+    const { app } = setup();
+    const b = new Browser(app);
+    const chain: Out[] = [];
+    for (let i = 0; i < 8; i++)
+      chain.push(await make(b, `level ${i + 1}`, { parent: chain[i - 1]?.id }));
+    const ninth = await b.post('/api/v1/folders', { name: 'too deep', parent: chain[7]?.id });
+    expect(ninth.status).toBe(400);
+    expect((await body(ninth)).error.message).toMatch(/8 deep/);
+    const loop = await b.patch(`/api/v1/folders/${chain[0]?.id}`, { parent: chain[2]?.id });
+    expect(loop.status).toBe(400);
+    expect((await body(loop)).error.message).toMatch(/inside itself/);
+    expect(
+      (await b.patch(`/api/v1/folders/${chain[0]?.id}`, { parent: chain[0]?.id })).status,
+    ).toBe(400);
+    // a folder with one inside it counts as two levels
+    const pair = await make(b, 'pair');
+    await make(b, 'inside the pair', { parent: pair.id });
+    expect((await b.patch(`/api/v1/folders/${pair.id}`, { parent: chain[6]?.id })).status).toBe(
+      400,
+    );
+    expect((await b.patch(`/api/v1/folders/${pair.id}`, { parent: chain[5]?.id })).status).toBe(
+      200,
+    );
+  });
+
+  test('deleting one keeps everything in it, a level up', async () => {
+    const { app, invite } = setup();
+    const b = await signedIn(app, invite);
+    const outer = await make(b, 'Outer');
+    const middle = await make(b, 'Middle', { parent: outer.id });
+    const inner = await make(b, 'Inner', { parent: middle.id });
+    const run = await b.chat(ask('keep me'));
+    await b.patch(`/api/v1/conversations/${run}`, { folder: middle.id });
+
+    expect((await b.del(`/api/v1/folders/${middle.id}`)).status).toBe(200);
+    const now = await folders(b);
+    expect(now.find((f) => f.id === inner.id)?.parent).toBe(outer.id);
+    expect((await listed(b))[run]).toBe(outer.id);
+    expect((await b.del(`/api/v1/folders/${outer.id}`)).status).toBe(200);
+    expect((await folders(b)).map((f) => [f.name, f.parent])).toEqual([['Inner', null]]);
+    expect((await listed(b))[run]).toBeNull();
+    expect((await b.del(`/api/v1/folders/${outer.id}`)).status).toBe(404);
+  });
+
+  test("someone else's folders answer as if they never existed", async () => {
+    const { app, invite } = setup();
+    const a = await signedIn(app, invite);
+    const b = await signedIn(app, invite);
+    const theirs = await make(a, 'Private');
+    const run = await a.chat(ask('mine alone'));
+    await a.patch(`/api/v1/conversations/${run}`, { folder: theirs.id });
+    const own = await b.chat(ask('my own'));
+
+    expect(await folders(b)).toEqual([]);
+    expect((await b.patch(`/api/v1/folders/${theirs.id}`, { name: 'taken' })).status).toBe(404);
+    expect((await b.del(`/api/v1/folders/${theirs.id}`)).status).toBe(404);
+    expect((await b.post('/api/v1/folders', { name: 'x', parent: theirs.id })).status).toBe(404);
+    expect((await b.patch(`/api/v1/conversations/${own}`, { folder: theirs.id })).status).toBe(404);
+    expect((await b.patch(`/api/v1/conversations/${run}`, { folder: null })).status).toBe(404);
+    const mine = await make(b, 'Mine');
+    expect((await a.patch(`/api/v1/folders/${theirs.id}`, { parent: mine.id })).status).toBe(404);
+    expect((await a.patch(`/api/v1/conversations/${run}`, { folder: mine.id })).status).toBe(404);
+
+    expect((await folders(a)).map((f) => f.name)).toEqual(['Private']);
+    expect((await listed(a))[run]).toBe(theirs.id);
+  });
+
+  test('what a folder takes, and how many', async () => {
+    const { app, store } = setup();
+    const b = new Browser(app);
+    for (const wrong of [
+      {},
+      { name: '' },
+      { name: '   ' },
+      { name: 'x'.repeat(121) },
+      { name: 7 },
+      { name: 'ok', parent: 'not-a-folder' },
+      { name: 'ok', position: 1.5 },
+      { name: 'ok', position: 10_000_001 },
+    ]) {
+      expect((await b.post('/api/v1/folders', wrong)).status, JSON.stringify(wrong)).toBe(400);
+    }
+    expect(b.jar.size).toBe(0);
+    const f = await make(b, 'ok');
+    expect((await b.patch(`/api/v1/folders/${f.id}`, { name: '' })).status).toBe(400);
+    expect((await b.patch('/api/v1/folders/fld_nope', { name: 'x' })).status).toBe(404);
+    const run = `run_${'0'.repeat(24)}`;
+    expect((await b.patch(`/api/v1/conversations/${run}`, { folder: 'elsewhere' })).status).toBe(
+      400,
+    );
+
+    const db = store();
+    const owner = await subjectOf(db, b);
+    for (let i = 1; i < 200; i++) {
+      await db.folder.insert({
+        id: `fld_${i.toString(16).padStart(24, '0')}`,
+        owner,
+        name: `f${i}`,
+        parent: null,
+        position: i,
+        created_at: 'then',
+        updated_at: 'then',
+      });
+    }
+    const full = await b.post('/api/v1/folders', { name: 'one more' });
+    expect(full.status).toBe(400);
+    expect((await body(full)).error.message).toMatch(/200 folders/);
+  });
+
+  test('a write from another site is refused', async () => {
+    const { app, invite } = setup();
+    const a = await signedIn(app, invite);
+    const f = await make(a, 'Mine');
+    const foreign = new Browser(app, 'https://evil.example');
+    foreign.jar = a.jar;
+    expect((await foreign.post('/api/v1/folders', { name: 'x' })).status).toBe(401);
+    expect((await foreign.patch(`/api/v1/folders/${f.id}`, { name: 'x' })).status).toBe(401);
+    expect((await foreign.del(`/api/v1/folders/${f.id}`)).status).toBe(401);
+    expect((await folders(a)).map((x) => x.name)).toEqual(['Mine']);
+  });
+
+  test('signing in keeps the folders, and the conversations in them', async () => {
+    const { app, invite, maker } = setup();
+    const b = await signedIn(app, invite);
+    const f = await make(b, 'Before signing in');
+    const run = await b.chat(ask('in a folder'));
+    await b.patch(`/api/v1/conversations/${run}`, { folder: f.id });
+
+    const ch = await body(await b.post('/api/v1/auth/challenge'));
+    const proof = maker.sign({ message: ch.message, nonce: ch.nonce, recipient: ch.recipient });
+    expect((await b.post('/api/v1/auth/verify', { network: 'testnet', proof })).status).toBe(200);
+
+    expect((await folders(b)).map((x) => x.id)).toEqual([f.id]);
+    expect((await listed(b))[run]).toBe(f.id);
+  });
+});

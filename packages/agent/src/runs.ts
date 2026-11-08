@@ -391,6 +391,10 @@ export function sqliteRunStore(store: Store): Required<RunStore> {
         if (kept) return reopen;
       }
       const id = newRunId();
+      // work from another door, continued here, stays in the folder its owner put it in
+      const folder = o?.exploration
+        ? ((await store.exploration.get(o.exploration))?.folder ?? null)
+        : null;
       await store.run.insert({
         id,
         owner: o?.owner ?? null,
@@ -399,6 +403,7 @@ export function sqliteRunStore(store: Store): Required<RunStore> {
         model: null,
         title: firstQuestion(input.messages) || null,
         settings: o?.settings ? JSON.stringify(o.settings) : null,
+        folder,
         body: bodyOf({
           run_id: id,
           status: 'running',

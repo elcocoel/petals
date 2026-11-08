@@ -3,7 +3,9 @@
 //   GET   /api/v1/catalogue                 what each provider offers; no session
 //   GET   /api/v1/conversations             a person's conversations, and work from other doors
 //   GET   /api/v1/conversations/:id         one, with its turns, its shapes and what other doors did
-//   PATCH /api/v1/conversations/:id         rename, change settings, hide
+//   PATCH /api/v1/conversations/:id         rename, change settings, hide, move into a folder
+//   GET   /api/v1/folders, POST             a person's folders, flat, and one more
+//   PATCH /api/v1/folders/:id, DELETE       rename, move, reorder; delete moves what it held up
 //   GET   /api/v1/follows, POST             what they follow, and follow one more
 //   GET   /api/v1/follows/:id               reopen it as a shape
 //   PATCH /api/v1/follows/:id, DELETE
@@ -21,6 +23,7 @@ import type { ChatMessage } from '@petal/core/types';
 import {
   type ConversationRow,
   type ExplorationRow,
+  type FolderRow,
   type FollowRow,
   type RunRow,
   SEARCH_HIT_CLOSE,
@@ -47,6 +50,7 @@ const EXPLORATION_ID = /^exp_[0-9a-f]{24}$/;
 const SHA256 = /^[0-9a-f]{64}$/;
 const FOLLOW_ID = /^flw_[0-9a-f]{24}$/;
 const NOTE_ID = /^nte_[0-9a-f]{24}$/;
+const FOLDER_ID = /^fld_[0-9a-f]{24}$/;
 
 const TITLE_MAX = 200;
 const LABEL_MAX = 120;
@@ -57,6 +61,10 @@ const EVIDENCE_NOTE_MAX = 2_000;
 /** What one owner can add has an end. */
 const FOLLOWS_MAX = 500;
 const NOTES_MAX = 1_000;
+const FOLDERS_MAX = 200;
+/** How deep folders nest: a folder at the top is at depth 1. */
+const FOLDER_DEPTH_MAX = 8;
+const POSITION_MAX = 1_000_000;
 const LIST_MAX = 200;
 const QUERY_MAX = 200;
 const QUERY_WORDS_MAX = 12;
@@ -101,6 +109,13 @@ function snippetParts(snippet: string): { text: string; hit: boolean }[] {
 }
 
 const idOf = (prefix: string) => `${prefix}_${randomBytes(12).toString('hex')}`;
+
+const FOLDER_FIELD = "folder must be a folder's id, or null for the top";
+/** A folder field as asked: undefined to leave it, null for the top, an id, or false when it's neither. */
+function folderOf(x: unknown): string | null | undefined | false {
+  if (x === undefined || x === null) return x;
+  return typeof x === 'string' && FOLDER_ID.test(x) ? x : false;
+}
 
 /** An account as claims spell it, or `network:<target_key>`. Null for anything else. */
 function followKind(ref: unknown): 'account' | 'network' | null {
@@ -176,7 +191,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     c.json({ ...body, tools_version: TOOLS_VERSION }, status);
 
   const app = new Hono();
-  for (const path of ['conversations', 'follows', 'notes', 'search', 'catalogue']) {
+  for (const path of ['conversations', 'folders', 'follows', 'notes', 'search', 'catalogue']) {
     app.options(`/api/v1/${path}`, (c) => c.body(null, 204));
     app.options(`/api/v1/${path}/*`, (c) => c.body(null, 204));
     app.use(`/api/v1/${path}`, bodyCap);
@@ -237,6 +252,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       exploration: row.exploration,
       shapes_count: await shapesCount(row.exploration),
       hidden_at: row.hidden_at ?? null,
+      folder: row.folder ?? null,
       created_at: row.created_at,
       updated_at: row.updated_at,
     };
@@ -264,6 +280,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       exploration: row.id,
       shapes_count: await shapesCount(row.id),
       hidden_at: null,
+      folder: row.folder ?? null,
       created_at: row.created_at,
       updated_at: row.updated_at,
     };
@@ -424,16 +441,24 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     const refused = await cannotWrite(c);
     if (refused) return refused;
     if (!subject) return noConversation(c, id);
+    const folder = folderOf(body.folder);
+    if (folder === false) return fail(c, 'bad_input', FOLDER_FIELD);
+    if (folder && !(await ownFolder(subject, folder))) return noFolder(c, folder);
     if (EXPLORATION_ID.test(id) && !(await store.run.latestOfExploration(id))) {
-      // nothing is written on an exploration: another door's work has no run to hold this
-      return (await store.exploration.get(id))?.owner === subject
-        ? fail(
-            c,
-            'bad_input',
-            'This came from another door, so there is no conversation here to change yet.',
-            'Continue it here first: POST /api/v1/agent/chat with its id as exploration.',
-          )
-        : noConversation(c, id);
+      const row = await store.exploration.get(id);
+      if (row?.owner !== subject) return noConversation(c, id);
+      // another door's work has no run to hold a name or settings, but it can sit in a folder
+      const onlyFolder = ['title', 'settings', 'hidden'].every((k) => body[k] === undefined);
+      if (folder === undefined || !onlyFolder) {
+        return fail(
+          c,
+          'bad_input',
+          'This came from another door, so there is no conversation here to rename, set or hide yet. It can go in a folder.',
+          'Continue it here first: POST /api/v1/agent/chat with its id as exploration.',
+        );
+      }
+      await store.exploration.setFolder(row.id, folder);
+      return ok(c, { conversation: await conversationOfExploration({ ...row, folder }) });
     }
     const run = await ownRun(subject, id);
     if (!run) return noConversation(c, id);
@@ -455,6 +480,11 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     await store.tx(async () => {
       if (settings) await store.run.setSettings(run.id, JSON.stringify(settings));
       if (body.hidden !== undefined) await store.run.setHidden(run.id, body.hidden ? iso() : null);
+      if (folder !== undefined) {
+        await store.run.setFolder(run.id, folder);
+        // its exploration goes too, so a later run on it starts in the same place
+        if (run.exploration) await store.exploration.setFolder(run.exploration, folder);
+      }
       if (body.title !== undefined) {
         // null goes back to the first question
         const title = typeof body.title === 'string' ? body.title.trim() : null;
@@ -465,6 +495,162 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     return ok(c, {
       conversation: await conversationOfRun((await store.run.get(run.id)) as RunRow),
     });
+  });
+
+  // ---------------------------------------------------------------------------------------------
+  // Folders (004-workspace, W4): the person's own, as in any IDE. Nothing else is in them but
+  // conversations, and a folder is never shared.
+
+  const folderItem = (f: FolderRow) => ({
+    id: f.id,
+    name: f.name,
+    parent: f.parent,
+    position: f.position,
+    created_at: f.created_at,
+    updated_at: f.updated_at,
+  });
+
+  const noFolder = (c: Context, id: string) => fail(c, 'not_found', `no folder ${id}`);
+  /** A write's outcome, decided inside its transaction: the row, a folder that isn't theirs, or a no. */
+  type Placed = { row: FolderRow } | { gone: string } | { problem: string };
+
+  async function ownFolder(subject: string | null, id: string) {
+    if (!subject || !FOLDER_ID.test(id)) return null;
+    const row = await store.folder.get(id);
+    return row?.owner === subject ? row : null;
+  }
+
+  /** What's wrong with a folder's fields, or null. Undefined means leave it. */
+  function folderFields(body: Record<string, unknown>): string | null {
+    if (body.name !== undefined) {
+      if (typeof body.name !== 'string' || !body.name.trim() || body.name.length > LABEL_MAX) {
+        return `name must be text, up to ${LABEL_MAX} characters`;
+      }
+    }
+    if (folderOf(body.parent) === false) return "parent must be a folder's id, or null for the top";
+    if (body.position !== undefined) {
+      if (!Number.isInteger(body.position) || Math.abs(body.position as number) > POSITION_MAX) {
+        return `position must be a whole number, up to ${POSITION_MAX} either way`;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Whether `id` (null for a new folder) can sit in `parent`: not inside itself, and no deeper than
+   * FOLDER_DEPTH_MAX with everything under it. Read from the owner's whole tree, in the same
+   * transaction as the write, so two moves at once can't make a loop.
+   */
+  function placeProblem(tree: FolderRow[], id: string | null, parent: string | null) {
+    const byId = new Map(tree.map((f) => [f.id, f]));
+    let depth = 0;
+    for (let at = parent; at !== null; at = byId.get(at)?.parent ?? null) {
+      if (at === id) return "a folder can't go inside itself";
+      if (++depth > FOLDER_DEPTH_MAX) break;
+    }
+    const height = (of: string | null): number =>
+      of === null
+        ? 1
+        : 1 + Math.max(0, ...tree.filter((f) => f.parent === of).map((f) => height(f.id)));
+    return depth + height(id) > FOLDER_DEPTH_MAX
+      ? `folders go ${FOLDER_DEPTH_MAX} deep at most`
+      : null;
+  }
+
+  app.get('/api/v1/folders', async (c) => {
+    const subject = await gate.subjectOf(c);
+    const rows = subject ? await store.folder.list(subject) : [];
+    return ok(c, { folders: rows.map(folderItem) });
+  });
+
+  app.post('/api/v1/folders', async (c) => {
+    const body = await jsonBody(c);
+    if (!body) return fail(c, 'bad_input', 'the body must be a JSON object');
+    if (body.name === undefined) return fail(c, 'bad_input', 'a folder needs a name');
+    const wrong = folderFields(body);
+    if (wrong) return fail(c, 'bad_input', wrong);
+    const parent = (folderOf(body.parent) as string | null | undefined) ?? null;
+    const known = await gate.subjectOf(c);
+    if (parent && !(await ownFolder(known, parent))) return noFolder(c, parent);
+    const refused = await cannotWrite(c);
+    if (refused) return refused;
+    const subject = known ?? (await gate.openAnonymous(c));
+    const { credential } = await gate.callerOf(c);
+    const at = iso();
+    const out = await store.tx(async (): Promise<Placed> => {
+      const tree = await store.folder.list(subject);
+      if (tree.length >= FOLDERS_MAX) {
+        return { problem: `You have ${FOLDERS_MAX} folders, the most this holds.` };
+      }
+      if (parent && !tree.some((f) => f.id === parent)) return { gone: parent };
+      const problem = placeProblem(tree, null, parent);
+      if (problem) return { problem };
+      const row: FolderRow = {
+        id: idOf('fld'),
+        owner: subject,
+        name: (body.name as string).trim(),
+        parent,
+        position:
+          (body.position as number | undefined) ??
+          (await store.folder.nextPosition(subject, parent)),
+        credential,
+        created_at: at,
+        updated_at: at,
+      };
+      await store.folder.insert(row);
+      return { row };
+    });
+    if ('gone' in out) return noFolder(c, out.gone);
+    if ('problem' in out) return fail(c, 'bad_input', out.problem);
+    return ok(c, { folder: folderItem(out.row) }, 201);
+  });
+
+  app.patch('/api/v1/folders/:id', async (c) => {
+    const id = c.req.param('id');
+    const body = await jsonBody(c);
+    if (!body) return fail(c, 'bad_input', 'the body must be a JSON object');
+    const wrong = folderFields(body);
+    if (wrong) return fail(c, 'bad_input', wrong);
+    const refused = await cannotWrite(c);
+    if (refused) return refused;
+    const subject = await gate.subjectOf(c);
+    if (!(await ownFolder(subject, id)) || !subject) return noFolder(c, id);
+    const asked = folderOf(body.parent) as string | null | undefined;
+    const out = await store.tx(async (): Promise<Placed> => {
+      const tree = await store.folder.list(subject);
+      const known = tree.find((f) => f.id === id);
+      if (!known) return { gone: id };
+      const parent = asked === undefined ? known.parent : asked;
+      const moved = parent !== known.parent;
+      if (moved) {
+        if (parent && !tree.some((f) => f.id === parent)) return { gone: parent };
+        const problem = placeProblem(tree, id, parent);
+        if (problem) return { problem };
+      }
+      const row = {
+        name: typeof body.name === 'string' ? body.name.trim() : known.name,
+        parent,
+        position:
+          (body.position as number | undefined) ??
+          (moved ? await store.folder.nextPosition(subject, parent) : known.position),
+        updated_at: iso(),
+      };
+      await store.folder.update(id, row);
+      return { row: { ...known, ...row } };
+    });
+    if ('gone' in out) return noFolder(c, out.gone);
+    if ('problem' in out) return fail(c, 'bad_input', out.problem);
+    return ok(c, { folder: folderItem(out.row) });
+  });
+
+  // Nothing in it is deleted: its folders and conversations move up to where it was.
+  app.delete('/api/v1/folders/:id', async (c) => {
+    const id = c.req.param('id');
+    const subject = await gate.subjectOf(c);
+    if (!subject || !FOLDER_ID.test(id) || !(await store.folder.delete(id, subject))) {
+      return noFolder(c, id);
+    }
+    return ok(c, { ok: true });
   });
 
   // ---------------------------------------------------------------------------------------------

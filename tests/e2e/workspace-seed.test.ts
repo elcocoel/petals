@@ -44,7 +44,13 @@ beforeAll(async () => {
     inviteId: invite.id,
   };
   const seeded = await seedWorkspace(options);
-  expect(seeded).toMatchObject({ conversations: 5, follows: 3, notes: 2, fresh: true });
+  expect(seeded).toMatchObject({
+    conversations: 5,
+    follows: 3,
+    notes: 2,
+    folders: 2,
+    fresh: true,
+  });
   cookie = `${SESSION_COOKIE}=${seeded.session}`;
   app = buildPetalApp(
     { root: REPO, stateDir, nearAiApiKey: 'stub', llmDailyUsd: 1, map: null },
@@ -70,6 +76,18 @@ test('the list has every kind of conversation, including work from another door'
   const open = await get(`/api/v1/conversations/${door.id}`);
   expect(open.conversation.door_turns.map((t: Out) => t.kind)).toEqual(['step', 'note']);
   expect(open.conversation.shapes).toHaveLength(1);
+});
+
+test('two folders, one inside the other, with conversations in each and the rest at the top', async () => {
+  const { folders } = await get('/api/v1/folders');
+  expect(folders.map((f: Out) => f.name)).toEqual(['Validators', 'DAOs']);
+  const [validators, daos] = folders;
+  expect(daos.parent).toBe(validators.id);
+  const { conversations } = await get('/api/v1/conversations');
+  const count = (folder: string | null) =>
+    conversations.filter((c: Out) => c.folder === folder).length;
+  expect([count(validators.id), count(daos.id), count(null)]).toEqual([2, 1, 2]);
+  expect(conversations.find((c: Out) => c.status === 'elsewhere').folder).toBe(daos.id);
 });
 
 test('one conversation holds two shapes, with figures per turn, and the pick apart from what answered', async () => {

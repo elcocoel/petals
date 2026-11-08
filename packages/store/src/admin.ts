@@ -13,6 +13,7 @@ const ORDER = [
   'wallet_binding',
   'session',
   'challenge',
+  'folder',
   'exploration',
   'run',
 ];

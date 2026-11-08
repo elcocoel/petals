@@ -165,6 +165,84 @@ describe.each(engines)('%s', (engine, open) => {
     ]);
   });
 
+  test('folders nest, list flat in order, move at sign-in, and a delete moves what it held up', async () => {
+    const anon = u('anon');
+    const prs = u('prs');
+    const folder = (name: string, parent: string | null, position: number, owner = anon) => ({
+      id: u('fld'),
+      owner,
+      name,
+      parent,
+      position,
+      created_at: AT,
+      updated_at: AT,
+    });
+    const top = folder('Top', null, 1);
+    const first = folder('First', null, 0);
+    const inner = folder('Inner', top.id, 0);
+    // a tree can arrive in any order inside one transaction: a parent is checked at its end
+    await store.tx(async () => {
+      await store.folder.insert(inner);
+      await store.folder.insert(top);
+      await store.folder.insert(first);
+    });
+    expect(await store.folder.nextPosition(anon, null)).toBe(2);
+    expect(await store.folder.nextPosition(anon, top.id)).toBe(1);
+    expect(await store.folder.nextPosition(anon, u('fld'))).toBe(0);
+    expect((await store.folder.list(anon)).map((f) => f.name)).toEqual(['First', 'Top', 'Inner']);
+    expect(await store.folder.count(anon)).toBe(3);
+
+    // a conversation of each kind, in the inner folder
+    const run = u('run');
+    await store.run.insert({
+      id: run,
+      owner: anon,
+      exploration: null,
+      status: 'done',
+      model: null,
+      body: '{}',
+      created_at: AT,
+      updated_at: AT,
+    });
+    await store.run.setFolder(run, inner.id);
+    const exp = u('exp');
+    await store.exploration.create({
+      id: exp,
+      owner: anon,
+      question: 'q',
+      target: null,
+      head: null,
+      visibility: 'private',
+      share_token_hash: null,
+      forked_from: null,
+      created_at: AT,
+      updated_at: AT,
+    });
+    await store.exploration.setFolder(exp, inner.id);
+    expect((await store.run.conversations(anon, 10, false))[0]?.folder).toBe(inner.id);
+
+    // signing in moves them all, still in place
+    await store.run.moveOwner(anon, prs);
+    await store.exploration.moveOwner(anon, prs);
+    await store.folder.moveOwner(anon, prs);
+    expect(await store.folder.list(anon)).toEqual([]);
+    expect(await store.folder.count(prs)).toBe(3);
+
+    // someone else can't delete it; its owner can, and nothing in it goes
+    expect(await store.folder.delete(inner.id, anon)).toBe(false);
+    const child = folder('Child', inner.id, 0, prs);
+    await store.folder.insert(child);
+    expect(await store.folder.delete(inner.id, prs)).toBe(true);
+    expect(await store.folder.get(inner.id)).toBeNull();
+    expect((await store.folder.get(child.id))?.parent).toBe(top.id);
+    expect((await store.run.get(run))?.folder).toBe(top.id);
+    expect((await store.exploration.get(exp))?.folder).toBe(top.id);
+    expect(await store.folder.delete(top.id, prs)).toBe(true);
+    expect((await store.folder.get(child.id))?.parent).toBeNull();
+    expect((await store.run.get(run))?.folder).toBeNull();
+    expect((await store.exploration.get(exp))?.folder).toBeNull();
+  });
+
   test("search finds a person's own words, folds accents, takes a prefix, and nobody else's", async () => {
     const a = u('prs');
     const b = u('prs');

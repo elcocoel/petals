@@ -44,6 +44,8 @@ export interface RunRow {
   /** JSON: the provider, model, effort and permissions picked. `model` above is what answered */
   settings?: string | null;
   hidden_at?: string | null;
+  /** the folder it sits in, the owner's own; null at the top */
+  folder?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -109,6 +111,8 @@ export interface ExplorationRow {
   forked_from: string | null;
   /** the credential that started it */
   credential?: string | null;
+  /** where its owner put it, as a conversation from another door; null at the top */
+  folder?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -149,6 +153,20 @@ export interface FollowRow {
   label: string | null;
   /** the flower it last opened as */
   spec_sha256: string | null;
+  /** the credential that made it */
+  credential?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+/** A person's own folder (004-workspace, W4): named, nested and arranged by them, and private to them. */
+export interface FolderRow {
+  id: string;
+  owner: string;
+  name: string;
+  /** the folder it sits in; null at the top */
+  parent: string | null;
+  /** where it sits among its siblings: lower first, then by name */
+  position: number;
   /** the credential that made it */
   credential?: string | null;
   created_at: string;
@@ -399,9 +417,9 @@ export function tables(db: Db) {
     run: {
       async insert(r: RunRow) {
         await db.run(
-          `INSERT INTO run (id, owner, exploration, status, model, body, title, settings,
+          `INSERT INTO run (id, owner, exploration, status, model, body, title, settings, folder,
                             created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           r.id,
           r.owner,
           r.exploration,
@@ -410,6 +428,7 @@ export function tables(db: Db) {
           r.body,
           r.title ?? null,
           r.settings ?? null,
+          r.folder ?? null,
           r.created_at,
           r.updated_at,
         );
@@ -466,8 +485,8 @@ export function tables(db: Db) {
       /** A person's list, newest first: the hidden ones, or the rest. */
       conversations: (owner: string, limit: number, hidden: boolean) =>
         db.all<ConversationRow>(
-          `SELECT id, owner, exploration, status, model, title, settings, hidden_at, created_at,
-                  updated_at, CASE WHEN title IS NULL THEN body END AS body
+          `SELECT id, owner, exploration, status, model, title, settings, hidden_at, folder,
+                  created_at, updated_at, CASE WHEN title IS NULL THEN body END AS body
            FROM run WHERE owner = ? AND hidden_at IS ${hidden ? 'NOT ' : ''}NULL
            ORDER BY updated_at DESC LIMIT ?`,
           owner,
@@ -482,6 +501,9 @@ export function tables(db: Db) {
       },
       async setHidden(id: string, at: string | null) {
         await db.run('UPDATE run SET hidden_at = ? WHERE id = ?', at, id);
+      },
+      async setFolder(id: string, folder: string | null) {
+        await db.run('UPDATE run SET folder = ? WHERE id = ?', folder, id);
       },
       /** The run that last worked on this exploration, if any. */
       latestOfExploration: async (exploration: string) =>
@@ -794,6 +816,10 @@ export function tables(db: Db) {
       async touch(id: string, at: string) {
         await db.run('UPDATE exploration SET updated_at = ? WHERE id = ?', at, id);
       },
+      /** Where its owner put it. Leaves updated_at alone: moving it isn't working on it. */
+      async setFolder(id: string, folder: string | null) {
+        await db.run('UPDATE exploration SET folder = ? WHERE id = ?', folder, id);
+      },
       /** Work from another door: theirs, and no conversation on this site has touched it. */
       withoutRun: (owner: string, limit: number) =>
         db.all<ExplorationRow>(
@@ -982,6 +1008,76 @@ export function tables(db: Db) {
           );
           await db.run('DELETE FROM follow WHERE owner = ?', from);
         }),
+    },
+
+    folder: {
+      async insert(r: FolderRow) {
+        await db.run(
+          `INSERT INTO folder (id, owner, name, parent, position, credential, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          r.id,
+          r.owner,
+          r.name,
+          r.parent,
+          r.position,
+          r.credential ?? null,
+          r.created_at,
+          r.updated_at,
+        );
+      },
+      get: (id: string) => db.get<FolderRow>('SELECT * FROM folder WHERE id = ?', id),
+      /** The owner's whole tree, flat: each folder names its parent. Siblings in their order. */
+      list: (owner: string) =>
+        db.all<FolderRow>(
+          'SELECT * FROM folder WHERE owner = ? ORDER BY parent IS NOT NULL, parent, position, name, id',
+          owner,
+        ),
+      count: (owner: string) => count('SELECT COUNT(*) AS n FROM folder WHERE owner = ?', owner),
+      /** After the last of its siblings. */
+      nextPosition: async (owner: string, parent: string | null) =>
+        Number(
+          (
+            await db.get<{ p: number | null }>(
+              parent === null
+                ? 'SELECT MAX(position) AS p FROM folder WHERE owner = ? AND parent IS NULL'
+                : 'SELECT MAX(position) AS p FROM folder WHERE owner = ? AND parent = ?',
+              ...(parent === null ? [owner] : [owner, parent]),
+            )
+          )?.p ?? -1,
+        ) + 1,
+      async update(id: string, f: Pick<FolderRow, 'name' | 'parent' | 'position' | 'updated_at'>) {
+        await db.run(
+          'UPDATE folder SET name = ?, parent = ?, position = ?, updated_at = ? WHERE id = ?',
+          f.name,
+          f.parent,
+          f.position,
+          f.updated_at,
+          id,
+        );
+      },
+      /**
+       * Deletes one folder and nothing in it: its folders and conversations move up to its parent, in
+       * the same transaction. Returns false if the owner has no such folder.
+       */
+      delete: (id: string, owner: string): Promise<boolean> =>
+        db.tx(async () => {
+          const row = await db.get<FolderRow>(
+            'SELECT * FROM folder WHERE id = ? AND owner = ?',
+            id,
+            owner,
+          );
+          if (!row) return false;
+          const up = row.parent;
+          await db.run('UPDATE folder SET parent = ? WHERE parent = ?', up, id);
+          await db.run('UPDATE run SET folder = ? WHERE folder = ?', up, id);
+          await db.run('UPDATE exploration SET folder = ? WHERE folder = ?', up, id);
+          await db.run('DELETE FROM folder WHERE id = ?', id);
+          return true;
+        }),
+      /** At sign-in, with the conversations in them: a person's folders, and an anonymous handle's. */
+      async moveOwner(from: string, to: string) {
+        await db.run('UPDATE folder SET owner = ? WHERE owner = ?', to, from);
+      },
     },
 
     workspaceNote: {
