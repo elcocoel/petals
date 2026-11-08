@@ -13,7 +13,14 @@
 // A note is data from whoever wrote it, for the next agent to weigh, and the packet says so in its
 // own structure. Nothing in this file spends, so a note can't cause spending.
 import { createHash, randomBytes } from 'node:crypto';
-import { diffSpecs, recipeHash, recipeOf } from '@petal/core';
+import {
+  canonicalJson,
+  diffSpecs,
+  recipeHash,
+  recipeOf,
+  sha256Hex,
+  validateSnapshot,
+} from '@petal/core';
 import type { Spec, SpecDiff } from '@petal/core/types';
 import type { ExplorationLinkRow, ExplorationRow, NoteRow, StepRow, Store } from '@petal/store';
 import { defineTool, type ToolAnnotations } from '../define.ts';
@@ -948,4 +955,63 @@ export function shapeAt(ctx: ToolContext, sha256: string) {
   const spec = specBody(ctx.config, sha256);
   const current = currentOf(ctx, { head: sha256 }, spec);
   return current && spec ? { ...current, target: targetOf(spec) } : null;
+}
+
+/** Where a held snapshot came from, as far as this site knows. */
+export type SnapshotOrigin = 'their_machine' | 'this_site';
+
+const POSTED = (sha: string) => `posted_snapshot:${sha}`;
+
+/** their_machine: a person's own agent posted it, and this site never read it again. */
+export function snapshotOrigin(ctx: ToolContext, sha256: string): SnapshotOrigin {
+  return storeOf(ctx).meta.get(POSTED(sha256)) ? 'their_machine' : 'this_site';
+}
+
+/**
+ * A reading made on the person's own machine, posted under one of their explorations so the site can
+ * draw it (PUT /api/v1/explorations/:ref/snapshots/:sha256; the owner, or a continue link). It is named by
+ * its content: the sha256 of its canonical JSON must be the name, and it must be a valid snapshot. It's
+ * kept as read on their machine: this site doesn't read it again, so the hash proves it arrived as it
+ * was made, not that it's true. Posting one this site already holds changes nothing.
+ */
+export async function postSnapshot(
+  ctx: ToolContext,
+  ref: string,
+  sha256: string,
+  snapshot: unknown,
+): Promise<{ exploration: string; sha256: string; stored: boolean; origin: SnapshotOrigin }> {
+  const o = open(ctx, ref);
+  writable(o);
+  if (sha256Hex(canonicalJson(snapshot)) !== sha256) {
+    throw new ToolFailure(
+      'bad_input',
+      "The body's sha256 isn't the one in the address.",
+      'Name it by the sha256 of its canonical JSON (canonicalJson in @petal/core), as get_snapshot does.',
+    );
+  }
+  const checked = validateSnapshot(snapshot);
+  if (!checked.ok) {
+    const first = checked.errors
+      .slice(0, 3)
+      .map((e) => `${e.path || '/'} ${e.message}`)
+      .join('; ');
+    throw new ToolFailure('bad_input', `That isn't a valid snapshot: ${first}.`);
+  }
+  const exploration = o.row.id;
+  if (await ctx.store.get(sha256)) {
+    return { exploration, sha256, stored: false, origin: snapshotOrigin(ctx, sha256) };
+  }
+  const now = ctx.now();
+  assertRoom(ctx.config, now);
+  if (!takeToday(ctx.config, 'posted_snapshot', limitsOf(ctx.config).postedSnapshotsPerDay, now)) {
+    throw overToday(now, 'This site has taken as many posted readings as it takes in a day.');
+  }
+  await ctx.store.put(checked.value);
+  const store = storeOf(ctx);
+  store.meta.set(
+    POSTED(sha256),
+    JSON.stringify({ exploration, author: authorOf(o), at: now.toISOString() }),
+  );
+  touched(ctx, exploration, 'post_snapshot');
+  return { exploration, sha256, stored: true, origin: 'their_machine' };
 }

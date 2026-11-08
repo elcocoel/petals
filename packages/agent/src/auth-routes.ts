@@ -40,7 +40,8 @@ import { type Budget, type LlmClient, PERSON_USD_PER_CHAT } from './llm.ts';
 import { fail, limiter } from './routes.ts';
 import type { WalletCipher } from './wallet-cipher.ts';
 
-export type AgentAccess = 'gated' | 'open';
+/** none: a public site (PETAL_PUBLIC=1), which runs no agent for anyone: each person brings their own. */
+export type AgentAccess = 'gated' | 'open' | 'none';
 export type Network = 'testnet' | 'mainnet';
 
 /** PETAL_AGENT_ACCESS. Anything but `open` is gated: a typo must not open the budget. */

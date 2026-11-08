@@ -3,6 +3,7 @@
 // quickstart.md and .env.example. Parts are built on first use, so making a context touches no
 // disk, key file or network; a part that cannot be built (a missing key file, say) fails inside
 // the tool call that needs it, as a ToolError, never here.
+import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { QuoteRequest, QuoteResult } from '@petal/core/types';
 import { fileStore, lastingStore, modules, vercelBlob } from '@petal/inputs';
@@ -12,8 +13,10 @@ import {
   fastDataReader,
   fastDataWriter,
   type MapReader,
+  type MapRow,
   type MapWriter,
   mirror,
+  toMapRow,
 } from '@petal/near/map';
 import { fakeQuote, quote1Click } from '@petal/near/pay';
 import { stateDirOf } from './drafts.ts';
@@ -44,6 +47,65 @@ const offlineRpc: Rpc = {
   },
 };
 
+/** A public site's refusal, for a part a tool reached anyway. */
+const notHere = (what: string) =>
+  new ToolFailure(
+    'not_on_this_site',
+    `This site ${what} for visitors.`,
+    'Your own agent does that on your machine. /connect says how to add Petals to it.',
+  );
+
+/** A public site reads no chain for a visitor. Sign-in's key check has its own RPC (@petal/agent). */
+const publicRpc: Rpc = {
+  async query() {
+    throw notHere('reads no chain');
+  },
+};
+
+/**
+ * The shared map as a public site holds it: copies of published rows exactly as FastData returned them
+ * (key, value, predecessor_id, current_account_id, tx_hash, block_height), shipped in
+ * <fixtures>/map-rows/*.row.json. Read from disk, never from the chain, so a visitor's page costs no
+ * chain read. Rows for another receiver, or that can't be read, are skipped. get_flower verifies each
+ * one as it would a live row.
+ */
+export function heldMapReader(dir: string, receiver: string): MapReader {
+  let rows: MapRow[] | undefined;
+  const all = (): MapRow[] => {
+    if (rows) return rows;
+    rows = [];
+    let names: string[] = [];
+    try {
+      names = readdirSync(dir)
+        .filter((n) => n.endsWith('.row.json'))
+        .sort();
+    } catch {
+      // no folder: nothing held
+    }
+    for (const n of names) {
+      try {
+        const r = toMapRow(JSON.parse(readFileSync(join(dir, n), 'utf8')));
+        if (r && typeof r.key === 'string' && r.receiver === receiver) rows.push(r);
+      } catch {
+        // an unreadable copy is skipped, like a row that fails verification
+      }
+    }
+    return rows;
+  };
+  return {
+    async latest(prefix, o = {}) {
+      const out = all()
+        .filter((r) => r.key.startsWith(prefix) && r.value !== null)
+        .filter((r) => !o.writers || o.writers.includes(r.writer));
+      return (o.limit === undefined ? out : out.slice(0, o.limit)).map((r) => ({ ...r }));
+    },
+    async get(key, writer) {
+      const r = all().find((x) => x.key === key && x.writer === writer && x.value !== null);
+      return r ? { ...r } : null;
+    },
+  };
+}
+
 export function createContext(cfg: Config): ToolContext {
   const root = resolve(cfg.root);
   const fixturesDir = resolve(root, cfg.fixturesDir ?? 'fixtures');
@@ -60,7 +122,23 @@ export function createContext(cfg: Config): ToolContext {
 
   let map: ToolContext['map'];
   const m = cfg.fake ? null : (cfg.map ?? null);
-  if (m) {
+  if (cfg.public) {
+    // No chain reads and no writer: the rows it ships, trusted as the configured map's would be.
+    const writers = m
+      ? m.trustedWriters.length
+        ? m.trustedWriters
+        : m.writer
+          ? [m.writer]
+          : []
+      : [];
+    const receiver = m?.receiver ?? 'petals.testnet';
+    map = {
+      reader: heldMapReader(join(fixturesDir, 'map-rows'), receiver),
+      writer: null,
+      receiver,
+      trustedWriters: writers.length ? writers : ['petals-writer.testnet'],
+    };
+  } else if (m) {
     const reader: MapReader = deferred(() =>
       fastDataReader({ network: m.network, receiver: m.receiver }),
     );
@@ -92,15 +170,18 @@ export function createContext(cfg: Config): ToolContext {
   }
 
   const network = m?.network ?? 'testnet';
-  const rpc = cfg.fake
-    ? offlineRpc
-    : jsonRpc(cfg.rpcUrl ?? RPC_URLS[network], {
-        ...(cfg.fastnearApiKey ? { apiKey: cfg.fastnearApiKey } : {}),
-      });
+  const rpc = cfg.public
+    ? publicRpc
+    : cfg.fake
+      ? offlineRpc
+      : jsonRpc(cfg.rpcUrl ?? RPC_URLS[network], {
+          ...(cfg.fastnearApiKey ? { apiKey: cfg.fastnearApiKey } : {}),
+        });
 
   // The recorded dry quote in fake mode; otherwise a live dry quote (keyless, no money moves).
   let quoter: ((req: QuoteRequest) => Promise<QuoteResult>) | undefined;
   const quote = (req: QuoteRequest) => {
+    if (cfg.public) return Promise.reject(notHere('asks for no payment quotes'));
     quoter ??= cfg.fake ? fakeQuote() : quote1Click;
     return quoter(req);
   };
@@ -117,7 +198,7 @@ const set = (v: string | undefined): string | undefined => (v?.trim() ? v.trim()
  * PETAL_LLM_DAILY_USD, PETAL_MAP_NETWORK, PETAL_MAP_RECEIVER, PETAL_WRITER_ACCOUNT,
  * PETAL_WRITER_KEY_FILE, PETAL_TRUSTED_WRITERS, FASTNEAR_API_KEY, PETAL_PAYOUT_ACCOUNT, PETAL_API
  * (public base URL), PETAL_REPO_URL, PETAL_LIVE=1; and PETAL_FAKE=1 (fakes everywhere),
- * PETAL_RPC_URL, PETAL_STATE_DIR, PETAL_FIXTURES_DIR. The map counts as configured when any of
+ * PETAL_RPC_URL, PETAL_STATE_DIR, PETAL_FIXTURES_DIR; PETAL_PUBLIC=1 (a public site: Config.public). The map counts as configured when any of
  * PETAL_MAP_NETWORK, PETAL_MAP_RECEIVER, PETAL_WRITER_ACCOUNT or PETAL_WRITER_KEY_FILE is set;
  * otherwise the fake map and the mirror are used.
  */
@@ -156,12 +237,15 @@ export function configFromEnv(env: Env = process.env, root: string = process.cwd
     live: env.PETAL_LIVE === '1',
     fake: env.PETAL_FAKE === '1',
   };
+  // A public site runs no model for anyone, so it never holds the key: nothing downstream can spend it.
+  const isPublic = env.PETAL_PUBLIC === '1';
+  if (isPublic) cfg.public = true;
   const optional: [keyof Config, string | undefined][] = [
     ['fixturesDir', set(env.PETAL_FIXTURES_DIR)],
     ['stateDir', set(env.PETAL_STATE_DIR)],
     ['rpcUrl', set(env.PETAL_RPC_URL)],
     ['fastnearApiKey', set(env.FASTNEAR_API_KEY)],
-    ['nearAiApiKey', set(env.NEAR_AI_API_KEY)],
+    ['nearAiApiKey', isPublic ? undefined : set(env.NEAR_AI_API_KEY)],
     ['payoutAccount', set(env.PETAL_PAYOUT_ACCOUNT)],
     ['apiBase', set(env.PETAL_API)?.replace(/\/+$/, '')],
     ['blobToken', set(env.BLOB_READ_WRITE_TOKEN)],

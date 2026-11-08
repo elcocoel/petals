@@ -91,6 +91,7 @@ export function makeSearch(
 ): PetalTool<{ query: string }, object> {
   return defineTool({
     name: 'search',
+    onTheirMachine: true,
     title: 'Search the web',
     description:
       'Words to public pages, through an unofficial route that can be down: when it is, it says so, and that says nothing about the answer. Results are leads, not proof. Read them with read_page.',

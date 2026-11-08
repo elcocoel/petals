@@ -71,6 +71,8 @@ export function mcpServer(ctx: ToolContext): McpServer {
     instructions: openPageOn(ctx) ? `${INSTRUCTIONS}${FOLLOW}` : INSTRUCTIONS,
   });
   for (const tool of registry) {
+    // A public site doesn't offer what it would refuse: the person's own agent runs those locally.
+    if (ctx.config.public && (tool as { onTheirMachine?: boolean }).onTheirMachine) continue;
     const { title, description, annotations } = describeTool(tool);
     server.registerTool(
       tool.name,
