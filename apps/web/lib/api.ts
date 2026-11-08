@@ -1,7 +1,8 @@
-// Server only. Server components call the API in process (no HTTP hop), through the same app
-// that /api/[[...route]] serves, so pages and API always agree.
+// Server only. Server components call the server over HTTP (002-system research, C6), as any page in the
+// browser does, with the site key and the visitor's address, so the server answers them as it answers
+// everyone else, and only them.
 import type { ToolError } from '@petal/core/types';
-import { getApp } from './server-app.ts';
+import { SITE_KEY_HEADER, serverBase, siteKey } from './server.ts';
 import { visitorAddress } from './visitor.ts';
 
 export type ApiResult<T> =
@@ -12,18 +13,32 @@ export async function api<T>(
   path: string,
   init?: { method?: string; body?: unknown; cookie?: string | null },
 ): Promise<ApiResult<T>> {
-  const { app } = await getApp();
-  const res = await app.request(path, {
-    method: init?.method ?? (init?.body === undefined ? 'GET' : 'POST'),
-    headers: {
-      'content-type': 'application/json',
-      accept: 'application/json',
-      ...(await visitorAddress()),
-      // in process, so the caller's own session comes along only when a page passes it on
-      ...(init?.cookie ? { cookie: init.cookie } : {}),
-    },
-    body: init?.body === undefined ? undefined : JSON.stringify(init.body),
-  });
+  const key = siteKey();
+  let res: Response;
+  try {
+    res = await fetch(`${serverBase()}${path}`, {
+      method: init?.method ?? (init?.body === undefined ? 'GET' : 'POST'),
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json',
+        ...(await visitorAddress()),
+        ...(key ? { [SITE_KEY_HEADER]: key } : {}),
+        // the caller's own session comes along only when a page passes it on
+        ...(init?.cookie ? { cookie: init.cookie } : {}),
+      },
+      body: init?.body === undefined ? undefined : JSON.stringify(init.body),
+      cache: 'no-store',
+    });
+  } catch (e) {
+    return {
+      ok: false,
+      status: 503,
+      error: {
+        code: 'source_failed',
+        message: `The server didn't answer: ${(e as Error).message}`,
+      },
+    };
+  }
   const text = await res.text();
   let json: unknown;
   try {
