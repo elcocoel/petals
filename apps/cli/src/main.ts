@@ -63,6 +63,8 @@ export interface CliDeps {
   runCommand?: RunCommand;
   nodeBin?: string;
   nodeVersion?: string;
+  /** Petal as one file (file.ts): no repo, so no `api` or `connect`, and help says how it's run */
+  asFile?: boolean;
 }
 
 const SHA256 = /^[0-9a-f]{64}$/i;
@@ -109,6 +111,12 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
 
   try {
     const [command = 'help', ...rest] = argv;
+    if (deps.asFile && (command === 'connect' || command === 'api')) {
+      throw new UsageError(
+        `petal ${command} needs a copy of the repo; this file runs the tools and mcp`,
+        'Run `node petal.mjs help` for the commands.',
+      );
+    }
     if (command === 'connect') {
       return connect(rest, {
         env,
@@ -123,7 +131,16 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
       });
     }
     const tools = await loadTools(deps);
-    const cli = new Cli(tools, { env, cwd, root: deps.root, io, stdout, stderr, writeFile });
+    const cli = new Cli(tools, {
+      env,
+      cwd,
+      root: deps.root,
+      io,
+      stdout,
+      stderr,
+      writeFile,
+      asFile: deps.asFile === true,
+    });
     if (command === 'help' || command === '--help' || command === '-h') return cli.help(rest[0]);
     if (command === 'mcp') return await cli.mcp(rest);
     if (command === 'api') return await cli.api(rest, deps);
@@ -183,6 +200,7 @@ interface System {
   stdout: (t: string) => void;
   stderr: (t: string) => void;
   writeFile: (p: string, d: string) => void;
+  asFile?: boolean;
 }
 
 class Cli {
@@ -503,7 +521,11 @@ class Cli {
     }
     if (command) throw new UsageError(`unknown command: ${command}`, 'Run `petal help`.');
     p("petal: Petal's tools from a terminal. Calls the tool registry in process, prints JSON.\n\n");
-    p('Usage: petal <command> [args] [--flags]     (from the repo root: pnpm petal ...)\n\n');
+    p(
+      this.sys.asFile
+        ? 'Usage: node petal.mjs <command> [args] [--flags]\n\n'
+        : 'Usage: petal <command> [args] [--flags]     (from the repo root: pnpm petal ...)\n\n',
+    );
     p(`Tools (${TOOLS_VERSION}, one command per registry tool):\n`);
     if (this.tools.registry.length === 0)
       p('  (none: @petal/tools has not registered its tools yet)\n');
@@ -515,8 +537,10 @@ class Cli {
     }
     p('\nDoors:\n');
     p('  mcp                 MCP over stdio (serveStdio), for Claude Code and Codex\n');
-    p(`  api                 the HTTP API (petalApp) on http://localhost:${DEFAULT_PORT}\n`);
-    p('  connect <agent>     give your own agent (claude, codex) the skill and the tools\n');
+    if (!this.sys.asFile) {
+      p(`  api                 the HTTP API (petalApp) on http://localhost:${DEFAULT_PORT}\n`);
+      p('  connect <agent>     give your own agent (claude, codex) the skill and the tools\n');
+    }
     p('  help [command]      this text, or one command and its flags\n');
     p('\nShorthand: a network id in place of a sha256 or a spec first takes the snapshot\n');
     p(

@@ -17,7 +17,7 @@ export {
   limitsOf,
   overDataBudget,
 } from './limits.ts';
-export { mcpServer } from './mcp/server.ts';
+export { type McpOptions, mcpServer } from './mcp/server.ts';
 export { serveStdio } from './mcp/stdio.ts';
 export type { PublicPage } from './public-fetch.ts';
 export { callTool, describeTool, findTool, registry } from './registry.ts';

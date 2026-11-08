@@ -3,11 +3,15 @@
 import type { Transport } from '@modelcontextprotocol/server';
 import { StdioServerTransport, serveStdio as serve } from '@modelcontextprotocol/server/stdio';
 import type { ToolContext } from '../types.ts';
-import { mcpServer } from './server.ts';
+import { type McpOptions, mcpServer } from './server.ts';
 
 /** Serve the registry on a transport; resolves when the connection closes. */
-export function serveOn(ctx: ToolContext, transport: Transport): Promise<void> {
-  serve(() => mcpServer(ctx), { transport });
+export function serveOn(
+  ctx: ToolContext,
+  transport: Transport,
+  opts: McpOptions = {},
+): Promise<void> {
+  serve(() => mcpServer(ctx, opts), { transport });
   // serve() sets onclose on the transport (and tears the connection down in it); chain onto it
   // to know when the client has gone.
   const sdkOnClose = transport.onclose;
@@ -23,6 +27,6 @@ export function serveOn(ctx: ToolContext, transport: Transport): Promise<void> {
 }
 
 /** MCP over this process's stdin and stdout; resolves when stdin closes. */
-export function serveStdio(ctx: ToolContext): Promise<void> {
-  return serveOn(ctx, new StdioServerTransport());
+export function serveStdio(ctx: ToolContext, opts: McpOptions = {}): Promise<void> {
+  return serveOn(ctx, new StdioServerTransport(), opts);
 }

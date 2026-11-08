@@ -15,7 +15,7 @@ import type { ProgressEvent } from '@petal/core/types';
 import { isToolError } from '../errors.ts';
 import { describeTool, registry } from '../registry.ts';
 import { openPageOn } from '../tools/explorations.ts';
-import type { ToolContext } from '../types.ts';
+import type { Tool, ToolContext } from '../types.ts';
 
 /** Every argument is accepted here; the registry validates against the same schema. */
 const passThrough: jsonSchemaValidator = {
@@ -65,12 +65,21 @@ export function progressLine(e: ProgressEvent): string {
   return `${e.stage}: ${e.message}${n}`;
 }
 
-export function mcpServer(ctx: ToolContext): McpServer {
+/** Another set of tools, or more to say on connecting: petal as one file brings both (apps/cli). */
+export interface McpOptions {
+  // biome-ignore lint/suspicious/noExplicitAny: a heterogeneous registry (packages.md)
+  tools?: readonly Tool<any, any>[];
+  /** said after the usual instructions */
+  instructions?: string;
+}
+
+export function mcpServer(ctx: ToolContext, opts: McpOptions = {}): McpServer {
+  const said = openPageOn(ctx) ? `${INSTRUCTIONS}${FOLLOW}` : INSTRUCTIONS;
   const server = new McpServer(SERVER_INFO, {
     capabilities: { tools: {} },
-    instructions: openPageOn(ctx) ? `${INSTRUCTIONS}${FOLLOW}` : INSTRUCTIONS,
+    instructions: opts.instructions ? `${said} ${opts.instructions}` : said,
   });
-  for (const tool of registry) {
+  for (const tool of opts.tools ?? registry) {
     const { title, description, annotations } = describeTool(tool);
     server.registerTool(
       tool.name,
