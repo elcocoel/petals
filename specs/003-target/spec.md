@@ -12,6 +12,8 @@ Elco, 5 Nov: "the google maps of power relationships on anything that is mapped 
 
 Elco, 8 Nov: "The claim system should be on chain as much as possible, we want a system that deincentivizes defamation, lying etc."
 
+Elco, 8 Nov, on login and claims: "login only with wallets - connecting socials for display of identity only / social connections messaging etc." "Claims -> for now we just need to look on our options for claims + metadata over the map, all could be private at first (I just add my commentary to my map and can see it again later) -> for claim validation etc, thats a chapter after we do basic testing."
+
 Elco, 8 Nov, on accounts: "We don't need the assumption that one account = one human. Any given humans that have coordinated control of a given wallet would inevitably be able to form one account and add other wallets to that account and share attribution - ideally the 'can sign in' and 'visible' are all yes for my first test, then we have to check consequences / if anything can actually be private in a technical sense."
 
 ## What Petals is, and isn't
@@ -48,7 +50,7 @@ A person connects a wallet, NEAR today and other chains later, and arrives in th
 
 ### Story 3: A verified profile
 
-An account adds more wallets on other chains, and social accounts. Each link is proven by the thing linked: a wallet by its own signature, a social account by signing in with it. An account isn't assumed to be one human. Whoever controls a wallet together can form one account, add other wallets to it, and share its attribution.
+An account adds more wallets on other chains. Each wallet is proven by its own signature. **Signing in is only ever with a wallet.** Social accounts can be connected later, for showing who someone is, their social connections and messaging, never for signing in. An account isn't assumed to be one human. Whoever controls a wallet together can form one account, add other wallets to it, and share its attribution.
 
 **For the first test, every linked identity can sign in and is publicly visible.** Workspaces and conversations stay private to the account. Whether a link can really be private, from other users or from the operator, is checked after the test (Q6).
 
@@ -74,23 +76,13 @@ A person comes back, from any computer, to their conversations, flowers, notes a
 
 **Acceptance:** everything a person made is there after the server restarts, after it moves to another host, and after the loss of a disk.
 
-### Story 6: Make a claim
+### Story 6: Commentary and metadata on my map
 
-A person states something about wallets or groups: who controls what, who acts together, who a wallet belongs to. The claim is signed with their identity, public and permanent. It lives on chain as much as possible. They're accountable for it.
+A person adds their own commentary and metadata to what they've mapped: on a flower, an account, a group, a relation. At first it's all private to their account, so they can come back to it later. The options for how commentary and metadata sit over the map are explored first, with Elco, in `004-workspace` (the meta layer).
 
-**Acceptance:**
-1. Every public claim names its claimer's identity. There are no anonymous public claims.
-2. A claim can't be edited or deleted in silence. A retraction is a new signed statement, and the history stays.
-3. Anyone can check who signed a claim, and when, without trusting Petals.
-4. Each claim says what kind it is (observed in chain data, declared by its subject, or inferred) and links its evidence.
+**Acceptance:** a person's commentary is there when they come back, from any computer, and nobody else can see or search it (TGT-006, TGT-007).
 
-### Story 7: Challenge and correct
-
-Anyone with an identity can challenge a claim. A challenge is a claim too. The claimer can answer or retract. Both sides stay visible.
-
-**Acceptance:**
-1. A challenged claim shows its challenges next to it.
-2. A claimer's standing comes from their record (claims upheld, challenged, retracted), never from popularity or payment.
+Public claims, challenges and validation are a later chapter, after basic testing: see **Public claims, after basic testing** at the end.
 
 ### Story 8: Read the map
 
@@ -107,8 +99,8 @@ Defined later, in its own spec, one step at a time.
 ## Requirements
 
 ### Identity
-- **TGT-001**: An account is an identity with many proven links. A link is a wallet on a supported chain, or a social account. An account may be controlled by several people together. Nothing assumes one human per account.
-- **TGT-002**: A link is proven only by the thing linked. A wallet proves itself with its own signature, a social account by signing in with it.
+- **TGT-001**: An account is an identity with many proven links. A link is a wallet on a supported chain. Social accounts can be connected for display, connections and messaging, never for signing in. An account may be controlled by several people together. Nothing assumes one human per account.
+- **TGT-002**: Signing in is only with a wallet, proven by its own signature. Checking that signature may read the chain, for signing in only, never for mapping (RESEARCH's Q2 lean).
 - **TGT-003**: Two wallets become one account only when someone is signed in with one and signs with the other.
 - **TGT-004**: For the first test, every link can sign in and is public. Private links, if they come, never go on chain, not even hashed. Whether a link can be private, and from whom, is Q6.
 - **TGT-005**: Every past action keeps the credential that authorised it. Revocation, recovery and control are in Details, after testing.
@@ -119,15 +111,7 @@ Defined later, in its own spec, one step at a time.
 
 ### Permanence
 - **TGT-010**: What a person makes survives restarts, a move to another host, and the loss of a disk. That covers accounts, links, workspaces, conversations, flowers, notes and claims.
-- **TGT-011**: Public claims and published flowers can be verified without trusting Petals.
-
-### Claims
-- **TGT-020**: Every public claim is signed by its claimer's identity and attributed publicly.
-- **TGT-021**: Claims live on chain as much as possible.
-- **TGT-022**: A claim is never edited or deleted in silence. Retractions and challenges are new signed claims.
-- **TGT-023**: A claimer's standing comes from their record, never from popularity or payment.
-- **TGT-024**: Each claim carries its kind and its evidence.
-- **TGT-025**: The system disincentivises defamation and lying. How it does that is research question Q5.
+- **TGT-011**: Published flowers can be verified without trusting Petals. Public claims are a later chapter.
 
 ### Agents and tools
 - **TGT-030**: The tools and the skill run on the person's side. The server does no chain reads, web reads, searches or model calls for visitors.
@@ -144,9 +128,8 @@ Defined later, in its own spec, one step at a time.
   2. connects a wallet;
   3. links a second wallet on another chain;
   4. maps a DAO with their own agent and watches it live;
-  5. makes a claim;
-  6. sees another person challenge it.
-- **SC-T2**: Anyone can verify who signed a public claim, and when, without Petals.
+  5. adds their own commentary to the map and finds it again later.
+- **SC-T2**: Nobody else can see or search that person's work or commentary.
 - **SC-T3**: Nothing Petals does for a visitor spends Elco's money or uses Elco's connection.
 
 ## Open technology questions: research together, then choose
@@ -155,9 +138,7 @@ Each one gets its options explained in plain words, with trade-offs, before anyt
 
 - **Q1. The database.** SQLite on one server, or Postgres? What does "permanent" need: backups, copies, a second machine? What changes in our code either way?
 - **Q2. Proving a wallet on each chain.** NEAR, Ethereum and the EVM chains, Solana, Bitcoin.
-- **Q3. Proving a social account.** Which accounts, and how: signing in with them, or a signed post.
-- **Q4. Where claims live on chain.** NEAR FastData, a NEAR contract, an attestation standard, or a mix. Also how long each keeps data, what it costs, and who pays to write (the claimer's own wallet).
-- **Q5. What disincentivises defamation and lying.** Accountability through identity and record, a stake that's lost when a challenge wins, rules about natural persons, or a mix. Also how a challenge is settled.
+- **Q3. Connecting a social account,** for display, connections and messaging, not for signing in. Which accounts, and how they're proven.
 - **Q6. The profile.** What's public, what's private, and who decides, after the first test. That means privacy from other users (access rules) and privacy from the operator, which needs a different key model. Also what to do about natural persons named in claims.
 - **Q7. The seam between website and server.** Researched on branch `sys/site-server-spec` (`specs/002-system/research.md`). The lean is one address.
 - **Q8. Payments.** Later, in its own spec.
@@ -189,3 +170,37 @@ Open, to design together:
 
 - **Q9. Recovery and controllers.** Recovering after a lost wallet, revoking a stolen one, conflicts between controllers, and losing every credential. No recovery authority is invented in the meantime.
 - **Shared accounts and "only the author".** With accounts shared on purpose, does "only the author can read" mean every member of the account, or a private compartment for each author? It's to clarify with Elco. Neither is assumed meanwhile.
+
+## Public claims, after basic testing
+
+Elco: "for claim validation etc, thats a chapter after we do basic testing." Everything below stays the intent. It's designed after basic testing, and it doesn't block it. RESEARCH's findings are on branch `research/target`, in `specs/003-target/research-q2-q6.md`, Q4 to Q6.
+
+### Public claim: make one
+
+A person states something about wallets or groups: who controls what, who acts together, who a wallet belongs to. The claim is signed with their identity, public and permanent. It lives on chain as much as possible. They're accountable for it.
+
+**Acceptance:**
+1. Every public claim names its claimer's identity. There are no anonymous public claims.
+2. A claim can't be edited or deleted in silence. A retraction is a new signed statement, and the history stays.
+3. Anyone can check who signed a claim, and when, without trusting Petals.
+4. Each claim says what kind it is (observed in chain data, declared by its subject, or inferred) and links its evidence.
+
+### Public claim: challenge and correct
+
+Anyone with an identity can challenge a claim. A challenge is a claim too. The claimer can answer or retract. Both sides stay visible.
+
+**Acceptance:**
+1. A challenged claim shows its challenges next to it.
+2. A claimer's standing comes from their record (claims upheld, challenged, retracted), never from popularity or payment.
+
+
+### Public claims: requirements
+- **TGT-020**: Every public claim is signed by its claimer's identity and attributed publicly.
+- **TGT-021**: Claims live on chain as much as possible.
+- **TGT-022**: A claim is never edited or deleted in silence. Retractions and challenges are new signed claims.
+- **TGT-023**: A claimer's standing comes from their record, never from popularity or payment.
+- **TGT-024**: Each claim carries its kind and its evidence.
+- **TGT-025**: The system disincentivises defamation and lying. How it does that is research question Q5.
+
+- **Q4. Where claims live on chain.** NEAR FastData, a NEAR contract, an attestation standard, or a mix. Also how long each keeps data, what it costs, and who pays to write (the claimer's own wallet).
+- **Q5. What disincentivises defamation and lying.** Accountability through identity and record, a stake that's lost when a challenge wins, rules about natural persons, or a mix. Also how a challenge is settled.
