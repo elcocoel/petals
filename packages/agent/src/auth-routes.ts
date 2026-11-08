@@ -248,7 +248,11 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       return { person, claimed, explorations };
     });
     // the wallet that signed, by its keyed hash: what authorises everything this session does
-    await openSession(c, out.person, { network, invite: old?.invite, credential: `wallet:${index}` });
+    await openSession(c, out.person, {
+      network,
+      invite: old?.invite,
+      credential: `wallet:${index}`,
+    });
     return out;
   }
 
