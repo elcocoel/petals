@@ -102,6 +102,20 @@ Left in Orca on "Different from Petals".
 - **The profile: cool and clear in the first second.** On "Intel Desk's case list on a profile is the nearest match": "yep we are different - here lets brainstorm on how we can be cool and easy to understand at the first second". Open, W6.
 - **The infinite map as a force map of connected universes (W9).** On "shared master list": "my vision here is that if we can identify "links" between 2 investigations that bridge them, we can have a "force map" of individual universes that are connected, so it feels like an infinite canvas, but it has discreet "addresses" this is still to be solved".
 
+## The interaction model, reopened (Elco, 8 Nov, after the first live test)
+
+NEAR AI bills its own accounts and keys, never a wallet, and nobody publishes how many people hold a key (LOOK's research, 8 Nov). Elco:
+
+> it completely destroys our interaction model, Assumed that people would be able to Write Into a checkbox box and get answers right there that that would only be possible if near AI and That makes near AI quasi impossible like we would have to facilitate the getting of the key and the staking somehow if you know from from their near wallets
+
+> we haven't figured out a way to chat within the app or the websites With our own AI and I'm using it with cloud code Here on the other computer and it's kind of ugly and annoying it would be Not an elegant process for someone without seven monitors like I have
+
+> We need to reconsider the interaction mode or how we could actually have this happen inside the chat box on the website itself or not or if we want that or not.
+
+- **W10. Where the conversation happens, and whose model answers.** Open. Options in LOOK's reply of 8 Nov: the page as a window onto the person's own agent (today); the site's box driving their own agent on their machine through a small helper; their own API key kept in the browser; Petals inside the AI app they already use.
+
+Elco moves testing to this machine, so LOOK can read the conversations and let what Elco runs into shape the skill and the tools.
+
 ## Ideas, not decided
 
 - **Points for mapping** (Elco, 8 Nov): "I had a vision of incentivizing mapping via 'points' that could one day move us towards a TGE -> users pay for extra features, part of revenue goes to a DAO, part of revenue rewards work, part of revenue goes to Devs." Payments are `003-target`'s Q8, later, in their own spec.
