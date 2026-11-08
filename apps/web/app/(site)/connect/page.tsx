@@ -12,8 +12,8 @@ export default async function Connect() {
     <>
       <h1>Use Petals from your own AI</h1>
       <p>
-        Nothing to install. Every door here reaches the same tools, the same rules and the same
-        flowers. Or just <a href="/make">talk to Petals’ agent here</a>.
+        Every door here gives your own agent the same tools, the same rules and the same flowers,
+        and it runs them on your computer.
       </p>
       {doors(origin).map((d) => (
         <section key={d.id} id={d.id}>

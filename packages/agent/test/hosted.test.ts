@@ -13,11 +13,29 @@ describe('agentPrompt', () => {
     expect(p).toContain(`${ORIGIN}/skill.md`);
     expect(p).toMatch(/read-only/);
     expect(p).toMatch(/no account or key/);
-    expect(p).toMatch(/If you can't open that link or run commands on my computer/);
     expect(p).toMatch(/without asking me to choose/);
     expect(p).toMatch(/I want to watch this conversation/);
     expect(p).toMatch(/word for word/);
-    expect(p.length).toBeLessThan(800);
+    expect(p.length).toBeLessThan(1200);
+  });
+
+  test('says which apps can run the tools, before anything else is tried', () => {
+    const p = agentPrompt(ORIGIN);
+    const apps = p.indexOf(
+      'Claude Code (in a terminal, or under Code in the Claude desktop app), Codex or Hermes',
+    );
+    expect(apps).toBeGreaterThan(-1);
+    expect(apps).toBeLessThan(p.indexOf('/skill.md'));
+    expect(p).toMatch(/The Claude app's chat runs in the cloud and can't/);
+    expect(p).toMatch(
+      /If you can't run commands on my computer, don't try: tell me so in one line/,
+    );
+  });
+
+  test('asks for a permission, rather than choices', () => {
+    expect(agentPrompt(ORIGIN)).toMatch(
+      /If your app needs my permission for something, ask me for it/,
+    );
   });
 
   test("no longer sends anyone to an agent on the site: there's none for visitors", () => {
@@ -61,6 +79,37 @@ describe('hostedSkill', () => {
       'codex mcp add petals -- "$(command -v node)" "$HOME/.petals/petal.mjs" mcp',
     );
     expect(setup).toContain("printf 'Y\\n' | hermes mcp add petals");
+  });
+
+  test('one try, then the permission the app can grant, asked for, not worked around', () => {
+    const setup = part('Set yourself up first');
+    expect(setup).toMatch(/A permission isn't a choice: when your app needs one, ask for it/);
+    expect(setup).toMatch(
+      /Try that once\. If it works, go on\. If it doesn't, don't test other ways in/,
+    );
+    expect(setup).toMatch(/A sandbox's refusal isn't the person's no/);
+    expect(setup).toContain('dangerouslyDisableSandbox');
+    expect(setup).toMatch(/Codex: run it again with escalated permissions/);
+    expect(setup).toContain('reaching `petal.example`');
+  });
+
+  test('the first run asking for permission is expected, and the skill says what to ask', () => {
+    const setup = part('Set yourself up first');
+    expect(setup).toMatch(/holds the file back the first time/);
+    expect(setup).toContain('Bash(node ~/.petals/petal.mjs:*)');
+    expect(setup).toMatch(/The file installs nothing and changes nothing in your app/);
+    expect(agentPrompt(ORIGIN)).toMatch(
+      /the first time it runs Petal's file, it may, because the file comes from this site/,
+    );
+  });
+
+  test('a cloud sandbox, or an app with no shell, says so at once and names the apps that can', () => {
+    const setup = part('Set yourself up first');
+    expect(setup).toMatch(/cloud or remote sandbox/);
+    expect(setup).toMatch(/as in the Claude app's chat: say so in one line, at once/);
+    expect(setup).toMatch(
+      /Claude Code \(in a terminal, or under Code in the Claude desktop app\), Codex or Hermes/,
+    );
   });
 
   test('teaches no route that reads for them: the site no longer does', () => {
