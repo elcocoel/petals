@@ -64,7 +64,7 @@ Petal's tools are one file that runs on this computer. Every read, search and dr
   \`\`\`
 
   Each tool is a command with JSON out, under "Calling the tools as commands". It needs Node 22.13 or newer: if \`node\` is missing or older, say so in a line, and install a current one if you can.
-- **A command is blocked** by a sandbox or a permission: the file reads public chain data and web pages, and writes only in \`~/.petals\`. Say in one plain line what you need allowed.
+- **A command is blocked** by a sandbox or a permission: the file reads public chain data and web pages, and writes only in \`~/.petals\`. Say in one plain line what you need allowed. If \`~/.petals\` is outside what you may write, keep the file in your working folder and set \`PETALS_HOME\` to a folder beside it, the same on every command.
 - **You can't run commands on this computer:** say so in a line. Petal needs an agent that can, such as Claude Code, Codex or Hermes.
 
 If they ask to keep Petal for next time, add the file as an MCP server for them. It takes effect in a new session:

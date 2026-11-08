@@ -166,20 +166,20 @@ export function siteDoor(opts: SiteOptions) {
     const sha = typeof input.spec_sha256 === 'string' ? input.spec_sha256 : undefined;
     const spec =
       (input.spec as Spec | undefined) ?? (sha ? specBody(ctx.config, sha) : null) ?? null;
-    if (!spec) {
-      return sha
-        ? fault('not_found', `No spec ${sha} on this machine.`, 'Pass spec, or render it first.')
-        : fault('bad_input', 'Pass spec or spec_sha256.');
-    }
     const ref = refOf(exploration);
+    const steps = `/api/v1/explorations/${encodeURIComponent(ref)}/steps`;
+    const note = typeof input.note === 'string' ? { note: input.note } : {};
+    if (!spec) {
+      if (!sha) return fault('bad_input', 'Pass spec or spec_sha256.');
+      // Not drawn here, such as a published flower: the site may hold it, and says if it doesn't.
+      return post(steps, { spec_sha256: sha, ...note });
+    }
     const snap = (spec as { snapshot?: { sha256?: unknown } }).snapshot?.sha256;
     if (typeof snap === 'string' && SHA.test(snap)) {
       const failed = await ensureSnapshot(ref, snap, ctx);
       if (failed) return failed;
     }
-    const body: Json = { spec };
-    if (typeof input.note === 'string') body.note = input.note;
-    return post(`/api/v1/explorations/${encodeURIComponent(ref)}/steps`, body);
+    return post(steps, { spec, ...note });
   }
 
   /** The site's own tool, by name; input and output are the registry's. */

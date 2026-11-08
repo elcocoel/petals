@@ -163,6 +163,20 @@ describe('a flower read on this machine goes to the page with its reading', () =
     expect(out.short_url).toMatch(/^https:\/\/petals\.example\/d\//);
   });
 
+  test('a spec not drawn here, such as a published flower, is left to the site to find', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch }).tools(registry);
+    const c = {
+      config: { root: mkdtempSync(join(tmpdir(), 'petal-site-')) },
+      store: { gz: async () => null, get: async () => null },
+    } as unknown as ToolContext;
+    await byName(tools, 'save_step').run({ exploration: LINK, spec_sha256: SNAP }, c);
+    expect(site.seen.map((s) => `${s.method} ${s.url.slice(SITE.length)}`)).toEqual([
+      `POST /api/v1/explorations/${TOKEN}/steps`,
+    ]);
+    expect(JSON.parse(site.seen[0]?.body as string)).toEqual({ spec_sha256: SNAP });
+  });
+
   test('a snapshot the site holds is not sent, and is checked once a process', async () => {
     const site = fakeSite(new Set([SNAP]));
     const tools = siteDoor({ site: SITE, fetch: site.fetch }).tools(registry);
