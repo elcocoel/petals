@@ -7,6 +7,7 @@ import { walletCipher } from '@petal/agent';
 import {
   compareWithSqlite,
   copyFromSqlite,
+  MIGRATIONS,
   migrateAndGrant,
   openStore,
   ownerConnection,
@@ -50,7 +51,7 @@ test('a SQLite store copies into Postgres exactly, once, and its seals still ope
 
   const pg = await ownerConnection('pglite:');
   await pg.raw.exec('CREATE ROLE petals_app');
-  expect(await migrateAndGrant(pg.raw, 'petals_app')).toBe(6);
+  expect(await migrateAndGrant(pg.raw, 'petals_app')).toBe(MIGRATIONS.length);
   const checks = await copyFromSqlite(pg.raw, file);
   expect(checks.every((c) => c.same)).toBe(true);
   expect(checks.find((c) => c.table === 'person')).toMatchObject({ sqlite: 1, postgres: 1 });

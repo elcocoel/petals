@@ -1,5 +1,5 @@
 // Petals on Postgres, through its real routes: two people sign in with test wallets, one makes a
-// workspace, and the other can't read it, change it or find it by search. On Postgres in process in
+// workspace, and the other can't read it, change it, find it by search or see its folders. On Postgres in process in
 // every check, and on a real server as the restricted runtime role when PETAL_TEST_DATABASE_URL is set.
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -88,6 +88,14 @@ describe.each(targets)('%s', (_name, databaseUrl) => {
         text: 'cafézinho secreto',
       })
     ).body.note.id as string;
+    const folder = (await a.call('POST', '/api/v1/folders', { name: 'Cafés' })).body.folder
+      .id as string;
+    const inner = (await a.call('POST', '/api/v1/folders', { name: 'Inner', parent: folder })).body
+      .folder.id as string;
+    expect(
+      (await a.call('PATCH', `/api/v1/conversations/${x}`, { folder: inner })).body.conversation
+        .folder,
+    ).toBe(inner);
 
     // the owner sees it all, and finds it, accents folded
     expect((await a.call('GET', `/api/v1/explorations/${x}`)).status).toBe(200);
@@ -108,10 +116,29 @@ describe.each(targets)('%s', (_name, databaseUrl) => {
     expect((await b.call('GET', '/api/v1/notes')).body.notes).toEqual([]);
     expect((await b.call('GET', '/api/v1/search?q=cafezinho')).body.results).toEqual([]);
     expect((await b.call('GET', '/api/v1/search?q=cafe')).body.results).toEqual([]);
+    expect((await b.call('GET', '/api/v1/folders')).body.folders).toEqual([]);
+    expect((await b.call('PATCH', `/api/v1/folders/${folder}`, { name: 'mine' })).status).toBe(404);
+    expect((await b.call('DELETE', `/api/v1/folders/${inner}`)).status).toBe(404);
+    expect((await b.call('POST', '/api/v1/folders', { name: 'x', parent: folder })).status).toBe(
+      404,
+    );
+    expect((await b.call('PATCH', `/api/v1/conversations/${x}`, { folder: null })).status).toBe(
+      404,
+    );
 
     // and nothing of the owner's moved
     expect((await a.call('GET', `/api/v1/explorations/${x}`)).body.notes).toHaveLength(1);
     expect((await a.call('GET', '/api/v1/notes')).body.notes[0].text).toBe('cafézinho secreto');
+    expect(
+      ((await a.call('GET', '/api/v1/folders')).body.folders as Out[]).map((f) => f.name),
+    ).toEqual(['Cafés', 'Inner']);
+    const [listed] = (await a.call('GET', '/api/v1/conversations')).body.conversations as Out[];
+    expect(listed).toMatchObject({ id: x, folder: inner });
+    // and deleting the folder moves the conversation up, as the runtime role can
+    expect((await a.call('DELETE', `/api/v1/folders/${inner}`)).status).toBe(200);
+    expect((await a.call('GET', `/api/v1/conversations/${x}`)).body.conversation.folder).toBe(
+      folder,
+    );
   });
 
   test('signing in again with the same wallet reaches the same person, and its wallets', async () => {

@@ -1,5 +1,6 @@
 // A small workspace to come back to, for `journey-server.ts --seed`: what INTERACTION builds against
-// before a real person has used the thing. Real code all the way down: the chats go through the real app,
+// before a real person has used the thing. Folders too (004-workspace, W4): two, one inside the other,
+// with conversations in each and the rest at the top. Real code all the way down: the chats go through the real app,
 // the real NEAR AI client, the stub model and the real tools, into the real SQLite, and the rest goes
 // through the real routes. Only what the stub can't say is written to the store directly, and by the same
 // functions the app uses: a chat a restart cut short, and work from another door. It spends $0.
@@ -34,6 +35,7 @@ export interface SeedResult {
   conversations: number;
   follows: number;
   notes: number;
+  folders: number;
   /** false when this folder already held a seeded workspace, which is left as it is */
   fresh: boolean;
 }
@@ -75,6 +77,7 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
       (await store.exploration.withoutRun(subject, 100)).length,
     follows: await store.follow.count(subject),
     notes: await store.workspaceNote.count(subject),
+    folders: await store.folder.count(subject),
     fresh,
   });
   if (await store.meta.get(SEEDED)) {
@@ -269,6 +272,24 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
     },
   ]) {
     await wanted(await call('/api/v1/notes', 'POST', note));
+  }
+
+  // Folders, through their routes: the validator conversations in one, another door's DAO work in one
+  // inside it, and the rest at the top.
+  const made = async (name: string, parent?: string) =>
+    (
+      (await (await wanted(await call('/api/v1/folders', 'POST', { name, parent }))).json()) as {
+        folder: { id: string };
+      }
+    ).folder.id;
+  const validators = await made('Validators');
+  const daos = await made('DAOs', validators);
+  for (const [id, folder] of [
+    [first, validators],
+    [second, validators],
+    [door, daos],
+  ] as const) {
+    await wanted(await call(`/api/v1/conversations/${id}`, 'PATCH', { folder }));
   }
 
   await store.meta.set(SEEDED, new Date().toISOString());
