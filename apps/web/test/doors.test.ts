@@ -22,10 +22,14 @@ describe('doors', () => {
     expect(all[0]?.copy).toContain(`${ORIGIN}/skill.md`);
   });
 
-  test('the commands are what the agents accept', () => {
+  test("the commands fetch the file from this site and add it as the agent's own tools", () => {
     const copy = (id: string) => all.find((d) => d.id === id)?.copy;
-    expect(copy('claude-code')).toBe(`claude mcp add --transport http petals ${ORIGIN}/mcp`);
-    expect(copy('codex')).toBe(`codex mcp add petals --url ${ORIGIN}/mcp`);
-    expect(copy('hermes')).toBe(`hermes mcp add petals --url ${ORIGIN}/mcp`);
+    const get = `mkdir -p ~/.petals && curl -fsSL ${ORIGIN}/petal.mjs -o ~/.petals/petal.mjs && `;
+    const run = '"$(command -v node)" "$HOME/.petals/petal.mjs" mcp';
+    expect(copy('claude-code')).toBe(`${get}claude mcp add petals -- ${run}`);
+    expect(copy('codex')).toBe(`${get}codex mcp add petals -- ${run}`);
+    expect(copy('hermes')).toBe(
+      `${get}printf 'Y\\n' | hermes mcp add petals --command "$(command -v node)" --args "$HOME/.petals/petal.mjs" mcp`,
+    );
   });
 });
