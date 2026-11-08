@@ -50,7 +50,7 @@ A person connects a wallet, NEAR today and other chains later, and arrives in th
 
 ### Story 3: A verified profile
 
-An account adds more wallets on other chains. Each wallet is proven by its own signature. **Signing in is only ever with a wallet.** Social accounts can be connected later, for showing who someone is, their social connections and messaging, never for signing in. An account isn't assumed to be one human. Whoever controls a wallet together can form one account, add other wallets to it, and share its attribution.
+An account adds more wallets on other chains. Each wallet is proven by its own signature. **Signing in is only ever with a wallet.** Social accounts are only fields a person connects to their own profile, to show who they are: no other function, no messaging, and never signing in (Elco, 8 Nov, to RESEARCH). An account isn't assumed to be one human. Whoever controls a wallet together can form one account, add other wallets to it, and share its attribution.
 
 **For the first test, every linked identity can sign in and is publicly visible.** Workspaces and conversations stay private to the account. Whether a link can really be private, from other users or from the operator, is checked after the test (Q6).
 
@@ -78,7 +78,7 @@ A person comes back, from any computer, to their conversations, flowers, notes a
 
 ### Story 6: Commentary and metadata on my map
 
-A person adds their own commentary and metadata to what they've mapped: on a flower, an account, a group, a relation. At first it's all private to their account, so they can come back to it later. The options for how commentary and metadata sit over the map are explored first, with Elco, in `004-workspace` (the meta layer).
+A person adds their own commentary and metadata to what they've mapped: on a flower, an account, a group, a relation. At first it's all private to their account, so they can come back to it later. It's their own commentary: no system decides what's true. The options for how commentary and metadata sit over the map are explored first, with Elco, in `004-workspace` (the meta layer).
 
 **Acceptance:** a person's commentary is there when they come back, from any computer, and nobody else can see or search it (TGT-006, TGT-007).
 
@@ -99,7 +99,7 @@ Defined later, in its own spec, one step at a time.
 ## Requirements
 
 ### Identity
-- **TGT-001**: An account is an identity with many proven links. A link is a wallet on a supported chain. Social accounts can be connected for display, connections and messaging, never for signing in. An account may be controlled by several people together. Nothing assumes one human per account.
+- **TGT-001**: An account is an identity with many proven links. A link is a wallet on a supported chain. Social accounts are only self-connected profile fields, shown on the profile, with no other function and no messaging. An account may be controlled by several people together. Nothing assumes one human per account.
 - **TGT-002**: Signing in is only with a wallet, proven by its own signature. Checking that signature may read the chain, for signing in only, never for mapping (RESEARCH's Q2 lean).
 - **TGT-003**: Two wallets become one account only when someone is signed in with one and signs with the other.
 - **TGT-004**: For the first test, every link can sign in and is public. Private links, if they come, never go on chain, not even hashed. Whether a link can be private, and from whom, is Q6.
@@ -138,7 +138,7 @@ Each one gets its options explained in plain words, with trade-offs, before anyt
 
 - **Q1. The database.** SQLite on one server, or Postgres? What does "permanent" need: backups, copies, a second machine? What changes in our code either way?
 - **Q2. Proving a wallet on each chain.** NEAR, Ethereum and the EVM chains, Solana, Bitcoin.
-- **Q3. Connecting a social account,** for display, connections and messaging, not for signing in. Which accounts, and how they're proven.
+- **Q3. Social accounts as profile fields.** They're self-connected and shown on the profile, with no other function. Which accounts, and whether and how they're proven. This comes after testing.
 - **Q6. The profile.** What's public, what's private, and who decides, after the first test. That means privacy from other users (access rules) and privacy from the operator, which needs a different key model. Also what to do about natural persons named in claims.
 - **Q7. The seam between website and server.** Researched on branch `sys/site-server-spec` (`specs/002-system/research.md`). The lean is one address.
 - **Q8. Payments.** Later, in its own spec.
