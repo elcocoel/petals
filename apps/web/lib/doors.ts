@@ -1,5 +1,7 @@
 // Many doors, one tool universe (Elco, 5 Nov): whatever someone already uses, one clear way in,
-// and no repo to clone. Every door reaches the same tools, rules and flowers on this site.
+// and no repo to clone. Every door gives the person's own agent the same tools, rules and flowers,
+// and it runs them on their computer. The Claude app's chat and ChatGPT run in the cloud, so they can't:
+// their doors stay, because the landing links to them, and say so with the app to use instead.
 import { agentPrompt, getFile, keepCommands } from './agent-prompt.ts';
 
 export interface Door {
@@ -13,59 +15,52 @@ export interface Door {
 }
 
 export function doors(origin: string): Door[] {
-  const mcp = `${origin}/mcp`;
   // The tools run on the person's own computer, from one file this site serves (petal.mjs).
   const file = getFile(origin);
   const keep = keepCommands();
   return [
     {
       id: 'prompt',
-      title: 'Any AI chat or agent',
-      how: 'Paste this in. Agents that can make web requests can do everything straight away. Stricter apps can still look things up, and will say what they can’t do.',
+      title: 'Claude Code, Codex or Hermes',
+      how: 'Paste this into Claude Code, Codex or Hermes on your computer. They run Petals’ tools there, and you watch the work here. In the Claude desktop app, that’s Code, not the chat: the Claude app’s chat runs in the cloud and can’t run them. The first time, your agent asks you once to let Petals’ tools run, because they come from this site. Say yes: they read public data and keep their notes in a folder called .petals.',
       copy: agentPrompt(origin),
       copyLabel: 'Copy this prompt',
     },
     {
       id: 'claude-app',
       title: 'The Claude app',
-      how: 'Open Customize, then Connectors, press +, choose Add custom connector, and paste this address. Then ask: “Using Petals, who holds the shares of Moloch DAO?”',
-      copy: mcp,
-      copyLabel: 'Copy the address',
+      how: 'Its chat runs in the cloud, so it can’t run Petals’ tools on your computer. Use Claude Code instead: in the Claude desktop app, open Code and paste the prompt above.',
     },
     {
       id: 'chatgpt',
       title: 'ChatGPT',
-      how: 'In Settings, under Apps & Connectors, turn on Developer mode under Advanced and add this address. It depends on your plan. If you don’t see it, use the prompt above.',
-      copy: mcp,
-      copyLabel: 'Copy the address',
+      how: 'ChatGPT runs in the cloud, so it can’t run Petals’ tools on your computer. Codex can, with the same account: paste the prompt above into Codex.',
     },
     {
       id: 'claude-code',
       title: 'Claude Code',
-      how: 'Run this once in a terminal.',
+      how: 'To keep Petals in Claude Code for next time, run this once in a terminal. It adds Petals to Claude Code’s tools, so it’s there in every new conversation.',
       copy: `${file} && ${keep.claude}`,
       copyLabel: 'Copy the command',
     },
     {
       id: 'codex',
       title: 'Codex',
-      how: 'Run this once in a terminal.',
+      how: 'To keep Petals in Codex for next time, run this once in a terminal. It adds Petals to Codex’s tools, so it’s there in every new conversation.',
       copy: `${file} && ${keep.codex}`,
       copyLabel: 'Copy the command',
     },
     {
       id: 'hermes',
       title: 'Hermes',
-      how: 'Run this once in a terminal.',
+      how: 'To keep Petals in Hermes for next time, run this once in a terminal. It adds Petals to Hermes’ tools, so it’s there in every new conversation.',
       copy: `${file} && ${keep.hermes}`,
       copyLabel: 'Copy the command',
     },
     {
       id: 'other',
-      title: 'Anything else that supports MCP',
-      how: 'Give it this address.',
-      copy: mcp,
-      copyLabel: 'Copy the address',
+      title: 'Anything else',
+      how: 'Any agent that can run commands on your computer can use the prompt above. One that only chats in the cloud can’t.',
     },
   ];
 }
