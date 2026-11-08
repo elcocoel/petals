@@ -58,18 +58,7 @@ An account adds more wallets on other chains, and social accounts. Each link is 
 3. Each link shows how it was proven, and when.
 4. Signing in with any linked identity reaches the same account.
 
-### Story 3b: Recovery, revocation and history (needs design)
-
-Elco names these as needing an answer: recovering an account after losing a wallet, revoking a stolen wallet, and keeping historical attribution. No mechanism is chosen yet.
-
-What's already fixed:
-- Revoking a credential ends its active sessions and tokens as well as its future sign-ins.
-- Every past action keeps the credential that authorised it and the account it was made for. Revocation never rewrites history.
-
-Open, to design together:
-- Can every credential on an account add or remove the others?
-- Who settles it when controllers conflict, or when a credential is compromised?
-- What happens when every credential is lost?
+Recovery, revocation and control of an account are in **Details, after testing**, at the end. They don't block the first test.
 
 ### Story 4: Map with your own agent
 
@@ -122,7 +111,7 @@ Defined later, in its own spec, one step at a time.
 - **TGT-002**: A link is proven only by the thing linked. A wallet proves itself with its own signature, a social account by signing in with it.
 - **TGT-003**: Two wallets become one account only when someone is signed in with one and signs with the other.
 - **TGT-004**: For the first test, every link can sign in and is public. Private links, if they come, never go on chain, not even hashed. Whether a link can be private, and from whom, is Q6.
-- **TGT-005**: Revoking a credential ends its sessions and tokens too. Every past action keeps the credential that authorised it, and revocation never rewrites that. Recovery and controller conflicts need design (Story 3b).
+- **TGT-005**: Every past action keeps the credential that authorised it. Revocation, recovery and control are in Details, after testing.
 
 ### Permanence
 - **TGT-010**: What a person makes survives restarts, a move to another host, and the loss of a disk. That covers accounts, links, workspaces, conversations, flowers, notes and claims.
@@ -166,7 +155,6 @@ Each one gets its options explained in plain words, with trade-offs, before anyt
 - **Q4. Where claims live on chain.** NEAR FastData, a NEAR contract, an attestation standard, or a mix. Also how long each keeps data, what it costs, and who pays to write (the claimer's own wallet).
 - **Q5. What disincentivises defamation and lying.** Accountability through identity and record, a stake that's lost when a challenge wins, rules about natural persons, or a mix. Also how a challenge is settled.
 - **Q6. The profile.** What's public, what's private, and who decides, after the first test. That means privacy from other users (access rules) and privacy from the operator, which needs a different key model. Also what to do about natural persons named in claims.
-- **Q9. Recovery and controllers.** Recovering after a lost wallet, revoking a stolen one, conflicts between controllers, and losing every credential (Story 3b).
 - **Q7. The seam between website and server.** Researched on branch `sys/site-server-spec` (`specs/002-system/research.md`). The lean is one address.
 - **Q8. Payments.** Later, in its own spec.
 
@@ -175,3 +163,22 @@ Each one gets its options explained in plain words, with trade-offs, before anyt
 - `design/system-plan.md`'s server doing visitors' work on Elco's resources.
 - `002-system`'s sponsored invites as the way in to Petals' agent. A person's own agent or own NEAR AI key replaces them.
 - `001-petal-core`'s FR-029, limited keys as the publishing path. The person's own wallet signs instead.
+
+## Details, after testing
+
+Elco, 8 Nov: "let's add the control, revocation issue to the 'details' section at the end - it's only important after testing etc." Nothing here blocks the first test.
+
+### Story 3b: Recovery, revocation and control (designed after testing)
+
+Elco names these as needing an answer: recovering an account after losing a wallet, revoking a stolen wallet, and keeping historical attribution. No mechanism is chosen yet.
+
+What's already fixed:
+- When revocation is built, revoking a credential ends its active sessions and tokens as well as its future sign-ins.
+- Every past action keeps the credential that authorised it and the account it was made for. Revocation never rewrites history.
+
+Open, to design together:
+- Can every credential on an account add or remove the others?
+- Who settles it when controllers conflict, or when a credential is compromised?
+- What happens when every credential is lost?
+
+- **Q9. Recovery and controllers.** Recovering after a lost wallet, revoking a stolen one, conflicts between controllers, and losing every credential. No recovery authority is invented in the meantime.
