@@ -112,7 +112,7 @@ NEAR AI bills its own accounts and keys, never a wallet, and nobody publishes ho
 
 > We need to reconsider the interaction mode or how we could actually have this happen inside the chat box on the website itself or not or if we want that or not.
 
-- **W10. Where the conversation happens, and whose model answers.** Open. Options in LOOK's reply of 8 Nov: the page as a window onto the person's own agent (today); the site's box driving their own agent on their machine through a small helper; their own API key kept in the browser; Petals inside the AI app they already use.
+- **W10. Where the conversation happens, and whose model answers.** Open. The full set of options, with sources and what's tested, is CONNECTORS's `design/connectors.md`, section 1H (A to H), and RESEARCH's `research/near-ai-wallet-update.md` for NEAR AI's wallet paths. The catch that shapes all of them: a public site reads nothing for visitors, so a model in the browser tab needs the reading done in the tab too (fewer tools), or Petals' file running on the person's computer.
 
 Elco moves testing to this machine, so LOOK can read the conversations and let what Elco runs into shape the skill and the tools.
 
