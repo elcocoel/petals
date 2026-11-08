@@ -177,7 +177,7 @@ Elco: "for claim validation etc, thats a chapter after we do basic testing." Eve
 
 ### Public claim: make one
 
-A person states something about wallets or groups: who controls what, who acts together, who a wallet belongs to. The claim is signed with their identity, public and permanent. It lives on chain as much as possible. They're accountable for it.
+A person states something about what wallets or groups do: who controls what, who acts together. Elco, 8 Nov: "it doesnt matter who they are, but what they do". Who owns a wallet isn't a core claim of Petals, "although it could be used for it". The claim is signed with their identity, public and permanent. It lives on chain as much as possible. They're accountable for it.
 
 **Acceptance:**
 1. Every public claim names its claimer's identity. There are no anonymous public claims.
