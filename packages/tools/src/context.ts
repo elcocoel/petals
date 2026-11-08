@@ -19,6 +19,7 @@ import {
   toMapRow,
 } from '@petal/near/map';
 import { fakeQuote, quote1Click } from '@petal/near/pay';
+import { skillUrl } from './define.ts';
 import { stateDirOf } from './drafts.ts';
 import { ToolFailure } from './errors.ts';
 import { jsonRpc, RPC_URLS } from './rpc.ts';
@@ -48,19 +49,19 @@ const offlineRpc: Rpc = {
 };
 
 /** A public site's refusal, for a part a tool reached anyway. */
-const notHere = (what: string) =>
+const notHere = (what: string, site?: string) =>
   new ToolFailure(
     'not_on_this_site',
     `This site ${what} for visitors.`,
-    'Your own agent does that on your machine. /connect says how to add Petals to it.',
+    `Your own agent does that on your machine: ${skillUrl(site)} says how to add Petals to it.`,
   );
 
 /** A public site reads no chain for a visitor. Sign-in's key check has its own RPC (@petal/agent). */
-const publicRpc: Rpc = {
+const publicRpc = (site?: string): Rpc => ({
   async query() {
-    throw notHere('reads no chain');
+    throw notHere('reads no chain', site);
   },
-};
+});
 
 /**
  * The shared map as a public site holds it: copies of published rows exactly as FastData returned them
@@ -171,7 +172,7 @@ export function createContext(cfg: Config): ToolContext {
 
   const network = m?.network ?? 'testnet';
   const rpc = cfg.public
-    ? publicRpc
+    ? publicRpc(cfg.apiBase)
     : cfg.fake
       ? offlineRpc
       : jsonRpc(cfg.rpcUrl ?? RPC_URLS[network], {
@@ -181,7 +182,7 @@ export function createContext(cfg: Config): ToolContext {
   // The recorded dry quote in fake mode; otherwise a live dry quote (keyless, no money moves).
   let quoter: ((req: QuoteRequest) => Promise<QuoteResult>) | undefined;
   const quote = (req: QuoteRequest) => {
-    if (cfg.public) return Promise.reject(notHere('asks for no payment quotes'));
+    if (cfg.public) return Promise.reject(notHere('asks for no payment quotes', cfg.apiBase));
     quoter ??= cfg.fake ? fakeQuote() : quote1Click;
     return quoter(req);
   };

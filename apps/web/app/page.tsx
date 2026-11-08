@@ -2,6 +2,7 @@
 // The conversation is at /make.
 import { BackIt } from '../components/landing/BackIt.tsx';
 import { BuildWithUs } from '../components/landing/BuildWithUs.tsx';
+import { FrontDoor } from '../components/landing/FrontDoor.tsx';
 import { GallerySection } from '../components/landing/GallerySection.tsx';
 import { Hero } from '../components/landing/Hero.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
@@ -26,6 +27,7 @@ export default function Landing() {
         <BuildWithUs />
       </main>
       <Footer />
+      <FrontDoor />
     </>
   );
 }
