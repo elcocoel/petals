@@ -42,6 +42,17 @@ const relocate: Plugin = {
       contents: fixturesModule(),
       loader: 'js',
     }));
+    // `petal connect` writes an agent's own settings, and it needs a copy of the repo, so the file
+    // refuses it (main.ts, asFile). Its code stays out of the file too: what a person's agent reads
+    // and runs should hold nothing that changes their app.
+    b.onLoad({ filter: /apps\/cli\/src\/connect\.ts$/ }, () => ({
+      contents: [
+        "export const CONNECT_HELP = '';",
+        'export async function connect() { return 2; }',
+        'export function spawnCommand() { return () => { throw new Error("no connect in the file"); }; }',
+      ].join('\n'),
+      loader: 'js',
+    }));
     b.onLoad({ filter: /packages\/inputs\/src\/modules\/near-validators\.ts$/ }, (args) => {
       const src = readFileSync(args.path, 'utf8');
       if (!src.includes(FIXTURE_LINE)) {

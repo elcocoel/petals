@@ -41,8 +41,8 @@ export function agentPrompt(origin: string): string {
     : '';
   return [
     `I'd like to use Petal with you. It maps who holds power in crypto networks (${origin}). It's public and read-only, with no account or key.`,
-    `Its instructions for you are at ${origin}/skill.md.${local} Please read them and set yourself up in whatever way works from where you are, without asking me to choose anything. I want to watch this conversation on Petal's page in my browser, so please open that page for me, and post each flower and your replies there word for word. Then tell me in a line or two what you can do, and ask what I'm curious about.`,
-    "If you can't open that link or run commands on my computer, say so in a line, and tell me which app could.",
+    `Its tools run on my own computer, so this needs an app that can run commands here: Claude Code (in a terminal, or under Code in the Claude desktop app), Codex or Hermes. The Claude app's chat runs in the cloud and can't. If you can't run commands on my computer, don't try: tell me so in one line, and which of those apps to open instead.`,
+    `Its instructions for you are at ${origin}/skill.md.${local} Please read them and set yourself up in whatever way works from where you are, without asking me to choose anything. If your app needs my permission for something, ask me for it: the first time it runs Petal's file, it may, because the file comes from this site. I want to watch this conversation on Petal's page in my browser, so please open that page for me, and post each flower and your replies there word for word. Then tell me in a line or two what you can do, and ask what I'm curious about.`,
   ].join('\n\n');
 }
 
@@ -51,7 +51,7 @@ function setup(origin: string): string {
   const keep = keepCommands();
   return `## Set yourself up first
 
-Work this out yourself. The person doesn't need to understand any of it, so don't ask them to choose, and don't explain it unless something goes wrong.
+Work this out yourself. The person doesn't need to understand any of it, so don't ask them to choose, and don't explain it unless something goes wrong. A permission isn't a choice: when your app needs one, ask for it.
 
 Petal's tools are one file that runs on this computer. Every read, search and drawing happens here, from this machine, on nobody else's account, and the site only shows what you send it. No account or key. Don't call this site's API to read or draw: it doesn't do that for anyone, and the file does it here.
 
@@ -64,8 +64,19 @@ Petal's tools are one file that runs on this computer. Every read, search and dr
   \`\`\`
 
   Each tool is a command with JSON out, under "Calling the tools as commands". It needs Node 22.13 or newer: if \`node\` is missing or older, say so in a line, and install a current one if you can.
-- **A command is blocked** by a sandbox or a permission: the file reads public chain data and web pages, and writes only in \`~/.petals\`. Say in one plain line what you need allowed. If \`~/.petals\` is outside what you may write, keep the file in your working folder and set \`PETALS_HOME\` to a folder beside it, the same on every command.
-- **You can't run commands on this computer:** say so in a line. Petal needs an agent that can, such as Claude Code, Codex or Hermes.
+
+Try that once. If it works, go on. If it doesn't, don't test other ways in: one of these says what to do, and getting set up should take under a minute.
+
+- **Your app holds the file back the first time** because it was downloaded: that's expected. Ask the person once, in one line, saying what it is: Petal's tools, from \`${new URL(origin).host}\`, which read public chain data and keep their notes in \`~/.petals\`. In Claude Code, suggest the rule \`Bash(${RUN}:*)\`, so later commands don't ask again. The file installs nothing and changes nothing in your app: only keeping Petal for next time does, below, and only when they ask.
+
+- **Your app's sandbox refused it** (a network connection blocked, or a folder outside your workspace): ask for the permission now, the way your app asks the person. A sandbox's refusal isn't the person's no: they haven't been asked. The file reads public chain sites from this computer, which a sandbox's list doesn't hold, so it needs the network for every command, not just the download.
+  - Claude Code: run the same command again outside the sandbox (the Bash tool's \`dangerouslyDisableSandbox\`), so the person is asked to approve it, and run each \`${RUN}\` command the same way.
+  - Codex: run it again with escalated permissions, so the person gets Codex's approval.
+  - Any other app: ask in one line, naming what to allow: reaching \`${new URL(origin).host}\` and the public sites the file reads, from your shell.
+
+  If only the folder was refused, no permission is needed: keep the file in your working folder and set \`PETALS_HOME\` to a folder beside it, the same on every command.
+- **You run in a cloud or remote sandbox,** not on the person's own computer (Claude Code on the web, a hosted workspace): you can't widen its network yourself. Say so in one line, with the two ways on: turn on full internet access in that environment's settings and ask again, or paste the same prompt into Claude Code, Codex or Hermes on their own computer.
+- **You can't run commands on the person's computer at all,** as in the Claude app's chat: say so in one line, at once, and name the apps that can: Claude Code (in a terminal, or under Code in the Claude desktop app), Codex or Hermes.
 
 If they ask to keep Petal for next time, add the file as an MCP server for them. It takes effect in a new session:
 

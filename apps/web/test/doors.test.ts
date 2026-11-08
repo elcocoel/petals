@@ -7,13 +7,38 @@ const ORIGIN = 'https://petal.example';
 describe('doors', () => {
   const all = doors(ORIGIN);
 
-  test('each one gives something to copy that points at this site', () => {
-    for (const d of all) expect(d.copy, d.id).toContain(ORIGIN);
+  test('each one that gives something to copy points it at this site', () => {
+    for (const d of all.filter((x) => x.copy)) expect(d.copy, d.id).toContain(ORIGIN);
+  });
+
+  test('the apps that run in the cloud say they can’t, and name one that can, with nothing to copy', () => {
+    for (const id of ['claude-app', 'chatgpt', 'other']) {
+      const d = all.find((x) => x.id === id);
+      expect(d?.copy, id).toBeUndefined();
+      expect(d?.how, id).toMatch(/can’t/);
+    }
+    expect(all.find((x) => x.id === 'claude-app')?.how).toMatch(/Claude Code/);
+    expect(all.find((x) => x.id === 'chatgpt')?.how).toMatch(/Codex/);
+  });
+
+  test('the first run asks once, and keeping Petals says what it changes', () => {
+    expect(all[0]?.how).toMatch(
+      /The first time, your agent asks you once to let Petals’ tools run/,
+    );
+    for (const id of ['claude-code', 'codex', 'hermes']) {
+      expect(all.find((x) => x.id === id)?.how, id).toMatch(/for next time.*It adds Petals to/);
+    }
+  });
+
+  test('the prompt says where to paste it, and that the Claude app’s chat can’t', () => {
+    const how = all[0]?.how ?? '';
+    expect(how).toMatch(/Claude Code, Codex or Hermes on your computer/);
+    expect(how).toMatch(/chat runs in the cloud and can’t/);
   });
 
   test('none needs a clone', () => {
     for (const d of all) {
-      expect(`${d.how} ${d.copy}`).not.toMatch(/pnpm|git clone|npm install/);
+      expect(`${d.how} ${d.copy ?? ''}`).not.toMatch(/pnpm|git clone|npm install/);
     }
   });
 
