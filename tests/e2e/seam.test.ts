@@ -49,15 +49,17 @@ async function until(url: string, ms: number): Promise<void> {
 const json = { 'content-type': 'application/json' };
 
 beforeAll(async () => {
-  // The file the server serves, and the site, built to forward to the server.
+  // The file the server serves, and the site, built knowing nothing of the server: it's told where the
+  // server is when it starts, as a host would tell it.
   const bundle = spawnSync(process.execPath, ['apps/cli/scripts/bundle.ts'], { cwd: REPO });
   if (bundle.status !== 0) throw new Error(`bundle failed: ${bundle.stderr}`);
   const web = join(REPO, 'apps/web');
   const next = join(web, 'node_modules/next/dist/bin/next');
   const siteEnv = { PETAL_SERVER: SERVER, PETAL_SITE_KEY: KEY, NEXT_TELEMETRY_DISABLED: '1' };
+  const { PETAL_SERVER: _s, PETAL_SITE_KEY: _k, ...buildEnv } = process.env;
   const built = spawnSync(process.execPath, [next, 'build'], {
     cwd: web,
-    env: { ...process.env, ...siteEnv },
+    env: { ...buildEnv, NEXT_TELEMETRY_DISABLED: '1' },
     encoding: 'utf8',
   });
   if (built.status !== 0) throw new Error(`next build failed:\n${built.stdout}\n${built.stderr}`);

@@ -6,7 +6,6 @@ import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { NextConfig } from 'next';
-import { FORWARDED, serverBase } from './lib/server.ts';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const app = fileURLToPath(new URL('.', import.meta.url));
@@ -51,12 +50,6 @@ function runtimeFiles(): string[] {
 }
 
 const config: NextConfig = {
-  // The server answers these paths, at this one address (lib/server.ts). A rewrite forwards them before
-  // the site's own routes, and passes Set-Cookie and Origin through unchanged (research.md, section 5).
-  async rewrites() {
-    const to = serverBase();
-    return { beforeFiles: FORWARDED.map((source) => ({ source, destination: `${to}${source}` })) };
-  },
   serverExternalPackages: [
     '@petal/core',
     '@petal/inputs',

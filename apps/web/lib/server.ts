@@ -1,11 +1,11 @@
 // Where the server is, for the site (002-system research, C1 and C4). The site shows pages; everything
-// below goes to the server, at one address for people and agents. The rewrites in next.config.ts send
-// those paths there, and proxy.ts adds the visitor's address and the site key on the way.
+// below goes to the server, at one address for people and agents: proxy.ts sends those paths there, and
+// adds the visitor's address and the site key on the way.
 //
 //   PETAL_SERVER     the server's own address (default http://127.0.0.1:8787, `pnpm server`)
 //   PETAL_SITE_KEY   shared with the server, which answers nothing without it; unset on this machine
 
-/** The paths the server answers, as next.config.ts rewrites them. proxy.ts's matcher lists the same. */
+/** The paths the server answers. proxy.ts's matcher lists the same. */
 export const FORWARDED = [
   '/api/:path*',
   '/mcp',
