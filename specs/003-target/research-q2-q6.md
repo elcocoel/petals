@@ -1,5 +1,7 @@
 # Petals target research: identity, claims and accountability
 
+**Scope update — Elco, 8 November 2026 (after this research):** wallet-only login. Socials are only ever self-connected fields on the user’s profile, with no login, messaging or other functions. Private messaging is not a goal. Claims are private commentary for now; Petals will not define or declare truth. Public-claim storage research resumes only after basic testing and usability. The upgradable mapping protocol follows testing, covering Elco’s broader list of mapping targets. The earlier social-login, messaging and public-claim recommendations below are historical options, not current scope. Current follow-ups: [Intents for non-NEAR users](intents-current.md) and [contract shortlist/Sputnik](near-contract-shortlist.md).
+
 Research date: **8 November 2026**. Owner: **RESEARCH**, for META COORDINATOR. Based on the approved [003 target](spec.md); these are recommendations for review, not new product decisions. Freeze: 12 November; submission planned for 13 November.
 
 Evidence labels used throughout:
