@@ -11,6 +11,9 @@ importers:
       '@petal/agent':
         specifier: workspace:*
         version: link:packages/agent
+      '@petal/store':
+        specifier: workspace:*
+        version: link:packages/store
     devDependencies:
       '@biomejs/biome':
         specifier: 2.6.5
@@ -30,9 +33,6 @@ importers:
       '@petal/relations':
         specifier: workspace:*
         version: link:packages/relations
-      '@petal/store':
-        specifier: workspace:*
-        version: link:packages/store
       '@petal/tools':
         specifier: workspace:*
         version: link:packages/tools

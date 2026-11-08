@@ -24,6 +24,8 @@ export interface SessionRow {
   network: string | null;
   /** the sponsored invite this session holds */
   invite: string | null;
+  /** what opened it: `wallet:<binding hash>`; null for an anonymous handle */
+  credential?: string | null;
   expires_at: string;
 }
 export type ChallengeCheck = 'ok' | 'unknown' | 'used' | 'expired';
@@ -105,6 +107,8 @@ export interface ExplorationRow {
   visibility: string;
   share_token_hash: string | null;
   forked_from: string | null;
+  /** the credential that started it */
+  credential?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -119,6 +123,8 @@ export interface StepRow {
   /** who wrote it, as a reader may see it: `owner` or `link:<id>`, never a person id */
   author: string | null;
   note: string | null;
+  /** the credential that authorised it: `wallet:…` or `link:…` */
+  credential?: string | null;
   at: string;
 }
 export interface NoteRow {
@@ -128,6 +134,8 @@ export interface NoteRow {
   author: string;
   door: string | null;
   text: string;
+  /** the credential that authorised it */
+  credential?: string | null;
   at: string;
 }
 /** A bookmark on something a person is following. It points, and proves nothing about who owns it. */
@@ -141,6 +149,8 @@ export interface FollowRow {
   label: string | null;
   /** the flower it last opened as */
   spec_sha256: string | null;
+  /** the credential that made it */
+  credential?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -157,6 +167,8 @@ export interface WorkspaceNoteRow {
   text: string;
   /** JSON: a list in the shape of a claim's evidence */
   evidence: string;
+  /** the credential that wrote it */
+  credential?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -323,11 +335,13 @@ export function tables(db: Db) {
     session: {
       async put(r: Pick<SessionRow, 'hash' | 'subject' | 'expires_at'> & Partial<SessionRow>) {
         await db.run(
-          'INSERT INTO session (hash, subject, network, invite, expires_at) VALUES (?, ?, ?, ?, ?)',
+          `INSERT INTO session (hash, subject, network, invite, credential, expires_at)
+           VALUES (?, ?, ?, ?, ?, ?)`,
           r.hash,
           r.subject,
           r.network ?? null,
           r.invite ?? null,
+          r.credential ?? null,
           r.expires_at,
         );
       },
@@ -719,8 +733,8 @@ export function tables(db: Db) {
       async create(r: ExplorationRow) {
         await db.run(
           `INSERT INTO exploration (id, owner, question, target, head, visibility,
-             share_token_hash, forked_from, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             share_token_hash, forked_from, credential, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           r.id,
           r.owner,
           r.question,
@@ -729,6 +743,7 @@ export function tables(db: Db) {
           r.visibility,
           r.share_token_hash,
           r.forked_from,
+          r.credential ?? null,
           r.created_at,
           r.updated_at,
         );
@@ -866,8 +881,8 @@ export function tables(db: Db) {
           const seq = await nextSeq('step', 'exploration', r.exploration);
           await db.run(
             `INSERT INTO step (exploration, seq, parent, spec_sha256, recipe_sha256,
-               snapshot_sha256, door, author, note, at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+               snapshot_sha256, door, author, note, credential, at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             r.exploration,
             seq,
             r.parent,
@@ -877,6 +892,7 @@ export function tables(db: Db) {
             r.door,
             r.author ?? null,
             r.note,
+            r.credential ?? null,
             r.at,
           );
           return seq;
@@ -893,12 +909,14 @@ export function tables(db: Db) {
         db.tx(async () => {
           const seq = await nextSeq('note', 'exploration', r.exploration);
           await db.run(
-            'INSERT INTO note (exploration, seq, author, door, text, at) VALUES (?, ?, ?, ?, ?, ?)',
+            `INSERT INTO note (exploration, seq, author, door, text, credential, at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             r.exploration,
             seq,
             r.author,
             r.door ?? null,
             r.text,
+            r.credential ?? null,
             r.at,
           );
           return seq;
@@ -913,14 +931,16 @@ export function tables(db: Db) {
       /** False when this owner already follows this ref: the row they have stands. */
       insert: async (r: FollowRow) =>
         (await db.run(
-          `INSERT INTO follow (id, owner, kind, ref, label, spec_sha256, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (owner, ref) DO NOTHING`,
+          `INSERT INTO follow (id, owner, kind, ref, label, spec_sha256, credential, created_at,
+             updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (owner, ref) DO NOTHING`,
           r.id,
           r.owner,
           r.kind,
           r.ref,
           r.label,
           r.spec_sha256,
+          r.credential ?? null,
           r.created_at,
           r.updated_at,
         )) === 1,
@@ -967,14 +987,16 @@ export function tables(db: Db) {
     workspaceNote: {
       async insert(r: WorkspaceNoteRow) {
         await db.run(
-          `INSERT INTO workspace_note (id, owner, author, about, text, evidence, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO workspace_note (id, owner, author, about, text, evidence, credential,
+             created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           r.id,
           r.owner,
           r.author,
           r.about,
           r.text,
           r.evidence,
+          r.credential ?? null,
           r.created_at,
           r.updated_at,
         );

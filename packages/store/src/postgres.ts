@@ -43,6 +43,22 @@ export interface PgConnection {
   close(): Promise<void>;
 }
 
+/**
+ * A Postgres address as node-postgres takes it, in parts, with the password given apart: handed the whole
+ * address, the driver lets its parts override the password it's given, and one with no password in it
+ * leaves none.
+ */
+export function pgConfigOf(url: string, password: string | undefined) {
+  const u = new URL(url);
+  return {
+    host: decodeURIComponent(u.hostname),
+    port: u.port ? Number(u.port) : 5432,
+    database: decodeURIComponent(u.pathname.replace(/^\//, '')) || undefined,
+    user: decodeURIComponent(u.username) || undefined,
+    ...(password !== undefined ? { password } : {}),
+  };
+}
+
 /** The address with nothing secret in it, for messages. */
 export function redacted(url: string): string {
   try {
@@ -136,8 +152,7 @@ export function postgresConnection(
       return pg.types.getTypeParser(oid, format as 'text');
     };
     pool = new pg.Pool({
-      connectionString: url,
-      ...(password !== undefined ? { password } : {}),
+      ...pgConfigOf(url, password),
       max: limits.pool,
       connectionTimeoutMillis: limits.connectMs,
       statement_timeout: limits.statementMs,

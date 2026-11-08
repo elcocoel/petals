@@ -119,6 +119,8 @@ export interface ChatAdmission {
 export interface RouteAuth {
   admitChat(c: Context, llm: LlmClient, budget: Budget): Promise<ChatAdmission>;
   subjectOf(c: Context): Promise<string | null>;
+  /** The subject and the credential that opened its session (TGT-005), in one look. */
+  callerOf(c: Context): Promise<{ subject: string | null; credential: string | null }>;
   /** A refusal for a POST from another site; null for one that's fine. */
   refuseForeign(c: Context): Response | null;
   /** Opens an anonymous session on this response, for a first write. Returns its subject. */
@@ -175,7 +177,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
   async function openSession(
     c: Context,
     subject: string,
-    o: { network?: string; invite?: string | null } = {},
+    o: { network?: string; invite?: string | null; credential?: string | null } = {},
   ): Promise<SessionRow> {
     const value = randomBytes(32).toString('base64url');
     const row: SessionRow = {
@@ -183,6 +185,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       subject,
       network: o.network ?? null,
       invite: o.invite ?? null,
+      credential: o.credential ?? null,
       expires_at: new Date(clock() + SESSION_DAYS * 86_400_000).toISOString(),
     };
     await store.tx(async () => {
@@ -244,7 +247,8 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       if (old) await store.session.delete(old.hash);
       return { person, claimed, explorations };
     });
-    await openSession(c, out.person, { network, invite: old?.invite });
+    // the wallet that signed, by its keyed hash: what authorises everything this session does
+    await openSession(c, out.person, { network, invite: old?.invite, credential: `wallet:${index}` });
     return out;
   }
 
@@ -375,6 +379,10 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
 
   const gate: RouteAuth = {
     subjectOf: async (c) => (await sessionOf(c))?.subject ?? null,
+    callerOf: async (c) => {
+      const s = await sessionOf(c);
+      return { subject: s?.subject ?? null, credential: s?.credential ?? null };
+    },
     refuseForeign: (c) => (originAllowed(c) ? null : badOrigin(c)),
     openAnonymous: async (c) => (await newHandle(c)).subject,
 

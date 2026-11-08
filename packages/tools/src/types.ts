@@ -63,6 +63,8 @@ export interface Config {
 export interface Caller {
   /** the session's subject: a person id or an anonymous handle. None: nobody signed in */
   subject?: string | null;
+  /** additive (TGT-005): what authorised this call, kept with what it writes: `wallet:<hash>` */
+  credential?: string | null;
   /** http, mcp, cli or site */
   door?: string;
   /** what the app at the other end calls itself, when its request says so (T404). Its own words */

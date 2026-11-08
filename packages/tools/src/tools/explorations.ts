@@ -122,6 +122,9 @@ function writable(o: Opened): void {
 }
 
 const authorOf = (o: Opened) => (o.link ? `link:${o.link.id}` : 'owner');
+/** What authorised a write (TGT-005): the link it came by, or the credential behind the session. */
+const credentialOf = (ctx: ToolContext, o: Opened) =>
+  o.link ? `link:${o.link.id}` : (ctx.caller?.credential ?? null);
 const doorOf = (ctx: ToolContext) => ctx.caller?.door ?? 'unknown';
 
 /** What it's about, in a line: the target of a step. A target is a query, never a binding. */
@@ -137,6 +140,7 @@ function targetOf(spec: Spec): string | null {
 interface StepInput {
   door: string;
   author: string;
+  credential?: string | null;
   note: string | null;
   at: string;
   /** called for a new spec body; the site's own run has none, because it is sponsored */
@@ -169,7 +173,8 @@ function writeStep(
       if (s.note) {
         if ((await store.note.count(id)) >= NOTES_MAX) throw tooManyNotes();
         const { door, author, note: text, at } = s;
-        await store.note.append({ exploration: id, door, author, text, at });
+        const credential = s.credential ?? null;
+        await store.note.append({ exploration: id, door, author, text, credential, at });
         await store.exploration.touch(id, at);
       }
       return { ...((await store.step.list(id)).at(-1) as StepRow), unchanged: true };
@@ -192,6 +197,7 @@ function writeStep(
       door: s.door,
       author: s.author,
       note: s.note,
+      credential: s.credential ?? null,
       at: s.at,
     };
     const seq = await store.step.append(r);
@@ -210,6 +216,7 @@ async function newExploration(
     target: string | null;
     head?: string | null;
     forked_from?: string;
+    credential?: string | null;
     at: string;
   },
 ): Promise<void> {
@@ -222,6 +229,7 @@ async function newExploration(
     visibility: 'private',
     share_token_hash: null,
     forked_from: o.forked_from ?? null,
+    credential: o.credential ?? null,
     created_at: o.at,
     updated_at: o.at,
   });
@@ -755,6 +763,7 @@ export const startExploration = defineTool<StartIn, object>({
         owner,
         question: asked,
         target: target ?? source?.target ?? null,
+        credential: ctx.caller?.credential ?? null,
         at,
         ...(source?.head ? { head: source.head } : {}),
         ...(source ? { forked_from: source.id } : {}),
@@ -832,6 +841,7 @@ export const saveStep = defineTool<
     const step = await writeStep(ctx, store, o.row.id, body, {
       door: doorOf(ctx),
       author: authorOf(o),
+      credential: credentialOf(ctx, o),
       note: note ?? null,
       at: ctx.now().toISOString(),
       capped: capSpecBodies(ctx.config, ctx.now()),
@@ -888,7 +898,15 @@ export const addNote = defineTool<{ exploration: string; text: string }, object>
     // The count and the append together, so two at once can't both pass the limit.
     const seq = await store.tx(async () => {
       if ((await store.note.count(o.row.id)) >= NOTES_MAX) throw tooManyNotes();
-      const n = await store.note.append({ exploration: o.row.id, author, door, text, at });
+      const credential = credentialOf(ctx, o);
+      const n = await store.note.append({
+        exploration: o.row.id,
+        author,
+        door,
+        text,
+        credential,
+        at,
+      });
       await store.exploration.touch(o.row.id, at);
       return n;
     });
@@ -1031,7 +1049,12 @@ export async function postSnapshot(
   const store = storeOf(ctx);
   await store.meta.set(
     POSTED(sha256),
-    JSON.stringify({ exploration, author: authorOf(o), at: now.toISOString() }),
+    JSON.stringify({
+      exploration,
+      author: authorOf(o),
+      credential: credentialOf(ctx, o),
+      at: now.toISOString(),
+    }),
   );
   touched(ctx, exploration, 'post_snapshot');
   return { exploration, sha256, stored: true, origin: 'their_machine' };

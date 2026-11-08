@@ -540,6 +540,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     const refused = await cannotWrite(c);
     if (refused) return refused;
     const subject = (await gate.subjectOf(c)) ?? (await gate.openAnonymous(c));
+    const { credential } = await gate.callerOf(c);
     const ref = body.ref as string;
     const at = iso();
     const label = (body.label as string | null | undefined) ?? null;
@@ -565,6 +566,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       ref,
       label,
       spec_sha256: sha,
+      credential,
       created_at: at,
       updated_at: at,
     };
@@ -689,6 +691,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     const refused = await cannotWrite(c);
     if (refused) return refused;
     const subject = (await gate.subjectOf(c)) ?? (await gate.openAnonymous(c));
+    const { credential } = await gate.callerOf(c);
     if ((await store.workspaceNote.count(subject)) >= NOTES_MAX) {
       return fail(c, 'bad_input', `You have ${NOTES_MAX} notes, the most this holds.`);
     }
@@ -700,6 +703,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       about: body.about as string,
       text: body.text as string,
       evidence: JSON.stringify(parsed.evidence),
+      credential,
       created_at: at,
       updated_at: at,
     };

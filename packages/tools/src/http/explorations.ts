@@ -46,6 +46,8 @@ import { body, fail, respond } from './reply.ts';
 /** What the door needs from sign-in; the agent package holds the sessions. */
 export interface SessionGate {
   subjectOf(c: Context): Promise<string | null>;
+  /** The subject and the credential that opened its session, in one look. */
+  callerOf?(c: Context): Promise<{ subject: string | null; credential: string | null }>;
   /** A refusal for a POST from another site; null for one that's fine. */
   refuseForeign(c: Context): Response | null;
   /** Opens an anonymous session on this response, for a browser's first claim. Returns its subject. */
@@ -78,10 +80,13 @@ export function explorationRoutes(
   // them, and a browser's cookie on localhost is no use on 127.0.0.1. Only links change.
   const asCaller = async (c: Context): Promise<ToolContext> => {
     const site = ctx.config.apiBase ? undefined : c.req.header(SITE_HEADER);
+    const who = gate?.callerOf
+      ? await gate.callerOf(c)
+      : { subject: (await gate?.subjectOf(c)) ?? null, credential: null };
     return {
       ...ctx,
       ...(site ? { config: { ...ctx.config, apiBase: site } } : {}),
-      caller: { subject: (await gate?.subjectOf(c)) ?? null, door: 'http' },
+      caller: { subject: who.subject, credential: who.credential, door: 'http' },
     };
   };
   /** A body that wasn't JSON comes here as its error. */

@@ -219,6 +219,18 @@ export const MIGRATIONS: readonly string[] = [
     title, text, tokenize = 'unicode61 remove_diacritics 2'
   );
   `,
+  // 6: the credential behind each action (specs/003-target, TGT-005). An account is an id with many
+  // linked wallets, and maybe many people: what authorised an action is the credential, kept with it, so
+  // a later revocation never rewrites history. `wallet:<the binding's keyed hash>` for a session a
+  // wallet opened, `link:<id>` for a continue link; null where there's none (an anonymous session).
+  `
+  ALTER TABLE session ADD COLUMN credential TEXT;
+  ALTER TABLE exploration ADD COLUMN credential TEXT;
+  ALTER TABLE step ADD COLUMN credential TEXT;
+  ALTER TABLE note ADD COLUMN credential TEXT;
+  ALTER TABLE follow ADD COLUMN credential TEXT;
+  ALTER TABLE workspace_note ADD COLUMN credential TEXT;
+  `,
 ];
 
 /**
