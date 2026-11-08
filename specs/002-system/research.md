@@ -106,6 +106,7 @@ The live hub stays on the server: the website holds no state, so it can't hold t
 - **Long-polling.** The page asks "anything new?", and the server answers when something changes or after 25 seconds. That works through any forwarder, with one more request every 25 seconds per open page. About 2 hours.
 - **The stream straight to the server's name.** The page would need a cookie there, which is C1's two-address problem, and it would skip the site key.
 - **Lean: the stream through the rewrite, with a heartbeat. If the spike shows Vercel cuts streams, long-polling.**
+- **Decided, 8 Nov (META, after the spike): the stream through the rewrite, with no heartbeat.** An idle stream drops after about 2 minutes (Cloudflare) and any stream after 15 (Vercel). The page's EventSource reconnects by itself, and the server's first event makes it read again, so no timer is added.
 - **Later, not now:** with more than one server, the hub would need a shared bus. Postgres has one (LISTEN/NOTIFY), which fits "as if it were Postgres".
 
 ### C6. Pages built on Vercel's side
