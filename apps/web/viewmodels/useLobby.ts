@@ -11,8 +11,8 @@ import { useSession } from './useSession.ts';
 
 export function useLobby() {
   const session = useSession(true);
-  // Only a person has conversations: read them once the server has said someone is here.
-  const conversations = useConversations(session.known && session.account ? 'arrived' : null);
+  // Read once the server has said who's here. A browser that hasn't connected can still hold work.
+  const conversations = useConversations(session.known ? 'arrived' : null);
   const [flowers, setFlowers] = useState<ListedFlower[]>([]);
   useEffect(() => {
     let gone = false;
