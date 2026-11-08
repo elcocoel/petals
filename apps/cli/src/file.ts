@@ -104,8 +104,14 @@ export async function fileMain(argv: string[], env: Env = process.env): Promise<
     PETAL_STATE_DIR: env.PETAL_STATE_DIR || join(home, 'state'),
     PETAL_MAP_NETWORK: env.PETAL_MAP_NETWORK || 'testnet',
   };
-  // Nothing here may spend or sign for anyone, whatever this shell holds.
-  for (const k of ['NEAR_AI_API_KEY', 'PETAL_WRITER_KEY_FILE', 'BLOB_READ_WRITE_TOKEN'])
+  // Nothing here may spend or sign for anyone, whatever this shell holds, and this is the person's
+  // own machine, never a public site.
+  for (const k of [
+    'NEAR_AI_API_KEY',
+    'PETAL_WRITER_KEY_FILE',
+    'BLOB_READ_WRITE_TOKEN',
+    'PETAL_PUBLIC',
+  ])
     delete own[k];
 
   const { main } = await import('./main.ts');

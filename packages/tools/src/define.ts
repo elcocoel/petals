@@ -58,6 +58,8 @@ export type PetalTool<I, O> = Tool<I, Versioned<O>> & {
   title: string;
   description: string;
   annotations: ToolAnnotations;
+  /** true: a public site refuses it (Config.public), and a person's own agent runs it on their machine */
+  onTheirMachine: boolean;
 };
 
 export interface ToolDef<I, O> {
@@ -76,6 +78,12 @@ export interface ToolDef<I, O> {
   annotations?: ToolAnnotations;
   /** code for an unexpected thrown error (default internal) */
   failure?: ToolErrorCode;
+  /**
+   * It reaches outside the site (a chain, a web page, a search, a payment route) or writes to a chain.
+   * A public site does none of that for a visitor, so there it refuses with not_on_this_site, and the
+   * person's own agent runs it on their machine instead.
+   */
+  onTheirMachine?: boolean;
   run(input: I, ctx: ToolContext): Promise<O | ToolError>;
 }
 
@@ -107,6 +115,7 @@ export const TOOL_ERROR_SCHEMA: JSONSchema = {
             'unauthorised',
             'invite_required',
             'budget_exhausted',
+            'not_on_this_site',
             'internal',
           ],
         },
@@ -118,6 +127,15 @@ export const TOOL_ERROR_SCHEMA: JSONSchema = {
     ...VERSION_PROP,
   },
 };
+
+/** What a public site answers for a tool that runs on the person's own machine. */
+export function notOnThisSite(what: string): ToolError {
+  return toolError(
+    'not_on_this_site',
+    `This site doesn't run ${what} for visitors: it reads no chain or web page, searches nothing and runs no model on anyone's behalf.`,
+    'Your own agent does that on your machine. /connect says how to add Petals to it.',
+  );
+}
 
 /** Ajv errors in plain words, at most five. */
 export function describeErrors(errors: ErrorObject[] | null | undefined): string {
@@ -146,9 +164,13 @@ export function defineTool<I, O extends object>(def: ToolDef<I, O>): PetalTool<I
     title: def.title,
     description: def.description,
     annotations: def.annotations ?? {},
+    onTheirMachine: def.onTheirMachine === true,
     input,
     output,
     async run(raw: I, ctx: ToolContext): Promise<Versioned<O> | Versioned<ToolError>> {
+      // First, so a refused call reads nothing, not even its input.
+      if (def.onTheirMachine === true && ctx.config.public)
+        return versioned(notOnThisSite(def.name));
       const i = raw === undefined || raw === null ? ({} as I) : raw;
       if (!check(i)) return versioned(toolError('bad_input', describeErrors(check.errors), hint));
       try {

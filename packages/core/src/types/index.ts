@@ -154,6 +154,8 @@ export type ToolErrorCode =
   | 'unauthorised'
   | 'invite_required'
   | 'budget_exhausted'
+  /** additive: a public site refuses what a person's own agent does on their machine (PETAL_PUBLIC) */
+  | 'not_on_this_site'
   | 'internal';
 /** Errors are returned, not thrown across a door. */
 export interface ToolError {

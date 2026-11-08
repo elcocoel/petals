@@ -50,10 +50,22 @@ describe('one test per error code', () => {
       invalid_spec: 422,
       rate_limited: 429,
       budget_exhausted: 429,
+      not_on_this_site: 403,
       source_failed: 502,
       internal: 500,
     });
     expect([...ERROR_CODES].sort()).toEqual(Object.keys(HTTP_STATUS).sort());
+  });
+
+  test("not_on_this_site 403: a public site refuses what runs on the person's own machine", async () => {
+    // HTTP and in process. Its /mcp doesn't list these at all (public.test.ts).
+    const { ctx } = await rig();
+    const site = { ...ctx, config: { ...ctx.config, public: true } };
+    const res = await httpApp(site).request('/api/v1/find?query=moloch');
+    expect(res.status).toBe(HTTP_STATUS.not_on_this_site);
+    const body = (await res.json()) as Json;
+    expect(body).toMatchObject({ error: { code: 'not_on_this_site' }, tools_version: 'tools/v1' });
+    expect(await callTool('find_target', { query: 'moloch' }, site)).toEqual(body);
   });
 
   test('bad_input 400: an input that does not match the schema', async () => {

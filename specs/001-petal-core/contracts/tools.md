@@ -10,7 +10,7 @@ The agent interprets; the tools count (FR-025). Any number an agent quotes must 
 
 - Inputs and outputs are JSON. Amounts are decimal strings. Shares are numbers rounded to 6 decimals.
 - Every output carries `"tools_version": "tools/v1"`.
-- Errors are returned, not thrown across the door: `{ "error": { "code", "message", "hint", "retry_after_s"? } }`. Codes: `bad_input`, `not_found`, `cannot_read`, `source_failed`, `rate_limited`, `invalid_spec`, `unauthorised`, `invite_required` (agent routes only), `budget_exhausted`, `internal`.
+- Errors are returned, not thrown across the door: `{ "error": { "code", "message", "hint", "retry_after_s"? } }`. Codes: `bad_input`, `not_found`, `cannot_read`, `source_failed`, `rate_limited`, `invalid_spec`, `unauthorised`, `invite_required` (agent routes only), `budget_exhausted`, `not_on_this_site` (a public site, `PETAL_PUBLIC=1`, refuses a tool that runs on the person's own machine), `internal`.
 - Additive (J4): `approval_required` is what Petal's own agent loop answers a held `get_snapshot`, `propose_spec` or `render_flower` with, before the person's yes ([http-api.md](./http-api.md#agent-chat-sse)). No tool returns it and no door sees it: every door runs these tools as before (SYS-030).
 - Tools that can take time (`get_snapshot` on a live pull) report progress through an optional `onProgress(event)` callback in process, `notifications/progress` in MCP, and SSE in HTTP. Event: `{ stage, message, done?, total? }`.
 - Tools never ask for a key from the caller. Viewing and making need nothing (FR-030); only `publish_flower` needs a NEP-413 proof.

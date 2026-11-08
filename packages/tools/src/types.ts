@@ -45,6 +45,13 @@ export interface Config {
   fake?: boolean;
   /** additive (T300): overrides the defaults and PETAL_* variables of limits.ts */
   limits?: Partial<Limits>;
+  /**
+   * additive (PETAL_PUBLIC=1): a public site. It does no work for a visitor that reaches outside it:
+   * no chain reads, web reads, searches, model calls or chain writes. A person's own agent does those
+   * on their machine and posts what it made. Tools marked onTheirMachine refuse, with
+   * not_on_this_site, and the shared map is the copies of published rows the site ships.
+   */
+  public?: boolean;
 }
 
 /** Who is calling and through what. A door sets this; a caller can't name itself. */

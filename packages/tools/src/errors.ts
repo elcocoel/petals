@@ -12,6 +12,7 @@ export const ERROR_CODES: readonly ToolErrorCode[] = [
   'unauthorised',
   'invite_required',
   'budget_exhausted',
+  'not_on_this_site',
   'internal',
 ];
 
@@ -25,6 +26,7 @@ export const HTTP_STATUS: Record<ToolErrorCode, 400 | 401 | 403 | 404 | 422 | 42
   invalid_spec: 422,
   rate_limited: 429,
   budget_exhausted: 429,
+  not_on_this_site: 403,
   source_failed: 502,
   internal: 500,
 };

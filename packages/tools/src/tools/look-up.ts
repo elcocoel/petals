@@ -374,6 +374,7 @@ export function makeLookUp(
   const ROWS = { type: 'array', items: { type: 'object' } };
   return defineTool({
     name: 'look_up',
+    onTheirMachine: true,
     title: 'Look up',
     description:
       "What Petal knows about any word (a name, ticker, address, account): flowers with view_url, stored reads with dates, accounts in them, what the chain says of an address, and what market and DAO lists name, each marked how it's known. Never fails on a guess.",
