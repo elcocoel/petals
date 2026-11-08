@@ -7,4 +7,11 @@ export const doorWords = {
   ownAgent: 'Use your own agent',
   badSignature: "That signature didn't work. Connect your wallet again.",
   nearDidntAnswer: "NEAR didn't answer. Try again.",
+  // Proposed 8 Nov for a site that runs no agent for visitors (design/journey-strings.md, "The front door").
+  connectAgent: 'Connect your agent',
+  pasteIt:
+    'Paste this into a conversation in Claude Code, Codex or Hermes. Your agent opens it here, in this browser, and you watch it work.',
+  // Already on /connect.
+  copyPrompt: 'Copy this prompt',
+  otherWays: 'Other ways in',
 } as const;

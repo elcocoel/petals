@@ -1,7 +1,9 @@
 // The workspace: the flower is the page and the conversation floats over it. Runs link here
 // (run.resume_url), and the landing's questions arrive here as ?q=. The rest of the address says what
 // the conversation held (lib/workspace-url.ts).
+import { headers } from 'next/headers';
 import { InteractionSurface } from '../../flower/InteractionSurface.tsx';
+import { agentPrompt, originFrom } from '../../lib/agent-prompt.ts';
 import { workspaceHome } from '../../lib/workspace-home.ts';
 
 export const dynamic = 'force-dynamic';
@@ -13,6 +15,7 @@ export default async function MakePage({ searchParams }: { searchParams: Promise
   return (
     <InteractionSurface
       {...(await workspaceHome(q))}
+      agentPrompt={agentPrompt(originFrom(await headers()))}
       // Elco's open choices, read from the address until they're chosen: ?box=ink and ?order=scatter.
       surface={q.box === 'ink' ? 'ink' : 'ground'}
       scatter={q.order === 'scatter'}

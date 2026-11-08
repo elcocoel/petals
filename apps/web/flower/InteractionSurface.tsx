@@ -8,6 +8,7 @@
 import type { SurfaceName } from '@petal/tokens';
 import { useEffect } from 'react';
 import { Composer } from '../components/chat/Composer.tsx';
+import { ConnectAgent } from '../components/chat/ConnectAgent.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
@@ -33,6 +34,7 @@ export function InteractionSurface({
   scatter,
   probe,
   surface,
+  agentPrompt = '',
   ...workspace
 }: {
   standIn: CanvasFlower | null;
@@ -41,6 +43,9 @@ export function InteractionSurface({
   surface: SurfaceName;
   initialRun?: string | undefined;
   catalogue?: Catalogue | null;
+  agentForVisitors?: boolean;
+  /** What a person pastes into their own agent, on a site that runs none for them. */
+  agentPrompt?: string;
   initialQuestion: string | null;
   recorded: boolean;
   opening: string;
@@ -76,8 +81,8 @@ export function InteractionSurface({
         onPick={actions.pick}
       />
       <FloatBox
-        label={state.heading}
-        title={state.heading}
+        label={doorLabel(state.door) ?? state.heading}
+        title={doorLabel(state.door) ?? state.heading}
         surface={surface}
         hand={hands.output}
         control={
@@ -88,24 +93,37 @@ export function InteractionSurface({
           ) : undefined
         }
       >
-        <ConversationThread
-          recorded={state.recorded}
-          rows={state.rows}
-          thumbs={state.thumbs}
-          threadRef={refs.thread}
-          className="px-block-gap pt-block-gap overscroll-none"
-          openWord=""
-          onOpenTurn={actions.openTurn}
-          onOpenStored={actions.openStored}
-          onRefollow={actions.refollow}
-          onLink={actions.followLink}
-        />
+        {state.door === 'wallet' && (
+          <ConnectWallet
+            question=""
+            busy={state.session.busy}
+            failed={state.session.failed}
+            onConnect={state.session.connect}
+          />
+        )}
+        {state.door === 'agent' && <ConnectAgent prompt={agentPrompt} />}
+        {/* Petals' greeting and the thread, wherever Petals' agent answers or there's something to show. */}
+        {!state.door && (
+          <ConversationThread
+            recorded={state.recorded}
+            rows={state.rows}
+            thumbs={state.thumbs}
+            threadRef={refs.thread}
+            className="px-block-gap pt-block-gap overscroll-none"
+            openWord=""
+            onOpenTurn={actions.openTurn}
+            onOpenStored={actions.openStored}
+            onRefollow={actions.refollow}
+            onLink={actions.followLink}
+          />
+        )}
       </FloatBox>
       <FloatBox
         label={state.needsWallet ? doorWords.connect : state.composer.label}
         title={state.needsWallet ? doorWords.connect : state.composer.label}
         surface={surface}
         hand={hands.input}
+        closed={!state.inputShown}
       >
         {state.needsWallet && (
           <ConnectWallet
@@ -198,4 +216,11 @@ export function InteractionSurface({
       </FloatBox>
     </>
   );
+}
+
+/** The one box's bar on a site with no agent for visitors: what it's for. */
+function doorLabel(door: 'waiting' | 'wallet' | 'agent' | null): string | null {
+  if (door === 'wallet') return doorWords.connect;
+  if (door === 'agent') return doorWords.connectAgent;
+  return null;
 }

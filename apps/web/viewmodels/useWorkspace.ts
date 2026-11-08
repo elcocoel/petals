@@ -58,6 +58,8 @@ export function useWorkspace(props: {
   standIn: CanvasFlower | null;
   /** What a person can pick from. Null: the API couldn't say, so there's nothing to pick. */
   catalogue?: Catalogue | null;
+  /** False on a site that runs no agent for visitors (lib/workspace-home.ts): their own agent does the work. */
+  agentForVisitors?: boolean;
 }) {
   const { shelf, standIn, initialElsewhere, catalogue = null, ...chatProps } = props;
   const { state: chat, dispatch, actions: chatActions, refs } = useMakeChat(chatProps);
@@ -210,10 +212,26 @@ export function useWorkspace(props: {
 
   // Read when the page opens, and again when a turn starts or ends here: nothing runs on a timer.
   const session = useSession(!recorded);
+  // No agent here for visitors (8 Nov): on a page of its own, the one box is the way in, a wallet and then
+  // the person's own agent, where Petals' greeting and composer were. Not on a run, another agent's
+  // conversation or a recorded site, which show what they hold.
+  const agentless =
+    props.agentForVisitors === false && !recorded && !initialElsewhere && !props.initialRun;
+  const door: 'waiting' | 'wallet' | 'agent' | null = !agentless
+    ? null
+    : !session.known
+      ? 'waiting'
+      : session.account
+        ? 'agent'
+        : 'wallet';
   // Another agent's conversation needs no wallet here: nothing here is spent on it.
-  const needsWallet = !recorded && !initialElsewhere && session.known && !session.account;
-  // Until the server has said who's here, nothing offers to ask or to connect.
-  const composerShown = recorded || Boolean(initialElsewhere) || Boolean(session.account);
+  const needsWallet =
+    !agentless && !recorded && !initialElsewhere && session.known && !session.account;
+  // Until the server has said who's here, nothing offers to ask or to connect. With no agent, nothing asks.
+  const composerShown =
+    recorded ||
+    Boolean(initialElsewhere) ||
+    (Boolean(session.account) && props.agentForVisitors !== false);
   const listed = useConversations(recorded ? null : `${runId}:${busy}:${elsewhereRef}`);
   const conversations = useMemo(
     () => conversationRows(listed, { runId, elsewhere: elsewhereRef ?? undefined }),
@@ -312,6 +330,9 @@ export function useWorkspace(props: {
       session,
       needsWallet,
       composerShown,
+      door,
+      // With an agent it's there from the first paint, as before. Without one, only when it holds something.
+      inputShown: !door && (props.agentForVisitors !== false || needsWallet || composerShown),
       question,
       pill:
         showModel && catalogue && settings

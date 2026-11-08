@@ -14,6 +14,7 @@ import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
 import { CopyPrompt } from '../components/CopyPrompt.tsx';
 import { AnsweredBy } from '../components/chat/AnsweredBy.tsx';
+import { ConnectAgent } from '../components/chat/ConnectAgent.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
@@ -1292,6 +1293,20 @@ export const registry: LabEntry[] = [
         ),
       },
       { name: 'lost', wide: true, render: () => <TurnStatus row={turnRow('lost')} /> },
+    ],
+  },
+  {
+    id: 'ConnectAgent',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/ConnectAgent.tsx',
+    states: [
+      {
+        name: 'signed in, on a site with no agent for visitors',
+        wide: true,
+        render: () => <ConnectAgent prompt="I'd like to use Petal with you." />,
+      },
     ],
   },
   {
