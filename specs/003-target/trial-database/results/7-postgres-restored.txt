@@ -1,0 +1,3 @@
+3. Row for row: 24 of 24 tables identical in SQLite and Postgres.
+   rows per table, SQLite/Postgres: challenge 1/1, credit 0/0, credit_entry 0/0, daily_count 2/2, draft 2/2, exploration 2/2, exploration_link 0/0, follow 1/1, invite 0/0, ledger 0/0, meta 2/2, note 1/1, person 1/1, publish_draft 0/0, run 0/0, run_event 0/0, run_thread 0/0, schema_migration 5/5, search 0/0, search_doc 0/0, session 1/1, step 2/2, wallet_binding 2/2, workspace_note 1/1
+4. Wallet seals read from Postgres: 2 of 2 open with the server's key and still find their account: near:testnet:alice-trial.testnet, near:testnet:bob-trial.testnet
