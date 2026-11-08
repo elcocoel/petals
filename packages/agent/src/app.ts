@@ -58,20 +58,26 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   // <stateDir>/private.db, or memory when that can't be written: the keyless public copy must still
   // start. Memory is fine for a recorded run, which spends nothing. It can't guard real spend,
   // because a restart would forget the day's total, so a server with a key then refuses to spend.
-  const store = stateStore(stateDir);
-  try {
-    importLedgerFile(store, join(stateDir, 'llm-ledger.json'));
-    importRunFiles(store, join(stateDir, 'runs'));
-  } catch (e) {
-    // the old files stay where they are, and the next start tries again
-    console.warn(`petal: couldn't import the old run files: ${(e as Error).message}`);
-  }
-  try {
-    interruptRuns(store);
-  } catch (e) {
-    // the server still starts; the next boot scans again
-    console.warn(`petal: couldn't scan for interrupted runs: ${(e as Error).message}`);
-  }
+  // The configured database (PETAL_DATABASE_URL), else SQLite in the state folder: the store is the only
+  // way in, wherever the data is.
+  const store = stateStore(stateDir, console.warn, config.databaseUrl);
+  // What a start must do before it answers: old files folded in, and runs a stop cut short marked. The
+  // first request waits for it; neither failure stops the server.
+  const started = (async () => {
+    try {
+      await importLedgerFile(store, join(stateDir, 'llm-ledger.json'));
+      await importRunFiles(store, join(stateDir, 'runs'));
+    } catch (e) {
+      // the old files stay where they are, and the next start tries again
+      console.warn(`petal: couldn't import the old run files: ${(e as Error).message}`);
+    }
+    try {
+      await interruptRuns(store);
+    } catch (e) {
+      // the server still starts; the next boot scans again
+      console.warn(`petal: couldn't scan for interrupted runs: ${(e as Error).message}`);
+    }
+  })();
   const budget = serverBudget(DEFAULT_BUDGET, {
     usdPerDay: config.llmDailyUsd,
     wallSeconds: runMaxSeconds(),
@@ -96,6 +102,10 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   });
 
   const app = new Hono();
+  app.use('*', async (_c, next) => {
+    await started;
+    await next();
+  });
   // The tool side owns /api/v1/health; only the agent knows which model mode it is in.
   app.use('/api/v1/health', async (c, next) => {
     await next();

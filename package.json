@@ -27,7 +27,8 @@
     "prepare": "git config core.hooksPath scripts/git-hooks 2>/dev/null || true"
   },
   "dependencies": {
-    "@petal/agent": "workspace:*"
+    "@petal/agent": "workspace:*",
+    "@petal/store": "workspace:*"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.5",
@@ -36,7 +37,6 @@
     "@petal/inputs": "workspace:*",
     "@petal/near": "workspace:*",
     "@petal/relations": "workspace:*",
-    "@petal/store": "workspace:*",
     "@petal/tools": "workspace:*",
     "@types/node": "^24.19.2",
     "ajv": "^8.20.0",

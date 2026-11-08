@@ -102,7 +102,7 @@ export const renderFlowerTool = defineTool<
       );
     }
     const r = renderFlower(spec, snapshot, size !== undefined ? { size } : {});
-    const stored = putSpecBody(ctx.config, spec, ctx.now().toISOString());
+    const stored = await putSpecBody(ctx.config, spec, ctx.now().toISOString());
     // renderFlower reads the same thing and keeps it to itself, so this is only paid for when asked.
     const reading = include_reading ? readFlower(spec, snapshot) : null;
     return {

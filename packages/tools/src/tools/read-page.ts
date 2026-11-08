@@ -89,7 +89,7 @@ export function makeReadPage(
           note: OFFLINE_PAGE,
         };
       const cap = limitsOf(ctx.config).pageReadsPerDay;
-      if (!takeToday(ctx.config, 'page-read', cap, ctx.now()))
+      if (!(await takeToday(ctx.config, 'page-read', cap, ctx.now())))
         throw overToday(ctx.now(), `Petal has read its ${cap} pages for today.`);
       let page: PublicPage;
       try {

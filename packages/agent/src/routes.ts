@@ -21,7 +21,7 @@ import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
-import type { RouteAuth } from './auth-routes.ts';
+import type { ChatAdmission, RouteAuth } from './auth-routes.ts';
 import { defaultSettings, resolveSettings, settingsOf } from './catalogue.ts';
 import { type Earlier, type Observed, runJobs } from './jobs.ts';
 import type { Budget, LlmClient } from './llm.ts';
@@ -226,7 +226,7 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
   /** A run with an owner is that owner's alone: to anyone else, it doesn't exist (SYS-014). */
   async function mayRead(c: Context, runId: string): Promise<boolean> {
     const owner = await deps.runs.ownerOf?.(runId);
-    return !owner || owner === o.auth?.subjectOf(c);
+    return !owner || owner === (await o.auth?.subjectOf(c));
   }
 
   const app = new Hono();
@@ -253,10 +253,10 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
       }
       // Before the rate limit: a refused chat costs nothing, and shouldn't use up the allowance.
       // Before the body too, so a stranger's is never parsed.
-      const admitted = o.auth?.admitChat(c, deps.llm, deps.budget) ?? {};
+      const admitted: ChatAdmission = (await o.auth?.admitChat(c, deps.llm, deps.budget)) ?? {};
       if (admitted.refused) return admitted.refused;
       // A sponsored chat is the invite's to pay for. Nobody's stands behind one with no budget.
-      if (!admitted.budget && overDataBudget(deps.tools.config, new Date(clock()))) {
+      if (!admitted.budget && (await overDataBudget(deps.tools.config, new Date(clock())))) {
         return fail(c, 'budget_exhausted', DATA_FULL);
       }
       let raw: unknown;
@@ -334,12 +334,13 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
           // Only its owner can pick it up, and to anyone else it doesn't exist. Nothing is written on
           // it here: a run points at it, and its flowers become steps as they do for any run.
           const id = String(asked.exploration);
-          const row = privateStore(deps.tools.config).exploration.get(id);
+          const row = await privateStore(deps.tools.config).exploration.get(id);
           if (!admitted.subject || row?.owner !== admitted.subject) {
             return fail(c, 'not_found', `no exploration ${id}`);
           }
           exploration = row.id;
-          const spec = !parsed.draft && row.head ? specBody(deps.tools.config, row.head) : null;
+          const spec =
+            !parsed.draft && row.head ? await specBody(deps.tools.config, row.head) : null;
           if (spec) input = { ...input, draft: { spec } };
         }
         runId = await deps.runs.create(input, {

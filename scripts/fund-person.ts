@@ -12,7 +12,7 @@ import { fundPerson, openPrivateStore } from '@petal/agent';
 
 const USAGE = 'usage: node scripts/fund-person.ts --state <folder> --person <prs_id> --total <usd>';
 
-export function run(args: string[], env: NodeJS.ProcessEnv = process.env): string {
+export async function run(args: string[], env: NodeJS.ProcessEnv = process.env): Promise<string> {
   const { values } = parseArgs({
     args,
     options: {
@@ -24,13 +24,14 @@ export function run(args: string[], env: NodeJS.ProcessEnv = process.env): strin
   const folder = values.state ?? env.PETAL_STATE_DIR?.trim();
   if (!folder || !values.person || values.total === undefined) throw new Error(USAGE);
   const stateDir = resolve(folder);
+  const databaseUrl = env.PETAL_DATABASE_URL?.trim() || undefined;
   // Not made here: a mistyped folder would hold money no server ever sees.
-  if (!existsSync(join(stateDir, 'private.db'))) {
+  if (!databaseUrl && !existsSync(join(stateDir, 'private.db'))) {
     throw new Error(`no private.db in ${stateDir}: name the server's own state folder`);
   }
-  const store = openPrivateStore(stateDir);
+  const store = openPrivateStore(stateDir, databaseUrl);
   try {
-    const credit = fundPerson(store, values.person, Number(values.total));
+    const credit = await fundPerson(store, values.person, Number(values.total));
     return [
       `person ${values.person}`,
       `funded $${credit.funded_usd}`,
@@ -38,13 +39,13 @@ export function run(args: string[], env: NodeJS.ProcessEnv = process.env): strin
       `left   $${credit.left_usd}`,
     ].join('\n');
   } finally {
-    store.close();
+    await store.close();
   }
 }
 
 if (import.meta.main) {
   try {
-    console.log(run(process.argv.slice(2)));
+    console.log(await run(process.argv.slice(2)));
   } catch (e) {
     console.error((e as Error).message);
     process.exitCode = 1;

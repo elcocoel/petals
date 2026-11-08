@@ -48,7 +48,7 @@ export function mapIndex(ctx: ToolContext): MapIndex {
       if (!writer) return null;
       // each costs the writer's allowance, so a stranger's fresh reads can't spend it down
       const cap = limitsOf(ctx.config).fingerprintsPerDay;
-      if (!takeToday(ctx.config, 'fingerprints', cap, ctx.now())) {
+      if (!(await takeToday(ctx.config, 'fingerprints', cap, ctx.now()))) {
         throw new ToolFailure('rate_limited', `Petal has written ${cap} fingerprints today`);
       }
       const entries: Record<string, unknown> = { [mapKeys.snapshot(ref.sha256)]: ref };

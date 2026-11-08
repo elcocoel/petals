@@ -12,7 +12,7 @@ import { buildPetalApp } from '../src/app.ts';
 import { catalogue, modelOf, resolveSettings, settingsOf } from '../src/catalogue.ts';
 import { mintInvite } from '../src/invites.ts';
 import { DEFAULT_MODEL, FALLBACK_MODELS, PRICES } from '../src/near-ai.ts';
-import { searchMatch } from '../src/workspace.ts';
+import { searchWords } from '../src/workspace.ts';
 import { fakeRegistry, parseSse, scriptedLlm, tmpRoot } from './helpers.ts';
 
 const SITE = 'https://petals.example';
@@ -33,8 +33,8 @@ type App = ReturnType<typeof buildPetalApp>;
 type Out = Record<string, any>;
 
 const open: Store[] = [];
-afterEach(() => {
-  for (const s of open.splice(0)) s.close();
+afterEach(async () => {
+  for (const s of open.splice(0)) await s.close();
 });
 
 function setup(o: { dailyUsd?: number; apiBase?: string } = {}) {
@@ -55,7 +55,7 @@ function setup(o: { dailyUsd?: number; apiBase?: string } = {}) {
     open.push(s);
     return s;
   };
-  const invite = () => mintInvite(store(), { usd: 1, days: 1 }).token;
+  const invite = async () => (await mintInvite(store(), { usd: 1, days: 1 })).token;
   return { app, store, invite, maker };
 }
 
@@ -108,16 +108,16 @@ const ask = (content: string, more: Out = {}) => ({
 });
 const body = async (res: Response): Promise<Out> => (await res.json()) as Out;
 
-async function signedIn(app: App, invite: () => string) {
+async function signedIn(app: App, invite: () => Promise<string>) {
   const b = new Browser(app);
-  await b.redeem(invite());
+  await b.redeem(await invite());
   return b;
 }
 
 /** An exploration from another door: no run, written by a door that isn't the site. */
-function doorWork(store: Store, owner: string | null, id = `exp_${'1'.repeat(24)}`) {
+async function doorWork(store: Store, owner: string | null, id = `exp_${'1'.repeat(24)}`) {
   const at = '2026-11-02T00:00:00.000Z';
-  store.exploration.create({
+  await store.exploration.create({
     id,
     owner,
     question: 'Who holds the DAO?',
@@ -129,7 +129,7 @@ function doorWork(store: Store, owner: string | null, id = `exp_${'1'.repeat(24)
     created_at: at,
     updated_at: at,
   });
-  store.step.append({
+  await store.step.append({
     exploration: id,
     parent: null,
     spec_sha256: null,
@@ -140,7 +140,7 @@ function doorWork(store: Store, owner: string | null, id = `exp_${'1'.repeat(24)
     note: 'drew it in Claude Code',
     at,
   });
-  store.note.append({
+  await store.note.append({
     exploration: id,
     author: 'link:abc',
     door: 'mcp',
@@ -150,12 +150,14 @@ function doorWork(store: Store, owner: string | null, id = `exp_${'1'.repeat(24)
   return id;
 }
 
-const subjectOf = (store: Store, b: Browser) => {
+const subjectOf = async (store: Store, b: Browser) => {
   // the session is opaque to a browser; a test may read the store behind it
   const cookie = b.jar.get('__Host-petal_session') ?? '';
-  return store.session.get(
-    createHash('sha256').update(cookie, 'utf8').digest('hex'),
-    new Date().toISOString(),
+  return (
+    await store.session.get(
+      createHash('sha256').update(cookie, 'utf8').digest('hex'),
+      new Date().toISOString(),
+    )
   )?.subject as string;
 };
 
@@ -182,7 +184,7 @@ describe('the catalogue', () => {
     });
   });
 
-  test('a signed model only ever falls back to another signed one', () => {
+  test('a signed model only ever falls back to another signed one', async () => {
     const { providers } = catalogue('near-ai-cloud');
     for (const m of providers[0]?.models ?? []) {
       for (const next of m.fallbacks) expect(modelOf(next)?.promise).toBe(m.promise);
@@ -204,7 +206,7 @@ describe('the catalogue', () => {
     }
   });
 
-  test("it agrees with the model client's own list", () => {
+  test("it agrees with the model client's own list", async () => {
     // until the client reads its models from the catalogue, this is what keeps the two level
     const { default: first } = catalogue('near-ai-cloud');
     expect(first.model).toBe(DEFAULT_MODEL);
@@ -214,7 +216,7 @@ describe('the catalogue', () => {
     }
   });
 
-  test('a pick is checked against the model it lands on, with effort per model', () => {
+  test('a pick is checked against the model it lands on, with effort per model', async () => {
     const now = settingsOf(null);
     expect(resolveSettings({ model: 'not/a-model' }, now)).toMatch(/isn't in the catalogue/);
     expect(resolveSettings({ provider: 'openai' }, now)).toMatch(/only near-ai/);
@@ -280,7 +282,7 @@ describe('conversations', () => {
       ask('hello', { settings: { model: 'not/a-model' } }),
     );
     expect(refused.status).toBe(400);
-    expect(store().run.listByOwner('nobody')).toEqual([]);
+    expect(await store().run.listByOwner('nobody')).toEqual([]);
     expect((await body(await b.get('/api/v1/conversations'))).conversations).toEqual([]);
 
     const haiku = 'anthropic/claude-haiku-5-5';
@@ -348,8 +350,8 @@ describe('work from other doors (the pane is never empty)', () => {
     const { app, invite, store } = setup();
     const b = await signedIn(app, invite);
     const db = store();
-    const subject = subjectOf(db, b);
-    const id = doorWork(db, subject);
+    const subject = await subjectOf(db, b);
+    const id = await doorWork(db, subject);
 
     const { conversations } = await body(await b.get('/api/v1/conversations'));
     expect(conversations).toHaveLength(1);
@@ -362,7 +364,7 @@ describe('work from other doors (the pane is never empty)', () => {
       exploration: id,
       shapes_count: 1,
     });
-    expect(db.run.latestOfExploration(id)).toBeNull();
+    expect(await db.run.latestOfExploration(id)).toBeNull();
 
     const { conversation } = await body(await b.get(`/api/v1/conversations/${id}`));
     expect(conversation.turns).toEqual([]);
@@ -381,7 +383,7 @@ describe('work from other doors (the pane is never empty)', () => {
     const { app, invite, store } = setup();
     const b = await signedIn(app, invite);
     const db = store();
-    const id = doorWork(db, null);
+    const id = await doorWork(db, null);
     expect((await body(await b.get('/api/v1/conversations'))).conversations).toEqual([]);
     expect((await b.get(`/api/v1/conversations/${id}`)).status).toBe(404);
     expect((await b.post('/api/v1/agent/chat', ask('go on', { exploration: id }))).status).toBe(
@@ -393,10 +395,10 @@ describe('work from other doors (the pane is never empty)', () => {
     const { app, invite, store } = setup();
     const b = await signedIn(app, invite);
     const db = store();
-    const id = doorWork(db, subjectOf(db, b));
+    const id = await doorWork(db, await subjectOf(db, b));
     const runId = await b.chat(ask('carry on from there', { exploration: id }));
 
-    expect(db.run.get(runId)?.exploration).toBe(id);
+    expect((await db.run.get(runId))?.exploration).toBe(id);
     const { conversations } = await body(await b.get('/api/v1/conversations'));
     expect(conversations.map((c: Out) => c.id)).toEqual([runId]);
     // the other door's work is still shown, beside the run's own
@@ -416,7 +418,7 @@ describe('work from other doors (the pane is never empty)', () => {
     const { app, invite, store } = setup();
     const b = await signedIn(app, invite);
     const db = store();
-    const id = doorWork(db, subjectOf(db, b));
+    const id = await doorWork(db, await subjectOf(db, b));
     const res = await b.patch(`/api/v1/conversations/${id}`, { title: 'x' });
     expect(res.status).toBe(400);
     expect((await body(res)).error.hint).toMatch(/exploration/);
@@ -554,10 +556,10 @@ describe('a conversation with many shapes', () => {
     const id = await b.chat(ask('draw two'));
     const db = store();
     const sha = specHash(SPEC);
-    db.draft.put({ sha256: sha, body: canonicalJson(SPEC), created_at: 'now' });
-    const exp = doorWork(db, subjectOf(db, b));
-    db.run.setExploration(id, exp);
-    db.step.append({
+    await db.draft.put({ sha256: sha, body: canonicalJson(SPEC), created_at: 'now' });
+    const exp = await doorWork(db, await subjectOf(db, b));
+    await db.run.setExploration(id, exp);
+    await db.step.append({
       exploration: exp,
       parent: null,
       spec_sha256: sha,
@@ -739,10 +741,10 @@ describe('search', () => {
   });
 
   test("a person's words are never syntax", async () => {
-    expect(searchMatch('  ')).toBeNull();
-    expect(searchMatch('--- ()')).toBeNull();
-    expect(searchMatch('foo AND (bar')).toBe('"foo" "AND" "(bar"*');
-    expect(searchMatch('say "hi"')).toBe('"say" """hi"""*');
+    expect(searchWords('  ')).toBeNull();
+    expect(searchWords('--- ()')).toBeNull();
+    expect(searchWords('foo AND (bar')).toEqual(['foo', 'AND', '(bar']);
+    expect(searchWords('say "hi"')).toEqual(['say', '"hi"']);
     const { app } = setup();
     const b = new Browser(app);
     await b.post('/api/v1/notes', { about: ACCOUNT, text: 'plain words' });
@@ -778,9 +780,9 @@ describe('search', () => {
     expect(await q('pears')).toHaveLength(1);
 
     const db = store();
-    const docs = db.search.staleRuns(subjectOf(db, b));
+    const docs = await db.search.staleRuns(await subjectOf(db, b));
     expect(docs).toEqual([]);
-    db.search.forgetOwner(subjectOf(db, b));
+    await db.search.forgetOwner(await subjectOf(db, b));
     expect(await q('pears')).toHaveLength(1);
   });
 
@@ -788,7 +790,7 @@ describe('search', () => {
     const { app, invite, store } = setup();
     const b = await signedIn(app, invite);
     const db = store();
-    const id = doorWork(db, subjectOf(db, b));
+    const id = await doorWork(db, await subjectOf(db, b));
     const asked = await body(await b.get('/api/v1/search?q=DAO'));
     expect(asked.results[0]).toMatchObject({ kind: 'conversation', id });
     const noted = await body(await b.get('/api/v1/search?q=concentrated'));
@@ -831,10 +833,10 @@ describe('signing in', () => {
       created_at: 'then',
       updated_at: 'then',
     });
-    db.follow.insert(row('flw_a', 'anon_x', 'from before'));
-    db.follow.insert(row('flw_b', 'prs_y', 'theirs'));
-    db.follow.moveOwner('anon_x', 'prs_y');
-    expect(db.follow.list('prs_y', 10).map((f) => f.label)).toEqual(['theirs']);
-    expect(db.follow.list('anon_x', 10)).toEqual([]);
+    await db.follow.insert(row('flw_a', 'anon_x', 'from before'));
+    await db.follow.insert(row('flw_b', 'prs_y', 'theirs'));
+    await db.follow.moveOwner('anon_x', 'prs_y');
+    expect((await db.follow.list('prs_y', 10)).map((f) => f.label)).toEqual(['theirs']);
+    expect(await db.follow.list('anon_x', 10)).toEqual([]);
   });
 });

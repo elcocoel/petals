@@ -119,9 +119,9 @@ export const preparePublish = defineTool<{ entry: Partial<Entry> }, object>({
         `The entry is over ${MAP_LIMITS.valueBytes} bytes, the map's limit.`,
       );
     }
-    assertRoom(ctx.config, ctx.now());
+    await assertRoom(ctx.config, ctx.now());
     const entry_sha256 = entrySha256(draft);
-    const { nonce, expires_at } = nonceStore(ctx.config).issue();
+    const { nonce, expires_at } = await nonceStore(ctx.config).issue();
     const recipient = ctx.map.receiver;
     const message = publishMessage(entry_sha256);
     await draftStore(ctx.config).put({
@@ -252,11 +252,11 @@ export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Pro
         'Set PETAL_WRITER_ACCOUNT and PETAL_WRITER_KEY_FILE (testnet only).',
       );
     }
-    assertRoom(ctx.config, ctx.now());
+    await assertRoom(ctx.config, ctx.now());
     // After the proof, so a forged one can't use up the day's publishes. Before the claim, so a refused
     // draft isn't spent. This is what stops anyone draining the writer's allowance by publishing.
     const cap = limitsOf(ctx.config).publishesPerDay;
-    if (!takeToday(ctx.config, 'publishes', cap, ctx.now())) {
+    if (!(await takeToday(ctx.config, 'publishes', cap, ctx.now()))) {
       throw overToday(ctx.now(), `Petal has published ${cap} flowers today, so this one was not.`);
     }
     if (!(await drafts.claim(entry_sha256, ctx.now().toISOString()))) {

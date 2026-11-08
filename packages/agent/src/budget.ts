@@ -13,19 +13,19 @@ const day = (d: Date) => d.toISOString().slice(0, 10);
 export function storeLedger(store: Store, now: () => Date = () => new Date()): Ledger {
   return {
     async spentToday() {
-      const r = store.ledger.get(day(now()));
+      const r = await store.ledger.get(day(now()));
       return r.usd + r.reserved_usd;
     },
     async add(usd) {
-      store.ledger.add(day(now()), usd);
+      await store.ledger.add(day(now()), usd);
     },
     async reserve(usd, capUsd) {
       const today = day(now());
-      const held = store.ledger.reserve(today, usd, capUsd);
+      const held = await store.ledger.reserve(today, usd, capUsd);
       return held === null ? null : { day: today, usd: held };
     },
     async settle(hold, actualUsd) {
-      store.ledger.settle(hold.day, hold.usd, actualUsd);
+      await store.ledger.settle(hold.day, hold.usd, actualUsd);
     },
   };
 }
@@ -47,7 +47,7 @@ export function closedLedger(reason: string): Ledger {
 }
 
 /** Today's figure from the old .petal/llm-ledger.json, so moving to the store can't reset the cap. */
-export function importLedgerFile(store: Store, path: string): void {
+export async function importLedgerFile(store: Store, path: string): Promise<void> {
   let old: { day?: unknown; usd?: unknown };
   try {
     old = JSON.parse(readFileSync(path, 'utf8'));
@@ -55,7 +55,7 @@ export function importLedgerFile(store: Store, path: string): void {
     return;
   }
   if (typeof old.day === 'string' && typeof old.usd === 'number') {
-    store.ledger.seed(old.day, old.usd);
+    await store.ledger.seed(old.day, old.usd);
   }
 }
 

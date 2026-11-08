@@ -24,17 +24,28 @@ interface Slot {
 
 export type NonceCheck = 'ok' | 'unknown' | 'used' | 'expired';
 
+/** A value now, or later: the in-memory store answers at once, a database-backed one later. */
+export type Awaitable<T> = T | Promise<T>;
+
 export interface NonceStore {
-  issue(): { nonce: string; expires_at: string };
+  issue(): Awaitable<{ nonce: string; expires_at: string }>;
   /** take the nonce for one check; anything but 'ok' means the proof must fail */
-  reserve(nonce: string): NonceCheck;
+  reserve(nonce: string): Awaitable<NonceCheck>;
   /** the proof passed: the nonce can never be used again */
-  spend(nonce: string): void;
+  spend(nonce: string): Awaitable<void>;
   /** the check could not finish: the nonce may be tried again until it expires */
+  release(nonce: string): Awaitable<void>;
+}
+
+/** The in-memory store: every answer at once. */
+export interface MemoryNonceStore extends NonceStore {
+  issue(): { nonce: string; expires_at: string };
+  reserve(nonce: string): NonceCheck;
+  spend(nonce: string): void;
   release(nonce: string): void;
 }
 
-export function createNonceStore(ttlMs = NONCE_TTL_MS): NonceStore {
+export function createNonceStore(ttlMs = NONCE_TTL_MS): MemoryNonceStore {
   const slots = new Map<string, Slot>();
   const prune = (now: number) => {
     for (const [n, s] of slots) if (s.expires <= now && s.state !== 'checking') slots.delete(n);
@@ -76,11 +87,11 @@ const newNonce = () => base64.encode(crypto.getRandomValues(new Uint8Array(NONCE
 /** What durableNonceStore needs. `reserve` must be atomic: one caller gets 'ok', from any process. */
 export interface NonceTable {
   /** Keep a new nonce; a good moment to clear out the expired ones. Times are ISO strings. */
-  put(nonce: string, expiresAt: string, now: string): void;
-  reserve(nonce: string, now: string): NonceCheck;
-  spend(nonce: string, now: string): void;
+  put(nonce: string, expiresAt: string, now: string): Awaitable<void>;
+  reserve(nonce: string, now: string): Awaitable<NonceCheck>;
+  spend(nonce: string, now: string): Awaitable<void>;
   /** Back to issued, only if it is being checked: a spent nonce is never released. */
-  release(nonce: string): void;
+  release(nonce: string): Awaitable<void>;
 }
 
 export function durableNonceStore(
@@ -90,11 +101,11 @@ export function durableNonceStore(
 ): NonceStore {
   const iso = (ms: number) => new Date(ms).toISOString();
   return {
-    issue() {
+    async issue() {
       const at = now();
       const nonce = newNonce();
       const expires_at = iso(at + ttlMs);
-      table.put(nonce, expires_at, iso(at));
+      await table.put(nonce, expires_at, iso(at));
       return { nonce, expires_at };
     },
     reserve: (nonce) => table.reserve(nonce, iso(now())),
@@ -104,7 +115,7 @@ export function durableNonceStore(
 }
 
 /** The store issueNonce and verifyNep413 share. */
-export const defaultNonces: NonceStore = createNonceStore();
+export const defaultNonces: MemoryNonceStore = createNonceStore();
 
 /** 32 random bytes, base64, single use, short TTL. */
 export function issueNonce(): { nonce: string; expires_at: string } {

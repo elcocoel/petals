@@ -78,11 +78,11 @@ function setup(
   return { app, llm, post, signIn, store, build };
 }
 
-const withStore = <T>(s: Store, f: (s: Store) => T): T => {
+const withStore = async <T>(s: Store, f: (s: Store) => T | Promise<T>): Promise<T> => {
   try {
-    return f(s);
+    return await f(s);
   } finally {
-    s.close();
+    await s.close();
   }
 };
 
@@ -93,11 +93,11 @@ describe('a person’s own credit', () => {
     expect(credit).toBeNull();
     expect((await w.post('/api/v1/agent/chat', QUESTION)).status).toBe(403);
 
-    withStore(w.store(), (s) => fundPerson(s, person, 5));
+    await withStore(w.store(), async (s) => fundPerson(s, person, 5));
     const res = await w.post('/api/v1/agent/chat', QUESTION);
     expect(res.status).toBe(200);
     await res.text();
-    const left = withStore(w.store(), (s) => personCredit(s, person));
+    const left = await withStore(w.store(), async (s) => personCredit(s, person));
     expect(left?.funded_usd).toBe(5);
     expect(left?.spent_usd).toBeCloseTo(0.01, 9);
     expect(left?.left_usd).toBeCloseTo(4.99, 9);
@@ -106,7 +106,7 @@ describe('a person’s own credit', () => {
   test('stops at its end, with no model call, and says so', async () => {
     const w = setup({ costUsd: 0.02 });
     const { person_id: person } = await w.signIn();
-    withStore(w.store(), (s) => fundPerson(s, person, 0.01));
+    await withStore(w.store(), async (s) => fundPerson(s, person, 0.01));
     await (await w.post('/api/v1/agent/chat', QUESTION)).text();
     const calls = w.llm.requests.length;
     expect(calls).toBe(1);
@@ -121,19 +121,19 @@ describe('a person’s own credit', () => {
   test('comes before an invite the session holds, and an invite still pays once it ends', async () => {
     const w = setup({ costUsd: 0.02 });
     const { person_id: person } = await w.signIn();
-    const invite = withStore(w.store(), (s) => {
-      fundPerson(s, person, 0.01);
-      return mintInvite(s, { usd: 1, days: 1 });
+    const invite = await withStore(w.store(), async (s) => {
+      await fundPerson(s, person, 0.01);
+      return await mintInvite(s, { usd: 1, days: 1 });
     });
     await w.post('/api/v1/auth/invite', { token: invite.token });
     await (await w.post('/api/v1/agent/chat', QUESTION)).text();
-    withStore(w.store(), (s) => {
-      expect(s.invite.get(invite.id)?.spent_usd).toBe(0);
-      expect(personCredit(s, person)?.left_usd).toBe(0);
+    await withStore(w.store(), async (s) => {
+      expect((await s.invite.get(invite.id))?.spent_usd).toBe(0);
+      expect((await personCredit(s, person))?.left_usd).toBe(0);
     });
     await (await w.post('/api/v1/agent/chat', QUESTION)).text();
-    withStore(w.store(), (s) => {
-      expect(s.invite.get(invite.id)?.spent_usd).toBeCloseTo(0.02, 9);
+    await withStore(w.store(), async (s) => {
+      expect((await s.invite.get(invite.id))?.spent_usd).toBeCloseTo(0.02, 9);
     });
   });
 
@@ -148,16 +148,16 @@ describe('a person’s own credit', () => {
     test('doesn’t hold a person on their own credit, and uses up nothing of it', async () => {
       const w = setup({ chatsPerHour: 2 });
       const { person_id: person } = await w.signIn();
-      withStore(w.store(), (s) => fundPerson(s, person, 5));
+      await withStore(w.store(), async (s) => fundPerson(s, person, 5));
       for (let i = 0; i < 5; i++) expect((await chat(w)).status).toBe(200);
     });
 
     test('holds an invite, and holds the same person again once their credit ends', async () => {
       const w = setup({ chatsPerHour: 2, costUsd: 0.02 });
       const { person_id: person } = await w.signIn();
-      const invite = withStore(w.store(), (s) => {
-        fundPerson(s, person, 0.01);
-        return mintInvite(s, { usd: 1, days: 1 });
+      const invite = await withStore(w.store(), async (s) => {
+        await fundPerson(s, person, 0.01);
+        return await mintInvite(s, { usd: 1, days: 1 });
       });
       await w.post('/api/v1/auth/invite', { token: invite.token });
       // On their own credit, which this one call ends: not counted.
@@ -174,7 +174,7 @@ describe('a person’s own credit', () => {
       const w = setup({ chatsPerHour: 1, followUpsPerHour: 1 });
       expect((await chat(w)).status).toBe(403);
       const { person_id: person } = await w.signIn();
-      withStore(w.store(), (s) => fundPerson(s, person, 5));
+      await withStore(w.store(), async (s) => fundPerson(s, person, 5));
       const first = parseSse((await chat(w)).body)[0]?.data as { run_id: string };
       const more = { ...QUESTION, run_id: first.run_id };
       expect((await chat(w, more)).status).toBe(200);
@@ -187,15 +187,16 @@ describe('a person’s own credit', () => {
   test('a restart counts what was held, as it does for an invite', async () => {
     const w = setup();
     const { person_id: person } = await w.signIn();
-    withStore(w.store(), (s) => {
-      fundPerson(s, person, 5);
-      expect(s.credit.reserve(`person:${person}`, 0.05)).toBe(0.05);
+    await withStore(w.store(), async (s) => {
+      await fundPerson(s, person, 5);
+      expect(await s.credit.reserve(`person:${person}`, 0.05)).toBe(0.05);
     });
-    w.build();
-    withStore(w.store(), (s) => {
-      expect(s.credit.get(`person:${person}`)?.reserved_usd).toBe(0);
-      expect(personCredit(s, person)?.spent_usd).toBeCloseTo(0.05, 9);
-      expect(personCredit(s, person)?.left_usd).toBeCloseTo(4.95, 9);
+    // a start's work is done before its first answer
+    await w.build().request('/api/v1/health');
+    await withStore(w.store(), async (s) => {
+      expect((await s.credit.get(`person:${person}`))?.reserved_usd).toBe(0);
+      expect((await personCredit(s, person))?.spent_usd).toBeCloseTo(0.05, 9);
+      expect((await personCredit(s, person))?.left_usd).toBeCloseTo(4.95, 9);
     });
   });
 });
