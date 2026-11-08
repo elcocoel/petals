@@ -10,9 +10,8 @@
   "description": "The site: gallery, flower view, /make chat, publish, quote panel.",
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
-    "build": "node ../cli/scripts/bundle.ts && next build",
-    "start": "next start --hostname 127.0.0.1",
-    "mock-data": "node scripts/mock-data.ts"
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1"
   },
   "dependencies": {
     "@hono/vercel": "^1.0.1",

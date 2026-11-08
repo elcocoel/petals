@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { agentPrompt, hostedSkill, originFrom } from '../lib/agent-prompt.ts';
+import { agentPrompt, hostedSkill, originFrom } from '../src/hosted.ts';
 
 const SKILL = readFileSync(join(import.meta.dirname, '../../../skill/petal/SKILL.md'), 'utf8');
 const ORIGIN = 'https://petal.example';

@@ -13,6 +13,7 @@
     "test": "vitest run --project '!e2e'",
     "test:e2e": "vitest run --project e2e --passWithNoTests",
     "dev": "pnpm --filter @petal/web dev",
+    "server": "node packages/agent/src/serve.ts",
     "api": "node apps/cli/src/index.ts api",
     "petal": "node apps/cli/src/index.ts",
     "lint": "biome check .",
