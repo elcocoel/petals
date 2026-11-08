@@ -1,7 +1,7 @@
 # Feature Specification: Petals, the target system
 
 **Created**: 2026-11-08
-**Status**: Draft for Elco to read. Nothing is built from it, and no chat works from it, until Elco approves it. Once approved, this is the target every chat works toward. Where `001-petal-core` or `002-system` disagree with it, this wins.
+**Status**: Approved by Elco on 8 Nov ("seems correct"). This is the target every chat works toward. Where `001-petal-core` or `002-system` disagree with it, this wins. Its technology questions (Q1 to Q8) are researched with Elco, one at a time, before anything is built.
 **Input**: Elco, 8 Nov, describing the system. Technology isn't chosen here: this says what the system does. The technology questions are at the end, to research together.
 
 ## Mission
