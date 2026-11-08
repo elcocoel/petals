@@ -8,6 +8,8 @@ export interface ApiHealth {
   fake?: boolean;
   map: string;
   llm: string;
+  /** open, gated, or none when the site runs no agent for visitors (assumed until SYSTEMS' public mode) */
+  agent_access?: string;
 }
 
 export function apiLabel(h: ApiHealth): string {

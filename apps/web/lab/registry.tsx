@@ -14,6 +14,7 @@ import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
 import { CopyPrompt } from '../components/CopyPrompt.tsx';
 import { AnsweredBy } from '../components/chat/AnsweredBy.tsx';
+import { ConnectAgent } from '../components/chat/ConnectAgent.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
@@ -1295,6 +1296,20 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'ConnectAgent',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/ConnectAgent.tsx',
+    states: [
+      {
+        name: 'signed in, on a site with no agent for visitors',
+        wide: true,
+        render: () => <ConnectAgent prompt="I'd like to use Petal with you." />,
+      },
+    ],
+  },
+  {
     id: 'ConnectWallet',
     group: 'The conversation',
     figmaName: null,
@@ -1734,4 +1749,5 @@ export const NOT_IN_LAB: Record<string, string> = {
   ConversationThread: 'Thread and TurnFlower wired together, and each of those is here',
   FloatBox: 'a BarBox fixed to the window and placed by hand: it lives at /make',
   SiteChrome: 'the Nav, drawn here, around a reading column; it holds no state of its own',
+  FrontDoor: 'draws nothing: it opens the wallet when the landing is left for /make (proposal)',
 };
