@@ -81,7 +81,7 @@ Each gets references and trade-offs in plain words before Elco chooses.
 - ~~**W4. What a project is.**~~ Decided above: folders and conversations.
 - **W5. The left menu, first version.** Folders and conversations, from W4. What else is in it on day one, and what waits.
 - **W6. The profile.** A page or a panel; overlaps `003-target`'s Q3 and Q6.
-- **W7. The meta layer.** Where notes, claims and challenges sit on the canvas, and who sees them; overlaps `003-target`'s Q4 to Q6.
+- **W7. The meta layer.** Elco, 8 Nov, through META: "Claims -> for now we just need to look on our options for claims + metadata over the map, all could be private at first (I just add my commentary to my map and can see it again later) -> for claim validation etc, thats a chapter after we do basic testing." `003-target` Story 6 holds it: private to the account (TGT-006, TGT-007). Open: what commentary and metadata attach to (a flower, an account, a group, a relation, a place on the canvas), what they hold, how they show, and how an agent adds them. References being studied; storage asked of SYSTEMS.
 - **W8. The flower's layers.** What information shows on and around a flower, at what distance, and how. Elco's second thread; it follows W1 and W7.
 - **W9. In code.** How many flowers share one space, where each sits, and how relations between them are drawn. Technology, decided after the shape.
 
