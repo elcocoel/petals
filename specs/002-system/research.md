@@ -192,6 +192,81 @@ This takes one hour, and it needs a Vercel preview deploy and a tunnel name, bot
 
 If 1 fails, C5 falls back to long-polling. If 2 fails, a posted reading goes in parts, or to the server's name with the key. If 3 or 4 fail, the lean on C1 or C4 needs another look.
 
+### Results (run by CONNECTORS, 8 Nov, about 21:48 to 22:20 UTC, $0)
+
+**The setup.** A test server on this Mac, on `127.0.0.1:3175`, holding nothing (no data, no keys, no Petals state). One test name on the shared tunnel, `seam-spike.elementarycomplexity.dev`, pointing at it. A throwaway Vercel project, `petals-seam-spike`, on the free plan: a blank Next.js 16.4.5 page, `next.config` rewrites, and a `proxy.js` (Next 16's name for middleware) that adds the two headers. Three paths: `/api/*` (the config rewrite, with the proxy running first), `/mw/*` (the proxy doing the rewrite itself), and `/raw/*` (the config rewrite with no proxy on it). All requests were made from this Mac, through Vercel's Paris edge (`cdg1`). Everything is **tested**.
+
+**One gate broke, my mistake.** The first deploy, run with `--target=preview`, became the new project's production deployment anyway, probably because it was the project's first. META said to measure on it and delete the project after. The second deploy was a real preview. `petal-flowers` wasn't touched.
+
+**1. The stream.**
+
+| Path | No heartbeat | A comment line every 25 s |
+|---|---|---|
+| The tunnel alone | Closed at 126 s, cut mid-stream (curl: HTTP/2 stream error) | Still open at 25 min, when my client stopped it. 59 of 59 beats arrived |
+| Vercel, `/api` and `/mw` | Closed cleanly at 126 s | Closed cleanly at 15 min (901 s). 37 of 37 beats arrived first |
+
+- **The 2-minute cut is Cloudflare's, not Vercel's:** the tunnel alone cuts an idle stream at the same moment.
+- **Vercel ends every forwarded stream at 15 minutes,** heartbeat or not.
+- **Nothing is held back:** the first event arrived at once on every path, so nothing buffers the stream.
+- **What that means for C5:** the page's `EventSource` reconnects by itself after a close, and the server's first event makes the page read again. So the stream works either way:
+  - with a heartbeat, a page reconnects every 15 minutes;
+  - without one, it reconnects about every 2 minutes, with a read each time.
+
+  Long-polling isn't needed. A heartbeat is a timer that runs while a stream is open, so it's a row in `coordinator/automation.md` for Elco.
+
+**2. The upload.**
+
+| Path | 2 MiB | Largest that passed | First refused |
+|---|---|---|---|
+| Vercel with the proxy (`/api`, `/mw`) | Yes, byte for byte, 1.3 to 1.6 s | 4,493,750 bytes | 4,494,531 bytes, `413 FUNCTION_PAYLOAD_TOO_LARGE` |
+| Vercel, rewrite only (`/raw`) | Yes, 1.2 s | 64 MiB, in 17 s | 110 MiB, `502 ROUTER_EXTERNAL_TARGET_CONNECTION_ERROR`, likely Cloudflare's 100 MB limit |
+
+- **The 4.5 MB cap is the proxy's.** Once the proxy runs on a path, the body counts against Vercel's function limit. Today's posted reading is capped at 2 MiB on the wire, so it fits with room to spare.
+- **`Content-Encoding: gzip` arrived unchanged,** and the bytes matched by sha256.
+- **The tunnel alone was slow from this Mac:** 2 MiB took 7 to 38 s. That's this Mac's own path to Cloudflare, since the same bytes reached it through Vercel in about a second. A visitor elsewhere doesn't take that path.
+
+**3. Set-Cookie and Origin.**
+- **Both `Set-Cookie` headers came back unchanged on every path**, including `__Host-spike=one; Path=/; Secure; HttpOnly; SameSite=Lax`.
+- **`Origin` and `Cookie` reached the server unchanged.**
+- **`Host` became the server's name;** Vercel's own address arrived as `x-forwarded-host`.
+- **What the server sees for a visitor's address:** `cf-connecting-ip` is Vercel's outgoing address (`52.47.91.29`), not the visitor's. That's C4's problem, confirmed. Vercel also sent the visitor's address itself, in `x-vercel-forwarded-for` and first in `x-forwarded-for`.
+
+**4. The proxy adds both headers.**
+- **On both proxy paths**, `x-petal-visitor` (the visitor's address, from `x-forwarded-for`) and `x-petal-site-key` reached the server. Proxy headers work with the config rewrite as well as with the proxy's own rewrite.
+- **On `/raw`, with no proxy, neither arrived,** as expected.
+- **A header I didn't know about:** Vercel also sends `x-vercel-proxy-signature` and `x-vercel-proxy-signature-ts` on forwarded requests. If that can be verified, it could replace the site key, but I haven't checked how.
+
+**5. What each hop adds** (a tiny `GET`, 20 calls each, medians; kept-alive means the connection was reused):
+
+| Path | New connection | Kept-alive |
+|---|---|---|
+| Straight to `127.0.0.1` | 0 ms | 0 ms |
+| A static page on Vercel (visitor to Vercel only) | 129 ms | 44 ms |
+| Vercel rewrite, no proxy | 265 ms | 137 ms |
+| Vercel rewrite with the proxy | 321 ms | 234 ms |
+| The tunnel alone, from this Mac | 2,875 ms | 754 ms |
+
+- **Vercel to this Mac through the tunnel** adds about 90 ms over a static page, kept-alive.
+- **The proxy adds another 60 to 100 ms.**
+- **The tunnel alone was slow from this Mac:** that's this Mac reaching Cloudflare, as in 2, not what visitors see.
+
+**What it means for the choices.**
+- **C1 (one address) holds:** cookies, Origin and uploads pass.
+- **C2 (the rewrite) holds.**
+- **C4 holds**, at about 60 to 100 ms a call and a 4.5 MB body cap on proxied paths.
+- **C5 is a stream through the rewrite**, with or without a heartbeat: that's for Elco.
+
+**Cleaned up and checked:**
+- The Vercel project is deleted; its alias and both deployment URLs answer 404.
+- The tunnel route is removed: the config is byte for byte what it was, and `api.elementarycomplexity.dev`'s routes answer as they did before.
+- The test server is stopped and its port is closed.
+- **Left for Elco, one click:** the DNS record `seam-spike` (a CNAME to the tunnel) on `elementarycomplexity.dev` in Cloudflare's dashboard. It answers 404 with no route. cloudflared can't delete records, and no Cloudflare API access was taken from `cert.pem`.
+
+**Not proven:**
+- From another computer or country: every call here started on this Mac and went through Vercel's Paris edge.
+- A browser's `EventSource` through Vercel: these were curl clients.
+- What the free plan counts per proxied call.
+
 ## 6. Where the rest of Elco's architecture attaches, unchanged here
 
 - **Sign-in with a wallet, multichain later:** it stays on the server, with its challenge, verification and session. The website shows the wallet picker and passes the signature on. Other chains (Sign-In with Ethereum, Solana, Bitcoin) are added to the server's verify route (SYS-020). NEAR Intents is about paying and moving value, so it attaches where payment does (`open-questions.md`, rows 2 and 3), not here.
