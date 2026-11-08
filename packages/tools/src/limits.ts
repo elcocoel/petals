@@ -75,6 +75,8 @@ const ENV: Record<keyof Limits, string> = {
 export interface LimitsConfig {
   root: string;
   stateDir?: string;
+  /** where the private data is (PETAL_DATABASE_URL); unset, SQLite in the state folder */
+  databaseUrl?: string;
   limits?: Partial<Limits>;
 }
 
@@ -93,9 +95,16 @@ export function stateDirOf(cfg: { root: string; stateDir?: string }): string {
   return resolve(cfg.root, cfg.stateDir ?? '.petal');
 }
 
-/** <stateDir>/private.db: the one store for this state folder, in this process. */
-export function privateStore(cfg: { root: string; stateDir?: string }): Store {
-  return stateStore(stateDirOf(cfg));
+/**
+ * The one store for this configuration, in this process: the only way into private data. At the
+ * database address when one is set (PETAL_DATABASE_URL), else SQLite in <stateDir>/private.db.
+ */
+export function privateStore(cfg: {
+  root: string;
+  stateDir?: string;
+  databaseUrl?: string;
+}): Store {
+  return stateStore(stateDirOf(cfg), console.warn, cfg.databaseUrl);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -114,11 +123,16 @@ const untilTomorrow = (now: Date) =>
   );
 
 /** One more of `what` today: true, or false at the cap, with nothing changed. */
-export function takeToday(cfg: LimitsConfig, what: string, cap: number, now: Date): boolean {
+export function takeToday(
+  cfg: LimitsConfig,
+  what: string,
+  cap: number,
+  now: Date,
+): Promise<boolean> {
   return privateStore(cfg).dailyCount.take(what, dayOf(now), cap);
 }
 
-export function countToday(cfg: LimitsConfig, what: string, now: Date): number {
+export function countToday(cfg: LimitsConfig, what: string, now: Date): Promise<number> {
   return privateStore(cfg).dailyCount.get(what, dayOf(now));
 }
 
@@ -156,21 +170,28 @@ function folderBytes(dir: string): number {
   return total;
 }
 
-/** What the state folder holds: every file, snapshots included, less what SQLite will reuse. */
-function dataBytes(cfg: LimitsConfig): number {
+/**
+ * What Petals holds: every file in the state folder, snapshots included, and the database as the store
+ * measures it. A SQLite file is in the folder already, less what SQLite will reuse; a Postgres database
+ * is counted by Postgres. Measured through the store, never by finding the database's files.
+ */
+async function dataBytes(cfg: LimitsConfig): Promise<number> {
   const store = privateStore(cfg);
-  return Math.max(0, folderBytes(stateDirOf(cfg)) - (store.durable ? store.freeBytes() : 0));
+  const folder = folderBytes(stateDirOf(cfg));
+  if (!store.durable) return folder;
+  const size = await store.size();
+  return Math.max(0, size.inStateDir ? folder - size.reusable : folder + size.stored);
 }
 
 /** Over budget, by a size measured at most PETAL_DATA_CHECK_S ago. */
-export function overDataBudget(cfg: LimitsConfig, now: Date): boolean {
+export async function overDataBudget(cfg: LimitsConfig, now: Date): Promise<boolean> {
   const { dataMaxMb, dataCheckS } = limitsOf(cfg);
-  const dir = stateDirOf(cfg);
+  const key = `${stateDirOf(cfg)}\n${cfg.databaseUrl ?? ''}`;
   const at = now.getTime();
-  let seen = measured.get(dir);
+  let seen = measured.get(key);
   if (!seen || Math.abs(at - seen.at) >= dataCheckS * 1000) {
-    seen = { at, bytes: dataBytes(cfg) };
-    measured.set(dir, seen);
+    seen = { at, bytes: await dataBytes(cfg) };
+    measured.set(key, seen);
   }
   return seen.bytes > dataMaxMb * 1024 * 1024;
 }
@@ -179,6 +200,6 @@ export const DATA_FULL =
   "Petal's disk space for saved data is full, so this was not saved. Reading and drawing what is stored still work.";
 
 /** Throws the plain refusal when the data folder is over budget. */
-export function assertRoom(cfg: LimitsConfig, now: Date): void {
-  if (overDataBudget(cfg, now)) throw new ToolFailure('budget_exhausted', DATA_FULL);
+export async function assertRoom(cfg: LimitsConfig, now: Date): Promise<void> {
+  if (await overDataBudget(cfg, now)) throw new ToolFailure('budget_exhausted', DATA_FULL);
 }

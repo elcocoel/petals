@@ -35,8 +35,8 @@ beforeAll(async () => {
   const { port } = server.address() as AddressInfo;
   stateDir = mkdtempSync(join(tmpdir(), 'petal-seed-'));
   const store = openPrivateStore(stateDir);
-  const invite = mintInvite(store, { usd: 1, days: 1 });
-  store.close();
+  const invite = await mintInvite(store, { usd: 1, days: 1 });
+  await store.close();
   options = {
     stateDir,
     modelBase: `http://127.0.0.1:${port}/v1`,
@@ -55,7 +55,7 @@ beforeAll(async () => {
   );
 }, 120_000);
 
-afterAll(() => {
+afterAll(async () => {
   server.close();
   rmSync(stateDir, { recursive: true, force: true });
 });
@@ -99,8 +99,8 @@ test('follows reopen as shapes, notes and search answer, and a chat goes on from
     .update(cookie.split('=')[1] as string)
     .digest('hex');
   const store = openPrivateStore(stateDir);
-  expect(store.session.get(hash, new Date().toISOString())?.invite).toBe(options.inviteId);
-  store.close();
+  expect((await store.session.get(hash, new Date().toISOString()))?.invite).toBe(options.inviteId);
+  await store.close();
   const res = await app.request('/api/v1/agent/chat', {
     method: 'POST',
     headers: { cookie, 'content-type': 'application/json', accept: 'application/json' },

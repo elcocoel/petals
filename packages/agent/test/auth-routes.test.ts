@@ -120,7 +120,7 @@ async function runOfChat(
   return { id: first?.run_id ?? '', events };
 }
 
-afterEach(() => {
+afterEach(async () => {
   vi.restoreAllMocks();
 });
 
@@ -219,9 +219,9 @@ describe('T192: POST /api/v1/auth/verify', () => {
     const second = (await (await b.signIn(other)).json()) as { person_id: string };
     expect(second.person_id).not.toBe(first.person_id);
     const s = store();
-    expect(s.walletBinding.ofPerson(first.person_id)).toHaveLength(1);
-    expect(s.walletBinding.ofPerson(second.person_id)).toHaveLength(1);
-    s.close();
+    expect(await s.walletBinding.ofPerson(first.person_id)).toHaveLength(1);
+    expect(await s.walletBinding.ofPerson(second.person_id)).toHaveLength(1);
+    await s.close();
   });
 });
 
@@ -438,8 +438,8 @@ describe('T192: sessions', () => {
     const value = b.jar.get(COOKIE) ?? '';
     expect(Buffer.from(value, 'base64url')).toHaveLength(32);
     const s = store();
-    expect(s.session.get(value, new Date().toISOString())).toBeNull();
-    s.close();
+    expect(await s.session.get(value, new Date().toISOString())).toBeNull();
+    await s.close();
     b.jar.set(COOKIE, `${value}x`);
     expect((await b.get('/api/v1/me')).status).toBe(401);
   });
@@ -534,7 +534,7 @@ describe('T192: what is kept', () => {
     await b.signIn();
     const s = store();
     const person = ((await (await b.get('/api/v1/me')).json()) as { person_id: string }).person_id;
-    const [w] = s.walletBinding.ofPerson(person);
+    const [w] = await s.walletBinding.ofPerson(person);
     const cipher = walletCipher(Buffer.from(WALLET_KEY, 'hex'));
     expect(w?.network).toBe('testnet');
     expect(cipher.open(w?.caip10_encrypted ?? '')).toBe('near:testnet:maker.testnet');
@@ -542,7 +542,7 @@ describe('T192: what is kept', () => {
     expect(w?.caip10_hash).not.toBe(
       walletCipher(Buffer.alloc(32, 1)).index('near:testnet:maker.testnet'),
     );
-    s.close();
+    await s.close();
 
     // grep, not readFileSync: closing a descriptor on a SQLite file in this process drops its locks
     const files = readdirSync(stateDir).filter((f) => f.startsWith('private.db'));
@@ -601,8 +601,8 @@ describe('T193: run owners', () => {
     expect(read.status).toBe(200);
     const text = await read.text();
     const s = store();
-    const owner = await s.run.get(id)?.owner;
-    s.close();
+    const owner = (await s.run.get(id))?.owner;
+    await s.close();
     expect(owner).toMatch(/^anon_/);
     expect(text).not.toContain(owner as string);
     expect(JSON.parse(text)).not.toHaveProperty('owner');
@@ -629,8 +629,8 @@ describe('T193: run owners', () => {
   test('its owner can continue it; a stranger holding an invite still can’t', async () => {
     const { app, store } = setup();
     const s = store();
-    const { token } = mintInvite(s, { usd: 1 });
-    s.close();
+    const { token } = await mintInvite(s, { usd: 1 });
+    await s.close();
     const mine = new Browser(app);
     await mine.post('/api/v1/auth/invite', { token });
     const { id } = await runOfChat(await mine.chat());
@@ -702,9 +702,9 @@ describe('T193: run owners', () => {
     const body = (await signed.json()) as { person_id: string; claimed_runs: number };
     expect(body.claimed_runs).toBe(2);
     const s = store();
-    expect(s.run.get(a.id)?.owner).toBe(body.person_id);
-    expect(s.run.get(b.id)?.owner).toBe(body.person_id);
-    s.close();
+    expect((await s.run.get(a.id))?.owner).toBe(body.person_id);
+    expect((await s.run.get(b.id))?.owner).toBe(body.person_id);
+    await s.close();
     expect(mine.jar.get(COOKIE)).not.toBe(handle);
     expect((await mine.get(`/api/v1/agent/runs/${a.id}`)).status).toBe(200);
     expect((await stranger.get(`/api/v1/agent/runs/${a.id}`)).status).toBe(404);
@@ -739,7 +739,7 @@ describe('T193: run owners', () => {
     const { app, store } = setup({ access: 'open' });
     const s = store();
     const at = new Date().toISOString();
-    s.run.insert({
+    await s.run.insert({
       id: 'old-run-1',
       owner: null,
       exploration: null,
@@ -749,7 +749,7 @@ describe('T193: run owners', () => {
       created_at: at,
       updated_at: at,
     });
-    s.close();
+    await s.close();
     const anyone = new Browser(app, null);
     expect((await anyone.get('/api/v1/agent/runs/old-run-1')).status).toBe(200);
     const cont = await anyone.chat({
@@ -759,8 +759,8 @@ describe('T193: run owners', () => {
     expect(cont.status).toBe(200);
     await cont.text();
     const again = store();
-    expect(again.run.get('old-run-1')?.owner).toBeNull();
-    again.close();
+    expect((await again.run.get('old-run-1'))?.owner).toBeNull();
+    await again.close();
   });
 });
 
@@ -780,8 +780,8 @@ describe('T196: who pays', () => {
     expect((llm as ReturnType<typeof scriptedLlm>).requests).toHaveLength(0);
     const s = store();
     const today = new Date().toISOString().slice(0, 10);
-    expect(s.ledger.get(today)).toMatchObject({ usd: 0, reserved_usd: 0 });
-    s.close();
+    expect(await s.ledger.get(today)).toMatchObject({ usd: 0, reserved_usd: 0 });
+    await s.close();
   });
 
   test('gated is the default, and anything but `open` is gated', async () => {
@@ -832,8 +832,8 @@ describe('T196: who pays', () => {
   test('redeem, chat, and the invite and the day’s ledger both draw down', async () => {
     const { app, store, llm } = setup({ llm: scriptedLlm(answers(4), { costUsd: 0.01 }) });
     const s = store();
-    const { token, id } = mintInvite(s, { usd: 0.5, days: 7 });
-    s.close();
+    const { token, id } = await mintInvite(s, { usd: 0.5, days: 7 });
+    await s.close();
     const b = new Browser(app);
     const redeemed = await b.post('/api/v1/auth/invite', { token });
     expect(redeemed.status).toBe(200);
@@ -854,13 +854,13 @@ describe('T196: who pays', () => {
     expect(state.invite.left_usd).toBeCloseTo(0.49, 9);
     const after = store();
     const today = new Date().toISOString().slice(0, 10);
-    expect(after.ledger.get(today).usd).toBeCloseTo(0.01, 9);
-    expect(after.ledger.get(today).reserved_usd).toBe(0);
-    expect(after.credit.get(`invite:${id}`)?.reserved_usd).toBe(0);
-    expect(after.credit.entries(`invite:${id}`).map((e) => e.delta_usd)).toEqual(
+    expect((await after.ledger.get(today)).usd).toBeCloseTo(0.01, 9);
+    expect((await after.ledger.get(today)).reserved_usd).toBe(0);
+    expect((await after.credit.get(`invite:${id}`))?.reserved_usd).toBe(0);
+    expect((await after.credit.entries(`invite:${id}`)).map((e) => e.delta_usd)).toEqual(
       expect.arrayContaining([0.5, -0.01]),
     );
-    const invite = after.invite.get(id);
+    const invite = await after.invite.get(id);
     expect(JSON.stringify(invite)).not.toContain(token);
     after.close();
   });
@@ -873,8 +873,8 @@ describe('T196: who pays', () => {
     );
     const { app, store } = setup({ llm });
     const s = store();
-    const { token } = mintInvite(s, { usd: 0.03 });
-    s.close();
+    const { token } = await mintInvite(s, { usd: 0.03 });
+    await s.close();
     const b = new Browser(app);
     await b.post('/api/v1/auth/invite', { token });
 
@@ -910,8 +910,8 @@ describe('T196: who pays', () => {
     );
     const { app, store } = setup({ llm });
     const s = store();
-    const { token, id } = mintInvite(s, { usd: 0.0126 });
-    s.close();
+    const { token, id } = await mintInvite(s, { usd: 0.0126 });
+    await s.close();
     const b = new Browser(app);
     await b.post('/api/v1/auth/invite', { token });
     await (await b.chat()).text();
@@ -920,7 +920,7 @@ describe('T196: who pays', () => {
       invite: { status: 'spent', left_usd: 0 },
     });
     const after = store();
-    expect(after.invite.get(id)?.spent_usd).toBeCloseTo(0.0126, 9);
+    expect((await after.invite.get(id))?.spent_usd).toBeCloseTo(0.0126, 9);
     after.close();
   });
 
@@ -931,7 +931,7 @@ describe('T196: who pays', () => {
     );
     const { app, store } = setup({ llm });
     const s = store();
-    const { token, id } = mintInvite(s, { usd: 1 });
+    const { token, id } = await mintInvite(s, { usd: 1 });
     const b = new Browser(app);
     await b.post('/api/v1/auth/invite', { token });
 
@@ -939,7 +939,7 @@ describe('T196: who pays', () => {
     const res = await b.chat();
     const reader = res.body?.getReader();
     await reader?.read();
-    revokeInvite(s, id);
+    await revokeInvite(s, id);
     let text = '';
     for (;;) {
       const part = await reader?.read();
@@ -961,14 +961,18 @@ describe('T196: who pays', () => {
     const fresh = await new Browser(app).post('/api/v1/auth/invite', { token });
     expect(fresh.status).toBe(401);
     expect(((await fresh.json()) as Err).error.message).toMatch(/isn't valid/);
-    s.close();
+    await s.close();
   });
 
   test('an expired invite, and a token that was never minted, are refused alike', async () => {
     const { app, store } = setup();
     const s = store();
-    const { token } = mintInvite(s, { usd: 1, days: 1, now: new Date('2020-01-01T00:00:00Z') });
-    s.close();
+    const { token } = await mintInvite(s, {
+      usd: 1,
+      days: 1,
+      now: new Date('2020-01-01T00:00:00Z'),
+    });
+    await s.close();
     const expired = await new Browser(app).post('/api/v1/auth/invite', { token });
     const unknown = await new Browser(app).post('/api/v1/auth/invite', { token: 'petal_invite_x' });
     expect(expired.status).toBe(401);
@@ -982,8 +986,8 @@ describe('T196: who pays', () => {
   test('sign-in keeps the invite; a second browser can redeem the same token, on one budget', async () => {
     const { app, store } = setup({ llm: scriptedLlm(answers(6), { costUsd: 0.01 }) });
     const s = store();
-    const { token, id } = mintInvite(s, { usd: 1 });
-    s.close();
+    const { token, id } = await mintInvite(s, { usd: 1 });
+    await s.close();
     const judge = new Browser(app);
     await judge.post('/api/v1/auth/invite', { token });
     await (await judge.chat()).text();
@@ -994,7 +998,7 @@ describe('T196: who pays', () => {
     await (await other.chat()).text();
     await new Promise((r) => setTimeout(r, 20));
     const after = store();
-    expect(after.invite.get(id)?.spent_usd).toBeCloseTo(0.03, 9);
+    expect((await after.invite.get(id))?.spent_usd).toBeCloseTo(0.03, 9);
     after.close();
   });
 
@@ -1005,8 +1009,8 @@ describe('T196: who pays', () => {
     );
     const { app, store } = setup({ llm, dailyUsd: 0.03 });
     const s = store();
-    const { token, id } = mintInvite(s, { usd: 1 });
-    s.close();
+    const { token, id } = await mintInvite(s, { usd: 1 });
+    await s.close();
     const b = new Browser(app);
     await b.post('/api/v1/auth/invite', { token });
     const es = parseSse(await (await b.chat()).text());
@@ -1014,8 +1018,8 @@ describe('T196: who pays', () => {
     expect(stop.code).toBe('budget_exhausted');
     expect(stop.message).toMatch(/today's budget/);
     const after = store();
-    expect(after.credit.get(`invite:${id}`)?.reserved_usd).toBe(0);
-    expect(after.credit.get(`invite:${id}`)?.balance_usd).toBeCloseTo(0.96, 9);
+    expect((await after.credit.get(`invite:${id}`))?.reserved_usd).toBe(0);
+    expect((await after.credit.get(`invite:${id}`))?.balance_usd).toBeCloseTo(0.96, 9);
     after.close();
   });
 
@@ -1023,8 +1027,8 @@ describe('T196: who pays', () => {
     const llm = scriptedLlm(answers(1), { costUsd: 0.01, delayMs: 50 });
     const { app, store } = setup({ llm });
     const s = store();
-    const { token, id } = mintInvite(s, { usd: 1 });
-    s.close();
+    const { token, id } = await mintInvite(s, { usd: 1 });
+    await s.close();
     const b = new Browser(app);
     await b.post('/api/v1/auth/invite', { token });
     const res = await b.chat();
@@ -1036,9 +1040,12 @@ describe('T196: who pays', () => {
     await new Promise((r) => setTimeout(r, 120));
     const after = store();
     const today = new Date().toISOString().slice(0, 10);
-    expect(after.credit.get(`invite:${id}`)?.reserved_usd).toBe(0);
-    expect(after.ledger.get(today).reserved_usd).toBe(0);
-    expect(after.invite.get(id)?.spent_usd).toBeCloseTo(after.ledger.get(today).usd, 9);
+    expect((await after.credit.get(`invite:${id}`))?.reserved_usd).toBe(0);
+    expect((await after.ledger.get(today)).reserved_usd).toBe(0);
+    expect((await after.invite.get(id))?.spent_usd).toBeCloseTo(
+      (await after.ledger.get(today)).usd,
+      9,
+    );
     after.close();
   });
 
@@ -1046,11 +1053,11 @@ describe('T196: who pays', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     const { store, stateDir } = setup();
     const s = store();
-    const { id } = mintInvite(s, { usd: 1 });
-    expect(s.credit.reserve(`invite:${id}`, 0.05)).toBe(0.05);
-    s.close();
+    const { id } = await mintInvite(s, { usd: 1 });
+    expect(await s.credit.reserve(`invite:${id}`, 0.05)).toBe(0.05);
+    await s.close();
     const root = tmpRoot();
-    buildPetalApp(
+    const restarted = buildPetalApp(
       { root, stateDir, apiBase: SITE },
       {
         llm: scriptedLlm([]),
@@ -1058,11 +1065,13 @@ describe('T196: who pays', () => {
         env: { PETAL_WALLET_KEY: WALLET_KEY, NODE_ENV: 'test' },
       },
     );
+    // the start's work is done before the first answer
+    await restarted.request('/api/v1/health');
     const after = store();
-    const credit = after.credit.get(`invite:${id}`);
+    const credit = await after.credit.get(`invite:${id}`);
     expect(credit?.reserved_usd).toBe(0);
     expect(credit?.balance_usd).toBeCloseTo(0.95, 9);
-    expect(after.invite.get(id)?.spent_usd).toBeCloseTo(0.05, 9);
+    expect((await after.invite.get(id))?.spent_usd).toBeCloseTo(0.05, 9);
     after.close();
   });
 
@@ -1071,8 +1080,8 @@ describe('T196: who pays', () => {
     const llm = scriptedLlm(answers(3), { costUsd: 0.01 });
     const { app, store, stateDir } = setup({ llm });
     const s = store();
-    const { token } = mintInvite(s, { usd: 1 });
-    s.close();
+    const { token } = await mintInvite(s, { usd: 1 });
+    await s.close();
     const b = new Browser(app);
     await b.post('/api/v1/auth/invite', { token });
     const { stateStore } = await import('@petal/store');
@@ -1093,7 +1102,7 @@ describe('T192, T196: the key at start', () => {
     );
   };
 
-  test('a real gated server with no key refuses to start', () => {
+  test('a real gated server with no key refuses to start', async () => {
     for (const NODE_ENV of ['production', undefined]) {
       expect(() => start({ NODE_ENV })).toThrow(/PETAL_WALLET_KEY is not set/);
     }
@@ -1102,7 +1111,7 @@ describe('T192, T196: the key at start', () => {
     );
   });
 
-  test('a bad key stops any server, whatever it spends', () => {
+  test('a bad key stops any server, whatever it spends', async () => {
     expect(() =>
       start({ PETAL_WALLET_KEY: 'too-short', PETAL_AGENT_ACCESS: 'open', NODE_ENV: 'test' }),
     ).toThrow(/at least 32 bytes/);

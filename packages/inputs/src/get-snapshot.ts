@@ -41,7 +41,7 @@ export const RECORD_WAIT_MS = 2000;
  */
 export interface FreshGate {
   /** Throws when a read couldn't start now. Costs nothing. */
-  check(): void;
+  check(): void | Promise<void>;
   /** Runs the read, if it may start; counted, and stopped if it takes too long. */
   run<T>(work: () => Promise<T>): Promise<T>;
 }
@@ -153,7 +153,7 @@ export async function getSnapshot(
   // This can only be a fresh read: nothing stored for this target, or asked for by name. Refused here,
   // it costs no call at all.
   const stored = rows.some((r) => r.chain === scope.chain && r.population === scope.population);
-  if (gate && (!stored || (latest && req.fresh))) gate.check();
+  if (gate && (!stored || (latest && req.fresh))) await gate.check();
 
   say('resolving', `resolving ${latest ? 'latest' : JSON.stringify(req.at)} for ${d.id}`);
   const at = await mod.resolveAt(req.at ?? 'latest', req.params);

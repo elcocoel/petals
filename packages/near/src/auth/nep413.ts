@@ -213,7 +213,7 @@ export async function verifyNep413(
   } catch {}
   if (!signed) return fail('the signature does not match');
 
-  const check = nonces.reserve(p.nonce);
+  const check = await nonces.reserve(p.nonce);
   if (check === 'unknown') return fail('the nonce was not issued by this server');
   if (check === 'used') return fail('the nonce was already used');
   if (check === 'expired') return fail('the nonce expired; ask for a new one');
@@ -235,14 +235,14 @@ export async function verifyNep413(
         isImplicitOf(p.account_id, publicKey) &&
         !(await accountExists(rpc, p.account_id));
       if (unfunded) {
-        nonces.spend(p.nonce);
+        await nonces.spend(p.nonce);
         return { ok: true };
       }
     } catch (lookup) {
-      nonces.release(p.nonce);
+      await nonces.release(p.nonce);
       throw rpcFailed(lookup);
     }
-    nonces.release(p.nonce);
+    await nonces.release(p.nonce);
     if (e instanceof RpcFailure) {
       if (missingKey(e.inner)) return fail(`the key is not a key of ${p.account_id}`);
       if (missingAccount(e.inner)) return fail(`the account ${p.account_id} does not exist`);
@@ -252,6 +252,6 @@ export async function verifyNep413(
       return fail(`the key is not a full-access key of ${p.account_id}`);
     return fail(`the proof does not verify: ${describe(e)}`);
   }
-  nonces.spend(p.nonce);
+  await nonces.spend(p.nonce);
   return { ok: true };
 }

@@ -24,15 +24,15 @@ const QUESTION = agreed('who stands behind it?');
 const HOLD = DEFAULT_BUDGET.usdPerChat;
 const DAY = new Date().toISOString().slice(0, 10);
 
-function invited() {
+async function invited() {
   const store = openStore(':memory:');
-  const { id } = mintInvite(store, { usd: 1 });
+  const { id } = await mintInvite(store, { usd: 1 });
   return { store, id, ledger: inviteLedger(store, id, storeLedger(store)) };
 }
 
 function chat(
   llm: LlmClient,
-  ledger: ReturnType<typeof invited>['ledger'],
+  ledger: Awaited<ReturnType<typeof invited>>['ledger'],
   o: { signal?: AbortSignal; wallSeconds?: number } = {},
 ) {
   return collect(
@@ -56,24 +56,24 @@ function chat(
   );
 }
 
-function expectFullHold(store: Store, id: string, usd = HOLD) {
-  expect(store.ledger.get(DAY).usd).toBeCloseTo(usd, 9);
-  expect(store.ledger.get(DAY).reserved_usd).toBe(0);
-  const credit = store.credit.get(`invite:${id}`);
+async function expectFullHold(store: Store, id: string, usd = HOLD) {
+  expect((await store.ledger.get(DAY)).usd).toBeCloseTo(usd, 9);
+  expect((await store.ledger.get(DAY)).reserved_usd).toBe(0);
+  const credit = await store.credit.get(`invite:${id}`);
   expect(credit?.balance_usd).toBeCloseTo(1 - usd, 9);
   expect(credit?.reserved_usd).toBe(0);
-  expect(store.invite.get(id)?.spent_usd).toBeCloseTo(usd, 9);
+  expect((await store.invite.get(id))?.spent_usd).toBeCloseTo(usd, 9);
 }
 
 const doneOf = (es: AgentEvent[]) => es.flatMap((e) => (e.event === 'done' ? [e.data] : []))[0];
 
-const until = async (f: () => boolean) => {
-  while (!f()) await new Promise((r) => setTimeout(r, 2));
+const until = async (f: () => boolean | Promise<boolean>) => {
+  while (!(await f())) await new Promise((r) => setTimeout(r, 2));
 };
 
 describe('a call whose cost is not known counts at its full hold', () => {
   test('Stop: a client that honours the signal and says it cost nothing', async () => {
-    const { store, id, ledger } = invited();
+    const { store, id, ledger } = await invited();
     const stop = new AbortController();
     const llm: LlmClient = {
       kind: 'near-ai-cloud',
@@ -86,15 +86,15 @@ describe('a call whose cost is not known counts at its full hold', () => {
         }),
     };
     const running = chat(llm, ledger, { signal: stop.signal });
-    await until(() => store.ledger.get(DAY).reserved_usd > 0);
+    await until(async () => (await store.ledger.get(DAY)).reserved_usd > 0);
     stop.abort();
     const es = await running;
-    expectFullHold(store, id);
+    await expectFullHold(store, id);
     expect(doneOf(es)?.cost_usd).toBeCloseTo(HOLD, 9);
   });
 
   test('a timeout: the chat ends, the hold stands, and the late answer settles at the full hold', async () => {
-    const { store, id, ledger } = invited();
+    const { store, id, ledger } = await invited();
     let answer: (c: LlmCompletion) => void = () => {};
     const llm: LlmClient = {
       kind: 'near-ai-cloud',
@@ -106,7 +106,9 @@ describe('a call whose cost is not known counts at its full hold', () => {
     };
     const es = await chat(llm, ledger, { wallSeconds: 0.01 });
     expect(doneOf(es)?.cost_usd).toBeCloseTo(HOLD, 9);
-    expect(store.ledger.get(DAY).reserved_usd + store.ledger.get(DAY).usd).toBeCloseTo(HOLD, 9);
+    expect(
+      (await store.ledger.get(DAY)).reserved_usd + (await store.ledger.get(DAY)).usd,
+    ).toBeCloseTo(HOLD, 9);
     answer({
       model: 'm',
       completion_id: 'late',
@@ -116,12 +118,12 @@ describe('a call whose cost is not known counts at its full hold', () => {
       fallback_used: false,
       signature: null,
     });
-    await until(() => store.ledger.get(DAY).reserved_usd === 0);
-    expectFullHold(store, id);
+    await until(async () => (await store.ledger.get(DAY)).reserved_usd === 0);
+    await expectFullHold(store, id);
   });
 
   test('a late answer that cost more than the hold counts at what it cost', async () => {
-    const { store, id, ledger } = invited();
+    const { store, id, ledger } = await invited();
     let answer: (c: LlmCompletion) => void = () => {};
     const llm: LlmClient = {
       kind: 'near-ai-cloud',
@@ -141,12 +143,12 @@ describe('a call whose cost is not known counts at its full hold', () => {
       fallback_used: false,
       signature: null,
     });
-    await until(() => store.ledger.get(DAY).reserved_usd === 0);
-    expectFullHold(store, id, 0.07);
+    await until(async () => (await store.ledger.get(DAY)).reserved_usd === 0);
+    await expectFullHold(store, id, 0.07);
   });
 
   test('a call that says its cost isn’t known', async () => {
-    const { store, id, ledger } = invited();
+    const { store, id, ledger } = await invited();
     const inner = scriptedLlm([{ content: 'the answer' }], { costUsd: 0 });
     const llm: LlmClient = {
       kind: 'near-ai-cloud',
@@ -154,7 +156,7 @@ describe('a call whose cost is not known counts at its full hold', () => {
       complete: async (r) => ({ ...(await inner.complete(r)), cost_unknown: true }),
     };
     await chat(llm, ledger);
-    expectFullHold(store, id);
+    await expectFullHold(store, id);
   });
 
   test('a failure that can’t say what it cost', async () => {
@@ -162,23 +164,23 @@ describe('a call whose cost is not known counts at its full hold', () => {
       new Error('some transport trouble'),
       new LlmCallError('source_failed', 'cut off', { costUnknown: true }),
     ]) {
-      const { store, id, ledger } = invited();
+      const { store, id, ledger } = await invited();
       await chat(
         { kind: 'near-ai-cloud', model: 'm', complete: () => Promise.reject(thrown) },
         ledger,
       );
-      expectFullHold(store, id);
+      await expectFullHold(store, id);
     }
   });
 
   test('a failure that does say what it cost still pays only that', async () => {
-    const { store, id, ledger } = invited();
+    const { store, id, ledger } = await invited();
     const known = new LlmCallError('source_failed', 'the model broke', { costUsd: 0.002 });
     await chat(
       { kind: 'near-ai-cloud', model: 'm', complete: () => Promise.reject(known) },
       ledger,
     );
-    expectFullHold(store, id, 0.002);
+    await expectFullHold(store, id, 0.002);
   });
 });
 
@@ -275,17 +277,17 @@ describe('the NEAR AI client says when it can’t know', () => {
 describe('a restart', () => {
   test('counts the holds it finds as spent, on the day and on the invite', async () => {
     const store = openStore(':memory:');
-    const { id } = mintInvite(store, { usd: 1 });
+    const { id } = await mintInvite(store, { usd: 1 });
     const ledger = inviteLedger(store, id, storeLedger(store));
     const hold = await ledger.reserve(0.05, 3);
     expect(hold).not.toBeNull();
     const runs = sqliteRunStore(store);
     await runs.create({ messages: QUESTION });
-    const out = interruptRuns(store, () => {});
+    const out = await interruptRuns(store, () => {});
     expect(out.interrupted).toBe(1);
     expect(out.spentUsd).toBeCloseTo(0.05, 9);
-    expectFullHold(store, id);
-    const paid = store.credit.entries(`invite:${id}`).filter((e) => e.delta_usd < 0);
+    await expectFullHold(store, id);
+    const paid = (await store.credit.entries(`invite:${id}`)).filter((e) => e.delta_usd < 0);
     expect(paid).toMatchObject([{ delta_usd: -0.05, reason: 'held at a restart' }]);
   });
 });
@@ -314,11 +316,11 @@ describe('tool calls in one round', () => {
 });
 
 describe('an invite', () => {
-  test('minted without days has a default expiry of 14 days', () => {
+  test('minted without days has a default expiry of 14 days', async () => {
     const store = openStore(':memory:');
     const now = new Date('2026-11-06T00:00:00.000Z');
-    const made = mintInvite(store, { usd: 1, now });
+    const made = await mintInvite(store, { usd: 1, now });
     expect(made.expires_at).toBe('2026-11-20T00:00:00.000Z');
-    expect(store.invite.get(made.id)?.expires_at).toBe('2026-11-20T00:00:00.000Z');
+    expect((await store.invite.get(made.id))?.expires_at).toBe('2026-11-20T00:00:00.000Z');
   });
 });

@@ -51,7 +51,7 @@ function door() {
     '/',
     httpApp(r.ctx, {
       gate: {
-        subjectOf: (c) => c.req.header('x-test-subject') ?? null,
+        subjectOf: async (c) => c.req.header('x-test-subject') ?? null,
         refuseForeign: (c) =>
           c.req.header('origin') === 'https://evil.example'
             ? c.json({ error: { code: 'unauthorised', message: 'another site' } }, 401)
@@ -334,7 +334,7 @@ describe('links', () => {
     const { url } = await made('continue');
     const token = url.split('/').pop() as string;
     const db = openStore(join(r.stateDir, 'private.db'));
-    expect(db.explorationLink.byTokenHash(token)).toBeNull();
+    expect(await db.explorationLink.byTokenHash(token)).toBeNull();
     db.close();
     for (const f of readdirSync(r.stateDir).filter((n) => n.startsWith('private.db'))) {
       expect(readFileSync(join(r.stateDir, f)).includes(token), f).toBe(false);
@@ -722,7 +722,7 @@ describe('the resume packet', () => {
     const { url } = started.link;
     const db = openStore(join(r.stateDir, 'private.db'));
     for (let i = 0; i < 500; i++) {
-      db.note.append({
+      await db.note.append({
         exploration: started.exploration,
         author: 'x',
         text: 't',
@@ -832,22 +832,22 @@ describe('short draft links (SYS-043)', () => {
   test('put if absent: drawing twice changes nothing', async () => {
     await run('render_flower', { spec });
     const db = openStore(join(r.stateDir, 'private.db'));
-    const first = db.draft.get(sha);
+    const first = await db.draft.get(sha);
     db.close();
     r.clock.set('2026-12-01T00:00:00.000Z');
     await run('render_flower', { spec });
     const again = openStore(join(r.stateDir, 'private.db'));
-    expect(again.draft.get(sha)).toEqual(first);
+    expect(await again.draft.get(sha)).toEqual(first);
     expect(first?.body).toBe(canonicalJson(spec));
     expect(sha256Hex(first?.body as string)).toBe(sha);
-    again.close();
+    await again.close();
   });
 
   test('re-hashed on read: a row that changed is refused, and an unknown hash is a 404', async () => {
     const drawn = await run('render_flower', { spec });
     const app = door();
     const wrong = openStore(join(r.stateDir, 'private.db'));
-    wrong.draft.put({ sha256: 'b'.repeat(64), body: '{"tampered":true}', created_at: 'x' });
+    await wrong.draft.put({ sha256: 'b'.repeat(64), body: '{"tampered":true}', created_at: 'x' });
     wrong.close();
     expect((await app.request(`/d/${'b'.repeat(64)}`)).status).toBe(500);
     expect((await app.request(`/d/${'c'.repeat(64)}`)).status).toBe(404);

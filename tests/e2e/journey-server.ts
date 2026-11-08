@@ -46,11 +46,11 @@ const BASE = `http://127.0.0.1:${PORT}`;
 interface Prepared {
   stateDir: string;
   walletKey: string;
-  invite: ReturnType<typeof mintInvite>;
+  invite: Awaited<ReturnType<typeof mintInvite>>;
 }
 
 /** A person is found by a hash under the wallet key, so a folder that's reused keeps its key. */
-function prepareState(dir: string | undefined): Prepared {
+async function prepareState(dir: string | undefined): Promise<Prepared> {
   const stateDir = dir ? resolve(dir) : mkdtempSync(join(tmpdir(), 'petal-journey-'));
   mkdirSync(stateDir, { recursive: true });
   const keyFile = join(stateDir, 'journey-wallet-key');
@@ -60,9 +60,9 @@ function prepareState(dir: string | undefined): Prepared {
   writeFileSync(keyFile, walletKey, { mode: 0o600 });
   const store = openPrivateStore(stateDir);
   try {
-    return { stateDir, walletKey, invite: mintInvite(store, { usd: 1, days: 14 }) };
+    return { stateDir, walletKey, invite: await mintInvite(store, { usd: 1, days: 14 }) };
   } finally {
-    store.close();
+    await store.close();
   }
 }
 
@@ -177,7 +177,7 @@ server.on('error', (e: NodeJS.ErrnoException) => {
   process.exit(1);
 });
 server.listen(PORT, '127.0.0.1', async () => {
-  const prepared = prepareState(values.state);
+  const prepared = await prepareState(values.state);
   const seed = values.seed
     ? await seedWorkspace({
         stateDir: prepared.stateDir,

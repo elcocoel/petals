@@ -90,25 +90,26 @@ interface Opened {
 }
 
 /** An id or a link, as far as this caller may go. Same failure whatever the reason. */
-function open(ctx: ToolContext, ref: string): Opened {
+async function open(ctx: ToolContext, ref: string): Promise<Opened> {
   const store = storeOf(ctx);
   const raw = ref.trim();
   if (EXPLORATION_ID.test(raw)) {
-    const row = store.exploration.get(raw);
+    const row = await store.exploration.get(raw);
     const subject = ctx.caller?.subject;
     if (!row || !subject || row.owner !== subject) throw missing();
     return { row, as: 'owner', link: null };
   }
   const token = LINK_TOKEN.exec(raw)?.[1];
-  const link = token ? store.explorationLink.byTokenHash(tokenHash(token)) : null;
+  const link = token ? await store.explorationLink.byTokenHash(tokenHash(token)) : null;
   if (!link || link.revoked_at) throw missing();
-  const row = store.exploration.get(link.exploration);
+  const row = await store.exploration.get(link.exploration);
   if (!row) throw missing();
   return { row, as: link.scope as LinkScope, link };
 }
 
 /** Which exploration a ref opens, for this caller. Same failure as reading it. */
-export const explorationIdOf = (ctx: ToolContext, ref: string): string => open(ctx, ref).row.id;
+export const explorationIdOf = async (ctx: ToolContext, ref: string): Promise<string> =>
+  (await open(ctx, ref)).row.id;
 
 function writable(o: Opened): void {
   if (o.as === 'read') {
@@ -139,7 +140,7 @@ interface StepInput {
   note: string | null;
   at: string;
   /** called for a new spec body; the site's own run has none, because it is sponsored */
-  capped?: () => void;
+  capped?: () => Promise<void>;
 }
 
 const tooManyNotes = () =>
@@ -158,22 +159,22 @@ function writeStep(
   id: string,
   spec: Spec,
   s: StepInput,
-): WrittenStep {
-  return store.tx(() => {
-    const row = store.exploration.get(id);
+): Promise<WrittenStep> {
+  return store.tx(async () => {
+    const row = await store.exploration.get(id);
     if (!row) throw missing();
-    const sha = keepSpecBody(store, spec, s.at, s.capped);
+    const sha = await keepSpecBody(store, spec, s.at, s.capped);
     if (!sha) throw new ToolFailure('bad_input', 'That spec is too large to keep.');
     if (row.head === sha) {
       if (s.note) {
-        if (store.note.count(id) >= NOTES_MAX) throw tooManyNotes();
+        if ((await store.note.count(id)) >= NOTES_MAX) throw tooManyNotes();
         const { door, author, note: text, at } = s;
-        store.note.append({ exploration: id, door, author, text, at });
-        store.exploration.touch(id, at);
+        await store.note.append({ exploration: id, door, author, text, at });
+        await store.exploration.touch(id, at);
       }
-      return { ...(store.step.list(id).at(-1) as StepRow), unchanged: true };
+      return { ...((await store.step.list(id)).at(-1) as StepRow), unchanged: true };
     }
-    if (store.step.count(id) >= STEPS_MAX) {
+    if ((await store.step.count(id)) >= STEPS_MAX) {
       throw new ToolFailure(
         'bad_input',
         `This exploration has ${STEPS_MAX} steps, the most it can hold.`,
@@ -193,14 +194,14 @@ function writeStep(
       note: s.note,
       at: s.at,
     };
-    const seq = store.step.append(r);
-    store.exploration.moveHead(id, row.head, sha, s.at);
-    store.exploration.setTarget(id, targetOf(spec) ?? row.target);
+    const seq = await store.step.append(r);
+    await store.exploration.moveHead(id, row.head, sha, s.at);
+    await store.exploration.setTarget(id, targetOf(spec) ?? row.target);
     return { ...r, seq };
   });
 }
 
-function newExploration(
+async function newExploration(
   store: Store,
   o: {
     id: string;
@@ -211,8 +212,8 @@ function newExploration(
     forked_from?: string;
     at: string;
   },
-): void {
-  store.exploration.create({
+): Promise<void> {
+  await store.exploration.create({
     id: o.id,
     owner: o.owner,
     question: o.question,
@@ -230,26 +231,26 @@ function newExploration(
  * The site's own agent: a flower drawn in a run is a step of that run's exploration, made at its first
  * flower. A run with no owner (a recorded one) has nobody to come back, so nothing is saved for it.
  */
-export function saveRunStep(ctx: ToolContext, runId: string, spec: Spec): void {
+export async function saveRunStep(ctx: ToolContext, runId: string, spec: Spec): Promise<void> {
   const store = storeOf(ctx);
   if (!store.durable) return;
   const at = ctx.now().toISOString();
-  store.tx(() => {
-    const run = store.run.get(runId);
+  await store.tx(async () => {
+    const run = await store.run.get(runId);
     if (!run?.owner) return;
     let id = run.exploration;
     if (!id) {
       id = newExplorationId();
-      newExploration(store, {
+      await newExploration(store, {
         id,
         owner: run.owner,
         question: firstQuestion(run.body),
         target: null,
         at,
       });
-      store.run.setExploration(runId, id);
+      await store.run.setExploration(runId, id);
     }
-    writeStep(ctx, store, id, spec, { door: 'site', author: 'owner', note: null, at });
+    await writeStep(ctx, store, id, spec, { door: 'site', author: 'owner', note: null, at });
   });
 }
 
@@ -356,17 +357,19 @@ function currentOf(ctx: ToolContext, row: Pick<ExplorationRow, 'head'>, spec: Sp
   };
 }
 
-function packetOf(ctx: ToolContext, o: Opened) {
+async function packetOf(ctx: ToolContext, o: Opened) {
   const store = storeOf(ctx);
   const { row } = o;
+  const steps = await store.step.list(row.id);
+  const notes = await store.note.list(row.id);
+  const shown = steps.slice(-STEPS_SHOWN);
+  // Every body the packet shows, read once, before it's put together.
   const bodies = new Map<string, Spec | null>();
-  const specOf = (sha: string | null) => {
-    if (!sha) return null;
-    if (!bodies.has(sha)) bodies.set(sha, specBody(ctx.config, sha));
-    return bodies.get(sha) ?? null;
-  };
-  const steps = store.step.list(row.id);
-  const notes = store.note.list(row.id);
+  for (const sha of [row.head, ...shown.flatMap((r) => [r.spec_sha256, r.parent])]) {
+    if (sha && !bodies.has(sha)) bodies.set(sha, await specBody(ctx.config, sha));
+  }
+  const specOf = (sha: string | null) => (sha ? (bodies.get(sha) ?? null) : null);
+  const runId = o.as === 'owner' ? await store.run.latestOfExploration(row.id) : null;
   return {
     exploration: row.id,
     access: {
@@ -378,7 +381,7 @@ function packetOf(ctx: ToolContext, o: Opened) {
     target: row.target,
     presence: ctx.live?.presenceOf(row.id) ?? null,
     current: currentOf(ctx, row, specOf(row.head)),
-    steps: digestOf(steps.slice(-STEPS_SHOWN), specOf),
+    steps: digestOf(shown, specOf),
     steps_total: steps.length,
     notes: notes.slice(-NOTES_SHOWN).map(noteItem),
     notes_total: notes.length,
@@ -388,7 +391,7 @@ function packetOf(ctx: ToolContext, o: Opened) {
     next: NEXT[o.as],
     forked_from: row.forked_from,
     // the conversation stays on the site: only its owner can open a run, and only there
-    ...(o.as === 'owner' ? { run_id: store.run.latestOfExploration(row.id) } : {}),
+    ...(o.as === 'owner' ? { run_id: runId } : {}),
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -399,8 +402,8 @@ const jsonLines = (items: unknown[]) =>
   `\`\`\`json\n${items.map((i) => JSON.stringify(i)).join('\n')}\n\`\`\``;
 
 /** The resume packet for an agent that can only fetch a URL: the same facts, as markdown. */
-export function packetMarkdown(ctx: ToolContext, ref: string): string {
-  const p = packetOf(ctx, open(ctx, ref));
+export async function packetMarkdown(ctx: ToolContext, ref: string): Promise<string> {
+  const p = await packetOf(ctx, await open(ctx, ref));
   const c = p.current;
   const api = `${base(ctx)}/api/v1/explorations/${LINK_TOKEN.exec(ref.trim())?.[1]}`;
   const lines = [
@@ -509,21 +512,24 @@ export const listExplorations = defineTool<{ limit?: number }, object>({
       );
     }
     const store = storeOf(ctx);
-    return {
-      explorations: store.exploration.listByOwner(subject, limit ?? 50).map((row) => ({
+    const rows = await store.exploration.listByOwner(subject, limit ?? 50);
+    const explorations = [];
+    for (const row of rows) {
+      explorations.push({
         exploration: row.id,
         question: row.question,
         target: row.target,
         head: row.head,
         ...(row.head ? { short_url: `${base(ctx)}/d/${row.head}` } : {}),
-        steps: store.step.count(row.id),
-        notes: store.note.count(row.id),
+        steps: await store.step.count(row.id),
+        notes: await store.note.count(row.id),
         forked_from: row.forked_from,
-        run_id: store.run.latestOfExploration(row.id),
+        run_id: await store.run.latestOfExploration(row.id),
         created_at: row.created_at,
         updated_at: row.updated_at,
-      })),
-    };
+      });
+    }
+    return { explorations };
   },
 });
 
@@ -605,14 +611,14 @@ export const getExploration = defineTool<{ exploration: string }, object>({
   ),
   annotations: READS,
   async run({ exploration }, ctx) {
-    return packetOf(ctx, open(ctx, exploration));
+    return packetOf(ctx, await open(ctx, exploration));
   },
 });
 
 type StartIn = { question?: string; target?: string; fork_of?: string; client?: string };
 
 /** A link's token goes out once, and only its hash stays. */
-function issueLink(
+async function issueLink(
   ctx: ToolContext,
   store: Store,
   exploration: string,
@@ -621,7 +627,7 @@ function issueLink(
 ) {
   const token = randomBytes(32).toString('base64url');
   const id = `lnk_${randomBytes(8).toString('hex')}`;
-  store.explorationLink.create({
+  await store.explorationLink.create({
     id,
     exploration,
     scope,
@@ -655,14 +661,14 @@ function touched(ctx: ToolContext, id: string, tool: string, client?: string): v
 }
 
 /** The steps and notes come along, so a fork stands on its own once a link is revoked. */
-function copyInto(store: Store, id: string, from: ExplorationRow): void {
+async function copyInto(store: Store, id: string, from: ExplorationRow): Promise<void> {
   const was = (who: string | null) => `fork:${who ?? 'owner'}`;
   // the latest, if an older one holds more than a new one may
-  for (const s of store.step.list(from.id).slice(-STEPS_MAX)) {
-    store.step.append({ ...s, exploration: id, author: was(s.author) });
+  for (const s of (await store.step.list(from.id)).slice(-STEPS_MAX)) {
+    await store.step.append({ ...s, exploration: id, author: was(s.author) });
   }
-  for (const n of store.note.list(from.id).slice(-NOTES_MAX)) {
-    store.note.append({ ...n, exploration: id, author: was(n.author) });
+  for (const n of (await store.note.list(from.id)).slice(-NOTES_MAX)) {
+    await store.note.append({ ...n, exploration: id, author: was(n.author) });
   }
 }
 
@@ -670,16 +676,21 @@ function copyInto(store: Store, id: string, from: ExplorationRow): void {
  * What a stranger's new exploration costs, checked before it's made. Nobody behind it, or a fork, which
  * copies rows: a daily cap on those together. A person's own new one is a single small row.
  */
-function admitExploration(ctx: ToolContext, store: Store, sessionless: boolean, fork: boolean) {
+async function admitExploration(
+  ctx: ToolContext,
+  store: Store,
+  sessionless: boolean,
+  fork: boolean,
+) {
   const now = ctx.now();
   const limits = limitsOf(ctx.config);
   if (sessionless) {
     const before = new Date(now.getTime() - limits.unclaimedDays * 86_400_000).toISOString();
-    store.exploration.deleteUnclaimed(before, UNCLAIMED_DELETED_AT_ONCE);
+    await store.exploration.deleteUnclaimed(before, UNCLAIMED_DELETED_AT_ONCE);
   }
-  assertRoom(ctx.config, now);
+  await assertRoom(ctx.config, now);
   if (!sessionless && !fork) return;
-  if (!takeToday(ctx.config, 'explorations', limits.explorationsPerDay, now)) {
+  if (!(await takeToday(ctx.config, 'explorations', limits.explorationsPerDay, now))) {
     throw overToday(
       now,
       `Petal has made ${limits.explorationsPerDay} explorations with no owner, or forks, today, so this one was not started.`,
@@ -729,17 +740,17 @@ export const startExploration = defineTool<StartIn, object>({
   annotations: WRITES,
   async run({ question, target, fork_of, client }, ctx) {
     const store = lastingStore(ctx);
-    const source = fork_of ? open(ctx, fork_of).row : null;
+    const source = fork_of ? (await open(ctx, fork_of)).row : null;
     const asked = question ?? source?.question;
     if (!asked) {
       throw new ToolFailure('bad_input', 'A new exploration needs a question.');
     }
     const owner = ctx.caller?.subject ?? null;
-    admitExploration(ctx, store, owner === null, source !== null);
+    await admitExploration(ctx, store, owner === null, source !== null);
     const at = ctx.now().toISOString();
     const id = newExplorationId();
-    const link = store.tx(() => {
-      newExploration(store, {
+    const link = await store.tx(async () => {
+      await newExploration(store, {
         id,
         owner,
         question: asked,
@@ -748,8 +759,8 @@ export const startExploration = defineTool<StartIn, object>({
         ...(source?.head ? { head: source.head } : {}),
         ...(source ? { forked_from: source.id } : {}),
       });
-      if (source) copyInto(store, id, source);
-      return owner ? null : issueLink(ctx, store, id, 'continue', at);
+      if (source) await copyInto(store, id, source);
+      return owner ? null : await issueLink(ctx, store, id, 'continue', at);
     });
     touched(ctx, id, 'start_exploration', client);
     const page = link && openPageOn(ctx) ? openUrl(ctx, link) : null;
@@ -797,10 +808,10 @@ export const saveStep = defineTool<
   annotations: WRITES,
   async run({ exploration, spec, spec_sha256, note }, ctx) {
     const store = lastingStore(ctx);
-    const o = open(ctx, exploration);
+    const o = await open(ctx, exploration);
     writable(o);
-    assertRoom(ctx.config, ctx.now());
-    const body = spec ?? (spec_sha256 ? specBody(ctx.config, spec_sha256) : null);
+    await assertRoom(ctx.config, ctx.now());
+    const body = spec ?? (spec_sha256 ? await specBody(ctx.config, spec_sha256) : null);
     if (!body) {
       throw spec_sha256
         ? new ToolFailure(
@@ -818,7 +829,7 @@ export const saveStep = defineTool<
         'validate_spec lists every error; propose_spec builds a valid spec.',
       );
     }
-    const step = writeStep(ctx, store, o.row.id, body, {
+    const step = await writeStep(ctx, store, o.row.id, body, {
       door: doorOf(ctx),
       author: authorOf(o),
       note: note ?? null,
@@ -826,6 +837,7 @@ export const saveStep = defineTool<
       capped: capSpecBodies(ctx.config, ctx.now()),
     });
     touched(ctx, o.row.id, 'save_step');
+    const parent = step.parent ? await specBody(ctx.config, step.parent) : null;
     return {
       exploration: o.row.id,
       step: {
@@ -839,7 +851,7 @@ export const saveStep = defineTool<
         from: step.author ?? 'owner',
         note: step.note,
         at: step.at,
-        diff: safeDiff(step.parent ? specBody(ctx.config, step.parent) : null, body),
+        diff: safeDiff(parent, body),
       },
       head: step.spec_sha256,
       unchanged: step.unchanged === true,
@@ -867,16 +879,17 @@ export const addNote = defineTool<{ exploration: string; text: string }, object>
   annotations: WRITES,
   async run({ exploration, text }, ctx) {
     const store = lastingStore(ctx);
-    const o = open(ctx, exploration);
+    const o = await open(ctx, exploration);
     writable(o);
-    assertRoom(ctx.config, ctx.now());
-    if (store.note.count(o.row.id) >= NOTES_MAX) throw tooManyNotes();
+    await assertRoom(ctx.config, ctx.now());
     const at = ctx.now().toISOString();
     const door = doorOf(ctx);
     const author = authorOf(o);
-    const seq = store.tx(() => {
-      const n = store.note.append({ exploration: o.row.id, author, door, text, at });
-      store.exploration.touch(o.row.id, at);
+    // The count and the append together, so two at once can't both pass the limit.
+    const seq = await store.tx(async () => {
+      if ((await store.note.count(o.row.id)) >= NOTES_MAX) throw tooManyNotes();
+      const n = await store.note.append({ exploration: o.row.id, author, door, text, at });
+      await store.exploration.touch(o.row.id, at);
       return n;
     });
     touched(ctx, o.row.id, 'add_note');
@@ -893,30 +906,33 @@ export const addNote = defineTool<{ exploration: string; text: string }, object>
 // and a link never reaches them.
 
 /** Its owner, with an id. Any other caller gets the same answer as for nothing at all. */
-function ownedBy(ctx: ToolContext, id: string): ExplorationRow {
-  const o = EXPLORATION_ID.test(id) ? open(ctx, id) : null;
+async function ownedBy(ctx: ToolContext, id: string): Promise<ExplorationRow> {
+  const o = EXPLORATION_ID.test(id) ? await open(ctx, id) : null;
   if (o?.as !== 'owner') throw missing();
   return o.row;
 }
 
-export function makeLink(ctx: ToolContext, id: string, scope: LinkScope) {
+export async function makeLink(ctx: ToolContext, id: string, scope: LinkScope) {
   const store = lastingStore(ctx);
-  ownedBy(ctx, id);
-  assertRoom(ctx.config, ctx.now());
+  await ownedBy(ctx, id);
+  await assertRoom(ctx.config, ctx.now());
   return issueLink(ctx, store, id, scope, ctx.now().toISOString());
 }
 
-export function listLinks(ctx: ToolContext, id: string) {
-  ownedBy(ctx, id);
-  return storeOf(ctx)
-    .explorationLink.list(id)
-    .map((l) => ({ id: l.id, scope: l.scope, created_at: l.created_at, revoked_at: l.revoked_at }));
+export async function listLinks(ctx: ToolContext, id: string) {
+  await ownedBy(ctx, id);
+  return (await storeOf(ctx).explorationLink.list(id)).map((l) => ({
+    id: l.id,
+    scope: l.scope,
+    created_at: l.created_at,
+    revoked_at: l.revoked_at,
+  }));
 }
 
-export function revokeLink(ctx: ToolContext, id: string, linkId: string) {
-  ownedBy(ctx, id);
+export async function revokeLink(ctx: ToolContext, id: string, linkId: string) {
+  await ownedBy(ctx, id);
   const at = ctx.now().toISOString();
-  if (!storeOf(ctx).explorationLink.revoke(id, linkId, at)) throw missing();
+  if (!(await storeOf(ctx).explorationLink.revoke(id, linkId, at))) throw missing();
   return { id: linkId, revoked_at: at };
 }
 
@@ -926,9 +942,13 @@ export function revokeLink(ctx: ToolContext, id: string, linkId: string) {
  * session gets one: it's only called once the claim is sure to succeed, so a bad link, a read link or
  * someone else's exploration never opens a session. With none, as with httpApp alone, it takes a session.
  */
-export function claimExploration(ctx: ToolContext, ref: string, newSubject?: () => string) {
+export async function claimExploration(
+  ctx: ToolContext,
+  ref: string,
+  newSubject?: () => Promise<string>,
+) {
   const subject = ctx.caller?.subject;
-  const o = open(ctx, ref);
+  const o = await open(ctx, ref);
   if (!o.link) throw missing();
   if (!subject && !newSubject) {
     throw new ToolFailure('unauthorised', 'Sign in first, then claim this.');
@@ -940,8 +960,8 @@ export function claimExploration(ctx: ToolContext, ref: string, newSubject?: () 
   if (o.row.owner !== null) {
     throw new ToolFailure('unauthorised', 'This exploration already has an owner.');
   }
-  const owner = subject ?? (newSubject as () => string)();
-  if (!storeOf(ctx).exploration.setOwner(o.row.id, owner)) {
+  const owner = subject ?? (await (newSubject as () => Promise<string>)());
+  if (!(await storeOf(ctx).exploration.setOwner(o.row.id, owner))) {
     throw new ToolFailure('unauthorised', 'This exploration already has an owner.');
   }
   return { exploration: o.row.id, claimed: true };
@@ -951,8 +971,8 @@ export function claimExploration(ctx: ToolContext, ref: string, newSubject?: () 
  * A flower by its hash, as an exploration's `current` holds it, and what it's a flower of: how the
  * workspace opens a shape. Null when no spec is stored under this hash.
  */
-export function shapeAt(ctx: ToolContext, sha256: string) {
-  const spec = specBody(ctx.config, sha256);
+export async function shapeAt(ctx: ToolContext, sha256: string) {
+  const spec = await specBody(ctx.config, sha256);
   const current = currentOf(ctx, { head: sha256 }, spec);
   return current && spec ? { ...current, target: targetOf(spec) } : null;
 }
@@ -963,8 +983,8 @@ export type SnapshotOrigin = 'their_machine' | 'this_site';
 const POSTED = (sha: string) => `posted_snapshot:${sha}`;
 
 /** their_machine: a person's own agent posted it, and this site never read it again. */
-export function snapshotOrigin(ctx: ToolContext, sha256: string): SnapshotOrigin {
-  return storeOf(ctx).meta.get(POSTED(sha256)) ? 'their_machine' : 'this_site';
+export async function snapshotOrigin(ctx: ToolContext, sha256: string): Promise<SnapshotOrigin> {
+  return (await storeOf(ctx).meta.get(POSTED(sha256))) ? 'their_machine' : 'this_site';
 }
 
 /**
@@ -980,7 +1000,7 @@ export async function postSnapshot(
   sha256: string,
   snapshot: unknown,
 ): Promise<{ exploration: string; sha256: string; stored: boolean; origin: SnapshotOrigin }> {
-  const o = open(ctx, ref);
+  const o = await open(ctx, ref);
   writable(o);
   if (sha256Hex(canonicalJson(snapshot)) !== sha256) {
     throw new ToolFailure(
@@ -999,16 +1019,17 @@ export async function postSnapshot(
   }
   const exploration = o.row.id;
   if (await ctx.store.get(sha256)) {
-    return { exploration, sha256, stored: false, origin: snapshotOrigin(ctx, sha256) };
+    return { exploration, sha256, stored: false, origin: await snapshotOrigin(ctx, sha256) };
   }
   const now = ctx.now();
-  assertRoom(ctx.config, now);
-  if (!takeToday(ctx.config, 'posted_snapshot', limitsOf(ctx.config).postedSnapshotsPerDay, now)) {
+  await assertRoom(ctx.config, now);
+  const cap = limitsOf(ctx.config).postedSnapshotsPerDay;
+  if (!(await takeToday(ctx.config, 'posted_snapshot', cap, now))) {
     throw overToday(now, 'This site has taken as many posted readings as it takes in a day.');
   }
   await ctx.store.put(checked.value);
   const store = storeOf(ctx);
-  store.meta.set(
+  await store.meta.set(
     POSTED(sha256),
     JSON.stringify({ exploration, author: authorOf(o), at: now.toISOString() }),
   );

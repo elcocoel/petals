@@ -43,9 +43,8 @@ export function freshGate(
       `Petal has done its ${n} fresh reads for today, so this one was not started. Anything already stored is still free.`,
     );
 
-  const check = () => {
+  const busy = () => {
     const { freshAtOnce } = limitsOf(ctx.config);
-    assertRoom(ctx.config, ctx.now());
     if (running >= freshAtOnce) {
       throw new ToolFailure(
         'rate_limited',
@@ -54,18 +53,29 @@ export function freshGate(
         BUSY_RETRY_S,
       );
     }
+  };
+  const check = async () => {
+    await assertRoom(ctx.config, ctx.now());
+    busy();
     const n = cap();
-    if (countToday(ctx.config, counter, ctx.now()) >= n) throw refusal(n);
+    if ((await countToday(ctx.config, counter, ctx.now())) >= n) throw refusal(n);
   };
 
   return {
     check,
     async run(work) {
-      check();
-      // no await since the check, so two callers can't both take the last slot
-      const n = cap();
-      if (!takeToday(ctx.config, counter, n, ctx.now())) throw refusal(n);
+      await assertRoom(ctx.config, ctx.now());
+      // The slot is taken before anything waits, so two callers can't both take the last one.
+      busy();
       running++;
+      let started = false;
+      try {
+        const n = cap();
+        if (!(await takeToday(ctx.config, counter, n, ctx.now()))) throw refusal(n);
+        started = true;
+      } finally {
+        if (!started) running--;
+      }
       const stop = new AbortController();
       const { freshMaxS } = limitsOf(ctx.config);
       let timer: ReturnType<typeof setTimeout> | undefined;

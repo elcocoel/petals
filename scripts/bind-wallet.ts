@@ -25,8 +25,12 @@ function wrongNetwork(network: string, account: string): boolean {
   return account.endsWith(network === 'mainnet' ? '.testnet' : '.near');
 }
 
-function openWallets(store: Store, person: string, cipher: WalletCipher | null): string[] {
-  return store.walletBinding.ofPerson(person).map((w) => {
+async function openWallets(
+  store: Store,
+  person: string,
+  cipher: WalletCipher | null,
+): Promise<string[]> {
+  return (await store.walletBinding.ofPerson(person)).map((w) => {
     if (!cipher) return `(${w.network}, sealed)`;
     try {
       return cipher.open(w.caip10_encrypted);
@@ -37,39 +41,40 @@ function openWallets(store: Store, person: string, cipher: WalletCipher | null):
 }
 
 /** Who's in this store. Ids and counts, and wallet names only when the key opens them. */
-function shape(store: Store, cipher: WalletCipher | null): string[] {
-  const lines = store.person.list().map((p) => {
-    const wallets = openWallets(store, p.id, cipher);
-    return `person ${p.id}: ${wallets.length} wallet(s): ${wallets.join(', ') || 'none'}`;
-  });
+async function shape(store: Store, cipher: WalletCipher | null): Promise<string[]> {
+  const lines: string[] = [];
+  for (const p of await store.person.list()) {
+    const wallets = await openWallets(store, p.id, cipher);
+    lines.push(`person ${p.id}: ${wallets.length} wallet(s): ${wallets.join(', ') || 'none'}`);
+  }
   if (!lines.length) lines.push('no people here');
-  for (const { owner, n } of store.run.ownerCounts()) {
+  for (const { owner, n } of await store.run.ownerCounts()) {
     lines.push(`runs   ${n} owned by ${owner ?? 'nobody'}`);
   }
   return lines;
 }
 
 /** As a sign-in moves an anonymous session's work, and the same for what's older than owners. */
-function adoptStrays(store: Store, person: string): number {
-  return store.tx(() => {
+function adoptStrays(store: Store, person: string): Promise<number> {
+  return store.tx(async () => {
     let moved = 0;
-    for (const run of store.run.withoutOwner()) {
-      if (store.run.setOwner(run.id, person)) moved++;
-      if (run.exploration) store.exploration.setOwner(run.exploration, person);
+    for (const run of await store.run.withoutOwner()) {
+      if (await store.run.setOwner(run.id, person)) moved++;
+      if (run.exploration) await store.exploration.setOwner(run.exploration, person);
     }
-    for (const { owner } of store.run.ownerCounts()) {
+    for (const { owner } of await store.run.ownerCounts()) {
       if (!owner?.startsWith('anon_')) continue;
-      moved += store.run.moveOwner(owner, person);
-      store.exploration.moveOwner(owner, person);
-      store.follow.moveOwner(owner, person);
-      store.workspaceNote.moveOwner(owner, person);
-      store.search.forgetOwner(owner);
+      moved += await store.run.moveOwner(owner, person);
+      await store.exploration.moveOwner(owner, person);
+      await store.follow.moveOwner(owner, person);
+      await store.workspaceNote.moveOwner(owner, person);
+      await store.search.forgetOwner(owner);
     }
     return moved;
   });
 }
 
-export function run(args: string[], env: NodeJS.ProcessEnv = process.env): string {
+export async function run(args: string[], env: NodeJS.ProcessEnv = process.env): Promise<string> {
   const { values } = parseArgs({
     args,
     options: {
@@ -83,21 +88,22 @@ export function run(args: string[], env: NodeJS.ProcessEnv = process.env): strin
   const folder = values.state ?? env.PETAL_STATE_DIR?.trim();
   if (!folder) throw new Error(USAGE);
   const stateDir = resolve(folder);
+  const databaseUrl = env.PETAL_DATABASE_URL?.trim() || undefined;
   // Not made here: a mistyped folder would hold a binding no server ever sees.
-  if (!existsSync(join(stateDir, 'private.db'))) {
+  if (!databaseUrl && !existsSync(join(stateDir, 'private.db'))) {
     throw new Error(`no private.db in ${stateDir}: name the server's own state folder`);
   }
   const key = env.PETAL_WALLET_KEY?.trim();
   const cipher = key ? walletCipher(parseWalletKey(key)) : null;
-  const store = openPrivateStore(stateDir);
+  const store = openPrivateStore(stateDir, databaseUrl);
   try {
     const wallets = values.wallet ?? [];
     if (!values.person) {
       if (wallets.length || values['adopt-strays']) throw new Error(USAGE);
-      return shape(store, cipher).join('\n');
+      return (await shape(store, cipher)).join('\n');
     }
     const person = values.person;
-    if (!store.person.get(person)) throw new Error(`no person ${person} here`);
+    if (!(await store.person.get(person))) throw new Error(`no person ${person} here`);
     for (const w of wallets) {
       const [, network = '', account = ''] = WALLET.exec(w) ?? [];
       if (!network) throw new Error(`${w} isn't near:<mainnet|testnet>:<account>`);
@@ -106,7 +112,7 @@ export function run(args: string[], env: NodeJS.ProcessEnv = process.env): strin
     const lines: string[] = [];
     if (wallets.length) {
       if (!cipher) throw new Error('PETAL_WALLET_KEY must be set: bindings are found under it');
-      const unopened = store.walletBinding.ofPerson(person).filter((w) => {
+      const unopened = (await store.walletBinding.ofPerson(person)).filter((w) => {
         try {
           cipher.open(w.caip10_encrypted);
           return false;
@@ -122,10 +128,10 @@ export function run(args: string[], env: NodeJS.ProcessEnv = process.env): strin
       if (unopened.length)
         lines.push(`key    not the store's own: a copy, and only good for a test`);
       const at = new Date().toISOString();
-      store.tx(() => {
+      await store.tx(async () => {
         for (const w of wallets) {
           const index = cipher.index(w);
-          const holder = store.walletBinding.byHash(index)?.person;
+          const holder = (await store.walletBinding.byHash(index))?.person;
           if (holder && holder !== person) {
             throw new Error(`${w} already belongs to ${holder}: nothing was written`);
           }
@@ -133,7 +139,7 @@ export function run(args: string[], env: NodeJS.ProcessEnv = process.env): strin
             lines.push(`wallet ${w}: already this person's`);
             continue;
           }
-          store.walletBinding.bind({
+          await store.walletBinding.bind({
             person,
             network: w.split(':')[1] as string,
             caip10_encrypted: cipher.seal(w),
@@ -146,16 +152,16 @@ export function run(args: string[], env: NodeJS.ProcessEnv = process.env): strin
       });
     }
     if (values['adopt-strays'])
-      lines.push(`runs   ${adoptStrays(store, person)} moved to ${person}`);
-    return [...lines, ...shape(store, cipher)].join('\n');
+      lines.push(`runs   ${await adoptStrays(store, person)} moved to ${person}`);
+    return [...lines, ...(await shape(store, cipher))].join('\n');
   } finally {
-    store.close();
+    await store.close();
   }
 }
 
 if (import.meta.main) {
   try {
-    console.log(run(process.argv.slice(2)));
+    console.log(await run(process.argv.slice(2)));
   } catch (e) {
     console.error((e as Error).message);
     process.exitCode = 1;

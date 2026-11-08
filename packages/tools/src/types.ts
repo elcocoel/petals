@@ -19,6 +19,11 @@ export interface Config {
   fixturesDir?: string;
   /** local state: cache, mirror, runs, attestations. Default <root>/.petal */
   stateDir?: string;
+  /**
+   * additive: where private data lives (PETAL_DATABASE_URL): postgres://user@host:port/db, with the
+   * password in the file PETAL_DATABASE_PASSWORD_FILE names. Unset: SQLite in the state folder.
+   */
+  databaseUrl?: string;
   /** the shared map; null or absent: fakeMap plus the local mirror */
   map?: {
     network: 'testnet' | 'mainnet';

@@ -104,7 +104,7 @@ describe('a restart mid-run', () => {
       // and the money: every finished call is recorded
       const paid = kept.filter((e) => e.event === 'tool_result').length;
       expect(
-        check.store.ledger.get(new Date().toISOString().slice(0, 10)).usd,
+        (await check.store.ledger.get(new Date().toISOString().slice(0, 10))).usd,
       ).toBeGreaterThanOrEqual(paid * COST - 1e-9);
       check.store.close();
     });
@@ -120,8 +120,8 @@ describe('a restart mid-run', () => {
       content: `Here it is: ${VIEW_URL}`,
     });
     expect(run.draft?.entry?.provenance?.agent?.signature?.completion_id).toBe('c3');
-    expect(end.store.ledger.get(end.day).usd).toBeCloseTo(5 * COST, 9);
-    expect(end.store.ledger.get(end.day).reserved_usd).toBeCloseTo(0, 9);
+    expect((await end.store.ledger.get(end.day)).usd).toBeCloseTo(5 * COST, 9);
+    expect((await end.store.ledger.get(end.day)).reserved_usd).toBeCloseTo(0, 9);
     const thread = await end.runs.thread?.(end.runId);
     expect(thread?.filter((m) => m.role === 'tool')).toHaveLength(4);
 
@@ -139,7 +139,7 @@ describe('a restart mid-run', () => {
   test('the same chat with no restart gives the same events', async () => {
     const store = openStore(':memory:');
     const steady = await play(
-      () => ({ store: { ...store, close: () => {} }, runs: sqliteRunStore(store) }),
+      () => ({ store: { ...store, close: async () => {} }, runs: sqliteRunStore(store) }),
       async () => {},
     );
     const path = join(tmpRoot(), 'private.db');
@@ -256,14 +256,17 @@ describe('the old files', () => {
     const before = readFileSync(join(dir, `${id}.json`), 'utf8');
     const store = openStore(':memory:');
     const lines: string[] = [];
-    expect(importRunFiles(store, dir, (l) => lines.push(l))).toEqual({ imported: 1, skipped: 0 });
+    expect(await importRunFiles(store, dir, (l) => lines.push(l))).toEqual({
+      imported: 1,
+      skipped: 0,
+    });
     expect(lines).toHaveLength(1);
 
     const runs = sqliteRunStore(store);
     expect(await runs.get(id)).toEqual(await old.get(id));
     expect(await runs.thread(id)).toEqual([{ role: 'user', content: 'q' }]);
     expect((await runs.eventsFrom(id)).map((x) => x.seq)).toEqual([0, 1, 2]);
-    expect(store.run.get(id)?.model).toBe('z-ai/glm-5.3-flash');
+    expect((await store.run.get(id))?.model).toBe('z-ai/glm-5.3-flash');
     expect(readFileSync(join(dir, `${id}.json`), 'utf8')).toBe(before);
 
     // a run in the store is carried on from there, and a second boot brings nothing over again
@@ -272,7 +275,10 @@ describe('the old files', () => {
       join(dir, 'newer00001.json'),
       JSON.stringify({ ...(await old.get(id)), run_id: 'newer00001' }),
     );
-    expect(importRunFiles(store, dir, (l) => lines.push(l))).toEqual({ imported: 0, skipped: 0 });
+    expect(await importRunFiles(store, dir, (l) => lines.push(l))).toEqual({
+      imported: 0,
+      skipped: 0,
+    });
     expect(await runs.get('newer00001')).toBeNull();
     expect((await runs.get(id))?.events).toHaveLength(4);
     expect(lines).toHaveLength(1);
@@ -298,30 +304,33 @@ describe('the old files', () => {
     mkdirSync(join(dir, 'folder0001.json'));
     const store = openStore(':memory:');
     const lines: string[] = [];
-    expect(importRunFiles(store, dir, (l) => lines.push(l))).toEqual({ imported: 1, skipped: 4 });
+    expect(await importRunFiles(store, dir, (l) => lines.push(l))).toEqual({
+      imported: 1,
+      skipped: 4,
+    });
     expect(lines[0]).toMatch(/imported 1 runs.*skipped 4/);
-    expect(store.run.get(id)).not.toBeNull();
-    expect(store.run.get('badevent01')).toBeNull();
+    expect(await store.run.get(id)).not.toBeNull();
+    expect(await store.run.get('badevent01')).toBeNull();
   });
 
   test('a thread that isn’t a list is left out, and the run still comes over', async () => {
     const { dir, id } = await oldFolder();
     writeFileSync(join(dir, `${id}.thread.json`), '{ not json');
     const store = openStore(':memory:');
-    importRunFiles(store, dir, () => {});
-    expect(store.run.get(id)).not.toBeNull();
-    expect(store.runThread.get(id)).toBeNull();
+    await importRunFiles(store, dir, () => {});
+    expect(await store.run.get(id)).not.toBeNull();
+    expect(await store.runThread.get(id)).toBeNull();
   });
 
-  test('no folder: nothing to do, nothing printed, and it is not looked for again', () => {
+  test('no folder: nothing to do, nothing printed, and it is not looked for again', async () => {
     const store = openStore(':memory:');
     const log = vi.fn();
-    expect(importRunFiles(store, join(tmpRoot(), 'none'), log)).toEqual({
+    expect(await importRunFiles(store, join(tmpRoot(), 'none'), log)).toEqual({
       imported: 0,
       skipped: 0,
     });
     expect(log).not.toHaveBeenCalled();
-    expect(store.meta.get('runs_imported_at')).not.toBeNull();
+    expect(await store.meta.get('runs_imported_at')).not.toBeNull();
   });
 
   test('an interrupted import brings nothing in, and the next boot tries again', async () => {
@@ -330,26 +339,26 @@ describe('the old files', () => {
     const spy = vi.spyOn(store.meta, 'set').mockImplementationOnce(() => {
       throw new Error('disk full');
     });
-    expect(() => importRunFiles(store, dir, () => {})).toThrow('disk full');
-    expect(store.run.get(id)).toBeNull();
+    await expect(importRunFiles(store, dir, () => {})).rejects.toThrow('disk full');
+    expect(await store.run.get(id)).toBeNull();
     spy.mockRestore();
-    expect(importRunFiles(store, dir, () => {})).toEqual({ imported: 1, skipped: 0 });
+    expect(await importRunFiles(store, dir, () => {})).toEqual({ imported: 1, skipped: 0 });
   });
 
-  test('today’s old ledger figure carries over, so moving can’t reset the cap', () => {
+  test('today’s old ledger figure carries over, so moving can’t reset the cap', async () => {
     const root = tmpRoot();
     const path = join(root, 'llm-ledger.json');
     writeFileSync(path, JSON.stringify({ day: '2026-11-05', usd: 1.25 }));
     const store = openStore(':memory:');
-    importLedgerFile(store, path);
-    expect(store.ledger.get('2026-11-05').usd).toBe(1.25);
+    await importLedgerFile(store, path);
+    expect((await store.ledger.get('2026-11-05')).usd).toBe(1.25);
     // the store is the truth from here on
-    store.ledger.add('2026-11-05', 0.5);
-    importLedgerFile(store, path);
-    expect(store.ledger.get('2026-11-05').usd).toBeCloseTo(1.75, 9);
+    await store.ledger.add('2026-11-05', 0.5);
+    await importLedgerFile(store, path);
+    expect((await store.ledger.get('2026-11-05')).usd).toBeCloseTo(1.75, 9);
     expect(readFileSync(path, 'utf8')).toContain('1.25');
-    importLedgerFile(store, join(root, 'none.json'));
+    await importLedgerFile(store, join(root, 'none.json'));
     writeFileSync(path, 'not json');
-    importLedgerFile(store, path);
+    await importLedgerFile(store, path);
   });
 });

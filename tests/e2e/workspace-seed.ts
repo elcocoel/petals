@@ -39,7 +39,7 @@ export interface SeedResult {
 }
 
 /** The session this folder's seed belongs to: the same one each time, holding today's invite. */
-function holdSession(o: SeedOptions): string {
+async function holdSession(o: SeedOptions): Promise<string> {
   const file = join(o.stateDir, 'journey-session');
   const value = existsSync(file)
     ? readFileSync(file, 'utf8').trim()
@@ -47,10 +47,10 @@ function holdSession(o: SeedOptions): string {
   writeFileSync(file, value, { mode: 0o600 });
   const store = openPrivateStore(o.stateDir);
   try {
-    store.tx(() => {
+    await store.tx(async () => {
       const hash = hashOf(value);
-      store.session.delete(hash);
-      store.session.put({
+      await store.session.delete(hash);
+      await store.session.put({
         hash,
         subject: `anon_${createHash('sha256').update(`seed:${value}`).digest('hex').slice(0, 32)}`,
         invite: o.inviteId,
@@ -58,27 +58,28 @@ function holdSession(o: SeedOptions): string {
       });
     });
   } finally {
-    store.close();
+    await store.close();
   }
   return value;
 }
 
 export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
-  const session = holdSession(o);
+  const session = await holdSession(o);
   const store = openPrivateStore(o.stateDir);
-  const subject = store.session.get(hashOf(session), new Date().toISOString())?.subject as string;
-  const counted = (fresh: boolean): SeedResult => ({
+  const subject = (await store.session.get(hashOf(session), new Date().toISOString()))
+    ?.subject as string;
+  const counted = async (fresh: boolean): Promise<SeedResult> => ({
     session,
     conversations:
-      store.run.listByOwner(subject, 100).length +
-      store.exploration.withoutRun(subject, 100).length,
-    follows: store.follow.count(subject),
-    notes: store.workspaceNote.count(subject),
+      (await store.run.listByOwner(subject, 100)).length +
+      (await store.exploration.withoutRun(subject, 100)).length,
+    follows: await store.follow.count(subject),
+    notes: await store.workspaceNote.count(subject),
     fresh,
   });
-  if (store.meta.get(SEEDED)) {
-    const again = counted(false);
-    store.close();
+  if (await store.meta.get(SEEDED)) {
+    const again = await counted(false);
+    await store.close();
     return again;
   }
 
@@ -172,15 +173,15 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
       context_tokens: 6_900,
     },
   });
-  store.draft.put({
+  await store.draft.put({
     sha256: variantSha,
     body: canonicalJson(variant),
     created_at: new Date().toISOString(),
   });
-  const exploration = store.run.get(second)?.exploration as string;
+  const exploration = (await store.run.get(second))?.exploration as string;
   const at = new Date().toISOString();
-  store.tx(() => {
-    store.step.append({
+  await store.tx(async () => {
+    await store.step.append({
       exploration,
       parent: flower.spec_sha256,
       spec_sha256: variantSha,
@@ -191,7 +192,7 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
       note: null,
       at,
     });
-    store.exploration.touch(exploration, at);
+    await store.exploration.touch(exploration, at);
   });
 
   // 3. It asked, and nobody has said yes yet: nothing drawn. Passed through to another company.
@@ -217,8 +218,8 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
   // 5. Work from another door: started in Claude Code, say, and claimed. It has no run, and none is made.
   const door = `exp_${randomBytes(12).toString('hex')}`;
   const doorAt = new Date(Date.now() - 3_600_000).toISOString();
-  store.tx(() => {
-    store.exploration.create({
+  await store.tx(async () => {
+    await store.exploration.create({
       id: door,
       owner: subject,
       question: 'Who holds Moloch DAO?',
@@ -230,7 +231,7 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
       created_at: doorAt,
       updated_at: doorAt,
     });
-    store.step.append({
+    await store.step.append({
       exploration: door,
       parent: null,
       spec_sha256: variantSha,
@@ -241,7 +242,7 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
       note: 'First pass from Claude Code.',
       at: doorAt,
     });
-    store.note.append({
+    await store.note.append({
       exploration: door,
       author: 'owner',
       door: 'mcp',
@@ -270,8 +271,8 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
     await wanted(await call('/api/v1/notes', 'POST', note));
   }
 
-  store.meta.set(SEEDED, new Date().toISOString());
-  const done = counted(true);
-  store.close();
+  await store.meta.set(SEEDED, new Date().toISOString());
+  const done = await counted(true);
+  await store.close();
   return done;
 }

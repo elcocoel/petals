@@ -35,14 +35,14 @@ const ON_THEIR_MACHINE = [
 
 /** Every call that would leave this process, refused and counted. */
 let outside: string[];
-beforeEach(() => {
+beforeEach(async () => {
   outside = [];
   vi.stubGlobal('fetch', async (u: unknown) => {
     outside.push(String(u instanceof Request ? u.url : u));
     throw new Error('a public site called out');
   });
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(async () => vi.unstubAllGlobals());
 
 /** The site as the container runs it: the real context from the environment, on a fresh data folder. */
 function publicSite(): ToolContext {
@@ -59,7 +59,7 @@ function publicSite(): ToolContext {
 }
 
 describe('a public site holds no key and reads nothing outside', () => {
-  test('PETAL_PUBLIC=1 sets public, and the model key is never carried', () => {
+  test('PETAL_PUBLIC=1 sets public, and the model key is never carried', async () => {
     const ctx = publicSite();
     expect(ctx.config.public).toBe(true);
     expect(ctx.config.nearAiApiKey).toBeUndefined();
@@ -67,7 +67,7 @@ describe('a public site holds no key and reads nothing outside', () => {
     expect(configFromEnv({}, REPO).public).toBeUndefined();
   });
 
-  test('exactly the nine that reach outside are marked as running on their machine', () => {
+  test('exactly the nine that reach outside are marked as running on their machine', async () => {
     const marked = registry
       .filter((t) => (t as { onTheirMachine?: boolean }).onTheirMachine)
       .map((t) => t.name)
@@ -168,7 +168,7 @@ describe("a reading made on the person's machine, posted so the site can draw it
       '/',
       httpApp(ctx, {
         gate: {
-          subjectOf: (c) => c.req.header('x-test-subject') ?? null,
+          subjectOf: async (c) => c.req.header('x-test-subject') ?? null,
           refuseForeign: () => null,
         },
       }),

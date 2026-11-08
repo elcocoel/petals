@@ -127,7 +127,7 @@ export function makeSearch(
         note: `Search is down just now (${why}). That says nothing about the answer. Try read_page on a page you know, or read_chain.`,
       });
       const cap = limitsOf(ctx.config).searchesPerDay;
-      if (!takeToday(ctx.config, 'search', cap, ctx.now()))
+      if (!(await takeToday(ctx.config, 'search', cap, ctx.now())))
         throw overToday(ctx.now(), `Petal has made its ${cap} searches for today.`);
       const wait = takeSlot(Date.now());
       if (wait === null)
