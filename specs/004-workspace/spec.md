@@ -92,6 +92,16 @@ So a flower is **a group of wallets that share something they hold or did, compa
 
 This is W9. LOOK reads the code first and reports where it already points.
 
+## Elco's comments on `research.md`, 8 Nov
+
+Left in Orca on "Different from Petals".
+
+- **What they do, not who they are.** On "'This wallet belongs to X' is exactly what drew Arkham's dox-to-earn backlash": "we should not make this as a core claim of our product, although it could be used for it, that's not the goal - I guess the main insight here is - since you can see their history of actions across the entire space and use it to understand their incentives, it doesnt matter who they are, but what they do."
+- **Private work is the same business model as Arkham's secrecy.** On "Arkham even sells 90 days of secrecy": "I consider the same business model". This is W1's paid private maps.
+- **Their own AI is how Petals wins.** On "Whose AI": "we win by doing this because people are not locked into artificial scarcity and get value immediately, making the platform itself more valuable".
+- **The profile: cool and clear in the first second.** On "Intel Desk's case list on a profile is the nearest match": "yep we are different - here lets brainstorm on how we can be cool and easy to understand at the first second". Open, W6.
+- **The infinite map as a force map of connected universes (W9).** On "shared master list": "my vision here is that if we can identify "links" between 2 investigations that bridge them, we can have a "force map" of individual universes that are connected, so it feels like an infinite canvas, but it has discreet "addresses" this is still to be solved".
+
 ## Ideas, not decided
 
 - **Points for mapping** (Elco, 8 Nov): "I had a vision of incentivizing mapping via 'points' that could one day move us towards a TGE -> users pay for extra features, part of revenue goes to a DAO, part of revenue rewards work, part of revenue goes to Devs." Payments are `003-target`'s Q8, later, in their own spec.
