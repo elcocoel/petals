@@ -1,0 +1,68 @@
+# Feature Specification: the workspace, a small IDE for investigation
+
+**Created**: 2026-11-08
+**Status**: Draft. Elco is describing it. Nothing here is decided or built. The questions at the end are taken one at a time, with references and trade-offs, before anything is chosen.
+**Parent**: `003-target` (Story 2, enter; Story 3, profile; Story 5, a workspace to come back to; Stories 6 to 8, claims and reading the map). Where this disagrees with `003-target`, `003-target` wins until Elco says otherwise.
+**Input**: Elco, 8 Nov, to LOOK.
+
+## Elco's words, 8 Nov
+
+> The "workspace" page (that is currently behind /make) - it is deeply confused - we will need more than "a page with a chat and a flower and a list of chats) - we need to define the look and feel and process of this little "IDE" investigation environment.
+
+> We also can do work on the flowers themselves and what other layers of information show up and how - everything so far has been improvisational and shooting off the hip, let's reign it in
+
+> I'm a user, I connected, right? So I connected with a wallet, then I have the opportunity to have as many interactions with agents as I can. We have to define what happens when I connect the wallet, because depending if I connect that wallet with a wallet that holds governance in places, this might already be an insinuation of investigative directions, but maybe the user might go for the prompt and say let's look at this or that, so we have to have a creative decision making around this. But what I do understand now is that certainly there is going to be a lobby situation, a place where the work that I've done sits, that I can go back to it, there's probably a space where I can define my profile, all these things need to be defined.
+
+> It's very likely that to the left there will be a collapsible menu where conversation history and projects and other connections sit, and where future features like automations or whatever that we create could show up. Then we have the space in which whatever page the user is in, and that would usually be the chat itself, where they have the landscape of flowers behind it. And then we have to define how that happens in code, because right now we are seeing each shape or flower or graph that a user has found or created as an isolated universe, which I wish we didn't. I wish I could just flow through the spaces of what got mapped. So we need to take steps into defining the creative space of this app as a sort of infinite canvas of ways to see data, with ways to interact with that data, and to add a meta layer of commentary to that data, basically.
+
+(Voice, lightly punctuated.)
+
+## The parts, as Elco named them
+
+1. **Connecting a wallet.** What happens next is to be defined. A wallet that holds governance somewhere may already suggest where to look; or the person goes straight to the prompt: "let's look at this or that". Elco: "a creative decision".
+2. **The lobby.** "A place where the work that I've done sits, that I can go back to."
+3. **The profile.** "A space where I can define my profile."
+4. **The left menu.** Collapsible. Conversation history, projects, other connections. Later: automations, or whatever we create.
+5. **The page.** Whatever page the person is on; usually the chat itself, with the landscape of flowers behind it.
+6. **One continuous space.** Not each flower or graph as an isolated universe: "I wish I could just flow through the spaces of what got mapped."
+7. **The meta layer.** Commentary on the data.
+
+Elco's summary: "an infinite canvas of ways to see data, with ways to interact with that data, and to add a meta layer of commentary to that data".
+
+## What Elco said before, still standing
+
+- **The infinite canvas** (5 Nov): a campaign map, "like Civilization or Napoleon: Total War", a visual feast you zoom in and out of, with mapped relations between flowers.
+- **Three levels** (5 Nov): an account; a group, "any group of accounts connected by a common thing", usually a token; relations between groups. "Crossing those boundaries elegantly. That's kind of what we have to design for."
+- **The detective** (5 Nov): point the agent at any address, contract or person, and exploration starts there. Connecting a wallet lets the agent see holdings and suggest explorations. This is the same idea as part 1 above.
+- **The flower as a shared place** (5 Nov): zoom, click, add to, comment on; "almost a messaging platform, or a collaborative mapping exercise".
+- **Your own section** (5 Nov): the explorations you made, so you can pick up later.
+- **Chat and composer float over the canvas** (6 Nov): boxes a person can move and resize, in the illustrated terminal's language, so a conversation carries on at any zoom.
+- **Like Orca or any IDE** (6 Nov): "come back to my workspace and have different conversations"; the composer shows context, model, effort and permissions, as Fire solves it, with send rather than Ask.
+- **Notes and search** (6 Nov): "notes are a good beginning for the claim / comments system". Notes are private by default.
+- **Following** favourite wallets and addresses (6 Nov).
+- **Another agent's conversation** (6 Nov): its output shows in Petals, with the composer grayed out saying where it's happening.
+- **Each unit of work is code** (5 Nov): a flower's recipe is its own unit, separate from how it looks.
+- **The agent speaks first** (5 Nov).
+- **Claims** (`003-target`): signed, public, permanent, challengeable, each with its kind (observed, declared, inferred) and evidence; a claimer's standing comes from their record.
+
+## What's on the page today, for contrast
+
+`/make` on `main` is one canvas with five floating boxes over it: output, input, the flower's panel, the conversation list and the model box. Each conversation's flower is its own canvas. Switching conversation reloads the page. There is no lobby, profile, left menu or project, and flowers don't share a space.
+
+## Questions to decide, one at a time
+
+Each gets references and trade-offs in plain words before Elco chooses.
+
+- **W1. Whose map is the canvas?** Only what you mapped; the shared public map; or the shared map with your own work as a layer over it.
+- **W2. After connecting a wallet,** where does a person land: the lobby, the chat, or suggestions from what the wallet holds?
+- **W3. Lobby and canvas.** Is the lobby its own page, or the same canvas seen from far away?
+- **W4. What a project is.** A group of conversations, a network, a question, or something else, and how it differs from a conversation.
+- **W5. The left menu, first version.** What's in it on day one, and what waits.
+- **W6. The profile.** A page or a panel; overlaps `003-target`'s Q3 and Q6.
+- **W7. The meta layer.** Where notes, claims and challenges sit on the canvas, and who sees them; overlaps `003-target`'s Q4 to Q6.
+- **W8. The flower's layers.** What information shows on and around a flower, at what distance, and how. Elco's second thread; it follows W1 and W7.
+- **W9. In code.** How many flowers share one space, where each sits, and how relations between them are drawn. Technology, decided after the shape.
+
+## References being studied
+
+Arkham Intelligence and Maltego, which Elco named, and a few others (crypto investigation tools, graph and canvas tools, IDE layouts). Findings go to `research.md` next to this file.
