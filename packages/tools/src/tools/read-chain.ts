@@ -510,6 +510,7 @@ export function makeReadChain(
 ): PetalTool<ReadChainInput, object> {
   return defineTool({
     name: 'read_chain',
+    onTheirMachine: true,
     title: 'Read the chain',
     description:
       'Any address on any EVM chain Petal knows: contract or account, what it answers, verified source and its functions where an explorer has it, proxy target, any view call by signature, any event’s logs. Leave out chain to check them all. Read-only.',

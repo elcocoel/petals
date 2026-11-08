@@ -10,14 +10,19 @@
 //   GET  /api/v1/explorations/:id/links            its links, with no tokens: owner only
 //   POST /api/v1/explorations/:id/links            a new link, shown once: owner only
 //   POST /api/v1/explorations/:id/links/:link/revoke
+//   PUT  /api/v1/explorations/:ref/snapshots/:sha256  a reading made on the person's own machine, so the
+//                                                  site can draw it (postSnapshot); gzip allowed
 //   GET  /d/:hash                                  a short draft link: redirects to /draft?spec=
 //   GET  /s/:token                                 the resume packet, as markdown
 //
 // They read a session, so they answer before httpApp's open CORS, as the auth routes do, and a POST
 // from another site is refused. With no gate (httpApp alone), nobody is ever signed in. httpApp's body
 // limit, which comes first, covers them.
+import { promisify } from 'node:util';
+import { gunzip as gunzipCb } from 'node:zlib';
 import { canonicalJson } from '@petal/core';
 import { type Context, Hono, type MiddlewareHandler } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
 import { versioned } from '../define.ts';
@@ -31,6 +36,7 @@ import {
   listLinks,
   makeLink,
   packetMarkdown,
+  postSnapshot,
   revokeLink,
 } from '../tools/explorations.ts';
 import { draftPath } from '../tools/shared.ts';
@@ -51,6 +57,15 @@ export const SITE_HEADER = 'x-petal-site';
 
 const SHA = /^[0-9a-f]{64}$/;
 const NEVER_STORE = 'no-store';
+const gunzip = promisify(gunzipCb);
+
+/** A posted reading on the wire, gzipped or not. Bodies run 50 KB to 0.8 MB gzipped. */
+export const SNAPSHOT_WIRE_MAX_BYTES = 2 * 1024 * 1024;
+/** The same reading inflated: a small gzip can't grow past this. */
+export const SNAPSHOT_MAX_BYTES = 32 * 1024 * 1024;
+/** The one route whose body may pass the door's 256 KiB: it has its own limits, above. */
+export const isSnapshotPost = (c: Context) =>
+  c.req.method === 'PUT' && /^\/api\/v1\/explorations\/[^/]+\/snapshots\/[^/]+$/.test(c.req.path);
 
 export function explorationRoutes(
   ctx: ToolContext,
@@ -183,6 +198,47 @@ export function explorationRoutes(
   );
 
   // Re-hashed on read (specBody), so a row that changed can't send anyone to another flower.
+  app.put(
+    '/api/v1/explorations/:ref/snapshots/:sha256',
+    bodyLimit({
+      maxSize: SNAPSHOT_WIRE_MAX_BYTES,
+      onError: (c) =>
+        fail(c, toolError('bad_input', 'The body is larger than 2 MiB. Send it gzipped.')),
+    }),
+    async (c) => {
+      const sha = c.req.param('sha256');
+      if (!SHA.test(sha)) return fail(c, toolError('bad_input', 'Not a sha256.'));
+      let raw = new Uint8Array(await c.req.arrayBuffer());
+      if ((c.req.header('content-encoding') ?? '').trim().toLowerCase() === 'gzip') {
+        try {
+          raw = new Uint8Array(await gunzip(raw, { maxOutputLength: SNAPSHOT_MAX_BYTES }));
+        } catch {
+          return fail(
+            c,
+            toolError('bad_input', 'The body is not gzip, or it inflates past 32 MiB.'),
+          );
+        }
+      }
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(new TextDecoder().decode(raw));
+      } catch {
+        return fail(
+          c,
+          toolError('bad_input', 'The body is not JSON.', 'Send the snapshot as JSON.'),
+        );
+      }
+      try {
+        return respond(
+          c,
+          versioned(await postSnapshot(asCaller(c), c.req.param('ref'), sha, parsed)),
+        );
+      } catch (e) {
+        return fail(c, fromThrown(e));
+      }
+    },
+  );
+
   app.get('/d/:hash', limit, (c) => {
     const sha = c.req.param('hash');
     try {

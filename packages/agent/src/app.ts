@@ -41,7 +41,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   const ctx = createContext(cfg);
   const config = ctx.config ?? cfg;
   const stateDir = stateDirOf(config);
-  const key = config.fake ? undefined : config.nearAiApiKey || undefined;
+  const key = config.fake || config.public ? undefined : config.nearAiApiKey || undefined;
   const llm =
     o.llm ??
     (key
@@ -80,7 +80,8 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   const runs = sqliteRunStore(store);
 
   const env = o.env ?? process.env;
-  const access = agentAccess(env);
+  // A public site runs no model for anyone: chats are refused, and there's no key to spend.
+  const access = config.public ? 'none' : agentAccess(env);
   const auth = createAuth({
     store,
     // the same table as publish's nonces: nonceStore(cfg) in @petal/tools opens this very store
@@ -109,7 +110,8 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     const status = c.res.status;
     // unset first: Hono's setter would copy the old headers, content-length included
     c.res = undefined;
-    c.res = new Response(JSON.stringify({ ...body, llm: llmHealth(llm), agent_access: access }), {
+    const llmNow = access === 'none' ? 'none' : llmHealth(llm);
+    c.res = new Response(JSON.stringify({ ...body, llm: llmNow, agent_access: access }), {
       status,
       headers,
     });

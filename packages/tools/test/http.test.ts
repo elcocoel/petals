@@ -177,6 +177,7 @@ describe('SSE, bodies, health', () => {
       version: 'api/v1',
       tools_version: 'tools/v1',
       commit: null,
+      public: false,
     });
   });
 

@@ -7,6 +7,7 @@ import { DATETIME, obj } from './shared.ts';
 
 export const quotePayment = defineTool<QuoteRequest, QuoteResult>({
   name: 'quote_payment',
+  onTheirMachine: true,
   title: 'Quote a payment (dry)',
   description:
     'A dry NEAR Intents quote for sponsoring a refresh of a network, or new coverage of a ' +

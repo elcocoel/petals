@@ -47,6 +47,7 @@ export const STATUS: Record<ToolErrorCode, number> = {
   invalid_spec: 422,
   rate_limited: 429,
   budget_exhausted: 429,
+  not_on_this_site: 403,
   source_failed: 502,
   internal: 500,
 };
@@ -241,6 +242,15 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
       onError: (c) => fail(c, 'bad_input', 'the body is larger than 512 KiB'),
     }),
     async (c) => {
+      // A public site runs no agent for anyone: each person's own does the work on their machine.
+      if (deps.tools.config.public) {
+        return fail(
+          c,
+          'not_on_this_site',
+          'This site runs no agent for visitors: your own Claude Code, Codex or Hermes does the work on your machine.',
+          '/connect says how to add Petals to it.',
+        );
+      }
       // Before the rate limit: a refused chat costs nothing, and shouldn't use up the allowance.
       // Before the body too, so a stranger's is never parsed.
       const admitted = o.auth?.admitChat(c, deps.llm, deps.budget) ?? {};
