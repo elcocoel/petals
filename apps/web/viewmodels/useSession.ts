@@ -99,7 +99,8 @@ export function useSession(reading: boolean) {
       void signIn(deps).finally(() => setBusy(false));
     },
     disconnect: () => {
-      void sessionClient.logout().then(() => window.location.assign('/make'));
+      // Proposal (8 Nov, fe-frontdoor): leaving the account leaves the app, back to the front page.
+      void sessionClient.logout().then(() => window.location.assign('/'));
     },
   };
 }

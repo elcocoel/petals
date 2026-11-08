@@ -1734,4 +1734,5 @@ export const NOT_IN_LAB: Record<string, string> = {
   ConversationThread: 'Thread and TurnFlower wired together, and each of those is here',
   FloatBox: 'a BarBox fixed to the window and placed by hand: it lives at /make',
   SiteChrome: 'the Nav, drawn here, around a reading column; it holds no state of its own',
+  FrontDoor: 'draws nothing: it opens the wallet when the landing is left for /make (proposal)',
 };

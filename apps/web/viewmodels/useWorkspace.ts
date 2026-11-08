@@ -225,7 +225,8 @@ export function useWorkspace(props: {
   const cameBare =
     !props.initialRun && !initialElsewhere && !props.initialQuestion && !props.initialPetal;
   const nothingOpened = (props.initialOpen?.kind ?? 'latest') === 'latest';
-  const hasList = conversations.length > 0 || Boolean(session.account);
+  // Proposal (8 Nov, fe-frontdoor): the account has its own place, so with nothing to list there's no list.
+  const hasList = conversations.length > 0;
   const listOpen = listChoice ?? (cameBare && nothingOpened && hasList);
 
   // Another agent's conversation has only its own flowers: a stand-in would read as one of them.

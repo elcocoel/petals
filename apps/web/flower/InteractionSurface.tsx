@@ -154,11 +154,20 @@ export function InteractionSurface({
           </Button>
         }
       >
-        {state.session.account && (
-          <WhoIsHere account={state.session.account} onDisconnect={state.session.disconnect} />
-        )}
         <ConversationList rows={state.conversations} />
       </FloatBox>
+      {/* Proposal (8 Nov, fe-frontdoor): the account is its own thing, apart from the work, in a corner. */}
+      {state.session.account && (
+        <div className="fixed top-0 right-0">
+          <WhoIsHere
+            account={state.session.account.replace(
+              /\b([0-9a-f]{6})[0-9a-f]{54}([0-9a-f]{4})\b/g,
+              '$1…$2',
+            )}
+            onDisconnect={state.session.disconnect}
+          />
+        </div>
+      )}
       <FloatBox
         label="Flower"
         title={panel.kind === 'flower' ? panel.title : undefined}
