@@ -184,3 +184,14 @@ None of these products uses a connected wallet to suggest what to investigate: e
 - **Bubblemaps Intel Desk GIF:** [GIF](https://storage.ghost.io/c/19/d2/19d2abd6-b3d7-45da-8e65-9ec46f80625e/content/images/2025/09/ID_gif_em--2-.gif).
 - **Cursor 2.0 agent layout images:** [changelog](https://cursor.com/changelog/2-0).
 - **Video: Steve Ruiz, "Agents on the Canvas in tldraw"** (AI Engineer Europe 2026): https://www.youtube.com/watch?v=sPUjIBH5Cwg. The most relevant talk for chat over an infinite canvas.
+
+---
+
+## W7 storage: SYSTEMS's options, 8 Nov
+
+Asked by LOOK; options only, nothing built. Today a private note (`workspace_note`) is about one thing (`about`: a conversation, a flower's recipe, a network, or an account or group) and holds text and evidence. A person's agent can only write notes on an exploration, which link holders read.
+
+1. **What a note can be about.** Additive. `about` stays the one main subject, because search and each thing's list hang on it. New forms: `relation:<ref>|<ref>` for a relation, and `canvas:<view>@<x>,<y>,<z>` for a place on the canvas. Several things at once go in a small join table (note, ref) beside it, not packed into one string.
+2. **What it holds.** Lean: free-form metadata as a JSON field (text now, Postgres `jsonb` later), as `evidence` is today. Real columns only for what gets filtered or sorted, such as confidence. Tags get a join table if people search by them.
+3. **An agent writing private notes.** Possible: a tool on the owner's session or a continue link, written as the agent's (`agent:<client>`), with the credential that authorised it, which every row already records (TGT-005). The cost to trust: today a continue link writes only to its own exploration, and this would let it write into the account's private notes. So it needs its own scope: revocable, write-only (no reading other notes), and what it wrote is treated as untrusted by later readers. SYSTEMS's lean: notes on the exploration first, workspace notes only with that separate scope.
+4. **The Postgres move** blocks none of it. Search and reads are already limited to the account, and every row keeps its credential. Row-level security, if Elco wants it, would cover these tables the same way.
