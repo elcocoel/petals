@@ -6,7 +6,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { InteractionSurface } from '../flower/InteractionSurface.tsx';
 import type { AgentClient, RunRead } from '../lib/agent-client.ts';
-import type { CanvasFlower } from '../lib/panel-view.ts';
 import { type ChatAction, chatReducer, initialChat, type QuestionStore } from '../lib/thread.ts';
 import { RECORDED_QUESTION } from '../lib/thread-view.ts';
 import { openFromParams, questionFromParams, workspaceUrl } from '../lib/workspace-url.ts';
@@ -267,20 +266,9 @@ describe('?run=X&q=Y', () => {
 });
 
 describe('the first paint', () => {
-  const flower: CanvasFlower = {
-    key: 'k',
-    reading: { title: 'A stand-in', petals: [] },
-  };
-  const paint = (o: {
-    q?: string;
-    run?: string;
-    recorded?: boolean;
-    standIn?: CanvasFlower | null;
-    stored?: string;
-  }) =>
+  const paint = (o: { q?: string; run?: string; recorded?: boolean; stored?: string }) =>
     renderToStaticMarkup(
       createElement(InteractionSurface, {
-        standIn: o.standIn === undefined ? flower : o.standIn,
         scatter: false,
         probe: false,
         surface: 'ground',
@@ -313,30 +301,15 @@ describe('the first paint', () => {
     expect(html).toContain('Play the recorded run');
   });
 
-  test('the stand-in is only a picture: no row, no words about it, the usual placeholder', () => {
-    const html = paint({ standIn: flower });
-    expect(html).toContain('aria-label="A stand-in"');
-    expect(html).toContain('placeholder="Ask about any network, or paste an address."');
-    expect(html).not.toContain('Ask about this flower');
-    expect(html).not.toContain('Continue this flower');
-    expect(html.match(/A stand-in/g)).toHaveLength(1);
-    // the same page with no stand-in differs in the picture and nothing else
-    const without = paint({ standIn: null });
-    const strip = (s: string) => s.replace(/<svg.*?<\/svg>/, '');
-    expect(strip(html)).toBe(strip(without));
-  });
-
   test.each([
     ['a run', { run: 'r1' }],
     ['a stored flower', { stored: 'abc' }],
-  ])('%s on its way back shows no stand-in', (_name, o) => {
-    const html = paint(o);
-    expect(html).not.toContain('A stand-in');
-    expect(html).toContain('aria-hidden="true"');
+  ])('%s on its way back is empty ground until it arrives', (_name, o) => {
+    expect(paint(o)).toContain('<svg aria-hidden="true"');
   });
 
   test('no flower at all is empty ground, and the boxes are there', () => {
-    const html = paint({ standIn: null });
+    const html = paint({});
     expect(html).toContain('<svg aria-hidden="true"');
     expect(html).toContain('aria-label="Ask Petals about a network"');
   });

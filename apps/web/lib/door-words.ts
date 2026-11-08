@@ -9,8 +9,9 @@ export const doorWords = {
   nearDidntAnswer: "NEAR didn't answer. Try again.",
   // Proposed 8 Nov for a site that runs no agent for visitors (design/journey-strings.md, "The front door").
   connectAgent: 'Connect your agent',
+  // Proposed by LOOK, 8 Nov, after Elco: "it doesn't say what this is" (design/journey-strings.md).
   pasteIt:
-    'Paste this into a conversation in Claude Code, Codex or Hermes. Your agent opens it here, in this browser, and you watch it work.',
+    "Petals doesn't run an agent for you. Your own agent does the mapping: Claude Code, Codex, Hermes or any other. Copy this into it, and its conversation shows up here as it happens.",
   // Already on /connect.
   copyPrompt: 'Copy this prompt',
   otherWays: 'Other ways in',

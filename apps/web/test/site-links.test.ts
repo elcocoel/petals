@@ -31,6 +31,7 @@ describe('the landing page', () => {
     const routes: Record<string, string> = {
       [siteLinks.home]: 'page.tsx',
       [siteLinks.make]: 'make/page.tsx',
+      [siteLinks.lobby]: 'lobby/page.tsx',
       [siteLinks.gallery]: '(site)/gallery/page.tsx',
       [siteLinks.connect]: '(site)/connect/page.tsx',
       [siteLinks.liveShape]: '(site)/f/[id]/page.tsx',

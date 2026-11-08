@@ -15,6 +15,8 @@ export const publicOrigin = 'https://petal-flowers.vercel.app';
 export const siteLinks = {
   home: '/',
   make: '/make',
+  /** A person's own place (specs/004-workspace, W3): where connecting a wallet lands. */
+  lobby: '/lobby',
   gallery: '/gallery',
   connect: '/connect',
   /** The doors on /connect (lib/doors.ts), which say plainly what each app asks you to do. */
