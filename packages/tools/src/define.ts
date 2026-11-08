@@ -128,12 +128,15 @@ export const TOOL_ERROR_SCHEMA: JSONSchema = {
   },
 };
 
-/** What a public site answers for a tool that runs on the person's own machine. */
-export function notOnThisSite(what: string): ToolError {
+/** Where an agent learns to run Petals on its own machine: the site's skill.md, by its address when known. */
+export const skillUrl = (site?: string) => `${site ?? ''}/skill.md`;
+
+/** What a public site answers for a tool that runs on the person's own machine. An agent reads the hint. */
+export function notOnThisSite(what: string, site?: string): ToolError {
   return toolError(
     'not_on_this_site',
     `This site doesn't run ${what} for visitors: it reads no chain or web page, searches nothing and runs no model on anyone's behalf.`,
-    'Your own agent does that on your machine. /connect says how to add Petals to it.',
+    `Your own agent does that on your machine: ${skillUrl(site)} says how to add Petals to it.`,
   );
 }
 
@@ -170,7 +173,7 @@ export function defineTool<I, O extends object>(def: ToolDef<I, O>): PetalTool<I
     async run(raw: I, ctx: ToolContext): Promise<Versioned<O> | Versioned<ToolError>> {
       // First, so a refused call reads nothing, not even its input.
       if (def.onTheirMachine === true && ctx.config.public)
-        return versioned(notOnThisSite(def.name));
+        return versioned(notOnThisSite(def.name, ctx.config.apiBase));
       const i = raw === undefined || raw === null ? ({} as I) : raw;
       if (!check(i)) return versioned(toolError('bad_input', describeErrors(check.errors), hint));
       try {

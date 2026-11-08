@@ -80,7 +80,7 @@ describe('a public site holds no key and reads nothing outside', () => {
     expect(out.error).toMatchObject({
       code: 'not_on_this_site',
       message: expect.stringContaining(name),
-      hint: expect.stringContaining('/connect'),
+      hint: expect.stringContaining('https://petals.example/skill.md'),
     });
     expect(outside).toEqual([]);
   });
