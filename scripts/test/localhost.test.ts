@@ -17,9 +17,13 @@ test('the web app binds to localhost, for dev and for start', () => {
   expect(scripts.start).toContain('--hostname 127.0.0.1');
 });
 
-test("Elco's app doesn't undo that, and the container runs Next directly", () => {
+test("Elco's app doesn't undo that, and the container runs the server alone", () => {
   expect(read('scripts/serve-testnet.sh')).not.toMatch(/--hostname (?!127\.0\.0\.1)/);
-  expect(read('scripts/container/entry.sh')).toContain('next start -p');
+  expect(read('scripts/container/entry.sh')).toContain(
+    'exec node /app/packages/agent/src/serve.ts',
+  );
+  // inside the container only; petals_run.sh publishes the port on 127.0.0.1
+  expect(read('scripts/container/entry.sh')).toContain('PETAL_HOST=0.0.0.0');
 });
 
 test('the standalone API binds to localhost', async () => {
