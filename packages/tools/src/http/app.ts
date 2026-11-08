@@ -16,7 +16,12 @@ import { mcpHttpHandler } from '../mcp/server.ts';
 import { findTool } from '../registry.ts';
 import { findSnapshot } from '../tools/shared.ts';
 import type { ToolContext } from '../types.ts';
-import { explorationRoutes, type SessionGate, SITE_HEADER } from './explorations.ts';
+import {
+  explorationRoutes,
+  isSnapshotPost,
+  type SessionGate,
+  SITE_HEADER,
+} from './explorations.ts';
 import { isLocalSite, rateLimit } from './rate-limit.ts';
 import { body, bodyCap, fail, respond } from './reply.ts';
 
@@ -59,7 +64,8 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     what: 'tool calls',
     local: isLocalSite(ctx.config.apiBase),
   });
-  app.use('*', bodyCap);
+  // A posted reading has its own, larger limits (explorations.ts); everything else stays under 256 KiB.
+  app.use('*', (c, next) => (isSnapshotPost(c) ? next() : bodyCap(c, next)));
   // First: these read a session, so the open CORS below doesn't reach them.
   app.route('/', explorationRoutes(ctx, limit, o.gate));
   app.use('*', cors({ origin: '*', exposeHeaders: ['Retry-After', 'ETag'] }));
@@ -249,7 +255,9 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     c.json({
       ok: true,
       map: await mapStatus(ctx),
-      llm: ctx.config.nearAiApiKey ? 'up' : 'recorded',
+      llm: ctx.config.public ? 'none' : ctx.config.nearAiApiKey ? 'up' : 'recorded',
+      // additive: true on a public site (PETAL_PUBLIC=1), which does no outside work for visitors
+      public: ctx.config.public === true,
       version: API_VERSION,
       tools_version: TOOLS_VERSION,
       // The deployed commit, so a deploy can witness what is really running. Unset locally.
@@ -293,9 +301,12 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
 
 /**
  * up: the configured map answers; down: it does not; mirror: no map is configured, so flowers
- * live in this server's memory and local mirror only (not on NEAR).
+ * live in this server's memory and local mirror only (not on NEAR); held: a public site, which
+ * answers from the copies of published rows it ships and reads no chain.
  */
-async function mapStatus(ctx: ToolContext): Promise<'up' | 'down' | 'mirror'> {
+async function mapStatus(ctx: ToolContext): Promise<'up' | 'down' | 'mirror' | 'held'> {
+  // A public site reads no chain, so it can't say whether the map is up: it answers from what it ships.
+  if (ctx.config.public) return 'held';
   if (ctx.config.fake || !ctx.config.map) return 'mirror';
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {

@@ -58,6 +58,7 @@ function explorerUrl(ctx: ToolContext, tx: string): string {
 
 export const preparePublish = defineTool<{ entry: Partial<Entry> }, object>({
   name: 'prepare_publish',
+  onTheirMachine: true,
   title: 'Prepare to publish',
   description:
     'Get the exact NEP-413 message a maker signs to publish a flower, with a fresh nonce. Pass ' +
@@ -165,6 +166,7 @@ const unauthorised = (message: string) =>
 
 export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Proof }, object>({
   name: 'publish_flower',
+  onTheirMachine: true,
   title: 'Publish a flower',
   description:
     "Publish a prepared flower to the shared map on NEAR with the maker's NEP-413 proof. Checks " +

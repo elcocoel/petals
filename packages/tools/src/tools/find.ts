@@ -723,6 +723,7 @@ export function makeFindTarget(
   const source = obj(['id', 'url'], { id: { type: 'string' }, url: { type: 'string' } });
   return defineTool({
     name: 'find_target',
+    onTheirMachine: true,
     title: 'Find a target',
     description:
       'From plain words (a network, a DAO, a token name or ticker, "UNI on Base") or an address, to candidates: chain, address, the ledger it keeps, whether the chain confirmed it, the module and params that draw it (draw) or why none can (cannot_draw), the evidence that separates look-alikes, and sources. Use it first when a person names something. If you remember an address, pass it here so the chain confirms it. A token is a ledger of holdings, transferable or not.',

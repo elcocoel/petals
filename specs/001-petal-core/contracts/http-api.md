@@ -16,9 +16,9 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 - No account, key or payment is needed for anything except publishing and Petal's own agent (FR-030, SYS-051).
 - CORS: open on the tool and agent routes, so agents and other sites can call them, with no `Access-Control-Allow-Credentials`, so a browser never sends a session across origins. The auth routes, `/api/v1/me` and `/api/v1/explorations` send no CORS headers.
 - Rate limits per address (in memory in Phase A): 60 tool calls per minute; 10 new agent chats per hour, plus 60 follow-ups per hour on an existing run. A person spending their own credit isn't held to the 10 new chats (T374): the follow-ups still count. Over the limit: `429` with `{ error: { code: "rate_limited", retry_after_s } }`. An address is `cf-connecting-ip`, else the socket on a local deployment, and on a public one everyone without it shares a limit. `x-forwarded-for` and `x-real-ip` never count. An IPv6 address counts as its /64.
-- A body is at most 256 KiB, and a chat 512 KiB: `400 bad_input`. `/mcp` takes one call per POST, so a batch is `400 bad_input`.
+- A body is at most 256 KiB, a chat 512 KiB, and a posted reading 2 MiB on the wire and 32 MiB inflated: `400 bad_input`. `/mcp` takes one call per POST, so a batch is `400 bad_input`.
 - Global limits (T300, `.env.example`). Daily caps answer `429 rate_limited` with `retry_after_s` until midnight UTC. A fresh read past its turn, two at a time, answers the same with a short `retry_after_s`, and one that takes too long answers `502 source_failed`. Past the data budget, a write a stranger can cause answers `429 budget_exhausted`.
-- Errors: HTTP status from the error code (`bad_input` 400, `unauthorised` 401, `invite_required` 403, `not_found` 404, `cannot_read` 422, `invalid_spec` 422, `rate_limited` 429, `budget_exhausted` 429, `source_failed` 502, `internal` 500), body `{ error: { code, message, hint } }`.
+- Errors: HTTP status from the error code (`bad_input` 400, `unauthorised` 401, `invite_required` 403, `not_found` 404, `cannot_read` 422, `invalid_spec` 422, `rate_limited` 429, `budget_exhausted` 429, `not_on_this_site` 403, `source_failed` 502, `internal` 500), body `{ error: { code, message, hint } }`.
 - Long tools (`get_snapshot` on a live pull) accept `Accept: text/event-stream` and then stream `progress` events before the final `result` event.
 
 ## Routes
@@ -154,6 +154,16 @@ A link is 32 random bytes in base64url, and only its hash is stored. Making, lis
 - **Local**: `petal mcp` over stdio (the CLI in `apps/cli` calls `serveStdio`), for Claude Code and Codex. The one install command: `claude mcp add petal -- pnpm -s --dir <repo> petal mcp`, where `<repo>` is the root of the clone (locally, the `build/` folder).
 - Same tool names, input schemas and outputs as [tools.md](./tools.md). Progress goes out as `notifications/progress`.
 - IronClaw loads it only through a packaged extension: `skill/ironclaw/` wraps `/mcp` over HTTP and ships the skill. It is a hedge, never on the demo's critical path; the skill and the HTTP API work without it.
+
+## Public mode (`PETAL_PUBLIC=1`, additive, 8 Nov)
+
+Elco, 8 Nov: Petals runs on each person's own computer and AI. A public site does no work for a visitor that reaches outside it: no chain reads, web reads, searches, model calls or chain writes. The container turns it on whenever `Petals/public-url` exists. The person's own agent runs the tools on their machine (CONNECTORS' `/petal.mjs`) and posts what it made.
+
+- **Refused**, `403 not_on_this_site`, with a hint to `/connect`: `POST /api/v1/agent/chat`; the tools marked `onTheirMachine` through every door: `find_target`, `look_up`, `read_chain`, `read_page`, `search`, `get_snapshot`, `prepare_publish`, `publish_flower`, `quote_payment`. Their routes: `GET find`, `look-up`, `read-page`, `web-search`; `POST read-chain`, `snapshots`, `publish/prepare`, `publish`, `quote`. `/mcp` doesn't list them.
+- **The shared map** is the copies of published rows the site ships, exactly as FastData returned them (`fixtures/map-rows/`), so `GET flowers`, `flowers/:id`, `flowers/:id/svg` and `networks/:id` answer with no chain read. There is no writer.
+- **Kept**: sign-in (its one RPC check of the signing key is the site's own job), `/api/v1/me`, the workspace, explorations and links, `/d`, `/s`, `GET snapshots/:sha256` and `describe`, `figures`, `specs/propose` and `validate`, `render`, `networks`, `relations`, `health`, `/skill.md`.
+- **Health** says `agent_access: "none"`, `llm: "none"`, `map: "held"` and `public: true`. The model key is never loaded.
+- **`PUT /api/v1/explorations/:ref/snapshots/:sha256`** (both modes): a reading made on the person's own machine, so the site can draw it. The owner or a continue link; the body is the snapshot JSON, `Content-Encoding: gzip` allowed. The name must be the sha256 of its canonical JSON and the body a valid snapshot, or `400 bad_input`; anyone else gets the same `404` as nothing at all. Answers `{ exploration, sha256, stored, origin }`: `stored` is false when the site already held it, which changes nothing, and `origin` is `their_machine` for a posted reading, which this site never reads again, or `this_site`. Then it serves at `GET /api/v1/snapshots/:sha256`, and `save_step` with the spec inline checks against it. At most `PETAL_POSTED_SNAPSHOTS_PER_DAY` (200) new ones a day, and none past the data budget.
 
 ## Contract tests (W4 tool routes, W5 agent routes)
 

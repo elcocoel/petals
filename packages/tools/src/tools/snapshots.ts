@@ -87,6 +87,7 @@ export const getSnapshotTool = defineTool<
   SnapshotResult
 >({
   name: 'get_snapshot',
+  onTheirMachine: true,
   title: 'Get a snapshot',
   description:
     'Gather or reuse the data for one network at one moment. A final snapshot Petal already ' +

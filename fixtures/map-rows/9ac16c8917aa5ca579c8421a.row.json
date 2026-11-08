@@ -1,0 +1,162 @@
+{
+  "key": "petal/v1/spec/9ac16c8917aa5ca579c8421a",
+  "value": {
+    "id": "9ac16c8917aa5ca579c8421a",
+    "interpretation": {
+      "conflicts": [
+        "House of Stake voting power (veNEAR) is a second kind of power on NEAR; this flower draws block-production stake only."
+      ],
+      "documents": [],
+      "inferred": ["A named .near account is a self-declared name, not a verified identity."],
+      "mappings": [
+        {
+          "primitive": "width",
+          "sources": ["fastnear-rpc-validators"],
+          "why": "Share of stake is the power that counts here, compressed into a band so small validators stay visible."
+        },
+        {
+          "primitive": "height",
+          "sources": ["fastnear-rpc-validators"],
+          "why": "Bar height repeats the share, on a square-root scale, so the largest validators stand out."
+        },
+        {
+          "primitive": "colour",
+          "sources": ["nearblocks-validators", "fastnear-rpc-liquid-staking"],
+          "why": "Kind of account tells pools from liquid-staking entities."
+        },
+        {
+          "primitive": "outline",
+          "sources": ["nearblocks-validators", "account-id"],
+          "why": "Pool names are self-declared on-chain, so they are drawn as self-declared, never verified."
+        },
+        {
+          "primitive": "segments",
+          "sources": ["fastnear-rpc-staking-pool-views"],
+          "why": "Each bar is cut into the backers of the pool: other delegators, accounts with 1M+ NEAR, liquid-staking contracts and lockups."
+        },
+        {
+          "primitive": "order",
+          "sources": ["fastnear-rpc-validators"],
+          "why": "Largest first, clockwise from the top, so the validators that matter most are read first."
+        }
+      ],
+      "power_means": [
+        {
+          "claim": "A validator's power is its stake in the current epoch: it sets how many blocks and chunks the validator produces.",
+          "figures": ["fig:total", "fig:shares"],
+          "sources": ["fastnear-rpc-validators"]
+        },
+        {
+          "claim": "9 validators together pass the one-third threshold that BFT consensus needs to halt.",
+          "figures": ["fig:nakamoto"],
+          "sources": ["fastnear-rpc-validators"]
+        },
+        {
+          "claim": "Stake is lent to a pool by its delegators; they can move it, so they share the pool's power.",
+          "figures": ["fig:top_k_share.10"],
+          "sources": ["fastnear-rpc-staking-pool-views"]
+        }
+      ],
+      "summary": "Stake decides who produces NEAR's blocks. 9 of the 371 seated validators together hold more than a third of it, enough to stall the chain. Behind each pool stand its backers: many small delegators, a few large accounts, liquid-staking contracts and lockups.",
+      "unknowns": [
+        "Who controls the large implicit (hex) delegators: most of the biggest delegators have no public name.",
+        "Who owns the lockup contracts: their owners were not resolved.",
+        "Whether several pools are run by one operator: pools are not merged without evidence."
+      ]
+    },
+    "petal": "flower/v1",
+    "provenance": {
+      "agent": {
+        "kind": "petal-agent",
+        "model": "recorded",
+        "signature": null
+      },
+      "created_at": "2026-11-05T11:12:58.507Z",
+      "maker": {
+        "account_id": "elcocoel.testnet",
+        "message": "{\"petal\":\"publish/v1\",\"entry_sha256\":\"5d75c429620d08e5df755aa516b2023890a734f8652a4aa11c9f32101bc23a76\"}",
+        "nonce": "Qa4Ah2jzhWcZKMrByh8DoAdIZPiX3h6hCu579lQIWK4=",
+        "public_key": "ed25519:Bcmrf5G7LCJ2t5DpiEJ24qui8ekBSFyp3P3nHuNtXHxS",
+        "recipient": "petals.testnet",
+        "signature": "3SVPQrd+f+DLDXgX6/JqERa/cFt7cmxNT870/KMKHr8d6agxd2UN2om249bdxYdwhRXRZAtSKS/T+vHS5L/ICA==",
+        "type": "nep413"
+      },
+      "tools_version": "tools/v1"
+    },
+    "render_sha256": "31cdd4a612bc190f8d203be9aa717b0ae7de71f084cae9ebe0b2563cab258b8f",
+    "snapshot": {
+      "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
+      "urls": [
+        "http://localhost:3080/api/v1/snapshots/72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec"
+      ]
+    },
+    "spec": {
+      "convention": {
+        "changes": [],
+        "id": "default/v1",
+        "variation_of": null
+      },
+      "encodings": {
+        "colour": {
+          "by": "kind",
+          "meaning": "kind of account: staking pool, liquid-staking contract, or unknown",
+          "sources": ["nearblocks-validators", "fastnear-rpc-liquid-staking"]
+        },
+        "height": {
+          "by": "share",
+          "meaning": "square root of the validator's share of stake this epoch",
+          "scale": "sqrt",
+          "sources": ["fastnear-rpc-validators"]
+        },
+        "order": {
+          "by": "measure_desc",
+          "meaning": "largest stake first, clockwise from the top",
+          "sources": ["fastnear-rpc-validators"]
+        },
+        "outline": {
+          "by": "identity_status",
+          "meaning": "solid when the name is self-declared (pool-details.near or a named account id) or verified, dashed when inferred, none when unknown",
+          "sources": ["nearblocks-validators", "account-id"]
+        },
+        "segments": {
+          "by": "backers",
+          "meaning": "who stands behind each pool: its delegations split into other delegators, accounts with 1M+ NEAR, liquid-staking contracts and lockups (delegations under 1,000 NEAR are folded per pool and class, as coverage declares)",
+          "sources": ["fastnear-rpc-staking-pool-views", "fastnear-rpc-liquid-staking"]
+        },
+        "width": {
+          "by": "share",
+          "max_ratio": 2,
+          "meaning": "the validator's share of stake this epoch, compressed into a band",
+          "scale": "log",
+          "sources": ["fastnear-rpc-validators"]
+        }
+      },
+      "labels": "none",
+      "network": {
+        "chain": "near:mainnet",
+        "id": "near-validators",
+        "population": "validators"
+      },
+      "petal": "spec/v1",
+      "selection": {
+        "measure": "validator_stake_current_epoch",
+        "petals": 60,
+        "tail": {
+          "group": true,
+          "label": "everyone else"
+        }
+      },
+      "snapshot": {
+        "as_of": "2026-11-03T19:42:00Z",
+        "block_height": 222915356,
+        "sha256": "72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec"
+      }
+    },
+    "spec_sha256": "897a01ac9a1f1150e84dbb7aa7baebffa14d2f8674a882e1fcc9016f259a7e04",
+    "title": "Who stands behind NEAR's validators?"
+  },
+  "predecessor_id": "petals-writer.testnet",
+  "current_account_id": "petals.testnet",
+  "tx_hash": "Bs8E4tJ3mFvkLaENbbY82hkAj5hWofZU5R4yVuh5UzXu",
+  "block_height": 276333748
+}
