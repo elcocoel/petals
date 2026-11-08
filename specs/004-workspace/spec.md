@@ -67,6 +67,31 @@ Elco's summary: "an infinite canvas of ways to see data, with ways to interact w
   - **Two modes of work:** asking about or adding to flowers already on the map, and making new mapping.
   - **Ours to solve, in the tools and the skill:** making the difference understandable between just talking about something and using inference to read chain data and put something on the map.
 
+- **W3, 8 Nov: a skeleton of a lobby, to sense what's needed.** Elco: "there's no lobby right now yes there isn't and that's a problem let's get at least a skeleton of a lobby in there so we can sense what's needed or not."
+- **W2, 8 Nov, the direction: discovery, not a crime tool.** How much is suggested from the connected wallet is decided once the structure is in place and Elco can test it, "but we should go in that direction". Elco:
+  > at least in the view one for the hackathon it should feel like not like a serious open source detective let's find crime tool but more discovery exploration about the nature of power tool and that's nice because it's starting from your own wallet, you have reasons to engage but this also could be somebody else's wallet
+
+  > there's going to be some form of a function or a tool where we will teach the agents to looking at an address that if it's not an organization or a contract but if it's an end user wallet, it could come up with insights and future and possible continuation explorations like this user belongs or if it's my wallet, you but then if it's somebody else's wallet, it would say this user belongs to this and this and this, do you want to know more about there's no map for this, do you want to map this so it could become sort of a social network exploration space that people enjoy
+
+  The tool for reading an end-user wallet is the skill's and the tools' work, not the workspace's.
+
+## What Petals is looking at (Elco, 8 Nov)
+
+> we have a universal map being built in community at least that's how i see the app getting the most traction first right so we want to see the shape of the governance landscape and differently to arkham where the objective of the investigation is a transaction or agents making transactions
+
+> what is an on-chain organization of any kind could it could be bitcoin as a whole or it could be a dow or it could be a multi sig it's actually any wallets group of wallets that have something in common usually something that they hold or maybe even that they that they did
+
+> if i ask like let's make a shape or a flower or whatever we decide to call the unit of a group of wallets it's like everyone that voted on proposal x or everyone that sent or received funds from this wallet between said dates that would actually create a visual representation just the same right we could even do this for anyone that is participating in this options contract or things like this so that is our way of of viewing it's a way it's a comparative analysis of a certain set of parameters with a group of entities that share that parameter with a specific visual way of showing it
+
+So a flower is **a group of wallets that share something they hold or did, compared on a set of parameters, drawn one way**. Petals' map is a governance landscape built by the community, not a trail of transactions.
+
+**The infinite map, Elco's question:**
+> now how do we technically solve for the sensation of an infinite map is what we have to define i do know that there is the the looking at a wallet layer looking at a group of things layer meaning a group of wallets that share a thing in common which would be a dow or whatever right they hold the same token now what we have to solve for is the space between how do i zoom out of the one thing i'm looking at and then see it as a landscape and how groups connect to each other or not
+
+> my ideal sensation would be a ongoing canvas that you feel compelled to even make it grow more if i look at my code right now where where does the situation seem to be pointing at that's what i want to know and how can we expand in the right direction
+
+This is W9. LOOK reads the code first and reports where it already points.
+
 ## Ideas, not decided
 
 - **Points for mapping** (Elco, 8 Nov): "I had a vision of incentivizing mapping via 'points' that could one day move us towards a TGE -> users pay for extra features, part of revenue goes to a DAO, part of revenue rewards work, part of revenue goes to Devs." Payments are `003-target`'s Q8, later, in their own spec.
@@ -76,8 +101,8 @@ Elco's summary: "an infinite canvas of ways to see data, with ways to interact w
 Each gets references and trade-offs in plain words before Elco chooses.
 
 - ~~**W1. Whose map is the canvas?**~~ Decided above.
-- **W2. After connecting a wallet,** where does a person land: the lobby, the chat, or suggestions from what the wallet holds?
-- **W3. Lobby and canvas.** Is the lobby its own page, or the same canvas seen from far away?
+- **W2. After connecting a wallet.** Direction set above; how much is suggested waits for testing.
+- ~~**W3. Lobby and canvas.**~~ A lobby skeleton first, above.
 - ~~**W4. What a project is.**~~ Decided above: folders and conversations.
 - **W5. The left menu, first version.** Folders and conversations, from W4. What else is in it on day one, and what waits.
 - **W6. The profile.** A page or a panel; overlaps `003-target`'s Q3 and Q6.
