@@ -15,6 +15,7 @@ import type {
 import type { Settings } from './composer-options.ts';
 import type { ListedConversation } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
+import type { ListedFlower } from './flower-view.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
 
@@ -91,6 +92,14 @@ export async function listConversations(): Promise<ListedConversation[]> {
   if (!res.ok) return [];
   const json = (await res.json()) as { conversations?: ListedConversation[] };
   return json.conversations ?? [];
+}
+
+/** The flowers on the shared map, as the gallery lists them. No answer is the same as none. */
+export async function listMapFlowers(): Promise<ListedFlower[]> {
+  const res = await fetch('/api/v1/flowers');
+  if (!res.ok) return [];
+  const json = (await res.json()) as { flowers?: ListedFlower[] };
+  return json.flowers ?? [];
 }
 
 /** Where a conversation in another agent stands, by its exploration's id or a link's token. */
