@@ -717,7 +717,10 @@ describe('migration 5, the workspace', () => {
     expect((await store.run.get('run-with-no-owner'))?.owner).toBeNull();
     expect(await store.runEvent.list('run-with-owner')).toHaveLength(1);
     expect(await store.runThread.get('run-with-owner')).toBe('[]');
-    expect(await store.note.list('exp_a')).toEqual(before.note);
+    // as it was, with migration 6's credential, which an old row doesn't have
+    expect(await store.note.list('exp_a')).toEqual(
+      (before.note as object[]).map((n) => ({ ...n, credential: null })),
+    );
     // the new tables are there and empty, and an old run shows in the list with no title of its own
     expect(await store.follow.count('prs_a')).toBe(0);
     expect(await store.workspaceNote.count('prs_a')).toBe(0);
