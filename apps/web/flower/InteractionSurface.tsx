@@ -2,9 +2,8 @@
 // The page where people work (design/interaction-surface.md): the live flower fills the window, and the
 // conversation floats above it in two boxes a hand can move and size. A third, the same box, shows the
 // flower's own details once something asks for them. This only wires the ViewModels to the views. The
-// camera isn't told about the boxes. Until the conversation has a flower, the canvas holds a stand-in the
-// server chose, which is only that until someone chooses it: until then it never joins the conversation
-// or the address.
+// camera isn't told about the boxes. Until the conversation has a flower, the canvas is empty ground
+// (Elco, 8 Nov: no flower hard-coded in).
 import type { SurfaceName } from '@petal/tokens';
 import { useEffect } from 'react';
 import { Composer } from '../components/chat/Composer.tsx';
@@ -21,7 +20,6 @@ import type { Catalogue } from '../lib/composer-options.ts';
 import { doorWords } from '../lib/door-words.ts';
 import { conversationBoxes, recordedBoxes } from '../lib/float-box.ts';
 import type { ListedFlower } from '../lib/flower-view.ts';
-import type { CanvasFlower } from '../lib/panel-view.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
@@ -37,7 +35,6 @@ export function InteractionSurface({
   agentPrompt = '',
   ...workspace
 }: {
-  standIn: CanvasFlower | null;
   scatter: boolean;
   probe: boolean;
   surface: SurfaceName;

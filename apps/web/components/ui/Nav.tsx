@@ -19,7 +19,7 @@ export function Nav() {
           <TextLink href={siteLinks.howItWorks}>{copy.howItWorks}</TextLink>
           <TextLink href={siteLinks.gallery}>{copy.gallery}</TextLink>
           <TextLink href={siteLinks.connect}>{copy.docs}</TextLink>
-          <Button href={siteLinks.make}>{copy.ask}</Button>
+          <Button href={siteLinks.lobby}>{copy.ask}</Button>
         </div>
       </div>
     </Section>

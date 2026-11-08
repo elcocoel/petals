@@ -19,7 +19,6 @@ import {
   type CanvasFlower,
   type CanvasHit,
   canvasPetal,
-  canvasShown,
   composerTarget,
   flowerPanelView,
   nextCanvas,
@@ -54,14 +53,12 @@ export function useWorkspace(props: {
   shelf: ListedFlower[];
   initialOpen?: Opened;
   initialPetal?: string | null;
-  /** What stands on the canvas until the conversation draws its own. */
-  standIn: CanvasFlower | null;
   /** What a person can pick from. Null: the API couldn't say, so there's nothing to pick. */
   catalogue?: Catalogue | null;
   /** False on a site that runs no agent for visitors (lib/workspace-home.ts): their own agent does the work. */
   agentForVisitors?: boolean;
 }) {
-  const { shelf, standIn, initialElsewhere, catalogue = null, ...chatProps } = props;
+  const { shelf, initialElsewhere, catalogue = null, ...chatProps } = props;
   const { state: chat, dispatch, actions: chatActions, refs } = useMakeChat(chatProps);
   const { rows, open, petal, section, busy, runId, question, items, recorded, asked } = chat;
 
@@ -193,13 +190,6 @@ export function useWorkspace(props: {
     recorded,
   ]);
 
-  // What the address brought back isn't known until it's here, so nothing should stand in for it yet.
-  // It only ever ends: later, a flower on its way takes over from whatever is on the canvas.
-  const [comingBack, setComingBack] = useState(
-    Boolean(props.initialRun || initialElsewhere) || props.initialOpen?.kind === 'stored',
-  );
-  if (comingBack && panel.kind !== 'loading' && (!panelFlower || drawing)) setComingBack(false);
-
   // box.close
   // Closed so the flower stays clear, until something asks for it. It can't stay closed on a failure.
   const [boxOpen, setBoxOpen] = useState(addressOpensBox(props.initialOpen, props.initialPetal));
@@ -247,8 +237,8 @@ export function useWorkspace(props: {
   const hasList = conversations.length > 0;
   const listOpen = listChoice ?? (cameBare && nothingOpened && hasList);
 
-  // Another agent's conversation has only its own flowers: a stand-in would read as one of them.
-  const onCanvas = canvasShown(canvas, comingBack, initialElsewhere ? null : standIn);
+  // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
+  const onCanvas = canvas;
   // The canvas's flower is the panel's, or is on its way there: only then does it have a selected petal.
   const canvasIsOpen =
     Boolean(onCanvas) &&

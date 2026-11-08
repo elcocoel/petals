@@ -77,20 +77,6 @@ export function nextCanvas(
   return { key, reading, ...(stored ? { stored } : {}) };
 }
 
-/**
- * What's on the canvas right now. The conversation's flower, or the stand-in until it has one, unless
- * what the address brought back isn't known yet. The very flower that's already standing there keeps the
- * same object, so its arrival leaves the scene and the camera alone.
- */
-export function canvasShown(
-  canvas: CanvasFlower | null,
-  comingBack: boolean,
-  standIn: CanvasFlower | null,
-): CanvasFlower | null {
-  const shown = canvas ?? (comingBack ? null : standIn);
-  return shown && shown.key === standIn?.key ? standIn : shown;
-}
-
 export interface Tile {
   id: string;
   title: string;
@@ -252,8 +238,8 @@ export function flowerPanelView(v: {
 }
 
 /**
- * What has to open for the flower on the canvas to be the panel's, or null if it already is. It may be
- * the stand-in, which only becomes a flower of this conversation here, or one the shelf stepped away from.
+ * What has to open for the flower on the canvas to be the panel's, or null if it already is: a stored
+ * flower not opened yet, or one the shelf stepped away from.
  */
 function openingFor(
   shown: CanvasFlower | null,

@@ -1,4 +1,4 @@
-// T201: which flower stands on the canvas before the conversation has one, and that nothing throws.
+// T201, then Elco on 8 Nov: nothing stands on the canvas before the conversation draws, and nothing throws.
 import type { ToolError } from '@petal/core/types';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -58,45 +58,13 @@ beforeEach(() => {
   answers.posts.length = 0;
 });
 
-describe('the stand-in', () => {
-  test('is the first flower listed, its reading through render, keyed by its spec', async () => {
+describe('the canvas before the conversation draws', () => {
+  test('nothing stands in: no flower is read or drawn for it', async () => {
     serve({ flowers: [row('first'), row('second')] });
     const home = await (await fresh())({});
-    expect(answers.posts).toEqual([
-      { path: '/api/v1/render', body: { spec, include_reading: true } },
-    ]);
-    expect(home.standIn).toEqual({
-      key: 'sha-first',
-      reading: { title: reading.title, petals: reading.petals },
-      stored: 'first',
-    });
-  });
-
-  test('is read once, since a page load shares its limit with every other', async () => {
-    serve({ flowers: [row('first')] });
-    const workspaceHome = await fresh();
-    const one = await workspaceHome({});
-    const two = await workspaceHome({});
-    expect(answers.posts).toHaveLength(1);
-    expect(two.standIn).toEqual(one.standIn);
-  });
-
-  test('a failure isn’t kept: the next page load tries again', async () => {
-    serve({ flowers: [row('first')] });
-    answers.post = () => undefined;
-    const workspaceHome = await fresh();
-    expect((await workspaceHome({})).standIn).toBeNull();
-    answers.post = () => ({ reading });
-    expect((await workspaceHome({})).standIn?.key).toBe('sha-first');
-  });
-
-  test('another flower at the top of the list is another stand-in', async () => {
-    serve({ flowers: [row('first')] });
-    const workspaceHome = await fresh();
-    await workspaceHome({});
-    answers.get.set('/api/v1/flowers', { flowers: [row('newer', 'map'), row('first')] });
-    answers.get.set('/api/v1/flowers/newer', { entry: { spec, spec_sha256: 'sha-newer' } });
-    expect((await workspaceHome({})).standIn?.key).toBe('sha-newer');
+    expect(answers.posts).toEqual([]);
+    expect(home).not.toHaveProperty('standIn');
+    expect(home.shelf.map((f) => f.id)).toEqual(['first', 'second']);
   });
 
   test('never opens: the address decides that, and it asked for nothing', async () => {
@@ -109,44 +77,9 @@ describe('the stand-in', () => {
   test.each([
     ['no flowers', () => serve({ flowers: [] })],
     ['the list failing', () => answers.get.set('/api/v1/health', { ok: true, llm: 'up' })],
-    [
-      'the flower failing to read',
-      () => {
-        serve({ flowers: [row('first')] });
-        answers.get.delete('/api/v1/flowers/first');
-      },
-    ],
-    [
-      'the read throwing',
-      () => {
-        serve({ flowers: [row('first')] });
-        answers.get.set('/api/v1/flowers/first', new Error('down'));
-      },
-    ],
-    [
-      'the render failing',
-      () => {
-        serve({ flowers: [row('first')] });
-        answers.post = () => undefined;
-      },
-    ],
-    [
-      'the render throwing',
-      () => {
-        serve({ flowers: [row('first')] });
-        answers.post = () => new Error('down');
-      },
-    ],
-    [
-      'a render with no reading',
-      () => {
-        serve({ flowers: [row('first')] });
-        answers.post = () => ({});
-      },
-    ],
-  ])('%s is empty ground, and nothing throws', async (_name, arrange) => {
+  ])('%s, and nothing throws', async (_name, arrange) => {
     arrange();
-    await expect((await fresh())({})).resolves.toMatchObject({ standIn: null });
+    await expect((await fresh())({})).resolves.toMatchObject({ shelf: [] });
   });
 });
 
