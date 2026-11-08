@@ -12,6 +12,8 @@ Elco, 5 Nov: "the google maps of power relationships on anything that is mapped 
 
 Elco, 8 Nov: "The claim system should be on chain as much as possible, we want a system that deincentivizes defamation, lying etc."
 
+Elco, 8 Nov, on accounts: "We don't need the assumption that one account = one human. Any given humans that have coordinated control of a given wallet would inevitably be able to form one account and add other wallets to that account and share attribution - ideally the 'can sign in' and 'visible' are all yes for my first test, then we have to check consequences / if anything can actually be private in a technical sense."
+
 ## What Petals is, and isn't
 
 **Petals gives people:**
@@ -46,13 +48,28 @@ A person connects a wallet, NEAR today and other chains later, and arrives in th
 
 ### Story 3: A verified profile
 
-A person adds to their account more wallets on other chains, and their social accounts. Each link is proven by the thing linked: a wallet by its own signature, a social account by signing in with it. The person chooses which links are public.
+An account adds more wallets on other chains, and social accounts. Each link is proven by the thing linked: a wallet by its own signature, a social account by signing in with it. An account isn't assumed to be one human. Whoever controls a wallet together can form one account, add other wallets to it, and share its attribution.
+
+**For the first test, every linked identity can sign in and is publicly visible.** Workspaces and conversations stay private to the account. Whether a link can really be private, from other users or from the operator, is checked after the test (Q6).
 
 **Acceptance:**
-1. A wallet joins an account only with that wallet's own signature, made while the person is signed in.
+1. A wallet joins an account only with that wallet's own signature, made while signed in to the account.
 2. Pointing at an address never makes it yours.
-3. A private link is never shown to anyone else and never goes on chain.
-4. Each link shows how it was proven, and when.
+3. Each link shows how it was proven, and when.
+4. Signing in with any linked identity reaches the same account.
+
+### Story 3b: Recovery, revocation and history (needs design)
+
+Elco names these as needing an answer: recovering an account after losing a wallet, revoking a stolen wallet, and keeping historical attribution. No mechanism is chosen yet.
+
+What's already fixed:
+- Revoking a credential ends its active sessions and tokens as well as its future sign-ins.
+- Every past action keeps the credential that authorised it and the account it was made for. Revocation never rewrites history.
+
+Open, to design together:
+- Can every credential on an account add or remove the others?
+- Who settles it when controllers conflict, or when a credential is compromised?
+- What happens when every credential is lost?
 
 ### Story 4: Map with your own agent
 
@@ -101,10 +118,11 @@ Defined later, in its own spec, one step at a time.
 ## Requirements
 
 ### Identity
-- **TGT-001**: A person is one account with many proven links. A link is a wallet on a supported chain, or a social account.
+- **TGT-001**: An account is an identity with many proven links. A link is a wallet on a supported chain, or a social account. An account may be controlled by several people together. Nothing assumes one human per account.
 - **TGT-002**: A link is proven only by the thing linked. A wallet proves itself with its own signature, a social account by signing in with it.
-- **TGT-003**: Two wallets become one account only when the person is signed in with one and signs with the other.
-- **TGT-004**: The person chooses which links are public. Private links never go on chain, not even hashed.
+- **TGT-003**: Two wallets become one account only when someone is signed in with one and signs with the other.
+- **TGT-004**: For the first test, every link can sign in and is public. Private links, if they come, never go on chain, not even hashed. Whether a link can be private, and from whom, is Q6.
+- **TGT-005**: Revoking a credential ends its sessions and tokens too. Every past action keeps the credential that authorised it, and revocation never rewrites that. Recovery and controller conflicts need design (Story 3b).
 
 ### Permanence
 - **TGT-010**: What a person makes survives restarts, a move to another host, and the loss of a disk. That covers accounts, links, workspaces, conversations, flowers, notes and claims.
@@ -147,7 +165,8 @@ Each one gets its options explained in plain words, with trade-offs, before anyt
 - **Q3. Proving a social account.** Which accounts, and how: signing in with them, or a signed post.
 - **Q4. Where claims live on chain.** NEAR FastData, a NEAR contract, an attestation standard, or a mix. Also how long each keeps data, what it costs, and who pays to write (the claimer's own wallet).
 - **Q5. What disincentivises defamation and lying.** Accountability through identity and record, a stake that's lost when a challenge wins, rules about natural persons, or a mix. Also how a challenge is settled.
-- **Q6. The profile.** What's public, what's private, and who decides. What about natural persons named in claims?
+- **Q6. The profile.** What's public, what's private, and who decides, after the first test. That means privacy from other users (access rules) and privacy from the operator, which needs a different key model. Also what to do about natural persons named in claims.
+- **Q9. Recovery and controllers.** Recovering after a lost wallet, revoking a stolen one, conflicts between controllers, and losing every credential (Story 3b).
 - **Q7. The seam between website and server.** Researched on branch `sys/site-server-spec` (`specs/002-system/research.md`). The lean is one address.
 - **Q8. Payments.** Later, in its own spec.
 
