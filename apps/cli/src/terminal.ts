@@ -19,7 +19,15 @@
 // JavaScript with no native parts. Windows isn't covered yet.
 import { spawn, spawnSync } from 'node:child_process';
 import { randomInt, timingSafeEqual } from 'node:crypto';
-import { accessSync, constants, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import {
+  accessSync,
+  constants,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import type { IncomingMessage } from 'node:http';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -186,6 +194,25 @@ export interface PetalsSetup {
 
 /** A continue link on the site: the only form a page may hand in. */
 const LINK = /^https?:\/\/[^\s"'`<>]+\/s\/[A-Za-z0-9_-]{43}$/;
+/** A conversation's id on the site (an exploration), which its saved sessions are kept under. */
+const CONVERSATION = /^exp_[A-Za-z0-9]{8,64}$/;
+/** Each conversation's agent sessions, on the person's machine, in PETALS_HOME. */
+export const CHATS = 'chats.json';
+
+/** conversation id -> agent -> that agent's own session id */
+export function savedChats(file: string): Record<string, Partial<Record<Agent, string>>> {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+function saveChat(file: string, conversation: string, agent: Agent, session: string): void {
+  const all = savedChats(file);
+  all[conversation] = { ...all[conversation], [agent]: session };
+  writeFileSync(file, `${JSON.stringify(all, null, 2)}\n`);
+}
 
 export const FIRST_MESSAGE =
   "Read AGENTS.md in this folder: it's how you work with Petal here. Then tell me in a line or two what you can do, and ask what I'm curious about.";
@@ -438,7 +465,13 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
     const first = setTimeout(() => ws.close(4408, 'no pairing'), 30_000);
     ws.once('message', (raw: RawData, isBinary: boolean) => {
       clearTimeout(first);
-      let msg: { pair?: unknown; cols?: unknown; rows?: unknown; exploration?: unknown } = {};
+      let msg: {
+        pair?: unknown;
+        cols?: unknown;
+        rows?: unknown;
+        exploration?: unknown;
+        conversation?: unknown;
+      } = {};
       try {
         msg = isBinary ? {} : JSON.parse(raw.toString());
       } catch {
@@ -474,7 +507,11 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
         typeof msg.exploration === 'string' && LINK.test(msg.exploration)
           ? msg.exploration
           : undefined;
-      if (path === '/chat') void chat(ws, origin, exploration);
+      const conversation =
+        typeof msg.conversation === 'string' && CONVERSATION.test(msg.conversation)
+          ? msg.conversation
+          : undefined;
+      if (path === '/chat') void chat(ws, origin, exploration, conversation);
       else void run(ws, origin, clampSize(msg.cols, 100), clampSize(msg.rows, 30), exploration);
     });
   }
@@ -499,7 +536,7 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
    * page's prompts, approvals and choices back (chat.ts). Claude Code runs in stream-json; Hermes
    * speaks ACP. Codex stays in the terminal box for now.
    */
-  async function chat(ws: WebSocket, origin: string, exploration?: string) {
+  async function chat(ws: WebSocket, origin: string, exploration?: string, conversation?: string) {
     const send = (e: ToPage) => {
       if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(e));
     };
@@ -544,7 +581,21 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
       );
       if (ws.readyState === WebSocket.OPEN) ws.close(1000, 'ended');
     };
-    const launch = { cwd, env, mcp: tools, send: onEvent, agent: AGENTS[o.agent] };
+    // a conversation the page reopens comes back in the agent's own saved session (Elco, 9 Nov)
+    const sessions = o.petals && conversation ? join(o.petals.home, CHATS) : null;
+    const resume =
+      sessions && conversation ? savedChats(sessions)[conversation]?.[o.agent] : undefined;
+    const launch = {
+      cwd,
+      env,
+      mcp: tools,
+      send: onEvent,
+      agent: AGENTS[o.agent],
+      ...(resume ? { resume } : {}),
+      ...(sessions && conversation
+        ? { onSession: (id: string) => saveChat(sessions, conversation, o.agent, id) }
+        : {}),
+    };
     const petalsFlags = tools.length
       ? [
           '--mcp-config',

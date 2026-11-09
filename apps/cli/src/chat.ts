@@ -42,7 +42,9 @@ export type ToPage =
   | { t: 'permission'; id: string; toolCall: Record<string, unknown>; options: PermissionOption[] }
   | { t: 'turn'; stopReason: string }
   | { t: 'error'; message: string }
-  | { t: 'exit'; code: number };
+  | { t: 'exit'; code: number }
+  /** a reopened conversation's earlier turns, right after hello: the person's as user_message_chunk */
+  | { t: 'history'; updates: Update[] };
 
 /** What the page sends. */
 export type FromPage =
@@ -80,7 +82,10 @@ export interface McpServer {
 
 /** One running agent, whatever its protocol. */
 export interface ChatAgent {
-  /** starts it, says hello, and sends the opening message, which the page doesn't show as the person's */
+  /**
+   * Starts it and says hello. A new session gets the opening message, which the page doesn't show as
+   * the person's; a reopened one gets its history instead, and waits for the person.
+   */
   start(opening: string): Promise<void>;
   prompt(text: string): void;
   cancel(): void;
@@ -101,6 +106,10 @@ export interface AgentLaunch {
   send: (event: ToPage) => void;
   /** the agent's name, for hello */
   agent: string;
+  /** the agent's own saved session to reopen, instead of a new one */
+  resume?: string;
+  /** told the agent's session id, so the conversation can reopen it */
+  onSession?: (id: string) => void;
 }
 
 /** Reads a newline-delimited JSON stream, one object per line, skipping anything else. */
@@ -167,6 +176,8 @@ export function acpAgent(o: AgentLaunch): ChatAgent {
   let child: ChildProcess | null = null;
   let nextId = 1;
   let sessionId: string | null = null;
+  /** a reopened session's turns, while session/load replays them */
+  let replay: Update[] | null = null;
   let models: { current: string | null; available: Model[] } | null = null;
   const pending = new Map<number, { ok: (v: unknown) => void; fail: (e: Error) => void }>();
   const write = (msg: Record<string, unknown>) => {
@@ -194,7 +205,9 @@ export function acpAgent(o: AgentLaunch): ChatAgent {
     const params = (msg.params ?? {}) as Record<string, unknown>;
     if (method === 'session/update') {
       const update = params.update as Update | undefined;
-      if (update && typeof update.sessionUpdate === 'string') o.send({ t: 'update', update });
+      if (!update || typeof update.sessionUpdate !== 'string') return;
+      if (replay) replay.push(update);
+      else o.send({ t: 'update', update });
       return;
     }
     if (method === 'session/request_permission' && 'id' in msg) {
@@ -238,16 +251,19 @@ export function acpAgent(o: AgentLaunch): ChatAgent {
           },
           clientInfo: { name: 'petals', title: 'Petals', version: '1' },
         });
-        const session = await request('session/new', {
-          cwd: o.cwd,
-          mcpServers: o.mcp.map((m) => ({
-            name: m.name,
-            command: m.command,
-            args: m.args,
-            env: Object.entries(m.env).map(([name, value]) => ({ name, value })),
-          })),
-        });
-        sessionId = String(session.sessionId);
+        const mcpServers = o.mcp.map((m) => ({
+          name: m.name,
+          command: m.command,
+          args: m.args,
+          env: Object.entries(m.env).map(([name, value]) => ({ name, value })),
+        }));
+        // a reopened session: ACP's session/load replays its turns as updates, kept for one frame
+        if (o.resume) replay = [];
+        const session = o.resume
+          ? await request('session/load', { sessionId: o.resume, cwd: o.cwd, mcpServers })
+          : await request('session/new', { cwd: o.cwd, mcpServers });
+        sessionId = o.resume ?? String(session.sessionId);
+        if (!o.resume) o.onSession?.(sessionId);
         const modes = session.modes as
           | { currentModeId: string; availableModes: Mode[] }
           | undefined;
@@ -279,7 +295,10 @@ export function acpAgent(o: AgentLaunch): ChatAgent {
           usage: null,
         });
         if (models) o.send({ t: 'models', ...models });
-        prompt(opening);
+        if (replay) {
+          o.send({ t: 'history', updates: replay });
+          replay = null;
+        } else prompt(opening);
       } catch (e) {
         o.send({ t: 'error', message: (e as Error).message });
         endProcess(child);

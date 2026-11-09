@@ -13,6 +13,22 @@ const out = (msg) => process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', ..
 log({ argv: process.argv.slice(2), cwd: process.cwd(), home: process.env.HOME });
 
 const sessionId = 'acp-stand-in';
+const SESSION = {
+  modes: {
+    currentModeId: 'ask',
+    availableModes: [
+      { id: 'ask', name: 'Ask' },
+      { id: 'code', name: 'Code' },
+    ],
+  },
+  models: {
+    currentModelId: 'm1',
+    availableModels: [
+      { modelId: 'm1', name: 'Model one' },
+      { modelId: 'm2', name: 'Model two' },
+    ],
+  },
+};
 const update = (u) => out({ method: 'session/update', params: { sessionId, update: u } });
 const waiting = new Map();
 let held = null;
@@ -83,31 +99,23 @@ createInterface({ input: process.stdin }).on('line', (line) => {
         id: msg.id,
         result: {
           protocolVersion: 1,
-          agentCapabilities: { loadSession: false },
+          agentCapabilities: { loadSession: true },
           agentInfo: { name: 'stand-in', title: 'Stand-in', version: '1' },
         },
       });
     case 'session/new':
-      return out({
-        id: msg.id,
-        result: {
-          sessionId,
-          modes: {
-            currentModeId: 'ask',
-            availableModes: [
-              { id: 'ask', name: 'Ask' },
-              { id: 'code', name: 'Code' },
-            ],
-          },
-          models: {
-            currentModelId: 'm1',
-            availableModels: [
-              { modelId: 'm1', name: 'Model one' },
-              { modelId: 'm2', name: 'Model two' },
-            ],
-          },
-        },
+      return out({ id: msg.id, result: { sessionId, ...SESSION } });
+    case 'session/load':
+      // a saved session: its turns come back as updates, then the answer
+      update({
+        sessionUpdate: 'user_message_chunk',
+        content: { type: 'text', text: 'An earlier question' },
       });
+      update({
+        sessionUpdate: 'agent_message_chunk',
+        content: { type: 'text', text: 'An earlier answer' },
+      });
+      return out({ id: msg.id, result: SESSION });
     case 'session/prompt':
       return void prompt(msg.id, (p.prompt ?? []).map((c) => c.text ?? '').join(''));
     case 'session/cancel':
