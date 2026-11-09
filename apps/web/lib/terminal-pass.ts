@@ -47,6 +47,20 @@ export function readControl(text: string): FromHelper | null {
   return null;
 }
 
+/**
+ * What the helper put in the address it opened (`/make?terminal=1#pair=K7QM-3WTZ`, with `&port=7499` only
+ * when it isn't on 7466), so the page connects with nothing typed. A fragment never reaches any server.
+ * Null when there's no code.
+ */
+export function pairFromHash(hash: string): { code: string; port: number } | null {
+  const q = new URLSearchParams(hash.replace(/^#/, ''));
+  const given = q.get('pair');
+  const code = given ? pairingCode(given) : '';
+  if (!code) return null;
+  const port = Number(q.get('port'));
+  return { code, port: Number.isInteger(port) && port > 0 && port < 65536 ? port : HELPER_PORT };
+}
+
 /** A code as people type it: any case, with or without its dash or spaces. K7QM-3WTZ. */
 export function pairingCode(typed: string): string {
   const bare = typed.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -59,7 +73,10 @@ export const terminalWords = {
   /** The box's bar, and what a screen reader hears. */
   box: 'Terminal',
   /** Before it's paired. The command under it is the helper's own (lib/agent-prompt.ts). */
-  start: 'Run this in a terminal on this computer, then enter the code it shows.',
+  start:
+    'Paste this into Terminal on this computer and press Return. It gets the Petals helper, which opens this page again, connected.',
+  copy: 'Copy the command',
+  orCode: 'Or type the code it shows here.',
   code: 'Pairing code',
   connect: 'Connect',
   /** Nothing answered: no helper, or another page already has it. */

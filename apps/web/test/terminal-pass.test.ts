@@ -4,6 +4,7 @@ import { describe, expect, test } from 'vitest';
 import {
   helloFrame,
   helperUrl,
+  pairFromHash,
   pairingCode,
   readControl,
   resizeFrame,
@@ -35,6 +36,15 @@ describe('the terminal in the page', () => {
     expect(readControl('{"error":"wrong code"}')).toEqual({ kind: 'refused', why: 'wrong code' });
     expect(readControl('ls -la')).toBeNull();
     expect(readControl('{"paired":false}')).toBeNull();
+  });
+
+  test('a code the helper put in the address connects with nothing typed', () => {
+    expect(pairFromHash('#pair=K7QM-3WTZ')).toEqual({ code: 'K7QM-3WTZ', port: 7466 });
+    expect(pairFromHash('#pair=k7qm3wtz')).toEqual({ code: 'K7QM-3WTZ', port: 7466 });
+    expect(pairFromHash('#pair=K7QM-3WTZ&port=7499')).toEqual({ code: 'K7QM-3WTZ', port: 7499 });
+    expect(pairFromHash('#pair=K7QM-3WTZ&port=nope')).toEqual({ code: 'K7QM-3WTZ', port: 7466 });
+    expect(pairFromHash('')).toBeNull();
+    expect(pairFromHash('#petal=abc')).toBeNull();
   });
 
   test('a code reads however it was typed', () => {

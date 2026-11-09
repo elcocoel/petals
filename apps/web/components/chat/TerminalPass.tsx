@@ -4,8 +4,8 @@
 import '@xterm/xterm/css/xterm.css';
 import type { RefCallback } from 'react';
 import { type TermPhase, terminalWords } from '../../lib/terminal-pass.ts';
+import { CopyPrompt } from '../CopyPrompt.tsx';
 import { Button } from '../ui/Button.tsx';
-import { Mono } from '../ui/Mono.tsx';
 
 export function TerminalPass({
   command,
@@ -40,10 +40,9 @@ export function TerminalPass({
           <p className="my-0 type-body">
             {phase === 'ended' ? terminalWords.ended : terminalWords.start}
           </p>
-          <span className="wrap-anywhere">
-            <Mono>{command}</Mono>
-          </span>
+          <CopyPrompt prompt={command} label={terminalWords.copy} />
           {failed && <p className="my-0 type-caption text-muted">{failed}</p>}
+          <p className="my-0 type-caption text-muted">{terminalWords.orCode}</p>
           <label className="flex items-center gap-text-gap">
             <span className="type-label">{terminalWords.code}</span>
             <input
