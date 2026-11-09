@@ -308,6 +308,28 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE layer ADD COLUMN brain TEXT;
   ALTER TABLE layer ADD COLUMN recipe TEXT;
   `,
+  // 11: agents across a person's projects (Elco, 9 Nov, agent-house-test.md). An agent link is a person's,
+  // only its hash kept; it can only wait for jobs. An agent is a name a person's link was used with (`as`),
+  // seen last at some time. A job can be sent to one agent by name, and says who took it.
+  `
+  CREATE TABLE agent_link (
+    id TEXT PRIMARY KEY,
+    owner TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    revoked_at TEXT
+  );
+  CREATE INDEX agent_link_owner ON agent_link(owner);
+  CREATE TABLE agent (
+    owner TEXT NOT NULL,
+    key TEXT NOT NULL,
+    name TEXT NOT NULL,
+    last_seen TEXT NOT NULL,
+    PRIMARY KEY (owner, key)
+  );
+  ALTER TABLE job ADD COLUMN assignee TEXT;
+  ALTER TABLE job ADD COLUMN taken_by TEXT;
+  `,
 ];
 
 /**

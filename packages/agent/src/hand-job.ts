@@ -28,16 +28,49 @@ export const jobEvent = (j: JobRow): JobEvent => ({
   title: j.title,
   brief: j.brief,
   status: j.status,
+  to: j.to,
+  taken_by: j.taken_by,
 });
 
-export function handJobTool(ctx: ToolContext, runId: string): AnyTool {
+/** Who's connected, for the system message: each agent by name, and the job it holds if any. */
+export async function agentsOfRun(ctx: ToolContext, runId: string) {
+  const store = privateStore(ctx.config);
+  const owner = (await store.run.get(runId))?.owner;
+  if (!owner) return [];
+  const held = await store.job.held(owner);
+  return (await store.agent.list(owner)).map((a) => ({
+    name: a.name,
+    last_seen: a.last_seen,
+    job: held.find((j) => j.taken_by?.toLowerCase() === a.name.toLowerCase())?.title ?? null,
+  }));
+}
+
+export function connectedNotes(
+  agents: readonly { name: string; last_seen: string; job: string | null }[],
+): string {
+  return [
+    '## Agents connected',
+    '',
+    "The person's own agents, by the name each uses. Send a job to one with hand_job's to.",
+    ...agents.map(
+      (a) => `- ${a.name}: ${a.job ? `working on "${a.job}"` : 'free'}, last seen ${a.last_seen}`,
+    ),
+  ].join('\n');
+}
+
+/** Rung when a job is handed out, so a waiting agent wakes (agent-links.ts). */
+export interface Bell {
+  ring(owner: string): void;
+}
+
+export function handJobTool(ctx: ToolContext, runId: string, bell?: Bell): AnyTool {
   return {
     name: HAND_JOB,
     input: {
       type: 'object',
       // the agent's tool list reads the description from here (tool-defs.ts)
       description:
-        "Hand a job to the person's own agent (Claude Code, Codex, ChatGPT or Claude), which does it on their machine and reports back into this conversation. Use it when the person asks for their own agent to do something, or for a mapping too big for this chat. title: a few words. brief: plain words for that agent, saying what to map and what to look for. You read its report when the person next writes.",
+        "Hand a job to the person's own agent (Claude Code, Codex, ChatGPT or Claude), which does it on their machine and reports back into this conversation. Use it when the person asks for their own agent to do something, or for a mapping too big for this chat. title: a few words. brief: plain words for that agent, saying what to map and what to look for. to: one of the agents under 'Agents connected', by name, to send it to that one only; leave it out for whichever takes it first. Its report comes back into this conversation.",
       required: ['title', 'brief'],
       properties: {
         title: { type: 'string', minLength: 1, maxLength: TITLE_MAX },
@@ -46,6 +79,7 @@ export function handJobTool(ctx: ToolContext, runId: string): AnyTool {
           type: 'object',
           description: 'anything the job needs by name, such as an account',
         },
+        to: { type: 'string', minLength: 1, maxLength: 60, description: 'an agent by its name' },
       },
       additionalProperties: false,
     },
@@ -63,6 +97,25 @@ export function handJobTool(ctx: ToolContext, runId: string): AnyTool {
         args.inputs && typeof args.inputs === 'object' && !Array.isArray(args.inputs)
           ? (args.inputs as Record<string, unknown>)
           : {};
+      const store = privateStore(ctx.config);
+      const owner = (await store.run.get(runId))?.owner ?? null;
+      // sent to one agent: it must be one this person has connected
+      let to: string | null = null;
+      if (typeof args.to === 'string' && args.to.trim()) {
+        const known = owner ? await store.agent.list(owner) : [];
+        const match = known.find(
+          (a) => a.name.toLowerCase() === (args.to as string).trim().toLowerCase(),
+        );
+        if (!match) {
+          return toolError(
+            'not_found',
+            known.length
+              ? `No agent ${String(args.to)} is connected. Connected: ${known.map((a) => a.name).join(', ')}.`
+              : 'No agent of the person is connected yet: leave to out, or ask them to connect one.',
+          );
+        }
+        to = match.name;
+      }
       const exploration = await runExplorationOf(ctx, runId);
       if (!exploration) {
         return toolError(
@@ -70,7 +123,7 @@ export function handJobTool(ctx: ToolContext, runId: string): AnyTool {
           "This conversation isn't kept anywhere, so it can't hand out a job.",
         );
       }
-      const row = await privateStore(ctx.config).job.add({
+      const row = await store.job.add({
         id: `job_${randomBytes(9).toString('hex')}`,
         exploration,
         run: runId,
@@ -79,10 +132,12 @@ export function handJobTool(ctx: ToolContext, runId: string): AnyTool {
         brief,
         inputs,
         at: ctx.now().toISOString(),
+        to,
       });
+      if (owner) bell?.ring(owner);
       return {
         job: jobEvent(row),
-        next: "Tell the person, in a sentence, that the job is waiting for their own agent in this conversation, and that you'll read its report when they next write.",
+        next: `Tell the person, in a sentence, that the job is waiting for ${to ?? 'their own agent'}, and that its report comes back here.`,
       };
     },
   };

@@ -191,8 +191,14 @@ export interface JobRow {
   failed: string | null;
   created_at: string;
   updated_at: string;
+  /** the agent it was sent to, by the name it uses, or null for any (migration 11) */
+  to: string | null;
+  /** the agent that took it, by name, or null (migration 11) */
+  taken_by: string | null;
 }
-interface JobRecord extends Omit<JobRow, 'inputs' | 'result'> {
+interface JobRecord extends Omit<JobRow, 'inputs' | 'result' | 'to' | 'taken_by'> {
+  assignee?: string | null;
+  taken_by?: string | null;
   seq: number;
   inputs: string;
   result: string | null;
@@ -210,7 +216,24 @@ const jobOf = (r: JobRecord): JobRow => ({
   failed: r.failed,
   created_at: r.created_at,
   updated_at: r.updated_at,
+  to: r.assignee ?? null,
+  taken_by: r.taken_by ?? null,
 });
+
+/** A person's agent link (migration 11): only its hash is kept, and it can only wait for jobs. */
+export interface AgentLinkRow {
+  id: string;
+  owner: string;
+  token_hash: string;
+  created_at: string;
+  revoked_at: string | null;
+}
+/** A name a person's agent link was used with, and when it was last seen. */
+export interface AgentRow {
+  owner: string;
+  name: string;
+  last_seen: string;
+}
 
 /** A bookmark on something a person is following. It points, and proves nothing about who owns it. */
 export interface FollowRow {
@@ -1011,13 +1034,15 @@ export function tables(db: Db) {
         brief: string;
         inputs: Record<string, unknown>;
         at: string;
+        /** an agent's name, or none for any */
+        to?: string | null;
       }): Promise<JobRow> =>
         db.tx(async () => {
           const seq = await nextSeq('job', 'exploration', r.exploration);
           await db.run(
             `INSERT INTO job (id, exploration, seq, run, kind, title, brief, inputs, status, result,
-               failed, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', NULL, NULL, ?, ?)`,
+               failed, created_at, updated_at, assignee)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', NULL, NULL, ?, ?, ?)`,
             r.id,
             r.exploration,
             seq,
@@ -1028,6 +1053,7 @@ export function tables(db: Db) {
             JSON.stringify(r.inputs),
             r.at,
             r.at,
+            r.to ?? null,
           );
           return jobOf(
             (await db.get<JobRecord>('SELECT * FROM job WHERE id = ?', r.id)) as JobRecord,
@@ -1083,6 +1109,92 @@ export function tables(db: Db) {
           );
           return jobOf({ ...taken, status, result, failed, updated_at: at });
         }),
+      /**
+       * For a person's agent (migration 11): the next open job in any of `owner`'s projects that was sent to
+       * `name` (case ignored), else the oldest sent to anyone, now taken by `name`. Null when there's none.
+       */
+      takeFor: (owner: string, name: string, at: string): Promise<JobRow | null> =>
+        db.tx(async () => {
+          const open = await db.get<JobRecord>(
+            `SELECT job.* FROM job JOIN exploration ON exploration.id = job.exploration
+             WHERE exploration.owner = ? AND job.status = 'open'
+               AND (lower(job.assignee) = lower(?) OR job.assignee IS NULL)
+             ORDER BY CASE WHEN job.assignee IS NULL THEN 1 ELSE 0 END, job.created_at, job.seq
+             LIMIT 1`,
+            owner,
+            name,
+          );
+          if (!open) return null;
+          await db.run(
+            `UPDATE job SET status = 'taken', taken_by = ?, updated_at = ? WHERE id = ? AND status = 'open'`,
+            name,
+            at,
+            open.id,
+          );
+          return jobOf({ ...open, status: 'taken', taken_by: name, updated_at: at });
+        }),
+      /** The jobs `owner`'s agents have taken and not reported yet, in any of their projects. */
+      held: async (owner: string): Promise<JobRow[]> =>
+        (
+          await db.all<JobRecord>(
+            `SELECT job.* FROM job JOIN exploration ON exploration.id = job.exploration
+             WHERE exploration.owner = ? AND job.status = 'taken' AND job.taken_by IS NOT NULL
+             ORDER BY job.updated_at`,
+            owner,
+          )
+        ).map(jobOf),
+    },
+
+    agentLink: {
+      create: async (r: Omit<AgentLinkRow, 'revoked_at'>) => {
+        await db.run(
+          'INSERT INTO agent_link (id, owner, token_hash, created_at) VALUES (?, ?, ?, ?)',
+          r.id,
+          r.owner,
+          r.token_hash,
+          r.created_at,
+        );
+      },
+      byTokenHash: (hash: string) =>
+        db.get<AgentLinkRow>('SELECT * FROM agent_link WHERE token_hash = ?', hash),
+      list: (owner: string) =>
+        db.all<AgentLinkRow>(
+          'SELECT * FROM agent_link WHERE owner = ? AND revoked_at IS NULL ORDER BY created_at',
+          owner,
+        ),
+      /** One by id, or all of an owner's; returns how many it revoked. */
+      revoke: (owner: string, at: string, id?: string): Promise<number> =>
+        id
+          ? db.run(
+              'UPDATE agent_link SET revoked_at = ? WHERE owner = ? AND id = ? AND revoked_at IS NULL',
+              at,
+              owner,
+              id,
+            )
+          : db.run(
+              'UPDATE agent_link SET revoked_at = ? WHERE owner = ? AND revoked_at IS NULL',
+              at,
+              owner,
+            ),
+    },
+
+    agent: {
+      /** The name a person's link was used with, seen now; its case is kept as last given. */
+      seen: async (r: AgentRow) => {
+        await db.run(
+          `INSERT INTO agent (owner, key, name, last_seen) VALUES (?, ?, ?, ?)
+           ON CONFLICT (owner, key) DO UPDATE SET name = excluded.name, last_seen = excluded.last_seen`,
+          r.owner,
+          r.name.toLowerCase(),
+          r.name,
+          r.last_seen,
+        );
+      },
+      list: (owner: string) =>
+        db.all<AgentRow>(
+          'SELECT owner, name, last_seen FROM agent WHERE owner = ? ORDER BY last_seen DESC',
+          owner,
+        ),
     },
 
     layer: {

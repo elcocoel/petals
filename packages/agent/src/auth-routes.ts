@@ -127,6 +127,11 @@ export interface ChatAdmission {
 /** What the agent routes need. With no session, the subject is null. */
 export interface RouteAuth {
   admitChat(c: Context, llm: LlmClient, budget: Budget): Promise<ChatAdmission>;
+  /**
+   * A turn nobody's browser asked for, on a person's own credit (a job's report taken up at once, 9 Nov).
+   * Null when they have none, or it's a recorded run.
+   */
+  admitOwner?(subject: string, llm: LlmClient, budget: Budget): Promise<ChatAdmission | null>;
   subjectOf(c: Context): Promise<string | null>;
   /** The subject and the credential that opened its session (TGT-005), in one look. */
   callerOf(c: Context): Promise<{ subject: string | null; credential: string | null }>;
@@ -429,6 +434,39 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         .filter((w) => w.network === network)
         .map((w) => w.account_id);
       return { person: s.subject, network, accounts, account: await sessionAccount(s) };
+    },
+
+    async admitOwner(subject, llm, budget) {
+      if (llm.kind === 'recorded' || !isPerson(subject)) return null;
+      const day = budget.ledger ?? closedLedger('this server keeps no spend ledger');
+      // on the credit contract: what the first of their wallets on its network holds, read now
+      let chain: ChainChat | null = null;
+      if (d.credit) {
+        const network = d.credit.contract.network;
+        const account = (await walletsOf(subject)).find((w) => w.network === network)?.account_id;
+        const price = account ? await (d.nearUsd ?? (async () => null))() : null;
+        if (account && price !== null) {
+          chain = await chainChat(store, d.credit, subject, account, price, now).catch(() => null);
+        }
+      }
+      const own = await personCredit(store, subject);
+      if (!own || own.left_usd <= 0) return null;
+      let spent = 0;
+      const counted = chain
+        ? async (usd: number) => {
+            spent += usd;
+          }
+        : undefined;
+      return {
+        subject,
+        ownCredit: true,
+        budget: {
+          ...budget,
+          usdPerChat: usdPerOwnChat,
+          ledger: personLedger(store, subject, day, now, counted),
+        },
+        ...(chain ? { onEnd: () => (chain as ChainChat).settle(spent) } : {}),
+      };
     },
 
     async admitChat(c, llm, budget) {

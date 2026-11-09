@@ -656,6 +656,10 @@ export interface JobEvent {
   title: string;
   brief: string;
   status: 'open' | 'taken' | 'done' | 'failed';
+  /** additive (9 Nov, agent-house): the agent it was sent to, by name, or null for any */
+  to?: string | null;
+  /** additive: the agent that took it, or null */
+  taken_by?: string | null;
 }
 
 /** One SSE event of a chat, in order: run, stage/progress/tool_call/tool_result/message…, flower, signature, done. */
