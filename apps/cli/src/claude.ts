@@ -14,6 +14,8 @@
 //        {"type":"control_response","response":{"subtype":"success"|"error","request_id":…,…}}
 //        {"type":"control_cancel_request","request_id":…}
 import type { ChildProcess } from 'node:child_process';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   type AgentLaunch,
   type ChatAgent,
@@ -140,6 +142,128 @@ function plan(input: Json): Update | null {
   };
 }
 
+/**
+ * Where claude saved a session: <its folder>/projects/<the work folder, as a name>/<id>.jsonl. Its
+ * folder is CLAUDE_CONFIG_DIR, or ~/.claude.
+ */
+export function savedSession(env: NodeJS.ProcessEnv, id: string): string | null {
+  const projects = join(env.CLAUDE_CONFIG_DIR ?? join(env.HOME ?? '', '.claude'), 'projects');
+  let dirs: string[] = [];
+  try {
+    dirs = readdirSync(projects);
+  } catch {
+    return null;
+  }
+  for (const d of dirs) {
+    const file = join(projects, d, `${id}.jsonl`);
+    if (existsSync(file)) return file;
+  }
+  return null;
+}
+
+/**
+ * A saved session's turns as the chat's updates: the person's words, the agent's words and
+ * thinking, its tool calls with their results, and its todo lists as plans. The opening message is
+ * Petals', not the person's, so it's left out, as are claude's own notes to itself.
+ */
+export function claudeHistory(
+  jsonl: string,
+  opening: string,
+): { updates: Update[]; model: string | null; used: number } {
+  const updates: Update[] = [];
+  const todos = new Set<string>();
+  let model: string | null = null;
+  let used = 0;
+  for (const line of jsonl.split('\n')) {
+    let e: Json;
+    try {
+      e = JSON.parse(line) as Json;
+    } catch {
+      continue;
+    }
+    if ((e.type !== 'user' && e.type !== 'assistant') || e.isSidechain || e.isMeta) continue;
+    const m = (e.message ?? {}) as Json;
+    const blocks: Json[] =
+      typeof m.content === 'string'
+        ? [{ type: 'text', text: m.content }]
+        : Array.isArray(m.content)
+          ? (m.content as Json[])
+          : [];
+    if (e.type === 'user') {
+      for (const b of blocks) {
+        const text = str(b.text);
+        if (
+          b.type === 'text' &&
+          text &&
+          text !== opening &&
+          !text.startsWith('[Request interrupted')
+        ) {
+          updates.push({ sessionUpdate: 'user_message_chunk', content: { type: 'text', text } });
+        } else if (
+          b.type === 'tool_result' &&
+          str(b.tool_use_id) &&
+          !todos.has(b.tool_use_id as string)
+        ) {
+          const out = resultText(b.content);
+          updates.push({
+            sessionUpdate: 'tool_call_update',
+            toolCallId: b.tool_use_id,
+            status: b.is_error ? 'failed' : 'completed',
+            ...(out
+              ? { content: [{ type: 'content', content: { type: 'text', text: out } }] }
+              : {}),
+          });
+        }
+      }
+      continue;
+    }
+    if (str(m.model) && m.model !== '<synthetic>') model = m.model as string;
+    const id = str(m.id);
+    for (const b of blocks) {
+      if (b.type === 'text' && str(b.text)) {
+        updates.push({
+          sessionUpdate: 'agent_message_chunk',
+          content: { type: 'text', text: b.text },
+          ...(id ? { messageId: id } : {}),
+        });
+      } else if (b.type === 'thinking' && str(b.thinking)) {
+        updates.push({
+          sessionUpdate: 'agent_thought_chunk',
+          content: { type: 'text', text: b.thinking },
+          ...(id ? { messageId: id } : {}),
+        });
+      } else if (b.type === 'tool_use' && str(b.id)) {
+        const name = String(b.name ?? 'tool');
+        const input = (b.input ?? {}) as Json;
+        if (name === 'TodoWrite') {
+          todos.add(b.id as string);
+          const p = plan(input);
+          if (p) updates.push(p);
+          continue;
+        }
+        updates.push({
+          sessionUpdate: 'tool_call',
+          toolCallId: b.id,
+          title: toolTitle(name, input),
+          kind: toolKind(name),
+          status: 'in_progress',
+          rawInput: input,
+          ...(locations(input) ? { locations: locations(input) } : {}),
+          _meta: { tool: name },
+        });
+      }
+    }
+    const u = (m.usage ?? {}) as Json;
+    const now =
+      num(u.input_tokens) +
+      num(u.cache_creation_input_tokens) +
+      num(u.cache_read_input_tokens) +
+      num(u.output_tokens);
+    if (now > 0) used = now;
+  }
+  return { updates, model, used };
+}
+
 /** Claude Code's stop, in ACP's words. */
 function stopReason(result: Json, cancelled: boolean): string {
   if (cancelled) return 'cancelled';
@@ -161,6 +285,8 @@ export function claudeAgent(o: AgentLaunch): ChatAgent {
   let commands: { name: string; description?: string }[] | null = null;
   let cancelled = false;
   let nextRequest = 1;
+  /** the session claude says it's in: a reopened one keeps its id */
+  let session: string | null = o.resume ?? null;
   const ours = new Map<string, { ok: (r: Json) => void; fail: (e: Error) => void }>();
   /** approvals waiting on the page, by request id */
   const asks = new Map<string, { input: Json; suggestions: unknown[]; toolUseId?: string }>();
@@ -419,6 +545,10 @@ export function claudeAgent(o: AgentLaunch): ChatAgent {
   const onMessage = (msg: Json) => {
     switch (msg.type) {
       case 'system':
+        if (msg.subtype === 'init' && str(msg.session_id) && msg.session_id !== session) {
+          session = msg.session_id as string;
+          o.onSession?.(session);
+        }
         if (msg.subtype === 'init' && !said) return hello(msg);
         if (str(msg.model) && msg.model !== model) {
           model = msg.model as string;
@@ -467,7 +597,10 @@ export function claudeAgent(o: AgentLaunch): ChatAgent {
 
   return {
     async start(opening) {
-      child = startProcess(o);
+      // a reopened conversation: claude's own saved session, and its turns for the page
+      const saved = o.resume ? savedSession(o.env, o.resume) : null;
+      const past = saved ? claudeHistory(readFileSync(saved, 'utf8'), opening) : null;
+      child = startProcess(o.resume ? { ...o, command: [...o.command, '--resume', o.resume] } : o);
       const stderr = tail(child);
       jsonLines(child, onMessage);
       child.on('error', (e) => o.send({ t: 'error', message: e.message }));
@@ -495,7 +628,7 @@ export function claudeAgent(o: AgentLaunch): ChatAgent {
               name: c.name as string,
               ...(str(c.description) ? { description: c.description as string } : {}),
             }));
-          if (said)
+          if (said && !o.resume)
             update({
               sessionUpdate: 'available_commands_update',
               availableCommands: commands.map((c) => ({
@@ -504,9 +637,28 @@ export function claudeAgent(o: AgentLaunch): ChatAgent {
               })),
             });
         }
+        if (o.resume && !said) {
+          // claude says nothing more until the person writes: hello comes from this answer
+          const named = list.find((m) => m.value === 'default');
+          model = past?.model ?? str(named?.resolvedModel) ?? null;
+          mode = str(r.current_permission_mode) ?? mode;
+          used = past?.used ?? 0;
+          said = true;
+          o.send({
+            t: 'hello',
+            agent: o.agent,
+            model,
+            mode: { current: mode, available: CLAUDE_MODES },
+            commands: commands ?? [],
+            usage: { used, size },
+          });
+          sendModels();
+          o.send({ t: 'history', updates: past?.updates ?? [] });
+          return;
+        }
         sendModels();
       }).catch(() => {});
-      prompt(opening);
+      if (!o.resume) prompt(opening);
     },
     prompt,
     cancel() {

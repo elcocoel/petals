@@ -37,7 +37,9 @@ let turn = 0;
 const waiting = new Map(); // request_id -> resolve
 let interrupted = null;
 
-const session = 'stand-in-session';
+// a reopened session keeps its id, as claude --resume does
+const resumed = process.argv.indexOf('--resume');
+const session = resumed >= 0 ? process.argv[resumed + 1] : 'stand-in-session';
 const init = () =>
   out({
     type: 'system',
@@ -260,12 +262,14 @@ createInterface({ input: process.stdin }).on('line', (line) => {
         models: [
           {
             value: 'default',
+            resolvedModel: MODEL,
             displayName: 'Default (recommended)',
             description: 'The stand-in default',
           },
           { value: 'sonnet', displayName: 'Sonnet', description: 'A stand-in Sonnet' },
         ],
         account: {},
+        current_permission_mode: 'default',
       });
     } else if (r.subtype === 'interrupt') {
       reply({ still_queued: [] });
