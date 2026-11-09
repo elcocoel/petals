@@ -19,7 +19,7 @@ export function SocialProfile({ profile }: { profile: Profile }) {
       <div className="flex min-w-0 flex-col gap-text-gap">
         {profile.name && <span className="type-label wrap-anywhere">{profile.name}</span>}
         {profile.about && (
-          <p className="my-0 type-body whitespace-pre-wrap wrap-anywhere">{profile.about}</p>
+          <p className="my-0 type-caption whitespace-pre-wrap wrap-anywhere">{profile.about}</p>
         )}
         {profile.links.length > 0 && (
           <div className="flex flex-col gap-space-4">
