@@ -1,0 +1,223 @@
+{
+  "petal": "brain-index/v1",
+  "entries": [
+    {
+      "id": "doctrine",
+      "kind": "doctrine",
+      "for": "what every answer holds to, read before anything else",
+      "recognise": [],
+      "tools": [],
+      "continues": [],
+      "status": "ready",
+      "file": "doctrine.md",
+      "sha256": "be9e3da716babe68cf6a377c2199911ce056c6f886776cd476364df92ca5b853"
+    },
+    {
+      "id": "a-new-system",
+      "kind": "chapter",
+      "for": "a contract or system Petals has no recipe for yet",
+      "recognise": [
+        "unknown contract",
+        "not supported",
+        "no module",
+        "new framework",
+        "can't read"
+      ],
+      "tools": [
+        "read_chain",
+        "add_layer",
+        "get_snapshot"
+      ],
+      "continues": [
+        "where-power-lives",
+        "contributing"
+      ],
+      "status": "partial",
+      "file": "chapters/a-new-system.md",
+      "sha256": "d0e92bde3644dd00cd0c4e6e594a246378af92686ce836d55cffc748499481fa"
+    },
+    {
+      "id": "contributing",
+      "kind": "chapter",
+      "for": "improving a chapter or a recipe, by pull request",
+      "recognise": [
+        "improve",
+        "fix this",
+        "add recipe",
+        "contribute",
+        "pull request",
+        "github"
+      ],
+      "tools": [
+        "add_note"
+      ],
+      "continues": [
+        "a-new-system"
+      ],
+      "status": "partial",
+      "file": "chapters/contributing.md",
+      "sha256": "d2e60eff96f50a25010d0323760d88bf9c231446aa625a1064853bde78a4e817"
+    },
+    {
+      "id": "going-deeper",
+      "kind": "chapter",
+      "for": "what to offer after every answer",
+      "recognise": [
+        "more",
+        "deeper",
+        "next",
+        "why",
+        "who else",
+        "tell me more"
+      ],
+      "tools": [
+        "account_groups",
+        "related_groups",
+        "shared_accounts",
+        "power_path",
+        "get_snapshot"
+      ],
+      "continues": [
+        "start-from-an-address",
+        "over-time",
+        "open-source-leads"
+      ],
+      "status": "ready",
+      "file": "chapters/going-deeper.md",
+      "sha256": "f3b1122a6a8cdda53b2647441748348e6312bafd421bd0b6b7cfb68512600d91"
+    },
+    {
+      "id": "open-source-leads",
+      "kind": "chapter",
+      "for": "public traces that might say what an address did, as directions only",
+      "recognise": [
+        "osint",
+        "forum",
+        "twitter",
+        "x",
+        "ens",
+        "who wrote",
+        "discussion",
+        "social"
+      ],
+      "tools": [
+        "read_page",
+        "search",
+        "add_note"
+      ],
+      "continues": [
+        "going-deeper"
+      ],
+      "status": "partial",
+      "file": "chapters/open-source-leads.md",
+      "sha256": "57c051167d46f190e1d8d45523e292fa0e1b4cf81f269ba442540bb048d56fc7"
+    },
+    {
+      "id": "over-time",
+      "kind": "chapter",
+      "for": "how a group changed over a span, at an interval agreed with the person",
+      "recognise": [
+        "over time",
+        "history",
+        "change",
+        "since",
+        "trend",
+        "month",
+        "year",
+        "before"
+      ],
+      "tools": [
+        "get_snapshot",
+        "compute_figures",
+        "describe_snapshot"
+      ],
+      "continues": [
+        "going-deeper"
+      ],
+      "status": "partial",
+      "file": "chapters/over-time.md",
+      "sha256": "1ca3515f6108be2a843762cef2fbc84cf60610c8ba9b3a9e60e6db8a1a7d240c"
+    },
+    {
+      "id": "start-from-an-address",
+      "kind": "chapter",
+      "for": "any address or account, when nothing is known about it yet",
+      "recognise": [
+        "address",
+        "account",
+        "wallet",
+        "contract",
+        "who is",
+        "what is this"
+      ],
+      "tools": [
+        "look_up",
+        "read_chain",
+        "find_target",
+        "account_groups"
+      ],
+      "continues": [
+        "where-power-lives",
+        "going-deeper",
+        "a-new-system"
+      ],
+      "status": "ready",
+      "file": "chapters/start-from-an-address.md",
+      "sha256": "997116b1c2fe7888833f7c687bf47917ba65b111c232c8eb1002b74b904bb831"
+    },
+    {
+      "id": "where-power-lives",
+      "kind": "chapter",
+      "for": "finding where power sits in any on-chain system, and reading it with a shape",
+      "recognise": [
+        "dao",
+        "governance",
+        "members",
+        "holders",
+        "votes",
+        "who controls",
+        "treasury",
+        "multisig",
+        "admin",
+        "delegation"
+      ],
+      "tools": [
+        "get_snapshot",
+        "read_chain",
+        "describe_snapshot",
+        "compute_figures",
+        "propose_spec",
+        "render_flower"
+      ],
+      "continues": [
+        "going-deeper",
+        "over-time",
+        "a-new-system"
+      ],
+      "status": "ready",
+      "file": "chapters/where-power-lives.md",
+      "sha256": "2632601547c09fe184fc0110131848d0295125338f34b71128f9f18c81a3ccc1"
+    },
+    {
+      "id": "moloch-v3",
+      "kind": "recipe",
+      "for": "A Moloch v3 DAO (Baal, as DAOhaus deploys it): who holds its shares and loot, and what they did in it",
+      "recognise": [
+        "sharesToken()",
+        "lootToken()",
+        "avatar()"
+      ],
+      "tools": [
+        "get_snapshot",
+        "compose_view"
+      ],
+      "continues": [
+        "where-power-lives",
+        "going-deeper"
+      ],
+      "status": "ready",
+      "file": "recipes/moloch-v3.json",
+      "sha256": "274af5920291219c7f751561a7149407ec2b531d75838934e64f317120750af4"
+    }
+  ]
+}
