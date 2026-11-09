@@ -37,6 +37,7 @@ import { useConversationFacts } from './useConversationFacts.ts';
 import { useConversations } from './useConversations.ts';
 import { useDrawnFlowers } from './useDrawnFlower.ts';
 import { useElsewhere } from './useElsewhere.ts';
+import { useJobs } from './useJobs.ts';
 import { useMakeChat } from './useMakeChat.ts';
 import { usePay } from './usePay.ts';
 import { useSession } from './useSession.ts';
@@ -225,6 +226,12 @@ export function useWorkspace(props: {
     recorded ||
     Boolean(initialElsewhere) ||
     (Boolean(session.account) && props.agentForVisitors !== false);
+  // Jobs handed to the person's own agent (C), in the conversation the newest one names.
+  const jobsIn = useMemo(
+    () => items.findLast((i) => i.kind === 'job')?.job.exploration ?? null,
+    [items],
+  );
+  const jobs = useJobs(jobsIn);
   // Paying for Petals' agent (B): the newest pay row is the live one.
   const asking = useMemo(
     () => shownRows.findLast((r) => r.kind === 'pay')?.key ?? null,
@@ -320,6 +327,7 @@ export function useWorkspace(props: {
       conversations,
       menuShown: Boolean(session.account),
       pay: { asking: pay.asking, phase: pay.phase, added: pay.added },
+      jobs: { known: jobs.jobs, copied: jobs.copied },
       balance: pay.balance ? payWords.balance(pay.balance) : null,
       menuOpen,
       session,
@@ -377,6 +385,7 @@ export function useWorkspace(props: {
       },
       closeBox: () => setBoxOpen(false),
       pay: pay.pay,
+      copyJobs: jobs.copy,
       foldMenu: () => setMenuOpen(false),
       unfoldMenu: () => setMenuOpen(true),
       closeDetail: () => dispatch({ type: 'select', petal: null }),

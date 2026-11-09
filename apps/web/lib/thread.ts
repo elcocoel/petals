@@ -1,7 +1,7 @@
 // The conversation on /make as a list of items, folded from the agent's events (http-api.md, Agent
 // chat), live or from a stored run. Pure, so a reload and a live chat read the same. Below the list:
 // the stages of a turn, the backup of a question, and the one reducer the chat's state goes through.
-import type { AgentEvent, FlowerResult, ModelSignature, Run } from '@petal/core/types';
+import type { AgentEvent, FlowerResult, JobEvent, ModelSignature, Run } from '@petal/core/types';
 import { readAbout } from './ask-about.ts';
 
 export type Done = Extract<AgentEvent, { event: 'done' }>['data'];
@@ -26,6 +26,8 @@ export type Item =
   /** a stored flower was opened here: what it was asked and what it found */
   | StoredItem
   | { kind: 'error'; code: string; message: string; hint?: string }
+  /** A job Petals' agent handed to the person's own agent (C), as the run said it. */
+  | { kind: 'job'; job: JobEvent }
   | { kind: 'done'; done: Done; signature: ModelSignature | null };
 
 export interface StoredItem {
@@ -65,6 +67,8 @@ export function fold(items: Item[], e: AgentEvent): Item[] {
         i === at && x.kind === 'flower' ? { ...x, signature: e.data } : x,
       );
     }
+    case 'job':
+      return [...items, { kind: 'job', job: e.data }];
     case 'error':
       return [...items, { kind: 'error', ...e.data }];
     case 'done': {

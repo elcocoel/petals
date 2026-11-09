@@ -171,6 +171,7 @@ export function InteractionSurface({
             onRefollow={actions.refollow}
             onLink={actions.followLink}
             pay={{ ...state.pay, onPay: actions.pay }}
+            jobs={{ ...state.jobs, onCopy: actions.copyJobs }}
           />
         )}
       </FloatBox>

@@ -23,6 +23,10 @@ export const jobWords = {
   taken: (title: string) => `Your own agent is on it: ${title}`,
   done: (title: string) => `Your own agent finished: ${title}`,
   failed: (title: string) => `Your own agent couldn't finish: ${title}`,
+  /** The one way to hand the jobs to your agent: a line to paste into it (CONNECTORS, 9 Nov). */
+  copy: 'Copy for your agent',
+  copied: 'Copied. Paste it into your agent.',
+  handover: (link: string) => `Take the open jobs in my Petals project: ${link}`,
 } as const;
 
 /** The job's line, from the newest word on it: the list if it's been read, the event otherwise. */
