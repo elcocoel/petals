@@ -83,13 +83,12 @@ describe('the applet', () => {
 
 describe.skipIf(findPython() === null)('started from a link', () => {
   test('pairs with the page’s own code, then ends with its session', async () => {
-    const port = 47950 + Math.floor(Math.random() * 40);
     let done = false;
     const said: string[] = [];
     const helper = await startTerminal({
       agent: 'claude',
       command: ['sh', '-c', 'echo hello; exit 0'],
-      port,
+      port: 0, // a free one: tests run side by side
       origins: ['https://petals.example'],
       cwd: mkdtempSync(join(tmpdir(), 'petal-term-')),
       code: 'PAGE-MADE-CODE-1',
@@ -100,7 +99,9 @@ describe.skipIf(findPython() === null)('started from a link', () => {
       openPage: false,
       say: (l) => said.push(l),
     });
-    const ws = new WebSocket(`ws://127.0.0.1:${port}/pty`, { origin: 'https://petals.example' });
+    const ws = new WebSocket(`ws://127.0.0.1:${helper.port}/pty`, {
+      origin: 'https://petals.example',
+    });
     let output = '';
     ws.on('message', (raw, bin) => {
       if (bin) output += raw.toString();

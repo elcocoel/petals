@@ -10,7 +10,19 @@ const log = (entry) => {
   if (process.env.STAND_IN_LOG)
     appendFileSync(process.env.STAND_IN_LOG, `${JSON.stringify(entry)}\n`);
 };
-const out = (msg) => process.stdout.write(`${JSON.stringify(msg)}\n`);
+// STAND_IN_ONE_CHUNK holds its answer to initialize back, to send it with its first system line in
+// one write, as a busy machine can deliver them
+let holding = !!process.env.STAND_IN_ONE_CHUNK;
+let held = '';
+const out = (msg) => {
+  const line = `${JSON.stringify(msg)}\n`;
+  if (holding) {
+    held += line;
+    return;
+  }
+  process.stdout.write(held + line);
+  held = '';
+};
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 log({
   argv: process.argv.slice(2),
@@ -48,6 +60,7 @@ const ask = (request_id, request) =>
 
 async function play(text) {
   turn += 1;
+  holding = false;
   init();
   if (process.env.STAND_IN_LOGGED_OUT) {
     // what a claude that isn't signed in says, as Claude Code 2.1 does

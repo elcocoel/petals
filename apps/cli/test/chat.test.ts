@@ -13,7 +13,7 @@ import { type Agent, FIRST_MESSAGE, startTerminal, type TerminalHelper } from '.
 const SITE = 'https://petals.example';
 const LINK = `${SITE}/s/${'a'.repeat(43)}`;
 const STAND_INS = join(import.meta.dirname, 'stand-ins');
-let port = 47900 + Math.floor(Math.random() * 300);
+let port = 0; // the helper's, once it has one
 let helper: TerminalHelper | null = null;
 
 afterEach(async () => {
@@ -33,7 +33,6 @@ async function start(
   standIn: string,
   extra: Record<string, string> = {},
 ): Promise<Run> {
-  port += 1;
   const dir = realpathSync(mkdtempSync(join(tmpdir(), 'petal-chat-')));
   const log = join(dir, 'stand-in.log');
   const home = join(dir, 'petals');
@@ -41,7 +40,7 @@ async function start(
   helper = await startTerminal({
     agent,
     command: [process.execPath, join(STAND_INS, standIn)],
-    port,
+    port: 0, // a free one: tests run side by side
     origins: [SITE],
     cwd: dir,
     env: { ...process.env, HOME: join(dir, 'home'), STAND_IN_LOG: log, ...extra },
@@ -50,10 +49,11 @@ async function start(
     petals: { node: process.execPath, file: '/nowhere/petal.mjs', site: SITE, home },
     skill: async () => 'THE SKILL',
   });
+  port = helper.port;
   return { h: helper, log, home, said };
 }
 
-const until = async (ok: () => boolean, ms = 8000) => {
+const until = async (ok: () => boolean, ms = 15_000) => {
   const end = Date.now() + ms;
   while (!ok() && Date.now() < end) await new Promise((r) => setTimeout(r, 20));
   return ok();
@@ -107,7 +107,8 @@ const sent = (log: string) =>
     .map((l) => l.in as Record<string, unknown> | undefined)
     .filter(Boolean) as Record<string, unknown>[];
 
-describe('Claude Code, in stream-json', () => {
+// Each test starts a helper and an agent process: room for a loaded machine (a full check, two lanes).
+describe('Claude Code, in stream-json', { timeout: 60_000 }, () => {
   test('one turn: streamed text, a command to approve, a plan, the usage, and the end', async () => {
     const { h, log, home } = await start('claude', 'claude.mjs');
     const page = await pair(h, LINK);
@@ -268,6 +269,18 @@ describe('Claude Code, in stream-json', () => {
     page.ws.close();
   });
 
+  test('its answer to initialize and its first line, in one chunk: hello still has them', async () => {
+    const { h } = await start('claude', 'claude.mjs', { STAND_IN_ONE_CHUNK: '1' });
+    const page = await pair(h);
+    expect(await until(() => !!page.find((e) => e.t === 'models'))).toBe(true);
+    expect(page.find((e) => e.t === 'hello')).toMatchObject({
+      commands: [{ name: 'compact', description: 'Clear history but keep a summary' }],
+    });
+    const kinds = page.got.map((e) => (e as { t?: string }).t);
+    expect(kinds.indexOf('models')).toBe(kinds.indexOf('hello') + 1);
+    page.ws.close();
+  });
+
   test("a claude that isn't signed in says so once, as its own reply", async () => {
     const { h } = await start('claude', 'claude.mjs', { STAND_IN_LOGGED_OUT: '1' });
     const page = await pair(h);
@@ -293,7 +306,7 @@ describe('Claude Code, in stream-json', () => {
   });
 });
 
-describe('an ACP agent (Hermes)', () => {
+describe('an ACP agent (Hermes)', { timeout: 60_000 }, () => {
   test('hello with its modes and models, a turn with an approval, a cancel, and its choices', async () => {
     const { h, log } = await start('hermes', 'acp.mjs');
     const page = await pair(h, LINK);
