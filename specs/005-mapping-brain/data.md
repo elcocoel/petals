@@ -13,56 +13,91 @@ One set of facts about the address's participants, from one author, at one time.
 | Field | What it holds |
 |---|---|
 | `about` | The address, `chain:address` |
-| `by` | The author's account, and the credential that signed it (TGT-005). A reader run by Petals' own tools still has an author: whoever's agent ran it |
+| `by` | The author's account, and the credential that signed it (TGT-005). A reader run by someone's agent has that person as its author |
 | `kind` | `measures` (a value per participant), `relations` (lines between participants) or `leads` (directions of research) |
 | `measures` | Per measure: a name, a unit and a kind (amount, count, share, category or yes-no), then a value per participant |
 | `relations` | Per line: from, to, a kind (sent to, delegated to, voted with, sponsored), a weight and a unit |
-| `leads` | Per lead: the participant, what was found, its source links, and the person's confidence. Private (`spec.md`, choice 3) |
-| `how` | A Petals reader with its parameters and version, or the agent's own method and its sources |
+| `leads` | Per lead: the participant, what was found, and its source links. How much a person trusts a lead belongs to the notes and claims chapter, not here (Elco, 9 Nov) |
+| `how` | The recipe it was read with (by its hash), or the agent's own method and its sources |
+| `from` | The layers it was built on, by hash, if any |
 | `when` | A block, a date or a window |
 | `standing` | Verified (read from the chain, and anyone can read it again), inferred (a step beyond a read) or lead (a direction, never a fact) |
-| `corrects` | Optionally, the hash of a layer this one corrects |
 | `hash` | Of everything above |
 
-## What a version is
+## Git-like, as Elco asked
 
-- **A version of the dataset is a set of layer hashes.** Nothing more is needed: layers don't change, so a set of hashes always means the same data.
-- **Improving the dataset is adding a layer:** a later reading, a new measure, or a correction.
-- **Different people's layers stand side by side.** Nobody overwrites anybody.
-- **Change over time** is the same measure, from the same `how`, in layers with different `when`.
+Elco, 9 Nov: "anyone can add, fork and use the prior."
 
-## Readers
+**Now:**
+- **Content-addressed.** A layer is named by its hash, so the same facts always have the same name, and nobody can change a layer without it becoming another one.
+- **A version of a dataset is a set of layer hashes, plus the version it came from (`parent`).** Adding a layer makes a new version that names its parent. Nothing is overwritten.
+- **Anyone can fork.** Taking someone's version and adding, dropping or replacing layers makes a new version that names theirs as its parent. Both stand. The original author's work is untouched and still theirs.
+- **Building on prior work.** A layer names the layers it was built on (`from`): a share computed from shares, proposals per member matched to a reader's members. So credit and checking follow the chain back.
+- **Each author has their own latest version** of each dataset they've touched. A flower names the version it draws, so it never changes underneath anyone.
 
-A reader turns a source into a layer, the way today's readers turn one into a snapshot. Today's seven stay as they are, and today's snapshot becomes a reader's layer.
-
-**The first new reader is Moloch v3 (Baal).**
-- **Where it reads:** Gnosis, Ethereum, Base and Arbitrum.
-- **How it recognises a Baal DAO:** by `sharesToken()`, `lootToken()` and `avatar()`, or by its summoner.
-- **What one verified layer holds, per member:**
-  - shares and loot;
-  - voting power after delegation;
-  - proposals sponsored;
-  - votes cast.
-- **Proposals written, optionally.** The submission event doesn't name who wrote it, so this reads each submission's sender: one call per proposal, 246 for RaidGuild. It says that cost, and it stops at a stated cap.
-- **To confirm before building:** the event layouts, against the DAO's verified source.
-
-**An agent's own gathering** becomes a layer through one tool, `add_layer`. That's what the agent did by hand for RaidGuild's proposals. The tool checks three things before it keeps the layer:
-- the participants are the address's;
-- the measures have units and kinds;
-- `how` names its method and sources.
-
-## Derived measures
-
-A share of the total, a rank or a count per period comes from other layers by a fixed rule, so anyone gets the same answer. These are computed on this side and named like any measure (`share_of:shares`). The visual side never computes data.
+**Later, not now:**
+- **Merging two versions** into one, and what to do when they disagree.
+- **Named branches.**
+- **Comparing versions** (what's new between two).
+- **Credit or points** for layers others build on (Elco's points idea, 004-workspace).
 
 ## Where layers live
 
-That's `spec.md`, choice 1: private first, published when the author chooses (lean).
-- **Private layers** live in Petals' database, against the account (TGT-006).
-- **Published layers** go to the shared map on NEAR, like flowers today, under the author's signature.
+Elco's choice, 9 Nov: **private first, published when the author chooses.**
+- **Private layers and versions** live in Petals' database, against the author's account (TGT-006).
+- **Published ones** go to the shared map on NEAR, like flowers today, under the author's signature.
+- **A fork can only name a parent the forker can see:** a published version, or their own.
+
+## Readers: a few shapes in code, frameworks as recipe files
+
+Elco asked "why do DAO frameworks need specific readers?". **They mostly don't.**
+
+There's no universal "list the members" call on any chain. But a few shapes cover most frameworks. A framework is then a **recipe**: a short file that names its contract's events and calls, and which shape reads each one.
+
+**The shapes, in code, and few:**
+
+| Shape | What it reads | Today's code it comes from |
+|---|---|---|
+| **token balances** | A token's holders, from its transfers or an indexer | erc20-holders, solana-spl-holders |
+| **members from events** | A value per member, replayed from events (joins, share changes, leaves) | moloch-v1 |
+| **count by participant** | How many times each address appears in an event (votes cast, proposals sponsored) | new |
+| **count by sender** | The same, by who sent each event's transaction. Bounded: one call per event | new; it's the RaidGuild proposals, done by hand on 9 Nov |
+| **lines from events** | A relation per event (delegated to, sent to) | erc20-votes |
+| **view calls** | A list of read calls, and how their answers become values | near-house-of-stake |
+| **off-chain list** | A public API's list (Snapshot's votes), through the page reader's guard | new |
+
+**A recipe, as a file:**
+- which framework it's for, and how to recognise it (calls the contract answers, or the factory that made it);
+- the chains;
+- for each measure or relation: the shape, the events or calls, the name, unit and kind;
+- its bounds: calls and block range.
+
+A recipe can only ask for reads on chains we know, within its bounds, and it holds no code.
+
+**Moloch v3 (Baal) as a recipe:**
+- **Recognise it** by `sharesToken()`, `lootToken()` and `avatar()`.
+- **Read with these shapes:**
+  - token balances, on the shares token and on the loot token;
+  - count by participant, on `SponsorProposal(member)` and `SubmitVote(member)`;
+  - optionally, count by sender, on `SubmitProposal`, which costs 246 calls for RaidGuild.
+- **To confirm before building:** the event layouts, against the DAO's verified source.
+
+**Recipes travel the git-like way.**
+- An agent can write a recipe for a new framework from its contract's ABI, in the conversation, and run it on the person's side. The layer it makes names the recipe's hash, so anyone can run it again.
+- A recipe that works is offered to the open repo the way a strategy is (`brain.md`, "Improve this strategy"). Once merged, every door has it at the next release.
+
+**Code stays where the work is more than reading:** the NEAR validators crawl and veNEAR's power maths. Those two stay as readers in code.
+
+## Derived measures
+
+A share of the total, a rank or a count per period comes from other layers by a fixed rule, so anyone gets the same answer. These are computed on this side, named like any measure (`share_of:shares`), and kept as layers with `from`. The visual side never computes data.
 
 ## What changes in code
 
-- `snapshot/v1` becomes a layer of kind `measures` from a reader. Old snapshots stay readable as such.
-- One tool to add a layer, and one to list an address's layers.
-- The readers, the counting (`compute_figures`) and the shared map stay as they are.
+- `snapshot/v1` becomes a layer of kind `measures`. Old snapshots stay readable.
+- The readers become shapes, plus recipes, plus the two that stay code.
+- Three tools:
+  - add a layer;
+  - list an address's layers and versions;
+  - fork a version.
+- The counting (`compute_figures`) and the shared map stay as they are.

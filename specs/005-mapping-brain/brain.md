@@ -76,7 +76,7 @@ Every door carries the brain version it was built with, and the index says which
 
 ## "Improve this strategy"
 
-1. **The person says it, in the conversation.** For example: "that missed the loot", or "keep this way of reading Baal DAOs".
+1. **The person says it, in the conversation.** For example: "that missed the loot", or "keep this way of reading Baal DAOs". Recipes (`data.md`) are improved the same way.
 2. **The agent drafts the change** to the strategy file, or a new one. It adds what went wrong or what worked, from the conversation.
 3. **It goes in one of two ways:**
    - **(a) A pull request** on the open repo, if the person has GitHub. Their agent opens it.

@@ -38,7 +38,7 @@ If two layers give the same name, it's written `<layer>:<name>`. The visual side
 
 | Changed alone by the data side | Changed alone by the visual side |
 |---|---|
-| A new reader, a new measure under an existing kind, new chains, a new layer format inside, where layers are stored | A new channel, a new encoding or scale, texture, how time is shown, the canvas, legends |
+| A new recipe or reader shape, a new measure under an existing kind, new chains, forks and versions, where layers are stored | A new channel, a new encoding or scale, texture, how time is shown, the canvas, legends |
 
 **Reproducible:** a flower is the view input (named by its layer hashes) plus the recipe plus the renderer's version. The same three draw the same flower.
 
@@ -46,7 +46,7 @@ If two layers give the same name, it's written `<layer>:<name>`. The visual side
 
 | Today | Side |
 |---|---|
-| `snapshot/v1`, readers, `get_snapshot`, `compute_figures`, the relations index | Data |
+| `snapshot/v1`, readers (shapes and recipes), `get_snapshot`, `compute_figures`, the relations index | Data |
 | `spec/v1`'s `encodings`, `propose_spec`, `validate_spec`, `render_flower`, the canvas | Visual |
 | `spec/v1`'s `snapshot` and `network` fields | The seam: they become the address and the layer hashes |
 | `m:<measure>` | The seam's measure by name, for any measure of any chosen layer |
