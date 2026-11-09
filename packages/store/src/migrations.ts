@@ -252,6 +252,27 @@ export const MIGRATIONS: readonly string[] = [
   CREATE INDEX run_folder ON run(folder);
   CREATE INDEX exploration_folder ON exploration(folder);
   `,
+  // 8: jobs (Elco, 9 Nov, B with C). Petals' agent on the page hands a job out in a project (an
+  // exploration); the person's own agent takes it, does it on their machine and reports back. seq
+  // keeps them in the order they were handed out. inputs and result are JSON.
+  `
+  CREATE TABLE job (
+    id TEXT PRIMARY KEY,
+    exploration TEXT NOT NULL REFERENCES exploration(id),
+    seq INTEGER NOT NULL,
+    run TEXT,
+    kind TEXT NOT NULL,
+    title TEXT NOT NULL,
+    brief TEXT NOT NULL,
+    inputs TEXT NOT NULL,
+    status TEXT NOT NULL,
+    result TEXT,
+    failed TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE UNIQUE INDEX job_order ON job(exploration, seq);
+  `,
 ];
 
 /**

@@ -4,6 +4,7 @@
 import { schemas } from '@petal/core';
 import { describe, expect, test } from 'vitest';
 import { compile, describeErrors, TOOL_ERROR_SCHEMA } from '../../src/define.ts';
+import { privateStore } from '../../src/drafts.ts';
 import { isToolError } from '../../src/errors.ts';
 import { findTool, registry } from '../../src/registry.ts';
 import { flow, INTERPRETATION, rig } from '../helpers.ts';
@@ -90,7 +91,26 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     const started = await run('start_exploration', { question: 'who holds it?' });
     const exploration = (started.link as { url: string }).url;
     await run('save_step', { exploration, spec: f.spec, note: 'a first look' });
-    await run('add_note', { exploration, text: 'a note' });
+    const noted = await run('add_note', { exploration, text: 'a note' });
+    // a job handed out in the project, as the page's agent does, then taken and reported
+    await privateStore(r.ctx.config).job.add({
+      id: 'job_contract',
+      exploration: noted.exploration as string,
+      run: null,
+      kind: 'map',
+      title: 'Map the validators',
+      brief: 'Who stands behind NEAR validators?',
+      inputs: {},
+      at: r.ctx.now().toISOString(),
+    });
+    const took = await run('take_job', { exploration });
+    await run('take_job', { exploration });
+    await run('report_job', {
+      exploration,
+      job: (took.job as { id: string }).id,
+      result: { summary: 'A few pools hold most of the stake.', steps: [0] },
+    });
+    await run('list_jobs', { exploration });
     const fork = await run('start_exploration', { fork_of: exploration });
     await run('get_exploration', { exploration: (fork.link as { url: string }).url });
     const signedIn = { ...r.ctx, caller: { subject: 'prs_test', door: 'test' } };

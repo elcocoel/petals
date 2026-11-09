@@ -23,6 +23,7 @@ export type {
   FolderRow,
   FollowRow,
   InviteRow,
+  JobRow,
   LedgerRow,
   NoteRow,
   PersonRow,

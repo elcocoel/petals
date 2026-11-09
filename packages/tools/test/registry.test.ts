@@ -37,6 +37,9 @@ const PHASE_A = [
   'start_exploration',
   'save_step',
   'add_note',
+  'take_job',
+  'report_job',
+  'list_jobs',
 ];
 
 describe('registry', () => {

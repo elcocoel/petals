@@ -30,6 +30,15 @@ find_target (a name) or list_networks → get_snapshot → describe_snapshot + c
   → propose_spec → validate_spec → render_flower → (asked to publish) prepare_publish → sign_url
 ```
 
+## Jobs from a project
+
+Petals' own agent, in the chat on the page, can hand you jobs in the person's project, such as mapping a network. When the person asks you to help with their project, or gives you its link:
+
+1. Call `take_job` with the project's link as `exploration`. It gives you the oldest open job, or `job: null` when there's none.
+2. Do what the job's `brief` says, on this machine, with the six steps below. The job is the person's yes for its map, so don't ask again. Each flower you draw is saved in the project.
+3. Call `report_job` with the job's `id` and a `result`: a `summary` of two or three plain sentences, and the `steps` you saved. If you can't do it, call `report_job` with `failed` and the reason instead.
+4. Take the next one. When there's none, tell the person in one line that the page's agent has your report.
+
 <!-- The block between the petal:shared markers is the same text as Petal's own agent prompt
      (packages/agent/src/prompt.md). `node skill/build.ts` copies it from there; until then the
      coordinator syncs the wording at merge. Edit the shared text there, not here. -->

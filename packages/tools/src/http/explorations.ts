@@ -5,6 +5,9 @@
 //   GET  /api/v1/explorations/:ref/live            a signal (SSE) each time it changes: read it again
 //   POST /api/v1/explorations/:ref/steps           save_step
 //   POST /api/v1/explorations/:ref/notes           add_note
+//   POST /api/v1/explorations/:ref/jobs/take       take_job
+//   POST /api/v1/explorations/:ref/jobs/:job/report  report_job
+//   GET  /api/v1/explorations/:ref/jobs            list_jobs
 //   POST /api/v1/explorations/:ref/claim           a session takes an unowned one, with a continue link;
 //                                                  a browser with no session gets an anonymous one for it
 //   GET  /api/v1/explorations/:id/links            its links, with no tokens: owner only
@@ -177,6 +180,20 @@ export function explorationRoutes(
     answer(c, 'save_step', await withRef(c)),
   );
   app.post('/api/v1/explorations/:ref/notes', async (c) => answer(c, 'add_note', await withRef(c)));
+  app.post('/api/v1/explorations/:ref/jobs/take', async (c) =>
+    answer(c, 'take_job', await withRef(c)),
+  );
+  app.post('/api/v1/explorations/:ref/jobs/:job/report', async (c) => {
+    const b = await withRef(c);
+    const input =
+      b && typeof b === 'object' && !Array.isArray(b) && !isToolError(b)
+        ? { ...b, job: c.req.param('job') }
+        : b;
+    return answer(c, 'report_job', input);
+  });
+  app.get('/api/v1/explorations/:ref/jobs', (c) =>
+    answer(c, 'list_jobs', { exploration: c.req.param('ref') }),
+  );
   app.post('/api/v1/explorations/:ref/claim', (c) =>
     attempt(c, async () =>
       claimExploration(
