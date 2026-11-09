@@ -35,7 +35,7 @@ The feel: a campaign map, "like Civilization or Napoleon: Total War", a visual f
         │ draws each flower with
         ▼
  THE LOOK            the visual protocol, view/v1 (W8): which channel shows which measure
-   render/v2         the live wedge flower, named, and the still pictures drawn by it
+   the one look      the wedge flower, live and still, versioned as one look that improves
         ▲
         │ reads
  THE READING         reading/v1 (001): who, how much, what kind. No pixels
@@ -67,16 +67,16 @@ Elco's definitions (5 Nov), with the words this spec uses:
 4. **Roads:** one line with a count from far away, fanning into the shared petals up close.
 5. **The crossing is a continuous zoom:** the zoom is the only clock; stop part-way and it stays part-way.
 6. **This spec is the map's home.**
-7. **One look everywhere:** the `/make` flower gets a version name, and the still pictures (landing, lobby, gallery, a flower's page) are drawn by it too.
+7. **One look everywhere:** the `/make` flower gets a version name, and the still pictures (landing, lobby, gallery, a flower's page) are drawn by it too. Elco, on the systems check (`coordinator/systems-check-2026-11-09.md`): "no second look - one first look that we improve on".
 8. **First build: a bench at `/lab/map`,** real data only. Onto pages after Elco's go on each.
 
 ## The parts
 
-### M-A. The one look (`render/v2`)
+### M-A. The one look
 
-- **What:** today's live flower (`apps/web/flower/`) becomes a named skin, `render/v2`: wedges with a stable line between them, straight edges, heights true to the reading, continuous detail.
+- **What:** today's live flower (`apps/web/flower/`) becomes THE look: wedges with a stable line between them, straight edges, heights true to the reading, continuous detail. It isn't a second look beside the bars. It's the one look, and it improves by versions, like the system's tokens (v1, then the joy layer).
 - **One geometry, two outputs:** the live canvas and the still SVG draw from the same wedge geometry, kept in the shared renderer (`packages/core/src/render/`). Today `apps/web/flower/ring.ts` is a copy of `render/geometry.ts` with wedges added.
-- **Nothing old is lost:** `render/v1` stays drawable, as V8's lean asks. A published flower stays the same flower, because its id leaves the drawing out (`flower/v2`, `drawn_with`).
+- **A published flower stays the same flower** when the look improves, because its id leaves the drawing out (`flower/v2`, `drawn_with`). Whether a flower can still be drawn as an older version of the look is V8, which META is asking Elco now.
 - **Tests lock the reading, not the pixels** (`design/frontend-foundation.md`).
 - **Shared:** every page draws flowers, so the plan goes to META before `packages/core/src/render` changes.
 
@@ -119,9 +119,9 @@ A flower's unmapped neighbours show at the edge, and "map this" becomes a job fo
 
 | Name | What | Where |
 |---|---|---|
-| `render/v2` | The wedge flower, live and still | `packages/core/src/versions.ts`, the renderer |
+| The look's version | The one look, the wedge, live and still; the bars stop being drawn | `packages/core/src/versions.ts`, the renderer; how it counts up follows V8 |
 | `places/v1` | Continents and saved places | To be decided in the plan |
-| `view/v1` | The visual protocol | When V1 to V8 are answered |
+| `view/v1` | The visual protocol, as one schema under the rule SYSTEMS is writing for every protocol: a JSON Schema with its version string, pinned fixtures, a check in `scripts/check.sh`, and a rule for when it becomes v2 | After Elco answers V1, V3, V7 and V8 |
 
 ## Milestones
 
@@ -129,7 +129,7 @@ Each ends when Elco has judged it by hand.
 
 1. **The spec.** Done when Elco has read this and the open questions below are answered or parked.
 2. **The bench, `/lab/map`.** Done when Elco can start from every flower the night's run saved, on their continents, and zoom without a break into ENS delegates, then into one delegate's petal. The road to Uniswap delegates should fan into the accounts they share, held at about 60 frames a second on Elco's Mac.
-3. **The one look.** Done when the landing tiles, the lobby, the gallery and a flower's page draw the `/make` flower, and `render/v1` still draws on request.
+3. **The one look.** Done when the landing tiles, the lobby, the gallery and a flower's page draw the `/make` flower, and no page draws the bars.
 4. **Onto pages,** one at a time, each with Elco's go and Elco's words.
 
 ## Open, for Elco

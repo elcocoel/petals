@@ -1,7 +1,7 @@
 # 006 plan: milestone 2, the bench at `/lab/map`
 
 **Created**: 2026-11-09, by LOOK.
-**Scope**: the bench only (spec milestone 2). It doesn't change `packages/core/src/render`; the one look (`render/v2`, milestone 3) gets its own plan, which goes to META first.
+**Scope**: the bench only (spec milestone 2). It doesn't change `packages/core/src/render`; the one look (milestone 3) gets its own plan, which goes to META first.
 **Lane**: `build.fe-map`, branch `m-face/fe-map`, port 3191.
 
 ## Data, read-only from the live server
