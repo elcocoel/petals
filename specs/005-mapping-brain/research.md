@@ -1,6 +1,21 @@
 # Research behind the mapping-brain proposal
 
-SYSTEMS, 9 Nov. These are the facts `spec.md` rests on, with paths and sources, so RESEARCH can check them independently. Paths are relative to `build/` unless they start with `~` or `/`.
+SYSTEMS, 9 Nov. These are the facts `spec.md` rests on, with paths and sources, so RESEARCH can check them independently. Paths are relative to `build/` unless they start with `~` or `/`. The first draft of `spec.md` is in git (`0065189`); its routes, tool set and doors are kept at the end of this file.
+
+## Elco's live session, 9 Nov: RaidGuild (Moloch v3, Gnosis)
+
+From `~/.claude/projects/-Users-elco-Desktop/aff77786-bf63-45f6-bf89-19c524df4274.jsonl`: Claude Code, on the live site, with the terminal file.
+
+- **Setup:** the agent fetched `skill.md` and the file and ran `petal.mjs` as the skill says. It then ran 125 shell commands in the whole session, many of them searches inside the 5.8 MB file:
+  - `grep 'logs: obj'` to learn `read_chain`'s log arguments;
+  - `grep 'm:<'` to learn whether a flower can take a new measure;
+  - `grep POSTED_SNAPSHOTS_PER_DAY` to learn how posting works.
+- **The DAO:** `look_up "RaidGuild"` found two names in DAO lists, and no stored read. There's no Moloch v3 reader, so the agent drew the shares token with `erc20-holders` (158 holders). Elco said there's no delegation in RaidGuild, and it was redrawn.
+- **Proposals per wallet** (Elco: "use a little bit of basic osint"):
+  - `read_chain --logs` for `SubmitProposal(uint256,bytes32,uint256,bytes,uint256,uint256,bool,uint256,string)` on the DAO at `0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986`, paged;
+  - then a script of the agent's own reading each submission's transaction sender, 246 of them;
+  - then the count per holder, posted as a note.
+- **The refusal:** "show it on the petal". `render` with height `m:proposals` answered `bad_input`: "The snapshot has no measure \"proposals\". Measures in this snapshot: token_balance." The agent's recap: "Petal can't put proposal counts on the flower: its snapshot of RaidGuild holds only shares."
 
 ## The harness brain (`~/Desktop/Saint Elmo Systems/backend/cloud/apps/harness/harness-brain`)
 
@@ -132,3 +147,58 @@ Sources:
 | Ethplorer `getAddressInfo`, `apiKey=freekey` | An Ethereum address's tokens, with holder counts | Worked: up to 100 tokens. Spam airdrops come in too |
 | Snapshot `hub.snapshot.org/graphql` | The votes an address cast | Worked, keyless |
 | Blockscout `/api/v2/addresses/<a>/tokens` | Tokens on EVM chains | Didn't work: Ethereum timed out twice, and Base answered with a Cloudflare challenge |
+
+## Kept from the first draft (0065189)
+
+### The routes
+
+First, **what is it?** One tool answers, by asking the chain.
+
+| It is | Strategies | Tools and readers today |
+|---|---|---|
+| Any address or account, nothing known yet | **start-from-an-address**: what it is, where it already sits on the map, what it holds and did that isn't mapped | identify, account_groups; *no reader yet for what it holds or did* |
+| A token (ERC-20, SPL, NEP-141) | **token-holders**: who holds it, how concentrated | erc20-holders, solana-spl-holders; *no NEAR token reader* |
+| A token with voting (ERC20Votes) | **delegation**: who holds the votes, and who they gave them to | erc20-votes |
+| A Moloch DAO | **dao-moloch**: members, shares, who can rage-quit | moloch-v1 |
+| A Governor DAO | **dao-governor**: proposal power, quorum, delegates | erc20-votes; *no reader for the Governor's own rules* |
+| A Sputnik or Astro DAO (NEAR) | **dao-sputnik**: roles, policy, members | *no reader yet* |
+| A Snapshot space or proposal | **snapshot-voters**: who voted, how much weight | *no reader yet*; `find_target` already searches Snapshot |
+| A NEAR validator, pool or delegator | **validators-and-staking**: stake, concentration, backers | near-validators (stored only) |
+| House of Stake, veNEAR | **ve-governance**: locked power, delegations | near-house-of-stake |
+| A multisig (Safe) or a contract's admin | **keys-and-admins**: who can sign, who can upgrade or pause | read_chain view calls; *no reader that makes a group* |
+| Two groups, or "how are these connected?" | **relations**: overlaps, shared accounts, paths | the five relations tools |
+| A question with no address ("who runs NEAR's governance?") | **find-the-target**: from words to candidates, then one of the above | find_target, search, read_page |
+
+Each strategy ends with **continuations**, the routes it offers next. The token holders' largest holder opens start-from-an-address. A DAO's members open relations with other DAOs. The "force map" of connected universes (W9) is these continuations followed across groups.
+
+### The smallest set of generic tools
+
+With strategies carrying the specifics, the tools can be few and plain. Here's a possible set of 10, with today's tools inside each:
+
+| Tool | Today's tools inside it |
+|---|---|
+| **brain**: the doctrine, a route, a strategy | new |
+| **identify**: what is this word or address, and which strategies apply | look_up, find_target, read_chain's first look |
+| **read**: bounded raw reads (view calls, logs, an account's holdings from a public indexer, a public page, a web search) | read_chain, read_page, search; *the holdings read is new* |
+| **gather**: run a reader, keep the read with its hash | get_snapshot, list_networks, get_network |
+| **measure**: what's in a read, and its figures | describe_snapshot, compute_figures |
+| **relate**: where an account sits, overlaps, paths | the five relations tools |
+| **draw**: choose and check a recipe, draw the flower | propose_spec, validate_spec, render_flower |
+| **page**: the conversation's page | the five exploration tools |
+| **map**: published flowers, and publishing | list_flowers, get_flower, prepare_publish, publish_flower |
+| **quote**: a dry payment quote | quote_payment |
+
+**Trade-off:** fewer tools means less for the model to choose from and less text in every prompt. But each tool takes a `mode`, which makes its description longer. It also changes the contract every door, test and transcript depends on. Old names could keep working for one version.
+
+### Every way to give the tools to an agent
+
+| Door | Who it reaches | Where the reads run | Setup | Trade-offs |
+|---|---|---|---|---|
+| **A. The one file, in a terminal** (today) | Claude Code, Codex, Hermes, Gemini CLI, Cursor | The person's machine | A paste. 15.5 s to the page, measured once, locally | Needs Node and a 5.8 MB download. The agent has to trust a file from a website. People without a terminal agent are left out |
+| **B. An npm package** (`npx petals`) | The same agents | The person's machine | One command, cached and versioned | Publishing on npm (free, public), and keeping versions. Agents trust npm more than a raw file. Same reach as A |
+| **C. A skill folder** (the SKILL.md format) | Agents that read skills: Claude Code, Codex, Gemini CLI, Cursor, and more reported | The person's machine, through A or B | Installed once. The brain then loads by itself, strategy by strategy | The brain fits this format naturally. The claude.ai app also takes uploaded skills, but whether its sandbox can reach chains is *unverified* |
+| **D. In the tab** (spike) | Anyone with a browser and a model key (OpenRouter, NEAR AI, Gemini, Anthropic) | The person's browser | Nothing to install, just a key in the page | Some sources refuse a browser (Solana, OpenAI's API). No page reading or web search. A key in the tab. 11 of the tools today |
+| **E. Our server, as a remote MCP connector** | The Claude app (every plan, one connector on Free) and ChatGPT (Developer Mode, paid plans) | **Our server** | Paste one address | The only way to reach cloud agents with reads. **It changes TGT-030 and TGT-031:** our connection and our providers' limits serve everyone, and abuse needs rate limits. ChatGPT's plan rules and reliability vary, by reports |
+| **F. Our server, map and brain only** | The same cloud agents | No new reads: Petals' own stored data | Paste one address | Fits TGT-030 as it stands. A cloud agent can read the brain and the map, and see where an account already sits. It can't make a new flower |
+| **G. The person's own server** | Anyone who can host one | Their server | Deploying a server | Fits TGT-030. Too technical for most people |
+
