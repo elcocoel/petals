@@ -48,6 +48,8 @@ export function InteractionSurface({
   terminalCommand?: string;
   surface: SurfaceName;
   initialRun?: string | undefined;
+  /** The conversation this page follows, from the address (`?elsewhere=`). */
+  initialElsewhere?: string | undefined;
   catalogue?: Catalogue | null;
   agentForVisitors?: boolean;
   /** What a person pastes into their own agent, on a site that runs none for them. */
@@ -59,9 +61,13 @@ export function InteractionSurface({
   initialOpen: Opened;
   initialPetal: string | null;
 }) {
-  const { state, actions, refs } = useWorkspace(workspace);
+  const { state, actions, refs } = useWorkspace({ ...workspace, terminal });
   useFollowScroll(refs.thread, refs.following);
-  const term = useTerminalPass();
+  const term = useTerminalPass({
+    conversation: workspace.initialElsewhere ?? null,
+    known: state.session.known,
+    signedIn: Boolean(state.session.account),
+  });
   const hands = useFloatBoxes(
     BOXES,
     terminal ? terminalBoxes : workspace.recorded ? recordedBoxes : conversationBoxes,

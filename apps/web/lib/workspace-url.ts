@@ -5,6 +5,7 @@
 //   &stored=<id>             a stored flower
 //   &shelf=1                 the shelf, with the thread's flowers closed
 //   &petal=<account>         the selected petal
+//   &terminal=1              the person's own agent in a terminal box (W10)
 //   &q=<words>               a question that came with the link and waits in the box, until the server
 //                            accepts one. It stays because it has to survive leaving and coming back.
 import type { Opened } from './thread.ts';
@@ -15,10 +16,12 @@ export function workspaceUrl(v: {
   petal: string | null;
   asked?: string | null;
   elsewhere?: string | null;
+  terminal?: boolean;
 }): string | null {
   const q = new URLSearchParams();
   if (v.runId) q.set('run', v.runId);
   if (v.elsewhere) q.set('elsewhere', v.elsewhere);
+  if (v.terminal) q.set('terminal', '1');
   if (v.open.kind === 'turn') q.set('flower', String(v.open.index));
   if (v.open.kind === 'stored') q.set('stored', v.open.id);
   if (v.open.kind === 'shelf') q.set('shelf', '1');

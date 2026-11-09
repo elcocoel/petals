@@ -18,8 +18,20 @@ export interface TermSize {
  * The first frame: the one-use code the helper printed, and how big the terminal is, so the agent starts
  * at that size. Every session takes a fresh code, so the person sees and approves each pairing (Elco).
  */
-export const helloFrame = (pair: string, size: TermSize) =>
-  JSON.stringify({ pair, cols: size.cols, rows: size.rows });
+export const helloFrame = (pair: string, size: TermSize, exploration: string | null = null) =>
+  JSON.stringify({
+    pair,
+    cols: size.cols,
+    rows: size.rows,
+    // the page's conversation, as a continue link on the site: the agent writes its notes and flowers there
+    ...(exploration ? { exploration } : {}),
+  });
+
+/** The page on a conversation of the person's, with the helper's code kept in the fragment. */
+export function terminalAddress(path: string, conversation: string, pair: string, port: number) {
+  const fragment = `pair=${encodeURIComponent(pair)}${port === HELPER_PORT ? '' : `&port=${port}`}`;
+  return `${path}?terminal=1&elsewhere=${encodeURIComponent(conversation)}#${fragment}`;
+}
 
 /** A text frame that is exactly this resizes; any other text is keystrokes. */
 export const resizeFrame = (size: TermSize) =>
@@ -84,4 +96,7 @@ export const terminalWords = {
   /** The helper answered and said no. */
   refused: "That code didn't work. Enter the newest code the helper shows.",
   ended: 'Your agent has stopped. Enter the next code the helper shows to start it again.',
+  /** The conversation the page starts for the agent: its first words in the list, and where it happens. */
+  conversation: 'A conversation in your terminal',
+  client: 'your terminal',
 } as const;

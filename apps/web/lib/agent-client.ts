@@ -127,6 +127,36 @@ export function openTerminalLine(
   };
 }
 
+/**
+ * A conversation of the signed-in person's, for the agent in the terminal to write into: its id, or null
+ * when this browser has no person (an exploration nobody owns would only be an orphan).
+ */
+export async function startOwnConversation(
+  question: string,
+  client: string,
+): Promise<string | null> {
+  const res = await fetch('/api/v1/explorations', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ question, client }),
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { exploration?: string; owned?: boolean };
+  return json.owned && json.exploration ? json.exploration : null;
+}
+
+/** A continue link to a conversation of the person's, which the helper hands its agent. */
+export async function continueLinkFor(id: string): Promise<string | null> {
+  const res = await fetch(`/api/v1/explorations/${encodeURIComponent(id)}/links`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ scope: 'continue' }),
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { url?: string };
+  return json.url ?? null;
+}
+
 /** Where a conversation in another agent stands, by its exploration's id or a link's token. */
 export async function readElsewhere(ref: string): Promise<ElsewhereRead> {
   const res = await fetch(`/api/v1/explorations/${encodeURIComponent(ref)}`, { cache: 'no-store' });
