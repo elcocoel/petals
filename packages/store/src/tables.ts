@@ -284,32 +284,10 @@ export function tables(db: Db) {
     );
   };
 
-  const countOf = async (what: string, day: string): Promise<number> =>
-    (await db.get<{ n: number }>('SELECT n FROM daily_count WHERE day = ? AND what = ?', day, what))
-      ?.n ?? 0;
-
   const count = async (sql: string, ...params: string[]): Promise<number> =>
     ((await db.get<{ n: number }>(sql, ...params)) as { n: number }).n;
 
   return {
-    /** One number a day for each thing capped: the caps a restart must not reset. */
-    dailyCount: {
-      get: countOf,
-      /** Counts one more of `what` today, and true; false, and no change, at the cap. */
-      take: (what: string, day: string, cap: number): Promise<boolean> =>
-        db.tx(async () => {
-          await db.run('DELETE FROM daily_count WHERE day < ?', day);
-          if ((await countOf(what, day)) >= cap) return false;
-          await db.run(
-            `INSERT INTO daily_count (day, what, n) VALUES (?, ?, 1)
-             ON CONFLICT (day, what) DO UPDATE SET n = daily_count.n + 1`,
-            day,
-            what,
-          );
-          return true;
-        }),
-    },
-
     meta: {
       get: async (key: string) =>
         (await db.get<{ value: string }>('SELECT value FROM meta WHERE key = ?', key))?.value ??

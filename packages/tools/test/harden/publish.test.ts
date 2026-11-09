@@ -33,34 +33,4 @@ describe('publishing', () => {
     expect(out.error?.code).toBe('unauthorised');
     expect(write).not.toHaveBeenCalled();
   });
-
-  test('a global daily cap on publishes, past the proof, before the writer', async () => {
-    (r.ctx.config as Out).limits = { publishesPerDay: 2 };
-    const write = vi.spyOn(r.map, 'write');
-    for (const title of ['one', 'two']) {
-      const p = await prepared(title);
-      const out = await run('publish_flower', { entry_sha256: p.entry_sha256, proof: proofOf(p) });
-      expect(out.error, title).toBeUndefined();
-    }
-    const p = await prepared('three');
-    const out = await run('publish_flower', { entry_sha256: p.entry_sha256, proof: proofOf(p) });
-    expect(out.error?.code).toBe('rate_limited');
-    expect(out.error?.retry_after_s).toBeGreaterThan(0);
-    expect(write).toHaveBeenCalledTimes(2);
-    // a refused one isn't used up: its draft is still there for tomorrow
-    r.clock.set('2026-11-05T00:00:01.000Z');
-    const q = await prepared('three');
-    const next = await run('publish_flower', { entry_sha256: q.entry_sha256, proof: proofOf(q) });
-    expect(next.error).toBeUndefined();
-  });
-
-  test('a forged proof doesn’t use up the day’s publishes', async () => {
-    (r.ctx.config as Out).limits = { publishesPerDay: 1 };
-    const p = await prepared('forged');
-    const proof = { ...proofOf(p, implicitSigner('forger')) };
-    await run('publish_flower', { entry_sha256: p.entry_sha256, proof });
-    const q = await prepared('real');
-    const out = await run('publish_flower', { entry_sha256: q.entry_sha256, proof: proofOf(q) });
-    expect(out.error).toBeUndefined();
-  });
 });

@@ -8,15 +8,7 @@ import type { Spec } from '@petal/core/types';
 import { durableNonceStore, type NonceStore } from '@petal/near/auth';
 import type { Store } from '@petal/store';
 import { ToolFailure } from './errors.ts';
-import {
-  type LimitsConfig,
-  limitsOf,
-  overDataBudget,
-  overToday,
-  privateStore,
-  stateDirOf,
-  takeToday,
-} from './limits.ts';
+import { type LimitsConfig, overDataBudget, privateStore, stateDirOf } from './limits.ts';
 import type { DraftEntry } from './verify.ts';
 
 export { privateStore, stateDirOf };
@@ -46,33 +38,19 @@ export function nonceStore(cfg: {
 export const MAX_SPEC_BYTES = 64 * 1024;
 
 /** The daily count of new bodies: one already stored costs nothing more. */
-const SPEC_BODIES = 'spec-bodies';
 
 /** Puts a spec's body in once under its hash, and returns the hash. Null when it's too large. */
 export async function keepSpecBody(
   store: Store,
   spec: unknown,
   at: string,
-  /** a door's new body: refused past the daily cap. None: the site's own run, which is sponsored. */
-  capped?: () => Promise<void>,
 ): Promise<string | null> {
   const body = canonicalJson(spec);
   if (Buffer.byteLength(body, 'utf8') > MAX_SPEC_BYTES) return null;
   const sha256 = sha256Hex(body);
   if (await store.draft.get(sha256)) return sha256;
-  await capped?.();
   await store.draft.put({ sha256, body, created_at: at });
   return sha256;
-}
-
-/** For a door: throws the refusal past the daily cap on new spec bodies. */
-export function capSpecBodies(cfg: LimitsConfig, now: Date): () => Promise<void> {
-  return async () => {
-    const cap = limitsOf(cfg).specBodiesPerDay;
-    if (!(await takeToday(cfg, SPEC_BODIES, cap, now))) {
-      throw overToday(now, `Petal has stored ${cap} new specs today, so this one was not saved.`);
-    }
-  };
 }
 
 /**
@@ -88,7 +66,7 @@ export async function putSpecBody(
     const now = new Date(at);
     const store = privateStore(cfg);
     if (!store.durable || (await overDataBudget(cfg, now))) return null;
-    return await keepSpecBody(store, spec, at, capSpecBodies(cfg, now));
+    return await keepSpecBody(store, spec, at);
   } catch {
     return null;
   }

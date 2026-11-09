@@ -66,29 +66,6 @@ describe('a prepared draft', () => {
 });
 
 describe('explorations with nobody behind them', () => {
-  test('a global daily cap: sessionless and forks stop, and the next day starts again', async () => {
-    limits({ explorationsPerDay: 3 });
-    const made = [];
-    for (let i = 0; i < 3; i++) made.push(await run('start_exploration', { question: `q${i}` }));
-    for (const m of made) expect(m.owned).toBe(false);
-
-    const over = await run('start_exploration', { question: 'one more' });
-    expect(over.error?.code).toBe('rate_limited');
-    expect(over.error?.retry_after_s).toBeGreaterThan(0);
-    const fork = await run('start_exploration', { fork_of: made[0].link.url });
-    expect(fork.error?.code).toBe('rate_limited');
-
-    // a person's own new exploration isn't a stranger's, but a fork copies rows, so it counts
-    expect((await run('start_exploration', { question: 'mine' }, person('prs_a'))).owned).toBe(
-      true,
-    );
-    const ownFork = await run('start_exploration', { fork_of: made[0].link.url }, person('prs_a'));
-    expect(ownFork.error?.code).toBe('rate_limited');
-
-    r.clock.set(later(1));
-    expect((await run('start_exploration', { question: 'tomorrow' })).owned).toBe(false);
-  });
-
   test('the note cap holds on every path, the same spec with a note included', async () => {
     const start = await run('start_exploration', { question: 'mine' }, person('prs_a'));
     const id = start.exploration as string;
@@ -156,38 +133,6 @@ describe('explorations with nobody behind them', () => {
     r.clock.set(later(20));
     await run('start_exploration', { question: 'another' });
     expect((await run('get_exploration', { exploration: live.link.url })).question).toBe('in use');
-  });
-});
-
-describe('stored spec bodies', () => {
-  const other = async (petals: number) =>
-    (
-      await run('propose_spec', {
-        network: 'near-validators',
-        sha256: f.sha256,
-        choices: { measure: 'validator_stake_current_epoch', petals },
-      })
-    ).spec;
-
-  test('a global daily cap: the drawing still works, it just has no short link', async () => {
-    limits({ specBodiesPerDay: 3 }); // flow() has already stored one today
-    const a = await run('render_flower', { spec: await other(11) });
-    const b = await run('render_flower', { spec: await other(12) });
-    expect(a.short_url).toBeTruthy();
-    expect(b.short_url).toBeTruthy();
-    const c = await run('render_flower', { spec: await other(13) });
-    expect(c.render_sha256).toBeTruthy();
-    expect(c.short_url).toBeUndefined();
-    // one already stored costs nothing more
-    expect((await run('render_flower', { spec: await other(11) })).short_url).toBe(a.short_url);
-  });
-
-  test('a save_step past the cap is refused; the site’s own step path is not a stranger', async () => {
-    limits({ specBodiesPerDay: 1 });
-    const e = await run('start_exploration', { question: 'q' });
-    await run('render_flower', { spec: await other(14) });
-    const out = await run('save_step', { exploration: e.link.url, spec: await other(15) });
-    expect(out.error?.code).toBe('rate_limited');
   });
 });
 

@@ -7,7 +7,6 @@
 // Every other keyless route tried on 6 Nov refused or gave junk: design/tools.md.
 import { defineTool, type PetalTool } from '../define.ts';
 import { ToolFailure } from '../errors.ts';
-import { limitsOf, overToday, takeToday } from '../limits.ts';
 import { decodeEntities } from '../page-text.ts';
 import { fetchPublic, type PublicPage } from '../public-fetch.ts';
 import { obj } from './shared.ts';
@@ -126,9 +125,6 @@ export function makeSearch(
         results: [],
         note: `Search is down just now (${why}). That says nothing about the answer. Try read_page on a page you know, or read_chain.`,
       });
-      const cap = limitsOf(ctx.config).searchesPerDay;
-      if (!(await takeToday(ctx.config, 'search', cap, ctx.now())))
-        throw overToday(ctx.now(), `Petal has made its ${cap} searches for today.`);
       const wait = takeSlot(Date.now());
       if (wait === null)
         throw new ToolFailure(
