@@ -1,7 +1,14 @@
 // The chat box (004 W10): the person's own agent in its structured mode, its events to the page as
 // one shape, and the page's prompts, approvals and choices back. Stand-ins take the agents' place
 // (test/stand-ins), with a throwaway HOME: no real agent, login or ~/.petals is touched.
-import { existsSync, mkdtempSync, readFileSync, realpathSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, test } from 'vitest';
@@ -26,6 +33,7 @@ interface Run {
   log: string;
   home: string;
   said: string[];
+  dir: string;
 }
 
 async function start(
@@ -43,14 +51,20 @@ async function start(
     port: 0, // a free one: tests run side by side
     origins: [SITE],
     cwd: dir,
-    env: { ...process.env, HOME: join(dir, 'home'), STAND_IN_LOG: log, ...extra },
+    env: {
+      ...process.env,
+      HOME: join(dir, 'home'),
+      CLAUDE_CONFIG_DIR: join(dir, 'home', '.claude'),
+      STAND_IN_LOG: log,
+      ...extra,
+    },
     say: (l) => said.push(l),
     openPage: false,
     petals: { node: process.execPath, file: '/nowhere/petal.mjs', site: SITE, home },
     skill: async () => 'THE SKILL',
   });
   port = helper.port;
-  return { h: helper, log, home, said };
+  return { h: helper, log, home, said, dir };
 }
 
 const until = async (ok: () => boolean, ms = 15_000) => {
@@ -69,7 +83,7 @@ interface Page {
 }
 
 /** Opens /chat as the page would, and pairs. */
-async function pair(h: TerminalHelper, exploration?: string): Promise<Page> {
+async function pair(h: TerminalHelper, exploration?: string, conversation?: string): Promise<Page> {
   const ws = new WebSocket(`ws://127.0.0.1:${port}/chat`, { origin: SITE });
   await new Promise((r, j) => {
     ws.once('open', r);
@@ -91,7 +105,13 @@ async function pair(h: TerminalHelper, exploration?: string): Promise<Page> {
   ws.on('close', (code) => {
     page.closed = code;
   });
-  ws.send(JSON.stringify({ pair: h.code(), ...(exploration ? { exploration } : {}) }));
+  ws.send(
+    JSON.stringify({
+      pair: h.code(),
+      ...(exploration ? { exploration } : {}),
+      ...(conversation ? { conversation } : {}),
+    }),
+  );
   return page;
 }
 
@@ -357,6 +377,198 @@ describe('an ACP agent (Hermes)', { timeout: 60_000 }, () => {
     expect(await until(() => page.got.filter((e) => e.t === 'models').length === 2)).toBe(true);
     expect(page.got.filter((e) => e.t === 'models').at(-1)).toMatchObject({ current: 'm2' });
     page.ws.close();
+  });
+});
+
+// Elco, 9 Nov: a chat comes back by "reopening the saved session first".
+describe('a conversation comes back in its saved session', { timeout: 60_000 }, () => {
+  const CONV = 'exp_d583ed8f0a5977b03845cf93';
+
+  /** A session as claude saves it: the turns, with its own bookkeeping lines between them. */
+  const saved = (opening: string) =>
+    [
+      { type: 'queue-operation', sessionId: 'stand-in-session' },
+      { type: 'user', message: { role: 'user', content: [{ type: 'text', text: opening }] } },
+      { type: 'user', isMeta: true, message: { role: 'user', content: 'a note claude keeps' } },
+      {
+        type: 'assistant',
+        message: {
+          id: 'm1',
+          model: 'claude-earlier-1',
+          content: [
+            { type: 'thinking', thinking: 'Plan the answer' },
+            { type: 'text', text: 'What are you curious about?' },
+          ],
+          usage: { input_tokens: 10, cache_read_input_tokens: 4000, output_tokens: 20 },
+        },
+      },
+      {
+        type: 'user',
+        message: { role: 'user', content: [{ type: 'text', text: 'Who holds power in NEAR?' }] },
+      },
+      {
+        type: 'assistant',
+        message: {
+          id: 'm2',
+          model: 'claude-earlier-1',
+          content: [
+            {
+              type: 'tool_use',
+              id: 't1',
+              name: 'Bash',
+              input: { command: 'ls', description: 'List files' },
+            },
+          ],
+        },
+      },
+      {
+        type: 'user',
+        message: {
+          role: 'user',
+          content: [{ type: 'tool_result', tool_use_id: 't1', content: 'a.md' }],
+        },
+      },
+      {
+        type: 'assistant',
+        isSidechain: true,
+        message: { id: 'sub', content: [{ type: 'text', text: 'SUBAGENT' }] },
+      },
+      {
+        type: 'assistant',
+        message: {
+          id: 'm3',
+          content: [
+            {
+              type: 'tool_use',
+              id: 't2',
+              name: 'TodoWrite',
+              input: { todos: [{ content: 'Map it', status: 'pending' }] },
+            },
+          ],
+        },
+      },
+      {
+        type: 'user',
+        message: {
+          role: 'user',
+          content: [{ type: 'tool_result', tool_use_id: 't2', content: 'ok' }],
+        },
+      },
+      {
+        type: 'user',
+        message: {
+          role: 'user',
+          content: [{ type: 'text', text: '[Request interrupted by user]' }],
+        },
+      },
+      {
+        type: 'assistant',
+        message: { id: 'm4', content: [{ type: 'text', text: 'The validators.' }] },
+      },
+      { type: 'cost-state', sessionId: 'stand-in-session' },
+    ]
+      .map((l) => JSON.stringify(l))
+      .join('\n');
+
+  test("Claude Code: the first chat's session is kept, and reopening it resumes claude with its turns", async () => {
+    const { h, log, home, said, dir } = await start('claude', 'claude.mjs');
+    const first = await pair(h, LINK, CONV);
+    expect(await until(() => !!first.find((e) => e.t === 'permission'))).toBe(true);
+    const chats = JSON.parse(readFileSync(join(home, 'chats.json'), 'utf8'));
+    expect(chats).toEqual({ [CONV]: { claude: 'stand-in-session' } });
+    first.ws.close();
+    expect(await until(() => said.some((l) => l.includes('Claude Code ended')))).toBe(true);
+
+    // claude saved the session where it keeps them, by the work folder's name
+    const projects = join(dir, 'home', '.claude', 'projects', '-petals-work');
+    mkdirSync(projects, { recursive: true });
+    writeFileSync(join(projects, 'stand-in-session.jsonl'), saved(FIRST_MESSAGE));
+
+    const before = sent(log).length;
+    const again = await pair(h, LINK, CONV);
+    expect(await until(() => !!again.find((e) => e.t === 'history'))).toBe(true);
+    const runs = logged(log).filter((l) => Array.isArray(l.argv)) as { argv: string[] }[];
+    expect(runs.at(-1)?.argv.join(' ')).toContain('--resume stand-in-session');
+    expect(again.find((e) => e.t === 'hello')).toMatchObject({
+      agent: 'Claude Code',
+      model: 'claude-earlier-1',
+      mode: { current: 'default' },
+      commands: [{ name: 'compact' }],
+      usage: { used: 4030 },
+    });
+    const kinds = again.got.map((e) => (e as { t?: string }).t);
+    expect(kinds.slice(1, 4)).toEqual(['hello', 'models', 'history']);
+    const history = (again.find((e) => e.t === 'history') as { updates: Record<string, unknown>[] })
+      .updates;
+    expect(history.map((u) => u.sessionUpdate)).toEqual([
+      'agent_thought_chunk',
+      'agent_message_chunk',
+      'user_message_chunk',
+      'tool_call',
+      'tool_call_update',
+      'plan',
+      'agent_message_chunk',
+    ]);
+    expect(history[2]).toMatchObject({ content: { text: 'Who holds power in NEAR?' } });
+    expect(history[3]).toMatchObject({ toolCallId: 't1', title: 'List files', kind: 'execute' });
+    expect(history[4]).toMatchObject({ toolCallId: 't1', status: 'completed' });
+    expect(JSON.stringify(history)).not.toContain('SUBAGENT');
+    // no opening: the reopened chat waits for the person
+    await new Promise((r) => setTimeout(r, 300));
+    expect(
+      sent(log)
+        .slice(before)
+        .some((m) => m.type === 'user'),
+    ).toBe(false);
+    again.send({ t: 'prompt', text: 'Go on' });
+    expect(await until(() => !!again.find((e) => e.t === 'permission'))).toBe(true);
+    expect(JSON.parse(readFileSync(join(home, 'chats.json'), 'utf8'))).toEqual({
+      [CONV]: { claude: 'stand-in-session' },
+    });
+    again.ws.close();
+  });
+
+  test('Hermes: its session is kept, and reopening it loads the session, whose replay is the history', async () => {
+    const { h, log, home, said } = await start('hermes', 'acp.mjs');
+    const first = await pair(h, LINK, CONV);
+    expect(await until(() => !!first.find((e) => e.t === 'permission'))).toBe(true);
+    expect(JSON.parse(readFileSync(join(home, 'chats.json'), 'utf8'))).toEqual({
+      [CONV]: { hermes: 'acp-stand-in' },
+    });
+    first.ws.close();
+    expect(await until(() => said.some((l) => l.includes('Hermes ended')))).toBe(true);
+
+    const again = await pair(h, LINK, CONV);
+    expect(await until(() => !!again.find((e) => e.t === 'history'))).toBe(true);
+    const load = sent(log).find((m) => m.method === 'session/load') as {
+      params: Record<string, unknown>;
+    };
+    expect(load.params).toMatchObject({ sessionId: 'acp-stand-in', cwd: join(home, 'work') });
+    expect(again.find((e) => e.t === 'history')).toEqual({
+      t: 'history',
+      updates: [
+        {
+          sessionUpdate: 'user_message_chunk',
+          content: { type: 'text', text: 'An earlier question' },
+        },
+        {
+          sessionUpdate: 'agent_message_chunk',
+          content: { type: 'text', text: 'An earlier answer' },
+        },
+      ],
+    });
+    expect(again.updates('agent_message_chunk')).toEqual([]);
+    expect(sent(log).filter((m) => m.method === 'session/prompt').length).toBe(1);
+    again.ws.close();
+  });
+
+  test("without a conversation, or with one not in the site's form, nothing is kept", async () => {
+    const { h, home, said } = await start('claude', 'claude.mjs');
+    const page = await pair(h, LINK, '../../etc');
+    expect(await until(() => !!page.find((e) => e.t === 'hello'))).toBe(true);
+    page.ws.close();
+    expect(await until(() => said.some((l) => l.includes('Claude Code ended')))).toBe(true);
+    expect(existsSync(join(home, 'chats.json'))).toBe(false);
   });
 });
 

@@ -3,7 +3,8 @@
 // against: it speaks the wire as Claude's Agent SDK (0.3.x) does, and plays one turn: streamed text,
 // a command that asks for approval, a todo list, and a closing line. A prompt with "wait" in it holds
 // the turn until it's interrupted. It writes what it was given to $STAND_IN_LOG, one JSON line each.
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 
 const log = (entry) => {
@@ -14,7 +15,28 @@ const log = (entry) => {
 // one write, as a busy machine can deliver them
 let holding = !!process.env.STAND_IN_ONE_CHUNK;
 let held = '';
+// STAND_IN_SAVES keeps the session as claude does, in its folder under projects/, so a reopened
+// conversation has turns to show
+const keep = (msg) => {
+  if (
+    !process.env.STAND_IN_SAVES ||
+    (msg.type !== 'user' && msg.type !== 'assistant') ||
+    msg.parent_tool_use_id
+  )
+    return;
+  const dir = join(
+    process.env.CLAUDE_CONFIG_DIR ?? join(process.env.HOME ?? '', '.claude'),
+    'projects',
+    'stand-in',
+  );
+  mkdirSync(dir, { recursive: true });
+  appendFileSync(
+    join(dir, `${session}.jsonl`),
+    `${JSON.stringify({ type: msg.type, message: msg.message })}\n`,
+  );
+};
 const out = (msg) => {
+  keep(msg);
   const line = `${JSON.stringify(msg)}\n`;
   if (holding) {
     held += line;
@@ -37,7 +59,9 @@ let turn = 0;
 const waiting = new Map(); // request_id -> resolve
 let interrupted = null;
 
-const session = 'stand-in-session';
+// a reopened session keeps its id, as claude --resume does
+const resumed = process.argv.indexOf('--resume');
+const session = resumed >= 0 ? process.argv[resumed + 1] : 'stand-in-session';
 const init = () =>
   out({
     type: 'system',
@@ -238,6 +262,7 @@ createInterface({ input: process.stdin }).on('line', (line) => {
     return;
   }
   log({ in: msg });
+  keep(msg);
   if (msg.type === 'user') {
     const text = (msg.message?.content ?? []).map((c) => c.text ?? '').join('');
     void play(text);
@@ -260,12 +285,14 @@ createInterface({ input: process.stdin }).on('line', (line) => {
         models: [
           {
             value: 'default',
+            resolvedModel: MODEL,
             displayName: 'Default (recommended)',
             description: 'The stand-in default',
           },
           { value: 'sonnet', displayName: 'Sonnet', description: 'A stand-in Sonnet' },
         ],
         account: {},
+        current_permission_mode: 'default',
       });
     } else if (r.subtype === 'interrupt') {
       reply({ still_queued: [] });

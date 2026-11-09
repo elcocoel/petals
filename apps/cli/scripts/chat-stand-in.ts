@@ -33,8 +33,22 @@ const helper = await startTerminal({
   port: args.port,
   origins,
   cwd: dir,
-  env: { ...process.env, HOME: dir, STAND_IN_LOG: join(dir, 'stand-in.log') },
+  env: {
+    ...process.env,
+    HOME: dir,
+    CLAUDE_CONFIG_DIR: join(dir, '.claude'),
+    STAND_IN_LOG: join(dir, 'stand-in.log'),
+    STAND_IN_SAVES: '1',
+  },
   openPage: false,
+  // its own Petals folder, so a conversation's session is kept and comes back on reopening
+  petals: {
+    node: process.execPath,
+    file: join(dir, 'petal.mjs'),
+    site: origins[0] as string,
+    home: join(dir, 'petals'),
+  },
+  skill: async () => 'A stand-in skill.',
 });
 console.error(
   `Open ${pageUrl(origins[0] as string, helper.code(), args.port)} (the socket is /chat).`,
