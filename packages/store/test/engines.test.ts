@@ -236,6 +236,74 @@ describe.each(engines)('%s', (engine, open) => {
     expect((await store.exploration.get(exp))?.folder).toBeNull();
   });
 
+  test('jobs: handed out in order, each taken once even when asked for together, then reported', async () => {
+    const x = u('exp');
+    await store.exploration.create({
+      id: x,
+      owner: u('prs'),
+      question: 'who?',
+      target: null,
+      head: null,
+      visibility: 'private',
+      share_token_hash: null,
+      forked_from: null,
+      created_at: AT,
+      updated_at: AT,
+    });
+    const job = (n: number) =>
+      store.job.add({
+        id: u('job'),
+        exploration: x,
+        run: n === 0 ? u('run') : null,
+        kind: 'map',
+        title: `Map ${n}`,
+        brief: `Who holds power in ${n}?`,
+        inputs: { network: `n${n}` },
+        at: AT,
+      });
+    const first = await job(0);
+    expect(first).toMatchObject({
+      status: 'open',
+      result: null,
+      failed: null,
+      inputs: { network: 'n0' },
+    });
+    const second = await job(1);
+    expect((await store.job.list(x)).map((j) => j.id)).toEqual([first.id, second.id]);
+
+    // two agents asking at once take one job each
+    const taken = await together(3, () => store.job.take(x, LATER));
+    expect(
+      taken
+        .filter(Boolean)
+        .map((j) => j?.id)
+        .sort(),
+    ).toEqual([first.id, second.id].sort());
+    expect(taken.filter((j) => j === null)).toHaveLength(1);
+    expect(taken.find((j) => j?.id === first.id)).toMatchObject({
+      status: 'taken',
+      updated_at: LATER,
+    });
+
+    const result = { summary: 'Three members hold most of the shares.', steps: [0, 1] };
+    expect(await store.job.report(x, first.id, { result }, LATER)).toMatchObject({
+      status: 'done',
+      result,
+      failed: null,
+    });
+    expect(await store.job.report(x, second.id, { failed: 'No data for n1' }, LATER)).toMatchObject(
+      {
+        status: 'failed',
+        result: null,
+        failed: 'No data for n1',
+      },
+    );
+    // a job reported once, or in another project, can't be reported again
+    expect(await store.job.report(x, first.id, { failed: 'again' }, LATER)).toBeNull();
+    expect(await store.job.report(u('exp'), second.id, { result }, LATER)).toBeNull();
+    expect((await store.job.list(x)).map((j) => j.status)).toEqual(['done', 'failed']);
+  });
+
   test("search finds a person's own words, folds accents, takes a prefix, and nobody else's", async () => {
     const a = u('prs');
     const b = u('prs');

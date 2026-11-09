@@ -142,6 +142,43 @@ export interface NoteRow {
   credential?: string | null;
   at: string;
 }
+/** A job handed out in a project (an exploration): open, taken by someone's agent, then done or failed. */
+export interface JobRow {
+  id: string;
+  exploration: string;
+  /** the page agent's run that handed it out, if a run did */
+  run: string | null;
+  kind: 'map';
+  title: string;
+  /** plain words for the agent that takes it */
+  brief: string;
+  inputs: Record<string, unknown>;
+  status: 'open' | 'taken' | 'done' | 'failed';
+  result: { summary: string; steps?: number[]; notes?: string } | null;
+  failed: string | null;
+  created_at: string;
+  updated_at: string;
+}
+interface JobRecord extends Omit<JobRow, 'inputs' | 'result'> {
+  seq: number;
+  inputs: string;
+  result: string | null;
+}
+const jobOf = (r: JobRecord): JobRow => ({
+  id: r.id,
+  exploration: r.exploration,
+  run: r.run,
+  kind: r.kind,
+  title: r.title,
+  brief: r.brief,
+  inputs: JSON.parse(r.inputs) as Record<string, unknown>,
+  status: r.status,
+  result: r.result ? (JSON.parse(r.result) as JobRow['result']) : null,
+  failed: r.failed,
+  created_at: r.created_at,
+  updated_at: r.updated_at,
+});
+
 /** A bookmark on something a person is following. It points, and proves nothing about who owns it. */
 export interface FollowRow {
   id: string;
@@ -241,7 +278,7 @@ function tsQuery(words: readonly string[]): string {
 
 export function tables(db: Db) {
   const nextSeq = async (
-    table: 'run_event' | 'step' | 'note',
+    table: 'run_event' | 'step' | 'note' | 'job',
     column: string,
     id: string,
   ): Promise<number> =>
@@ -929,6 +966,90 @@ export function tables(db: Db) {
         db.all<NoteRow>('SELECT * FROM note WHERE exploration = ? ORDER BY seq', exploration),
       count: (exploration: string) =>
         count('SELECT COUNT(*) AS n FROM note WHERE exploration = ?', exploration),
+    },
+
+    job: {
+      add: (r: {
+        id: string;
+        exploration: string;
+        run: string | null;
+        kind: JobRow['kind'];
+        title: string;
+        brief: string;
+        inputs: Record<string, unknown>;
+        at: string;
+      }): Promise<JobRow> =>
+        db.tx(async () => {
+          const seq = await nextSeq('job', 'exploration', r.exploration);
+          await db.run(
+            `INSERT INTO job (id, exploration, seq, run, kind, title, brief, inputs, status, result,
+               failed, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', NULL, NULL, ?, ?)`,
+            r.id,
+            r.exploration,
+            seq,
+            r.run,
+            r.kind,
+            r.title,
+            r.brief,
+            JSON.stringify(r.inputs),
+            r.at,
+            r.at,
+          );
+          return jobOf(
+            (await db.get<JobRecord>('SELECT * FROM job WHERE id = ?', r.id)) as JobRecord,
+          );
+        }),
+      /** Oldest first. */
+      list: async (exploration: string): Promise<JobRow[]> =>
+        (
+          await db.all<JobRecord>(
+            'SELECT * FROM job WHERE exploration = ? ORDER BY seq',
+            exploration,
+          )
+        ).map(jobOf),
+      /** The oldest open job, now taken, or null when none is open. */
+      take: (exploration: string, at: string): Promise<JobRow | null> =>
+        db.tx(async () => {
+          const open = await db.get<JobRecord>(
+            `SELECT * FROM job WHERE exploration = ? AND status = 'open' ORDER BY seq LIMIT 1`,
+            exploration,
+          );
+          if (!open) return null;
+          await db.run(
+            `UPDATE job SET status = 'taken', updated_at = ? WHERE id = ? AND status = 'open'`,
+            at,
+            open.id,
+          );
+          return jobOf({ ...open, status: 'taken', updated_at: at });
+        }),
+      /** A taken job, done with its result or failed with why; null for any other job. */
+      report: (
+        exploration: string,
+        id: string,
+        r: { result?: JobRow['result']; failed?: string },
+        at: string,
+      ): Promise<JobRow | null> =>
+        db.tx(async () => {
+          const taken = await db.get<JobRecord>(
+            `SELECT * FROM job WHERE id = ? AND exploration = ? AND status = 'taken'`,
+            id,
+            exploration,
+          );
+          if (!taken) return null;
+          const failed = r.failed ?? null;
+          const result = failed === null && r.result ? JSON.stringify(r.result) : null;
+          const status = failed === null ? 'done' : 'failed';
+          await db.run(
+            'UPDATE job SET status = ?, result = ?, failed = ?, updated_at = ? WHERE id = ?',
+            status,
+            result,
+            failed,
+            at,
+            id,
+          );
+          return jobOf({ ...taken, status, result, failed, updated_at: at });
+        }),
     },
 
     follow: {
