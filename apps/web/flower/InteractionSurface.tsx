@@ -4,7 +4,7 @@
 // flower's own details once something asks for them. This only wires the ViewModels to the views. The
 // camera isn't told about the boxes. Until the conversation has a flower, the canvas is empty ground
 // (Elco, 8 Nov: no flower hard-coded in).
-import type { SurfaceName } from '@petal/tokens';
+import { type SurfaceName, terminalSurface } from '@petal/tokens';
 import { useEffect } from 'react';
 import { Composer } from '../components/chat/Composer.tsx';
 import { ConnectAgent } from '../components/chat/ConnectAgent.tsx';
@@ -93,7 +93,7 @@ export function InteractionSurface({
       <FloatBox
         label={terminal ? terminalWords.box : (doorLabel(state.door) ?? state.heading)}
         title={terminal ? terminalWords.box : (doorLabel(state.door) ?? state.heading)}
-        surface={surface}
+        surface={terminal ? terminalSurface : surface}
         hand={hands.output}
         control={
           state.hasList ? (

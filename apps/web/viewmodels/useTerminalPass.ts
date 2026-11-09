@@ -3,6 +3,7 @@
 // person's terminal: the helper ends the agent when the line closes, and never reattaches (CONNECTORS's
 // seam, 9 Nov). Nothing here reaches Petals' server. It connects when the helper opened this page with its
 // code in the address, or when a person types the code and presses Connect.
+import { terminalCursor, terminalTheme } from '@petal/tokens';
 import type { Terminal } from '@xterm/xterm';
 import { type RefCallback, useCallback, useRef, useState } from 'react';
 import { openTerminalLine, type TerminalLine } from '../lib/agent-client.ts';
@@ -76,18 +77,24 @@ export function useTerminalPass() {
       void Promise.all([import('@xterm/xterm'), import('@xterm/addon-fit')]).then(
         ([{ Terminal }, { FitAddon }]) => {
           if (gone || term.current) return;
-          // the box's own type and colours, from the tokens, so the terminal sits in the system
+          // Petals' look, from the tokens (packages/tokens/terminal.ts): the type the box is set in, and
+          // each colour from its role on the box's own surface.
           const css = getComputedStyle(el);
-          const v = (name: string) => css.getPropertyValue(name).trim();
+          const size = Number.parseFloat(css.fontSize);
+          const theme = Object.fromEntries(
+            Object.entries(terminalTheme).map(([key, role]) => [
+              key,
+              // the role's own variable, which a surface flips where it's set
+              css.getPropertyValue(`--${role}`).trim(),
+            ]),
+          );
           const t = new Terminal({
-            fontFamily: v('--font-mono') || 'monospace',
-            fontSize: Number.parseFloat(css.fontSize),
-            cursorBlink: true,
-            theme: {
-              background: v('--color-surface'),
-              foreground: v('--color-primary'),
-              cursor: v('--color-accent'),
-            },
+            fontFamily: css.fontFamily,
+            fontSize: size,
+            lineHeight: Number.parseFloat(css.lineHeight) / size,
+            cursorStyle: terminalCursor.style,
+            cursorBlink: terminalCursor.blink,
+            theme,
           });
           const fit = new FitAddon();
           t.loadAddon(fit);
