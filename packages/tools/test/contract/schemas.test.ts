@@ -37,21 +37,20 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     await run('list_networks', {});
     await run('get_network', { id: 'near-validators' });
     await run('describe_snapshot', { sha256: f.sha256 });
-    const added = await run('add_layer', {
-      layer: {
-        petal: 'layer/v1',
-        about: 'near:mainnet:near-validators',
-        kind: 'measures',
-        measures: [{ name: 'proposals_written', unit: 'proposals', kind: 'count' }],
-        rows: [
-          { participant: 'astro-stakers.poolv1.near', measure: 'proposals_written', value: '3' },
-        ],
-        how: { method: 'a test layer', sources: [{ url: 'https://example.org/' }] },
-        from: [f.sha256],
-        when: { as_of: '2026-11-09T00:00:00Z' },
-        standing: 'inferred',
-      },
-    });
+    const testLayer = {
+      petal: 'layer/v1',
+      about: 'near:mainnet:near-validators',
+      kind: 'measures',
+      measures: [{ name: 'proposals_written', unit: 'proposals', kind: 'count' }],
+      rows: [
+        { participant: 'astro-stakers.poolv1.near', measure: 'proposals_written', value: '3' },
+      ],
+      how: { method: 'a test layer', sources: [{ url: 'https://example.org/' }] },
+      from: [f.sha256],
+      when: { as_of: '2026-11-09T00:00:00Z' },
+      standing: 'inferred',
+    };
+    const added = await run('add_layer', { layer: testLayer });
     await run('compose_view', { base: f.sha256, layers: [added.hash as string] });
     await run('compute_figures', { sha256: f.sha256, measure: 'validator_stake_current_epoch' });
     const v = await run('validate_spec', { spec: f.spec, interpretation: INTERPRETATION });
@@ -115,6 +114,15 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     await run('brain_index', {});
     await run('brain_route', { question: 'who holds the power here?', answers: ['sharesToken()'] });
     await run('brain_file', { id: 'doctrine' });
+    // layers kept on the site, and a fork of the version that made
+    const kept = await run('keep_layer', { exploration, layer: testLayer });
+    await run('list_layers', { exploration });
+    await run('list_layers', { exploration, hash: kept.hash as string });
+    await run('fork_dataset', {
+      exploration,
+      version: (kept.version as { id: string }).id,
+      drop: [],
+    });
     const fork = await run('start_exploration', { fork_of: exploration });
     await run('get_exploration', { exploration: (fork.link as { url: string }).url });
     const signedIn = { ...r.ctx, caller: { subject: 'prs_test', door: 'test' } };

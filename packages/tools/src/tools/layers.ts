@@ -41,7 +41,7 @@ const badLayer = (e: unknown): never => {
   throw e;
 };
 
-const LAYER_INPUT = obj(
+export const LAYER_INPUT = obj(
   ['petal', 'about', 'kind', 'measures', 'rows', 'how', 'from', 'when', 'standing'],
   {
     petal: { const: 'layer/v1' },

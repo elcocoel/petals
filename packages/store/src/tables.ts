@@ -142,6 +142,35 @@ export interface NoteRow {
   credential?: string | null;
   at: string;
 }
+/** A layer kept on the site (005): named by its hash, under its author, never changed. */
+export interface LayerRow {
+  owner: string;
+  hash: string;
+  about: string;
+  standing: string;
+  /** the layer itself, as canonical JSON */
+  body: string;
+  credential: string | null;
+  created_at: string;
+}
+/** One version of an author's dataset about an address: a set of layer hashes, and where it came from. */
+export interface DatasetVersionRow {
+  id: string;
+  owner: string;
+  about: string;
+  seq: number;
+  /** the version it came from: the author's own last one, or one they forked */
+  parent: string | null;
+  layers: string[];
+  credential: string | null;
+  created_at: string;
+}
+type DatasetVersionRecord = Omit<DatasetVersionRow, 'layers'> & { layers: string };
+const versionOf = (r: DatasetVersionRecord): DatasetVersionRow => ({
+  ...r,
+  layers: JSON.parse(r.layers) as string[],
+});
+
 /** A job handed out in a project (an exploration): open, taken by someone's agent, then done or failed. */
 export interface JobRow {
   id: string;
@@ -278,7 +307,7 @@ function tsQuery(words: readonly string[]): string {
 
 export function tables(db: Db) {
   const nextSeq = async (
-    table: 'run_event' | 'step' | 'note' | 'job',
+    table: 'run_event' | 'step' | 'note' | 'job' | 'dataset_version',
     column: string,
     id: string,
   ): Promise<number> =>
@@ -1049,6 +1078,128 @@ export function tables(db: Db) {
             id,
           );
           return jobOf({ ...taken, status, result, failed, updated_at: at });
+        }),
+    },
+
+    layer: {
+      /** Keeps it under its owner; false, and no change, when they hold that hash already. */
+      keep: async (r: LayerRow): Promise<boolean> =>
+        (await db.run(
+          `INSERT INTO layer (owner, hash, about, standing, body, credential, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (owner, hash) DO NOTHING`,
+          r.owner,
+          r.hash,
+          r.about,
+          r.standing,
+          r.body,
+          r.credential,
+          r.created_at,
+        )) === 1,
+      get: (owner: string, hash: string) =>
+        db.get<LayerRow>('SELECT * FROM layer WHERE owner = ? AND hash = ?', owner, hash),
+      /** An owner's layers, about one address or all, oldest first. */
+      list: (owner: string, about?: string) =>
+        about
+          ? db.all<LayerRow>(
+              'SELECT * FROM layer WHERE owner = ? AND about = ? ORDER BY created_at, hash',
+              owner,
+              about,
+            )
+          : db.all<LayerRow>(
+              'SELECT * FROM layer WHERE owner = ? ORDER BY created_at, hash',
+              owner,
+            ),
+      /** A session that signs in brings its layers along; one the person holds already stays theirs. */
+      moveOwner: (from: string, to: string): Promise<void> =>
+        db.tx(async () => {
+          await db.run(
+            'DELETE FROM layer WHERE owner = ? AND hash IN (SELECT hash FROM layer WHERE owner = ?)',
+            from,
+            to,
+          );
+          await db.run('UPDATE layer SET owner = ? WHERE owner = ?', to, from);
+        }),
+    },
+
+    datasetVersion: {
+      /** A new version, after the owner's last one of this address. */
+      add: (r: Omit<DatasetVersionRow, 'seq'>): Promise<DatasetVersionRow> =>
+        db.tx(async () => {
+          const seq = (
+            (await db.get<{ next: number }>(
+              'SELECT COALESCE(MAX(seq) + 1, 0) AS next FROM dataset_version WHERE owner = ? AND about = ?',
+              r.owner,
+              r.about,
+            )) as { next: number }
+          ).next;
+          await db.run(
+            `INSERT INTO dataset_version (id, owner, about, seq, parent, layers, credential, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            r.id,
+            r.owner,
+            r.about,
+            seq,
+            r.parent,
+            JSON.stringify(r.layers),
+            r.credential,
+            r.created_at,
+          );
+          return { ...r, seq };
+        }),
+      get: async (id: string) => {
+        const r = await db.get<DatasetVersionRecord>(
+          'SELECT * FROM dataset_version WHERE id = ?',
+          id,
+        );
+        return r ? versionOf(r) : null;
+      },
+      /** The owner's last version of this address, or null. */
+      latest: async (owner: string, about: string) => {
+        const r = await db.get<DatasetVersionRecord>(
+          'SELECT * FROM dataset_version WHERE owner = ? AND about = ? ORDER BY seq DESC LIMIT 1',
+          owner,
+          about,
+        );
+        return r ? versionOf(r) : null;
+      },
+      /** The owner's versions, of one address or all, oldest first. */
+      list: async (owner: string, about?: string) =>
+        (about
+          ? await db.all<DatasetVersionRecord>(
+              'SELECT * FROM dataset_version WHERE owner = ? AND about = ? ORDER BY about, seq',
+              owner,
+              about,
+            )
+          : await db.all<DatasetVersionRecord>(
+              'SELECT * FROM dataset_version WHERE owner = ? ORDER BY about, seq',
+              owner,
+            )
+        ).map(versionOf),
+      /**
+       * A session that signs in brings its versions along, after the person's own of the same address, so
+       * neither's order breaks.
+       */
+      moveOwner: (from: string, to: string): Promise<void> =>
+        db.tx(async () => {
+          const moving = await db.all<DatasetVersionRecord>(
+            'SELECT * FROM dataset_version WHERE owner = ? ORDER BY about, seq',
+            from,
+          );
+          for (const v of moving) {
+            const next = (
+              (await db.get<{ next: number }>(
+                'SELECT COALESCE(MAX(seq) + 1, 0) AS next FROM dataset_version WHERE owner = ? AND about = ?',
+                to,
+                v.about,
+              )) as { next: number }
+            ).next;
+            await db.run(
+              'UPDATE dataset_version SET owner = ?, seq = ? WHERE id = ?',
+              to,
+              next,
+              v.id,
+            );
+          }
         }),
     },
 

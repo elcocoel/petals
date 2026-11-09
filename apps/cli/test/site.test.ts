@@ -72,6 +72,11 @@ function fakeSite(held: Set<string> = new Set()) {
     if (method === 'GET' && path.endsWith('/jobs')) return json({ jobs: [] });
     if (method === 'GET' && path.startsWith('/api/v1/brain'))
       return json({ commit: 'c0ffee', path });
+    if (method === 'POST' && path.endsWith('/layers'))
+      return json({ hash: 'e'.repeat(64), version: { id: 'dsv_1', seq: 0 } });
+    if (method === 'GET' && path.includes('/layers')) return json({ layers: [], versions: [] });
+    if (method === 'POST' && path.endsWith('/datasets/fork'))
+      return json({ version: { id: 'dsv_2' } });
     if (method === 'GET' && path.startsWith('/api/v1/explorations')) return json({ steps: [] });
     return json({ error: { code: 'not_found', message: 'no' } }, 404);
   };
@@ -96,6 +101,7 @@ const registry = [
   ...SITE_TOOLS.map((n) => tool(n)),
   ...LEFT_OUT.map((n) => tool(n)),
   tool('find_target'),
+  tool('add_layer', async () => ({ hash: 'e'.repeat(64), about: 'eip155:100:0xraid', rows: 1 })),
   tool('render_flower', async () => ({
     spec_sha256: 'b'.repeat(64),
     view_url: '/draft?spec=x',
@@ -357,5 +363,40 @@ describe('jobs from the page’s agent', () => {
     expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/brain/files/where-power-lives`);
     await byName(tools, 'brain_index').run({}, ctx());
     expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/brain`);
+  });
+
+  test('add_layer keeps the layer here, then in the open project on the site too', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, initial: LINK }).tools(registry);
+    const layer = { petal: 'layer/v1', about: 'eip155:100:0xraid' };
+    const out = (await byName(tools, 'add_layer').run({ layer }, ctx())) as Record<string, unknown>;
+    expect(out).toMatchObject({ hash: 'e'.repeat(64), kept_on_site: { version: { id: 'dsv_1' } } });
+    const sent = site.seen.at(-1) as Seen;
+    expect(sent.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/layers`);
+    expect(JSON.parse(sent.body as string)).toEqual({ layer });
+  });
+
+  test('with no project open, add_layer keeps it here only, and says so', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch }).tools(registry);
+    const out = (await byName(tools, 'add_layer').run({ layer: {} }, ctx())) as Record<
+      string,
+      unknown
+    >;
+    expect(out.next).toMatch(/start_exploration/);
+    expect(site.seen).toEqual([]);
+  });
+
+  test('list_layers and fork_dataset go to the project on the site', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, initial: LINK }).tools(registry);
+    await byName(tools, 'list_layers').run({ about: 'eip155:100:0xraid' }, ctx());
+    expect((site.seen.at(-1) as Seen).url).toBe(
+      `${SITE}/api/v1/explorations/${TOKEN}/layers?about=eip155%3A100%3A0xraid`,
+    );
+    await byName(tools, 'fork_dataset').run({ version: 'dsv_1', drop: ['e'.repeat(64)] }, ctx());
+    const sent = site.seen.at(-1) as Seen;
+    expect(sent.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/datasets/fork`);
+    expect(JSON.parse(sent.body as string)).toEqual({ version: 'dsv_1', drop: ['e'.repeat(64)] });
   });
 });

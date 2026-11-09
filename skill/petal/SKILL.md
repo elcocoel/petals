@@ -47,6 +47,7 @@ One reading is one layer: one thing about one address, such as who holds a DAO's
 - Every snapshot Petals reads is a layer. Facts you gathered yourself (counted from the chain's events, from a page or a list) become a layer with `add_layer`. Say how you made it, what you read and how sure it is. It stays on this machine, named by its hash, and never changes after.
 - To show two things at once, join layers of the same address with `compose_view`: the reading the flower is of, as `base`, and the others as `layers`. Each measure keeps its name and its source.
 - Then draw the joined reading as any other: `propose_spec` with its `sha256` and, for example, `height: "m:proposals_written"`, then `validate_spec` and `render_flower`.
+- With a project open, a layer is also kept in it on the site, privately, and each one makes a new version of the person's dataset about that address (`list_layers` shows them). `fork_dataset` makes a new version with layers added or dropped; the one it came from stays as it was.
 
 ## Jobs from a project
 

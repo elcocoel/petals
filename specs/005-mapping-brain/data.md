@@ -48,6 +48,8 @@ Elco's choice, 9 Nov: **private first, published when the author chooses.**
 - **Published ones** go to the shared map on NEAR, like flowers today, under the author's signature.
 - **A fork can only name a parent the forker can see:** a published version, or their own.
 
+**Built, 9 Nov:** `keep_layer`, `list_layers` and `fork_dataset`, through the project's link (migration 9). A project nobody has claimed holds its layers under itself, and they move to whoever claims it, and again when a session signs in. Publishing a version to the shared map isn't built, so for now a fork takes one's own versions only.
+
 ## Readers: a few shapes in code, frameworks as recipe files
 
 Elco asked "why do DAO frameworks need specific readers?". **They mostly don't.** Elco, 9 Nov: "let's not default to a one module per DAO type". The brain's `where-power-lives` chapter teaches the shapes, and `a-new-system` teaches writing a recipe.

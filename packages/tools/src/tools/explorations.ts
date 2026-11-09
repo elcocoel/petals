@@ -123,7 +123,7 @@ export function writable(o: Opened): void {
 
 const authorOf = (o: Opened) => (o.link ? `link:${o.link.id}` : 'owner');
 /** What authorised a write (TGT-005): the link it came by, or the credential behind the session. */
-const credentialOf = (ctx: ToolContext, o: Opened) =>
+export const credentialOf = (ctx: ToolContext, o: Opened) =>
   o.link ? `link:${o.link.id}` : (ctx.caller?.credential ?? null);
 const doorOf = (ctx: ToolContext) => ctx.caller?.door ?? 'unknown';
 
@@ -999,6 +999,9 @@ export async function claimExploration(
   if (!(await storeOf(ctx).exploration.setOwner(o.row.id, owner))) {
     throw new ToolFailure('unauthorised', 'This exploration already has an owner.');
   }
+  // the layers it held under itself until now are the new owner's (datasets.ts)
+  await storeOf(ctx).layer.moveOwner(`exploration:${o.row.id}`, owner);
+  await storeOf(ctx).datasetVersion.moveOwner(`exploration:${o.row.id}`, owner);
   return { exploration: o.row.id, claimed: true };
 }
 
