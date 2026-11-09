@@ -118,12 +118,12 @@ describe('SKILL.md: the Agent Skills format', () => {
 
 describe('README.md: install in Claude Code, Codex and IronClaw', () => {
   test.each([
-    'claude mcp add petal -- pnpm -s --dir <repo> petal mcp',
+    'claude mcp add petals -- pnpm -s --dir <repo> petal mcp',
     'pnpm petal connect claude',
     '~/.claude/skills/petal',
     '~/.agents/skills/petal',
     '~/.ironclaw/skills/petal',
-    'claude mcp add --transport http petal http://localhost:8787/mcp',
+    'claude mcp add --transport http petals http://localhost:8787/mcp',
     'pnpm api',
   ])('%s', (text) => {
     expect(README).toContain(text);

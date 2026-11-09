@@ -5,6 +5,7 @@
 // The only thing the CLI adds is a shorthand: a network id where a tool wants a sha256 or a spec
 // first calls get_snapshot and, for a spec or a missing measure, propose_spec with the default
 // convention. So `petal figures near-validators` prints the figures the default flower quotes.
+
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -25,6 +26,7 @@ import {
 import { commandName, positionalFields } from './commands.ts';
 import { callerCwd, configFromEnv, type Env, findRoot } from './config.ts';
 import { CONNECT_HELP, connect, type RunCommand, spawnCommand } from './connect.ts';
+import { brainServed } from './file.ts';
 
 /** Any registry tool, called with an input built from argv. */
 export type AnyTool = Tool<never, unknown>;
@@ -771,6 +773,11 @@ class Cli {
         ? 'Usage: node petal.mjs <command> [args] [--flags]\n\n'
         : 'Usage: petal <command> [args] [--flags]     (from the repo root: pnpm petal ...)\n\n',
     );
+    const brain = brainServed();
+    if (brain)
+      p(
+        `Served with Petals' brain ${brain}: brain_route and brain_file read the site's latest.\n\n`,
+      );
     p(`Tools (${TOOLS_VERSION}, one command per registry tool):\n`);
     if (this.tools.registry.length === 0)
       p('  (none: @petal/tools has not registered its tools yet)\n');

@@ -92,7 +92,7 @@ describe('first use', () => {
 describe('what each tool says', () => {
   test('overview: the pairs and their honesty, and a kind filter that makes it small', async () => {
     const small = await call('relations_overview', { kind: 'holdings', min_shared: 2 });
-    expect(small.tools_version).toBe('tools/v1');
+    expect(small.tools_version).toBe('tools/v2');
     expect(small.groups.every((g: Json) => g.kind === 'holdings')).toBe(true);
     expect(small.pairs.every((p: Json) => p.shared >= 2)).toBe(true);
     for (const p of small.pairs) {
@@ -175,7 +175,7 @@ describe('errors', () => {
   ])('%s %j is %s', async (tool, input, code) => {
     const out = await call(tool, input);
     expect(out.error.code).toBe(code);
-    expect(out.tools_version).toBe('tools/v1');
+    expect(out.tools_version).toBe('tools/v2');
   });
 
   test('one group named twice is refused, and says how to compare its dates', async () => {

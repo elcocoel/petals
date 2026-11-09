@@ -175,7 +175,12 @@ const cut = (md: string, title: string) => section(md, title, '');
  * skill/petal/SKILL.md for an agent with no clone: this site's address, the tools as one file on
  * the person's own computer (petal.mjs), and no routes that read for them.
  */
-export function hostedSkill(skill: string, origin: string, fileSha?: string): string {
+export function hostedSkill(
+  skill: string,
+  origin: string,
+  fileSha?: string,
+  brainVersion?: string,
+): string {
   let md = skill.replace(/^---\n[\s\S]*?\n---\n+/, '');
   md = section(md, 'Quick Start', setup(origin, fileSha));
   md = section(
@@ -190,7 +195,7 @@ export function hostedSkill(skill: string, origin: string, fileSha?: string): st
   md = section(
     md,
     'Resources',
-    `## Connecting\n\nThe file is at \`${origin}/petal.mjs\`, and these instructions stay at \`${origin}/skill.md\`.\n`,
+    `## Connecting\n\nThe file is at \`${origin}/petal.mjs\`, and these instructions stay at \`${origin}/skill.md\`.${brainVersion ? ` Petals' brain here is version \`${brainVersion}\`: \`${origin}/api/v1/brain/files/doctrine\` first, then \`${origin}/api/v1/brain/route?q=<your app and what you're doing>\`.` : ''}\n`,
   );
   return md;
 }

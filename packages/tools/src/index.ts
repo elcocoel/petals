@@ -5,6 +5,7 @@ export {
   BRAIN_INDEX_VERSION,
   type BrainEntry,
   type BrainIndex,
+  brainAt,
   brainProblems,
   buildBrainIndex,
   headerOf,

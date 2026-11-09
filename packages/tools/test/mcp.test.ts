@@ -52,7 +52,7 @@ describe('MCP', () => {
     expect(bad.isError).toBe(true);
     expect(bad.structuredContent).toMatchObject({
       error: { code: 'bad_input' },
-      tools_version: 'tools/v1',
+      tools_version: 'tools/v2',
     });
     await client.close();
   });

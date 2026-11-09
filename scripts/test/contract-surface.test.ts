@@ -79,7 +79,7 @@ describe('packages/v1 surface', () => {
   test('versions', () => {
     expect(core.VERSIONS).toEqual({
       packages: 'packages/v1',
-      tools: 'tools/v1',
+      tools: 'tools/v2',
       api: 'api/v1',
       map: 'map/v2',
       render: 'render/v1',

@@ -172,7 +172,7 @@ describe('look_up', () => {
 
   test('every door has it: the registry runs it, and a bad input is still bad_input', async () => {
     const o = (await callTool('look_up', { query: 'validators' }, ctx)) as Json;
-    expect(o.tools_version).toBe('tools/v1');
+    expect(o.tools_version).toBe('tools/v2');
     expect(((await callTool('look_up', {}, ctx)) as Json).error.code).toBe('bad_input');
   });
 });
