@@ -66,7 +66,10 @@ export function doors(origin: string): Door[] {
     {
       id: 'other',
       title: 'Anything else',
-      how: 'Any agent that can run commands on your computer can use the prompt above. One that only chats in the cloud can’t.',
+      // a draft (WORKSPACE, 9 Nov), for Elco to approve
+      how: 'Any agent that can run commands on your computer can use the prompt above. An app that takes an MCP server’s address, such as Cursor, can add Petals with this one instead: it reads and draws what Petals already holds.',
+      copy: connectorAddress(origin),
+      copyLabel: 'Copy the address',
     },
   ];
 }

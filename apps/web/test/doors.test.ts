@@ -20,9 +20,10 @@ describe('doors', () => {
     }
     expect(all.find((x) => x.id === 'claude-app')?.how).toMatch(/use Claude Code/);
     expect(all.find((x) => x.id === 'chatgpt')?.how).toMatch(/use Codex/);
+    // any app that takes an MCP server's address (connect-cloud), with the same address
     const other = all.find((x) => x.id === 'other');
-    expect(other?.copy).toBeUndefined();
-    expect(other?.how).toMatch(/can’t/);
+    expect(other?.copy).toBe(`${ORIGIN}/mcp`);
+    expect(other?.how).toMatch(/such as Cursor/);
   });
 
   test('the first run asks once, and keeping Petals says what it changes', () => {
