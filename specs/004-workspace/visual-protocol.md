@@ -98,6 +98,8 @@ The agent writes that in one line. The data side checks each name against the pe
 3. **A certainty on each petal,** observed, declared or inferred, if texture is to show it (V4).
 4. **Dated layers,** for time (V6), which SYSTEMS already plans.
 
+**SYSTEMS, 9 Nov: it fits.** Certainty ("standing": verified, inferred, lead) is per layer today, so certainty per petal would be an optional standing on each row, an easy addition if Elco picks texture for it (V4). SYSTEMS's first version of the seam is a composed reading in today's `snapshot/v1` (holdings from several layers, each listed as a source), so today's renderer draws `height: m:<measure>` with no change on the visual side.
+
 ## References worth a look
 
 - **Bertin, *Semiology of Graphics* (1967).** The original list of visual variables: position, size, value, texture, colour, orientation, shape. Where "texture" as a channel comes from.
