@@ -242,22 +242,38 @@ export async function saveRunStep(ctx: ToolContext, runId: string, spec: Spec): 
   if (!store.durable) return;
   const at = ctx.now().toISOString();
   await store.tx(async () => {
-    const run = await store.run.get(runId);
-    if (!run?.owner) return;
-    let id = run.exploration;
-    if (!id) {
-      id = newExplorationId();
-      await newExploration(store, {
-        id,
-        owner: run.owner,
-        question: firstQuestion(run.body),
-        target: null,
-        at,
-      });
-      await store.run.setExploration(runId, id);
-    }
+    const id = await explorationOfRun(store, runId, at);
+    if (!id) return;
     await writeStep(ctx, store, id, spec, { door: 'site', author: 'owner', note: null, at });
   });
+}
+
+/** The run's exploration, made now if it has none. Null for a run nobody owns. Inside a transaction. */
+async function explorationOfRun(store: Store, runId: string, at: string): Promise<string | null> {
+  const run = await store.run.get(runId);
+  if (!run?.owner) return null;
+  if (run.exploration) return run.exploration;
+  const id = newExplorationId();
+  await newExploration(store, {
+    id,
+    owner: run.owner,
+    question: firstQuestion(run.body),
+    target: null,
+    at,
+  });
+  await store.run.setExploration(runId, id);
+  return id;
+}
+
+/**
+ * The exploration a run of Petals' agent works in (9 Nov, the jobs it hands out live there), made now if
+ * the run has none yet. Null for a run nobody owns, or a store that keeps nothing.
+ */
+export async function runExplorationOf(ctx: ToolContext, runId: string): Promise<string | null> {
+  const store = storeOf(ctx);
+  if (!store.durable) return null;
+  const at = ctx.now().toISOString();
+  return store.tx(() => explorationOfRun(store, runId, at));
 }
 
 function firstQuestion(body: string): string {
