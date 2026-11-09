@@ -1,7 +1,7 @@
 # Proposal: two protocols and an open brain
 
 **Created**: 2026-11-09, by SYSTEMS. Revised twice the same day, after Elco read each draft.
-**Status**: Proposal. Nothing is built. Elco answered choices 1 to 3 on 9 Nov (below); 4 to 6 are open.
+**Status**: Proposal. Nothing is built. Elco answered choices 1, 2, 3, 5 and 6 on 9 Nov (below). The order of work (4) is SYSTEMS' lean, and the go to build is Elco's.
 **Input**: Elco, 9 Nov:
 
 > Please don't make it more complicated than it has to be. The agent barely knows how to do anything. The agent should know how to go deeper and deeper into the basic information it found in the first layer.
@@ -31,9 +31,9 @@
 | The data protocol | SYSTEMS | `data/v1` |
 | The seam | SYSTEMS, agreed with LOOK | `seam/v1` |
 | The visual protocol | LOOK, with Elco | `view/v1` |
-| The brain | SYSTEMS writes the frame; anyone improves the strategies | `brain-vN` |
+| The brain | SYSTEMS writes the frame; anyone improves it by pull request | GitHub's main branch, always the latest |
 
-**Each moves on its own.** A new reader doesn't touch drawing. A new channel doesn't touch data. A better strategy touches neither.
+**Each moves on its own.** A new reader doesn't touch drawing. A new channel doesn't touch data. A better chapter or recipe touches neither.
 
 ## What went wrong on 9 Nov, and where each part answers it
 
@@ -46,30 +46,33 @@ Elco's session: RaidGuild, a Moloch v3 DAO on Gnosis.
 3. **"Show it on the petal" was refused:** a flower draws only what one reading holds.
    - *The seam:* a view names measures from any layers. Height is shares, a marking is proposals.
 4. **The agent searched the 5.8 MB file** to learn the commands.
-   - *The brain:* strategies and a `brain` command answer that. Each tool's inputs should be answerable by a command, too.
+   - *The brain:* chapters and recipes, read from GitHub, answer that. Each tool's inputs should be answerable by a command, too.
 
 ## The files
 
 - `data.md`: the dataset, git-like layers and versions, reader shapes and recipes, attribution, and where layers live.
 - `seam.md`: exactly what crosses between data and drawing, and what each side changes alone.
-- `brain.md`: the brain, its versions, the routing index, every door, "improve this strategy", and the harness brain's lessons.
+- `brain.md`: the brain's chapters and recipes, always read from GitHub, the routing index, pull requests as the only way in, and the harness brain's lessons.
 - `research.md`: the facts and sources, the first draft's survey, Elco's live session, and the harness brain's history.
 
 ## What the agent learns first
 
-Three strategies, as Elco asked, plus one doctrine:
+The brain's first chapters (`brain.md`):
+- **start-from-an-address;**
+- **where-power-lives,** with the seven shapes;
+- **a-new-system:** figure it out, write a recipe, open a pull request;
+- **going-deeper** and **over-time,** as Elco asked;
+- **open-source-leads:** directions only, private;
+- **contributing:** opening a pull request, and a GitHub account if the person has none.
 
-- **Going deeper.** After every answer, the agent offers the next layer down, from what it found. Each step taken adds a layer.
-- **Open-source leads.** Public traces (a forum post, a proposal's discussion, an ENS name, a post on X) are directions only: private, never a name for a wallet. How much a person trusts a lead is for the notes and claims chapter, once we know how to generate leads well.
-- **Change over time.** An interval and a span agreed with the person, at most 24 points to start. Each point is a dated layer.
-- **The doctrine:**
-  - discovery, not crime;
-  - what they do, not who they are;
-  - verified, inferred or a lead, always said;
-  - coverage is partial;
-  - the tools count;
-  - small reads first;
-  - the person's own resources.
+The doctrine:
+- discovery, not crime;
+- what they do, not who they are;
+- verified, inferred or a lead, always said;
+- coverage is partial;
+- the tools count;
+- small reads first;
+- the person's own resources.
 
 The tools run on the person's side only because our server does no reads for visitors (TGT-030). "The person's side" is wherever their agent runs. Every door is in `research.md`.
 
@@ -81,26 +84,23 @@ The tools run on the person's side only because our server does no reads for vis
 
 **Elco's question, "why do DAO frameworks need specific readers?"** They mostly don't. There's no universal "list the members" call, but a few shapes in code (token balances, members from events, counts by participant or by sender, lines from events, view calls, an off-chain list) cover most frameworks. Each framework is then a recipe file. So readers become shapes and recipes now, not later, and an agent can write a recipe for a new framework from its ABI and offer it the git-like way (`data.md`).
 
-## Still open
+5. **Which brain:** "always latest". Every agent reads the brain from GitHub's main branch each time, and each layer records the commit it read. A door's own copy is only a fallback when GitHub can't be reached, and says so.
+6. **Improvements:** "only through github for now … teach the AI to submit a PR, and if the user doesn't have github he gets one". So there are no suggestions on the site. The `contributing` chapter teaches the agent to open the pull request, and to help the person make an account.
 
-**4. The order of work.** Lean:
-1. the data protocol: layers, versions and forks, the reader shapes and the recipe format, with Moloch v3 as the first recipe and the RaidGuild flower as the test (it needs the seam, and LOOK's view to name two measures);
-2. the brain, with going deeper and change over time;
-3. leads.
+**Frameworks:** "let's not default to a one module per DAO type, but make where power lives a chapter in the brain, and have the first seven shapes. The brain should also teach the agents to figure a new system out, define a recipe and submit the PR if needed." So there are two chapters, `where-power-lives` and `a-new-system`, plus the seven shapes and recipes as files.
 
-**5. Which brain an agent reads.**
-- (a) The version its door was built with.
-- (b) The latest from GitHub, each time.
-- **Lean: (a).** It's reproducible, and a newer brain reaches people at the next build.
+## The order of work (SYSTEMS' lean; the go is Elco's)
 
-**6. How someone without GitHub improves a strategy or a recipe.**
-- (a) Only by pull request.
-- (b) Also by a suggestion posted to the site, which a maintainer turns into a pull request.
-- **Lean: (b).**
+1. **The data protocol:** layers, versions and forks, the seven shapes and the recipe format. Moloch v3 is the first recipe, and the RaidGuild flower is the test. It needs the seam, and LOOK's view to name two measures.
+2. **The brain:** the doctrine and the first chapters, read from GitHub, with `identify` routing by the index.
+3. **Leads.**
+
+**Gate:** "always latest from GitHub" needs `build/` public on GitHub. That's Elco's go. Until then, the brain can be built and tested from a local folder in the same shape.
 
 ## Done when (once approved)
 
 - **The RaidGuild flower draws** shares as size and proposals written as height, from two layers, each with its author.
 - **A second person forks that dataset and adds a layer,** and both versions stand, each naming its parent.
 - **An agent writes a recipe for a framework Petals hasn't seen,** from its ABI, and its layer can be read again by anyone from the recipe's hash.
-- **A strategy improved by a pull request reaches every door** at the next release, and the check refuses an index that doesn't match its files.
+- **A chapter or recipe improved by a pull request is what the next agent reads,** and the check refuses an index that doesn't match its files.
+- **An agent with no recipe for a system writes one, tests it small, and opens the pull request,** and a person with no GitHub gets an account with the agent's help.

@@ -50,7 +50,7 @@ Elco's choice, 9 Nov: **private first, published when the author chooses.**
 
 ## Readers: a few shapes in code, frameworks as recipe files
 
-Elco asked "why do DAO frameworks need specific readers?". **They mostly don't.**
+Elco asked "why do DAO frameworks need specific readers?". **They mostly don't.** Elco, 9 Nov: "let's not default to a one module per DAO type". The brain's `where-power-lives` chapter teaches the shapes, and `a-new-system` teaches writing a recipe.
 
 There's no universal "list the members" call on any chain. But a few shapes cover most frameworks. A framework is then a **recipe**: a short file that names its contract's events and calls, and which shape reads each one.
 
@@ -84,7 +84,7 @@ A recipe can only ask for reads on chains we know, within its bounds, and it hol
 
 **Recipes travel the git-like way.**
 - An agent can write a recipe for a new framework from its contract's ABI, in the conversation, and run it on the person's side. The layer it makes names the recipe's hash, so anyone can run it again.
-- A recipe that works is offered to the open repo the way a strategy is (`brain.md`, "Improve this strategy"). Once merged, every door has it at the next release.
+- A recipe that works is offered to the open repo as a pull request, the way a chapter is (`brain.md`). Once merged, every agent reads it, because every agent reads the latest. Recipes live in the brain's folder, `brain/recipes/`.
 
 **Code stays where the work is more than reading:** the NEAR validators crawl and veNEAR's power maths. Those two stay as readers in code.
 
