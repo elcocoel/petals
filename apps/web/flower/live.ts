@@ -1,7 +1,7 @@
 // The flower's state from frame to frame, with no DOM: springs in, a laid-out ring out. The hook feeds
 // it the pointer and the clock; marks.ts and scene.ts read what it holds. Time comes in as dt, so a
 // test can run it at 60 and at 120 Hz without a browser.
-import { type Camera, newCamera, stepCamera } from './camera.ts';
+import { type Camera, newCamera, stepCamera, type View } from './camera.ts';
 import { DETAIL, fade, openAt } from './detail.ts';
 import {
   ACCENT_FADE,
@@ -102,8 +102,11 @@ export function newLive(
   width: number,
   height: number,
   calm: boolean,
+  /** The opening bloom. A flower that takes over from its own silhouette, as on the map, starts open. */
+  bloom = true,
 ): Live {
   const n = m.n;
+  const folded = !calm && bloom;
   const live: Live = {
     m,
     way,
@@ -113,7 +116,7 @@ export function newLive(
     width: channel(n),
     flare: channel(n),
     // Every petal starts folded down onto the polygon, and blooms; calm skips it.
-    height: channel(n, calm ? 0 : -1),
+    height: channel(n, folded ? -1 : 0),
     open: channel(n),
     accent: channel(n),
     named: channel(n),
@@ -136,7 +139,7 @@ export function newLive(
     anchorY: 0,
     locked: false,
     calm,
-    age: calm ? BLOOM : 0,
+    age: folded ? 0 : BLOOM,
     widths: new Float64Array(m.width),
     heights: new Float64Array(m.height),
     target: {
@@ -192,10 +195,13 @@ export function clickedAt(l: Live, x: number, y: number): Clicked {
   return Math.hypot(px - m.cx, py - m.cy) < centre ? { kind: 'centre' } : { kind: 'ground' };
 }
 
-/** One frame of the whole flower. */
-export function stepLive(l: Live, dt: number): Stepped {
+/**
+ * One frame of the whole flower. With a view, the flower is one of many in a space whose camera is
+ * somebody else's (the map): it takes that view as it is and doesn't move its own camera.
+ */
+export function stepLive(l: Live, dt: number, view?: View): Stepped {
   const { m, camera: cam, pointer, ring } = l;
-  const moved = stepCamera(cam, dt, l.calm);
+  const moved = view ? takeView(cam, view) : stepCamera(cam, dt, l.calm);
   const { k } = cam;
   l.age += dt;
 
@@ -405,4 +411,15 @@ export function tipOf(ring: Ring, i: number): { x: number; y: number } {
     x: ((ring.ax[i] as number) + (ring.bx[i] as number)) / 2 + (ring.nx[i] as number) * h,
     y: ((ring.ay[i] as number) + (ring.by[i] as number)) / 2 + (ring.ny[i] as number) * h,
   };
+}
+
+/** Puts a view from outside on the flower's camera. True if it changed. */
+function takeView(cam: Camera, v: View): boolean {
+  const changed = cam.k !== v.k || cam.x !== v.x || cam.y !== v.y;
+  cam.k = v.k;
+  cam.x = v.x;
+  cam.y = v.y;
+  cam.width = v.width;
+  cam.height = v.height;
+  return changed;
 }
