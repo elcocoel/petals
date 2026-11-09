@@ -11,14 +11,18 @@ describe('doors', () => {
     for (const d of all.filter((x) => x.copy)) expect(d.copy, d.id).toContain(ORIGIN);
   });
 
-  test('the apps that run in the cloud say they can’t, and name one that can, with nothing to copy', () => {
-    for (const id of ['claude-app', 'chatgpt', 'other']) {
+  test('the cloud apps connect as a connector at this site’s /mcp, and name the app for new readings', () => {
+    // the address is connect-cloud's, generated from the brain (scripts/brain-connect.ts)
+    for (const id of ['claude-app', 'chatgpt']) {
       const d = all.find((x) => x.id === id);
-      expect(d?.copy, id).toBeUndefined();
-      expect(d?.how, id).toMatch(/can’t/);
+      expect(d?.copy, id).toBe(`${ORIGIN}/mcp`);
+      expect(d?.how, id).toMatch(/It reads and draws what Petals already holds/);
     }
-    expect(all.find((x) => x.id === 'claude-app')?.how).toMatch(/Claude Code/);
-    expect(all.find((x) => x.id === 'chatgpt')?.how).toMatch(/Codex/);
+    expect(all.find((x) => x.id === 'claude-app')?.how).toMatch(/use Claude Code/);
+    expect(all.find((x) => x.id === 'chatgpt')?.how).toMatch(/use Codex/);
+    const other = all.find((x) => x.id === 'other');
+    expect(other?.copy).toBeUndefined();
+    expect(other?.how).toMatch(/can’t/);
   });
 
   test('the first run asks once, and keeping Petals says what it changes', () => {

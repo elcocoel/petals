@@ -65,6 +65,14 @@ export function keepCommands(): { claude: string; codex: string; hermes: string 
   };
 }
 
+/** The address a cloud app adds as a connector, as connect-cloud gives it ({site}/mcp). */
+export function connectorAddress(origin: string): string {
+  const intro = chapterOf('cloud').intro;
+  const block = /```\n([^`\n]+)\n```/.exec(intro)?.[1]?.trim();
+  if (!block) throw new Error('connect-cloud: no address block in its opening');
+  return fill(block, origin);
+}
+
 /** Each app's own steps, from its chapter, for /skill.md: every section but the page's box, which isn't theirs. */
 function appSteps(origin: string): string {
   const out: string[] = [];
