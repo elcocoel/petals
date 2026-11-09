@@ -19,8 +19,11 @@
 // JavaScript with no native parts. Windows isn't covered yet.
 import { type ChildProcess, spawn, spawnSync } from 'node:child_process';
 import { randomInt, timingSafeEqual } from 'node:crypto';
+import { accessSync, constants, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import type { IncomingMessage } from 'node:http';
 import { createServer, type Server } from 'node:http';
+import { homedir } from 'node:os';
+import { dirname, join } from 'node:path';
 import type { Writable } from 'node:stream';
 import { type RawData, WebSocket, WebSocketServer } from 'ws';
 
@@ -109,6 +112,225 @@ export interface TerminalOptions {
   /** what the person sees in this terminal */
   say?: (line: string) => void;
   python?: string;
+  /**
+   * Opens the person's browser at the page, with the pairing code in the address's fragment, so the
+   * page connects by itself: one paste, then nothing. The fragment never reaches any server. Default:
+   * the system's opener; false to only print the code.
+   */
+  openPage?: ((url: string) => void) | false;
+  /** where the agent is; default findAgent */
+  find?: (name: string) => string | null;
+  /** start the agent already in Petals: its tools, its instructions and the page's conversation */
+  petals?: PetalsSetup;
+  /** the site's skill, for the session's notes; default fetched from the site */
+  skill?: (site: string) => Promise<string>;
+}
+
+/** The site's own skill, or a pointer to it when the site can't be reached. */
+async function fetchSkill(site: string): Promise<string> {
+  try {
+    const res = await fetch(`${site}/skill.md`, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) return await res.text();
+  } catch {
+    // below
+  }
+  return `Petal's instructions are at ${site}/skill.md: read them first.`;
+}
+
+/** The page that shows the box, with the code where only the browser sees it. */
+export function pageUrl(origin: string, code: string, port: number): string {
+  const extra = port === DEFAULT_PORT ? '' : `&port=${port}`;
+  return `${origin.replace(/\/+$/, '')}/make?terminal=1#pair=${code}${extra}`;
+}
+
+/** The system's own way to open an address in the default browser. */
+export function systemOpener(url: string): void {
+  const [cmd, args] =
+    process.platform === 'darwin'
+      ? ['open', [url]]
+      : process.platform === 'win32'
+        ? ['cmd', ['/c', 'start', '', url]]
+        : ['xdg-open', [url]];
+  try {
+    spawn(cmd as string, args as string[], { stdio: 'ignore', detached: true }).unref();
+  } catch {
+    // no opener: the code is printed anyway
+  }
+}
+
+/** How to install each agent, said in the box when it can't be found. */
+export const INSTALL: Record<Agent, string> = {
+  claude: 'Install it with: curl -fsSL https://claude.ai/install.sh | bash',
+  codex: 'Install it with: npm install -g @openai/codex',
+  hermes: "Install it from Nous Research's Hermes Agent guide",
+};
+
+/** What starts the agent already in Petals: this file as its tools, and the site it shows on. */
+export interface PetalsSetup {
+  /** the Node running this file, and the file, to start Petals' tools as an MCP server */
+  node: string;
+  file: string;
+  site: string;
+  /** PETALS_HOME: the agent works in its work folder, not the person's home */
+  home: string;
+}
+
+/** A continue link on the site: the only form a page may hand in. */
+const LINK = /^https?:\/\/[^\s"'`<>]+\/s\/[A-Za-z0-9_-]{43}$/;
+
+export const FIRST_MESSAGE =
+  "Read AGENTS.md in this folder: it's how you work with Petal here. Then tell me in a line or two what you can do, and ask what I'm curious about.";
+
+/** Petal's instructions for this session, written as AGENTS.md (and CLAUDE.md) in the work folder. */
+export function sessionNotes(
+  agent: Agent,
+  site: string,
+  skill: string,
+  exploration?: string,
+): string {
+  const tools =
+    agent === 'hermes'
+      ? 'as commands in your shell: `node ~/.petals/petal.mjs <command>`, JSON out (`node ~/.petals/petal.mjs help`)'
+      : 'as the `petals` MCP server, already loaded for this session';
+  const page = exploration
+    ? `This conversation's page is already open in their browser: don't start or open another. Its link is ${exploration}: pass it as \`exploration\` when a tool asks. \`render_flower\` saves each flower there by itself.`
+    : `Before your first reply, start this conversation's page with \`start_exploration\` (client: "${AGENTS[agent]}"), and give them \`open_url\` in one line.`;
+  return [
+    '# Petal, in this session',
+    '',
+    `You're running in a box on Petal's page (${site}), where the person sees this terminal. Petal maps who holds power in crypto networks and draws it as flowers. Its instructions are below. Follow them, with these differences:`,
+    '',
+    `- Its tools are already here, ${tools}. Don't download or install anything.`,
+    `- ${page}`,
+    "- Before you finish each reply, post the person's words and then your reply, word for word, with `add_note`. The first message, which asks you to read this file, comes from Petal, not the person: post only your reply to it.",
+    '',
+    '---',
+    '',
+    skill,
+  ].join('\n');
+}
+
+const toml = (v: string) => JSON.stringify(v);
+
+/**
+ * How each agent starts already in Petals, for this session only: flags and a first message, and
+ * nothing written to the person's own settings. Claude Code and Codex get the file as their MCP tools;
+ * Hermes has no per-session MCP flag, so it runs the same tools as commands.
+ */
+export function inPetals(
+  agent: Agent,
+  setup: PetalsSetup,
+  exploration?: string,
+): { args: string[]; env: Record<string, string> } {
+  const env: Record<string, string> = {
+    PETALS_HOME: setup.home,
+    PETALS_SITE: setup.site,
+    ...(exploration ? { PETALS_EXPLORATION: exploration } : {}),
+  };
+  if (agent === 'claude') {
+    const mcp = { mcpServers: { petals: { command: setup.node, args: [setup.file, 'mcp'], env } } };
+    return {
+      args: [FIRST_MESSAGE, '--mcp-config', JSON.stringify(mcp), '--allowedTools', 'mcp__petals'],
+      env,
+    };
+  }
+  if (agent === 'codex') {
+    const table = `{${Object.entries(env)
+      .map(([k, v]) => `${k}=${toml(v)}`)
+      .join(',')}}`;
+    return {
+      args: [
+        '-c',
+        `mcp_servers.petals.command=${toml(setup.node)}`,
+        '-c',
+        `mcp_servers.petals.args=[${toml(setup.file)},"mcp"]`,
+        '-c',
+        `mcp_servers.petals.env=${table}`,
+        '-c',
+        'mcp_servers.petals.default_tools_approval_mode="approve"',
+        FIRST_MESSAGE,
+      ],
+      env,
+    };
+  }
+  return { args: ['chat', '-q', FIRST_MESSAGE], env };
+}
+
+const executable = (path: string) => {
+  try {
+    accessSync(path, constants.X_OK);
+    return statSync(path).isFile();
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Where the person's agent is, found the way their own shell would find it: this PATH, then their
+ * login shell (which knows nvm, aliases and their profile), then the usual places installers use.
+ * Elco, 9 Nov: Terminal ran Homebrew's Node with no nvm on its PATH, and claude lived only under nvm.
+ */
+export function findAgent(
+  name: string,
+  env: NodeJS.ProcessEnv = process.env,
+  home: string = homedir(),
+): string | null {
+  const onPath = (env.PATH ?? '')
+    .split(':')
+    .filter(Boolean)
+    .map((d) => join(d, name));
+  for (const p of onPath) if (executable(p)) return p;
+
+  const shell = env.SHELL && /^\/[\w/.-]+$/.test(env.SHELL) ? env.SHELL : null;
+  if (shell) {
+    const r = spawnSync(shell, ['-lic', `command -v ${name}`], {
+      encoding: 'utf8',
+      timeout: 5000,
+      env: { ...env, TERM: 'dumb' },
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    for (const line of (r.stdout ?? '').split('\n').reverse()) {
+      const t = line.trim();
+      // an alias, as Claude Code's local install makes: alias claude='/Users/x/.claude/local/claude'
+      const alias =
+        /^alias \S+=['"]?([^'"\s]+)['"]?$/.exec(t)?.[1] ?? /^\S+: aliased to (\S+)$/.exec(t)?.[1];
+      const path = (alias ?? t).replace(/^~(?=\/)/, home);
+      if (path.startsWith('/') && executable(path)) return path;
+    }
+  }
+
+  const nvm = join(home, '.nvm/versions/node');
+  let nvmBins: string[] = [];
+  try {
+    nvmBins = readdirSync(nvm)
+      .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))
+      .map((v) => join(nvm, v, 'bin'));
+  } catch {
+    // no nvm
+  }
+  let npmBin: string[] = [];
+  const npm = spawnSync('/bin/sh', ['-c', 'npm prefix -g'], {
+    encoding: 'utf8',
+    timeout: 5000,
+    env,
+  });
+  if (npm.status === 0 && npm.stdout.trim()) npmBin = [join(npm.stdout.trim(), 'bin')];
+  const places = [
+    ...(name === 'claude' ? [join(home, '.claude/local')] : []),
+    join(home, '.local/bin'),
+    ...nvmBins,
+    '/opt/homebrew/bin',
+    '/usr/local/bin',
+    ...npmBin,
+    join(home, '.npm-global/bin'),
+    join(home, '.bun/bin'),
+    join(home, '.volta/bin'),
+  ];
+  for (const dir of places) {
+    const p = join(dir, name);
+    if (executable(p)) return p;
+  }
+  return null;
 }
 
 export interface TerminalHelper {
@@ -153,7 +375,15 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
       ),
     );
   }
-  const command = o.command ?? [o.agent];
+  const find = o.find ?? ((name: string) => findAgent(name, o.env ?? process.env));
+  // The agent, found now to say so early, and again at each session, in case it's installed meanwhile.
+  const locate = (): string[] | null => {
+    if (o.command) return o.command;
+    const found = find(o.agent);
+    return found ? [found] : null;
+  };
+  const missing = `${AGENTS[o.agent]} isn't installed here, or can't be found. ${INSTALL[o.agent]}, then start this again.`;
+  if (!locate()) say(missing);
 
   let code = newCode();
   let codeUntil = Date.now() + CODE_MS;
@@ -196,7 +426,7 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
     const first = setTimeout(() => ws.close(4408, 'no pairing'), 30_000);
     ws.once('message', (raw: RawData, isBinary: boolean) => {
       clearTimeout(first);
-      let msg: { pair?: unknown; cols?: unknown; rows?: unknown } = {};
+      let msg: { pair?: unknown; cols?: unknown; rows?: unknown; exploration?: unknown } = {};
       try {
         msg = isBinary ? {} : JSON.parse(raw.toString());
       } catch {
@@ -228,14 +458,57 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
         return;
       }
       ws.send(JSON.stringify({ paired: true, agent: o.agent }));
-      run(ws, origin, clampSize(msg.cols, 100), clampSize(msg.rows, 30));
+      const exploration =
+        typeof msg.exploration === 'string' && LINK.test(msg.exploration)
+          ? msg.exploration
+          : undefined;
+      void run(ws, origin, clampSize(msg.cols, 100), clampSize(msg.rows, 30), exploration);
     });
   }
 
-  function run(ws: WebSocket, origin: string, cols: number, rows: number) {
+  async function run(
+    ws: WebSocket,
+    origin: string,
+    cols: number,
+    rows: number,
+    exploration?: string,
+  ) {
+    const found = locate();
+    let command = found;
+    let extraEnv: Record<string, string> = {};
+    let cwd = o.cwd;
+    if (found && o.petals && !o.command) {
+      // In Petals from the first line: the tools for this session, the notes in its own folder.
+      const work = join(o.petals.home, 'work');
+      mkdirSync(work, { recursive: true });
+      const notes = sessionNotes(
+        o.agent,
+        o.petals.site,
+        await (o.skill ?? fetchSkill)(o.petals.site),
+        exploration,
+      );
+      writeFileSync(join(work, 'AGENTS.md'), notes);
+      writeFileSync(join(work, 'CLAUDE.md'), notes);
+      const launch = inPetals(o.agent, o.petals, exploration);
+      command = [...found, ...launch.args];
+      extraEnv = launch.env;
+      cwd = work;
+    }
+    if (!command) {
+      say(missing);
+      ws.send(Buffer.from(`${missing}\r\n`), { binary: true });
+      ws.send(JSON.stringify({ exit: 127, error: missing }));
+      ws.close(1000, 'not installed');
+      return;
+    }
+    // The agent's own folder first, so a script's `#!/usr/bin/env node` finds the Node it came with.
+    const env = { ...(o.env ?? process.env), ...extraEnv };
+    if ((command[0] as string).startsWith('/')) {
+      env.PATH = [dirname(command[0] as string), env.PATH].filter(Boolean).join(':');
+    }
     const child = spawn(python as string, ['-c', PTY_PY, String(cols), String(rows), ...command], {
-      cwd: o.cwd,
-      env: { ...(o.env ?? process.env), TERM: 'xterm-256color', COLORTERM: 'truecolor' },
+      cwd,
+      env: { ...env, TERM: 'xterm-256color', COLORTERM: 'truecolor' },
       stdio: ['pipe', 'pipe', 'inherit', 'pipe'],
     });
     active = { ws, child };
@@ -289,6 +562,12 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
         `Petals terminal on 127.0.0.1:${port}, for ${[...origins].join(', ')}. It runs ${AGENTS[o.agent]} here, in ${o.cwd ?? process.cwd()}.`,
       );
       announce();
+      const opener = o.openPage === undefined ? systemOpener : o.openPage;
+      const first = [...origins][0];
+      if (opener && first) {
+        say(`Opening ${first} in your browser: it connects by itself.`);
+        opener(pageUrl(first, code, port));
+      }
       say('Ctrl-C here stops it.');
       resolve({
         server,
@@ -310,8 +589,9 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
 /** `petal terminal [agent] [--port n] [--allow-origin o]...`: the arguments, or an error to show. */
 export function parseTerminalArgs(
   argv: string[],
-): { agent: Agent; port: number; extra: string[] } | { error: string } {
+): { agent: Agent; port: number; extra: string[]; open?: false } | { error: string } {
   let agent: Agent = 'claude';
+  let open: false | undefined;
   let port = DEFAULT_PORT;
   const extra: string[] = [];
   for (let i = 0; i < argv.length; i++) {
@@ -325,11 +605,15 @@ export function parseTerminalArgs(
       if (!o || !/^https?:\/\/[^/]+$/.test(o))
         return { error: '--allow-origin takes an origin, such as http://127.0.0.1:3195' };
       extra.push(o);
+    } else if (a === '--no-open') {
+      open = false;
     } else if (a in AGENTS) {
       agent = a as Agent;
     } else {
-      return { error: `unknown: ${a}. Use claude, codex or hermes, --port, --allow-origin` };
+      return {
+        error: `unknown: ${a}. Use claude, codex or hermes, --port, --allow-origin, --no-open`,
+      };
     }
   }
-  return { agent, port, extra };
+  return { agent, port, extra, ...(open === false ? { open } : {}) };
 }

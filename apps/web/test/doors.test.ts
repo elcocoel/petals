@@ -49,7 +49,7 @@ describe('doors', () => {
 
   test("the commands fetch the file from this site and add it as the agent's own tools", () => {
     const copy = (id: string) => all.find((d) => d.id === id)?.copy;
-    const get = `mkdir -p ~/.petals && curl -fsSL ${ORIGIN}/petal.mjs -o ~/.petals/petal.mjs && `;
+    const get = `curl -fsSL ${ORIGIN}/petal.mjs --create-dirs -o ~/.petals/petal.mjs && `;
     const run = '"$(command -v node)" "$HOME/.petals/petal.mjs" mcp';
     expect(copy('claude-code')).toBe(`${get}claude mcp add petals -- ${run}`);
     expect(copy('codex')).toBe(`${get}codex mcp add petals -- ${run}`);

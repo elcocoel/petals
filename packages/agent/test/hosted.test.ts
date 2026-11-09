@@ -56,7 +56,7 @@ describe('terminalCommand', () => {
   test('fetches the file from this site, then starts the terminal helper for the agent', () => {
     const { terminalCommand } = hosted;
     expect(terminalCommand(ORIGIN)).toBe(
-      `mkdir -p ~/.petals && curl -fsSL ${ORIGIN}/petal.mjs -o ~/.petals/petal.mjs && node ~/.petals/petal.mjs terminal claude`,
+      `curl -fsSL ${ORIGIN}/petal.mjs --create-dirs -o ~/.petals/petal.mjs && node ~/.petals/petal.mjs terminal`,
     );
     expect(terminalCommand(ORIGIN, 'codex').endsWith('terminal codex')).toBe(true);
   });
@@ -74,7 +74,7 @@ describe('hostedSkill', () => {
   test('sets the agent up with the file from this site, first, with no choice to make', () => {
     const setup = part('Set yourself up first');
     expect(md.indexOf('## Set yourself up first')).toBeLessThan(md.indexOf('## Talk first'));
-    expect(setup).toContain(`curl -fsSL ${ORIGIN}/petal.mjs -o ~/.petals/petal.mjs`);
+    expect(setup).toContain(`curl -fsSL ${ORIGIN}/petal.mjs --create-dirs -o ~/.petals/petal.mjs`);
     expect(setup).toContain('node ~/.petals/petal.mjs help');
     expect(setup).toMatch(/don't ask them to choose/);
     expect(setup).toMatch(/Node 22\.13/);

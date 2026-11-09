@@ -27,6 +27,8 @@ export interface SiteOptions {
   site: string;
   /** where the last exploration started from the CLI is kept; none: memory only */
   currentFile?: string;
+  /** the page's own conversation, handed in by the terminal helper (PETALS_EXPLORATION) */
+  initial?: string;
   fetch?: Fetch;
 }
 
@@ -73,7 +75,7 @@ export function siteDoor(opts: SiteOptions) {
   const f: Fetch = opts.fetch ?? ((url, init) => fetch(url, init));
   /** snapshots the site is known to hold, this process */
   const held = new Set<string>();
-  let current: string | null = null;
+  let current: string | null = opts.initial?.trim() || null;
 
   const remember = (link: string) => {
     current = link;
