@@ -396,6 +396,8 @@ class Cli {
       json({
         open_url: openUrl,
         opened,
+        // the site this file belongs to: if it isn't the one in the instructions, fetch the file again
+        site: this.sys.env.PETAL_API ?? null,
         ...(link ? { exploration: link } : {}),
         next: opened
           ? 'The page is open in their browser: tell them in one line. Each reply: `note`, with their words and then yours.'
@@ -776,6 +778,13 @@ class Cli {
     for (const [name, s] of Object.entries(own)) {
       const req = required.has(name) ? ' required' : '';
       lines.push(`  --${kebab(name).padEnd(20)}${describe(s, tool.input)}${req}`);
+      // An object, or a list of them: its own fields, so nobody has to read the source for them.
+      const inner = fields(s, tool.input);
+      const item =
+        s?.items && typeof s.items === 'object' ? fields(s.items as JSONSchema, tool.input) : {};
+      for (const [k, v] of Object.entries(Object.keys(inner).length ? inner : item)) {
+        lines.push(`      .${k.padEnd(18)}${describe(v, tool.input)}`);
+      }
     }
     if ('sha256' in own || 'spec' in own) {
       lines.push('', 'A network id in place of the sha256 or spec first takes the snapshot (--at,');
@@ -785,6 +794,29 @@ class Cli {
     }
     if ('choices' in own) lines.push('', 'Choice flags (--segments, --width, ...) fill --choices.');
     if ('include_svg' in own) lines.push('', '--out <file> writes the SVG to a file.');
+    const out = fields(tool.output);
+    if (Object.keys(out).length) {
+      lines.push(
+        '',
+        'Answers with (JSON on stdout; an error is { error: { code, message, hint } }):',
+      );
+      for (const [name, s] of Object.entries(out)) {
+        lines.push(`  ${name.padEnd(22)}${describe(s, tool.output)}`);
+      }
+    }
+    if (this.sys.asFile && tool.name === 'render_flower') {
+      lines.push(
+        '',
+        "In this file, render also saves the flower to this conversation's page, with the reading it",
+        'came from, and its short_url is the link to give. save-step is not needed after it.',
+      );
+    }
+    if (this.sys.asFile && tool.name === 'save_step') {
+      lines.push(
+        '',
+        'render already does this for each flower it draws: use it only for a spec drawn elsewhere.',
+      );
+    }
     return `${lines.filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n')}\n`;
   }
 }
