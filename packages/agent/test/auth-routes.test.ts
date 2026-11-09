@@ -170,6 +170,8 @@ describe('T192: POST /api/v1/auth/verify', () => {
     expect(await me.json()).toMatchObject({
       person_id: body.person_id,
       network: 'testnet',
+      // the wallet this session signed in with
+      account: 'maker.testnet',
       wallets: [
         { caip10: 'near:testnet:maker.testnet', network: 'testnet', account_id: 'maker.testnet' },
       ],
