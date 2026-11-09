@@ -10,7 +10,7 @@ import { WhoIsHere } from '../chat/WhoIsHere.tsx';
 import { FlowerTile } from '../FlowerTile.tsx';
 import { EmptySlot } from '../ui/EmptySlot.tsx';
 import { Funds } from './Funds.tsx';
-import { WorkMenu } from './WorkMenu.tsx';
+import { WorkMenu, type WorkMenuView } from './WorkMenu.tsx';
 
 /** Only a person reaches the lobby (app/lobby/page.tsx), so there's no way to connect here. */
 export interface LobbySession {
@@ -23,9 +23,7 @@ export function Lobby({
   funds,
   conversations,
   tiles,
-  menuOpen,
-  fold,
-  unfold,
+  menu,
 }: {
   session: LobbySession;
   funds: {
@@ -36,13 +34,11 @@ export function Lobby({
   };
   conversations: ConversationRow[];
   tiles: MapTile[];
-  menuOpen: boolean;
-  fold: () => void;
-  unfold: () => void;
+  menu: WorkMenuView;
 }) {
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
-      <WorkMenu conversations={conversations} open={menuOpen} onFold={fold} onUnfold={unfold} />
+      <WorkMenu conversations={conversations} menu={menu} />
       <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
         <section aria-label={fundsWords.profile} className="flex flex-col">
           {session.account && (

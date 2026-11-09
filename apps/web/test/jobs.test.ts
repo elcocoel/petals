@@ -1,9 +1,6 @@
 // C: a job Petals' agent hands to the person's own agent shows in the chat, says where it stands, and
 // while it's open, offers the line that hands it over.
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
-import { JobRow } from '../components/chat/JobRow.tsx';
 import { type Job, jobLine, jobWords } from '../lib/jobs.ts';
 import { fold } from '../lib/thread.ts';
 import { threadView } from '../lib/thread-view.ts';
@@ -42,16 +39,34 @@ describe('jobs in the chat', () => {
     expect(jobLine(handed, failed).summary).toBe('no RPC');
   });
 
-  test('the hand-over is one line with the conversation’s continue link', () => {
-    expect(jobWords.handover('https://x/s/t')).toBe(
-      'Take the open jobs in my Petals project: https://x/s/t',
+  test('a job names the agent it went to, and who took it', () => {
+    expect(jobLine({ ...handed, to: 'Claude Code' }, undefined).text).toBe(
+      "Sent to Claude Code: Map RaidGuild's proposals",
     );
+    const taken: Job = { ...handed, status: 'taken', taken_by: 'Hermes' };
+    expect(jobLine(handed, taken).text).toBe("Hermes is on it: Map RaidGuild's proposals");
+  });
+});
+
+describe('your agents in the menu', () => {
+  test('each says what it’s doing: on a job, waiting, or not connected now', async () => {
+    const { agentRows, agentWords } = await import('../lib/agents.ts');
+    const rows = agentRows([
+      { name: 'Claude Code', waiting: false, job: { id: 'j', title: 'Map X' } },
+      { name: 'Hermes', waiting: true, job: null },
+      { name: 'Codex', waiting: false, job: null },
+    ]);
+    expect(rows.map((r) => [r.label, r.status, r.here])).toEqual([
+      ['Claude Code', agentWords.on('Map X'), true],
+      ['Hermes', agentWords.waiting, true],
+      ['Codex', agentWords.away, false],
+    ]);
   });
 
-  test('an open job offers the copy; a taken one doesn’t', () => {
-    const at = (open: boolean) =>
-      renderToStaticMarkup(createElement(JobRow, { text: 'x', open, onCopy: () => {} }));
-    expect(at(true)).toContain(jobWords.copy);
-    expect(at(false)).not.toContain(jobWords.copy);
+  test('the one prompt carries the site and a fresh agent key', async () => {
+    const { agentWords } = await import('../lib/agents.ts');
+    const line = agentWords.prompt('https://p', 'petal_agent_k');
+    expect(line).toContain('https://p/skill.md');
+    expect(line.endsWith('My agent key: petal_agent_k')).toBe(true);
   });
 });

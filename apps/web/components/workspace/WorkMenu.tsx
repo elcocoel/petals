@@ -6,6 +6,7 @@
 // to a new one, where folders go, and the way to bring your own agent. Props only: open or folded comes from the page's ViewModel. Words
 // from lib/lobby-view.ts.
 import type { ReactNode } from 'react';
+import { type AgentRow, agentWords } from '../../lib/agents.ts';
 import type { ConversationRow } from '../../lib/conversation-list.ts';
 import { doorWords } from '../../lib/door-words.ts';
 import { lobbyWords } from '../../lib/lobby-view.ts';
@@ -16,17 +17,26 @@ import { EmptySlot } from '../ui/EmptySlot.tsx';
 import { SideRail } from '../ui/SideRail.tsx';
 import { TextLink } from '../ui/TextLink.tsx';
 
+/** What viewmodels/useWorkMenu.ts gives the menu, the same on both pages. */
+export interface WorkMenuView {
+  open: boolean;
+  fold: () => void;
+  unfold: () => void;
+  /** The person's own agents, and what each is doing (the first full test, 9 Nov). */
+  agents: AgentRow[];
+  copied: boolean;
+  /** Copies the one prompt that connects another agent, with a fresh agent key. */
+  copy: () => void;
+}
+
 export function WorkMenu({
   conversations,
-  open,
-  onFold,
-  onUnfold,
+  menu,
 }: {
   conversations: ConversationRow[];
-  open: boolean;
-  onFold: () => void;
-  onUnfold: () => void;
+  menu: WorkMenuView;
 }) {
+  const { open, fold: onFold, unfold: onUnfold } = menu;
   const rail = (open: boolean, children: ReactNode) => (
     <SideRail
       label={lobbyWords.menu}
@@ -67,12 +77,29 @@ export function WorkMenu({
               <h2 className="m-0 type-label">{lobbyWords.folders}</h2>
               <EmptySlot />
             </section>
-            {/* The second way in (B and C, 9 Nov): bring your own agent, as /connect says how. */}
-            <div className="p-block-gap">
+            {/* The person's own agents (C, the first full test): who's connected and what each is on, the
+                one prompt that connects another, and how, on /connect. */}
+            <section className="flex flex-col items-start gap-text-gap p-block-gap">
+              <h2 className="m-0 type-label">{agentWords.heading}</h2>
+              {menu.agents.length > 0 && (
+                <ul className="m-0 flex w-full list-none flex-col gap-space-8 p-0">
+                  {menu.agents.map((a) => (
+                    <li key={a.key} className="flex flex-col">
+                      <span className={`type-label ${a.here ? 'text-primary' : 'text-muted'}`}>
+                        {a.label}
+                      </span>
+                      <span className="type-caption text-muted">{a.status}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Button variant="pill" onClick={menu.copy}>
+                {menu.copied ? agentWords.copied : agentWords.copy}
+              </Button>
               <TextLink variant="quiet" href={siteLinks.connect}>
                 {doorWords.ownAgent}
               </TextLink>
-            </div>
+            </section>
           </>,
         )}
       </div>

@@ -2,7 +2,7 @@
 // the panel that opens over it. Which flower is open and which petal is selected are in the chat's reducer,
 // so a new flower can take them; this draws what's needed, projects the panel, says whether its box is
 // open, keeps the address in step and hears Escape.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { saveSettings } from '../lib/agent-client.ts';
 import {
   type Catalogue,
@@ -43,6 +43,7 @@ import { usePay } from './usePay.ts';
 import { useSession } from './useSession.ts';
 import { useSnapshotFacts } from './useSnapshotFacts.ts';
 import { useStoredFlower } from './useStoredFlower.ts';
+import { useWorkMenu } from './useWorkMenu.ts';
 
 const STORED_LINK = /^\/f\/([^/?#]+)$/;
 
@@ -232,6 +233,20 @@ export function useWorkspace(props: {
     [items],
   );
   const jobs = useJobs(jobsIn);
+  // A report landed: Petals' agent takes it up at once, in this run (C), so the page follows that turn.
+  const reported = useRef<Set<string>>(new Set());
+  const follow = chatActions.follow;
+  useEffect(() => {
+    const ended = Object.values(jobs).filter((j) => j.status === 'done' || j.status === 'failed');
+    const fresh = ended.filter((j) => !reported.current.has(j.id));
+    for (const j of ended) reported.current.add(j.id);
+    if (fresh.length > 0) follow();
+  }, [jobs, follow]);
+  // The work menu, the lobby's own: its agents read again when a turn ends or the conversation changes.
+  const menu = useWorkMenu(
+    Boolean(session.account),
+    `${busy}:${Object.keys(jobs).length}:${JSON.stringify(Object.values(jobs).map((j) => j.status))}`,
+  );
   // Paying for Petals' agent (B): the newest pay row is the live one.
   const asking = useMemo(
     () => shownRows.findLast((r) => r.kind === 'pay')?.key ?? null,
@@ -243,9 +258,6 @@ export function useWorkspace(props: {
     () => conversationRows(listed, { runId, elsewhere: elsewhereRef ?? undefined }),
     [listed, runId, elsewhereRef],
   );
-  // box.fold: the work menu, the lobby's own (B1), for a person who's signed in. It starts open, as an
-  // IDE's does, and folds away by hand.
-  const [menuOpen, setMenuOpen] = useState(true);
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
   const onCanvas = canvas;
@@ -326,10 +338,10 @@ export function useWorkspace(props: {
             'Conversation'),
       conversations,
       menuShown: Boolean(session.account),
+      menu,
       pay: { asking: pay.asking, phase: pay.phase, added: pay.added },
-      jobs: { known: jobs.jobs, copied: jobs.copied },
+      jobs,
       balance: pay.balance ? payWords.balance(pay.balance) : null,
-      menuOpen,
       session,
       needsWallet,
       composerShown,
@@ -385,9 +397,6 @@ export function useWorkspace(props: {
       },
       closeBox: () => setBoxOpen(false),
       pay: pay.pay,
-      copyJobs: jobs.copy,
-      foldMenu: () => setMenuOpen(false),
-      unfoldMenu: () => setMenuOpen(true),
       closeDetail: () => dispatch({ type: 'select', petal: null }),
       setSection: (next: PanelSection) => dispatch({ type: 'section', section: next }),
       startFrom: (text: string) => {

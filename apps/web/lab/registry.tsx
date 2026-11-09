@@ -1453,10 +1453,8 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/chat/JobRow.tsx',
     states: [
       {
-        name: 'handed, open',
-        render: () => (
-          <JobRow text="Sent to your own agent: Map RaidGuild's proposals" open onCopy={() => {}} />
-        ),
+        name: 'sent to an agent',
+        render: () => <JobRow text="Sent to Claude Code: Map RaidGuild's proposals" />,
       },
       {
         name: 'reported',
