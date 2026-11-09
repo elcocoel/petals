@@ -70,3 +70,35 @@ describe('your agents in the menu', () => {
     expect(line.endsWith('My agent key: petal_agent_k')).toBe(true);
   });
 });
+
+describe('a turn Petals starts on a report', () => {
+  test('its opening line shows as a note, not as the person’s words', async () => {
+    const { chatReducer, initialChat } = await import('../lib/thread.ts');
+    const s0 = initialChat({
+      initialRun: 'run_1',
+      recorded: false,
+      opening: '',
+      initialQuestion: null,
+    } as never);
+    const run = {
+      run_id: 'run_1',
+      status: 'done',
+      messages: [
+        { role: 'user', content: 'Map RaidGuild' },
+        { role: 'assistant', content: 'Sent it to Hermes.' },
+        { role: 'user', content: '(Petals) The job "Map RaidGuild" came back from Hermes.' },
+        { role: 'assistant', content: 'Hermes found 246 proposals.' },
+      ],
+      events: [
+        { event: 'run', data: { run_id: 'run_1', resume_url: '' } },
+        { event: 'message', data: { text: 'Sent it to Hermes.' } },
+        { event: 'run', data: { run_id: 'run_1', resume_url: '' } },
+        { event: 'message', data: { text: 'Hermes found 246 proposals.' } },
+      ],
+    };
+    const s = chatReducer(s0, { type: 'opened', run } as never);
+    const kinds = s.items.map((i: { kind: string }) => i.kind);
+    expect(kinds).toContain('note');
+    expect(s.items.filter((i: { kind: string }) => i.kind === 'user')).toHaveLength(1);
+  });
+});
