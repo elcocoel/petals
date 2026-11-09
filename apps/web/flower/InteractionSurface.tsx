@@ -5,12 +5,10 @@
 // camera isn't told about the boxes. Until the conversation has a flower, the canvas is empty ground
 // (Elco, 8 Nov: no flower hard-coded in).
 import type { SurfaceName } from '@petal/tokens';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { AgentChat } from '../components/chat/AgentChat.tsx';
 import { Composer } from '../components/chat/Composer.tsx';
-import { ConnectAgent } from '../components/chat/ConnectAgent.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
-import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
 import { HelperPairing } from '../components/chat/HelperPairing.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
@@ -18,10 +16,17 @@ import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { WhoIsHere } from '../components/chat/WhoIsHere.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
+import { WorkMenu } from '../components/workspace/WorkMenu.tsx';
 import { agentName, chatWords } from '../lib/agent-chat.ts';
 import type { Catalogue } from '../lib/composer-options.ts';
 import { doorWords } from '../lib/door-words.ts';
-import { conversationBoxes, recordedBoxes, terminalBoxes } from '../lib/float-box.ts';
+import {
+  besideMenu,
+  conversationBoxes,
+  recordedBoxes,
+  type Size,
+  terminalBoxes,
+} from '../lib/float-box.ts';
 import type { ListedFlower } from '../lib/flower-view.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useAgentChat } from '../viewmodels/useAgentChat.ts';
@@ -30,13 +35,12 @@ import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
 import { FlowerPanel } from './FlowerPanel.tsx';
 
-const BOXES = ['output', 'input', 'panel', 'list', 'options'] as const;
+const BOXES = ['output', 'input', 'panel', 'options'] as const;
 
 export function InteractionSurface({
   scatter,
   probe,
   surface,
-  agentPrompt = '',
   terminal = false,
   terminalCommand = '',
   ...workspace
@@ -53,8 +57,6 @@ export function InteractionSurface({
   initialElsewhere?: string | undefined;
   catalogue?: Catalogue | null;
   agentForVisitors?: boolean;
-  /** What a person pastes into their own agent, on a site that runs none for them. */
-  agentPrompt?: string;
   initialQuestion: string | null;
   recorded: boolean;
   opening: string;
@@ -70,18 +72,25 @@ export function InteractionSurface({
     signedIn: Boolean(state.session.account),
   });
   const chatTitle = term.chat.agent ? agentName(term.chat.agent) : chatWords.box;
-  const hands = useFloatBoxes(
-    BOXES,
-    terminal ? terminalBoxes : workspace.recorded ? recordedBoxes : conversationBoxes,
+  // The chat with the person's own agent is the page's conversation on a site that runs none for them,
+  // once they're signed in (B1, 9 Nov), and wherever ?terminal=1 asks for it. A wallet comes first.
+  const chat = state.door === 'chat' || (terminal && !state.door);
+  // The boxes start past the work menu when it's there. Placed again only if that or the chat changes.
+  const from = state.menuShown ? besideMenu : undefined;
+  const place = useMemo(
+    () =>
+      chat
+        ? (win: Size) => terminalBoxes(win, from)
+        : workspace.recorded
+          ? recordedBoxes
+          : (win: Size) => conversationBoxes(win, undefined, from),
+    [chat, from, workspace.recorded],
   );
+  const hands = useFloatBoxes(BOXES, place);
   const raisePanel = hands.panel.raise;
   useEffect(() => {
     if (state.boxOpen) raisePanel();
   }, [state.boxOpen, raisePanel]);
-  const raiseList = hands.list.raise;
-  useEffect(() => {
-    if (state.listOpen) raiseList();
-  }, [state.listOpen, raiseList]);
   const raiseOptions = hands.options.raise;
   useEffect(() => {
     if (state.modelsOpen) raiseOptions();
@@ -98,20 +107,21 @@ export function InteractionSurface({
         selected={state.selected}
         onPick={actions.pick}
       />
+      {state.menuShown && (
+        <WorkMenu
+          conversations={state.conversations}
+          open={state.menuOpen}
+          onFold={actions.foldMenu}
+          onUnfold={actions.unfoldMenu}
+        />
+      )}
       <FloatBox
-        label={terminal ? chatTitle : (doorLabel(state.door) ?? state.heading)}
-        title={terminal ? chatTitle : (doorLabel(state.door) ?? state.heading)}
+        label={chat ? chatTitle : (doorLabel(state.door) ?? state.heading)}
+        title={chat ? chatTitle : (doorLabel(state.door) ?? state.heading)}
         surface={surface}
         hand={hands.output}
-        control={
-          state.hasList ? (
-            <Button variant="link" onClick={actions.toggleList}>
-              Conversations
-            </Button>
-          ) : undefined
-        }
       >
-        {terminal && term.phase !== 'open' && (
+        {chat && term.phase !== 'open' && (
           <HelperPairing
             command={terminalCommand}
             phase={term.phase}
@@ -123,7 +133,7 @@ export function InteractionSurface({
             onStart={term.start}
           />
         )}
-        {terminal && term.phase === 'open' && (
+        {chat && term.phase === 'open' && (
           <AgentChat
             chat={term.chat}
             draft={term.draft}
@@ -139,7 +149,7 @@ export function InteractionSurface({
             onPick={term.togglePicking}
           />
         )}
-        {!terminal && state.door === 'wallet' && (
+        {!chat && state.door === 'wallet' && (
           <ConnectWallet
             question=""
             busy={state.session.busy}
@@ -147,9 +157,8 @@ export function InteractionSurface({
             onConnect={state.session.connect}
           />
         )}
-        {!terminal && state.door === 'agent' && <ConnectAgent prompt={agentPrompt} />}
         {/* Petals' greeting and the thread, wherever Petals' agent answers or there's something to show. */}
-        {!terminal && !state.door && (
+        {!chat && !state.door && (
           <ConversationThread
             recorded={state.recorded}
             rows={state.rows}
@@ -169,7 +178,7 @@ export function InteractionSurface({
         title={state.needsWallet ? doorWords.connect : state.composer.label}
         surface={surface}
         hand={hands.input}
-        closed={terminal || !state.inputShown}
+        closed={chat || !state.inputShown}
       >
         {state.needsWallet && (
           <ConnectWallet
@@ -205,20 +214,6 @@ export function InteractionSurface({
         closed={!state.modelsOpen}
       >
         <ModelOptions options={state.models} onPick={actions.pickModel} />
-      </FloatBox>
-      <FloatBox
-        label="Conversations"
-        title="Conversations"
-        surface={surface}
-        hand={hands.list}
-        closed={!state.listOpen}
-        control={
-          <Button variant="link" href="/make">
-            New
-          </Button>
-        }
-      >
-        <ConversationList rows={state.conversations} />
       </FloatBox>
       {/* Proposal (8 Nov, fe-frontdoor): the account is its own thing, apart from the work, in a corner. */}
       {state.session.account && (
@@ -265,8 +260,6 @@ export function InteractionSurface({
 }
 
 /** The one box's bar on a site with no agent for visitors: what it's for. */
-function doorLabel(door: 'waiting' | 'wallet' | 'agent' | null): string | null {
-  if (door === 'wallet') return doorWords.connect;
-  if (door === 'agent') return doorWords.connectAgent;
-  return null;
+function doorLabel(door: 'waiting' | 'wallet' | 'chat' | null): string | null {
+  return door === 'wallet' ? doorWords.connect : null;
 }

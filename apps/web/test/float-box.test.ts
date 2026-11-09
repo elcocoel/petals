@@ -10,6 +10,7 @@ import { FloatBox, type FloatHand } from '../components/ui/FloatBox.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
 import { MAP_BOTTOM, MAP_SIZE } from '../flower/marks.ts';
 import {
+  besideMenu,
   conversationBoxes,
   type Edge,
   kept,
@@ -18,6 +19,7 @@ import {
   recordedBoxes,
   type Size,
   sized,
+  terminalBoxes,
 } from '../lib/float-box.ts';
 import { composerView } from '../lib/thread-view.ts';
 
@@ -27,12 +29,22 @@ const barInside = (r: Rect, win: Size) =>
   r.x >= 0 && r.x + r.w <= win.w && r.y >= 0 && r.y + floatBox.bar <= win.h;
 
 describe('where the conversation starts', () => {
-  test('the list waits beside the output, as tall as it', () => {
-    const { output, list } = conversationBoxes(WIN);
-    expect(list.x).toBe(output.x + output.w + floatBox.gap);
-    expect(list.y).toBe(output.y);
-    expect(list.h).toBe(output.h);
-    expect(list.w).toBe(floatBox['list-width']);
+  test('beside the work menu, the column starts past it, the chat included', () => {
+    for (const { output, input } of [
+      conversationBoxes(WIN, floatBox['input-height'], besideMenu),
+      terminalBoxes(WIN, besideMenu),
+    ]) {
+      expect(output.x).toBe(besideMenu);
+      expect(input.x).toBe(besideMenu);
+    }
+  });
+
+  test("where there's no room beside the menu, the column goes over it, inside the window", () => {
+    const narrow = { w: 700, h: 900 };
+    const { output } = terminalBoxes(narrow, besideMenu);
+    expect(output.x + output.w).toBe(narrow.w - floatBox.inset);
+    const phone = { w: 390, h: 844 };
+    expect(terminalBoxes(phone, besideMenu).output.x).toBe(floatBox.inset);
   });
 
   test('both on the left, output above, input directly under it, the same width', () => {

@@ -204,17 +204,16 @@ export function useWorkspace(props: {
 
   // Read when the page opens, and again when a turn starts or ends here: nothing runs on a timer.
   const session = useSession(!recorded);
-  // No agent here for visitors (8 Nov): on a page of its own, the one box is the way in, a wallet and then
-  // the person's own agent, where Petals' greeting and composer were. Not on a run, another agent's
-  // conversation or a recorded site, which show what they hold.
-  const agentless =
-    props.agentForVisitors === false && !recorded && !initialElsewhere && !props.initialRun;
-  const door: 'waiting' | 'wallet' | 'agent' | null = !agentless
+  // No agent here for visitors (8 Nov): the one box is the way in, a wallet and then the chat with the
+  // person's own agent (W10), on a conversation of theirs or a new one (B1, 9 Nov). Not on one of Petals'
+  // own runs or a recorded site, which show what they hold.
+  const agentless = props.agentForVisitors === false && !recorded && !props.initialRun;
+  const door: 'waiting' | 'wallet' | 'chat' | null = !agentless
     ? null
     : !session.known
       ? 'waiting'
       : session.account
-        ? 'agent'
+        ? 'chat'
         : 'wallet';
   // Another agent's conversation needs no wallet here: nothing here is spent on it.
   const needsWallet =
@@ -229,15 +228,9 @@ export function useWorkspace(props: {
     () => conversationRows(listed, { runId, elsewhere: elsewhereRef ?? undefined }),
     [listed, runId, elsewhereRef],
   );
-  // box.close
-  // Coming back with nothing in hand, the list is what there is to do. A person's choice wins from then on.
-  const [listChoice, setListChoice] = useState<boolean | null>(null);
-  const cameBare =
-    !props.initialRun && !initialElsewhere && !props.initialQuestion && !props.initialPetal;
-  const nothingOpened = (props.initialOpen?.kind ?? 'latest') === 'latest';
-  // Proposal (8 Nov, fe-frontdoor): the account has its own place, so with nothing to list there's no list.
-  const hasList = conversations.length > 0;
-  const listOpen = listChoice ?? (cameBare && nothingOpened && hasList);
+  // box.fold: the work menu, the lobby's own (B1), for a person who's signed in. It starts open, as an
+  // IDE's does, and folds away by hand.
+  const [menuOpen, setMenuOpen] = useState(true);
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
   const onCanvas = canvas;
@@ -317,8 +310,8 @@ export function useWorkspace(props: {
             elsewherePacket?.question ??
             'Conversation'),
       conversations,
-      hasList,
-      listOpen,
+      menuShown: Boolean(session.account),
+      menuOpen,
       session,
       needsWallet,
       composerShown,
@@ -373,7 +366,8 @@ export function useWorkspace(props: {
         if (opensBox) setBoxOpen(true);
       },
       closeBox: () => setBoxOpen(false),
-      toggleList: () => setListChoice(!listOpen),
+      foldMenu: () => setMenuOpen(false),
+      unfoldMenu: () => setMenuOpen(true),
       closeDetail: () => dispatch({ type: 'select', petal: null }),
       setSection: (next: PanelSection) => dispatch({ type: 'section', section: next }),
       startFrom: (text: string) => {

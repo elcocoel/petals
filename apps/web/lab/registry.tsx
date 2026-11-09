@@ -1919,6 +1919,7 @@ export const NOT_IN_LAB: Record<string, string> = {
   FloatBox: 'a BarBox fixed to the window and placed by hand: it lives at /make',
   SiteChrome: 'the Nav, drawn here, around a reading column; it holds no state of its own',
   FrontDoor: 'draws nothing: it opens the wallet when the landing is left for /make (proposal)',
-  Lobby:
-    'wires useLobby to the SideRail, the list and the tiles, each here, and it lives at /lobby',
+  Lobby: 'wires useLobby to the WorkMenu and the tiles, and it lives at /lobby',
+  WorkMenu:
+    'the SideRail and the list, both here, fixed to the window: it lives at /lobby and /make',
 };
