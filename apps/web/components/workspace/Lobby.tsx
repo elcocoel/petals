@@ -1,15 +1,17 @@
 // The lobby (specs/004-workspace, W3), a skeleton: the work menu on the left (WorkMenu, the same as the
 // workspace's) with a person's conversations and where folders will go, and beside it the profile part
-// (who's here, and what they hold in the credit contract, with Withdraw) and the flowers on the map, each
-// opening on the canvas.
+// (who's here, their public profile on NEAR Social, and what they hold in the credit contract, with
+// Withdraw) and the flowers on the map, each opening on the canvas.
 // Props only: app/lobby/LobbySurface.tsx wires useLobby to it. It lays out existing parts and adds no
 // look of its own. Words from lib/lobby-view.ts.
 import type { ConversationRow } from '../../lib/conversation-list.ts';
 import { fundsWords, lobbyWords, type MapTile, type WithdrawPhase } from '../../lib/lobby-view.ts';
+import type { SocialProfile as Profile } from '../../lib/near-social.ts';
 import { WhoIsHere } from '../chat/WhoIsHere.tsx';
 import { FlowerTile } from '../FlowerTile.tsx';
 import { EmptySlot } from '../ui/EmptySlot.tsx';
 import { Funds } from './Funds.tsx';
+import { SocialProfile } from './SocialProfile.tsx';
 import { WorkMenu, type WorkMenuView } from './WorkMenu.tsx';
 
 /** Only a person reaches the lobby (app/lobby/page.tsx), so there's no way to connect here. */
@@ -20,12 +22,15 @@ export interface LobbySession {
 
 export function Lobby({
   session,
+  social,
   funds,
   conversations,
   tiles,
   menu,
 }: {
   session: LobbySession;
+  /** The account's public profile on NEAR Social, or null: none, or it can't be read. */
+  social: Profile | null;
   funds: {
     held: string | null;
     phase: WithdrawPhase;
@@ -44,6 +49,7 @@ export function Lobby({
           {session.account && (
             <WhoIsHere account={session.account} onDisconnect={session.disconnect} />
           )}
+          {social && <SocialProfile profile={social} />}
           <Funds
             held={funds.held}
             phase={funds.phase}
