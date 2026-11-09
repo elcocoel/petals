@@ -4,8 +4,9 @@
 // no timer per viewer. Stop aborts the job's signal and waits for the job to say how it ended.
 // Each flower is also saved as a step of the run's exploration (SYS-041).
 import type { AgentEvent, ChatInput } from '@petal/core/types';
-import { saveRunStep } from '@petal/tools';
+import { registry as defaultRegistry, saveRunStep } from '@petal/tools';
 import { Channel } from './channel.ts';
+import { handJobTool, jobsOfRun } from './hand-job.ts';
 import type { Budget, LlmMessage } from './llm.ts';
 import { type RunDeps, type RunOptions, startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
@@ -82,16 +83,20 @@ export function runJobs(
       };
       job.task = (async () => {
         try {
+          // The jobs it handed out so far, as they stand: their reports are read on this chat.
+          const jobsNow = await jobsOfRun(deps.tools, runId).catch(() => []);
           const events = startRun(
             {
               messages: input.messages,
               ...(input.draft ? { draft: input.draft } : {}),
               ...earlier,
+              ...(jobsNow.length ? { jobs: jobsNow } : {}),
             },
             { tools: deps.tools, llm: deps.llm, budget },
             {
               runId,
-              ...(o.registry ? { registry: o.registry } : {}),
+              // its own hand_job, which knows this run and so its exploration
+              registry: [...(o.registry ?? defaultRegistry), handJobTool(deps.tools, runId)],
               ...(o.heartbeatMs ? { heartbeatMs: o.heartbeatMs } : {}),
               signal: job.abort.signal,
               ...(pick ? { pick } : {}),
