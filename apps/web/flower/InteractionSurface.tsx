@@ -118,6 +118,7 @@ export function InteractionSurface({
             mount={term.mount}
             onCode={term.setCode}
             onPair={term.pair}
+            onStart={term.start}
           />
         )}
         {!terminal && state.door === 'wallet' && (

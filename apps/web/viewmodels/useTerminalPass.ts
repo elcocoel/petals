@@ -19,6 +19,8 @@ import {
   type TerminalLine,
 } from '../lib/agent-client.ts';
 import {
+  type AgentId,
+  codeFrom,
   HELPER_PORT,
   helloFrame,
   helperUrl,
@@ -26,6 +28,11 @@ import {
   pairingCode,
   readControl,
   resizeFrame,
+  START_RETRY_MS,
+  START_WAIT_MS,
+  startAddress,
+  startFromHash,
+  startLink,
   type TermPhase,
   terminalAddress,
   terminalWords,
@@ -50,49 +57,56 @@ export function useTerminalPass({
   const line = useRef<TerminalLine | null>(null);
   const live = useRef(false);
   // A code from the address waits here until the terminal is drawn and the server has said who's here.
-  const waiting = useRef<{ code: string; port: number } | null>(null);
+  const waiting = useRef<
+    { kind: 'pair'; code: string; port: number } | { kind: 'start'; agent: AgentId } | null
+  >(null);
 
-  const connect = useCallback((pair: string, port: number, exploration: string | null) => {
-    const t = term.current;
-    if (!t) return;
-    line.current?.close();
-    live.current = false;
-    setPhase('connecting');
-    setFailed(null);
-    let answered = false;
-    const next = openTerminalLine(
-      helperUrl(port),
-      helloFrame(pair, { cols: t.cols, rows: t.rows }, exploration),
-      {
-        bytes: (b) => t.write(b),
-        text: (text) => {
-          const m = readControl(text);
-          if (!m) return;
-          answered = true;
-          if (m.kind === 'paired') {
-            live.current = true;
-            setPhase('open');
-            t.focus();
-          } else if (m.kind === 'exit') {
+  const connect = useCallback(
+    (pair: string, port: number, exploration: string | null, absent?: () => void) => {
+      const t = term.current;
+      if (!t) return;
+      line.current?.close();
+      live.current = false;
+      setPhase('connecting');
+      setFailed(null);
+      let answered = false;
+      const next = openTerminalLine(
+        helperUrl(port),
+        helloFrame(pair, { cols: t.cols, rows: t.rows }, exploration),
+        {
+          bytes: (b) => t.write(b),
+          text: (text) => {
+            const m = readControl(text);
+            if (!m) return;
+            answered = true;
+            if (m.kind === 'paired') {
+              live.current = true;
+              setPhase('open');
+              t.focus();
+            } else if (m.kind === 'exit') {
+              live.current = false;
+              setPhase('ended');
+            } else {
+              // a wrong or used code: ask for the next one
+              setFailed(terminalWords.refused);
+              setPhase('pair');
+            }
+          },
+          closed: () => {
             live.current = false;
-            setPhase('ended');
-          } else {
-            // a wrong or used code: ask for the next one
-            setFailed(terminalWords.refused);
-            setPhase('pair');
-          }
+            if (answered) setPhase((p) => (p === 'open' ? 'ended' : p));
+            else if (absent) absent();
+            else {
+              setFailed(terminalWords.noHelper);
+              setPhase('pair');
+            }
+          },
         },
-        closed: () => {
-          live.current = false;
-          if (!answered) {
-            setFailed(terminalWords.noHelper);
-            setPhase('pair');
-          } else setPhase((p) => (p === 'open' ? 'ended' : p));
-        },
-      },
-    );
-    line.current = next;
-  }, []);
+      );
+      line.current = next;
+    },
+    [],
+  );
 
   const begin = useCallback(
     async (pair: string, port: number) => {
@@ -112,12 +126,45 @@ export function useTerminalPass({
     [conversation, signedIn, connect],
   );
 
+  // One click: the page makes the code, opens petals:// so Petals Helper.app starts the helper with it, and
+  // keeps trying the line while it starts. Nothing answering for a few seconds means the app isn't on this
+  // computer yet, and the first-time paste is the way. A signed-in page with no conversation makes one
+  // first and reloads onto it, then starts.
+  const start = useCallback(
+    async (agent: AgentId) => {
+      setPhase('connecting');
+      setFailed(null);
+      if (!conversation && signedIn) {
+        const id = await startOwnConversation(terminalWords.conversation, terminalWords.client);
+        if (id) {
+          window.location.replace(startAddress(window.location.pathname, id, agent));
+          return;
+        }
+      }
+      const pair = codeFrom(crypto.getRandomValues(new Uint8Array(20)));
+      const link = conversation ? await continueLinkFor(conversation) : null;
+      window.location.assign(startLink(pair, agent));
+      const until = Date.now() + START_WAIT_MS;
+      const attempt = () =>
+        connect(pair, HELPER_PORT, link, () => {
+          if (Date.now() < until) window.setTimeout(attempt, START_RETRY_MS);
+          else {
+            setFailed(terminalWords.notInstalled);
+            setPhase('pair');
+          }
+        });
+      attempt();
+    },
+    [conversation, signedIn, connect],
+  );
+
   useEffect(() => {
     const w = waiting.current;
     if (!w || !drawn || !known) return;
     waiting.current = null;
-    void begin(w.code, w.port);
-  }, [drawn, known, begin]);
+    if (w.kind === 'pair') void begin(w.code, w.port);
+    else void start(w.agent);
+  }, [drawn, known, begin, start]);
 
   // The terminal is drawn once its box is on the page, and gone with it (React 19 calls the cleanup).
   const mount: RefCallback<HTMLDivElement> = useCallback((el) => {
@@ -127,8 +174,10 @@ export function useTerminalPass({
     // The helper opened this page with its code in the fragment: take it out of the address at once, so
     // it isn't kept or shared, and connect with nothing typed.
     const fromLink = pairFromHash(window.location.hash);
-    if (fromLink) {
-      waiting.current = fromLink;
+    const toStart = startFromHash(window.location.hash);
+    if (fromLink) waiting.current = { kind: 'pair', ...fromLink };
+    else if (toStart) waiting.current = { kind: 'start', agent: toStart };
+    if (fromLink || toStart) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
     void Promise.all([import('@xterm/xterm'), import('@xterm/addon-fit')]).then(
@@ -187,6 +236,7 @@ export function useTerminalPass({
     failed,
     mount,
     setCode,
+    start: (agent: AgentId) => void start(agent),
     pair: () => {
       const c = pairingCode(code);
       if (c) {

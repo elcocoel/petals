@@ -1459,6 +1459,7 @@ export const registry: LabEntry[] = [
             mount={() => {}}
             onCode={() => {}}
             onPair={() => {}}
+            onStart={() => {}}
           />
         ),
       },
@@ -1474,6 +1475,7 @@ export const registry: LabEntry[] = [
             mount={() => {}}
             onCode={() => {}}
             onPair={() => {}}
+            onStart={() => {}}
           />
         ),
       },
