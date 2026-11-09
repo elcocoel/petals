@@ -147,5 +147,10 @@ Notes to address later, not blockers.
 - Most flowers have no road yet. They'll sit at the edge of their continent.
 - A flower draws its top holders and "everyone else", so a road fans only into the shared accounts that have petals; the rest go to "everyone else".
 - A composed view may be counted twice in the index (SYSTEMS, untested).
+- Links guessed across chains (the same EVM address on two chains) aren't drawn; they could become routes over the sea, Elco's call.
+- A flower's top petals often share few accounts with its neighbours' (ENS and Uniswap delegates: none of 60), so most of a fan runs between "everyone else" petals.
+- A continent grows when flowers join it, and could grow into its neighbour; that isn't handled yet.
+- A name sits under a flower's full reach, so under a flower with short petals it floats low.
+- Faraway roads still cross the view when zoomed into one continent.
 - An opened petal looks bigger than its share (5 Nov, the continuous crossing).
 - Performance on a cheap laptop, in Safari and on touch is unmeasured.

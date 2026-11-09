@@ -59,3 +59,16 @@ The page shows no new words: only the flowers' own titles and the data's counts.
 ## Measuring
 
 The probe, as on the bench (`?probe=1`): frame times while zooming from the whole landscape into ENS delegates, then into one delegate, on Elco's Mac, with the CPU throttled 4x. The bar is the 5 Nov proof's: about 60 full frames a second.
+
+## Built, 9 Nov (lane `m-face/fe-map`, `3f12193`, not merged)
+
+What's on the bench, and where it moved from the plan above:
+
+- **Data:** the night's 203 views, their readings and the index's pairs are copied once into `fixtures/landscape/night-2026-11-09.json.gz` (0.66 MB), by `apps/web/scripts/landscape-data.ts`. A page load can't fetch them: the server allows 60 calls a minute, and a view takes two. A rerun fetches only views it doesn't have.
+- **Scripts live in `apps/web/scripts/`,** because the repo's `scripts/` can't import the web app's files.
+- **Roads are same-chain matches only.** 1,060 of the index's 3,354 pairs are guessed across chains from the same EVM address (`match.status: inferred`). They're a different claim, and the map leaves them out for now.
+- **Each flower pulls on its strongest three links only** (`backbone`, `ROADS_FAR`). Pulling on all of them knotted Solana, where nearly every group shares someone with every other. Far away, a flower shows those three; the rest come in with a new row, `roadMore`.
+- **Flowers with no links sit on the shore,** past every linked flower.
+- **The fan's rest:** ENS and Uniswap delegates share 1,731 accounts, but none of them is among either flower's 60 drawn petals. So besides the lines between shared petals, one line joins the two "everyone else" petals, weighted by the accounts left over.
+- **Measured** on this Mac in Chrome, zooming from the whole map into one ENS delegate's account: 0.5 ms a frame typical, 1.1 ms at the 95th percentile, 2.4 ms worst.
+- **Tests:** 15 new tests in `apps/web/test/landscape.test.ts`; the flower's 152 pass unchanged; 3,353 in all.
