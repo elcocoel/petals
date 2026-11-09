@@ -11,16 +11,19 @@ import type {
   ChatMessage,
   FlowerResult,
   Interpretation,
+  JobEvent,
   ModelSignature,
   Spec,
   Stage,
   ToolError,
   Validation,
 } from '@petal/core/types';
+import type { JobRow } from '@petal/store';
 import { registry as defaultRegistry, type ToolContext, withRunSignal } from '@petal/tools';
 import { approvalRequired, DRAWING_TOOLS, hashOf, STORED_ONLY, yesGate } from './approval.ts';
 import { modelOf } from './catalogue.ts';
 import { Channel } from './channel.ts';
+import { HAND_JOB, jobNotes } from './hand-job.ts';
 import type {
   Budget,
   LlmClient,
@@ -52,6 +55,8 @@ export interface RunInput {
   thread?: LlmMessage[];
   /** a continued run: the flowers drawn so far, which this chat can still name and redraw */
   flowers?: EarlierFlower[];
+  /** additive (9 Nov): the jobs this run handed to the person's own agent, as they stand now */
+  jobs?: JobRow[];
 }
 
 export interface RunDeps {
@@ -344,6 +349,7 @@ async function loop(
     SYSTEM_PROMPT,
     agentNotes({ budget, today: (opts.today ?? (() => new Date()))(), draftSpec }),
     ...(followUp ? [followUpNotes(earlier)] : []),
+    ...(input.jobs?.length ? [jobNotes(input.jobs)] : []),
   ].join('\n\n');
   const messages: LlmMessage[] = [{ role: 'system', content: system }, ...conversation];
   // Sent with every call, and they count against the window too.
@@ -494,6 +500,7 @@ async function loop(
       },
     });
     if (!ok) return out;
+    if (call.name === HAND_JOB) emit({ event: 'job', data: (out as { job: JobEvent }).job });
     remember(call.name, args as Obj, out as Obj, by);
     if (stored) return { ...(out as Obj), [STORED_ONLY]: true };
     gate?.passed(call.name, args as Obj, out as Obj);

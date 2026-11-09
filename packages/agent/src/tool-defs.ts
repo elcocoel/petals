@@ -59,6 +59,11 @@ const NOT_FOR_THE_AGENT = new Set([
   'start_exploration',
   'save_step',
   'add_note',
+  // The person's agent's side of a job (9 Nov, C). Petals' agent hands jobs out with its own hand_job and
+  // reads where they stand in its system message (hand-job.ts), so these would only add bytes.
+  'take_job',
+  'report_job',
+  'list_jobs',
 ]);
 
 export function forAgent(t: AnyTool): boolean {

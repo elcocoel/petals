@@ -99,6 +99,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `message` | `{ text }` one complete assistant turn |
 | `approval_required` | `{ tool, network, params?, target_key }`, additive (J4): Petal's own agent reached for a new map before the person said yes, and the tool didn't run. At most once per target per chat, stored like the rest, so a surface can show Yes and No. A chip sends "Yes" as an ordinary message: no new field, no new route |
 | `flower` | `{ spec, spec_sha256, render_sha256, view_url, legend, interpretation, validation }` |
+| `job` | additive (9 Nov): `{ id, exploration, kind: "map", title, brief, status }`. Petals' agent handed a job to the person's own agent (`hand_job`, its own tool). It lives in the conversation's exploration, which the run gets now if it had none; the person's agent takes it there (`take_job`, `report_job`), each change signals `GET /api/v1/explorations/:ref/live`, and `GET /api/v1/explorations/:ref/jobs` says where it stands. The run's next chat carries every job's status and report in its system message, as data from that agent. |
 | `signature` | `ModelSignature` for the completion that proposed the spec |
 | `error` | `{ code, message, hint }`; besides the tool codes, `stopped` (followed by `done`) and `interrupted` (last) |
 | `heartbeat` | `{}` every 10 s, so idle connections stay open |
