@@ -6,7 +6,7 @@
 import type { AgentEvent, ChatInput } from '@petal/core/types';
 import { registry as defaultRegistry, saveRunStep } from '@petal/tools';
 import { Channel } from './channel.ts';
-import { handJobTool, jobsOfRun } from './hand-job.ts';
+import { agentsOfRun, type Bell, handJobTool, jobsOfRun } from './hand-job.ts';
 import type { Budget, LlmMessage } from './llm.ts';
 import { type RunDeps, type RunOptions, startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
@@ -47,7 +47,7 @@ class Job {
 
 export function runJobs(
   deps: RunDeps & { runs: RunStore },
-  o: Pick<RunOptions, 'registry' | 'heartbeatMs'> = {},
+  o: Pick<RunOptions, 'registry' | 'heartbeatMs'> & { bell?: Bell } = {},
 ) {
   const { runs } = deps;
   const jobs = new Map<string, Job>();
@@ -85,18 +85,24 @@ export function runJobs(
         try {
           // The jobs it handed out so far, as they stand: their reports are read on this chat.
           const jobsNow = await jobsOfRun(deps.tools, runId).catch(() => []);
+          // and who's connected, so it can send a job to one by name
+          const agentsNow = await agentsOfRun(deps.tools, runId).catch(() => []);
           const events = startRun(
             {
               messages: input.messages,
               ...(input.draft ? { draft: input.draft } : {}),
               ...earlier,
               ...(jobsNow.length ? { jobs: jobsNow } : {}),
+              ...(agentsNow.length ? { agents: agentsNow } : {}),
             },
             { tools: deps.tools, llm: deps.llm, budget },
             {
               runId,
               // its own hand_job, which knows this run and so its exploration
-              registry: [...(o.registry ?? defaultRegistry), handJobTool(deps.tools, runId)],
+              registry: [
+                ...(o.registry ?? defaultRegistry),
+                handJobTool(deps.tools, runId, o.bell),
+              ],
               ...(o.heartbeatMs ? { heartbeatMs: o.heartbeatMs } : {}),
               signal: job.abort.signal,
               ...(pick ? { pick } : {}),

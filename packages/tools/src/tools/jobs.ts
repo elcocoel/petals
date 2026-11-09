@@ -125,6 +125,7 @@ export const reportJob = defineTool<
       );
     }
     touched(ctx, o.row.id, 'report_job');
+    ctx.onJobReported?.(done);
     return {
       exploration: o.row.id,
       job: { id: done.id, status: done.status, updated_at: done.updated_at },
