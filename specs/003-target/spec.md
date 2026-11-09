@@ -123,6 +123,7 @@ First step, 9 Nov: paying for Petals' own agent in NEAR, from the signed-in wall
 ### Hosting
 - **TGT-040**: The website and the server are separate. The server is built to move to any host, and nothing in it is tied to this Mac.
 - **TGT-041**: Nothing to steal, nothing to take over. The server holds no key that spends money or writes for anyone, and its attack surface is as small as it can be.
+  - **Amended for the hackathon, 9 Nov.** Elco chose a contract for people's funds (through META): "a small NEAR contract holds each person's deposit, and they withdraw unused NEAR themselves, so Petals holds nobody's money". The server holds one key that can call the contract's `charge` and nothing else: it moves what a turn cost from a person's balance to what Petals has earned, never to anyone else. `proposal-payment.md`, section 6, says how in plain words.
 
 ## Success Criteria
 

@@ -5,11 +5,13 @@
 import { join } from 'node:path';
 import { TOOLS_VERSION } from '@petal/core';
 import { durableNonceStore, nearRpc, type Rpc } from '@petal/near/auth';
+import { nearUsd } from '@petal/near/pay';
 import { stateStore } from '@petal/store';
 import { type Config, createContext, freshGate, httpApp, overDataBudget } from '@petal/tools';
 import { Hono } from 'hono';
 import { agentAccess, createAuth, type Network, siteOf } from './auth-routes.ts';
 import { closedLedger, importLedgerFile, serverBudget, storeLedger } from './budget.ts';
+import { creditFrom } from './credit.ts';
 import { DEFAULT_BUDGET, type LlmClient, personUsdPerChat, runMaxSeconds } from './llm.ts';
 import { chosenModel, createNearAiClient, FALLBACK_MODELS, type NearAiOptions } from './near-ai.ts';
 import { type PayDeps, payRoutes } from './pay-routes.ts';
@@ -28,8 +30,8 @@ export interface PetalAppOptions extends AgentRouteOptions {
   env?: Record<string, string | undefined>;
   /** NEAR RPC per network, for sign-in; default the public RPC, or the context's in fake mode */
   rpcFor?: (network: Network) => Rpc;
-  /** for tests: how a payment is read on chain, and NEAR's price */
-  pay?: Pick<PayDeps, 'readTransfer' | 'nearUsd'>;
+  /** for tests: how a payment is read on chain, NEAR's price, and the credit contract */
+  pay?: Pick<PayDeps, 'readTransfer' | 'nearUsd' | 'credit'>;
 }
 
 /** "recorded", or the NEAR AI client's own up/down. */
@@ -90,6 +92,18 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
 
   const env = o.env ?? process.env;
   const usdPerOwnChat = personUsdPerChat(env);
+  // The credit contract (Elco, 9 Nov), when PETAL_CREDIT_CONTRACT is set; none in fake mode.
+  const credit =
+    o.pay?.credit !== undefined
+      ? o.pay.credit
+      : config.fake
+        ? null
+        : creditFrom(env, { public: config.public === true });
+  const priceNow =
+    o.pay?.nearUsd ??
+    (config.fake
+      ? async () => null
+      : () => nearUsd({ onWarning: (m: string) => console.warn(`petal: ${m}`) }));
   // A public site runs Petals' agent too (9 Nov): for a person who has paid for it, or holds an invite.
   const access = agentAccess(env);
   const auth = createAuth({
@@ -103,6 +117,8 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     ...(o.clock ? { clock: o.clock } : {}),
     full: () => overDataBudget(config, ctx.now()),
     personUsdPerChat: usdPerOwnChat,
+    credit,
+    nearUsd: priceNow,
   });
 
   const app = new Hono();
@@ -139,15 +155,14 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       gate: auth.gate,
       usdPerChat: usdPerOwnChat,
       mainnetOnly: config.public === true,
+      credit,
+      nearUsd: priceNow,
       ...(o.clock ? { clock: o.clock } : {}),
-      // fakes everywhere: no chain and no price is read
+      // fakes everywhere: no chain is read
       ...(config.fake
-        ? {
-            nearUsd: async () => null,
-            readTransfer: () => Promise.reject(new Error('fake mode reads no chain')),
-          }
+        ? { readTransfer: () => Promise.reject(new Error('fake mode reads no chain')) }
         : {}),
-      ...(o.pay ?? {}),
+      ...(o.pay?.readTransfer ? { readTransfer: o.pay.readTransfer } : {}),
     }),
   );
   app.route(

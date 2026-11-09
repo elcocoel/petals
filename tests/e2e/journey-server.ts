@@ -26,7 +26,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { mintInvite, openPrivateStore } from '@petal/agent';
-import { testnetTransfer } from '@petal/near/auth/testing';
+import { type TestnetAction, testnetSend } from '@petal/near/auth/testing';
 import { stubModel } from './stub-model.ts';
 import { seedSnippet, WALLET_NAME, walletScript } from './test-wallet.ts';
 import { SESSION_COOKIE, type SeedResult, seedWorkspace } from './workspace-seed.ts';
@@ -142,6 +142,10 @@ A person's own credit needs no invite. Sign in, read the id from /api/v1/me, the
 Or pay for it as a visitor does, for free: sign in on testnet as alice or bob, whose testnet accounts hold
 testnet NEAR, and approve the transfer the chat asks for. This server sends it on testnet, for real, to
 petals.testnet, and the API server reads it back from the chain. On mainnet a test wallet refuses to send.
+To pay into the credit contract instead (Elco, 9 Nov), start the server with these two as well; a test
+wallet then deposits and withdraws there for real, and each chat is charged there when it ends:
+
+   PETAL_CREDIT_CONTRACT=credit.petals-paytest.testnet PETAL_CHARGER_KEY_FILE=<the charge-only key file>
 
 The stub's call count, and the model and effort each call named: ${BASE}/calls
 To come back later as the same people: node tests/e2e/journey-server.ts --web-port ${webPort} --api-port ${apiPort} --stub-port ${PORT} --state ${quoted(stateDir)}${seed ? ' --seed' : ''}
@@ -193,16 +197,21 @@ const server = createServer((req, res) => {
         const b = JSON.parse(raw) as {
           network?: string;
           receiverId?: string;
-          actions?: { type?: string; params?: { deposit?: string } }[];
+          actions?: { type?: string; params?: { deposit?: string; methodName?: string } }[];
         };
-        const deposit = b.actions?.length === 1 ? b.actions[0] : undefined;
+        const action = b.actions?.length === 1 ? b.actions[0] : undefined;
         if (!WALLET_NAME.test(name)) return answer(404, { error: 'not a wallet name' });
         if (b.network !== 'testnet')
           return answer(400, { error: 'a test wallet sends only on testnet' });
-        if (deposit?.type !== 'Transfer' || !b.receiverId || !deposit.params?.deposit) {
-          return answer(400, { error: 'a test wallet sends one NEAR transfer, nothing else' });
+        const one =
+          (action?.type === 'Transfer' && action.params?.deposit) ||
+          (action?.type === 'FunctionCall' && action.params?.methodName);
+        if (!one || !b.receiverId) {
+          return answer(400, {
+            error: 'a test wallet sends one transfer or one call, nothing else',
+          });
         }
-        answer(200, await testnetTransfer(name, b.receiverId, deposit.params.deposit));
+        answer(200, await testnetSend(name, b.receiverId, action as TestnetAction));
       } catch (e) {
         answer(502, { error: (e as Error).message });
       }

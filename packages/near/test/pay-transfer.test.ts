@@ -38,11 +38,32 @@ describe('readTransfer', () => {
       receiver_id: 'petals.near',
       yocto: `2${'0'.repeat(23)}5`,
       succeeded: true,
+      methods: [],
     });
     expect(r.sent[0]?.url).toBe('https://rpc.mainnet.fastnear.com');
     expect(r.sent[0]?.body).toMatchObject({
       method: 'tx',
       params: { tx_hash: HASH, sender_account_id: 'alice.near', wait_until: 'FINAL' },
+    });
+  });
+
+  test('a function call’s NEAR counts too, with the method it named (the credit contract’s deposit)', async () => {
+    const r = rpc({
+      result: {
+        status: { SuccessValue: '' },
+        transaction: {
+          hash: HASH,
+          signer_id: 'alice.near',
+          receiver_id: 'credit.petals.near',
+          actions: [{ FunctionCall: { method_name: 'deposit', deposit: `3${'0'.repeat(23)}` } }],
+        },
+      },
+    });
+    const t = await readTransfer('mainnet', HASH, 'alice.near', { fetch: r.fetch });
+    expect(t).toMatchObject({
+      receiver_id: 'credit.petals.near',
+      yocto: `3${'0'.repeat(23)}`,
+      methods: ['deposit'],
     });
   });
 

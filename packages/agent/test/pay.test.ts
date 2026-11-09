@@ -32,8 +32,9 @@ function chain(txs: Record<string, Partial<Transfer>>) {
       receiver_id: 'petals.near',
       yocto: ONE_NEAR,
       succeeded: true,
+      methods: [],
       ...t,
-    };
+    } as Transfer;
   };
   return { read, reads };
 }
