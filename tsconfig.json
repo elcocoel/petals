@@ -8,6 +8,9 @@
       "path": "./packages/core"
     },
     {
+      "path": "./brain"
+    },
+    {
       "path": "./packages/store"
     },
     {

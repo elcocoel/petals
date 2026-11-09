@@ -20,8 +20,10 @@ type Out = Record<string, any>;
 
 const FIRST_FLOWER = '9ac16c8917aa5ca579c8421a';
 
-/** The nine that reach outside the site or write a chain: a public site refuses each of them. */
+/** The tools that reach outside the site, write a chain, or keep a person's own work (005): a public site refuses each. */
 const ON_THEIR_MACHINE = [
+  'add_layer',
+  'compose_view',
   'find_target',
   'get_snapshot',
   'look_up',
@@ -67,7 +69,7 @@ describe('a public site holds no key and reads nothing outside', () => {
     expect(configFromEnv({}, REPO).public).toBeUndefined();
   });
 
-  test('exactly the nine that reach outside are marked as running on their machine', async () => {
+  test("exactly the tools that reach outside or keep the person's work are marked as running on their machine", async () => {
     const marked = registry
       .filter((t) => (t as { onTheirMachine?: boolean }).onTheirMachine)
       .map((t) => t.name)

@@ -70,6 +70,10 @@ export interface EvmReader {
   /** The URL that served log reads or state reads, for a snapshot's `sources`. */
   servedBy(kind: 'logs' | 'state'): string;
   stats(): RpcPoolStats;
+  /** Additive (005): who sent a transaction, and where it was mined. */
+  transaction?(hash: string): Promise<{ from: string; to: string | null; blockNumber: number }>;
+  /** Additive (005): a contract's code at a block, `0x` where there was none yet. */
+  code?(address: string, block: number): Promise<string>;
 }
 
 export interface LogFilter {
@@ -205,6 +209,21 @@ export function evmReader(opts: EvmReaderOptions = {}): EvmReader {
   }
 
   const reader: EvmReader = {
+    async transaction(hash) {
+      const t = await stateCall<{ from: string; to: string | null; blockNumber: string } | null>(
+        'eth_getTransactionByHash',
+        [hash],
+      );
+      if (!t) throw failed(`no transaction ${hash}`);
+      return {
+        from: t.from.toLowerCase(),
+        to: t.to?.toLowerCase() ?? null,
+        blockNumber: Number.parseInt(t.blockNumber, 16),
+      };
+    },
+    async code(address, block) {
+      return (await stateCall<string | null>('eth_getCode', [address, hexBlock(block)])) ?? '0x';
+    },
     async block(ref) {
       const tag = typeof ref === 'number' ? hexBlock(ref) : ref;
       const b = await stateCall<Parameters<typeof toBlock>[0] | null>('eth_getBlockByNumber', [

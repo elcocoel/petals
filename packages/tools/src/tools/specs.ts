@@ -29,6 +29,7 @@ import type { ToolContext } from '../types.ts';
 import {
   checkMeasure,
   checkParams,
+  descriptorOf,
   findSnapshot,
   loadSnapshot,
   moduleFor,
@@ -126,7 +127,8 @@ export function checkChoices(
     }
     if (by.startsWith('m:')) checkMeasure(s, by.slice(2));
     const allowed = allowedFor(d.capabilities, p);
-    if (allowed && !allowed.includes(by)) {
+    const metricAllowed = by.startsWith('m:') && allowed?.includes('m:<metric>');
+    if (allowed && !allowed.includes(by) && !metricAllowed) {
       const options = p === 'segments' || p === 'outline' ? ['none', ...allowed] : allowed;
       throw new ToolFailure(
         'bad_input',
@@ -175,7 +177,7 @@ export async function checkSpec(
   const sha = snapshotOf(spec);
   const snapshot = sha && /^[0-9a-f]{64}$/.test(sha) ? await findSnapshot(ctx, sha) : null;
   const id = (spec as Partial<Spec> | null)?.network?.id;
-  const d = snapshot ? (ctx.modules[snapshot.network.id]?.descriptor ?? null) : null;
+  const d = snapshot ? descriptorOf(ctx, snapshot) : null;
   if (snapshot && d && id === snapshot.network.id) {
     const ctxv = {
       snapshot,
@@ -323,9 +325,10 @@ export const proposeSpec = defineTool<ProposeIn, object>({
   ),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   async run(input, ctx) {
-    const d = moduleFor(ctx, input.network).descriptor;
-    if (input.params) checkParams(d, input.params);
+    const base = moduleFor(ctx, input.network).descriptor;
+    if (input.params) checkParams(base, input.params);
     const s = await loadSnapshot(ctx, input.sha256);
+    const d = descriptorOf(ctx, s) ?? base;
     if (s.network.id !== input.network) {
       throw new ToolFailure(
         'bad_input',

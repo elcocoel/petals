@@ -14,6 +14,7 @@ import {
 import { computeFiguresTool } from './tools/figures.ts';
 import { findTarget } from './tools/find.ts';
 import { getFlower, listFlowers } from './tools/flowers.ts';
+import { addLayer, composeViewTool } from './tools/layers.ts';
 import { lookUp } from './tools/look-up.ts';
 import { getNetwork, listNetworks } from './tools/networks.ts';
 import { preparePublish, publishFlower } from './tools/publish.ts';
@@ -39,6 +40,8 @@ export const registry: Tool<any, any>[] = [
   getNetwork,
   getSnapshotTool,
   describeSnapshot,
+  addLayer,
+  composeViewTool,
   computeFiguresTool,
   proposeSpec,
   validateSpecTool,

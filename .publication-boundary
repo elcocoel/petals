@@ -12,6 +12,7 @@
 
 [allow]
 packages/
+brain/
 apps/
 skill/
 fixtures/

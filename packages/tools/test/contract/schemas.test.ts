@@ -36,6 +36,22 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     await run('list_networks', {});
     await run('get_network', { id: 'near-validators' });
     await run('describe_snapshot', { sha256: f.sha256 });
+    const added = await run('add_layer', {
+      layer: {
+        petal: 'layer/v1',
+        about: 'near:mainnet:near-validators',
+        kind: 'measures',
+        measures: [{ name: 'proposals_written', unit: 'proposals', kind: 'count' }],
+        rows: [
+          { participant: 'astro-stakers.poolv1.near', measure: 'proposals_written', value: '3' },
+        ],
+        how: { method: 'a test layer', sources: [{ url: 'https://example.org/' }] },
+        from: [f.sha256],
+        when: { as_of: '2026-11-09T00:00:00Z' },
+        standing: 'inferred',
+      },
+    });
+    await run('compose_view', { base: f.sha256, layers: [added.hash as string] });
     await run('compute_figures', { sha256: f.sha256, measure: 'validator_stake_current_epoch' });
     const v = await run('validate_spec', { spec: f.spec, interpretation: INTERPRETATION });
     expect(v.valid).toBe(true);

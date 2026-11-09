@@ -43,6 +43,21 @@ export { exactValues, formatDecimal } from './decimal.ts';
 export { BadInputError, InvalidSpecError } from './errors.ts';
 export { compareFigures, computeFigures } from './figures/index.ts';
 export { canonicalJson, entryId, sha256Hex, signedPart, specHash } from './hash.ts';
+export {
+  type Added,
+  COMPOSED,
+  checkLayer,
+  composeView,
+  LAYER_ROWS_MAX,
+  LAYER_VERSION,
+  type Layer,
+  LayerError,
+  layerHash,
+  MEASURE_KINDS,
+  type MeasureKind,
+  SEAM_VERSION,
+  type Standing,
+} from './layers.ts';
 export { NotImplementedError, notImplemented } from './not-implemented.ts';
 export { PRIMITIVES } from './primitives.ts';
 export { readFlower, readingHash } from './reading/index.ts';
