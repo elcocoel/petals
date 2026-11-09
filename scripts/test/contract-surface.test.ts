@@ -87,6 +87,7 @@ describe('packages/v1 surface', () => {
       recipe: 'recipe/v1',
       convention: 'default/v1',
       claim: 'claim/v1',
+      view: 'view/v1',
     });
   });
 

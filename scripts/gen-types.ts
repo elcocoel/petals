@@ -10,6 +10,7 @@ const core = join(import.meta.dirname, '..', 'packages', 'core');
 const jobs = [
   { schema: 'snapshot.schema.json', out: 'snapshot.ts' },
   { schema: 'flower.schema.json', out: 'flower.ts' },
+  { schema: 'view.schema.json', out: 'view.ts' },
 ];
 
 for (const job of jobs) {

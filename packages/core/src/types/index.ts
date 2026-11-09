@@ -23,6 +23,10 @@ import type {
   Kind,
   PetalSnapshotCommonTableV1,
 } from './generated/snapshot.ts';
+import type { PetalViewV1 } from './generated/view.ts';
+
+/** view/v1 (specs/006-the-map/contracts/view.md): which piece of data each dimension shows. */
+export type View = PetalViewV1;
 
 // claim/v1 (specs/002-system/contracts/claims.md)
 export type {

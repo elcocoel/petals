@@ -30,5 +30,13 @@
   "layer.v1.json": {
     "schema": "urn:petal:schema:layer:v1",
     "sha256": "1ef775725bff5e01f37710afdd3c68804bbf500d6c8947b47e6c4f729562a325"
+  },
+  "view.v1.json": {
+    "schema": "urn:petal:schema:view:v1",
+    "sha256": "543f9533366d12e54891ad20f96211d75d8415608de1829739566407550f9761"
+  },
+  "view.v1.proposals.json": {
+    "schema": "urn:petal:schema:view:v1",
+    "sha256": "4e8117ea89164e17d63d4dac82a75d1f130d3ae5ab478bfe6262fde9a67543fc"
   }
 }
