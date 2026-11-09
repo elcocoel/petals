@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
+import * as hosted from '../src/hosted.ts';
 import { agentPrompt, hostedSkill, originFrom } from '../src/hosted.ts';
 
 const SKILL = readFileSync(join(import.meta.dirname, '../../../skill/petal/SKILL.md'), 'utf8');
@@ -48,6 +49,16 @@ describe('agentPrompt on this machine', () => {
     expect(agentPrompt('http://127.0.0.1:3090')).toMatch(/on this machine.*use curl/);
     expect(agentPrompt('http://localhost:3080')).toMatch(/on this machine.*use curl/);
     expect(agentPrompt(ORIGIN)).not.toMatch(/on this machine/);
+  });
+});
+
+describe('terminalCommand', () => {
+  test('fetches the file from this site, then starts the terminal helper for the agent', () => {
+    const { terminalCommand } = hosted;
+    expect(terminalCommand(ORIGIN)).toBe(
+      `mkdir -p ~/.petals && curl -fsSL ${ORIGIN}/petal.mjs -o ~/.petals/petal.mjs && node ~/.petals/petal.mjs terminal claude`,
+    );
+    expect(terminalCommand(ORIGIN, 'codex').endsWith('terminal codex')).toBe(true);
   });
 });
 

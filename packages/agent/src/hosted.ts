@@ -25,6 +25,13 @@ const RUN = 'node ~/.petals/petal.mjs';
 export const getFile = (origin: string) =>
   `mkdir -p ~/.petals && curl -fsSL ${origin}/petal.mjs -o ${FILE_PATH}`;
 
+/**
+ * What a person runs, once, to see their own agent in a box on the Petals page: the file, then its
+ * terminal helper on 127.0.0.1, which prints the pairing code to type into the page.
+ */
+export const terminalCommand = (origin: string, agent: 'claude' | 'codex' | 'hermes' = 'claude') =>
+  `${getFile(origin)} && ${RUN} terminal ${agent}`;
+
 /** Each agent's own command to keep the file as its tools. They take effect in a new session. */
 export function keepCommands(): { claude: string; codex: string; hermes: string } {
   const node = '"$(command -v node)" "$HOME/.petals/petal.mjs" mcp';

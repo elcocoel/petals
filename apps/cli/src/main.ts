@@ -117,6 +117,7 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
         'Run `node petal.mjs help` for the commands.',
       );
     }
+    if (command === 'terminal') return await terminal(rest, env, cwd, stderr);
     if (command === 'connect') {
       return connect(rest, {
         env,
@@ -167,6 +168,44 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
     stderr(errorJson(code, String(err.message ?? e)));
     return 1;
   }
+}
+
+/**
+ * `petal terminal [claude|codex|hermes]`: the person's own agent, in a box on the Petals page, through
+ * this machine only (terminal.ts). The site the file came from may pair; anything else needs naming.
+ */
+async function terminal(
+  argv: string[],
+  env: Env,
+  cwd: string,
+  stderr: (t: string) => void,
+): Promise<number> {
+  const { parseTerminalArgs, startTerminal } = await import('./terminal.ts');
+  const args = parseTerminalArgs(argv);
+  if ('error' in args)
+    throw new UsageError(
+      args.error,
+      'petal terminal [claude|codex|hermes] [--port 7466] [--allow-origin <origin>]',
+    );
+  const site = env.PETAL_API?.trim().replace(/\/+$/, '');
+  const origins = [...(site ? [site] : []), ...args.extra];
+  if (origins.length === 0) {
+    throw new UsageError('no site may pair: name one with --allow-origin, or set PETAL_API');
+  }
+  const helper = await startTerminal({
+    agent: args.agent,
+    port: args.port,
+    origins,
+    cwd,
+    env,
+    say: (line) => stderr(`${line}\n`),
+  });
+  await new Promise<void>((done) => {
+    const stop = () => void helper.close().then(done);
+    process.once('SIGINT', stop);
+    process.once('SIGTERM', stop);
+  });
+  return 0;
 }
 
 interface Tools {
@@ -542,6 +581,7 @@ class Cli {
     }
     p('\nDoors:\n');
     p('  mcp                 MCP over stdio (serveStdio), for Claude Code and Codex\n');
+    p('  terminal [agent]    your own claude, codex or hermes, in a box on the Petals page\n');
     if (!this.sys.asFile) {
       p(`  api                 the HTTP API (petalApp) on http://localhost:${DEFAULT_PORT}\n`);
       p('  connect <agent>     give your own agent (claude, codex) the skill and the tools\n');
