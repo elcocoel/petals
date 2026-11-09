@@ -412,6 +412,8 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     return ok(c, {
       person_id: session.subject,
       network: session.network,
+      // additive (9 Nov, LOBBY): the wallet this session signed in with, by account id; null for none
+      account: await sessionAccount(session),
       wallets: await walletsOf(session.subject),
       // null: no credit of their own, so a chat needs an invite like anyone else's
       credit: credit && { ...credit, usd_per_chat: usdPerOwnChat },
