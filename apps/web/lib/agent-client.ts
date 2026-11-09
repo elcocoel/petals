@@ -18,6 +18,7 @@ import type { ListedConversation } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
 import type { ListedFlower } from './flower-view.ts';
 import type { Job } from './jobs.ts';
+import { NEAR_SOCIAL_API, type SocialProfile, socialProfile } from './near-social.ts';
 import type { Credit, PayInfo } from './pay.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
@@ -388,6 +389,20 @@ export const preparePublish = (entry: EntryDraft) =>
 
 export const publishEntry = (entrySha256: string, proof: Nep413Proof) =>
   postJson<Published>('/api/v1/publish', { entry_sha256: entrySha256, proof });
+
+/**
+ * The public profile of `account` on NEAR Social (lib/near-social.ts), read straight from NEAR Social's API,
+ * not ours; null when there's none or it can't be read.
+ */
+export async function readSocialProfile(account: string): Promise<SocialProfile | null> {
+  try {
+    const res = await fetch(`${NEAR_SOCIAL_API}/v1/accounts/${encodeURIComponent(account)}`);
+    if (!res.ok) return null;
+    return socialProfile(await res.json());
+  } catch {
+    return null;
+  }
+}
 
 /** The wallet this session signed in with, and its network, or null: not signed in, or the server doesn't say. */
 export async function readSignedIn(): Promise<{ network: string; account: string } | null> {
