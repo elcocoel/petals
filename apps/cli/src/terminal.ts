@@ -59,7 +59,7 @@ def end_agent(*_):
     for sig in (signal.SIGHUP, signal.SIGTERM):
         try: os.killpg(pid, sig)
         except OSError: pass
-        for _ in range(30):
+        for _ in range(10):
             done, status = os.waitpid(pid, os.WNOHANG)
             if done: os._exit(os.waitstatus_to_exitcode(status) if hasattr(os, "waitstatus_to_exitcode") else 0)
             select.select([], [], [], 0.1)
@@ -266,7 +266,7 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
       child.stdin?.end();
       setTimeout(() => {
         if (child.exitCode === null) child.kill('SIGTERM');
-      }, 3000).unref();
+      }, 2000).unref();
     };
     ws.on('close', end);
     ws.on('error', end);
