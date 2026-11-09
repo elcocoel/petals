@@ -1,3 +1,4 @@
+'use client';
 // The chat in the box (lib/agent-chat.ts; Elco, 9 Nov: "an input box, the chat above it, proper
 // typography, show context"): the person's own agent, typeset in Petals' type. What it says, its thinking
 // and its tool calls kept quiet and open for anyone who wants them, its plan, a question about a tool as

@@ -30,5 +30,11 @@ step fixture-size;  node scripts/check-fixture-size.ts
 step boundary;      bash scripts/check-boundary.sh
 step tokens;        node packages/tokens/emit.ts --check
 step literals;      node scripts/check-literals.ts
+# The site's production build: Next refuses things the typecheck and tests don't see, such as a hook
+# reached from a server component (8 Nov, Vercel refused 8872b7d). About ten seconds.
+step web-build
+build_log="$(mktemp -t petal-web-build)"
+pnpm -s --filter @petal/web build >"$build_log" 2>&1 || { tail -40 "$build_log"; rm -f "$build_log"; exit 1; }
+rm -f "$build_log"
 
 printf '\ncheck: all green\n'
