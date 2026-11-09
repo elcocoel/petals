@@ -17,7 +17,7 @@
 //
 // The terminal itself is Python's pty module, which macOS and Linux ship, so this file stays plain
 // JavaScript with no native parts. Windows isn't covered yet.
-import { type ChildProcess, spawn, spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { randomInt, timingSafeEqual } from 'node:crypto';
 import { accessSync, constants, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import type { IncomingMessage } from 'node:http';
@@ -26,6 +26,8 @@ import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import type { Writable } from 'node:stream';
 import { type RawData, WebSocket, WebSocketServer } from 'ws';
+import { acpAgent, type ChatAgent, fromPage, type McpServer, type ToPage } from './chat.ts';
+import { CLAUDE_FLAGS, claudeAgent } from './claude.ts';
 
 export const DEFAULT_PORT = 7466;
 export const AGENTS = { claude: 'Claude Code', codex: 'Codex', hermes: 'Hermes' } as const;
@@ -193,6 +195,7 @@ export function sessionNotes(
   site: string,
   skill: string,
   exploration?: string,
+  box: 'terminal' | 'chat' = 'terminal',
 ): string {
   const tools =
     agent === 'hermes'
@@ -204,7 +207,7 @@ export function sessionNotes(
   return [
     '# Petal, in this session',
     '',
-    `You're running in a box on Petal's page (${site}), where the person sees this terminal. Petal maps who holds power in crypto networks and draws it as flowers. Its instructions are below. Follow them, with these differences:`,
+    `You're running in a box on Petal's page (${site}), where the person sees ${box === 'chat' ? 'your replies as a chat, and your tool calls as short lines' : 'this terminal'}. Petal maps who holds power in crypto networks and draws it as flowers. Its instructions are below. Follow them, with these differences:`,
     '',
     `- Its tools are already here, ${tools}. Don't download or install anything.`,
     `- ${page}`,
@@ -375,14 +378,10 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
   const port = o.port ?? DEFAULT_PORT;
   const origins = new Set(o.origins.map((s) => s.replace(/\/+$/, '')));
   const hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
+  // Python's pty runs the terminal box; the chat box needs none
   const python = o.python ?? findPython(o.env);
-  if (!python) {
-    return Promise.reject(
-      new Error(
-        'The terminal needs Python 3, which macOS and Linux usually have. Install it, then try again.',
-      ),
-    );
-  }
+  const noPython =
+    'The terminal needs Python 3, which macOS and Linux usually have. Install it, then try again.';
   const find = o.find ?? ((name: string) => findAgent(name, o.env ?? process.env));
   // The agent, found now to say so early, and again at each session, in case it's installed meanwhile.
   const locate = (): string[] | null => {
@@ -396,7 +395,8 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
   let code = o.code ?? newCode();
   let codeUntil = Date.now() + CODE_MS;
   let tries = 0;
-  let active: { ws: WebSocket; child: ChildProcess } | null = null;
+  /** the open session: its socket, how to end it now, and when it has ended */
+  let active: { ws: WebSocket; stop: () => void; ended: Promise<void> } | null = null;
 
   const announce = () =>
     say(`Pairing code: ${code}  (type it into the Petals page; one use, 10 minutes)`);
@@ -423,14 +423,14 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
       socket.write(`HTTP/1.1 ${status} ${why}\r\nConnection: close\r\n\r\n`);
       socket.destroy();
     };
-    if (path !== '/pty') return refuse(404, 'not /pty');
+    if (path !== '/pty' && path !== '/chat') return refuse(404, 'not /pty or /chat');
     if (!hosts.has(host)) return refuse(403, `Host ${host || '(none)'} isn't this machine`);
     if (!origins.has(origin)) return refuse(403, `Origin ${origin || '(none)'} isn't allowed`);
     if (active) return refuse(409, 'a session is already open');
-    wss.handleUpgrade(req, socket, head, (ws) => greet(ws, origin));
+    wss.handleUpgrade(req, socket, head, (ws) => greet(ws, origin, path));
   });
 
-  function greet(ws: WebSocket, origin: string) {
+  function greet(ws: WebSocket, origin: string, path: string) {
     const first = setTimeout(() => ws.close(4408, 'no pairing'), 30_000);
     ws.once('message', (raw: RawData, isBinary: boolean) => {
       clearTimeout(first);
@@ -470,8 +470,111 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
         typeof msg.exploration === 'string' && LINK.test(msg.exploration)
           ? msg.exploration
           : undefined;
-      void run(ws, origin, clampSize(msg.cols, 100), clampSize(msg.rows, 30), exploration);
+      if (path === '/chat') void chat(ws, origin, exploration);
+      else void run(ws, origin, clampSize(msg.cols, 100), clampSize(msg.rows, 30), exploration);
     });
+  }
+
+  /** In Petals from the first line: the session's notes in its own folder, and its tools' settings. */
+  async function prepare(
+    exploration: string | undefined,
+    box: 'terminal' | 'chat',
+  ): Promise<{ cwd: string; env: Record<string, string> } | null> {
+    if (!o.petals) return null;
+    const work = join(o.petals.home, 'work');
+    mkdirSync(work, { recursive: true });
+    const skill = await (o.skill ?? fetchSkill)(o.petals.site);
+    const notes = sessionNotes(o.agent, o.petals.site, skill, exploration, box);
+    writeFileSync(join(work, 'AGENTS.md'), notes);
+    writeFileSync(join(work, 'CLAUDE.md'), notes);
+    return { cwd: work, env: inPetals(o.agent, o.petals, exploration).env };
+  }
+
+  /**
+   * The chat box: the agent in its structured mode, its events to the page as JSON frames, and the
+   * page's prompts, approvals and choices back (chat.ts). Claude Code runs in stream-json; Hermes
+   * speaks ACP. Codex stays in the terminal box for now.
+   */
+  async function chat(ws: WebSocket, origin: string, exploration?: string) {
+    const send = (e: ToPage) => {
+      if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(e));
+    };
+    const fail = (message: string, code: number) => {
+      say(message);
+      send({ t: 'error', message });
+      send({ t: 'exit', code });
+      ws.close(1000, 'not started');
+    };
+    const found = locate();
+    if (!found) return fail(missing, 127);
+    if (o.agent === 'codex') return fail('Codex runs in the terminal box for now.', 2);
+    const inside = await prepare(exploration, 'chat');
+    const env: NodeJS.ProcessEnv = { ...(o.env ?? process.env), ...(inside?.env ?? {}) };
+    if ((found[0] as string).startsWith('/')) {
+      env.PATH = [dirname(found[0] as string), env.PATH].filter(Boolean).join(':');
+    }
+    const cwd = inside?.cwd ?? o.cwd ?? process.cwd();
+    const tools: McpServer[] =
+      o.petals && inside
+        ? [
+            {
+              name: 'petals',
+              command: o.petals.node,
+              args: [o.petals.file, 'mcp'],
+              env: inside.env,
+            },
+          ]
+        : [];
+    let ended!: () => void;
+    const over = new Promise<void>((done) => {
+      ended = done;
+    });
+    const onEvent = (e: ToPage) => {
+      send(e);
+      if (e.t !== 'exit') return;
+      active = null;
+      ended();
+      if (o.once) setImmediate(() => o.onDone?.());
+      say(
+        `${AGENTS[o.agent]} ended${e.code ? ` (exit ${e.code})` : ''}. To start it again from the page, the code is ${code}.`,
+      );
+      if (ws.readyState === WebSocket.OPEN) ws.close(1000, 'ended');
+    };
+    const launch = { cwd, env, mcp: tools, send: onEvent, agent: AGENTS[o.agent] };
+    const petalsFlags = tools.length
+      ? [
+          '--mcp-config',
+          JSON.stringify({
+            mcpServers: Object.fromEntries(
+              tools.map((t) => [t.name, { command: t.command, args: t.args, env: t.env }]),
+            ),
+          }),
+          '--allowedTools',
+          'mcp__petals',
+        ]
+      : [];
+    const agent: ChatAgent =
+      o.agent === 'claude'
+        ? claudeAgent({ ...launch, command: [...found, ...CLAUDE_FLAGS, ...petalsFlags] })
+        : // Hermes has no per-session MCP servers yet: its notes give it the same tools as commands
+          acpAgent({ ...launch, command: [...found, 'acp'], mcp: [] });
+    active = { ws, stop: () => agent.close(true), ended: over };
+    say(
+      `${AGENTS[o.agent]} is running in the Petals page's chat (${origin}). Closing that box ends it.`,
+    );
+    ws.on('message', (raw: RawData, isBinary: boolean) => {
+      if (isBinary) return;
+      const m = fromPage(raw.toString());
+      if (!m) return;
+      if (m.t === 'prompt') agent.prompt(m.text);
+      else if (m.t === 'cancel') agent.cancel();
+      else if (m.t === 'permission') agent.answer(m.id, m.optionId);
+      else if (m.t === 'mode') agent.setMode(m.id);
+      else agent.setModel(m.id);
+    });
+    ws.on('close', () => agent.close());
+    ws.on('error', () => agent.close());
+    await agent.start(FIRST_MESSAGE);
   }
 
   async function run(
@@ -502,6 +605,13 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
       extraEnv = launch.env;
       cwd = work;
     }
+    if (!python) {
+      say(noPython);
+      ws.send(Buffer.from(`${noPython}\r\n`), { binary: true });
+      ws.send(JSON.stringify({ exit: 127, error: noPython }));
+      ws.close(1000, 'no python');
+      return;
+    }
     if (!command) {
       say(missing);
       ws.send(Buffer.from(`${missing}\r\n`), { binary: true });
@@ -519,7 +629,11 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
       env: { ...env, TERM: 'xterm-256color', COLORTERM: 'truecolor' },
       stdio: ['pipe', 'pipe', 'inherit', 'pipe'],
     });
-    active = { ws, child };
+    active = {
+      ws,
+      stop: () => child.kill('SIGTERM'),
+      ended: new Promise((done) => child.once('exit', () => done())),
+    };
     const control = child.stdio[3] as Writable;
     say(`${AGENTS[o.agent]} is running in the Petals page (${origin}). Closing that box ends it.`);
 
@@ -590,12 +704,12 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
         code: () => code,
         close: () =>
           new Promise<void>((done) => {
-            const child = active?.child;
+            const open = active;
             for (const c of wss.clients) c.terminate();
             const finish = () => server.close(() => done());
-            if (!child || child.exitCode !== null) return finish();
-            child.once('exit', finish);
-            child.kill('SIGTERM');
+            if (!open) return finish();
+            void open.ended.then(finish);
+            open.stop();
           }),
       });
     });
