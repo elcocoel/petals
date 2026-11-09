@@ -21,6 +21,7 @@ import type { Job } from './jobs.ts';
 import type { Credit, PayInfo } from './pay.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
+import { viewerView } from './viewer-view.ts';
 
 export interface ChatRequest {
   messages: ChatMessage[];
@@ -292,7 +293,7 @@ export async function drawFlower(specJson: string): Promise<Drawn> {
   const res = await fetch('/api/v1/render', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: `{"spec":${specJson},"include_svg":true,"include_reading":true}`,
+    body: `{"spec":${specJson},"include_svg":true,"include_reading":true,"view":${JSON.stringify(viewerView())}}`,
   });
   const json = (await res.json()) as Partial<Drawn> & { error?: { message: string } };
   if (res.ok && json.svg) {

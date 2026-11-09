@@ -484,6 +484,8 @@ export interface RenderOptions {
   /** default 800 */
   size?: number;
   thumb?: boolean;
+  /** The viewer's view (view/v1): what each dimension draws. Without one, the spec's own choices. */
+  view?: View;
 }
 
 export interface LegendItem {

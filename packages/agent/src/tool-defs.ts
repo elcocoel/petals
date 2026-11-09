@@ -121,6 +121,8 @@ function agentParameters(t: AnyTool): Record<string, unknown> {
     include_svg: _svg,
     include_reading: _reading,
     size: _size,
+    // The viewer's to choose (specs/006-the-map), never the agent's: it proposes through its spec.
+    view: _view,
     ...own
   } = (p.properties ?? {}) as Record<string, unknown>;
   return { ...p, properties: { ...own, spec: SPEC_BY_HASH } };
