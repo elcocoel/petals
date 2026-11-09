@@ -2,7 +2,7 @@
 // kept in dollars by the server (GET /api/v1/me, `credit`) and shown in NEAR at today's price (GET
 // /api/v1/pay). Out of credit, the chat shows one way to add some, where the person meets it: the wallet
 // sends NEAR to Petals' account, and the server checks that transfer on chain (POST /api/v1/pay). Pure.
-// The words are proposals, waiting for Elco's.
+// The words are drafts, shipped on Elco's word (9 Nov: "Ship the drafts, I'll change them later").
 
 /** The visitor's credit, as the server keeps it. Null until their first top-up. */
 export interface Credit {
@@ -51,6 +51,7 @@ export type PayPhase = 'ready' | 'paying' | 'added' | 'failed';
 /** The chat's refusal when the visitor has no credit left (SYSTEMS, B). */
 export const PAYMENT_REQUIRED = 'payment_required';
 
+/** Drafts (Elco, 9 Nov: "Ship the drafts, I'll change them later"). */
 export const payWords = {
   balance: (near: string) => `Balance: ${near} NEAR`,
   out: "You're out of NEAR for Petals. Add some to keep going.",

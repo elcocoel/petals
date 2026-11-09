@@ -2,7 +2,7 @@
 // the apps to outsource mapping and other processes"): Petals' agent hands a job to the person's own
 // agent, which does it on their machine and reports back into the same conversation. The run's `job`
 // event says it was handed; GET /api/v1/explorations/:ref/jobs says where each stands. Pure. The words
-// are proposals, waiting for Elco's.
+// are drafts, shipped on Elco's word (9 Nov: "Ship the drafts, I'll change them later").
 
 export type JobStatus = 'open' | 'taken' | 'done' | 'failed';
 

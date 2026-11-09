@@ -1,6 +1,6 @@
 // The way to add credit for Petals' agent, where the person meets it in the chat (B): one line and one
 // button, which opens the wallet. Props only: viewmodels/usePay.ts holds the payment. Words from
-// lib/pay.ts, proposed.
+// lib/pay.ts, drafts.
 import { PAY_NEAR, type PayPhase, payWords } from '../../lib/pay.ts';
 import { Button } from '../ui/Button.tsx';
 

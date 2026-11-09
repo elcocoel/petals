@@ -1,5 +1,5 @@
 // A job Petals' agent handed to the person's own agent, in the chat (C): one line saying where it stands,
-// and what it said when it reported. Props only. Words from lib/jobs.ts, proposed.
+// and what it said when it reported. Props only. Words from lib/jobs.ts, drafts.
 export function JobRow({ text, summary }: { text: string; summary?: string | undefined }) {
   return (
     <div className="flex flex-col gap-space-4 border-l border-hairline pl-text-gap">
