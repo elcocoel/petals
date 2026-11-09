@@ -1,32 +1,10 @@
-// The terminal in the page (specs/004-workspace, W10; Elco, 9 Nov: "that seems to be what we wanted all
-// along"). A person's own agent runs in a terminal on their own computer, under the Petals helper
-// (`node ~/.petals/petal.mjs terminal`, CONNECTORS's), and the page shows that terminal in a floating box.
-// Nothing passes through Petals' server. Pure: the helper's address, what the page sends, and how it reads
-// the helper's control frames. The seam is CONNECTORS's, 9 Nov; the words are proposals
-// (design/journey-strings.md, "The terminal in the page").
+// Pairing the page with the Petals helper on the person's own computer (specs/004-workspace, W10): the
+// one-use code, the one-click petals:// start, the codes the helper puts in the address, and the page's own
+// conversation for the agent. The helper is CONNECTORS's; the chat it serves is lib/agent-chat.ts. Nothing
+// passes through Petals' server. Pure. The words are proposals (design/journey-strings.md).
 
 /** Where the helper listens. Only on the person's own computer. */
 export const HELPER_PORT = 7466;
-export const helperUrl = (port: number = HELPER_PORT) => `ws://127.0.0.1:${port}/pty`;
-
-export interface TermSize {
-  cols: number;
-  rows: number;
-}
-
-/**
- * The first frame: the one-use code the helper printed, and how big the terminal is, so the agent starts
- * at that size. Every session takes a fresh code, so the person sees and approves each pairing (Elco).
- */
-export const helloFrame = (pair: string, size: TermSize, exploration: string | null = null) =>
-  JSON.stringify({
-    pair,
-    cols: size.cols,
-    rows: size.rows,
-    // the page's conversation, as a continue link on the site: the agent writes its notes and flowers there
-    ...(exploration ? { exploration } : {}),
-  });
-
 /**
  * One click (CONNECTORS's Petals Helper.app, 9 Nov): once the first paste has put the app on the person's
  * Mac, it claims petals:// links. The page makes up the code, opens this, and connects with the same code
@@ -73,32 +51,6 @@ export function terminalAddress(path: string, conversation: string, pair: string
   return `${path}?terminal=1&elsewhere=${encodeURIComponent(conversation)}#${fragment}`;
 }
 
-/** A text frame that is exactly this resizes; any other text is keystrokes. */
-export const resizeFrame = (size: TermSize) =>
-  JSON.stringify({ resize: { cols: size.cols, rows: size.rows } });
-
-/** What a control frame from the helper says. Output comes as bytes, never through here. */
-export type FromHelper =
-  | { kind: 'paired'; agent: string }
-  | { kind: 'exit'; code: number }
-  | { kind: 'refused'; why: string };
-
-export function readControl(text: string): FromHelper | null {
-  let m: unknown;
-  try {
-    m = JSON.parse(text);
-  } catch {
-    return null;
-  }
-  if (!m || typeof m !== 'object') return null;
-  const o = m as Record<string, unknown>;
-  if (o.paired === true)
-    return { kind: 'paired', agent: typeof o.agent === 'string' ? o.agent : '' };
-  if (typeof o.exit === 'number') return { kind: 'exit', code: o.exit };
-  if (typeof o.error === 'string') return { kind: 'refused', why: o.error };
-  return null;
-}
-
 /**
  * What the helper put in the address it opened (`/make?terminal=1#pair=K7QM-3WTZ`, with `&port=7499` only
  * when it isn't on 7466), so the page connects with nothing typed. A fragment never reaches any server.
@@ -122,8 +74,6 @@ export function pairingCode(typed: string): string {
 export type TermPhase = 'pair' | 'connecting' | 'open' | 'ended';
 
 export const terminalWords = {
-  /** The box's bar, and what a screen reader hears. */
-  box: 'Terminal',
   /** The one click, once Petals Helper is on this computer. */
   startButton: 'Start your agent',
   /** The first time on a computer: the paste that sets up the helper. The command is lib/agent-prompt.ts's. */
@@ -139,7 +89,6 @@ export const terminalWords = {
   noHelper: "The Petals helper didn't answer. Start it, or close the other page that's using it.",
   /** The helper answered and said no. */
   refused: "That code didn't work. Enter the newest code the helper shows.",
-  ended: 'Your agent has stopped. Enter the next code the helper shows to start it again.',
   /** The conversation the page starts for the agent: its first words in the list, and where it happens. */
   conversation: 'A conversation in your terminal',
   client: 'your terminal',

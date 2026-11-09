@@ -13,14 +13,15 @@ import type { SurfaceName } from '@petal/tokens';
 import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
 import { CopyPrompt } from '../components/CopyPrompt.tsx';
+import { AgentChat } from '../components/chat/AgentChat.tsx';
 import { AnsweredBy } from '../components/chat/AnsweredBy.tsx';
 import { ConnectAgent } from '../components/chat/ConnectAgent.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
+import { HelperPairing } from '../components/chat/HelperPairing.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { Speech } from '../components/chat/Speech.tsx';
 import { Steps } from '../components/chat/Steps.tsx';
-import { TerminalPass } from '../components/chat/TerminalPass.tsx';
 import { Thread } from '../components/chat/Thread.tsx';
 import { TurnFlower } from '../components/chat/TurnFlower.tsx';
 import { TurnStatus } from '../components/chat/TurnStatus.tsx';
@@ -70,6 +71,7 @@ import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
+import { emptyChat } from '../lib/agent-chat.ts';
 import type { DrawingKind } from '../lib/figures.ts';
 import { readingKey, svgImage } from '../lib/flower-view.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
@@ -1441,22 +1443,22 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'TerminalPass',
+    id: 'HelperPairing',
     group: 'The conversation',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/chat/TerminalPass.tsx',
+    source: 'apps/web/components/chat/HelperPairing.tsx',
     states: [
       {
-        name: 'waiting for the helper',
+        name: 'before the agent is on the page',
         wide: true,
         render: () => (
-          <TerminalPass
-            command="curl -fsSL https://petal-flowers.vercel.app/petal.mjs -o ~/.petals/petal.mjs && node ~/.petals/petal.mjs terminal claude"
+          <HelperPairing
+            command="curl -fsSL https://petal-flowers.vercel.app/petal.mjs --create-dirs -o ~/.petals/petal.mjs && node ~/.petals/petal.mjs terminal"
             phase="pair"
             code=""
             failed={null}
-            mount={() => {}}
+            ended=""
             onCode={() => {}}
             onPair={() => {}}
             onStart={() => {}}
@@ -1464,18 +1466,83 @@ export const registry: LabEntry[] = [
         ),
       },
       {
-        name: 'no helper answered',
+        name: 'the app is not on this computer yet',
         wide: true,
         render: () => (
-          <TerminalPass
-            command="curl -fsSL https://petal-flowers.vercel.app/petal.mjs -o ~/.petals/petal.mjs && node ~/.petals/petal.mjs terminal claude"
+          <HelperPairing
+            command="curl -fsSL https://petal-flowers.vercel.app/petal.mjs --create-dirs -o ~/.petals/petal.mjs && node ~/.petals/petal.mjs terminal"
             phase="pair"
-            code="K7QM-3WTZ"
-            failed="The Petals helper didn't answer. Start it, or close the other page that's using it."
-            mount={() => {}}
+            code=""
+            failed="Petals Helper isn't on this computer yet. Paste the command below once."
+            ended=""
             onCode={() => {}}
             onPair={() => {}}
             onStart={() => {}}
+          />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'AgentChat',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/AgentChat.tsx',
+    states: [
+      {
+        name: 'a turn with a tool and a question',
+        wide: true,
+        render: () => (
+          <AgentChat
+            chat={{
+              ...emptyChat,
+              paired: true,
+              agent: 'claude',
+              model: 'Opus',
+              usage: { used: 50000, size: 200000 },
+              mode: {
+                current: 'default',
+                available: [
+                  { id: 'default', name: 'Ask before acting' },
+                  { id: 'plan', name: 'Plan' },
+                ],
+              },
+              items: [
+                { kind: 'user', key: 'u1', text: 'Who holds Moloch DAO?' },
+                {
+                  kind: 'tool',
+                  key: 't1',
+                  title: 'Read the DAO',
+                  tool: 'read',
+                  status: 'completed',
+                  detail: '',
+                },
+                {
+                  kind: 'agent',
+                  key: 'a1',
+                  text: 'Moloch has **72** members. The top five hold a third of the shares.',
+                },
+              ],
+              busy: true,
+              permission: {
+                id: 1,
+                title: 'Draw the flower',
+                options: [
+                  { optionId: 'yes', name: 'Allow', kind: 'allow_once' },
+                  { optionId: 'no', name: 'Deny', kind: 'reject_once' },
+                ],
+              },
+            }}
+            draft=""
+            threadRef={{ current: null }}
+            following={{ current: true }}
+            onDraft={() => {}}
+            onSend={() => {}}
+            onStop={() => {}}
+            onAnswer={() => {}}
+            onMode={() => {}}
+            onModel={() => {}}
           />
         ),
       },
