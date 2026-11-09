@@ -152,6 +152,10 @@ export interface LayerRow {
   body: string;
   credential: string | null;
   created_at: string;
+  /** the brain version the site served when it was kept (migration 10) */
+  brain?: string | null;
+  /** the reading recipe it was read with, by hash (migration 10) */
+  recipe?: string | null;
 }
 /** One version of an author's dataset about an address: a set of layer hashes, and where it came from. */
 export interface DatasetVersionRow {
@@ -1085,8 +1089,8 @@ export function tables(db: Db) {
       /** Keeps it under its owner; false, and no change, when they hold that hash already. */
       keep: async (r: LayerRow): Promise<boolean> =>
         (await db.run(
-          `INSERT INTO layer (owner, hash, about, standing, body, credential, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (owner, hash) DO NOTHING`,
+          `INSERT INTO layer (owner, hash, about, standing, body, credential, created_at, brain, recipe)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (owner, hash) DO NOTHING`,
           r.owner,
           r.hash,
           r.about,
@@ -1094,6 +1098,8 @@ export function tables(db: Db) {
           r.body,
           r.credential,
           r.created_at,
+          r.brain ?? null,
+          r.recipe ?? null,
         )) === 1,
       get: (owner: string, hash: string) =>
         db.get<LayerRow>('SELECT * FROM layer WHERE owner = ? AND hash = ?', owner, hash),

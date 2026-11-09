@@ -301,6 +301,13 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE UNIQUE INDEX dataset_version_order ON dataset_version(owner, about, seq);
   `,
+  // 10: who made a layer, the git way, outside its hash (systems check, step 2): beside the author (owner),
+  // the credential and the time that 9 keeps, the brain version the agent was given and the recipe it read
+  // with. Empty for the layers kept before.
+  `
+  ALTER TABLE layer ADD COLUMN brain TEXT;
+  ALTER TABLE layer ADD COLUMN recipe TEXT;
+  `,
 ];
 
 /**
