@@ -56,6 +56,26 @@ describe('a snapshot is not a group', () => {
   });
 });
 
+describe('a view made with compose_view', () => {
+  test('is no group, so never a second observation of its base (LOOK, 9 Nov)', () => {
+    const base = snap({
+      id: 'moloch-v3',
+      chain: 'eip155:100',
+      population: 'raidguild',
+      title: 'RaidGuild',
+      unit: 'shares',
+      measure: 'shares',
+      holders: [
+        ['0xaa', '700'],
+        ['0xbb', '300'],
+      ],
+    });
+    expect(groupsOf(base).length).toBeGreaterThan(0);
+    const view = { ...base, module: { id: 'compose', version: 'seam/v1' } };
+    expect(groupsOf(view)).toEqual([]);
+  });
+});
+
 describe('folded rows are no accounts', () => {
   test('counted as a tail, never as members, and shares still count their amount', () => {
     const [g] = groupsOf(

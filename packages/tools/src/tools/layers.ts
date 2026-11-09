@@ -167,10 +167,24 @@ export const composeViewTool = defineTool<{ base: string; layers: string[] }, ob
       return badLayer(e);
     }
     const { sha256 } = await ctx.store.put(view);
+    // Each measure's kind, standing and layer, as the seam promises (seam.md): a reader's measures are
+    // verified, and their kind is the reader's own, so it isn't named here.
+    const about = new Map<string, { kind?: string; standing: string; from: string }>();
+    for (const m of measuresIn(s)) about.set(m.id, { standing: 'verified', from: base });
+    for (const a of added) {
+      if ('layer' in a) {
+        for (const m of a.layer.measures) {
+          about.set(m.name, { kind: m.kind, standing: a.layer.standing, from: a.hash });
+        }
+      } else {
+        for (const m of measuresIn(a.snapshot))
+          about.set(m.id, { standing: 'verified', from: a.hash });
+      }
+    }
     return {
       sha256,
       network: view.network.id,
-      measures: measuresIn(view),
+      measures: measuresIn(view).map((m) => ({ ...m, ...about.get(m.id) })),
       layers: [
         { hash: base, as: 'base' },
         ...added.map((a) => ({
