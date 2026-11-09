@@ -71,6 +71,7 @@ import { TextLink } from '../components/ui/TextLink.tsx';
 import { Transcript } from '../components/ui/Transcript.tsx';
 import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
+import { Funds } from '../components/workspace/Funds.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import { emptyChat } from '../lib/agent-chat.ts';
@@ -1465,6 +1466,56 @@ export const registry: LabEntry[] = [
             summary="246 proposals, by author, added as a layer."
           />
         ),
+      },
+    ],
+  },
+  {
+    id: 'Funds',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/Funds.tsx',
+    states: [
+      {
+        name: 'holding NEAR',
+        render: () => (
+          <Funds
+            held="840000000000000000000000"
+            phase="ready"
+            withdrew={null}
+            onWithdraw={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'waiting for the wallet',
+        render: () => (
+          <Funds
+            held="840000000000000000000000"
+            phase="withdrawing"
+            withdrew={null}
+            onWithdraw={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'withdrew',
+        render: () => <Funds held="0" phase="withdrew" withdrew="0.84" onWithdraw={() => {}} />,
+      },
+      {
+        name: "didn't go through",
+        render: () => (
+          <Funds
+            held="840000000000000000000000"
+            phase="failed"
+            withdrew={null}
+            onWithdraw={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'nothing held',
+        render: () => <Funds held="0" phase="ready" withdrew={null} onWithdraw={() => {}} />,
       },
     ],
   },
