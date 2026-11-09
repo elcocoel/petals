@@ -98,4 +98,6 @@ META's go once `seam/v1` was live (`1c82b33`); the reading is SYSTEMS's, so this
 
 **Tests:** without a view, every golden reading is byte-identical; with the default view, the default specs' readings are the same; a view naming a piece a flower lacks draws nothing in that dimension; markings, texture and lines draw nothing yet.
 
-**Open, for Elco:** until people can set their own view, a flower the agent drew with other choices (proposals as height, say) is drawn by the default view, so the agent's choice doesn't show. See the reply in chat.
+**Elco, 9 Nov: the default view for all.** Until people can set their own view, every flower is drawn by the default; the agent's choices stay with the flower as its proposal and don't show until a person can adopt them.
+
+**SYSTEMS, 9 Nov: OK,** on two conditions: without a view the golden readings stay byte-identical, and with one the reading keeps `reading/v1`'s shape (same fields, only the values the view picks), so it stays v1. Height by a piece's name keeps today's path, `m:<name>` through `measureTable` on the composed snapshot. The optional `view` on `render_flower` and `/api/v1/render` is additive; SYSTEMS raises `tools_version` once for the day's tool changes, so this lane doesn't.
