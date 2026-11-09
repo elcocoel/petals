@@ -1,6 +1,6 @@
 # Contract: the view (`view/v1`), how data becomes a flower
 
-**Version**: view/v1 | **Owner**: LOOK | **Status**: reviewed by META, 9 Nov; built on `m-face/fe-view`, which merges once SYSTEMS's typed seam is on `main`. Built under the rule SYSTEMS is writing for every protocol: a JSON Schema with its version string, pinned fixtures, a check, and a rule for v2. Where SYSTEMS's rule lands differently, this follows it.
+**Version**: view/v1 | **Owner**: LOOK | **Status**: reviewed by META, 9 Nov; built on `m-face/fe-view`, which merges once SYSTEMS's typed seam is on `main`. Built under `specs/protocols.md`, the one rule for every format.
 **Schema draft**: `view-v1.schema.json`, next to this file.
 
 ## Elco's words (9 Nov, through META)
@@ -77,15 +77,17 @@ That's the **default**: today's `default/v1` choices, written as a view. `null` 
 
 ## The rule for v2
 
-- **It stays `view/v1`** while a change keeps every v1 document valid, with the same meaning: an optional field that old readers can ignore, or a kind that a dimension now accepts.
-- **It becomes `view/v2`** when a dimension is added, removed or renamed, or a field changes meaning.
-- **Old documents stay readable:** v2 comes with a written upgrade from v1 (for example, a new dimension starts not in use). Nothing is rewritten in place.
+It follows `specs/protocols.md`, the one rule for every format:
+
+- **It becomes `view/v2`** when a change would make a valid v1 view invalid, change what a field means, or change a v1 view's hash. A view refuses fields it doesn't know, so a new field, or a dimension added, removed or renamed, is a new version.
+- **It stays `view/v1`** when a dimension starts accepting another kind of data: every v1 view stays valid and means the same; a flower may simply show more.
+- **Old views stay readable:** v1's schema, fixtures and pins stay, a reader picks by the `petal` field, and nothing is rewritten in place.
 - **The look's version is separate:** the look improves and is always the latest; the view's format changes only by this rule.
 
 ## Fixtures and checks
 
-- `fixtures/views/default.view.json`, and `fixtures/views/proposals.view.json` (Elco's case), each with its sha256 pinned in a test.
-- Every fixture is checked against the schema, as part of the tests that `scripts/check.sh` runs.
+- `packages/core/schema/fixtures/view.v1.json` (the default) and `view.v1.proposals.json` (Elco's case), pinned in `packages/core/schema/pins.json`.
+- `scripts/check-protocols.ts`, run by `scripts/check.sh`, checks both against the schema and their pins.
 - A test holds the table above: each dimension accepts exactly its kinds.
 - A test holds that the look draws only what it declares, and the legend lists exactly what's drawn.
 

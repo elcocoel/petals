@@ -21,7 +21,8 @@ import {
 
 const root = join(import.meta.dirname, '..', '..', '..');
 const read = (p: string) => readFileSync(join(root, p));
-const fixture = (name: string) => JSON.parse(read(`fixtures/views/${name}`).toString()) as View;
+const fixture = (name: string) =>
+  JSON.parse(read(`packages/core/schema/fixtures/${name}`).toString()) as View;
 const ajv = createAjv();
 const valid = (doc: unknown) => {
   const v = ajv.getSchema(schemaId('view'));
@@ -77,8 +78,8 @@ describe('the schema', () => {
 
 describe('the fixtures', () => {
   test.each([
-    ['default.view.json', '543f9533366d12e54891ad20f96211d75d8415608de1829739566407550f9761'],
-    ['proposals.view.json', '4e8117ea89164e17d63d4dac82a75d1f130d3ae5ab478bfe6262fde9a67543fc'],
+    ['view.v1.json', '543f9533366d12e54891ad20f96211d75d8415608de1829739566407550f9761'],
+    ['view.v1.proposals.json', '4e8117ea89164e17d63d4dac82a75d1f130d3ae5ab478bfe6262fde9a67543fc'],
   ])('%s is valid and pinned', (name, hash) => {
     const v = fixture(name);
     expect(valid(v).errors).toEqual([]);
@@ -86,11 +87,11 @@ describe('the fixtures', () => {
   });
 
   test('the default fixture is the default view', () => {
-    expect(fixture('default.view.json')).toEqual(DEFAULT_VIEW);
+    expect(fixture('view.v1.json')).toEqual(DEFAULT_VIEW);
   });
 
   test("Elco's case is the default with proposals as marks", () => {
-    const v = fixture('proposals.view.json');
+    const v = fixture('view.v1.proposals.json');
     expect({ ...v.dimensions, markings: null }).toEqual(DEFAULT_VIEW.dimensions);
     expect(v.dimensions.markings).toEqual({ data: 'proposals' });
   });
@@ -162,7 +163,7 @@ describe('a view meeting a flower', () => {
   });
 
   test('a piece of data a flower lacks shows nothing there, with no fallback', () => {
-    const v = fixture('proposals.view.json');
+    const v = fixture('view.v1.proposals.json');
     expect(inUse(v, moloch).markings).toBe('proposals');
     expect(inUse(v, near).markings).toBeNull();
   });

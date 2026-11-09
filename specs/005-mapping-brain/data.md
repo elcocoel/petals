@@ -10,6 +10,8 @@ There's one per investigated address, written `chain:address`: a DAO, a token, a
 
 One set of facts about the address's participants, from one author, at one time. A layer never changes after it's made.
 
+Its format is `layer/v1`, a JSON Schema at `packages/core/schema/layer.schema.json` (`urn:petal:schema:layer:v1`), under `specs/protocols.md`. It refuses fields it doesn't know and needs full dates, with their time and zone; `add_layer` and the checker both use it.
+
 | Field | What it holds |
 |---|---|
 | `about` | The address, `chain:address` |

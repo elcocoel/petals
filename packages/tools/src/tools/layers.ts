@@ -13,6 +13,7 @@ import {
   type Layer,
   LayerError,
   layerHash,
+  schemas,
 } from '@petal/core';
 import { defineTool } from '../define.ts';
 import { stateDirOf } from '../drafts.ts';
@@ -41,54 +42,14 @@ const badLayer = (e: unknown): never => {
   throw e;
 };
 
-export const LAYER_INPUT = obj(
-  ['petal', 'about', 'kind', 'measures', 'rows', 'how', 'from', 'when', 'standing'],
-  {
-    petal: { const: 'layer/v1' },
-    about: {
-      type: 'string',
-      description: 'the investigated address as chain:address, e.g. eip155:100:0xf02f…',
-    },
-    kind: { const: 'measures' },
-    measures: {
-      type: 'array',
-      minItems: 1,
-      items: obj(['name', 'unit', 'kind'], {
-        name: { type: 'string', description: 'lowercase_with_underscores, e.g. proposals_written' },
-        unit: { type: 'string' },
-        kind: { enum: ['amount', 'count', 'share', 'category', 'flag'] },
-        label: { type: 'string' },
-      }),
-    },
-    rows: {
-      type: 'array',
-      minItems: 1,
-      items: obj(['participant', 'measure', 'value'], {
-        participant: {
-          type: 'string',
-          description: "an address as the reading you're adding to names it",
-        },
-        measure: { type: 'string' },
-        value: { type: 'string', description: 'a number as text for amount, count and share' },
-      }),
-    },
-    how: obj(['method', 'sources'], {
-      method: { type: 'string', description: 'how you made it, in a sentence anyone could repeat' },
-      sources: {
-        type: 'array',
-        items: obj(['url'], { url: { type: 'string' }, note: { type: 'string' } }),
-      },
-      recipe: SHA256,
-    }),
-    from: { type: 'array', items: SHA256, description: 'the layers or readings this was built on' },
-    when: obj(['as_of'], { as_of: { type: 'string' }, block_height: { type: 'integer' } }),
-    standing: {
-      enum: ['verified', 'inferred', 'lead'],
-      description:
-        'verified: read from the chain, and anyone can read it again; inferred: a step beyond a read; lead: a direction, never a fact',
-    },
-  },
-);
+/** layer/v1 as its schema says (urn:petal:schema:layer:v1), so a door refuses what the format refuses. */
+const {
+  $id: _id,
+  $schema: _s,
+  title: _t,
+  ...LAYER_SHAPE
+} = schemas.layer as Record<string, unknown>;
+export const LAYER_INPUT = LAYER_SHAPE;
 
 export const addLayer = defineTool<{ layer: unknown }, object>({
   name: 'add_layer',

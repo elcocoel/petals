@@ -1,0 +1,68 @@
+{
+  "petal": "spec/v1",
+  "network": {
+    "id": "sample-pools",
+    "chain": "near:mainnet",
+    "population": "validators"
+  },
+  "snapshot": {
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "as_of": "2026-11-03T19:42:00Z",
+    "block_height": 222915356
+  },
+  "labels": "none",
+  "selection": {
+    "measure": "validator_stake_current_epoch",
+    "petals": 60,
+    "tail": {
+      "group": true,
+      "label": "everyone else"
+    }
+  },
+  "encodings": {
+    "width": {
+      "by": "share",
+      "scale": "log",
+      "max_ratio": 2,
+      "meaning": "share of stake, in a 2x band",
+      "sources": [
+        "rpc-validators"
+      ]
+    },
+    "height": {
+      "by": "share",
+      "scale": "sqrt",
+      "meaning": "square root of share",
+      "sources": [
+        "rpc-validators"
+      ]
+    },
+    "colour": {
+      "by": "kind",
+      "meaning": "kind of account",
+      "sources": [
+        "rpc-validators"
+      ]
+    },
+    "outline": {
+      "by": "identity_status",
+      "meaning": "solid: self-declared or verified; dashed: inferred",
+      "sources": [
+        "rpc-validators"
+      ]
+    },
+    "segments": null,
+    "order": {
+      "by": "measure_desc",
+      "meaning": "largest first, clockwise from the top",
+      "sources": [
+        "rpc-validators"
+      ]
+    }
+  },
+  "convention": {
+    "id": "default/v1",
+    "variation_of": null,
+    "changes": []
+  }
+}

@@ -21,11 +21,11 @@ export const DIMENSIONS = [
 export type Dimension = (typeof DIMENSIONS)[number];
 
 /**
- * The kinds a piece of data can be: 005's five (layers.ts), and two the view needs: `parts`, a petal cut
- * into what it's made of (backers today), and `relation`, petal to petal. The two are asked of SYSTEMS
- * (META, 9 Nov), with a kind for dates; this follows the typed seam when it lands.
+ * The kinds a piece of data can be: 005's five (layers.ts), and `date`, `parts` (a petal cut into what it's
+ * made of, backers today) and `relation` (petal to petal). The same list SYSTEMS puts in core with seam/v1
+ * (DATA_KINDS); when it lands, this points at it and nothing else changes. No dimension takes a date yet.
  */
-export type DataKind = MeasureKind | 'parts' | 'relation';
+export type DataKind = MeasureKind | 'date' | 'parts' | 'relation';
 
 /** A piece of data a flower has: its name, as the view names it, and its kind. */
 export interface Piece {
