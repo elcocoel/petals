@@ -173,7 +173,9 @@ async function send(
       r.outcome.status && typeof r.outcome.status === 'object' && 'Failure' in r.outcome.status,
   );
   const ok = out.status && typeof out.status === 'object' && 'SuccessValue' in out.status;
-  if (!ok && o.gone && (await balanceOf(o.gone)) === null) return out.transaction.hash;
+  // Deleting an account: NEAR then sends its gas refund to the account that's just gone, and that receipt
+  // fails with AccountDoesNotExist. That's how a delete ends, not a failure: gone is done (Elco's testnet run).
+  if (o.gone && (await balanceOf(o.gone)) === null) return out.transaction.hash;
   if (!ok || failed) {
     fail(
       `a transaction to ${receiverId} failed (${out.transaction.hash}): ${JSON.stringify(failed?.outcome.status ?? out.status)}`,
@@ -253,7 +255,6 @@ async function finish(ownerKey: string): Promise<string> {
   }
   if ((await balanceOf(FUNDER)) !== null) {
     console.log(`credit-setup: giving back to ${owner} what's left`);
-    // A resend after the first one landed finds it gone: that's done, not a failure (testnet rehearsal).
     await send(f, FUNDER, [actions.deleteAccount(owner)], { gone: FUNDER });
   }
 
