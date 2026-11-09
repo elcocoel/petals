@@ -9,10 +9,11 @@ import {
   PAY_NEAR,
   type PayInfo,
   type PayPhase,
+  payAction,
   sentBy,
   yoctoOf,
 } from '../lib/pay.ts';
-import { sendNear } from '../lib/wallet.ts';
+import { sendAction } from '../lib/wallet.ts';
 
 /** `asking` is the newest pay row's key: a new one starts a new payment. */
 export function usePay(signedIn: boolean, busy: boolean, asking: string | null) {
@@ -34,7 +35,8 @@ export function usePay(signedIn: boolean, busy: boolean, asking: string | null) 
     void Promise.all([readCredit(), readPay()]).then(
       ([c, p]) => {
         if (gone) return;
-        setCredit(c);
+        // with the contract, what it holds now, read from the chain, is the truer balance
+        setCredit(p?.credit ?? c);
         setInfo(p);
       },
       () => {},
@@ -52,7 +54,8 @@ export function usePay(signedIn: boolean, busy: boolean, asking: string | null) 
     }
     setPhase('paying');
     try {
-      const sent = sentBy(await sendNear(where.network, where.receiver, yoctoOf(PAY_NEAR)));
+      const action = payAction(where, yoctoOf(PAY_NEAR));
+      const sent = sentBy(await sendAction(where.network, where.receiver, action));
       if (!sent) throw new Error('no transaction');
       const done = await confirmPay({
         network: where.network,
