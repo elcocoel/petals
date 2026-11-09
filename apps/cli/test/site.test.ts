@@ -70,6 +70,8 @@ function fakeSite(held: Set<string> = new Set()) {
     if (method === 'POST' && /\/jobs\/[^/]+\/report$/.test(path))
       return json({ job: { id: 'job_1', status: 'done' } });
     if (method === 'GET' && path.endsWith('/jobs')) return json({ jobs: [] });
+    if (method === 'GET' && path.startsWith('/api/v1/brain'))
+      return json({ commit: 'c0ffee', path });
     if (method === 'GET' && path.startsWith('/api/v1/explorations')) return json({ steps: [] });
     return json({ error: { code: 'not_found', message: 'no' } }, 404);
   };
@@ -337,5 +339,23 @@ describe('jobs from the page’s agent', () => {
       true,
     );
     expect(site.seen).toEqual([]);
+  });
+
+  test('the brain comes from the site, which holds the latest, with its commit', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch }).tools(registry);
+    const route = (await byName(tools, 'brain_route').run(
+      { question: 'who controls this treasury', answers: ['sharesToken()', 'lootToken()'] },
+      ctx(),
+    )) as { commit: string };
+    expect(route.commit).toBe('c0ffee');
+    const url = new URL((site.seen.at(-1) as Seen).url);
+    expect(url.pathname).toBe('/api/v1/brain/route');
+    expect(url.searchParams.get('q')).toBe('who controls this treasury');
+    expect(url.searchParams.get('answers')).toBe('sharesToken(),lootToken()');
+    await byName(tools, 'brain_file').run({ id: 'where-power-lives' }, ctx());
+    expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/brain/files/where-power-lives`);
+    await byName(tools, 'brain_index').run({}, ctx());
+    expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/brain`);
   });
 });

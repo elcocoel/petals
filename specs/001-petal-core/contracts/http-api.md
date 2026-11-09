@@ -45,6 +45,9 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `POST /api/v1/publish/prepare` | `prepare_publish` |
 | `POST /api/v1/publish` | `publish_flower` |
 | `POST /api/v1/quote` | `quote_payment` (dry, FR-031) |
+| `GET /api/v1/brain` | `brain_index` (005): every chapter's and recipe's header, with the brain commit |
+| `GET /api/v1/brain/route?q=&answers=` | `brain_route`: the best three for a question, the calls a contract answers (comma-separated), or both |
+| `GET /api/v1/brain/files/:id` | `brain_file`: one, whole, by id; `doctrine` is read first |
 | `POST /api/v1/figures/compare` | `compare_figures` (Phase B) |
 | `POST /api/v1/corrections/prepare` | `prepare_correction` (Phase B) |
 | `POST /api/v1/corrections` | `submit_correction` (Phase B) |
