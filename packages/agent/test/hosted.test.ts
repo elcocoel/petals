@@ -145,6 +145,14 @@ describe('hostedSkill', () => {
     );
   });
 
+  test("each app's steps come from its chapter, without repeating the setup the general block has", () => {
+    const setup = part('Set yourself up first');
+    expect(setup).toContain('### A cloud app');
+    expect(setup).not.toContain('#### Set up, every session');
+    expect(setup).toContain("(the Bash tool's dangerouslyDisableSandbox)");
+    expect(setup.split('--create-dirs -o ~/.petals/petal.mjs').length - 1).toBe(1);
+  });
+
   test('teaches no route that reads for them: the site no longer does', () => {
     expect(md).not.toContain('## Calling the tools over HTTP');
     expect(md).not.toMatch(

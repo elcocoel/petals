@@ -73,13 +73,16 @@ export function connectorAddress(origin: string): string {
   return fill(block, origin);
 }
 
-/** Each app's own steps, from its chapter, for /skill.md: every section but the page's box, which isn't theirs. */
+/** Each app's own steps, from its chapter, for /skill.md: every section but the setup (above) and the page's box. */
 function appSteps(origin: string): string {
   const out: string[] = [];
   for (const c of CONNECT_CHAPTERS) {
-    out.push(`### ${c.title.replace(/^Connect /, '')}`, '', fill(c.intro, origin), '');
+    const app = c.title.replace(/^Connect /, '');
+    out.push(`### ${app.charAt(0).toUpperCase()}${app.slice(1)}`, '', fill(c.intro, origin), '');
     for (const sec of c.sections) {
-      if (sec.heading === "In the box on Petals' page") continue;
+      // the page's box isn't theirs, and the two setup commands are already above, the same for every app
+      if (sec.heading === "In the box on Petals' page" || sec.heading === 'Set up, every session')
+        continue;
       out.push(`#### ${sec.heading}`, '', fill(sec.body, origin), '');
     }
     out.push(`All of it, always the latest: \`${origin}/api/v1/brain/files/${c.id}\`.`, '');
