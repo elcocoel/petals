@@ -76,6 +76,7 @@ function speakers(items: ChatItem[], agent: string): (string | undefined)[] {
 export function AgentChat({
   chat,
   draft,
+  picking,
   threadRef,
   following,
   onDraft,
@@ -84,9 +85,12 @@ export function AgentChat({
   onAnswer,
   onMode,
   onModel,
+  onPick,
 }: {
   chat: ChatState;
   draft: string;
+  /** The model list is open under the input. */
+  picking: boolean;
   threadRef: RefObject<HTMLDivElement | null>;
   /** Whether the reader is at the newest line, so the chat keeps them there. */
   following: RefObject<boolean>;
@@ -97,6 +101,8 @@ export function AgentChat({
   onAnswer: (optionId: string | null) => void;
   onMode: (id: string) => void;
   onModel: (id: string) => void;
+  /** Opens or closes the model list. */
+  onPick: () => void;
 }) {
   // follows the newest line from when the chat is on the page, unless the reader scrolled up
   useFollowScroll(threadRef, following);
@@ -107,8 +113,6 @@ export function AgentChat({
   const at = modes.findIndex((m) => m.id === chat.mode.current);
   const nextMode = modes.length > 1 ? modes[(at + 1) % modes.length] : undefined;
   const models = chat.models.available;
-  const atModel = models.findIndex((m) => m.id === chat.models.current);
-  const nextModel = models.length > 1 ? models[(atModel + 1) % models.length] : undefined;
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div ref={threadRef} className="min-h-0 flex-1 overflow-y-auto overscroll-none px-block-gap">
@@ -137,6 +141,26 @@ export function AgentChat({
           {chat.error && <p className="my-0 type-caption text-muted">{chat.error}</p>}
         </div>
       </div>
+      {picking && models.length > 1 && (
+        <ul className="m-0 flex max-h-figure-height list-none flex-col gap-space-4 overflow-y-auto px-block-gap pt-text-gap">
+          {models.map((m) => (
+            <li key={m.id}>
+              <Button
+                variant="row"
+                current={m.id === chat.models.current}
+                onClick={() => onModel(m.id)}
+              >
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate type-label">{m.name}</span>
+                  {m.description && (
+                    <span className="type-caption text-muted">{m.description}</span>
+                  )}
+                </span>
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
       <Composer
         view={{
           value: draft,
@@ -155,8 +179,8 @@ export function AgentChat({
                 {chatWords.stop}
               </Button>
             )}
-            {nextModel ? (
-              <Button variant="pill" onClick={() => onModel(nextModel.id)}>
+            {models.length > 1 ? (
+              <Button variant="pill" pressed={picking} onClick={onPick}>
                 {chat.model}
               </Button>
             ) : (

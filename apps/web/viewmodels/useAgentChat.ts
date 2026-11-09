@@ -56,6 +56,8 @@ export function useAgentChat({
   const [failed, setFailed] = useState<string | null>(null);
   const [chat, setChat] = useState<ChatState>(emptyChat);
   const [draft, setDraft] = useState('');
+  // the model list under the input, open or not
+  const [picking, setPicking] = useState(false);
   const line = useRef<TerminalLine | null>(null);
   const thread = useRef<HTMLDivElement | null>(null);
   const following = useRef(true);
@@ -175,6 +177,7 @@ export function useAgentChat({
     failed,
     chat,
     draft,
+    picking,
     refs: { thread, following },
     setCode,
     setDraft,
@@ -202,6 +205,10 @@ export function useAgentChat({
       setChat(answered);
     },
     setMode: (id: string) => line.current?.send(toHelper.mode(id)),
-    setModel: (id: string) => line.current?.send(toHelper.model(id)),
+    togglePicking: () => setPicking((p) => !p),
+    setModel: (id: string) => {
+      line.current?.send(toHelper.model(id));
+      setPicking(false);
+    },
   };
 }

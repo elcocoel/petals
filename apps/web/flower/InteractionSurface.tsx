@@ -127,6 +127,7 @@ export function InteractionSurface({
           <AgentChat
             chat={term.chat}
             draft={term.draft}
+            picking={term.picking}
             threadRef={term.refs.thread}
             following={term.refs.following}
             onDraft={term.setDraft}
@@ -135,6 +136,7 @@ export function InteractionSurface({
             onAnswer={term.answer}
             onMode={term.setMode}
             onModel={term.setModel}
+            onPick={term.togglePicking}
           />
         )}
         {!terminal && state.door === 'wallet' && (

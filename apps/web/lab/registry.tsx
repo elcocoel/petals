@@ -1535,6 +1535,7 @@ export const registry: LabEntry[] = [
               },
             }}
             draft=""
+            picking={false}
             threadRef={{ current: null }}
             following={{ current: true }}
             onDraft={() => {}}
@@ -1543,6 +1544,7 @@ export const registry: LabEntry[] = [
             onAnswer={() => {}}
             onMode={() => {}}
             onModel={() => {}}
+            onPick={() => {}}
           />
         ),
       },
