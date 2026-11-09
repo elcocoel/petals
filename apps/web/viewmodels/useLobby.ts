@@ -9,6 +9,7 @@ import { mapTiles } from '../lib/lobby-view.ts';
 import { useConversations } from './useConversations.ts';
 import { useFunds } from './useFunds.ts';
 import { useSession } from './useSession.ts';
+import { useWorkMenu } from './useWorkMenu.ts';
 
 export function useLobby() {
   const session = useSession(true);
@@ -29,15 +30,12 @@ export function useLobby() {
       gone = true;
     };
   }, []);
-  // box.fold: the menu starts open, as an IDE's does, and folds away by hand
-  const [menuOpen, setMenuOpen] = useState(true);
+  const menu = useWorkMenu(Boolean(session.account));
   return {
     session,
     funds,
     conversations: conversationRows(conversations, { runId: null }),
     tiles: mapTiles(flowers),
-    menuOpen,
-    fold: () => setMenuOpen(false),
-    unfold: () => setMenuOpen(true),
+    menu,
   };
 }

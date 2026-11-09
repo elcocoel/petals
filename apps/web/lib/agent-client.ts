@@ -12,6 +12,7 @@ import type {
   Reading,
   Run,
 } from '@petal/core/types';
+import type { ConnectedAgent } from './agents.ts';
 import type { Settings } from './composer-options.ts';
 import type { ListedConversation } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
@@ -418,4 +419,16 @@ export async function readJobs(exploration: string): Promise<Job[]> {
   });
   if (!res.ok) return [];
   return ((await res.json()) as { jobs?: Job[] }).jobs ?? [];
+}
+
+/** The person's own agents and what each is doing, or none: not signed in, or no answer. */
+export async function readAgents(): Promise<ConnectedAgent[]> {
+  const res = await fetch('/api/v1/agents', { cache: 'no-store' });
+  if (!res.ok) return [];
+  return ((await res.json()) as { agents?: ConnectedAgent[] }).agents ?? [];
+}
+
+/** A new agent link for the whole account, shown once; older ones keep working until revoked. */
+export function mintAgentLink(): Promise<{ id: string; token: string; created_at: string }> {
+  return sessionPost('/api/v1/agents/link', {});
 }

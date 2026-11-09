@@ -37,7 +37,7 @@ export function ConversationThread({
   /** Paying for Petals' agent, for the live pay row (B). */
   pay?: { asking: string | null; phase: PayPhase; added: string | null; onPay: () => void };
   /** Where each handed job stands, and the hand-over (C). */
-  jobs?: { known: Record<string, Job>; copied: boolean; onCopy: () => void };
+  jobs?: Record<string, Job>;
 }) {
   return (
     <Thread
@@ -75,18 +75,8 @@ export function ConversationThread({
         ) : null
       }
       renderJob={(row) => {
-        const known = jobs?.known[row.job.id];
-        const line = jobLine(row.job, known);
-        return (
-          <JobRow
-            key={row.key}
-            text={line.text}
-            summary={line.summary}
-            open={(known ?? row.job).status === 'open'}
-            copied={jobs?.copied ?? false}
-            {...(jobs ? { onCopy: jobs.onCopy } : {})}
-          />
-        );
+        const line = jobLine(row.job, jobs?.[row.job.id]);
+        return <JobRow key={row.key} text={line.text} summary={line.summary} />;
       }}
       onRefollow={onRefollow}
       onLink={onLink}

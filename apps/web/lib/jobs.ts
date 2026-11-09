@@ -16,22 +16,28 @@ export interface Job {
   status: JobStatus;
   summary?: string;
   failed?: string;
+  /** The agent it was sent to, by the name it called itself, or null: any of them. */
+  to?: string | null;
+  /** Who took it, or null. */
+  taken_by?: string | null;
 }
 
+/** Who, as a person reads it: the agent's own name, or your own agent when none is named yet. */
+const whoOf = (name: string | null | undefined) => name || 'Your own agent';
+
 export const jobWords = {
-  open: (title: string) => `Sent to your own agent: ${title}`,
-  taken: (title: string) => `Your own agent is on it: ${title}`,
-  done: (title: string) => `Your own agent finished: ${title}`,
-  failed: (title: string) => `Your own agent couldn't finish: ${title}`,
-  /** The one way to hand the jobs to your agent: a line to paste into it (CONNECTORS, 9 Nov). */
-  copy: 'Copy for your agent',
-  copied: 'Copied. Paste it into your agent.',
-  handover: (link: string) => `Take the open jobs in my Petals project: ${link}`,
+  open: (title: string, to?: string | null) =>
+    to ? `Sent to ${to}: ${title}` : `Sent to your own agent: ${title}`,
+  taken: (title: string, by?: string | null) => `${whoOf(by)} is on it: ${title}`,
+  done: (title: string, by?: string | null) => `${whoOf(by)} finished: ${title}`,
+  failed: (title: string, by?: string | null) => `${whoOf(by)} couldn't finish: ${title}`,
 } as const;
 
 /** The job's line, from the newest word on it: the list if it's been read, the event otherwise. */
 export function jobLine(handed: Job, known: Job | undefined): { text: string; summary?: string } {
   const j = known ?? handed;
   const summary = j.status === 'failed' ? j.failed : j.summary;
-  return { text: jobWords[j.status](j.title), ...(summary ? { summary } : {}) };
+  const text =
+    j.status === 'open' ? jobWords.open(j.title, j.to) : jobWords[j.status](j.title, j.taken_by);
+  return { text, ...(summary ? { summary } : {}) };
 }
