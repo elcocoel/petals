@@ -45,10 +45,10 @@ export function WorkMenu({
   );
   return (
     <>
-      {/* Its room in the page's flow, which the page can lay out beside: the menu's width while it's open,
-          and the folded word's while it's folded (the same word, unseen). */}
+      {/* Its room in the page's flow, which the page can lay out beside: up to the menu's floating edge while
+          it's open, and the folded word's while it's folded (the same word, unseen). */}
       <div aria-hidden className="invisible flex shrink-0">
-        {open ? <div className="w-tile-width" /> : rail(false, null)}
+        {open ? <div className="box-content w-tile-width pl-block-gap" /> : rail(false, null)}
       </div>
       <div className={open ? 'fixed top-0 bottom-0 left-0 flex p-block-gap' : 'fixed top-0 left-0'}>
         {rail(
