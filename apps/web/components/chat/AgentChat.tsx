@@ -143,12 +143,18 @@ export function AgentChat({
           readOnly: false,
           label: chatWords.placeholder,
           placeholder: chatWords.placeholder,
-          button: chat.busy ? chatWords.stop : chatWords.send,
-          disabled: !chat.busy && !draft.trim(),
+          // Enter and the button only ever send; Stop is its own button while a turn runs
+          button: chatWords.send,
+          disabled: chat.busy || !draft.trim(),
         }}
         className="px-block-gap pt-text-gap pb-block-gap"
         controls={
           <span className="flex flex-wrap items-center gap-space-8">
+            {chat.busy && (
+              <Button variant="pill" onClick={onStop}>
+                {chatWords.stop}
+              </Button>
+            )}
             {nextModel ? (
               <Button variant="pill" onClick={() => onModel(nextModel.id)}>
                 {chat.model}
@@ -165,7 +171,7 @@ export function AgentChat({
           </span>
         }
         onChange={onDraft}
-        onSend={chat.busy ? onStop : onSend}
+        onSend={onSend}
       />
     </div>
   );
