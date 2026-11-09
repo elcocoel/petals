@@ -264,7 +264,7 @@ export type ChatAction =
   | { type: 'sent'; text: string; startOver: boolean }
   | { type: 'event'; event: AgentEvent }
   /** never accepted; `text` is what goes back to the box (null when it has no words of its own) */
-  | { type: 'refused'; text: string | null; message: string }
+  | { type: 'refused'; text: string | null; message: string; code?: string }
   | { type: 'opening' }
   | { type: 'opened'; run: Pick<Run, 'status' | 'messages' | 'events'> }
   | { type: 'unreadable'; code: string; message: string }
@@ -333,7 +333,7 @@ export function chatReducer(s: ChatState, a: ChatAction): ChatState {
         ...s,
         question: a.text === null ? s.question : joinQuestion(a.text, s.question),
         restored: a.text !== null,
-        items: [...s.items, { kind: 'error', code: 'client', message: a.message }],
+        items: [...s.items, { kind: 'error', code: a.code ?? 'client', message: a.message }],
         busy: false,
         turn: s.before === 'lost' ? 'lost' : witness(s.turn, { event: 'ended' }),
       };

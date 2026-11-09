@@ -6,7 +6,7 @@
 // browser. The hook only wires them to React. There is no actions.stop: packages/agent has no abort,
 // so Stop needs server work first, and a button here would claim what nothing can witness.
 import { useEffect, useMemo, useReducer, useRef } from 'react';
-import { type AgentClient, agentClient } from '../lib/agent-client.ts';
+import { type AgentClient, agentClient, refusalCode } from '../lib/agent-client.ts';
 import { withAbout } from '../lib/ask-about.ts';
 import type { Settings } from '../lib/composer-options.ts';
 import {
@@ -56,6 +56,7 @@ export async function sendQuestion(
   deps.dispatch({ type: 'sent', text: said, startOver: q.recorded });
   let accepted = false;
   let failure: string | null = null;
+  let failureCode: string | null = null;
   try {
     const events = deps.client.chat({
       messages: [
@@ -77,6 +78,7 @@ export async function sendQuestion(
     }
   } catch (e) {
     failure = messageOf(e);
+    failureCode = refusalCode(e);
   }
   if (accepted) deps.dispatch({ type: 'ended', again: false });
   else {
@@ -84,6 +86,7 @@ export async function sendQuestion(
       type: 'refused',
       text: q.recorded ? null : q.text,
       message: failure ?? 'The connection closed before the server accepted your question.',
+      ...(failureCode ? { code: failureCode } : {}),
     });
   }
 }

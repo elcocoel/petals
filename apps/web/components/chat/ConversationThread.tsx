@@ -1,7 +1,9 @@
 // The thread as every surface shows it: its rows, the recorded notice, and a flower's row wired to what
 // opens it. A surface says only where the thread sits and what the open row says.
 import type { Ref } from 'react';
+import type { PayPhase } from '../../lib/pay.ts';
 import type { Row } from '../../lib/thread-view.ts';
+import { PayRow } from './PayRow.tsx';
 import { Thread } from './Thread.tsx';
 import { TurnFlower } from './TurnFlower.tsx';
 
@@ -16,6 +18,7 @@ export function ConversationThread({
   onOpenStored,
   onRefollow,
   onLink,
+  pay,
 }: {
   recorded: boolean;
   rows: Row[];
@@ -28,6 +31,8 @@ export function ConversationThread({
   onOpenStored: (id: string) => void;
   onRefollow: () => void;
   onLink: (href: string) => boolean;
+  /** Paying for Petals' agent, for the live pay row (B). */
+  pay?: { asking: string | null; phase: PayPhase; added: string | null; onPay: () => void };
 }) {
   return (
     <Thread
@@ -59,6 +64,11 @@ export function ConversationThread({
           />
         );
       }}
+      renderPay={(key) =>
+        pay && key === pay.asking ? (
+          <PayRow key={key} phase={pay.phase} added={pay.added} onPay={pay.onPay} />
+        ) : null
+      }
       onRefollow={onRefollow}
       onLink={onLink}
     />

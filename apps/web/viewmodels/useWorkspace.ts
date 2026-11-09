@@ -29,6 +29,7 @@ import {
   questionPrefix,
   shelfView,
 } from '../lib/panel-view.ts';
+import { payWords } from '../lib/pay.ts';
 import type { Opened, PanelSection } from '../lib/thread.ts';
 import { composerView, type FlowerRow, openFlowerIndex } from '../lib/thread-view.ts';
 import { workspaceUrl } from '../lib/workspace-url.ts';
@@ -37,6 +38,7 @@ import { useConversations } from './useConversations.ts';
 import { useDrawnFlowers } from './useDrawnFlower.ts';
 import { useElsewhere } from './useElsewhere.ts';
 import { useMakeChat } from './useMakeChat.ts';
+import { usePay } from './usePay.ts';
 import { useSession } from './useSession.ts';
 import { useSnapshotFacts } from './useSnapshotFacts.ts';
 import { useStoredFlower } from './useStoredFlower.ts';
@@ -223,6 +225,12 @@ export function useWorkspace(props: {
     recorded ||
     Boolean(initialElsewhere) ||
     (Boolean(session.account) && props.agentForVisitors !== false);
+  // Paying for Petals' agent (B): the newest pay row is the live one.
+  const asking = useMemo(
+    () => shownRows.findLast((r) => r.kind === 'pay')?.key ?? null,
+    [shownRows],
+  );
+  const pay = usePay(Boolean(session.account) && props.agentForVisitors !== false, busy, asking);
   const listed = useConversations(recorded ? null : `${runId}:${busy}:${elsewhereRef}`);
   const conversations = useMemo(
     () => conversationRows(listed, { runId, elsewhere: elsewhereRef ?? undefined }),
@@ -311,6 +319,8 @@ export function useWorkspace(props: {
             'Conversation'),
       conversations,
       menuShown: Boolean(session.account),
+      pay: { asking: pay.asking, phase: pay.phase, added: pay.added },
+      balance: pay.balance ? payWords.balance(pay.balance) : null,
       menuOpen,
       session,
       needsWallet,
@@ -366,6 +376,7 @@ export function useWorkspace(props: {
         if (opensBox) setBoxOpen(true);
       },
       closeBox: () => setBoxOpen(false),
+      pay: pay.pay,
       foldMenu: () => setMenuOpen(false),
       unfoldMenu: () => setMenuOpen(true),
       closeDetail: () => dispatch({ type: 'select', petal: null }),

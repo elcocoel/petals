@@ -170,6 +170,7 @@ export function InteractionSurface({
             onOpenStored={actions.openStored}
             onRefollow={actions.refollow}
             onLink={actions.followLink}
+            pay={{ ...state.pay, onPay: actions.pay }}
           />
         )}
       </FloatBox>
@@ -195,10 +196,19 @@ export function InteractionSurface({
             boxRef={refs.box}
             className="px-block-gap pt-text-gap pb-block-gap"
             controls={
-              state.pill && (
-                <Button variant="pill" pressed={state.modelsOpen} onClick={actions.toggleModels}>
-                  {state.pill}
-                </Button>
+              (state.pill || state.balance) && (
+                <span className="flex flex-wrap items-center gap-space-8">
+                  {state.pill && (
+                    <Button
+                      variant="pill"
+                      pressed={state.modelsOpen}
+                      onClick={actions.toggleModels}
+                    >
+                      {state.pill}
+                    </Button>
+                  )}
+                  {state.balance && <span className="type-mono text-muted">{state.balance}</span>}
+                </span>
               )
             }
             onChange={actions.setQuestion}
