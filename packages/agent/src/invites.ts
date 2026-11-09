@@ -308,7 +308,20 @@ export async function payPerson(
   };
 }
 
-/** The day's ledger, with this person's credit on top. */
+/**
+ * A day with no cap, for turns a person pays for themselves (Elco, 9 Nov: the daily cap is "for unpaid
+ * spend only; paid turns don't count"). It reports the real day's spend, and adds nothing to it.
+ */
+function uncapped(day: BudgetLedger, now: () => Date): BudgetLedger {
+  return {
+    spentToday: () => day.spentToday(),
+    add: async () => {},
+    reserve: async (usd) => ({ day: now().toISOString().slice(0, 10), usd }),
+    settle: async () => {},
+  };
+}
+
+/** This person's credit, and nothing else: the daily cap doesn't hold their own turns. */
 export function personLedger(
   store: Store,
   person: string,
@@ -325,7 +338,7 @@ export function personLedger(
       code: 'payment_required',
       hint: PAY_HINT,
     },
-    day,
+    uncapped(day, now),
     now,
   );
 }

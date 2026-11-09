@@ -8,7 +8,7 @@ import { openStore } from '@petal/store';
 import { describe, expect, test } from 'vitest';
 import { buildPetalApp } from '../src/app.ts';
 import { personCredit } from '../src/invites.ts';
-import { fakeRegistry, parseSse, type ScriptTurn, scriptedLlm, tmpRoot } from './helpers.ts';
+import { fakeRegistry, parseSse, type ScriptTurn, scriptedLlm, tmpRoot, tool } from './helpers.ts';
 
 const SITE = 'https://petals.example';
 const COOKIE = '__Host-petal_session';
@@ -40,7 +40,14 @@ function chain(txs: Record<string, Partial<Transfer>>) {
 
 function setup(
   txs: Record<string, Partial<Transfer>> = {},
-  o: { price?: number | null; costUsd?: number; turns?: ScriptTurn[]; public?: boolean } = {},
+  o: {
+    price?: number | null;
+    costUsd?: number;
+    turns?: ScriptTurn[];
+    public?: boolean;
+    dailyUsd?: number;
+    registry?: ReturnType<typeof fakeRegistry>['registry'];
+  } = {},
 ) {
   const root = tmpRoot();
   const stateDir = join(root, 'state');
@@ -49,11 +56,17 @@ function setup(
   });
   const onChain = chain(txs);
   const app = buildPetalApp(
-    { root, stateDir, apiBase: SITE, llmDailyUsd: 5, ...(o.public ? { public: true } : {}) },
+    {
+      root,
+      stateDir,
+      apiBase: SITE,
+      llmDailyUsd: o.dailyUsd ?? 5,
+      ...(o.public ? { public: true } : {}),
+    },
     {
       llm,
       rpcFor: () => fakeRpcFor([alice, bob]),
-      registry: fakeRegistry().registry,
+      registry: o.registry ?? fakeRegistry().registry,
       pay: {
         readTransfer: onChain.read,
         nearUsd: async () => (o.price === undefined ? 3.5 : o.price),
@@ -240,6 +253,49 @@ describe('paying for Petals’ agent in NEAR', () => {
     const refused = await live.pay({ network: 'testnet', account_id: 'alice.near', tx_hash: HASH });
     expect(refused.status).toBe(400);
     expect(live.onChain.reads).toEqual([]);
+  });
+
+  test('paid turns don’t count against the daily cap (Elco, 9 Nov: unpaid spend only)', async () => {
+    const w = setup({ [HASH]: {} }, { dailyUsd: 0.015, costUsd: 0.01 });
+    await w.signIn();
+    await w.pay({ network: 'mainnet', account_id: 'alice.near', tx_hash: HASH });
+    // three calls at $0.01 each, past a $0.015 day
+    for (let i = 0; i < 3; i++) {
+      const events = parseSse(await (await w.call('POST', '/api/v1/agent/chat', QUESTION)).text());
+      expect(events.find((e) => e.event === 'error')).toBeUndefined();
+    }
+    expect(w.llm.requests.length).toBe(3);
+    const s = w.store();
+    try {
+      expect((await s.ledger.get(new Date().toISOString().slice(0, 10))).usd).toBe(0);
+    } finally {
+      await s.close();
+    }
+  });
+
+  test('on a public site, the paid agent’s own tools read from the server; the doors still don’t', async () => {
+    const seen: (boolean | undefined)[] = [];
+    const registry = [
+      ...fakeRegistry().registry,
+      tool('read_chain', (_a, ctx) => {
+        seen.push(ctx.config.public);
+        return { rows: [], tools_version: 'tools/v1' };
+      }),
+    ];
+    const turns: ScriptTurn[] = [
+      { calls: [{ name: 'read_chain', args: {} }] },
+      { content: 'done' },
+    ];
+    const w = setup({ [HASH]: {} }, { public: true, turns, registry });
+    await w.signIn();
+    await w.pay({ network: 'mainnet', account_id: 'alice.near', tx_hash: HASH });
+    await (await w.call('POST', '/api/v1/agent/chat', QUESTION)).text();
+    expect(seen).toEqual([false]);
+    const health = (await (await w.call('GET', '/api/v1/health')).json()) as Record<
+      string,
+      unknown
+    >;
+    expect(health.public).toBe(true);
   });
 
   test('a POST from another site is refused', async () => {

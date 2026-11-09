@@ -113,7 +113,7 @@ export interface ChatAdmission {
   /** None for a recorded run: it spends nothing and stays readable by link. */
   subject?: string;
   budget?: Budget;
-  /** On a person's own credit: its end, the chat's cap and the day's cap bound it, so new chats aren't counted. */
+  /** On a person's own credit: its end and the chat's cap bound it (not the day's, since 9 Nov), so new chats aren't counted. */
   ownCredit?: boolean;
 }
 
