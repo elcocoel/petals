@@ -72,3 +72,30 @@ What's on the bench, and where it moved from the plan above:
 - **The fan's rest:** ENS and Uniswap delegates share 1,731 accounts, but none of them is among either flower's 60 drawn petals. So besides the lines between shared petals, one line joins the two "everyone else" petals, weighted by the accounts left over.
 - **Measured** on this Mac in Chrome, zooming from the whole map into one ENS delegate's account: 0.5 ms a frame typical, 1.1 ms at the 95th percentile, 2.4 ms worst.
 - **Tests:** 15 new tests in `apps/web/test/landscape.test.ts`; the flower's 152 pass unchanged; 3,353 in all.
+
+## Drawing from the viewer's view (after seam/v1, 9 Nov)
+
+META's go once `seam/v1` was live (`1c82b33`); the reading is SYSTEMS's, so this waits for their OK too. Lane `m-face/fe-viewdraw`.
+
+**The change, in one line:** `readFlower(spec, snapshot, view?)`. With a view, each dimension's choice comes from the view, matched against the flower's own data (`seamOf`'s pieces); without one, nothing changes, so the golden readings stay as they are.
+
+**How a view's choice becomes what's drawn today.** The look draws only what it already draws; a choice it can't draw yet shows nothing, and the legend leaves it out ("declared, never imitated").
+
+| Dimension | The view names | Drawn as |
+|---|---|---|
+| height | `share` / `amount` / any amount or count by its name | share (its scale) / amount (log) / that piece, relative to the largest; nothing: equal heights |
+| width | `share` | share in its band; anything else, or nothing: equal |
+| order | anything | largest first (the only order built) |
+| colour | `kind` / `identity` | kind of account / named or anonymous; anything else, or nothing: one colour |
+| outline | `identity` | the identity's status; anything else, or nothing: none |
+| segments | `backers` | the pool's backers; anything else, or nothing: none |
+| markings, texture, lines | anything | nothing yet |
+
+- **A pure step in core,** `encodingsOf(view, spec, seam)`, gives `spec/v1`-shaped encodings with each meaning taken from the data's own label, so the legend is exactly what's drawn. `readFlower` uses them in place of `spec.encodings`. The reading's `spec_sha256` stays the spec's: the flower is the same flower.
+- **The agent's choices stay in its spec,** as its proposal (Elco: "Agent proposes, person adjusts").
+- **Where the view comes from:** `render_flower` and `/api/v1/render` take an optional `view`; the web passes the viewer's. Until a person can set one (the lobby's settings, later), the viewer's view is the default.
+- **A correction:** the default view turns bands on (`segments: backers`), but today's `default/v1` doesn't; the default becomes `segments: null`, so the default view changes no drawing. Its fixture and pin change with it.
+
+**Tests:** without a view, every golden reading is byte-identical; with the default view, the default specs' readings are the same; a view naming a piece a flower lacks draws nothing in that dimension; markings, texture and lines draw nothing yet.
+
+**Open, for Elco:** until people can set their own view, a flower the agent drew with other choices (proposals as height, say) is drawn by the default view, so the agent's choice doesn't show. See the reply in chat.
