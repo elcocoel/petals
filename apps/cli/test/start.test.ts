@@ -27,17 +27,34 @@ function registry(calls: Call[]): Tool<unknown, unknown>[] {
       open_url: 'https://petals.example/make?elsewhere=token',
     })),
     tool('add_note', (i) => ({ note: { seq: 0, text: i.text } })),
+    {
+      name: 'read_chain',
+      input: {
+        type: 'object',
+        properties: {
+          address: { type: 'string' },
+          logs: {
+            type: 'object',
+            properties: {
+              event: { type: 'string', description: 'e.g. Transfer(address,address,uint256)' },
+            },
+          },
+        },
+      },
+      output: { type: 'object', properties: { read: { type: 'array' }, says: { type: 'string' } } },
+      run: async () => ({}),
+    } as unknown as Tool<unknown, unknown>,
   ];
 }
 
-async function run(argv: string[], stdin = '') {
+async function run(argv: string[], stdin = '', env: Record<string, string> = {}) {
   const calls: Call[] = [];
   let stdout = '';
   const code = await main(argv, {
     registry: registry(calls),
     createContext: (cfg) => ({ config: cfg }) as unknown as ToolContext,
     serveStdio: async () => {},
-    env: { PETALS_NO_OPEN: '1' },
+    env: { PETALS_NO_OPEN: '1', ...env },
     cwd: '/work',
     root: '/repo',
     stdout: (t) => {
@@ -46,7 +63,13 @@ async function run(argv: string[], stdin = '') {
     stderr: () => {},
     readStdin: async () => stdin,
   });
-  return { code, calls, out: JSON.parse(stdout || 'null') as Record<string, unknown> };
+  let out: Record<string, unknown> = {};
+  try {
+    out = JSON.parse(stdout || 'null') as Record<string, unknown>;
+  } catch {
+    out = { text: stdout };
+  }
+  return { code, calls, out };
 }
 
 describe('start', () => {
@@ -83,5 +106,23 @@ describe('note', () => {
       text: 'short reply',
     });
     expect((await run(['note'])).code).toBe(2);
+  });
+});
+
+describe('what an agent needs, without reading the file', () => {
+  test('start says which site its file belongs to', async () => {
+    const r = await run(['start', '--client', 'Codex'], '', {
+      PETAL_API: 'https://petals.example',
+    });
+    expect(r.out.site).toBe('https://petals.example');
+  });
+
+  test("help shows an object flag's own fields, and what the command answers with", async () => {
+    const r = await run(['help', 'read-chain']);
+    const text = r.out.text as string;
+    expect(text).toMatch(/--logs\s+object/);
+    expect(text).toMatch(/\.event\s+string\s+e\.g\. Transfer\(address,address,uint256\)/);
+    expect(text).toMatch(/Answers with \(JSON on stdout/);
+    expect(text).toMatch(/\n {2}says\s+string/);
   });
 });

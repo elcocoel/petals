@@ -104,6 +104,18 @@ describe('hostedSkill', () => {
     expect(setup).toContain('reaching `petal.example`');
   });
 
+  test("fetches the file every session, and checks start's site against this one", () => {
+    const setup = part('Set yourself up first');
+    expect(setup).toMatch(
+      /run it every session, since it takes a second and keeps the file current and from this site/,
+    );
+    expect(setup).toContain(`its \`site\` must be \`${ORIGIN}\``);
+    expect(setup).not.toMatch(/skip it if/);
+    expect(part('Let them watch')).toMatch(
+      /help <command>` lists any command's flags and what it answers with/,
+    );
+  });
+
   test('says what the file is, so an agent can trust it without reading it', () => {
     const withSha = hostedSkill(SKILL, ORIGIN, 'a'.repeat(64));
     expect(withSha).toContain(`sha256 \`${'a'.repeat(64)}\``);
