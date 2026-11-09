@@ -58,7 +58,11 @@ export function TerminalPass({
           </Button>
         </form>
       )}
-      <div ref={mount} className="min-h-0 flex-1 px-text-gap pb-text-gap" />
+      {/* Set in Mono code, so the terminal takes Petals' type (packages/tokens/terminal.ts). */}
+      <div
+        ref={mount}
+        className="min-h-0 flex-1 px-block-gap pt-text-gap pb-block-gap type-mono-code"
+      />
     </div>
   );
 }
