@@ -3,6 +3,15 @@
 import type { QuoteRequest, QuoteResult } from '@petal/core/types';
 
 export {
+  type CreditContract,
+  type CreditDeps,
+  chargeCredit,
+  creditBalance,
+  networkOfAccount,
+  usdToYocto,
+  yoctoToUsd,
+} from './credit.ts';
+export {
   BASE_USDC,
   DRY_QUOTE_NOTE,
   fakeQuote,

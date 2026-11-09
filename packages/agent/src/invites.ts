@@ -224,6 +224,8 @@ export function inviteLedger(
 const personAccount = (person: string) => `person:${person}`;
 const FUNDED = 'funded';
 const PAID = 'paid';
+/** The credit contract's balance, read from the chain (credit.ts): what puts it in, in dollars. */
+const SYNCED = 'synced';
 
 export interface PersonCredit {
   /** everything ever put in */
@@ -235,7 +237,7 @@ export interface PersonCredit {
 }
 
 /** What was put in by `reasons`: by default both kinds, what Elco gave and what the person paid. */
-const fundedOf = async (store: Store, account: string, reasons = [FUNDED, PAID]) =>
+const fundedOf = async (store: Store, account: string, reasons = [FUNDED, PAID, SYNCED]) =>
   (await store.credit.entries(account))
     .filter((e) => reasons.includes(e.reason))
     .reduce((sum, e) => sum + e.delta_usd, 0);
@@ -321,12 +323,41 @@ function uncapped(day: BudgetLedger, now: () => Date): BudgetLedger {
   };
 }
 
+/**
+ * Sets the person's credit to `usd`, what they hold in the credit contract (credit.ts), whatever it was. What
+ * calls in flight hold stays held.
+ */
+export async function syncPersonCredit(
+  store: Store,
+  person: string,
+  usd: number,
+  now: Date = new Date(),
+): Promise<PersonCredit> {
+  if (!(await store.person.get(person))) throw new Error(`no person ${person}`);
+  const account = personAccount(person);
+  return store.tx(async () => {
+    const change = usd - ((await store.credit.get(account))?.balance_usd ?? 0);
+    if (Math.abs(change) >= DUST_USD) {
+      await store.credit.apply({
+        id: `sync:${randomUUID()}`,
+        account_key: account,
+        delta_usd: change,
+        reason: SYNCED,
+        at: now.toISOString(),
+      });
+    }
+    return (await personCredit(store, person)) ?? { funded_usd: 0, spent_usd: 0, left_usd: 0 };
+  });
+}
+
 /** This person's credit, and nothing else: the daily cap doesn't hold their own turns. */
 export function personLedger(
   store: Store,
   person: string,
   day: BudgetLedger,
   now: () => Date = () => new Date(),
+  /** told what each call really cost: a chat on the credit contract adds it up, to charge at its end */
+  onSpend?: (usd: number) => Promise<void>,
 ): BudgetLedger {
   return creditLedger(
     store,
@@ -337,6 +368,7 @@ export function personLedger(
       spent: CREDIT_SPENT,
       code: 'payment_required',
       hint: PAY_HINT,
+      ...(onSpend ? { onSpend } : {}),
     },
     uncapped(day, now),
     now,

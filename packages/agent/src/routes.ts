@@ -347,13 +347,16 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
       const pick = stored ? settingsOf(stored) : undefined;
       keepAlive(
         c,
-        jobs.start(
-          runId,
-          input,
-          earlier,
-          admitted.budget,
-          pick && { model: pick.model, effort: pick.effort },
-        ),
+        jobs
+          .start(
+            runId,
+            input,
+            earlier,
+            admitted.budget,
+            pick && { model: pick.model, effort: pick.effort },
+          )
+          // on the credit contract, what the chat cost is charged once it has ended
+          .then(() => admitted.onEnd?.()),
       );
       if (wantsJson(c)) {
         return c.json({ run_id: runId, status: 'running', tools_version: TOOLS_VERSION }, 202);

@@ -142,6 +142,59 @@ export function fakeRpcFor(signers: TestSigner[], functionCallOnly: TestSigner[]
   return fakeRpc(keys);
 }
 
+/** One action a test wallet sends, as near-connect passes it: a transfer, or a call with NEAR attached. */
+export type TestnetAction =
+  | { type: 'Transfer'; params: { deposit: string } }
+  | {
+      type: 'FunctionCall';
+      params: {
+        methodName: string;
+        args?: Record<string, unknown>;
+        gas?: string;
+        deposit?: string;
+      };
+    };
+
+/**
+ * A test wallet's real transaction on testnet (9 Nov, the pay step): `implicitSigner(seed)`'s account sends
+ * one action to `receiverId` and waits for the FINAL outcome, which it returns as a wallet would. A call is
+ * how it deposits into or withdraws from the credit contract. Testnet only: the key is derived from a public
+ * seed, so anyone could spend what it holds. Its account must hold testnet NEAR first.
+ */
+export async function testnetSend(
+  seed: string,
+  receiverId: string,
+  action: TestnetAction,
+): Promise<{
+  transaction: { hash: string };
+  transaction_outcome: { id: string };
+  status: unknown;
+}> {
+  if (action.type === 'Transfer') return testnetTransfer(seed, receiverId, action.params.deposit);
+  const { methodName, args = {}, gas = '30000000000000', deposit = '0' } = action.params;
+  if (!/^\d+$/.test(gas) || !/^\d+$/.test(deposit))
+    throw new Error('gas and deposit are yocto strings');
+  const { Account, actions, JsonRpcProvider, KeyPair, KeyPairSigner } = await import('near-api-js');
+  const secretKey = sha256(utf8ToBytes(`petal-test-signer:${seed}`));
+  const both = new Uint8Array([...secretKey, ...ed25519.getPublicKey(secretKey)]);
+  const keyPair = KeyPair.fromString(`ed25519:${base58.encode(both)}` as `ed25519:${string}`);
+  const account = new Account(
+    implicitSigner(seed).accountId,
+    new JsonRpcProvider({ url: RPC_URLS.testnet }),
+    new KeyPairSigner(keyPair),
+  );
+  return (await account.signAndSendTransaction({
+    receiverId,
+    actions: [actions.functionCall(methodName, args, BigInt(gas), BigInt(deposit))],
+    waitUntil: 'FINAL',
+    throwOnFailure: false,
+  })) as unknown as {
+    transaction: { hash: string };
+    transaction_outcome: { id: string };
+    status: unknown;
+  };
+}
+
 /**
  * A test wallet's real transfer on testnet (9 Nov, the pay step): `implicitSigner(seed)`'s account sends
  * `yocto` to `receiverId` and waits for the FINAL outcome, which it returns as a wallet would. Testnet only:
