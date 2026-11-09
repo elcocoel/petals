@@ -45,8 +45,8 @@ describe('a prepared draft', () => {
     expect(out.error?.code).toBe('bad_input');
     expect(out.error?.message).toMatch(new RegExp(`over ${MAP_LIMITS.valueBytes} bytes`));
     const s = db();
-    expect(s.publishDraft.get(out.entry_sha256 ?? '')).toBeNull();
-    s.close();
+    expect(await s.publishDraft.get(out.entry_sha256 ?? '')).toBeNull();
+    await s.close();
     const size = statSync(join(r.stateDir, 'private.db')).size;
     expect(size).toBeLessThan(MAP_LIMITS.valueBytes);
   });
@@ -59,9 +59,9 @@ describe('a prepared draft', () => {
     const second = await run('prepare_publish', { entry });
     expect(second.entry_sha256).toBeTruthy();
     const s = db();
-    expect(s.publishDraft.get(first.entry_sha256)).toBeNull();
-    expect(s.publishDraft.get(second.entry_sha256)).toBeTruthy();
-    s.close();
+    expect(await s.publishDraft.get(first.entry_sha256)).toBeNull();
+    expect(await s.publishDraft.get(second.entry_sha256)).toBeTruthy();
+    await s.close();
   });
 });
 
@@ -111,12 +111,17 @@ describe('explorations with nobody behind them', () => {
     const big = await run('start_exploration', { question: 'from before the caps' });
     const s = db();
     for (let i = 0; i < 150; i++) {
-      s.note.append({ exploration: big.exploration, author: 'link:x', text: `n${i}`, at: NOW });
+      await s.note.append({
+        exploration: big.exploration,
+        author: 'link:x',
+        text: `n${i}`,
+        at: NOW,
+      });
     }
     const fork = await run('start_exploration', { fork_of: big.link.url });
-    expect(s.note.count(fork.exploration)).toBe(100);
-    expect(s.note.list(fork.exploration).at(-1)?.text).toBe('n149');
-    s.close();
+    expect(await s.note.count(fork.exploration)).toBe(100);
+    expect((await s.note.list(fork.exploration)).at(-1)?.text).toBe('n149');
+    await s.close();
   });
 
   test('one nobody claimed goes away after the expiry; a claimed one stays', async () => {
@@ -138,10 +143,10 @@ describe('explorations with nobody behind them', () => {
       (await run('get_exploration', { exploration: kept.exploration }, person('prs_a'))).question,
     ).toBe('somebody came back');
     const s = db();
-    expect(s.step.count(dropped.exploration)).toBe(0);
-    expect(s.note.count(dropped.exploration)).toBe(0);
-    expect(s.exploration.get(dropped.exploration)).toBeNull();
-    s.close();
+    expect(await s.step.count(dropped.exploration)).toBe(0);
+    expect(await s.note.count(dropped.exploration)).toBe(0);
+    expect(await s.exploration.get(dropped.exploration)).toBeNull();
+    await s.close();
   });
 
   test('one still being worked on is not expired', async () => {

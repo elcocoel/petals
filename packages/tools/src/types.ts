@@ -19,6 +19,11 @@ export interface Config {
   fixturesDir?: string;
   /** local state: cache, mirror, runs, attestations. Default <root>/.petal */
   stateDir?: string;
+  /**
+   * additive: where private data lives (PETAL_DATABASE_URL): postgres://user@host:port/db, with the
+   * password in the file PETAL_DATABASE_PASSWORD_FILE names. Unset: SQLite in the state folder.
+   */
+  databaseUrl?: string;
   /** the shared map; null or absent: fakeMap plus the local mirror */
   map?: {
     network: 'testnet' | 'mainnet';
@@ -58,6 +63,8 @@ export interface Config {
 export interface Caller {
   /** the session's subject: a person id or an anonymous handle. None: nobody signed in */
   subject?: string | null;
+  /** additive (TGT-005): what authorised this call, kept with what it writes: `wallet:<hash>` */
+  credential?: string | null;
   /** http, mcp, cli or site */
   door?: string;
   /** what the app at the other end calls itself, when its request says so (T404). Its own words */

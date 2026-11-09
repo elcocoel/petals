@@ -42,6 +42,28 @@ const relocate: Plugin = {
       contents: fixturesModule(),
       loader: 'js',
     }));
+    // `petal connect` writes an agent's own settings, and it needs a copy of the repo, so the file
+    // refuses it (main.ts, asFile). Its code stays out of the file too: what a person's agent reads
+    // and runs should hold nothing that changes their app.
+    // What the file never uses, and would only carry: Vercel's storage (with undici and its WebAssembly
+    // HTTP parser) and Postgres (pg, and PGlite's Emscripten build). They load only when configured,
+    // which the file never is; an auditing agent shouldn't have to wonder why they're there.
+    b.onResolve({ filter: /^(@vercel\/blob|pg|@electric-sql\/pglite)(\/.*)?$/ }, (args) => ({
+      path: args.path,
+      namespace: 'petal-absent',
+    }));
+    b.onLoad({ filter: /.*/, namespace: 'petal-absent' }, (args) => ({
+      contents: `throw new Error(${JSON.stringify(`${args.path} isn't in petal.mjs: the file keeps its state in SQLite`)});`,
+      loader: 'js',
+    }));
+    b.onLoad({ filter: /apps\/cli\/src\/connect\.ts$/ }, () => ({
+      contents: [
+        "export const CONNECT_HELP = '';",
+        'export async function connect() { return 2; }',
+        'export function spawnCommand() { return () => { throw new Error("no connect in the file"); }; }',
+      ].join('\n'),
+      loader: 'js',
+    }));
     b.onLoad({ filter: /packages\/inputs\/src\/modules\/near-validators\.ts$/ }, (args) => {
       const src = readFileSync(args.path, 'utf8');
       if (!src.includes(FIXTURE_LINE)) {
@@ -75,10 +97,23 @@ export async function bundle(): Promise<{ bytes: number }> {
     plugins: [relocate],
     // CommonJS dependencies (ajv) call require; give them one.
     banner: {
-      js: "#!/usr/bin/env node\nimport { createRequire as __petalRequire } from 'node:module';\nconst require = __petalRequire(import.meta.url);",
+      js: [
+        '#!/usr/bin/env node',
+        "// Petals' tools as one file, served by the Petals site named in SERVED_FROM below. Built from",
+        "// Petals' own source with esbuild, not minified. It reads public chain data and web pages from",
+        '// this computer, counts and draws flowers, keeps its notes in ~/.petals, and posts this',
+        '// conversation and its flowers to that site. It starts another program only to open the page in',
+        "// the browser (`start`), and for `terminal`, to run the person's own claude, codex or hermes",
+        "// through Python's pty, and on a Mac to make Petals Helper.app with macOS's own tools (osacompile,",
+        '// plutil, codesign, lsregister), so the page can start it. Everything else is ordinary npm code:',
+        "// the MCP SDK, ws, ajv, noble's cryptography, near-api-js.",
+        "import { createRequire as __petalRequire } from 'node:module';",
+        'const require = __petalRequire(import.meta.url);',
+      ].join('\n'),
     },
     // Petals' own agent and its HTTP server aren't in the file: the person's agent is theirs.
-    external: ['@petal/agent', '@hono/node-server'],
+    // ws's optional native speed-ups: it runs without them.
+    external: ['@petal/agent', '@hono/node-server', 'bufferutil', 'utf-8-validate'],
     legalComments: 'none',
     logLevel: 'warning',
   });

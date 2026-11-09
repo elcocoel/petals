@@ -10,9 +10,8 @@
   "description": "The site: gallery, flower view, /make chat, publish, quote panel.",
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
-    "build": "node ../cli/scripts/bundle.ts && next build",
-    "start": "next start --hostname 127.0.0.1",
-    "mock-data": "node scripts/mock-data.ts"
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1"
   },
   "dependencies": {
     "@hono/vercel": "^1.0.1",
@@ -23,6 +22,8 @@
     "@petal/store": "workspace:*",
     "@petal/tokens": "workspace:*",
     "@petal/tools": "workspace:*",
+    "@xterm/addon-fit": "0.11.0",
+    "@xterm/xterm": "6.0.0",
     "hono": "^4.13.16",
     "next": "^16.4.5",
     "react": "^19.3.1",

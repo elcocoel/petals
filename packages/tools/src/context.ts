@@ -199,7 +199,8 @@ const set = (v: string | undefined): string | undefined => (v?.trim() ? v.trim()
  * PETAL_LLM_DAILY_USD, PETAL_MAP_NETWORK, PETAL_MAP_RECEIVER, PETAL_WRITER_ACCOUNT,
  * PETAL_WRITER_KEY_FILE, PETAL_TRUSTED_WRITERS, FASTNEAR_API_KEY, PETAL_PAYOUT_ACCOUNT, PETAL_API
  * (public base URL), PETAL_REPO_URL, PETAL_LIVE=1; and PETAL_FAKE=1 (fakes everywhere),
- * PETAL_RPC_URL, PETAL_STATE_DIR, PETAL_FIXTURES_DIR; PETAL_PUBLIC=1 (a public site: Config.public). The map counts as configured when any of
+ * PETAL_RPC_URL, PETAL_STATE_DIR, PETAL_FIXTURES_DIR, PETAL_DATABASE_URL (where private data lives);
+ * PETAL_PUBLIC=1 (a public site: Config.public). The map counts as configured when any of
  * PETAL_MAP_NETWORK, PETAL_MAP_RECEIVER, PETAL_WRITER_ACCOUNT or PETAL_WRITER_KEY_FILE is set;
  * otherwise the fake map and the mirror are used.
  */
@@ -244,6 +245,7 @@ export function configFromEnv(env: Env = process.env, root: string = process.cwd
   const optional: [keyof Config, string | undefined][] = [
     ['fixturesDir', set(env.PETAL_FIXTURES_DIR)],
     ['stateDir', set(env.PETAL_STATE_DIR)],
+    ['databaseUrl', set(env.PETAL_DATABASE_URL)],
     ['rpcUrl', set(env.PETAL_RPC_URL)],
     ['fastnearApiKey', set(env.FASTNEAR_API_KEY)],
     ['nearAiApiKey', isPublic ? undefined : set(env.NEAR_AI_API_KEY)],

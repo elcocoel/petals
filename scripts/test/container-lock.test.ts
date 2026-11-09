@@ -15,7 +15,7 @@ function start(envFile: string, env: Record<string, string> = {}): Record<string
   const script = join(dir, 'entry.sh');
   writeFileSync(script, readFileSync(ENTRY, 'utf8').replaceAll('/secrets/', `${dir}/`));
   const node = join(dir, 'node');
-  writeFileSync(node, '#!/bin/bash\nenv\n');
+  writeFileSync(node, '#!/bin/bash\necho "NODE_ARGS=$*"\nenv\n');
   chmodSync(node, 0o755);
   const r = spawnSync('/bin/bash', [script], {
     encoding: 'utf8',
@@ -62,5 +62,22 @@ describe('entry.sh', () => {
     expect(fromFile.NEAR_AI_API_KEY).toBe('k');
     const fromRun = start('', { PETAL_NEAR_AI_BASE_URL: stub });
     expect(fromRun.PETAL_NEAR_AI_BASE_URL).toBeUndefined();
+  });
+
+  test('it runs the server alone, on every interface inside, which the run command publishes on 127.0.0.1', () => {
+    const env = start('');
+    expect(env.NODE_ARGS).toBe('/app/packages/agent/src/serve.ts');
+    expect(env.PETAL_HOST).toBe('0.0.0.0');
+    expect(env.PORT).toBe('3090');
+  });
+
+  test('a public server takes its site key from the secrets mount, never from a file or the run command', () => {
+    const env = start('PETAL_SITE_KEY=from-a-file\n', {
+      PETAL_PUBLIC: '1',
+      PETAL_SITE_KEY: 'from-run',
+    });
+    expect(env.PETAL_PUBLIC).toBe('1');
+    expect(env.PETAL_SITE_KEY).toBeUndefined();
+    expect(env.PETAL_SITE_KEY_FILE?.endsWith('/petal-site-key')).toBe(true);
   });
 });

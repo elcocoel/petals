@@ -20,6 +20,7 @@ import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { Speech } from '../components/chat/Speech.tsx';
 import { Steps } from '../components/chat/Steps.tsx';
+import { TerminalPass } from '../components/chat/TerminalPass.tsx';
 import { Thread } from '../components/chat/Thread.tsx';
 import { TurnFlower } from '../components/chat/TurnFlower.tsx';
 import { TurnStatus } from '../components/chat/TurnStatus.tsx';
@@ -61,6 +62,7 @@ import { Mono } from '../components/ui/Mono.tsx';
 import { Nav } from '../components/ui/Nav.tsx';
 import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
+import { SideRail } from '../components/ui/SideRail.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
 import { TextLink } from '../components/ui/TextLink.tsx';
 import { Transcript } from '../components/ui/Transcript.tsx';
@@ -1045,6 +1047,63 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'SideRail',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/SideRail.tsx',
+    states: [
+      {
+        name: 'open',
+        wide: true,
+        render: () => (
+          <SideRail
+            label="Your work"
+            title="Conversations"
+            open
+            foldLabel="Hide"
+            unfoldLabel="Menu"
+            onFold={() => {}}
+            onUnfold={() => {}}
+            control={
+              <Button variant="link" href="#new">
+                New
+              </Button>
+            }
+          >
+            <ConversationList
+              rows={[
+                {
+                  key: 'a',
+                  title: "Who stands behind NEAR's validators?",
+                  sub: '6 Nov 2026',
+                  href: '#a',
+                  current: false,
+                },
+              ]}
+            />
+          </SideRail>
+        ),
+      },
+      {
+        name: 'folded',
+        render: () => (
+          <SideRail
+            label="Your work"
+            title="Conversations"
+            open={false}
+            foldLabel="Hide"
+            unfoldLabel="Menu"
+            onFold={() => {}}
+            onUnfold={() => {}}
+          >
+            {null}
+          </SideRail>
+        ),
+      },
+    ],
+  },
+  {
     id: 'ReadingKey',
     group: 'The workspace',
     figmaName: 'Make a flower / One petal',
@@ -1376,6 +1435,47 @@ export const registry: LabEntry[] = [
               },
             ]}
             onPick={() => {}}
+          />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'TerminalPass',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/TerminalPass.tsx',
+    states: [
+      {
+        name: 'waiting for the helper',
+        wide: true,
+        render: () => (
+          <TerminalPass
+            command="curl -fsSL https://petal-flowers.vercel.app/petal.mjs -o ~/.petals/petal.mjs && node ~/.petals/petal.mjs terminal claude"
+            phase="pair"
+            code=""
+            failed={null}
+            mount={() => {}}
+            onCode={() => {}}
+            onPair={() => {}}
+            onStart={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'no helper answered',
+        wide: true,
+        render: () => (
+          <TerminalPass
+            command="curl -fsSL https://petal-flowers.vercel.app/petal.mjs -o ~/.petals/petal.mjs && node ~/.petals/petal.mjs terminal claude"
+            phase="pair"
+            code="K7QM-3WTZ"
+            failed="The Petals helper didn't answer. Start it, or close the other page that's using it."
+            mount={() => {}}
+            onCode={() => {}}
+            onPair={() => {}}
+            onStart={() => {}}
           />
         ),
       },
@@ -1750,4 +1850,6 @@ export const NOT_IN_LAB: Record<string, string> = {
   FloatBox: 'a BarBox fixed to the window and placed by hand: it lives at /make',
   SiteChrome: 'the Nav, drawn here, around a reading column; it holds no state of its own',
   FrontDoor: 'draws nothing: it opens the wallet when the landing is left for /make (proposal)',
+  Lobby:
+    'wires useLobby to the SideRail, the list and the tiles, each here, and it lives at /lobby',
 };

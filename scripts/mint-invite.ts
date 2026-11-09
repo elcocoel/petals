@@ -11,7 +11,7 @@ import { mintInvite, openPrivateStore, revokeInvite } from '@petal/agent';
 const USAGE = 'usage: node scripts/mint-invite.ts <usd> [days] | --revoke <id>';
 const REPO = resolve(import.meta.dirname, '..');
 
-export function run(args: string[], env: NodeJS.ProcessEnv = process.env): string {
+export async function run(args: string[], env: NodeJS.ProcessEnv = process.env): Promise<string> {
   const [first, second] = args;
   if (!first) throw new Error(USAGE);
   const stateDir = resolve(REPO, env.PETAL_STATE_DIR?.trim() || '.petal');
@@ -19,14 +19,14 @@ export function run(args: string[], env: NodeJS.ProcessEnv = process.env): strin
   if (!existsSync(stateDir)) {
     throw new Error(`no state folder at ${stateDir}: set PETAL_STATE_DIR to the server's own`);
   }
-  const store = openPrivateStore(stateDir);
+  const store = openPrivateStore(stateDir, env.PETAL_DATABASE_URL?.trim() || undefined);
   try {
     if (first === '--revoke') {
       if (!second) throw new Error(USAGE);
-      if (!revokeInvite(store, second)) throw new Error(`no invite ${second}`);
+      if (!(await revokeInvite(store, second))) throw new Error(`no invite ${second}`);
       return `revoked ${second}`;
     }
-    const minted = mintInvite(store, {
+    const minted = await mintInvite(store, {
       usd: Number(first),
       ...(second === undefined ? {} : { days: Number(second) }),
     });
@@ -38,13 +38,13 @@ export function run(args: string[], env: NodeJS.ProcessEnv = process.env): strin
       "The token isn't stored and can't be shown again.",
     ].join('\n');
   } finally {
-    store.close();
+    await store.close();
   }
 }
 
 if (import.meta.main) {
   try {
-    console.log(run(process.argv.slice(2)));
+    console.log(await run(process.argv.slice(2)));
   } catch (e) {
     console.error((e as Error).message);
     process.exitCode = 1;

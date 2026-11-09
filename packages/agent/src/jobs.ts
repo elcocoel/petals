@@ -72,7 +72,7 @@ export function runJobs(
         });
         if (e.event === 'flower') {
           try {
-            saveRunStep(deps.tools, runId, e.data.spec);
+            await saveRunStep(deps.tools, runId, e.data.spec);
           } catch (err) {
             // the flower is drawn and in the run's log: a step that can't be saved doesn't undo that
             console.warn(`petal: run ${runId} couldn't save a step: ${(err as Error).message}`);

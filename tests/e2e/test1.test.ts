@@ -40,7 +40,7 @@ const bindWallet = (args: string[], env: Record<string, string> = {}) =>
 const fundPerson = (args: string[]) => script('fund-person.ts', args);
 
 const closing: (() => void)[] = [];
-afterEach(() => {
+afterEach(async () => {
   for (const close of closing.splice(0)) close();
 });
 
@@ -172,7 +172,7 @@ async function funded(w: W, usd: number, seed = 'alice') {
   const b = browser(w);
   await b.signIn(implicitSigner(seed));
   const { person_id: person } = await b.me();
-  fundPerson(['--state', w.stateDir, '--person', person, '--total', String(usd)]);
+  await fundPerson(['--state', w.stateDir, '--person', person, '--total', String(usd)]);
   return { b, person };
 }
 
@@ -186,8 +186,8 @@ describe('line 2: one person, whichever wallet', () => {
   test('two test wallets, bound by the script, sign in to the same person and the same conversations', async () => {
     const w = await world();
     const store = openPrivateStore(w.stateDir);
-    const invite = mintInvite(store, { usd: 1, days: 1 });
-    store.close();
+    const invite = await mintInvite(store, { usd: 1, days: 1 });
+    await store.close();
     const seed = await seedWorkspace({
       stateDir: w.stateDir,
       modelBase: w.modelBase,
@@ -260,8 +260,8 @@ describe('line 2: one person, whichever wallet', () => {
     expect(bind('near:mainnet:petals.near')).toContain('near:mainnet:petals.near: bound');
     expect(bind('near:mainnet:petals.near')).toContain(': already this person’s'.replace('’', "'"));
     const store = openPrivateStore(w.stateDir);
-    expect(store.walletBinding.ofPerson(person)).toHaveLength(2);
-    store.close();
+    expect(await store.walletBinding.ofPerson(person)).toHaveLength(2);
+    await store.close();
 
     expect(() => bind(`near:mainnet:${implicitSigner('bob').accountId}`)).toThrow(
       /already belongs/,
@@ -335,7 +335,7 @@ describe('line 2: one person, whichever wallet', () => {
       ['anonymous1', 'anon_1'],
       ['othersrun1', other],
     ] as const) {
-      store.run.insert({
+      await store.run.insert({
         id,
         owner,
         exploration: null,
@@ -348,7 +348,7 @@ describe('line 2: one person, whichever wallet', () => {
         updated_at: at,
       });
     }
-    store.close();
+    await store.close();
     const out = bindWallet(['--state', w.stateDir, '--person', person, '--adopt-strays'], w.env);
     expect(out).toContain(`runs   2 moved to ${person}`);
     expect(await a.conversations()).toEqual(['anonymous1', 'unowned01']);
@@ -509,19 +509,21 @@ describe('line 3: the model they picked, on their own money', () => {
     expect(w.stub.calls).toBe(calls);
 
     // Elco changes it.
-    const out = fundPerson(['--state', w.stateDir, '--person', person, '--total', '5']);
+    const out = await fundPerson(['--state', w.stateDir, '--person', person, '--total', '5']);
     expect(out).toContain('funded $5');
     const back = (await b.say(QUESTION, { settings: { model: GLM, effort: 'low' } })) as Said;
     expect(back.error).toBeUndefined();
-    expect(fundPerson(['--state', w.stateDir, '--person', person, '--total', '5'])).toContain(
+    expect(await fundPerson(['--state', w.stateDir, '--person', person, '--total', '5'])).toContain(
       'funded $5',
     );
     const store = openPrivateStore(w.stateDir);
-    const entries = store.credit.entries(`person:${person}`).filter((e) => e.reason === 'funded');
+    const entries = (await store.credit.entries(`person:${person}`)).filter(
+      (e) => e.reason === 'funded',
+    );
     expect(entries).toHaveLength(2);
-    store.close();
+    await store.close();
     // And down to nothing, which stops them whatever's left.
-    fundPerson(['--state', w.stateDir, '--person', person, '--total', '0']);
+    await fundPerson(['--state', w.stateDir, '--person', person, '--total', '0']);
     expect(await b.say(QUESTION)).toMatchObject({ refused: 429 });
   });
 
@@ -544,8 +546,8 @@ describe('line 3: the model they picked, on their own money', () => {
     expect(w.stub.calls).toBe(0);
     expect((await b.me()).credit).toEqual(before);
     const store = openPrivateStore(w.stateDir);
-    expect(store.ledger.get(new Date().toISOString().slice(0, 10)).usd).toBe(0);
-    store.close();
+    expect((await store.ledger.get(new Date().toISOString().slice(0, 10))).usd).toBe(0);
+    await store.close();
   });
 
   test('a flower-sized chat over 5¢ and under 50¢ isn’t cut off, and an invite’s cap still is', async () => {
@@ -561,8 +563,8 @@ describe('line 3: the model they picked, on their own money', () => {
     // The same chat on an invite stops at the invite's cap, whatever the catalogue lists for Sonnet.
     expect(modelOf(SONNET)?.usd_per_chat).toBe(0.3);
     const store = openPrivateStore(w.stateDir);
-    const invite = mintInvite(store, { usd: 1, days: 1 });
-    store.close();
+    const invite = await mintInvite(store, { usd: 1, days: 1 });
+    await store.close();
     const guest = browser(w);
     await guest.request('/api/v1/auth/invite', 'POST', { token: invite.token });
     const cut = await flowerChat(guest, { model: SONNET });

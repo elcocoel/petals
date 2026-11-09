@@ -523,12 +523,12 @@ async function wholePath() {
 
   console.log('\n# what is on disk');
   const db = openStore(join(stateDir, 'private.db'));
-  const row = db.exploration.get(id);
+  const row = await db.exploration.get(id);
   check(
     'the exploration is on disk',
     row?.owner === person.person_id && row?.head === drawn.spec_sha256,
   );
-  check('the body is stored under its hash', !!db.draft.get(drawn.spec_sha256));
+  check('the body is stored under its hash', !!(await db.draft.get(drawn.spec_sha256)));
   // grep, not readFileSync: see tests/e2e/auth-path.ts
   const files = readdirSync(stateDir).filter((f) => f.startsWith('private.db'));
   const onDisk = (needle: string) =>
@@ -537,7 +537,7 @@ async function wholePath() {
     'no link token in a database file',
     !onDisk(tokenOf(read.url)) && !onDisk(tokenOf(cont.url)),
   );
-  db.close();
+  await db.close();
   check('$0 of NEAR AI: only the stub answered', stub.calls > 0, { stub_calls: stub.calls });
 
   console.log('\n# the sample packet, the spec cut');

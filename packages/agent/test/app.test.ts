@@ -197,6 +197,8 @@ describe('petalApp', () => {
         env: OPEN,
       },
     );
+    // the start's work is done before the first answer
+    await app.request('/api/v1/health');
     expect(log.mock.calls.flat().join()).toMatch(/imported 1 runs/);
     log.mockRestore();
     const stored = await bodyOf(app.request(`/api/v1/agent/runs/${id}`));

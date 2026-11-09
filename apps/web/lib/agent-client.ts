@@ -15,6 +15,7 @@ import type {
 import type { Settings } from './composer-options.ts';
 import type { ListedConversation } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
+import type { ListedFlower } from './flower-view.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
 
@@ -91,6 +92,69 @@ export async function listConversations(): Promise<ListedConversation[]> {
   if (!res.ok) return [];
   const json = (await res.json()) as { conversations?: ListedConversation[] };
   return json.conversations ?? [];
+}
+
+/** The flowers on the shared map, as the gallery lists them. No answer is the same as none. */
+export async function listMapFlowers(): Promise<ListedFlower[]> {
+  const res = await fetch('/api/v1/flowers');
+  if (!res.ok) return [];
+  const json = (await res.json()) as { flowers?: ListedFlower[] };
+  return json.flowers ?? [];
+}
+
+/** A line to the Petals helper on the person's own computer (lib/terminal-pass.ts), never to our server. */
+export interface TerminalLine {
+  send: (text: string) => void;
+  close: () => void;
+}
+
+export function openTerminalLine(
+  url: string,
+  first: string,
+  on: { bytes: (b: Uint8Array) => void; text: (t: string) => void; closed: (code: number) => void },
+): TerminalLine {
+  const ws = new WebSocket(url);
+  ws.binaryType = 'arraybuffer';
+  ws.onopen = () => ws.send(first);
+  ws.onmessage = (e: MessageEvent) =>
+    typeof e.data === 'string' ? on.text(e.data) : on.bytes(new Uint8Array(e.data as ArrayBuffer));
+  ws.onclose = (e: CloseEvent) => on.closed(e.code);
+  return {
+    send: (text) => {
+      if (ws.readyState === WebSocket.OPEN) ws.send(text);
+    },
+    close: () => ws.close(),
+  };
+}
+
+/**
+ * A conversation of the signed-in person's, for the agent in the terminal to write into: its id, or null
+ * when this browser has no person (an exploration nobody owns would only be an orphan).
+ */
+export async function startOwnConversation(
+  question: string,
+  client: string,
+): Promise<string | null> {
+  const res = await fetch('/api/v1/explorations', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ question, client }),
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { exploration?: string; owned?: boolean };
+  return json.owned && json.exploration ? json.exploration : null;
+}
+
+/** A continue link to a conversation of the person's, which the helper hands its agent. */
+export async function continueLinkFor(id: string): Promise<string | null> {
+  const res = await fetch(`/api/v1/explorations/${encodeURIComponent(id)}/links`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ scope: 'continue' }),
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { url?: string };
+  return json.url ?? null;
 }
 
 /** Where a conversation in another agent stands, by its exploration's id or a link's token. */

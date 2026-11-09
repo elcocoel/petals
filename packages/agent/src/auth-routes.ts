@@ -100,7 +100,7 @@ export interface AuthDeps {
   site: Site;
   clock?: () => number;
   /** the data budget: a new wallet adds a person for good, so it's refused past that */
-  full?: () => boolean;
+  full?: () => Promise<boolean>;
   /** where a chat stops when a person spends their own credit; default PERSON_USD_PER_CHAT */
   personUsdPerChat?: number;
 }
@@ -117,12 +117,14 @@ export interface ChatAdmission {
 
 /** What the agent routes need. With no session, the subject is null. */
 export interface RouteAuth {
-  admitChat(c: Context, llm: LlmClient, budget: Budget): ChatAdmission;
-  subjectOf(c: Context): string | null;
+  admitChat(c: Context, llm: LlmClient, budget: Budget): Promise<ChatAdmission>;
+  subjectOf(c: Context): Promise<string | null>;
+  /** The subject and the credential that opened its session (TGT-005), in one look. */
+  callerOf(c: Context): Promise<{ subject: string | null; credential: string | null }>;
   /** A refusal for a POST from another site; null for one that's fine. */
   refuseForeign(c: Context): Response | null;
   /** Opens an anonymous session on this response, for a first write. Returns its subject. */
-  openAnonymous(c: Context): string;
+  openAnonymous(c: Context): Promise<string>;
 }
 
 export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
@@ -156,7 +158,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
   const badOrigin = (c: Context) =>
     fail(c, 'unauthorised', 'This request came from another site, so it was refused.');
 
-  function sessionOf(c: Context): SessionRow | null {
+  async function sessionOf(c: Context): Promise<SessionRow | null> {
     const value = getCookie(c, site.cookie);
     return value ? store.session.get(hashOf(value), iso()) : null;
   }
@@ -172,22 +174,23 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
   }
 
   /** A new session. The value goes to the browser, its hash to the store. */
-  function openSession(
+  async function openSession(
     c: Context,
     subject: string,
-    o: { network?: string; invite?: string | null } = {},
-  ): SessionRow {
+    o: { network?: string; invite?: string | null; credential?: string | null } = {},
+  ): Promise<SessionRow> {
     const value = randomBytes(32).toString('base64url');
     const row: SessionRow = {
       hash: hashOf(value),
       subject,
       network: o.network ?? null,
       invite: o.invite ?? null,
+      credential: o.credential ?? null,
       expires_at: new Date(clock() + SESSION_DAYS * 86_400_000).toISOString(),
     };
-    store.tx(() => {
-      store.session.deleteExpired(iso());
-      store.session.put(row);
+    await store.tx(async () => {
+      await store.session.deleteExpired(iso());
+      await store.session.put(row);
     });
     writeCookie(c, value, SESSION_DAYS * 86_400);
     return row;
@@ -195,8 +198,8 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
 
   const newHandle = (c: Context) => openSession(c, `anon_${randomBytes(16).toString('hex')}`);
 
-  function walletsOf(person: string) {
-    return store.walletBinding.ofPerson(person).flatMap((w) => {
+  async function walletsOf(person: string) {
+    return (await store.walletBinding.ofPerson(person)).flatMap((w) => {
       try {
         const caip10 = d.cipher().open(w.caip10_encrypted);
         const account_id = caip10.split(':').slice(2).join(':');
@@ -213,18 +216,18 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
    * explorations moved to them, and a new session in place of the old one, keeping its invite. A
    * person signing in with another wallet changes person: their work stays where it is.
    */
-  function signIn(c: Context, network: Network, accountId: string) {
+  async function signIn(c: Context, network: Network, accountId: string) {
     const cipher = d.cipher();
     const address = `near:${network}:${accountId}`;
     const index = cipher.index(address);
-    const old = sessionOf(c);
+    const old = await sessionOf(c);
     const at = iso();
-    const out = store.tx(() => {
-      let person = store.walletBinding.byHash(index)?.person;
+    const out = await store.tx(async () => {
+      let person = (await store.walletBinding.byHash(index))?.person;
       if (!person) {
         person = `prs_${randomBytes(16).toString('hex')}`;
-        store.person.create({ id: person, created_at: at });
-        store.walletBinding.bind({
+        await store.person.create({ id: person, created_at: at });
+        await store.walletBinding.bind({
           person,
           network,
           caip10_encrypted: cipher.seal(address),
@@ -235,16 +238,22 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       let claimed = 0;
       let explorations = 0;
       if (old && !isPerson(old.subject)) {
-        claimed = store.run.moveOwner(old.subject, person);
-        explorations = store.exploration.moveOwner(old.subject, person);
-        store.follow.moveOwner(old.subject, person);
-        store.workspaceNote.moveOwner(old.subject, person);
-        store.search.forgetOwner(old.subject);
+        claimed = await store.run.moveOwner(old.subject, person);
+        explorations = await store.exploration.moveOwner(old.subject, person);
+        await store.follow.moveOwner(old.subject, person);
+        await store.workspaceNote.moveOwner(old.subject, person);
+        await store.folder.moveOwner(old.subject, person);
+        await store.search.forgetOwner(old.subject);
       }
-      if (old) store.session.delete(old.hash);
+      if (old) await store.session.delete(old.hash);
       return { person, claimed, explorations };
     });
-    openSession(c, out.person, { network, invite: old?.invite });
+    // the wallet that signed, by its keyed hash: what authorises everything this session does
+    await openSession(c, out.person, {
+      network,
+      invite: old?.invite,
+      credential: `wallet:${index}`,
+    });
     return out;
   }
 
@@ -270,8 +279,8 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     onError: (c) => fail(c, 'bad_input', 'the body is larger than 16 KiB'),
   });
 
-  app.post('/api/v1/auth/challenge', (c) => {
-    const { nonce, expires_at } = d.nonces.issue();
+  app.post('/api/v1/auth/challenge', async (c) => {
+    const { nonce, expires_at } = await d.nonces.issue();
     return ok(c, {
       nonce,
       message: signInMessage(site.hostname),
@@ -313,23 +322,23 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       );
     }
     if (!check.ok) return fail(c, 'unauthorised', `The signature was refused: ${check.reason}.`);
-    const known = store.walletBinding.byHash(
+    const known = await store.walletBinding.byHash(
       d.cipher().index(`near:${network}:${proof.account_id}`),
     );
-    if (!known && d.full?.()) return fail(c, 'budget_exhausted', DATA_FULL);
-    const { person, claimed, explorations } = signIn(c, network, proof.account_id);
+    if (!known && (await d.full?.())) return fail(c, 'budget_exhausted', DATA_FULL);
+    const { person, claimed, explorations } = await signIn(c, network, proof.account_id);
     return ok(c, {
       person_id: person,
       network,
-      wallets: walletsOf(person),
+      wallets: await walletsOf(person),
       claimed_runs: claimed,
       claimed_explorations: explorations,
     });
   });
 
-  app.post('/api/v1/auth/logout', (c) => {
-    const session = sessionOf(c);
-    if (session) store.session.delete(session.hash);
+  app.post('/api/v1/auth/logout', async (c) => {
+    const session = await sessionOf(c);
+    if (session) await store.session.delete(session.hash);
     writeCookie(c, '', 0);
     return ok(c, { ok: true });
   });
@@ -341,54 +350,58 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     if (typeof body?.token !== 'string' || !body.token) {
       return fail(c, 'bad_input', 'token must be a string');
     }
-    const invite = store.invite.byTokenHash(hashToken(body.token));
-    const state = invite ? inviteBody(invite.id) : null;
+    const invite = await store.invite.byTokenHash(hashToken(body.token));
+    const state = invite ? await inviteBody(invite.id) : null;
     if (!invite || !state || state.status === 'revoked' || state.status === 'expired') {
       return fail(c, 'unauthorised', "That invite isn't valid.", CONNECT_HINT);
     }
     if (state.status === 'spent') return fail(c, 'budget_exhausted', INVITE_SPENT, CONNECT_HINT);
-    const session = sessionOf(c) ?? newHandle(c);
-    store.session.setInvite(session.hash, invite.id);
+    const session = (await sessionOf(c)) ?? (await newHandle(c));
+    await store.session.setInvite(session.hash, invite.id);
     return ok(c, { invite: state });
   });
 
-  app.get('/api/v1/auth/invite', (c) => {
-    const id = sessionOf(c)?.invite;
-    return ok(c, { invite: id ? inviteBody(id) : null });
+  app.get('/api/v1/auth/invite', async (c) => {
+    const id = (await sessionOf(c))?.invite;
+    return ok(c, { invite: id ? await inviteBody(id) : null });
   });
 
-  app.get('/api/v1/me', (c) => {
+  app.get('/api/v1/me', async (c) => {
     c.header('Cache-Control', 'no-store');
-    const session = sessionOf(c);
+    const session = await sessionOf(c);
     if (!session || !isPerson(session.subject)) {
       return fail(c, 'unauthorised', 'Not signed in.');
     }
-    const credit = personCredit(store, session.subject);
+    const credit = await personCredit(store, session.subject);
     return ok(c, {
       person_id: session.subject,
       network: session.network,
-      wallets: walletsOf(session.subject),
+      wallets: await walletsOf(session.subject),
       // null: no credit of their own, so a chat needs an invite like anyone else's
       credit: credit && { ...credit, usd_per_chat: usdPerOwnChat },
     });
   });
 
   const gate: RouteAuth = {
-    subjectOf: (c) => sessionOf(c)?.subject ?? null,
+    subjectOf: async (c) => (await sessionOf(c))?.subject ?? null,
+    callerOf: async (c) => {
+      const s = await sessionOf(c);
+      return { subject: s?.subject ?? null, credential: s?.credential ?? null };
+    },
     refuseForeign: (c) => (originAllowed(c) ? null : badOrigin(c)),
-    openAnonymous: (c) => newHandle(c).subject,
+    openAnonymous: async (c) => (await newHandle(c)).subject,
 
-    admitChat(c, llm, budget) {
+    async admitChat(c, llm, budget) {
       // A recorded run spends nothing: anyone may watch it, from anywhere, and no one owns it.
       if (llm.kind === 'recorded') return {};
       if (!originAllowed(c)) return { refused: badOrigin(c) };
-      const session = sessionOf(c);
-      if (d.access === 'open') return { subject: (session ?? newHandle(c)).subject };
+      const session = await sessionOf(c);
+      if (d.access === 'open') return { subject: (session ?? (await newHandle(c))).subject };
       const day = budget.ledger ?? closedLedger('this server keeps no spend ledger');
       // A person's own credit comes first and asks for no invite. It's theirs, so the wallet they came
       // in with and the browser they're on don't matter. Their own money has a cap of its own.
       const own =
-        session && isPerson(session.subject) ? personCredit(store, session.subject) : null;
+        session && isPerson(session.subject) ? await personCredit(store, session.subject) : null;
       if (session && own && own.left_usd > 0) {
         return {
           subject: session.subject,
@@ -405,7 +418,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       if (!session || !id) {
         return { refused: fail(c, 'invite_required', NO_INVITE, CONNECT_HINT) };
       }
-      const refusal = inviteRefusal(inviteBody(id));
+      const refusal = inviteRefusal(await inviteBody(id));
       if (refusal) {
         const code = refusal === INVITE_SPENT ? 'budget_exhausted' : 'invite_required';
         return { refused: fail(c, code, refusal, CONNECT_HINT) };

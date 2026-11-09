@@ -35,8 +35,8 @@ beforeAll(async () => {
   const { port } = server.address() as AddressInfo;
   stateDir = mkdtempSync(join(tmpdir(), 'petal-seed-'));
   const store = openPrivateStore(stateDir);
-  const invite = mintInvite(store, { usd: 1, days: 1 });
-  store.close();
+  const invite = await mintInvite(store, { usd: 1, days: 1 });
+  await store.close();
   options = {
     stateDir,
     modelBase: `http://127.0.0.1:${port}/v1`,
@@ -44,7 +44,13 @@ beforeAll(async () => {
     inviteId: invite.id,
   };
   const seeded = await seedWorkspace(options);
-  expect(seeded).toMatchObject({ conversations: 5, follows: 3, notes: 2, fresh: true });
+  expect(seeded).toMatchObject({
+    conversations: 5,
+    follows: 3,
+    notes: 2,
+    folders: 2,
+    fresh: true,
+  });
   cookie = `${SESSION_COOKIE}=${seeded.session}`;
   app = buildPetalApp(
     { root: REPO, stateDir, nearAiApiKey: 'stub', llmDailyUsd: 1, map: null },
@@ -55,7 +61,7 @@ beforeAll(async () => {
   );
 }, 120_000);
 
-afterAll(() => {
+afterAll(async () => {
   server.close();
   rmSync(stateDir, { recursive: true, force: true });
 });
@@ -70,6 +76,18 @@ test('the list has every kind of conversation, including work from another door'
   const open = await get(`/api/v1/conversations/${door.id}`);
   expect(open.conversation.door_turns.map((t: Out) => t.kind)).toEqual(['step', 'note']);
   expect(open.conversation.shapes).toHaveLength(1);
+});
+
+test('two folders, one inside the other, with conversations in each and the rest at the top', async () => {
+  const { folders } = await get('/api/v1/folders');
+  expect(folders.map((f: Out) => f.name)).toEqual(['Validators', 'DAOs']);
+  const [validators, daos] = folders;
+  expect(daos.parent).toBe(validators.id);
+  const { conversations } = await get('/api/v1/conversations');
+  const count = (folder: string | null) =>
+    conversations.filter((c: Out) => c.folder === folder).length;
+  expect([count(validators.id), count(daos.id), count(null)]).toEqual([2, 1, 2]);
+  expect(conversations.find((c: Out) => c.status === 'elsewhere').folder).toBe(daos.id);
 });
 
 test('one conversation holds two shapes, with figures per turn, and the pick apart from what answered', async () => {
@@ -99,8 +117,8 @@ test('follows reopen as shapes, notes and search answer, and a chat goes on from
     .update(cookie.split('=')[1] as string)
     .digest('hex');
   const store = openPrivateStore(stateDir);
-  expect(store.session.get(hash, new Date().toISOString())?.invite).toBe(options.inviteId);
-  store.close();
+  expect((await store.session.get(hash, new Date().toISOString()))?.invite).toBe(options.inviteId);
+  await store.close();
   const res = await app.request('/api/v1/agent/chat', {
     method: 'POST',
     headers: { cookie, 'content-type': 'application/json', accept: 'application/json' },

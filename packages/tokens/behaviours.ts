@@ -138,6 +138,12 @@ export const behaviours = [
     purpose: 'Stays closed until asked for, opens above the others, and closes from its bar',
     via: 'view',
   },
+  {
+    name: 'box.fold',
+    purpose:
+      'A menu docked to the window’s edge folds away from its bar, and one word brings it back',
+    via: 'view',
+  },
   // row
   { name: 'row.arrive', purpose: 'Rows arrive one by one', via: 'both' },
   {

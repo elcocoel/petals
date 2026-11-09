@@ -13,6 +13,7 @@
     "test": "vitest run --project '!e2e'",
     "test:e2e": "vitest run --project e2e --passWithNoTests",
     "dev": "pnpm --filter @petal/web dev",
+    "server": "node packages/agent/src/serve.ts",
     "api": "node apps/cli/src/index.ts api",
     "petal": "node apps/cli/src/index.ts",
     "lint": "biome check .",
@@ -27,7 +28,8 @@
     "prepare": "git config core.hooksPath scripts/git-hooks 2>/dev/null || true"
   },
   "dependencies": {
-    "@petal/agent": "workspace:*"
+    "@petal/agent": "workspace:*",
+    "@petal/store": "workspace:*"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.5",
@@ -36,7 +38,6 @@
     "@petal/inputs": "workspace:*",
     "@petal/near": "workspace:*",
     "@petal/relations": "workspace:*",
-    "@petal/store": "workspace:*",
     "@petal/tools": "workspace:*",
     "@types/node": "^24.19.2",
     "ajv": "^8.20.0",

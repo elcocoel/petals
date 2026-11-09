@@ -3,7 +3,7 @@
 // the conversation held (lib/workspace-url.ts).
 import { headers } from 'next/headers';
 import { InteractionSurface } from '../../flower/InteractionSurface.tsx';
-import { agentPrompt, originFrom } from '../../lib/agent-prompt.ts';
+import { agentPrompt, originFrom, terminalCommand } from '../../lib/agent-prompt.ts';
 import { workspaceHome } from '../../lib/workspace-home.ts';
 
 export const dynamic = 'force-dynamic';
@@ -19,6 +19,9 @@ export default async function MakePage({ searchParams }: { searchParams: Promise
       // Elco's open choices, read from the address until they're chosen: ?box=ink and ?order=scatter.
       surface={q.box === 'ink' ? 'ink' : 'ground'}
       scatter={q.order === 'scatter'}
+      // W10's proof: the person's own agent in a terminal on their computer, through the Petals helper.
+      terminal={q.terminal === '1'}
+      terminalCommand={terminalCommand(originFrom(await headers()), 'claude')}
       // An instrument for checking by script. It stays out of production, like the lab.
       probe={
         q.probe === '1' && (process.env.NODE_ENV !== 'production' || process.env.PETAL_LAB === '1')

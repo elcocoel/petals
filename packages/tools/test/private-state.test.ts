@@ -50,7 +50,7 @@ describe('durable nonces', () => {
   test('one proof passes once, however many arrive together', async () => {
     const { store } = setup();
     const nonces = durableNonceStore(store.challenge);
-    const { nonce } = nonces.issue();
+    const { nonce } = await nonces.issue();
     const proof = maker.sign({ message, nonce, recipient });
     const rpc = fakeRpcFor([maker]);
     const out = await Promise.all(
@@ -65,7 +65,7 @@ describe('durable nonces', () => {
     const other = openStore(path);
     const a = durableNonceStore(store.challenge);
     const b = durableNonceStore(other.challenge);
-    const { nonce } = a.issue();
+    const { nonce } = await a.issue();
     const proof = maker.sign({ message, nonce, recipient });
     const rpc = fakeRpcFor([maker]);
     const out = await Promise.all(
@@ -79,8 +79,8 @@ describe('durable nonces', () => {
 
   test('a restart: an issued nonce still works, a used one stays used', async () => {
     const { path, store } = setup();
-    const { nonce } = durableNonceStore(store.challenge).issue();
-    store.close();
+    const { nonce } = await durableNonceStore(store.challenge).issue();
+    await store.close();
 
     const second = openStore(path);
     const proof = maker.sign({ message, nonce, recipient });
@@ -88,7 +88,7 @@ describe('durable nonces', () => {
     expect(
       await verifyNep413(proof, expected, rpc, { nonces: durableNonceStore(second.challenge) }),
     ).toEqual({ ok: true });
-    second.close();
+    await second.close();
 
     const third = openStore(path);
     expect(
@@ -100,7 +100,7 @@ describe('durable nonces', () => {
   test('an RPC that cannot answer releases it, so the maker need not sign again', async () => {
     const { store } = setup();
     const nonces = durableNonceStore(store.challenge);
-    const { nonce } = nonces.issue();
+    const { nonce } = await nonces.issue();
     const proof = maker.sign({ message, nonce, recipient });
     const down: Rpc = {
       query: () => Promise.reject(new Error('rpc down')),
@@ -116,32 +116,32 @@ describe('durable nonces', () => {
   test('a store that is down refuses: the proof does not pass', async () => {
     const { store } = setup();
     const nonces = durableNonceStore(store.challenge);
-    const { nonce } = nonces.issue();
-    store.close();
+    const { nonce } = await nonces.issue();
+    await store.close();
     const proof = maker.sign({ message, nonce, recipient });
     await expect(verifyNep413(proof, expected, fakeRpcFor([maker]), { nonces })).rejects.toThrow();
   });
 
-  test('it expires, and behaves like the in-memory form', () => {
+  test('it expires, and behaves like the in-memory form', async () => {
     const { store } = setup();
     let now = Date.parse('2026-11-05T12:00:00Z');
     const durable = durableNonceStore(store.challenge, NONCE_TTL_MS, () => now);
-    const { nonce, expires_at } = durable.issue();
+    const { nonce, expires_at } = await durable.issue();
     expect(Date.parse(expires_at)).toBe(now + NONCE_TTL_MS);
     expect(Buffer.from(nonce, 'base64')).toHaveLength(32);
     now += NONCE_TTL_MS;
-    expect(durable.reserve(nonce)).toBe('expired');
+    expect(await durable.reserve(nonce)).toBe('expired');
 
     for (const nonces of [durableNonceStore(store.challenge), createNonceStore()]) {
-      const n = nonces.issue().nonce;
-      expect(nonces.reserve('nope')).toBe('unknown');
-      expect(nonces.reserve(n)).toBe('ok');
-      expect(nonces.reserve(n)).toBe('used');
-      nonces.release(n);
-      expect(nonces.reserve(n)).toBe('ok');
-      nonces.spend(n);
-      nonces.release(n);
-      expect(nonces.reserve(n)).toBe('used');
+      const n = (await nonces.issue()).nonce;
+      expect(await nonces.reserve('nope')).toBe('unknown');
+      expect(await nonces.reserve(n)).toBe('ok');
+      expect(await nonces.reserve(n)).toBe('used');
+      await nonces.release(n);
+      expect(await nonces.reserve(n)).toBe('ok');
+      await nonces.spend(n);
+      await nonces.release(n);
+      expect(await nonces.reserve(n)).toBe('used');
     }
   });
 });

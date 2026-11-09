@@ -27,6 +27,8 @@ export interface SiteOptions {
   site: string;
   /** where the last exploration started from the CLI is kept; none: memory only */
   currentFile?: string;
+  /** the page's own conversation, handed in by the terminal helper (PETALS_EXPLORATION) */
+  initial?: string;
   fetch?: Fetch;
 }
 
@@ -73,7 +75,7 @@ export function siteDoor(opts: SiteOptions) {
   const f: Fetch = opts.fetch ?? ((url, init) => fetch(url, init));
   /** snapshots the site is known to hold, this process */
   const held = new Set<string>();
-  let current: string | null = null;
+  let current: string | null = opts.initial?.trim() || null;
 
   const remember = (link: string) => {
     current = link;
@@ -165,7 +167,7 @@ export function siteDoor(opts: SiteOptions) {
     if (!exploration) return noExploration();
     const sha = typeof input.spec_sha256 === 'string' ? input.spec_sha256 : undefined;
     const spec =
-      (input.spec as Spec | undefined) ?? (sha ? specBody(ctx.config, sha) : null) ?? null;
+      (input.spec as Spec | undefined) ?? (sha ? await specBody(ctx.config, sha) : null) ?? null;
     const ref = refOf(exploration);
     const steps = `/api/v1/explorations/${encodeURIComponent(ref)}/steps`;
     const note = typeof input.note === 'string' ? { note: input.note } : {};

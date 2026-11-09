@@ -34,7 +34,11 @@ export interface StoredDraft {
 }
 
 /** Single-use nonces that survive a restart and hold across processes. */
-export function nonceStore(cfg: { root: string; stateDir?: string }): NonceStore {
+export function nonceStore(cfg: {
+  root: string;
+  stateDir?: string;
+  databaseUrl?: string;
+}): NonceStore {
   return durableNonceStore(privateStore(cfg).challenge);
 }
 
@@ -45,27 +49,27 @@ export const MAX_SPEC_BYTES = 64 * 1024;
 const SPEC_BODIES = 'spec-bodies';
 
 /** Puts a spec's body in once under its hash, and returns the hash. Null when it's too large. */
-export function keepSpecBody(
+export async function keepSpecBody(
   store: Store,
   spec: unknown,
   at: string,
   /** a door's new body: refused past the daily cap. None: the site's own run, which is sponsored. */
-  capped?: () => void,
-): string | null {
+  capped?: () => Promise<void>,
+): Promise<string | null> {
   const body = canonicalJson(spec);
   if (Buffer.byteLength(body, 'utf8') > MAX_SPEC_BYTES) return null;
   const sha256 = sha256Hex(body);
-  if (store.draft.get(sha256)) return sha256;
-  capped?.();
-  store.draft.put({ sha256, body, created_at: at });
+  if (await store.draft.get(sha256)) return sha256;
+  await capped?.();
+  await store.draft.put({ sha256, body, created_at: at });
   return sha256;
 }
 
 /** For a door: throws the refusal past the daily cap on new spec bodies. */
-export function capSpecBodies(cfg: LimitsConfig, now: Date): () => void {
-  return () => {
+export function capSpecBodies(cfg: LimitsConfig, now: Date): () => Promise<void> {
+  return async () => {
     const cap = limitsOf(cfg).specBodiesPerDay;
-    if (!takeToday(cfg, SPEC_BODIES, cap, now)) {
+    if (!(await takeToday(cfg, SPEC_BODIES, cap, now))) {
       throw overToday(now, `Petal has stored ${cap} new specs today, so this one was not saved.`);
     }
   };
@@ -75,20 +79,27 @@ export function capSpecBodies(cfg: LimitsConfig, now: Date): () => void {
  * keepSpecBody for a public tool, which goes on without it: a store that won't last would give a short
  * link that stops working, and a store that fails or is full must not break a public tool.
  */
-export function putSpecBody(cfg: LimitsConfig, spec: unknown, at: string): string | null {
+export async function putSpecBody(
+  cfg: LimitsConfig,
+  spec: unknown,
+  at: string,
+): Promise<string | null> {
   try {
     const now = new Date(at);
     const store = privateStore(cfg);
-    if (!store.durable || overDataBudget(cfg, now)) return null;
-    return keepSpecBody(store, spec, at, capSpecBodies(cfg, now));
+    if (!store.durable || (await overDataBudget(cfg, now))) return null;
+    return await keepSpecBody(store, spec, at, capSpecBodies(cfg, now));
   } catch {
     return null;
   }
 }
 
 /** The spec stored under this hash, or null. Hashed again on the way out, so a changed row can't pass. */
-export function specBody(cfg: { root: string; stateDir?: string }, sha256: string): Spec | null {
-  const row = privateStore(cfg).draft.get(sha256);
+export async function specBody(
+  cfg: { root: string; stateDir?: string; databaseUrl?: string },
+  sha256: string,
+): Promise<Spec | null> {
+  const row = await privateStore(cfg).draft.get(sha256);
   if (!row) return null;
   if (sha256Hex(row.body) !== sha256) {
     throw new ToolFailure('internal', 'The stored spec does not match its hash.');
@@ -96,10 +107,10 @@ export function specBody(cfg: { root: string; stateDir?: string }, sha256: strin
   return JSON.parse(row.body) as Spec;
 }
 
-export function draftStore(cfg: { root: string; stateDir?: string }) {
+export function draftStore(cfg: { root: string; stateDir?: string; databaseUrl?: string }) {
   return {
     async get(sha: string): Promise<StoredDraft | null> {
-      const row = privateStore(cfg).publishDraft.get(sha);
+      const row = await privateStore(cfg).publishDraft.get(sha);
       if (!row) return null;
       const draft = JSON.parse(row.body) as StoredDraft;
       return row.used_at ? { ...draft, used_at: row.used_at } : draft;
@@ -107,9 +118,9 @@ export function draftStore(cfg: { root: string; stateDir?: string }) {
     /** A new prepare for the same entry replaces the old draft: it carries a new nonce. */
     async put(d: StoredDraft): Promise<void> {
       const store = privateStore(cfg);
-      store.tx(() => {
-        store.publishDraft.deleteExpired(d.created_at);
-        store.publishDraft.put(d.entry_sha256, JSON.stringify(d), d.expires_at);
+      await store.tx(async () => {
+        await store.publishDraft.deleteExpired(d.created_at);
+        await store.publishDraft.put(d.entry_sha256, JSON.stringify(d), d.expires_at);
       });
     },
     /** Marks it used. True for exactly one caller, however many arrive together. */

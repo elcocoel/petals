@@ -279,19 +279,21 @@ const eventOf = (type: string, data: string) =>
   ({ event: type, data: JSON.parse(data) }) as AgentEvent;
 
 /** One transaction, so a crash leaves a run as it was after its last whole event. */
-function appendEvent(store: Store, runId: string, e: AgentEvent): void {
+async function appendEvent(store: Store, runId: string, e: AgentEvent): Promise<void> {
   if (e.event === 'heartbeat') return;
-  store.tx(() => {
-    const row = store.run.get(runId);
+  await store.tx(async () => {
+    const row = await store.run.get(runId);
     if (!row) throw new Error(`sqliteRunStore: no run ${runId}`);
     const at = new Date().toISOString();
     // only `done` looks back over the log, to judge this chat
     const events =
-      e.event === 'done' ? store.runEvent.list(runId).map((r) => eventOf(r.type, r.data)) : [];
+      e.event === 'done'
+        ? (await store.runEvent.list(runId)).map((r) => eventOf(r.type, r.data))
+        : [];
     const run = runOf(row, events);
     applyEvent(run, e, at);
-    store.runEvent.append(runId, e.event, JSON.stringify(e.data), at);
-    store.run.update(runId, {
+    await store.runEvent.append(runId, e.event, JSON.stringify(e.data), at);
+    await store.run.update(runId, {
       status: run.status,
       // what answered: a chat where no model did leaves it as it was
       model: e.event === 'done' && e.data.turns > 0 ? e.data.model : row.model,
@@ -328,25 +330,28 @@ function isAlive(pid: number): boolean {
  * server up on the same folder. So a process that started a chat here and is still alive keeps its
  * runs, and this scan leaves them for the next boot.
  */
-export function interruptRuns(
+export async function interruptRuns(
   store: Store,
   log: (line: string) => void = console.log,
-): { interrupted: number; spentUsd: number } {
-  const holder = Number(store.meta.get(RUNS_PID));
+): Promise<{ interrupted: number; spentUsd: number }> {
+  const holder = Number(await store.meta.get(RUNS_PID));
   if (holder && holder !== process.pid && isAlive(holder)) {
     log(`petal: process ${holder} is running this store's runs, so they are left to it.`);
     return { interrupted: 0, spentUsd: 0 };
   }
-  const ids = store.run.idsWithStatus('running');
+  const ids = await store.run.idsWithStatus('running');
   for (const id of ids) {
-    appendEvent(store, id, { event: 'error', data: { code: 'interrupted', message: INTERRUPTED } });
+    await appendEvent(store, id, {
+      event: 'error',
+      data: { code: 'interrupted', message: INTERRUPTED },
+    });
   }
   // The day's ledger and the invites hold the same money twice over, so the day's figure is the total.
-  const spentUsd = store.tx(() => {
+  const spentUsd = await store.tx(async () => {
     const at = new Date().toISOString();
-    for (const { account_key, usd } of store.credit.spendHolds(at)) {
+    for (const { account_key, usd } of await store.credit.spendHolds(at)) {
       const invite = inviteOfAccount(account_key);
-      if (invite) store.invite.addSpent(invite, usd);
+      if (invite) await store.invite.addSpent(invite, usd);
     }
     return store.ledger.spendHolds();
   });
@@ -359,33 +364,38 @@ export function interruptRuns(
 }
 
 export function sqliteRunStore(store: Store): Required<RunStore> {
-  const eventsOf = (id: string) => store.runEvent.list(id).map((r) => eventOf(r.type, r.data));
+  const eventsOf = async (id: string) =>
+    (await store.runEvent.list(id)).map((r) => eventOf(r.type, r.data));
 
   return {
     async create(input, o) {
-      store.meta.set(RUNS_PID, String(process.pid));
+      await store.meta.set(RUNS_PID, String(process.pid));
       const at = new Date().toISOString();
       const reopen = input.run_id && RUN_ID.test(input.run_id) ? input.run_id : undefined;
       if (reopen) {
-        const kept = store.tx(() => {
-          const row = store.run.get(reopen);
+        const kept = await store.tx(async () => {
+          const row = await store.run.get(reopen);
           if (!row) return false;
           const run = runOf(row, []);
           run.messages = [...input.messages];
           if (input.draft) run.draft = input.draft as Draft;
-          store.run.update(reopen, {
+          await store.run.update(reopen, {
             status: 'running',
             model: row.model,
             body: bodyOf(run),
             updated_at: at,
           });
-          if (o?.settings) store.run.setSettings(reopen, JSON.stringify(o.settings));
+          if (o?.settings) await store.run.setSettings(reopen, JSON.stringify(o.settings));
           return true;
         });
         if (kept) return reopen;
       }
       const id = newRunId();
-      store.run.insert({
+      // work from another door, continued here, stays in the folder its owner put it in
+      const folder = o?.exploration
+        ? ((await store.exploration.get(o.exploration))?.folder ?? null)
+        : null;
+      await store.run.insert({
         id,
         owner: o?.owner ?? null,
         exploration: o?.exploration ?? null,
@@ -393,6 +403,7 @@ export function sqliteRunStore(store: Store): Required<RunStore> {
         model: null,
         title: firstQuestion(input.messages) || null,
         settings: o?.settings ? JSON.stringify(o.settings) : null,
+        folder,
         body: bodyOf({
           run_id: id,
           status: 'running',
@@ -409,33 +420,34 @@ export function sqliteRunStore(store: Store): Required<RunStore> {
     },
 
     async append(runId, e) {
-      appendEvent(store, runId, e);
+      await appendEvent(store, runId, e);
     },
 
     async get(runId) {
       if (!RUN_ID.test(runId)) return null;
-      const row = store.run.get(runId);
-      return row ? runOf(row, eventsOf(runId)) : null;
+      const row = await store.run.get(runId);
+      return row ? runOf(row, await eventsOf(runId)) : null;
     },
 
     async saveThread(runId, thread) {
-      store.runThread.save(runId, JSON.stringify(thread), new Date().toISOString());
+      await store.runThread.save(runId, JSON.stringify(thread), new Date().toISOString());
     },
 
     async thread(runId) {
       if (!RUN_ID.test(runId)) return null;
-      const messages = store.runThread.get(runId);
+      const messages = await store.runThread.get(runId);
       return messages === null ? null : (JSON.parse(messages) as LlmMessage[]);
     },
 
     async eventsFrom(runId, from = 0) {
-      return store.runEvent
-        .list(runId, from)
-        .map((r) => ({ seq: r.seq, event: eventOf(r.type, r.data) }));
+      return (await store.runEvent.list(runId, from)).map((r) => ({
+        seq: r.seq,
+        event: eventOf(r.type, r.data),
+      }));
     },
 
     async ownerOf(runId) {
-      return store.run.get(runId)?.owner ?? null;
+      return (await store.run.get(runId))?.owner ?? null;
     },
 
     async setOwner(runId, owner, from) {
@@ -443,11 +455,11 @@ export function sqliteRunStore(store: Store): Required<RunStore> {
     },
 
     async settingsOf(runId) {
-      return store.run.get(runId)?.settings ?? null;
+      return (await store.run.get(runId))?.settings ?? null;
     },
 
     async listByOwner(owner, limit) {
-      return store.run.listByOwner(owner, limit).map((r) => ({
+      return (await store.run.listByOwner(owner, limit)).map((r) => ({
         run_id: r.id,
         status: r.status as Run['status'],
         created_at: r.created_at,
@@ -463,13 +475,13 @@ const RUNS_IMPORTED = 'runs_imported_at';
  * Copies fileRunStore's files into the store, once, and leaves the files where they are. A file that
  * can't be read as a run is skipped and counted: an old file must not stop the server starting.
  */
-export function importRunFiles(
+export async function importRunFiles(
   store: Store,
   dir: string,
   log: (line: string) => void = console.log,
-): { imported: number; skipped: number } {
+): Promise<{ imported: number; skipped: number }> {
   const counts = { imported: 0, skipped: 0 };
-  if (store.meta.get(RUNS_IMPORTED)) return counts;
+  if (await store.meta.get(RUNS_IMPORTED)) return counts;
   let names: string[] = [];
   try {
     names = readdirSync(dir);
@@ -483,7 +495,7 @@ export function importRunFiles(
       return null;
     }
   };
-  store.tx(() => {
+  await store.tx(async () => {
     for (const name of names) {
       const id = name.endsWith('.json') ? name.slice(0, -'.json'.length) : '';
       // threads and half-written temporary files don't match: their names have more dots
@@ -502,8 +514,8 @@ export function importRunFiles(
         counts.skipped++;
         continue;
       }
-      if (store.run.get(id)) continue;
-      store.run.insert({
+      if (await store.run.get(id)) continue;
+      await store.run.insert({
         id,
         owner: null,
         exploration: null,
@@ -514,15 +526,15 @@ export function importRunFiles(
         updated_at: run.updated_at,
       });
       for (const e of run.events) {
-        store.runEvent.append(id, e.event, JSON.stringify(e.data), run.updated_at);
+        await store.runEvent.append(id, e.event, JSON.stringify(e.data), run.updated_at);
       }
       const thread = read<LlmMessage[]>(join(dir, `${id}.thread.json`));
       if (Array.isArray(thread)) {
-        store.runThread.save(id, JSON.stringify(thread), run.updated_at);
+        await store.runThread.save(id, JSON.stringify(thread), run.updated_at);
       }
       counts.imported++;
     }
-    store.meta.set(RUNS_IMPORTED, new Date().toISOString());
+    await store.meta.set(RUNS_IMPORTED, new Date().toISOString());
   });
   if (counts.imported || counts.skipped) {
     log(`petal: imported ${counts.imported} runs from ${dir}, skipped ${counts.skipped}.`);

@@ -1,8 +1,9 @@
-// Server only. Who a page is rendering for, as the API's limiter reads it (@petal/tools, clientAddress).
-// A call in process has no address of its own, so without this every visitor to a public site shares one
-// limit, and past it pages lose what they load. app/layout.tsx supplies the source, because lib/ doesn't
-// import next. It lives on globalThis because route handlers and server components may each load this
-// module separately, as lib/server-app.ts says.
+// Server only. Who a page is rendering for, and on which address, for the server it calls (lib/api.ts).
+// Without the visitor's address, every visitor to a public site shares one limit, and past it pages
+// lose what they load. app/layout.tsx supplies the source, because lib/ doesn't import next. It lives on
+// globalThis because route handlers and server components may each load this module separately.
+import { SITE_HEADER, VISITOR_HEADER, visitorOf } from './server.ts';
+
 export type VisitorHeaders = () => Promise<{ get(name: string): string | null }>;
 
 const g = globalThis as { __petalVisitorHeaders?: VisitorHeaders };
@@ -16,9 +17,15 @@ export async function visitorAddress(): Promise<Record<string, string>> {
   const out: Record<string, string> = {};
   try {
     const incoming = await g.__petalVisitorHeaders?.();
-    for (const name of ['cf-connecting-ip', 'x-real-ip']) {
-      const value = incoming?.get(name);
-      if (value) out[name] = value;
+    if (!incoming) return out;
+    const visitor = visitorOf(incoming);
+    if (visitor) out[VISITOR_HEADER] = visitor;
+    const host = incoming.get('x-forwarded-host') ?? incoming.get('host');
+    if (host) {
+      const proto =
+        incoming.get('x-forwarded-proto') ??
+        (/^(localhost|127\.0\.0\.1)\b/.test(host) ? 'http' : 'https');
+      out[SITE_HEADER] = `${proto}://${host}`;
     }
   } catch {
     // not in a request: a test, or a script

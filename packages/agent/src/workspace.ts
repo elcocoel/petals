@@ -3,7 +3,9 @@
 //   GET   /api/v1/catalogue                 what each provider offers; no session
 //   GET   /api/v1/conversations             a person's conversations, and work from other doors
 //   GET   /api/v1/conversations/:id         one, with its turns, its shapes and what other doors did
-//   PATCH /api/v1/conversations/:id         rename, change settings, hide
+//   PATCH /api/v1/conversations/:id         rename, change settings, hide, move into a folder
+//   GET   /api/v1/folders, POST             a person's folders, flat, and one more
+//   PATCH /api/v1/folders/:id, DELETE       rename, move, reorder; delete moves what it held up
 //   GET   /api/v1/follows, POST             what they follow, and follow one more
 //   GET   /api/v1/follows/:id               reopen it as a shape
 //   PATCH /api/v1/follows/:id, DELETE
@@ -21,6 +23,7 @@ import type { ChatMessage } from '@petal/core/types';
 import {
   type ConversationRow,
   type ExplorationRow,
+  type FolderRow,
   type FollowRow,
   type RunRow,
   SEARCH_HIT_CLOSE,
@@ -47,6 +50,7 @@ const EXPLORATION_ID = /^exp_[0-9a-f]{24}$/;
 const SHA256 = /^[0-9a-f]{64}$/;
 const FOLLOW_ID = /^flw_[0-9a-f]{24}$/;
 const NOTE_ID = /^nte_[0-9a-f]{24}$/;
+const FOLDER_ID = /^fld_[0-9a-f]{24}$/;
 
 const TITLE_MAX = 200;
 const LABEL_MAX = 120;
@@ -57,6 +61,10 @@ const EVIDENCE_NOTE_MAX = 2_000;
 /** What one owner can add has an end. */
 const FOLLOWS_MAX = 500;
 const NOTES_MAX = 1_000;
+const FOLDERS_MAX = 200;
+/** How deep folders nest: a folder at the top is at depth 1. */
+const FOLDER_DEPTH_MAX = 8;
+const POSITION_MAX = 1_000_000;
 const LIST_MAX = 200;
 const QUERY_MAX = 200;
 const QUERY_WORDS_MAX = 12;
@@ -77,18 +85,15 @@ const messagesOf = (body: string | null): ChatMessage[] => {
 };
 
 /**
- * A person's words as FTS5 can take them: each one quoted, so nothing they type is syntax, and the last
- * one a prefix, for search as they type. Null when there's nothing to look for.
+ * A person's words, for search as they type: the store writes its own query from them, each one taken
+ * as words and never as syntax, the last one a prefix. Null when there's nothing to look for.
  */
-export function searchMatch(q: string): string | null {
+export function searchWords(q: string): string[] | null {
   const words = q
     .split(/\s+/)
     .filter((w) => /[\p{L}\p{N}]/u.test(w))
     .slice(0, QUERY_WORDS_MAX);
-  if (!words.length) return null;
-  return words
-    .map((w, i) => `"${w.replaceAll('"', '""')}"${i === words.length - 1 ? '*' : ''}`)
-    .join(' ');
+  return words.length ? words : null;
 }
 
 /** A snippet from the store, in pieces, so a surface never has to treat text as markup. */
@@ -104,6 +109,13 @@ function snippetParts(snippet: string): { text: string; hit: boolean }[] {
 }
 
 const idOf = (prefix: string) => `${prefix}_${randomBytes(12).toString('hex')}`;
+
+const FOLDER_FIELD = "folder must be a folder's id, or null for the top";
+/** A folder field as asked: undefined to leave it, null for the top, an id, or false when it's neither. */
+function folderOf(x: unknown): string | null | undefined | false {
+  if (x === undefined || x === null) return x;
+  return typeof x === 'string' && FOLDER_ID.test(x) ? x : false;
+}
 
 /** An account as claims spell it, or `network:<target_key>`. Null for anything else. */
 function followKind(ref: unknown): 'account' | 'network' | null {
@@ -165,7 +177,7 @@ export interface WorkspaceDeps {
   llm: LlmClient;
   clock?: () => number;
   /** past the data budget, a write a stranger can cause is refused */
-  full?: () => boolean;
+  full?: () => Promise<boolean>;
 }
 
 export function workspaceRoutes(d: WorkspaceDeps): Hono {
@@ -179,7 +191,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     c.json({ ...body, tools_version: TOOLS_VERSION }, status);
 
   const app = new Hono();
-  for (const path of ['conversations', 'follows', 'notes', 'search', 'catalogue']) {
+  for (const path of ['conversations', 'folders', 'follows', 'notes', 'search', 'catalogue']) {
     app.options(`/api/v1/${path}`, (c) => c.body(null, 204));
     app.options(`/api/v1/${path}/*`, (c) => c.body(null, 204));
     app.use(`/api/v1/${path}`, bodyCap);
@@ -211,7 +223,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
   };
 
   /** Why this write can't happen at all, or null. Asked before any session is opened for it. */
-  function cannotWrite(c: Context) {
+  async function cannotWrite(c: Context) {
     if (!store.durable) {
       return fail(
         c,
@@ -219,16 +231,16 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
         "This server can't keep anything between requests, so this can't be saved here.",
       );
     }
-    return d.full?.() ? fail(c, 'budget_exhausted', DATA_FULL) : null;
+    return (await d.full?.()) ? fail(c, 'budget_exhausted', DATA_FULL) : null;
   }
 
   // ---------------------------------------------------------------------------------------------
   // Conversations
 
-  const shapesCount = (exploration: string | null) =>
+  const shapesCount = async (exploration: string | null) =>
     exploration ? store.step.count(exploration) : 0;
 
-  function conversationOfRun(row: ConversationRow | RunRow) {
+  async function conversationOfRun(row: ConversationRow | RunRow) {
     return {
       id: row.id,
       run_id: row.id,
@@ -238,39 +250,45 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       settings: settingsOf(row.settings),
       answered_by: row.model,
       exploration: row.exploration,
-      shapes_count: shapesCount(row.exploration),
+      shapes_count: await shapesCount(row.exploration),
       hidden_at: row.hidden_at ?? null,
+      folder: row.folder ?? null,
       created_at: row.created_at,
       updated_at: row.updated_at,
     };
   }
 
   /** Where work from another door began: its first step, or else its first note. */
-  function doorOf(exploration: string): string | null {
-    return store.step.list(exploration)[0]?.door ?? store.note.list(exploration)[0]?.door ?? null;
+  async function doorOf(exploration: string): Promise<string | null> {
+    return (
+      (await store.step.list(exploration))[0]?.door ??
+      (await store.note.list(exploration))[0]?.door ??
+      null
+    );
   }
 
   /** Work from another door, as a conversation. `status: "elsewhere"`, and no run: none exists. */
-  function conversationOfExploration(row: ExplorationRow) {
+  async function conversationOfExploration(row: ExplorationRow) {
     return {
       id: row.id,
       run_id: null,
-      door: doorOf(row.id),
+      door: await doorOf(row.id),
       title: row.question.slice(0, TITLE_MAX),
       status: 'elsewhere',
       settings: settingsOf(null),
       answered_by: null,
       exploration: row.id,
-      shapes_count: shapesCount(row.id),
+      shapes_count: await shapesCount(row.id),
       hidden_at: null,
+      folder: row.folder ?? null,
       created_at: row.created_at,
       updated_at: row.updated_at,
     };
   }
 
   /** A turn's figures, from its `done`. `turns` there counts model calls, so it's named for what it is. */
-  function turnsOf(runId: string) {
-    return store.runEvent.ofType(runId, 'done').map((e) => {
+  async function turnsOf(runId: string) {
+    return (await store.runEvent.ofType(runId, 'done')).map((e) => {
       const data = JSON.parse(e.data) as {
         model: string;
         picked?: string;
@@ -297,9 +315,9 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     });
   }
 
-  const shape = (sha: string) => {
+  const shape = async (sha: string) => {
     try {
-      return shapeAt(tools, sha);
+      return await shapeAt(tools, sha);
     } catch {
       // a stored spec that no longer matches its hash isn't shown
       return null;
@@ -307,32 +325,32 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
   };
 
   /** Each flower of an exploration, in order, however many doors drew them. */
-  function shapesOf(exploration: string | null) {
+  async function shapesOf(exploration: string | null) {
     if (!exploration) return [];
-    return store.step.list(exploration).flatMap((s) => {
-      const at = s.spec_sha256 ? shape(s.spec_sha256) : null;
-      if (!at) return [];
-      return [
-        {
-          spec_sha256: at.spec_sha256,
-          short_url: at.short_url,
-          network: at.network,
-          target: at.target,
-          as_of: at.as_of,
-          door: s.door,
-          at: s.at,
-        },
-      ];
-    });
+    const out = [];
+    for (const s of await store.step.list(exploration)) {
+      const at = s.spec_sha256 ? await shape(s.spec_sha256) : null;
+      if (!at) continue;
+      out.push({
+        spec_sha256: at.spec_sha256,
+        short_url: at.short_url,
+        network: at.network,
+        target: at.target,
+        as_of: at.as_of,
+        door: s.door,
+        at: s.at,
+      });
+    }
+    return out;
   }
 
   /**
    * What other doors did on this exploration, oldest first. A site's own steps are left out: a run
    * shows those in its log. With no run, this is the whole story.
    */
-  function doorTurnsOf(exploration: string | null) {
+  async function doorTurnsOf(exploration: string | null) {
     if (!exploration) return [];
-    const steps = store.step.list(exploration).map((s) => ({
+    const steps = (await store.step.list(exploration)).map((s) => ({
       kind: 'step' as const,
       door: s.door,
       from: s.author ?? 'owner',
@@ -343,7 +361,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
         : null,
       text: s.note,
     }));
-    const notes = store.note.list(exploration).map((n) => ({
+    const notes = (await store.note.list(exploration)).map((n) => ({
       kind: 'note' as const,
       door: n.door,
       from: n.author,
@@ -358,10 +376,10 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
   }
 
   /** The owner's run by id, or by the exploration it's working on. Null for anything else. */
-  function ownRun(subject: string, id: string): RunRow | null {
-    const runId = EXPLORATION_ID.test(id) ? store.run.latestOfExploration(id) : id;
+  async function ownRun(subject: string, id: string): Promise<RunRow | null> {
+    const runId = EXPLORATION_ID.test(id) ? await store.run.latestOfExploration(id) : id;
     if (!runId || !RUN_ID.test(runId)) return null;
-    const row = store.run.get(runId);
+    const row = await store.run.get(runId);
     return row?.owner === subject ? row : null;
   }
 
@@ -369,68 +387,80 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
 
   app.get('/api/v1/catalogue', (c) => ok(c, catalogue(d.llm.kind)));
 
-  app.get('/api/v1/conversations', (c) => {
-    const subject = gate.subjectOf(c);
+  app.get('/api/v1/conversations', async (c) => {
+    const subject = await gate.subjectOf(c);
     if (!subject) return ok(c, { conversations: [] });
     const limit = limitOf(c);
     const hidden = c.req.query('hidden') === '1' || c.req.query('hidden') === 'true';
-    const runs = store.run.conversations(subject, limit, hidden).map(conversationOfRun);
+    const runs = await Promise.all(
+      (await store.run.conversations(subject, limit, hidden)).map(conversationOfRun),
+    );
     const doors = hidden
       ? []
-      : store.exploration.withoutRun(subject, limit).map(conversationOfExploration);
+      : await Promise.all(
+          (await store.exploration.withoutRun(subject, limit)).map(conversationOfExploration),
+        );
     const conversations = [...runs, ...doors]
       .sort((a, b) => (a.updated_at < b.updated_at ? 1 : a.updated_at > b.updated_at ? -1 : 0))
       .slice(0, limit);
     return ok(c, { conversations });
   });
 
-  app.get('/api/v1/conversations/:id', (c) => {
+  app.get('/api/v1/conversations/:id', async (c) => {
     const id = c.req.param('id');
-    const subject = gate.subjectOf(c);
+    const subject = await gate.subjectOf(c);
     if (!subject) return noConversation(c, id);
-    const run = ownRun(subject, id);
+    const run = await ownRun(subject, id);
     if (run) {
       return ok(c, {
         conversation: {
-          ...conversationOfRun(run),
-          turns: turnsOf(run.id),
-          shapes: shapesOf(run.exploration),
-          door_turns: doorTurnsOf(run.exploration),
+          ...(await conversationOfRun(run)),
+          turns: await turnsOf(run.id),
+          shapes: await shapesOf(run.exploration),
+          door_turns: await doorTurnsOf(run.exploration),
         },
       });
     }
-    const row = EXPLORATION_ID.test(id) ? store.exploration.get(id) : null;
+    const row = EXPLORATION_ID.test(id) ? await store.exploration.get(id) : null;
     if (row?.owner !== subject) return noConversation(c, id);
     return ok(c, {
       conversation: {
-        ...conversationOfExploration(row),
+        ...(await conversationOfExploration(row)),
         turns: [],
-        shapes: shapesOf(row.id),
-        door_turns: doorTurnsOf(row.id),
+        shapes: await shapesOf(row.id),
+        door_turns: await doorTurnsOf(row.id),
       },
     });
   });
 
   app.patch('/api/v1/conversations/:id', async (c) => {
     const id = c.req.param('id');
-    const subject = gate.subjectOf(c);
+    const subject = await gate.subjectOf(c);
     const body = await jsonBody(c);
     if (!body) return fail(c, 'bad_input', 'the body must be a JSON object');
-    const refused = cannotWrite(c);
+    const refused = await cannotWrite(c);
     if (refused) return refused;
     if (!subject) return noConversation(c, id);
-    if (EXPLORATION_ID.test(id) && !store.run.latestOfExploration(id)) {
-      // nothing is written on an exploration: another door's work has no run to hold this
-      return store.exploration.get(id)?.owner === subject
-        ? fail(
-            c,
-            'bad_input',
-            'This came from another door, so there is no conversation here to change yet.',
-            'Continue it here first: POST /api/v1/agent/chat with its id as exploration.',
-          )
-        : noConversation(c, id);
+    const folder = folderOf(body.folder);
+    if (folder === false) return fail(c, 'bad_input', FOLDER_FIELD);
+    if (folder && !(await ownFolder(subject, folder))) return noFolder(c, folder);
+    if (EXPLORATION_ID.test(id) && !(await store.run.latestOfExploration(id))) {
+      const row = await store.exploration.get(id);
+      if (row?.owner !== subject) return noConversation(c, id);
+      // another door's work has no run to hold a name or settings, but it can sit in a folder
+      const onlyFolder = ['title', 'settings', 'hidden'].every((k) => body[k] === undefined);
+      if (folder === undefined || !onlyFolder) {
+        return fail(
+          c,
+          'bad_input',
+          'This came from another door, so there is no conversation here to rename, set or hide yet. It can go in a folder.',
+          'Continue it here first: POST /api/v1/agent/chat with its id as exploration.',
+        );
+      }
+      await store.exploration.setFolder(row.id, folder);
+      return ok(c, { conversation: await conversationOfExploration({ ...row, folder }) });
     }
-    const run = ownRun(subject, id);
+    const run = await ownRun(subject, id);
     if (!run) return noConversation(c, id);
 
     let settings: Settings | null = null;
@@ -447,31 +477,192 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     if (body.hidden !== undefined && typeof body.hidden !== 'boolean') {
       return fail(c, 'bad_input', 'hidden must be true or false');
     }
-    store.tx(() => {
-      if (settings) store.run.setSettings(run.id, JSON.stringify(settings));
-      if (body.hidden !== undefined) store.run.setHidden(run.id, body.hidden ? iso() : null);
+    await store.tx(async () => {
+      if (settings) await store.run.setSettings(run.id, JSON.stringify(settings));
+      if (body.hidden !== undefined) await store.run.setHidden(run.id, body.hidden ? iso() : null);
+      if (folder !== undefined) {
+        await store.run.setFolder(run.id, folder);
+        // its exploration goes too, so a later run on it starts in the same place
+        if (run.exploration) await store.exploration.setFolder(run.exploration, folder);
+      }
       if (body.title !== undefined) {
         // null goes back to the first question
         const title = typeof body.title === 'string' ? body.title.trim() : null;
-        store.run.setTitle(run.id, title ?? firstQuestion(messagesOf(run.body)));
-        store.search.forget(subject, 'conversation', run.id);
+        await store.run.setTitle(run.id, title ?? firstQuestion(messagesOf(run.body)));
+        await store.search.forget(subject, 'conversation', run.id);
       }
     });
     return ok(c, {
-      conversation: conversationOfRun(store.run.get(run.id) as RunRow),
+      conversation: await conversationOfRun((await store.run.get(run.id)) as RunRow),
     });
+  });
+
+  // ---------------------------------------------------------------------------------------------
+  // Folders (004-workspace, W4): the person's own, as in any IDE. Nothing else is in them but
+  // conversations, and a folder is never shared.
+
+  const folderItem = (f: FolderRow) => ({
+    id: f.id,
+    name: f.name,
+    parent: f.parent,
+    position: f.position,
+    created_at: f.created_at,
+    updated_at: f.updated_at,
+  });
+
+  const noFolder = (c: Context, id: string) => fail(c, 'not_found', `no folder ${id}`);
+  /** A write's outcome, decided inside its transaction: the row, a folder that isn't theirs, or a no. */
+  type Placed = { row: FolderRow } | { gone: string } | { problem: string };
+
+  async function ownFolder(subject: string | null, id: string) {
+    if (!subject || !FOLDER_ID.test(id)) return null;
+    const row = await store.folder.get(id);
+    return row?.owner === subject ? row : null;
+  }
+
+  /** What's wrong with a folder's fields, or null. Undefined means leave it. */
+  function folderFields(body: Record<string, unknown>): string | null {
+    if (body.name !== undefined) {
+      if (typeof body.name !== 'string' || !body.name.trim() || body.name.length > LABEL_MAX) {
+        return `name must be text, up to ${LABEL_MAX} characters`;
+      }
+    }
+    if (folderOf(body.parent) === false) return "parent must be a folder's id, or null for the top";
+    if (body.position !== undefined) {
+      if (!Number.isInteger(body.position) || Math.abs(body.position as number) > POSITION_MAX) {
+        return `position must be a whole number, up to ${POSITION_MAX} either way`;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Whether `id` (null for a new folder) can sit in `parent`: not inside itself, and no deeper than
+   * FOLDER_DEPTH_MAX with everything under it. Read from the owner's whole tree, in the same
+   * transaction as the write, so two moves at once can't make a loop.
+   */
+  function placeProblem(tree: FolderRow[], id: string | null, parent: string | null) {
+    const byId = new Map(tree.map((f) => [f.id, f]));
+    let depth = 0;
+    for (let at = parent; at !== null; at = byId.get(at)?.parent ?? null) {
+      if (at === id) return "a folder can't go inside itself";
+      if (++depth > FOLDER_DEPTH_MAX) break;
+    }
+    const height = (of: string | null): number =>
+      of === null
+        ? 1
+        : 1 + Math.max(0, ...tree.filter((f) => f.parent === of).map((f) => height(f.id)));
+    return depth + height(id) > FOLDER_DEPTH_MAX
+      ? `folders go ${FOLDER_DEPTH_MAX} deep at most`
+      : null;
+  }
+
+  app.get('/api/v1/folders', async (c) => {
+    const subject = await gate.subjectOf(c);
+    const rows = subject ? await store.folder.list(subject) : [];
+    return ok(c, { folders: rows.map(folderItem) });
+  });
+
+  app.post('/api/v1/folders', async (c) => {
+    const body = await jsonBody(c);
+    if (!body) return fail(c, 'bad_input', 'the body must be a JSON object');
+    if (body.name === undefined) return fail(c, 'bad_input', 'a folder needs a name');
+    const wrong = folderFields(body);
+    if (wrong) return fail(c, 'bad_input', wrong);
+    const parent = (folderOf(body.parent) as string | null | undefined) ?? null;
+    const known = await gate.subjectOf(c);
+    if (parent && !(await ownFolder(known, parent))) return noFolder(c, parent);
+    const refused = await cannotWrite(c);
+    if (refused) return refused;
+    const subject = known ?? (await gate.openAnonymous(c));
+    const { credential } = await gate.callerOf(c);
+    const at = iso();
+    const out = await store.tx(async (): Promise<Placed> => {
+      const tree = await store.folder.list(subject);
+      if (tree.length >= FOLDERS_MAX) {
+        return { problem: `You have ${FOLDERS_MAX} folders, the most this holds.` };
+      }
+      if (parent && !tree.some((f) => f.id === parent)) return { gone: parent };
+      const problem = placeProblem(tree, null, parent);
+      if (problem) return { problem };
+      const row: FolderRow = {
+        id: idOf('fld'),
+        owner: subject,
+        name: (body.name as string).trim(),
+        parent,
+        position:
+          (body.position as number | undefined) ??
+          (await store.folder.nextPosition(subject, parent)),
+        credential,
+        created_at: at,
+        updated_at: at,
+      };
+      await store.folder.insert(row);
+      return { row };
+    });
+    if ('gone' in out) return noFolder(c, out.gone);
+    if ('problem' in out) return fail(c, 'bad_input', out.problem);
+    return ok(c, { folder: folderItem(out.row) }, 201);
+  });
+
+  app.patch('/api/v1/folders/:id', async (c) => {
+    const id = c.req.param('id');
+    const body = await jsonBody(c);
+    if (!body) return fail(c, 'bad_input', 'the body must be a JSON object');
+    const wrong = folderFields(body);
+    if (wrong) return fail(c, 'bad_input', wrong);
+    const refused = await cannotWrite(c);
+    if (refused) return refused;
+    const subject = await gate.subjectOf(c);
+    if (!(await ownFolder(subject, id)) || !subject) return noFolder(c, id);
+    const asked = folderOf(body.parent) as string | null | undefined;
+    const out = await store.tx(async (): Promise<Placed> => {
+      const tree = await store.folder.list(subject);
+      const known = tree.find((f) => f.id === id);
+      if (!known) return { gone: id };
+      const parent = asked === undefined ? known.parent : asked;
+      const moved = parent !== known.parent;
+      if (moved) {
+        if (parent && !tree.some((f) => f.id === parent)) return { gone: parent };
+        const problem = placeProblem(tree, id, parent);
+        if (problem) return { problem };
+      }
+      const row = {
+        name: typeof body.name === 'string' ? body.name.trim() : known.name,
+        parent,
+        position:
+          (body.position as number | undefined) ??
+          (moved ? await store.folder.nextPosition(subject, parent) : known.position),
+        updated_at: iso(),
+      };
+      await store.folder.update(id, row);
+      return { row: { ...known, ...row } };
+    });
+    if ('gone' in out) return noFolder(c, out.gone);
+    if ('problem' in out) return fail(c, 'bad_input', out.problem);
+    return ok(c, { folder: folderItem(out.row) });
+  });
+
+  // Nothing in it is deleted: its folders and conversations move up to where it was.
+  app.delete('/api/v1/folders/:id', async (c) => {
+    const id = c.req.param('id');
+    const subject = await gate.subjectOf(c);
+    if (!subject || !FOLDER_ID.test(id) || !(await store.folder.delete(id, subject))) {
+      return noFolder(c, id);
+    }
+    return ok(c, { ok: true });
   });
 
   // ---------------------------------------------------------------------------------------------
   // Following
 
-  const followItem = (f: FollowRow) => ({
+  const followItem = async (f: FollowRow) => ({
     id: f.id,
     kind: f.kind,
     ref: f.ref,
     label: f.label,
     spec_sha256: f.spec_sha256,
-    short_url: f.spec_sha256 ? (shape(f.spec_sha256)?.short_url ?? null) : null,
+    short_url: f.spec_sha256 ? ((await shape(f.spec_sha256))?.short_url ?? null) : null,
     created_at: f.created_at,
     updated_at: f.updated_at,
   });
@@ -493,9 +684,9 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     return null;
   }
 
-  const ownFollow = (subject: string | null, id: string) => {
+  const ownFollow = async (subject: string | null, id: string) => {
     if (!subject || !FOLLOW_ID.test(id)) return null;
-    const row = store.follow.get(id);
+    const row = await store.follow.get(id);
     return row?.owner === subject ? row : null;
   };
 
@@ -503,20 +694,20 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
    * A change, and what search held for it goes. A later search can't be left to notice by time: a change
    * in the millisecond it last looked would read as no change.
    */
-  function saveFollow(
+  async function saveFollow(
     known: FollowRow,
     row: Pick<FollowRow, 'label' | 'spec_sha256' | 'updated_at'>,
   ) {
-    store.tx(() => {
-      store.follow.update(known.id, row);
-      store.search.forget(known.owner, 'follow', known.id);
+    await store.tx(async () => {
+      await store.follow.update(known.id, row);
+      await store.search.forget(known.owner, 'follow', known.id);
     });
   }
 
-  app.get('/api/v1/follows', (c) => {
-    const subject = gate.subjectOf(c);
-    const rows = subject ? store.follow.list(subject, limitOf(c, LIST_MAX)) : [];
-    return ok(c, { follows: rows.map(followItem) });
+  app.get('/api/v1/follows', async (c) => {
+    const subject = await gate.subjectOf(c);
+    const rows = subject ? await store.follow.list(subject, limitOf(c, LIST_MAX)) : [];
+    return ok(c, { follows: await Promise.all(rows.map(followItem)) });
   });
 
   app.post('/api/v1/follows', async (c) => {
@@ -532,14 +723,15 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     }
     const wrong = followFields(body);
     if (wrong) return fail(c, 'bad_input', wrong);
-    const refused = cannotWrite(c);
+    const refused = await cannotWrite(c);
     if (refused) return refused;
-    const subject = gate.subjectOf(c) ?? gate.openAnonymous(c);
+    const subject = (await gate.subjectOf(c)) ?? (await gate.openAnonymous(c));
+    const { credential } = await gate.callerOf(c);
     const ref = body.ref as string;
     const at = iso();
     const label = (body.label as string | null | undefined) ?? null;
     const sha = (body.spec_sha256 as string | null | undefined) ?? null;
-    const known = store.follow.byRef(subject, ref);
+    const known = await store.follow.byRef(subject, ref);
     if (known) {
       // following again keeps the row, and takes anything new it was told
       const row = {
@@ -547,10 +739,10 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
         spec_sha256: sha ?? known.spec_sha256,
         updated_at: at,
       };
-      saveFollow(known, row);
-      return ok(c, { follow: followItem({ ...known, ...row }) });
+      await saveFollow(known, row);
+      return ok(c, { follow: await followItem({ ...known, ...row }) });
     }
-    if (store.follow.count(subject) >= FOLLOWS_MAX) {
+    if ((await store.follow.count(subject)) >= FOLLOWS_MAX) {
       return fail(c, 'bad_input', `You are following ${FOLLOWS_MAX} things, the most this holds.`);
     }
     const row: FollowRow = {
@@ -560,20 +752,21 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       ref,
       label,
       spec_sha256: sha,
+      credential,
       created_at: at,
       updated_at: at,
     };
-    store.follow.insert(row);
-    return ok(c, { follow: followItem(row) }, 201);
+    await store.follow.insert(row);
+    return ok(c, { follow: await followItem(row) }, 201);
   });
 
-  app.get('/api/v1/follows/:id', (c) => {
+  app.get('/api/v1/follows/:id', async (c) => {
     const id = c.req.param('id');
-    const row = ownFollow(gate.subjectOf(c), id);
+    const row = await ownFollow(await gate.subjectOf(c), id);
     if (!row) return noFollow(c, id);
     return ok(c, {
-      follow: followItem(row),
-      current: row.spec_sha256 ? shape(row.spec_sha256) : null,
+      follow: await followItem(row),
+      current: row.spec_sha256 ? await shape(row.spec_sha256) : null,
     });
   });
 
@@ -583,9 +776,9 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     if (!body) return fail(c, 'bad_input', 'the body must be a JSON object');
     const wrong = followFields(body);
     if (wrong) return fail(c, 'bad_input', wrong);
-    const refused = cannotWrite(c);
+    const refused = await cannotWrite(c);
     if (refused) return refused;
-    const known = ownFollow(gate.subjectOf(c), id);
+    const known = await ownFollow(await gate.subjectOf(c), id);
     if (!known) return noFollow(c, id);
     const row = {
       label: body.label === undefined ? known.label : (body.label as string | null),
@@ -593,18 +786,18 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
         body.spec_sha256 === undefined ? known.spec_sha256 : (body.spec_sha256 as string | null),
       updated_at: iso(),
     };
-    saveFollow(known, row);
-    return ok(c, { follow: followItem({ ...known, ...row }) });
+    await saveFollow(known, row);
+    return ok(c, { follow: await followItem({ ...known, ...row }) });
   });
 
   // Its notes stay: they're about the address, which is still there.
-  app.delete('/api/v1/follows/:id', (c) => {
+  app.delete('/api/v1/follows/:id', async (c) => {
     const id = c.req.param('id');
-    const known = ownFollow(gate.subjectOf(c), id);
+    const known = await ownFollow(await gate.subjectOf(c), id);
     if (!known) return noFollow(c, id);
-    store.tx(() => {
-      store.follow.delete(known.id);
-      store.search.forget(known.owner, 'follow', known.id);
+    await store.tx(async () => {
+      await store.follow.delete(known.id);
+      await store.search.forget(known.owner, 'follow', known.id);
     });
     return ok(c, { ok: true });
   });
@@ -625,14 +818,19 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
   const noNote = (c: Context, id: string) => fail(c, 'not_found', `no note ${id}`);
 
   /** What a note can be about. A conversation has to be theirs; anything else is public or a pointer. */
-  function aboutProblem(subject: string | null, about: unknown): string | null | 'not_found' {
+  async function aboutProblem(
+    subject: string | null,
+    about: unknown,
+  ): Promise<string | null | 'not_found'> {
     if (typeof about !== 'string' || !about || about.length > REF_MAX) {
       return 'about must name what the note is about';
     }
     const conversation = /^conversation:(.+)$/.exec(about)?.[1];
     if (conversation) {
-      if (!subject || !ownRun(subject, conversation)) {
-        const row = EXPLORATION_ID.test(conversation) ? store.exploration.get(conversation) : null;
+      if (!subject || !(await ownRun(subject, conversation))) {
+        const row = EXPLORATION_ID.test(conversation)
+          ? await store.exploration.get(conversation)
+          : null;
         if (!subject || row?.owner !== subject) return 'not_found';
       }
       return null;
@@ -647,9 +845,9 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       : 'about must be conversation:<id>, spec:<sha256>, network:<target_key>, or an account or group ref';
   }
 
-  const ownNote = (subject: string | null, id: string) => {
+  const ownNote = async (subject: string | null, id: string) => {
     if (!subject || !NOTE_ID.test(id)) return null;
-    const row = store.workspaceNote.get(id);
+    const row = await store.workspaceNote.get(id);
     return row?.owner === subject ? row : null;
   };
 
@@ -658,10 +856,10 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       ? `text must be words, up to ${NOTE_TEXT_MAX} characters`
       : null;
 
-  app.get('/api/v1/notes', (c) => {
-    const subject = gate.subjectOf(c);
+  app.get('/api/v1/notes', async (c) => {
+    const subject = await gate.subjectOf(c);
     const rows = subject
-      ? store.workspaceNote.list(subject, c.req.query('about') ?? null, limitOf(c))
+      ? await store.workspaceNote.list(subject, c.req.query('about') ?? null, limitOf(c))
       : [];
     return ok(c, { notes: rows.map(noteItem) });
   });
@@ -673,13 +871,14 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     if (wrongText) return fail(c, 'bad_input', wrongText);
     const parsed = evidenceOf(body.evidence);
     if ('problem' in parsed) return fail(c, 'bad_input', parsed.problem);
-    const problem = aboutProblem(gate.subjectOf(c), body.about);
+    const problem = await aboutProblem(await gate.subjectOf(c), body.about);
     if (problem === 'not_found') return fail(c, 'not_found', `no ${String(body.about)}`);
     if (problem) return fail(c, 'bad_input', problem);
-    const refused = cannotWrite(c);
+    const refused = await cannotWrite(c);
     if (refused) return refused;
-    const subject = gate.subjectOf(c) ?? gate.openAnonymous(c);
-    if (store.workspaceNote.count(subject) >= NOTES_MAX) {
+    const subject = (await gate.subjectOf(c)) ?? (await gate.openAnonymous(c));
+    const { credential } = await gate.callerOf(c);
+    if ((await store.workspaceNote.count(subject)) >= NOTES_MAX) {
       return fail(c, 'bad_input', `You have ${NOTES_MAX} notes, the most this holds.`);
     }
     const at = iso();
@@ -690,10 +889,11 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       about: body.about as string,
       text: body.text as string,
       evidence: JSON.stringify(parsed.evidence),
+      credential,
       created_at: at,
       updated_at: at,
     };
-    store.workspaceNote.insert(row);
+    await store.workspaceNote.insert(row);
     return ok(c, { note: noteItem(row) }, 201);
   });
 
@@ -707,30 +907,30 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     }
     const parsed = body.evidence === undefined ? null : evidenceOf(body.evidence);
     if (parsed && 'problem' in parsed) return fail(c, 'bad_input', parsed.problem);
-    const refused = cannotWrite(c);
+    const refused = await cannotWrite(c);
     if (refused) return refused;
-    const known = ownNote(gate.subjectOf(c), id);
+    const known = await ownNote(await gate.subjectOf(c), id);
     if (!known) return noNote(c, id);
     const row = {
       text: (body.text as string | undefined) ?? known.text,
       evidence: parsed ? JSON.stringify(parsed.evidence) : known.evidence,
       updated_at: iso(),
     };
-    store.tx(() => {
-      store.workspaceNote.update(known.id, row);
+    await store.tx(async () => {
+      await store.workspaceNote.update(known.id, row);
       // as for a follow: a change in the millisecond search last looked would read as no change
-      store.search.forget(known.owner, 'note', known.id);
+      await store.search.forget(known.owner, 'note', known.id);
     });
     return ok(c, { note: noteItem({ ...known, ...row }) });
   });
 
-  app.delete('/api/v1/notes/:id', (c) => {
+  app.delete('/api/v1/notes/:id', async (c) => {
     const id = c.req.param('id');
-    const known = ownNote(gate.subjectOf(c), id);
+    const known = await ownNote(await gate.subjectOf(c), id);
     if (!known) return noNote(c, id);
-    store.tx(() => {
-      store.workspaceNote.delete(known.id);
-      store.search.forget(known.owner, 'note', known.id);
+    await store.tx(async () => {
+      await store.workspaceNote.delete(known.id);
+      await store.search.forget(known.owner, 'note', known.id);
     });
     return ok(c, { ok: true });
   });
@@ -739,11 +939,11 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
   // Search
 
   /** Indexes whatever changed for this owner. No write path has to know, and a deleted index rebuilds. */
-  function catchUp(owner: string) {
-    store.tx(() => {
-      for (const run of store.search.staleRuns(owner)) {
+  async function catchUp(owner: string) {
+    await store.tx(async () => {
+      for (const run of await store.search.staleRuns(owner)) {
         const messages = messagesOf(run.body);
-        store.search.put(
+        await store.search.put(
           {
             owner,
             kind: 'conversation',
@@ -758,10 +958,10 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
             .slice(0, INDEXED_CHARS_MAX),
         );
       }
-      for (const e of store.search.staleExplorations(owner)) {
+      for (const e of await store.search.staleExplorations(owner)) {
         const about = `exploration:${e.id}`;
-        store.search.forgetAbout(owner, about);
-        store.search.put(
+        await store.search.forgetAbout(owner, about);
+        await store.search.put(
           {
             owner,
             kind: 'exploration',
@@ -772,9 +972,9 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
           },
           null,
         );
-        const noted = store.note.list(e.id);
-        if (!store.run.latestOfExploration(e.id)) {
-          store.search.put(
+        const noted = await store.note.list(e.id);
+        if (!(await store.run.latestOfExploration(e.id))) {
+          await store.search.put(
             {
               owner,
               kind: 'conversation',
@@ -786,11 +986,11 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
             e.question,
           );
         }
-        for (const s of store.step.list(e.id)) {
-          const at = s.spec_sha256 ? shape(s.spec_sha256) : null;
+        for (const s of await store.step.list(e.id)) {
+          const at = s.spec_sha256 ? await shape(s.spec_sha256) : null;
           if (!at) continue;
           const network = at.network as { id?: string; title?: string } | null;
-          store.search.put(
+          await store.search.put(
             {
               owner,
               kind: 'shape',
@@ -803,7 +1003,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
           );
         }
         for (const n of noted) {
-          store.search.put(
+          await store.search.put(
             {
               owner,
               kind: 'note',
@@ -816,8 +1016,8 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
           );
         }
       }
-      for (const f of store.search.staleFollows(owner)) {
-        store.search.put(
+      for (const f of await store.search.staleFollows(owner)) {
+        await store.search.put(
           {
             owner,
             kind: 'follow',
@@ -829,8 +1029,8 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
           [f.label, f.ref].filter(Boolean).join('\n'),
         );
       }
-      for (const n of store.search.staleNotes(owner)) {
-        store.search.put(
+      for (const n of await store.search.staleNotes(owner)) {
+        await store.search.put(
           {
             owner,
             kind: 'note',
@@ -846,7 +1046,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     });
   }
 
-  app.get('/api/v1/search', (c) => {
+  app.get('/api/v1/search', async (c) => {
     const q = c.req.query('q') ?? '';
     if (q.length > QUERY_MAX) {
       return fail(c, 'bad_input', `q is too long (${QUERY_MAX} characters at most)`);
@@ -856,15 +1056,15 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     if (!kinds.every((k) => (SEARCH_KINDS as readonly string[]).includes(k))) {
       return fail(c, 'bad_input', `kinds must be some of ${SEARCH_KINDS.join(', ')}`);
     }
-    const subject = gate.subjectOf(c);
-    const match = searchMatch(q);
-    if (!subject || !match) return ok(c, { results: [] });
+    const subject = await gate.subjectOf(c);
+    const words = searchWords(q);
+    if (!subject || !words) return ok(c, { results: [] });
     const wait = searches(clientAddress(c, local));
     if (wait !== null) {
       return fail(c, 'rate_limited', 'Too many searches from one address.', undefined, wait);
     }
-    catchUp(subject);
-    const results = store.search.query(subject, match, kinds, limitOf(c, 30)).map((h) => ({
+    await catchUp(subject);
+    const results = (await store.search.query(subject, words, kinds, limitOf(c, 30))).map((h) => ({
       kind: h.kind,
       id: h.ref,
       title: h.title,

@@ -468,7 +468,7 @@ async function wholePath() {
   console.log('\n# what is on disk');
   const db = openStore(join(stateDir, 'private.db'));
   const today = new Date().toISOString().slice(0, 10);
-  const wallets = db.walletBinding.ofPerson(person.person_id);
+  const wallets = await db.walletBinding.ofPerson(person.person_id);
   check('the binding keeps its network', wallets[0]?.network === 'testnet', wallets[0]?.network);
   check('sealed, with a keyed hash', !JSON.stringify(wallets).includes(account), {
     hash: `${wallets[0]?.caip10_hash.slice(0, 12)}…`,
@@ -663,8 +663,8 @@ async function wholePath() {
   );
   check(
     'and on the day’s ledger',
-    Math.abs(db.ledger.get(today).usd - stub.completions * 0.0042) < 1e-9,
-    db.ledger.get(today),
+    Math.abs((await db.ledger.get(today)).usd - stub.completions * 0.0042) < 1e-9,
+    await db.ledger.get(today),
   );
   const stopping = events(await (await a.chat('keep going')).text());
   const stop = stopping.find((e) => e.event === 'error')?.data;
@@ -690,9 +690,9 @@ async function wholePath() {
   );
   console.log(
     '    invite row:',
-    JSON.stringify({ ...db.invite.get(first.id), token_hash: '<hash>' }),
+    JSON.stringify({ ...(await db.invite.get(first.id)), token_hash: '<hash>' }),
   );
-  console.log('    credit:', JSON.stringify(db.credit.get(`invite:${first.id}`)));
+  console.log('    credit:', JSON.stringify(await db.credit.get(`invite:${first.id}`)));
 
   console.log('\n# a revoked invite');
   const second = mint(['0.5']);
@@ -729,10 +729,10 @@ async function wholePath() {
   stub.refuse = null;
   check(
     'nothing is charged for a refused call',
-    db.invite.get(third.id)?.spent_usd === 0,
-    db.invite.get(third.id)?.spent_usd,
+    (await db.invite.get(third.id))?.spent_usd === 0,
+    (await db.invite.get(third.id))?.spent_usd,
   );
-  db.close();
+  await db.close();
 
   console.log('\n# a restart, on the same disk and key');
   await new Promise<void>((done) => server.close(() => done()));

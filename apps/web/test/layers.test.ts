@@ -103,7 +103,9 @@ const all =
  * The exceptions, each named. Everything else in lib/ is held to every rule below, the files that
  * only ever run on the server included: none of them needs React, Next or the DOM.
  */
-const MAY_CALL_THE_NETWORK = new Set(['lib/agent-client.ts']);
+// The browser's adapter, and the server-built pages' one (lib/api.ts), which calls the server over HTTP
+// since the site and the server are apart (002-system research, C6).
+const MAY_CALL_THE_NETWORK = new Set(['lib/agent-client.ts', 'lib/api.ts']);
 
 /** The pure projection of the foundation doc's table: same input, same output, and nothing else. */
 const PROJECTION = [
@@ -149,7 +151,7 @@ const RULES: Rule[] = [
   {
     name: 'lib/ calls no network, except the adapter',
     files: () => sourcesIn('lib').filter((f) => !MAY_CALL_THE_NETWORK.has(f)),
-    check: using(NETWORK, 'only lib/agent-client.ts talks to the API'),
+    check: using(NETWORK, 'only lib/agent-client.ts and lib/api.ts talk to the API'),
     bad: "export const go = () => fetch('/api/v1/health');",
     good: "// fetch() is the adapter's job\nconst hono = app.fetch(req); const s = 'fetch(';",
   },

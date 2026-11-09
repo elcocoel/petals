@@ -305,7 +305,7 @@ describe('Stop', () => {
     const id = await startRun(app);
     (await m.call(0)).give(answer({ tool: 'list_networks' }));
     const second = await m.call(1);
-    expect(store.ledger.get(DAY).reserved_usd).toBeGreaterThan(0);
+    expect((await store.ledger.get(DAY)).reserved_usd).toBeGreaterThan(0);
 
     const said = await stop(app, id);
     expect(said).toMatchObject({
@@ -324,8 +324,8 @@ describe('Stop', () => {
     const done = run.events.at(-1);
     const hold = DEFAULT_BUDGET.usdPerChat;
     expect(done?.event === 'done' && done.data.cost_usd).toBeCloseTo(COST + hold, 9);
-    expect(store.ledger.get(DAY).reserved_usd).toBe(0);
-    expect(store.ledger.get(DAY).usd).toBeCloseTo(COST + hold, 9);
+    expect((await store.ledger.get(DAY)).reserved_usd).toBe(0);
+    expect((await store.ledger.get(DAY)).usd).toBeCloseTo(COST + hold, 9);
     expect(m.calls).toHaveLength(2);
   });
 
@@ -376,10 +376,10 @@ describe('Stop', () => {
     const id = await startRun(app);
     const call = await m.call(0);
     expect((await stop(app, id)).body).toMatchObject({ status: 'stopped', stopped: true });
-    expect(store.ledger.get(DAY).reserved_usd).toBeGreaterThan(0);
+    expect((await store.ledger.get(DAY)).reserved_usd).toBeGreaterThan(0);
     call.give(answer());
-    await until(() => store.ledger.get(DAY).reserved_usd === 0, 'the hold settles');
-    expect(store.ledger.get(DAY).usd).toBeCloseTo(DEFAULT_BUDGET.usdPerChat, 9);
+    await until(async () => (await store.ledger.get(DAY)).reserved_usd === 0, 'the hold settles');
+    expect((await store.ledger.get(DAY)).usd).toBeCloseTo(DEFAULT_BUDGET.usdPerChat, 9);
   });
 
   test('after the end it says it had already finished; a second Stop says the same', async () => {
@@ -444,7 +444,7 @@ describe('Stop', () => {
 
 describe('the boot scan', () => {
   const REPO = fileURLToPath(new URL('../../../', import.meta.url));
-  afterEach(() => vi.unstubAllEnvs());
+  afterEach(async () => vi.unstubAllEnvs());
 
   /** These tests are about the run, not who may ask: T196 has its own. */
   const OPEN = { PETAL_AGENT_ACCESS: 'open', NODE_ENV: 'test' };
@@ -475,7 +475,7 @@ describe('the boot scan', () => {
     (await m.call(0)).give(answer({ content: 'looking', tool: 'list_networks' }));
     const inFlight = await m.call(1);
     const db = openStore(join(stateDir, 'private.db'));
-    expect(db.ledger.get(DAY).reserved_usd).toBeGreaterThan(0);
+    expect((await db.ledger.get(DAY)).reserved_usd).toBeGreaterThan(0);
 
     // the process is gone: its app never hears another thing
     const again = heldModel();
@@ -491,8 +491,8 @@ describe('the boot scan', () => {
     });
     expect(names(parseSse(await (await watch(app, id)).text())).at(-1)).toBe('error');
     // what the call in flight cost can't be known, so its hold counts as spent
-    expect(db.ledger.get(DAY)).toMatchObject({ reserved_usd: 0 });
-    expect(db.ledger.get(DAY).usd).toBeCloseTo(COST + DEFAULT_BUDGET.usdPerChat, 9);
+    expect(await db.ledger.get(DAY)).toMatchObject({ reserved_usd: 0 });
+    expect((await db.ledger.get(DAY)).usd).toBeCloseTo(COST + DEFAULT_BUDGET.usdPerChat, 9);
     expect(again.calls).toHaveLength(0); // nothing was resumed
 
     const before = run.events.length;
@@ -517,22 +517,22 @@ describe('the boot scan', () => {
     const store = openStore(join(tmpRoot(), 'private.db'));
     const runs = sqliteRunStore(store);
     const id = await runs.create(QUESTION as ChatInput);
-    store.ledger.reserve(DAY, 0.05, 3);
-    store.meta.set('runs_pid', String(live.pid));
+    await store.ledger.reserve(DAY, 0.05, 3);
+    await store.meta.set('runs_pid', String(live.pid));
     const log = vi.fn();
-    expect(interruptRuns(store, log)).toEqual({ interrupted: 0, spentUsd: 0 });
+    expect(await interruptRuns(store, log)).toEqual({ interrupted: 0, spentUsd: 0 });
     expect(log.mock.calls.flat().join()).toContain(String(live.pid));
     expect((await runs.get(id))?.status).toBe('running');
-    expect(store.ledger.get(DAY).reserved_usd).toBe(0.05);
+    expect((await store.ledger.get(DAY)).reserved_usd).toBe(0.05);
 
     // once that process is gone, the next boot does scan
     await new Promise((r) => {
       live.once('exit', r);
       live.kill('SIGKILL');
     });
-    expect(interruptRuns(store, log)).toEqual({ interrupted: 1, spentUsd: 0.05 });
+    expect(await interruptRuns(store, log)).toEqual({ interrupted: 1, spentUsd: 0.05 });
     expect((await runs.get(id))?.status).toBe('interrupted');
-    expect(store.ledger.get(DAY)).toMatchObject({ usd: 0.05, reserved_usd: 0 });
+    expect(await store.ledger.get(DAY)).toMatchObject({ usd: 0.05, reserved_usd: 0 });
   });
 
   test('PETAL_RUN_MAX_S sets the limit; a run past it ends, and says so', async () => {

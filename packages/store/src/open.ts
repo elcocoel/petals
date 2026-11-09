@@ -1,156 +1,136 @@
-// openStore (T189): private data in SQLite through node:sqlite. One connection, WAL, a numbered
-// migration list, prepared statements. stateStore is the process's one store for a state folder:
-// <stateDir>/private.db, or memory, with one log line, when that folder can't be written.
-//
-// node:sqlite is synchronous, so a function here that doesn't await is atomic within the process;
-// tx() (BEGIN IMMEDIATE) makes it atomic against other processes on the same file too.
+// The store: the only way into Petals' private data (specs/003-target/proposal-database.md). The rest of
+// the code asks it for things by name and gets plain values back, later; it never sees SQL, a file or a
+// connection. Where the data is comes from one setting, the database address:
+//   postgres://user@host:5432/db   a Postgres server; the password from PETAL_DATABASE_PASSWORD_FILE
+//   pglite:                         Postgres inside this process, in memory: tests only
+//   a file path, or :memory:        SQLite, the starting point a migration copies from
+// stateStore is the process's one store for a state folder, or for the address it's given.
 import { mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type { StatementSync } from 'node:sqlite';
+import type { Db, Engine } from './db.ts';
 import { MIGRATIONS } from './migrations.ts';
+import { type PgConnection, pgliteConnection, postgresConnection, redacted } from './postgres.ts';
+import { migrateSqlite, sqliteConnection } from './sqlite.ts';
 import { type Tables, tables } from './tables.ts';
 
-export type Param = string | number | null;
+export type { Db, Engine, Param } from './db.ts';
 
-export interface Db {
-  /** Returns how many rows changed. */
-  run(sql: string, ...params: Param[]): number;
-  get<T>(sql: string, ...params: Param[]): T | null;
-  all<T>(sql: string, ...params: Param[]): T[];
-  /** All of `fn`, or none of it. `fn` must be synchronous. Nested calls join the outer one. */
-  tx<T>(fn: () => T): T;
+/** What the data takes up, for the data limit. */
+export interface StoreSize {
+  /** bytes the database holds */
+  stored: number;
+  /** of those, bytes a SQLite file will reuse: deleted rows don't shrink it */
+  reusable: number;
+  /** true when the database's files sit inside the state folder, so a folder measure already has them */
+  inStateDir: boolean;
 }
 
 export interface Store extends Tables {
+  readonly engine: Engine;
+  /** Where the data is: a file, :memory:, or a Postgres address with nothing secret in it. */
   readonly path: string;
-  /** False for ':memory:': it ends with the process, so it can't hold anything that must last. */
+  /** False for SQLite's :memory:: it ends with the process, so it can't hold anything that must last. */
   readonly durable: boolean;
-  tx<T>(fn: () => T): T;
-  /** Bytes this file holds that SQLite will reuse: deleted rows don't shrink a database file. */
-  freeBytes(): number;
-  close(): void;
+  /** Connected and migrated. Calls wait for it themselves; await it to find out early. */
+  readonly ready: Promise<void>;
+  /** All of `fn`, or none of it, one transaction at a time; calls inside it join it (db.ts). */
+  tx<T>(fn: () => Promise<T>): Promise<T>;
+  size(): Promise<StoreSize>;
+  close(): Promise<void>;
 }
 
-/** How long a write waits on another process's lock before it fails. */
-const BUSY_MS = 5000;
+const isPostgres = (location: string) => /^postgres(ql)?:\/\//.test(location);
+const isPglite = (location: string) => location === 'pglite:' || location === 'pglite:memory';
 
-function connect(path: string, onClose: () => void, migrations: readonly string[]): Store {
-  // Loaded here, not imported: node:sqlite prints an ExperimentalWarning when first loaded, and a
-  // command that never opens a store shouldn't print it.
-  const { DatabaseSync } = process.getBuiltinModule('node:sqlite');
-  const conn = new DatabaseSync(path, { timeout: BUSY_MS });
-  const cache = new Map<string, StatementSync>();
-  const prepared = (sql: string) => {
-    let s = cache.get(sql);
-    if (!s) {
-      s = conn.prepare(sql);
-      cache.set(sql, s);
-    }
-    return s;
-  };
-
-  let inTx = false;
-  const db: Db = {
-    run: (sql, ...params) => Number(prepared(sql).run(...params).changes),
-    get: <T>(sql: string, ...params: Param[]) => {
-      const row = prepared(sql).get(...params);
-      return row ? ({ ...row } as T) : null;
+function fromPg(c: PgConnection, path: string, onClose: () => void): Store {
+  return {
+    ...tables(c.db),
+    engine: 'postgres',
+    path,
+    durable: true,
+    ready: c.ready,
+    tx: (fn) => c.db.tx(fn),
+    async size() {
+      return { stored: await c.bytes(), reusable: 0, inStateDir: false };
     },
-    all: <T>(sql: string, ...params: Param[]) =>
-      prepared(sql)
-        .all(...params)
-        .map((row) => ({ ...row }) as T),
-    tx<T>(fn: () => T): T {
-      if (inTx) return fn();
-      conn.exec('BEGIN IMMEDIATE');
-      inTx = true;
-      try {
-        const out = fn();
-        conn.exec('COMMIT');
-        return out;
-      } catch (e) {
-        // SQLite has already rolled back after some failures, a full disk among them
-        if (conn.isTransaction) conn.exec('ROLLBACK');
-        throw e;
-      } finally {
-        inTx = false;
-      }
+    async close() {
+      onClose();
+      await c.close();
     },
   };
+}
 
+function connect(location: string, onClose: () => void, migrations: readonly string[]): Store {
+  if (isPostgres(location))
+    return fromPg(postgresConnection(location), redacted(location), onClose);
+  if (isPglite(location)) return fromPg(pgliteConnection(), 'pglite:', onClose);
+  const c = sqliteConnection(location);
   try {
-    conn.exec('PRAGMA journal_mode = WAL');
-    // Also the proof that the file can be written: BEGIN IMMEDIATE fails on a read-only database.
-    db.tx(() => {
-      conn.exec(`CREATE TABLE IF NOT EXISTS schema_migration (
-        version INTEGER PRIMARY KEY,
-        applied_at TEXT NOT NULL
-      )`);
-      const row = db.get<{ v: number }>(
-        'SELECT COALESCE(MAX(version), 0) AS v FROM schema_migration',
-      );
-      for (let v = (row?.v ?? 0) + 1; v <= migrations.length; v++) {
-        conn.exec(migrations[v - 1] as string);
-        db.run(
-          'INSERT INTO schema_migration (version, applied_at) VALUES (?, ?)',
-          v,
-          new Date().toISOString(),
-        );
-      }
-    });
+    if (!c.sharedBusy()) migrateSqlite(c.conn, migrations);
   } catch (e) {
-    conn.close();
+    void c.close();
     throw e;
   }
-
+  const db: Db = c.db;
   return {
     ...tables(db),
-    path,
-    durable: path !== ':memory:',
-    tx: db.tx,
-    freeBytes() {
-      const free = db.get<{ freelist_count: number }>('PRAGMA freelist_count');
-      const page = db.get<{ page_size: number }>('PRAGMA page_size');
-      return (free?.freelist_count ?? 0) * (page?.page_size ?? 0);
+    engine: 'sqlite',
+    path: location,
+    durable: location !== ':memory:',
+    ready: Promise.resolve(),
+    tx: (fn) => db.tx(fn),
+    async size() {
+      const page = (await db.get<{ page_size: number }>('PRAGMA page_size'))?.page_size ?? 0;
+      const pages = (await db.get<{ page_count: number }>('PRAGMA page_count'))?.page_count ?? 0;
+      return { stored: page * pages, reusable: c.freeBytes(), inStateDir: location !== ':memory:' };
     },
-    close() {
-      if (!conn.isOpen) return;
-      cache.clear();
-      conn.close();
+    async close() {
+      if (!c.conn.isOpen) return;
       onClose();
+      await c.close();
     },
   };
 }
 
-/** A new connection to `path`, migrated. Throws if it can't be opened and written. */
-export function openStore(path: string, migrations: readonly string[] = MIGRATIONS): Store {
-  return connect(path, () => {}, migrations);
+/** A new connection to `location`, migrated (SQLite at once; Postgres before its first answer). */
+export function openStore(location: string, migrations: readonly string[] = MIGRATIONS): Store {
+  return connect(location, () => {}, migrations);
 }
 
 const open = new Map<string, Store>();
 
 /**
- * The process's one store for a state folder. Falls back to memory when the folder can't be
- * written: that's the keyless public copy on a read-only disk, which must still start. Nothing that
- * must last may rely on it there, so check `durable`. Closing it lets the next call reopen the file.
+ * The process's one store: at `databaseUrl` when one is set, else SQLite in `<stateDir>/private.db`.
+ * SQLite falls back to memory when the folder can't be written: that's the keyless public copy on a
+ * read-only disk, which must still start. Nothing that must last may rely on it there, so check
+ * `durable`. Closing it lets the next call reopen it.
  */
-export function stateStore(stateDir: string, log: (line: string) => void = console.warn): Store {
-  const dir = resolve(stateDir);
-  const hit = open.get(dir);
+export function stateStore(
+  stateDir: string,
+  log: (line: string) => void = console.warn,
+  databaseUrl?: string,
+): Store {
+  const url = databaseUrl?.trim() || undefined;
+  const key = url ?? resolve(stateDir);
+  const hit = open.get(key);
   if (hit) return hit;
   const forget = () => {
-    open.delete(dir);
+    open.delete(key);
   };
   let store: Store;
-  try {
-    mkdirSync(dir, { recursive: true });
-    store = connect(join(dir, 'private.db'), forget, MIGRATIONS);
-  } catch (e) {
-    log(
-      `petal: private data is in memory for this process, because ${dir} can't be written (${(e as Error).message}).`,
-    );
-    store = connect(':memory:', forget, MIGRATIONS);
+  if (url) {
+    store = connect(url, forget, MIGRATIONS);
+  } else {
+    try {
+      mkdirSync(key, { recursive: true });
+      store = connect(join(key, 'private.db'), forget, MIGRATIONS);
+    } catch (e) {
+      log(
+        `petal: private data is in memory for this process, because ${key} can't be written (${(e as Error).message}).`,
+      );
+      store = connect(':memory:', forget, MIGRATIONS);
+    }
   }
-  open.set(dir, store);
+  open.set(key, store);
   return store;
 }

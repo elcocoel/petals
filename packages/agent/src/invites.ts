@@ -51,10 +51,10 @@ export interface MintedInvite {
   expires_at: string;
 }
 
-export function mintInvite(
+export async function mintInvite(
   store: Store,
   o: { usd: number; days?: number; now?: Date },
-): MintedInvite {
+): Promise<MintedInvite> {
   if (!Number.isFinite(o.usd) || o.usd <= 0) throw new Error('the budget must be more than $0');
   if (o.days !== undefined && (!Number.isFinite(o.days) || o.days <= 0)) {
     throw new Error('the days must be more than 0');
@@ -65,9 +65,9 @@ export function mintInvite(
   const expires_at = new Date(
     now.getTime() + (o.days ?? DEFAULT_INVITE_DAYS) * 86_400_000,
   ).toISOString();
-  store.tx(() => {
-    store.invite.create({ id, token_hash: hashToken(token), budget_usd: o.usd, expires_at });
-    store.credit.apply({
+  await store.tx(async () => {
+    await store.invite.create({ id, token_hash: hashToken(token), budget_usd: o.usd, expires_at });
+    await store.credit.apply({
       id: `mint:${id}`,
       account_key: accountOf(id),
       delta_usd: o.usd,
@@ -79,16 +79,24 @@ export function mintInvite(
 }
 
 /** False when no such invite exists. Calls in flight still settle; the next one is refused. */
-export function revokeInvite(store: Store, id: string, now: Date = new Date()): boolean {
-  if (!store.invite.get(id)) return false;
-  store.invite.revoke(id, now.toISOString());
+export async function revokeInvite(
+  store: Store,
+  id: string,
+  now: Date = new Date(),
+): Promise<boolean> {
+  if (!(await store.invite.get(id))) return false;
+  await store.invite.revoke(id, now.toISOString());
   return true;
 }
 
-export function inviteState(store: Store, id: string, now: Date = new Date()): InviteState | null {
-  const invite = store.invite.get(id);
+export async function inviteState(
+  store: Store,
+  id: string,
+  now: Date = new Date(),
+): Promise<InviteState | null> {
+  const invite = await store.invite.get(id);
   if (!invite) return null;
-  const credit = store.credit.get(accountOf(id));
+  const credit = await store.credit.get(accountOf(id));
   const free = (credit?.balance_usd ?? 0) - (credit?.reserved_usd ?? 0);
   const left = free < DUST_USD ? 0 : free;
   let status: InviteStatus = 'active';
@@ -121,20 +129,20 @@ function creditLedger(
   store: Store,
   account: string,
   o: {
-    refusal: () => string | null;
+    refusal: () => Promise<string | null>;
     spent: string;
     /** told what each call really cost, inside the same transaction */
-    onSpend?: (usd: number) => void;
+    onSpend?: (usd: number) => Promise<void>;
   },
   day: BudgetLedger,
   now: () => Date,
 ): BudgetLedger {
   let refused: string | null = null;
-  const reserveAccount = (usd: number): number | null =>
-    store.tx(() => {
-      refused = o.refusal();
+  const reserveAccount = (usd: number): Promise<number | null> =>
+    store.tx(async () => {
+      refused = await o.refusal();
       if (refused) return null;
-      const held = store.credit.reserve(account, usd);
+      const held = await store.credit.reserve(account, usd);
       if (held === null) refused = o.spent;
       return held;
     });
@@ -142,18 +150,18 @@ function creditLedger(
     spentToday: () => day.spentToday(),
     add: (usd) => day.add(usd),
     async reserve(usd, capUsd) {
-      const accountUsd = reserveAccount(usd);
+      const accountUsd = await reserveAccount(usd);
       if (accountUsd === null) return null;
       const release = () => store.credit.settle(account, accountUsd, 0);
       let hold: SpendHold | null;
       try {
         hold = await day.reserve(usd, capUsd);
       } catch (e) {
-        release();
+        await release();
         throw e;
       }
       if (!hold) {
-        release();
+        await release();
         return null;
       }
       return { ...hold, accountUsd } satisfies AccountHold;
@@ -161,17 +169,17 @@ function creditLedger(
     async settle(hold, actualUsd) {
       await day.settle(hold, actualUsd);
       const at = now().toISOString();
-      store.tx(() => {
-        store.credit.settle(account, (hold as AccountHold).accountUsd, 0);
+      await store.tx(async () => {
+        await store.credit.settle(account, (hold as AccountHold).accountUsd, 0);
         if (actualUsd <= 0) return;
-        store.credit.apply({
+        await store.credit.apply({
           id: randomUUID(),
           account_key: account,
           delta_usd: -actualUsd,
           reason: 'model call',
           at,
         });
-        o.onSpend?.(actualUsd);
+        await o.onSpend?.(actualUsd);
       });
     },
     refusal: () => (refused ? { message: refused, hint: CONNECT_HINT } : null),
@@ -189,7 +197,7 @@ export function inviteLedger(
     store,
     accountOf(id),
     {
-      refusal: () => inviteRefusal(inviteState(store, id, now())),
+      refusal: async () => inviteRefusal(await inviteState(store, id, now())),
       spent: INVITE_SPENT,
       onSpend: (usd) => store.invite.addSpent(id, usd),
     },
@@ -212,18 +220,17 @@ export interface PersonCredit {
   left_usd: number;
 }
 
-const fundedOf = (store: Store, account: string) =>
-  store.credit
-    .entries(account)
+const fundedOf = async (store: Store, account: string) =>
+  (await store.credit.entries(account))
     .filter((e) => e.reason === FUNDED)
     .reduce((sum, e) => sum + e.delta_usd, 0);
 
 /** Null for a person with no credit account: they're treated as anyone else. */
-export function personCredit(store: Store, person: string): PersonCredit | null {
+export async function personCredit(store: Store, person: string): Promise<PersonCredit | null> {
   const account = personAccount(person);
-  const credit = store.credit.get(account);
+  const credit = await store.credit.get(account);
   if (!credit) return null;
-  const funded = fundedOf(store, account);
+  const funded = await fundedOf(store, account);
   const free = credit.balance_usd - credit.reserved_usd;
   return {
     funded_usd: funded,
@@ -236,21 +243,21 @@ export function personCredit(store: Store, person: string): PersonCredit | null 
  * Sets what this person has been given in all, whatever they've spent, so it can be raised, lowered or
  * run again with no change. What's spent stays spent.
  */
-export function fundPerson(
+export async function fundPerson(
   store: Store,
   person: string,
   totalUsd: number,
   now: Date = new Date(),
-): PersonCredit {
+): Promise<PersonCredit> {
   if (!Number.isFinite(totalUsd) || totalUsd < 0) {
     throw new Error('the total must be a number of dollars, $0 or more');
   }
-  if (!store.person.get(person)) throw new Error(`no person ${person}`);
+  if (!(await store.person.get(person))) throw new Error(`no person ${person}`);
   const account = personAccount(person);
-  return store.tx(() => {
-    const change = totalUsd - fundedOf(store, account);
+  return store.tx(async () => {
+    const change = totalUsd - (await fundedOf(store, account));
     if (Math.abs(change) >= DUST_USD) {
-      store.credit.apply({
+      await store.credit.apply({
         id: `fund:${randomUUID()}`,
         account_key: account,
         delta_usd: change,
@@ -258,7 +265,7 @@ export function fundPerson(
         at: now.toISOString(),
       });
     }
-    return personCredit(store, person) as PersonCredit;
+    return (await personCredit(store, person)) as PersonCredit;
   });
 }
 
@@ -273,7 +280,8 @@ export function personLedger(
     store,
     personAccount(person),
     {
-      refusal: () => ((personCredit(store, person)?.left_usd ?? 0) > 0 ? null : CREDIT_SPENT),
+      refusal: async () =>
+        ((await personCredit(store, person))?.left_usd ?? 0) > 0 ? null : CREDIT_SPENT,
       spent: CREDIT_SPENT,
     },
     day,
@@ -281,6 +289,11 @@ export function personLedger(
   );
 }
 
-/** <stateDir>/private.db for a script. Throws when it can't be written, so nothing is lost silently. */
-export const openPrivateStore = (stateDir: string): Store =>
-  openStore(join(stateDir, 'private.db'));
+/**
+ * The private store for a script: the database at PETAL_DATABASE_URL when it's set, as the server would
+ * use, else <stateDir>/private.db. Throws when it can't be opened, so nothing is lost silently.
+ */
+export const openPrivateStore = (
+  stateDir: string,
+  databaseUrl: string | undefined = process.env.PETAL_DATABASE_URL?.trim() || undefined,
+): Store => openStore(databaseUrl ?? join(stateDir, 'private.db'));

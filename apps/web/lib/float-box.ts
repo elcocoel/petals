@@ -79,6 +79,21 @@ export function conversationBoxes(
   };
 }
 
+/**
+ * With the terminal in the page (W10): the person's own agent takes the output's place, wider and down to
+ * the floor, since its own screen holds the input too. The list moves over to stay beside it.
+ */
+export function terminalBoxes(win: Size): ReturnType<typeof conversationBoxes> {
+  const boxes = conversationBoxes(win, 0);
+  const { inset, gap } = floatBox;
+  const w = Math.min(floatBox['terminal-width'], win.w - inset * 2);
+  return {
+    ...boxes,
+    output: kept({ ...boxes.output, w }, win),
+    list: kept({ ...boxes.list, x: inset + w + gap }, win),
+  };
+}
+
 /** The same, with a recorded run's input: a read-only saved question and the button that plays it. */
 export const recordedBoxes = (win: Size) =>
   conversationBoxes(win, floatBox['recorded-input-height']);

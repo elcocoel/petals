@@ -45,11 +45,13 @@ import { body, fail, respond } from './reply.ts';
 
 /** What the door needs from sign-in; the agent package holds the sessions. */
 export interface SessionGate {
-  subjectOf(c: Context): string | null;
+  subjectOf(c: Context): Promise<string | null>;
+  /** The subject and the credential that opened its session, in one look. */
+  callerOf?(c: Context): Promise<{ subject: string | null; credential: string | null }>;
   /** A refusal for a POST from another site; null for one that's fine. */
   refuseForeign(c: Context): Response | null;
   /** Opens an anonymous session on this response, for a browser's first claim. Returns its subject. */
-  openAnonymous?(c: Context): string;
+  openAnonymous?(c: Context): Promise<string>;
 }
 
 /** Set by the web app's /mcp and /api routes. A bare API has no pages, so its links stay relative. */
@@ -76,12 +78,15 @@ export function explorationRoutes(
 
   // With no address configured, the address this person's agent came in by: its links have to open for
   // them, and a browser's cookie on localhost is no use on 127.0.0.1. Only links change.
-  const asCaller = (c: Context): ToolContext => {
+  const asCaller = async (c: Context): Promise<ToolContext> => {
     const site = ctx.config.apiBase ? undefined : c.req.header(SITE_HEADER);
+    const who = gate?.callerOf
+      ? await gate.callerOf(c)
+      : { subject: (await gate?.subjectOf(c)) ?? null, credential: null };
     return {
       ...ctx,
       ...(site ? { config: { ...ctx.config, apiBase: site } } : {}),
-      caller: { subject: gate?.subjectOf(c) ?? null, door: 'http' },
+      caller: { subject: who.subject, credential: who.credential, door: 'http' },
     };
   };
   /** A body that wasn't JSON comes here as its error. */
@@ -89,12 +94,12 @@ export function explorationRoutes(
     if (isToolError(input)) return respond(c, input);
     const t = findTool(name);
     if (!t) return fail(c, toolError('internal', `No tool ${name}.`));
-    return respond(c, await t.run(input, asCaller(c)));
+    return respond(c, await t.run(input, await asCaller(c)));
   };
   /** Runs `f`, and turns what it throws into the usual error. */
-  const attempt = (c: Context, f: () => object) => {
+  const attempt = async (c: Context, f: () => object | Promise<object>) => {
     try {
-      return respond(c, versioned(f()));
+      return respond(c, versioned(await f()));
     } catch (e) {
       return fail(c, fromThrown(e));
     }
@@ -137,10 +142,10 @@ export function explorationRoutes(
   );
   // Pushed, not polled, and only a signal: the page reads the packet again, so there's one way to read.
   // One on connecting, so a page that was away catches up. No timers: it wakes when something happened.
-  app.get('/api/v1/explorations/:ref/live', (c) => {
+  app.get('/api/v1/explorations/:ref/live', async (c) => {
     let id: string;
     try {
-      id = explorationIdOf(asCaller(c), c.req.param('ref'));
+      id = await explorationIdOf(await asCaller(c), c.req.param('ref'));
     } catch (e) {
       return fail(c, fromThrown(e));
     }
@@ -173,17 +178,17 @@ export function explorationRoutes(
   );
   app.post('/api/v1/explorations/:ref/notes', async (c) => answer(c, 'add_note', await withRef(c)));
   app.post('/api/v1/explorations/:ref/claim', (c) =>
-    attempt(c, () =>
+    attempt(c, async () =>
       claimExploration(
-        asCaller(c),
+        await asCaller(c),
         c.req.param('ref'),
-        gate?.openAnonymous ? () => gate.openAnonymous?.(c) as string : undefined,
+        gate?.openAnonymous ? () => gate.openAnonymous?.(c) as Promise<string> : undefined,
       ),
     ),
   );
 
   app.get('/api/v1/explorations/:ref/links', (c) =>
-    attempt(c, () => ({ links: listLinks(asCaller(c), c.req.param('ref')) })),
+    attempt(c, async () => ({ links: await listLinks(await asCaller(c), c.req.param('ref')) })),
   );
   app.post('/api/v1/explorations/:ref/links', async (c) => {
     const input = (await body(c)) as { scope?: unknown };
@@ -191,10 +196,12 @@ export function explorationRoutes(
     if (scope !== 'read' && scope !== 'continue') {
       return fail(c, toolError('bad_input', 'scope must be read or continue'));
     }
-    return attempt(c, () => makeLink(asCaller(c), c.req.param('ref'), scope as LinkScope));
+    return attempt(c, async () =>
+      makeLink(await asCaller(c), c.req.param('ref'), scope as LinkScope),
+    );
   });
   app.post('/api/v1/explorations/:ref/links/:link/revoke', (c) =>
-    attempt(c, () => revokeLink(asCaller(c), c.req.param('ref'), c.req.param('link'))),
+    attempt(c, async () => revokeLink(await asCaller(c), c.req.param('ref'), c.req.param('link'))),
   );
 
   // Re-hashed on read (specBody), so a row that changed can't send anyone to another flower.
@@ -231,7 +238,7 @@ export function explorationRoutes(
       try {
         return respond(
           c,
-          versioned(await postSnapshot(asCaller(c), c.req.param('ref'), sha, parsed)),
+          versioned(await postSnapshot(await asCaller(c), c.req.param('ref'), sha, parsed)),
         );
       } catch (e) {
         return fail(c, fromThrown(e));
@@ -239,10 +246,10 @@ export function explorationRoutes(
     },
   );
 
-  app.get('/d/:hash', limit, (c) => {
+  app.get('/d/:hash', limit, async (c) => {
     const sha = c.req.param('hash');
     try {
-      const spec = SHA.test(sha) ? specBody(ctx.config, sha) : null;
+      const spec = SHA.test(sha) ? await specBody(ctx.config, sha) : null;
       if (!spec) return fail(c, toolError('not_found', 'No draft under that hash.'));
       // Relative, so it stays on whichever address the person came in by.
       return c.redirect(draftPath(canonicalJson(spec)), 302);
@@ -253,12 +260,12 @@ export function explorationRoutes(
 
   // Plain text holding markdown: some agents' web tools refuse text/markdown (see /skill.md). Open
   // CORS, because the token is the only credential: no session is read, so an id always fails here.
-  app.get('/s/:token', cors({ origin: '*' }), limit, (c) => {
+  app.get('/s/:token', cors({ origin: '*' }), limit, async (c) => {
     const plain = (text: string, status: 200 | 404 | 500) =>
       c.text(text, status, { 'Cache-Control': NEVER_STORE, 'X-Robots-Tag': 'noindex' });
     try {
       const anyone: ToolContext = { ...ctx, caller: { door: 'http' } };
-      return plain(packetMarkdown(anyone, c.req.param('token')), 200);
+      return plain(await packetMarkdown(anyone, c.req.param('token')), 200);
     } catch (e) {
       const { error } = fromThrown(e);
       return plain(error.message, error.code === 'not_found' ? 404 : 500);

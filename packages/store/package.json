@@ -4,9 +4,16 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Private data in SQLite through node:sqlite: people, sessions, runs, the ledger, credit, explorations.",
+  "description": "Private data, behind one asynchronous interface: Postgres, or SQLite as the starting point. People, sessions, runs, the ledger, credit, explorations.",
   "exports": {
     ".": "./src/index.ts",
     "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.3.16",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1"
   }
 }

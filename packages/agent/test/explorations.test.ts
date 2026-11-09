@@ -200,7 +200,7 @@ describe("a run's flowers are steps", () => {
     expect((await b.json('/api/v1/explorations')).explorations).toHaveLength(1);
 
     const db = openStore(join(stateDir, 'private.db'));
-    expect(db.run.get(first.id)?.exploration).toBe(row?.exploration);
+    expect((await db.run.get(first.id))?.exploration).toBe(row?.exploration);
     db.close();
   });
 
@@ -224,7 +224,7 @@ describe("a run's flowers are steps", () => {
     expect(events.map((e) => e.event)).toContain('flower');
     const { run_id: id } = (events[0] as { data: Out }).data;
     const db = openStore(join(stateDir, 'private.db'));
-    expect(db.run.get(id)?.exploration).toBeNull();
+    expect((await db.run.get(id))?.exploration).toBeNull();
     db.close();
   });
 
@@ -325,7 +325,7 @@ describe("Petal's own agent", () => {
     'add_note',
   ];
 
-  test('is offered none of the exploration tools, and no door loses them', () => {
+  test('is offered none of the exploration tools, and no door loses them', async () => {
     for (const name of FIVE) {
       const t = registry.find((x) => x.name === name);
       expect(t, name).toBeDefined();
@@ -335,7 +335,7 @@ describe("Petal's own agent", () => {
     expect(llmTools(registry).some((t) => FIVE.includes(t.name))).toBe(false);
   });
 
-  test('reads no short link: its result is the same size as before', () => {
+  test('reads no short link: its result is the same size as before', async () => {
     const out = {
       spec_sha256: 'a'.repeat(64),
       view_url: 'https://x/draft?spec=abc',
@@ -349,7 +349,7 @@ describe("Petal's own agent", () => {
     expect(read.view_url).toBe(`/draft?flower=${'a'.repeat(8)}`);
   });
 
-  test('is told nothing new: render_flower says what it said', () => {
+  test('is told nothing new: render_flower says what it said', async () => {
     const def = llmTools(registry).find((t) => t.name === 'render_flower');
     expect(JSON.stringify(def)).not.toMatch(/short_url|exploration/);
   });

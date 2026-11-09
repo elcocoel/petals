@@ -102,6 +102,8 @@ export async function fileMain(argv: string[], env: Env = process.env): Promise<
     ...env,
     PETAL_API: site,
     PETAL_STATE_DIR: env.PETAL_STATE_DIR || join(home, 'state'),
+    PETALS_HOME: home,
+    PETALS_SITE: site,
     PETAL_MAP_NETWORK: env.PETAL_MAP_NETWORK || 'testnet',
   };
   // Nothing here may spend or sign for anyone, whatever this shell holds, and this is the person's
@@ -111,13 +113,19 @@ export async function fileMain(argv: string[], env: Env = process.env): Promise<
     'PETAL_WRITER_KEY_FILE',
     'BLOB_READ_WRITE_TOKEN',
     'PETAL_PUBLIC',
+    'PETAL_DATABASE_URL',
+    'PETAL_DATABASE_PASSWORD_FILE',
   ])
     delete own[k];
 
   const { main } = await import('./main.ts');
   const tools = await import('@petal/tools');
   const { siteDoor } = await import('./site.ts');
-  const door = siteDoor({ site, currentFile: join(own.PETAL_STATE_DIR as string, 'current.json') });
+  const door = siteDoor({
+    site,
+    currentFile: join(own.PETAL_STATE_DIR as string, 'current.json'),
+    ...(env.PETALS_EXPLORATION?.trim() ? { initial: env.PETALS_EXPLORATION.trim() } : {}),
+  });
   const served = door.tools(tools.registry);
   const instructions =
     `These tools run on this machine and show this conversation on ${site}: ` +
