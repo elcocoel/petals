@@ -1,7 +1,8 @@
 // The landing page's words, in one file, so a copy pass touches one file. The source is the "Landing copy
 // for coders (v6)" tab of the "Petals — Copy" doc: its green text, word for word, and nothing else in that
 // tab. Its yellow slots carry no words: an EmptySlot, or a placeholder drawing until the hero set (T108).
-// Only the line breaks are ours.
+// Only the line breaks are ours. The three Connect buttons (nav, the hero box, How it works) are Elco's word
+// from 9 Nov, which the doc may not have yet: Elco shot down Ask as a call to action.
 // Nav isn't in the doc and keeps its words; "Atlas" stays everywhere until Elco picks the name.
 // The arrows aren't here: Geist Mono and our Mona Sans subset have neither U+2192 nor U+2190, so the
 // components draw them (components/ui/Arrow.tsx).
@@ -10,7 +11,7 @@ export const landingCopy = {
     howItWorks: 'How it works',
     gallery: 'Atlas',
     docs: 'Docs',
-    ask: 'Ask Petals',
+    ask: 'Connect',
   },
   hero: {
     eyebrow: 'SEE POWER MOVE',
@@ -25,7 +26,7 @@ export const landingCopy = {
         'Who do you want to look into?',
       ],
       label: 'Ask about a network, a wallet or a contract',
-      action: 'Ask',
+      action: 'Connect',
     },
     starterLabel: 'OR START WITH ONE OF THESE',
     starters: [
@@ -68,7 +69,7 @@ export const landingCopy = {
         body: 'Ask why a petal is that size, or ask it to measure something else. Petals redraws and shows what changed.',
       },
     ],
-    action: 'Ask your first question',
+    action: 'Connect',
   },
   useAnywhere: {
     title: 'Take Petals into your own AI.',
