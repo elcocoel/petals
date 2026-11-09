@@ -1,0 +1,40 @@
+{
+  "petal": "layer/v1",
+  "about": "eip155:100:0x10e31c10fb0b3f56a9e7fd0b0a3d17a1be0ac9c1",
+  "kind": "measures",
+  "measures": [
+    {
+      "name": "proposals_written",
+      "unit": "proposals",
+      "kind": "count",
+      "label": "Proposals written"
+    }
+  ],
+  "rows": [
+    {
+      "participant": "eip155:100:0x1111111111111111111111111111111111111111",
+      "measure": "proposals_written",
+      "value": "3"
+    },
+    {
+      "participant": "eip155:100:0x2222222222222222222222222222222222222222",
+      "measure": "proposals_written",
+      "value": "1"
+    }
+  ],
+  "how": {
+    "method": "counted the DAO's ProcessProposal events by who sent each submission",
+    "sources": [
+      {
+        "url": "https://rpc.gnosischain.com",
+        "note": "eth_getLogs"
+      }
+    ]
+  },
+  "from": [],
+  "when": {
+    "as_of": "2026-11-09T00:00:00Z",
+    "block_height": 40000000
+  },
+  "standing": "verified"
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:layer:v1",
+  "title": "Petal layer v1",
+  "description": "One set of facts about an address's participants, from one author, at one time, named by the SHA-256 of its canonical JSON and never changed after (specs/005-mapping-brain/data.md). Who made it is kept by whoever stores it, outside the hash.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["petal", "about", "kind", "measures", "rows", "how", "from", "when", "standing"],
+  "properties": {
+    "petal": { "const": "layer/v1" },
+    "about": {
+      "description": "the investigated address, chain:address (eip155:100:0x…, near:mainnet:alice.near)",
+      "type": "string",
+      "pattern": "^[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,32}:\\S{2,128}$"
+    },
+    "kind": { "const": "measures" },
+    "measures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "unit", "kind"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,40}$" },
+          "unit": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["amount", "count", "share", "category", "flag"] },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "rows": {
+      "description": "a value per participant and piece of data; amounts, counts and shares as decimal text",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["participant", "measure", "value"],
+        "properties": {
+          "participant": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "measure": { "type": "string" },
+          "value": { "type": "string" }
+        }
+      }
+    },
+    "how": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "sources"],
+      "properties": {
+        "method": { "description": "how it was made, in words anyone could repeat", "type": "string", "pattern": "\\S" },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["url"],
+            "properties": {
+              "url": { "type": "string", "pattern": "^(https?://|petal:|eip155:|near:)\\S+$" },
+              "note": { "type": "string" }
+            }
+          }
+        },
+        "recipe": { "description": "the reading recipe it was read with, by hash", "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "from": {
+      "description": "the layers or readings it was built on, by hash",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    },
+    "when": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["as_of"],
+      "properties": {
+        "as_of": { "description": "a full date and time, with its zone", "type": "string", "format": "date-time" },
+        "block_height": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "standing": {
+      "description": "verified: read from the chain, and anyone can read it again; inferred: a step beyond a read; lead: a direction, never a fact",
+      "enum": ["verified", "inferred", "lead"]
+    }
+  }
+}
