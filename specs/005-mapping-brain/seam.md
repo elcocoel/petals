@@ -14,7 +14,7 @@ One read-only table, made from a chosen set of layers. Its version is `seam/v1`.
 | `about` | The address the dataset is about |
 | `layers` | The layer hashes it was made from: the dataset's version |
 | `participants` | Their ids (`chain:address`). Nothing about who they are |
-| `measures` | Each with a name, a unit, a kind (amount, count, share, category or yes-no), its date, its standing (verified, inferred or lead), and the layer it came from. Then a value per participant, or empty |
+| `measures` | Each with a name, a unit, a kind (amount, count, share, category or flag, a yes or no), its date, its standing (verified, inferred or lead), and the layer it came from. Then a value per participant, or empty |
 | `relations` | Each line with from, to, a kind, a weight, a unit, its date, its standing and its layer |
 | `dates` | Every date at which a measure exists, for change over time |
 | `coverage` | How many participants and how much of the total are included, so a view can say what's missing |
@@ -32,7 +32,7 @@ If two layers give the same name, it's written `<layer>:<name>`. The visual side
 
 ## The one rule both sides share
 
-**The measure kinds are the contract.** The visual side decides which channel takes which kind: height takes an amount or a count, colour a category, a marking a count or a yes-no. The data side promises that every measure carries one of these kinds. Adding a kind is a change to the seam, `seam/v2`, and both sides agree it.
+**The measure kinds are the contract.** The visual side decides which channel takes which kind: height takes an amount or a count, colour a category, a marking a count or a flag. The data side promises that every measure carries one of these kinds. Adding a kind is a change to the seam, `seam/v2`, and both sides agree it.
 
 ## What each side changes alone
 

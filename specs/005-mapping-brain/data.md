@@ -15,7 +15,7 @@ One set of facts about the address's participants, from one author, at one time.
 | `about` | The address, `chain:address` |
 | `by` | The author's account, and the credential that signed it (TGT-005). A reader run by someone's agent has that person as its author |
 | `kind` | `measures` (a value per participant), `relations` (lines between participants) or `leads` (directions of research) |
-| `measures` | Per measure: a name, a unit and a kind (amount, count, share, category or yes-no), then a value per participant |
+| `measures` | Per measure: a name, a unit and a kind (amount, count, share, category or flag, a yes or no), then a value per participant |
 | `relations` | Per line: from, to, a kind (sent to, delegated to, voted with, sponsored), a weight and a unit |
 | `leads` | Per lead: the participant, what was found, and its source links. How much a person trusts a lead belongs to the notes and claims chapter, not here (Elco, 9 Nov) |
 | `how` | The recipe it was read with (by its hash), or the agent's own method and its sources |

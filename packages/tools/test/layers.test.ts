@@ -42,6 +42,20 @@ describe('a flower from two layers', () => {
       'validator_stake_current_epoch',
       'proposals_written',
     ]);
+    // each measure keeps its kind and its standing, and names the layer it came from (seam.md)
+    expect(view.measures).toEqual([
+      expect.objectContaining({
+        id: 'validator_stake_current_epoch',
+        standing: 'verified',
+        from: base.sha256,
+      }),
+      expect.objectContaining({
+        id: 'proposals_written',
+        kind: 'count',
+        standing: 'verified',
+        from: added.hash,
+      }),
+    ]);
 
     const proposed = (await tool('propose_spec').run(
       {
