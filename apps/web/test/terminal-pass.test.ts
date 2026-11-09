@@ -8,6 +8,7 @@ import {
   pairingCode,
   readControl,
   resizeFrame,
+  terminalAddress,
 } from '../lib/terminal-pass.ts';
 
 describe('the terminal in the page', () => {
@@ -21,6 +22,28 @@ describe('the terminal in the page', () => {
       cols: 120,
       rows: 32,
     });
+  });
+
+  test("the first frame can hand the agent the page's conversation", () => {
+    expect(
+      JSON.parse(
+        helloFrame('K7QM-3WTZ', { cols: 90, rows: 30 }, 'https://petal-flowers.vercel.app/s/abc'),
+      ),
+    ).toEqual({
+      pair: 'K7QM-3WTZ',
+      cols: 90,
+      rows: 30,
+      exploration: 'https://petal-flowers.vercel.app/s/abc',
+    });
+  });
+
+  test('a new conversation reloads the page on it, with the code kept in the fragment', () => {
+    expect(terminalAddress('/make', 'exp_1', 'K7QM-3WTZ', 7466)).toBe(
+      '/make?terminal=1&elsewhere=exp_1#pair=K7QM-3WTZ',
+    );
+    expect(terminalAddress('/make', 'exp_1', 'K7QM-3WTZ', 7499)).toBe(
+      '/make?terminal=1&elsewhere=exp_1#pair=K7QM-3WTZ&port=7499',
+    );
   });
 
   test('a resize is exactly the one JSON the helper reads as one', () => {

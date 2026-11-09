@@ -47,6 +47,8 @@ export function useWorkspace(props: {
   initialRun?: string | undefined;
   /** a conversation happening in another agent: nothing in this page's chat is that conversation */
   initialElsewhere?: string | undefined;
+  /** The terminal box is on the page, so the address keeps it (W10). */
+  terminal?: boolean;
   initialQuestion?: string | null;
   recorded?: boolean;
   opening?: string;
@@ -58,7 +60,7 @@ export function useWorkspace(props: {
   /** False on a site that runs no agent for visitors (lib/workspace-home.ts): their own agent does the work. */
   agentForVisitors?: boolean;
 }) {
-  const { shelf, initialElsewhere, catalogue = null, ...chatProps } = props;
+  const { shelf, initialElsewhere, catalogue = null, terminal = false, ...chatProps } = props;
   const { state: chat, dispatch, actions: chatActions, refs } = useMakeChat(chatProps);
   const { rows, open, petal, section, busy, runId, question, items, recorded, asked } = chat;
 
@@ -274,9 +276,9 @@ export function useWorkspace(props: {
 
   // the address holds what a reload needs
   useEffect(() => {
-    const url = workspaceUrl({ runId, open, petal, asked, elsewhere: elsewhereRef });
+    const url = workspaceUrl({ runId, open, petal, asked, elsewhere: elsewhereRef, terminal });
     if (url) window.history.replaceState(null, '', url);
-  }, [runId, open, petal, asked, elsewhereRef]);
+  }, [runId, open, petal, asked, elsewhereRef, terminal]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
