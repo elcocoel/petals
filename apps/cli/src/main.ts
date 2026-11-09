@@ -145,6 +145,8 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
     if (command === 'help' || command === '--help' || command === '-h') return cli.help(rest[0]);
     if (command === 'start') return await cli.start(rest);
     if (command === 'note') return await cli.note(rest);
+    if (command === 'join') return await cli.join(rest);
+    if (command === 'jobs') return await cli.jobs(rest);
     if (command === 'mcp') return await cli.mcp(rest);
     if (command === 'api') return await cli.api(rest, deps);
     const tool = cli.find(command);
@@ -425,6 +427,45 @@ class Cli {
       { text, ...(exploration ? { exploration } : {}) } as never,
       ctx,
     );
+    this.sys.stdout(json(out));
+    return isToolError(out) ? 1 : 0;
+  }
+
+  /** `petal join <agent key> --as <name>`: this agent joins the person's Petals, to take their jobs. */
+  async join(argv: string[]): Promise<number> {
+    const parsed = tokenize(argv, (n) => CLI_BOOLEAN.has(n));
+    const as = new Map(parsed.flags).get('as');
+    const key = parsed.positionals[0];
+    if (!key || typeof as !== 'string') {
+      throw new UsageError(
+        'join takes the agent key and a name: join <agent key> --as claude-code',
+      );
+    }
+    const { joinAgent } = await import('./agents.ts');
+    const out = joinAgent(this.sys.env, key, as);
+    this.sys.stdout(json(out));
+    return isToolError(out) ? 1 : 0;
+  }
+
+  /** `petal jobs wait [--for <seconds>]`: the next job Petals' agent hands this agent, or none yet. */
+  async jobs(argv: string[]): Promise<number> {
+    const parsed = tokenize(argv, (n) => CLI_BOOLEAN.has(n));
+    if (parsed.positionals[0] !== 'wait') throw new UsageError('jobs takes one command: jobs wait');
+    const given = new Map(parsed.flags).get('for');
+    const forS = typeof given === 'string' ? Number(given) : undefined;
+    if (forS !== undefined && !(Number.isInteger(forS) && forS >= 10 && forS <= 3600)) {
+      throw new UsageError('--for takes a number of seconds, from 10 to 3600');
+    }
+    const site = this.sys.env.PETAL_API?.trim().replace(/\/+$/, '');
+    if (!site) throw new UsageError("jobs wait needs the site: this file doesn't know it");
+    const state = this.sys.env.PETAL_STATE_DIR?.trim();
+    const { waitForJob } = await import('./agents.ts');
+    const out = await waitForJob({
+      env: this.sys.env,
+      site,
+      ...(forS !== undefined ? { forS } : {}),
+      ...(state ? { currentFile: join(state, 'current.json') } : {}),
+    });
     this.sys.stdout(json(out));
     return isToolError(out) ? 1 : 0;
   }
@@ -742,6 +783,12 @@ class Cli {
     p('\nDoors:\n');
     p('  mcp                 MCP over stdio (serveStdio), for Claude Code and Codex\n');
     p('  terminal [agent]    your own claude, codex or hermes, in a box on the Petals page\n');
+    p(
+      "  join <key> --as <n> join the person's Petals as one of their agents, with their agent key\n",
+    );
+    p(
+      "  jobs wait           the next job Petals' agent hands you, or none yet (--for <seconds>)\n",
+    );
     if (!this.sys.asFile) {
       p(`  api                 the HTTP API (petalApp) on http://localhost:${DEFAULT_PORT}\n`);
       p('  connect <agent>     give your own agent (claude, codex) the skill and the tools\n');

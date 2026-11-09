@@ -22,6 +22,8 @@ The Claude app's chat (on the web, the desktop app and the phone) and ChatGPT ru
 
 It reads what Petals already holds (networks, stored readings, flowers, relations), counts and draws from those readings, keeps a conversation on Petals' page, takes jobs, and reads the brain. It can't make a fresh reading: looking up a new name or address, reading a chain, or searching the web runs only on the person's own computer. For those, the person uses Claude Code, Codex or Hermes there (`connect-claude-code`, `connect-codex`, `connect-hermes`).
 
+A connector can't run the waiting command, so it isn't one of the agents that wait for jobs. Given a project's link, it can still take that project's open jobs with `take_job`.
+
 ## The Claude app
 
 - **Pro, Max and Free:** Customize > Connectors, then **+ Add** and **Add custom connector**. Name it Petals, paste the address, then **Continue** and **Add**. The Free plan holds one custom connector.

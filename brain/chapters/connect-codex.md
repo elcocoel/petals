@@ -31,6 +31,7 @@ node ~/.petals/petal.mjs start --client "Codex" --question "<what they asked, or
 ## The first time it runs
 
 - **Codex's sandbox refused it** (the file reads public chain sites, so it needs the network on every command): run it again with escalated permissions, so the person gets Codex's approval. A sandbox's refusal isn't the person's no.
+- **For the whole session,** so no command needs approving again, the person starts Codex with the network allowed in its workspace sandbox: `codex -c sandbox_workspace_write.network_access=true`. For every session, they add it to `~/.codex/config.toml`, under `[sandbox_workspace_write]`, as `network_access = true`. Waiting for jobs needs this.
 - **Only the folder was refused:** keep the file in the working folder and set `PETALS_HOME` to a folder beside it, the same on every command.
 
 ## Keep Petals for next time
@@ -42,6 +43,10 @@ codex mcp add petals -- "$(command -v node)" "$HOME/.petals/petal.mjs" mcp
 ```
 
 It goes into Codex's own settings (`~/.codex/config.toml`), so it holds in every folder, and takes effect in a new session. `codex mcp list` shows it. Codex replaces a server of the same name without asking, so check `codex mcp list` first.
+
+## Waiting for jobs
+
+As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait`, with the network allowed as above. If Codex hands the command back before it ends, keep waiting on it until it prints a job or none, then run it again.
 
 ## In the box on Petals' page
 

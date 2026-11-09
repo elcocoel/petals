@@ -44,6 +44,10 @@ claude mcp add -s user petals -- "$(command -v node)" "$HOME/.petals/petal.mjs" 
 
 It takes effect in a new session. The tools then show as `mcp__petals__<tool>`, and `claude mcp list` shows `petals` as connected. Without `-s user`, it would hold for this folder only.
 
+## Waiting for jobs
+
+As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait` with the Bash tool's `timeout` at 600000, its longest: ten minutes. The default two minutes cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way.
+
 ## In the box on Petals' page
 
 Petals' helper starts Claude Code with the tools already loaded, as the `petals` MCP server for that session, and its notes in `~/.petals/work`. Nothing to download or install there.

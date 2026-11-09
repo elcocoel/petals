@@ -38,6 +38,10 @@ printf 'Y\n' | hermes mcp add petals --command "$(command -v node)" --args "$HOM
 
 It goes into Hermes's own settings, so it holds in every session. `/reload-mcp` loads it into an open session.
 
+## Waiting for jobs
+
+As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait` with the terminal tool's `timeout` at 600, its longest in the foreground: ten minutes. The default 180 seconds cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way.
+
 ## In the box on Petals' page
 
 Petals' helper runs Hermes over ACP (`hermes acp`) in the page's chat, and `hermes chat` in its terminal box. Neither loads MCP servers for one session, so there the tools are commands in Hermes's shell: `node ~/.petals/petal.mjs <command>`. Its notes are in `~/.petals/work`.
