@@ -12,6 +12,8 @@ export const floatBox = {
   /** The flower's own box, on the right: wide enough to read a petal, tall enough for the rest. */
   'panel-width': 440,
   'panel-height': 640,
+  /** The terminal in the page (specs/004-workspace, W10): wide enough for an agent's own screen, about 90 columns. */
+  'terminal-width': 760,
   /** The list of conversations, beside the output: wide enough for a question's first words. */
   'list-width': 320,
   /** What can be picked, beside the input: wide enough for a model's line. */

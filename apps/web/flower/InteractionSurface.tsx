@@ -12,16 +12,19 @@ import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
+import { TerminalPass } from '../components/chat/TerminalPass.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { WhoIsHere } from '../components/chat/WhoIsHere.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import type { Catalogue } from '../lib/composer-options.ts';
 import { doorWords } from '../lib/door-words.ts';
-import { conversationBoxes, recordedBoxes } from '../lib/float-box.ts';
+import { conversationBoxes, recordedBoxes, terminalBoxes } from '../lib/float-box.ts';
 import type { ListedFlower } from '../lib/flower-view.ts';
+import { terminalWords } from '../lib/terminal-pass.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
+import { useTerminalPass } from '../viewmodels/useTerminalPass.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
 import { FlowerPanel } from './FlowerPanel.tsx';
@@ -33,10 +36,13 @@ export function InteractionSurface({
   probe,
   surface,
   agentPrompt = '',
+  terminal = false,
   ...workspace
 }: {
   scatter: boolean;
   probe: boolean;
+  /** The person's own agent in a terminal, in the output's place (W10, a localhost proof for now). */
+  terminal?: boolean;
   surface: SurfaceName;
   initialRun?: string | undefined;
   catalogue?: Catalogue | null;
@@ -52,7 +58,11 @@ export function InteractionSurface({
 }) {
   const { state, actions, refs } = useWorkspace(workspace);
   useFollowScroll(refs.thread, refs.following);
-  const hands = useFloatBoxes(BOXES, workspace.recorded ? recordedBoxes : conversationBoxes);
+  const term = useTerminalPass();
+  const hands = useFloatBoxes(
+    BOXES,
+    terminal ? terminalBoxes : workspace.recorded ? recordedBoxes : conversationBoxes,
+  );
   const raisePanel = hands.panel.raise;
   useEffect(() => {
     if (state.boxOpen) raisePanel();
@@ -78,8 +88,8 @@ export function InteractionSurface({
         onPick={actions.pick}
       />
       <FloatBox
-        label={doorLabel(state.door) ?? state.heading}
-        title={doorLabel(state.door) ?? state.heading}
+        label={terminal ? terminalWords.box : (doorLabel(state.door) ?? state.heading)}
+        title={terminal ? terminalWords.box : (doorLabel(state.door) ?? state.heading)}
         surface={surface}
         hand={hands.output}
         control={
@@ -90,7 +100,17 @@ export function InteractionSurface({
           ) : undefined
         }
       >
-        {state.door === 'wallet' && (
+        {terminal && (
+          <TerminalPass
+            phase={term.phase}
+            code={term.code}
+            failed={term.failed}
+            mount={term.mount}
+            onCode={term.setCode}
+            onPair={term.pair}
+          />
+        )}
+        {!terminal && state.door === 'wallet' && (
           <ConnectWallet
             question=""
             busy={state.session.busy}
@@ -98,9 +118,9 @@ export function InteractionSurface({
             onConnect={state.session.connect}
           />
         )}
-        {state.door === 'agent' && <ConnectAgent prompt={agentPrompt} />}
+        {!terminal && state.door === 'agent' && <ConnectAgent prompt={agentPrompt} />}
         {/* Petals' greeting and the thread, wherever Petals' agent answers or there's something to show. */}
-        {!state.door && (
+        {!terminal && !state.door && (
           <ConversationThread
             recorded={state.recorded}
             rows={state.rows}
@@ -120,7 +140,7 @@ export function InteractionSurface({
         title={state.needsWallet ? doorWords.connect : state.composer.label}
         surface={surface}
         hand={hands.input}
-        closed={!state.inputShown}
+        closed={terminal || !state.inputShown}
       >
         {state.needsWallet && (
           <ConnectWallet

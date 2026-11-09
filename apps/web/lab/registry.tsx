@@ -20,6 +20,7 @@ import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { Speech } from '../components/chat/Speech.tsx';
 import { Steps } from '../components/chat/Steps.tsx';
+import { TerminalPass } from '../components/chat/TerminalPass.tsx';
 import { Thread } from '../components/chat/Thread.tsx';
 import { TurnFlower } from '../components/chat/TurnFlower.tsx';
 import { TurnStatus } from '../components/chat/TurnStatus.tsx';
@@ -1434,6 +1435,43 @@ export const registry: LabEntry[] = [
               },
             ]}
             onPick={() => {}}
+          />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'TerminalPass',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/TerminalPass.tsx',
+    states: [
+      {
+        name: 'waiting for the helper',
+        wide: true,
+        render: () => (
+          <TerminalPass
+            phase="pair"
+            code=""
+            failed={null}
+            mount={() => {}}
+            onCode={() => {}}
+            onPair={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'no helper answered',
+        wide: true,
+        render: () => (
+          <TerminalPass
+            phase="pair"
+            code="K7QM-3WTZ"
+            failed="The Petals helper isn't running on this computer."
+            mount={() => {}}
+            onCode={() => {}}
+            onPair={() => {}}
           />
         ),
       },

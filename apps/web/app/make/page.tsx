@@ -19,6 +19,8 @@ export default async function MakePage({ searchParams }: { searchParams: Promise
       // Elco's open choices, read from the address until they're chosen: ?box=ink and ?order=scatter.
       surface={q.box === 'ink' ? 'ink' : 'ground'}
       scatter={q.order === 'scatter'}
+      // W10's proof: the person's own agent in a terminal on their computer, through the Petals helper.
+      terminal={q.terminal === '1'}
       // An instrument for checking by script. It stays out of production, like the lab.
       probe={
         q.probe === '1' && (process.env.NODE_ENV !== 'production' || process.env.PETAL_LAB === '1')
