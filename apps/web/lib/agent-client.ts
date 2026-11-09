@@ -16,6 +16,8 @@ import type { Settings } from './composer-options.ts';
 import type { ListedConversation } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
 import type { ListedFlower } from './flower-view.ts';
+import type { Job } from './jobs.ts';
+import type { Credit, PayInfo } from './pay.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
 
@@ -59,8 +61,10 @@ export const agentClient: AgentClient = {
       const json = (await res.json().catch(() => ({}))) as {
         error?: { code: string; message: string };
       };
-      throw new Error(
-        json.error ? `${json.error.code}: ${json.error.message}` : `HTTP ${res.status}`,
+      // the code goes with it, so a refusal can be answered for what it is (a payment, B)
+      throw new Refused(
+        json.error?.code ?? 'internal',
+        json.error?.message ?? `HTTP ${res.status}`,
       );
     }
     yield* eventsOf(res.body);
@@ -382,3 +386,36 @@ export const preparePublish = (entry: EntryDraft) =>
 
 export const publishEntry = (entrySha256: string, proof: Nep413Proof) =>
   postJson<Published>('/api/v1/publish', { entry_sha256: entrySha256, proof });
+
+/** The visitor's credit for Petals' agent (B), or null: not signed in, or no top-up yet. */
+export async function readCredit(): Promise<Credit | null> {
+  const res = await fetch('/api/v1/me');
+  if (!res.ok) return null;
+  const json = (await res.json()) as { credit?: Credit | null };
+  return json.credit ?? null;
+}
+
+/** Where a payment goes and NEAR's price now, or null if the server can't say. */
+export async function readPay(): Promise<PayInfo | null> {
+  const res = await fetch('/api/v1/pay');
+  if (!res.ok) return null;
+  return (await res.json()) as PayInfo;
+}
+
+/** Tells the server about a transfer the wallet sent; it checks it on chain and adds the credit. */
+export function confirmPay(body: {
+  network: string;
+  account_id: string;
+  tx_hash: string;
+}): Promise<{ added_usd: number; added_near: number; near_usd: number; credit: Credit }> {
+  return sessionPost('/api/v1/pay', body);
+}
+
+/** The jobs Petals' agent handed out in a conversation, and where each stands (C). Empty on no answer. */
+export async function readJobs(exploration: string): Promise<Job[]> {
+  const res = await fetch(`/api/v1/explorations/${encodeURIComponent(exploration)}/jobs`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  return ((await res.json()) as { jobs?: Job[] }).jobs ?? [];
+}

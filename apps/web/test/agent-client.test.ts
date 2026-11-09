@@ -7,6 +7,7 @@ import {
   drawFlower,
   preparePublish,
   publishEntry,
+  refusalCode,
 } from '../lib/agent-client.ts';
 
 interface Call {
@@ -58,9 +59,10 @@ describe('chat', () => {
 
   test('a refusal throws code and message', async () => {
     serve(json({ error: { code: 'rate_limited', message: 'slow down' } }, 429));
-    await expect(events(agentClient.chat({ messages: [] }))).rejects.toThrow(
-      'rate_limited: slow down',
-    );
+    const refused = await events(agentClient.chat({ messages: [] })).catch((e: unknown) => e);
+    // the code travels apart from the words, so the chat can answer a refusal for what it is (B)
+    expect(refusalCode(refused)).toBe('rate_limited');
+    expect((refused as Error).message).toBe('slow down');
   });
 
   test('a refusal with no JSON throws the status', async () => {

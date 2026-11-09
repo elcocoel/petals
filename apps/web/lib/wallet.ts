@@ -66,3 +66,21 @@ export async function signPrepared(
   if (!signed) throw new Error('The wallet signed in but returned no signed message.');
   return signed;
 }
+
+/**
+ * Sends NEAR from the connected wallet to `receiverId` on `network` (B's payment step), and hands back what
+ * the wallet answered, for the server to check on chain. It rejects when the person says no.
+ */
+export async function sendNear(
+  network: Network,
+  receiverId: string,
+  yocto: string,
+): Promise<unknown> {
+  const connector = await connectorFor(network);
+  const wallet = await connector.wallet();
+  return wallet.signAndSendTransaction({
+    network,
+    receiverId,
+    actions: [{ type: 'Transfer', params: { deposit: yocto } }],
+  });
+}

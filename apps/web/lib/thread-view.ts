@@ -1,10 +1,12 @@
 // The thread as a person reads it: pure projection from the chat's state to rows, with every
 // decision made and every word chosen. The views under components/chat only lay these out, so a
 // redesign replaces them without touching a decision.
+
 import type { FlowerResult, ModelSignature } from '@petal/core/types';
 import { aboutLabel, readAbout } from './ask-about.ts';
 import { chainLabel, dateLabel, networkLabel } from './flower-view.ts';
 import { type Block as MarkdownBlock, parseMarkdown } from './markdown.ts';
+import { PAYMENT_REQUIRED } from './pay.ts';
 import { blocksOf, type ChatState, type Done, type Opened, type Step } from './thread.ts';
 import { workspaceUrl } from './workspace-url.ts';
 
@@ -132,6 +134,8 @@ export type Row =
   /** `about` is what the question carried, kept quiet; `label` says who is speaking */
   | { kind: 'user'; key: string; text: string; label: string; about?: string }
   | { kind: 'note' | 'error'; key: string; text: string }
+  /** Out of credit for Petals' agent: the way to add some, where the person meets it (B). */
+  | { kind: 'pay'; key: string }
   | { kind: 'steps'; key: string; summary: string; steps: StepRow[] }
   /**
    * `speaker` is set where the agent starts speaking, and not on what follows it. `foreign` is another
@@ -318,6 +322,10 @@ export function threadView(v: ThreadInput): Row[] {
         break;
       }
       case 'error':
+        if (b.code === PAYMENT_REQUIRED) {
+          rows.push({ kind: 'pay', key });
+          break;
+        }
         rows.push({
           kind: 'error',
           key,

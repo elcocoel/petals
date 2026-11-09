@@ -19,7 +19,9 @@ import { ConnectAgent } from '../components/chat/ConnectAgent.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { HelperPairing } from '../components/chat/HelperPairing.tsx';
+import { JobRow } from '../components/chat/JobRow.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
+import { PayRow } from '../components/chat/PayRow.tsx';
 import { Speech } from '../components/chat/Speech.tsx';
 import { Steps } from '../components/chat/Steps.tsx';
 import { Thread } from '../components/chat/Thread.tsx';
@@ -1439,6 +1441,50 @@ export const registry: LabEntry[] = [
             onPick={() => {}}
           />
         ),
+      },
+    ],
+  },
+  {
+    id: 'JobRow',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/JobRow.tsx',
+    states: [
+      {
+        name: 'handed',
+        render: () => <JobRow text="Sent to your own agent: Map RaidGuild's proposals" />,
+      },
+      {
+        name: 'reported',
+        render: () => (
+          <JobRow
+            text="Your own agent finished: Map RaidGuild's proposals"
+            summary="246 proposals, by author, added as a layer."
+          />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'PayRow',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/PayRow.tsx',
+    states: [
+      {
+        name: 'out of credit',
+        render: () => <PayRow phase="ready" added={null} onPay={() => {}} />,
+      },
+      {
+        name: 'waiting for the wallet',
+        render: () => <PayRow phase="paying" added={null} onPay={() => {}} />,
+      },
+      { name: 'added', render: () => <PayRow phase="added" added="1" onPay={() => {}} /> },
+      {
+        name: "didn't go through",
+        render: () => <PayRow phase="failed" added={null} onPay={() => {}} />,
       },
     ],
   },

@@ -16,6 +16,7 @@ export function Thread({
   threadRef,
   className = 'pt-column-gap pr-space-32 pl-column-gap',
   renderFlower,
+  renderPay,
   onRefollow,
   onLink,
 }: {
@@ -27,6 +28,8 @@ export function Thread({
   /** Where it sits in whatever holds it. By default, the conversation's column. */
   className?: string;
   renderFlower: (row: FlowerRow | StoredRow) => ReactNode;
+  /** The way to add credit, drawn by whoever composes this, as a flower's row is. */
+  renderPay?: (key: string) => ReactNode;
   onRefollow?: () => void;
   /** A link in the agent's words: true when it was handled here and shouldn't navigate. */
   onLink?: (href: string) => boolean;
@@ -75,6 +78,8 @@ export function Thread({
                   {row.text}
                 </p>
               );
+            case 'pay':
+              return renderPay?.(row.key) ?? null;
             case 'done':
               return <AnsweredBy key={row.key} line={row.line} />;
             case 'turn':
