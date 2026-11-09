@@ -1,7 +1,7 @@
 // A NEAR account's public profile on NEAR Social, read-only (Elco, 9 Nov, through META;
 // research/near-social-profile-fit.md): its name, picture, bio and the links it declares, from the current
-// social-kv/1 API (receiver `social` on mainnet, not the legacy social.near). The browser reads it directly:
-// the API answers the site's origin. Everything here is the account's own words, so it stays plain text,
+// social-kv/1 API (receiver `social` on mainnet, not the legacy social.near). Pure: the browser reads it
+// directly (lib/agent-client.ts, readSocialProfile), as the API answers the site's origin. Everything here is the account's own words, so it stays plain text,
 // and the links are what the account declares, never a proof that it controls them. It signs nobody in,
 // grants nothing, and is never merged with another account's.
 
@@ -50,15 +50,4 @@ export function socialProfile(json: unknown): SocialProfile | null {
   };
   const empty = !profile.name && !profile.about && !profile.avatar && profile.links.length === 0;
   return empty ? null : profile;
-}
-
-/** The profile of `account` on NEAR Social, or null when there's none or it can't be read. */
-export async function readSocialProfile(account: string): Promise<SocialProfile | null> {
-  try {
-    const res = await fetch(`${NEAR_SOCIAL_API}/v1/accounts/${encodeURIComponent(account)}`);
-    if (!res.ok) return null;
-    return socialProfile(await res.json());
-  } catch {
-    return null;
-  }
 }
