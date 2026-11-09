@@ -7,9 +7,17 @@ import { HELPER_PORT } from './terminal-pass.ts';
 
 export const helperChatUrl = (port: number = HELPER_PORT) => `ws://127.0.0.1:${port}/chat`;
 
-/** The first frame: the one-use code, and the page's conversation for the agent to write into. */
-export const chatHello = (pair: string, exploration: string | null) =>
-  JSON.stringify({ pair, ...(exploration ? { exploration } : {}) });
+/**
+ * The first frame: the one-use code, the page's conversation for the agent to write into (a continue
+ * link), and that conversation's own id, which the helper keeps the agent's saved session under, so
+ * reopening the conversation reopens the session (B2; Elco, 9 Nov: "reopening the saved session first").
+ */
+export const chatHello = (pair: string, exploration: string | null, conversation?: string | null) =>
+  JSON.stringify({
+    pair,
+    ...(exploration ? { exploration } : {}),
+    ...(conversation ? { conversation } : {}),
+  });
 
 /** What the page says to the helper once paired. */
 export const toHelper = {
@@ -104,7 +112,12 @@ function detailOf(update: Obj, before = ''): string {
 }
 
 /** Text that streams in pieces joins the item it belongs to: the same message, or the last of its kind. */
-function appendText(s: ChatState, kind: 'agent' | 'thought', id: string, text: string): ChatState {
+function appendText(
+  s: ChatState,
+  kind: 'user' | 'agent' | 'thought',
+  id: string,
+  text: string,
+): ChatState {
   const items = [...s.items];
   const last = items.at(-1);
   const i = id
@@ -113,7 +126,7 @@ function appendText(s: ChatState, kind: 'agent' | 'thought', id: string, text: s
       ? items.length - 1
       : -1;
   const found = i >= 0 ? items[i] : undefined;
-  if (found && (found.kind === 'agent' || found.kind === 'thought')) {
+  if (found && (found.kind === 'user' || found.kind === 'agent' || found.kind === 'thought')) {
     items[i] = { ...found, text: found.text + text };
     return { ...s, items };
   }
@@ -126,6 +139,9 @@ function appendText(s: ChatState, kind: 'agent' | 'thought', id: string, text: s
 
 function applyUpdate(s: ChatState, u: Obj): ChatState {
   switch (u.sessionUpdate) {
+    // the person's own words come back only with a reopened chat's earlier turns
+    case 'user_message_chunk':
+      return appendText(s, 'user', str(u.messageId), words(u.content));
     case 'agent_message_chunk':
       return appendText(s, 'agent', str(u.messageId), words(u.content));
     case 'agent_thought_chunk':
@@ -244,6 +260,12 @@ export function foldChat(s: ChatState, text: string): ChatState {
     }
     case 'update':
       return isObj(m.update) ? applyUpdate(s, m.update) : s;
+    // A reopened chat: its earlier turns, as they were, before anything live. It doesn't speak first.
+    case 'history':
+      return {
+        ...(Array.isArray(m.updates) ? m.updates : []).filter(isObj).reduce(applyUpdate, s),
+        busy: false,
+      };
     case 'permission': {
       const call = isObj(m.toolCall) ? m.toolCall : {};
       return {

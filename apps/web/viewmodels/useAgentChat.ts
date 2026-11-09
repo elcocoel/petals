@@ -24,6 +24,7 @@ import {
   startOwnConversation,
   type TerminalLine,
 } from '../lib/agent-client.ts';
+import { isOwnId } from '../lib/elsewhere.ts';
 import {
   type AgentId,
   codeFrom,
@@ -73,7 +74,8 @@ export function useAgentChat({
       setFailed(null);
       setChat(emptyChat);
       let answeredOnce = false;
-      line.current = openTerminalLine(helperChatUrl(port), chatHello(pair, exploration), {
+      const own = conversation && isOwnId(conversation) ? conversation : null;
+      line.current = openTerminalLine(helperChatUrl(port), chatHello(pair, exploration, own), {
         bytes: () => {},
         text: (text) => {
           answeredOnce = true;
@@ -97,7 +99,7 @@ export function useAgentChat({
         },
       });
     },
-    [],
+    [conversation],
   );
 
   const begin = useCallback(

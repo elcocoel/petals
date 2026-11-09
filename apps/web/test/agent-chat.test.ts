@@ -25,6 +25,60 @@ describe('the chat in the box', () => {
       exploration: 'https://site/s/t',
     });
     expect(JSON.parse(chatHello('abc12345', null))).toEqual({ pair: 'abc12345' });
+    // the conversation's own id, which the helper keeps the agent's saved session under (B2)
+    expect(JSON.parse(chatHello('abc12345', 'https://site/s/t', 'exp_1'))).toEqual({
+      pair: 'abc12345',
+      exploration: 'https://site/s/t',
+      conversation: 'exp_1',
+    });
+  });
+
+  test('a reopened chat shows its earlier turns as they were, and waits for the person', () => {
+    const hello = fold(emptyChat, { t: 'hello', agent: 'claude', model: 'Opus' });
+    const s = fold(hello, {
+      t: 'history',
+      updates: [
+        {
+          sessionUpdate: 'user_message_chunk',
+          messageId: 'u1',
+          content: { type: 'text', text: 'Map ' },
+        },
+        {
+          sessionUpdate: 'user_message_chunk',
+          messageId: 'u1',
+          content: { type: 'text', text: 'Moloch' },
+        },
+        {
+          sessionUpdate: 'agent_message_chunk',
+          messageId: 'a1',
+          content: { type: 'text', text: 'On it.' },
+        },
+        { sessionUpdate: 'tool_call', toolCallId: 't1', title: 'Read', status: 'pending' },
+        { sessionUpdate: 'tool_call_update', toolCallId: 't1', status: 'completed' },
+        { sessionUpdate: 'plan', entries: [{ content: 'Draw it', status: 'completed' }] },
+      ],
+    });
+    expect(s.items.map((i) => i.kind)).toEqual(['user', 'agent', 'tool', 'plan']);
+    expect(s.items[0]).toMatchObject({ kind: 'user', text: 'Map Moloch' });
+    expect(s.items[2]).toMatchObject({ kind: 'tool', status: 'completed' });
+    expect(s.busy).toBe(false);
+    // what comes live afterwards goes on from there
+    const next = fold(
+      asked(s, 'And its delegates?'),
+      update({
+        sessionUpdate: 'agent_message_chunk',
+        messageId: 'a2',
+        content: { type: 'text', text: 'Looking.' },
+      }),
+    );
+    expect(next.items.map((i) => i.kind)).toEqual([
+      'user',
+      'agent',
+      'tool',
+      'plan',
+      'user',
+      'agent',
+    ]);
   });
 
   test('hello pairs it, names the agent, its model, modes and context, and the agent speaks first', () => {
