@@ -75,7 +75,13 @@ export function payRoutes(d: PayDeps): Hono {
         const synced = await chainChat(d.store, chain, me.person, me.account, near_usd, now).catch(
           () => null,
         );
-        if (synced) credit = { ...synced.credit, usd_per_chat: d.usdPerChat };
+        if (synced) {
+          credit = {
+            ...synced.credit,
+            usd_per_chat: d.usdPerChat,
+            balance_yocto: synced.yocto.toString(),
+          };
+        }
       }
       return ok(c, { network, receiver: contract, method: 'deposit', near_usd, credit });
     }
@@ -249,7 +255,11 @@ export function payRoutes(d: PayDeps): Hono {
       added_usd: Math.round((after.credit.left_usd - before) * 1e6) / 1e6,
       added_near: deposit ? yoctoToNear(t.yocto) : 0,
       near_usd,
-      credit: { ...after.credit, usd_per_chat: d.usdPerChat },
+      credit: {
+        ...after.credit,
+        usd_per_chat: d.usdPerChat,
+        balance_yocto: after.yocto.toString(),
+      },
     });
   }
 

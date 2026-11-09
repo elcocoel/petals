@@ -1,5 +1,5 @@
-//! Petals' credit contract (Elco, 9 Nov: a small NEAR contract holds each person's deposit, and they
-//! withdraw unused NEAR themselves, so Petals holds nobody's money).
+//! Petals' credit contract. Elco, 9 Nov, chose "A NEAR contract, before the freeze": "A small contract
+//! holds each person's deposit and they withdraw it themselves, so Petals holds nobody's money."
 //!
 //! - `deposit`: a person sends NEAR with the call; it goes onto their own balance, under their own account.
 //!   Storing a new balance costs a little NEAR, which comes out of the first deposit.
