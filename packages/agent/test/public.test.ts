@@ -1,6 +1,7 @@
-// A public site (PETAL_PUBLIC=1) runs no agent for anyone: each person's own Claude Code, Codex or Hermes
-// does the work on their machine. Health says agent_access none, a chat is refused before anything is
-// read, and a model key in the config is never used. Nothing leaves the process.
+// A public site (PETAL_PUBLIC=1). Since 9 Nov (TGT-030, amended) it runs Petals' own agent on NEAR AI, for a
+// person who pays for it in NEAR or holds an invite (pay.test.ts walks the paying). Health says the agent
+// is gated and the model up, a stranger's chat is refused before anything is read or spent, and nothing
+// leaves the process for either.
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -29,7 +30,7 @@ function site() {
     root: REPO,
     stateDir: mkdtempSync(join(tmpdir(), 'petal-public-agent-')),
     public: true,
-    // a key that reached the config anyway: a public site never builds a model client with it
+    // never reached: nobody here pays, so no call is made with it
     nearAiApiKey: 'sk-never-used',
     llmDailyUsd: 5,
     map: {
@@ -40,24 +41,26 @@ function site() {
     },
     apiBase: 'https://petals.example',
   };
-  return buildPetalApp(cfg, { env: { PETAL_AGENT_ACCESS: 'gated', NODE_ENV: 'production' } });
+  return buildPetalApp(cfg, {
+    env: { PETAL_AGENT_ACCESS: 'gated', PETAL_WALLET_KEY: 'ab'.repeat(32), NODE_ENV: 'production' },
+  });
 }
 
-test('health says there is no agent and no model, and reads no chain to say so', async () => {
+test('health says the agent is gated and the model up, and reads no chain to say so', async () => {
   const health = (await (await site().request('/api/v1/health')).json()) as Out;
-  expect(health).toMatchObject({ agent_access: 'none', llm: 'none', map: 'held', public: true });
+  expect(health).toMatchObject({ agent_access: 'gated', llm: 'up', map: 'held', public: true });
   expect(outside).toEqual([]);
 });
 
-test('a chat is refused, with the way to bring your own agent', async () => {
+test('a stranger’s chat is refused before anything is read or spent, with the way to bring your own agent', async () => {
   const res = await site().request('/api/v1/agent/chat', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', origin: 'https://petals.example' },
     body: JSON.stringify({ messages: [{ role: 'user', content: 'who holds NEAR?' }] }),
   });
   expect(res.status).toBe(403);
   expect(((await res.json()) as Out).error).toMatchObject({
-    code: 'not_on_this_site',
+    code: 'invite_required',
     hint: expect.stringContaining('/connect'),
   });
   expect(outside).toEqual([]);

@@ -198,7 +198,7 @@ export function serveApi(
   const app = serverApp(cfg, { ...(siteKey ? { siteKey } : {}), options });
   // Localhost unless told otherwise: in the container, PETAL_HOST=0.0.0.0, published on 127.0.0.1.
   const hostname = o.hostname ?? (env.PETAL_HOST?.trim() || '127.0.0.1');
-  const mode = cfg.nearAiApiKey && !cfg.fake && !cfg.public ? 'NEAR AI Cloud' : 'no agent spend';
+  const mode = cfg.nearAiApiKey && !cfg.fake ? 'NEAR AI Cloud' : 'no agent spend';
   return serve({ fetch: app.fetch, port, hostname }, (info) => {
     console.log(
       `Petal server on http://${hostname}:${info.port} (${cfg.public ? 'public' : 'local'}, agent: ${mode}, site key ${siteKey ? 'on' : 'off'})`,

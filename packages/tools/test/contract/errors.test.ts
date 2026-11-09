@@ -50,6 +50,7 @@ describe('one test per error code', () => {
       invalid_spec: 422,
       rate_limited: 429,
       budget_exhausted: 429,
+      payment_required: 402,
       not_on_this_site: 403,
       source_failed: 502,
       internal: 500,

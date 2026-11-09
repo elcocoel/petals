@@ -54,7 +54,9 @@ export interface Config {
    * additive (PETAL_PUBLIC=1): a public site. It does no work for a visitor that reaches outside it:
    * no chain reads, web reads, searches, model calls or chain writes. A person's own agent does those
    * on their machine and posts what it made. Tools marked onTheirMachine refuse, with
-   * not_on_this_site, and the shared map is the copies of published rows the site ships.
+   * not_on_this_site, and the shared map is the copies of published rows the site ships. Since 9 Nov
+   * (TGT-030, amended for the hackathon), Petals' own agent runs on it, on NEAR AI, for a person who pays
+   * for it in NEAR or holds an invite.
    */
   public?: boolean;
 }

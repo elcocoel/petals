@@ -61,10 +61,10 @@ function publicSite(): ToolContext {
 }
 
 describe('a public site holds no key and reads nothing outside', () => {
-  test('PETAL_PUBLIC=1 sets public, and the model key is never carried', async () => {
+  test('PETAL_PUBLIC=1 sets public, and carries the model key for the paid agent (9 Nov)', async () => {
     const ctx = publicSite();
     expect(ctx.config.public).toBe(true);
-    expect(ctx.config.nearAiApiKey).toBeUndefined();
+    expect(ctx.config.nearAiApiKey).toBe('sk-never-used');
     expect(ctx.map.writer).toBeNull();
     expect(configFromEnv({}, REPO).public).toBeUndefined();
   });
@@ -115,7 +115,8 @@ describe('a public site holds no key and reads nothing outside', () => {
     expect(svg.status).toBe(200);
     expect(await svg.text()).toContain('<svg');
     const health = (await (await app.request('/api/v1/health')).json()) as Out;
-    expect(health).toMatchObject({ map: 'held', llm: 'none', public: true });
+    // the paid agent's model (9 Nov); the agent's own health says who may use it
+    expect(health).toMatchObject({ map: 'held', llm: 'up', public: true });
     for (const path of [
       '/api/v1/find?query=moloch',
       '/api/v1/look-up?query=moloch',

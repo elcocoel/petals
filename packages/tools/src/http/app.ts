@@ -255,7 +255,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     c.json({
       ok: true,
       map: await mapStatus(ctx),
-      llm: ctx.config.public ? 'none' : ctx.config.nearAiApiKey ? 'up' : 'recorded',
+      llm: ctx.config.nearAiApiKey ? 'up' : 'recorded',
       // additive: true on a public site (PETAL_PUBLIC=1), which does no outside work for visitors
       public: ctx.config.public === true,
       version: API_VERSION,

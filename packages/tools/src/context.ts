@@ -239,7 +239,8 @@ export function configFromEnv(env: Env = process.env, root: string = process.cwd
     live: env.PETAL_LIVE === '1',
     fake: env.PETAL_FAKE === '1',
   };
-  // A public site runs no model for anyone, so it never holds the key: nothing downstream can spend it.
+  // Since 9 Nov a public site runs Petals' own agent for people who pay for it (TGT-030, amended), so it
+  // carries the model key like any other.
   const isPublic = env.PETAL_PUBLIC === '1';
   if (isPublic) cfg.public = true;
   const optional: [keyof Config, string | undefined][] = [
@@ -248,7 +249,7 @@ export function configFromEnv(env: Env = process.env, root: string = process.cwd
     ['databaseUrl', set(env.PETAL_DATABASE_URL)],
     ['rpcUrl', set(env.PETAL_RPC_URL)],
     ['fastnearApiKey', set(env.FASTNEAR_API_KEY)],
-    ['nearAiApiKey', isPublic ? undefined : set(env.NEAR_AI_API_KEY)],
+    ['nearAiApiKey', set(env.NEAR_AI_API_KEY)],
     ['payoutAccount', set(env.PETAL_PAYOUT_ACCOUNT)],
     ['apiBase', set(env.PETAL_API)?.replace(/\/+$/, '')],
     ['blobToken', set(env.BLOB_READ_WRITE_TOKEN)],

@@ -154,6 +154,8 @@ export type ToolErrorCode =
   | 'unauthorised'
   | 'invite_required'
   | 'budget_exhausted'
+  /** additive (9 Nov): Petals' own agent is paid for from the person's wallet, and their credit is used up */
+  | 'payment_required'
   /** additive: a public site refuses what a person's own agent does on their machine (PETAL_PUBLIC) */
   | 'not_on_this_site'
   | 'internal';
