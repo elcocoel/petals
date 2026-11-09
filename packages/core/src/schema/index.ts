@@ -4,6 +4,7 @@
 // schema: the same $defs with a different root, so any JSON Schema tool can use them alone.
 import claimSchema from '../../schema/claim.schema.json' with { type: 'json' };
 import flowerSchema from '../../schema/flower.schema.json' with { type: 'json' };
+import layerSchema from '../../schema/layer.schema.json' with { type: 'json' };
 import snapshotSchema from '../../schema/snapshot.schema.json' with { type: 'json' };
 
 export const SNAPSHOT_SCHEMA_ID = 'urn:petal:schema:snapshot:v1';
@@ -25,6 +26,8 @@ export const schemas: {
   entryV2: object;
   correction: object;
   claim: object;
+  /** the data protocol's layer (005, data.md); stored and hashed, so it refuses fields it doesn't know */
+  layer: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -33,6 +36,7 @@ export const schemas: {
   entryV2: view('entryV2'),
   correction: view('correction'),
   claim: claimSchema,
+  layer: layerSchema,
 };
 
 /** The two source documents, unchanged. */

@@ -26,5 +26,9 @@
   "claim.v1.json": {
     "schema": "urn:petal:schema:claim:v1",
     "sha256": "1c2d27e0d04701b5891613f58cc98c9d07431b459ce3d618e91197c79a2137a0"
+  },
+  "layer.v1.json": {
+    "schema": "urn:petal:schema:layer:v1",
+    "sha256": "1ef775725bff5e01f37710afdd3c68804bbf500d6c8947b47e6c4f729562a325"
   }
 }
