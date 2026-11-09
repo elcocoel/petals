@@ -1,0 +1,23 @@
+{
+  "petal": "correction/v1",
+  "id": "abcdefabcdefabcdefabcdef",
+  "flower_id": "0123456789abcdef01234567",
+  "target": {
+    "participant": "a.pool.near",
+    "caip2": "near:mainnet",
+    "address": "a.pool.near"
+  },
+  "request": "correct",
+  "reason": "The pool is run by someone else.",
+  "requester": "someone.testnet",
+  "proof": {
+    "type": "nep413",
+    "account_id": "someone.testnet",
+    "public_key": "ed25519:11111111111111111111111111111111",
+    "signature": "AAAA",
+    "message": "{\"petal\":\"correction/v1\",\"correction_sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+    "nonce": "AAAA",
+    "recipient": "petals.testnet"
+  },
+  "written_at": "2026-11-04T12:00:00Z"
+}
