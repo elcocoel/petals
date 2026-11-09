@@ -5,6 +5,8 @@
 //   GET  /api/v1/explorations/:ref/live            a signal (SSE) each time it changes: read it again
 //   POST /api/v1/explorations/:ref/steps           save_step
 //   POST /api/v1/explorations/:ref/notes           add_note
+//   POST /api/v1/explorations/:ref/layers          keep_layer; GET lists them (list_layers)
+//   POST /api/v1/explorations/:ref/datasets/fork   fork_dataset
 //   POST /api/v1/explorations/:ref/jobs/take       take_job
 //   POST /api/v1/explorations/:ref/jobs/:job/report  report_job
 //   GET  /api/v1/explorations/:ref/jobs            list_jobs
@@ -180,6 +182,21 @@ export function explorationRoutes(
     answer(c, 'save_step', await withRef(c)),
   );
   app.post('/api/v1/explorations/:ref/notes', async (c) => answer(c, 'add_note', await withRef(c)));
+  // layers kept on the site, and the dataset's versions (005, datasets.ts)
+  app.post('/api/v1/explorations/:ref/layers', async (c) =>
+    answer(c, 'keep_layer', await withRef(c)),
+  );
+  app.get('/api/v1/explorations/:ref/layers', (c) => {
+    const q = c.req.query();
+    return answer(c, 'list_layers', {
+      exploration: c.req.param('ref'),
+      ...(q.about ? { about: q.about } : {}),
+      ...(q.hash ? { hash: q.hash } : {}),
+    });
+  });
+  app.post('/api/v1/explorations/:ref/datasets/fork', async (c) =>
+    answer(c, 'fork_dataset', await withRef(c)),
+  );
   app.post('/api/v1/explorations/:ref/jobs/take', async (c) =>
     answer(c, 'take_job', await withRef(c)),
   );

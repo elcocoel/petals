@@ -43,6 +43,9 @@ const PHASE_A = [
   'brain_route',
   'brain_file',
   'brain_index',
+  'keep_layer',
+  'list_layers',
+  'fork_dataset',
 ];
 
 describe('registry', () => {

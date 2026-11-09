@@ -1,7 +1,7 @@
 # Proposal: two protocols and an open brain
 
 **Created**: 2026-11-09, by SYSTEMS. Revised twice the same day, after Elco read each draft.
-**Status**: Building, 9 Nov. Elco answered choices 1, 2, 3, 5 and 6 (below). Built and on main: the brain's files and their checked index; layers (`layer/v1`), `add_layer` and `compose_view` (`seam/v1`); the brain service and its routing (`brain_route`, `brain_file`, `brain_index`), taught in the skill and reached from `petal.mjs`. Not yet: layers stored on the site with forks, and leads.
+**Status**: Building, 9 Nov. Elco answered choices 1, 2, 3, 5 and 6 (below). Built and on main: the brain's files and their checked index; layers (`layer/v1`), `add_layer` and `compose_view` (`seam/v1`); the brain service and its routing (`brain_route`, `brain_file`, `brain_index`), taught in the skill and reached from `petal.mjs`. Layers kept on the site with versions and forks (`keep_layer`, `list_layers`, `fork_dataset`). Not yet: publishing a version, and leads.
 **Input**: Elco, 9 Nov:
 
 > Please don't make it more complicated than it has to be. The agent barely knows how to do anything. The agent should know how to go deeper and deeper into the basic information it found in the first layer.

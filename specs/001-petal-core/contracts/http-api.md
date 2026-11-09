@@ -48,6 +48,9 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `GET /api/v1/brain` | `brain_index` (005): every chapter's and recipe's header, with the brain commit |
 | `GET /api/v1/brain/route?q=&answers=` | `brain_route`: the best three for a question, the calls a contract answers (comma-separated), or both |
 | `GET /api/v1/brain/files/:id` | `brain_file`: one, whole, by id; `doctrine` is read first |
+| `POST /api/v1/explorations/:ref/layers` | `keep_layer` (005): a layer kept privately under the project's owner, and the dataset version it makes; owner or continue link |
+| `GET /api/v1/explorations/:ref/layers?about=&hash=` | `list_layers`: the owner's layers and versions about an address, or one layer whole; any link |
+| `POST /api/v1/explorations/:ref/datasets/fork` | `fork_dataset`: a new version from one of the owner's, `{ version, add?, drop? }`, naming it as parent; owner or continue link |
 | `POST /api/v1/figures/compare` | `compare_figures` (Phase B) |
 | `POST /api/v1/corrections/prepare` | `prepare_correction` (Phase B) |
 | `POST /api/v1/corrections` | `submit_correction` (Phase B) |

@@ -273,6 +273,34 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE UNIQUE INDEX job_order ON job(exploration, seq);
   `,
+  // 9: layers kept on the site (005, data.md, Elco 9 Nov: "anyone can add, fork and use the prior"; private
+  // first). A layer is named by its hash and kept under its author, never changed. A dataset version is a
+  // set of layer hashes about one address, and the version it came from (parent); seq orders an author's
+  // versions of one address, so the last is their latest.
+  `
+  CREATE TABLE layer (
+    owner TEXT NOT NULL,
+    hash TEXT NOT NULL,
+    about TEXT NOT NULL,
+    standing TEXT NOT NULL,
+    body TEXT NOT NULL,
+    credential TEXT,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (owner, hash)
+  );
+  CREATE INDEX layer_about ON layer(owner, about);
+  CREATE TABLE dataset_version (
+    id TEXT PRIMARY KEY,
+    owner TEXT NOT NULL,
+    about TEXT NOT NULL,
+    seq INTEGER NOT NULL,
+    parent TEXT,
+    layers TEXT NOT NULL,
+    credential TEXT,
+    created_at TEXT NOT NULL
+  );
+  CREATE UNIQUE INDEX dataset_version_order ON dataset_version(owner, about, seq);
+  `,
 ];
 
 /**

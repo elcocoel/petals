@@ -304,6 +304,59 @@ describe.each(engines)('%s', (engine, open) => {
     expect((await store.job.list(x)).map((j) => j.status)).toEqual(['done', 'failed']);
   });
 
+  test('layers: kept once under their author, versions in order, and both move at sign-in', async () => {
+    const anon = u('anon');
+    const person = u('prs');
+    const about = 'eip155:100:0xraid';
+    const layer = (owner: string, hash: string) =>
+      store.layer.keep({
+        owner,
+        hash,
+        about,
+        standing: 'verified',
+        body: `{"h":"${hash}"}`,
+        credential: null,
+        created_at: AT,
+      });
+    const [a, b] = ['a'.repeat(64), 'b'.repeat(64)];
+    expect(await layer(anon, a)).toBe(true);
+    expect(await layer(anon, a)).toBe(false);
+    expect(await layer(anon, b)).toBe(true);
+    expect(await layer(person, a)).toBe(true);
+    expect((await store.layer.list(anon, about)).map((l) => l.hash)).toEqual([a, b]);
+    expect(await store.layer.get(person, b)).toBeNull();
+
+    const version = (owner: string, parent: string | null, layers: string[]) =>
+      store.datasetVersion.add({
+        id: u('dsv'),
+        owner,
+        about,
+        parent,
+        layers,
+        credential: null,
+        created_at: AT,
+      });
+    const v0 = await version(anon, null, [a]);
+    const v1 = await version(anon, v0.id, [a, b]);
+    const p0 = await version(person, null, [a]);
+    expect([v0.seq, v1.seq, p0.seq]).toEqual([0, 1, 0]);
+    expect((await store.datasetVersion.latest(anon, about))?.id).toBe(v1.id);
+    expect((await store.datasetVersion.get(v1.id))?.layers).toEqual([a, b]);
+
+    // signing in: the layer the person holds already stays theirs once, and versions follow theirs
+    await store.layer.moveOwner(anon, person);
+    await store.datasetVersion.moveOwner(anon, person);
+    expect((await store.layer.list(person, about)).map((l) => l.hash).sort()).toEqual([a, b]);
+    expect(await store.layer.list(anon)).toEqual([]);
+    const mine = await store.datasetVersion.list(person, about);
+    expect(mine.map((v) => [v.id, v.seq])).toEqual([
+      [p0.id, 0],
+      [v0.id, 1],
+      [v1.id, 2],
+    ]);
+    expect((await store.datasetVersion.latest(person, about))?.id).toBe(v1.id);
+  });
+
   test("search finds a person's own words, folds accents, takes a prefix, and nobody else's", async () => {
     const a = u('prs');
     const b = u('prs');
