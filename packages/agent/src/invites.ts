@@ -17,7 +17,13 @@ export const INVITE_SPENT =
 export const INVITE_CLOSED =
   "This invite isn't valid any more, so Petal's agent stopped here. You can carry on with your own agent.";
 export const CREDIT_SPENT =
-  "Your credit is used up, so Petal's agent stopped here and nothing more will be spent. You can carry on with your own agent.";
+  "Your credit is used up, so Petal's agent stopped here and nothing more will be spent. Top up from your wallet to carry on, or carry on with your own agent.";
+/** A signed-in person with no credit and no invite (9 Nov): Petals' agent is paid for from their wallet. */
+export const PAYMENT_NEEDED =
+  "Petals' agent runs on NEAR AI and is paid for in NEAR from your wallet, so nothing was spent. Top up to start, or use your own agent.";
+/** Where to pay, for a caller that isn't the page. */
+export const PAY_HINT =
+  'GET /api/v1/pay says where to send NEAR; POST it the transaction to add it.';
 
 /** An invite minted with no days given ends after this many. An open-ended one is never closed. */
 export const DEFAULT_INVITE_DAYS = 14;
@@ -131,6 +137,9 @@ function creditLedger(
   o: {
     refusal: () => Promise<string | null>;
     spent: string;
+    /** the code a refusal carries; default budget_exhausted */
+    code?: 'budget_exhausted' | 'payment_required';
+    hint?: string;
     /** told what each call really cost, inside the same transaction */
     onSpend?: (usd: number) => Promise<void>;
   },
@@ -182,7 +191,10 @@ function creditLedger(
         await o.onSpend?.(actualUsd);
       });
     },
-    refusal: () => (refused ? { message: refused, hint: CONNECT_HINT } : null),
+    refusal: () =>
+      refused
+        ? { message: refused, hint: o.hint ?? CONNECT_HINT, ...(o.code ? { code: o.code } : {}) }
+        : null,
   };
 }
 
@@ -207,9 +219,11 @@ export function inviteLedger(
 }
 
 // A person's own credit (T374). It belongs to the person, not to a session or a wallet: any of their wallets
-// and any browser reach it, and it needs no invite. scripts/fund-person.ts sets it.
+// and any browser reach it, and it needs no invite. scripts/fund-person.ts sets it, and since 9 Nov the
+// person adds to it themselves by paying in NEAR (payPerson).
 const personAccount = (person: string) => `person:${person}`;
 const FUNDED = 'funded';
+const PAID = 'paid';
 
 export interface PersonCredit {
   /** everything ever put in */
@@ -220,9 +234,10 @@ export interface PersonCredit {
   left_usd: number;
 }
 
-const fundedOf = async (store: Store, account: string) =>
+/** What was put in by `reasons`: by default both kinds, what Elco gave and what the person paid. */
+const fundedOf = async (store: Store, account: string, reasons = [FUNDED, PAID]) =>
   (await store.credit.entries(account))
-    .filter((e) => e.reason === FUNDED)
+    .filter((e) => reasons.includes(e.reason))
     .reduce((sum, e) => sum + e.delta_usd, 0);
 
 /** Null for a person with no credit account: they're treated as anyone else. */
@@ -255,7 +270,8 @@ export async function fundPerson(
   if (!(await store.person.get(person))) throw new Error(`no person ${person}`);
   const account = personAccount(person);
   return store.tx(async () => {
-    const change = totalUsd - (await fundedOf(store, account));
+    // only what was given: what the person paid stays theirs, whatever this is set to
+    const change = totalUsd - (await fundedOf(store, account, [FUNDED]));
     if (Math.abs(change) >= DUST_USD) {
       await store.credit.apply({
         id: `fund:${randomUUID()}`,
@@ -267,6 +283,29 @@ export async function fundPerson(
     }
     return (await personCredit(store, person)) as PersonCredit;
   });
+}
+
+/**
+ * A payment the chain has shown (9 Nov): `usd` onto this person's credit, under `id`, which counts once
+ * however often it's sent. Returns what it added (0 the second time) and the credit after.
+ */
+export async function payPerson(
+  store: Store,
+  person: string,
+  o: { id: string; usd: number; now?: Date },
+): Promise<{ added_usd: number; credit: PersonCredit }> {
+  if (!Number.isFinite(o.usd) || o.usd < 0) throw new Error('a payment is a number of dollars');
+  const fresh = await store.credit.apply({
+    id: o.id,
+    account_key: personAccount(person),
+    delta_usd: o.usd,
+    reason: PAID,
+    at: (o.now ?? new Date()).toISOString(),
+  });
+  return {
+    added_usd: fresh ? o.usd : 0,
+    credit: (await personCredit(store, person)) as PersonCredit,
+  };
 }
 
 /** The day's ledger, with this person's credit on top. */
@@ -283,6 +322,8 @@ export function personLedger(
       refusal: async () =>
         ((await personCredit(store, person))?.left_usd ?? 0) > 0 ? null : CREDIT_SPENT,
       spent: CREDIT_SPENT,
+      code: 'payment_required',
+      hint: PAY_HINT,
     },
     day,
     now,

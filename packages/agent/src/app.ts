@@ -12,6 +12,7 @@ import { agentAccess, createAuth, type Network, siteOf } from './auth-routes.ts'
 import { closedLedger, importLedgerFile, serverBudget, storeLedger } from './budget.ts';
 import { DEFAULT_BUDGET, type LlmClient, personUsdPerChat, runMaxSeconds } from './llm.ts';
 import { chosenModel, createNearAiClient, FALLBACK_MODELS, type NearAiOptions } from './near-ai.ts';
+import { type PayDeps, payRoutes } from './pay-routes.ts';
 import { recordedClient, SKELETON_TRANSCRIPT } from './recorded.ts';
 import { type AgentRouteOptions, createAgentRoutes, stateDirOf } from './routes.ts';
 import { importRunFiles, interruptRuns, sqliteRunStore } from './runs.ts';
@@ -27,6 +28,8 @@ export interface PetalAppOptions extends AgentRouteOptions {
   env?: Record<string, string | undefined>;
   /** NEAR RPC per network, for sign-in; default the public RPC, or the context's in fake mode */
   rpcFor?: (network: Network) => Rpc;
+  /** for tests: how a payment is read on chain, and NEAR's price */
+  pay?: Pick<PayDeps, 'readTransfer' | 'nearUsd'>;
 }
 
 /** "recorded", or the NEAR AI client's own up/down. */
@@ -41,7 +44,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   const ctx = createContext(cfg);
   const config = ctx.config ?? cfg;
   const stateDir = stateDirOf(config);
-  const key = config.fake || config.public ? undefined : config.nearAiApiKey || undefined;
+  const key = config.fake ? undefined : config.nearAiApiKey || undefined;
   const llm =
     o.llm ??
     (key
@@ -86,8 +89,9 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   const runs = sqliteRunStore(store);
 
   const env = o.env ?? process.env;
-  // A public site runs no model for anyone: chats are refused, and there's no key to spend.
-  const access = config.public ? 'none' : agentAccess(env);
+  const usdPerOwnChat = personUsdPerChat(env);
+  // A public site runs Petals' agent too (9 Nov): for a person who has paid for it, or holds an invite.
+  const access = agentAccess(env);
   const auth = createAuth({
     store,
     // the same table as publish's nonces: nonceStore(cfg) in @petal/tools opens this very store
@@ -98,7 +102,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     site: siteOf(config.apiBase),
     ...(o.clock ? { clock: o.clock } : {}),
     full: () => overDataBudget(config, ctx.now()),
-    personUsdPerChat: personUsdPerChat(env),
+    personUsdPerChat: usdPerOwnChat,
   });
 
   const app = new Hono();
@@ -128,6 +132,24 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   });
   // Before the tool routes, whose open CORS must not answer for them.
   app.route('/', auth.routes);
+  app.route(
+    '/',
+    payRoutes({
+      store,
+      gate: auth.gate,
+      usdPerChat: usdPerOwnChat,
+      mainnetOnly: config.public === true,
+      ...(o.clock ? { clock: o.clock } : {}),
+      // fakes everywhere: no chain and no price is read
+      ...(config.fake
+        ? {
+            nearUsd: async () => null,
+            readTransfer: () => Promise.reject(new Error('fake mode reads no chain')),
+          }
+        : {}),
+      ...(o.pay ?? {}),
+    }),
+  );
   app.route(
     '/',
     workspaceRoutes({

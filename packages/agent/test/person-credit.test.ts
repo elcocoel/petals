@@ -91,7 +91,8 @@ describe('a person’s own credit', () => {
     const w = setup();
     const { person_id: person, credit } = await w.signIn();
     expect(credit).toBeNull();
-    expect((await w.post('/api/v1/agent/chat', QUESTION)).status).toBe(403);
+    // signed in, with nothing paid and no invite: they're asked to pay (9 Nov)
+    expect((await w.post('/api/v1/agent/chat', QUESTION)).status).toBe(402);
 
     await withStore(w.store(), async (s) => fundPerson(s, person, 5));
     const res = await w.post('/api/v1/agent/chat', QUESTION);
@@ -111,9 +112,9 @@ describe('a person’s own credit', () => {
     const calls = w.llm.requests.length;
     expect(calls).toBe(1);
     const res = await w.post('/api/v1/agent/chat', QUESTION);
-    expect(res.status).toBe(429);
+    expect(res.status).toBe(402);
     const body = (await res.json()) as { error: { code: string; message: string } };
-    expect(body.error.code).toBe('budget_exhausted');
+    expect(body.error.code).toBe('payment_required');
     expect(body.error.message).toMatch(/credit is used up/);
     expect(w.llm.requests.length).toBe(calls);
   });

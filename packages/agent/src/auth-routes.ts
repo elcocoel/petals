@@ -33,6 +33,8 @@ import {
   inviteRefusal,
   inviteState,
   NO_INVITE,
+  PAY_HINT,
+  PAYMENT_NEEDED,
   personCredit,
   personLedger,
 } from './invites.ts';
@@ -40,7 +42,7 @@ import { type Budget, type LlmClient, PERSON_USD_PER_CHAT } from './llm.ts';
 import { fail, limiter } from './routes.ts';
 import type { WalletCipher } from './wallet-cipher.ts';
 
-/** none: a public site (PETAL_PUBLIC=1), which runs no agent for anyone: each person brings their own. */
+/** none: no agent for anyone. A public site set it until 9 Nov; since then it runs the paid agent (gated). */
 export type AgentAccess = 'gated' | 'open' | 'none';
 export type Network = 'testnet' | 'mainnet';
 
@@ -125,6 +127,8 @@ export interface RouteAuth {
   refuseForeign(c: Context): Response | null;
   /** Opens an anonymous session on this response, for a first write. Returns its subject. */
   openAnonymous(c: Context): Promise<string>;
+  /** The signed-in person, the network they signed in on and their wallets there; null for anyone else. */
+  personOf(c: Context): Promise<{ person: string; network: Network; accounts: string[] } | null>;
 }
 
 export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
@@ -390,6 +394,15 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     },
     refuseForeign: (c) => (originAllowed(c) ? null : badOrigin(c)),
     openAnonymous: async (c) => (await newHandle(c)).subject,
+    async personOf(c) {
+      const s = await sessionOf(c);
+      if (!s || !isPerson(s.subject)) return null;
+      const network: Network = s.network === 'testnet' ? 'testnet' : 'mainnet';
+      const accounts = (await walletsOf(s.subject))
+        .filter((w) => w.network === network)
+        .map((w) => w.account_id);
+      return { person: s.subject, network, accounts };
+    },
 
     async admitChat(c, llm, budget) {
       // A recorded run spends nothing: anyone may watch it, from anywhere, and no one owns it.
@@ -414,7 +427,12 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         };
       }
       const id = session?.invite;
-      if (own && !id) return { refused: fail(c, 'budget_exhausted', CREDIT_SPENT, CONNECT_HINT) };
+      // Signed in, with no credit left and no invite: they pay for it themselves (9 Nov).
+      if (session && isPerson(session.subject) && !id) {
+        return {
+          refused: fail(c, 'payment_required', own ? CREDIT_SPENT : PAYMENT_NEEDED, PAY_HINT),
+        };
+      }
       if (!session || !id) {
         return { refused: fail(c, 'invite_required', NO_INVITE, CONNECT_HINT) };
       }

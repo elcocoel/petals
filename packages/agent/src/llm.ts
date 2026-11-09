@@ -78,7 +78,11 @@ export interface BudgetLedger {
   /** swaps a hold for what the call cost; the full hold when that can't be known */
   settle(hold: SpendHold, actualUsd: number): Promise<void>;
   /** why `reserve` last answered null, when the reason isn't today's cap (an invite's end) */
-  refusal?(): { message: string; hint?: string } | null;
+  refusal?(): {
+    message: string;
+    hint?: string;
+    code?: 'budget_exhausted' | 'payment_required';
+  } | null;
 }
 
 /** Limits per chat and per day (http-api.md: 8 tool rounds, 300 s, $0.05; daily cap $3). */
