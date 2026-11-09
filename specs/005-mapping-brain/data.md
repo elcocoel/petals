@@ -15,7 +15,6 @@ Its format is `layer/v1`, a JSON Schema at `packages/core/schema/layer.schema.js
 | Field | What it holds |
 |---|---|
 | `about` | The address, `chain:address` |
-| `by` | The author's account, and the credential that signed it (TGT-005). A reader run by someone's agent has that person as its author |
 | `kind` | `measures` (a value per participant), `relations` (lines between participants) or `leads` (directions of research) |
 | `measures` | Per measure: a name, a unit and a kind (amount, count, share, category or flag, a yes or no), then a value per participant |
 | `relations` | Per line: from, to, a kind (sent to, delegated to, voted with, sponsored), a weight and a unit |
@@ -25,6 +24,8 @@ Its format is `layer/v1`, a JSON Schema at `packages/core/schema/layer.schema.js
 | `when` | A block, a date or a window |
 | `standing` | Verified (read from the chain, and anyone can read it again), inferred (a step beyond a read) or lead (a direction, never a fact) |
 | `hash` | Of everything above |
+
+**Who made it is kept the git way, outside the hash,** as git keeps a commit's author apart from the files: whoever stores a layer keeps, beside it, the author (the account that owns the project, TGT-005), the credential that authorised it (their wallet, or the link it came by), the time, the brain version the site served, and the recipe it was read with. On the site that's the `layer` table (migrations 9 and 10), and `list_layers` shows it as `by`, with the author as `owner` or the link, never an account id. So the same facts from two people are the same layer, with two records of who kept it. A reader run by someone's agent has that person as its author.
 
 ## Git-like, as Elco asked
 

@@ -14,6 +14,7 @@ import { canonicalJson, checkLayer, type Layer, LayerError, layerHash } from '@p
 import type { DatasetVersionRow, LayerRow } from '@petal/store';
 import { defineTool } from '../define.ts';
 import { ToolFailure } from '../errors.ts';
+import { brainOf } from './brain.ts';
 import {
   credentialOf,
   lastingStore,
@@ -40,13 +41,20 @@ const VERSION = obj(['id', 'about', 'seq', 'parent', 'layers', 'created_at'], {
   layers: { type: 'array', items: SHA256 },
   created_at: DATETIME,
 });
-const LAYER_SUMMARY = obj(['hash', 'about', 'standing', 'measures', 'rows', 'created_at'], {
+const BY = obj(['author', 'at', 'brain', 'recipe'], {
+  author: { type: 'string', description: "'owner', or the link it came by" },
+  at: DATETIME,
+  brain: { type: ['string', 'null'], description: 'the brain version the site served then' },
+  recipe: { type: ['string', 'null'] },
+});
+const LAYER_SUMMARY = obj(['hash', 'about', 'standing', 'measures', 'rows', 'created_at', 'by'], {
   hash: SHA256,
   about: { type: 'string' },
   standing: { type: 'string' },
   measures: { type: 'array', items: { type: 'object' } },
   rows: { type: 'integer' },
   created_at: DATETIME,
+  by: BY,
 });
 
 const versionOut = (v: DatasetVersionRow) => ({
@@ -57,6 +65,13 @@ const versionOut = (v: DatasetVersionRow) => ({
   layers: v.layers,
   created_at: v.created_at,
 });
+/** Who made a layer, as a link holder may read it: the owner, or the link it came by, never an account id. */
+const byOf = (r: LayerRow) => ({
+  author: r.credential?.startsWith('link:') ? r.credential : 'owner',
+  at: r.created_at,
+  brain: r.brain ?? null,
+  recipe: r.recipe ?? null,
+});
 const summaryOf = (r: LayerRow) => {
   const l = JSON.parse(r.body) as Layer;
   return {
@@ -66,6 +81,7 @@ const summaryOf = (r: LayerRow) => {
     measures: l.measures,
     rows: l.rows.length,
     created_at: r.created_at,
+    by: byOf(r),
   };
 };
 const newVersionId = () => `dsv_${randomBytes(9).toString('hex')}`;
@@ -106,6 +122,14 @@ export const keepLayer = defineTool<{ exploration: string; layer: unknown }, obj
     const hash = layerHash(l);
     const at = ctx.now().toISOString();
     const credential = credentialOf(ctx, o);
+    // Who made it, the git way, outside its hash: the author (owner), the credential, the time, the brain the
+    // site served and the recipe it was read with. A site with no brain/ keeps none.
+    let brain: string | null = null;
+    try {
+      brain = brainOf(ctx).version;
+    } catch {
+      brain = null;
+    }
     const out = await store.tx(async () => {
       const fresh = await store.layer.keep({
         owner,
@@ -115,6 +139,8 @@ export const keepLayer = defineTool<{ exploration: string; layer: unknown }, obj
         body: canonicalJson(l),
         credential,
         created_at: at,
+        brain,
+        recipe: l.how.recipe ?? null,
       });
       const last = await store.datasetVersion.latest(owner, l.about);
       if (last?.layers.includes(hash)) return { existed: !fresh, version: last };
@@ -158,6 +184,7 @@ export const listLayers = defineTool<
     layers: { type: 'array', items: LAYER_SUMMARY },
     versions: { type: 'array', items: VERSION },
     layer: { type: 'object' },
+    by: BY,
   }),
   annotations: READS,
   async run({ exploration, about, hash }, ctx) {
@@ -167,7 +194,7 @@ export const listLayers = defineTool<
     if (hash) {
       const row = await store.layer.get(owner, hash);
       if (!row) throw new ToolFailure('not_found', `No layer ${hash} in this project.`);
-      return { exploration: o.row.id, layer: JSON.parse(row.body) as Layer };
+      return { exploration: o.row.id, layer: JSON.parse(row.body) as Layer, by: byOf(row) };
     }
     return {
       exploration: o.row.id,

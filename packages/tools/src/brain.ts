@@ -3,7 +3,7 @@
 // this index, and anything that serves it, is a projection of them.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { sha256Hex } from '@petal/core';
+import { canonicalJson, sha256Hex } from '@petal/core';
 
 export const BRAIN_INDEX_VERSION = 'brain-index/v1';
 
@@ -130,9 +130,19 @@ export function brainProblems(
 /** The brain as one commit holds it: the index, and every file by its id. */
 export interface BrainCopy {
   commit: string | null;
+  /**
+   * The brain's version: the hash of its index, which changes with any file, then the commit it came from,
+   * as `<16 hex>@<12 hex>` (`@unknown` with no commit). The one version shown at every door and kept with
+   * every layer (systems check, step 4).
+   */
+  version: string;
   index: BrainIndex;
   texts: Map<string, string>;
 }
+
+/** A brain's version, from its index and commit. */
+export const brainVersionOf = (index: BrainIndex, commit: string | null) =>
+  `${sha256Hex(canonicalJson(index)).slice(0, 16)}@${commit ? commit.slice(0, 12) : 'unknown'}`;
 
 /** The commit the repo holding `dir` is on, read from its `.git`; null when there's none (an image). */
 export function gitCommitOf(dir: string): string | null {
@@ -188,7 +198,7 @@ function headOf(git: string): string | null {
 export function readBrain(dir: string, commit: string | null): BrainCopy {
   const index = buildBrainIndex(dir);
   const texts = new Map(index.entries.map((e) => [e.id, readFileSync(join(dir, e.file), 'utf8')]));
-  return { commit, index, texts };
+  return { commit, version: brainVersionOf(index, commit), index, texts };
 }
 
 /**

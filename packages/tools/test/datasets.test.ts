@@ -97,11 +97,18 @@ describe('layers on the site', () => {
       .body;
     expect(listed.layers.map((l: Out) => l.hash)).toEqual([first.body.hash, second.body.hash]);
     expect(listed.layers[0]).toMatchObject({ standing: 'verified', rows: 1 });
+    // who made it, outside the hash: the link it came by, the time, the brain version, no recipe
+    expect(listed.layers[0].by).toMatchObject({
+      author: expect.stringMatching(/^link:/),
+      brain: expect.stringMatching(/^[0-9a-f]{16}@([0-9a-f]{12}|unknown)$/),
+      recipe: null,
+    });
     expect(listed.versions.map((v: Out) => v.seq)).toEqual([0, 1]);
     const whole = (
       await send(app, 'GET', `/api/v1/explorations/${read}/layers?hash=${first.body.hash}`)
     ).body;
     expect(whole.layer.measures[0].name).toBe('proposals_written');
+    expect(whole.by.author).toMatch(/^link:/);
     const refused = await send(app, 'POST', `/api/v1/explorations/${read}/layers`, {
       layer: voted,
     });
