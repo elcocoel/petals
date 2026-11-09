@@ -39,7 +39,7 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     await run('describe_snapshot', { sha256: f.sha256 });
     const testLayer = {
       petal: 'layer/v1',
-      about: 'near:mainnet:near-validators',
+      about: 'near:mainnet:validators',
       kind: 'measures',
       measures: [{ name: 'proposals_written', unit: 'proposals', kind: 'count' }],
       rows: [

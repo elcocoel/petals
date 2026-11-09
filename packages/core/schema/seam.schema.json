@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:seam:v1",
+  "title": "Petal seam v1",
+  "description": "What crosses from the data side to the look (specs/005-mapping-brain/seam.md): an address, the layers it was made from, its participants, and each piece of data with its kind, standing and layer. The look never computes data; a view names these pieces by name.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "petal",
+    "about",
+    "layers",
+    "participants",
+    "data",
+    "dates",
+    "coverage"
+  ],
+  "properties": {
+    "petal": {
+      "const": "seam/v1"
+    },
+    "about": {
+      "type": "string",
+      "pattern": "^[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,32}:\\S{2,128}$"
+    },
+    "layers": {
+      "description": "the reading first, then each layer, by hash: the dataset's version",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/sha256"
+      }
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "data": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/piece"
+      }
+    },
+    "dates": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "participants",
+        "partial"
+      ],
+      "properties": {
+        "participants": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "partial": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "piece": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "unit",
+        "standing",
+        "layer",
+        "as_of"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "amount",
+            "count",
+            "share",
+            "category",
+            "flag",
+            "date",
+            "parts",
+            "relation"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "standing": {
+          "enum": [
+            "verified",
+            "inferred",
+            "lead"
+          ]
+        },
+        "layer": {
+          "$ref": "#/$defs/sha256"
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "participant",
+              "value"
+            ],
+            "properties": {
+              "participant": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "participant",
+              "part",
+              "value"
+            ],
+            "properties": {
+              "participant": {
+                "type": "string"
+              },
+              "part": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "to",
+              "value"
+            ],
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "parts"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "parts"
+            ],
+            "properties": {
+              "parts": true,
+              "values": false,
+              "lines": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "relation"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "lines"
+            ],
+            "properties": {
+              "lines": true,
+              "values": false,
+              "parts": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "amount",
+                  "count",
+                  "share",
+                  "category",
+                  "flag",
+                  "date"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "values"
+            ],
+            "properties": {
+              "values": true,
+              "parts": false,
+              "lines": false
+            }
+          }
+        }
+      ]
+    }
+  }
+}

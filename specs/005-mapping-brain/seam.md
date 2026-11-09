@@ -21,6 +21,17 @@ One read-only table, made from a chosen set of layers. Its version is `seam/v1`.
 
 What it never holds: leads that aren't the viewer's own, anything about drawing, or anything about the person viewing.
 
+### As built, 9 Nov: the document
+
+`seam/v1` is a JSON Schema at `packages/core/schema/seam.schema.json` (`urn:petal:schema:seam:v1`), made by core's `seamOf` and handed over by `compose_view`, under `specs/protocols.md`:
+
+- `about`, `layers` (the reading first, then each layer, by hash), `participants`, `dates`, `coverage` as above;
+- `data`: each **piece of data** with its `name`, `kind`, `unit`, `standing`, the `layer` it came from and its `as_of`, then `values` (one per participant), `parts` (for `parts`: a petal cut into what it's made of) or `lines` (for `relation`: petal to petal). Relations are pieces of kind `relation`, so one list holds everything a view can name.
+- **The kinds:** amount, count, share, category, flag (a yes or no), date, parts and relation (`DATA_KINDS`). The look's `DataKind` is the same list.
+- **From every reading:** each of its holdings by its own name, as an amount; `amount` (its main data) and `share` (of that), computed here so the look never computes; `kind` and `identity` (categories; identity is verified, self-declared, inferred or none); and `backers` (parts, from its delegations) where it has them. These names are the reading's: a layer can't use them.
+- **About the same address:** a reading is about its chain and the address it was asked for (`dao`, `token`, `mint`, `contract`, `address`, `account`), or its chain and population when it reads a whole network. Every layer, and every added reading, must be about the same, or compose refuses.
+- **Not yet:** a reader's own data is all `amount` until readers say each piece's kind (a count of blocks reads as an amount today).
+
 ## From visual to data: references only
 
 A view (what a flower's spec becomes) names three things:

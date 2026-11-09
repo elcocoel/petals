@@ -38,5 +38,9 @@
   "view.v1.proposals.json": {
     "schema": "urn:petal:schema:view:v1",
     "sha256": "4e8117ea89164e17d63d4dac82a75d1f130d3ae5ab478bfe6262fde9a67543fc"
+  },
+  "seam.v1.json": {
+    "schema": "urn:petal:schema:seam:v1",
+    "sha256": "16ed4c7874baef1318e14b1e27b733cdb47fe48557eb24cc71f59d581312004a"
   }
 }
