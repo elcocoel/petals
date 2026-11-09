@@ -97,17 +97,17 @@ function fakeClaude(w: World, args: string[], cwd: string) {
   const servers = (config.mcpServers ?? {}) as Record<string, StdioServer>;
   const save = () => writeFileSync(file, JSON.stringify({ ...config, mcpServers: servers }));
   if (args[1] === 'add') {
-    if (args[4] !== 'petal' || args[5] !== '-e' || args[7] !== '--') return fail('bad add form');
-    if (servers.petal) return fail(`MCP server petal already exists in ${scope} config`);
+    if (args[4] !== 'petals' || args[5] !== '-e' || args[7] !== '--') return fail('bad add form');
+    if (servers.petals) return fail(`MCP server petals already exists in ${scope} config`);
     const [command, ...rest] = args.slice(8);
     const path = (args[6] as string).replace(/^PATH=/, '');
-    servers.petal = { type: 'stdio', command, args: rest, env: { PATH: path } };
+    servers.petals = { type: 'stdio', command, args: rest, env: { PATH: path } };
     save();
     return ok();
   }
   if (args[1] === 'remove') {
-    if (!servers.petal) return fail(`No MCP server named "petal" in ${scope} scope`);
-    delete servers.petal;
+    if (!servers.petals) return fail(`No MCP server named "petals" in ${scope} scope`);
+    delete servers.petals;
     save();
     return ok();
   }
@@ -116,19 +116,20 @@ function fakeClaude(w: World, args: string[], cwd: string) {
 
 function fakeCodex(w: World, args: string[]) {
   if (args[1] === 'get') {
-    const server = w.codex.get('petal');
-    if (!server) return fail("Error: No MCP server named 'petal' found.");
-    return ok(JSON.stringify({ name: 'petal', enabled: true, transport: server }));
+    const server = w.codex.get('petals');
+    if (!server) return fail("Error: No MCP server named 'petals' found.");
+    return ok(JSON.stringify({ name: 'petals', enabled: true, transport: server }));
   }
   if (args[1] === 'add') {
-    if (args[2] !== 'petal' || args[3] !== '--env' || args[5] !== '--') return fail('bad add form');
+    if (args[2] !== 'petals' || args[3] !== '--env' || args[5] !== '--')
+      return fail('bad add form');
     const [command, ...rest] = args.slice(6);
     const path = (args[4] as string).replace(/^PATH=/, '');
-    w.codex.set('petal', { type: 'stdio', command, args: rest, env: { PATH: path } });
+    w.codex.set('petals', { type: 'stdio', command, args: rest, env: { PATH: path } });
     return ok();
   }
   if (args[1] === 'remove') {
-    w.codex.delete('petal');
+    w.codex.delete('petals');
     return ok();
   }
   return fail(`unexpected: codex ${args.join(' ')}`);
@@ -183,7 +184,7 @@ describe('petal connect claude', () => {
           'add',
           '-s',
           'user',
-          'petal',
+          'petals',
           '-e',
           `PATH=${w.serverPath}`,
           '--',
@@ -197,7 +198,7 @@ describe('petal connect claude', () => {
       string,
       StdioServer
     >;
-    expect(servers.petal?.env?.PATH?.split(':')[0]).toBe(w.bin); // Node 24 first
+    expect(servers.petals?.env?.PATH?.split(':')[0]).toBe(w.bin); // Node 24 first
     const skill = readFileSync(join(w.home, '.claude/skills/petal/SKILL.md'), 'utf8');
     expect(skill).toContain(`pnpm -s --dir "${w.repo}" petal render @spec.json`);
     expect(skill).not.toContain('<repo>');
@@ -211,7 +212,7 @@ describe('petal connect claude', () => {
     expect(r.stdout).toContain(join(w.home, '.claude/skills/petal/SKILL.md'));
     expect(r.stdout).toContain(`claude "who stands behind NEAR's validators?"`);
     expect(r.stdout).toContain(
-      `claude -p "..." --allowedTools mcp__petal "Bash(pnpm *)" "Bash(grep *)" Write`,
+      `claude -p "..." --allowedTools mcp__petals "Bash(pnpm *)" "Bash(grep *)" Write`,
     );
     expect(r.stdout).toContain(`Undo: pnpm -s --dir '${w.repo}' petal connect claude --remove`);
   });
@@ -239,7 +240,7 @@ describe('petal connect claude', () => {
     expect(changes(w)).toEqual([]);
     expect(r.stdout).toContain('Dry run, nothing changed.');
     expect(r.stdout).toContain(
-      `claude mcp add -s user petal -e PATH=${w.serverPath} -- pnpm -s --dir '${w.repo}' petal mcp`,
+      `claude mcp add -s user petals -e PATH=${w.serverPath} -- pnpm -s --dir '${w.repo}' petal mcp`,
     );
     expect(r.stdout).toContain(join(w.home, '.claude/skills/petal/SKILL.md'));
   });
@@ -283,7 +284,7 @@ describe('petal connect claude', () => {
     expect(changes(w)[0]).toMatchObject({ cwd: w.work });
     expect(changes(w)[0]?.args.slice(0, 4)).toEqual(['mcp', 'add', '-s', 'project']);
     const servers = readJson(join(w.work, '.mcp.json')).mcpServers as Record<string, StdioServer>;
-    expect(servers.petal?.command).toBe('pnpm');
+    expect(servers.petals?.command).toBe('pnpm');
     expect(readFileSync(join(w.work, '.claude/skills/petal/SKILL.md'), 'utf8')).toContain(w.repo);
     expect(r.stdout).toContain('asks you to approve the petal server');
     expect(r.stdout).toContain('keep it out of git');
@@ -319,7 +320,7 @@ describe('petal connect claude', () => {
     const r = await connect(w, ['claude']);
     expect(r.code, r.stderr).toBe(0);
     expect(tree(w.home)).toEqual(home);
-    expect(readJson(join(dir, '.claude.json')).mcpServers).toHaveProperty('petal');
+    expect(readJson(join(dir, '.claude.json')).mcpServers).toHaveProperty('petals');
     expect(readFileSync(join(dir, 'skills/petal/SKILL.md'), 'utf8')).toContain('# Petal');
     // it reads the same file claude writes, so a second run is a no-op
     expect((await connect(w, ['claude'])).stdout).toContain('Nothing changed.');
@@ -354,9 +355,9 @@ describe('what is not Petal stays untouched', () => {
     expect(tree(w.home)).toEqual(before);
   });
 
-  test('a claude server named petal that is something else stops it', async () => {
+  test('a claude server named petals that is something else stops it', async () => {
     const w = world();
-    const config = { mcpServers: { petal: { command: 'npx', args: ['flowers', 'mcp'] } } };
+    const config = { mcpServers: { petals: { command: 'npx', args: ['flowers', 'mcp'] } } };
     writeFileSync(join(w.home, '.claude.json'), JSON.stringify(config));
     const before = tree(w.home);
     const r = await connect(w, ['claude']);
@@ -369,26 +370,26 @@ describe('what is not Petal stays untouched', () => {
     expect(changes(w)).toEqual([]);
   });
 
-  test('codex: a server named petal is not replaced, though codex mcp add would', async () => {
+  test('codex: a server named petals is not replaced, though codex mcp add would', async () => {
     const w = world();
     const theirs = { type: 'stdio', command: 'npx', args: ['flowers', 'mcp'], env: null };
-    w.codex.set('petal', theirs);
+    w.codex.set('petals', theirs);
     const r = await connect(w, ['codex']);
     expect(r.code).toBe(1);
     expect(r.stderr).toContain("isn't Petal's");
-    expect(w.codex.get('petal')).toEqual(theirs);
+    expect(w.codex.get('petals')).toEqual(theirs);
     expect(changes(w)).toEqual([]);
   });
 
   test('a server whose name only ends in petal is not Petal', async () => {
     const w = world();
-    w.codex.set('petal', { type: 'stdio', command: 'pnpm', args: ['evil-petal', 'mcp'] });
+    w.codex.set('petals', { type: 'stdio', command: 'pnpm', args: ['evil-petal', 'mcp'] });
     expect((await connect(w, ['codex'])).code).toBe(1);
   });
 
-  test('an HTTP server named petal is not replaced', async () => {
+  test('an HTTP server named petals is not replaced', async () => {
     const w = world();
-    const config = { mcpServers: { petal: { type: 'http', url: 'http://localhost:8787/mcp' } } };
+    const config = { mcpServers: { petals: { type: 'http', url: 'http://localhost:8787/mcp' } } };
     writeFileSync(join(w.home, '.claude.json'), JSON.stringify(config));
     expect((await connect(w, ['claude'])).code).toBe(1);
   });
@@ -426,7 +427,7 @@ describe('what is not Petal stays untouched', () => {
       args: ['-s', '--dir', '/old/clone', 'petal', 'mcp'],
       env: { PATH: '/old/node/bin:/usr/bin:/bin' },
     };
-    writeFileSync(join(w.home, '.claude.json'), JSON.stringify({ mcpServers: { petal: old } }));
+    writeFileSync(join(w.home, '.claude.json'), JSON.stringify({ mcpServers: { petals: old } }));
     mkdirSync(join(w.home, '.claude/skills/petal'), { recursive: true });
     writeFileSync(join(w.home, '.claude/skills/petal/SKILL.md'), SKILL);
     const r = await connect(w, ['claude']);
@@ -436,7 +437,7 @@ describe('what is not Petal stays untouched', () => {
       string,
       StdioServer
     >;
-    expect(servers.petal?.args).toEqual(mcpArgs(w));
+    expect(servers.petals?.args).toEqual(mcpArgs(w));
     expect(r.stdout).toContain('updated');
   });
 
@@ -457,7 +458,7 @@ describe('petal connect codex', () => {
     const r = await connect(w, ['codex']);
     expect(r.code, r.stderr).toBe(0);
     expect(changes(w).map((c) => c.args)).toEqual([
-      ['mcp', 'add', 'petal', '--env', `PATH=${w.serverPath}`, '--', 'pnpm', ...mcpArgs(w)],
+      ['mcp', 'add', 'petals', '--env', `PATH=${w.serverPath}`, '--', 'pnpm', ...mcpArgs(w)],
     ]);
     const skill = readFileSync(join(w.home, '.agents/skills/petal/SKILL.md'), 'utf8');
     expect(skill).toContain(`pnpm -s --dir "${w.repo}" petal render`);
@@ -484,7 +485,7 @@ describe('petal connect codex', () => {
     expect(tree(w.home)).toEqual(empty);
     expect(w.codex.size).toBe(0);
     expect(dry.stdout).toContain(
-      `codex mcp add petal --env PATH=${w.serverPath} -- pnpm -s --dir '${w.repo}' petal mcp`,
+      `codex mcp add petals --env PATH=${w.serverPath} -- pnpm -s --dir '${w.repo}' petal mcp`,
     );
 
     await connect(w, ['codex']);
@@ -629,7 +630,7 @@ describe("the server's PATH", () => {
     w.env.PATH = `${pnpmHome}:/usr/bin`;
     const r = await connect(w, ['codex'], { nodeBin: nodeOnly });
     expect(r.code, r.stderr).toBe(0);
-    expect(w.codex.get('petal')?.env?.PATH).toBe(`${nodeOnly}:${pnpmHome}:/usr/bin:/bin`);
+    expect(w.codex.get('petals')?.env?.PATH).toBe(`${nodeOnly}:${pnpmHome}:/usr/bin:/bin`);
   });
 
   test("ignores the folders pnpm's script runner adds to the PATH", async () => {

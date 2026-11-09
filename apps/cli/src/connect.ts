@@ -61,7 +61,11 @@ export const spawnCommand =
     return { code: r.status ?? 1, stdout: r.stdout, stderr: r.stderr };
   };
 
-const NAME = 'petal';
+/** The MCP server's name, as every door says it; the skill keeps its own name, petal. */
+const SERVER = 'petals';
+const SKILL_NAME = 'petal';
+/** The repo's own command, which runs the server: pnpm petal mcp. */
+const CLI = 'petal';
 const QUESTION = "who stands behind NEAR's validators?";
 const SKILL_MARK = '<!-- petal:shared:begin -->';
 const BOOLEANS = new Set(['dry_run', 'remove', 'project', 'help']);
@@ -168,12 +172,12 @@ function claude(sys: ConnectSystem, project: boolean): Agent {
     id: 'claude',
     label: 'Claude Code',
     where: project ? `only in ${sys.cwd}` : 'in every folder',
-    skillDir: join(skills, NAME),
+    skillDir: join(skills, SKILL_NAME),
     tidyDirs: project ? [skills, join(sys.cwd, '.claude')] : [],
     ...(project ? { tidyConfig: configFile } : {}),
     read() {
       const servers = readConfig(configFile)?.mcpServers as Record<string, unknown> | undefined;
-      const raw = servers?.[NAME] as Record<string, unknown> | undefined;
+      const raw = servers?.[SERVER] as Record<string, unknown> | undefined;
       return raw ? toServer(raw) : null;
     },
     add: (s) => [
@@ -181,19 +185,19 @@ function claude(sys: ConnectSystem, project: boolean): Agent {
       'add',
       '-s',
       scope,
-      NAME,
+      SERVER,
       '-e',
       `PATH=${s.path}`,
       '--',
       s.command,
       ...s.args,
     ],
-    remove: ['mcp', 'remove', '-s', scope, NAME],
+    remove: ['mcp', 'remove', '-s', scope, SERVER],
     next: [
       `Next: start a new Claude Code session ${project ? 'in this folder' : 'in any folder'} and ask:`,
       `  claude "${QUESTION}"`,
       'It asks before using each tool. To run without asking, and still get a local flower file:',
-      `  claude -p "..." --allowedTools mcp__petal "Bash(pnpm *)" "Bash(grep *)" Write`,
+      `  claude -p "..." --allowedTools mcp__petals "Bash(pnpm *)" "Bash(grep *)" Write`,
       ...(project
         ? [
             'The first time, Claude Code asks you to approve the petal server.',
@@ -212,23 +216,25 @@ function codex(sys: ConnectSystem): Agent {
     id: 'codex',
     label: 'Codex',
     where: 'in every folder',
-    skillDir: join(skills, NAME),
+    skillDir: join(skills, SKILL_NAME),
     tidyDirs: [],
     read() {
-      const r = sys.runCommand('codex', ['mcp', 'get', NAME, '--json'], sys.cwd);
+      const r = sys.runCommand('codex', ['mcp', 'get', SERVER, '--json'], sys.cwd);
       if (r.code !== 0) {
         if (/No MCP server named/i.test(r.stderr + r.stdout)) return null;
-        throw new Stop(`codex mcp get ${NAME} failed: ${(r.stderr || r.stdout).trim()}`);
+        throw new Stop(`codex mcp get ${SERVER} failed: ${(r.stderr || r.stdout).trim()}`);
       }
       try {
         const answer = JSON.parse(r.stdout) as { transport?: Record<string, unknown> };
         return toServer(answer.transport ?? {});
       } catch {
-        throw new Stop(`codex mcp get ${NAME} --json didn't answer with JSON: ${r.stdout.trim()}`);
+        throw new Stop(
+          `codex mcp get ${SERVER} --json didn't answer with JSON: ${r.stdout.trim()}`,
+        );
       }
     },
-    add: (s) => ['mcp', 'add', NAME, '--env', `PATH=${s.path}`, '--', s.command, ...s.args],
-    remove: ['mcp', 'remove', NAME],
+    add: (s) => ['mcp', 'add', SERVER, '--env', `PATH=${s.path}`, '--', s.command, ...s.args],
+    remove: ['mcp', 'remove', SERVER],
     next: [
       'Next: start a new Codex session in any folder and ask:',
       `  codex "${QUESTION}"`,
@@ -277,13 +283,13 @@ function serverPath(sys: ConnectSystem): string {
 
 const wantedServer = (sys: ConnectSystem, root: string): Server => ({
   command: 'pnpm',
-  args: ['-s', '--dir', root, NAME, 'mcp'],
+  args: ['-s', '--dir', root, CLI, 'mcp'],
   path: serverPath(sys),
 });
 
 /** Any clone's server counts as Petal's; an HTTP one or a different command does not. */
 const isPetalServer = (s: Server) =>
-  s.command === 'pnpm' && s.args.slice(-2).join(' ') === `${NAME} mcp`;
+  s.command === 'pnpm' && s.args.slice(-2).join(' ') === `${CLI} mcp`;
 
 const sameServer = (a: Server, b: Server) =>
   a.command === b.command && a.args.join('\0') === b.args.join('\0') && a.path === b.path;
@@ -350,9 +356,9 @@ function planConnect(sys: ConnectSystem, agent: Agent, want: Server, text: strin
   if (!have) plan.steps.push(add);
   else if (!isPetalServer(have)) {
     plan.conflicts.push(
-      `${agent.label} already has an MCP server named ${NAME} that isn't Petal's: ${shell([have.command, ...have.args])}. Remove or rename it yourself, then run this again.`,
+      `${agent.label} already has an MCP server named ${SERVER} that isn't Petal's: ${shell([have.command, ...have.args])}. Remove or rename it yourself, then run this again.`,
     );
-  } else if (sameServer(have, want)) plan.kept.push(`MCP server ${NAME}, already this one`);
+  } else if (sameServer(have, want)) plan.kept.push(`MCP server ${SERVER}, already this one`);
   else plan.steps.push(runStep(sys, agent.id, agent.remove), add);
 
   const file = join(agent.skillDir, 'SKILL.md');
@@ -379,7 +385,7 @@ function holdsOnlyPetal(file: string): boolean {
   if (!config || Object.keys(config).length !== 1) return false;
   const servers = config.mcpServers;
   if (typeof servers !== 'object' || servers === null) return false;
-  return Object.keys(servers).join() === NAME;
+  return Object.keys(servers).join() === SERVER;
 }
 
 function removeIfEmpty(dir: string): void {
@@ -390,7 +396,7 @@ function planRemove(sys: ConnectSystem, agent: Agent): Plan {
   const plan: Plan = { steps: [], kept: [], conflicts: [] };
   const have = agent.read();
   if (have && !isPetalServer(have)) {
-    plan.kept.push(`MCP server ${NAME}, left alone: it isn't Petal's`);
+    plan.kept.push(`MCP server ${SERVER}, left alone: it isn't Petal's`);
   } else if (have) {
     const emptiesConfig = agent.tidyConfig !== undefined && holdsOnlyPetal(agent.tidyConfig);
     plan.steps.push(runStep(sys, agent.id, agent.remove));
@@ -493,7 +499,7 @@ export function connect(argv: string[], sys: ConnectSystem): number {
     }
 
     const scope = on.has('project') ? ['--project'] : [];
-    const command = shell(['pnpm', '-s', '--dir', root, NAME, 'connect', id, ...scope]);
+    const command = shell(['pnpm', '-s', '--dir', root, CLI, 'connect', id, ...scope]);
     const line = (verb: string, text: string) => sys.stdout(`  ${verb.padEnd(8)}${text}\n`);
     const nothing = plan.steps.length === 0;
     if (on.has('dry_run')) {

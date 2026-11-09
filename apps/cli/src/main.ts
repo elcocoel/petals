@@ -748,7 +748,7 @@ class Cli {
         p('  claude mcp add petals -- "$(command -v node)" "$HOME/.petals/petal.mjs" mcp\n');
         p('It takes effect in a new session, and changes nothing until the person asks for it.\n');
       } else {
-        p('  claude mcp add petal -- pnpm -s --dir <repo> petal mcp\n');
+        p('  claude mcp add -s user petals -- pnpm -s --dir <repo> petal mcp\n');
         p('`petal connect claude` does this for you, with Node 24 on the PATH.\n');
       }
       return 0;
