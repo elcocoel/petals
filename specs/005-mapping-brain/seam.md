@@ -23,7 +23,7 @@ What it never holds: leads that aren't the viewer's own, anything about drawing,
 
 ## From visual to data: references only
 
-A view (a flower's recipe) names three things:
+A view (what a flower's spec becomes) names three things:
 - the address;
 - the layer hashes it uses;
 - for each channel, a measure or relation **by name**: `height: shares`, `marking: proposals`, `lines: delegated_to`.
@@ -40,7 +40,7 @@ If two layers give the same name, it's written `<layer>:<name>`. The visual side
 |---|---|
 | A new recipe or reader shape, a new measure under an existing kind, new chains, forks and versions, where layers are stored | A new channel, a new encoding or scale, texture, how time is shown, the canvas, legends |
 
-**Reproducible:** a flower is the view input (named by its layer hashes) plus the recipe plus the renderer's version. The same three draw the same flower.
+**Reproducible:** a flower is the view input (named by its layer hashes) plus the view plus the renderer's version. The same three draw the same flower. ("Recipe" in `data.md` means a reader's recipe, on the data side.)
 
 ## Today's code, on either side
 
