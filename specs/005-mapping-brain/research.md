@@ -52,6 +52,42 @@ It's 101 files, about 9,000 lines, read on 9 Nov.
 - "Translate, never delete": a dead doc gets a deprecation header and is left out of loading.
 - Don't lock the list of domains early: its README's 7 and the JSON's labels were never reconciled.
 
+## The harness brain's history: how it was stored and delivered, and why it moved
+
+This was read on 9 Nov, from `harness-brain/HANDOFF-*.md`, `BRAIN-AUDIT-CRITICAL-2026-04-07T2329.md`, `docs/product/` and the Saint Elmo monorepo's history (`github.com/elcocoel/saint-elmo-systems`).
+
+### Timeline
+
+- **Before April 2026: files on disk.** `brain-reader.ts` read `harness-brain/` and routed it by `routing.json`.
+- **7 Apr: an audit of all 68 docs.** "The patterns they teach are correct; the wiring is wrong" (`HANDOFF-NEXT-AGENT.md`).
+- **8 Apr: a separate Supabase project.** It had three tables: `brain_documents`, `brain_routing` and `brain_access_log`.
+  - `seed-brain.ts` loaded it by hand, with a secret key.
+  - It was read by a server action, and by the MCP tool `query_brain`.
+  - No reason is written. The files imply independence ("Products consume the Brain; they do not own it") and metering (`char_count` "for billing/metering").
+- **Problems in the Supabase era:**
+  - Seeding needed the secret key, and builds broke without it ("lazy-init only — or `next build` fails").
+  - Each seed overwrote the documents and kept no history.
+- **29 Jul: Git became the authority, with a derived index.** Commits `817dee5`, `d769fad` and `69d51ff`. ADR-0082 gives the reason: the old setup "split the organism across a filesystem corpus, a separate Supabase project, Harness readers, and Lens synchronization machinery". It also says "A database-only migration would lose Git review and provenance".
+  - **How the index is built:** `backend/provisioning/brain/reindex.py` builds it from every `.md` file and `routing.json`.
+  - **What it's stamped with:** the commit, a SHA-256 per document, and one for the whole.
+  - **Where it's written:** by a service-only function.
+  - **How it's tested:** for determinism, and against a contract.
+- **Gaps in that index:**
+  - It never checks for uncommitted changes.
+  - Nothing checks that routing targets exist.
+  - No code reads the new index yet. The live app still reads the old Supabase project.
+- **What isn't in the files:**
+  - latency or cost as a reason for any move;
+  - tags, releases or a pull-request process.
+
+### Lessons the files state
+
+- "Database documents … are rebuildable projections or receipts. They never compete with Git" (ADR-0082).
+- "Do not edit generated database projections as if they were constitutional source" (`backend/brain/README.md`).
+- "Drift is repaired from the authority, never from a sibling copy." "Mirrors and projections land after the authorized change, never ahead of it" (DEC-032).
+- "Feedback must never mutate the Harness or core system DNA immediately": the Meta-Pass (`docs/product/anti-reactive-feedback-loop.md`).
+- "Cutover work must prove source-to-index, routing, strategist consumption, and receipt projection before retiring the legacy service" (ADR-0082).
+
 ## Petals today
 
 ### Tools
