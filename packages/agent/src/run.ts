@@ -23,7 +23,7 @@ import { registry as defaultRegistry, type ToolContext, withRunSignal } from '@p
 import { approvalRequired, DRAWING_TOOLS, hashOf, STORED_ONLY, yesGate } from './approval.ts';
 import { modelOf } from './catalogue.ts';
 import { Channel } from './channel.ts';
-import { HAND_JOB, jobNotes } from './hand-job.ts';
+import { connectedNotes, HAND_JOB, jobNotes } from './hand-job.ts';
 import type {
   Budget,
   LlmClient,
@@ -57,6 +57,8 @@ export interface RunInput {
   flowers?: EarlierFlower[];
   /** additive (9 Nov): the jobs this run handed to the person's own agent, as they stand now */
   jobs?: JobRow[];
+  /** additive (9 Nov, agent-house): the person's agents, by name, and what each holds */
+  agents?: { name: string; last_seen: string; job: string | null }[];
 }
 
 export interface RunDeps {
@@ -350,6 +352,7 @@ async function loop(
     agentNotes({ budget, today: (opts.today ?? (() => new Date()))(), draftSpec }),
     ...(followUp ? [followUpNotes(earlier)] : []),
     ...(input.jobs?.length ? [jobNotes(input.jobs)] : []),
+    ...(input.agents?.length ? [connectedNotes(input.agents)] : []),
   ].join('\n\n');
   const messages: LlmMessage[] = [{ role: 'system', content: system }, ...conversation];
   // Sent with every call, and they count against the window too.

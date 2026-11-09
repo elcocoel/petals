@@ -13,6 +13,8 @@ export { MIGRATIONS, pgMigrations } from './migrations.ts';
 export { openStore, type Store, type StoreSize, stateStore } from './open.ts';
 export { type PgLimits, pgLimitsOf, redacted } from './postgres.ts';
 export type {
+  AgentLinkRow,
+  AgentRow,
   ChallengeCheck,
   ConversationRow,
   CreditEntryRow,
