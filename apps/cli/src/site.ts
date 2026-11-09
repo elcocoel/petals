@@ -43,6 +43,10 @@ export const SITE_TOOLS = [
   'take_job',
   'report_job',
   'list_jobs',
+  // the brain (005): the site holds the latest from the repo, with its commit
+  'brain_route',
+  'brain_file',
+  'brain_index',
 ] as const;
 
 /**
@@ -244,6 +248,18 @@ export function siteDoor(opts: SiteOptions) {
             rest,
           );
         }
+        case 'brain_route': {
+          const q = new URLSearchParams();
+          if (typeof i.question === 'string') q.set('q', i.question);
+          if (Array.isArray(i.answers)) q.set('answers', i.answers.join(','));
+          return call('GET', `/api/v1/brain/route?${q}`);
+        }
+        case 'brain_file':
+          if (typeof i.id !== 'string' || !i.id.trim())
+            return fault('bad_input', 'Pass id: a chapter or recipe, or doctrine.');
+          return call('GET', `/api/v1/brain/files/${encodeURIComponent(i.id)}`);
+        case 'brain_index':
+          return call('GET', '/api/v1/brain');
         default:
           return fault('internal', `${tool.name} has no route on the site.`);
       }

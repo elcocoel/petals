@@ -30,6 +30,24 @@ find_target (a name) or list_networks → get_snapshot → describe_snapshot + c
   → propose_spec → validate_spec → render_flower → (asked to publish) prepare_publish → sign_url
 ```
 
+## Petals' brain
+
+What Petals knows about mapping power is kept as a short doctrine, a few chapters and the recipes for the systems it knows. The site holds the latest from Petals' repo, and every answer names the commit it came from.
+
+1. **Read the doctrine first,** once a conversation: `brain_file` with `id: "doctrine"`. It holds for every answer.
+2. **Ask which chapter fits:** `brain_route` with the person's words as `question`. For an address, add the view calls its contract answers as `answers` (`read_chain` tells you, such as `sharesToken()`): a system Petals has a recipe for then comes first. It gives the best three, and why each matched.
+3. **Read the one that fits** with `brain_file`, and follow it. Its header says which tools it uses and which chapter comes next. The six steps below still hold.
+
+When a chapter or a recipe misses something, or the person finds a better way, the `contributing` chapter says how to propose the change as a pull request. Nothing changes what the next agent reads until it's reviewed and merged.
+
+## Layers
+
+One reading is one layer: one thing about one address, such as who holds a DAO's shares, or how many proposals each member wrote.
+
+- Every snapshot Petals reads is a layer. Facts you gathered yourself (counted from the chain's events, from a page or a list) become a layer with `add_layer`. Say how you made it, what you read and how sure it is. It stays on this machine, named by its hash, and never changes after.
+- To show two things at once, join layers of the same address with `compose_view`: the reading the flower is of, as `base`, and the others as `layers`. Each measure keeps its name and its source.
+- Then draw the joined reading as any other: `propose_spec` with its `sha256` and, for example, `height: "m:proposals_written"`, then `validate_spec` and `render_flower`.
+
 ## Jobs from a project
 
 Petals' own agent, in the chat on the page, can hand you jobs in the person's project, such as mapping a network. When the person asks you to help with their project, or gives you its link:
@@ -172,6 +190,8 @@ JSON in and out; send `content-type: application/json`. Every answer carries `to
 | `list_flowers`, `get_flower` | `GET /api/v1/flowers?network=&maker=&limit=`, `GET /api/v1/flowers/:id` |
 | `prepare_publish`            | `POST /api/v1/publish/prepare`                                          |
 | `quote_payment`              | `POST /api/v1/quote` (dry)                                              |
+| `brain_route`                | `GET /api/v1/brain/route?q=&answers=` (answers comma-separated)         |
+| `brain_file`, `brain_index`  | `GET /api/v1/brain/files/:id`, `GET /api/v1/brain`                      |
 
 - Over HTTP, `render_flower` includes the SVG unless you send `"include_svg": false`. Send it: the `view_url` is what the person needs, and the SVG would fill your context.
 - Keep large JSON (the spec, your interpretation) in files and send them with `--data-binary @file`.
