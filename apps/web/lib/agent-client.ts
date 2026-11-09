@@ -389,6 +389,14 @@ export const preparePublish = (entry: EntryDraft) =>
 export const publishEntry = (entrySha256: string, proof: Nep413Proof) =>
   postJson<Published>('/api/v1/publish', { entry_sha256: entrySha256, proof });
 
+/** The wallet this session signed in with, and its network, or null: not signed in, or the server doesn't say. */
+export async function readSignedIn(): Promise<{ network: string; account: string } | null> {
+  const res = await fetch('/api/v1/me');
+  if (!res.ok) return null;
+  const { network, account } = (await res.json()) as { network?: string; account?: string | null };
+  return network && account ? { network, account } : null;
+}
+
 /** The visitor's credit for Petals' agent (B), or null: not signed in, or no top-up yet. */
 export async function readCredit(): Promise<Credit | null> {
   const res = await fetch('/api/v1/me');

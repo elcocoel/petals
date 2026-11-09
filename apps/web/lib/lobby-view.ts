@@ -39,6 +39,16 @@ export const fundsWords = {
   failed: "That withdrawal didn't go through. Try again.",
 } as const;
 
+/**
+ * The profile part's public profile, from NEAR Social (Elco, 9 Nov). The links are the account's own
+ * declaration, so their label says only that, plainly. LOBBY's draft.
+ */
+export const socialWords = {
+  declared: 'Declared on NEAR Social',
+  /** One declared link: the service as NEAR Social names it, and what the account wrote there. */
+  link: (service: string, value: string) => `${service} ${value}`,
+} as const;
+
 /** The credit as GET and POST /api/v1/pay answer it with the contract: with what it holds, in yoctoNEAR. */
 export type HeldCredit = Credit & { balance_yocto?: string };
 
