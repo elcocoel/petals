@@ -71,7 +71,7 @@ function storeOf(ctx: ToolContext): Store {
 }
 
 /** A store that ends with the process would lose the work and strand the link. */
-function lastingStore(ctx: ToolContext): Store {
+export function lastingStore(ctx: ToolContext): Store {
   const store = storeOf(ctx);
   if (!store.durable) {
     throw new ToolFailure(
@@ -82,7 +82,7 @@ function lastingStore(ctx: ToolContext): Store {
   return store;
 }
 
-interface Opened {
+export interface Opened {
   row: ExplorationRow;
   as: Access;
   /** the link it was opened with; none for its owner */
@@ -90,7 +90,7 @@ interface Opened {
 }
 
 /** An id or a link, as far as this caller may go. Same failure whatever the reason. */
-async function open(ctx: ToolContext, ref: string): Promise<Opened> {
+export async function open(ctx: ToolContext, ref: string): Promise<Opened> {
   const store = storeOf(ctx);
   const raw = ref.trim();
   if (EXPLORATION_ID.test(raw)) {
@@ -111,7 +111,7 @@ async function open(ctx: ToolContext, ref: string): Promise<Opened> {
 export const explorationIdOf = async (ctx: ToolContext, ref: string): Promise<string> =>
   (await open(ctx, ref)).row.id;
 
-function writable(o: Opened): void {
+export function writable(o: Opened): void {
   if (o.as === 'read') {
     throw new ToolFailure(
       'unauthorised',
@@ -468,14 +468,18 @@ export async function packetMarkdown(ctx: ToolContext, ref: string): Promise<str
 // ---------------------------------------------------------------------------------------------
 // The tools
 
-const REF: JSONSchema = {
+export const REF: JSONSchema = {
   type: 'string',
   minLength: 1,
   maxLength: 500,
   description: 'an exploration id (exp_…) or a link (/s/…)',
 };
-const READS: ToolAnnotations = { readOnlyHint: true, idempotentHint: true, openWorldHint: false };
-const WRITES: ToolAnnotations = { readOnlyHint: false, openWorldHint: false };
+export const READS: ToolAnnotations = {
+  readOnlyHint: true,
+  idempotentHint: true,
+  openWorldHint: false,
+};
+export const WRITES: ToolAnnotations = { readOnlyHint: false, openWorldHint: false };
 const NULLABLE_STRING = { type: ['string', 'null'] };
 const NULLABLE_SHA = { type: ['string', 'null'], pattern: '^[0-9a-f]{64}$' };
 
@@ -658,7 +662,7 @@ const MIRROR =
   "Before you finish each answer, add_note with text: the person's words, then your reply word for word. After each render_flower, save_step with its spec_sha256.";
 
 /** The app at the other end and the last thing it wrote here, in memory. A read moves nothing. */
-function touched(ctx: ToolContext, id: string, tool: string, client?: string): void {
+export function touched(ctx: ToolContext, id: string, tool: string, client?: string): void {
   ctx.live?.touch(id, {
     client: client ?? ctx.caller?.client ?? null,
     last_at: ctx.now().toISOString(),

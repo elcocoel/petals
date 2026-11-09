@@ -14,6 +14,7 @@ import {
 import { computeFiguresTool } from './tools/figures.ts';
 import { findTarget } from './tools/find.ts';
 import { getFlower, listFlowers } from './tools/flowers.ts';
+import { listJobs, reportJob, takeJob } from './tools/jobs.ts';
 import { addLayer, composeViewTool } from './tools/layers.ts';
 import { lookUp } from './tools/look-up.ts';
 import { getNetwork, listNetworks } from './tools/networks.ts';
@@ -66,6 +67,9 @@ export const registry: Tool<any, any>[] = [
   startExploration,
   saveStep,
   addNote,
+  takeJob,
+  reportJob,
+  listJobs,
 ];
 
 /** Title, description and hints, for doors that list them (MCP, the agent's tool list). */

@@ -42,6 +42,7 @@ export const SITE_TOOLS = [
   // jobs the page's agent hands out in a project, done on this machine and reported back (C)
   'take_job',
   'report_job',
+  'list_jobs',
 ] as const;
 
 /**
@@ -195,6 +196,7 @@ export function siteDoor(opts: SiteOptions) {
       'get_exploration',
       'take_job',
       'report_job',
+      'list_jobs',
     ].includes(tool.name);
     const input = optional ? withoutRequired(tool.input, 'exploration') : tool.input;
     const run = async (raw: unknown, ctx: ToolContext): Promise<Json> => {
@@ -227,6 +229,10 @@ export function siteDoor(opts: SiteOptions) {
             `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/jobs/take`,
             {},
           );
+        }
+        case 'list_jobs': {
+          if (!exploration) return noExploration();
+          return call('GET', `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/jobs`);
         }
         case 'report_job': {
           if (!exploration) return noExploration();

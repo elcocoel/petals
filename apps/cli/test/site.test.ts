@@ -69,6 +69,7 @@ function fakeSite(held: Set<string> = new Set()) {
     }
     if (method === 'POST' && /\/jobs\/[^/]+\/report$/.test(path))
       return json({ job: { id: 'job_1', status: 'done' } });
+    if (method === 'GET' && path.endsWith('/jobs')) return json({ jobs: [] });
     if (method === 'GET' && path.startsWith('/api/v1/explorations')) return json({ steps: [] });
     return json({ error: { code: 'not_found', message: 'no' } }, 404);
   };
@@ -319,6 +320,13 @@ describe('jobs from the page’s agent', () => {
       ctx(),
     );
     expect(JSON.parse((site.seen.at(-1) as Seen).body as string)).toEqual({ failed: 'No data' });
+  });
+
+  test('list_jobs reads the project’s jobs from the site, not this machine', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, initial: LINK }).tools(registry);
+    expect(await byName(tools, 'list_jobs').run({}, ctx())).toMatchObject({ jobs: [] });
+    expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/jobs`);
   });
 
   test('without a project, or without the job’s id, nothing is sent', async () => {
