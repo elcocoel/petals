@@ -107,9 +107,15 @@ Elco's definitions (5 Nov), with the words this spec uses:
 
 The map is one component. It goes on `/lab/map` first, then, each on Elco's go, onto the landing's Power Map, behind the chat on `/make` (B3) and into the lobby. People see "Power Map" (Elco, 9 Nov); code says `landscape`, because `map/v2` already names NEAR's shared registry of published flowers.
 
-### M-F. The visual protocol (`view/v1`, W8)
+### M-F. The view (`view/v1`, W8)
 
-Moved here from `004-workspace`. The questions, the channels and the references stay in `004-workspace/visual-protocol.md` until Elco answers. The name follows 005: `view/v1`. The seam with SYSTEMS: channel names, each measure's kind, a certainty on each row if texture shows it (V4), and dated layers for time (V6).
+Moved here from `004-workspace`. Elco answered V1, V3, V7 and V8 on 9 Nov (through META); the contract, in Elco's words, is `contracts/view.md`, with its schema draft `contracts/view-v1.schema.json`.
+
+- **Dimensions are the visual primitives, a handful and fixed; data and dimensions are independent.** "the data doesn't have to know how it's being shown, the rendering doesn't need to care what data is living in which dimension". Any piece of data of a fitting kind can go in any dimension (V1, V3; V2 and V4 follow from it).
+- **One view per person, for every flower, with a default:** "Agent proposes, person adjusts, settings are global" (V7). The lobby's settings come later.
+- **Always the latest look** (V8).
+- **Still open:** V5 (how lines inside a flower show) and V6 (how time shows), in `004-workspace/visual-protocol.md`.
+- **Words, with Elco:** "data" or "a piece of data", and "dimensions"; not "measure".
 
 ### M-G. The edge of the map (later)
 
@@ -121,7 +127,7 @@ A flower's unmapped neighbours show at the edge, and "map this" becomes a job fo
 |---|---|---|
 | The look's version | The one look, the wedge, live and still; the bars stop being drawn | `packages/core/src/versions.ts`, the renderer; how it counts up follows V8 |
 | `places/v1` | Continents and saved places | To be decided in the plan |
-| `view/v1` | The visual protocol, as one schema under the rule SYSTEMS is writing for every protocol: a JSON Schema with its version string, pinned fixtures, a check in `scripts/check.sh`, and a rule for when it becomes v2 | After Elco answers V1, V3, V7 and V8 |
+| `view/v1` | The view, as one schema under the rule SYSTEMS is writing for every protocol: a JSON Schema with its version string, pinned fixtures, a check in `scripts/check.sh`, and a rule for when it becomes v2 | Drafted 9 Nov (`contracts/`), for META's review before code |
 
 ## Milestones
 
