@@ -113,6 +113,8 @@ export async function fileMain(argv: string[], env: Env = process.env): Promise<
     'PETAL_WRITER_KEY_FILE',
     'BLOB_READ_WRITE_TOKEN',
     'PETAL_PUBLIC',
+    'PETAL_DATABASE_URL',
+    'PETAL_DATABASE_PASSWORD_FILE',
   ])
     delete own[k];
 
