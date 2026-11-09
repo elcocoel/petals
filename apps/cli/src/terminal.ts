@@ -124,6 +124,12 @@ export interface TerminalOptions {
   petals?: PetalsSetup;
   /** the site's skill, for the session's notes; default fetched from the site */
   skill?: (site: string) => Promise<string>;
+  /** the first pairing code, made up by the page and handed over in a petals:// link */
+  code?: string;
+  /** started from a link: end with the session, or after two minutes with no pairing */
+  once?: boolean;
+  /** called when a helper started with `once` is done */
+  onDone?: () => void;
 }
 
 /** The site's own skill, or a pointer to it when the site can't be reached. */
@@ -281,7 +287,9 @@ export function findAgent(
     .map((d) => join(d, name));
   for (const p of onPath) if (executable(p)) return p;
 
-  const shell = env.SHELL && /^\/[\w/.-]+$/.test(env.SHELL) ? env.SHELL : null;
+  // Started from an app, there's no SHELL: macOS's default login shell stands in.
+  const given = env.SHELL ?? (process.platform === 'darwin' ? '/bin/zsh' : undefined);
+  const shell = given && /^\/[\w/.-]+$/.test(given) ? given : null;
   if (shell) {
     const r = spawnSync(shell, ['-lic', `command -v ${name}`], {
       encoding: 'utf8',
@@ -385,7 +393,7 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
   const missing = `${AGENTS[o.agent]} isn't installed here, or can't be found. ${INSTALL[o.agent]}, then start this again.`;
   if (!locate()) say(missing);
 
-  let code = newCode();
+  let code = o.code ?? newCode();
   let codeUntil = Date.now() + CODE_MS;
   let tries = 0;
   let active: { ws: WebSocket; child: ChildProcess } | null = null;
@@ -545,6 +553,7 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
     ws.on('error', end);
     child.on('exit', (exitCode) => {
       active = null;
+      if (o.once) setImmediate(() => o.onDone?.());
       say(
         `${AGENTS[o.agent]} ended${exitCode ? ` (exit ${exitCode})` : ''}. To start it again from the page, the code is ${code}.`,
       );
@@ -559,7 +568,7 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
     server.once('error', reject);
     server.listen(port, '127.0.0.1', () => {
       say(
-        `Petals terminal on 127.0.0.1:${port}, for ${[...origins].join(', ')}. It runs ${AGENTS[o.agent]} here, in ${o.cwd ?? process.cwd()}.`,
+        `Petals terminal on 127.0.0.1:${port}, for ${[...origins].join(', ')}. It runs ${AGENTS[o.agent]} here, in ${o.petals && !o.command ? join(o.petals.home, 'work') : (o.cwd ?? process.cwd())}.`,
       );
       announce();
       const opener = o.openPage === undefined ? systemOpener : o.openPage;
@@ -568,7 +577,14 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
         say(`Opening ${first} in your browser: it connects by itself.`);
         opener(pageUrl(first, code, port));
       }
-      say('Ctrl-C here stops it.');
+      if (o.once) {
+        // started from the page's button: nobody waits at a terminal, so it ends on its own
+        setTimeout(() => {
+          if (!active) o.onDone?.();
+        }, 120_000).unref();
+      } else {
+        say('Ctrl-C here stops it.');
+      }
       resolve({
         server,
         code: () => code,
@@ -589,9 +605,13 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
 /** `petal terminal [agent] [--port n] [--allow-origin o]...`: the arguments, or an error to show. */
 export function parseTerminalArgs(
   argv: string[],
-): { agent: Agent; port: number; extra: string[]; open?: false } | { error: string } {
+):
+  | { agent: Agent; port: number; extra: string[]; open?: false; link?: string; app?: false }
+  | { error: string } {
   let agent: Agent = 'claude';
   let open: false | undefined;
+  let link: string | undefined;
+  let app: false | undefined;
   let port = DEFAULT_PORT;
   const extra: string[] = [];
   for (let i = 0; i < argv.length; i++) {
@@ -607,6 +627,11 @@ export function parseTerminalArgs(
       extra.push(o);
     } else if (a === '--no-open') {
       open = false;
+    } else if (a === '--no-app') {
+      app = false;
+    } else if (a === '--link') {
+      link = argv[++i];
+      if (!link) return { error: '--link takes a petals:// link' };
     } else if (a in AGENTS) {
       agent = a as Agent;
     } else {
@@ -615,5 +640,12 @@ export function parseTerminalArgs(
       };
     }
   }
-  return { agent, port, extra, ...(open === false ? { open } : {}) };
+  return {
+    agent,
+    port,
+    extra,
+    ...(open === false ? { open } : {}),
+    ...(link ? { link } : {}),
+    ...(app === false ? { app } : {}),
+  };
 }
