@@ -16,6 +16,7 @@ import type { Settings } from './composer-options.ts';
 import type { ListedConversation } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
 import type { ListedFlower } from './flower-view.ts';
+import type { Job } from './jobs.ts';
 import type { Credit, PayInfo } from './pay.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
@@ -408,4 +409,13 @@ export function confirmPay(body: {
   tx_hash: string;
 }): Promise<{ added_usd: number; added_near: number; near_usd: number; credit: Credit }> {
   return sessionPost('/api/v1/pay', body);
+}
+
+/** The jobs Petals' agent handed out in a conversation, and where each stands (C). Empty on no answer. */
+export async function readJobs(exploration: string): Promise<Job[]> {
+  const res = await fetch(`/api/v1/explorations/${encodeURIComponent(exploration)}/jobs`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  return ((await res.json()) as { jobs?: Job[] }).jobs ?? [];
 }
