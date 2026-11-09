@@ -51,7 +51,8 @@ describe('doors', () => {
     const copy = (id: string) => all.find((d) => d.id === id)?.copy;
     const get = `curl -fsSL ${ORIGIN}/petal.mjs --create-dirs -o ~/.petals/petal.mjs && `;
     const run = '"$(command -v node)" "$HOME/.petals/petal.mjs" mcp';
-    expect(copy('claude-code')).toBe(`${get}claude mcp add petals -- ${run}`);
+    // as connect-claude-code says it: for every folder
+    expect(copy('claude-code')).toBe(`${get}claude mcp add -s user petals -- ${run}`);
     expect(copy('codex')).toBe(`${get}codex mcp add petals -- ${run}`);
     expect(copy('hermes')).toBe(
       `${get}printf 'Y\\n' | hermes mcp add petals --command "$(command -v node)" --args "$HOME/.petals/petal.mjs" mcp`,

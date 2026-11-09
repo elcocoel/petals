@@ -29,6 +29,7 @@ step secrets;       bash scripts/check-secrets.sh
 step fixture-size;  node scripts/check-fixture-size.ts
 step boundary;      bash scripts/check-boundary.sh
 step protocols;     node scripts/check-protocols.ts
+step connect;       node scripts/brain-connect.ts --check
 step tokens;        node packages/tokens/emit.ts --check
 step literals;      node scripts/check-literals.ts
 # The site's production build: Next refuses things the typecheck and tests don't see, such as a hook
