@@ -4,27 +4,28 @@
 // flower's own details once something asks for them. This only wires the ViewModels to the views. The
 // camera isn't told about the boxes. Until the conversation has a flower, the canvas is empty ground
 // (Elco, 8 Nov: no flower hard-coded in).
-import { type SurfaceName, terminalSurface } from '@petal/tokens';
+import type { SurfaceName } from '@petal/tokens';
 import { useEffect } from 'react';
+import { AgentChat } from '../components/chat/AgentChat.tsx';
 import { Composer } from '../components/chat/Composer.tsx';
 import { ConnectAgent } from '../components/chat/ConnectAgent.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
+import { HelperPairing } from '../components/chat/HelperPairing.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
-import { TerminalPass } from '../components/chat/TerminalPass.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { WhoIsHere } from '../components/chat/WhoIsHere.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
+import { agentName, chatWords } from '../lib/agent-chat.ts';
 import type { Catalogue } from '../lib/composer-options.ts';
 import { doorWords } from '../lib/door-words.ts';
 import { conversationBoxes, recordedBoxes, terminalBoxes } from '../lib/float-box.ts';
 import type { ListedFlower } from '../lib/flower-view.ts';
-import { terminalWords } from '../lib/terminal-pass.ts';
 import type { Opened } from '../lib/thread.ts';
+import { useAgentChat } from '../viewmodels/useAgentChat.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
-import { useTerminalPass } from '../viewmodels/useTerminalPass.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
 import { FlowerPanel } from './FlowerPanel.tsx';
@@ -42,7 +43,7 @@ export function InteractionSurface({
 }: {
   scatter: boolean;
   probe: boolean;
-  /** The person's own agent in a terminal, in the output's place (W10, a localhost proof for now). */
+  /** The person's own agent, in a chat in the output's place (W10, a prototype). */
   terminal?: boolean;
   /** The line that starts the Petals helper for it. */
   terminalCommand?: string;
@@ -63,11 +64,12 @@ export function InteractionSurface({
 }) {
   const { state, actions, refs } = useWorkspace({ ...workspace, terminal });
   useFollowScroll(refs.thread, refs.following);
-  const term = useTerminalPass({
+  const term = useAgentChat({
     conversation: workspace.initialElsewhere ?? null,
     known: state.session.known,
     signedIn: Boolean(state.session.account),
   });
+  const chatTitle = term.chat.agent ? agentName(term.chat.agent) : chatWords.box;
   const hands = useFloatBoxes(
     BOXES,
     terminal ? terminalBoxes : workspace.recorded ? recordedBoxes : conversationBoxes,
@@ -97,9 +99,9 @@ export function InteractionSurface({
         onPick={actions.pick}
       />
       <FloatBox
-        label={terminal ? terminalWords.box : (doorLabel(state.door) ?? state.heading)}
-        title={terminal ? terminalWords.box : (doorLabel(state.door) ?? state.heading)}
-        surface={terminal ? terminalSurface : surface}
+        label={terminal ? chatTitle : (doorLabel(state.door) ?? state.heading)}
+        title={terminal ? chatTitle : (doorLabel(state.door) ?? state.heading)}
+        surface={surface}
         hand={hands.output}
         control={
           state.hasList ? (
@@ -109,16 +111,32 @@ export function InteractionSurface({
           ) : undefined
         }
       >
-        {terminal && (
-          <TerminalPass
+        {terminal && term.phase !== 'open' && (
+          <HelperPairing
             command={terminalCommand}
             phase={term.phase}
             code={term.code}
             failed={term.failed}
-            mount={term.mount}
+            ended={chatWords.ended}
             onCode={term.setCode}
             onPair={term.pair}
             onStart={term.start}
+          />
+        )}
+        {terminal && term.phase === 'open' && (
+          <AgentChat
+            chat={term.chat}
+            draft={term.draft}
+            picking={term.picking}
+            threadRef={term.refs.thread}
+            following={term.refs.following}
+            onDraft={term.setDraft}
+            onSend={term.send}
+            onStop={term.stop}
+            onAnswer={term.answer}
+            onMode={term.setMode}
+            onModel={term.setModel}
+            onPick={term.togglePicking}
           />
         )}
         {!terminal && state.door === 'wallet' && (

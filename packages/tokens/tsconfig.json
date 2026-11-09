@@ -1,13 +1,4 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": [
-    "source.ts",
-    "emit.ts",
-    "behaviours.ts",
-    "float.ts",
-    "terminal.ts",
-    "versions",
-    "src",
-    "test"
-  ]
+  "include": ["source.ts", "emit.ts", "behaviours.ts", "float.ts", "versions", "src", "test"]
 }
