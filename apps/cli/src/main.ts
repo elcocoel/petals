@@ -7,7 +7,7 @@
 // convention. So `petal figures near-validators` prints the figures the default flower quotes.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { TOOLS_VERSION } from '@petal/core';
 import type { ToolError } from '@petal/core/types';
 import type { Config, JSONSchema, Tool, ToolContext } from '@petal/tools';
@@ -192,12 +192,21 @@ async function terminal(
   if (origins.length === 0) {
     throw new UsageError('no site may pair: name one with --allow-origin, or set PETAL_API');
   }
+  // The agent starts already in Petals: this file as its tools, the page's site, a folder of its own.
+  const petals = {
+    node: process.execPath,
+    file: resolve(process.argv[1] ?? ''),
+    site: (site ?? origins[0]) as string,
+    home: env.PETALS_HOME?.trim() || join(homedir(), '.petals'),
+  };
   const helper = await startTerminal({
     agent: args.agent,
     port: args.port,
     origins,
     cwd,
     env,
+    petals,
+    ...(args.open === false || env.PETALS_NO_OPEN === '1' ? { openPage: false as const } : {}),
     say: (line) => stderr(`${line}\n`),
   });
   await new Promise<void>((done) => {
