@@ -106,8 +106,7 @@ export async function bundle(): Promise<{ bytes: number }> {
         "// the browser (`start`), and for `terminal`, to run the person's own claude, codex or hermes",
         "// through Python's pty, and on a Mac to make Petals Helper.app with macOS's own tools (osacompile,",
         '// plutil, codesign, lsregister), so the page can start it. Everything else is ordinary npm code:',
-        "// the MCP SDK, ws, ajv, noble's
-        '// cryptography, near-api-js.',
+        "// the MCP SDK, ws, ajv, noble's cryptography, near-api-js.",
         "import { createRequire as __petalRequire } from 'node:module';",
         'const require = __petalRequire(import.meta.url);',
       ].join('\n'),
