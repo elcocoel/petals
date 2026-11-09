@@ -13,7 +13,9 @@
       "!fixtures",
       "!packages/core/schema",
       "!packages/core/src/types/generated",
-      "!**/*.generated.css"
+      "!**/*.generated.css",
+      "!brain/index.json",
+      "!brain/**/*.md"
     ]
   },
   "formatter": {

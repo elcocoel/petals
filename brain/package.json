@@ -8,6 +8,7 @@
   "exports": {
     ".": "./index.ts",
     "./recipes/*": "./recipes/*",
+    "./index.json": "./index.json",
     "./package.json": "./package.json"
   }
 }
