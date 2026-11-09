@@ -30,7 +30,7 @@ export type PayAction =
   | { type: 'Transfer'; params: { deposit: string } }
   | {
       type: 'FunctionCall';
-      params: { methodName: string; args: Record<string, never>; gas: string; deposit: string };
+      params: { methodName: string; args: Record<string, string>; gas: string; deposit: string };
     };
 
 /** What the wallet is asked to send for `yocto`: a deposit into the contract, or a plain transfer. */
