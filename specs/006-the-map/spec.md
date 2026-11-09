@@ -70,6 +70,20 @@ Elco's definitions (5 Nov), with the words this spec uses:
 7. **One look everywhere:** the `/make` flower gets a version name, and the still pictures (landing, lobby, gallery, a flower's page) are drawn by it too. Elco, on the systems check (`coordinator/systems-check-2026-11-09.md`): "no second look - one first look that we improve on".
 8. **First build: a bench at `/lab/map`,** real data only. Onto pages after Elco's go on each.
 
+## Elco on the first bench (9 Nov, evening)
+
+> Okay, so for now, this map is a total mess. We're not in love with it. I don't think trying to convey the connections and the accurate map on on this thing is super great. Also, the Z dimension here is confused. Some stuff is on top of other stuff. I think we need one to add the fact that we grab a logo or some version of a token symbol for each of these organizations. We need a standardized way for the name to show up in a way that it doesn't sort of break the graph. I feel that we need a simplified version for connections at different levels of zoom. And this has to be elegant. I don't think we have to see more than one chain at a time. So maybe there's a selector on the side where you choose your chain, kind of like how you would do on an exchange and then resolution and detail shows up as you zoom in. We need just to work a little bit on the elegance of this zoomed out view. And ideally, there is, although it is a continuous zoom, there should be some version of a click or a moment where you do enter into a I am looking at this specific organization mode and all things else fade away. So we need to, this is a valid start, is a step in the right direction. Now we just need to make things a little simpler and figure out how to make it elegant.
+
+What it asks of the next bench:
+
+1. **One chain at a time,** chosen from a selector on the side, as on an exchange. Detail comes in as you zoom.
+2. **A logo, or some version of a token symbol,** for each organisation.
+3. **One standard way to show a name,** so it never breaks the drawing.
+4. **Simpler connections,** different at each distance.
+5. **One clear order of what's on top of what.**
+6. **A moment of entering one organisation:** the zoom stays continuous, but a click or a moment puts you in "I'm looking at this organisation", and everything else fades.
+7. **Elegance in the far view,** above all.
+
 ## The parts
 
 ### M-A. The one look
