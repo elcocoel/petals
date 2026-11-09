@@ -3,6 +3,7 @@
 // together: connect({ signMessageParams }).
 // near-connect touches window, localStorage and IndexedDB, so it is imported only when used.
 import type { EventMap, NearConnector } from '@hot-labs/near-connect';
+import type { PayAction } from './pay.ts';
 import { base64ToBytes, type Prepared, type WalletSignature } from './publish.ts';
 
 export type Network = 'testnet' | 'mainnet';
@@ -68,19 +69,16 @@ export async function signPrepared(
 }
 
 /**
- * Sends NEAR from the connected wallet to `receiverId` on `network` (B's payment step), and hands back what
- * the wallet answered, for the server to check on chain. It rejects when the person says no.
+ * Sends one action from the connected wallet to `receiverId` on `network` (B's payment step: a transfer,
+ * or a deposit into the credit contract), and hands back what the wallet answered, for the server to check
+ * on chain. It rejects when the person says no.
  */
-export async function sendNear(
+export async function sendAction(
   network: Network,
   receiverId: string,
-  yocto: string,
+  action: PayAction,
 ): Promise<unknown> {
   const connector = await connectorFor(network);
   const wallet = await connector.wallet();
-  return wallet.signAndSendTransaction({
-    network,
-    receiverId,
-    actions: [{ type: 'Transfer', params: { deposit: yocto } }],
-  });
+  return wallet.signAndSendTransaction({ network, receiverId, actions: [action] });
 }
