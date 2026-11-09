@@ -37,6 +37,128 @@
       "sha256": "d0e92bde3644dd00cd0c4e6e594a246378af92686ce836d55cffc748499481fa"
     },
     {
+      "id": "connect-claude-code",
+      "kind": "chapter",
+      "for": "connecting Claude Code to Petals, in a terminal or under Code in the Claude desktop app, and keeping it for next time",
+      "recognise": [
+        "claude code",
+        "claude cli",
+        "claude desktop code",
+        "anthropic",
+        "connect",
+        "set up",
+        "install",
+        "mcp",
+        "add petals",
+        "keep petals"
+      ],
+      "tools": [
+        "start_exploration",
+        "add_note",
+        "render_flower"
+      ],
+      "continues": [
+        "start-from-an-address",
+        "where-power-lives"
+      ],
+      "status": "ready",
+      "file": "chapters/connect-claude-code.md",
+      "sha256": "9faf43efb3e1df6547dd4d91cae04d362215171cdeb4f2eea3ad5d3fa1ea5f00"
+    },
+    {
+      "id": "connect-cloud",
+      "kind": "chapter",
+      "for": "connecting an app that runs in the cloud, or takes a remote MCP server's URL, to Petals as a connector: the Claude app, ChatGPT, Cursor",
+      "recognise": [
+        "claude app",
+        "claude.ai",
+        "claude desktop chat",
+        "claude mobile",
+        "chatgpt",
+        "openai",
+        "cursor",
+        "connector",
+        "custom connector",
+        "remote mcp",
+        "mcp url",
+        "connect",
+        "set up",
+        "add petals"
+      ],
+      "tools": [
+        "list_networks",
+        "describe_snapshot",
+        "render_flower",
+        "start_exploration",
+        "brain_route"
+      ],
+      "continues": [
+        "where-power-lives",
+        "going-deeper"
+      ],
+      "status": "partial",
+      "file": "chapters/connect-cloud.md",
+      "sha256": "16190527161a8a21958ed2629faacf0f25d417c3ce1fd4f1c896c9c6aca7969c"
+    },
+    {
+      "id": "connect-codex",
+      "kind": "chapter",
+      "for": "connecting Codex to Petals, in a terminal, and keeping it for next time",
+      "recognise": [
+        "codex",
+        "codex cli",
+        "openai codex",
+        "connect",
+        "set up",
+        "install",
+        "mcp",
+        "add petals",
+        "keep petals"
+      ],
+      "tools": [
+        "start_exploration",
+        "add_note",
+        "render_flower"
+      ],
+      "continues": [
+        "start-from-an-address",
+        "where-power-lives"
+      ],
+      "status": "ready",
+      "file": "chapters/connect-codex.md",
+      "sha256": "4c5b5a2f2b2586b5f416cdf1e2fbde7794f102e84a4161bf00e13133181982bd"
+    },
+    {
+      "id": "connect-hermes",
+      "kind": "chapter",
+      "for": "connecting Hermes, Nous Research's agent, to Petals, in a terminal or over ACP, and keeping it for next time",
+      "recognise": [
+        "hermes",
+        "hermes agent",
+        "nous",
+        "nous research",
+        "acp",
+        "connect",
+        "set up",
+        "install",
+        "mcp",
+        "add petals",
+        "keep petals"
+      ],
+      "tools": [
+        "start_exploration",
+        "add_note",
+        "render_flower"
+      ],
+      "continues": [
+        "start-from-an-address",
+        "where-power-lives"
+      ],
+      "status": "ready",
+      "file": "chapters/connect-hermes.md",
+      "sha256": "10ebc64f097c140e99ce25337c7fa421e30e2e276bd838e20ce147419c2f067f"
+    },
+    {
       "id": "contributing",
       "kind": "chapter",
       "for": "improving a chapter or a recipe, by pull request",

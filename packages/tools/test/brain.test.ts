@@ -26,6 +26,10 @@ describe('the brain', () => {
     expect(recipes).toEqual(RECIPES.map((r) => r.id).sort());
     expect(index.entries.filter((e) => e.kind === 'chapter').map((e) => e.id)).toEqual([
       'a-new-system',
+      'connect-claude-code',
+      'connect-cloud',
+      'connect-codex',
+      'connect-hermes',
       'contributing',
       'going-deeper',
       'open-source-leads',
