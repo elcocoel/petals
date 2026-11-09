@@ -314,7 +314,7 @@ export const registry: LabEntry[] = [
   section(
     'GallerySection',
     'apps/web/components/landing/GallerySection.tsx',
-    'The atlas',
+    'The Power Map',
     '66:2303',
     () => <GallerySection />,
   ),
@@ -1959,6 +1959,7 @@ export const registry: LabEntry[] = [
 
 /** Exported by components/ but not drawn here, each for a stated reason. */
 export const NOT_IN_LAB: Record<string, string> = {
+  Landing: 'the whole landing page, at /; each of its sections is here',
   InteractionSurface: 'wires the ViewModels to the boxes and the flower, and it lives at /make',
   FlowerCanvas: 'the live flower fills the window, so its bench is its own page, /lab/flower',
   ConversationThread: 'Thread and TurnFlower wired together, and each of those is here',

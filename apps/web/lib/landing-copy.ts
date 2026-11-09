@@ -81,6 +81,18 @@ export const landingCopy = {
       keep: 'Keep Petals in your agent',
     },
     promptNote: 'Works today with Claude Code, Codex, Hermes and any agent that runs commands.',
+    /** The illustrated terminal (Elco, 9 Nov: "let's bring back that terminal visual element here"). */
+    terminal: {
+      start: "YOUR AGENT  ·  A JOB FROM PETALS' AGENT",
+      end: 'ILLUSTRATIVE',
+      lines: [
+        { text: "# Petals' agent hands your agent a job" },
+        { text: '> Map RaidGuild: its shares, and who wrote each proposal.', accent: true },
+        { text: '  reading Gnosis, on this computer…' },
+        { text: '  158 members · 246 proposals' },
+        { text: 'a new layer, in your project', returned: true },
+      ],
+    },
   },
   gallery: {
     title: 'Start with a network you know.',

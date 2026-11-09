@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
-import Landing from '../app/page.tsx';
+import { Landing } from '../components/landing/Landing.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
 import { doors } from '../lib/doors.ts';
 import { landingCopy } from '../lib/landing-copy.ts';

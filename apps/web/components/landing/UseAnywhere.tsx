@@ -6,9 +6,9 @@ import { publicOrigin, siteLinks } from '../../lib/site-links.ts';
 import { CopyPrompt } from '../CopyPrompt.tsx';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
-import { Drawing } from '../ui/Drawing.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
+import { Terminal } from '../ui/Terminal.tsx';
 
 const copy = landingCopy.useAnywhere;
 
@@ -33,9 +33,7 @@ export function UseAnywhere() {
           <p className="my-0 type-caption">{copy.promptNote}</p>
         </div>
       </div>
-      <div className="lg:justify-self-end">
-        <Drawing kind="cell" size={240} />
-      </div>
+      <Terminal {...copy.terminal} />
     </Section>
   );
 }

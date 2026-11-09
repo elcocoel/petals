@@ -55,3 +55,31 @@ export async function api<T>(
 }
 
 export const post = <T>(path: string, body: unknown) => api<T>(path, { method: 'POST', body });
+
+/**
+ * For content-addressed reads only, where the answer can never change: the server's reply is kept by the
+ * site's cache for good, so it must not depend on who is asking (no visitor address, no cookie). The
+ * landing's Power Map draws its saved views this way (lib/power-map.ts). `redirect: 'manual'` keeps a
+ * redirect's Location readable.
+ */
+export async function forever(
+  path: string,
+  init?: { method?: string; body?: unknown; redirect?: 'manual' },
+): Promise<Response | null> {
+  const key = siteKey();
+  try {
+    return await fetch(`${serverBase()}${path}`, {
+      method: init?.method ?? (init?.body === undefined ? 'GET' : 'POST'),
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json',
+        ...(key ? { [SITE_KEY_HEADER]: key } : {}),
+      },
+      body: init?.body === undefined ? undefined : JSON.stringify(init.body),
+      ...(init?.redirect ? { redirect: init.redirect } : {}),
+      next: { revalidate: 60 * 60 * 24 * 365 },
+    });
+  } catch {
+    return null;
+  }
+}
