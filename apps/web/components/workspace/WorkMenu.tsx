@@ -3,16 +3,18 @@
 // be the same". It floats at the window's edge, over whatever the page shows, and keeps its room in the
 // page's flow, open or folded, so a page that lays out beside it isn't covered. Folded, only its word
 // floats, so nothing else under it is held. It holds a person's conversations, a way
-// to a new one, and where folders go. Props only: open or folded comes from the page's ViewModel. Words
+// to a new one, where folders go, and the way to bring your own agent. Props only: open or folded comes from the page's ViewModel. Words
 // from lib/lobby-view.ts.
 import type { ReactNode } from 'react';
 import type { ConversationRow } from '../../lib/conversation-list.ts';
+import { doorWords } from '../../lib/door-words.ts';
 import { lobbyWords } from '../../lib/lobby-view.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { ConversationList } from '../chat/ConversationList.tsx';
 import { Button } from '../ui/Button.tsx';
 import { EmptySlot } from '../ui/EmptySlot.tsx';
 import { SideRail } from '../ui/SideRail.tsx';
+import { TextLink } from '../ui/TextLink.tsx';
 
 export function WorkMenu({
   conversations,
@@ -65,6 +67,12 @@ export function WorkMenu({
               <h2 className="m-0 type-label">{lobbyWords.folders}</h2>
               <EmptySlot />
             </section>
+            {/* The second way in (B and C, 9 Nov): bring your own agent, as /connect says how. */}
+            <div className="p-block-gap">
+              <TextLink variant="quiet" href={siteLinks.connect}>
+                {doorWords.ownAgent}
+              </TextLink>
+            </div>
           </>,
         )}
       </div>
