@@ -161,8 +161,11 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       full: () => overDataBudget(config, ctx.now()),
     }),
   );
-  // The agent's runs read fresh data apart from the doors, so strangers there can't starve a run.
-  const tools = { ...ctx, fresh: freshGate(ctx) };
+  // The agent's runs read fresh data apart from the doors, so strangers there can't starve a run. On a
+  // public site its runs read the chain, pages and search from here too (Elco, 9 Nov: "yes"): every run that
+  // reaches the model is paid for, by the person or an invite. The site's own doors still read nothing.
+  const agentCtx = config.public ? createContext({ ...cfg, public: false }) : ctx;
+  const tools = { ...agentCtx, fresh: freshGate(agentCtx) };
   app.route('/', createAgentRoutes({ tools, llm, budget, runs }, { ...o, auth: auth.gate }));
   app.route('/', httpApp(ctx, { gate: auth.gate }));
   // A store that fails mid-request (a full disk, say) ends in the API's own error shape: no chat

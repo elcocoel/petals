@@ -39,8 +39,16 @@ The words are Elco's, through the copy doc.
 - NEAR AI Cloud running the agent, with every answer signed inside its secure hardware and the proof kept (live already).
 - Later, if Elco wants: paying from any chain through NEAR Intents, whose quotes Petals already asks for.
 
+## 6. Keeping each person's money apart, and giving back what's unused
+
+Elco, 9 Nov: "how do we separate each user's funds, if and how they would withdraw unused funds".
+
+**Lean: a balance per person in our database, and Elco gives back what's left by hand.** This is what's built. Each person has their own balance, which only their own transfers fill, each one checked on chain and counted once. Every turn takes what NEAR AI charged off that balance, and each charge is kept as its own line, so anyone's balance can be added up from their payments and their turns. The NEAR itself sits in `petals.near`. A person who wants their unused balance back asks, and Elco sends it from `petals.near`, at the NEAR price of the day. Nothing else to build or deploy, and the server still holds no key.
+
+*Other way:* a small NEAR contract that holds each person's deposit under their own account, and lets them take back what's unspent themselves, any time, without asking anyone. It shows more of NEAR and Petals holds nobody's money. But the server would need a key that can charge each turn to the contract, which TGT-041 rules out today, and a contract holding real money has to be written, tested and deployed on mainnet before the freeze. Lean: after the hackathon.
+
 ## Three things this changes
 
-- **The page's agent reads the chain itself.** To map anything it reads the chain, web pages and search results, as it did before 8 Nov. Lean: it does, from our server, for people who've paid, and hands the bigger mapping jobs to their own agents when they have them. Without this, a judge with no agent of their own gets no map.
-- **The spec said Petals holds nobody's money.** A top-up means `petals.near` holds what isn't spent yet. Lean: small top-ups, and Elco refunds by hand if someone asks.
-- **The server's daily cap ($3 a day, across everyone) still stands,** so paying visitors could be stopped by it. Lean: paid turns don't count against it, since they aren't Elco's money. It changes only on Elco's word.
+- **The page's agent reads the chain itself.** To map anything it reads the chain, web pages and search results, as it did before 8 Nov. Elco: yes, from our server, for people who've paid. It hands the bigger mapping jobs to their own agents when they have them.
+- **The spec said Petals holds nobody's money.** A top-up means `petals.near` holds what isn't spent yet. Elco: yes; how it's kept apart and given back is section 6.
+- **The server's daily cap ($3 a day, across everyone).** Elco: it stays for unpaid spend only; paid turns don't count.
