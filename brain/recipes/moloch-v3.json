@@ -1,0 +1,76 @@
+{
+  "petal": "recipe/v1",
+  "id": "moloch-v3",
+  "title": "Moloch v3 (Baal) members",
+  "for": "A Moloch v3 DAO (Baal, as DAOhaus deploys it): who holds its shares and loot, and what they did in it",
+  "description": "Members of a Moloch v3 (Baal) DAO. Shares are votes and a claim on the treasury; loot is a claim with no vote. Both are tokens the DAO names. Proposals sponsored and votes cast come from the DAO's own events. Proposals written are counted by who sent each submission, which costs one call per proposal, so ask for it with measures=proposals_written. Give the DAO's address.",
+  "chains": ["gnosis", "ethereum", "base", "arbitrum"],
+  "params": {
+    "dao": {
+      "required": true,
+      "description": "the DAO's (Baal's) contract address",
+      "pattern": "^0x[0-9a-fA-F]{40}$",
+      "example": "0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986"
+    },
+    "chain": {
+      "required": false,
+      "description": "gnosis, ethereum, base or arbitrum; default gnosis",
+      "pattern": "^(gnosis|ethereum|base|arbitrum)$",
+      "example": "gnosis",
+      "default": "gnosis"
+    },
+    "measures": {
+      "required": false,
+      "description": "which measures to read, comma-separated; default shares, loot, proposals_sponsored and votes_cast",
+      "pattern": "^[a-z_]+(,[a-z_]+)*$",
+      "example": "proposals_written"
+    }
+  },
+  "recognise": { "answers": ["sharesToken()", "lootToken()", "avatar()"] },
+  "measures": [
+    {
+      "name": "shares",
+      "unit": "shares",
+      "kind": "amount",
+      "label": "Baal shares (votes)",
+      "shape": "token_balances",
+      "token": { "call": "sharesToken()" }
+    },
+    {
+      "name": "loot",
+      "unit": "loot",
+      "kind": "amount",
+      "label": "Baal loot (no votes)",
+      "shape": "token_balances",
+      "token": { "call": "lootToken()" }
+    },
+    {
+      "name": "proposals_sponsored",
+      "unit": "proposals",
+      "kind": "count",
+      "label": "proposals sponsored",
+      "shape": "count_by_participant",
+      "event": "SponsorProposal(address,uint256,uint256)",
+      "participant": { "topic": 1 }
+    },
+    {
+      "name": "votes_cast",
+      "unit": "votes",
+      "kind": "count",
+      "label": "votes cast",
+      "shape": "count_by_participant",
+      "event": "SubmitVote(address,uint256,uint256,bool)",
+      "participant": { "topic": 1 }
+    },
+    {
+      "name": "proposals_written",
+      "unit": "proposals",
+      "kind": "count",
+      "label": "proposals written (by who sent each submission)",
+      "shape": "count_by_sender",
+      "event": "SubmitProposal(uint256,bytes32,uint256,bytes,uint256,uint256,bool,uint256,string)",
+      "optional": true
+    }
+  ],
+  "bounds": { "max_log_calls": 200, "max_sender_calls": 600 }
+}

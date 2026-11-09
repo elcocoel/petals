@@ -147,6 +147,8 @@ importers:
         specifier: ^4.3.4
         version: 4.3.4
 
+  brain: {}
+
   packages/agent:
     dependencies:
       '@hono/node-server':
@@ -198,6 +200,9 @@ importers:
       '@noble/hashes':
         specifier: ^2.4.0
         version: 2.4.0
+      '@petal/brain':
+        specifier: workspace:*
+        version: link:../../brain
       '@petal/core':
         specifier: workspace:*
         version: link:../core

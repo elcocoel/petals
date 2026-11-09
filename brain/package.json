@@ -1,0 +1,13 @@
+{
+  "name": "@petal/brain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "What Petals' agent knows how to do: the doctrine, the chapters and the reading recipes (specs/005-mapping-brain). Plain files; the repo is their only source.",
+  "exports": {
+    ".": "./index.ts",
+    "./recipes/*": "./recipes/*",
+    "./package.json": "./package.json"
+  }
+}

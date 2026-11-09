@@ -80,6 +80,16 @@ export {
   splMint,
   TOKEN_PROGRAM,
 } from './modules/solana-spl-holders.ts';
+export {
+  checkRecipe,
+  pullRecipe,
+  RECIPES,
+  type ReadingRecipe,
+  recipeDescriptor,
+  recipeModule,
+  recipeModules,
+  SHAPES,
+} from './recipes/index.ts';
 export { modules } from './registry.ts';
 export {
   type BlockInfo,

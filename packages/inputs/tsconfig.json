@@ -3,6 +3,9 @@
   "include": ["src", "test", "scripts"],
   "references": [
     {
+      "path": "../../brain"
+    },
+    {
       "path": "../core"
     },
     {

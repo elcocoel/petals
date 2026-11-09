@@ -11,6 +11,8 @@ const PHASE_A = [
   'get_network',
   'get_snapshot',
   'describe_snapshot',
+  'add_layer',
+  'compose_view',
   'compute_figures',
   'propose_spec',
   'validate_spec',

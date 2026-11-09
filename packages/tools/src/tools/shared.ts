@@ -1,5 +1,5 @@
 // Pieces every tool uses: snapshots by hash, modules by network id, public URLs, schema bits.
-import { exactValues, formatDecimal } from '@petal/core';
+import { COMPOSED, exactValues, formatDecimal } from '@petal/core';
 import type { NetworkDescriptor, Params, Snapshot, Spec } from '@petal/core/types';
 import type { InputModule, SnapshotStore } from '@petal/inputs';
 import { ToolFailure } from '../errors.ts';
@@ -72,7 +72,26 @@ export function moduleFor(ctx: ToolContext, id: string): InputModule {
 
 /** The descriptor for a snapshot's network, if a module reads it. */
 export function descriptorOf(ctx: ToolContext, s: Snapshot): NetworkDescriptor | null {
-  return ctx.modules[s.network.id]?.descriptor ?? null;
+  const d = ctx.modules[s.network.id]?.descriptor ?? null;
+  if (!d || s.module.id !== COMPOSED) return d;
+  // A view over layers (005 seam/v1): what its base reads, plus every measure the layers brought,
+  // any of which can be a petal's height.
+  const known = new Set(d.capabilities.measures.map((m) => m.id));
+  const added = measuresIn(s)
+    .filter((m) => !known.has(m.id))
+    .map((m) => ({ id: m.id, unit: m.unit, label: m.id.replaceAll('_', ' ') }));
+  const height = d.capabilities.by.height ?? [];
+  return {
+    ...d,
+    capabilities: {
+      ...d.capabilities,
+      measures: [...d.capabilities.measures, ...added],
+      by: {
+        ...d.capabilities.by,
+        height: height.includes('m:<metric>') ? height : [...height, 'm:<metric>'],
+      },
+    },
+  };
 }
 
 /** Check params against the descriptor (required, pattern). */
