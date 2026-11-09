@@ -41,8 +41,11 @@ export function newDriven(
   };
 }
 
-/** One frame. With a view, the camera is the map's (live.ts stepLive). True while anything still moves. */
-export function driveFlower(d: Driven, dt: number, view?: View): boolean {
+/**
+ * One frame. With a view, the camera is the map's (live.ts stepLive). Quiet, it draws no notes or band
+ * names: on the map, only the flower you're pointing at or have entered speaks. True while anything moves.
+ */
+export function driveFlower(d: Driven, dt: number, view?: View, quiet = false): boolean {
   const { m, live, scene } = d;
   const stepped = stepLive(live, dt, view);
   const presence = live.presence.x;
@@ -58,7 +61,8 @@ export function driveFlower(d: Driven, dt: number, view?: View): boolean {
           named: live.named.x,
         }
       : null;
-  const mk = marks(m, live.camera, focus, live.ring, d.scratch, d.readout, live.chosen);
+  const said = marks(m, live.camera, focus, live.ring, d.scratch, d.readout, live.chosen);
+  const mk = quiet ? { ...said, notes: [], labels: [] } : said;
   scene.draw({
     marks: mk,
     ring: live.ring,

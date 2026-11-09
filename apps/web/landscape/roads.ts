@@ -1,8 +1,7 @@
-// Roads (specs/006-the-map, M-C): two flowers that share accounts. Far away, one line whose weight is how
-// many they share; up close, it fans out into the shared petals, each line ending on the same account in
-// the other flower. A road says "same accounts", never "working together": the relations index's own
-// words are "Shared membership is not coordination." Pure.
-import type { ReadingPetal } from '@petal/core/types';
+// Connections (specs/006-the-map, M-C, bench v2): two flowers that share accounts, drawn as one line whose
+// width is how many they share, with the number on zoom or a click. A connection says "same accounts",
+// never "working together": the relations index's own words are "Shared membership is not coordination."
+// Pure.
 import { type Link, type Place, ROADS_FAR } from './places.ts';
 
 export interface Road {
@@ -41,39 +40,6 @@ export function roadsBetween(flowers: readonly Place[], links: readonly Link[]):
 export function roadWidth(shared: number): number {
   return Math.max(0.6, Math.min(3.2, 0.6 + 0.9 * Math.log10(Math.max(1, shared))));
 }
-
-/**
- * The petals a road fans into: each pair is a petal in the first flower and the same account's petal in the
- * second. "Everyone else" isn't an account, so it never pairs.
- */
-export function fanPairs(
-  a: readonly Pick<ReadingPetal, 'id' | 'tail'>[],
-  b: readonly Pick<ReadingPetal, 'id' | 'tail'>[],
-): [number, number][] {
-  const inB = new Map<string, number>();
-  b.forEach((p, j) => {
-    if (!p.tail) inB.set(p.id, j);
-  });
-  const pairs: [number, number][] = [];
-  a.forEach((p, i) => {
-    if (p.tail) return;
-    const j = inB.get(p.id);
-    if (j !== undefined) pairs.push([i, j]);
-  });
-  return pairs;
-}
-
-/**
- * The accounts a road shares beyond its drawn petals. A flower draws its top holders and "everyone else",
- * so most of what two big flowers share is usually inside their "everyone else" petals.
- */
-export function restOf(shared: number, pairs: number): number {
-  return Math.max(0, shared - pairs);
-}
-
-/** A flower's "everyone else" petal, or -1 if it has none. */
-export const tailOf = (petals: readonly Pick<ReadingPetal, 'tail'>[]): number =>
-  petals.findIndex((p) => p.tail);
 
 /** How much a road shows at a distance: the more roads on screen, the fainter each, so it never tangles. */
 export function crowdFade(onScreen: number): number {

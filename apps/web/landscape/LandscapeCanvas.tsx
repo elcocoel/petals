@@ -1,39 +1,45 @@
 'use client';
-// The map, live (specs/006-the-map): an empty SVG for the map's scene and its live flowers to draw in,
-// filling the window. Each flower's drawing model is made here from its reading, once.
-import { useMemo, useRef } from 'react';
-import type { Home } from '../flower/camera.ts';
+// The map, live (specs/006-the-map, bench v2): one chain at a time, chosen down the left as on an exchange,
+// and an empty SVG for that chain's scene and its live flowers to draw in, filling the window. Each
+// flower's drawing model is made here from its reading, once. The words are the data's: each chain's name
+// and how many flowers it has.
+import { type RefObject, useMemo, useRef, useState } from 'react';
+import { Button } from '../components/ui/Button.tsx';
+import { Mono } from '../components/ui/Mono.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
 import type { Continent, Place } from './places.ts';
 import type { Road } from './roads.ts';
+import type { LandFlower } from './scene.ts';
+import { reachOf } from './space.ts';
 import { type LandscapeData, useLandscape } from './useLandscape.ts';
 
-export function LandscapeCanvas({
+export interface CanvasFlower {
+  name: string;
+  mark: { logo: string | null; symbol: string };
+  place: Place;
+  reading: FlowerReading;
+}
+
+export interface CanvasChain {
+  chain: string;
+  label: string;
+  continent: Continent;
+}
+
+/** The chain the bench opens on: the most connected one (a lean, specs/006-the-map plan). */
+const FIRST = 'eip155:1';
+
+function Land({
   data,
-  probe = false,
+  probe,
+  aside,
 }: {
-  data: {
-    flowers: { title: string; place: Place; reading: FlowerReading }[];
-    roads: Road[];
-    continents: Continent[];
-    continentNames: string[];
-    home: Home;
-  };
-  probe?: boolean;
+  data: LandscapeData;
+  probe: boolean;
+  aside: RefObject<HTMLDivElement | null>;
 }) {
   const svg = useRef<SVGSVGElement>(null);
-  const land = useMemo<LandscapeData>(
-    () => ({
-      ...data,
-      flowers: data.flowers.map((f) => ({
-        title: f.title,
-        place: f.place,
-        model: modelOf(f.reading),
-      })),
-    }),
-    [data],
-  );
-  useLandscape(svg, land, probe);
+  useLandscape(svg, data, probe, aside);
   return (
     // surface.canvas
     <svg
@@ -42,5 +48,66 @@ export function LandscapeCanvas({
       aria-label="Power Map"
       className="fixed inset-0 block size-full touch-none select-none bg-surface"
     />
+  );
+}
+
+export function LandscapeCanvas({
+  data,
+  probe = false,
+}: {
+  data: { flowers: CanvasFlower[]; roads: Road[]; chains: CanvasChain[] };
+  probe?: boolean;
+}) {
+  const aside = useRef<HTMLDivElement>(null);
+  const [chain, setChain] = useState(
+    data.chains.some((c) => c.chain === FIRST) ? FIRST : (data.chains[0]?.chain ?? ''),
+  );
+  const counts = useMemo(() => {
+    const n = new Map<string, number>();
+    for (const f of data.flowers) n.set(f.place.chain, (n.get(f.place.chain) ?? 0) + 1);
+    return n;
+  }, [data]);
+  const land = useMemo<LandscapeData | null>(() => {
+    const here = data.chains.find((c) => c.chain === chain);
+    if (!here) return null;
+    const at = new Map<number, number>();
+    const flowers: LandFlower[] = [];
+    data.flowers.forEach((f, i) => {
+      if (f.place.chain !== chain) return;
+      at.set(i, flowers.length);
+      const model = modelOf(f.reading);
+      flowers.push({ name: f.name, mark: f.mark, place: f.place, model, reach: reachOf(model) });
+    });
+    const roads = data.roads.flatMap((r) => {
+      const a = at.get(r.a);
+      const b = at.get(r.b);
+      return a === undefined || b === undefined ? [] : [{ ...r, a, b }];
+    });
+    const { x, y, r } = here.continent;
+    return { flowers, roads, home: { cx: x, cy: y, r } };
+  }, [data, chain]);
+
+  return (
+    <>
+      {land && <Land key={chain} data={land} probe={probe} aside={aside} />}
+      <div
+        ref={aside}
+        className="fixed top-space-16 left-space-16 flex w-tile-width flex-col gap-space-4"
+      >
+        {data.chains.map((c) => (
+          <Button
+            key={c.chain}
+            variant="row"
+            pressed={c.chain === chain}
+            onClick={() => setChain(c.chain)}
+          >
+            <span className="flex w-full items-center justify-between gap-text-gap">
+              <span>{c.label}</span>
+              <Mono as="span">{counts.get(c.chain) ?? 0}</Mono>
+            </span>
+          </Button>
+        ))}
+      </div>
+    </>
   );
 }

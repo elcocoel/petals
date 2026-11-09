@@ -2,11 +2,13 @@
 // pairs, joined. A view's spec names its snapshot, and a group's latest observation names the same
 // snapshot, so a flower finds its group, and two flowers share a road when their groups share accounts.
 // Pure: the scripts and the bench's loader both use it.
+import { sha256Hex } from '@petal/core';
 import type { Reading } from '@petal/core/types';
 import type { Link, Seed } from './places.ts';
 
 export const NIGHT_FIXTURE = 'fixtures/landscape/night-2026-11-09.json.gz';
 export const PLACES_FILE = 'apps/web/lab/map/places.json';
+export const LOGOS_DIR = 'fixtures/landscape/logos';
 
 /** One saved view from the run's index, with the reading the server gave for it. */
 export interface NightView {
@@ -97,4 +99,25 @@ export function linksOf(night: Night): Link[] {
     if (a && b) links.push({ a, b, shared: p.shared, weight: p.weight });
   }
   return links;
+}
+
+/** Trust Wallet's folder for a chain, as the run's index names it, or null where it lists no tokens. */
+export function trustWalletChain(chain: string): string | null {
+  return (
+    { ethereum: 'ethereum', gnosis: 'xdai', arbitrum: 'arbitrum', base: 'base', solana: 'solana' }[
+      chain
+    ] ?? null
+  );
+}
+
+/**
+ * A token's logo file in LOGOS_DIR, or null where the chain has no logos: named by a hash of its chain and
+ * address, so no token's address ends up in a file name (one Solana mint starts with a word the
+ * publication boundary refuses in names).
+ */
+export function logoFile(chain: string, address: string): string | null {
+  const folder = trustWalletChain(chain);
+  if (!folder || !address) return null;
+  const key = `${folder}:${folder === 'solana' ? address : address.toLowerCase()}`;
+  return `${sha256Hex(key).slice(0, 24)}.png`;
 }

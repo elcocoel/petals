@@ -52,8 +52,8 @@ export const SIZE_MOST = 2.5;
 /** Members at which a flower is smallest, and at which it stops growing. */
 const MEMBERS_LEAST = 10;
 const MEMBERS_MOST = 100_000;
-/** A flower keeps this much room around its petals, for its name and a gap. */
-const ROOM = 1.15;
+/** A flower keeps this much room around its petals, for its name under it and a gap. */
+const ROOM = 1.5;
 /** Between continents, in a flower's radii. */
 const SEA = 1.5;
 const STEPS = 400;

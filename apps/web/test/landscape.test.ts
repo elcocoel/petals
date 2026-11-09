@@ -6,6 +6,7 @@ import { newLive, stepLive } from '../flower/live.ts';
 import { modelOf } from '../flower/model.ts';
 import { SHAPE } from '../flower/ring.ts';
 import { syntheticReading } from '../lab/flower/synthetic.ts';
+import { benchLandscape } from '../lab/map/landscape.ts';
 import {
   backbone,
   footprint,
@@ -17,8 +18,18 @@ import {
   SIZE_MOST,
   sizeOf,
 } from '../landscape/places.ts';
-import { fanPairs, restOf, roadsBetween, tailOf } from '../landscape/roads.ts';
-import { flowerView, LIVE_FROM, LIVE_UNTIL, liveSet, screenRadius } from '../landscape/space.ts';
+import { roadsBetween } from '../landscape/roads.ts';
+import {
+  edgePoint,
+  flowerAt,
+  flowerView,
+  LIVE_FROM,
+  LIVE_UNTIL,
+  liveSet,
+  reachOf,
+  screenRadius,
+  toSegment,
+} from '../landscape/space.ts';
 
 const seeds: Seed[] = [
   { id: 'a', chain: 'eip155:1', members: 8000 },
@@ -144,15 +155,6 @@ describe('roads', () => {
     expect(roads.map((r) => r.shared)).toEqual([1731, 1634, 548, 40]);
     expect(roads.every((r) => r.strong)).toBe(true);
   });
-
-  test('a road fans into the same account in both flowers, never into everyone else', () => {
-    const a = [{ id: 'x' }, { id: 'y' }, { id: 'rest', tail: true }];
-    const b = [{ id: 'z' }, { id: 'x' }, { id: 'rest', tail: true }];
-    expect(fanPairs(a, b)).toEqual([[0, 1]]);
-    expect(tailOf(a)).toBe(2);
-    expect(restOf(1731, 1)).toBe(1730);
-    expect(restOf(1, 3)).toBe(0);
-  });
 });
 
 describe('the space', () => {
@@ -202,5 +204,66 @@ describe('the space', () => {
     c.raw.t = Math.log(0.001);
     for (let i = 0; i < 600; i++) stepCamera(c, 1 / 60, false);
     expect(c.k).toBeGreaterThan(0.009);
+  });
+});
+
+describe('bench v2', () => {
+  const W = 1440;
+  const H = 900;
+
+  test("a flower's reach is where its petals end, not its room", () => {
+    const tall = modelOf(syntheticReading(60));
+    const r = reachOf(tall);
+    expect(r).toBeGreaterThan(SHAPE.r0 / SHAPE.R);
+    expect(r).toBeLessThanOrEqual(1.0001);
+  });
+
+  test('a click finds a flower only on its petals', () => {
+    const cam = { k: 0.1, x: 0, y: 0, width: W, height: H };
+    const flowers = [{ x: 5000, y: 4000, s: 1 }];
+    const c = { x: 500, y: 400 };
+    const r = SHAPE.R * 0.1;
+    expect(flowerAt(cam, flowers, [1], c.x + r * 0.9, c.y)).toBe(0);
+    expect(flowerAt(cam, flowers, [0.5], c.x + r * 0.9, c.y)).toBe(-1);
+  });
+
+  test("an arrow meets the window's edge the way its neighbour lies", () => {
+    expect(edgePoint(720, 450, 1, 0, W, H, 28)).toEqual({ x: W - 28, y: 450 });
+    const up = edgePoint(720, 450, 0, -1, W, H, 28);
+    expect(up).toEqual({ x: 720, y: 28 });
+    const corner = edgePoint(720, 450, Math.SQRT1_2, Math.SQRT1_2, W, H, 28);
+    expect(corner.y).toBeCloseTo(H - 28, 6);
+  });
+
+  test('how far a point is from a connection', () => {
+    expect(toSegment(5, 3, 0, 0, 10, 0)).toBe(3);
+    expect(toSegment(-4, 3, 0, 0, 10, 0)).toBe(5);
+  });
+
+  test("names are the run's, without their notes, and one chain's names tell its flowers apart", () => {
+    const b = benchLandscape();
+    const eth = b.flowers.filter((f) => f.place.chain === 'eip155:1').map((f) => f.name);
+    expect(eth).toContain('ENS delegates');
+    expect(eth).toContain('ENS active holders');
+    for (const f of b.flowers) {
+      expect(f.name).not.toMatch(/[()]/);
+      expect(f.name.length).toBeLessThanOrEqual(28);
+      expect(f.mark.symbol.length).toBeGreaterThan(0);
+      expect(f.reading.title).toBe('');
+    }
+    const jito = b.flowers.find((f) => f.name === 'Jito');
+    expect(jito?.mark.symbol).toBe('JTO');
+  });
+
+  test('every chain is offered, the most flowers first, by its own name', () => {
+    const b = benchLandscape();
+    expect(b.chains.map((c) => c.label)).toEqual(
+      expect.arrayContaining(['Ethereum', 'Gnosis', 'Solana', 'Arbitrum', 'Base', 'NEAR']),
+    );
+    const n = (chain: string) => b.flowers.filter((f) => f.place.chain === chain).length;
+    for (let i = 1; i < b.chains.length; i++)
+      expect(n((b.chains[i - 1] as (typeof b.chains)[number]).chain)).toBeGreaterThanOrEqual(
+        n((b.chains[i] as (typeof b.chains)[number]).chain),
+      );
   });
 });
