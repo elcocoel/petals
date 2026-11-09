@@ -1,6 +1,6 @@
 # Contract: the view (`view/v1`), how data becomes a flower
 
-**Version**: view/v1 (draft) | **Owner**: LOOK | **Status**: for META's review before any code. Built under the rule SYSTEMS is writing for every protocol: a JSON Schema with its version string, pinned fixtures, a check, and a rule for v2. Where SYSTEMS's rule lands differently, this follows it.
+**Version**: view/v1 | **Owner**: LOOK | **Status**: reviewed by META, 9 Nov; built on `m-face/fe-view`, which merges once SYSTEMS's typed seam is on `main`. Built under the rule SYSTEMS is writing for every protocol: a JSON Schema with its version string, pinned fixtures, a check, and a rule for v2. Where SYSTEMS's rule lands differently, this follows it.
 **Schema draft**: `view-v1.schema.json`, next to this file.
 
 ## Elco's words (9 Nov, through META)
