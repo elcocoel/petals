@@ -1,5 +1,6 @@
 // The profile part's money (Elco, 9 Nov): what the person holds in the credit contract, and Withdraw, which
-// takes all of it out through their own wallet. Props only: viewmodels/useFunds.ts holds the withdrawal.
+// takes all of it out through their own wallet. Withdraw is quiet, as Disconnect beside it is, so the part
+// keeps its height whatever it says. Props only: viewmodels/useFunds.ts holds the withdrawal.
 // Words from lib/lobby-view.ts, drafts.
 import { canWithdraw, fundsWords, nearOf, type WithdrawPhase } from '../../lib/lobby-view.ts';
 import { Button } from '../ui/Button.tsx';
@@ -26,7 +27,7 @@ export function Funds({
         <span className="type-caption text-muted">{fundsWords.withdrew(withdrew)}</span>
       ) : (
         canWithdraw(held) && (
-          <Button variant="secondary" disabled={phase === 'withdrawing'} onClick={onWithdraw}>
+          <Button variant="quiet" disabled={phase === 'withdrawing'} onClick={onWithdraw}>
             {phase === 'withdrawing' ? fundsWords.waiting : fundsWords.withdraw}
           </Button>
         )
