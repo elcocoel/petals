@@ -175,10 +175,21 @@ export function claudeAgent(o: AgentLaunch): ChatAgent {
     if (child?.stdin?.writable) child.stdin.write(`${JSON.stringify(msg)}\n`);
   };
   const update = (u: Update) => o.send({ t: 'update', update: u });
-  const request = (request: Json) =>
+  /**
+   * Asks claude something. `now` takes the answer the moment its line is read, before the next line:
+   * claude's answer to initialize and its first system line can come in one chunk, and a promise's
+   * callback would run only after both.
+   */
+  const request = (request: Json, now?: (r: Json) => void) =>
     new Promise<Json>((ok, fail) => {
       const id = `petals-${nextRequest++}`;
-      ours.set(id, { ok, fail });
+      ours.set(id, {
+        ok: (r) => {
+          now?.(r);
+          ok(r);
+        },
+        fail,
+      });
       write({ type: 'control_request', request_id: id, request });
     });
   const sendModels = () => {
@@ -468,35 +479,33 @@ export function claudeAgent(o: AgentLaunch): ChatAgent {
         o.send({ t: 'exit', code: code ?? (signal ? 1 : 0) });
       });
       // its models and commands, when this claude offers them; an older one just goes on
-      request({ subtype: 'initialize', hooks: null })
-        .then((r) => {
-          const list = Array.isArray(r.models) ? (r.models as Json[]) : [];
-          models = list
-            .map((m) => ({
-              id: str(m.value) ?? str(m.id) ?? '',
-              name: str(m.displayName) ?? str(m.name) ?? str(m.value) ?? '',
-              ...(str(m.description) ? { description: str(m.description) } : {}),
-            }))
-            .filter((m) => m.id);
-          if (Array.isArray(r.commands)) {
-            commands = (r.commands as Json[])
-              .filter((c) => str(c.name))
-              .map((c) => ({
-                name: c.name as string,
-                ...(str(c.description) ? { description: c.description as string } : {}),
-              }));
-            if (said)
-              update({
-                sessionUpdate: 'available_commands_update',
-                availableCommands: commands.map((c) => ({
-                  name: c.name,
-                  description: c.description ?? '',
-                })),
-              });
-          }
-          sendModels();
-        })
-        .catch(() => {});
+      request({ subtype: 'initialize', hooks: null }, (r) => {
+        const list = Array.isArray(r.models) ? (r.models as Json[]) : [];
+        models = list
+          .map((m) => ({
+            id: str(m.value) ?? str(m.id) ?? '',
+            name: str(m.displayName) ?? str(m.name) ?? str(m.value) ?? '',
+            ...(str(m.description) ? { description: str(m.description) } : {}),
+          }))
+          .filter((m) => m.id);
+        if (Array.isArray(r.commands)) {
+          commands = (r.commands as Json[])
+            .filter((c) => str(c.name))
+            .map((c) => ({
+              name: c.name as string,
+              ...(str(c.description) ? { description: c.description as string } : {}),
+            }));
+          if (said)
+            update({
+              sessionUpdate: 'available_commands_update',
+              availableCommands: commands.map((c) => ({
+                name: c.name,
+                description: c.description ?? '',
+              })),
+            });
+        }
+        sendModels();
+      }).catch(() => {});
       prompt(opening);
     },
     prompt,

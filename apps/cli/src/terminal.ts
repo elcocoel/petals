@@ -22,6 +22,7 @@ import { randomInt, timingSafeEqual } from 'node:crypto';
 import { accessSync, constants, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import type { IncomingMessage } from 'node:http';
 import { createServer, type Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import type { Writable } from 'node:stream';
@@ -346,6 +347,8 @@ export function findAgent(
 
 export interface TerminalHelper {
   server: Server;
+  /** the port it listens on: the one asked for, or the one the system gave for 0 (tests) */
+  port: number;
   /** the current pairing code, for tests */
   code(): string;
   close(): Promise<void>;
@@ -375,9 +378,10 @@ export function findPython(env: NodeJS.ProcessEnv = process.env): string | null 
 
 export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
   const say = o.say ?? ((line: string) => void process.stderr.write(`${line}\n`));
-  const port = o.port ?? DEFAULT_PORT;
+  // 0 asks the system for a free port (tests, which run side by side); the Host check follows it
+  let port = o.port ?? DEFAULT_PORT;
   const origins = new Set(o.origins.map((s) => s.replace(/\/+$/, '')));
-  const hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
+  let hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
   // Python's pty runs the terminal box; the chat box needs none
   const python = o.python ?? findPython(o.env);
   const noPython =
@@ -681,6 +685,8 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
   return new Promise((resolve, reject) => {
     server.once('error', reject);
     server.listen(port, '127.0.0.1', () => {
+      port = (server.address() as AddressInfo).port;
+      hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
       say(
         `Petals terminal on 127.0.0.1:${port}, for ${[...origins].join(', ')}. It runs ${AGENTS[o.agent]} here, in ${o.petals && !o.command ? join(o.petals.home, 'work') : (o.cwd ?? process.cwd())}.`,
       );
@@ -701,6 +707,7 @@ export function startTerminal(o: TerminalOptions): Promise<TerminalHelper> {
       }
       resolve({
         server,
+        port,
         code: () => code,
         close: () =>
           new Promise<void>((done) => {

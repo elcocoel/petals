@@ -26,7 +26,7 @@ import {
 
 const SITE = 'https://petals.example';
 const hasPython = findPython() !== null;
-let port = 47600 + Math.floor(Math.random() * 300);
+let port = 0; // the helper's, once it has one
 let helper: TerminalHelper | null = null;
 let said: string[] = [];
 const opened: string[] = [];
@@ -36,7 +36,6 @@ async function start(
   find?: (name: string) => string | null,
   petalsHome?: string,
 ) {
-  port += 1;
   // each helper its own log: one still shutting down mustn't speak for the next
   const mine: string[] = [];
   said = mine;
@@ -50,13 +49,14 @@ async function start(
           skill: async () => 'THE SKILL',
         }
       : {}),
-    port,
+    port: 0, // a free one: tests run side by side
     origins: [SITE],
     cwd: mkdtempSync(join(tmpdir(), 'petal-term-')),
     say: (l) => mine.push(l),
     // never the real browser in a test: the address it would open is kept instead
     openPage: (url) => opened.push(url),
   });
+  port = helper.port;
   return helper;
 }
 
