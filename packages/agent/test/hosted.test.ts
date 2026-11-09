@@ -76,17 +76,16 @@ describe('hostedSkill', () => {
     expect(md.indexOf('## Set yourself up first')).toBeLessThan(md.indexOf('## Talk first'));
     expect(setup).toContain(`curl -fsSL ${ORIGIN}/petal.mjs --create-dirs -o ~/.petals/petal.mjs`);
     expect(setup).toContain('node ~/.petals/petal.mjs start --client');
-    expect(setup).toMatch(/There's no need for `help`, or to read the file/);
-    expect(setup).not.toContain('petal.mjs help');
     expect(setup).toMatch(/Don't ask them to choose anything/);
     expect(setup).toMatch(/Node 22\.13/);
   });
 
   test("keeps the file as MCP tools only when asked, with each agent's own command", () => {
     const setup = part('Set yourself up first');
-    expect(setup).toMatch(/If they ask to keep Petal/);
+    // the connect chapters' words (brain/chapters/connect-*.md), generated into the skill
+    expect(setup).toMatch(/Only when they ask, add the file as an MCP server/);
     expect(setup).toContain(
-      'claude mcp add petals -- "$(command -v node)" "$HOME/.petals/petal.mjs" mcp',
+      'claude mcp add -s user petals -- "$(command -v node)" "$HOME/.petals/petal.mjs" mcp',
     );
     expect(setup).toContain(
       'codex mcp add petals -- "$(command -v node)" "$HOME/.petals/petal.mjs" mcp',
@@ -99,8 +98,8 @@ describe('hostedSkill', () => {
     expect(setup).toMatch(/A permission isn't a choice: when your app needs one, ask for it/);
     expect(setup).toMatch(/run these two commands as written, and nothing else first/);
     expect(setup).toMatch(/A sandbox's refusal isn't the person's no/);
-    expect(setup).toContain('dangerouslyDisableSandbox');
-    expect(setup).toMatch(/Codex: run it again with escalated permissions/);
+    expect(setup).toMatch(/run the same command again outside the sandbox/);
+    expect(setup).toMatch(/escalated/);
     expect(setup).toContain('reaching `petal.example`');
   });
 
@@ -125,7 +124,7 @@ describe('hostedSkill', () => {
 
   test('the first run asking for permission is expected, and the skill gives the question', () => {
     const setup = part('Set yourself up first');
-    expect(setup).toMatch(/holds the file back the first time/);
+    expect(setup).toMatch(/Claude Code holds the file back once/);
     expect(setup).toContain(
       '"May I run Petal\'s tool? It\'s a file from petal.example that reads public chain data and keeps its notes in ~/.petals."',
     );
@@ -138,11 +137,20 @@ describe('hostedSkill', () => {
 
   test('a cloud sandbox, or an app with no shell, says so at once and names the apps that can', () => {
     const setup = part('Set yourself up first');
-    expect(setup).toMatch(/cloud or remote sandbox/);
-    expect(setup).toMatch(/as in the Claude app's chat: say so in one line, at once/);
+    expect(setup).toMatch(/Claude Code on the web\*\* runs in a cloud sandbox/);
+    // a cloud app connects to Petals' server instead, as a connector (connect-cloud)
+    expect(setup).toContain(`${ORIGIN}/mcp`);
     expect(setup).toMatch(
-      /Claude Code \(in a terminal, or under Code in the Claude desktop app\), Codex or Hermes/,
+      /in a terminal \(`claude`\), or under \*\*Code\*\* in the Claude desktop app/,
     );
+  });
+
+  test("each app's steps come from its chapter, without repeating the setup the general block has", () => {
+    const setup = part('Set yourself up first');
+    expect(setup).toContain('### A cloud app');
+    expect(setup).not.toContain('#### Set up, every session');
+    expect(setup).toContain("(the Bash tool's dangerouslyDisableSandbox)");
+    expect(setup.split('--create-dirs -o ~/.petals/petal.mjs').length - 1).toBe(1);
   });
 
   test('teaches no route that reads for them: the site no longer does', () => {
@@ -150,7 +158,7 @@ describe('hostedSkill', () => {
     expect(md).not.toMatch(
       /\/api\/v1\/(find|look-up|read-chain|read-page|web-search|snapshots|figures|render)/,
     );
-    expect(md).not.toContain(`${ORIGIN}/mcp`);
+    // ${ORIGIN}/mcp is a cloud app's connector now (connect-cloud): it makes no fresh reads
     expect(md).not.toContain('localhost:8787');
     expect(md).not.toContain('petal render @spec.json --out');
     expect(md).not.toMatch(/^name: petal/m);

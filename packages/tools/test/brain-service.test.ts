@@ -33,6 +33,14 @@ const QUESTIONS: [string, string][] = [
   ['go deeper', 'going-deeper'],
   ['how do I improve this recipe on github', 'contributing'],
   ['I want to contribute a fix, open a pull request', 'contributing'],
+  // connecting (step 4): an app and what it's trying to do
+  ["I'm Claude Code, how do I connect to Petals", 'connect-claude-code'],
+  ['set up petals in codex', 'connect-codex'],
+  ["I'm Hermes, how do I install Petals", 'connect-hermes'],
+  ['add petals to chatgpt', 'connect-cloud'],
+  ['connect the claude app as a custom connector', 'connect-cloud'],
+  ['keep petals in claude code for next time', 'connect-claude-code'],
+  ['cursor remote mcp url for petals', 'connect-cloud'],
 ];
 
 describe('routing', () => {

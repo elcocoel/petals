@@ -11,14 +11,19 @@ describe('doors', () => {
     for (const d of all.filter((x) => x.copy)) expect(d.copy, d.id).toContain(ORIGIN);
   });
 
-  test('the apps that run in the cloud say they can’t, and name one that can, with nothing to copy', () => {
-    for (const id of ['claude-app', 'chatgpt', 'other']) {
+  test('the cloud apps connect as a connector at this site’s /mcp, and name the app for new readings', () => {
+    // the address is connect-cloud's, generated from the brain (scripts/brain-connect.ts)
+    for (const id of ['claude-app', 'chatgpt']) {
       const d = all.find((x) => x.id === id);
-      expect(d?.copy, id).toBeUndefined();
-      expect(d?.how, id).toMatch(/can’t/);
+      expect(d?.copy, id).toBe(`${ORIGIN}/mcp`);
+      expect(d?.how, id).toMatch(/It reads and draws what Petals already holds/);
     }
-    expect(all.find((x) => x.id === 'claude-app')?.how).toMatch(/Claude Code/);
-    expect(all.find((x) => x.id === 'chatgpt')?.how).toMatch(/Codex/);
+    expect(all.find((x) => x.id === 'claude-app')?.how).toMatch(/use Claude Code/);
+    expect(all.find((x) => x.id === 'chatgpt')?.how).toMatch(/use Codex/);
+    // any app that takes an MCP server's address (connect-cloud), with the same address
+    const other = all.find((x) => x.id === 'other');
+    expect(other?.copy).toBe(`${ORIGIN}/mcp`);
+    expect(other?.how).toMatch(/such as Cursor/);
   });
 
   test('the first run asks once, and keeping Petals says what it changes', () => {
@@ -51,7 +56,8 @@ describe('doors', () => {
     const copy = (id: string) => all.find((d) => d.id === id)?.copy;
     const get = `curl -fsSL ${ORIGIN}/petal.mjs --create-dirs -o ~/.petals/petal.mjs && `;
     const run = '"$(command -v node)" "$HOME/.petals/petal.mjs" mcp';
-    expect(copy('claude-code')).toBe(`${get}claude mcp add petals -- ${run}`);
+    // as connect-claude-code says it: for every folder
+    expect(copy('claude-code')).toBe(`${get}claude mcp add -s user petals -- ${run}`);
     expect(copy('codex')).toBe(`${get}codex mcp add petals -- ${run}`);
     expect(copy('hermes')).toBe(
       `${get}printf 'Y\\n' | hermes mcp add petals --command "$(command -v node)" --args "$HOME/.petals/petal.mjs" mcp`,
