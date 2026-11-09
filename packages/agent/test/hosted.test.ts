@@ -191,3 +191,21 @@ describe('originFrom', () => {
     expect(originFrom(new Headers())).toBe('http://localhost:3080');
   });
 });
+
+describe('the brain version at every door (step 4)', () => {
+  test('/skill.md names the brain version it was served with, and where to start reading', () => {
+    const skill = readFileSync(
+      join(import.meta.dirname, '..', '..', '..', 'skill', 'petal', 'SKILL.md'),
+      'utf8',
+    );
+    const md = hostedSkill(
+      skill,
+      'https://petals.example',
+      undefined,
+      '0123456789abcdef@abcdef012345',
+    );
+    expect(md).toContain("Petals' brain here is version `0123456789abcdef@abcdef012345`");
+    expect(md).toContain('https://petals.example/api/v1/brain/files/doctrine');
+    expect(hostedSkill(skill, 'https://petals.example')).not.toContain("Petals' brain here");
+  });
+});

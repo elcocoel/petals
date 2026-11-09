@@ -28,11 +28,11 @@ vi.mock('@petal/tools', async (importOriginal) => {
           map: 'mirror',
           llm: 'down',
           version: 'api/v1',
-          tools_version: 'tools/v1',
+          tools_version: 'tools/v2',
         }),
       );
       app.get('/api/v1/networks', (c) =>
-        c.json({ networks: [{ id: 'near-validators' }], tools_version: 'tools/v1' }),
+        c.json({ networks: [{ id: 'near-validators' }], tools_version: 'tools/v2' }),
       );
       return app;
     },
@@ -62,7 +62,7 @@ describe('petalApp', () => {
       llm: 'recorded',
       agent_access: 'gated',
       version: 'api/v1',
-      tools_version: 'tools/v1',
+      tools_version: 'tools/v2',
     });
     expect((await bodyOf(app.request('/api/v1/networks'))).networks).toHaveLength(1);
     const es = parseSse(await (await chat(app)).text());
@@ -170,7 +170,7 @@ describe('petalApp', () => {
     expect(res.status).toBe(500);
     expect(await res.json()).toMatchObject({
       error: { code: 'internal', message: expect.stringMatching(/can't reach its records/) },
-      tools_version: 'tools/v1',
+      tools_version: 'tools/v2',
     });
     expect(fake.log).toEqual([]);
     expect(error).toHaveBeenCalledTimes(1);

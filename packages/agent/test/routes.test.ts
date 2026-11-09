@@ -140,7 +140,7 @@ describe('POST /api/v1/agent/chat', () => {
       expect(res.status).toBe(400);
       expect(await res.json()).toMatchObject({
         error: { code: 'bad_input' },
-        tools_version: 'tools/v1',
+        tools_version: 'tools/v2',
       });
     }
     const res = await chat(app, { ...QUESTION, run_id: 'nosuchrun1' });
@@ -170,7 +170,7 @@ describe('runs you can leave and come back to', () => {
     const res = await app.request(`/api/v1/agent/runs/${run_id}`);
     expect(res.status).toBe(200);
     const run = (await res.json()) as Run & { tools_version: string };
-    expect(run).toMatchObject({ run_id, status: 'done', tools_version: 'tools/v1' });
+    expect(run).toMatchObject({ run_id, status: 'done', tools_version: 'tools/v2' });
     expect(run.flower?.view_url).toBe('http://localhost:3000/f/draft');
     expect(run.messages[0]).toEqual(QUESTION.messages[0]);
     expect(run.messages.at(-1)?.content).toContain('9 of 371 seated validators');

@@ -29,7 +29,7 @@ export const SPEC_SHA = specHash(SPEC);
 export const RENDER_SHA = 'e'.repeat(64);
 export const VIEW_URL = 'http://localhost:3000/f/draft';
 export const SIGNER = '0x1234567890abcdef1234567890abcdef12345678';
-const TV = { tools_version: 'tools/v1' };
+const TV = { tools_version: 'tools/v2' };
 
 export function tmpRoot(): string {
   return mkdtempSync(join(tmpdir(), 'petal-agent-'));

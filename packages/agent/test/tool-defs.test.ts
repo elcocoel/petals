@@ -150,7 +150,7 @@ describe('forModel on the real tools (near-validators fixture)', () => {
   });
 
   test('a tool error goes through whole', () => {
-    const e = { error: { code: 'bad_input', message: 'no', hint: 'h' }, tools_version: 'tools/v1' };
+    const e = { error: { code: 'bad_input', message: 'no', hint: 'h' }, tools_version: 'tools/v2' };
     for (const name of ['get_snapshot', 'render_flower', 'compute_figures']) {
       expect(forModel(name, e)).toBe(e);
     }

@@ -1,6 +1,11 @@
 // Contract versions (T016). A contract change bumps its version here and in specs/.../contracts/.
 export const PACKAGES_VERSION = 'packages/v1';
-export const TOOLS_VERSION = 'tools/v1';
+/**
+ * tools/v2 since 9 Nov: the brain's tools (brain_route, brain_file, brain_index), layers on the site
+ * (keep_layer, list_layers, fork_dataset), jobs (take_job, report_job, list_jobs), compose_view's seam and
+ * hand_job's to. A flower entry keeps the tools_version that drew it, so old entries still say tools/v1.
+ */
+export const TOOLS_VERSION = 'tools/v2';
 export const API_VERSION = 'api/v1';
 export const MAP_VERSION = 'map/v2';
 export const RENDER_VERSION = 'render/v1';

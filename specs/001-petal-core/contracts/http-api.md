@@ -74,7 +74,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `GET /api/v1/agent/runs/:id` | a stored run: `{ run_id, status: "running" \| "done" \| "failed" \| "stopped" \| "interrupted", messages, events, flower?, exploration? }`; with `Accept: text/event-stream`, replays stored events from the cursor (`Last-Event-ID`, or `?from=<seq>`), then streams new ones until the run ends. Agent route. |
 | `POST /api/v1/agent/runs/:id/stop` | Stop (below). `{ run_id, status, stopped, already_finished }`. Agent route. |
 | `GET /api/v1/attestations/:sha256` | the NEAR AI attestation report Petal stored for a model signature (`report_sha256`), `application/json`, immutable cache headers. Agent route. |
-| `GET /api/v1/health` | `{ ok, map: "up"|"down"|"mirror", llm: "up"|"down"|"recorded", agent_access: "gated"|"open", version, commit }`; `commit` is what a deploy witnesses, null locally |
+| `GET /api/v1/health` | `{ ok, map: "up"|"down"|"mirror", llm: "up"|"down"|"recorded", agent_access: "gated"|"open", version, tools_version, commit, brain_version }`; `commit` is what a deploy witnesses, null locally; `brain_version` (additive, 9 Nov) is the brain every door serves, `<16 hex of its index hash>@<12 hex of its commit>`, also in `/skill.md`, the MCP instructions and a served `petal.mjs`, and kept with each layer |
 | `POST /api/v1/auth/challenge` | `{ nonce, message, recipient, expires_at }` ([below](#sign-in-sessions-and-invites)) |
 | `POST /api/v1/auth/verify` | body `{ network, proof }`: `{ person_id, network, wallets, claimed_runs, claimed_explorations }`, and sets the session |
 | `POST /api/v1/auth/logout` | `{ ok: true }`, and clears the session |

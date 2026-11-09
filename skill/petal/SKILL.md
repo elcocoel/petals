@@ -21,7 +21,7 @@ curl -s "$API/api/v1/health"
 curl -s "$API/api/v1/networks"
 ```
 
-If the `petal` MCP server is configured, call the same tools by name instead (in Claude Code they show as `mcp__petal__<tool>`). Names, inputs and outputs are the same over both.
+If the `petals` MCP server is configured, call the same tools by name instead (in Claude Code they show as `mcp__petals__<tool>`). Names, inputs and outputs are the same over both.
 
 ## Flow
 

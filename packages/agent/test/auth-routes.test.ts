@@ -134,7 +134,7 @@ describe('T192: POST /api/v1/auth/challenge', () => {
     expect(ch.message).toMatch(/^Sign in to Petals at petals\.example\. /);
     expect(Buffer.from(ch.nonce, 'base64')).toHaveLength(32);
     expect(Date.parse(ch.expires_at)).toBeGreaterThan(Date.now());
-    expect(ch.tools_version).toBe('tools/v1');
+    expect(ch.tools_version).toBe('tools/v2');
   });
 
   test('a Host header can’t choose the recipient', async () => {
@@ -586,7 +586,7 @@ describe('T192: what is kept', () => {
 describe('T193: run owners', () => {
   const notFoundBody = (id: string) => ({
     error: { code: 'not_found', message: `no run ${id}` },
-    tools_version: 'tools/v1',
+    tools_version: 'tools/v2',
   });
 
   test('a run started without sign-in belongs to that anonymous handle, and to no one else', async () => {

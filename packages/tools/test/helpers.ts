@@ -317,7 +317,7 @@ export async function flow(run: Run) {
     provenance: {
       maker: null,
       agent: { kind: 'own-agent', name: 'vitest' },
-      tools_version: 'tools/v1',
+      tools_version: 'tools/v2',
       created_at: NOW,
     },
   };

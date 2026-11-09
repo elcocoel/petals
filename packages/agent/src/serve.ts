@@ -14,7 +14,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serve } from '@hono/node-server';
-import { type Config, configFromEnv as toolsConfig } from '@petal/tools';
+import { brainAt, type Config, configFromEnv as toolsConfig } from '@petal/tools';
 import { Hono } from 'hono';
 import { buildPetalApp, type PetalAppOptions } from './app.ts';
 import { hostedSkill, originFrom } from './hosted.ts';
@@ -33,6 +33,8 @@ const HEALTH = '/api/v1/health';
 const PETAL_FILE = 'apps/cli/dist/petal.mjs';
 /** The string apps/cli/src/file.ts leaves for the site's address, in whichever quotes it was bundled. */
 const PLACEHOLDER = /(["'])%%PETALS_SITE%%\1/;
+/** And the brain version, stamped beside it, when the file has the slot. */
+const BRAIN_PLACEHOLDER = /(["'])%%PETALS_BRAIN%%\1/;
 /** Anything that isn't an address is dropped rather than believed. */
 const ADDRESS = /^[0-9a-fA-F:.]{2,45}$/;
 
@@ -68,6 +70,14 @@ export interface ServerOptions {
 export function serverApp(cfg: Config, o: ServerOptions = {}): Hono {
   const api = buildPetalApp(cfg, o.options);
   const root = o.root ?? REPO_ROOT;
+  /** The brain this server serves, its version as every door shows it; none without a brain/. */
+  const brainVersion = (): string | null => {
+    try {
+      return brainAt(cfg.brainDir ?? join(root, 'brain')).current().version;
+    } catch {
+      return null;
+    }
+  };
   const app = new Hono();
 
   // The site's address: the configured one, else what the website says (only with the key), else
@@ -89,7 +99,9 @@ export function serverApp(cfg: Config, o: ServerOptions = {}): Hono {
   const served = async (site: string): Promise<{ file: string; sha: string } | null> => {
     const file = await readFile(join(root, PETAL_FILE), 'utf8').catch(() => null);
     if (!file || !PLACEHOLDER.test(file)) return null;
-    const out = file.replace(PLACEHOLDER, () => JSON.stringify(site));
+    const out = file
+      .replace(PLACEHOLDER, () => JSON.stringify(site))
+      .replace(BRAIN_PLACEHOLDER, () => JSON.stringify(brainVersion() ?? '%%PETALS_BRAIN%%'));
     return { file: out, sha: createHash('sha256').update(out, 'utf8').digest('hex') };
   };
 
@@ -99,7 +111,7 @@ export function serverApp(cfg: Config, o: ServerOptions = {}): Hono {
     // The file's sha256, so an agent can check it rather than read 6 MB (Elco, 9 Nov).
     const sha = (await served(site))?.sha;
     // Plain text, because some agents' web tools refuse text/markdown (Hermes did).
-    return c.body(hostedSkill(skill, site, sha), 200, {
+    return c.body(hostedSkill(skill, site, sha, brainVersion() ?? undefined), 200, {
       'content-type': 'text/plain; charset=utf-8',
     });
   });

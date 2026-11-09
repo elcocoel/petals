@@ -342,7 +342,7 @@ describe("Petal's own agent", () => {
       short_url: `https://x/d/${'a'.repeat(64)}`,
       legend: [],
       petals: [],
-      tools_version: 'tools/v1',
+      tools_version: 'tools/v2',
     };
     const read = forModel('render_flower', out) as Out;
     expect(read).not.toHaveProperty('short_url');
