@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { TOOLS_VERSION } from '@petal/core';
-import type { Tool, ToolContext } from '@petal/tools';
+import { isToolError, type Tool, type ToolContext } from '@petal/tools';
 import { describe, expect, test } from 'vitest';
 import { nodeIsNew, siteOf } from '../src/file.ts';
 import { LEFT_OUT, SITE_TOOLS, siteDoor } from '../src/site.ts';
@@ -56,6 +56,19 @@ function fakeSite(held: Set<string> = new Set()) {
       });
     }
     if (method === 'POST' && path.endsWith('/notes')) return json({ note: { seq: 0 } });
+    if (method === 'POST' && path.endsWith('/jobs/take')) {
+      return json({
+        job: {
+          id: 'job_1',
+          kind: 'map',
+          title: 'Map RaidGuild',
+          brief: 'Who holds power in RaidGuild?',
+          inputs: {},
+        },
+      });
+    }
+    if (method === 'POST' && /\/jobs\/[^/]+\/report$/.test(path))
+      return json({ job: { id: 'job_1', status: 'done' } });
     if (method === 'GET' && path.startsWith('/api/v1/explorations')) return json({ steps: [] });
     return json({ error: { code: 'not_found', message: 'no' } }, 404);
   };
@@ -275,5 +288,46 @@ describe('the file itself', () => {
     expect(nodeIsNew('22.13.0')).toBe(true);
     expect(nodeIsNew('24.14.0')).toBe(true);
     expect(nodeIsNew('20.19.0')).toBe(false);
+  });
+});
+
+// Elco, 9 Nov (B with C): the page's agent hands jobs out in a project, and the person's own agent
+// takes one, does it on their machine and reports back. The project is reached by its link.
+describe('jobs from the page’s agent', () => {
+  test('take_job claims the next job in the project the agent is in', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, initial: LINK }).tools(registry);
+    expect((byName(tools, 'take_job').input as { required: string[] }).required).toEqual([]);
+    const out = (await byName(tools, 'take_job').run({}, ctx())) as { job: { id: string } };
+    expect(out.job.id).toBe('job_1');
+    const sent = site.seen.at(-1) as Seen;
+    expect(sent.method).toBe('POST');
+    expect(sent.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/jobs/take`);
+    expect(JSON.parse(sent.body as string)).toEqual({});
+  });
+
+  test('report_job sends the result to that job, without the link or the id in the body', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch }).tools(registry);
+    const result = { summary: 'Three members hold most of the shares.', steps: [0, 1] };
+    await byName(tools, 'report_job').run({ exploration: LINK, job: 'job_1', result }, ctx());
+    const sent = site.seen.at(-1) as Seen;
+    expect(sent.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/jobs/job_1/report`);
+    expect(JSON.parse(sent.body as string)).toEqual({ result });
+    await byName(tools, 'report_job').run(
+      { exploration: LINK, job: 'job_1', failed: 'No data' },
+      ctx(),
+    );
+    expect(JSON.parse((site.seen.at(-1) as Seen).body as string)).toEqual({ failed: 'No data' });
+  });
+
+  test('without a project, or without the job’s id, nothing is sent', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch }).tools(registry);
+    expect(isToolError(await byName(tools, 'take_job').run({}, ctx()))).toBe(true);
+    expect(isToolError(await byName(tools, 'report_job').run({ exploration: LINK }, ctx()))).toBe(
+      true,
+    );
+    expect(site.seen).toEqual([]);
   });
 });

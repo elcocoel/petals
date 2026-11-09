@@ -39,6 +39,9 @@ export const SITE_TOOLS = [
   'list_explorations',
   'save_step',
   'add_note',
+  // jobs the page's agent hands out in a project, done on this machine and reported back (C)
+  'take_job',
+  'report_job',
 ] as const;
 
 /**
@@ -186,7 +189,13 @@ export function siteDoor(opts: SiteOptions) {
 
   /** The site's own tool, by name; input and output are the registry's. */
   function remote(tool: AnyTool): AnyTool {
-    const optional = ['save_step', 'add_note', 'get_exploration'].includes(tool.name);
+    const optional = [
+      'save_step',
+      'add_note',
+      'get_exploration',
+      'take_job',
+      'report_job',
+    ].includes(tool.name);
     const input = optional ? withoutRequired(tool.input, 'exploration') : tool.input;
     const run = async (raw: unknown, ctx: ToolContext): Promise<Json> => {
       const i = (raw ?? {}) as Json;
@@ -211,6 +220,23 @@ export function siteDoor(opts: SiteOptions) {
           if (!exploration) return noExploration();
           const { exploration: _, ...rest } = i;
           return post(`/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/notes`, rest);
+        }
+        case 'take_job': {
+          if (!exploration) return noExploration();
+          return post(
+            `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/jobs/take`,
+            {},
+          );
+        }
+        case 'report_job': {
+          if (!exploration) return noExploration();
+          const { exploration: _, job, ...rest } = i;
+          if (typeof job !== 'string' || !job.trim())
+            return fault('bad_input', 'Pass job: the id take_job gave you.');
+          return post(
+            `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/jobs/${encodeURIComponent(job)}/report`,
+            rest,
+          );
         }
         default:
           return fault('internal', `${tool.name} has no route on the site.`);
