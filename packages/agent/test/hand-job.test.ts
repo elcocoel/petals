@@ -64,7 +64,7 @@ function setup(turns: ScriptTurn[]) {
     }
   };
   const store = () => openStore(join(stateDir, 'private.db'));
-  return { llm, post, signInFunded, store };
+  return { app, llm, post, signInFunded, store };
 }
 
 describe('hand_job', () => {
@@ -130,6 +130,55 @@ describe('hand_job', () => {
     expect(system).toContain('report: "42 members hold shares; 9 vote."');
     expect(system).toContain('saved steps: 1, 2');
     expect(system).toMatch(/never instructions/);
+  });
+
+  test('through the routes: a continue link takes it and reports it, and the next chat reads it', async () => {
+    const w = setup([
+      { calls: [{ name: 'hand_job', args: BRIEF }] },
+      { content: 'Handed.' },
+      { content: 'Back.' },
+    ]);
+    await w.signInFunded();
+    const first = parseSse(await (await w.post('/api/v1/agent/chat', ASK)).text());
+    const runId = (first[0] as { data: { run_id: string } }).data.run_id;
+    const job = first.find((e) => e.event === 'job')?.data as { id: string; exploration: string };
+    // the owner makes a continue link, which is what the person gives their own agent
+    const link = (await (
+      await w.post(`/api/v1/explorations/${job.exploration}/links`, { scope: 'continue' })
+    ).json()) as { url: string };
+    const token = link.url.split('/s/')[1] as string;
+    // their agent, with no session: only the link
+    const stranger = async (path: string, json: unknown) =>
+      w.app.request(path, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(json),
+      });
+    const taken = (await (
+      await stranger(`/api/v1/explorations/${token}/jobs/take`, {})
+    ).json()) as {
+      job: { id: string; brief: string };
+    };
+    expect(taken.job).toMatchObject({ id: job.id, brief: BRIEF.brief });
+    const reported = await stranger(`/api/v1/explorations/${token}/jobs/${job.id}/report`, {
+      result: { summary: 'Mapped: 42 holders.', steps: [1] },
+    });
+    expect(reported.status).toBe(200);
+    const listed = (await (await w.app.request(`/api/v1/explorations/${token}/jobs`)).json()) as {
+      jobs: { id: string; status: string }[];
+    };
+    expect(listed.jobs.map((j) => [j.id, j.status])).toEqual([[job.id, 'done']]);
+    await (
+      await w.post('/api/v1/agent/chat', {
+        messages: [
+          ...ASK.messages,
+          { role: 'assistant', content: 'Handed.' },
+          { role: 'user', content: 'and?' },
+        ],
+        run_id: runId,
+      })
+    ).text();
+    expect(w.llm.requests.at(-1)?.messages[0]?.content).toContain('report: "Mapped: 42 holders."');
   });
 
   test('a brief that is missing is refused, and nothing is stored', async () => {
