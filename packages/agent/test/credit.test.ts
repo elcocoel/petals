@@ -105,9 +105,10 @@ describe('the credit contract', () => {
     });
     await w.signIn();
     const pay = (await (await w.call('GET', '/api/v1/pay')).json()) as {
-      credit: { left_usd: number };
+      credit: { left_usd: number; balance_yocto: string };
     };
     expect(pay.credit.left_usd).toBe(3.5);
+    expect(pay.credit.balance_yocto).toBe(String(NEAR));
   });
 
   test('a chat runs on what the contract holds, and its cost is charged there in NEAR when it ends', async () => {
@@ -157,7 +158,11 @@ describe('the credit contract', () => {
       })
     ).json()) as Record<string, unknown>;
     expect(paid).toMatchObject({ added_usd: 7, added_near: 1, near_usd: 3.5 });
-    expect(paid.credit).toMatchObject({ left_usd: 7, usd_per_chat: 0.5 });
+    expect(paid.credit).toMatchObject({
+      left_usd: 7,
+      usd_per_chat: 0.5,
+      balance_yocto: String(2n * NEAR),
+    });
   });
 
   test('refuses a transaction that isn’t a deposit or withdrawal in the contract, or another wallet', async () => {

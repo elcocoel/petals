@@ -41,7 +41,7 @@ The words are Elco's, through the copy doc.
 
 ## 6. Keeping each person's money apart, and giving back what's unused
 
-Elco, 9 Nov: "how do we separate each user's funds, if and how they would withdraw unused funds". Then Elco chose a contract, before the freeze (through META): a small NEAR contract holds each person's deposit, and they withdraw unused NEAR themselves, so Petals holds nobody's money.
+Elco, 9 Nov: "how do we separate each user's funds, if and how they would withdraw unused funds". Then Elco chose "A NEAR contract, before the freeze": "A small contract holds each person's deposit and they withdraw it themselves, so Petals holds nobody's money."
 
 **How it works, in plain words.** The contract is `packages/near/contract`, at `credit.petals.near` on mainnet once Elco says go (`credit.petals-paytest.testnet` on testnet now).
 

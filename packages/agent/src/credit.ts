@@ -48,6 +48,8 @@ export function creditFrom(env: Env, o: { public: boolean }): CreditChain | null
 /** A chat on the contract: the person's credit, synced from the chain, and how to charge it at the end. */
 export interface ChainChat {
   credit: PersonCredit;
+  /** what the wallet holds in the contract, as read now */
+  yocto: bigint;
   /** charges what the chat cost, at the price it was synced at; never throws */
   settle(spentUsd: number): Promise<void>;
 }
@@ -65,6 +67,7 @@ export async function chainChat(
   const credit = await syncPersonCredit(store, person, yoctoToUsd(yocto, nearUsd), now());
   return {
     credit,
+    yocto,
     async settle(spentUsd) {
       if (!(spentUsd > 0)) return;
       const ask = usdToYocto(spentUsd, nearUsd);
