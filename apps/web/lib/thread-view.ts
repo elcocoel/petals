@@ -380,7 +380,8 @@ export function composerView(
       placeholder: v.unavailable
         ? 'This conversation isn’t available here.'
         : `This conversation is happening in ${v.elsewhere}.`,
-      button: 'Ask',
+      // Elco, 6 Nov: "it will not be 'Ask', it will be the send"
+      button: 'Send',
       disabled: true,
       away: true,
     };
@@ -398,7 +399,7 @@ export function composerView(
         : v.runId
           ? 'Ask a follow-up…'
           : 'Ask about any network, or paste an address.',
-    button: v.busy ? 'Working…' : v.recorded ? 'Play the recorded run' : 'Ask',
+    button: v.busy ? 'Working…' : v.recorded ? 'Play the recorded run' : 'Send',
     disabled: v.busy || (!v.recorded && !v.question.trim()),
     ...(target.kind === 'wallet' || target.kind === 'group'
       ? { about: aboutLabel(target.line) }

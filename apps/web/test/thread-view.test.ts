@@ -226,7 +226,7 @@ describe('the composer', () => {
     expect(composer()).toMatchObject({
       value: '',
       readOnly: false,
-      button: 'Ask',
+      button: 'Send',
       disabled: true,
       label: 'Ask Petals about a network',
       placeholder: 'Ask about any network, or paste an address.',
