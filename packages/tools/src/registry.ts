@@ -4,6 +4,7 @@
 import type { ToolError } from '@petal/core/types';
 import { type PetalTool, versioned } from './define.ts';
 import { toolError } from './errors.ts';
+import { brainFile, brainIndexTool, brainRoute } from './tools/brain.ts';
 import {
   addNote,
   getExploration,
@@ -70,6 +71,9 @@ export const registry: Tool<any, any>[] = [
   takeJob,
   reportJob,
   listJobs,
+  brainRoute,
+  brainFile,
+  brainIndexTool,
 ];
 
 /** Title, description and hints, for doors that list them (MCP, the agent's tool list). */

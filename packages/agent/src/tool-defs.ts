@@ -64,6 +64,11 @@ const NOT_FOR_THE_AGENT = new Set([
   'take_job',
   'report_job',
   'list_jobs',
+  // The brain's doors (005) are for the person's own agent, which reads chapters to know what to do.
+  // Petals' agent has its prompt; giving it these is a reviewed step, as with the exploration tools.
+  'brain_route',
+  'brain_file',
+  'brain_index',
 ]);
 
 export function forAgent(t: AnyTool): boolean {

@@ -29,8 +29,8 @@ There's no chapter or reader per DAO type (Elco, 9 Nov: "let's not default to a 
 Elco, 9 Nov: "cant that be the repo, and we build a thin API or MCP or whatever that the agents use to get routed quickly semantically like I used in the harness?"
 
 - **What it holds:** the latest brain from the repo's main branch, and the index made from it, stamped with the commit. It's never edited by hand. If it's lost, it's rebuilt from the repo.
-- **When it refreshes:** when the repo changes. Today, `build/` main is mounted into the server read-only, and the service re-reads when main's commit moves; a merge is the change. Once the repo is public, GitHub tells the server on each push to main. Nothing runs on a timer.
-- **What it answers,** over MCP (on the site's `/mcp`) and plain HTTP (`/api/v1/brain`):
+- **When it refreshes:** when the repo changes. The service reads the brain folder's git commit at each request, and reads the files again only when that commit has moved; a merge is the change. Today the server serves its own `brain/`, so a deploy is the change; `PETAL_BRAIN_DIR` points it at a read-only copy of `build/` that follows main, once that's mounted. Once the repo is public, GitHub tells the server on each push to main. Nothing runs on a timer.
+- **What it answers,** over MCP (on the site's `/mcp`: `brain_route`, `brain_file`, `brain_index`) and plain HTTP (`GET /api/v1/brain`, `/api/v1/brain/route?q=…&answers=…`, `/api/v1/brain/files/:id`):
   - "which for this?", given words, or the chain's answers about an address, returns the best few chapters and recipes, each with its header and why it matched;
   - one file by its id;
   - the index.
@@ -64,6 +64,8 @@ Elco, 9 Nov: "cant that be the repo, and we build a thin API or MCP or whatever 
 3. **The service returns the best three** with their headers, and **the agent's own model chooses.** That last step is the most semantic of all, and it's on the person's own model.
 
 **Test before trusting it.** A set of real questions from Elco's sessions, each with the chapter it should reach, is run against 2 alone and against 2 with 3. The model stays only if it's right more often.
+
+**Tested, 9 Nov.** Twenty questions in the words people use (`packages/tools/test/brain-service.test.ts`). Words alone (2) put the right chapter first for 17 and in the top three for 18. Both misses had words that sat in the chapter's text but not in its header ("upgrade, pause", "sponsored proposals"), so they went into `where-power-lives`'s header, as the header is what routes. Then: 19 first, 20 in the top three. The model (3) isn't added: words already reach every question, and a miss is fixed in a header, by pull request.
 
 ## At each door
 

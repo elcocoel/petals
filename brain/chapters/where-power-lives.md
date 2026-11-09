@@ -1,7 +1,7 @@
 ---
 id: where-power-lives
 for: finding where power sits in any on-chain system, and reading it with a shape
-recognise: dao, governance, members, holders, votes, who controls, treasury, multisig, admin, delegation
+recognise: dao, governance, members, holders, who holds, votes, voting power, who controls, treasury, multisig, signers, admin, owner, upgrade, pause, delegation, proposals, sponsored, stake
 tools: get_snapshot, read_chain, describe_snapshot, compute_figures, propose_spec, render_flower
 continues: going-deeper, over-time, a-new-system
 status: ready

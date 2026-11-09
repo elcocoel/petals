@@ -59,6 +59,8 @@ export interface Config {
    * for it in NEAR or holds an invite.
    */
   public?: boolean;
+  /** additive (9 Nov, PETAL_BRAIN_DIR): the brain/ the site serves, a copy of the repo that follows main */
+  brainDir?: string;
 }
 
 /** Who is calling and through what. A door sets this; a caller can't name itself. */
