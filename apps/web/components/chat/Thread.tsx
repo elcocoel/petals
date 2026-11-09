@@ -2,7 +2,7 @@
 // column, and the box stays below it. A flower's row is drawn by whoever composes this, so the view
 // holds no state and no calls.
 import type { ReactNode, Ref } from 'react';
-import type { FlowerRow, Row, StoredRow } from '../../lib/thread-view.ts';
+import type { FlowerRow, JobRowData, Row, StoredRow } from '../../lib/thread-view.ts';
 import { Markdown } from '../Markdown.tsx';
 import { AnsweredBy } from './AnsweredBy.tsx';
 import { Speech } from './Speech.tsx';
@@ -17,6 +17,7 @@ export function Thread({
   className = 'pt-column-gap pr-space-32 pl-column-gap',
   renderFlower,
   renderPay,
+  renderJob,
   onRefollow,
   onLink,
 }: {
@@ -30,6 +31,8 @@ export function Thread({
   renderFlower: (row: FlowerRow | StoredRow) => ReactNode;
   /** The way to add credit, drawn by whoever composes this, as a flower's row is. */
   renderPay?: (key: string) => ReactNode;
+  /** A job handed to the person's own agent, drawn by whoever composes this (C). */
+  renderJob?: (row: JobRowData) => ReactNode;
   onRefollow?: () => void;
   /** A link in the agent's words: true when it was handled here and shouldn't navigate. */
   onLink?: (href: string) => boolean;
@@ -80,6 +83,8 @@ export function Thread({
               );
             case 'pay':
               return renderPay?.(row.key) ?? null;
+            case 'job':
+              return renderJob?.(row) ?? null;
             case 'done':
               return <AnsweredBy key={row.key} line={row.line} />;
             case 'turn':

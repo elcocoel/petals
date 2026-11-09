@@ -2,7 +2,7 @@
 // decision made and every word chosen. The views under components/chat only lay these out, so a
 // redesign replaces them without touching a decision.
 
-import type { FlowerResult, ModelSignature } from '@petal/core/types';
+import type { FlowerResult, JobEvent, ModelSignature } from '@petal/core/types';
 import { aboutLabel, readAbout } from './ask-about.ts';
 import { chainLabel, dateLabel, networkLabel } from './flower-view.ts';
 import { type Block as MarkdownBlock, parseMarkdown } from './markdown.ts';
@@ -130,12 +130,21 @@ export interface TurnRow {
   refollow?: { label: string; disabled: boolean };
 }
 
+/** A job handed to the person's own agent (C); where it stands is read apart (useJobs). */
+export interface JobRowData {
+  kind: 'job';
+  key: string;
+  job: JobEvent;
+}
+
 export type Row =
   /** `about` is what the question carried, kept quiet; `label` says who is speaking */
   | { kind: 'user'; key: string; text: string; label: string; about?: string }
   | { kind: 'note' | 'error'; key: string; text: string }
   /** Out of credit for Petals' agent: the way to add some, where the person meets it (B). */
   | { kind: 'pay'; key: string }
+  /** A job handed to the person's own agent (C); where it stands is read apart (useJobs). */
+  | JobRowData
   | { kind: 'steps'; key: string; summary: string; steps: StepRow[] }
   /**
    * `speaker` is set where the agent starts speaking, and not on what follows it. `foreign` is another
@@ -331,6 +340,9 @@ export function threadView(v: ThreadInput): Row[] {
           key,
           text: `${b.code}: ${b.message}${b.hint ? ` (${b.hint})` : ''}`,
         });
+        break;
+      case 'job':
+        rows.push({ kind: 'job', key, job: b.job });
         break;
       case 'done':
         rows.push({ kind: 'done', key, line: answeredBy(b.done, b.signature) });
