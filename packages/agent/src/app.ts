@@ -140,7 +140,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     }),
   );
   // The agent's runs read fresh data apart from the doors, so strangers there can't starve a run.
-  const tools = { ...ctx, fresh: freshGate(ctx, 'run') };
+  const tools = { ...ctx, fresh: freshGate(ctx) };
   app.route('/', createAgentRoutes({ tools, llm, budget, runs }, { ...o, auth: auth.gate }));
   app.route('/', httpApp(ctx, { gate: auth.gate }));
   // A store that fails mid-request (a full disk, say) ends in the API's own error shape: no chat

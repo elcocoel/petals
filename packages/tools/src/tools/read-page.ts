@@ -3,7 +3,6 @@
 // Who may be reached is decided in public-fetch.ts, not here.
 import { defineTool, type PetalTool } from '../define.ts';
 import { ToolFailure } from '../errors.ts';
-import { limitsOf, overToday, takeToday } from '../limits.ts';
 import { addressesIn, htmlToText } from '../page-text.ts';
 import {
   type FetchPublicOptions,
@@ -88,9 +87,6 @@ export function makeReadPage(
           next_start: null,
           note: OFFLINE_PAGE,
         };
-      const cap = limitsOf(ctx.config).pageReadsPerDay;
-      if (!(await takeToday(ctx.config, 'page-read', cap, ctx.now())))
-        throw overToday(ctx.now(), `Petal has read its ${cap} pages for today.`);
       let page: PublicPage;
       try {
         page = await read(url);

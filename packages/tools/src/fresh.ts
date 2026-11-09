@@ -1,19 +1,12 @@
 // T300: a fresh read uses the owner's connection and home address, and public sources have blocked this
-// machine before. So each set of callers gets a gate: a few at a time, a daily count, an overall
-// timeout and a plain refusal when busy. The doors share one, the agent's runs have their own, so
+// machine before. So each set of callers gets a gate: a few at a time, an overall timeout and a plain
+// refusal when busy. The doors share one, the agent's runs have their own, so
 // neither starves the other. A local command, with no door, has none.
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { setRunSignalSource } from '@petal/core';
 import type { FreshGate } from '@petal/inputs';
 import { ToolFailure } from './errors.ts';
-import {
-  assertRoom,
-  countToday,
-  type LimitsConfig,
-  limitsOf,
-  overToday,
-  takeToday,
-} from './limits.ts';
+import { assertRoom, type LimitsConfig, limitsOf } from './limits.ts';
 
 /** How long a caller refused for being busy is told to wait. */
 const BUSY_RETRY_S = 30;
@@ -27,21 +20,8 @@ export function withRunSignal<T>(signal: AbortSignal, f: () => T): T {
   return scope.run(outer ? AbortSignal.any([outer, signal]) : signal, f);
 }
 
-export function freshGate(
-  ctx: { config: LimitsConfig; now(): Date },
-  who: 'door' | 'run',
-): FreshGate {
-  const counter = `fresh:${who}`;
+export function freshGate(ctx: { config: LimitsConfig; now(): Date }): FreshGate {
   let running = 0;
-  const cap = () => {
-    const l = limitsOf(ctx.config);
-    return who === 'door' ? l.freshPerDay : l.freshRunPerDay;
-  };
-  const refusal = (n: number) =>
-    overToday(
-      ctx.now(),
-      `Petal has done its ${n} fresh reads for today, so this one was not started. Anything already stored is still free.`,
-    );
 
   const busy = () => {
     const { freshAtOnce } = limitsOf(ctx.config);
@@ -57,8 +37,6 @@ export function freshGate(
   const check = async () => {
     await assertRoom(ctx.config, ctx.now());
     busy();
-    const n = cap();
-    if ((await countToday(ctx.config, counter, ctx.now())) >= n) throw refusal(n);
   };
 
   return {
@@ -68,14 +46,6 @@ export function freshGate(
       // The slot is taken before anything waits, so two callers can't both take the last one.
       busy();
       running++;
-      let started = false;
-      try {
-        const n = cap();
-        if (!(await takeToday(ctx.config, counter, n, ctx.now()))) throw refusal(n);
-        started = true;
-      } finally {
-        if (!started) running--;
-      }
       const stop = new AbortController();
       const { freshMaxS } = limitsOf(ctx.config);
       let timer: ReturnType<typeof setTimeout> | undefined;

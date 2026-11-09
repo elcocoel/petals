@@ -137,30 +137,6 @@ describe('at the real limits', () => {
     expect(((await res.json()) as Out).error.code).toBe('bad_input');
   });
 
-  test('a fork loop stops at its cap, whatever address each request claims', LONG, async () => {
-    const before = folderBytes(dir);
-    const { made, notes } = await fullExploration(s);
-    expect(notes).toBeLessThanOrEqual(100);
-    const url = made.link.url as string;
-    let forks = 0;
-    let refusal: Out | undefined;
-    for (let i = 0; i < 500 && !refusal; i++) {
-      const res = await post(s, '/api/v1/explorations', { fork_of: url });
-      if (res.status === 200) forks++;
-      else refusal = { status: res.status, ...((await res.json()) as Out) };
-    }
-    expect(refusal?.status).toBe(429);
-    expect(refusal?.error.code).toBe('rate_limited');
-    expect(refusal?.error.retry_after_s).toBeGreaterThan(0);
-    // the seed counted, and every fork that got through
-    expect(forks).toBe(99);
-    const grown = folderBytes(dir) - before;
-    console.log(
-      `fork loop: ${forks} forks, then ${refusal?.error.code}; the folder grew ${Math.round(grown / 1e6)} MB`,
-    );
-    expect(grown).toBeLessThan(150 * 1024 * 1024);
-  });
-
   test('spoofed headers get no fresh limit', async () => {
     const spoof = () => {
       const n = () => Math.floor(Math.random() * 250);
@@ -211,14 +187,6 @@ describe('at the real limits', () => {
       expect(again.status).toBe(200);
     },
   );
-
-  test('a restart forgets none of the day’s caps', LONG, async () => {
-    await stop(s);
-    s = await start(dir);
-    const out = await post(s, '/api/v1/explorations', { question: 'after a restart' });
-    expect(out.status).toBe(429);
-    expect(((await out.json()) as Out).error.code).toBe('rate_limited');
-  });
 });
 
 describe('at the budget’s edge', () => {
@@ -230,28 +198,12 @@ describe('at the budget’s edge', () => {
     s = await start(dir, {
       PETAL_DATA_MAX_MB: '1',
       PETAL_DATA_CHECK_S: '0',
-      PETAL_FRESH_PER_DAY: '2',
       HARDEN_READ_MS: '10',
     });
   });
   afterAll(async () => {
     await stop(s);
     rmSync(dir, { recursive: true, force: true });
-  });
-
-  test('the fresh-read limit for the day: only real reads count', LONG, async () => {
-    const read = () => post(s, '/api/v1/snapshots', { network: 'slow-live', fresh: true });
-    for (let i = 0; i < 3; i++) {
-      expect((await post(s, '/api/v1/snapshots', { network: 'near-validators' })).status).toBe(200);
-    }
-    expect((await read()).status).toBe(200);
-    expect((await read()).status).toBe(200);
-    const over = await read();
-    expect(over.status).toBe(429);
-    const { error } = (await over.json()) as Out;
-    expect(error.code).toBe('rate_limited');
-    expect(error.message).toMatch(/fresh reads for today/);
-    expect((await post(s, '/api/v1/snapshots', { network: 'near-validators' })).status).toBe(200);
   });
 
   test(

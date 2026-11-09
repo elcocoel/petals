@@ -167,61 +167,8 @@ describe('fresh reads at the doors', () => {
     expect([200, 502]).toContain((await next).status);
   });
 
-  test('a low daily limit for anonymous callers; only real reads count, and it ends at midnight', async () => {
-    (r.ctx.config as Out).limits = { freshPerDay: 2 };
-    const h = heldModule();
-    h.module.fetch = async (at) =>
-      ({
-        ...liveSnapshot(),
-        snapshot: { ...liveSnapshot().snapshot, block_height: at.block_height },
-      }) as Snapshot;
-    r.ctx.modules['test-live'] = h.module;
-    const app = httpApp(r.ctx);
-    const stored = () =>
-      app.request('/api/v1/snapshots', json({ network: 'near-validators' }, fromSomeone()));
-    for (let i = 0; i < 5; i++) expect((await stored()).status).toBe(200);
-    const fresh = () =>
-      app.request('/api/v1/snapshots', json({ network: 'test-live', fresh: true }, fromSomeone()));
-    expect((await fresh()).status).toBe(200);
-    expect((await fresh()).status).toBe(200);
-    const over = await fresh();
-    expect(over.status).toBe(429);
-    const body = (await over.json()) as Out;
-    expect(body.error.code).toBe('rate_limited');
-    expect(body.error.retry_after_s).toBeGreaterThan(0);
-    expect((await stored()).status).toBe(200);
-    r.clock.set('2026-11-05T00:00:01.000Z');
-    expect((await fresh()).status).toBe(200);
-  });
-
-  test('a target with nothing stored is refused before it costs a public source a call', async () => {
-    (r.ctx.config as Out).limits = { freshPerDay: 0 };
-    const h = heldModule();
-    r.ctx.modules['test-live'] = h.module;
-    expect((await read(httpApp(r.ctx))).status).toBe(429);
-    expect(h.resolved.calls).toBe(0);
-  });
-
-  test('asked for by name, past the limit, it costs no call either', async () => {
-    (r.ctx.config as Out).limits = { freshPerDay: 1 };
-    const h = heldModule();
-    h.module.fetch = async (at) =>
-      ({
-        ...liveSnapshot(),
-        snapshot: { ...liveSnapshot().snapshot, block_height: at.block_height },
-      }) as Snapshot;
-    r.ctx.modules['test-live'] = h.module;
-    const app = httpApp(r.ctx);
-    const fresh = () =>
-      app.request('/api/v1/snapshots', json({ network: 'test-live', fresh: true }, fromSomeone()));
-    expect((await fresh()).status).toBe(200);
-    const asked = h.resolved.calls;
-    expect((await fresh()).status).toBe(429);
-    expect(h.resolved.calls).toBe(asked);
-  });
-
   test('in process, with no door, nothing is gated: a local command reads what it is told', async () => {
-    (r.ctx.config as Out).limits = { freshPerDay: 0 };
+    (r.ctx.config as Out).limits = { freshAtOnce: 0 };
     const out = (await callTool('get_snapshot', { network: 'test-live' }, r.ctx)) as Out;
     expect(out.reused).toBe(false);
   });
@@ -234,29 +181,12 @@ describe('fresh reads at the doors', () => {
     await until(() => h.waiting.length === 2);
     expect((await read(app)).status).toBe(429);
 
-    const run: ToolContext = { ...r.ctx, fresh: freshGate(r.ctx, 'run') };
+    const run: ToolContext = { ...r.ctx, fresh: freshGate(r.ctx) };
     const asked = callTool('get_snapshot', { network: 'test-live', fresh: true }, run);
     await until(() => h.waiting.length === 3);
     for (const w of h.waiting) w.go();
     expect(((await asked) as Out).reused).toBe(false);
     await Promise.all(reads);
-  });
-
-  test('fingerprints have their own daily cap, so fresh reads can’t drain the writer', async () => {
-    (r.ctx.config as Out).limits = { fingerprintsPerDay: 1 };
-    const h = heldModule();
-    h.module.fetch = async (at) =>
-      ({
-        ...liveSnapshot(),
-        snapshot: { ...liveSnapshot().snapshot, block_height: at.block_height },
-      }) as Snapshot;
-    r.ctx.modules['test-live'] = h.module;
-    const write = vi.spyOn(r.map, 'write');
-    const app = httpApp(r.ctx);
-    const fresh = () =>
-      app.request('/api/v1/snapshots', json({ network: 'test-live', fresh: true }, fromSomeone()));
-    for (let i = 0; i < 3; i++) expect((await fresh()).status).toBe(200);
-    expect(write).toHaveBeenCalledTimes(1);
   });
 });
 

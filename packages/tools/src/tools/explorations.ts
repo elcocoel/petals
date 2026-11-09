@@ -24,9 +24,9 @@ import {
 import type { Spec, SpecDiff } from '@petal/core/types';
 import type { ExplorationLinkRow, ExplorationRow, NoteRow, StepRow, Store } from '@petal/store';
 import { defineTool, type ToolAnnotations } from '../define.ts';
-import { capSpecBodies, keepSpecBody, privateStore, specBody } from '../drafts.ts';
+import { keepSpecBody, privateStore, specBody } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
-import { assertRoom, limitsOf, overToday, takeToday } from '../limits.ts';
+import { assertRoom, limitsOf } from '../limits.ts';
 import type { JSONSchema, ToolContext } from '../types.ts';
 import { base, DATETIME, obj, SHA256 } from './shared.ts';
 import { checkSpec, summarise } from './specs.ts';
@@ -143,8 +143,6 @@ interface StepInput {
   credential?: string | null;
   note: string | null;
   at: string;
-  /** called for a new spec body; the site's own run has none, because it is sponsored */
-  capped?: () => Promise<void>;
 }
 
 const tooManyNotes = () =>
@@ -167,7 +165,7 @@ function writeStep(
   return store.tx(async () => {
     const row = await store.exploration.get(id);
     if (!row) throw missing();
-    const sha = await keepSpecBody(store, spec, s.at, s.capped);
+    const sha = await keepSpecBody(store, spec, s.at);
     if (!sha) throw new ToolFailure('bad_input', 'That spec is too large to keep.');
     if (row.head === sha) {
       if (s.note) {
@@ -680,16 +678,8 @@ async function copyInto(store: Store, id: string, from: ExplorationRow): Promise
   }
 }
 
-/**
- * What a stranger's new exploration costs, checked before it's made. Nobody behind it, or a fork, which
- * copies rows: a daily cap on those together. A person's own new one is a single small row.
- */
-async function admitExploration(
-  ctx: ToolContext,
-  store: Store,
-  sessionless: boolean,
-  fork: boolean,
-) {
+/** Checked before a new exploration is made: room for it, and unclaimed ones past their days go. */
+async function admitExploration(ctx: ToolContext, store: Store, sessionless: boolean) {
   const now = ctx.now();
   const limits = limitsOf(ctx.config);
   if (sessionless) {
@@ -697,14 +687,6 @@ async function admitExploration(
     await store.exploration.deleteUnclaimed(before, UNCLAIMED_DELETED_AT_ONCE);
   }
   await assertRoom(ctx.config, now);
-  if (!sessionless && !fork) return;
-  if (!(await takeToday(ctx.config, 'explorations', limits.explorationsPerDay, now))) {
-    throw overToday(
-      now,
-      `Petal has made ${limits.explorationsPerDay} explorations with no owner, or forks, today, so this one was not started.`,
-      'A link you already have still works.',
-    );
-  }
 }
 
 export const startExploration = defineTool<StartIn, object>({
@@ -754,7 +736,7 @@ export const startExploration = defineTool<StartIn, object>({
       throw new ToolFailure('bad_input', 'A new exploration needs a question.');
     }
     const owner = ctx.caller?.subject ?? null;
-    await admitExploration(ctx, store, owner === null, source !== null);
+    await admitExploration(ctx, store, owner === null);
     const at = ctx.now().toISOString();
     const id = newExplorationId();
     const link = await store.tx(async () => {
@@ -844,7 +826,6 @@ export const saveStep = defineTool<
       credential: credentialOf(ctx, o),
       note: note ?? null,
       at: ctx.now().toISOString(),
-      capped: capSpecBodies(ctx.config, ctx.now()),
     });
     touched(ctx, o.row.id, 'save_step');
     const parent = step.parent ? await specBody(ctx.config, step.parent) : null;
@@ -1041,10 +1022,6 @@ export async function postSnapshot(
   }
   const now = ctx.now();
   await assertRoom(ctx.config, now);
-  const cap = limitsOf(ctx.config).postedSnapshotsPerDay;
-  if (!(await takeToday(ctx.config, 'posted_snapshot', cap, now))) {
-    throw overToday(now, 'This site has taken as many posted readings as it takes in a day.');
-  }
   await ctx.store.put(checked.value);
   const store = storeOf(ctx);
   await store.meta.set(

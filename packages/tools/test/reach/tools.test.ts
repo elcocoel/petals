@@ -445,16 +445,6 @@ describe('read_page', () => {
     }
   });
 
-  test('a day has a cap', async () => {
-    const { ctx } = await rig();
-    const capped = { ...ctx, config: { ...ctx.config, limits: { pageReadsPerDay: 1 } } };
-    const tool = makeReadPage({ fetchPage: async () => page('<p>hello</p>') });
-    await tool.run({ url: 'https://example.org/' }, capped);
-    expect(await tool.run({ url: 'https://example.org/' }, capped)).toMatchObject({
-      error: { code: 'rate_limited' },
-    });
-  });
-
   test('in fake mode it fetches nothing', async () => {
     const { ctx } = await rig();
     expect(await callTool('read_page', { url: 'https://example.org/' }, ctx)).toMatchObject({

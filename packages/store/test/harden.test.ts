@@ -59,23 +59,6 @@ describe('pruning uses an index, so a request never scans a table a stranger can
   });
 });
 
-describe('a daily count', () => {
-  test('takes up to the cap, per day and per thing, and forgets old days', async () => {
-    const { dailyCount } = openStore(':memory:');
-    expect(await dailyCount.take('a', DAY, 2)).toBe(true);
-    expect(await dailyCount.take('a', DAY, 2)).toBe(true);
-    expect(await dailyCount.take('a', DAY, 2)).toBe(false);
-    expect(await dailyCount.take('b', DAY, 1)).toBe(true);
-    expect(await dailyCount.get('a', DAY)).toBe(2);
-    expect(await dailyCount.take('a', '2026-11-07', 2)).toBe(true);
-    expect(await dailyCount.get('a', DAY)).toBe(0);
-  });
-
-  test('a cap of zero takes nothing', async () => {
-    expect(await openStore(':memory:').dailyCount.take('a', DAY, 0)).toBe(false);
-  });
-});
-
 describe('holds at a restart', () => {
   test('the ledger counts them as spent, each on its own day', async () => {
     const { ledger } = openStore(':memory:');

@@ -85,13 +85,6 @@ describe.each(engines)('%s', (engine, open) => {
     expect((await store.ledger.get(day)).reserved_usd).toBeCloseTo(0.12, 9);
   });
 
-  test('a daily cap counts once each, and holds under concurrent calls', async () => {
-    const what = u('what');
-    const taken = await together(12, () => store.dailyCount.take(what, '2026-11-08', 5));
-    expect(taken.filter(Boolean)).toHaveLength(5);
-    expect(await store.dailyCount.get(what, '2026-11-08')).toBe(5);
-  });
-
   test('one id counts once, and one nonce goes to one caller', async () => {
     const account = u('acct');
     const id = u('c');
