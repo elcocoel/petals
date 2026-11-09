@@ -111,6 +111,10 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
       result: { summary: 'A few pools hold most of the stake.', steps: [0] },
     });
     await run('list_jobs', { exploration });
+    // the brain, from the repo's brain/
+    await run('brain_index', {});
+    await run('brain_route', { question: 'who holds the power here?', answers: ['sharesToken()'] });
+    await run('brain_file', { id: 'doctrine' });
     const fork = await run('start_exploration', { fork_of: exploration });
     await run('get_exploration', { exploration: (fork.link as { url: string }).url });
     const signedIn = { ...r.ctx, caller: { subject: 'prs_test', door: 'test' } };

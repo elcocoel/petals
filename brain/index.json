@@ -174,12 +174,21 @@
         "governance",
         "members",
         "holders",
+        "who holds",
         "votes",
+        "voting power",
         "who controls",
         "treasury",
         "multisig",
+        "signers",
         "admin",
-        "delegation"
+        "owner",
+        "upgrade",
+        "pause",
+        "delegation",
+        "proposals",
+        "sponsored",
+        "stake"
       ],
       "tools": [
         "get_snapshot",
@@ -196,7 +205,7 @@
       ],
       "status": "ready",
       "file": "chapters/where-power-lives.md",
-      "sha256": "2632601547c09fe184fc0110131848d0295125338f34b71128f9f18c81a3ccc1"
+      "sha256": "b92b802cb32d73095ac7b88b8ceb596c58ff234fdd93cd43b94eb059b1c4db81"
     },
     {
       "id": "moloch-v3",

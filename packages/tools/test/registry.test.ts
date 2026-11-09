@@ -40,6 +40,9 @@ const PHASE_A = [
   'take_job',
   'report_job',
   'list_jobs',
+  'brain_route',
+  'brain_file',
+  'brain_index',
 ];
 
 describe('registry', () => {

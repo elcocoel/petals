@@ -254,6 +254,7 @@ export function configFromEnv(env: Env = process.env, root: string = process.cwd
     ['apiBase', set(env.PETAL_API)?.replace(/\/+$/, '')],
     ['blobToken', set(env.BLOB_READ_WRITE_TOKEN)],
     ['repoUrl', set(env.PETAL_REPO_URL)],
+    ['brainDir', set(env.PETAL_BRAIN_DIR)],
   ];
   for (const [k, v] of optional)
     if (v !== undefined) (cfg as unknown as Record<string, unknown>)[k] = v;
