@@ -37,12 +37,15 @@ export function InteractionSurface({
   surface,
   agentPrompt = '',
   terminal = false,
+  terminalCommand = '',
   ...workspace
 }: {
   scatter: boolean;
   probe: boolean;
   /** The person's own agent in a terminal, in the output's place (W10, a localhost proof for now). */
   terminal?: boolean;
+  /** The line that starts the Petals helper for it. */
+  terminalCommand?: string;
   surface: SurfaceName;
   initialRun?: string | undefined;
   catalogue?: Catalogue | null;
@@ -102,6 +105,7 @@ export function InteractionSurface({
       >
         {terminal && (
           <TerminalPass
+            command={terminalCommand}
             phase={term.phase}
             code={term.code}
             failed={term.failed}

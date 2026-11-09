@@ -1452,6 +1452,7 @@ export const registry: LabEntry[] = [
         wide: true,
         render: () => (
           <TerminalPass
+            command="curl -fsSL https://petal-flowers.vercel.app/petal.mjs -o ~/.petals/petal.mjs && node ~/.petals/petal.mjs terminal claude"
             phase="pair"
             code=""
             failed={null}
@@ -1466,9 +1467,10 @@ export const registry: LabEntry[] = [
         wide: true,
         render: () => (
           <TerminalPass
+            command="curl -fsSL https://petal-flowers.vercel.app/petal.mjs -o ~/.petals/petal.mjs && node ~/.petals/petal.mjs terminal claude"
             phase="pair"
             code="K7QM-3WTZ"
-            failed="The Petals helper isn't running on this computer."
+            failed="The Petals helper didn't answer. Start it, or close the other page that's using it."
             mount={() => {}}
             onCode={() => {}}
             onPair={() => {}}

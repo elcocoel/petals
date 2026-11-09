@@ -14,12 +14,12 @@ export interface TermSize {
   rows: number;
 }
 
-/** How the page proves itself: the one-use code the helper printed, or the token it gave back. */
-export type Pass = { pair: string } | { token: string };
-
-/** The first frame: who's asking, and how big the terminal is, so the agent starts at that size. */
-export const helloFrame = (pass: Pass, size: TermSize) =>
-  JSON.stringify({ ...pass, cols: size.cols, rows: size.rows });
+/**
+ * The first frame: the one-use code the helper printed, and how big the terminal is, so the agent starts
+ * at that size. Every session takes a fresh code, so the person sees and approves each pairing (Elco).
+ */
+export const helloFrame = (pair: string, size: TermSize) =>
+  JSON.stringify({ pair, cols: size.cols, rows: size.rows });
 
 /** A text frame that is exactly this resizes; any other text is keystrokes. */
 export const resizeFrame = (size: TermSize) =>
@@ -27,7 +27,7 @@ export const resizeFrame = (size: TermSize) =>
 
 /** What a control frame from the helper says. Output comes as bytes, never through here. */
 export type FromHelper =
-  | { kind: 'paired'; token: string; agent: string }
+  | { kind: 'paired'; agent: string }
   | { kind: 'exit'; code: number }
   | { kind: 'refused'; why: string };
 
@@ -40,9 +40,8 @@ export function readControl(text: string): FromHelper | null {
   }
   if (!m || typeof m !== 'object') return null;
   const o = m as Record<string, unknown>;
-  if (o.paired === true && typeof o.token === 'string') {
-    return { kind: 'paired', token: o.token, agent: typeof o.agent === 'string' ? o.agent : '' };
-  }
+  if (o.paired === true)
+    return { kind: 'paired', agent: typeof o.agent === 'string' ? o.agent : '' };
   if (typeof o.exit === 'number') return { kind: 'exit', code: o.exit };
   if (typeof o.error === 'string') return { kind: 'refused', why: o.error };
   return null;
@@ -59,14 +58,13 @@ export type TermPhase = 'pair' | 'connecting' | 'open' | 'ended';
 export const terminalWords = {
   /** The box's bar, and what a screen reader hears. */
   box: 'Terminal',
-  /** Before it's paired, or after the helper stopped. */
-  start: 'Start the Petals helper on this computer, then enter the code it shows.',
-  command: 'node ~/.petals/petal.mjs terminal',
+  /** Before it's paired. The command under it is the helper's own (lib/agent-prompt.ts). */
+  start: 'Run this in a terminal on this computer, then enter the code it shows.',
   code: 'Pairing code',
   connect: 'Connect',
-  /** Nothing answered on this computer. */
-  noHelper: "The Petals helper isn't running on this computer.",
+  /** Nothing answered: no helper, or another page already has it. */
+  noHelper: "The Petals helper didn't answer. Start it, or close the other page that's using it.",
   /** The helper answered and said no. */
-  refused: "That code didn't work. The helper prints a new one each time it starts.",
-  ended: 'Your agent has stopped. Connect again to start it.',
+  refused: "That code didn't work. Enter the newest code the helper shows.",
+  ended: 'Your agent has stopped. Enter the next code the helper shows to start it again.',
 } as const;

@@ -14,16 +14,11 @@ describe('the terminal in the page', () => {
     expect(helperUrl()).toBe('ws://127.0.0.1:7466/pty');
   });
 
-  test('the first frame says who is asking and how big the terminal is', () => {
-    expect(JSON.parse(helloFrame({ pair: 'K7QM-3WTZ' }, { cols: 120, rows: 32 }))).toEqual({
+  test('the first frame is the code and how big the terminal is', () => {
+    expect(JSON.parse(helloFrame('K7QM-3WTZ', { cols: 120, rows: 32 }))).toEqual({
       pair: 'K7QM-3WTZ',
       cols: 120,
       rows: 32,
-    });
-    expect(JSON.parse(helloFrame({ token: 't' }, { cols: 80, rows: 24 }))).toEqual({
-      token: 't',
-      cols: 80,
-      rows: 24,
     });
   });
 
@@ -32,15 +27,14 @@ describe('the terminal in the page', () => {
   });
 
   test('control frames: paired, exit, refused, and anything else is nothing', () => {
-    expect(readControl('{"paired":true,"token":"abc","agent":"claude"}')).toEqual({
+    expect(readControl('{"paired":true,"agent":"claude"}')).toEqual({
       kind: 'paired',
-      token: 'abc',
       agent: 'claude',
     });
     expect(readControl('{"exit":0}')).toEqual({ kind: 'exit', code: 0 });
     expect(readControl('{"error":"wrong code"}')).toEqual({ kind: 'refused', why: 'wrong code' });
     expect(readControl('ls -la')).toBeNull();
-    expect(readControl('{"paired":true}')).toBeNull();
+    expect(readControl('{"paired":false}')).toBeNull();
   });
 
   test('a code reads however it was typed', () => {

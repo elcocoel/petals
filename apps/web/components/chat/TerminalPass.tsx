@@ -8,6 +8,7 @@ import { Button } from '../ui/Button.tsx';
 import { Mono } from '../ui/Mono.tsx';
 
 export function TerminalPass({
+  command,
   phase,
   code,
   failed,
@@ -15,6 +16,8 @@ export function TerminalPass({
   onCode,
   onPair,
 }: {
+  /** The one line that fetches Petals' file and starts the helper (lib/agent-prompt.ts). */
+  command: string;
   phase: TermPhase;
   code: string;
   /** Why the last try didn't work. */
@@ -37,7 +40,9 @@ export function TerminalPass({
           <p className="my-0 type-body">
             {phase === 'ended' ? terminalWords.ended : terminalWords.start}
           </p>
-          <Mono>{terminalWords.command}</Mono>
+          <span className="wrap-anywhere">
+            <Mono>{command}</Mono>
+          </span>
           {failed && <p className="my-0 type-caption text-muted">{failed}</p>}
           <label className="flex items-center gap-text-gap">
             <span className="type-label">{terminalWords.code}</span>
