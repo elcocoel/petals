@@ -89,7 +89,8 @@ export async function bundle(): Promise<{ bytes: number }> {
       js: "#!/usr/bin/env node\nimport { createRequire as __petalRequire } from 'node:module';\nconst require = __petalRequire(import.meta.url);",
     },
     // Petals' own agent and its HTTP server aren't in the file: the person's agent is theirs.
-    external: ['@petal/agent', '@hono/node-server'],
+    // ws's optional native speed-ups: it runs without them.
+    external: ['@petal/agent', '@hono/node-server', 'bufferutil', 'utf-8-validate'],
     legalComments: 'none',
     logLevel: 'warning',
   });
