@@ -143,6 +143,8 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
       asFile: deps.asFile === true,
     });
     if (command === 'help' || command === '--help' || command === '-h') return cli.help(rest[0]);
+    if (command === 'start') return await cli.start(rest);
+    if (command === 'note') return await cli.note(rest);
     if (command === 'mcp') return await cli.mcp(rest);
     if (command === 'api') return await cli.api(rest, deps);
     const tool = cli.find(command);
@@ -276,6 +278,80 @@ class Cli {
         ? resolve(this.sys.cwd, rootFlag)
         : (this.sys.root ?? findRoot(this.sys.env, import.meta.dirname));
     return configFromEnv(this.sys.env, root, { fake: flags.get('fake') === true });
+  }
+
+  /**
+   * `petal start --client <app> [--question <q>] [--note <text>] [--no-open]`: the whole start of a
+   * conversation in one call (Elco, 9 Nov: setup took three minutes). It starts this conversation's
+   * page, opens it in the browser, and posts an opening note if one is given.
+   */
+  async start(argv: string[]): Promise<number> {
+    const flags = new Map(tokenize(argv, (n) => n === 'no-open' || CLI_BOOLEAN.has(n)).flags);
+    const str = (k: string) =>
+      typeof flags.get(k) === 'string' ? (flags.get(k) as string) : undefined;
+    const question = str('question') ?? 'A conversation about who holds power';
+    const client = str('client');
+    const ctx: ToolContext = {
+      ...this.tools.createContext(this.config(new Map())),
+      caller: { door: 'cli' },
+    };
+    const started = (await this.tool('start_exploration').run(
+      { question, ...(client ? { client } : {}) } as never,
+      ctx,
+    )) as Record<string, unknown>;
+    if (isToolError(started)) {
+      this.sys.stdout(json(started));
+      return 1;
+    }
+    const openUrl = typeof started.open_url === 'string' ? started.open_url : null;
+    let opened = false;
+    if (openUrl && flags.get('no-open') !== true && this.sys.env.PETALS_NO_OPEN !== '1') {
+      const { systemOpener } = await import('./terminal.ts');
+      systemOpener(openUrl);
+      opened = true;
+    }
+    const note = str('note');
+    if (note) {
+      const posted = await this.tool('add_note').run({ text: note } as never, ctx);
+      if (isToolError(posted)) {
+        this.sys.stdout(json(posted));
+        return 1;
+      }
+    }
+    const link = (started.link as { url?: string } | undefined)?.url;
+    this.sys.stdout(
+      json({
+        open_url: openUrl,
+        opened,
+        ...(link ? { exploration: link } : {}),
+        next: opened
+          ? 'The page is open in their browser: tell them in one line. Each reply: `note`, with their words and then yours.'
+          : 'Give them open_url in one line. Each reply: `note`, with their words and then yours.',
+      }),
+    );
+    return 0;
+  }
+
+  /** `petal note [text]`: a note on this conversation's page, from the words given, or from stdin. */
+  async note(argv: string[]): Promise<number> {
+    const parsed = tokenize(argv, (n) => CLI_BOOLEAN.has(n));
+    const positionals = parsed.positionals;
+    const flags = new Map(parsed.flags);
+    const exploration =
+      typeof flags.get('exploration') === 'string' ? flags.get('exploration') : undefined;
+    const text =
+      positionals.length > 0 ? positionals.join(' ') : (await this.sys.io.readStdin()).trim();
+    if (!text) throw new UsageError('note needs text: as words, or on stdin (a heredoc)');
+    const ctx: ToolContext = {
+      ...this.tools.createContext(this.config(new Map())),
+      caller: { door: 'cli' },
+    };
+    const out = await this.tool('add_note').run(
+      { text, ...(exploration ? { exploration } : {}) } as never,
+      ctx,
+    );
+    this.sys.stdout(json(out));
+    return isToolError(out) ? 1 : 0;
   }
 
   /** `petal mcp`: MCP over stdio. Nothing may reach stdout but the protocol. */

@@ -85,25 +85,32 @@ export function serverApp(cfg: Config, o: ServerOptions = {}): Hono {
     return next();
   });
 
+  /** The file as this site serves it, written for one site's address: its bytes and their sha256. */
+  const served = async (site: string): Promise<{ file: string; sha: string } | null> => {
+    const file = await readFile(join(root, PETAL_FILE), 'utf8').catch(() => null);
+    if (!file || !PLACEHOLDER.test(file)) return null;
+    const out = file.replace(PLACEHOLDER, () => JSON.stringify(site));
+    return { file: out, sha: createHash('sha256').update(out, 'utf8').digest('hex') };
+  };
+
   app.get('/skill.md', async (c) => {
     const skill = await readFile(join(root, 'skill/petal/SKILL.md'), 'utf8');
+    const site = siteOf(c.req.raw);
+    // The file's sha256, so an agent can check it rather than read 6 MB (Elco, 9 Nov).
+    const sha = (await served(site))?.sha;
     // Plain text, because some agents' web tools refuse text/markdown (Hermes did).
-    return c.body(hostedSkill(skill, siteOf(c.req.raw)), 200, {
+    return c.body(hostedSkill(skill, site, sha), 200, {
       'content-type': 'text/plain; charset=utf-8',
     });
   });
 
   app.get('/petal.mjs', async (c) => {
-    const file = await readFile(join(root, PETAL_FILE), 'utf8').catch(() => null);
-    if (!file || !PLACEHOLDER.test(file)) {
-      return c.text('petal.mjs is not built on this server.\n', 404);
-    }
-    const site = siteOf(c.req.raw);
-    return c.body(
-      file.replace(PLACEHOLDER, () => JSON.stringify(site)),
-      200,
-      { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' },
-    );
+    const out = await served(siteOf(c.req.raw));
+    if (!out) return c.text('petal.mjs is not built on this server.\n', 404);
+    return c.body(out.file, 200, {
+      'content-type': 'text/javascript; charset=utf-8',
+      'cache-control': 'no-store',
+    });
   });
 
   app.all('*', async (c) => {
