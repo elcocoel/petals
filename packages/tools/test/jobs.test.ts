@@ -126,3 +126,20 @@ describe('jobs over HTTP', () => {
     ).toBe('not_found');
   });
 });
+
+describe('the link the page hands the person’s agent', () => {
+  test('opens the open jobs and how to take them; a read link only shows them', async () => {
+    const { app, cont, read } = await project();
+    const packet = async (token: string) => (await app.request(`/s/${token}`)).text();
+    const withContinue = await packet(cont);
+    expect(withContinue).toContain('## Open jobs (2)');
+    expect(withContinue).toContain('"title":"Map RaidGuild"');
+    expect(withContinue).toContain('To take the open jobs: take_job with this link');
+    expect(withContinue).toContain(`/api/v1/explorations/${cont}/jobs/take`);
+    const withRead = await packet(read);
+    expect(withRead).toContain('## Open jobs (2)');
+    expect(withRead).not.toContain('To take the open jobs');
+    await send(app, 'POST', `/api/v1/explorations/${cont}/jobs/take`, {});
+    expect(await packet(cont)).toContain('## Open jobs (1)');
+  });
+});

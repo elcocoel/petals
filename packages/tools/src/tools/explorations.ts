@@ -425,9 +425,15 @@ const jsonLines = (items: unknown[]) =>
 
 /** The resume packet for an agent that can only fetch a URL: the same facts, as markdown. */
 export async function packetMarkdown(ctx: ToolContext, ref: string): Promise<string> {
-  const p = await packetOf(ctx, await open(ctx, ref));
+  const o = await open(ctx, ref);
+  const p = await packetOf(ctx, o);
   const c = p.current;
   const api = `${base(ctx)}/api/v1/explorations/${LINK_TOKEN.exec(ref.trim())?.[1]}`;
+  // jobs Petals' agent handed out here, for whoever holds the link to take (C)
+  const open_ = (await storeOf(ctx).job.list(o.row.id))
+    .filter((j) => j.status === 'open')
+    .map((j) => ({ id: j.id, kind: j.kind, title: j.title, brief: j.brief, inputs: j.inputs }));
+  const takes = p.access.as === 'continue' && open_.length > 0;
   const lines = [
     '# A Petals exploration: where this work stands',
     '',
@@ -465,6 +471,10 @@ export async function packetMarkdown(ctx: ToolContext, ref: string): Promise<str
     '',
     p.notes.length ? jsonLines(p.notes) : 'None yet.',
     '',
+    `## Open jobs (${open_.length}), handed out by Petals' agent on the page`,
+    '',
+    open_.length ? jsonLines(open_) : 'None open.',
+    '',
     '## Free, and what spends',
     '',
     `Free: ${p.free.join('; ')}.`,
@@ -477,6 +487,12 @@ export async function packetMarkdown(ctx: ToolContext, ref: string): Promise<str
     '',
     `With Petal's MCP tools, pass this link as \`exploration\` to get_exploration${p.access.as === 'continue' ? ', save_step and add_note' : ''}. Over HTTP: GET ${api} for this as JSON${p.access.as === 'continue' ? `; POST ${api}/steps with { "spec" | "spec_sha256", "note"? }; POST ${api}/notes with { "text" }` : ''}.`,
     '',
+    ...(takes
+      ? [
+          `To take the open jobs: take_job with this link as \`exploration\`, do what its brief says, then report_job with its id and { "result": { "summary", "steps"? } } or { "failed" }; then take the next. Over HTTP: POST ${api}/jobs/take with {}, then POST ${api}/jobs/<id>/report.`,
+          '',
+        ]
+      : []),
   ];
   return lines.join('\n');
 }
