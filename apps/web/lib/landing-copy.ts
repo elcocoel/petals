@@ -1,31 +1,32 @@
 // The landing page's words, in one file, so a copy pass touches one file. The source is the "Landing copy
-// for coders (v6)" tab of the "Petals — Copy" doc: its green text, word for word, and nothing else in that
-// tab. Its yellow slots carry no words: an EmptySlot, or a placeholder drawing until the hero set (T108).
-// Only the line breaks are ours. The three Connect buttons (nav, the hero box, How it works) are Elco's word
-// from 9 Nov, which the doc may not have yet: Elco shot down Ask as a call to action.
-// Nav isn't in the doc and keeps its words; "Atlas" stays everywhere until Elco picks the name.
+// (v7)" tab of the "Petals — Copy" doc. Elco's approved words and v6's drafts stay word for word. Everything
+// that was an empty slot is a v1 draft by LANDING (Elco, 9 Nov: "lets try to get everything to be 'v1' with no
+// placeholders as much as possible than we critique by looking at the page"). Only the line breaks are ours.
 // The arrows aren't here: Geist Mono and our Mona Sans subset have neither U+2192 nor U+2190, so the
 // components draw them (components/ui/Arrow.tsx).
 export const landingCopy = {
   nav: {
     howItWorks: 'How it works',
-    gallery: 'Atlas',
+    gallery: 'Power Map',
     docs: 'Docs',
     ask: 'Connect',
   },
   hero: {
     eyebrow: 'SEE POWER MOVE',
     title: 'Power has\na shape.\nNow you\ncan see it.',
-    body: 'Everything is connected. Petals shows you how.\nPoint Petals at any wallet or contract, or just name a community, and see how power moves.',
+    body: 'Point Petals at any wallet or contract, or just name a community, and map how power moves.',
     ask: {
-      /** All four, in this order: the box types one, holds it, deletes it, types the next (field.type). */
+      /** One line per chapter, in the chapters' order: the box types one, holds it, deletes it, types the next. */
       placeholders: [
-        'Name your target and start an investigation…',
-        'What do you want to uncover?',
-        'Name a community, a wallet or a contract…',
-        'Who do you want to look into?',
+        "Every account is a petal. 9 of NEAR's 371 validators hold a third of the stake.",
+        'Same chain, a second kind of power: the votes in House of Stake.',
+        'A handful of delegates carry most of the ENS vote. Petals counts how few.',
+        'One block, one wallet, 79.63% of the vote.',
+        'Many tokens call themselves Lido. Petals checks which is real before it draws.',
+        'Two crowds, one set of wallets: lines join the holders of both.',
+        "RaidGuild runs on a system Petals hadn't read. One recipe later, every agent can.",
       ],
-      label: 'Ask about a network, a wallet or a contract',
+      label: 'What Petals reads: a network, a wallet or a contract',
       action: 'Connect',
     },
     starterLabel: 'OR START WITH ONE OF THESE',
@@ -36,6 +37,7 @@ export const landingCopy = {
       'How did one wallet take Beanstalk in one block?',
       'Which Lido is the real one?',
       'Who holds both DEGEN and UNI on Base?',
+      'Can Petals read a DAO it has never seen?',
     ],
   },
   liveReading: {
@@ -55,36 +57,34 @@ export const landingCopy = {
     steps: [
       {
         numeral: '01',
-        title: 'Name it.',
-        body: 'Type a name, a ticker or an address. Petals finds it on chain, warns you about copycats, and asks before it reads anything new.',
+        title: "Petals' agent, on the page.",
+        body: 'Connect a NEAR wallet and talk to it right here. It runs on NEAR AI, and you pay as you go, in NEAR.',
       },
       {
         numeral: '02',
-        title: 'Petals counts.',
-        body: 'Code does the counting, so the same question always draws the same shape. The AI explains the shape, and every part of it cites a source.',
+        title: 'Your agents work with it.',
+        body: "Bring Claude Code, Codex or Hermes. Petals' agent hands them jobs, they do them on your computer, and the results land in the same project.",
       },
       {
         numeral: '03',
-        title: 'Question it.',
-        body: 'Ask why a petal is that size, or ask it to measure something else. Petals redraws and shows what changed.',
+        title: 'An open brain, tools that count.',
+        body: 'Every agent learns to map from an open brain of chapters and recipes. The tools read the chain and do the counting, so the same question always draws the same shape.',
       },
     ],
     action: 'Connect',
   },
   useAnywhere: {
-    title: 'Take Petals into your own AI.',
-    body: 'Free from your own AI: no account, no key, no payment. Your AI does the talking, and Petals reads and draws.',
+    title: 'Put your own agents to work.',
+    body: "Petals' agent can hand jobs to the agents you already use. Each one reads on your computer, on the plan you already pay for, so a big map costs you less. Several can map different parts of a network at once, and everything lands in one project.",
     actions: {
-      claude: 'Add to Claude',
-      chatgpt: 'Add to ChatGPT',
-      claudeCode: 'Add to Claude Code',
       prompt: 'Copy the prompt',
+      keep: 'Keep Petals in your agent',
     },
-    promptNote: 'For Claude Code, Codex and other agents that run commands.',
+    promptNote: 'Works today with Claude Code, Codex, Hermes and any agent that runs commands.',
   },
   gallery: {
     title: 'Start with a network you know.',
-    open: 'Open the atlas',
+    open: 'Explore the Power Map',
   },
   questions: {
     sign: '−',
@@ -93,10 +93,9 @@ export const landingCopy = {
         index: '01',
         question: 'Is it free?',
         answer: [
-          'Looking is free. Every shape in the atlas opens without an account, a key or a wallet.',
+          'Looking is free. Every shape on the Power Map opens without an account, a key or a wallet.',
           "Asking from your own AI is free too. Petals' tools need no account, key or payment, and your AI's own plan covers the talking.",
-          'Publishing costs you nothing. You sign a short message in your NEAR wallet, and Petals writes your shape to the shared map.',
-          "You can also fund a fresh reading, or a network Petals can't read yet. Petals quotes the price, to be paid through NEAR Intents. Paying isn't switched on yet.",
+          "Talking to Petals' agent on the page costs a little NEAR, paid as you go from your wallet.",
         ],
       },
       {
@@ -106,14 +105,14 @@ export const landingCopy = {
           'Today:',
           {
             list: [
-              "NEAR: its validators and the delegators behind each pool, and House of Stake's voting power and delegations, read live.",
-              'Ethereum, Base and Arbitrum: the holders of any ERC-20 token, the delegates of any token that tracks delegated votes (like ENS), and the members of any Moloch v1 DAO.',
+              "NEAR: its validators and the delegators behind each pool, and House of Stake's voting power and delegations.",
+              'Ethereum, Base, Arbitrum and Gnosis: the holders of any ERC-20 token, the delegates of any token that tracks delegated votes (like ENS), and the members of Moloch DAOs (like RaidGuild).',
               'Solana: the holders of any SPL token.',
               'One moment from history: Beanstalk on 17 April 2022, the block before and the block after one address took 79.63% of the vote.',
             ],
           },
-          "Coming next: any Sputnik DAO on NEAR, and Bitcoin's mining pools. Ask for anything else and Petals tells you what it can read instead, and what adding it would cost.",
-          "Some readings have limits, and every shape says so. On Base and Arbitrum, Petals sees the wallets that moved a token in the last week, so the rest of the supply isn't attributed. The NEAR validators reading is stored from 3 November.",
+          "Anything else: an agent can work out a system Petals hasn't seen, write a recipe for it and share it, so the next person's agent can read it too.",
+          "Some readings have limits, and every shape says so. On Base, Petals sees the wallets that moved a token in the last 7 days, so the rest of the supply isn't attributed.",
         ],
       },
       {
@@ -128,9 +127,10 @@ export const landingCopy = {
         index: '04',
         question: "How do I know it's right?",
         answer: [
-          'Every number comes from code that reads the chain and counts. The AI never does the arithmetic, and it can only quote figures the tools return.',
+          "Every number comes from code that reads the chain and counts. Petals' agent never does the arithmetic, and it can only quote figures the tools return. Your own agents get the same rule.",
           "The same question on the same data always draws the same shape, down to its hash, so anyone can redraw it and check. Every part of the shape cites its source, every answer lists what Petals couldn't find out, and anything inferred is labelled as inferred.",
           'A published shape carries its proofs: the hash of exactly what was drawn, and the signature of the person who published it. You can open its record on NEAR yourself.',
+          'Everything Petals shows is labelled: verified on chain, inferred, or a lead to check. Every layer names who added it.',
         ],
       },
       {
@@ -139,38 +139,54 @@ export const landingCopy = {
         answer: [
           "It tells you what's on record, and where the wallet shows up. Names come from what owners declared on chain: a NEAR account name, a validator's published details, a name in a DAO proposal.",
           'Petals also shows every group it has seen a wallet in, and the shortest chain of shared groups between two wallets. It never guesses who someone is, and anything inferred is labelled.',
+          'Your own notes on a wallet stay private to your account.',
         ],
       },
       {
         index: '06',
         question: 'When do I need a wallet?',
         answer: [
-          'Never to look, and never to ask from your own AI.',
-          'You need a NEAR wallet to publish a shape. You sign a short message, Petals writes the shape to the map, and nothing you sign can move your funds. Petals never asks for a key or a seed phrase.',
+          'Never to look.',
+          "You need a NEAR wallet to come in: to talk to Petals' agent, to pay for it, and to keep your conversations and notes. Signing in moves nothing and costs nothing, and Petals never asks for a key or a seed phrase.",
         ],
       },
       {
         index: '07',
         question: 'Can I use it in ChatGPT or Claude?',
         answer: [
-          'Yes. Add Petals to Claude or ChatGPT as a connector, then ask your question there. In Claude Code, Codex or any agent that runs commands, paste the Petals prompt. Your AI gets the same tools Petals uses here, and draws the same shapes.',
+          "You don't need them: Petals' agent works right on the page.",
+          "If you'd like your own agents to help, Claude Code, Codex and Hermes can join after one pasted prompt, and take mapping jobs from Petals' agent. The Claude and ChatGPT chat apps can't run Petals' tools yet.",
         ],
       },
       {
         index: '08',
         question: 'Who sees my questions?',
         answer: [
-          'You, and anyone you give the link to. An investigation belongs to whoever started it. A shape becomes public only when you publish it.',
+          'Only you. Your conversations, notes and unshared layers stay private to your account, and search only looks inside your own. A shape goes on the shared map only when you put it there.',
         ],
       },
     ],
   },
   backIt: {
-    title: 'Keep Petals reading.',
+    title: 'Help the map grow.',
+    ways: [
+      {
+        title: 'Map a network you care about.',
+        body: 'Every layer your agent adds makes the map better for the next person.',
+      },
+      {
+        title: 'Teach Petals a new system.',
+        body: "Write a recipe for a kind of DAO Petals can't read yet, and share it with a pull request.",
+      },
+      {
+        title: "Talk to Petals' agent.",
+        body: 'What you pay in NEAR keeps it reading.',
+      },
+    ],
   },
   builders: {
     title: 'Petals is open source. Build it with us.',
-    body: 'The code, the spec for how a shape is drawn, and the modules that read each network, under the MIT licence. Add a network, sharpen a reading, or bring Petals into your own agent.',
+    body: "Built in the open, under the MIT licence: the brain that teaches agents to map, the recipes that read each kind of system, the protocol that turns a network's data into a shape, and Petals' agent on NEAR AI. Teach it a new system, sharpen a reading, or bring Petals into your own agent.",
     actions: {
       github: 'GitHub',
       docs: 'Read the docs',
@@ -179,7 +195,7 @@ export const landingCopy = {
   },
   footer: {
     links: {
-      gallery: 'Atlas',
+      gallery: 'Power Map',
       howItWorks: 'How it works',
       docs: 'Docs',
       github: 'GitHub',

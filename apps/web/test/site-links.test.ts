@@ -66,10 +66,9 @@ describe('the landing page', () => {
 
   test('every door it sends someone to is on /connect', () => {
     const ids = doors('https://x').map((d) => d.id);
-    for (const href of Object.values(siteLinks.doors)) {
-      expect(ids, href).toContain(href.split('#')[1]);
-      expect(hrefs.includes(href) || href === siteLinks.doors.prompt, href).toBe(true);
-    }
+    const sent = hrefs.filter((href) => href.startsWith(`${siteLinks.connect}#`));
+    expect(sent.length).toBeGreaterThan(0);
+    for (const href of sent) expect(ids, href).toContain(href.split('#')[1]);
   });
 });
 
