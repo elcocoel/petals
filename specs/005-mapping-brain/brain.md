@@ -1,6 +1,6 @@
-# The brain: open, always the latest, with a fast routing index
+# The brain: one source in the repo, a thin service that routes
 
-The brain is what the agent knows how to do: a short doctrine, a few chapters and the recipes. It's plain files in the open-source repo on GitHub, improved only by pull requests. Every agent reads the latest from GitHub each time (Elco, 9 Nov). A small index, generated from the files, routes an agent to the right chapter or recipe in one step.
+The brain is what the agent knows how to do: a short doctrine, a few chapters and the recipes. **The repo is its only source of truth**, improved only by pull requests. A thin **brain service** on our server holds the latest copy of it and routes agents quickly: "which chapter or recipe for this?" (Elco, 9 Nov).
 
 ## What it is
 
@@ -24,29 +24,66 @@ There's no chapter or reader per DAO type (Elco, 9 Nov: "let's not default to a 
 - **`recipes/<framework>.md`:** one per framework or contract type, as `data.md` defines them. Moloch v3 comes first. A recipe's header says how to recognise its contracts, so the index routes to it directly.
 - **`index.json`:** generated from every header. Nobody edits it by hand.
 
-## Always the latest
+## The brain service
 
-At the start of each session, the agent reads `brain/index.json` from the repo's main branch on GitHub. It's a few KB, and a public file needs no key. The agent then reads only the chapters and recipes the index points it to. This is a read on the person's side, by their agent (TGT-030).
+Elco, 9 Nov: "cant that be the repo, and we build a thin API or MCP or whatever that the agents use to get routed quickly semantically like I used in the harness?"
 
-- **What the record keeps:** every layer an agent makes says which brain commit it read, in its `how`. Anyone can see what the agent knew when it made it.
-- **If GitHub can't be reached,** the agent says so. It may use the copy that came with its door (the file, the skill folder, the tab) and say how old it is. It never treats that copy as the latest.
-- **Gate: this needs the repo public on GitHub.** `build/` has no remote yet, and making it public is Elco's go.
+- **What it holds:** the latest brain from the repo's main branch, and the index made from it, stamped with the commit. It's never edited by hand. If it's lost, it's rebuilt from the repo.
+- **When it refreshes:** when the repo changes. Today, `build/` main is mounted into the server read-only, and the service re-reads when main's commit moves; a merge is the change. Once the repo is public, GitHub tells the server on each push to main. Nothing runs on a timer.
+- **What it answers,** over MCP (on the site's `/mcp`) and plain HTTP (`/api/v1/brain`):
+  - "which for this?", given words, or the chain's answers about an address, returns the best few chapters and recipes, each with its header and why it matched;
+  - one file by its id;
+  - the index.
 
-## The routing index, and why it's fast
+  Every answer carries the commit.
+- **It fits TGT-030:** it serves Petals' own files, like the map, and reads no chain or web page and calls no model for anyone.
+- **It's fast:** the brain is a few dozen files, so the service keeps them in memory.
 
-Routing is one tool call, with no model or database:
-1. The agent gives `identify` an address or words.
-2. `identify` asks the chain what the thing is: contract or account, which calls it answers, which factory made it.
-3. It matches those answers against the index's signals.
-4. It returns the matching chapters and recipes with what it found.
+**Always the latest, even before the repo is public:** every door reads through the service, and the service follows the repo. Each layer an agent makes records the brain commit it was given.
 
-If no recipe matches, the route is `a-new-system`.
+## Routing: three ways, compared honestly
 
-The check runs before every merge, and fails if any of these is true:
+**What the harness actually used, from its code:**
+- **Not embeddings.** The harness brain's reader (`src/lib/brain/reader.ts`) counts exact keyword matches against `routing.json`, takes words from the work order's role, phase, label and description, and returns at most 6 documents.
+- **On a miss,** its memory map (Lens) made one model call that "picks from existing tags, never invents new ones".
+- **The semantic recall Elco remembers is Jarvis's memory,** elsewhere in Saint Elmo (`backend/engine/jarvis/embedder.py`, `memory_index.py`):
+  - a small local model, all-MiniLM-L6-v2, quantized, about 22 MB, run with ONNX;
+  - vectors kept in SQLite, cosine top-K in memory;
+  - word matching when the model isn't there;
+  - its reason: "memory recall must be FAST … no network and no tool-call latency".
+
+| Way | How it works | Cost | Speed | Where it's weak |
+|---|---|---|---|---|
+| **1. The chain's own answer** | The agent's `identify` asks the chain what an address is (calls it answers, the factory that made it) on the person's side. The service matches those answers against the recipes' signals | Nothing on our side | One match in memory, under a millisecond. The chain read is on the person's side, a second or two | Only for addresses. A question in words needs 2 or 3 |
+| **2. Words, ranked (BM25) over the headers** | Rank headers by shared words, weighted by rarity. Postgres's full-text (`ts_rank`, with our `petal_search` and unaccent) is close but isn't BM25, and true BM25 needs an extension we said no to. For a few dozen headers, BM25 in the service's own memory is a few lines of code | Nothing | Under a millisecond for this size *(not measured)* | Misses when the words differ: "who controls this treasury" against "owners, admin keys, upgrades" |
+| **3. A small embedding model, inside our container** | Jarvis's way: MiniLM in the service, every header embedded at refresh, the question embedded and compared. No outside service, and nobody's credit | A 22 MB model, about 100 MB of memory, no money | Tens of milliseconds a question on the server's processor *(estimated, not measured)* | MiniLM is English-first; a multilingual model is about five times larger. Quality on short questions in this domain is unknown until tested |
+
+**Lean:**
+1. **The chain first,** for any address.
+2. **For words, 2 and 3 together:** each ranks, the two rankings are combined, and 2 alone serves if the model isn't there, as Jarvis does.
+3. **The service returns the best three** with their headers, and **the agent's own model chooses.** That last step is the most semantic of all, and it's on the person's own model.
+
+**Test before trusting it.** A set of real questions from Elco's sessions, each with the chapter it should reach, is run against 2 alone and against 2 with 3. The model stays only if it's right more often.
+
+## At each door
+
+| Door | How the agent reaches the brain |
+|---|---|
+| The terminal file (`petal.mjs`) | `petal brain` asks the service. `identify` sends the chain's answers to it and returns the routes. If the service can't be reached, it uses the copy built into the file, and says its commit and that it's older |
+| A skill folder | `SKILL.md` tells the agent to ask the service. The skill folder's copy is only the fallback |
+| The tab | The same site's service, same origin |
+| Cloud agents (the Claude app, ChatGPT) | The site's `/mcp`. The brain tools read nothing, so they work there today |
+| GitHub | The source. For reading, and for pull requests |
+
+## The check
+
+It runs before every merge, and fails if any of these is true:
 - the index differs from what the headers generate;
 - a chapter or recipe names a tool, a shape or a continuation that doesn't exist;
 - a recipe asks for something outside its bounds;
 - the doctrine names a path.
+
+The service builds its index the same way, so what it serves is what the check passed.
 
 ## Improving it: only by pull request
 
@@ -56,7 +93,7 @@ Elco, 9 Nov: "only through github for now … teach the AI to submit a PR, and i
 2. **The agent drafts the change** to a chapter or a recipe, or a new one. It adds what went wrong or what worked, from the conversation.
 3. **The agent opens the pull request,** as the `contributing` chapter teaches: fork, branch, commit and open it, with the `gh` command or GitHub's website.
 4. **If the person has no GitHub,** the agent helps them make an account. The person signs up themselves; the agent never handles their password.
-5. **A maintainer reviews and merges,** Elco first. The check runs, and from that moment every agent reads it, because every agent reads the latest.
+5. **A maintainer reviews and merges,** Elco first. The check runs, the service follows the merge, and from that moment every agent is given it.
 
 **Nothing changes what the next agent reads until a reviewed merge.** A chapter or a recipe is instructions to every agent, so review is the gate.
 
@@ -66,9 +103,9 @@ Elco, 9 Nov: "only through github for now … teach the AI to submit a PR, and i
 
 | What happened there | What we do |
 |---|---|
-| Files on disk, then a separate Supabase project with a seed script and a secret key, then back to Git, with a database index built from it. ADR-0082 calls the middle stage "split … across a filesystem corpus, a separate Supabase project, Harness readers, and Lens synchronization machinery" | **One authority from the start: the files on GitHub.** The index is generated, with no database or seed, and every agent reads it from there |
-| "Database documents … are rebuildable projections or receipts. They never compete with Git" | `index.json` is a projection. The check rebuilds and compares it. A door's copy is only a fallback, and says so |
-| "Drift is repaired from the authority, never from a sibling copy" | Agents read the authority itself |
+| Files on disk, then a separate Supabase project with a seed script and a secret key, then back to Git, with a database index built from it. ADR-0082 calls the middle stage "split … across a filesystem corpus, a separate Supabase project, Harness readers, and Lens synchronization machinery" | **One authority from the start: the repo.** The service is a projection of it, with no seed script or secret, and it's rebuilt from the repo whenever main moves |
+| "Database documents … are rebuildable projections or receipts. They never compete with Git" | The service and `index.json` are projections. The check rebuilds and compares. A door's copy is only a fallback, and says so |
+| "Drift is repaired from the authority, never from a sibling copy" | The service follows the repo, never another copy |
 | Its markdown table and `routing.json` were both kept by hand, and drifted | One source: the headers |
 | Its index checks missed uncommitted edits and missing targets | The check covers targets, and merges are the only way in |
 | The always-loaded doctrine pointed agents at paths that didn't exist | A short doctrine, with no paths, checked |
@@ -77,5 +114,5 @@ Elco, 9 Nov: "only through github for now … teach the AI to submit a PR, and i
 
 ## Not here yet
 
-- **The public repo.** It's Elco's go.
+- **The public repo.** It's Elco's go. Until then, the service follows `build/` main, and pull requests come once it's public.
 - **Who else can merge** besides Elco: later.

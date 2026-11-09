@@ -88,6 +88,18 @@ This was read on 9 Nov, from `harness-brain/HANDOFF-*.md`, `BRAIN-AUDIT-CRITICAL
 - "Feedback must never mutate the Harness or core system DNA immediately": the Meta-Pass (`docs/product/anti-reactive-feedback-loop.md`).
 - "Cutover work must prove source-to-index, routing, strategist consumption, and receipt projection before retiring the legacy service" (ADR-0082).
 
+## Routing in the harness, and the local model in Jarvis (9 Nov, from the code)
+
+- **The harness brain's reader:** `backend/cloud/apps/harness/src/lib/brain/reader.ts`.
+  - `deriveKeywords` takes words from the work order's role, its phase, its label (words over 3 letters) and the first five description words over 4 letters.
+  - `scoreEntry` counts exact keyword matches per `routing.json` entry, the reader ranks them, and returns at most 6 documents.
+  - No embeddings: a search of the harness and brain code finds none.
+- **Lens**, the memory map, makes one model call on a miss, which "picks from existing tags, never invents new ones".
+- **Jarvis's memory recall:** `backend/engine/jarvis/embedder.py` and `memory_index.py`.
+  - The model is all-MiniLM-L6-v2, quantized ONNX, about 22 MB, run through `onnxruntime` and `tokenizers`, with input cut at 256 tokens.
+  - Vectors are kept in one SQLite file, the matrix is cached in memory, and recall takes the cosine top-K.
+  - "if the model files are absent or fail to load … callers fall back to lexical recall". Its reason: "memory recall must be FAST and in-context … no network and no tool-call latency".
+
 ## Petals today
 
 ### Tools

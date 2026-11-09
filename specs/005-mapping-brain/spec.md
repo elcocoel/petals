@@ -31,7 +31,7 @@
 | The data protocol | SYSTEMS | `data/v1` |
 | The seam | SYSTEMS, agreed with LOOK | `seam/v1` |
 | The visual protocol | LOOK, with Elco | `view/v1` |
-| The brain | SYSTEMS writes the frame; anyone improves it by pull request | GitHub's main branch, always the latest |
+| The brain | SYSTEMS writes the frame; anyone improves it by pull request | The repo's main branch, the only source, served by a thin brain service |
 
 **Each moves on its own.** A new reader doesn't touch drawing. A new channel doesn't touch data. A better chapter or recipe touches neither.
 
@@ -52,7 +52,7 @@ Elco's session: RaidGuild, a Moloch v3 DAO on Gnosis.
 
 - `data.md`: the dataset, git-like layers and versions, reader shapes and recipes, attribution, and where layers live.
 - `seam.md`: exactly what crosses between data and drawing, and what each side changes alone.
-- `brain.md`: the brain's chapters and recipes, always read from GitHub, the routing index, pull requests as the only way in, and the harness brain's lessons.
+- `brain.md`: the brain's chapters and recipes; the repo as the only source; the brain service that follows it and routes (the chain's answer, ranked words, a small local model, compared); pull requests as the only way in; and the harness brain's lessons.
 - `research.md`: the facts and sources, the first draft's survey, Elco's live session, and the harness brain's history.
 
 ## What the agent learns first
@@ -84,7 +84,7 @@ The tools run on the person's side only because our server does no reads for vis
 
 **Elco's question, "why do DAO frameworks need specific readers?"** They mostly don't. There's no universal "list the members" call, but a few shapes in code (token balances, members from events, counts by participant or by sender, lines from events, view calls, an off-chain list) cover most frameworks. Each framework is then a recipe file. So readers become shapes and recipes now, not later, and an agent can write a recipe for a new framework from its ABI and offer it the git-like way (`data.md`).
 
-5. **Which brain:** "always latest". Every agent reads the brain from GitHub's main branch each time, and each layer records the commit it read. A door's own copy is only a fallback when GitHub can't be reached, and says so.
+5. **Which brain:** "always latest". Every agent asks the brain service, which follows the repo's main branch, and each layer records the commit it was given. A door's own copy is only a fallback when the service can't be reached, and says so. Then Elco: "the brain solution needs to have a single source of truth of some kind - cant that be the repo, and we build a thin API or MCP or whatever that the agents use to get routed quickly semantically like I used in the harness?". So the repo is the source, and the service is a projection that routes (`brain.md`).
 6. **Improvements:** "only through github for now … teach the AI to submit a PR, and if the user doesn't have github he gets one". So there are no suggestions on the site. The `contributing` chapter teaches the agent to open the pull request, and to help the person make an account.
 
 **Frameworks:** "let's not default to a one module per DAO type, but make where power lives a chapter in the brain, and have the first seven shapes. The brain should also teach the agents to figure a new system out, define a recipe and submit the PR if needed." So there are two chapters, `where-power-lives` and `a-new-system`, plus the seven shapes and recipes as files.
@@ -92,10 +92,10 @@ The tools run on the person's side only because our server does no reads for vis
 ## The order of work (SYSTEMS' lean; the go is Elco's)
 
 1. **The data protocol:** layers, versions and forks, the seven shapes and the recipe format. Moloch v3 is the first recipe, and the RaidGuild flower is the test. It needs the seam, and LOOK's view to name two measures.
-2. **The brain:** the doctrine and the first chapters, read from GitHub, with `identify` routing by the index.
+2. **The brain:** the doctrine, the first chapters, and the brain service. Routing starts with the chain's answer and ranked words; the small model is added only if the test set shows it's right more often.
 3. **Leads.**
 
-**Gate:** "always latest from GitHub" needs `build/` public on GitHub. That's Elco's go. Until then, the brain can be built and tested from a local folder in the same shape.
+**Gate:** pull requests need `build/` public on GitHub, and that's Elco's go. "Always latest" doesn't wait for it: the service follows `build/` main today.
 
 ## Done when (once approved)
 
