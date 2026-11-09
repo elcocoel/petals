@@ -10,12 +10,14 @@ There's one per investigated address, written `chain:address`: a DAO, a token, a
 
 One set of facts about the address's participants, from one author, at one time. A layer never changes after it's made.
 
+Its format is `layer/v1`, a JSON Schema at `packages/core/schema/layer.schema.json` (`urn:petal:schema:layer:v1`), under `specs/protocols.md`. It refuses fields it doesn't know and needs full dates, with their time and zone; `add_layer` and the checker both use it.
+
 | Field | What it holds |
 |---|---|
 | `about` | The address, `chain:address` |
 | `by` | The author's account, and the credential that signed it (TGT-005). A reader run by someone's agent has that person as its author |
 | `kind` | `measures` (a value per participant), `relations` (lines between participants) or `leads` (directions of research) |
-| `measures` | Per measure: a name, a unit and a kind (amount, count, share, category or yes-no), then a value per participant |
+| `measures` | Per measure: a name, a unit and a kind (amount, count, share, category or flag, a yes or no), then a value per participant |
 | `relations` | Per line: from, to, a kind (sent to, delegated to, voted with, sponsored), a weight and a unit |
 | `leads` | Per lead: the participant, what was found, and its source links. How much a person trusts a lead belongs to the notes and claims chapter, not here (Elco, 9 Nov) |
 | `how` | The recipe it was read with (by its hash), or the agent's own method and its sources |
@@ -47,6 +49,8 @@ Elco's choice, 9 Nov: **private first, published when the author chooses.**
 - **Private layers and versions** live in Petals' database, against the author's account (TGT-006).
 - **Published ones** go to the shared map on NEAR, like flowers today, under the author's signature.
 - **A fork can only name a parent the forker can see:** a published version, or their own.
+
+**Built, 9 Nov:** `keep_layer`, `list_layers` and `fork_dataset`, through the project's link (migration 9). A project nobody has claimed holds its layers under itself, and they move to whoever claims it, and again when a session signs in. Publishing a version to the shared map isn't built, so for now a fork takes one's own versions only.
 
 ## Readers: a few shapes in code, frameworks as recipe files
 

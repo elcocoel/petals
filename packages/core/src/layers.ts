@@ -7,6 +7,7 @@
 // each layer listed as a source. Today's renderer draws it as it draws any snapshot, so a flower can
 // take its size from one layer and its height from another (`height: m:<measure>`).
 import { canonicalJson, sha256Hex } from './hash.ts';
+import { createAjv, schemaId } from './schema/ajv.ts';
 import type { Holding, Participant, Snapshot } from './types/index.ts';
 
 export const LAYER_VERSION = 'layer/v1';
@@ -46,6 +47,13 @@ const DECIMAL = /^-?\d+(\.\d+)?$/;
 export const LAYER_ROWS_MAX = 20_000;
 
 export class LayerError extends Error {}
+
+let compiled: ReturnType<ReturnType<typeof createAjv>['getSchema']> | undefined;
+const layerValidator = () => {
+  compiled ??= createAjv().getSchema(schemaId('layer'));
+  if (!compiled) throw new Error('layer schema not registered');
+  return compiled;
+};
 
 /** A layer as given, checked, or a LayerError that says what's wrong. */
 export function checkLayer(x: unknown): Layer {
@@ -97,6 +105,13 @@ export function checkLayer(x: unknown): Layer {
     bad('when.block_height must be a whole number');
   if (l.standing !== 'verified' && l.standing !== 'inferred' && l.standing !== 'lead')
     bad('standing is verified, inferred or lead');
+  // Last, the schema itself (urn:petal:schema:layer:v1): what the checks above don't name, such as a field
+  // it doesn't know or a date without its time, is refused here.
+  const valid = layerValidator();
+  if (!valid(x))
+    bad(
+      `not a layer/v1: ${(valid.errors ?? []).map((e) => `${e.instancePath || 'the layer'} ${e.message}`).join('; ')}`,
+    );
   return l as Layer;
 }
 

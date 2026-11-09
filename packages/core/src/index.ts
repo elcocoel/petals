@@ -70,3 +70,13 @@ export { selectPetals } from './select.ts';
 export type * from './types/index.ts';
 export { validateSnapshot, validateSpec } from './validate/index.ts';
 export * from './versions.ts';
+export type { DataKind, Dimension, Piece } from './view/index.ts';
+export {
+  ACCEPTS,
+  DEFAULT_VIEW,
+  DIMENSIONS,
+  EVERY_FLOWER,
+  fits,
+  inUse,
+  viewHash,
+} from './view/index.ts';

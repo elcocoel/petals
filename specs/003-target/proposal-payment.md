@@ -43,14 +43,16 @@ The words are Elco's, through the copy doc.
 
 Elco, 9 Nov: "how do we separate each user's funds, if and how they would withdraw unused funds". Then Elco chose "A NEAR contract, before the freeze": "A small contract holds each person's deposit and they withdraw it themselves, so Petals holds nobody's money."
 
-**How it works, in plain words.** The contract is `packages/near/contract`, at `credit.petals.near` on mainnet once Elco says go (`credit.petals-paytest.testnet` on testnet now).
+**How it works, in plain words.** The contract is `packages/near/contract`, at `petals-credit.near` on mainnet once Elco says go (`credit.petals-paytest.testnet` and `petals-rcredit2.testnet` on testnet now).
 
 - **Deposit.** The person's wallet calls `deposit` with the NEAR they choose. It goes onto their own balance in the contract, under their own account. The first deposit pays a little for storing that balance (0.00125 NEAR).
 - **Withdraw.** The person calls `withdraw`, for some or all of what's left, whenever they like, and asks nobody. It needs one yoctoNEAR attached, which only their own wallet can do, and that comes back with the rest.
 - **Charge.** After each turn of Petals' agent, our server calls `charge` for what NEAR AI billed, in NEAR at that turn's price. It moves that much from the person's balance to what Petals has earned, never more than they hold. Nothing else can call it.
 - **Claim.** Elco's account takes what has been earned.
 
-**The server's key.** It's a function-call key on a separate account, `charger`, that can call `charge` on the contract and nothing else: NEAR's own key rules refuse it any other method, any transfer and any attached NEAR. So whoever stole it could only move people's balances into what Petals has earned, where Elco sees it and can give it back. They could never send anything to themselves. That key, its gas allowance, is all the server holds.
+**Setting it up asks the owner's wallet for one plain transfer, nothing else** (9 Nov: Meteor refused a site's request for a full-access key, as wallets should). `packages/near/scripts/credit-setup.ts` makes a new account on Elco's computer, Elco's wallet sends it 1.7 NEAR, and the script does the rest from there: it makes `petals-credit.near` and `petals-charger.near` through NEAR's own name registrar, deploys the contract and sets it up, and deletes the contract's last key, so nobody can change it, Elco included, and people can always withdraw. The charger keeps two keys: Elco's own wallet key, and the server's. Then the script deletes the account it was paid into, and what's left goes back to petals.near. A run that stops halfway picks up where it stopped. Rehearsed on testnet end to end, 9 Nov.
+
+**The server's key.** It's a function-call key on a separate account, the charger, that can call `charge` on the contract and nothing else: NEAR's own key rules refuse it any other method, any transfer and any attached NEAR. So whoever stole it could only move people's balances into what Petals has earned, where Elco sees it and can give it back. They could never send anything to themselves. That key, its gas allowance, is all the server holds.
 
 **What the person's credit is.** Their balance in the contract, read from the chain before each turn and shown in NEAR. The page reads it after a deposit or a withdrawal. Elco still sponsors others with invites, as before; with the contract on, the credit Elco gave by hand (`fund-person`) gives way to what people hold in it.
 

@@ -4,7 +4,7 @@
 //
 // A group's identity over time is its module and parameters (open question 26), so two dates of one
 // population are two observations of one group, and a `group:*` row is never an account.
-import { exactValues, formatDecimal } from '@petal/core';
+import { COMPOSED, exactValues, formatDecimal } from '@petal/core';
 import type { Participant, Snapshot } from '@petal/core/types';
 
 export type GroupKind = 'holdings' | 'delegators';
@@ -129,6 +129,9 @@ const shareOf = (v: bigint, total: bigint): number =>
 const round6 = (x: number): number => Math.round(x * 1e6) / 1e6;
 
 export function groupsOf(s: Snapshot): ProjectedGroup[] {
+  // A view made with compose_view keeps its base's network and parameters, but observes nothing new: its
+  // readings are indexed already, so it's no group, and never a second observation of one (LOOK, 9 Nov).
+  if (s.module?.id === COMPOSED) return [];
   if (Number.isNaN(Date.parse(s.snapshot.as_of)))
     throw new TypeError(`snapshot date is not a date: ${s.snapshot.as_of}`);
   const chain = s.network.chain;

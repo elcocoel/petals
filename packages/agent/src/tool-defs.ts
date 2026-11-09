@@ -69,6 +69,10 @@ const NOT_FOR_THE_AGENT = new Set([
   'brain_route',
   'brain_file',
   'brain_index',
+  // layers kept on the site (005): the person's agent keeps them; Petals' agent doesn't yet
+  'keep_layer',
+  'list_layers',
+  'fork_dataset',
 ]);
 
 export function forAgent(t: AnyTool): boolean {
