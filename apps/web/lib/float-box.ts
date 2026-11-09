@@ -1,7 +1,7 @@
 // Where a box floating over a canvas sits, and what a hand does to it. Pure geometry, in window pixels.
 // The one law: a box's bar can never leave the window, so it can always be grabbed again. Its body may
 // hang off the bottom, which is how a person puts a box mostly out of the way.
-import { floatBox } from '@petal/tokens';
+import { floatBox, quarantine } from '@petal/tokens';
 
 export interface Size {
   w: number;
@@ -47,29 +47,40 @@ export function sized(from: Rect, edge: Edge, dx: number, dy: number, win: Size)
 }
 
 /**
+ * Where the boxes start beside the work menu, when it's on the page (components/workspace/WorkMenu.tsx):
+ * the menu floats at the window's edge, a tile wide, and the boxes begin one gap past it.
+ */
+export const besideMenu = floatBox.inset + quarantine['Tile width'] + floatBox.gap;
+
+/** A column of boxes `w` wide starts at `from`, or further left if it wouldn't fit there. */
+const columnAt = (from: number, w: number, win: Size) =>
+  Math.max(floatBox.inset, Math.min(from, win.w - floatBox.inset - w));
+
+/**
  * Where the conversation's boxes start: on the left, because a sorted flower's small side is there
- * and its biggest names are upper right. Output above, input directly under it, stopping above the
- * corner the flower's small map has. The flower's own box waits on the right, at the top, closed until
- * something asks for it. The list of conversations waits beside the output, as tall as it, and the models
- * wait beside the input, ending level with it.
+ * and its biggest names are upper right, and past the menu when there is one (`from`). Output above,
+ * input directly under it, stopping above the corner the flower's small map has. The flower's own box
+ * waits on the right, at the top, closed until something asks for it. The models wait beside the input,
+ * ending level with it.
  */
 export function conversationBoxes(
   win: Size,
   inputH: number = floatBox['input-height'],
-): { output: Rect; input: Rect; panel: Rect; list: Rect; options: Rect } {
+  from: number = floatBox.inset,
+): { output: Rect; input: Rect; panel: Rect; options: Rect } {
   const { inset, gap, width, floor, 'min-height': minH } = floatBox;
   const w = Math.min(width, win.w - inset * 2);
+  const x = columnAt(from, w, win);
   const outputH = Math.max(minH, win.h - inset - floor - gap - inputH);
   const panelW = Math.min(floatBox['panel-width'], win.w - inset * 2);
   const panelH = Math.min(floatBox['panel-height'], win.h - inset * 2);
   return {
-    output: kept({ x: inset, y: inset, w, h: outputH }, win),
-    input: kept({ x: inset, y: inset + outputH + gap, w, h: inputH }, win),
+    output: kept({ x, y: inset, w, h: outputH }, win),
+    input: kept({ x, y: inset + outputH + gap, w, h: inputH }, win),
     panel: kept({ x: win.w - inset - panelW, y: inset, w: panelW, h: panelH }, win),
-    list: kept({ x: inset + w + gap, y: inset, w: floatBox['list-width'], h: outputH }, win),
     options: kept(
       {
-        x: inset + w + gap,
+        x: x + w + gap,
         y: Math.max(inset, inset + outputH + gap + inputH - floatBox['options-height']),
         w: floatBox['options-width'],
         h: Math.min(floatBox['options-height'], win.h - inset * 2),
@@ -80,18 +91,16 @@ export function conversationBoxes(
 }
 
 /**
- * With the terminal in the page (W10): the person's own agent takes the output's place, wider and down to
- * the floor, since its own screen holds the input too. The list moves over to stay beside it.
+ * The chat with the person's own agent (W10): it takes the output's place, wider and down to the floor,
+ * since it holds its own input.
  */
-export function terminalBoxes(win: Size): ReturnType<typeof conversationBoxes> {
-  const boxes = conversationBoxes(win, 0);
-  const { inset, gap } = floatBox;
-  const w = Math.min(floatBox['terminal-width'], win.w - inset * 2);
-  return {
-    ...boxes,
-    output: kept({ ...boxes.output, w }, win),
-    list: kept({ ...boxes.list, x: inset + w + gap }, win),
-  };
+export function terminalBoxes(
+  win: Size,
+  from: number = floatBox.inset,
+): ReturnType<typeof conversationBoxes> {
+  const boxes = conversationBoxes(win, 0, from);
+  const w = Math.min(floatBox['terminal-width'], win.w - floatBox.inset * 2);
+  return { ...boxes, output: kept({ ...boxes.output, x: columnAt(from, w, win), w }, win) };
 }
 
 /** The same, with a recorded run's input: a read-only saved question and the button that plays it. */
