@@ -12,6 +12,7 @@ import { sha256 } from '@noble/hashes/sha2.js';
 import { utf8ToBytes } from '@noble/hashes/utils.js';
 import type { Nep413Proof } from '@petal/core/types';
 import { base58, base64 } from '@scure/base';
+import { RPC_URLS } from '../network.ts';
 import type { AccessKeyPermission, AccessKeyView, Rpc, RpcQuery } from './index.ts';
 import { type Nep413Payload, nep413Hash, nonceBytes } from './nep413.ts';
 
@@ -139,4 +140,40 @@ export function fakeRpcFor(signers: TestSigner[], functionCallOnly: TestSigner[]
     keys[s.accountId][s.publicKey] = functionCallOnly.includes(s) ? functionCall() : 'FullAccess';
   }
   return fakeRpc(keys);
+}
+
+/**
+ * A test wallet's real transfer on testnet (9 Nov, the pay step): `implicitSigner(seed)`'s account sends
+ * `yocto` to `receiverId` and waits for the FINAL outcome, which it returns as a wallet would. Testnet only:
+ * the key is derived from a public seed, so anyone could spend what it holds. Its account must hold
+ * testnet NEAR first.
+ */
+export async function testnetTransfer(
+  seed: string,
+  receiverId: string,
+  yocto: string,
+): Promise<{
+  transaction: { hash: string };
+  transaction_outcome: { id: string };
+  status: unknown;
+}> {
+  if (!/^\d+$/.test(yocto) || yocto === '0') throw new Error('a transfer moves some yoctoNEAR');
+  const { Account, actions, JsonRpcProvider, KeyPair, KeyPairSigner } = await import('near-api-js');
+  const secretKey = sha256(utf8ToBytes(`petal-test-signer:${seed}`));
+  const publicKey = ed25519.getPublicKey(secretKey);
+  const both = new Uint8Array([...secretKey, ...publicKey]);
+  const keyPair = KeyPair.fromString(`ed25519:${base58.encode(both)}` as `ed25519:${string}`);
+  const { accountId } = implicitSigner(seed);
+  const provider = new JsonRpcProvider({ url: RPC_URLS.testnet });
+  const account = new Account(accountId, provider, new KeyPairSigner(keyPair));
+  const outcome = (await account.signAndSendTransaction({
+    receiverId,
+    actions: [actions.transfer(BigInt(yocto))],
+    waitUntil: 'FINAL',
+  })) as unknown as {
+    transaction: { hash: string };
+    transaction_outcome: { id: string };
+    status: unknown;
+  };
+  return outcome;
 }

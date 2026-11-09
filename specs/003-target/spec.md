@@ -96,6 +96,8 @@ A person publishes a flower to the shared map with their own wallet's signature.
 
 Defined later, in its own spec, one step at a time.
 
+First step, 9 Nov: paying for Petals' own agent in NEAR, from the signed-in wallet (TGT-030's amendment, `proposal-payment.md`).
+
 ## Requirements
 
 ### Identity
@@ -115,6 +117,7 @@ Defined later, in its own spec, one step at a time.
 
 ### Agents and tools
 - **TGT-030**: The tools and the skill run on the person's side. The server does no chain reads, web reads, searches or model calls for visitors.
+  - **Amended for the hackathon, 9 Nov.** Elco: "I think you are right - B and C beside it - and what we can also have is that C doesnt need to shut down B - the agent in the conversation can work in collaboration with conversations in the apps to outsource mapping and other processes". Asked who pays for the agent's model calls: "build the payment step". Then: "everything else is a go". So Petals' own agent is the chat on the page, on NEAR AI Cloud through our server, for any signed-in visitor (B), and the visitor pays for it in NEAR from the wallet they signed in with. It goes live only with payment working. The person's own agents join the same project (C), and the page's agent can hand them mapping and other jobs, which they do on their own machines and report back. The payment choices are in `proposal-payment.md`.
 - **TGT-031**: Nobody uses Elco's wallets, agents, credit, limits or connection.
 
 ### Hosting

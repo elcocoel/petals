@@ -26,6 +26,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { mintInvite, openPrivateStore } from '@petal/agent';
+import { testnetTransfer } from '@petal/near/auth/testing';
 import { stubModel } from './stub-model.ts';
 import { seedSnippet, WALLET_NAME, walletScript } from './test-wallet.ts';
 import { SESSION_COOKIE, type SeedResult, seedWorkspace } from './workspace-seed.ts';
@@ -138,6 +139,10 @@ A person's own credit needs no invite. Sign in, read the id from /api/v1/me, the
 
    node scripts/fund-person.ts --state ${quoted(stateDir)} --person <prs_id> --total 5
 
+Or pay for it as a visitor does, for free: sign in on testnet as alice or bob, whose testnet accounts hold
+testnet NEAR, and approve the transfer the chat asks for. This server sends it on testnet, for real, to
+petals.testnet, and the API server reads it back from the chain. On mainnet a test wallet refuses to send.
+
 The stub's call count, and the model and effort each call named: ${BASE}/calls
 To come back later as the same people: node tests/e2e/journey-server.ts --web-port ${webPort} --api-port ${apiPort} --stub-port ${PORT} --state ${quoted(stateDir)}${seed ? ' --seed' : ''}
 That keeps the wallet key and the data, and prints a new invite.
@@ -167,6 +172,43 @@ const server = createServer((req, res) => {
     res.end(JSON.stringify({ calls: stub.calls, asked: stub.asked }));
     return;
   }
+  // A test wallet's transfer (9 Nov, the pay step): testnet only, one Transfer action, sent from its own
+  // implicit account, which must hold testnet NEAR.
+  const send = /^\/wallet\/([^/]+)\/send$/.exec(path);
+  if (send && req.method === 'POST') {
+    let raw = '';
+    req.on('data', (c) => {
+      raw += c;
+    });
+    req.on('end', async () => {
+      const answer = (status: number, body: unknown) => {
+        res.writeHead(status, {
+          'content-type': 'application/json',
+          'access-control-allow-origin': '*',
+        });
+        res.end(JSON.stringify(body));
+      };
+      try {
+        const name = send[1] ?? '';
+        const b = JSON.parse(raw) as {
+          network?: string;
+          receiverId?: string;
+          actions?: { type?: string; params?: { deposit?: string } }[];
+        };
+        const deposit = b.actions?.length === 1 ? b.actions[0] : undefined;
+        if (!WALLET_NAME.test(name)) return answer(404, { error: 'not a wallet name' });
+        if (b.network !== 'testnet')
+          return answer(400, { error: 'a test wallet sends only on testnet' });
+        if (deposit?.type !== 'Transfer' || !b.receiverId || !deposit.params?.deposit) {
+          return answer(400, { error: 'a test wallet sends one NEAR transfer, nothing else' });
+        }
+        answer(200, await testnetTransfer(name, b.receiverId, deposit.params.deposit));
+      } catch (e) {
+        answer(502, { error: (e as Error).message });
+      }
+    });
+    return;
+  }
   if (path.startsWith('/wallet/')) {
     const name = /^\/wallet\/(.+)\.js$/.exec(path)?.[1] ?? '';
     const known = WALLET_NAME.test(name);
@@ -175,7 +217,7 @@ const server = createServer((req, res) => {
       'access-control-allow-origin': '*',
       'cache-control': 'no-store',
     });
-    res.end(known ? walletScript(name) : 'not a wallet name: letters, digits and hyphens');
+    res.end(known ? walletScript(name, BASE) : 'not a wallet name: letters, digits and hyphens');
     return;
   }
   stub.handle(req, res);

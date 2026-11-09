@@ -1,0 +1,148 @@
+// Paying for Petals' own agent (9 Nov; specs/003-target/proposal-payment.md).
+//   GET  /api/v1/pay   where to send NEAR, on the network the person signed in on, and NEAR's price now
+//   POST /api/v1/pay   {network, account_id, tx_hash}: the server reads that transaction on chain, and a
+//                      successful NEAR transfer from one of this person's wallets to Petals' account goes
+//                      onto their credit, in dollars at NEAR's price now, once however often it's sent
+//
+// The server holds no key: Petals' account is Elco's, and the server only reads the chain. Each turn of the
+// agent then draws the credit down by what NEAR AI charged (invites.ts, personLedger).
+//
+// A public site counts mainnet NEAR only. Testnet NEAR is free, and NEAR AI bills real dollars, so on the
+// live site a testnet payment would spend Elco's money. A site that isn't public (a lane, the journey
+// server) takes testnet too, so the pay step can be walked for nothing.
+import { TOOLS_VERSION } from '@petal/core';
+import {
+  nearUsd,
+  PAY_RECEIVER,
+  readTransfer,
+  type Transfer,
+  TX_HASH,
+  yoctoToNear,
+} from '@petal/near/pay';
+import type { Store } from '@petal/store';
+import { type Context, Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
+import type { Network, RouteAuth } from './auth-routes.ts';
+import { payPerson } from './invites.ts';
+import { fail } from './routes.ts';
+
+export interface PayDeps {
+  store: Store;
+  gate: RouteAuth;
+  /** the transfer as the chain shows it; default readTransfer on the public RPC */
+  readTransfer?: (network: Network, txHash: string, sender: string) => Promise<Transfer>;
+  /** dollars per NEAR now; default NEAR Intents' token list */
+  nearUsd?: () => Promise<number | null>;
+  /** where a chat on the person's own credit stops, as /api/v1/me says it */
+  usdPerChat: number;
+  /** a public site (Config.public): only mainnet NEAR counts */
+  mainnetOnly: boolean;
+  clock?: () => number;
+}
+
+const NEAR_ACCOUNT = /^[a-z0-9._-]{2,64}$/;
+
+export function payRoutes(d: PayDeps): Hono {
+  const read = d.readTransfer ?? ((network, hash, sender) => readTransfer(network, hash, sender));
+  const price = d.nearUsd ?? (() => nearUsd({ onWarning: (m) => console.warn(`petal: ${m}`) }));
+  const clock = d.clock ?? Date.now;
+  const ok = (c: Context, body: Record<string, unknown>) =>
+    c.json({ ...body, tools_version: TOOLS_VERSION });
+  const app = new Hono();
+
+  app.use('/api/v1/pay', async (c, next) => {
+    c.header('Cache-Control', 'no-store');
+    await next();
+  });
+
+  app.get('/api/v1/pay', async (c) => {
+    const signedIn = d.mainnetOnly ? null : (await d.gate.personOf(c))?.network;
+    const network: Network = signedIn ?? 'mainnet';
+    return ok(c, { network, receiver: PAY_RECEIVER[network], near_usd: await price() });
+  });
+
+  app.post(
+    '/api/v1/pay',
+    bodyLimit({
+      maxSize: 16 * 1024,
+      onError: (c) => fail(c, 'bad_input', 'the body is larger than 16 KiB'),
+    }),
+    async (c) => {
+      const foreign = d.gate.refuseForeign(c);
+      if (foreign) return foreign;
+      const me = await d.gate.personOf(c);
+      if (!me) return fail(c, 'unauthorised', 'Sign in with your wallet first.');
+      const body = (await c.req.json().catch(() => null)) as {
+        network?: unknown;
+        account_id?: unknown;
+        tx_hash?: unknown;
+      } | null;
+      const { network, account_id, tx_hash } = body ?? {};
+      if (d.mainnetOnly && me.network !== 'mainnet') {
+        return fail(c, 'bad_input', 'Only mainnet NEAR pays here: sign in with a mainnet wallet.');
+      }
+      if (network !== me.network) {
+        return fail(c, 'bad_input', `network must be ${me.network}, the one you signed in on`);
+      }
+      if (typeof account_id !== 'string' || !NEAR_ACCOUNT.test(account_id)) {
+        return fail(c, 'bad_input', 'account_id must be a NEAR account');
+      }
+      if (typeof tx_hash !== 'string' || !TX_HASH.test(tx_hash)) {
+        return fail(c, 'bad_input', 'tx_hash must be a NEAR transaction hash');
+      }
+      if (!me.accounts.includes(account_id)) {
+        return fail(c, 'unauthorised', `${account_id} isn't one of your wallets here.`);
+      }
+      const receiver = PAY_RECEIVER[me.network];
+      let t: Transfer;
+      try {
+        t = await read(me.network, tx_hash, account_id);
+      } catch (e) {
+        const code = (e as { code?: string }).code;
+        const message = (e as Error).message;
+        if (code === 'not_found') return fail(c, 'not_found', message);
+        if (code === 'bad_input') return fail(c, 'bad_input', message);
+        return fail(
+          c,
+          'source_failed',
+          "Couldn't read the transaction on NEAR, so nothing changed. Send it again.",
+        );
+      }
+      if (
+        t.signer_id !== account_id ||
+        t.receiver_id !== receiver ||
+        !t.succeeded ||
+        t.yocto === '0'
+      ) {
+        return fail(
+          c,
+          'bad_input',
+          `That transaction isn't a successful NEAR transfer from ${account_id} to ${receiver}.`,
+        );
+      }
+      const near_usd = await price();
+      if (near_usd === null) {
+        return fail(
+          c,
+          'source_failed',
+          "Couldn't read NEAR's price, so nothing changed. Send it again.",
+        );
+      }
+      const near = yoctoToNear(t.yocto);
+      const usd = Math.round(near * near_usd * 1e6) / 1e6;
+      const paid = await payPerson(d.store, me.person, {
+        id: `paid:${me.network}:${t.tx_hash}`,
+        usd,
+        now: new Date(clock()),
+      });
+      return ok(c, {
+        added_usd: paid.added_usd,
+        added_near: paid.added_usd > 0 ? near : 0,
+        near_usd,
+        credit: { ...paid.credit, usd_per_chat: d.usdPerChat },
+      });
+    },
+  );
+
+  return app;
+}

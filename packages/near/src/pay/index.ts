@@ -1,4 +1,5 @@
-// @petal/near/pay (W3): NEAR Intents 1Click. Dry quotes only (FR-031): a real payment needs Elco's OK.
+// @petal/near/pay (W3): NEAR Intents 1Click, dry quotes only (FR-031); and since 9 Nov, paying for Petals' agent:
+// a NEAR transfer read back from the chain (readTransfer) and NEAR's price from NEAR Intents (nearUsd).
 import type { QuoteRequest, QuoteResult } from '@petal/core/types';
 
 export {
@@ -20,4 +21,13 @@ export {
   quote1Click,
   usdcUnits,
 } from './one-click.ts';
+export { nearUsd, ONE_CLICK_TOKENS_URL, type PriceDeps, WRAPPED_NEAR } from './price.ts';
+export {
+  PAY_RECEIVER,
+  readTransfer,
+  type Transfer,
+  type TransferDeps,
+  TX_HASH,
+  yoctoToNear,
+} from './transfer.ts';
 export type { QuoteRequest, QuoteResult };

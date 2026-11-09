@@ -3,6 +3,8 @@
 // implicit: the hex of its public key, on any network. It signs with no prompt, and the network it's
 // given changes nothing: a NEP-413 signature doesn't name one. The site asks near-connect for it through
 // the `debug-wallets` entry in localStorage, the door near-connect keeps for a wallet in development.
+// Since 9 Nov it also sends one NEAR transfer, on testnet only, for the pay step: the journey server signs
+// and sends it (testnetTransfer), so the account must hold testnet NEAR. On mainnet it refuses.
 import { createHash } from 'node:crypto';
 import { implicitSigner } from '@petal/near/auth/testing';
 
@@ -13,7 +15,7 @@ export const WALLET_NAME = /^[a-z0-9][a-z0-9-]{0,31}$/;
 const ED25519_PKCS8_PREFIX = '302e020100300506032b657004220420';
 
 /** The script near-connect runs in its sandboxed iframe. */
-export function walletScript(name: string): string {
+export function walletScript(name: string, base = ''): string {
   if (!WALLET_NAME.test(name)) throw new Error(`not a wallet name: ${name}`);
   const { accountId, publicKey } = implicitSigner(name);
   const seed = createHash('sha256').update(`petal-test-signer:${name}`).digest();
@@ -56,6 +58,17 @@ window.selector.ready({
   async signMessage(params) {
     return signNep413(params);
   },
+  // One transfer, on testnet only; the journey server signs and sends it, and answers as a wallet would.
+  async signAndSendTransaction({ network, receiverId, actions }) {
+    const res = await fetch(${JSON.stringify(`${base}/wallet/${name}/send`)}, {
+      method: 'POST',
+      headers: { 'content-type': 'text/plain' },
+      body: JSON.stringify({ network, receiverId, actions }),
+    });
+    const out = await res.json();
+    if (!res.ok) throw new Error(out.error || 'the test wallet could not send it');
+    return out;
+  },
   async signOut() {},
 });
 `;
@@ -75,7 +88,7 @@ export function seedSnippet(base: string, names: string[]): string {
     `localStorage.setItem('debug-wallets',JSON.stringify([${list}].map(n=>({` +
     `id:'test-wallet-'+n,name:'Test wallet: '+n,icon:'data:image/svg+xml;base64,${ICON}',` +
     `website:'${base}',version:'1.0.0',executor:'${base}/wallet/'+n+'.js',type:'sandbox',` +
-    'features:{signMessage:true,signInAndSignMessage:true,testnet:true},permissions:{}' +
+    'features:{signMessage:true,signInAndSignMessage:true,signAndSendTransaction:true,testnet:true},permissions:{}' +
     '}))));location.reload()'
   );
 }

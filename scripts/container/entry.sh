@@ -8,9 +8,9 @@
 cap="${PETAL_LLM_DAILY_USD:-}"
 # PETAL_PUBLIC=1 comes from the run command (petals_run.sh, when Petals/public-url exists), never a file.
 public="${PETAL_PUBLIC:-}"
+# Since 9 Nov a public site runs Petals' own agent for people who pay for it in NEAR (TGT-030, amended), so
+# it loads the model key too.
 for env_file in /secrets/near-ai.env /secrets/petal-wallet.env; do
-  # A public site runs no model for anyone, so it doesn't load the model key at all.
-  if [ "$public" = 1 ] && [ "$env_file" = /secrets/near-ai.env ]; then continue; fi
   if [ -f "$env_file" ]; then
     set -a
     # shellcheck disable=SC1090
@@ -21,7 +21,7 @@ done
 [ -z "$cap" ] || export PETAL_LLM_DAILY_USD="$cap"
 if [ "$public" = 1 ]; then
   export PETAL_PUBLIC=1
-  unset NEAR_AI_API_KEY PETAL_WRITER_KEY_FILE
+  unset PETAL_WRITER_KEY_FILE
   # The site key: the server answers nothing but health without it, and won't start public without it.
   export PETAL_SITE_KEY_FILE=/secrets/petal-site-key
   unset PETAL_SITE_KEY
