@@ -23,9 +23,7 @@
     "markings": {
       "data": "proposals"
     },
-    "segments": {
-      "data": "backers"
-    },
+    "segments": null,
     "lines": null
   }
 }

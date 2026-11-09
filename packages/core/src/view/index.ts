@@ -65,7 +65,7 @@ export const DEFAULT_VIEW: View = {
     outline: { data: 'identity' },
     texture: null,
     markings: null,
-    segments: { data: 'backers' },
+    segments: null,
     lines: null,
   },
 };

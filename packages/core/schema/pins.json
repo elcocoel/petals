@@ -33,11 +33,11 @@
   },
   "view.v1.json": {
     "schema": "urn:petal:schema:view:v1",
-    "sha256": "543f9533366d12e54891ad20f96211d75d8415608de1829739566407550f9761"
+    "sha256": "1421e0bf7b2642e78008091c8bd2db8d22f924114d2144344ae8c5f8ae6e7b9b"
   },
   "view.v1.proposals.json": {
     "schema": "urn:petal:schema:view:v1",
-    "sha256": "4e8117ea89164e17d63d4dac82a75d1f130d3ae5ab478bfe6262fde9a67543fc"
+    "sha256": "866a6699ed4708acd19551e63347aa71e83c14fc641e880650ec54b52716a4cb"
   },
   "seam.v1.json": {
     "schema": "urn:petal:schema:seam:v1",

@@ -78,8 +78,8 @@ describe('the schema', () => {
 
 describe('the fixtures', () => {
   test.each([
-    ['view.v1.json', '543f9533366d12e54891ad20f96211d75d8415608de1829739566407550f9761'],
-    ['view.v1.proposals.json', '4e8117ea89164e17d63d4dac82a75d1f130d3ae5ab478bfe6262fde9a67543fc'],
+    ['view.v1.json', '1421e0bf7b2642e78008091c8bd2db8d22f924114d2144344ae8c5f8ae6e7b9b'],
+    ['view.v1.proposals.json', '866a6699ed4708acd19551e63347aa71e83c14fc641e880650ec54b52716a4cb'],
   ])('%s is valid and pinned', (name, hash) => {
     const v = fixture(name);
     expect(valid(v).errors).toEqual([]);
@@ -150,16 +150,13 @@ describe('a view meeting a flower', () => {
   const near: Piece[] = [...EVERY_FLOWER, { name: 'backers', kind: 'parts' }];
   const moloch: Piece[] = [...EVERY_FLOWER, { name: 'proposals', kind: 'count' }];
 
-  test('the default draws what every flower has, and bands only where there are backers', () => {
+  test('the default draws what every flower has, and no bands, as default/v1', () => {
     const a = inUse(DEFAULT_VIEW, near);
-    const b = inUse(DEFAULT_VIEW, moloch);
-    expect(a).toMatchObject({
-      height: 'share',
-      width: 'share',
-      colour: 'kind',
-      segments: 'backers',
-    });
-    expect(b.segments).toBeNull();
+    expect(a).toMatchObject({ height: 'share', width: 'share', colour: 'kind', segments: null });
+    const banded = structuredClone(DEFAULT_VIEW);
+    banded.dimensions.segments = { data: 'backers' };
+    expect(inUse(banded, near).segments).toBe('backers');
+    expect(inUse(banded, moloch).segments).toBeNull();
   });
 
   test('a piece of data a flower lacks shows nothing there, with no fallback', () => {
