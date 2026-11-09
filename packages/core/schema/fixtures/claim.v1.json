@@ -1,0 +1,26 @@
+{
+  "petal": "claim/v1",
+  "subject": "near:mainnet:tern.pool.example.near",
+  "verb": "holds",
+  "object": "asset:near:mainnet:NEAR",
+  "qualifiers": {
+    "amount": "1000.5",
+    "measure": "validator_stake",
+    "unit": "NEAR"
+  },
+  "issued_at": "2026-11-05T12:00:00Z",
+  "valid_from": "2026-11-05T12:00:00Z",
+  "valid_to": "2026-11-05T12:00:00Z",
+  "as_of": {
+    "chain": "near:mainnet",
+    "block": 123
+  },
+  "kind": "observed",
+  "evidence": [
+    {
+      "snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "by": "tool:petal/observed-claims@1",
+  "id": "7ae8e42a82da887b85d2d27b936ce89f75b4b77e0aeacafb5e3935126c5246c2"
+}

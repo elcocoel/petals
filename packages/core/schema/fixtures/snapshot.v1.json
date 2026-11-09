@@ -1,0 +1,104 @@
+{
+  "petal": "snapshot/v1",
+  "network": {
+    "id": "sample-pools",
+    "chain": "near:mainnet",
+    "population": "validators",
+    "title": "Two sample pools"
+  },
+  "snapshot": {
+    "as_of": "2026-11-03T19:42:00Z",
+    "block_height": 222915356,
+    "final": true
+  },
+  "coverage": {
+    "participants_total": 3,
+    "participants_included": 3,
+    "amount_total": "3000",
+    "amount_included": "3000",
+    "unit": "NEAR",
+    "measure": "validator_stake_current_epoch",
+    "grouped": [
+      {
+        "rule": "delegates_to rows under 1,000 NEAR, one group row per pool",
+        "rows_folded": 12,
+        "amount": "1000.5"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "id": "rpc-validators",
+      "kind": "chain",
+      "url": "https://rpc.mainnet.fastnear.com",
+      "method": "validators",
+      "fetched_at": "2026-11-03T19:42:00Z",
+      "block_height": 222915356
+    }
+  ],
+  "participants": [
+    {
+      "id": "a.pool.near",
+      "label": "a.pool.near",
+      "kind": "staking_pool",
+      "identity": {
+        "name": "A",
+        "source": "rpc-validators",
+        "status": "self-declared"
+      },
+      "source": "rpc-validators"
+    },
+    {
+      "id": "b.pool.near",
+      "label": "b.pool.near",
+      "kind": "staking_pool",
+      "identity": null,
+      "source": "rpc-validators"
+    },
+    {
+      "id": "group:b.pool.near:other",
+      "label": "12 delegators under 1,000 NEAR",
+      "kind": "group",
+      "identity": null,
+      "count": 12,
+      "source": "rpc-validators"
+    }
+  ],
+  "holdings": [
+    {
+      "participant": "a.pool.near",
+      "asset": "NEAR",
+      "measure": "validator_stake_current_epoch",
+      "amount": "2000",
+      "amount_raw": "2000000000000000000000000000",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "rpc-validators"
+    },
+    {
+      "participant": "b.pool.near",
+      "asset": "NEAR",
+      "measure": "validator_stake_current_epoch",
+      "amount": "1000.5",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "rpc-validators"
+    }
+  ],
+  "relationships": [
+    {
+      "from": "group:b.pool.near:other",
+      "to": "b.pool.near",
+      "type": "delegates_to",
+      "amount": "1000.5",
+      "unit": "NEAR",
+      "as_of": "2026-11-03T19:42:00Z",
+      "source": "rpc-validators"
+    }
+  ],
+  "events": [],
+  "module": {
+    "id": "sample",
+    "version": "0.0.0"
+  }
+}

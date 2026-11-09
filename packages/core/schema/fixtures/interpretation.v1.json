@@ -1,0 +1,29 @@
+{
+  "summary": "Two pools hold all the stake; the larger holds two thirds of it.",
+  "power_means": [
+    {
+      "claim": "Stake decides block production.",
+      "sources": [
+        "rpc-validators"
+      ],
+      "figures": [
+        "fig:nakamoto"
+      ]
+    }
+  ],
+  "mappings": [
+    {
+      "primitive": "width",
+      "why": "Stake is the power that counts here.",
+      "sources": [
+        "rpc-validators"
+      ]
+    }
+  ],
+  "conflicts": [],
+  "unknowns": [
+    "Who controls each pool is not known from the chain alone."
+  ],
+  "inferred": [],
+  "documents": []
+}
