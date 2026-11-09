@@ -1,10 +1,12 @@
 // The terminal in the page (lib/terminal-pass.ts): the person's own agent, running on their own computer
-// under the Petals helper, shown in a box over the canvas. Until it's paired, the way to start the helper
-// and a field for its code. Props only: viewmodels/useTerminalPass.ts holds the terminal and the line.
+// under the Petals helper, shown in a box over the canvas. Until it's paired: one click per agent, the
+// first-time paste, and a field for a code. Props only: viewmodels/useTerminalPass.ts holds the terminal
+// and the line.
 import '@xterm/xterm/css/xterm.css';
 import type { RefCallback } from 'react';
-import { type TermPhase, terminalWords } from '../../lib/terminal-pass.ts';
+import { AGENTS, type AgentId, type TermPhase, terminalWords } from '../../lib/terminal-pass.ts';
 import { CopyPrompt } from '../CopyPrompt.tsx';
+import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
 
 export function TerminalPass({
@@ -15,6 +17,7 @@ export function TerminalPass({
   mount,
   onCode,
   onPair,
+  onStart,
 }: {
   /** The one line that fetches Petals' file and starts the helper (lib/agent-prompt.ts). */
   command: string;
@@ -26,6 +29,8 @@ export function TerminalPass({
   mount: RefCallback<HTMLDivElement>;
   onCode: (code: string) => void;
   onPair: () => void;
+  /** One click: Petals Helper.app starts this agent, once the first paste has put it on this computer. */
+  onStart: (agent: AgentId) => void;
 }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -37,11 +42,23 @@ export function TerminalPass({
             onPair();
           }}
         >
-          <p className="my-0 type-body">
-            {phase === 'ended' ? terminalWords.ended : terminalWords.start}
-          </p>
-          <CopyPrompt prompt={command} label={terminalWords.copy} />
+          {phase === 'ended' && <p className="my-0 type-body">{terminalWords.ended}</p>}
+          <p className="my-0 type-label">{terminalWords.startButton}</p>
+          <ActionRow gap="tight">
+            {AGENTS.map((a, i) => (
+              <Button
+                key={a.id}
+                variant={i === 0 ? 'primary' : 'secondary'}
+                disabled={phase === 'connecting'}
+                onClick={() => onStart(a.id)}
+              >
+                {a.name}
+              </Button>
+            ))}
+          </ActionRow>
           {failed && <p className="my-0 type-caption text-muted">{failed}</p>}
+          <p className="my-0 type-body">{terminalWords.start}</p>
+          <CopyPrompt prompt={command} label={terminalWords.copy} />
           <p className="my-0 type-caption text-muted">{terminalWords.orCode}</p>
           <label className="flex items-center gap-text-gap">
             <span className="type-label">{terminalWords.code}</span>

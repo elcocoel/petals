@@ -2,12 +2,16 @@
 // against CONNECTORS's seam of 9 Nov.
 import { describe, expect, test } from 'vitest';
 import {
+  codeFrom,
   helloFrame,
   helperUrl,
   pairFromHash,
   pairingCode,
   readControl,
   resizeFrame,
+  startAddress,
+  startFromHash,
+  startLink,
   terminalAddress,
 } from '../lib/terminal-pass.ts';
 
@@ -68,6 +72,27 @@ describe('the terminal in the page', () => {
     expect(pairFromHash('#pair=K7QM-3WTZ&port=nope')).toEqual({ code: 'K7QM-3WTZ', port: 7466 });
     expect(pairFromHash('')).toBeNull();
     expect(pairFromHash('#petal=abc')).toBeNull();
+  });
+
+  test('one click: the page opens petals:// with a code of its own, which the app takes', () => {
+    expect(startLink('abcdEFGH2345', 'claude')).toBe(
+      'petals://start?code=abcdEFGH2345&agent=claude',
+    );
+    expect(startLink('abcdEFGH2345', 'codex', 7499)).toBe(
+      'petals://start?code=abcdEFGH2345&agent=codex&port=7499',
+    );
+    const code = codeFrom(new Uint8Array(20).fill(7));
+    expect(code).toMatch(/^[A-Za-z0-9-]{8,64}$/);
+    expect(code).toHaveLength(20);
+  });
+
+  test('a new conversation reloads the page on it, and starts the agent asked for', () => {
+    expect(startAddress('/make', 'exp_1', 'claude')).toBe(
+      '/make?terminal=1&elsewhere=exp_1#start=claude',
+    );
+    expect(startFromHash('#start=codex')).toBe('codex');
+    expect(startFromHash('#start=other')).toBeNull();
+    expect(startFromHash('#pair=K7QM-3WTZ')).toBeNull();
   });
 
   test('a code reads however it was typed', () => {

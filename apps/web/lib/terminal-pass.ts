@@ -27,6 +27,46 @@ export const helloFrame = (pair: string, size: TermSize, exploration: string | n
     ...(exploration ? { exploration } : {}),
   });
 
+/**
+ * One click (CONNECTORS's Petals Helper.app, 9 Nov): once the first paste has put the app on the person's
+ * Mac, it claims petals:// links. The page makes up the code, opens this, and connects with the same code
+ * while the app starts the helper. A web page can't start a program, so the first time is still a paste.
+ */
+export function startLink(code: string, agent = 'claude', port: number = HELPER_PORT): string {
+  const q = new URLSearchParams({ code, agent });
+  if (port !== HELPER_PORT) q.set('port', String(port));
+  return `petals://start?${q.toString()}`;
+}
+
+/** How long the page keeps trying while the app starts the helper, and how often. Then: not installed. */
+export const START_WAIT_MS = 5000;
+export const START_RETRY_MS = 500;
+
+/** A code of the page's own: 20 letters and digits, from random bytes, which the app's rule takes. */
+export function codeFrom(bytes: Uint8Array): string {
+  const ALPHA = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  return [...bytes].map((b) => ALPHA[b % ALPHA.length]).join('');
+}
+
+/** The agents the helper can start, as the person knows them. */
+export const AGENTS = [
+  { id: 'claude', name: 'Claude Code' },
+  { id: 'codex', name: 'Codex' },
+  { id: 'hermes', name: 'Hermes' },
+] as const;
+export type AgentId = (typeof AGENTS)[number]['id'];
+
+/** The page asked, before a reload onto a new conversation, to start this agent once it's back. */
+export function startFromHash(hash: string): AgentId | null {
+  const asked = new URLSearchParams(hash.replace(/^#/, '')).get('start');
+  return AGENTS.find((a) => a.id === asked)?.id ?? null;
+}
+
+/** The page on a new conversation of the person's, asking to start the agent once it has reloaded. */
+export function startAddress(path: string, conversation: string, agent: AgentId) {
+  return `${path}?terminal=1&elsewhere=${encodeURIComponent(conversation)}#start=${agent}`;
+}
+
 /** The page on a conversation of the person's, with the helper's code kept in the fragment. */
 export function terminalAddress(path: string, conversation: string, pair: string, port: number) {
   const fragment = `pair=${encodeURIComponent(pair)}${port === HELPER_PORT ? '' : `&port=${port}`}`;
@@ -84,9 +124,13 @@ export type TermPhase = 'pair' | 'connecting' | 'open' | 'ended';
 export const terminalWords = {
   /** The box's bar, and what a screen reader hears. */
   box: 'Terminal',
-  /** Before it's paired. The command under it is the helper's own (lib/agent-prompt.ts). */
+  /** The one click, once Petals Helper is on this computer. */
+  startButton: 'Start your agent',
+  /** The first time on a computer: the paste that sets up the helper. The command is lib/agent-prompt.ts's. */
   start:
-    'Paste this into Terminal on this computer and press Return. It gets the Petals helper, which opens this page again, connected.',
+    'First time on this computer? Paste this into Terminal once and press Return. It sets up the Petals helper and opens this page again, connected.',
+  /** Start was pressed and nothing answered: the app isn't on this computer yet. */
+  notInstalled: "Petals Helper isn't on this computer yet. Paste the command below once.",
   copy: 'Copy the command',
   orCode: 'Or type the code it shows here.',
   code: 'Pairing code',
