@@ -80,7 +80,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `POST /api/v1/auth/logout` | `{ ok: true }`, and clears the session |
 | `POST /api/v1/auth/invite` | body `{ token }`: `{ invite }`, and holds it in this session |
 | `GET /api/v1/auth/invite` | `{ invite }` this session holds, or `{ invite: null }` |
-| `GET /api/v1/me` | `{ person_id, network, wallets, credit }`, to that person only; `401` to anyone else. `network` is the wallet this session came in with, and nothing else reads it. `credit` is `{ funded_usd, spent_usd, left_usd, usd_per_chat }`, or `null` for a person with no credit of their own (T374) |
+| `GET /api/v1/me` | `{ person_id, network, account, wallets, credit }`, to that person only; `401` to anyone else. `network` is the wallet this session came in with, and nothing else reads it; `account` (additive, 9 Nov) is that wallet's account id, or `null`. `credit` is `{ funded_usd, spent_usd, left_usd, usd_per_chat }`, or `null` for a person with no credit of their own (T374) |
 | `ALL /mcp` | MCP Streamable HTTP, stateless |
 
 ## Agent chat (SSE)
