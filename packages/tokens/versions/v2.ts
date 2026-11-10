@@ -407,6 +407,8 @@ const groups = {
     notes: '1.1s',
     blink: '1.06s',
     fold: '.62s',
+    /** A section of the side panel folding: long enough for what's below to slow down into place. */
+    settle: '.56s',
     /** How long a scene of How it works keeps the focus before the row moves on. */
     cycle: '7s',
     /** A hairline between stars: fades in, holds, fades out. */
@@ -425,6 +427,8 @@ const groups = {
     drift: 'ease-in-out',
     /** Time kept: the line under the scene in focus fills at an even pace. */
     cycle: 'linear',
+    /** A soft-close drawer: quick at first, then a long slowing to rest, with no bounce. */
+    settle: 'cubic-bezier(.16, 1, .3, 1)',
   },
   // How far things move. Reduced motion takes all of these to nothing.
   move: {

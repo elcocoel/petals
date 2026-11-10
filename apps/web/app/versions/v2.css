@@ -970,8 +970,9 @@
   display: inline-block;
 }
 
+/* The side panel's heads are there from the start: they're read and pressed, not revealed. */
 /* head.rise */
-:root[data-version="2"][data-joy] [data-b="head"]:not([data-seen]) > * {
+:root[data-version="2"][data-joy] [data-b="head"]:not([data-seen], [data-kind="panel"]) > * {
   opacity: 0;
 }
 
@@ -989,6 +990,30 @@
     translate: 0 var(--joy-move-rise);
     filter: var(--joy-move-blur);
   }
+}
+
+/* A section of the side panel folds under its head, and what's below settles against it softly, as a drawer
+   with a soft-close does (design/side-panel.md, line 43): its height runs out on a long slowing, with no
+   bounce. Open, what's in it may reach past it (a row's menu); folding, it's clipped at once, and opening,
+   only once it's open. */
+/* head.settle */
+:root[data-version="2"] [data-b="head"][data-kind="panel"] + [data-fold] {
+  display: block;
+  interpolate-size: allow-keywords;
+  height: auto;
+  overflow: visible;
+  transition:
+    height var(--joy-dur-settle) var(--joy-ease-settle),
+    overflow var(--joy-move-none-s) var(--joy-dur-settle) allow-discrete;
+}
+
+/* head.settle */
+:root[data-version="2"] [data-b="head"][data-kind="panel"] + [data-fold][data-folded] {
+  height: var(--joy-move-fold-closed);
+  overflow: hidden;
+  transition:
+    height var(--joy-dur-settle) var(--joy-ease-settle),
+    overflow var(--joy-move-none-s) allow-discrete;
 }
 
 /* ----- item ----- */

@@ -109,7 +109,7 @@ export function SideRail({
           </div>
           <div
             ref={column}
-            className="flex min-h-0 flex-1 flex-col gap-space-16 overflow-y-auto overscroll-none px-space-8 pb-block-gap"
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none px-space-8 pb-block-gap"
           >
             {/* the last section takes at least the column's height, so any head can come to the top
                 (design/side-panel.md, lines 7 and 8) */}

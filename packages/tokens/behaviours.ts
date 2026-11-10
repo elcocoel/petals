@@ -12,7 +12,7 @@ export const parents = {
   row: 'FaqItem, a Transcript line',
   figure: 'Drawing, AnnotatedFlower',
   mark: 'Wordmark, the pixel numerals',
-  head: 'SectionHead',
+  head: 'SectionHead, and the side panel’s section heads',
   item: 'NavItem, IconButton, a tick, your turn: a row or a small control, in the side panel or a pager, and your words in a conversation',
 } as const;
 
@@ -241,6 +241,12 @@ export const behaviours = [
   },
   { name: 'mark.tight', purpose: 'The nav wordmark settles smaller with the nav', via: 'css' },
   // head
+  {
+    name: 'head.settle',
+    purpose:
+      'A section of the side panel folds under its head, and the heads below settle against it softly, as a drawer with a soft-close does',
+    via: 'css',
+  },
   {
     name: 'head.rise',
     purpose: 'Eyebrow, title lines and body rise in softly, staggered',

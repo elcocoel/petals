@@ -139,7 +139,9 @@ export type SettingsView = Omit<Parameters<typeof ViewControls>[0], 'dimensions'
 
 /**
  * A section of the panel: its head, then its rows, the last of which is its one action, if it has one.
- * Pressing the head folds it to the head (design/side-panel.md, line 40).
+ * Pressing the head folds it to the head (design/side-panel.md, lines 40 and 43): the rows stay, out of
+ * reach, so the fold can settle (head.settle); without the joy layer they're simply gone. The space under
+ * a section is its own, so folded heads meet.
  */
 function Group({
   title,
@@ -155,7 +157,14 @@ function Group({
   return (
     <section className="flex flex-col">
       <SectionHead size="panel" title={title} fold={{ open: !folded, onToggle: onFold }} />
-      {!folded && children}
+      <div
+        data-fold=""
+        {...(folded ? { 'data-folded': '' } : {})}
+        inert={folded}
+        className={folded ? 'hidden' : ''}
+      >
+        <div className="pb-space-16">{children}</div>
+      </div>
     </section>
   );
 }
