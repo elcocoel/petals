@@ -1,4 +1,4 @@
-// Gives a person back what they were charged too much, as one entry with its reason (Elco, 10 Nov: "give the
+// Corrects what a person was charged (positive goes back, negative is charged), as one entry with its reason (Elco, 10 Nov: "give the
 // overcharge back, one entry 'repriced at the cached rate'"). Running it again with the same reason changes
 // nothing. It moves no money: it's a record of what Petals will let them spend.
 //   node scripts/credit-back.ts --person <prs_id> --usd <dollars> --reason "repriced at the cached rate"
@@ -33,7 +33,7 @@ export async function run(args: string[], env: NodeJS.ProcessEnv = process.env):
     const credit = await creditBack(store, values.person, Number(values.usd), values.reason);
     return [
       `person ${values.person}`,
-      `back   $${Number(values.usd)} (${values.reason})`,
+      `${Number(values.usd) > 0 ? 'back  ' : 'charge'} $${Math.abs(Number(values.usd))} (${values.reason})`,
       `funded $${credit.funded_usd}`,
       `spent  $${credit.spent_usd}`,
       `left   $${credit.left_usd}`,
