@@ -11,11 +11,13 @@ import type {
   QuoteResult,
   Reading,
   Run,
+  Spec,
   View,
 } from '@petal/core/types';
 import type { ConnectedAgent } from './agents.ts';
 import type { Settings } from './composer-options.ts';
 import type { ListedConversation, ListedProject } from './conversation-list.ts';
+import { decodeDraft } from './draft.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
 import type { Job } from './jobs.ts';
 import {
@@ -134,6 +136,18 @@ export async function moveConversation(id: string, project: string | null): Prom
     body: JSON.stringify({ folder: project }),
   });
   return res.ok;
+}
+
+/**
+ * A view's spec from its /d/<sha> address: the server answers it with the draft's own address, /draft?spec=,
+ * which holds the spec. Only that address is read here; the page it leads to isn't.
+ */
+export async function readDrawingSpec(sha: string): Promise<Spec | null> {
+  const res = await fetch(`/d/${encodeURIComponent(sha)}`);
+  void res.body?.cancel();
+  const param = res.ok ? new URL(res.url).searchParams.get('spec') : null;
+  const read = param ? decodeDraft(param) : null;
+  return read?.ok ? read.spec : null;
 }
 
 /** Where a conversation in another agent stands, by its exploration's id or a link's token. */

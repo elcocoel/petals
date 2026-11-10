@@ -3,10 +3,12 @@
 //   /make?elsewhere=<ref>    a conversation happening in another agent: an exploration's id, or a link's token
 //   &flower=<n>              an earlier flower of the thread (from 0)
 //   &stored=<id>             a stored flower
+//   &draft=<spec>            a drawing a link in the conversation opened here, its spec as /draft?spec= has it
 //   &shelf=1                 the shelf, with the thread's flowers closed
 //   &petal=<account>         the selected petal
 //   &q=<words>               a question that came with the link and waits in the box, until the server
 //                            accepts one. It stays because it has to survive leaving and coming back.
+import { decodeDraft, encodeDraft } from './draft.ts';
 import type { Opened } from './thread.ts';
 
 export function workspaceUrl(v: {
@@ -21,6 +23,7 @@ export function workspaceUrl(v: {
   if (v.elsewhere) q.set('elsewhere', v.elsewhere);
   if (v.open.kind === 'turn') q.set('flower', String(v.open.index));
   if (v.open.kind === 'stored') q.set('stored', v.open.id);
+  if (v.open.kind === 'draft') q.set('draft', encodeDraft(v.open.spec));
   if (v.open.kind === 'shelf') q.set('shelf', '1');
   if (v.petal) q.set('petal', v.petal);
   // Alone it says nothing new: the address it came in already holds it.
@@ -49,15 +52,19 @@ export function openFromParams(q: Record<string, Param>): {
   petal: string | null;
 } {
   const stored = one(q.stored);
+  const draft = one(q.draft);
+  const drafted = draft ? decodeDraft(draft) : null;
   const flower = one(q.flower);
   const index = flower === undefined ? Number.NaN : Number(flower);
   const open: Opened = stored
     ? { kind: 'stored', id: stored }
-    : one(q.shelf)
-      ? { kind: 'shelf' }
-      : Number.isInteger(index) && index >= 0
-        ? { kind: 'turn', index }
-        : { kind: 'latest' };
+    : drafted?.ok
+      ? { kind: 'draft', spec: drafted.spec }
+      : one(q.shelf)
+        ? { kind: 'shelf' }
+        : Number.isInteger(index) && index >= 0
+          ? { kind: 'turn', index }
+          : { kind: 'latest' };
   return { open, petal: one(q.petal) ?? null };
 }
 
