@@ -36,6 +36,7 @@ export {
   type PersonCredit,
   personCredit,
   revokeInvite,
+  setInviteBudget,
 } from './invites.ts';
 export type * from './llm.ts';
 export { DEFAULT_BUDGET } from './llm.ts';
