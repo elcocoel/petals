@@ -4,11 +4,16 @@
 import { layout, sizes } from './source.ts';
 
 export const floatBox = {
-  /** Where a box starts: how wide, and its input's height, which fits a question, its pill and the run's line. */
+  /**
+   * Where a box starts: how wide, and its input's height, which fits a question, its pill and the run's line.
+   * The height holds the Ask box grown to its most (Ask box max height, 200) with its controls and padding,
+   * under the bar, so a long message never hides its first lines under the bar (design/minimally-good.md,
+   * rule 7; 264 did, 10 Nov).
+   */
   width: 480,
-  'input-height': 264,
+  'input-height': 344,
   /** A recorded run's input: its saved question is long, and the button to play it stays in sight. */
-  'recorded-input-height': 312,
+  'recorded-input-height': 392,
   /** The flower's own box, on the right: wide enough to read a petal, tall enough for the rest. */
   'panel-width': 440,
   'panel-height': 640,
