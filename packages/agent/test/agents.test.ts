@@ -2,6 +2,7 @@
 // agents named by what they call themselves, a job aimed at one, a wait the bell wakes, nothing taken for a wait
 // nobody's holding, and a report taken up at once as a turn in its run. Through petalApp, scripted model.
 import { join } from 'node:path';
+import { DEFAULT_VIEW } from '@petal/core';
 import { fakeRpcFor, testSigner } from '@petal/near/auth/testing';
 import { openStore } from '@petal/store';
 import { describe, expect, test } from 'vitest';
@@ -173,6 +174,26 @@ describe('agents across projects', () => {
     expect(got.project.exploration).toMatch(/\/s\/[A-Za-z0-9_-]{43}$/);
     const agents = ((await (await w.call('GET', '/api/v1/agents')).json()) as Out).agents;
     expect(agents.find((a: Out) => a.name === 'claude code')?.job?.id).toBe(job.id);
+  });
+
+  test("a job comes with the person's view, so their own agent draws every flower as they see it", async () => {
+    const IDENTITY = {
+      ...DEFAULT_VIEW,
+      dimensions: { ...DEFAULT_VIEW.dimensions, colour: { data: 'identity' } },
+    };
+    const w = setup([
+      {
+        calls: [{ name: 'hand_job', args: { title: 'Map the shares', brief: 'who holds shares' } }],
+      },
+      { content: 'Sent.' },
+    ]);
+    await w.signInFunded();
+    expect((await w.call('PUT', '/api/v1/me/view', { view: IDENTITY })).status).toBe(200);
+    const token = await link(w);
+    await (await w.call('POST', '/api/v1/agent/chat', ASK)).text();
+    const got = (await (await w.wait(token, 'Claude Code')).json()) as Out;
+    expect(got.job).toMatchObject({ title: 'Map the shares' });
+    expect(got.view).toEqual(IDENTITY);
   });
 
   test('a waiting agent wakes when a job is handed out', async () => {

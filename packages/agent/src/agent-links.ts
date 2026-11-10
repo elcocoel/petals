@@ -25,6 +25,7 @@ import {
   disconnectedFor,
   makeLink,
   type ToolContext,
+  viewOfPerson,
 } from '@petal/tools';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
@@ -233,6 +234,8 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
         to: job.to,
       },
       project: { exploration: made.url, question: exploration?.question ?? null },
+      // the person's glasses (one-source.md): every flower their agent draws for them goes through these
+      view: await viewOfPerson(d.tools, owner),
     };
   }
 
