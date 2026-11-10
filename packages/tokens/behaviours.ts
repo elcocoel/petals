@@ -183,6 +183,12 @@ export const behaviours = [
     purpose: 'The fill under the pointer and under where you are has soft corners, and fades in',
     via: 'css',
   },
+  {
+    name: 'item.moved',
+    purpose:
+      'A row just moved into a project takes a soft fill that fades, so you see where it went',
+    via: 'css',
+  },
   // figure
   {
     name: 'figure.arrive',

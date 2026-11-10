@@ -3,9 +3,13 @@
 // and what each is doing, and the one prompt that connects another (Elco, 9 Nov, the first full test).
 // The agents and the projects are read when the page opens and again whenever `fresh` changes: a run
 // ending, or a conversation's change signal. No timer.
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import {
+  archiveConversation,
+  deleteConversation,
   disconnectAgent,
+  listArchived,
   listProjects,
   newProject as makeProject,
   mintAgentLink,
@@ -13,10 +17,16 @@ import {
   readAgents,
 } from '../lib/agent-client.ts';
 import { agentRows, agentWords, type ConnectedAgent } from '../lib/agents.ts';
-import type { ListedProject } from '../lib/conversation-list.ts';
-import type { SectionKey } from '../lib/panel-words.ts';
+import type { ListedConversation, ListedProject, RowRef } from '../lib/conversation-list.ts';
+import { panelWords, type SectionKey } from '../lib/panel-words.ts';
 
-export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
+export function useWorkMenu(
+  signedIn: boolean,
+  fresh: unknown = null,
+  /** Reads the list of conversations again, after an archive, an unarchive or a delete. */
+  reread: () => void = () => {},
+) {
+  const router = useRouter();
   // box.fold: the panel starts open, as an IDE's does (design/side-panel.md); the one collapse control
   // hides it to the bar and shows it again; a section's icon opens it, if need be, and asks for that section
   const [open, setOpen] = useState(true);
@@ -26,10 +36,23 @@ export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
   const [opened, setOpened] = useState<string[]>([]);
   // a new project's row, waiting for its name
   const [naming, setNaming] = useState(false);
-  // the conversation whose projects are open to choose from, and where each moved one is now, until the
-  // list is read again and says so itself
-  const [moving, setMoving] = useState<string | null>(null);
+  // where each moved conversation is now, until the list is read again and says so itself
   const [placed, setPlaced] = useState<Record<string, string | null>>({});
+  // a row's menu (design/side-panel.md, lines 24 to 29): the one open, the move dialog and its search,
+  // the delete dialog and why it last failed
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [moving, setMoving] = useState<RowRef | null>(null);
+  const [query, setQuery] = useState('');
+  const [removing, setRemoving] = useState<RowRef | null>(null);
+  const [removeFailed, setRemoveFailed] = useState<string | null>(null);
+  // dragging a row onto a project (lines 30 to 32), and what a move leaves behind (line 31)
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [dropOn, setDropOn] = useState<string | null>(null);
+  const [justMoved, setJustMoved] = useState<string | null>(null);
+  const [said, setSaid] = useState('');
+  // archived conversations (lines 27 and 28)
+  const [archived, setArchived] = useState<ListedConversation[]>([]);
+  const [archivedOpen, setArchivedOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   // a read again after a disconnect, so the list says what's true
   const [reads, setReads] = useState(0);
@@ -46,6 +69,12 @@ export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
     void listProjects().then(
       (list) => {
         if (!gone) setProjects(list);
+      },
+      () => {},
+    );
+    void listArchived().then(
+      (list) => {
+        if (!gone) setArchived(list);
       },
       () => {},
     );
@@ -75,13 +104,44 @@ export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
     setOpened((keys) => [...keys, made.id]);
   }, []);
 
-  // the project it goes into opens, so the row is seen where it went
-  const moveTo = useCallback(async (row: string, project: string | null) => {
-    setMoving(null);
-    if (!(await moveConversation(row, project))) return;
-    setPlaced((now) => ({ ...now, [row]: project }));
-    if (project) setOpened((keys) => (keys.includes(project) ? keys : [...keys, project]));
-  }, []);
+  // the project it goes into opens, its row there takes a soft fill, and a screen reader hears where
+  const moveTo = useCallback(
+    async (row: { key: string; title: string }, project: { key: string; name: string } | null) => {
+      setMoving(null);
+      setQuery('');
+      if (!(await moveConversation(row.key, project?.key ?? null))) return;
+      setPlaced((now) => ({ ...now, [row.key]: project?.key ?? null }));
+      if (project)
+        setOpened((keys) => (keys.includes(project.key) ? keys : [...keys, project.key]));
+      setJustMoved(row.key);
+      setSaid(panelWords.moved(row.title, project?.name ?? null));
+    },
+    [],
+  );
+
+  const archive = useCallback(
+    async (key: string, out: boolean) => {
+      if (!(await archiveConversation(key, out))) return;
+      setReads((n) => n + 1);
+      reread();
+    },
+    [reread],
+  );
+
+  // a conversation deleted while it's open leaves for a new one
+  const remove = useCallback(async () => {
+    if (!removing) return;
+    const failed = await deleteConversation(removing.key);
+    if (failed) {
+      setRemoveFailed(failed);
+      return;
+    }
+    setRemoving(null);
+    setRemoveFailed(null);
+    setReads((n) => n + 1);
+    reread();
+    if (removing.current) router.push('/make');
+  }, [removing, reread, router]);
 
   return {
     open,
@@ -99,10 +159,43 @@ export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
     newProject: () => setNaming(true),
     nameProject: (name: string) => void nameProject(name).catch(() => {}),
     stopNaming: () => setNaming(false),
-    moving,
-    toggleMoving: (row: string) => setMoving((now) => (now === row ? null : row)),
-    moveTo: (row: string, project: string | null) => void moveTo(row, project).catch(() => {}),
     placed,
+    menuFor,
+    toggleMenu: (key: string) => setMenuFor((now) => (now === key ? null : key)),
+    closeMenu: () => setMenuFor(null),
+    moving,
+    startMove: (row: RowRef) => {
+      setQuery('');
+      setMoving(row);
+    },
+    stopMove: () => setMoving(null),
+    query,
+    setQuery,
+    moveTo: (row: { key: string; title: string }, project: { key: string; name: string } | null) =>
+      void moveTo(row, project).catch(() => {}),
+    archive: (key: string) => void archive(key, true).catch(() => {}),
+    unarchive: (key: string) => void archive(key, false).catch(() => {}),
+    archived,
+    archivedOpen,
+    toggleArchived: () => setArchivedOpen((now) => !now),
+    removing,
+    startRemove: (row: RowRef) => {
+      setRemoveFailed(null);
+      setRemoving(row);
+    },
+    stopRemove: () => setRemoving(null),
+    remove: () => void remove().catch(() => {}),
+    removeFailed,
+    dragging,
+    dragStart: (key: string) => setDragging(key),
+    dragEnd: () => {
+      setDragging(null);
+      setDropOn(null);
+    },
+    dropOn,
+    dragOver: (project: string | null) => setDropOn(project),
+    justMoved,
+    said,
     agents: agentRows(agents),
     copied,
     copy: () => void copy().catch(() => {}),

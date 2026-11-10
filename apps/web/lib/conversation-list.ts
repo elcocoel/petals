@@ -84,6 +84,14 @@ export function conversationRows(
   });
 }
 
+/** A conversation as its menu's actions need it: its key, its title, and where it is. */
+export interface RowRef {
+  key: string;
+  title: string;
+  project: string | null;
+  current: boolean;
+}
+
 /** A project as GET /api/v1/folders lists it: the server's folder, flat, each with its parent. */
 export interface ListedProject {
   id: string;

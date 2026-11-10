@@ -129,6 +129,32 @@ export async function newProject(name: string): Promise<ListedProject | null> {
   return json.folder ?? null;
 }
 
+/** The person's archived conversations, newest first (GET ?hidden=1). No answer is none. */
+export async function listArchived(): Promise<ListedConversation[]> {
+  const res = await fetch('/api/v1/conversations?hidden=1');
+  if (!res.ok) return [];
+  const json = (await res.json()) as { conversations?: ListedConversation[] };
+  return json.conversations ?? [];
+}
+
+/** Archives a conversation, or brings it back with false. True when the server took it. */
+export async function archiveConversation(id: string, archived: boolean): Promise<boolean> {
+  const res = await fetch(`/api/v1/conversations/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ hidden: archived }),
+  });
+  return res.ok;
+}
+
+/** Deletes a conversation for good. Null when it's gone; otherwise the server's reason. */
+export async function deleteConversation(id: string): Promise<string | null> {
+  const res = await fetch(`/api/v1/conversations/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  if (res.ok) return null;
+  const json = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+  return json?.error?.message ?? `The server said ${res.status}.`;
+}
+
 /** Puts a conversation in a project, or in none with null. True when the server took it. */
 export async function moveConversation(id: string, project: string | null): Promise<boolean> {
   const res = await fetch(`/api/v1/conversations/${encodeURIComponent(id)}`, {

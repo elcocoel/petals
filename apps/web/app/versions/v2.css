@@ -1009,8 +1009,24 @@
 }
 
 /* item.soft */
-:root[data-version="2"] [data-b="item"]:is([aria-current="page"], [data-current])::before {
+:root[data-version="2"]
+  [data-b="item"]:is([aria-current="page"], [data-current], [data-drop])::before {
   opacity: 1;
+}
+
+/* item.moved */
+:root[data-version="2"] [data-b="item"][data-moved]::before {
+  animation: item-moved var(--joy-dur-reveal) var(--joy-ease-reveal) both;
+}
+
+/* item.moved */
+@keyframes item-moved {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 @media (hover: hover) {

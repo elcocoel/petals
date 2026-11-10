@@ -81,7 +81,11 @@ export function SideRail({
     at?.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' });
   }, [open, jump]);
   return (
-    <nav aria-label={label} className="flex h-full shrink-0 border-r border-hairline bg-surface">
+    // positioned, so its edge paints over a page that is itself positioned (the workspace's canvas)
+    <nav
+      aria-label={label}
+      className="relative flex h-full shrink-0 border-r border-hairline bg-surface"
+    >
       <div className="flex shrink-0 flex-col justify-between p-space-8">
         <div className="flex flex-col gap-space-16">
           <IconButton
@@ -113,12 +117,15 @@ export function SideRail({
               </div>
             ))}
           </div>
-          {/* the sash: drag to size, double-click for the usual width */}
+          {/* the sash (design/side-panel.md, lines 16 to 19 and 33): drag to size, double-click for the
+              usual width; under the pointer, and while it's dragged, the line shows in the accent */}
           <span
             aria-hidden="true"
             {...width.sash}
-            className="absolute top-0 -right-space-4 bottom-0 w-space-8 cursor-col-resize touch-none"
-          />
+            className="group/sash absolute top-0 -right-space-4 bottom-0 flex w-space-8 cursor-col-resize touch-none justify-center"
+          >
+            <span className="invisible h-full w-px scale-x-200 bg-accent group-hover/sash:visible group-active/sash:visible" />
+          </span>
         </div>
       )}
     </nav>

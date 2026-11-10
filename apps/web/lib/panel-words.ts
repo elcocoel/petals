@@ -70,9 +70,29 @@ export const panelWords = {
   nameProject: 'Name the project',
   /** An open project with nothing in it yet. */
   emptyProject: 'Nothing in it yet',
-  /** The way to put a conversation in a project, read aloud and on hover with the conversation's title. */
-  moveTo: (title: string) => `Move “${title}” to a project`,
-  outOfProject: 'Out of its project',
+  /** A conversation's menu (design/side-panel.md, lines 24 to 29). Drafts. */
+  more: (title: string) => `More for “${title}”`,
+  moveToProject: 'Move to project…',
+  archive: 'Archive',
+  unarchive: 'Unarchive',
+  remove: 'Delete',
+  /** The move dialog. */
+  moveTitle: (title: string) => `Move “${title}”`,
+  findProject: 'Find a project',
+  noProjectFound: (words: string) => `No project has “${words}”`,
+  outOfProject: 'No project',
+  close: 'Close',
+  /** Said after a move, to a screen reader. */
+  moved: (title: string, project: string | null) =>
+    project ? `Moved “${title}” to ${project}` : `Took “${title}” out of its project`,
+  /** Archived, at the end of Conversations, with how many. */
+  archived: 'Archived',
+  /** The delete dialog, in SYSTEMS's words of what goes and what stays. */
+  removeTitle: (title: string) => `Delete “${title}”?`,
+  removeBody:
+    "This can't be undone. Its steps, notes and jobs go, and its links stop working. Drawings on the map, your kept layers and your credit stay.",
+  removeYes: 'Delete it',
+  removeNo: 'Cancel',
   /** How many conversations a project holds. */
   count: (n: number) => String(n),
   conversations: 'Conversations',
