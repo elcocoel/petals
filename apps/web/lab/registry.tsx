@@ -49,9 +49,11 @@ import { SourceList } from '../components/Sources.tsx';
 import { ActionRow } from '../components/ui/ActionRow.tsx';
 import { AskBlock } from '../components/ui/AskBlock.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
+import { Badge } from '../components/ui/Badge.tsx';
 import { BarBox } from '../components/ui/BarBox.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Callout } from '../components/ui/Callout.tsx';
+import { Card } from '../components/ui/Card.tsx';
 import { Drawing } from '../components/ui/Drawing.tsx';
 import { EmptySlot } from '../components/ui/EmptySlot.tsx';
 import { FaqItem } from '../components/ui/FaqItem.tsx';
@@ -73,6 +75,7 @@ import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
+import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { DrawingKind } from '../lib/figures.ts';
@@ -1175,6 +1178,47 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'Badge',
+    group: 'The workspace',
+    figmaName: 'Petals / Badge',
+    figmaNode: '164:2284',
+    source: 'apps/web/components/ui/Badge.tsx',
+    states: [
+      { name: 'neutral, a fact', render: () => <Badge>Declared</Badge> },
+      { name: 'accent, a state that went well', render: () => <Badge tone="accent">Saved</Badge> },
+    ],
+  },
+  {
+    id: 'Card',
+    group: 'The workspace',
+    figmaName: 'Petals / Card head',
+    figmaNode: '164:2294',
+    source: 'apps/web/components/ui/Card.tsx',
+    states: [
+      {
+        name: 'a title, a badge and its one action',
+        render: () => (
+          <Card
+            title="A card's title"
+            labelledBy="lab-card"
+            badge={<Badge>208</Badge>}
+            action={<Button variant="secondary">Edit</Button>}
+          >
+            <p className="my-0 type-body">One job, said in its body.</p>
+          </Card>
+        ),
+      },
+      {
+        name: 'a title only',
+        render: () => (
+          <Card title="A card's title" labelledBy="lab-card-plain">
+            <p className="my-0 type-caption text-muted">Nothing here yet, and what to do next.</p>
+          </Card>
+        ),
+      },
+    ],
+  },
+  {
     id: 'IconButton',
     group: 'The workspace',
     figmaName: null,
@@ -1537,6 +1581,40 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'ProfileHead',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/ProfileHead.tsx',
+    states: [
+      {
+        name: 'with a NEAR Social profile',
+        render: () => (
+          <ProfileHead
+            account="a-name.near"
+            social={{
+              kind: 'profile',
+              profile: { name: 'A name on NEAR Social', about: null, avatar: null, links: [] },
+            }}
+            disconnectLabel="Disconnect"
+            onDisconnect={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'no public profile, a 64-character account',
+        render: () => (
+          <ProfileHead
+            account="02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc"
+            social={{ kind: 'none' }}
+            disconnectLabel="Disconnect"
+            onDisconnect={() => {}}
+          />
+        ),
+      },
+    ],
+  },
+  {
     id: 'Profile',
     group: 'The workspace',
     figmaName: null,
@@ -1547,7 +1625,6 @@ export const registry: LabEntry[] = [
         name: 'with a NEAR Social profile',
         render: () => (
           <Profile
-            account="a-name.near"
             social={{
               kind: 'profile',
               profile: {
@@ -1560,32 +1637,21 @@ export const registry: LabEntry[] = [
                 ],
               },
             }}
-            disconnectLabel="Disconnect"
-            onDisconnect={() => {}}
+            onEdit={() => {}}
           />
         ),
       },
       {
-        name: 'no NEAR Social profile',
-        render: () => (
-          <Profile
-            account="02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc"
-            social={{ kind: 'none' }}
-            disconnectLabel="Disconnect"
-            onDisconnect={() => {}}
-          />
-        ),
+        name: 'no public profile yet',
+        render: () => <Profile social={{ kind: 'none' }} onEdit={() => {}} />,
+      },
+      {
+        name: 'still reading',
+        render: () => <Profile social={{ kind: 'reading' }} />,
       },
       {
         name: "NEAR Social didn't answer",
-        render: () => (
-          <Profile
-            account="a-name.near"
-            social={{ kind: 'unread' }}
-            disconnectLabel="Disconnect"
-            onDisconnect={() => {}}
-          />
-        ),
+        render: () => <Profile social={{ kind: 'unread' }} />,
       },
     ],
   },
@@ -1642,6 +1708,12 @@ export const registry: LabEntry[] = [
             withdrew={null}
             onWithdraw={() => {}}
           />
+        ),
+      },
+      {
+        name: 'the balance can’t be read',
+        render: () => (
+          <Funds balance={null} held={null} phase="ready" withdrew={null} onWithdraw={() => {}} />
         ),
       },
       {

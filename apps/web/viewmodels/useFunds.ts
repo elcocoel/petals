@@ -63,8 +63,17 @@ export function useFunds() {
   }, [info, held]);
 
   return {
-    /** The credit in NEAR, as /make shows it; null until it's known, or with no price. */
-    balance: nearLeft(credit, info?.near_usd ?? null),
+    /**
+     * The credit in NEAR, as /make shows it; nothing given yet is none. Null until it's read, or with no
+     * price to show it in.
+     */
+    balance: info
+      ? credit
+        ? nearLeft(credit, info.near_usd)
+        : info.near_usd
+          ? '0.00'
+          : null
+      : null,
     held,
     phase,
     withdrew,

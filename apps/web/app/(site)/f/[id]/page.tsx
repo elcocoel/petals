@@ -4,6 +4,7 @@
 import type { Entry } from '@petal/core/types';
 import { FlowerSheet } from '../../../../components/FlowerSheet.tsx';
 import { Interpretation, SignatureLine } from '../../../../components/Interpretation.tsx';
+import { Badge } from '../../../../components/ui/Badge.tsx';
 import { api } from '../../../../lib/api.ts';
 import { renderSpec, sourceUrls } from '../../../../lib/flower-data.ts';
 import { dateLabel } from '../../../../lib/flower-view.ts';
@@ -57,7 +58,7 @@ export default async function FlowerPage({ params }: { params: Promise<{ id: str
           entry doesn't match its id. Ids and hashes stay in the API. */}
       {where === 'map' && (
         <p>
-          <span className="badge">on NEAR</span>
+          <Badge>on NEAR</Badge>
         </p>
       )}
       {!verified.entry_hash && <p className="error">This flower's entry doesn't match its id.</p>}

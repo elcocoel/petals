@@ -555,20 +555,29 @@
 }
 
 @media (hover: hover) {
+  /* A card is read, not pressed: like a float, it doesn't lift. */
   /* box.lift */
   :root[data-version="2"]
-    :is([data-b="box"]:not([data-kind="float"]):hover, a:hover > [data-b="box"]) {
+    :is(
+      [data-b="box"]:not([data-kind="float"], [data-kind="card"]):hover,
+      a:hover > [data-b="box"]
+    ) {
     translate: 0 var(--joy-move-lift-box);
   }
 
   /* box.lift */
   :root[data-version="2"]
-    :is([data-b="box"]:not([data-kind="float"]):hover, a:hover > [data-b="box"])::after {
+    :is(
+      [data-b="box"]:not([data-kind="float"], [data-kind="card"]):hover,
+      a:hover > [data-b="box"]
+    )::after {
     opacity: 1;
   }
 
   /* box.swell */
-  :root[data-version="2"] :is([data-b="box"]:hover, a:hover > [data-b="box"]) [data-b="figure"] {
+  :root[data-version="2"]
+    :is([data-b="box"]:not([data-kind="card"]):hover, a:hover > [data-b="box"])
+    [data-b="figure"] {
     scale: var(--joy-move-swell);
   }
 }

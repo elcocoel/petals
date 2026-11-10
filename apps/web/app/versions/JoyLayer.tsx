@@ -231,8 +231,8 @@ function follow(
   };
 }
 
-// A box that floats is read and dragged, so it doesn't tilt under the pointer.
-const BOX = '[data-b="box"]:not(foreignObject *, [data-kind="float"])';
+// A box that floats is read and dragged, and a card is read, so neither tilts under the pointer.
+const BOX = '[data-b="box"]:not(foreignObject *, [data-kind="float"], [data-kind="card"])';
 
 function tilt(joy: Joy): Stop {
   if (joy.reduced || !joy.fine) return () => {};

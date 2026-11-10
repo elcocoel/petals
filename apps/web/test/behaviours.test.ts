@@ -303,7 +303,23 @@ describe('a box that floats', () => {
 
   test("isn't watched for a reveal, and doesn't follow the pointer", () => {
     expect(JOY).toContain(`'box.rise': '[data-b="box"]:not([data-kind="float"])'`);
-    expect(JOY).toContain(`const BOX = '[data-b="box"]:not(foreignObject *, [data-kind="float"])'`);
+    expect(JOY).toContain(
+      `const BOX = '[data-b="box"]:not(foreignObject *, [data-kind="float"], [data-kind="card"])'`,
+    );
+  });
+});
+
+// A card is read, not pressed (the small set, 10 Nov): it takes the glass and rises in, and never lifts,
+// swells or follows the pointer, so it never reads as something to click.
+describe('a card', () => {
+  const rules = parse(SHEET).rules;
+  test.each(['box.lift', 'box.swell'])('leaves out %s', (child) => {
+    const hovering = rules.filter(
+      (r) => r.child === child && r.selector.includes('[data-b="box"]:'),
+    );
+    expect(hovering.length).toBeGreaterThan(0);
+    for (const { selector } of hovering.filter((r) => r.selector.includes(':hover')))
+      expect(selector).toContain('[data-kind="card"]');
   });
 });
 

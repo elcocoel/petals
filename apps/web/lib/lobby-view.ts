@@ -15,11 +15,17 @@ export const lobbyWords = {
 } as const;
 
 /**
- * The profile part's money (Elco, 9 Nov: the Withdraw button lives in the lobby, "more specifically,
- * profile part of it"): what the person holds in the credit contract, and taking all of it out. Drafts,
- * shipped on Elco's word ("ship drafts, change later"). Waiting for the wallet is the pay step's own draft.
+ * The Balance card (Elco, 9 Nov: the Withdraw button lives in the lobby, "more specifically, profile part of
+ * it"; 10 Nov, the redo's frame: "Build it"): the credit the person holds, in NEAR, and taking everything
+ * out of the contract while it holds something. Drafts, shipped on Elco's word ("ship drafts, change later").
  */
 export const fundsWords = {
+  title: 'Balance',
+  unit: 'NEAR',
+  /** Under the amount: what it is. LOBBY's draft. */
+  note: 'Credit for Petals’ agent, at today’s price.',
+  /** The credit or NEAR's price couldn't be read. LOBBY's draft. */
+  unread: 'Your balance can’t be read right now.',
   /** Elco's draft. */
   withdraw: 'Withdraw',
   waiting: payWords.paying,
@@ -30,24 +36,30 @@ export const fundsWords = {
 } as const;
 
 /**
- * The profile part (Elco, 9 Nov: "a profile area"; 10 Nov: "minimally good"): its title, the wallet the
- * person signed in with, and their public profile from NEAR Social, whose links are the account's own
- * declaration, so their label says only that. 'Profile' is Elco's word; the rest are LOBBY's drafts.
+ * The person at the top of the page, and the Public profile card (Elco, 9 and 10 Nov: "a profile area";
+ * the redo's frame, "Build it"). The card is the account's profile on NEAR Social, whose links are its own
+ * declaration, so their badge says only that. LOBBY's drafts.
  */
 export const profileWords = {
-  title: 'Profile',
-  declared: 'Declared on NEAR Social',
-  /** One declared link: the service as NEAR Social names it, and what the account wrote there. */
-  link: (service: string, value: string) => `${service} ${value}`,
-  /** No profile there yet: what would show, and where to make one. */
-  none: 'No NEAR Social profile yet. Make one there, and its name, picture and links show here.',
-  open: 'Open NEAR Social',
+  /** The badges beside the account: the chain it's on, and whether it has a public profile. */
+  chain: 'NEAR',
+  social: 'NEAR Social',
+  noSocial: 'No public profile',
+  title: 'Public profile',
+  edit: 'Edit',
+  /** A link's badge: the account says so; nobody checked it. */
+  declared: 'Declared',
+  /** Under the profile: who sees it, and what the links are. */
+  note: 'Anyone can see this, in any app that reads NEAR Social. Links are what you declare; nobody checks them.',
+  /** No profile there yet: what goes there, and the one thing to do. */
+  none: 'You don’t have a public profile yet. Make one here: a name, a picture, a short bio and your links.',
+  create: 'Create your public profile',
+  noneNote: 'It’s your NEAR Social profile, so other NEAR apps show it too.',
+  /** Still reading it. */
+  reading: 'Reading your public profile from NEAR Social…',
   /** NEAR Social didn't answer. */
-  unread: "NEAR Social didn't answer, so your profile from there isn't shown.",
+  unread: "NEAR Social didn't answer, so your public profile isn't shown.",
 } as const;
-
-/** Where a person makes or edits their NEAR Social profile. */
-export const NEAR_SOCIAL_SITE = 'https://near.social/';
 
 /** The profile part's NEAR Social state: still reading, a profile, none there, or no answer. */
 export type SocialState =
