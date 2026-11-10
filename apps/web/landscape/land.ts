@@ -36,6 +36,8 @@ export interface BenchFlower {
   mark: Mark;
   place: Place;
   reading: FlowerReading;
+  /** the map it stands for, an address, when the live map says */
+  map: string | null;
 }
 
 export interface BenchChain {
@@ -105,20 +107,16 @@ export function oneEach(views: readonly LiveView[]): LiveView[] {
   });
 }
 
-/**
- * The live map in the view whose hash is given, in the shape the bench's fixture has: a view without a name
- * from the run takes its title. `each` keeps one drawing per map.
- */
-export async function liveNight(
-  view: string,
-  each: 'drawing' | 'map' = 'drawing',
-): Promise<Night | { error: string }> {
-  const got = await api<Omit<Night, 'views'> & { views: LiveView[] }>(
-    `/api/v1/map?${viewQuery(view)}`,
-  );
-  if (!got.ok) return { error: got.error.message };
-  const { views: all, ...rest } = got.value;
-  const views = each === 'map' ? oneEach(all) : all;
+type LiveMap = Omit<Night, 'views'> & { views: LiveView[] };
+
+/** The live map in the view whose hash is given, as GET /api/v1/map gives it. */
+async function liveMap(view: string): Promise<LiveMap | { error: string }> {
+  const got = await api<LiveMap>(`/api/v1/map?${viewQuery(view)}`);
+  return got.ok ? got.value : { error: got.error.message };
+}
+
+/** In the shape the bench's fixture has: a view without a name from the run takes its title. */
+function nightOf({ views, ...rest }: LiveMap): Night {
   return {
     ...rest,
     run: 'GET /api/v1/map',
@@ -132,9 +130,20 @@ export async function liveNight(
       status: '',
       as_of: v.as_of,
       snapshot: v.snapshot,
+      map: v.map,
       reading: v.reading,
     })),
   };
+}
+
+/** The live map in the view whose hash is given, as the bench's fixture is. `each` keeps one drawing per map. */
+export async function liveNight(
+  view: string,
+  each: 'drawing' | 'map' = 'drawing',
+): Promise<Night | { error: string }> {
+  const live = await liveMap(view);
+  if ('error' in live) return live;
+  return nightOf(each === 'map' ? { ...live, views: oneEach(live.views) } : live);
 }
 
 /** The night as the fixture holds it: what the tests read, with no network. */
@@ -154,6 +163,23 @@ export async function benchLandscape(view: string): Promise<BenchLandscape | { e
 export async function powerMapLandscape(view: string): Promise<BenchLandscape | { error: string }> {
   const night = await liveNight(view, 'map');
   return 'error' in night ? night : landscapeOf(night);
+}
+
+/**
+ * The Power Map opened at one map (coordinator/one-source.md, step 6), by its address or by a reading of it
+ * (a snapshot, as a flower's spec names it): the map, and which of its flowers is that map, or -1 when it
+ * isn't on the map.
+ */
+export async function powerMapAt(
+  view: string,
+  at: { map: string } | { snapshot: string },
+): Promise<{ land: BenchLandscape; focus: number } | { error: string }> {
+  const live = await liveMap(view);
+  if ('error' in live) return live;
+  const map =
+    'map' in at ? at.map : (live.views.find((v) => v.snapshot === at.snapshot)?.map ?? null);
+  const land = landscapeOf(nightOf({ ...live, views: oneEach(live.views) }));
+  return { land, focus: map === null ? -1 : land.flowers.findIndex((f) => f.map === map) };
 }
 
 /** A map's flowers at their places: the address book's, and a new place for any view it doesn't have. */
@@ -190,6 +216,7 @@ export function landscapeOf(night: Night): BenchLandscape {
       place,
       // On the map a flower's name is drawn under it, one way for all, so the flower draws no title.
       reading: { title: '', petals: v.reading.petals },
+      map: v.map ?? null,
     };
   });
   return {

@@ -92,6 +92,32 @@ describe('jobs wait', () => {
     expect(JSON.parse(readFileSync(current, 'utf8'))).toEqual({ link: LINK });
   });
 
+  test("the job's view is kept with its project, so the flowers drawn for it go through it", async () => {
+    const env = home();
+    joinAgent(env, KEY, 'codex');
+    const clock = { t: 0 };
+    const view = { petal: 'view/v1', color: { data: 'kind' } };
+    const job = {
+      id: 'job_3',
+      kind: 'map',
+      title: 'Map NEAR',
+      brief: 'Who?',
+      inputs: {},
+      to: null,
+    };
+    const s = site([{ body: { job, project: { exploration: LINK, question: 'q' }, view } }], clock);
+    const current = join(env.PETALS_HOME, 'state', 'current.json');
+    const out = await waitForJob({
+      env,
+      site: SITE,
+      fetch: s.fetch,
+      now: () => clock.t,
+      currentFile: current,
+    });
+    expect(out.next).toContain('drawn as the person sees it');
+    expect(JSON.parse(readFileSync(current, 'utf8'))).toEqual({ link: LINK, view });
+  });
+
   test('with no job, it comes back just before its time is up, so the agent runs it again', async () => {
     const env = home();
     joinAgent(env, KEY, 'claude-code');

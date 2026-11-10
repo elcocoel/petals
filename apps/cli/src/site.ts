@@ -10,7 +10,10 @@
 // One process is one conversation (stdio MCP starts one per session), so the exploration it
 // started is the default for save_step, add_note and get_exploration. The CLI is one process per
 // command, so the last one started is also kept in a file. Passing `exploration` always wins.
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+// A job's project comes with the person's view (Elco's glasses rule, 10 Nov), kept with it, so every
+// flower drawn for that job goes through it. `jobs wait` runs as a command of its own while an MCP
+// session may run on, so a file newer than what this process remembers wins.
+import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { canonicalJson, TOOLS_VERSION } from '@petal/core';
@@ -21,6 +24,12 @@ import { isToolError, specBody, type Tool, type ToolContext } from '@petal/tools
 type AnyTool = Tool<any, any>;
 type Json = Record<string, unknown>;
 type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
+/** The conversation this process works in, and the person's view when it's a job's project. */
+interface Current {
+  link: string;
+  view?: Json;
+}
+const isView = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v);
 
 export interface SiteOptions {
   /** the site's origin, e.g. https://petals.example */
@@ -87,28 +96,38 @@ export function siteDoor(opts: SiteOptions) {
   const f: Fetch = opts.fetch ?? ((url, init) => fetch(url, init));
   /** snapshots the site is known to hold, this process */
   const held = new Set<string>();
-  let current: string | null = opts.initial?.trim() || null;
+  const first = opts.initial?.trim();
+  let current: Current | null = first ? { link: first } : null;
+  /** when this process last chose its conversation, against the file's own time */
+  let chosenAt = first ? Date.now() : 0;
 
-  const remember = (link: string) => {
-    current = link;
+  const remember = (link: string, view?: unknown) => {
+    current = { link, ...(isView(view) ? { view } : {}) };
+    chosenAt = Date.now();
     if (!opts.currentFile) return;
     try {
       mkdirSync(dirname(opts.currentFile), { recursive: true });
-      writeFileSync(opts.currentFile, `${JSON.stringify({ link })}\n`, { mode: 0o600 });
+      writeFileSync(opts.currentFile, `${JSON.stringify(current)}\n`, { mode: 0o600 });
     } catch {
       // memory still has it; a CLI user passes exploration
     }
   };
-  const recalled = (): string | null => {
-    if (current) return current;
+  const fromFile = (): Current | null => {
     if (!opts.currentFile) return null;
     try {
-      const { link } = JSON.parse(readFileSync(opts.currentFile, 'utf8')) as { link?: unknown };
-      return typeof link === 'string' ? link : null;
+      if (current && statSync(opts.currentFile).mtimeMs <= chosenAt) return null;
+      const j = JSON.parse(readFileSync(opts.currentFile, 'utf8')) as Json;
+      return typeof j.link === 'string'
+        ? { link: j.link, ...(isView(j.view) ? { view: j.view } : {}) }
+        : null;
     } catch {
       return null;
     }
   };
+  const recalledAll = (): Current | null => fromFile() ?? current;
+  const recalled = (): string | null => recalledAll()?.link ?? null;
+  /** the person's view, when the conversation is a job's project */
+  const recalledView = (): Json | null => recalledAll()?.view ?? null;
 
   /** One request to the site; its JSON answer as it is, or a ToolError when there is none. */
   async function call(
@@ -245,14 +264,16 @@ export function siteDoor(opts: SiteOptions) {
             );
             if (isToolError(out) || !out.job) return isToolError(out) ? out : { job: null };
             const link = (out.project as { exploration?: unknown } | undefined)?.exploration;
-            if (typeof link === 'string') remember(link);
-            return { link, job: out.job };
+            if (typeof link === 'string') remember(link, out.view);
+            return { link, job: out.job, ...(isView(out.view) ? { view: out.view } : {}) };
           }
           if (!exploration) return noExploration();
-          return post(
+          const taken = await post(
             `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/jobs/take`,
             {},
           );
+          if (!isToolError(taken) && taken.job) remember(exploration, taken.view);
+          return taken;
         }
         case 'list_jobs': {
           if (!exploration) return noExploration();
@@ -321,7 +342,10 @@ export function siteDoor(opts: SiteOptions) {
    */
   function render(tool: AnyTool): AnyTool {
     const run = async (raw: unknown, ctx: ToolContext): Promise<Json> => {
-      const out = (await tool.run(raw as never, ctx)) as Json;
+      // a job's flowers go through the person's view, unless the call names one
+      const given = (raw ?? {}) as Json;
+      const view = given.view === undefined ? recalledView() : null;
+      const out = (await tool.run((view ? { ...given, view } : raw) as never, ctx)) as Json;
       if (isToolError(out)) return out;
       const { view_url: _v, short_url: _s, ...rest } = out;
       const exploration = recalled();

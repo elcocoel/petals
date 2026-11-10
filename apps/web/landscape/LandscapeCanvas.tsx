@@ -4,15 +4,16 @@
 // under the site's nav on the Power Map (app/(canvas)/map). Each
 // flower's drawing model is made here from its reading, once. The words are the data's: each chain's name
 // and how many flowers it has.
-import { type RefObject, useMemo, useRef, useState } from 'react';
+import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../components/ui/Button.tsx';
 import { Mono } from '../components/ui/Mono.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
+import type { CanvasHit } from '../lib/panel-view.ts';
 import type { Continent, Place } from './places.ts';
 import type { Road } from './roads.ts';
 import type { LandFlower } from './scene.ts';
 import { reachOf } from './space.ts';
-import { type LandscapeData, useLandscape } from './useLandscape.ts';
+import { type LandscapeAt, type LandscapeData, useLandscape } from './useLandscape.ts';
 
 export interface CanvasFlower {
   name: string;
@@ -35,14 +36,26 @@ function Land({
   probe,
   aside,
   fill,
+  focus,
+  selected,
+  onPick,
 }: {
   data: LandscapeData;
   probe: boolean;
   aside: RefObject<HTMLDivElement | null>;
   fill: 'window' | 'area';
+  focus: number;
+  selected: string | null;
+  onPick: ((hit: CanvasHit) => void) | undefined;
 }) {
   const svg = useRef<SVGSVGElement>(null);
-  useLandscape(svg, data, probe, aside);
+  const at = useRef<LandscapeAt | null>(null);
+  // Read by the scene when it's built and on each click, so a new pick or petal never builds it again.
+  at.current = { ...at.current, focus, ...(onPick ? { onPick } : {}) };
+  useLandscape(svg, data, probe, aside, at);
+  useEffect(() => {
+    at.current?.choose?.(selected);
+  }, [selected]);
   return (
     // surface.canvas
     <svg
@@ -59,6 +72,9 @@ export function LandscapeCanvas({
   probe = false,
   fill = 'window',
   title,
+  focus = -1,
+  selected = null,
+  onPick,
 }: {
   data: { flowers: CanvasFlower[]; roads: Road[]; chains: CanvasChain[] };
   probe?: boolean;
@@ -66,17 +82,24 @@ export function LandscapeCanvas({
   fill?: 'window' | 'area';
   /** the page's one title, over the chains */
   title?: string;
+  /** the flower it opens inside, by its place in data.flowers (coordinator/one-source.md, step 6) */
+  focus?: number;
+  /** that flower's chosen petal, by its id */
+  selected?: string | null;
+  /** what a click inside that flower landed on */
+  onPick?: (hit: CanvasHit) => void;
 }) {
   const aside = useRef<HTMLDivElement>(null);
+  const opened = data.flowers[focus]?.place.chain;
   const [chain, setChain] = useState(
-    data.chains.some((c) => c.chain === FIRST) ? FIRST : (data.chains[0]?.chain ?? ''),
+    opened ?? (data.chains.some((c) => c.chain === FIRST) ? FIRST : (data.chains[0]?.chain ?? '')),
   );
   const counts = useMemo(() => {
     const n = new Map<string, number>();
     for (const f of data.flowers) n.set(f.place.chain, (n.get(f.place.chain) ?? 0) + 1);
     return n;
   }, [data]);
-  const land = useMemo<LandscapeData | null>(() => {
+  const land = useMemo<(LandscapeData & { focus: number }) | null>(() => {
     const here = data.chains.find((c) => c.chain === chain);
     if (!here) return null;
     const at = new Map<number, number>();
@@ -93,12 +116,23 @@ export function LandscapeCanvas({
       return a === undefined || b === undefined ? [] : [{ ...r, a, b }];
     });
     const { x, y, r } = here.continent;
-    return { flowers, roads, home: { cx: x, cy: y, r } };
-  }, [data, chain]);
+    return { flowers, roads, home: { cx: x, cy: y, r }, focus: at.get(focus) ?? -1 };
+  }, [data, chain, focus]);
 
   return (
     <>
-      {land && <Land key={chain} data={land} probe={probe} aside={aside} fill={fill} />}
+      {land && (
+        <Land
+          key={chain}
+          data={land}
+          probe={probe}
+          aside={aside}
+          fill={fill}
+          focus={land.focus}
+          selected={selected}
+          onPick={onPick}
+        />
+      )}
       <div
         ref={aside}
         className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 flex w-tile-width flex-col gap-space-4`}
