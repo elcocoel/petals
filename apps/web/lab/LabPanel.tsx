@@ -6,28 +6,29 @@ import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { IconButton } from '../components/ui/IconButton.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
-import { type RailItem, SideRail } from '../components/ui/SideRail.tsx';
+import { type RailSection, SideRail } from '../components/ui/SideRail.tsx';
 import { agentWords } from '../lib/agents.ts';
 import { PANEL_STATES } from './panel-fixtures.ts';
 
-/** The panel's places, as WorkMenu gives them. */
-const ITEMS: RailItem[] = [
-  { key: 'new', icon: 'plus', label: 'New conversation', href: '#new' },
-  { key: 'lobby', icon: 'home', label: 'Lobby', href: '#lobby' },
+/** The bar's sections, as WorkMenu gives them. */
+const SECTIONS: RailSection[] = [
+  { key: 'conversations', icon: 'conversation', label: 'Conversations' },
+  { key: 'projects', icon: 'project', label: 'Projects' },
+  { key: 'agents', icon: 'agent', label: 'Your agents' },
+  { key: 'lobby', icon: 'home', label: 'Lobby' },
+  { key: 'profile', icon: 'profile', label: 'Profile', foot: true },
+  { key: 'settings', icon: 'settings', label: 'Settings', foot: true },
 ];
 
-/** The panel, open or folded, with a first afternoon in it (all of it: /lab/panel). */
+/** The panel, open on its conversations or folded to the bar (all of it: /lab/panel). */
 export function LabRail({ open: initial }: { open: boolean }) {
-  const [open, setOpen] = useState(initial);
+  const [open, setOpen] = useState<string | null>(initial ? 'conversations' : null);
   return (
     <SideRail
       label="Your work"
+      sections={SECTIONS}
       open={open}
-      foldLabel="Hide the panel"
-      unfoldLabel="Show the panel"
-      onFold={() => setOpen(false)}
-      onUnfold={() => setOpen(true)}
-      items={ITEMS}
+      onChoose={(key) => setOpen((now) => (now === key ? null : key))}
     >
       <section className="flex flex-col">
         <SectionHead size="panel" title="Conversations" />

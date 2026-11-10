@@ -8,14 +8,14 @@ import { WorkMenu } from '../../components/workspace/WorkMenu.tsx';
 import { usePanelState, WorkPanelContext } from '../../viewmodels/useWorkPanel.ts';
 
 export function WorkPanel({ children }: { children: ReactNode }) {
-  const { bus, menu, rows, here } = usePanelState();
+  const { bus, menu, rows, you, here } = usePanelState();
   return (
     <WorkPanelContext.Provider value={bus}>
       <div className="flex h-dvh">
         <div className="min-w-0 flex-1">{children}</div>
         {bus.shown && (
           <div className="order-first flex">
-            <WorkMenu conversations={rows} menu={menu} here={here} />
+            <WorkMenu conversations={rows} menu={menu} you={you} here={here} />
           </div>
         )}
       </div>

@@ -1,20 +1,15 @@
 // The lobby's ViewModel (specs/004-workspace, W3): who's here, what they hold in the credit contract
-// (useFunds), and the profile part (useProfile: the wallet they signed in with, and NEAR Social). The side
-// panel, with the person's conversations, is the layout's (viewmodels/useWorkPanel.ts). Reads happen when
-// the page opens. There is no timer.
+// (useFunds), and the profile part (useProfile: the wallet they signed in with, and NEAR Social). Read
+// once, in the layout the lobby shares with the workspace (viewmodels/useWorkPanel.ts), so the side panel
+// and the page show one state (LOBBY, 10 Nov). There is no timer.
 import { PROFILE_EDITING } from '../lib/lobby-view.ts';
-import { useFunds } from './useFunds.ts';
-import { useProfile } from './useProfile.ts';
-import { useProfileEditor } from './useProfileEditor.ts';
-import { useSession } from './useSession.ts';
+import { useWorkPanel } from './useWorkPanel.ts';
 
 export function useLobby() {
-  const session = useSession(true);
-  const funds = useFunds();
-  const profile = useProfile();
-  const editor = useProfileEditor(profile.account, profile.social, profile.reload);
+  const person = useWorkPanel().person;
+  if (!person) throw new Error('the lobby is drawn inside the layout it shares with the workspace');
+  const { profile, editor, funds } = person;
   return {
-    session,
     profile: {
       account: profile.account,
       social: profile.social,

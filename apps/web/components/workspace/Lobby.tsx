@@ -4,7 +4,6 @@
 // and one job (components/ui/Card.tsx). Checked against design/minimally-good.md.
 // Props only: app/(work)/lobby/LobbySurface.tsx wires useLobby to it. It lays out the small set's parts and adds
 // no look of its own. Words from lib/lobby-view.ts.
-import { doorWords } from '../../lib/door-words.ts';
 import type { LegendKey } from '../../lib/flower-view.ts';
 import {
   lobbyWords,
@@ -28,20 +27,12 @@ export interface LobbyMap {
   keys: LegendKey[];
 }
 
-/** Only a person reaches the lobby (app/(work)/lobby/page.tsx), so there's no way to connect here. */
-export interface LobbySession {
-  account: string | null;
-  disconnect: () => void;
-}
-
 export function Lobby({
-  session,
   profile,
   funds,
   editor,
   map,
 }: {
-  session: LobbySession;
   /** The wallet this session signed in with, and its public profile on NEAR Social. */
   profile: { account: string | null; social: SocialState; edit?: () => void; saved: boolean };
   /** The public profile's editor, while it's open: it takes the Public profile card's place. */
@@ -58,12 +49,7 @@ export function Lobby({
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
       <div className="flex min-w-0 flex-1 flex-col gap-space-32 overflow-y-auto px-page-inset py-column-gap">
-        <ProfileHead
-          account={profile.account}
-          social={profile.social}
-          disconnectLabel={doorWords.disconnect}
-          onDisconnect={session.disconnect}
-        />
+        <ProfileHead account={profile.account} social={profile.social} />
         <div className="grid grid-cols-1 items-start gap-block-gap lg:grid-cols-3">
           <div className={`min-w-0 ${editor ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
             {editor ? (

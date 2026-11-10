@@ -10,14 +10,21 @@ import {
   ArrowLeft,
   ArrowRight,
   CaretRight,
+  ChatCircle,
   Flower,
   FolderSimple,
+  GearSix,
   House,
+  IdentificationCard,
+  MapTrifold,
   Plug,
   Plus,
   SidebarSimple,
+  SignOut,
   SquaresFour,
   TerminalWindow,
+  UserCircle,
+  Wallet,
   X,
 } from '@phosphor-icons/react/dist/ssr';
 
@@ -38,6 +45,16 @@ const GLYPHS = {
   petals: Flower,
   /** A conversation with, or a line for, the person's own agent. */
   agent: TerminalWindow,
+  /** The side panel's sections (Elco, 10 Nov: "each of them is a set of tools"), and what they hold. */
+  conversation: ChatCircle,
+  profile: UserCircle,
+  settings: GearSix,
+  balance: Wallet,
+  map: MapTrifold,
+  /** The public profile a person declares on NEAR Social. */
+  card: IdentificationCard,
+  /** Signing out. */
+  leave: SignOut,
 } as const satisfies Record<string, Glyph>;
 
 export type IconName = keyof typeof GLYPHS;

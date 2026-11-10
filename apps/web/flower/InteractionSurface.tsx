@@ -11,7 +11,6 @@ import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
-import { WhoIsHere } from '../components/chat/WhoIsHere.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import type { Catalogue } from '../lib/composer-options.ts';
@@ -145,18 +144,7 @@ export function InteractionSurface({
       >
         <ModelOptions options={state.models} onPick={actions.pickModel} />
       </FloatBox>
-      {/* Proposal (8 Nov, fe-frontdoor): the account is its own thing, apart from the work, in a corner. */}
-      {state.session.account && (
-        <div className="fixed top-0 right-0">
-          <WhoIsHere
-            account={state.session.account.replace(
-              /\b([0-9a-f]{6})[0-9a-f]{54}([0-9a-f]{4})\b/g,
-              '$1…$2',
-            )}
-            onDisconnect={state.session.disconnect}
-          />
-        </div>
-      )}
+      {/* Who's signed in, and the way out, are the side panel's Profile section (PANEL, WORKSPACE, 10 Nov). */}
       <FloatBox
         label="Flower"
         title={panel.kind === 'flower' ? panel.title : undefined}

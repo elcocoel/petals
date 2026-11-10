@@ -6,11 +6,12 @@ import { Mono } from '../components/ui/Mono.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
 import { WorkMenu, type WorkMenuView } from '../components/workspace/WorkMenu.tsx';
 import type { ListedProject } from '../lib/conversation-list.ts';
+import type { SectionKey } from '../lib/panel-words.ts';
 import { PANEL_STATES, type PanelState } from './panel-fixtures.ts';
 
 export function PanelBench({ state }: { state: PanelState }) {
   const fixture = PANEL_STATES[state];
-  const [open, setOpen] = useState(fixture.open);
+  const [section, setSection] = useState<SectionKey | null>(fixture.section);
   const [projects, setProjects] = useState<ListedProject[]>(fixture.projects);
   const [opened, setOpened] = useState<string[]>(fixture.opened);
   const [copied, setCopied] = useState(false);
@@ -18,9 +19,8 @@ export function PanelBench({ state }: { state: PanelState }) {
   const [moving, setMoving] = useState<string | null>(null);
   const [placed, setPlaced] = useState<Record<string, string | null>>({});
   const menu: WorkMenuView = {
-    open,
-    fold: () => setOpen(false),
-    unfold: () => setOpen(true),
+    section,
+    choose: (key) => setSection((now) => (now === key ? null : key)),
     projects,
     opened,
     toggle: (key) =>
@@ -49,7 +49,11 @@ export function PanelBench({ state }: { state: PanelState }) {
   };
   return (
     <main data-workspace="" data-surface="ground" className="flex h-dvh bg-surface">
-      <WorkMenu conversations={fixture.rows} menu={menu} />
+      <WorkMenu
+        conversations={fixture.rows}
+        menu={menu}
+        you={{ ...fixture.you, leave: () => {} }}
+      />
       <div className="flex min-w-0 flex-1 flex-col gap-text-gap p-column-gap">
         <Mono tone="muted">The side panel, in the lab</Mono>
         <ul className="m-0 flex w-sidebar-width list-none flex-col p-0">

@@ -142,7 +142,7 @@ export const behaviours = [
   {
     name: 'box.fold',
     purpose:
-      'The side panel, docked to the window’s edge, folds to its icons, and the same control in the same spot brings it back',
+      'The side panel folds to its bar of sections, and a section’s icon opens it again, in place',
     via: 'view',
   },
   // row
