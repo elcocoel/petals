@@ -152,6 +152,7 @@ export const PANEL_STATES = {
   },
   forty: { name: 'Forty, in six projects', ...forty, section: 'projects', you: ELCO_LIKE },
   profile: { name: 'Profile', ...forty, section: 'profile', you: ELCO_LIKE },
+  settings: { name: 'Settings', ...forty, section: 'settings', you: ELCO_LIKE },
   folded: { name: 'Folded to the bar', ...forty, section: null, you: ELCO_LIKE },
 } satisfies Record<string, PanelFixture>;
 

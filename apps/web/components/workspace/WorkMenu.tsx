@@ -10,10 +10,12 @@
 // - Lobby: the lobby, the balance and the map, each opening its card on /lobby. Withdraw stays on the card.
 // - Profile: who's signed in, their public profile's state (it opens the card, where it's edited), and
 //   Disconnect, the one place to sign out.
-// - Settings: a shell until the display settings have their one source (LOOK and SYSTEMS).
+// - Settings: the person's view, how each of the nine dimensions draws data for every petal they look at
+//   (ViewControls; coordinator/one-source.md, step 7), saved at once and drawn everywhere without a reload.
 // It keeps its room in the page's flow, open or folded, so a page that lays out beside it isn't covered.
 // Props only: its state comes from viewmodels/useWorkMenu.ts and useWorkPanel.ts. Every word from
 // lib/panel-words.ts.
+import { DIMENSIONS } from '@petal/core/view';
 import type { ReactNode } from 'react';
 import type { AgentRow } from '../../lib/agents.ts';
 import {
@@ -30,6 +32,7 @@ import { NavItem } from '../ui/NavItem.tsx';
 import { RowField } from '../ui/RowField.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 import { type RailSection, SideRail } from '../ui/SideRail.tsx';
+import { ViewControls } from './ViewControls.tsx';
 
 /** The bar, top to bottom. */
 const SECTIONS: (RailSection & { key: SectionKey })[] = [
@@ -83,6 +86,9 @@ export interface PanelYou {
   leave: () => void;
 }
 
+/** The person's view, as the Settings section sets it: what ViewControls takes, but the dimensions. */
+export type SettingsView = Omit<Parameters<typeof ViewControls>[0], 'dimensions'>;
+
 /** A group of the panel: its head, then its rows, the last of which is its one action, if it has one. */
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -99,12 +105,14 @@ export function WorkMenu({
   conversations,
   menu,
   you,
+  settings,
   here,
   restartNew,
 }: {
   conversations: ConversationRow[];
   menu: WorkMenuView;
   you: PanelYou;
+  settings: SettingsView;
   /** New, pressed where a new conversation already is: the address won't move, so this opens it again. */
   restartNew?: (() => void) | undefined;
   /** The page it's on, when that page is one of its places. */
@@ -259,7 +267,7 @@ export function WorkMenu({
     ),
     settings: (
       <Group title={panelWords.sections.settings}>
-        <NavItem label={panelWords.settingsSoon} muted />
+        <ViewControls dimensions={DIMENSIONS} {...settings} />
       </Group>
     ),
   };

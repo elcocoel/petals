@@ -8,7 +8,7 @@ import { WorkMenu } from '../../components/workspace/WorkMenu.tsx';
 import { usePanelState, WorkPanelContext } from '../../viewmodels/useWorkPanel.ts';
 
 export function WorkPanel({ children }: { children: ReactNode }) {
-  const { bus, menu, rows, you, here, atNew, restart } = usePanelState();
+  const { bus, menu, rows, you, settings, here, atNew, restart } = usePanelState();
   return (
     <WorkPanelContext.Provider value={bus}>
       <div className="flex h-dvh">
@@ -19,6 +19,7 @@ export function WorkPanel({ children }: { children: ReactNode }) {
               conversations={rows}
               menu={menu}
               you={you}
+              settings={settings}
               here={here}
               restartNew={atNew ? restart : undefined}
             />

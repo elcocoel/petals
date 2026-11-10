@@ -28,6 +28,8 @@ type Where =
       onClick: MouseEventHandler<HTMLButtonElement>;
       /** It opens or folds the rows under it, and this says which it is now. */
       expanded?: boolean;
+      /** A choice, and this one is chosen. */
+      chosen?: boolean;
     }
   | {
       /** A line that says what's there, which goes nowhere. It may hold one control at its end. */
@@ -118,6 +120,8 @@ export function NavItem({
         type="button"
         title={hover}
         aria-expanded={expanded}
+        aria-pressed={'chosen' in where ? where.chosen : undefined}
+        data-current={'chosen' in where && where.chosen ? '' : undefined}
         onClick={where.onClick}
         data-b="item"
         className={`${look} ${ANSWERS}`}
