@@ -1,28 +1,46 @@
-// The lobby's profile part (Elco, 9 and 10 Nov): the wallet this session signed in with, and that mainnet
-// account's public profile on NEAR Social, read when the lobby opens and again after the person publishes
-// a change: a profile, none there, or no answer, each of which the page says. There is no timer.
-// lib/agent-client.ts reads, lib/near-social.ts shapes, and lib/lobby-view.ts holds the words and states.
+// The person's profile (Elco, 9 and 10 Nov: "hold the same data shape as near.social in our DB ... and have
+// a publish button"): the wallet this session signed in with, and the profile the page shows: Petals' own
+// copy (GET /api/v1/me/profile), or, before Petals keeps one, the account's NEAR Social profile, which the
+// editor then starts from; or none anywhere; or that it couldn't be read. Read when the page opens and
+// again after the person saves. There is no timer. lib/agent-client.ts reads, lib/near-social.ts shapes,
+// and lib/lobby-view.ts holds the words and the states.
 import { useCallback, useEffect, useState } from 'react';
-import { readSignedIn, readSocialProfile } from '../lib/agent-client.ts';
+import { readMyProfile, readSignedIn, readSocialProfile } from '../lib/agent-client.ts';
 import type { SocialState } from '../lib/lobby-view.ts';
+import { fromPetals, type PetalsProfile } from '../lib/near-social.ts';
 
 export function useProfile(): {
   account: string | null;
   social: SocialState;
-  /** Reads the public profile again, as NEAR Social has it now. */
+  /** Petals' own copy as it's kept, picture and all; null before it keeps one. */
+  kept: PetalsProfile | null;
+  /** Reads the profile again, as Petals has it now. */
   reload: () => Promise<void>;
 } {
   const [account, setAccount] = useState<string | null>(null);
-  const [mainnet, setMainnet] = useState(false);
+  const [network, setNetwork] = useState<string | null>(null);
   const [social, setSocial] = useState<SocialState>({ kind: 'reading' });
+  const [kept, setKept] = useState<PetalsProfile | null>(null);
 
-  const read = useCallback(async (who: string) => {
+  const read = useCallback(async (who: string, on: string) => {
+    let mine: PetalsProfile | null;
     try {
-      const profile = await readSocialProfile(who);
-      setSocial(profile ? { kind: 'profile', profile } : { kind: 'none' });
+      mine = await readMyProfile();
     } catch {
       setSocial({ kind: 'unread' });
+      return;
     }
+    setKept(mine);
+    const shown = fromPetals(mine);
+    if (shown) {
+      setSocial({ kind: 'profile', profile: shown, source: 'petals' });
+      return;
+    }
+    // Nothing kept yet: the account's NEAR Social profile, on mainnet, is where the editor starts.
+    const public_ = on === 'mainnet' ? await readSocialProfile(who).catch(() => null) : null;
+    setSocial(
+      public_ ? { kind: 'profile', profile: public_, source: 'near-social' } : { kind: 'none' },
+    );
   }, []);
 
   useEffect(() => {
@@ -31,10 +49,8 @@ export function useProfile(): {
       const me = await readSignedIn().catch(() => null);
       if (gone || !me) return;
       setAccount(me.account);
-      // NEAR Social lives on mainnet; a testnet session only reaches a lane, and shows the address alone
-      if (me.network !== 'mainnet') return;
-      setMainnet(true);
-      if (!gone) await read(me.account);
+      setNetwork(me.network);
+      await read(me.account, me.network);
     })();
     return () => {
       gone = true;
@@ -42,8 +58,8 @@ export function useProfile(): {
   }, [read]);
 
   const reload = useCallback(async () => {
-    if (account && mainnet) await read(account);
-  }, [account, mainnet, read]);
+    if (account && network) await read(account, network);
+  }, [account, network, read]);
 
-  return { account, social, reload };
+  return { account, social, kept, reload };
 }

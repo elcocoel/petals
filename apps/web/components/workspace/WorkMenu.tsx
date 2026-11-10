@@ -238,7 +238,9 @@ export function WorkMenu({
           trail={
             panelWords.socialState[
               you.social.kind === 'profile'
-                ? 'profile'
+                ? you.social.source === 'petals'
+                  ? 'petals'
+                  : 'profile'
                 : you.social.kind === 'none'
                   ? 'none'
                   : you.social.kind

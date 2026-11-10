@@ -18,7 +18,12 @@ import type { Settings } from './composer-options.ts';
 import type { ListedConversation, ListedProject } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
 import type { Job } from './jobs.ts';
-import { NEAR_SOCIAL_API, type SocialProfile, socialProfile } from './near-social.ts';
+import {
+  NEAR_SOCIAL_API,
+  type PetalsProfile,
+  type SocialProfile,
+  socialProfile,
+} from './near-social.ts';
 import type { Credit, PayInfo } from './pay.ts';
 import type { PersonView } from './person-view.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
@@ -385,6 +390,28 @@ export async function readSocialProfile(account: string): Promise<SocialProfile 
   const res = await fetch(`${NEAR_SOCIAL_API}/v1/accounts/${encodeURIComponent(account)}`);
   if (!res.ok) throw new Error(`NEAR Social answered ${res.status}`);
   return socialProfile(await res.json());
+}
+
+/** The person's profile as Petals keeps it (GET /api/v1/me/profile); null when Petals has none yet. */
+export async function readMyProfile(): Promise<PetalsProfile | null> {
+  const res = await fetch('/api/v1/me/profile');
+  if (!res.ok) throw new Error(`Petals answered ${res.status}`);
+  return ((await res.json()) as { profile?: PetalsProfile | null }).profile ?? null;
+}
+
+/** Keeps the whole profile in Petals (PUT /api/v1/me/profile); throws with the server's reason. */
+export async function saveMyProfile(profile: PetalsProfile): Promise<PetalsProfile | null> {
+  const res = await fetch('/api/v1/me/profile', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(profile),
+  });
+  const json = (await res.json().catch(() => null)) as {
+    profile?: PetalsProfile | null;
+    error?: { message?: string };
+  } | null;
+  if (!res.ok) throw new Error(json?.error?.message ?? `Petals answered ${res.status}`);
+  return json?.profile ?? null;
 }
 
 /** What NEAR Social's indexer did with one transaction (GET /v1/tx/{hash}); null when it can't say. */

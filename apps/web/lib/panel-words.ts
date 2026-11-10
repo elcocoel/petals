@@ -25,8 +25,15 @@ export const panelWords = {
   near: (amount: string) => `${amount} NEAR`,
   onTheMap: 'On the map',
   /** The Profile section: the public profile's state, a few characters at its row's end. */
-  publicProfile: 'Public profile',
-  socialState: { profile: 'NEAR Social', none: 'None', reading: '…', unread: 'No answer' },
+  /** The lobby's Profile card, by its own title (LOBBY, 10 Nov: the profile is kept in Petals first). */
+  publicProfile: 'Profile',
+  socialState: {
+    petals: 'In Petals',
+    profile: 'NEAR Social',
+    none: 'None',
+    reading: '…',
+    unread: 'No answer',
+  },
   signOut: 'Disconnect',
   /** Settings, until LOOK and SYSTEMS's one-source page fills it. A draft. */
   settingsSoon: 'Your display settings show here',

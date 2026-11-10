@@ -113,3 +113,75 @@ describe('txOutcome', () => {
       }),
     ).toEqual({ kind: 'refused', why: ['profile/avatar: not a fastfs uri'] }));
 });
+
+import { fromPetals, keptAvatar, toPetals } from '../lib/near-social.ts';
+
+describe('Petals’ own copy', () => {
+  test('what the editor saves: the whole profile, links as NEAR Social keys them', () => {
+    expect(
+      toPetals(
+        {
+          name: ' Mara ',
+          about: '',
+          links: [
+            { service: 'GitHub', value: 'mara' },
+            { service: '', value: 'x' },
+          ],
+        },
+        'data:image/webp;base64,AAA=',
+      ),
+    ).toEqual({
+      name: 'Mara',
+      about: null,
+      avatar: 'data:image/webp;base64,AAA=',
+      banner: null,
+      location: null,
+      links: { github: 'mara' },
+    });
+  });
+
+  test('shown as a profile, its picture as a browser can draw it', () => {
+    expect(
+      fromPetals({
+        name: 'Mara',
+        about: null,
+        avatar: 'fastfs://mara.near/social/media/ab.webp',
+        links: {},
+      }),
+    ).toEqual({
+      name: 'Mara',
+      about: null,
+      avatar: 'https://main.fastfs.io/mara.near/social/media/ab.webp',
+      links: [],
+    });
+  });
+
+  test('a picture is kept as Petals keeps it: new, its own, or NEAR Social’s as fastfs://', () => {
+    expect(keptAvatar('https://main.fastfs.io/mara.near/social/media/ab.webp')).toBe(
+      'fastfs://mara.near/social/media/ab.webp',
+    );
+    expect(keptAvatar('https://petal-flowers.vercel.app/api/v1/media/ab.webp')).toBe(
+      'https://petal-flowers.vercel.app/api/v1/media/ab.webp',
+    );
+    expect(keptAvatar('https://elsewhere.example/a.png')).toBeNull();
+  });
+
+  test('the banner and location the editor doesn’t show stay as they were', () => {
+    const p = toPetals({ name: 'M', about: '', links: [] }, null, {
+      banner: 'fastfs://m/social/b.webp',
+      location: 'Lisbon',
+    });
+    expect([p.banner, p.location]).toEqual(['fastfs://m/social/b.webp', 'Lisbon']);
+  });
+
+  test('a service keeps letters, digits and _ only', () => {
+    expect(
+      toPetals({ name: '', about: '', links: [{ service: 'Tele-gram', value: 'm' }] }, null).links,
+    ).toEqual({ telegram: 'm' });
+  });
+
+  test('an empty copy is none', () => {
+    expect(fromPetals({ name: null, about: null, avatar: null, links: {} })).toBeNull();
+    expect(fromPetals(null)).toBeNull();
+  });
+});

@@ -135,12 +135,13 @@ export const draftOf = (p: SocialProfile | null): ProfileDraft => ({
 /** The standard's limits (standard.md, profile keys). */
 export const PROFILE_LIMITS = { name: 256, about: 10_000, link: 2048 } as const;
 
-/** A service as a key segment: lower case, letters, digits, - and _ (keys are ASCII). */
+/** A service as a key segment, as the standard has it: lower case letters, digits and _, at most 32. */
 export const serviceKey = (s: string) =>
   s
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, '');
+    .replace(/[^a-z0-9_]+/g, '')
+    .slice(0, 32);
 
 /**
  * The `__fastdata_kv` args that make the public profile what the draft says: each field as typed, empty
@@ -198,3 +199,94 @@ export function txOutcome(json: unknown): TxOutcome {
   }
   return why.length > 0 ? { kind: 'refused', why } : { kind: 'ok' };
 }
+
+// ---- Petals' own copy (Elco, 10 Nov: "hold the same data shape as near.social in our DB in case the user
+// doesn't want to put it on chain and have a publish button"). GET and PUT /api/v1/me/profile (SYSTEMS),
+// NEAR Social's profile keys: the picture is held as a data: URI until it's published.
+
+/**
+ * A profile as Petals keeps it (GET and PUT /api/v1/me/profile; SYSTEMS, 10 Nov, the standard's own fields,
+ * so publishing is a straight copy). A picture goes in as a data: URI; the server keeps the file and puts
+ * its own address there (https://<site>/api/v1/media/<sha256>.webp), or keeps a fastfs:// one as it is.
+ */
+export interface PetalsProfile {
+  name?: string | null;
+  about?: string | null;
+  avatar?: string | null;
+  banner?: string | null;
+  location?: string | null;
+  links?: Record<string, string>;
+}
+
+/** NEAR Social's limit on links (standard.md). */
+export const MAX_LINKS = 32;
+
+/** A fastfs:// address as the https one a browser can show. */
+const shownAvatar = (a: string | null | undefined): string | null => {
+  if (!a) return null;
+  const m = /^fastfs:\/\/([^/]+)\/([^/]+)\/(.+)$/.exec(a);
+  if (m) return `https://main.fastfs.io/${m[1]}/${m[2]}/${m[3]}`;
+  return a.startsWith('data:image/') || a.startsWith('https://') ? a : null;
+};
+
+/** Petals' copy as the lobby shows a profile; null when it has nothing in it. */
+export function fromPetals(p: PetalsProfile | null): SocialProfile | null {
+  if (!p) return null;
+  const profile: SocialProfile = {
+    name: text(p.name),
+    about: text(p.about),
+    avatar: shownAvatar(p.avatar),
+    links: Object.entries(p.links ?? {}).flatMap(([service, v]) => {
+      const value = text(v);
+      return value ? [{ service, value }] : [];
+    }),
+  };
+  const empty = !profile.name && !profile.about && !profile.avatar && profile.links.length === 0;
+  return empty ? null : profile;
+}
+
+/**
+ * A picture's address as Petals keeps it: a new one's data: URI, Petals' own media address, or a NEAR Social
+ * picture back as its fastfs:// address; anything else isn't kept.
+ */
+export function keptAvatar(src: string | null): string | null {
+  if (!src) return null;
+  const m = /^https:\/\/main\.fastfs\.io\/([^/]+)\/([^/]+)\/(.+)$/.exec(src);
+  if (m) return `fastfs://${m[1]}/${m[2]}/${m[3]}`;
+  if (
+    src.startsWith('data:image/') ||
+    src.startsWith('fastfs://') ||
+    /\/api\/v1\/media\//.test(src)
+  )
+    return src;
+  return null;
+}
+
+/**
+ * What the editor saves into Petals: the whole profile, as typed, with the picture it has, and what the
+ * editor doesn't show (the banner, the location) kept as it was.
+ */
+export function toPetals(
+  draft: ProfileDraft,
+  avatar: string | null,
+  before: PetalsProfile | null = null,
+): PetalsProfile {
+  const links: Record<string, string> = {};
+  for (const l of draft.links) {
+    const service = serviceKey(l.service);
+    const value = l.value.trim().slice(0, PROFILE_LIMITS.link);
+    if (service && value && Object.keys(links).length < MAX_LINKS) links[service] = value;
+  }
+  return {
+    name: draft.name.trim().slice(0, PROFILE_LIMITS.name) || null,
+    about: draft.about.trim().slice(0, PROFILE_LIMITS.about) || null,
+    avatar,
+    banner: before?.banner ?? null,
+    location: before?.location ?? null,
+    links,
+  };
+}
+
+/** Picture bytes as a data: URI, the way Petals keeps one until it's published. */
+export const dataUri = (mime: string, bytes: Uint8Array) =>
+  `data:${mime};base64,${base64Of(bytes)}`;

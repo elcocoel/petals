@@ -1,7 +1,8 @@
-// The Public profile card (Elco, 9 and 10 Nov; the redo's frame, "Build it"): the account's profile on
-// NEAR Social, its bio and the links it declares, each with a badge that says only that; or, with none
-// there, what goes there and the one thing to do; or that it's still being read, or that NEAR Social
-// didn't answer. NEAR Social's words are the account's own, shown as plain text; the links are never
+// The Profile card (Elco, 9 and 10 Nov; the redo's frame, "Build it"; the profile kept in Petals): the
+// profile Petals keeps, or the account's NEAR Social profile before it keeps one, with its bio and the
+// links it declares, each with a badge that says only that, and a line saying where it is and who sees
+// it; or, with none anywhere, what goes there and the one thing to do; or that it's still being read, or
+// that it couldn't be read. NEAR Social's words are the account's own, shown as plain text; the links are never
 // followed, checked or trusted. Edit and Create show only when there's something to open them.
 // Props only: viewmodels/useProfile.ts reads it. Words from lib/lobby-view.ts, drafts.
 import { editorWords, profileWords, type SocialState } from '../../lib/lobby-view.ts';
@@ -52,25 +53,27 @@ export function Profile({
           ))}
         </ul>
       )}
-      {profile && <p className="my-0 type-caption text-muted">{profileWords.note}</p>}
+      {social.kind === 'profile' && (
+        <p className="my-0 type-caption text-muted">
+          {social.source === 'petals' ? profileWords.notePetals : profileWords.noteSocial}
+        </p>
+      )}
       {saved && (
         <p className="my-0 flex flex-wrap items-center gap-space-8">
           <Badge tone="accent">{editorWords.saved}</Badge>
           <span className="type-caption">{editorWords.savedLine}</span>
         </p>
       )}
-      {social.kind === 'none' && !onEdit && (
-        <p className="my-0 type-body">{profileWords.noneYet}</p>
-      )}
-      {social.kind === 'none' && onEdit && (
+      {social.kind === 'none' && (
         <>
           <p className="my-0 type-body">{profileWords.none}</p>
-          <div>
-            <Button variant="primary" onClick={onEdit}>
-              {profileWords.create}
-            </Button>
-          </div>
-          <p className="my-0 type-caption text-muted">{profileWords.noneNote}</p>
+          {onEdit && (
+            <div>
+              <Button variant="primary" onClick={onEdit}>
+                {profileWords.create}
+              </Button>
+            </div>
+          )}
         </>
       )}
       {social.kind === 'reading' && (
