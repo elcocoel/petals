@@ -1,7 +1,8 @@
 // Names the night's views on the map and says who made them (Elco, 10 Nov: the project's own mapping is
 // "by Petals' own mapping (mapping.petals.near)"). The names and hashes are the run's own, from the bench's
 // copy of its index (fixtures/landscape/night-2026-11-09.json.gz: the 203 views INDEX.md links). Only
-// views this server holds change; running it again changes nothing.
+// views this server holds change; running it again changes nothing. The run's own notes in a name, such as
+// "(token-only map)", are left out: a name is what people read on the map (Elco, 10 Nov).
 //   node scripts/label-map-views.ts --by mapping.petals.near [--from <copy.json.gz>]
 // It writes to the server's own private store, so for a container run it from inside (mint-invite.ts says
 // why): container exec petals node /app/scripts/label-map-views.ts --by mapping.petals.near
@@ -14,6 +15,10 @@ import { openPrivateStore } from '@petal/agent';
 const USAGE = 'usage: node scripts/label-map-views.ts --by <near account> [--from <copy.json.gz>]';
 const REPO = resolve(import.meta.dirname, '..');
 const COPY = 'fixtures/landscape/night-2026-11-09.json.gz';
+/** The notes the night's run wrote into names, which aren't part of them. */
+const NOTES = ['factory-discovered; self-declared', 'token-only map', 'not governance token'];
+export const nameOf = (raw: string) =>
+  NOTES.reduce((n, note) => n.replace(` (${note})`, ''), raw).trim();
 const ACCOUNT = /^(?=.{2,64}$)[a-z0-9]+([-_][a-z0-9]+)*(\.[a-z0-9]+([-_][a-z0-9]+)*)*$/;
 
 export async function run(args: string[], env: NodeJS.ProcessEnv = process.env): Promise<string> {
@@ -39,7 +44,7 @@ export async function run(args: string[], env: NodeJS.ProcessEnv = process.env):
   const missing: string[] = [];
   try {
     for (const v of views) {
-      if (await store.draft.label(v.sha, { name: v.name, made_by: by })) named++;
+      if (await store.draft.label(v.sha, { name: nameOf(v.name), made_by: by })) named++;
       else missing.push(v.sha);
     }
   } finally {

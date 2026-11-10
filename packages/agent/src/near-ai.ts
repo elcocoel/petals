@@ -466,7 +466,7 @@ export function createNearAiClient(
     async complete(req, { signal, model: picked, effort }: LlmCallOptions = {}) {
       if (!key()) {
         throw new LlmCallError('source_failed', `${cfg.apiKeyEnv} is not set`, {
-          hint: 'Without a key, Petal replays a recorded run (recordedClient).',
+          hint: 'Without a key, Petals replays a recorded run (recordedClient).',
         });
       }
       const head = picked ?? cfg.model;

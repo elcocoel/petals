@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { openStore } from '@petal/store';
 import { describe, expect, test } from 'vitest';
-import { run } from '../label-map-views.ts';
+import { nameOf, run } from '../label-map-views.ts';
 
 describe('label-map-views', () => {
   test('names the views this server holds, says who made them, and says how many it lacks', async () => {
@@ -41,6 +41,13 @@ describe('label-map-views', () => {
     await again.close();
     expect(await run(['--by', 'mapping.petals.near', '--from', copy], env)).toMatch(/named 1 of 2/);
     await expect(run(['--by', 'Not An Account'], env)).rejects.toThrow(/usage/);
+  });
+
+  test("a name leaves out the run's own notes, and keeps what's really in it", () => {
+    expect(nameOf('Cosmo Tokens (factory-discovered; self-declared)')).toBe('Cosmo Tokens');
+    expect(nameOf('Zebec Network / ZBCN (token-only map)')).toBe('Zebec Network / ZBCN');
+    expect(nameOf('Moloch v3 (Baal)')).toBe('Moloch v3 (Baal)');
+    expect(nameOf('RaidGuild v3')).toBe('RaidGuild v3');
   });
 
   test('the copy in the repo holds the 203 views the run saved', async () => {

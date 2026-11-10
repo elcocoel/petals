@@ -722,7 +722,7 @@ export const ERC20_HOLDERS_DESCRIPTOR: NetworkDescriptor = {
   chain: ETHEREUM.caip2,
   population: 'erc20-holders',
   kind: 'other',
-  title: 'ERC-20 holders, any token',
+  title: 'ERC-20 token holders',
   description: `Holders of any ERC-20 token on ${EVM_CHAIN_WORDS}, chosen by chain and token address, read now. Where Blockscout answers: the largest holders. Where a chain serves wide logs: every holder, if the token's history is short enough to read in one query. Otherwise only the addresses that moved the token in the last window_days, default 7, and the result says so.`,
   params: {
     chain: {
@@ -825,7 +825,7 @@ export function erc20Holders(
           ? `its history is too long to read whole in a chat (over ${grouped(WHOLE_HISTORY_LOGS)} Transfer logs, or more than one query holds)`
           : `its whole history could not be read (${e.message})`;
         if (asked)
-          throw new InputError('cannot_read', `Petal can't read this token whole: ${why}`, {
+          throw new InputError('cannot_read', `Petals can't read this token whole: ${why}`, {
             hint: 'leave out window_days for a window of recent logs, or read it offline with pull-module.ts --full',
           });
         onProgress?.({ stage: 'fetching', message: `reading a window, because ${why}` });

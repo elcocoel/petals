@@ -286,7 +286,7 @@ export function validateSpec(
         err(
           '/interpretation/unknowns',
           'interpretation',
-          'say at least one thing Petal cannot know',
+          'say at least one thing Petals cannot know',
         );
     }
   }

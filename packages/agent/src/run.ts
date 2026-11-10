@@ -598,7 +598,7 @@ async function loop(
               ...messages,
               {
                 role: 'user' as const,
-                content: `(Petal: the ${budget.toolRounds} tool rounds are used. Answer now with what the tools gave you.)`,
+                content: `(Petals: the ${budget.toolRounds} tool rounds are used. Answer now with what the tools gave you.)`,
               },
             ],
           }

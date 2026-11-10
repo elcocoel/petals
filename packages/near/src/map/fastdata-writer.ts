@@ -93,7 +93,7 @@ export async function loadWriterKey(
 /** The key may only call __fastdata_kv on the receiver: never a full-access key. */
 export function checkWriterPermission(permission: unknown, receiver: string): string | null {
   if (permission === 'FullAccess')
-    return 'is a full-access key; Petal holds only a function-call key';
+    return 'is a full-access key; Petals holds only a function-call key';
   const fc = (permission as { FunctionCall?: { receiver_id?: unknown; method_names?: unknown } })
     ?.FunctionCall;
   if (!fc) return 'has an unknown permission';

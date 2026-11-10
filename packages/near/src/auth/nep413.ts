@@ -188,7 +188,7 @@ export async function verifyNep413(
     typeof p.nonce !== 'string'
   )
     return fail('not a NEP-413 proof');
-  if (p.message !== expect.message) return fail('the signed message is not the one Petal issued');
+  if (p.message !== expect.message) return fail('the signed message is not the one Petals issued');
   if (p.recipient !== expect.recipient) return fail(`the recipient must be ${expect.recipient}`);
 
   let nonce: Uint8Array;

@@ -48,6 +48,8 @@ describe('the map', () => {
       sha,
       name: 'Founders Guild v1',
       network: 'moloch-v1',
+      // what was read and where, in people's words, never the reader's id
+      about: 'Moloch v1 members on Ethereum',
       chain: 'ethereum',
       address: DAO,
       snapshot: MOLOCH,
