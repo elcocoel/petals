@@ -61,7 +61,7 @@ export function agentRows(agents: readonly ConnectedAgent[]): AgentRow[] {
 export const agentWords = {
   heading: 'Your agents',
   /** Rule 2: what goes here, and the one thing to do. */
-  none: 'None connected yet. Copy this into an agent to connect it.',
+  none: 'None connected yet.',
   waiting: 'Waiting for a job',
   away: 'Not connected now',
   on: (title: string) => `On: ${title}`,
