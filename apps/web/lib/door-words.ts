@@ -4,7 +4,6 @@
 export const doorWords = {
   connect: 'Connect wallet',
   disconnect: 'Disconnect',
-  ownAgent: 'Use your own agent',
   badSignature: "That signature didn't work. Connect your wallet again.",
   nearDidntAnswer: "NEAR didn't answer. Try again.",
   // Proposed 8 Nov for a site that runs no agent for visitors (design/journey-strings.md, "The front door").
