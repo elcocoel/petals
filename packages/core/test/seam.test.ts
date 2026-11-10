@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
 import {
+  aboutKey,
   aboutOf,
   canonicalJson,
   checkLayer,
@@ -92,5 +93,17 @@ describe('seam/v1', () => {
       network: { ...base.network, chain: 'eip155:100', params: { dao: '0xabc' } },
     };
     expect(aboutOf(dao as Snapshot)).toBe('eip155:100:0xabc');
+  });
+});
+
+describe('one map per address', () => {
+  test('an EVM address is one address in any case; other chains keep theirs as written', () => {
+    expect(aboutKey('eip155:100:0x372FC5A6b0B12aE174f09F6fC849A83DE6B503b6')).toBe(
+      'eip155:100:0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6',
+    );
+    const mint =
+      'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:ZBCNpuD7YMXzTHB2fhGkGi78MNsHGLRXUhRewNRm9RU';
+    expect(aboutKey(mint)).toBe(mint);
+    expect(aboutKey('near:mainnet:validators')).toBe('near:mainnet:validators');
   });
 });

@@ -67,9 +67,18 @@ export function aboutOf(s: Snapshot): string {
   return `${s.network.chain}:${address ?? s.network.population}`;
 }
 
-/** Two addresses the same: an EVM address in any case is one address. */
-export const sameAbout = (a: string, b: string) =>
-  a === b || (/:0x[0-9a-fA-F]{40}$/.test(a) && a.toLowerCase() === b.toLowerCase());
+/** An address in one form: an EVM address in any case is one address, so it's written in lower case. */
+export const aboutKey = (about: string) =>
+  /:0x[0-9a-fA-F]{40}$/.test(about) ? about.toLowerCase() : about;
+
+/** Two addresses the same. */
+export const sameAbout = (a: string, b: string) => a === b || aboutKey(a) === aboutKey(b);
+
+/**
+ * The map a reading belongs to (Elco, 10 Nov: "maps that map the same address need to come together as
+ * versions of the same map"): its address, in one form. Every drawing of every reading of it is on that map.
+ */
+export const mapOf = (s: Snapshot): string => aboutKey(aboutOf(s));
 
 /** A share of a total, as decimal text with nine places at most. */
 function shareOf(part: number, total: number): string {

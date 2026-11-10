@@ -4,7 +4,14 @@
 // HTTP statuses, reads query strings, and streams progress as SSE when asked.
 import { promisify } from 'node:util';
 import { gunzip as gunzipCb, gzip as gzipCb } from 'node:zlib';
-import { API_VERSION, canonicalJson, DEFAULT_VIEW, sha256Hex, TOOLS_VERSION } from '@petal/core';
+import {
+  API_VERSION,
+  aboutKey,
+  canonicalJson,
+  DEFAULT_VIEW,
+  sha256Hex,
+  TOOLS_VERSION,
+} from '@petal/core';
 import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
@@ -13,7 +20,7 @@ import { specBody } from '../drafts.ts';
 import { fromThrown, isToolError, toolError } from '../errors.ts';
 import { freshGate } from '../fresh.ts';
 import { LiveHub } from '../live.ts';
-import { mapViews } from '../map.ts';
+import { mapsOf, mapViews } from '../map.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
 import { findTool } from '../registry.ts';
 import { brainOf } from '../tools/brain.ts';
@@ -301,6 +308,18 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   app.get('/api/v1/map/views', limit, async (c) =>
     respond(c, { views: (await mapViews(ctx)).map(({ reading: _r, ...row }) => row) }),
   );
+  // One card per map (Elco, 10 Nov: "maps that map the same address need to come together as versions of
+  // the same map"): each address, its readings (the sediments) newest first, and each reading's drawings.
+  app.get('/api/v1/maps', limit, async (c) => respond(c, { maps: mapsOf(await mapViews(ctx)) }));
+  // One map's card, by its id (URL-encoded, since it holds colons), for its page.
+  app.get('/api/v1/maps/:id', limit, async (c) => {
+    const id = aboutKey(c.req.param('id'));
+    const map = mapsOf(await mapViews(ctx)).find((m) => m.id === id);
+    return respond(
+      c,
+      map ? { map } : versioned(toolError('not_found', 'No map under that address.')),
+    );
+  });
   // A view's still picture, as a flower's tile is drawn: with the default view. No per-address limit: a
   // gallery asks for every view's picture at once, and behind the site every visitor reaches this server
   // from the site's own address. Each picture is kept for a year wherever it's cached.

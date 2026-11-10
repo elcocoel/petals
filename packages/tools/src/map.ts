@@ -2,7 +2,7 @@
 // every view stored on this site, each with its reading, its name, its date and who made it. Read-only and
 // public: GET /api/v1/map hands it over whole, list_flowers and find_target search it before a fresh read.
 // A view's spec is content-addressed, so its reading never changes: each is read once per process.
-import { DEFAULT_VIEW, legendItem, pictureQuery, readFlower } from '@petal/core';
+import { DEFAULT_VIEW, legendItem, mapOf, pictureQuery, readFlower } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
@@ -24,6 +24,8 @@ const ADDRESS_PARAMS = ['dao', 'token', 'mint', 'contract', 'address', 'account'
 export interface MapView {
   /** the view's hash, as in its /d/ link */
   sha: string;
+  /** the map it's on: its reading's address, in one form (core's mapOf) */
+  map: string;
   /** what it's called on the map, when someone named it */
   name: string | null;
   /** its reading's own title */
@@ -78,6 +80,7 @@ async function readOf(ctx: ToolContext, body: string): Promise<Read | null> {
     const reader = ctx.modules[spec.network.id]?.descriptor.title ?? spec.network.id;
     const where = chainWords(spec.network.chain);
     return {
+      map: mapOf(snapshot),
       title: reading.title,
       network: spec.network.id,
       about: reader.toLowerCase().includes(where.toLowerCase()) ? reader : `${reader} on ${where}`,
@@ -117,6 +120,97 @@ export async function mapViews(ctx: ToolContext): Promise<MapView[]> {
     });
   }
   return out;
+}
+
+/** A drawing on a map's card. */
+export type MapDrawing = Pick<
+  MapView,
+  'sha' | 'name' | 'view_url' | 'picture' | 'keys' | 'made_by'
+>;
+
+/** A reading of a map: one sediment, with the drawings made of it. */
+export interface MapReading {
+  snapshot: string;
+  as_of: string;
+  network: string;
+  about: string;
+  title: string;
+  count: number;
+  /** who made it: the maker of its first drawing */
+  made_by: string | null;
+  /** the oldest first */
+  drawings: MapDrawing[];
+}
+
+/** One map: everything read about one address (Elco, 10 Nov), as one card. */
+export interface MapCard {
+  /** the address, in one form: chain:address, or chain:population for a whole network */
+  id: string;
+  /** its newest named drawing's name; null when nobody named one */
+  name: string | null;
+  /** these are its newest drawing's */
+  title: string;
+  about: string;
+  chain: string;
+  /** what tells two maps of the same name apart; null for a whole network */
+  address: string | null;
+  picture: string;
+  view_url: string;
+  keys: MapView['keys'];
+  /** its sediments, the newest first by their date */
+  readings: MapReading[];
+}
+
+/**
+ * The map's views as maps: one card per address, the newest first by its newest drawing. The holders and the
+ * delegates of one token are two readings of one map; two drawings of one reading sit under that reading.
+ */
+export function mapsOf(views: readonly MapView[]): MapCard[] {
+  const byMap = new Map<string, MapView[]>();
+  for (const v of views) byMap.set(v.map, [...(byMap.get(v.map) ?? []), v]);
+  const drawing = (v: MapView): MapDrawing => ({
+    sha: v.sha,
+    name: v.name,
+    view_url: v.view_url,
+    picture: v.picture,
+    keys: v.keys,
+    made_by: v.made_by,
+  });
+  const cards: { at: number; card: MapCard }[] = [];
+  for (const [id, drawn] of byMap) {
+    const newest = drawn.at(-1) as MapView;
+    const bySnapshot = new Map<string, MapView[]>();
+    for (const v of drawn) bySnapshot.set(v.snapshot, [...(bySnapshot.get(v.snapshot) ?? []), v]);
+    const readings = [...bySnapshot.values()]
+      .map((vs) => ({ first: vs[0] as MapView, last: views.indexOf(vs.at(-1) as MapView), vs }))
+      .sort((a, b) => b.first.as_of.localeCompare(a.first.as_of) || b.last - a.last)
+      .map(({ first, vs }) => ({
+        snapshot: first.snapshot,
+        as_of: first.as_of,
+        network: first.network,
+        about: first.about,
+        title: first.title,
+        count: first.count,
+        made_by: first.made_by,
+        drawings: vs.map(drawing),
+      }));
+    cards.push({
+      at: views.indexOf(newest),
+      card: {
+        id,
+        name: drawn.findLast((v) => v.name)?.name ?? null,
+        title: newest.title,
+        about: newest.about,
+        chain: newest.chain,
+        address: newest.address,
+        picture: newest.picture,
+        view_url: newest.view_url,
+        keys: newest.keys,
+        readings,
+      },
+    });
+  }
+  return cards.sort((a, b) => b.at - a.at).map((c) => c.card);
 }
 
 const wordsOf = (q: string) =>
