@@ -98,6 +98,27 @@ export interface DraftRow {
   /** who made it: a NEAR account, such as mapping.petals.near for Petals' own mapping (13) */
   made_by?: string | null;
 }
+/** A person's own: their current view, or their profile, with who saved it and when (15). */
+export interface PersonViewRow {
+  person: string;
+  view: string;
+  credential: string | null;
+  set_at: string;
+}
+export interface PersonProfileRow {
+  person: string;
+  body: string;
+  credential: string | null;
+  saved_at: string;
+}
+/** A picture, by the sha256 of its bytes, kept as base64 (15). */
+export interface MediaRow {
+  sha256: string;
+  type: string;
+  body: string;
+  person: string | null;
+  created_at: string;
+}
 export interface PublishDraftRow {
   entry_sha256: string;
   /** JSON */
@@ -803,6 +824,73 @@ export function tables(db: Db) {
       async addSpent(id: string, usd: number) {
         await db.run('UPDATE invite SET spent_usd = spent_usd + ? WHERE id = ?', usd, id);
       },
+    },
+
+    /** Views (view/v1) by their hash: put-if-absent, never changed (15). */
+    viewDoc: {
+      put: async (hash: string, body: string, at: string) => {
+        await db.run(
+          'INSERT INTO view_doc (hash, body, created_at) VALUES (?, ?, ?) ON CONFLICT (hash) DO NOTHING',
+          hash,
+          body,
+          at,
+        );
+      },
+      get: (hash: string) =>
+        db.get<{ hash: string; body: string; created_at: string }>(
+          'SELECT * FROM view_doc WHERE hash = ?',
+          hash,
+        ),
+    },
+
+    /** Each person's current view, the one every petal they see is drawn with (15). */
+    personView: {
+      get: (person: string) =>
+        db.get<PersonViewRow>('SELECT * FROM person_view WHERE person = ?', person),
+      async set(r: PersonViewRow) {
+        await db.run(
+          `INSERT INTO person_view (person, view, credential, set_at) VALUES (?, ?, ?, ?)
+           ON CONFLICT (person) DO UPDATE SET
+             view = excluded.view, credential = excluded.credential, set_at = excluded.set_at`,
+          r.person,
+          r.view,
+          r.credential,
+          r.set_at,
+        );
+      },
+    },
+
+    /** Each person's profile, in NEAR Social's shape (15). */
+    personProfile: {
+      get: (person: string) =>
+        db.get<PersonProfileRow>('SELECT * FROM person_profile WHERE person = ?', person),
+      async set(r: PersonProfileRow) {
+        await db.run(
+          `INSERT INTO person_profile (person, body, credential, saved_at) VALUES (?, ?, ?, ?)
+           ON CONFLICT (person) DO UPDATE SET
+             body = excluded.body, credential = excluded.credential, saved_at = excluded.saved_at`,
+          r.person,
+          r.body,
+          r.credential,
+          r.saved_at,
+        );
+      },
+    },
+
+    /** Pictures by their sha256: put-if-absent, never changed (15). */
+    media: {
+      put: async (r: MediaRow) => {
+        await db.run(
+          `INSERT INTO media (sha256, type, body, person, created_at) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT (sha256) DO NOTHING`,
+          r.sha256,
+          r.type,
+          r.body,
+          r.person,
+          r.created_at,
+        );
+      },
+      get: (sha256: string) => db.get<MediaRow>('SELECT * FROM media WHERE sha256 = ?', sha256),
     },
 
     /** Hash-addressed draft links (SYS-043): put-if-absent. */

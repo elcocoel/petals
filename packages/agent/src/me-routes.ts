@@ -1,0 +1,275 @@
+// A person's own, kept on this site (Elco, 10 Nov), each the person's and not a wallet's, with who saved it
+// (the session's credential) and when beside it.
+//
+//   GET  /api/v1/me/view       { view, hash }: the person's view, or the default for anyone without one
+//   PUT  /api/v1/me/view       { view } → the same; checked against view/v1
+//   GET  /api/v1/views/:hash   { view, hash }: any view by its hash, so anyone can read what a picture shows
+//   GET  /api/v1/me/profile    { profile, updated_at, published }
+//   PUT  /api/v1/me/profile    { profile } → the same; NEAR Social's own shape (social-kv/1)
+//   GET  /api/v1/media/:file   a picture from a profile, by its sha256, kept a year wherever it's cached
+//
+// The view is the glasses every petal the person sees is drawn through (one-source.md, step 1: "When the
+// user has a certain setting selected, all of the petals he will ever interact while those settings are
+// selected are going to be rendered in that way for him"). The profile holds what NEAR Social's profile
+// holds (api2.near.social/standard.md: name, about, avatar, banner, location, links), so publishing it later
+// is a straight copy (Elco: "hold the same data shape as near.social in our DB in case the user doesn't want
+// to put it on chain"). A picture comes as a data: URI and is kept here under its sha256, as FastFS names an
+// upload (media/{sha256}.{ext}); the profile then holds its address on this site.
+import { createHash } from 'node:crypto';
+import { canonicalJson, DEFAULT_VIEW, TOOLS_VERSION, viewHash, viewProblem } from '@petal/core';
+import type { View } from '@petal/core/types';
+import type { Store } from '@petal/store';
+import { bodyCap } from '@petal/tools';
+import { type Context, Hono } from 'hono';
+import type { RouteAuth } from './auth-routes.ts';
+import { fail } from './routes.ts';
+
+const HASH = /^[0-9a-f]{64}$/;
+const isPerson = (subject: string | null): subject is string => !!subject?.startsWith('prs_');
+const DEFAULT_HASH = viewHash(DEFAULT_VIEW);
+const IMMUTABLE = 'public, max-age=31536000, immutable';
+
+/** The picture types a profile takes, by the extension its address carries. */
+const MEDIA: Record<string, string> = { webp: 'image/webp', jpg: 'image/jpeg', png: 'image/png' };
+const EXTENSION: Record<string, string> = Object.fromEntries(
+  Object.entries(MEDIA).map(([ext, type]) => [type, ext]),
+);
+
+/** NEAR Social's profile (social-kv/1, section 3.1): each field optional, null clears it. */
+export interface Profile {
+  name?: string | null;
+  about?: string | null;
+  avatar?: string | null;
+  banner?: string | null;
+  location?: string | null;
+  links?: Record<string, string>;
+}
+
+/** The standard's limits, in Unicode characters. */
+const TEXT_MAX: Record<'name' | 'about' | 'location', number> = {
+  name: 256,
+  about: 10_000,
+  location: 256,
+};
+const LINK_SERVICE = /^[a-z0-9_]{1,32}$/;
+const LINK_MAX = 2048;
+const LINKS_MAX = 32;
+/** A media address on chain (section 4). */
+const FASTFS = /^fastfs:\/\/[^/\s]+\/[^/\s]+\/(?!\/)(?!.*\.\.)[A-Za-z0-9._\-/]{1,1024}$/;
+const DATA_URI = /^data:(image\/(?:webp|jpeg|png));base64,([A-Za-z0-9+/]+=*)$/;
+const chars = (s: string) => [...s].length;
+
+export interface MeDeps {
+  store: Store;
+  gate: RouteAuth;
+  /** the site's public address, for a picture's address; none: relative */
+  apiBase?: string;
+  clock?: () => number;
+}
+
+export function meRoutes(d: MeDeps): Hono {
+  const { store, gate } = d;
+  const clock = d.clock ?? Date.now;
+  const iso = () => new Date(clock()).toISOString();
+  const site = (d.apiBase ?? '').replace(/\/+$/, '');
+  const mediaPath = (sha: string, type: string) => `/api/v1/media/${sha}.${EXTENSION[type]}`;
+  const ok = (c: Context, body: Record<string, unknown>) =>
+    c.json({ ...body, tools_version: TOOLS_VERSION });
+
+  const app = new Hono();
+  for (const path of ['/api/v1/me/view', '/api/v1/me/profile']) {
+    app.use(path, bodyCap);
+    app.use(path, async (c, next) => {
+      c.header('Cache-Control', 'no-store');
+      if (c.req.method !== 'GET') {
+        const foreign = gate.refuseForeign(c);
+        if (foreign) return foreign;
+      }
+      await next();
+    });
+  }
+
+  /** The person signed in, and what opened their session; null for a visitor. */
+  async function personOf(c: Context) {
+    const { subject, credential } = await gate.callerOf(c);
+    return isPerson(subject) ? { person: subject, credential } : null;
+  }
+
+  const jsonBody = async (c: Context): Promise<Record<string, unknown> | null> => {
+    const b = await c.req.json().catch(() => null);
+    return b && typeof b === 'object' && !Array.isArray(b) ? (b as Record<string, unknown>) : null;
+  };
+
+  async function viewOf(hash: string): Promise<View | null> {
+    if (hash === DEFAULT_HASH) return DEFAULT_VIEW;
+    const row = await store.viewDoc.get(hash);
+    return row ? (JSON.parse(row.body) as View) : null;
+  }
+
+  // -- the view
+
+  app.get('/api/v1/me/view', async (c) => {
+    const me = await personOf(c);
+    const row = me ? await store.personView.get(me.person) : undefined;
+    const view = row ? await viewOf(row.view) : null;
+    return view && row
+      ? ok(c, { view, hash: row.view })
+      : ok(c, { view: DEFAULT_VIEW, hash: DEFAULT_HASH });
+  });
+
+  app.put('/api/v1/me/view', async (c) => {
+    const me = await personOf(c);
+    if (!me)
+      return fail(c, 'unauthorised', "Sign in to keep your own view: a visitor's is the default.");
+    const body = await jsonBody(c);
+    const problem = viewProblem(body?.view);
+    if (problem) return fail(c, 'bad_input', `Not a view/v1: ${problem}.`);
+    const view = body?.view as View;
+    const hash = viewHash(view);
+    const at = iso();
+    await store.tx(async () => {
+      await store.viewDoc.put(hash, canonicalJson(view), at);
+      await store.personView.set({
+        person: me.person,
+        view: hash,
+        credential: me.credential,
+        set_at: at,
+      });
+    });
+    return ok(c, { view, hash });
+  });
+
+  app.get('/api/v1/views/:hash', async (c) => {
+    const hash = c.req.param('hash');
+    const view = HASH.test(hash) ? await viewOf(hash) : null;
+    if (!view) return fail(c, 'not_found', 'No view under that hash.');
+    return ok(c, { view, hash });
+  });
+
+  // -- the profile
+
+  /** What GET answers. `published` stays null until publishing to NEAR Social is on. */
+  async function profileAnswer(person: string) {
+    const row = await store.personProfile.get(person);
+    return {
+      profile: row ? (JSON.parse(row.body) as Profile) : null,
+      updated_at: row?.saved_at ?? null,
+      published: null,
+    };
+  }
+
+  /** A picture field as the profile keeps it, or why not. A data: URI is kept here and becomes its address. */
+  async function pictureOf(
+    value: unknown,
+    field: string,
+    person: string,
+  ): Promise<{ value: string | null } | { problem: string }> {
+    if (value === null || value === undefined || value === '') return { value: null };
+    if (typeof value !== 'string')
+      return { problem: `${field} must be a picture's address or null` };
+    if (FASTFS.test(value)) return { value };
+    const ours = /^(?:.*)?\/api\/v1\/media\/([0-9a-f]{64})\.(webp|jpg|png)$/.exec(value);
+    if (ours && (value.startsWith('/') || value.startsWith(`${site}/`))) {
+      const row = await store.media.get(ours[1] as string);
+      return row ? { value } : { problem: `${field} names a picture this site doesn't hold` };
+    }
+    const data = DATA_URI.exec(value);
+    if (!data) {
+      return {
+        problem: `${field} must be a data:image/webp, jpeg or png base64 picture, this site's picture address, or a fastfs:// address`,
+      };
+    }
+    const type = data[1] as string;
+    const bytes = Buffer.from(data[2] as string, 'base64');
+    if (!bytes.length) return { problem: `${field}'s picture is empty` };
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    await store.media.put({
+      sha256,
+      type,
+      body: bytes.toString('base64'),
+      person,
+      created_at: iso(),
+    });
+    return { value: `${site}${mediaPath(sha256, type)}` };
+  }
+
+  /** The profile as it's kept, or why it can't be. Every field is optional; null clears it. */
+  async function checkProfile(x: unknown, person: string): Promise<Profile | string> {
+    if (!x || typeof x !== 'object' || Array.isArray(x)) return 'profile must be an object';
+    const given = x as Record<string, unknown>;
+    const known = ['name', 'about', 'avatar', 'banner', 'location', 'links'];
+    const unknown = Object.keys(given).find((k) => !known.includes(k));
+    if (unknown)
+      return `profile has an unknown field: ${unknown} (NEAR Social's are ${known.join(', ')})`;
+    const out: Profile = {};
+    for (const field of ['name', 'about', 'location'] as const) {
+      const v = given[field];
+      if (v === undefined) continue;
+      if (v !== null && typeof v !== 'string') return `${field} must be text or null`;
+      if (typeof v === 'string' && chars(v) > TEXT_MAX[field]) {
+        return `${field} is ${TEXT_MAX[field]} characters at most`;
+      }
+      out[field] = v === '' ? null : v;
+    }
+    for (const field of ['avatar', 'banner'] as const) {
+      if (given[field] === undefined) continue;
+      const got = await pictureOf(given[field], field, person);
+      if ('problem' in got) return got.problem;
+      out[field] = got.value;
+    }
+    if (given.links !== undefined) {
+      const links = given.links;
+      if (!links || typeof links !== 'object' || Array.isArray(links)) {
+        return 'links must be an object of service: handle or https URL';
+      }
+      const entries = Object.entries(links as Record<string, unknown>);
+      if (entries.length > LINKS_MAX) return `links holds ${LINKS_MAX} at most`;
+      for (const [service, value] of entries) {
+        if (!LINK_SERVICE.test(service)) {
+          return `a link's service is 1 to 32 of a-z, 0-9 and _: ${service} isn't`;
+        }
+        if (typeof value !== 'string' || !value || chars(value) > LINK_MAX) {
+          return `links.${service} must be a handle or an https:// URL, ${LINK_MAX} characters at most`;
+        }
+      }
+      out.links = Object.fromEntries(entries) as Record<string, string>;
+    }
+    return out;
+  }
+
+  app.get('/api/v1/me/profile', async (c) => {
+    const me = await personOf(c);
+    if (!me) return fail(c, 'unauthorised', 'Not signed in.');
+    return ok(c, await profileAnswer(me.person));
+  });
+
+  app.put('/api/v1/me/profile', async (c) => {
+    const me = await personOf(c);
+    if (!me) return fail(c, 'unauthorised', 'Sign in to keep a profile.');
+    const body = await jsonBody(c);
+    const profile = await checkProfile(body?.profile, me.person);
+    if (typeof profile === 'string') return fail(c, 'bad_input', profile);
+    await store.personProfile.set({
+      person: me.person,
+      body: canonicalJson(profile),
+      credential: me.credential,
+      saved_at: iso(),
+    });
+    return ok(c, await profileAnswer(me.person));
+  });
+
+  app.get('/api/v1/media/:file', async (c) => {
+    const m = /^([0-9a-f]{64})\.(webp|jpg|png)$/.exec(c.req.param('file'));
+    const row = m ? await store.media.get(m[1] as string) : undefined;
+    if (!m || !row || MEDIA[m[2] as string] !== row.type) {
+      return fail(c, 'not_found', 'No picture under that name.');
+    }
+    return c.body(Buffer.from(row.body, 'base64'), 200, {
+      'Content-Type': row.type,
+      'Cache-Control': IMMUTABLE,
+      ETag: `"${row.sha256}"`,
+    });
+  });
+
+  return app;
+}
