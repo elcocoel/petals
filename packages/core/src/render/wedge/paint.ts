@@ -5,5 +5,13 @@
 import type { ReadingPetal } from '../../types/index.ts';
 import { colourStyle, TAIL_SWATCH } from '../style.ts';
 
+/**
+ * A still picture defines `--k-pool` and the rest in its own <style>; a page defines the same colours as
+ * the site's chart tokens, `--chart-k-pool` and the rest. So a paint names the first, falling back to the
+ * second, and reads right in both.
+ */
+const inEither = (swatch: string): string =>
+  swatch.replace(/^var\(--([\w-]+)\)$/, 'var(--$1, var(--chart-$1))');
+
 export const paintOf = (p: Pick<ReadingPetal, 'colour' | 'tail'>): string =>
-  p.tail ? TAIL_SWATCH : colourStyle(p.colour).swatch;
+  inEither(p.tail ? TAIL_SWATCH : colourStyle(p.colour).swatch);
