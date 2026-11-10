@@ -7,6 +7,8 @@
 //   GET  /api/v1/me/profile    { profile, updated_at, published }
 //   PUT  /api/v1/me/profile    { profile } → the same; NEAR Social's own shape (social-kv/1)
 //   GET  /api/v1/media/:file   a picture from a profile, by its sha256, kept a year wherever it's cached
+//   GET  /api/v1/price         { price, hash }: what Petals charges at (price/v1), every switch off today
+//   GET  /api/v1/me/tip        { tip, min, max }: the person's tip on Petals' fees; PUT { tip } sets it
 //   GET  /api/v1/me/usage      { usage, totals }: every model call charged to them (usage/v1), the newest
 //                              first, reconciled with NEAR AI's bill first
 //
@@ -18,13 +20,23 @@
 // to put it on chain"). A picture comes as a data: URI and is kept here under its sha256, as FastFS names an
 // upload (media/{sha256}.{ext}); the profile then holds its address on this site.
 import { createHash } from 'node:crypto';
-import { canonicalJson, DEFAULT_VIEW, TOOLS_VERSION, viewHash, viewProblem } from '@petal/core';
+import {
+  canonicalJson,
+  DEFAULT_VIEW,
+  type Price,
+  priceHash,
+  TOOLS_VERSION,
+  tipAllowed,
+  viewHash,
+  viewProblem,
+} from '@petal/core';
 import type { View } from '@petal/core/types';
 import type { Store } from '@petal/store';
 import { bodyCap } from '@petal/tools';
 import { type Context, Hono } from 'hono';
 import type { RouteAuth } from './auth-routes.ts';
 import type { LlmClient } from './llm.ts';
+import { PRICE, tipOfPerson } from './price.ts';
 import { fail } from './routes.ts';
 import { reconcile, recordOf } from './usage.ts';
 
@@ -72,11 +84,14 @@ export interface MeDeps {
   apiBase?: string;
   /** whose billing a person's usage is reconciled with */
   llm?: LlmClient;
+  /** what Petals charges at; default price.json */
+  price?: Price;
   clock?: () => number;
 }
 
 export function meRoutes(d: MeDeps): Hono {
   const { store, gate } = d;
+  const price = d.price ?? PRICE;
   const clock = d.clock ?? Date.now;
   const iso = () => new Date(clock()).toISOString();
   const site = (d.apiBase ?? '').replace(/\/+$/, '');
@@ -85,7 +100,12 @@ export function meRoutes(d: MeDeps): Hono {
     c.json({ ...body, tools_version: TOOLS_VERSION });
 
   const app = new Hono();
-  for (const path of ['/api/v1/me/view', '/api/v1/me/profile', '/api/v1/me/usage']) {
+  for (const path of [
+    '/api/v1/me/view',
+    '/api/v1/me/profile',
+    '/api/v1/me/usage',
+    '/api/v1/me/tip',
+  ]) {
     app.use(path, bodyCap);
     app.use(path, async (c, next) => {
       c.header('Cache-Control', 'no-store');
@@ -266,6 +286,41 @@ export function meRoutes(d: MeDeps): Hono {
     return ok(c, await profileAnswer(me.person));
   });
 
+  // -- the price (price/v1) and the person's tip on its fees
+
+  app.get('/api/v1/price', (c) => ok(c, { price, hash: priceHash(price) }));
+
+  app.get('/api/v1/me/tip', async (c) => {
+    const me = await personOf(c);
+    if (!me) return fail(c, 'unauthorised', 'Not signed in.');
+    return ok(c, {
+      tip: await tipOfPerson(store, price, me.person),
+      min: price.tip.min,
+      max: price.tip.max,
+    });
+  });
+
+  app.put('/api/v1/me/tip', async (c) => {
+    const me = await personOf(c);
+    if (!me) return fail(c, 'unauthorised', 'Sign in to set a tip.');
+    const body = await jsonBody(c);
+    const tip = body?.tip;
+    // null puts it back to the price's default
+    if (tip !== null && (typeof tip !== 'number' || !tipAllowed(price, tip))) {
+      return fail(
+        c,
+        'bad_input',
+        `tip is a number from ${price.tip.min} to ${price.tip.max}, or null`,
+      );
+    }
+    await store.person.setTip(me.person, tip as number | null);
+    return ok(c, {
+      tip: await tipOfPerson(store, price, me.person),
+      min: price.tip.min,
+      max: price.tip.max,
+    });
+  });
+
   // -- usage (usage/v1)
 
   app.get('/api/v1/me/usage', async (c) => {
@@ -273,7 +328,7 @@ export function meRoutes(d: MeDeps): Hono {
     if (!me) return fail(c, 'unauthorised', 'Not signed in.');
     const account = `person:${me.person}`;
     if (d.llm) {
-      await reconcile(store, d.llm, account).catch((e) =>
+      await reconcile(store, d.llm, account, price).catch((e) =>
         console.warn(`petal: couldn't reconcile ${account} with NEAR AI: ${String(e)}`),
       );
     }

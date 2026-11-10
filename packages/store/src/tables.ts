@@ -7,6 +7,8 @@ import type { Db } from './db.ts';
 export interface PersonRow {
   id: string;
   created_at: string;
+  /** their tip on Petals' fees (18); null: the price's default */
+  tip?: number | null;
 }
 export interface WalletBindingRow {
   person: string;
@@ -444,6 +446,10 @@ export function tables(db: Db) {
       },
       get: (id: string) => db.get<PersonRow>('SELECT * FROM person WHERE id = ?', id),
       list: () => db.all<PersonRow>('SELECT * FROM person ORDER BY created_at, id'),
+      /** Their tip on Petals' fees (18); null puts it back to the price's default. */
+      async setTip(id: string, tip: number | null) {
+        await db.run('UPDATE person SET tip = ? WHERE id = ?', tip, id);
+      },
     },
 
     walletBinding: {

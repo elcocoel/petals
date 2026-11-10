@@ -155,6 +155,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     payRoutes({
       store,
       gate: auth.gate,
+      ...(o.price ? { price: o.price } : {}),
       usdPerChat: usdPerOwnChat,
       mainnetOnly: config.public === true,
       credit,
@@ -174,6 +175,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       store,
       gate: auth.gate,
       llm,
+      ...(o.price ? { price: o.price } : {}),
       ...(config.apiBase ? { apiBase: config.apiBase } : {}),
       ...(o.clock ? { clock: o.clock } : {}),
     }),

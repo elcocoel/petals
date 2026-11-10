@@ -59,6 +59,15 @@ export {
   type Standing,
 } from './layers.ts';
 export { NotImplementedError, notImplemented } from './not-implemented.ts';
+export {
+  type PetalsCharge,
+  type Price,
+  type Priced,
+  petalsCharge,
+  priceHash,
+  tipAllowed,
+  tipOf,
+} from './price.ts';
 export { PRIMITIVES } from './primitives.ts';
 export { readFlower, readingHash } from './reading/index.ts';
 export { PAINT, pictureQuery, renderFlower, SKINS } from './render/index.ts';

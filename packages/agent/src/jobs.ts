@@ -3,6 +3,7 @@
 // log by cursor, so each sees every event once wherever it joins; a job only wakes them, so there is
 // no timer per viewer. Stop aborts the job's signal and waits for the job to say how it ended.
 // Each flower is also saved as a step of the run's exploration (SYS-041).
+import type { Price } from '@petal/core';
 import type { AgentEvent, ChatInput } from '@petal/core/types';
 import {
   registry as defaultRegistry,
@@ -15,6 +16,7 @@ import { Channel } from './channel.ts';
 import { agentsOfRun, type Bell, handJobTool, jobsOfRun } from './hand-job.ts';
 import type { Budget, LlmMessage } from './llm.ts';
 import { nameConversationTool, nameOfRun } from './name-conversation.ts';
+import { chargePetals, PRICE } from './price.ts';
 import { type RunDeps, type RunOptions, startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
 import type { EarlierFlower } from './thread.ts';
@@ -55,7 +57,7 @@ class Job {
 
 export function runJobs(
   deps: RunDeps & { runs: RunStore },
-  o: Pick<RunOptions, 'registry' | 'heartbeatMs'> & { bell?: Bell } = {},
+  o: Pick<RunOptions, 'registry' | 'heartbeatMs'> & { bell?: Bell; price?: Price } = {},
 ) {
   const { runs } = deps;
   const jobs = new Map<string, Job>();
@@ -73,8 +75,12 @@ export function runJobs(
     ): Promise<void> {
       const job = new Job();
       jobs.set(runId, job);
+      const startedAt = new Date().toISOString();
+      // the tools this turn used, for Petals' per-tool fee when it's switched on (price/v1)
+      const used: Record<string, number> = {};
       const keep = async (e: AgentEvent) => {
         if (e.event === 'heartbeat') return job.wake('beat');
+        if (e.event === 'tool_call') used[e.data.name] = (used[e.data.name] ?? 0) + 1;
         // a store that fails must not stop the chat
         await runs.append(runId, e).catch(() => {
           job.unsaved.push(e);
@@ -100,8 +106,9 @@ export function runJobs(
           // NEAR AI's bill for this account's earlier calls, so what they're charged is what it billed
           const account = budget.ledger?.account;
           if (account) {
-            await reconcile(privateStore(deps.tools.config), deps.llm, account).catch((e) =>
-              console.warn(`petal: couldn't reconcile ${account} with NEAR AI: ${String(e)}`),
+            await reconcile(privateStore(deps.tools.config), deps.llm, account, o.price).catch(
+              (e) =>
+                console.warn(`petal: couldn't reconcile ${account} with NEAR AI: ${String(e)}`),
             );
           }
           // and the person's view, the glasses every flower it draws for them is drawn through
@@ -139,6 +146,19 @@ export function runJobs(
             },
           );
           for await (const e of events) await keep(e);
+          // Petals' own part of the turn, on a person's credit: nothing while its switches are off
+          if (account?.startsWith('person:')) {
+            await chargePetals(
+              privateStore(deps.tools.config),
+              o.price ?? PRICE,
+              account.slice('person:'.length),
+              { kind: 'turn', tools: used },
+              `${runId}:${startedAt}`,
+              new Date().toISOString(),
+            ).catch((e) =>
+              console.warn(`petal: run ${runId}: Petals' turn charge failed: ${String(e)}`),
+            );
+          }
         } catch (e) {
           await keep({ event: 'error', data: { code: 'internal', message: String(e) } });
           await keep({

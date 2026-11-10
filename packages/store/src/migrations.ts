@@ -399,6 +399,11 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX usage_account ON usage(account_key, at);
   `,
+  // 18: a person's tip (Elco, 10 Nov: price/v1's fees "multiplied by a user defined 'tip' rate"): theirs to
+  // set, the price's default while it's empty.
+  `
+  ALTER TABLE person ADD COLUMN tip REAL;
+  `,
 ];
 
 /**

@@ -4,8 +4,10 @@
 // the bill: when it differs from what was counted, the difference goes back or is charged as its own entry.
 // Reconciling happens when it's needed, before a person's next chat and when they look at their usage: no
 // timer.
+import type { Price } from '@petal/core';
 import type { Store, UsageRow } from '@petal/store';
 import type { LlmClient } from './llm.ts';
+import { chargePetals, PRICE } from './price.ts';
 
 export interface UsageRecord {
   petal: 'usage/v1';
@@ -61,6 +63,7 @@ export async function reconcile(
   store: Store,
   llm: LlmClient,
   account: string,
+  price: Price = PRICE,
   now: () => Date = () => new Date(),
 ): Promise<number> {
   if (!llm.billed) return 0;
@@ -88,6 +91,17 @@ export async function reconcile(
       }
       await store.usage.reconcile(row.id, billed, at);
     });
+    // Petals' own part of the call, by the price: nothing while its switches are off
+    if (account.startsWith('person:')) {
+      await chargePetals(
+        store,
+        price,
+        account.slice('person:'.length),
+        { kind: 'call', billed_usd: billed },
+        row.id,
+        at,
+      );
+    }
     done++;
   }
   return done;
