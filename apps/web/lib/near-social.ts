@@ -116,3 +116,85 @@ export function base64Of(bytes: Uint8Array): string {
   for (const b of bytes) s += String.fromCharCode(b);
   return btoa(s);
 }
+
+// ---- The profile editor's data (Elco, 10 Nov: name, picture, bio and links, edited inside Petals).
+
+/** What the editor holds: the fields as typed, and the picture shown now. */
+export interface ProfileDraft {
+  name: string;
+  about: string;
+  links: { service: string; value: string }[];
+}
+
+export const draftOf = (p: SocialProfile | null): ProfileDraft => ({
+  name: p?.name ?? '',
+  about: p?.about ?? '',
+  links: p && p.links.length > 0 ? p.links.map((l) => ({ ...l })) : [{ service: '', value: '' }],
+});
+
+/** The standard's limits (standard.md, profile keys). */
+export const PROFILE_LIMITS = { name: 256, about: 10_000, link: 2048 } as const;
+
+/** A service as a key segment: lower case, letters, digits, - and _ (keys are ASCII). */
+export const serviceKey = (s: string) =>
+  s
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '');
+
+/**
+ * The `__fastdata_kv` args that make the public profile what the draft says: each field as typed, empty
+ * ones removed (null) only where they were set before, every link the draft keeps, null for each it
+ * dropped, and the new picture's fastfs:// address when there is one.
+ */
+export function profileArgs(
+  before: SocialProfile | null,
+  draft: ProfileDraft,
+  avatar: string | null,
+): Record<string, string | null> {
+  const out: Record<string, string | null> = {};
+  const set = (key: string, value: string, had: boolean) => {
+    if (value) out[key] = value;
+    else if (had) out[key] = null;
+  };
+  set('profile/name', draft.name.trim().slice(0, PROFILE_LIMITS.name), Boolean(before?.name));
+  set('profile/about', draft.about.trim().slice(0, PROFILE_LIMITS.about), Boolean(before?.about));
+  const kept = new Set<string>();
+  for (const l of draft.links) {
+    const service = serviceKey(l.service);
+    const value = l.value.trim().slice(0, PROFILE_LIMITS.link);
+    if (!service || !value) continue;
+    kept.add(service);
+    out[`profile/links/${service}`] = value;
+  }
+  for (const l of before?.links ?? [])
+    if (!kept.has(serviceKey(l.service))) out[`profile/links/${serviceKey(l.service)}`] = null;
+  if (avatar) out['profile/avatar'] = avatar;
+  return out;
+}
+
+/** Where a picture lives once it's stored, by FastFS's rule: content-addressed, under `social`. */
+export const fastfsPath = (sha256Hex: string, mime: string) =>
+  `media/${sha256Hex}.${mime === 'image/webp' ? 'webp' : mime === 'image/jpeg' ? 'jpg' : 'png'}`;
+export const fastfsUri = (account: string, path: string) =>
+  `fastfs://${account}/${SOCIAL_RECEIVER}/${path}`;
+export const fastfsUrl = (account: string, path: string) =>
+  `https://main.fastfs.io/${account}/${SOCIAL_RECEIVER}/${path}`;
+
+/** What NEAR Social's indexer did with one transaction (GET /v1/tx/{hash}). */
+export type TxOutcome = { kind: 'waiting' } | { kind: 'ok' } | { kind: 'refused'; why: string[] };
+
+export function txOutcome(json: unknown): TxOutcome {
+  const o = json as {
+    indexed?: boolean;
+    actions?: { status?: string; keys?: { key?: string; status?: string; reason?: string }[] }[];
+  } | null;
+  if (!o?.indexed) return { kind: 'waiting' };
+  const why: string[] = [];
+  for (const a of o.actions ?? []) {
+    if (a.status && a.status !== 'ok') why.push(a.status);
+    for (const k of a.keys ?? [])
+      if (k.status && k.status !== 'ok') why.push(`${k.key}: ${k.reason ?? k.status}`);
+  }
+  return why.length > 0 ? { kind: 'refused', why } : { kind: 'ok' };
+}

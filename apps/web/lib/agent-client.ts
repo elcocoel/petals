@@ -375,6 +375,19 @@ export async function readSocialProfile(account: string): Promise<SocialProfile 
   return socialProfile(await res.json());
 }
 
+/** What NEAR Social's indexer did with one transaction (GET /v1/tx/{hash}); null when it can't say. */
+export async function readSocialTx(hash: string): Promise<unknown> {
+  const res = await fetch(`${NEAR_SOCIAL_API}/v1/tx/${encodeURIComponent(hash)}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+/** Whether FastFS serves a stored file yet. Asked with a fresh query each time: its CDN keeps a 404. */
+export async function fastfsServes(url: string, fresh: string): Promise<boolean> {
+  const res = await fetch(`${url}?v=${encodeURIComponent(fresh)}`);
+  return res.ok;
+}
+
 /** The wallet this session signed in with, and its network, or null: not signed in, or the server doesn't say. */
 export async function readSignedIn(): Promise<{ network: string; account: string } | null> {
   const res = await fetch('/api/v1/me');

@@ -39,3 +39,77 @@ describe('fastfsSimple', () => {
     expect(base64Of(Uint8Array.of(0, 1, 2, 250))).toBe('AAEC+g==');
   });
 });
+
+import { draftOf, fastfsPath, fastfsUri, profileArgs, txOutcome } from '../lib/near-social.ts';
+
+describe('profileArgs', () => {
+  const before = {
+    name: 'Old name',
+    about: 'Old bio',
+    avatar: null,
+    links: [
+      { service: 'github', value: 'old' },
+      { service: 'x', value: '@old' },
+    ],
+  };
+
+  test('a new profile writes only what was typed', () => {
+    expect(
+      profileArgs(
+        null,
+        { name: ' Mara ', about: '', links: [{ service: 'GitHub', value: 'mara' }] },
+        null,
+      ),
+    ).toEqual({ 'profile/name': 'Mara', 'profile/links/github': 'mara' });
+  });
+
+  test('an edit removes what was cleared or dropped, and keeps the rest', () => {
+    expect(
+      profileArgs(
+        before,
+        { name: 'New name', about: '', links: [{ service: 'github', value: 'new' }] },
+        null,
+      ),
+    ).toEqual({
+      'profile/name': 'New name',
+      'profile/about': null,
+      'profile/links/github': 'new',
+      'profile/links/x': null,
+    });
+  });
+
+  test('a new picture goes in as its fastfs:// address', () => {
+    const uri = fastfsUri('mara.near', fastfsPath('ab12', 'image/webp'));
+    expect(uri).toBe('fastfs://mara.near/social/media/ab12.webp');
+    expect(profileArgs(before, draftOf(before), uri)['profile/avatar']).toBe(uri);
+  });
+
+  test('a link with no service or no value is left out', () => {
+    expect(
+      profileArgs(null, { name: '', about: '', links: [{ service: '', value: 'x' }] }, null),
+    ).toEqual({});
+  });
+});
+
+describe('txOutcome', () => {
+  test('not seen yet', () => expect(txOutcome({ indexed: false })).toEqual({ kind: 'waiting' }));
+  test('every key accepted', () =>
+    expect(
+      txOutcome({
+        indexed: true,
+        actions: [{ status: 'ok', keys: [{ key: 'profile/name', status: 'ok' }] }],
+      }),
+    ).toEqual({ kind: 'ok' }));
+  test('a key refused says which and why', () =>
+    expect(
+      txOutcome({
+        indexed: true,
+        actions: [
+          {
+            status: 'ok',
+            keys: [{ key: 'profile/avatar', status: 'invalid', reason: 'not a fastfs uri' }],
+          },
+        ],
+      }),
+    ).toEqual({ kind: 'refused', why: ['profile/avatar: not a fastfs uri'] }));
+});

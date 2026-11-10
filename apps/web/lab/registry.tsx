@@ -54,9 +54,11 @@ import { BarBox } from '../components/ui/BarBox.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Callout } from '../components/ui/Callout.tsx';
 import { Card } from '../components/ui/Card.tsx';
+import { ChooseFile } from '../components/ui/ChooseFile.tsx';
 import { Drawing } from '../components/ui/Drawing.tsx';
 import { EmptySlot } from '../components/ui/EmptySlot.tsx';
 import { FaqItem } from '../components/ui/FaqItem.tsx';
+import { Field } from '../components/ui/Field.tsx';
 import { Footer } from '../components/ui/Footer.tsx';
 import { GalleryCard } from '../components/ui/GalleryCard.tsx';
 import { Icon, type IconName } from '../components/ui/Icon.tsx';
@@ -75,12 +77,14 @@ import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
+import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { DrawingKind } from '../lib/figures.ts';
 import { readingKey, svgImage } from '../lib/flower-view.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
+import type { ProfileEditorView } from '../lib/lobby-view.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
@@ -304,6 +308,29 @@ const RAIL_ICONS: IconName[] = [
   'petals',
   'agent',
 ];
+
+/** The editor's view for the lab: every control does nothing. */
+const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
+  creating: false,
+  account: { shown: 'a-name.near', full: 'a-name.near' },
+  draft: {
+    name: 'A name on NEAR Social',
+    about: 'A short bio, in the account’s own words.',
+    links: [{ service: 'github', value: 'a-handle' }],
+  },
+  picture: null,
+  phase: 'editing',
+  problem: null,
+  setName: () => {},
+  setAbout: () => {},
+  setLink: () => {},
+  addLink: () => {},
+  removeLink: () => {},
+  choosePicture: () => {},
+  publish: () => {},
+  cancel: () => {},
+  ...over,
+});
 
 export const registry: LabEntry[] = [
   {
@@ -1219,6 +1246,44 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'ChooseFile',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ChooseFile.tsx',
+    states: [
+      {
+        name: 'a picture',
+        render: () => <ChooseFile label="Choose a picture" accept="image/png" onFile={() => {}} />,
+      },
+    ],
+  },
+  {
+    id: 'Field',
+    group: 'The workspace',
+    figmaName: 'Petals / Field',
+    figmaNode: '164:2293',
+    source: 'apps/web/components/ui/Field.tsx',
+    states: [
+      {
+        name: 'one line',
+        render: () => <Field id="lab-field-one" label="Name" value="A name" onChange={() => {}} />,
+      },
+      {
+        name: 'several lines',
+        render: () => (
+          <Field
+            id="lab-field-several"
+            label="Bio"
+            value="A short bio, in the account’s own words."
+            onChange={() => {}}
+            lines="several"
+          />
+        ),
+      },
+    ],
+  },
+  {
     id: 'IconButton',
     group: 'The workspace',
     figmaName: null,
@@ -1615,6 +1680,43 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'ProfileEditor',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/ProfileEditor.tsx',
+    states: [
+      { name: 'editing a profile', render: () => <ProfileEditor view={editorView({})} /> },
+      {
+        name: 'making the first one',
+        render: () => (
+          <ProfileEditor
+            view={editorView({
+              creating: true,
+              draft: { name: '', about: '', links: [{ service: '', value: '' }] },
+            })}
+          />
+        ),
+      },
+      {
+        name: 'waiting for the wallet',
+        render: () => <ProfileEditor view={editorView({ phase: 'signing' })} />,
+      },
+      {
+        name: "NEAR Social didn't take it",
+        render: () => (
+          <ProfileEditor
+            view={editorView({
+              phase: 'failed',
+              problem:
+                'NEAR Social didn’t take it, so nothing changed: profile/avatar: not a fastfs uri.',
+            })}
+          />
+        ),
+      },
+    ],
+  },
+  {
     id: 'Profile',
     group: 'The workspace',
     figmaName: null,
@@ -1638,6 +1740,19 @@ export const registry: LabEntry[] = [
               },
             }}
             onEdit={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'just saved',
+        render: () => (
+          <Profile
+            social={{
+              kind: 'profile',
+              profile: { name: 'A name', about: 'A short bio.', avatar: null, links: [] },
+            }}
+            onEdit={() => {}}
+            saved
           />
         ),
       },

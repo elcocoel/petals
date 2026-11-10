@@ -4,7 +4,7 @@
 // didn't answer. NEAR Social's words are the account's own, shown as plain text; the links are never
 // followed, checked or trusted. Edit and Create show only when there's something to open them.
 // Props only: viewmodels/useProfile.ts reads it. Words from lib/lobby-view.ts, drafts.
-import { profileWords, type SocialState } from '../../lib/lobby-view.ts';
+import { editorWords, profileWords, type SocialState } from '../../lib/lobby-view.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
@@ -12,10 +12,13 @@ import { Card } from '../ui/Card.tsx';
 export function Profile({
   social,
   onEdit,
+  saved,
 }: {
   social: SocialState;
   /** Opens the editor: Edit with a profile, Create without one. */
   onEdit?: () => void;
+  /** The person just published a change and NEAR Social took it. */
+  saved?: boolean;
 }) {
   const profile = social.kind === 'profile' ? social.profile : null;
   return (
@@ -50,6 +53,12 @@ export function Profile({
         </ul>
       )}
       {profile && <p className="my-0 type-caption text-muted">{profileWords.note}</p>}
+      {saved && (
+        <p className="my-0 flex flex-wrap items-center gap-space-8">
+          <Badge tone="accent">{editorWords.saved}</Badge>
+          <span className="type-caption">{editorWords.savedLine}</span>
+        </p>
+      )}
       {social.kind === 'none' && (
         <>
           <p className="my-0 type-body">{profileWords.none}</p>

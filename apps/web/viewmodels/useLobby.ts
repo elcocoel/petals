@@ -10,6 +10,7 @@ import { mapTiles } from '../lib/lobby-view.ts';
 import { useConversations } from './useConversations.ts';
 import { useFunds } from './useFunds.ts';
 import { useProfile } from './useProfile.ts';
+import { useProfileEditor } from './useProfileEditor.ts';
 import { useSession } from './useSession.ts';
 import { useWorkMenu } from './useWorkMenu.ts';
 
@@ -19,6 +20,7 @@ export function useLobby() {
   const conversations = useConversations(session.known ? 'arrived' : null);
   const funds = useFunds();
   const profile = useProfile();
+  const editor = useProfileEditor(profile.account, profile.social, profile.reload);
   const [views, setViews] = useState<MapViewRow[]>([]);
   useEffect(() => {
     let gone = false;
@@ -36,7 +38,13 @@ export function useLobby() {
   const menu = useWorkMenu(Boolean(session.account));
   return {
     session,
-    profile,
+    profile: {
+      account: profile.account,
+      social: profile.social,
+      edit: editor.open,
+      saved: editor.saved,
+    },
+    editor: editor.view,
     funds,
     conversations: conversationRows(conversations, { runId: null }),
     tiles: mapTiles(views),

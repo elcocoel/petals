@@ -9,6 +9,7 @@ import { doorWords } from '../../lib/door-words.ts';
 import {
   lobbyWords,
   type MapTile,
+  type ProfileEditorView,
   type SocialState,
   type WithdrawPhase,
 } from '../../lib/lobby-view.ts';
@@ -17,6 +18,7 @@ import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
 import { Funds } from './Funds.tsx';
 import { Profile } from './Profile.tsx';
+import { ProfileEditor } from './ProfileEditor.tsx';
 import { ProfileHead } from './ProfileHead.tsx';
 import { WorkMenu, type WorkMenuView } from './WorkMenu.tsx';
 
@@ -30,13 +32,16 @@ export function Lobby({
   session,
   profile,
   funds,
+  editor,
   conversations,
   tiles,
   menu,
 }: {
   session: LobbySession;
   /** The wallet this session signed in with, and its public profile on NEAR Social. */
-  profile: { account: string | null; social: SocialState; edit?: () => void };
+  profile: { account: string | null; social: SocialState; edit?: () => void; saved: boolean };
+  /** The public profile's editor, while it's open: it takes the Public profile card's place. */
+  editor: ProfileEditorView | null;
   funds: {
     balance: string | null;
     held: string | null;
@@ -59,8 +64,12 @@ export function Lobby({
           onDisconnect={session.disconnect}
         />
         <div className="grid grid-cols-1 items-start gap-block-gap lg:grid-cols-3">
-          <div className="min-w-0 lg:col-span-2">
-            <Profile social={profile.social} onEdit={profile.edit} />
+          <div className={`min-w-0 ${editor ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
+            {editor ? (
+              <ProfileEditor view={editor} />
+            ) : (
+              <Profile social={profile.social} onEdit={profile.edit} saved={profile.saved} />
+            )}
           </div>
           <Funds
             balance={funds.balance}

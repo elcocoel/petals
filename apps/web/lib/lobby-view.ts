@@ -2,7 +2,7 @@
 // Elco can sense what's needed. Pure: its words and where each thing goes are decided here, and the view
 // only lays them out. Every word below is a proposal, listed in design/journey-strings.md, "The lobby".
 import { chainLabel, dateLabel, type MapViewRow } from './flower-view.ts';
-import type { SocialProfile } from './near-social.ts';
+import type { ProfileDraft, SocialProfile } from './near-social.ts';
 import { type Credit, type PayAction, payWords } from './pay.ts';
 
 export const lobbyWords = {
@@ -60,6 +60,83 @@ export const profileWords = {
   /** NEAR Social didn't answer. */
   unread: "NEAR Social didn't answer, so your public profile isn't shown.",
 } as const;
+
+/**
+ * The public profile's editor (Elco, 10 Nov: people create and edit their NEAR Social profile inside
+ * Petals; it says plainly that it changes the shared public profile and that old versions stay public).
+ * LOBBY's drafts, from the Figma frame Elco approved.
+ */
+export const editorWords = {
+  edit: 'Edit your public profile',
+  create: 'Create your public profile',
+  picture: 'Picture',
+  choose: 'Choose a picture',
+  pictureNote: 'A square picture. It’s stored in public, with your profile.',
+  name: 'Name',
+  about: 'Bio',
+  links: 'Links',
+  service: 'Service',
+  handle: 'Handle or address',
+  remove: 'Remove',
+  addLink: 'Add a link',
+  preview: 'Preview: how any app that reads NEAR Social shows it',
+  publishingAs: 'Publishing as',
+  publicNote:
+    'This changes your public profile on NEAR Social, which other NEAR apps show too. Earlier versions stay public: every change is kept on NEAR.',
+  walletNote: 'Your wallet approves it. A new picture is one more approval.',
+  publish: 'Publish to NEAR Social',
+  cancel: 'Cancel',
+  /** The button while it works, step by step. */
+  picturing: 'Your wallet: the picture first…',
+  storing: 'Storing the picture…',
+  signing: 'Waiting for your wallet…',
+  checking: 'Checking NEAR Social has it…',
+  saved: 'Saved',
+  savedLine: 'Your public profile is updated, here and in other NEAR apps.',
+  notSaved: 'Not saved',
+  refused: 'Your wallet didn’t send it, so nothing changed.',
+  rejected: (why: string) => `NEAR Social didn’t take it, so nothing changed: ${why}.`,
+  slow: 'NEAR Social hasn’t confirmed it yet. Look again in a minute.',
+  otherWallet: (wallet: string, account: string) =>
+    `Your wallet is on ${wallet}. Switch it to ${account} to publish.`,
+  tryAgain: 'Try again',
+} as const;
+
+/** Where publishing is. */
+export type EditPhase =
+  | 'editing'
+  | 'picturing'
+  | 'storing'
+  | 'signing'
+  | 'checking'
+  | 'saved'
+  | 'failed';
+
+/** The phases in which the editor waits and nothing can be changed. */
+export const busyPhase = (p: EditPhase) =>
+  p === 'picturing' || p === 'storing' || p === 'signing' || p === 'checking';
+
+/** The editor as its view shows it (components/workspace/ProfileEditor.tsx). */
+export interface ProfileEditorView {
+  /** No public profile yet: this makes the first. */
+  creating: boolean;
+  /** The account that publishes, as shown, and in full. */
+  account: { shown: string; full: string };
+  draft: ProfileDraft;
+  /** The picture shown: the one chosen, or the one there now. */
+  picture: string | null;
+  phase: EditPhase;
+  /** Why the last try didn't go through, in a person's words. */
+  problem: string | null;
+  setName: (v: string) => void;
+  setAbout: (v: string) => void;
+  setLink: (i: number, part: 'service' | 'value', v: string) => void;
+  addLink: () => void;
+  removeLink: (i: number) => void;
+  choosePicture: (file: File) => void;
+  publish: () => void;
+  cancel: () => void;
+}
 
 /** The profile part's NEAR Social state: still reading, a profile, none there, or no answer. */
 export type SocialState =
