@@ -6,11 +6,17 @@
 // started or ended, a job moved) and the name Petals' agent just gave the open conversation. It also holds
 // the person's own state (the session, the profile and its editor, the credit), once, which the panel's
 // Profile and Lobby sections and the lobby page all read. No timer.
+
+import type { View } from '@petal/core/types';
+import { type Dimension, EVERY_FLOWER, type Piece } from '@petal/core/view';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { type ConversationRow, conversationRows } from '../lib/conversation-list.ts';
+import { DEFAULT_PERSON_VIEW } from '../lib/person-view.ts';
+import { isDefault, type Scale, withData, withScale } from '../lib/view-edit.ts';
 import { useConversations } from './useConversations.ts';
 import { useFunds } from './useFunds.ts';
+import { usePersonView } from './usePersonView.ts';
 import { useProfile } from './useProfile.ts';
 import { useProfileEditor } from './useProfileEditor.ts';
 import { useSession } from './useSession.ts';
@@ -23,6 +29,20 @@ export interface PanelPerson {
   profile: ReturnType<typeof useProfile>;
   editor: ReturnType<typeof useProfileEditor>;
   funds: ReturnType<typeof useFunds>;
+}
+
+/** The Settings section's state: the person's view and what a choice does to it (ViewControls' props). */
+export interface PanelSettings {
+  view: View;
+  defaults: View;
+  choices: Record<Dimension, readonly Piece[]>;
+  pieces: readonly Piece[];
+  open: Dimension | null;
+  onOpen: (d: Dimension) => void;
+  onPick: (d: Dimension, data: string | null) => void;
+  onScale: (d: Dimension, scale: Scale) => void;
+  onReset: (() => void) | undefined;
+  failed: string | null;
 }
 
 /** What the page beside the panel reads from it and tells it. */
@@ -135,6 +155,42 @@ export function usePanelState() {
     }),
     [signedIn, person, rows, visit, claim, restart],
   );
+  // the Settings section: the person's view, read once for the whole site (usePersonView, LOOK's), each
+  // choice saved at once, and everything drawn in it again without a reload
+  const personView = usePersonView();
+  const [openDimension, setOpenDimension] = useState<Dimension | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
+  const keep = useCallback(
+    (next: View) => {
+      setFailed(null);
+      personView
+        .save(next)
+        .catch((e: unknown) => setFailed(e instanceof Error ? e.message : String(e)));
+    },
+    [personView],
+  );
+  const defaults = DEFAULT_PERSON_VIEW.view;
+  const settings: PanelSettings = {
+    view: personView.view,
+    defaults,
+    choices: personView.choices,
+    pieces: EVERY_FLOWER,
+    open: openDimension,
+    onOpen: (d: Dimension) => setOpenDimension((now) => (now === d ? null : d)),
+    onPick: (d: Dimension, data: string | null) =>
+      keep(withData(personView.view, d, data, EVERY_FLOWER, defaults)),
+    onScale: (d: Dimension, scale: Scale) => keep(withScale(personView.view, d, scale)),
+    // usePersonView's reset puts the default back: the person's own choice, in the one place
+    onReset: isDefault(personView.view, defaults)
+      ? undefined
+      : () => {
+          setFailed(null);
+          personView
+            .reset()
+            .catch((e: unknown) => setFailed(e instanceof Error ? e.message : String(e)));
+        },
+    failed,
+  };
   // what the Profile and Lobby sections say: the lobby's own state, not a second read of it
   const you = {
     account: session.account,
@@ -147,6 +203,7 @@ export function usePanelState() {
     menu,
     rows,
     you,
+    settings,
     here: pathname === '/lobby' ? ('lobby' as const) : undefined,
     // New, pressed where a new conversation already is: the address won't change, so it says so itself
     atNew: address === '/make',

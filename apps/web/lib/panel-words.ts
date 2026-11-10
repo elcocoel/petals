@@ -33,8 +33,34 @@ export const panelWords = {
     unread: 'No answer',
   },
   signOut: 'Disconnect',
-  /** Settings, until LOOK and SYSTEMS's one-source page fills it. A draft. */
-  settingsSoon: 'Your display settings show here',
+  /**
+   * Settings (coordinator/one-source.md, step 7): how each dimension draws data, for every petal you look
+   * at. The dimensions' names are the view's own (view/v1); the rest are drafts.
+   */
+  settings: {
+    dimensions: {
+      height: 'Height',
+      width: 'Width',
+      order: 'Order',
+      colour: 'Colour',
+      outline: 'Outline',
+      texture: 'Texture',
+      markings: 'Markings',
+      segments: 'Segments',
+      lines: 'Lines',
+    },
+    /** A piece of data as a person reads it: share, amount, kind, identity. */
+    piece: (name: string) => `${name.charAt(0).toUpperCase()}${name.slice(1)}`,
+    none: 'None',
+    /** At a choice's end: the one everyone sees until they choose. */
+    isDefault: 'default',
+    scale: 'Scale',
+    scales: { sqrt: 'Square root', linear: 'Straight', log: 'Log' },
+    /** A dimension no data takes yet, on hover. */
+    nothingFits: 'No data takes this yet',
+    reset: 'Put the default back',
+    failed: (reason: string) => `Not saved: ${reason}`,
+  },
   projects: 'Projects',
   newProject: 'New project',
   /** The new project's row, waiting for its name. */
