@@ -65,7 +65,6 @@ import { Nav } from '../components/ui/Nav.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
 import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
-import { type RailItem, SideRail } from '../components/ui/SideRail.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
 import { TextLink } from '../components/ui/TextLink.tsx';
 import { Transcript } from '../components/ui/Transcript.tsx';
@@ -96,6 +95,7 @@ import {
   TURN_ROWS,
 } from './fixtures.ts';
 import { LabComposer, LabPetalClose } from './LabComposer.tsx';
+import { LabAction, LabAgent, LabFold, LabProject, LabRail } from './LabPanel.tsx';
 import { PANEL_STATES } from './panel-fixtures.ts';
 
 export interface LabState {
@@ -131,11 +131,6 @@ export interface LabEntry {
 const SOURCE_URLS = { 'fastnear-rpc-validators': 'https://rpc.fastnear.com' };
 const STARTER = { figmaName: 'Petals / Starter question', figmaNode: '52:1866' };
 const SECONDARY = { figmaName: 'Petals / Button secondary', figmaNode: '52:1869' };
-/** The panel's places, as WorkMenu gives them. */
-const PANEL_ITEMS: RailItem[] = [
-  { key: 'new', icon: 'plus', label: 'New conversation', href: '#new' },
-  { key: 'lobby', icon: 'home', label: 'Lobby', href: '#lobby' },
-];
 
 /** Every drawing once, at a size the landing page draws it. */
 const KINDS: {
@@ -1090,38 +1085,11 @@ export const registry: LabEntry[] = [
       {
         name: 'open, with the work in it (all of it: /lab/panel)',
         wide: true,
-        render: () => (
-          <SideRail
-            label="Your work"
-            open
-            foldLabel="Hide the panel"
-            unfoldLabel="Show the panel"
-            onFold={() => {}}
-            onUnfold={() => {}}
-            items={PANEL_ITEMS}
-          >
-            <section className="flex flex-col">
-              <SectionHead size="panel" title="Conversations" />
-              <ConversationList rows={PANEL_STATES.five.rows} />
-            </section>
-          </SideRail>
-        ),
+        render: () => <LabRail open />,
       },
       {
         name: 'folded: the fold and the places, as icons',
-        render: () => (
-          <SideRail
-            label="Your work"
-            open={false}
-            foldLabel="Hide the panel"
-            unfoldLabel="Show the panel"
-            onFold={() => {}}
-            onUnfold={() => {}}
-            items={PANEL_ITEMS}
-          >
-            {null}
-          </SideRail>
-        ),
+        render: () => <LabRail open={false} />,
       },
     ],
   },
@@ -1151,9 +1119,7 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'a project, open, with its count',
-        render: () => (
-          <NavItem onClick={() => {}} expanded icon="chevron" label="NEAR stake" trail="6" />
-        ),
+        render: () => <LabProject />,
       },
       {
         name: 'in a project',
@@ -1169,18 +1135,11 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'a line that says what is there, with a control',
-        render: () => (
-          <NavItem
-            icon="agent"
-            label="Codex"
-            trail="waiting"
-            action={<IconButton icon="close" label="Disconnect Codex" onClick={() => {}} />}
-          />
-        ),
+        render: () => <LabAgent />,
       },
       {
         name: 'muted: empty, or the way to add one',
-        render: () => <NavItem onClick={() => {}} icon="plus" label="Connect an agent" muted />,
+        render: () => <LabAction />,
       },
     ],
   },
@@ -1193,9 +1152,7 @@ export const registry: LabEntry[] = [
     states: [
       {
         name: 'the fold',
-        render: () => (
-          <IconButton icon="sidebar" label="Hide the panel" onClick={() => {}} expanded />
-        ),
+        render: () => <LabFold />,
       },
       {
         name: 'a place, folded',
