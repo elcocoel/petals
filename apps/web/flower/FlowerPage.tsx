@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 import { useCallback, useRef } from 'react';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
-import { conversationBoxes, type Size } from '../lib/float-box.ts';
+import { boxUnder, type Size } from '../lib/float-box.ts';
 import type { PanelFlower } from '../lib/panel-view.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useFlowerPage } from '../viewmodels/useFlowerPage.ts';
@@ -27,11 +27,10 @@ export function FlowerPage({
   const { state, actions } = useFlowerPage(flower);
   const area = useRef<HTMLDivElement>(null);
   // The box starts where /make's does, at the top right, under the nav.
-  const place = useCallback((win: Size) => {
-    const top = area.current?.getBoundingClientRect().top ?? 0;
-    const { panel } = conversationBoxes({ w: win.w, h: win.h - top });
-    return { panel: { ...panel, y: panel.y + top } };
-  }, []);
+  const place = useCallback(
+    (win: Size) => ({ panel: boxUnder(win, area.current?.getBoundingClientRect().top ?? 0) }),
+    [],
+  );
   const hands = useFloatBoxes(BOXES, place);
   const { panel } = state;
   return (

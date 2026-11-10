@@ -23,6 +23,8 @@ export interface NightView {
   status: string;
   as_of: string;
   snapshot: string;
+  /** the map it's on, its reading's address, when the live map says (GET /api/v1/map) */
+  map?: string;
   reading: Pick<Reading, 'title' | 'petals'>;
 }
 

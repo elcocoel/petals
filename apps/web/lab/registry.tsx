@@ -2240,6 +2240,10 @@ export const NOT_IN_LAB: Record<string, string> = {
   SiteChrome: 'the Nav, drawn here, around a reading column; it holds no state of its own',
   ReadingColumn:
     'the reading column SiteChrome sets pages in, alone: a width and a margin, nothing to see',
+  MapAt:
+    'wires the Power Map, opened inside one map, to the box of its readings: it lives at /m/<id>',
+  FlowerAt:
+    'wires useFlowerPage to the Power Map opened inside the flower, and its box: it lives at /f/<id> and /draft',
   FlowerPage:
     'wires useFlowerPage to the flower and its box, filling the area under the nav: it lives at /f/<id> and /draft',
   FrontDoor: 'draws nothing: it opens the wallet when the landing is left for /make (proposal)',

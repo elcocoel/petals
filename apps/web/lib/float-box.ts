@@ -92,6 +92,15 @@ export function conversationBoxes(
   };
 }
 
+/**
+ * A canvas page's one box (app/(canvas)): where the conversation's flower box starts, at the top right, in
+ * the area below `top` (the site's nav), so it starts under the nav, not over it.
+ */
+export function boxUnder(win: Size, top: number): Rect {
+  const { panel } = conversationBoxes({ w: win.w, h: win.h - top });
+  return { ...panel, y: panel.y + top };
+}
+
 /** The same, with a recorded run's input: a read-only saved question and the button that plays it. */
 export const recordedBoxes = (win: Size) =>
   conversationBoxes(win, floatBox['recorded-input-height']);
