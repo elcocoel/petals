@@ -12,6 +12,15 @@ export {
   yoctoToUsd,
 } from './credit.ts';
 export {
+  type DepositDeps,
+  type DepositQuote,
+  depositQuote,
+  ONE_CLICK,
+  payTokens,
+  type SwapStatus,
+  swapStatus,
+} from './deposit.ts';
+export {
   BASE_USDC,
   DRY_QUOTE_NOTE,
   fakeQuote,

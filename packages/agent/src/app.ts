@@ -33,7 +33,7 @@ export interface PetalAppOptions extends AgentRouteOptions {
   /** NEAR RPC per network, for sign-in; default the public RPC, or the context's in fake mode */
   rpcFor?: (network: Network) => Rpc;
   /** for tests: how a payment is read on chain, NEAR's price, and the credit contract */
-  pay?: Pick<PayDeps, 'readTransfer' | 'nearUsd' | 'credit'>;
+  pay?: Pick<PayDeps, 'readTransfer' | 'nearUsd' | 'credit' | 'oneClick'>;
 }
 
 /** "recorded", or the NEAR AI client's own up/down. */
@@ -166,6 +166,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
         ? { readTransfer: () => Promise.reject(new Error('fake mode reads no chain')) }
         : {}),
       ...(o.pay?.readTransfer ? { readTransfer: o.pay.readTransfer } : {}),
+      ...(o.pay?.oneClick ? { oneClick: o.pay.oneClick } : {}),
     }),
   );
   // a person's own view and profile (Elco, 10 Nov), and the pictures in profiles

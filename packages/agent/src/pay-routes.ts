@@ -17,9 +17,13 @@
 import type { Price } from '@petal/core';
 import { TOOLS_VERSION } from '@petal/core';
 import {
+  type DepositDeps,
+  depositQuote,
   nearUsd,
   PAY_RECEIVER,
+  payTokens,
   readTransfer,
+  swapStatus,
   type Transfer,
   TX_HASH,
   yoctoToNear,
@@ -38,6 +42,8 @@ export interface PayDeps {
   gate: RouteAuth;
   /** what Petals charges at (price/v1); default price.json */
   price?: Price;
+  /** NEAR Intents' 1Click, for a top-up from any token on any chain; tests give a fake fetch */
+  oneClick?: DepositDeps;
   /** the transfer as the chain shows it; default readTransfer on the public RPC */
   readTransfer?: (network: Network, txHash: string, sender: string) => Promise<Transfer>;
   /** dollars per NEAR now; default NEAR Intents' token list */
@@ -280,6 +286,142 @@ export function payRoutes(d: PayDeps): Hono {
       },
     });
   }
+
+  // -- a top-up through NEAR Intents (Elco, 10 Nov: "let users pay with anything from anywhere"):
+  //    GET  /api/v1/pay/tokens          what a person can pay from: every token and chain 1Click lists
+  //    POST /api/v1/pay/intents         { usd, origin_asset, refund_to } → a deposit address to send to
+  //    GET  /api/v1/pay/intents/:deposit where it stands; once it's landed, the dollars are on their credit
+  // Into NEAR Intents under Petals' account, mainnet only, as NEAR Intents is. It lands as the dollars of
+  // USDC it delivered, once, with its own entry, at the price it came in at.
+
+  app.get('/api/v1/pay/tokens', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    return ok(c, { tokens: await payTokens(d.oneClick) });
+  });
+
+  app.post(
+    '/api/v1/pay/intents',
+    bodyLimit({
+      maxSize: 16 * 1024,
+      onError: (c) => fail(c, 'bad_input', 'the body is larger than 16 KiB'),
+    }),
+    async (c) => {
+      c.header('Cache-Control', 'no-store');
+      const foreign = d.gate.refuseForeign(c);
+      if (foreign) return foreign;
+      const me = await d.gate.personOf(c);
+      if (!me) return fail(c, 'unauthorised', 'Sign in with your wallet first.');
+      const body = (await c.req.json().catch(() => null)) as {
+        usd?: unknown;
+        origin_asset?: unknown;
+        refund_to?: unknown;
+      } | null;
+      const { usd, origin_asset, refund_to } = body ?? {};
+      if (typeof usd !== 'number' || !(usd > 0) || usd > 1000) {
+        return fail(c, 'bad_input', 'usd is how many dollars to add, more than 0 and at most 1000');
+      }
+      if (typeof origin_asset !== 'string' || !origin_asset) {
+        return fail(
+          c,
+          'bad_input',
+          'origin_asset is the token to pay with, as GET /api/v1/pay/tokens names it',
+        );
+      }
+      if (typeof refund_to !== 'string' || !refund_to) {
+        return fail(
+          c,
+          'bad_input',
+          "refund_to is your address on the token's chain, where anything unswapped goes back",
+        );
+      }
+      let quote: Awaited<ReturnType<typeof depositQuote>>;
+      try {
+        quote = await depositQuote(
+          { usd, originAsset: origin_asset, refundTo: refund_to, recipient: PAY_RECEIVER.mainnet },
+          d.oneClick,
+        );
+      } catch (e) {
+        return fail(c, 'source_failed', `NEAR Intents couldn't quote it: ${(e as Error).message}`);
+      }
+      await d.store.topUp.add({
+        deposit_address: quote.deposit_address,
+        person: me.person,
+        usd,
+        quote: JSON.stringify(quote),
+        status: 'PENDING_DEPOSIT',
+        credited_usd: null,
+        created_at: new Date(clock()).toISOString(),
+        settled_at: null,
+      });
+      return ok(c, { top_up: { ...quote, usd, status: 'PENDING_DEPOSIT' } });
+    },
+  );
+
+  app.get('/api/v1/pay/intents/:deposit', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const me = await d.gate.personOf(c);
+    if (!me) return fail(c, 'unauthorised', 'Sign in with your wallet first.');
+    const row = await d.store.topUp.get(c.req.param('deposit'));
+    if (!row || row.person !== me.person)
+      return fail(c, 'not_found', 'No top-up of yours at that address.');
+    const quote = JSON.parse(row.quote) as { deposit_memo: string | null };
+    if (row.settled_at) {
+      return ok(c, {
+        top_up: {
+          deposit_address: row.deposit_address,
+          status: row.status,
+          credited_usd: row.credited_usd,
+        },
+        credit: await personCredit(d.store, me.person),
+      });
+    }
+    let s: Awaited<ReturnType<typeof swapStatus>>;
+    try {
+      s = await swapStatus(row.deposit_address, quote.deposit_memo, d.oneClick);
+    } catch (e) {
+      return fail(c, 'source_failed', `NEAR Intents couldn't say: ${(e as Error).message}`);
+    }
+    let credited: number | null = null;
+    if (s.status === 'SUCCESS') {
+      // the dollars it delivered, as USDC (six decimals), at the price it came in at
+      const delivered =
+        s.amount_out_usd !== null
+          ? Number(s.amount_out_usd)
+          : s.amount_out !== null
+            ? Number(s.amount_out) / 1e6
+            : row.usd;
+      const usdIn = Math.round(delivered * 1e6) / 1e6;
+      const at = new Date(clock()).toISOString();
+      if (await d.store.topUp.settle(row.deposit_address, usdIn, at)) {
+        await payPerson(d.store, me.person, {
+          id: `intents:${row.deposit_address}`,
+          usd: usdIn,
+          now: new Date(clock()),
+        });
+        await chargePetals(
+          d.store,
+          d.price ?? PRICE,
+          me.person,
+          { kind: 'top_up', usd: usdIn },
+          `intents:${row.deposit_address}`,
+          at,
+        );
+      }
+      credited = usdIn;
+    } else if (s.status !== row.status) {
+      await d.store.topUp.setStatus(row.deposit_address, s.status);
+    }
+    return ok(c, {
+      top_up: {
+        deposit_address: row.deposit_address,
+        status: s.status,
+        credited_usd: credited,
+        origin_tx: s.origin_tx,
+        destination_tx: s.destination_tx,
+      },
+      credit: await personCredit(d.store, me.person),
+    });
+  });
 
   return app;
 }
