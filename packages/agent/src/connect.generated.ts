@@ -43,6 +43,10 @@ export const CONNECT_CHAPTERS: readonly ConnectChapter[] = [
       {
         "heading": "When it can't start",
         "body": "- **Claude Code isn't installed:** `curl -fsSL https://claude.ai/install.sh | bash`.\n- **It isn't signed in** (\"Not logged in · Please run /login\"): the person runs `claude` once in a terminal and signs in there."
+      },
+      {
+        "heading": "On Petals' connect page",
+        "body": "What the person reads on `{site}/connect`, next to the command under \"Keep Petals for next time\":\n\n- **Claude Code:** To keep Petals in Claude Code for next time, run this once in a terminal. It adds Petals to Claude Code’s tools, so it’s there in every new conversation."
       }
     ]
   },
@@ -76,6 +80,10 @@ export const CONNECT_CHAPTERS: readonly ConnectChapter[] = [
       {
         "heading": "When it can't start",
         "body": "- **Codex isn't installed:** `npm install -g @openai/codex`.\n- **It isn't signed in:** the person runs `codex` once in a terminal and signs in there, with their ChatGPT account or an API key."
+      },
+      {
+        "heading": "On Petals' connect page",
+        "body": "What the person reads on `{site}/connect`, next to the command under \"Keep Petals for next time\":\n\n- **Codex:** To keep Petals in Codex for next time, run this once in a terminal. It adds Petals to Codex’s tools, so it’s there in every new conversation."
       }
     ]
   },
@@ -105,6 +113,10 @@ export const CONNECT_CHAPTERS: readonly ConnectChapter[] = [
       {
         "heading": "When it can't start",
         "body": "- **Hermes isn't installed:** install it from Nous Research's Hermes Agent guide.\n- **Hermes isn't set up yet** (the page's chat says only \"Internal error\"): the person runs `hermes setup` once in a terminal to choose a provider and a model."
+      },
+      {
+        "heading": "On Petals' connect page",
+        "body": "What the person reads on `{site}/connect`, next to the command under \"Keep Petals for next time\":\n\n- **Hermes:** To keep Petals in Hermes for next time, run this once in a terminal. It adds Petals to Hermes’ tools, so it’s there in every new conversation."
       }
     ]
   },
@@ -138,6 +150,10 @@ export const CONNECT_CHAPTERS: readonly ConnectChapter[] = [
       {
         "heading": "Cursor, or any app that takes an MCP server's address",
         "body": "Add the address as a remote server. In Cursor that's `~/.cursor/mcp.json`:\n\n```json\n{ \"mcpServers\": { \"petals\": { \"url\": \"{site}/mcp\" } } }\n```\n\nAn app like Cursor also runs commands on the person's computer, so the prompt for Claude Code, Codex or Hermes works there too, with fresh readings."
+      },
+      {
+        "heading": "On Petals' connect page",
+        "body": "What the person reads on `{site}/connect`, next to the address above:\n\n- **The Claude app:** Add Petals as a connector: Customize > Connectors, then + Add and Add custom connector. Name it Petals and paste this address. On a Team or Enterprise plan, an Owner adds it first, under Organization settings > Connectors. It reads and draws what Petals already holds, and takes your jobs when you ask it to. For new readings, use Claude Code.\n- **ChatGPT:** Add Petals as a custom MCP server: in ChatGPT’s Plugins, choose +, then Add custom MCP server, and paste this address. It reads and draws what Petals already holds, and takes your jobs when you ask it to. For new readings, use Codex.\n- **Anything else:** Any agent that can run commands on your computer can use the prompt above. An app that takes an MCP server’s address, such as Cursor, can add Petals with this one instead: it reads and draws what Petals already holds."
       }
     ]
   }

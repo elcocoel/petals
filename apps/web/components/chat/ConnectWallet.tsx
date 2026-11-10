@@ -3,7 +3,6 @@
 import { doorWords } from '../../lib/door-words.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
-import { TextLink } from '../ui/TextLink.tsx';
 
 export function ConnectWallet({
   question,
@@ -24,9 +23,6 @@ export function ConnectWallet({
         <Button disabled={busy} onClick={onConnect}>
           {doorWords.connect}
         </Button>
-        <TextLink variant="quiet" href="/connect">
-          {doorWords.ownAgent}
-        </TextLink>
       </ActionRow>
       {failed && <p className="error my-0">{failed}</p>}
     </div>
