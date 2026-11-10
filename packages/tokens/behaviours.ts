@@ -13,7 +13,7 @@ export const parents = {
   figure: 'Drawing, AnnotatedFlower',
   mark: 'Wordmark, the pixel numerals',
   head: 'SectionHead',
-  item: 'NavItem, IconButton: a row or a control in the side panel',
+  item: 'NavItem, IconButton, a tick: a row or a small control, in the side panel or a pager',
 } as const;
 
 export type Parent = keyof typeof parents;
@@ -118,6 +118,18 @@ export const behaviours = [
   { name: 'box.tilt', purpose: 'Tilts slightly toward the pointer', via: 'both' },
   { name: 'box.swell', purpose: 'The drawing inside swells a little', via: 'css' },
   { name: 'box.type', purpose: "A terminal's lines come in one by one", via: 'css' },
+  {
+    name: 'box.focus',
+    purpose:
+      'The scene in focus comes forward, lifted, its shadow deep, its drawing swelled; the rest step back until the pointer finds them',
+    via: 'css',
+  },
+  {
+    name: 'box.cycle',
+    purpose:
+      'A line fills under the scene in focus and, once it is full, the row moves on, round and round; a hand on the row holds it',
+    via: 'css',
+  },
   {
     name: 'box.move',
     purpose: 'Dragged by its bar, comes above the other, and its bar never leaves the window',
