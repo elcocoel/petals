@@ -1529,9 +1529,16 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/Funds.tsx',
     states: [
       {
-        name: 'holding NEAR',
+        name: 'credit, as on the live site (no contract)',
+        render: () => (
+          <Funds balance="0.42" held={null} phase="ready" withdrew={null} onWithdraw={() => {}} />
+        ),
+      },
+      {
+        name: 'holding NEAR in the contract',
         render: () => (
           <Funds
+            balance="0.84"
             held="840000000000000000000000"
             phase="ready"
             withdrew={null}
@@ -1543,6 +1550,7 @@ export const registry: LabEntry[] = [
         name: 'waiting for the wallet',
         render: () => (
           <Funds
+            balance="0.84"
             held="840000000000000000000000"
             phase="withdrawing"
             withdrew={null}
@@ -1552,12 +1560,15 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'withdrew',
-        render: () => <Funds held="0" phase="withdrew" withdrew="0.84" onWithdraw={() => {}} />,
+        render: () => (
+          <Funds balance="0.00" held="0" phase="withdrew" withdrew="0.84" onWithdraw={() => {}} />
+        ),
       },
       {
         name: "didn't go through",
         render: () => (
           <Funds
+            balance="0.84"
             held="840000000000000000000000"
             phase="failed"
             withdrew={null}
@@ -1567,7 +1578,9 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'nothing held',
-        render: () => <Funds held="0" phase="ready" withdrew={null} onWithdraw={() => {}} />,
+        render: () => (
+          <Funds balance="0.00" held="0" phase="ready" withdrew={null} onWithdraw={() => {}} />
+        ),
       },
     ],
   },

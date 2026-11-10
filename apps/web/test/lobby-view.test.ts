@@ -1,6 +1,7 @@
-// The lobby's flowers (specs/004-workspace, W3): each reads as in the gallery and opens on the canvas.
+// The lobby's map (Elco, 10 Nov: one map): every view on the one shared map, read as the gallery reads it,
+// with its picture as SYSTEMS draws it, opening where it lives. And the profile part's money.
 import { describe, expect, test } from 'vitest';
-import type { ListedFlower } from '../lib/flower-view.ts';
+import type { MapViewRow } from '../lib/flower-view.ts';
 import {
   canWithdraw,
   fundsWords,
@@ -11,41 +12,44 @@ import {
   withdrawn,
 } from '../lib/lobby-view.ts';
 
-const flower = (over: Partial<ListedFlower>): ListedFlower => ({
-  id: '9ac16c8917aa5ca579c8421a',
+const view = (over: Partial<MapViewRow>): MapViewRow => ({
+  sha: '3f0c9a1b2d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5061728394a5b6c7d8e',
+  name: null,
   title: 'House of Stake',
-  network: 'near',
+  network: 'near-house-of-stake',
+  chain: 'near',
+  address: null,
+  count: 412,
   as_of: '2026-11-05T10:00:00Z',
-  maker: null,
-  published_at: null,
-  where: 'map',
+  made_by: 'mapping.petals.near',
+  view_url: 'https://petal-flowers.vercel.app/d/3f0c9a1b',
+  picture: '/api/v1/map/3f0c9a1b/svg?look=render%2Fv2&view=1421e0bf7b26',
   ...over,
 });
 
 describe('mapTiles', () => {
-  test('a flower on the map opens on the canvas as a stored flower, with the gallery’s badge', () => {
-    const [tile] = mapTiles([flower({})]);
-    expect(tile?.href).toBe('/make?stored=9ac16c8917aa5ca579c8421a');
-    expect(tile?.image).toBe(
-      '/api/v1/flowers/9ac16c8917aa5ca579c8421a/svg?look=render%2Fv2&view=1421e0bf7b26',
-    );
-    expect(tile?.badge).toBe('on NEAR');
+  test('a view opens where it lives, with the picture as given and its chain as the badge', () => {
+    const [tile] = mapTiles([view({})]);
+    expect(tile?.href).toBe('https://petal-flowers.vercel.app/d/3f0c9a1b');
+    expect(tile?.image).toBe('/api/v1/map/3f0c9a1b/svg?look=render%2Fv2&view=1421e0bf7b26');
+    expect(tile?.badge).toBe('NEAR');
     expect(tile?.title).toBe('House of Stake');
+    expect(tile?.where).toBe('NEAR house of stake   /   5 Nov 2026');
   });
 
-  test('the site’s own copies (fixtures) are left out, so a flower never shows twice', () => {
-    const tiles = mapTiles([flower({}), flower({ where: 'fixture', id: 'near-validators' })]);
-    expect(tiles.map((t) => t.key)).toEqual(['map:9ac16c8917aa5ca579c8421a']);
+  test('a view someone named on the map shows that name', () => {
+    const [tile] = mapTiles([view({ name: 'RaidGuild' })]);
+    expect(tile?.title).toBe('RaidGuild');
   });
 
-  test('a flower with no title is named by its id', () => {
-    const [tile] = mapTiles([flower({ title: null, id: 'moloch-v1' })]);
-    expect(tile?.title).toBe('moloch-v1');
+  test('a chain other than NEAR says its name', () => {
+    const [tile] = mapTiles([view({ chain: 'ethereum' })]);
+    expect(tile?.badge).toBe('Ethereum');
   });
 
-  test('the order is the API’s', () => {
-    const tiles = mapTiles([flower({ id: 'b' }), flower({ id: 'a' })]);
-    expect(tiles.map((t) => t.key)).toEqual(['map:b', 'map:a']);
+  test('every view, in the API’s order, each once', () => {
+    const tiles = mapTiles([view({ sha: 'b' }), view({ sha: 'a' })]);
+    expect(tiles.map((t) => t.key)).toEqual(['b', 'a']);
   });
 });
 

@@ -1,7 +1,7 @@
 // The lobby (specs/004-workspace, W3): where a person's work sits when they come back. A skeleton, built so
 // Elco can sense what's needed. Pure: its words and where each thing goes are decided here, and the view
 // only lays them out. Every word below is a proposal, listed in design/journey-strings.md, "The lobby".
-import { dateLabel, flowerImage, type ListedFlower, networkLabel } from './flower-view.ts';
+import { chainLabel, dateLabel, type MapViewRow, networkLabel } from './flower-view.ts';
 import type { SocialProfile } from './near-social.ts';
 import { type Credit, type PayAction, payWords } from './pay.ts';
 
@@ -19,7 +19,7 @@ export const lobbyWords = {
   /** The flowers on the shared map, each opening on the canvas. */
   map: 'On the map',
   /** The map with nothing on it yet: what goes there, and how. LOBBY's draft. */
-  mapEmpty: 'Nothing on the map yet. A flower you publish from a conversation shows here.',
+  mapEmpty: 'Nothing on the map yet. A network you map in a conversation shows here.',
   /** Folding the menu away, and bringing it back. */
   fold: 'Hide',
   unfold: 'Menu',
@@ -31,8 +31,6 @@ export const lobbyWords = {
  * shipped on Elco's word ("ship drafts, change later"). Waiting for the wallet is the pay step's own draft.
  */
 export const fundsWords = {
-  /** The balance in the contract. */
-  held: (near: string) => `${near} NEAR`,
   /** Elco's draft. */
   withdraw: 'Withdraw',
   waiting: payWords.paying,
@@ -109,7 +107,7 @@ export function withdrawn(before: string, after: string): string {
   return nearOf((out > 0n ? out : 0n).toString());
 }
 
-/** A flower on the map as the lobby shows it: the gallery's tile, opening in the workspace. */
+/** A view on the one shared map as the lobby shows it: the gallery's tile, opening where the view lives. */
 export interface MapTile {
   key: string;
   title: string;
@@ -120,19 +118,17 @@ export interface MapTile {
 }
 
 /**
- * In the order the API lists them, without the site's own copies (fixtures), which are the same flowers
- * again (minimally good, rule 8). A tile opens the flower on the canvas, as a stored flower.
+ * Every view on the one shared map (Elco, 10 Nov), in the order GET /api/v1/map/views lists them, the
+ * oldest first, with its picture as SYSTEMS draws it. A tile opens the view where it lives.
  */
-export function mapTiles(flowers: readonly ListedFlower[]): MapTile[] {
-  return flowers
-    .filter((f) => f.where !== 'fixture')
-    .map((f) => ({
-      key: `${f.where}:${f.id}`,
-      title: f.title ?? f.id,
-      // the gallery's own line and badge, so a flower reads the same in both
-      where: `${networkLabel(f.network)}   /   ${dateLabel(f.as_of)}`,
-      badge: f.where === 'map' ? 'on NEAR' : 'fixture',
-      image: flowerImage(f.id),
-      href: `/make?stored=${encodeURIComponent(f.id)}`,
-    }));
+export function mapTiles(views: readonly MapViewRow[]): MapTile[] {
+  return views.map((v) => ({
+    key: v.sha,
+    title: v.name ?? v.title,
+    where: `${networkLabel(v.network)}   /   ${dateLabel(v.as_of)}`,
+    // the chain it's on, as the landing's tiles say it
+    badge: chainLabel(v.chain),
+    image: v.picture,
+    href: v.view_url,
+  }));
 }

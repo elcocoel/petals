@@ -28,6 +28,28 @@ export interface ListedFlower {
   tx_hash?: string;
 }
 
+/** A view on the one shared map, as GET /api/v1/map/views lists it (SYSTEMS, 10 Nov). */
+export interface MapViewRow {
+  /** the view's hash, as in its /d/ link */
+  sha: string;
+  /** what it's called on the map, when someone named it */
+  name: string | null;
+  /** its reading's own title */
+  title: string;
+  /** the reader that made its snapshot */
+  network: string;
+  chain: string;
+  address: string | null;
+  count: number;
+  as_of: string;
+  /** who made it (a NEAR account), when that's recorded */
+  made_by: string | null;
+  /** where the view opens */
+  view_url: string;
+  /** its tile, drawn on the server with the default view; used as given */
+  picture: string;
+}
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /** 2026-11-03T19:42:00Z as "3 Nov 2026". Read from the text, so it never shifts with a timezone. */
