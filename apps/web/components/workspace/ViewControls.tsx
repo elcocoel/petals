@@ -2,7 +2,8 @@
 // 10 Nov: "I'm basically choosing the glasses through which I see the entire universe"). One row per
 // dimension, all nine, saying the data it shows; pressing one opens its choices under it, as a project
 // opens its conversations: only the data that fits it, or none, with the default marked, and, while it
-// shows a number on a dimension that has one, its scale. A dimension no data takes yet says so on hover.
+// shows a number on a dimension that has one, its scale. A dimension no data takes yet can't open: it has no
+// chevron, and says so on hover.
 // Choosing saves at once; the last row puts the default back, when there's a change to undo. Nothing is
 // written here but what it's handed: any mapping core's table allows. Props only.
 import type { View } from '@petal/core/types';
@@ -53,12 +54,13 @@ export function ViewControls({
         if (fit.length === 0) {
           return (
             <li key={d}>
+              {/* it can't open, so no chevron; its name still starts where the others' do */}
               <NavItem
-                icon="chevron"
                 label={words.dimensions[d]}
                 trail={trail}
                 title={`${words.dimensions[d]}\n${words.nothingFits}`}
                 muted
+                depth={1}
               />
             </li>
           );
