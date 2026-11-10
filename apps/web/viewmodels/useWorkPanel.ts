@@ -9,6 +9,7 @@
 
 import type { View } from '@petal/core/types';
 import { type Dimension, EVERY_FLOWER, type Piece } from '@petal/core/view';
+import { layout, sizes } from '@petal/tokens';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { type ConversationRow, conversationRows } from '../lib/conversation-list.ts';
@@ -16,6 +17,7 @@ import { DEFAULT_PERSON_VIEW } from '../lib/person-view.ts';
 import { isDefault, type Scale, withData, withScale } from '../lib/view-edit.ts';
 import { useConversations } from './useConversations.ts';
 import { useFunds } from './useFunds.ts';
+import { usePanelWidth } from './usePanelWidth.ts';
 import { usePersonView } from './usePersonView.ts';
 import { useProfile } from './useProfile.ts';
 import { useProfileEditor } from './useProfileEditor.ts';
@@ -67,7 +69,12 @@ export interface WorkPanelBus {
   claim: (address: string) => void;
   /** Open the conversation again from clean, at the same address: New, pressed where it already is. */
   restart: () => void;
+  /** Where the panel ends, from the window's left edge, in pixels: a page lays out past it. */
+  edge: number;
 }
+
+/** The bar's width: one control with Space 8 on each side, and its hairline. */
+const BAR = sizes['Row height'] + 2 * layout['Space 8'] + 1;
 
 /** An address as the router reports it, so a claimed one and a seen one compare the same. */
 export const addressOf = (path: string, query: string) => {
@@ -84,6 +91,7 @@ const NOBODY: WorkPanelBus = {
   visit: 0,
   claim: () => {},
   restart: () => {},
+  edge: 0,
 };
 
 export const WorkPanelContext = createContext<WorkPanelBus>(NOBODY);
@@ -129,6 +137,9 @@ export function usePanelState() {
   // read again on every move and whenever the page signals; nothing is read for nobody
   const listed = useConversations(signedIn ? `${pathname}?${params.toString()}:${signal}` : null);
   const menu = useWorkMenu(signedIn, signal);
+  const width = usePanelWidth();
+  // the bar (a control with Space 8 around it, and its hairline), and the panel beside it when it's open
+  const edge = BAR + (menu.open ? width.width : 0);
   // a name Petals' agent gives the open conversation shows as it arrives, not only when the list is read
   const rows = useMemo(
     () =>
@@ -152,8 +163,9 @@ export function usePanelState() {
       visit,
       claim,
       restart,
+      edge,
     }),
-    [signedIn, person, rows, visit, claim, restart],
+    [signedIn, person, rows, visit, claim, restart, edge],
   );
   // the Settings section: the person's view, read once for the whole site (usePersonView, LOOK's), each
   // choice saved at once, and everything drawn in it again without a reload
@@ -204,6 +216,7 @@ export function usePanelState() {
     rows,
     you,
     settings,
+    width: width.hand,
     here: pathname === '/lobby' ? ('lobby' as const) : undefined,
     // New, pressed where a new conversation already is: the address won't change, so it says so itself
     atNew: address === '/make',

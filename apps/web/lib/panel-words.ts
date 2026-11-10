@@ -9,6 +9,9 @@ export type SectionKey = 'conversations' | 'projects' | 'agents' | 'lobby' | 'pr
 export const panelWords = {
   /** What a screen reader hears for the panel. */
   panel: 'Your work',
+  /** The one collapse control, as it is now, read aloud and in its tooltip. */
+  fold: 'Hide the panel',
+  unfold: 'Show the panel',
   /** The sections, as their icons are read aloud and shown on hover, and as each one's head. */
   sections: {
     conversations: 'Conversations',

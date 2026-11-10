@@ -11,11 +11,16 @@ import type { ListedProject } from '../lib/conversation-list.ts';
 import type { SectionKey } from '../lib/panel-words.ts';
 import { viewChoices } from '../lib/person-view.ts';
 import { isDefault, withData, withScale } from '../lib/view-edit.ts';
+import { usePanelWidth } from '../viewmodels/usePanelWidth.ts';
 import { PANEL_STATES, type PanelState } from './panel-fixtures.ts';
 
 export function PanelBench({ state }: { state: PanelState }) {
   const fixture = PANEL_STATES[state];
-  const [section, setSection] = useState<SectionKey | null>(fixture.section);
+  const [open, setOpen] = useState(fixture.section !== null);
+  const [jump, setJump] = useState<{ key: SectionKey; n: number } | null>(
+    fixture.section ? { key: fixture.section, n: 1 } : null,
+  );
+  const width = usePanelWidth();
   const [projects, setProjects] = useState<ListedProject[]>(fixture.projects);
   const [opened, setOpened] = useState<string[]>(fixture.opened);
   const [copied, setCopied] = useState(false);
@@ -26,8 +31,13 @@ export function PanelBench({ state }: { state: PanelState }) {
   const [view, setView] = useState<View>(DEFAULT_VIEW);
   const [openDimension, setOpenDimension] = useState<Dimension | null>('colour');
   const menu: WorkMenuView = {
-    section,
-    choose: (key) => setSection((now) => (now === key ? null : key)),
+    open,
+    toggleOpen: () => setOpen((now) => !now),
+    jump,
+    jumpTo: (key) => {
+      setOpen(true);
+      setJump((now) => ({ key, n: (now?.n ?? 0) + 1 }));
+    },
     projects,
     opened,
     toggle: (key) =>
@@ -60,6 +70,7 @@ export function PanelBench({ state }: { state: PanelState }) {
         conversations={fixture.rows}
         menu={menu}
         you={{ ...fixture.you, leave: () => {} }}
+        width={width.hand}
         settings={{
           view,
           defaults: DEFAULT_VIEW,

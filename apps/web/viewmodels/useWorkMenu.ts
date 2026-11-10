@@ -17,9 +17,10 @@ import type { ListedProject } from '../lib/conversation-list.ts';
 import type { SectionKey } from '../lib/panel-words.ts';
 
 export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
-  // box.fold: the panel starts open on its conversations, as an IDE's does; the open section's icon folds
-  // it to the bar, and another switches
-  const [section, setSection] = useState<SectionKey | null>('conversations');
+  // box.fold: the panel starts open, as an IDE's does (design/side-panel.md); the one collapse control
+  // hides it to the bar and shows it again; a section's icon opens it, if need be, and asks for that section
+  const [open, setOpen] = useState(true);
+  const [jump, setJump] = useState<{ key: SectionKey; n: number } | null>(null);
   const [agents, setAgents] = useState<ConnectedAgent[]>([]);
   const [projects, setProjects] = useState<ListedProject[]>([]);
   const [opened, setOpened] = useState<string[]>([]);
@@ -83,8 +84,13 @@ export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
   }, []);
 
   return {
-    section,
-    choose: (key: SectionKey) => setSection((now) => (now === key ? null : key)),
+    open,
+    toggleOpen: () => setOpen((now) => !now),
+    jump,
+    jumpTo: (key: SectionKey) => {
+      setOpen(true);
+      setJump((now) => ({ key, n: (now?.n ?? 0) + 1 }));
+    },
     projects,
     opened,
     toggle: (key: string) =>

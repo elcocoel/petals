@@ -5,7 +5,7 @@
 // camera isn't told about the boxes. Until the conversation has a flower, the canvas is empty ground
 // (Elco, 8 Nov: no flower hard-coded in).
 import type { SurfaceName } from '@petal/tokens';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Composer } from '../components/chat/Composer.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
@@ -14,7 +14,7 @@ import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import type { Catalogue } from '../lib/composer-options.ts';
-import { besideMenu, conversationBoxes, recordedBoxes, type Size } from '../lib/float-box.ts';
+import { besidePanel, conversationBoxes, recordedBoxes, type Size } from '../lib/float-box.ts';
 import type { MapCard } from '../lib/maps.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
@@ -48,7 +48,14 @@ export function InteractionSurface({
   useFollowScroll(refs.thread, refs.following);
   // The boxes start past the side panel when it's there (the layout's, app/(work)/WorkPanel.tsx). Placed
   // again only if that changes.
-  const from = state.menuShown ? besideMenu : undefined;
+  // At the panel's width when this conversation opens (design/side-panel.md, line 21): sizing or
+  // collapsing it afterwards doesn't move a box.
+  const openedBeside = useRef<number | null>(null);
+  if (state.menuShown && openedBeside.current === null) openedBeside.current = state.panelEdge;
+  const from =
+    state.menuShown && openedBeside.current !== null
+      ? besidePanel(openedBeside.current)
+      : undefined;
   const place = useMemo(
     () =>
       workspace.recorded ? recordedBoxes : (win: Size) => conversationBoxes(win, undefined, from),

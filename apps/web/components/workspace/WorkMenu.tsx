@@ -2,7 +2,8 @@
 // the same piece in both (Elco, 9 Nov), held by the layout they share, so it stays while the page beside
 // it changes. Since 10 Nov a professional tool's panel, as Orca's is, and a bar of sections (Elco: "each
 // of them is a set of tools"): Conversations, Projects, Your agents and Lobby, then the person's own two,
-// Profile and Settings, at the bar's foot. One section is open at a time, beside the bar, or none.
+// Profile and Settings, at the bar's foot. Open, every section is in the panel, one after the other, in
+// that order, scrolling as one; a section's icon brings it to the top (design/side-panel.md).
 // - Conversations: every conversation, newest first, each with who and when, and the way to a project;
 //   New conversation is its first row, where a new one appears.
 // - Projects: each holding its conversations, named in place; New project is its last row.
@@ -12,7 +13,7 @@
 //   Disconnect, the one place to sign out.
 // - Settings: the person's view, how each of the nine dimensions draws data for every petal they look at
 //   (ViewControls; coordinator/one-source.md, step 7), saved at once and drawn everywhere without a reload.
-// It keeps its room in the page's flow, open or folded, so a page that lays out beside it isn't covered.
+// It lies in the page's flow, open or collapsed, so a page that lays out beside it isn't covered.
 // Props only: its state comes from viewmodels/useWorkMenu.ts and useWorkPanel.ts. Every word from
 // lib/panel-words.ts.
 import { DIMENSIONS } from '@petal/core/view';
@@ -31,11 +32,11 @@ import { IconButton } from '../ui/IconButton.tsx';
 import { NavItem } from '../ui/NavItem.tsx';
 import { RowField } from '../ui/RowField.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
-import { type RailSection, SideRail } from '../ui/SideRail.tsx';
+import { type RailSection, type RailWidth, SideRail } from '../ui/SideRail.tsx';
 import { ViewControls } from './ViewControls.tsx';
 
-/** The bar, top to bottom. */
-const SECTIONS: (RailSection & { key: SectionKey })[] = [
+/** The bar, top to bottom, and the panel's sections in the same order. */
+const SECTIONS: (Omit<RailSection, 'content'> & { key: SectionKey })[] = [
   { key: 'conversations', icon: 'conversation', label: panelWords.sections.conversations },
   { key: 'projects', icon: 'project', label: panelWords.sections.projects },
   { key: 'agents', icon: 'agent', label: panelWords.sections.agents },
@@ -46,10 +47,14 @@ const SECTIONS: (RailSection & { key: SectionKey })[] = [
 
 /** What viewmodels/useWorkMenu.ts gives the menu, the same on both pages. */
 export interface WorkMenuView {
-  /** The section open beside the bar, or null when the panel is folded to it. */
-  section: SectionKey | null;
-  /** Opens a section; the open one folds the panel. */
-  choose: (key: SectionKey) => void;
+  /** The panel is open beside the bar; collapsed, only the bar shows. */
+  open: boolean;
+  /** The one collapse control: hides the panel, or shows it again. */
+  toggleOpen: () => void;
+  /** The section asked for last, and how many times: the panel scrolls to it. */
+  jump: { key: SectionKey; n: number } | null;
+  /** A section's icon: opens the panel if it's collapsed, and scrolls to that section. */
+  jumpTo: (key: SectionKey) => void;
   /** The person's projects, as the server keeps them (its folders). */
   projects: ListedProject[];
   /** The projects showing their conversations, by key. */
@@ -106,6 +111,7 @@ export function WorkMenu({
   menu,
   you,
   settings,
+  width,
   here,
   restartNew,
 }: {
@@ -113,6 +119,8 @@ export function WorkMenu({
   menu: WorkMenuView;
   you: PanelYou;
   settings: SettingsView;
+  /** The sash's hands: the panel's width is sized at its edge. */
+  width: RailWidth;
   /** New, pressed where a new conversation already is: the address won't move, so this opens it again. */
   restartNew?: (() => void) | undefined;
   /** The page it's on, when that page is one of its places. */
@@ -272,25 +280,16 @@ export function WorkMenu({
     ),
   };
 
-  const rail = (children: ReactNode) => (
+  return (
     <SideRail
       label={panelWords.panel}
-      sections={SECTIONS}
-      open={menu.section}
-      onChoose={(key) => menu.choose(key as SectionKey)}
-    >
-      {children}
-    </SideRail>
-  );
-  return (
-    <>
-      {/* Its room in the page's flow, which the page can lay out beside: the same panel, unseen. */}
-      <div aria-hidden className="invisible flex h-dvh shrink-0">
-        {rail(null)}
-      </div>
-      <div className="fixed top-0 bottom-0 left-0 flex">
-        {rail(menu.section ? sections[menu.section] : null)}
-      </div>
-    </>
+      sections={SECTIONS.map((section) => ({ ...section, content: sections[section.key] }))}
+      open={menu.open}
+      toggleLabel={menu.open ? panelWords.fold : panelWords.unfold}
+      onToggle={menu.toggleOpen}
+      onJump={(key) => menu.jumpTo(key as SectionKey)}
+      jump={menu.jump}
+      width={width}
+    />
   );
 }

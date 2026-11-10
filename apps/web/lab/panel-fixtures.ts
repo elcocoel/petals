@@ -100,7 +100,7 @@ export interface PanelFixture {
   projects: ListedProject[];
   opened: string[];
   agents: ReturnType<typeof agentRows>;
-  /** The section open beside the bar, or null for the bar alone. */
+  /** The section the panel opens scrolled to, or null for the panel collapsed to the bar. */
   section: SectionKey | null;
   you: { account: string | null; social: SocialState; balance: string | null };
 }
@@ -153,7 +153,7 @@ export const PANEL_STATES = {
   forty: { name: 'Forty, in six projects', ...forty, section: 'projects', you: ELCO_LIKE },
   profile: { name: 'Profile', ...forty, section: 'profile', you: ELCO_LIKE },
   settings: { name: 'Settings', ...forty, section: 'settings', you: ELCO_LIKE },
-  folded: { name: 'Folded to the bar', ...forty, section: null, you: ELCO_LIKE },
+  folded: { name: 'Collapsed to the bar', ...forty, section: null, you: ELCO_LIKE },
 } satisfies Record<string, PanelFixture>;
 
 export type PanelState = keyof typeof PANEL_STATES;

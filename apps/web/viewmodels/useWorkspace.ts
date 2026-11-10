@@ -337,6 +337,8 @@ export function useWorkspace(props: {
             elsewherePacket?.question ??
             'Conversation'),
       menuShown: panelBus.shown,
+      /** Where the side panel ends now, in pixels. */
+      panelEdge: panelBus.edge,
       pay: { asking: pay.asking, phase: pay.phase, added: pay.added },
       jobs,
       balance: pay.balance ? payWords.balance(pay.balance) : null,

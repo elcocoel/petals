@@ -54,6 +54,9 @@ export function sized(from: Rect, edge: Edge, dx: number, dy: number, win: Size)
 const BAR = sizes['Row height'] + 2 * layout['Space 8'];
 export const besideMenu = BAR + sizes['Sidebar width'] + floatBox.gap;
 
+/** Where the boxes start past a side panel that ends at `edge` (design/side-panel.md, line 21). */
+export const besidePanel = (edge: number) => edge + floatBox.gap;
+
 /** A column of boxes `w` wide starts at `from`, or further left if it wouldn't fit there. */
 const columnAt = (from: number, w: number, win: Size) =>
   Math.max(floatBox.inset, Math.min(from, win.w - floatBox.inset - w));

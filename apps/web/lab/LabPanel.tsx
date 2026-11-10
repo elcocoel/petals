@@ -8,33 +8,69 @@ import { NavItem } from '../components/ui/NavItem.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { type RailSection, SideRail } from '../components/ui/SideRail.tsx';
 import { agentWords } from '../lib/agents.ts';
+import { usePanelWidth } from '../viewmodels/usePanelWidth.ts';
 import { PANEL_STATES } from './panel-fixtures.ts';
 
-/** The bar's sections, as WorkMenu gives them. */
+/** The bar's sections, as WorkMenu gives them, each with a first afternoon's rows or a line. */
 const SECTIONS: RailSection[] = [
-  { key: 'conversations', icon: 'conversation', label: 'Conversations' },
-  { key: 'projects', icon: 'project', label: 'Projects' },
-  { key: 'agents', icon: 'agent', label: 'Your agents' },
-  { key: 'lobby', icon: 'home', label: 'Lobby' },
-  { key: 'profile', icon: 'profile', label: 'Profile', foot: true },
-  { key: 'settings', icon: 'settings', label: 'Settings', foot: true },
+  {
+    key: 'conversations',
+    icon: 'conversation',
+    label: 'Conversations',
+    content: (
+      <section className="flex flex-col">
+        <SectionHead size="panel" title="Conversations" />
+        <ConversationList rows={PANEL_STATES.five.rows} />
+      </section>
+    ),
+  },
+  ...(
+    [
+      ['projects', 'project', 'Projects'],
+      ['agents', 'agent', 'Your agents'],
+      ['lobby', 'home', 'Lobby'],
+    ] as const
+  ).map(([key, icon, label]) => ({
+    key,
+    icon,
+    label,
+    content: <SectionHead size="panel" title={label} />,
+  })),
+  {
+    key: 'profile',
+    icon: 'profile',
+    label: 'Profile',
+    foot: true,
+    content: <SectionHead size="panel" title="Profile" />,
+  },
+  {
+    key: 'settings',
+    icon: 'settings',
+    label: 'Settings',
+    foot: true,
+    content: <SectionHead size="panel" title="Settings" />,
+  },
 ];
 
-/** The panel, open on its conversations or folded to the bar (all of it: /lab/panel). */
+/** The panel, open or collapsed to the bar, its width sized at its edge (all of it: /lab/panel). */
 export function LabRail({ open: initial }: { open: boolean }) {
-  const [open, setOpen] = useState<string | null>(initial ? 'conversations' : null);
+  const [open, setOpen] = useState(initial);
+  const [jump, setJump] = useState<{ key: string; n: number } | null>(null);
+  const width = usePanelWidth();
   return (
     <SideRail
       label="Your work"
       sections={SECTIONS}
       open={open}
-      onChoose={(key) => setOpen((now) => (now === key ? null : key))}
-    >
-      <section className="flex flex-col">
-        <SectionHead size="panel" title="Conversations" />
-        <ConversationList rows={PANEL_STATES.five.rows} />
-      </section>
-    </SideRail>
+      toggleLabel={open ? 'Hide the panel' : 'Show the panel'}
+      onToggle={() => setOpen((now) => !now)}
+      onJump={(key) => {
+        setOpen(true);
+        setJump((now) => ({ key, n: (now?.n ?? 0) + 1 }));
+      }}
+      jump={jump}
+      width={width.hand}
+    />
   );
 }
 
