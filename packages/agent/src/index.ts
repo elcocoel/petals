@@ -26,6 +26,8 @@ export {
   modelOf,
   type Settings,
 } from './catalogue.ts';
+/** The credit contract on the server, and what a person owes on it (scripts/rehearse-credit.ts). */
+export { type CreditChain, chainChat, creditFrom, owedOf } from './credit.ts';
 /** Sponsored invites, scripts/mint-invite.ts, and a person's own credit, scripts/fund-person.ts. */
 export {
   creditBack,

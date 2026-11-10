@@ -250,10 +250,10 @@ export function inviteLedger(
 // and any browser reach it, and it needs no invite. scripts/fund-person.ts sets it, and since 9 Nov the
 // person adds to it themselves by paying in NEAR (payPerson).
 const personAccount = (person: string) => `person:${person}`;
-const FUNDED = 'funded';
-const PAID = 'paid';
+export const FUNDED = 'funded';
+export const PAID = 'paid';
 /** The credit contract's balance, read from the chain (credit.ts): what puts it in, in dollars. */
-const SYNCED = 'synced';
+export const SYNCED = 'synced';
 
 export interface PersonCredit {
   /** everything ever put in */
