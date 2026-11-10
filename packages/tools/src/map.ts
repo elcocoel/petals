@@ -2,7 +2,7 @@
 // every view stored on this site, each with its reading, its name, its date and who made it. Read-only and
 // public: GET /api/v1/map hands it over whole, list_flowers and find_target search it before a fresh read.
 // A view's spec is content-addressed, so its reading never changes: each is read once per process.
-import { DEFAULT_VIEW, RENDER_VERSION, readFlower, viewHash } from '@petal/core';
+import { DEFAULT_VIEW, legendItem, RENDER_VERSION, readFlower, viewHash } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
@@ -36,6 +36,8 @@ export interface MapView {
   view_url: string;
   /** its still picture, drawn with the default view (GET /api/v1/map/:sha/svg) */
   picture: string;
+  /** the colours that picture draws, as its legend has them: colour's keys, then the tail's */
+  keys: { label: string; swatch: string }[];
   /** who made it (a NEAR account), when that's recorded */
   made_by: string | null;
   reading: { title: string; petals: unknown[] };
@@ -60,6 +62,10 @@ async function readOf(ctx: ToolContext, body: string): Promise<Read | null> {
     const snapshot = await findSnapshot(ctx, spec.snapshot.sha256);
     if (!snapshot) return null;
     const reading = readFlower(spec, snapshot);
+    // the picture's colours: its legend with the default view, as render_flower dresses it
+    const legend = readFlower(spec, snapshot, DEFAULT_VIEW).legend.map(legendItem);
+    const keysOf = (primitive: string) =>
+      legend.filter((i) => i.primitive === primitive).flatMap((i) => i.keys ?? []);
     const params = (spec.network.params ?? {}) as Record<string, string>;
     const address = ADDRESS_PARAMS.map((k) => params[k]).find((v) => typeof v === 'string' && v);
     return {
@@ -71,6 +77,7 @@ async function readOf(ctx: ToolContext, body: string): Promise<Read | null> {
       as_of: spec.snapshot.as_of,
       snapshot: spec.snapshot.sha256,
       params,
+      keys: [...keysOf('colour'), ...keysOf('tail')],
       reading: { title: reading.title, petals: reading.petals },
     };
   } catch {
