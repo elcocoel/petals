@@ -13,6 +13,11 @@ import type { ToolContext } from './types.ts';
 const chainName = (caip2: string) =>
   Object.values(EVM_CHAINS).find((c) => c.caip2 === caip2)?.id ?? caip2;
 
+/** A chain as people name it: Gnosis, Solana, NEAR. */
+const chainWords = (caip2: string) =>
+  Object.values(EVM_CHAINS).find((c) => c.caip2 === caip2)?.name ??
+  (caip2.startsWith('solana:') ? 'Solana' : caip2.startsWith('near:') ? 'NEAR' : caip2);
+
 /** The address parameters a reader is asked for, in the order one is taken as the view's address. */
 const ADDRESS_PARAMS = ['dao', 'token', 'mint', 'contract', 'address', 'account'] as const;
 
@@ -25,6 +30,8 @@ export interface MapView {
   title: string;
   /** the reader that made its snapshot */
   network: string;
+  /** what was read and where, in people's words: its reader's title and its chain ("ERC-20 token holders on Gnosis") */
+  about: string;
   chain: string;
   address: string | null;
   /** the participants its snapshot holds */
@@ -68,9 +75,12 @@ async function readOf(ctx: ToolContext, body: string): Promise<Read | null> {
       legend.filter((i) => i.primitive === primitive).flatMap((i) => i.keys ?? []);
     const params = (spec.network.params ?? {}) as Record<string, string>;
     const address = ADDRESS_PARAMS.map((k) => params[k]).find((v) => typeof v === 'string' && v);
+    const reader = ctx.modules[spec.network.id]?.descriptor.title ?? spec.network.id;
+    const where = chainWords(spec.network.chain);
     return {
       title: reading.title,
       network: spec.network.id,
+      about: reader.toLowerCase().includes(where.toLowerCase()) ? reader : `${reader} on ${where}`,
       chain: params.chain ?? chainName(spec.network.chain),
       address: address ?? null,
       count: snapshot.participants.length,

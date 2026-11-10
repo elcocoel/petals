@@ -49,9 +49,9 @@ export interface CatalogueProvider {
   /** `recorded`: this server has no model key, so chats replay a recorded run and nothing here applies */
   status: 'ready' | 'recorded';
   /** where the credential lives */
-  credential: 'server' | 'tab' | 'helper' | 'none';
+  credential: 'server' | 'tab' | 'none';
   /** where the agent runs */
-  runs: 'server' | 'tab' | 'helper' | 'elsewhere';
+  runs: 'server' | 'tab' | 'elsewhere';
   /** `ask` waits for a yes before a new read or draw; `auto` draws without asking. `ask` is the default */
   permissions: string[];
   models: CatalogueModel[];

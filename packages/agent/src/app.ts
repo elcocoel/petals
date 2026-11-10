@@ -206,7 +206,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
         error: {
           code: 'internal',
           message:
-            "Petal can't reach its records right now, so nothing was started. Try again in a little while.",
+            "Petals can't reach its records right now, so nothing was started. Try again in a little while.",
         },
         tools_version: TOOLS_VERSION,
       },

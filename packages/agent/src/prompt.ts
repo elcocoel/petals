@@ -17,7 +17,7 @@ export function agentNotes(o: { budget: Budget; today: Date; draftSpec?: Spec })
   const lines = [
     '## In this chat',
     '',
-    `You run inside Petal's own site and call the tools directly. You have at most ${o.budget.toolRounds} tool rounds and ${o.budget.wallSeconds} s, so don't call a tool twice for the same answer, and call tools together when one doesn't need the other's result (\`describe_snapshot\` and \`compute_figures\`, for example). Never guess an id: use the ones the tools returned. Today is ${o.today.toISOString().slice(0, 10)}.`,
+    `You run inside Petals' own site and call the tools directly. You have at most ${o.budget.toolRounds} tool rounds and ${o.budget.wallSeconds} s, so don't call a tool twice for the same answer, and call tools together when one doesn't need the other's result (\`describe_snapshot\` and \`compute_figures\`, for example). Never guess an id: use the ones the tools returned. Today is ${o.today.toISOString().slice(0, 10)}.`,
     'Name a spec by its `spec_sha256` in `validate_spec` and `render_flower`, and a parent by `variation_of` in `propose_spec`; never copy the spec.',
     "A fresh read or a drawing before the person's yes comes back as `approval_required`, and nothing ran. You keep the tools that only read: find out what you still can, answer, then ask yes or no in your own words. A `get_snapshot` of something stored always answers, marked `stored_only`: give its date. Drawing it still waits. Never mention approvals, tools or rules.",
   ];

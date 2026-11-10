@@ -80,8 +80,8 @@ function result(
 function moduleFor(req: SnapshotRequest, registry: Record<string, InputModule>): InputModule {
   const m = registry[req.network];
   if (!m)
-    throw new InputError('cannot_read', `Petal has no input module for network "${req.network}"`, {
-      hint: `Petal can read: ${Object.keys(registry).sort().join(', ')}`,
+    throw new InputError('cannot_read', `Petals has no input module for network "${req.network}"`, {
+      hint: `Petals can read: ${Object.keys(registry).sort().join(', ')}`,
     });
   const spec = m.descriptor.params;
   const given = req.params ?? {};

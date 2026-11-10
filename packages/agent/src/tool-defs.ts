@@ -13,7 +13,7 @@ const DESCRIPTIONS: Record<string, string> = {
   find_target:
     'From a plain name or an address to candidates: what would draw each one, or why nothing can.',
   list_networks:
-    "The networks Petal can read. If the question is about one it can't read, say so and use cannot_read_hint.",
+    "The networks Petals can read. If the question is about one it can't read, say so and use cannot_read_hint.",
   get_network: 'One network: its descriptor and the snapshots already mapped.',
   get_snapshot:
     'Resolve a network and date to a snapshot; reused when already stored. Returns sha256, reused, as_of, block_height, sources and counts, never the body.',
