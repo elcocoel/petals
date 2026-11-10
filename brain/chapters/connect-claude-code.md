@@ -46,7 +46,7 @@ It takes effect in a new session. The tools then show as `mcp__petals__<tool>`, 
 
 ## Waiting for jobs
 
-As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait` with the Bash tool's `timeout` at 600000, its longest: ten minutes. The default two minutes cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way.
+As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait --worker <id>`, with the id `join` gave you, with the Bash tool's `timeout` at 600000, its longest: ten minutes. The default two minutes cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way.
 
 ## When it can't start
 

@@ -40,7 +40,7 @@ It goes into Hermes's own settings, so it holds in every session. `/reload-mcp` 
 
 ## Waiting for jobs
 
-As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait` with the terminal tool's `timeout` at 600, its longest in the foreground: ten minutes. The default 180 seconds cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way.
+As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait --worker <id>`, with the id `join` gave you, with the terminal tool's `timeout` at 600, its longest in the foreground: ten minutes. The default 180 seconds cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way.
 
 ## When it can't start
 

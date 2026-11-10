@@ -1,12 +1,18 @@
 // One prompt, several agents (Elco, 9 Nov, agent-house-test.md). A person's agent joins their Petals
 // with an agent key, then waits for the jobs Petals' agent hands out, in any of their projects:
-//   node petal.mjs join <agent key> --as <name>   keeps the key and the name in PETALS_HOME
-//   node petal.mjs jobs wait [--for <seconds>]    asks the site again and again, and comes back with
+//   node petal.mjs join <agent key> --as <name>   keeps the key and the name in PETALS_HOME, as a new
+//                                                 worker, and answers with its id
+//   node petal.mjs jobs wait --worker <id> [--for <seconds>]
+//                                                 asks the site again and again, and comes back with
 //                                                 the next job, or with none just before --for ends
+// Several workers per agent (Elco's swarm, 10 Nov; coordinator/swarm.md step 1): each window and each
+// sub-agent joins once and waits with its own worker id, so the page lists them apart and each holds
+// its own job. Each worker is a file of its own, so two joining at once never overwrite each other.
 // The waiting lives only in the command the agent's own session runs: nothing stays behind it. It
 // comes back before the agent app's own limit on one command (Claude Code and Hermes: 10 minutes),
 // so the agent runs it again; the site holds each ask for at most 90 seconds.
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -18,15 +24,22 @@ export const AGENT_NAME = /^[a-z0-9][a-z0-9-]{0,39}$/;
 export const WAIT_FOR_S = 570;
 /** Under the site's tunnel, which closes a request idle for 100 seconds. */
 const ASK_S = 85;
-const AGAIN = 'node ~/.petals/petal.mjs jobs wait';
+const WAIT = 'node ~/.petals/petal.mjs jobs wait';
+/** A worker's id, as join makes it. */
+export const WORKER = /^[a-z0-9]{1,12}$/;
+const again = (worker: string | null) => (worker ? `${WAIT} --worker ${worker}` : WAIT);
 
 type Json = Record<string, unknown>;
 type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 
 const homeOf = (env: NodeJS.ProcessEnv) => env.PETALS_HOME?.trim() || join(homedir(), '.petals');
+/** Before workers: one agent per computer. Still read, so an agent joined then keeps waiting. */
 export const agentFile = (env: NodeJS.ProcessEnv) => join(homeOf(env), 'agent.json');
+const workersDir = (env: NodeJS.ProcessEnv) => join(homeOf(env), 'workers');
+export const workerFile = (env: NodeJS.ProcessEnv, id: string) =>
+  join(workersDir(env), `${id}.json`);
 
-/** Keeps the key and the name, for `jobs wait`. The key stays on this machine. */
+/** Keeps the key and the name as a new worker, for `jobs wait`. The key stays on this machine. */
 export function joinAgent(env: NodeJS.ProcessEnv, key: string, as: string): Json {
   const name = as.trim().toLowerCase();
   if (!AGENT_KEY.test(key.trim())) {
@@ -42,28 +55,57 @@ export function joinAgent(env: NodeJS.ProcessEnv, key: string, as: string): Json
       },
     };
   }
-  const file = agentFile(env);
+  const worker = randomBytes(4).readUInt32BE(0).toString(36).padStart(6, '0').slice(-6);
+  const file = workerFile(env, worker);
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, `${JSON.stringify({ key: key.trim(), as: name })}\n`, { mode: 0o600 });
   return {
     joined: true,
     as: name,
-    next: `Now wait for jobs: ${AGAIN}. Each time it comes back, do the job it gives, if any, and run it again.`,
+    worker,
+    next: `Now wait for jobs, always with your worker id: ${again(worker)}. Each time it comes back, do the job it gives, if any, and run it again.`,
   };
 }
 
-function joined(env: NodeJS.ProcessEnv): { key: string; as: string } | null {
+interface Joined {
+  key: string;
+  as: string;
+  /** null for an agent joined before workers */
+  worker: string | null;
+}
+
+const readJoined = (file: string, worker: string | null): Joined | null => {
   try {
-    const j = JSON.parse(readFileSync(agentFile(env), 'utf8')) as { key?: unknown; as?: unknown };
-    return typeof j.key === 'string' && typeof j.as === 'string' ? { key: j.key, as: j.as } : null;
+    const j = JSON.parse(readFileSync(file, 'utf8')) as { key?: unknown; as?: unknown };
+    return typeof j.key === 'string' && typeof j.as === 'string'
+      ? { key: j.key, as: j.as, worker }
+      : null;
   } catch {
     return null;
   }
+};
+
+/** The worker named, or the only one there is, or the agent joined before workers. */
+function joined(env: NodeJS.ProcessEnv, worker?: string): Joined | 'which' | null {
+  if (worker) return WORKER.test(worker) ? readJoined(workerFile(env, worker), worker) : null;
+  let ids: string[] = [];
+  try {
+    ids = readdirSync(workersDir(env))
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => f.slice(0, -5));
+  } catch {
+    // none yet
+  }
+  if (ids.length > 1) return 'which';
+  const only = ids[0];
+  return only ? readJoined(workerFile(env, only), only) : readJoined(agentFile(env), null);
 }
 
 export interface WaitOptions {
   env: NodeJS.ProcessEnv;
   site: string;
+  /** the worker id join gave; none: the only worker there is */
+  worker?: string;
   /** how long this command may wait, in seconds */
   forS?: number;
   fetch?: Fetch;
@@ -74,16 +116,27 @@ export interface WaitOptions {
 
 /** Asks the site until a job comes or the time is up. Each ask the site holds for up to ASK_S. */
 export async function waitForJob(o: WaitOptions): Promise<Json> {
-  const me = joined(o.env);
-  if (!me) {
+  const me = joined(o.env, o.worker);
+  if (me === 'which') {
     return {
       error: {
         code: 'bad_input',
         message:
-          'Join first, with the agent key the person gave you: node ~/.petals/petal.mjs join <agent key> --as <name>.',
+          'Several workers joined on this computer: pass yours, as join gave it: node ~/.petals/petal.mjs jobs wait --worker <id>.',
       },
     };
   }
+  if (!me) {
+    return {
+      error: {
+        code: 'bad_input',
+        message: o.worker
+          ? `No worker ${o.worker} joined on this computer. Join first, with the agent key the person gave you: node ~/.petals/petal.mjs join <agent key> --as <name>.`
+          : 'Join first, with the agent key the person gave you: node ~/.petals/petal.mjs join <agent key> --as <name>.',
+      },
+    };
+  }
+  const AGAIN = again(me.worker);
   const f: Fetch = o.fetch ?? ((url, init) => fetch(url, init));
   const now = o.now ?? Date.now;
   const until = now() + (o.forS ?? WAIT_FOR_S) * 1000;
@@ -98,7 +151,7 @@ export async function waitForJob(o: WaitOptions): Promise<Json> {
       res = await f(`${o.site}/api/v1/agents/wait`, {
         method: 'POST',
         headers: { authorization: `Bearer ${me.key}`, 'content-type': 'application/json' },
-        body: JSON.stringify({ as: me.as, wait_s }),
+        body: JSON.stringify({ as: me.as, ...(me.worker ? { worker: me.worker } : {}), wait_s }),
         signal: AbortSignal.timeout((wait_s + 15) * 1000),
       });
     } catch (e) {
