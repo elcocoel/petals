@@ -4,7 +4,7 @@
 // HTTP statuses, reads query strings, and streams progress as SSE when asked.
 import { promisify } from 'node:util';
 import { gunzip as gunzipCb, gzip as gzipCb } from 'node:zlib';
-import { API_VERSION, canonicalJson, sha256Hex, TOOLS_VERSION } from '@petal/core';
+import { API_VERSION, canonicalJson, DEFAULT_VIEW, sha256Hex, TOOLS_VERSION } from '@petal/core';
 import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
@@ -232,7 +232,9 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     const f = await run('get_flower', { id: c.req.param('id') });
     if (isToolError(f)) return respond(c, f);
     const spec = (f as { entry: { spec: unknown } }).entry.spec;
-    const r = await run('render_flower', { spec, include_svg: true });
+    // Drawn with the default view, as a flower's page and /make draw it: everyone sees the default today
+    // (decisions, 9 Nov), so the same flower looks the same on its tile.
+    const r = await run('render_flower', { spec, include_svg: true, view: DEFAULT_VIEW });
     if (isToolError(r)) return respond(c, r);
     const { svg, render_sha256 } = r as { svg: string; render_sha256: string };
     return c.body(svg, 200, {

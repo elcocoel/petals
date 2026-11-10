@@ -2,7 +2,7 @@
 // long tools, health, snapshot bodies with immutable cache headers, the flower SVG, /mcp.
 
 import { gunzipSync } from 'node:zlib';
-import { canonicalJson, sha256Hex } from '@petal/core';
+import { canonicalJson, DEFAULT_VIEW, sha256Hex } from '@petal/core';
 import { describe, expect, test } from 'vitest';
 import { httpApp } from '../src/http/app.ts';
 import { flow, progressOf, rig, validatorsFixture } from './helpers.ts';
@@ -193,7 +193,7 @@ describe('SSE, bodies, health', () => {
     }
   });
 
-  test("a published flower's SVG, immutable", async () => {
+  test("a published flower's SVG, immutable, drawn with the default view like its page", async () => {
     const { app, r, run, call } = await setup();
     const f = await flow(run);
     const prep = (await call('/api/v1/publish/prepare', json({ entry: f.draft }))).body;
@@ -207,7 +207,8 @@ describe('SSE, bodies, health', () => {
     const res = await app.request(`/api/v1/flowers/${pub.body.id}/svg`);
     expect(res.headers.get('content-type')).toMatch(/^image\/svg\+xml/);
     expect(res.headers.get('cache-control')).toMatch(/immutable/);
-    expect(sha256Hex(await res.text())).toBe(f.rendered.render_sha256);
+    const viewed = await run('render_flower', { spec: f.spec, view: DEFAULT_VIEW });
+    expect(sha256Hex(await res.text())).toBe(viewed.render_sha256);
     const bad = await call('/api/v1/publish', json({ entry_sha256: prep.entry_sha256, proof }));
     expect(bad.res.status).toBe(401);
   });

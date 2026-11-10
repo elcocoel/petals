@@ -58,7 +58,9 @@ describe('the landing page', () => {
   });
 
   test('its figures are inline and carry no raw colour, but for the published shape from the API', () => {
-    const images = [...html.matchAll(/<img\b[^>]*\ssrc="([^"]*)"/g)].map((m) => m[1]);
+    const images = [...html.matchAll(/<img\b[^>]*\ssrc="([^"]*)"/g)].map((m) =>
+      m[1]?.replaceAll('&amp;', '&'),
+    );
     expect(images).toEqual([siteLinks.liveShapeImage]);
     expect(html).not.toMatch(/(?:fill|stroke)="#/);
   });
