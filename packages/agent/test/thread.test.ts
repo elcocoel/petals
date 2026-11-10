@@ -15,6 +15,7 @@ import {
   closeThread,
   compactionChars,
   compactThread,
+  lightenThread,
   windowOf,
 } from '../src/thread.ts';
 import {
@@ -335,15 +336,77 @@ describe('compactThread', () => {
   });
 });
 
+describe('lightenThread', () => {
+  const READ = JSON.stringify({
+    read: [{ chain: 'eip155:100', status: 'answered', kind: 'contract', calls: [] }],
+    body: 'x'.repeat(5000),
+  });
+  const exchange = (q: string, name = 'read_chain', content = READ): LlmMessage[] => [
+    { role: 'user', content: q },
+    {
+      role: 'assistant',
+      content: null,
+      tool_calls: [{ id: `${q}1`, name, arguments: '{}' }],
+    },
+    { role: 'tool', tool_call_id: `${q}1`, content },
+    { role: 'assistant', content: `answer ${q}` },
+  ];
+  const toolText = (t: LlmMessage[]) =>
+    t.filter((m) => m.role === 'tool').map((m) => m.content as string);
+
+  test('before the last two exchanges a result keeps its summary line; calls and words stay', () => {
+    const t = [...exchange('a'), ...exchange('b'), ...exchange('c'), ...exchange('d')];
+    const out = lightenThread(t);
+    expect(toolText(out)).toEqual([
+      JSON.stringify({ summary: 'eip155:100 contract, 0 calls answered' }),
+      JSON.stringify({ summary: 'eip155:100 contract, 0 calls answered' }),
+      READ,
+      READ,
+    ]);
+    // every call keeps its answer, and nothing else moves
+    expect(closeThread(out)).toEqual(out);
+    expect(out.filter((m) => m.role !== 'tool')).toEqual(t.filter((m) => m.role !== 'tool'));
+  });
+
+  test('what the run reads back stays whole however old: the yes and the specs', () => {
+    const t = [
+      ...['get_snapshot', 'propose_spec', 'render_flower', 'find_target', 'look_up'].flatMap(
+        (name) => exchange(name, name),
+      ),
+      ...exchange('b'),
+      ...exchange('c'),
+    ];
+    expect(lightenThread(t)).toBe(t);
+  });
+
+  test('a second pass, a short thread, or a result shorter than its summary: the same thread', () => {
+    const t = [...exchange('a'), ...exchange('b'), ...exchange('c')];
+    const once = lightenThread(t);
+    expect(once).not.toBe(t);
+    expect(lightenThread(once)).toBe(once);
+    const two = [...exchange('a'), ...exchange('b')];
+    expect(lightenThread(two)).toBe(two);
+    const small = [
+      ...exchange('a', 'read_chain', '{"read":[]}'),
+      ...exchange('b'),
+      ...exchange('c'),
+    ];
+    expect(lightenThread(small)).toBe(small);
+  });
+});
+
 describe('in a run', () => {
   const READ = { name: 'list_flowers', args: {} };
   const long = 'x'.repeat(20_000);
   const big = fakeRegistry();
   big.registry.unshift(tool('list_flowers', () => ({ flowers: [], note: long })));
+  // look_up is read back by the yes, so it stays whole however old: only the window cuts it
+  big.registry.unshift(tool('look_up', () => ({ listed: [], note: long })));
+  const KEPT = { name: 'look_up', args: { query: 'raidguild' } };
 
   /** One chat: what the model was sent, and what is saved for the next. */
-  async function chat(thread: LlmMessage[], said: string, windowTokens: number) {
-    const llm = scriptedLlm([{ calls: [READ] }, { content: `answered ${said}` }]);
+  async function chat(thread: LlmMessage[], said: string, windowTokens: number, read = READ) {
+    const llm = scriptedLlm([{ calls: [read] }, { content: `answered ${said}` }]);
     let kept: LlmMessage[] = [];
     await collect(
       startRun(
@@ -363,10 +426,21 @@ describe('in a run', () => {
   const toolsIn = (ms: LlmMessage[] | undefined) =>
     (ms ?? []).filter((m) => m.role === 'tool').length;
 
-  test('a wide window keeps every tool result of every chat', async () => {
+  test('a wide window keeps every call; results before the last two keep their summary', async () => {
     let t: LlmMessage[] = [];
-    for (const said of ['a', 'b', 'c', 'd', 'e', 'f']) t = (await chat(t, said, 1_000_000)).kept;
+    let last: Awaited<ReturnType<typeof chat>> | undefined;
+    for (const said of ['a', 'b', 'c', 'd', 'e', 'f']) {
+      last = await chat(t, said, 1_000_000);
+      t = last.kept;
+    }
     expect(toolsIn(t)).toBe(6);
+    const whole = t.filter((m) => m.role === 'tool' && (m.content as string).includes(long));
+    expect(whole).toHaveLength(2);
+    // what was sent is what's saved, and the last call sent only two long results
+    const sent = last?.llm.requests.at(-1)?.messages ?? [];
+    expect(
+      sent.filter((m) => m.role === 'tool' && (m.content as string).includes(long)),
+    ).toHaveLength(2);
   });
 
   test('near the window the oldest lose theirs, words stay, and what is saved is what was sent', async () => {
@@ -376,7 +450,7 @@ describe('in a run', () => {
     let last: Awaited<ReturnType<typeof chat>> | undefined;
     const seen: number[] = [];
     for (const said of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']) {
-      last = await chat(t, said, windowTokens);
+      last = await chat(t, said, windowTokens, KEPT);
       t = last.kept;
       seen.push(toolsIn(t));
     }
