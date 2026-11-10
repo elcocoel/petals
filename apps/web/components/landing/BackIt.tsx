@@ -1,7 +1,7 @@
 // Back it, on what was Figma's Join the community (66:2346): the ways to help, v1 drafts (Elco, 9 Nov). Ways
-// that take money (merch, donations, sponsoring) wait for Elco.
+// that take money (merch, donations, sponsoring) wait for Elco. Its figure, the old look's repeated cell, went
+// with one-source.md's step 8 (10 Nov); the text keeps its side of the split.
 import { landingCopy } from '../../lib/landing-copy.ts';
-import { Drawing } from '../ui/Drawing.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 
@@ -21,7 +21,6 @@ export function BackIt() {
           ))}
         </ul>
       </div>
-      <Drawing kind="cell-repeat" />
     </Section>
   );
 }
