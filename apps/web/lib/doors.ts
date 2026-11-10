@@ -38,7 +38,7 @@ export function doors(origin: string): Door[] {
     {
       id: 'chatgpt',
       title: 'ChatGPT',
-      how: 'On a paid plan, add Petals as an app: in Settings, turn on developer mode (Apps and Connectors, Advanced), then create an app with this address. It reads and draws what Petals already holds. For new readings, use Codex.',
+      how: 'Add Petals as a custom MCP server: in ChatGPT’s Plugins, choose +, then Add custom MCP server, and paste this address. It reads and draws what Petals already holds. For new readings, use Codex.',
       copy: connectorAddress(origin),
       copyLabel: 'Copy the address',
     },
