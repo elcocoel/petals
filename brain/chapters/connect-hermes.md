@@ -50,3 +50,9 @@ Petals' helper runs Hermes over ACP (`hermes acp`) in the page's chat, and `herm
 
 - **Hermes isn't installed:** install it from Nous Research's Hermes Agent guide.
 - **Hermes isn't set up yet** (the page's chat says only "Internal error"): the person runs `hermes setup` once in a terminal to choose a provider and a model.
+
+## On Petals' connect page
+
+What the person reads on `{site}/connect`, next to the command under "Keep Petals for next time":
+
+- **Hermes:** To keep Petals in Hermes for next time, run this once in a terminal. It adds Petals to Hermes’ tools, so it’s there in every new conversation.

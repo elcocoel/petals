@@ -56,3 +56,9 @@ Petals' helper starts Claude Code with the tools already loaded, as the `petals`
 
 - **Claude Code isn't installed:** `curl -fsSL https://claude.ai/install.sh | bash`.
 - **It isn't signed in** ("Not logged in · Please run /login"): the person runs `claude` once in a terminal and signs in there.
+
+## On Petals' connect page
+
+What the person reads on `{site}/connect`, next to the command under "Keep Petals for next time":
+
+- **Claude Code:** To keep Petals in Claude Code for next time, run this once in a terminal. It adds Petals to Claude Code’s tools, so it’s there in every new conversation.

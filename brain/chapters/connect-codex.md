@@ -56,3 +56,9 @@ Petals' helper starts Codex in the terminal box with the tools already loaded, a
 
 - **Codex isn't installed:** `npm install -g @openai/codex`.
 - **It isn't signed in:** the person runs `codex` once in a terminal and signs in there, with their ChatGPT account or an API key.
+
+## On Petals' connect page
+
+What the person reads on `{site}/connect`, next to the command under "Keep Petals for next time":
+
+- **Codex:** To keep Petals in Codex for next time, run this once in a terminal. It adds Petals to Codex’s tools, so it’s there in every new conversation.
