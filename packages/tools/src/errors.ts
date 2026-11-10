@@ -70,7 +70,7 @@ export function fromThrown(err: unknown, fallback: ToolErrorCode = 'internal'): 
     return toolError(
       'internal',
       `not built yet: ${err.message.replace(/^not_implemented: /, '')}`,
-      'This part of Petal is still being built (milestone M1).',
+      'This part of Petals is still being built (milestone M1).',
     );
   }
   const e = (err ?? {}) as { code?: unknown; message?: unknown; hint?: unknown };

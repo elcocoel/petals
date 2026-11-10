@@ -63,7 +63,7 @@ export const preparePublish = defineTool<{ entry: Partial<Entry> }, object>({
   description:
     'Get the exact NEP-413 message a maker signs to publish a flower, with a fresh nonce. Pass ' +
     'the entry without id and maker (petal, spec, spec_sha256, interpretation, snapshot, ' +
-    'provenance). Petal adds the drawing receipt itself. Hand sign_url to the human: their wallet ' +
+    'provenance). Petals adds the drawing receipt itself. Hand sign_url to the human: their wallet ' +
     'signs; never ask anyone for a key.',
   input: obj(
     ['entry'],

@@ -135,9 +135,9 @@ Work this out yourself, fast: the person is waiting, and setup should take secon
 
 **First, where you run.** If you're the Claude app's chat or ChatGPT, a sandbox there isn't the person's computer, and the commands below can't reach Petals from it. Use the Petals connector at \`${origin}/mcp\` if it's added, or tell the person in a line how to add it (the cloud app's steps below), and run nothing here. A sandbox's network refusal can't be approved in the chat: don't retry it or look for a way round.
 
-Petal's tools are one file that runs on this computer. Every read, search and drawing happens here, on nobody else's account, and the site only shows what you send it. No account or key. Don't call this site's API to read or draw: the file does it here.
+Petals' tools are one file that runs on this computer. Every read, search and drawing happens here, on nobody else's account, and the site only shows what you send it. No account or key. Don't call this site's API to read or draw: the file does it here.
 
-- **You already have Petal's tools** (\`find_target\`, \`render_flower\`, from a \`petals\` MCP server): use them, and start the page with \`start_exploration\` (below).
+- **You already have Petals' tools** (\`find_target\`, \`render_flower\`, from a \`petals\` MCP server): use them, and start the page with \`start_exploration\` (below).
 - **You have a shell on the person's computer:** run these two commands as written, and nothing else first:
 
   \`\`\`bash
@@ -154,7 +154,7 @@ Petal's tools are one file that runs on this computer. Every read, search and dr
 ${appSteps(origin)}
 **Any other app** that runs commands on their computer: the two commands above are all it takes. If its sandbox refuses them, ask in one line, naming what to allow: reaching \`${host}\` and the public sites the file reads, from your shell. The file changes nothing in your app: only keeping Petals for next time does, and only when they ask.
 
-Publishing to Petal's shared map isn't in these tools yet. If they ask, say so in a line.
+Publishing to Petals' shared map isn't in these tools yet. If they ask, say so in a line.
 
 ## Let them watch
 
@@ -251,7 +251,7 @@ export function hostedSkill(
   md = section(md, 'Quick Start', setup(origin, fileSha));
   md = section(
     md,
-    'When no Petal site is running',
+    'When no Petals site is running',
     `## Links\n\nHand the person \`short_url\` when \`render_flower\` gives one, because it fits on a line, and open it for them if you can. A flower is drawn here and shown on this site (\`${origin}\`) once it's saved to the conversation's page.\n`,
   );
   // the curl example goes first, so the commands' own example takes its place

@@ -663,7 +663,7 @@ class Cli {
     }
     if (command === 'api') {
       p(`petal api [--port ${DEFAULT_PORT}] [--host <host>] [--fake] [--root <dir>]\n\n`);
-      p("Petal's HTTP API (petalApp): tool routes, agent routes and /mcp, on Node.\n");
+      p("Petals' HTTP API (petalApp): tool routes, agent routes and /mcp, on Node.\n");
       return 0;
     }
     if (tool) {
@@ -671,7 +671,7 @@ class Cli {
       return 0;
     }
     if (command) throw new UsageError(`unknown command: ${command}`, 'Run `petal help`.');
-    p("petal: Petal's tools from a terminal. Calls the tool registry in process, prints JSON.\n\n");
+    p("petal: Petals' tools from a terminal. Calls the tool registry in process, prints JSON.\n\n");
     p(
       this.sys.asFile
         ? 'Usage: node petal.mjs <command> [args] [--flags]\n\n'

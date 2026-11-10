@@ -28,7 +28,7 @@ export function freshGate(ctx: { config: LimitsConfig; now(): Date }): FreshGate
     if (running >= freshAtOnce) {
       throw new ToolFailure(
         'rate_limited',
-        `Petal is busy: it does ${freshAtOnce} fresh reads at a time, so this one was not started. Anything already stored is still free.`,
+        `Petals is busy: it does ${freshAtOnce} fresh reads at a time, so this one was not started. Anything already stored is still free.`,
         `Try again in ${BUSY_RETRY_S} s.`,
         BUSY_RETRY_S,
       );

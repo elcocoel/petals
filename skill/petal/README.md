@@ -1,10 +1,10 @@
-# The Petal skill
+# The Petals skill
 
-`SKILL.md` teaches any agent (Claude Code, Codex, IronClaw) to make a Petal flower: find the network, take the snapshot, quote only the tools' figures, propose and validate a spec, render it, and hand back the link. It is in the Agent Skills format, like NEAR's [`near/agent-skills`](https://github.com/near/agent-skills): frontmatter with `name` and `description`, then instructions.
+`SKILL.md` teaches any agent (Claude Code, Codex, IronClaw) to make a Petals flower: find the network, take the snapshot, quote only the tools' figures, propose and validate a spec, render it, and hand back the link. It is in the Agent Skills format, like NEAR's [`near/agent-skills`](https://github.com/near/agent-skills): frontmatter with `name` and `description`, then instructions.
 
-The skill calls Petal's HTTP API with `curl`, which works in all three agents. Where the `petal` MCP server is configured, the agent calls the same tools by name instead.
+The skill calls Petals' HTTP API with `curl`, which works in all three agents. Where the `petal` MCP server is configured, the agent calls the same tools by name instead.
 
-In the commands below, `<repo>` is the root of your clone of the Petal repo (locally, the `build/` folder).
+In the commands below, `<repo>` is the root of your clone of the Petals repo (locally, the `build/` folder).
 
 ## Before you start
 
@@ -13,7 +13,7 @@ You need Node 24 (the repo's `.nvmrc`) and pnpm 10.
 ```bash
 cd <repo>
 nvm use && pnpm install
-pnpm api                                   # Petal's HTTP API on http://localhost:8787
+pnpm api                                   # Petals' HTTP API on http://localhost:8787
 curl -s http://localhost:8787/api/v1/health
 ```
 
@@ -32,10 +32,10 @@ It installs the skill and registers the MCP server with Node 24 on its PATH, usi
 - `--dry-run` prints exactly what it would change, and changes nothing.
 - `--remove` undoes it.
 - `--project` (Claude Code only) installs for one folder instead of every folder. Run it from that folder, with `pnpm -s --dir <repo> petal connect claude --project`.
-- Running it twice is fine. It never overwrites a skill or a server that isn't Petal's: it stops and says so.
+- Running it twice is fine. It never overwrites a skill or a server that isn't Petals': it stops and says so.
 - `petal connect <any other name>` prints what's supported, plus the MCP command and the skill's path to give another agent by hand.
 
-Without a Petal site running, the flower's `view_url` opens nothing, so the skill has the agent save a local SVG and hand back its path.
+Without a Petals site running, the flower's `view_url` opens nothing, so the skill has the agent save a local SVG and hand back its path.
 
 The sections below do the same by hand.
 
@@ -93,7 +93,7 @@ IronClaw uses the skill over HTTP, so `pnpm api` must run where IronClaw can rea
 
 ## Keeping it current
 
-The rules in `SKILL.md` (the block between the `petal:shared` markers) are the same text as Petal's own agent prompt, `packages/agent/src/prompt.md`. Edit them there. `node skill/build.ts` copies the block into `SKILL.md`, and `node skill/build.ts --check` says whether the two agree. The coordinator syncs the wording at merge. After you pull, copy `SKILL.md` again, unless you symlinked it.
+The rules in `SKILL.md` (the block between the `petal:shared` markers) are the same text as Petals' own agent prompt, `packages/agent/src/prompt.md`. Edit them there. `node skill/build.ts` copies the block into `SKILL.md`, and `node skill/build.ts --check` says whether the two agree. The coordinator syncs the wording at merge. After you pull, copy `SKILL.md` again, unless you symlinked it.
 
 ## Without an agent
 

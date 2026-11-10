@@ -203,7 +203,7 @@ export async function checkSpec(
     errors.push({
       path: '/network/id',
       rule: 'network',
-      message: `Petal can't read the network "${String(id)}", so its capabilities are unknown.`,
+      message: `Petals can't read the network "${String(id)}", so its capabilities are unknown.`,
     });
   }
   return { validation: { valid: false, errors, warnings: [] }, snapshot };
@@ -282,7 +282,7 @@ export const proposeSpec = defineTool<ProposeIn, object>({
   name: 'propose_spec',
   title: 'Propose a spec',
   description:
-    'Build the full canonical Petal spec from a few choices, starting from default/v1 and the ' +
+    'Build the full canonical Petals spec from a few choices, starting from default/v1 and the ' +
     "network's defaults, with the standard meaning and sources for each primitive. The same " +
     'choices always give the same spec_sha256. Pass the fewest choices the question needs. To ' +
     'change a flower, pass it as `parent` and only the choices that change: they go on top of its ' +

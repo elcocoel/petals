@@ -305,7 +305,7 @@ const FREE = [
   'propose_spec, validate_spec, render_flower',
 ];
 const SPENDS = [
-  'your own model calls, on your own bill and never on Petal',
+  'your own model calls, on your own bill and never on Petals',
   'a fresh read (get_snapshot on data not stored): it uses public sources, so ask first',
   'publishing: prepare_publish, then the person signs sign_url with their own wallet',
 ];

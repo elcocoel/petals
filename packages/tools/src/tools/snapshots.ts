@@ -84,7 +84,7 @@ export const getSnapshotTool = defineTool<
   onTheirMachine: true,
   title: 'Get a snapshot',
   description:
-    'Gather or reuse the data for one network at one moment. A final snapshot Petal already ' +
+    'Gather or reuse the data for one network at one moment. A final snapshot Petals already ' +
     'holds is returned with reused: true (say so). Returns the sha256 and counts, never the body: ' +
     'use describe_snapshot and compute_figures to read it. A live pull reports progress.',
   input: obj(

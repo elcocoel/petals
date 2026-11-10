@@ -35,7 +35,7 @@ describe('SKILL.md: the Agent Skills format', () => {
     expect(front.description).toMatch(/Use when /);
     expect(Object.keys(front).sort()).toEqual(['description', 'metadata', 'name']);
     expect(front.metadata).toMatch(/^\{ author: ".+", version: "\d+\.\d+\.\d+" \}$/);
-    expect(SKILL.slice(match?.[0].length)).toMatch(/^\n# Petal\n/);
+    expect(SKILL.slice(match?.[0].length)).toMatch(/^\n# Petals\n/);
   });
 
   test('every Phase A tool of tools.md is named', () => {
@@ -96,9 +96,9 @@ describe('SKILL.md: the Agent Skills format', () => {
     expect(SKILL).toMatch(/coordinator syncs the wording at merge/);
   });
 
-  test('says how to get the flower when no Petal site is running', () => {
+  test('says how to get the flower when no Petals site is running', () => {
     const own = SKILL.slice(SKILL.indexOf(END));
-    expect(own).toContain('## When no Petal site is running');
+    expect(own).toContain('## When no Petals site is running');
     expect(own).toContain(
       `pnpm -s --dir "<repo>" petal render @spec.json --out flower.svg | grep '"spec_sha256"'`,
     );

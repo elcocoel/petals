@@ -179,7 +179,7 @@ describe('hostedSkill', () => {
     expect(part('Calling the tools as commands')).toContain('`render @spec.json`');
     expect(md).toMatch(/Hand the person `short_url`/);
     expect(md).not.toContain('## Publishing');
-    expect(md).toMatch(/Publishing to Petal's shared map isn't in these tools yet/);
+    expect(md).toMatch(/Publishing to Petals' shared map isn't in these tools yet/);
   });
 
   test('fails loudly if the skill is reorganised, rather than serving local instructions', () => {
