@@ -31,6 +31,9 @@
   --spacing-drawing-240: 240px;
   --spacing-figure-height: 288px;
   --spacing-icon-size: 18px;
+  --spacing-row-height: 32px;
+  --spacing-sidebar-width: 264px;
+  --spacing-icon-small: 16px;
   --spacing-workspace-header-height: 80px;
   --spacing-workspace-rule: 20px;
   --spacing-rail-width: 180px;
@@ -68,9 +71,10 @@
   --color-accent: var(--accent);
   --color-figure-petal: var(--figure-petal);
   --color-figure-accent: var(--figure-accent);
+  --color-tint: var(--tint);
 }
 
-@source inline("type-display type-display-compact type-title type-heading type-lead type-body type-label type-caption type-mono type-mono-code type-pixel-numeral wordmark wordmark-back wordmark-middle wordmark-front wordmark-nav wordmark-footer wordmark-workspace");
+@source inline("type-display type-display-compact type-title type-heading type-lead type-body type-label type-caption type-mono type-mono-code type-ui type-pixel-numeral wordmark wordmark-back wordmark-middle wordmark-front wordmark-nav wordmark-footer wordmark-workspace wordmark-panel");
 
 @layer base {
 *, ::before, ::after {
@@ -113,6 +117,7 @@
   --accent: #8BC9BD;
   --figure-petal: #C7C7C7;
   --figure-accent: #8BC9BD;
+  --tint: rgb(23 23 23 / 0.05);
 }
 [data-surface="ink"] {
   --surface: #171717;
@@ -125,6 +130,7 @@
   --accent: #8BC9BD;
   --figure-petal: #C7C7C7;
   --figure-accent: #8BC9BD;
+  --tint: rgb(255 255 255 / 0.1);
 }
 [data-surface="mint"] {
   --surface: #8BC9BD;
@@ -137,6 +143,7 @@
   --accent: #171717;
   --figure-petal: #C7C7C7;
   --figure-accent: #8BC9BD;
+  --tint: rgb(23 23 23 / 0.06);
 }
 [data-surface] {
   background-color: var(--surface);
@@ -183,6 +190,9 @@
 }
 [data-swatch="figure-accent"] {
   background-color: var(--figure-accent);
+}
+[data-swatch="tint"] {
+  background-color: var(--tint);
 }
 [data-swatch="ink-2"] {
   background-color: var(--chart-ink-2);
@@ -326,6 +336,14 @@
   letter-spacing: 0em;
 }
 
+@utility type-ui {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 450;
+  letter-spacing: 0em;
+}
+
 @utility type-pixel-numeral {
   font-family: var(--font-pixel);
   font-size: 64px;
@@ -392,6 +410,10 @@
 
 @utility wordmark-workspace {
   font-size: 33.18px;
+}
+
+@utility wordmark-panel {
+  font-size: 22px;
 }
 
 .flower-svg svg[data-petal] {

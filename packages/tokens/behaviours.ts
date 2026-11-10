@@ -13,6 +13,7 @@ export const parents = {
   figure: 'Drawing, AnnotatedFlower',
   mark: 'Wordmark, the pixel numerals',
   head: 'SectionHead',
+  item: 'NavItem, IconButton: a row or a control in the side panel',
 } as const;
 
 export type Parent = keyof typeof parents;
@@ -164,6 +165,12 @@ export const behaviours = [
   },
   { name: 'row.sign', purpose: 'The sign turns between plus and minus', via: 'css' },
   { name: 'row.cursor', purpose: "The transcript's cursor blinks", via: 'css' },
+  // item
+  {
+    name: 'item.soft',
+    purpose: 'The fill under the pointer and under where you are has soft corners, and fades in',
+    via: 'css',
+  },
   // figure
   {
     name: 'figure.arrive',

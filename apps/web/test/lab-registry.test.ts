@@ -5,10 +5,15 @@ import { join, relative } from 'node:path';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
+import { readFixtures } from '../lab/fixture-files.ts';
+import { provideFixtures } from '../lab/fixtures.ts';
 import { NOT_IN_LAB, registry } from '../lab/registry.tsx';
 
 const app = join(import.meta.dirname, '..');
 const repo = join(app, '..', '..');
+
+// What the lab's server page hands its client page: the states read their fixtures from these.
+provideFixtures(readFixtures(repo));
 
 function files(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((d) =>

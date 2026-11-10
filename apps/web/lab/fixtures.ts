@@ -1,14 +1,40 @@
 // Saved data for the lab, read from the repo's fixtures/ when a state renders. No network, no model.
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type { Entry, FlowerResult, ModelSignature, PetalDetail, Spec } from '@petal/core/types';
-import { repoRoot } from '../lib/config.ts';
 import type { Rendered } from '../lib/flower-data.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
 import type { Prepared } from '../lib/publish.ts';
 import type { FlowerRow, Row, StepRow } from '../lib/thread-view.ts';
 
-const read = (path: string) => readFileSync(join(repoRoot(), 'fixtures', path), 'utf8');
+/**
+ * The files under fixtures/ that the lab draws from. The lab's page renders on the client, so every
+ * state's controls can hold a hand (a function), and the browser has no files: the server reads these
+ * (lab/fixture-files.ts) and hands them to the page, which hands them here before anything renders.
+ */
+export const FIXTURE_FILES = [
+  'golden/near-validators-default.json',
+  'golden/near-validators-default.svg',
+  'golden/near-validators-backers.json',
+  'golden/near-validators-backers.svg',
+  'golden/house-of-stake-default.json',
+  'golden/house-of-stake-default.svg',
+  'map/3394fb875bf97c1af8191566.json',
+  'transcripts/skeleton.json',
+] as const;
+
+export type FixtureFiles = Record<(typeof FIXTURE_FILES)[number], string>;
+
+let files: Partial<FixtureFiles> = {};
+
+/** The files, read on the server. */
+export function provideFixtures(given: FixtureFiles) {
+  files = given;
+}
+
+const read = (path: (typeof FIXTURE_FILES)[number]) => {
+  const text = files[path];
+  if (text === undefined) throw new Error(`lab: fixtures/${path} wasn't handed to the lab`);
+  return text;
+};
 
 export type GoldenName =
   | 'near-validators-default'

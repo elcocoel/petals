@@ -61,9 +61,11 @@ import { FaqItem } from '../components/ui/FaqItem.tsx';
 import { Footer } from '../components/ui/Footer.tsx';
 import { GalleryCard } from '../components/ui/GalleryCard.tsx';
 import { Icon, type IconName } from '../components/ui/Icon.tsx';
+import { IconButton } from '../components/ui/IconButton.tsx';
 import { MetaRow } from '../components/ui/MetaRow.tsx';
 import { Mono } from '../components/ui/Mono.tsx';
 import { Nav } from '../components/ui/Nav.tsx';
+import { NavItem } from '../components/ui/NavItem.tsx';
 import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { SideRail } from '../components/ui/SideRail.tsx';
@@ -273,7 +275,18 @@ const panelView = (selected: string | null = null) =>
     sources: SOURCE_URLS,
     units: { validator_stake_current_epoch: 'NEAR' },
   });
-const RAIL_ICONS: IconName[] = ['home', 'plus', 'gallery', 'connect'];
+const RAIL_ICONS: IconName[] = [
+  'home',
+  'plus',
+  'gallery',
+  'connect',
+  'sidebar',
+  'project',
+  'chevron',
+  'close',
+  'petals',
+  'agent',
+];
 
 export const registry: LabEntry[] = [
   {
@@ -576,6 +589,11 @@ export const registry: LabEntry[] = [
         figmaName: 'Ask',
         figmaNode: '66:2337',
         render: () => <SectionHead size="compact" title={landingCopy.useAnywhere.title} />,
+      },
+      {
+        name: 'panel: a group in the side panel',
+        closedIn: 'The workspace',
+        render: () => <SectionHead size="panel" title="Projects" />,
       },
       {
         name: 'title, with a paragraph',
@@ -1107,6 +1125,84 @@ export const registry: LabEntry[] = [
             {null}
           </SideRail>
         ),
+      },
+    ],
+  },
+  {
+    id: 'NavItem',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/NavItem.tsx',
+    states: [
+      { name: 'a place', render: () => <NavItem href="#lobby" icon="home" label="Lobby" /> },
+      {
+        name: 'where you are',
+        render: () => <NavItem href="#lobby" icon="home" label="Lobby" current />,
+      },
+      {
+        name: 'a conversation, working, cut with an ellipsis',
+        render: () => (
+          <NavItem
+            href="#c"
+            icon="petals"
+            label="Validators whose stake comes from one exchange's custody wallets"
+            trail="now"
+            working="Working"
+          />
+        ),
+      },
+      {
+        name: 'a project, open, with its count',
+        render: () => (
+          <NavItem onClick={() => {}} expanded icon="chevron" label="NEAR stake" trail="6" />
+        ),
+      },
+      {
+        name: 'in a project',
+        render: () => (
+          <NavItem
+            href="#c"
+            icon="agent"
+            label="Who custodies Binance's NEAR"
+            trail="12m"
+            depth={1}
+          />
+        ),
+      },
+      {
+        name: 'a line that says what is there, with a control',
+        render: () => (
+          <NavItem
+            icon="agent"
+            label="Codex"
+            trail="waiting"
+            action={<IconButton icon="close" label="Disconnect Codex" onClick={() => {}} />}
+          />
+        ),
+      },
+      {
+        name: 'muted: empty, or the way to add one',
+        render: () => <NavItem onClick={() => {}} icon="plus" label="Connect an agent" muted />,
+      },
+    ],
+  },
+  {
+    id: 'IconButton',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/IconButton.tsx',
+    states: [
+      {
+        name: 'the fold',
+        render: () => (
+          <IconButton icon="sidebar" label="Hide the panel" onClick={() => {}} expanded />
+        ),
+      },
+      {
+        name: 'a place, folded',
+        render: () => <IconButton href="#lobby" icon="home" label="Lobby" />,
       },
     ],
   },
