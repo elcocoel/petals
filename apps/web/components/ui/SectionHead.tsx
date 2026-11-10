@@ -1,5 +1,7 @@
 // An eyebrow, a title, a paragraph: the head of nearly every section, with Figma's gaps per size.
-// A line break in the title or the paragraph is written in the copy.
+// A line break in the title or the paragraph is written in the copy. At the panel's size it heads a
+// group in the side panel instead: one mono line, muted, one row high, and it doesn't rise in as a
+// section's head does. A group's one action is its last row, not a control here.
 import { Fragment, type ReactNode } from 'react';
 import { Mono } from './Mono.tsx';
 
@@ -46,8 +48,15 @@ export function SectionHead({
   eyebrowTone?: 'primary' | 'accent';
   title: ReactNode;
   body?: ReactNode;
-  size?: keyof typeof SIZES;
+  size?: keyof typeof SIZES | 'panel';
 }) {
+  if (size === 'panel') {
+    return (
+      <div className="flex h-row-height items-center px-space-8">
+        <h2 className="my-0 min-w-0 truncate type-mono text-muted">{title}</h2>
+      </div>
+    );
+  }
   const { Tag, title: titleType, gap, body: bodyType } = SIZES[size];
   return (
     <div data-b="head">

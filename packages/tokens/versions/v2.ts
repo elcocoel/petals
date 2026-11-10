@@ -224,6 +224,8 @@ const FIELD_INSET = 8;
 const groups = {
   // Petals' corners stay straight in the drawings. Softness lives on the things you touch.
   radius: {
+    /** A row in the side panel: soft, and still a row, not a pill. */
+    item: '8px',
     sm: '13px',
     md: '18px',
     lg: '26px',

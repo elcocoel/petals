@@ -3,6 +3,7 @@
 /* Version 2, from v1. */
 
 :root[data-version="2"] {
+  --joy-radius-item: 8px;
   --joy-radius-sm: 13px;
   --joy-radius-md: 18px;
   --joy-radius-lg: 26px;

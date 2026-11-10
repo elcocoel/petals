@@ -907,3 +907,38 @@
     filter: var(--joy-move-blur);
   }
 }
+
+/* ----- item ----- */
+
+/* The v1 fill gives way to one that fades, on a layer under the words, so hover only changes opacity. */
+/* item.soft */
+:root[data-version="2"] [data-b="item"] {
+  position: relative;
+  isolation: isolate;
+  background-color: transparent;
+}
+
+/* item.soft */
+:root[data-version="2"] [data-b="item"]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: var(--joy-radius-item);
+  background-color: var(--tint);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--joy-dur-quick) var(--joy-ease-color);
+}
+
+/* item.soft */
+:root[data-version="2"] [data-b="item"]:is([aria-current="page"], [data-current])::before {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  /* item.soft */
+  :root[data-version="2"] [data-b="item"]:hover::before {
+    opacity: 1;
+  }
+}

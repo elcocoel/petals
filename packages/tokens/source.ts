@@ -34,6 +34,8 @@ export interface Roles {
   'figure-petal': Paint;
   /** Mint on every surface, so on mint it vanishes, as the closing section's cell does (66:2345). */
   'figure-accent': Paint;
+  /** The soft fill under a row in the side panel: where the pointer is, and where you are. */
+  tint: Paint;
 }
 export type Role = keyof Roles;
 
@@ -49,6 +51,7 @@ export const surfaces: Record<SurfaceName, Roles> = {
     accent: 'Mint',
     'figure-petal': 'Gray',
     'figure-accent': 'Mint',
+    tint: { of: 'Ink', alpha: 0.05 },
   },
   ink: {
     surface: 'Ink',
@@ -61,6 +64,7 @@ export const surfaces: Record<SurfaceName, Roles> = {
     accent: 'Mint',
     'figure-petal': 'Gray',
     'figure-accent': 'Mint',
+    tint: { of: 'Ground', alpha: 0.1 },
   },
   mint: {
     surface: 'Mint',
@@ -73,6 +77,7 @@ export const surfaces: Record<SurfaceName, Roles> = {
     accent: 'Ink',
     'figure-petal': 'Gray',
     'figure-accent': 'Mint',
+    tint: { of: 'Ink', alpha: 0.06 },
   },
 };
 
@@ -88,6 +93,7 @@ export const roleUtilities: Record<Role, string> = {
   accent: 'accent',
   'figure-petal': 'figure-petal',
   'figure-accent': 'figure-accent',
+  tint: 'tint',
 };
 
 /**
@@ -139,6 +145,14 @@ export const sizes = {
   /** The box around a picture: a step's and a gallery card's. Drawing 240 with Block gap above and below. */
   'Figure height': 288,
   'Icon size': 18,
+  /**
+   * The app's sizes (Elco, 10 Nov: "like the side of a professional software like Orca"): the landing's
+   * sizes read as a page, and a tool needs to show forty minutes of work at a glance. One row of the side
+   * panel, the panel open, and an icon beside UI text.
+   */
+  'Row height': 32,
+  'Sidebar width': 264,
+  'Icon small': 16,
 } as const;
 
 /**
@@ -220,6 +234,8 @@ export const type = {
   /** Every small mono line: an eyebrow, a caption, a note, an index. */
   Mono: { font: 'mono', size: 11, line: 16, weight: 400, tracking: 0.04 },
   'Mono code': { font: 'mono', size: 15, line: 24, weight: 400, tracking: 0 },
+  /** The app's one line of words: a row, an item and a control in the side panel. */
+  UI: { font: 'sans', size: 13, line: 18, weight: 450, tracking: 0 },
   /** The step numbers (66:2275): Bitcount Grid Single with its axes at rest. */
   'Pixel numeral': {
     font: 'pixel',
@@ -241,7 +257,8 @@ export const wordmark = {
   /** The role that paints each layer. */
   roles: { back: 'figure-accent', middle: 'figure-petal', front: 'text-primary' },
   /** Font size in pixels, those in the page frames. */
-  sizes: { Nav: 36.67, Footer: 155.56, Workspace: 33.18 },
+  /** Panel: the side panel's head, beside its fold, one control high. */
+  sizes: { Nav: 36.67, Footer: 155.56, Workspace: 33.18, Panel: 22 },
 } as const;
 
 /**
