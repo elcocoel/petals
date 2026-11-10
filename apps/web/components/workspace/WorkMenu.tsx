@@ -3,18 +3,16 @@
 // be the same". It floats at the window's edge, over whatever the page shows, and keeps its room in the
 // page's flow, open or folded, so a page that lays out beside it isn't covered. Folded, only its word
 // floats, so nothing else under it is held. It holds a person's conversations, a way
-// to a new one, the person's own agents (each with a way to end it), and the way to bring another. Props only: open or folded comes from the page's ViewModel. Words
+// to a new one, the person's own agents (each with a way to end it), and the one way to bring another. Props only: open or folded comes from the page's ViewModel. Words
 // from lib/lobby-view.ts.
 import type { ReactNode } from 'react';
 import { type AgentRow, agentWords } from '../../lib/agents.ts';
 import type { ConversationRow } from '../../lib/conversation-list.ts';
-import { doorWords } from '../../lib/door-words.ts';
 import { lobbyWords } from '../../lib/lobby-view.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { ConversationList } from '../chat/ConversationList.tsx';
 import { Button } from '../ui/Button.tsx';
 import { SideRail } from '../ui/SideRail.tsx';
-import { TextLink } from '../ui/TextLink.tsx';
 
 /** What viewmodels/useWorkMenu.ts gives the menu, the same on both pages. */
 export interface WorkMenuView {
@@ -103,12 +101,10 @@ export function WorkMenu({
                   ))}
                 </ul>
               )}
+              {/* one way to connect them (Elco, 10 Nov, fix 1): the one prompt, copied */}
               <Button variant="pill" onClick={menu.copy}>
                 {menu.copied ? agentWords.copied : agentWords.copy}
               </Button>
-              <TextLink variant="quiet" href={siteLinks.connect}>
-                {doorWords.ownAgent}
-              </TextLink>
             </section>
           </>,
         )}
