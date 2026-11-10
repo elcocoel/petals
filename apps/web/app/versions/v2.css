@@ -608,6 +608,74 @@
   }
 }
 
+/* A scene of How it works is a box in a row that keeps time (components/landing/HowItWorks.tsx): the one in
+   focus comes forward and the rest step back; a line fills under it, and when it's full the row moves on.
+   A hand on the row (the pointer, the keyboard, the row out of sight) sets [data-paused] and holds it. */
+/* box.focus */
+:root[data-version="2"] [data-b="box"][data-kind="scene"] {
+  transition:
+    translate var(--joy-dur-spring) var(--joy-ease-spring),
+    opacity var(--joy-dur-slow) var(--joy-ease-color);
+}
+
+/* box.focus */
+:root[data-version="2"] [data-b="box"][data-kind="scene"]:not([data-current]) {
+  opacity: var(--joy-move-rest);
+}
+
+/* box.focus */
+:root[data-version="2"] [data-b="box"][data-kind="scene"][data-current] {
+  translate: 0 var(--joy-move-lift-box);
+}
+
+/* box.focus */
+:root[data-version="2"] [data-b="box"][data-kind="scene"][data-current]::after {
+  opacity: 1;
+}
+
+/* box.focus */
+:root[data-version="2"] [data-b="box"][data-kind="scene"] img {
+  transition: scale var(--joy-dur-spring) var(--joy-ease-spring);
+}
+
+/* box.focus */
+:root[data-version="2"] [data-b="box"][data-kind="scene"][data-current] img {
+  scale: var(--joy-move-swell);
+}
+
+@media (hover: hover) {
+  /* box.focus */
+  :root[data-version="2"] [data-b="box"][data-kind="scene"]:hover {
+    opacity: 1;
+  }
+}
+
+/* box.cycle */
+:root[data-version="2"] [data-b="box"][data-kind="scene"] > [data-progress] {
+  display: block;
+  scale: 0 1;
+  transform-origin: left;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* box.cycle */
+  :root[data-version="2"] [data-b="box"][data-kind="scene"][data-current] > [data-progress] {
+    animation: box-cycle var(--joy-dur-cycle) var(--joy-ease-cycle) forwards;
+  }
+
+  /* box.cycle */
+  :root[data-version="2"] [data-paused] [data-b="box"][data-kind="scene"] > [data-progress] {
+    animation-play-state: paused;
+  }
+}
+
+/* box.cycle */
+@keyframes box-cycle {
+  to {
+    scale: 1 1;
+  }
+}
+
 /* ----- row ----- */
 
 /* row.arrive */

@@ -1,6 +1,7 @@
 // The one control (Petals / Button 23:161, Button secondary 52:1869, Starter question 52:1866). A
 // `link` is Figma's Close detail: an action that reads as Petals / Link 23:159. `row` and `tile` are
-// the things you can open, which lay out their own content.
+// the things you can open, which lay out their own content. A `tick` is one mark of a pager: no words of its
+// own, so its `label` is what a screen reader hears and the pointer reads; it's an item, as IconButton is.
 // Its primary look is the base style of every <button> in app/globals.css. Variation goes through
 // these props, so there's no className: a one-off look needs a new variant here.
 import type { MouseEventHandler, ReactNode } from 'react';
@@ -14,16 +15,18 @@ export type ButtonVariant =
   | 'quiet'
   | 'row'
   | 'tile'
-  | 'pill';
+  | 'pill'
+  | 'tick';
 
 /** The behaviour each variant inherits (packages/tokens/behaviours.ts). `row` and `tile` stay v1. */
-const BEHAVIOUR: Partial<Record<ButtonVariant, 'action' | 'link'>> = {
+const BEHAVIOUR: Partial<Record<ButtonVariant, 'action' | 'link' | 'item'>> = {
   primary: 'action',
   secondary: 'action',
   starter: 'action',
   link: 'link',
   quiet: 'link',
   pill: 'action',
+  tick: 'item',
 };
 
 const VARIANTS: Record<ButtonVariant, string> = {
@@ -38,6 +41,8 @@ const VARIANTS: Record<ButtonVariant, string> = {
   // A setting beside the field, that opens what it can be.
   pill: 'h-auto justify-start gap-space-8 border border-hairline bg-transparent px-space-8 py-space-4 text-left type-mono whitespace-normal text-primary aria-pressed:border-primary',
   tile: 'h-auto w-tile-width flex-col items-start gap-text-gap bg-transparent px-0 text-left whitespace-normal text-primary',
+  // A pager's mark: the whole of its share of the row can be pressed, the mark itself is the child.
+  tick: 'h-row-height min-w-0 flex-1 bg-transparent px-space-8 text-primary hover:bg-tint hover:opacity-100 data-current:bg-tint',
 };
 
 export type ButtonProps = {
@@ -57,6 +62,10 @@ export type ButtonProps = {
       disabled?: boolean;
       /** A toggle or a choice: this one is on. */
       pressed?: boolean;
+      /** The one of these that's in view, as a pager's tick is. */
+      current?: boolean;
+      /** What it does, for a control with no words of its own: read aloud and shown on hover. */
+      label?: string;
       onClick?: MouseEventHandler<HTMLButtonElement>;
     }
 );
@@ -84,12 +93,16 @@ export function Button({ variant = 'primary', arrow, children, ...rest }: Button
       </a>
     );
   }
-  const { type = 'button', disabled, pressed, onClick } = rest;
+  const { type = 'button', disabled, pressed, current, label, onClick } = rest;
   return (
     <button
       type={type}
       disabled={disabled}
       aria-pressed={pressed}
+      aria-current={current ? 'true' : undefined}
+      data-current={current ? '' : undefined}
+      aria-label={label}
+      title={label}
       onClick={onClick}
       data-b={BEHAVIOUR[variant]}
       data-kind={variant}

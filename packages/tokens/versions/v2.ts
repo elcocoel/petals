@@ -407,6 +407,8 @@ const groups = {
     notes: '1.1s',
     blink: '1.06s',
     fold: '.62s',
+    /** How long a scene of How it works keeps the focus before the row moves on. */
+    cycle: '7s',
     /** A hairline between stars: fades in, holds, fades out. */
     connect: '18s',
     /** Two layers of static, sliding against each other, on lengths that never line up. */
@@ -421,6 +423,8 @@ const groups = {
     draw: 'cubic-bezier(.45, .05, .2, 1)',
     blink: 'steps(1)',
     drift: 'ease-in-out',
+    /** Time kept: the line under the scene in focus fills at an even pace. */
+    cycle: 'linear',
   },
   // How far things move. Reduced motion takes all of these to nothing.
   move: {
@@ -444,6 +448,8 @@ const groups = {
     'bloom-from': '.5',
     'arrive-from': '.92',
     dim: '.26',
+    /** A scene of How it works that isn't in focus steps back to this. */
+    rest: '.55',
     'nav-shift': '-24px',
     'nav-row': '-12px',
     'nav-mark': '.88',

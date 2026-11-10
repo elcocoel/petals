@@ -466,6 +466,14 @@ export const registry: LabEntry[] = [
           </ul>
         ),
       },
+      {
+        name: 'in focus',
+        render: () => (
+          <ul className="m-0 flex list-none p-0">
+            <Scene {...landingCopy.howItWorks.scenes[0]} current />
+          </ul>
+        ),
+      },
     ],
   },
   {
