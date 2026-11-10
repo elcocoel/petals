@@ -14,6 +14,7 @@ import { agentAccess, createAuth, type Network, siteOf } from './auth-routes.ts'
 import { closedLedger, importLedgerFile, serverBudget, storeLedger } from './budget.ts';
 import { creditFrom } from './credit.ts';
 import { DEFAULT_BUDGET, type LlmClient, personUsdPerChat, runMaxSeconds } from './llm.ts';
+import { meRoutes } from './me-routes.ts';
 import { chosenModel, createNearAiClient, FALLBACK_MODELS, type NearAiOptions } from './near-ai.ts';
 import { type PayDeps, payRoutes } from './pay-routes.ts';
 import { recordedClient, SKELETON_TRANSCRIPT } from './recorded.ts';
@@ -164,6 +165,16 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
         ? { readTransfer: () => Promise.reject(new Error('fake mode reads no chain')) }
         : {}),
       ...(o.pay?.readTransfer ? { readTransfer: o.pay.readTransfer } : {}),
+    }),
+  );
+  // a person's own view and profile (Elco, 10 Nov), and the pictures in profiles
+  app.route(
+    '/',
+    meRoutes({
+      store,
+      gate: auth.gate,
+      ...(config.apiBase ? { apiBase: config.apiBase } : {}),
+      ...(o.clock ? { clock: o.clock } : {}),
     }),
   );
   app.route(
