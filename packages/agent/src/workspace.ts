@@ -180,6 +180,19 @@ export interface WorkspaceDeps {
   full?: () => Promise<boolean>;
 }
 
+/** How many turns' figures are read, and how many per model a turn's price is the median of. */
+const TURNS_READ = 200;
+const TURNS_MEASURED = 20;
+
+/** The middle one, or the mean of the two middle ones; null for none. */
+function median(xs: readonly number[]): number | null {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  const m = s.length % 2 ? (s[mid] as number) : ((s[mid - 1] as number) + (s[mid] as number)) / 2;
+  return Math.round(m * 1e6) / 1e6;
+}
+
 export function workspaceRoutes(d: WorkspaceDeps): Hono {
   const { store, gate, tools } = d;
   const clock = d.clock ?? Date.now;
@@ -386,7 +399,35 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
 
   const noConversation = (c: Context, id: string) => fail(c, 'not_found', `no conversation ${id}`);
 
-  app.get('/api/v1/catalogue', (c) => ok(c, catalogue(d.llm.kind)));
+  // Each model with what a turn on it really costs here (Elco, 10 Nov: "the price estimates seem incorrect"):
+  // the median of its last turns priced as NEAR AI bills, cached input included; null until it has one.
+  app.get('/api/v1/catalogue', async (c) => {
+    const turns = new Map<string, number[]>();
+    for (const e of await store.runEvent.latestOfType('done', TURNS_READ)) {
+      const done = JSON.parse(e.data) as {
+        model?: string;
+        turns?: number;
+        cost_usd?: number;
+        tokens?: { cached?: number };
+      };
+      if (!done.model || !done.turns || typeof done.tokens?.cached !== 'number') continue;
+      const costs = turns.get(done.model) ?? [];
+      if (costs.length < TURNS_MEASURED && typeof done.cost_usd === 'number') {
+        turns.set(done.model, [...costs, done.cost_usd]);
+      }
+    }
+    const offered = catalogue(d.llm.kind);
+    return ok(c, {
+      ...offered,
+      providers: offered.providers.map((p) => ({
+        ...p,
+        models: p.models.map((m) => {
+          const costs = turns.get(m.id) ?? [];
+          return { ...m, usd_per_turn: median(costs), turns_measured: costs.length };
+        }),
+      })),
+    });
+  });
 
   app.get('/api/v1/conversations', async (c) => {
     const subject = await gate.subjectOf(c);

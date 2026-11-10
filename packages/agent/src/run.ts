@@ -278,11 +278,8 @@ async function loop(
         turns: totals.turns,
         model: totals.model,
         fallback_used: totals.fallback,
-        tokens: {
-          in: totals.in,
-          out: totals.out,
-          ...(totals.cached ? { cached: totals.cached } : {}),
-        },
+        // `cached` always, from 10 Nov: a turn with it was priced as NEAR AI bills, cached input included
+        tokens: { in: totals.in, out: totals.out, cached: totals.cached },
         cost_usd: Math.round(totals.usd * 1e6) / 1e6,
         signature: totals.signature,
         ...(totals.context ? { context_tokens: totals.context } : {}),
