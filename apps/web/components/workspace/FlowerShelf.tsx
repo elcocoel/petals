@@ -38,7 +38,7 @@ export function FlowerShelf({
         </ul>
       )}
       <div>
-        <TextLink variant="quiet" href="/gallery">
+        <TextLink variant="quiet" href="/map">
           The whole Power Map
         </TextLink>
       </div>

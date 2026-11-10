@@ -38,7 +38,7 @@ describe('openingMessage', () => {
   test('offers maps, one per address, each by its page', () => {
     const text = openingMessage([map]);
     expect(text).toContain('[NEAR validators](/m/near%3Avalidators)');
-    expect(text).toContain('[Power Map](/gallery)');
+    expect(text).toContain('[Power Map](/map)');
   });
 
   test("the largest three first, by a map's largest reading, and still talks with an empty or unreachable map", () => {
@@ -50,7 +50,7 @@ describe('openingMessage', () => {
       card('e', 'ENS delegates', [8561], 'ENS (token-only map)'),
     ]);
     expect(text).toContain(
-      "Or start from what's already mapped: [UNI](/m/u), [ENS](/m/e), [NEAR validators](/m/near%3Avalidators), or the whole [Power Map](/gallery).",
+      "Or start from what's already mapped: [UNI](/m/u), [ENS](/m/e), [NEAR validators](/m/near%3Avalidators), or the whole [Power Map](/map).",
     );
     expect(text).not.toContain('Small');
     const empty = openingMessage([]);
@@ -65,7 +65,7 @@ describe('openingMessage', () => {
   test('renders as links on this site', () => {
     const blocks = JSON.stringify(parseMarkdown(openingMessage([map]), new Set()));
     expect(blocks).toContain('"href":"/m/near%3Avalidators"');
-    expect(blocks).toContain('"href":"/gallery"');
+    expect(blocks).toContain('"href":"/map"');
   });
 
   test('a reopened conversation still starts with what the agent said', () => {

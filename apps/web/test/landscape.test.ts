@@ -6,7 +6,7 @@ import { newLive, stepLive } from '../flower/live.ts';
 import { modelOf } from '../flower/model.ts';
 import { SHAPE } from '../flower/ring.ts';
 import { syntheticReading } from '../lab/flower/synthetic.ts';
-import { fixtureNight, landscapeOf } from '../lab/map/landscape.ts';
+import { fixtureNight, landscapeOf, oneEach } from '../landscape/land.ts';
 import {
   backbone,
   footprint,
@@ -204,6 +204,34 @@ describe('the space', () => {
     c.raw.t = Math.log(0.001);
     for (let i = 0; i < 600; i++) stepCamera(c, 1 / 60, false);
     expect(c.k).toBeGreaterThan(0.009);
+  });
+});
+
+describe('the Power Map', () => {
+  const view = (sha: string, map: string, name: string | null) => ({
+    sha,
+    name,
+    title: `title ${sha}`,
+    network: 'n',
+    chain: 'eip155:1',
+    address: null,
+    count: null,
+    as_of: '2026-11-09T00:00:00Z',
+    snapshot: `snap ${sha}`,
+    map,
+    reading: { title: '', petals: [] },
+  });
+
+  test('places one flower per map: its newest drawing, named by its newest drawing with a name', () => {
+    const kept = oneEach([
+      view('a1', 'eip155:1:ens', 'ENS delegates'),
+      view('b1', 'eip155:1:uni', null),
+      view('a2', 'eip155:1:ens', null),
+    ]);
+    expect(kept.map((v) => [v.sha, v.name])).toEqual([
+      ['a2', 'ENS delegates'],
+      ['b1', null],
+    ]);
   });
 });
 

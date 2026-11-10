@@ -1,6 +1,7 @@
 'use client';
 // The map, live (specs/006-the-map, bench v2): one chain at a time, chosen down the left as on an exchange,
-// and an empty SVG for that chain's scene and its live flowers to draw in, filling the window. Each
+// and an empty SVG for that chain's scene and its live flowers to draw in, filling the window, or the area
+// under the site's nav on the Power Map (app/(canvas)/map). Each
 // flower's drawing model is made here from its reading, once. The words are the data's: each chain's name
 // and how many flowers it has.
 import { type RefObject, useMemo, useRef, useState } from 'react';
@@ -33,10 +34,12 @@ function Land({
   data,
   probe,
   aside,
+  fill,
 }: {
   data: LandscapeData;
   probe: boolean;
   aside: RefObject<HTMLDivElement | null>;
+  fill: 'window' | 'area';
 }) {
   const svg = useRef<SVGSVGElement>(null);
   useLandscape(svg, data, probe, aside);
@@ -46,7 +49,7 @@ function Land({
       ref={svg}
       role="img"
       aria-label="Power Map"
-      className="fixed inset-0 block size-full touch-none select-none bg-surface"
+      className={`${fill === 'window' ? 'fixed' : 'absolute'} inset-0 block size-full touch-none select-none bg-surface`}
     />
   );
 }
@@ -54,9 +57,15 @@ function Land({
 export function LandscapeCanvas({
   data,
   probe = false,
+  fill = 'window',
+  title,
 }: {
   data: { flowers: CanvasFlower[]; roads: Road[]; chains: CanvasChain[] };
   probe?: boolean;
+  /** what it fills: the window, or the positioned area it's in */
+  fill?: 'window' | 'area';
+  /** the page's one title, over the chains */
+  title?: string;
 }) {
   const aside = useRef<HTMLDivElement>(null);
   const [chain, setChain] = useState(
@@ -89,11 +98,12 @@ export function LandscapeCanvas({
 
   return (
     <>
-      {land && <Land key={chain} data={land} probe={probe} aside={aside} />}
+      {land && <Land key={chain} data={land} probe={probe} aside={aside} fill={fill} />}
       <div
         ref={aside}
-        className="fixed top-space-16 left-space-16 flex w-tile-width flex-col gap-space-4"
+        className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 flex w-tile-width flex-col gap-space-4`}
       >
+        {title && <h1 className="type-label">{title}</h1>}
         {data.chains.map((c) => (
           <Button
             key={c.chain}

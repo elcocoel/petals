@@ -15,7 +15,7 @@ export function Footer() {
         <div className="flex flex-col gap-block-gap lg:flex-row lg:items-end lg:justify-between">
           <Wordmark size="footer" />
           <div className="flex flex-wrap gap-x-space-32 gap-y-text-gap">
-            <TextLink href={siteLinks.gallery}>{copy.links.gallery}</TextLink>
+            <TextLink href={siteLinks.map}>{copy.links.gallery}</TextLink>
             <TextLink href={siteLinks.howItWorks}>{copy.links.howItWorks}</TextLink>
             <TextLink href={siteLinks.connect}>{copy.links.docs}</TextLink>
           </div>
