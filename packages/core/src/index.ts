@@ -84,6 +84,7 @@ export { selectPetals } from './select.ts';
 export type * from './types/index.ts';
 export { validateSnapshot, validateSpec } from './validate/index.ts';
 export * from './versions.ts';
+export { isView, viewProblem } from './view/check.ts';
 export type { Dimension, Piece } from './view/index.ts';
 export {
   ACCEPTS,

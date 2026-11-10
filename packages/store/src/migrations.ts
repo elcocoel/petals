@@ -348,6 +348,37 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE run ADD COLUMN named_at TEXT;
   ALTER TABLE exploration ADD COLUMN title TEXT;
   `,
+  // 15: a person's own (Elco, 10 Nov). Their view, the glasses every petal they see is drawn through
+  // (one-source.md, step 1): views by their hash, and each person's current one. Their profile, in NEAR
+  // Social's own shape (api2.near.social/standard.md, social-kv/1), so publishing later is a straight copy.
+  // And the pictures in it, by their sha256, served from here so they show without anything on chain.
+  // Each is the person's, not a wallet's; who saved it (the credential) and when are kept beside it.
+  `
+  CREATE TABLE view_doc (
+    hash TEXT PRIMARY KEY,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  CREATE TABLE person_view (
+    person TEXT PRIMARY KEY REFERENCES person(id),
+    view TEXT NOT NULL REFERENCES view_doc(hash),
+    credential TEXT,
+    set_at TEXT NOT NULL
+  );
+  CREATE TABLE person_profile (
+    person TEXT PRIMARY KEY REFERENCES person(id),
+    body TEXT NOT NULL,
+    credential TEXT,
+    saved_at TEXT NOT NULL
+  );
+  CREATE TABLE media (
+    sha256 TEXT PRIMARY KEY,
+    type TEXT NOT NULL,
+    body TEXT NOT NULL,
+    person TEXT,
+    created_at TEXT NOT NULL
+  );
+  `,
 ];
 
 /**

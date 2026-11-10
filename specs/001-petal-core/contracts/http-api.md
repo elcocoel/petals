@@ -86,6 +86,12 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `POST /api/v1/auth/invite` | body `{ token }`: `{ invite }`, and holds it in this session |
 | `GET /api/v1/auth/invite` | `{ invite }` this session holds, or `{ invite: null }` |
 | `GET /api/v1/me` | `{ person_id, network, account, wallets, credit }`, to that person only; `401` to anyone else. `network` is the wallet this session came in with, and nothing else reads it; `account` (additive, 9 Nov) is that wallet's account id, or `null`. `credit` is `{ funded_usd, spent_usd, left_usd, usd_per_chat }`, or `null` for a person with no credit of their own (T374) |
+| `GET /api/v1/me/view` | `{ view, hash }`: the person's own view (`view/v1`), the glasses every petal they see is drawn through, or the default for a visitor and anyone who hasn't set one (Elco, 10 Nov; one-source.md, step 1). It's the person's, not a wallet's |
+| `PUT /api/v1/me/view` | `{ view }` → `{ view, hash }`, signed in, same-origin: checked against `view/v1` (`400` with the reason), kept by its hash, with the session's credential and the time beside it. `401` for a visitor. Putting the default back is a `PUT` of the default |
+| `GET /api/v1/views/:hash` | `{ view, hash }`: any view by its hash, the default's too without anyone keeping it; `not_found` otherwise |
+| `GET /api/v1/me/profile` | `{ profile, updated_at, published }`: the person's profile in NEAR Social's own shape (api2.near.social/standard.md, social-kv/1), `null` until they keep one. `published` stays `null` until publishing to NEAR Social is on. `401` for a visitor |
+| `PUT /api/v1/me/profile` | `{ profile }`, the whole of it → the same as `GET`, signed in, same-origin. `profile` is `{ name?, about?, avatar?, banner?, location?, links? }`, each optional and `null` to clear: name and location 256 characters at most, about 10,000, `links` up to 32 of `service: value` (service `^[a-z0-9_]{1,32}$`, value a handle or an `https://` URL, 2,048 at most). `avatar` and `banner` take a `data:image/webp`, `jpeg` or `png` base64 picture, which is kept here under its sha256 and becomes its address on this site, or that address, or a `fastfs://` address as on chain. Anything else is `400` with the reason |
+| `GET /api/v1/media/:sha256.:ext` | a profile's picture, to anyone, by its sha256 (as FastFS names an upload, `media/{sha256}.{ext}`), `Cache-Control: immutable` |
 | `ALL /mcp` | MCP Streamable HTTP, stateless |
 
 ## Agent chat (SSE)
