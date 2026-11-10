@@ -107,7 +107,6 @@ export function usePanelState() {
   const signedIn = Boolean(session.account);
   const profile = useProfile();
   const editor = useProfileEditor(profile.account, profile.social, profile.kept, profile.reload);
-  const funds = useFunds();
   const pathname = usePathname();
   const params = useSearchParams();
   const runId = params.get('run');
@@ -140,6 +139,8 @@ export function usePanelState() {
   const width = usePanelWidth();
   // the bar (a control with Space 8 around it, and its hairline), and the panel beside it when it's open
   const edge = BAR + (menu.open ? width.width : 0);
+  // the one balance: read again after each turn (the page's signal) and on every move
+  const funds = useFunds(signedIn ? `${pathname}?${params.toString()}:${signal}` : '');
   // a name Petals' agent gives the open conversation shows as it arrives, not only when the list is read
   const rows = useMemo(
     () =>
