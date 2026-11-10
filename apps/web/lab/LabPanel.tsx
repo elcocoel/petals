@@ -7,6 +7,7 @@ import { IconButton } from '../components/ui/IconButton.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { type RailItem, SideRail } from '../components/ui/SideRail.tsx';
+import { agentWords } from '../lib/agents.ts';
 import { PANEL_STATES } from './panel-fixtures.ts';
 
 /** The panel's places, as WorkMenu gives them. */
@@ -69,7 +70,7 @@ export function LabAction() {
     <NavItem
       onClick={() => setCopied(true)}
       icon="plus"
-      label={copied ? 'Copied. Paste it in an agent' : 'Connect an agent'}
+      label={copied ? agentWords.copied : agentWords.copy}
       muted
     />
   );

@@ -49,7 +49,20 @@ export interface MapViewRow {
   picture: string;
 }
 
-export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const MONTHS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 
 /** 2026-11-03T19:42:00Z as "3 Nov 2026". Read from the text, so it never shifts with a timezone. */
 export function dateLabel(asOf: string): string {

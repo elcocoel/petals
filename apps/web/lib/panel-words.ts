@@ -1,6 +1,7 @@
 // Every word in the side panel (WorkMenu, on /make and /lobby), in one place, so the panel says one thing
 // one way (Elco, 10 Nov: "two buttons with different languages kind of claiming to do the same thing").
 // Drafts, PANEL's, listed for Elco; "Lobby", "Projects" and "Conversations" are Elco's own words.
+import { agentWords } from './agents.ts';
 
 export const panelWords = {
   /** What a screen reader hears for the panel. */
@@ -17,9 +18,9 @@ export const panelWords = {
   /** Rule 2: what goes here, and the way to it is the first row of the panel. */
   noConversations: 'Your conversations show here',
   agents: 'Your agents',
-  /** The one way to connect one: it copies the one prompt, with a fresh agent key. */
-  connect: 'Connect an agent',
-  copied: 'Copied. Paste it in an agent',
+  /** The one way to connect one: it copies the one prompt, with a fresh agent key, in /connect's words. */
+  connect: agentWords.copy,
+  copied: agentWords.copied,
   disconnect: (agent: string) => `Disconnect ${agent}`,
   /** An agent's state, in a few characters at its row's end; the full line shows on hover. */
   state: { busy: 'on a job', waiting: 'waiting', away: 'away' },
