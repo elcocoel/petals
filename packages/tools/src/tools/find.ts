@@ -729,7 +729,7 @@ function nextStep(
   const checked = `Checked: ${answered.join(', ') || 'nothing'}.${down}`;
   const open = `Not tried here: read_chain on an address, read_page on a page, search for a name.`;
   if (shown.length === 0)
-    return `Nothing in these sources answers to "${p.core}"${p.chain ? ` on ${p.chain}` : ''}. ${checked} This lookup knows only these lists and Petal's own modules (${readable(ctx)}), so that isn't the same as not existing. ${open}`;
+    return `Nothing in these sources answers to "${p.core}"${p.chain ? ` on ${p.chain}` : ''}. ${checked} This lookup knows only these lists and Petals' own modules (${readable(ctx)}), so that isn't the same as not existing. ${open}`;
   if (noDao)
     return `No DAO answers to "${p.core}" in these sources, and what's listed only shares the name, so it isn't the DAO. ${checked} A DAO with no trading pool and no Snapshot space isn't in these lists. ${open}`;
   if (rivals > 0)

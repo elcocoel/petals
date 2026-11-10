@@ -95,7 +95,7 @@ export const DEFAULT_HEARTBEAT_MS = 8000;
 
 /** The spend ledger can't be read or written, so nothing more is bought (SYS-004). */
 export const LEDGER_DOWN =
-  "Petal's agent stopped because it can't check its spending record right now. Nothing more will be spent. Try again in a little while.";
+  "Petals' agent stopped because it can't check its spending record right now. Nothing more will be spent. Try again in a little while.";
 
 /** What a run's readers are told when someone stops it. */
 export const STOPPED =
@@ -579,7 +579,7 @@ async function loop(
           fail(
             why?.code ?? 'budget_exhausted',
             why?.message ??
-              `Petal's agent has used today's budget ($${budget.usdPerDay}); it starts again tomorrow (UTC).`,
+              `Petals' agent has used today's budget ($${budget.usdPerDay}); it starts again tomorrow (UTC).`,
             why?.hint ?? SKILL_HINT,
           );
           break;

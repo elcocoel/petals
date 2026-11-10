@@ -11,13 +11,13 @@ import type { BudgetLedger, SpendHold } from './llm.ts';
 /** What to do instead, in plain words. Own agents need no invite and no sign-in. */
 export const CONNECT_HINT = 'Connect your own agent at /connect: it can use every tool, for free.';
 export const NO_INVITE =
-  "Petal's own agent runs only on a sponsored invite, and this session doesn't hold one, so nothing was spent. You can use your own agent instead.";
+  "Petals' own agent runs only on a sponsored invite, and this session doesn't hold one, so nothing was spent. You can use your own agent instead.";
 export const INVITE_SPENT =
-  "This invite's budget is used up, so Petal's agent stopped here. You can carry on with your own agent.";
+  "This invite's budget is used up, so Petals' agent stopped here. You can carry on with your own agent.";
 export const INVITE_CLOSED =
-  "This invite isn't valid any more, so Petal's agent stopped here. You can carry on with your own agent.";
+  "This invite isn't valid any more, so Petals' agent stopped here. You can carry on with your own agent.";
 export const CREDIT_SPENT =
-  "Your credit is used up, so Petal's agent stopped here and nothing more will be spent. Top up from your wallet to carry on, or carry on with your own agent.";
+  "Your credit is used up, so Petals' agent stopped here and nothing more will be spent. Top up from your wallet to carry on, or carry on with your own agent.";
 /** A signed-in person with no credit and no invite (9 Nov): Petals' agent is paid for from their wallet. */
 export const PAYMENT_NEEDED =
   "Petals' agent runs on NEAR AI and is paid for in NEAR from your wallet, so nothing was spent. Top up to start, or use your own agent.";

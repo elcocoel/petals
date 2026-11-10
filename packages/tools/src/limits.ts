@@ -122,7 +122,7 @@ export async function overDataBudget(cfg: LimitsConfig, now: Date): Promise<bool
 }
 
 export const DATA_FULL =
-  "Petal's disk space for saved data is full, so this was not saved. Reading and drawing what is stored still work.";
+  "Petals' disk space for saved data is full, so this was not saved. Reading and drawing what is stored still work.";
 
 /** Throws the plain refusal when the data folder is over budget. */
 export async function assertRoom(cfg: LimitsConfig, now: Date): Promise<void> {
