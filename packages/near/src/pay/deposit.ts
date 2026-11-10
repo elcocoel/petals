@@ -4,7 +4,8 @@
 // there, from whatever wallet they have, and 1Click does the rest. The quote is asked for EXACT_OUTPUT, so
 // the dollars Petals receives are the dollars the person asked for, and delivered into NEAR Intents under
 // Petals' account (INTENTS), which needs no token storage on chain. The dry module (one-click.ts) stays dry.
-// Keyless: 1Click adds 0.25% to quotes without a partner key (its authentication page, 10 Nov).
+// With Petals' partner key (ONE_CLICK_API_KEY, Elco's, 10 Nov), sent as X-API-Key, 1Click takes 0.20%, and
+// 0.01% between stablecoins or the same token across chains; without one, 0.25% (its authentication page).
 import { describe, NearError } from '../errors.ts';
 import { NEAR_USDC, usdcUnits } from './one-click.ts';
 
@@ -14,6 +15,8 @@ export interface DepositDeps {
   fetch?: typeof fetch;
   now?: () => Date;
   base?: string;
+  /** Petals' 1Click partner key; none: keyless */
+  apiKey?: string;
 }
 
 /** What the person is told to send, and what it becomes. */
@@ -43,7 +46,12 @@ export interface SwapStatus {
 }
 
 async function oneClick(deps: DepositDeps, path: string, init?: RequestInit): Promise<unknown> {
-  const res = await (deps.fetch ?? globalThis.fetch)(`${deps.base ?? ONE_CLICK}${path}`, init);
+  const headers = new Headers(init?.headers);
+  if (deps.apiKey) headers.set('X-API-Key', deps.apiKey);
+  const res = await (deps.fetch ?? globalThis.fetch)(`${deps.base ?? ONE_CLICK}${path}`, {
+    ...init,
+    headers,
+  });
   const text = await res.text();
   if (!res.ok) {
     throw new NearError(
