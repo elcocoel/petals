@@ -1,5 +1,6 @@
-// Giving back an overcharge (Elco, 10 Nov): one entry with its reason, which makes what was spent smaller and
-// isn't funding; run again, it changes nothing. On a real private.db in a temp folder.
+// Correcting a charge (Elco, 10 Nov): one entry with its reason, which changes what was spent and isn't
+// funding; positive goes back, negative is charged; run again, it changes nothing. On a real private.db in a
+// temp folder.
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -10,7 +11,7 @@ import { run } from '../credit-back.ts';
 const REASON = 'repriced at the cached rate';
 
 describe('credit-back', () => {
-  test('one entry back, what was spent gets smaller, and running it again changes nothing', async () => {
+  test('one entry back or charged, what was spent changes, and running it again changes nothing', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'petal-back-'));
     let store = openPrivateStore(dir);
     await store.person.create({ id: 'prs_me', created_at: '2026-11-10T00:00:00.000Z' });
@@ -35,8 +36,23 @@ describe('credit-back', () => {
     expect(credit?.spent_usd).toBeCloseTo(0.235479, 6);
     expect(credit?.left_usd).toBeCloseTo(0.764521, 6);
     await store.close();
+    // a correction the other way is charged, as its own entry
+    expect(
+      await run([
+        '--state',
+        dir,
+        '--person',
+        'prs_me',
+        '--usd=-0.003298',
+        '--reason',
+        'repriced again',
+      ]),
+    ).toContain('charge $0.003298 (repriced again)');
+    store = openPrivateStore(dir);
+    expect((await personCredit(store, 'prs_me'))?.left_usd).toBeCloseTo(0.761223, 6);
+    await store.close();
     await expect(
       run(['--state', dir, '--person', 'prs_me', '--usd', '0', '--reason', REASON]),
-    ).rejects.toThrow(/over \$0/);
+    ).rejects.toThrow(/not \$0/);
   });
 });

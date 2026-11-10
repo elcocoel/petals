@@ -284,9 +284,9 @@ export async function personCredit(store: Store, person: string): Promise<Person
 }
 
 /**
- * Gives back what a person was charged too much, as one entry with its reason (Elco, 10 Nov: "one entry
- * 'repriced at the cached rate'"). It isn't funding: it makes what they spent smaller. Its id names the
- * person and the reason, so running it again changes nothing.
+ * Corrects what a person was charged, as one entry with its reason (Elco, 10 Nov: "one entry 'repriced at
+ * the cached rate'"): a positive amount goes back, a negative one is charged. It isn't funding: it changes
+ * what they spent. Its id names the person and the reason, so running it again changes nothing.
  */
 export async function creditBack(
   store: Store,
@@ -295,8 +295,11 @@ export async function creditBack(
   reason: string,
   now: Date = new Date(),
 ): Promise<PersonCredit> {
-  if (!Number.isFinite(usd) || usd <= 0)
-    throw new Error('what goes back is a number of dollars, over $0');
+  if (!Number.isFinite(usd) || usd === 0) {
+    throw new Error(
+      'the correction is a number of dollars, not $0: positive goes back, negative is charged',
+    );
+  }
   if (!reason.trim()) throw new Error('say why it goes back');
   if (!(await store.person.get(person))) throw new Error(`no person ${person}`);
   await store.credit.apply({
