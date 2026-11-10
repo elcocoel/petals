@@ -2,7 +2,9 @@
 // (JSON, or SSE replay), POST /api/v1/agent/runs/:id/stop, GET /api/v1/attestations/:sha256 (the
 // stored report, byte for byte). A chat is a run: a job in this process (jobs.ts), stored event by
 // event, so it keeps going when the browser disconnects, and the SSE stream only observes it.
+
 import { join } from 'node:path';
+import type { Price } from '@petal/core';
 import { sha256Hex, TOOLS_VERSION } from '@petal/core';
 import type { ChatInput, ChatMessage, Draft, ToolError, ToolErrorCode } from '@petal/core/types';
 import type { JobRow } from '@petal/store';
@@ -63,6 +65,8 @@ export interface AgentRouteDeps {
 }
 
 export interface AgentRouteOptions {
+  /** what Petals charges at (price/v1); default price.json, every switch off */
+  price?: Price;
   /** default the @petal/tools registry */
   registry?: readonly AnyTool[];
   heartbeatMs?: number;

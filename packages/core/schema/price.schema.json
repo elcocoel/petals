@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:price:v1",
+  "title": "Petal price v1",
+  "description": "What Petals charges for its agent's work (coordinator/pricing-protocol.md; Elco, 10 Nov: \"We have a set of fees * multiplied * by a user defined 'tip' rate *added* protocol defined rate - just so we can either be free, or charge and some users can choose to 'pay more to support' - this is optional switches for now\"). A charge is NEAR AI's own bill for the call, plus the fees that are switched on times the person's tip, plus the protocol's rate of the bill. Every switch off is Petals at cost. Each charge names the hash of the price it used.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["petal", "form", "fees", "protocol", "tip"],
+  "properties": {
+    "petal": { "const": "price/v1" },
+    "form": {
+      "description": "how the parts add up: the bill, plus fees times the tip, plus the protocol's percent of the bill",
+      "const": "bill + fees * tip + protocol * bill"
+    },
+    "fees": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["usage", "top_up", "per_turn", "per_tool", "free"],
+      "properties": {
+        "usage": {
+          "description": "(A) a percent of each call's bill",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["on", "percent"],
+          "properties": { "on": { "type": "boolean" }, "percent": { "type": "number", "minimum": 0, "maximum": 100 } }
+        },
+        "top_up": {
+          "description": "(B) a percent of each top-up, kept by Petals when it lands",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["on", "percent"],
+          "properties": { "on": { "type": "boolean" }, "percent": { "type": "number", "minimum": 0, "maximum": 100 } }
+        },
+        "per_turn": {
+          "description": "(C) dollars for each turn of Petals' agent",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["on", "usd"],
+          "properties": { "on": { "type": "boolean" }, "usd": { "type": "number", "minimum": 0 } }
+        },
+        "per_tool": {
+          "description": "(D) dollars for each use of a tool Petals runs, by the tool's name",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["on", "usd"],
+          "properties": {
+            "on": { "type": "boolean" },
+            "usd": {
+              "type": "object",
+              "propertyNames": { "pattern": "^[a-z][a-z0-9_]{0,40}$" },
+              "additionalProperties": { "type": "number", "minimum": 0 }
+            }
+          }
+        },
+        "free": {
+          "description": "(E) dollars of NEAR AI's bill a person runs before any of Petals' charges",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["on", "usd"],
+          "properties": { "on": { "type": "boolean" }, "usd": { "type": "number", "minimum": 0 } }
+        }
+      }
+    },
+    "protocol": {
+      "description": "the protocol's own rate: a percent of each call's bill, not multiplied by the tip",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["on", "percent"],
+      "properties": { "on": { "type": "boolean" }, "percent": { "type": "number", "minimum": 0, "maximum": 100 } }
+    },
+    "tip": {
+      "description": "the person's multiplier on the fees: theirs to set between min and max, default unless they do",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default", "min", "max"],
+      "properties": {
+        "default": { "type": "number", "minimum": 0 },
+        "min": { "type": "number", "minimum": 0 },
+        "max": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

@@ -14,6 +14,7 @@
 // With the credit contract (credit.ts; Elco, 9 Nov), the person deposits into it instead: GET says the
 // contract and `method: "deposit"`, and POST, sent after a deposit or a withdrawal, checks that transaction
 // and sets the person's credit to what the wallet they signed in with holds in the contract now.
+import type { Price } from '@petal/core';
 import { TOOLS_VERSION } from '@petal/core';
 import {
   nearUsd,
@@ -29,11 +30,14 @@ import { bodyLimit } from 'hono/body-limit';
 import type { Network, RouteAuth } from './auth-routes.ts';
 import { type CreditChain, chainChat } from './credit.ts';
 import { payPerson, personCredit } from './invites.ts';
+import { chargePetals, PRICE } from './price.ts';
 import { fail } from './routes.ts';
 
 export interface PayDeps {
   store: Store;
   gate: RouteAuth;
+  /** what Petals charges at (price/v1); default price.json */
+  price?: Price;
   /** the transfer as the chain shows it; default readTransfer on the public RPC */
   readTransfer?: (network: Network, txHash: string, sender: string) => Promise<Transfer>;
   /** dollars per NEAR now; default NEAR Intents' token list */
@@ -170,11 +174,25 @@ export function payRoutes(d: PayDeps): Hono {
         usd,
         now: new Date(clock()),
       });
+      // Petals' part of a top-up (price/v1's B), only when it's switched on, once per transfer
+      const kept =
+        paid.added_usd > 0
+          ? await chargePetals(
+              d.store,
+              d.price ?? PRICE,
+              me.person,
+              { kind: 'top_up', usd: paid.added_usd },
+              `${me.network}:${t.tx_hash}`,
+              new Date(clock()).toISOString(),
+            )
+          : 0;
+      const credit = kept ? ((await personCredit(d.store, me.person)) ?? paid.credit) : paid.credit;
       return ok(c, {
         added_usd: paid.added_usd,
         added_near: paid.added_usd > 0 ? near : 0,
         near_usd,
-        credit: { ...paid.credit, usd_per_chat: d.usdPerChat },
+        ...(kept ? { petals_usd: kept } : {}),
+        credit: { ...credit, usd_per_chat: d.usdPerChat },
       });
     },
   );

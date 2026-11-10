@@ -40,7 +40,7 @@ describe('openStore', () => {
     const memory = openStore(':memory:');
     expect(memory.durable).toBe(false);
     await memory.person.create({ id: 'p1', created_at: AT });
-    expect(await memory.person.get('p1')).toEqual({ id: 'p1', created_at: AT });
+    expect(await memory.person.get('p1')).toEqual({ id: 'p1', created_at: AT, tip: null });
   });
 
   test('migrations run once each, in order; a new one applies on the next open', async () => {

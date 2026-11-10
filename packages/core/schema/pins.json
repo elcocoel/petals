@@ -46,5 +46,9 @@
   "usage.v1.json": {
     "schema": "urn:petal:schema:usage:v1",
     "sha256": "a286f56d3fc880f3910d5f39fab2801c67b570aaa43bafcc6fabb39d99df04b1"
+  },
+  "price.v1.json": {
+    "schema": "urn:petal:schema:price:v1",
+    "sha256": "9bd6186ec9bb00bb897c333ef119c1d73a6bdd86dea8561fbd888097baa912c8"
   }
 }
