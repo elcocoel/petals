@@ -304,6 +304,46 @@ describe.each(engines)('%s', (engine, open) => {
     expect((await store.job.list(x)).map((j) => j.status)).toEqual(['done', 'failed']);
   });
 
+  test("a person's agents asking at once take one job each, never the same one", async () => {
+    const owner = u('prs');
+    const x = u('exp');
+    await store.exploration.create({
+      id: x,
+      owner,
+      question: 'who?',
+      target: null,
+      head: null,
+      visibility: 'private',
+      share_token_hash: null,
+      forked_from: null,
+      created_at: AT,
+      updated_at: AT,
+    });
+    const ids: string[] = [];
+    for (const n of [0, 1]) {
+      const j = await store.job.add({
+        id: u('job'),
+        exploration: x,
+        run: null,
+        kind: 'map',
+        title: `Map ${n}`,
+        brief: `Who holds power in ${n}?`,
+        inputs: { network: `n${n}` },
+        at: AT,
+      });
+      ids.push(j.id);
+    }
+    const taken = await together(3, () => store.job.takeFor(owner, 'Codex', LATER));
+    expect(
+      taken
+        .filter(Boolean)
+        .map((j) => j?.id)
+        .sort(),
+    ).toEqual([...ids].sort());
+    expect(taken.filter((j) => j === null)).toHaveLength(1);
+    expect((await store.job.held(owner)).map((j) => j.id).sort()).toEqual([...ids].sort());
+  });
+
   test('layers: kept once under their author, versions in order, and both move at sign-in', async () => {
     const anon = u('anon');
     const person = u('prs');
