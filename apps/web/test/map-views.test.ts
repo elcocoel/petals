@@ -87,6 +87,9 @@ describe("the landing's Power Map, from the map", () => {
       [first?.title, 'p1', 'u1'],
       [second?.title, 'p2', 'u2'],
     ]);
+    // with its map known, a tile opens the map's page
+    const [mapped] = tilesOf([row({ sha: first?.sha, map: 'near:mainnet:validators' })]);
+    expect(mapped?.href).toBe('/m/near%3Amainnet%3Avalidators');
     expect(tiles[0]?.keys).toEqual([
       { label: 'pool', swatch: 'k-pool' },
       { label: 'everyone else', swatch: 'tail' },

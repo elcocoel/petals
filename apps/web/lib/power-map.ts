@@ -7,6 +7,7 @@
 import { hourly } from './api.ts';
 import { type LegendKey, oneKey } from './flower-view.ts';
 import { type MapViewRow, rowKeys } from './map-views.ts';
+import { mapHref } from './maps.ts';
 
 export interface PowerMapView {
   sha: string;
@@ -90,7 +91,9 @@ export function tilesOf(rows: readonly MapViewRow[]): PowerMapTile[] {
   const bySha = new Map(rows.map((r) => [r.sha, r]));
   return POWER_MAP.flatMap((view) => {
     const row = bySha.get(view.sha);
-    return row ? [{ ...view, image: row.picture, href: row.view_url, keys: rowKeys(row) }] : [];
+    // A tile opens its map's page, as the Power Map's cards do.
+    const href = row?.map ? mapHref(row.map) : row?.view_url;
+    return row && href ? [{ ...view, image: row.picture, href, keys: rowKeys(row) }] : [];
   });
 }
 
