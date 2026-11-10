@@ -201,6 +201,7 @@ function turnRow(v: Pick<ThreadInput, 'items' | 'turn' | 'busy' | 'lostAgain'>):
 export function openFlowerIndex(open: Opened | undefined, count: number): number {
   switch (open?.kind) {
     case 'stored':
+    case 'draft':
     case 'shelf':
       return -1;
     case 'turn':

@@ -2,8 +2,9 @@
 // the panel that opens over it. Which flower is open and which petal is selected are in the chat's reducer,
 // so a new flower can take them; this draws what's needed, projects the panel, says whether its box is
 // open, keeps the address in step and hears Escape.
+import type { Spec } from '@petal/core/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { saveSettings } from '../lib/agent-client.ts';
+import { readDrawingSpec, saveSettings } from '../lib/agent-client.ts';
 import {
   type Catalogue,
   modelOptions,
@@ -11,6 +12,8 @@ import {
   type Settings,
   withModel,
 } from '../lib/composer-options.ts';
+import { decodeDraft } from '../lib/draft.ts';
+import { drawingLink } from '../lib/drawing-link.ts';
 import { elsewhereFlower, elsewhereRows, whereOf } from '../lib/elsewhere.ts';
 import { svgImage } from '../lib/flower-view.ts';
 import type { MapCard } from '../lib/maps.ts';
@@ -20,6 +23,7 @@ import {
   type CanvasHit,
   canvasPetal,
   composerTarget,
+  draftPanelFlower,
   flowerPanelView,
   nextCanvas,
   type PanelFlower,
@@ -45,8 +49,6 @@ import { useSession } from './useSession.ts';
 import { useSnapshotFacts } from './useSnapshotFacts.ts';
 import { useStoredFlower } from './useStoredFlower.ts';
 import { useWorkPanel } from './useWorkPanel.ts';
-
-const STORED_LINK = /^\/f\/([^/?#]+)$/;
 
 export function useWorkspace(props: {
   initialRun?: string | undefined;
@@ -99,6 +101,8 @@ export function useWorkspace(props: {
 
   const inPanel = openFlowerIndex(open, turnFlowers.length);
   const panelFlower = useMemo<PanelFlower | null>(() => {
+    // a drawing a link in the conversation opened: on the canvas beside it, whatever the conversation is
+    if (open.kind === 'draft') return draftPanelFlower(open.spec);
     if (initialElsewhere) return elsewhereFlower(elsewherePacket);
     if (open.kind === 'stored') {
       if (!storedFlower || !storedId) return null;
@@ -118,7 +122,7 @@ export function useWorkspace(props: {
       ...(row.publishUrl ? { publishUrl: row.publishUrl } : {}),
       earlier: inPanel !== turnFlowers.length - 1,
     };
-  }, [initialElsewhere, elsewherePacket, open.kind, storedFlower, storedId, turnFlowers, inPanel]);
+  }, [initialElsewhere, elsewherePacket, open, storedFlower, storedId, turnFlowers, inPanel]);
 
   const toDraw = useMemo(
     () => [
@@ -129,8 +133,9 @@ export function useWorkspace(props: {
       ...(storedFlower
         ? [{ key: storedFlower.entry.spec_sha256, spec: storedFlower.entry.spec }]
         : []),
+      ...(open.kind === 'draft' ? [{ key: draftPanelFlower(open.spec).key, spec: open.spec }] : []),
     ],
-    [turnFlowers, elsewherePacket, storedFlower],
+    [turnFlowers, elsewherePacket, storedFlower, open],
   );
   const person = usePersonView();
   const drawings = useDrawnFlowers(toDraw, person);
@@ -294,6 +299,19 @@ export function useWorkspace(props: {
     dispatch({ type: 'open', open: { kind: 'stored', id } });
     setBoxOpen(true);
   };
+  const openDraft = (spec: Spec) => {
+    // one this conversation drew opens as its own turn's flower, with what the agent said of it
+    const key = draftPanelFlower(spec).key;
+    const index = turnFlowers.findIndex((r) => r.flower.spec_sha256 === key);
+    const open: Opened =
+      index < 0
+        ? { kind: 'draft', spec }
+        : index === turnFlowers.length - 1
+          ? { kind: 'latest' }
+          : { kind: 'turn', index };
+    dispatch({ type: 'open', open });
+    setBoxOpen(true);
+  };
   const select = (id: string | null) => {
     dispatch({ type: 'select', petal: id });
     // you've picked who you're asking about: the next thing is to ask
@@ -380,11 +398,29 @@ export function useWorkspace(props: {
         chatActions.setQuestion(text);
         refs.box.current?.focus();
       },
-      /** A link in the agent's words to a stored flower opens it here. */
+      /**
+       * A link in the conversation to one of this site's flowers opens it here, on the canvas beside it (Elco,
+       * 10 Nov: not outside the work surface): a stored one (/f/), a drawing (/draft?spec=) or a view on the
+       * map (/d/<sha>, read first). One that can't be read goes where it points, as any link would.
+       */
       followLink: (href: string) => {
-        const id = STORED_LINK.exec(href)?.[1];
-        if (id) openStored(decodeURIComponent(id));
-        return Boolean(id);
+        const drawing = drawingLink(href, window.location.origin);
+        if (!drawing) return false;
+        if ('stored' in drawing) {
+          openStored(drawing.stored);
+          return true;
+        }
+        if ('draft' in drawing) {
+          const read = decodeDraft(drawing.draft);
+          if (!read.ok) return false;
+          openDraft(read.spec);
+          return true;
+        }
+        void readDrawingSpec(drawing.sha).then(
+          (spec) => (spec ? openDraft(spec) : window.location.assign(href)),
+          () => window.location.assign(href),
+        );
+        return true;
       },
     },
     refs,

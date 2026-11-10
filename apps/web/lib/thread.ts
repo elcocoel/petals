@@ -1,7 +1,14 @@
 // The conversation on /make as a list of items, folded from the agent's events (http-api.md, Agent
 // chat), live or from a stored run. Pure, so a reload and a live chat read the same. Below the list:
 // the stages of a turn, the backup of a question, and the one reducer the chat's state goes through.
-import type { AgentEvent, FlowerResult, JobEvent, ModelSignature, Run } from '@petal/core/types';
+import type {
+  AgentEvent,
+  FlowerResult,
+  JobEvent,
+  ModelSignature,
+  Run,
+  Spec,
+} from '@petal/core/types';
 import { readAbout } from './ask-about.ts';
 
 export type Done = Extract<AgentEvent, { event: 'done' }>['data'];
@@ -243,6 +250,8 @@ export type Opened =
   | { kind: 'latest' }
   | { kind: 'turn'; index: number }
   | { kind: 'stored'; id: string }
+  /** A drawing a link in the conversation points at (/d/<sha>, /draft?spec=), opened here from its spec. */
+  | { kind: 'draft'; spec: Spec }
   | { kind: 'shelf' };
 
 /** The panel's extra reading, one at a time. */

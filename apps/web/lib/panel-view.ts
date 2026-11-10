@@ -321,7 +321,7 @@ export function pickPlan(
 
 /** Whether the address asks for the box. A run alone only brings its flower back to the canvas. */
 export const addressOpensBox = (open: Opened | undefined, petal: string | null | undefined) =>
-  open?.kind === 'stored' || open?.kind === 'shelf' || Boolean(petal);
+  open?.kind === 'stored' || open?.kind === 'draft' || open?.kind === 'shelf' || Boolean(petal);
 
 /** A flower that couldn't be drawn or read, as something that can happen once. It's never silent. */
 export function panelFailure(view: PanelView): string | null {

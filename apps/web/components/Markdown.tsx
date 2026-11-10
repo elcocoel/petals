@@ -40,8 +40,21 @@ function spans(c: Inline[], onLink?: OnLink): ReactNode[] {
         );
       case 'flower':
         return (
-          // biome-ignore lint/suspicious/noArrayIndexKey: a parsed text never reorders
-          <a key={i} href={x.href} target="_blank" rel="noreferrer">
+          <a
+            // biome-ignore lint/suspicious/noArrayIndexKey: a parsed text never reorders
+            key={i}
+            href={x.href}
+            target="_blank"
+            rel="noreferrer"
+            // where the page can open it in place (the workspace's canvas), it does, and stays (Elco, 10 Nov)
+            onClick={
+              onLink &&
+              ((e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+                if (onLink(x.href)) e.preventDefault();
+              })
+            }
+          >
             Open the flower
           </a>
         );
