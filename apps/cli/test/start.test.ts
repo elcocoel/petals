@@ -107,6 +107,21 @@ describe('note', () => {
     });
     expect((await run(['note'])).code).toBe(2);
   });
+
+  test('--title names the conversation, sent with the note; an empty one is refused', async () => {
+    const r = await run(
+      ['note', '--title', ' NEAR validators and their backers '],
+      'Their words\n\nMine\n',
+    );
+    expect(r.code).toBe(0);
+    expect(r.calls).toEqual([
+      {
+        name: 'add_note',
+        input: { text: 'Their words\n\nMine', title: 'NEAR validators and their backers' },
+      },
+    ]);
+    expect((await run(['note', '--title', '  ', 'reply'])).code).toBe(2);
+  });
 });
 
 describe('what an agent needs, without reading the file', () => {
@@ -115,6 +130,13 @@ describe('what an agent needs, without reading the file', () => {
       PETAL_API: 'https://petals.example',
     });
     expect(r.out.site).toBe('https://petals.example');
+  });
+
+  test('help start and help note answer, and note names its --title', async () => {
+    expect((await run(['help', 'start'])).out.text).toMatch(/--client/);
+    const note = await run(['help', 'note']);
+    expect(note.code).toBe(0);
+    expect(note.out.text).toMatch(/--title <the subject>/);
   });
 
   test("help shows an object flag's own fields, and what the command answers with", async () => {

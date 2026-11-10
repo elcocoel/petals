@@ -240,6 +240,7 @@ export function sessionNotes(
     `- Its tools are already here, ${tools}. Don't download or install anything.`,
     `- ${page}`,
     "- Before you finish each reply, post the person's words and then your reply, word for word, with `add_note`. The first message, which asks you to read this file, comes from Petal, not the person: post only your reply to it.",
+    "- With your first reply to the person, and again when the subject changes, give `add_note` a `title` too: the conversation's name in their list, 3 to 6 plain words, the subject, not the request.",
     '',
     '---',
     '',

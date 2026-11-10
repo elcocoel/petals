@@ -411,13 +411,22 @@ class Cli {
     return 0;
   }
 
-  /** `petal note [text]`: a note on this conversation's page, from the words given, or from stdin. */
+  /**
+   * `petal note [text] [--title <the subject>]`: a note on this conversation's page, from the words
+   * given, or from stdin. `--title` names the conversation in the person's list (Elco, 10 Nov): 3 to 6
+   * plain words, the subject, not the request; sent with the first reply and when the subject changes.
+   */
   async note(argv: string[]): Promise<number> {
     const parsed = tokenize(argv, (n) => CLI_BOOLEAN.has(n));
     const positionals = parsed.positionals;
     const flags = new Map(parsed.flags);
     const exploration =
       typeof flags.get('exploration') === 'string' ? flags.get('exploration') : undefined;
+    const given = flags.get('title');
+    if (given !== undefined && (typeof given !== 'string' || !given.trim())) {
+      throw new UsageError('--title takes the subject in 3 to 6 plain words');
+    }
+    const title = typeof given === 'string' ? given.trim() : undefined;
     const text =
       positionals.length > 0 ? positionals.join(' ') : (await this.sys.io.readStdin()).trim();
     if (!text) throw new UsageError('note needs text: as words, or on stdin (a heredoc)');
@@ -426,7 +435,7 @@ class Cli {
       caller: { door: 'cli' },
     };
     const out = await this.tool('add_note').run(
-      { text, ...(exploration ? { exploration } : {}) } as never,
+      { text, ...(title ? { title } : {}), ...(exploration ? { exploration } : {}) } as never,
       ctx,
     );
     this.sys.stdout(json(out));
@@ -755,6 +764,22 @@ class Cli {
     }
     if (command === 'connect') {
       p(CONNECT_HELP);
+      return 0;
+    }
+    if (command === 'start') {
+      p('petal start --client <your app> [--question <q>] [--note <text>] [--no-open]\n\n');
+      p("Starts this conversation's page and opens it in the browser, in one call.\n");
+      return 0;
+    }
+    if (command === 'note') {
+      p('petal note [text] [--title <the subject>]     (or the text from stdin, a heredoc)\n\n');
+      p(
+        "A note on this conversation's page: the person's words, then your reply, word for word.\n",
+      );
+      p(
+        "--title names the conversation in the person's list: 3 to 6 plain words, the subject, not\n",
+      );
+      p('the request. Send it with your first reply, and again when the subject changes.\n');
       return 0;
     }
     if (command === 'api') {
