@@ -85,9 +85,14 @@ const readJoined = (file: string, worker: string | null): Joined | null => {
   }
 };
 
-/** The worker named, or the only one there is, or the agent joined before workers. */
+/**
+ * The worker named; with none named, the agent joined before workers (its prompt never names one, so
+ * a newer join on the same computer must not take its place), else the only worker there is.
+ */
 function joined(env: NodeJS.ProcessEnv, worker?: string): Joined | 'which' | null {
   if (worker) return WORKER.test(worker) ? readJoined(workerFile(env, worker), worker) : null;
+  const before = readJoined(agentFile(env), null);
+  if (before) return before;
   let ids: string[] = [];
   try {
     ids = readdirSync(workersDir(env))
@@ -98,7 +103,7 @@ function joined(env: NodeJS.ProcessEnv, worker?: string): Joined | 'which' | nul
   }
   if (ids.length > 1) return 'which';
   const only = ids[0];
-  return only ? readJoined(workerFile(env, only), only) : readJoined(agentFile(env), null);
+  return only ? readJoined(workerFile(env, only), only) : null;
 }
 
 export interface WaitOptions {

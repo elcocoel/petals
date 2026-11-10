@@ -103,6 +103,42 @@ describe('jobs wait', () => {
     expect(s.asks).toHaveLength(0);
   });
 
+  test('an agent joined before workers keeps waiting as itself after newer joins on the same computer', async () => {
+    const env = home();
+    mkdirSync(env.PETALS_HOME, { recursive: true });
+    const OLD = `petal_agent_${'B'.repeat(43)}`;
+    writeFileSync(agentFile(env), JSON.stringify({ key: OLD, as: 'codex' }));
+    // Claude Code joins later, with the new file; then a second one
+    const newer = joinAgent(env, KEY, 'claude-code').worker as string;
+    const s = site([], { t: 0 });
+    const clock = { t: 0 };
+    const s1 = site([], clock);
+    await waitForJob({ env, site: SITE, fetch: s1.fetch, now: () => clock.t, forS: 60 });
+    expect(s1.asks[0]).toMatchObject({ auth: `Bearer ${OLD}`, body: { as: 'codex' } });
+    expect(s1.asks[0]?.body.worker).toBeUndefined();
+    joinAgent(env, KEY, 'claude-code');
+    const clock2 = { t: 0 };
+    const s2 = site([], clock2);
+    await waitForJob({ env, site: SITE, fetch: s2.fetch, now: () => clock2.t, forS: 60 });
+    expect(s2.asks[0]).toMatchObject({ auth: `Bearer ${OLD}`, body: { as: 'codex' } });
+    // and the newer one, named, waits as itself
+    const clock3 = { t: 0 };
+    const s3 = site([], clock3);
+    await waitForJob({
+      env,
+      site: SITE,
+      fetch: s3.fetch,
+      now: () => clock3.t,
+      forS: 60,
+      worker: newer,
+    });
+    expect(s3.asks[0]).toMatchObject({
+      auth: `Bearer ${KEY}`,
+      body: { as: 'claude-code', worker: newer },
+    });
+    expect(s.asks).toHaveLength(0);
+  });
+
   test('an agent joined before workers keeps waiting as it did, with no worker sent', async () => {
     const env = home();
     mkdirSync(env.PETALS_HOME, { recursive: true });
