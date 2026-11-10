@@ -143,6 +143,12 @@ describe('the map', () => {
     const viewed = await run('render_flower', { spec, view: DEFAULT_VIEW });
     expect(sha256Hex(await res.text())).toBe(viewed.render_sha256);
     expect(res.headers.get('etag')).toBe(`"${viewed.render_sha256}"`);
+    // its keys are that picture's colours, as its legend has them: colour's, then the tail's
+    const keysOf = (p: string) =>
+      (viewed.legend as Out[]).filter((i) => i.primitive === p).flatMap((i) => i.keys ?? []);
+    const keys = [...keysOf('colour'), ...keysOf('tail')];
+    expect(keys.length).toBeGreaterThan(0);
+    expect((await mapViews(r.ctx))[0]?.keys).toEqual(keys);
     expect((await app.request(`/api/v1/map/${'0'.repeat(64)}/svg`)).status).toBe(404);
     expect((await app.request('/api/v1/map/nope/svg')).status).toBe(404);
   });

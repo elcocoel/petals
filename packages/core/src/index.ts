@@ -62,6 +62,7 @@ export { NotImplementedError, notImplemented } from './not-implemented.ts';
 export { PRIMITIVES } from './primitives.ts';
 export { readFlower, readingHash } from './reading/index.ts';
 export { renderFlower, SKINS } from './render/index.ts';
+export { legendItem } from './render/legend.ts';
 export type { Skin } from './render/types.ts';
 export { runSignal, setRunSignalSource } from './run-signal.ts';
 export { schemas } from './schema/index.ts';
