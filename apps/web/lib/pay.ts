@@ -1,5 +1,5 @@
 // Paying for Petals' agent in NEAR (B, Elco, 9 Nov: "build the payment step"). The visitor's credit is
-// kept in dollars by the server (GET /api/v1/me, `credit`) and shown in NEAR at today's price (GET
+// kept in dollars by the server (GET /api/v1/me, `credit`) and shown in dollars, NEAR beside at today's price (GET
 // /api/v1/pay). Out of credit, the chat shows one way to add some, where the person meets it: the wallet
 // sends NEAR to Petals' account, and the server checks that transfer on chain (POST /api/v1/pay). Pure.
 // The words are drafts, shipped on Elco's word (9 Nov: "Ship the drafts, I'll change them later").
@@ -52,11 +52,33 @@ export function yoctoOf(near: number): string {
   return (BigInt(Math.round(near * 1000)) * 10n ** 21n).toString();
 }
 
-/** What's left, in NEAR at today's price, to two places. Null with no credit yet or no price. */
-export function nearLeft(credit: Credit | null, near_usd: number | null): string | null {
-  if (!credit || !near_usd || near_usd <= 0) return null;
-  return (Math.max(0, credit.left_usd) / near_usd).toFixed(2);
+/**
+ * An amount as people read it (Elco, 10 Nov: dollars first, "since NEAR AI bills dollars", with NEAR beside
+ * it at today's price). A balance takes two places; a cost takes the places it needs (three under ten
+ * cents, four under a tenth of a cent), so a small cost never reads as nothing. NEAR is null when there's
+ * no price to show it in.
+ */
+export interface Money {
+  usd: string;
+  near: string | null;
 }
+
+const costPlaces = (x: number) => (x === 0 || x >= 0.1 ? 2 : x >= 0.001 ? 3 : 4);
+
+export function money(
+  usd: number,
+  near_usd: number | null,
+  of: 'balance' | 'cost' = 'balance',
+): Money {
+  const u = Math.max(0, usd);
+  const n = near_usd && near_usd > 0 ? u / near_usd : null;
+  const at = (x: number) => x.toFixed(of === 'cost' ? costPlaces(x) : 2);
+  return { usd: at(u), near: n === null ? null : at(n) };
+}
+
+/** Money in words: "$1.00 · 0.28 NEAR", or "$1.00" with no price. The one look, everywhere. */
+export const moneyWords = (m: Money) =>
+  m.near === null ? `$${m.usd}` : `$${m.usd} · ${m.near} NEAR`;
 
 /** The hash and the account a wallet's answer names, whichever shape the wallet gave. */
 export function sentBy(outcome: unknown): { hash: string; account: string } | null {
@@ -77,7 +99,7 @@ export const PAYMENT_REQUIRED = 'payment_required';
 
 /** Drafts (Elco, 9 Nov: "Ship the drafts, I'll change them later"). */
 export const payWords = {
-  balance: (near: string) => `Balance: ${near} NEAR`,
+  balance: (m: Money) => `Balance: ${moneyWords(m)}`,
   out: "You're out of NEAR for Petals. Add some to keep going.",
   button: (near: number) => `Add ${near} NEAR`,
   paying: 'Waiting for your wallet…',

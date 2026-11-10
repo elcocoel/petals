@@ -29,6 +29,7 @@ import {
 } from '../../lib/conversation-list.ts';
 import { type SocialState, shownAccount } from '../../lib/lobby-view.ts';
 import { panelWords, type SectionKey } from '../../lib/panel-words.ts';
+import { type Money, moneyWords } from '../../lib/pay.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { ConversationList, type RowActions } from '../chat/ConversationList.tsx';
 import { Dialog } from '../ui/Dialog.tsx';
@@ -121,8 +122,8 @@ export interface WorkMenuView {
 export interface PanelYou {
   account: string | null;
   social: SocialState;
-  /** The credit in NEAR, or null until it's read. */
-  balance: string | null;
+  /** What's left, dollars first and NEAR beside (useFunds, the one balance), or null until it's read. */
+  balance: Money | null;
   /** Signs out. */
   leave: () => void;
 }
@@ -377,7 +378,7 @@ export function WorkMenu({
           href={lobbyAt('lobby-balance')}
           icon="balance"
           label={panelWords.balance}
-          {...(you.balance === null ? {} : { trail: panelWords.near(you.balance) })}
+          {...(you.balance === null ? {} : { trail: moneyWords(you.balance) })}
         />
         <NavItem href={lobbyAt('lobby-map')} icon="map" label={panelWords.onTheMap} />
       </Group>

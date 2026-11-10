@@ -12,6 +12,7 @@ import {
   type SocialState,
   type WithdrawPhase,
 } from '../../lib/lobby-view.ts';
+import type { Money } from '../../lib/pay.ts';
 import { FlowerTile } from '../FlowerTile.tsx';
 import { LegendKeys } from '../Legend.tsx';
 import { Badge } from '../ui/Badge.tsx';
@@ -38,7 +39,7 @@ export function Lobby({
   /** The public profile's editor, while it's open: it takes the Public profile card's place. */
   editor: ProfileEditorView | null;
   funds: {
-    balance: string | null;
+    balance: Money | null;
     held: string | null;
     phase: WithdrawPhase;
     withdrew: string | null;

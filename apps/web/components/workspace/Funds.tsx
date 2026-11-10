@@ -1,9 +1,10 @@
-// The Balance card (Elco, 9 and 10 Nov; the redo's frame, "Build it"): the credit the person holds, in NEAR
-// at today's price, in the pixel numerals amounts take; and Withdraw, the card's one action, which takes
+// The Balance card (Elco, 9 and 10 Nov; the redo's frame, "Build it"): the credit the person holds, dollars
+// first in the pixel numerals amounts take, NEAR beside at today's price (wrapping under it when narrow); and Withdraw, the card's one action, which takes
 // everything out of the credit contract through their own wallet while it holds something. Withdraw is
 // quiet, as Disconnect is. Props only: viewmodels/useFunds.ts reads the credit and holds the withdrawal.
 // Words from lib/lobby-view.ts, drafts.
 import { canWithdraw, fundsWords, type WithdrawPhase } from '../../lib/lobby-view.ts';
+import type { Money } from '../../lib/pay.ts';
 import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
 
@@ -14,8 +15,8 @@ export function Funds({
   withdrew,
   onWithdraw,
 }: {
-  /** The person's credit in NEAR, as /make shows it; null until it can be read. */
-  balance: string | null;
+  /** What's left, dollars first and NEAR beside, as /make shows it; null until it can be read. */
+  balance: Money | null;
   /** What the contract holds for the person, in yoctoNEAR; null when there's no contract to hold it. */
   held: string | null;
   phase: WithdrawPhase;
@@ -37,9 +38,13 @@ export function Funds({
       }
     >
       {balance !== null ? (
-        <p className="my-0 flex items-baseline gap-space-8">
-          <span className="type-pixel-numeral">{balance}</span>
-          <span className="type-label text-muted">{fundsWords.unit}</span>
+        <p className="my-0 flex flex-wrap items-baseline gap-x-space-8">
+          <span className="type-pixel-numeral whitespace-nowrap">${balance.usd}</span>
+          {balance.near !== null && (
+            <span className="type-label whitespace-nowrap text-muted">
+              {fundsWords.near(balance.near)}
+            </span>
+          )}
         </p>
       ) : (
         <p className="my-0 type-caption text-muted">{fundsWords.unread}</p>

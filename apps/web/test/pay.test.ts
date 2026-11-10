@@ -1,11 +1,11 @@
-// B, the payment step: what a payment sends, what's left in NEAR, and where the chat offers it.
+// B, the payment step: what a payment sends, what's left (dollars first, NEAR beside), and where the chat offers it.
 
 import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { PayRow } from '../components/chat/PayRow.tsx';
-import { nearLeft, PAY_NEAR, payAction, payWords, sentBy, yoctoOf } from '../lib/pay.ts';
+import { money, moneyWords, PAY_NEAR, payAction, payWords, sentBy, yoctoOf } from '../lib/pay.ts';
 import { threadView } from '../lib/thread-view.ts';
 
 describe('paying for Petals’ agent', () => {
@@ -14,11 +14,23 @@ describe('paying for Petals’ agent', () => {
     expect(yoctoOf(0.5)).toBe('500000000000000000000000');
   });
 
-  test('what’s left shows in NEAR at today’s price, and nothing without credit or a price', () => {
-    const credit = { funded_usd: 3, spent_usd: 1, left_usd: 2, usd_per_chat: 0.01 };
-    expect(nearLeft(credit, 4)).toBe('0.50');
-    expect(nearLeft(null, 4)).toBeNull();
-    expect(nearLeft(credit, null)).toBeNull();
+  test('money reads dollars first, NEAR beside at today’s price (Elco, 10 Nov)', () => {
+    expect(money(2, 4)).toEqual({ usd: '2.00', near: '0.50' });
+    expect(moneyWords(money(2, 4))).toBe('$2.00 · 0.50 NEAR');
+    expect(payWords.balance(money(1, 3.62))).toBe('Balance: $1.00 · 0.28 NEAR');
+  });
+
+  test('a small cost keeps its places, so it never reads as nothing; a balance takes two', () => {
+    expect(money(0.012, 3.6, 'cost')).toEqual({ usd: '0.012', near: '0.003' });
+    expect(money(0.0042, 3.6, 'cost')).toEqual({ usd: '0.004', near: '0.001' });
+    expect(money(0.0005, 3.6, 'cost')).toEqual({ usd: '0.0005', near: '0.0001' });
+    expect(money(0.012, 3.6)).toEqual({ usd: '0.01', near: '0.00' });
+    expect(money(0, 3.6)).toEqual({ usd: '0.00', near: '0.00' });
+  });
+
+  test('with no price, dollars alone; a negative credit is none', () => {
+    expect(moneyWords(money(1, null))).toBe('$1.00');
+    expect(money(-1, 4)).toEqual({ usd: '0.00', near: '0.00' });
   });
 
   test('with the credit contract it deposits; without it, a plain transfer', () => {
