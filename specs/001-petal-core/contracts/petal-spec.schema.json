@@ -175,7 +175,7 @@
         "public_key": { "type": "string", "pattern": "^ed25519:" },
         "signature": { "type": "string", "description": "base64" },
         "message": { "type": "string", "description": "JSON text: {\"petal\":\"publish/v1\",\"entry_sha256\":\"...\"}" },
-        "nonce": { "type": "string", "description": "base64 of 32 bytes issued by Petal's server" },
+        "nonce": { "type": "string", "description": "base64 of 32 bytes issued by Petals' server" },
         "recipient": { "type": "string" }
       }
     },
@@ -197,12 +197,12 @@
         "response_sha256": { "$ref": "#/$defs/sha256" },
         "attestation": {
           "type": "object",
-          "description": "the attestation report fetched before the completion, stored by Petal because the report endpoint needs a key",
+          "description": "the attestation report fetched before the completion, stored by Petals because the report endpoint needs a key",
           "additionalProperties": false,
           "properties": {
             "nonce": { "type": "string" },
             "report_sha256": { "$ref": "#/$defs/sha256" },
-            "report_url": { "type": "string", "description": "where anyone can read the full report: Petal's API at /api/v1/attestations/<report_sha256> (http-api.md)" }
+            "report_url": { "type": "string", "description": "where anyone can read the full report: Petals' API at /api/v1/attestations/<report_sha256> (http-api.md)" }
           }
         },
         "fetched_at": { "$ref": "#/$defs/datetime" }

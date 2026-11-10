@@ -193,7 +193,7 @@ export interface Nep413Proof {
    */
   message: string;
   /**
-   * base64 of 32 bytes issued by Petal's server
+   * base64 of 32 bytes issued by Petals' server
    */
   nonce: string;
   recipient: string;
@@ -220,13 +220,13 @@ export interface ModelSignature {
   request_sha256: Sha256;
   response_sha256: Sha256;
   /**
-   * the attestation report fetched before the completion, stored by Petal because the report endpoint needs a key
+   * the attestation report fetched before the completion, stored by Petals because the report endpoint needs a key
    */
   attestation?: {
     nonce?: string;
     report_sha256?: Sha256;
     /**
-     * where anyone can read the full report: Petal's API at /api/v1/attestations/<report_sha256> (http-api.md)
+     * where anyone can read the full report: Petals' API at /api/v1/attestations/<report_sha256> (http-api.md)
      */
     report_url?: string;
   };
