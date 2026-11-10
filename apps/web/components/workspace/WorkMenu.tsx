@@ -62,8 +62,11 @@ export interface WorkMenuView {
   toggleOpen: () => void;
   /** The section asked for last, and how many times: the panel scrolls to it. */
   jump: { key: SectionKey; n: number } | null;
-  /** A section's icon: opens the panel if it's collapsed, and scrolls to that section. */
+  /** A section's icon: opens the panel if it's collapsed, unfolds the section, and scrolls to it. */
   jumpTo: (key: SectionKey) => void;
+  /** The sections folded to their heads (design/side-panel.md, lines 40 to 42). */
+  folded: readonly SectionKey[];
+  fold: (key: SectionKey) => void;
   /** The person's projects, as the server keeps them (its folders). */
   projects: ListedProject[];
   /** The projects showing their conversations, by key. */
@@ -134,12 +137,25 @@ export interface PanelYou {
 /** The person's view, as the Settings section sets it: what ViewControls takes, but the dimensions. */
 export type SettingsView = Omit<Parameters<typeof ViewControls>[0], 'dimensions'>;
 
-/** A group of the panel: its head, then its rows, the last of which is its one action, if it has one. */
-function Group({ title, children }: { title: string; children: ReactNode }) {
+/**
+ * A section of the panel: its head, then its rows, the last of which is its one action, if it has one.
+ * Pressing the head folds it to the head (design/side-panel.md, line 40).
+ */
+function Group({
+  title,
+  folded,
+  onFold,
+  children,
+}: {
+  title: string;
+  folded: boolean;
+  onFold: () => void;
+  children: ReactNode;
+}) {
   return (
     <section className="flex flex-col">
-      <SectionHead size="panel" title={title} />
-      {children}
+      <SectionHead size="panel" title={title} fold={{ open: !folded, onToggle: onFold }} />
+      {!folded && children}
     </section>
   );
 }
@@ -264,7 +280,11 @@ export function WorkMenu({
 
   const sections: Record<SectionKey, ReactNode> = {
     conversations: (
-      <Group title={panelWords.sections.conversations}>
+      <Group
+        title={panelWords.sections.conversations}
+        folded={menu.folded.includes('conversations')}
+        onFold={() => menu.fold('conversations')}
+      >
         <NavItem
           href={siteLinks.make}
           icon="plus"
@@ -297,7 +317,11 @@ export function WorkMenu({
       </Group>
     ),
     projects: (
-      <Group title={panelWords.sections.projects}>
+      <Group
+        title={panelWords.sections.projects}
+        folded={menu.folded.includes('projects')}
+        onFold={() => menu.fold('projects')}
+      >
         <ul className="m-0 flex list-none flex-col p-0">
           {projects.map((p) => {
             const shown = menu.opened.includes(p.key);
@@ -340,7 +364,11 @@ export function WorkMenu({
       </Group>
     ),
     agents: (
-      <Group title={panelWords.sections.agents}>
+      <Group
+        title={panelWords.sections.agents}
+        folded={menu.folded.includes('agents')}
+        onFold={() => menu.fold('agents')}
+      >
         <ul className="m-0 flex list-none flex-col p-0">
           {menu.agents.map((a) => (
             <li key={a.key}>
@@ -373,7 +401,11 @@ export function WorkMenu({
       </Group>
     ),
     lobby: (
-      <Group title={panelWords.sections.lobby}>
+      <Group
+        title={panelWords.sections.lobby}
+        folded={menu.folded.includes('lobby')}
+        onFold={() => menu.fold('lobby')}
+      >
         <NavItem
           href={siteLinks.lobby}
           current={here === 'lobby'}
@@ -390,7 +422,11 @@ export function WorkMenu({
       </Group>
     ),
     profile: (
-      <Group title={panelWords.sections.profile}>
+      <Group
+        title={panelWords.sections.profile}
+        folded={menu.folded.includes('profile')}
+        onFold={() => menu.fold('profile')}
+      >
         {/* the person, opening their Profile card; the trail says where the profile is kept */}
         <NavItem
           href={lobbyAt('lobby-profile')}
@@ -414,7 +450,11 @@ export function WorkMenu({
       </Group>
     ),
     settings: (
-      <Group title={panelWords.sections.settings}>
+      <Group
+        title={panelWords.sections.settings}
+        folded={menu.folded.includes('settings')}
+        onFold={() => menu.fold('settings')}
+      >
         <TipControl {...tip} />
         <ViewControls dimensions={DIMENSIONS} {...settings} />
       </Group>
