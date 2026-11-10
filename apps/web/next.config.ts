@@ -66,6 +66,8 @@ const config: NextConfig = {
     '/**': [
       '../../pnpm-workspace.yaml',
       '../../fixtures/**',
+      // the map bench's saved places (lab/map/landscape.ts), which live beside it, not in fixtures/
+      './lab/map/places.json',
       '../../skill/petal/SKILL.md',
       '../../packages/*/src/**',
       '../../packages/*/schema/**',
