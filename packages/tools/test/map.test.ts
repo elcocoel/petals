@@ -1,7 +1,7 @@
 // One map (Elco, 10 Nov: "the workspace and the agent don't seem to be connected to the global power map"):
 // every view stored on the site, named and with who made it, searched by list_flowers and find_target before
 // a fresh read, and handed over whole by GET /api/v1/map. On a real fixture snapshot, offline.
-import { DEFAULT_VIEW, pictureQuery, sha256Hex } from '@petal/core';
+import { canonicalJson, DEFAULT_VIEW, pictureQuery, sha256Hex, viewHash } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { modules } from '@petal/inputs';
 import { Hono } from 'hono';
@@ -250,5 +250,77 @@ describe('one map per address (Elco, 10 Nov)', () => {
         drawings: [expect.objectContaining({ sha, name: 'Founders Guild v1' })],
       }),
     ]);
+  });
+});
+describe("through the viewer's view (one-source.md, step 2)", () => {
+  const IDENTITY = {
+    ...DEFAULT_VIEW,
+    dimensions: { ...DEFAULT_VIEW.dimensions, colour: { data: 'identity' } },
+  };
+  const appOf = () => {
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    return app;
+  };
+  const keep = (view: typeof IDENTITY) =>
+    privateStore(r.ctx.config).viewDoc.put(
+      viewHash(view),
+      canonicalJson(view),
+      new Date().toISOString(),
+    );
+  const specOf = async (sha: string) =>
+    JSON.parse((await privateStore(r.ctx.config).draft.get(sha))?.body as string) as Spec;
+
+  test('a list asked for a view gives its pictures, keys and readings through it; an unknown one is refused', async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    await keep(IDENTITY);
+    const hash = viewHash(IDENTITY);
+    const app = appOf();
+    const plain = (await (await app.request('/api/v1/map/views')).json()) as Out;
+    const through = (await (await app.request(`/api/v1/map/views?view=${hash}`)).json()) as Out;
+    expect(plain.views[0].picture).toContain(`view=${viewHash(DEFAULT_VIEW)}`);
+    expect(through.views[0].picture).toContain(`view=${hash}`);
+    expect(through.views[0].keys).not.toEqual(plain.views[0].keys);
+    const whole = (await (await app.request(`/api/v1/map?view=${hash}`)).json()) as Out;
+    const viewed = await run('render_flower', {
+      spec: await specOf(through.views[0].sha),
+      view: IDENTITY,
+      include_reading: true,
+    });
+    expect(whole.views[0].reading).toEqual(viewed.reading);
+    for (const path of ['/api/v1/maps', '/api/v1/map/views', '/api/v1/map']) {
+      expect((await app.request(`${path}?view=${'1'.repeat(64)}`)).status).toBe(404);
+    }
+  });
+
+  test("a picture is drawn with the view its address names; the default's twelve characters are still the default", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    await keep(IDENTITY);
+    const app = appOf();
+    const [v] = await mapViews(r.ctx, IDENTITY);
+    const spec = await specOf(v?.sha as string);
+    const drawn = async (address: string) => sha256Hex(await (await app.request(address)).text());
+    const path = new URL(v?.picture as string).pathname;
+    expect(await drawn(`${path}?view=${viewHash(IDENTITY)}`)).toBe(
+      (await run('render_flower', { spec, view: IDENTITY })).render_sha256,
+    );
+    const theDefault = (await run('render_flower', { spec, view: DEFAULT_VIEW })).render_sha256;
+    expect(await drawn(path)).toBe(theDefault);
+    expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW).slice(0, 12)}`)).toBe(theDefault);
+    expect((await app.request(`${path}?view=${'1'.repeat(64)}`)).status).toBe(404);
+  });
+
+  test("render_flower draws with the view given, else the viewer's, else the default; never the spec's own", async () => {
+    const spec = await specOf(await drawnView(null, null));
+    const theDefault = await run('render_flower', { spec, view: DEFAULT_VIEW });
+    expect((await run('render_flower', { spec })).render_sha256).toBe(theDefault.render_sha256);
+    const viewer = (await callTool('render_flower', { spec }, { ...r.ctx, view: IDENTITY })) as Out;
+    expect(viewer.render_sha256).toBe(
+      (await run('render_flower', { spec, view: IDENTITY })).render_sha256,
+    );
+    expect(viewer.render_sha256).not.toBe(theDefault.render_sha256);
   });
 });

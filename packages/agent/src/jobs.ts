@@ -4,7 +4,7 @@
 // no timer per viewer. Stop aborts the job's signal and waits for the job to say how it ended.
 // Each flower is also saved as a step of the run's exploration (SYS-041).
 import type { AgentEvent, ChatInput } from '@petal/core/types';
-import { registry as defaultRegistry, saveRunStep } from '@petal/tools';
+import { registry as defaultRegistry, privateStore, saveRunStep, viewOfPerson } from '@petal/tools';
 import { Channel } from './channel.ts';
 import { agentsOfRun, type Bell, handJobTool, jobsOfRun } from './hand-job.ts';
 import type { Budget, LlmMessage } from './llm.ts';
@@ -90,6 +90,10 @@ export function runJobs(
           const agentsNow = await agentsOfRun(deps.tools, runId).catch(() => []);
           // and its name so far, so it names it once and renames it when the subject changes
           const nameNow = await nameOfRun(deps.tools, runId).catch(() => null);
+          // and the person's view, the glasses every flower it draws for them is drawn through
+          // (one-source.md, step 2), so what it says about a flower is what they see
+          const owner = (await privateStore(deps.tools.config).run.get(runId))?.owner ?? null;
+          const tools = { ...deps.tools, view: await viewOfPerson(deps.tools, owner) };
           const events = startRun(
             {
               messages: input.messages,
@@ -99,7 +103,7 @@ export function runJobs(
               ...(agentsNow.length ? { agents: agentsNow } : {}),
               ...(nameNow ? { name: nameNow } : {}),
             },
-            { tools: deps.tools, llm: deps.llm, budget },
+            { tools, llm: deps.llm, budget },
             {
               runId,
               // its own hand_job and name_conversation, which know this run (and so its exploration)

@@ -48,3 +48,4 @@ export {
 } from './tools/explorations.ts';
 export { makeReadPage } from './tools/read-page.ts';
 export type { Caller, Config, JSONSchema, Tool, ToolContext } from './types.ts';
+export { viewAsked, viewByHash, viewOfPerson } from './views.ts';

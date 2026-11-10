@@ -26,6 +26,7 @@ import { findTool } from '../registry.ts';
 import { brainOf } from '../tools/brain.ts';
 import { findSnapshot } from '../tools/shared.ts';
 import type { ToolContext } from '../types.ts';
+import { viewAsked, viewOfPerson } from '../views.ts';
 import {
   explorationRoutes,
   isSnapshotPost,
@@ -89,6 +90,16 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   app.route('/', explorationRoutes(ctx, limit, o.gate));
   app.use('*', cors({ origin: '*', exposeHeaders: ['Retry-After', 'ETag'] }));
   const mcp = mcpHttpHandler(ctx);
+
+  /** An address naming a view nobody kept. */
+  const noView = () =>
+    versioned(
+      toolError(
+        'not_found',
+        'No view under that hash.',
+        'GET /api/v1/views/:hash names every view kept.',
+      ),
+    );
 
   const run = (name: string, input: unknown, runCtx: ToolContext = ctx): Promise<unknown> => {
     const tool = findTool(name);
@@ -211,8 +222,16 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   app.post('/api/v1/specs/propose', limit, async (c) => answer(c, 'propose_spec', await body(c)));
   app.post('/api/v1/specs/validate', limit, async (c) => answer(c, 'validate_spec', await body(c)));
   app.post('/api/v1/render', limit, async (c) => {
-    const input = await body(c);
-    if (isToolError(input)) return respond(c, input);
+    const sent = await body(c);
+    if (isToolError(sent)) return respond(c, sent);
+    // with no view of its own, it's drawn through the viewer's: the signed-in person's, or the default
+    const input =
+      typeof sent === 'object' &&
+      sent !== null &&
+      !Array.isArray(sent) &&
+      (sent as Out).view === undefined
+        ? { ...(sent as Out), view: await viewOfPerson(ctx, (await o.gate?.subjectOf(c)) ?? null) }
+        : sent;
     // include_svg defaults to true over HTTP (false over MCP and in process).
     const given = typeof input === 'object' && input !== null && !Array.isArray(input);
     const withSvg =
@@ -237,12 +256,13 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     answer(c, 'list_flowers', pick(c.req.query(), ['network', 'maker', 'limit'], ['limit'])),
   );
   app.get('/api/v1/flowers/:id/svg', limit, async (c) => {
+    // drawn with the view its address names, by its whole hash, so a picture kept a year is always right
+    const view = await viewAsked(ctx, c.req.query('view'));
+    if (!view) return respond(c, noView());
     const f = await run('get_flower', { id: c.req.param('id') });
     if (isToolError(f)) return respond(c, f);
     const spec = (f as { entry: { spec: unknown } }).entry.spec;
-    // Drawn with the default view, as a flower's page and /make draw it: everyone sees the default today
-    // (decisions, 9 Nov), so the same flower looks the same on its tile.
-    const r = await run('render_flower', { spec, include_svg: true, view: DEFAULT_VIEW });
+    const r = await run('render_flower', { spec, include_svg: true, view });
     if (isToolError(r)) return respond(c, r);
     const { svg, render_sha256 } = r as { svg: string; render_sha256: string };
     return c.body(svg, 200, {
@@ -278,6 +298,8 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   // One map (Elco, 10 Nov): every view stored here with its reading, name, date and maker, and the relations
   // index's groups and pairs, in one answer, as the map bench's copy had them (specs/006-the-map).
   app.get('/api/v1/map', limit, async (c) => {
+    const view = await viewAsked(ctx, c.req.query('view'));
+    if (!view) return respond(c, noView());
     const overview = (await run('relations_overview', { kind: 'holdings', limit: 5000 })) as {
       groups?: Record<string, unknown>[];
       pairs?: Record<string, unknown>[];
@@ -286,7 +308,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     return respond(c, {
       made: new Date().toISOString(),
       source: (ctx.config.apiBase ?? '').replace(/\/+$/, ''),
-      views: await mapViews(ctx),
+      views: await mapViews(ctx, view),
       groups: (overview.groups ?? []).map((g) => ({
         id: g.id,
         chain: g.chain,
@@ -305,25 +327,36 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   });
   // The map as a list (Elco, 10 Nov: the gallery, the lobby and /make read the one map): every view as
   // /api/v1/map has it, in the same order, each with its picture, without its reading.
-  app.get('/api/v1/map/views', limit, async (c) =>
-    respond(c, { views: (await mapViews(ctx)).map(({ reading: _r, ...row }) => row) }),
-  );
+  // Each list takes ?view=<hash>: its pictures, keys and readings are then that view's (one-source.md, step 2).
+  app.get('/api/v1/map/views', limit, async (c) => {
+    const view = await viewAsked(ctx, c.req.query('view'));
+    if (!view) return respond(c, noView());
+    return respond(c, { views: (await mapViews(ctx, view)).map(({ reading: _r, ...row }) => row) });
+  });
   // One card per map (Elco, 10 Nov: "maps that map the same address need to come together as versions of
   // the same map"): each address, its readings (the sediments) newest first, and each reading's drawings.
-  app.get('/api/v1/maps', limit, async (c) => respond(c, { maps: mapsOf(await mapViews(ctx)) }));
+  app.get('/api/v1/maps', limit, async (c) => {
+    const view = await viewAsked(ctx, c.req.query('view'));
+    if (!view) return respond(c, noView());
+    return respond(c, { maps: mapsOf(await mapViews(ctx, view)) });
+  });
   // One map's card, by its id (URL-encoded, since it holds colons), for its page.
   app.get('/api/v1/maps/:id', limit, async (c) => {
+    const view = await viewAsked(ctx, c.req.query('view'));
+    if (!view) return respond(c, noView());
     const id = aboutKey(c.req.param('id'));
-    const map = mapsOf(await mapViews(ctx)).find((m) => m.id === id);
+    const map = mapsOf(await mapViews(ctx, view)).find((m) => m.id === id);
     return respond(
       c,
       map ? { map } : versioned(toolError('not_found', 'No map under that address.')),
     );
   });
-  // A view's still picture, as a flower's tile is drawn: with the default view. No per-address limit: a
+  // A view's still picture, as a flower's tile is drawn: with the view its address names. No per-address limit: a
   // gallery asks for every view's picture at once, and behind the site every visitor reaches this server
   // from the site's own address. Each picture is kept for a year wherever it's cached.
   app.get('/api/v1/map/:sha/svg', async (c) => {
+    const view = await viewAsked(ctx, c.req.query('view'));
+    if (!view) return respond(c, noView());
     const sha = c.req.param('sha');
     let spec: unknown;
     try {
@@ -333,7 +366,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     }
     if (!spec)
       return respond(c, versioned(toolError('not_found', 'No view on the map under that hash.')));
-    const r = await run('render_flower', { spec, include_svg: true, view: DEFAULT_VIEW });
+    const r = await run('render_flower', { spec, include_svg: true, view });
     if (isToolError(r)) return respond(c, r);
     const { svg, render_sha256 } = r as { svg: string; render_sha256: string };
     return c.body(svg, 200, {

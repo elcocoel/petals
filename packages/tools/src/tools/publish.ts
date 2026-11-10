@@ -4,6 +4,7 @@
 // recipe's build; the drawing is only a receipt beside them, so nothing is refused over it.
 import {
   canonicalJson,
+  DEFAULT_VIEW,
   entryId,
   NotImplementedError,
   RENDER_VERSION,
@@ -109,7 +110,8 @@ export const preparePublish = defineTool<{ entry: Partial<Entry> }, object>({
       ...lifted,
       drawn_with: {
         render: RENDER_VERSION,
-        sha256: renderFlower(lifted.spec, snapshot).render_sha256,
+        // the drawing everyone without their own view sees: never its own choices (one-source.md, step 2)
+        sha256: renderFlower(lifted.spec, snapshot, { view: DEFAULT_VIEW }).render_sha256,
       },
     };
     // Before anything is kept: nothing else stands between a stranger's entry and the disk.

@@ -2,8 +2,8 @@
 // every view stored on this site, each with its reading, its name, its date and who made it. Read-only and
 // public: GET /api/v1/map hands it over whole, list_flowers and find_target search it before a fresh read.
 // A view's spec is content-addressed, so its reading never changes: each is read once per process.
-import { DEFAULT_VIEW, legendItem, mapOf, pictureQuery, readFlower } from '@petal/core';
-import type { Spec } from '@petal/core/types';
+import { DEFAULT_VIEW, legendItem, mapOf, pictureQuery, readFlower, viewHash } from '@petal/core';
+import type { Spec, View } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
 import { base, findSnapshot } from './tools/shared.ts';
@@ -61,18 +61,20 @@ export type MapViewRow = Omit<MapView, 'reading'>;
  * The picture's address. The browser and Vercel's edge keep each one for a year, so it names the look and
  * the view it's drawn with (as the site's flower tiles do): when either changes, so does every address.
  */
-export const pictureOf = (ctx: ToolContext, sha: string) =>
-  `${base(ctx)}/api/v1/map/${sha}/svg?${pictureQuery(DEFAULT_VIEW)}`;
+export const pictureOf = (ctx: ToolContext, sha: string, view: View = DEFAULT_VIEW) =>
+  `${base(ctx)}/api/v1/map/${sha}/svg?${pictureQuery(view)}`;
+/** Each view's reading through each viewer's view, by `<sha>:<view hash>`: neither ever changes. */
 const read = new Map<string, Read>();
 
-async function readOf(ctx: ToolContext, body: string): Promise<Read | null> {
+async function readOf(ctx: ToolContext, body: string, view: View): Promise<Read | null> {
   try {
     const spec = JSON.parse(body) as Spec;
     const snapshot = await findSnapshot(ctx, spec.snapshot.sha256);
     if (!snapshot) return null;
-    const reading = readFlower(spec, snapshot);
-    // the picture's colours: its legend with the default view, as render_flower dresses it
-    const legend = readFlower(spec, snapshot, DEFAULT_VIEW).legend.map(legendItem);
+    // through the viewer's view, never the flower's own choices (one-source.md, step 2)
+    const reading = readFlower(spec, snapshot, view);
+    // the picture's colours: its legend, as render_flower dresses it
+    const legend = reading.legend.map(legendItem);
     const keysOf = (primitive: string) =>
       legend.filter((i) => i.primitive === primitive).flatMap((i) => i.keys ?? []);
     const params = (spec.network.params ?? {}) as Record<string, string>;
@@ -99,15 +101,17 @@ async function readOf(ctx: ToolContext, body: string): Promise<Read | null> {
   }
 }
 
-/** Every view on this site's map whose reading is here, the oldest first. */
-export async function mapViews(ctx: ToolContext): Promise<MapView[]> {
+/** Every view on this site's map whose reading is here, the oldest first, through the viewer's view. */
+export async function mapViews(ctx: ToolContext, view: View = DEFAULT_VIEW): Promise<MapView[]> {
   const out: MapView[] = [];
+  const through = viewHash(view);
   for (const row of await privateStore(ctx.config).draft.list()) {
-    let r = read.get(row.sha256);
+    const key = `${row.sha256}:${through}`;
+    let r = read.get(key);
     if (!r) {
-      const got = await readOf(ctx, row.body);
+      const got = await readOf(ctx, row.body, view);
       if (!got) continue;
-      read.set(row.sha256, got);
+      read.set(key, got);
       r = got;
     }
     out.push({
@@ -115,7 +119,7 @@ export async function mapViews(ctx: ToolContext): Promise<MapView[]> {
       name: row.name ?? null,
       ...r,
       view_url: `${base(ctx)}/d/${row.sha256}`,
-      picture: pictureOf(ctx, row.sha256),
+      picture: pictureOf(ctx, row.sha256, view),
       made_by: row.made_by ?? null,
     });
   }

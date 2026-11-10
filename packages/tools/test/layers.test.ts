@@ -1,5 +1,6 @@
 // A flower from two layers (specs/005-mapping-brain, the RaidGuild test in miniature): one reading's
 // measure as size, an agent's own layer as height. In process, on the test rig, with no network.
+import { DEFAULT_VIEW } from '@petal/core';
 import { describe, expect, test } from 'vitest';
 import { registry } from '../src/registry.ts';
 import { rig, testFixture } from './helpers.ts';
@@ -69,7 +70,16 @@ describe('a flower from two layers', () => {
     expect(proposed.spec.encodings.height.by).toBe('m:proposals_written');
     expect(proposed.spec.encodings.height.sources).toEqual([`layer:${added.hash.slice(0, 12)}`]);
 
-    const drawn = (await tool('render_flower').run({ spec: proposed.spec }, ctx)) as Out;
+    // what draws it is the viewer's view, never the spec's choice (one-source.md, step 2): here a view
+    // whose height is the agent's layer, as a person would set it
+    const glasses = {
+      ...DEFAULT_VIEW,
+      dimensions: { ...DEFAULT_VIEW.dimensions, height: { data: 'proposals_written' } },
+    };
+    const drawn = (await tool('render_flower').run(
+      { spec: proposed.spec, view: glasses },
+      ctx,
+    )) as Out;
     expect(drawn.error).toBeUndefined();
     const height = (id: string) =>
       drawn.petals.find((p: Out) => p.id === id)?.values.find((v: Out) => v.primitive === 'height')

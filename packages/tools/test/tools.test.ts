@@ -3,7 +3,7 @@
 
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { canonicalJson, entryId, readFlower, specHash } from '@petal/core';
+import { canonicalJson, DEFAULT_VIEW, entryId, readFlower, specHash } from '@petal/core';
 import type { Entry, ProgressEvent, Snapshot } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
 import { FLOWER_DEFS, inlineRefs } from '../src/define.ts';
@@ -296,7 +296,7 @@ describe('propose_spec, validate_spec, render_flower', () => {
     expect(rendered).not.toHaveProperty('reading');
     const asked = await run('render_flower', { spec, include_reading: true });
     const snapshot = (await checkSpec(r.ctx, spec as never)).snapshot as Snapshot;
-    const real = readFlower(spec as never, snapshot);
+    const real = readFlower(spec as never, snapshot, DEFAULT_VIEW);
     expect(asked.reading).toEqual({ title: real.title, petals: real.petals });
     // the rest of the answer doesn't move
     const { reading: _reading, ...rest } = asked;

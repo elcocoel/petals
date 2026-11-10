@@ -1,5 +1,12 @@
 // render_flower (tools.md; renderer.md). Render refuses anything validate_spec rejects.
-import { canonicalJson, readFlower, renderFlower, schemas, specHash } from '@petal/core';
+import {
+  canonicalJson,
+  DEFAULT_VIEW,
+  readFlower,
+  renderFlower,
+  schemas,
+  specHash,
+} from '@petal/core';
 import type { Spec, View } from '@petal/core/types';
 import { compile, defineTool, describeErrors } from '../define.ts';
 import { putSpecBody } from '../drafts.ts';
@@ -81,7 +88,7 @@ export const renderFlowerTool = defineTool<
       view: {
         type: 'object',
         description:
-          "the viewer's view (view/v1): which piece of data each dimension shows. Without one, the spec's own choices are drawn",
+          "the viewer's view (view/v1): which piece of data each dimension shows. Without one, the viewer's own, or the default: never the spec's own choices",
       },
     },
     { additionalProperties: false },
@@ -116,13 +123,16 @@ export const renderFlowerTool = defineTool<
         'validate_spec lists every error; propose_spec builds a valid spec.',
       );
     }
+    // Always through a view (one-source.md, step 2): the one given, or the viewer's, or the default. A
+    // flower's own choices are the record of what its agent proposed, and never draw it.
+    const drawWith = view ?? ctx.view ?? DEFAULT_VIEW;
     const r = renderFlower(spec, snapshot, {
       ...(size !== undefined ? { size } : {}),
-      ...(view ? { view } : {}),
+      view: drawWith,
     });
     const stored = await putSpecBody(ctx.config, spec, ctx.now().toISOString());
     // renderFlower reads the same thing and keeps it to itself, so this is only paid for when asked.
-    const reading = include_reading ? readFlower(spec, snapshot, view) : null;
+    const reading = include_reading ? readFlower(spec, snapshot, drawWith) : null;
     return {
       spec_sha256: specHash(spec),
       render_sha256: r.render_sha256,
