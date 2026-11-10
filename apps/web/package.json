@@ -22,6 +22,7 @@
     "@petal/store": "workspace:*",
     "@petal/tokens": "workspace:*",
     "@petal/tools": "workspace:*",
+    "@phosphor-icons/react": "2.1.10",
     "hono": "^4.13.16",
     "next": "^16.4.5",
     "react": "^19.3.1",

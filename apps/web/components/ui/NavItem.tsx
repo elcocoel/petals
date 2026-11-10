@@ -10,7 +10,8 @@ import { Mono } from './Mono.tsx';
 const BASE =
   'flex h-row-height w-full min-w-0 items-center justify-start gap-space-8 bg-transparent px-space-8 text-left type-ui whitespace-nowrap no-underline';
 const ANSWERS = 'hover:bg-tint hover:opacity-100 data-current:bg-tint';
-const DEPTH = { 0: '', 1: 'pl-space-32' } as const;
+/** How far in a row starts: at its group, in a project, or under a row in a project. */
+const DEPTH = { 0: '', 1: 'pl-space-32', 2: 'pl-column-gap' } as const;
 
 type Where =
   | {
@@ -39,6 +40,7 @@ export function NavItem({
   muted,
   depth = 0,
   title,
+  trailGivesWay,
   ...where
 }: {
   label: string;
@@ -52,6 +54,8 @@ export function NavItem({
   depth?: keyof typeof DEPTH;
   /** Shown on hover: the words in full, and anything a row leaves out. */
   title?: string;
+  /** A control takes the trail's place on hover (its row is a `group`): the trail keeps its room. */
+  trailGivesWay?: boolean;
 } & Where) {
   const expanded = 'expanded' in where ? where.expanded : undefined;
   const content = (
@@ -74,7 +78,9 @@ export function NavItem({
         </span>
       )}
       {trail && (
-        <span className="shrink-0">
+        <span
+          className={`shrink-0 ${trailGivesWay ? 'group-focus-within:invisible group-hover:invisible' : ''}`}
+        >
           <Mono as="span" tone="muted">
             {trail}
           </Mono>

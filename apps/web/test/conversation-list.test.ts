@@ -3,9 +3,10 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
-import { conversationRows, type ListedConversation } from '../lib/conversation-list.ts';
+import { byProject, conversationRows, type ListedConversation } from '../lib/conversation-list.ts';
 
 const NONE = { runId: null };
+const NOW = new Date('2026-11-06T18:02:09.000Z');
 
 const listed = (o: Partial<ListedConversation> = {}): ListedConversation => ({
   id: 'run_1',
@@ -17,12 +18,15 @@ const listed = (o: Partial<ListedConversation> = {}): ListedConversation => ({
 });
 
 describe('a row', () => {
-  test('says its question and its date, and links to its run', () => {
-    expect(conversationRows([listed()], NONE)).toEqual([
+  test('says its title, who it is with, when it last moved, and links to its run', () => {
+    expect(conversationRows([listed()], NONE, NOW)).toEqual([
       {
         key: 'run_1',
         title: 'Who holds Moloch DAO?',
-        sub: '6 Nov 2026',
+        by: 'petals',
+        when: '2h',
+        working: false,
+        project: null,
         href: '/make?run=run_1',
         current: false,
       },
@@ -30,7 +34,16 @@ describe('a row', () => {
   });
 
   test('one still going says so', () => {
-    expect(conversationRows([listed({ status: 'running' })], NONE)[0]?.sub).toBe('Working…');
+    expect(conversationRows([listed({ status: 'running' })], NONE)[0]?.working).toBe(true);
+  });
+
+  test('says when in a few characters, then the date', () => {
+    const at = (iso: string) => conversationRows([listed({ updated_at: iso })], NONE, NOW)[0]?.when;
+    expect(at('2026-11-06T18:01:30.000Z')).toBe('now');
+    expect(at('2026-11-06T17:40:09.000Z')).toBe('22m');
+    expect(at('2026-11-04T18:02:09.000Z')).toBe('2d');
+    expect(at('2026-10-20T10:00:00.000Z')).toBe('20 Oct');
+    expect(at('2025-12-24T10:00:00.000Z')).toBe('24 Dec 2025');
   });
 
   test('the open one is marked, and only that one', () => {
@@ -55,13 +68,46 @@ describe('a row', () => {
 
   test('work from another door opens as what it is, and says where', () => {
     const door = listed({ id: 'exp_1', run_id: null, status: 'elsewhere' });
-    expect(conversationRows([door], { runId: null, elsewhere: 'exp_1' })[0]).toEqual({
+    expect(conversationRows([door], { runId: null, elsewhere: 'exp_1' }, NOW)[0]).toEqual({
       key: 'exp_1',
       title: 'Who holds Moloch DAO?',
-      sub: 'Your own agent  ·  6 Nov 2026',
+      by: 'own',
+      when: '2h',
+      working: false,
+      project: null,
       href: '/make?elsewhere=exp_1',
       current: true,
     });
+  });
+});
+
+describe('projects', () => {
+  const projects = [
+    { id: 'p2', name: 'Second', parent: null, position: 1 },
+    { id: 'p1', name: 'First', parent: null, position: 0 },
+    { id: 'p1a', name: 'Inside first', parent: 'p1', position: 0 },
+  ];
+  const rows = conversationRows(
+    [
+      listed({ id: 'a', run_id: 'a', folder: 'p2' }),
+      listed({ id: 'b', run_id: 'b', folder: 'p1a' }),
+      listed({ id: 'c', run_id: 'c', folder: null }),
+      listed({ id: 'd', run_id: 'd', folder: 'gone' }),
+    ],
+    NONE,
+    NOW,
+  );
+
+  test("in the person's order, each holding its own, a folder inside another counting as its top", () => {
+    const { projects: shown } = byProject(rows, projects);
+    expect(shown.map((p) => [p.name, p.rows.map((r) => r.key)])).toEqual([
+      ['First', ['b']],
+      ['Second', ['a']],
+    ]);
+  });
+
+  test('a conversation in no project, or in one that is gone, is loose', () => {
+    expect(byProject(rows, projects).loose.map((r) => r.key)).toEqual(['c', 'd']);
   });
 });
 

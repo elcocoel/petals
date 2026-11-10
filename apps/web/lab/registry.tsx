@@ -63,9 +63,9 @@ import { MetaRow } from '../components/ui/MetaRow.tsx';
 import { Mono } from '../components/ui/Mono.tsx';
 import { Nav } from '../components/ui/Nav.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
+import { RowField } from '../components/ui/RowField.tsx';
 import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
-import { SideRail } from '../components/ui/SideRail.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
 import { TextLink } from '../components/ui/TextLink.tsx';
 import { Transcript } from '../components/ui/Transcript.tsx';
@@ -96,6 +96,8 @@ import {
   TURN_ROWS,
 } from './fixtures.ts';
 import { LabComposer, LabPetalClose } from './LabComposer.tsx';
+import { LabAction, LabAgent, LabFold, LabProject, LabRail } from './LabPanel.tsx';
+import { PANEL_STATES } from './panel-fixtures.ts';
 
 export interface LabState {
   name: string;
@@ -1082,52 +1084,13 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/ui/SideRail.tsx',
     states: [
       {
-        name: 'open',
+        name: 'open, with the work in it (all of it: /lab/panel)',
         wide: true,
-        render: () => (
-          <SideRail
-            label="Your work"
-            title="Conversations"
-            open
-            foldLabel="Hide"
-            unfoldLabel="Menu"
-            onFold={() => {}}
-            onUnfold={() => {}}
-            control={
-              <Button variant="link" href="#new">
-                New
-              </Button>
-            }
-          >
-            <ConversationList
-              rows={[
-                {
-                  key: 'a',
-                  title: "Who stands behind NEAR's validators?",
-                  sub: '6 Nov 2026',
-                  href: '#a',
-                  current: false,
-                },
-              ]}
-            />
-          </SideRail>
-        ),
+        render: () => <LabRail open />,
       },
       {
-        name: 'folded',
-        render: () => (
-          <SideRail
-            label="Your work"
-            title="Conversations"
-            open={false}
-            foldLabel="Hide"
-            unfoldLabel="Menu"
-            onFold={() => {}}
-            onUnfold={() => {}}
-          >
-            {null}
-          </SideRail>
-        ),
+        name: 'folded: the fold and the places, as icons',
+        render: () => <LabRail open={false} />,
       },
     ],
   },
@@ -1157,9 +1120,7 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'a project, open, with its count',
-        render: () => (
-          <NavItem onClick={() => {}} expanded icon="chevron" label="NEAR stake" trail="6" />
-        ),
+        render: () => <LabProject />,
       },
       {
         name: 'in a project',
@@ -1175,18 +1136,32 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'a line that says what is there, with a control',
-        render: () => (
-          <NavItem
-            icon="agent"
-            label="Codex"
-            trail="waiting"
-            action={<IconButton icon="close" label="Disconnect Codex" onClick={() => {}} />}
-          />
-        ),
+        render: () => <LabAgent />,
       },
       {
         name: 'muted: empty, or the way to add one',
-        render: () => <NavItem onClick={() => {}} icon="plus" label="Connect an agent" muted />,
+        render: () => <LabAction />,
+      },
+    ],
+  },
+  {
+    id: 'RowField',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/RowField.tsx',
+    states: [
+      {
+        name: 'naming a new project, in its place',
+        render: () => (
+          <RowField
+            label="Name the project"
+            placeholder="Name the project"
+            icon="project"
+            onDone={() => {}}
+            onCancel={() => {}}
+          />
+        ),
       },
     ],
   },
@@ -1199,9 +1174,7 @@ export const registry: LabEntry[] = [
     states: [
       {
         name: 'the fold',
-        render: () => (
-          <IconButton icon="sidebar" label="Hide the panel" onClick={() => {}} expanded />
-        ),
+        render: () => <LabFold />,
       },
       {
         name: 'a place, folded',
@@ -1700,26 +1673,17 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/chat/ConversationList.tsx',
     states: [
       {
-        name: 'one open, one still going',
+        name: "a first afternoon: one open, two working, Petals' agent and your own",
+        wide: true,
+        render: () => <ConversationList rows={PANEL_STATES.five.rows} />,
+      },
+      {
+        name: 'in a project',
         wide: true,
         render: () => (
           <ConversationList
-            rows={[
-              {
-                key: 'a',
-                title: 'How much of the stake do the top ten hold?',
-                sub: 'Working…',
-                href: '#a',
-                current: false,
-              },
-              {
-                key: 'b',
-                title: "Who stands behind NEAR's validators?",
-                sub: '6 Nov 2026',
-                href: '#b',
-                current: true,
-              },
-            ]}
+            rows={PANEL_STATES.forty.rows.filter((r) => r.project === 'p2')}
+            depth={1}
           />
         ),
       },

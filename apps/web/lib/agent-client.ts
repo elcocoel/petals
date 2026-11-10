@@ -14,7 +14,7 @@ import type {
 } from '@petal/core/types';
 import type { ConnectedAgent } from './agents.ts';
 import type { Settings } from './composer-options.ts';
-import type { ListedConversation } from './conversation-list.ts';
+import type { ListedConversation, ListedProject } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
 import type { MapViewRow } from './flower-view.ts';
 import type { Job } from './jobs.ts';
@@ -99,6 +99,36 @@ export async function listConversations(): Promise<ListedConversation[]> {
   if (!res.ok) return [];
   const json = (await res.json()) as { conversations?: ListedConversation[] };
   return json.conversations ?? [];
+}
+
+/** A person's projects: the server keeps them as folders (004-workspace, W4). No answer is none. */
+export async function listProjects(): Promise<ListedProject[]> {
+  const res = await fetch('/api/v1/folders');
+  if (!res.ok) return [];
+  const json = (await res.json()) as { folders?: ListedProject[] };
+  return json.folders ?? [];
+}
+
+/** A new project, at the top level, by the name given. Null if the server said no. */
+export async function newProject(name: string): Promise<ListedProject | null> {
+  const res = await fetch('/api/v1/folders', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { folder?: ListedProject };
+  return json.folder ?? null;
+}
+
+/** Puts a conversation in a project, or in none with null. True when the server took it. */
+export async function moveConversation(id: string, project: string | null): Promise<boolean> {
+  const res = await fetch(`/api/v1/conversations/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ folder: project }),
+  });
+  return res.ok;
 }
 
 /** The views on the one shared map, oldest first, each with its picture (GET /api/v1/map/views). No answer is the same as none. */

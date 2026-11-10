@@ -236,9 +236,15 @@ export function useWorkspace(props: {
   );
   const pay = usePay(Boolean(session.account), busy, asking);
   const listed = useConversations(recorded ? null : `${runId}:${busy}:${elsewhereRef}`);
+  // A name Petals' agent gives this conversation shows in the panel as it arrives (the `title` event),
+  // not only when the list is next read.
+  const named = chat.named;
   const conversations = useMemo(
-    () => conversationRows(listed, { runId, elsewhere: elsewhereRef ?? undefined }),
-    [listed, runId, elsewhereRef],
+    () =>
+      conversationRows(listed, { runId, elsewhere: elsewhereRef ?? undefined }).map((row) =>
+        named && row.current && row.by === 'petals' ? { ...row, title: named } : row,
+      ),
+    [listed, runId, elsewhereRef, named],
   );
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.

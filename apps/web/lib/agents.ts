@@ -44,6 +44,8 @@ export interface AgentRow {
   label: string;
   status: string;
   here: boolean;
+  /** What it's doing, for the panel's few characters: on a job, waiting for one, or not connected. */
+  state: 'busy' | 'waiting' | 'away';
 }
 
 export function agentRows(agents: readonly ConnectedAgent[]): AgentRow[] {
@@ -54,20 +56,18 @@ export function agentRows(agents: readonly ConnectedAgent[]): AgentRow[] {
     label: readableAgent(a.name),
     status: a.job ? agentWords.on(a.job.title) : a.waiting ? agentWords.waiting : agentWords.away,
     here: Boolean(a.job) || a.waiting,
+    state: a.job ? 'busy' : a.waiting ? 'waiting' : 'away',
   }));
 }
 
 /** Drafts. */
 export const agentWords = {
-  heading: 'Your agents',
-  /** Rule 2: what goes here, and the one thing to do. */
-  none: 'None connected yet.',
   waiting: 'Waiting for a job',
   away: 'Not connected now',
   on: (title: string) => `On: ${title}`,
+  /** The one prompt's button, the same in the side panel and on /connect (Elco's fix 1, 10 Nov). */
   copy: 'Copy for your agents',
   copied: 'Copied. Paste it into each agent.',
-  disconnect: 'Disconnect',
   /** CONNECTORS's line, 9 Nov, routing a cloud chat to the connector since 10 Nov; `site` is this site's address and `key` a fresh agent link's token. */
   prompt: (site: string, key: string) =>
     `Be one of my agents in Petals. If you run on my computer, read ${site}/skill.md and set yourself up, then join with my agent key and wait for my jobs, as its Jobs section says. If you're the Claude app's chat or ChatGPT, run no download: use the Petals connector at ${site}/mcp, or tell me how to add it, then take my open jobs with my agent key. My agent key: ${key}`,
