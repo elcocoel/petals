@@ -6,6 +6,7 @@ import {
   fundsWords,
   mapTiles,
   nearOf,
+  shownAccount,
   WITHDRAW_ALL,
   withdrawn,
 } from '../lib/lobby-view.ts';
@@ -30,11 +31,14 @@ describe('mapTiles', () => {
     expect(tile?.title).toBe('House of Stake');
   });
 
-  test('a fixture says so, and a flower with no title is named by its id', () => {
-    const [tile] = mapTiles([flower({ where: 'fixture', title: null, id: 'moloch-v1' })]);
-    expect(tile?.badge).toBe('fixture');
+  test('the site’s own copies (fixtures) are left out, so a flower never shows twice', () => {
+    const tiles = mapTiles([flower({}), flower({ where: 'fixture', id: 'near-validators' })]);
+    expect(tiles.map((t) => t.key)).toEqual(['map:9ac16c8917aa5ca579c8421a']);
+  });
+
+  test('a flower with no title is named by its id', () => {
+    const [tile] = mapTiles([flower({ title: null, id: 'moloch-v1' })]);
     expect(tile?.title).toBe('moloch-v1');
-    expect(tile?.key).toBe('fixture:moloch-v1');
   });
 
   test('the order is the API’s', () => {
@@ -70,5 +74,16 @@ describe('the profile part’s money', () => {
       type: 'FunctionCall',
       params: { methodName: 'withdraw', args: {}, gas: '30000000000000', deposit: '1' },
     });
+  });
+});
+
+describe('the profile part’s account', () => {
+  test('a 64-character implicit account shows its first six and last four, and in full for the pointer', () => {
+    const id = '02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc';
+    expect(shownAccount(id)).toEqual({ shown: '02b85f…18fc', full: id });
+  });
+
+  test('a named account shows as it is', () => {
+    expect(shownAccount('petals.near')).toEqual({ shown: 'petals.near', full: 'petals.near' });
   });
 });

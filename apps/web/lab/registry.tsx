@@ -72,8 +72,8 @@ import { Transcript } from '../components/ui/Transcript.tsx';
 import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
+import { Profile } from '../components/workspace/Profile.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
-import { SocialProfile } from '../components/workspace/SocialProfile.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import { emptyChat } from '../lib/agent-chat.ts';
 import type { DrawingKind } from '../lib/figures.ts';
@@ -1469,34 +1469,53 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'SocialProfile',
+    id: 'Profile',
     group: 'The workspace',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/workspace/SocialProfile.tsx',
+    source: 'apps/web/components/workspace/Profile.tsx',
     states: [
       {
-        name: 'a full profile',
+        name: 'with a NEAR Social profile',
         render: () => (
-          <SocialProfile
-            profile={{
-              name: 'A name on NEAR Social',
-              about: 'A short bio, in the account’s own words.',
-              avatar: null,
-              links: [
-                { service: 'github', value: 'a-handle' },
-                { service: 'x', value: 'a-handle' },
-                { service: 'website', value: 'example.org' },
-              ],
+          <Profile
+            account="a-name.near"
+            social={{
+              kind: 'profile',
+              profile: {
+                name: 'A name on NEAR Social',
+                about: 'A short bio, in the account’s own words.',
+                avatar: null,
+                links: [
+                  { service: 'github', value: 'a-handle' },
+                  { service: 'x', value: 'a-handle' },
+                ],
+              },
             }}
+            disconnectLabel="Disconnect"
+            onDisconnect={() => {}}
           />
         ),
       },
       {
-        name: 'a name only',
+        name: 'no NEAR Social profile',
         render: () => (
-          <SocialProfile
-            profile={{ name: 'A name on NEAR Social', about: null, avatar: null, links: [] }}
+          <Profile
+            account="02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc"
+            social={{ kind: 'none' }}
+            disconnectLabel="Disconnect"
+            onDisconnect={() => {}}
+          />
+        ),
+      },
+      {
+        name: "NEAR Social didn't answer",
+        render: () => (
+          <Profile
+            account="a-name.near"
+            social={{ kind: 'unread' }}
+            disconnectLabel="Disconnect"
+            onDisconnect={() => {}}
           />
         ),
       },

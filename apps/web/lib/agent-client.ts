@@ -392,16 +392,12 @@ export const publishEntry = (entrySha256: string, proof: Nep413Proof) =>
 
 /**
  * The public profile of `account` on NEAR Social (lib/near-social.ts), read straight from NEAR Social's API,
- * not ours; null when there's none or it can't be read.
+ * not ours: null when there's none. It throws when NEAR Social doesn't answer, so the page can say so.
  */
 export async function readSocialProfile(account: string): Promise<SocialProfile | null> {
-  try {
-    const res = await fetch(`${NEAR_SOCIAL_API}/v1/accounts/${encodeURIComponent(account)}`);
-    if (!res.ok) return null;
-    return socialProfile(await res.json());
-  } catch {
-    return null;
-  }
+  const res = await fetch(`${NEAR_SOCIAL_API}/v1/accounts/${encodeURIComponent(account)}`);
+  if (!res.ok) throw new Error(`NEAR Social answered ${res.status}`);
+  return socialProfile(await res.json());
 }
 
 /** The wallet this session signed in with, and its network, or null: not signed in, or the server doesn't say. */
