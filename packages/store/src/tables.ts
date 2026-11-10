@@ -636,6 +636,13 @@ export function tables(db: Db) {
           run,
           type,
         ),
+      /** The newest events of one type across every run, the newest first: what turns have cost. */
+      latestOfType: (type: string, limit: number) =>
+        db.all<RunEventRow>(
+          'SELECT * FROM run_event WHERE type = ? ORDER BY at DESC LIMIT ?',
+          type,
+          limit,
+        ),
       /** Append-only. Returns the event's sequence number: 0, 1, 2… within the run. */
       append: (run: string, type: string, data: string, at: string): Promise<number> =>
         db.tx(async () => {

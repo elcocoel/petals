@@ -269,7 +269,11 @@ describe('conversations', () => {
       signed: false,
       fallback_used: false,
     });
-    expect(open.turns[1].tokens).toEqual({ in: expect.any(Number), out: expect.any(Number) });
+    expect(open.turns[1].tokens).toEqual({
+      in: expect.any(Number),
+      out: expect.any(Number),
+      cached: expect.any(Number),
+    });
     expect(open.turns[1].context_tokens).toBe(open.turns[1].tokens.in);
     expect(open.door_turns).toEqual([]);
   });

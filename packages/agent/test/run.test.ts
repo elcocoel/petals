@@ -101,7 +101,7 @@ describe('runAgent on the recorded skeleton run', () => {
       turns: 7,
       model: 'recorded',
       fallback_used: false,
-      tokens: { in: 0, out: 0 },
+      tokens: { in: 0, out: 0, cached: 0 },
       cost_usd: 0,
       signature: null,
     });
