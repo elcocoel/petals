@@ -273,7 +273,8 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       id: row.id,
       run_id: null,
       door: await doorOf(row.id),
-      title: row.question.slice(0, TITLE_MAX),
+      // the name its agent sent with a note, or else the question it started on
+      title: (row.title ?? row.question).slice(0, TITLE_MAX),
       status: 'elsewhere',
       settings: settingsOf(null),
       answered_by: null,
@@ -488,7 +489,11 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       if (body.title !== undefined) {
         // null goes back to the first question
         const title = typeof body.title === 'string' ? body.title.trim() : null;
-        await store.run.setTitle(run.id, title ?? firstQuestion(messagesOf(run.body)));
+        await store.run.setTitle(
+          run.id,
+          title ?? firstQuestion(messagesOf(run.body)),
+          title ? iso() : null,
+        );
         await store.search.forget(subject, 'conversation', run.id);
       }
     });
@@ -966,7 +971,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
             owner,
             kind: 'exploration',
             ref: e.id,
-            title: e.question,
+            title: e.title ?? e.question,
             about: null,
             at: e.updated_at,
           },
@@ -979,7 +984,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
               owner,
               kind: 'conversation',
               ref: e.id,
-              title: e.question.slice(0, TITLE_MAX),
+              title: (e.title ?? e.question).slice(0, TITLE_MAX),
               about,
               at: e.updated_at,
             },

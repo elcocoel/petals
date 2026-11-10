@@ -257,8 +257,10 @@ Output: `{ "exploration", "step": Step, "head", "unchanged": boolean, "short_url
 
 #### add_note
 
-Input: `{ "exploration": string, "text": string (2,000 characters at most) }`
-Output: `{ "exploration", "note": Note }`. Errors: `unauthorised` on a read link.
+Input: `{ "exploration": string, "text": string (2,000 characters at most), "title"?: string (80 characters at most) }`
+Output: `{ "exploration", "note": Note, "title"? }`. Errors: `unauthorised` on a read link.
+
+`title` (10 Nov, Elco: conversations are named) names the exploration as a conversation in its owner's list, which shows it instead of the question it started on. The person's own agent sends it with its first reply's note and again when the subject changes: 3 to 6 plain words, the subject, not the request. A note without one leaves the name as it is. When the person carries the work on in Petals' chat, the new run starts with that name.
 
 ## Types referenced
 

@@ -8,6 +8,7 @@ import { registry as defaultRegistry, saveRunStep } from '@petal/tools';
 import { Channel } from './channel.ts';
 import { agentsOfRun, type Bell, handJobTool, jobsOfRun } from './hand-job.ts';
 import type { Budget, LlmMessage } from './llm.ts';
+import { nameConversationTool, nameOfRun } from './name-conversation.ts';
 import { type RunDeps, type RunOptions, startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
 import type { EarlierFlower } from './thread.ts';
@@ -87,6 +88,8 @@ export function runJobs(
           const jobsNow = await jobsOfRun(deps.tools, runId).catch(() => []);
           // and who's connected, so it can send a job to one by name
           const agentsNow = await agentsOfRun(deps.tools, runId).catch(() => []);
+          // and its name so far, so it names it once and renames it when the subject changes
+          const nameNow = await nameOfRun(deps.tools, runId).catch(() => null);
           const events = startRun(
             {
               messages: input.messages,
@@ -94,14 +97,16 @@ export function runJobs(
               ...earlier,
               ...(jobsNow.length ? { jobs: jobsNow } : {}),
               ...(agentsNow.length ? { agents: agentsNow } : {}),
+              ...(nameNow ? { name: nameNow } : {}),
             },
             { tools: deps.tools, llm: deps.llm, budget },
             {
               runId,
-              // its own hand_job, which knows this run and so its exploration
+              // its own hand_job and name_conversation, which know this run (and so its exploration)
               registry: [
                 ...(o.registry ?? defaultRegistry),
                 handJobTool(deps.tools, runId, o.bell),
+                nameConversationTool(deps.tools, runId),
               ],
               ...(o.heartbeatMs ? { heartbeatMs: o.heartbeatMs } : {}),
               signal: job.abort.signal,

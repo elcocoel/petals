@@ -391,17 +391,18 @@ export function sqliteRunStore(store: Store): Required<RunStore> {
         if (kept) return reopen;
       }
       const id = newRunId();
-      // work from another door, continued here, stays in the folder its owner put it in
-      const folder = o?.exploration
-        ? ((await store.exploration.get(o.exploration))?.folder ?? null)
-        : null;
+      // work from another door, continued here, stays in the folder its owner put it in, and keeps the
+      // name its agent gave it
+      const from = o?.exploration ? await store.exploration.get(o.exploration) : undefined;
+      const folder = from?.folder ?? null;
       await store.run.insert({
         id,
         owner: o?.owner ?? null,
         exploration: o?.exploration ?? null,
         status: 'running',
         model: null,
-        title: firstQuestion(input.messages) || null,
+        title: from?.title ?? (firstQuestion(input.messages) || null),
+        named_at: from?.title ? at : null,
         settings: o?.settings ? JSON.stringify(o.settings) : null,
         folder,
         body: bodyOf({
