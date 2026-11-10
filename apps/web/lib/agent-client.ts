@@ -16,7 +16,6 @@ import type { ConnectedAgent } from './agents.ts';
 import type { Settings } from './composer-options.ts';
 import type { ListedConversation, ListedProject } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
-import type { MapViewRow } from './flower-view.ts';
 import type { Job } from './jobs.ts';
 import { NEAR_SOCIAL_API, type SocialProfile, socialProfile } from './near-social.ts';
 import type { Credit, PayInfo } from './pay.ts';
@@ -129,14 +128,6 @@ export async function moveConversation(id: string, project: string | null): Prom
     body: JSON.stringify({ folder: project }),
   });
   return res.ok;
-}
-
-/** The views on the one shared map, oldest first, each with its picture (GET /api/v1/map/views). No answer is the same as none. */
-export async function listMapViews(): Promise<MapViewRow[]> {
-  const res = await fetch('/api/v1/map/views');
-  if (!res.ok) return [];
-  const json = (await res.json()) as { views?: MapViewRow[] };
-  return json.views ?? [];
 }
 
 /** Where a conversation in another agent stands, by its exploration's id or a link's token. */
@@ -373,6 +364,19 @@ export async function readSocialProfile(account: string): Promise<SocialProfile 
   const res = await fetch(`${NEAR_SOCIAL_API}/v1/accounts/${encodeURIComponent(account)}`);
   if (!res.ok) throw new Error(`NEAR Social answered ${res.status}`);
   return socialProfile(await res.json());
+}
+
+/** What NEAR Social's indexer did with one transaction (GET /v1/tx/{hash}); null when it can't say. */
+export async function readSocialTx(hash: string): Promise<unknown> {
+  const res = await fetch(`${NEAR_SOCIAL_API}/v1/tx/${encodeURIComponent(hash)}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+/** Whether FastFS serves a stored file yet. Asked with a fresh query each time: its CDN keeps a 404. */
+export async function fastfsServes(url: string, fresh: string): Promise<boolean> {
+  const res = await fetch(`${url}?v=${encodeURIComponent(fresh)}`);
+  return res.ok;
 }
 
 /** The wallet this session signed in with, and its network, or null: not signed in, or the server doesn't say. */

@@ -1,6 +1,7 @@
 // A stored flower you can open: its drawing, its title and where it's from. A link on the gallery, an
 // action in the workspace, so it's the one tile on both.
 import type { ReactNode } from 'react';
+import { Badge } from './ui/Badge.tsx';
 import { Button } from './ui/Button.tsx';
 
 export function FlowerTile({
@@ -33,7 +34,7 @@ export function FlowerTile({
       />
       <span className="type-label">{title}</span>
       <span className="type-caption whitespace-pre-wrap">{where}</span>
-      <span className="badge ml-0">{badge}</span>
+      <Badge>{badge}</Badge>
     </>
   );
   return (

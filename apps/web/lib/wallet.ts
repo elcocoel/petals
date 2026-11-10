@@ -82,3 +82,39 @@ export async function sendAction(
   const wallet = await connector.wallet();
   return wallet.signAndSendTransaction({ network, receiverId, actions: [action] });
 }
+
+/**
+ * Connects a wallet on `network`, or uses the one already connected there, and names its account: for a
+ * write the person's own wallet signs (NEAR Social's), where no Petals sign-in is asked.
+ */
+export async function connectWallet(network: Network): Promise<string> {
+  const connector = await connectorFor(network);
+  const known = await connector.wallet().catch(() => null);
+  const already = known ? await known.getAccounts({ network }).catch(() => []) : [];
+  const accounts =
+    already.length > 0 ? already : await (await connector.connect()).getAccounts({ network });
+  const [first] = accounts;
+  if (!first) throw new Error('The wallet connected but named no account.');
+  return first.accountId;
+}
+
+/**
+ * One function call from the connected wallet, with JSON args or raw bytes (a FastFS file's borsh), no
+ * deposit. Hands back what the wallet answered; it rejects when the person says no, and, with some
+ * wallets, when the receipt fails, as NEAR Social's always does (CodeDoesNotExist).
+ */
+export async function callFunction(
+  network: Network,
+  receiverId: string,
+  methodName: string,
+  args: object | Uint8Array,
+  gas: string,
+): Promise<unknown> {
+  const connector = await connectorFor(network);
+  const wallet = await connector.wallet();
+  return wallet.signAndSendTransaction({
+    network,
+    receiverId,
+    actions: [{ type: 'FunctionCall', params: { methodName, args, gas, deposit: '0' } }],
+  });
+}

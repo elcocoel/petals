@@ -1,6 +1,7 @@
 // The draft view (T064): a flower from its spec alone (/draft?spec=, the view_url render_flower
 // returns). Not published, so there is no interpretation, maker or signature to show.
 import { FlowerSheet } from '../../../components/FlowerSheet.tsx';
+import { Badge } from '../../../components/ui/Badge.tsx';
 import { decodeDraft } from '../../../lib/draft.ts';
 import { renderSpec, sourceUrls } from '../../../lib/flower-data.ts';
 
@@ -42,7 +43,7 @@ export default async function DraftPage({
     <>
       <h1>Draft: {spec.network.id}</h1>
       <p>
-        <span className="badge">draft</span>{' '}
+        <Badge>draft</Badge>{' '}
         <span className="muted">Made from the spec in this link; not published.</span>
       </p>
       {rendered.ok ? (

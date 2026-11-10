@@ -49,12 +49,16 @@ import { SourceList } from '../components/Sources.tsx';
 import { ActionRow } from '../components/ui/ActionRow.tsx';
 import { AskBlock } from '../components/ui/AskBlock.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
+import { Badge } from '../components/ui/Badge.tsx';
 import { BarBox } from '../components/ui/BarBox.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Callout } from '../components/ui/Callout.tsx';
+import { Card } from '../components/ui/Card.tsx';
+import { ChooseFile } from '../components/ui/ChooseFile.tsx';
 import { Drawing } from '../components/ui/Drawing.tsx';
 import { EmptySlot } from '../components/ui/EmptySlot.tsx';
 import { FaqItem } from '../components/ui/FaqItem.tsx';
+import { Field } from '../components/ui/Field.tsx';
 import { Footer } from '../components/ui/Footer.tsx';
 import { GalleryCard } from '../components/ui/GalleryCard.tsx';
 import { Icon, type IconName } from '../components/ui/Icon.tsx';
@@ -73,11 +77,14 @@ import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
+import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
+import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { DrawingKind } from '../lib/figures.ts';
 import { readingKey, svgImage } from '../lib/flower-view.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
+import type { ProfileEditorView } from '../lib/lobby-view.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
@@ -301,6 +308,29 @@ const RAIL_ICONS: IconName[] = [
   'petals',
   'agent',
 ];
+
+/** The editor's view for the lab: every control does nothing. */
+const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
+  creating: false,
+  account: { shown: 'a-name.near', full: 'a-name.near' },
+  draft: {
+    name: 'A name on NEAR Social',
+    about: 'A short bio, in the account’s own words.',
+    links: [{ service: 'github', value: 'a-handle' }],
+  },
+  picture: null,
+  phase: 'editing',
+  problem: null,
+  setName: () => {},
+  setAbout: () => {},
+  setLink: () => {},
+  addLink: () => {},
+  removeLink: () => {},
+  choosePicture: () => {},
+  publish: () => {},
+  cancel: () => {},
+  ...over,
+});
 
 export const registry: LabEntry[] = [
   {
@@ -1175,6 +1205,85 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'Badge',
+    group: 'The workspace',
+    figmaName: 'Petals / Badge',
+    figmaNode: '164:2284',
+    source: 'apps/web/components/ui/Badge.tsx',
+    states: [
+      { name: 'neutral, a fact', render: () => <Badge>Declared</Badge> },
+      { name: 'accent, a state that went well', render: () => <Badge tone="accent">Saved</Badge> },
+    ],
+  },
+  {
+    id: 'Card',
+    group: 'The workspace',
+    figmaName: 'Petals / Card head',
+    figmaNode: '164:2294',
+    source: 'apps/web/components/ui/Card.tsx',
+    states: [
+      {
+        name: 'a title, a badge and its one action',
+        render: () => (
+          <Card
+            title="A card's title"
+            labelledBy="lab-card"
+            badge={<Badge>208</Badge>}
+            action={<Button variant="secondary">Edit</Button>}
+          >
+            <p className="my-0 type-body">One job, said in its body.</p>
+          </Card>
+        ),
+      },
+      {
+        name: 'a title only',
+        render: () => (
+          <Card title="A card's title" labelledBy="lab-card-plain">
+            <p className="my-0 type-caption text-muted">Nothing here yet, and what to do next.</p>
+          </Card>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'ChooseFile',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ChooseFile.tsx',
+    states: [
+      {
+        name: 'a picture',
+        render: () => <ChooseFile label="Choose a picture" accept="image/png" onFile={() => {}} />,
+      },
+    ],
+  },
+  {
+    id: 'Field',
+    group: 'The workspace',
+    figmaName: 'Petals / Field',
+    figmaNode: '164:2293',
+    source: 'apps/web/components/ui/Field.tsx',
+    states: [
+      {
+        name: 'one line',
+        render: () => <Field id="lab-field-one" label="Name" value="A name" onChange={() => {}} />,
+      },
+      {
+        name: 'several lines',
+        render: () => (
+          <Field
+            id="lab-field-several"
+            label="Bio"
+            value="A short bio, in the account’s own words."
+            onChange={() => {}}
+            lines="several"
+          />
+        ),
+      },
+    ],
+  },
+  {
     id: 'IconButton',
     group: 'The workspace',
     figmaName: null,
@@ -1537,6 +1646,77 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'ProfileHead',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/ProfileHead.tsx',
+    states: [
+      {
+        name: 'with a NEAR Social profile',
+        render: () => (
+          <ProfileHead
+            account="a-name.near"
+            social={{
+              kind: 'profile',
+              profile: { name: 'A name on NEAR Social', about: null, avatar: null, links: [] },
+            }}
+            disconnectLabel="Disconnect"
+            onDisconnect={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'no public profile, a 64-character account',
+        render: () => (
+          <ProfileHead
+            account="02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc"
+            social={{ kind: 'none' }}
+            disconnectLabel="Disconnect"
+            onDisconnect={() => {}}
+          />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'ProfileEditor',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/ProfileEditor.tsx',
+    states: [
+      { name: 'editing a profile', render: () => <ProfileEditor view={editorView({})} /> },
+      {
+        name: 'making the first one',
+        render: () => (
+          <ProfileEditor
+            view={editorView({
+              creating: true,
+              draft: { name: '', about: '', links: [{ service: '', value: '' }] },
+            })}
+          />
+        ),
+      },
+      {
+        name: 'waiting for the wallet',
+        render: () => <ProfileEditor view={editorView({ phase: 'signing' })} />,
+      },
+      {
+        name: "NEAR Social didn't take it",
+        render: () => (
+          <ProfileEditor
+            view={editorView({
+              phase: 'failed',
+              problem:
+                'NEAR Social didn’t take it, so nothing changed: profile/avatar: not a fastfs uri.',
+            })}
+          />
+        ),
+      },
+    ],
+  },
+  {
     id: 'Profile',
     group: 'The workspace',
     figmaName: null,
@@ -1547,7 +1727,6 @@ export const registry: LabEntry[] = [
         name: 'with a NEAR Social profile',
         render: () => (
           <Profile
-            account="a-name.near"
             social={{
               kind: 'profile',
               profile: {
@@ -1560,32 +1739,38 @@ export const registry: LabEntry[] = [
                 ],
               },
             }}
-            disconnectLabel="Disconnect"
-            onDisconnect={() => {}}
+            onEdit={() => {}}
           />
         ),
       },
       {
-        name: 'no NEAR Social profile',
+        name: 'just saved',
         render: () => (
           <Profile
-            account="02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc"
-            social={{ kind: 'none' }}
-            disconnectLabel="Disconnect"
-            onDisconnect={() => {}}
+            social={{
+              kind: 'profile',
+              profile: { name: 'A name', about: 'A short bio.', avatar: null, links: [] },
+            }}
+            onEdit={() => {}}
+            saved
           />
         ),
+      },
+      {
+        name: 'no public profile yet',
+        render: () => <Profile social={{ kind: 'none' }} onEdit={() => {}} />,
+      },
+      {
+        name: 'no public profile yet, editing off',
+        render: () => <Profile social={{ kind: 'none' }} />,
+      },
+      {
+        name: 'still reading',
+        render: () => <Profile social={{ kind: 'reading' }} />,
       },
       {
         name: "NEAR Social didn't answer",
-        render: () => (
-          <Profile
-            account="a-name.near"
-            social={{ kind: 'unread' }}
-            disconnectLabel="Disconnect"
-            onDisconnect={() => {}}
-          />
-        ),
+        render: () => <Profile social={{ kind: 'unread' }} />,
       },
     ],
   },
@@ -1642,6 +1827,12 @@ export const registry: LabEntry[] = [
             withdrew={null}
             onWithdraw={() => {}}
           />
+        ),
+      },
+      {
+        name: 'the balance can’t be read',
+        render: () => (
+          <Funds balance={null} held={null} phase="ready" withdrew={null} onWithdraw={() => {}} />
         ),
       },
       {

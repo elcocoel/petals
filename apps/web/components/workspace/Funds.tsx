@@ -1,12 +1,11 @@
-// The profile part's money (Elco, 9 and 10 Nov): the credit the person holds, in NEAR, in /make's own words,
-// and Withdraw, which takes everything out of the credit contract through their own wallet while it holds
-// something. Withdraw is quiet, as Disconnect is, so the part keeps its height whatever it says.
-// Props only: viewmodels/useFunds.ts reads the credit and holds the withdrawal.
-// Words from lib/lobby-view.ts and lib/pay.ts, drafts.
+// The Balance card (Elco, 9 and 10 Nov; the redo's frame, "Build it"): the credit the person holds, in NEAR
+// at today's price, in the pixel numerals amounts take; and Withdraw, the card's one action, which takes
+// everything out of the credit contract through their own wallet while it holds something. Withdraw is
+// quiet, as Disconnect is. Props only: viewmodels/useFunds.ts reads the credit and holds the withdrawal.
+// Words from lib/lobby-view.ts, drafts.
 import { canWithdraw, fundsWords, type WithdrawPhase } from '../../lib/lobby-view.ts';
-import { payWords } from '../../lib/pay.ts';
 import { Button } from '../ui/Button.tsx';
-import { Mono } from '../ui/Mono.tsx';
+import { Card } from '../ui/Card.tsx';
 
 export function Funds({
   balance,
@@ -15,7 +14,7 @@ export function Funds({
   withdrew,
   onWithdraw,
 }: {
-  /** The person's credit in NEAR, as /make shows it; null until it's known. */
+  /** The person's credit in NEAR, as /make shows it; null until it can be read. */
   balance: string | null;
   /** What the contract holds for the person, in yoctoNEAR; null when there's no contract to hold it. */
   held: string | null;
@@ -24,21 +23,32 @@ export function Funds({
   withdrew: string | null;
   onWithdraw: () => void;
 }) {
-  if (balance === null && held === null) return null;
+  const offer = held !== null && canWithdraw(held) && phase !== 'withdrew';
   return (
-    <div className="flex flex-wrap items-center gap-text-gap">
-      {balance !== null && <Mono as="span">{payWords.balance(balance)}</Mono>}
-      {phase === 'withdrew' && withdrew !== null ? (
-        <span className="type-caption text-muted">{fundsWords.withdrew(withdrew)}</span>
-      ) : (
-        held !== null &&
-        canWithdraw(held) && (
+    <Card
+      title={fundsWords.title}
+      labelledBy="lobby-balance"
+      action={
+        offer ? (
           <Button variant="quiet" disabled={phase === 'withdrawing'} onClick={onWithdraw}>
             {phase === 'withdrawing' ? fundsWords.waiting : fundsWords.withdraw}
           </Button>
-        )
+        ) : undefined
+      }
+    >
+      {balance !== null ? (
+        <p className="my-0 flex items-baseline gap-space-8">
+          <span className="type-pixel-numeral">{balance}</span>
+          <span className="type-label text-muted">{fundsWords.unit}</span>
+        </p>
+      ) : (
+        <p className="my-0 type-caption text-muted">{fundsWords.unread}</p>
       )}
-      {phase === 'failed' && <span className="type-caption text-muted">{fundsWords.failed}</span>}
-    </div>
+      <p className="my-0 type-caption text-muted">{fundsWords.note}</p>
+      {phase === 'withdrew' && withdrew !== null && (
+        <p className="my-0 type-caption text-muted">{fundsWords.withdrew(withdrew)}</p>
+      )}
+      {phase === 'failed' && <p className="my-0 type-caption text-muted">{fundsWords.failed}</p>}
+    </Card>
   );
 }

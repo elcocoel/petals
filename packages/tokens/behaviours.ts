@@ -8,7 +8,7 @@ export const parents = {
   action: 'Button primary, secondary and starter',
   link: 'TextLink, GalleryCard, Button link and quiet',
   field: 'AskBox',
-  box: 'A figure box, Callout, Terminal, FloatBox',
+  box: 'A figure box, Callout, Terminal, FloatBox, Card',
   row: 'FaqItem, a Transcript line',
   figure: 'Drawing, AnnotatedFlower',
   mark: 'Wordmark, the pixel numerals',

@@ -1,21 +1,34 @@
-// The lobby (specs/004-workspace, W3): the work menu on the left (WorkMenu, the same as the workspace's),
-// and beside it the profile part (Profile: the wallet they signed in with, their public profile on NEAR
-// Social, and what they hold in the credit contract, with Withdraw) and the flowers on the map, each
-// opening on the canvas. Checked against design/minimally-good.md.
-// Props only: app/lobby/LobbySurface.tsx wires useLobby to it. It lays out existing parts and adds no
-// look of its own. Words from lib/lobby-view.ts.
+// The lobby (specs/004-workspace, W3; the redo, Elco's "Build it" on the Figma frame, 10 Nov): the side
+// panel on the left (WorkMenu, PANEL's), and beside it, from the top, the person (ProfileHead), their
+// Public profile and Balance cards side by side, and the map's card under them. Each card has one title
+// and one job (components/ui/Card.tsx). Checked against design/minimally-good.md.
+// Props only: app/lobby/LobbySurface.tsx wires useLobby to it. It lays out the small set's parts and adds
+// no look of its own. Words from lib/lobby-view.ts.
 import type { ConversationRow } from '../../lib/conversation-list.ts';
 import { doorWords } from '../../lib/door-words.ts';
+import type { LegendKey } from '../../lib/flower-view.ts';
 import {
   lobbyWords,
   type MapTile,
+  type ProfileEditorView,
   type SocialState,
   type WithdrawPhase,
 } from '../../lib/lobby-view.ts';
 import { FlowerTile } from '../FlowerTile.tsx';
+import { LegendKeys } from '../Legend.tsx';
+import { Badge } from '../ui/Badge.tsx';
+import { Card } from '../ui/Card.tsx';
 import { Funds } from './Funds.tsx';
 import { Profile } from './Profile.tsx';
+import { ProfileEditor } from './ProfileEditor.tsx';
+import { ProfileHead } from './ProfileHead.tsx';
 import { WorkMenu, type WorkMenuView } from './WorkMenu.tsx';
+
+/** The one map, a card per address, as the Power Map lists it, with one colour key over the pictures. */
+export interface LobbyMap {
+  tiles: MapTile[];
+  keys: LegendKey[];
+}
 
 /** Only a person reaches the lobby (app/lobby/page.tsx), so there's no way to connect here. */
 export interface LobbySession {
@@ -27,13 +40,16 @@ export function Lobby({
   session,
   profile,
   funds,
+  editor,
   conversations,
-  tiles,
+  map,
   menu,
 }: {
   session: LobbySession;
   /** The wallet this session signed in with, and its public profile on NEAR Social. */
-  profile: { account: string | null; social: SocialState };
+  profile: { account: string | null; social: SocialState; edit?: () => void; saved: boolean };
+  /** The public profile's editor, while it's open: it takes the Public profile card's place. */
+  editor: ProfileEditorView | null;
   funds: {
     balance: string | null;
     held: string | null;
@@ -42,19 +58,27 @@ export function Lobby({
     withdraw: () => void;
   };
   conversations: ConversationRow[];
-  tiles: MapTile[];
+  map: LobbyMap;
   menu: WorkMenuView;
 }) {
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
       <WorkMenu conversations={conversations} menu={menu} here="lobby" />
-      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-        <Profile
+      <div className="flex min-w-0 flex-1 flex-col gap-space-32 overflow-y-auto px-page-inset py-column-gap">
+        <ProfileHead
           account={profile.account}
           social={profile.social}
           disconnectLabel={doorWords.disconnect}
           onDisconnect={session.disconnect}
-        >
+        />
+        <div className="grid grid-cols-1 items-start gap-block-gap lg:grid-cols-3">
+          <div className={`min-w-0 ${editor ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
+            {editor ? (
+              <ProfileEditor view={editor} />
+            ) : (
+              <Profile social={profile.social} onEdit={profile.edit} saved={profile.saved} />
+            )}
+          </div>
           <Funds
             balance={funds.balance}
             held={funds.held}
@@ -62,27 +86,33 @@ export function Lobby({
             withdrew={funds.withdrew}
             onWithdraw={funds.withdraw}
           />
-        </Profile>
-        <section className="flex flex-col gap-block-gap p-column-gap">
-          <h2 className="m-0 type-heading">{lobbyWords.map}</h2>
-          {tiles.length > 0 ? (
-            <ul className="gallery">
-              {tiles.map((t) => (
-                <li key={t.key}>
-                  <FlowerTile
-                    title={t.title}
-                    where={t.where}
-                    badge={t.badge}
-                    image={t.image}
-                    href={t.href}
-                  />
-                </li>
-              ))}
-            </ul>
+        </div>
+        <Card
+          title={lobbyWords.map}
+          labelledBy="lobby-map"
+          badge={map.tiles.length > 0 ? <Badge>{map.tiles.length}</Badge> : undefined}
+        >
+          {map.tiles.length > 0 ? (
+            <>
+              <LegendKeys keys={map.keys} />
+              <ul className="gallery">
+                {map.tiles.map((t) => (
+                  <li key={t.key}>
+                    <FlowerTile
+                      title={t.title}
+                      where={t.where}
+                      badge={t.badge}
+                      image={t.image}
+                      href={t.href}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : (
             <p className="my-0 type-caption text-muted">{lobbyWords.mapEmpty}</p>
           )}
-        </section>
+        </Card>
       </div>
     </main>
   );
