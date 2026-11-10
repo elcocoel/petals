@@ -262,7 +262,7 @@ export const wordmark = {
 } as const;
 
 /**
- * Chart colours. The first twelve are the renderer's light values (packages/core render/style.ts),
+ * Chart colours. The first thirteen are the renderer's light values (packages/core render/style.ts),
  * which page CSS overrides by name, so a flower's colours move from here without changing its
  * hashed bytes. The renderer's own --ink follows --text-primary instead.
  */
@@ -280,6 +280,7 @@ export const chart = {
   'k-treasury': '#008300',
   'k-org': '#4a3aa7',
   'k-delegator': '#e34948',
+  'k-group': '#1797a6',
   'everyone-else': '#666661',
   selected: primitives.Mint,
   // Only the API mock's legend names these (apps/web/lib/mock/near-validators.json).
@@ -305,6 +306,7 @@ export const rendererVariables = [
   'k-treasury',
   'k-org',
   'k-delegator',
+  'k-group',
 ] as const satisfies readonly (keyof typeof chart)[];
 
 export interface Tokens {

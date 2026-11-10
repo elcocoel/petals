@@ -18,7 +18,8 @@ export const KIND_STYLE: Record<Kind, { cls: string; swatch: string }> = {
   organisation: { cls: 'c-org', swatch: 'var(--k-org)' },
   person: { cls: 'c-org', swatch: 'var(--k-org)' },
   delegator: { cls: 'c-delegator', swatch: 'var(--k-delegator)' },
-  group: { cls: 'c-unknown', swatch: 'var(--unknown)' },
+  // its own colour, so a key never shows two labels in one swatch (META, 10 Nov, fix 4)
+  group: { cls: 'c-group', swatch: 'var(--k-group)' },
   unknown: { cls: 'c-unknown', swatch: 'var(--unknown)' },
 };
 
@@ -51,11 +52,11 @@ export const OUTLINE = { asserted: 'solid', inferred: 'dashed' } as const;
 const LIGHT =
   '--ink:#0b0b0b;--ink-2:#52514e;--hair:#e1e0d9;--unknown:#c9c7bf;--tail:#8a8880;' +
   '--k-pool:#2a78d6;--k-exchange:#eb6834;--k-entity:#1baf7a;--k-custodian:#eda100;' +
-  '--k-contract:#e87ba4;--k-treasury:#008300;--k-org:#4a3aa7;--k-delegator:#e34948';
+  '--k-contract:#e87ba4;--k-treasury:#008300;--k-org:#4a3aa7;--k-delegator:#e34948;--k-group:#1797a6';
 const DARK =
   '--ink:#ffffff;--ink-2:#c3c2b7;--hair:#2c2c2a;--unknown:#4a4945;--tail:#8a8880;' +
   '--k-pool:#3987e5;--k-exchange:#d95926;--k-entity:#199e70;--k-custodian:#c98500;' +
-  '--k-contract:#d55181;--k-treasury:#008300;--k-org:#9085e9;--k-delegator:#e66767';
+  '--k-contract:#d55181;--k-treasury:#008300;--k-org:#9085e9;--k-delegator:#e66767;--k-group:#2ab0c0';
 
 const S = 'svg[data-petal]';
 const fills = [

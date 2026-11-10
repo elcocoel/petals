@@ -97,6 +97,7 @@
   --chart-k-treasury: #008300;
   --chart-k-org: #4a3aa7;
   --chart-k-delegator: #e34948;
+  --chart-k-group: #1797a6;
   --chart-everyone-else: #666661;
   --chart-selected: #8BC9BD;
   --chart-k-staking_pool: #6b8f71;
@@ -229,6 +230,9 @@
 }
 [data-swatch="k-delegator"] {
   background-color: var(--chart-k-delegator);
+}
+[data-swatch="k-group"] {
+  background-color: var(--chart-k-group);
 }
 [data-swatch="everyone-else"] {
   background-color: var(--chart-everyone-else);
@@ -430,5 +434,6 @@
   --k-treasury: var(--chart-k-treasury);
   --k-org: var(--chart-k-org);
   --k-delegator: var(--chart-k-delegator);
+  --k-group: var(--chart-k-group);
 }
 
