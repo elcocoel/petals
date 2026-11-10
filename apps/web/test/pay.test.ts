@@ -1,4 +1,6 @@
 // B, the payment step: what a payment sends, what's left in NEAR, and where the chat offers it.
+
+import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
@@ -43,6 +45,7 @@ describe('paying for Petals’ agent', () => {
     const items = [{ kind: 'error' as const, code: 'payment_required', message: 'no credit' }];
     const rows = threadView({
       items,
+      view: DEFAULT_VIEW,
       busy: false,
       runId: null,
       turn: 'idle',

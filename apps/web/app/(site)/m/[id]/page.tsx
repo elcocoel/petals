@@ -8,12 +8,13 @@ import { shortId } from '../../../../lib/flower-view.ts';
 import { viewName } from '../../../../lib/map-views.ts';
 import { drawingsKeys, drawingTile, mapOne, readingLine } from '../../../../lib/maps.ts';
 import { siteLinks } from '../../../../lib/site-links.ts';
+import { viewerView } from '../../../../lib/viewer-view.ts';
 
 export const dynamic = 'force-dynamic';
 
 export default async function MapPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const got = await mapOne(decodeURIComponent(id));
+  const got = await mapOne(decodeURIComponent(id), (await viewerView()).hash);
   if (!got.ok) {
     return (
       <>

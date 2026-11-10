@@ -57,6 +57,8 @@ export interface CanvasFlower {
   reading: DrawnReading;
   /** Its id, where it's a stored flower: what opens it, once someone chooses it. */
   stored?: string;
+  /** the hash of the person's view it's drawn in: a new view draws it again */
+  view?: string;
 }
 
 /** What a click on the canvas landed on. Every petal is by its id: an order can change, an id can't. */
@@ -64,17 +66,19 @@ export type CanvasHit = { kind: 'petal'; id: string } | { kind: 'centre' } | { k
 
 /**
  * What the canvas holds next: the open flower once its reading is in hand, and otherwise what it already
- * held, so nothing flickers between flowers. A new object only when the flower really changes: a live
- * bench rebuilds its scene on a new reading, and that would throw away where the camera is.
+ * held, so nothing flickers between flowers. A new object only when the flower really changes, or the
+ * person's view does: a live bench rebuilds its scene on a new reading, and that would throw away where
+ * the camera is.
  */
 export function nextCanvas(
   held: CanvasFlower | null,
   key: string | null | undefined,
   reading: DrawnReading | undefined,
   stored?: string,
+  view?: string,
 ): CanvasFlower | null {
-  if (!key || !reading || held?.key === key) return held;
-  return { key, reading, ...(stored ? { stored } : {}) };
+  if (!key || !reading || (held?.key === key && held.view === view)) return held;
+  return { key, reading, ...(stored ? { stored } : {}), ...(view ? { view } : {}) };
 }
 
 /** A map, one per address, as the Power Map draws it (mapTile), opening its page. */

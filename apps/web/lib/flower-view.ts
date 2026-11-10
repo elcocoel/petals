@@ -2,16 +2,15 @@
 // Pure, from the spec and what the render returned; the renderer's numbers and words are never
 // re-derived here, only laid out.
 import { pictureQuery } from '@petal/core';
-import type { LegendItem, PetalDetail, Spec } from '@petal/core/types';
-import { viewerView } from './viewer-view.ts';
+import type { LegendItem, PetalDetail, Spec, View } from '@petal/core/types';
 
 /**
- * A flower's still picture. The browser and Vercel's edge keep each one for a year, so its address names
- * the look and the view it's drawn with: when either changes, every picture has a new address and nobody
- * sees the old one from a cache.
+ * A flower's still picture, in the person's view (lib/person-view.ts). The browser and Vercel's edge keep
+ * each one for a year, so its address names the look and the view it's drawn with: when either changes,
+ * every picture has a new address and nobody sees the old one from a cache.
  */
-export const flowerImage = (id: string) =>
-  `/api/v1/flowers/${encodeURIComponent(id)}/svg?${pictureQuery(viewerView())}`;
+export const flowerImage = (id: string, view: View) =>
+  `/api/v1/flowers/${encodeURIComponent(id)}/svg?${pictureQuery(view)}`;
 
 /** A row of GET /api/v1/flowers. */
 export interface ListedFlower {

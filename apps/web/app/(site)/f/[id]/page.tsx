@@ -9,6 +9,7 @@ import { api } from '../../../../lib/api.ts';
 import { renderSpec, sourceUrls } from '../../../../lib/flower-data.ts';
 import { dateLabel } from '../../../../lib/flower-view.ts';
 import { explorerTxUrl } from '../../../../lib/publish.ts';
+import { viewerView } from '../../../../lib/viewer-view.ts';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,10 @@ const yesNo = (ok: boolean) => (ok ? 'verified' : 'NOT verified');
 
 export default async function FlowerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const got = await api<GotFlower>(`/api/v1/flowers/${encodeURIComponent(id)}`);
+  const [got, person] = await Promise.all([
+    api<GotFlower>(`/api/v1/flowers/${encodeURIComponent(id)}`),
+    viewerView(),
+  ]);
   if (!got.ok) {
     return (
       <>
@@ -44,7 +48,7 @@ export default async function FlowerPage({ params }: { params: Promise<{ id: str
   }
   const { entry, where, tx_hash, verified } = got.value;
   const [rendered, sources] = await Promise.all([
-    renderSpec(entry.spec),
+    renderSpec(entry.spec, person.view),
     sourceUrls(entry.spec.snapshot.sha256),
   ]);
   const maker = entry.provenance.maker;

@@ -3,6 +3,7 @@
 // The web uses both as given, so a view looks and opens the same everywhere it's listed.
 import { api } from './api.ts';
 import { chainLabel, dateLabel, keysOf, oneKey } from './flower-view.ts';
+import { viewQuery } from './person-view.ts';
 
 /** A row of GET /api/v1/map/views. */
 export interface MapViewRow {
@@ -25,7 +26,9 @@ export interface MapViewRow {
   map?: string;
 }
 
-export const mapViewList = () => api<{ views: MapViewRow[] }>('/api/v1/map/views');
+/** In the view whose hash is given, as the maps' lists are. */
+export const mapViewList = (view: string) =>
+  api<{ views: MapViewRow[] }>(`/api/v1/map/views?${viewQuery(view)}`);
 
 /** A view's name as people would say it: the run's name without its notes, "Jito / JTO" as Jito. */
 export function viewName(v: Pick<MapViewRow, 'name' | 'title'>): string {
