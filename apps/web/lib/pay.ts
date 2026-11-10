@@ -100,7 +100,8 @@ export const PAYMENT_REQUIRED = 'payment_required';
 /** Drafts (Elco, 9 Nov: "Ship the drafts, I'll change them later"). */
 export const payWords = {
   balance: (m: Money) => `Balance: ${moneyWords(m)}`,
-  out: "You're out of NEAR for Petals. Add some to keep going.",
+  // credit is kept in dollars, and paid in NEAR or any other token (Elco, 10 Nov)
+  out: "You're out of credit for Petals' agent. Add some to keep going.",
   button: (near: number) => `Add ${near} NEAR`,
   paying: 'Waiting for your wallet…',
   added: (near: string) => `Added ${near} NEAR. Send your question again.`,

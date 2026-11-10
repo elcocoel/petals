@@ -1,6 +1,7 @@
 // The thread as every surface shows it: its rows, the recorded notice, and a flower's row wired to what
 // opens it. A surface says only where the thread sits and what the open row says.
 import type { Ref } from 'react';
+import type { TopUpView } from '../../lib/intents.ts';
 import { type Job, jobLine } from '../../lib/jobs.ts';
 import type { PayPhase } from '../../lib/pay.ts';
 import type { Row } from '../../lib/thread-view.ts';
@@ -35,7 +36,14 @@ export function ConversationThread({
   onRefollow: () => void;
   onLink: (href: string) => boolean;
   /** Paying for Petals' agent, for the live pay row (B). */
-  pay?: { asking: string | null; phase: PayPhase; added: string | null; onPay: () => void };
+  pay?: {
+    asking: string | null;
+    phase: PayPhase;
+    added: string | null;
+    onPay: () => void;
+    /** Paying with any other token, through NEAR Intents. */
+    topUp?: TopUpView;
+  };
   /** Where each handed job stands, and the hand-over (C). */
   jobs?: Record<string, Job>;
 }) {
@@ -71,7 +79,13 @@ export function ConversationThread({
       }}
       renderPay={(key) =>
         pay && key === pay.asking ? (
-          <PayRow key={key} phase={pay.phase} added={pay.added} onPay={pay.onPay} />
+          <PayRow
+            key={key}
+            phase={pay.phase}
+            added={pay.added}
+            onPay={pay.onPay}
+            {...(pay.topUp ? { topUp: pay.topUp } : {})}
+          />
         ) : null
       }
       renderJob={(row) => {
