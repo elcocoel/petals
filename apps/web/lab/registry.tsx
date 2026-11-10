@@ -87,6 +87,7 @@ import { ViewControls } from '../components/workspace/ViewControls.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { DrawingKind } from '../lib/figures.ts';
 import { readingKey, svgImage } from '../lib/flower-view.ts';
+import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
 import type { ProfileEditorView } from '../lib/lobby-view.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
@@ -286,6 +287,60 @@ const LISTED = [
     ],
   },
 ];
+
+/** Paying with another token through NEAR Intents, as the pay row shows it at each step. */
+const TOPUP_BASE: TopUpView = {
+  open: true,
+  groups: tokenChoices([
+    { asset: 'nep141:base-usdc', chain: 'base', symbol: 'USDC', decimals: 6, usd: 1 },
+    { asset: 'nep141:eth-usdc', chain: 'eth', symbol: 'USDC', decimals: 6, usd: 1 },
+    { asset: 'nep141:sol', chain: 'sol', symbol: 'SOL', decimals: 9, usd: 150 },
+  ]),
+  asset: 'nep141:base-usdc',
+  usd: '5',
+  refund: '0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed',
+  refundLabel: intentWords.refund('Base'),
+  getting: false,
+  error: null,
+  sent: null,
+  copied: null,
+  actions: {
+    open: () => {},
+    setAsset: () => {},
+    setUsd: () => {},
+    setRefund: () => {},
+    get: () => {},
+    copy: () => {},
+    again: () => {},
+  },
+};
+const TOPUP = {
+  picking: TOPUP_BASE,
+  sending: {
+    ...TOPUP_BASE,
+    sent: {
+      line: intentWords.send('5.0125', 'USDC', 'Base'),
+      address: '0x76b4c56085ED136a8744D52bE956396624a730E8',
+      memo: null,
+      before: '19:42',
+      status: intentWords.status.PENDING_DEPOSIT,
+      ended: false,
+      landed: false,
+    },
+  },
+  landed: {
+    ...TOPUP_BASE,
+    sent: {
+      line: '',
+      address: '',
+      memo: null,
+      before: null,
+      status: intentWords.added(5),
+      ended: true,
+      landed: true,
+    },
+  },
+} satisfies Record<string, TopUpView>;
 
 /** A stored flower as the panel gets it, from the fixtures. */
 const panelFlower = (): PanelFlower => {
@@ -2030,6 +2085,20 @@ export const registry: LabEntry[] = [
       {
         name: "didn't go through",
         render: () => <PayRow phase="failed" added={null} onPay={() => {}} />,
+      },
+      {
+        name: 'another token: picking it',
+        wide: true,
+        render: () => <PayRow phase="ready" added={null} onPay={() => {}} topUp={TOPUP.picking} />,
+      },
+      {
+        name: 'another token: the address to send to',
+        wide: true,
+        render: () => <PayRow phase="ready" added={null} onPay={() => {}} topUp={TOPUP.sending} />,
+      },
+      {
+        name: 'another token: landed',
+        render: () => <PayRow phase="ready" added={null} onPay={() => {}} topUp={TOPUP.landed} />,
       },
     ],
   },

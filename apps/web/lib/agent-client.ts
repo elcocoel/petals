@@ -20,6 +20,7 @@ import type { Catalogue, Settings } from './composer-options.ts';
 import type { ListedConversation, ListedProject } from './conversation-list.ts';
 import { decodeDraft } from './draft.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
+import type { PayToken, TopUp } from './intents.ts';
 import type { Job } from './jobs.ts';
 import {
   NEAR_SOCIAL_API,
@@ -536,6 +537,31 @@ export function confirmPay(body: {
   tx_hash: string;
 }): Promise<{ added_usd: number; added_near: number; near_usd: number; credit: Credit }> {
   return sessionPost('/api/v1/pay', body);
+}
+
+/** What a person can pay with through NEAR Intents: every token and chain 1Click swaps. Empty on no answer. */
+export async function readPayTokens(): Promise<PayToken[]> {
+  const res = await fetch('/api/v1/pay/tokens', { cache: 'no-store' });
+  if (!res.ok) return [];
+  return ((await res.json()) as { tokens?: PayToken[] }).tokens ?? [];
+}
+
+/** A deposit address for `usd` dollars of credit, paid in `origin_asset`; what can't be swapped goes to `refund_to`. */
+export async function startTopUp(body: {
+  usd: number;
+  origin_asset: string;
+  refund_to: string;
+}): Promise<TopUp> {
+  return (await sessionPost<{ top_up: TopUp }>('/api/v1/pay/intents', body)).top_up;
+}
+
+/** Where a top-up stands. Once it has landed, the dollars are on the person's credit. */
+export async function readTopUp(deposit: string): Promise<TopUp | null> {
+  const res = await fetch(`/api/v1/pay/intents/${encodeURIComponent(deposit)}`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) return null;
+  return ((await res.json()) as { top_up?: TopUp }).top_up ?? null;
 }
 
 /** The jobs Petals' agent handed out in a conversation, and where each stands (C). Empty on no answer. */

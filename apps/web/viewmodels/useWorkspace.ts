@@ -48,6 +48,7 @@ import { usePersonView } from './usePersonView.ts';
 import { useSession } from './useSession.ts';
 import { useSnapshotFacts } from './useSnapshotFacts.ts';
 import { useStoredFlower } from './useStoredFlower.ts';
+import { useTopUp } from './useTopUp.ts';
 import { useWorkPanel } from './useWorkPanel.ts';
 
 export function useWorkspace(props: {
@@ -245,6 +246,8 @@ export function useWorkspace(props: {
   const reread = funds?.reread;
   const paid = useCallback(() => reread?.(), [reread]);
   const pay = usePay(funds?.where ?? null, asking, paid);
+  // or any other token, from any chain, through NEAR Intents (Elco, 10 Nov), beside it in the same row
+  const topUp = useTopUp(asking, paid);
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
   const onCanvas = canvas;
@@ -362,7 +365,7 @@ export function useWorkspace(props: {
       menuShown: panelBus.shown,
       /** Where the side panel ends now, in pixels. */
       panelEdge: panelBus.edge,
-      pay: { asking: pay.asking, phase: pay.phase, added: pay.added },
+      pay: { asking: pay.asking, phase: pay.phase, added: pay.added, topUp },
       jobs,
       balance: funds?.balance ? payWords.balance(funds.balance) : null,
       session,
