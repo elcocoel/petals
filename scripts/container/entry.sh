@@ -10,7 +10,7 @@ cap="${PETAL_LLM_DAILY_USD:-}"
 public="${PETAL_PUBLIC:-}"
 # Since 9 Nov a public site runs Petals' own agent for people who pay for it in NEAR (TGT-030, amended), so
 # it loads the model key too.
-for env_file in /secrets/near-ai.env /secrets/petal-wallet.env; do
+for env_file in /secrets/near-ai.env /secrets/petal-wallet.env /secrets/one-click.env; do
   if [ -f "$env_file" ]; then
     set -a
     # shellcheck disable=SC1090
