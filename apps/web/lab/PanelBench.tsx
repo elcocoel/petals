@@ -10,6 +10,7 @@ import { WorkMenu, type WorkMenuView } from '../components/workspace/WorkMenu.ts
 import type { ListedProject, RowRef } from '../lib/conversation-list.ts';
 import { panelWords, type SectionKey } from '../lib/panel-words.ts';
 import { viewChoices } from '../lib/person-view.ts';
+import { tipLine } from '../lib/tip.ts';
 import { isDefault, withData, withScale } from '../lib/view-edit.ts';
 import { usePanelWidth } from '../viewmodels/usePanelWidth.ts';
 import { PANEL_STATES, type PanelState } from './panel-fixtures.ts';
@@ -38,6 +39,8 @@ export function PanelBench({ state }: { state: PanelState }) {
   // Settings, saved nowhere: the bench keeps the view it's shown
   const [view, setView] = useState<View>(DEFAULT_VIEW);
   const [openDimension, setOpenDimension] = useState<Dimension | null>('colour');
+  const [tip, setTip] = useState(5);
+  const [tipOpen, setTipOpen] = useState(true);
   const menu: WorkMenuView = {
     open,
     toggleOpen: () => setOpen((now) => !now),
@@ -121,6 +124,16 @@ export function PanelBench({ state }: { state: PanelState }) {
           onPick: (d, data) => setView(withData(view, d, data, EVERY_FLOWER, DEFAULT_VIEW)),
           onScale: (d, scale) => setView(withScale(view, d, scale)),
           onReset: isDefault(view, DEFAULT_VIEW) ? undefined : () => setView(DEFAULT_VIEW),
+          failed: null,
+        }}
+        tip={{
+          percent: tip,
+          scale: { min: 0, max: 50, step: 1 },
+          open: tipOpen,
+          onOpen: () => setTipOpen((now) => !now),
+          onSlide: setTip,
+          onSet: () => {},
+          line: tipLine(tip, { model: 'DeepSeek V4.1 Flash', usd: 0.008 }, 3.56),
           failed: null,
         }}
       />

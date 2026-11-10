@@ -14,6 +14,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { type ConversationRow, conversationRows } from '../lib/conversation-list.ts';
 import { DEFAULT_PERSON_VIEW } from '../lib/person-view.ts';
+import { tipLine } from '../lib/tip.ts';
 import { isDefault, type Scale, withData, withScale } from '../lib/view-edit.ts';
 import { useConversations } from './useConversations.ts';
 import { useFunds } from './useFunds.ts';
@@ -22,6 +23,7 @@ import { usePersonView } from './usePersonView.ts';
 import { useProfile } from './useProfile.ts';
 import { useProfileEditor } from './useProfileEditor.ts';
 import { useSession } from './useSession.ts';
+import { useTip } from './useTip.ts';
 import { useWorkMenu } from './useWorkMenu.ts';
 
 /** The person's own state, read once here for the panel and the lobby page alike (LOBBY, 10 Nov: one state,
@@ -209,6 +211,19 @@ export function usePanelState() {
         },
     failed,
   };
+  // the tip, Settings' first row: what it adds to a typical turn reads as the balance does, at NEAR's price
+  // from the one balance (LOBBY, 10 Nov)
+  const tipped = useTip(signedIn);
+  const tip = {
+    percent: tipped.percent,
+    scale: tipped.scale,
+    open: tipped.open,
+    onOpen: tipped.toggle,
+    onSlide: tipped.slide,
+    onSet: tipped.set,
+    line: tipLine(tipped.percent ?? 0, tipped.turn, funds.where?.near_usd ?? null),
+    failed: tipped.failed,
+  };
   // what the Profile and Lobby sections say: the lobby's own state, not a second read of it
   const you = {
     account: session.account,
@@ -222,6 +237,7 @@ export function usePanelState() {
     rows,
     you,
     settings,
+    tip,
     width: width.hand,
     here: pathname === '/lobby' ? ('lobby' as const) : undefined,
     // New, pressed where a new conversation already is: the address won't change, so it says so itself
