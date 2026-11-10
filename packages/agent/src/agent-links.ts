@@ -4,6 +4,8 @@
 //                                     An older one keeps working until it's revoked.
 //   GET  /api/v1/agents/link          {links: [{id, created_at}]}
 //   POST /api/v1/agents/link/revoke   {id} for one, {} for all
+//   POST /api/v1/agents/disconnect    signed in: {name}, one agent, out of the list and refused from now on;
+//                                     the prompt copied into it again connects it again (Elco, 10 Nov)
 //   POST /api/v1/agents/wait          Authorization: Bearer <token>, {as, wait_s?}: waits for a job sent to
 //                                     `as`, or to anyone, in any of the person's projects, takes it, and
 //                                     answers it with a continue link for its project; {job: null} if none
@@ -18,8 +20,10 @@ import type { JobRow, Store } from '@petal/store';
 import {
   AGENT_NAME_MAX,
   agentKeyHash,
+  agentKeyOf,
+  DISCONNECTED,
+  disconnectedFor,
   makeLink,
-  ownerOfAgentKey,
   type ToolContext,
 } from '@petal/tools';
 import { type Context, Hono } from 'hono';
@@ -148,10 +152,26 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
     return ok(c, { revoked });
   });
 
+  app.post('/api/v1/agents/disconnect', small, async (c) => {
+    const foreign = gate.refuseForeign(c);
+    if (foreign) return foreign;
+    const owner = await personOr(c);
+    if (!owner) return fail(c, 'unauthorised', 'Sign in with your wallet first.');
+    const body = (await c.req.json().catch(() => ({}))) as { name?: unknown };
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    const at = now();
+    if (!name || !(await store.agent.setDisconnected(owner, name, at))) {
+      return fail(c, 'not_found', 'You have no agent by that name.');
+    }
+    // a wait it holds open wakes, and ends
+    bell.ring(owner);
+    return ok(c, { disconnected: { name, at } });
+  });
+
   app.post('/api/v1/agents/wait', small, async (c) => {
     const token = (c.req.header('authorization') ?? '').replace(/^Bearer\s+/i, '').trim();
-    const owner = await ownerOfAgentKey(store, token);
-    if (!owner) {
+    const link = await agentKeyOf(store, token);
+    if (!link) {
       return fail(
         c,
         'unauthorised',
@@ -170,6 +190,10 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
         `as must name this agent, 1 to ${AGENT_NAME_MAX} characters (e.g. claude-code)`,
       );
     }
+    const owner = link.owner;
+    if (await disconnectedFor(store, link, name, { reconnect: true })) {
+      return fail(c, 'unauthorised', DISCONNECTED);
+    }
     const asked =
       typeof body?.wait_s === 'number' && body.wait_s >= 0 ? body.wait_s : WAIT_DEFAULT_S;
     const waitMs = Math.min(asked, WAIT_MAX_S) * 1000;
@@ -186,6 +210,7 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
         const left = deadline - clock();
         if (left <= 0) return ok(c, { job: null });
         await bell.wait(owner, left, signal);
+        if (await disconnectedFor(store, link, name)) return fail(c, 'unauthorised', DISCONNECTED);
       }
     } finally {
       presence.leave(owner, name);

@@ -11,9 +11,32 @@ export const AGENT_NAME_MAX = 60;
 export const agentKeyHash = (token: string) =>
   createHash('sha256').update(token, 'utf8').digest('hex');
 
-/** Whose key this is; null for a bad, unknown or revoked one. */
-export async function ownerOfAgentKey(store: Store, token: string): Promise<string | null> {
+export const DISCONNECTED =
+  'This agent was disconnected in Petals. To connect it again, the person copies the prompt from Petals into it again.';
+
+/** A key's owner and when it was made; null for a bad, unknown or revoked one. */
+export async function agentKeyOf(
+  store: Store,
+  token: string,
+): Promise<{ owner: string; made: string } | null> {
   const t = token.trim();
   const link = AGENT_KEY.test(t) ? await store.agentLink.byTokenHash(agentKeyHash(t)) : null;
-  return link && !link.revoked_at ? link.owner : null;
+  return link && !link.revoked_at ? { owner: link.owner, made: link.created_at } : null;
+}
+
+/**
+ * Whether the person disconnected this agent after this key was made (10 Nov). A key made after the
+ * disconnection connects it again, and says so here.
+ */
+export async function disconnectedFor(
+  store: Store,
+  key: { owner: string; made: string },
+  name: string,
+  o: { reconnect?: boolean } = {},
+): Promise<boolean> {
+  const at = (await store.agent.get(key.owner, name))?.disconnected_at;
+  if (!at) return false;
+  if (at >= key.made) return true;
+  if (o.reconnect) await store.agent.setDisconnected(key.owner, name, null);
+  return false;
 }

@@ -29,6 +29,4 @@ export const siteLinks = {
   howItWorks: '/#how-it-works',
   liveShape: `/f/${LIVE_SHAPE}`,
   liveShapeImage: `/api/v1/flowers/${LIVE_SHAPE}/svg`,
-  /** No address yet. In-page, so nothing is invented; the coordinator holds the list. */
-  noDestination: '#',
 } as const;
