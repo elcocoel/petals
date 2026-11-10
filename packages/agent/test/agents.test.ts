@@ -96,6 +96,39 @@ const link = async (w: ReturnType<typeof setup>) =>
   ((await (await w.call('POST', '/api/v1/agents/link', {})).json()) as Out).token as string;
 
 describe('agents across projects', () => {
+  test('disconnecting one agent ends its wait, drops it from the list, and keeps it out until it connects again', async () => {
+    const w = setup([]);
+    await w.signInFunded();
+    const token = await link(w);
+    expect((await w.wait(token, 'Codex')).status).toBe(200);
+    expect((await w.wait(token, 'claude-code')).status).toBe(200);
+    const names = async () =>
+      (((await (await w.call('GET', '/api/v1/agents')).json()) as Out).agents as Out[]).map(
+        (a) => a.name,
+      );
+    expect((await names()).sort()).toEqual(['Codex', 'claude-code']);
+    const open = w.wait(token, 'Codex', 5);
+    await new Promise((r) => setTimeout(r, 30));
+    const off = await w.call('POST', '/api/v1/agents/disconnect', { name: 'codex' });
+    expect(off.status).toBe(200);
+    expect(((await off.json()) as Out).disconnected.name).toBe('codex');
+    // the wait it had open ends now, refused
+    expect((await open).status).toBe(401);
+    expect(await names()).toEqual(['claude-code']);
+    const again = await w.wait(token, 'Codex');
+    expect(again.status).toBe(401);
+    expect(JSON.stringify(await again.json())).toMatch(/disconnected in Petals/);
+    // another agent on the same link carries on
+    expect((await w.wait(token, 'claude-code')).status).toBe(200);
+    // the prompt copied into it again: a new link connects it again
+    await new Promise((r) => setTimeout(r, 5));
+    const fresh = await link(w);
+    expect((await w.wait(fresh, 'codex')).status).toBe(200);
+    expect((await names()).sort()).toEqual(['claude-code', 'codex']);
+    const none = await w.call('POST', '/api/v1/agents/disconnect', { name: 'hermes' });
+    expect(none.status).toBe(404);
+  });
+
   test('a link waits only for its person, a second one keeps the first working, and revoke ends them', async () => {
     const w = setup([]);
     expect((await w.call('POST', '/api/v1/agents/link', {})).status).toBe(401);

@@ -10,7 +10,7 @@
 // Taking and reporting need what writing a note needs (the owner or a continue link); reading the
 // list needs any link. A taken job that's never reported stays taken.
 import type { JobRow } from '@petal/store';
-import { AGENT_NAME_MAX, ownerOfAgentKey } from '../agent-key.ts';
+import { AGENT_NAME_MAX, agentKeyOf, DISCONNECTED, disconnectedFor } from '../agent-key.ts';
 import { defineTool } from '../define.ts';
 import { ToolFailure } from '../errors.ts';
 import type { ToolContext } from '../types.ts';
@@ -63,19 +63,23 @@ const jobOut = (j: JobRow) => ({
 /** The person's next job for this agent, from any of their projects, with that project's continue link. */
 async function takeWithKey(ctx: ToolContext, key: string, as: string | undefined) {
   const store = lastingStore(ctx);
-  const owner = await ownerOfAgentKey(store, key);
-  if (!owner) {
+  const link = await agentKeyOf(store, key);
+  if (!link) {
     throw new ToolFailure(
       'unauthorised',
       "That agent key isn't valid. Ask the person for a new one from Petals.",
     );
   }
+  const owner = link.owner;
   const name = (as ?? '').trim();
   if (!name || name.length > AGENT_NAME_MAX) {
     throw new ToolFailure(
       'bad_input',
       `as must name this agent, 1 to ${AGENT_NAME_MAX} characters, as join names it (e.g. claude-app, chatgpt).`,
     );
+  }
+  if (await disconnectedFor(store, link, name, { reconnect: true })) {
+    throw new ToolFailure('unauthorised', DISCONNECTED);
   }
   const at = ctx.now().toISOString();
   await store.agent.seen({ owner, name, last_seen: at });

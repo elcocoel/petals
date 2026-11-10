@@ -330,6 +330,11 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE job ADD COLUMN assignee TEXT;
   ALTER TABLE job ADD COLUMN taken_by TEXT;
   `,
+  // 12: the person disconnects one of their agents (Elco, 10 Nov: "i dont see a way to disconnect my agents").
+  // From then, no key made before it lets that name in; a key made after connects it again.
+  `
+  ALTER TABLE agent ADD COLUMN disconnected_at TEXT;
+  `,
 ];
 
 /**
