@@ -64,6 +64,45 @@ export function priceOf(
   return { in: p.in, cached: p.cached ?? p.in, out: p.out };
 }
 
+const GLM_CALL =
+  /<tool_call>\s*([A-Za-z_][\w.-]*)\s*((?:<arg_key>[\s\S]*?<\/arg_key>\s*<arg_value>[\s\S]*?<\/arg_value>\s*)*)<\/tool_call>/g;
+const GLM_ARG = /<arg_key>([\s\S]*?)<\/arg_key>\s*<arg_value>([\s\S]*?)<\/arg_value>/g;
+
+/**
+ * Tool calls a model wrote into its words in GLM's markup (`<tool_call>name<arg_key>k</arg_key><arg_value>v
+ * </arg_value>…</tool_call>`), as calls, and the words left without them (null when none are). A value that
+ * reads as JSON is that JSON; any other is the text. Null when there's no such markup. A block it can't read
+ * to its end is taken out of the words too, so markup never reaches the person.
+ */
+export function toolCallsInWords(
+  content: string | null,
+  completionId: string,
+): { calls: LlmToolCall[]; content: string | null } | null {
+  if (!content?.includes('<tool_call>')) return null;
+  const calls: LlmToolCall[] = [];
+  for (const [, name, body] of content.matchAll(GLM_CALL)) {
+    const args: Record<string, unknown> = {};
+    for (const [, key, value] of (body ?? '').matchAll(GLM_ARG)) {
+      const v = (value ?? '').trim();
+      try {
+        args[(key ?? '').trim()] = JSON.parse(v);
+      } catch {
+        args[(key ?? '').trim()] = v;
+      }
+    }
+    calls.push({
+      id: `${completionId}-${calls.length + 1}`,
+      name: name as string,
+      arguments: JSON.stringify(args),
+    });
+  }
+  const left = content
+    .replace(GLM_CALL, '')
+    .replace(/<tool_call>[\s\S]*$/, '')
+    .trim();
+  return { calls, content: left || null };
+}
+
 /** NEAR AI's id for a call: the UUIDv5 of the answer's own id in the DNS namespace (its usage reporting). */
 export function inferenceIdOf(completionId: string): string {
   const dns = Buffer.from('6ba7b8109dad11d180b400c04fd430c8', 'hex');
@@ -437,7 +476,7 @@ export function createNearAiClient(
         tryNext: true,
       });
     }
-    const tool_calls: LlmToolCall[] = (choice.message.tool_calls ?? []).flatMap((c, i) =>
+    const parsed: LlmToolCall[] = (choice.message.tool_calls ?? []).flatMap((c, i) =>
       c.type === 'function'
         ? [
             {
@@ -448,7 +487,13 @@ export function createNearAiClient(
           ]
         : [],
     );
-    const content = choice.message.content ?? null;
+    // GLM sometimes writes its calls into its words, in its own markup, when the route doesn't parse them
+    // (10 Nov, run 9c599a61: "<tool_call>propose_spec<arg_key>…"): they're read as the calls they are
+    const inWords = parsed.length
+      ? null
+      : toolCallsInWords(choice.message.content ?? null, completion.id);
+    const tool_calls = inWords?.calls ?? parsed;
+    const content = inWords ? inWords.content : (choice.message.content ?? null);
     const { usage, known } = usageOf(completion.usage);
     if (choice.finish_reason === 'length' && !content?.trim() && !tool_calls.length) {
       throw new LlmCallError('source_failed', `${model}: used its token limit before answering`, {

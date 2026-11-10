@@ -16,6 +16,7 @@ import {
   LlmCallError,
   MAX_COMPLETION_TOKENS,
   type NearAiOptions,
+  toolCallsInWords,
 } from '../src/near-ai.ts';
 import { fakeNearAi, SIGNER, tmpRoot } from './helpers.ts';
 
@@ -384,6 +385,33 @@ describe('nearAiClient', () => {
     const bills = await llm.billed?.(['a', 'b']);
     expect(asked).toEqual([{ requestIds: ['a', 'b'] }]);
     expect([...(bills ?? new Map())]).toEqual([['a', 0.000432744]]);
+  });
+
+  test("GLM's calls written into its words are read as calls, and its markup never reaches the person", () => {
+    // Elco's run 9c599a61, 10 Nov: GLM 5.3's answer was this markup, shown as words
+    const t =
+      '<tool_call>propose_spec<arg_key>choices</arg_key><arg_value>{"outline": "member_name"}</arg_value>' +
+      '<arg_key>network</arg_key><arg_value>erc20-votes</arg_value><arg_key>sha256</arg_key>' +
+      '<arg_value>08b9173c</arg_value></tool_call>';
+    const read = toolCallsInWords(t, 'chatcmpl-9');
+    expect(read?.content).toBeNull();
+    expect(read?.calls).toEqual([
+      {
+        id: 'chatcmpl-9-1',
+        name: 'propose_spec',
+        arguments: JSON.stringify({
+          choices: { outline: 'member_name' },
+          network: 'erc20-votes',
+          sha256: '08b9173c',
+        }),
+      },
+    ]);
+    // words beside a block cut off halfway: the words stay, the markup goes
+    expect(toolCallsInWords('Here it is. <tool_call>look_up<arg_key>query', 'c')).toEqual({
+      calls: [],
+      content: 'Here it is.',
+    });
+    expect(toolCallsInWords('plain words', 'c')).toBeNull();
   });
 
   test("NEAR AI's id for a call is the UUIDv5 of the answer's id, as its docs define it", () => {
