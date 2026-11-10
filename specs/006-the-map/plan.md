@@ -127,9 +127,14 @@ Elco: "no second look - one first look that we improve on"; V8: "Always the late
 4. **Versions:** `RENDER_VERSION` becomes `render/v2`, and `SKINS` holds only it. A published flower stays the same flower: its id leaves the drawing out, and its page says "Same facts, today's look." `contract-surface.test.ts` pins the version; SYSTEMS raises `tools_version` with its own changes.
 5. **Goldens:** the `.svg` and `.json` goldens are redrawn (`pnpm golden:update`) and reviewed; the `.reading.json` goldens stay byte-identical, which proves the facts didn't move.
 6. **Caches:** the landing keeps a drawing for a year (`lib/api.ts`, `forever`). Its request names the look, so `render/v2` asks anew and nothing old stays.
+7. **The still pictures' addresses name the look too** (META, 10 Nov, after Elco saw the lobby's old tile): `/api/v1/flowers/:id/svg` is kept for a year by the browser and by Vercel's edge (`x-vercel-cache: HIT`), so every page builds it through one helper, `flowerImage(id)` in `apps/web/lib/flower-view.ts`, which adds `?look=render%2Fv2`. A new look is a new address. Deploy order: the server first (so it draws `render/v2`), then the site, or the first visit could store the old look under the new address.
 
 **Done when:** the landing's Power Map, the gallery, the lobby's tiles, a flower's page and a draft all draw the `/make` flower; no page draws the bars; the readings are unchanged; the whole check is green.
 
 **SYSTEMS, 10 Nov: OK** on all of it; `tools_version` stays, since no tool's shape changes. Kept as history and never rewritten: `fixtures/map/3394fb87….json` (a `flower/v1` whose signed id holds its `render_sha256`) and `packages/core/schema/fixtures/entry.v2.json` (`drawn_with: render/v1`, pinned). What changes, and is fine: the ETags of `/api/v1/render` and `/api/v1/flowers/:id/svg`; the SVG's `data-petal` mark moves with the look (the old string is only in `apps/web/lib/mock/near-validators.json`); new publishes record `drawn_with: render/v2`.
 
 **Not in it:** marks at the tips, texture and lines (V5, V6), and the joy layer. Words stay as they are.
+
+## Built, 10 Nov (lane `m-face/fe-onelook`)
+
+All seven steps; the colour checked on screen at `/lab/flower` and `/lab/map` (inside a flower), and in the three goldens. Elco's go, 10 Nov, through META: "one look goes live now".

@@ -12,6 +12,7 @@ import { aboutLine } from './ask-about.ts';
 import {
   chainLabel,
   dateLabel,
+  flowerImage,
   type LegendKey,
   type ListedFlower,
   networkLabel,
@@ -194,7 +195,7 @@ export function shelfView(
       title: f.title ?? f.id,
       where: `${networkLabel(f.network)}   /   ${dateLabel(f.as_of)}`,
       badge: f.where === 'map' ? 'On NEAR' : 'Fixture',
-      image: `/api/v1/flowers/${encodeURIComponent(f.id)}/svg`,
+      image: flowerImage(f.id),
     })),
     ...(working || recorded ? {} : { starter: { label: `Try “${STARTER}”`, question: STARTER } }),
   };

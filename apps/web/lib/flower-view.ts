@@ -1,7 +1,15 @@
 // How a flower reads beside its drawing: its title and date, the reading key and one petal's detail.
 // Pure, from the spec and what the render returned; the renderer's numbers and words are never
 // re-derived here, only laid out.
+import { RENDER_VERSION } from '@petal/core';
 import type { PetalDetail, Spec } from '@petal/core/types';
+
+/**
+ * A flower's still picture. The server keeps each one forever, so its address names the look: when the look
+ * changes, every picture has a new address and nobody sees the old look from their cache.
+ */
+export const flowerImage = (id: string) =>
+  `/api/v1/flowers/${encodeURIComponent(id)}/svg?look=${encodeURIComponent(RENDER_VERSION)}`;
 
 /** A row of GET /api/v1/flowers. */
 export interface ListedFlower {

@@ -4,7 +4,7 @@
 
 import type { FlowerResult, JobEvent, ModelSignature } from '@petal/core/types';
 import { aboutLabel, readAbout } from './ask-about.ts';
-import { chainLabel, dateLabel, networkLabel } from './flower-view.ts';
+import { chainLabel, dateLabel, flowerImage, networkLabel } from './flower-view.ts';
 import { type Block as MarkdownBlock, parseMarkdown } from './markdown.ts';
 import { PAYMENT_REQUIRED } from './pay.ts';
 import { blocksOf, type ChatState, type Done, type Opened, type Step } from './thread.ts';
@@ -268,7 +268,7 @@ export function threadView(v: ThreadInput): Row[] {
           kind: 'stored',
           key,
           id: b.id,
-          image: `/api/v1/flowers/${encodeURIComponent(b.id)}/svg`,
+          image: flowerImage(b.id),
           title: networkLabel(b.network),
           sub: dateLabel(b.asOf),
           open: v.open?.kind === 'stored' && v.open.id === b.id,

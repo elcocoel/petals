@@ -4,7 +4,12 @@ import { QuotePanel } from '../../../components/QuotePanel.tsx';
 import { TextLink } from '../../../components/ui/TextLink.tsx';
 import { api } from '../../../lib/api.ts';
 import { type ApiHealth, apiLabel } from '../../../lib/api-label.ts';
-import { dateLabel, type ListedFlower, networkLabel } from '../../../lib/flower-view.ts';
+import {
+  dateLabel,
+  flowerImage,
+  type ListedFlower,
+  networkLabel,
+} from '../../../lib/flower-view.ts';
 import { explorerTxUrl } from '../../../lib/publish.ts';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +39,7 @@ export default async function Gallery() {
                 title={f.title ?? f.id}
                 where={`${networkLabel(f.network)}   /   ${dateLabel(f.as_of)}`}
                 badge={f.where === 'map' ? 'on NEAR' : 'fixture'}
-                image={`/api/v1/flowers/${f.id}/svg`}
+                image={flowerImage(f.id)}
                 href={`/f/${f.id}`}
               >
                 {f.tx_hash && (

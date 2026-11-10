@@ -1,7 +1,7 @@
 // The lobby (specs/004-workspace, W3): where a person's work sits when they come back. A skeleton, built so
 // Elco can sense what's needed. Pure: its words and where each thing goes are decided here, and the view
 // only lays them out. Every word below is a proposal, listed in design/journey-strings.md, "The lobby".
-import { dateLabel, type ListedFlower, networkLabel } from './flower-view.ts';
+import { dateLabel, flowerImage, type ListedFlower, networkLabel } from './flower-view.ts';
 import type { SocialProfile } from './near-social.ts';
 import { type Credit, type PayAction, payWords } from './pay.ts';
 
@@ -132,7 +132,7 @@ export function mapTiles(flowers: readonly ListedFlower[]): MapTile[] {
       // the gallery's own line and badge, so a flower reads the same in both
       where: `${networkLabel(f.network)}   /   ${dateLabel(f.as_of)}`,
       badge: f.where === 'map' ? 'on NEAR' : 'fixture',
-      image: `/api/v1/flowers/${encodeURIComponent(f.id)}/svg`,
+      image: flowerImage(f.id),
       href: `/make?stored=${encodeURIComponent(f.id)}`,
     }));
 }
