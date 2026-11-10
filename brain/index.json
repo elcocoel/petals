@@ -83,7 +83,10 @@
         "mcp url",
         "connect",
         "set up",
-        "add petals"
+        "add petals",
+        "cloud sandbox",
+        "code execution",
+        "blocked domain"
       ],
       "tools": [
         "list_networks",
@@ -98,7 +101,7 @@
       ],
       "status": "partial",
       "file": "chapters/connect-cloud.md",
-      "sha256": "700fbbdcba5d2490541ba718fdbf6427e56d659260ac697cba0475853271919a"
+      "sha256": "2f10d79e102d9797d3b585708add04bff54d00ca5bb49930b365654f6db92bca"
     },
     {
       "id": "connect-codex",
