@@ -30,24 +30,25 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
     );
   }
   const m = got.value.map;
+  const name = viewName(m);
+  // What it maps, unless that only says its name again, and its address when it has one.
+  const about = [m.about !== name ? m.about : null].filter(Boolean);
   return (
     <>
-      <h1>{viewName(m)}</h1>
-      <p>
-        {m.about}
-        {m.address && (
-          <>
-            {'   ·   '}
-            <Mono>{shortId(m.address)}</Mono>
-          </>
-        )}
-      </p>
+      <h1>{name}</h1>
+      {(about.length > 0 || m.address) && (
+        <p>
+          {about[0]}
+          {about.length > 0 && m.address && '   ·   '}
+          {m.address && <Mono as="span">{shortId(m.address)}</Mono>}
+        </p>
+      )}
       <div className="mb-block-gap">
         <LegendKeys keys={drawingsKeys(m)} />
       </div>
       {m.readings.map((r) => (
-        <section key={r.snapshot}>
-          <p className="type-label">{readingLine(r)}</p>
+        <section key={r.snapshot} className="mt-column-gap flex flex-col gap-block-gap">
+          <p className="my-0 type-label">{readingLine(r)}</p>
           <ul className="gallery">
             {r.drawings.map((d) => (
               <li key={d.sha}>
@@ -57,7 +58,7 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
           </ul>
         </section>
       ))}
-      <p>
+      <p className="mt-column-gap">
         <a href={siteLinks.gallery}>Back to the Power Map</a>
       </p>
     </>
