@@ -462,7 +462,7 @@ describe('the panel', () => {
     expect(shelf.pending).toBe(false);
     expect(shelf.tiles[0]).toMatchObject({ title: 'abc', badge: 'On NEAR' });
     expect(shelf.tiles[0]?.image).toBe(
-      '/api/v1/flowers/abc/svg?look=render%2Fv2&view=1421e0bf7b26&paint=561830c7',
+      '/api/v1/flowers/abc/svg?look=render%2Fv2&view=1421e0bf7b26&paint=5e6e9e45',
     );
     expect(shelf.starter?.question).toBeTruthy();
     const pending = shelfView(listed, true);
@@ -479,7 +479,7 @@ describe('the panel', () => {
     );
     expect(out).toContain('What would you like to map?');
     expect(out).toContain(
-      '/api/v1/flowers/abc/svg?look=render%2Fv2&amp;view=1421e0bf7b26&amp;paint=561830c7',
+      '/api/v1/flowers/abc/svg?look=render%2Fv2&amp;view=1421e0bf7b26&amp;paint=5e6e9e45',
     );
     expect(out).toContain('href="/gallery"');
   });

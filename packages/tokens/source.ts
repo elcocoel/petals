@@ -270,7 +270,8 @@ export const chart = {
   'ink-2': '#52514e',
   hair: '#e1e0d9',
   unknown: '#c9c7bf',
-  tail: '#b8b6ae',
+  // "Everyone else" a mid grey, clearly apart from "unknown" in a key (META, 10 Nov, fix 4).
+  tail: '#8a8880',
   'k-pool': '#2a78d6',
   'k-exchange': '#eb6834',
   'k-entity': '#1baf7a',
