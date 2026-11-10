@@ -234,7 +234,7 @@ export function useWorkspace(props: {
   // reads its list and agents again when a turn starts or ends, the conversation changes or a job moves,
   // and it shows the name Petals' agent gives this conversation as it arrives (the `title` event).
   const panelBus = useWorkPanel();
-  const { touch, name } = panelBus;
+  const { touch, name, claim } = panelBus;
   const jobsSignal = `${Object.keys(jobs).length}:${JSON.stringify(Object.values(jobs).map((j) => j.status))}`;
   useEffect(() => {
     if (!recorded) touch(`${runId}:${busy}:${elsewhereRef}:${jobsSignal}`);
@@ -286,8 +286,12 @@ export function useWorkspace(props: {
   // the address holds what a reload needs
   useEffect(() => {
     const url = workspaceUrl({ runId, open, petal, asked, elsewhere: elsewhereRef });
-    if (url) window.history.replaceState(null, '', url);
-  }, [runId, open, petal, asked, elsewhereRef]);
+    if (url) {
+      // the page writes its own address: the panel mustn't take it for a move
+      claim(url);
+      window.history.replaceState(null, '', url);
+    }
+  }, [claim, runId, open, petal, asked, elsewhereRef]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

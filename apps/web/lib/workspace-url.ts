@@ -32,6 +32,18 @@ export function workspaceUrl(v: {
 type Param = string | string[] | undefined;
 const one = (p: Param) => (Array.isArray(p) ? p[0] : p);
 
+/**
+ * Which conversation an address opens, whatever else it holds (a flower, a petal): its run, another
+ * door's conversation, or a new one. The page's data and the address showing are compared by it, so a
+ * conversation opens only once the data is for the address (on Back, the address moves first).
+ */
+export function conversationAt(q: Record<string, Param>): string {
+  const run = one(q.run);
+  if (run) return `run:${run}`;
+  const elsewhere = one(q.elsewhere);
+  return elsewhere ? `elsewhere:${elsewhere}` : 'new';
+}
+
 export function openFromParams(q: Record<string, Param>): {
   open: Opened;
   petal: string | null;
