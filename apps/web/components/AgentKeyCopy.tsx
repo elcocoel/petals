@@ -14,7 +14,8 @@ export function AgentKeyCopy() {
   if (!door.signedIn) {
     return (
       <>
-        <Button disabled={door.busy} onClick={door.connect}>
+        {/* the one Connect, as everywhere else: primary, with its arrow (Elco, 10 Nov) */}
+        <Button arrow disabled={door.busy} onClick={door.connect}>
           {doorWords.connect}
         </Button>
         {door.failed && <p className="error">{door.failed}</p>}
