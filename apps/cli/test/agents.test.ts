@@ -1,11 +1,11 @@
 // One prompt, several agents (Elco, 9 Nov): an agent joins with the person's agent key, then waits
 // for its next job, asking the site again and again and coming back before its app's own limit.
 // A stand-in site and a stand-in clock; a throwaway PETALS_HOME.
-import { mkdtempSync, readFileSync, statSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { agentFile, joinAgent, waitForJob } from '../src/agents.ts';
+import { agentFile, joinAgent, waitForJob, workerFile } from '../src/agents.ts';
 
 const KEY = `petal_agent_${'A'.repeat(43)}`;
 const SITE = 'https://petals.example';
@@ -15,7 +15,7 @@ const home = () => ({ PETALS_HOME: mkdtempSync(join(tmpdir(), 'petal-agent-')) }
 interface Ask {
   url: string;
   auth: string;
-  body: { as: string; wait_s: number };
+  body: { as: string; worker?: string; wait_s: number };
 }
 
 /** A site that answers each ask from a list, advancing the clock by what it was asked to hold. */
@@ -35,14 +35,25 @@ function site(answers: { status?: number; body: unknown }[], clock: { t: number 
 }
 
 describe('join', () => {
-  test('keeps the key and a lowercase name, readable only by the person', () => {
+  test('keeps the key and a lowercase name as a new worker, readable only by the person', () => {
     const env = home();
-    expect(joinAgent(env, KEY, 'Claude-Code')).toMatchObject({ joined: true, as: 'claude-code' });
-    expect(JSON.parse(readFileSync(agentFile(env), 'utf8'))).toEqual({
+    const out = joinAgent(env, KEY, 'Claude-Code');
+    expect(out).toMatchObject({ joined: true, as: 'claude-code' });
+    const worker = out.worker as string;
+    expect(worker).toMatch(/^[a-z0-9]{6}$/);
+    expect(out.next).toContain(`jobs wait --worker ${worker}`);
+    expect(JSON.parse(readFileSync(workerFile(env, worker), 'utf8'))).toEqual({
       key: KEY,
       as: 'claude-code',
     });
-    expect(statSync(agentFile(env)).mode & 0o777).toBe(0o600);
+    expect(statSync(workerFile(env, worker)).mode & 0o777).toBe(0o600);
+  });
+
+  test('each join is a worker of its own: two windows, or two sub-agents, on one computer', () => {
+    const env = home();
+    const a = joinAgent(env, KEY, 'codex').worker;
+    const b = joinAgent(env, KEY, 'codex').worker;
+    expect(a).not.toBe(b);
   });
 
   test('refuses what isn’t an agent key, and a name that isn’t short and plain', () => {
@@ -52,6 +63,57 @@ describe('join', () => {
 });
 
 describe('jobs wait', () => {
+  test('waits as its own worker, and says so in what to run again', async () => {
+    const env = home();
+    const worker = joinAgent(env, KEY, 'codex').worker as string;
+    joinAgent(env, KEY, 'codex');
+    const clock = { t: 0 };
+    const s = site([], clock);
+    const out = await waitForJob({
+      env,
+      site: SITE,
+      fetch: s.fetch,
+      now: () => clock.t,
+      forS: 60,
+      worker,
+    });
+    expect(s.asks[0]?.body).toMatchObject({ as: 'codex', worker });
+    expect(out.next).toContain(`jobs wait --worker ${worker}`);
+  });
+
+  test('with several workers here and none named, it asks for one; an unknown one is refused', async () => {
+    const env = home();
+    joinAgent(env, KEY, 'codex');
+    joinAgent(env, KEY, 'codex');
+    const s = site([], { t: 0 });
+    const which = await waitForJob({ env, site: SITE, fetch: s.fetch, forS: 60 });
+    expect(which).toMatchObject({
+      error: { code: 'bad_input', message: expect.stringContaining('--worker') },
+    });
+    const unknown = await waitForJob({
+      env,
+      site: SITE,
+      fetch: s.fetch,
+      forS: 60,
+      worker: 'zzzzzz',
+    });
+    expect(unknown).toMatchObject({
+      error: { message: expect.stringContaining('No worker zzzzzz') },
+    });
+    expect(s.asks).toHaveLength(0);
+  });
+
+  test('an agent joined before workers keeps waiting as it did, with no worker sent', async () => {
+    const env = home();
+    mkdirSync(env.PETALS_HOME, { recursive: true });
+    writeFileSync(agentFile(env), JSON.stringify({ key: KEY, as: 'hermes' }));
+    const clock = { t: 0 };
+    const s = site([], clock);
+    const out = await waitForJob({ env, site: SITE, fetch: s.fetch, now: () => clock.t, forS: 60 });
+    expect(s.asks[0]?.body.worker).toBeUndefined();
+    expect(out.next).toContain('Run node ~/.petals/petal.mjs jobs wait again');
+  });
+
   test('asks again until a job comes, then sets the job’s project as the current one', async () => {
     const env = home();
     joinAgent(env, KEY, 'hermes');
@@ -130,7 +192,10 @@ describe('jobs wait', () => {
       now: () => clock.t,
       forS: 200,
     });
-    expect(out).toMatchObject({ job: null, next: expect.stringContaining('jobs wait again') });
+    expect(out).toMatchObject({
+      job: null,
+      next: expect.stringMatching(/jobs wait --worker [a-z0-9]+ again/),
+    });
     expect(s.asks.map((a) => a.body.wait_s)).toEqual([85, 85, 28]);
     expect(clock.t).toBeLessThanOrEqual(200_000);
   });

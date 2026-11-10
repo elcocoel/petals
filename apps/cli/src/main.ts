@@ -6,7 +6,7 @@
 // first calls get_snapshot and, for a spec or a missing measure, propose_spec with the default
 // convention. So `petal figures near-validators` prints the figures the default flower quotes.
 
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { TOOLS_VERSION } from '@petal/core';
@@ -337,7 +337,7 @@ class Cli {
     return isToolError(out) ? 1 : 0;
   }
 
-  /** `petal jobs wait [--for <seconds>]`: the next job Petals' agent hands this agent, or none yet. */
+  /** `petal jobs wait [--worker <id>] [--for <seconds>]`: the next job Petals' agent hands this worker, or none yet. */
   async jobs(argv: string[]): Promise<number> {
     const parsed = tokenize(argv, (n) => CLI_BOOLEAN.has(n));
     if (parsed.positionals[0] !== 'wait') throw new UsageError('jobs takes one command: jobs wait');
@@ -345,6 +345,10 @@ class Cli {
     const forS = typeof given === 'string' ? Number(given) : undefined;
     if (forS !== undefined && !(Number.isInteger(forS) && forS >= 10 && forS <= 3600)) {
       throw new UsageError('--for takes a number of seconds, from 10 to 3600');
+    }
+    const worker = new Map(parsed.flags).get('worker');
+    if (worker !== undefined && typeof worker !== 'string') {
+      throw new UsageError('--worker takes the id join gave you');
     }
     const site = this.sys.env.PETAL_API?.trim().replace(/\/+$/, '');
     if (!site) throw new UsageError("jobs wait needs the site: this file doesn't know it");
@@ -354,6 +358,7 @@ class Cli {
       env: this.sys.env,
       site,
       ...(forS !== undefined ? { forS } : {}),
+      ...(worker ? { worker } : {}),
       ...(state ? { currentFile: join(state, 'current.json') } : {}),
     });
     this.sys.stdout(json(out));
@@ -697,7 +702,7 @@ class Cli {
       "  join <key> --as <n> join the person's Petals as one of their agents, with their agent key\n",
     );
     p(
-      "  jobs wait           the next job Petals' agent hands you, or none yet (--for <seconds>)\n",
+      "  jobs wait           the next job Petals' agent hands you, or none yet (--worker <id>, --for <seconds>)\n",
     );
     if (!this.sys.asFile) {
       p(`  api                 the HTTP API (petalApp) on http://localhost:${DEFAULT_PORT}\n`);

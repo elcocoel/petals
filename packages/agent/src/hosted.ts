@@ -179,7 +179,7 @@ function commands(): string {
 | \`start_exploration\`, \`add_note\` | \`start --client … --question …\` (and it opens the page), \`note [--title …]\` (text from a heredoc) |
 | \`brain_route\`, \`brain_file\` | \`brain-route --question …\` (your app and what you're doing), \`brain-file <id>\` |
 | \`take_job\`, \`report_job\` | \`take-job\`, \`report-job --job <id> --input @report.json\` |
-| one of the person's agents | \`join <agent link> --as <your app>\` once, then \`jobs wait\`, again after each job |
+| one of the person's agents | \`join <agent link> --as <your app>\` once (it answers with your worker id), then \`jobs wait --worker <id>\`, again after each job |
 
 - Save the spec exactly as \`propose_spec\` returned it, as \`spec.json\` in your working folder, and the interpretation as \`interpretation.json\`.
 - Run each command as written, on its own: a \`>\`, a \`cd\` or a \`$?\` can make an agent's permission check stop it. Writing a file with your own file tool is fine.
