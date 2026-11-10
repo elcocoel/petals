@@ -90,9 +90,15 @@ const PROJECTS: ListedProject[] = [
 ];
 
 const AGENTS: ConnectedAgent[] = [
-  { name: 'claude-code', waiting: false, job: { id: 'j1', title: "Who custodies Binance's NEAR" } },
-  { name: 'codex', waiting: true, job: null },
-  { name: 'hermes', waiting: false, job: null },
+  {
+    name: 'claude-code',
+    n: 1,
+    waiting: false,
+    job: { id: 'j1', title: "Who custodies Binance's NEAR" },
+  },
+  { name: 'claude-code', n: 2, waiting: true, job: null },
+  { name: 'codex', n: 1, waiting: true, job: null },
+  { name: 'hermes', n: 1, waiting: false, job: null },
 ];
 
 export interface PanelFixture {
