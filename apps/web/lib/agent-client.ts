@@ -14,6 +14,7 @@ import type {
   Spec,
   View,
 } from '@petal/core/types';
+import type { BenchLandscape } from '../landscape/land.ts';
 import type { ConnectedAgent } from './agents.ts';
 import type { Settings } from './composer-options.ts';
 import type { ListedConversation, ListedProject } from './conversation-list.ts';
@@ -455,6 +456,15 @@ export async function readCredit(): Promise<Credit | null> {
   if (!res.ok) return null;
   const json = (await res.json()) as { credit?: Credit | null };
   return json.credit ?? null;
+}
+
+/**
+ * The Power Map's data, in the visitor's view, for a page that draws the map inside itself: the landing's
+ * map (viewmodels/useLandingMap.ts). It's the site's own route, GET /map/data, not the server's.
+ */
+export async function readPowerMap(): Promise<BenchLandscape | { error: string }> {
+  const res = await fetch('/map/data');
+  return (await res.json()) as BenchLandscape | { error: string };
 }
 
 /** Where a payment goes and NEAR's price now, or null if the server can't say. */

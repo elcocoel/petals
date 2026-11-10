@@ -37,6 +37,7 @@ import { BuildWithUs } from '../components/landing/BuildWithUs.tsx';
 import { GallerySection } from '../components/landing/GallerySection.tsx';
 import { Hero } from '../components/landing/Hero.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
+import { LandingMap } from '../components/landing/LandingMap.tsx';
 import { LiveReading } from '../components/landing/LiveReading.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
@@ -448,6 +449,20 @@ export const registry: LabEntry[] = [
         render: () => (
           <GalleryCard thumb="even" label={landingCopy.gallery.open} href="#gallerycard" />
         ),
+      },
+    ],
+  },
+  {
+    id: 'LandingMap',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/LandingMap.tsx',
+    states: [
+      {
+        name: 'live, once near',
+        wide: true,
+        render: () => <LandingMap />,
       },
     ],
   },

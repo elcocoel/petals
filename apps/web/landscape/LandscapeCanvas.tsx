@@ -39,6 +39,7 @@ function Land({
   focus,
   selected,
   onPick,
+  inPage,
 }: {
   data: LandscapeData;
   probe: boolean;
@@ -47,11 +48,12 @@ function Land({
   focus: number;
   selected: string | null;
   onPick: ((hit: CanvasHit) => void) | undefined;
+  inPage: boolean;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
   // Read by the scene when it's built and on each click, so a new pick or petal never builds it again.
-  at.current = { ...at.current, focus, ...(onPick ? { onPick } : {}) };
+  at.current = { ...at.current, focus, inPage, ...(onPick ? { onPick } : {}) };
   useLandscape(svg, data, probe, aside, at);
   useEffect(() => {
     at.current?.choose?.(selected);
@@ -62,7 +64,7 @@ function Land({
       ref={svg}
       role="img"
       aria-label="Power Map"
-      className={`${fill === 'window' ? 'fixed' : 'absolute'} inset-0 block size-full touch-none select-none bg-surface`}
+      className={`${fill === 'window' ? 'fixed' : 'absolute'} inset-0 block size-full ${inPage ? 'touch-pan-y' : 'touch-none'} select-none bg-surface`}
     />
   );
 }
@@ -75,6 +77,7 @@ export function LandscapeCanvas({
   focus = -1,
   selected = null,
   onPick,
+  inPage = false,
 }: {
   data: { flowers: CanvasFlower[]; roads: Road[]; chains: CanvasChain[] };
   probe?: boolean;
@@ -88,6 +91,8 @@ export function LandscapeCanvas({
   selected?: string | null;
   /** what a click inside that flower landed on */
   onPick?: (hit: CanvasHit) => void;
+  /** inside a page that scrolls (the landing): the page keeps its wheel and its vertical swipe */
+  inPage?: boolean;
 }) {
   const aside = useRef<HTMLDivElement>(null);
   const opened = data.flowers[focus]?.place.chain;
@@ -131,6 +136,7 @@ export function LandscapeCanvas({
           focus={land.focus}
           selected={selected}
           onPick={onPick}
+          inPage={inPage}
         />
       )}
       <div

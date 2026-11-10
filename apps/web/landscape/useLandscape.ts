@@ -58,6 +58,8 @@ export interface LandscapeAt {
   focus: number;
   onPick?: (hit: CanvasHit) => void;
   choose?: (id: string | null) => void;
+  /** Inside a page that scrolls (the landing): the wheel scrolls the page unless Ctrl or ⌘ is held, or a pinch. */
+  inPage?: boolean;
 }
 
 const LONGEST_FRAME = 1 / 15;
@@ -392,6 +394,7 @@ export function useLandscape(
       wake();
     };
     const onWheel = (e: WheelEvent) => {
+      if (at?.current?.inPage && !e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       const p = local(e);
       pointer.x = p.x;
