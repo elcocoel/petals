@@ -3,7 +3,7 @@
 // so a new flower can take them; this draws what's needed, projects the panel, says whether its box is
 // open, keeps the address in step and hears Escape.
 import type { Spec } from '@petal/core/types';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { readDrawingSpec, saveSettings } from '../lib/agent-client.ts';
 import {
   type Catalogue,
@@ -240,7 +240,11 @@ export function useWorkspace(props: {
     () => shownRows.findLast((r) => r.kind === 'pay')?.key ?? null,
     [shownRows],
   );
-  const pay = usePay(Boolean(session.account), busy, asking);
+  // the one balance (useFunds, in the layout): read again after each turn, and after a payment lands
+  const funds = panelBus.person?.funds;
+  const reread = funds?.reread;
+  const paid = useCallback(() => reread?.(), [reread]);
+  const pay = usePay(Boolean(session.account), busy, asking, paid);
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
   const onCanvas = canvas;
@@ -341,7 +345,7 @@ export function useWorkspace(props: {
       panelEdge: panelBus.edge,
       pay: { asking: pay.asking, phase: pay.phase, added: pay.added },
       jobs,
-      balance: pay.balance ? payWords.balance(pay.balance) : null,
+      balance: funds?.balance ? payWords.balance(funds.balance) : null,
       session,
       needsWallet,
       composerShown,
