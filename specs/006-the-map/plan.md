@@ -114,3 +114,20 @@ META's go once `seam/v1` was live (`1c82b33`); the reading is SYSTEMS's, so this
 **Elco, 9 Nov: the default view for all.** Until people can set their own view, every flower is drawn by the default; the agent's choices stay with the flower as its proposal and don't show until a person can adopt them.
 
 **SYSTEMS, 9 Nov: OK,** on two conditions: without a view the golden readings stay byte-identical, and with one the reading keeps `reading/v1`'s shape (same fields, only the values the view picks), so it stays v1. Height by a piece's name keeps today's path, `m:<name>` through `measureTable` on the composed snapshot. The optional `view` on `render_flower` and `/api/v1/render` is additive; SYSTEMS raises `tools_version` once for the day's tool changes, so this lane doesn't.
+
+## Milestone 3: the one look (plan, 10 Nov)
+
+Elco: "no second look - one first look that we improve on"; V8: "Always the latest look". Rule 11 of `design/minimally-good.md`: the same flower looks the same everywhere. Today the still pictures (the landing's Power Map, the gallery and lobby tiles, a flower's page, drafts) are `render/v1`'s bars, and `/make` and the map draw the wedge flower. This touches `packages/core/src/render`, so it goes to META first, then SYSTEMS for core.
+
+**The change:** the wedge flower becomes the renderer's one look, `render/v2`, and `render/v1` stops being drawn.
+
+1. **One home for the geometry.** The wedge flower's pure parts move from `apps/web/flower/` into core, as `packages/core/src/look/`: `ring.ts` (itself a copy of `render/geometry.ts` with wedges), `model.ts`, `detail.ts`, `marks.ts`, `words.ts`, `order.ts`, and the two constants they read (`GUTTER`, `RECEDE`). The live flower imports them from core, unchanged, so `/make` and the map draw exactly what they draw today. The DOM parts (`scene.ts`, the camera, springs, the hook) stay in the web.
+2. **A still skin from the same marks.** `render/v2` draws the flower at rest, fitted to the requested size, by asking `marks()` what shows at that size, the same table that drives the live flower, and writing the SVG as text, with no DOM. So a tile shows what the live flower shows at a tile's size, and a page shows what it shows at a page's size.
+3. **Colour from the reading.** The default view says `colour: kind`, and the legend says so, so the one look paints each petal by its kind with the palette `render/v1` already has (`style.ts`). The live flower paints it too, since it's the same look; today it's all grey, and the legend lists colours it doesn't draw. This is the one visible change on `/make`.
+4. **Versions:** `RENDER_VERSION` becomes `render/v2`, and `SKINS` holds only it. A published flower stays the same flower: its id leaves the drawing out, and its page says "Same facts, today's look." `contract-surface.test.ts` pins the version; SYSTEMS raises `tools_version` with its own changes.
+5. **Goldens:** the `.svg` and `.json` goldens are redrawn (`pnpm golden:update`) and reviewed; the `.reading.json` goldens stay byte-identical, which proves the facts didn't move.
+6. **Caches:** the landing keeps a drawing for a year (`lib/api.ts`, `forever`). Its request names the look, so `render/v2` asks anew and nothing old stays.
+
+**Done when:** the landing's Power Map, the gallery, the lobby's tiles, a flower's page and a draft all draw the `/make` flower; no page draws the bars; the readings are unchanged; the whole check is green.
+
+**Not in it:** marks at the tips, texture and lines (V5, V6), and the joy layer. Words stay as they are.
