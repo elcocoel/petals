@@ -11,8 +11,10 @@
 // - Lobby: the lobby, the balance and the map, each opening its card on /lobby. Withdraw stays on the card.
 // - Profile: who's signed in, their public profile's state (it opens the card, where it's edited), and
 //   Disconnect, the one place to sign out.
-// - Settings: the person's view, how each of the nine dimensions draws data for every petal they look at
-//   (ViewControls; coordinator/one-source.md, step 7), saved at once and drawn everywhere without a reload.
+// - Settings: first the tip, an optional donation to Petals on the price's scale (TipControl; design/
+//   side-panel.md, lines 34 to 38); then the person's view, how each of the nine dimensions draws data for
+//   every petal they look at (ViewControls; coordinator/one-source.md, step 7), saved at once and drawn
+//   everywhere without a reload.
 // It lies in the page's flow, open or collapsed, so a page that lays out beside it isn't covered.
 // Props only: its state comes from viewmodels/useWorkMenu.ts and useWorkPanel.ts. Every word from
 // lib/panel-words.ts.
@@ -39,6 +41,7 @@ import { NavItem } from '../ui/NavItem.tsx';
 import { RowField } from '../ui/RowField.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 import { type RailSection, type RailWidth, SideRail } from '../ui/SideRail.tsx';
+import { TipControl, type TipView } from './TipControl.tsx';
 import { ViewControls } from './ViewControls.tsx';
 
 /** The bar, top to bottom, and the panel's sections in the same order. */
@@ -148,6 +151,7 @@ export function WorkMenu({
   menu,
   you,
   settings,
+  tip,
   width,
   here,
   restartNew,
@@ -156,6 +160,8 @@ export function WorkMenu({
   menu: WorkMenuView;
   you: PanelYou;
   settings: SettingsView;
+  /** The tip, Settings' first row (design/side-panel.md, lines 34 to 38). */
+  tip: TipView;
   /** The sash's hands: the panel's width is sized at its edge. */
   width: RailWidth;
   /** New, pressed where a new conversation already is: the address won't move, so this opens it again. */
@@ -409,6 +415,7 @@ export function WorkMenu({
     ),
     settings: (
       <Group title={panelWords.sections.settings}>
+        <TipControl {...tip} />
         <ViewControls dimensions={DIMENSIONS} {...settings} />
       </Group>
     ),

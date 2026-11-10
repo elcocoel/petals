@@ -68,6 +68,7 @@ import { MetaRow } from '../components/ui/MetaRow.tsx';
 import { Mono } from '../components/ui/Mono.tsx';
 import { Nav } from '../components/ui/Nav.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
+import { Range } from '../components/ui/Range.tsx';
 import { RowField } from '../components/ui/RowField.tsx';
 import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
@@ -81,6 +82,7 @@ import { Profile } from '../components/workspace/Profile.tsx';
 import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
+import { TipControl } from '../components/workspace/TipControl.tsx';
 import { ViewControls } from '../components/workspace/ViewControls.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { DrawingKind } from '../lib/figures.ts';
@@ -93,6 +95,7 @@ import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.
 import { viewChoices } from '../lib/person-view.ts';
 import type { Done } from '../lib/thread.ts';
 import { answeredBy, composerView, type TurnRow, threadView } from '../lib/thread-view.ts';
+import { tipLine } from '../lib/tip.ts';
 import { withScale } from '../lib/view-edit.ts';
 import {
   entry,
@@ -1352,6 +1355,86 @@ export const registry: LabEntry[] = [
             onReset={() => {}}
             failed={null}
           />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'TipControl',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/TipControl.tsx',
+    states: [
+      {
+        name: 'folded, at 5% (live with the panel: /lab/panel?state=settings)',
+        render: () => (
+          <TipControl
+            percent={5}
+            scale={{ min: 0, max: 50, step: 1 }}
+            open={false}
+            onOpen={() => {}}
+            onSlide={() => {}}
+            onSet={() => {}}
+            line=""
+            failed={null}
+          />
+        ),
+      },
+      {
+        name: 'open, on a measured turn',
+        render: () => (
+          <TipControl
+            percent={10}
+            scale={{ min: 0, max: 50, step: 1 }}
+            open
+            onOpen={() => {}}
+            onSlide={() => {}}
+            onSet={() => {}}
+            line={tipLine(10, { model: 'DeepSeek V4.1 Flash', usd: 0.008 }, 3.56)}
+            failed={null}
+          />
+        ),
+      },
+      {
+        name: 'open at 0%, and a change not kept',
+        render: () => (
+          <TipControl
+            percent={0}
+            scale={{ min: 0, max: 50, step: 1 }}
+            open
+            onOpen={() => {}}
+            onSlide={() => {}}
+            onSet={() => {}}
+            line={tipLine(0, null, null)}
+            failed="tip_percent is off the scale"
+          />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'Range',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Range.tsx',
+    states: [
+      {
+        name: 'at 5, on 0 to 50 in steps of 1',
+        render: () => (
+          <span className="flex w-sidebar-width flex-col">
+            <Range
+              label="Tip"
+              min={0}
+              max={50}
+              step={1}
+              value={5}
+              shown="5%"
+              onChange={() => {}}
+              onSet={() => {}}
+            />
+          </span>
         ),
       },
     ],

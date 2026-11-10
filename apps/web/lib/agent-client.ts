@@ -16,7 +16,7 @@ import type {
 } from '@petal/core/types';
 import type { BenchLandscape } from '../landscape/land.ts';
 import type { ConnectedAgent } from './agents.ts';
-import type { Settings } from './composer-options.ts';
+import type { Catalogue, Settings } from './composer-options.ts';
 import type { ListedConversation, ListedProject } from './conversation-list.ts';
 import { decodeDraft } from './draft.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
@@ -31,6 +31,7 @@ import type { Credit, PayInfo } from './pay.ts';
 import type { PersonView } from './person-view.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
+import type { Tip } from './tip.ts';
 
 export interface ChatRequest {
   messages: ChatMessage[];
@@ -491,6 +492,34 @@ export async function readCredit(): Promise<Credit | null> {
 export async function readPowerMap(): Promise<BenchLandscape | { error: string }> {
   const res = await fetch('/map/data');
   return (await res.json()) as BenchLandscape | { error: string };
+}
+
+/** The person's tip and the price's scale for it (GET /api/v1/me/tip), or null: not signed in. */
+export async function readTip(): Promise<Tip | null> {
+  const res = await fetch('/api/v1/me/tip');
+  if (!res.ok) return null;
+  return (await res.json()) as Tip;
+}
+
+/** Keeps the person's tip (PUT /api/v1/me/tip). Throws with the server's reason when it's refused. */
+export async function saveTip(percent: number): Promise<Tip> {
+  const res = await fetch('/api/v1/me/tip', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ tip_percent: percent }),
+  });
+  const json = (await res.json().catch(() => ({}))) as Partial<Tip> & {
+    error?: { message: string };
+  };
+  if (res.ok && typeof json.tip_percent === 'number') return json as Tip;
+  throw new Error(json.error?.message ?? `HTTP ${res.status}`);
+}
+
+/** The models and what each turn of them costs, measured (GET /api/v1/catalogue), or null. */
+export async function readCatalogue(): Promise<Catalogue | null> {
+  const res = await fetch('/api/v1/catalogue');
+  if (!res.ok) return null;
+  return (await res.json()) as Catalogue;
 }
 
 /** Where a payment goes and NEAR's price now, or null if the server can't say. */
