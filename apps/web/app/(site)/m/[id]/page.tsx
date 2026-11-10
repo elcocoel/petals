@@ -25,7 +25,7 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
             : `${got.error.code}: ${got.error.message}`}
         </p>
         <p>
-          <a href={siteLinks.gallery}>Back to the Power Map</a>
+          <a href={siteLinks.map}>Back to the Power Map</a>
         </p>
       </>
     );
@@ -60,7 +60,7 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
         </section>
       ))}
       <p className="mt-column-gap">
-        <a href={siteLinks.gallery}>Back to the Power Map</a>
+        <a href={siteLinks.map}>Back to the Power Map</a>
       </p>
     </>
   );

@@ -19,7 +19,10 @@ export const siteLinks = {
   make: '/make',
   /** A person's own place (specs/004-workspace, W3): where connecting a wallet lands. */
   lobby: '/lobby',
+  /** The grid of every map's tile (one name per thing: the Gallery). */
   gallery: '/gallery',
+  /** The Power Map: the continuous map (coordinator/one-source.md, step 5). */
+  map: '/map',
   connect: '/connect',
   /** The doors on /connect (lib/doors.ts), which say plainly what each app asks you to do. */
   doors: {

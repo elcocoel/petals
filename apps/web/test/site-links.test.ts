@@ -34,6 +34,7 @@ describe('the landing page', () => {
       [siteLinks.make]: '(work)/make/page.tsx',
       [siteLinks.lobby]: '(work)/lobby/page.tsx',
       [siteLinks.gallery]: '(site)/gallery/page.tsx',
+      [siteLinks.map]: '(canvas)/map/page.tsx',
       [siteLinks.connect]: '(site)/connect/page.tsx',
       [siteLinks.liveShape]: '(canvas)/f/[id]/page.tsx',
     };

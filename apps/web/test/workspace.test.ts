@@ -502,7 +502,7 @@ describe('the panel', () => {
       'src="https://petals.test/api/v1/map/abc/svg?look=render%2Fv2&amp;view=1421e0bf7b26"',
     );
     expect(out).toContain('href="/m/near%3Avalidators"');
-    expect(out).toContain('href="/gallery"');
+    expect(out).toContain('href="/map"');
   });
 });
 

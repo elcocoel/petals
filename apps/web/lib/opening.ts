@@ -23,7 +23,7 @@ export function openingMessage(maps: readonly MapCard[]): string {
     (m) => `[${viewName(m).replace(/[[\]]/g, '')}](${mapHref(m.id)})`,
   );
   const mapped = links.length
-    ? `Or start from what's already mapped: ${links.join(', ')}, or the whole [Power Map](/gallery).`
+    ? `Or start from what's already mapped: ${links.join(', ')}, or the whole [Power Map](/map).`
     : '';
   return [
     "Hi. I'm Petals. I dig into who holds power in a network, then draw what I find as a flower.",

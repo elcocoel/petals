@@ -1,12 +1,17 @@
-// Server only. The map bench's data (specs/006-the-map, plan, bench v2): the one shared map, read live from
-// GET /api/v1/map (Elco's go, 10 Nov: the lab and Petals' agent see the same map), joined to the places in
-// the address book, the connections between them, and each flower's name and mark. A view the address book
-// doesn't have yet gets a place worked out here, and nobody else moves. Only what a drawing needs goes to the
-// browser.
+// Server only. The map's data (specs/006-the-map, plan, bench v2; coordinator/one-source.md, step 5): the one
+// shared map, read live from GET /api/v1/map in the person's view (Elco's go, 10 Nov: the lab and Petals'
+// agent see the same map), joined to the places in the address book, the connections between them, and each
+// flower's name and mark. The Power Map (/map) places one flower per map, an address with all its readings;
+// the lab's bench places every drawing. A view the address book doesn't have yet gets a place worked out
+// here, and nobody else moves. Only what a drawing needs goes to the browser.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
-import type { FlowerReading } from '../../flower/model.ts';
+import type { FlowerReading } from '../flower/model.ts';
+import { api } from '../lib/api.ts';
+import { repoRoot } from '../lib/config.ts';
+import { chainLabel } from '../lib/flower-view.ts';
+import { viewQuery } from '../lib/person-view.ts';
 import {
   LOGOS_DIR,
   linksOf,
@@ -16,12 +21,9 @@ import {
   type NightView,
   PLACES_FILE,
   seedsOf,
-} from '../../landscape/night.ts';
-import { type Continent, type Place, type Places, placeFlowers } from '../../landscape/places.ts';
-import { type Road, roadsBetween } from '../../landscape/roads.ts';
-import { api } from '../../lib/api.ts';
-import { repoRoot } from '../../lib/config.ts';
-import { chainLabel } from '../../lib/flower-view.ts';
+} from './night.ts';
+import { type Continent, type Place, type Places, placeFlowers } from './places.ts';
+import { type Road, roadsBetween } from './roads.ts';
 
 /** A flower's mark: its logo when Trust Wallet's list has one, and always its token symbol. */
 export interface Mark {
@@ -85,14 +87,38 @@ interface LiveView {
   count: number | null;
   as_of: string;
   snapshot: string;
+  /** the map it's on: its reading's address (core's mapOf), as GET /api/v1/maps groups them */
+  map: string;
   reading: NightView['reading'];
 }
 
-/** The live map, in the shape the bench's fixture has: a view without a name from the run takes its title. */
-export async function liveNight(): Promise<Night | { error: string }> {
-  const got = await api<Omit<Night, 'views'> & { views: LiveView[] }>('/api/v1/map');
+/**
+ * One drawing per map, as GET /api/v1/maps makes each card: the map's newest drawing, by the list's order,
+ * named by its newest drawing that has a name.
+ */
+export function oneEach(views: readonly LiveView[]): LiveView[] {
+  const byMap = new Map<string, LiveView[]>();
+  for (const v of views) byMap.set(v.map, [...(byMap.get(v.map) ?? []), v]);
+  return [...byMap.values()].map((drawn) => {
+    const newest = drawn.at(-1) as LiveView;
+    return { ...newest, name: drawn.findLast((v) => v.name)?.name ?? null };
+  });
+}
+
+/**
+ * The live map in the view whose hash is given, in the shape the bench's fixture has: a view without a name
+ * from the run takes its title. `each` keeps one drawing per map.
+ */
+export async function liveNight(
+  view: string,
+  each: 'drawing' | 'map' = 'drawing',
+): Promise<Night | { error: string }> {
+  const got = await api<Omit<Night, 'views'> & { views: LiveView[] }>(
+    `/api/v1/map?${viewQuery(view)}`,
+  );
   if (!got.ok) return { error: got.error.message };
-  const { views, ...rest } = got.value;
+  const { views: all, ...rest } = got.value;
+  const views = each === 'map' ? oneEach(all) : all;
   return {
     ...rest,
     run: 'GET /api/v1/map',
@@ -118,9 +144,15 @@ export function fixtureNight(): Night {
   ) as Night;
 }
 
-/** The bench, from the live map. */
-export async function benchLandscape(): Promise<BenchLandscape | { error: string }> {
-  const night = await liveNight();
+/** The lab's bench, from the live map: every drawing, in the view whose hash is given. */
+export async function benchLandscape(view: string): Promise<BenchLandscape | { error: string }> {
+  const night = await liveNight(view);
+  return 'error' in night ? night : landscapeOf(night);
+}
+
+/** The Power Map: one flower per map, in the view whose hash is given (the person's: lib/viewer-view.ts). */
+export async function powerMapLandscape(view: string): Promise<BenchLandscape | { error: string }> {
+  const night = await liveNight(view, 'map');
   return 'error' in night ? night : landscapeOf(night);
 }
 

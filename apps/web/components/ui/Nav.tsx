@@ -17,7 +17,7 @@ export function Nav() {
         </a>
         <div className="flex flex-wrap items-center gap-x-space-32 gap-y-text-gap">
           <TextLink href={siteLinks.howItWorks}>{copy.howItWorks}</TextLink>
-          <TextLink href={siteLinks.gallery}>{copy.gallery}</TextLink>
+          <TextLink href={siteLinks.map}>{copy.gallery}</TextLink>
           <TextLink href={siteLinks.connect}>{copy.docs}</TextLink>
           <Button href={siteLinks.lobby}>{copy.ask}</Button>
         </div>

@@ -22,7 +22,7 @@ export function GallerySection({ tiles = [] }: { tiles?: readonly PowerMapTile[]
         <div className="flex flex-col gap-block-gap">
           <div className="flex flex-wrap items-end justify-between gap-block-gap">
             <SectionHead title={copy.title} />
-            <Button href={siteLinks.gallery}>{copy.open}</Button>
+            <Button href={siteLinks.map}>{copy.open}</Button>
           </div>
           {tiles.length > 0 && <LegendKeys keys={powerMapKeys(tiles)} />}
         </div>
