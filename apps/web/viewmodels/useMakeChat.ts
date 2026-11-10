@@ -164,7 +164,9 @@ function cameByReload(): boolean {
     const nav = performance.getEntriesByType('navigation')[0] as
       | PerformanceNavigationTiming
       | undefined;
-    return nav?.type === 'reload';
+    // The document's one load. Since the side panel moves inside the page (app/(work)/layout.tsx), a move
+    // after a reload isn't one: only the address the browser itself reloaded counts.
+    return nav?.type === 'reload' && nav.name === window.location.href;
   } catch {
     return false;
   }

@@ -3,8 +3,8 @@
 // asked here before anything is drawn, so a visitor never sees it.
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { api } from '../../lib/api.ts';
-import { mapList, mapsKeys, mapTile } from '../../lib/maps.ts';
+import { api } from '../../../lib/api.ts';
+import { mapList, mapsKeys, mapTile } from '../../../lib/maps.ts';
 import { LobbySurface } from './LobbySurface.tsx';
 
 export const dynamic = 'force-dynamic';

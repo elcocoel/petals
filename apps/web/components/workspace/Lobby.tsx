@@ -1,10 +1,9 @@
-// The lobby (specs/004-workspace, W3; the redo, Elco's "Build it" on the Figma frame, 10 Nov): the side
-// panel on the left (WorkMenu, PANEL's), and beside it, from the top, the person (ProfileHead), their
+// The lobby (specs/004-workspace, W3; the redo, Elco's "Build it" on the Figma frame, 10 Nov): beside the
+// side panel, which is the layout's (app/(work)/WorkPanel.tsx, PANEL's), from the top, the person (ProfileHead), their
 // Public profile and Balance cards side by side, and the map's card under them. Each card has one title
 // and one job (components/ui/Card.tsx). Checked against design/minimally-good.md.
-// Props only: app/lobby/LobbySurface.tsx wires useLobby to it. It lays out the small set's parts and adds
+// Props only: app/(work)/lobby/LobbySurface.tsx wires useLobby to it. It lays out the small set's parts and adds
 // no look of its own. Words from lib/lobby-view.ts.
-import type { ConversationRow } from '../../lib/conversation-list.ts';
 import { doorWords } from '../../lib/door-words.ts';
 import type { LegendKey } from '../../lib/flower-view.ts';
 import {
@@ -22,7 +21,6 @@ import { Funds } from './Funds.tsx';
 import { Profile } from './Profile.tsx';
 import { ProfileEditor } from './ProfileEditor.tsx';
 import { ProfileHead } from './ProfileHead.tsx';
-import { WorkMenu, type WorkMenuView } from './WorkMenu.tsx';
 
 /** The one map, a card per address, as the Power Map lists it, with one colour key over the pictures. */
 export interface LobbyMap {
@@ -30,7 +28,7 @@ export interface LobbyMap {
   keys: LegendKey[];
 }
 
-/** Only a person reaches the lobby (app/lobby/page.tsx), so there's no way to connect here. */
+/** Only a person reaches the lobby (app/(work)/lobby/page.tsx), so there's no way to connect here. */
 export interface LobbySession {
   account: string | null;
   disconnect: () => void;
@@ -41,9 +39,7 @@ export function Lobby({
   profile,
   funds,
   editor,
-  conversations,
   map,
-  menu,
 }: {
   session: LobbySession;
   /** The wallet this session signed in with, and its public profile on NEAR Social. */
@@ -57,13 +53,10 @@ export function Lobby({
     withdrew: string | null;
     withdraw: () => void;
   };
-  conversations: ConversationRow[];
   map: LobbyMap;
-  menu: WorkMenuView;
 }) {
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
-      <WorkMenu conversations={conversations} menu={menu} here="lobby" />
       <div className="flex min-w-0 flex-1 flex-col gap-space-32 overflow-y-auto px-page-inset py-column-gap">
         <ProfileHead
           account={profile.account}
