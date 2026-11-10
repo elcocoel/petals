@@ -35,6 +35,8 @@ export interface MapViewRow {
   title: string;
   /** the reader that made its snapshot */
   network: string;
+  /** what it maps and where, in people's words ('ERC-20 token holders on Gnosis') */
+  about: string;
   chain: string;
   address: string | null;
   count: number;

@@ -1,7 +1,7 @@
 // The lobby (specs/004-workspace, W3): where a person's work sits when they come back. A skeleton, built so
 // Elco can sense what's needed. Pure: its words and where each thing goes are decided here, and the view
 // only lays them out. Every word below is a proposal, listed in design/journey-strings.md, "The lobby".
-import { chainLabel, dateLabel, type MapViewRow, networkLabel } from './flower-view.ts';
+import { chainLabel, dateLabel, type MapViewRow } from './flower-view.ts';
 import type { SocialProfile } from './near-social.ts';
 import { type Credit, type PayAction, payWords } from './pay.ts';
 
@@ -125,7 +125,8 @@ export function mapTiles(views: readonly MapViewRow[]): MapTile[] {
   return views.map((v) => ({
     key: v.sha,
     title: v.name ?? v.title,
-    where: `${networkLabel(v.network)}   /   ${dateLabel(v.as_of)}`,
+    // what it maps, in the map's own words (SYSTEMS, 07f5936)
+    where: `${v.about}   /   ${dateLabel(v.as_of)}`,
     // the chain it's on, as the landing's tiles say it
     badge: chainLabel(v.chain),
     image: v.picture,
