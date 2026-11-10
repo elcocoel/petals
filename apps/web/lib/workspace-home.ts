@@ -5,7 +5,7 @@ import { type ApiResult, api } from './api.ts';
 import type { ApiHealth } from './api-label.ts';
 import type { Catalogue } from './composer-options.ts';
 import type { ListedFlower } from './flower-view.ts';
-import { openingMessage } from './opening.ts';
+import { type OpeningView, openingMessage } from './opening.ts';
 import { openFromParams, questionFromParams } from './workspace-url.ts';
 
 /**
@@ -19,10 +19,11 @@ export const agentForVisitors = (health: ApiResult<ApiHealth>): boolean =>
 export async function workspaceHome(q: Record<string, string | string[] | undefined>) {
   const run = Array.isArray(q.run) ? q.run[0] : q.run;
   const elsewhere = Array.isArray(q.elsewhere) ? q.elsewhere[0] : q.elsewhere;
-  const [health, listed, catalogue] = await Promise.all([
+  const [health, listed, catalogue, map] = await Promise.all([
     api<ApiHealth>('/api/v1/health'),
     api<{ flowers: ListedFlower[] }>('/api/v1/flowers'),
     api<Catalogue>('/api/v1/catalogue'),
+    api<{ views: OpeningView[] }>('/api/v1/map/views'),
   ]);
   const recorded = health.ok && health.value.llm === 'recorded';
   const flowers = listed.ok ? listed.value.flowers : [];
@@ -34,7 +35,7 @@ export async function workspaceHome(q: Record<string, string | string[] | undefi
     catalogue: catalogue.ok ? catalogue.value : null,
     initialQuestion: questionFromParams(q),
     recorded,
-    opening: openingMessage(flowers),
+    opening: openingMessage(map.ok ? map.value.views : []),
     shelf: flowers,
     initialOpen: open,
     initialPetal: petal,
