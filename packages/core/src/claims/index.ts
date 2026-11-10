@@ -9,7 +9,12 @@ export {
   SNAPSHOT_READER,
   type SnapshotRead,
 } from './observed.ts';
-export { FORBIDDEN_WORDS, PERSON_NAMESPACES, peopleRuleIssues } from './people.ts';
+export {
+  FORBIDDEN_WORDS,
+  PERSON_NAMESPACES,
+  type PeopleScope,
+  peopleRuleIssues,
+} from './people.ts';
 export { applyPolicy, DEFAULT_LENS } from './policy.ts';
 export {
   accountRef,
@@ -30,6 +35,7 @@ export {
   isMetaVerb,
   isVerb,
   LABEL_TAGS,
+  V2_VERBS,
   VERB_RULES,
   VERBS,
   type Verb,

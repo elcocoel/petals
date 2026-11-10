@@ -6,6 +6,7 @@ import {
   accountRef,
   applyPolicy,
   assetRef,
+  CLAIM_KINDS,
   claimerRecord,
   claimId,
   claimRef,
@@ -15,7 +16,9 @@ import {
   makeClaim,
   observedClaims,
   parseRef,
+  V2_VERBS,
   VERBS,
+  type Verb,
   validateClaim,
 } from '../src/claims/index.ts';
 import { schemas } from '../src/schema/index.ts';
@@ -72,12 +75,17 @@ describe('the shape', () => {
     expect(validateClaim(shuffleKeys(c)).ok).toBe(true);
   });
 
-  test('the schema and the code list the same verbs and kinds', () => {
-    const schema = schemas.claim as {
-      properties: { verb: { enum: string[] }; kind: { enum: string[] } };
-    };
-    expect(new Set(schema.properties.verb.enum)).toEqual(new Set(Object.keys(VERBS)));
-    expect(schema.properties.kind.enum).toEqual(['observed', 'declared', 'sourced', 'inferred']);
+  test("each version's schema and the code list the same verbs and kinds", () => {
+    type Lists = { properties: { verb: { enum: string[] }; kind: { enum: string[] } } };
+    const v1 = schemas.claim as Lists;
+    const v2 = schemas.claimV2 as Lists;
+    const all = Object.keys(VERBS);
+    expect(new Set(v1.properties.verb.enum)).toEqual(
+      new Set(all.filter((v) => !V2_VERBS.has(v as Verb))),
+    );
+    expect(v1.properties.kind.enum).toEqual(['observed', 'declared', 'sourced', 'inferred']);
+    expect(new Set(v2.properties.verb.enum)).toEqual(new Set(all));
+    expect(v2.properties.kind.enum).toEqual([...CLAIM_KINDS]);
   });
 
   test('every verb has a one-line definition, and the vocabulary accuses nobody', () => {

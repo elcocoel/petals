@@ -1,6 +1,8 @@
 # Contract: claims
 
-**Version**: claim/v1 | **Code**: `packages/core/src/claims/`, pure | **Schema**: `packages/core/schema/claim.schema.json` | **Consumers**: later, the relations index and surfaces
+**Version**: claim/v2 (v1 still reads) | **Code**: `packages/core/src/claims/`, pure | **Schemas**: `packages/core/schema/claim.schema.json` (v1), `claim-v2.schema.json` (v2) | **Consumers**: a person's annotations (annotation-layer.md), later the relations index and surfaces
+
+**claim/v2 (10 Nov)** adds annotations, what a person or an agent says about an account: `named`, `noted` and `linked`, the kind `stated`, the ground `research`, and `tx`, `proposal` and `quote` in the evidence. Everything else is v1's, word for word. Chain reads are still made as v1, so their ids don't move. A reader picks the schema by `petal`.
 
 Everything is a claim, and one pure function decides what shows. This is the seam, not the crowd: no writer, no contract, no scores and no classifier call exist yet. Observed claims are derived at read time, and nothing here writes to a chain.
 
@@ -8,7 +10,7 @@ Everything is a claim, and one pure function decides what shows. This is the sea
 
 ```ts
 type Claim = {
-  petal: 'claim/v1';
+  petal: 'claim/v1' | 'claim/v2';
   id: string;              // SHA-256 of canonicalJson(claim), without id and proof
   subject: EntityRef;
   verb: Verb;              // closed list per version
@@ -17,9 +19,10 @@ type Claim = {
   valid_from?: string; valid_to?: string;                // when it holds in the world
   issued_at: string;                                     // when it was said
   as_of?: { chain: string; block: number };              // the chain moment it stands for
-  kind: 'observed' | 'declared' | 'sourced' | 'inferred';
+  kind: 'observed' | 'declared' | 'stated' | 'sourced' | 'inferred';   // stated: v2
   method?: string;         // required if inferred, absent otherwise: name@version, optional #paramhash
-  evidence: { snapshot_sha256?; url?; url_sha256?; retrieved_at?; claim_id?; note? }[];
+  evidence: { snapshot_sha256?; url?; url_sha256?; retrieved_at?; claim_id?; note?;
+              tx?; proposal?; quote? }[];                 // tx, proposal, quote: v2
   by: EntityRef;           // who answers for it: an account, a named tool or a named model
   via?: EntityRef;         // the tool or model that produced it
   proof?: Proof;           // outside the hash
@@ -32,6 +35,7 @@ A claim never changes. Changing your mind is a new claim. Dates are UTC with `Z`
 |---|---|---|
 | `observed` | Read from a chain | A snapshot hash, or a `tx` proof |
 | `declared` | The subject says it of itself | `by` equals `subject`, and a proof. A tool can't declare: it holds no key |
+| `stated` (v2) | The writer says it on their own word, with no outside source: "this is Dekan's wallet" | `by` is the person's account |
 | `sourced` | A writer points at an outside source | An `http(s)` URL in the evidence |
 | `inferred` | A rule or model concluded it | `method`, evidence, and closed `grounds`, except a `confidence` |
 
@@ -81,14 +85,21 @@ A new verb is a new version. Anything else is refused. There's no `same_as`: it 
 | `retracts` | declared | claim | The author withdraws their own claim, which stays readable. Final: say it anew instead. |
 | `supersedes` | declared | claim | The author replaces their own earlier claim. The old one stays readable. |
 | `confidence` | declared, inferred | claim | How sure a named person or a named model is of the claim. It overwrites nothing. |
+| `named` | declared, stated, sourced, inferred | a name, one line, up to 128 characters | Someone says the account goes by this name: a handle, a person's, an organisation's or a role's. |
+| `noted` | declared, stated, sourced, inferred | words | A note or research about the account, in words. |
+| `linked` | declared, stated, sourced, inferred | an `http(s)` link | A page about the account. |
+
+`named`, `noted` and `linked` are v2's, and a v1 claim can't use them. An inferred one takes `grounds`, as any inference does.
 
 In a claim about a claim (`challenges`, `responds`, `retracts`, `supersedes`, `confidence`), `object` is `claim:<id>` and `subject` is the speaker, so it always equals `by`.
 
-Closed lists: `grounds` is a sorted, comma-separated set of `funding_lineage`, `inbound_transfers`, `same_address`, `shared_signer`, `synchronised_behaviour`. `band` is `low`, `medium` or `high`. A challenge's `reason` is `names_a_person`, `stale`, `unsupported` or `wrong`.
+Closed lists: `grounds` is a sorted, comma-separated set of `funding_lineage`, `inbound_transfers`, `research` (v2: read in proposals, pages or posts), `same_address`, `shared_signer`, `synchronised_behaviour`. `band` is `low`, `medium` or `high`. A challenge's `reason` is `names_a_person`, `stale`, `unsupported` or `wrong`.
 
-## Real people, first version
+## Real people
 
-**The rule, which Elco can change.** It lives in `packages/core/src/claims/people.ts`. Constitution line 56 allows links "wherever public evidence allows" and promises removal. Both hold only off chain, so that line is under question (open question 9).
+**Elco's decision, 10 Nov** (annotation-layer.md, decision 1 (a)): names are allowed in a person's own annotations, kept in their own project, because Elco asked to tie wallets to friends' names. `validateClaim(claim, { private: true })` reads a claim kept there. Rules 2 and 5 below give way there, for `named` and `noted` and for the evidence's notes and quotes; rules 1, 3 and 4 hold everywhere. Anything published keeps the first version below, decided again before annotations are published (step 8).
+
+**The first version, which Elco can change.** It lives in `packages/core/src/claims/people.ts`. Constitution line 56 allows links "wherever public evidence allows" and promises removal. Both hold only off chain, so that line is under question (open question 9).
 
 1. Claims name accounts, contracts and groups. No natural person as subject or object.
 2. No free-text names in `object`, `qualifiers` or `note`.

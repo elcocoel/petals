@@ -27,6 +27,7 @@ export {
   readSnapshot,
   SNAPSHOT_READER,
   targetOf,
+  V2_VERBS,
   VERB_RULES,
   VERBS,
   validateClaim,

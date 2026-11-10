@@ -1,4 +1,5 @@
-// The closed vocabulary of claim/v1. A new verb is a new version: anything not listed is refused.
+// The closed vocabulary of claims. A new verb is a new version: anything not listed is refused. claim/v2
+// adds named, noted and linked (V2_VERBS); each version's schema lists its own.
 // `same_as` is gone on purpose: it hid one address on two chains (`same_address`) and one controller
 // (`declares_same_controller`, or a neutral inference). `declares_name` is gone too: names stay in
 // the account's own voice, read at draw time (people.ts).
@@ -17,7 +18,17 @@ export type QualifierClass =
   | 'reason';
 
 /** What a verb's object may be. `entity`: an account, a contract or a group. */
-export type ObjectClass = 'entity' | 'account' | 'asset' | 'proposal' | 'claim' | 'number' | 'tag';
+export type ObjectClass =
+  | 'entity'
+  | 'account'
+  | 'asset'
+  | 'proposal'
+  | 'claim'
+  | 'number'
+  | 'tag'
+  | 'name'
+  | 'text'
+  | 'link';
 
 export interface VerbRule {
   /** The one-line definition. */
@@ -29,6 +40,8 @@ export interface VerbRule {
 }
 
 const READ = ['observed', 'sourced'] as const;
+/** What a person or an agent adds about an account (annotation-layer.md): never read from a chain. */
+const ANNOTATION = ['declared', 'stated', 'sourced', 'inferred'] as const;
 const AMOUNT = { amount: 'decimal', unit: 'symbol' } as const;
 
 export const VERBS = {
@@ -195,6 +208,28 @@ export const VERBS = {
     kinds: ['declared'],
     object: 'claim',
   },
+  // Annotations (v2): what a person or an agent adds, in words. Kept in a person's own project; a name
+  // is never published yet (people.ts).
+  named: {
+    means:
+      "Someone says the account goes by this name: a handle, a person's, an organisation's or a role's.",
+    kinds: ANNOTATION,
+    object: 'name',
+    qualifiers: { grounds: 'grounds' },
+  },
+  noted: {
+    means: 'A note or research about the account, in words.',
+    kinds: ANNOTATION,
+    object: 'text',
+    qualifiers: { grounds: 'grounds' },
+  },
+  linked: {
+    means: 'A page about the account.',
+    kinds: ANNOTATION,
+    object: 'link',
+    qualifiers: { grounds: 'grounds' },
+  },
+
   confidence: {
     means: 'How sure a named person or a named model is of the claim. It overwrites nothing.',
     kinds: ['declared', 'inferred'],
@@ -213,12 +248,19 @@ const META = new Set<Verb>(['challenges', 'responds', 'retracts', 'supersedes', 
 /** A claim about a claim. */
 export const isMetaVerb = (v: Verb): boolean => META.has(v);
 
-export const CLAIM_KINDS = ['observed', 'declared', 'sourced', 'inferred'] as const;
+/** The verbs claim/v2 added. A v1 claim can't use them: its schema doesn't list them. */
+export const V2_VERBS: ReadonlySet<Verb> = new Set<Verb>(['named', 'noted', 'linked']);
+
+export const CLAIM_KINDS = ['observed', 'declared', 'stated', 'sourced', 'inferred'] as const;
 export const CONFIDENCE_BANDS = ['low', 'medium', 'high'] as const;
-/** What an inference may rest on. `inbound_transfers` can't be the only one (people.ts). */
+/**
+ * What an inference may rest on. `inbound_transfers` can't be the only one (people.ts). `research`
+ * (reading proposals, pages and posts) is claim/v2's.
+ */
 export const GROUNDS = [
   'funding_lineage',
   'inbound_transfers',
+  'research',
   'same_address',
   'shared_signer',
   'synchronised_behaviour',

@@ -12,7 +12,8 @@ export const RENDER_VERSION = 'render/v2';
 export const READING_VERSION = 'reading/v1';
 export const RECIPE_VERSION = 'recipe/v1';
 export const CONVENTION_VERSION = 'default/v1';
-export const CLAIM_VERSION = 'claim/v1';
+/** claim/v2 since 10 Nov: annotations (annotation-layer.md). v1 still reads, and chain reads are still v1. */
+export const CLAIM_VERSION = 'claim/v2';
 /** A person's view: which piece of data each dimension shows (specs/006-the-map/contracts/view.md). */
 export const VIEW_VERSION = 'view/v1';
 

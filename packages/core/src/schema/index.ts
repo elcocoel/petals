@@ -4,6 +4,7 @@
 // `spec`, `interpretation`, `entry`, `entryV2` and `correction` are self-contained views of the flower
 // schema: the same $defs with a different root, so any JSON Schema tool can use them alone.
 import claimSchema from '../../schema/claim.schema.json' with { type: 'json' };
+import claimV2Schema from '../../schema/claim-v2.schema.json' with { type: 'json' };
 import flowerSchema from '../../schema/flower.schema.json' with { type: 'json' };
 import layerSchema from '../../schema/layer.schema.json' with { type: 'json' };
 import priceSchema from '../../schema/price.schema.json' with { type: 'json' };
@@ -33,6 +34,8 @@ export const schemas: {
   entryV2: object;
   correction: object;
   claim: object;
+  /** a claim, and what a person or an agent adds about an account: names, notes, links (annotation-layer.md) */
+  claimV2: object;
   /** the data protocol's layer (005, data.md); stored and hashed, so it refuses fields it doesn't know */
   layer: object;
   /** a person's view (006, contracts/view.md): which piece of data each dimension shows */
@@ -53,6 +56,7 @@ export const schemas: {
   entryV2: view('entryV2'),
   correction: view('correction'),
   claim: claimSchema,
+  claimV2: claimV2Schema,
   layer: layerSchema,
   view: viewSchema,
   seam: seamSchema,
