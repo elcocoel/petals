@@ -1,7 +1,7 @@
 {
   "name": "near-validators-backers",
   "spec_sha256": "0f475a0fb0f11115569b2f74cc9b884d0f6ba98cb101d7d49ed4c7b05c409cd4",
-  "render_sha256": "e61ae57c528708abb4b655ef4d0f251af35d6a9d8e96c5c44d166509b3dbbd1e",
+  "render_sha256": "4aa74f8bb6f691b6540bde5ef2fefdf82062a8bc84989bc4bbd0b210067b5097",
   "spec": {
     "petal": "spec/v1",
     "network": {
@@ -110,20 +110,6 @@
       ]
     },
     {
-      "primitive": "outline",
-      "meaning": "identity: solid when self-declared or verified, dashed when inferred",
-      "sources": [
-        "fastnear-rpc-liquid-staking",
-        "nearblocks-validators"
-      ],
-      "keys": [
-        {
-          "swatch": "var(--ink-2)",
-          "label": "solid: self-declared or verified"
-        }
-      ]
-    },
-    {
       "primitive": "segments",
       "meaning": "who backs the pool, bottom to top: other delegators, accounts with 1M+ NEAR, liquid-staking contracts, lockups",
       "sources": [
@@ -157,7 +143,7 @@
     },
     {
       "primitive": "tail",
-      "meaning": "everyone else: 311 more participants grouped into one hatched petal, 13.8% of the total; its height is their average",
+      "meaning": "everyone else: 311 more participants grouped into one petal, 13.8% of the total; its height is their average",
       "sources": [
         "fastnear-rpc-validators"
       ],
@@ -3957,7 +3943,7 @@
         {
           "primitive": "colour",
           "value": "tail",
-          "explains": "hatched: grouped, not one account"
+          "explains": "grouped, not one account"
         },
         {
           "primitive": "outline",

@@ -1,4 +1,5 @@
-// The renderer (contracts/renderer.md, render/v1). A pure function: no fetch, clock, randomness,
+// The renderer (contracts/renderer.md). Its one look is render/v2, the wedge flower (specs/006-the-map,
+// milestone 3): always the latest look, so render/v1 is no longer drawn. A pure function: no fetch, clock, randomness,
 // DOM or locale. Same spec and snapshot give the same SVG bytes (FR-010, SC-005). Three steps:
 // validate, read (reading/), and draw with a named skin.
 
@@ -17,11 +18,12 @@ import type {
   SpecPrimitive,
 } from '../types/index.ts';
 import { validateSpec } from '../validate/spec.ts';
-import { skinV1 } from './skin-v1.ts';
+import { RENDER_VERSION } from '../versions.ts';
+import { skinV2 } from './skin-v2.ts';
 import type { Skin } from './types.ts';
 
-/** The looks this build can draw, by name. A look that changes the bytes gets a new name. */
-export const SKINS = { 'render/v1': skinV1 } satisfies Record<string, Skin>;
+/** The look this build draws, by name. A look that changes the bytes gets a new name, and replaces the last. */
+export const SKINS = { [RENDER_VERSION]: skinV2 } satisfies Record<string, Skin>;
 
 /**
  * What a snapshot alone can show: the capabilities renderFlower validates against when no module
@@ -51,6 +53,6 @@ export function renderFlower(spec: Spec, s: Snapshot, o?: RenderOptions): Render
   const check = validateSpec(spec, { snapshot: s, capabilities: snapshotCapabilities(s) });
   if (!check.valid) throw new InvalidSpecError(check.errors);
 
-  const drawn = SKINS['render/v1'](readFlower(spec, s, o?.view), { size, thumb });
+  const drawn = SKINS[RENDER_VERSION](readFlower(spec, s, o?.view), { size, thumb });
   return { ...drawn, render_sha256: sha256Hex(drawn.svg) };
 }

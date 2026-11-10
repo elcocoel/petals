@@ -131,10 +131,11 @@ export type PanelView =
 const STARTER = 'Who holds the UNI token on Base?';
 
 /**
- * The live canvas paints gray, with one accent for attention, and draws no outline, line or marking. So
- * of what a render says about its drawing, these aren't true of it. Their sources still stand.
+ * The live canvas paints each petal by its colour from the reading, as the still picture does (the one look,
+ * specs/006-the-map), and draws no outline, line or marking. So of what a render says about its drawing,
+ * these aren't true of it. Their sources still stand.
  */
-const NOT_ON_CANVAS = new Set<string>(['colour', 'outline', 'lines', 'markings']);
+const NOT_ON_CANVAS = new Set<string>(['outline', 'lines', 'markings']);
 
 /**
  * What a flower says about itself, for what's on the canvas: no row about what it doesn't draw, no swatch
@@ -163,7 +164,10 @@ export function canvasReading(
 /** One petal's record, saying only why it looks this way on the canvas. */
 export const canvasPetal = (petal: PetalDetail): PetalDetail => ({
   ...petal,
-  values: petal.values.filter((v) => !NOT_ON_CANVAS.has(v.primitive)),
+  values: petal.values
+    .filter((v) => !NOT_ON_CANVAS.has(v.primitive))
+    // The tail is one petal in a tone, not render/v1's hatching.
+    .map((v) => ({ ...v, explains: v.explains.replace(/^hatched: /, '') })),
 });
 
 /** The only colour the canvas gives a meaning to, and only once there's something picked. */

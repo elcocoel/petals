@@ -1,137 +1,78 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-label="NEAR House of Stake" data-petal="render/v1" data-spec="6214e7c5f051370c7893b2e54203224ffbfa537b82c680a2e8b1c23236382569">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-label="NEAR House of Stake" data-petal="render/v2" data-spec="6214e7c5f051370c7893b2e54203224ffbfa537b82c680a2e8b1c23236382569">
 <style>svg[data-petal]{--ink:#0b0b0b;--ink-2:#52514e;--hair:#e1e0d9;--unknown:#c9c7bf;--tail:#b8b6ae;--k-pool:#2a78d6;--k-exchange:#eb6834;--k-entity:#1baf7a;--k-custodian:#eda100;--k-contract:#e87ba4;--k-treasury:#008300;--k-org:#4a3aa7;--k-delegator:#e34948}.petal-dark svg[data-petal],svg[data-petal].petal-dark{--ink:#ffffff;--ink-2:#c3c2b7;--hair:#2c2c2a;--unknown:#4a4945;--tail:#5e5d58;--k-pool:#3987e5;--k-exchange:#d95926;--k-entity:#199e70;--k-custodian:#c98500;--k-contract:#d55181;--k-treasury:#008300;--k-org:#9085e9;--k-delegator:#e66767}svg[data-petal] .petal-poly{fill:none;stroke:var(--hair)}svg[data-petal] .c-pool{fill:var(--k-pool)}svg[data-petal] .c-exchange{fill:var(--k-exchange)}svg[data-petal] .c-custodian{fill:var(--k-custodian)}svg[data-petal] .c-entity{fill:var(--k-entity)}svg[data-petal] .c-contract{fill:var(--k-contract)}svg[data-petal] .c-treasury{fill:var(--k-treasury)}svg[data-petal] .c-org{fill:var(--k-org)}svg[data-petal] .c-delegator{fill:var(--k-delegator)}svg[data-petal] .c-unknown{fill:var(--unknown)}svg[data-petal] .c-seg-other{fill:var(--k-pool)}svg[data-petal] .c-seg-large{fill:var(--k-org)}svg[data-petal] .c-seg-liquid{fill:var(--k-entity)}svg[data-petal] .c-seg-lockup{fill:var(--k-contract)}svg[data-petal] .petal-outline{fill:none;stroke:var(--ink-2);stroke-width:0.8px;pointer-events:none}svg[data-petal] .petal-outline.inferred{stroke-dasharray:3 2}svg[data-petal] .hatch-bg{fill:var(--unknown)}svg[data-petal] .hatch-line{stroke:var(--tail);stroke-width:2.2px}svg[data-petal] text{fill:var(--ink-2);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:11px}svg[data-petal] .petal-centre{fill:var(--ink);font-size:12px;font-weight:600}</style>
-<defs><pattern id="petal-hatch-6214e7c5" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect class="hatch-bg" width="5" height="5"/><line class="hatch-line" x1="0" y1="0" x2="0" y2="5"/></pattern></defs>
-<path class="petal-poly" d="M400.55 310.44L413.95 311.53L426.93 314.58L439.06 319.40L450.31 325.91L460.44 333.91L469.29 343.26L476.71 353.78L482.54 365.24L486.67 377.41L489.00 390.02L489.52 402.82L488.20 415.57L485.13 427.82L480.59 439.08L475.11 448.80L468.64 457.54L461.43 465.18L453.71 471.68L445.37 477.23L436.69 481.71L427.70 485.18L418.46 487.65L409.05 489.11L399.69 489.57L390.53 489.07L381.66 487.68L373.06 485.43L364.88 482.40L357.08 478.63L349.75 474.15L342.90 469.02L336.84 463.52L331.42 457.63L326.56 451.29L322.33 444.62L318.71 437.63L315.73 430.38L313.40 422.89L311.75 415.38L310.76 407.83L310.42 400.23L310.71 392.81L311.58 385.61L313.03 378.52L315.03 371.63L317.57 364.92L320.64 358.44L324.17 352.30L328.12 346.54L332.51 341.10L337.30 336.02L342.39 331.40L347.82 327.19L353.55 323.40L359.43 320.13L365.54 317.31L371.85 314.96L378.31 313.08L384.89 311.70L391.57 310.82Z"/>
+<g transform="translate(-74.286 -74.286) scale(1.186)">
 <g class="petal-bars">
-<path id="s-0-bar" class="petal-seg c-org" data-p="cc96f55848f0ac487f1a185e72df91d33ec13b608fc8eb90d15dbd1bf363c807" data-i="0" data-seg="bar" d="M414.84 120.58L427.16 121.51L412.86 311.37L400.55 310.44Z"/>
-<path id="s-1-bar" class="petal-seg c-org" data-p="4783b54876253b1f79e3241c11d683223d186ad217178927fcbd2fff2f646172" data-i="1" data-seg="bar" d="M452.70 142.01L464.63 144.74L425.88 314.26L413.95 311.53Z"/>
-<path id="s-2-bar" class="petal-seg c-org" data-p="spareuni818.near" data-i="2" data-seg="bar" d="M477.92 183.95L489.06 188.30L438.07 318.93L426.93 314.58Z"/>
-<path id="s-3-bar" class="petal-seg c-org" data-p="delegatetoyuen.near" data-i="3" data-seg="bar" d="M505.38 202.97L515.72 208.86L449.40 325.30L439.06 319.40Z"/>
-<path id="s-4-bar" class="petal-seg c-org" data-p="tony_bc.near" data-i="4" data-seg="bar" d="M527.26 227.27L536.58 234.54L459.63 333.17L450.31 325.91Z"/>
-<path id="s-5-bar" class="petal-seg c-org" data-p="vinibarbosa.near" data-i="5" data-seg="bar" d="M548.17 249.83L556.32 258.33L468.59 342.41L460.44 333.91Z"/>
-<path id="s-6-bar" class="petal-seg c-org" data-p="klausbravegov.near" data-i="6" data-seg="bar" d="M568.16 272.63L575.01 282.21L476.14 352.84L469.29 343.26Z"/>
-<path id="s-7-bar" class="petal-seg c-org" data-p="hos.chicago.near" data-i="7" data-seg="bar" d="M583.36 298.73L588.76 309.18L482.11 364.23L476.71 353.78Z"/>
-<path id="s-8-bar" class="petal-seg c-org" data-p="india.sputnik-dao.near" data-i="8" data-seg="bar" d="M595.40 326.22L599.24 337.33L486.38 376.35L482.54 365.24Z"/>
-<path id="s-9-bar" class="petal-seg c-org" data-p="alan777.near" data-i="9" data-seg="bar" d="M600.87 355.51L603.08 367.03L488.88 388.93L486.67 377.41Z"/>
-<path id="s-10-bar" class="petal-seg c-org" data-p="vote.mob.near" data-i="10" data-seg="bar" d="M605.00 384.65L605.55 396.36L489.55 401.72L489.00 390.02Z"/>
-<path id="s-11-bar" class="petal-seg c-org" data-p="charles-hos.near" data-i="11" data-seg="bar" d="M604.84 414.04L603.71 425.71L488.38 414.49L489.52 402.82Z"/>
-<path id="s-12-bar" class="petal-seg c-org" data-p="zaki.near" data-i="12" data-seg="bar" d="M585.80 439.37L583.07 450.57L485.47 426.78L488.20 415.57Z"/>
-<path id="s-13-bar" class="petal-seg c-org" data-p="aurora_hos.near" data-i="13" data-seg="bar" d="M548.77 453.06L544.70 463.33L481.06 438.09L485.13 427.82Z"/>
-<path id="s-14-bar" class="petal-seg c-org" data-p="lllllli.near" data-i="14" data-seg="bar" d="M508.04 454.36L503.15 463.14L475.70 447.87L480.59 439.08Z"/>
-<path id="s-15-bar" class="petal-seg c-org" data-p="yadira.near" data-i="15" data-seg="bar" d="M495.43 463.64L489.67 471.53L469.34 456.69L475.11 448.80Z"/>
-<path id="s-16-bar" class="petal-seg c-org" data-p="chicagonode.sputnik-dao.near" data-i="16" data-seg="bar" d="M482.50 470.45L476.08 477.34L462.23 464.43L468.64 457.54Z"/>
-<path id="s-17-bar" class="petal-seg c-org" data-p="cryptoape.near" data-i="17" data-seg="bar" d="M470.25 475.54L463.41 481.37L454.59 471.02L461.43 465.18Z"/>
-<path id="s-18-bar" class="petal-seg c-org" data-p="bluegirl.near" data-i="18" data-seg="bar" d="M460.92 482.37L453.52 487.36L446.31 476.67L453.71 471.68Z"/>
-<path id="s-19-bar" class="petal-seg c-org" data-p="spewy.near" data-i="19" data-seg="bar" d="M450.28 486.59L442.60 490.62L437.69 481.26L445.37 477.23Z"/>
-<path id="s-20-bar" class="petal-seg c-org" data-p="delegate.sleet.near" data-i="20" data-seg="bar" d="M440.18 490.60L432.23 493.72L428.74 484.84L436.69 481.71Z"/>
-<path id="s-21-bar" class="petal-seg c-org" data-p="vadim.near" data-i="21" data-seg="bar" d="M430.08 493.88L421.91 496.11L419.53 487.42L427.70 485.18Z"/>
-<path id="s-22-bar" class="petal-seg c-org" data-p="hmtri1011.near" data-i="22" data-seg="bar" d="M419.85 496.25L411.53 497.59L410.14 489.00L418.46 487.65Z"/>
-<path id="s-23-bar" class="petal-seg c-org" data-p="james.near" data-i="23" data-seg="bar" d="M409.47 496.83L401.21 497.29L400.79 489.57L409.05 489.11Z"/>
-<path id="s-24-bar" class="petal-seg c-org" data-p="axianetwork.near" data-i="24" data-seg="bar" d="M399.37 496.18L391.31 495.78L391.63 489.18L399.69 489.57Z"/>
-<path id="s-25-bar" class="petal-seg c-org" data-p="machinewash.near" data-i="25" data-seg="bar" d="M389.68 494.74L381.88 493.56L382.73 487.89L390.53 489.07Z"/>
-<path id="s-26-bar" class="petal-seg c-org" data-p="fiatisabubble.near" data-i="26" data-seg="bar" d="M380.24 493.21L372.70 491.29L374.11 485.75L381.66 487.68Z"/>
-<path id="s-27-bar" class="petal-seg c-org" data-p="hos.slimedragon.near" data-i="27" data-seg="bar" d="M371.11 490.80L363.94 488.20L365.89 482.83L373.06 485.43Z"/>
-<path id="s-28-bar" class="petal-seg c-org" data-p="1920804333ced7e8357b5b22b69b3ce03aff94c04836ba604019e0c363f2d7b3" data-i="28" data-seg="bar" d="M362.42 487.56L355.59 484.30L358.05 479.15L364.88 482.40Z"/>
-<path id="s-29-bar" class="petal-seg c-org" data-p="kolosun.tg" data-i="29" data-seg="bar" d="M354.14 483.52L347.72 479.66L350.67 474.77L357.08 478.63Z"/>
-<path id="s-30-bar" class="petal-seg c-org" data-p="griff.near" data-i="30" data-seg="bar" d="M346.35 478.75L340.36 474.31L343.75 469.71L349.75 474.15Z"/>
-<path id="s-31-bar" class="petal-seg c-org" data-p="simpletag3424.near" data-i="31" data-seg="bar" d="M339.09 473.27L333.82 468.55L337.63 464.29L342.90 469.02Z"/>
-<path id="s-32-bar" class="petal-seg c-org" data-p="bearmans.near" data-i="32" data-seg="bar" d="M332.66 467.42L327.95 462.36L332.13 458.46L336.84 463.52Z"/>
-<path id="s-33-bar" class="petal-seg c-org" data-p="undermines.near" data-i="33" data-seg="bar" d="M326.91 461.13L322.68 455.69L327.19 452.18L331.42 457.63Z"/>
-<path id="s-34-bar" class="petal-seg c-org" data-p="m1halich228.tg" data-i="34" data-seg="bar" d="M321.75 454.38L318.08 448.66L322.88 445.57L326.56 451.29Z"/>
-<path id="s-35-bar" class="petal-seg c-org" data-p="lyprovidad2150.near" data-i="35" data-seg="bar" d="M317.27 447.28L314.12 441.28L319.18 438.63L322.33 444.62Z"/>
-<path id="s-36-bar" class="petal-seg c-org" data-p="jaguarcat.near" data-i="36" data-seg="bar" d="M313.44 439.83L310.84 433.61L316.11 431.41L318.71 437.63Z"/>
-<path id="s-37-bar" class="petal-seg c-org" data-p="jp_daug.tg" data-i="37" data-seg="bar" d="M310.29 432.11L308.24 425.68L313.68 423.95L315.73 430.38Z"/>
-<path id="s-38-bar" class="petal-seg c-org" data-p="ramgor.near" data-i="38" data-seg="bar" d="M307.82 424.14L306.38 417.72L311.95 416.46L313.40 422.89Z"/>
-<path id="s-39-bar" class="petal-seg c-org" data-p="coffee-crush_gov.near" data-i="39" data-seg="bar" d="M306.09 416.16L305.21 409.70L310.87 408.93L311.75 415.38Z"/>
-<path id="s-40-bar" class="petal-seg c-org" data-p="ray012803.tg" data-i="40" data-seg="bar" d="M305.06 408.12L304.73 401.62L310.43 401.33L310.76 407.83Z"/>
-<path id="s-41-bar" class="petal-seg c-org" data-p="tanegov.near" data-i="41" data-seg="bar" d="M304.71 400.04L304.92 393.71L310.63 393.90L310.42 400.23Z"/>
-<path id="s-42-bar" class="petal-seg c-org" data-p="kentf.near" data-i="42" data-seg="bar" d="M305.04 392.15L305.74 386.05L311.41 386.70L310.71 392.81Z"/>
-<path id="s-43-bar" class="petal-seg c-org" data-p="edwinck.near" data-i="43" data-seg="bar" d="M305.98 384.50L307.18 378.47L312.78 379.58L311.58 385.61Z"/>
-<path id="s-44-bar" class="petal-seg c-org" data-p="zorakrizovnikov.tg" data-i="44" data-seg="bar" d="M307.54 376.96L309.19 371.12L314.69 372.67L313.03 378.52Z"/>
-<path id="s-45-bar" class="petal-seg c-org" data-p="nearweek.near" data-i="45" data-seg="bar" d="M309.68 369.64L311.80 363.95L317.15 365.94L315.03 371.63Z"/>
-<path id="s-46-bar" class="petal-seg c-org" data-p="blaze.near" data-i="46" data-seg="bar" d="M312.40 362.51L314.96 357.01L320.14 359.42L317.57 364.92Z"/>
-<path id="s-47-bar" class="petal-seg c-org" data-p="profit.near" data-i="47" data-seg="bar" d="M315.67 355.63L318.63 350.42L323.60 353.24L320.64 358.44Z"/>
-<path id="s-48-bar" class="petal-seg c-org" data-p="vikashxd.near" data-i="48" data-seg="bar" d="M319.44 349.10L322.74 344.22L327.47 347.42L324.17 352.30Z"/>
-<path id="s-49-bar" class="petal-seg c-org" data-p="truekale619.near" data-i="49" data-seg="bar" d="M323.65 342.98L327.32 338.37L331.79 341.93L328.12 346.54Z"/>
-<path id="s-50-bar" class="petal-seg c-org" data-p="kinguin.near" data-i="50" data-seg="bar" d="M328.33 337.20L332.35 332.90L336.52 336.79L332.51 341.10Z"/>
-<path id="s-51-bar" class="petal-seg c-org" data-p="monza.near" data-i="51" data-seg="bar" d="M333.44 331.81L337.69 327.91L341.55 332.11L337.30 336.02Z"/>
-<path id="s-52-bar" class="petal-seg c-org" data-p="bright-key.near" data-i="52" data-seg="bar" d="M338.86 326.91L343.40 323.34L346.93 327.83L342.39 331.40Z"/>
-<path id="s-53-bar" class="petal-seg c-org" data-p="479fceb8679be8c39437dbdf3d94c7cf2b1a16eb3babd1f7e6da15e8ca526a72" data-i="53" data-seg="bar" d="M344.64 322.44L349.44 319.23L352.62 323.98L347.82 327.19Z"/>
-<path id="s-54-bar" class="petal-seg c-org" data-p="9e54f4e56afa295e7b60c88ca6157e83e01623d008a42998ee46beab6b72d141" data-i="54" data-seg="bar" d="M350.75 318.43L355.65 315.66L358.46 320.63L353.55 323.40Z"/>
-<path id="s-55-bar" class="petal-seg c-org" data-p="mapogov.near" data-i="55" data-seg="bar" d="M357.01 314.96L362.11 312.57L364.53 317.74L359.43 320.13Z"/>
-<path id="s-56-bar" class="petal-seg c-org" data-p="wisezip1714.near" data-i="56" data-seg="bar" d="M363.51 311.97L368.78 309.97L370.81 315.31L365.54 317.31Z"/>
-<path id="s-57-bar" class="petal-seg c-org" data-p="freytipp1894.tg" data-i="57" data-seg="bar" d="M370.22 309.48L375.62 307.88L377.24 313.36L371.85 314.96Z"/>
-<path id="s-58-bar" class="petal-seg c-org" data-p="lyubov_minsk.tg" data-i="58" data-seg="bar" d="M377.10 307.50L382.60 306.31L383.81 311.89L378.31 313.08Z"/>
-<path id="s-59-bar" class="petal-seg c-org" data-p="hexie.near" data-i="59" data-seg="bar" d="M384.11 306.04L389.69 305.27L390.47 310.93L384.89 311.70Z"/>
-<path id="s-60-tail" class="petal-seg" fill="url(#petal-hatch-6214e7c5)" data-p="__tail" data-i="60" data-seg="tail" d="M391.28 305.12L399.16 304.72L399.45 310.43L391.57 310.82Z"/>
+<path class="c-org" data-p="cc96f55848f0ac487f1a185e72df91d33ec13b608fc8eb90d15dbd1bf363c807" data-i="0" d="M400.3 119.484L441.695 122.6L413.113 311.387L400.3 310.423Z"/>
+<path class="c-org" data-p="4783b54876253b1f79e3241c11d683223d186ad217178927fcbd2fff2f646172" data-i="1" d="M439.809 139.065L477.523 147.686L426.119 314.314L413.706 311.477Z"/>
+<path class="c-org" data-p="spareuni818.near" data-i="2" d="M468.142 180.131L498.843 192.116L438.3 319.022L426.693 314.491Z"/>
+<path class="c-org" data-p="delegatetoyuen.near" data-i="3" d="M496.691 198.021L524.41 213.81L449.618 325.419L438.841 319.28Z"/>
+<path class="c-org" data-p="tony_bc.near" data-i="4" d="M519.939 221.56L543.904 240.257L459.826 333.328L450.117 325.752Z"/>
+<path class="c-org" data-p="vinibarbosa.near" data-i="5" d="M541.938 243.328L562.551 264.835L468.767 342.594L460.271 333.73Z"/>
+<path class="c-org" data-p="klausbravegov.near" data-i="6" d="M562.93 265.3L580.246 289.539L476.287 353.046L469.15 343.056Z"/>
+<path class="c-org" data-p="hos.chicago.near" data-i="7" d="M579.284 290.829L592.833 317.076L482.224 364.454L476.6 353.558Z"/>
+<path class="c-org" data-p="india.sputnik-dao.near" data-i="8" d="M592.508 317.868L602.126 345.687L486.465 376.588L482.461 365.005Z"/>
+<path class="c-org" data-p="alan777.near" data-i="9" d="M599.255 347.075L604.699 375.465L488.922 389.171L486.62 377.168Z"/>
+<path class="c-org" data-p="vote.mob.near" data-i="10" d="M604.608 376.08L605.943 404.929L489.557 401.974L488.993 389.767Z"/>
+<path class="c-org" data-p="charles-hos.near" data-i="11" d="M605.673 405.522L602.881 434.224L488.359 414.734L489.542 402.574Z"/>
+<path class="c-org" data-p="zaki.near" data-i="12" d="M587.544 432.223L581.328 457.717L485.408 427.018L488.259 415.325Z"/>
+<path class="c-org" data-p="aurora_hos.near" data-i="13" d="M550.578 448.505L542.89 467.888L480.968 438.325L485.225 427.59Z"/>
+<path class="c-org" data-p="lllllli.near" data-i="14" d="M509.109 452.425L502.071 465.074L475.579 448.091L480.711 438.867Z"/>
+<path class="c-org" data-p="yadira.near" data-i="15" d="M496.48 462.203L488.616 472.971L469.196 456.894L475.255 448.597Z"/>
+<path class="c-org" data-p="chicagonode.sputnik-dao.near" data-i="16" d="M483.43 469.457L475.154 478.337L462.055 464.608L468.814 457.357Z"/>
+<path class="c-org" data-p="cryptoape.near" data-i="17" d="M471.025 474.878L462.632 482.028L454.397 471.177L461.622 465.023Z"/>
+<path class="c-org" data-p="bluegirl.near" data-i="18" d="M461.727 481.828L452.716 487.904L446.106 476.808L453.919 471.54Z"/>
+<path class="c-org" data-p="spewy.near" data-i="19" d="M451.008 486.21L441.864 491.002L437.469 481.372L445.591 477.116Z"/>
+<path class="c-org" data-p="delegate.sleet.near" data-i="20" d="M440.893 490.321L431.521 494.003L428.508 484.927L436.923 481.621Z"/>
+<path class="c-org" data-p="vadim.near" data-i="21" d="M430.783 493.684L421.204 496.305L419.29 487.483L427.939 485.116Z"/>
+<path class="c-org" data-p="hmtri1011.near" data-i="22" d="M420.553 496.132L410.829 497.706L409.895 489.036L418.704 487.61Z"/>
+<path class="c-org" data-p="james.near" data-i="23" d="M410.128 496.798L400.561 497.324L400.54 489.583L409.299 489.101Z"/>
+<path class="c-org" data-p="axianetwork.near" data-i="24" d="M399.958 496.204L390.719 495.756L391.378 489.169L399.94 489.585Z"/>
+<path class="c-org" data-p="machinewash.near" data-i="25" d="M390.21 494.819L381.345 493.479L382.485 487.857L390.781 489.11Z"/>
+<path class="c-org" data-p="fiatisabubble.near" data-i="26" d="M380.76 493.342L372.182 491.154L373.869 485.69L381.897 487.738Z"/>
+<path class="c-org" data-p="hos.slimedragon.near" data-i="27" d="M371.609 490.978L363.445 488.015L365.655 482.741L373.295 485.513Z"/>
+<path class="c-org" data-p="1920804333ced7e8357b5b22b69b3ce03aff94c04836ba604019e0c363f2d7b3" data-i="28" d="M362.892 487.784L355.117 484.074L357.826 479.038L365.102 482.509Z"/>
+<path class="c-org" data-p="kolosun.tg" data-i="29" d="M354.588 483.79L347.273 479.39L350.452 474.637L357.297 478.754Z"/>
+<path class="c-org" data-p="griff.near" data-i="30" d="M346.774 479.057L339.935 473.994L343.553 469.566L349.953 474.303Z"/>
+<path class="c-org" data-p="simpletag3424.near" data-i="31" d="M339.47 473.615L333.436 468.207L337.443 464.128L343.088 469.187Z"/>
+<path class="c-org" data-p="bearmans.near" data-i="32" d="M333.008 467.787L327.608 461.987L331.963 458.282L337.014 463.708Z"/>
+<path class="c-org" data-p="undermines.near" data-i="33" d="M327.219 461.53L322.372 455.289L327.04 451.987L331.574 457.825Z"/>
+<path class="c-org" data-p="m1halich228.tg" data-i="34" d="M322.025 454.799L317.805 448.238L322.745 445.36L326.693 451.497Z"/>
+<path class="c-org" data-p="lyprovidad2150.near" data-i="35" d="M317.503 447.72L313.888 440.838L319.062 438.404L322.443 444.842Z"/>
+<path class="c-org" data-p="jaguarcat.near" data-i="36" d="M313.633 440.295L310.646 433.149L316.013 431.178L318.806 437.861Z"/>
+<path class="c-org" data-p="jp_daug.tg" data-i="37" d="M310.439 432.586L308.089 425.207L313.608 423.712L315.806 430.614Z"/>
+<path class="c-org" data-p="ramgor.near" data-i="38" d="M307.932 424.627L306.266 417.234L311.893 416.218L313.45 423.133Z"/>
+<path class="c-org" data-p="coffee-crush_gov.near" data-i="39" d="M306.16 416.644L305.142 409.214L310.834 408.68L311.786 415.628Z"/>
+<path class="c-org" data-p="ray012803.tg" data-i="40" d="M305.085 408.617L304.702 401.128L310.419 401.078L310.778 408.082Z"/>
+<path class="c-org" data-p="tanegov.near" data-i="41" d="M304.697 400.528L304.936 393.228L310.637 393.652L310.413 400.478Z"/>
+<path class="c-org" data-p="kentf.near" data-i="42" d="M304.98 392.63L305.794 385.568L311.442 386.451L310.681 393.054Z"/>
+<path class="c-org" data-p="edwinck.near" data-i="43" d="M305.887 384.975L307.269 378.002L312.827 379.339L311.535 385.858Z"/>
+<path class="c-org" data-p="zorakrizovnikov.tg" data-i="44" d="M307.409 377.418L309.325 370.656L314.758 372.433L312.967 378.755Z"/>
+<path class="c-org" data-p="nearweek.near" data-i="45" d="M309.511 370.085L311.962 363.498L317.236 365.704L314.945 371.863Z"/>
+<path class="c-org" data-p="blaze.near" data-i="46" d="M312.194 362.944L315.164 356.574L320.244 359.194L317.468 365.15Z"/>
+<path class="c-org" data-p="profit.near" data-i="47" d="M315.439 356.04L318.861 350.005L323.718 353.019L320.519 358.661Z"/>
+<path class="c-org" data-p="vikashxd.near" data-i="48" d="M319.177 349.495L323.004 343.833L327.612 347.216L324.035 352.509Z"/>
+<path class="c-org" data-p="truekale619.near" data-i="49" d="M323.36 343.349L327.616 338.003L331.946 341.735L327.967 346.733Z"/>
+<path class="c-org" data-p="kinguin.near" data-i="50" d="M328.008 337.548L332.668 332.55L336.694 336.608L332.338 341.281Z"/>
+<path class="c-org" data-p="monza.near" data-i="51" d="M333.094 332.128L338.036 327.588L341.739 331.943L337.12 336.186Z"/>
+<path class="c-org" data-p="bright-key.near" data-i="52" d="M338.493 327.199L343.768 323.052L347.126 327.678L342.196 331.554Z"/>
+<path class="c-org" data-p="479fceb8679be8c39437dbdf3d94c7cf2b1a16eb3babd1f7e6da15e8ca526a72" data-i="53" d="M344.253 322.699L349.831 318.968L352.825 323.838L347.612 327.325Z"/>
+<path class="c-org" data-p="9e54f4e56afa295e7b60c88ca6157e83e01623d008a42998ee46beab6b72d141" data-i="54" d="M350.342 318.654L356.055 315.431L358.674 320.512L353.336 323.523Z"/>
+<path class="c-org" data-p="mapogov.near" data-i="55" d="M356.588 315.156L362.526 312.371L364.757 317.634L359.208 320.237Z"/>
+<path class="c-org" data-p="wisezip1714.near" data-i="56" d="M363.079 312.137L369.209 309.806L371.039 315.221L365.31 317.4Z"/>
+<path class="c-org" data-p="freytipp1894.tg" data-i="57" d="M369.778 309.614L376.066 307.749L377.484 313.286L371.607 315.029Z"/>
+<path class="c-org" data-p="lyubov_minsk.tg" data-i="58" d="M376.647 307.6L383.058 306.213L384.056 311.841L378.065 313.137Z"/>
+<path class="c-org" data-p="hexie.near" data-i="59" d="M383.649 306.108L390.145 305.206L390.719 310.893L384.647 311.736Z"/>
+<path style="fill:var(--tail)" data-p="__tail" data-i="60" d="M390.742 305.146L399.7 304.696L399.7 310.415L391.316 310.836Z"/>
 </g>
-<g class="petal-outlines">
-<path class="petal-outline" data-p="spareuni818.near" data-i="2" d="M477.92 183.95L489.06 188.30L438.07 318.93L426.93 314.58Z"/>
-<path class="petal-outline" data-p="delegatetoyuen.near" data-i="3" d="M505.38 202.97L515.72 208.86L449.40 325.30L439.06 319.40Z"/>
-<path class="petal-outline" data-p="tony_bc.near" data-i="4" d="M527.26 227.27L536.58 234.54L459.63 333.17L450.31 325.91Z"/>
-<path class="petal-outline" data-p="vinibarbosa.near" data-i="5" d="M548.17 249.83L556.32 258.33L468.59 342.41L460.44 333.91Z"/>
-<path class="petal-outline" data-p="klausbravegov.near" data-i="6" d="M568.16 272.63L575.01 282.21L476.14 352.84L469.29 343.26Z"/>
-<path class="petal-outline" data-p="hos.chicago.near" data-i="7" d="M583.36 298.73L588.76 309.18L482.11 364.23L476.71 353.78Z"/>
-<path class="petal-outline" data-p="india.sputnik-dao.near" data-i="8" d="M595.40 326.22L599.24 337.33L486.38 376.35L482.54 365.24Z"/>
-<path class="petal-outline" data-p="alan777.near" data-i="9" d="M600.87 355.51L603.08 367.03L488.88 388.93L486.67 377.41Z"/>
-<path class="petal-outline" data-p="vote.mob.near" data-i="10" d="M605.00 384.65L605.55 396.36L489.55 401.72L489.00 390.02Z"/>
-<path class="petal-outline" data-p="charles-hos.near" data-i="11" d="M604.84 414.04L603.71 425.71L488.38 414.49L489.52 402.82Z"/>
-<path class="petal-outline" data-p="zaki.near" data-i="12" d="M585.80 439.37L583.07 450.57L485.47 426.78L488.20 415.57Z"/>
-<path class="petal-outline" data-p="aurora_hos.near" data-i="13" d="M548.77 453.06L544.70 463.33L481.06 438.09L485.13 427.82Z"/>
-<path class="petal-outline" data-p="lllllli.near" data-i="14" d="M508.04 454.36L503.15 463.14L475.70 447.87L480.59 439.08Z"/>
-<path class="petal-outline" data-p="yadira.near" data-i="15" d="M495.43 463.64L489.67 471.53L469.34 456.69L475.11 448.80Z"/>
-<path class="petal-outline" data-p="chicagonode.sputnik-dao.near" data-i="16" d="M482.50 470.45L476.08 477.34L462.23 464.43L468.64 457.54Z"/>
-<path class="petal-outline" data-p="cryptoape.near" data-i="17" d="M470.25 475.54L463.41 481.37L454.59 471.02L461.43 465.18Z"/>
-<path class="petal-outline" data-p="bluegirl.near" data-i="18" d="M460.92 482.37L453.52 487.36L446.31 476.67L453.71 471.68Z"/>
-<path class="petal-outline" data-p="spewy.near" data-i="19" d="M450.28 486.59L442.60 490.62L437.69 481.26L445.37 477.23Z"/>
-<path class="petal-outline" data-p="delegate.sleet.near" data-i="20" d="M440.18 490.60L432.23 493.72L428.74 484.84L436.69 481.71Z"/>
-<path class="petal-outline" data-p="vadim.near" data-i="21" d="M430.08 493.88L421.91 496.11L419.53 487.42L427.70 485.18Z"/>
-<path class="petal-outline" data-p="hmtri1011.near" data-i="22" d="M419.85 496.25L411.53 497.59L410.14 489.00L418.46 487.65Z"/>
-<path class="petal-outline" data-p="james.near" data-i="23" d="M409.47 496.83L401.21 497.29L400.79 489.57L409.05 489.11Z"/>
-<path class="petal-outline" data-p="axianetwork.near" data-i="24" d="M399.37 496.18L391.31 495.78L391.63 489.18L399.69 489.57Z"/>
-<path class="petal-outline" data-p="machinewash.near" data-i="25" d="M389.68 494.74L381.88 493.56L382.73 487.89L390.53 489.07Z"/>
-<path class="petal-outline" data-p="fiatisabubble.near" data-i="26" d="M380.24 493.21L372.70 491.29L374.11 485.75L381.66 487.68Z"/>
-<path class="petal-outline" data-p="hos.slimedragon.near" data-i="27" d="M371.11 490.80L363.94 488.20L365.89 482.83L373.06 485.43Z"/>
-<path class="petal-outline" data-p="kolosun.tg" data-i="29" d="M354.14 483.52L347.72 479.66L350.67 474.77L357.08 478.63Z"/>
-<path class="petal-outline" data-p="griff.near" data-i="30" d="M346.35 478.75L340.36 474.31L343.75 469.71L349.75 474.15Z"/>
-<path class="petal-outline" data-p="simpletag3424.near" data-i="31" d="M339.09 473.27L333.82 468.55L337.63 464.29L342.90 469.02Z"/>
-<path class="petal-outline" data-p="bearmans.near" data-i="32" d="M332.66 467.42L327.95 462.36L332.13 458.46L336.84 463.52Z"/>
-<path class="petal-outline" data-p="undermines.near" data-i="33" d="M326.91 461.13L322.68 455.69L327.19 452.18L331.42 457.63Z"/>
-<path class="petal-outline" data-p="m1halich228.tg" data-i="34" d="M321.75 454.38L318.08 448.66L322.88 445.57L326.56 451.29Z"/>
-<path class="petal-outline" data-p="lyprovidad2150.near" data-i="35" d="M317.27 447.28L314.12 441.28L319.18 438.63L322.33 444.62Z"/>
-<path class="petal-outline" data-p="jaguarcat.near" data-i="36" d="M313.44 439.83L310.84 433.61L316.11 431.41L318.71 437.63Z"/>
-<path class="petal-outline" data-p="jp_daug.tg" data-i="37" d="M310.29 432.11L308.24 425.68L313.68 423.95L315.73 430.38Z"/>
-<path class="petal-outline" data-p="ramgor.near" data-i="38" d="M307.82 424.14L306.38 417.72L311.95 416.46L313.40 422.89Z"/>
-<path class="petal-outline" data-p="coffee-crush_gov.near" data-i="39" d="M306.09 416.16L305.21 409.70L310.87 408.93L311.75 415.38Z"/>
-<path class="petal-outline" data-p="ray012803.tg" data-i="40" d="M305.06 408.12L304.73 401.62L310.43 401.33L310.76 407.83Z"/>
-<path class="petal-outline" data-p="tanegov.near" data-i="41" d="M304.71 400.04L304.92 393.71L310.63 393.90L310.42 400.23Z"/>
-<path class="petal-outline" data-p="kentf.near" data-i="42" d="M305.04 392.15L305.74 386.05L311.41 386.70L310.71 392.81Z"/>
-<path class="petal-outline" data-p="edwinck.near" data-i="43" d="M305.98 384.50L307.18 378.47L312.78 379.58L311.58 385.61Z"/>
-<path class="petal-outline" data-p="zorakrizovnikov.tg" data-i="44" d="M307.54 376.96L309.19 371.12L314.69 372.67L313.03 378.52Z"/>
-<path class="petal-outline" data-p="nearweek.near" data-i="45" d="M309.68 369.64L311.80 363.95L317.15 365.94L315.03 371.63Z"/>
-<path class="petal-outline" data-p="blaze.near" data-i="46" d="M312.40 362.51L314.96 357.01L320.14 359.42L317.57 364.92Z"/>
-<path class="petal-outline" data-p="profit.near" data-i="47" d="M315.67 355.63L318.63 350.42L323.60 353.24L320.64 358.44Z"/>
-<path class="petal-outline" data-p="vikashxd.near" data-i="48" d="M319.44 349.10L322.74 344.22L327.47 347.42L324.17 352.30Z"/>
-<path class="petal-outline" data-p="truekale619.near" data-i="49" d="M323.65 342.98L327.32 338.37L331.79 341.93L328.12 346.54Z"/>
-<path class="petal-outline" data-p="kinguin.near" data-i="50" d="M328.33 337.20L332.35 332.90L336.52 336.79L332.51 341.10Z"/>
-<path class="petal-outline" data-p="monza.near" data-i="51" d="M333.44 331.81L337.69 327.91L341.55 332.11L337.30 336.02Z"/>
-<path class="petal-outline" data-p="bright-key.near" data-i="52" d="M338.86 326.91L343.40 323.34L346.93 327.83L342.39 331.40Z"/>
-<path class="petal-outline" data-p="mapogov.near" data-i="55" d="M357.01 314.96L362.11 312.57L364.53 317.74L359.43 320.13Z"/>
-<path class="petal-outline" data-p="wisezip1714.near" data-i="56" d="M363.51 311.97L368.78 309.97L370.81 315.31L365.54 317.31Z"/>
-<path class="petal-outline" data-p="freytipp1894.tg" data-i="57" d="M370.22 309.48L375.62 307.88L377.24 313.36L371.85 314.96Z"/>
-<path class="petal-outline" data-p="lyubov_minsk.tg" data-i="58" d="M377.10 307.50L382.60 306.31L383.81 311.89L378.31 313.08Z"/>
-<path class="petal-outline" data-p="hexie.near" data-i="59" d="M384.11 306.04L389.69 305.27L390.47 310.93L384.89 311.70Z"/>
+<path class="petal-poly" stroke-opacity="1" vector-effect="non-scaling-stroke" d="M400.3 310.423L413.113 311.387L413.706 311.477L426.119 314.314L426.693 314.491L438.3 319.022L438.841 319.28L449.618 325.419L450.117 325.752L459.826 333.328L460.271 333.73L468.767 342.594L469.15 343.056L476.287 353.046L476.6 353.558L482.224 364.454L482.461 365.005L486.465 376.588L486.62 377.168L488.922 389.171L488.993 389.767L489.557 401.974L489.542 402.574L488.359 414.734L488.259 415.325L485.408 427.018L485.225 427.59L480.968 438.325L480.711 438.867L475.579 448.091L475.255 448.597L469.196 456.894L468.814 457.357L462.055 464.608L461.622 465.023L454.397 471.177L453.919 471.54L446.106 476.808L445.591 477.116L437.469 481.372L436.923 481.621L428.508 484.927L427.939 485.116L419.29 487.483L418.704 487.61L409.895 489.036L409.299 489.101L400.54 489.583L399.94 489.585L391.378 489.169L390.781 489.11L382.485 487.857L381.897 487.738L373.869 485.69L373.295 485.513L365.655 482.741L365.102 482.509L357.826 479.038L357.297 478.754L350.452 474.637L349.953 474.303L343.553 469.566L343.088 469.187L337.443 464.128L337.014 463.708L331.963 458.282L331.574 457.825L327.04 451.987L326.693 451.497L322.745 445.36L322.443 444.842L319.062 438.404L318.806 437.861L316.013 431.178L315.806 430.614L313.608 423.712L313.45 423.133L311.893 416.218L311.786 415.628L310.834 408.68L310.778 408.082L310.419 401.078L310.413 400.478L310.637 393.652L310.681 393.054L311.442 386.451L311.535 385.858L312.827 379.339L312.967 378.755L314.758 372.433L314.945 371.863L317.236 365.704L317.468 365.15L320.244 359.194L320.519 358.661L323.718 353.019L324.035 352.509L327.612 347.216L327.967 346.733L331.946 341.735L332.338 341.281L336.694 336.608L337.12 336.186L341.739 331.943L342.196 331.554L347.126 327.678L347.612 327.325L352.825 323.838L353.336 323.523L358.674 320.512L359.208 320.237L364.757 317.634L365.31 317.4L371.039 315.221L371.607 315.029L377.484 313.286L378.065 313.137L384.056 311.841L384.647 311.736L390.719 310.893L391.316 310.836L399.7 310.415Z"/>
 </g>
-<g class="petal-labels">
-<text x="394.82" y="300.93" text-anchor="end">everyone else (406) &lt;0.1%</text>
-<text x="421.60" y="117.06" text-anchor="middle">cc96f558…c807 15.3%</text>
-<text x="460.45" y="139.58" text-anchor="start">4783b548…6172 12.8%</text>
-<text x="486.40" y="182.67" text-anchor="start">spareuni818.near 8.33%</text>
-<text x="514.51" y="202.96" text-anchor="start">delegatetoyuen.near 7.60%</text>
-<text x="536.84" y="228.60" text-anchor="start">tony_bc.near 6.63%</text>
-<text x="558.02" y="252.55" text-anchor="start">vinibarbosa.near 6.25%</text>
-<text x="578.10" y="276.77" text-anchor="start">klausbravegov.near 6.25%</text>
-<text x="593.17" y="304.28" text-anchor="start">hos.chicago.near 6.10%</text>
-</g>
-<text class="petal-centre" x="400.00" y="404.00" text-anchor="middle">NEAR House of Stake</text>
+<g opacity="1"><path fill="none" style="stroke:var(--hair)" d="M424.897 69.235L426.098 53.281L559.858 53.281"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="424.897" cy="69.235"/><text x="426.098" y="49.281">cc96f558…c807 15.3%</text></g>
+<g opacity="1"><path fill="none" style="stroke:var(--hair)" d="M394.334 287.263L393.531 271.284L217.531 271.284"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="394.334" cy="287.263"/><text x="217.531" y="267.284">everyone else (406) &lt;0.1%</text></g>
+<g opacity="1"><path fill="none" style="stroke:var(--hair)" d="M498.998 146.404L511.362 114.732L666.242 114.732"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="498.998" cy="146.404"/><text x="511.362" y="110.732">spareuni818.near 8.33%</text></g>
+<g opacity="1"><path fill="none" style="stroke:var(--hair)" d="M531.081 169.871L539 155.968L715 155.968"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="531.081" cy="169.871"/><text x="539" y="151.968">delegatetoyuen.near 7.60%</text></g>
+<g opacity="1"><path fill="none" style="stroke:var(--hair)" d="M556.421 199.506L571.799 179.795L698.519 179.795"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="556.421" cy="199.506"/><text x="571.799" y="175.795">tony_bc.near 6.63%</text></g>
+<g opacity="0.99"><path fill="none" style="stroke:var(--hair)" d="M580.518 226.982L605.065 203.456L759.945 203.456"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="580.518" cy="226.982"/><text x="605.065" y="199.456">vinibarbosa.near 6.25%</text></g>
+<g opacity="0.97"><path fill="none" style="stroke:var(--hair)" d="M603.454 254.654L616.474 245.353L785.434 245.353"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="603.454" cy="254.654"/><text x="616.474" y="241.353">klausbravegov.near 6.25%</text></g>
+<g opacity="0.01"><path fill="none" style="stroke:var(--hair)" d="M620.612 286.115L642.827 274.648L797.707 274.648"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="620.612" cy="286.115"/><text x="642.827" y="270.648">hos.chicago.near 6.10%</text></g>
+<text class="petal-centre" opacity="1" x="400" y="404" text-anchor="middle">NEAR House of Stake</text>
 </svg>

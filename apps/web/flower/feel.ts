@@ -45,12 +45,6 @@ export const CLICK_LONGEST = 450;
 /** figure.pick: a click takes a petal only where hover has lit it at least this much. */
 export const CLICK_LIT = 0.5;
 
-/** The flower fills this share of the window's short side, at rest. */
-export const FIT = 0.415;
-
-/** The line between two wedges, in world units: the same width from base to tip. */
-export const GUTTER = 0.6;
-
 /** Dock: how much of the focus's rise each petal gets, by how many petals away it is. Past the last
  * one nothing moves. */
 export const DOCK_FALLOFF = [1, 0.15, 0.05];
@@ -82,5 +76,7 @@ export const SETTLE = 0.07;
 export const OPEN_WIDTH = 4;
 /** Past this far open, the account stays locked until the zoom closes it. */
 export const LOCK_AT = 0.5;
-/** The rest of the flower recedes this far while an account opens (crossing.js). */
-export const RECEDE = 0.62;
+
+export { RECEDE } from '@petal/core/wedge/marks';
+// Three numbers the still pictures need too, so they live with the wedge flower in core.
+export { FIT, GUTTER } from '@petal/core/wedge/ring';

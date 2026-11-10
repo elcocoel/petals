@@ -239,7 +239,14 @@ describe('the table against what uses it', () => {
             ? [join(dir, d.name)]
             : [],
       );
-    const text = [...sources('components'), ...sources('viewmodels'), ...sources('flower')]
+    // The live flower's pure half lives in core since the one look (specs/006-the-map, milestone 3).
+    const wedge = '../../packages/core/src/render/wedge';
+    const text = [
+      ...sources('components'),
+      ...sources('viewmodels'),
+      ...sources('flower'),
+      ...sources(wedge),
+    ]
       .map((p) => readFileSync(join(app, p), 'utf8'))
       .join('\n');
     const parentNames = Object.keys(parents).join('|');

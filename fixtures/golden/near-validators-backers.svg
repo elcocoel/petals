@@ -1,177 +1,189 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-label="NEAR validators" data-petal="render/v1" data-spec="0f475a0fb0f11115569b2f74cc9b884d0f6ba98cb101d7d49ed4c7b05c409cd4">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-label="NEAR validators" data-petal="render/v2" data-spec="0f475a0fb0f11115569b2f74cc9b884d0f6ba98cb101d7d49ed4c7b05c409cd4">
 <style>svg[data-petal]{--ink:#0b0b0b;--ink-2:#52514e;--hair:#e1e0d9;--unknown:#c9c7bf;--tail:#b8b6ae;--k-pool:#2a78d6;--k-exchange:#eb6834;--k-entity:#1baf7a;--k-custodian:#eda100;--k-contract:#e87ba4;--k-treasury:#008300;--k-org:#4a3aa7;--k-delegator:#e34948}.petal-dark svg[data-petal],svg[data-petal].petal-dark{--ink:#ffffff;--ink-2:#c3c2b7;--hair:#2c2c2a;--unknown:#4a4945;--tail:#5e5d58;--k-pool:#3987e5;--k-exchange:#d95926;--k-entity:#199e70;--k-custodian:#c98500;--k-contract:#d55181;--k-treasury:#008300;--k-org:#9085e9;--k-delegator:#e66767}svg[data-petal] .petal-poly{fill:none;stroke:var(--hair)}svg[data-petal] .c-pool{fill:var(--k-pool)}svg[data-petal] .c-exchange{fill:var(--k-exchange)}svg[data-petal] .c-custodian{fill:var(--k-custodian)}svg[data-petal] .c-entity{fill:var(--k-entity)}svg[data-petal] .c-contract{fill:var(--k-contract)}svg[data-petal] .c-treasury{fill:var(--k-treasury)}svg[data-petal] .c-org{fill:var(--k-org)}svg[data-petal] .c-delegator{fill:var(--k-delegator)}svg[data-petal] .c-unknown{fill:var(--unknown)}svg[data-petal] .c-seg-other{fill:var(--k-pool)}svg[data-petal] .c-seg-large{fill:var(--k-org)}svg[data-petal] .c-seg-liquid{fill:var(--k-entity)}svg[data-petal] .c-seg-lockup{fill:var(--k-contract)}svg[data-petal] .petal-outline{fill:none;stroke:var(--ink-2);stroke-width:0.8px;pointer-events:none}svg[data-petal] .petal-outline.inferred{stroke-dasharray:3 2}svg[data-petal] .hatch-bg{fill:var(--unknown)}svg[data-petal] .hatch-line{stroke:var(--tail);stroke-width:2.2px}svg[data-petal] text{fill:var(--ink-2);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:11px}svg[data-petal] .petal-centre{fill:var(--ink);font-size:12px;font-weight:600}</style>
-<defs><pattern id="petal-hatch-0f475a0f" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect class="hatch-bg" width="5" height="5"/><line class="hatch-line" x1="0" y1="0" x2="0" y2="5"/></pattern></defs>
-<path class="petal-poly" d="M400.55 310.44L412.85 311.36L424.60 313.88L435.57 317.80L445.79 323.02L455.20 329.46L463.70 337.03L471.10 345.53L477.33 354.81L482.32 364.70L486.02 375.05L488.43 385.74L489.51 396.65L489.25 407.60L487.73 418.06L485.03 428.15L481.18 437.85L476.23 447.03L470.30 455.50L463.55 463.12L455.99 469.91L447.71 475.81L439.02 480.62L430.10 484.36L420.85 487.11L411.63 488.81L402.29 489.54L392.95 489.30L383.78 488.09L374.88 485.98L366.24 482.97L357.96 479.09L350.21 474.46L343.01 469.11L336.52 463.20L330.74 456.80L325.65 449.97L321.28 442.74L317.67 435.30L314.80 427.67L312.66 419.90L311.23 412.01L310.52 404.13L310.50 396.28L311.16 388.50L312.46 381.02L314.33 373.81L316.78 366.86L319.76 360.18L323.26 353.78L327.28 347.69L331.77 341.95L336.66 336.66L341.95 331.78L347.55 327.38L353.49 323.44L359.71 319.99L366.18 317.05L372.85 314.63L379.67 312.76L386.56 311.46Z"/>
+<g transform="translate(-74.286 -74.286) scale(1.186)">
 <g class="petal-bars">
-<path id="s-0-other" class="petal-seg c-seg-other" data-p="astro-stakers.poolv1.near" data-i="0" data-seg="other" d="M408.51 195.08L419.73 195.86L411.77 311.21L400.55 310.44Z"/>
-<path id="s-0-large" class="petal-seg c-seg-large" data-p="astro-stakers.poolv1.near" data-i="0" data-seg="large" d="M411.07 158.09L422.29 158.87L419.79 194.96L408.58 194.19Z"/>
-<path id="s-0-lockup" class="petal-seg c-seg-lockup" data-p="astro-stakers.poolv1.near" data-i="0" data-seg="lockup" d="M413.66 120.49L424.88 121.26L422.40 157.21L411.18 156.43Z"/>
-<path id="s-1-other" class="petal-seg c-seg-other" data-p="figment.poolv1.near" data-i="1" data-seg="other" d="M421.79 268.40L432.47 270.62L423.54 313.58L412.85 311.36Z"/>
-<path id="s-1-large" class="petal-seg c-seg-large" data-p="figment.poolv1.near" data-i="1" data-seg="large" d="M447.83 143.12L458.52 145.34L432.66 269.74L421.97 267.52Z"/>
-<path id="s-1-lockup" class="petal-seg c-seg-lockup" data-p="figment.poolv1.near" data-i="1" data-seg="lockup" d="M448.35 140.62L459.04 142.84L458.70 144.45L448.02 142.23Z"/>
-<path id="s-2-other" class="petal-seg c-seg-other" data-p="ledgerbyfigment.poolv1.near" data-i="2" data-seg="other" d="M460.59 211.19L470.55 214.68L434.56 317.37L424.60 313.88Z"/>
-<path id="s-2-large" class="petal-seg c-seg-large" data-p="ledgerbyfigment.poolv1.near" data-i="2" data-seg="large" d="M476.60 165.53L486.56 169.02L470.85 213.83L460.89 210.34Z"/>
-<path id="s-3-other" class="petal-seg c-seg-other" data-p="staked.poolv1.near" data-i="3" data-seg="other" d="M442.56 303.89L451.84 308.56L444.84 322.47L435.57 317.80Z"/>
-<path id="s-3-large" class="petal-seg c-seg-large" data-p="staked.poolv1.near" data-i="3" data-seg="large" d="M501.88 186.06L511.15 190.73L452.24 307.76L442.97 303.09Z"/>
-<path id="s-3-lockup" class="petal-seg c-seg-lockup" data-p="staked.poolv1.near" data-i="3" data-seg="lockup" d="M503.61 182.62L512.89 187.29L511.56 189.93L502.28 185.26Z"/>
-<path id="s-4-other" class="petal-seg c-seg-other" data-p="binancenode1.poolv1.near" data-i="4" data-seg="other" d="M447.83 320.00L456.37 325.76L454.33 328.79L445.79 323.02Z"/>
-<path id="s-4-large" class="petal-seg c-seg-large" data-p="binancenode1.poolv1.near" data-i="4" data-seg="large" d="M527.21 202.50L535.75 208.26L456.87 325.02L448.34 319.25Z"/>
-<path id="s-4-lockup" class="petal-seg c-seg-lockup" data-p="binancenode1.poolv1.near" data-i="4" data-seg="lockup" d="M528.70 200.30L537.23 206.07L536.67 206.90L528.14 201.13Z"/>
-<path id="s-5-other" class="petal-seg c-seg-other" data-p="bitwise_1.poolv1.near" data-i="5" data-seg="other" d="M459.85 324.17L467.57 330.97L462.92 336.26L455.20 329.46Z"/>
-<path id="s-5-large" class="petal-seg c-seg-large" data-p="bitwise_1.poolv1.near" data-i="5" data-seg="large" d="M552.55 218.77L560.28 225.57L468.17 330.29L460.44 323.50Z"/>
-<path id="s-6-other" class="petal-seg c-seg-other" data-p="sumerian.poolv1.near" data-i="6" data-seg="other" d="M476.19 326.01L482.92 333.64L470.43 344.66L463.70 337.03Z"/>
-<path id="s-6-large" class="petal-seg c-seg-large" data-p="sumerian.poolv1.near" data-i="6" data-seg="large" d="M570.60 242.73L577.33 250.36L483.60 333.04L476.87 325.41Z"/>
-<path id="s-7-other" class="petal-seg c-seg-other" data-p="zavodil.poolv1.near" data-i="7" data-seg="other" d="M543.28 296.42L548.95 304.76L476.77 353.87L471.10 345.53Z"/>
-<path id="s-7-large" class="petal-seg c-seg-large" data-p="zavodil.poolv1.near" data-i="7" data-seg="large" d="M556.78 287.24L562.45 295.58L549.70 304.25L544.02 295.91Z"/>
-<path id="s-7-liquid" class="petal-seg c-seg-liquid" data-p="zavodil.poolv1.near" data-i="7" data-seg="liquid" d="M560.25 284.87L565.93 293.21L563.19 295.07L557.52 286.73Z"/>
-<path id="s-7-lockup" class="petal-seg c-seg-lockup" data-p="zavodil.poolv1.near" data-i="7" data-seg="lockup" d="M586.67 266.90L592.35 275.24L566.67 292.70L561.00 284.36Z"/>
-<path id="s-8-other" class="petal-seg c-seg-other" data-p="bitwise_2.poolv1.near" data-i="8" data-seg="other" d="M573.84 305.41L578.39 314.29L481.88 363.69L477.33 354.81Z"/>
-<path id="s-8-large" class="petal-seg c-seg-large" data-p="bitwise_2.poolv1.near" data-i="8" data-seg="large" d="M597.65 293.23L602.19 302.10L579.19 313.88L574.65 305.00Z"/>
-<path id="s-9-other" class="petal-seg c-seg-other" data-p="liver.pool.near" data-i="9" data-seg="other" d="M487.02 362.98L490.42 372.29L485.71 374.00L482.32 364.70Z"/>
-<path id="s-9-large" class="petal-seg c-seg-large" data-p="liver.pool.near" data-i="9" data-seg="large" d="M523.37 349.72L526.77 359.02L491.26 371.98L487.87 362.67Z"/>
-<path id="s-9-lockup" class="petal-seg c-seg-lockup" data-p="liver.pool.near" data-i="9" data-seg="lockup" d="M607.36 319.08L610.76 328.38L528.51 358.39L525.11 349.08Z"/>
-<path id="s-10-large" class="petal-seg c-seg-large" data-p="cnear-1.poolv1.near" data-i="10" data-seg="large" d="M614.22 345.42L616.45 355.03L489.11 384.46L486.89 374.85Z"/>
-<path id="s-11-large" class="petal-seg c-seg-large" data-p="cnear-3.poolv1.near" data-i="11" data-seg="large" d="M619.24 371.99L620.27 381.79L490.25 395.47L489.22 385.66Z"/>
-<path id="s-12-large" class="petal-seg c-seg-large" data-p="cnear-2.poolv1.near" data-i="12" data-seg="large" d="M621.01 398.97L620.84 408.82L490.12 406.52L490.29 396.66Z"/>
-<path id="s-13-other" class="petal-seg c-seg-other" data-p="kiln-1.poolv1.near" data-i="13" data-seg="other" d="M506.09 409.94L504.79 419.32L487.94 416.99L489.25 407.60Z"/>
-<path id="s-13-large" class="petal-seg c-seg-large" data-p="kiln-1.poolv1.near" data-i="13" data-seg="large" d="M605.40 423.72L604.10 433.10L505.68 419.45L506.99 410.06Z"/>
-<path id="s-13-liquid" class="petal-seg c-seg-liquid" data-p="kiln-1.poolv1.near" data-i="13" data-seg="liquid" d="M606.87 423.92L605.57 433.31L604.99 433.23L606.29 423.84Z"/>
-<path id="s-14-large" class="petal-seg c-seg-large" data-p="svrn-ai.poolv1.near" data-i="14" data-seg="large" d="M598.70 447.02L596.34 456.06L486.32 427.36L488.68 418.31Z"/>
-<path id="s-15-other" class="petal-seg c-seg-other" data-p="svrn.pool.near" data-i="15" data-seg="other" d="M485.29 428.25L481.90 436.96L481.64 436.85L485.03 428.15Z"/>
-<path id="s-15-large" class="petal-seg c-seg-large" data-p="svrn.pool.near" data-i="15" data-seg="large" d="M591.73 469.77L588.34 478.47L482.74 437.28L486.13 428.58Z"/>
-<path id="s-16-other" class="petal-seg c-seg-other" data-p="epic.poolv1.near" data-i="16" data-seg="other" d="M517.29 457.04L512.91 465.28L476.80 446.09L481.18 437.85Z"/>
-<path id="s-16-large" class="petal-seg c-seg-large" data-p="epic.poolv1.near" data-i="16" data-seg="large" d="M568.31 484.15L563.93 492.38L513.71 465.70L518.08 457.46Z"/>
-<path id="s-16-liquid" class="petal-seg c-seg-liquid" data-p="epic.poolv1.near" data-i="16" data-seg="liquid" d="M569.81 484.95L565.43 493.18L564.73 492.81L569.10 484.57Z"/>
-<path id="s-16-lockup" class="petal-seg c-seg-lockup" data-p="epic.poolv1.near" data-i="16" data-seg="lockup" d="M581.93 491.39L577.56 499.62L566.23 493.61L570.61 485.37Z"/>
-<path id="s-17-large" class="petal-seg c-seg-large" data-p="svrn-luganodes.pool.near" data-i="17" data-seg="large" d="M568.14 510.50L562.89 518.11L471.35 454.89L476.60 447.28Z"/>
-<path id="s-18-large" class="petal-seg c-seg-large" data-p="nearvana.poolv1.near" data-i="18" data-seg="large" d="M550.24 525.47L544.26 532.30L464.74 462.69L470.71 455.86Z"/>
-<path id="s-19-other" class="petal-seg c-seg-other" data-p="stake1.poolv1.near" data-i="19" data-seg="other" d="M474.05 474.65L467.33 480.75L456.84 469.22L463.55 463.12Z"/>
-<path id="s-19-large" class="petal-seg c-seg-large" data-p="stake1.poolv1.near" data-i="19" data-seg="large" d="M533.32 539.80L526.61 545.91L467.94 481.42L474.65 475.31Z"/>
-<path id="s-19-liquid" class="petal-seg c-seg-liquid" data-p="stake1.poolv1.near" data-i="19" data-seg="liquid" d="M534.98 541.63L528.27 547.74L527.22 546.57L533.93 540.47Z"/>
-<path id="s-20-large" class="petal-seg c-seg-large" data-p="svrn_bitwise.poolv1.near" data-i="20" data-seg="large" d="M518.27 556.30L510.91 561.60L449.20 476.00L456.55 470.70Z"/>
-<path id="s-21-liquid" class="petal-seg c-seg-liquid" data-p="metapool01.pool.near" data-i="21" data-seg="liquid" d="M496.76 563.02L489.06 567.35L440.24 480.55L447.94 476.22Z"/>
-<path id="s-22-other" class="petal-seg c-seg-other" data-p="p2p-org.poolv1.near" data-i="22" data-seg="other" d="M456.43 521.47L448.54 524.83L431.13 483.99L439.02 480.62Z"/>
-<path id="s-22-large" class="petal-seg c-seg-large" data-p="p2p-org.poolv1.near" data-i="22" data-seg="large" d="M474.34 563.49L466.45 566.85L448.89 525.66L456.78 522.30Z"/>
-<path id="s-22-lockup" class="petal-seg c-seg-lockup" data-p="p2p-org.poolv1.near" data-i="22" data-seg="lockup" d="M475.64 566.55L467.75 569.91L466.89 567.90L474.78 564.54Z"/>
-<path id="s-23-other" class="petal-seg c-seg-other" data-p="dragonfly.poolv1.near" data-i="23" data-seg="other" d="M430.51 485.72L422.33 488.21L421.92 486.85L430.10 484.36Z"/>
-<path id="s-23-large" class="petal-seg c-seg-large" data-p="dragonfly.poolv1.near" data-i="23" data-seg="large" d="M456.19 570.24L448.01 572.73L422.59 489.07L430.77 486.58Z"/>
-<path id="s-23-liquid" class="petal-seg c-seg-liquid" data-p="dragonfly.poolv1.near" data-i="23" data-seg="liquid" d="M457.08 573.17L448.89 575.66L448.27 573.59L456.45 571.10Z"/>
-<path id="s-24-other" class="petal-seg c-seg-other" data-p="allnodes.poolv1.near" data-i="24" data-seg="other" d="M436.22 567.61L428.09 569.16L412.72 488.67L420.85 487.11Z"/>
-<path id="s-24-liquid" class="petal-seg c-seg-liquid" data-p="allnodes.poolv1.near" data-i="24" data-seg="liquid" d="M436.93 571.32L428.80 572.87L428.26 570.04L436.39 568.49Z"/>
-<path id="s-25-other" class="petal-seg c-seg-other" data-p="bisontrails.poolv1.near" data-i="25" data-seg="other" d="M416.68 548.69L408.44 549.39L403.39 489.51L411.63 488.81Z"/>
-<path id="s-25-large" class="petal-seg c-seg-large" data-p="bisontrails.poolv1.near" data-i="25" data-seg="large" d="M418.59 571.39L410.35 572.08L408.51 550.28L416.75 549.59Z"/>
-<path id="s-25-lockup" class="petal-seg c-seg-lockup" data-p="bisontrails.poolv1.near" data-i="25" data-seg="lockup" d="M418.85 574.53L410.61 575.23L410.43 573.01L418.67 572.32Z"/>
-<path id="s-26-large" class="petal-seg c-seg-large" data-p="macrodatarefinement.poolv1.near" data-i="26" data-seg="large" d="M400.59 572.96L392.34 572.79L394.04 489.83L402.28 489.99Z"/>
-<path id="s-26-liquid" class="petal-seg c-seg-liquid" data-p="macrodatarefinement.poolv1.near" data-i="26" data-seg="liquid" d="M400.54 575.06L392.30 574.90L392.32 573.69L400.57 573.86Z"/>
-<path id="s-27-large" class="petal-seg c-seg-large" data-p="aca87218e28c41f5a693dee3dff12238.poolv1.near" data-i="27" data-seg="large" d="M382.68 571.48L374.60 570.47L384.80 488.76L392.89 489.77Z"/>
-<path id="s-28-large" class="petal-seg c-seg-large" data-p="silentnodes.pool.near" data-i="28" data-seg="large" d="M365.49 567.27L357.64 565.46L375.83 486.74L383.68 488.56Z"/>
-<path id="s-29-other" class="petal-seg c-seg-other" data-p="d1.poolv1.near" data-i="29" data-seg="other" d="M374.12 488.19L366.50 485.59L367.26 483.37L374.88 485.98Z"/>
-<path id="s-29-liquid" class="petal-seg c-seg-liquid" data-p="d1.poolv1.near" data-i="29" data-seg="liquid" d="M372.43 493.14L364.81 490.54L366.21 486.44L373.83 489.04Z"/>
-<path id="s-29-lockup" class="petal-seg c-seg-lockup" data-p="d1.poolv1.near" data-i="29" data-seg="lockup" d="M348.61 562.84L340.99 560.24L364.52 491.39L372.14 493.99Z"/>
-<path id="s-30-large" class="petal-seg c-seg-large" data-p="svrn-twinstake.poolv1.near" data-i="30" data-seg="large" d="M332.39 556.49L325.09 553.13L358.74 480.03L366.04 483.39Z"/>
-<path id="s-31-other" class="petal-seg c-seg-other" data-p="stakin.poolv1.near" data-i="31" data-seg="other" d="M341.13 507.63L334.30 503.60L351.13 475.07L357.96 479.09Z"/>
-<path id="s-31-large" class="petal-seg c-seg-large" data-p="stakin.poolv1.near" data-i="31" data-seg="large" d="M321.98 540.11L315.15 536.08L333.84 504.37L340.67 508.40Z"/>
-<path id="s-31-liquid" class="petal-seg c-seg-liquid" data-p="stakin.poolv1.near" data-i="31" data-seg="liquid" d="M320.67 542.32L313.84 538.29L314.69 536.85L321.52 540.88Z"/>
-<path id="s-31-lockup" class="petal-seg c-seg-lockup" data-p="stakin.poolv1.near" data-i="31" data-seg="lockup" d="M318.04 546.78L311.21 542.75L313.38 539.07L320.21 543.10Z"/>
-<path id="s-32-bar" class="petal-seg c-entity" data-p="lst-pool.near" data-i="32" data-seg="bar" d="M304.36 536.91L298.01 532.24L343.86 469.80L350.21 474.46Z"/>
-<path id="s-33-other" class="petal-seg c-seg-other" data-p="legends.poolv1.near" data-i="33" data-seg="other" d="M338.21 474.44L332.51 469.30L337.30 463.97L343.01 469.11Z"/>
-<path id="s-33-large" class="petal-seg c-seg-large" data-p="legends.poolv1.near" data-i="33" data-seg="large" d="M294.71 522.81L289.01 517.67L331.91 469.97L337.61 475.11Z"/>
-<path id="s-33-lockup" class="petal-seg c-seg-lockup" data-p="legends.poolv1.near" data-i="33" data-seg="lockup" d="M293.92 523.69L288.21 518.56L288.40 518.34L294.11 523.47Z"/>
-<path id="s-34-lockup" class="petal-seg c-seg-lockup" data-p="northernlights.poolv1.near" data-i="34" data-seg="lockup" d="M284.40 510.90L279.32 505.34L330.56 458.45L335.64 464.00Z"/>
-<path id="s-35-large" class="petal-seg c-seg-large" data-p="republic.poolv1.near" data-i="35" data-seg="large" d="M276.44 497.69L271.97 491.76L325.78 451.25L330.24 457.17Z"/>
-<path id="s-36-other" class="petal-seg c-seg-other" data-p="okx-earn.poolv1.near" data-i="36" data-seg="other" d="M313.58 457.38L309.74 451.12L321.81 443.71L325.65 449.97Z"/>
-<path id="s-36-large" class="petal-seg c-seg-large" data-p="okx-earn.poolv1.near" data-i="36" data-seg="large" d="M270.69 483.72L266.84 477.46L308.97 451.59L312.81 457.85Z"/>
-<path id="s-36-liquid" class="petal-seg c-seg-liquid" data-p="okx-earn.poolv1.near" data-i="36" data-seg="liquid" d="M268.38 485.14L264.53 478.88L266.08 477.93L269.92 484.19Z"/>
-<path id="s-37-other" class="petal-seg c-seg-other" data-p="rekt.poolv1.near" data-i="37" data-seg="other" d="M308.52 449.02L305.36 442.58L318.11 436.31L321.28 442.74Z"/>
-<path id="s-37-liquid" class="petal-seg c-seg-liquid" data-p="rekt.poolv1.near" data-i="37" data-seg="liquid" d="M303.47 451.51L300.30 445.07L304.55 442.98L307.72 449.42Z"/>
-<path id="s-37-lockup" class="petal-seg c-seg-lockup" data-p="rekt.poolv1.near" data-i="37" data-seg="lockup" d="M263.63 471.12L260.46 464.68L299.49 445.47L302.66 451.91Z"/>
-<path id="s-38-other" class="petal-seg c-seg-other" data-p="ni.poolv1.near" data-i="38" data-seg="other" d="M316.70 435.67L314.18 429.09L315.15 428.72L317.67 435.30Z"/>
-<path id="s-38-large" class="petal-seg c-seg-large" data-p="ni.poolv1.near" data-i="38" data-seg="large" d="M266.58 454.86L264.06 448.28L313.34 429.41L315.86 435.99Z"/>
-<path id="s-38-liquid" class="petal-seg c-seg-liquid" data-p="ni.poolv1.near" data-i="38" data-seg="liquid" d="M262.50 456.42L259.98 449.84L263.22 448.60L265.74 455.18Z"/>
-<path id="s-38-lockup" class="petal-seg c-seg-lockup" data-p="ni.poolv1.near" data-i="38" data-seg="lockup" d="M259.65 457.52L257.13 450.93L259.14 450.16L261.66 456.74Z"/>
-<path id="s-39-other" class="petal-seg c-seg-other" data-p="everstake.poolv1.near" data-i="39" data-seg="other" d="M287.88 435.27L285.99 428.57L312.91 420.97L314.80 427.67Z"/>
-<path id="s-39-large" class="petal-seg c-seg-large" data-p="everstake.poolv1.near" data-i="39" data-seg="large" d="M268.08 440.86L266.18 434.16L285.12 428.81L287.02 435.52Z"/>
-<path id="s-39-liquid" class="petal-seg c-seg-liquid" data-p="everstake.poolv1.near" data-i="39" data-seg="liquid" d="M262.75 442.37L260.86 435.67L265.32 434.41L267.21 441.11Z"/>
-<path id="s-39-lockup" class="petal-seg c-seg-lockup" data-p="everstake.poolv1.near" data-i="39" data-seg="lockup" d="M256.34 444.18L254.45 437.47L259.99 435.91L261.88 442.61Z"/>
-<path id="s-40-other" class="petal-seg c-seg-other" data-p="gtnode-0.poolv1.near" data-i="40" data-seg="other" d="M303.59 421.60L302.31 414.79L311.39 413.09L312.66 419.90Z"/>
-<path id="s-40-large" class="petal-seg c-seg-large" data-p="gtnode-0.poolv1.near" data-i="40" data-seg="large" d="M257.68 430.21L256.41 423.40L301.43 414.96L302.70 421.77Z"/>
-<path id="s-40-liquid" class="petal-seg c-seg-liquid" data-p="gtnode-0.poolv1.near" data-i="40" data-seg="liquid" d="M253.62 430.97L252.34 424.16L255.52 423.57L256.80 430.37Z"/>
-<path id="s-41-other" class="petal-seg c-seg-other" data-p="nearfans.poolv1.near" data-i="41" data-seg="other" d="M283.39 414.70L282.74 407.92L310.58 405.23L311.23 412.01Z"/>
-<path id="s-41-liquid" class="petal-seg c-seg-liquid" data-p="nearfans.poolv1.near" data-i="41" data-seg="liquid" d="M279.93 415.03L279.27 408.25L281.84 408.01L282.50 414.78Z"/>
-<path id="s-41-lockup" class="petal-seg c-seg-lockup" data-p="nearfans.poolv1.near" data-i="41" data-seg="lockup" d="M253.21 417.62L252.56 410.84L278.38 408.34L279.03 415.12Z"/>
-<path id="s-42-large" class="petal-seg c-seg-large" data-p="nearone.pool.near" data-i="42" data-seg="large" d="M253.10 404.61L253.04 397.86L309.92 397.38L309.97 404.13Z"/>
-<path id="s-43-other" class="petal-seg c-seg-other" data-p="x.poolv1.near" data-i="43" data-seg="other" d="M285.91 394.33L286.44 387.64L311.03 389.59L310.50 396.28Z"/>
-<path id="s-43-lockup" class="petal-seg c-seg-lockup" data-p="x.poolv1.near" data-i="43" data-seg="lockup" d="M253.98 391.80L254.51 385.12L285.54 387.57L285.01 394.26Z"/>
-<path id="s-44-other" class="petal-seg c-seg-other" data-p="here.poolv1.near" data-i="44" data-seg="other" d="M285.58 384.24L286.65 377.83L312.23 382.09L311.16 388.50Z"/>
-<path id="s-44-large" class="petal-seg c-seg-large" data-p="here.poolv1.near" data-i="44" data-seg="large" d="M264.82 380.78L265.88 374.37L285.76 377.68L284.69 384.09Z"/>
-<path id="s-44-liquid" class="petal-seg c-seg-liquid" data-p="here.poolv1.near" data-i="44" data-seg="liquid" d="M259.93 379.97L261.00 373.56L264.99 374.23L263.93 380.63Z"/>
-<path id="s-44-lockup" class="petal-seg c-seg-lockup" data-p="here.poolv1.near" data-i="44" data-seg="lockup" d="M258.28 379.69L259.34 373.28L260.11 373.41L259.04 379.82Z"/>
-<path id="s-45-other" class="petal-seg c-seg-other" data-p="twinstake.poolv1.near" data-i="45" data-seg="other" d="M263.08 368.46L264.64 362.31L314.02 374.87L312.46 381.02Z"/>
-<path id="s-46-other" class="petal-seg c-seg-other" data-p="bitcoinsuisse.poolv1.near" data-i="46" data-seg="other" d="M288.25 364.83L290.29 358.90L316.38 367.88L314.33 373.81Z"/>
-<path id="s-46-large" class="petal-seg c-seg-large" data-p="bitcoinsuisse.poolv1.near" data-i="46" data-seg="large" d="M266.61 357.38L268.65 351.45L289.44 358.61L287.40 364.54Z"/>
-<path id="s-47-liquid" class="petal-seg c-seg-liquid" data-p="lux.poolv1.near" data-i="47" data-seg="liquid" d="M313.96 365.62L316.46 359.93L318.60 360.87L316.10 366.56Z"/>
-<path id="s-47-lockup" class="petal-seg c-seg-lockup" data-p="lux.poolv1.near" data-i="47" data-seg="lockup" d="M271.26 346.88L273.76 341.19L315.63 359.57L313.14 365.26Z"/>
-<path id="s-48-lockup" class="petal-seg c-seg-lockup" data-p="anonymous.poolv1.near" data-i="48" data-seg="lockup" d="M276.16 336.64L279.11 331.18L322.24 354.48L319.30 359.93Z"/>
-<path id="s-49-lockup" class="petal-seg c-seg-lockup" data-p="erm.poolv1.near" data-i="49" data-seg="lockup" d="M281.75 326.77L285.13 321.58L325.93 348.12L322.55 353.32Z"/>
-<path id="s-50-other" class="petal-seg c-seg-other" data-p="staking4all.poolv1.near" data-i="50" data-seg="other" d="M313.19 336.79L316.98 331.90L331.07 342.79L327.28 347.69Z"/>
-<path id="s-50-large" class="petal-seg c-seg-large" data-p="staking4all.poolv1.near" data-i="50" data-seg="large" d="M293.86 321.85L297.65 316.96L316.26 331.35L312.48 336.24Z"/>
-<path id="s-50-liquid" class="petal-seg c-seg-liquid" data-p="staking4all.poolv1.near" data-i="50" data-seg="liquid" d="M288.24 317.50L292.02 312.61L296.93 316.41L293.15 321.30Z"/>
-<path id="s-51-other" class="petal-seg c-seg-other" data-p="dsrvlabs.poolv1.near" data-i="51" data-seg="other" d="M331.35 341.56L335.46 337.05L335.89 337.44L331.77 341.95Z"/>
-<path id="s-51-lockup" class="petal-seg c-seg-lockup" data-p="dsrvlabs.poolv1.near" data-i="51" data-seg="lockup" d="M296.08 309.42L300.19 304.91L334.79 336.44L330.68 340.96Z"/>
-<path id="s-52-other" class="petal-seg c-seg-other" data-p="blockdaemon.poolv1.near" data-i="52" data-seg="other" d="M323.44 322.51L327.90 318.34L341.11 332.49L336.66 336.66Z"/>
-<path id="s-52-large" class="petal-seg c-seg-large" data-p="blockdaemon.poolv1.near" data-i="52" data-seg="large" d="M306.90 304.80L311.36 300.64L327.28 317.69L322.83 321.85Z"/>
-<path id="s-52-liquid" class="petal-seg c-seg-liquid" data-p="blockdaemon.poolv1.near" data-i="52" data-seg="liquid" d="M304.06 301.76L308.52 297.60L310.74 299.98L306.29 304.14Z"/>
-<path id="s-53-other" class="petal-seg c-seg-other" data-p="moonlet.poolv1.near" data-i="53" data-seg="other" d="M340.19 329.56L344.91 325.81L346.67 328.03L341.95 331.78Z"/>
-<path id="s-53-liquid" class="petal-seg c-seg-liquid" data-p="moonlet.poolv1.near" data-i="53" data-seg="liquid" d="M334.79 322.77L339.51 319.02L344.35 325.11L339.63 328.86Z"/>
-<path id="s-53-lockup" class="petal-seg c-seg-lockup" data-p="moonlet.poolv1.near" data-i="53" data-seg="lockup" d="M312.52 294.74L317.24 290.99L338.95 318.32L334.23 322.07Z"/>
-<path id="s-54-other" class="petal-seg c-seg-other" data-p="cryptium.poolv1.near" data-i="54" data-seg="other" d="M331.71 303.81L336.71 300.45L352.55 324.02L347.55 327.38Z"/>
-<path id="s-54-liquid" class="petal-seg c-seg-liquid" data-p="cryptium.poolv1.near" data-i="54" data-seg="liquid" d="M328.27 298.69L333.27 295.33L336.21 299.71L331.21 303.07Z"/>
-<path id="s-54-lockup" class="petal-seg c-seg-lockup" data-p="cryptium.poolv1.near" data-i="54" data-seg="lockup" d="M321.20 288.18L326.20 284.82L332.77 294.59L327.77 297.95Z"/>
-<path id="s-55-other" class="petal-seg c-seg-other" data-p="buildlinks.poolv1.near" data-i="55" data-seg="other" d="M353.15 322.84L358.39 319.89L358.73 320.49L353.49 323.44Z"/>
-<path id="s-55-liquid" class="petal-seg c-seg-liquid" data-p="buildlinks.poolv1.near" data-i="55" data-seg="liquid" d="M349.30 315.99L354.54 313.04L357.95 319.11L352.71 322.06Z"/>
-<path id="s-55-lockup" class="petal-seg c-seg-lockup" data-p="buildlinks.poolv1.near" data-i="55" data-seg="lockup" d="M330.39 282.38L335.63 279.43L354.10 312.26L348.85 315.20Z"/>
-<path id="s-56-other" class="petal-seg c-seg-other" data-p="npro.poolv1.near" data-i="56" data-seg="other" d="M339.95 277.25L345.41 274.73L365.16 317.47L359.71 319.99Z"/>
-<path id="s-57-liquid" class="petal-seg c-seg-liquid" data-p="baziliknear.poolv1.near" data-i="57" data-seg="liquid" d="M365.73 315.85L371.36 313.77L371.53 314.23L365.90 316.31Z"/>
-<path id="s-57-lockup" class="petal-seg c-seg-lockup" data-p="baziliknear.poolv1.near" data-i="57" data-seg="lockup" d="M349.94 273.06L355.56 270.98L371.05 312.93L365.42 315.00Z"/>
-<path id="s-58-large" class="petal-seg c-seg-large" data-p="sofarsonear.poolv1.near" data-i="58" data-seg="large" d="M360.20 269.74L365.95 268.12L378.32 312.03L372.57 313.65Z"/>
-<path id="s-59-other" class="petal-seg c-seg-other" data-p="chorusone.poolv1.near" data-i="59" data-seg="other" d="M371.90 273.62L377.71 272.47L385.47 311.61L379.67 312.76Z"/>
-<path id="s-59-lockup" class="petal-seg c-seg-lockup" data-p="chorusone.poolv1.near" data-i="59" data-seg="lockup" d="M370.72 267.68L376.53 266.53L377.53 271.59L371.73 272.74Z"/>
-<path id="s-60-tail" class="petal-seg" fill="url(#petal-hatch-0f475a0f)" data-p="__tail" data-i="60" data-seg="tail" d="M385.24 294.57L398.13 293.56L399.45 310.44L386.56 311.46Z"/>
+<path class="c-seg-other" data-p="astro-stakers.poolv1.near" data-i="0" data-seg="other" d="M400.3 194.066L428.007 195.979L412.015 311.23L400.3 310.421Z"/>
+<path class="c-seg-large" data-p="astro-stakers.poolv1.near" data-i="0" data-seg="large" d="M400.3 156.899L433.116 159.165L428.007 195.979L400.3 194.066Z"/>
+<path class="c-seg-liquid" data-p="astro-stakers.poolv1.near" data-i="0" data-seg="liquid" d="M400.3 156.134L433.221 158.408L433.116 159.165L400.3 156.899Z"/>
+<path class="c-seg-lockup" data-p="astro-stakers.poolv1.near" data-i="0" data-seg="lockup" d="M400.3 119.567L438.247 122.188L433.221 158.408L400.3 156.134Z"/>
+<path class="c-seg-other" data-p="figment.poolv1.near" data-i="1" data-seg="other" d="M418.717 267.299L435.726 270.835L423.785 313.635L412.609 311.312Z"/>
+<path class="c-seg-large" data-p="figment.poolv1.near" data-i="1" data-seg="large" d="M436.343 140.272L470.191 147.309L435.726 270.835L418.717 267.299Z"/>
+<path class="c-seg-liquid" data-p="figment.poolv1.near" data-i="1" data-seg="liquid" d="M436.344 140.263L470.193 147.301L470.191 147.309L436.343 140.272Z"/>
+<path class="c-seg-lockup" data-p="figment.poolv1.near" data-i="1" data-seg="lockup" d="M436.633 138.181L470.758 145.276L470.193 147.301L436.344 140.263Z"/>
+<path class="c-seg-other" data-p="ledgerbyfigment.poolv1.near" data-i="2" data-seg="other" d="M453.789 208.329L477.652 216.694L434.79 317.451L424.363 313.796Z"/>
+<path class="c-seg-large" data-p="ledgerbyfigment.poolv1.near" data-i="2" data-seg="large" d="M466.819 161.626L496.632 172.077L477.652 216.694L453.789 208.329Z"/>
+<path class="c-seg-liquid" data-p="ledgerbyfigment.poolv1.near" data-i="2" data-seg="liquid" d="M466.967 161.095L496.848 171.57L496.632 172.077L466.819 161.626Z"/>
+<path class="c-seg-other" data-p="staked.poolv1.near" data-i="3" data-seg="other" d="M441.625 302.917L453.184 308.735L445.064 322.579L435.343 317.685Z"/>
+<path class="c-seg-large" data-p="staked.poolv1.near" data-i="3" data-seg="large" d="M493.371 181.276L520.065 194.713L453.184 308.735L441.625 302.917Z"/>
+<path class="c-seg-lockup" data-p="staked.poolv1.near" data-i="3" data-seg="lockup" d="M494.706 178.138L521.79 191.771L520.065 194.713L493.371 181.276Z"/>
+<path class="c-seg-other" data-p="binancenode1.poolv1.near" data-i="4" data-seg="other" d="M447.661 319.337L457.046 325.677L454.533 328.93L445.582 322.882Z"/>
+<path class="c-seg-large" data-p="binancenode1.poolv1.near" data-i="4" data-seg="large" d="M519.551 196.775L543.921 213.239L457.046 325.677L447.661 319.337Z"/>
+<path class="c-seg-liquid" data-p="binancenode1.poolv1.near" data-i="4" data-seg="liquid" d="M519.929 196.131L544.378 212.648L543.921 213.239L519.551 196.775Z"/>
+<path class="c-seg-lockup" data-p="binancenode1.poolv1.near" data-i="4" data-seg="lockup" d="M520.665 194.876L545.267 211.497L544.378 212.648L519.929 196.131Z"/>
+<path class="c-seg-other" data-p="bitwise_1.poolv1.near" data-i="5" data-seg="other" d="M459.599 323.355L468.413 331.108L463.106 336.42L455.008 329.297Z"/>
+<path class="c-seg-large" data-p="bitwise_1.poolv1.near" data-i="5" data-seg="large" d="M545.319 212.411L567.512 231.932L468.413 331.108L459.599 323.355Z"/>
+<path class="c-seg-other" data-p="sumerian.poolv1.near" data-i="6" data-seg="other" d="M475.653 324.712L484.14 334.334L470.591 344.847L463.531 336.844Z"/>
+<path class="c-seg-large" data-p="sumerian.poolv1.near" data-i="6" data-seg="large" d="M564.812 235.482L583.799 257.006L484.14 334.334L475.653 324.712Z"/>
+<path class="c-seg-liquid" data-p="sumerian.poolv1.near" data-i="6" data-seg="liquid" d="M564.818 235.477L583.805 257.001L583.799 257.006L564.812 235.482Z"/>
+<path class="c-seg-lockup" data-p="sumerian.poolv1.near" data-i="6" data-seg="lockup" d="M564.83 235.465L583.818 256.991L583.805 257.001L564.818 235.477Z"/>
+<path class="c-seg-other" data-p="zavodil.poolv1.near" data-i="7" data-seg="other" d="M540.422 291.423L552.552 309.252L476.913 354.074L470.958 345.321Z"/>
+<path class="c-seg-large" data-p="zavodil.poolv1.near" data-i="7" data-seg="large" d="M553.346 281.394L566.625 300.912L552.552 309.252L540.422 291.423Z"/>
+<path class="c-seg-liquid" data-p="zavodil.poolv1.near" data-i="7" data-seg="liquid" d="M556.676 278.811L570.251 298.764L566.625 300.912L553.346 281.394Z"/>
+<path class="c-seg-lockup" data-p="zavodil.poolv1.near" data-i="7" data-seg="lockup" d="M581.614 259.46L597.407 282.672L570.251 298.764L556.676 278.811Z"/>
+<path class="c-seg-other" data-p="bitwise_2.poolv1.near" data-i="8" data-seg="other" d="M571.06 298.982L581.975 320.306L481.992 363.913L477.219 354.59Z"/>
+<path class="c-seg-large" data-p="bitwise_2.poolv1.near" data-i="8" data-seg="large" d="M594.109 285.324L606.533 309.596L581.975 320.306L571.06 298.982Z"/>
+<path class="c-seg-liquid" data-p="bitwise_2.poolv1.near" data-i="8" data-seg="liquid" d="M594.124 285.314L606.55 309.588L606.533 309.596L594.109 285.324Z"/>
+<path class="c-seg-other" data-p="liver.pool.near" data-i="9" data-seg="other" d="M487.244 362.277L491.039 372.681L485.797 374.236L482.232 364.463Z"/>
+<path class="c-seg-large" data-p="liver.pool.near" data-i="9" data-seg="large" d="M522.778 346.779L528.206 361.655L491.039 372.681L487.244 362.277Z"/>
+<path class="c-seg-liquid" data-p="liver.pool.near" data-i="9" data-seg="liquid" d="M523.653 346.397L529.121 361.384L528.206 361.655L522.778 346.779Z"/>
+<path class="c-seg-lockup" data-p="liver.pool.near" data-i="9" data-seg="lockup" d="M604.469 311.15L613.648 336.31L529.121 361.384L523.653 346.397Z"/>
+<path class="c-seg-other" data-p="cnear-1.poolv1.near" data-i="10" data-seg="other" d="M486.392 374.685L488.738 384.832L488.301 384.905L485.968 374.811Z"/>
+<path class="c-seg-large" data-p="cnear-1.poolv1.near" data-i="10" data-seg="large" d="M612.353 337.32L618.318 363.126L488.738 384.832L486.392 374.685Z"/>
+<path class="c-seg-other" data-p="cnear-3.poolv1.near" data-i="11" data-seg="other" d="M488.742 385.439L489.83 395.783L489.484 395.798L488.4 385.497Z"/>
+<path class="c-seg-large" data-p="cnear-3.poolv1.near" data-i="11" data-seg="large" d="M618.371 363.726L621.14 390.058L489.83 395.783L488.742 385.439Z"/>
+<path class="c-seg-other" data-p="cnear-2.poolv1.near" data-i="12" data-seg="other" d="M489.844 396.383L489.661 406.781L489.327 406.755L489.51 396.398Z"/>
+<path class="c-seg-large" data-p="cnear-2.poolv1.near" data-i="12" data-seg="large" d="M621.159 390.658L620.692 417.13L489.661 406.781L489.844 396.383Z"/>
+<path class="c-seg-other" data-p="kiln-1.poolv1.near" data-i="13" data-seg="other" d="M506.717 408.73L505.062 420.656L487.909 417.234L489.281 407.353Z"/>
+<path class="c-seg-large" data-p="kiln-1.poolv1.near" data-i="13" data-seg="large" d="M606.84 416.638L603.556 440.308L505.062 420.656L506.717 408.73Z"/>
+<path class="c-seg-liquid" data-p="kiln-1.poolv1.near" data-i="13" data-seg="liquid" d="M607.869 416.719L604.568 440.51L603.556 440.308L606.84 416.638Z"/>
+<path class="c-seg-other" data-p="svrn-ai.poolv1.near" data-i="14" data-seg="other" d="M488.318 417.927L485.817 427.514L485.306 427.349L487.792 417.822Z"/>
+<path class="c-seg-large" data-p="svrn-ai.poolv1.near" data-i="14" data-seg="large" d="M600.449 440.3L594.581 462.785L485.817 427.514L488.318 417.927Z"/>
+<path class="c-seg-other" data-p="svrn.pool.near" data-i="15" data-seg="other" d="M485.82 428.146L482.213 437.393L481.546 437.087L485.121 427.919Z"/>
+<path class="c-seg-large" data-p="svrn.pool.near" data-i="15" data-seg="large" d="M594.251 463.309L585.817 484.932L482.213 437.393L485.82 428.146Z"/>
+<path class="c-seg-other" data-p="epic.poolv1.near" data-i="16" data-seg="other" d="M518.932 454.902L512.06 467.834L476.685 446.309L481.295 437.632Z"/>
+<path class="c-seg-large" data-p="epic.poolv1.near" data-i="16" data-seg="large" d="M571.532 479.037L561.5 497.917L512.06 467.834L518.932 454.902Z"/>
+<path class="c-seg-liquid" data-p="epic.poolv1.near" data-i="16" data-seg="liquid" d="M573.083 479.749L562.958 498.804L561.5 497.917L571.532 479.037Z"/>
+<path class="c-seg-lockup" data-p="epic.poolv1.near" data-i="16" data-seg="lockup" d="M585.17 485.295L574.319 505.717L562.958 498.804L573.083 479.749Z"/>
+<path class="c-seg-other" data-p="svrn-luganodes.pool.near" data-i="17" data-seg="other" d="M476.373 446.822L470.834 454.842L470.834 454.842L476.373 446.822Z"/>
+<path class="c-seg-large" data-p="svrn-luganodes.pool.near" data-i="17" data-seg="large" d="M571.954 504.98L559.072 523.632L470.834 454.842L476.373 446.822Z"/>
+<path class="c-seg-other" data-p="nearvana.poolv1.near" data-i="18" data-seg="other" d="M470.544 455.376L464.23 462.59L464.159 462.52L470.466 455.315Z"/>
+<path class="c-seg-large" data-p="nearvana.poolv1.near" data-i="18" data-seg="large" d="M554.741 521.016L540.441 537.354L464.23 462.59L470.544 455.376Z"/>
+<path class="c-seg-liquid" data-p="nearvana.poolv1.near" data-i="18" data-seg="liquid" d="M554.759 521.03L540.457 537.369L540.441 537.354L554.741 521.016Z"/>
+<path class="c-seg-other" data-p="stake1.poolv1.near" data-i="19" data-seg="other" d="M475.207 474.199L466.778 481.868L456.659 469.39L463.739 462.949Z"/>
+<path class="c-seg-large" data-p="stake1.poolv1.near" data-i="19" data-seg="large" d="M538.187 535.983L522.349 550.392L466.778 481.868L475.207 474.199Z"/>
+<path class="c-seg-liquid" data-p="stake1.poolv1.near" data-i="19" data-seg="liquid" d="M539.954 537.717L523.908 552.315L522.349 550.392L538.187 535.983Z"/>
+<path class="c-seg-lockup" data-p="stake1.poolv1.near" data-i="19" data-seg="lockup" d="M539.954 537.717L523.908 552.315L523.908 552.315L539.954 537.717Z"/>
+<path class="c-seg-other" data-p="svrn_bitwise.poolv1.near" data-i="20" data-seg="other" d="M456.517 470.167L448.708 475.796L448.432 475.363L456.193 469.768Z"/>
+<path class="c-seg-large" data-p="svrn_bitwise.poolv1.near" data-i="20" data-seg="large" d="M523.379 552.615L505.798 565.289L448.708 475.796L456.517 470.167Z"/>
+<path class="c-seg-other" data-p="metapool01.pool.near" data-i="21" data-seg="other" d="M447.936 475.702L439.799 480.279L439.79 480.262L447.926 475.686Z"/>
+<path class="c-seg-liquid" data-p="metapool01.pool.near" data-i="21" data-seg="liquid" d="M501.823 560.174L484.002 570.198L439.799 480.279L447.936 475.702Z"/>
+<path class="c-seg-other" data-p="p2p-org.poolv1.near" data-i="22" data-seg="other" d="M459.068 520.837L446.255 526.297L430.902 484.086L439.252 480.527Z"/>
+<path class="c-seg-large" data-p="p2p-org.poolv1.near" data-i="22" data-seg="large" d="M479.247 561.886L461.89 569.284L446.255 526.297L459.068 520.837Z"/>
+<path class="c-seg-liquid" data-p="p2p-org.poolv1.near" data-i="22" data-seg="liquid" d="M479.353 562.101L461.971 569.508L461.89 569.284L479.247 561.886Z"/>
+<path class="c-seg-lockup" data-p="p2p-org.poolv1.near" data-i="22" data-seg="lockup" d="M480.518 564.47L462.874 571.99L461.971 569.508L479.353 562.101Z"/>
+<path class="c-seg-other" data-p="dragonfly.poolv1.near" data-i="23" data-seg="other" d="M430.978 486.049L422.123 488.739L421.676 486.922L430.338 484.291Z"/>
+<path class="c-seg-large" data-p="dragonfly.poolv1.near" data-i="23" data-seg="large" d="M461.216 569.187L443.241 574.648L422.123 488.739L430.978 486.049Z"/>
+<path class="c-seg-liquid" data-p="dragonfly.poolv1.near" data-i="23" data-seg="liquid" d="M462.109 571.642L443.865 577.184L443.241 574.648L461.216 569.187Z"/>
+<path class="c-seg-other" data-p="allnodes.poolv1.near" data-i="24" data-seg="other" d="M440.79 567.191L423.69 570.457L412.474 488.712L421.094 487.066Z"/>
+<path class="c-seg-liquid" data-p="allnodes.poolv1.near" data-i="24" data-seg="liquid" d="M441.693 570.865L424.204 574.205L423.69 570.457L440.79 567.191Z"/>
+<path class="c-seg-lockup" data-p="allnodes.poolv1.near" data-i="24" data-seg="lockup" d="M441.695 570.872L424.205 574.212L424.204 574.205L441.693 570.865Z"/>
+<path class="c-seg-other" data-p="bisontrails.poolv1.near" data-i="25" data-seg="other" d="M420.12 548.855L405.066 550.123L403.143 489.53L411.88 488.794Z"/>
+<path class="c-seg-large" data-p="bisontrails.poolv1.near" data-i="25" data-seg="large" d="M423.22 571.447L405.79 572.915L405.066 550.123L420.12 548.855Z"/>
+<path class="c-seg-liquid" data-p="bisontrails.poolv1.near" data-i="25" data-seg="liquid" d="M423.225 571.485L405.791 572.954L405.79 572.915L423.22 571.447Z"/>
+<path class="c-seg-lockup" data-p="bisontrails.poolv1.near" data-i="25" data-seg="lockup" d="M423.589 574.133L405.876 575.625L405.791 572.954L423.225 571.485Z"/>
+<path class="c-seg-other" data-p="macrodatarefinement.poolv1.near" data-i="26" data-seg="other" d="M402.543 489.55L393.797 489.371L393.798 489.37L402.543 489.549Z"/>
+<path class="c-seg-large" data-p="macrodatarefinement.poolv1.near" data-i="26" data-seg="large" d="M405.208 573.504L387.701 573.146L393.797 489.371L402.543 489.55Z"/>
+<path class="c-seg-liquid" data-p="macrodatarefinement.poolv1.near" data-i="26" data-seg="liquid" d="M405.261 575.161L387.581 574.799L387.701 573.146L405.208 573.504Z"/>
+<path class="c-seg-other" data-p="aca87218e28c41f5a693dee3dff12238.poolv1.near" data-i="27" data-seg="other" d="M393.197 489.359L384.611 488.286L384.617 488.254L393.199 489.326Z"/>
+<path class="c-seg-large" data-p="aca87218e28c41f5a693dee3dff12238.poolv1.near" data-i="27" data-seg="large" d="M387.147 572.491L370.023 570.352L384.611 488.286L393.197 489.359Z"/>
+<path class="c-seg-liquid" data-p="aca87218e28c41f5a693dee3dff12238.poolv1.near" data-i="27" data-seg="liquid" d="M387.143 572.547L370.013 570.407L370.023 570.352L387.147 572.491Z"/>
+<path class="c-seg-other" data-p="silentnodes.pool.near" data-i="28" data-seg="other" d="M384.021 488.175L375.683 486.248L375.69 486.224L384.026 488.149Z"/>
+<path class="c-seg-large" data-p="silentnodes.pool.near" data-i="28" data-seg="large" d="M369.785 568.263L353.348 564.466L375.683 486.248L384.021 488.175Z"/>
+<path class="c-seg-other" data-p="d1.poolv1.near" data-i="29" data-seg="other" d="M374.347 488.742L365.984 485.884L367.019 483.293L375.113 486.059Z"/>
+<path class="c-seg-liquid" data-p="d1.poolv1.near" data-i="29" data-seg="liquid" d="M372.908 493.782L364.037 490.751L365.984 485.884L374.347 488.742Z"/>
+<path class="c-seg-lockup" data-p="d1.poolv1.near" data-i="29" data-seg="lockup" d="M352.781 564.267L336.823 558.814L364.037 490.751L372.908 493.782Z"/>
+<path class="c-seg-other" data-p="svrn-twinstake.poolv1.near" data-i="30" data-seg="other" d="M366.456 483.085L358.697 479.514L358.705 479.5L366.462 483.071Z"/>
+<path class="c-seg-large" data-p="svrn-twinstake.poolv1.near" data-i="30" data-seg="large" d="M336.373 558.324L321.105 551.296L358.697 479.514L366.456 483.085Z"/>
+<path class="c-seg-other" data-p="stakin.poolv1.near" data-i="31" data-seg="other" d="M342.577 509.002L332.398 502.999L350.912 474.939L358.173 479.221Z"/>
+<path class="c-seg-large" data-p="stakin.poolv1.near" data-i="31" data-seg="large" d="M325.06 542.449L311.604 534.513L332.398 502.999L342.577 509.002Z"/>
+<path class="c-seg-liquid" data-p="stakin.poolv1.near" data-i="31" data-seg="liquid" d="M323.867 544.727L310.187 536.66L311.604 534.513L325.06 542.449Z"/>
+<path class="c-seg-lockup" data-p="stakin.poolv1.near" data-i="31" data-seg="lockup" d="M321.67 548.923L307.579 540.613L310.187 536.66L323.867 544.727Z"/>
+<path class="c-entity" data-p="lst-pool.near" data-i="32" d="M307.691 539.354L294.675 529.797L343.66 469.652L350.411 474.609Z"/>
+<path class="c-seg-other" data-p="legends.poolv1.near" data-i="33" data-seg="other" d="M338.377 475.188L331.743 469.222L337.117 463.807L343.194 469.273Z"/>
+<path class="c-seg-large" data-p="legends.poolv1.near" data-i="33" data-seg="large" d="M297.246 525.69L285.87 515.459L331.743 469.222L338.377 475.188Z"/>
+<path class="c-seg-lockup" data-p="legends.poolv1.near" data-i="33" data-seg="lockup" d="M296.781 526.261L285.351 515.982L285.87 515.459L297.246 525.69Z"/>
+<path class="c-seg-other" data-p="northernlights.poolv1.near" data-i="34" data-seg="other" d="M336.632 463.443L331.205 457.513L331.269 457.46L336.691 463.384Z"/>
+<path class="c-seg-liquid" data-p="northernlights.poolv1.near" data-i="34" data-seg="liquid" d="M336.168 463.911L330.698 457.934L331.205 457.513L336.632 463.443Z"/>
+<path class="c-seg-lockup" data-p="northernlights.poolv1.near" data-i="34" data-seg="lockup" d="M286.873 513.595L276.851 502.645L330.698 457.934L336.168 463.911Z"/>
+<path class="c-seg-other" data-p="republic.poolv1.near" data-i="35" data-seg="other" d="M330.752 457.109L325.98 450.771L326.123 450.674L330.885 456.999Z"/>
+<path class="c-seg-large" data-p="republic.poolv1.near" data-i="35" data-seg="large" d="M278.185 500.758L269.505 489.23L325.98 450.771L330.752 457.109Z"/>
+<path class="c-seg-liquid" data-p="republic.poolv1.near" data-i="35" data-seg="liquid" d="M278.087 500.839L269.399 489.302L269.505 489.23L278.185 500.758Z"/>
+<path class="c-seg-other" data-p="okx-earn.poolv1.near" data-i="36" data-seg="other" d="M313.689 458.415L308.863 450.555L321.68 443.493L325.785 450.178Z"/>
+<path class="c-seg-large" data-p="okx-earn.poolv1.near" data-i="36" data-seg="large" d="M272.038 486.78L264.726 474.873L308.863 450.555L313.689 458.415Z"/>
+<path class="c-seg-liquid" data-p="okx-earn.poolv1.near" data-i="36" data-seg="liquid" d="M270.166 488.054L262.742 475.966L264.726 474.873L272.038 486.78Z"/>
+<path class="c-seg-other" data-p="rekt.poolv1.near" data-i="37" data-seg="other" d="M308.53 450.053L304.542 441.95L318.001 436.082L321.39 442.968Z"/>
+<path class="c-seg-liquid" data-p="rekt.poolv1.near" data-i="37" data-seg="liquid" d="M303.592 452.774L299.374 444.204L304.542 441.95L308.53 450.053Z"/>
+<path class="c-seg-lockup" data-p="rekt.poolv1.near" data-i="37" data-seg="lockup" d="M265.055 474.006L259.043 461.79L299.374 444.204L303.592 452.774Z"/>
+<path class="c-seg-other" data-p="ni.poolv1.near" data-i="38" data-seg="other" d="M316.393 436.129L313.645 428.952L315.061 428.482L317.761 435.532Z"/>
+<path class="c-seg-large" data-p="ni.poolv1.near" data-i="38" data-seg="large" d="M267.148 457.601L262.653 445.861L313.645 428.952L316.393 436.129Z"/>
+<path class="c-seg-liquid" data-p="ni.poolv1.near" data-i="38" data-seg="liquid" d="M263.142 459.348L258.504 447.236L262.653 445.861L267.148 457.601Z"/>
+<path class="c-seg-lockup" data-p="ni.poolv1.near" data-i="38" data-seg="lockup" d="M260.748 460.392L256.025 448.058L258.504 447.236L263.142 459.348Z"/>
+<path class="c-seg-other" data-p="everstake.poolv1.near" data-i="39" data-seg="other" d="M287.865 436.868L285.141 427.219L312.844 420.728L314.872 427.912Z"/>
+<path class="c-seg-large" data-p="everstake.poolv1.near" data-i="39" data-seg="large" d="M268.311 443.352L265.083 431.918L285.141 427.219L287.865 436.868Z"/>
+<path class="c-seg-liquid" data-p="everstake.poolv1.near" data-i="39" data-seg="liquid" d="M263.052 445.096L259.688 433.182L265.083 431.918L268.311 443.352Z"/>
+<path class="c-seg-lockup" data-p="everstake.poolv1.near" data-i="39" data-seg="lockup" d="M257.152 447.052L253.637 434.6L259.688 433.182L263.052 445.096Z"/>
+<path class="c-seg-other" data-p="gtnode-0.poolv1.near" data-i="40" data-seg="other" d="M303.273 422.354L301.745 414.206L311.339 412.848L312.707 420.144Z"/>
+<path class="c-seg-large" data-p="gtnode-0.poolv1.near" data-i="40" data-seg="large" d="M257.752 433.02L255.452 420.756L301.745 414.206L303.273 422.354Z"/>
+<path class="c-seg-liquid" data-p="gtnode-0.poolv1.near" data-i="40" data-seg="liquid" d="M254.163 433.861L251.802 421.273L255.452 420.756L257.752 433.02Z"/>
+<path class="c-seg-other" data-p="nearfans.poolv1.near" data-i="41" data-seg="other" d="M283.09 416.24L282.145 406.464L310.551 404.978L311.255 412.254Z"/>
+<path class="c-seg-liquid" data-p="nearfans.poolv1.near" data-i="41" data-seg="liquid" d="M279.64 416.728L278.665 406.646L282.145 406.464L283.09 416.24Z"/>
+<path class="c-seg-lockup" data-p="nearfans.poolv1.near" data-i="41" data-seg="lockup" d="M253.485 420.429L252.285 408.025L278.665 406.646L279.64 416.728Z"/>
+<path class="c-seg-other" data-p="nearone.pool.near" data-i="42" data-seg="other" d="M310.424 404.384L310.363 397.122L310.459 397.125L310.52 404.379Z"/>
+<path class="c-seg-large" data-p="nearone.pool.near" data-i="42" data-seg="large" d="M253.12 407.381L253.017 395.089L310.363 397.122L310.424 404.384Z"/>
+<path class="c-seg-other" data-p="x.poolv1.near" data-i="43" data-seg="other" d="M285.355 395.635L286.097 386.268L311.049 389.342L310.48 396.526Z"/>
+<path class="c-seg-lockup" data-p="x.poolv1.near" data-i="43" data-seg="lockup" d="M253.77 394.515L254.729 382.403L286.097 386.268L285.355 395.635Z"/>
+<path class="c-seg-other" data-p="here.poolv1.near" data-i="44" data-seg="other" d="M284.911 385.517L286.428 376.407L312.271 381.845L311.122 388.747Z"/>
+<path class="c-seg-large" data-p="here.poolv1.near" data-i="44" data-seg="large" d="M263.999 382.941L265.81 372.068L286.428 376.407L284.911 385.517Z"/>
+<path class="c-seg-liquid" data-p="here.poolv1.near" data-i="44" data-seg="liquid" d="M259.079 382.334L260.958 371.047L265.81 372.068L263.999 382.941Z"/>
+<path class="c-seg-lockup" data-p="here.poolv1.near" data-i="44" data-seg="lockup" d="M257.862 382.184L259.758 370.794L260.958 371.047L259.079 382.334Z"/>
+<path class="c-seg-other" data-p="twinstake.poolv1.near" data-i="45" data-seg="other" d="M262.056 370.664L264.795 359.888L314.081 374.624L312.394 381.258Z"/>
+<path class="c-seg-liquid" data-p="twinstake.poolv1.near" data-i="45" data-seg="liquid" d="M261.974 370.647L264.716 359.865L264.795 359.888L262.056 370.664Z"/>
+<path class="c-seg-other" data-p="bitcoinsuisse.poolv1.near" data-i="46" data-seg="other" d="M287.37 366.012L290.327 357.427L316.457 367.648L314.253 374.049Z"/>
+<path class="c-seg-large" data-p="bitcoinsuisse.poolv1.near" data-i="46" data-seg="large" d="M265.849 359.577L269.407 349.246L290.327 357.427L287.37 366.012Z"/>
+<path class="c-seg-other" data-p="lux.poolv1.near" data-i="47" data-seg="other" d="M316.409 366.984L319.116 360.816L319.374 360.942L316.676 367.089Z"/>
+<path class="c-seg-liquid" data-p="lux.poolv1.near" data-i="47" data-seg="liquid" d="M313.39 365.803L316.204 359.393L319.116 360.816L316.409 366.984Z"/>
+<path class="c-seg-lockup" data-p="lux.poolv1.near" data-i="47" data-seg="lockup" d="M270.348 348.969L274.679 339.105L316.204 359.393L313.39 365.803Z"/>
+<path class="c-seg-other" data-p="anonymous.poolv1.near" data-i="48" data-seg="other" d="M319.572 360.371L322.759 354.469L322.822 354.507L319.638 360.403Z"/>
+<path class="c-seg-lockup" data-p="anonymous.poolv1.near" data-i="48" data-seg="lockup" d="M275.083 338.634L280.188 329.183L322.759 354.469L319.572 360.371Z"/>
+<path class="c-seg-other" data-p="erm.poolv1.near" data-i="49" data-seg="other" d="M323.013 353.922L326.672 348.297L326.782 348.375L323.129 353.991Z"/>
+<path class="c-seg-liquid" data-p="erm.poolv1.near" data-i="49" data-seg="liquid" d="M322.784 353.786L326.455 348.143L326.672 348.297L323.013 353.922Z"/>
+<path class="c-seg-lockup" data-p="erm.poolv1.near" data-i="49" data-seg="lockup" d="M280.511 328.677L286.366 319.676L326.455 348.143L322.784 353.786Z"/>
+<path class="c-seg-other" data-p="staking4all.poolv1.near" data-i="50" data-seg="other" d="M312.228 337.304L317.227 330.839L331.219 342.596L327.129 347.886Z"/>
+<path class="c-seg-large" data-p="staking4all.poolv1.near" data-i="50" data-seg="large" d="M292.291 323.147L298.506 315.108L317.227 330.839L312.228 337.304Z"/>
+<path class="c-seg-liquid" data-p="staking4all.poolv1.near" data-i="50" data-seg="liquid" d="M286.858 319.289L293.405 310.821L298.506 315.108L292.291 323.147Z"/>
+<path class="c-seg-other" data-p="dsrvlabs.poolv1.near" data-i="51" data-seg="other" d="M330.818 341.476L335.323 336.532L336.054 337.255L331.605 342.137Z"/>
+<path class="c-seg-lockup" data-p="dsrvlabs.poolv1.near" data-i="51" data-seg="lockup" d="M294.598 311.04L301.666 303.285L335.323 336.532L330.818 341.476Z"/>
+<path class="c-seg-other" data-p="blockdaemon.poolv1.near" data-i="52" data-seg="other" d="M322.368 322.892L328.354 317.3L341.297 332.324L336.476 336.828Z"/>
+<path class="c-seg-large" data-p="blockdaemon.poolv1.near" data-i="52" data-seg="large" d="M305.117 305.851L312.527 298.93L328.354 317.3L322.368 322.892Z"/>
+<path class="c-seg-liquid" data-p="blockdaemon.poolv1.near" data-i="52" data-seg="liquid" d="M302.156 302.926L309.81 295.777L312.527 298.93L305.117 305.851Z"/>
+<path class="c-seg-lockup" data-p="blockdaemon.poolv1.near" data-i="52" data-seg="lockup" d="M302.154 302.924L309.808 295.774L309.81 295.777L302.156 302.926Z"/>
+<path class="c-seg-other" data-p="moonlet.poolv1.near" data-i="53" data-seg="other" d="M339.611 329.447L344.926 325.224L346.863 327.871L341.752 331.932Z"/>
+<path class="c-seg-liquid" data-p="moonlet.poolv1.near" data-i="53" data-seg="liquid" d="M333.944 322.869L339.8 318.217L344.926 325.224L339.611 329.447Z"/>
+<path class="c-seg-lockup" data-p="moonlet.poolv1.near" data-i="53" data-seg="lockup" d="M310.851 296.066L318.911 289.662L339.8 318.217L333.944 322.869Z"/>
+<path class="c-seg-other" data-p="cryptium.poolv1.near" data-i="54" data-seg="other" d="M330.303 304.219L337.62 299.3L352.76 323.879L347.347 327.517Z"/>
+<path class="c-seg-liquid" data-p="cryptium.poolv1.near" data-i="54" data-seg="liquid" d="M326.658 299.236L334.383 294.044L337.62 299.3L330.303 304.219Z"/>
+<path class="c-seg-lockup" data-p="cryptium.poolv1.near" data-i="54" data-seg="lockup" d="M319.436 289.364L327.967 283.629L334.383 294.044L326.658 299.236Z"/>
+<path class="c-seg-other" data-p="buildlinks.poolv1.near" data-i="55" data-seg="other" d="M352.674 322.595L358.428 319.358L358.946 320.371L353.271 323.564Z"/>
+<path class="c-seg-liquid" data-p="buildlinks.poolv1.near" data-i="55" data-seg="liquid" d="M348.546 315.893L354.845 312.35L358.428 319.358L352.674 322.595Z"/>
+<path class="c-seg-lockup" data-p="buildlinks.poolv1.near" data-i="55" data-seg="lockup" d="M328.543 283.419L337.481 278.392L354.845 312.35L348.546 315.893Z"/>
+<path class="c-seg-other" data-p="npro.poolv1.near" data-i="56" data-seg="other" d="M338.025 278.137L347.33 273.836L365.391 317.366L359.481 320.098Z"/>
+<path class="c-seg-other" data-p="baziliknear.poolv1.near" data-i="57" data-seg="other" d="M365.814 316.82L371.932 314.562L372.037 314.887L365.945 317.137Z"/>
+<path class="c-seg-liquid" data-p="baziliknear.poolv1.near" data-i="57" data-seg="liquid" d="M365.28 315.534L371.501 313.237L371.932 314.562L365.814 316.82Z"/>
+<path class="c-seg-lockup" data-p="baziliknear.poolv1.near" data-i="57" data-seg="lockup" d="M347.96 273.79L357.539 270.254L371.501 313.237L365.28 315.534Z"/>
+<path class="c-seg-other" data-p="sofarsonear.poolv1.near" data-i="58" data-seg="other" d="M372.432 314.159L378.707 312.391L378.84 312.946L372.608 314.702Z"/>
+<path class="c-seg-large" data-p="sofarsonear.poolv1.near" data-i="58" data-seg="large" d="M358.189 270.312L367.968 267.557L378.707 312.391L372.432 314.159Z"/>
+<path class="c-seg-other" data-p="chorusone.poolv1.near" data-i="59" data-seg="other" d="M370.017 273.538L379.417 271.673L385.72 311.557L379.423 312.806Z"/>
+<path class="c-seg-large" data-p="chorusone.poolv1.near" data-i="59" data-seg="large" d="M370.017 273.538L379.417 271.673L379.417 271.673L370.017 273.538Z"/>
+<path class="c-seg-liquid" data-p="chorusone.poolv1.near" data-i="59" data-seg="liquid" d="M370.017 273.537L379.417 271.672L379.417 271.673L370.017 273.538Z"/>
+<path class="c-seg-lockup" data-p="chorusone.poolv1.near" data-i="59" data-seg="lockup" d="M368.709 268.077L378.54 266.126L379.417 271.672L370.017 273.537Z"/>
+<path style="fill:var(--tail)" data-p="__tail" data-i="60" d="M383.662 294.695L399.7 293.435L399.7 310.424L386.314 311.475Z"/>
 </g>
-<g class="petal-outlines">
-<path class="petal-outline" data-p="astro-stakers.poolv1.near" data-i="0" d="M413.66 120.49L424.88 121.26L411.77 311.21L400.55 310.44Z"/>
-<path class="petal-outline" data-p="zavodil.poolv1.near" data-i="7" d="M586.67 266.90L592.35 275.24L476.77 353.87L471.10 345.53Z"/>
-<path class="petal-outline" data-p="kiln-1.poolv1.near" data-i="13" d="M606.87 423.92L605.57 433.31L487.94 416.99L489.25 407.60Z"/>
-<path class="petal-outline" data-p="epic.poolv1.near" data-i="16" d="M581.93 491.39L577.56 499.62L476.80 446.09L481.18 437.85Z"/>
-<path class="petal-outline" data-p="p2p-org.poolv1.near" data-i="22" d="M475.64 566.55L467.75 569.91L431.13 483.99L439.02 480.62Z"/>
-<path class="petal-outline" data-p="allnodes.poolv1.near" data-i="24" d="M437.01 571.77L428.89 573.32L412.72 488.67L420.85 487.11Z"/>
-<path class="petal-outline" data-p="d1.poolv1.near" data-i="29" d="M348.61 562.84L340.99 560.24L367.26 483.37L374.88 485.98Z"/>
-<path class="petal-outline" data-p="stakin.poolv1.near" data-i="31" d="M318.04 546.78L311.21 542.75L351.13 475.07L357.96 479.09Z"/>
-<path class="petal-outline" data-p="lst-pool.near" data-i="32" d="M304.36 536.91L298.01 532.24L343.86 469.80L350.21 474.46Z"/>
-<path class="petal-outline" data-p="legends.poolv1.near" data-i="33" d="M293.92 523.69L288.21 518.56L337.30 463.97L343.01 469.11Z"/>
-<path class="petal-outline" data-p="ni.poolv1.near" data-i="38" d="M259.65 457.52L257.13 450.93L315.15 428.72L317.67 435.30Z"/>
-<path class="petal-outline" data-p="everstake.poolv1.near" data-i="39" d="M256.34 444.18L254.45 437.47L312.91 420.97L314.80 427.67Z"/>
-<path class="petal-outline" data-p="twinstake.poolv1.near" data-i="45" d="M262.56 368.33L264.13 362.18L314.02 374.87L312.46 381.02Z"/>
-<path class="petal-outline" data-p="lux.poolv1.near" data-i="47" d="M271.26 346.88L273.76 341.19L319.27 361.17L316.78 366.86Z"/>
-<path class="petal-outline" data-p="erm.poolv1.near" data-i="49" d="M281.75 326.77L285.13 321.58L326.65 348.58L323.26 353.78Z"/>
-<path class="petal-outline" data-p="staking4all.poolv1.near" data-i="50" d="M288.24 317.50L292.02 312.61L331.07 342.79L327.28 347.69Z"/>
-<path class="petal-outline" data-p="dsrvlabs.poolv1.near" data-i="51" d="M296.08 309.42L300.19 304.91L335.89 337.44L331.77 341.95Z"/>
-<path class="petal-outline" data-p="moonlet.poolv1.near" data-i="53" d="M312.52 294.74L317.24 290.99L346.67 328.03L341.95 331.78Z"/>
-<path class="petal-outline" data-p="cryptium.poolv1.near" data-i="54" d="M321.20 288.18L326.20 284.82L352.55 324.02L347.55 327.38Z"/>
-<path class="petal-outline" data-p="buildlinks.poolv1.near" data-i="55" d="M330.39 282.38L335.63 279.43L358.73 320.49L353.49 323.44Z"/>
-<path class="petal-outline" data-p="npro.poolv1.near" data-i="56" d="M339.95 277.25L345.41 274.73L365.16 317.47L359.71 319.99Z"/>
-<path class="petal-outline" data-p="chorusone.poolv1.near" data-i="59" d="M370.72 267.68L376.53 266.53L385.47 311.61L379.67 312.76Z"/>
+<path class="petal-poly" stroke-opacity="1" vector-effect="non-scaling-stroke" d="M400.3 310.421L412.015 311.23L412.609 311.312L423.785 313.635L424.363 313.796L434.79 317.451L435.343 317.685L445.064 322.579L445.582 322.882L454.533 328.93L455.008 329.297L463.106 336.42L463.531 336.844L470.591 344.847L470.958 345.321L476.913 354.074L477.219 354.59L481.992 363.913L482.232 364.463L485.797 374.236L485.968 374.811L488.301 384.905L488.4 385.497L489.484 395.798L489.51 396.398L489.327 406.755L489.281 407.353L487.909 417.234L487.792 417.822L485.306 427.349L485.121 427.919L481.546 437.087L481.295 437.632L476.685 446.309L476.373 446.822L470.834 454.842L470.466 455.315L464.159 462.52L463.739 462.949L456.659 469.39L456.193 469.768L448.432 475.363L447.926 475.686L439.79 480.262L439.252 480.527L430.902 484.086L430.338 484.291L421.676 486.922L421.094 487.066L412.474 488.712L411.88 488.794L403.143 489.53L402.543 489.549L393.798 489.37L393.199 489.326L384.617 488.254L384.026 488.149L375.69 486.224L375.113 486.059L367.019 483.293L366.462 483.071L358.705 479.5L358.173 479.221L350.912 474.939L350.411 474.609L343.66 469.652L343.194 469.273L337.117 463.807L336.691 463.384L331.269 457.46L330.885 456.999L326.123 450.674L325.785 450.178L321.68 443.493L321.39 442.968L318.001 436.082L317.761 435.532L315.061 428.482L314.872 427.912L312.844 420.728L312.707 420.144L311.339 412.848L311.255 412.254L310.551 404.978L310.52 404.379L310.459 397.125L310.48 396.526L311.049 389.342L311.122 388.747L312.271 381.845L312.394 381.258L314.081 374.624L314.253 374.049L316.457 367.648L316.676 367.089L319.374 360.942L319.638 360.403L322.822 354.507L323.129 353.991L326.782 348.375L327.129 347.886L331.219 342.596L331.605 342.137L336.054 337.255L336.476 336.828L341.297 332.324L341.752 331.932L346.863 327.871L347.347 327.517L352.76 323.879L353.271 323.564L358.946 320.371L359.481 320.098L365.391 317.366L365.945 317.137L372.037 314.887L372.608 314.702L378.84 312.946L379.423 312.806L385.72 311.557L386.314 311.475L399.7 310.424Z"/>
 </g>
-<g class="petal-labels">
-<text x="388.86" y="262.18" text-anchor="end">everyone else (311) 13.8%</text>
-<text x="419.82" y="116.90" text-anchor="middle">astrostakers.com 5.61%</text>
-<text x="455.32" y="137.90" text-anchor="start">figment.poolv1.near 4.70%</text>
-<text x="484.55" y="162.78" text-anchor="start">ledgerbyfigment.pool… 3.87%</text>
-<text x="511.85" y="181.81" text-anchor="start">staked.poolv1.near 3.54%</text>
-<text x="537.44" y="200.56" text-anchor="start">binancenode1.poolv1.… 3.39%</text>
-<text x="561.70" y="220.16" text-anchor="start">bitwise_1.poolv1.near 3.36%</text>
-<text x="580.32" y="244.94" text-anchor="start">sumerian.poolv1.near 3.16%</text>
-<text x="596.12" y="270.57" text-anchor="start">NEAR Zavodil node 3.02%</text>
-</g>
-<text class="petal-centre" x="400.00" y="404.00" text-anchor="middle">NEAR validators</text>
+<g opacity="1"><path fill="none" style="stroke:var(--hair)" d="M422.853 69.04L423.955 53.078L578.835 53.078"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="422.853" cy="69.04"/><text x="423.955" y="49.078">astrostakers.com 5.61%</text></g>
+<g opacity="1"><path fill="none" style="stroke:var(--hair)" d="M390.136 274.391L388.884 236.42L212.884 236.42"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="390.136" cy="274.391"/><text x="212.884" y="232.42">everyone else (311) 13.8%</text></g>
+<g opacity="1"><path fill="none" style="stroke:var(--hair)" d="M497.119 122.937L508.366 90.851L719.566 90.851"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="497.119" cy="122.937"/><text x="508.366" y="86.851">ledgerbyfigment.poolv1.… 3.87%</text></g>
+<g opacity="1"><path fill="none" style="stroke:var(--hair)" d="M528.351 145.018L535.545 130.726L704.505 130.726"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="528.351" cy="145.018"/><text x="535.545" y="126.726">staked.poolv1.near 3.54%</text></g>
+<g opacity="0.01"><path fill="none" style="stroke:var(--hair)" d="M585.464 189.146L607.919 163.617L797.999 163.617"/><circle r="2.5" style="fill:var(--hair);stroke:var(--ink-2)" cx="585.464" cy="189.146"/><text x="607.919" y="159.617">bitwise_1.poolv1.near 3.36%</text></g>
+<text class="petal-centre" opacity="1" x="400" y="404" text-anchor="middle">NEAR validators</text>
 </svg>
