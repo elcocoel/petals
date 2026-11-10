@@ -35,6 +35,7 @@ export function Lobby({
   /** The wallet this session signed in with, and its public profile on NEAR Social. */
   profile: { account: string | null; social: SocialState };
   funds: {
+    balance: string | null;
     held: string | null;
     phase: WithdrawPhase;
     withdrew: string | null;
@@ -55,6 +56,7 @@ export function Lobby({
           onDisconnect={session.disconnect}
         >
           <Funds
+            balance={funds.balance}
             held={funds.held}
             phase={funds.phase}
             withdrew={funds.withdrew}

@@ -16,7 +16,7 @@ import type { ConnectedAgent } from './agents.ts';
 import type { Settings } from './composer-options.ts';
 import type { ListedConversation } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
-import type { ListedFlower } from './flower-view.ts';
+import type { MapViewRow } from './flower-view.ts';
 import type { Job } from './jobs.ts';
 import { NEAR_SOCIAL_API, type SocialProfile, socialProfile } from './near-social.ts';
 import type { Credit, PayInfo } from './pay.ts';
@@ -101,12 +101,12 @@ export async function listConversations(): Promise<ListedConversation[]> {
   return json.conversations ?? [];
 }
 
-/** The flowers on the shared map, as the gallery lists them. No answer is the same as none. */
-export async function listMapFlowers(): Promise<ListedFlower[]> {
-  const res = await fetch('/api/v1/flowers');
+/** The views on the one shared map, oldest first, each with its picture (GET /api/v1/map/views). No answer is the same as none. */
+export async function listMapViews(): Promise<MapViewRow[]> {
+  const res = await fetch('/api/v1/map/views');
   if (!res.ok) return [];
-  const json = (await res.json()) as { flowers?: ListedFlower[] };
-  return json.flowers ?? [];
+  const json = (await res.json()) as { views?: MapViewRow[] };
+  return json.views ?? [];
 }
 
 /** A line to the Petals helper on the person's own computer (lib/terminal-pass.ts), never to our server. */

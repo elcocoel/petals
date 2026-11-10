@@ -1,15 +1,20 @@
-// The lobby's profile part, its money (Elco, 9 Nov): what the person holds in the credit contract, read
-// when the lobby opens, and Withdraw, which takes all of it out. The person's own wallet calls the
-// contract, and the server reads that transaction back and says what's left (POST /api/v1/pay). There is
-// no timer. lib/lobby-view.ts holds the arithmetic and the words.
+// The lobby's profile part, its money (Elco, 9 and 10 Nov): the credit the person holds, read when the lobby
+// opens, the same number /make shows by the input box (GET /api/v1/me's credit, which plain transfers to
+// Petals and credit given by hand both go onto, in NEAR at today's price; with the contract, what it holds,
+// read from the chain, as usePay reads it). And Withdraw, which takes everything out of the contract while
+// it holds something: the person's own wallet calls the contract, and the server reads that transaction
+// back and says what's left (POST /api/v1/pay). There is no timer. lib/lobby-view.ts holds the arithmetic
+// and the words.
 import { useCallback, useEffect, useState } from 'react';
-import { confirmPay, readPay } from '../lib/agent-client.ts';
+import { confirmPay, readCredit, readPay } from '../lib/agent-client.ts';
 import { type HeldCredit, WITHDRAW_ALL, type WithdrawPhase, withdrawn } from '../lib/lobby-view.ts';
-import { type PayInfo, sentBy } from '../lib/pay.ts';
+import { type Credit, nearLeft, type PayInfo, sentBy } from '../lib/pay.ts';
 import { sendAction } from '../lib/wallet.ts';
 
 export function useFunds() {
   const [info, setInfo] = useState<PayInfo | null>(null);
+  /** The person's credit, as /make reads it. */
+  const [credit, setCredit] = useState<Credit | null>(null);
   /** What the contract holds for the person, in yoctoNEAR; null when there's no contract to hold it. */
   const [held, setHeld] = useState<string | null>(null);
   const [phase, setPhase] = useState<WithdrawPhase>('ready');
@@ -17,11 +22,13 @@ export function useFunds() {
 
   useEffect(() => {
     let gone = false;
-    void readPay().then(
-      (next) => {
+    void Promise.all([readCredit(), readPay()]).then(
+      ([c, p]) => {
         if (gone) return;
-        setInfo(next);
-        setHeld((next?.credit as HeldCredit | null | undefined)?.balance_yocto ?? null);
+        setInfo(p);
+        // with the contract, what it holds now, read from the chain, is the truer balance (as usePay)
+        setCredit(p?.credit ?? c);
+        setHeld((p?.credit as HeldCredit | null | undefined)?.balance_yocto ?? null);
       },
       // no answer shows no balance
       () => {},
@@ -46,6 +53,7 @@ export function useFunds() {
         });
         const left = (after.credit as HeldCredit).balance_yocto ?? '0';
         setWithdrew(withdrawn(before, left));
+        setCredit(after.credit);
         setHeld(left);
         setPhase('withdrew');
       } catch {
@@ -54,5 +62,12 @@ export function useFunds() {
     })();
   }, [info, held]);
 
-  return { held, phase, withdrew, withdraw };
+  return {
+    /** The credit in NEAR, as /make shows it; null until it's known, or with no price. */
+    balance: nearLeft(credit, info?.near_usd ?? null),
+    held,
+    phase,
+    withdrew,
+    withdraw,
+  };
 }

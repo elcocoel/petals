@@ -1,11 +1,11 @@
-// The lobby's ViewModel (specs/004-workspace, W3): who's here, their conversations, the flowers on the map,
+// The lobby's ViewModel (specs/004-workspace, W3): who's here, their conversations, the views on the one map,
 // what they hold in the credit contract (useFunds), the profile part (useProfile: the wallet they signed in with, and NEAR Social),
 // and whether the menu is open. Reads happen when the page opens, and the conversations once the server
 // has said who's here. There is no timer.
 import { useEffect, useState } from 'react';
-import { listMapFlowers } from '../lib/agent-client.ts';
+import { listMapViews } from '../lib/agent-client.ts';
 import { conversationRows } from '../lib/conversation-list.ts';
-import type { ListedFlower } from '../lib/flower-view.ts';
+import type { MapViewRow } from '../lib/flower-view.ts';
 import { mapTiles } from '../lib/lobby-view.ts';
 import { useConversations } from './useConversations.ts';
 import { useFunds } from './useFunds.ts';
@@ -19,12 +19,12 @@ export function useLobby() {
   const conversations = useConversations(session.known ? 'arrived' : null);
   const funds = useFunds();
   const profile = useProfile();
-  const [flowers, setFlowers] = useState<ListedFlower[]>([]);
+  const [views, setViews] = useState<MapViewRow[]>([]);
   useEffect(() => {
     let gone = false;
-    void listMapFlowers().then(
+    void listMapViews().then(
       (next) => {
-        if (!gone) setFlowers(next);
+        if (!gone) setViews(next);
       },
       // no answer leaves the map empty
       () => {},
@@ -39,7 +39,7 @@ export function useLobby() {
     profile,
     funds,
     conversations: conversationRows(conversations, { runId: null }),
-    tiles: mapTiles(flowers),
+    tiles: mapTiles(views),
     menu,
   };
 }
