@@ -52,7 +52,7 @@ export function Field({
             maxLength={maxLength}
             disabled={disabled}
             rows={4}
-            className={`${look} resize-none field-sizing-content`}
+            className={`${look} resize-none`}
           />
         )}
       </div>

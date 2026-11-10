@@ -1,5 +1,8 @@
-// The public profile's editor (Elco, 10 Nov: people create and edit their NEAR Social profile inside
-// Petals; the wallet approves; confirm the write was accepted; refresh). Publishing, in order:
+// The profile's editor (Elco, 10 Nov: people create and edit their profile inside Petals; "hold the same
+// data shape as near.social in our DB ... and have a publish button"). Save keeps the whole profile in
+// Petals (PUT /api/v1/me/profile), the picture as a data: URI the server stores; it costs nothing. The first
+// time, the editor starts from the account's NEAR Social profile when there is one.
+// Publish, off until it's set up on mainnet (PUBLISH_TO_NEAR_SOCIAL), puts it on NEAR Social, in order:
 //   1. The wallet that's connected must be the account the lobby shows, or nothing is sent.
 //   2. A new picture, made square and small in the browser, goes first: one `__fastdata_fastfs` call to
 //      `social` that the wallet approves, then NEAR Social's indexer confirms it and FastFS serves it.
@@ -10,10 +13,11 @@
 // from the indexer (GET /v1/tx/{hash}), never from the receipt. The waits ask a few times, a moment apart,
 // and only after the person pressed Publish. lib/near-social.ts holds the data and lib/lobby-view.ts the words.
 import { useCallback, useState } from 'react';
-import { fastfsServes, readSocialTx } from '../lib/agent-client.ts';
+import { fastfsServes, readSocialTx, saveMyProfile } from '../lib/agent-client.ts';
 import type { EditPhase, ProfileEditorView, SocialState } from '../lib/lobby-view.ts';
-import { editorWords, shownAccount } from '../lib/lobby-view.ts';
+import { editorWords, PUBLISH_TO_NEAR_SOCIAL, shownAccount } from '../lib/lobby-view.ts';
 import {
+  dataUri,
   draftOf,
   FASTFS_METHOD,
   fastfsPath,
@@ -21,10 +25,13 @@ import {
   fastfsUri,
   fastfsUrl,
   KV_METHOD,
+  keptAvatar,
+  type PetalsProfile,
   type ProfileDraft,
   profileArgs,
   SOCIAL_RECEIVER,
   type TxOutcome,
+  toPetals,
   txOutcome,
   WRITE_GAS,
 } from '../lib/near-social.ts';
@@ -118,6 +125,8 @@ const accepted = (out: TxOutcome) => {
 export function useProfileEditor(
   account: string | null,
   social: SocialState,
+  /** Petals' own copy as it's kept; null before it keeps one. */
+  kept: PetalsProfile | null,
   reload: () => Promise<void>,
 ): { open: (() => void) | undefined; view: ProfileEditorView | null; saved: boolean } {
   const profile = social.kind === 'profile' ? social.profile : null;
@@ -140,6 +149,25 @@ export function useProfileEditor(
     setSaved(false);
     setEditing(true);
   }, [profile]);
+
+  const save = useCallback(async () => {
+    setProblem(null);
+    setPhase('saving');
+    try {
+      const avatar =
+        picture.bytes && picture.mime
+          ? dataUri(picture.mime, picture.bytes)
+          : (kept?.avatar ?? keptAvatar(picture.src));
+      await saveMyProfile(toPetals(draft, avatar, kept));
+      await reload();
+      setEditing(false);
+      setSaved(true);
+      setPhase('editing');
+    } catch (e) {
+      setProblem(editorWords.notKept(message(e)));
+      setPhase('failed');
+    }
+  }, [picture, kept, draft, reload]);
 
   const publish = useCallback(async () => {
     if (!account) return;
@@ -166,7 +194,7 @@ export function useProfileEditor(
       await reload();
       setEditing(false);
       setSaved(true);
-      setPhase('saved');
+      setPhase('editing');
     } catch (e) {
       setProblem(e instanceof Stop ? e.message : editorWords.refused);
       setPhase('failed');
@@ -203,7 +231,8 @@ export function useProfileEditor(
               (e) => setProblem(message(e)),
             );
           },
-          publish: () => void publish(),
+          save: () => void save(),
+          ...(PUBLISH_TO_NEAR_SOCIAL ? { publish: () => void publish() } : {}),
           cancel: () => setEditing(false),
         }
       : null;

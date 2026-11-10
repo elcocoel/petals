@@ -59,7 +59,7 @@ export function usePanelState() {
   const session = useSession(true);
   const signedIn = Boolean(session.account);
   const profile = useProfile();
-  const editor = useProfileEditor(profile.account, profile.social, profile.reload);
+  const editor = useProfileEditor(profile.account, profile.social, profile.kept, profile.reload);
   const funds = useFunds();
   const pathname = usePathname();
   const params = useSearchParams();

@@ -35,44 +35,47 @@ export const fundsWords = {
 } as const;
 
 /**
- * The person at the top of the page, and the Public profile card (Elco, 9 and 10 Nov: "a profile area";
- * the redo's frame, "Build it"). The card is the account's profile on NEAR Social, whose links are its own
- * declaration, so their badge says only that. LOBBY's drafts.
+ * The person at the top of the page, and the Profile card (Elco, 9 and 10 Nov; the redo's frame, "Build
+ * it"; and "hold the same data shape as near.social in our DB ... and have a publish button"): the
+ * profile is kept in Petals, in NEAR Social's shape, and goes onto NEAR Social only when it's published.
+ * Its links are the account's own declaration, so their badge says only that. LOBBY's drafts.
  */
 export const profileWords = {
-  /** The badges beside the account: the chain it's on, and whether it has a public profile. */
+  /** The badges beside the account: the chain it's on, and where its profile is. */
   chain: 'NEAR',
   social: 'NEAR Social',
-  noSocial: 'No public profile',
-  title: 'Public profile',
+  inPetals: 'In Petals',
+  noProfile: 'No profile',
+  title: 'Profile',
   edit: 'Edit',
   /** A link's badge: the account says so; nobody checked it. */
   declared: 'Declared',
-  /** Under the profile: who sees it, and what the links are. */
-  note: 'Anyone can see this, in any app that reads NEAR Social. Links are what you declare; nobody checks them.',
-  /** No profile there yet, while the editor is off. */
-  noneYet: 'You don’t have a public profile yet.',
-  /** No profile there yet: what goes there, and the one thing to do. */
-  none: 'You don’t have a public profile yet. Make one here: a name, a picture, a short bio and your links.',
-  create: 'Create your public profile',
-  noneNote: 'It’s your NEAR Social profile, so other NEAR apps show it too.',
+  /** Under a profile kept in Petals: who sees it. */
+  notePetals:
+    'Kept in Petals, for you. It goes on NEAR Social, where anyone can see it, only when you publish it. Links are what you declare; nobody checks them.',
+  /** Under the account's NEAR Social profile, before Petals keeps a copy. */
+  noteSocial:
+    'This is your profile on NEAR Social, which anyone can see. Edit it here and Petals keeps your copy. Links are what you declare; nobody checks them.',
+  /** No profile anywhere yet: what goes there, and the one thing to do. */
+  none: 'You don’t have a profile yet. Make one here: a name, a picture, a short bio and your links.',
+  create: 'Create your profile',
   /** Still reading it. */
-  reading: 'Reading your public profile from NEAR Social…',
-  /** NEAR Social didn't answer. */
-  unread: "NEAR Social didn't answer, so your public profile isn't shown.",
+  reading: 'Reading your profile…',
+  /** Petals didn't answer. */
+  unread: "Your profile couldn't be read right now.",
 } as const;
 
 /**
- * The public profile's editor (Elco, 10 Nov: people create and edit their NEAR Social profile inside
- * Petals; it says plainly that it changes the shared public profile and that old versions stay public).
- * LOBBY's drafts, from the Figma frame Elco approved.
+ * The profile's editor (Elco, 10 Nov): it saves into Petals, which costs nothing; Publish is its own
+ * button, which puts the profile on NEAR Social, and stays off until it's set up on mainnet, so the line
+ * beside it says so. LOBBY's drafts, from the Figma frame Elco approved.
  */
 export const editorWords = {
-  edit: 'Edit your public profile',
-  create: 'Create your public profile',
+  edit: 'Edit your profile',
+  create: 'Create your profile',
   picture: 'Picture',
   choose: 'Choose a picture',
-  pictureNote: 'A square picture. It’s stored in public, with your profile.',
+  pictureNote: 'A square picture, kept with your profile.',
   name: 'Name',
   about: 'Bio',
   links: 'Links',
@@ -80,21 +83,27 @@ export const editorWords = {
   handle: 'Handle or address',
   remove: 'Remove',
   addLink: 'Add a link',
-  preview: 'Preview: how any app that reads NEAR Social shows it',
-  publishingAs: 'Publishing as',
+  preview: 'Preview: how it shows',
+  /** The box beside the preview: where it's kept, and what publishing will do. */
+  keptAs: 'Kept in Petals for',
+  keptNote: 'Save keeps it in Petals, for you, and costs nothing.',
   publicNote:
-    'This changes your public profile on NEAR Social, which other NEAR apps show too. Earlier versions stay public: every change is kept on NEAR.',
-  walletNote: 'Your wallet approves it. A new picture is one more approval.',
+    'Publishing puts it on NEAR Social, which other NEAR apps show too. Earlier versions stay public there: every change is kept on NEAR.',
+  save: 'Save',
+  saving: 'Saving…',
   publish: 'Publish to NEAR Social',
+  /** Beside Publish, while it's off. LOBBY's draft of Elco's words. */
+  publishLater: 'Saved in Petals. Publishing to NEAR Social comes later.',
   cancel: 'Cancel',
-  /** The button while it works, step by step. */
+  /** Publishing, step by step, once it's on. */
   picturing: 'Your wallet: the picture first…',
   storing: 'Storing the picture…',
   signing: 'Waiting for your wallet…',
   checking: 'Checking NEAR Social has it…',
   saved: 'Saved',
-  savedLine: 'Your public profile is updated, here and in other NEAR apps.',
+  savedLine: 'Saved in Petals.',
   notSaved: 'Not saved',
+  notKept: (why: string) => `Petals didn’t keep it: ${why}`,
   refused: 'Your wallet didn’t send it, so nothing changed.',
   rejected: (why: string) => `NEAR Social didn’t take it, so nothing changed: ${why}.`,
   slow: 'NEAR Social hasn’t confirmed it yet. Look again in a minute.',
@@ -104,30 +113,29 @@ export const editorWords = {
 } as const;
 
 /**
- * Edit and Create, on or off (META's go, 10 Nov): off until the testnet lab (/lab/social) has passed and
- * Elco's own run on mainnet is set, since publishing writes the real public profile. Then this goes true.
+ * Publish to NEAR Social, on or off (Elco, 10 Nov: "test look and feel for free and then rig to mainnet
+ * effortlessly later"): off until it's set up on mainnet, with Elco there for the first run.
  */
-export const PROFILE_EDITING = false;
+export const PUBLISH_TO_NEAR_SOCIAL = false;
 
-/** Where publishing is. */
+/** Where saving or publishing is. */
 export type EditPhase =
   | 'editing'
+  | 'saving'
   | 'picturing'
   | 'storing'
   | 'signing'
   | 'checking'
-  | 'saved'
   | 'failed';
 
 /** The phases in which the editor waits and nothing can be changed. */
-export const busyPhase = (p: EditPhase) =>
-  p === 'picturing' || p === 'storing' || p === 'signing' || p === 'checking';
+export const busyPhase = (p: EditPhase) => p !== 'editing' && p !== 'failed';
 
 /** The editor as its view shows it (components/workspace/ProfileEditor.tsx). */
 export interface ProfileEditorView {
-  /** No public profile yet: this makes the first. */
+  /** No profile yet: this makes the first. */
   creating: boolean;
-  /** The account that publishes, as shown, and in full. */
+  /** The account it's kept for and would publish as, as shown, and in full. */
   account: { shown: string; full: string };
   draft: ProfileDraft;
   /** The picture shown: the one chosen, or the one there now. */
@@ -141,14 +149,19 @@ export interface ProfileEditorView {
   addLink: () => void;
   removeLink: (i: number) => void;
   choosePicture: (file: File) => void;
-  publish: () => void;
+  save: () => void;
+  /** Publishing to NEAR Social; absent while it's off. */
+  publish?: () => void;
   cancel: () => void;
 }
 
-/** The profile part's NEAR Social state: still reading, a profile, none there, or no answer. */
+/**
+ * The profile the page shows: still reading, a profile (Petals' copy, or the account's NEAR Social profile
+ * before Petals keeps one), none anywhere, or no answer.
+ */
 export type SocialState =
   | { kind: 'reading' }
-  | { kind: 'profile'; profile: SocialProfile }
+  | { kind: 'profile'; profile: SocialProfile; source: 'petals' | 'near-social' }
   | { kind: 'none' }
   | { kind: 'unread' };
 
