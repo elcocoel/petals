@@ -126,12 +126,12 @@ describe('hostedSkill', () => {
     const setup = part('Set yourself up first');
     expect(setup).toMatch(/Claude Code holds the file back once/);
     expect(setup).toContain(
-      '"May I run Petal\'s tool? It\'s a file from petal.example that reads public chain data and keeps its notes in ~/.petals."',
+      '"May I run Petals\' tool? It\'s a file from petal.example that reads public chain data and keeps its notes in ~/.petals."',
     );
     expect(setup).toContain('Bash(node ~/.petals/petal.mjs:*)');
     expect(setup).toMatch(/The file changes nothing in your app/);
     expect(agentPrompt(ORIGIN)).toMatch(
-      /the first time it runs Petal's file, it may, because the file comes from this site/,
+      /the first time it runs Petals' file, it may, because the file comes from this site/,
     );
   });
 

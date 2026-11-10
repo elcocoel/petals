@@ -95,9 +95,9 @@ export function agentPrompt(origin: string): string {
     ? " It's running on this machine, so if your web tool won't open a local address, use curl."
     : '';
   return [
-    `I'd like to use Petal with you. It maps who holds power in crypto networks (${origin}). It's public and read-only, with no account or key.`,
+    `I'd like to use Petals with you. It maps who holds power in crypto networks (${origin}). It's public and read-only, with no account or key.`,
     `Its tools run on my own computer, so this needs an app that can run commands here: Claude Code (in a terminal, or under Code in the Claude desktop app), Codex or Hermes. The Claude app's chat runs in the cloud and can't. If you can't run commands here, don't try: tell me so in one line, and that I can add Petals as a connector at ${origin}/mcp.`,
-    `Its instructions for you are at ${origin}/skill.md.${local} Its brain: ${origin}/api/v1/brain/route?q=<your app and what I ask>. Please read them and set yourself up in whatever way works from where you are, without asking me to choose anything. If your app needs my permission for something, ask me for it: the first time it runs Petal's file, it may, because the file comes from this site. I want to watch this conversation on Petal's page in my browser, so please open that page for me, and post each flower and your replies there word for word. Then tell me in a line or two what you can do, and ask what I'm curious about.`,
+    `Its instructions for you are at ${origin}/skill.md.${local} Its brain: ${origin}/api/v1/brain/route?q=<your app and what I ask>. Please read them and set yourself up in whatever way works from where you are, without asking me to choose anything. If your app needs my permission for something, ask me for it: the first time it runs Petals' file, it may, because the file comes from this site. I want to watch this conversation on Petals' page in my browser, so please open that page for me, and post each flower and your replies there word for word. Then tell me in a line or two what you can do, and ask what I'm curious about.`,
   ].join('\n\n');
 }
 
