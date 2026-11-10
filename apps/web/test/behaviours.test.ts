@@ -304,7 +304,7 @@ describe('a box that floats', () => {
   test("isn't watched for a reveal, and doesn't follow the pointer", () => {
     expect(JOY).toContain(`'box.rise': '[data-b="box"]:not([data-kind="float"])'`);
     expect(JOY).toContain(
-      `const BOX = '[data-b="box"]:not(foreignObject *, [data-kind="float"], [data-kind="card"])'`,
+      `'[data-b="box"]:not(foreignObject *, [data-kind="float"], [data-kind="card"], [data-kind="scene"])'`,
     );
   });
 });
