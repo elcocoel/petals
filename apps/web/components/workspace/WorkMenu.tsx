@@ -79,6 +79,9 @@ export function WorkMenu({
                 one prompt that connects another, and how, on /connect. */}
             <section className="flex flex-col items-start gap-text-gap p-block-gap">
               <h2 className="m-0 type-label">{agentWords.heading}</h2>
+              {menu.agents.length === 0 && (
+                <p className="m-0 type-caption text-muted">{agentWords.none}</p>
+              )}
               {menu.agents.length > 0 && (
                 <ul className="m-0 flex w-full list-none flex-col gap-space-8 p-0">
                   {menu.agents.map((a) => (
