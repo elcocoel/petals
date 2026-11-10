@@ -27,7 +27,7 @@ describe('askHref', () => {
 });
 
 describe('the landing page', () => {
-  test('every link goes where the site has a page, an anchor, or nowhere on purpose', () => {
+  test('every link goes where the site has a page or an anchor: none goes nowhere', () => {
     const routes: Record<string, string> = {
       [siteLinks.home]: 'page.tsx',
       [siteLinks.make]: 'make/page.tsx',
@@ -39,7 +39,6 @@ describe('the landing page', () => {
     for (const path of Object.values(routes)) expect(existsSync(join(app, path)), path).toBe(true);
     const anchors = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
     for (const href of new Set(hrefs)) {
-      if (href === siteLinks.noDestination) continue;
       if (href.startsWith('/#')) expect(anchors, href).toContain(href.slice(2));
       else expect(routes[href.split(/[?#]/)[0] as string], href).toBeDefined();
     }
@@ -49,9 +48,9 @@ describe('the landing page', () => {
     for (const question of landingCopy.hero.starters) expect(hrefs).toContain(askHref(question));
   });
 
-  test('its ask boxes send a plain GET to /make', () => {
+  test("its box sends a plain GET to /make: the hero's, the only one since How it works lost its own", () => {
     const forms = [...html.matchAll(/<form\b[^>]*>/g)].map((m) => m[0]);
-    expect(forms.length).toBe(2);
+    expect(forms.length).toBe(1);
     for (const form of forms) {
       expect(form).toContain('action="/make"');
       expect(form).toContain('method="get"');
