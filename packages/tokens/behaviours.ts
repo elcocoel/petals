@@ -142,7 +142,7 @@ export const behaviours = [
   {
     name: 'box.fold',
     purpose:
-      'A menu docked to the window’s edge folds away from its bar, and one word brings it back',
+      'The side panel, docked to the window’s edge, folds to its icons, and the same control in the same spot brings it back',
     via: 'view',
   },
   // row

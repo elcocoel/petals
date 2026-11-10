@@ -1,7 +1,7 @@
 // Where a box floating over a canvas sits, and what a hand does to it. Pure geometry, in window pixels.
 // The one law: a box's bar can never leave the window, so it can always be grabbed again. Its body may
 // hang off the bottom, which is how a person puts a box mostly out of the way.
-import { floatBox, quarantine } from '@petal/tokens';
+import { floatBox, sizes } from '@petal/tokens';
 
 export interface Size {
   w: number;
@@ -48,9 +48,9 @@ export function sized(from: Rect, edge: Edge, dx: number, dy: number, win: Size)
 
 /**
  * Where the boxes start beside the work menu, when it's on the page (components/workspace/WorkMenu.tsx):
- * the menu floats at the window's edge, a tile wide, and the boxes begin one gap past it.
+ * the panel is docked at the window's edge, Sidebar width wide, and the boxes begin one gap past it.
  */
-export const besideMenu = floatBox.inset + quarantine['Tile width'] + floatBox.gap;
+export const besideMenu = sizes['Sidebar width'] + floatBox.gap;
 
 /** A column of boxes `w` wide starts at `from`, or further left if it wouldn't fit there. */
 const columnAt = (from: number, w: number, win: Size) =>

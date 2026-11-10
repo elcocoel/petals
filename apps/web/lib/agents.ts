@@ -44,6 +44,8 @@ export interface AgentRow {
   label: string;
   status: string;
   here: boolean;
+  /** What it's doing, for the panel's few characters: on a job, waiting for one, or not connected. */
+  state: 'busy' | 'waiting' | 'away';
 }
 
 export function agentRows(agents: readonly ConnectedAgent[]): AgentRow[] {
@@ -54,6 +56,7 @@ export function agentRows(agents: readonly ConnectedAgent[]): AgentRow[] {
     label: readableAgent(a.name),
     status: a.job ? agentWords.on(a.job.title) : a.waiting ? agentWords.waiting : agentWords.away,
     here: Boolean(a.job) || a.waiting,
+    state: a.job ? 'busy' : a.waiting ? 'waiting' : 'away',
   }));
 }
 

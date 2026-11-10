@@ -47,7 +47,7 @@ export function Lobby({
 }) {
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
-      <WorkMenu conversations={conversations} menu={menu} />
+      <WorkMenu conversations={conversations} menu={menu} here="lobby" />
       <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
         <Profile
           account={profile.account}
