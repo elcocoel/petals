@@ -16,7 +16,9 @@ export function UseAnywhere() {
       <div>
         <SectionHead size="compact" title={copy.title} body={copy.body} />
         <div className="mt-space-32 flex flex-col items-start gap-text-gap">
-          <Button href={siteLinks.doors.prompt}>{copy.action}</Button>
+          <Button href={siteLinks.doors.prompt} arrow>
+            {copy.action}
+          </Button>
           <p className="my-0 type-caption">{copy.promptNote}</p>
         </div>
       </div>

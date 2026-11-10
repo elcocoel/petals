@@ -1,7 +1,7 @@
 // The one control (Petals / Button 23:161, Button secondary 52:1869, Starter question 52:1866). A
 // `link` is Figma's Close detail: an action that reads as Petals / Link 23:159. `row` and `tile` are
-// the things you can open, which lay out their own content. A `tick` is one mark of a pager: no words of its
-// own, so its `label` is what a screen reader hears and the pointer reads; it's an item, as IconButton is.
+// the things you can open, which lay out their own content. A `tick` is one mark of a pager, with its word
+// under it; it's an item, as IconButton is. `label` names a control that has no words of its own.
 // Its primary look is the base style of every <button> in app/globals.css. Variation goes through
 // these props, so there's no className: a one-off look needs a new variant here. `compact` is primary at the
 // app's scale (a row high, UI words): the conversation's Send and Connect, beside the side panel's rows.
@@ -46,7 +46,8 @@ const VARIANTS: Record<ButtonVariant, string> = {
   pill: 'h-auto justify-start gap-space-8 border border-hairline bg-transparent px-space-8 py-space-4 text-left type-mono whitespace-normal text-primary aria-pressed:border-primary',
   tile: 'h-auto w-tile-width flex-col items-start gap-text-gap bg-transparent px-0 text-left whitespace-normal text-primary',
   // A pager's mark: the whole of its share of the row can be pressed, the mark itself is the child.
-  tick: 'h-row-height min-w-0 flex-1 bg-transparent px-space-8 text-primary hover:bg-tint hover:opacity-100 data-current:bg-tint',
+  // Its share of the pager grows with its word, so every word keeps to one line.
+  tick: 'h-auto min-h-row-height min-w-0 flex-auto items-start bg-transparent px-space-8 py-space-8 text-left text-primary hover:bg-tint hover:opacity-100 data-current:bg-tint',
 };
 
 export type ButtonProps = {

@@ -477,7 +477,7 @@ export const registry: LabEntry[] = [
         name: 'in the row',
         render: () => (
           <ul className="m-0 flex list-none p-0">
-            <Scene {...landingCopy.howItWorks.scenes[0]} />
+            <Scene {...landingCopy.howItWorks.scenes[0]} numeral="01" />
           </ul>
         ),
       },
@@ -485,7 +485,7 @@ export const registry: LabEntry[] = [
         name: 'in focus',
         render: () => (
           <ul className="m-0 flex list-none p-0">
-            <Scene {...landingCopy.howItWorks.scenes[0]} current />
+            <Scene {...landingCopy.howItWorks.scenes[0]} numeral="01" current />
           </ul>
         ),
       },
