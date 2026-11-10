@@ -4,27 +4,36 @@
 export interface OpeningView {
   title: string;
   /** the participants its snapshot holds */
-  count: number;
+  count: number | null;
   /** its flower on the site (/d/<sha>), the link Petals' agent gives too */
   view_url: string;
 }
 
 const MAX_SHOWN = 3;
 
-/** The largest views first, as the readiest first cases; one per title. */
-export function openingMessage(views: OpeningView[]): string {
+/**
+ * What's offered as already mapped, in the first message and on /make's shelf alike: the largest views
+ * first, as the readiest first cases, one per title.
+ */
+export function firstCases<V extends Pick<OpeningView, 'title' | 'count'>>(
+  views: readonly V[],
+): V[] {
   const seen = new Set<string>();
-  const shown = [...views]
-    .sort((a, b) => b.count - a.count)
+  return [...views]
+    .sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
     .filter((v) => {
       if (seen.has(v.title)) return false;
       seen.add(v.title);
       return true;
     })
     .slice(0, MAX_SHOWN);
+}
+
+export function openingMessage(views: readonly OpeningView[]): string {
+  const shown = firstCases(views);
   const links = shown.map((v) => `[${v.title.replace(/[[\]]/g, '')}](${v.view_url})`);
   const mapped = links.length
-    ? `Or start from what's already mapped: ${links.join(', ')}, or the whole [gallery](/gallery).`
+    ? `Or start from what's already mapped: ${links.join(', ')}, or the whole [Power Map](/gallery).`
     : '';
   return [
     "Hi. I'm Petals. I dig into who holds power in a network, then draw what I find as a flower.",

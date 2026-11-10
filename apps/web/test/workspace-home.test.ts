@@ -34,21 +34,27 @@ const fresh = async () => {
   return (await import('../lib/workspace-home.ts')).workspaceHome;
 };
 
-const row = (id: string, where: 'map' | 'fixture' = 'fixture') => ({
-  id,
-  title: `Flower ${id}`,
+/** A view of the one map, as GET /api/v1/map/views lists it. */
+const row = (sha: string, count = 1) => ({
+  sha,
+  name: null,
+  title: `Flower ${sha}`,
   network: 'near-validators',
+  chain: 'near:mainnet',
+  address: null,
+  count,
   as_of: '2026-11-03T19:42:00Z',
-  maker: null,
-  published_at: null,
-  where,
+  view_url: `https://petals.test/d/${sha}`,
+  picture: `https://petals.test/api/v1/map/${sha}/svg`,
+  keys: [],
+  made_by: null,
 });
 const spec = { petal: 'spec/v1' };
 const reading = { title: 'NEAR validators', petals: [{ id: 'a' }], extra: 'not for the browser' };
 
-function serve(flowers: unknown) {
+function serve(map: unknown) {
   answers.get.set('/api/v1/health', { ok: true, llm: 'up' });
-  answers.get.set('/api/v1/flowers', flowers);
+  answers.get.set('/api/v1/map/views', map);
   answers.get.set('/api/v1/flowers/first', { entry: { spec, spec_sha256: 'sha-first' } });
   answers.post = () => ({ reading });
 }
@@ -60,22 +66,24 @@ beforeEach(() => {
 
 describe('the canvas before the conversation draws', () => {
   test('nothing stands in: no flower is read or drawn for it', async () => {
-    serve({ flowers: [row('first'), row('second')] });
+    serve({ views: [row('first'), row('second', 5)] });
     const home = await (await fresh())({});
     expect(answers.posts).toEqual([]);
     expect(home).not.toHaveProperty('standIn');
-    expect(home.shelf.map((f) => f.id)).toEqual(['first', 'second']);
+    // one map: the shelf offers what the first message offers, the largest first
+    expect(home.shelf.map((v) => v.sha)).toEqual(['second', 'first']);
+    expect(home.opening).toContain('[Flower second](https://petals.test/d/second), [Flower first]');
   });
 
   test('never opens: the address decides that, and it asked for nothing', async () => {
-    serve({ flowers: [row('first')] });
+    serve({ views: [row('first')] });
     const home = await (await fresh())({});
     expect(home.initialOpen).toEqual({ kind: 'latest' });
     expect(home.initialRun).toBeUndefined();
   });
 
   test.each([
-    ['no flowers', () => serve({ flowers: [] })],
+    ['an empty map', () => serve({ views: [] })],
     ['the list failing', () => answers.get.set('/api/v1/health', { ok: true, llm: 'up' })],
   ])('%s, and nothing throws', async (_name, arrange) => {
     arrange();
@@ -85,7 +93,7 @@ describe('the canvas before the conversation draws', () => {
 
 describe('the question', () => {
   test('comes from ?q=, whatever else the address holds', async () => {
-    serve({ flowers: [] });
+    serve({ views: [] });
     const workspaceHome = await fresh();
     expect(await workspaceHome({ q: 'words', run: 'r1' })).toMatchObject({
       initialQuestion: 'words',

@@ -17,13 +17,13 @@ import {
   amountLabel,
   chainLabel,
   dateLabel,
-  type ListedFlower,
   networkLabel,
   petalView,
   readingKey,
   shortId,
   svgTitle,
 } from '../lib/flower-view.ts';
+import type { MapViewRow } from '../lib/map-views.ts';
 import {
   addressOpensBox,
   type CanvasFlower,
@@ -445,25 +445,34 @@ describe('the panel', () => {
     expect(view.keys).toEqual([]);
   });
 
-  const listed: ListedFlower[] = [
+  const listed: MapViewRow[] = [
     {
-      id: 'abc',
-      title: null,
+      sha: 'abc',
+      name: 'NEAR validators',
+      title: 'NEAR validators',
       network: 'near-validators',
+      chain: 'near:mainnet',
+      address: null,
+      count: 8487,
       as_of: '2026-11-03T19:42:00Z',
-      maker: null,
-      published_at: null,
-      where: 'map',
+      view_url: 'https://petals.test/d/abc',
+      picture: 'https://petals.test/api/v1/map/abc/svg?look=render%2Fv2&view=1421e0bf7b26',
+      keys: [],
+      made_by: null,
     },
   ];
 
-  test('the shelf offers what is stored, and holds the place while the first one is made', () => {
+  test('the shelf offers views of the one map, and holds the place while the first one is made', () => {
     const shelf = shelfView(listed, false);
     expect(shelf.pending).toBe(false);
-    expect(shelf.tiles[0]).toMatchObject({ title: 'abc', badge: 'On NEAR' });
-    expect(shelf.tiles[0]?.image).toBe(
-      '/api/v1/flowers/abc/svg?look=render%2Fv2&view=1421e0bf7b26&paint=48795b01',
-    );
+    // the gallery's own tile, opening the view where it lives
+    expect(shelf.tiles[0]).toMatchObject({
+      key: 'abc',
+      title: 'NEAR validators',
+      badge: 'NEAR',
+      image: 'https://petals.test/api/v1/map/abc/svg?look=render%2Fv2&view=1421e0bf7b26',
+      href: 'https://petals.test/d/abc',
+    });
     expect(shelf.starter?.question).toBeTruthy();
     const pending = shelfView(listed, true);
     expect(pending.pending).toBe(true);
@@ -479,8 +488,9 @@ describe('the panel', () => {
     );
     expect(out).toContain('What would you like to map?');
     expect(out).toContain(
-      '/api/v1/flowers/abc/svg?look=render%2Fv2&amp;view=1421e0bf7b26&amp;paint=48795b01',
+      'src="https://petals.test/api/v1/map/abc/svg?look=render%2Fv2&amp;view=1421e0bf7b26"',
     );
+    expect(out).toContain('href="https://petals.test/d/abc"');
     expect(out).toContain('href="/gallery"');
   });
 });

@@ -12,9 +12,7 @@ import { aboutLine } from './ask-about.ts';
 import {
   chainLabel,
   dateLabel,
-  flowerImage,
   type LegendKey,
-  type ListedFlower,
   networkLabel,
   type PetalView,
   petalView,
@@ -22,6 +20,7 @@ import {
   readingKey,
   svgTitle,
 } from './flower-view.ts';
+import { type MapViewRow, viewTile } from './map-views.ts';
 import type { ChatAction, Opened } from './thread.ts';
 import type { ComposerTarget } from './thread-view.ts';
 
@@ -78,12 +77,14 @@ export function nextCanvas(
   return { key, reading, ...(stored ? { stored } : {}) };
 }
 
+/** A view of the one map, as the gallery draws it (viewTile), opening where it lives. */
 export interface Tile {
-  id: string;
+  key: string;
   title: string;
   where: string;
   badge: string;
   image: string;
+  href: string;
 }
 
 export interface ShelfView {
@@ -183,7 +184,7 @@ const canvasKeys = (selected: boolean): LegendKey[] =>
   selected ? [{ label: 'Selected', swatch: 'selected' }] : [];
 
 export function shelfView(
-  listed: ListedFlower[],
+  listed: readonly MapViewRow[],
   working: boolean,
   /** a recorded run has its one question, so there's nothing to start from */
   recorded = false,
@@ -197,13 +198,7 @@ export function shelfView(
       : listed.length > 0
         ? 'Your flower will appear here. Or open one that’s already mapped.'
         : 'Your flower will appear here.',
-    tiles: listed.map((f) => ({
-      id: f.id,
-      title: f.title ?? f.id,
-      where: `${networkLabel(f.network)}   /   ${dateLabel(f.as_of)}`,
-      badge: f.where === 'map' ? 'On NEAR' : 'Fixture',
-      image: flowerImage(f.id),
-    })),
+    tiles: listed.map((v) => ({ key: v.sha, ...viewTile(v) })),
     ...(working || recorded ? {} : { starter: { label: `Try “${STARTER}”`, question: STARTER } }),
   };
 }

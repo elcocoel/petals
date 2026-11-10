@@ -15,7 +15,7 @@ describe('openingMessage', () => {
   test('offers views of the one shared map, by their flower on the site', () => {
     const text = openingMessage([map]);
     expect(text).toContain('[NEAR validators](https://petals.test/d/abc)');
-    expect(text).toContain('[gallery](/gallery)');
+    expect(text).toContain('[Power Map](/gallery)');
   });
 
   test('the largest three first, one per title, and still talks with an empty or unreachable map', () => {
@@ -27,12 +27,12 @@ describe('openingMessage', () => {
       view('ENS delegates', 8561, 'e'),
     ]);
     expect(text).toContain(
-      "Or start from what's already mapped: [UNI delegates](https://petals.test/d/u), [ENS delegates](https://petals.test/d/e), [NEAR validators](https://petals.test/d/n1), or the whole [gallery](/gallery).",
+      "Or start from what's already mapped: [UNI delegates](https://petals.test/d/u), [ENS delegates](https://petals.test/d/e), [NEAR validators](https://petals.test/d/n1), or the whole [Power Map](/gallery).",
     );
     expect(text).not.toContain('Small');
     const empty = openingMessage([]);
     expect(empty).toContain('What are you curious about?');
-    expect(empty).not.toContain('gallery');
+    expect(empty).not.toContain('Power Map');
   });
 
   test('a title cannot break its link', () => {

@@ -235,15 +235,22 @@ const turnRow = (turn: Parameters<typeof threadView>[0]['turn'], o: Partial<Turn
 
 const ONE_PETAL = { figmaName: 'Make a flower / One petal', figmaNode: '39:862' };
 
+/** A view of the one map, as GET /api/v1/map/views lists it. */
 const LISTED = [
   {
-    id: '3394fb875bf97c1af8191566',
-    title: 'Who stands behind NEAR’s validators?',
+    sha: '897a01ac9a1f1150e84dbb7aa7baebffa14d2f8674a882e1fcc9016f259a7e04',
+    name: 'NEAR validators',
+    title: 'NEAR validators',
     network: 'near-validators',
+    chain: 'near:mainnet',
+    address: null,
+    count: 8487,
     as_of: '2026-11-03T19:42:00Z',
-    maker: null,
-    published_at: null,
-    where: 'fixture' as const,
+    view_url: '/d/897a01ac9a1f1150e84dbb7aa7baebffa14d2f8674a882e1fcc9016f259a7e04',
+    picture:
+      '/api/v1/map/897a01ac9a1f1150e84dbb7aa7baebffa14d2f8674a882e1fcc9016f259a7e04/svg?look=render%2Fv2',
+    keys: [],
+    made_by: null,
   },
 ];
 
