@@ -58,6 +58,7 @@ async function chat(
     draft?: { spec: typeof SPEC };
     tools?: Tools;
     kind?: 'recorded';
+    onMap?: { specs: string[]; snapshots: string[] };
   } = {},
 ) {
   const llm = scriptedLlm(turns, o.kind ? { kind: o.kind } : {});
@@ -70,6 +71,7 @@ async function chat(
         ...(o.thread ? { thread: o.thread } : {}),
         ...(o.flowers ? { flowers: o.flowers } : {}),
         ...(o.draft ? { draft: o.draft } : {}),
+        ...(o.onMap ? { onMap: o.onMap } : {}),
       },
       { tools: fakeContext(), llm, budget: DEFAULT_BUDGET },
       {
@@ -950,5 +952,26 @@ describe('naming one is the yes, when several things carry the name', () => {
     });
     expect(ran(tools)).toEqual(['get_snapshot']);
     expect(held(es)).toHaveLength(1);
+  });
+});
+
+describe('what the map already holds (Elco, 10 Nov, run 9c599a61: "show me the graph here")', () => {
+  test('is drawn without a yes, from its stored read: nothing new is read', async () => {
+    const { es, tools } = await chat(TO_FLOWER, {
+      said: 'show me the graph here',
+      onMap: { specs: [], snapshots: [SHA] },
+    });
+    expect(held(es)).toEqual([]);
+    expect(ran(tools)).toEqual(['propose_spec', 'validate_spec', 'render_flower']);
+    expect(pick(es, 'flower')).toHaveLength(1);
+  });
+
+  test('a fresh read of the same target still waits for the yes', async () => {
+    const fresh = { name: 'get_snapshot', args: { network: 'near-validators', fresh: true } };
+    const { es, tools } = await chat([{ calls: [fresh] }, { content: ASK }], {
+      onMap: { specs: [], snapshots: [SHA] },
+    });
+    expect(held(es)).toHaveLength(1);
+    expect(ran(tools)).toEqual([]);
   });
 });

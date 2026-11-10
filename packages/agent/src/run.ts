@@ -20,7 +20,14 @@ import type {
 } from '@petal/core/types';
 import type { JobRow } from '@petal/store';
 import { registry as defaultRegistry, type ToolContext, withRunSignal } from '@petal/tools';
-import { approvalRequired, DRAWING_TOOLS, hashOf, STORED_ONLY, yesGate } from './approval.ts';
+import {
+  approvalRequired,
+  DRAWING_TOOLS,
+  hashOf,
+  type OnTheMap,
+  STORED_ONLY,
+  yesGate,
+} from './approval.ts';
 import { modelOf } from './catalogue.ts';
 import { Channel } from './channel.ts';
 import { connectedNotes, HAND_JOB, jobNotes } from './hand-job.ts';
@@ -62,6 +69,8 @@ export interface RunInput {
   agents?: { name: string; last_seen: string; job: string | null }[];
   /** additive (10 Nov): the conversation's name so far, which the model gives with name_conversation */
   name?: RunName;
+  /** additive (10 Nov): what the shared map holds, which it draws without a yes (approval.ts) */
+  onMap?: OnTheMap;
 }
 
 export interface RunDeps {
@@ -370,7 +379,7 @@ async function loop(
   };
 
   // The yes (approval.ts). A recorded run spends nothing and its transcript is fixed, so it isn't held.
-  const gate = llm.kind === 'recorded' ? null : yesGate(said, earlier, draftSpec);
+  const gate = llm.kind === 'recorded' ? null : yesGate(said, earlier, draftSpec, input.onMap);
   // What this chat was refused: its targets, one event each, and the calls themselves. From then on
   // the model keeps what only reads, so it can still find out and answer, and bounded by the rounds as
   // ever. It loses what draws, and asking again for what it was just refused isn't a call.

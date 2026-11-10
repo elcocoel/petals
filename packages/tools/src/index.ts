@@ -35,6 +35,7 @@ export {
   limitsOf,
   overDataBudget,
 } from './limits.ts';
+export { mapViews } from './map.ts';
 export { type McpOptions, mcpServer } from './mcp/server.ts';
 export { serveStdio } from './mcp/stdio.ts';
 export type { PublicPage } from './public-fetch.ts';

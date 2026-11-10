@@ -271,13 +271,26 @@ export interface YesGate {
   passed(tool: string, args: Obj, out: Obj): void;
 }
 
-/** One chat's gate. `conversation` is what was said before this chat's first model call. */
+/** What the shared map already holds: its views' specs and the readings they're drawn from. */
+export interface OnTheMap {
+  specs: readonly string[];
+  snapshots: readonly string[];
+}
+
+/**
+ * One chat's gate. `conversation` is what was said before this chat's first model call. What the map
+ * already holds is drawn without a yes (Elco, 10 Nov, run 9c599a61: "show me the graph here"): drawing it
+ * reads nothing new. A fresh read of the same target still waits, so its target isn't approved.
+ */
 export function yesGate(
   conversation: LlmMessage[],
   flowers: readonly EarlierFlower[],
   draft?: Spec,
+  onMap?: OnTheMap,
 ): YesGate {
   const approved = approvedIn(conversation, flowers, draft);
+  for (const spec of onMap?.specs ?? []) approved.specs.add(spec);
+  for (const sha of onMap?.snapshots ?? []) approved.shas.add(sha);
   const at = conversation.findLastIndex((m) => m.role === 'user');
   const latest = conversation[at];
   const reply = latest?.role === 'user' ? latest.content : '';
