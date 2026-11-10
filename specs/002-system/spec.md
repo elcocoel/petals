@@ -1,7 +1,7 @@
 # Feature Specification: The system behind the app
 
 **Created**: 2026-11-05
-**Status**: Draft. A map, not a final definition: it names the shape and the seams, and `open-questions.md` lists what's undecided.
+**Status**: Draft. A map, not a final definition: it names the shape and the seams, and `open-questions.md` lists what's undecided. Amended 2026-11-08 with Story 7 and SYS-080 to SYS-087 (the website and its server): proposed, for Elco's go, with the choices in `research.md`.
 **Input**: Elco: "connecting agents, accounts, login in with wallet, the user's own workspace and how they come back to the work they were doing, where it's saved and its tradeoffs, serverless or server, db or not."
 
 This spec covers what's behind the app. It defines data, rules and contracts, and no screens. Surfaces are designed separately, and any page needed to test this stays out of the product until then.
@@ -81,6 +81,23 @@ A mapping that spends needs a yes from the wallet.
 **Acceptance:**
 1. **Given** a group read through a limited window, **when** overlap is reported, **then** it's reported as at least that many, since absence isn't proof.
 
+### Story 7: The website and its server (P1)
+
+Elco, 8 Nov: the website on Vercel, and the server in a container, on this Mac for now but built as if it were a VPS. A person signs in on the website with a wallet and connects their own agent. Then they watch its work appear, while everything they've saved lives on the server. The choices, with their trade-offs and leans, are in `research.md`. The seam is in `contracts/site-server.md`.
+
+**Independent test:** run the website on a preview address in front of the server at its own name. Then:
+- a test wallet signs in
+- a scripted agent, given only the website's address, posts a reading and a step
+- the open page shows the step without a reload
+- the server's own name refuses a call without the site key
+
+**Acceptance:**
+1. **Given** a visitor, **when** they sign in, **then** their session belongs to the website's address, and nothing asks their browser to talk to a second address [NEEDS CLARIFICATION: one address or two, `research.md` C1; the lean is one].
+2. **Given** an agent that has only the website's address, **when** it fetches `skill.md` and `petal.mjs`, reads and posts, **then** everything works through that one address.
+3. **Given** a page open on an exploration, **when** the person's agent saves a step, **then** the page shows it within a few seconds. **Given** the stream dropped, **then** the page catches up when it reconnects.
+4. **Given** a call to the server's own name without the site key, **then** it's refused, except the health check [NEEDS CLARIFICATION: `research.md` C4; the lean is a site key].
+5. **Given** the server is down, **when** someone opens the website, **then** the pages load and say plainly that the records can't be reached.
+
 ### Edge cases
 
 - A lost wallet: recovery through another linked wallet, or a new key on the same NEAR account. Otherwise private work is gone, except an export. Published flowers stay.
@@ -153,6 +170,17 @@ A mapping that spends needs a yes from the wallet.
 - **SYS-070**: Relations MUST be queryable as rows in a rebuildable index, with no graph engine as a dependency unless measurements show a need.
 - **SYS-071**: Every relation MUST carry its date and coverage, and overlap MUST be reported as a lower bound where coverage is partial.
 
+### The website and its server
+
+- **SYS-080**: The website MUST hold no private data and no database, and no secret but the site key. Everything private MUST live on the server.
+- **SYS-081**: A person and their agent MUST need only one address. The website forwards the server's paths: `/api/*`, `/mcp`, `/skill.md`, `/petal.mjs`, `/d/*` and `/s/*` [NEEDS CLARIFICATION: `research.md` C1 and C2; the lean is one address, with a rewrite].
+- **SYS-082**: The website MUST reach the server only through the HTTP API and the agent doors, never in process. Its page code MUST go through one function, `lib/api.ts`.
+- **SYS-083**: Live updates MUST come from the server. After a dropped stream, a page MUST catch up by reading again. Forwarded streams MUST carry a heartbeat [NEEDS CLARIFICATION: `research.md` C5; long-polling if forwarding cuts streams].
+- **SYS-084**: The server MUST trust a visitor's forwarded address only from the website, proven by the site key, and MUST refuse calls without the key, except its health check [NEEDS CLARIFICATION: `research.md` C4].
+- **SYS-085**: The server MUST be built as for any host: one container, whose address, data folder and secrets all come from the environment, with nothing tied to this Mac.
+- **SYS-086**: The store MUST stay behind interfaces that don't name an engine, and new SQL MUST stay within what Postgres also runs [NEEDS CLARIFICATION: `research.md` C8, async now or later; the lean is later].
+- **SYS-087**: Sign-in MUST stay on the server. The website shows the wallet and passes the signature on. Other chains are added on the server's verify route (SYS-020).
+
 ## Success Criteria
 
 - **SC-101**: Someone starts on the site and continues in another agent with no token handled by hand.
@@ -161,6 +189,9 @@ A mapping that spends needs a yes from the wallet.
 - **SC-104**: The spend cap holds across restarts and refuses when the store fails.
 - **SC-105**: Deleting the index and rebuilding it changes no answer.
 - **SC-106**: Two policies over the same claims give two different explainable views.
+- **SC-107**: One address is enough for a person and their own agent: sign-in, the workspace, `skill.md`, `petal.mjs` and posting a reading.
+- **SC-108**: A step saved by a person's agent shows on their open page within 3 seconds, through the website.
+- **SC-109**: The server's own name answers nothing but its health check without the site key.
 
 ## Assumptions
 

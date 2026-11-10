@@ -87,6 +87,23 @@ Everything we know we'll have to solve. Each has a working default, so nothing h
 | 33 | When is the move to Postgres? The same SQL mostly carries over | Not before the freeze | Later |
 | 34 | Where do backups go, and encrypted how? | Nightly, encrypted, off the machine | With hosting |
 
+## The website and its server (8 Nov, for Elco to choose)
+
+Elco's architecture: the website on Vercel, and the server in a container built as for a VPS. Each row is a choice in `research.md`. The default is its lean, and nothing is built until Elco says go.
+
+| # | Question | Lean | Bites |
+|---|---|---|---|
+| 40 | One address or two (C1)? | One, `petals.elementarycomplexity.dev`. Vercel forwards the server's paths, so the cookie and sign-in stay as built | Before building the split |
+| 41 | How does Vercel forward (C2)? | A rewrite in `next.config`, so no function runs | Before building the split |
+| 42 | What does the container run (C3)? | Today's whole app first. The API alone later, as its own step | Before building the split |
+| 43 | How does the server know a visitor's address for limits (C4)? | A middleware adds it, with a site key. The server refuses calls without the key | Before building the split |
+| 44 | Live updates through Vercel (C5)? | The stream, forwarded, with a heartbeat every 25 s. Long-polling if the spike shows Vercel cuts streams | After the spike |
+| 45 | Pages built on Vercel's side (C6)? | Fetch the server over HTTP with the key: one function, `lib/api.ts` | Before building the split |
+| 46 | Where do `skill.md` and `petal.mjs` come from (C7)? | The server, forwarded, so they match its API | Before building the split |
+| 47 | The store as if it were Postgres: async now or later (C8)? | Later, as its own step. New SQL stays portable now | After the split |
+| 48 | The server's own name, and the tunnel (C9)? | A separate name through the tunnel, behind the key, opened only after the firewall. `open_public.sh` would need that name, not the website's | With the firewall |
+| 49 | When a person publishes from their own wallet, how does the server learn of it? | Not decided. Today's public site publishes nothing | With publishing |
+
 ## Beyond the build
 
 | # | Question | Bites |
