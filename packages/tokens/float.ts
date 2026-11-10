@@ -4,16 +4,17 @@
 import { layout, sizes } from './source.ts';
 
 export const floatBox = {
-  /**
-   * Where a box starts: how wide, and its input's height, which fits a question, its pill and the run's line.
-   * The height holds the Ask box grown to its most (Ask box max height, 200) with its controls and padding,
-   * under the bar, so a long message never hides its first lines under the bar (design/minimally-good.md,
-   * rule 7; 264 did, 10 Nov).
-   */
+  /** Where a box starts: how wide. */
   width: 480,
-  'input-height': 344,
-  /** A recorded run's input: its saved question is long, and the button to play it stays in sight. */
-  'recorded-input-height': 392,
+  /**
+   * The conversation's foot, the dark base its input is (design/conversation.md): where it starts, a few lines
+   * of the field over its controls and the run's line, and the least a hand can make it, one line and its
+   * controls. The field fills the base, so a taller base is a taller field.
+   */
+  'base-height': 184,
+  'base-min-height': 120,
+  /** A recorded run's base: its saved question is long, and the button to play it stays in sight. */
+  'recorded-base-height': 392,
   /** The flower's own box, on the right: wide enough to read a petal, tall enough for the rest. */
   'panel-width': 440,
   'panel-height': 640,
@@ -24,7 +25,7 @@ export const floatBox = {
   'options-height': 456,
   /** Where the column of boxes stops above the window's bottom: the flower's small map has that corner. */
   floor: 168,
-  /** The smallest a hand can make it, which still shows its bar and a line or two. */
+  /** The smallest a hand can make it, which still shows its bar and a line or two. A sheet over a base, too. */
   'min-width': 280,
   'min-height': 144,
   /** How far from the window's edge boxes start, and the space between one and the next. */

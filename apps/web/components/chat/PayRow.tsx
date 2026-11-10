@@ -15,15 +15,15 @@ export function PayRow({
   onPay: () => void;
 }) {
   if (phase === 'added' && added) {
-    return <p className="my-0 type-body">{payWords.added(added)}</p>;
+    return <p className="my-0 type-ui">{payWords.added(added)}</p>;
   }
   return (
     <div className="flex flex-col items-start gap-text-gap border border-hairline p-text-gap">
-      <p className="my-0 type-body">{payWords.out}</p>
-      <Button disabled={phase === 'paying'} onClick={onPay}>
+      <p className="my-0 type-ui">{payWords.out}</p>
+      <Button variant="compact" disabled={phase === 'paying'} onClick={onPay}>
         {phase === 'paying' ? payWords.paying : payWords.button(PAY_NEAR)}
       </Button>
-      {phase === 'failed' && <p className="my-0 type-caption text-muted">{payWords.failed}</p>}
+      {phase === 'failed' && <p className="my-0 type-ui text-muted">{payWords.failed}</p>}
     </div>
   );
 }

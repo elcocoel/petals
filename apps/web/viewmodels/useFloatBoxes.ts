@@ -2,7 +2,7 @@
 // straight to each box's element, so a drag never renders React and a render never moves a box. The
 // geometry is in lib/float-box.ts. Positions last as long as the page does.
 import { type HTMLAttributes, type RefCallback, useLayoutEffect, useMemo, useRef } from 'react';
-import { type Edge, kept, moved, type Rect, type Size, sized } from '../lib/float-box.ts';
+import { type Edge, kept, moved, type Rect, type Size, seamed, sized } from '../lib/float-box.ts';
 
 type Hold = Pick<
   HTMLAttributes<HTMLElement>,
@@ -14,6 +14,8 @@ export interface BoxHand {
   raise: () => void;
   bar: Hold;
   edge: Record<Edge, Hold>;
+  /** box.split: the line between a box's sheet and its base, where it has one. */
+  seam: Hold;
 }
 
 interface Held {
@@ -26,10 +28,16 @@ export const keepCursor = (e: { preventDefault(): void }) => e.preventDefault();
 
 const windowSize = (): Size => ({ w: window.innerWidth, h: window.innerHeight });
 
+/** A box with a base marks it, so the base's height is painted with the rest (components/ui/FloatBox.tsx). */
+const BASE = '[data-foot]';
+
 const paint = (el: HTMLElement, r: Rect) => {
   el.style.translate = `${Math.round(r.x)}px ${Math.round(r.y)}px`;
   el.style.width = `${Math.round(r.w)}px`;
   el.style.height = `${Math.round(r.h)}px`;
+  if (r.base === undefined) return;
+  const base = el.querySelector<HTMLElement>(BASE);
+  if (base) base.style.height = `${Math.round(r.base)}px`;
 };
 
 /** Is there anything between the pointer and the box that this wheel can still scroll? */
@@ -132,6 +140,8 @@ export function useFloatBoxes<K extends string>(
             holdWith((from, dx, dy, win) => sized(from, edge, dx, dy, win)),
           ]),
         ) as Record<Edge, Hold>,
+        // box.split
+        seam: holdWith((from, _dx, dy) => seamed(from, dy)),
       };
     };
 

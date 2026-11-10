@@ -18,6 +18,7 @@ import {
   type Rect,
   recordedBoxes,
   type Size,
+  seamed,
   sized,
 } from '../lib/float-box.ts';
 import { composerView } from '../lib/thread-view.ts';
@@ -27,35 +28,39 @@ const BOX: Rect = { x: 300, y: 200, w: 480, h: 500 };
 const barInside = (r: Rect, win: Size) =>
   r.x >= 0 && r.x + r.w <= win.w && r.y >= 0 && r.y + floatBox.bar <= win.h;
 
-describe('where the conversation starts', () => {
-  test('beside the work menu, the column starts past it', () => {
-    const { output, input } = conversationBoxes(WIN, floatBox['input-height'], besideMenu);
-    expect(output.x).toBe(besideMenu);
-    expect(input.x).toBe(besideMenu);
+describe('where the conversation starts (design/conversation.md, line 3)', () => {
+  const base = floatBox['base-height'];
+
+  test('beside the work menu, it starts past it', () => {
+    expect(conversationBoxes(WIN, base, besideMenu).conversation.x).toBe(besideMenu);
   });
 
-  test("where there's no room beside the menu, the column goes over it, inside the window", () => {
+  test("where there's no room beside the menu, it goes over it, inside the window", () => {
     const narrow = { w: 700, h: 900 };
-    const { output } = conversationBoxes(narrow, floatBox['input-height'], besideMenu);
-    expect(output.x + output.w).toBe(narrow.w - floatBox.inset);
+    const { conversation } = conversationBoxes(narrow, base, besideMenu);
+    expect(conversation.x + conversation.w).toBe(narrow.w - floatBox.inset);
     const phone = { w: 390, h: 844 };
-    expect(conversationBoxes(phone, floatBox['input-height'], besideMenu).output.x).toBe(
-      floatBox.inset,
-    );
+    expect(conversationBoxes(phone, base, besideMenu).conversation.x).toBe(floatBox.inset);
   });
 
-  test('both on the left, output above, input directly under it, the same width', () => {
-    const { output, input } = conversationBoxes(WIN);
-    expect(output.x).toBe(input.x);
-    expect(output.w).toBe(input.w);
-    expect(output.x).toBe(floatBox.inset);
-    expect(input.y).toBe(output.y + output.h + floatBox.gap);
+  test('one box on the left, its base at its foot', () => {
+    const { conversation } = conversationBoxes(WIN);
+    expect(conversation.x).toBe(floatBox.inset);
+    expect(conversation.y).toBe(floatBox.inset);
+    expect(conversation.w).toBe(floatBox.width);
+    expect(conversation.base).toBe(base);
   });
 
-  test("they stop above the corner the flower's small map has", () => {
-    const { input } = conversationBoxes(WIN);
-    expect(input.y + input.h).toBe(WIN.h - floatBox.floor);
+  test("it stops above the corner the flower's small map has", () => {
+    const { conversation } = conversationBoxes(WIN);
+    expect(conversation.y + conversation.h).toBe(WIN.h - floatBox.floor);
     expect(floatBox.floor).toBeGreaterThanOrEqual(MAP_BOTTOM + MAP_SIZE);
+  });
+
+  test('the models open beside it, ending level with its foot (line 20)', () => {
+    const { conversation, options } = conversationBoxes(WIN);
+    expect(options.x).toBe(conversation.x + conversation.w + floatBox.gap);
+    expect(options.y + options.h).toBe(conversation.y + conversation.h);
   });
 
   test.each([
@@ -64,36 +69,84 @@ describe('where the conversation starts', () => {
     [320, 240],
     [768, 1024],
     [390, 844],
-  ])('every bar is in a %i x %i window', (w, h) => {
+  ])('its bar is in a %i x %i window, and its sheet keeps its least', (w, h) => {
     for (const place of [conversationBoxes, recordedBoxes]) {
-      const { output, input } = place({ w, h });
-      expect(barInside(output, { w, h })).toBe(true);
-      expect(barInside(input, { w, h })).toBe(true);
+      const { conversation } = place({ w, h });
+      expect(barInside(conversation, { w, h })).toBe(true);
+      expect(conversation.base).toBeGreaterThanOrEqual(floatBox['base-min-height']);
     }
   });
 
   test.each([
     [768, 1024],
     [390, 844],
-  ])('both fit a %i x %i window, with nothing past its sides', (w, h) => {
+  ])('it fits a %i x %i window, with nothing past its sides', (w, h) => {
     for (const place of [conversationBoxes, recordedBoxes]) {
-      const { output, input } = place({ w, h });
-      for (const box of [output, input]) {
-        expect(box.x).toBeGreaterThanOrEqual(0);
-        expect(box.x + box.w).toBeLessThanOrEqual(w);
-        expect(box.y + box.h).toBeLessThanOrEqual(h);
-      }
+      const { conversation } = place({ w, h });
+      expect(conversation.x).toBeGreaterThanOrEqual(0);
+      expect(conversation.x + conversation.w).toBeLessThanOrEqual(w);
+      expect(conversation.y + conversation.h).toBeLessThanOrEqual(h);
     }
   });
 
-  test('a recorded run takes more of the column for its input, and stops in the same place', () => {
-    const live = conversationBoxes(WIN);
-    const recorded = recordedBoxes(WIN);
-    expect(recorded.input.h).toBe(floatBox['recorded-input-height']);
-    expect(recorded.input.h).toBeGreaterThan(live.input.h);
-    expect(recorded.input.y + recorded.input.h).toBe(live.input.y + live.input.h);
-    expect(recorded.output.y).toBe(live.output.y);
-    expect(recorded.input.y).toBe(recorded.output.y + recorded.output.h + floatBox.gap);
+  test('a recorded run starts with a taller base, and stops in the same place (line 19)', () => {
+    const live = conversationBoxes(WIN).conversation;
+    const recorded = recordedBoxes(WIN).conversation;
+    expect(recorded.base).toBe(floatBox['recorded-base-height']);
+    expect(recorded.base).toBeGreaterThan(live.base ?? 0);
+    expect(recorded.y + recorded.h).toBe(live.y + live.h);
+    expect(recorded.y).toBe(live.y);
+  });
+});
+
+describe('a sheet over a base (box.split, design/conversation.md, lines 5 to 11)', () => {
+  const SPLIT: Rect = { x: 300, y: 100, w: 480, h: 600, base: 200 };
+  const sheetOf = (r: Rect) => r.h - (r.base ?? 0);
+
+  test('the sides size the whole box, both parts with it', () => {
+    expect(sized(SPLIT, 'e', 40, 0, WIN)).toEqual({ ...SPLIT, w: 520 });
+    expect(sized(SPLIT, 'w', -40, 0, WIN)).toEqual({ ...SPLIT, x: 260, w: 520 });
+  });
+
+  test('the top sizes the sheet, and the base stays where it is', () => {
+    const r = sized(SPLIT, 'n', 0, -50, WIN);
+    expect(r).toEqual({ ...SPLIT, y: 50, h: 650 });
+    expect(r.y + r.h - (r.base ?? 0)).toBe(SPLIT.y + SPLIT.h - (SPLIT.base ?? 0));
+  });
+
+  test('the bottom sizes the base, and the sheet stays as it is', () => {
+    const r = sized(SPLIT, 's', 0, 60, WIN);
+    expect(r).toEqual({ ...SPLIT, h: 660, base: 260 });
+    expect(sheetOf(r)).toBe(sheetOf(SPLIT));
+  });
+
+  test('the seam moves the line between them, and the box stays as it is', () => {
+    expect(seamed(SPLIT, -80)).toEqual({ ...SPLIT, base: 280 });
+    expect(seamed(SPLIT, 50)).toEqual({ ...SPLIT, base: 150 });
+  });
+
+  test('neither part goes below its least', () => {
+    expect(seamed(SPLIT, 9000).base).toBe(floatBox['base-min-height']);
+    expect(sheetOf(seamed(SPLIT, -9000))).toBe(floatBox['min-height']);
+    expect(sheetOf(sized(SPLIT, 'n', 0, 9000, WIN))).toBe(floatBox['min-height']);
+    expect(sized(SPLIT, 's', 0, -9000, WIN).base).toBe(floatBox['base-min-height']);
+  });
+
+  test("a corner does its two edges' work", () => {
+    expect(sized(SPLIT, 'se', 20, 30, WIN)).toEqual({ ...SPLIT, w: 500, h: 630, base: 230 });
+    expect(sized(SPLIT, 'nw', -20, -30, WIN)).toEqual({ ...SPLIT, x: 280, y: 70, w: 500, h: 630 });
+  });
+
+  test('a smaller window keeps the base where it fits (line 13)', () => {
+    const r = kept(SPLIT, { w: 1440, h: 400 });
+    expect(r.h).toBe(400);
+    expect(r.base).toBe(SPLIT.base);
+    expect(kept(SPLIT, { w: 1440, h: 300 }).base).toBe(300 - floatBox['min-height']);
+  });
+
+  test('a box with no base has none to move', () => {
+    expect(seamed(BOX, 50)).toEqual(BOX);
+    expect(sized(BOX, 's', 0, 10, WIN)).not.toHaveProperty('base');
   });
 });
 
@@ -206,6 +259,7 @@ describe('the views', () => {
     raise: () => {},
     bar: none,
     edge: { n: none, s: none, e: none, w: none, nw: none, ne: none, sw: none, se: none },
+    seam: none,
   };
 
   test('a float box: the box parent, its own kind, words once, eight edges with no marks', () => {
@@ -223,6 +277,24 @@ describe('the views', () => {
     expect(html).toContain('data-surface="ink"');
     expect(html.match(/aria-hidden="true"/g)).toHaveLength(8);
     expect(html.match(/>Conversation</g)).toHaveLength(1);
+  });
+
+  test('with a foot: one box, the sheet over a dark base, the seam a ninth hand (line 1)', () => {
+    const html = renderToStaticMarkup(
+      FloatBox({
+        label: 'Conversation',
+        title: 'Conversation',
+        hand,
+        foot: 'field',
+        children: 'body',
+      }),
+    );
+    expect(html.match(/<section/g)).toHaveLength(1);
+    expect(html).toContain('data-foot=""');
+    expect(html).toContain('data-surface="ink"');
+    expect(html).toContain('cursor-row-resize');
+    expect(html.match(/aria-hidden="true"/g)).toHaveLength(9);
+    expect(html.indexOf('body')).toBeLessThan(html.indexOf('field'));
   });
 
   test('an empty bar still has the height to hold it by', () => {
@@ -263,9 +335,9 @@ describe('the views', () => {
         }),
       );
     expect(composer()).toContain(
-      'class="flex shrink-0 flex-col gap-space-8 pt-text-gap pr-space-32 pb-space-32 pl-column-gap"',
+      'class="flex flex-col gap-space-8 shrink-0 pt-text-gap pr-space-32 pb-space-32 pl-column-gap"',
     );
-    expect(composer('p-1')).toContain('class="flex shrink-0 flex-col gap-space-8 p-1"');
+    expect(composer('p-1')).toContain('class="flex flex-col gap-space-8 shrink-0 p-1"');
   });
 
   test('an open row says where its flower is, and only where that is true', () => {

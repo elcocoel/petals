@@ -1,8 +1,10 @@
 'use client';
-// A box that floats over a canvas: a BarBox a hand can move and size. Input, output and the flower's own
-// box are this. It holds no state: where it is and what a hand does to it come from
-// viewmodels/useFloatBoxes.ts, which writes directly to the element, so a drag never renders. Hidden until
-// that has placed it, since only the browser knows the window. The edges are shown by the cursor alone.
+// A box that floats over a canvas: a BarBox a hand can move and size. The conversation, the models and the
+// flower's own box are this. With a `foot` it's two parts, one box (design/conversation.md): a light sheet
+// rising out of a dark base, a little narrower, its foot in behind the base's edge, sized apart at the seam.
+// It holds no state: where it is and what a hand does to it come from viewmodels/useFloatBoxes.ts, which
+// writes directly to the element, so a drag never renders. Hidden until that has placed it, since only the
+// browser knows the window. The edges are shown by the cursor alone, the seam by its line too.
 import type { SurfaceName } from '@petal/tokens';
 import type { HTMLAttributes, ReactNode, RefCallback } from 'react';
 import { BarBox } from './BarBox.tsx';
@@ -32,6 +34,7 @@ export interface FloatHand {
   raise: () => void;
   bar: Hold;
   edge: Record<keyof typeof EDGE, Hold>;
+  seam: Hold;
 }
 
 export function FloatBox({
@@ -41,6 +44,8 @@ export function FloatBox({
   hand,
   closed = false,
   control,
+  foot,
+  footSurface = 'ink',
   children,
 }: {
   /** What a screen reader hears for the box. */
@@ -53,6 +58,9 @@ export function FloatBox({
   closed?: boolean;
   /** Something the bar can do, at its far end. */
   control?: ReactNode;
+  /** The base the sheet rises out of, on its own surface: the conversation's input. */
+  foot?: ReactNode;
+  footSurface?: SurfaceName;
   children: ReactNode;
 }) {
   return (
@@ -62,12 +70,12 @@ export function FloatBox({
       onPointerDownCapture={hand.raise}
       // box.close
       hidden={closed}
-      className="invisible fixed top-0 left-0"
+      className="invisible fixed top-0 left-0 flex flex-col"
     >
       <BarBox
         kind="float"
         surface={surface}
-        className="flex size-full flex-col bg-surface"
+        className={`flex min-h-0 flex-1 flex-col bg-surface ${foot ? 'mx-space-8 -mb-space-16' : ''}`}
         bar={
           control ? (
             <div className="flex items-center justify-between gap-text-gap">
@@ -89,16 +97,37 @@ export function FloatBox({
         barClassName="min-h-control-height shrink-0 cursor-grab touch-none select-none active:cursor-grabbing"
         barProps={hand.bar}
       >
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none">
+        <div
+          className={`flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none ${foot ? 'pb-space-16' : ''}`}
+        >
           {children}
         </div>
       </BarBox>
+      {foot && (
+        // box.split
+        <div
+          data-foot=""
+          data-b="box"
+          data-kind="float"
+          data-surface={footSurface}
+          className="relative z-10 flex shrink-0 flex-col border border-primary bg-surface"
+        >
+          <span
+            aria-hidden="true"
+            {...hand.seam}
+            className="group/seam absolute inset-x-block-gap -top-space-4 flex h-space-8 cursor-row-resize touch-none items-center"
+          >
+            <span className="invisible h-px w-full scale-y-200 bg-accent group-hover/seam:visible group-active/seam:visible" />
+          </span>
+          {foot}
+        </div>
+      )}
       {(Object.keys(EDGE) as (keyof typeof EDGE)[]).map((edge) => (
         <span
           key={edge}
           aria-hidden="true"
           {...hand.edge[edge]}
-          className={`absolute touch-none ${EDGE[edge]}`}
+          className={`absolute z-20 touch-none ${EDGE[edge]}`}
         />
       ))}
     </section>

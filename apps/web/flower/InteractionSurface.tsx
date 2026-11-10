@@ -1,7 +1,8 @@
 'use client';
 // The page where people work (design/interaction-surface.md): the live flower fills the window, and the
-// conversation floats above it in two boxes a hand can move and size. A third, the same box, shows the
-// flower's own details once something asks for them. This only wires the ViewModels to the views. The
+// conversation floats above it, one box a hand can move and size: its thread a light sheet rising out of the
+// dark base its input is (design/conversation.md). Another, the same box, shows the flower's own details
+// once something asks for them. This only wires the ViewModels to the views. The
 // camera isn't told about the boxes. Until the conversation has a flower, the canvas is empty ground
 // (Elco, 8 Nov: no flower hard-coded in).
 import type { SurfaceName } from '@petal/tokens';
@@ -22,7 +23,7 @@ import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
 import { FlowerPanel } from './FlowerPanel.tsx';
 
-const BOXES = ['output', 'input', 'panel', 'options'] as const;
+const BOXES = ['conversation', 'panel', 'options'] as const;
 
 export function InteractionSurface({
   scatter,
@@ -58,7 +59,9 @@ export function InteractionSurface({
       : undefined;
   const place = useMemo(
     () =>
-      workspace.recorded ? recordedBoxes : (win: Size) => conversationBoxes(win, undefined, from),
+      workspace.recorded
+        ? (win: Size) => recordedBoxes(win, from)
+        : (win: Size) => conversationBoxes(win, undefined, from),
     [from, workspace.recorded],
   );
   const hands = useFloatBoxes(BOXES, place);
@@ -82,14 +85,64 @@ export function InteractionSurface({
         selected={state.selected}
         onPick={actions.pick}
       />
-      <FloatBox label={state.heading} title={state.heading} surface={surface} hand={hands.output}>
+      <FloatBox
+        label={state.heading}
+        title={state.heading}
+        surface={surface}
+        hand={hands.conversation}
+        // Work from another door goes on in its own app: its thread says so, and there's no base to send
+        // from (design/conversation.md, line 18).
+        foot={
+          state.composer.away ? undefined : (
+            <>
+              {state.needsWallet && (
+                <ConnectWallet
+                  question={state.question}
+                  busy={state.session.busy}
+                  failed={state.session.failed}
+                  onConnect={state.session.connect}
+                />
+              )}
+              {/* Hidden, not gone, so what's in it and the way to it stay while someone connects. */}
+              <div hidden={!state.composerShown} className="flex min-h-0 flex-1 flex-col">
+                <Composer
+                  view={state.composer}
+                  boxRef={refs.box}
+                  device
+                  className="px-block-gap py-space-16"
+                  controls={
+                    (state.pill || state.balance) && (
+                      <span className="flex flex-wrap items-center gap-space-8">
+                        {state.pill && (
+                          <Button
+                            variant="pill"
+                            pressed={state.modelsOpen}
+                            onClick={actions.toggleModels}
+                          >
+                            {state.pill}
+                          </Button>
+                        )}
+                        {state.balance && (
+                          <span className="type-mono text-muted">{state.balance}</span>
+                        )}
+                      </span>
+                    )
+                  }
+                  onChange={actions.setQuestion}
+                  onSend={() => void actions.send()}
+                />
+              </div>
+            </>
+          )
+        }
+      >
         {/* Petals' greeting and the thread. */}
         <ConversationThread
           recorded={state.recorded}
           rows={state.rows}
           thumbs={state.thumbs}
           threadRef={refs.thread}
-          className="px-block-gap pt-block-gap overscroll-none"
+          className="px-block-gap pt-space-16 overscroll-none"
           openWord=""
           onOpenTurn={actions.openTurn}
           onOpenStored={actions.openStored}
@@ -98,49 +151,6 @@ export function InteractionSurface({
           pay={{ ...state.pay, onPay: actions.pay }}
           jobs={state.jobs}
         />
-      </FloatBox>
-      <FloatBox
-        label={state.composer.label}
-        title={state.composer.label}
-        surface={surface}
-        hand={hands.input}
-        // Work from another door goes on in its own app: its thread says so, and there's no box to send from.
-        closed={Boolean(state.composer.away)}
-      >
-        {state.needsWallet && (
-          <ConnectWallet
-            question={state.question}
-            busy={state.session.busy}
-            failed={state.session.failed}
-            onConnect={state.session.connect}
-          />
-        )}
-        {/* Hidden, not gone, so what's in it and the way to it stay while someone connects. */}
-        <div hidden={!state.composerShown}>
-          <Composer
-            view={state.composer}
-            boxRef={refs.box}
-            className="px-block-gap pt-text-gap pb-block-gap"
-            controls={
-              (state.pill || state.balance) && (
-                <span className="flex flex-wrap items-center gap-space-8">
-                  {state.pill && (
-                    <Button
-                      variant="pill"
-                      pressed={state.modelsOpen}
-                      onClick={actions.toggleModels}
-                    >
-                      {state.pill}
-                    </Button>
-                  )}
-                  {state.balance && <span className="type-mono text-muted">{state.balance}</span>}
-                </span>
-              )
-            }
-            onChange={actions.setQuestion}
-            onSend={() => void actions.send()}
-          />
-        </div>
       </FloatBox>
       <FloatBox
         label="Model"

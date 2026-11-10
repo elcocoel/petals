@@ -10,11 +10,23 @@ export interface Size {
 export interface Rect extends Size {
   x: number;
   y: number;
+  /**
+   * A box with a base (FloatBox's `foot`, design/conversation.md): the base's height, from the box's foot up.
+   * The sheet above it has the rest.
+   */
+  base?: number;
 }
 export type Edge = 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se';
 
 /** Below `lo` never wins over `lo`, so a window smaller than a box still gives one answer. */
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(v, hi));
+
+/** A sheet keeps its bar and a line or two, and a base one line of its field and its controls. */
+const SHEET_MIN = floatBox['min-height'];
+const BASE_MIN = floatBox['base-min-height'];
+
+/** The base, inside a box this tall: never below its least, and never so tall the sheet goes below its own. */
+const baseIn = (base: number, h: number) => clamp(base, BASE_MIN, h - SHEET_MIN);
 
 /** The same box, inside this window. What a drag and a window resize both come down to. */
 export function kept(r: Rect, win: Size): Rect {
@@ -25,26 +37,42 @@ export function kept(r: Rect, win: Size): Rect {
     h,
     x: clamp(r.x, 0, win.w - w),
     y: clamp(r.y, 0, win.h - floatBox.bar),
+    ...(r.base === undefined ? {} : { base: baseIn(r.base, h) }),
   };
 }
 
 export const moved = (from: Rect, dx: number, dy: number, win: Size): Rect =>
   kept({ ...from, x: from.x + dx, y: from.y + dy }, win);
 
-/** The edge or corner under the hand follows it; the opposite one stays where it is. */
+/**
+ * The edge or corner under the hand follows it; the opposite one stays where it is. With a base, each edge
+ * sizes its own part (design/conversation.md, lines 5 to 7): the top the sheet, the bottom the base.
+ */
 export function sized(from: Rect, edge: Edge, dx: number, dy: number, win: Size): Rect {
   const minW = Math.min(floatBox['min-width'], win.w);
-  const minH = Math.min(floatBox['min-height'], win.h);
+  const { base } = from;
+  // the part this edge doesn't size keeps its height
+  const minN = base === undefined ? floatBox['min-height'] : base + SHEET_MIN;
+  const minS = base === undefined ? floatBox['min-height'] : from.h - base + BASE_MIN;
   let left = from.x;
   let right = from.x + from.w;
   let top = from.y;
   let bottom = from.y + from.h;
   if (edge.includes('w')) left = clamp(left + dx, 0, right - minW);
   if (edge.includes('e')) right = clamp(right + dx, left + minW, win.w);
-  if (edge.includes('n')) top = clamp(top + dy, 0, Math.min(bottom - minH, win.h - floatBox.bar));
-  if (edge.includes('s')) bottom = clamp(bottom + dy, top + minH, win.h);
-  return { x: left, y: top, w: right - left, h: bottom - top };
+  if (edge.includes('n')) {
+    top = clamp(top + dy, 0, Math.min(bottom - Math.min(minN, win.h), win.h - floatBox.bar));
+  }
+  if (edge.includes('s')) bottom = clamp(bottom + dy, top + Math.min(minS, win.h), win.h);
+  const h = bottom - top;
+  const r = { x: left, y: top, w: right - left, h };
+  if (base === undefined) return r;
+  return { ...r, base: edge.includes('s') ? baseIn(base + (bottom - from.y - from.h), h) : base };
 }
+
+/** box.split: the seam follows the hand, so the base grows as the sheet shrinks, and the box stays as it is. */
+export const seamed = (from: Rect, dy: number): Rect =>
+  from.base === undefined ? from : { ...from, base: baseIn(from.base - dy, from.h) };
 
 /**
  * Where the boxes start beside the side panel, when it's on the page (components/workspace/WorkMenu.tsx):
@@ -62,31 +90,30 @@ const columnAt = (from: number, w: number, win: Size) =>
   Math.max(floatBox.inset, Math.min(from, win.w - floatBox.inset - w));
 
 /**
- * Where the conversation's boxes start: on the left, because a sorted flower's small side is there
- * and its biggest names are upper right, and past the menu when there is one (`from`). Output above,
- * input directly under it, stopping above the corner the flower's small map has. The flower's own box
- * waits on the right, at the top, closed until something asks for it. The models wait beside the input,
- * ending level with it.
+ * Where the conversation starts (design/conversation.md, line 3): on the left, because a sorted flower's
+ * small side is there and its biggest names are upper right, and past the menu when there is one (`from`).
+ * One box, its sheet over its base, stopping above the corner the flower's small map has. The flower's own
+ * box waits on the right, at the top, closed until something asks for it. The models wait beside it,
+ * ending level with its foot.
  */
 export function conversationBoxes(
   win: Size,
-  inputH: number = floatBox['input-height'],
+  base: number = floatBox['base-height'],
   from: number = floatBox.inset,
-): { output: Rect; input: Rect; panel: Rect; options: Rect } {
-  const { inset, gap, width, floor, 'min-height': minH } = floatBox;
+): { conversation: Rect; panel: Rect; options: Rect } {
+  const { inset, gap, width, floor } = floatBox;
   const w = Math.min(width, win.w - inset * 2);
   const x = columnAt(from, w, win);
-  const outputH = Math.max(minH, win.h - inset - floor - gap - inputH);
+  const h = Math.max(SHEET_MIN + base, win.h - inset - floor);
   const panelW = Math.min(floatBox['panel-width'], win.w - inset * 2);
   const panelH = Math.min(floatBox['panel-height'], win.h - inset * 2);
   return {
-    output: kept({ x, y: inset, w, h: outputH }, win),
-    input: kept({ x, y: inset + outputH + gap, w, h: inputH }, win),
+    conversation: kept({ x, y: inset, w, h, base }, win),
     panel: kept({ x: win.w - inset - panelW, y: inset, w: panelW, h: panelH }, win),
     options: kept(
       {
         x: x + w + gap,
-        y: Math.max(inset, inset + outputH + gap + inputH - floatBox['options-height']),
+        y: Math.max(inset, inset + h - floatBox['options-height']),
         w: floatBox['options-width'],
         h: Math.min(floatBox['options-height'], win.h - inset * 2),
       },
@@ -104,6 +131,6 @@ export function boxUnder(win: Size, top: number): Rect {
   return { ...panel, y: panel.y + top };
 }
 
-/** The same, with a recorded run's input: a read-only saved question and the button that plays it. */
-export const recordedBoxes = (win: Size) =>
-  conversationBoxes(win, floatBox['recorded-input-height']);
+/** The same, with a recorded run's base: a read-only saved question and the button that plays it. */
+export const recordedBoxes = (win: Size, from?: number) =>
+  conversationBoxes(win, floatBox['recorded-base-height'], from);
