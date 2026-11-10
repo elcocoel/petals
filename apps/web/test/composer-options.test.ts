@@ -62,7 +62,7 @@ describe('what can be picked', () => {
       {
         id: 'flash',
         label: 'DeepSeek V4.1 Flash',
-        sub: 'Signed  ·  NEAR AI’s enclave  ·  $0.012 a turn · 0.003 NEAR',
+        sub: 'Signed  ·  NEAR AI’s enclave  ·  $0.012\u00a0a\u00a0turn\u00a0·\u00a00.003\u00a0NEAR',
         on: true,
       },
       {
@@ -76,7 +76,7 @@ describe('what can be picked', () => {
 
   test('with no price for NEAR, a turn’s cost in dollars alone', () => {
     expect(modelOptions(catalogue, settings, null)[0]?.sub).toBe(
-      'Signed  ·  NEAR AI’s enclave  ·  $0.012 a turn',
+      'Signed  ·  NEAR AI’s enclave  ·  $0.012\u00a0a\u00a0turn',
     );
   });
 });

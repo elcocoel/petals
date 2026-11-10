@@ -71,9 +71,16 @@ export function modelOptions(c: Catalogue, s: Settings, near_usd: number | null)
   }));
 }
 
-/** A turn's cost: "$0.012 a turn · 0.003 NEAR". A draft (WORKSPACE, LOBBY, 10 Nov). */
+/**
+ * A turn's cost: "$0.012 a turn · 0.003 NEAR". A draft (WORKSPACE, LOBBY, 10 Nov). Held together by
+ * no-break spaces, so a narrow line breaks before the cost and never inside it (design/minimally-good.md,
+ * rule 7).
+ */
 const turnCost = (m: Money) =>
-  m.near === null ? `$${m.usd} a turn` : `$${m.usd} a turn · ${m.near} NEAR`;
+  (m.near === null ? `$${m.usd} a turn` : `$${m.usd} a turn · ${m.near} NEAR`).replaceAll(
+    ' ',
+    '\u00a0',
+  );
 
 /** A new model brings its own effort: its default, or none if it offers none. */
 export function withModel(c: Catalogue, s: Settings, id: string): Settings {
