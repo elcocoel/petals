@@ -113,6 +113,18 @@ export interface PersonProfileRow {
   credential: string | null;
   saved_at: string;
 }
+/** A top-up through NEAR Intents (19): its deposit address, whose, the quote, and where it stands. */
+export interface TopUpRow {
+  deposit_address: string;
+  person: string;
+  usd: number;
+  /** JSON: the quote the person was given */
+  quote: string;
+  status: string;
+  credited_usd: number | null;
+  created_at: string;
+  settled_at: string | null;
+}
 /** One model call's usage/v1 record, with whose account paid (17). */
 export interface UsageRow {
   id: string;
@@ -913,6 +925,45 @@ export function tables(db: Db) {
           r.saved_at,
         );
       },
+    },
+
+    /** Top-ups through NEAR Intents (19). */
+    topUp: {
+      add: async (r: TopUpRow) => {
+        await db.run(
+          `INSERT INTO top_up (deposit_address, person, usd, quote, status, credited_usd, created_at, settled_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          r.deposit_address,
+          r.person,
+          r.usd,
+          r.quote,
+          r.status,
+          r.credited_usd,
+          r.created_at,
+          r.settled_at,
+        );
+      },
+      get: (deposit: string) =>
+        db.get<TopUpRow>('SELECT * FROM top_up WHERE deposit_address = ?', deposit),
+      /** A person's, the newest first. */
+      ofPerson: (person: string, limit: number) =>
+        db.all<TopUpRow>(
+          'SELECT * FROM top_up WHERE person = ? ORDER BY created_at DESC LIMIT ?',
+          person,
+          limit,
+        ),
+      async setStatus(deposit: string, status: string) {
+        await db.run('UPDATE top_up SET status = ? WHERE deposit_address = ?', status, deposit);
+      },
+      /** Landed: what it became on their credit. Once: false when it had already landed. */
+      settle: async (deposit: string, credited: number, at: string) =>
+        (await db.run(
+          `UPDATE top_up SET status = 'SUCCESS', credited_usd = ?, settled_at = ?
+           WHERE deposit_address = ? AND settled_at IS NULL`,
+          credited,
+          at,
+          deposit,
+        )) === 1,
     },
 
     /** A usage record per model call (17): added once; only its bill is filled in later. */

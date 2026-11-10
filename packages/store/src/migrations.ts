@@ -404,6 +404,22 @@ export const MIGRATIONS: readonly string[] = [
   `
   ALTER TABLE person ADD COLUMN tip REAL;
   `,
+  // 19: top-ups through NEAR Intents (Elco, 10 Nov: "let users pay with anything from anywhere"): each quote's
+  // deposit address, whose it is, what was asked and quoted, where its swap stands, and what it became on
+  // their credit once it landed.
+  `
+  CREATE TABLE top_up (
+    deposit_address TEXT PRIMARY KEY,
+    person TEXT NOT NULL,
+    usd REAL NOT NULL,
+    quote TEXT NOT NULL,
+    status TEXT NOT NULL,
+    credited_usd REAL,
+    created_at TEXT NOT NULL,
+    settled_at TEXT
+  );
+  CREATE INDEX top_up_person ON top_up(person, created_at);
+  `,
 ];
 
 /**
