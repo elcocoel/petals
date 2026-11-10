@@ -15,10 +15,6 @@ export function originFrom(headers: Headers, fallback = 'http://localhost:3080')
   return `${proto}://${host}`;
 }
 
-/** On this machine, some agents' web tools refuse the address on principle (Hermes's, Claude's). */
-const isThisMachine = (origin: string) =>
-  /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(origin);
-
 /** Where a person's agent keeps Petals' file, and how it runs it. */
 export const FILE_PATH = '~/.petals/petal.mjs';
 const RUN = 'node ~/.petals/petal.mjs';
@@ -26,13 +22,6 @@ const RUN = 'node ~/.petals/petal.mjs';
 /** The one line a terminal runs to fetch the file. */
 export const getFile = (origin: string) =>
   `curl -fsSL ${origin}/petal.mjs --create-dirs -o ${FILE_PATH}`;
-
-/**
- * What a person runs, once, to see their own agent in a box on the Petals page: the file, then its
- * terminal helper on 127.0.0.1, which prints the pairing code to type into the page.
- */
-export const terminalCommand = (origin: string, agent: 'claude' | 'codex' | 'hermes' = 'claude') =>
-  `${getFile(origin)} && ${RUN} terminal${agent === 'claude' ? '' : ` ${agent}`}`;
 
 /** The connect chapters, with this site's address written in ({site}, {host}). */
 const fill = (text: string, origin: string) =>
@@ -105,30 +94,13 @@ function appSteps(origin: string): string {
     const app = c.title.replace(/^Connect /, '');
     out.push(`### ${app.charAt(0).toUpperCase()}${app.slice(1)}`, '', fill(c.intro, origin), '');
     for (const sec of c.sections) {
-      // the page's box isn't theirs, the two setup commands are already above, the same for every app,
-      // and /connect's words are the person's
-      if (
-        sec.heading === "In the box on Petals' page" ||
-        sec.heading === 'Set up, every session' ||
-        sec.heading === CONNECT_PAGE
-      )
-        continue;
+      // the two setup commands are already above, the same for every app, and /connect's words are the person's
+      if (sec.heading === 'Set up, every session' || sec.heading === CONNECT_PAGE) continue;
       out.push(`#### ${sec.heading}`, '', fill(sec.body, origin), '');
     }
     out.push(`All of it, always the latest: \`${origin}/api/v1/brain/files/${c.id}\`.`, '');
   }
   return out.join('\n');
-}
-
-export function agentPrompt(origin: string): string {
-  const local = isThisMachine(origin)
-    ? " It's running on this machine, so if your web tool won't open a local address, use curl."
-    : '';
-  return [
-    `I'd like to use Petals with you. It maps who holds power in crypto networks (${origin}). It's public and read-only, with no account or key.`,
-    `Its tools run on my own computer, so this needs an app that can run commands here: Claude Code (in a terminal, or under Code in the Claude desktop app), Codex or Hermes. The Claude app's chat runs in the cloud and can't. If you can't run commands here, don't try: tell me so in one line, and that I can add Petals as a connector at ${origin}/mcp.`,
-    `Its instructions for you are at ${origin}/skill.md.${local} Its brain: ${origin}/api/v1/brain/route?q=<your app and what I ask>. Please read them and set yourself up in whatever way works from where you are, without asking me to choose anything. If your app needs my permission for something, ask me for it: the first time it runs Petals' file, it may, because the file comes from this site. I want to watch this conversation on Petals' page in my browser, so please open that page for me, and post each flower and your replies there word for word. Then tell me in a line or two what you can do, and ask what I'm curious about.`,
-  ].join('\n\n');
 }
 
 /** What an agent works out for itself, so the person has nothing to understand (Elco, 6 Nov). */
@@ -141,9 +113,9 @@ Work this out yourself, fast: the person is waiting, and setup should take secon
 
 **First, where you run.** If you're the Claude app's chat or ChatGPT, a sandbox there isn't the person's computer, and the commands below can't reach Petals from it. Use the Petals connector at \`${origin}/mcp\` if it's added, or tell the person in a line how to add it (the cloud app's steps below), and run nothing here. A sandbox's network refusal can't be approved in the chat: don't retry it or look for a way round.
 
-Petal's tools are one file that runs on this computer. Every read, search and drawing happens here, on nobody else's account, and the site only shows what you send it. No account or key. Don't call this site's API to read or draw: the file does it here.
+Petals' tools are one file that runs on this computer. Every read, search and drawing happens here, on nobody else's account, and the site only shows what you send it. No account or key. Don't call this site's API to read or draw: the file does it here.
 
-- **You already have Petal's tools** (\`find_target\`, \`render_flower\`, from a \`petals\` MCP server): use them, and start the page with \`start_exploration\` (below).
+- **You already have Petals' tools** (\`find_target\`, \`render_flower\`, from a \`petals\` MCP server): use them, and start the page with \`start_exploration\` (below).
 - **You have a shell on the person's computer:** run these two commands as written, and nothing else first:
 
   \`\`\`bash
@@ -153,14 +125,14 @@ Petal's tools are one file that runs on this computer. Every read, search and dr
 
   The first gets the file: run it every session, since it takes a second and keeps the file current and from this site. The second starts this conversation's page and opens it in their browser, in one call; its \`site\` must be \`${origin}\`, or the file came from somewhere else, so fetch it again. Every tool is then a command, listed under "Calling the tools as commands". It needs Node 22.13 or newer: if \`node\` is missing or older, say so in a line.
 
-**What the file is, so you needn't audit it:** one file, built by this site from Petals' own source with esbuild, not minified${sha}. Its first lines say what it does. It reads public chain data and web pages from this computer, keeps its notes in \`~/.petals\`, and sends this conversation and its flowers to \`${host}\`. It starts another program only to open the page in the browser, and for its \`terminal\` command, to run the person's own agent through Python's pty and, on a Mac, to make Petals Helper.app with macOS's own tools. It has no WebAssembly and no install step.
+**What the file is, so you needn't audit it:** one file, built by this site from Petals' own source with esbuild, not minified${sha}. Its first lines say what it does. It reads public chain data and web pages from this computer, keeps its notes in \`~/.petals\`, and sends this conversation and its flowers to \`${host}\`. It starts another program only to open the page in the browser. It has no WebAssembly and no install step.
 
 **Your app's own steps** come from Petals' brain, one chapter per app. Follow yours:
 
 ${appSteps(origin)}
 **Any other app** that runs commands on their computer: the two commands above are all it takes. If its sandbox refuses them, ask in one line, naming what to allow: reaching \`${host}\` and the public sites the file reads, from your shell. The file changes nothing in your app: only keeping Petals for next time does, and only when they ask.
 
-Publishing to Petal's shared map isn't in these tools yet. If they ask, say so in a line.
+Publishing to Petals' shared map isn't in these tools yet. If they ask, say so in a line.
 
 ## Let them watch
 
@@ -257,7 +229,7 @@ export function hostedSkill(
   md = section(md, 'Quick Start', setup(origin, fileSha));
   md = section(
     md,
-    'When no Petal site is running',
+    'When no Petals site is running',
     `## Links\n\nHand the person \`short_url\` when \`render_flower\` gives one, because it fits on a line, and open it for them if you can. A flower is drawn here and shown on this site (\`${origin}\`) once it's saved to the conversation's page.\n`,
   );
   // the curl example goes first, so the commands' own example takes its place

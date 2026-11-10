@@ -78,7 +78,7 @@ const DONE: Record<string, string> = {
 
 export const CONNECT_HELP = `petal connect <agent> [--project] [--dry-run] [--remove] [--root <dir>]
 
-Gives your own agent Petal's skill and tools, so it can run the search instead of Petal's chat.
+Gives your own agent Petals' skill and tools, so it can run the search instead of Petals' chat.
 
 Agents:
   claude      Claude Code: the skill in ~/.claude/skills/petal, the server with claude mcp add
@@ -89,7 +89,7 @@ Agents:
   --dry-run   print exactly what it would change, and change nothing
   --remove    undo it
 
-Safe to run twice. It never overwrites a skill or a server that isn't Petal's: it stops and says so.
+Safe to run twice. It never overwrites a skill or a server that isn't Petals': it stops and says so.
 For any other agent, run petal connect <name> for the MCP command and the skill's path.
 `;
 
@@ -321,7 +321,7 @@ function skillAt(dir: string): Skill {
   const text = readFileSync(file, 'utf8');
   return isPetalSkill(text)
     ? { kind: 'petal', text }
-    : { kind: 'foreign', why: `${file} isn't Petal's skill` };
+    : { kind: 'foreign', why: `${file} isn't Petals' skill` };
 }
 
 /** The skill as an agent gets it: with the real path of the repo where the text says <repo>. */
@@ -331,7 +331,7 @@ function skillText(root: string): string {
   try {
     text = readFileSync(source, 'utf8');
   } catch {
-    throw new Stop(`There's no skill at ${source}. Is ${root} a clone of the Petal repo?`);
+    throw new Stop(`There's no skill at ${source}. Is ${root} a clone of the Petals repo?`);
   }
   return text.replaceAll('<repo>', root);
 }
@@ -356,7 +356,7 @@ function planConnect(sys: ConnectSystem, agent: Agent, want: Server, text: strin
   if (!have) plan.steps.push(add);
   else if (!isPetalServer(have)) {
     plan.conflicts.push(
-      `${agent.label} already has an MCP server named ${SERVER} that isn't Petal's: ${shell([have.command, ...have.args])}. Remove or rename it yourself, then run this again.`,
+      `${agent.label} already has an MCP server named ${SERVER} that isn't Petals': ${shell([have.command, ...have.args])}. Remove or rename it yourself, then run this again.`,
     );
   } else if (sameServer(have, want)) plan.kept.push(`MCP server ${SERVER}, already this one`);
   else plan.steps.push(runStep(sys, agent.id, agent.remove), add);
@@ -396,7 +396,7 @@ function planRemove(sys: ConnectSystem, agent: Agent): Plan {
   const plan: Plan = { steps: [], kept: [], conflicts: [] };
   const have = agent.read();
   if (have && !isPetalServer(have)) {
-    plan.kept.push(`MCP server ${SERVER}, left alone: it isn't Petal's`);
+    plan.kept.push(`MCP server ${SERVER}, left alone: it isn't Petals'`);
   } else if (have) {
     const emptiesConfig = agent.tidyConfig !== undefined && holdsOnlyPetal(agent.tidyConfig);
     plan.steps.push(runStep(sys, agent.id, agent.remove));
@@ -508,7 +508,7 @@ export function connect(argv: string[], sys: ConnectSystem): number {
       );
       for (const s of plan.steps) line(s.verb, s.text);
       for (const k of plan.kept) line('keep', k);
-      if (nothing && plan.kept.length === 0) line('do', 'nothing: Petal is not installed here');
+      if (nothing && plan.kept.length === 0) line('do', 'nothing: Petals is not installed here');
       return 0;
     }
 
@@ -516,14 +516,14 @@ export function connect(argv: string[], sys: ConnectSystem): number {
     if (removing) {
       sys.stdout(
         nothing
-          ? `Nothing of Petal's to remove from ${agent.label} (${agent.where}).\n`
-          : `Removed Petal from ${agent.label} (${agent.where}).\n`,
+          ? `Nothing of Petals' to remove from ${agent.label} (${agent.where}).\n`
+          : `Removed Petals from ${agent.label} (${agent.where}).\n`,
       );
     } else {
       sys.stdout(
         nothing
-          ? `${agent.label} already has Petal's skill and tools (${agent.where}). Nothing changed.\n`
-          : `${agent.label} now has Petal's skill and tools (${agent.where}).\n`,
+          ? `${agent.label} already has Petals' skill and tools (${agent.where}). Nothing changed.\n`
+          : `${agent.label} now has Petals' skill and tools (${agent.where}).\n`,
       );
     }
     for (const s of plan.steps) line(DONE[s.verb] ?? s.verb, s.text);

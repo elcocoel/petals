@@ -65,8 +65,8 @@ export function moduleFor(ctx: ToolContext, id: string): InputModule {
   if (m) return m;
   throw new ToolFailure(
     'cannot_read',
-    `Petal can't read the network "${id}" yet.`,
-    `Petal can read: ${readable(ctx)}. To ask for new coverage, quote_payment with purpose sponsor_coverage.`,
+    `Petals can't read the network "${id}" yet.`,
+    `Petals can read: ${readable(ctx)}. To ask for new coverage, quote_payment with purpose sponsor_coverage.`,
   );
 }
 
@@ -164,7 +164,7 @@ export async function loadSnapshot(ctx: ToolContext, sha256: string): Promise<Sn
   throw new ToolFailure(
     'not_found',
     `No snapshot ${sha256} in the fixtures, the cache or the map.`,
-    'get_snapshot returns the sha256 of a snapshot Petal holds.',
+    'get_snapshot returns the sha256 of a snapshot Petals holds.',
   );
 }
 

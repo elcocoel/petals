@@ -69,13 +69,7 @@ importers:
       '@petal/tools':
         specifier: workspace:*
         version: link:../../packages/tools
-      ws:
-        specifier: ^8.22.2
-        version: 8.22.2
     devDependencies:
-      '@types/ws':
-        specifier: ^8.18.2
-        version: 8.18.2
       esbuild:
         specifier: ^0.27.7
         version: 0.27.7
@@ -1055,9 +1049,6 @@ packages:
 
   '@types/react@19.3.0':
     resolution: {integrity: sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==}
-
-  '@types/ws@8.18.2':
-    resolution: {integrity: sha512-67MQl+fpWKVTT1NYdnmo3U4sc/xPo/zQBncVnI74qmQa0z/b+1g6iYqNmGCPbxO+zz2aklb08a0oHfegiVd0/w==}
 
   '@typescript/typescript-aix-ppc64@7.0.2':
     resolution: {integrity: sha512-MTKKkWB7p/0E9xi1d1tHtZ5PiLkGEMIq88pK2CubZjOsLtYTLqhgIgi6zepFa+9GHZ6h05NMCkQxGKiPXMxXtQ==}
@@ -2558,10 +2549,6 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
-  '@types/ws@8.18.2':
-    dependencies:
-      '@types/node': 24.19.2
-
   '@typescript/typescript-aix-ppc64@7.0.2':
     optional: true
 
@@ -3442,7 +3429,8 @@ snapshots:
 
   why-is-node-running@3.2.1: {}
 
-  ws@8.22.2: {}
+  ws@8.22.2:
+    optional: true
 
   xdg-app-paths@5.5.1:
     dependencies:

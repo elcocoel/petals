@@ -117,10 +117,4 @@ describe('minimally good, in the workspace', () => {
       "Sent to Claude Code: Map RaidGuild's proposals",
     );
   });
-
-  test('a conversation the page starts says which agent and when', async () => {
-    const { conversationTitle } = await import('../lib/terminal-pass.ts');
-    const t = conversationTitle('Claude Code', new Date(2026, 10, 10, 14, 32));
-    expect(t).toBe('Claude Code, 10 Nov 14:32');
-  });
 });

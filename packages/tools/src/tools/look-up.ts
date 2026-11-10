@@ -356,8 +356,8 @@ function sayIt(
   const looked = `Looked in: ${[...new Set(kinds)].map((k) => PLACES[k] ?? k).join(', ') || 'nothing'}.`;
   if (parts.length === 0) {
     const where = isAccount(shape)
-      ? 'No stored read has this account, and no chain Petal reads said anything about it.'
-      : `Nothing Petal holds or lists answers to "${query}".`;
+      ? 'No stored read has this account, and no chain Petals reads said anything about it.'
+      : `Nothing Petals holds or lists answers to "${query}".`;
     return `${where} ${looked}${downNote} That isn't the same as not existing: search and read_page look further, and read_chain reads any address.`;
   }
   return `Found ${parts.join('; ')}. ${looked}${downNote}`;
@@ -377,7 +377,7 @@ export function makeLookUp(
     onTheirMachine: true,
     title: 'Look up',
     description:
-      "What Petal knows about any word (a name, ticker, address, account): flowers with view_url, stored reads with dates, accounts in them, what the chain says of an address, and what market and DAO lists name, each marked how it's known. Never fails on a guess.",
+      "What Petals knows about any word (a name, ticker, address, account): flowers with view_url, stored reads with dates, accounts in them, what the chain says of an address, and what market and DAO lists name, each marked how it's known. Never fails on a guess.",
     input: obj(
       ['query'],
       {

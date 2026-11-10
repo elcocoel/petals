@@ -208,7 +208,7 @@ describe('petal connect claude', () => {
   test('says what it did and what to try next', async () => {
     const w = world();
     const r = await connect(w, ['claude']);
-    expect(r.stdout).toContain("Claude Code now has Petal's skill and tools (in every folder).");
+    expect(r.stdout).toContain("Claude Code now has Petals' skill and tools (in every folder).");
     expect(r.stdout).toContain(join(w.home, '.claude/skills/petal/SKILL.md'));
     expect(r.stdout).toContain(`claude "who stands behind NEAR's validators?"`);
     expect(r.stdout).toContain(
@@ -226,7 +226,7 @@ describe('petal connect claude', () => {
     expect(r.code).toBe(0);
     expect(changes(w)).toEqual([]);
     expect(tree(w.home)).toEqual(before);
-    expect(r.stdout).toContain('already has Petal');
+    expect(r.stdout).toContain('already has Petals');
     expect(r.stdout).toContain('Nothing changed.');
   });
 
@@ -251,14 +251,14 @@ describe('petal connect claude', () => {
     await connect(w, ['claude']);
     const r = await connect(w, ['claude', '--remove']);
     expect(r.code, r.stderr).toBe(0);
-    expect(r.stdout).toContain('Removed Petal from Claude Code');
+    expect(r.stdout).toContain('Removed Petals from Claude Code');
     expect(readJson(join(w.home, '.claude.json'))).toEqual({ theirs: 1, mcpServers: {} });
     expect(Object.keys(tree(w.home))).not.toContain(join(w.home, '.claude/skills/petal'));
 
     w.calls.length = 0;
     const again = await connect(w, ['claude', '--remove']);
     expect(again.code).toBe(0);
-    expect(again.stdout).toContain("Nothing of Petal's to remove");
+    expect(again.stdout).toContain("Nothing of Petals' to remove");
     expect(changes(w)).toEqual([]);
   });
 
@@ -321,7 +321,7 @@ describe('petal connect claude', () => {
     expect(r.code, r.stderr).toBe(0);
     expect(tree(w.home)).toEqual(home);
     expect(readJson(join(dir, '.claude.json')).mcpServers).toHaveProperty('petals');
-    expect(readFileSync(join(dir, 'skills/petal/SKILL.md'), 'utf8')).toContain('# Petal');
+    expect(readFileSync(join(dir, 'skills/petal/SKILL.md'), 'utf8')).toContain('# Petals');
     // it reads the same file claude writes, so a second run is a no-op
     expect((await connect(w, ['claude'])).stdout).toContain('Nothing changed.');
   });
@@ -339,7 +339,7 @@ describe('what is not Petal stays untouched', () => {
     const r = await connect(w, ['claude']);
     expect(r.code).toBe(1);
     expect(r.stderr).toContain('stopped, nothing changed');
-    expect(r.stderr).toContain(`${file} isn't Petal's skill`);
+    expect(r.stderr).toContain(`${file} isn't Petals' skill`);
     expect(changes(w)).toEqual([]);
     expect(tree(w.home)).toEqual(before);
   });
@@ -362,11 +362,11 @@ describe('what is not Petal stays untouched', () => {
     const before = tree(w.home);
     const r = await connect(w, ['claude']);
     expect(r.code).toBe(1);
-    expect(r.stderr).toContain("isn't Petal's: npx flowers mcp");
+    expect(r.stderr).toContain("isn't Petals': npx flowers mcp");
     expect(changes(w)).toEqual([]);
     expect(tree(w.home)).toEqual(before);
     const gone = await connect(w, ['claude', '--remove']);
-    expect(gone.stdout).toContain("left alone: it isn't Petal's");
+    expect(gone.stdout).toContain("left alone: it isn't Petals'");
     expect(changes(w)).toEqual([]);
   });
 
@@ -376,7 +376,7 @@ describe('what is not Petal stays untouched', () => {
     w.codex.set('petals', theirs);
     const r = await connect(w, ['codex']);
     expect(r.code).toBe(1);
-    expect(r.stderr).toContain("isn't Petal's");
+    expect(r.stderr).toContain("isn't Petals'");
     expect(w.codex.get('petals')).toEqual(theirs);
     expect(changes(w)).toEqual([]);
   });
@@ -505,7 +505,7 @@ describe('petal connect codex', () => {
     const home = tree(w.home);
     expect((await connect(w, ['codex'])).code).toBe(0);
     expect(tree(w.home)).toEqual(home);
-    expect(readFileSync(join(dir, 'skills/petal/SKILL.md'), 'utf8')).toContain('# Petal');
+    expect(readFileSync(join(dir, 'skills/petal/SKILL.md'), 'utf8')).toContain('# Petals');
   });
 
   test('a failing codex mcp get stops it, because mcp add would overwrite blindly', async () => {

@@ -114,7 +114,7 @@ describe('look_up', () => {
     expect(o.error).toBeUndefined();
     expect(fits(o), describeErrors(fits.errors)).toBe(true);
     for (const k of ['flowers', 'stored', 'accounts', 'chain', 'listed']) expect(o[k]).toEqual([]);
-    expect(o.says).toMatch(/Nothing Petal holds or lists answers to "zzqx-not-a-thing"/);
+    expect(o.says).toMatch(/Nothing Petals holds or lists answers to "zzqx-not-a-thing"/);
     expect(o.says).toMatch(/isn't the same as not existing/);
     // in fake mode the lists are skipped, and said so, not reported as empty
     expect(o.searched).toContainEqual(

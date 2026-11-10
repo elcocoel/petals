@@ -349,7 +349,7 @@ async function readLogs(c: AskCtx, address: string, want: NonNullable<ReadChainI
   if (!takeLogRead())
     throw new ToolFailure(
       'rate_limited',
-      `Petal makes at most ${LOG_READS_PER_MINUTE} log queries a minute on these free endpoints.`,
+      `Petals makes at most ${LOG_READS_PER_MINUTE} log queries a minute on these free endpoints.`,
       'Try again in a minute.',
       60,
     );
@@ -513,7 +513,7 @@ export function makeReadChain(
     onTheirMachine: true,
     title: 'Read the chain',
     description:
-      'Any address on any EVM chain Petal knows: contract or account, what it answers, verified source and its functions where an explorer has it, proxy target, any view call by signature, any event’s logs. Leave out chain to check them all. Read-only.',
+      'Any address on any EVM chain Petals knows: contract or account, what it answers, verified source and its functions where an explorer has it, proxy target, any view call by signature, any event’s logs. Leave out chain to check them all. Read-only.',
     input: obj(
       ['address'],
       {
@@ -553,7 +553,7 @@ export function makeReadChain(
         if (!chain)
           throw new ToolFailure(
             'bad_input',
-            `Petal reads no chain called "${input.chain}".`,
+            `Petals reads no chain called "${input.chain}".`,
             `Chains: ${Object.keys(EVM_CHAINS).join(', ')}. Leave chain out to check them all.`,
           );
         chains = [chain];

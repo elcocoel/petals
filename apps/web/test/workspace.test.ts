@@ -556,10 +556,18 @@ describe('the legend of what the canvas draws (T202)', () => {
   ) as { legend: LegendItem[]; petals: PetalDetail[] };
   const ofLegend = (items: LegendItem[]) => canvasReading(items, noReading);
 
-  test('no swatch of a colour it does not paint, whichever flower', () => {
+  test('a swatch only for a colour it paints: each petal by its kind, and the tail', () => {
     for (const items of [legend, backers.legend]) {
-      expect(ofLegend(items).legend.filter((i) => i.keys)).toEqual([]);
+      const keyed = ofLegend(items).legend.filter((i) => i.keys);
+      for (const i of keyed) expect(['colour', 'tail']).toContain(i.primitive);
     }
+    const kept = ofLegend(backers.legend).legend;
+    expect(kept.find((i) => i.primitive === 'colour')?.keys?.map((k) => k.swatch)).toEqual([
+      'var(--k-pool)',
+      'var(--k-entity)',
+    ]);
+    // the canvas bands a petal's segments in one tone, so they get no swatches of kinds
+    expect(kept.find((i) => i.primitive === 'segments')?.keys).toBeUndefined();
   });
 
   test("outline goes, because the canvas doesn't draw it; colour stays, since the one look paints it", () => {
@@ -624,7 +632,7 @@ describe('the legend of what the canvas draws (T202)', () => {
     expect(first.values.map((v) => v.primitive)).toContain('colour');
   });
 
-  test('nothing but the selection has a colour on the panel', () => {
+  test('the line under the drawing keys only the selection; the legend keys the colours', () => {
     const at = (selected: string | null) =>
       flowerPanelView({
         flower: {
@@ -845,11 +853,12 @@ describe('the panel in its box (T202)', () => {
     expect(out).toContain('Selected');
   });
 
-  test('the reading: its interpretation, its legend without a swatch, every source, its signature', () => {
+  test('the reading: its interpretation, its legend with the colours it paints, every source, its signature', () => {
     const out = html(view(), { section: 'reading' });
     expect(out).toContain('The argued reading.');
     expect(out).toContain('Legend');
-    expect(out).not.toContain('data-swatch');
+    expect(out).toContain('data-swatch="k-pool"');
+    expect(out).toContain('data-swatch="tail"');
     expect(out).toContain('nearblocks-validators');
     expect(out).toContain('No model signature.');
     expect(out).toContain('spec_sha256 k');

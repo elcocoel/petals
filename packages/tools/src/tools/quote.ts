@@ -11,7 +11,7 @@ export const quotePayment = defineTool<QuoteRequest, QuoteResult>({
   title: 'Quote a payment (dry)',
   description:
     'A dry NEAR Intents quote for sponsoring a refresh of a network, or new coverage of a ' +
-    "network Petal can't read yet: amount in, time and fees. Dry only: no deposit address is " +
+    "network Petals can't read yet: amount in, time and fees. Dry only: no deposit address is " +
     'returned and no money moves. Say "Dry quote. Paying is not switched on."',
   input: obj(
     ['purpose'],
@@ -57,8 +57,8 @@ export const quotePayment = defineTool<QuoteRequest, QuoteResult>({
     if (req.purpose === 'sponsor_refresh' && req.network && !ctx.modules[req.network]) {
       throw new ToolFailure(
         'bad_input',
-        `sponsor_refresh needs a network Petal reads; "${req.network}" is not one.`,
-        'For a network Petal cannot read yet, use purpose sponsor_coverage.',
+        `sponsor_refresh needs a network Petals reads; "${req.network}" is not one.`,
+        'For a network Petals cannot read yet, use purpose sponsor_coverage.',
       );
     }
     const q = await ctx.quote(req);

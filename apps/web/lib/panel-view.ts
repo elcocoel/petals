@@ -139,16 +139,23 @@ const STARTER = 'Who holds the UNI token on Base?';
 const NOT_ON_CANVAS = new Set<string>(['outline', 'lines', 'markings']);
 
 /**
- * What a flower says about itself, for what's on the canvas: no row about what it doesn't draw, no swatch
- * of a colour it doesn't use and no hatching. The sources only those rows named are kept, on their own.
+ * The rows whose swatches are the canvas's own paint (render/wedge/paint.ts): a petal's colour, and the
+ * tail's tone. The canvas bands a petal's segments in one tone, so their swatches would say what isn't there.
+ */
+const PAINTED = new Set<string>(['colour', 'tail']);
+
+/**
+ * What a flower says about itself, for what's on the canvas: no row about what it doesn't draw, a swatch
+ * only for a colour it paints, and no hatching. The sources only those rows named are kept, on their own.
  */
 export function canvasReading(
   items: LegendItem[],
   reading: Interpretation | null,
 ): { legend: LegendItem[]; interpretation: Interpretation | null; sources: string[] } {
   const drawn = (x: { primitive: string }) => !NOT_ON_CANVAS.has(x.primitive);
-  const legend = items.filter(drawn).map(({ keys: _swatches, ...item }) => ({
+  const legend = items.filter(drawn).map(({ keys, ...item }) => ({
     ...item,
+    ...(keys && PAINTED.has(item.primitive) ? { keys } : {}),
     meaning: item.meaning.replace('one hatched petal', 'one petal'),
   }));
   const mappings = reading?.mappings.filter(drawn) ?? [];

@@ -289,7 +289,7 @@ export const getFlower = defineTool<{ id: string }, object>({
       hidden
         ? `Flower ${id} is on the map but failed verification, so it is hidden.`
         : `No flower ${id} on the map or in the fixtures.`,
-      'list_flowers lists the flowers Petal can show.',
+      'list_flowers lists the flowers Petals can show.',
     );
   },
 });

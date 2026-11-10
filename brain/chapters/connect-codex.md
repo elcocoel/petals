@@ -48,10 +48,6 @@ It goes into Codex's own settings (`~/.codex/config.toml`), so it holds in every
 
 As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait`, with the network allowed as above. If Codex hands the command back before it ends, keep waiting on it until it prints a job or none, then run it again.
 
-## In the box on Petals' page
-
-Petals' helper starts Codex in the terminal box with the tools already loaded, as the `petals` MCP server for that session, and its notes in `~/.petals/work`. Codex isn't in the page's chat box yet: there, choose Claude Code or Hermes.
-
 ## When it can't start
 
 - **Codex isn't installed:** `npm install -g @openai/codex`.

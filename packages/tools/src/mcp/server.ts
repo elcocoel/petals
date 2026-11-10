@@ -28,12 +28,12 @@ const passThrough: jsonSchemaValidator = {
   }),
 };
 
-export const SERVER_INFO = { name: 'petal', title: 'Petal', version: TOOLS_VERSION };
+export const SERVER_INFO = { name: 'petal', title: 'Petals', version: TOOLS_VERSION };
 
 // What an agent learns just by connecting. Kept short, because clients may cut it off; the same
 // rules as the shared block in prompt.md, so every door lands in the same universe.
 const INSTRUCTIONS =
-  'Petal draws who holds power in a network as a flower. Talk first: not every message asks for a ' +
+  'Petals draws who holds power in a network as a flower. Talk first: not every message asks for a ' +
   'flower, so answer briefly and offer what is already mapped (list_flowers). When someone names a ' +
   'network, DAO, token or address, call find_target and follow its next. Ask a plain yes or no ' +
   'before a new read or a drawing. After a yes, finish in one go: get_snapshot (say whether it was ' +

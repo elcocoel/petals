@@ -94,7 +94,7 @@ export function makeReadPage(
         if (e instanceof NotPublic)
           throw new ToolFailure(
             'cannot_read',
-            `Petal reads public pages only, so it refused this: ${e.message}.`,
+            `Petals reads public pages only, so it refused this: ${e.message}.`,
             'Give a public http or https address.',
           );
         throw new ToolFailure(
@@ -119,7 +119,7 @@ export function makeReadPage(
           addresses: [],
           links: [],
           next_start: null,
-          note: `It is ${page.contentType}, and Petal reads text only.`,
+          note: `It is ${page.contentType}, and Petals reads text only.`,
         };
       const raw = page.body.toString('utf8');
       const isHtml = /html/.test(page.contentType) || /^\s*<(!doctype|html)/i.test(raw);

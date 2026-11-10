@@ -441,7 +441,7 @@ async function fromSnapshot(l: Lookup, p: Parsed): Promise<void> {
           exact,
           evidence,
           blocked:
-            'its Snapshot votes count no token or contract Petal could read (a ticket or a list of addresses, say)',
+            'its Snapshot votes count no token or contract Petals could read (a ticket or a list of addresses, say)',
         },
         source,
       );
@@ -616,13 +616,14 @@ function drawing(
 
 function plan(c: Working, ctx: ToolContext, rows: IndexRow[]): void {
   const has = (m: string) => Boolean(ctx.modules[m]);
-  const reads = () => `Petal reads tokens on ${[...Object.keys(EVM_CHAINS), 'solana'].join(', ')}.`;
+  const reads = () =>
+    `Petals reads tokens on ${[...Object.keys(EVM_CHAINS), 'solana'].join(', ')}.`;
   const out: Draw[] = [];
   if (c.kind === 'network') {
     const d = Object.values(ctx.modules).find((m) => m.descriptor.title === c.name)?.descriptor;
     if (d) out.push(drawing(rows, d.id, {}, d.title));
   } else if (c.held) {
-    out.push(drawing(rows, c.held.network, c.held.params as Params, 'what Petal has stored'));
+    out.push(drawing(rows, c.held.network, c.held.params as Params, 'what Petals has stored'));
   } else if (c.blocked) {
     // said below
   } else if (c.chain === 'solana' && c.address) {
@@ -677,7 +678,7 @@ function plan(c: Working, ctx: ToolContext, rows: IndexRow[]): void {
         );
     }
   } else if (c.address) {
-    c.blocked = `Petal can't read ${c.chain} yet. ${reads()}`;
+    c.blocked = `Petals can't read ${c.chain} yet. ${reads()}`;
   } else {
     c.blocked = `no address to read. ${reads()}`;
   }
@@ -739,7 +740,7 @@ function nextStep(
   if (shown[0]?.draw.length === 0)
     return `The best match can't be drawn (its cannot_draw says why), and others listed can. ${checked} ${open}`;
   const also = shown.length > 1 ? ' Others are listed, and may fit better.' : '';
-  return `One clear match, first in the list, with its chain and address, and whether Petal already holds it (stored).${also} ${checked} A new read and drawing take a plain yes or no before starting a new read. After a yes, read it: draw[0], or the entry of draw the question asks for, with module as network and params as params in get_snapshot.`;
+  return `One clear match, first in the list, with its chain and address, and whether Petals already holds it (stored).${also} ${checked} A new read and drawing take a plain yes or no before starting a new read. After a yes, read it: draw[0], or the entry of draw the question asks for, with module as network and params as params in get_snapshot.`;
 }
 
 export function makeFindTarget(

@@ -109,61 +109,6 @@ export async function listMapViews(): Promise<MapViewRow[]> {
   return json.views ?? [];
 }
 
-/** A line to the Petals helper on the person's own computer (lib/terminal-pass.ts), never to our server. */
-export interface TerminalLine {
-  send: (text: string) => void;
-  close: () => void;
-}
-
-export function openTerminalLine(
-  url: string,
-  first: string,
-  on: { bytes: (b: Uint8Array) => void; text: (t: string) => void; closed: (code: number) => void },
-): TerminalLine {
-  const ws = new WebSocket(url);
-  ws.binaryType = 'arraybuffer';
-  ws.onopen = () => ws.send(first);
-  ws.onmessage = (e: MessageEvent) =>
-    typeof e.data === 'string' ? on.text(e.data) : on.bytes(new Uint8Array(e.data as ArrayBuffer));
-  ws.onclose = (e: CloseEvent) => on.closed(e.code);
-  return {
-    send: (text) => {
-      if (ws.readyState === WebSocket.OPEN) ws.send(text);
-    },
-    close: () => ws.close(),
-  };
-}
-
-/**
- * A conversation of the signed-in person's, for the agent in the terminal to write into: its id, or null
- * when this browser has no person (an exploration nobody owns would only be an orphan).
- */
-export async function startOwnConversation(
-  question: string,
-  client: string,
-): Promise<string | null> {
-  const res = await fetch('/api/v1/explorations', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ question, client }),
-  });
-  if (!res.ok) return null;
-  const json = (await res.json()) as { exploration?: string; owned?: boolean };
-  return json.owned && json.exploration ? json.exploration : null;
-}
-
-/** A continue link to a conversation of the person's, which the helper hands its agent. */
-export async function continueLinkFor(id: string): Promise<string | null> {
-  const res = await fetch(`/api/v1/explorations/${encodeURIComponent(id)}/links`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ scope: 'continue' }),
-  });
-  if (!res.ok) return null;
-  const json = (await res.json()) as { url?: string };
-  return json.url ?? null;
-}
-
 /** Where a conversation in another agent stands, by its exploration's id or a link's token. */
 export async function readElsewhere(ref: string): Promise<ElsewhereRead> {
   const res = await fetch(`/api/v1/explorations/${encodeURIComponent(ref)}`, { cache: 'no-store' });

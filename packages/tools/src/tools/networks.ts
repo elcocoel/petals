@@ -27,8 +27,8 @@ export const listNetworks = defineTool<{ query?: string }, object>({
   name: 'list_networks',
   title: 'List networks',
   description:
-    'The networks Petal can read, with what each can show (measures, segments) and what a live ' +
-    'read costs. Use it first; when the network asked for is not listed, say plainly that Petal ' +
+    'The networks Petals can read, with what each can show (measures, segments) and what a live ' +
+    'read costs. Use it first; when the network asked for is not listed, say plainly that Petals ' +
     "can't read it yet and name what it can read (cannot_read_hint).",
   input: obj(
     [],
@@ -48,8 +48,8 @@ export const listNetworks = defineTool<{ query?: string }, object>({
     const networks = q ? all.filter((d) => matches(d, q)) : all;
     const cannot_read_hint =
       q && networks.length === 0
-        ? `Petal can't read "${q}" yet. It can read: ${readable(ctx)}.`
-        : `Petal reads only these networks. It can read: ${readable(ctx)}. For anything else, ` +
+        ? `Petals can't read "${q}" yet. It can read: ${readable(ctx)}.`
+        : `Petals reads only these networks. It can read: ${readable(ctx)}. For anything else, ` +
           'say it is not readable yet; quote_payment with purpose sponsor_coverage quotes new coverage.';
     return { networks, cannot_read_hint };
   },
@@ -92,7 +92,7 @@ export const getNetwork = defineTool<{ id: string; params?: Params }, object>({
   name: 'get_network',
   title: 'Get a network',
   description:
-    'One network: its descriptor (parameters, capabilities, cost) and the snapshots Petal ' +
+    'One network: its descriptor (parameters, capabilities, cost) and the snapshots Petals ' +
     'already holds for it (fixture, cache or the shared map), so a final one can be reused.',
   input: obj(
     ['id'],
