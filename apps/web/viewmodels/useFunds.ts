@@ -71,6 +71,8 @@ export function useFunds(cue: string) {
   }, [info, held]);
 
   return {
+    /** Where a payment goes and NEAR's price (GET /api/v1/pay), read with the credit: the pay step's too. */
+    where: info,
     /**
      * The credit in NEAR, as /make shows it; nothing given yet is none. Null until it's read, or with no
      * price to show it in.

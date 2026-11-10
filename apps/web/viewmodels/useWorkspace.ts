@@ -244,7 +244,7 @@ export function useWorkspace(props: {
   const funds = panelBus.person?.funds;
   const reread = funds?.reread;
   const paid = useCallback(() => reread?.(), [reread]);
-  const pay = usePay(Boolean(session.account), busy, asking, paid);
+  const pay = usePay(funds?.where ?? null, asking, paid);
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
   const onCanvas = canvas;
