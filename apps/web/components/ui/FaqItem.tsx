@@ -15,7 +15,8 @@ export function FaqItem({
   answer,
   open = true,
 }: {
-  glyph: GlyphKind;
+  /** A small drawing beside the number, if the item has one. */
+  glyph?: GlyphKind;
   index: string;
   question: string;
   answer: readonly AnswerBlock[];
@@ -25,7 +26,7 @@ export function FaqItem({
     <details open={open} data-b="row" className="border-b border-hairline py-block-gap">
       <summary className="flex list-none items-center gap-block-gap md:grid md:grid-cols-12 [&::-webkit-details-marker]:hidden">
         <span className="flex items-center gap-text-gap md:col-span-2">
-          <Drawing kind={glyph} size={48} />
+          {glyph && <Drawing kind={glyph} size={48} />}
           <span className="type-mono">{index}</span>
         </span>
         <span className="min-w-0 flex-1 type-lead md:col-span-9">{question}</span>

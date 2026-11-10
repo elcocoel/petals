@@ -39,7 +39,7 @@ import { Hero } from '../components/landing/Hero.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
 import { LiveReading } from '../components/landing/LiveReading.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
-import { Step } from '../components/landing/Step.tsx';
+import { Scene } from '../components/landing/Scene.tsx';
 import { UseAnywhere } from '../components/landing/UseAnywhere.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
@@ -372,7 +372,7 @@ export const registry: LabEntry[] = [
     'HowItWorks',
     'apps/web/components/landing/HowItWorks.tsx',
     'How it works',
-    '66:2268',
+    '181:2343',
     () => <HowItWorks />,
   ),
   section(
@@ -452,6 +452,23 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'Scene',
+    group: 'Blocks',
+    figmaName: 'Petals / Illustrated scene',
+    figmaNode: '179:2273',
+    source: 'apps/web/components/landing/Scene.tsx',
+    states: [
+      {
+        name: 'in the row',
+        render: () => (
+          <ul className="m-0 flex list-none p-0">
+            <Scene {...landingCopy.howItWorks.scenes[0]} />
+          </ul>
+        ),
+      },
+    ],
+  },
+  {
     id: 'FaqItem',
     group: 'Blocks',
     figmaName: 'Petals / FAQ item',
@@ -461,34 +478,12 @@ export const registry: LabEntry[] = [
       {
         name: 'open',
         wide: true,
-        render: () => <FaqItem glyph="concentration" {...FAQ} />,
+        render: () => <FaqItem {...FAQ} />,
       },
       {
         name: 'closed',
         wide: true,
-        render: () => <FaqItem glyph="concentration" {...FAQ} open={false} />,
-      },
-    ],
-  },
-  {
-    id: 'Step',
-    group: 'Blocks',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/landing/Step.tsx',
-    states: [
-      {
-        name: 'with a picture',
-        figmaName: 'Step 02',
-        figmaNode: '66:2279',
-        render: () => {
-          const see = landingCopy.howItWorks.steps[1];
-          return (
-            <Step {...see}>
-              <Drawing kind="even" size={144} />
-            </Step>
-          );
-        },
+        render: () => <FaqItem {...FAQ} open={false} />,
       },
     ],
   },

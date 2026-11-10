@@ -59,11 +59,14 @@ describe('the landing page', () => {
     }
   });
 
-  test('its figures are inline and carry no raw colour, but for the published shape from the API', () => {
+  test("its figures are inline and carry no raw colour, but for the published shape from the API and How it works' illustrations", () => {
     const images = [...html.matchAll(/<img\b[^>]*\ssrc="([^"]*)"/g)].map((m) =>
       m[1]?.replaceAll('&amp;', '&'),
     );
-    expect(images).toEqual([siteLinks.liveShapeImage(DEFAULT_VIEW)]);
+    const scenes = landingCopy.howItWorks.scenes.map((s) => `/landing/how-it-works/${s.id}.webp`);
+    expect(images).toEqual([siteLinks.liveShapeImage(DEFAULT_VIEW), ...scenes]);
+    for (const scene of scenes)
+      expect(existsSync(join(app, '..', 'public', scene)), scene).toBe(true);
     expect(html).not.toMatch(/(?:fill|stroke)="#/);
   });
 
