@@ -304,6 +304,53 @@ describe.each(engines)('%s', (engine, open) => {
     expect((await store.job.list(x)).map((j) => j.status)).toEqual(['done', 'failed']);
   });
 
+  test('workers of one agent: listed in the order they came, each taking its own, forgotten on disconnect', async () => {
+    const owner = u('prs');
+    for (const [worker, at] of [
+      ['w2', AT],
+      ['w1', LATER],
+      ['w2', LATER],
+    ] as const)
+      await store.agent.seen({ owner, name: 'Codex', worker, last_seen: at });
+    await store.agent.seen({ owner, name: 'Hermes', last_seen: AT });
+    expect(await store.agent.workers(owner)).toEqual([
+      { key: 'codex', worker: 'w2', first_seen: AT, last_seen: LATER },
+      { key: 'codex', worker: 'w1', first_seen: LATER, last_seen: LATER },
+    ]);
+    const x = u('exp');
+    await store.exploration.create({
+      id: x,
+      owner,
+      question: 'who?',
+      target: null,
+      head: null,
+      visibility: 'private',
+      share_token_hash: null,
+      forked_from: null,
+      created_at: AT,
+      updated_at: AT,
+    });
+    await store.job.add({
+      id: u('job'),
+      exploration: x,
+      run: null,
+      kind: 'map',
+      title: 'Map',
+      brief: 'map it',
+      inputs: {},
+      at: AT,
+    });
+    expect(await store.job.takeFor(owner, 'Codex', LATER, 'w1')).toMatchObject({
+      taken_by: 'Codex',
+      taken_worker: 'w1',
+    });
+    expect((await store.job.held(owner)).map((j) => j.taken_worker)).toEqual(['w1']);
+    expect(await store.agent.setDisconnected(owner, 'codex', LATER)).toBe(true);
+    expect(await store.agent.workers(owner)).toEqual([]);
+    await store.agent.setDisconnected(owner, 'codex', null);
+    expect(await store.agent.workers(owner)).toEqual([]);
+  });
+
   test("a person's agents asking at once take one job each, never the same one", async () => {
     const owner = u('prs');
     const x = u('exp');

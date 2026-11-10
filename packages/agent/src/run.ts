@@ -68,7 +68,7 @@ export interface RunInput {
   /** additive (9 Nov): the jobs this run handed to the person's own agent, as they stand now */
   jobs?: JobRow[];
   /** additive (9 Nov, agent-house): the person's agents, by name, and what each holds */
-  agents?: { name: string; last_seen: string; job: string | null }[];
+  agents?: { name: string; last_seen: string; workers: number; jobs: string[] }[];
   /** additive (10 Nov): the conversation's name so far, which the model gives with name_conversation */
   name?: RunName;
   /** additive (10 Nov): what the shared map holds, which it draws without a yes (approval.ts) */
