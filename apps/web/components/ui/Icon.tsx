@@ -43,7 +43,7 @@ const GLYPHS = {
 export type IconName = keyof typeof GLYPHS;
 
 /** The family's one weight. */
-export const ICON_WEIGHT = 'regular';
+const WEIGHT = 'regular';
 
 export function Icon({
   name,
@@ -62,7 +62,7 @@ export function Icon({
     <Drawn
       aria-hidden="true"
       focusable="false"
-      weight={ICON_WEIGHT}
+      weight={WEIGHT}
       // in text, an arrow as long as a Label word's capital is high
       size={inText ? '0.875em' : undefined}
       data-icon={name}
