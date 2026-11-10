@@ -1,14 +1,16 @@
-// Figma's Hero (66:2188). The figure is a placeholder until the hero set is chosen (T108), as Elco asked on
-// 6 Nov: the drawing alone, without the notes that went with it, which described things Petals doesn't draw.
+// Figma's Hero (66:2188). Its flower is a real one in the one look, with the key to its colours (Elco, 10 Nov:
+// the landing's first flower draws like the rest, not the old grey bars). A flower the server can't draw is
+// left out, as on the Power Map.
 import { landingCopy } from '../../lib/landing-copy.ts';
+import type { PowerMapTile } from '../../lib/power-map.ts';
+import { LegendKeys } from '../Legend.tsx';
 import { AskBlock } from '../ui/AskBlock.tsx';
-import { Drawing } from '../ui/Drawing.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 
 const copy = landingCopy.hero;
 
-export function Hero() {
+export function Hero({ flower }: { flower?: PowerMapTile }) {
   return (
     <Section layout="split">
       <div>
@@ -24,7 +26,13 @@ export function Hero() {
           />
         </div>
       </div>
-      <Drawing kind="hero-flower" />
+      {flower && (
+        <figure className="my-0 flex flex-col gap-block-gap">
+          {/* biome-ignore lint/performance/noImgElement: an SVG drawn by our own API */}
+          <img className="block h-auto w-full" src={flower.image} alt={flower.title} />
+          <LegendKeys keys={flower.keys} />
+        </figure>
+      )}
     </Section>
   );
 }

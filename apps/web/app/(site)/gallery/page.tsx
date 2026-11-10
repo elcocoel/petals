@@ -1,9 +1,9 @@
-// The gallery (T063): list_flowers, with "on NEAR" (and the transaction) or "fixture". No sign-in.
+// The gallery (T063): the flowers published on NEAR, each with its transaction. No sign-in. The fixtures,
+// the server's status line and the old sponsor box are gone (Elco, 10 Nov: the same flower twice, raw
+// timestamps and an old payment story).
 import { FlowerTile } from '../../../components/FlowerTile.tsx';
-import { QuotePanel } from '../../../components/QuotePanel.tsx';
 import { TextLink } from '../../../components/ui/TextLink.tsx';
 import { api } from '../../../lib/api.ts';
-import { type ApiHealth, apiLabel } from '../../../lib/api-label.ts';
 import {
   dateLabel,
   flowerImage,
@@ -14,9 +14,11 @@ import { explorerTxUrl } from '../../../lib/publish.ts';
 
 export const dynamic = 'force-dynamic';
 
+/** Only what is published on NEAR: a fixture is the same flower again, for tests. */
+const onNear = (flowers: ListedFlower[]) => flowers.filter((f) => f.where === 'map');
+
 export default async function Gallery() {
   const res = await api<{ flowers: ListedFlower[] }>('/api/v1/flowers');
-  const health = await api<ApiHealth>('/api/v1/health');
   return (
     <>
       <h1>Gallery</h1>
@@ -24,21 +26,20 @@ export default async function Gallery() {
         Flowers show who holds power in a network. Open one to read it; no account needed.{' '}
         <a href="/make">Talk to the agent</a>.
       </p>
-      {health.ok && <p className="muted">{apiLabel(health.value)}</p>}
       {!res.ok ? (
         <p className="error">
           Could not list flowers: {res.error.code}: {res.error.message}
         </p>
-      ) : res.value.flowers.length === 0 ? (
+      ) : onNear(res.value.flowers).length === 0 ? (
         <p>No flowers yet.</p>
       ) : (
         <ul className="gallery">
-          {res.value.flowers.map((f) => (
+          {onNear(res.value.flowers).map((f) => (
             <li key={`${f.where}:${f.id}`}>
               <FlowerTile
                 title={f.title ?? f.id}
                 where={`${networkLabel(f.network)}   /   ${dateLabel(f.as_of)}`}
-                badge={f.where === 'map' ? 'on NEAR' : 'fixture'}
+                badge="on NEAR"
                 image={flowerImage(f.id)}
                 href={`/f/${f.id}`}
               >
@@ -47,19 +48,11 @@ export default async function Gallery() {
                     Transaction
                   </TextLink>
                 )}
-                {(f.maker || f.published_at) && (
-                  <span className="type-caption text-muted">
-                    {f.maker ? `Signed by ${f.maker}` : ''}
-                    {f.maker && f.published_at ? ', ' : ''}
-                    {f.published_at ? `published ${f.published_at}` : ''}
-                  </span>
-                )}
               </FlowerTile>
             </li>
           ))}
         </ul>
       )}
-      <QuotePanel purpose="sponsor_coverage" />
     </>
   );
 }

@@ -2,7 +2,7 @@
 // Pure, from the spec and what the render returned; the renderer's numbers and words are never
 // re-derived here, only laid out.
 import { RENDER_VERSION, viewHash } from '@petal/core';
-import type { PetalDetail, Spec } from '@petal/core/types';
+import type { LegendItem, PetalDetail, Spec } from '@petal/core/types';
 import { viewerView } from './viewer-view.ts';
 
 /** The view a picture is drawn with, named by the start of its hash. */
@@ -106,6 +106,25 @@ export interface LegendKey {
 
 /** A swatch comes from the renderer as var(--k-pool); the generated CSS has a rule per colour. */
 export const swatchKey = (swatch: string) => /^var\(--([\w-]+)\)$/.exec(swatch)?.[1];
+
+/**
+ * The colours a drawing paints, as its key: the legend's colours by kind, then "everyone else". Segments
+ * are banded in the petal's own tone, so they have no swatch. Several legends give one key, each colour once.
+ */
+export function colourKeys(legends: readonly (readonly LegendItem[])[]): LegendKey[] {
+  const keys = (primitive: LegendItem['primitive']) =>
+    legends.flatMap((legend) =>
+      legend
+        .filter((item) => item.primitive === primitive)
+        .flatMap((item) => item.keys ?? [])
+        .map((k) => ({ label: k.label, swatch: swatchKey(k.swatch) })),
+    );
+  const out: LegendKey[] = [];
+  for (const k of [...keys('colour'), ...keys('tail')]) {
+    if (!out.some((o) => o.label === k.label && o.swatch === k.swatch)) out.push(k);
+  }
+  return out;
+}
 
 /** A drawing as an image source: an SVG in an <img> runs nothing and loads nothing. */
 export const svgImage = (svg: string) =>

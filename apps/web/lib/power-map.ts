@@ -9,6 +9,8 @@ import type { Spec } from '@petal/core/types';
 import { forever } from './api.ts';
 import { decodeDraft } from './draft.ts';
 import type { Rendered } from './flower-data.ts';
+import { colourKeys, type LegendKey } from './flower-view.ts';
+import { viewerView } from './viewer-view.ts';
 
 export interface PowerMapView {
   sha: string;
@@ -77,7 +79,17 @@ export const POWER_MAP: readonly PowerMapView[] = [
 export interface PowerMapTile extends PowerMapView {
   image: string;
   href: string;
+  /** the colours its picture paints */
+  keys: LegendKey[];
+  legend: Rendered['legend'];
 }
+
+/** The hero's flower (Elco, 10 Nov: the landing's first flower in the one look): NEAR's validators, the map's one flower coloured all the way round today. */
+export const HERO_SHA = '37def7bc0670b27a8d5145cdcef00eea579539ca07fd485bb582b4abffe6e49f';
+
+/** One key for a set of tiles: each colour any of them paints, once. */
+export const powerMapKeys = (tiles: readonly PowerMapTile[]) =>
+  colourKeys(tiles.map((t) => t.legend));
 
 async function viewSpec(sha: string): Promise<Spec | null> {
   const location = (await forever(`/d/${sha}`, { redirect: 'manual' }))?.headers.get('location');
@@ -86,22 +98,25 @@ async function viewSpec(sha: string): Promise<Spec | null> {
   return decoded?.ok ? decoded.spec : null;
 }
 
-async function draw(spec: Spec): Promise<string | null> {
+async function draw(spec: Spec): Promise<Rendered | null> {
   // The look is in the address, so a cached drawing is never an older look's (specs/006-the-map, milestone 3).
+  // Drawn with the viewer's view, like a flower's page and the map's own pictures.
   const res = await forever(`/api/v1/render?look=${encodeURIComponent(RENDER_VERSION)}`, {
-    body: { spec, include_svg: true },
+    body: { spec, include_svg: true, view: viewerView() },
   });
   if (!res?.ok) return null;
-  return ((await res.json()) as Rendered).svg || null;
+  const rendered = (await res.json()) as Rendered;
+  return rendered.svg ? rendered : null;
 }
 
 async function tile(view: PowerMapView): Promise<PowerMapTile | null> {
   try {
     const spec = await viewSpec(view.sha);
-    const svg = spec && (await draw(spec));
-    if (!svg) return null;
-    const image = `data:image/svg+xml;base64,${Buffer.from(svg, 'utf8').toString('base64')}`;
-    return { ...view, image, href: `/d/${view.sha}` };
+    const drawn = spec && (await draw(spec));
+    if (!drawn) return null;
+    const image = `data:image/svg+xml;base64,${Buffer.from(drawn.svg, 'utf8').toString('base64')}`;
+    const keys = colourKeys([drawn.legend]);
+    return { ...view, image, href: `/d/${view.sha}`, keys, legend: drawn.legend };
   } catch {
     return null;
   }

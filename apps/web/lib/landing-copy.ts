@@ -76,10 +76,8 @@ export const landingCopy = {
   useAnywhere: {
     title: 'Put your own agents to work.',
     body: "Petals' agent can hand jobs to the agents you already use. Each one reads on your computer, on the plan you already pay for, so a big map costs you less. Several can map different parts of a network at once, and everything lands in one project.",
-    actions: {
-      prompt: 'Copy the prompt',
-      keep: 'Keep Petals in your agent',
-    },
+    /** Draft (CONNECTORS, 10 Nov), for Elco: one action, where Copy the prompt and Keep Petals in your agent were. */
+    action: 'Connect your agents',
     promptNote: 'Works today with Claude Code, Codex, Hermes and any agent that runs commands.',
     /** The illustrated terminal (Elco, 9 Nov: "let's bring back that terminal visual element here"). */
     terminal: {

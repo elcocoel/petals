@@ -2,9 +2,10 @@
 // Its cards are real readings from the night's mapping run, drawn by the server (lib/power-map.ts); a reading
 // the server can't draw is left out, so there are no placeholder pictures.
 import { landingCopy } from '../../lib/landing-copy.ts';
-import type { PowerMapTile } from '../../lib/power-map.ts';
+import { type PowerMapTile, powerMapKeys } from '../../lib/power-map.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { FlowerTile } from '../FlowerTile.tsx';
+import { LegendKeys } from '../Legend.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
@@ -18,9 +19,12 @@ export function GallerySection({ tiles = [] }: { tiles?: readonly PowerMapTile[]
       rule="top"
       layout="columns"
       head={
-        <div className="flex flex-wrap items-end justify-between gap-block-gap">
-          <SectionHead title={copy.title} />
-          <Button href={siteLinks.gallery}>{copy.open}</Button>
+        <div className="flex flex-col gap-block-gap">
+          <div className="flex flex-wrap items-end justify-between gap-block-gap">
+            <SectionHead title={copy.title} />
+            <Button href={siteLinks.gallery}>{copy.open}</Button>
+          </div>
+          {tiles.length > 0 && <LegendKeys keys={powerMapKeys(tiles)} />}
         </div>
       }
     >
