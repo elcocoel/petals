@@ -15,6 +15,7 @@ Agents never read raw snapshot bodies; they use `describe_snapshot` and `compute
 | `transcripts/` | Recorded runs: agent transcripts replayed by `recordedClient`, and the recorded 1Click dry quote replayed by `fakeQuote()`. | W5 |
 | `map/` | Hero flower entries as they would sit on the shared map; the mirror for the hero set. | W5 |
 | `map-rows/` | Copies of published rows, exactly as FastData returned them: `<id>.row.json`. A public site (`PETAL_PUBLIC=1`) answers the shared map from these and reads no chain for visitors. `9ac16c89…` is the first flower on NEAR, read back from testnet on 5 Nov 2026. | SYSTEMS |
+| `landscape/` | The map bench's data (`specs/006-the-map`, `/lab/map`): `night-2026-11-09.json.gz`, the night's 203 saved views with their readings and the relations index's groups and pairs, copied once by `apps/web/scripts/landscape-data.ts` (read-only, from the live site); `logos/`, tokens' logos copied once from Trust Wallet's public list by `apps/web/scripts/landscape-logos.ts`, named by a hash of chain and address. The logos are the projects' own marks, used to identify them. | LOOK |
 
 Nothing under `../research/`, `../design/`, `../submission/` or `../.secrets/` is ever copied here. Fixtures are produced by scripts (`scripts/import-spike-data.ts`) that transform public data, so they can be rebuilt.
 

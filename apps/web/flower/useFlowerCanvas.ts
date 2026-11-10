@@ -4,13 +4,13 @@
 import { type RefObject, useEffect, useRef } from 'react';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { fitView, flyTo, letGo, panBy, resize, zoomWheel } from './camera.ts';
+import { driveFlower, newDriven } from './drive.ts';
 import { CLICK_LONGEST, CLICK_SLOP } from './feel.ts';
 import type { HoverWay } from './hover.ts';
-import { clickedAt, newLive, noteAt, stepLive } from './live.ts';
-import { type Focus, type Marks, marks } from './marks.ts';
+import { clickedAt } from './live.ts';
 import { type FlowerReading, modelOf } from './model.ts';
 import { scatter } from './order.ts';
-import { createScene, type FakeRelations } from './scene.ts';
+import type { FakeRelations } from './scene.ts';
 
 export interface CanvasOptions {
   /** With none, there's nothing to draw and nothing to move. */
@@ -57,10 +57,15 @@ export function useFlowerCanvas(
     const m = modelOf(options.scatter ? { ...reading, petals: scatter(reading.petals) } : reading);
     const motion = quiet();
     const box = node.getBoundingClientRect();
-    const live = newLive(m, options.hover, box.width, box.height, motion.matches);
-    const scene = createScene(node, m, options.relations);
-    const scratch = new Float64Array(m.n);
-    let last: Marks | null = null;
+    const d = newDriven(node, m, {
+      hover: options.hover,
+      width: box.width,
+      height: box.height,
+      calm: motion.matches,
+      relations: options.relations,
+      readout: options.readout,
+    });
+    const { live, scene } = d;
     let raf = 0;
     let then = 0;
     let frames = 0;
@@ -72,35 +77,7 @@ export function useFlowerCanvas(
       const dt = then ? Math.min(LONGEST_FRAME, (now - then) / 1000) : 1 / 60;
       then = now;
       frames++;
-      const stepped = stepLive(live, dt);
-      const presence = live.presence.x;
-      const focus: Focus | null =
-        presence > 0.001
-          ? {
-              index: live.noteIndex,
-              presence,
-              open: live.open.x[live.noteIndex] as number,
-              chase: noteAt(live),
-              side: live.noteSide.x,
-              band: live.noteIndex === live.focusIndex ? live.band : -1,
-              named: live.named.x,
-            }
-          : null;
-      const mk = marks(m, live.camera, focus, live.ring, scratch, options.readout, live.chosen);
-      scene.draw({
-        marks: mk,
-        ring: live.ring,
-        view: live.camera,
-        accent: live.accent,
-        ringMoved: stepped.ringMoved || last === null,
-        accentMoved: stepped.accentMoved,
-        focusIndex: focus ? live.noteIndex : -1,
-        raised: focus ? live.focusIndex : -1,
-        bandsMoved: stepped.bandsMoved,
-        band: focus ? (focus.band ?? -1) : -1,
-      });
-      last = mk;
-      if (stepped.moving) wake();
+      if (driveFlower(d, dt)) wake();
       else then = 0;
       if (options.probe) spent.push(performance.now() - began);
     };
@@ -135,7 +112,7 @@ export function useFlowerCanvas(
       live.pointer.x = p.x;
       live.pointer.y = p.y;
       live.pointer.inside = true;
-      const onMap = last && scene.onMap(p.x, p.y, last);
+      const onMap = d.last && scene.onMap(p.x, p.y, d.last);
       const takes = held.current.onPick && clickedAt(live, p.x, p.y).kind !== 'ground';
       node.style.cursor = onMap || takes ? 'pointer' : '';
       if (dragFrom && e.pointerId === dragFrom.id) {
@@ -163,7 +140,7 @@ export function useFlowerCanvas(
     };
     const onDown = (e: PointerEvent) => {
       const p = local(e);
-      if (last && scene.onMap(p.x, p.y, last)) {
+      if (d.last && scene.onMap(p.x, p.y, d.last)) {
         flyBack();
         return;
       }
@@ -267,14 +244,14 @@ export function useFlowerCanvas(
           rotation: live.rotation.x,
           frames,
           sleeping: raf === 0,
-          notes: last?.notes.length ?? 0,
-          labels: last?.labels.length ?? 0,
+          notes: d.last?.notes.length ?? 0,
+          labels: d.last?.labels.length ?? 0,
           nodes: node.querySelectorAll('*').length,
           petalHeight: live.ring.h[live.focusIndex],
           petalLen: live.ring.len[live.focusIndex],
           calm: live.calm,
         }),
-        marks: () => last,
+        marks: () => d.last,
         spent: () => spent.splice(0),
         focusName: () => m.petals[live.focusIndex]?.name,
         idOf: (i: number) => m.petals[i]?.id,

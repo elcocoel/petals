@@ -107,6 +107,8 @@ export interface Scene {
   }): void;
   /** Is this screen point on the small map? */
   onMap(x: number, y: number, marks: Marks): boolean;
+  /** The drawing's own group in the SVG, so a space of many flowers can set what's on top of what. */
+  root: SVGGElement;
   dispose(): void;
 }
 
@@ -465,6 +467,7 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
   };
 
   return {
+    root,
     draw({
       marks: mk,
       ring,

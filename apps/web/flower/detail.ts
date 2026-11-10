@@ -21,7 +21,9 @@ export type Driver =
   /** How far the flower overflows the window: its radius over half the short side (a ratio). */
   | 'overflow'
   /** How far the account has opened, 0 to 1 (a ratio). */
-  | 'open';
+  | 'open'
+  /** On the map (specs/006-the-map): the smaller radius on screen of a connection's two flowers. */
+  | 'pairRadius';
 
 export interface Row {
   driver: Driver;
@@ -68,6 +70,17 @@ export const DETAIL = {
 
   /** The illustrative layer, only with ?relations=1. */
   relations: { driver: 'flowerRadius', fadeIn: [56, 96] },
+
+  // The map (specs/006-the-map). A flower on the map uses every row above, by its own size on screen; its
+  // name under it is `titleOutside`'s, at one size on screen.
+  /** A flower's mark, its logo or token symbol, before its name has room. */
+  mark: { driver: 'flowerRadius', fadeIn: [5, 10] },
+  /** A connection: one line between two flowers, its width the accounts they share. It stays as you zoom. */
+  road: { driver: 'pairRadius', fadeIn: [0, 0] },
+  /** A flower's weaker connections, past its strongest few, once its flowers are big enough to tell apart. */
+  roadMore: { driver: 'pairRadius', fadeIn: [20, 60] },
+  /** A connection's number, at its middle, once its flowers are big enough. A click shows it at any size. */
+  roadCount: { driver: 'pairRadius', fadeIn: [40, 70] },
 } satisfies Record<string, Row>;
 
 export type Thing = keyof typeof DETAIL;

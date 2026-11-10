@@ -73,6 +73,19 @@ What's on the bench, and where it moved from the plan above:
 - **Measured** on this Mac in Chrome, zooming from the whole map into one ENS delegate's account: 0.5 ms a frame typical, 1.1 ms at the 95th percentile, 2.4 ms worst.
 - **Tests:** 15 new tests in `apps/web/test/landscape.test.ts`; the flower's 152 pass unchanged; 3,353 in all.
 
+## Bench v2: one chain, simpler, elegant (Elco, 9 Nov, evening)
+
+From "Elco on the first bench" (spec) and Elco's four answers. Lab-only, on `m-face/fe-map`. META's go, 9 Nov.
+
+| Elco | What the bench does |
+|---|---|
+| "I don't think we have to see more than one chain at a time... a selector on the side... like how you would do on an exchange" | A list down the left: one `row` button per chain (`components/ui/Button.tsx`), its name (`chainLabel`) and how many flowers it has, the chosen one pressed. The map shows that chain's continent alone, fitted to the window. It starts on Ethereum (a lean: the most links). No new words. |
+| Connections: "far away distance and one thicker of thinner line dictated by the amount of shared accounts - the number and details can show as you zoom or click the connection" | One straight line per connection, its width by the accounts shared. Far away, each flower's strongest three; the rest come in as you zoom (rows `road`, `roadMore`). The fan into petals goes. The number shows at the line's middle once its flowers are big enough (row `roadCount`), and a click on a line marks it and shows its number at any distance. |
+| Entering: "Only the organization with 'outgoing' lines with an arrow that has the name of the neighbours (in the orientation of where they would show up if you zoom out)" | A click on a flower flies to it, filling the window as it does alone; so does zooming in until it fills most of the window. Everything else fades away. From its edge, one arrow per connection points the real way to that neighbour, its width by the accounts shared, ending near the window's edge with the neighbour's mark and name. Where two names would collide, the stronger connection keeps its name. A click on an arrow flies into that neighbour. Esc, or zooming back out, brings the map back. |
+| Logos: "Real logos, symbol if none" | `apps/web/scripts/landscape-logos.ts` copies each token's logo once from Trust Wallet's public list (`trustwallet/assets`, by chain folder and checksummed address) into `fixtures/landscape/logos/`. A flower with no logo there gets a mark made from its token symbol: the first word of its title when it reads "SYM holders", "SYM active holders" or "SYM delegates". With no token, the first letter of its name. |
+| Names: "Mark + short name, under" | One line under each flower, always the same size on screen: the mark, then the run's name for it without its notes in brackets, cut at 28 characters. Names never sit on a flower; when two collide, the bigger flower keeps its name and the smaller shows only its mark. On the map, a live flower draws no title of its own. |
+| "the Z dimension here is confused" | One order, bottom to top: roads, flowers, live flowers, names and marks, then the notes of the one flower under the pointer (or the one you've entered). Other live flowers show no notes. |
+
 ## Drawing from the viewer's view (after seam/v1, 9 Nov)
 
 META's go once `seam/v1` was live (`1c82b33`); the reading is SYSTEMS's, so this waits for their OK too. Lane `m-face/fe-viewdraw`.

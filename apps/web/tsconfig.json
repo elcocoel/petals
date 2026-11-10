@@ -12,6 +12,7 @@
     "components",
     "flower",
     "lab",
+    "landscape",
     "lib",
     "lib/mock/*.json",
     "scripts",

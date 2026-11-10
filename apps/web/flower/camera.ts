@@ -26,7 +26,21 @@ export interface View {
   height: number;
 }
 
+/** What the camera fits to and comes back to: a circle in world units. One flower, by default. */
+export interface Home {
+  cx: number;
+  cy: number;
+  r: number;
+}
+
+/** One flower: the space /make and the bench draw in. */
+export const FLOWER_HOME: Home = { cx: SHAPE.cx, cy: SHAPE.cy, r: SHAPE.R };
+
 export interface Camera extends View {
+  home: Home;
+  /** The zoom's limits, as logs of the scale, before the soft edge. */
+  lo: number;
+  hi: number;
   /** The log of the scale, before the soft edge. */
   raw: Spring;
   spec: SpringSpec;
@@ -59,18 +73,31 @@ export function softLimit(raw: number, lo = LN_LO, hi = LN_HI, edge = SOFT_EDGE)
   return raw;
 }
 
-/** The view that shows the whole flower in the window. */
-export function fitView(width: number, height: number): Omit<View, 'width' | 'height'> {
-  const k = (Math.min(width, height) * FIT) / SHAPE.R;
-  return { k, x: width / 2 - SHAPE.cx * k, y: height / 2 - SHAPE.cy * k };
+/** The view that shows the whole home in the window: one flower unless a home is given. */
+export function fitView(
+  width: number,
+  height: number,
+  home: Home = FLOWER_HOME,
+): Omit<View, 'width' | 'height'> {
+  const k = (Math.min(width, height) * FIT) / home.r;
+  return { k, x: width / 2 - home.cx * k, y: height / 2 - home.cy * k };
 }
 
-export function newCamera(width: number, height: number): Camera {
-  const fit = fitView(width, height);
+/** A camera on its home. The limits are scales, as in ZOOM_LIMITS, which is the default. */
+export function newCamera(
+  width: number,
+  height: number,
+  home: Home = FLOWER_HOME,
+  limits: readonly [number, number] = ZOOM_LIMITS,
+): Camera {
+  const fit = fitView(width, height, home);
   return {
     ...fit,
     width,
     height,
+    home,
+    lo: Math.log(limits[0]),
+    hi: Math.log(limits[1]),
     raw: spring(Math.log(fit.k)),
     spec: WHEEL,
     mode: 'free',
@@ -78,8 +105,8 @@ export function newCamera(width: number, height: number): Camera {
     ay: 0,
     wx: 0,
     wy: 0,
-    cx: spring(SHAPE.cx),
-    cy: spring(SHAPE.cy),
+    cx: spring(home.cx),
+    cy: spring(home.cy),
     vx: 0,
     vy: 0,
     sinceInput: 1,
@@ -97,7 +124,7 @@ export function resize(cam: Camera, width: number, height: number): void {
   }
   cam.width = width;
   cam.height = height;
-  const fit = fitView(width, height);
+  const fit = fitView(width, height, cam.home);
   Object.assign(cam, fit);
   cam.raw = spring(Math.log(fit.k));
 }
@@ -129,7 +156,7 @@ export function zoomWheel(cam: Camera, e: WheelInput): void {
   cam.sinceInput = 0;
   cam.touched = true;
   const direct = e.ctrlKey || Math.abs(pixels) < NOTCH;
-  const t = Math.max(LN_LO - RAW_OVER, Math.min(LN_HI + RAW_OVER, cam.raw.t + d));
+  const t = Math.max(cam.lo - RAW_OVER, Math.min(cam.hi + RAW_OVER, cam.raw.t + d));
   if (direct) cam.raw.x += t - cam.raw.t;
   cam.raw.t = t;
 }
@@ -173,7 +200,7 @@ export function flyTo(cam: Camera, view: Omit<View, 'width' | 'height'>): void {
 export function stepCamera(cam: Camera, dt: number, calm: boolean): boolean {
   cam.sinceInput += dt;
   if (cam.mode !== 'fly' && cam.sinceInput > RELEASE_AFTER) {
-    const inside = Math.max(LN_LO, Math.min(LN_HI, cam.raw.t));
+    const inside = Math.max(cam.lo, Math.min(cam.hi, cam.raw.t));
     if (inside !== cam.raw.t) {
       cam.raw.t = inside;
       cam.spec = BOUNCE_BACK;
@@ -181,7 +208,7 @@ export function stepCamera(cam: Camera, dt: number, calm: boolean): boolean {
   }
   const step = calm ? SNAP : stepOf(cam.spec, dt);
   let moving = advance(cam.raw, step);
-  const k = Math.exp(softLimit(cam.raw.x));
+  const k = Math.exp(softLimit(cam.raw.x, cam.lo, cam.hi));
   if (cam.mode === 'anchor') {
     cam.k = k;
     cam.x = cam.ax - cam.wx * k;
