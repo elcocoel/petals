@@ -6,12 +6,13 @@
 //   POST /api/v1/agents/link/revoke   {id} for one, {} for all
 //   POST /api/v1/agents/disconnect    signed in: {name}, one agent, out of the list and refused from now on;
 //                                     the prompt copied into it again connects it again (Elco, 10 Nov)
-//   POST /api/v1/agents/wait          Authorization: Bearer <token>, {as, wait_s?}: waits for a job sent to
-//                                     `as`, or to anyone, in any of the person's projects, takes it, and
-//                                     answers it with a continue link for its project; {job: null} if none
-//                                     comes. The agent's own command runs it again.
-//   GET  /api/v1/agents               signed in: who's connected, whether each is waiting now, and the job
-//                                     each holds
+//   POST /api/v1/agents/wait          Authorization: Bearer <token>, {as, worker?, wait_s?}: waits for a job
+//                                     sent to `as`, or to anyone, in any of the person's projects, takes it,
+//                                     and answers it with a continue link for its project; {job: null} if
+//                                     none comes. The agent's own command runs it again. `worker` is the
+//                                     window or sub-agent asking, so several of one name each hold a job.
+//   GET  /api/v1/agents               signed in: who's connected, one entry per worker (n: 1, 2, …),
+//                                     whether each is waiting now, and the job each holds
 // Presence is a wait that's open right now: nothing runs once the agent's session stops asking (Elco: no
 // background service). The work itself goes through the project's continue link, as a pasted line does.
 import { randomBytes } from 'node:crypto';
@@ -65,26 +66,29 @@ export class JobBell {
   }
 }
 
-/** Who's waiting right now, per person: name (lower case) -> as given. In this process only. */
+/** A worker's id: petal.mjs makes it when a window or a sub-agent joins (swarm.md step 1). */
+const WORKER = /^[A-Za-z0-9_-]{1,32}$/;
+
+/** Who's waiting right now, per person: name (lower case) and worker -> open waits. In this process only. */
 class Presence {
-  #open = new Map<string, Map<string, { name: string; count: number }>>();
-  enter(owner: string, name: string) {
-    const m = this.#open.get(owner) ?? new Map();
-    const k = name.toLowerCase();
-    const e = m.get(k) ?? { name, count: 0 };
-    e.count += 1;
-    m.set(k, e);
+  #open = new Map<string, Map<string, number>>();
+  #key = (name: string, worker: string | null) => `${name.toLowerCase()}\u0000${worker ?? ''}`;
+  enter(owner: string, name: string, worker: string | null) {
+    const m = this.#open.get(owner) ?? new Map<string, number>();
+    const k = this.#key(name, worker);
+    m.set(k, (m.get(k) ?? 0) + 1);
     this.#open.set(owner, m);
   }
-  leave(owner: string, name: string) {
+  leave(owner: string, name: string, worker: string | null) {
     const m = this.#open.get(owner);
-    const e = m?.get(name.toLowerCase());
-    if (!e || !m) return;
-    e.count -= 1;
-    if (e.count <= 0) m.delete(name.toLowerCase());
+    const k = this.#key(name, worker);
+    const n = m?.get(k);
+    if (!m || n === undefined) return;
+    if (n <= 1) m.delete(k);
+    else m.set(k, n - 1);
   }
-  waiting(owner: string, name: string) {
-    return (this.#open.get(owner)?.get(name.toLowerCase())?.count ?? 0) > 0;
+  waiting(owner: string, name: string, worker: string | null) {
+    return (this.#open.get(owner)?.get(this.#key(name, worker)) ?? 0) > 0;
   }
 }
 
@@ -181,6 +185,7 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
     }
     const body = (await c.req.json().catch(() => null)) as {
       as?: unknown;
+      worker?: unknown;
       wait_s?: unknown;
     } | null;
     const name = typeof body?.as === 'string' ? body.as.trim() : '';
@@ -191,6 +196,14 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
         `as must name this agent, 1 to ${AGENT_NAME_MAX} characters (e.g. claude-code)`,
       );
     }
+    const worker = body?.worker === undefined ? null : body.worker;
+    if (worker !== null && (typeof worker !== 'string' || !WORKER.test(worker))) {
+      return fail(
+        c,
+        'bad_input',
+        'worker must be 1 to 32 letters, digits, - or _, as petal.mjs makes it when the agent joins',
+      );
+    }
     const owner = link.owner;
     if (await disconnectedFor(store, link, name, { reconnect: true })) {
       return fail(c, 'unauthorised', DISCONNECTED);
@@ -199,14 +212,14 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
       typeof body?.wait_s === 'number' && body.wait_s >= 0 ? body.wait_s : WAIT_DEFAULT_S;
     const waitMs = Math.min(asked, WAIT_MAX_S) * 1000;
     const signal = c.req.raw.signal;
-    await store.agent.seen({ owner, name, last_seen: now() });
-    presence.enter(owner, name);
+    await store.agent.seen({ owner, name, worker, last_seen: now() });
+    presence.enter(owner, name, worker);
     try {
       const deadline = clock() + waitMs;
       for (;;) {
         // only while someone is still asking: a job taken for a closed request would sit with nobody on it
         if (signal.aborted) return c.body(null, 204);
-        const job = await store.job.takeFor(owner, name, now());
+        const job = await store.job.takeFor(owner, name, now(), worker);
         if (job) return ok(c, await delivered(job, owner));
         const left = deadline - clock();
         if (left <= 0) return ok(c, { job: null });
@@ -214,8 +227,8 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
         if (await disconnectedFor(store, link, name)) return fail(c, 'unauthorised', DISCONNECTED);
       }
     } finally {
-      presence.leave(owner, name);
-      await store.agent.seen({ owner, name, last_seen: now() });
+      presence.leave(owner, name, worker);
+      await store.agent.seen({ owner, name, worker, last_seen: now() });
     }
   });
 
@@ -243,17 +256,42 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
     const owner = await personOr(c);
     if (!owner) return fail(c, 'unauthorised', 'Sign in with your wallet first.');
     const held = await store.job.held(owner);
-    const agents = (await store.agent.list(owner)).map((a) => {
-      const job = held.find((j) => j.taken_by?.toLowerCase() === a.name.toLowerCase());
-      return {
-        name: a.name,
-        waiting: presence.waiting(owner, a.name),
-        last_seen: a.last_seen,
-        job: job ? { id: job.id, title: job.title, exploration: job.exploration } : null,
-      };
-    });
+    const workers = await store.agent.workers(owner);
+    const agents = (await store.agent.list(owner)).flatMap((a) =>
+      workersOf(a, workers).map((w, i) => {
+        // the first entry also answers for a wait that names no worker, as petal.mjs did before workers
+        const mine = (worker: string | null) => worker === w.worker || (i === 0 && worker === null);
+        const job = held.find(
+          (j) => j.taken_by?.toLowerCase() === a.name.toLowerCase() && mine(j.taken_worker),
+        );
+        return {
+          name: a.name,
+          n: w.n,
+          worker: w.worker,
+          waiting:
+            presence.waiting(owner, a.name, w.worker) ||
+            (i === 0 && presence.waiting(owner, a.name, null)),
+          last_seen: w.last_seen,
+          job: job ? { id: job.id, title: job.title, exploration: job.exploration } : null,
+        };
+      }),
+    );
     return ok(c, { agents });
   });
 
   return app;
+}
+
+/**
+ * An agent's workers in the order they first came, each with its place: 1, 2, … The page reads them as
+ * "Codex", "Codex 2" (apps/web/lib/agents.ts names agents). One that never waited as a worker is itself
+ * its only entry, as before workers.
+ */
+export function workersOf(
+  a: { name: string; last_seen: string },
+  workers: readonly { key: string; worker: string; last_seen: string }[],
+): { n: number; worker: string | null; last_seen: string }[] {
+  const own = workers.filter((w) => w.key === a.name.toLowerCase());
+  if (!own.length) return [{ n: 1, worker: null, last_seen: a.last_seen }];
+  return own.map((w, i) => ({ n: i + 1, worker: w.worker, last_seen: w.last_seen }));
 }

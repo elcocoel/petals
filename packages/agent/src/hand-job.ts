@@ -32,29 +32,37 @@ export const jobEvent = (j: JobRow): JobEvent => ({
   taken_by: j.taken_by,
 });
 
-/** Who's connected, for the system message: each agent by name, and the job it holds if any. */
+/** Who's connected, for the system message: each agent by name, its workers, and the jobs they hold. */
 export async function agentsOfRun(ctx: ToolContext, runId: string) {
   const store = privateStore(ctx.config);
   const owner = (await store.run.get(runId))?.owner;
   if (!owner) return [];
   const held = await store.job.held(owner);
+  const workers = await store.agent.workers(owner);
   return (await store.agent.list(owner)).map((a) => ({
     name: a.name,
     last_seen: a.last_seen,
-    job: held.find((j) => j.taken_by?.toLowerCase() === a.name.toLowerCase())?.title ?? null,
+    workers: Math.max(1, workers.filter((w) => w.key === a.name.toLowerCase()).length),
+    jobs: held
+      .filter((j) => j.taken_by?.toLowerCase() === a.name.toLowerCase())
+      .map((j) => j.title),
   }));
 }
 
 export function connectedNotes(
-  agents: readonly { name: string; last_seen: string; job: string | null }[],
+  agents: readonly { name: string; last_seen: string; workers: number; jobs: string[] }[],
 ): string {
+  const doing = (a: (typeof agents)[number]) => {
+    const working = a.jobs.map((t) => `working on "${t}"`);
+    if (a.workers === 1) return working[0] ?? 'free';
+    const free = Math.max(0, a.workers - a.jobs.length);
+    return [`${a.workers} workers`, ...working, ...(free ? [`${free} free`] : [])].join(', ');
+  };
   return [
     '## Agents connected',
     '',
-    "The person's own agents, by the name each uses. Send a job to one with hand_job's to.",
-    ...agents.map(
-      (a) => `- ${a.name}: ${a.job ? `working on "${a.job}"` : 'free'}, last seen ${a.last_seen}`,
-    ),
+    "The person's own agents, by the name each uses. Send a job to one with hand_job's to: any of its workers that's free takes it.",
+    ...agents.map((a) => `- ${a.name}: ${doing(a)}, last seen ${a.last_seen}`),
   ].join('\n');
 }
 

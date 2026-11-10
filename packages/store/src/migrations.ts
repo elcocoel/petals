@@ -420,6 +420,19 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX top_up_person ON top_up(person, created_at);
   `,
+  // 20: several workers per agent (Elco, 10 Nov, swarm.md step 1): each window or sub-agent that joins as
+  // "Codex" waits as its own worker, so the page lists "Codex" and "Codex 2", each holding its own job.
+  `
+  CREATE TABLE agent_worker (
+    owner TEXT NOT NULL,
+    key TEXT NOT NULL,
+    worker TEXT NOT NULL,
+    first_seen TEXT NOT NULL,
+    last_seen TEXT NOT NULL,
+    PRIMARY KEY (owner, key, worker)
+  );
+  ALTER TABLE job ADD COLUMN taken_worker TEXT;
+  `,
 ];
 
 /**

@@ -90,11 +90,79 @@ function setup(turns: ScriptTurn[]) {
       body: JSON.stringify({ as, wait_s }),
       ...(signal ? { signal } : {}),
     });
-  return { app, llm, call, signInFunded, signInWithInvite, wait };
+  /** A wait from one worker of an agent: a window or a sub-agent that joined as `as` (swarm.md step 1). */
+  const waitAs = (token: string, as: string, worker: unknown, wait_s = 0) =>
+    app.request('/api/v1/agents/wait', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+      body: JSON.stringify({ as, worker, wait_s }),
+    });
+  return { app, llm, call, signInFunded, signInWithInvite, wait, waitAs };
 }
 
 const link = async (w: ReturnType<typeof setup>) =>
   ((await (await w.call('POST', '/api/v1/agents/link', {})).json()) as Out).token as string;
+
+describe('several workers of one agent (swarm.md step 1)', () => {
+  const list = async (w: ReturnType<typeof setup>) =>
+    ((await (await w.call('GET', '/api/v1/agents')).json()) as Out).agents as Out[];
+
+  test('two Codex windows are workers 1 and 2 ("Codex", "Codex 2"), each holding its own job', async () => {
+    const w = setup([
+      {
+        calls: [
+          { name: 'hand_job', args: { title: 'Map the shares', brief: 'who holds shares' } },
+          { name: 'hand_job', args: { title: 'Name the members', brief: 'who are they' } },
+        ],
+      },
+      { content: 'Two jobs are out.' },
+    ]);
+    await w.signInFunded();
+    const token = await link(w);
+    // each joins, in this order
+    expect(((await (await w.waitAs(token, 'Codex', 'w-one')).json()) as Out).job).toBeNull();
+    expect(((await (await w.waitAs(token, 'Codex', 'w-two')).json()) as Out).job).toBeNull();
+    await (await w.call('POST', '/api/v1/agent/chat', ASK)).text();
+    const one = ((await (await w.waitAs(token, 'Codex', 'w-one')).json()) as Out).job;
+    const two = ((await (await w.waitAs(token, 'Codex', 'w-two')).json()) as Out).job;
+    expect([one?.title, two?.title].sort()).toEqual(['Map the shares', 'Name the members']);
+    expect(await list(w)).toMatchObject([
+      { name: 'Codex', n: 1, worker: 'w-one', waiting: false, job: { id: one.id } },
+      { name: 'Codex', n: 2, worker: 'w-two', waiting: false, job: { id: two.id } },
+    ]);
+  });
+
+  test('a wait with no worker is one entry, as before; a worker that is not an id is refused', async () => {
+    const w = setup([]);
+    await w.signInFunded();
+    const token = await link(w);
+    expect((await w.wait(token, 'Hermes')).status).toBe(200);
+    expect(await list(w)).toMatchObject([{ name: 'Hermes', n: 1, worker: null }]);
+    for (const bad of ['', 'has space', 'x'.repeat(33), 7]) {
+      const res = await w.waitAs(token, 'Hermes', bad);
+      expect(res.status, String(bad)).toBe(400);
+      expect(JSON.stringify(await res.json())).toMatch(/worker must be/);
+    }
+  });
+
+  test('disconnecting an agent takes all its workers, and connecting again starts from its first', async () => {
+    const w = setup([]);
+    await w.signInFunded();
+    const token = await link(w);
+    for (const id of ['a1', 'a2', 'a3']) await w.waitAs(token, 'Codex', id);
+    expect((await list(w)).map((a) => [a.name, a.n])).toEqual([
+      ['Codex', 1],
+      ['Codex', 2],
+      ['Codex', 3],
+    ]);
+    expect((await w.call('POST', '/api/v1/agents/disconnect', { name: 'Codex' })).status).toBe(200);
+    expect(await list(w)).toEqual([]);
+    await new Promise((r) => setTimeout(r, 5));
+    const fresh = await link(w);
+    expect((await w.waitAs(fresh, 'Codex', 'a3')).status).toBe(200);
+    expect(await list(w)).toMatchObject([{ n: 1, worker: 'a3' }]);
+  });
+});
 
 describe('agents across projects', () => {
   test('disconnecting one agent ends its wait, drops it from the list, and keeps it out until it connects again', async () => {

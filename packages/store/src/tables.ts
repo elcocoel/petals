@@ -250,10 +250,13 @@ export interface JobRow {
   to: string | null;
   /** the agent that took it, by name, or null (migration 11) */
   taken_by: string | null;
+  /** which of that agent's workers took it, or null for one that waits as none (migration 20) */
+  taken_worker: string | null;
 }
-interface JobRecord extends Omit<JobRow, 'inputs' | 'result' | 'to' | 'taken_by'> {
+interface JobRecord extends Omit<JobRow, 'inputs' | 'result' | 'to' | 'taken_by' | 'taken_worker'> {
   assignee?: string | null;
   taken_by?: string | null;
+  taken_worker?: string | null;
   seq: number;
   inputs: string;
   result: string | null;
@@ -273,6 +276,7 @@ const jobOf = (r: JobRecord): JobRow => ({
   updated_at: r.updated_at,
   to: r.assignee ?? null,
   taken_by: r.taken_by ?? null,
+  taken_worker: r.taken_worker ?? null,
 });
 
 /** A person's agent link (migration 11): only its hash is kept, and it can only wait for jobs. */
@@ -288,6 +292,8 @@ export interface AgentRow {
   owner: string;
   name: string;
   last_seen: string;
+  /** the worker that asked, when it waits as one (migration 20): each window or sub-agent of this name */
+  worker?: string | null;
   /** when the person disconnected it; null while connected */
   disconnected_at?: string | null;
 }
@@ -1385,7 +1391,12 @@ export function tables(db: Db) {
        * For a person's agent (migration 11): the next open job in any of `owner`'s projects that was sent to
        * `name` (case ignored), else the oldest sent to anyone, now taken by `name`. Null when there's none.
        */
-      takeFor: (owner: string, name: string, at: string): Promise<JobRow | null> =>
+      takeFor: (
+        owner: string,
+        name: string,
+        at: string,
+        worker: string | null = null,
+      ): Promise<JobRow | null> =>
         db.tx(async () => {
           const open = await db.get<JobRecord>(
             `SELECT job.* FROM job JOIN exploration ON exploration.id = job.exploration
@@ -1398,12 +1409,20 @@ export function tables(db: Db) {
           );
           if (!open) return null;
           await db.run(
-            `UPDATE job SET status = 'taken', taken_by = ?, updated_at = ? WHERE id = ? AND status = 'open'`,
+            `UPDATE job SET status = 'taken', taken_by = ?, taken_worker = ?, updated_at = ?
+             WHERE id = ? AND status = 'open'`,
             name,
+            worker,
             at,
             open.id,
           );
-          return jobOf({ ...open, status: 'taken', taken_by: name, updated_at: at });
+          return jobOf({
+            ...open,
+            status: 'taken',
+            taken_by: name,
+            taken_worker: worker,
+            updated_at: at,
+          });
         }),
       /** The jobs `owner`'s agents have taken and not reported yet, in any of their projects. */
       held: async (owner: string): Promise<JobRow[]> =>
@@ -1451,7 +1470,7 @@ export function tables(db: Db) {
     },
 
     agent: {
-      /** The name a person's link was used with, seen now; its case is kept as last given. */
+      /** The name a person's link was used with, seen now; its case is kept as last given. So is its worker. */
       seen: async (r: AgentRow) => {
         await db.run(
           `INSERT INTO agent (owner, key, name, last_seen) VALUES (?, ?, ?, ?)
@@ -1461,7 +1480,26 @@ export function tables(db: Db) {
           r.name,
           r.last_seen,
         );
+        if (!r.worker) return;
+        await db.run(
+          `INSERT INTO agent_worker (owner, key, worker, first_seen, last_seen) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT (owner, key, worker) DO UPDATE SET last_seen = excluded.last_seen`,
+          r.owner,
+          r.name.toLowerCase(),
+          r.worker,
+          r.last_seen,
+          r.last_seen,
+        );
       },
+      /** The workers of the person's connected agents, each agent's in the order they first came (migration 20). */
+      workers: (owner: string) =>
+        db.all<{ key: string; worker: string; first_seen: string; last_seen: string }>(
+          `SELECT agent_worker.key, agent_worker.worker, agent_worker.first_seen, agent_worker.last_seen
+           FROM agent_worker JOIN agent ON agent.owner = agent_worker.owner AND agent.key = agent_worker.key
+           WHERE agent_worker.owner = ? AND agent.disconnected_at IS NULL
+           ORDER BY agent_worker.key, agent_worker.first_seen, agent_worker.worker`,
+          owner,
+        ),
       /** The person's connected agents, the last seen first. */
       list: (owner: string) =>
         db.all<AgentRow>(
@@ -1474,14 +1512,23 @@ export function tables(db: Db) {
           owner,
           name.toLowerCase(),
         ),
-      /** Disconnected at `at`, or connected again with null. False when the person has no agent by that name. */
-      setDisconnected: async (owner: string, name: string, at: string | null): Promise<boolean> =>
-        (await db.run(
-          'UPDATE agent SET disconnected_at = ? WHERE owner = ? AND key = ?',
-          at,
-          owner,
-          name.toLowerCase(),
-        )) === 1,
+      /**
+       * Disconnected at `at`, or connected again with null. False when the person has no agent by that name.
+       * Disconnecting forgets its workers too, so connecting again starts from its first.
+       */
+      setDisconnected: (owner: string, name: string, at: string | null): Promise<boolean> =>
+        db.tx(async () => {
+          const key = name.toLowerCase();
+          const changed = await db.run(
+            'UPDATE agent SET disconnected_at = ? WHERE owner = ? AND key = ?',
+            at,
+            owner,
+            key,
+          );
+          if (changed === 1 && at !== null)
+            await db.run('DELETE FROM agent_worker WHERE owner = ? AND key = ?', owner, key);
+          return changed === 1;
+        }),
     },
 
     layer: {
