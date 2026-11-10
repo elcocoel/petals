@@ -14,6 +14,9 @@ export function PanelBench({ state }: { state: PanelState }) {
   const [projects, setProjects] = useState<ListedProject[]>(fixture.projects);
   const [opened, setOpened] = useState<string[]>(fixture.opened);
   const [copied, setCopied] = useState(false);
+  const [naming, setNaming] = useState(false);
+  const [moving, setMoving] = useState<string | null>(null);
+  const [placed, setPlaced] = useState<Record<string, string | null>>({});
   const menu: WorkMenuView = {
     open,
     fold: () => setOpen(false),
@@ -22,14 +25,23 @@ export function PanelBench({ state }: { state: PanelState }) {
     opened,
     toggle: (key) =>
       setOpened((keys) => (keys.includes(key) ? keys.filter((k) => k !== key) : [...keys, key])),
-    newProject: () => {
+    naming,
+    newProject: () => setNaming(true),
+    nameProject: (name) => {
+      setNaming(false);
       const id = `new${projects.length}`;
-      setProjects((list) => [
-        ...list,
-        { id, name: 'New project', parent: null, position: list.length },
-      ]);
+      setProjects((list) => [...list, { id, name, parent: null, position: list.length }]);
       setOpened((keys) => [...keys, id]);
     },
+    stopNaming: () => setNaming(false),
+    moving,
+    toggleMoving: (row) => setMoving((now) => (now === row ? null : row)),
+    moveTo: (row, project) => {
+      setMoving(null);
+      setPlaced((now) => ({ ...now, [row]: project }));
+      if (project) setOpened((keys) => (keys.includes(project) ? keys : [...keys, project]));
+    },
+    placed,
     agents: fixture.agents,
     copied,
     copy: () => setCopied(true),

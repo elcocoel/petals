@@ -9,11 +9,11 @@ import {
   listProjects,
   newProject as makeProject,
   mintAgentLink,
+  moveConversation,
   readAgents,
 } from '../lib/agent-client.ts';
 import { agentRows, agentWords, type ConnectedAgent } from '../lib/agents.ts';
 import type { ListedProject } from '../lib/conversation-list.ts';
-import { panelWords } from '../lib/panel-words.ts';
 
 export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
   // box.fold: the menu starts open, as an IDE's does, and folds away by hand
@@ -21,6 +21,12 @@ export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
   const [agents, setAgents] = useState<ConnectedAgent[]>([]);
   const [projects, setProjects] = useState<ListedProject[]>([]);
   const [opened, setOpened] = useState<string[]>([]);
+  // a new project's row, waiting for its name
+  const [naming, setNaming] = useState(false);
+  // the conversation whose projects are open to choose from, and where each moved one is now, until the
+  // list is read again and says so itself
+  const [moving, setMoving] = useState<string | null>(null);
+  const [placed, setPlaced] = useState<Record<string, string | null>>({});
   const [copied, setCopied] = useState(false);
   // a read again after a disconnect, so the list says what's true
   const [reads, setReads] = useState(0);
@@ -58,11 +64,20 @@ export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
   }, []);
 
   // a new project comes in open, so what goes in it next has somewhere to show
-  const newProject = useCallback(async () => {
-    const made = await makeProject(panelWords.newProject);
+  const nameProject = useCallback(async (name: string) => {
+    setNaming(false);
+    const made = await makeProject(name);
     if (!made) return;
     setProjects((list) => [...list, made]);
     setOpened((keys) => [...keys, made.id]);
+  }, []);
+
+  // the project it goes into opens, so the row is seen where it went
+  const moveTo = useCallback(async (row: string, project: string | null) => {
+    setMoving(null);
+    if (!(await moveConversation(row, project))) return;
+    setPlaced((now) => ({ ...now, [row]: project }));
+    if (project) setOpened((keys) => (keys.includes(project) ? keys : [...keys, project]));
   }, []);
 
   return {
@@ -71,7 +86,14 @@ export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
     opened,
     toggle: (key: string) =>
       setOpened((keys) => (keys.includes(key) ? keys.filter((k) => k !== key) : [...keys, key])),
-    newProject: () => void newProject().catch(() => {}),
+    naming,
+    newProject: () => setNaming(true),
+    nameProject: (name: string) => void nameProject(name).catch(() => {}),
+    stopNaming: () => setNaming(false),
+    moving,
+    toggleMoving: (row: string) => setMoving((now) => (now === row ? null : row)),
+    moveTo: (row: string, project: string | null) => void moveTo(row, project).catch(() => {}),
+    placed,
     fold: () => setOpen(false),
     unfold: () => setOpen(true),
     agents: agentRows(agents),

@@ -12,6 +12,13 @@ export const panelWords = {
   lobby: 'Lobby',
   projects: 'Projects',
   newProject: 'New project',
+  /** The new project's row, waiting for its name. */
+  nameProject: 'Name the project',
+  /** An open project with nothing in it yet. */
+  emptyProject: 'Nothing in it yet',
+  /** The way to put a conversation in a project, read aloud and on hover with the conversation's title. */
+  moveTo: (title: string) => `Move “${title}” to a project`,
+  outOfProject: 'Out of its project',
   /** How many conversations a project holds. */
   count: (n: number) => String(n),
   conversations: 'Conversations',

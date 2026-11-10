@@ -15,9 +15,10 @@ import {
 } from '../../lib/conversation-list.ts';
 import { panelWords } from '../../lib/panel-words.ts';
 import { siteLinks } from '../../lib/site-links.ts';
-import { ConversationList } from '../chat/ConversationList.tsx';
+import { ConversationList, type MoveRows } from '../chat/ConversationList.tsx';
 import { IconButton } from '../ui/IconButton.tsx';
 import { NavItem } from '../ui/NavItem.tsx';
+import { RowField } from '../ui/RowField.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 import { type RailItem, SideRail } from '../ui/SideRail.tsx';
 
@@ -31,7 +32,18 @@ export interface WorkMenuView {
   /** The projects showing their conversations, by key. */
   opened: readonly string[];
   toggle: (key: string) => void;
+  /** A new project's row is waiting for its name. */
+  naming: boolean;
+  /** Opens that row. */
   newProject: () => void;
+  nameProject: (name: string) => void;
+  stopNaming: () => void;
+  /** The conversation whose projects are open to choose from, by key. */
+  moving: string | null;
+  toggleMoving: (row: string) => void;
+  moveTo: (row: string, project: string | null) => void;
+  /** Where each conversation moved here is now, until the list is read again. */
+  placed: Readonly<Record<string, string | null>>;
   /** The person's own agents, and what each is doing (the first full test, 9 Nov). */
   agents: AgentRow[];
   copied: boolean;
@@ -72,7 +84,16 @@ export function WorkMenu({
       current: here === 'lobby',
     },
   ];
-  const { projects, loose } = byProject(conversations, menu.projects);
+  const rows = conversations.map((row) =>
+    row.key in menu.placed ? { ...row, project: menu.placed[row.key] ?? null } : row,
+  );
+  const { projects, loose } = byProject(rows, menu.projects);
+  const move: MoveRows = {
+    projects: projects.map((p) => ({ key: p.key, name: p.name })),
+    open: menu.moving,
+    toggle: menu.toggleMoving,
+    to: menu.moveTo,
+  };
   const rail = (open: boolean, children: ReactNode) => (
     <SideRail
       label={panelWords.panel}
@@ -109,24 +130,41 @@ export function WorkMenu({
                         label={p.name}
                         trail={panelWords.count(p.rows.length)}
                       />
-                      {shown && <ConversationList rows={p.rows} depth={1} />}
+                      {shown &&
+                        (p.rows.length > 0 ? (
+                          <ConversationList rows={p.rows} depth={1} move={move} />
+                        ) : (
+                          // rule 2: open and empty says so
+                          <NavItem label={panelWords.emptyProject} muted depth={1} />
+                        ))}
                     </li>
                   );
                 })}
-                {/* a group's one action is its last row; with nothing above it, it says what goes here */}
+                {/* a group's one action is its last row; with nothing above it, it says what goes here.
+                    A new project is named in its place, before it exists. */}
                 <li>
-                  <NavItem
-                    onClick={menu.newProject}
-                    icon="plus"
-                    label={panelWords.newProject}
-                    muted
-                  />
+                  {menu.naming ? (
+                    <RowField
+                      label={panelWords.nameProject}
+                      placeholder={panelWords.nameProject}
+                      icon="project"
+                      onDone={menu.nameProject}
+                      onCancel={menu.stopNaming}
+                    />
+                  ) : (
+                    <NavItem
+                      onClick={menu.newProject}
+                      icon="plus"
+                      label={panelWords.newProject}
+                      muted
+                    />
+                  )}
                 </li>
               </ul>
             </Group>
             <Group title={panelWords.conversations}>
               {loose.length > 0 ? (
-                <ConversationList rows={loose} />
+                <ConversationList rows={loose} move={move} />
               ) : (
                 <NavItem label={panelWords.noConversations} muted />
               )}

@@ -121,6 +121,16 @@ export async function newProject(name: string): Promise<ListedProject | null> {
   return json.folder ?? null;
 }
 
+/** Puts a conversation in a project, or in none with null. True when the server took it. */
+export async function moveConversation(id: string, project: string | null): Promise<boolean> {
+  const res = await fetch(`/api/v1/conversations/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ folder: project }),
+  });
+  return res.ok;
+}
+
 /** The views on the one shared map, oldest first, each with its picture (GET /api/v1/map/views). No answer is the same as none. */
 export async function listMapViews(): Promise<MapViewRow[]> {
   const res = await fetch('/api/v1/map/views');

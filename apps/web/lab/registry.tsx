@@ -63,6 +63,7 @@ import { MetaRow } from '../components/ui/MetaRow.tsx';
 import { Mono } from '../components/ui/Mono.tsx';
 import { Nav } from '../components/ui/Nav.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
+import { RowField } from '../components/ui/RowField.tsx';
 import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
@@ -1140,6 +1141,27 @@ export const registry: LabEntry[] = [
       {
         name: 'muted: empty, or the way to add one',
         render: () => <LabAction />,
+      },
+    ],
+  },
+  {
+    id: 'RowField',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/RowField.tsx',
+    states: [
+      {
+        name: 'naming a new project, in its place',
+        render: () => (
+          <RowField
+            label="Name the project"
+            placeholder="Name the project"
+            icon="project"
+            onDone={() => {}}
+            onCancel={() => {}}
+          />
+        ),
       },
     ],
   },
