@@ -49,11 +49,11 @@ export function colourStyle(key: string): { cls: string; swatch: string } {
 export const OUTLINE = { asserted: 'solid', inferred: 'dashed' } as const;
 
 const LIGHT =
-  '--ink:#0b0b0b;--ink-2:#52514e;--hair:#e1e0d9;--unknown:#c9c7bf;--tail:#b8b6ae;' +
+  '--ink:#0b0b0b;--ink-2:#52514e;--hair:#e1e0d9;--unknown:#c9c7bf;--tail:#8a8880;' +
   '--k-pool:#2a78d6;--k-exchange:#eb6834;--k-entity:#1baf7a;--k-custodian:#eda100;' +
   '--k-contract:#e87ba4;--k-treasury:#008300;--k-org:#4a3aa7;--k-delegator:#e34948';
 const DARK =
-  '--ink:#ffffff;--ink-2:#c3c2b7;--hair:#2c2c2a;--unknown:#4a4945;--tail:#5e5d58;' +
+  '--ink:#ffffff;--ink-2:#c3c2b7;--hair:#2c2c2a;--unknown:#4a4945;--tail:#8a8880;' +
   '--k-pool:#3987e5;--k-exchange:#d95926;--k-entity:#199e70;--k-custodian:#c98500;' +
   '--k-contract:#d55181;--k-treasury:#008300;--k-org:#9085e9;--k-delegator:#e66767';
 
