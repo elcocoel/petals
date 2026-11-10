@@ -8,6 +8,7 @@ import flowerSchema from '../../schema/flower.schema.json' with { type: 'json' }
 import layerSchema from '../../schema/layer.schema.json' with { type: 'json' };
 import seamSchema from '../../schema/seam.schema.json' with { type: 'json' };
 import snapshotSchema from '../../schema/snapshot.schema.json' with { type: 'json' };
+import usageSchema from '../../schema/usage.schema.json' with { type: 'json' };
 import viewSchema from '../../schema/view.schema.json' with { type: 'json' };
 
 export const SNAPSHOT_SCHEMA_ID = 'urn:petal:schema:snapshot:v1';
@@ -36,6 +37,8 @@ export const schemas: {
   view: object;
   /** what crosses from data to the look (005, seam.md): every piece of data with its kind and standing */
   seam: object;
+  /** one model call, counted and charged, and NEAR AI's own bill for it (pricing-protocol.md) */
+  usage: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -47,6 +50,7 @@ export const schemas: {
   layer: layerSchema,
   view: viewSchema,
   seam: seamSchema,
+  usage: usageSchema,
 };
 
 /** The two source documents, unchanged. */

@@ -384,6 +384,21 @@ export const MIGRATIONS: readonly string[] = [
   `
   ALTER TABLE exploration ADD COLUMN hidden_at TEXT;
   `,
+  // 17: a usage record for every model call (Elco, 10 Nov: "count usage like pros"; pricing-protocol.md):
+  // usage/v1 as body, keyed by NEAR AI's inference id, with whose account paid, and NEAR AI's own bill once
+  // it's known. Nothing rewrites a record but its bill and when it was reconciled.
+  `
+  CREATE TABLE usage (
+    id TEXT PRIMARY KEY,
+    account_key TEXT,
+    run TEXT NOT NULL,
+    at TEXT NOT NULL,
+    body TEXT NOT NULL,
+    billed_usd REAL,
+    reconciled_at TEXT
+  );
+  CREATE INDEX usage_account ON usage(account_key, at);
+  `,
 ];
 
 /**

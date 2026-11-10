@@ -1,0 +1,15 @@
+{
+  "petal": "usage/v1",
+  "call": "d8761185-1b42-59a2-95d0-4d795be9d270",
+  "completion": "chatcmpl-6f4df516-c671-48f1-9a37-87acab6046cf",
+  "run": "9c599a61de1337853b111b4e",
+  "at": "2026-11-10T18:06:55.743Z",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+  "tokens": { "in": 25510, "cached": 24320, "out": 311 },
+  "list_price": { "in": 0.3, "cached": 0.006, "out": 1.2 },
+  "computed_usd": 0.000877,
+  "failed_usd": 0,
+  "charged_usd": 0.000877,
+  "billed_usd": 0.000432744,
+  "reconciled_at": "2026-11-10T18:07:02.000Z"
+}

@@ -111,6 +111,16 @@ export interface PersonProfileRow {
   credential: string | null;
   saved_at: string;
 }
+/** One model call's usage/v1 record, with whose account paid (17). */
+export interface UsageRow {
+  id: string;
+  account_key: string | null;
+  run: string;
+  at: string;
+  body: string;
+  billed_usd: number | null;
+  reconciled_at: string | null;
+}
 /** A picture, by the sha256 of its bytes, kept as base64 (15). */
 export interface MediaRow {
   sha256: string;
@@ -895,6 +905,45 @@ export function tables(db: Db) {
           r.body,
           r.credential,
           r.saved_at,
+        );
+      },
+    },
+
+    /** A usage record per model call (17): added once; only its bill is filled in later. */
+    usage: {
+      add: async (r: UsageRow) => {
+        await db.run(
+          `INSERT INTO usage (id, account_key, run, at, body, billed_usd, reconciled_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`,
+          r.id,
+          r.account_key,
+          r.run,
+          r.at,
+          r.body,
+          r.billed_usd,
+          r.reconciled_at,
+        );
+      },
+      /** An account's records, the newest first. */
+      ofAccount: (account: string, limit: number) =>
+        db.all<UsageRow>(
+          'SELECT * FROM usage WHERE account_key = ? ORDER BY at DESC LIMIT ?',
+          account,
+          limit,
+        ),
+      /** An account's records NEAR AI's bill isn't on yet, the oldest first. */
+      unreconciled: (account: string, limit: number) =>
+        db.all<UsageRow>(
+          'SELECT * FROM usage WHERE account_key = ? AND reconciled_at IS NULL ORDER BY at LIMIT ?',
+          account,
+          limit,
+        ),
+      async reconcile(id: string, billed: number, at: string) {
+        await db.run(
+          'UPDATE usage SET billed_usd = ?, reconciled_at = ? WHERE id = ? AND reconciled_at IS NULL',
+          billed,
+          at,
+          id,
         );
       },
     },

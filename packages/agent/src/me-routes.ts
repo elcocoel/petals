@@ -7,6 +7,8 @@
 //   GET  /api/v1/me/profile    { profile, updated_at, published }
 //   PUT  /api/v1/me/profile    { profile } → the same; NEAR Social's own shape (social-kv/1)
 //   GET  /api/v1/media/:file   a picture from a profile, by its sha256, kept a year wherever it's cached
+//   GET  /api/v1/me/usage      { usage, totals }: every model call charged to them (usage/v1), the newest
+//                              first, reconciled with NEAR AI's bill first
 //
 // The view is the glasses every petal the person sees is drawn through (one-source.md, step 1: "When the
 // user has a certain setting selected, all of the petals he will ever interact while those settings are
@@ -22,12 +24,16 @@ import type { Store } from '@petal/store';
 import { bodyCap } from '@petal/tools';
 import { type Context, Hono } from 'hono';
 import type { RouteAuth } from './auth-routes.ts';
+import type { LlmClient } from './llm.ts';
 import { fail } from './routes.ts';
+import { reconcile, recordOf } from './usage.ts';
 
 const HASH = /^[0-9a-f]{64}$/;
 const isPerson = (subject: string | null): subject is string => !!subject?.startsWith('prs_');
 const DEFAULT_HASH = viewHash(DEFAULT_VIEW);
 const IMMUTABLE = 'public, max-age=31536000, immutable';
+/** how many of a person's latest records their usage lists */
+const USAGE_LISTED = 500;
 
 /** The picture types a profile takes, by the extension its address carries. */
 const MEDIA: Record<string, string> = { webp: 'image/webp', jpg: 'image/jpeg', png: 'image/png' };
@@ -64,6 +70,8 @@ export interface MeDeps {
   gate: RouteAuth;
   /** the site's public address, for a picture's address; none: relative */
   apiBase?: string;
+  /** whose billing a person's usage is reconciled with */
+  llm?: LlmClient;
   clock?: () => number;
 }
 
@@ -77,7 +85,7 @@ export function meRoutes(d: MeDeps): Hono {
     c.json({ ...body, tools_version: TOOLS_VERSION });
 
   const app = new Hono();
-  for (const path of ['/api/v1/me/view', '/api/v1/me/profile']) {
+  for (const path of ['/api/v1/me/view', '/api/v1/me/profile', '/api/v1/me/usage']) {
     app.use(path, bodyCap);
     app.use(path, async (c, next) => {
       c.header('Cache-Control', 'no-store');
@@ -256,6 +264,31 @@ export function meRoutes(d: MeDeps): Hono {
       saved_at: iso(),
     });
     return ok(c, await profileAnswer(me.person));
+  });
+
+  // -- usage (usage/v1)
+
+  app.get('/api/v1/me/usage', async (c) => {
+    const me = await personOf(c);
+    if (!me) return fail(c, 'unauthorised', 'Not signed in.');
+    const account = `person:${me.person}`;
+    if (d.llm) {
+      await reconcile(store, d.llm, account).catch((e) =>
+        console.warn(`petal: couldn't reconcile ${account} with NEAR AI: ${String(e)}`),
+      );
+    }
+    const usage = (await store.usage.ofAccount(account, USAGE_LISTED)).map(recordOf);
+    const sum = (f: (r: (typeof usage)[number]) => number) =>
+      Math.round(usage.reduce((s, r) => s + f(r), 0) * 1e9) / 1e9;
+    return ok(c, {
+      usage,
+      totals: {
+        calls: usage.length,
+        charged_usd: sum((r) => r.charged_usd),
+        reconciled: usage.filter((r) => r.reconciled_at).length,
+        billed_usd: sum((r) => r.billed_usd ?? 0),
+      },
+    });
   });
 
   app.get('/api/v1/media/:file', async (c) => {

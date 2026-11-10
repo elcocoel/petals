@@ -12,6 +12,7 @@ import {
   DEFAULT_MODEL,
   effortFor,
   FALLBACK_MODELS,
+  inferenceIdOf,
   LlmCallError,
   MAX_COMPLETION_TOKENS,
   type NearAiOptions,
@@ -351,6 +352,44 @@ describe('nearAiClient', () => {
     expect(c.cost_usd).toBeCloseTo(
       costUsd(FALLBACK_MODELS[0] as string, c.usage) + costUsd(DEFAULT_MODEL, { in: 1000, out: 0 }),
       9,
+    );
+  });
+
+  test("each answer carries NEAR AI's id for it and the price it was counted at", async () => {
+    const { llm } = client();
+    const c = await llm.complete(ASK);
+    expect(c.inference_id).toBe(inferenceIdOf(c.completion_id));
+    expect(c.list_price).toEqual({ in: 0.3, cached: 0.006, out: 1.2 });
+  });
+
+  test("NEAR AI's bill is read by inference id, in dollars, and a call it hasn't counted is left out", async () => {
+    const fake = fakeNearAi();
+    const asked: unknown[] = [];
+    const billing: typeof fetch = async (input, init) => {
+      if (String(input).endsWith('/billing/costs')) {
+        asked.push(JSON.parse(String(init?.body)));
+        return new Response(
+          JSON.stringify({
+            requests: [
+              { requestId: 'a', costNanoUsd: 432744 },
+              { requestId: 'b', costNanoUsd: 0 },
+            ],
+          }),
+          { headers: { 'content-type': 'application/json' } },
+        );
+      }
+      return fake.fetch(input, init);
+    };
+    const { llm } = client(fake, { fetch: billing });
+    const bills = await llm.billed?.(['a', 'b']);
+    expect(asked).toEqual([{ requestIds: ['a', 'b'] }]);
+    expect([...(bills ?? new Map())]).toEqual([['a', 0.000432744]]);
+  });
+
+  test("NEAR AI's id for a call is the UUIDv5 of the answer's id, as its docs define it", () => {
+    // checked against Python's uuid.uuid5(uuid.NAMESPACE_DNS, …) and NEAR AI's own billing, 10 Nov
+    expect(inferenceIdOf('chatcmpl-6f4df516-c671-48f1-9a37-87acab6046cf')).toBe(
+      'd8761185-1b42-59a2-95d0-4d795be9d270',
     );
   });
 

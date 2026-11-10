@@ -55,6 +55,7 @@ import {
   windowOf,
 } from './thread.ts';
 import { type AnyTool, llmTools, STAGE_MESSAGE, STAGE_OF } from './tool-defs.ts';
+import type { Usage } from './usage.ts';
 
 export interface RunInput {
   messages: ChatMessage[];
@@ -92,6 +93,8 @@ export interface RunOptions {
   today?: () => Date;
   /** told what the model has read, each time that grows and before `done`; the store keeps it */
   onThread?: (thread: LlmMessage[]) => Promise<void> | void;
+  /** additive (10 Nov, usage/v1): told each answer's usage record, and whose account paid for it */
+  onUsage?: (u: Usage) => Promise<void> | void;
   /** Stop: aborts the model call and the tool in progress, and the chat ends as `stopped` */
   signal?: AbortSignal;
   /** the window a thread is compacted against, in tokens; default the model's (near-ai.ts) */
@@ -662,6 +665,32 @@ async function loop(
       totals.model = c.model;
       totals.signature = c.signature;
       await settle(hold, paid);
+      // its usage record (usage/v1): a recorded run spends nothing, so it has none
+      if (llm.kind !== 'recorded') {
+        const failed = c.failed_usd ?? 0;
+        await Promise.resolve(
+          opts.onUsage?.({
+            account: ledger?.account ?? null,
+            record: {
+              petal: 'usage/v1',
+              call: c.inference_id ?? null,
+              completion: c.completion_id,
+              run: runId,
+              at: new Date().toISOString(),
+              model: c.model,
+              tokens: { in: c.usage.in, cached: c.usage.cached ?? 0, out: c.usage.out },
+              list_price: c.list_price ?? { in: 0, cached: 0, out: 0 },
+              computed_usd: Math.round((c.cost_usd - failed) * 1e9) / 1e9,
+              failed_usd: failed,
+              charged_usd: paid,
+              billed_usd: null,
+              reconciled_at: null,
+            },
+          }),
+        ).catch((e) =>
+          console.warn(`petal: run ${runId} couldn't keep a usage record: ${String(e)}`),
+        );
+      }
       if (stopped()) return;
 
       // After a refusal, a call it wasn't offered, or that repeats the refusal, isn't one. Its words

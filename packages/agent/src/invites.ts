@@ -183,6 +183,7 @@ function creditLedger(
       return held;
     });
   return {
+    account,
     spentToday: () => day.spentToday(),
     add: (usd) => day.add(usd),
     async reserve(usd, capUsd) {

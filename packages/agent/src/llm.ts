@@ -37,6 +37,12 @@ export interface LlmCompletion {
   cost_usd: number;
   /** additive (T300): the answer didn't say what it used, so it counts at the call's full hold */
   cost_unknown?: boolean;
+  /** additive (10 Nov, usage/v1): NEAR AI's id for the call, which its billing knows */
+  inference_id?: string;
+  /** additive (10 Nov, usage/v1): dollars per million tokens it was counted at */
+  list_price?: { in: number; cached: number; out: number };
+  /** additive (10 Nov, usage/v1): of cost_usd, what attempts that failed before this answer were counted at */
+  failed_usd?: number;
   fallback_used: boolean;
   /** provider_tee when available; null for recorded runs ("recorded run, no signature") */
   signature: ModelSignature | null;
@@ -57,6 +63,11 @@ export interface LlmClient {
   readonly model: string;
   /** The model asked may not be the one that answers: `LlmCompletion.model` says which did. */
   complete(req: LlmRequest, o?: LlmCallOptions): Promise<LlmCompletion>;
+  /**
+   * additive (10 Nov, usage/v1): what the provider itself billed for each call, in dollars, by inference
+   * id. A call it doesn't know yet is left out.
+   */
+  billed?(ids: readonly string[]): Promise<Map<string, number>>;
 }
 
 /** Money set aside for one model call, until it is settled. */
@@ -71,6 +82,8 @@ export interface SpendHold {
  * down, and a caller must then stop spending: the ledger is the cap (SYS-004).
  */
 export interface BudgetLedger {
+  /** additive (10 Nov, usage/v1): the account each call is charged to (person:… or invite:…); none: the sponsor's day */
+  account?: string;
   /** spent today, plus what is held for calls in flight */
   spentToday(): Promise<number>;
   add(usd: number): Promise<void>;
