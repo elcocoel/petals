@@ -149,6 +149,7 @@ This conversation gets one page on this site, where they see your work as it hap
    \`\`\`
 
    With MCP tools, \`add_note\` with \`text\`. That note is all they see of what you said, so leave out only \`open_url\`, which is a key.
+4. **Name the conversation:** with your first reply's note, and again whenever the subject changes, add \`--title "<the subject>"\` to \`note\` (with MCP tools, \`title\` on \`add_note\`). It's the conversation's name in their list: 3 to 6 plain words, the subject, not the request, such as "NEAR validators and their backers", not "Map NEAR's validators for me".
 
 `;
 }
@@ -173,7 +174,7 @@ function commands(): string {
 | \`validate_spec\` | \`validate @spec.json --interpretation @interpretation.json\` |
 | \`render_flower\` | \`render @spec.json\` |
 | \`list_flowers\`, \`get_flower\` | \`flowers [network]\`, \`flower <id>\` |
-| \`start_exploration\`, \`add_note\` | \`start --client … --question …\` (and it opens the page), \`note\` (text from a heredoc) |
+| \`start_exploration\`, \`add_note\` | \`start --client … --question …\` (and it opens the page), \`note [--title …]\` (text from a heredoc) |
 | \`brain_route\`, \`brain_file\` | \`brain-route --question …\` (your app and what you're doing), \`brain-file <id>\` |
 | \`take_job\`, \`report_job\` | \`take-job\`, \`report-job --job <id> --input @report.json\` |
 | one of the person's agents | \`join <agent link> --as <your app>\` once, then \`jobs wait\`, again after each job |

@@ -53,7 +53,8 @@ const FOLLOW =
   'set to the app you run in. Give them open_url, or open it for them if you can: it shows this work ' +
   'as it happens. Pass link.url as exploration, not the exp_ id: save_step after each render_flower, ' +
   "and before you finish each answer, add_note with text: the person's words, then your reply word " +
-  'for word.';
+  'for word. With the first answer, and again when the subject changes, add_note also takes title, ' +
+  "the conversation's name in their list: 3 to 6 plain words, the subject, not the request.";
 
 /** What a request says its client is, on a protocol that says so on each request (2026-07-28 on). */
 function clientOf(meta: unknown): string | undefined {
