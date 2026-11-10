@@ -245,6 +245,8 @@ async function loop(
     turns: 0,
     in: 0,
     out: 0,
+    /** of `in`, what NEAR AI read from its cache, at the cache-read price */
+    cached: 0,
     usd: 0,
     fallback: false,
     // until a model answers: `done` with no turns means nobody did, and its readers say so
@@ -276,7 +278,11 @@ async function loop(
         turns: totals.turns,
         model: totals.model,
         fallback_used: totals.fallback,
-        tokens: { in: totals.in, out: totals.out },
+        tokens: {
+          in: totals.in,
+          out: totals.out,
+          ...(totals.cached ? { cached: totals.cached } : {}),
+        },
         cost_usd: Math.round(totals.usd * 1e6) / 1e6,
         signature: totals.signature,
         ...(totals.context ? { context_tokens: totals.context } : {}),
@@ -651,6 +657,7 @@ async function loop(
       const paid = c.cost_unknown ? Math.max(c.cost_usd, hold?.usd ?? 0) : c.cost_usd;
       totals.turns++;
       totals.in += c.usage.in;
+      totals.cached += c.usage.cached ?? 0;
       totals.out += c.usage.out;
       totals.context = c.usage.in;
       totals.usd += paid;

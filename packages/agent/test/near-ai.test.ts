@@ -334,6 +334,26 @@ describe('nearAiClient', () => {
     expect(c.cost_usd).toBeCloseTo(own + costUsd(DEFAULT_MODEL, c.usage), 9);
   });
 
+  test('cached input is counted at the cache-read rate NEAR AI bills it at', async () => {
+    const { llm } = client(fakeNearAi({ cached: 900 }));
+    const c = await llm.complete(ASK);
+    expect(c.usage).toMatchObject({ in: 1000, out: 100, cached: 900 });
+    // DeepSeek: 100 uncached at $0.30, 900 cached at $0.006, 100 out at $1.20, per million
+    expect(c.cost_usd).toBeCloseTo((100 * 0.3 + 900 * 0.006 + 100 * 1.2) / 1e6, 9);
+    expect(c.cost_usd).toBeLessThan(costUsd(DEFAULT_MODEL, { in: 1000, out: 100 }));
+  });
+
+  test('an attempt that timed out is counted at its input in full, not at the whole chat', async () => {
+    const { llm } = client(fakeNearAi({ fail: { [DEFAULT_MODEL]: 504 } }));
+    const c = await llm.complete(ASK);
+    expect(c.model).toBe(FALLBACK_MODELS[0]);
+    expect(c.cost_unknown).toBeUndefined();
+    expect(c.cost_usd).toBeCloseTo(
+      costUsd(FALLBACK_MODELS[0] as string, c.usage) + costUsd(DEFAULT_MODEL, { in: 1000, out: 0 }),
+      9,
+    );
+  });
+
   test('fetches the attestation report before the completion, the signature right after', async () => {
     const { llm, fake } = client();
     await llm.complete(ASK);

@@ -32,7 +32,8 @@ export interface LlmCompletion {
   model: string;
   completion_id: string;
   message: { role: 'assistant'; content: string | null; tool_calls?: LlmToolCall[] };
-  usage: { in: number; out: number };
+  /** `cached`: the part of `in` NEAR AI read from its cache, billed at the cache-read price */
+  usage: { in: number; out: number; cached?: number };
   cost_usd: number;
   /** additive (T300): the answer didn't say what it used, so it counts at the call's full hold */
   cost_unknown?: boolean;

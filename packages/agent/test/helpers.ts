@@ -271,6 +271,8 @@ export function fakeNearAi(
     llm?: LlmClient;
     /** model -> HTTP status it fails with */
     fail?: Record<string, number>;
+    /** of each answer's 1000 input tokens, how many it says it read from its cache */
+    cached?: number;
     /** the `error.type` of those failures, as NEAR AI's 402s carry one */
     failType?: string;
     /** models whose answer is all reasoning: cut off by the token limit, with empty content */
@@ -360,7 +362,14 @@ export function fakeNearAi(
               },
             },
           ],
-          usage: { prompt_tokens: 1000, completion_tokens: 100, total_tokens: 1100 },
+          usage: {
+            prompt_tokens: 1000,
+            completion_tokens: 100,
+            total_tokens: 1100,
+            ...(o.cached !== undefined
+              ? { prompt_tokens_details: { cached_tokens: o.cached } }
+              : {}),
+          },
         }),
       );
       exchanges.set(id, { model: req.model, request: enc.encode(body ?? ''), response: res });

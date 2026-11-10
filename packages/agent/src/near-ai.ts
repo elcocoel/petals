@@ -40,24 +40,30 @@ export function chosenModel(env: Record<string, string | undefined> = process.en
 }
 
 /**
- * USD per million tokens (research R10; GET /v1/models on 2026-11-05). Cached input is cheaper on
- * NEAR AI (input_cache_read); it is priced in full here, so spend is never under-counted.
+ * USD per million tokens (research R10; GET /v1/models on 2026-11-05, again 10 Nov: unchanged). Cached input
+ * is billed at the cache-read rate (input_cache_read; docs.near.ai/cloud/guides/prompt-caching): a chat
+ * resends its whole thread each call, so most of what it sends is read from the cache.
  */
-export const PRICES: Record<string, { in: number; out: number }> = {
-  'z-ai/glm-5.3-flash': { in: 0.08, out: 0.5 },
-  'Qwen/Qwen3.8-27B': { in: 0.04, out: 1.35 },
-  'deepseek-ai/DeepSeek-V4.1-Flash-1017': { in: 0.3, out: 1.2 },
+export const PRICES: Record<string, { in: number; out: number; cached: number }> = {
+  'z-ai/glm-5.3-flash': { in: 0.08, out: 0.5, cached: 0.012 },
+  'Qwen/Qwen3.8-27B': { in: 0.04, out: 1.35, cached: 0.018 },
+  'deepseek-ai/DeepSeek-V4.1-Flash-1017': { in: 0.3, out: 1.2, cached: 0.006 },
 };
-/** A model missing from PRICES and from NEAR AI's list: the dearest rates above. */
+/** A model missing from PRICES and from NEAR AI's list: the dearest rates above, its cache read in full. */
 const UNKNOWN_PRICE = { in: 0.3, out: 1.35 };
 
+type Price = { in: number; out: number; cached?: number };
+
+/** What a call cost: its uncached input, its cached input at the cache-read rate, and its output. */
 export function costUsd(
   model: string,
-  usage: { in: number; out: number },
-  listed?: { in: number; out: number },
+  usage: { in: number; out: number; cached?: number },
+  listed?: Price,
 ): number {
-  const p = PRICES[model] ?? modelOf(model)?.usd_per_million ?? listed ?? UNKNOWN_PRICE;
-  return Math.round(((usage.in * p.in + usage.out * p.out) / 1e6) * 1e9) / 1e9;
+  const p: Price = PRICES[model] ?? modelOf(model)?.usd_per_million ?? listed ?? UNKNOWN_PRICE;
+  const cached = Math.min(usage.cached ?? 0, usage.in);
+  const usd = (usage.in - cached) * p.in + cached * (p.cached ?? p.in) + usage.out * p.out;
+  return Math.round((usd / 1e6) * 1e9) / 1e9;
 }
 
 /**
@@ -242,11 +248,25 @@ function classify(e: unknown, model: string): LlmCallError {
 }
 
 /** What the answer says it used. A count that's missing, or none at all, is no count. */
-function usageOf(usage: { prompt_tokens?: unknown; completion_tokens?: unknown } | undefined) {
+function usageOf(
+  usage:
+    | {
+        prompt_tokens?: unknown;
+        completion_tokens?: unknown;
+        prompt_tokens_details?: { cached_tokens?: unknown } | null;
+      }
+    | undefined,
+) {
   const count = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) && n >= 0 ? n : null);
   const [input, output] = [count(usage?.prompt_tokens), count(usage?.completion_tokens)];
+  // the input read from NEAR AI's cache, null or 0 on a first call (docs: prompt caching)
+  const cached = count(usage?.prompt_tokens_details?.cached_tokens);
   return {
-    usage: { in: input ?? 0, out: output ?? 0 },
+    usage: {
+      in: input ?? 0,
+      out: output ?? 0,
+      ...(cached ? { cached: Math.min(cached, input ?? 0) } : {}),
+    },
     known: input !== null && output !== null && input + output > 0,
   };
 }
@@ -315,11 +335,16 @@ export function createNearAiClient(
           headers: { Authorization: `Bearer ${key()}` },
         });
         const list = (await res.json()) as {
-          data?: { id: string; pricing?: { input?: unknown; output?: unknown } }[];
+          data?: {
+            id: string;
+            pricing?: { input?: unknown; output?: unknown; input_cache_read?: unknown };
+          }[];
         };
         const p = list.data?.find((m) => m.id === model)?.pricing;
         if (typeof p?.input === 'number' && typeof p.output === 'number') {
-          return { in: p.input, out: p.output };
+          // per token, as text ("0.000000006"), where input and output are per million
+          const cached = Number(p.input_cache_read) * 1e6;
+          return { in: p.input, out: p.output, ...(cached >= 0 ? { cached } : {}) };
         }
       } catch {
         // falls through to the warning
@@ -476,7 +501,8 @@ export function createNearAiClient(
       const order = [...models.slice(first), ...models.slice(0, first)];
       const failures: LlmCallError[] = [];
       let lost = 0; // what failed attempts still cost, so spend is never under-counted
-      let unknown = false; // and one of them may have cost more than anyone can say
+      // the models whose attempt may have cost more than anyone can say (a timeout, no answer)
+      const unknownOn: string[] = [];
       for (const model of order) {
         try {
           const out = await callModel(model, req, {
@@ -485,16 +511,18 @@ export function createNearAiClient(
             ...(effort !== undefined ? { effort } : {}),
           });
           healthy = true;
-          return {
-            ...out,
-            cost_usd: out.cost_usd + lost,
-            ...(unknown ? { cost_unknown: true } : {}),
-          };
+          // An attempt that said nothing of its cost was sent the same request this answer read: it's
+          // counted at that input in full, uncached, rather than at the whole chat's hold.
+          const unsaid = unknownOn.reduce(
+            (sum, m) => sum + costUsd(m, { in: out.usage.in, out: 0 }),
+            0,
+          );
+          return { ...out, cost_usd: out.cost_usd + lost + unsaid };
         } catch (e) {
           const err = classify(e, model);
           failures.push(err);
-          lost += err.costUsd;
-          unknown ||= err.costUnknown;
+          if (err.costUnknown) unknownOn.push(model);
+          else lost += err.costUsd;
           // Stop says nothing about this model, so no fallback, and its health stands
           if (signal?.aborted) {
             throw new LlmCallError('source_failed', `${model}: stopped`, {
@@ -507,7 +535,7 @@ export function createNearAiClient(
               ...(err.hint ? { hint: err.hint } : {}),
               ...(err.retryAfterS ? { retryAfterS: err.retryAfterS } : {}),
               costUsd: lost,
-              costUnknown: unknown,
+              costUnknown: unknownOn.length > 0,
             });
           }
           // the next model goes first for a while, so each turn doesn't wait on a failing one
@@ -525,7 +553,7 @@ export function createNearAiClient(
           retryAfterS: last?.retryAfterS,
           hint: 'Try again in a minute, or bring your own agent.',
           costUsd: lost,
-          costUnknown: unknown,
+          costUnknown: unknownOn.length > 0,
         },
       );
     },
