@@ -26,6 +26,8 @@ export function FlowerTile({
       {/* biome-ignore lint/performance/noImgElement: an SVG from our own API */}
       <img
         className="block w-full border border-hairline"
+        loading="lazy"
+        decoding="async"
         src={image}
         alt={`The flower: ${title}`}
       />
