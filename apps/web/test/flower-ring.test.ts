@@ -44,21 +44,14 @@ const minus = (a: readonly number[], b: readonly number[]) => [
 ];
 
 describe('the same circle as the golden', () => {
-  test.each(NAMES)('%s: the same angles and polygon', (name) => {
-    const { ring, width } = restOf(reading(name).petals);
-    const poly = svg(name).match(/class="petal-poly" d="([^"]+)"/)?.[1] ?? '';
-    const golden = numbers(poly);
-    expect(golden.length).toBe(width.length * 2);
-    width.forEach((_, i) => {
-      // layout() takes its gap along the side; undo that to compare corners
-      const v0 = vertex(ring, i);
-      const v1 = vertex(ring, i + 1);
-      const len = Math.hypot(v1[0] - v0[0], v1[1] - v0[1]);
-      const g = Math.min(1.1, len * 0.22) / 2 / len;
-      expect(v0[0] + (v1[0] - v0[0]) * g).toBeCloseTo(golden[i * 2] as number, 1);
-      expect(v0[1] + (v1[1] - v0[1]) * g).toBeCloseTo(golden[i * 2 + 1] as number, 1);
-    });
-  });
+  test.each(NAMES)(
+    "%s: the golden's polygon is this ring's (the one look draws from it)",
+    (name) => {
+      const { ring } = restOf(reading(name).petals);
+      const poly = svg(name).match(/class="petal-poly"[^>]* d="([^"]+)"/)?.[1] ?? '';
+      expect(poly).toBe(polygonPath(ring));
+    },
+  );
 
   test.each(NAMES)('%s: every height exactly the reading, with no curve and no floor', (name) => {
     const r = reading(name);

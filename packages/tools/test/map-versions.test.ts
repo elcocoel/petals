@@ -3,7 +3,15 @@
 // the build, and a drawing by another skin is the same flower. Test signer and fake map only.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { canonicalJson, entryId, readFlower, renderFlower, sha256Hex, specHash } from '@petal/core';
+import {
+  canonicalJson,
+  entryId,
+  RENDER_VERSION,
+  readFlower,
+  renderFlower,
+  sha256Hex,
+  specHash,
+} from '@petal/core';
 import type { Entry, EntryV1, EntryV2, Reading, Spec } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
 import { callTool } from '../src/registry.ts';
@@ -105,7 +113,7 @@ describe('flower/v2: identity without the drawing', () => {
     expect(entry.petal).toBe('flower/v2');
     expect(entry).not.toHaveProperty('render_sha256');
     expect(entry.drawn_with).toEqual({
-      render: 'render/v1',
+      render: RENDER_VERSION,
       sha256: f.rendered.render_sha256,
     });
     expect(pub.id).toBe(entry.id);
@@ -202,7 +210,7 @@ describe('flower/v2: identity without the drawing', () => {
     const entry = (await r.map.get(pub.key as string, r.map.writer))?.value as EntryV2;
     expect(entry).toMatchObject({
       petal: 'flower/v2',
-      drawn_with: { render: 'render/v1', sha256: f.rendered.render_sha256 },
+      drawn_with: { render: RENDER_VERSION, sha256: f.rendered.render_sha256 },
     });
     expect(entry).not.toHaveProperty('render_sha256');
   });

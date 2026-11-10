@@ -26,7 +26,7 @@ describe('mapTiles', () => {
   test('a flower on the map opens on the canvas as a stored flower, with the gallery’s badge', () => {
     const [tile] = mapTiles([flower({})]);
     expect(tile?.href).toBe('/make?stored=9ac16c8917aa5ca579c8421a');
-    expect(tile?.image).toBe('/api/v1/flowers/9ac16c8917aa5ca579c8421a/svg');
+    expect(tile?.image).toBe('/api/v1/flowers/9ac16c8917aa5ca579c8421a/svg?look=render%2Fv2');
     expect(tile?.badge).toBe('on NEAR');
     expect(tile?.title).toBe('House of Stake');
   });

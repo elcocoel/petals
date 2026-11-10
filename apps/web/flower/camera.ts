@@ -2,6 +2,8 @@
 // moves it on its own (a notch of a wheel, the way back, a bounce off a limit) is a spring, so a hand
 // can take it over at any moment from where it is. The zoom's limits are soft: past them it gives way
 // less and less, and comes back when let go. d3-zoom isn't used here because it snaps to its extent.
+
+import type { View } from '@petal/core/wedge/view';
 import {
   BOUNCE_BACK,
   FIT,
@@ -18,13 +20,7 @@ import {
 import { SHAPE } from './ring.ts';
 import { advance, SNAP, type Spring, type SpringSpec, spring, stepOf } from './spring.ts';
 
-export interface View {
-  k: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+export type { View } from '@petal/core/wedge/view';
 
 /** What the camera fits to and comes back to: a circle in world units. One flower, by default. */
 export interface Home {

@@ -6,6 +6,7 @@ import { readFlower, readingHash } from '../src/reading/index.ts';
 import { renderFlower, SKINS } from '../src/render/index.ts';
 import { snapshotSha256 } from '../src/tables.ts';
 import type { ProposeChoices, Reading, Snapshot } from '../src/types/index.ts';
+import { RENDER_VERSION } from '../src/versions.ts';
 import { descriptorFor } from './descriptors.ts';
 import { GOLDEN_CASES, goldenSpec, readGolden } from './golden-cases.ts';
 import { tinyBackers, validators } from './load.ts';
@@ -78,12 +79,18 @@ describe('readFlower', () => {
 
   test('renderFlower is the reading plus the skin: same details, same legend words', () => {
     const r = renderFlower(spec, s);
-    expect(r.petals).toEqual(reading.details);
-    expect(r.legend.map((l) => l.primitive)).toEqual(reading.legend.map((l) => l.primitive));
-    expect(r.legend.find((l) => l.primitive === 'outline')?.keys?.map((k) => k.label)).toEqual([
-      'solid: self-declared or verified',
-    ]);
-    const drawn = SKINS['render/v1'](reading, { size: 800, thumb: false });
+    // The same details, but for the tail's wording: the one look paints it in a tone, not hatched.
+    const unhatched = reading.details.map((d) => ({
+      ...d,
+      values: d.values.map((v) => ({ ...v, explains: v.explains.replace(/^hatched: /, '') })),
+    }));
+    expect(r.petals).toEqual(unhatched);
+    // The legend is what the look draws: the reading's lines for the dimensions it paints.
+    const drawnHere = ['width', 'height', 'colour', 'segments', 'order', 'tail'];
+    expect(r.legend.map((l) => l.primitive)).toEqual(
+      reading.legend.map((l) => l.primitive).filter((x) => drawnHere.includes(x)),
+    );
+    const drawn = SKINS[RENDER_VERSION](reading, { size: 800, thumb: false });
     expect(drawn.svg).toBe(r.svg);
   });
 

@@ -1,4 +1,5 @@
 // Where the site's words point, in one place. Landing anchors start with / so they work from any page.
+import { flowerImage } from './flower-view.ts';
 
 /** /make puts q in its box, unsent: one press asks it. */
 export const askHref = (question: string) => `/make?q=${encodeURIComponent(question)}`;
@@ -28,5 +29,5 @@ export const siteLinks = {
   },
   howItWorks: '/#how-it-works',
   liveShape: `/f/${LIVE_SHAPE}`,
-  liveShapeImage: `/api/v1/flowers/${LIVE_SHAPE}/svg`,
+  liveShapeImage: flowerImage(LIVE_SHAPE),
 } as const;

@@ -1,6 +1,8 @@
 // The drawing: one SVG, built once, then attributes written on it. React doesn't touch it after it
 // mounts, so a frame costs what it costs here and nothing else. Colours are token roles; no other
 // colour appears on this flower.
+
+import { paintOf } from '@petal/core/wedge/paint';
 import type { View } from './camera.ts';
 import { GUTTER } from './feel.ts';
 import { LABEL_POOL, type Marks, NOTE_POOL } from './marks.ts';
@@ -183,9 +185,11 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
     ),
   );
 
+  // figure.petal-wedge: each petal in its own colour from the reading, as the still picture paints it.
+  const paints = m.petals.map((p) => paintOf(p));
   const petals: Slot<SVGPathElement>[] = [];
   for (let i = 0; i < m.n; i++) {
-    petals.push(slot(el('path', {}, petalsGroup.node)));
+    petals.push(slot(el('path', { fill: paints[i] as string }, petalsGroup.node)));
   }
   // Under the raised petal: the ground, a line wider than it, so where its tip lies over a neighbour
   // it's as solid as anywhere and the same line runs round it.
@@ -403,7 +407,7 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
       list = segs.map(() => slot(el('path', {}, petalsGroup.node)));
       bands[i] = list;
       const lit = litSteps[i] as number;
-      if (lit) for (const b of list) b.set('fill', accentFill(lit));
+      if (lit) for (const b of list) b.set('fill', accentFill(lit, PETAL));
     }
     if (!bandsOn[i]) {
       bandsOn[i] = 1;
@@ -424,10 +428,11 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
     });
   };
 
-  const accentFill = (step: number) =>
+  /** The accent, mixed into what the petal is painted with at rest. */
+  const accentFill = (step: number, from: string) =>
     step >= ACCENT_STEPS
       ? LIT
-      : `color-mix(in srgb, ${LIT} ${Math.round((100 * step) / ACCENT_STEPS)}%, ${PETAL})`;
+      : `color-mix(in srgb, ${LIT} ${Math.round((100 * step) / ACCENT_STEPS)}%, ${from})`;
 
   const writeAccent = (accent: Channel) => {
     const { x } = accent;
@@ -436,8 +441,9 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
       if (step === litSteps[i]) continue;
       litSteps[i] = step;
       const path = petals[i] as Slot<SVGPathElement>;
-      path.set('fill', step === 0 ? PETAL : accentFill(step));
-      for (const b of bands[i] ?? []) b.set('fill', step === 0 ? PETAL : accentFill(step));
+      const own = paints[i] as string;
+      path.set('fill', step === 0 ? own : accentFill(step, own));
+      for (const b of bands[i] ?? []) b.set('fill', step === 0 ? PETAL : accentFill(step, PETAL));
     }
   };
 

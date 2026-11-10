@@ -82,7 +82,7 @@ describe('packages/v1 surface', () => {
       tools: 'tools/v2',
       api: 'api/v1',
       map: 'map/v2',
-      render: 'render/v1',
+      render: 'render/v2',
       reading: 'reading/v1',
       recipe: 'recipe/v1',
       convention: 'default/v1',

@@ -5,7 +5,6 @@ import { buildSpec } from '../src/convention/index.ts';
 import { InvalidSpecError } from '../src/errors.ts';
 import { specHash } from '../src/hash.ts';
 import { widthFactors } from '../src/reading/encodings.ts';
-import { layout } from '../src/render/geometry.ts';
 import { renderFlower } from '../src/render/index.ts';
 import { selectPetals } from '../src/select.ts';
 import { snapshotSha256 } from '../src/tables.ts';
@@ -58,63 +57,56 @@ describe('renderFlower on the NEAR validators fixture (segments: backers)', () =
   const spec = specFor(s, { segments: 'backers' });
   const r = renderFlower(spec, s);
 
-  test('root element as renderer.md states it', () => {
+  test('root element as renderer.md states it, now render/v2', () => {
     expect(r.svg.split('\n')[0]).toBe(
-      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-label="NEAR validators" data-petal="render/v1" data-spec="${specHash(spec)}">`,
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-label="NEAR validators" data-petal="render/v2" data-spec="${specHash(spec)}">`,
     );
     expect(r.svg.endsWith('</svg>\n')).toBe(true);
   });
 
-  test('fixed element order: style, defs, polygon, bars, outlines, labels', () => {
+  test('fixed element order: style, the petals, the polygon, the names, the title', () => {
     const at = (needle: string) => r.svg.indexOf(needle);
     const order = [
       '<style>',
-      '<defs>',
-      'class="petal-poly"',
       'class="petal-bars"',
-      'class="petal-outlines"',
-      'class="petal-labels"',
+      'class="petal-poly"',
+      '</text>',
       'class="petal-centre"',
     ].map(at);
     expect(order.every((x) => x > 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 
-  test('every bar segment carries class, data-p, data-i, data-seg and a spec-derived id', () => {
-    const segs = [
+  test('every petal is drawn, each part carrying data-p and data-i, a banded one cut into its backers', () => {
+    const wedges = [
       ...r.svg.matchAll(
-        /<path id="s-(\d+)-(\w+)" class="petal-seg[^"]*"(?: fill="[^"]+")? data-p="([^"]+)" data-i="(\d+)" data-seg="(\w+)" d="[^"]+"\/>/g,
+        /<path(?: class="(c-[\w-]+)")?(?: style="fill:var\(--tail\)")? data-p="([^"]+)" data-i="(\d+)"(?: data-seg="(\w+)")? d="[^"]+"\/>/g,
       ),
     ];
-    expect(segs.length).toBe((r.svg.match(/petal-seg/g) ?? []).length);
-    for (const m of segs) {
-      expect(m[1]).toBe(m[4]);
-      expect(m[2]).toBe(m[5]);
-    }
-    expect(new Set(segs.map((m) => m[3])).size).toBe(61);
-    expect(segs.map((m) => m[5])).toEqual(
-      expect.arrayContaining(['other', 'large', 'liquid', 'lockup', 'tail']),
+    expect(new Set(wedges.map((m) => m[2])).size).toBe(61);
+    expect([...new Set(wedges.map((m) => Number(m[3])))]).toEqual([...Array(61).keys()]);
+    expect(wedges.every((m) => m[1] || m[2] === '__tail')).toBe(true);
+    expect(wedges.map((m) => m[4]).filter(Boolean)).toEqual(
+      expect.arrayContaining(['other', 'large', 'liquid', 'lockup']),
     );
   });
 
-  test('the tail: data-p="__tail", the hatch pattern, labelled with its count and share', () => {
-    expect(r.svg).toMatch(
-      /fill="url\(#petal-hatch-[0-9a-f]{8}\)" data-p="__tail" data-i="60" data-seg="tail"/,
-    );
+  test('the tail: data-p="__tail", in the tail\'s tone, named with its count and share', () => {
+    expect(r.svg).toMatch(/style="fill:var\(--tail\)" data-p="__tail" data-i="60"/);
     expect(r.svg).toContain('>everyone else (311) 13.8%</text>');
   });
 
-  test('straight edges only: paths use M, L and Z, nothing that curves', () => {
-    for (const [, d] of r.svg.matchAll(/ d="([^"]+)"/g)) expect(d).toMatch(/^M[-0-9. L]+Z$/);
+  test('straight edges only: paths use M and L, closed by Z, nothing that curves', () => {
+    for (const [, d] of r.svg.matchAll(/ d="([^"]+)"/g)) expect(d).toMatch(/^M[-0-9. L]+Z?$/);
   });
 
-  test('coordinates are written with two decimals', () => {
+  test('coordinates are written with at most three decimals, and no -0', () => {
     const numbers = [...r.svg.matchAll(/ (?:d|x|y)="([^"]+)"/g)].flatMap(
       ([, v]) => (v ?? '').match(/-?\d+(\.\d+)?/g) ?? [],
     );
-    expect(numbers.length).toBeGreaterThan(1000);
-    for (const n of numbers) expect(n).toMatch(/^-?\d+\.\d\d$/);
-    expect(r.svg).not.toContain('-0.00');
+    expect(numbers.length).toBeGreaterThan(500);
+    for (const n of numbers) expect(n).toMatch(/^-?\d+(\.\d{1,3})?$/);
+    expect(r.svg).not.toMatch(/[ "ML]-0[ "L]/);
   });
 
   test('colours are CSS custom properties with a .petal-dark override; no script', () => {
@@ -124,12 +116,12 @@ describe('renderFlower on the NEAR validators fixture (segments: backers)', () =
     expect(r.svg).not.toContain('<script');
   });
 
-  test('legend: every primitive used, an order line, the tail, with meanings and sources from the spec', () => {
+  test('legend: what this look draws, an order line, the tail, with meanings and sources from the spec', () => {
+    // Outlines aren't drawn in the one look yet, so the legend leaves them out.
     expect(r.legend.map((l) => l.primitive)).toEqual([
       'width',
       'height',
       'colour',
-      'outline',
       'segments',
       'order',
       'tail',
@@ -139,12 +131,6 @@ describe('renderFlower on the NEAR validators fixture (segments: backers)', () =
       expect(l.meaning).toBe(e.meaning);
       expect(l.sources).toEqual(e.sources);
     }
-    expect(r.legend.find((l) => l.primitive === 'segments')?.keys?.map((k) => k.label)).toEqual([
-      'other delegators',
-      'accounts with 1M+ NEAR',
-      'liquid-staking contracts',
-      'lockups (vesting)',
-    ]);
     expect(r.legend.find((l) => l.primitive === 'order')?.meaning).toBe(
       'largest first, clockwise from the top',
     );
@@ -245,19 +231,13 @@ describe('renderFlower refuses (FR-032)', () => {
 });
 
 describe('renderFlower geometry', () => {
-  test('two participants: two petals, no tail, the wide side split so the polygon stays closed', () => {
+  test('two participants: two wedges, no tail, the polygon closed', () => {
     const s = twoParticipants();
     const r = renderFlower(specFor(s), s);
     expect(r.petals.map((p) => p.id)).toEqual(['astro-stakers.poolv1.near', 'figment.poolv1.near']);
     expect(r.svg).not.toContain('__tail');
-    const rows = selectPetals(s, specFor(s).selection);
-    const g = layout(rows, widthFactors(rows, specFor(s).encodings.width), [1, 1], {
-      size: 800,
-      thumb: false,
-    });
-    expect(g.petals.map((p) => p.sides.length)).toEqual([10, 1]); // 4.19 rad split into 0.45-rad sides
-    const poly = r.svg.match(/class="petal-poly" d="M([^"]+)Z"/)?.[1]?.split('L') ?? [];
-    expect(poly).toHaveLength(11);
+    expect((r.svg.match(/ data-p="/g) ?? []).length).toBe(2);
+    expect(r.svg).toMatch(/class="petal-poly"[^>]* d="M[^"]+Z"/);
   });
 
   test('width stays in the band: widest side at most max_ratio times the narrowest', () => {
@@ -303,21 +283,15 @@ describe('renderFlower geometry', () => {
       const tail = r.petals.at(-1);
       expect(tail?.id).toBe('__tail');
       expect(tail?.count).toBe(1000 - (c.petals ?? 60));
-      for (const [, d] of r.svg.matchAll(/ d="([^"]+)"/g)) expect(d).toMatch(/^M[-0-9. L]+Z$/);
+      for (const [, d] of r.svg.matchAll(/ d="([^"]+)"/g)) expect(d).toMatch(/^M[-0-9. L]+Z?$/);
     }
   });
 
-  test('outline: solid for self-declared, dashed (3 2) for inferred, none for unknown', () => {
+  test("outlines aren't drawn yet in the one look, and the legend says nothing of them", () => {
     const s = population(30);
     const r = renderFlower(specFor(s, {}, 'm'), s);
-    expect(r.svg).toContain('.petal-outline.inferred{stroke-dasharray:3 2}');
-    const outlines = [
-      ...r.svg.matchAll(/<path class="petal-outline( inferred)?" data-p="(p\d+)"/g),
-    ];
-    const expected = s.participants
-      .filter((p) => p.identity)
-      .map((p) => [p.id, p.identity?.status === 'inferred']);
-    expect(outlines.map((m) => [m[2], Boolean(m[1])])).toEqual(expected);
+    expect(r.svg).not.toContain('class="petal-outline');
+    expect(r.legend.map((l) => l.primitive)).not.toContain('outline');
   });
 
   test('height m:<metric> draws from another holding measure', () => {

@@ -461,7 +461,7 @@ describe('the panel', () => {
     const shelf = shelfView(listed, false);
     expect(shelf.pending).toBe(false);
     expect(shelf.tiles[0]).toMatchObject({ title: 'abc', badge: 'On NEAR' });
-    expect(shelf.tiles[0]?.image).toBe('/api/v1/flowers/abc/svg');
+    expect(shelf.tiles[0]?.image).toBe('/api/v1/flowers/abc/svg?look=render%2Fv2');
     expect(shelf.starter?.question).toBeTruthy();
     const pending = shelfView(listed, true);
     expect(pending.pending).toBe(true);
@@ -476,7 +476,7 @@ describe('the panel', () => {
       createElement(FlowerShelf, { view: shelfView(listed, false) }),
     );
     expect(out).toContain('What would you like to map?');
-    expect(out).toContain('/api/v1/flowers/abc/svg');
+    expect(out).toContain('/api/v1/flowers/abc/svg?look=render%2Fv2');
     expect(out).toContain('href="/gallery"');
   });
 });
@@ -558,25 +558,37 @@ describe('the legend of what the canvas draws (T202)', () => {
     }
   });
 
-  test('colour and outline go, because the canvas draws neither; the rest keep their meaning', () => {
+  test("outline goes, because the canvas doesn't draw it; colour stays, since the one look paints it", () => {
     const { legend: kept } = ofLegend(backers.legend);
-    expect(kept.map((i) => i.primitive)).toEqual(['width', 'height', 'segments', 'order', 'tail']);
+    expect(kept.map((i) => i.primitive)).toEqual([
+      'width',
+      'height',
+      'colour',
+      'segments',
+      'order',
+      'tail',
+    ]);
     expect(kept[0]?.meaning).toBe('share of stake in the current epoch, in a 2x band');
     expect(kept.find((i) => i.primitive === 'segments')?.meaning).toContain('who backs the pool');
   });
 
   test('the tail is one petal, not a hatched one, and it says the same otherwise', () => {
-    const was = legend.find((i) => i.primitive === 'tail')?.meaning as string;
-    const now = ofLegend(legend).legend.find((i) => i.primitive === 'tail')?.meaning;
-    expect(was).toContain('one hatched petal');
-    expect(now).toBe(was.replace('one hatched petal', 'one petal'));
+    // The one look already says so (render/v2); the panel says the same of an older drawing's words.
+    const now = ofLegend(legend).legend.find((i) => i.primitive === 'tail')?.meaning as string;
+    expect(now).toContain('one petal');
+    expect(now).not.toContain('hatched');
+    const older = legend.map((i) =>
+      i.primitive === 'tail'
+        ? { ...i, meaning: i.meaning.replace('one petal', 'one hatched petal') }
+        : i,
+    );
+    expect(ofLegend(older).legend.find((i) => i.primitive === 'tail')?.meaning).toBe(now);
   });
 
   test('no source is lost with what went: each is still somewhere, once', () => {
     const { legend: kept, sources } = ofLegend(legend);
     const before = new Set(legend.flatMap((i) => i.sources));
     expect(new Set([...kept.flatMap((i) => i.sources), ...sources])).toEqual(before);
-    expect(sources).toContain('nearblocks-validators');
     expect(new Set(sources).size).toBe(sources.length);
     for (const id of sources) expect(kept.flatMap((i) => i.sources)).not.toContain(id);
   });
@@ -593,13 +605,13 @@ describe('the legend of what the canvas draws (T202)', () => {
     } as PanelFlower['interpretation'];
     const { interpretation, sources } = canvasReading([], reading);
     expect(interpretation?.summary).toBe('Its words stay.');
-    expect(interpretation?.mappings.map((m) => m.primitive)).toEqual(['height']);
-    expect(sources).toEqual(['b', 'c']);
+    expect(interpretation?.mappings.map((m) => m.primitive)).toEqual(['height', 'colour']);
+    expect(sources).toEqual(['c']);
   });
 
   test('a petal says why it looks this way only for what the canvas draws', () => {
     const shown = canvasPetal(first).values.map((v) => v.primitive);
-    expect(shown).toEqual(['width', 'height', 'order']);
+    expect(shown).toEqual(['width', 'height', 'colour', 'order']);
     expect(
       canvasPetal(tail)
         .values.map((v) => v.explains)
@@ -631,6 +643,7 @@ describe('the legend of what the canvas draws (T202)', () => {
     expect(at(first.id).petal?.values.map((v) => v.primitive)).toEqual([
       'width',
       'height',
+      'colour',
       'order',
     ]);
   });

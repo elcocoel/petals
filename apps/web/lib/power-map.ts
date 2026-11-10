@@ -3,6 +3,8 @@
 // mapping run (research/mapping-run-2026-11-09/INDEX.md), each a saved view on the server. A view's spec is
 // content-addressed, so a drawing never changes and is cached for good. A view the server can't draw is left
 // out. Titles and counts are the run's own.
+
+import { RENDER_VERSION } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { forever } from './api.ts';
 import { decodeDraft } from './draft.ts';
@@ -85,7 +87,10 @@ async function viewSpec(sha: string): Promise<Spec | null> {
 }
 
 async function draw(spec: Spec): Promise<string | null> {
-  const res = await forever('/api/v1/render', { body: { spec, include_svg: true } });
+  // The look is in the address, so a cached drawing is never an older look's (specs/006-the-map, milestone 3).
+  const res = await forever(`/api/v1/render?look=${encodeURIComponent(RENDER_VERSION)}`, {
+    body: { spec, include_svg: true },
+  });
   if (!res?.ok) return null;
   return ((await res.json()) as Rendered).svg || null;
 }
