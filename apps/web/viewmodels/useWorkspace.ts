@@ -290,6 +290,8 @@ export function useWorkspace(props: {
   useEffect(() => {
     const url = workspaceUrl({ runId, open, petal, asked, elsewhere: elsewhereRef });
     if (!url) return;
+    // another page's address (the lobby, mid-move) isn't this conversation's, whatever its search says
+    if (window.location.pathname !== '/make') return;
     const showing = conversationAt(
       Object.fromEntries(new URLSearchParams(window.location.search)) as Record<string, string>,
     );
