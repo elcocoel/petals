@@ -7,6 +7,7 @@ import { Interpretation, SignatureLine } from '../../../../components/Interpreta
 import { QuotePanel } from '../../../../components/QuotePanel.tsx';
 import { api } from '../../../../lib/api.ts';
 import { renderSpec, sourceUrls } from '../../../../lib/flower-data.ts';
+import { dateLabel } from '../../../../lib/flower-view.ts';
 import { explorerTxUrl } from '../../../../lib/publish.ts';
 
 export const dynamic = 'force-dynamic';
@@ -53,16 +54,14 @@ export default async function FlowerPage({ params }: { params: Promise<{ id: str
   return (
     <>
       <h1>{entry.title ?? `Flower ${entry.id}`}</h1>
-      <p>
-        {where === 'map' ? (
+      {/* People's words (design/minimally-good.md, rule 5): where it lives, and a warning only if its
+          entry doesn't match its id. Ids and hashes stay in the API. */}
+      {where === 'map' && (
+        <p>
           <span className="badge">on NEAR</span>
-        ) : (
-          <span className="badge">fixture</span>
-        )}{' '}
-        <span className="muted">
-          id <code>{entry.id}</code> (entry hash {yesNo(verified.entry_hash)})
-        </span>
-      </p>
+        </p>
+      )}
+      {!verified.entry_hash && <p className="error">This flower's entry doesn't match its id.</p>}
       {rendered.ok ? (
         <FlowerSheet spec={entry.spec} rendered={rendered.value} sources={sources} />
       ) : (
@@ -71,19 +70,15 @@ export default async function FlowerPage({ params }: { params: Promise<{ id: str
         </p>
       )}
       {rendered.ok && firstDrawn && rendered.value.render_sha256 !== firstDrawn && (
-        <p className="muted">
-          Same facts, today’s look. It was first drawn as <code>{firstDrawn}</code>.
-        </p>
+        <p className="muted">Same facts, today’s look.</p>
       )}
       <Interpretation reading={entry.interpretation} sources={sources} />
       <SignatureLine signature={agent.signature} model={agent.model} />
       <section>
         <h2>Who made it</h2>
         <p>
-          Agent: {agent.kind}
-          {agent.name ? ` (${agent.name})` : ''}
-          {agent.model ? `, model ${agent.model}` : ''}; made {entry.provenance.created_at}; tools{' '}
-          {entry.provenance.tools_version}.
+          Made by {agent.name ?? agent.kind}
+          {agent.model ? ` with ${agent.model}` : ''}, {dateLabel(entry.provenance.created_at)}.
         </p>
         {maker ? (
           <p>
@@ -93,14 +88,14 @@ export default async function FlowerPage({ params }: { params: Promise<{ id: str
               <>
                 , written in transaction{' '}
                 <a href={explorerTxUrl(tx_hash)} rel="noreferrer">
-                  <code>{tx_hash}</code>
+                  <code>{`${tx_hash.slice(0, 6)}…${tx_hash.slice(-4)}`}</code>
                 </a>
               </>
             )}
             .
           </p>
         ) : (
-          <p className="muted">Not published by a maker: a fixture shipped with Petal.</p>
+          <p className="muted">Not published on NEAR yet.</p>
         )}
       </section>
       <QuotePanel purpose="sponsor_refresh" network={entry.spec.network.id} />
