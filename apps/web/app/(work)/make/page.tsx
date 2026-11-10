@@ -4,6 +4,7 @@
 import { InteractionSurface } from '../../../flower/InteractionSurface.tsx';
 import { viewerView } from '../../../lib/viewer-view.ts';
 import { workspaceHome } from '../../../lib/workspace-home.ts';
+import { conversationAt } from '../../../lib/workspace-url.ts';
 import { OpenedConversation } from './OpenedConversation.tsx';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ export default async function MakePage({ searchParams }: { searchParams: Promise
   return (
     // A conversation opened by a move (a link, New, back or forward) starts clean (design/minimally-good.md,
     // rule 3), inside the panel that stays; a refresh of this page's data keeps the one that's open.
-    <OpenedConversation>
+    <OpenedConversation opens={conversationAt(q)}>
       <InteractionSurface
         {...(await workspaceHome(q, person.hash))}
         // Elco's open choices, read from the address until they're chosen: ?box=ink and ?order=scatter.
