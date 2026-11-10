@@ -651,7 +651,7 @@
 }
 
 /* box.cycle */
-:root[data-version="2"] [data-b="box"][data-kind="scene"] > [data-progress] {
+:root[data-version="2"] [data-b="box"][data-kind="scene"] [data-progress] {
   display: block;
   scale: 0 1;
   transform-origin: left;
@@ -659,12 +659,12 @@
 
 @media (prefers-reduced-motion: no-preference) {
   /* box.cycle */
-  :root[data-version="2"] [data-b="box"][data-kind="scene"][data-current] > [data-progress] {
+  :root[data-version="2"] [data-b="box"][data-kind="scene"][data-current] [data-progress] {
     animation: box-cycle var(--joy-dur-cycle) var(--joy-ease-cycle) forwards;
   }
 
   /* box.cycle */
-  :root[data-version="2"] [data-paused] [data-b="box"][data-kind="scene"] > [data-progress] {
+  :root[data-version="2"] [data-paused] [data-b="box"][data-kind="scene"] [data-progress] {
     animation-play-state: paused;
   }
 }

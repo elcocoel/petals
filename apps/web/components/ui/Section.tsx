@@ -29,6 +29,7 @@ export function Section({
   layout,
   figure = 'end',
   rule,
+  bleed = false,
   id,
   head,
   foot,
@@ -45,6 +46,8 @@ export function Section({
   figure?: keyof typeof SPLIT;
   /** A hairline on this edge, the whole width of the window. */
   rule?: keyof typeof RULES;
+  /** A child runs out to the window's edges: the band clips what passes them, so the page never scrolls sideways. */
+  bleed?: boolean;
   id?: string;
   /** What sits over and under a layout's columns. */
   head?: ReactNode;
@@ -66,7 +69,9 @@ export function Section({
       data-tone={tone}
       data-b="surface"
       id={id}
-      className={rule && RULES[rule]}
+      className={
+        [rule && RULES[rule], bleed && 'overflow-x-clip'].filter(Boolean).join(' ') || undefined
+      }
     >
       <div className={`mx-auto w-full max-w-page-width antialiased ${PADDING[padding]}`}>
         {head && <div className="mb-column-gap">{head}</div>}
