@@ -6,7 +6,7 @@ import { newLive, stepLive } from '../flower/live.ts';
 import { modelOf } from '../flower/model.ts';
 import { SHAPE } from '../flower/ring.ts';
 import { syntheticReading } from '../lab/flower/synthetic.ts';
-import { benchLandscape } from '../lab/map/landscape.ts';
+import { fixtureNight, landscapeOf } from '../lab/map/landscape.ts';
 import {
   backbone,
   footprint,
@@ -241,7 +241,7 @@ describe('bench v2', () => {
   });
 
   test("names are the run's, without their notes, and one chain's names tell its flowers apart", () => {
-    const b = benchLandscape();
+    const b = landscapeOf(fixtureNight());
     const eth = b.flowers.filter((f) => f.place.chain === 'eip155:1').map((f) => f.name);
     expect(eth).toContain('ENS delegates');
     expect(eth).toContain('ENS active holders');
@@ -256,7 +256,7 @@ describe('bench v2', () => {
   });
 
   test('every chain is offered, the most flowers first, by its own name', () => {
-    const b = benchLandscape();
+    const b = landscapeOf(fixtureNight());
     expect(b.chains.map((c) => c.label)).toEqual(
       expect.arrayContaining(['Ethereum', 'Gnosis', 'Solana', 'Arbitrum', 'Base', 'NEAR']),
     );
@@ -265,5 +265,20 @@ describe('bench v2', () => {
       expect(n((b.chains[i - 1] as (typeof b.chains)[number]).chain)).toBeGreaterThanOrEqual(
         n((b.chains[i] as (typeof b.chains)[number]).chain),
       );
+  });
+
+  test('a view the address book lacks gets a place, and every saved place stays', () => {
+    const night = fixtureNight();
+    const before = landscapeOf(night);
+    const first = night.views.find((v) => v.chain === 'ethereum') as (typeof night.views)[number];
+    const more = {
+      ...night,
+      views: [...night.views, { ...first, sha: 'f'.repeat(64), name: 'New one' }],
+    };
+    const after = landscapeOf(more);
+    expect(after.flowers).toHaveLength(before.flowers.length + 1);
+    for (const f of before.flowers)
+      expect(after.flowers.find((g) => g.place.id === f.place.id)?.place).toEqual(f.place);
+    expect(after.flowers.some((g) => g.name === 'New one')).toBe(true);
   });
 });

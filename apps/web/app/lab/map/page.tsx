@@ -17,5 +17,7 @@ type Query = Record<string, string | string[] | undefined>;
 export default async function MapLab({ searchParams }: { searchParams: Promise<Query> }) {
   if (process.env.NODE_ENV === 'production' && process.env.PETAL_LAB !== '1') notFound();
   const q = await searchParams;
-  return <LandscapeCanvas data={benchLandscape()} probe={q.probe === '1'} />;
+  const data = await benchLandscape();
+  if ('error' in data) return <p className="error">The map couldn't be read: {data.error}</p>;
+  return <LandscapeCanvas data={data} probe={q.probe === '1'} />;
 }

@@ -1,6 +1,8 @@
-// Server only. The map bench's data (specs/006-the-map, plan, bench v2): the night's views from the
-// fixture, joined to their places in the address book, the connections between them, and each flower's
-// name and mark. Only what a drawing needs goes to the browser.
+// Server only. The map bench's data (specs/006-the-map, plan, bench v2): the one shared map, read live from
+// GET /api/v1/map (Elco's go, 10 Nov: the lab and Petals' agent see the same map), joined to the places in
+// the address book, the connections between them, and each flower's name and mark. A view the address book
+// doesn't have yet gets a place worked out here, and nobody else moves. Only what a drawing needs goes to the
+// browser.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
@@ -13,9 +15,11 @@ import {
   type Night,
   type NightView,
   PLACES_FILE,
+  seedsOf,
 } from '../../landscape/night.ts';
-import type { Continent, Place, Places } from '../../landscape/places.ts';
+import { type Continent, type Place, type Places, placeFlowers } from '../../landscape/places.ts';
 import { type Road, roadsBetween } from '../../landscape/roads.ts';
+import { api } from '../../lib/api.ts';
 import { repoRoot } from '../../lib/config.ts';
 import { chainLabel } from '../../lib/flower-view.ts';
 
@@ -70,12 +74,61 @@ function symbolOf(v: NightView, name: string): string {
   return (name[0] ?? '?').toUpperCase();
 }
 
-export function benchLandscape(): BenchLandscape {
-  const root = repoRoot();
-  const night = JSON.parse(
-    gunzipSync(readFileSync(join(root, NIGHT_FIXTURE))).toString('utf8'),
+/** A view as GET /api/v1/map gives it (SYSTEMS, 10 Nov). */
+interface LiveView {
+  sha: string;
+  name: string | null;
+  title: string;
+  network: string;
+  chain: string;
+  address: string | null;
+  count: number | null;
+  as_of: string;
+  snapshot: string;
+  reading: NightView['reading'];
+}
+
+/** The live map, in the shape the bench's fixture has: a view without a name from the run takes its title. */
+export async function liveNight(): Promise<Night | { error: string }> {
+  const got = await api<Omit<Night, 'views'> & { views: LiveView[] }>('/api/v1/map');
+  if (!got.ok) return { error: got.error.message };
+  const { views, ...rest } = got.value;
+  return {
+    ...rest,
+    run: 'GET /api/v1/map',
+    views: views.map((v) => ({
+      sha: v.sha,
+      name: v.name ?? v.title,
+      chain: v.chain,
+      address: v.address ?? '',
+      reader: v.network,
+      count: v.count === null ? '' : String(v.count),
+      status: '',
+      as_of: v.as_of,
+      snapshot: v.snapshot,
+      reading: v.reading,
+    })),
+  };
+}
+
+/** The night as the fixture holds it: what the tests read, with no network. */
+export function fixtureNight(): Night {
+  return JSON.parse(
+    gunzipSync(readFileSync(join(repoRoot(), NIGHT_FIXTURE))).toString('utf8'),
   ) as Night;
-  const places = JSON.parse(readFileSync(join(root, PLACES_FILE), 'utf8')) as Places;
+}
+
+/** The bench, from the live map. */
+export async function benchLandscape(): Promise<BenchLandscape | { error: string }> {
+  const night = await liveNight();
+  return 'error' in night ? night : landscapeOf(night);
+}
+
+/** A map's flowers at their places: the address book's, and a new place for any view it doesn't have. */
+export function landscapeOf(night: Night): BenchLandscape {
+  const root = repoRoot();
+  const saved = JSON.parse(readFileSync(join(root, PLACES_FILE), 'utf8')) as Places;
+  const places = placeFlowers(seedsOf(night), linksOf(night), saved);
   const views = new Map(night.views.map((v) => [v.sha, v]));
   const placed = places.flowers.filter((p) => views.has(p.id));
 
