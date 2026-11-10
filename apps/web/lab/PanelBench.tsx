@@ -1,4 +1,6 @@
 'use client';
+import type { View } from '@petal/core/types';
+import { DEFAULT_VIEW, type Dimension, EVERY_FLOWER } from '@petal/core/view';
 // The side panel at its real size, on a page of its own (/lab/panel), in each of its states. Its hands
 // work here as on the pages: fold it, open a project, make one, copy the prompt. Nothing leaves the page.
 import { useState } from 'react';
@@ -7,6 +9,8 @@ import { NavItem } from '../components/ui/NavItem.tsx';
 import { WorkMenu, type WorkMenuView } from '../components/workspace/WorkMenu.tsx';
 import type { ListedProject } from '../lib/conversation-list.ts';
 import type { SectionKey } from '../lib/panel-words.ts';
+import { viewChoices } from '../lib/person-view.ts';
+import { isDefault, withData, withScale } from '../lib/view-edit.ts';
 import { PANEL_STATES, type PanelState } from './panel-fixtures.ts';
 
 export function PanelBench({ state }: { state: PanelState }) {
@@ -18,6 +22,9 @@ export function PanelBench({ state }: { state: PanelState }) {
   const [naming, setNaming] = useState(false);
   const [moving, setMoving] = useState<string | null>(null);
   const [placed, setPlaced] = useState<Record<string, string | null>>({});
+  // Settings, saved nowhere: the bench keeps the view it's shown
+  const [view, setView] = useState<View>(DEFAULT_VIEW);
+  const [openDimension, setOpenDimension] = useState<Dimension | null>('colour');
   const menu: WorkMenuView = {
     section,
     choose: (key) => setSection((now) => (now === key ? null : key)),
@@ -53,6 +60,18 @@ export function PanelBench({ state }: { state: PanelState }) {
         conversations={fixture.rows}
         menu={menu}
         you={{ ...fixture.you, leave: () => {} }}
+        settings={{
+          view,
+          defaults: DEFAULT_VIEW,
+          choices: viewChoices(),
+          pieces: EVERY_FLOWER,
+          open: openDimension,
+          onOpen: (d) => setOpenDimension((now) => (now === d ? null : d)),
+          onPick: (d, data) => setView(withData(view, d, data, EVERY_FLOWER, DEFAULT_VIEW)),
+          onScale: (d, scale) => setView(withScale(view, d, scale)),
+          onReset: isDefault(view, DEFAULT_VIEW) ? undefined : () => setView(DEFAULT_VIEW),
+          failed: null,
+        }}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-text-gap p-column-gap">
         <Mono tone="muted">The side panel, in the lab</Mono>

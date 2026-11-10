@@ -9,7 +9,7 @@
 // QuotePanel, PublishFlow, CopyPrompt and Flower still keep their later states in hooks, so only the
 // first state shows here until they take them as props, as the chat's views do. Their controls are
 // live on the page.
-import { DEFAULT_VIEW } from '@petal/core/view';
+import { DEFAULT_VIEW, DIMENSIONS, EVERY_FLOWER } from '@petal/core/view';
 import type { SurfaceName } from '@petal/tokens';
 import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
@@ -80,6 +80,7 @@ import { Profile } from '../components/workspace/Profile.tsx';
 import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
+import { ViewControls } from '../components/workspace/ViewControls.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { DrawingKind } from '../lib/figures.ts';
 import { readingKey, svgImage } from '../lib/flower-view.ts';
@@ -88,8 +89,10 @@ import type { ProfileEditorView } from '../lib/lobby-view.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
+import { viewChoices } from '../lib/person-view.ts';
 import type { Done } from '../lib/thread.ts';
 import { answeredBy, composerView, type TurnRow, threadView } from '../lib/thread-view.ts';
+import { withScale } from '../lib/view-edit.ts';
 import {
   entry,
   flowerRow,
@@ -1286,6 +1289,50 @@ export const registry: LabEntry[] = [
             value="A short bio, in the account’s own words."
             onChange={() => {}}
             lines="several"
+          />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'ViewControls',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/ViewControls.tsx',
+    states: [
+      {
+        name: 'the default, colour open (all of it, live: /lab/panel?state=settings)',
+        render: () => (
+          <ViewControls
+            dimensions={DIMENSIONS}
+            view={DEFAULT_VIEW}
+            defaults={DEFAULT_VIEW}
+            choices={viewChoices()}
+            pieces={EVERY_FLOWER}
+            open="colour"
+            onOpen={() => {}}
+            onPick={() => {}}
+            onScale={() => {}}
+            failed={null}
+          />
+        ),
+      },
+      {
+        name: 'height open on a number, with its scale, and the default to put back',
+        render: () => (
+          <ViewControls
+            dimensions={DIMENSIONS}
+            view={withScale(DEFAULT_VIEW, 'height', 'linear')}
+            defaults={DEFAULT_VIEW}
+            choices={viewChoices()}
+            pieces={EVERY_FLOWER}
+            open="height"
+            onOpen={() => {}}
+            onPick={() => {}}
+            onScale={() => {}}
+            onReset={() => {}}
+            failed={null}
           />
         ),
       },
