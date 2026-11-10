@@ -99,6 +99,8 @@ export function InteractionSurface({
         title={state.composer.label}
         surface={surface}
         hand={hands.input}
+        // Work from another door goes on in its own app: its thread says so, and there's no box to send from.
+        closed={Boolean(state.composer.away)}
       >
         {state.needsWallet && (
           <ConnectWallet

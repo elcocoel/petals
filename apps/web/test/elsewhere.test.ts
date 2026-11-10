@@ -1,4 +1,4 @@
-// A conversation happening in another agent: what the page shows of it, and the composer that can't send.
+// A conversation happening in another agent: what the page shows of it, and where it goes on.
 import type { Spec } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
 import { type ElsewherePacket, elsewhereFlower, elsewhereRows, WHERE } from '../lib/elsewhere.ts';
@@ -25,19 +25,32 @@ describe('what the thread shows', () => {
         notes: [{ text: 'Earlier.', at: '2026-11-06T09:00:00.000Z' }],
       }),
     });
-    expect(rows.map((r) => r.kind)).toEqual(['user', 'message', 'message']);
+    expect(rows.map((r) => r.kind)).toEqual(['user', 'message', 'message', 'note']);
     expect(rows[0]).toMatchObject({ text: 'Who holds Moloch DAO?', label: 'Original question' });
     expect(rows[1]).toMatchObject({ speaker: 'Your own agent' });
     expect(JSON.stringify(rows[1])).toContain('Earlier.');
     expect(rows[2]).not.toHaveProperty('speaker');
     expect(JSON.stringify(rows[2])).toContain('Later.');
+    // it ends by saying where it goes on, since nothing here can send to it
+    expect(rows[3]).toMatchObject({
+      key: 'goes-on',
+      text: "This conversation is with your own agent, so it goes on there, not here. To talk to Petals' agent, start a new conversation.",
+    });
+  });
+
+  test('names the app when it said who it is', () => {
+    const rows = elsewhereRows({
+      packet: packet({ presence: { client: 'Claude Code', last_at: '', last_tool: null } }),
+    });
+    expect(rows.at(-1)).toMatchObject({ kind: 'note' });
+    expect(JSON.stringify(rows.at(-1))).toContain('with Claude Code, so it goes on there');
   });
 
   test('a step with no words adds no row', () => {
     const rows = elsewhereRows({
       packet: packet({ steps: [{ note: null, at: '2026-11-06T10:00:00.000Z' }], notes: [] }),
     });
-    expect(rows.map((r) => r.kind)).toEqual(['user']);
+    expect(rows.map((r) => r.kind)).toEqual(['user', 'note']);
   });
 
   test('one that can’t be read says why', () => {

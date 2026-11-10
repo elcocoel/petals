@@ -34,7 +34,16 @@ const speakerOf = (read: ElsewhereRead) => {
   return `${name.charAt(0).toUpperCase()}${name.slice(1)}`;
 };
 
-/** The question, then what the agent wrote, oldest first. */
+/**
+ * Drafts. Work from another door goes on in that app, not in this page's box: the thread says so where it
+ * ends, and the box for a message isn't shown (Elco, 10 Nov: no dead Send, no "happening" that isn't).
+ */
+export const elsewhereWords = {
+  goesOn: (who: string) =>
+    `This conversation is with ${who}, so it goes on there, not here. To talk to Petals' agent, start a new conversation.`,
+} as const;
+
+/** The question, then what the agent wrote, oldest first, then where it goes on. */
 export function elsewhereRows(read: ElsewhereRead | null): Row[] {
   if (!read) return [];
   if ('failed' in read) return [{ kind: 'error', key: 'failed', text: read.failed }];
@@ -55,6 +64,7 @@ export function elsewhereRows(read: ElsewhereRead | null): Row[] {
         ...(i === 0 ? { speaker: speakerOf(read) } : {}),
       }),
     ),
+    { kind: 'note', key: 'goes-on', text: elsewhereWords.goesOn(whereOf(read)) },
   ];
 }
 
