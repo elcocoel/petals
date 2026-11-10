@@ -6,6 +6,7 @@
 import claimSchema from '../../schema/claim.schema.json' with { type: 'json' };
 import flowerSchema from '../../schema/flower.schema.json' with { type: 'json' };
 import layerSchema from '../../schema/layer.schema.json' with { type: 'json' };
+import seamSchema from '../../schema/seam.schema.json' with { type: 'json' };
 import snapshotSchema from '../../schema/snapshot.schema.json' with { type: 'json' };
 import viewSchema from '../../schema/view.schema.json' with { type: 'json' };
 
@@ -33,6 +34,8 @@ export const schemas: {
   layer: object;
   /** a person's view (006, contracts/view.md): which piece of data each dimension shows */
   view: object;
+  /** what crosses from data to the look (005, seam.md): every piece of data with its kind and standing */
+  seam: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -43,6 +46,7 @@ export const schemas: {
   claim: claimSchema,
   layer: layerSchema,
   view: viewSchema,
+  seam: seamSchema,
 };
 
 /** The two source documents, unchanged. */

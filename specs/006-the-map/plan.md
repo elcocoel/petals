@@ -85,3 +85,32 @@ From "Elco on the first bench" (spec) and Elco's four answers. Lab-only, on `m-f
 | Logos: "Real logos, symbol if none" | `apps/web/scripts/landscape-logos.ts` copies each token's logo once from Trust Wallet's public list (`trustwallet/assets`, by chain folder and checksummed address) into `fixtures/landscape/logos/`. A flower with no logo there gets a mark made from its token symbol: the first word of its title when it reads "SYM holders", "SYM active holders" or "SYM delegates". With no token, the first letter of its name. |
 | Names: "Mark + short name, under" | One line under each flower, always the same size on screen: the mark, then the run's name for it without its notes in brackets, cut at 28 characters. Names never sit on a flower; when two collide, the bigger flower keeps its name and the smaller shows only its mark. On the map, a live flower draws no title of its own. |
 | "the Z dimension here is confused" | One order, bottom to top: roads, flowers, live flowers, names and marks, then the notes of the one flower under the pointer (or the one you've entered). Other live flowers show no notes. |
+
+## Drawing from the viewer's view (after seam/v1, 9 Nov)
+
+META's go once `seam/v1` was live (`1c82b33`); the reading is SYSTEMS's, so this waits for their OK too. Lane `m-face/fe-viewdraw`.
+
+**The change, in one line:** `readFlower(spec, snapshot, view?)`. With a view, each dimension's choice comes from the view, matched against the flower's own data (`seamOf`'s pieces); without one, nothing changes, so the golden readings stay as they are.
+
+**How a view's choice becomes what's drawn today.** The look draws only what it already draws; a choice it can't draw yet shows nothing, and the legend leaves it out ("declared, never imitated").
+
+| Dimension | The view names | Drawn as |
+|---|---|---|
+| height | `share` / `amount` / any amount or count by its name | share (its scale) / amount (log) / that piece, relative to the largest; nothing: equal heights |
+| width | `share` | share in its band; anything else, or nothing: equal |
+| order | anything | largest first (the only order built) |
+| colour | `kind` / `identity` | kind of account / named or anonymous; anything else, or nothing: one colour |
+| outline | `identity` | the identity's status; anything else, or nothing: none |
+| segments | `backers` | the pool's backers; anything else, or nothing: none |
+| markings, texture, lines | anything | nothing yet |
+
+- **A pure step in core,** `encodingsOf(view, spec, seam)`, gives `spec/v1`-shaped encodings with each meaning taken from the data's own label, so the legend is exactly what's drawn. `readFlower` uses them in place of `spec.encodings`. The reading's `spec_sha256` stays the spec's: the flower is the same flower.
+- **The agent's choices stay in its spec,** as its proposal (Elco: "Agent proposes, person adjusts").
+- **Where the view comes from:** `render_flower` and `/api/v1/render` take an optional `view`; the web passes the viewer's. Until a person can set one (the lobby's settings, later), the viewer's view is the default.
+- **A correction:** the default view turns bands on (`segments: backers`), but today's `default/v1` doesn't; the default becomes `segments: null`, so the default view changes no drawing. Its fixture and pin change with it.
+
+**Tests:** without a view, every golden reading is byte-identical; with the default view, the default specs' readings are the same; a view naming a piece a flower lacks draws nothing in that dimension; markings, texture and lines draw nothing yet.
+
+**Elco, 9 Nov: the default view for all.** Until people can set their own view, every flower is drawn by the default; the agent's choices stay with the flower as its proposal and don't show until a person can adopt them.
+
+**SYSTEMS, 9 Nov: OK,** on two conditions: without a view the golden readings stay byte-identical, and with one the reading keeps `reading/v1`'s shape (same fields, only the values the view picks), so it stays v1. Height by a piece's name keeps today's path, `m:<name>` through `measureTable` on the composed snapshot. The optional `view` on `render_flower` and `/api/v1/render` is additive; SYSTEMS raises `tools_version` once for the day's tool changes, so this lane doesn't.

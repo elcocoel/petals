@@ -2,7 +2,7 @@
 // and no repo to clone. Every door gives the person's own agent the same tools, rules and flowers,
 // and it runs them on their computer. The Claude app's chat and ChatGPT run in the cloud, so they can't:
 // their doors stay, because the landing links to them, and say so with the app to use instead.
-import { agentPrompt, getFile, keepCommands } from './agent-prompt.ts';
+import { agentPrompt, connectorAddress, getFile, keepCommands } from './agent-prompt.ts';
 
 export interface Door {
   id: string;
@@ -26,15 +26,21 @@ export function doors(origin: string): Door[] {
       copy: agentPrompt(origin),
       copyLabel: 'Copy this prompt',
     },
+    // A cloud app connects to Petals' server as a connector (brain/chapters/connect-cloud.md, generated);
+    // the words are WORKSPACE's drafts, 9 Nov, for Elco to approve.
     {
       id: 'claude-app',
       title: 'The Claude app',
-      how: 'Its chat runs in the cloud, so it can’t run Petals’ tools on your computer. Use Claude Code instead: in the Claude desktop app, open Code and paste the prompt above.',
+      how: 'Add Petals as a connector: Customize > Connectors, Add custom connector, name it Petals, and paste this address. It reads and draws what Petals already holds. For new readings, use Claude Code.',
+      copy: connectorAddress(origin),
+      copyLabel: 'Copy the address',
     },
     {
       id: 'chatgpt',
       title: 'ChatGPT',
-      how: 'ChatGPT runs in the cloud, so it can’t run Petals’ tools on your computer. Codex can, with the same account: paste the prompt above into Codex.',
+      how: 'On a paid plan, add Petals as an app: in Settings, turn on developer mode (Apps and Connectors, Advanced), then create an app with this address. It reads and draws what Petals already holds. For new readings, use Codex.',
+      copy: connectorAddress(origin),
+      copyLabel: 'Copy the address',
     },
     {
       id: 'claude-code',
@@ -60,7 +66,10 @@ export function doors(origin: string): Door[] {
     {
       id: 'other',
       title: 'Anything else',
-      how: 'Any agent that can run commands on your computer can use the prompt above. One that only chats in the cloud can’t.',
+      // a draft (WORKSPACE, 9 Nov), for Elco to approve
+      how: 'Any agent that can run commands on your computer can use the prompt above. An app that takes an MCP server’s address, such as Cursor, can add Petals with this one instead: it reads and draws what Petals already holds.',
+      copy: connectorAddress(origin),
+      copyLabel: 'Copy the address',
     },
   ];
 }

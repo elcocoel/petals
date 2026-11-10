@@ -112,7 +112,7 @@
       "events": 15
     },
     "body_url": "/api/v1/snapshots/72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec",
-    "tools_version": "tools/v1"
+    "tools_version": "tools/v2"
   },
   "describe": {
     "measures": [
@@ -303,7 +303,7 @@
         "url": "https://rpc.mainnet.fastnear.com"
       }
     ],
-    "tools_version": "tools/v1"
+    "tools_version": "tools/v2"
   },
   "figures": {
     "measure": "validator_stake_current_epoch",
@@ -763,7 +763,7 @@
       "fig:gini",
       "fig:tail"
     ],
-    "tools_version": "tools/v1"
+    "tools_version": "tools/v2"
   },
   "spec": {
     "petal": "spec/v1",

@@ -73,6 +73,7 @@ import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
+import { SocialProfile } from '../components/workspace/SocialProfile.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import { emptyChat } from '../lib/agent-chat.ts';
 import type { DrawingKind } from '../lib/figures.ts';
@@ -1453,10 +1454,8 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/chat/JobRow.tsx',
     states: [
       {
-        name: 'handed, open',
-        render: () => (
-          <JobRow text="Sent to your own agent: Map RaidGuild's proposals" open onCopy={() => {}} />
-        ),
+        name: 'sent to an agent',
+        render: () => <JobRow text="Sent to Claude Code: Map RaidGuild's proposals" />,
       },
       {
         name: 'reported',
@@ -1464,6 +1463,40 @@ export const registry: LabEntry[] = [
           <JobRow
             text="Your own agent finished: Map RaidGuild's proposals"
             summary="246 proposals, by author, added as a layer."
+          />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'SocialProfile',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/SocialProfile.tsx',
+    states: [
+      {
+        name: 'a full profile',
+        render: () => (
+          <SocialProfile
+            profile={{
+              name: 'A name on NEAR Social',
+              about: 'A short bio, in the account’s own words.',
+              avatar: null,
+              links: [
+                { service: 'github', value: 'a-handle' },
+                { service: 'x', value: 'a-handle' },
+                { service: 'website', value: 'example.org' },
+              ],
+            }}
+          />
+        ),
+      },
+      {
+        name: 'a name only',
+        render: () => (
+          <SocialProfile
+            profile={{ name: 'A name on NEAR Social', about: null, avatar: null, links: [] }}
           />
         ),
       },

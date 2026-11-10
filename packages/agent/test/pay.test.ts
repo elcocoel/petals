@@ -280,7 +280,7 @@ describe('paying for Petals’ agent in NEAR', () => {
       ...fakeRegistry().registry,
       tool('read_chain', (_a, ctx) => {
         seen.push(ctx.config.public);
-        return { rows: [], tools_version: 'tools/v1' };
+        return { rows: [], tools_version: 'tools/v2' };
       }),
     ];
     const turns: ScriptTurn[] = [

@@ -12,14 +12,17 @@ import type {
   Reading,
   Run,
 } from '@petal/core/types';
+import type { ConnectedAgent } from './agents.ts';
 import type { Settings } from './composer-options.ts';
 import type { ListedConversation } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
 import type { ListedFlower } from './flower-view.ts';
 import type { Job } from './jobs.ts';
+import { NEAR_SOCIAL_API, type SocialProfile, socialProfile } from './near-social.ts';
 import type { Credit, PayInfo } from './pay.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
+import { viewerView } from './viewer-view.ts';
 
 export interface ChatRequest {
   messages: ChatMessage[];
@@ -291,7 +294,7 @@ export async function drawFlower(specJson: string): Promise<Drawn> {
   const res = await fetch('/api/v1/render', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: `{"spec":${specJson},"include_svg":true,"include_reading":true}`,
+    body: `{"spec":${specJson},"include_svg":true,"include_reading":true,"view":${JSON.stringify(viewerView())}}`,
   });
   const json = (await res.json()) as Partial<Drawn> & { error?: { message: string } };
   if (res.ok && json.svg) {
@@ -387,6 +390,28 @@ export const preparePublish = (entry: EntryDraft) =>
 export const publishEntry = (entrySha256: string, proof: Nep413Proof) =>
   postJson<Published>('/api/v1/publish', { entry_sha256: entrySha256, proof });
 
+/**
+ * The public profile of `account` on NEAR Social (lib/near-social.ts), read straight from NEAR Social's API,
+ * not ours; null when there's none or it can't be read.
+ */
+export async function readSocialProfile(account: string): Promise<SocialProfile | null> {
+  try {
+    const res = await fetch(`${NEAR_SOCIAL_API}/v1/accounts/${encodeURIComponent(account)}`);
+    if (!res.ok) return null;
+    return socialProfile(await res.json());
+  } catch {
+    return null;
+  }
+}
+
+/** The wallet this session signed in with, and its network, or null: not signed in, or the server doesn't say. */
+export async function readSignedIn(): Promise<{ network: string; account: string } | null> {
+  const res = await fetch('/api/v1/me');
+  if (!res.ok) return null;
+  const { network, account } = (await res.json()) as { network?: string; account?: string | null };
+  return network && account ? { network, account } : null;
+}
+
 /** The visitor's credit for Petals' agent (B), or null: not signed in, or no top-up yet. */
 export async function readCredit(): Promise<Credit | null> {
   const res = await fetch('/api/v1/me');
@@ -418,4 +443,16 @@ export async function readJobs(exploration: string): Promise<Job[]> {
   });
   if (!res.ok) return [];
   return ((await res.json()) as { jobs?: Job[] }).jobs ?? [];
+}
+
+/** The person's own agents and what each is doing, or none: not signed in, or no answer. */
+export async function readAgents(): Promise<ConnectedAgent[]> {
+  const res = await fetch('/api/v1/agents', { cache: 'no-store' });
+  if (!res.ok) return [];
+  return ((await res.json()) as { agents?: ConnectedAgent[] }).agents ?? [];
+}
+
+/** A new agent link for the whole account, shown once; older ones keep working until revoked. */
+export function mintAgentLink(): Promise<{ id: string; token: string; created_at: string }> {
+  return sessionPost('/api/v1/agents/link', {});
 }

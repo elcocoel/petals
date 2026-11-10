@@ -31,7 +31,7 @@ node ~/.petals/petal.mjs start --client "Claude Code" --question "<what they ask
 ## The first time it runs
 
 - **Claude Code holds the file back once,** because it was downloaded. Ask once, in these words: "May I run Petal's tool? It's a file from {host} that reads public chain data and keeps its notes in ~/.petals." The rule `Bash(node ~/.petals/petal.mjs:*)` stops later commands asking again.
-- **The sandbox refused it** (the network, or a folder outside the workspace): run the same command again outside the sandbox, so the person is asked to approve it, and run each `node ~/.petals/petal.mjs` command the same way. A sandbox's refusal isn't the person's no. If only the folder was refused, keep the file in the working folder and set `PETALS_HOME` to a folder beside it, the same on every command.
+- **The sandbox refused it** (the network, or a folder outside the workspace): run the same command again outside the sandbox (the Bash tool's dangerouslyDisableSandbox), so the person is asked to approve it, and run each `node ~/.petals/petal.mjs` command the same way. A sandbox's refusal isn't the person's no. If only the folder was refused, keep the file in the working folder and set `PETALS_HOME` to a folder beside it, the same on every command.
 - **Claude Code on the web** runs in a cloud sandbox, not on their computer. It can't widen its own network: say so in one line, with the two ways on: turn on full internet access in that environment's settings, or use Claude Code on their own computer.
 
 ## Keep Petals for next time
@@ -43,6 +43,10 @@ claude mcp add -s user petals -- "$(command -v node)" "$HOME/.petals/petal.mjs" 
 ```
 
 It takes effect in a new session. The tools then show as `mcp__petals__<tool>`, and `claude mcp list` shows `petals` as connected. Without `-s user`, it would hold for this folder only.
+
+## Waiting for jobs
+
+As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait` with the Bash tool's `timeout` at 600000, its longest: ten minutes. The default two minutes cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way.
 
 ## In the box on Petals' page
 

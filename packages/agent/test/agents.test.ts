@@ -1,0 +1,262 @@
+// A person's agents across their projects (9 Nov, agent-house-test.md): an agent link that only waits for jobs,
+// agents named by what they call themselves, a job aimed at one, a wait the bell wakes, nothing taken for a wait
+// nobody's holding, and a report taken up at once as a turn in its run. Through petalApp, scripted model.
+import { join } from 'node:path';
+import { fakeRpcFor, testSigner } from '@petal/near/auth/testing';
+import { openStore } from '@petal/store';
+import { describe, expect, test } from 'vitest';
+import { buildPetalApp } from '../src/app.ts';
+import { fundPerson, mintInvite } from '../src/invites.ts';
+import { fakeRegistry, parseSse, type ScriptTurn, scriptedLlm, tmpRoot } from './helpers.ts';
+
+const SITE = 'https://petals.example';
+const COOKIE = '__Host-petal_session';
+const alice = testSigner('alice.near');
+const ASK = { messages: [{ role: 'user', content: 'map RaidGuild with my agents' }] };
+
+// biome-ignore lint/suspicious/noExplicitAny: reading answers
+type Out = Record<string, any>;
+
+function setup(turns: ScriptTurn[]) {
+  const root = tmpRoot();
+  const stateDir = join(root, 'state');
+  const llm = scriptedLlm(turns, { costUsd: 0.01 });
+  const app = buildPetalApp(
+    { root, stateDir, apiBase: SITE, llmDailyUsd: 5 },
+    {
+      llm,
+      rpcFor: () => fakeRpcFor([alice]),
+      registry: fakeRegistry().registry,
+      env: { PETAL_AGENT_ACCESS: 'gated', PETAL_WALLET_KEY: 'ab'.repeat(32), NODE_ENV: 'test' },
+    },
+  );
+  const jar = { cookie: '' };
+  const call = async (
+    method: string,
+    path: string,
+    json?: unknown,
+    headers: Record<string, string> = {},
+  ) => {
+    const res = await app.request(path, {
+      method,
+      headers: {
+        origin: SITE,
+        'content-type': 'application/json',
+        ...(jar.cookie ? { cookie: jar.cookie } : {}),
+        ...headers,
+      },
+      ...(json === undefined ? {} : { body: JSON.stringify(json) }),
+    });
+    const set = res.headers.getSetCookie().find((l) => l.startsWith(`${COOKIE}=`));
+    if (set) jar.cookie = set.split(';')[0] as string;
+    return res;
+  };
+  const signInFunded = async () => {
+    const c = (await (await call('POST', '/api/v1/auth/challenge', {})).json()) as Out;
+    await call('POST', '/api/v1/auth/verify', {
+      network: 'mainnet',
+      proof: alice.sign(c as never),
+    });
+    const me = (await (await call('GET', '/api/v1/me')).json()) as Out;
+    const s = openStore(join(stateDir, 'private.db'));
+    try {
+      await fundPerson(s, me.person_id, 5);
+    } finally {
+      await s.close();
+    }
+  };
+  /** Signed in with no credit of their own, chatting on a sponsored invite instead. */
+  const signInWithInvite = async () => {
+    const c = (await (await call('POST', '/api/v1/auth/challenge', {})).json()) as Out;
+    await call('POST', '/api/v1/auth/verify', {
+      network: 'mainnet',
+      proof: alice.sign(c as never),
+    });
+    const s = openStore(join(stateDir, 'private.db'));
+    let token: string;
+    try {
+      token = (await mintInvite(s, { usd: 2 })).token;
+    } finally {
+      await s.close();
+    }
+    expect((await call('POST', '/api/v1/auth/invite', { token })).status).toBe(200);
+  };
+  /** An agent's wait, with no session: only the link. */
+  const wait = (token: string, as: string, wait_s = 0, signal?: AbortSignal) =>
+    app.request('/api/v1/agents/wait', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+      body: JSON.stringify({ as, wait_s }),
+      ...(signal ? { signal } : {}),
+    });
+  return { app, llm, call, signInFunded, signInWithInvite, wait };
+}
+
+const link = async (w: ReturnType<typeof setup>) =>
+  ((await (await w.call('POST', '/api/v1/agents/link', {})).json()) as Out).token as string;
+
+describe('agents across projects', () => {
+  test('a link waits only for its person, a second one keeps the first working, and revoke ends them', async () => {
+    const w = setup([]);
+    expect((await w.call('POST', '/api/v1/agents/link', {})).status).toBe(401);
+    await w.signInFunded();
+    const first = await link(w);
+    const second = await link(w);
+    expect(first).toMatch(/^petal_agent_[A-Za-z0-9_-]{43}$/);
+    for (const t of [first, second])
+      expect(((await (await w.wait(t, 'Claude Code')).json()) as Out).job).toBeNull();
+    const links = ((await (await w.call('GET', '/api/v1/agents/link')).json()) as Out).links;
+    expect(links).toHaveLength(2);
+    await w.call('POST', '/api/v1/agents/link/revoke', {});
+    expect((await w.wait(first, 'Claude Code')).status).toBe(401);
+    expect((await w.wait('petal_agent_nope', 'x')).status).toBe(401);
+  });
+
+  test('a job sent to one agent goes to that one only, with a continue link for its project', async () => {
+    const w = setup([
+      {
+        calls: [
+          {
+            name: 'hand_job',
+            args: { title: 'Map the shares', brief: 'who holds shares', to: 'claude code' },
+          },
+        ],
+      },
+      { content: 'Sent.' },
+    ]);
+    await w.signInFunded();
+    const token = await link(w);
+    // both introduce themselves, so Petals' agent can name them
+    await w.wait(token, 'Claude Code');
+    await w.wait(token, 'Hermes');
+    const events = parseSse(await (await w.call('POST', '/api/v1/agent/chat', ASK)).text());
+    const job = events.find((e) => e.event === 'job')?.data as Out;
+    expect(job).toMatchObject({ to: 'Claude Code', taken_by: null, status: 'open' });
+    // the system message told it who's connected
+    expect(w.llm.requests[0]?.messages[0]?.content).toContain('## Agents connected');
+    expect(((await (await w.wait(token, 'Hermes')).json()) as Out).job).toBeNull();
+    const got = (await (await w.wait(token, 'claude code')).json()) as Out;
+    expect(got.job).toMatchObject({ id: job.id, title: 'Map the shares', to: 'Claude Code' });
+    expect(got.project.exploration).toMatch(/\/s\/[A-Za-z0-9_-]{43}$/);
+    const agents = ((await (await w.call('GET', '/api/v1/agents')).json()) as Out).agents;
+    expect(agents.find((a: Out) => a.name === 'claude code')?.job?.id).toBe(job.id);
+  });
+
+  test('a waiting agent wakes when a job is handed out', async () => {
+    const w = setup([
+      { calls: [{ name: 'hand_job', args: { title: 'Map', brief: 'map it' } }] },
+      { content: 'ok' },
+    ]);
+    await w.signInFunded();
+    const token = await link(w);
+    const started = Date.now();
+    const waiting = w.wait(token, 'Hermes', 5);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(((await (await w.call('GET', '/api/v1/agents')).json()) as Out).agents[0]).toMatchObject(
+      {
+        name: 'Hermes',
+        waiting: true,
+      },
+    );
+    await (await w.call('POST', '/api/v1/agent/chat', ASK)).text();
+    const got = (await (await waiting).json()) as Out;
+    expect(got.job?.title).toBe('Map');
+    expect(Date.now() - started).toBeLessThan(4000);
+  });
+
+  test('nothing is taken for a wait that was closed', async () => {
+    const w = setup([
+      { calls: [{ name: 'hand_job', args: { title: 'Map', brief: 'map it' } }] },
+      { content: 'ok' },
+    ]);
+    await w.signInFunded();
+    const token = await link(w);
+    const ac = new AbortController();
+    const waiting = Promise.resolve(w.wait(token, 'Codex', 5, ac.signal)).catch(() => null);
+    await new Promise((r) => setTimeout(r, 50));
+    ac.abort();
+    await waiting;
+    const events = parseSse(await (await w.call('POST', '/api/v1/agent/chat', ASK)).text());
+    const job = events.find((e) => e.event === 'job')?.data as Out;
+    await new Promise((r) => setTimeout(r, 50));
+    const jobs = (
+      (await (await w.call('GET', `/api/v1/explorations/${job.exploration}/jobs`)).json()) as Out
+    ).jobs;
+    expect(jobs[0]).toMatchObject({ status: 'open', taken_by: null });
+  });
+
+  test('a report is taken up at once, as a turn in the run that handed the job out', async () => {
+    const w = setup([
+      {
+        calls: [{ name: 'hand_job', args: { title: 'Map the shares', brief: 'who holds shares' } }],
+      },
+      { content: 'Sent.' },
+      { content: 'Your agent found 42 holders.' },
+    ]);
+    await w.signInFunded();
+    const token = await link(w);
+    const first = parseSse(await (await w.call('POST', '/api/v1/agent/chat', ASK)).text());
+    const runId = (first[0] as { data: { run_id: string } }).data.run_id;
+    const got = (await (await w.wait(token, 'Claude Code')).json()) as Out;
+    const ref = (got.project.exploration as string).split('/s/')[1];
+    const reported = await w.app.request(`/api/v1/explorations/${ref}/jobs/${got.job.id}/report`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ result: { summary: '42 holders.' } }),
+    });
+    expect(reported.status).toBe(200);
+    // the turn runs on the server; wait for its model call
+    for (let i = 0; i < 50 && w.llm.requests.length < 3; i++)
+      await new Promise((r) => setTimeout(r, 20));
+    expect(w.llm.requests).toHaveLength(3);
+    const turn = w.llm.requests[2];
+    expect(turn?.messages.at(-1)?.content).toMatch(
+      /\(Petals\) The job "Map the shares" came back from Claude Code/,
+    );
+    expect(turn?.messages[0]?.content).toContain('report: "42 holders."');
+    for (let i = 0; i < 50; i++) {
+      const run = (await (await w.call('GET', `/api/v1/agent/runs/${runId}`)).json()) as Out;
+      if (run.status !== 'running') break;
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    const run = (await (await w.call('GET', `/api/v1/agent/runs/${runId}`)).json()) as Out;
+    expect(JSON.stringify(run.events)).toContain('Your agent found 42 holders.');
+  });
+
+  test('with no credit of their own, a report is taken up on the invite they chat on, and charged to it', async () => {
+    const w = setup([
+      {
+        calls: [{ name: 'hand_job', args: { title: 'Map the shares', brief: 'who holds shares' } }],
+      },
+      { content: 'Sent.' },
+      { content: 'Your agent found 42 holders.' },
+    ]);
+    await w.signInWithInvite();
+    const token = await link(w);
+    const first = parseSse(await (await w.call('POST', '/api/v1/agent/chat', ASK)).text());
+    const runId = (first[0] as { data: { run_id: string } }).data.run_id;
+    const spent = async () =>
+      ((await (await w.call('GET', '/api/v1/auth/invite')).json()) as Out).invite
+        .spent_usd as number;
+    const before = await spent();
+    expect(before).toBeCloseTo(0.02);
+    const got = (await (await w.wait(token, 'Claude Code')).json()) as Out;
+    const ref = (got.project.exploration as string).split('/s/')[1];
+    const reported = await w.app.request(`/api/v1/explorations/${ref}/jobs/${got.job.id}/report`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ result: { summary: '42 holders.' } }),
+    });
+    expect(reported.status).toBe(200);
+    for (let i = 0; i < 50; i++) {
+      const run = (await (await w.call('GET', `/api/v1/agent/runs/${runId}`)).json()) as Out;
+      if (w.llm.requests.length >= 3 && run.status !== 'running') break;
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    expect(w.llm.requests).toHaveLength(3);
+    expect(w.llm.requests[2]?.messages.at(-1)?.content).toMatch(/came back from Claude Code/);
+    const run = (await (await w.call('GET', `/api/v1/agent/runs/${runId}`)).json()) as Out;
+    expect(JSON.stringify(run.events)).toContain('Your agent found 42 holders.');
+    expect(await spent()).toBeCloseTo(0.03);
+  });
+});

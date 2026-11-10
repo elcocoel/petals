@@ -8,6 +8,7 @@
 // take its size from one layer and its height from another (`height: m:<measure>`).
 import { canonicalJson, sha256Hex } from './hash.ts';
 import { createAjv, schemaId } from './schema/ajv.ts';
+import { aboutOf, sameAbout } from './seam.ts';
 import type { Holding, Participant, Snapshot } from './types/index.ts';
 
 export const LAYER_VERSION = 'layer/v1';
@@ -129,6 +130,13 @@ const sourceOf = (hash: string) => `layer:${hash.slice(0, 12)}`;
  */
 export function composeView(base: Snapshot, added: readonly Added[]): Snapshot {
   if (!added.length) throw new LayerError('compose needs at least one layer to add');
+  // every layer and every added reading must be about what the reading is about (seam.md; systems check)
+  const about = aboutOf(base);
+  for (const a of added) {
+    const other = 'layer' in a ? a.layer.about : aboutOf(a.snapshot);
+    if (!sameAbout(other, about))
+      throw new LayerError(`${a.hash.slice(0, 12)} is about ${other}, not ${about}, the reading's`);
+  }
   const names = new Set(base.holdings.map((h) => h.measure));
   const participants = new Map<string, Participant>(base.participants.map((p) => [p.id, p]));
   const holdings: Holding[] = [...base.holdings];

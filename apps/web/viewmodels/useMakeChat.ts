@@ -250,6 +250,10 @@ export function useMakeChat({
       refollow: () => {
         if (runId && !busy) void openRun(deps, runId, { again: true });
       },
+      /** The server started a turn of its own (a report Petals' agent takes up, C): read it and follow it. */
+      follow: () => {
+        if (runId && !busy) void openRun(deps, runId);
+      },
     },
     refs: { box, thread, following },
   };

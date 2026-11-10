@@ -484,6 +484,8 @@ export interface RenderOptions {
   /** default 800 */
   size?: number;
   thumb?: boolean;
+  /** The viewer's view (view/v1): what each dimension draws. Without one, the spec's own choices. */
+  view?: View;
 }
 
 export interface LegendItem {
@@ -656,6 +658,10 @@ export interface JobEvent {
   title: string;
   brief: string;
   status: 'open' | 'taken' | 'done' | 'failed';
+  /** additive (9 Nov, agent-house): the agent it was sent to, by name, or null for any */
+  to?: string | null;
+  /** additive: the agent that took it, or null */
+  taken_by?: string | null;
 }
 
 /** One SSE event of a chat, in order: run, stage/progress/tool_call/tool_result/message…, flower, signature, done. */

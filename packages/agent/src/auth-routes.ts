@@ -127,6 +127,11 @@ export interface ChatAdmission {
 /** What the agent routes need. With no session, the subject is null. */
 export interface RouteAuth {
   admitChat(c: Context, llm: LlmClient, budget: Budget): Promise<ChatAdmission>;
+  /**
+   * A turn nobody's browser asked for (a job's report taken up at once, 9 Nov): on a person's own credit,
+   * or else on an invite one of their sessions holds (10 Nov). Null when neither pays, or it's a recorded run.
+   */
+  admitOwner?(subject: string, llm: LlmClient, budget: Budget): Promise<ChatAdmission | null>;
   subjectOf(c: Context): Promise<string | null>;
   /** The subject and the credential that opened its session (TGT-005), in one look. */
   callerOf(c: Context): Promise<{ subject: string | null; credential: string | null }>;
@@ -407,6 +412,8 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     return ok(c, {
       person_id: session.subject,
       network: session.network,
+      // additive (9 Nov, LOBBY): the wallet this session signed in with, by account id; null for none
+      account: await sessionAccount(session),
       wallets: await walletsOf(session.subject),
       // null: no credit of their own, so a chat needs an invite like anyone else's
       credit: credit && { ...credit, usd_per_chat: usdPerOwnChat },
@@ -429,6 +436,46 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         .filter((w) => w.network === network)
         .map((w) => w.account_id);
       return { person: s.subject, network, accounts, account: await sessionAccount(s) };
+    },
+
+    async admitOwner(subject, llm, budget) {
+      if (llm.kind === 'recorded' || !isPerson(subject)) return null;
+      const day = budget.ledger ?? closedLedger('this server keeps no spend ledger');
+      // on the credit contract: what the first of their wallets on its network holds, read now
+      let chain: ChainChat | null = null;
+      if (d.credit) {
+        const network = d.credit.contract.network;
+        const account = (await walletsOf(subject)).find((w) => w.network === network)?.account_id;
+        const price = account ? await (d.nearUsd ?? (async () => null))() : null;
+        if (account && price !== null) {
+          chain = await chainChat(store, d.credit, subject, account, price, now).catch(() => null);
+        }
+      }
+      const own = await personCredit(store, subject);
+      if (!own || own.left_usd <= 0) {
+        // the invite their browser chats on, charged as a chat there is, with the day's cap (10 Nov)
+        for (const id of await store.session.invitesOf(subject, iso())) {
+          if (inviteRefusal(await inviteBody(id))) continue;
+          return { subject, budget: { ...budget, ledger: inviteLedger(store, id, day, now) } };
+        }
+        return null;
+      }
+      let spent = 0;
+      const counted = chain
+        ? async (usd: number) => {
+            spent += usd;
+          }
+        : undefined;
+      return {
+        subject,
+        ownCredit: true,
+        budget: {
+          ...budget,
+          usdPerChat: usdPerOwnChat,
+          ledger: personLedger(store, subject, day, now, counted),
+        },
+        ...(chain ? { onEnd: () => (chain as ChainChat).settle(spent) } : {}),
+      };
     },
 
     async admitChat(c, llm, budget) {

@@ -2,6 +2,7 @@
 // @modelcontextprotocol/server v2. Raw JSON Schema goes in through fromJsonSchema(). Inputs are
 // checked once, by the registry, so a bad input gets the same bad_input on every door; the MCP
 // layer passes arguments through. Progress goes out as notifications/progress.
+
 import {
   createMcpHandler,
   fromJsonSchema,
@@ -14,6 +15,7 @@ import { TOOLS_VERSION } from '@petal/core';
 import type { ProgressEvent } from '@petal/core/types';
 import { isToolError } from '../errors.ts';
 import { describeTool, registry } from '../registry.ts';
+import { brainOf } from '../tools/brain.ts';
 import { openPageOn } from '../tools/explorations.ts';
 import type { Tool, ToolContext } from '../types.ts';
 
@@ -40,8 +42,10 @@ const INSTRUCTIONS =
   'render_flower. The flower is the answer: always hand back a link to it, short_url if given and ' +
   'otherwise view_url, with the legend, your interpretation and what the data cannot tell. A table ' +
   'is not a flower. To publish: ' +
-  'prepare_publish, then give the person sign_url; never call publish_flower yourself. Never ask ' +
-  'for a key or a seed phrase.';
+  'prepare_publish, then give the person sign_url; never call publish_flower yourself. When the ' +
+  'person gives you their agent key (petal_agent_…) and asks you to take their open jobs: take_job ' +
+  'with agent_key and as, your app as a short name such as claude-app or chatgpt; do each job in its ' +
+  'link, report_job, and take_job again until job is null. Never ask for a key or a seed phrase.';
 
 // Only where the page it hands over opens. Short, because an agent on MCP alone reads nothing else.
 const FOLLOW =
@@ -73,8 +77,18 @@ export interface McpOptions {
   instructions?: string;
 }
 
+/** What the brain adds: where to learn how, and which version this is (step 4). Nothing without a brain/. */
+function brainLine(ctx: ToolContext): string {
+  try {
+    const { version } = brainOf(ctx);
+    return ` Petals' brain (${version}) holds how to map anything and how each app connects: read brain_file with id doctrine first, then brain_route with your app and what you're doing.`;
+  } catch {
+    return '';
+  }
+}
+
 export function mcpServer(ctx: ToolContext, opts: McpOptions = {}): McpServer {
-  const said = openPageOn(ctx) ? `${INSTRUCTIONS}${FOLLOW}` : INSTRUCTIONS;
+  const said = `${openPageOn(ctx) ? `${INSTRUCTIONS}${FOLLOW}` : INSTRUCTIONS}${brainLine(ctx)}`;
   const server = new McpServer(SERVER_INFO, {
     capabilities: { tools: {} },
     instructions: opts.instructions ? `${said} ${opts.instructions}` : said,

@@ -1,4 +1,4 @@
-// MCP over stdio (T051), for `petal mcp` (apps/cli) and `claude mcp add petal -- pnpm -s --dir
+// MCP over stdio (T051), for `petal mcp` (apps/cli) and `claude mcp add -s user petals -- pnpm -s --dir
 // <repo> petal mcp`. stdout carries MCP only: nothing in the tools writes to it.
 import type { Transport } from '@modelcontextprotocol/server';
 import { StdioServerTransport, serveStdio as serve } from '@modelcontextprotocol/server/stdio';

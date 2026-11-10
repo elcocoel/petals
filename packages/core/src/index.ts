@@ -65,12 +65,23 @@ export { renderFlower, SKINS } from './render/index.ts';
 export type { Skin } from './render/types.ts';
 export { runSignal, setRunSignalSource } from './run-signal.ts';
 export { schemas } from './schema/index.ts';
+export {
+  aboutOf,
+  DATA_KINDS,
+  type DataKind,
+  SEAM_DOCUMENT_VERSION,
+  type Seam,
+  type SeamPiece,
+  sameAbout,
+  seamHash,
+  seamOf,
+} from './seam.ts';
 export { backerSegments } from './segments/backers.ts';
 export { selectPetals } from './select.ts';
 export type * from './types/index.ts';
 export { validateSnapshot, validateSpec } from './validate/index.ts';
 export * from './versions.ts';
-export type { DataKind, Dimension, Piece } from './view/index.ts';
+export type { Dimension, Piece } from './view/index.ts';
 export {
   ACCEPTS,
   DEFAULT_VIEW,

@@ -65,7 +65,7 @@ A dimension the look doesn't draw yet is declared, never imitated, as today (`pr
     "outline": { "data": "identity" },
     "texture": null,
     "markings": null,
-    "segments": { "data": "backers" },
+    "segments": null,
     "lines": null
   }
 }

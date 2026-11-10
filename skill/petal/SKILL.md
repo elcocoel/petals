@@ -21,7 +21,7 @@ curl -s "$API/api/v1/health"
 curl -s "$API/api/v1/networks"
 ```
 
-If the `petal` MCP server is configured, call the same tools by name instead (in Claude Code they show as `mcp__petal__<tool>`). Names, inputs and outputs are the same over both.
+If the `petals` MCP server is configured, call the same tools by name instead (in Claude Code they show as `mcp__petals__<tool>`). Names, inputs and outputs are the same over both.
 
 ## Flow
 
@@ -49,14 +49,21 @@ One reading is one layer: one thing about one address, such as who holds a DAO's
 - Then draw the joined reading as any other: `propose_spec` with its `sha256` and, for example, `height: "m:proposals_written"`, then `validate_spec` and `render_flower`.
 - With a project open, a layer is also kept in it on the site, privately, and each one makes a new version of the person's dataset about that address (`list_layers` shows them). `fork_dataset` makes a new version with layers added or dropped; the one it came from stays as it was.
 
-## Jobs from a project
+## Jobs from Petals
 
-Petals' own agent, in the chat on the page, can hand you jobs in the person's project, such as mapping a network. When the person asks you to help with their project, or gives you its link:
+Petals' own agent, in the chat on the page, hands jobs to the person's agents, such as mapping a network. The job is the person's yes for its map, so don't ask again.
 
-1. Call `take_job` with the project's link as `exploration`. It gives you the oldest open job, or `job: null` when there's none.
-2. Do what the job's `brief` says, on this machine, with the six steps below. The job is the person's yes for its map, so don't ask again. Each flower you draw is saved in the project.
-3. Call `report_job` with the job's `id` and a `result`: a `summary` of two or three plain sentences, and the `steps` you saved. If you can't do it, call `report_job` with `failed` and the reason instead.
-4. Take the next one. When there's none, tell the person in one line that the page's agent has your report.
+**When the person gives you their agent key** (it starts `petal_agent_`), you're one of their agents, in all of their projects:
+
+1. Join once, with a short name for your app, such as `claude-code`, `codex` or `hermes`: `node ~/.petals/petal.mjs join <agent key> --as <name>`.
+2. Wait for a job: `node ~/.petals/petal.mjs jobs wait`. It comes back with a job, or with none just under ten minutes. Give the command your app's longest limit for one command, as your app's connect chapter says, so it isn't cut short.
+3. Do what the job's `brief` says, on this machine, with the six steps below, in the job's project: `project.exploration` is that project's link, for every tool, and each flower you draw is saved there.
+4. Report it: `report_job` with that link, the job's `id` and a `result`: a `summary` of two or three plain sentences and the `steps` you saved. If you can't do it, report `failed` with the reason instead.
+5. Run `jobs wait` again, and keep going until the person says stop. Petals' agent takes up your report in the same conversation.
+
+**In an app that can't run commands here, connected at the site's `/mcp`** (the Claude app, ChatGPT): when the person gives you their agent key and asks you to take their open jobs, call `take_job` with `agent_key` and `as` (your app's short name, such as `claude-app` or `chatgpt`). Do each job in the `link` it gives, passing that as `exploration`, report it, and call `take_job` again until `job` is null. There's no waiting there: you take jobs when the person asks.
+
+**When the person gives you one project's link** instead: call `take_job` with it as `exploration`, do the job and report it the same way, then take the next one. When there's none, tell the person in one line that the page's agent has your report.
 
 <!-- The block between the petal:shared markers is the same text as Petal's own agent prompt
      (packages/agent/src/prompt.md). `node skill/build.ts` copies it from there; until then the

@@ -39,6 +39,9 @@ export interface StoredItem {
   asOf: string;
 }
 
+/** How a turn Petals' agent starts on its own begins (SYSTEMS, C): a report it takes up at once. */
+export const FROM_PETALS = '(Petals)';
+
 /** One event into the list. `run` and heartbeats add nothing to read. */
 export function fold(items: Item[], e: AgentEvent): Item[] {
   switch (e.event) {
@@ -113,7 +116,13 @@ export function threadFromRun(run: Pick<Run, 'messages' | 'events'>): Item[] {
           items = [...items, { kind: 'message', text: m.content }];
         } else {
           if (questionsLeft() <= chatsAfter) break;
-          items = [...items, { kind: 'user', text: m.content }];
+          // a turn Petals started itself, on a report (C), says so; the person didn't write it
+          items = [
+            ...items,
+            m.content.startsWith(FROM_PETALS)
+              ? { kind: 'note', text: m.content.slice(FROM_PETALS.length).trim() }
+              : { kind: 'user', text: m.content },
+          ];
         }
         p++;
       }

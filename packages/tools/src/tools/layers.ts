@@ -13,7 +13,10 @@ import {
   type Layer,
   LayerError,
   layerHash,
+  type Seam,
   schemas,
+  seamHash,
+  seamOf,
 } from '@petal/core';
 import { defineTool } from '../define.ts';
 import { stateDirOf } from '../drafts.ts';
@@ -94,11 +97,17 @@ export const composeViewTool = defineTool<{ base: string; layers: string[] }, ob
     base: { ...SHA256, description: 'the sha256 of the reading the flower is of' },
     layers: { type: 'array', minItems: 1, maxItems: 8, items: SHA256 },
   }),
-  output: obj(['sha256', 'network', 'measures', 'layers'], {
+  output: obj(['sha256', 'network', 'measures', 'layers', 'seam'], {
     sha256: SHA256,
     network: { type: 'string' },
     measures: { type: 'array', items: { type: 'object' } },
     layers: { type: 'array', items: { type: 'object' } },
+    seam: obj(['sha256', 'about', 'layers', 'data'], {
+      sha256: SHA256,
+      about: { type: 'string' },
+      layers: { type: 'array', items: SHA256 },
+      data: { type: 'array', items: { type: 'object' } },
+    }),
   }),
   annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: false },
   onTheirMachine: true,
@@ -122,11 +131,17 @@ export const composeViewTool = defineTool<{ base: string; layers: string[] }, ob
       added.push({ hash, snapshot });
     }
     let view: ReturnType<typeof composeView>;
+    let seam: Seam;
     try {
       view = composeView(s, added);
+      seam = seamOf(s, base, added);
     } catch (e) {
       return badLayer(e);
     }
+    // the typed seam (seam/v1), kept beside the layers by its hash, for the look to read
+    const seamSha = seamHash(seam);
+    await mkdir(layersDir(ctx), { recursive: true });
+    await writeFile(join(layersDir(ctx), `seam-${seamSha}.json`), canonicalJson(seam));
     const { sha256 } = await ctx.store.put(view);
     // Each measure's kind, standing and layer, as the seam promises (seam.md): a reader's measures are
     // verified, and their kind is the reader's own, so it isn't named here.
@@ -146,6 +161,19 @@ export const composeViewTool = defineTool<{ base: string; layers: string[] }, ob
       sha256,
       network: view.network.id,
       measures: measuresIn(view).map((m) => ({ ...m, ...about.get(m.id) })),
+      seam: {
+        sha256: seamSha,
+        about: seam.about,
+        layers: seam.layers,
+        data: seam.data.map(({ name, kind, unit, standing, layer, as_of }) => ({
+          name,
+          kind,
+          unit,
+          standing,
+          layer,
+          as_of,
+        })),
+      },
       layers: [
         { hash: base, as: 'base' },
         ...added.map((a) => ({

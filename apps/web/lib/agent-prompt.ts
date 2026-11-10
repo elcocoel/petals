@@ -2,6 +2,7 @@
 // server serves (@petal/agent/hosted), so the site's /connect and the server's /skill.md say the same.
 export {
   agentPrompt,
+  connectorAddress,
   FILE_PATH,
   getFile,
   keepCommands,

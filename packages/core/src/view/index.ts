@@ -2,7 +2,7 @@
 // One per person, for every flower they look at; the default for everyone else. The data never names a
 // dimension, and the look never sees a data name: this joins them. Pure.
 import { canonicalJson, sha256Hex } from '../hash.ts';
-import type { MeasureKind } from '../layers.ts';
+import type { DataKind } from '../seam.ts';
 import type { View } from '../types/index.ts';
 import { VIEW_VERSION } from '../versions.ts';
 
@@ -20,12 +20,8 @@ export const DIMENSIONS = [
 ] as const;
 export type Dimension = (typeof DIMENSIONS)[number];
 
-/**
- * The kinds a piece of data can be: 005's five (layers.ts), and `date`, `parts` (a petal cut into what it's
- * made of, backers today) and `relation` (petal to petal). The same list SYSTEMS puts in core with seam/v1
- * (DATA_KINDS); when it lands, this points at it and nothing else changes. No dimension takes a date yet.
- */
-export type DataKind = MeasureKind | 'date' | 'parts' | 'relation';
+/** The kinds a piece of data can be: seam/v1's eight (seam.ts, DATA_KINDS). No dimension takes a date yet. */
+export type { DataKind };
 
 /** A piece of data a flower has: its name, as the view names it, and its kind. */
 export interface Piece {
@@ -69,7 +65,7 @@ export const DEFAULT_VIEW: View = {
     outline: { data: 'identity' },
     texture: null,
     markings: null,
-    segments: { data: 'backers' },
+    segments: null,
     lines: null,
   },
 };

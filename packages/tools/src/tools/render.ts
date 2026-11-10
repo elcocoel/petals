@@ -1,7 +1,7 @@
 // render_flower (tools.md; renderer.md). Render refuses anything validate_spec rejects.
-import { canonicalJson, readFlower, renderFlower, specHash } from '@petal/core';
-import type { Spec } from '@petal/core/types';
-import { defineTool } from '../define.ts';
+import { canonicalJson, readFlower, renderFlower, schemas, specHash } from '@petal/core';
+import type { Spec, View } from '@petal/core/types';
+import { compile, defineTool, describeErrors } from '../define.ts';
 import { putSpecBody } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
 import { base, obj, SHA256, viewUrl } from './shared.ts';
@@ -54,8 +54,11 @@ export const PETAL_DETAIL = obj(
   },
 );
 
+/** A view (view/v1, specs/006-the-map/contracts/view.md), checked against its schema. */
+const checkView = compile(schemas.view as Record<string, unknown>);
+
 export const renderFlowerTool = defineTool<
-  { spec: Spec; include_svg?: boolean; include_reading?: boolean; size?: number },
+  { spec: Spec; include_svg?: boolean; include_reading?: boolean; size?: number; view?: View },
   object
 >({
   name: 'render_flower',
@@ -75,6 +78,11 @@ export const renderFlowerTool = defineTool<
         description: 'also return reading: the title and petals readFlower reads from this spec',
       },
       size: { type: 'integer', minimum: 64, maximum: 4096, default: 800 },
+      view: {
+        type: 'object',
+        description:
+          "the viewer's view (view/v1): which piece of data each dimension shows. Without one, the spec's own choices are drawn",
+      },
     },
     { additionalProperties: false },
   ),
@@ -92,7 +100,14 @@ export const renderFlowerTool = defineTool<
     short_url: { type: 'string' },
   }),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  async run({ spec, include_svg = false, include_reading = false, size }, ctx) {
+  async run({ spec, include_svg = false, include_reading = false, size, view }, ctx) {
+    if (view !== undefined && !checkView(view)) {
+      throw new ToolFailure(
+        'bad_input',
+        `The view is not a valid view/v1: ${describeErrors(checkView.errors)}`,
+        'A view names a piece of data, or null, for each of the nine dimensions (specs/006-the-map/contracts/view.md).',
+      );
+    }
     const { validation, snapshot } = await checkSpec(ctx, spec);
     if (!validation.valid || !snapshot) {
       throw new ToolFailure(
@@ -101,10 +116,13 @@ export const renderFlowerTool = defineTool<
         'validate_spec lists every error; propose_spec builds a valid spec.',
       );
     }
-    const r = renderFlower(spec, snapshot, size !== undefined ? { size } : {});
+    const r = renderFlower(spec, snapshot, {
+      ...(size !== undefined ? { size } : {}),
+      ...(view ? { view } : {}),
+    });
     const stored = await putSpecBody(ctx.config, spec, ctx.now().toISOString());
     // renderFlower reads the same thing and keeps it to itself, so this is only paid for when asked.
-    const reading = include_reading ? readFlower(spec, snapshot) : null;
+    const reading = include_reading ? readFlower(spec, snapshot, view) : null;
     return {
       spec_sha256: specHash(spec),
       render_sha256: r.render_sha256,

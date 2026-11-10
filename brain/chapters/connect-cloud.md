@@ -2,7 +2,7 @@
 id: connect-cloud
 app: cloud
 for: connecting an app that runs in the cloud, or takes a remote MCP server's URL, to Petals as a connector: the Claude app, ChatGPT, Cursor
-recognise: claude app, claude.ai, claude desktop chat, claude mobile, chatgpt, openai, cursor, connector, custom connector, remote mcp, mcp url, connect, set up, add petals
+recognise: claude app, claude.ai, claude desktop chat, claude mobile, chatgpt, openai, cursor, connector, custom connector, remote mcp, mcp url, connect, set up, add petals, cloud sandbox, code execution, blocked domain
 tools: list_networks, describe_snapshot, render_flower, start_exploration, brain_route
 continues: where-power-lives, going-deeper
 status: partial
@@ -22,6 +22,23 @@ The Claude app's chat (on the web, the desktop app and the phone) and ChatGPT ru
 
 It reads what Petals already holds (networks, stored readings, flowers, relations), counts and draws from those readings, keeps a conversation on Petals' page, takes jobs, and reads the brain. It can't make a fresh reading: looking up a new name or address, reading a chain, or searching the web runs only on the person's own computer. For those, the person uses Claude Code, Codex or Hermes there (`connect-claude-code`, `connect-codex`, `connect-hermes`).
 
+A connector can't run the waiting command, so it doesn't wait for jobs in the background. It takes them when the person asks:
+
+- **With the person's agent key** (it starts `petal_agent_`, from "Copy for your agents"): when they ask you to take their open jobs, call `take_job` with `agent_key` and `as`, a short name for your app such as `claude-app` or `chatgpt`. It gives the next job sent to that name or to anyone, in any of their projects, with that project's `link`. Do the job, and pass the link as `exploration` to `save_step` after each `render_flower`, so each flower lands in that project, and to `add_note` and `report_job`. Call `take_job` again until it gives none.
+- **With one project's link:** call `take_job` with it as `exploration`, the same way.
+
+## A cloud sandbox isn't the person's computer
+
+The Claude app and ChatGPT can run code in a sandbox in the cloud. Having a shell there doesn't make the setup for Claude Code, Codex or Hermes apply: downloading Petals' file and running it there fails, because the sandbox can't reach Petals. Use the connector. If it isn't added yet, give the person the address above and their app's steps below, before trying any download.
+
+When a sandbox says a domain is blocked, that's its network rule, not a question the person can answer in the chat. Don't retry it, try another host, or offer a button the app doesn't have. The person or their organisation's administrator controls that access, and a connector has its own permissions, apart from the sandbox's network.
+
+## Approving the connector's tools
+
+Claude offers "Allow always" for a connector's tools, within the organisation's rules. ChatGPT can remember an approval for a tool within a conversation, and a new conversation or a refresh can ask again. Say so when it helps, and never change these settings for the person, or call a write a read: saving a note or a layer, and taking or reporting a job, change the project.
+
+Checked 10 Nov 2026: [Claude's network access](https://support.claude.com/en/articles/12111783-create-and-edit-files-with-claude), [Claude's connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp), [ChatGPT's custom MCP servers](https://developers.openai.com/api/docs/guides/custom-mcp-server).
+
 ## The Claude app
 
 - **Pro, Max and Free:** Customize > Connectors, then **+ Add** and **Add custom connector**. Name it Petals, paste the address, then **Continue** and **Add**. The Free plan holds one custom connector.
@@ -30,9 +47,7 @@ It reads what Petals already holds (networks, stored readings, flowers, relation
 
 ## ChatGPT
 
-<!-- Unconfirmed on OpenAI's own help pages (they refused to be read on 9 Nov): from current guides. -->
-
-On a paid plan, turn on developer mode in Settings (under Apps and Connectors, then Advanced). Then create an app with the address. The Free plan can't add one.
+In ChatGPT's Plugins, choose **+**, then **Add custom MCP server**. Give it a name and the address above, review its connection and sign-in settings, then create and install it. In a conversation, choose it with **@**. What's offered depends on the account and the workspace's rules: if the person doesn't see this, ask what they see instead of assuming they can turn it on.
 
 ## Cursor, or any app that takes an MCP server's address
 

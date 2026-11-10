@@ -58,7 +58,7 @@ describe('every door returns the same JSON', () => {
     ];
     for (const [tool, input] of calls) {
       const [out] = await same(tool, input);
-      expect(out?.tools_version, tool).toBe('tools/v1');
+      expect(out?.tools_version, tool).toBe('tools/v2');
       expect(out?.error, tool).toBeUndefined();
     }
   });
@@ -154,7 +154,7 @@ describe('every door returns the same JSON', () => {
         key: `petal/v1/spec/${pub.id}`,
         receiver: 'petals.testnet',
         writer: 'petals-writer.testnet',
-        tools_version: 'tools/v1',
+        tools_version: 'tools/v2',
       });
       ids.push(pub.id as string);
     }
