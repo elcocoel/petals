@@ -25,7 +25,6 @@ import { Steps } from '../components/chat/Steps.tsx';
 import { Thread } from '../components/chat/Thread.tsx';
 import { TurnFlower } from '../components/chat/TurnFlower.tsx';
 import { TurnStatus } from '../components/chat/TurnStatus.tsx';
-import { WhoIsHere } from '../components/chat/WhoIsHere.tsx';
 import { Flower } from '../components/Flower.tsx';
 import { FlowerSheet } from '../components/FlowerSheet.tsx';
 import { FlowerTile } from '../components/FlowerTile.tsx';
@@ -1578,20 +1577,6 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'WhoIsHere',
-    group: 'The conversation',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/chat/WhoIsHere.tsx',
-    states: [
-      {
-        name: 'connected',
-        wide: true,
-        render: () => <WhoIsHere account="elcocoel.near" onDisconnect={() => {}} />,
-      },
-    ],
-  },
-  {
     id: 'ModelOptions',
     group: 'The conversation',
     figmaName: null,
@@ -1661,8 +1646,6 @@ export const registry: LabEntry[] = [
               kind: 'profile',
               profile: { name: 'A name on NEAR Social', about: null, avatar: null, links: [] },
             }}
-            disconnectLabel="Disconnect"
-            onDisconnect={() => {}}
           />
         ),
       },
@@ -1672,8 +1655,6 @@ export const registry: LabEntry[] = [
           <ProfileHead
             account="02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc"
             social={{ kind: 'none' }}
-            disconnectLabel="Disconnect"
-            onDisconnect={() => {}}
           />
         ),
       },

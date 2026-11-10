@@ -6,16 +6,19 @@ import type { MouseEventHandler } from 'react';
 import { Icon, type IconName } from './Icon.tsx';
 
 const LOOK =
-  'inline-flex size-row-height shrink-0 items-center justify-center bg-transparent p-0 text-muted hover:bg-tint hover:text-primary hover:opacity-100 aria-expanded:text-primary';
+  'inline-flex size-row-height shrink-0 items-center justify-center bg-transparent p-0 text-muted hover:bg-tint hover:text-primary hover:opacity-100 aria-expanded:text-primary data-current:bg-tint data-current:text-primary';
 
 export function IconButton({
   icon,
   label,
+  current,
   ...rest
 }: {
   icon: IconName;
   /** What it does, in a person's words: read aloud and shown on hover. */
   label: string;
+  /** The one of these that's on: the section open in the side panel. */
+  current?: boolean;
 } & (
   | { href: string }
   | {
@@ -30,6 +33,8 @@ export function IconButton({
       <Link
         href={rest.href}
         prefetch={false}
+        aria-current={current ? 'page' : undefined}
+        data-current={current ? '' : undefined}
         aria-label={label}
         title={label}
         data-button=""
@@ -46,6 +51,8 @@ export function IconButton({
       aria-label={label}
       title={label}
       aria-expanded={rest.expanded}
+      aria-pressed={current}
+      data-current={current ? '' : undefined}
       onClick={rest.onClick}
       data-b="item"
       className={LOOK}

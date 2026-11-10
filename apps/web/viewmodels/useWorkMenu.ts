@@ -14,10 +14,12 @@ import {
 } from '../lib/agent-client.ts';
 import { agentRows, agentWords, type ConnectedAgent } from '../lib/agents.ts';
 import type { ListedProject } from '../lib/conversation-list.ts';
+import type { SectionKey } from '../lib/panel-words.ts';
 
 export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
-  // box.fold: the menu starts open, as an IDE's does, and folds away by hand
-  const [open, setOpen] = useState(true);
+  // box.fold: the panel starts open on its conversations, as an IDE's does; the open section's icon folds
+  // it to the bar, and another switches
+  const [section, setSection] = useState<SectionKey | null>('conversations');
   const [agents, setAgents] = useState<ConnectedAgent[]>([]);
   const [projects, setProjects] = useState<ListedProject[]>([]);
   const [opened, setOpened] = useState<string[]>([]);
@@ -81,7 +83,8 @@ export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
   }, []);
 
   return {
-    open,
+    section,
+    choose: (key: SectionKey) => setSection((now) => (now === key ? null : key)),
     projects,
     opened,
     toggle: (key: string) =>
@@ -94,8 +97,6 @@ export function useWorkMenu(signedIn: boolean, fresh: unknown = null) {
     toggleMoving: (row: string) => setMoving((now) => (now === row ? null : row)),
     moveTo: (row: string, project: string | null) => void moveTo(row, project).catch(() => {}),
     placed,
-    fold: () => setOpen(false),
-    unfold: () => setOpen(true),
     agents: agentRows(agents),
     copied,
     copy: () => void copy().catch(() => {}),

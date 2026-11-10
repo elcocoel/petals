@@ -3,18 +3,34 @@
 // page reloads - so the side bar is fake?"). It reads who's here, the person's conversations and the
 // panel's own state (useWorkMenu), and says which conversation is open from the address, which the page
 // keeps true. The page tells it two things through WorkPanelContext: when to read the list again (a turn
-// started or ended, a job moved) and the name Petals' agent just gave the open conversation. No timer.
+// started or ended, a job moved) and the name Petals' agent just gave the open conversation. It also holds
+// the person's own state (the session, the profile and its editor, the credit), once, which the panel's
+// Profile and Lobby sections and the lobby page all read. No timer.
 import { usePathname, useSearchParams } from 'next/navigation';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { type ConversationRow, conversationRows } from '../lib/conversation-list.ts';
 import { useConversations } from './useConversations.ts';
+import { useFunds } from './useFunds.ts';
+import { useProfile } from './useProfile.ts';
+import { useProfileEditor } from './useProfileEditor.ts';
 import { useSession } from './useSession.ts';
 import { useWorkMenu } from './useWorkMenu.ts';
+
+/** The person's own state, read once here for the panel and the lobby page alike (LOBBY, 10 Nov: one state,
+ * not two reads, so a Saved or a withdrawal shows in both). */
+export interface PanelPerson {
+  session: ReturnType<typeof useSession>;
+  profile: ReturnType<typeof useProfile>;
+  editor: ReturnType<typeof useProfileEditor>;
+  funds: ReturnType<typeof useFunds>;
+}
 
 /** What the page beside the panel reads from it and tells it. */
 export interface WorkPanelBus {
   /** The panel is on the page: someone is signed in. */
   shown: boolean;
+  /** The person's own state; null outside the shared layout. */
+  person: PanelPerson | null;
   /** The person's conversations, the open one marked, as the panel shows them. */
   rows: ConversationRow[];
   /** Read the list and the agents again whenever this changes. */
@@ -23,7 +39,13 @@ export interface WorkPanelBus {
   name: (title: string | null) => void;
 }
 
-const NOBODY: WorkPanelBus = { shown: false, rows: [], touch: () => {}, name: () => {} };
+const NOBODY: WorkPanelBus = {
+  shown: false,
+  person: null,
+  rows: [],
+  touch: () => {},
+  name: () => {},
+};
 
 export const WorkPanelContext = createContext<WorkPanelBus>(NOBODY);
 
@@ -36,6 +58,9 @@ export function useWorkPanel(): WorkPanelBus {
 export function usePanelState() {
   const session = useSession(true);
   const signedIn = Boolean(session.account);
+  const profile = useProfile();
+  const editor = useProfileEditor(profile.account, profile.social, profile.reload);
+  const funds = useFunds();
   const pathname = usePathname();
   const params = useSearchParams();
   const runId = params.get('run');
@@ -53,9 +78,20 @@ export function usePanelState() {
       ),
     [listed, runId, elsewhere, named],
   );
-  const bus = useMemo<WorkPanelBus>(
-    () => ({ shown: signedIn, rows, touch: setSignal, name: setNamed }),
-    [signedIn, rows],
+  const person = useMemo<PanelPerson>(
+    () => ({ session, profile, editor, funds }),
+    [session, profile, editor, funds],
   );
-  return { bus, menu, rows, here: pathname === '/lobby' ? ('lobby' as const) : undefined };
+  const bus = useMemo<WorkPanelBus>(
+    () => ({ shown: signedIn, person, rows, touch: setSignal, name: setNamed }),
+    [signedIn, person, rows],
+  );
+  // what the Profile and Lobby sections say: the lobby's own state, not a second read of it
+  const you = {
+    account: session.account,
+    social: profile.social,
+    balance: funds.balance,
+    leave: session.disconnect,
+  };
+  return { bus, menu, rows, you, here: pathname === '/lobby' ? ('lobby' as const) : undefined };
 }

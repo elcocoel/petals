@@ -3,13 +3,33 @@
 // Drafts, PANEL's, listed for Elco; "Lobby", "Projects" and "Conversations" are Elco's own words.
 import { agentWords } from './agents.ts';
 
+/** The side panel's sections, as WorkMenu draws them and useWorkMenu keeps which one is open. */
+export type SectionKey = 'conversations' | 'projects' | 'agents' | 'lobby' | 'profile' | 'settings';
+
 export const panelWords = {
   /** What a screen reader hears for the panel. */
   panel: 'Your work',
-  fold: 'Hide the panel',
-  unfold: 'Show the panel',
+  /** The sections, as their icons are read aloud and shown on hover, and as each one's head. */
+  sections: {
+    conversations: 'Conversations',
+    projects: 'Projects',
+    agents: 'Your agents',
+    lobby: 'Lobby',
+    profile: 'Profile',
+    settings: 'Settings',
+  },
   newConversation: 'New conversation',
   lobby: 'Lobby',
+  /** The Lobby section's rows: each opens its card on /lobby. */
+  balance: 'Balance',
+  near: (amount: string) => `${amount} NEAR`,
+  onTheMap: 'On the map',
+  /** The Profile section: the public profile's state, a few characters at its row's end. */
+  publicProfile: 'Public profile',
+  socialState: { profile: 'NEAR Social', none: 'None', reading: '…', unread: 'No answer' },
+  signOut: 'Disconnect',
+  /** Settings, until LOOK and SYSTEMS's one-source page fills it. A draft. */
+  settingsSoon: 'Your display settings show here',
   projects: 'Projects',
   newProject: 'New project',
   /** The new project's row, waiting for its name. */

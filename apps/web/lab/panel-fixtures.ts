@@ -9,6 +9,8 @@ import {
   type ListedConversation,
   type ListedProject,
 } from '../lib/conversation-list.ts';
+import type { SocialState } from '../lib/lobby-view.ts';
+import type { SectionKey } from '../lib/panel-words.ts';
 
 export const PANEL_NOW = new Date('2026-11-10T16:00:00.000Z');
 
@@ -98,8 +100,24 @@ export interface PanelFixture {
   projects: ListedProject[];
   opened: string[];
   agents: ReturnType<typeof agentRows>;
-  open: boolean;
+  /** The section open beside the bar, or null for the bar alone. */
+  section: SectionKey | null;
+  you: { account: string | null; social: SocialState; balance: string | null };
 }
+
+const NEW_PERSON = {
+  account: '446815176e3ea9c5e07d2d1fbf2e5843288b060eca0a3d31a54b39e98c9d1ef5',
+  social: { kind: 'none' } as SocialState,
+  balance: '0.00',
+};
+const ELCO_LIKE = {
+  account: 'researcher.near',
+  social: {
+    kind: 'profile',
+    profile: { name: 'A researcher', about: null, avatar: null, links: [] },
+  } as SocialState,
+  balance: '0.42',
+};
 
 const forty = {
   rows: conversationRows(listed(FORTY), { runId: 'r3' }, PANEL_NOW),
@@ -115,7 +133,8 @@ export const PANEL_STATES = {
     projects: [],
     opened: [],
     agents: [],
-    open: true,
+    section: 'conversations',
+    you: NEW_PERSON,
   },
   five: {
     name: 'A first afternoon',
@@ -127,10 +146,12 @@ export const PANEL_STATES = {
     projects: [],
     opened: [],
     agents: agentRows([{ name: 'claude-code', waiting: true, job: null }]),
-    open: true,
+    section: 'conversations',
+    you: NEW_PERSON,
   },
-  forty: { name: 'Forty, in six projects', ...forty, open: true },
-  folded: { name: 'Folded', ...forty, open: false },
+  forty: { name: 'Forty, in six projects', ...forty, section: 'projects', you: ELCO_LIKE },
+  profile: { name: 'Profile', ...forty, section: 'profile', you: ELCO_LIKE },
+  folded: { name: 'Folded to the bar', ...forty, section: null, you: ELCO_LIKE },
 } satisfies Record<string, PanelFixture>;
 
 export type PanelState = keyof typeof PANEL_STATES;
