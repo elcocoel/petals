@@ -103,17 +103,14 @@ export async function bundle(): Promise<{ bytes: number }> {
         "// Petals' own source with esbuild, not minified. It reads public chain data and web pages from",
         '// this computer, counts and draws flowers, keeps its notes in ~/.petals, and posts this',
         '// conversation and its flowers to that site. It starts another program only to open the page in',
-        "// the browser (`start`), and for `terminal`, to run the person's own claude, codex or hermes",
-        "// through Python's pty, and on a Mac to make Petals Helper.app with macOS's own tools (osacompile,",
-        '// plutil, codesign, lsregister), so the page can start it. Everything else is ordinary npm code:',
-        "// the MCP SDK, ws, ajv, noble's cryptography, near-api-js.",
+        "// the browser (`start`). Everything else is ordinary npm code: the MCP SDK, ajv, noble's",
+        '// cryptography, near-api-js.',
         "import { createRequire as __petalRequire } from 'node:module';",
         'const require = __petalRequire(import.meta.url);',
       ].join('\n'),
     },
     // Petals' own agent and its HTTP server aren't in the file: the person's agent is theirs.
-    // ws's optional native speed-ups: it runs without them.
-    external: ['@petal/agent', '@hono/node-server', 'bufferutil', 'utf-8-validate'],
+    external: ['@petal/agent', '@hono/node-server'],
     legalComments: 'none',
     logLevel: 'warning',
   });

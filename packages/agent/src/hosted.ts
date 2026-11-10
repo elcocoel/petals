@@ -105,14 +105,8 @@ function appSteps(origin: string): string {
     const app = c.title.replace(/^Connect /, '');
     out.push(`### ${app.charAt(0).toUpperCase()}${app.slice(1)}`, '', fill(c.intro, origin), '');
     for (const sec of c.sections) {
-      // the page's box isn't theirs, the two setup commands are already above, the same for every app,
-      // and /connect's words are the person's
-      if (
-        sec.heading === "In the box on Petals' page" ||
-        sec.heading === 'Set up, every session' ||
-        sec.heading === CONNECT_PAGE
-      )
-        continue;
+      // the two setup commands are already above, the same for every app, and /connect's words are the person's
+      if (sec.heading === 'Set up, every session' || sec.heading === CONNECT_PAGE) continue;
       out.push(`#### ${sec.heading}`, '', fill(sec.body, origin), '');
     }
     out.push(`All of it, always the latest: \`${origin}/api/v1/brain/files/${c.id}\`.`, '');
@@ -153,7 +147,7 @@ Petal's tools are one file that runs on this computer. Every read, search and dr
 
   The first gets the file: run it every session, since it takes a second and keeps the file current and from this site. The second starts this conversation's page and opens it in their browser, in one call; its \`site\` must be \`${origin}\`, or the file came from somewhere else, so fetch it again. Every tool is then a command, listed under "Calling the tools as commands". It needs Node 22.13 or newer: if \`node\` is missing or older, say so in a line.
 
-**What the file is, so you needn't audit it:** one file, built by this site from Petals' own source with esbuild, not minified${sha}. Its first lines say what it does. It reads public chain data and web pages from this computer, keeps its notes in \`~/.petals\`, and sends this conversation and its flowers to \`${host}\`. It starts another program only to open the page in the browser, and for its \`terminal\` command, to run the person's own agent through Python's pty and, on a Mac, to make Petals Helper.app with macOS's own tools. It has no WebAssembly and no install step.
+**What the file is, so you needn't audit it:** one file, built by this site from Petals' own source with esbuild, not minified${sha}. Its first lines say what it does. It reads public chain data and web pages from this computer, keeps its notes in \`~/.petals\`, and sends this conversation and its flowers to \`${host}\`. It starts another program only to open the page in the browser. It has no WebAssembly and no install step.
 
 **Your app's own steps** come from Petals' brain, one chapter per app. Follow yours:
 

@@ -119,7 +119,6 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
         'Run `node petal.mjs help` for the commands.',
       );
     }
-    if (command === 'terminal') return await terminal(rest, env, cwd, stderr, deps.asFile === true);
     if (command === 'connect') {
       return connect(rest, {
         env,
@@ -173,126 +172,6 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
     const code = typeof err.code === 'string' ? err.code : 'internal';
     stderr(errorJson(code, String(err.message ?? e)));
     return 1;
-  }
-}
-
-/**
- * `petal terminal [claude|codex|hermes]`: the person's own agent, in a box on the Petals page, through
- * this machine only (terminal.ts). The site the file came from may pair; anything else needs naming.
- */
-async function terminal(
-  argv: string[],
-  env: Env,
-  cwd: string,
-  stderr: (t: string) => void,
-  asFile: boolean,
-): Promise<number> {
-  const { parseTerminalArgs, startTerminal } = await import('./terminal.ts');
-  const { parseLink, writeHelperApp } = await import('./helper-app.ts');
-  const say = (line: string) => stderr(`${line}\n`);
-  const args = parseTerminalArgs(argv);
-  if ('error' in args)
-    throw new UsageError(
-      args.error,
-      'petal terminal [claude|codex|hermes] [--port 7466] [--allow-origin <origin>] [--no-open] [--no-app]',
-    );
-  // From the page's Start button, through Petals Helper.app: the agent, the port and the page's own code.
-  const link = args.link ? parseLink(args.link) : null;
-  if (args.link && !link) throw new UsageError(`not a Petals link: ${args.link}`);
-  const agent = link?.agent ?? args.agent;
-  const port = link?.port ?? args.port;
-  const site = env.PETAL_API?.trim().replace(/\/+$/, '');
-  const origins = [...(site ? [site] : []), ...args.extra];
-  if (origins.length === 0) {
-    throw new UsageError('no site may pair: name one with --allow-origin, or set PETAL_API');
-  }
-  const home = env.PETALS_HOME?.trim() || join(homedir(), '.petals');
-  const petals = {
-    node: process.execPath,
-    file: resolve(process.argv[1] ?? ''),
-    site: (site ?? origins[0]) as string,
-    home,
-  };
-  // One helper at a time: a link replaces the one running, which a pid file names.
-  const pidFile = join(home, 'helper.pid');
-  if (link) await stopRunningHelper(pidFile, port);
-  // The first paste also writes Petals Helper.app, so next time the page's button is one click.
-  if (asFile && !link && args.app !== false && process.platform === 'darwin') {
-    try {
-      const made = writeHelperApp({
-        dir: join(homedir(), 'Applications'),
-        node: petals.node,
-        file: petals.file,
-        home,
-      });
-      if (made.registered) {
-        say(
-          'Next time, the Start button on the Petals page opens this helper by itself (Petals Helper, in your Applications folder).',
-        );
-      }
-    } catch (e) {
-      say(
-        `Petals Helper.app wasn't written (${(e as Error).message}); pasting the line still works.`,
-      );
-    }
-  }
-  let finish: () => void = () => {};
-  const finished = new Promise<void>((done) => {
-    finish = done;
-  });
-  const helper = await startTerminal({
-    agent,
-    port,
-    origins,
-    cwd,
-    env,
-    petals,
-    ...(link ? { code: link.code, once: true, onDone: () => finish() } : {}),
-    ...(link || args.open === false || env.PETALS_NO_OPEN === '1'
-      ? { openPage: false as const }
-      : {}),
-    say,
-  });
-  mkdirSync(home, { recursive: true });
-  writeFileSync(pidFile, `${process.pid}\n`);
-  await new Promise<void>((done) => {
-    const stop = () => void helper.close().then(done);
-    process.once('SIGINT', stop);
-    process.once('SIGTERM', stop);
-    void finished.then(stop);
-  });
-  try {
-    if (readFileSync(pidFile, 'utf8').trim() === String(process.pid)) rmSync(pidFile);
-  } catch {
-    // already gone
-  }
-  return 0;
-}
-
-/** Stops the helper a pid file names, and waits for its port to be free. */
-async function stopRunningHelper(pidFile: string, port: number): Promise<void> {
-  let pid = 0;
-  try {
-    pid = Number(readFileSync(pidFile, 'utf8').trim());
-  } catch {
-    return;
-  }
-  if (!Number.isInteger(pid) || pid <= 1 || pid === process.pid) return;
-  try {
-    process.kill(pid, 'SIGTERM');
-  } catch {
-    return; // not running
-  }
-  const { createServer } = await import('node:net');
-  for (let i = 0; i < 50; i++) {
-    const free = await new Promise<boolean>((ok) => {
-      const probe = createServer()
-        .once('error', () => ok(false))
-        .once('listening', () => probe.close(() => ok(true)))
-        .listen(port, '127.0.0.1');
-    });
-    if (free) return;
-    await new Promise((r) => setTimeout(r, 100));
   }
 }
 
@@ -383,7 +262,7 @@ class Cli {
     const openUrl = typeof started.open_url === 'string' ? started.open_url : null;
     let opened = false;
     if (openUrl && flags.get('no-open') !== true && this.sys.env.PETALS_NO_OPEN !== '1') {
-      const { systemOpener } = await import('./terminal.ts');
+      const { systemOpener } = await import('./opener.ts');
       systemOpener(openUrl);
       opened = true;
     }
@@ -814,7 +693,6 @@ class Cli {
     }
     p('\nDoors:\n');
     p('  mcp                 MCP over stdio (serveStdio), for Claude Code and Codex\n');
-    p('  terminal [agent]    your own claude, codex or hermes, in a box on the Petals page\n');
     p(
       "  join <key> --as <n> join the person's Petals as one of their agents, with their agent key\n",
     );

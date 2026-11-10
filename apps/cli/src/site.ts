@@ -27,7 +27,7 @@ export interface SiteOptions {
   site: string;
   /** where the last exploration started from the CLI is kept; none: memory only */
   currentFile?: string;
-  /** the page's own conversation, handed in by the terminal helper (PETALS_EXPLORATION) */
+  /** a conversation's link to work in from the start (PETALS_EXPLORATION) */
   initial?: string;
   fetch?: Fetch;
 }

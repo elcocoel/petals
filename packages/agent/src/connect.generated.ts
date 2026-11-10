@@ -37,10 +37,6 @@ export const CONNECT_CHAPTERS: readonly ConnectChapter[] = [
         "body": "As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait` with the Bash tool's `timeout` at 600000, its longest: ten minutes. The default two minutes cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way."
       },
       {
-        "heading": "In the box on Petals' page",
-        "body": "Petals' helper starts Claude Code with the tools already loaded, as the `petals` MCP server for that session, and its notes in `~/.petals/work`. Nothing to download or install there."
-      },
-      {
         "heading": "When it can't start",
         "body": "- **Claude Code isn't installed:** `curl -fsSL https://claude.ai/install.sh | bash`.\n- **It isn't signed in** (\"Not logged in · Please run /login\"): the person runs `claude` once in a terminal and signs in there."
       },
@@ -74,10 +70,6 @@ export const CONNECT_CHAPTERS: readonly ConnectChapter[] = [
         "body": "As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait`, with the network allowed as above. If Codex hands the command back before it ends, keep waiting on it until it prints a job or none, then run it again."
       },
       {
-        "heading": "In the box on Petals' page",
-        "body": "Petals' helper starts Codex in the terminal box with the tools already loaded, as the `petals` MCP server for that session, and its notes in `~/.petals/work`. Codex isn't in the page's chat box yet: there, choose Claude Code or Hermes."
-      },
-      {
         "heading": "When it can't start",
         "body": "- **Codex isn't installed:** `npm install -g @openai/codex`.\n- **It isn't signed in:** the person runs `codex` once in a terminal and signs in there, with their ChatGPT account or an API key."
       },
@@ -105,10 +97,6 @@ export const CONNECT_CHAPTERS: readonly ConnectChapter[] = [
       {
         "heading": "Waiting for jobs",
         "body": "As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait` with the terminal tool's `timeout` at 600, its longest in the foreground: ten minutes. The default 180 seconds cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way."
-      },
-      {
-        "heading": "In the box on Petals' page",
-        "body": "Petals' helper runs Hermes over ACP (`hermes acp`) in the page's chat, and `hermes chat` in its terminal box. Neither loads MCP servers for one session, so there the tools are commands in Hermes's shell: `node ~/.petals/petal.mjs <command>`. Its notes are in `~/.petals/work`."
       },
       {
         "heading": "When it can't start",
