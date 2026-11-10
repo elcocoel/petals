@@ -1,21 +1,19 @@
 // Paying for Petals' agent (B): the one payment, which the wallet sends and the server checks on chain, to
-// where GET /api/v1/pay says, read when someone is signed in. The balance it changes is the one balance
-// (useFunds, in the layout), which `paid` reads again once a payment lands. lib/pay.ts holds the arithmetic
-// and the words.
-import { useCallback, useEffect, useState } from 'react';
-import { confirmPay, readPay } from '../lib/agent-client.ts';
+// where GET /api/v1/pay says. That's read once, with the one balance (useFunds, in the layout), and handed in
+// as `where`; `paid` reads both again once a payment lands. lib/pay.ts holds the arithmetic and the words.
+import { useCallback, useState } from 'react';
+import { confirmPay } from '../lib/agent-client.ts';
 import { PAY_NEAR, type PayInfo, type PayPhase, payAction, sentBy, yoctoOf } from '../lib/pay.ts';
 import { sendAction } from '../lib/wallet.ts';
 
 /** `asking` is the newest pay row's key: a new one starts a new payment. */
 export function usePay(
-  signedIn: boolean,
-  busy: boolean,
+  /** Where a payment goes and NEAR's price, as the one balance read them; null until it has. */
+  where: PayInfo | null,
   asking: string | null,
   /** The one balance's re-read, once a payment has landed. */
   paid: () => void,
 ) {
-  const [info, setInfo] = useState<PayInfo | null>(null);
   const [phase, setPhase] = useState<PayPhase>('ready');
   const [added, setAdded] = useState<string | null>(null);
   const [askedBy, setAskedBy] = useState(asking);
@@ -26,22 +24,7 @@ export function usePay(
     setAdded(null);
   }
 
-  useEffect(() => {
-    if (!signedIn || busy) return;
-    let gone = false;
-    void readPay().then(
-      (p) => {
-        if (!gone) setInfo(p);
-      },
-      () => {},
-    );
-    return () => {
-      gone = true;
-    };
-  }, [signedIn, busy]);
-
   const pay = useCallback(async () => {
-    const where = info ?? (await readPay());
     if (!where) {
       setPhase('failed');
       return;
@@ -62,7 +45,7 @@ export function usePay(
     } catch {
       setPhase('failed');
     }
-  }, [info, paid]);
+  }, [where, paid]);
 
   return {
     /** The pay row that's live; earlier ones were answered or passed. */
