@@ -26,7 +26,9 @@ import {
   PRESENCE,
   ZOOM_LIMITS,
 } from '../flower/feel.ts';
+import { clickedAt } from '../flower/live.ts';
 import { advance, SNAP, spring, stepOf } from '../flower/spring.ts';
+import type { CanvasHit } from '../lib/panel-view.ts';
 import { type Road, roadWidth } from './roads.ts';
 import { type ArrowHit, createLandScene, type LandFlower, roadEnds } from './scene.ts';
 import {
@@ -47,6 +49,17 @@ export interface LandscapeData {
   home: Home;
 }
 
+/**
+ * A page that opens the map at one flower (coordinator/one-source.md, step 6): which flower it opens in, and
+ * what a click inside that flower tells the page, as a flower's own canvas does (flower/FlowerCanvas.tsx).
+ * `choose` is set by the map, so the page can mark a petal without the scene being built again.
+ */
+export interface LandscapeAt {
+  focus: number;
+  onPick?: (hit: CanvasHit) => void;
+  choose?: (id: string | null) => void;
+}
+
 const LONGEST_FRAME = 1 / 15;
 const LONGEST_THROW = 2400;
 /** The way out goes a little past the whole chain, so its edge shows. */
@@ -60,6 +73,7 @@ export function useLandscape(
   probe: boolean,
   /** What sits down the window's left side, so the arrows' names keep clear of it. */
   aside?: RefObject<HTMLElement | null>,
+  at?: RefObject<LandscapeAt | null>,
 ): void {
   useEffect(() => {
     const node = svg.current;
@@ -88,6 +102,9 @@ export function useLandscape(
     let marked = -1;
     let hits: ArrowHit[] = [];
     const enter = spring(0);
+    // Opened at a flower: the first frame is already inside it, with no flight to it.
+    let arriving = false;
+    let chosen: string | null = null;
     let left = 0;
     const measure = () => {
       const r = aside?.current?.getBoundingClientRect();
@@ -126,7 +143,7 @@ export function useLandscape(
       const dt = then ? Math.min(LONGEST_FRAME, (now - then) / 1000) : 1 / 60;
       then = now;
       frames++;
-      let moving = stepCamera(cam, dt, calm);
+      let moving = stepCamera(cam, dt, calm || arriving);
 
       // Entering and leaving by zoom, while a hand drives the camera; a click's flight decides on its own.
       if (cam.mode !== 'fly') {
@@ -136,7 +153,8 @@ export function useLandscape(
         } else entered = filling();
       }
       enter.t = entered >= 0 ? 1 : 0;
-      if (advance(enter, calm ? SNAP : stepOf(PRESENCE, dt))) moving = true;
+      if (advance(enter, calm || arriving ? SNAP : stepOf(PRESENCE, dt))) moving = true;
+      arriving = false;
 
       // Who's live: mount the new ones open, as their silhouettes already are, under the names.
       const want = liveSet(cam, places, new Set(lives.keys()));
@@ -182,6 +200,11 @@ export function useLandscape(
         p.inside = pointer.inside && i === under && (entered < 0 || i === entered);
         p.dragging = pointer.dragging;
         d.live.calm = calm;
+        // The page's chosen petal, marked only in the flower it opened in.
+        d.live.chosen =
+          i === entered && i === at?.current?.focus && chosen
+            ? d.live.m.petals.findIndex((petal) => petal.id === chosen)
+            : -1;
         const tone = String(i === entered ? 1 : Math.round((1 - enter.x) * 100) / 100);
         if (tones.get(i) !== tone) {
           d.scene.root.setAttribute('opacity', tone);
@@ -267,10 +290,22 @@ export function useLandscape(
         }
       }
       const f = flowerAt(cam, places, reach, x, y);
+      const tells = entered >= 0 && entered === at?.current?.focus ? at.current.onPick : undefined;
       if (f >= 0 && (entered < 0 || f === entered)) {
         if (f !== entered) enterFlower(f);
+        else if (tells) {
+          const d = lives.get(f);
+          const hit = d ? clickedAt(d.live, x, y) : { kind: 'ground' as const };
+          const petal = hit.kind === 'petal' ? d?.live.m.petals[hit.index]?.id : undefined;
+          tells(
+            petal
+              ? { kind: 'petal', id: petal }
+              : { kind: hit.kind === 'centre' ? 'centre' : 'ground' },
+          );
+        }
         return;
       }
+      if (tells) tells({ kind: 'ground' });
       const r = roadAt(x, y);
       marked = r >= 0 && r !== marked ? r : -1;
       wake();
@@ -388,6 +423,20 @@ export function useLandscape(
       wake();
     });
 
+    const focus = at?.current?.focus ?? -1;
+    if (focus >= 0 && flowers[focus]) {
+      enterFlower(focus);
+      arriving = true;
+      // Placed on purpose: the first size the window reports must keep it there, not fit the chain again.
+      cam.touched = true;
+    }
+    if (at?.current) {
+      at.current.choose = (id) => {
+        chosen = id;
+        wake();
+      };
+    }
+
     node.addEventListener('pointermove', onMove);
     node.addEventListener('pointerleave', onLeave);
     node.addEventListener('pointerdown', onDown);
@@ -457,5 +506,5 @@ export function useLandscape(
       scene.dispose();
       delete probeHost.landscapeProbe;
     };
-  }, [svg, data, probe, aside]);
+  }, [svg, data, probe, aside, at]);
 }
