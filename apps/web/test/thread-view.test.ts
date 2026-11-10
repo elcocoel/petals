@@ -228,11 +228,11 @@ describe('the composer', () => {
       readOnly: false,
       button: 'Send',
       disabled: true,
-      label: 'Ask Petals about a network',
-      placeholder: 'Ask about any network, or paste an address.',
+      label: 'Message Petals',
+      placeholder: 'A network, a DAO, a token or an address.',
     });
     expect(composer({ runId: 'r1' })).toMatchObject({
-      placeholder: 'Ask a follow-up…',
+      placeholder: 'A follow-up…',
       run: { id: 'r1', href: '/make?run=r1' },
     });
     expect(composer({ recorded: true, question: 'ignored' })).toMatchObject({

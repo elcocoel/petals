@@ -4,6 +4,8 @@
 // event says it was handed; GET /api/v1/explorations/:ref/jobs says where each stands. Pure. The words
 // are drafts, shipped on Elco's word (9 Nov: "Ship the drafts, I'll change them later").
 
+import { readableAgent } from './agents.ts';
+
 export type JobStatus = 'open' | 'taken' | 'done' | 'failed';
 
 /** A job as GET /api/v1/explorations/:ref/jobs lists it (SYSTEMS). */
@@ -22,12 +24,12 @@ export interface Job {
   taken_by?: string | null;
 }
 
-/** Who, as a person reads it: the agent's own name, or your own agent when none is named yet. */
-const whoOf = (name: string | null | undefined) => name || 'Your own agent';
+/** Who, as a person reads it: the agent's name made readable, or your own agent when none is named yet. */
+const whoOf = (name: string | null | undefined) => (name ? readableAgent(name) : 'Your own agent');
 
 export const jobWords = {
   open: (title: string, to?: string | null) =>
-    to ? `Sent to ${to}: ${title}` : `Sent to your own agent: ${title}`,
+    to ? `Sent to ${readableAgent(to)}: ${title}` : `Sent to your own agent: ${title}`,
   taken: (title: string, by?: string | null) => `${whoOf(by)} is on it: ${title}`,
   done: (title: string, by?: string | null) => `${whoOf(by)} finished: ${title}`,
   failed: (title: string, by?: string | null) => `${whoOf(by)} couldn't finish: ${title}`,

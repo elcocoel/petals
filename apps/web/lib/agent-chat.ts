@@ -319,7 +319,7 @@ export const chatWords = {
   box: 'Your agent',
   you: 'You',
   thinking: 'Thinking',
-  placeholder: 'Ask your agent',
+  placeholder: 'Message your agent',
   send: 'Send',
   stop: 'Stop',
   context: (pct: number) => `${pct}% of context`,

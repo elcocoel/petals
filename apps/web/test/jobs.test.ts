@@ -102,3 +102,25 @@ describe('a turn Petals starts on a report', () => {
     expect(s.items.filter((i: { kind: string }) => i.kind === 'user')).toHaveLength(1);
   });
 });
+
+describe('minimally good, in the workspace', () => {
+  test('agents read as people know them', async () => {
+    const { readableAgent } = await import('../lib/agents.ts');
+    expect(readableAgent('claude-code')).toBe('Claude Code');
+    expect(readableAgent('codex')).toBe('Codex');
+    expect(readableAgent('my-helper')).toBe('My Helper');
+    expect(readableAgent('Claude Code')).toBe('Claude Code');
+  });
+
+  test('a job names its agent readably', () => {
+    expect(jobLine({ ...handed, to: 'claude-code' }, undefined).text).toBe(
+      "Sent to Claude Code: Map RaidGuild's proposals",
+    );
+  });
+
+  test('a conversation the page starts says which agent and when', async () => {
+    const { conversationTitle } = await import('../lib/terminal-pass.ts');
+    const t = conversationTitle('Claude Code', new Date(2026, 10, 10, 14, 32));
+    expect(t).toBe('Claude Code, 10 Nov 14:32');
+  });
+});

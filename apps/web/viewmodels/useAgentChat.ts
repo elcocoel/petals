@@ -13,6 +13,7 @@ import {
   asked,
   type ChatState,
   chatHello,
+  chatWords,
   emptyChat,
   foldChat,
   helperChatUrl,
@@ -26,8 +27,10 @@ import {
 } from '../lib/agent-client.ts';
 import { isOwnId } from '../lib/elsewhere.ts';
 import {
+  AGENTS,
   type AgentId,
   codeFrom,
+  conversationTitle,
   HELPER_PORT,
   pairFromHash,
   pairingCode,
@@ -107,7 +110,10 @@ export function useAgentChat({
       setPhase('connecting');
       setFailed(null);
       if (!conversation && signedIn) {
-        const id = await startOwnConversation(terminalWords.conversation, terminalWords.client);
+        const id = await startOwnConversation(
+          conversationTitle(chatWords.box, new Date()),
+          terminalWords.client,
+        );
         if (id) {
           window.location.replace(terminalAddress(window.location.pathname, id, pair, port));
           return;
@@ -127,7 +133,10 @@ export function useAgentChat({
       setPhase('connecting');
       setFailed(null);
       if (!conversation && signedIn) {
-        const id = await startOwnConversation(terminalWords.conversation, terminalWords.client);
+        const id = await startOwnConversation(
+          conversationTitle(AGENTS.find((a) => a.id === agent)?.name ?? chatWords.box, new Date()),
+          terminalWords.client,
+        );
         if (id) {
           window.location.replace(startAddress(window.location.pathname, id, agent));
           return;

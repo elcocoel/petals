@@ -452,3 +452,10 @@ export async function readAgents(): Promise<ConnectedAgent[]> {
 export function mintAgentLink(): Promise<{ id: string; token: string; created_at: string }> {
   return sessionPost('/api/v1/agents/link', {});
 }
+
+/** Ends one of the person's agents by its name (SYSTEMS): it leaves the list, and its waits are refused. */
+export function disconnectAgent(
+  name: string,
+): Promise<{ disconnected: { name: string; at: string } }> {
+  return sessionPost('/api/v1/agents/disconnect', { name });
+}

@@ -71,6 +71,16 @@ export function pairingCode(typed: string): string {
   return bare.length === 8 ? `${bare.slice(0, 4)}-${bare.slice(4)}` : bare;
 }
 
+/**
+ * The title of a conversation the page starts for the person's own agent: which agent, and when, so rows
+ * tell themselves apart (design/minimally-good.md, rule 8). A draft: 'Claude Code, 10 Nov 14:32'.
+ */
+export function conversationTitle(agent: string, when: Date): string {
+  const day = when.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  const time = when.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  return `${agent}, ${day} ${time}`;
+}
+
 export type TermPhase = 'pair' | 'connecting' | 'open' | 'ended';
 
 export const terminalWords = {
@@ -89,7 +99,7 @@ export const terminalWords = {
   noHelper: "The Petals helper didn't answer. Start it, or close the other page that's using it.",
   /** The helper answered and said no. */
   refused: "That code didn't work. Enter the newest code the helper shows.",
-  /** The conversation the page starts for the agent: its first words in the list, and where it happens. */
+  /** The conversation the page starts for the agent: where it happens. Its title is conversationTitle's. */
   conversation: 'A conversation in your terminal',
   client: 'your terminal',
 } as const;
