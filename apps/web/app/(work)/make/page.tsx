@@ -1,8 +1,9 @@
 // The workspace: the flower is the page and the conversation floats over it. Runs link here
 // (run.resume_url), and the landing's questions arrive here as ?q=. The rest of the address says what
 // the conversation held (lib/workspace-url.ts).
-import { InteractionSurface } from '../../flower/InteractionSurface.tsx';
-import { workspaceHome } from '../../lib/workspace-home.ts';
+import { randomUUID } from 'node:crypto';
+import { InteractionSurface } from '../../../flower/InteractionSurface.tsx';
+import { workspaceHome } from '../../../lib/workspace-home.ts';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +13,11 @@ export default async function MakePage({ searchParams }: { searchParams: Promise
   const q = await searchParams;
   return (
     <InteractionSurface
+      // Each render of this page is a conversation opened: by a link in the side panel, by New, or by an
+      // address. It starts clean (design/minimally-good.md, rule 3), inside the panel that stays. A new
+      // conversation takes its run's address in place (history.replaceState), which renders nothing here,
+      // so its first turn carries on.
+      key={randomUUID()}
       {...(await workspaceHome(q))}
       // Elco's open choices, read from the address until they're chosen: ?box=ink and ?order=scatter.
       surface={q.box === 'ink' ? 'ink' : 'ground'}

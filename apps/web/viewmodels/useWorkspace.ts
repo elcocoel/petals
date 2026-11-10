@@ -11,7 +11,6 @@ import {
   type Settings,
   withModel,
 } from '../lib/composer-options.ts';
-import { conversationRows } from '../lib/conversation-list.ts';
 import { elsewhereFlower, elsewhereRows, whereOf } from '../lib/elsewhere.ts';
 import { svgImage } from '../lib/flower-view.ts';
 import type { MapCard } from '../lib/maps.ts';
@@ -35,7 +34,6 @@ import type { Opened, PanelSection } from '../lib/thread.ts';
 import { composerView, type FlowerRow, openFlowerIndex } from '../lib/thread-view.ts';
 import { workspaceUrl } from '../lib/workspace-url.ts';
 import { useConversationFacts } from './useConversationFacts.ts';
-import { useConversations } from './useConversations.ts';
 import { useDrawnFlowers } from './useDrawnFlower.ts';
 import { useElsewhere } from './useElsewhere.ts';
 import { useJobs } from './useJobs.ts';
@@ -44,7 +42,7 @@ import { usePay } from './usePay.ts';
 import { useSession } from './useSession.ts';
 import { useSnapshotFacts } from './useSnapshotFacts.ts';
 import { useStoredFlower } from './useStoredFlower.ts';
-import { useWorkMenu } from './useWorkMenu.ts';
+import { useWorkPanel } from './useWorkPanel.ts';
 
 const STORED_LINK = /^\/f\/([^/?#]+)$/;
 
@@ -224,28 +222,23 @@ export function useWorkspace(props: {
     for (const j of ended) reported.current.add(j.id);
     if (fresh.length > 0) follow();
   }, [jobs, follow]);
-  // The work menu, the lobby's own: its agents read again when a turn ends or the conversation changes.
-  const menu = useWorkMenu(
-    Boolean(session.account),
-    `${busy}:${Object.keys(jobs).length}:${JSON.stringify(Object.values(jobs).map((j) => j.status))}`,
-  );
+  // The side panel is the layout's (app/(work)/WorkPanel.tsx), so it stays while conversations change. It
+  // reads its list and agents again when a turn starts or ends, the conversation changes or a job moves,
+  // and it shows the name Petals' agent gives this conversation as it arrives (the `title` event).
+  const panelBus = useWorkPanel();
+  const { touch, name } = panelBus;
+  const jobsSignal = `${Object.keys(jobs).length}:${JSON.stringify(Object.values(jobs).map((j) => j.status))}`;
+  useEffect(() => {
+    if (!recorded) touch(`${runId}:${busy}:${elsewhereRef}:${jobsSignal}`);
+  }, [touch, recorded, runId, busy, elsewhereRef, jobsSignal]);
+  const named = chat.named;
+  useEffect(() => name(named), [name, named]);
   // Paying for Petals' agent (B): the newest pay row is the live one.
   const asking = useMemo(
     () => shownRows.findLast((r) => r.kind === 'pay')?.key ?? null,
     [shownRows],
   );
   const pay = usePay(Boolean(session.account), busy, asking);
-  const listed = useConversations(recorded ? null : `${runId}:${busy}:${elsewhereRef}`);
-  // A name Petals' agent gives this conversation shows in the panel as it arrives (the `title` event),
-  // not only when the list is next read.
-  const named = chat.named;
-  const conversations = useMemo(
-    () =>
-      conversationRows(listed, { runId, elsewhere: elsewhereRef ?? undefined }).map((row) =>
-        named && row.current && row.by === 'petals' ? { ...row, title: named } : row,
-      ),
-    [listed, runId, elsewhereRef, named],
-  );
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
   const onCanvas = canvas;
@@ -321,12 +314,10 @@ export function useWorkspace(props: {
       heading:
         open.kind === 'stored'
           ? 'Continue this flower'
-          : (conversations.find((c) => c.current)?.title ??
+          : (panelBus.rows.find((c) => c.current)?.title ??
             elsewherePacket?.question ??
             'Conversation'),
-      conversations,
-      menuShown: Boolean(session.account),
-      menu,
+      menuShown: panelBus.shown,
       pay: { asking: pay.asking, phase: pay.phase, added: pay.added },
       jobs,
       balance: pay.balance ? payWords.balance(pay.balance) : null,

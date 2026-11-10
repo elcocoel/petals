@@ -30,8 +30,8 @@ describe('the landing page', () => {
   test('every link goes where the site has a page or an anchor: none goes nowhere', () => {
     const routes: Record<string, string> = {
       [siteLinks.home]: 'page.tsx',
-      [siteLinks.make]: 'make/page.tsx',
-      [siteLinks.lobby]: 'lobby/page.tsx',
+      [siteLinks.make]: '(work)/make/page.tsx',
+      [siteLinks.lobby]: '(work)/lobby/page.tsx',
       [siteLinks.gallery]: '(site)/gallery/page.tsx',
       [siteLinks.connect]: '(site)/connect/page.tsx',
       [siteLinks.liveShape]: '(site)/f/[id]/page.tsx',

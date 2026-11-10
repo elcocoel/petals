@@ -14,7 +14,6 @@ import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { WhoIsHere } from '../components/chat/WhoIsHere.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
-import { WorkMenu } from '../components/workspace/WorkMenu.tsx';
 import type { Catalogue } from '../lib/composer-options.ts';
 import { besideMenu, conversationBoxes, recordedBoxes, type Size } from '../lib/float-box.ts';
 import type { MapCard } from '../lib/maps.ts';
@@ -48,7 +47,8 @@ export function InteractionSurface({
 }) {
   const { state, actions, refs } = useWorkspace(workspace);
   useFollowScroll(refs.thread, refs.following);
-  // The boxes start past the work menu when it's there. Placed again only if that changes.
+  // The boxes start past the side panel when it's there (the layout's, app/(work)/WorkPanel.tsx). Placed
+  // again only if that changes.
   const from = state.menuShown ? besideMenu : undefined;
   const place = useMemo(
     () =>
@@ -76,7 +76,6 @@ export function InteractionSurface({
         selected={state.selected}
         onPick={actions.pick}
       />
-      {state.menuShown && <WorkMenu conversations={state.conversations} menu={state.menu} />}
       <FloatBox label={state.heading} title={state.heading} surface={surface} hand={hands.output}>
         {/* Petals' greeting and the thread. */}
         <ConversationThread

@@ -2,7 +2,9 @@
 // high, UI words cut with an ellipsis and shown in full on hover, an icon before them and, at the far end,
 // when it last moved or a count, in mono. A square of accent says something is working there now. The
 // fill under the pointer and under where you are is item's (item.soft in v2). A row nested in a project
-// starts where its project's words do.
+// starts where its project's words do. A way somewhere is Next's Link, so moving inside the site is a move,
+// not a load: the side panel stays where it is.
+import Link from 'next/link';
 import type { MouseEventHandler, ReactNode } from 'react';
 import { Icon, type IconName } from './Icon.tsx';
 import { Mono } from './Mono.tsx';
@@ -92,8 +94,10 @@ export function NavItem({
   const hover = title ?? label;
   if (where.href !== undefined) {
     return (
-      <a
+      <Link
         href={where.href}
+        // the workspace is read fresh on each move; forty rows mustn't each ask the server ahead
+        prefetch={false}
         title={hover}
         aria-current={where.current ? 'page' : undefined}
         data-current={where.current ? '' : undefined}
@@ -102,7 +106,7 @@ export function NavItem({
         className={`${look} ${ANSWERS}`}
       >
         {content}
-      </a>
+      </Link>
     );
   }
   if (where.onClick) {
