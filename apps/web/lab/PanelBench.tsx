@@ -40,6 +40,7 @@ export function PanelBench({ state }: { state: PanelState }) {
   const [view, setView] = useState<View>(DEFAULT_VIEW);
   const [openDimension, setOpenDimension] = useState<Dimension | null>('colour');
   const [tip, setTip] = useState(5);
+  const [folded, setFolded] = useState<SectionKey[]>([]);
   const [tipOpen, setTipOpen] = useState(true);
   const menu: WorkMenuView = {
     open,
@@ -47,8 +48,12 @@ export function PanelBench({ state }: { state: PanelState }) {
     jump,
     jumpTo: (key) => {
       setOpen(true);
+      setFolded((now) => now.filter((k) => k !== key));
       setJump((now) => ({ key, n: (now?.n ?? 0) + 1 }));
     },
+    folded,
+    fold: (key) =>
+      setFolded((now) => (now.includes(key) ? now.filter((k) => k !== key) : [...now, key])),
     projects,
     opened,
     toggle: (key) =>

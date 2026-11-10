@@ -111,8 +111,14 @@ export function SideRail({
             ref={column}
             className="flex min-h-0 flex-1 flex-col gap-space-16 overflow-y-auto overscroll-none px-space-8 pb-block-gap"
           >
-            {sections.map((s) => (
-              <div key={s.key} id={sectionId(s.key)}>
+            {/* the last section takes at least the column's height, so any head can come to the top
+                (design/side-panel.md, lines 7 and 8) */}
+            {sections.map((s, i) => (
+              <div
+                key={s.key}
+                id={sectionId(s.key)}
+                className={i === sections.length - 1 ? 'min-h-full shrink-0' : 'shrink-0'}
+              >
                 {s.content}
               </div>
             ))}

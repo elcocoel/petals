@@ -20,6 +20,34 @@ import { agentRows, agentWords, type ConnectedAgent } from '../lib/agents.ts';
 import type { ListedConversation, ListedProject, RowRef } from '../lib/conversation-list.ts';
 import { panelWords, type SectionKey } from '../lib/panel-words.ts';
 
+/** Folded sections, kept in this browser, as the width is (design/side-panel.md, line 41). */
+const FOLDED = 'petals:panel-folded';
+const SECTIONS: readonly SectionKey[] = [
+  'conversations',
+  'projects',
+  'agents',
+  'lobby',
+  'profile',
+  'settings',
+];
+
+function keptFolds(): SectionKey[] {
+  try {
+    const raw: unknown = JSON.parse(window.localStorage.getItem(FOLDED) ?? '[]');
+    return Array.isArray(raw) ? SECTIONS.filter((k) => raw.includes(k)) : [];
+  } catch {
+    return [];
+  }
+}
+
+function keepFolds(keys: readonly SectionKey[]) {
+  try {
+    window.localStorage.setItem(FOLDED, JSON.stringify(keys));
+  } catch {
+    // a browser that keeps nothing starts with every section open
+  }
+}
+
 export function useWorkMenu(
   signedIn: boolean,
   fresh: unknown = null,
@@ -31,6 +59,16 @@ export function useWorkMenu(
   // hides it to the bar and shows it again; a section's icon opens it, if need be, and asks for that section
   const [open, setOpen] = useState(true);
   const [jump, setJump] = useState<{ key: SectionKey; n: number } | null>(null);
+  // sections folded to their heads; read after the first paint, so the server's page and the browser's agree
+  const [folded, setFolded] = useState<SectionKey[]>([]);
+  useEffect(() => setFolded(keptFolds()), []);
+  const fold = useCallback((key: SectionKey) => {
+    setFolded((now) => {
+      const next = now.includes(key) ? now.filter((k) => k !== key) : [...now, key];
+      keepFolds(next);
+      return next;
+    });
+  }, []);
   const [agents, setAgents] = useState<ConnectedAgent[]>([]);
   const [projects, setProjects] = useState<ListedProject[]>([]);
   const [opened, setOpened] = useState<string[]>([]);
@@ -149,8 +187,16 @@ export function useWorkMenu(
     jump,
     jumpTo: (key: SectionKey) => {
       setOpen(true);
+      setFolded((now) => {
+        if (!now.includes(key)) return now;
+        const next = now.filter((k) => k !== key);
+        keepFolds(next);
+        return next;
+      });
       setJump((now) => ({ key, n: (now?.n ?? 0) + 1 }));
     },
+    folded,
+    fold,
     projects,
     opened,
     toggle: (key: string) =>
