@@ -1,7 +1,7 @@
 // One turn's words: who is speaking, then what they said (Figma's "You" 39:894 and "Petals" 39:898). A
 // speaker is left out where the same one goes on speaking.
 import type { ReactNode } from 'react';
-import { Drawing } from '../ui/Drawing.tsx';
+import { Icon } from '../ui/Icon.tsx';
 
 export function Speech({
   speaker,
@@ -10,7 +10,7 @@ export function Speech({
   children,
 }: {
   speaker?: string;
-  /** The agent's mark beside the name. */
+  /** The agent's mark beside the name: Petals' own sign, as the side panel shows its conversations. */
   agent?: boolean;
   /** Said quietly above the words, like what a question carried. */
   note?: string;
@@ -20,7 +20,7 @@ export function Speech({
     <div className="flex min-w-0 flex-col gap-space-8">
       {speaker && (
         <p className="flex items-center gap-space-8 type-caption">
-          {agent && <Drawing kind="cell" size="cell-small" />}
+          {agent && <Icon name="petals" small />}
           {speaker}
         </p>
       )}

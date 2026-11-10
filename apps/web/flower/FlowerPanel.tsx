@@ -9,7 +9,7 @@ import { Legend, LegendKeys } from '../components/Legend.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
 import { SourceList } from '../components/Sources.tsx';
 import { Button } from '../components/ui/Button.tsx';
-import { Drawing } from '../components/ui/Drawing.tsx';
+import { Icon } from '../components/ui/Icon.tsx';
 import { TextLink } from '../components/ui/TextLink.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
@@ -60,7 +60,7 @@ function OpenFlower({
         <p className="error">The flower could not be drawn: {view.failed}</p>
       ) : view.svg ? null : (
         <div className="flex items-center gap-text-gap type-lead">
-          <Drawing kind="cell" size="cell-medium" />
+          <Icon name="petals" />
           Drawing…
         </div>
       )}
