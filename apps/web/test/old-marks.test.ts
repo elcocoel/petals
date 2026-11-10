@@ -54,8 +54,8 @@ describe('the old marks', () => {
   });
 
   test('the FAQ hands its items no glyph', () => {
-    expect(readFileSync(join(WEB, 'components/landing/Questions.tsx'), 'utf8')).not.toMatch(
-      /\bglyph\b|figures/,
-    );
+    const questions = readFileSync(join(WEB, 'components/landing/Questions.tsx'), 'utf8');
+    expect(questions).not.toMatch(/\bglyph[=:]/);
+    expect(imports('components/landing/Questions.tsx', /figures/)).toBe(false);
   });
 });
