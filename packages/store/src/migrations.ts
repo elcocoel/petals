@@ -379,6 +379,11 @@ export const MIGRATIONS: readonly string[] = [
     created_at TEXT NOT NULL
   );
   `,
+  // 16: a conversation from another door can be archived too (Elco, 10 Nov: Archive and Delete in the
+  // panel), as a run is with hidden_at. Empty for what nobody archived.
+  `
+  ALTER TABLE exploration ADD COLUMN hidden_at TEXT;
+  `,
 ];
 
 /**

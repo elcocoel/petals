@@ -1055,3 +1055,99 @@ describe('folders (004-workspace, W4)', () => {
     expect((await listed(b))[run]).toBe(f.id);
   });
 });
+
+describe('archive and delete (Elco, 10 Nov)', () => {
+  test("another door's work is archived and back, as a run is", async () => {
+    const { app, invite, store } = setup();
+    const b = await signedIn(app, invite);
+    const db = store();
+    const id = await doorWork(db, await subjectOf(db, b));
+    const archived = await body(await b.patch(`/api/v1/conversations/${id}`, { hidden: true }));
+    expect(archived.conversation.hidden_at).toBeTruthy();
+    expect((await body(await b.get('/api/v1/conversations'))).conversations).toEqual([]);
+    const listed = (await body(await b.get('/api/v1/conversations?hidden=1'))).conversations;
+    expect(listed.map((x: Out) => [x.id, !!x.hidden_at])).toEqual([[id, true]]);
+    await b.patch(`/api/v1/conversations/${id}`, { hidden: false });
+    expect(
+      (await body(await b.get('/api/v1/conversations'))).conversations.map((x: Out) => x.id),
+    ).toEqual([id]);
+    // still no name or settings for it
+    expect((await b.patch(`/api/v1/conversations/${id}`, { title: 'x' })).status).toBe(400);
+  });
+
+  test('delete takes the run, its project and its notes; the map, credit and other people keep theirs', async () => {
+    const { app, invite, store } = setup();
+    const b = await signedIn(app, invite);
+    const db = store();
+    const subject = (await subjectOf(db, b)) as string;
+    const exp = await doorWork(db, subject);
+    const run = await b.chat(ask('carry on', { exploration: exp }));
+    await db.note.append({
+      exploration: exp,
+      author: 'an agent',
+      text: 'a note',
+      credential: null,
+      at: '2026-11-10T00:00:00.000Z',
+    });
+    await db.job.add({
+      id: 'job_1',
+      exploration: exp,
+      run,
+      kind: 'map',
+      title: 'Map it',
+      brief: 'map it',
+      inputs: {},
+      at: '2026-11-10T00:00:00.000Z',
+      to: null,
+    });
+    const link = await body(
+      await b.post(`/api/v1/explorations/${exp}/links`, { scope: 'continue' }),
+    );
+    await b.post('/api/v1/notes', { about: `conversation:${run}`, text: 'mine' });
+    const drafts = (await db.draft.list()).length;
+    // nobody else can
+    const other = await signedIn(app, invite);
+    expect((await other.del(`/api/v1/conversations/${run}`)).status).toBe(404);
+    const res = await b.del(`/api/v1/conversations/${run}`);
+    expect(res.status).toBe(200);
+    const { deleted } = await body(res);
+    expect(deleted).toMatchObject({
+      id: run,
+      removed: { runs: 1, steps: 1, notes: 2, jobs: 1, links: 1 },
+    });
+    expect(deleted.removed.events).toBeGreaterThan(0);
+    expect(await db.run.get(run)).toBeFalsy();
+    expect(await db.exploration.get(exp)).toBeFalsy();
+    expect((await b.get(`/api/v1/conversations/${run}`)).status).toBe(404);
+    expect((await body(await b.get('/api/v1/notes'))).notes).toEqual([]);
+    // its link stops working, and the shared map keeps what was drawn
+    const token = String(link.url).split('/s/')[1];
+    expect((await b.get(`/api/v1/explorations/${token}`)).status).toBe(404);
+    expect((await db.draft.list()).length).toBe(drafts);
+  });
+
+  test("another door's work is deleted whole, and a running chat must be stopped first", async () => {
+    const { app, invite, store } = setup();
+    const b = await signedIn(app, invite);
+    const db = store();
+    const exp = await doorWork(db, await subjectOf(db, b));
+    expect((await body(await b.del(`/api/v1/conversations/${exp}`))).deleted.removed).toMatchObject(
+      {
+        runs: 0,
+        steps: 1,
+      },
+    );
+    expect(await db.exploration.get(exp)).toBeFalsy();
+    const run = await b.chat(ask('a question'));
+    const row = await db.run.get(run);
+    await db.run.update(run, {
+      status: 'running',
+      model: row?.model ?? null,
+      body: row?.body as string,
+      updated_at: new Date().toISOString(),
+    });
+    const refused = await b.del(`/api/v1/conversations/${run}`);
+    expect(refused.status).toBe(400);
+    expect((await body(refused)).error.message).toMatch(/Stop it first/);
+  });
+});

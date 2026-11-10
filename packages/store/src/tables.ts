@@ -142,6 +142,8 @@ export interface ExplorationRow {
   folder?: string | null;
   /** its name as a conversation, sent with a note by the agent doing it; null until one is sent */
   title?: string | null;
+  /** when its owner archived it, as a conversation from another door (16); null when they haven't */
+  hidden_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -618,6 +620,19 @@ export function tables(db: Db) {
       async setFolder(id: string, folder: string | null) {
         await db.run('UPDATE run SET folder = ? WHERE id = ?', folder, id);
       },
+      /** Every run on this exploration. */
+      idsOfExploration: async (exploration: string) =>
+        (await db.all<{ id: string }>('SELECT id FROM run WHERE exploration = ?', exploration)).map(
+          (r) => r.id,
+        ),
+      /** Gone, with its events and its thread. Returns how many events went. */
+      remove: (id: string) =>
+        db.tx(async () => {
+          const events = await db.run('DELETE FROM run_event WHERE run = ?', id);
+          await db.run('DELETE FROM run_thread WHERE run = ?', id);
+          await db.run('DELETE FROM run WHERE id = ?', id);
+          return events;
+        }),
       /** The run that last worked on this exploration, if any. */
       latestOfExploration: async (exploration: string) =>
         (
@@ -1025,14 +1040,32 @@ export function tables(db: Db) {
         await db.run('UPDATE exploration SET title = ? WHERE id = ?', title, id);
       },
       /** Work from another door: theirs, and no conversation on this site has touched it. */
-      withoutRun: (owner: string, limit: number) =>
+      withoutRun: (owner: string, limit: number, hidden = false) =>
         db.all<ExplorationRow>(
           `SELECT * FROM exploration e WHERE e.owner = ?
              AND NOT EXISTS (SELECT 1 FROM run r WHERE r.exploration = e.id)
+             AND e.hidden_at IS ${hidden ? 'NOT ' : ''}NULL
            ORDER BY e.updated_at DESC LIMIT ?`,
           owner,
           limit,
         ),
+      /** Archived by its owner, or back. Leaves updated_at alone: archiving it isn't working on it. */
+      async setHidden(id: string, at: string | null) {
+        await db.run('UPDATE exploration SET hidden_at = ? WHERE id = ?', at, id);
+      },
+      /**
+       * Gone, with what's kept only for it: its steps, notes, jobs and links. What it drew stays on the map
+       * (drafts are shared and content-addressed), and the layers its owner kept stay theirs.
+       */
+      remove: (id: string) =>
+        db.tx(async () => {
+          const steps = await db.run('DELETE FROM step WHERE exploration = ?', id);
+          const notes = await db.run('DELETE FROM note WHERE exploration = ?', id);
+          const jobs = await db.run('DELETE FROM job WHERE exploration = ?', id);
+          const links = await db.run('DELETE FROM exploration_link WHERE exploration = ?', id);
+          await db.run('DELETE FROM exploration WHERE id = ?', id);
+          return { steps, notes, jobs, links };
+        }),
       /** Every exploration of `from` now belongs to `to`, in one statement. */
       moveOwner: (from: string, to: string): Promise<number> =>
         db.run('UPDATE exploration SET owner = ? WHERE owner = ?', to, from),
