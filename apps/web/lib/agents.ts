@@ -39,7 +39,7 @@ export const agentWords = {
   on: (title: string) => `On: ${title}`,
   copy: 'Copy for your agents',
   copied: 'Copied. Paste it into each agent.',
-  /** CONNECTORS's line, 9 Nov; `site` is this site's address and `key` a fresh agent link's token. */
+  /** CONNECTORS's line, 9 Nov, routing a cloud chat to the connector since 10 Nov; `site` is this site's address and `key` a fresh agent link's token. */
   prompt: (site: string, key: string) =>
-    `Be one of my agents in Petals. Read ${site}/skill.md and set yourself up, then join with my agent key and wait for my jobs, as its Jobs section says. My agent key: ${key}`,
+    `Be one of my agents in Petals. If you run on my computer, read ${site}/skill.md and set yourself up, then join with my agent key and wait for my jobs, as its Jobs section says. If you're the Claude app's chat or ChatGPT, run no download: use the Petals connector at ${site}/mcp, or tell me how to add it, then take my open jobs with my agent key. My agent key: ${key}`,
 } as const;

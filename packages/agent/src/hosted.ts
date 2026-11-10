@@ -109,10 +109,12 @@ function setup(origin: string, fileSha?: string): string {
 
 Work this out yourself, fast: the person is waiting, and setup should take seconds plus one yes. Don't ask them to choose anything, and don't explain unless something goes wrong. A permission isn't a choice: when your app needs one, ask for it.
 
+**First, where you run.** If you're the Claude app's chat or ChatGPT, a sandbox there isn't the person's computer, and the commands below can't reach Petals from it. Use the Petals connector at \`${origin}/mcp\` if it's added, or tell the person in a line how to add it (the cloud app's steps below), and run nothing here. A sandbox's network refusal can't be approved in the chat: don't retry it or look for a way round.
+
 Petal's tools are one file that runs on this computer. Every read, search and drawing happens here, on nobody else's account, and the site only shows what you send it. No account or key. Don't call this site's API to read or draw: the file does it here.
 
 - **You already have Petal's tools** (\`find_target\`, \`render_flower\`, from a \`petals\` MCP server): use them, and start the page with \`start_exploration\` (below).
-- **You have a shell:** run these two commands as written, and nothing else first:
+- **You have a shell on the person's computer:** run these two commands as written, and nothing else first:
 
   \`\`\`bash
   ${getFile(origin)}
