@@ -15,10 +15,6 @@ export function originFrom(headers: Headers, fallback = 'http://localhost:3080')
   return `${proto}://${host}`;
 }
 
-/** On this machine, some agents' web tools refuse the address on principle (Hermes's, Claude's). */
-const isThisMachine = (origin: string) =>
-  /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(origin);
-
 /** Where a person's agent keeps Petals' file, and how it runs it. */
 export const FILE_PATH = '~/.petals/petal.mjs';
 const RUN = 'node ~/.petals/petal.mjs';
@@ -26,13 +22,6 @@ const RUN = 'node ~/.petals/petal.mjs';
 /** The one line a terminal runs to fetch the file. */
 export const getFile = (origin: string) =>
   `curl -fsSL ${origin}/petal.mjs --create-dirs -o ${FILE_PATH}`;
-
-/**
- * What a person runs, once, to see their own agent in a box on the Petals page: the file, then its
- * terminal helper on 127.0.0.1, which prints the pairing code to type into the page.
- */
-export const terminalCommand = (origin: string, agent: 'claude' | 'codex' | 'hermes' = 'claude') =>
-  `${getFile(origin)} && ${RUN} terminal${agent === 'claude' ? '' : ` ${agent}`}`;
 
 /** The connect chapters, with this site's address written in ({site}, {host}). */
 const fill = (text: string, origin: string) =>
@@ -112,17 +101,6 @@ function appSteps(origin: string): string {
     out.push(`All of it, always the latest: \`${origin}/api/v1/brain/files/${c.id}\`.`, '');
   }
   return out.join('\n');
-}
-
-export function agentPrompt(origin: string): string {
-  const local = isThisMachine(origin)
-    ? " It's running on this machine, so if your web tool won't open a local address, use curl."
-    : '';
-  return [
-    `I'd like to use Petals with you. It maps who holds power in crypto networks (${origin}). It's public and read-only, with no account or key.`,
-    `Its tools run on my own computer, so this needs an app that can run commands here: Claude Code (in a terminal, or under Code in the Claude desktop app), Codex or Hermes. The Claude app's chat runs in the cloud and can't. If you can't run commands here, don't try: tell me so in one line, and that I can add Petals as a connector at ${origin}/mcp.`,
-    `Its instructions for you are at ${origin}/skill.md.${local} Its brain: ${origin}/api/v1/brain/route?q=<your app and what I ask>. Please read them and set yourself up in whatever way works from where you are, without asking me to choose anything. If your app needs my permission for something, ask me for it: the first time it runs Petals' file, it may, because the file comes from this site. I want to watch this conversation on Petals' page in my browser, so please open that page for me, and post each flower and your replies there word for word. Then tell me in a line or two what you can do, and ask what I'm curious about.`,
-  ].join('\n\n');
 }
 
 /** What an agent works out for itself, so the person has nothing to understand (Elco, 6 Nov). */

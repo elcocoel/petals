@@ -51,8 +51,6 @@ export function useWorkspace(props: {
   initialRun?: string | undefined;
   /** a conversation happening in another agent: nothing in this page's chat is that conversation */
   initialElsewhere?: string | undefined;
-  /** The terminal box is on the page, so the address keeps it (W10). */
-  terminal?: boolean;
   initialQuestion?: string | null;
   recorded?: boolean;
   opening?: string;
@@ -61,10 +59,8 @@ export function useWorkspace(props: {
   initialPetal?: string | null;
   /** What a person can pick from. Null: the API couldn't say, so there's nothing to pick. */
   catalogue?: Catalogue | null;
-  /** False on a site that runs no agent for visitors (lib/workspace-home.ts): their own agent does the work. */
-  agentForVisitors?: boolean;
 }) {
-  const { shelf, initialElsewhere, catalogue = null, terminal = false, ...chatProps } = props;
+  const { shelf, initialElsewhere, catalogue = null, ...chatProps } = props;
   const { state: chat, dispatch, actions: chatActions, refs } = useMakeChat(chatProps);
   const { rows, open, petal, section, busy, runId, question, items, recorded, asked } = chat;
 
@@ -208,25 +204,10 @@ export function useWorkspace(props: {
 
   // Read when the page opens, and again when a turn starts or ends here: nothing runs on a timer.
   const session = useSession(!recorded);
-  // No agent here for visitors (8 Nov): the one box is the way in, a wallet and then the chat with the
-  // person's own agent (W10), on a conversation of theirs or a new one (B1, 9 Nov). Not on one of Petals'
-  // own runs or a recorded site, which show what they hold.
-  const agentless = props.agentForVisitors === false && !recorded && !props.initialRun;
-  const door: 'waiting' | 'wallet' | 'chat' | null = !agentless
-    ? null
-    : !session.known
-      ? 'waiting'
-      : session.account
-        ? 'chat'
-        : 'wallet';
   // Another agent's conversation needs no wallet here: nothing here is spent on it.
-  const needsWallet =
-    !agentless && !recorded && !initialElsewhere && session.known && !session.account;
-  // Until the server has said who's here, nothing offers to ask or to connect. With no agent, nothing asks.
-  const composerShown =
-    recorded ||
-    Boolean(initialElsewhere) ||
-    (Boolean(session.account) && props.agentForVisitors !== false);
+  const needsWallet = !recorded && !initialElsewhere && session.known && !session.account;
+  // Until the server has said who's here, nothing offers to send or to connect.
+  const composerShown = recorded || Boolean(initialElsewhere) || Boolean(session.account);
   // Jobs handed to the person's own agent (C), in the conversation the newest one names.
   const jobsIn = useMemo(
     () => items.findLast((i) => i.kind === 'job')?.job.exploration ?? null,
@@ -252,7 +233,7 @@ export function useWorkspace(props: {
     () => shownRows.findLast((r) => r.kind === 'pay')?.key ?? null,
     [shownRows],
   );
-  const pay = usePay(Boolean(session.account) && props.agentForVisitors !== false, busy, asking);
+  const pay = usePay(Boolean(session.account), busy, asking);
   const listed = useConversations(recorded ? null : `${runId}:${busy}:${elsewhereRef}`);
   const conversations = useMemo(
     () => conversationRows(listed, { runId, elsewhere: elsewhereRef ?? undefined }),
@@ -296,9 +277,9 @@ export function useWorkspace(props: {
 
   // the address holds what a reload needs
   useEffect(() => {
-    const url = workspaceUrl({ runId, open, petal, asked, elsewhere: elsewhereRef, terminal });
+    const url = workspaceUrl({ runId, open, petal, asked, elsewhere: elsewhereRef });
     if (url) window.history.replaceState(null, '', url);
-  }, [runId, open, petal, asked, elsewhereRef, terminal]);
+  }, [runId, open, petal, asked, elsewhereRef]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -345,9 +326,6 @@ export function useWorkspace(props: {
       session,
       needsWallet,
       composerShown,
-      door,
-      // With an agent it's there from the first paint, as before. Without one, only when it holds something.
-      inputShown: !door && (props.agentForVisitors !== false || needsWallet || composerShown),
       question,
       pill:
         showModel && catalogue && settings

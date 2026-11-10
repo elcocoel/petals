@@ -97,10 +97,6 @@ describe('the address', () => {
   test('holds it, with a petal or without', () => {
     const none = { runId: null, open: openFromParams({}).open, petal: null };
     expect(workspaceUrl({ ...none, elsewhere: 'exp_1' })).toBe('/make?elsewhere=exp_1');
-    // the terminal box stays on a reload (W10)
-    expect(workspaceUrl({ ...none, elsewhere: 'exp_1', terminal: true })).toBe(
-      '/make?elsewhere=exp_1&terminal=1',
-    );
     expect(workspaceUrl({ ...none, elsewhere: 'exp_1', petal: 'a.near' })).toBe(
       '/make?elsewhere=exp_1&petal=a.near',
     );

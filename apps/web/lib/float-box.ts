@@ -90,19 +90,6 @@ export function conversationBoxes(
   };
 }
 
-/**
- * The chat with the person's own agent (W10): it takes the output's place, wider and down to the floor,
- * since it holds its own input.
- */
-export function terminalBoxes(
-  win: Size,
-  from: number = floatBox.inset,
-): ReturnType<typeof conversationBoxes> {
-  const boxes = conversationBoxes(win, 0, from);
-  const w = Math.min(floatBox['terminal-width'], win.w - floatBox.inset * 2);
-  return { ...boxes, output: kept({ ...boxes.output, x: columnAt(from, w, win), w }, win) };
-}
-
 /** The same, with a recorded run's input: a read-only saved question and the button that plays it. */
 export const recordedBoxes = (win: Size) =>
   conversationBoxes(win, floatBox['recorded-input-height']);

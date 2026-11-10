@@ -2,65 +2,10 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import * as hosted from '../src/hosted.ts';
-import { agentPrompt, hostedSkill, originFrom } from '../src/hosted.ts';
+import { hostedSkill, originFrom } from '../src/hosted.ts';
 
 const SKILL = readFileSync(join(import.meta.dirname, '../../../skill/petal/SKILL.md'), 'utf8');
 const ORIGIN = 'https://petal.example';
-
-describe('agentPrompt', () => {
-  test('says what Petal is, where its instructions are, and what to do without a shell', () => {
-    const p = agentPrompt(ORIGIN);
-    expect(p).toContain(`${ORIGIN}/skill.md`);
-    expect(p).toMatch(/read-only/);
-    expect(p).toMatch(/no account or key/);
-    expect(p).toMatch(/without asking me to choose/);
-    expect(p).toMatch(/I want to watch this conversation/);
-    expect(p).toMatch(/word for word/);
-    expect(p.length).toBeLessThan(1200);
-  });
-
-  test('says which apps can run the tools, before anything else is tried', () => {
-    const p = agentPrompt(ORIGIN);
-    const apps = p.indexOf(
-      'Claude Code (in a terminal, or under Code in the Claude desktop app), Codex or Hermes',
-    );
-    expect(apps).toBeGreaterThan(-1);
-    expect(apps).toBeLessThan(p.indexOf('/skill.md'));
-    expect(p).toMatch(/The Claude app's chat runs in the cloud and can't/);
-    expect(p).toMatch(/If you can't run commands here, don't try: tell me so in one line/);
-    // a cloud app points the person to the connector door rather than only declining (WORKSPACE, 9 Nov)
-    expect(p).toContain(`that I can add Petals as a connector at ${ORIGIN}/mcp`);
-  });
-
-  test('asks for a permission, rather than choices', () => {
-    expect(agentPrompt(ORIGIN)).toMatch(
-      /If your app needs my permission for something, ask me for it/,
-    );
-  });
-
-  test("no longer sends anyone to an agent on the site: there's none for visitors", () => {
-    expect(agentPrompt(ORIGIN)).not.toMatch(/Petal's own agent/);
-  });
-});
-
-describe('agentPrompt on this machine', () => {
-  test('says so, for a web tool that refuses a local address, and only there', () => {
-    expect(agentPrompt('http://127.0.0.1:3090')).toMatch(/on this machine.*use curl/);
-    expect(agentPrompt('http://localhost:3080')).toMatch(/on this machine.*use curl/);
-    expect(agentPrompt(ORIGIN)).not.toMatch(/on this machine/);
-  });
-});
-
-describe('terminalCommand', () => {
-  test('fetches the file from this site, then starts the terminal helper for the agent', () => {
-    const { terminalCommand } = hosted;
-    expect(terminalCommand(ORIGIN)).toBe(
-      `curl -fsSL ${ORIGIN}/petal.mjs --create-dirs -o ~/.petals/petal.mjs && node ~/.petals/petal.mjs terminal`,
-    );
-    expect(terminalCommand(ORIGIN, 'codex').endsWith('terminal codex')).toBe(true);
-  });
-});
 
 describe('hostedSkill', () => {
   const md = hostedSkill(SKILL, ORIGIN);
@@ -130,9 +75,6 @@ describe('hostedSkill', () => {
     );
     expect(setup).toContain('Bash(node ~/.petals/petal.mjs:*)');
     expect(setup).toMatch(/The file changes nothing in your app/);
-    expect(agentPrompt(ORIGIN)).toMatch(
-      /the first time it runs Petals' file, it may, because the file comes from this site/,
-    );
   });
 
   test('a cloud sandbox, or an app with no shell, says so at once and names the apps that can', () => {
