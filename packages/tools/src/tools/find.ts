@@ -21,6 +21,7 @@ import {
   TOKEN_PROGRAM,
 } from '@petal/inputs';
 import { defineTool, type PetalTool } from '../define.ts';
+import { mapViews, searchMap } from '../map.ts';
 import type { ToolContext } from '../types.ts';
 import { bodyUrl, obj, readable } from './shared.ts';
 
@@ -496,6 +497,30 @@ async function fromPetal(l: Lookup, ctx: ToolContext, p: Parsed, rows: IndexRow[
   }
 }
 
+/**
+ * The views on this site's map that answer to these words (10 Nov): each with the stored snapshot it was
+ * drawn from, so drawing it again reuses that snapshot instead of a fresh read.
+ */
+async function fromMap(l: Lookup, ctx: ToolContext, p: Parsed, rows: IndexRow[]): Promise<void> {
+  const views = searchMap(await mapViews(ctx).catch(() => []), p.core);
+  for (const v of views) {
+    if (!v.address || (p.chain && p.chain !== v.chain)) continue;
+    const held = rows.find((r) => r.sha256 === v.snapshot);
+    l.add(
+      {
+        name: v.name ?? v.title,
+        kind: 'token',
+        chain: v.chain,
+        address: v.address,
+        ledger: v.network.startsWith('moloch') ? v.network : 'erc20',
+        exact: true,
+        ...(held ? { held } : {}),
+      },
+      { id: 'petal-map', url: v.view_url },
+    );
+  }
+}
+
 // --- The chain confirms
 
 /**
@@ -795,6 +820,7 @@ export function makeFindTarget(
         await fromJupiter(l, p.core, true);
       } else {
         await fromPetal(l, ctx, p, rows);
+        await fromMap(l, ctx, p, rows);
         const solana = !p.chain || p.chain === 'solana';
         await Promise.all([
           fromGecko(l, p),
