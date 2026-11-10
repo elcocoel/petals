@@ -206,10 +206,10 @@ function toOpenAi(m: LlmMessage): OpenAI.Chat.Completions.ChatCompletionMessageP
 function paymentRefused(type: string | null | undefined): LlmCallError {
   const message =
     type === 'api_key_limit_exceeded'
-      ? "The sponsored key behind Petal's agent has reached its spending limit, so the agent stopped here."
+      ? "The sponsored key behind Petals' agent has reached its spending limit, so the agent stopped here."
       : type === 'insufficient_credits' || type === 'no_credits' || type === 'no_limit_configured'
-        ? "Petal's sponsor account is out of NEAR AI credit, so the agent stopped here."
-        : "NEAR AI Cloud refused to bill Petal's sponsor account, so the agent stopped here.";
+        ? "Petals' sponsor account is out of NEAR AI credit, so the agent stopped here."
+        : "NEAR AI Cloud refused to bill Petals' sponsor account, so the agent stopped here.";
   return new LlmCallError('budget_exhausted', message, { hint: CONNECT_HINT });
 }
 

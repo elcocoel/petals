@@ -171,7 +171,7 @@ export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Pro
   description:
     "Publish a prepared flower to the shared map on NEAR with the maker's NEP-413 proof. Checks " +
     'the nonce is fresh and unused, the signature, and that the key is a full-access key of the ' +
-    "account; then Petal's writer writes petal/v1/spec/<id>.",
+    "account; then Petals' writer writes petal/v1/spec/<id>.",
   input: obj(
     ['entry_sha256', 'proof'],
     { entry_sha256: SHA256, proof: PROOF },
@@ -248,7 +248,7 @@ export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Pro
     if (!writer) {
       throw new ToolFailure(
         'source_failed',
-        "Petal's map writer is not configured on this server, so nothing was written.",
+        "Petals' map writer is not configured on this server, so nothing was written.",
         'Set PETAL_WRITER_ACCOUNT and PETAL_WRITER_KEY_FILE (testnet only).',
       );
     }

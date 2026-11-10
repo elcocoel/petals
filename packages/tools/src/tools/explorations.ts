@@ -487,7 +487,7 @@ export async function packetMarkdown(ctx: ToolContext, ref: string): Promise<str
     '',
     p.next,
     '',
-    `With Petal's MCP tools, pass this link as \`exploration\` to get_exploration${p.access.as === 'continue' ? ', save_step and add_note' : ''}. Over HTTP: GET ${api} for this as JSON${p.access.as === 'continue' ? `; POST ${api}/steps with { "spec" | "spec_sha256", "note"? }; POST ${api}/notes with { "text" }` : ''}.`,
+    `With Petals' MCP tools, pass this link as \`exploration\` to get_exploration${p.access.as === 'continue' ? ', save_step and add_note' : ''}. Over HTTP: GET ${api} for this as JSON${p.access.as === 'continue' ? `; POST ${api}/steps with { "spec" | "spec_sha256", "note"? }; POST ${api}/notes with { "text" }` : ''}.`,
     '',
     ...(takes
       ? [
