@@ -28,6 +28,7 @@ import {
   pickPlan,
   questionPrefix,
   shelfView,
+  storedPanelFlower,
 } from '../lib/panel-view.ts';
 import { payWords } from '../lib/pay.ts';
 import type { Opened, PanelSection } from '../lib/thread.ts';
@@ -101,19 +102,7 @@ export function useWorkspace(props: {
     if (initialElsewhere) return elsewhereFlower(elsewherePacket);
     if (open.kind === 'stored') {
       if (!storedFlower || !storedId) return null;
-      const { entry } = storedFlower;
-      return {
-        key: entry.spec_sha256,
-        spec: entry.spec,
-        legend: [],
-        interpretation: entry.interpretation,
-        signature: entry.provenance.agent.signature ?? null,
-        ...(entry.provenance.agent.model ? { model: entry.provenance.agent.model } : {}),
-        checks: `Entry ${entry.id}`,
-        viewUrl: `/f/${encodeURIComponent(storedId)}`,
-        stored: { id: storedId, title: entry.title ?? null },
-        earlier: false,
-      };
+      return storedPanelFlower(storedFlower.entry, storedId, `/f/${encodeURIComponent(storedId)}`);
     }
     const row = turnFlowers[inPanel];
     if (!row) return null;

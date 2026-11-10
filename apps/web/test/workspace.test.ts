@@ -858,8 +858,19 @@ describe('the panel in its box (T202)', () => {
     });
   const html = (v: PanelView, more: { petal?: PetalDetail; section?: 'reading' | 'quote' } = {}) =>
     renderToStaticMarkup(
-      createElement(FlowerPanel, { view: v, ...more, actions: { onCloseDetail: () => {} } }),
+      createElement(FlowerPanel, {
+        view: v,
+        ...more,
+        actions: { onCloseDetail: () => {}, onShelf: () => {} },
+      }),
     );
+
+  test('on a flower’s own page there’s no shelf to go to, so no Explore another flower', () => {
+    const out = renderToStaticMarkup(
+      createElement(FlowerPanel, { view: view(), actions: { onCloseDetail: () => {} } }),
+    );
+    expect(out).not.toContain('Explore another flower');
+  });
 
   test('no stage: the canvas is the stage, so no drawing here and none of its words', () => {
     const out = html(view());

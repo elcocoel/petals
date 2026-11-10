@@ -2238,6 +2238,10 @@ export const NOT_IN_LAB: Record<string, string> = {
   ConversationThread: 'Thread and TurnFlower wired together, and each of those is here',
   FloatBox: 'a BarBox fixed to the window and placed by hand: it lives at /make',
   SiteChrome: 'the Nav, drawn here, around a reading column; it holds no state of its own',
+  ReadingColumn:
+    'the reading column SiteChrome sets pages in, alone: a width and a margin, nothing to see',
+  FlowerPage:
+    'wires useFlowerPage to the flower and its box, filling the area under the nav: it lives at /f/<id> and /draft',
   FrontDoor: 'draws nothing: it opens the wallet when the landing is left for /make (proposal)',
   Lobby: 'wires useLobby to the cards and the tiles, and it lives at /lobby',
   WorkMenu:
