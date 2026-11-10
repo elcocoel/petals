@@ -1,7 +1,7 @@
 // The tool contract types (packages.md, @petal/tools). Re-exported by index.ts; frozen at
 // packages/v1, so their shapes do not change here.
 
-import type { Progress, QuoteRequest, QuoteResult, ToolError } from '@petal/core/types';
+import type { Progress, QuoteRequest, QuoteResult, ToolError, View } from '@petal/core/types';
 import type { FreshGate, InputModule, SnapshotStore } from '@petal/inputs';
 import type { Rpc } from '@petal/near/auth';
 import type { MapReader, MapWriter } from '@petal/near/map';
@@ -94,6 +94,11 @@ export interface ToolContext {
   live?: LiveHub;
   /** additive (9 Nov, agent-house): told when a job is reported, so Petals' agent takes it up at once */
   onJobReported?: (job: JobRow) => void;
+  /**
+   * additive (10 Nov, one-source.md step 2): the viewer's view, the glasses every drawing without a view of
+   * its own is drawn through: the person's, or the default. A flower's own choices never draw it.
+   */
+  view?: View;
 }
 
 export type Tool<I, O> = {
