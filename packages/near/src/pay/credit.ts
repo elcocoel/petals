@@ -127,3 +127,34 @@ export function usdToYocto(usd: number, nearUsd: number): bigint {
   const nano = Math.ceil((usd / nearUsd) * 1e9);
   return BigInt(nano) * 10n ** 15n;
 }
+
+/**
+ * A call on the contract made with an account's own key file (a person's deposit or withdraw, in a testnet
+ * rehearsal; on the site a person's wallet makes these). Returns the transaction's hash; throws when it fails.
+ */
+export async function callAsAccount(
+  network: CreditContract['network'],
+  contract: string,
+  keyFile: string,
+  method: string,
+  args: object,
+  depositYocto: bigint,
+): Promise<{ account: string; tx_hash: string }> {
+  const key = JSON.parse(await readFile(keyFile, 'utf8')) as {
+    account_id?: string;
+    private_key?: string;
+  };
+  if (!key.account_id || !key.private_key) {
+    throw new NearError('internal', `${keyFile} isn't a key file { account_id, private_key }`);
+  }
+  const { Account, actions, JsonRpcProvider, KeyPair, KeyPairSigner } = await import('near-api-js');
+  const signer = new KeyPairSigner(KeyPair.fromString(key.private_key as `ed25519:${string}`));
+  const who = new Account(key.account_id, new JsonRpcProvider({ url: RPC_URLS[network] }), signer);
+  const out = (await who.signAndSendTransaction({
+    receiverId: contract,
+    actions: [actions.functionCall(method, args, CHARGE_GAS, depositYocto)],
+    waitUntil: 'FINAL',
+    throwOnFailure: true,
+  })) as unknown as { transaction: { hash: string } };
+  return { account: key.account_id, tx_hash: out.transaction.hash };
+}

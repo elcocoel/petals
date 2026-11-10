@@ -5,6 +5,7 @@ import type { QuoteRequest, QuoteResult } from '@petal/core/types';
 export {
   type CreditContract,
   type CreditDeps,
+  callAsAccount,
   chargeCredit,
   creditBalance,
   networkOfAccount,
