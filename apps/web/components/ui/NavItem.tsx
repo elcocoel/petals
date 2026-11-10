@@ -5,13 +5,14 @@
 // starts where its project's words do. A way somewhere is Next's Link, so moving inside the site is a move,
 // not a load: the side panel stays where it is.
 import Link from 'next/link';
-import type { MouseEventHandler, ReactNode } from 'react';
+import type { DragEvent, MouseEventHandler, ReactNode } from 'react';
 import { Icon, type IconName } from './Icon.tsx';
 import { Mono } from './Mono.tsx';
 
 const BASE =
   'flex h-row-height w-full min-w-0 items-center justify-start gap-space-8 bg-transparent px-space-8 text-left type-ui whitespace-nowrap no-underline';
-const ANSWERS = 'hover:bg-tint hover:opacity-100 data-current:bg-tint';
+const ANSWERS =
+  'hover:bg-tint hover:opacity-100 data-current:bg-tint data-moved:bg-tint data-drop:bg-tint data-drop:outline data-drop:outline-accent';
 /** How far in a row starts: at its group, in a project, or under a row in a project. */
 const DEPTH = { 0: '', 1: 'pl-space-32', 2: 'pl-column-gap' } as const;
 
@@ -22,6 +23,10 @@ type Where =
       current?: boolean;
       /** Told when it's pressed, before the move. */
       onNavigate?: () => void;
+      /** It can be dragged (onto a project): its start, and its end, dropped or not. */
+      drag?: { onDragStart: (e: DragEvent<HTMLElement>) => void; onDragEnd: () => void };
+      /** It's the row just moved: a soft fill for a moment (item.moved). */
+      moved?: boolean;
     }
   | {
       href?: undefined;
@@ -30,6 +35,10 @@ type Where =
       expanded?: boolean;
       /** A choice, and this one is chosen. */
       chosen?: boolean;
+      /** Something dragged is over it, and dropping would put it here. */
+      lit?: boolean;
+      /** One of a menu's items. */
+      menuItem?: boolean;
     }
   | {
       /** A line that says what's there, which goes nowhere. It may hold one control at its end. */
@@ -103,6 +112,10 @@ export function NavItem({
         // the workspace is read fresh on each move; forty rows mustn't each ask the server ahead
         prefetch={false}
         onClick={where.onNavigate}
+        draggable={where.drag ? true : undefined}
+        onDragStart={where.drag?.onDragStart}
+        onDragEnd={where.drag?.onDragEnd}
+        data-moved={where.moved ? '' : undefined}
         title={hover}
         aria-current={where.current ? 'page' : undefined}
         data-current={where.current ? '' : undefined}
@@ -122,6 +135,8 @@ export function NavItem({
         aria-expanded={expanded}
         aria-pressed={'chosen' in where ? where.chosen : undefined}
         data-current={'chosen' in where && where.chosen ? '' : undefined}
+        data-drop={'lit' in where && where.lit ? '' : undefined}
+        role={'menuItem' in where && where.menuItem ? 'menuitem' : undefined}
         onClick={where.onClick}
         data-b="item"
         className={`${look} ${ANSWERS}`}

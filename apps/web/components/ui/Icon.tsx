@@ -7,11 +7,14 @@
 // SSR glyphs: they need no context, so a server component can draw them.
 import type { Icon as Glyph } from '@phosphor-icons/react';
 import {
+  Archive,
   ArrowCounterClockwise,
   ArrowLeft,
   ArrowRight,
+  ArrowUUpLeft,
   CaretRight,
   ChatCircle,
+  DotsThree,
   Flower,
   FolderSimple,
   GearSix,
@@ -24,6 +27,7 @@ import {
   SignOut,
   SquaresFour,
   TerminalWindow,
+  Trash,
   UserCircle,
   Wallet,
   X,
@@ -58,6 +62,12 @@ const GLYPHS = {
   leave: SignOut,
   /** Putting something back as it was. */
   undo: ArrowCounterClockwise,
+  /** A row's menu of what can be done with it. */
+  more: DotsThree,
+  archive: Archive,
+  unarchive: ArrowUUpLeft,
+  /** Removing something for good. */
+  remove: Trash,
 } as const satisfies Record<string, Glyph>;
 
 export type IconName = keyof typeof GLYPHS;

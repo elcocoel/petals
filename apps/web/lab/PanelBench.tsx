@@ -7,8 +7,8 @@ import { useState } from 'react';
 import { Mono } from '../components/ui/Mono.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
 import { WorkMenu, type WorkMenuView } from '../components/workspace/WorkMenu.tsx';
-import type { ListedProject } from '../lib/conversation-list.ts';
-import type { SectionKey } from '../lib/panel-words.ts';
+import type { ListedProject, RowRef } from '../lib/conversation-list.ts';
+import { panelWords, type SectionKey } from '../lib/panel-words.ts';
 import { viewChoices } from '../lib/person-view.ts';
 import { isDefault, withData, withScale } from '../lib/view-edit.ts';
 import { usePanelWidth } from '../viewmodels/usePanelWidth.ts';
@@ -25,8 +25,16 @@ export function PanelBench({ state }: { state: PanelState }) {
   const [opened, setOpened] = useState<string[]>(fixture.opened);
   const [copied, setCopied] = useState(false);
   const [naming, setNaming] = useState(false);
-  const [moving, setMoving] = useState<string | null>(null);
   const [placed, setPlaced] = useState<Record<string, string | null>>({});
+  // the row's menu, its dialogs and dragging, saved nowhere: the bench only shows them
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [moving, setMoving] = useState<RowRef | null>(null);
+  const [query, setQuery] = useState('');
+  const [removing, setRemoving] = useState<RowRef | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [dropOn, setDropOn] = useState<string | null>(null);
+  const [justMoved, setJustMoved] = useState<string | null>(null);
+  const [said, setSaid] = useState('');
   // Settings, saved nowhere: the bench keeps the view it's shown
   const [view, setView] = useState<View>(DEFAULT_VIEW);
   const [openDimension, setOpenDimension] = useState<Dimension | null>('colour');
@@ -51,13 +59,45 @@ export function PanelBench({ state }: { state: PanelState }) {
       setOpened((keys) => [...keys, id]);
     },
     stopNaming: () => setNaming(false),
+    menuFor,
+    toggleMenu: (key) => setMenuFor((now) => (now === key ? null : key)),
+    closeMenu: () => setMenuFor(null),
     moving,
-    toggleMoving: (row) => setMoving((now) => (now === row ? null : row)),
+    startMove: (row) => {
+      setQuery('');
+      setMoving(row);
+    },
+    stopMove: () => setMoving(null),
+    query,
+    setQuery,
     moveTo: (row, project) => {
       setMoving(null);
-      setPlaced((now) => ({ ...now, [row]: project }));
-      if (project) setOpened((keys) => (keys.includes(project) ? keys : [...keys, project]));
+      setPlaced((now) => ({ ...now, [row.key]: project?.key ?? null }));
+      if (project)
+        setOpened((keys) => (keys.includes(project.key) ? keys : [...keys, project.key]));
+      setJustMoved(row.key);
+      setSaid(panelWords.moved(row.title, project?.name ?? null));
     },
+    archive: () => {},
+    unarchive: () => {},
+    archived: [],
+    archivedOpen: false,
+    toggleArchived: () => {},
+    removing,
+    startRemove: setRemoving,
+    stopRemove: () => setRemoving(null),
+    remove: () => setRemoving(null),
+    removeFailed: null,
+    dragging,
+    dragStart: setDragging,
+    dragEnd: () => {
+      setDragging(null);
+      setDropOn(null);
+    },
+    dropOn,
+    dragOver: setDropOn,
+    justMoved,
+    said,
     placed,
     agents: fixture.agents,
     copied,

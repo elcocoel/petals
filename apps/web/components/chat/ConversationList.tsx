@@ -1,39 +1,46 @@
 // A person's conversations in the side panel, one row each. A row is a link: opening one is opening its
-// address. Who it's with is its icon, and said in full on hover. With `move`, a row's end holds the way to
-// put it in a project, shown where the pointer or the keyboard is, in the trail's place; it opens the
-// projects under the row, as a project opens its conversations. The words and the addresses come from
-// conversationRows in lib/conversation-list.ts; the panel's own words from lib/panel-words.ts.
+// address. Who it's with is its icon, and said in full on hover. With `actions` (design/side-panel.md,
+// lines 24 to 32), a row's end holds its ⋯ menu, shown where the pointer or the keyboard is, in the
+// trail's place, and the row can be dragged onto a project; the row just moved takes a soft fill. The
+// words and the addresses come from conversationRows in lib/conversation-list.ts; the panel's own words
+// from lib/panel-words.ts.
+import type { DragEvent } from 'react';
 import type { ConversationRow } from '../../lib/conversation-list.ts';
 import { panelWords } from '../../lib/panel-words.ts';
 import { IconButton } from '../ui/IconButton.tsx';
+import { Menu, type MenuItem } from '../ui/Menu.tsx';
 import { NavItem } from '../ui/NavItem.tsx';
 
-/** Putting a conversation in a project: where it can go, which row is choosing, and the choice. */
-export interface MoveRows {
-  projects: { key: string; name: string }[];
-  /** The row whose choices are open, by key. */
-  open: string | null;
-  toggle: (row: string) => void;
-  to: (row: string, project: string | null) => void;
+/** What can be done with a row: its menu, dragging it, and which one was just moved. */
+export interface RowActions {
+  /** The row whose menu is open, by key. */
+  menuFor: string | null;
+  toggleMenu: (key: string) => void;
+  closeMenu: () => void;
+  /** The menu's items for a row. */
+  itemsFor: (row: ConversationRow) => MenuItem[];
+  /** Dragging a row onto a project; absent where rows can't be dragged. */
+  drag?: { start: (key: string) => void; end: () => void };
+  /** The row just moved into a project. */
+  justMoved: string | null;
 }
 
 export function ConversationList({
   rows,
   depth = 0,
-  move,
+  actions,
 }: {
   rows: ConversationRow[];
   /** 1 when the rows sit in a project. */
   depth?: 0 | 1;
-  move?: MoveRows;
+  actions?: RowActions;
 }) {
   return (
     <ul className="m-0 flex list-none flex-col p-0">
       {rows.map((row) => {
         const who = row.by === 'petals' ? panelWords.withPetals : panelWords.withOwn;
-        const elsewhere = move?.projects.filter((p) => p.key !== row.project) ?? [];
-        const movable = move && (elsewhere.length > 0 || row.project !== null);
-        const choosing = movable && move.open === row.key;
+        const open = actions?.menuFor === row.key;
+        const drag = actions?.drag;
         return (
           <li key={row.key} className="group relative">
             <NavItem
@@ -45,44 +52,39 @@ export function ConversationList({
               trail={row.when}
               {...(row.working ? { working: panelWords.working } : {})}
               depth={depth}
-              trailGivesWay={Boolean(movable)}
+              trailGivesWay={Boolean(actions)}
+              moved={actions?.justMoved === row.key}
+              {...(drag
+                ? {
+                    drag: {
+                      onDragStart: (e: DragEvent<HTMLElement>) => {
+                        e.dataTransfer.setData('text/plain', row.title);
+                        e.dataTransfer.effectAllowed = 'move';
+                        drag.start(row.key);
+                      },
+                      onDragEnd: drag.end,
+                    },
+                  }
+                : {})}
             />
-            {movable && (
+            {actions && (
               <span
-                className={`absolute top-0 right-0 flex ${choosing ? '' : 'invisible group-focus-within:visible group-hover:visible'}`}
+                className={`absolute top-0 right-0 flex ${open ? '' : 'invisible group-focus-within:visible group-hover:visible'}`}
               >
                 <IconButton
-                  icon="project"
-                  label={panelWords.moveTo(row.title)}
-                  onClick={() => move.toggle(row.key)}
-                  expanded={Boolean(choosing)}
+                  icon="more"
+                  label={panelWords.more(row.title)}
+                  onClick={() => actions.toggleMenu(row.key)}
+                  expanded={open}
                 />
-              </span>
-            )}
-            {choosing && (
-              <ul className="m-0 flex list-none flex-col p-0">
-                {elsewhere.map((p) => (
-                  <li key={p.key}>
-                    <NavItem
-                      onClick={() => move.to(row.key, p.key)}
-                      icon="project"
-                      label={p.name}
-                      depth={depth === 0 ? 1 : 2}
-                    />
-                  </li>
-                ))}
-                {row.project !== null && (
-                  <li>
-                    <NavItem
-                      onClick={() => move.to(row.key, null)}
-                      icon="close"
-                      label={panelWords.outOfProject}
-                      muted
-                      depth={depth === 0 ? 1 : 2}
-                    />
-                  </li>
+                {open && (
+                  <Menu
+                    label={panelWords.more(row.title)}
+                    items={actions.itemsFor(row)}
+                    onClose={actions.closeMenu}
+                  />
                 )}
-              </ul>
+              </span>
             )}
           </li>
         );

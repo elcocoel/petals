@@ -37,7 +37,7 @@ import {
 import { payWords } from '../lib/pay.ts';
 import type { Opened, PanelSection } from '../lib/thread.ts';
 import { composerView, type FlowerRow, openFlowerIndex } from '../lib/thread-view.ts';
-import { workspaceUrl } from '../lib/workspace-url.ts';
+import { conversationAt, workspaceUrl } from '../lib/workspace-url.ts';
 import { useConversationFacts } from './useConversationFacts.ts';
 import { useDrawnFlowers } from './useDrawnFlower.ts';
 import { useElsewhere } from './useElsewhere.ts';
@@ -281,14 +281,31 @@ export function useWorkspace(props: {
     unavailable: Boolean(elsewhere && 'failed' in elsewhere),
   });
 
-  // the address holds what a reload needs
+  // the address holds what a reload needs, while it's still this conversation's: once a move has put
+  // another conversation's address there (a link, New, or a delete opening a new one), this one, still
+  // showing until the next one's data arrives, leaves it alone
+  const ownAddress = useRef(
+    conversationAt({ run: props.initialRun, elsewhere: initialElsewhere ?? undefined }),
+  );
   useEffect(() => {
     const url = workspaceUrl({ runId, open, petal, asked, elsewhere: elsewhereRef });
-    if (url) {
-      // the page writes its own address: the panel mustn't take it for a move
-      claim(url);
-      window.history.replaceState(null, '', url);
-    }
+    if (!url) return;
+    const showing = conversationAt(
+      Object.fromEntries(new URLSearchParams(window.location.search)) as Record<string, string>,
+    );
+    if (showing !== ownAddress.current) return;
+    // Writing the address it already has changes nothing, and Next takes every write as a restore, which
+    // cancels a move under way (a delete opening a new conversation was undone so).
+    if (url === `${window.location.pathname}${window.location.search}`) return;
+    // the page writes its own address: the panel mustn't take it for a move
+    claim(url);
+    window.history.replaceState(null, '', url);
+    ownAddress.current = conversationAt(
+      Object.fromEntries(new URL(url, window.location.origin).searchParams) as Record<
+        string,
+        string
+      >,
+    );
   }, [claim, runId, open, petal, asked, elsewhereRef]);
 
   useEffect(() => {

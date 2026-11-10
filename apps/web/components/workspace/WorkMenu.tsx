@@ -17,17 +17,22 @@
 // Props only: its state comes from viewmodels/useWorkMenu.ts and useWorkPanel.ts. Every word from
 // lib/panel-words.ts.
 import { DIMENSIONS } from '@petal/core/view';
-import type { ReactNode } from 'react';
+import type { DragEvent, ReactNode } from 'react';
 import type { AgentRow } from '../../lib/agents.ts';
 import {
   byProject,
   type ConversationRow,
+  conversationRows,
+  type ListedConversation,
   type ListedProject,
+  type RowRef,
 } from '../../lib/conversation-list.ts';
 import { type SocialState, shownAccount } from '../../lib/lobby-view.ts';
 import { panelWords, type SectionKey } from '../../lib/panel-words.ts';
 import { siteLinks } from '../../lib/site-links.ts';
-import { ConversationList, type MoveRows } from '../chat/ConversationList.tsx';
+import { ConversationList, type RowActions } from '../chat/ConversationList.tsx';
+import { Dialog } from '../ui/Dialog.tsx';
+import { Field } from '../ui/Field.tsx';
 import { IconButton } from '../ui/IconButton.tsx';
 import { NavItem } from '../ui/NavItem.tsx';
 import { RowField } from '../ui/RowField.tsx';
@@ -66,12 +71,43 @@ export interface WorkMenuView {
   newProject: () => void;
   nameProject: (name: string) => void;
   stopNaming: () => void;
-  /** The conversation whose projects are open to choose from, by key. */
-  moving: string | null;
-  toggleMoving: (row: string) => void;
-  moveTo: (row: string, project: string | null) => void;
   /** Where each conversation moved here is now, until the list is read again. */
   placed: Readonly<Record<string, string | null>>;
+  /** The row whose ⋯ menu is open (design/side-panel.md, lines 24 to 29). */
+  menuFor: string | null;
+  toggleMenu: (key: string) => void;
+  closeMenu: () => void;
+  /** The conversation in the move dialog, and the dialog's search. */
+  moving: RowRef | null;
+  startMove: (row: RowRef) => void;
+  stopMove: () => void;
+  query: string;
+  setQuery: (q: string) => void;
+  moveTo: (
+    row: { key: string; title: string },
+    project: { key: string; name: string } | null,
+  ) => void;
+  archive: (key: string) => void;
+  unarchive: (key: string) => void;
+  /** The archived conversations, and whether their row is open. */
+  archived: ListedConversation[];
+  archivedOpen: boolean;
+  toggleArchived: () => void;
+  /** The conversation in the delete dialog, and why the last try failed. */
+  removing: RowRef | null;
+  startRemove: (row: RowRef) => void;
+  stopRemove: () => void;
+  remove: () => void;
+  removeFailed: string | null;
+  /** Dragging a row onto a project (lines 30 to 32). */
+  dragging: string | null;
+  dragStart: (key: string) => void;
+  dragEnd: () => void;
+  dropOn: string | null;
+  dragOver: (project: string | null) => void;
+  /** The row just moved, and what a screen reader hears about it. */
+  justMoved: string | null;
+  said: string;
   /** The person's own agents, and what each is doing (the first full test, 9 Nov). */
   agents: AgentRow[];
   copied: boolean;
@@ -130,12 +166,92 @@ export function WorkMenu({
     row.key in menu.placed ? { ...row, project: menu.placed[row.key] ?? null } : row,
   );
   const { projects } = byProject(rows, menu.projects);
-  const move: MoveRows = {
-    projects: projects.map((p) => ({ key: p.key, name: p.name })),
-    open: menu.moving,
-    toggle: menu.toggleMoving,
-    to: menu.moveTo,
+  const ref = (row: ConversationRow): RowRef => ({
+    key: row.key,
+    title: row.title,
+    project: row.project,
+    current: row.current,
+  });
+  const canMove = (row: ConversationRow) => projects.length > 0 || row.project !== null;
+  const actions: RowActions = {
+    menuFor: menu.menuFor,
+    toggleMenu: menu.toggleMenu,
+    closeMenu: menu.closeMenu,
+    itemsFor: (row) => [
+      ...(canMove(row)
+        ? [
+            {
+              key: 'move',
+              icon: 'project' as const,
+              label: panelWords.moveToProject,
+              onPick: () => menu.startMove(ref(row)),
+            },
+          ]
+        : []),
+      {
+        key: 'archive',
+        icon: 'archive',
+        label: panelWords.archive,
+        onPick: () => menu.archive(row.key),
+      },
+      {
+        key: 'remove',
+        icon: 'remove',
+        label: panelWords.remove,
+        onPick: () => menu.startRemove(ref(row)),
+      },
+    ],
+    drag: { start: menu.dragStart, end: menu.dragEnd },
+    justMoved: menu.justMoved,
   };
+  const archivedRows = conversationRows(menu.archived, { runId: null });
+  const archivedActions: RowActions = {
+    menuFor: menu.menuFor,
+    toggleMenu: menu.toggleMenu,
+    closeMenu: menu.closeMenu,
+    itemsFor: (row) => [
+      {
+        key: 'unarchive',
+        icon: 'unarchive',
+        label: panelWords.unarchive,
+        onPick: () => menu.unarchive(row.key),
+      },
+      {
+        key: 'remove',
+        icon: 'remove',
+        label: panelWords.remove,
+        onPick: () => menu.startRemove(ref(row)),
+      },
+    ],
+    justMoved: null,
+  };
+  // a project takes a dragged conversation anywhere on its rows (line 30)
+  const dropHands = (p: { key: string; name: string }) =>
+    menu.dragging
+      ? {
+          onDragOver: (e: DragEvent<HTMLElement>) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (menu.dropOn !== p.key) menu.dragOver(p.key);
+          },
+          onDragLeave: (e: DragEvent<HTMLElement>) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) menu.dragOver(null);
+          },
+          onDrop: (e: DragEvent<HTMLElement>) => {
+            e.preventDefault();
+            const row = rows.find((r) => r.key === menu.dragging);
+            menu.dragEnd();
+            if (row && row.project !== p.key) menu.moveTo({ key: row.key, title: row.title }, p);
+          },
+        }
+      : {};
+  const found = menu.moving
+    ? projects.filter(
+        (p) =>
+          p.key !== menu.moving?.project &&
+          p.name.toLowerCase().includes(menu.query.trim().toLowerCase()),
+      )
+    : [];
   const who = you.account ? shownAccount(you.account) : null;
   const name = you.social.kind === 'profile' ? you.social.profile.name : null;
 
@@ -150,10 +266,26 @@ export function WorkMenu({
           {...(restartNew ? { onNavigate: restartNew } : {})}
         />
         {rows.length > 0 ? (
-          <ConversationList rows={rows} move={move} />
+          <ConversationList rows={rows} actions={actions} />
         ) : (
           // design/minimally-good.md, rule 2: empty says what goes here; the way to it is the row above
           <NavItem label={panelWords.noConversations} muted />
+        )}
+        {/* line 28: one row for the archived, only while there are some */}
+        {archivedRows.length > 0 && (
+          <>
+            <NavItem
+              onClick={menu.toggleArchived}
+              expanded={menu.archivedOpen}
+              icon="chevron"
+              label={panelWords.archived}
+              trail={panelWords.count(archivedRows.length)}
+              muted
+            />
+            {menu.archivedOpen && (
+              <ConversationList rows={archivedRows} depth={1} actions={archivedActions} />
+            )}
+          </>
         )}
       </Group>
     ),
@@ -163,17 +295,18 @@ export function WorkMenu({
           {projects.map((p) => {
             const shown = menu.opened.includes(p.key);
             return (
-              <li key={p.key}>
+              <li key={p.key} {...dropHands(p)}>
                 <NavItem
                   onClick={() => menu.toggle(p.key)}
                   expanded={shown}
                   icon="chevron"
                   label={p.name}
                   trail={panelWords.count(p.rows.length)}
+                  lit={menu.dropOn === p.key}
                 />
                 {shown &&
                   (p.rows.length > 0 ? (
-                    <ConversationList rows={p.rows} depth={1} move={move} />
+                    <ConversationList rows={p.rows} depth={1} actions={actions} />
                   ) : (
                     // rule 2: open and empty says so
                     <NavItem label={panelWords.emptyProject} muted depth={1} />
@@ -280,16 +413,92 @@ export function WorkMenu({
     ),
   };
 
+  const moving = menu.moving;
   return (
-    <SideRail
-      label={panelWords.panel}
-      sections={SECTIONS.map((section) => ({ ...section, content: sections[section.key] }))}
-      open={menu.open}
-      toggleLabel={menu.open ? panelWords.fold : panelWords.unfold}
-      onToggle={menu.toggleOpen}
-      onJump={(key) => menu.jumpTo(key as SectionKey)}
-      jump={menu.jump}
-      width={width}
-    />
+    <>
+      <SideRail
+        label={panelWords.panel}
+        sections={SECTIONS.map((section) => ({ ...section, content: sections[section.key] }))}
+        open={menu.open}
+        toggleLabel={menu.open ? panelWords.fold : panelWords.unfold}
+        onToggle={menu.toggleOpen}
+        onJump={(key) => menu.jumpTo(key as SectionKey)}
+        jump={menu.jump}
+        width={width}
+      />
+      {/* line 26: move to a project, found by name */}
+      <Dialog
+        open={moving !== null}
+        title={moving ? panelWords.moveTitle(moving.title) : ''}
+        closeLabel={panelWords.close}
+        onClose={menu.stopMove}
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const first = found[0];
+            if (moving && first) menu.moveTo(moving, first);
+          }}
+        >
+          <Field
+            id="panel-find-project"
+            label={panelWords.findProject}
+            value={menu.query}
+            onChange={menu.setQuery}
+            hideLabel
+          />
+        </form>
+        <ul className="m-0 flex max-h-figure-height list-none flex-col overflow-y-auto p-0">
+          {found.map((p) => (
+            <li key={p.key}>
+              <NavItem
+                onClick={() => moving && menu.moveTo(moving, p)}
+                icon="project"
+                label={p.name}
+              />
+            </li>
+          ))}
+          {found.length === 0 && menu.query.trim() !== '' && (
+            <li>
+              <NavItem label={panelWords.noProjectFound(menu.query.trim())} muted />
+            </li>
+          )}
+          {moving?.project && (
+            <li>
+              <NavItem
+                onClick={() => menu.moveTo(moving, null)}
+                icon="close"
+                label={panelWords.outOfProject}
+                muted
+              />
+            </li>
+          )}
+        </ul>
+      </Dialog>
+      {/* line 29: delete asks first, and says what goes and what stays */}
+      <Dialog
+        open={menu.removing !== null}
+        title={menu.removing ? panelWords.removeTitle(menu.removing.title) : ''}
+        closeLabel={panelWords.close}
+        onClose={menu.stopRemove}
+      >
+        <p className="m-0 px-space-8 type-ui text-muted">{panelWords.removeBody}</p>
+        {menu.removeFailed && (
+          <p className="m-0 px-space-8 type-ui text-primary">{menu.removeFailed}</p>
+        )}
+        <ul className="m-0 flex list-none flex-col p-0">
+          <li>
+            <NavItem onClick={menu.remove} icon="remove" label={panelWords.removeYes} />
+          </li>
+          <li>
+            <NavItem onClick={menu.stopRemove} icon="close" label={panelWords.removeNo} muted />
+          </li>
+        </ul>
+      </Dialog>
+      {/* line 31: a screen reader hears where a moved conversation went */}
+      <p aria-live="polite" className="sr-only">
+        {menu.said}
+      </p>
+    </>
   );
 }

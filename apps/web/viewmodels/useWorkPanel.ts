@@ -134,8 +134,13 @@ export function usePanelState() {
     rerender((n) => n + 1);
   }, []);
   // read again on every move and whenever the page signals; nothing is read for nobody
-  const listed = useConversations(signedIn ? `${pathname}?${params.toString()}:${signal}` : null);
-  const menu = useWorkMenu(signedIn, signal);
+  // read again also after an archive, an unarchive or a delete from the panel's own menu
+  const [reads, setReads] = useState(0);
+  const reread = useCallback(() => setReads((n) => n + 1), []);
+  const listed = useConversations(
+    signedIn ? `${pathname}?${params.toString()}:${signal}:${reads}` : null,
+  );
+  const menu = useWorkMenu(signedIn, signal, reread);
   const width = usePanelWidth();
   // the bar (a control with Space 8 around it, and its hairline), and the panel beside it when it's open
   const edge = BAR + (menu.open ? width.width : 0);

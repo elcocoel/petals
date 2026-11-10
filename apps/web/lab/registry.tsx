@@ -2313,6 +2313,8 @@ export const NOT_IN_LAB: Record<string, string> = {
     'wires useFlowerPage to the flower and its box, filling the area under the nav: it lives at /f/<id> and /draft',
   FrontDoor: 'draws nothing: it opens the wallet when the landing is left for /make (proposal)',
   Lobby: 'wires useLobby to the cards and the tiles, and it lives at /lobby',
+  Menu: "takes the focus when it shows and closes on any press elsewhere, so it's shown live, from a row's ⋯ at /lab/panel",
+  Dialog: "a modal over the page, so it is shown live, from a row's ⋯ menu at /lab/panel",
   WorkMenu:
     'the SideRail and the list, both here, fixed to the window: the layout of /lobby and /make holds it (/lab/panel shows it whole)',
 };
