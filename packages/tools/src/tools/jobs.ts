@@ -14,6 +14,7 @@ import { AGENT_NAME_MAX, agentKeyOf, DISCONNECTED, disconnectedFor } from '../ag
 import { defineTool } from '../define.ts';
 import { ToolFailure } from '../errors.ts';
 import type { ToolContext } from '../types.ts';
+import { viewOfPerson } from '../views.ts';
 import {
   lastingStore,
   makeLink,
@@ -61,6 +62,10 @@ const jobOut = (j: JobRow) => ({
 });
 
 /** The person's next job for this agent, from any of their projects, with that project's continue link. */
+
+const THEN_REPORT =
+  'Then report_job with link as exploration, this job id and result: { summary, steps }, or failed and why. Then take_job again, until job is null.';
+
 async function takeWithKey(ctx: ToolContext, key: string, as: string | undefined) {
   const store = lastingStore(ctx);
   const link = await agentKeyOf(store, key);
@@ -95,7 +100,9 @@ async function takeWithKey(ctx: ToolContext, key: string, as: string | undefined
     exploration: job.exploration,
     link: made.url,
     job: jobOut(job),
-    next: 'Do what brief says, with the six steps, passing link as exploration to save_step, add_note and keep_layer. Then report_job with link as exploration, this job id and result: { summary, steps }, or failed and why. Then take_job again, until job is null.',
+    // the person's glasses (one-source.md): every flower drawn for them is drawn through these
+    view: await viewOfPerson(ctx, owner),
+    next: `Do what brief says, with the six steps, passing link as exploration to save_step, add_note and keep_layer, and view to render_flower. ${THEN_REPORT}`,
   };
 }
 
@@ -133,6 +140,11 @@ export const takeJob = defineTool<
       description: "with agent_key: the job's project, as exploration for the rest",
     },
     job: { anyOf: [JOB, { type: 'null' }] },
+    view: {
+      type: 'object',
+      description:
+        "the person's view (view/v1), with a job: pass it to render_flower, so every flower is drawn as they see it",
+    },
     next: { type: 'string' },
   }),
   annotations: WRITES,
@@ -152,8 +164,10 @@ export const takeJob = defineTool<
     return {
       exploration: o.row.id,
       job: job ? jobOut(job) : null,
+      // the project's owner's glasses (one-source.md): their flowers are drawn through these
+      ...(job ? { view: await viewOfPerson(ctx, o.row.owner) } : {}),
       next: job
-        ? 'Do what brief says, with the six steps. Then report_job with this job id and result: { summary, steps }, or failed and why.'
+        ? 'Do what brief says, with the six steps, passing view to render_flower. Then report_job with this job id and result: { summary, steps }, or failed and why.'
         : 'No job is open in this project.',
     };
   },

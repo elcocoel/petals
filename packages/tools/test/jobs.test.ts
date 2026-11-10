@@ -1,6 +1,7 @@
 // Jobs in a project (Elco, 9 Nov, B with C): Petals' agent hands a job out, the person's own agent
 // takes it with the project's continue link, does it on its machine and reports back; the page reads
 // the list with any link. Over HTTP, as the pasted file and curl call them.
+import { DEFAULT_VIEW } from '@petal/core';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { agentKeyHash } from '../src/agent-key.ts';
@@ -172,6 +173,8 @@ describe('take_job with the agent key', () => {
     const first = (await take({ agent_key: KEY, as: 'claude-app' })) as Out;
     expect(first).toMatchObject({ exploration: id, job: { id: 'job_0', title: 'Map RaidGuild' } });
     expect(first.link).toMatch(/\/s\//);
+    // with the person's view (theirs, or the default), to draw every flower as they see it
+    expect(first.view).toEqual(DEFAULT_VIEW);
     // the link works the project: report the job with it
     const reported = (await registry
       .find((t) => t.name === 'report_job')
