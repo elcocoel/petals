@@ -21,6 +21,8 @@ export interface MapViewRow {
   /** the colours its picture draws: colour's keys, then the tail's, each { label, swatch: var(--k-…) } */
   keys: { label: string; swatch: string }[];
   made_by: string | null;
+  /** the map it belongs to: its card's id in GET /api/v1/maps */
+  map?: string;
 }
 
 export const mapViewList = () => api<{ views: MapViewRow[] }>('/api/v1/map/views');

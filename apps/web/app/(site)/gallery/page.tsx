@@ -1,14 +1,14 @@
-// The gallery (T063): the one shared map, every view on it (SYSTEMS's GET /api/v1/map/views; Elco, 10 Nov,
-// fix 2: the gallery reads the map, not the old published list). Each tile is the view's own picture, drawn
-// by the server in the default view, and opens the view. No sign-in.
+// The Power Map (T063, the gallery): one card per map, an address with every reading of it together (Elco,
+// 10 Nov: one map per address; SYSTEMS's GET /api/v1/maps). Each card is its newest drawing's picture, drawn
+// by the server in the default view, and opens the map's page. No sign-in.
 import { FlowerTile } from '../../../components/FlowerTile.tsx';
 import { LegendKeys } from '../../../components/Legend.tsx';
-import { listKeys, mapViewList, viewTile } from '../../../lib/map-views.ts';
+import { mapList, mapsKeys, mapTile } from '../../../lib/maps.ts';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Gallery() {
-  const res = await mapViewList();
+  const res = await mapList();
   return (
     <>
       {/* Named as the navbar and the landing name it (Elco, 10 Nov, fix 4). */}
@@ -19,19 +19,19 @@ export default async function Gallery() {
       </p>
       {!res.ok ? (
         <p className="error">
-          Could not list flowers: {res.error.code}: {res.error.message}
+          Could not list the maps: {res.error.code}: {res.error.message}
         </p>
-      ) : res.value.views.length === 0 ? (
-        <p>No flowers yet.</p>
+      ) : res.value.maps.length === 0 ? (
+        <p>No maps yet.</p>
       ) : (
         <>
           <div className="mb-block-gap">
-            <LegendKeys keys={listKeys(res.value.views)} />
+            <LegendKeys keys={mapsKeys(res.value.maps)} />
           </div>
           <ul className="gallery">
-            {res.value.views.map((v) => (
-              <li key={v.sha}>
-                <FlowerTile {...viewTile(v)} />
+            {res.value.maps.map((m) => (
+              <li key={m.id}>
+                <FlowerTile {...mapTile(m)} />
               </li>
             ))}
           </ul>
