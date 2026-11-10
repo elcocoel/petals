@@ -507,6 +507,12 @@
   border-end-end-radius: inherit;
 }
 
+/* The conversation's base is its field (design/conversation.md, line 16): the cursor in it, its edge says so. */
+/* box.well */
+:root[data-version="2"] [data-b="box"][data-foot]:focus-within {
+  border-color: var(--accent);
+}
+
 /* box.paper */
 :root[data-version="2"] [data-b="box"][data-kind="plate"] {
   background-image:
@@ -1011,6 +1017,12 @@
 /* item.soft */
 :root[data-version="2"]
   [data-b="item"]:is([aria-current="page"], [data-current], [data-drop])::before {
+  opacity: 1;
+}
+
+/* Your own words in a conversation keep the fill (design/conversation.md, line 23). */
+/* item.said */
+:root[data-version="2"] [data-b="item"][data-said]::before {
   opacity: 1;
 }
 

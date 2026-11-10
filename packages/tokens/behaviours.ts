@@ -13,7 +13,7 @@ export const parents = {
   figure: 'Drawing, AnnotatedFlower',
   mark: 'Wordmark, the pixel numerals',
   head: 'SectionHead',
-  item: 'NavItem, IconButton, a tick: a row or a small control, in the side panel or a pager',
+  item: 'NavItem, IconButton, a tick, your turn: a row or a small control, in the side panel or a pager, and your words in a conversation',
 } as const;
 
 export type Parent = keyof typeof parents;
@@ -141,6 +141,17 @@ export const behaviours = [
     via: 'view',
   },
   {
+    name: 'box.split',
+    purpose:
+      'A light sheet rising out of a dark base, one box: the seam between them moves the line, each edge sizes its own part',
+    via: 'view',
+  },
+  {
+    name: 'box.well',
+    purpose: 'With the cursor in its base, the base takes the accent at its edge',
+    via: 'css',
+  },
+  {
     name: 'box.hold',
     purpose:
       'A wheel or a pinch stays in it, and pressing the canvas leaves the cursor in it, so a chat carries on',
@@ -181,6 +192,12 @@ export const behaviours = [
   {
     name: 'item.soft',
     purpose: 'The fill under the pointer and under where you are has soft corners, and fades in',
+    via: 'css',
+  },
+  {
+    name: 'item.said',
+    purpose:
+      'Your own turn in a conversation sits on the fill, its corners soft, so it reads apart from the answers',
     via: 'css',
   },
   {

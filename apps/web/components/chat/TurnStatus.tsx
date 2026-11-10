@@ -6,14 +6,14 @@ import { Icon } from '../ui/Icon.tsx';
 
 export function TurnStatus({ row, onRefollow }: { row: TurnRow; onRefollow?: () => void }) {
   return (
-    <div role="status" data-turn-stage={row.stage} className="flex flex-col gap-text-gap">
+    <div role="status" data-turn-stage={row.stage} className="flex flex-col gap-space-4">
       {row.headline && (
-        <p className="flex items-center gap-text-gap type-lead">
-          <Icon name="petals" />
+        <p className="flex items-center gap-space-8 type-ui">
+          <Icon name="petals" small />
           {row.headline}
         </p>
       )}
-      <p className={row.headline ? 'type-body' : 'type-body text-muted'}>{row.text}</p>
+      <p className="type-ui text-muted">{row.text}</p>
       {row.refollow && (
         <Button variant="link" onClick={onRefollow} disabled={row.refollow.disabled}>
           {row.refollow.label}

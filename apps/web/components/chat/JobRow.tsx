@@ -4,8 +4,8 @@
 export function JobRow({ text, summary }: { text: string; summary?: string | undefined }) {
   return (
     <div className="flex flex-col items-start gap-space-4 border-l border-hairline pl-text-gap">
-      <p className="my-0 type-label">{text}</p>
-      {summary && <p className="my-0 type-caption text-muted">{summary}</p>}
+      <p className="my-0 type-ui">{text}</p>
+      {summary && <p className="my-0 type-ui text-muted">{summary}</p>}
     </div>
   );
 }

@@ -26,12 +26,12 @@ export function TurnFlower({
       {/* biome-ignore lint/performance/noImgElement: a data URL of a drawing already in hand */}
       {thumb ? <img src={thumb} alt="" className="size-turn-flower-thumb shrink-0" /> : null}
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="type-label">{title}</span>
+        <span className="type-ui">{title}</span>
         <Mono as="span" tone="muted">
           {sub}
         </Mono>
       </span>
-      <span className="shrink-0 type-caption text-muted">{open ? openWord : 'Show'}</span>
+      <span className="shrink-0 type-ui text-muted">{open ? openWord : 'Show'}</span>
     </Button>
   );
 }

@@ -3,12 +3,14 @@
 // the things you can open, which lay out their own content. A `tick` is one mark of a pager: no words of its
 // own, so its `label` is what a screen reader hears and the pointer reads; it's an item, as IconButton is.
 // Its primary look is the base style of every <button> in app/globals.css. Variation goes through
-// these props, so there's no className: a one-off look needs a new variant here.
+// these props, so there's no className: a one-off look needs a new variant here. `compact` is primary at the
+// app's scale (a row high, UI words): the conversation's Send and Connect, beside the side panel's rows.
 import type { MouseEventHandler, ReactNode } from 'react';
 import { Icon } from './Icon.tsx';
 
 export type ButtonVariant =
   | 'primary'
+  | 'compact'
   | 'secondary'
   | 'starter'
   | 'link'
@@ -21,6 +23,7 @@ export type ButtonVariant =
 /** The behaviour each variant inherits (packages/tokens/behaviours.ts). `row` and `tile` stay v1. */
 const BEHAVIOUR: Partial<Record<ButtonVariant, 'action' | 'link' | 'item'>> = {
   primary: 'action',
+  compact: 'action',
   secondary: 'action',
   starter: 'action',
   link: 'link',
@@ -31,6 +34,7 @@ const BEHAVIOUR: Partial<Record<ButtonVariant, 'action' | 'link' | 'item'>> = {
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: '',
+  compact: 'h-row-height px-text-gap type-ui',
   secondary: 'border border-primary bg-transparent text-primary',
   // One line at any width Figma draws. Narrower than its question, it wraps instead of overflowing.
   starter:

@@ -272,7 +272,7 @@ describe('the views only lay it out', () => {
     expect(out).toContain('>You<');
     expect(thread(view([{ kind: 'note', text: 'n' }]))).toContain('n</p>');
     expect(thread(view([{ kind: 'error', code: 'c', message: 'm' }]))).toContain(
-      '<p class="error">c: m</p>',
+      '<p class="error type-ui">c: m</p>',
     );
   });
 

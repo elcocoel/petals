@@ -39,7 +39,7 @@ export function Thread({
 }) {
   return (
     <div className={`min-h-0 flex-1 overflow-y-auto ${className}`} ref={threadRef}>
-      <div className="flex flex-col gap-block-gap pb-block-gap">
+      <div className="flex flex-col gap-space-16 pb-block-gap">
         {heading && <h2 className="m-0 type-heading">{heading}</h2>}
         {notice}
         {rows.map((row): ReactNode => {
@@ -49,6 +49,7 @@ export function Thread({
                 <Speech
                   key={row.key}
                   speaker={row.label}
+                  mine
                   {...(row.about ? { note: row.about } : {})}
                 >
                   {row.text}
@@ -56,7 +57,7 @@ export function Thread({
               );
             case 'note':
               return (
-                <p key={row.key} className="type-caption text-muted">
+                <p key={row.key} className="type-ui text-muted">
                   {row.text}
                 </p>
               );
@@ -69,7 +70,7 @@ export function Thread({
                   agent={!row.foreign}
                   {...(row.speaker ? { speaker: row.speaker } : {})}
                 >
-                  <Markdown blocks={row.blocks} onLink={onLink} />
+                  <Markdown blocks={row.blocks} onLink={onLink} app />
                 </Speech>
               );
             case 'flower':
@@ -77,7 +78,7 @@ export function Thread({
               return renderFlower(row);
             case 'error':
               return (
-                <p key={row.key} className="error">
+                <p key={row.key} className="error type-ui">
                   {row.text}
                 </p>
               );

@@ -17,10 +17,10 @@ export function ConnectWallet({
   onConnect: () => void;
 }) {
   return (
-    <div className="flex flex-col items-start gap-text-gap px-block-gap pt-text-gap pb-block-gap">
-      {question && <p className="my-0 type-body wrap-anywhere text-muted">{question}</p>}
+    <div className="flex flex-col items-start gap-text-gap px-block-gap py-space-16">
+      {question && <p className="my-0 type-ui wrap-anywhere text-muted">{question}</p>}
       <ActionRow gap="tight">
-        <Button disabled={busy} onClick={onConnect}>
+        <Button variant="compact" disabled={busy} onClick={onConnect}>
           {doorWords.connect}
         </Button>
       </ActionRow>
