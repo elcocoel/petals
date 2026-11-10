@@ -688,6 +688,8 @@ export type AgentEvent =
   | { event: 'flower'; data: FlowerResult }
   /** additive (9 Nov): Petals' agent handed a job to the person's own agent, in this exploration */
   | { event: 'job'; data: JobEvent }
+  /** additive (10 Nov): Petals' agent named or renamed this conversation */
+  | { event: 'title'; data: { title: string } }
   | { event: 'signature'; data: ModelSignature }
   | { event: 'error'; data: AgentError }
   | { event: 'heartbeat'; data: Record<string, never> }

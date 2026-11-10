@@ -341,6 +341,13 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE draft ADD COLUMN name TEXT;
   ALTER TABLE draft ADD COLUMN made_by TEXT;
   `,
+  // 14: conversations are named (Elco, 10 Nov): Petals' agent names its own after its first answer and
+  // renames it when the subject changes; the person's own agents send a title with a note. A run says when
+  // its title became a name, so until then it's still the first question. Empty for what nobody named.
+  `
+  ALTER TABLE run ADD COLUMN named_at TEXT;
+  ALTER TABLE exploration ADD COLUMN title TEXT;
+  `,
 ];
 
 /**

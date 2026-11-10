@@ -32,6 +32,7 @@ import type {
   LlmToolCall,
   SpendHold,
 } from './llm.ts';
+import { NAME_CONVERSATION, nameNotes, type RunName } from './name-conversation.ts';
 import { LlmCallError } from './near-ai.ts';
 import { agentNotes, SYSTEM_PROMPT } from './prompt.ts';
 import { newRunId } from './runs.ts';
@@ -59,6 +60,8 @@ export interface RunInput {
   jobs?: JobRow[];
   /** additive (9 Nov, agent-house): the person's agents, by name, and what each holds */
   agents?: { name: string; last_seen: string; job: string | null }[];
+  /** additive (10 Nov): the conversation's name so far, which the model gives with name_conversation */
+  name?: RunName;
 }
 
 export interface RunDeps {
@@ -353,6 +356,7 @@ async function loop(
     ...(followUp ? [followUpNotes(earlier)] : []),
     ...(input.jobs?.length ? [jobNotes(input.jobs)] : []),
     ...(input.agents?.length ? [connectedNotes(input.agents)] : []),
+    ...(input.name ? [nameNotes(input.name)] : []),
   ].join('\n\n');
   const messages: LlmMessage[] = [{ role: 'system', content: system }, ...conversation];
   // Sent with every call, and they count against the window too.
@@ -504,6 +508,9 @@ async function loop(
     });
     if (!ok) return out;
     if (call.name === HAND_JOB) emit({ event: 'job', data: (out as { job: JobEvent }).job });
+    if (call.name === NAME_CONVERSATION) {
+      emit({ event: 'title', data: { title: (out as { title: string }).title } });
+    }
     remember(call.name, args as Obj, out as Obj, by);
     if (stored) return { ...(out as Obj), [STORED_ONLY]: true };
     gate?.passed(call.name, args as Obj, out as Obj);
@@ -692,6 +699,8 @@ async function loop(
         });
         await saveThread();
       }
+      // A name given with the answer ends the turn: the answer is already said, so naming buys no call.
+      if (text && calls.every((call) => call.name === NAME_CONVERSATION)) break;
       if (totals.usd >= budget.usdPerChat) {
         fail('budget_exhausted', `The chat used its $${budget.usdPerChat} budget.`, SKILL_HINT);
         break;

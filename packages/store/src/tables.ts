@@ -41,6 +41,8 @@ export interface RunRow {
   body: string;
   /** a conversation's name: its first question until a person renames it; null on an older run */
   title?: string | null;
+  /** when the title became a name (Petals' agent's, the person's, or the work it continues); null while it's the first question */
+  named_at?: string | null;
   /** JSON: the provider, model, effort and permissions picked. `model` above is what answered */
   settings?: string | null;
   hidden_at?: string | null;
@@ -117,6 +119,8 @@ export interface ExplorationRow {
   credential?: string | null;
   /** where its owner put it, as a conversation from another door; null at the top */
   folder?: string | null;
+  /** its name as a conversation, sent with a note by the agent doing it; null until one is sent */
+  title?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -503,9 +507,9 @@ export function tables(db: Db) {
     run: {
       async insert(r: RunRow) {
         await db.run(
-          `INSERT INTO run (id, owner, exploration, status, model, body, title, settings, folder,
-                            created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO run (id, owner, exploration, status, model, body, title, named_at, settings,
+                            folder, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           r.id,
           r.owner,
           r.exploration,
@@ -513,6 +517,7 @@ export function tables(db: Db) {
           r.model,
           r.body,
           r.title ?? null,
+          r.named_at ?? null,
           r.settings ?? null,
           r.folder ?? null,
           r.created_at,
@@ -578,9 +583,10 @@ export function tables(db: Db) {
           owner,
           limit,
         ),
-      // These three leave updated_at alone: renaming or hiding one isn't talking in it.
-      async setTitle(id: string, title: string) {
-        await db.run('UPDATE run SET title = ? WHERE id = ?', title, id);
+      // These leave updated_at alone: renaming or hiding one isn't talking in it.
+      /** `named` is when it became a name; null puts it back to being the first question. */
+      async setTitle(id: string, title: string, named: string | null) {
+        await db.run('UPDATE run SET title = ?, named_at = ? WHERE id = ?', title, named, id);
       },
       async setSettings(id: string, settings: string) {
         await db.run('UPDATE run SET settings = ? WHERE id = ?', settings, id);
@@ -918,6 +924,10 @@ export function tables(db: Db) {
       /** Where its owner put it. Leaves updated_at alone: moving it isn't working on it. */
       async setFolder(id: string, folder: string | null) {
         await db.run('UPDATE exploration SET folder = ? WHERE id = ?', folder, id);
+      },
+      /** Its name as a conversation. Leaves updated_at alone: the note it came with touches that. */
+      async setTitle(id: string, title: string) {
+        await db.run('UPDATE exploration SET title = ? WHERE id = ?', title, id);
       },
       /** Work from another door: theirs, and no conversation on this site has touched it. */
       withoutRun: (owner: string, limit: number) =>

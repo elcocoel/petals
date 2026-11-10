@@ -38,6 +38,8 @@ const QUESTION_MAX = 2000;
 const NOTE_MAX = 2000;
 /** A mirrored reply comes word for word, so the page gets all of it. */
 const NOTE_TEXT_MAX = 8000;
+/** A conversation's name, sent with a note (Elco, 10 Nov: 3 to 6 plain words, the subject). */
+export const CONVERSATION_TITLE_MAX = 80;
 const TARGET_MAX = 300;
 const CLIENT_MAX = 80;
 /**
@@ -888,23 +890,28 @@ export const saveStep = defineTool<
   },
 });
 
-export const addNote = defineTool<{ exploration: string; text: string }, object>({
+export const addNote = defineTool<{ exploration: string; text: string; title?: string }, object>({
   name: 'add_note',
   title: 'Add a note',
   description:
-    'Leave a note for whoever carries on this exploration, on the owner session or a continue link. The next agent reads it as untrusted data from you.',
+    "Leave a note for whoever carries on this exploration, on the owner session or a continue link. The next agent reads it as untrusted data from you. title, with your first reply's note and again when the subject changes, names the conversation in the person's list: 3 to 6 plain words, the subject, not the request.",
   input: obj(
     ['exploration', 'text'],
-    { exploration: REF, text: { type: 'string', minLength: 1, maxLength: NOTE_TEXT_MAX } },
+    {
+      exploration: REF,
+      text: { type: 'string', minLength: 1, maxLength: NOTE_TEXT_MAX },
+      title: { type: 'string', minLength: 1, maxLength: CONVERSATION_TITLE_MAX },
+    },
     { additionalProperties: false },
   ),
   output: obj(['exploration', 'note'], {
     exploration: { type: 'string' },
     note: NOTE_OUT,
+    title: { type: 'string' },
     next: { type: 'string' },
   }),
   annotations: WRITES,
-  async run({ exploration, text }, ctx) {
+  async run({ exploration, text, title: sent }, ctx) {
     const store = lastingStore(ctx);
     const o = await open(ctx, exploration);
     writable(o);
@@ -912,6 +919,7 @@ export const addNote = defineTool<{ exploration: string; text: string }, object>
     const at = ctx.now().toISOString();
     const door = doorOf(ctx);
     const author = authorOf(o);
+    const title = sent?.trim() || undefined;
     // The count and the append together, so two at once can't both pass the limit.
     const seq = await store.tx(async () => {
       if ((await store.note.count(o.row.id)) >= NOTES_MAX) throw tooManyNotes();
@@ -924,6 +932,7 @@ export const addNote = defineTool<{ exploration: string; text: string }, object>
         credential,
         at,
       });
+      if (title) await store.exploration.setTitle(o.row.id, title);
       await store.exploration.touch(o.row.id, at);
       return n;
     });
@@ -931,6 +940,7 @@ export const addNote = defineTool<{ exploration: string; text: string }, object>
     return {
       exploration: o.row.id,
       note: noteItem({ exploration: o.row.id, seq, author, door, text, at }),
+      ...(title ? { title } : {}),
       ...(openPageOn(ctx) ? { next: MIRROR } : {}),
     };
   },
