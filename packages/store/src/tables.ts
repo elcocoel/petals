@@ -785,6 +785,9 @@ export function tables(db: Db) {
           id,
         );
       },
+      async setBudget(id: string, usd: number) {
+        await db.run('UPDATE invite SET budget_usd = ? WHERE id = ?', usd, id);
+      },
       async addSpent(id: string, usd: number) {
         await db.run('UPDATE invite SET spent_usd = spent_usd + ? WHERE id = ?', usd, id);
       },

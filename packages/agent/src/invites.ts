@@ -84,6 +84,33 @@ export async function mintInvite(
   return { id, token, budget_usd: o.usd, expires_at };
 }
 
+/**
+ * A new budget for an invite, in total, the same token kept (Elco, 10 Nov): what's left moves by the
+ * difference, so what it has spent still counts. False when no such invite exists.
+ */
+export async function setInviteBudget(
+  store: Store,
+  id: string,
+  usd: number,
+  now: Date = new Date(),
+): Promise<boolean> {
+  if (!Number.isFinite(usd) || usd <= 0) throw new Error('the budget must be more than $0');
+  const invite = await store.invite.get(id);
+  if (!invite) return false;
+  const at = now.toISOString();
+  await store.tx(async () => {
+    await store.invite.setBudget(id, usd);
+    await store.credit.apply({
+      id: `budget:${id}:${at}`,
+      account_key: accountOf(id),
+      delta_usd: usd - invite.budget_usd,
+      reason: 'budget',
+      at,
+    });
+  });
+  return true;
+}
+
 /** False when no such invite exists. Calls in flight still settle; the next one is refused. */
 export async function revokeInvite(
   store: Store,
