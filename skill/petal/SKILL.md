@@ -57,11 +57,11 @@ Petals' own agent, in the chat on the page, hands jobs to the person's agents, s
 
 1. Join once, with a short name for your app, such as `claude-code`, `codex` or `hermes`: `node ~/.petals/petal.mjs join <agent key> --as <name>`.
 2. Wait for a job: `node ~/.petals/petal.mjs jobs wait`. It comes back with a job, or with none just under ten minutes. Give the command your app's longest limit for one command, as your app's connect chapter says, so it isn't cut short.
-3. Do what the job's `brief` says, on this machine, with the six steps below, in the job's project: `project.exploration` is that project's link, for every tool, and each flower you draw is saved there.
+3. Do what the job's `brief` says, on this machine, with the six steps below, in the job's project: `project.exploration` is that project's link, for every tool, and each flower you draw is saved there, drawn as the person sees it: the job brings their view, and the file draws with it.
 4. Report it: `report_job` with that link, the job's `id` and a `result`: a `summary` of two or three plain sentences and the `steps` you saved. If you can't do it, report `failed` with the reason instead.
 5. Run `jobs wait` again, and keep going until the person says stop. Petals' agent takes up your report in the same conversation.
 
-**In an app that can't run commands here, connected at the site's `/mcp`** (the Claude app, ChatGPT): when the person gives you their agent key and asks you to take their open jobs, call `take_job` with `agent_key` and `as` (your app's short name, such as `claude-app` or `chatgpt`). Do each job in the `link` it gives, passing that as `exploration`, report it, and call `take_job` again until `job` is null. There's no waiting there: you take jobs when the person asks.
+**In an app that can't run commands here, connected at the site's `/mcp`** (the Claude app, ChatGPT): when the person gives you their agent key and asks you to take their open jobs, call `take_job` with `agent_key` and `as` (your app's short name, such as `claude-app` or `chatgpt`). Do each job in the `link` it gives, passing that as `exploration`, and its `view` to each `render_flower`, so every flower is drawn as the person sees it. Report it, and call `take_job` again until `job` is null. There's no waiting there: you take jobs when the person asks.
 
 **When the person gives you one project's link** instead: call `take_job` with it as `exploration`, do the job and report it the same way, then take the next one. When there's none, tell the person in one line that the page's agent has your report.
 

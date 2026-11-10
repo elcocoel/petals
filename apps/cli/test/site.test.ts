@@ -429,3 +429,86 @@ describe('jobs from the page’s agent', () => {
     expect(JSON.parse(sent.body as string)).toEqual({ version: 'dsv_1', drop: ['e'.repeat(64)] });
   });
 });
+
+// Elco's glasses rule, 10 Nov: a job brings the person's view, and every flower drawn for it goes
+// through that view, in the CLI (one process per command) and in an MCP session alike.
+describe("a job's flowers are drawn as the person sees them", () => {
+  const VIEW = { petal: 'view/v1', color: { data: 'kind' } };
+  const withView = () => {
+    const site = fakeSite();
+    const fetch = async (url: string, init: RequestInit = {}) => {
+      const res = await site.fetch(url, init);
+      const path = url.slice(SITE.length);
+      if (
+        (init.method ?? 'GET') === 'POST' &&
+        (path === '/api/v1/agents/wait' || path.endsWith('/jobs/take'))
+      ) {
+        const body = (await res.json()) as Record<string, unknown>;
+        return new Response(JSON.stringify({ ...body, view: VIEW }), {
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return res;
+    };
+    return { ...site, fetch };
+  };
+  /** render_flower that answers with the view it was given */
+  const seenView = tool('render_flower', async (i) => ({
+    spec_sha256: 'b'.repeat(64),
+    legend: [],
+    drawn_with: (i as { view?: unknown }).view ?? null,
+  }));
+  const reg = [...registry.filter((t) => t.name !== 'render_flower'), seenView];
+  const draw = (tools: Tool<unknown, unknown>[]) =>
+    byName(tools, 'render_flower').run({ spec: SPEC } as never, ctx()) as Promise<
+      Record<string, unknown>
+    >;
+
+  test('take_job by agent key keeps the view, and render_flower draws with it', async () => {
+    const tools = siteDoor({ site: SITE, fetch: withView().fetch }).tools(reg);
+    const taken = (await byName(tools, 'take_job').run(
+      { agent_key: 'petal_agent_x', as: 'claude-code' } as never,
+      ctx(),
+    )) as Record<string, unknown>;
+    expect(taken.view).toEqual(VIEW);
+    expect((await draw(tools)).drawn_with).toEqual(VIEW);
+  });
+
+  test("take_job by a project's link keeps it too; a view the call names wins", async () => {
+    const tools = siteDoor({ site: SITE, fetch: withView().fetch }).tools(reg);
+    await byName(tools, 'take_job').run({ exploration: LINK } as never, ctx());
+    expect((await draw(tools)).drawn_with).toEqual(VIEW);
+    const own = { petal: 'view/v1', color: { data: 'stake' } };
+    const out = (await byName(tools, 'render_flower').run(
+      { spec: SPEC, view: own } as never,
+      ctx(),
+    )) as Record<string, unknown>;
+    expect(out.drawn_with).toEqual(own);
+  });
+
+  test('a new conversation leaves the job and its view behind', async () => {
+    const tools = siteDoor({ site: SITE, fetch: withView().fetch }).tools(reg);
+    await byName(tools, 'take_job').run({ exploration: LINK } as never, ctx());
+    await byName(tools, 'start_exploration').run(
+      { question: 'q', client: 'Codex' } as never,
+      ctx(),
+    );
+    expect((await draw(tools)).drawn_with).toBeNull();
+  });
+
+  test('jobs wait, in a shell, hands its view to a running MCP session through the file', async () => {
+    const { writeFileSync } = await import('node:fs');
+    const currentFile = join(mkdtempSync(join(tmpdir(), 'petal-view-')), 'current.json');
+    const tools = siteDoor({ site: SITE, fetch: withView().fetch, currentFile }).tools(reg);
+    // the session started its own conversation first
+    await byName(tools, 'start_exploration').run(
+      { question: 'q', client: 'Claude Code' } as never,
+      ctx(),
+    );
+    expect((await draw(tools)).drawn_with).toBeNull();
+    // then `jobs wait`, another process, wrote the job's project and view a moment later
+    await new Promise((r) => setTimeout(r, 15));
+    writeFileSync(currentFile, `${JSON.stringify({ link: LINK, view: VIEW })}\n`);
+    expect((await draw(tools)).drawn_with).toEqual(VIEW);
+  });
+});
