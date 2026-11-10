@@ -1,6 +1,7 @@
 // The landing's sections in the order of the copy doc (T185, Figma frame 66:2180). It only assembles;
 // app/page.tsx hands it the Power Map's drawn readings.
 
+import type { View } from '@petal/core/types';
 import { HERO_SHA, type PowerMapTile } from '../../lib/power-map.ts';
 import { Footer } from '../ui/Footer.tsx';
 import { Nav } from '../ui/Nav.tsx';
@@ -14,13 +15,14 @@ import { LiveReading } from './LiveReading.tsx';
 import { Questions } from './Questions.tsx';
 import { UseAnywhere } from './UseAnywhere.tsx';
 
-export function Landing({ tiles = [] }: { tiles?: readonly PowerMapTile[] }) {
+/** `view` is the person's (lib/viewer-view.ts): every picture on the page is drawn in it. */
+export function Landing({ tiles = [], view }: { tiles?: readonly PowerMapTile[]; view: View }) {
   return (
     <>
       <Nav />
       <main>
         <Hero flower={tiles.find((t) => t.sha === HERO_SHA)} />
-        <LiveReading />
+        <LiveReading view={view} />
         <HowItWorks />
         <UseAnywhere />
         <GallerySection tiles={tiles} />

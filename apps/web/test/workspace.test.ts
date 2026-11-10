@@ -3,6 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AgentEvent, FlowerResult, LegendItem, PetalDetail, Spec } from '@petal/core/types';
+import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
@@ -91,6 +92,7 @@ const rowsOf = (items: Item[], s: Partial<Parameters<typeof threadView>[0]> = {}
     turn: 'idle',
     lostAgain: false,
     recorded: false,
+    view: DEFAULT_VIEW,
     ...s,
   });
 const flowerRows = (items: Item[], s = {}) =>
@@ -524,6 +526,17 @@ describe('what a live canvas holds (T200)', () => {
     expect(nextCanvas(held, 'b', other)).toEqual({ key: 'b', reading: other });
   });
 
+  test('a new view of the person’s draws the same flower again, once its reading in that view is in', () => {
+    const held = nextCanvas(null, 'a', reading, undefined, 'v1') as CanvasFlower;
+    expect(nextCanvas(held, 'a', { ...reading }, undefined, 'v1')).toBe(held);
+    expect(nextCanvas(held, 'a', undefined, undefined, 'v2')).toBe(held);
+    expect(nextCanvas(held, 'a', other, undefined, 'v2')).toEqual({
+      key: 'a',
+      reading: other,
+      view: 'v2',
+    });
+  });
+
   /** A turn through the real flow and reducer, with the canvas followed as useWorkspace does. */
   async function played(s0: ChatState, held0: CanvasFlower | null, recorded: boolean) {
     const sha = flower().spec_sha256;
@@ -546,7 +559,7 @@ describe('what a live canvas holds (T200)', () => {
       onRun: () => {},
       dispatch: (a: ChatAction) => {
         s = chatReducer(s, a);
-        const flowers = threadView({ ...s, recorded }).filter(
+        const flowers = threadView({ ...s, recorded, view: DEFAULT_VIEW }).filter(
           (r): r is FlowerRow => r.kind === 'flower',
         );
         const row = flowers[openFlowerIndex(s.open, flowers.length)];

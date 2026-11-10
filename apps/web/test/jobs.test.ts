@@ -1,5 +1,7 @@
 // C: a job Petals' agent hands to the person's own agent shows in the chat, says where it stands, and
 // while it's open, offers the line that hands it over.
+
+import { DEFAULT_VIEW } from '@petal/core/view';
 import { describe, expect, test } from 'vitest';
 import { type Job, jobLine, jobWords } from '../lib/jobs.ts';
 import { fold } from '../lib/thread.ts';
@@ -19,6 +21,7 @@ describe('jobs in the chat', () => {
     const items = fold([], { event: 'job', data: handed });
     const rows = threadView({
       items,
+      view: DEFAULT_VIEW,
       busy: false,
       runId: null,
       turn: 'idle',

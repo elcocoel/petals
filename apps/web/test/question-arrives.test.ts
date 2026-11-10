@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { InteractionSurface } from '../flower/InteractionSurface.tsx';
 import type { AgentClient, RunRead } from '../lib/agent-client.ts';
+import { DEFAULT_PERSON_VIEW, viewChoices } from '../lib/person-view.ts';
 import { type ChatAction, chatReducer, initialChat, type QuestionStore } from '../lib/thread.ts';
 import { RECORDED_QUESTION } from '../lib/thread-view.ts';
 import { openFromParams, questionFromParams, workspaceUrl } from '../lib/workspace-url.ts';
@@ -16,6 +17,7 @@ import {
   sendQuestion,
   typeQuestion,
 } from '../viewmodels/useMakeChat.ts';
+import { PersonViewContext } from '../viewmodels/usePersonView.ts';
 
 const Q = 'Who "really" backs A&B #1, señor?';
 const run = (id = 'r1'): AgentEvent => ({
@@ -266,20 +268,31 @@ describe('?run=X&q=Y', () => {
 });
 
 describe('the first paint', () => {
+  // The root layout holds the person's view for every page (app/PersonView.tsx): a visitor's is the default.
+  const person = {
+    ...DEFAULT_PERSON_VIEW,
+    choices: viewChoices(),
+    save: async () => {},
+    reset: async () => {},
+  };
   const paint = (o: { q?: string; run?: string; recorded?: boolean; stored?: string }) =>
     renderToStaticMarkup(
-      createElement(InteractionSurface, {
-        scatter: false,
-        probe: false,
-        surface: 'ground',
-        initialRun: o.run,
-        initialQuestion: o.q ?? null,
-        recorded: o.recorded ?? false,
-        opening: 'Hi. I’m Petals.',
-        shelf: [],
-        initialOpen: o.stored ? { kind: 'stored', id: o.stored } : { kind: 'latest' },
-        initialPetal: null,
-      }),
+      createElement(
+        PersonViewContext.Provider,
+        { value: person },
+        createElement(InteractionSurface, {
+          scatter: false,
+          probe: false,
+          surface: 'ground',
+          initialRun: o.run,
+          initialQuestion: o.q ?? null,
+          recorded: o.recorded ?? false,
+          opening: 'Hi. I’m Petals.',
+          shelf: [],
+          initialOpen: o.stored ? { kind: 'stored', id: o.stored } : { kind: 'latest' },
+          initialPetal: null,
+        }),
+      ),
     );
   const textarea = (html: string) => /<textarea[^>]*>([^<]*)<\/textarea>/.exec(html);
 

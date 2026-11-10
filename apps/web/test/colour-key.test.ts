@@ -1,6 +1,7 @@
 // The key to a flower's colours (Elco, 10 Nov: colours by kind get a key wherever a flower shows): the
 // legend's colours by kind, then "everyone else", each once, and the hero drawing its flower with that key.
 import type { LegendItem } from '@petal/core/types';
+import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
@@ -79,7 +80,9 @@ describe('the hero', () => {
     keys: colourKeys([validators]),
   };
   test('draws its flower in the one look, with the key to its colours', () => {
-    const html = renderToStaticMarkup(createElement(Landing, { tiles: [tile] }));
+    const html = renderToStaticMarkup(
+      createElement(Landing, { tiles: [tile], view: DEFAULT_VIEW }),
+    );
     expect(html).toContain('src="data:image/svg+xml;base64,PHN2Zy8+"');
     expect(html).toContain('data-swatch="k-pool"');
     expect(html).not.toContain('data-kind="hero-flower"');

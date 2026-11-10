@@ -28,6 +28,9 @@ vi.mock('../lib/api.ts', () => ({
   },
 }));
 
+/** The view the page read (lib/viewer-view.ts), by its hash. */
+const VIEW = 'ab'.repeat(32);
+
 /** A server just started: nothing kept. */
 const fresh = async () => {
   vi.resetModules();
@@ -63,7 +66,7 @@ const reading = { title: 'NEAR validators', petals: [{ id: 'a' }], extra: 'not f
 
 function serve(map: unknown) {
   answers.get.set('/api/v1/health', { ok: true, llm: 'up' });
-  answers.get.set('/api/v1/maps', map);
+  answers.get.set(`/api/v1/maps?view=${VIEW}`, map);
   answers.get.set('/api/v1/flowers/first', { entry: { spec, spec_sha256: 'sha-first' } });
   answers.post = () => ({ reading });
 }
@@ -76,7 +79,7 @@ beforeEach(() => {
 describe('the canvas before the conversation draws', () => {
   test('nothing stands in: no flower is read or drawn for it', async () => {
     serve({ maps: [row('first'), row('second', 5)] });
-    const home = await (await fresh())({});
+    const home = await (await fresh())({}, VIEW);
     expect(answers.posts).toEqual([]);
     expect(home).not.toHaveProperty('standIn');
     // one map: the shelf offers what the first message offers, the largest first
@@ -86,7 +89,7 @@ describe('the canvas before the conversation draws', () => {
 
   test('never opens: the address decides that, and it asked for nothing', async () => {
     serve({ maps: [row('first')] });
-    const home = await (await fresh())({});
+    const home = await (await fresh())({}, VIEW);
     expect(home.initialOpen).toEqual({ kind: 'latest' });
     expect(home.initialRun).toBeUndefined();
   });
@@ -96,7 +99,7 @@ describe('the canvas before the conversation draws', () => {
     ['the list failing', () => answers.get.set('/api/v1/health', { ok: true, llm: 'up' })],
   ])('%s, and nothing throws', async (_name, arrange) => {
     arrange();
-    await expect((await fresh())({})).resolves.toMatchObject({ shelf: [] });
+    await expect((await fresh())({}, VIEW)).resolves.toMatchObject({ shelf: [] });
   });
 });
 
@@ -104,10 +107,10 @@ describe('the question', () => {
   test('comes from ?q=, whatever else the address holds', async () => {
     serve({ maps: [] });
     const workspaceHome = await fresh();
-    expect(await workspaceHome({ q: 'words', run: 'r1' })).toMatchObject({
+    expect(await workspaceHome({ q: 'words', run: 'r1' }, VIEW)).toMatchObject({
       initialQuestion: 'words',
       initialRun: 'r1',
     });
-    expect(await workspaceHome({ q: '' })).toMatchObject({ initialQuestion: null });
+    expect(await workspaceHome({ q: '' }, VIEW)).toMatchObject({ initialQuestion: null });
   });
 });

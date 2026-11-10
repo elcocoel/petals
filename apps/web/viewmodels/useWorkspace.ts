@@ -39,6 +39,7 @@ import { useElsewhere } from './useElsewhere.ts';
 import { useJobs } from './useJobs.ts';
 import { useMakeChat } from './useMakeChat.ts';
 import { usePay } from './usePay.ts';
+import { usePersonView } from './usePersonView.ts';
 import { useSession } from './useSession.ts';
 import { useSnapshotFacts } from './useSnapshotFacts.ts';
 import { useStoredFlower } from './useStoredFlower.ts';
@@ -142,7 +143,8 @@ export function useWorkspace(props: {
     ],
     [turnFlowers, elsewherePacket, storedFlower],
   );
-  const drawings = useDrawnFlowers(toDraw);
+  const person = usePersonView();
+  const drawings = useDrawnFlowers(toDraw, person);
   const thumbs = useMemo(
     () =>
       Object.fromEntries(
@@ -156,7 +158,13 @@ export function useWorkspace(props: {
 
   // Adjusted during render, as React allows, so the canvas never paints a frame behind the panel.
   const [canvas, setCanvas] = useState<CanvasFlower | null>(null);
-  const nextHeld = nextCanvas(canvas, panelFlower?.key, drawing?.reading, panelFlower?.stored?.id);
+  const nextHeld = nextCanvas(
+    canvas,
+    panelFlower?.key,
+    drawing?.reading,
+    panelFlower?.stored?.id,
+    person.hash,
+  );
   if (nextHeld !== canvas) setCanvas(nextHeld);
 
   const panel = useMemo<PanelView>(() => {

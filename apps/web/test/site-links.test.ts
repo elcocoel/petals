@@ -2,6 +2,7 @@
 // somewhere real. The page is static, so this reads its markup.
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
@@ -12,7 +13,7 @@ import { landingCopy } from '../lib/landing-copy.ts';
 import { askHref, siteLinks } from '../lib/site-links.ts';
 
 const app = join(import.meta.dirname, '..', 'app');
-const html = renderToStaticMarkup(createElement(Landing));
+const html = renderToStaticMarkup(createElement(Landing, { view: DEFAULT_VIEW }));
 // React writes an apostrophe in an attribute as &#x27;, and a browser reads it back.
 const hrefs = [...html.matchAll(/<a\b[^>]*\shref="([^"]*)"/g)].map((m) =>
   (m[1] as string).replaceAll('&#x27;', "'"),
@@ -61,7 +62,7 @@ describe('the landing page', () => {
     const images = [...html.matchAll(/<img\b[^>]*\ssrc="([^"]*)"/g)].map((m) =>
       m[1]?.replaceAll('&amp;', '&'),
     );
-    expect(images).toEqual([siteLinks.liveShapeImage]);
+    expect(images).toEqual([siteLinks.liveShapeImage(DEFAULT_VIEW)]);
     expect(html).not.toMatch(/(?:fill|stroke)="#/);
   });
 

@@ -1,8 +1,7 @@
 // Server only. What the flower and draft views need besides the entry: the render (SVG, legend,
 // petals) and the snapshot's source URLs, so source ids can be links.
-import type { LegendItem, PetalDetail, Spec } from '@petal/core/types';
+import type { LegendItem, PetalDetail, Spec, View } from '@petal/core/types';
 import { api, post } from './api.ts';
-import { viewerView } from './viewer-view.ts';
 
 export interface Rendered {
   spec_sha256: string;
@@ -13,8 +12,9 @@ export interface Rendered {
   view_url: string;
 }
 
-export async function renderSpec(spec: Spec) {
-  return post<Rendered>('/api/v1/render', { spec, include_svg: true, view: viewerView() });
+/** Drawn in the person's view (lib/viewer-view.ts), as every petal they look at is. */
+export async function renderSpec(spec: Spec, view: View) {
+  return post<Rendered>('/api/v1/render', { spec, include_svg: true, view });
 }
 
 export async function sourceUrls(sha256: string): Promise<Record<string, string>> {

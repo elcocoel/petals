@@ -4,6 +4,7 @@ import { FlowerSheet } from '../../../components/FlowerSheet.tsx';
 import { Badge } from '../../../components/ui/Badge.tsx';
 import { decodeDraft } from '../../../lib/draft.ts';
 import { renderSpec, sourceUrls } from '../../../lib/flower-data.ts';
+import { viewerView } from '../../../lib/viewer-view.ts';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +37,7 @@ export default async function DraftPage({
   }
   const { spec } = decoded;
   const [rendered, sources] = await Promise.all([
-    renderSpec(spec),
+    viewerView().then((person) => renderSpec(spec, person.view)),
     sourceUrls(spec.snapshot.sha256),
   ]);
   return (

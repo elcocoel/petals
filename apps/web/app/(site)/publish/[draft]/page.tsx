@@ -9,6 +9,7 @@ import { api } from '../../../../lib/api.ts';
 import { entryDraftFromRun } from '../../../../lib/entry.ts';
 import { renderSpec, sourceUrls } from '../../../../lib/flower-data.ts';
 import { publishTarget } from '../../../../lib/publish.ts';
+import { viewerView } from '../../../../lib/viewer-view.ts';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,7 +80,7 @@ export default async function PublishPage({
     );
   }
   const [rendered, sources] = await Promise.all([
-    renderSpec(entry.spec),
+    viewerView().then((person) => renderSpec(entry.spec, person.view)),
     sourceUrls(entry.spec.snapshot.sha256),
   ]);
   return (
