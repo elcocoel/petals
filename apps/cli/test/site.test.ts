@@ -56,6 +56,12 @@ function fakeSite(held: Set<string> = new Set()) {
       });
     }
     if (method === 'POST' && path.endsWith('/notes')) return json({ note: { seq: 0 } });
+    if (method === 'POST' && path === '/api/v1/agents/wait') {
+      return json({
+        job: { id: 'job_2', kind: 'map', title: 'Map Moloch', brief: 'Who?', inputs: {}, to: null },
+        project: { exploration: `${SITE}/s/${TOKEN}`, question: 'who?' },
+      });
+    }
     if (method === 'POST' && path.endsWith('/jobs/take')) {
       return json({
         job: {
@@ -313,6 +319,29 @@ describe('jobs from the page’s agent', () => {
     expect(sent.method).toBe('POST');
     expect(sent.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/jobs/take`);
     expect(JSON.parse(sent.body as string)).toEqual({});
+  });
+
+  test("with the person's agent key, take_job takes their next job now, and keeps its project", async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch }).tools(registry);
+    const key = `petal_agent_${'a'.repeat(43)}`;
+    const out = (await byName(tools, 'take_job').run(
+      { agent_key: key, as: 'claude-app' },
+      ctx(),
+    )) as {
+      link: string;
+      job: { id: string };
+    };
+    expect(out).toMatchObject({ link: `${SITE}/s/${TOKEN}`, job: { id: 'job_2' } });
+    const sent = site.seen.at(-1) as Seen;
+    expect(sent.url).toBe(`${SITE}/api/v1/agents/wait`);
+    expect(sent.headers.authorization).toBe(`Bearer ${key}`);
+    expect(JSON.parse(sent.body as string)).toEqual({ as: 'claude-app', wait_s: 0 });
+    // the job's project is the one the next calls go to
+    await byName(tools, 'report_job').run({ job: 'job_2', result: { summary: 'Done.' } }, ctx());
+    expect((site.seen.at(-1) as Seen).url).toBe(
+      `${SITE}/api/v1/explorations/${TOKEN}/jobs/job_2/report`,
+    );
   });
 
   test('report_job sends the result to that job, without the link or the id in the body', async () => {

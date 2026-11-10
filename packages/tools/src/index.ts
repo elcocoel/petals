@@ -1,6 +1,7 @@
 // @petal/tools (W4): one registry, thin doors (HTTP, MCP, CLI in process). Tools: contracts/tools.md.
 // Every output carries tools_version; errors are returned as ToolError, never thrown across a door.
 
+export { AGENT_KEY, AGENT_NAME_MAX, agentKeyHash, ownerOfAgentKey } from './agent-key.ts';
 export {
   BRAIN_INDEX_VERSION,
   type BrainEntry,
