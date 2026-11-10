@@ -1,10 +1,9 @@
 // The flower view (T064): a published or fixture flower, its date, legend, interpretation with
 // sources and unknowns, the model signature (or why there is none), who published it and when,
-// and petal details on click. Plus "Sponsor a refresh" (T067).
+// and petal details on click.
 import type { Entry } from '@petal/core/types';
 import { FlowerSheet } from '../../../../components/FlowerSheet.tsx';
 import { Interpretation, SignatureLine } from '../../../../components/Interpretation.tsx';
-import { QuotePanel } from '../../../../components/QuotePanel.tsx';
 import { api } from '../../../../lib/api.ts';
 import { renderSpec, sourceUrls } from '../../../../lib/flower-data.ts';
 import { dateLabel } from '../../../../lib/flower-view.ts';
@@ -98,7 +97,6 @@ export default async function FlowerPage({ params }: { params: Promise<{ id: str
           <p className="muted">Not published on NEAR yet.</p>
         )}
       </section>
-      <QuotePanel purpose="sponsor_refresh" network={entry.spec.network.id} />
     </>
   );
 }

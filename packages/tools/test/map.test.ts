@@ -1,7 +1,7 @@
 // One map (Elco, 10 Nov: "the workspace and the agent don't seem to be connected to the global power map"):
 // every view stored on the site, named and with who made it, searched by list_flowers and find_target before
 // a fresh read, and handed over whole by GET /api/v1/map. On a real fixture snapshot, offline.
-import { DEFAULT_VIEW, RENDER_VERSION, sha256Hex, viewHash } from '@petal/core';
+import { DEFAULT_VIEW, pictureQuery, sha256Hex } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { modules } from '@petal/inputs';
 import { Hono } from 'hono';
@@ -122,7 +122,7 @@ describe('the map', () => {
     expect(views[0].reading).toBeUndefined();
     // the picture names the look and the view it's drawn with, so a cached one is never the old one
     expect(views[0].picture).toBe(
-      `https://petal.test/api/v1/map/${sha}/svg?look=${encodeURIComponent(RENDER_VERSION)}&view=${viewHash(DEFAULT_VIEW).slice(0, 12)}`,
+      `https://petal.test/api/v1/map/${sha}/svg?${pictureQuery(DEFAULT_VIEW)}`,
     );
   });
 

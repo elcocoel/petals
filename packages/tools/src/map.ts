@@ -2,7 +2,7 @@
 // every view stored on this site, each with its reading, its name, its date and who made it. Read-only and
 // public: GET /api/v1/map hands it over whole, list_flowers and find_target search it before a fresh read.
 // A view's spec is content-addressed, so its reading never changes: each is read once per process.
-import { DEFAULT_VIEW, legendItem, RENDER_VERSION, readFlower, viewHash } from '@petal/core';
+import { DEFAULT_VIEW, legendItem, pictureQuery, readFlower } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
@@ -53,7 +53,7 @@ export type MapViewRow = Omit<MapView, 'reading'>;
  * the view it's drawn with (as the site's flower tiles do): when either changes, so does every address.
  */
 export const pictureOf = (ctx: ToolContext, sha: string) =>
-  `${base(ctx)}/api/v1/map/${sha}/svg?look=${encodeURIComponent(RENDER_VERSION)}&view=${viewHash(DEFAULT_VIEW).slice(0, 12)}`;
+  `${base(ctx)}/api/v1/map/${sha}/svg?${pictureQuery(DEFAULT_VIEW)}`;
 const read = new Map<string, Read>();
 
 async function readOf(ctx: ToolContext, body: string): Promise<Read | null> {

@@ -77,7 +77,6 @@ describe('the hero', () => {
     image: 'data:image/svg+xml;base64,PHN2Zy8+',
     href: `/d/${HERO_SHA}`,
     keys: colourKeys([validators]),
-    legend: validators,
   };
   test('draws its flower in the one look, with the key to its colours', () => {
     const html = renderToStaticMarkup(createElement(Landing, { tiles: [tile] }));

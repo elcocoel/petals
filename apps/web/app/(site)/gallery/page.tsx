@@ -1,27 +1,18 @@
-// The gallery (T063): the flowers published on NEAR, each with its transaction. No sign-in. The fixtures,
-// the server's status line and the old sponsor box are gone (Elco, 10 Nov: the same flower twice, raw
-// timestamps and an old payment story).
+// The gallery (T063): the one shared map, every view on it (SYSTEMS's GET /api/v1/map/views; Elco, 10 Nov,
+// fix 2: the gallery reads the map, not the old published list). Each tile is the view's own picture, drawn
+// by the server in the default view, and opens the view. No sign-in.
 import { FlowerTile } from '../../../components/FlowerTile.tsx';
-import { TextLink } from '../../../components/ui/TextLink.tsx';
-import { api } from '../../../lib/api.ts';
-import {
-  dateLabel,
-  flowerImage,
-  type ListedFlower,
-  networkLabel,
-} from '../../../lib/flower-view.ts';
-import { explorerTxUrl } from '../../../lib/publish.ts';
+import { LegendKeys } from '../../../components/Legend.tsx';
+import { listKeys, mapViewList, viewTile } from '../../../lib/map-views.ts';
 
 export const dynamic = 'force-dynamic';
 
-/** Only what is published on NEAR: a fixture is the same flower again, for tests. */
-const onNear = (flowers: ListedFlower[]) => flowers.filter((f) => f.where === 'map');
-
 export default async function Gallery() {
-  const res = await api<{ flowers: ListedFlower[] }>('/api/v1/flowers');
+  const res = await mapViewList();
   return (
     <>
-      <h1>Gallery</h1>
+      {/* Named as the navbar and the landing name it (Elco, 10 Nov, fix 4). */}
+      <h1>Power Map</h1>
       <p>
         Flowers show who holds power in a network. Open one to read it; no account needed.{' '}
         <a href="/make">Talk to the agent</a>.
@@ -30,28 +21,21 @@ export default async function Gallery() {
         <p className="error">
           Could not list flowers: {res.error.code}: {res.error.message}
         </p>
-      ) : onNear(res.value.flowers).length === 0 ? (
+      ) : res.value.views.length === 0 ? (
         <p>No flowers yet.</p>
       ) : (
-        <ul className="gallery">
-          {onNear(res.value.flowers).map((f) => (
-            <li key={`${f.where}:${f.id}`}>
-              <FlowerTile
-                title={f.title ?? f.id}
-                where={`${networkLabel(f.network)}   /   ${dateLabel(f.as_of)}`}
-                badge="on NEAR"
-                image={flowerImage(f.id)}
-                href={`/f/${f.id}`}
-              >
-                {f.tx_hash && (
-                  <TextLink variant="quiet" href={explorerTxUrl(f.tx_hash)} rel="noreferrer">
-                    Transaction
-                  </TextLink>
-                )}
-              </FlowerTile>
-            </li>
-          ))}
-        </ul>
+        <>
+          <div className="mb-block-gap">
+            <LegendKeys keys={listKeys(res.value.views)} />
+          </div>
+          <ul className="gallery">
+            {res.value.views.map((v) => (
+              <li key={v.sha}>
+                <FlowerTile {...viewTile(v)} />
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </>
   );

@@ -1,12 +1,9 @@
 // How a flower reads beside its drawing: its title and date, the reading key and one petal's detail.
 // Pure, from the spec and what the render returned; the renderer's numbers and words are never
 // re-derived here, only laid out.
-import { RENDER_VERSION, viewHash } from '@petal/core';
+import { pictureQuery } from '@petal/core';
 import type { LegendItem, PetalDetail, Spec } from '@petal/core/types';
 import { viewerView } from './viewer-view.ts';
-
-/** The view a picture is drawn with, named by the start of its hash. */
-const VIEW_NAME = viewHash(viewerView()).slice(0, 12);
 
 /**
  * A flower's still picture. The browser and Vercel's edge keep each one for a year, so its address names
@@ -14,7 +11,7 @@ const VIEW_NAME = viewHash(viewerView()).slice(0, 12);
  * sees the old one from a cache.
  */
 export const flowerImage = (id: string) =>
-  `/api/v1/flowers/${encodeURIComponent(id)}/svg?look=${encodeURIComponent(RENDER_VERSION)}&view=${VIEW_NAME}`;
+  `/api/v1/flowers/${encodeURIComponent(id)}/svg?${pictureQuery(viewerView())}`;
 
 /** A row of GET /api/v1/flowers. */
 export interface ListedFlower {
@@ -133,16 +130,29 @@ export const swatchKey = (swatch: string) => /^var\(--([\w-]+)\)$/.exec(swatch)?
  * The colours a drawing paints, as its key: the legend's colours by kind, then "everyone else". Segments
  * are banded in the petal's own tone, so they have no swatch. Several legends give one key, each colour once.
  */
-export function colourKeys(legends: readonly (readonly LegendItem[])[]): LegendKey[] {
-  const keys = (primitive: LegendItem['primitive']) =>
-    legends.flatMap((legend) =>
-      legend
-        .filter((item) => item.primitive === primitive)
-        .flatMap((item) => item.keys ?? [])
-        .map((k) => ({ label: k.label, swatch: swatchKey(k.swatch) })),
-    );
+export const colourKeys = (legends: readonly (readonly LegendItem[])[]): LegendKey[] =>
+  oneKey(
+    legends.map((legend) =>
+      keysOf(
+        legend
+          .filter((item) => item.primitive === 'colour' || item.primitive === 'tail')
+          .flatMap((item) => item.keys ?? []),
+      ),
+    ),
+  );
+
+/** The server's keys, { label, swatch: var(--k-pool) }, as a key's. */
+export const keysOf = (keys: readonly { label: string; swatch: string }[]): LegendKey[] =>
+  keys.map((k) => ({ label: k.label, swatch: swatchKey(k.swatch) }));
+
+/** One key from several: each colour once, and "everyone else" last. */
+export function oneKey(lists: readonly (readonly LegendKey[])[]): LegendKey[] {
+  const all = lists.flat();
   const out: LegendKey[] = [];
-  for (const k of [...keys('colour'), ...keys('tail')]) {
+  for (const k of [
+    ...all.filter((k) => k.swatch !== 'tail'),
+    ...all.filter((k) => k.swatch === 'tail'),
+  ]) {
     if (!out.some((o) => o.label === k.label && o.swatch === k.swatch)) out.push(k);
   }
   return out;

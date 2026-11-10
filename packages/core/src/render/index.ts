@@ -16,11 +16,25 @@ import type {
   Snapshot,
   Spec,
   SpecPrimitive,
+  View,
 } from '../types/index.ts';
 import { validateSpec } from '../validate/spec.ts';
 import { RENDER_VERSION } from '../versions.ts';
+import { viewHash } from '../view/index.ts';
 import { skinV2 } from './skin-v2.ts';
+import { STYLE } from './style.ts';
 import type { Skin } from './types.ts';
+
+/** The still pictures' paint, named by the start of its hash: a palette change is a new name. */
+export const PAINT = sha256Hex(STYLE).slice(0, 8);
+
+/**
+ * The one name for a still picture (GET /api/v1/flowers/:id/svg, GET /api/v1/map/:sha/svg), as its address's
+ * query. The browser and Vercel's edge keep each picture for a year, so it names the look, the view it's
+ * drawn with and the paint: when any of them changes, every picture has a new address. The routes ignore it.
+ */
+export const pictureQuery = (view: View): string =>
+  `look=${encodeURIComponent(RENDER_VERSION)}&view=${viewHash(view).slice(0, 12)}&paint=${PAINT}`;
 
 /** The look this build draws, by name. A look that changes the bytes gets a new name, and replaces the last. */
 export const SKINS = { [RENDER_VERSION]: skinV2 } satisfies Record<string, Skin>;

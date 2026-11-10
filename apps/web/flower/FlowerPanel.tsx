@@ -6,7 +6,6 @@ import type { PetalDetail } from '@petal/core/types';
 import { Interpretation, SignatureLine } from '../components/Interpretation.tsx';
 import { Legend, LegendKeys } from '../components/Legend.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
-import { QuotePanel } from '../components/QuotePanel.tsx';
 import { SourceList } from '../components/Sources.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Drawing } from '../components/ui/Drawing.tsx';
@@ -76,13 +75,6 @@ function OpenFlower({
             Publish on NEAR
           </TextLink>
         )}
-        <Button
-          variant="quiet"
-          pressed={section === 'quote'}
-          onClick={() => actions.onSection?.('quote')}
-        >
-          Sponsor a refresh
-        </Button>
         {view.viewUrl && (
           <TextLink variant="quiet" href={view.viewUrl} target="_blank" rel="noreferrer">
             Open as a page
@@ -106,7 +98,6 @@ function OpenFlower({
           </p>
         </div>
       )}
-      {section === 'quote' && <QuotePanel purpose="sponsor_refresh" network={view.network} />}
     </div>
   );
 }
