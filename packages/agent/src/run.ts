@@ -51,6 +51,7 @@ import {
   compactThread,
   type EarlierFlower,
   followUpNotes,
+  lightenThread,
   specsIn,
   windowOf,
 } from './thread.ts';
@@ -376,11 +377,11 @@ async function loop(
   const messages: LlmMessage[] = [{ role: 'system', content: system }, ...conversation];
   // Sent with every call, and they count against the window too.
   const reservedChars = system.length + JSON.stringify(tools).length;
-  /** Near the model's window, what it no longer needs goes. What's saved is the same as what's sent. */
+  /** Older results shrink to their summary, and near the window more goes. What's saved is what's sent. */
   const compact = () => {
     const window = opts.windowTokens ?? windowOf(totals.model);
     const thread = messages.slice(1);
-    const kept = compactThread(thread, compactionChars(window, reservedChars));
+    const kept = compactThread(lightenThread(thread), compactionChars(window, reservedChars));
     if (kept !== thread) messages.splice(1, thread.length, ...kept);
   };
 

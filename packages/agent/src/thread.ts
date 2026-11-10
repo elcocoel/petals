@@ -1,12 +1,12 @@
 // What the model remembers across the chats of one run (T166). A follow-up is a new chat on the same
 // run, and the prose in run.messages is not enough: the model needs what it read from the tools, or
 // it starts over. So the loop keeps its whole message list (the thread), the store saves it, and the
-// next chat starts from it. A thread can use the model's window: near full it is compacted, with no
-// model call, as an IDE does. What guards spending is the dollar caps (Budget), not the thread's size.
+// next chat starts from it. Older tool results keep only their summary line, and near the window's
+// end the oldest lose even that, with no model call, as an IDE does.
 import type { AgentEvent, FlowerResult, ModelSignature, Spec } from '@petal/core/types';
 import { COMPACT_AT_FRACTION, modelOf } from './catalogue.ts';
 import type { LlmMessage } from './llm.ts';
-import { draftLink } from './summary.ts';
+import { draftLink, summarize } from './summary.ts';
 
 /** Compaction goes down to this share of the window: it costs the cached prefix, so it should be rare. */
 export const COMPACT_TO = 0.6;
@@ -95,6 +95,63 @@ export function compactThread(thread: LlmMessage[], maxChars: number): LlmMessag
   return parts.flat();
 }
 
+/**
+ * What the run itself reads back, kept whole however old: the yes reads get_snapshot, propose_spec,
+ * render_flower and the last find_target or look_up (approval.ts), and specsIn reads propose_spec.
+ */
+const READ_BACK = new Set([
+  'get_snapshot',
+  'propose_spec',
+  'render_flower',
+  'find_target',
+  'look_up',
+]);
+
+const summaryOnly = (content: string) => {
+  try {
+    const o = JSON.parse(content) as unknown;
+    return !!o && typeof o === 'object' && Object.keys(o).join() === 'summary';
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Before the last two exchanges, a tool result becomes its summary line, the one the person sees,
+ * when that is shorter. In run 9c599a61 (10 Nov) tool results were 91% of the thread, and a window
+ * of a million tokens never compacts, so each call sent all of them again. The last two exchanges
+ * never change, so the prefix a cache holds moves once a chat. When nothing is old enough, this
+ * same thread comes back.
+ */
+export function lightenThread(thread: LlmMessage[]): LlmMessage[] {
+  const parts = exchanges(thread);
+  if (parts.length <= 2) return thread;
+  const names = new Map<string, string>();
+  for (const m of thread) {
+    if (m.role === 'assistant') for (const c of m.tool_calls ?? []) names.set(c.id, c.name);
+  }
+  let changed = false;
+  const old = parts
+    .slice(0, -2)
+    .flat()
+    .map((m): LlmMessage => {
+      if (m.role !== 'tool' || summaryOnly(m.content)) return m;
+      const name = names.get(m.tool_call_id) ?? '';
+      if (READ_BACK.has(name)) return m;
+      let out: unknown;
+      try {
+        out = JSON.parse(m.content);
+      } catch {
+        out = m.content;
+      }
+      const content = JSON.stringify({ summary: summarize(name, out) });
+      if (content.length >= m.content.length) return m;
+      changed = true;
+      return { ...m, content };
+    });
+  return changed ? [...old, ...parts.slice(-2).flat()] : thread;
+}
+
 /** A flower drawn earlier in the run, and the signature that came with it. */
 export interface EarlierFlower {
   flower: FlowerResult;
@@ -131,7 +188,7 @@ export function followUpNotes(flowers: EarlierFlower[]): string {
   const lines = [
     '## This is a follow-up',
     '',
-    'The messages hold this conversation so far, with your earlier tool calls and their results. Read them first. In a very long conversation the oldest may have lost theirs: read those again rather than guess. The person means what was said before: "the largest one" or "the top ten" is about the flower or network you just discussed. If the answer is already there, answer from it without calling a tool, and do not go through the six steps again. Numbers still come only from tool results, earlier ones included. Answer in a sentence or two, and never repeat the mapping or a caveat you already gave. If you asked whether to draw something and the person said yes, go on and draw it: that is the next step, not a repeat.',
+    'The messages hold this conversation so far, with your earlier tool calls and their results. Read them first. Results from before your last answer keep only a one-line `summary`, and in a very long conversation the oldest lose even that: call the tool again for their detail rather than guess. The person means what was said before: "the largest one" or "the top ten" is about the flower or network you just discussed. If the answer is already there, answer from it without calling a tool, and do not go through the six steps again. Numbers still come only from tool results, earlier ones included. Answer in a sentence or two, and never repeat the mapping or a caveat you already gave. If you asked whether to draw something and the person said yes, go on and draw it: that is the next step, not a repeat.',
   ];
   if (flowers.length) {
     lines.push('', 'Flowers drawn so far, oldest first:');
