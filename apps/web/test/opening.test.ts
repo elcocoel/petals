@@ -1,33 +1,56 @@
-// The agent speaks first: written text, from real views of the one map, no model call.
+// The agent speaks first: written text, from real maps of the one shared map, no model call.
 import { describe, expect, test } from 'vitest';
+import type { MapCard } from '../lib/maps.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { threadFromRun } from '../lib/thread.ts';
 
-const view = (title: string, count: number, sha = 'abc') => ({
+/** A map, one per address, as GET /api/v1/maps gives it; `counts` are its readings', newest first. */
+const card = (
+  id: string,
+  title: string,
+  counts: number[],
+  name: string | null = null,
+): MapCard => ({
+  id,
+  name,
   title,
-  count,
-  view_url: `https://petals.test/d/${sha}`,
+  about: 'validators on NEAR',
+  chain: 'near:mainnet',
+  address: null,
+  picture: `/api/v1/map/${id}/svg`,
+  view_url: `https://petals.test/d/${id}`,
+  keys: [],
+  readings: counts.map((count, i) => ({
+    snapshot: `${id}-${i}`,
+    as_of: '2026-11-03T19:42:00Z',
+    network: 'near-validators',
+    about: 'validators on NEAR',
+    title,
+    count,
+    made_by: null,
+    drawings: [],
+  })),
 });
-const map = view('NEAR validators', 8487);
+const map = card('near:validators', 'NEAR validators', [8487]);
 
 describe('openingMessage', () => {
-  test('offers views of the one shared map, by their flower on the site', () => {
+  test('offers maps, one per address, each by its page', () => {
     const text = openingMessage([map]);
-    expect(text).toContain('[NEAR validators](https://petals.test/d/abc)');
+    expect(text).toContain('[NEAR validators](/m/near%3Avalidators)');
     expect(text).toContain('[Power Map](/gallery)');
   });
 
-  test('the largest three first, one per title, and still talks with an empty or unreachable map', () => {
+  test("the largest three first, by a map's largest reading, and still talks with an empty or unreachable map", () => {
     const text = openingMessage([
-      view('Small', 3, 's'),
-      view('NEAR validators', 8487, 'n1'),
-      view('UNI delegates', 21919, 'u'),
-      view('NEAR validators', 8487, 'n2'),
-      view('ENS delegates', 8561, 'e'),
+      card('s', 'Small', [3]),
+      map,
+      // holders and delegates of one address: one map, sized by its larger reading
+      card('u', 'UNI delegates', [500, 21919], 'UNI'),
+      card('e', 'ENS delegates', [8561], 'ENS (token-only map)'),
     ]);
     expect(text).toContain(
-      "Or start from what's already mapped: [UNI delegates](https://petals.test/d/u), [ENS delegates](https://petals.test/d/e), [NEAR validators](https://petals.test/d/n1), or the whole [Power Map](/gallery).",
+      "Or start from what's already mapped: [UNI](/m/u), [ENS](/m/e), [NEAR validators](/m/near%3Avalidators), or the whole [Power Map](/gallery).",
     );
     expect(text).not.toContain('Small');
     const empty = openingMessage([]);
@@ -36,12 +59,12 @@ describe('openingMessage', () => {
   });
 
   test('a title cannot break its link', () => {
-    expect(openingMessage([view('a [b] c', 1)])).toContain('[a b c](https://petals.test/d/abc)');
+    expect(openingMessage([card('x', 'a [b] c', [1])])).toContain('[a b c](/m/x)');
   });
 
   test('renders as links on this site', () => {
     const blocks = JSON.stringify(parseMarkdown(openingMessage([map]), new Set()));
-    expect(blocks).toContain('"href":"https://petals.test/d/abc"');
+    expect(blocks).toContain('"href":"/m/near%3Avalidators"');
     expect(blocks).toContain('"href":"/gallery"');
   });
 

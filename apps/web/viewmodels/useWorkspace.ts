@@ -14,7 +14,7 @@ import {
 import { conversationRows } from '../lib/conversation-list.ts';
 import { elsewhereFlower, elsewhereRows, whereOf } from '../lib/elsewhere.ts';
 import { svgImage } from '../lib/flower-view.ts';
-import type { MapViewRow } from '../lib/map-views.ts';
+import type { MapCard } from '../lib/maps.ts';
 import {
   addressOpensBox,
   type CanvasFlower,
@@ -55,7 +55,7 @@ export function useWorkspace(props: {
   initialQuestion?: string | null;
   recorded?: boolean;
   opening?: string;
-  shelf: MapViewRow[];
+  shelf: MapCard[];
   initialOpen?: Opened;
   initialPetal?: string | null;
   /** What a person can pick from. Null: the API couldn't say, so there's nothing to pick. */

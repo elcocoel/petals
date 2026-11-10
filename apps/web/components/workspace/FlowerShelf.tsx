@@ -1,6 +1,6 @@
 'use client';
 // The panel before there's a flower in it (Figma's "New question" 43:736 and "Reading the record"
-// 39:668): what to do here, and views of the one map already mapped, each opening where it lives.
+// 39:668): what to do here, and maps already made, one per address, each opening its page.
 import type { ShelfView } from '../../lib/panel-view.ts';
 import { FlowerTile } from '../FlowerTile.tsx';
 import { Button } from '../ui/Button.tsx';
