@@ -16,7 +16,6 @@ import type { ConnectedAgent } from './agents.ts';
 import type { Settings } from './composer-options.ts';
 import type { ListedConversation, ListedProject } from './conversation-list.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
-import type { MapViewRow } from './flower-view.ts';
 import type { Job } from './jobs.ts';
 import { NEAR_SOCIAL_API, type SocialProfile, socialProfile } from './near-social.ts';
 import type { Credit, PayInfo } from './pay.ts';
@@ -129,14 +128,6 @@ export async function moveConversation(id: string, project: string | null): Prom
     body: JSON.stringify({ folder: project }),
   });
   return res.ok;
-}
-
-/** The views on the one shared map, oldest first, each with its picture (GET /api/v1/map/views). No answer is the same as none. */
-export async function listMapViews(): Promise<MapViewRow[]> {
-  const res = await fetch('/api/v1/map/views');
-  if (!res.ok) return [];
-  const json = (await res.json()) as { views?: MapViewRow[] };
-  return json.views ?? [];
 }
 
 /** Where a conversation in another agent stands, by its exploration's id or a link's token. */

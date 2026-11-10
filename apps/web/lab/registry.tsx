@@ -1761,6 +1761,10 @@ export const registry: LabEntry[] = [
         render: () => <Profile social={{ kind: 'none' }} onEdit={() => {}} />,
       },
       {
+        name: 'no public profile yet, editing off',
+        render: () => <Profile social={{ kind: 'none' }} />,
+      },
+      {
         name: 'still reading',
         render: () => <Profile social={{ kind: 'reading' }} />,
       },

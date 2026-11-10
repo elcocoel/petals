@@ -1,7 +1,6 @@
 // The lobby (specs/004-workspace, W3): where a person's work sits when they come back. A skeleton, built so
 // Elco can sense what's needed. Pure: its words and where each thing goes are decided here, and the view
 // only lays them out. Every word below is a proposal, listed in design/journey-strings.md, "The lobby".
-import { chainLabel, dateLabel, type MapViewRow } from './flower-view.ts';
 import type { ProfileDraft, SocialProfile } from './near-social.ts';
 import { type Credit, type PayAction, payWords } from './pay.ts';
 
@@ -51,6 +50,8 @@ export const profileWords = {
   declared: 'Declared',
   /** Under the profile: who sees it, and what the links are. */
   note: 'Anyone can see this, in any app that reads NEAR Social. Links are what you declare; nobody checks them.',
+  /** No profile there yet, while the editor is off. */
+  noneYet: 'You don’t have a public profile yet.',
   /** No profile there yet: what goes there, and the one thing to do. */
   none: 'You don’t have a public profile yet. Make one here: a name, a picture, a short bio and your links.',
   create: 'Create your public profile',
@@ -101,6 +102,12 @@ export const editorWords = {
     `Your wallet is on ${wallet}. Switch it to ${account} to publish.`,
   tryAgain: 'Try again',
 } as const;
+
+/**
+ * Edit and Create, on or off (META's go, 10 Nov): off until the testnet lab (/lab/social) has passed and
+ * Elco's own run on mainnet is set, since publishing writes the real public profile. Then this goes true.
+ */
+export const PROFILE_EDITING = false;
 
 /** Where publishing is. */
 export type EditPhase =
@@ -185,7 +192,7 @@ export function withdrawn(before: string, after: string): string {
   return nearOf((out > 0n ? out : 0n).toString());
 }
 
-/** A view on the one shared map as the lobby shows it: the gallery's tile, opening where the view lives. */
+/** A map as the lobby lists it: lib/maps.ts's mapTile, as the Power Map's, with its card's id as its key. */
 export interface MapTile {
   key: string;
   title: string;
@@ -193,21 +200,4 @@ export interface MapTile {
   badge: string;
   image: string;
   href: string;
-}
-
-/**
- * Every view on the one shared map (Elco, 10 Nov), in the order GET /api/v1/map/views lists them, the
- * oldest first, with its picture as SYSTEMS draws it. A tile opens the view where it lives.
- */
-export function mapTiles(views: readonly MapViewRow[]): MapTile[] {
-  return views.map((v) => ({
-    key: v.sha,
-    title: v.name ?? v.title,
-    // what it maps, in the map's own words (SYSTEMS, 07f5936)
-    where: `${v.about}   /   ${dateLabel(v.as_of)}`,
-    // the chain it's on, as the landing's tiles say it
-    badge: chainLabel(v.chain),
-    image: v.picture,
-    href: v.view_url,
-  }));
 }

@@ -59,16 +59,17 @@ export function Profile({
           <span className="type-caption">{editorWords.savedLine}</span>
         </p>
       )}
-      {social.kind === 'none' && (
+      {social.kind === 'none' && !onEdit && (
+        <p className="my-0 type-body">{profileWords.noneYet}</p>
+      )}
+      {social.kind === 'none' && onEdit && (
         <>
           <p className="my-0 type-body">{profileWords.none}</p>
-          {onEdit && (
-            <div>
-              <Button variant="primary" onClick={onEdit}>
-                {profileWords.create}
-              </Button>
-            </div>
-          )}
+          <div>
+            <Button variant="primary" onClick={onEdit}>
+              {profileWords.create}
+            </Button>
+          </div>
           <p className="my-0 type-caption text-muted">{profileWords.noneNote}</p>
         </>
       )}

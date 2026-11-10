@@ -6,6 +6,7 @@
 // no look of its own. Words from lib/lobby-view.ts.
 import type { ConversationRow } from '../../lib/conversation-list.ts';
 import { doorWords } from '../../lib/door-words.ts';
+import type { LegendKey } from '../../lib/flower-view.ts';
 import {
   lobbyWords,
   type MapTile,
@@ -14,6 +15,7 @@ import {
   type WithdrawPhase,
 } from '../../lib/lobby-view.ts';
 import { FlowerTile } from '../FlowerTile.tsx';
+import { LegendKeys } from '../Legend.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
 import { Funds } from './Funds.tsx';
@@ -21,6 +23,12 @@ import { Profile } from './Profile.tsx';
 import { ProfileEditor } from './ProfileEditor.tsx';
 import { ProfileHead } from './ProfileHead.tsx';
 import { WorkMenu, type WorkMenuView } from './WorkMenu.tsx';
+
+/** The one map, a card per address, as the Power Map lists it, with one colour key over the pictures. */
+export interface LobbyMap {
+  tiles: MapTile[];
+  keys: LegendKey[];
+}
 
 /** Only a person reaches the lobby (app/lobby/page.tsx), so there's no way to connect here. */
 export interface LobbySession {
@@ -34,7 +42,7 @@ export function Lobby({
   funds,
   editor,
   conversations,
-  tiles,
+  map,
   menu,
 }: {
   session: LobbySession;
@@ -50,7 +58,7 @@ export function Lobby({
     withdraw: () => void;
   };
   conversations: ConversationRow[];
-  tiles: MapTile[];
+  map: LobbyMap;
   menu: WorkMenuView;
 }) {
   return (
@@ -82,22 +90,25 @@ export function Lobby({
         <Card
           title={lobbyWords.map}
           labelledBy="lobby-map"
-          badge={tiles.length > 0 ? <Badge>{tiles.length}</Badge> : undefined}
+          badge={map.tiles.length > 0 ? <Badge>{map.tiles.length}</Badge> : undefined}
         >
-          {tiles.length > 0 ? (
-            <ul className="gallery">
-              {tiles.map((t) => (
-                <li key={t.key}>
-                  <FlowerTile
-                    title={t.title}
-                    where={t.where}
-                    badge={t.badge}
-                    image={t.image}
-                    href={t.href}
-                  />
-                </li>
-              ))}
-            </ul>
+          {map.tiles.length > 0 ? (
+            <>
+              <LegendKeys keys={map.keys} />
+              <ul className="gallery">
+                {map.tiles.map((t) => (
+                  <li key={t.key}>
+                    <FlowerTile
+                      title={t.title}
+                      where={t.where}
+                      badge={t.badge}
+                      image={t.image}
+                      href={t.href}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : (
             <p className="my-0 type-caption text-muted">{lobbyWords.mapEmpty}</p>
           )}
