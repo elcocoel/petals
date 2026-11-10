@@ -88,7 +88,8 @@ const REVEALS = {
   'row.arrive': '[data-b="row"]',
   'figure.arrive': '[data-b="figure"]',
   'mark.arrive': '[data-b="mark"]',
-  'head.rise': '[data-b="head"]',
+  // the side panel's heads are there from the start, as a floating box is
+  'head.rise': '[data-b="head"]:not([data-kind="panel"])',
 } as const;
 
 /** Things arriving together stagger among their siblings; a head and a terminal among their lines. */

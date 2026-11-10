@@ -13,7 +13,8 @@ const head = (fold?: { open: boolean; onToggle: () => void }) =>
 describe('a section head in the panel', () => {
   test('is a band in the tint, out to the panel’s edges, a heading still', () => {
     const out = head();
-    expect(out).toMatch(/^<h2 class="[^"]*-mx-space-8[^"]*bg-tint/);
+    expect(out).toMatch(/^<h2 class="[^"]*-mx-space-8[^"]*border-hairline[^"]*bg-tint/);
+    expect(out).toContain('data-b="head" data-kind="panel"');
     expect(out).toContain('Projects');
   });
 
