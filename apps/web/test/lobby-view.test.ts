@@ -17,6 +17,7 @@ const view = (over: Partial<MapViewRow>): MapViewRow => ({
   name: null,
   title: 'House of Stake',
   network: 'near-house-of-stake',
+  about: 'House of Stake on NEAR',
   chain: 'near',
   address: null,
   count: 412,
@@ -34,7 +35,14 @@ describe('mapTiles', () => {
     expect(tile?.image).toBe('/api/v1/map/3f0c9a1b/svg?look=render%2Fv2&view=1421e0bf7b26');
     expect(tile?.badge).toBe('NEAR');
     expect(tile?.title).toBe('House of Stake');
-    expect(tile?.where).toBe('NEAR house of stake   /   5 Nov 2026');
+    expect(tile?.where).toBe('House of Stake on NEAR   /   5 Nov 2026');
+  });
+
+  test('under the title, what the view maps in the map’s own words, with its date', () => {
+    const [tile] = mapTiles([
+      view({ about: 'SPL token holders on Solana', as_of: '2026-11-09T00:00:00Z' }),
+    ]);
+    expect(tile?.where).toBe('SPL token holders on Solana   /   9 Nov 2026');
   });
 
   test('a view someone named on the map shows that name', () => {
