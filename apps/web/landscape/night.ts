@@ -103,10 +103,14 @@ export function linksOf(night: Night): Link[] {
 
 /** Trust Wallet's folder for a chain, as the run's index names it, or null where it lists no tokens. */
 export function trustWalletChain(chain: string): string | null {
+  if (chain.startsWith('solana')) return 'solana';
   return (
-    { ethereum: 'ethereum', gnosis: 'xdai', arbitrum: 'arbitrum', base: 'base', solana: 'solana' }[
-      chain
-    ] ?? null
+    (
+      { ethereum: 'ethereum', gnosis: 'xdai', arbitrum: 'arbitrum', base: 'base' } as Record<
+        string,
+        string
+      >
+    )[chain] ?? null
   );
 }
 
