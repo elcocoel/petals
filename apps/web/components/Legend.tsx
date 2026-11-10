@@ -31,7 +31,9 @@ export function Legend({
       <ul className="legend">
         {items.map((item) => (
           <li key={item.primitive}>
-            <strong>{item.primitive}</strong>: {item.meaning}
+            {/* "everyone else" says what it is; "tail" is the code's word for it. */}
+            {item.primitive !== 'tail' && <strong>{item.primitive}: </strong>}
+            {item.meaning}
             {item.sources.length > 0 && (
               <>
                 {' '}
