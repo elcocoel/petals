@@ -19,13 +19,9 @@ export function BuildWithUs() {
         <SectionHead title={copy.title} body={copy.body} />
         <div className="mt-space-32">
           <ActionRow gap="tight">
-            <Button href={siteLinks.noDestination}>{copy.actions.github}</Button>
-            <Button variant="secondary" href={siteLinks.connect}>
-              {copy.actions.docs}
-            </Button>
-            <Button variant="secondary" href={siteLinks.noDestination}>
-              {copy.actions.join}
-            </Button>
+            {/* GitHub and Join the builders come back with somewhere to go: the repo public on Elco's
+                go, a builders' channel once chosen (design/minimally-good.md, rule 10). */}
+            <Button href={siteLinks.connect}>{copy.actions.docs}</Button>
           </ActionRow>
         </div>
       </div>

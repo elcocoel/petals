@@ -18,8 +18,6 @@ export function Footer() {
             <TextLink href={siteLinks.gallery}>{copy.links.gallery}</TextLink>
             <TextLink href={siteLinks.howItWorks}>{copy.links.howItWorks}</TextLink>
             <TextLink href={siteLinks.connect}>{copy.links.docs}</TextLink>
-            <TextLink href={siteLinks.noDestination}>{copy.links.github}</TextLink>
-            <TextLink href={siteLinks.noDestination}>{copy.links.community}</TextLink>
           </div>
         </div>
         <Mono>{copy.built}</Mono>
