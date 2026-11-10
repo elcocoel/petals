@@ -166,7 +166,11 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
         ? { readTransfer: () => Promise.reject(new Error('fake mode reads no chain')) }
         : {}),
       ...(o.pay?.readTransfer ? { readTransfer: o.pay.readTransfer } : {}),
-      ...(o.pay?.oneClick ? { oneClick: o.pay.oneClick } : {}),
+      // Petals' 1Click partner key, when it's set (never printed)
+      oneClick: {
+        ...(env.ONE_CLICK_API_KEY?.trim() ? { apiKey: env.ONE_CLICK_API_KEY.trim() } : {}),
+        ...o.pay?.oneClick,
+      },
     }),
   );
   // a person's own view and profile (Elco, 10 Nov), and the pictures in profiles
