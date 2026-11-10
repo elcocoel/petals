@@ -2,7 +2,7 @@
 // decision made and every word chosen. The views under components/chat only lay these out, so a
 // redesign replaces them without touching a decision.
 
-import type { FlowerResult, JobEvent, ModelSignature } from '@petal/core/types';
+import type { FlowerResult, JobEvent, ModelSignature, View } from '@petal/core/types';
 import { aboutLabel, readAbout } from './ask-about.ts';
 import { chainLabel, dateLabel, flowerImage, networkLabel } from './flower-view.ts';
 import { type Block as MarkdownBlock, parseMarkdown } from './markdown.ts';
@@ -159,6 +159,8 @@ export type Row =
 export type ThreadInput = Pick<ChatState, 'items' | 'busy' | 'runId' | 'turn' | 'lostAgain'> & {
   recorded: boolean;
   open?: Opened;
+  /** the person's view, which a stored flower's picture is drawn in */
+  view: View;
 };
 
 const AGENT = 'Petals';
@@ -268,7 +270,7 @@ export function threadView(v: ThreadInput): Row[] {
           kind: 'stored',
           key,
           id: b.id,
-          image: flowerImage(b.id),
+          image: flowerImage(b.id, v.view),
           title: networkLabel(b.network),
           sub: dateLabel(b.asOf),
           open: v.open?.kind === 'stored' && v.open.id === b.id,

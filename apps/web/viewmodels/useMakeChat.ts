@@ -19,6 +19,7 @@ import {
   questionBackup,
 } from '../lib/thread.ts';
 import { RECORDED_QUESTION, threadView } from '../lib/thread-view.ts';
+import { usePersonView } from './usePersonView.ts';
 
 export interface ChatDeps {
   client: AgentClient;
@@ -248,9 +249,10 @@ export function useMakeChat({
   }, [deps, initialRun]);
 
   const { items, busy, runId, turn, lostAgain, question, open } = chat;
+  const { view } = usePersonView();
   const rows = useMemo(
-    () => threadView({ items, busy, runId, turn, lostAgain, recorded, open }),
-    [items, busy, runId, turn, lostAgain, recorded, open],
+    () => threadView({ items, busy, runId, turn, lostAgain, recorded, open, view }),
+    [items, busy, runId, turn, lostAgain, recorded, open, view],
   );
 
   return {

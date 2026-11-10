@@ -9,6 +9,7 @@
 // QuotePanel, PublishFlow, CopyPrompt and Flower still keep their later states in hooks, so only the
 // first state shows here until they take them as props, as the chat's views do. Their controls are
 // live on the page.
+import { DEFAULT_VIEW } from '@petal/core/view';
 import type { SurfaceName } from '@petal/tokens';
 import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
@@ -237,7 +238,15 @@ const drawn = () => {
   return { svg, petals };
 };
 const inTurn = (turn: Parameters<typeof threadView>[0]['turn'], busy = true, lostAgain = false) =>
-  threadView({ items: [], busy, runId: 'run', turn, lostAgain, recorded: false });
+  threadView({
+    items: [],
+    busy,
+    runId: 'run',
+    turn,
+    lostAgain,
+    recorded: false,
+    view: DEFAULT_VIEW,
+  });
 const turnRow = (turn: Parameters<typeof threadView>[0]['turn'], o: Partial<TurnRow> = {}) =>
   ({ ...(inTurn(turn, false)[0] as TurnRow), ...o }) as TurnRow;
 
@@ -354,7 +363,7 @@ export const registry: LabEntry[] = [
     'apps/web/components/landing/LiveReading.tsx',
     'A flower, already read',
     '66:2232',
-    () => <LiveReading />,
+    () => <LiveReading view={DEFAULT_VIEW} />,
   ),
   section(
     'HowItWorks',

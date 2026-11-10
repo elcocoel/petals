@@ -5,6 +5,7 @@
 import { api } from './api.ts';
 import { chainLabel, dateLabel, keysOf, type LegendKey, oneKey, shortId } from './flower-view.ts';
 import { viewName } from './map-views.ts';
+import { viewQuery } from './person-view.ts';
 
 type Keys = { label: string; swatch: string }[];
 
@@ -47,9 +48,11 @@ export interface MapCard {
   readings: MapReading[];
 }
 
-export const mapList = () => api<{ maps: MapCard[] }>('/api/v1/maps');
-export const mapOne = (id: string) =>
-  api<{ map: MapCard }>(`/api/v1/maps/${encodeURIComponent(id)}`);
+/** The maps, their pictures, keys and readings in the view whose hash is given (the person's: lib/viewer-view.ts). */
+export const mapList = (view: string) =>
+  api<{ maps: MapCard[] }>(`/api/v1/maps?${viewQuery(view)}`);
+export const mapOne = (id: string, view: string) =>
+  api<{ map: MapCard }>(`/api/v1/maps/${encodeURIComponent(id)}?${viewQuery(view)}`);
 
 /** A map's page (the id holds colons, so it's encoded). */
 export const mapHref = (id: string) => `/m/${encodeURIComponent(id)}`;

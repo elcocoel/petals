@@ -1,6 +1,6 @@
 // The Power Map on the landing (Elco, 9 Nov: "instead of these shitty place holders let's see how to put the
 // actual map here - research yesterday grabbed data for SEVERAL DAOs"). Nine views of the one shared map, by
-// their hash, each with the picture the server draws for it in the default view, its address and its colours
+// their hash, each with the picture the server draws for it in the person's view, its address and its colours
 // (GET /api/v1/map/views; Elco, 10 Nov, fix 2: the landing reads the map). The list is read at most hourly.
 // A view that isn't on the map is left out. Titles and counts are the night run's own.
 
@@ -8,6 +8,7 @@ import { hourly } from './api.ts';
 import { type LegendKey, oneKey } from './flower-view.ts';
 import { type MapViewRow, rowKeys } from './map-views.ts';
 import { mapHref } from './maps.ts';
+import { viewQuery } from './person-view.ts';
 
 export interface PowerMapView {
   sha: string;
@@ -97,9 +98,10 @@ export function tilesOf(rows: readonly MapViewRow[]): PowerMapTile[] {
   });
 }
 
-export async function powerMapTiles(): Promise<PowerMapTile[]> {
+/** In the view whose hash is given; the list is kept an hour for each view. */
+export async function powerMapTiles(view: string): Promise<PowerMapTile[]> {
   try {
-    const res = await hourly('/api/v1/map/views');
+    const res = await hourly(`/api/v1/map/views?${viewQuery(view)}`);
     if (!res?.ok) return [];
     return tilesOf(((await res.json()) as { views: MapViewRow[] }).views);
   } catch {

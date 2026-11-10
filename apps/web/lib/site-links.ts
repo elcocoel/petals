@@ -1,4 +1,5 @@
 // Where the site's words point, in one place. Landing anchors start with / so they work from any page.
+import type { View } from '@petal/core/types';
 import { flowerImage } from './flower-view.ts';
 
 /** /make puts q in its box, unsent: one press asks it. */
@@ -29,5 +30,6 @@ export const siteLinks = {
   },
   howItWorks: '/#how-it-works',
   liveShape: `/f/${LIVE_SHAPE}`,
-  liveShapeImage: flowerImage(LIVE_SHAPE),
+  /** its picture, in the person's view */
+  liveShapeImage: (view: View) => flowerImage(LIVE_SHAPE, view),
 } as const;

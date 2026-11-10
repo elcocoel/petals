@@ -8,13 +8,17 @@ import { mapList } from './maps.ts';
 import { firstCases, openingMessage } from './opening.ts';
 import { openFromParams, questionFromParams } from './workspace-url.ts';
 
-export async function workspaceHome(q: Record<string, string | string[] | undefined>) {
+/** `view` is the person's view's hash (lib/viewer-view.ts): the shelf's pictures come in it. */
+export async function workspaceHome(
+  q: Record<string, string | string[] | undefined>,
+  view: string,
+) {
   const run = Array.isArray(q.run) ? q.run[0] : q.run;
   const elsewhere = Array.isArray(q.elsewhere) ? q.elsewhere[0] : q.elsewhere;
   const [health, catalogue, map] = await Promise.all([
     api<ApiHealth>('/api/v1/health'),
     api<Catalogue>('/api/v1/catalogue'),
-    mapList(),
+    mapList(view),
   ]);
   const recorded = health.ok && health.value.llm === 'recorded';
   // One map per address (Elco, 10 Nov): the first message and the shelf offer the same maps.

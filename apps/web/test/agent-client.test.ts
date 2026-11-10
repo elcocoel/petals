@@ -10,6 +10,7 @@ import {
   preparePublish,
   publishEntry,
   refusalCode,
+  saveView,
 } from '../lib/agent-client.ts';
 
 interface Call {
@@ -151,16 +152,43 @@ describe('followRun', () => {
   });
 });
 
+describe('saveView', () => {
+  test('keeps the view on the server and gives back what it kept, with its hash', async () => {
+    const kept = { view: DEFAULT_VIEW, hash: 'ab'.repeat(32) };
+    const calls = serve(json(kept));
+    expect(await saveView(DEFAULT_VIEW)).toEqual(kept);
+    expect(calls[0]?.url).toBe('/api/v1/me/view');
+    expect(calls[0]?.init?.method).toBe('PUT');
+    expect(calls[0]?.init?.body).toBe(JSON.stringify({ view: DEFAULT_VIEW }));
+  });
+
+  test('throws the server’s reason when it’s refused', async () => {
+    serve(json({ error: { message: 'sign in first' } }, 401));
+    await expect(saveView(DEFAULT_VIEW)).rejects.toThrow('sign in first');
+    serve(json({}, 500));
+    await expect(saveView(DEFAULT_VIEW)).rejects.toThrow('HTTP 500');
+  });
+});
+
 describe('drawFlower', () => {
   test('carries the reading when it comes back', async () => {
     const reading = { title: 'A flower', petals: [] };
     serve(json({ svg: '<svg/>', petals: [], legend: [], reading }));
-    expect(await drawFlower('{"a":1}')).toEqual({ svg: '<svg/>', petals: [], legend: [], reading });
+    expect(await drawFlower('{"a":1}', DEFAULT_VIEW)).toEqual({
+      svg: '<svg/>',
+      petals: [],
+      legend: [],
+      reading,
+    });
   });
 
   test('posts the spec as it was given and returns the drawing', async () => {
     const calls = serve(json({ svg: '<svg/>' }));
-    expect(await drawFlower('{"a":1}')).toEqual({ svg: '<svg/>', petals: [], legend: [] });
+    expect(await drawFlower('{"a":1}', DEFAULT_VIEW)).toEqual({
+      svg: '<svg/>',
+      petals: [],
+      legend: [],
+    });
     expect(calls[0]?.url).toBe('/api/v1/render');
     expect(calls[0]?.init?.body).toBe(
       `{"spec":{"a":1},"include_svg":true,"include_reading":true,"view":${JSON.stringify(DEFAULT_VIEW)}}`,
@@ -169,9 +197,9 @@ describe('drawFlower', () => {
 
   test('throws the server’s message, or the status', async () => {
     serve(json({ error: { message: 'bad spec' } }, 422));
-    await expect(drawFlower('{}')).rejects.toThrow('bad spec');
+    await expect(drawFlower('{}', DEFAULT_VIEW)).rejects.toThrow('bad spec');
     serve(json({}, 500));
-    await expect(drawFlower('{}')).rejects.toThrow('HTTP 500');
+    await expect(drawFlower('{}', DEFAULT_VIEW)).rejects.toThrow('HTTP 500');
   });
 });
 

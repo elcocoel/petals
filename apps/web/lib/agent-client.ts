@@ -11,6 +11,7 @@ import type {
   QuoteResult,
   Reading,
   Run,
+  View,
 } from '@petal/core/types';
 import type { ConnectedAgent } from './agents.ts';
 import type { Settings } from './composer-options.ts';
@@ -19,9 +20,9 @@ import type { ElsewhereRead } from './elsewhere.ts';
 import type { Job } from './jobs.ts';
 import { NEAR_SOCIAL_API, type SocialProfile, socialProfile } from './near-social.ts';
 import type { Credit, PayInfo } from './pay.ts';
+import type { PersonView } from './person-view.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
-import { viewerView } from './viewer-view.ts';
 
 export interface ChatRequest {
   messages: ChatMessage[];
@@ -255,12 +256,15 @@ export interface Drawn {
   reading?: DrawnReading;
 }
 
-/** The flower's SVG for a spec, given as JSON text. Throws with the reason when it can't be drawn. */
-export async function drawFlower(specJson: string): Promise<Drawn> {
+/**
+ * The flower's SVG for a spec, given as JSON text, in the person's view (viewmodels/usePersonView.ts).
+ * Throws with the reason when it can't be drawn.
+ */
+export async function drawFlower(specJson: string, view: View): Promise<Drawn> {
   const res = await fetch('/api/v1/render', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: `{"spec":${specJson},"include_svg":true,"include_reading":true,"view":${JSON.stringify(viewerView())}}`,
+    body: `{"spec":${specJson},"include_svg":true,"include_reading":true,"view":${JSON.stringify(view)}}`,
   });
   const json = (await res.json()) as Partial<Drawn> & { error?: { message: string } };
   if (res.ok && json.svg) {
@@ -271,6 +275,23 @@ export async function drawFlower(specJson: string): Promise<Drawn> {
       ...(json.reading ? { reading: json.reading } : {}),
     };
   }
+  throw new Error(json.error?.message ?? `HTTP ${res.status}`);
+}
+
+/**
+ * Keeps the person's view (PUT /api/v1/me/view), checked against view/v1 by the server. Only a person
+ * signed in has one to keep. Throws with the server's reason when it's refused.
+ */
+export async function saveView(view: View): Promise<PersonView> {
+  const res = await fetch('/api/v1/me/view', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ view }),
+  });
+  const json = (await res.json().catch(() => ({}))) as Partial<PersonView> & {
+    error?: { message: string };
+  };
+  if (res.ok && json.view && json.hash) return { view: json.view, hash: json.hash };
   throw new Error(json.error?.message ?? `HTTP ${res.status}`);
 }
 

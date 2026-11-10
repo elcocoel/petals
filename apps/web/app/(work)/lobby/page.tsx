@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { api } from '../../../lib/api.ts';
 import { mapList, mapsKeys, mapTile } from '../../../lib/maps.ts';
+import { viewerView } from '../../../lib/viewer-view.ts';
 import { LobbySurface } from './LobbySurface.tsx';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +18,7 @@ export default async function LobbyPage() {
   if (!me.ok) redirect('/');
   // The one map, a card per address, as the Power Map lists it (Elco, 10 Nov: one map per address), so a
   // map reads and opens the same in both. No answer is the same as none.
-  const maps = await mapList();
+  const maps = await mapList((await viewerView()).hash);
   const cards = maps.ok ? maps.value.maps : [];
   return (
     <LobbySurface

@@ -1,6 +1,7 @@
 // T178: the projection from the chat's state to what a person reads, and the views that lay it out.
 // These decisions used to live inside Chat.tsx's render.
 import type { FlowerResult, ModelSignature } from '@petal/core/types';
+import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
@@ -48,6 +49,7 @@ const view = (items: Item[], o: Partial<ThreadInput> = {}): Row[] =>
     turn: 'idle',
     lostAgain: false,
     recorded: false,
+    view: DEFAULT_VIEW,
     ...o,
   });
 const flowers = (rows: Row[]) => rows.filter((r): r is FlowerRow => r.kind === 'flower');

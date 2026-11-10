@@ -12,6 +12,15 @@ export function readVisitorFrom(source: VisitorHeaders): void {
   g.__petalVisitorHeaders = source;
 }
 
+/** The request's own cookie, for the one read that's the person's own (lib/viewer-view.ts); none outside a request. */
+export async function requestCookie(): Promise<string | null> {
+  try {
+    return (await g.__petalVisitorHeaders?.())?.get('cookie') ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Outside a request there's nobody to name, and the call goes on with no address. */
 export async function visitorAddress(): Promise<Record<string, string>> {
   const out: Record<string, string> = {};

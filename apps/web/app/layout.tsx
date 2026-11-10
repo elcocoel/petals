@@ -1,13 +1,16 @@
-// The root: html, body and fonts. The site's nav and the workspace's frame are their own layouts.
+// The root: html, body and fonts, and the person's view, read once on the server for the page and held for
+// the browser (app/PersonView.tsx). The site's nav and the workspace's frame are their own layouts.
 // Styling lives in globals.css and the generated tokens.
 
 import { Bitcount_Grid_Single, Geist_Mono, Mona_Sans } from 'next/font/google';
 import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
+import { viewerView } from '../lib/viewer-view.ts';
 import { readVisitorFrom } from '../lib/visitor.ts';
 import './globals.css';
 import './versions/tokens.generated.css';
 import './versions/v2.css';
+import { PersonViewProvider } from './PersonView.tsx';
 import { JoyLayer } from './versions/JoyLayer.tsx';
 import { SWITCH_SCRIPT } from './versions/switch.ts';
 
@@ -32,7 +35,8 @@ export const metadata = {
   description: 'See who holds power in a network, drawn as a flower. NEAR first.',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const person = await viewerView();
   return (
     // data-version is this branch's default. The script below may change it before the first paint, so
     // React shouldn't expect it to match.
@@ -47,8 +51,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: SWITCH_SCRIPT }} />
       </head>
       <body data-b="surface">
-        {children}
-        <JoyLayer />
+        <PersonViewProvider initial={person}>
+          {children}
+          <JoyLayer />
+        </PersonViewProvider>
       </body>
     </html>
   );
