@@ -1,4 +1,10 @@
-// REAL PEOPLE, FIRST VERSION. This file is the rule. Elco can change it here.
+// REAL PEOPLE. This file is the rule. Elco can change it here.
+//
+// Elco's decision, 10 Nov (coordinator/annotation-layer.md, decision 1 (a)): names are allowed in a
+// person's own annotations, kept in their own project (`{ private: true }`), because Elco asked to tie
+// wallets to friends' names. Anything published keeps the first version below, to be decided again
+// before annotations are published (step 8). In a person's own project, rules 2 and 5 give way for
+// claim/v2's named and noted and for the evidence's notes and quotes; rules 1, 3 and 4 hold everywhere.
 //
 // Why it's strict: a chain can't forget. A wrong claim about a real person can be hidden, not erased,
 // and constitution line 56 ("may link an account to a real person... wherever public evidence
@@ -29,6 +35,11 @@
 import type { ValidationIssue } from '../types/index.ts';
 import type { Claim } from './types.ts';
 
+/** Where a claim is kept: in a person's own project (`private`), or published. Absent: published. */
+export interface PeopleScope {
+  private?: boolean;
+}
+
 /** Namespaces that would name a person, or anything at all. Refused with a plain reason. */
 export const PERSON_NAMESPACES: ReadonlySet<string> = new Set([
   'did',
@@ -55,14 +66,15 @@ const REASON = {
     'claims name accounts, contracts and groups, not natural people (people.ts, first-version rule)',
   word: 'this word is not in the vocabulary: say what the accounts did, not what anyone is',
   note: 'a note must not name a person: point to the evidence instead (people.ts)',
+  name: "a name is kept in a person's own project, and isn't published yet (people.ts, 10 Nov)",
   inbound:
     'an inference can not rest on inbound transfers alone: anyone can send anything to anyone',
 };
 
 const namespaceOf = (ref: string): string => ref.slice(0, Math.max(0, ref.indexOf(':')));
 
-/** The first-version rule, as far as a machine can check it. */
-export function peopleRuleIssues(c: Claim): ValidationIssue[] {
+/** The rule, as far as a machine can check it, for a claim kept where `scope` says. */
+export function peopleRuleIssues(c: Claim, scope: PeopleScope = {}): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const add = (path: string, rule: string, message: string) => issues.push({ path, rule, message });
 
@@ -89,14 +101,25 @@ export function peopleRuleIssues(c: Claim): ValidationIssue[] {
       v,
     ]),
     ...c.evidence.map((e, i): [string, string | undefined] => [`/evidence/${i}/note`, e.note]),
+    ...c.evidence.map((e, i): [string, string | undefined] => [`/evidence/${i}/quote`, e.quote]),
   ];
   for (const [path, text] of texts)
     if (text !== undefined && FORBIDDEN_WORDS.test(text)) add(path, 'vocabulary', REASON.word);
 
-  c.evidence.forEach((e, i) => {
-    if (e.note !== undefined && (NAME_LIKE.test(e.note) || CONTACT.test(e.note)))
-      add(`/evidence/${i}/note`, 'no_free_text_name', REASON.note);
-  });
+  // Names: allowed in a person's own project, never published yet.
+  if (!scope.private) {
+    if (c.verb === 'named') add('/object/value', 'no_free_text_name', REASON.name);
+    const words: [string, string | undefined][] = [
+      ...(c.verb === 'noted' && typeof c.object !== 'string'
+        ? ([['/object/value', c.object.value]] as [string, string][])
+        : []),
+      ...c.evidence.map((e, i): [string, string | undefined] => [`/evidence/${i}/note`, e.note]),
+      ...c.evidence.map((e, i): [string, string | undefined] => [`/evidence/${i}/quote`, e.quote]),
+    ];
+    for (const [path, text] of words)
+      if (text !== undefined && (NAME_LIKE.test(text) || CONTACT.test(text)))
+        add(path, 'no_free_text_name', REASON.note);
+  }
 
   // `confidence` rates a claim, so it rests on the claim. Everything else inferred links accounts.
   if (c.kind === 'inferred' && c.verb !== 'confidence') {

@@ -1,0 +1,22 @@
+{
+  "petal": "claim/v2",
+  "subject": "eip155:100:0x1111111111111111111111111111111111111111",
+  "verb": "named",
+  "object": {
+    "value": "Ada"
+  },
+  "issued_at": "2026-11-10T12:00:00Z",
+  "kind": "sourced",
+  "evidence": [
+    {
+      "url": "https://gnosisscan.io/tx/0xabababababababababababababababababababababababababababababababab",
+      "tx": "eip155:100:0xabababababababababababababababababababababababababababababababab",
+      "proposal": "proposal:eip155:100:0x2222222222222222222222222222222222222222:7",
+      "quote": "Elect Ada as Keeper of the Handbook",
+      "note": "The proposal names this address as the keeper. Passed; its action succeeded."
+    }
+  ],
+  "by": "near:mainnet:reed.example.near",
+  "via": "tool:codex@2026-11-10",
+  "id": "fce63b2b052eca1ee6bafb80aff608c6032760fd9ff5a45a6cc8364569c5fc34"
+}

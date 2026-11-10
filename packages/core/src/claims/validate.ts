@@ -4,7 +4,7 @@
 import { canonicalJson, sha256Hex } from '../hash.ts';
 import { createAjv, schemaId } from '../schema/ajv.ts';
 import type { Result, ValidationIssue } from '../types/index.ts';
-import { peopleRuleIssues } from './people.ts';
+import { type PeopleScope, peopleRuleIssues } from './people.ts';
 import { HEX64, parseRef } from './refs.ts';
 import type { Claim, ClaimDraft } from './types.ts';
 import {
@@ -19,23 +19,37 @@ import {
 } from './verbs.ts';
 
 /** The id: SHA-256 of the canonical claim, without `id` and `proof`. */
-export function claimId(claim: Claim | (ClaimDraft & { petal: 'claim/v1' })): string {
+export function claimId(claim: Claim | (ClaimDraft & { petal: Claim['petal'] })): string {
   const { id: _id, proof: _proof, ...hashed } = claim as Claim;
   return sha256Hex(canonicalJson(hashed));
 }
 
-/** A claim with its version and id filled in. It doesn't validate: see validateClaim. */
-export function makeClaim(draft: ClaimDraft): Claim {
-  const body = { petal: 'claim/v1' as const, ...draft };
+/**
+ * A claim with its version and id filled in. It doesn't validate: see validateClaim. Chain reads stay
+ * v1, so their ids don't move; annotations are v2.
+ */
+export function makeClaim(draft: ClaimDraft, petal: Claim['petal'] = 'claim/v1'): Claim {
+  const body = { petal, ...draft };
   return { ...body, id: claimId(body) };
 }
 
-let compiled: ReturnType<ReturnType<typeof createAjv>['getSchema']> | undefined;
-function schemaValidator() {
-  if (!compiled) compiled = createAjv().getSchema(schemaId('claim'));
-  if (!compiled) throw new Error('claim schema not registered');
-  return compiled;
+type Validator = NonNullable<ReturnType<ReturnType<typeof createAjv>['getSchema']>>;
+const compiled = new Map<string, Validator>();
+/** Each version reads by its own schema: a reader picks by the document's `petal`. */
+function schemaValidator(petal: unknown): Validator {
+  const name = petal === 'claim/v2' ? 'claimV2' : 'claim';
+  let v = compiled.get(name);
+  if (!v) {
+    v = createAjv().getSchema(schemaId(name));
+    if (!v) throw new Error(`${name} schema not registered`);
+    compiled.set(name, v);
+  }
+  return v;
 }
+
+/** A name is one line, as long as a profile's name; a link is a web page. */
+const NAME_MAX = 128;
+const LINK = /^https?:\/\/\S+$/;
 
 const DECIMAL = /^-?[0-9]+(\.[0-9]+)?$/;
 const TAGS: readonly string[] = LABEL_TAGS;
@@ -63,8 +77,14 @@ const QUALIFIER: Readonly<Record<QualifierClass, (v: string) => boolean>> = {
 
 function objectFits(cls: ObjectClass, object: Claim['object']): boolean {
   if (typeof object !== 'string') {
-    if (cls === 'number') return DECIMAL.test(object.value);
-    if (cls === 'tag') return TAGS.includes(object.value) && object.unit === undefined;
+    const { value, unit } = object;
+    if (cls === 'number') return DECIMAL.test(value);
+    if (unit !== undefined) return false;
+    if (cls === 'tag') return TAGS.includes(value);
+    if (cls === 'name')
+      return value.trim() === value && value.length <= NAME_MAX && !/[\r\n]/.test(value);
+    if (cls === 'text') return value.trim().length > 0;
+    if (cls === 'link') return LINK.test(value);
     return false;
   }
   const ns = parseRef(object)?.ns;
@@ -89,9 +109,12 @@ const OBJECT_WORDS: Readonly<Record<ObjectClass, string>> = {
   claim: 'another claim',
   number: 'a number, as a string',
   tag: `one of these tags: ${LABEL_TAGS.join(', ')}`,
+  name: `a name in one line, at most ${NAME_MAX} characters, with no unit`,
+  text: 'words, with no unit',
+  link: 'a link to a web page, with no unit',
 };
 
-function ruleIssues(c: Claim): ValidationIssue[] {
+function ruleIssues(c: Claim, scope: PeopleScope): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const add = (path: string, rule: string, message: string) => issues.push({ path, rule, message });
   const rule = VERB_RULES[c.verb];
@@ -134,6 +157,8 @@ function ruleIssues(c: Claim): ValidationIssue[] {
   for (const key of rule.required ?? [])
     if (c.qualifiers?.[key] === undefined)
       add(`/qualifiers/${key}`, 'qualifier', `${c.verb} needs the qualifier "${key}"`);
+  if (c.petal === 'claim/v1' && c.qualifiers?.grounds?.split(',').includes('research'))
+    add('/qualifiers/grounds', 'qualifier', 'research is a ground from claim/v2');
 
   // What each kind needs before anyone can check it.
   const has = (test: (e: Claim['evidence'][number]) => boolean) => c.evidence.some(test);
@@ -147,6 +172,10 @@ function ruleIssues(c: Claim): ValidationIssue[] {
         add('/by', 'declared', 'declared means the subject says it of itself');
       if (c.proof === undefined) add('/proof', 'declared', 'a declared claim needs its proof');
       if (by?.ns === 'tool') add('/by', 'declared', 'a tool holds no key, so it can not declare');
+      break;
+    case 'stated':
+      if (by?.ns !== 'account')
+        add('/by', 'stated', "stated is a person's own word: `by` names their account");
       break;
     case 'sourced':
       if (!has((e) => /^https?:\/\//.test(e.url ?? '')))
@@ -174,14 +203,19 @@ function ruleIssues(c: Claim): ValidationIssue[] {
   c.evidence.forEach((e, i) => {
     if (e.claim_id !== undefined && !HEX64.test(e.claim_id))
       add(`/evidence/${i}/claim_id`, 'evidence', 'claim_id must be a claim id');
+    if (e.proposal !== undefined && parseRef(e.proposal)?.ns !== 'proposal')
+      add(`/evidence/${i}/proposal`, 'evidence', 'proposal must be proposal:<caip2>:<key>');
   });
 
-  return [...issues, ...peopleRuleIssues(c)];
+  return [...issues, ...peopleRuleIssues(c, scope)];
 }
 
-/** The claim, typed, or every reason it can't be one. */
-export function validateClaim(x: unknown): Result<Claim> {
-  const v = schemaValidator();
+/**
+ * The claim, typed, or every reason it can't be one. `private`: it's kept in a person's own project,
+ * where names are allowed (people.ts). Without it, the claim is read as one to publish.
+ */
+export function validateClaim(x: unknown, scope: PeopleScope = {}): Result<Claim> {
+  const v = schemaValidator((x as { petal?: unknown } | null)?.petal);
   if (!v(x)) {
     return {
       ok: false,
@@ -195,6 +229,6 @@ export function validateClaim(x: unknown): Result<Claim> {
     };
   }
   const claim = x as Claim;
-  const errors = ruleIssues(claim);
+  const errors = ruleIssues(claim, scope);
   return errors.length > 0 ? { ok: false, errors } : { ok: true, value: claim };
 }

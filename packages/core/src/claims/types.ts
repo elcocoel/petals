@@ -1,5 +1,7 @@
-// claim/v1: the shapes (specs/002-system/contracts/claims.md). The JSON Schema is
-// packages/core/schema/claim.schema.json; test/claims.test.ts keeps the two in step.
+// claim/v1 and claim/v2: the shapes (specs/002-system/contracts/claims.md). The JSON Schemas are
+// packages/core/schema/claim.schema.json and claim-v2.schema.json; test/claims.test.ts keeps them in step.
+// v2 adds annotations: named, noted and linked, a person's own word (stated), research as a ground, and a
+// transaction, a proposal and a quote in the evidence.
 import type { Nep413Proof } from '../types/generated/flower.ts';
 import type { Verb } from './verbs.ts';
 
@@ -13,15 +15,16 @@ export type EntityRef = string;
  * How anyone can check it.
  * observed: read from a chain, proved by a snapshot's hash or a transaction.
  * declared: the subject says it of itself, with proof.
+ * stated (v2): the writer says it on their own word, with no outside source.
  * sourced: a writer points at an outside source.
  * inferred: a rule or a model concluded it, with its method stated.
  */
-export type ClaimKind = 'observed' | 'declared' | 'sourced' | 'inferred';
+export type ClaimKind = 'observed' | 'declared' | 'stated' | 'sourced' | 'inferred';
 
 /** Plain bands, not a number (open question 12). */
 export type ConfidenceBand = 'low' | 'medium' | 'high';
 
-/** A number, or a closed tag. Never free text: see people.ts. */
+/** A number, or a closed tag; in v2, words for named and noted, and a link for linked (people.ts). */
 export interface ClaimValue {
   value: string;
   unit?: string;
@@ -33,8 +36,14 @@ export interface ClaimEvidence {
   url_sha256?: string;
   retrieved_at?: string;
   claim_id?: string;
-  /** Short. Must not name a person: see people.ts for what a machine can and can't catch. */
+  /** Short. Published, it must not name a person: see people.ts for what a machine can and can't catch. */
   note?: string;
+  /** v2: the transaction it rests on, `<caip2>:<hash>`. */
+  tx?: string;
+  /** v2: the proposal it rests on, `proposal:<caip2>:<key>`. */
+  proposal?: string;
+  /** v2: the source's own words, exactly as written. */
+  quote?: string;
 }
 
 /** A FastData write records its signer, so a transaction is enough for a direct write. */
@@ -55,7 +64,7 @@ export interface NearAiProof {
 export type ClaimProof = TxProof | Nep413Proof | NearAiProof;
 
 export interface Claim {
-  petal: 'claim/v1';
+  petal: 'claim/v1' | 'claim/v2';
   /** SHA-256 of the canonical claim, without `id` and `proof`. */
   id: string;
   subject: EntityRef;
@@ -97,7 +106,7 @@ export interface Lens {
    * An account's word about itself and a snapshot's hash need no trust.
    */
   trusted?: readonly EntityRef[] | 'everyone';
-  /** Sourced and inferred claims need at least this, from a writer in `trusted`. */
+  /** Stated, sourced and inferred claims need at least this, from a writer in `trusted`. */
   minConfidence?: ConfidenceBand;
   /** Disputed claims show as contested (default), or, when false, are hidden. */
   showDisputed?: boolean;

@@ -26,6 +26,7 @@ export const DEFAULT_LENS: Readonly<Lens> = Object.freeze<Lens>({
 const KIND_WORDS: Readonly<Record<ClaimKind, string>> = {
   observed: 'Observed',
   declared: 'Declared',
+  stated: 'Stated',
   sourced: 'Sourced',
   inferred: 'Inferred',
 };
@@ -127,7 +128,7 @@ function factVerdict(
     return ['hidden', `Said by ${c.by}, who this lens doesn't trust.`];
 
   const min = lens.minConfidence;
-  if (min !== undefined && (c.kind === 'sourced' || c.kind === 'inferred')) {
+  if (min !== undefined && (c.kind === 'stated' || c.kind === 'sourced' || c.kind === 'inferred')) {
     const band = notes.confidence?.band;
     if (band === undefined)
       return [
@@ -151,7 +152,9 @@ function factVerdict(
   if (oneSided(c))
     return ['caveated', 'Only this account says so. The other account has not said the same.'];
   if (notes.confidence?.band === 'low')
-    return ['caveated', `Said by ${c.by}, citing a source, but the rating is low.`];
+    return c.kind === 'stated'
+      ? ['caveated', `Said by ${c.by} on their own word, but the rating is low.`]
+      : ['caveated', `Said by ${c.by}, citing a source, but the rating is low.`];
 
   switch (c.kind) {
     case 'observed':
@@ -160,6 +163,8 @@ function factVerdict(
         : ['plain', `${c.by} says it read this from the chain, and this lens trusts them.`];
     case 'declared':
       return ['plain', 'This account says this of itself.'];
+    case 'stated':
+      return ['plain', `Said by ${c.by} on their own word, and this lens trusts them.`];
     default:
       return ['plain', `Said by ${c.by}, citing a source, and this lens trusts them.`];
   }
