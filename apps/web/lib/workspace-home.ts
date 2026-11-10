@@ -4,21 +4,21 @@
 import { api } from './api.ts';
 import type { ApiHealth } from './api-label.ts';
 import type { Catalogue } from './composer-options.ts';
-import type { ListedFlower } from './flower-view.ts';
-import { type OpeningView, openingMessage } from './opening.ts';
+import { mapViewList } from './map-views.ts';
+import { firstCases, openingMessage } from './opening.ts';
 import { openFromParams, questionFromParams } from './workspace-url.ts';
 
 export async function workspaceHome(q: Record<string, string | string[] | undefined>) {
   const run = Array.isArray(q.run) ? q.run[0] : q.run;
   const elsewhere = Array.isArray(q.elsewhere) ? q.elsewhere[0] : q.elsewhere;
-  const [health, listed, catalogue, map] = await Promise.all([
+  const [health, catalogue, map] = await Promise.all([
     api<ApiHealth>('/api/v1/health'),
-    api<{ flowers: ListedFlower[] }>('/api/v1/flowers'),
     api<Catalogue>('/api/v1/catalogue'),
-    api<{ views: OpeningView[] }>('/api/v1/map/views'),
+    mapViewList(),
   ]);
   const recorded = health.ok && health.value.llm === 'recorded';
-  const flowers = listed.ok ? listed.value.flowers : [];
+  // One map (Elco's fix 2): the first message and the shelf offer the same views of it.
+  const views = map.ok ? map.value.views : [];
   const { open, petal } = openFromParams(q);
   return {
     initialRun: run,
@@ -26,8 +26,8 @@ export async function workspaceHome(q: Record<string, string | string[] | undefi
     catalogue: catalogue.ok ? catalogue.value : null,
     initialQuestion: questionFromParams(q),
     recorded,
-    opening: openingMessage(map.ok ? map.value.views : []),
-    shelf: flowers,
+    opening: openingMessage(views),
+    shelf: firstCases(views),
     initialOpen: open,
     initialPetal: petal,
   };

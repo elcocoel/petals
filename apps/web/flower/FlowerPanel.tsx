@@ -121,11 +121,7 @@ export function FlowerPanel({
   }
   if (view.kind === 'shelf') {
     return (
-      <FlowerShelf
-        view={view}
-        {...(actions.onOpenStored ? { onOpen: actions.onOpenStored } : {})}
-        {...(actions.onStarter ? { onStarter: actions.onStarter } : {})}
-      />
+      <FlowerShelf view={view} {...(actions.onStarter ? { onStarter: actions.onStarter } : {})} />
     );
   }
   return (
