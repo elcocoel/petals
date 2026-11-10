@@ -280,7 +280,7 @@ export const chart = {
   'k-treasury': '#008300',
   'k-org': '#4a3aa7',
   'k-delegator': '#e34948',
-  'k-group': '#1797a6',
+  'k-group': '#a0673a',
   'everyone-else': '#666661',
   selected: primitives.Mint,
   // Only the API mock's legend names these (apps/web/lib/mock/near-validators.json).
