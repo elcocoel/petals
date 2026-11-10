@@ -19,7 +19,10 @@ export function Nav() {
           <TextLink href={siteLinks.howItWorks}>{copy.howItWorks}</TextLink>
           <TextLink href={siteLinks.map}>{copy.gallery}</TextLink>
           <TextLink href={siteLinks.connect}>{copy.docs}</TextLink>
-          <Button href={siteLinks.lobby}>{copy.ask}</Button>
+          {/* The one Connect, as the hero's box has it: primary, with its arrow (Elco, 10 Nov). */}
+          <Button href={siteLinks.lobby} arrow>
+            {copy.ask}
+          </Button>
         </div>
       </div>
     </Section>

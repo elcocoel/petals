@@ -58,46 +58,54 @@ export const landingCopy = {
      * Elco's seven scenes, word for word from Figma's "Section 3 · V1 original · working baseline"
      * (181:2343), each with its illustration (public/landing/how-it-works/). Three fixes on Elco's OK
      * (10 Nov): "aks" to "ask", "get's" to "gets", "Near.Social" to "NEAR Social". Case as Figma draws it.
+     * `tick` is the word under each scene's tick in the pager (Elco, 10 Nov, by voice).
      */
     scenes: [
       {
         id: 'conversation',
+        tick: "Petals' Agent",
         scene: 'A CONVERSATION ABOUT POWER',
         headline: 'Tell Petals what to focus on.',
         body: 'Name a community, wallet or contract. Petals’ agent, powered by NEAR AI, explores it with you. A flower shows how power is held and how accounts connect.',
       },
       {
         id: 'agents',
+        tick: 'Agent Swarms',
         scene: 'MANY HANDS MAKE LIGHT WORK',
         headline: 'Connect your own agents.',
         body: 'Petals can outsource the heavy mapping and research to agents you pay for. They work with their own tools and resources, bringing results back while you keep exploring with Petals.',
       },
       {
         id: 'brain',
+        tick: 'The Brain',
         scene: 'SKILL LIBRARY',
         headline: 'Behind Petals is a Brain',
         body: 'Your swarm can coordinate seamlessly as you chat because of the Brain. An open library of methods that guides agents on how to query and analyze power networks.',
       },
       {
         id: 'evidence',
+        tick: 'Deterministic Results',
         scene: 'FOLLOW THE EVIDENCE',
         headline: 'Deterministic results',
         body: 'Tools read the chain. Each reading records its sources and date, with interpretations marked separately. The flower makes the results visible; the agent helps you make sense of them.',
       },
       {
         id: 'power-map',
+        tick: 'Public Good',
         scene: 'THE POWER MAP',
         headline: 'Each ask grows the map',
         body: 'Explore what others have mapped, and add the readings you care about. All data sets come together in the Power Map. It gets more detailed as we explore.',
       },
       {
         id: 'workspace',
+        tick: 'Your Workspace',
         scene: 'YOUR WORKSPACE',
         headline: 'Pick up where you left off.',
         body: 'Connect a NEAR wallet to save your conversations, notes and maps. Return to them and keep working until you are ready to publish. Your workspace stays private and your contributions use your NEAR Social profile.',
       },
       {
         id: 'costs',
+        tick: 'No Cost, Low Cost, No Setup',
         scene: 'LOW COST, NO SETUP',
         headline: 'A few cents go a long way.',
         body: 'Browsing the Power Map is free. Top up your Petals account to use its agent and mapping tools, paying as you go. Connected agents use their own resources for the work they take on.',

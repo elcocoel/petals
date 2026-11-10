@@ -26,7 +26,9 @@ export function HowItWorks() {
       id="how-it-works"
       foot={
         <div className="flex justify-center">
-          <Button href={siteLinks.make}>{copy.action}</Button>
+          <Button href={siteLinks.make} arrow>
+            {copy.action}
+          </Button>
         </div>
       }
     >
@@ -44,25 +46,37 @@ export function HowItWorks() {
           ref={cycle.row}
           className="relative left-1/2 -mt-column-gap -mb-section-padding flex w-screen -translate-x-1/2 list-none snap-x snap-mandatory gap-block-gap overflow-x-auto px-0 lg:gap-column-gap pt-column-gap pb-section-padding [scrollbar-width:none]" /* token-exempt: no scrollbar of its own, the ticks and arrows are its scrollbar */
         >
-          <li aria-hidden="true" className="shrink-0 basis-1/10 lg:basis-1/8" />
+          <li aria-hidden="true" className="shrink-0 basis-1/2" />
           {copy.scenes.map((s, i) => (
-            <Scene key={s.id} {...s} current={i === cycle.current} onTimeUp={cycle.timeUp} />
+            <Scene
+              key={s.id}
+              {...s}
+              numeral={String(i + 1).padStart(2, '0')}
+              current={i === cycle.current}
+              onTimeUp={cycle.timeUp}
+              onPress={(half) =>
+                i !== cycle.current ? cycle.go(i) : half === 'next' ? cycle.next() : cycle.back()
+              }
+            />
           ))}
-          <li aria-hidden="true" className="shrink-0 basis-1/10 lg:basis-1/8" />
+          <li aria-hidden="true" className="shrink-0 basis-1/2" />
         </ul>
-        <div className="mt-block-gap flex items-center gap-block-gap">
-          <div className="flex min-w-0 flex-1 gap-space-4">
+        <div className="mt-block-gap flex items-start gap-block-gap">
+          <div className="flex min-w-0 flex-1 items-start gap-space-4">
             {copy.scenes.map((s, i) => (
               <Button
                 key={s.id}
                 variant="tick"
-                label={s.headline}
                 current={i === cycle.current}
                 onClick={() => cycle.go(i)}
               >
-                <span
-                  className={`block w-full border-t-heavy ${i === cycle.current ? 'border-primary' : 'border-hairline'}`}
-                />
+                <span className="flex w-full flex-col gap-space-8">
+                  <span
+                    className={`block w-full border-t-heavy ${i === cycle.current ? 'border-primary' : 'border-hairline'}`}
+                  />
+                  {/* Under each tick on a wide window; read aloud everywhere. */}
+                  <span className="sr-only type-caption lg:not-sr-only">{s.tick}</span>
+                </span>
               </Button>
             ))}
           </div>
