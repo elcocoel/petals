@@ -2,6 +2,7 @@
 // Elco can sense what's needed. Pure: its words and where each thing goes are decided here, and the view
 // only lays them out. Every word below is a proposal, listed in design/journey-strings.md, "The lobby".
 import { dateLabel, type ListedFlower, networkLabel } from './flower-view.ts';
+import type { SocialProfile } from './near-social.ts';
 import { type Credit, type PayAction, payWords } from './pay.ts';
 
 export const lobbyWords = {
@@ -15,6 +16,8 @@ export const lobbyWords = {
   folders: 'Folders',
   /** The flowers on the shared map, each opening on the canvas. */
   map: 'On the map',
+  /** The map with nothing on it yet: what goes there, and how. LOBBY's draft. */
+  mapEmpty: 'Nothing on the map yet. A flower you publish from a conversation shows here.',
   /** Folding the menu away, and bringing it back. */
   fold: 'Hide',
   unfold: 'Menu',
@@ -26,8 +29,6 @@ export const lobbyWords = {
  * shipped on Elco's word ("ship drafts, change later"). Waiting for the wallet is the pay step's own draft.
  */
 export const fundsWords = {
-  /** What a screen reader hears for the profile part. Elco's word. */
-  profile: 'Profile',
   /** The balance in the contract. */
   held: (near: string) => `${near} NEAR`,
   /** Elco's draft. */
@@ -40,14 +41,42 @@ export const fundsWords = {
 } as const;
 
 /**
- * The profile part's public profile, from NEAR Social (Elco, 9 Nov). The links are the account's own
- * declaration, so their label says only that, plainly. LOBBY's draft.
+ * The profile part (Elco, 9 Nov: "a profile area"; 10 Nov: "minimally good"): its title, the wallet the
+ * person signed in with, and their public profile from NEAR Social, whose links are the account's own
+ * declaration, so their label says only that. 'Profile' is Elco's word; the rest are LOBBY's drafts.
  */
-export const socialWords = {
+export const profileWords = {
+  title: 'Profile',
   declared: 'Declared on NEAR Social',
   /** One declared link: the service as NEAR Social names it, and what the account wrote there. */
   link: (service: string, value: string) => `${service} ${value}`,
+  /** No profile there yet: what would show, and where to make one. */
+  none: 'No NEAR Social profile yet. Make one there, and its name, picture and links show here.',
+  open: 'Open NEAR Social',
+  /** NEAR Social didn't answer. */
+  unread: "NEAR Social didn't answer, so your profile from there isn't shown.",
 } as const;
+
+/** Where a person makes or edits their NEAR Social profile. */
+export const NEAR_SOCIAL_SITE = 'https://near.social/';
+
+/** The profile part's NEAR Social state: still reading, a profile, none there, or no answer. */
+export type SocialState =
+  | { kind: 'reading' }
+  | { kind: 'profile'; profile: SocialProfile }
+  | { kind: 'none' }
+  | { kind: 'unread' };
+
+/**
+ * An account as the profile part shows it, and in full for the pointer: a 64-character implicit account
+ * shortened to its first six and last four, as /make does; a named account as it is.
+ */
+export function shownAccount(account: string): { shown: string; full: string } {
+  return {
+    shown: account.replace(/^([0-9a-f]{6})[0-9a-f]{54}([0-9a-f]{4})$/, '$1…$2'),
+    full: account,
+  };
+}
 
 /** The credit as GET and POST /api/v1/pay answer it with the contract: with what it holds, in yoctoNEAR. */
 export type HeldCredit = Credit & { balance_yocto?: string };
@@ -88,15 +117,20 @@ export interface MapTile {
   href: string;
 }
 
-/** In the order the API lists them. A tile opens the flower on the canvas, as a stored flower. */
+/**
+ * In the order the API lists them, without the site's own copies (fixtures), which are the same flowers
+ * again (minimally good, rule 8). A tile opens the flower on the canvas, as a stored flower.
+ */
 export function mapTiles(flowers: readonly ListedFlower[]): MapTile[] {
-  return flowers.map((f) => ({
-    key: `${f.where}:${f.id}`,
-    title: f.title ?? f.id,
-    // the gallery's own line and badge, so a flower reads the same in both
-    where: `${networkLabel(f.network)}   /   ${dateLabel(f.as_of)}`,
-    badge: f.where === 'map' ? 'on NEAR' : 'fixture',
-    image: `/api/v1/flowers/${encodeURIComponent(f.id)}/svg`,
-    href: `/make?stored=${encodeURIComponent(f.id)}`,
-  }));
+  return flowers
+    .filter((f) => f.where !== 'fixture')
+    .map((f) => ({
+      key: `${f.where}:${f.id}`,
+      title: f.title ?? f.id,
+      // the gallery's own line and badge, so a flower reads the same in both
+      where: `${networkLabel(f.network)}   /   ${dateLabel(f.as_of)}`,
+      badge: f.where === 'map' ? 'on NEAR' : 'fixture',
+      image: `/api/v1/flowers/${encodeURIComponent(f.id)}/svg`,
+      href: `/make?stored=${encodeURIComponent(f.id)}`,
+    }));
 }

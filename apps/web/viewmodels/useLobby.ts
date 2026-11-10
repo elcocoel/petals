@@ -1,5 +1,5 @@
 // The lobby's ViewModel (specs/004-workspace, W3): who's here, their conversations, the flowers on the map,
-// what they hold in the credit contract (useFunds), their public profile on NEAR Social (useSocialProfile),
+// what they hold in the credit contract (useFunds), the profile part (useProfile: the wallet they signed in with, and NEAR Social),
 // and whether the menu is open. Reads happen when the page opens, and the conversations once the server
 // has said who's here. There is no timer.
 import { useEffect, useState } from 'react';
@@ -9,8 +9,8 @@ import type { ListedFlower } from '../lib/flower-view.ts';
 import { mapTiles } from '../lib/lobby-view.ts';
 import { useConversations } from './useConversations.ts';
 import { useFunds } from './useFunds.ts';
+import { useProfile } from './useProfile.ts';
 import { useSession } from './useSession.ts';
-import { useSocialProfile } from './useSocialProfile.ts';
 import { useWorkMenu } from './useWorkMenu.ts';
 
 export function useLobby() {
@@ -18,7 +18,7 @@ export function useLobby() {
   // Read once the server has said who's here. Only a person reaches the lobby (app/lobby/page.tsx).
   const conversations = useConversations(session.known ? 'arrived' : null);
   const funds = useFunds();
-  const social = useSocialProfile();
+  const profile = useProfile();
   const [flowers, setFlowers] = useState<ListedFlower[]>([]);
   useEffect(() => {
     let gone = false;
@@ -36,7 +36,7 @@ export function useLobby() {
   const menu = useWorkMenu(Boolean(session.account));
   return {
     session,
-    social,
+    profile,
     funds,
     conversations: conversationRows(conversations, { runId: null }),
     tiles: mapTiles(flowers),

@@ -21,7 +21,7 @@ export function Funds({
 }) {
   if (held === null) return null;
   return (
-    <div className="flex flex-wrap items-center gap-text-gap px-block-gap pt-text-gap">
+    <div className="flex flex-wrap items-center gap-text-gap">
       <Mono as="span">{fundsWords.held(nearOf(held))}</Mono>
       {phase === 'withdrew' && withdrew !== null ? (
         <span className="type-caption text-muted">{fundsWords.withdrew(withdrew)}</span>
