@@ -462,7 +462,7 @@ describe('the panel', () => {
     expect(shelf.pending).toBe(false);
     expect(shelf.tiles[0]).toMatchObject({ title: 'abc', badge: 'On NEAR' });
     expect(shelf.tiles[0]?.image).toBe(
-      '/api/v1/flowers/abc/svg?look=render%2Fv2&view=1421e0bf7b26',
+      '/api/v1/flowers/abc/svg?look=render%2Fv2&view=1421e0bf7b26&paint=561830c7',
     );
     expect(shelf.starter?.question).toBeTruthy();
     const pending = shelfView(listed, true);
@@ -478,7 +478,9 @@ describe('the panel', () => {
       createElement(FlowerShelf, { view: shelfView(listed, false) }),
     );
     expect(out).toContain('What would you like to map?');
-    expect(out).toContain('/api/v1/flowers/abc/svg?look=render%2Fv2&amp;view=1421e0bf7b26');
+    expect(out).toContain(
+      '/api/v1/flowers/abc/svg?look=render%2Fv2&amp;view=1421e0bf7b26&amp;paint=561830c7',
+    );
     expect(out).toContain('href="/gallery"');
   });
 });
@@ -830,7 +832,6 @@ describe('the panel in its box (T202)', () => {
     'Explore another flower',
     'Interpretation and sources',
     'Publish on NEAR',
-    'Sponsor a refresh',
     'Open as a page',
   ])('keeps its word: %s', (word) => {
     expect(html(view())).toContain(word);

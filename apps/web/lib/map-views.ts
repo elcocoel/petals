@@ -2,7 +2,7 @@
 // oldest first, with the picture the server draws for it in the default view and the address that opens it.
 // The web uses both as given, so a view looks and opens the same everywhere it's listed.
 import { api } from './api.ts';
-import { chainLabel, dateLabel } from './flower-view.ts';
+import { chainLabel, dateLabel, keysOf, oneKey } from './flower-view.ts';
 
 /** A row of GET /api/v1/map/views. */
 export interface MapViewRow {
@@ -18,6 +18,8 @@ export interface MapViewRow {
   as_of: string;
   view_url: string;
   picture: string;
+  /** the colours its picture draws: colour's keys, then the tail's, each { label, swatch: var(--k-…) } */
+  keys: { label: string; swatch: string }[];
   made_by: string | null;
 }
 
@@ -42,4 +44,12 @@ export function viewTile(v: MapViewRow) {
     image: v.picture,
     href: v.view_url,
   };
+}
+
+/** A row's colours as a key. */
+export const rowKeys = (v: Pick<MapViewRow, 'keys'>) => keysOf(v.keys ?? []);
+
+/** One key for a list of views: every colour their pictures draw, once. */
+export function listKeys(views: readonly Pick<MapViewRow, 'keys'>[]) {
+  return oneKey(views.map(rowKeys));
 }

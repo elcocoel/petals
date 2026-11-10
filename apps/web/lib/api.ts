@@ -56,15 +56,22 @@ export async function api<T>(
 
 export const post = <T>(path: string, body: unknown) => api<T>(path, { method: 'POST', body });
 
+type KeptInit = { method?: string; body?: unknown; redirect?: 'manual' };
+
 /**
  * For content-addressed reads only, where the answer can never change: the server's reply is kept by the
- * site's cache for good, so it must not depend on who is asking (no visitor address, no cookie). The
- * landing's Power Map draws its saved views this way (lib/power-map.ts). `redirect: 'manual'` keeps a
- * redirect's Location readable.
+ * site's cache for good, so it must not depend on who is asking (no visitor address, no cookie).
+ * `redirect: 'manual'` keeps a redirect's Location readable.
  */
-export async function forever(
+export const forever = (path: string, init?: KeptInit) => kept(path, init, 60 * 60 * 24 * 365);
+
+/** The same for a public read that may change, kept an hour: the landing's Power Map reads the map's list this way. */
+export const hourly = (path: string, init?: KeptInit) => kept(path, init, 60 * 60);
+
+async function kept(
   path: string,
-  init?: { method?: string; body?: unknown; redirect?: 'manual' },
+  init: KeptInit | undefined,
+  seconds: number,
 ): Promise<Response | null> {
   const key = siteKey();
   try {
@@ -77,7 +84,7 @@ export async function forever(
       },
       body: init?.body === undefined ? undefined : JSON.stringify(init.body),
       ...(init?.redirect ? { redirect: init.redirect } : {}),
-      next: { revalidate: 60 * 60 * 24 * 365 },
+      next: { revalidate: seconds },
     });
   } catch {
     return null;

@@ -140,3 +140,10 @@ Elco: "no second look - one first look that we improve on"; V8: "Always the late
 All seven steps; the colour checked on screen at `/lab/flower` and `/lab/map` (inside a flower), and in the three goldens. Elco's go, 10 Nov, through META: "one look goes live now".
 
 **Then, the tile (META's go, SYSTEMS's OK, 10 Nov):** live, the same flower showed many colours on its tile and one on its page, because `/api/v1/flowers/:id/svg` drew the spec's own choices (backers) and the page and `/make` draw the viewer's view. Everyone sees the default today (decisions, 9 Nov), so the tile draws with `DEFAULT_VIEW` too. The picture's address now names the view as well, `&view=` and the first 12 characters of the view's hash, because the bytes changed under an address already kept for a year.
+
+## The gallery and the landing on the one map (Elco's go, 10 Nov, fixes 2 to 4)
+
+- **One list:** the gallery, titled Power Map as the navbar and the landing call it, lists every view of the shared map (SYSTEMS's `GET /api/v1/map/views`), each with the server's own picture and address, as given. The landing's nine tiles and the hero are views of the same list, read at most hourly.
+- **A key wherever a flower shows:** `LegendKeys`, one quiet line of the colours a picture draws: under a flower's page drawing, under the hero, over the Power Map's tiles and the gallery (one key for all of them, each colour once, everyone else last). The colours come from the render's legend, or from each map row's `keys`.
+- **One name for a still picture:** `pictureQuery(view)` in `packages/core/src/render` gives `look`, `view` (12 hex of the view's hash) and `paint` (8 hex of the still palette's CSS hash). The site's flower tiles and the server's map pictures both use it, so a new look, view or palette gives every picture a new address.
+- **Gone:** the fixture twin, the raw publish line, the status line, the sponsor box, and "Sponsor a refresh" on a flower's page and in `/make`'s detail.

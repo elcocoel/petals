@@ -1,16 +1,12 @@
 // The Power Map on the landing (Elco, 9 Nov: "instead of these shitty place holders let's see how to put the
-// actual map here - research yesterday grabbed data for SEVERAL DAOs"). Real readings from the night's
-// mapping run (research/mapping-run-2026-11-09/INDEX.md), each a saved view on the server. A view's spec is
-// content-addressed, so a drawing never changes and is cached for good. A view the server can't draw is left
-// out. Titles and counts are the run's own.
+// actual map here - research yesterday grabbed data for SEVERAL DAOs"). Nine views of the one shared map, by
+// their hash, each with the picture the server draws for it in the default view, its address and its colours
+// (GET /api/v1/map/views; Elco, 10 Nov, fix 2: the landing reads the map). The list is read at most hourly.
+// A view that isn't on the map is left out. Titles and counts are the night run's own.
 
-import { RENDER_VERSION } from '@petal/core';
-import type { Spec } from '@petal/core/types';
-import { forever } from './api.ts';
-import { decodeDraft } from './draft.ts';
-import type { Rendered } from './flower-data.ts';
-import { colourKeys, type LegendKey } from './flower-view.ts';
-import { viewerView } from './viewer-view.ts';
+import { hourly } from './api.ts';
+import { type LegendKey, oneKey } from './flower-view.ts';
+import { type MapViewRow, rowKeys } from './map-views.ts';
 
 export interface PowerMapView {
   sha: string;
@@ -81,48 +77,29 @@ export interface PowerMapTile extends PowerMapView {
   href: string;
   /** the colours its picture paints */
   keys: LegendKey[];
-  legend: Rendered['legend'];
 }
 
 /** The hero's flower (Elco, 10 Nov: the landing's first flower in the one look): NEAR's validators, the map's one flower coloured all the way round today. */
 export const HERO_SHA = '37def7bc0670b27a8d5145cdcef00eea579539ca07fd485bb582b4abffe6e49f';
 
 /** One key for a set of tiles: each colour any of them paints, once. */
-export const powerMapKeys = (tiles: readonly PowerMapTile[]) =>
-  colourKeys(tiles.map((t) => t.legend));
+export const powerMapKeys = (tiles: readonly PowerMapTile[]) => oneKey(tiles.map((t) => t.keys));
 
-async function viewSpec(sha: string): Promise<Spec | null> {
-  const location = (await forever(`/d/${sha}`, { redirect: 'manual' }))?.headers.get('location');
-  const param = location ? new URL(location, 'http://view').searchParams.get('spec') : null;
-  const decoded = param ? decodeDraft(param) : null;
-  return decoded?.ok ? decoded.spec : null;
-}
-
-async function draw(spec: Spec): Promise<Rendered | null> {
-  // The look is in the address, so a cached drawing is never an older look's (specs/006-the-map, milestone 3).
-  // Drawn with the viewer's view, like a flower's page and the map's own pictures.
-  const res = await forever(`/api/v1/render?look=${encodeURIComponent(RENDER_VERSION)}`, {
-    body: { spec, include_svg: true, view: viewerView() },
+/** The tiles for these views, from the map's rows. */
+export function tilesOf(rows: readonly MapViewRow[]): PowerMapTile[] {
+  const bySha = new Map(rows.map((r) => [r.sha, r]));
+  return POWER_MAP.flatMap((view) => {
+    const row = bySha.get(view.sha);
+    return row ? [{ ...view, image: row.picture, href: row.view_url, keys: rowKeys(row) }] : [];
   });
-  if (!res?.ok) return null;
-  const rendered = (await res.json()) as Rendered;
-  return rendered.svg ? rendered : null;
-}
-
-async function tile(view: PowerMapView): Promise<PowerMapTile | null> {
-  try {
-    const spec = await viewSpec(view.sha);
-    const drawn = spec && (await draw(spec));
-    if (!drawn) return null;
-    const image = `data:image/svg+xml;base64,${Buffer.from(drawn.svg, 'utf8').toString('base64')}`;
-    const keys = colourKeys([drawn.legend]);
-    return { ...view, image, href: `/d/${view.sha}`, keys, legend: drawn.legend };
-  } catch {
-    return null;
-  }
 }
 
 export async function powerMapTiles(): Promise<PowerMapTile[]> {
-  const tiles = await Promise.all(POWER_MAP.map(tile));
-  return tiles.filter((t): t is PowerMapTile => t !== null);
+  try {
+    const res = await hourly('/api/v1/map/views');
+    if (!res?.ok) return [];
+    return tilesOf(((await res.json()) as { views: MapViewRow[] }).views);
+  } catch {
+    return [];
+  }
 }
