@@ -1,7 +1,7 @@
 // The landing's sections in the order of the copy doc (T185, Figma frame 66:2180). It only assembles;
 // app/page.tsx hands it the Power Map's drawn readings.
 
-import type { PowerMapTile } from '../../lib/power-map.ts';
+import { HERO_SHA, type PowerMapTile } from '../../lib/power-map.ts';
 import { Footer } from '../ui/Footer.tsx';
 import { Nav } from '../ui/Nav.tsx';
 import { BackIt } from './BackIt.tsx';
@@ -19,7 +19,7 @@ export function Landing({ tiles = [] }: { tiles?: readonly PowerMapTile[] }) {
     <>
       <Nav />
       <main>
-        <Hero />
+        <Hero flower={tiles.find((t) => t.sha === HERO_SHA)} />
         <LiveReading />
         <HowItWorks />
         <UseAnywhere />

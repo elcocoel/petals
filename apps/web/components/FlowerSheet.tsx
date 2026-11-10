@@ -2,9 +2,9 @@
 // and the legend. Used by /f/[id], /draft and /publish.
 import type { Spec } from '@petal/core/types';
 import type { Rendered } from '../lib/flower-data.ts';
-import { chainLabel, dateLabel, networkLabel } from '../lib/flower-view.ts';
+import { chainLabel, colourKeys, dateLabel, networkLabel } from '../lib/flower-view.ts';
 import { Flower } from './Flower.tsx';
-import { Legend } from './Legend.tsx';
+import { Legend, LegendKeys } from './Legend.tsx';
 
 export function FlowerSheet({
   spec,
@@ -26,6 +26,7 @@ export function FlowerSheet({
           : ''}
       </p>
       <Flower svg={rendered.svg} petals={rendered.petals} title={spec.network.id} />
+      <LegendKeys keys={colourKeys([rendered.legend])} />
       <Legend items={rendered.legend} sources={sources} />
     </>
   );
