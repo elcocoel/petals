@@ -28,9 +28,9 @@ describe('agentPrompt', () => {
     expect(apps).toBeGreaterThan(-1);
     expect(apps).toBeLessThan(p.indexOf('/skill.md'));
     expect(p).toMatch(/The Claude app's chat runs in the cloud and can't/);
-    expect(p).toMatch(
-      /If you can't run commands on my computer, don't try: tell me so in one line/,
-    );
+    expect(p).toMatch(/If you can't run commands here, don't try: tell me so in one line/);
+    // a cloud app points the person to the connector door rather than only declining (WORKSPACE, 9 Nov)
+    expect(p).toContain(`that I can add Petals as a connector at ${ORIGIN}/mcp`);
   });
 
   test('asks for a permission, rather than choices', () => {

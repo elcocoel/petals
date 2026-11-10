@@ -6,7 +6,7 @@ import { fakeRpcFor, testSigner } from '@petal/near/auth/testing';
 import { openStore } from '@petal/store';
 import { describe, expect, test } from 'vitest';
 import { buildPetalApp } from '../src/app.ts';
-import { fundPerson } from '../src/invites.ts';
+import { fundPerson, mintInvite } from '../src/invites.ts';
 import { fakeRegistry, parseSse, type ScriptTurn, scriptedLlm, tmpRoot } from './helpers.ts';
 
 const SITE = 'https://petals.example';
@@ -65,6 +65,22 @@ function setup(turns: ScriptTurn[]) {
       await s.close();
     }
   };
+  /** Signed in with no credit of their own, chatting on a sponsored invite instead. */
+  const signInWithInvite = async () => {
+    const c = (await (await call('POST', '/api/v1/auth/challenge', {})).json()) as Out;
+    await call('POST', '/api/v1/auth/verify', {
+      network: 'mainnet',
+      proof: alice.sign(c as never),
+    });
+    const s = openStore(join(stateDir, 'private.db'));
+    let token: string;
+    try {
+      token = (await mintInvite(s, { usd: 2 })).token;
+    } finally {
+      await s.close();
+    }
+    expect((await call('POST', '/api/v1/auth/invite', { token })).status).toBe(200);
+  };
   /** An agent's wait, with no session: only the link. */
   const wait = (token: string, as: string, wait_s = 0, signal?: AbortSignal) =>
     app.request('/api/v1/agents/wait', {
@@ -73,7 +89,7 @@ function setup(turns: ScriptTurn[]) {
       body: JSON.stringify({ as, wait_s }),
       ...(signal ? { signal } : {}),
     });
-  return { app, llm, call, signInFunded, wait };
+  return { app, llm, call, signInFunded, signInWithInvite, wait };
 }
 
 const link = async (w: ReturnType<typeof setup>) =>
@@ -205,5 +221,42 @@ describe('agents across projects', () => {
     }
     const run = (await (await w.call('GET', `/api/v1/agent/runs/${runId}`)).json()) as Out;
     expect(JSON.stringify(run.events)).toContain('Your agent found 42 holders.');
+  });
+
+  test('with no credit of their own, a report is taken up on the invite they chat on, and charged to it', async () => {
+    const w = setup([
+      {
+        calls: [{ name: 'hand_job', args: { title: 'Map the shares', brief: 'who holds shares' } }],
+      },
+      { content: 'Sent.' },
+      { content: 'Your agent found 42 holders.' },
+    ]);
+    await w.signInWithInvite();
+    const token = await link(w);
+    const first = parseSse(await (await w.call('POST', '/api/v1/agent/chat', ASK)).text());
+    const runId = (first[0] as { data: { run_id: string } }).data.run_id;
+    const spent = async () =>
+      ((await (await w.call('GET', '/api/v1/auth/invite')).json()) as Out).invite
+        .spent_usd as number;
+    const before = await spent();
+    expect(before).toBeCloseTo(0.02);
+    const got = (await (await w.wait(token, 'Claude Code')).json()) as Out;
+    const ref = (got.project.exploration as string).split('/s/')[1];
+    const reported = await w.app.request(`/api/v1/explorations/${ref}/jobs/${got.job.id}/report`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ result: { summary: '42 holders.' } }),
+    });
+    expect(reported.status).toBe(200);
+    for (let i = 0; i < 50; i++) {
+      const run = (await (await w.call('GET', `/api/v1/agent/runs/${runId}`)).json()) as Out;
+      if (w.llm.requests.length >= 3 && run.status !== 'running') break;
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    expect(w.llm.requests).toHaveLength(3);
+    expect(w.llm.requests[2]?.messages.at(-1)?.content).toMatch(/came back from Claude Code/);
+    const run = (await (await w.call('GET', `/api/v1/agent/runs/${runId}`)).json()) as Out;
+    expect(JSON.stringify(run.events)).toContain('Your agent found 42 holders.');
+    expect(await spent()).toBeCloseTo(0.03);
   });
 });

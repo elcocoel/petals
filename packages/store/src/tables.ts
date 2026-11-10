@@ -437,6 +437,15 @@ export function tables(db: Db) {
       async setInvite(hash: string, invite: string) {
         await db.run('UPDATE session SET invite = ? WHERE hash = ?', invite, hash);
       },
+      /** The invites a person's live sessions hold, the newest session's first, each once. */
+      async invitesOf(subject: string, now: string): Promise<string[]> {
+        const rows = await db.all<{ invite: string }>(
+          'SELECT invite FROM session WHERE subject = ? AND invite IS NOT NULL AND expires_at > ? ORDER BY expires_at DESC',
+          subject,
+          now,
+        );
+        return [...new Set(rows.map((r) => r.invite))];
+      },
       /** Null once expired. */
       get: (hash: string, now: string) =>
         db.get<SessionRow>('SELECT * FROM session WHERE hash = ? AND expires_at > ?', hash, now),

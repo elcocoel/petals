@@ -128,8 +128,8 @@ export interface ChatAdmission {
 export interface RouteAuth {
   admitChat(c: Context, llm: LlmClient, budget: Budget): Promise<ChatAdmission>;
   /**
-   * A turn nobody's browser asked for, on a person's own credit (a job's report taken up at once, 9 Nov).
-   * Null when they have none, or it's a recorded run.
+   * A turn nobody's browser asked for (a job's report taken up at once, 9 Nov): on a person's own credit,
+   * or else on an invite one of their sessions holds (10 Nov). Null when neither pays, or it's a recorded run.
    */
   admitOwner?(subject: string, llm: LlmClient, budget: Budget): Promise<ChatAdmission | null>;
   subjectOf(c: Context): Promise<string | null>;
@@ -452,7 +452,14 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         }
       }
       const own = await personCredit(store, subject);
-      if (!own || own.left_usd <= 0) return null;
+      if (!own || own.left_usd <= 0) {
+        // the invite their browser chats on, charged as a chat there is, with the day's cap (10 Nov)
+        for (const id of await store.session.invitesOf(subject, iso())) {
+          if (inviteRefusal(await inviteBody(id))) continue;
+          return { subject, budget: { ...budget, ledger: inviteLedger(store, id, day, now) } };
+        }
+        return null;
+      }
       let spent = 0;
       const counted = chain
         ? async (usd: number) => {
