@@ -212,8 +212,8 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
   const clock = o.clock ?? Date.now;
   const jobs = runJobs(deps, o);
   // A report that comes back (report_job): Petals' agent takes it up at once, as a turn in the run that handed
-  // the job out, paid from the person's own credit (Elco, 9 Nov). With no credit, or the run already going, it
-  // waits in the job row for the person's next message, as before.
+  // the job out, paid from the person's own credit (Elco, 9 Nov), or else from the invite they chat on (10 Nov).
+  // With neither, or the run already going, it waits in the job row for the person's next message, as before.
   if (o.takeUp) {
     o.takeUp.current = async (job) => {
       if (!job.run || jobs.running(job.run) || !o.auth?.admitOwner) return;
