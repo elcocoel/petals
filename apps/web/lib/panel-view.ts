@@ -1,6 +1,8 @@
 // The flower panel as a person reads it: which state it is in and every word it says. The panel's
 // flower is the same shape whichever way it came, from a turn of the thread or from the stored ones.
+import { specHash } from '@petal/core';
 import type {
+  Entry,
   Interpretation,
   LegendItem,
   ModelSignature,
@@ -41,6 +43,36 @@ export interface PanelFlower {
   stored?: { id: string; title: string | null };
   /** an earlier flower, not the one the thread is on: a question has to say which it means */
   earlier: boolean;
+}
+
+/** A stored flower as the panel reads it, the same on /make and on its own page (/f/<id>). */
+export function storedPanelFlower(entry: Entry, id: string, viewUrl: string): PanelFlower {
+  return {
+    key: entry.spec_sha256,
+    spec: entry.spec,
+    legend: [],
+    interpretation: entry.interpretation,
+    signature: entry.provenance.agent.signature ?? null,
+    ...(entry.provenance.agent.model ? { model: entry.provenance.agent.model } : {}),
+    checks: `Entry ${entry.id}`,
+    viewUrl,
+    stored: { id, title: entry.title ?? null },
+    earlier: false,
+  };
+}
+
+/** A flower from its spec alone (a draft's link): no reading, maker or signature to show. */
+export function draftPanelFlower(spec: Spec): PanelFlower {
+  return {
+    key: specHash(spec),
+    spec,
+    legend: [],
+    interpretation: null,
+    signature: null,
+    checks: '',
+    viewUrl: '',
+    earlier: false,
+  };
 }
 
 export interface Drawing {

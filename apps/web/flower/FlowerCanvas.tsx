@@ -1,5 +1,6 @@
 'use client';
-// The flower, live: an empty SVG for the scene to draw in, filling the window. Nothing else on screen.
+// The flower, live: an empty SVG for the scene to draw in, filling the window, or the area it's put in on a
+// page with the site's nav above (app/(canvas)). Nothing else on screen.
 // The canvas is there with no flower too, as empty ground, and pressing it still leaves the cursor alone.
 // Everything but the reading is an option the lab's bench asks for; the product's page asks for little.
 // What it's told to mark and what a click does are apart from those: they never rebuild the scene.
@@ -12,6 +13,7 @@ import type { FakeRelations } from './scene.ts';
 import { useFlowerCanvas } from './useFlowerCanvas.ts';
 
 export function FlowerCanvas({
+  fill = 'window',
   reading,
   hover = 'dock',
   relations = null,
@@ -21,6 +23,8 @@ export function FlowerCanvas({
   selected = null,
   onPick,
 }: {
+  /** what it fills: the window, or the positioned area it's in */
+  fill?: 'window' | 'area';
   reading: FlowerReading | null;
   hover?: HoverWay;
   relations?: FakeRelations | null;
@@ -45,7 +49,7 @@ export function FlowerCanvas({
       ref={svg}
       {...(reading ? { role: 'img', 'aria-label': reading.title } : { 'aria-hidden': true })}
       onMouseDown={keepCursor}
-      className="fixed inset-0 block size-full touch-none select-none bg-surface"
+      className={`${fill === 'window' ? 'fixed' : 'absolute'} inset-0 block size-full touch-none select-none bg-surface`}
     />
   );
 }

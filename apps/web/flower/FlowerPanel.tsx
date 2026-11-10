@@ -3,6 +3,7 @@
 // the rest one quiet click away. Before there's a flower, the shelf, or the words for why not. The flower
 // itself is the canvas under this, and its title is the box's bar, so neither is here.
 import type { PetalDetail } from '@petal/core/types';
+import type { ReactNode } from 'react';
 import { Interpretation, SignatureLine } from '../components/Interpretation.tsx';
 import { Legend, LegendKeys } from '../components/Legend.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
@@ -29,12 +30,16 @@ function OpenFlower({
   unit,
   section,
   actions,
+  note,
+  about,
 }: {
   view: FlowerPanelView;
   petal: PetalDetail | null;
   unit?: string | undefined;
   section: PanelSection;
   actions: FlowerPanelActions;
+  note?: ReactNode;
+  about?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-text-gap p-block-gap">
@@ -44,10 +49,13 @@ function OpenFlower({
           {'   /   '}
           {view.date}
         </p>
-        <Button variant="quiet" onClick={actions.onShelf}>
-          Explore another flower
-        </Button>
+        {actions.onShelf && (
+          <Button variant="quiet" onClick={actions.onShelf}>
+            Explore another flower
+          </Button>
+        )}
       </header>
+      {note}
       {view.failed ? (
         <p className="error">The flower could not be drawn: {view.failed}</p>
       ) : view.svg ? null : (
@@ -96,6 +104,7 @@ function OpenFlower({
           <p data-quiet className="type-mono wrap-anywhere text-muted">
             {view.checks && `${view.checks}. `}spec_sha256 {view.hashes}
           </p>
+          {about}
         </div>
       )}
     </div>
@@ -108,6 +117,8 @@ export function FlowerPanel({
   unit,
   section = null,
   actions = {},
+  note,
+  about,
 }: {
   view: PanelView;
   /** The selected petal's own record, when one is selected. */
@@ -115,9 +126,23 @@ export function FlowerPanel({
   unit?: string | undefined;
   section?: PanelSection;
   actions?: FlowerPanelActions;
+  /** what a page says about the flower first, under its date: that it's a draft, or written on NEAR */
+  note?: ReactNode;
+  /** what a page knows about the flower besides its reading (who made it, who published it), with its sources */
+  about?: ReactNode;
 }) {
   if (view.kind === 'flower') {
-    return <OpenFlower view={view} petal={petal} unit={unit} section={section} actions={actions} />;
+    return (
+      <OpenFlower
+        view={view}
+        petal={petal}
+        unit={unit}
+        section={section}
+        actions={actions}
+        note={note}
+        about={about}
+      />
+    );
   }
   if (view.kind === 'shelf') {
     return (
@@ -127,7 +152,7 @@ export function FlowerPanel({
   return (
     <div className="p-block-gap">
       <p className={view.kind === 'failed' ? 'error' : 'type-body text-muted'}>{view.text}</p>
-      {view.kind === 'failed' && (
+      {view.kind === 'failed' && actions.onShelf && (
         <Button variant="link" onClick={actions.onShelf}>
           Explore another flower
         </Button>

@@ -35,7 +35,7 @@ describe('the landing page', () => {
       [siteLinks.lobby]: '(work)/lobby/page.tsx',
       [siteLinks.gallery]: '(site)/gallery/page.tsx',
       [siteLinks.connect]: '(site)/connect/page.tsx',
-      [siteLinks.liveShape]: '(site)/f/[id]/page.tsx',
+      [siteLinks.liveShape]: '(canvas)/f/[id]/page.tsx',
     };
     for (const path of Object.values(routes)) expect(existsSync(join(app, path)), path).toBe(true);
     const anchors = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
