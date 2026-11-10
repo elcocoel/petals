@@ -25,8 +25,6 @@ export const panelWords = {
   near: (amount: string) => `${amount} NEAR`,
   onTheMap: 'On the map',
   /** The Profile section: the public profile's state, a few characters at its row's end. */
-  /** The lobby's Profile card, by its own title (LOBBY, 10 Nov: the profile is kept in Petals first). */
-  publicProfile: 'Profile',
   socialState: {
     petals: 'In Petals',
     profile: 'NEAR Social',

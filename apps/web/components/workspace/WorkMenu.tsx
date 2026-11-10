@@ -226,15 +226,12 @@ export function WorkMenu({
     ),
     profile: (
       <Group title={panelWords.sections.profile}>
+        {/* the person, opening their Profile card; the trail says where the profile is kept */}
         <NavItem
+          href={lobbyAt('lobby-profile')}
           icon="profile"
           label={name ?? who?.shown ?? '…'}
           {...(who ? { title: who.full } : {})}
-        />
-        <NavItem
-          href={lobbyAt('lobby-profile')}
-          icon="card"
-          label={panelWords.publicProfile}
           trail={
             panelWords.socialState[
               you.social.kind === 'profile'
