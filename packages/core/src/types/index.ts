@@ -699,7 +699,8 @@ export type AgentEvent =
         turns: number;
         model: string;
         fallback_used: boolean;
-        tokens: { in: number; out: number };
+        /** additive (10 Nov): `cached`, the part of `in` read from NEAR AI's cache, at its cheaper price */
+        tokens: { in: number; out: number; cached?: number };
         cost_usd: number;
         /** additive (T168): the completion that wrote the answer; null when it got no signature */
         signature?: ModelSignature | null;
