@@ -6,23 +6,12 @@ import type { SocialProfile } from './near-social.ts';
 import { type Credit, type PayAction, payWords } from './pay.ts';
 
 export const lobbyWords = {
-  /** What a screen reader hears for the page and for the menu. */
+  /** What a screen reader hears for the page. The menu's words are lib/panel-words.ts's. */
   page: 'Lobby',
-  menu: 'Your work',
-  /** The menu's bar, and the way to a new conversation: the words the workspace's list box already uses. */
-  conversations: 'Conversations',
-  newConversation: 'New',
-  /** Where folders go once SYSTEMS has them (W4). Not shown until one exists (minimally-good rule 1). */
-  folders: 'Folders',
-  /** The menu's list with nothing in it yet: what goes there and what to do (rule 2). A draft. */
-  noConversations: 'No conversations yet. Press New to start one.',
   /** The flowers on the shared map, each opening on the canvas. */
   map: 'On the map',
   /** The map with nothing on it yet: what goes there, and how. LOBBY's draft. */
   mapEmpty: 'Nothing on the map yet. A network you map in a conversation shows here.',
-  /** Folding the menu away, and bringing it back. */
-  fold: 'Hide',
-  unfold: 'Menu',
 } as const;
 
 /**
