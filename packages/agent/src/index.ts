@@ -28,6 +28,7 @@ export {
 } from './catalogue.ts';
 /** Sponsored invites, scripts/mint-invite.ts, and a person's own credit, scripts/fund-person.ts. */
 export {
+  creditBack,
   fundPerson,
   hashToken,
   inviteState,
