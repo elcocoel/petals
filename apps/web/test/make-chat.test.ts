@@ -486,3 +486,18 @@ describe('opening a run by its link', () => {
     expect(h.urls).toEqual(['r1']);
   });
 });
+
+describe("the conversation's name", () => {
+  const ev = (event: AgentEvent) => ({ type: 'event' as const, event });
+  test('a title event names this run, and another run starts unnamed', () => {
+    let s = initialChat({});
+    s = chatReducer(s, ev({ event: 'run', data: { run_id: 'run_1' } } as AgentEvent));
+    expect(s.named).toBeNull();
+    s = chatReducer(s, ev({ event: 'title', data: { title: 'NEAR stake concentration' } }));
+    expect(s.named).toBe('NEAR stake concentration');
+    s = chatReducer(s, ev({ event: 'run', data: { run_id: 'run_1' } } as AgentEvent));
+    expect(s.named).toBe('NEAR stake concentration');
+    s = chatReducer(s, ev({ event: 'run', data: { run_id: 'run_2' } } as AgentEvent));
+    expect(s.named).toBeNull();
+  });
+});

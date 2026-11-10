@@ -275,6 +275,8 @@ export interface ChatState {
   /** the selected petal of the open flower */
   petal: string | null;
   section: PanelSection;
+  /** the name Petals' agent gave this conversation in this page's stream, before the list reads it */
+  named: string | null;
 }
 
 export type ChatAction =
@@ -314,6 +316,7 @@ export function initialChat(o: {
     open: o.open ?? { kind: 'latest' },
     petal: o.petal ?? null,
     section: null,
+    named: null,
   };
 }
 
@@ -339,6 +342,13 @@ export function chatReducer(s: ChatState, a: ChatAction): ChatState {
         ...s,
         items: fold(s.items, a.event),
         runId: a.event.event === 'run' ? a.event.data.run_id : s.runId,
+        // a name is this run's: another run starts unnamed until its own `title`
+        named:
+          a.event.event === 'title'
+            ? a.event.data.title
+            : a.event.event === 'run' && a.event.data.run_id !== s.runId
+              ? null
+              : s.named,
         turn: witness(s.turn, a.event),
         // the server took a question: only a `run` answering one that left, not one being followed
         asked: a.event.event === 'run' && s.turn === 'sending' ? null : s.asked,
