@@ -9,6 +9,7 @@ import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
 import { versioned } from '../define.ts';
+import { specBody } from '../drafts.ts';
 import { fromThrown, isToolError, toolError } from '../errors.ts';
 import { freshGate } from '../fresh.ts';
 import { LiveHub } from '../live.ts';
@@ -293,6 +294,33 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
         weight: p.weight,
         match: p.match,
       })),
+    });
+  });
+  // The map as a list (Elco, 10 Nov: the gallery, the lobby and /make read the one map): every view as
+  // /api/v1/map has it, in the same order, each with its picture, without its reading.
+  app.get('/api/v1/map/views', limit, async (c) =>
+    respond(c, { views: (await mapViews(ctx)).map(({ reading: _r, ...row }) => row) }),
+  );
+  // A view's still picture, as a flower's tile is drawn: with the default view. No per-address limit: a
+  // gallery asks for every view's picture at once, and behind the site every visitor reaches this server
+  // from the site's own address. Each picture is kept for a year wherever it's cached.
+  app.get('/api/v1/map/:sha/svg', async (c) => {
+    const sha = c.req.param('sha');
+    let spec: unknown;
+    try {
+      spec = /^[0-9a-f]{64}$/.test(sha) ? await specBody(ctx.config, sha) : null;
+    } catch (e) {
+      return respond(c, versioned(fromThrown(e)));
+    }
+    if (!spec)
+      return respond(c, versioned(toolError('not_found', 'No view on the map under that hash.')));
+    const r = await run('render_flower', { spec, include_svg: true, view: DEFAULT_VIEW });
+    if (isToolError(r)) return respond(c, r);
+    const { svg, render_sha256 } = r as { svg: string; render_sha256: string };
+    return c.body(svg, 200, {
+      'Content-Type': 'image/svg+xml; charset=utf-8',
+      'Cache-Control': IMMUTABLE,
+      ETag: `"${render_sha256}"`,
     });
   });
   app.get('/api/v1/relations/path', limit, (c) => {

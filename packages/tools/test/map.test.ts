@@ -1,6 +1,7 @@
 // One map (Elco, 10 Nov: "the workspace and the agent don't seem to be connected to the global power map"):
 // every view stored on the site, named and with who made it, searched by list_flowers and find_target before
 // a fresh read, and handed over whole by GET /api/v1/map. On a real fixture snapshot, offline.
+import { DEFAULT_VIEW, RENDER_VERSION, sha256Hex, viewHash } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { modules } from '@petal/inputs';
 import { Hono } from 'hono';
@@ -103,5 +104,46 @@ describe('the map', () => {
     expect(map.views[0].name).toBe('Founders Guild v1');
     expect(Array.isArray(map.groups)).toBe(true);
     expect(Array.isArray(map.pairs)).toBe(true);
+  });
+
+  test('GET /api/v1/map/views lists the same views with their pictures, without readings', async () => {
+    const sha = await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    const whole = (await (await app.request('/api/v1/map')).json()) as Out;
+    const res = await app.request('/api/v1/map/views');
+    expect(res.status).toBe(200);
+    const { views } = (await res.json()) as Out;
+    const { reading: _r, ...row } = whole.views[0];
+    expect(views).toEqual([row]);
+    expect(views[0].reading).toBeUndefined();
+    // the picture names the look and the view it's drawn with, so a cached one is never the old one
+    expect(views[0].picture).toBe(
+      `https://petal.test/api/v1/map/${sha}/svg?look=${encodeURIComponent(RENDER_VERSION)}&view=${viewHash(DEFAULT_VIEW).slice(0, 12)}`,
+    );
+  });
+
+  test("a view's picture: drawn with the default view, kept a year, and nothing for a hash off the map", async () => {
+    const sha = await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    const res = await app.request(new URL((await mapViews(r.ctx))[0]?.picture as string).pathname);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toMatch(/^image\/svg\+xml/);
+    expect(res.headers.get('cache-control')).toMatch(/immutable/);
+    const spec = JSON.parse(
+      (await privateStore(r.ctx.config).draft.get(sha))?.body as string,
+    ) as Spec;
+    const viewed = await run('render_flower', { spec, view: DEFAULT_VIEW });
+    expect(sha256Hex(await res.text())).toBe(viewed.render_sha256);
+    expect(res.headers.get('etag')).toBe(`"${viewed.render_sha256}"`);
+    expect((await app.request(`/api/v1/map/${'0'.repeat(64)}/svg`)).status).toBe(404);
+    expect((await app.request('/api/v1/map/nope/svg')).status).toBe(404);
   });
 });
