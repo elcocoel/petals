@@ -39,6 +39,12 @@ export interface StoredItem {
   asOf: string;
 }
 
+/**
+ * Petals' agent names the conversation with this tool, beside its answer (SYSTEMS, 10 Nov). The name
+ * shows in the list, so the call isn't a step here (META's lean).
+ */
+const NAMING_TOOL = 'name_conversation';
+
 /** How a turn Petals' agent starts on its own begins (SYSTEMS, C): a report it takes up at once. */
 export const FROM_PETALS = '(Petals)';
 
@@ -53,7 +59,7 @@ export function fold(items: Item[], e: AgentEvent): Item[] {
     case 'progress':
       return [...items, { kind: 'progress', ...e.data }];
     case 'tool_call':
-      return [...items, { kind: 'tool', ...e.data }];
+      return e.data.name === NAMING_TOOL ? items : [...items, { kind: 'tool', ...e.data }];
     case 'tool_result': {
       const { id, ok, summary, ms } = e.data;
       return items.map((x) =>

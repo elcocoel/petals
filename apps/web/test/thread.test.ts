@@ -113,6 +113,26 @@ describe('fold', () => {
     });
     expect(items).toEqual([{ kind: 'note', text: 'Recorded run: your question was not read.' }]);
   });
+
+  test("naming the conversation isn't a step: the name shows in the list", () => {
+    let items: Item[] = [];
+    for (const e of [
+      { event: 'tool_call', data: { id: 't1', name: 'search_map', args: {} } },
+      { event: 'tool_call', data: { id: 't2', name: 'name_conversation', args: { title: 'x' } } },
+      {
+        event: 'tool_result',
+        data: { id: 't2', name: 'name_conversation', ok: true, summary: '', ms: 1 },
+      },
+      { event: 'title', data: { title: 'x' } },
+      say('An answer.'),
+    ] as AgentEvent[]) {
+      items = fold(items, e);
+    }
+    expect(items.map((x) => (x.kind === 'tool' ? x.name : x.kind))).toEqual([
+      'search_map',
+      'message',
+    ]);
+  });
 });
 
 describe('blocksOf', () => {
