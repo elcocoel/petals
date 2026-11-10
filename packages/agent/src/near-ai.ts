@@ -4,6 +4,7 @@
 // A capturing fetch keeps the exact request and response bytes and their SHA-256 (never
 // re-serialised JSON). The model and its fallbacks come from the bake-off (T060, research R10).
 // Never called in tests: they use faked HTTP.
+import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sha256Hex } from '@petal/core';
@@ -53,6 +54,25 @@ export const PRICES: Record<string, { in: number; out: number; cached: number }>
 const UNKNOWN_PRICE = { in: 0.3, out: 1.35 };
 
 type Price = { in: number; out: number; cached?: number };
+
+/** The price a model's calls are counted at: the table's, the catalogue's, NEAR AI's list, or the dearest. */
+export function priceOf(
+  model: string,
+  listed?: Price,
+): { in: number; cached: number; out: number } {
+  const p: Price = PRICES[model] ?? modelOf(model)?.usd_per_million ?? listed ?? UNKNOWN_PRICE;
+  return { in: p.in, cached: p.cached ?? p.in, out: p.out };
+}
+
+/** NEAR AI's id for a call: the UUIDv5 of the answer's own id in the DNS namespace (its usage reporting). */
+export function inferenceIdOf(completionId: string): string {
+  const dns = Buffer.from('6ba7b8109dad11d180b400c04fd430c8', 'hex');
+  const h = createHash('sha1').update(dns).update(completionId, 'utf8').digest().subarray(0, 16);
+  h[6] = ((h[6] as number) & 0x0f) | 0x50;
+  h[8] = ((h[8] as number) & 0x3f) | 0x80;
+  const x = h.toString('hex');
+  return `${x.slice(0, 8)}-${x.slice(8, 12)}-${x.slice(12, 16)}-${x.slice(16, 20)}-${x.slice(20)}`;
+}
 
 /** What a call cost: its uncached input, its cached input at the cache-read rate, and its output. */
 export function costUsd(
@@ -367,10 +387,13 @@ export function createNearAiClient(
     const listed = await listedPrice(model);
     signal?.throwIfAborted();
     let captured: { request: Uint8Array; response: Uint8Array } | undefined;
+    // the id NEAR AI's billing knows the call by (docs.near.ai, usage reporting)
+    let inferenceId: string | undefined;
     const capture: typeof fetch = async (input, init) => {
       const res = await transport(input, init);
       const response = new Uint8Array(await res.arrayBuffer());
       captured = { request: bodyBytes(init?.body), response };
+      inferenceId = res.headers.get('inference-id') ?? undefined;
       const nullBody = res.status === 204 || res.status === 304;
       return new Response(nullBody ? null : response, {
         status: res.status,
@@ -448,6 +471,9 @@ export function createNearAiClient(
       ...(known ? {} : { cost_unknown: true }),
       fallback_used: model !== call.head,
       signature,
+      // its header, or, as NEAR AI defines it, the UUIDv5 of the answer's id in the DNS namespace
+      inference_id: inferenceId ?? inferenceIdOf(completion.id),
+      list_price: priceOf(model, listed),
     };
   }
 
@@ -488,6 +514,24 @@ export function createNearAiClient(
     kind: 'near-ai-cloud',
     model: cfg.model,
     status: () => (healthy ? 'up' : 'down'),
+    /** NEAR AI's own bill per call (POST /v1/billing/costs, nano-dollars); a call it doesn't know yet is left out */
+    async billed(ids) {
+      const known = new Map<string, number>();
+      if (!ids.length || !key()) return known;
+      const res = await transport(`${baseURL}/billing/costs`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestIds: ids }),
+      });
+      if (!res.ok) throw new Error(`NEAR AI's billing answered ${res.status}`);
+      const answer = (await res.json()) as {
+        requests?: { requestId: string; costNanoUsd: number }[];
+      };
+      // 0 is what it says for a call it hasn't counted yet
+      for (const r of answer.requests ?? [])
+        if (r.costNanoUsd > 0) known.set(r.requestId, r.costNanoUsd / 1e9);
+      return known;
+    },
     async complete(req, { signal, model: picked, effort }: LlmCallOptions = {}) {
       if (!key()) {
         throw new LlmCallError('source_failed', `${cfg.apiKeyEnv} is not set`, {
@@ -517,7 +561,7 @@ export function createNearAiClient(
             (sum, m) => sum + costUsd(m, { in: out.usage.in, out: 0 }),
             0,
           );
-          return { ...out, cost_usd: out.cost_usd + lost + unsaid };
+          return { ...out, cost_usd: out.cost_usd + lost + unsaid, failed_usd: lost + unsaid };
         } catch (e) {
           const err = classify(e, model);
           failures.push(err);

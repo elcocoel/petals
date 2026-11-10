@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:usage:v1",
+  "title": "Petal usage v1",
+  "description": "One model call, as it was counted and charged (coordinator/pricing-protocol.md; Elco, 10 Nov: \"count usage like pros\"): NEAR AI's own id for the call, the tokens it reported, the list price they were counted at, what the person was charged, and NEAR AI's own bill once it's known. Kept for every call; only billed_usd and reconciled_at are filled in later.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["petal", "call", "completion", "run", "at", "model", "tokens", "list_price", "computed_usd", "failed_usd", "charged_usd", "billed_usd", "reconciled_at"],
+  "properties": {
+    "petal": { "const": "usage/v1" },
+    "call": {
+      "description": "NEAR AI's inference id for the call (its inference-id header, the id its billing knows), or null when there is none",
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "completion": { "description": "the answer's own id", "type": "string", "minLength": 1 },
+    "run": { "description": "the conversation it was part of", "type": "string", "minLength": 1 },
+    "at": { "type": "string", "format": "date-time" },
+    "model": { "description": "what answered", "type": "string", "minLength": 1 },
+    "tokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["in", "cached", "out"],
+      "properties": {
+        "in": { "description": "input tokens, cached ones included", "type": "integer", "minimum": 0 },
+        "cached": { "description": "of in, the ones NEAR AI read from its cache", "type": "integer", "minimum": 0 },
+        "out": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "list_price": {
+      "description": "dollars per million tokens it was counted at",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["in", "cached", "out"],
+      "properties": {
+        "in": { "type": "number", "minimum": 0 },
+        "cached": { "type": "number", "minimum": 0 },
+        "out": { "type": "number", "minimum": 0 }
+      }
+    },
+    "computed_usd": { "description": "tokens times list price", "type": "number", "minimum": 0 },
+    "failed_usd": { "description": "what attempts that failed before this answer were counted at", "type": "number", "minimum": 0 },
+    "charged_usd": { "description": "what was taken for it when it answered: computed plus failed", "type": "number", "minimum": 0 },
+    "billed_usd": { "description": "NEAR AI's own bill for the call, once known; the difference from computed is given back or charged, as its own entry", "type": ["number", "null"], "minimum": 0 },
+    "reconciled_at": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

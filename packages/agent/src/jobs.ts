@@ -18,6 +18,7 @@ import { nameConversationTool, nameOfRun } from './name-conversation.ts';
 import { type RunDeps, type RunOptions, startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
 import type { EarlierFlower } from './thread.ts';
+import { keepUsage, reconcile } from './usage.ts';
 
 /** What a follow-up carries over from earlier chats of its run. */
 export type Earlier = { thread?: LlmMessage[]; flowers?: EarlierFlower[] };
@@ -96,6 +97,13 @@ export function runJobs(
           const agentsNow = await agentsOfRun(deps.tools, runId).catch(() => []);
           // and its name so far, so it names it once and renames it when the subject changes
           const nameNow = await nameOfRun(deps.tools, runId).catch(() => null);
+          // NEAR AI's bill for this account's earlier calls, so what they're charged is what it billed
+          const account = budget.ledger?.account;
+          if (account) {
+            await reconcile(privateStore(deps.tools.config), deps.llm, account).catch((e) =>
+              console.warn(`petal: couldn't reconcile ${account} with NEAR AI: ${String(e)}`),
+            );
+          }
           // and the person's view, the glasses every flower it draws for them is drawn through
           // (one-source.md, step 2), so what it says about a flower is what they see
           const owner = (await privateStore(deps.tools.config).run.get(runId))?.owner ?? null;
@@ -126,6 +134,8 @@ export function runJobs(
               signal: job.abort.signal,
               ...(pick ? { pick } : {}),
               onThread: (t) => runs.saveThread?.(runId, t),
+              // every answer's usage record, by NEAR AI's id for the call (usage/v1)
+              onUsage: (u) => keepUsage(privateStore(deps.tools.config), u),
             },
           );
           for await (const e of events) await keep(e);

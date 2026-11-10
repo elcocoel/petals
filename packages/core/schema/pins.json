@@ -42,5 +42,9 @@
   "seam.v1.json": {
     "schema": "urn:petal:schema:seam:v1",
     "sha256": "16ed4c7874baef1318e14b1e27b733cdb47fe48557eb24cc71f59d581312004a"
+  },
+  "usage.v1.json": {
+    "schema": "urn:petal:schema:usage:v1",
+    "sha256": "a286f56d3fc880f3910d5f39fab2801c67b570aaa43bafcc6fabb39d99df04b1"
   }
 }
