@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { confirmPay, readCredit, readPay } from '../lib/agent-client.ts';
 import { type HeldCredit, WITHDRAW_ALL, type WithdrawPhase, withdrawn } from '../lib/lobby-view.ts';
-import { type Credit, nearLeft, type PayInfo, sentBy } from '../lib/pay.ts';
+import { type Credit, type Money, money, type PayInfo, sentBy } from '../lib/pay.ts';
 import { sendAction } from '../lib/wallet.ts';
 
 export function useFunds(cue: string) {
@@ -74,16 +74,10 @@ export function useFunds(cue: string) {
     /** Where a payment goes and NEAR's price (GET /api/v1/pay), read with the credit: the pay step's too. */
     where: info,
     /**
-     * The credit in NEAR, as /make shows it; nothing given yet is none. Null until it's read, or with no
-     * price to show it in.
+     * What's left, dollars first and NEAR beside at today's price (Elco, 10 Nov); nothing given yet is
+     * none. Null until Petals has said.
      */
-    balance: info
-      ? credit
-        ? nearLeft(credit, info.near_usd)
-        : info.near_usd
-          ? '0.00'
-          : null
-      : null,
+    balance: (info ? money(credit?.left_usd ?? 0, info.near_usd) : null) as Money | null,
     held,
     phase,
     withdrew,

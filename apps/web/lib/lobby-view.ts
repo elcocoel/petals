@@ -20,7 +20,8 @@ export const lobbyWords = {
  */
 export const fundsWords = {
   title: 'Balance',
-  unit: 'NEAR',
+  /** NEAR beside the dollars, at today's price. */
+  near: (amount: string) => `${amount} NEAR`,
   /** Under the amount: what it is. LOBBY's draft. */
   note: 'Credit for Petals’ agent, at today’s price.',
   /** The credit or NEAR's price couldn't be read. LOBBY's draft. */

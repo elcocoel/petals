@@ -11,6 +11,7 @@ import {
 } from '../lib/conversation-list.ts';
 import type { SocialState } from '../lib/lobby-view.ts';
 import type { SectionKey } from '../lib/panel-words.ts';
+import type { Money } from '../lib/pay.ts';
 
 export const PANEL_NOW = new Date('2026-11-10T16:00:00.000Z');
 
@@ -102,13 +103,13 @@ export interface PanelFixture {
   agents: ReturnType<typeof agentRows>;
   /** The section the panel opens scrolled to, or null for the panel collapsed to the bar. */
   section: SectionKey | null;
-  you: { account: string | null; social: SocialState; balance: string | null };
+  you: { account: string | null; social: SocialState; balance: Money | null };
 }
 
 const NEW_PERSON = {
   account: '446815176e3ea9c5e07d2d1fbf2e5843288b060eca0a3d31a54b39e98c9d1ef5',
   social: { kind: 'none' } as SocialState,
-  balance: '0.00',
+  balance: { usd: '0.00', near: '0.00' },
 };
 const ELCO_LIKE = {
   account: 'researcher.near',
@@ -117,7 +118,7 @@ const ELCO_LIKE = {
     profile: { name: 'A researcher', about: null, avatar: null, links: [] },
     source: 'petals',
   } as SocialState,
-  balance: '0.42',
+  balance: { usd: '1.52', near: '0.42' },
 };
 
 const forty = {

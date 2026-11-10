@@ -25,7 +25,6 @@ export const panelWords = {
   lobby: 'Lobby',
   /** The Lobby section's rows: each opens its card on /lobby. */
   balance: 'Balance',
-  near: (amount: string) => `${amount} NEAR`,
   onTheMap: 'On the map',
   /** The Profile section: the public profile's state, a few characters at its row's end. */
   socialState: {

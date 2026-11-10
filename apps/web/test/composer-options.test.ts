@@ -15,6 +15,7 @@ const flash = {
   runs_at: 'NEAR AI’s enclave',
   default_effort: 'low',
   usd_per_flower: 0.0205,
+  usd_per_turn: 0.012,
 };
 const haiku = {
   id: 'haiku',
@@ -23,6 +24,7 @@ const haiku = {
   runs_at: 'Anthropic',
   default_effort: null,
   usd_per_flower: 0.007,
+  usd_per_turn: null,
 };
 const settings: Settings = {
   provider: 'near-ai',
@@ -55,21 +57,27 @@ describe('the pill', () => {
 });
 
 describe('what can be picked', () => {
-  test('the provider’s models, what each promises, and which is on', () => {
-    expect(modelOptions(catalogue, settings)).toEqual([
+  test('the provider’s models, what each promises, what a measured turn costs, and which is on', () => {
+    expect(modelOptions(catalogue, settings, 3.6)).toEqual([
       {
         id: 'flash',
         label: 'DeepSeek V4.1 Flash',
-        sub: 'Signed  ·  NEAR AI’s enclave  ·  $0.02 a flower',
+        sub: 'Signed  ·  NEAR AI’s enclave  ·  $0.012 a turn · 0.003 NEAR',
         on: true,
       },
       {
         id: 'haiku',
         label: 'Claude Haiku 5.5',
-        sub: 'Passed through  ·  Anthropic  ·  $0.007 a flower',
+        sub: 'Passed through  ·  Anthropic',
         on: false,
       },
     ]);
+  });
+
+  test('with no price for NEAR, a turn’s cost in dollars alone', () => {
+    expect(modelOptions(catalogue, settings, null)[0]?.sub).toBe(
+      'Signed  ·  NEAR AI’s enclave  ·  $0.012 a turn',
+    );
   });
 });
 

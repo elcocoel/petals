@@ -1666,13 +1666,13 @@ export const registry: LabEntry[] = [
               {
                 id: 'a',
                 label: 'DeepSeek V4.1 Flash',
-                sub: 'Signed  ·  NEAR AI’s enclave  ·  $0.02 a flower',
+                sub: 'Signed  ·  NEAR AI’s enclave  ·  $0.012 a turn · 0.003 NEAR',
                 on: true,
               },
               {
                 id: 'b',
                 label: 'Claude Haiku 5.5',
-                sub: 'Passed through  ·  Anthropic  ·  $0.007 a flower',
+                sub: 'Passed through  ·  Anthropic',
                 on: false,
               },
             ]}
@@ -1851,14 +1851,20 @@ export const registry: LabEntry[] = [
       {
         name: 'credit, as on the live site (no contract)',
         render: () => (
-          <Funds balance="0.42" held={null} phase="ready" withdrew={null} onWithdraw={() => {}} />
+          <Funds
+            balance={{ usd: '1.52', near: '0.42' }}
+            held={null}
+            phase="ready"
+            withdrew={null}
+            onWithdraw={() => {}}
+          />
         ),
       },
       {
         name: 'holding NEAR in the contract',
         render: () => (
           <Funds
-            balance="0.84"
+            balance={{ usd: '3.04', near: '0.84' }}
             held="840000000000000000000000"
             phase="ready"
             withdrew={null}
@@ -1870,7 +1876,7 @@ export const registry: LabEntry[] = [
         name: 'waiting for the wallet',
         render: () => (
           <Funds
-            balance="0.84"
+            balance={{ usd: '3.04', near: '0.84' }}
             held="840000000000000000000000"
             phase="withdrawing"
             withdrew={null}
@@ -1881,14 +1887,20 @@ export const registry: LabEntry[] = [
       {
         name: 'withdrew',
         render: () => (
-          <Funds balance="0.00" held="0" phase="withdrew" withdrew="0.84" onWithdraw={() => {}} />
+          <Funds
+            balance={{ usd: '0.00', near: '0.00' }}
+            held="0"
+            phase="withdrew"
+            withdrew="0.84"
+            onWithdraw={() => {}}
+          />
         ),
       },
       {
         name: "didn't go through",
         render: () => (
           <Funds
-            balance="0.84"
+            balance={{ usd: '3.04', near: '0.84' }}
             held="840000000000000000000000"
             phase="failed"
             withdrew={null}
@@ -1905,7 +1917,13 @@ export const registry: LabEntry[] = [
       {
         name: 'nothing held',
         render: () => (
-          <Funds balance="0.00" held="0" phase="ready" withdrew={null} onWithdraw={() => {}} />
+          <Funds
+            balance={{ usd: '0.00', near: '0.00' }}
+            held="0"
+            phase="ready"
+            withdrew={null}
+            onWithdraw={() => {}}
+          />
         ),
       },
     ],

@@ -371,7 +371,10 @@ export function useWorkspace(props: {
         showModel && catalogue && settings
           ? modelPill(catalogue, settings, conversation?.answered ?? null)
           : null,
-      models: showModel && catalogue && settings ? modelOptions(catalogue, settings) : [],
+      models:
+        showModel && catalogue && settings
+          ? modelOptions(catalogue, settings, funds?.where?.near_usd ?? null)
+          : [],
       modelsOpen: showModel && modelsOpen,
       recorded,
     },
