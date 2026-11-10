@@ -7,8 +7,9 @@
 //   GET  /api/v1/me/profile    { profile, updated_at, published }
 //   PUT  /api/v1/me/profile    { profile } → the same; NEAR Social's own shape (social-kv/1)
 //   GET  /api/v1/media/:file   a picture from a profile, by its sha256, kept a year wherever it's cached
-//   GET  /api/v1/price         { price, hash }: what Petals charges at (price/v1), every switch off today
-//   GET  /api/v1/me/tip        { tip, min, max }: the person's tip on Petals' fees; PUT { tip } sets it
+//   GET  /api/v1/price         { price, hash }: what a person pays (price/v2): NEAR AI's bill + a base fee + a tip
+//   GET  /api/v1/me/tip        { tip_percent, min_percent, max_percent, step_percent }: their tip, a percent of
+//                              their usage; PUT { tip_percent } sets it on the price's scale
 //   GET  /api/v1/me/usage      { usage, totals }: every model call charged to them (usage/v1), the newest
 //                              first, reconciled with NEAR AI's bill first
 //
@@ -36,7 +37,7 @@ import { bodyCap } from '@petal/tools';
 import { type Context, Hono } from 'hono';
 import type { RouteAuth } from './auth-routes.ts';
 import type { LlmClient } from './llm.ts';
-import { PRICE, tipOfPerson } from './price.ts';
+import { PRICE, tipPercentOfPerson } from './price.ts';
 import { fail } from './routes.ts';
 import { reconcile, recordOf } from './usage.ts';
 
@@ -286,39 +287,38 @@ export function meRoutes(d: MeDeps): Hono {
     return ok(c, await profileAnswer(me.person));
   });
 
-  // -- the price (price/v1) and the person's tip on its fees
+  // -- the price (price/v2) and the person's tip, a donation at a percent of their usage
 
   app.get('/api/v1/price', (c) => ok(c, { price, hash: priceHash(price) }));
+
+  const tipAnswer = async (person: string) => ({
+    tip_percent: await tipPercentOfPerson(store, price, person),
+    min_percent: price.tip.min_percent,
+    max_percent: price.tip.max_percent,
+    step_percent: price.tip.step_percent,
+  });
 
   app.get('/api/v1/me/tip', async (c) => {
     const me = await personOf(c);
     if (!me) return fail(c, 'unauthorised', 'Not signed in.');
-    return ok(c, {
-      tip: await tipOfPerson(store, price, me.person),
-      min: price.tip.min,
-      max: price.tip.max,
-    });
+    return ok(c, await tipAnswer(me.person));
   });
 
   app.put('/api/v1/me/tip', async (c) => {
     const me = await personOf(c);
     if (!me) return fail(c, 'unauthorised', 'Sign in to set a tip.');
-    const body = await jsonBody(c);
-    const tip = body?.tip;
+    const tip = (await jsonBody(c))?.tip_percent;
     // null puts it back to the price's default
     if (tip !== null && (typeof tip !== 'number' || !tipAllowed(price, tip))) {
+      const t = price.tip;
       return fail(
         c,
         'bad_input',
-        `tip is a number from ${price.tip.min} to ${price.tip.max}, or null`,
+        `tip_percent is ${t.min_percent} to ${t.max_percent} in steps of ${t.step_percent}, or null`,
       );
     }
     await store.person.setTip(me.person, tip as number | null);
-    return ok(c, {
-      tip: await tipOfPerson(store, price, me.person),
-      min: price.tip.min,
-      max: price.tip.max,
-    });
+    return ok(c, await tipAnswer(me.person));
   });
 
   // -- usage (usage/v1)

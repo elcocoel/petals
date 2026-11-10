@@ -7,7 +7,7 @@
 import type { Price } from '@petal/core';
 import type { Store, UsageRow } from '@petal/store';
 import type { LlmClient } from './llm.ts';
-import { chargePetals, PRICE } from './price.ts';
+import { chargeBase, chargeTip, PRICE } from './price.ts';
 
 export interface UsageRecord {
   petal: 'usage/v1';
@@ -91,16 +91,11 @@ export async function reconcile(
       }
       await store.usage.reconcile(row.id, billed, at);
     });
-    // Petals' own part of the call, by the price: nothing while its switches are off
+    // the base fee and the person's tip on the call, each its own entry: nothing while they're off and 0
     if (account.startsWith('person:')) {
-      await chargePetals(
-        store,
-        price,
-        account.slice('person:'.length),
-        { kind: 'call', billed_usd: billed },
-        row.id,
-        at,
-      );
+      const person = account.slice('person:'.length);
+      await chargeBase(store, price, person, { kind: 'call', billed_usd: billed }, row.id, at);
+      await chargeTip(store, price, person, billed, row.id, at);
     }
     done++;
   }

@@ -16,7 +16,7 @@ import { Channel } from './channel.ts';
 import { agentsOfRun, type Bell, handJobTool, jobsOfRun } from './hand-job.ts';
 import type { Budget, LlmMessage } from './llm.ts';
 import { nameConversationTool, nameOfRun } from './name-conversation.ts';
-import { chargePetals, PRICE } from './price.ts';
+import { chargeBase, PRICE } from './price.ts';
 import { type RunDeps, type RunOptions, startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
 import type { EarlierFlower } from './thread.ts';
@@ -146,9 +146,9 @@ export function runJobs(
             },
           );
           for await (const e of events) await keep(e);
-          // Petals' own part of the turn, on a person's credit: nothing while its switches are off
+          // the base fee for the turn, on a person's credit: nothing while its switches are off
           if (account?.startsWith('person:')) {
-            await chargePetals(
+            await chargeBase(
               privateStore(deps.tools.config),
               o.price ?? PRICE,
               account.slice('person:'.length),
@@ -156,7 +156,7 @@ export function runJobs(
               `${runId}:${startedAt}`,
               new Date().toISOString(),
             ).catch((e) =>
-              console.warn(`petal: run ${runId}: Petals' turn charge failed: ${String(e)}`),
+              console.warn(`petal: run ${runId}: the turn's base fee failed: ${String(e)}`),
             );
           }
         } catch (e) {

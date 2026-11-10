@@ -50,5 +50,9 @@
   "price.v1.json": {
     "schema": "urn:petal:schema:price:v1",
     "sha256": "9bd6186ec9bb00bb897c333ef119c1d73a6bdd86dea8561fbd888097baa912c8"
+  },
+  "price.v2.json": {
+    "schema": "urn:petal:schema:price:v2",
+    "sha256": "da2578fcc35871b9f7eceabc1107edf26e09fae40b43625b803c30897ff84dec"
   }
 }

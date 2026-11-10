@@ -34,7 +34,7 @@ import { bodyLimit } from 'hono/body-limit';
 import type { Network, RouteAuth } from './auth-routes.ts';
 import { type CreditChain, chainChat } from './credit.ts';
 import { payPerson, personCredit } from './invites.ts';
-import { chargePetals, PRICE } from './price.ts';
+import { chargeBase, PRICE } from './price.ts';
 import { fail } from './routes.ts';
 
 export interface PayDeps {
@@ -180,10 +180,10 @@ export function payRoutes(d: PayDeps): Hono {
         usd,
         now: new Date(clock()),
       });
-      // Petals' part of a top-up (price/v1's B), only when it's switched on, once per transfer
+      // the base fee on a top-up (price/v2's B), only when it's switched on, once per transfer
       const kept =
         paid.added_usd > 0
-          ? await chargePetals(
+          ? await chargeBase(
               d.store,
               d.price ?? PRICE,
               me.person,
@@ -398,7 +398,7 @@ export function payRoutes(d: PayDeps): Hono {
           usd: usdIn,
           now: new Date(clock()),
         });
-        await chargePetals(
+        await chargeBase(
           d.store,
           d.price ?? PRICE,
           me.person,

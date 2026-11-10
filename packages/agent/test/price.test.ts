@@ -1,6 +1,6 @@
-// The price's switches on Petals' agent (price/v1; Elco, 10 Nov: "build the switches for all of them as
-// options that we can choose later"). The live price is all off, so Petals runs at cost; with a switch on,
-// Petals' part goes onto the person's credit as its own entry, naming the price, times their tip.
+// The price on Petals' agent (price/v2; Elco, 10 Nov: "there's three components to the price"): NEAR AI's
+// bill, plus a base fee whose switches are all off live, plus the person's tip, a donation at a percent of
+// their usage, 0 by default. Each goes onto the credit as its own entry, naming the price.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Price, priceHash } from '@petal/core';
@@ -19,7 +19,7 @@ const COOKIE = '__Host-petal_session';
 const alice = testSigner('alice.near');
 // biome-ignore lint/suspicious/noExplicitAny: walking what the server answers
 type Out = Record<string, any>;
-const FIXTURE = new URL('../../core/schema/fixtures/price.v1.json', import.meta.url);
+const FIXTURE = new URL('../../core/schema/fixtures/price.v2.json', import.meta.url);
 
 function setup(price: Price | undefined, bills: Map<string, number>) {
   const root = tmpRoot();
@@ -81,8 +81,8 @@ function setup(price: Price | undefined, bills: Map<string, number>) {
   const entries = async () => {
     const s = openStore(join(stateDir, 'private.db'));
     try {
-      return (await s.credit.entries(`person:${person}`)).filter((e) =>
-        e.reason.startsWith('Petals ('),
+      return (await s.credit.entries(`person:${person}`)).filter(
+        (e) => e.reason.startsWith('Petals base fee') || e.reason.startsWith('Tip to Petals'),
       );
     } finally {
       await s.close();
@@ -95,7 +95,7 @@ function setup(price: Price | undefined, bills: Map<string, number>) {
   return { request, signInFunded, entries, chat };
 }
 
-describe('price/v1 on the server', () => {
+describe('price/v2 on the server', () => {
   test('the live price is every switch off, served with its hash, so Petals runs at cost', async () => {
     expect(PRICE).toEqual(JSON.parse(readFileSync(FIXTURE, 'utf8')));
     expect(readFileSync(PRICE_FILE, 'utf8')).toBe(readFileSync(FIXTURE, 'utf8'));
@@ -112,32 +112,32 @@ describe('price/v1 on the server', () => {
     expect(await w.entries()).toEqual([]);
   });
 
-  test('with a fee and the protocol rate on: each billed call, times the tip, as its own entry', async () => {
+  test("the base fee and the person's tip, each its own entry; the tip a percent of the bill they set", async () => {
     const price = structuredClone(PRICE);
-    price.fees.usage = { on: true, percent: 10 };
-    price.fees.per_turn = { on: true, usd: 0.002 };
-    price.protocol = { on: true, percent: 5 };
+    price.base.usage = { on: true, percent: 10 };
+    price.base.per_turn = { on: true, usd: 0.002 };
     const bills = new Map<string, number>();
     const w = setup(price, bills);
     await w.signInFunded();
     expect(await (await w.request('/api/v1/me/tip')).json()).toMatchObject({
-      tip: 1,
-      min: 0,
-      max: 10,
+      tip_percent: 0,
+      min_percent: 0,
+      max_percent: 50,
+      step_percent: 1,
     });
-    expect((await w.request('/api/v1/me/tip', 'PUT', { tip: 11 })).status).toBe(400);
-    expect(await (await w.request('/api/v1/me/tip', 'PUT', { tip: 2 })).json()).toMatchObject({
-      tip: 2,
-    });
+    expect((await w.request('/api/v1/me/tip', 'PUT', { tip_percent: 51 })).status).toBe(400);
+    expect(
+      await (await w.request('/api/v1/me/tip', 'PUT', { tip_percent: 20 })).json(),
+    ).toMatchObject({ tip_percent: 20 });
     await w.chat('first');
     bills.set(inferenceIdOf('cmpl-1'), 0.01);
     await w.request('/api/v1/me/usage');
-    const got = await w.entries();
     const hash = priceHash(price).slice(0, 12);
-    // the turn: $0.002 × 2; the call: 10% of $0.01 × 2, plus 5% of $0.01
-    expect(got.map((e) => [e.reason, e.delta_usd]).sort()).toEqual([
-      [`Petals (call, price ${hash})`, -0.0025],
-      [`Petals (turn, price ${hash})`, -0.004],
+    // the turn's base fee $0.002; the call's base fee 10% of $0.01; the tip 20% of $0.01, apart
+    expect((await w.entries()).map((e) => [e.reason, e.delta_usd]).sort()).toEqual([
+      [`Petals base fee (call, price ${hash})`, -0.001],
+      [`Petals base fee (turn, price ${hash})`, -0.002],
+      [`Tip to Petals (price ${hash})`, -0.002],
     ]);
   });
 });

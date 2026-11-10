@@ -60,13 +60,13 @@ export {
 } from './layers.ts';
 export { NotImplementedError, notImplemented } from './not-implemented.ts';
 export {
-  type PetalsCharge,
+  baseFee,
   type Price,
   type Priced,
-  petalsCharge,
   priceHash,
   tipAllowed,
-  tipOf,
+  tipOn,
+  tipPercentOf,
 } from './price.ts';
 export { PRIMITIVES } from './primitives.ts';
 export { readFlower, readingHash } from './reading/index.ts';
