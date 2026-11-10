@@ -293,7 +293,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       answered_by: null,
       exploration: row.id,
       shapes_count: await shapesCount(row.id),
-      hidden_at: null,
+      hidden_at: row.hidden_at ?? null,
       folder: row.folder ?? null,
       created_at: row.created_at,
       updated_at: row.updated_at,
@@ -429,6 +429,55 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     });
   });
 
+  /**
+   * Delete (Elco, 10 Nov): gone for good, the run with its events and thread, and its project when no other
+   * conversation carries it on (its steps, notes, jobs and links), the person's own notes about it, and its
+   * rows in search. What it drew stays on the shared map, the layers they kept stay theirs, and their credit
+   * and every charge stay. A chat still answering is stopped first, by the person.
+   */
+  app.delete('/api/v1/conversations/:id', async (c) => {
+    const id = c.req.param('id');
+    const subject = await gate.subjectOf(c);
+    if (!subject) return noConversation(c, id);
+    let run: RunRow | null = null;
+    let exploration: string | null = null;
+    if (EXPLORATION_ID.test(id) && !(await store.run.latestOfExploration(id))) {
+      const row = await store.exploration.get(id);
+      if (row?.owner !== subject) return noConversation(c, id);
+      exploration = row.id;
+    } else {
+      run = await ownRun(subject, id);
+      if (!run) return noConversation(c, id);
+      if (run.status === 'running') {
+        return fail(c, 'bad_input', 'Stop it first: it is still answering.');
+      }
+      const others = run.exploration ? await store.run.idsOfExploration(run.exploration) : [];
+      if (run.exploration && others.every((r) => r === run?.id)) exploration = run.exploration;
+    }
+    const removed = { runs: 0, events: 0, steps: 0, notes: 0, jobs: 0, links: 0 };
+    const refs = [run?.id, exploration].filter((r): r is string => !!r);
+    const notes = (
+      await Promise.all(
+        refs.map((r) => store.workspaceNote.list(subject, `conversation:${r}`, LIST_MAX)),
+      )
+    ).flat();
+    await store.tx(async () => {
+      if (run) {
+        removed.events = await store.run.remove(run.id);
+        removed.runs = 1;
+      }
+      if (exploration) Object.assign(removed, await store.exploration.remove(exploration));
+      for (const n of notes) await store.workspaceNote.delete(n.id);
+      for (const r of refs) await store.search.forget(subject, 'conversation', r);
+      if (exploration) {
+        await store.search.forget(subject, 'exploration', exploration);
+        await store.search.forgetAbout(subject, `exploration:${exploration}`);
+      }
+      for (const n of notes) await store.search.forget(subject, 'note', n.id);
+    });
+    return ok(c, { deleted: { id, removed } });
+  });
+
   app.get('/api/v1/conversations', async (c) => {
     const subject = await gate.subjectOf(c);
     if (!subject) return ok(c, { conversations: [] });
@@ -437,11 +486,10 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     const runs = await Promise.all(
       (await store.run.conversations(subject, limit, hidden)).map(conversationOfRun),
     );
-    const doors = hidden
-      ? []
-      : await Promise.all(
-          (await store.exploration.withoutRun(subject, limit)).map(conversationOfExploration),
-        );
+    // work from another door is archived, and listed, the same way (16)
+    const doors = await Promise.all(
+      (await store.exploration.withoutRun(subject, limit, hidden)).map(conversationOfExploration),
+    );
     const conversations = [...runs, ...doors]
       .sort((a, b) => (a.updated_at < b.updated_at ? 1 : a.updated_at > b.updated_at ? -1 : 0))
       .slice(0, limit);
@@ -489,18 +537,32 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     if (EXPLORATION_ID.test(id) && !(await store.run.latestOfExploration(id))) {
       const row = await store.exploration.get(id);
       if (row?.owner !== subject) return noConversation(c, id);
-      // another door's work has no run to hold a name or settings, but it can sit in a folder
-      const onlyFolder = ['title', 'settings', 'hidden'].every((k) => body[k] === undefined);
-      if (folder === undefined || !onlyFolder) {
+      // another door's work has no run to hold a name or settings, but it can sit in a folder, and be archived
+      const noRunNeeded = ['title', 'settings'].every((k) => body[k] === undefined);
+      if ((folder === undefined && body.hidden === undefined) || !noRunNeeded) {
         return fail(
           c,
           'bad_input',
-          'This came from another door, so there is no conversation here to rename, set or hide yet. It can go in a folder.',
+          'This came from another door, so there is no conversation here to rename or set yet. It can go in a folder, or be archived.',
           'Continue it here first: POST /api/v1/agent/chat with its id as exploration.',
         );
       }
-      await store.exploration.setFolder(row.id, folder);
-      return ok(c, { conversation: await conversationOfExploration({ ...row, folder }) });
+      if (body.hidden !== undefined && typeof body.hidden !== 'boolean') {
+        return fail(c, 'bad_input', 'hidden must be true or false');
+      }
+      const hidden_at =
+        body.hidden === undefined ? (row.hidden_at ?? null) : body.hidden ? iso() : null;
+      await store.tx(async () => {
+        if (folder !== undefined) await store.exploration.setFolder(row.id, folder);
+        if (body.hidden !== undefined) await store.exploration.setHidden(row.id, hidden_at);
+      });
+      return ok(c, {
+        conversation: await conversationOfExploration({
+          ...row,
+          ...(folder !== undefined ? { folder } : {}),
+          hidden_at,
+        }),
+      });
     }
     const run = await ownRun(subject, id);
     if (!run) return noConversation(c, id);
