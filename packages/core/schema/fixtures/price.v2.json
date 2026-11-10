@@ -1,0 +1,33 @@
+{
+  "petal": "price/v2",
+  "form": "bill + base + tip",
+  "base": {
+    "usage": {
+      "on": false,
+      "percent": 0
+    },
+    "top_up": {
+      "on": false,
+      "percent": 0
+    },
+    "per_turn": {
+      "on": false,
+      "usd": 0
+    },
+    "per_tool": {
+      "on": false,
+      "usd": {}
+    },
+    "free": {
+      "on": false,
+      "usd": 0
+    }
+  },
+  "tip": {
+    "of": "bill",
+    "default_percent": 0,
+    "min_percent": 0,
+    "max_percent": 50,
+    "step_percent": 1
+  }
+}

@@ -7,6 +7,7 @@ import claimSchema from '../../schema/claim.schema.json' with { type: 'json' };
 import flowerSchema from '../../schema/flower.schema.json' with { type: 'json' };
 import layerSchema from '../../schema/layer.schema.json' with { type: 'json' };
 import priceSchema from '../../schema/price.schema.json' with { type: 'json' };
+import priceV2Schema from '../../schema/price-v2.schema.json' with { type: 'json' };
 import seamSchema from '../../schema/seam.schema.json' with { type: 'json' };
 import snapshotSchema from '../../schema/snapshot.schema.json' with { type: 'json' };
 import usageSchema from '../../schema/usage.schema.json' with { type: 'json' };
@@ -42,6 +43,8 @@ export const schemas: {
   usage: object;
   /** what Petals charges: NEAR AI's bill, plus the fees switched on times the tip, plus the protocol rate */
   price: object;
+  /** what a person pays: NEAR AI's bill, plus a base fee, plus their own tip (price/v2, which replaces v1) */
+  priceV2: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -55,6 +58,7 @@ export const schemas: {
   seam: seamSchema,
   usage: usageSchema,
   price: priceSchema,
+  priceV2: priceV2Schema,
 };
 
 /** The two source documents, unchanged. */

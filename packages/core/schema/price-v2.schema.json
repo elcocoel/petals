@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:price:v2",
+  "title": "Petal price v2",
+  "description": "What a person pays for Petals' agent (coordinator/pricing-protocol.md; Elco, 10 Nov: \"there's three components to the price. There is the inevitable payment that we have to collect to pay for the AI. We have to know that price. Then we can add a base fee, which would be unavoidable. And then a tip, an optional donation type payment ... how much the users tip in relation to their usage, they could set it ... some form of a slider or scale\"). A charge is NEAR AI's own bill, plus the base fee (its switches), plus the person's tip: a donation, a percent of their usage they set on the price's scale, always its own entry. Every switch off and a tip of 0 is Petals at cost. Each charge names the hash of the price it used. It replaces price/v1, whose fees were multiplied by the tip.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "petal",
+    "form",
+    "base",
+    "tip"
+  ],
+  "properties": {
+    "petal": {
+      "const": "price/v2"
+    },
+    "form": {
+      "description": "the three parts: NEAR AI's bill, the base fee, and the person's tip",
+      "const": "bill + base + tip"
+    },
+    "base": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "usage",
+        "top_up",
+        "per_turn",
+        "per_tool",
+        "free"
+      ],
+      "properties": {
+        "usage": {
+          "description": "(A) a percent of each call's bill",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "on",
+            "percent"
+          ],
+          "properties": {
+            "on": {
+              "type": "boolean"
+            },
+            "percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        },
+        "top_up": {
+          "description": "(B) a percent of each top-up, kept by Petals when it lands",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "on",
+            "percent"
+          ],
+          "properties": {
+            "on": {
+              "type": "boolean"
+            },
+            "percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        },
+        "per_turn": {
+          "description": "(C) dollars for each turn of Petals' agent",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "on",
+            "usd"
+          ],
+          "properties": {
+            "on": {
+              "type": "boolean"
+            },
+            "usd": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "per_tool": {
+          "description": "(D) dollars for each use of a tool Petals runs, by the tool's name",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "on",
+            "usd"
+          ],
+          "properties": {
+            "on": {
+              "type": "boolean"
+            },
+            "usd": {
+              "type": "object",
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9_]{0,40}$"
+              },
+              "additionalProperties": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "free": {
+          "description": "(E) dollars of NEAR AI's bill a person runs before any of Petals' charges",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "on",
+            "usd"
+          ],
+          "properties": {
+            "on": {
+              "type": "boolean"
+            },
+            "usd": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        }
+      },
+      "description": "the base fee: unavoidable, its parts each a switch, all off by default"
+    },
+    "tip": {
+      "description": "the person's donation, a percent of their usage (each call's bill), theirs to set on this scale; the default until they do",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "of",
+        "default_percent",
+        "min_percent",
+        "max_percent",
+        "step_percent"
+      ],
+      "properties": {
+        "of": {
+          "description": "what the percent is of",
+          "const": "bill"
+        },
+        "default_percent": {
+          "type": "number",
+          "minimum": 0
+        },
+        "min_percent": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_percent": {
+          "type": "number",
+          "minimum": 0
+        },
+        "step_percent": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  }
+}
