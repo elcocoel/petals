@@ -158,6 +158,18 @@ export function typeQuestion(
   else backup.clear();
 }
 
+/** This page was reloaded, rather than reached by a link, New or the address bar. */
+function cameByReload(): boolean {
+  try {
+    const nav = performance.getEntriesByType('navigation')[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    return nav?.type === 'reload';
+  } catch {
+    return false;
+  }
+}
+
 function browserStore(): QuestionStore | null {
   try {
     return typeof window === 'undefined' ? null : window.localStorage;
@@ -216,8 +228,12 @@ export function useMakeChat({
     el.form?.scrollIntoView({ block: 'end' });
   }, [recorded]);
 
+  // New is new (design/minimally-good.md, rule 3): words that were on their way come back only on a
+  // reload of this same page; arriving by New or a link starts clean, and forgets them.
   useEffect(() => {
-    if (!recorded) restoreQuestion(deps, initialRun ?? null, asked);
+    if (recorded) return;
+    if (cameByReload()) restoreQuestion(deps, initialRun ?? null, asked);
+    else questionBackup(deps.store, initialRun ?? null).clear();
   }, [deps, initialRun, recorded, asked]);
 
   useEffect(() => {

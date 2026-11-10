@@ -244,7 +244,7 @@ describe('what a question carries', () => {
     expect(questionPrefix(panelFlower, target)).toContain('311 accounts grouped');
     expect(
       composerView({ question: '', runId: 'r', busy: false, recorded: false, target }).placeholder,
-    ).toBe('Ask about everyone else…');
+    ).toBe('About everyone else…');
   });
 
   test('the flower the thread is on needs no words of its own; an earlier or stored one does', () => {
@@ -263,9 +263,9 @@ describe('what a question carries', () => {
   test('the placeholder follows the selection', () => {
     const at = (target: Parameters<typeof composerView>[0]['target']) =>
       composerView({ question: '', runId: 'r', busy: false, recorded: false, target }).placeholder;
-    expect(at(composerTarget(panelFlower, first))).toBe('Ask about this wallet…');
-    expect(at(composerTarget(panelFlower, null))).toBe('Ask about this flower…');
-    expect(at({ kind: 'none' })).toBe('Ask a follow-up…');
+    expect(at(composerTarget(panelFlower, first))).toBe('About this wallet…');
+    expect(at(composerTarget(panelFlower, null))).toBe('About this flower…');
+    expect(at({ kind: 'none' })).toBe('A follow-up…');
   });
 
   test('a bracket in a title cannot end the prefix early', () => {
@@ -723,7 +723,7 @@ describe('a click on the canvas (T202)', () => {
       recorded: false,
       target,
     });
-    expect(view.placeholder).toBe('Ask about this wallet…');
+    expect(view.placeholder).toBe('About this wallet…');
     expect(view.about).toBe(`About account ${first.id}`);
 
     const sent: string[] = [];

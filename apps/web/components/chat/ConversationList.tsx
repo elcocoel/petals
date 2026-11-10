@@ -11,10 +11,15 @@ export function ConversationList({ rows }: { rows: ConversationRow[] }) {
         <li key={row.key}>
           <Button variant="row" href={row.href} current={row.current}>
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="truncate type-label">{row.title}</span>
-              <Mono as="span" tone="muted">
-                {row.sub}
-              </Mono>
+              <span title={row.title} className="truncate type-label">
+                {row.title}
+              </span>
+              {/* rule 7: one line, cut with an ellipsis rather than wrapped */}
+              <span className="truncate">
+                <Mono as="span" tone="muted">
+                  {row.sub}
+                </Mono>
+              </span>
             </span>
           </Button>
         </li>

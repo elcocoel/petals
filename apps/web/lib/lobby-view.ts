@@ -11,8 +11,10 @@ export const lobbyWords = {
   /** The menu's bar, and the way to a new conversation: the words the workspace's list box already uses. */
   conversations: 'Conversations',
   newConversation: 'New',
-  /** Where folders go once SYSTEMS has them (W4). Until then the space is there with nothing in it. */
+  /** Where folders go once SYSTEMS has them (W4). Not shown until one exists (minimally-good rule 1). */
   folders: 'Folders',
+  /** The menu's list with nothing in it yet: what goes there and what to do (rule 2). A draft. */
+  noConversations: 'No conversations yet. Press New to start one.',
   /** The flowers on the shared map, each opening on the canvas. */
   map: 'On the map',
   /** Folding the menu away, and bringing it back. */

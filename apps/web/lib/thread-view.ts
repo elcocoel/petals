@@ -376,10 +376,11 @@ export interface ComposerView {
   away?: boolean;
 }
 
+// Drafts (design/minimally-good.md, rule 5: no "Ask" as a label).
 const PLACEHOLDER: Record<'flower' | 'wallet' | 'group', string> = {
-  flower: 'Ask about this flower…',
-  wallet: 'Ask about this wallet…',
-  group: 'Ask about everyone else…',
+  flower: 'About this flower…',
+  wallet: 'About this wallet…',
+  group: 'About everyone else…',
 };
 
 export function composerView(
@@ -412,13 +413,13 @@ export function composerView(
   return {
     value: v.recorded ? RECORDED_QUESTION : v.question,
     readOnly: v.recorded,
-    label: v.recorded ? 'The saved question' : 'Ask Petals about a network',
+    label: v.recorded ? 'The saved question' : 'Message Petals',
     placeholder:
       target.kind !== 'none'
         ? PLACEHOLDER[target.kind]
         : v.runId
-          ? 'Ask a follow-up…'
-          : 'Ask about any network, or paste an address.',
+          ? 'A follow-up…'
+          : 'A network, a DAO, a token or an address.',
     button: v.busy ? 'Working…' : v.recorded ? 'Play the recorded run' : 'Send',
     disabled: v.busy || (!v.recorded && !v.question.trim()),
     ...(target.kind === 'wallet' || target.kind === 'group'

@@ -3,7 +3,7 @@
 // be the same". It floats at the window's edge, over whatever the page shows, and keeps its room in the
 // page's flow, open or folded, so a page that lays out beside it isn't covered. Folded, only its word
 // floats, so nothing else under it is held. It holds a person's conversations, a way
-// to a new one, where folders go, and the way to bring your own agent. Props only: open or folded comes from the page's ViewModel. Words
+// to a new one, the person's own agents (each with a way to end it), and the way to bring another. Props only: open or folded comes from the page's ViewModel. Words
 // from lib/lobby-view.ts.
 import type { ReactNode } from 'react';
 import { type AgentRow, agentWords } from '../../lib/agents.ts';
@@ -13,7 +13,6 @@ import { lobbyWords } from '../../lib/lobby-view.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { ConversationList } from '../chat/ConversationList.tsx';
 import { Button } from '../ui/Button.tsx';
-import { EmptySlot } from '../ui/EmptySlot.tsx';
 import { SideRail } from '../ui/SideRail.tsx';
 import { TextLink } from '../ui/TextLink.tsx';
 
@@ -27,6 +26,8 @@ export interface WorkMenuView {
   copied: boolean;
   /** Copies the one prompt that connects another agent, with a fresh agent key. */
   copy: () => void;
+  /** Ends one agent, by the name the server knows it by. */
+  disconnect: (name: string) => void;
 }
 
 export function WorkMenu({
@@ -69,14 +70,11 @@ export function WorkMenu({
             {conversations.length > 0 ? (
               <ConversationList rows={conversations} />
             ) : (
-              <div className="p-block-gap">
-                <EmptySlot />
-              </div>
+              // design/minimally-good.md, rule 2: empty says what to do
+              <p className="m-0 p-block-gap type-caption text-muted">
+                {lobbyWords.noConversations}
+              </p>
             )}
-            <section className="flex flex-col gap-text-gap p-block-gap">
-              <h2 className="m-0 type-label">{lobbyWords.folders}</h2>
-              <EmptySlot />
-            </section>
             {/* The person's own agents (C, the first full test): who's connected and what each is on, the
                 one prompt that connects another, and how, on /connect. */}
             <section className="flex flex-col items-start gap-text-gap p-block-gap">
@@ -84,11 +82,20 @@ export function WorkMenu({
               {menu.agents.length > 0 && (
                 <ul className="m-0 flex w-full list-none flex-col gap-space-8 p-0">
                   {menu.agents.map((a) => (
-                    <li key={a.key} className="flex flex-col">
-                      <span className={`type-label ${a.here ? 'text-primary' : 'text-muted'}`}>
-                        {a.label}
+                    <li key={a.key} className="flex items-start justify-between gap-text-gap">
+                      <span className="flex min-w-0 flex-col">
+                        <span
+                          title={a.label}
+                          className={`truncate type-label ${a.here ? 'text-primary' : 'text-muted'}`}
+                        >
+                          {a.label}
+                        </span>
+                        <span className="truncate type-caption text-muted">{a.status}</span>
                       </span>
-                      <span className="type-caption text-muted">{a.status}</span>
+                      {/* rule 4: what starts can end, from where you see it */}
+                      <Button variant="quiet" onClick={() => menu.disconnect(a.name)}>
+                        {agentWords.disconnect}
+                      </Button>
                     </li>
                   ))}
                 </ul>

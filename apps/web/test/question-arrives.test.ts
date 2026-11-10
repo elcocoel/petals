@@ -311,6 +311,6 @@ describe('the first paint', () => {
   test('no flower at all is empty ground, and the boxes are there', () => {
     const html = paint({});
     expect(html).toContain('<svg aria-hidden="true"');
-    expect(html).toContain('aria-label="Ask Petals about a network"');
+    expect(html).toContain('aria-label="Message Petals"');
   });
 });
