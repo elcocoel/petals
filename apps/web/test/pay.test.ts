@@ -3,7 +3,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { PayRow } from '../components/chat/PayRow.tsx';
-import { nearLeft, PAY_NEAR, payWords, sentBy, yoctoOf } from '../lib/pay.ts';
+import { nearLeft, PAY_NEAR, payAction, payWords, sentBy, yoctoOf } from '../lib/pay.ts';
 import { threadView } from '../lib/thread-view.ts';
 
 describe('paying for Petals’ agent', () => {
@@ -17,6 +17,18 @@ describe('paying for Petals’ agent', () => {
     expect(nearLeft(credit, 4)).toBe('0.50');
     expect(nearLeft(null, 4)).toBeNull();
     expect(nearLeft(credit, null)).toBeNull();
+  });
+
+  test('with the credit contract it deposits; without it, a plain transfer', () => {
+    const base = { network: 'testnet' as const, receiver: 'r', near_usd: 3 };
+    expect(payAction({ ...base, method: 'deposit' }, '5')).toEqual({
+      type: 'FunctionCall',
+      params: { methodName: 'deposit', args: {}, gas: '30000000000000', deposit: '5' },
+    });
+    expect(payAction({ ...base, method: null }, '5')).toEqual({
+      type: 'Transfer',
+      params: { deposit: '5' },
+    });
   });
 
   test('the hash and the account come from the wallet’s answer', () => {

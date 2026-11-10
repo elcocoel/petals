@@ -71,7 +71,7 @@ function storeOf(ctx: ToolContext): Store {
 }
 
 /** A store that ends with the process would lose the work and strand the link. */
-function lastingStore(ctx: ToolContext): Store {
+export function lastingStore(ctx: ToolContext): Store {
   const store = storeOf(ctx);
   if (!store.durable) {
     throw new ToolFailure(
@@ -82,7 +82,7 @@ function lastingStore(ctx: ToolContext): Store {
   return store;
 }
 
-interface Opened {
+export interface Opened {
   row: ExplorationRow;
   as: Access;
   /** the link it was opened with; none for its owner */
@@ -90,7 +90,7 @@ interface Opened {
 }
 
 /** An id or a link, as far as this caller may go. Same failure whatever the reason. */
-async function open(ctx: ToolContext, ref: string): Promise<Opened> {
+export async function open(ctx: ToolContext, ref: string): Promise<Opened> {
   const store = storeOf(ctx);
   const raw = ref.trim();
   if (EXPLORATION_ID.test(raw)) {
@@ -111,7 +111,7 @@ async function open(ctx: ToolContext, ref: string): Promise<Opened> {
 export const explorationIdOf = async (ctx: ToolContext, ref: string): Promise<string> =>
   (await open(ctx, ref)).row.id;
 
-function writable(o: Opened): void {
+export function writable(o: Opened): void {
   if (o.as === 'read') {
     throw new ToolFailure(
       'unauthorised',
@@ -123,7 +123,7 @@ function writable(o: Opened): void {
 
 const authorOf = (o: Opened) => (o.link ? `link:${o.link.id}` : 'owner');
 /** What authorised a write (TGT-005): the link it came by, or the credential behind the session. */
-const credentialOf = (ctx: ToolContext, o: Opened) =>
+export const credentialOf = (ctx: ToolContext, o: Opened) =>
   o.link ? `link:${o.link.id}` : (ctx.caller?.credential ?? null);
 const doorOf = (ctx: ToolContext) => ctx.caller?.door ?? 'unknown';
 
@@ -242,22 +242,38 @@ export async function saveRunStep(ctx: ToolContext, runId: string, spec: Spec): 
   if (!store.durable) return;
   const at = ctx.now().toISOString();
   await store.tx(async () => {
-    const run = await store.run.get(runId);
-    if (!run?.owner) return;
-    let id = run.exploration;
-    if (!id) {
-      id = newExplorationId();
-      await newExploration(store, {
-        id,
-        owner: run.owner,
-        question: firstQuestion(run.body),
-        target: null,
-        at,
-      });
-      await store.run.setExploration(runId, id);
-    }
+    const id = await explorationOfRun(store, runId, at);
+    if (!id) return;
     await writeStep(ctx, store, id, spec, { door: 'site', author: 'owner', note: null, at });
   });
+}
+
+/** The run's exploration, made now if it has none. Null for a run nobody owns. Inside a transaction. */
+async function explorationOfRun(store: Store, runId: string, at: string): Promise<string | null> {
+  const run = await store.run.get(runId);
+  if (!run?.owner) return null;
+  if (run.exploration) return run.exploration;
+  const id = newExplorationId();
+  await newExploration(store, {
+    id,
+    owner: run.owner,
+    question: firstQuestion(run.body),
+    target: null,
+    at,
+  });
+  await store.run.setExploration(runId, id);
+  return id;
+}
+
+/**
+ * The exploration a run of Petals' agent works in (9 Nov, the jobs it hands out live there), made now if
+ * the run has none yet. Null for a run nobody owns, or a store that keeps nothing.
+ */
+export async function runExplorationOf(ctx: ToolContext, runId: string): Promise<string | null> {
+  const store = storeOf(ctx);
+  if (!store.durable) return null;
+  const at = ctx.now().toISOString();
+  return store.tx(() => explorationOfRun(store, runId, at));
 }
 
 function firstQuestion(body: string): string {
@@ -409,9 +425,15 @@ const jsonLines = (items: unknown[]) =>
 
 /** The resume packet for an agent that can only fetch a URL: the same facts, as markdown. */
 export async function packetMarkdown(ctx: ToolContext, ref: string): Promise<string> {
-  const p = await packetOf(ctx, await open(ctx, ref));
+  const o = await open(ctx, ref);
+  const p = await packetOf(ctx, o);
   const c = p.current;
   const api = `${base(ctx)}/api/v1/explorations/${LINK_TOKEN.exec(ref.trim())?.[1]}`;
+  // jobs Petals' agent handed out here, for whoever holds the link to take (C)
+  const open_ = (await storeOf(ctx).job.list(o.row.id))
+    .filter((j) => j.status === 'open')
+    .map((j) => ({ id: j.id, kind: j.kind, title: j.title, brief: j.brief, inputs: j.inputs }));
+  const takes = p.access.as === 'continue' && open_.length > 0;
   const lines = [
     '# A Petals exploration: where this work stands',
     '',
@@ -449,6 +471,10 @@ export async function packetMarkdown(ctx: ToolContext, ref: string): Promise<str
     '',
     p.notes.length ? jsonLines(p.notes) : 'None yet.',
     '',
+    `## Open jobs (${open_.length}), handed out by Petals' agent on the page`,
+    '',
+    open_.length ? jsonLines(open_) : 'None open.',
+    '',
     '## Free, and what spends',
     '',
     `Free: ${p.free.join('; ')}.`,
@@ -461,6 +487,12 @@ export async function packetMarkdown(ctx: ToolContext, ref: string): Promise<str
     '',
     `With Petal's MCP tools, pass this link as \`exploration\` to get_exploration${p.access.as === 'continue' ? ', save_step and add_note' : ''}. Over HTTP: GET ${api} for this as JSON${p.access.as === 'continue' ? `; POST ${api}/steps with { "spec" | "spec_sha256", "note"? }; POST ${api}/notes with { "text" }` : ''}.`,
     '',
+    ...(takes
+      ? [
+          `To take the open jobs: take_job with this link as \`exploration\`, do what its brief says, then report_job with its id and { "result": { "summary", "steps"? } } or { "failed" }; then take the next. Over HTTP: POST ${api}/jobs/take with {}, then POST ${api}/jobs/<id>/report.`,
+          '',
+        ]
+      : []),
   ];
   return lines.join('\n');
 }
@@ -468,14 +500,18 @@ export async function packetMarkdown(ctx: ToolContext, ref: string): Promise<str
 // ---------------------------------------------------------------------------------------------
 // The tools
 
-const REF: JSONSchema = {
+export const REF: JSONSchema = {
   type: 'string',
   minLength: 1,
   maxLength: 500,
   description: 'an exploration id (exp_…) or a link (/s/…)',
 };
-const READS: ToolAnnotations = { readOnlyHint: true, idempotentHint: true, openWorldHint: false };
-const WRITES: ToolAnnotations = { readOnlyHint: false, openWorldHint: false };
+export const READS: ToolAnnotations = {
+  readOnlyHint: true,
+  idempotentHint: true,
+  openWorldHint: false,
+};
+export const WRITES: ToolAnnotations = { readOnlyHint: false, openWorldHint: false };
 const NULLABLE_STRING = { type: ['string', 'null'] };
 const NULLABLE_SHA = { type: ['string', 'null'], pattern: '^[0-9a-f]{64}$' };
 
@@ -658,7 +694,7 @@ const MIRROR =
   "Before you finish each answer, add_note with text: the person's words, then your reply word for word. After each render_flower, save_step with its spec_sha256.";
 
 /** The app at the other end and the last thing it wrote here, in memory. A read moves nothing. */
-function touched(ctx: ToolContext, id: string, tool: string, client?: string): void {
+export function touched(ctx: ToolContext, id: string, tool: string, client?: string): void {
   ctx.live?.touch(id, {
     client: client ?? ctx.caller?.client ?? null,
     last_at: ctx.now().toISOString(),
@@ -963,6 +999,9 @@ export async function claimExploration(
   if (!(await storeOf(ctx).exploration.setOwner(o.row.id, owner))) {
     throw new ToolFailure('unauthorised', 'This exploration already has an owner.');
   }
+  // the layers it held under itself until now are the new owner's (datasets.ts)
+  await storeOf(ctx).layer.moveOwner(`exploration:${o.row.id}`, owner);
+  await storeOf(ctx).datasetVersion.moveOwner(`exploration:${o.row.id}`, owner);
   return { exploration: o.row.id, claimed: true };
 }
 

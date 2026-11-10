@@ -142,6 +142,99 @@ export interface NoteRow {
   credential?: string | null;
   at: string;
 }
+/** A layer kept on the site (005): named by its hash, under its author, never changed. */
+export interface LayerRow {
+  owner: string;
+  hash: string;
+  about: string;
+  standing: string;
+  /** the layer itself, as canonical JSON */
+  body: string;
+  credential: string | null;
+  created_at: string;
+  /** the brain version the site served when it was kept (migration 10) */
+  brain?: string | null;
+  /** the reading recipe it was read with, by hash (migration 10) */
+  recipe?: string | null;
+}
+/** One version of an author's dataset about an address: a set of layer hashes, and where it came from. */
+export interface DatasetVersionRow {
+  id: string;
+  owner: string;
+  about: string;
+  seq: number;
+  /** the version it came from: the author's own last one, or one they forked */
+  parent: string | null;
+  layers: string[];
+  credential: string | null;
+  created_at: string;
+}
+type DatasetVersionRecord = Omit<DatasetVersionRow, 'layers'> & { layers: string };
+const versionOf = (r: DatasetVersionRecord): DatasetVersionRow => ({
+  ...r,
+  layers: JSON.parse(r.layers) as string[],
+});
+
+/** A job handed out in a project (an exploration): open, taken by someone's agent, then done or failed. */
+export interface JobRow {
+  id: string;
+  exploration: string;
+  /** the page agent's run that handed it out, if a run did */
+  run: string | null;
+  kind: 'map';
+  title: string;
+  /** plain words for the agent that takes it */
+  brief: string;
+  inputs: Record<string, unknown>;
+  status: 'open' | 'taken' | 'done' | 'failed';
+  result: { summary: string; steps?: number[]; notes?: string } | null;
+  failed: string | null;
+  created_at: string;
+  updated_at: string;
+  /** the agent it was sent to, by the name it uses, or null for any (migration 11) */
+  to: string | null;
+  /** the agent that took it, by name, or null (migration 11) */
+  taken_by: string | null;
+}
+interface JobRecord extends Omit<JobRow, 'inputs' | 'result' | 'to' | 'taken_by'> {
+  assignee?: string | null;
+  taken_by?: string | null;
+  seq: number;
+  inputs: string;
+  result: string | null;
+}
+const jobOf = (r: JobRecord): JobRow => ({
+  id: r.id,
+  exploration: r.exploration,
+  run: r.run,
+  kind: r.kind,
+  title: r.title,
+  brief: r.brief,
+  inputs: JSON.parse(r.inputs) as Record<string, unknown>,
+  status: r.status,
+  result: r.result ? (JSON.parse(r.result) as JobRow['result']) : null,
+  failed: r.failed,
+  created_at: r.created_at,
+  updated_at: r.updated_at,
+  to: r.assignee ?? null,
+  taken_by: r.taken_by ?? null,
+});
+
+/** A person's agent link (migration 11): only its hash is kept, and it can only wait for jobs. */
+export interface AgentLinkRow {
+  id: string;
+  owner: string;
+  token_hash: string;
+  created_at: string;
+  revoked_at: string | null;
+}
+/** A name a person's agent link was used with, and when it was last seen. */
+export interface AgentRow {
+  owner: string;
+  name: string;
+  last_seen: string;
+}
+
 /** A bookmark on something a person is following. It points, and proves nothing about who owns it. */
 export interface FollowRow {
   id: string;
@@ -241,7 +334,7 @@ function tsQuery(words: readonly string[]): string {
 
 export function tables(db: Db) {
   const nextSeq = async (
-    table: 'run_event' | 'step' | 'note',
+    table: 'run_event' | 'step' | 'note' | 'job' | 'dataset_version',
     column: string,
     id: string,
   ): Promise<number> =>
@@ -343,6 +436,15 @@ export function tables(db: Db) {
       },
       async setInvite(hash: string, invite: string) {
         await db.run('UPDATE session SET invite = ? WHERE hash = ?', invite, hash);
+      },
+      /** The invites a person's live sessions hold, the newest session's first, each once. */
+      async invitesOf(subject: string, now: string): Promise<string[]> {
+        const rows = await db.all<{ invite: string }>(
+          'SELECT invite FROM session WHERE subject = ? AND invite IS NOT NULL AND expires_at > ? ORDER BY expires_at DESC',
+          subject,
+          now,
+        );
+        return [...new Set(rows.map((r) => r.invite))];
       },
       /** Null once expired. */
       get: (hash: string, now: string) =>
@@ -683,6 +785,9 @@ export function tables(db: Db) {
           id,
         );
       },
+      async setBudget(id: string, usd: number) {
+        await db.run('UPDATE invite SET budget_usd = ? WHERE id = ?', usd, id);
+      },
       async addSpent(id: string, usd: number) {
         await db.run('UPDATE invite SET spent_usd = spent_usd + ? WHERE id = ?', usd, id);
       },
@@ -929,6 +1034,303 @@ export function tables(db: Db) {
         db.all<NoteRow>('SELECT * FROM note WHERE exploration = ? ORDER BY seq', exploration),
       count: (exploration: string) =>
         count('SELECT COUNT(*) AS n FROM note WHERE exploration = ?', exploration),
+    },
+
+    job: {
+      add: (r: {
+        id: string;
+        exploration: string;
+        run: string | null;
+        kind: JobRow['kind'];
+        title: string;
+        brief: string;
+        inputs: Record<string, unknown>;
+        at: string;
+        /** an agent's name, or none for any */
+        to?: string | null;
+      }): Promise<JobRow> =>
+        db.tx(async () => {
+          const seq = await nextSeq('job', 'exploration', r.exploration);
+          await db.run(
+            `INSERT INTO job (id, exploration, seq, run, kind, title, brief, inputs, status, result,
+               failed, created_at, updated_at, assignee)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', NULL, NULL, ?, ?, ?)`,
+            r.id,
+            r.exploration,
+            seq,
+            r.run,
+            r.kind,
+            r.title,
+            r.brief,
+            JSON.stringify(r.inputs),
+            r.at,
+            r.at,
+            r.to ?? null,
+          );
+          return jobOf(
+            (await db.get<JobRecord>('SELECT * FROM job WHERE id = ?', r.id)) as JobRecord,
+          );
+        }),
+      /** Oldest first. */
+      list: async (exploration: string): Promise<JobRow[]> =>
+        (
+          await db.all<JobRecord>(
+            'SELECT * FROM job WHERE exploration = ? ORDER BY seq',
+            exploration,
+          )
+        ).map(jobOf),
+      /** The oldest open job, now taken, or null when none is open. */
+      take: (exploration: string, at: string): Promise<JobRow | null> =>
+        db.tx(async () => {
+          const open = await db.get<JobRecord>(
+            `SELECT * FROM job WHERE exploration = ? AND status = 'open' ORDER BY seq LIMIT 1`,
+            exploration,
+          );
+          if (!open) return null;
+          await db.run(
+            `UPDATE job SET status = 'taken', updated_at = ? WHERE id = ? AND status = 'open'`,
+            at,
+            open.id,
+          );
+          return jobOf({ ...open, status: 'taken', updated_at: at });
+        }),
+      /** A taken job, done with its result or failed with why; null for any other job. */
+      report: (
+        exploration: string,
+        id: string,
+        r: { result?: JobRow['result']; failed?: string },
+        at: string,
+      ): Promise<JobRow | null> =>
+        db.tx(async () => {
+          const taken = await db.get<JobRecord>(
+            `SELECT * FROM job WHERE id = ? AND exploration = ? AND status = 'taken'`,
+            id,
+            exploration,
+          );
+          if (!taken) return null;
+          const failed = r.failed ?? null;
+          const result = failed === null && r.result ? JSON.stringify(r.result) : null;
+          const status = failed === null ? 'done' : 'failed';
+          await db.run(
+            'UPDATE job SET status = ?, result = ?, failed = ?, updated_at = ? WHERE id = ?',
+            status,
+            result,
+            failed,
+            at,
+            id,
+          );
+          return jobOf({ ...taken, status, result, failed, updated_at: at });
+        }),
+      /**
+       * For a person's agent (migration 11): the next open job in any of `owner`'s projects that was sent to
+       * `name` (case ignored), else the oldest sent to anyone, now taken by `name`. Null when there's none.
+       */
+      takeFor: (owner: string, name: string, at: string): Promise<JobRow | null> =>
+        db.tx(async () => {
+          const open = await db.get<JobRecord>(
+            `SELECT job.* FROM job JOIN exploration ON exploration.id = job.exploration
+             WHERE exploration.owner = ? AND job.status = 'open'
+               AND (lower(job.assignee) = lower(?) OR job.assignee IS NULL)
+             ORDER BY CASE WHEN job.assignee IS NULL THEN 1 ELSE 0 END, job.created_at, job.seq
+             LIMIT 1`,
+            owner,
+            name,
+          );
+          if (!open) return null;
+          await db.run(
+            `UPDATE job SET status = 'taken', taken_by = ?, updated_at = ? WHERE id = ? AND status = 'open'`,
+            name,
+            at,
+            open.id,
+          );
+          return jobOf({ ...open, status: 'taken', taken_by: name, updated_at: at });
+        }),
+      /** The jobs `owner`'s agents have taken and not reported yet, in any of their projects. */
+      held: async (owner: string): Promise<JobRow[]> =>
+        (
+          await db.all<JobRecord>(
+            `SELECT job.* FROM job JOIN exploration ON exploration.id = job.exploration
+             WHERE exploration.owner = ? AND job.status = 'taken' AND job.taken_by IS NOT NULL
+             ORDER BY job.updated_at`,
+            owner,
+          )
+        ).map(jobOf),
+    },
+
+    agentLink: {
+      create: async (r: Omit<AgentLinkRow, 'revoked_at'>) => {
+        await db.run(
+          'INSERT INTO agent_link (id, owner, token_hash, created_at) VALUES (?, ?, ?, ?)',
+          r.id,
+          r.owner,
+          r.token_hash,
+          r.created_at,
+        );
+      },
+      byTokenHash: (hash: string) =>
+        db.get<AgentLinkRow>('SELECT * FROM agent_link WHERE token_hash = ?', hash),
+      list: (owner: string) =>
+        db.all<AgentLinkRow>(
+          'SELECT * FROM agent_link WHERE owner = ? AND revoked_at IS NULL ORDER BY created_at',
+          owner,
+        ),
+      /** One by id, or all of an owner's; returns how many it revoked. */
+      revoke: (owner: string, at: string, id?: string): Promise<number> =>
+        id
+          ? db.run(
+              'UPDATE agent_link SET revoked_at = ? WHERE owner = ? AND id = ? AND revoked_at IS NULL',
+              at,
+              owner,
+              id,
+            )
+          : db.run(
+              'UPDATE agent_link SET revoked_at = ? WHERE owner = ? AND revoked_at IS NULL',
+              at,
+              owner,
+            ),
+    },
+
+    agent: {
+      /** The name a person's link was used with, seen now; its case is kept as last given. */
+      seen: async (r: AgentRow) => {
+        await db.run(
+          `INSERT INTO agent (owner, key, name, last_seen) VALUES (?, ?, ?, ?)
+           ON CONFLICT (owner, key) DO UPDATE SET name = excluded.name, last_seen = excluded.last_seen`,
+          r.owner,
+          r.name.toLowerCase(),
+          r.name,
+          r.last_seen,
+        );
+      },
+      list: (owner: string) =>
+        db.all<AgentRow>(
+          'SELECT owner, name, last_seen FROM agent WHERE owner = ? ORDER BY last_seen DESC',
+          owner,
+        ),
+    },
+
+    layer: {
+      /** Keeps it under its owner; false, and no change, when they hold that hash already. */
+      keep: async (r: LayerRow): Promise<boolean> =>
+        (await db.run(
+          `INSERT INTO layer (owner, hash, about, standing, body, credential, created_at, brain, recipe)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (owner, hash) DO NOTHING`,
+          r.owner,
+          r.hash,
+          r.about,
+          r.standing,
+          r.body,
+          r.credential,
+          r.created_at,
+          r.brain ?? null,
+          r.recipe ?? null,
+        )) === 1,
+      get: (owner: string, hash: string) =>
+        db.get<LayerRow>('SELECT * FROM layer WHERE owner = ? AND hash = ?', owner, hash),
+      /** An owner's layers, about one address or all, oldest first. */
+      list: (owner: string, about?: string) =>
+        about
+          ? db.all<LayerRow>(
+              'SELECT * FROM layer WHERE owner = ? AND about = ? ORDER BY created_at, hash',
+              owner,
+              about,
+            )
+          : db.all<LayerRow>(
+              'SELECT * FROM layer WHERE owner = ? ORDER BY created_at, hash',
+              owner,
+            ),
+      /** A session that signs in brings its layers along; one the person holds already stays theirs. */
+      moveOwner: (from: string, to: string): Promise<void> =>
+        db.tx(async () => {
+          await db.run(
+            'DELETE FROM layer WHERE owner = ? AND hash IN (SELECT hash FROM layer WHERE owner = ?)',
+            from,
+            to,
+          );
+          await db.run('UPDATE layer SET owner = ? WHERE owner = ?', to, from);
+        }),
+    },
+
+    datasetVersion: {
+      /** A new version, after the owner's last one of this address. */
+      add: (r: Omit<DatasetVersionRow, 'seq'>): Promise<DatasetVersionRow> =>
+        db.tx(async () => {
+          const seq = (
+            (await db.get<{ next: number }>(
+              'SELECT COALESCE(MAX(seq) + 1, 0) AS next FROM dataset_version WHERE owner = ? AND about = ?',
+              r.owner,
+              r.about,
+            )) as { next: number }
+          ).next;
+          await db.run(
+            `INSERT INTO dataset_version (id, owner, about, seq, parent, layers, credential, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            r.id,
+            r.owner,
+            r.about,
+            seq,
+            r.parent,
+            JSON.stringify(r.layers),
+            r.credential,
+            r.created_at,
+          );
+          return { ...r, seq };
+        }),
+      get: async (id: string) => {
+        const r = await db.get<DatasetVersionRecord>(
+          'SELECT * FROM dataset_version WHERE id = ?',
+          id,
+        );
+        return r ? versionOf(r) : null;
+      },
+      /** The owner's last version of this address, or null. */
+      latest: async (owner: string, about: string) => {
+        const r = await db.get<DatasetVersionRecord>(
+          'SELECT * FROM dataset_version WHERE owner = ? AND about = ? ORDER BY seq DESC LIMIT 1',
+          owner,
+          about,
+        );
+        return r ? versionOf(r) : null;
+      },
+      /** The owner's versions, of one address or all, oldest first. */
+      list: async (owner: string, about?: string) =>
+        (about
+          ? await db.all<DatasetVersionRecord>(
+              'SELECT * FROM dataset_version WHERE owner = ? AND about = ? ORDER BY about, seq',
+              owner,
+              about,
+            )
+          : await db.all<DatasetVersionRecord>(
+              'SELECT * FROM dataset_version WHERE owner = ? ORDER BY about, seq',
+              owner,
+            )
+        ).map(versionOf),
+      /**
+       * A session that signs in brings its versions along, after the person's own of the same address, so
+       * neither's order breaks.
+       */
+      moveOwner: (from: string, to: string): Promise<void> =>
+        db.tx(async () => {
+          const moving = await db.all<DatasetVersionRecord>(
+            'SELECT * FROM dataset_version WHERE owner = ? ORDER BY about, seq',
+            from,
+          );
+          for (const v of moving) {
+            const next = (
+              (await db.get<{ next: number }>(
+                'SELECT COALESCE(MAX(seq) + 1, 0) AS next FROM dataset_version WHERE owner = ? AND about = ?',
+                to,
+                v.about,
+              )) as { next: number }
+            ).next;
+            await db.run(
+              'UPDATE dataset_version SET owner = ?, seq = ? WHERE id = ?',
+              to,
+              next,
+              v.id,
+            );
+          }
+        }),
     },
 
     follow: {

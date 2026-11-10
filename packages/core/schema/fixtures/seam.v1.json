@@ -1,0 +1,1035 @@
+{
+  "petal": "seam/v1",
+  "about": "near:mainnet:validators-test",
+  "layers": [
+    "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+    "4771f4b0c77516169220637481c7bf5f336e60d33d24db92c6aa24efd6eb6f1e"
+  ],
+  "participants": [
+    "astro-stakers.poolv1.near",
+    "astrostakers.near",
+    "c7e9e9eaf340b35907df79841f596375531561cb.lockup.near",
+    "a7b761234a3f068e2e12920331395540cff6568f.lockup.near",
+    "group:astro-stakers.poolv1.near:lockup",
+    "lst.rhealab.near",
+    "linear-protocol.near",
+    "group:astro-stakers.poolv1.near:liquid",
+    "8b86832ca46d0cd00a63473ef6e7cd107e8c93127d2a21445aba6afcade632f4",
+    "liping.near",
+    "group:astro-stakers.poolv1.near:large",
+    "d7be837bddae208a781674f201b9553a6fd939c76f9734444b634cdccb9498ad",
+    "bf5cb425ba05c80828665cc66d1a2d0d09a50b200c84db1f5020008cfdf9f47e",
+    "group:astro-stakers.poolv1.near:other",
+    "figment.poolv1.near",
+    "figment.near",
+    "030722ff960a1e51e1af31f13eca39f4c16ce482.lockup.near",
+    "fedc4a53214d6ad18663e43de7018b9ff9fded52.lockup.near",
+    "group:figment.poolv1.near:lockup",
+    "4a082e8c3f9b46d1906c8244a52078ba401cec6b4d58c05829690f2f6cecb88b",
+    "4f4ebac8c8632d16091952bb06cf1be8fb01a46b5dc5381c4926f70b481a6123",
+    "group:figment.poolv1.near:large",
+    "26d4f594db09d16c1c04cb703c6fe5d6d79d298eb2dede943e29272d0e1bd368",
+    "5811a1e5aa8f9b638981daea09f29df0e4920fa14d1a2b27a0218264be17afb3",
+    "group:figment.poolv1.near:other",
+    "ledgerbyfigment.poolv1.near",
+    "ledgerxfigment.near",
+    "434fbe5d25e22c0a5628b6d4693a4076d0a100ec7d093e708b0a9aa00f84880a",
+    "2242533657cc34cbee30f4ee128505b99324a2a56a406405272884a4a81723a5",
+    "group:ledgerbyfigment.poolv1.near:large",
+    "6ccf53088a0670911e7072e9ce0f2159da727ca7a3ec20378ae48988e225a184",
+    "e26f1aaa6e88d87e7007b5b7ce2322834bb49fbf5bae4e7f46d870b01e4fa414",
+    "group:ledgerbyfigment.poolv1.near:other",
+    "staked.poolv1.near",
+    "staked.near",
+    "da056a5ac60c027001b0fd1f6c7395f4dd574c81.lockup.near",
+    "5f26629815016a143d8c0054b6fa47a3b9961f1d.lockup.near",
+    "group:staked.poolv1.near:lockup",
+    "88730479801e0245f75a5bb5d83d09ef0d9a17b1144fc6573658d3b83fafd34a",
+    "f593c153578b81b910a14d03892dd0cb4656a00f3a36666094bf7d8b2d916e7f",
+    "group:staked.poolv1.near:large",
+    "250a08d42a1510a93ab92a28691aa0588612ce54e4a09616c9f257126e69d497",
+    "df982ec119174188e73eef66510dc94d86370dbc930e8925baddd98497ec395b",
+    "group:staked.poolv1.near:other",
+    "binancenode1.poolv1.near",
+    "binancenode1.near",
+    "277a16ad69dd7f635e99fa47f7096df54bb59abf.lockup.near",
+    "93a84536a1e92eb40e0f98837c86d7c74fcd5f5b.lockup.near",
+    "7e6e17fcb8e8e6a22ecd47bbd1b58b1af3582b97bbfd4a8d974bb9c266fa282b",
+    "48611d2a830a83e4a8fcaae8393737a93184ff354e375f809cd4c4dfb83ac3d3",
+    "afa6c0716ddd9ba0cf329ef950d09d55cdf7ddf02e49e48f7b3b695d140dd15a",
+    "group:binancenode1.poolv1.near:other"
+  ],
+  "data": [
+    {
+      "name": "validator_stake_current_epoch",
+      "kind": "amount",
+      "unit": "NEAR",
+      "standing": "verified",
+      "layer": "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+      "as_of": "2026-11-03T19:42:00Z",
+      "values": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "value": "33270925.61921712"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "value": "20129876.800994642"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "value": "27913093.17933405"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "value": "22968074.4156654"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "value": "21019461.61560974"
+        }
+      ]
+    },
+    {
+      "name": "num_produced_blocks_current_epoch",
+      "kind": "amount",
+      "unit": "blocks",
+      "standing": "verified",
+      "layer": "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+      "as_of": "2026-11-03T19:42:00Z",
+      "values": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "value": "1918"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "value": "1180"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "value": "1664"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "value": "1375"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "value": "1237"
+        }
+      ]
+    },
+    {
+      "name": "num_expected_blocks_current_epoch",
+      "kind": "amount",
+      "unit": "blocks",
+      "standing": "verified",
+      "layer": "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+      "as_of": "2026-11-03T19:42:00Z",
+      "values": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "value": "1918"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "value": "1180"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "value": "1664"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "value": "1375"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "value": "1237"
+        }
+      ]
+    },
+    {
+      "name": "num_produced_chunks_current_epoch",
+      "kind": "amount",
+      "unit": "chunks",
+      "standing": "verified",
+      "layer": "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+      "as_of": "2026-11-03T19:42:00Z",
+      "values": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "value": "9597"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "value": "8283"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "value": "11191"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "value": "12571"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "value": "13990"
+        }
+      ]
+    },
+    {
+      "name": "num_expected_chunks_current_epoch",
+      "kind": "amount",
+      "unit": "chunks",
+      "standing": "verified",
+      "layer": "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+      "as_of": "2026-11-03T19:42:00Z",
+      "values": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "value": "9599"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "value": "8298"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "value": "11191"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "value": "12572"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "value": "13997"
+        }
+      ]
+    },
+    {
+      "name": "num_produced_endorsements_current_epoch",
+      "kind": "amount",
+      "unit": "endorsements",
+      "standing": "verified",
+      "layer": "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+      "as_of": "2026-11-03T19:42:00Z",
+      "values": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "value": "324664"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "value": "320037"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "value": "324957"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "value": "322989"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "value": "321246"
+        }
+      ]
+    },
+    {
+      "name": "num_expected_endorsements_current_epoch",
+      "kind": "amount",
+      "unit": "endorsements",
+      "standing": "verified",
+      "layer": "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+      "as_of": "2026-11-03T19:42:00Z",
+      "values": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "value": "325821"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "value": "321692"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "value": "325243"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "value": "323719"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "value": "322571"
+        }
+      ]
+    },
+    {
+      "name": "amount",
+      "kind": "amount",
+      "unit": "NEAR",
+      "standing": "verified",
+      "layer": "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+      "as_of": "2026-11-03T19:42:00Z",
+      "values": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "value": "33270925.61921712"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "value": "20129876.800994642"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "value": "27913093.17933405"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "value": "22968074.4156654"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "value": "21019461.61560974"
+        }
+      ]
+    },
+    {
+      "name": "share",
+      "kind": "share",
+      "unit": "share",
+      "standing": "verified",
+      "layer": "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+      "as_of": "2026-11-03T19:42:00Z",
+      "values": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "value": "0.265527099"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "value": "0.160651611"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "value": "0.222767552"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "value": "0.18330257"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "value": "0.167751169"
+        }
+      ]
+    },
+    {
+      "name": "kind",
+      "kind": "category",
+      "unit": "kind of account",
+      "standing": "verified",
+      "layer": "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+      "as_of": "2026-11-03T19:42:00Z",
+      "values": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "value": "staking_pool"
+        },
+        {
+          "participant": "astrostakers.near",
+          "value": "unknown"
+        },
+        {
+          "participant": "c7e9e9eaf340b35907df79841f596375531561cb.lockup.near",
+          "value": "delegator"
+        },
+        {
+          "participant": "a7b761234a3f068e2e12920331395540cff6568f.lockup.near",
+          "value": "delegator"
+        },
+        {
+          "participant": "group:astro-stakers.poolv1.near:lockup",
+          "value": "group"
+        },
+        {
+          "participant": "lst.rhealab.near",
+          "value": "staking_entity"
+        },
+        {
+          "participant": "linear-protocol.near",
+          "value": "staking_entity"
+        },
+        {
+          "participant": "group:astro-stakers.poolv1.near:liquid",
+          "value": "group"
+        },
+        {
+          "participant": "8b86832ca46d0cd00a63473ef6e7cd107e8c93127d2a21445aba6afcade632f4",
+          "value": "delegator"
+        },
+        {
+          "participant": "liping.near",
+          "value": "delegator"
+        },
+        {
+          "participant": "group:astro-stakers.poolv1.near:large",
+          "value": "group"
+        },
+        {
+          "participant": "d7be837bddae208a781674f201b9553a6fd939c76f9734444b634cdccb9498ad",
+          "value": "delegator"
+        },
+        {
+          "participant": "bf5cb425ba05c80828665cc66d1a2d0d09a50b200c84db1f5020008cfdf9f47e",
+          "value": "delegator"
+        },
+        {
+          "participant": "group:astro-stakers.poolv1.near:other",
+          "value": "group"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "value": "staking_pool"
+        },
+        {
+          "participant": "figment.near",
+          "value": "unknown"
+        },
+        {
+          "participant": "030722ff960a1e51e1af31f13eca39f4c16ce482.lockup.near",
+          "value": "delegator"
+        },
+        {
+          "participant": "fedc4a53214d6ad18663e43de7018b9ff9fded52.lockup.near",
+          "value": "delegator"
+        },
+        {
+          "participant": "group:figment.poolv1.near:lockup",
+          "value": "group"
+        },
+        {
+          "participant": "4a082e8c3f9b46d1906c8244a52078ba401cec6b4d58c05829690f2f6cecb88b",
+          "value": "delegator"
+        },
+        {
+          "participant": "4f4ebac8c8632d16091952bb06cf1be8fb01a46b5dc5381c4926f70b481a6123",
+          "value": "delegator"
+        },
+        {
+          "participant": "group:figment.poolv1.near:large",
+          "value": "group"
+        },
+        {
+          "participant": "26d4f594db09d16c1c04cb703c6fe5d6d79d298eb2dede943e29272d0e1bd368",
+          "value": "delegator"
+        },
+        {
+          "participant": "5811a1e5aa8f9b638981daea09f29df0e4920fa14d1a2b27a0218264be17afb3",
+          "value": "delegator"
+        },
+        {
+          "participant": "group:figment.poolv1.near:other",
+          "value": "group"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "value": "staking_pool"
+        },
+        {
+          "participant": "ledgerxfigment.near",
+          "value": "unknown"
+        },
+        {
+          "participant": "434fbe5d25e22c0a5628b6d4693a4076d0a100ec7d093e708b0a9aa00f84880a",
+          "value": "delegator"
+        },
+        {
+          "participant": "2242533657cc34cbee30f4ee128505b99324a2a56a406405272884a4a81723a5",
+          "value": "delegator"
+        },
+        {
+          "participant": "group:ledgerbyfigment.poolv1.near:large",
+          "value": "group"
+        },
+        {
+          "participant": "6ccf53088a0670911e7072e9ce0f2159da727ca7a3ec20378ae48988e225a184",
+          "value": "delegator"
+        },
+        {
+          "participant": "e26f1aaa6e88d87e7007b5b7ce2322834bb49fbf5bae4e7f46d870b01e4fa414",
+          "value": "delegator"
+        },
+        {
+          "participant": "group:ledgerbyfigment.poolv1.near:other",
+          "value": "group"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "value": "staking_pool"
+        },
+        {
+          "participant": "staked.near",
+          "value": "unknown"
+        },
+        {
+          "participant": "da056a5ac60c027001b0fd1f6c7395f4dd574c81.lockup.near",
+          "value": "delegator"
+        },
+        {
+          "participant": "5f26629815016a143d8c0054b6fa47a3b9961f1d.lockup.near",
+          "value": "delegator"
+        },
+        {
+          "participant": "group:staked.poolv1.near:lockup",
+          "value": "group"
+        },
+        {
+          "participant": "88730479801e0245f75a5bb5d83d09ef0d9a17b1144fc6573658d3b83fafd34a",
+          "value": "delegator"
+        },
+        {
+          "participant": "f593c153578b81b910a14d03892dd0cb4656a00f3a36666094bf7d8b2d916e7f",
+          "value": "delegator"
+        },
+        {
+          "participant": "group:staked.poolv1.near:large",
+          "value": "group"
+        },
+        {
+          "participant": "250a08d42a1510a93ab92a28691aa0588612ce54e4a09616c9f257126e69d497",
+          "value": "delegator"
+        },
+        {
+          "participant": "df982ec119174188e73eef66510dc94d86370dbc930e8925baddd98497ec395b",
+          "value": "delegator"
+        },
+        {
+          "participant": "group:staked.poolv1.near:other",
+          "value": "group"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "value": "staking_pool"
+        },
+        {
+          "participant": "binancenode1.near",
+          "value": "unknown"
+        },
+        {
+          "participant": "277a16ad69dd7f635e99fa47f7096df54bb59abf.lockup.near",
+          "value": "delegator"
+        },
+        {
+          "participant": "93a84536a1e92eb40e0f98837c86d7c74fcd5f5b.lockup.near",
+          "value": "delegator"
+        },
+        {
+          "participant": "7e6e17fcb8e8e6a22ecd47bbd1b58b1af3582b97bbfd4a8d974bb9c266fa282b",
+          "value": "delegator"
+        },
+        {
+          "participant": "48611d2a830a83e4a8fcaae8393737a93184ff354e375f809cd4c4dfb83ac3d3",
+          "value": "delegator"
+        },
+        {
+          "participant": "afa6c0716ddd9ba0cf329ef950d09d55cdf7ddf02e49e48f7b3b695d140dd15a",
+          "value": "delegator"
+        },
+        {
+          "participant": "group:binancenode1.poolv1.near:other",
+          "value": "group"
+        }
+      ]
+    },
+    {
+      "name": "identity",
+      "kind": "category",
+      "unit": "identity",
+      "standing": "verified",
+      "layer": "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+      "as_of": "2026-11-03T19:42:00Z",
+      "values": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "value": "self-declared"
+        },
+        {
+          "participant": "astrostakers.near",
+          "value": "self-declared"
+        },
+        {
+          "participant": "c7e9e9eaf340b35907df79841f596375531561cb.lockup.near",
+          "value": "none"
+        },
+        {
+          "participant": "a7b761234a3f068e2e12920331395540cff6568f.lockup.near",
+          "value": "none"
+        },
+        {
+          "participant": "group:astro-stakers.poolv1.near:lockup",
+          "value": "none"
+        },
+        {
+          "participant": "lst.rhealab.near",
+          "value": "self-declared"
+        },
+        {
+          "participant": "linear-protocol.near",
+          "value": "self-declared"
+        },
+        {
+          "participant": "group:astro-stakers.poolv1.near:liquid",
+          "value": "none"
+        },
+        {
+          "participant": "8b86832ca46d0cd00a63473ef6e7cd107e8c93127d2a21445aba6afcade632f4",
+          "value": "none"
+        },
+        {
+          "participant": "liping.near",
+          "value": "self-declared"
+        },
+        {
+          "participant": "group:astro-stakers.poolv1.near:large",
+          "value": "none"
+        },
+        {
+          "participant": "d7be837bddae208a781674f201b9553a6fd939c76f9734444b634cdccb9498ad",
+          "value": "none"
+        },
+        {
+          "participant": "bf5cb425ba05c80828665cc66d1a2d0d09a50b200c84db1f5020008cfdf9f47e",
+          "value": "none"
+        },
+        {
+          "participant": "group:astro-stakers.poolv1.near:other",
+          "value": "none"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "value": "none"
+        },
+        {
+          "participant": "figment.near",
+          "value": "self-declared"
+        },
+        {
+          "participant": "030722ff960a1e51e1af31f13eca39f4c16ce482.lockup.near",
+          "value": "none"
+        },
+        {
+          "participant": "fedc4a53214d6ad18663e43de7018b9ff9fded52.lockup.near",
+          "value": "none"
+        },
+        {
+          "participant": "group:figment.poolv1.near:lockup",
+          "value": "none"
+        },
+        {
+          "participant": "4a082e8c3f9b46d1906c8244a52078ba401cec6b4d58c05829690f2f6cecb88b",
+          "value": "none"
+        },
+        {
+          "participant": "4f4ebac8c8632d16091952bb06cf1be8fb01a46b5dc5381c4926f70b481a6123",
+          "value": "none"
+        },
+        {
+          "participant": "group:figment.poolv1.near:large",
+          "value": "none"
+        },
+        {
+          "participant": "26d4f594db09d16c1c04cb703c6fe5d6d79d298eb2dede943e29272d0e1bd368",
+          "value": "none"
+        },
+        {
+          "participant": "5811a1e5aa8f9b638981daea09f29df0e4920fa14d1a2b27a0218264be17afb3",
+          "value": "none"
+        },
+        {
+          "participant": "group:figment.poolv1.near:other",
+          "value": "none"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "value": "none"
+        },
+        {
+          "participant": "ledgerxfigment.near",
+          "value": "self-declared"
+        },
+        {
+          "participant": "434fbe5d25e22c0a5628b6d4693a4076d0a100ec7d093e708b0a9aa00f84880a",
+          "value": "none"
+        },
+        {
+          "participant": "2242533657cc34cbee30f4ee128505b99324a2a56a406405272884a4a81723a5",
+          "value": "none"
+        },
+        {
+          "participant": "group:ledgerbyfigment.poolv1.near:large",
+          "value": "none"
+        },
+        {
+          "participant": "6ccf53088a0670911e7072e9ce0f2159da727ca7a3ec20378ae48988e225a184",
+          "value": "none"
+        },
+        {
+          "participant": "e26f1aaa6e88d87e7007b5b7ce2322834bb49fbf5bae4e7f46d870b01e4fa414",
+          "value": "none"
+        },
+        {
+          "participant": "group:ledgerbyfigment.poolv1.near:other",
+          "value": "none"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "value": "none"
+        },
+        {
+          "participant": "staked.near",
+          "value": "self-declared"
+        },
+        {
+          "participant": "da056a5ac60c027001b0fd1f6c7395f4dd574c81.lockup.near",
+          "value": "none"
+        },
+        {
+          "participant": "5f26629815016a143d8c0054b6fa47a3b9961f1d.lockup.near",
+          "value": "none"
+        },
+        {
+          "participant": "group:staked.poolv1.near:lockup",
+          "value": "none"
+        },
+        {
+          "participant": "88730479801e0245f75a5bb5d83d09ef0d9a17b1144fc6573658d3b83fafd34a",
+          "value": "none"
+        },
+        {
+          "participant": "f593c153578b81b910a14d03892dd0cb4656a00f3a36666094bf7d8b2d916e7f",
+          "value": "none"
+        },
+        {
+          "participant": "group:staked.poolv1.near:large",
+          "value": "none"
+        },
+        {
+          "participant": "250a08d42a1510a93ab92a28691aa0588612ce54e4a09616c9f257126e69d497",
+          "value": "none"
+        },
+        {
+          "participant": "df982ec119174188e73eef66510dc94d86370dbc930e8925baddd98497ec395b",
+          "value": "none"
+        },
+        {
+          "participant": "group:staked.poolv1.near:other",
+          "value": "none"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "value": "none"
+        },
+        {
+          "participant": "binancenode1.near",
+          "value": "self-declared"
+        },
+        {
+          "participant": "277a16ad69dd7f635e99fa47f7096df54bb59abf.lockup.near",
+          "value": "none"
+        },
+        {
+          "participant": "93a84536a1e92eb40e0f98837c86d7c74fcd5f5b.lockup.near",
+          "value": "none"
+        },
+        {
+          "participant": "7e6e17fcb8e8e6a22ecd47bbd1b58b1af3582b97bbfd4a8d974bb9c266fa282b",
+          "value": "none"
+        },
+        {
+          "participant": "48611d2a830a83e4a8fcaae8393737a93184ff354e375f809cd4c4dfb83ac3d3",
+          "value": "none"
+        },
+        {
+          "participant": "afa6c0716ddd9ba0cf329ef950d09d55cdf7ddf02e49e48f7b3b695d140dd15a",
+          "value": "none"
+        },
+        {
+          "participant": "group:binancenode1.poolv1.near:other",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "name": "backers",
+      "kind": "parts",
+      "unit": "NEAR",
+      "standing": "verified",
+      "layer": "977453e97b73ad2436e7d4131e99f8774527f14364d3cfe08fa3cf802972ef3f",
+      "as_of": "2026-11-03T19:42:00Z",
+      "parts": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "part": "c7e9e9eaf340b35907df79841f596375531561cb.lockup.near",
+          "value": "1363802.876921329611635859744287"
+        },
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "part": "a7b761234a3f068e2e12920331395540cff6568f.lockup.near",
+          "value": "1151953.931196037191635987141895"
+        },
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "part": "group:astro-stakers.poolv1.near:lockup",
+          "value": "3859703.586834146217879322806139"
+        },
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "part": "lst.rhealab.near",
+          "value": "63469.313666073522838194711966"
+        },
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "part": "linear-protocol.near",
+          "value": "61266.512818191950386918985132"
+        },
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "part": "group:astro-stakers.poolv1.near:liquid",
+          "value": "8642.126485229900710878956894"
+        },
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "part": "8b86832ca46d0cd00a63473ef6e7cd107e8c93127d2a21445aba6afcade632f4",
+          "value": "1704175.625747619871451199775978"
+        },
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "part": "liping.near",
+          "value": "1531402.003459435175898416562832"
+        },
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "part": "group:astro-stakers.poolv1.near:large",
+          "value": "3244410.854336236844034918051285"
+        },
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "part": "d7be837bddae208a781674f201b9553a6fd939c76f9734444b634cdccb9498ad",
+          "value": "888165.941303704737926869440678"
+        },
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "part": "bf5cb425ba05c80828665cc66d1a2d0d09a50b200c84db1f5020008cfdf9f47e",
+          "value": "723497.874579357960368963335453"
+        },
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "part": "group:astro-stakers.poolv1.near:other",
+          "value": "18674846.243009424426981467133372"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "part": "030722ff960a1e51e1af31f13eca39f4c16ce482.lockup.near",
+          "value": "166672.217074485394735366975913"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "part": "fedc4a53214d6ad18663e43de7018b9ff9fded52.lockup.near",
+          "value": "166672.217028639927754458760436"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "part": "group:figment.poolv1.near:lockup",
+          "value": "2334.229192568957794553238973"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "part": "linear-protocol.near",
+          "value": "1409.001702702579908684667331"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "part": "4a082e8c3f9b46d1906c8244a52078ba401cec6b4d58c05829690f2f6cecb88b",
+          "value": "12954392.177088046259290526626488"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "part": "4f4ebac8c8632d16091952bb06cf1be8fb01a46b5dc5381c4926f70b481a6123",
+          "value": "2045807.407185172513814607133509"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "part": "group:figment.poolv1.near:large",
+          "value": "5481286.072150437430615910776635"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "part": "26d4f594db09d16c1c04cb703c6fe5d6d79d298eb2dede943e29272d0e1bd368",
+          "value": "996573.753382474378522479998029"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "part": "5811a1e5aa8f9b638981daea09f29df0e4920fa14d1a2b27a0218264be17afb3",
+          "value": "593895.339918526279024819176913"
+        },
+        {
+          "participant": "figment.poolv1.near",
+          "part": "group:figment.poolv1.near:other",
+          "value": "5506090.934821417166224378819976"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "part": "linear-protocol.near",
+          "value": "80147.860088176443776449851555"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "part": "434fbe5d25e22c0a5628b6d4693a4076d0a100ec7d093e708b0a9aa00f84880a",
+          "value": "4576580.744116801132066852919929"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "part": "2242533657cc34cbee30f4ee128505b99324a2a56a406405272884a4a81723a5",
+          "value": "1154192.324703940094244450939503"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "part": "group:ledgerbyfigment.poolv1.near:large",
+          "value": "1316317.28199286115538610557649"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "part": "6ccf53088a0670911e7072e9ce0f2159da727ca7a3ec20378ae48988e225a184",
+          "value": "993410.469489592550811982773442"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "part": "e26f1aaa6e88d87e7007b5b7ce2322834bb49fbf5bae4e7f46d870b01e4fa414",
+          "value": "699557.703725970769246314949253"
+        },
+        {
+          "participant": "ledgerbyfigment.poolv1.near",
+          "part": "group:ledgerbyfigment.poolv1.near:other",
+          "value": "14221092.991537977632970912585987"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "part": "da056a5ac60c027001b0fd1f6c7395f4dd574c81.lockup.near",
+          "value": "167575.891987372353717305542331"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "part": "5f26629815016a143d8c0054b6fa47a3b9961f1d.lockup.near",
+          "value": "157046.477408031777811813982229"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "part": "group:staked.poolv1.near:lockup",
+          "value": "148082.559144469054564837339243"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "part": "88730479801e0245f75a5bb5d83d09ef0d9a17b1144fc6573658d3b83fafd34a",
+          "value": "7101880.571380529658122428985464"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "part": "f593c153578b81b910a14d03892dd0cb4656a00f3a36666094bf7d8b2d916e7f",
+          "value": "5824065.696508867181988788735427"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "part": "group:staked.poolv1.near:large",
+          "value": "5399990.208523618323737695154166"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "part": "250a08d42a1510a93ab92a28691aa0588612ce54e4a09616c9f257126e69d497",
+          "value": "484448.526700352096341724222085"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "part": "df982ec119174188e73eef66510dc94d86370dbc930e8925baddd98497ec395b",
+          "value": "393653.302224918822355999678207"
+        },
+        {
+          "participant": "staked.poolv1.near",
+          "part": "group:staked.poolv1.near:other",
+          "value": "1346846.460065844533758524010838"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "part": "277a16ad69dd7f635e99fa47f7096df54bb59abf.lockup.near",
+          "value": "196244.792618277018112903264377"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "part": "93a84536a1e92eb40e0f98837c86d7c74fcd5f5b.lockup.near",
+          "value": "1045.760119960532814057373676"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "part": "linear-protocol.near",
+          "value": "101382.869124995920875398398498"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "part": "7e6e17fcb8e8e6a22ecd47bbd1b58b1af3582b97bbfd4a8d974bb9c266fa282b",
+          "value": "19274414.308681283787216101276019"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "part": "48611d2a830a83e4a8fcaae8393737a93184ff354e375f809cd4c4dfb83ac3d3",
+          "value": "303033.084242081080458291302757"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "part": "afa6c0716ddd9ba0cf329ef950d09d55cdf7ddf02e49e48f7b3b695d140dd15a",
+          "value": "68577.160894961757770604254445"
+        },
+        {
+          "participant": "binancenode1.poolv1.near",
+          "part": "group:binancenode1.poolv1.near:other",
+          "value": "185920.120487976430131131153502"
+        }
+      ]
+    },
+    {
+      "name": "blocks_missed",
+      "kind": "count",
+      "unit": "blocks",
+      "standing": "verified",
+      "layer": "4771f4b0c77516169220637481c7bf5f336e60d33d24db92c6aa24efd6eb6f1e",
+      "as_of": "2026-11-09T00:00:00Z",
+      "values": [
+        {
+          "participant": "astro-stakers.poolv1.near",
+          "value": "0"
+        },
+        {
+          "participant": "astrostakers.near",
+          "value": "2"
+        },
+        {
+          "participant": "c7e9e9eaf340b35907df79841f596375531561cb.lockup.near",
+          "value": "4"
+        }
+      ]
+    }
+  ],
+  "dates": [
+    "2026-11-03T19:42:00Z",
+    "2026-11-09T00:00:00Z"
+  ],
+  "coverage": {
+    "participants": 52,
+    "partial": false
+  }
+}

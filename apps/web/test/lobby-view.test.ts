@@ -1,7 +1,14 @@
 // The lobby's flowers (specs/004-workspace, W3): each reads as in the gallery and opens on the canvas.
 import { describe, expect, test } from 'vitest';
 import type { ListedFlower } from '../lib/flower-view.ts';
-import { mapTiles } from '../lib/lobby-view.ts';
+import {
+  canWithdraw,
+  fundsWords,
+  mapTiles,
+  nearOf,
+  WITHDRAW_ALL,
+  withdrawn,
+} from '../lib/lobby-view.ts';
 
 const flower = (over: Partial<ListedFlower>): ListedFlower => ({
   id: '9ac16c8917aa5ca579c8421a',
@@ -33,5 +40,35 @@ describe('mapTiles', () => {
   test('the order is the API’s', () => {
     const tiles = mapTiles([flower({ id: 'b' }), flower({ id: 'a' })]);
     expect(tiles.map((t) => t.key)).toEqual(['map:b', 'map:a']);
+  });
+});
+
+describe('the profile part’s money', () => {
+  test('yoctoNEAR reads as NEAR to two places, rounded to the nearest hundredth', () => {
+    expect(nearOf('840000000000000000000000')).toBe('0.84');
+    expect(nearOf('0')).toBe('0.00');
+    expect(nearOf('1')).toBe('0.00');
+    expect(nearOf('4995000000000000000000')).toBe('0.00');
+    expect(nearOf('5000000000000000000000')).toBe('0.01');
+    expect(nearOf('12345000000000000000000000')).toBe('12.35');
+  });
+
+  test('what came out is the balance before less the balance after', () => {
+    expect(withdrawn('840000000000000000000000', '0')).toBe('0.84');
+    expect(fundsWords.withdrew(withdrawn('840000000000000000000000', '0'))).toBe(
+      'Withdrew 0.84 NEAR.',
+    );
+  });
+
+  test('Withdraw is there only while the contract holds something', () => {
+    expect(canWithdraw('1')).toBe(true);
+    expect(canWithdraw('0')).toBe(false);
+  });
+
+  test('the wallet takes everything out: withdraw, no amount, the 1 yoctoNEAR the contract asks', () => {
+    expect(WITHDRAW_ALL).toEqual({
+      type: 'FunctionCall',
+      params: { methodName: 'withdraw', args: {}, gas: '30000000000000', deposit: '1' },
+    });
   });
 });

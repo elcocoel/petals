@@ -37,6 +37,15 @@ const PHASE_A = [
   'start_exploration',
   'save_step',
   'add_note',
+  'take_job',
+  'report_job',
+  'list_jobs',
+  'brain_route',
+  'brain_file',
+  'brain_index',
+  'keep_layer',
+  'list_layers',
+  'fork_dataset',
 ];
 
 describe('registry', () => {
@@ -61,7 +70,7 @@ describe('registry', () => {
     const { ctx } = await rig();
     const out = await callTool('compute_figures', { sha256: 'nope' }, ctx);
     expect(compile(TOOL_ERROR_SCHEMA)(out)).toBe(true);
-    expect(out).toMatchObject({ error: { code: 'bad_input' }, tools_version: 'tools/v1' });
+    expect(out).toMatchObject({ error: { code: 'bad_input' }, tools_version: 'tools/v2' });
     expect((out as { error: { message: string } }).error.message).toMatch(/sha256|measure/);
   });
 
@@ -86,7 +95,7 @@ describe('registry', () => {
     const out = await throwing.run({}, (await rig()).ctx);
     expect(out).toMatchObject({
       error: { code: 'internal', message: 'not built yet: fileStore' },
-      tools_version: 'tools/v1',
+      tools_version: 'tools/v2',
     });
     const coded = defineTool<object, object>({
       ...throwing,

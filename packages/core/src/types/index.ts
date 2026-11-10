@@ -23,6 +23,10 @@ import type {
   Kind,
   PetalSnapshotCommonTableV1,
 } from './generated/snapshot.ts';
+import type { PetalViewV1 } from './generated/view.ts';
+
+/** view/v1 (specs/006-the-map/contracts/view.md): which piece of data each dimension shows. */
+export type View = PetalViewV1;
 
 // claim/v1 (specs/002-system/contracts/claims.md)
 export type {
@@ -480,6 +484,8 @@ export interface RenderOptions {
   /** default 800 */
   size?: number;
   thumb?: boolean;
+  /** The viewer's view (view/v1): what each dimension draws. Without one, the spec's own choices. */
+  view?: View;
 }
 
 export interface LegendItem {
@@ -640,6 +646,24 @@ export type AgentError = Omit<ToolError['error'], 'code'> & {
   code: ToolErrorCode | 'stopped' | 'interrupted';
 };
 
+/**
+ * A job Petals' own agent handed to the person's own agent (9 Nov, C): it lives in the conversation's
+ * exploration, their agent takes it there and reports back, and GET /api/v1/explorations/:ref/jobs says
+ * where it stands.
+ */
+export interface JobEvent {
+  id: string;
+  exploration: string;
+  kind: 'map';
+  title: string;
+  brief: string;
+  status: 'open' | 'taken' | 'done' | 'failed';
+  /** additive (9 Nov, agent-house): the agent it was sent to, by name, or null for any */
+  to?: string | null;
+  /** additive: the agent that took it, or null */
+  taken_by?: string | null;
+}
+
 /** One SSE event of a chat, in order: run, stage/progress/tool_call/tool_result/message…, flower, signature, done. */
 export type AgentEvent =
   | { event: 'run'; data: { run_id: string; resume_url: string } }
@@ -662,6 +686,8 @@ export type AgentEvent =
       };
     }
   | { event: 'flower'; data: FlowerResult }
+  /** additive (9 Nov): Petals' agent handed a job to the person's own agent, in this exploration */
+  | { event: 'job'; data: JobEvent }
   | { event: 'signature'; data: ModelSignature }
   | { event: 'error'; data: AgentError }
   | { event: 'heartbeat'; data: Record<string, never> }

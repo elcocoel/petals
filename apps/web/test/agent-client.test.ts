@@ -1,5 +1,7 @@
 // T178: the adapter says the same things to the server the components used to, and turns the answers
 // into plain values. Each error here is word for word what the page showed before.
+
+import { DEFAULT_VIEW } from '@petal/core/view';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   agentClient,
@@ -160,7 +162,9 @@ describe('drawFlower', () => {
     const calls = serve(json({ svg: '<svg/>' }));
     expect(await drawFlower('{"a":1}')).toEqual({ svg: '<svg/>', petals: [], legend: [] });
     expect(calls[0]?.url).toBe('/api/v1/render');
-    expect(calls[0]?.init?.body).toBe('{"spec":{"a":1},"include_svg":true,"include_reading":true}');
+    expect(calls[0]?.init?.body).toBe(
+      `{"spec":{"a":1},"include_svg":true,"include_reading":true,"view":${JSON.stringify(DEFAULT_VIEW)}}`,
+    );
   });
 
   test('throws the server’s message, or the status', async () => {

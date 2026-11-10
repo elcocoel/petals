@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { TOOLS_VERSION } from '@petal/core';
-import type { Tool, ToolContext } from '@petal/tools';
+import { isToolError, type Tool, type ToolContext } from '@petal/tools';
 import { describe, expect, test } from 'vitest';
 import { nodeIsNew, siteOf } from '../src/file.ts';
 import { LEFT_OUT, SITE_TOOLS, siteDoor } from '../src/site.ts';
@@ -56,6 +56,33 @@ function fakeSite(held: Set<string> = new Set()) {
       });
     }
     if (method === 'POST' && path.endsWith('/notes')) return json({ note: { seq: 0 } });
+    if (method === 'POST' && path === '/api/v1/agents/wait') {
+      return json({
+        job: { id: 'job_2', kind: 'map', title: 'Map Moloch', brief: 'Who?', inputs: {}, to: null },
+        project: { exploration: `${SITE}/s/${TOKEN}`, question: 'who?' },
+      });
+    }
+    if (method === 'POST' && path.endsWith('/jobs/take')) {
+      return json({
+        job: {
+          id: 'job_1',
+          kind: 'map',
+          title: 'Map RaidGuild',
+          brief: 'Who holds power in RaidGuild?',
+          inputs: {},
+        },
+      });
+    }
+    if (method === 'POST' && /\/jobs\/[^/]+\/report$/.test(path))
+      return json({ job: { id: 'job_1', status: 'done' } });
+    if (method === 'GET' && path.endsWith('/jobs')) return json({ jobs: [] });
+    if (method === 'GET' && path.startsWith('/api/v1/brain'))
+      return json({ commit: 'c0ffee', path });
+    if (method === 'POST' && path.endsWith('/layers'))
+      return json({ hash: 'e'.repeat(64), version: { id: 'dsv_1', seq: 0 } });
+    if (method === 'GET' && path.includes('/layers')) return json({ layers: [], versions: [] });
+    if (method === 'POST' && path.endsWith('/datasets/fork'))
+      return json({ version: { id: 'dsv_2' } });
     if (method === 'GET' && path.startsWith('/api/v1/explorations')) return json({ steps: [] });
     return json({ error: { code: 'not_found', message: 'no' } }, 404);
   };
@@ -80,6 +107,7 @@ const registry = [
   ...SITE_TOOLS.map((n) => tool(n)),
   ...LEFT_OUT.map((n) => tool(n)),
   tool('find_target'),
+  tool('add_layer', async () => ({ hash: 'e'.repeat(64), about: 'eip155:100:0xraid', rows: 1 })),
   tool('render_flower', async () => ({
     spec_sha256: 'b'.repeat(64),
     view_url: '/draft?spec=x',
@@ -275,5 +303,129 @@ describe('the file itself', () => {
     expect(nodeIsNew('22.13.0')).toBe(true);
     expect(nodeIsNew('24.14.0')).toBe(true);
     expect(nodeIsNew('20.19.0')).toBe(false);
+  });
+});
+
+// Elco, 9 Nov (B with C): the page's agent hands jobs out in a project, and the person's own agent
+// takes one, does it on their machine and reports back. The project is reached by its link.
+describe('jobs from the page’s agent', () => {
+  test('take_job claims the next job in the project the agent is in', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, initial: LINK }).tools(registry);
+    expect((byName(tools, 'take_job').input as { required: string[] }).required).toEqual([]);
+    const out = (await byName(tools, 'take_job').run({}, ctx())) as { job: { id: string } };
+    expect(out.job.id).toBe('job_1');
+    const sent = site.seen.at(-1) as Seen;
+    expect(sent.method).toBe('POST');
+    expect(sent.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/jobs/take`);
+    expect(JSON.parse(sent.body as string)).toEqual({});
+  });
+
+  test("with the person's agent key, take_job takes their next job now, and keeps its project", async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch }).tools(registry);
+    const key = `petal_agent_${'a'.repeat(43)}`;
+    const out = (await byName(tools, 'take_job').run(
+      { agent_key: key, as: 'claude-app' },
+      ctx(),
+    )) as {
+      link: string;
+      job: { id: string };
+    };
+    expect(out).toMatchObject({ link: `${SITE}/s/${TOKEN}`, job: { id: 'job_2' } });
+    const sent = site.seen.at(-1) as Seen;
+    expect(sent.url).toBe(`${SITE}/api/v1/agents/wait`);
+    expect(sent.headers.authorization).toBe(`Bearer ${key}`);
+    expect(JSON.parse(sent.body as string)).toEqual({ as: 'claude-app', wait_s: 0 });
+    // the job's project is the one the next calls go to
+    await byName(tools, 'report_job').run({ job: 'job_2', result: { summary: 'Done.' } }, ctx());
+    expect((site.seen.at(-1) as Seen).url).toBe(
+      `${SITE}/api/v1/explorations/${TOKEN}/jobs/job_2/report`,
+    );
+  });
+
+  test('report_job sends the result to that job, without the link or the id in the body', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch }).tools(registry);
+    const result = { summary: 'Three members hold most of the shares.', steps: [0, 1] };
+    await byName(tools, 'report_job').run({ exploration: LINK, job: 'job_1', result }, ctx());
+    const sent = site.seen.at(-1) as Seen;
+    expect(sent.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/jobs/job_1/report`);
+    expect(JSON.parse(sent.body as string)).toEqual({ result });
+    await byName(tools, 'report_job').run(
+      { exploration: LINK, job: 'job_1', failed: 'No data' },
+      ctx(),
+    );
+    expect(JSON.parse((site.seen.at(-1) as Seen).body as string)).toEqual({ failed: 'No data' });
+  });
+
+  test('list_jobs reads the project’s jobs from the site, not this machine', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, initial: LINK }).tools(registry);
+    expect(await byName(tools, 'list_jobs').run({}, ctx())).toMatchObject({ jobs: [] });
+    expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/jobs`);
+  });
+
+  test('without a project, or without the job’s id, nothing is sent', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch }).tools(registry);
+    expect(isToolError(await byName(tools, 'take_job').run({}, ctx()))).toBe(true);
+    expect(isToolError(await byName(tools, 'report_job').run({ exploration: LINK }, ctx()))).toBe(
+      true,
+    );
+    expect(site.seen).toEqual([]);
+  });
+
+  test('the brain comes from the site, which holds the latest, with its commit', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch }).tools(registry);
+    const route = (await byName(tools, 'brain_route').run(
+      { question: 'who controls this treasury', answers: ['sharesToken()', 'lootToken()'] },
+      ctx(),
+    )) as { commit: string };
+    expect(route.commit).toBe('c0ffee');
+    const url = new URL((site.seen.at(-1) as Seen).url);
+    expect(url.pathname).toBe('/api/v1/brain/route');
+    expect(url.searchParams.get('q')).toBe('who controls this treasury');
+    expect(url.searchParams.get('answers')).toBe('sharesToken(),lootToken()');
+    await byName(tools, 'brain_file').run({ id: 'where-power-lives' }, ctx());
+    expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/brain/files/where-power-lives`);
+    await byName(tools, 'brain_index').run({}, ctx());
+    expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/brain`);
+  });
+
+  test('add_layer keeps the layer here, then in the open project on the site too', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, initial: LINK }).tools(registry);
+    const layer = { petal: 'layer/v1', about: 'eip155:100:0xraid' };
+    const out = (await byName(tools, 'add_layer').run({ layer }, ctx())) as Record<string, unknown>;
+    expect(out).toMatchObject({ hash: 'e'.repeat(64), kept_on_site: { version: { id: 'dsv_1' } } });
+    const sent = site.seen.at(-1) as Seen;
+    expect(sent.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/layers`);
+    expect(JSON.parse(sent.body as string)).toEqual({ layer });
+  });
+
+  test('with no project open, add_layer keeps it here only, and says so', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch }).tools(registry);
+    const out = (await byName(tools, 'add_layer').run({ layer: {} }, ctx())) as Record<
+      string,
+      unknown
+    >;
+    expect(out.next).toMatch(/start_exploration/);
+    expect(site.seen).toEqual([]);
+  });
+
+  test('list_layers and fork_dataset go to the project on the site', async () => {
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, initial: LINK }).tools(registry);
+    await byName(tools, 'list_layers').run({ about: 'eip155:100:0xraid' }, ctx());
+    expect((site.seen.at(-1) as Seen).url).toBe(
+      `${SITE}/api/v1/explorations/${TOKEN}/layers?about=eip155%3A100%3A0xraid`,
+    );
+    await byName(tools, 'fork_dataset').run({ version: 'dsv_1', drop: ['e'.repeat(64)] }, ctx());
+    const sent = site.seen.at(-1) as Seen;
+    expect(sent.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/datasets/fork`);
+    expect(JSON.parse(sent.body as string)).toEqual({ version: 'dsv_1', drop: ['e'.repeat(64)] });
   });
 });

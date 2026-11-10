@@ -37,6 +37,131 @@
       "sha256": "d0e92bde3644dd00cd0c4e6e594a246378af92686ce836d55cffc748499481fa"
     },
     {
+      "id": "connect-claude-code",
+      "kind": "chapter",
+      "for": "connecting Claude Code to Petals, in a terminal or under Code in the Claude desktop app, and keeping it for next time",
+      "recognise": [
+        "claude code",
+        "claude cli",
+        "claude desktop code",
+        "anthropic",
+        "connect",
+        "set up",
+        "install",
+        "mcp",
+        "add petals",
+        "keep petals"
+      ],
+      "tools": [
+        "start_exploration",
+        "add_note",
+        "render_flower"
+      ],
+      "continues": [
+        "start-from-an-address",
+        "where-power-lives"
+      ],
+      "status": "ready",
+      "file": "chapters/connect-claude-code.md",
+      "sha256": "f56b1167947a1db16c89094d193c1c8e920a00a39f54c52fa89667aba02d462d"
+    },
+    {
+      "id": "connect-cloud",
+      "kind": "chapter",
+      "for": "connecting an app that runs in the cloud, or takes a remote MCP server's URL, to Petals as a connector: the Claude app, ChatGPT, Cursor",
+      "recognise": [
+        "claude app",
+        "claude.ai",
+        "claude desktop chat",
+        "claude mobile",
+        "chatgpt",
+        "openai",
+        "cursor",
+        "connector",
+        "custom connector",
+        "remote mcp",
+        "mcp url",
+        "connect",
+        "set up",
+        "add petals",
+        "cloud sandbox",
+        "code execution",
+        "blocked domain"
+      ],
+      "tools": [
+        "list_networks",
+        "describe_snapshot",
+        "render_flower",
+        "start_exploration",
+        "brain_route"
+      ],
+      "continues": [
+        "where-power-lives",
+        "going-deeper"
+      ],
+      "status": "partial",
+      "file": "chapters/connect-cloud.md",
+      "sha256": "2f10d79e102d9797d3b585708add04bff54d00ca5bb49930b365654f6db92bca"
+    },
+    {
+      "id": "connect-codex",
+      "kind": "chapter",
+      "for": "connecting Codex to Petals, in a terminal, and keeping it for next time",
+      "recognise": [
+        "codex",
+        "codex cli",
+        "openai codex",
+        "connect",
+        "set up",
+        "install",
+        "mcp",
+        "add petals",
+        "keep petals"
+      ],
+      "tools": [
+        "start_exploration",
+        "add_note",
+        "render_flower"
+      ],
+      "continues": [
+        "start-from-an-address",
+        "where-power-lives"
+      ],
+      "status": "ready",
+      "file": "chapters/connect-codex.md",
+      "sha256": "3e9a891eff75fd914bb1c6f0e5f1463662b504bd5ae26e3716bc227e75ab5697"
+    },
+    {
+      "id": "connect-hermes",
+      "kind": "chapter",
+      "for": "connecting Hermes, Nous Research's agent, to Petals, in a terminal or over ACP, and keeping it for next time",
+      "recognise": [
+        "hermes",
+        "hermes agent",
+        "nous",
+        "nous research",
+        "acp",
+        "connect",
+        "set up",
+        "install",
+        "mcp",
+        "add petals",
+        "keep petals"
+      ],
+      "tools": [
+        "start_exploration",
+        "add_note",
+        "render_flower"
+      ],
+      "continues": [
+        "start-from-an-address",
+        "where-power-lives"
+      ],
+      "status": "ready",
+      "file": "chapters/connect-hermes.md",
+      "sha256": "f67f5808ab9dc63904d3454a1fbafaa515d042046c9a78fbcce388d3171b9c49"
+    },
+    {
       "id": "contributing",
       "kind": "chapter",
       "for": "improving a chapter or a recipe, by pull request",
@@ -174,12 +299,21 @@
         "governance",
         "members",
         "holders",
+        "who holds",
         "votes",
+        "voting power",
         "who controls",
         "treasury",
         "multisig",
+        "signers",
         "admin",
-        "delegation"
+        "owner",
+        "upgrade",
+        "pause",
+        "delegation",
+        "proposals",
+        "sponsored",
+        "stake"
       ],
       "tools": [
         "get_snapshot",
@@ -196,7 +330,7 @@
       ],
       "status": "ready",
       "file": "chapters/where-power-lives.md",
-      "sha256": "2632601547c09fe184fc0110131848d0295125338f34b71128f9f18c81a3ccc1"
+      "sha256": "b92b802cb32d73095ac7b88b8ceb596c58ff234fdd93cd43b94eb059b1c4db81"
     },
     {
       "id": "moloch-v3",

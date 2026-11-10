@@ -12,11 +12,35 @@ export interface Credit {
   usd_per_chat: number;
 }
 
-/** Where a payment goes, and NEAR's price now (null if it can't be read). */
+/**
+ * Where a payment goes, and NEAR's price now (null if it can't be read). With the credit contract (Elco,
+ * 9 Nov), `method` is 'deposit': the NEAR stays the person's, held under their account in the contract,
+ * and `credit` is what it holds now, read from the chain. Without it, a plain transfer to Petals.
+ */
 export interface PayInfo {
   network: 'mainnet' | 'testnet';
   receiver: string;
   near_usd: number | null;
+  method?: 'deposit' | null;
+  credit?: Credit | null;
+}
+
+/** One action, as a wallet takes it. */
+export type PayAction =
+  | { type: 'Transfer'; params: { deposit: string } }
+  | {
+      type: 'FunctionCall';
+      params: { methodName: string; args: Record<string, string>; gas: string; deposit: string };
+    };
+
+/** What the wallet is asked to send for `yocto`: a deposit into the contract, or a plain transfer. */
+export function payAction(info: PayInfo, yocto: string): PayAction {
+  return info.method === 'deposit'
+    ? {
+        type: 'FunctionCall',
+        params: { methodName: 'deposit', args: {}, gas: '30000000000000', deposit: yocto },
+      }
+    : { type: 'Transfer', params: { deposit: yocto } };
 }
 
 /** What one press of the pay button sends, in NEAR. A proposal, for Elco to set. */

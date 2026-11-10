@@ -53,20 +53,20 @@ To install it for one project only, copy `SKILL.md` to `.claude/skills/petal/` i
 The MCP server is optional. It gives Claude Code the tools by name, so it doesn't need `curl`:
 
 ```bash
-claude mcp add petal -- pnpm -s --dir <repo> petal mcp
+claude mcp add petals -- pnpm -s --dir <repo> petal mcp
 ```
 
 - `-s` keeps pnpm's script banner off stdout. MCP over stdio needs a clean stdout, and the banner would corrupt it.
 - **Node 24 must be first on the PATH that Claude Code gives the server.** Claude Code starts `pnpm` with its own environment, and pnpm runs whichever `node` comes first on that PATH. A login shell can find an older `node` before nvm's, and then the server fails to start. If that happens, pass a PATH with Node 24 first (run this where nvm is loaded):
 
   ```bash
-  claude mcp add petal -e PATH="$(dirname "$(nvm which 24)"):/usr/bin:/bin" \
+  claude mcp add petals -e PATH="$(dirname "$(nvm which 24)"):/usr/bin:/bin" \
     -- pnpm -s --dir <repo> petal mcp
   ```
 
-- Or, while `pnpm api` is running, use the HTTP endpoint. It needs no local Node setup on the agent's side: `claude mcp add --transport http petal http://localhost:8787/mcp`.
+- Or, while `pnpm api` is running, use the HTTP endpoint. It needs no local Node setup on the agent's side: `claude mcp add --transport http petals http://localhost:8787/mcp`.
 
-Check it: `claude mcp list` shows `petal` as connected, and `/mcp` in a session lists its tools (`mcp__petal__list_networks`, ...).
+Check it: `claude mcp list` shows `petals` as connected, and `/mcp` in a session lists its tools (`mcp__petals__list_networks`, ...).
 
 Then ask: **who stands behind NEAR's validators?** The agent should run the tools in order (networks, snapshot, figures, propose, validate, render). It should answer with a `view_url`, the legend and an interpretation. If you ask it to publish, it calls `prepare_publish` and gives you a `sign_url` to sign in your own wallet. It never asks for a key.
 
@@ -75,12 +75,12 @@ Then ask: **who stands behind NEAR's validators?** The agent should run the tool
 ```bash
 mkdir -p ~/.agents/skills/petal
 cp <repo>/skill/petal/SKILL.md ~/.agents/skills/petal/
-codex mcp add petal -- pnpm -s --dir <repo> petal mcp            # optional
+codex mcp add petals -- pnpm -s --dir <repo> petal mcp            # optional
 ```
 
 Codex's `mcp add` replaces a server of the same name without asking. `petal connect codex` checks first.
 
-The Node 24 rule above applies here too. Give the server a PATH with `--env PATH=...`, or use the HTTP endpoint with `codex mcp add petal --url http://localhost:8787/mcp`. If Codex's sandbox blocks the skill's `curl` calls to localhost, use the MCP server or allow network access for the session.
+The Node 24 rule above applies here too. Give the server a PATH with `--env PATH=...`, or use the HTTP endpoint with `codex mcp add petals --url http://localhost:8787/mcp`. If Codex's sandbox blocks the skill's `curl` calls to localhost, use the MCP server or allow network access for the session.
 
 ## IronClaw
 

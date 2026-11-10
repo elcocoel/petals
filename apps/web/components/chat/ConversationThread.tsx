@@ -1,8 +1,10 @@
 // The thread as every surface shows it: its rows, the recorded notice, and a flower's row wired to what
 // opens it. A surface says only where the thread sits and what the open row says.
 import type { Ref } from 'react';
+import { type Job, jobLine } from '../../lib/jobs.ts';
 import type { PayPhase } from '../../lib/pay.ts';
 import type { Row } from '../../lib/thread-view.ts';
+import { JobRow } from './JobRow.tsx';
 import { PayRow } from './PayRow.tsx';
 import { Thread } from './Thread.tsx';
 import { TurnFlower } from './TurnFlower.tsx';
@@ -19,6 +21,7 @@ export function ConversationThread({
   onRefollow,
   onLink,
   pay,
+  jobs,
 }: {
   recorded: boolean;
   rows: Row[];
@@ -33,6 +36,8 @@ export function ConversationThread({
   onLink: (href: string) => boolean;
   /** Paying for Petals' agent, for the live pay row (B). */
   pay?: { asking: string | null; phase: PayPhase; added: string | null; onPay: () => void };
+  /** Where each handed job stands, and the hand-over (C). */
+  jobs?: Record<string, Job>;
 }) {
   return (
     <Thread
@@ -69,6 +74,10 @@ export function ConversationThread({
           <PayRow key={key} phase={pay.phase} added={pay.added} onPay={pay.onPay} />
         ) : null
       }
+      renderJob={(row) => {
+        const line = jobLine(row.job, jobs?.[row.job.id]);
+        return <JobRow key={row.key} text={line.text} summary={line.summary} />;
+      }}
       onRefollow={onRefollow}
       onLink={onLink}
     />

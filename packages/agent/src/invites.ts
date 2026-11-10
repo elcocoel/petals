@@ -84,6 +84,33 @@ export async function mintInvite(
   return { id, token, budget_usd: o.usd, expires_at };
 }
 
+/**
+ * A new budget for an invite, in total, the same token kept (Elco, 10 Nov): what's left moves by the
+ * difference, so what it has spent still counts. False when no such invite exists.
+ */
+export async function setInviteBudget(
+  store: Store,
+  id: string,
+  usd: number,
+  now: Date = new Date(),
+): Promise<boolean> {
+  if (!Number.isFinite(usd) || usd <= 0) throw new Error('the budget must be more than $0');
+  const invite = await store.invite.get(id);
+  if (!invite) return false;
+  const at = now.toISOString();
+  await store.tx(async () => {
+    await store.invite.setBudget(id, usd);
+    await store.credit.apply({
+      id: `budget:${id}:${at}`,
+      account_key: accountOf(id),
+      delta_usd: usd - invite.budget_usd,
+      reason: 'budget',
+      at,
+    });
+  });
+  return true;
+}
+
 /** False when no such invite exists. Calls in flight still settle; the next one is refused. */
 export async function revokeInvite(
   store: Store,
@@ -224,6 +251,8 @@ export function inviteLedger(
 const personAccount = (person: string) => `person:${person}`;
 const FUNDED = 'funded';
 const PAID = 'paid';
+/** The credit contract's balance, read from the chain (credit.ts): what puts it in, in dollars. */
+const SYNCED = 'synced';
 
 export interface PersonCredit {
   /** everything ever put in */
@@ -235,7 +264,7 @@ export interface PersonCredit {
 }
 
 /** What was put in by `reasons`: by default both kinds, what Elco gave and what the person paid. */
-const fundedOf = async (store: Store, account: string, reasons = [FUNDED, PAID]) =>
+const fundedOf = async (store: Store, account: string, reasons = [FUNDED, PAID, SYNCED]) =>
   (await store.credit.entries(account))
     .filter((e) => reasons.includes(e.reason))
     .reduce((sum, e) => sum + e.delta_usd, 0);
@@ -321,12 +350,41 @@ function uncapped(day: BudgetLedger, now: () => Date): BudgetLedger {
   };
 }
 
+/**
+ * Sets the person's credit to `usd`, what they hold in the credit contract (credit.ts), whatever it was. What
+ * calls in flight hold stays held.
+ */
+export async function syncPersonCredit(
+  store: Store,
+  person: string,
+  usd: number,
+  now: Date = new Date(),
+): Promise<PersonCredit> {
+  if (!(await store.person.get(person))) throw new Error(`no person ${person}`);
+  const account = personAccount(person);
+  return store.tx(async () => {
+    const change = usd - ((await store.credit.get(account))?.balance_usd ?? 0);
+    if (Math.abs(change) >= DUST_USD) {
+      await store.credit.apply({
+        id: `sync:${randomUUID()}`,
+        account_key: account,
+        delta_usd: change,
+        reason: SYNCED,
+        at: now.toISOString(),
+      });
+    }
+    return (await personCredit(store, person)) ?? { funded_usd: 0, spent_usd: 0, left_usd: 0 };
+  });
+}
+
 /** This person's credit, and nothing else: the daily cap doesn't hold their own turns. */
 export function personLedger(
   store: Store,
   person: string,
   day: BudgetLedger,
   now: () => Date = () => new Date(),
+  /** told what each call really cost: a chat on the credit contract adds it up, to charge at its end */
+  onSpend?: (usd: number) => Promise<void>,
 ): BudgetLedger {
   return creditLedger(
     store,
@@ -337,6 +395,7 @@ export function personLedger(
       spent: CREDIT_SPENT,
       code: 'payment_required',
       hint: PAY_HINT,
+      ...(onSpend ? { onSpend } : {}),
     },
     uncapped(day, now),
     now,

@@ -106,7 +106,7 @@ describe('createContext', () => {
       string,
       unknown
     >;
-    expect(out.tools_version).toBe('tools/v1');
+    expect(out.tools_version).toBe('tools/v2');
     const nets = (await callTool('list_networks', {}, ctx)) as { networks: unknown[] };
     expect(Array.isArray(nets.networks)).toBe(true);
   });

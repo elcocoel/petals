@@ -27,7 +27,7 @@ async function expectCode(ctx: ToolContext, code: ToolErrorCode, tool: string, i
   });
   const body = (await res.json()) as Json;
   expect(res.status, tool).toBe(HTTP_STATUS[code]);
-  expect(body, tool).toMatchObject({ error: { code }, tools_version: 'tools/v1' });
+  expect(body, tool).toMatchObject({ error: { code }, tools_version: 'tools/v2' });
   expect(checkError(body), tool).toBe(true);
   const mcp = await httpMcpClient(httpApp(ctx));
   const viaMcp = await mcp.callTool({ name: tool, arguments: input });
@@ -65,7 +65,7 @@ describe('one test per error code', () => {
     const res = await httpApp(site).request('/api/v1/find?query=moloch');
     expect(res.status).toBe(HTTP_STATUS.not_on_this_site);
     const body = (await res.json()) as Json;
-    expect(body).toMatchObject({ error: { code: 'not_on_this_site' }, tools_version: 'tools/v1' });
+    expect(body).toMatchObject({ error: { code: 'not_on_this_site' }, tools_version: 'tools/v2' });
     expect(await callTool('find_target', { query: 'moloch' }, site)).toEqual(body);
   });
 

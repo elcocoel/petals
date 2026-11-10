@@ -6,10 +6,19 @@ import { canonicalJson, sha256Hex, specHash } from '../hash.ts';
 import { backerSegments } from '../segments/backers.ts';
 import { selectPetals } from '../select.ts';
 import { measureTable } from '../tables.ts';
-import type { Encoding, PetalRow, Reading, ReadingPetal, Snapshot, Spec } from '../types/index.ts';
+import type {
+  Encoding,
+  PetalRow,
+  Reading,
+  ReadingPetal,
+  Snapshot,
+  Spec,
+  View,
+} from '../types/index.ts';
 import { READING_VERSION } from '../versions.ts';
 import { HEIGHT_FLOOR, heightValues, metricOf, widthFactors } from './encodings.ts';
 import { detailsOf, legendOf } from './legend.ts';
+import { encodingsOf } from './view.ts';
 
 function colourKey(colour: Encoding, r: PetalRow): string {
   if (r.tail) return 'tail';
@@ -28,7 +37,13 @@ function nameOf(r: PetalRow): string {
   return r.identity && r.identity.status !== 'inferred' ? r.identity.name : r.label;
 }
 
-export function readFlower(spec: Spec, s: Snapshot): Reading {
+/**
+ * The reading of a spec over its snapshot. With a person's view (view/v1), each dimension draws what the
+ * view picks (reading/view.ts) and the spec's own choices stay in the spec, as the agent's proposal; the
+ * reading is still of that spec. Without one, the spec's choices are drawn, as they always were.
+ */
+export function readFlower(given: Spec, s: Snapshot, view?: View): Reading {
+  const spec = view ? { ...given, encodings: encodingsOf(view, given, s) } : given;
   // petals clockwise from twelve o'clock in encodings.order.by; measure_desc is the only order
   // this build draws, and selectPetals already returns it (tail last)
   const rows = selectPetals(s, spec.selection);
@@ -49,7 +64,7 @@ export function readFlower(spec: Spec, s: Snapshot): Reading {
   );
   return {
     petal: READING_VERSION,
-    spec_sha256: specHash(spec),
+    spec_sha256: specHash(given),
     title: s.network.title,
     chain: spec.network.chain,
     encodings: spec.encodings,

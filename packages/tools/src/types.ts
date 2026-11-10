@@ -5,6 +5,7 @@ import type { Progress, QuoteRequest, QuoteResult, ToolError } from '@petal/core
 import type { FreshGate, InputModule, SnapshotStore } from '@petal/inputs';
 import type { Rpc } from '@petal/near/auth';
 import type { MapReader, MapWriter } from '@petal/near/map';
+import type { JobRow } from '@petal/store';
 import type { Limits } from './limits.ts';
 import type { LiveHub } from './live.ts';
 
@@ -59,6 +60,8 @@ export interface Config {
    * for it in NEAR or holds an invite.
    */
   public?: boolean;
+  /** additive (9 Nov, PETAL_BRAIN_DIR): the brain/ the site serves, a copy of the repo that follows main */
+  brainDir?: string;
 }
 
 /** Who is calling and through what. A door sets this; a caller can't name itself. */
@@ -89,6 +92,8 @@ export interface ToolContext {
   fresh?: FreshGate;
   /** additive (T404): told when an exploration changes, for a page that's following it */
   live?: LiveHub;
+  /** additive (9 Nov, agent-house): told when a job is reported, so Petals' agent takes it up at once */
+  onJobReported?: (job: JobRow) => void;
 }
 
 export type Tool<I, O> = {

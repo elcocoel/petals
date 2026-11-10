@@ -107,14 +107,7 @@ export function InteractionSurface({
         selected={state.selected}
         onPick={actions.pick}
       />
-      {state.menuShown && (
-        <WorkMenu
-          conversations={state.conversations}
-          open={state.menuOpen}
-          onFold={actions.foldMenu}
-          onUnfold={actions.unfoldMenu}
-        />
-      )}
+      {state.menuShown && <WorkMenu conversations={state.conversations} menu={state.menu} />}
       <FloatBox
         label={chat ? chatTitle : (doorLabel(state.door) ?? state.heading)}
         title={chat ? chatTitle : (doorLabel(state.door) ?? state.heading)}
@@ -171,6 +164,7 @@ export function InteractionSurface({
             onRefollow={actions.refollow}
             onLink={actions.followLink}
             pay={{ ...state.pay, onPay: actions.pay }}
+            jobs={state.jobs}
           />
         )}
       </FloatBox>

@@ -20,8 +20,10 @@ export interface Transfer {
   tx_hash: string;
   signer_id: string;
   receiver_id: string;
-  /** what its Transfer actions moved, in yoctoNEAR, as a decimal string */
+  /** what its Transfer actions, and the NEAR its function calls carried, moved, in yoctoNEAR, as a decimal string */
   yocto: string;
+  /** the methods its function calls named: `deposit`, for the credit contract */
+  methods: string[];
   /** the whole transaction succeeded, its receipts included */
   succeeded: boolean;
 }
@@ -32,7 +34,13 @@ interface TxView {
     hash?: string;
     signer_id?: string;
     receiver_id?: string;
-    actions?: (string | { Transfer?: { deposit?: string } })[];
+    actions?: (
+      | string
+      | {
+          Transfer?: { deposit?: string };
+          FunctionCall?: { method_name?: string; deposit?: string };
+        }
+    )[];
   };
 }
 
@@ -91,9 +99,12 @@ export async function readTransfer(
     );
   }
   let yocto = 0n;
+  const methods: string[] = [];
   for (const a of tx.actions ?? []) {
-    const deposit = typeof a === 'object' ? a.Transfer?.deposit : undefined;
+    if (typeof a !== 'object') continue;
+    const deposit = a.Transfer?.deposit ?? a.FunctionCall?.deposit;
     if (deposit && /^\d+$/.test(deposit)) yocto += BigInt(deposit);
+    if (a.FunctionCall?.method_name) methods.push(a.FunctionCall.method_name);
   }
   const status = body.result?.status;
   return {
@@ -101,6 +112,7 @@ export async function readTransfer(
     signer_id: tx.signer_id ?? '',
     receiver_id: tx.receiver_id ?? '',
     yocto: yocto.toString(),
+    methods,
     succeeded: typeof status === 'object' && status !== null && 'SuccessValue' in status,
   };
 }

@@ -1,6 +1,8 @@
 # dependencies and build output
 node_modules/
 dist/
+# the credit contract's Rust build (packages/credit)
+target/
 *.tsbuildinfo
 coverage/
 

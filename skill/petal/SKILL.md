@@ -21,7 +21,7 @@ curl -s "$API/api/v1/health"
 curl -s "$API/api/v1/networks"
 ```
 
-If the `petal` MCP server is configured, call the same tools by name instead (in Claude Code they show as `mcp__petal__<tool>`). Names, inputs and outputs are the same over both.
+If the `petals` MCP server is configured, call the same tools by name instead (in Claude Code they show as `mcp__petals__<tool>`). Names, inputs and outputs are the same over both.
 
 ## Flow
 
@@ -29,6 +29,41 @@ If the `petal` MCP server is configured, call the same tools by name instead (in
 find_target (a name) or list_networks → get_snapshot → describe_snapshot + compute_figures
   → propose_spec → validate_spec → render_flower → (asked to publish) prepare_publish → sign_url
 ```
+
+## Petals' brain
+
+What Petals knows about mapping power is kept as a short doctrine, a few chapters and the recipes for the systems it knows. The site holds the latest from Petals' repo, and every answer names the commit it came from.
+
+1. **Read the doctrine first,** once a conversation: `brain_file` with `id: "doctrine"`. It holds for every answer.
+2. **Ask which chapter fits:** `brain_route` with the person's words as `question`. For an address, add the view calls its contract answers as `answers` (`read_chain` tells you, such as `sharesToken()`): a system Petals has a recipe for then comes first. It gives the best three, and why each matched.
+3. **Read the one that fits** with `brain_file`, and follow it. Its header says which tools it uses and which chapter comes next. The six steps below still hold.
+
+When a chapter or a recipe misses something, or the person finds a better way, the `contributing` chapter says how to propose the change as a pull request. Nothing changes what the next agent reads until it's reviewed and merged.
+
+## Layers
+
+One reading is one layer: one thing about one address, such as who holds a DAO's shares, or how many proposals each member wrote.
+
+- Every snapshot Petals reads is a layer. Facts you gathered yourself (counted from the chain's events, from a page or a list) become a layer with `add_layer`. Say how you made it, what you read and how sure it is. It stays on this machine, named by its hash, and never changes after.
+- To show two things at once, join layers of the same address with `compose_view`: the reading the flower is of, as `base`, and the others as `layers`. Each measure keeps its name and its source.
+- Then draw the joined reading as any other: `propose_spec` with its `sha256` and, for example, `height: "m:proposals_written"`, then `validate_spec` and `render_flower`.
+- With a project open, a layer is also kept in it on the site, privately, and each one makes a new version of the person's dataset about that address (`list_layers` shows them). `fork_dataset` makes a new version with layers added or dropped; the one it came from stays as it was.
+
+## Jobs from Petals
+
+Petals' own agent, in the chat on the page, hands jobs to the person's agents, such as mapping a network. The job is the person's yes for its map, so don't ask again.
+
+**When the person gives you their agent key** (it starts `petal_agent_`), you're one of their agents, in all of their projects:
+
+1. Join once, with a short name for your app, such as `claude-code`, `codex` or `hermes`: `node ~/.petals/petal.mjs join <agent key> --as <name>`.
+2. Wait for a job: `node ~/.petals/petal.mjs jobs wait`. It comes back with a job, or with none just under ten minutes. Give the command your app's longest limit for one command, as your app's connect chapter says, so it isn't cut short.
+3. Do what the job's `brief` says, on this machine, with the six steps below, in the job's project: `project.exploration` is that project's link, for every tool, and each flower you draw is saved there.
+4. Report it: `report_job` with that link, the job's `id` and a `result`: a `summary` of two or three plain sentences and the `steps` you saved. If you can't do it, report `failed` with the reason instead.
+5. Run `jobs wait` again, and keep going until the person says stop. Petals' agent takes up your report in the same conversation.
+
+**In an app that can't run commands here, connected at the site's `/mcp`** (the Claude app, ChatGPT): when the person gives you their agent key and asks you to take their open jobs, call `take_job` with `agent_key` and `as` (your app's short name, such as `claude-app` or `chatgpt`). Do each job in the `link` it gives, passing that as `exploration`, report it, and call `take_job` again until `job` is null. There's no waiting there: you take jobs when the person asks.
+
+**When the person gives you one project's link** instead: call `take_job` with it as `exploration`, do the job and report it the same way, then take the next one. When there's none, tell the person in one line that the page's agent has your report.
 
 <!-- The block between the petal:shared markers is the same text as Petal's own agent prompt
      (packages/agent/src/prompt.md). `node skill/build.ts` copies it from there; until then the
@@ -163,6 +198,8 @@ JSON in and out; send `content-type: application/json`. Every answer carries `to
 | `list_flowers`, `get_flower` | `GET /api/v1/flowers?network=&maker=&limit=`, `GET /api/v1/flowers/:id` |
 | `prepare_publish`            | `POST /api/v1/publish/prepare`                                          |
 | `quote_payment`              | `POST /api/v1/quote` (dry)                                              |
+| `brain_route`                | `GET /api/v1/brain/route?q=&answers=` (answers comma-separated)         |
+| `brain_file`, `brain_index`  | `GET /api/v1/brain/files/:id`, `GET /api/v1/brain`                      |
 
 - Over HTTP, `render_flower` includes the SVG unless you send `"include_svg": false`. Send it: the `view_url` is what the person needs, and the SVG would fill your context.
 - Keep large JSON (the spec, your interpretation) in files and send them with `--data-binary @file`.

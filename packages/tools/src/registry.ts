@@ -4,6 +4,8 @@
 import type { ToolError } from '@petal/core/types';
 import { type PetalTool, versioned } from './define.ts';
 import { toolError } from './errors.ts';
+import { brainFile, brainIndexTool, brainRoute } from './tools/brain.ts';
+import { forkDataset, keepLayer, listLayers } from './tools/datasets.ts';
 import {
   addNote,
   getExploration,
@@ -14,6 +16,7 @@ import {
 import { computeFiguresTool } from './tools/figures.ts';
 import { findTarget } from './tools/find.ts';
 import { getFlower, listFlowers } from './tools/flowers.ts';
+import { listJobs, reportJob, takeJob } from './tools/jobs.ts';
 import { addLayer, composeViewTool } from './tools/layers.ts';
 import { lookUp } from './tools/look-up.ts';
 import { getNetwork, listNetworks } from './tools/networks.ts';
@@ -66,6 +69,15 @@ export const registry: Tool<any, any>[] = [
   startExploration,
   saveStep,
   addNote,
+  takeJob,
+  reportJob,
+  listJobs,
+  brainRoute,
+  brainFile,
+  brainIndexTool,
+  keepLayer,
+  listLayers,
+  forkDataset,
 ];
 
 /** Title, description and hints, for doors that list them (MCP, the agent's tool list). */

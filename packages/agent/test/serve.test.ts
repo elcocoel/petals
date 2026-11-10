@@ -1,6 +1,6 @@
 // The server alone (002-system research, C3 and C4): it answers only its website, believes the visitor's
 // address only from it, and serves the skill and the file with the website's address in them.
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Config } from '@petal/tools';
@@ -120,5 +120,18 @@ describe('what the server serves for agents', () => {
     expect(await res.text()).toBe(`var SERVED_FROM = "${SITE}";\n`);
     const none = serverApp(fresh(), { root: mkdtempSync(join(tmpdir(), 'petal-empty-')) });
     expect((await call(none, '/petal.mjs')).status).toBe(404);
+  });
+
+  test('the file carries the brain version it was served with (step 4)', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'petal-root-'));
+    mkdirSync(join(root, 'apps/cli/dist'), { recursive: true });
+    cpSync(join(REPO, 'brain'), join(root, 'brain'), { recursive: true });
+    writeFileSync(
+      join(root, 'apps/cli/dist/petal.mjs'),
+      'var SERVED_FROM = "%%PETALS_SITE%%";\nvar BRAIN_SERVED = "%%PETALS_BRAIN%%";\n',
+    );
+    const app = serverApp(fresh(), { siteKey: KEY, root });
+    const text = await (await call(app, '/petal.mjs', { 'x-petal-site-key': KEY })).text();
+    expect(text).toMatch(/var BRAIN_SERVED = "[0-9a-f]{16}@([0-9a-f]{12}|unknown)";/);
   });
 });

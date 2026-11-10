@@ -14,6 +14,7 @@
       "!packages/core/schema",
       "!packages/core/src/types/generated",
       "!**/*.generated.css",
+      "!**/*.generated.ts",
       "!brain/index.json",
       "!brain/**/*.md"
     ]

@@ -1,0 +1,29 @@
+{
+  "petal": "view/v1",
+  "dimensions": {
+    "height": {
+      "data": "share",
+      "scale": "sqrt"
+    },
+    "width": {
+      "data": "share",
+      "scale": "log",
+      "max_ratio": 2
+    },
+    "order": {
+      "data": "share"
+    },
+    "colour": {
+      "data": "kind"
+    },
+    "outline": {
+      "data": "identity"
+    },
+    "texture": null,
+    "markings": {
+      "data": "proposals"
+    },
+    "segments": null,
+    "lines": null
+  }
+}

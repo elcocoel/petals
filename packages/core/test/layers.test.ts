@@ -43,6 +43,18 @@ describe('a layer', () => {
     expect(layerHash(layer({ standing: 'inferred' }))).not.toBe(layerHash(l));
   });
 
+  test('refuses a field the format does not know, and a date without its time (urn:petal:schema:layer:v1)', () => {
+    expect(() => checkLayer({ ...layer(), by: 'someone' })).toThrow(
+      /must NOT have additional properties/,
+    );
+    expect(() => checkLayer(layer({ when: { as_of: '2026-11-09' } }))).toThrow(
+      /as_of must match format "date-time"/,
+    );
+    expect(() =>
+      checkLayer(layer({ how: { method: 'x', sources: [], extra: 1 } as unknown as Layer['how'] })),
+    ).toThrow(/additional properties/);
+  });
+
   test('refuses what it is not', () => {
     for (const bad of [
       { about: 'validators' },

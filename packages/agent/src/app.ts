@@ -5,11 +5,14 @@
 import { join } from 'node:path';
 import { TOOLS_VERSION } from '@petal/core';
 import { durableNonceStore, nearRpc, type Rpc } from '@petal/near/auth';
-import { stateStore } from '@petal/store';
+import { nearUsd } from '@petal/near/pay';
+import { type JobRow, stateStore } from '@petal/store';
 import { type Config, createContext, freshGate, httpApp, overDataBudget } from '@petal/tools';
 import { Hono } from 'hono';
+import { agentLinkRoutes, JobBell } from './agent-links.ts';
 import { agentAccess, createAuth, type Network, siteOf } from './auth-routes.ts';
 import { closedLedger, importLedgerFile, serverBudget, storeLedger } from './budget.ts';
+import { creditFrom } from './credit.ts';
 import { DEFAULT_BUDGET, type LlmClient, personUsdPerChat, runMaxSeconds } from './llm.ts';
 import { chosenModel, createNearAiClient, FALLBACK_MODELS, type NearAiOptions } from './near-ai.ts';
 import { type PayDeps, payRoutes } from './pay-routes.ts';
@@ -28,8 +31,8 @@ export interface PetalAppOptions extends AgentRouteOptions {
   env?: Record<string, string | undefined>;
   /** NEAR RPC per network, for sign-in; default the public RPC, or the context's in fake mode */
   rpcFor?: (network: Network) => Rpc;
-  /** for tests: how a payment is read on chain, and NEAR's price */
-  pay?: Pick<PayDeps, 'readTransfer' | 'nearUsd'>;
+  /** for tests: how a payment is read on chain, NEAR's price, and the credit contract */
+  pay?: Pick<PayDeps, 'readTransfer' | 'nearUsd' | 'credit'>;
 }
 
 /** "recorded", or the NEAR AI client's own up/down. */
@@ -90,6 +93,18 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
 
   const env = o.env ?? process.env;
   const usdPerOwnChat = personUsdPerChat(env);
+  // The credit contract (Elco, 9 Nov), when PETAL_CREDIT_CONTRACT is set; none in fake mode.
+  const credit =
+    o.pay?.credit !== undefined
+      ? o.pay.credit
+      : config.fake
+        ? null
+        : creditFrom(env, { public: config.public === true });
+  const priceNow =
+    o.pay?.nearUsd ??
+    (config.fake
+      ? async () => null
+      : () => nearUsd({ onWarning: (m: string) => console.warn(`petal: ${m}`) }));
   // A public site runs Petals' agent too (9 Nov): for a person who has paid for it, or holds an invite.
   const access = agentAccess(env);
   const auth = createAuth({
@@ -103,6 +118,8 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     ...(o.clock ? { clock: o.clock } : {}),
     full: () => overDataBudget(config, ctx.now()),
     personUsdPerChat: usdPerOwnChat,
+    credit,
+    nearUsd: priceNow,
   });
 
   const app = new Hono();
@@ -139,15 +156,14 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       gate: auth.gate,
       usdPerChat: usdPerOwnChat,
       mainnetOnly: config.public === true,
+      credit,
+      nearUsd: priceNow,
       ...(o.clock ? { clock: o.clock } : {}),
-      // fakes everywhere: no chain and no price is read
+      // fakes everywhere: no chain is read
       ...(config.fake
-        ? {
-            nearUsd: async () => null,
-            readTransfer: () => Promise.reject(new Error('fake mode reads no chain')),
-          }
+        ? { readTransfer: () => Promise.reject(new Error('fake mode reads no chain')) }
         : {}),
-      ...(o.pay ?? {}),
+      ...(o.pay?.readTransfer ? { readTransfer: o.pay.readTransfer } : {}),
     }),
   );
   app.route(
@@ -161,13 +177,26 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       full: () => overDataBudget(config, ctx.now()),
     }),
   );
+  // A person's agents across their projects (9 Nov, agent-house): a job handed out wakes their waiting agents,
+  // and a report is taken up at once in its run.
+  const bell = new JobBell();
+  const takeUp: { current?: (job: JobRow) => Promise<void> } = {};
+  app.route('/', agentLinkRoutes({ store, gate: auth.gate, tools: ctx, bell }));
   // The agent's runs read fresh data apart from the doors, so strangers there can't starve a run. On a
   // public site its runs read the chain, pages and search from here too (Elco, 9 Nov: "yes"): every run that
   // reaches the model is paid for, by the person or an invite. The site's own doors still read nothing.
   const agentCtx = config.public ? createContext({ ...cfg, public: false }) : ctx;
   const tools = { ...agentCtx, fresh: freshGate(agentCtx) };
-  app.route('/', createAgentRoutes({ tools, llm, budget, runs }, { ...o, auth: auth.gate }));
-  app.route('/', httpApp(ctx, { gate: auth.gate }));
+  app.route(
+    '/',
+    createAgentRoutes({ tools, llm, budget, runs }, { ...o, auth: auth.gate, bell, takeUp }),
+  );
+  const onJobReported = (job: JobRow) => {
+    void takeUp
+      .current?.(job)
+      .catch((e) => console.warn(`petal: a report's turn failed: ${(e as Error).message}`));
+  };
+  app.route('/', httpApp({ ...ctx, onJobReported }, { gate: auth.gate }));
   // A store that fails mid-request (a full disk, say) ends in the API's own error shape: no chat
   // starts, so nothing is spent, and the caller is told plainly.
   app.onError((e, c) => {

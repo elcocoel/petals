@@ -10,6 +10,10 @@
 // A public site counts mainnet NEAR only. Testnet NEAR is free, and NEAR AI bills real dollars, so on the
 // live site a testnet payment would spend Elco's money. A site that isn't public (a lane, the journey
 // server) takes testnet too, so the pay step can be walked for nothing.
+//
+// With the credit contract (credit.ts; Elco, 9 Nov), the person deposits into it instead: GET says the
+// contract and `method: "deposit"`, and POST, sent after a deposit or a withdrawal, checks that transaction
+// and sets the person's credit to what the wallet they signed in with holds in the contract now.
 import { TOOLS_VERSION } from '@petal/core';
 import {
   nearUsd,
@@ -23,7 +27,8 @@ import type { Store } from '@petal/store';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import type { Network, RouteAuth } from './auth-routes.ts';
-import { payPerson } from './invites.ts';
+import { type CreditChain, chainChat } from './credit.ts';
+import { payPerson, personCredit } from './invites.ts';
 import { fail } from './routes.ts';
 
 export interface PayDeps {
@@ -37,6 +42,8 @@ export interface PayDeps {
   usdPerChat: number;
   /** a public site (Config.public): only mainnet NEAR counts */
   mainnetOnly: boolean;
+  /** the credit contract; none: plain transfers to Petals' account */
+  credit?: CreditChain | null;
   clock?: () => number;
 }
 
@@ -56,9 +63,36 @@ export function payRoutes(d: PayDeps): Hono {
   });
 
   app.get('/api/v1/pay', async (c) => {
+    const chain = d.credit;
+    if (chain) {
+      const { network, contract } = chain.contract;
+      const near_usd = await price();
+      // signed in on this network: their balance in the contract, read now
+      const me = await d.gate.personOf(c);
+      let credit: Record<string, unknown> | null = null;
+      if (me?.account && me.network === network && near_usd !== null) {
+        const now = () => new Date(clock());
+        const synced = await chainChat(d.store, chain, me.person, me.account, near_usd, now).catch(
+          () => null,
+        );
+        if (synced) {
+          credit = {
+            ...synced.credit,
+            usd_per_chat: d.usdPerChat,
+            balance_yocto: synced.yocto.toString(),
+          };
+        }
+      }
+      return ok(c, { network, receiver: contract, method: 'deposit', near_usd, credit });
+    }
     const signedIn = d.mainnetOnly ? null : (await d.gate.personOf(c))?.network;
     const network: Network = signedIn ?? 'mainnet';
-    return ok(c, { network, receiver: PAY_RECEIVER[network], near_usd: await price() });
+    return ok(c, {
+      network,
+      receiver: PAY_RECEIVER[network],
+      method: null,
+      near_usd: await price(),
+    });
   });
 
   app.post(
@@ -93,6 +127,7 @@ export function payRoutes(d: PayDeps): Hono {
       if (!me.accounts.includes(account_id)) {
         return fail(c, 'unauthorised', `${account_id} isn't one of your wallets here.`);
       }
+      if (d.credit) return contractPaid(c, d.credit, me, account_id, tx_hash);
       const receiver = PAY_RECEIVER[me.network];
       let t: Transfer;
       try {
@@ -143,6 +178,90 @@ export function payRoutes(d: PayDeps): Hono {
       });
     },
   );
+
+  /** A deposit or a withdrawal on the contract, read back, and the person's credit set to what they hold. */
+  async function contractPaid(
+    c: Context,
+    chain: CreditChain,
+    me: { person: string; network: Network; account: string | null },
+    account: string,
+    txHash: string,
+  ) {
+    const { network, contract } = chain.contract;
+    if (me.network !== network) {
+      return fail(
+        c,
+        'bad_input',
+        `Credit here is on ${network}: sign in with a ${network} wallet.`,
+      );
+    }
+    if (account !== me.account) {
+      return fail(c, 'unauthorised', `${account} isn't the wallet you signed in with.`);
+    }
+    let t: Transfer;
+    try {
+      t = await read(network, txHash, account);
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      const message = (e as Error).message;
+      if (code === 'not_found') return fail(c, 'not_found', message);
+      if (code === 'bad_input') return fail(c, 'bad_input', message);
+      return fail(
+        c,
+        'source_failed',
+        "Couldn't read the transaction on NEAR, so nothing changed. Send it again.",
+      );
+    }
+    const deposit = t.methods.includes('deposit');
+    if (
+      t.signer_id !== account ||
+      t.receiver_id !== contract ||
+      !t.succeeded ||
+      !(deposit || t.methods.includes('withdraw'))
+    ) {
+      return fail(
+        c,
+        'bad_input',
+        `That transaction isn't a deposit or withdrawal in ${contract} from ${account}.`,
+      );
+    }
+    const near_usd = await price();
+    if (near_usd === null) {
+      return fail(
+        c,
+        'source_failed',
+        "Couldn't read NEAR's price, so nothing changed. Send it again.",
+      );
+    }
+    const before = (await personCredit(d.store, me.person))?.left_usd ?? 0;
+    let after: Awaited<ReturnType<typeof chainChat>>;
+    try {
+      after = await chainChat(
+        d.store,
+        chain,
+        me.person,
+        account,
+        near_usd,
+        () => new Date(clock()),
+      );
+    } catch {
+      return fail(
+        c,
+        'source_failed',
+        "Couldn't read your balance on NEAR, so nothing changed. Send it again.",
+      );
+    }
+    return ok(c, {
+      added_usd: Math.round((after.credit.left_usd - before) * 1e6) / 1e6,
+      added_near: deposit ? yoctoToNear(t.yocto) : 0,
+      near_usd,
+      credit: {
+        ...after.credit,
+        usd_per_chat: d.usdPerChat,
+        balance_yocto: after.yocto.toString(),
+      },
+    });
+  }
 
   return app;
 }

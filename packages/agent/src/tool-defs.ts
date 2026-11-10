@@ -59,6 +59,20 @@ const NOT_FOR_THE_AGENT = new Set([
   'start_exploration',
   'save_step',
   'add_note',
+  // The person's agent's side of a job (9 Nov, C). Petals' agent hands jobs out with its own hand_job and
+  // reads where they stand in its system message (hand-job.ts), so these would only add bytes.
+  'take_job',
+  'report_job',
+  'list_jobs',
+  // The brain's doors (005) are for the person's own agent, which reads chapters to know what to do.
+  // Petals' agent has its prompt; giving it these is a reviewed step, as with the exploration tools.
+  'brain_route',
+  'brain_file',
+  'brain_index',
+  // layers kept on the site (005): the person's agent keeps them; Petals' agent doesn't yet
+  'keep_layer',
+  'list_layers',
+  'fork_dataset',
 ]);
 
 export function forAgent(t: AnyTool): boolean {
@@ -107,6 +121,8 @@ function agentParameters(t: AnyTool): Record<string, unknown> {
     include_svg: _svg,
     include_reading: _reading,
     size: _size,
+    // The viewer's to choose (specs/006-the-map), never the agent's: it proposes through its spec.
+    view: _view,
     ...own
   } = (p.properties ?? {}) as Record<string, unknown>;
   return { ...p, properties: { ...own, spec: SPEC_BY_HASH } };

@@ -14,6 +14,7 @@ import { freshGate } from '../fresh.ts';
 import { LiveHub } from '../live.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
 import { findTool } from '../registry.ts';
+import { brainOf } from '../tools/brain.ts';
 import { findSnapshot } from '../tools/shared.ts';
 import type { ToolContext } from '../types.ts';
 import {
@@ -52,6 +53,15 @@ export { SITE_HEADER };
 const wantsSse = (c: Context) => (c.req.header('accept') ?? '').includes('text/event-stream');
 
 class MismatchedSnapshot extends Error {}
+
+/** The brain version this site serves (tools/brain.ts), or null when it has no brain/. */
+function brainVersionOf(ctx: ToolContext): string | null {
+  try {
+    return brainOf(ctx).version;
+  } catch {
+    return null;
+  }
+}
 
 export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hono {
   const app = new Hono();
@@ -108,6 +118,22 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     answer(c, 'read_page', pick(c.req.query(), ['url', 'start'], ['start'])),
   );
   app.get('/api/v1/web-search', limit, (c) => answer(c, 'search', pick(c.req.query(), ['query'])));
+  // The brain (005): every header, a route for a question or a contract's answers, one file by id.
+  app.get('/api/v1/brain', limit, (c) => answer(c, 'brain_index', {}));
+  app.get('/api/v1/brain/route', limit, (c) => {
+    const q = c.req.query();
+    const answers = (q.answers ?? '')
+      .split(',')
+      .map((a) => a.trim())
+      .filter(Boolean);
+    return answer(c, 'brain_route', {
+      ...(q.q ? { question: q.q } : {}),
+      ...(answers.length ? { answers } : {}),
+    });
+  });
+  app.get('/api/v1/brain/files/:id', limit, (c) =>
+    answer(c, 'brain_file', { id: c.req.param('id') }),
+  );
   app.get('/api/v1/networks', limit, (c) =>
     answer(c, 'list_networks', pick(c.req.query(), ['query'])),
   );
@@ -256,6 +282,8 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       ok: true,
       map: await mapStatus(ctx),
       llm: ctx.config.nearAiApiKey ? 'up' : 'recorded',
+      // additive (step 4): the brain every door serves, as <index hash>@<commit>; null without a brain/
+      brain_version: brainVersionOf(ctx),
       // additive: true on a public site (PETAL_PUBLIC=1), which does no outside work for visitors
       public: ctx.config.public === true,
       version: API_VERSION,

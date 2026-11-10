@@ -17,6 +17,12 @@ import { pathToFileURL } from 'node:url';
 
 /** The site that serves this file writes its own origin over this. Untouched, it means none. */
 const SERVED_FROM: string = '%%PETALS_SITE%%';
+/** And the brain version it served then (systems check, step 4). Untouched, it means none. */
+const BRAIN_SERVED: string = '%%PETALS_BRAIN%%';
+
+/** The brain version the site that served this file had then, or none. */
+export const brainServed = (): string | null =>
+  BRAIN_SERVED.startsWith('%%') ? null : BRAIN_SERVED;
 /** node:sqlite without a flag. */
 const NODE_MIN: [number, number] = [22, 13];
 

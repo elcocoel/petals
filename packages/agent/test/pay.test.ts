@@ -32,8 +32,9 @@ function chain(txs: Record<string, Partial<Transfer>>) {
       receiver_id: 'petals.near',
       yocto: ONE_NEAR,
       succeeded: true,
+      methods: [],
       ...t,
-    };
+    } as Transfer;
   };
   return { read, reads };
 }
@@ -279,7 +280,7 @@ describe('paying for Petals’ agent in NEAR', () => {
       ...fakeRegistry().registry,
       tool('read_chain', (_a, ctx) => {
         seen.push(ctx.config.public);
-        return { rows: [], tools_version: 'tools/v1' };
+        return { rows: [], tools_version: 'tools/v2' };
       }),
     ];
     const turns: ScriptTurn[] = [

@@ -5,6 +5,7 @@
 import { join } from 'node:path';
 import { sha256Hex, TOOLS_VERSION } from '@petal/core';
 import type { ChatInput, ChatMessage, Draft, ToolError, ToolErrorCode } from '@petal/core/types';
+import type { JobRow } from '@petal/store';
 import {
   bodyCap,
   type Config,
@@ -23,6 +24,7 @@ import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
 import type { ChatAdmission, RouteAuth } from './auth-routes.ts';
 import { defaultSettings, resolveSettings, settingsOf } from './catalogue.ts';
+import type { Bell } from './hand-job.ts';
 import { type Earlier, type Observed, runJobs } from './jobs.ts';
 import type { Budget, LlmClient } from './llm.ts';
 import { RECORDED_ATTESTATIONS } from './recorded.ts';
@@ -75,6 +77,10 @@ export interface AgentRouteOptions {
   clock?: () => number;
   /** sessions, run owners and who pays; none: every run is public and unowned, as before T193 */
   auth?: RouteAuth;
+  /** rung when a job is handed out, so a person's waiting agent wakes (agent-links.ts) */
+  bell?: Bell;
+  /** filled in here: what a report does, taking it up at once in its run (app.ts wires it to report_job) */
+  takeUp?: { current?: (job: JobRow) => Promise<void> };
 }
 
 export function stateDirOf(config: Config): string {
@@ -205,6 +211,48 @@ function sse(c: Context, events: AsyncIterable<Observed>, leave: () => void) {
 export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {}): Hono {
   const clock = o.clock ?? Date.now;
   const jobs = runJobs(deps, o);
+  // A report that comes back (report_job): Petals' agent takes it up at once, as a turn in the run that handed
+  // the job out, paid from the person's own credit (Elco, 9 Nov), or else from the invite they chat on (10 Nov).
+  // With neither, or the run already going, it waits in the job row for the person's next message, as before.
+  if (o.takeUp) {
+    o.takeUp.current = async (job) => {
+      if (!job.run || jobs.running(job.run) || !o.auth?.admitOwner) return;
+      const owner = await deps.runs.ownerOf?.(job.run);
+      const stored = await deps.runs.get(job.run);
+      if (!owner || !stored) return;
+      const admitted = await o.auth.admitOwner(owner, deps.llm, deps.budget);
+      if (!admitted?.budget) return;
+      const came: ChatMessage = {
+        role: 'user',
+        content: `(Petals) The job "${job.title}" came back from ${job.taken_by ?? "the person's own agent"}${job.status === 'failed' ? ', not done' : ''}. Its report is under Jobs: say what it found, in a sentence or two.`,
+      };
+      const input: ChatInput = {
+        messages: [...stored.messages, came],
+        ...(stored.draft ? { draft: stored.draft } : {}),
+        run_id: job.run,
+      };
+      const said = await deps.runs.thread?.(job.run);
+      const earlier: Earlier = {
+        flowers: flowersOf(stored.events),
+        ...(said ? { thread: [...said, came] } : {}),
+      };
+      const runId = await deps.runs.create(input, { owner });
+      const settings = await deps.runs.settingsOf?.(runId);
+      const pick = settings ? settingsOf(settings) : undefined;
+      void jobs
+        .start(
+          runId,
+          input,
+          earlier,
+          admitted.budget,
+          pick && { model: pick.model, effort: pick.effort },
+        )
+        .then(() => admitted.onEnd?.())
+        .catch((e) =>
+          console.warn(`petal: taking up job ${job.id} failed: ${(e as Error).message}`),
+        );
+    };
+  }
   const perHour = o.chatsPerHour ?? 10;
   const chatLimit = limiter(perHour, 3_600_000, clock);
   const followUpsPerHour = o.followUpsPerHour ?? 60;
@@ -347,13 +395,16 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
       const pick = stored ? settingsOf(stored) : undefined;
       keepAlive(
         c,
-        jobs.start(
-          runId,
-          input,
-          earlier,
-          admitted.budget,
-          pick && { model: pick.model, effort: pick.effort },
-        ),
+        jobs
+          .start(
+            runId,
+            input,
+            earlier,
+            admitted.budget,
+            pick && { model: pick.model, effort: pick.effort },
+          )
+          // on the credit contract, what the chat cost is charged once it has ended
+          .then(() => admitted.onEnd?.()),
       );
       if (wantsJson(c)) {
         return c.json({ run_id: runId, status: 'running', tools_version: TOOLS_VERSION }, 202);

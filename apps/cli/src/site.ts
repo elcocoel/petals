@@ -39,6 +39,18 @@ export const SITE_TOOLS = [
   'list_explorations',
   'save_step',
   'add_note',
+  // jobs the page's agent hands out in a project, done on this machine and reported back (C)
+  'take_job',
+  'report_job',
+  'list_jobs',
+  // the brain (005): the site holds the latest from the repo, with its commit
+  'brain_route',
+  'brain_file',
+  'brain_index',
+  // layers kept on the site, privately, and a dataset's versions (005)
+  'keep_layer',
+  'list_layers',
+  'fork_dataset',
 ] as const;
 
 /**
@@ -186,7 +198,17 @@ export function siteDoor(opts: SiteOptions) {
 
   /** The site's own tool, by name; input and output are the registry's. */
   function remote(tool: AnyTool): AnyTool {
-    const optional = ['save_step', 'add_note', 'get_exploration'].includes(tool.name);
+    const optional = [
+      'save_step',
+      'add_note',
+      'get_exploration',
+      'take_job',
+      'report_job',
+      'list_jobs',
+      'keep_layer',
+      'list_layers',
+      'fork_dataset',
+    ].includes(tool.name);
     const input = optional ? withoutRequired(tool.input, 'exploration') : tool.input;
     const run = async (raw: unknown, ctx: ToolContext): Promise<Json> => {
       const i = (raw ?? {}) as Json;
@@ -212,6 +234,79 @@ export function siteDoor(opts: SiteOptions) {
           const { exploration: _, ...rest } = i;
           return post(`/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/notes`, rest);
         }
+        case 'take_job': {
+          // with the person's agent key: their next job from any project, taken now (no wait)
+          if (typeof i.agent_key === 'string') {
+            const out = await call(
+              'POST',
+              '/api/v1/agents/wait',
+              JSON.stringify({ as: i.as, wait_s: 0 }),
+              { 'content-type': 'application/json', authorization: `Bearer ${i.agent_key.trim()}` },
+            );
+            if (isToolError(out) || !out.job) return isToolError(out) ? out : { job: null };
+            const link = (out.project as { exploration?: unknown } | undefined)?.exploration;
+            if (typeof link === 'string') remember(link);
+            return { link, job: out.job };
+          }
+          if (!exploration) return noExploration();
+          return post(
+            `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/jobs/take`,
+            {},
+          );
+        }
+        case 'list_jobs': {
+          if (!exploration) return noExploration();
+          return call('GET', `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/jobs`);
+        }
+        case 'report_job': {
+          if (!exploration) return noExploration();
+          const { exploration: _, job, ...rest } = i;
+          if (typeof job !== 'string' || !job.trim())
+            return fault('bad_input', 'Pass job: the id take_job gave you.');
+          return post(
+            `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/jobs/${encodeURIComponent(job)}/report`,
+            rest,
+          );
+        }
+        case 'keep_layer': {
+          if (!exploration) return noExploration();
+          const { exploration: _, ...rest } = i;
+          return post(
+            `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/layers`,
+            rest,
+          );
+        }
+        case 'list_layers': {
+          if (!exploration) return noExploration();
+          const q = new URLSearchParams();
+          if (typeof i.about === 'string') q.set('about', i.about);
+          if (typeof i.hash === 'string') q.set('hash', i.hash);
+          const query = q.size ? `?${q}` : '';
+          return call(
+            'GET',
+            `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/layers${query}`,
+          );
+        }
+        case 'fork_dataset': {
+          if (!exploration) return noExploration();
+          const { exploration: _, ...rest } = i;
+          return post(
+            `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/datasets/fork`,
+            rest,
+          );
+        }
+        case 'brain_route': {
+          const q = new URLSearchParams();
+          if (typeof i.question === 'string') q.set('q', i.question);
+          if (Array.isArray(i.answers)) q.set('answers', i.answers.join(','));
+          return call('GET', `/api/v1/brain/route?${q}`);
+        }
+        case 'brain_file':
+          if (typeof i.id !== 'string' || !i.id.trim())
+            return fault('bad_input', 'Pass id: a chapter or recipe, or doctrine.');
+          return call('GET', `/api/v1/brain/files/${encodeURIComponent(i.id)}`);
+        case 'brain_index':
+          return call('GET', '/api/v1/brain');
         default:
           return fault('internal', `${tool.name} has no route on the site.`);
       }
@@ -258,8 +353,38 @@ export function siteDoor(opts: SiteOptions) {
     return { ...tool, run } as AnyTool;
   }
 
+  /**
+   * add_layer as it is, here, and then the layer is kept on the site too, in the open project, so the
+   * person's dataset there has it (005). Before a project is open there's nowhere to keep it, and `next`
+   * says so.
+   */
+  function addLayer(tool: AnyTool, keep: AnyTool): AnyTool {
+    const run = async (raw: unknown, ctx: ToolContext): Promise<Json> => {
+      const out = (await tool.run(raw as never, ctx)) as Json;
+      if (isToolError(out)) return out;
+      const exploration = recalled();
+      if (!exploration) {
+        return {
+          ...out,
+          next: 'Kept on this machine. Call start_exploration and add it again to keep it in the project on the site too.',
+        };
+      }
+      const layer = (raw as { layer?: unknown } | null)?.layer;
+      const kept = (await keep.run({ exploration, layer }, ctx)) as Json;
+      if (isToolError(kept)) {
+        return {
+          ...out,
+          next: `Kept on this machine, but the site didn't take it: ${(kept as { error: { message: string } }).error.message} Say so in a line.`,
+        };
+      }
+      return { ...out, kept_on_site: { version: kept.version } };
+    };
+    return { ...tool, run } as AnyTool;
+  }
+
   /** The registry as the file serves it: the site's tools go there, the rest stays here. */
   function tools(registry: readonly AnyTool[]): AnyTool[] {
+    const keepTool = registry.find((t) => t.name === 'keep_layer');
     return registry
       .filter((t) => !(LEFT_OUT as readonly string[]).includes(t.name))
       .map((t) =>
@@ -267,7 +392,9 @@ export function siteDoor(opts: SiteOptions) {
           ? remote(t)
           : t.name === 'render_flower'
             ? render(t)
-            : t,
+            : t.name === 'add_layer' && keepTool
+              ? addLayer(t, remote(keepTool))
+              : t,
       );
   }
 

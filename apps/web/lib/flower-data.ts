@@ -2,6 +2,7 @@
 // petals) and the snapshot's source URLs, so source ids can be links.
 import type { LegendItem, PetalDetail, Spec } from '@petal/core/types';
 import { api, post } from './api.ts';
+import { viewerView } from './viewer-view.ts';
 
 export interface Rendered {
   spec_sha256: string;
@@ -13,7 +14,7 @@ export interface Rendered {
 }
 
 export async function renderSpec(spec: Spec) {
-  return post<Rendered>('/api/v1/render', { spec, include_svg: true });
+  return post<Rendered>('/api/v1/render', { spec, include_svg: true, view: viewerView() });
 }
 
 export async function sourceUrls(sha256: string): Promise<Record<string, string>> {

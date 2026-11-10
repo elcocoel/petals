@@ -252,6 +252,84 @@ export const MIGRATIONS: readonly string[] = [
   CREATE INDEX run_folder ON run(folder);
   CREATE INDEX exploration_folder ON exploration(folder);
   `,
+  // 8: jobs (Elco, 9 Nov, B with C). Petals' agent on the page hands a job out in a project (an
+  // exploration); the person's own agent takes it, does it on their machine and reports back. seq
+  // keeps them in the order they were handed out. inputs and result are JSON.
+  `
+  CREATE TABLE job (
+    id TEXT PRIMARY KEY,
+    exploration TEXT NOT NULL REFERENCES exploration(id),
+    seq INTEGER NOT NULL,
+    run TEXT,
+    kind TEXT NOT NULL,
+    title TEXT NOT NULL,
+    brief TEXT NOT NULL,
+    inputs TEXT NOT NULL,
+    status TEXT NOT NULL,
+    result TEXT,
+    failed TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE UNIQUE INDEX job_order ON job(exploration, seq);
+  `,
+  // 9: layers kept on the site (005, data.md, Elco 9 Nov: "anyone can add, fork and use the prior"; private
+  // first). A layer is named by its hash and kept under its author, never changed. A dataset version is a
+  // set of layer hashes about one address, and the version it came from (parent); seq orders an author's
+  // versions of one address, so the last is their latest.
+  `
+  CREATE TABLE layer (
+    owner TEXT NOT NULL,
+    hash TEXT NOT NULL,
+    about TEXT NOT NULL,
+    standing TEXT NOT NULL,
+    body TEXT NOT NULL,
+    credential TEXT,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (owner, hash)
+  );
+  CREATE INDEX layer_about ON layer(owner, about);
+  CREATE TABLE dataset_version (
+    id TEXT PRIMARY KEY,
+    owner TEXT NOT NULL,
+    about TEXT NOT NULL,
+    seq INTEGER NOT NULL,
+    parent TEXT,
+    layers TEXT NOT NULL,
+    credential TEXT,
+    created_at TEXT NOT NULL
+  );
+  CREATE UNIQUE INDEX dataset_version_order ON dataset_version(owner, about, seq);
+  `,
+  // 10: who made a layer, the git way, outside its hash (systems check, step 2): beside the author (owner),
+  // the credential and the time that 9 keeps, the brain version the agent was given and the recipe it read
+  // with. Empty for the layers kept before.
+  `
+  ALTER TABLE layer ADD COLUMN brain TEXT;
+  ALTER TABLE layer ADD COLUMN recipe TEXT;
+  `,
+  // 11: agents across a person's projects (Elco, 9 Nov, agent-house-test.md). An agent link is a person's,
+  // only its hash kept; it can only wait for jobs. An agent is a name a person's link was used with (`as`),
+  // seen last at some time. A job can be sent to one agent by name, and says who took it.
+  `
+  CREATE TABLE agent_link (
+    id TEXT PRIMARY KEY,
+    owner TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    revoked_at TEXT
+  );
+  CREATE INDEX agent_link_owner ON agent_link(owner);
+  CREATE TABLE agent (
+    owner TEXT NOT NULL,
+    key TEXT NOT NULL,
+    name TEXT NOT NULL,
+    last_seen TEXT NOT NULL,
+    PRIMARY KEY (owner, key)
+  );
+  ALTER TABLE job ADD COLUMN assignee TEXT;
+  ALTER TABLE job ADD COLUMN taken_by TEXT;
+  `,
 ];
 
 /**

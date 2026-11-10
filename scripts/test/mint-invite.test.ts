@@ -29,6 +29,34 @@ describe('mint-invite', () => {
     await store.close();
   });
 
+  test('--budget sets its budget in total, keeps the token, and what it spent still counts', async () => {
+    const dir = stateDir();
+    const env = { PETAL_STATE_DIR: dir };
+    const out = await run(['20', '14'], env);
+    const id = /invite\s+(\S+)/.exec(out)?.[1] ?? '';
+    const token = /token\s+(\S+)/.exec(out)?.[1] ?? '';
+    let store = openStore(join(dir, 'private.db'));
+    await store.credit.apply({
+      id: 'spent-a-bit',
+      account_key: `invite:${id}`,
+      delta_usd: -0.25,
+      reason: 'test',
+      at: new Date().toISOString(),
+    });
+    await store.close();
+    expect(await run(['--budget', id, '1'], env)).toMatch(/budget\s+\$1\b/);
+    store = openStore(join(dir, 'private.db'));
+    expect(await store.invite.get(id)).toMatchObject({
+      token_hash: hashToken(token),
+      budget_usd: 1,
+    });
+    expect((await store.credit.get(`invite:${id}`))?.balance_usd).toBeCloseTo(0.75);
+    await store.close();
+    await expect(run(['--budget', 'inv_nope', '1'], env)).rejects.toThrow(/no invite/);
+    await expect(run(['--budget', id, '0'], env)).rejects.toThrow(/more than \$0/);
+    await expect(run(['--budget', id], env)).rejects.toThrow(/usage/);
+  });
+
   test('--revoke marks it, and a wrong id or a bad amount says so', async () => {
     const dir = stateDir();
     const env = { PETAL_STATE_DIR: dir };

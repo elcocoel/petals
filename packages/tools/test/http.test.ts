@@ -39,7 +39,7 @@ describe('tool routes', () => {
     const { call } = await setup();
     const list = await call('/api/v1/networks?query=validators');
     expect(list.res.status).toBe(200);
-    expect(list.body.tools_version).toBe('tools/v1');
+    expect(list.body.tools_version).toBe('tools/v2');
     const one = await call('/api/v1/networks/near-validators');
     expect((one.body.network as { id: string }).id).toBe('near-validators');
     const params = await call('/api/v1/networks/near-validators?dao=x.sputnik-dao.near');
@@ -145,7 +145,7 @@ describe('SSE, bodies, health', () => {
       done: 1,
       total: 2,
     });
-    expect(events.at(-1)?.data).toMatchObject({ reused: false, tools_version: 'tools/v1' });
+    expect(events.at(-1)?.data).toMatchObject({ reused: false, tools_version: 'tools/v2' });
   });
 
   test('the snapshot body: canonical bytes, gzip, immutable cache, ETag, 304', async () => {
@@ -175,8 +175,10 @@ describe('SSE, bodies, health', () => {
       map: 'mirror',
       llm: 'recorded',
       version: 'api/v1',
-      tools_version: 'tools/v1',
+      tools_version: 'tools/v2',
       commit: null,
+      // the brain every door serves (step 4): its index hash, then its commit
+      brain_version: expect.stringMatching(/^[0-9a-f]{16}@([0-9a-f]{12}|unknown)$/),
       public: false,
     });
   });
