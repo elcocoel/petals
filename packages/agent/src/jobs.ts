@@ -4,7 +4,13 @@
 // no timer per viewer. Stop aborts the job's signal and waits for the job to say how it ended.
 // Each flower is also saved as a step of the run's exploration (SYS-041).
 import type { AgentEvent, ChatInput } from '@petal/core/types';
-import { registry as defaultRegistry, privateStore, saveRunStep, viewOfPerson } from '@petal/tools';
+import {
+  registry as defaultRegistry,
+  mapViews,
+  privateStore,
+  saveRunStep,
+  viewOfPerson,
+} from '@petal/tools';
 import { Channel } from './channel.ts';
 import { agentsOfRun, type Bell, handJobTool, jobsOfRun } from './hand-job.ts';
 import type { Budget, LlmMessage } from './llm.ts';
@@ -94,6 +100,9 @@ export function runJobs(
           // (one-source.md, step 2), so what it says about a flower is what they see
           const owner = (await privateStore(deps.tools.config).run.get(runId))?.owner ?? null;
           const tools = { ...deps.tools, view: await viewOfPerson(deps.tools, owner) };
+          // and what the shared map holds, which it draws without a yes: drawing it reads nothing new
+          const map = await mapViews(deps.tools);
+          const onMap = { specs: map.map((v) => v.sha), snapshots: map.map((v) => v.snapshot) };
           const events = startRun(
             {
               messages: input.messages,
@@ -102,6 +111,7 @@ export function runJobs(
               ...(jobsNow.length ? { jobs: jobsNow } : {}),
               ...(agentsNow.length ? { agents: agentsNow } : {}),
               ...(nameNow ? { name: nameNow } : {}),
+              onMap,
             },
             { tools, llm: deps.llm, budget },
             {

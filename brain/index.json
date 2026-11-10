@@ -10,7 +10,7 @@
       "continues": [],
       "status": "ready",
       "file": "doctrine.md",
-      "sha256": "be9e3da716babe68cf6a377c2199911ce056c6f886776cd476364df92ca5b853"
+      "sha256": "e882bd15b66e4c99046b1375f3c21f176dbab6472a9b7e126a44267cc9644fa1"
     },
     {
       "id": "a-new-system",
@@ -223,7 +223,12 @@
         "ens",
         "who wrote",
         "discussion",
-        "social"
+        "social",
+        "who is",
+        "names",
+        "people",
+        "proposals",
+        "members"
       ],
       "tools": [
         "read_page",
@@ -235,7 +240,7 @@
       ],
       "status": "partial",
       "file": "chapters/open-source-leads.md",
-      "sha256": "57c051167d46f190e1d8d45523e292fa0e1b4cf81f269ba442540bb048d56fc7"
+      "sha256": "e3f6831a23fed211db6ae2f85dfc2a845e92643352a63e298f521f93af03218e"
     },
     {
       "id": "over-time",
