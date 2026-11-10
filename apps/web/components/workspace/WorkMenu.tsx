@@ -100,10 +100,13 @@ export function WorkMenu({
   menu,
   you,
   here,
+  restartNew,
 }: {
   conversations: ConversationRow[];
   menu: WorkMenuView;
   you: PanelYou;
+  /** New, pressed where a new conversation already is: the address won't move, so this opens it again. */
+  restartNew?: (() => void) | undefined;
   /** The page it's on, when that page is one of its places. */
   here?: 'lobby';
 }) {
@@ -123,7 +126,13 @@ export function WorkMenu({
   const sections: Record<SectionKey, ReactNode> = {
     conversations: (
       <Group title={panelWords.sections.conversations}>
-        <NavItem href={siteLinks.make} icon="plus" label={panelWords.newConversation} muted />
+        <NavItem
+          href={siteLinks.make}
+          icon="plus"
+          label={panelWords.newConversation}
+          muted
+          {...(restartNew ? { onNavigate: restartNew } : {})}
+        />
         {rows.length > 0 ? (
           <ConversationList rows={rows} move={move} />
         ) : (
@@ -226,19 +235,18 @@ export function WorkMenu({
     ),
     profile: (
       <Group title={panelWords.sections.profile}>
+        {/* the person, opening their Profile card; the trail says where the profile is kept */}
         <NavItem
+          href={lobbyAt('lobby-profile')}
           icon="profile"
           label={name ?? who?.shown ?? '…'}
           {...(who ? { title: who.full } : {})}
-        />
-        <NavItem
-          href={lobbyAt('lobby-profile')}
-          icon="card"
-          label={panelWords.publicProfile}
           trail={
             panelWords.socialState[
               you.social.kind === 'profile'
-                ? 'profile'
+                ? you.social.source === 'petals'
+                  ? 'petals'
+                  : 'profile'
                 : you.social.kind === 'none'
                   ? 'none'
                   : you.social.kind

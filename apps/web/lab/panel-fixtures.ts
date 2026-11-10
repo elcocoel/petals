@@ -115,6 +115,7 @@ const ELCO_LIKE = {
   social: {
     kind: 'profile',
     profile: { name: 'A researcher', about: null, avatar: null, links: [] },
+    source: 'petals',
   } as SocialState,
   balance: '0.42',
 };

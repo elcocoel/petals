@@ -1,8 +1,9 @@
-// The public profile's editor (Elco, 10 Nov: people create and edit their NEAR Social profile inside
-// Petals; the Figma frame "Lobby · editing the public profile", approved): the picture, the name, the bio
-// and the links on the left; on the right a preview of how other apps show it, who publishes it, and the
-// plain line that this changes the shared public profile and that old versions stay public. Then the one
-// action, Publish, whose words follow each step, and Cancel. The Public profile card opens into this.
+// The profile's editor (Elco, 10 Nov: people create and edit their profile inside Petals, in NEAR Social's
+// shape, "and have a publish button"; the Figma frame "Lobby · editing the public profile", approved): the
+// picture, the name, the bio and the links on the left; on the right a preview, whose profile it is, and
+// the plain lines that Save keeps it in Petals and that publishing puts it on NEAR Social, where earlier
+// versions stay public. Then Save, the one main action, Cancel, and Publish as its own button, off until
+// it's set up on mainnet, with the line beside it saying so. The Profile card opens into this.
 // Props only: viewmodels/useProfileEditor.ts holds it. Words from lib/lobby-view.ts, drafts.
 import {
   busyPhase,
@@ -19,12 +20,12 @@ import { ChooseFile } from '../ui/ChooseFile.tsx';
 import { Field } from '../ui/Field.tsx';
 import { Mono } from '../ui/Mono.tsx';
 
-const BUTTON: Partial<Record<EditPhase, string>> = {
+/** Publish's words while it works, step by step. */
+const PUBLISHING: Partial<Record<EditPhase, string>> = {
   picturing: editorWords.picturing,
   storing: editorWords.storing,
   signing: editorWords.signing,
   checking: editorWords.checking,
-  failed: editorWords.tryAgain,
 };
 
 export function ProfileEditor({ view }: { view: ProfileEditorView }) {
@@ -32,11 +33,7 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
   const { draft } = view;
   const links = draft.links.filter((l) => l.service.trim() && l.value.trim());
   return (
-    <Card
-      title={view.creating ? editorWords.create : editorWords.edit}
-      labelledBy="lobby-editor"
-      badge={<Badge>{profileWords.social}</Badge>}
-    >
+    <Card title={view.creating ? editorWords.create : editorWords.edit} labelledBy="lobby-editor">
       <div className="grid grid-cols-1 gap-space-32 lg:grid-cols-3">
         <div className="flex min-w-0 flex-col gap-block-gap lg:col-span-2">
           <div className="flex flex-col gap-space-8">
@@ -138,24 +135,32 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
           </div>
           <div className="flex flex-col gap-space-8 border border-hairline p-space-16">
             <div className="flex flex-wrap items-center gap-space-8">
-              <span className="type-caption text-muted">{editorWords.publishingAs}</span>
+              <span className="type-caption text-muted">{editorWords.keptAs}</span>
               <span title={view.account.full}>
                 <Mono as="span">{view.account.shown}</Mono>
               </span>
               <Badge>{profileWords.chain}</Badge>
             </div>
-            <p className="my-0 type-caption">{editorWords.publicNote}</p>
-            <p className="my-0 type-caption text-muted">{editorWords.walletNote}</p>
+            <p className="my-0 type-caption">{editorWords.keptNote}</p>
+            <p className="my-0 type-caption text-muted">{editorWords.publicNote}</p>
           </div>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-block-gap">
-        <Button variant="primary" disabled={busy} onClick={view.publish}>
-          {BUTTON[view.phase] ?? editorWords.publish}
+        <Button variant="primary" disabled={busy} onClick={view.save}>
+          {view.phase === 'saving' ? editorWords.saving : editorWords.save}
         </Button>
         <Button variant="quiet" disabled={busy} onClick={view.cancel}>
           {editorWords.cancel}
         </Button>
+        <span className="flex flex-wrap items-center gap-text-gap">
+          <Button variant="secondary" disabled={busy || !view.publish} onClick={view.publish}>
+            {PUBLISHING[view.phase] ?? editorWords.publish}
+          </Button>
+          {!view.publish && (
+            <span className="type-caption text-muted">{editorWords.publishLater}</span>
+          )}
+        </span>
         {view.phase === 'failed' && (
           <span className="flex items-center gap-space-8">
             <Badge>{editorWords.notSaved}</Badge>

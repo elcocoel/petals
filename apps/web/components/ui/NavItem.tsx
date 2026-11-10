@@ -20,6 +20,8 @@ type Where =
       href: string;
       /** The one of these you are on. */
       current?: boolean;
+      /** Told when it's pressed, before the move. */
+      onNavigate?: () => void;
     }
   | {
       href?: undefined;
@@ -98,6 +100,7 @@ export function NavItem({
         href={where.href}
         // the workspace is read fresh on each move; forty rows mustn't each ask the server ahead
         prefetch={false}
+        onClick={where.onNavigate}
         title={hover}
         aria-current={where.current ? 'page' : undefined}
         data-current={where.current ? '' : undefined}

@@ -335,7 +335,7 @@ const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
   addLink: () => {},
   removeLink: () => {},
   choosePicture: () => {},
-  publish: () => {},
+  save: () => {},
   cancel: () => {},
   ...over,
 });
@@ -1647,13 +1647,14 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/ProfileHead.tsx',
     states: [
       {
-        name: 'with a NEAR Social profile',
+        name: 'a profile kept in Petals',
         render: () => (
           <ProfileHead
             account="a-name.near"
             social={{
               kind: 'profile',
-              profile: { name: 'A name on NEAR Social', about: null, avatar: null, links: [] },
+              profile: { name: 'A name', about: null, avatar: null, links: [] },
+              source: 'petals',
             }}
           />
         ),
@@ -1689,8 +1690,8 @@ export const registry: LabEntry[] = [
         ),
       },
       {
-        name: 'waiting for the wallet',
-        render: () => <ProfileEditor view={editorView({ phase: 'signing' })} />,
+        name: 'saving',
+        render: () => <ProfileEditor view={editorView({ phase: 'saving' })} />,
       },
       {
         name: "NEAR Social didn't take it",
@@ -1714,7 +1715,7 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/Profile.tsx',
     states: [
       {
-        name: 'with a NEAR Social profile',
+        name: 'the NEAR Social profile, before Petals keeps one',
         render: () => (
           <Profile
             social={{
@@ -1728,6 +1729,20 @@ export const registry: LabEntry[] = [
                   { service: 'x', value: 'a-handle' },
                 ],
               },
+              source: 'near-social',
+            }}
+            onEdit={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'kept in Petals',
+        render: () => (
+          <Profile
+            social={{
+              kind: 'profile',
+              profile: { name: 'A name', about: 'A short bio.', avatar: null, links: [] },
+              source: 'petals',
             }}
             onEdit={() => {}}
           />
@@ -1740,6 +1755,7 @@ export const registry: LabEntry[] = [
             social={{
               kind: 'profile',
               profile: { name: 'A name', about: 'A short bio.', avatar: null, links: [] },
+              source: 'petals',
             }}
             onEdit={() => {}}
             saved
@@ -1747,12 +1763,8 @@ export const registry: LabEntry[] = [
         ),
       },
       {
-        name: 'no public profile yet',
+        name: 'no profile yet',
         render: () => <Profile social={{ kind: 'none' }} onEdit={() => {}} />,
-      },
-      {
-        name: 'no public profile yet, editing off',
-        render: () => <Profile social={{ kind: 'none' }} />,
       },
       {
         name: 'still reading',
