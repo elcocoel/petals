@@ -42,8 +42,10 @@ const INSTRUCTIONS =
   'render_flower. The flower is the answer: always hand back a link to it, short_url if given and ' +
   'otherwise view_url, with the legend, your interpretation and what the data cannot tell. A table ' +
   'is not a flower. To publish: ' +
-  'prepare_publish, then give the person sign_url; never call publish_flower yourself. Never ask ' +
-  'for a key or a seed phrase.';
+  'prepare_publish, then give the person sign_url; never call publish_flower yourself. When the ' +
+  'person gives you their agent key (petal_agent_…) and asks you to take their open jobs: take_job ' +
+  'with agent_key and as, your app as a short name such as claude-app or chatgpt; do each job in its ' +
+  'link, report_job, and take_job again until job is null. Never ask for a key or a seed phrase.';
 
 // Only where the page it hands over opens. Short, because an agent on MCP alone reads nothing else.
 const FOLLOW =

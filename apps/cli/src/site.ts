@@ -235,6 +235,19 @@ export function siteDoor(opts: SiteOptions) {
           return post(`/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/notes`, rest);
         }
         case 'take_job': {
+          // with the person's agent key: their next job from any project, taken now (no wait)
+          if (typeof i.agent_key === 'string') {
+            const out = await call(
+              'POST',
+              '/api/v1/agents/wait',
+              JSON.stringify({ as: i.as, wait_s: 0 }),
+              { 'content-type': 'application/json', authorization: `Bearer ${i.agent_key.trim()}` },
+            );
+            if (isToolError(out) || !out.job) return isToolError(out) ? out : { job: null };
+            const link = (out.project as { exploration?: unknown } | undefined)?.exploration;
+            if (typeof link === 'string') remember(link);
+            return { link, job: out.job };
+          }
           if (!exploration) return noExploration();
           return post(
             `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/jobs/take`,

@@ -12,10 +12,16 @@
 //                                     each holds
 // Presence is a wait that's open right now: nothing runs once the agent's session stops asking (Elco: no
 // background service). The work itself goes through the project's continue link, as a pasted line does.
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { TOOLS_VERSION } from '@petal/core';
 import type { JobRow, Store } from '@petal/store';
-import { makeLink, type ToolContext } from '@petal/tools';
+import {
+  AGENT_NAME_MAX,
+  agentKeyHash,
+  makeLink,
+  ownerOfAgentKey,
+  type ToolContext,
+} from '@petal/tools';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import type { RouteAuth } from './auth-routes.ts';
@@ -27,10 +33,6 @@ import { fail } from './routes.ts';
  */
 export const WAIT_MAX_S = 90;
 const WAIT_DEFAULT_S = 50;
-const TOKEN = /^petal_agent_[A-Za-z0-9_-]{43}$/;
-const NAME_MAX = 60;
-
-const hashOf = (token: string) => createHash('sha256').update(token, 'utf8').digest('hex');
 
 /** Rung when a job is handed out; a wait for that person wakes and looks. One per process. */
 export class JobBell {
@@ -121,7 +123,7 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
     const token = `petal_agent_${randomBytes(32).toString('base64url')}`;
     const id = `agl_${randomBytes(9).toString('hex')}`;
     const created_at = now();
-    await store.agentLink.create({ id, owner, token_hash: hashOf(token), created_at });
+    await store.agentLink.create({ id, owner, token_hash: agentKeyHash(token), created_at });
     return ok(c, { id, token, created_at });
   });
 
@@ -148,8 +150,8 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
 
   app.post('/api/v1/agents/wait', small, async (c) => {
     const token = (c.req.header('authorization') ?? '').replace(/^Bearer\s+/i, '').trim();
-    const link = TOKEN.test(token) ? await store.agentLink.byTokenHash(hashOf(token)) : null;
-    if (!link || link.revoked_at) {
+    const owner = await ownerOfAgentKey(store, token);
+    if (!owner) {
       return fail(
         c,
         'unauthorised',
@@ -161,17 +163,16 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
       wait_s?: unknown;
     } | null;
     const name = typeof body?.as === 'string' ? body.as.trim() : '';
-    if (!name || name.length > NAME_MAX) {
+    if (!name || name.length > AGENT_NAME_MAX) {
       return fail(
         c,
         'bad_input',
-        `as must name this agent, 1 to ${NAME_MAX} characters (e.g. Claude Code)`,
+        `as must name this agent, 1 to ${AGENT_NAME_MAX} characters (e.g. claude-code)`,
       );
     }
     const asked =
       typeof body?.wait_s === 'number' && body.wait_s >= 0 ? body.wait_s : WAIT_DEFAULT_S;
     const waitMs = Math.min(asked, WAIT_MAX_S) * 1000;
-    const owner = link.owner;
     const signal = c.req.raw.signal;
     await store.agent.seen({ owner, name, last_seen: now() });
     presence.enter(owner, name);
