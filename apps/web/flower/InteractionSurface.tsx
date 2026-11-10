@@ -17,7 +17,7 @@ import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { WorkMenu } from '../components/workspace/WorkMenu.tsx';
 import type { Catalogue } from '../lib/composer-options.ts';
 import { besideMenu, conversationBoxes, recordedBoxes, type Size } from '../lib/float-box.ts';
-import type { MapViewRow } from '../lib/map-views.ts';
+import type { MapCard } from '../lib/maps.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
@@ -42,7 +42,7 @@ export function InteractionSurface({
   initialQuestion: string | null;
   recorded: boolean;
   opening: string;
-  shelf: MapViewRow[];
+  shelf: MapCard[];
   initialOpen: Opened;
   initialPetal: string | null;
 }) {

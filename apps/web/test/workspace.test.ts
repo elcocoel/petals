@@ -23,7 +23,7 @@ import {
   shortId,
   svgTitle,
 } from '../lib/flower-view.ts';
-import type { MapViewRow } from '../lib/map-views.ts';
+import type { MapCard } from '../lib/maps.ts';
 import {
   addressOpensBox,
   type CanvasFlower,
@@ -445,33 +445,42 @@ describe('the panel', () => {
     expect(view.keys).toEqual([]);
   });
 
-  const listed: MapViewRow[] = [
+  const listed: MapCard[] = [
     {
-      sha: 'abc',
+      id: 'near:validators',
       name: 'NEAR validators',
       title: 'NEAR validators',
-      network: 'near-validators',
+      about: 'validators on NEAR',
       chain: 'near:mainnet',
       address: null,
-      count: 8487,
-      as_of: '2026-11-03T19:42:00Z',
-      view_url: 'https://petals.test/d/abc',
       picture: 'https://petals.test/api/v1/map/abc/svg?look=render%2Fv2&view=1421e0bf7b26',
+      view_url: 'https://petals.test/d/abc',
       keys: [],
-      made_by: null,
+      readings: [
+        {
+          snapshot: 'abc',
+          as_of: '2026-11-03T19:42:00Z',
+          network: 'near-validators',
+          about: 'validators on NEAR',
+          title: 'NEAR validators',
+          count: 8487,
+          made_by: null,
+          drawings: [],
+        },
+      ],
     },
   ];
 
-  test('the shelf offers views of the one map, and holds the place while the first one is made', () => {
+  test('the shelf offers maps, one per address, and holds the place while the first one is made', () => {
     const shelf = shelfView(listed, false);
     expect(shelf.pending).toBe(false);
-    // the gallery's own tile, opening the view where it lives
+    // the Power Map's own tile, opening the map's page
     expect(shelf.tiles[0]).toMatchObject({
-      key: 'abc',
+      key: 'near:validators',
       title: 'NEAR validators',
       badge: 'NEAR',
       image: 'https://petals.test/api/v1/map/abc/svg?look=render%2Fv2&view=1421e0bf7b26',
-      href: 'https://petals.test/d/abc',
+      href: '/m/near%3Avalidators',
     });
     expect(shelf.starter?.question).toBeTruthy();
     const pending = shelfView(listed, true);
@@ -490,7 +499,7 @@ describe('the panel', () => {
     expect(out).toContain(
       'src="https://petals.test/api/v1/map/abc/svg?look=render%2Fv2&amp;view=1421e0bf7b26"',
     );
-    expect(out).toContain('href="https://petals.test/d/abc"');
+    expect(out).toContain('href="/m/near%3Avalidators"');
     expect(out).toContain('href="/gallery"');
   });
 });

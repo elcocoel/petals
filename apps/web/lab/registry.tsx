@@ -237,22 +237,31 @@ const turnRow = (turn: Parameters<typeof threadView>[0]['turn'], o: Partial<Turn
 
 const ONE_PETAL = { figmaName: 'Make a flower / One petal', figmaNode: '39:862' };
 
-/** A view of the one map, as GET /api/v1/map/views lists it. */
+/** A map, one per address, as GET /api/v1/maps gives it. */
 const LISTED = [
   {
-    sha: '897a01ac9a1f1150e84dbb7aa7baebffa14d2f8674a882e1fcc9016f259a7e04',
+    id: 'near:validators',
     name: 'NEAR validators',
     title: 'NEAR validators',
-    network: 'near-validators',
+    about: 'validators on NEAR',
     chain: 'near:mainnet',
     address: null,
-    count: 8487,
-    as_of: '2026-11-03T19:42:00Z',
-    view_url: '/d/897a01ac9a1f1150e84dbb7aa7baebffa14d2f8674a882e1fcc9016f259a7e04',
     picture:
       '/api/v1/map/897a01ac9a1f1150e84dbb7aa7baebffa14d2f8674a882e1fcc9016f259a7e04/svg?look=render%2Fv2',
+    view_url: '/d/897a01ac9a1f1150e84dbb7aa7baebffa14d2f8674a882e1fcc9016f259a7e04',
     keys: [],
-    made_by: null,
+    readings: [
+      {
+        snapshot: '72a6d9676d967d63712dc82bcbb90282d2f61e5ca6495c3e2e54a4f9af77e9ec',
+        as_of: '2026-11-03T19:42:00Z',
+        network: 'near-validators',
+        about: 'validators on NEAR',
+        title: 'NEAR validators',
+        count: 8487,
+        made_by: 'mapping.petals.near',
+        drawings: [],
+      },
+    ],
   },
 ];
 
