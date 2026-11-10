@@ -233,6 +233,8 @@ export interface AgentRow {
   owner: string;
   name: string;
   last_seen: string;
+  /** when the person disconnected it; null while connected */
+  disconnected_at?: string | null;
 }
 
 /** A bookmark on something a person is following. It points, and proves nothing about who owns it. */
@@ -1202,11 +1204,26 @@ export function tables(db: Db) {
           r.last_seen,
         );
       },
+      /** The person's connected agents, the last seen first. */
       list: (owner: string) =>
         db.all<AgentRow>(
-          'SELECT owner, name, last_seen FROM agent WHERE owner = ? ORDER BY last_seen DESC',
+          'SELECT owner, name, last_seen FROM agent WHERE owner = ? AND disconnected_at IS NULL ORDER BY last_seen DESC',
           owner,
         ),
+      get: (owner: string, name: string) =>
+        db.get<AgentRow>(
+          'SELECT owner, name, last_seen, disconnected_at FROM agent WHERE owner = ? AND key = ?',
+          owner,
+          name.toLowerCase(),
+        ),
+      /** Disconnected at `at`, or connected again with null. False when the person has no agent by that name. */
+      setDisconnected: async (owner: string, name: string, at: string | null): Promise<boolean> =>
+        (await db.run(
+          'UPDATE agent SET disconnected_at = ? WHERE owner = ? AND key = ?',
+          at,
+          owner,
+          name.toLowerCase(),
+        )) === 1,
     },
 
     layer: {

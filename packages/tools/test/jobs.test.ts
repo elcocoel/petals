@@ -205,6 +205,28 @@ describe('take_job with the agent key', () => {
     expect(((await take({ agent_key: KEY, as: 'Codex' })) as Out).job.id).toBe('job_x');
   });
 
+  test('an agent the person disconnected is refused, until a key made after connects it again', async () => {
+    const { id, store, take } = await keyed();
+    await store.agent.seen({
+      owner: 'prs_a',
+      name: 'claude-app',
+      last_seen: '2026-11-10T00:30:00.000Z',
+    });
+    await store.agent.setDisconnected('prs_a', 'Claude-App', '2026-11-10T01:00:00.000Z');
+    const refused = (await take({ agent_key: KEY, as: 'claude-app' })) as Out;
+    expect(isToolError(refused) && refused.error.code).toBe('unauthorised');
+    expect((await store.job.list(id)).every((j) => j.status === 'open')).toBe(true);
+    const LATER = `petal_agent_${'n'.repeat(43)}`;
+    await store.agentLink.create({
+      id: 'agl_2',
+      owner: 'prs_a',
+      token_hash: agentKeyHash(LATER),
+      created_at: '2026-11-10T02:00:00.000Z',
+    });
+    expect(((await take({ agent_key: LATER, as: 'claude-app' })) as Out).job.id).toBe('job_0');
+    expect((await store.agent.get('prs_a', 'claude-app'))?.disconnected_at).toBeNull();
+  });
+
   test('a bad or revoked key, or no name, is refused and takes nothing', async () => {
     const { id, store, take } = await keyed();
     const code = async (input: Record<string, unknown>) => {
