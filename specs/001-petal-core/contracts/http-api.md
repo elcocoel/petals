@@ -58,6 +58,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `GET /api/v1/relations/shared?group_a=&group_b=&limit=` | `shared_accounts` |
 | `GET /api/v1/relations/related?group=&by=&limit=` | `related_groups` |
 | `GET /api/v1/relations/overview?min_shared=&kind=&limit=` | `relations_overview` |
+| `GET /api/v1/map` | none: one answer, `{made, source, views, groups, pairs}`. Every view stored on the site with its name, reading, address, date, snapshot, params and `made_by`, and the holdings groups and pairs `relations_overview` gives (10 Nov, one map) |
 | `GET /api/v1/relations/path?account_a=&account_b=&max_depth=&budget=&include_inferred=` | `power_path` |
 | `GET /api/v1/explorations?limit=` | `list_explorations` ([below](#explorations-and-links)) |
 | `POST /api/v1/explorations` | `start_exploration` |

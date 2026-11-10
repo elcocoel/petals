@@ -6,6 +6,7 @@ import type { Entry, MapRow } from '@petal/core/types';
 import { mapKeys } from '@petal/near/map';
 import { defineTool, FLOWER_DEFS } from '../define.ts';
 import { ToolFailure } from '../errors.ts';
+import { madeByWords, mapViews, searchMap } from '../map.ts';
 import type { ToolContext } from '../types.ts';
 import { type Verified, verifyEntry } from '../verify.ts';
 import { ENTRY_ID, galleryUrl, obj } from './shared.ts';
@@ -121,50 +122,111 @@ export function summaryOf(f: Found, ctx: ToolContext) {
   };
 }
 
-export const listFlowers = defineTool<{ network?: string; maker?: string; limit?: number }, object>(
+const MAP_VIEW_ROW = obj(
+  ['name', 'title', 'network', 'chain', 'as_of', 'count', 'snapshot', 'view_url', 'made_by'],
   {
-    name: 'list_flowers',
-    title: 'List flowers',
-    description:
-      'Published flowers on the shared map (trusted writers only, each re-verified) and the hero ' +
-      'fixtures, newest first. Check here before making a new flower: offer an existing one for ' +
-      'the same network and date unless a fresh analysis is asked for.',
-    input: obj(
-      [],
-      {
-        network: { type: 'string', minLength: 1 },
-        maker: { type: 'string', minLength: 1, description: 'NEAR account of the maker' },
-        limit: { type: 'integer', minimum: 1, maximum: 200, default: 50 },
-      },
-      { additionalProperties: false },
-    ),
-    output: obj(['flowers'], {
-      flowers: { type: 'array', items: FLOWER_ROW },
-      hint: { type: 'string' },
-    }),
-    annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
-    async run({ network, maker, limit = 50 }, ctx) {
-      // When the map is unreachable the fixtures still answer; health says map: down.
-      const { found } = await allFlowers(ctx);
-      const all = found.map((f) => summaryOf(f, ctx));
-      const flowers = all
-        .filter((f) => (network ? f.network === network : true))
-        .filter((f) => (maker ? f.maker === maker : true))
-        .sort((a, b) => (b.published_at ?? '').localeCompare(a.published_at ?? ''))
-        .slice(0, limit);
-      // A guessed id ("near", "moloch") is no reason to fail: it's empty, and the hint says which
-      // ids have flowers, so "none for this id" never reads as "nothing is published".
-      if (network && flowers.length === 0 && !ctx.modules[network]) {
-        const have = [...new Set(all.map((f) => f.network))].sort();
-        const hint = `No network has the id "${network}". ${
-          have.length ? `Flowers are on: ${have.join(', ')}.` : 'No flowers are published yet.'
-        } look_up takes any word.`;
-        return { flowers, hint };
-      }
-      return { flowers };
+    name: { type: ['string', 'null'] },
+    title: { type: 'string' },
+    network: { type: 'string' },
+    chain: { type: 'string' },
+    address: { type: ['string', 'null'] },
+    as_of: { type: 'string' },
+    count: { type: 'integer' },
+    snapshot: {
+      type: 'string',
+      description: 'its stored snapshot: describe and draw it again with no new read',
     },
+    params: { type: 'object', description: 'get_snapshot with these, and network, reuses it' },
+    view_url: { type: 'string' },
+    made_by: { type: 'string', description: 'who made it, in words' },
   },
 );
+const MAP_VIEWS_MAX = 20;
+
+export const listFlowers = defineTool<
+  { network?: string; maker?: string; q?: string; limit?: number },
+  object
+>({
+  name: 'list_flowers',
+  title: 'List flowers',
+  description:
+    'Published flowers on the shared map (trusted writers only, each re-verified) and the hero ' +
+    'fixtures, newest first; with q (a name, symbol or address), also the views already made on ' +
+    "this site's map and not published, each with its date, who made it and its stored snapshot. " +
+    'Check here before making a new flower or a fresh read: offer what exists for the same ' +
+    'target unless a fresh analysis is asked for.',
+  input: obj(
+    [],
+    {
+      network: { type: 'string', minLength: 1 },
+      maker: { type: 'string', minLength: 1, description: 'NEAR account of the maker' },
+      q: {
+        type: 'string',
+        minLength: 1,
+        maxLength: 200,
+        description:
+          "words or an address: searches the map's views by name, title, chain and address",
+      },
+      limit: { type: 'integer', minimum: 1, maximum: 200, default: 50 },
+    },
+    { additionalProperties: false },
+  ),
+  output: obj(['flowers'], {
+    flowers: { type: 'array', items: FLOWER_ROW },
+    views: { type: 'array', items: MAP_VIEW_ROW },
+    views_total: { type: 'integer' },
+    hint: { type: 'string' },
+  }),
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
+  async run({ network, maker, q, limit = 50 }, ctx) {
+    const onMap = await mapViews(ctx);
+    const matched = q ? searchMap(onMap, q) : [];
+    const views = matched
+      .slice(-MAP_VIEWS_MAX)
+      .reverse()
+      .map((v) => ({
+        name: v.name,
+        title: v.title,
+        network: v.network,
+        chain: v.chain,
+        address: v.address,
+        as_of: v.as_of,
+        count: v.count,
+        snapshot: v.snapshot,
+        params: v.params,
+        view_url: v.view_url,
+        made_by: madeByWords(v.made_by),
+      }));
+    const mapPart = q
+      ? { views, views_total: onMap.length }
+      : {
+          views_total: onMap.length,
+          ...(onMap.length
+            ? {
+                hint: `${onMap.length} views are on this site's map and not published: pass q with a name, symbol or address to search them.`,
+              }
+            : {}),
+        };
+    // When the map is unreachable the fixtures still answer; health says map: down.
+    const { found } = await allFlowers(ctx);
+    const all = found.map((f) => summaryOf(f, ctx));
+    const flowers = all
+      .filter((f) => (network ? f.network === network : true))
+      .filter((f) => (maker ? f.maker === maker : true))
+      .sort((a, b) => (b.published_at ?? '').localeCompare(a.published_at ?? ''))
+      .slice(0, limit);
+    // A guessed id ("near", "moloch") is no reason to fail: it's empty, and the hint says which
+    // ids have flowers, so "none for this id" never reads as "nothing is published".
+    if (network && flowers.length === 0 && !ctx.modules[network]) {
+      const have = [...new Set(all.map((f) => f.network))].sort();
+      const hint = `No network has the id "${network}". ${
+        have.length ? `Flowers are on: ${have.join(', ')}.` : 'No flowers are published yet.'
+      } look_up takes any word.`;
+      return { ...mapPart, flowers, hint };
+    }
+    return { ...mapPart, flowers };
+  },
+});
 
 export const getFlower = defineTool<{ id: string }, object>({
   name: 'get_flower',

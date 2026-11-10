@@ -335,6 +335,12 @@ export const MIGRATIONS: readonly string[] = [
   `
   ALTER TABLE agent ADD COLUMN disconnected_at TEXT;
   `,
+  // 13: one map (Elco, 10 Nov): a stored view gets a name and who made it, beside its hash and outside it, so
+  // the map can be searched by name and says by whom. Empty for views nobody named.
+  `
+  ALTER TABLE draft ADD COLUMN name TEXT;
+  ALTER TABLE draft ADD COLUMN made_by TEXT;
+  `,
 ];
 
 /**

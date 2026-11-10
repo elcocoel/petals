@@ -91,6 +91,10 @@ export interface DraftRow {
   sha256: string;
   body: string;
   created_at: string;
+  /** what the view is called on the map, when someone named it (13) */
+  name?: string | null;
+  /** who made it: a NEAR account, such as mapping.petals.near for Petals' own mapping (13) */
+  made_by?: string | null;
 }
 export interface PublishDraftRow {
   entry_sha256: string;
@@ -806,6 +810,16 @@ export function tables(db: Db) {
           r.created_at,
         )) === 1,
       get: (sha256: string) => db.get<DraftRow>('SELECT * FROM draft WHERE sha256 = ?', sha256),
+      /** Every stored view, the oldest first: the map. */
+      list: () => db.all<DraftRow>('SELECT * FROM draft ORDER BY created_at, sha256'),
+      /** Names a view and says who made it. False when no view has that hash. */
+      label: async (sha256: string, l: { name: string | null; made_by: string | null }) =>
+        (await db.run(
+          'UPDATE draft SET name = ?, made_by = ? WHERE sha256 = ?',
+          l.name,
+          l.made_by,
+          sha256,
+        )) === 1,
     },
 
     /** Entries prepared for a maker's signature (prepare_publish). */

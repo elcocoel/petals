@@ -12,6 +12,7 @@ import { versioned } from '../define.ts';
 import { fromThrown, isToolError, toolError } from '../errors.ts';
 import { freshGate } from '../fresh.ts';
 import { LiveHub } from '../live.ts';
+import { mapViews } from '../map.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
 import { findTool } from '../registry.ts';
 import { brainOf } from '../tools/brain.ts';
@@ -264,6 +265,34 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       pick(c.req.query(), ['min_shared', 'kind', 'limit'], ['min_shared', 'limit']),
     ),
   );
+  // One map (Elco, 10 Nov): every view stored here with its reading, name, date and maker, and the relations
+  // index's groups and pairs, in one answer, as the map bench's copy had them (specs/006-the-map).
+  app.get('/api/v1/map', limit, async (c) => {
+    const overview = (await run('relations_overview', { kind: 'holdings', limit: 5000 })) as {
+      groups?: Record<string, unknown>[];
+      pairs?: Record<string, unknown>[];
+    };
+    if (isToolError(overview)) return respond(c, overview);
+    return respond(c, {
+      made: new Date().toISOString(),
+      source: (ctx.config.apiBase ?? '').replace(/\/+$/, ''),
+      views: await mapViews(ctx),
+      groups: (overview.groups ?? []).map((g) => ({
+        id: g.id,
+        chain: g.chain,
+        snapshot_sha256: g.snapshot_sha256,
+        members_total: g.members_total,
+        title: g.title,
+      })),
+      pairs: (overview.pairs ?? []).map((p) => ({
+        a: p.a,
+        b: p.b,
+        shared: p.shared,
+        weight: p.weight,
+        match: p.match,
+      })),
+    });
+  });
   app.get('/api/v1/relations/path', limit, (c) => {
     const q = c.req.query();
     const numbers = ['max_depth', 'budget'];
