@@ -1,5 +1,5 @@
 // How it works' row of scenes (Elco, 10 Nov: "automated cycling on a loop and the focused card could be
-// highlighted"). One scene is in focus at a time, and the row slides so it leads. Under version 2 a line
+// highlighted"). One scene is in focus at a time, and the row slides so it's in the middle. Under version 2 a line
 // fills under it (box.cycle, app/versions/v2.css) and, once it's full, the focus moves on to the next,
 // round and round. Without that line (version 1, reduced motion) nothing moves by itself.
 // A hand on the row holds it: the pointer over it, the keyboard in it, the row out of sight or the tab
@@ -18,6 +18,9 @@ import {
 const SETTLE_MS = 160;
 /** How long the row's own slide takes at most, so its scroll events aren't taken for a hand's. */
 const SLIDE_MS = 1000;
+
+/** The row's scenes, without the spacers at its ends. */
+const scenes = (row: HTMLElement) => [...row.querySelectorAll<HTMLElement>('[data-kind="scene"]')];
 
 export function useSceneCycle<T extends HTMLElement>(count: number) {
   const row = useRef<T>(null);
@@ -39,20 +42,20 @@ export function useSceneCycle<T extends HTMLElement>(count: number) {
     [count],
   );
 
-  // The row slides so the scene in focus leads it, as far as the row can go.
+  // The row slides so the scene in focus is in its middle.
   useEffect(() => {
     const el = row.current;
-    const card = el?.children[current];
-    if (!slide.current || !el || !(card instanceof HTMLElement)) return;
-    const inset = Number.parseFloat(getComputedStyle(el).scrollPaddingLeft) || 0;
-    const left =
-      el.scrollLeft + card.getBoundingClientRect().left - el.getBoundingClientRect().left - inset;
+    const card = el && scenes(el)[current];
+    if (!slide.current || !el || !card) return;
+    const box = el.getBoundingClientRect();
+    const at = card.getBoundingClientRect();
+    const left = el.scrollLeft + at.left - box.left - (box.width - at.width) / 2;
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     sliding.current = performance.now() + SLIDE_MS;
     el.scrollTo({ left, behavior: still ? 'auto' : 'smooth' });
   }, [current]);
 
-  // A hand moved the row: if the scene in focus went out of view, the first one in full view takes it.
+  // A hand moved the row: the scene that came to rest in its middle takes the focus.
   useEffect(() => {
     const el = row.current;
     if (!el) return;
@@ -60,14 +63,13 @@ export function useSceneCycle<T extends HTMLElement>(count: number) {
     const settle = () => {
       if (performance.now() < sliding.current) return;
       const box = el.getBoundingClientRect();
-      const cards = [...el.children];
-      const whole = (c: Element | undefined) => {
-        const r = c?.getBoundingClientRect();
-        return Boolean(r && r.left >= box.left - 1 && r.right <= box.right + 1);
-      };
-      if (whole(cards[at.current])) return;
-      const first = cards.findIndex(whole);
-      if (first !== -1) go(first, false);
+      const middle = box.left + box.width / 2;
+      const off = scenes(el).map((c) => {
+        const r = c.getBoundingClientRect();
+        return Math.abs(r.left + r.width / 2 - middle);
+      });
+      const nearest = off.indexOf(Math.min(...off));
+      if (nearest !== -1 && nearest !== at.current) go(nearest, false);
     };
     const onScroll = () => {
       window.clearTimeout(timer);

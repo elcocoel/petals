@@ -448,8 +448,8 @@ const groups = {
     'bloom-from': '.5',
     'arrive-from': '.92',
     dim: '.26',
-    /** A scene of How it works that isn't in focus steps back to this. */
-    rest: '.55',
+    /** A scene of How it works that isn't in focus steps back to this, so the one in focus is clearly it. */
+    rest: '.4',
     'nav-shift': '-24px',
     'nav-row': '-12px',
     'nav-mark': '.88',

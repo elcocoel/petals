@@ -1,7 +1,8 @@
 'use client';
 // How it works: Elco's seven illustrated scenes (Figma 181:2343, 10 Nov), as a row of cards (Elco: "a row of
 // cards") that keeps time (Elco: "automated cycling on a loop and the focused card could be highlighted").
-// The scene in focus leads the row and comes forward; under version 2 a line fills under it and the row
+// The scene in focus sits in the middle of a row that runs to the window's edges, and comes forward; the
+// others step back either side. Under version 2 a line fills under it and the row
 // moves on, round and round, while no hand is on it (viewmodels/useSceneCycle.ts). Under the row, a tick
 // for each scene and the two arrows move the focus; the one way in is under them.
 import { landingCopy } from '../../lib/landing-copy.ts';
@@ -21,6 +22,7 @@ export function HowItWorks() {
     <Section
       tone="paper"
       rule="top"
+      bleed
       id="how-it-works"
       foot={
         <div className="flex justify-center">
@@ -32,16 +34,21 @@ export function HowItWorks() {
         <SectionHead size="compact" title={copy.title} />
       </div>
       <div data-paused={cycle.held ? '' : undefined} {...cycle.holder}>
-        {/* The row runs out to the band's edges and leaves room under the cards, so the scene in focus
-            can lift and its shadow fade out before the row ends. The ticks and arrows under it are its
-            scrollbar, so it shows none of its own. */}
+        {/* The row runs out to the window's edges, past the page's column, with one scene in focus in its
+            middle and the next ones either side, stepped back (Elco, 10 Nov: "it should go to the edges of
+            the composition and perhaps one clearly focused card is better"). A spacer at each end lets the
+            first and the last scene come to the middle too. It leaves room under the cards, so the scene in
+            focus can lift and its shadow fade out before the row ends, and the ticks and arrows under it
+            are its scrollbar, so it shows none of its own. */}
         <ul
           ref={cycle.row}
-          className="-mx-block-gap -mt-column-gap -mb-section-padding flex list-none snap-x snap-mandatory scroll-px-block-gap gap-column-gap overflow-x-auto px-block-gap pt-column-gap pb-section-padding [scrollbar-width:none] md:-mx-page-inset md:scroll-px-page-inset md:px-page-inset" /* token-exempt: no scrollbar of its own, the ticks and arrows are its scrollbar */
+          className="relative left-1/2 -mt-column-gap -mb-section-padding flex w-screen -translate-x-1/2 list-none snap-x snap-mandatory gap-block-gap overflow-x-auto px-0 lg:gap-column-gap pt-column-gap pb-section-padding [scrollbar-width:none]" /* token-exempt: no scrollbar of its own, the ticks and arrows are its scrollbar */
         >
+          <li aria-hidden="true" className="shrink-0 basis-1/10 lg:basis-1/8" />
           {copy.scenes.map((s, i) => (
             <Scene key={s.id} {...s} current={i === cycle.current} onTimeUp={cycle.timeUp} />
           ))}
+          <li aria-hidden="true" className="shrink-0 basis-1/10 lg:basis-1/8" />
         </ul>
         <div className="mt-block-gap flex items-center gap-block-gap">
           <div className="flex min-w-0 flex-1 gap-space-4">
