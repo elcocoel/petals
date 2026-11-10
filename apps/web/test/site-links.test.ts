@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
-import Landing from '../app/page.tsx';
+import { Landing } from '../components/landing/Landing.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
 import { doors } from '../lib/doors.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
@@ -66,10 +66,9 @@ describe('the landing page', () => {
 
   test('every door it sends someone to is on /connect', () => {
     const ids = doors('https://x').map((d) => d.id);
-    for (const href of Object.values(siteLinks.doors)) {
-      expect(ids, href).toContain(href.split('#')[1]);
-      expect(hrefs.includes(href) || href === siteLinks.doors.prompt, href).toBe(true);
-    }
+    const sent = hrefs.filter((href) => href.startsWith(`${siteLinks.connect}#`));
+    expect(sent.length).toBeGreaterThan(0);
+    for (const href of sent) expect(ids, href).toContain(href.split('#')[1]);
   });
 });
 
