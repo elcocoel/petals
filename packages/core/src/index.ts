@@ -67,9 +67,11 @@ export type { Skin } from './render/types.ts';
 export { runSignal, setRunSignalSource } from './run-signal.ts';
 export { schemas } from './schema/index.ts';
 export {
+  aboutKey,
   aboutOf,
   DATA_KINDS,
   type DataKind,
+  mapOf,
   SEAM_DOCUMENT_VERSION,
   type Seam,
   type SeamPiece,

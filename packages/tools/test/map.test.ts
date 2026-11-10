@@ -8,7 +8,7 @@ import { Hono } from 'hono';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { privateStore } from '../src/drafts.ts';
 import { httpApp } from '../src/http/app.ts';
-import { mapViews, searchMap } from '../src/map.ts';
+import { type MapView, mapsOf, mapViews, searchMap } from '../src/map.ts';
 import { callTool } from '../src/registry.ts';
 import { rig, type TestRig } from './helpers.ts';
 
@@ -153,5 +153,102 @@ describe('the map', () => {
     expect((await mapViews(r.ctx))[0]?.keys).toEqual(keys);
     expect((await app.request(`/api/v1/map/${'0'.repeat(64)}/svg`)).status).toBe(404);
     expect((await app.request('/api/v1/map/nope/svg')).status).toBe(404);
+  });
+});
+
+describe('one map per address (Elco, 10 Nov)', () => {
+  /** A drawing on the map, with only what grouping reads. */
+  const drawing = (
+    sha: string,
+    map: string,
+    snapshot: string,
+    as_of: string,
+    more: Partial<MapView> = {},
+  ) =>
+    ({
+      sha,
+      map,
+      name: null,
+      title: `title ${sha}`,
+      network: 'erc20-holders',
+      about: 'ERC-20 token holders on Gnosis',
+      chain: 'gnosis',
+      address: map.split(':').at(-1) as string,
+      count: 3,
+      as_of,
+      snapshot,
+      params: {},
+      view_url: `https://petal.test/d/${sha}`,
+      picture: `https://petal.test/api/v1/map/${sha}/svg`,
+      keys: [],
+      made_by: 'mapping.petals.near',
+      reading: { title: '', petals: [] },
+      ...more,
+    }) as MapView;
+
+  test('holders and delegates are two readings of one map, twins two drawings of one reading', () => {
+    const rg = 'eip155:100:0x372f';
+    const maps = mapsOf([
+      drawing('a', rg, 'holders', '2026-11-09T01:00:00Z', { name: 'RaidGuild v3' }),
+      drawing('b', 'eip155:100:0xother', 'other', '2026-11-09T01:00:00Z'),
+      drawing('c', rg, 'delegates', '2026-11-09T02:00:00Z', { network: 'erc20-votes' }),
+      drawing('d', rg, 'holders', '2026-11-09T01:00:00Z', { made_by: null }),
+    ]);
+    // newest first, by its newest drawing
+    expect(maps.map((m) => m.id)).toEqual([rg, 'eip155:100:0xother']);
+    const [card] = maps;
+    // the newest drawing's picture and link, the newest named drawing's name
+    expect(card).toMatchObject({
+      name: 'RaidGuild v3',
+      picture: 'https://petal.test/api/v1/map/d/svg',
+    });
+    expect(card?.view_url).toBe('https://petal.test/d/d');
+    // its readings, the newest first by date; each with its maker and its drawings, the oldest first
+    expect(card?.readings.map((r) => [r.snapshot, r.network, r.made_by])).toEqual([
+      ['delegates', 'erc20-votes', 'mapping.petals.near'],
+      ['holders', 'erc20-holders', 'mapping.petals.near'],
+    ]);
+    expect(card?.readings[1]?.drawings.map((d) => d.sha)).toEqual(['a', 'd']);
+    // nobody named the other one
+    expect(maps[1]?.name).toBeNull();
+  });
+
+  test('GET /api/v1/maps gives one card per address, and each drawing says its map', async () => {
+    const sha = await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    const { views } = (await (await app.request('/api/v1/map/views')).json()) as Out;
+    expect(views[0].map).toBe(`eip155:1:${DAO}`);
+    const res = await app.request('/api/v1/maps');
+    expect(res.status).toBe(200);
+    const { maps } = (await res.json()) as Out;
+    expect(maps).toHaveLength(1);
+    expect(maps[0]).toMatchObject({
+      id: views[0].map,
+      name: 'Founders Guild v1',
+      address: DAO,
+      about: 'Moloch v1 members on Ethereum',
+    });
+    // one map's card by its id, encoded, in any case of its address
+    const mixed = (views[0].map as string).replace(
+      /0x([0-9a-f]+)$/,
+      (_, h) => `0x${h.toUpperCase()}`,
+    );
+    const one = await app.request(`/api/v1/maps/${encodeURIComponent(mixed)}`);
+    expect(one.status).toBe(200);
+    expect(((await one.json()) as Out).map).toEqual(maps[0]);
+    expect(
+      (await app.request(`/api/v1/maps/${encodeURIComponent('eip155:1:0xnothing')}`)).status,
+    ).toBe(404);
+    expect(maps[0].readings).toEqual([
+      expect.objectContaining({
+        snapshot: MOLOCH,
+        made_by: 'mapping.petals.near',
+        drawings: [expect.objectContaining({ sha, name: 'Founders Guild v1' })],
+      }),
+    ]);
   });
 });
