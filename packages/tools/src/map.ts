@@ -2,7 +2,7 @@
 // every view stored on this site, each with its reading, its name, its date and who made it. Read-only and
 // public: GET /api/v1/map hands it over whole, list_flowers and find_target search it before a fresh read.
 // A view's spec is content-addressed, so its reading never changes: each is read once per process.
-import { readFlower } from '@petal/core';
+import { DEFAULT_VIEW, RENDER_VERSION, readFlower, viewHash } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
@@ -34,12 +34,24 @@ export interface MapView {
   /** the read's parameters: asking get_snapshot for these reuses the stored snapshot */
   params: Record<string, string>;
   view_url: string;
+  /** its still picture, drawn with the default view (GET /api/v1/map/:sha/svg) */
+  picture: string;
   /** who made it (a NEAR account), when that's recorded */
   made_by: string | null;
   reading: { title: string; petals: unknown[] };
 }
 
-type Read = Omit<MapView, 'sha' | 'name' | 'view_url' | 'made_by'>;
+type Read = Omit<MapView, 'sha' | 'name' | 'view_url' | 'picture' | 'made_by'>;
+
+/** A view's row in a list of the map (GET /api/v1/map/views): all of it but its reading. */
+export type MapViewRow = Omit<MapView, 'reading'>;
+
+/**
+ * The picture's address. The browser and Vercel's edge keep each one for a year, so it names the look and
+ * the view it's drawn with (as the site's flower tiles do): when either changes, so does every address.
+ */
+export const pictureOf = (ctx: ToolContext, sha: string) =>
+  `${base(ctx)}/api/v1/map/${sha}/svg?look=${encodeURIComponent(RENDER_VERSION)}&view=${viewHash(DEFAULT_VIEW).slice(0, 12)}`;
 const read = new Map<string, Read>();
 
 async function readOf(ctx: ToolContext, body: string): Promise<Read | null> {
@@ -83,6 +95,7 @@ export async function mapViews(ctx: ToolContext): Promise<MapView[]> {
       name: row.name ?? null,
       ...r,
       view_url: `${base(ctx)}/d/${row.sha256}`,
+      picture: pictureOf(ctx, row.sha256),
       made_by: row.made_by ?? null,
     });
   }

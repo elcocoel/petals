@@ -58,7 +58,9 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `GET /api/v1/relations/shared?group_a=&group_b=&limit=` | `shared_accounts` |
 | `GET /api/v1/relations/related?group=&by=&limit=` | `related_groups` |
 | `GET /api/v1/relations/overview?min_shared=&kind=&limit=` | `relations_overview` |
-| `GET /api/v1/map` | none: one answer, `{made, source, views, groups, pairs}`. Every view stored on the site with its name, reading, address, date, snapshot, params and `made_by`, and the holdings groups and pairs `relations_overview` gives (10 Nov, one map) |
+| `GET /api/v1/map` | none: one answer, `{made, source, views, groups, pairs}`. Every view stored on the site with its name, reading, address, date, snapshot, params, `view_url`, `picture` and `made_by`, and the holdings groups and pairs `relations_overview` gives (10 Nov, one map) |
+| `GET /api/v1/map/views` | none: `{views}`, the same views in the same order (the oldest first), each without its `reading`. The one source for any list of what's on the map: the gallery, the lobby's "On the map", `/make`'s opening (Elco, 10 Nov). A view opens at its `view_url` (`/d/<sha>`) |
+| `GET /api/v1/map/:sha/svg` | none: a view's still picture, drawn with the default view as a flower's tile is, `Cache-Control: immutable`, ETag its `render_sha256`; `not_found` for a hash that isn't on the map. A view's `picture` is this address with `?look=<render version>&view=<the view's hash, 12 characters>`, so a cached picture is never an old look: use it as given. It has no per-address limit, since a gallery asks for every picture at once |
 | `GET /api/v1/relations/path?account_a=&account_b=&max_depth=&budget=&include_inferred=` | `power_path` |
 | `GET /api/v1/explorations?limit=` | `list_explorations` ([below](#explorations-and-links)) |
 | `POST /api/v1/explorations` | `start_exploration` |
