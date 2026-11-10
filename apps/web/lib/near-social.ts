@@ -226,8 +226,13 @@ const shownAvatar = (a: string | null | undefined): string | null => {
   if (!a) return null;
   const m = /^fastfs:\/\/([^/]+)\/([^/]+)\/(.+)$/.exec(a);
   if (m) return `https://main.fastfs.io/${m[1]}/${m[2]}/${m[3]}`;
+  // Petals' own picture address (/api/v1/media/<sha256>.<ext>), on whatever site served it
+  if (MEDIA.test(a)) return a;
   return a.startsWith('data:image/') || a.startsWith('https://') ? a : null;
 };
+
+/** Where Petals keeps a picture: GET /api/v1/media/<sha256>.<ext> (SYSTEMS, 10 Nov). */
+const MEDIA = /^https?:\/\/[^/]+\/api\/v1\/media\/[0-9a-f]{64}\.(?:webp|jpg|png)$/;
 
 /** Petals' copy as the lobby shows a profile; null when it has nothing in it. */
 export function fromPetals(p: PetalsProfile | null): SocialProfile | null {
@@ -253,12 +258,7 @@ export function keptAvatar(src: string | null): string | null {
   if (!src) return null;
   const m = /^https:\/\/main\.fastfs\.io\/([^/]+)\/([^/]+)\/(.+)$/.exec(src);
   if (m) return `fastfs://${m[1]}/${m[2]}/${m[3]}`;
-  if (
-    src.startsWith('data:image/') ||
-    src.startsWith('fastfs://') ||
-    /\/api\/v1\/media\//.test(src)
-  )
-    return src;
+  if (src.startsWith('data:image/') || src.startsWith('fastfs://') || MEDIA.test(src)) return src;
   return null;
 }
 

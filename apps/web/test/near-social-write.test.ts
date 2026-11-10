@@ -160,9 +160,8 @@ describe('Petals’ own copy', () => {
     expect(keptAvatar('https://main.fastfs.io/mara.near/social/media/ab.webp')).toBe(
       'fastfs://mara.near/social/media/ab.webp',
     );
-    expect(keptAvatar('https://petal-flowers.vercel.app/api/v1/media/ab.webp')).toBe(
-      'https://petal-flowers.vercel.app/api/v1/media/ab.webp',
-    );
+    const own = `https://petal-flowers.vercel.app/api/v1/media/${'b'.repeat(64)}.webp`;
+    expect(keptAvatar(own)).toBe(own);
     expect(keptAvatar('https://elsewhere.example/a.png')).toBeNull();
   });
 
@@ -178,6 +177,12 @@ describe('Petals’ own copy', () => {
     expect(
       toPetals({ name: '', about: '', links: [{ service: 'Tele-gram', value: 'm' }] }, null).links,
     ).toEqual({ telegram: 'm' });
+  });
+
+  test('Petals’ own picture address shows, on whatever site served it', () => {
+    const a = `http://127.0.0.1:3196/api/v1/media/${'a'.repeat(64)}.webp`;
+    expect(fromPetals({ name: 'M', avatar: a })?.avatar).toBe(a);
+    expect(keptAvatar(a)).toBe(a);
   });
 
   test('an empty copy is none', () => {

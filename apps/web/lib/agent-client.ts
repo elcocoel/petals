@@ -399,12 +399,12 @@ export async function readMyProfile(): Promise<PetalsProfile | null> {
   return ((await res.json()) as { profile?: PetalsProfile | null }).profile ?? null;
 }
 
-/** Keeps the whole profile in Petals (PUT /api/v1/me/profile); throws with the server's reason. */
+/** Keeps the whole profile in Petals (PUT /api/v1/me/profile, as { profile }); throws with the server's reason. */
 export async function saveMyProfile(profile: PetalsProfile): Promise<PetalsProfile | null> {
   const res = await fetch('/api/v1/me/profile', {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(profile),
+    body: JSON.stringify({ profile }),
   });
   const json = (await res.json().catch(() => null)) as {
     profile?: PetalsProfile | null;
