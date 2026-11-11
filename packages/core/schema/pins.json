@@ -74,5 +74,9 @@
   "mark.v1.json": {
     "schema": "urn:petal:schema:mark:v1",
     "sha256": "5009b0df4c69acc7b35cd605aeb504f7f5247188f3be69876a20bf3c2cca7f58"
+  },
+  "value.v1.json": {
+    "schema": "urn:petal:schema:value:v1",
+    "sha256": "0b129ce424d14f171f073e4724e714ab119873116f4ef0c2bbd4d16df1d5bf0f"
   }
 }

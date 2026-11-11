@@ -28,6 +28,7 @@ import { findTool } from '../registry.ts';
 import { brainOf } from '../tools/brain.ts';
 import { base, findSnapshot } from '../tools/shared.ts';
 import type { ToolContext } from '../types.ts';
+import { valuesOf } from '../value-store.ts';
 import { viewAsked, viewOfPerson } from '../views.ts';
 import {
   explorationRoutes,
@@ -376,16 +377,20 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   app.get('/api/v1/maps', limit, async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
-    return respond(c, { maps: mapsOf(await mapViews(await forViewer(c), view), await marks()) });
+    return respond(c, {
+      maps: mapsOf(await mapViews(await forViewer(c), view), await marks(), await valuesOf(ctx)),
+    });
   });
   // One map's card, by its id (URL-encoded, since it holds colons), for its page.
   app.get('/api/v1/maps/:id', limit, async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
     const id = aboutKey(c.req.param('id'));
-    const map = mapsOf(await mapViews(await forViewer(c), view), await marks()).find(
-      (m) => m.id === id,
-    );
+    const map = mapsOf(
+      await mapViews(await forViewer(c), view),
+      await marks(),
+      await valuesOf(ctx),
+    ).find((m) => m.id === id);
     return respond(
       c,
       map ? { map } : versioned(toolError('not_found', 'No map under that address.')),

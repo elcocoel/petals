@@ -13,6 +13,8 @@ import {
   pictureQuery,
   readFlower,
   sha256Hex,
+  type Value,
+  valuePieces,
   viewHash,
 } from '@petal/core';
 import type { Claim, Spec, View } from '@petal/core/types';
@@ -20,6 +22,7 @@ import { EVM_CHAINS } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
 import { base, findSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
+import { type CardValue, cardValue, valuesOf } from './value-store.ts';
 
 /** A chain by the name a reader's chain parameter takes (ethereum, gnosis), as find_target names it. */
 const chainName = (caip2: string) =>
@@ -86,19 +89,23 @@ export const pictureOf = (ctx: ToolContext, sha: string, view: View = DEFAULT_VI
 /** Each view's reading through each viewer's view, by `<sha>:<view hash>`: neither ever changes. */
 const read = new Map<string, Read>();
 
-async function readOf(ctx: ToolContext, body: string, view: View): Promise<Read | null> {
+async function readOf(
+  ctx: ToolContext,
+  body: string,
+  view: View,
+  values: ReadonlyMap<string, Value> = new Map(),
+): Promise<Read | null> {
   try {
     const spec = JSON.parse(body) as Spec;
     const snapshot = await findSnapshot(ctx, spec.snapshot.sha256);
     if (!snapshot) return null;
     // through the viewer's view, never the flower's own choices (one-source.md, step 2), with the viewer's
     // own names on the petals they name (annotation step 6)
-    const reading = readFlower(
-      spec,
-      snapshot,
-      view,
-      ctx.names?.length ? namePieces(snapshot, ctx.names) : [],
-    );
+    const reading = readFlower(spec, snapshot, view, [
+      ...(ctx.names?.length ? namePieces(snapshot, ctx.names) : []),
+      // each petal's value in dollars, from its map's stored value (#91): none with no price
+      ...valuePieces(snapshot, values.get(mapOf(snapshot)) ?? null),
+    ]);
     // the picture's colours: its legend, as render_flower dresses it
     const legend = reading.legend.map(legendItem);
     const keysOf = (primitive: string) =>
@@ -133,11 +140,16 @@ export async function mapViews(ctx: ToolContext, view: View = DEFAULT_VIEW): Pro
   const through = viewHash(view);
   // keyed by the viewer's names too, so one person's never reach another's, nor a visitor's, reading
   const named = ctx.names?.length ? `:${namesKey(ctx.names)}` : '';
+  // and by when the map's values were read, so a new price reads again (#91)
+  const values = await valuesOf(ctx);
+  const priced = values.size
+    ? `:${sha256Hex([...values.values()].map((v) => `${v.about}@${v.read_at}`).join(','))}`
+    : '';
   for (const row of await privateStore(ctx.config).draft.list()) {
-    const key = `${row.sha256}:${through}${named}`;
+    const key = `${row.sha256}:${through}${named}${priced}`;
     let r = read.get(key);
     if (!r) {
-      const got = await readOf(ctx, row.body, view);
+      const got = await readOf(ctx, row.body, view, values);
       if (!got) continue;
       read.set(key, got);
       r = got;
@@ -220,6 +232,8 @@ export interface MapCard {
   keys: MapView['keys'];
   /** its organisation's name, symbol and logo, each with where it came from; null until it's read (#85) */
   mark: CardMark | null;
+  /** its token in dollars, its supply and its reading's totals, each with where and when; null until read (#91) */
+  value: CardValue | null;
   /** its sediments, the newest first by their date */
   readings: MapReading[];
 }
@@ -231,6 +245,7 @@ export interface MapCard {
 export function mapsOf(
   views: readonly MapView[],
   marks: ReadonlyMap<string, CardMark> = new Map(),
+  values: ReadonlyMap<string, Value> = new Map(),
 ): MapCard[] {
   const byMap = new Map<string, MapView[]>();
   for (const v of views) byMap.set(v.map, [...(byMap.get(v.map) ?? []), v]);
@@ -273,6 +288,7 @@ export function mapsOf(
         view_url: newest.view_url,
         keys: newest.keys,
         mark: marks.get(id) ?? null,
+        value: values.has(id) ? cardValue(values.get(id) as Value) : null,
         readings,
       },
     });

@@ -1,0 +1,32 @@
+{
+  "petal": "value/v1",
+  "about": "eip155:1:0xc18360217d8f7ab5e7c516566761ea12ce7f9d72",
+  "asset": {
+    "id": "0xc18360217d8f7ab5e7c516566761ea12ce7f9d72",
+    "symbol": "ENS"
+  },
+  "price": {
+    "usd": 4.43965579,
+    "source": "defillama",
+    "ref": "ethereum:0xc18360217d8f7ab5e7c516566761ea12ce7f9d72, confidence 0.999 (https://coins.llama.fi/prices/current/ethereum:0xc18360217d8f7ab5e7c516566761ea12ce7f9d72)",
+    "at": "2026-11-11T14:14:00.000Z"
+  },
+  "supply": {
+    "amount": "100000000",
+    "unit": "ENS",
+    "source": "chain",
+    "ref": "totalSupply() and decimals() on eip155:1:0xc18360217d8f7ab5e7c516566761ea12ce7f9d72",
+    "at": "2026-11-11T14:14:57.316Z"
+  },
+  "snapshot": "ad9aedfde8f1f5e667b2577a8a31284ce5f5fe6e8c253e9d5eff8080a3559fd4",
+  "measure": "delegated_votes",
+  "totals": [
+    {
+      "measure": "delegated_votes",
+      "unit": "ENS",
+      "amount": "3986197.896935631",
+      "usd": "17697346.57"
+    }
+  ],
+  "read_at": "2026-11-11T14:14:57.316Z"
+}

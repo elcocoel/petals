@@ -18,6 +18,7 @@ import { httpApp } from '../src/http/app.ts';
 import { type MapView, mapsOf, mapViews, searchMap } from '../src/map.ts';
 import { markMaps } from '../src/marks.ts';
 import { callTool } from '../src/registry.ts';
+import { valueMaps } from '../src/values.ts';
 import { rig, type TestRig } from './helpers.ts';
 
 // biome-ignore lint/suspicious/noExplicitAny: walking tool outputs
@@ -298,6 +299,43 @@ describe('one map per address (Elco, 10 Nov)', () => {
     const picture = await store.media.get(mark.logo.sha256);
     expect(picture).toMatchObject({ type: 'image/png', person: null });
     expect(Buffer.from(picture?.body ?? '', 'base64')).toEqual(Buffer.from(PNG));
+  });
+
+  test("the value run (#91): a token nothing prices says no price, with its reading's totals; a priced one is in dollars", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const store = privateStore(r.ctx.config);
+    // 1Click lists nothing here and DefiLlama prices nothing: Moloch's shares have no market
+    const fetchImpl = (async (input: string | URL | Request) =>
+      String(input).startsWith('https://1click.chaindefuser.com/')
+        ? new Response('[]')
+        : new Response(JSON.stringify({ coins: {} }))) as typeof fetch;
+    const done = await valueMaps(r.ctx, { fetch: fetchImpl });
+    expect(done).toMatchObject({ maps: 1, saved: 1, priced: 0 });
+    const row = await store.value.get(`eip155:1:${DAO}`);
+    const v = JSON.parse(row?.body ?? '{}');
+    expect(v).toMatchObject({ petal: 'value/v1', price: null, snapshot: MOLOCH });
+    expect(v.totals[0]).toMatchObject({ usd: null });
+    expect(Number(v.totals[0].amount)).toBeGreaterThan(0);
+
+    // the same value with a price: the card carries it, each total in dollars
+    const priced = { ...v, price: { usd: 2, source: '1click', ref: 'test', at: v.read_at } };
+    priced.totals = v.totals.map((t: { amount: string }) => ({
+      ...t,
+      usd: (Number(t.amount) * 2).toFixed(2),
+    }));
+    await store.value.put({ about: v.about, body: JSON.stringify(priced), read_at: v.read_at });
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    const { maps } = (await (await app.request('/api/v1/maps')).json()) as Out;
+    expect(maps[0].value).toMatchObject({
+      price: { usd: 2, source: '1click' },
+      total_usd:
+        priced.totals.find((t: { measure: string }) => t.measure === v.measure)?.usd ?? null,
+      supply_usd: null,
+    });
   });
 
   test('a map with no mark read yet says so: null', async () => {
