@@ -55,4 +55,11 @@ describe("a map's ring", () => {
       /\.\.\.lookFills\(m\.petals\), highlight: \[\], roundTops: true, votes/,
     );
   });
+
+  test('proposals/v2: a vote that is neither for nor against is a grey dot, counted apart', () => {
+    const scene = text('flower/scene.ts');
+    expect(scene).toMatch(/if \(!cast\.has\(petal\.id\)\) return;/);
+    expect(scene).toMatch(/fill: votes\.colours\[v \?\? 'abstain'\]/);
+    expect(scene).toMatch(/chose otherwise/);
+  });
 });

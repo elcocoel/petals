@@ -19,7 +19,7 @@ import {
   placeArc,
   placesOf,
   ringRadius,
-  type Vote,
+  type VoteColour,
   voteDot,
   votesOn,
 } from '@petal/core/wedge/votes';
@@ -70,7 +70,7 @@ export interface PetalLook {
     to: string;
     proposals: readonly Proposal[];
     /** each vote's colour, as the reading gives it */
-    colours: Record<Vote['vote'], string>;
+    colours: Record<VoteColour, string>;
   };
 }
 
@@ -469,20 +469,22 @@ export function createScene(
       return;
     }
     const cast = votesOn(p);
-    const count = { for: 0, against: 0, abstain: 0 };
+    const count = { for: 0, against: 0, abstain: 0, other: 0 };
     m.petals.forEach((petal, i) => {
-      const v = cast.get(petal.id);
-      if (!v) return;
-      count[v] += 1;
+      if (!cast.has(petal.id)) return;
+      // proposals/v2: null is a vote that is neither for nor against (weighted, ranked); grey, as abstain
+      const v = cast.get(petal.id) ?? null;
+      count[v ?? 'other'] += 1;
       const dot = voteDot(lastRing, i);
       el(
         'circle',
-        { cx: n3(dot.x), cy: n3(dot.y), r: n3(dot.r), fill: votes.colours[v] },
+        { cx: n3(dot.x), cy: n3(dot.y), r: n3(dot.r), fill: votes.colours[v ?? 'abstain'] },
         dotLayer,
       );
     });
     const said = [`${count.for} for`, `${count.against} against`];
     if (count.abstain) said.push(`${count.abstain} abstained`);
+    if (count.other) said.push(`${count.other} chose otherwise`);
     // a proposal's own title can run to a paragraph: the first words, then its outcome
     const title = p.title.length > 44 ? `${p.title.slice(0, 43).trimEnd()}…` : p.title;
     voteWords?.text(`${title}, ${p.outcome}`);
