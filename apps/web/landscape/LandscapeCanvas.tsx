@@ -45,6 +45,7 @@ function Land({
   inPage,
   far,
   inside,
+  clearOfChains,
 }: {
   data: LandscapeData;
   probe: boolean;
@@ -57,11 +58,20 @@ function Land({
   far: FarStyle;
   /** told when the map goes into a flower and comes out */
   inside: (yes: boolean) => void;
+  clearOfChains: boolean;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
   // Read by the scene when it's built and on each click, so a new pick or petal never builds it again.
-  at.current = { ...at.current, focus, inPage, far, inside, ...(onPick ? { onPick } : {}) };
+  at.current = {
+    ...at.current,
+    focus,
+    inPage,
+    far,
+    inside,
+    clearOfChains,
+    ...(onPick ? { onPick } : {}),
+  };
   useLandscape(svg, data, probe, aside, at);
   useEffect(() => {
     at.current?.choose?.(selected);
@@ -87,6 +97,7 @@ export function LandscapeCanvas({
   onPick,
   inPage = false,
   far = null,
+  clearOfChains = false,
 }: {
   data: { flowers: CanvasFlower[]; roads: Road[]; chains: CanvasChain[] };
   probe?: boolean;
@@ -104,6 +115,8 @@ export function LandscapeCanvas({
   inPage?: boolean;
   /** how a far flower is drawn: only the lab's map bench asks for the far wave (#84) until Elco has seen it */
   far?: FarStyle;
+  /** the home keeps clear of the chain list, where the map's room is narrow (/make, #78); off on /map */
+  clearOfChains?: boolean;
 }) {
   const aside = useRef<HTMLDivElement>(null);
   const opened = data.flowers[focus]?.place.chain;
@@ -155,6 +168,7 @@ export function LandscapeCanvas({
           inPage={inPage}
           far={far}
           inside={setInside}
+          clearOfChains={clearOfChains}
         />
       )}
       <div
