@@ -36,7 +36,8 @@ export {
   overDataBudget,
 } from './limits.ts';
 export { LiveHub, type Presence } from './live.ts';
-export { mapViews } from './map.ts';
+export { type CardMark, cardMark, mapViews } from './map.ts';
+export { type MarkRun, type MarkRunResult, markMaps } from './marks.ts';
 export { type McpOptions, mcpServer } from './mcp/server.ts';
 export { serveStdio } from './mcp/stdio.ts';
 export type { PublicPage } from './public-fetch.ts';

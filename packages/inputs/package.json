@@ -10,9 +10,11 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
+    "@noble/curves": "^2.4.0",
     "@noble/hashes": "^2.4.0",
     "@petal/brain": "workspace:*",
     "@petal/core": "workspace:*",
+    "@scure/base": "^2.4.0",
     "@vercel/blob": "^2.8.2"
   },
   "devDependencies": {

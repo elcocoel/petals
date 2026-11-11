@@ -128,3 +128,13 @@ export interface SnapshotStore {
   /** Additive (T300). The gzip file as stored, unchecked, so serving one costs no compression. */
   gz?(sha256: string): Promise<Uint8Array | null>;
 }
+export {
+  type MarkDeps,
+  type MarkPicture,
+  type MarkTarget,
+  NETWORK_MARKS,
+  pictureType,
+  type ReadMark,
+  readMark,
+} from './marks/index.ts';
+export { type Fetch, type ListReader, listReader } from './marks/lists.ts';

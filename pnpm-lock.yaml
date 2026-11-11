@@ -188,6 +188,9 @@ importers:
 
   packages/inputs:
     dependencies:
+      '@noble/curves':
+        specifier: ^2.4.0
+        version: 2.4.0
       '@noble/hashes':
         specifier: ^2.4.0
         version: 2.4.0
@@ -197,6 +200,9 @@ importers:
       '@petal/core':
         specifier: workspace:*
         version: link:../core
+      '@scure/base':
+        specifier: ^2.4.0
+        version: 2.4.0
       '@vercel/blob':
         specifier: ^2.8.2
         version: 2.8.2

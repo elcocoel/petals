@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:mark:v1",
+  "title": "Petal mark v1",
+  "description": "What tells one organisation on the map from another: its name, its token's symbol and its logo, each with where it came from (Elco, 11 Nov: 'a better module or strategy to grab the names and the token symbols or any logos of these organizations'; board #85, research/org-names-logos-2026-11-11.md, strategy 2: the chain first, then curated lists). One per map, named by the map's address. Each part says whether the thing declared it itself (self-declared), a curated list holds it (verified), or Petals worked it out (inferred).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["petal", "about", "name", "symbol", "logo", "read_at"],
+  "properties": {
+    "petal": { "const": "mark/v1" },
+    "about": {
+      "description": "the map it marks, by its address: chain:address, or chain:population for a whole network (the map card's id)",
+      "type": "string",
+      "minLength": 3
+    },
+    "name": {
+      "description": "the organisation's name, or null when nothing names it beyond the map's own name",
+      "oneOf": [{ "$ref": "#/$defs/said" }, { "type": "null" }]
+    },
+    "symbol": {
+      "description": "its token's symbol, or null",
+      "oneOf": [{ "$ref": "#/$defs/said" }, { "type": "null" }]
+    },
+    "logo": {
+      "description": "its logo, kept by Petals as a picture named by its sha256, or null",
+      "oneOf": [{ "$ref": "#/$defs/logo" }, { "type": "null" }]
+    },
+    "read_at": { "description": "when it was read", "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "status": {
+      "description": "self-declared: the contract, the DAO or the account says it of itself. verified: a curated list holds this address (verified_by names which). inferred: Petals worked it out (ref says how).",
+      "enum": ["self-declared", "verified", "inferred"]
+    },
+    "source": {
+      "description": "where it came from, in a word: chain, poster, daohaus, metaplex, ft_metadata, trustwallet, uniswap, coingecko, cow, superchain, arbitrum, jupiter, defillama, petals",
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+$"
+    },
+    "said": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "status", "source", "ref", "at"],
+      "properties": {
+        "value": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "status": { "$ref": "#/$defs/status" },
+        "source": { "$ref": "#/$defs/source" },
+        "ref": {
+          "description": "exactly where: the call it answered (symbol() on eip155:1:0x…), or the list and its version, or the page",
+          "type": "string",
+          "minLength": 1
+        },
+        "verified_by": {
+          "description": "the curated lists that hold this address, each with its version: what makes a self-declared value verified",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "at": { "description": "when it was read there", "type": "string", "format": "date-time" }
+      }
+    },
+    "logo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "media_type", "status", "source", "ref", "at"],
+      "properties": {
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "media_type": { "enum": ["image/png", "image/jpeg", "image/webp"] },
+        "status": { "$ref": "#/$defs/status" },
+        "source": { "$ref": "#/$defs/source" },
+        "ref": { "description": "the address it was read from", "type": "string", "minLength": 1 },
+        "at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

@@ -8,6 +8,7 @@ import claimV2Schema from '../../schema/claim-v2.schema.json' with { type: 'json
 import claimV3Schema from '../../schema/claim-v3.schema.json' with { type: 'json' };
 import flowerSchema from '../../schema/flower.schema.json' with { type: 'json' };
 import layerSchema from '../../schema/layer.schema.json' with { type: 'json' };
+import markSchema from '../../schema/mark.schema.json' with { type: 'json' };
 import priceSchema from '../../schema/price.schema.json' with { type: 'json' };
 import priceV2Schema from '../../schema/price-v2.schema.json' with { type: 'json' };
 import seamSchema from '../../schema/seam.schema.json' with { type: 'json' };
@@ -55,6 +56,8 @@ export const schemas: {
   price: object;
   /** what a person pays: NEAR AI's bill, plus a base fee, plus their own tip (price/v2, which replaces v1) */
   priceV2: object;
+  /** what tells one organisation on the map from another: its name, symbol and logo, each with where it came from (#85) */
+  mark: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -72,6 +75,7 @@ export const schemas: {
   usage: usageSchema,
   price: priceSchema,
   priceV2: priceV2Schema,
+  mark: markSchema,
 };
 
 /** The two source documents, unchanged. */
