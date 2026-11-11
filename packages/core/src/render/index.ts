@@ -68,6 +68,6 @@ export function renderFlower(spec: Spec, s: Snapshot, o?: RenderOptions): Render
   const check = validateSpec(spec, { snapshot: s, capabilities: snapshotCapabilities(s) });
   if (!check.valid) throw new InvalidSpecError(check.errors);
 
-  const drawn = SKINS[RENDER_VERSION](readFlower(spec, s, o?.view), { size, thumb });
+  const drawn = SKINS[RENDER_VERSION](readFlower(spec, s, o?.view, o?.pieces), { size, thumb });
   return { ...drawn, render_sha256: sha256Hex(drawn.svg) };
 }

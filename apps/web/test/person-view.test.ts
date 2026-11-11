@@ -82,13 +82,15 @@ describe('what can go where', () => {
     expect(names).toEqual({
       height: ['share', 'amount'],
       width: ['share', 'amount'],
-      order: ['share', 'amount', 'kind', 'identity'],
-      colour: ['share', 'amount', 'kind', 'identity'],
-      outline: ['kind', 'identity'],
-      texture: ['kind', 'identity'],
+      order: ['share', 'amount', 'kind', 'identity', 'name', 'name_kind'],
+      colour: ['share', 'amount', 'kind', 'identity', 'name', 'name_kind'],
+      outline: ['kind', 'identity', 'name', 'name_kind'],
+      texture: ['kind', 'identity', 'name', 'name_kind'],
       markings: [],
       segments: [],
       lines: [],
+      // a person's annotations name accounts (annotation-layer.md, step 6): labels show them once chosen
+      labels: ['kind', 'identity', 'name', 'name_kind'],
     });
   });
 

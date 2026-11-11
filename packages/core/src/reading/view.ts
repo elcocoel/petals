@@ -1,4 +1,4 @@
-// How a person's view (view/v1, specs/006-the-map/contracts/view.md) becomes what the reading draws
+// How a person's view (view/v2, specs/006-the-map/contracts/view.md) becomes what the reading draws
 // (specs/006-the-map/plan.md, "Drawing from the viewer's view"). The view picks a piece of data for each
 // dimension; this turns each pick into the encoding today's look draws for it, in spec/v1's shape, so the
 // reading keeps reading/v1's fields and only its values follow the view. A pick the look can't draw yet,
@@ -7,10 +7,11 @@
 // words and its sources, so the default view changes no default flower. Pure.
 import { STANDARD_MEANINGS } from '../convention/default.ts';
 import { choiceOf, shape } from '../convention/shape.ts';
+import type { SeamPiece } from '../seam.ts';
 import { hasBackers } from '../segments/backers.ts';
 import { holdingMeasures, measureTable } from '../tables.ts';
 import type { Encoding, Snapshot, SourceIds, Spec, SpecPrimitive, View } from '../types/index.ts';
-import { EVERY_FLOWER, inUse, type Piece } from '../view/index.ts';
+import { EVERY_FLOWER, inUse, latestView, type Piece } from '../view/index.ts';
 
 /** The dimensions a view picks for that today's look can draw, in spec/v1's words. Order isn't one yet. */
 const FIELDS = ['width', 'height', 'colour', 'outline', 'segments', 'lines', 'markings'] as const;
@@ -21,21 +22,29 @@ const RATIOS = [1.5, 2, 3];
 
 /**
  * The pieces of data a snapshot holds, as seamOf names them from a reading: the four every flower has, each
- * holding as an amount under its own name, and backers where there are delegations.
+ * holding as an amount under its own name, and backers where there are delegations. With pieces given
+ * beyond the snapshot's own (a person's names, namePieces), those too.
  */
-export function piecesOf(s: Snapshot): Piece[] {
+export function piecesOf(s: Snapshot, extra: readonly SeamPiece[] = []): Piece[] {
   const out: Piece[] = [...EVERY_FLOWER];
   for (const m of holdingMeasures(s)) {
     if (!out.some((p) => p.name === m.id)) out.push({ name: m.id, kind: 'amount' });
   }
   if (hasBackers(s)) out.push({ name: 'backers', kind: 'parts' });
+  for (const p of extra) {
+    if (!out.some((o) => o.name === p.name)) out.push({ name: p.name, kind: p.kind });
+  }
   return out;
 }
 
 /** For each dimension, the choice (in propose_spec's words) that draws what the view picks, or nothing. */
-export function choicesOf(view: View, s: Snapshot): Record<Field, string> {
-  const used = inUse(view, piecesOf(s));
-  const d = view.dimensions;
+export function choicesOf(
+  view: View,
+  s: Snapshot,
+  extra: readonly SeamPiece[] = [],
+): Record<Field, string> {
+  const used = inUse(view, piecesOf(s, extra));
+  const d = latestView(view).dimensions;
   let height = 'equal';
   if (used.height === 'share') height = d.height?.scale === 'linear' ? 'linear' : 'sqrt';
   else if (used.height === 'amount') height = 'log';
@@ -46,7 +55,12 @@ export function choicesOf(view: View, s: Snapshot): Record<Field, string> {
     width: used.width === 'share' ? `r${near}` : 'equal',
     height,
     colour: used.colour === 'kind' ? 'kind' : used.colour === 'identity' ? 'identity' : 'single',
-    outline: used.outline === 'identity' ? 'identity_status' : 'none',
+    outline:
+      used.outline === 'identity'
+        ? 'identity_status'
+        : used.outline === 'name_kind'
+          ? 'name_kind'
+          : 'none',
     segments: used.segments === 'backers' ? 'backers' : 'none',
     lines: 'none',
     markings: 'none',
@@ -58,8 +72,13 @@ export function choicesOf(view: View, s: Snapshot): Record<Field, string> {
  * chose, and otherwise the standard words for the pick (the measure's and the metric's names put in, as
  * propose_spec does), with the sources of the data it draws.
  */
-export function encodingsOf(view: View, spec: Spec, s: Snapshot): Spec['encodings'] {
-  const choices = choicesOf(view, s);
+export function encodingsOf(
+  view: View,
+  spec: Spec,
+  s: Snapshot,
+  extra: readonly SeamPiece[] = [],
+): Spec['encodings'] {
+  const choices = choicesOf(view, s, extra);
   const label = spec.selection.measure.replaceAll('_', ' ');
   const out: Record<string, Encoding | null> = { ...spec.encodings };
   for (const field of FIELDS) {
@@ -84,3 +103,10 @@ export function encodingsOf(view: View, spec: Spec, s: Snapshot): Spec['encoding
   }
   return out as Spec['encodings'];
 }
+
+/** The piece of data the view names petals by, when this flower has it in a kind labels take; else null. */
+export const labelsOf = (
+  view: View,
+  s: Snapshot,
+  extra: readonly SeamPiece[] = [],
+): string | null => inUse(view, piecesOf(s, extra)).labels;

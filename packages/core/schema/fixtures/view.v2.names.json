@@ -1,0 +1,30 @@
+{
+  "petal": "view/v2",
+  "dimensions": {
+    "height": {
+      "data": "share",
+      "scale": "sqrt"
+    },
+    "width": {
+      "data": "share",
+      "scale": "log",
+      "max_ratio": 2
+    },
+    "order": {
+      "data": "share"
+    },
+    "colour": {
+      "data": "kind"
+    },
+    "outline": {
+      "data": "name_kind"
+    },
+    "texture": null,
+    "markings": null,
+    "segments": null,
+    "lines": null,
+    "labels": {
+      "data": "name"
+    }
+  }
+}

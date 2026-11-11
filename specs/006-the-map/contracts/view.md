@@ -1,7 +1,7 @@
-# Contract: the view (`view/v1`), how data becomes a flower
+# Contract: the view (`view/v2`), how data becomes a flower
 
-**Version**: view/v1 | **Owner**: LOOK | **Status**: reviewed by META, 9 Nov; built on `m-face/fe-view`, which merges once SYSTEMS's typed seam is on `main`. Built under `specs/protocols.md`, the one rule for every format.
-**Schema draft**: `view-v1.schema.json`, next to this file.
+**Version**: view/v2 since 11 Nov (labels; see "view/v2" below), view/v1 still read | **Owner**: LOOK | **Status**: v1 reviewed by META, 9 Nov; v2 by Elco's go on `coordinator/annotation-layer.md`, step 6. Built under `specs/protocols.md`, the one rule for every format.
+**Schemas**: `view-v1.schema.json` and `view-v2.schema.json`, next to this file.
 
 ## Elco's words (9 Nov, through META)
 
@@ -100,6 +100,24 @@ Today a flower's spec carries its own encodings, and the agent chooses them for 
 3. **`propose_spec`'s choices become the agent's proposal for the person's view.**
 
 Kinds on every piece of data are what make this work, so it waits on `seam/v1` carrying each piece's kind (SYSTEMS's step 2 in `coordinator/systems-check-2026-11-09.md`). "Last active" for colour, Elco's example, needs a kind for dates that 005 doesn't have yet.
+
+## view/v2: labels (11 Nov)
+
+`coordinator/annotation-layer.md`, section 3 and step 6. Elco: "the agent and the person can go CRAZY adding annotation". A person's annotations name accounts, and the names are data like any other, so they reach a petal through the view.
+
+- **A tenth dimension, `labels`:** which piece of data names each petal. It accepts a **category**. A new dimension is a new version, by the rule above.
+- **What each choice shows:**
+  - `identity`: the identity's name, unless it's only inferred, else the short address. That's every petal's name before v2.
+  - `kind`: the kind of account.
+  - Any other category, such as `name` from a person's annotations (`seam.ts`, `namePieces`): its value for that account.
+  - None, or no value for that account: the petal's own label, its short address. No claim, no name.
+  - The tail ("everyone else") keeps its own label whatever labels show.
+- **Long names** are cut at 24 characters with "…" on the flower, and shown whole where they're pointed at.
+- **The default** is v1's with `"labels": { "data": "identity" }` (`view.v2.json`). It draws exactly what v1's default draws. It has a new hash, and v1's default hash and its 12-character alias still mean the default.
+- **A view/v1 reads as v2** with labels on identity (core's `latestView`), and keeps its own hash. A person's next choice in Settings writes v2. Nothing is rewritten in place.
+- **Names from annotations** are two pieces, `name` and `name_kind` (declared, stated, sourced or inferred). Outline accepts `name_kind`: declared, stated or sourced is solid, inferred is apart, and no claim draws none. The strongest word is sourced, never verified.
+- **Fixtures:** `view.v2.json` (the default) and `view.v2.names.json` (labels on `name`, outline on `name_kind`), pinned.
+- **Who composes:** names are the person's own, so whoever draws for a signed-in person passes their named claims through `namePieces` to the reading (`readFlower`'s `pieces`, `renderFlower`'s option `pieces`). A visitor gets none, so every petal keeps its short address under labels on `name`.
 
 ## Not in v1
 

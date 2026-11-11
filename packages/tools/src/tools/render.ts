@@ -4,11 +4,11 @@ import {
   DEFAULT_VIEW,
   readFlower,
   renderFlower,
-  schemas,
   specHash,
+  viewProblem,
 } from '@petal/core';
 import type { Spec, View } from '@petal/core/types';
-import { compile, defineTool, describeErrors } from '../define.ts';
+import { defineTool } from '../define.ts';
 import { putSpecBody } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
 import { base, obj, SHA256, viewUrl } from './shared.ts';
@@ -61,9 +61,6 @@ export const PETAL_DETAIL = obj(
   },
 );
 
-/** A view (view/v1, specs/006-the-map/contracts/view.md), checked against its schema. */
-const checkView = compile(schemas.view as Record<string, unknown>);
-
 export const renderFlowerTool = defineTool<
   { spec: Spec; include_svg?: boolean; include_reading?: boolean; size?: number; view?: View },
   object
@@ -88,7 +85,7 @@ export const renderFlowerTool = defineTool<
       view: {
         type: 'object',
         description:
-          "the viewer's view (view/v1): which piece of data each dimension shows. Without one, the viewer's own, or the default: never the spec's own choices",
+          "the viewer's view (view/v2, or a view/v1): which piece of data each dimension shows. Without one, the viewer's own, or the default: never the spec's own choices",
       },
     },
     { additionalProperties: false },
@@ -108,11 +105,13 @@ export const renderFlowerTool = defineTool<
   }),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   async run({ spec, include_svg = false, include_reading = false, size, view }, ctx) {
-    if (view !== undefined && !checkView(view)) {
+    // A view says its version and is checked by it (view/v1 and view/v2 both read): core's one check.
+    const problem = view === undefined ? null : viewProblem(view);
+    if (problem) {
       throw new ToolFailure(
         'bad_input',
-        `The view is not a valid view/v1: ${describeErrors(checkView.errors)}`,
-        'A view names a piece of data, or null, for each of the nine dimensions (specs/006-the-map/contracts/view.md).',
+        `The view is not a valid view: ${problem}`,
+        'A view names a piece of data, or null, for each of its dimensions (specs/006-the-map/contracts/view.md).',
       );
     }
     const { validation, snapshot } = await checkSpec(ctx, spec);

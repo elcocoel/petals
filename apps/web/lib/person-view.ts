@@ -9,6 +9,7 @@ import {
   DIMENSIONS,
   type Dimension,
   EVERY_FLOWER,
+  FROM_ANNOTATIONS,
   fits,
   type Piece,
   viewHash,
@@ -25,7 +26,13 @@ export const DEFAULT_PERSON_VIEW: PersonView = { view: DEFAULT_VIEW, hash: viewH
 /** For each dimension, the data that fits it. Nothing beyond the default is hard-coded: core's table says. */
 export type ViewChoices = Record<Dimension, Piece[]>;
 
-export const viewChoices = (pieces: readonly Piece[] = EVERY_FLOWER): ViewChoices =>
+/**
+ * The data a person can choose from: what every flower has, and the names their annotations give accounts
+ * (annotation-layer.md, step 6). A petal no one named keeps its short address.
+ */
+export const CHOOSABLE: readonly Piece[] = [...EVERY_FLOWER, ...FROM_ANNOTATIONS];
+
+export const viewChoices = (pieces: readonly Piece[] = CHOOSABLE): ViewChoices =>
   Object.fromEntries(
     DIMENSIONS.map((d) => [d, pieces.filter((p) => fits(d, p.kind))]),
   ) as ViewChoices;

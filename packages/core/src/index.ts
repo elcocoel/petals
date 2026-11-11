@@ -99,10 +99,14 @@ export { isView, viewProblem } from './view/check.ts';
 export type { Dimension, Piece } from './view/index.ts';
 export {
   ACCEPTS,
+  DEFAULT_HASHES,
   DEFAULT_VIEW,
+  DEFAULT_VIEW_V1,
   DIMENSIONS,
   EVERY_FLOWER,
+  FROM_ANNOTATIONS,
   fits,
   inUse,
+  latestView,
   viewHash,
 } from './view/index.ts';
