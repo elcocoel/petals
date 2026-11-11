@@ -1,7 +1,14 @@
 // The tool contract types (packages.md, @petal/tools). Re-exported by index.ts; frozen at
 // packages/v1, so their shapes do not change here.
 
-import type { Progress, QuoteRequest, QuoteResult, ToolError, View } from '@petal/core/types';
+import type {
+  Claim,
+  Progress,
+  QuoteRequest,
+  QuoteResult,
+  ToolError,
+  View,
+} from '@petal/core/types';
 import type { FreshGate, InputModule, SnapshotStore } from '@petal/inputs';
 import type { Rpc } from '@petal/near/auth';
 import type { MapReader, MapWriter } from '@petal/near/map';
@@ -104,6 +111,12 @@ export interface ToolContext {
    * its own is drawn through: the person's, or the default. A flower's own choices never draw it.
    */
   view?: View;
+  /**
+   * additive (11 Nov, annotation-layer.md step 6): the viewer's own names (named annotations), which a
+   * drawing for them shows on the petals they name (core's namePieces). Set by a door that knows the
+   * person, never taken from what a caller sends; a visitor has none.
+   */
+  names?: readonly Claim[];
 }
 
 export type Tool<I, O> = {
