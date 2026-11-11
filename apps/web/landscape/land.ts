@@ -11,7 +11,7 @@ import type { FlowerReading } from '../flower/model.ts';
 import { api } from '../lib/api.ts';
 import { repoRoot } from '../lib/config.ts';
 import { chainLabel } from '../lib/flower-view.ts';
-import type { MapMark } from '../lib/maps.ts';
+import { type MapMark, mapList } from '../lib/maps.ts';
 import { viewQuery } from '../lib/person-view.ts';
 import {
   LOGOS_DIR,
@@ -162,10 +162,16 @@ export async function benchLandscape(view: string): Promise<BenchLandscape | { e
   return 'error' in night ? night : landscapeOf(night);
 }
 
+/** The map's flowers named and marked by their maps' own marks (#85), from the maps' cards; as they were without. */
+async function marked(land: BenchLandscape, view: string): Promise<BenchLandscape> {
+  const cards = await mapList(view);
+  return cards.ok ? withMarks(land, new Map(cards.value.maps.map((c) => [c.id, c.mark]))) : land;
+}
+
 /** The Power Map: one flower per map, in the view whose hash is given (the person's: lib/viewer-view.ts). */
 export async function powerMapLandscape(view: string): Promise<BenchLandscape | { error: string }> {
   const night = await liveNight(view, 'map');
-  return 'error' in night ? night : landscapeOf(night);
+  return 'error' in night ? night : marked(landscapeOf(night), view);
 }
 
 /**
@@ -181,7 +187,7 @@ export async function powerMapAt(
   if ('error' in live) return live;
   const map =
     'map' in at ? at.map : (live.views.find((v) => v.snapshot === at.snapshot)?.map ?? null);
-  const land = landscapeOf(nightOf({ ...live, views: oneEach(live.views) }));
+  const land = await marked(landscapeOf(nightOf({ ...live, views: oneEach(live.views) })), view);
   return { land, focus: map === null ? -1 : land.flowers.findIndex((f) => f.map === map) };
 }
 
