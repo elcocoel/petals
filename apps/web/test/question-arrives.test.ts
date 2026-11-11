@@ -321,9 +321,9 @@ describe('the first paint', () => {
     expect(paint(o)).toContain('<svg aria-hidden="true"');
   });
 
-  test('no flower at all is empty ground, and the boxes are there', () => {
+  test('a new conversation, nothing to draw yet: the Power Map on its way, and the boxes are there (#78)', () => {
     const html = paint({});
-    expect(html).toContain('<svg aria-hidden="true"');
+    expect(html).toContain('Opening the Power Map…');
     expect(html).toContain('aria-label="Message Petals"');
   });
 });
