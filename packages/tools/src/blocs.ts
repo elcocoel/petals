@@ -24,6 +24,18 @@ export async function keptProposals(ctx: ToolContext, id: string): Promise<Propo
   return p.ok ? p.value : null;
 }
 
+/**
+ * The vote ring's stretch (LOOK, 11 Nov: one period for the ring and the blocs): the 90 days up to the map's newest
+ * proposal's close (decided_at, else closes_at, else when it was submitted, at its latest), so a quiet DAO still
+ * shows its last stretch. Null with no proposals.
+ */
+export function lastStretch(p: Proposals, days = 90): { from: string; to: string } | null {
+  const ends = p.proposals.map((x) => x.decided_at ?? x.closes_at ?? x.at).sort();
+  const to = ends.at(-1);
+  if (!to) return null;
+  return { from: new Date(Date.parse(to) - days * 24 * 60 * 60 * 1000).toISOString(), to };
+}
+
 /** A map's blocs over the period asked, its members as its newest reading's petal ids; null: no proposals. */
 export async function mapBlocs(ctx: ToolContext, id: string, ask: BlocsAsk): Promise<Blocs | null> {
   const p = await keptProposals(ctx, id);

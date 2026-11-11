@@ -353,10 +353,14 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(paired.pairs).toEqual([
       { a: ana, b: ben, shared: 6, agreed: 6, agreement: 1, kappa: 1 },
     ]);
-    // with no period, the last 90 days, as the vote ring shows: these are older
-    const recent = (await at('')) as Out;
-    expect(recent.proposals).toEqual({ in_period: 0, voted: 0 });
-    expect(recent).toMatchObject({ pair_count: 0, blocs: [] });
+    // with no period, the ring's: the 90 days up to the newest proposal (1 June): March, April, May and June
+    const ring = (await at('')) as Out;
+    expect(ring.period).toEqual({
+      from: '2025-03-03T00:00:00.000Z',
+      to: '2025-06-01T00:00:00.000Z',
+    });
+    expect(ring.proposals).toEqual({ in_period: 3, voted: 3 });
+    expect(ring).toMatchObject({ pair_count: 0, blocs: [] });
     expect(((await at('?from=soon')) as Out).error).toMatchObject({ code: 'bad_input' });
     expect(((await at('?min_kappa=2')) as Out).error).toMatchObject({ code: 'bad_input' });
 

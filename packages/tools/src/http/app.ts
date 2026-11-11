@@ -17,7 +17,7 @@ import type { Claim } from '@petal/core/types';
 import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
-import { mapBlocs, shownBlocs } from '../blocs.ts';
+import { keptProposals, lastStretch, mapBlocs, shownBlocs } from '../blocs.ts';
 import { versioned } from '../define.ts';
 import { privateStore, specBody } from '../drafts.ts';
 import { fromThrown, isToolError, toolError } from '../errors.ts';
@@ -407,10 +407,10 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
         : versioned(toolError('not_found', 'No proposals read for that map.')),
     );
   });
-  // A map's voting blocs (#94; LOOK, 11 Nov): over ?from&to (default the last 90 days, as the vote ring shows),
+  // A map's voting blocs (#94; LOOK, 11 Nov): over ?from&to (default the 90 days up to its newest proposal's close,
+  // as the vote ring shows them),
   // ?min_shared, ?min_agreement and ?min_kappa settable; members as the petal ids of the map's newest reading. The
   // blocs and a pair count; the pairs only on ?pairs=true, without each pair's proposals (META, 11 Nov).
-  const DAY = 24 * 60 * 60 * 1000;
   app.get('/api/v1/maps/:id/blocs', limit, async (c) => {
     const id = aboutKey(c.req.param('id'));
     const q = (k: string) => c.req.query(k) || undefined;
@@ -446,8 +446,11 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
           ),
         ),
       );
+    // no period asked: the ring's stretch; every proposal in it was submitted by its end, so none is cut
+    const kept = from === undefined && to === undefined ? await keptProposals(ctx, id) : null;
+    const stretch = kept ? lastStretch(kept) : null;
     const blocs = await mapBlocs(ctx, id, {
-      from: from ?? (to ? null : new Date(ctx.now().getTime() - 90 * DAY).toISOString()),
+      from: from ?? stretch?.from ?? null,
       to: to ?? null,
       ...(minShared === undefined ? {} : { min_shared: minShared }),
       ...(minAgreement === undefined ? {} : { min_agreement: minAgreement }),
@@ -456,7 +459,10 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     return respond(
       c,
       blocs
-        ? shownBlocs(blocs, q('pairs') === 'true')
+        ? shownBlocs(
+            stretch ? { ...blocs, period: { from: stretch.from, to: stretch.to } } : blocs,
+            q('pairs') === 'true',
+          )
         : versioned(toolError('not_found', 'No proposals read for that map.')),
     );
   });
