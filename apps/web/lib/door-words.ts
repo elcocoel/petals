@@ -8,3 +8,12 @@ export const doorWords = {
   badSignature: "That signature didn't work. Connect your wallet again.",
   nearDidntAnswer: "NEAR didn't answer. Try again.",
 } as const;
+
+/**
+ * /make for someone not signed in (Elco, 11 Nov, #78: "a oops, your no logged in"): drafts for Elco, listed in
+ * design/journey-strings.md. The copy button's words are the setup prompt's own (lib/landing-copy.ts).
+ */
+export const notSignedInWords = {
+  title: 'Oops, you’re not logged in.',
+  body: 'Connect a NEAR wallet to talk to Petals’ agent.\nNo wallet yet? Copy this for your agent, and it walks you through it.',
+} as const;
