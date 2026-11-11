@@ -19,7 +19,7 @@ import {
   wordsOf,
 } from '../src/search-index.ts';
 import { fakeSearchModel, type SearchModel, searchModel } from '../src/search-model.ts';
-import { MEANING_OFF } from '../src/tools/search-petals.ts';
+import { claimTitle, MEANING_OFF, shortRef } from '../src/tools/search-petals.ts';
 import { rig, type TestRig } from './helpers.ts';
 
 // biome-ignore lint/suspicious/noExplicitAny: walking tool outputs
@@ -132,6 +132,50 @@ describe('the ranking', () => {
 const MOLOCH = 'c46437a2afb76cc7c3b07195da499a80a93bd3f09f2ce342436a366c68009a9c';
 const DAO = '0x1fd169a4f5c59acf79d0fd5d91d1201ef1bce9f1';
 
+describe("a claim's title", () => {
+  const names = new Map([
+    ['eip155:1:0xc00e94cb662c3520282e6f5717214004a7f26888', 'Compound'],
+    ['near:mainnet:alice.near', 'Alice'],
+  ]);
+  const nameOf = (ref: string) => names.get(ref) ?? null;
+
+  test('says who by name, else a short address, and the claim in words', () => {
+    expect(
+      claimTitle(
+        'eip155:1:0xc00e94cb662c3520282e6f5717214004a7f26888',
+        'noted',
+        { value: 'No stable voting bloc is asserted.' },
+        nameOf,
+      ),
+    ).toBe('Compound: No stable voting bloc is asserted.');
+    expect(
+      claimTitle(
+        'eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986',
+        'member_of',
+        'near:mainnet:alice.near',
+        nameOf,
+      ),
+    ).toBe('0xf02f…e986 is a member of Alice');
+    // a name claim's own subject reads as its address, never as the name it gives
+    expect(claimTitle('near:mainnet:alice.near', 'named', { value: 'Alice' }, nameOf)).toBe(
+      'alice.near is named Alice',
+    );
+    expect(
+      shortRef(
+        'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:8HVYKgq2PA4SCDuPZSfHBH1aupTBJYPVru6kq3UfuSX9',
+      ),
+    ).toBe('8HVY…uSX9');
+    expect(shortRef('proposal:near:mainnet:marketing.sputnik-dao.near:12')).toBe('proposal 12');
+  });
+
+  test('a long note is cut at a word, with an ellipsis', () => {
+    const t = claimTitle('near:mainnet:alice.near', 'noted', { value: 'word '.repeat(60) }, nameOf);
+    expect(t.length).toBeLessThanOrEqual(121);
+    expect(t.endsWith('…')).toBe(true);
+    expect(t.startsWith('Alice: word word')).toBe(true);
+  });
+});
+
 describe('search_petals', () => {
   let r: TestRig;
   let embedded: string[];
@@ -217,7 +261,11 @@ describe('search_petals', () => {
     expect(await keepMappingClaims(r.ctx, 'test', [claim])).toBe(1);
     const found = await run({ q: 'funds open source tooling' });
     expect(found.results[0]).toMatchObject({ kind: 'map', id: about });
-    expect(found.results[0].matched[0]).toMatchObject({ kind: 'claim', id: 'c'.repeat(64) });
+    expect(found.results[0].matched[0]).toMatchObject({
+      kind: 'claim',
+      id: 'c'.repeat(64),
+      title: 'Founders Guild v1 is a grants guild',
+    });
   });
 
   test('the map is embedded once: a second search embeds nothing', async () => {
