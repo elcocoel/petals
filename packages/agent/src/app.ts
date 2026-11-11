@@ -186,6 +186,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     meRoutes({
       store,
       gate: auth.gate,
+      tools: ctx,
       llm,
       ...(o.price ? { price: o.price } : {}),
       ...(config.apiBase ? { apiBase: config.apiBase } : {}),

@@ -15,6 +15,10 @@
 //   GET  /api/v1/me/annotations?verb=  { annotations: [{ claim, exploration, added_at }] }: everything they and
 //                              their agents keep about accounts, from all their projects, oldest first; with
 //                              verb=named, the names the page draws on petals (core's namePieces)
+//   POST /api/v1/me/annotations  { annotations, conversation? } → { added, existed, ids }: what the person adds
+//                              from the page ("Add a note"), with their account as who answers for it, in a
+//                              conversation's project (a run's made now if it has none), or with none, theirs
+//                              in no project (exploration: null)
 //
 // The view is the glasses every petal the person sees is drawn through (one-source.md, step 1: "When the
 // user has a certain setting selected, all of the petals he will ever interact while those settings are
@@ -36,7 +40,13 @@ import {
 } from '@petal/core';
 import type { View } from '@petal/core/types';
 import type { Store } from '@petal/store';
-import { bodyCap } from '@petal/tools';
+import {
+  annotationsOf,
+  bodyCap,
+  fromThrown,
+  runExplorationOf,
+  type ToolContext,
+} from '@petal/tools';
 import { type Context, Hono } from 'hono';
 import type { RouteAuth } from './auth-routes.ts';
 import type { LlmClient } from './llm.ts';
@@ -91,6 +101,8 @@ export interface MeDeps {
   /** what Petals charges at; default price.json */
   price?: Price;
   clock?: () => number;
+  /** for a run's project, made when an annotation is the first thing it keeps */
+  tools?: ToolContext;
 }
 
 export function meRoutes(d: MeDeps): Hono {
@@ -148,9 +160,68 @@ export function meRoutes(d: MeDeps): Hono {
     return ok(c, {
       annotations: rows.map((r) => ({
         claim: JSON.parse(r.body) as unknown,
-        exploration: r.exploration,
+        exploration: r.exploration || null,
         added_at: r.created_at,
       })),
+    });
+  });
+
+  app.post('/api/v1/me/annotations', bodyCap, async (c) => {
+    const foreign = gate.refuseForeign(c);
+    if (foreign) return foreign;
+    const me = await personOf(c);
+    if (!me) return fail(c, 'unauthorised', 'Sign in to keep what you know about accounts.');
+    const who = await gate.callerOf(c);
+    if (!who.by)
+      return fail(c, 'unauthorised', 'Sign in with your wallet: what you keep names your account.');
+    const body = (await c.req.json().catch(() => null)) as {
+      annotations?: unknown;
+      conversation?: unknown;
+    } | null;
+    if (!Array.isArray(body?.annotations) || body.annotations.length === 0)
+      return fail(
+        c,
+        'bad_input',
+        'annotations must be a list of one or more, as add_annotation takes them',
+      );
+    // where it's kept: the conversation's project, or none
+    let exploration = '';
+    const ref = typeof body.conversation === 'string' ? body.conversation.trim() : '';
+    if (ref) {
+      const row = ref.startsWith('exp_') ? await store.exploration.get(ref) : null;
+      const run = row ? null : await store.run.get(ref);
+      if (row?.owner === me.person) exploration = row.id;
+      else if (run?.owner === me.person && d.tools)
+        exploration = (await runExplorationOf(d.tools, run.id)) ?? '';
+      if (!exploration) return fail(c, 'not_found', 'You have no conversation by that id.');
+    }
+    const at = iso();
+    let claims: ReturnType<typeof annotationsOf>;
+    try {
+      claims = annotationsOf(body.annotations, who.by, at);
+    } catch (e) {
+      const { error } = fromThrown(e, 'bad_input');
+      return fail(c, error.code, error.message, error.hint);
+    }
+    const added = await store.annotation.add(
+      claims.map((cl, place) => ({
+        owner: me.person,
+        id: cl.id,
+        exploration,
+        subject: cl.subject,
+        verb: cl.verb,
+        kind: cl.kind,
+        body: JSON.stringify(cl),
+        credential: who.credential,
+        created_at: at,
+        place,
+      })),
+    );
+    return ok(c, {
+      exploration: exploration || null,
+      added,
+      existed: claims.length - added,
+      ids: claims.map((cl) => cl.id),
     });
   });
 

@@ -91,6 +91,34 @@ function writerOf(o: Opened, ctx: ToolContext, as: string | undefined): string {
   return by;
 }
 
+/**
+ * Drafts (claim/v2 without id and by) as claims with `by` and the time filled in, each checked as kept in a
+ * person's own project; or every reason, with a ToolFailure, so none is kept. One rule for every door.
+ */
+export function annotationsOf(drafts: readonly unknown[], by: string, at: string): Claim[] {
+  const claims: Claim[] = [];
+  const refused: string[] = [];
+  drafts.forEach((raw, i) => {
+    const { id: _id, petal: _petal, by: given, ...draft } = (raw ?? {}) as Record<string, unknown>;
+    if (given !== undefined && given !== by) {
+      refused.push(`annotation ${i + 1}: by is filled by Petals (${by}), so leave it out`);
+      return;
+    }
+    const claim = makeClaim({ issued_at: at, ...draft, by } as ClaimDraft, 'claim/v2');
+    const v = validateClaim(claim, { private: true });
+    if (v.ok) claims.push(claim);
+    else
+      for (const e of v.errors) refused.push(`annotation ${i + 1}: ${e.path || '/'} ${e.message}`);
+  });
+  if (refused.length)
+    throw new ToolFailure(
+      'bad_input',
+      `None was added: ${refused.slice(0, 10).join('; ')}${refused.length > 10 ? `; and ${refused.length - 10} more` : ''}.`,
+      "Each is a claim/v2 without id and by: see add_annotation's input schema.",
+    );
+  return claims;
+}
+
 export const addAnnotation = defineTool<
   { exploration: string; annotations: unknown[]; as?: string },
   object
@@ -122,32 +150,7 @@ export const addAnnotation = defineTool<
     writable(o);
     const by = writerOf(o, ctx, as);
     const at = ctx.now().toISOString();
-    const claims: Claim[] = [];
-    const refused: string[] = [];
-    annotations.forEach((raw, i) => {
-      const {
-        id: _id,
-        petal: _petal,
-        by: given,
-        ...draft
-      } = (raw ?? {}) as Record<string, unknown>;
-      if (given !== undefined && given !== by) {
-        refused.push(`annotation ${i + 1}: by is filled by Petals (${by}), so leave it out`);
-        return;
-      }
-      const claim = makeClaim({ issued_at: at, ...draft, by } as ClaimDraft, 'claim/v2');
-      const v = validateClaim(claim, { private: true });
-      if (v.ok) claims.push(claim);
-      else
-        for (const e of v.errors)
-          refused.push(`annotation ${i + 1}: ${e.path || '/'} ${e.message}`);
-    });
-    if (refused.length)
-      throw new ToolFailure(
-        'bad_input',
-        `None was added: ${refused.slice(0, 10).join('; ')}${refused.length > 10 ? `; and ${refused.length - 10} more` : ''}.`,
-        "Each is a claim/v2 without id and by: see add_annotation's input schema.",
-      );
+    const claims = annotationsOf(annotations, by, at);
     const owner = layerOwnerOf(o.row);
     const credential = credentialOf(ctx, o);
     const rows: AnnotationRow[] = claims.map((c, place) => ({
