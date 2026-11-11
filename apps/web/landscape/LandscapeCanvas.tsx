@@ -53,6 +53,18 @@ export interface CanvasChain {
   continent: Continent;
 }
 
+/** Below this much room (md, 48rem) the overlays start folded to their bars. */
+const ROOM = 768;
+
+/**
+ * How wide the map's own room is: the positioned area the overlays' column stands in (the column's offset
+ * parent), or null where the column is fixed to the window.
+ */
+function roomOf(aside: HTMLElement | null): number | null {
+  const area = aside?.parentElement?.offsetParent;
+  return area instanceof HTMLElement ? area.clientWidth : null;
+}
+
 /** The chain the bench opens on: the most connected one (a lean, specs/006-the-map plan). */
 const FIRST = 'eip155:1';
 
@@ -162,14 +174,16 @@ export function LandscapeCanvas({
   const [chain, setChain] = useState(
     opened ?? (data.chains.some((c) => c.chain === FIRST) ? FIRST : (data.chains[0]?.chain ?? '')),
   );
-  // the overlay's fold: open where there's room, folded to its bar below md, as the phone's toggle was
+  // the overlays' folds: open where the map has room, folded to their bars where it's narrow, a phone's or
+  // /make's beside the conversation (WORKSPACE's walk, 11 Nov): its own room, not the window's
   const [listOpen, setListOpen] = useState(true);
   const [legendOpen, setLegendOpen] = useState(true);
+  const narrow = useCallback(() => (roomOf(aside.current) ?? window.innerWidth) < ROOM, []);
   useEffect(() => {
-    if (window.matchMedia('(min-width: 48rem)').matches) return;
+    if (!narrow()) return;
     setListOpen(false);
     setLegendOpen(false);
-  }, []);
+  }, [narrow]);
   // Inside a flower the chains step aside, so they never cover it; they're back once it's left (#78, LOOK's
   // lean (a)). Invisible, not gone, so the arrows' names still keep clear of where they stand.
   const [inside, setInside] = useState(focus >= 0);
@@ -270,8 +284,8 @@ export function LandscapeCanvas({
                   <NavItem
                     onClick={() => {
                       setChain(c.chain);
-                      // below md the list folds back once a chain is chosen, as the toggle's did
-                      if (!window.matchMedia('(min-width: 48rem)').matches) setListOpen(false);
+                      // where the room is narrow the list folds back once a chain is chosen
+                      if (narrow()) setListOpen(false);
                     }}
                     chosen={c.chain === chain}
                     label={c.label}
