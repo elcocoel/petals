@@ -22,7 +22,7 @@ import {
 import type { Claim, Spec, View } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
-import { hiddenMap } from './hidden.ts';
+import { hiddenMap, retiredReading } from './hidden.ts';
 import type { CardProposals } from './proposals.ts';
 import { base, findSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
@@ -174,8 +174,9 @@ export async function mapViews(
       made_by: row.made_by ?? null,
     });
   }
-  // a map hidden from the Power Map (#96) is in no list of it
-  return o.hidden ? out : out.filter((v) => !hiddenMap(v.map));
+  // a map hidden from the Power Map (#96) is in no list of it, nor is a reading a wave replaced
+  const shown = out.filter((v) => !retiredReading(v.snapshot));
+  return o.hidden ? shown : shown.filter((v) => !hiddenMap(v.map));
 }
 
 /** A drawing on a map's card. */

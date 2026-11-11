@@ -1,8 +1,9 @@
 // Maps hidden from the Power Map (board #96; Elco approved DAO SET's review, 11 Nov): never deleted, each with
 // its reason, and the four the review protects stay shown.
 import { describe, expect, test } from 'vitest';
-import { hiddenCount, hiddenMap } from '../src/hidden.ts';
+import { hiddenCount, hiddenMap, retiredReading } from '../src/hidden.ts';
 import hidden from '../src/hidden-maps.json' with { type: 'json' };
+import retired from '../src/retired-readings.json' with { type: 'json' };
 
 describe('maps hidden from the Power Map', () => {
   test('the 64 Elco approved and the six retired off-chain cards, each by its address in one form, with its reason and who decided', () => {
@@ -34,5 +35,21 @@ describe('maps hidden from the Power Map', () => {
     ])
       expect(hiddenMap(`eip155:100:${a}`)).toBeNull();
     expect(hiddenMap('eip155:100:0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6')).toBeNull();
+  });
+
+  test("the readings the waves replaced are retired, never deleted: each names its replacement and the wave's record", () => {
+    expect(retired.retired.length).toBe(92);
+    for (const r of retired.retired) {
+      expect(r.snapshot).toMatch(/^[0-9a-f]{64}$/);
+      expect(r.replaced_by).toMatch(/^[0-9a-f]{64}$/);
+      // a replacement is never itself retired: it points to the newest
+      expect(retiredReading(r.replaced_by)).toBeNull();
+    }
+    const first = retired.retired[0] as { snapshot: string; from: string };
+    expect(retiredReading(first.snapshot)).toMatchObject({
+      from: first.from,
+      decided: expect.stringMatching(/^META, 11 Nov 2026/),
+    });
+    expect(retiredReading('0'.repeat(64))).toBeNull();
   });
 });
