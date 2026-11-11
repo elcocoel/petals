@@ -237,7 +237,8 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     const subject = (await o.gate?.subjectOf(c)) ?? null;
     if (!subject) return ctx;
     const names = (await privateStore(ctx.config).annotation.list(subject))
-      .filter((r) => r.verb === 'named')
+      // their names and their types (#97), each drawn on the petals it's about
+      .filter((r) => r.verb === 'named' || r.verb === 'is_a')
       .map((r) => JSON.parse(r.body) as Claim);
     if (!names.length) return ctx;
     c.header('Cache-Control', 'private, no-store');

@@ -13,6 +13,7 @@ import {
   pictureQuery,
   readFlower,
   sha256Hex,
+  typePieces,
   type Value,
   valuePieces,
   viewHash,
@@ -105,6 +106,7 @@ async function readOf(
     // own names on the petals they name (annotation step 6)
     const reading = readFlower(spec, snapshot, view, [
       ...(ctx.names?.length ? namePieces(snapshot, ctx.names) : []),
+      ...(ctx.names?.length ? typePieces(snapshot, ctx.names) : []),
       // each petal's value in dollars, from its map's stored value (#91): none with no price
       ...valuePieces(snapshot, values.get(mapOf(snapshot)) ?? null),
     ]);
@@ -202,6 +204,10 @@ export interface CardMark {
   name: MarkSaid | null;
   symbol: MarkSaid | null;
   logo: (MarkLogo & { url: string }) | null;
+  /** its types, each an is_a claim with its kind and evidence, in the order found (#97) */
+  types: Claim[];
+  /** the same words, each once, in that order: what a badge says ('DAO' once, however many claims say it) */
+  type_words: string[];
   read_at: string;
 }
 
@@ -211,6 +217,16 @@ const EXTENSION: Record<MarkLogo['media_type'], string> = {
   'image/webp': 'webp',
 };
 
+/** Each type's word once, in the order its claims were found. */
+export function typeWords(types: readonly Claim[]): string[] {
+  const out: string[] = [];
+  for (const c of types) {
+    const w = typeof c.object === 'string' ? c.object : c.object.value;
+    if (typeof w === 'string' && w && !out.includes(w)) out.push(w);
+  }
+  return out;
+}
+
 /** A stored mark as its card carries it: the logo at /api/v1/media/<sha256>.<ext>, on this site. */
 export function cardMark(m: Mark, site: string): CardMark {
   return {
@@ -219,6 +235,8 @@ export function cardMark(m: Mark, site: string): CardMark {
     logo: m.logo
       ? { ...m.logo, url: `${site}/api/v1/media/${m.logo.sha256}.${EXTENSION[m.logo.media_type]}` }
       : null,
+    types: m.types ?? [],
+    type_words: typeWords(m.types ?? []),
     read_at: m.read_at,
   };
 }

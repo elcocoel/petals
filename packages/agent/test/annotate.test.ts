@@ -96,7 +96,7 @@ describe("Petals' agent keeps what the person tells it", () => {
       {
         exploration,
         claim: {
-          petal: 'claim/v3',
+          petal: 'claim/v4',
           subject: DEKAN,
           verb: 'named',
           object: { value: 'Dekan' },

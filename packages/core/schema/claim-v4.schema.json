@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:claim:v4",
+  "title": "Petal claim v4",
+  "description": "claim/v4 (11 Nov, board #97; Elco: types are data, claims with evidence, any value, several at once) is claim/v3 with one more verb, is_a: the account is of a type, in any word (a DAO, a multisig, a token, an exchange wallet), as a technical form, a role or a declared nature. Everything else is claim/v3's. One attributed, immutable statement about an account, a contract or a group. Named by the SHA-256 of its RFC 8785 canonical JSON, without id and proof. The rules a schema can't say are in validateClaim. See specs/002-system/contracts/claims.md. v2 added annotations: a name, a note and a link in words (named, noted, linked), a person's own word (stated), research as a ground, and a transaction, a proposal and a quote in the evidence. v3 types each piece of evidence and says who found it and when, and an open source's platform and an archived copy, so a claim discovered on the chain, inferred, or gathered from the open web keeps what it rests on. A name or a person in its words is kept in a person's own project only (people.ts).",
+  "type": "object",
+  "required": [
+    "petal",
+    "id",
+    "subject",
+    "verb",
+    "object",
+    "issued_at",
+    "kind",
+    "evidence",
+    "by"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "petal": {
+      "const": "claim/v4"
+    },
+    "id": {
+      "$ref": "#/$defs/sha256"
+    },
+    "subject": {
+      "$ref": "#/$defs/entityRef"
+    },
+    "verb": {
+      "enum": [
+        "holds",
+        "measured",
+        "delegates_to",
+        "owned_by",
+        "member_of",
+        "holds_role",
+        "voted",
+        "proposed",
+        "reviewed",
+        "paid",
+        "funded_by",
+        "signer_of",
+        "deployed",
+        "controls",
+        "declares_same_controller",
+        "shares_signer",
+        "moves_with",
+        "same_funder",
+        "same_address",
+        "labelled",
+        "requests_correction",
+        "challenges",
+        "responds",
+        "retracts",
+        "supersedes",
+        "confidence",
+        "named",
+        "noted",
+        "linked",
+        "is_a"
+      ],
+      "description": "A closed list per version. Each verb's definition is in verbs.ts and contracts/claims.md."
+    },
+    "object": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/entityRef"
+        },
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "description": "A number as a string, a closed tag, or, for named, noted and linked, words or a link."
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            }
+          }
+        }
+      ]
+    },
+    "qualifiers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 256
+      },
+      "description": "Checked per verb. Amounts are strings."
+    },
+    "valid_from": {
+      "$ref": "#/$defs/datetime"
+    },
+    "valid_to": {
+      "$ref": "#/$defs/datetime"
+    },
+    "issued_at": {
+      "$ref": "#/$defs/datetime"
+    },
+    "as_of": {
+      "type": "object",
+      "required": [
+        "chain",
+        "block"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "chain": {
+          "type": "string",
+          "pattern": "^[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,32}$"
+        },
+        "block": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "kind": {
+      "enum": [
+        "observed",
+        "declared",
+        "stated",
+        "sourced",
+        "inferred"
+      ]
+    },
+    "method": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._/-]*@[a-zA-Z0-9][a-zA-Z0-9._/-]*(#[0-9a-f]{8,64})?$",
+      "description": "Required if inferred: a rule or model, its version, and an optional hash of its parameters."
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "by": {
+      "$ref": "#/$defs/entityRef"
+    },
+    "via": {
+      "$ref": "#/$defs/entityRef"
+    },
+    "proof": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/txProof"
+        },
+        {
+          "$ref": "#/$defs/nep413Proof"
+        },
+        {
+          "$ref": "#/$defs/nearAiProof"
+        }
+      ],
+      "description": "Outside the hash: the same claim can carry different proofs."
+    }
+  },
+  "if": {
+    "type": "object",
+    "properties": {
+      "kind": {
+        "const": "inferred"
+      }
+    },
+    "required": [
+      "kind"
+    ]
+  },
+  "then": {
+    "type": "object",
+    "properties": {
+      "method": true
+    },
+    "required": [
+      "method"
+    ]
+  },
+  "else": {
+    "not": {
+      "type": "object",
+      "properties": {
+        "method": true
+      },
+      "required": [
+        "method"
+      ]
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "datetime": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$",
+      "description": "UTC with Z, so one moment has one spelling and one id."
+    },
+    "entityRef": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*:[^\\s]+$",
+      "maxLength": 300,
+      "description": "Namespaced. refs.ts says which namespaces parse. No natural person."
+    },
+    "evidence": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "snapshot_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "url_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "retrieved_at": {
+          "$ref": "#/$defs/datetime"
+        },
+        "claim_id": {
+          "$ref": "#/$defs/sha256"
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280,
+          "description": "Short. In a published claim it must not name a person (people.ts)."
+        },
+        "tx": {
+          "type": "string",
+          "pattern": "^[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,32}:[0-9a-zA-Z]{16,128}$",
+          "description": "The transaction it rests on, on its chain: <caip2>:<hash>."
+        },
+        "proposal": {
+          "$ref": "#/$defs/entityRef",
+          "description": "The proposal it rests on: proposal:<caip2>:<key>."
+        },
+        "quote": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "The source's own words, exactly as written."
+        },
+        "type": {
+          "enum": [
+            "snapshot",
+            "tx",
+            "proposal",
+            "page",
+            "post",
+            "claim",
+            "note"
+          ],
+          "description": "What this piece is: a reading by its hash, a transaction, a proposal, a web page, a post on a platform, another claim, or a note alone. It names the field that holds it."
+        },
+        "found_by": {
+          "$ref": "#/$defs/entityRef",
+          "description": "Who found this piece: an account, a named tool or a named model."
+        },
+        "found_at": {
+          "$ref": "#/$defs/datetime",
+          "description": "When it was found."
+        },
+        "platform": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,31}$",
+          "description": "Where a page or post lives, as a slug: x, github, discord, forum, telegram, farcaster."
+        },
+        "archive_url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "An archived copy of the page or post (web.archive.org, archive.today), so it survives the page changing."
+        }
+      },
+      "required": [
+        "type",
+        "found_by",
+        "found_at"
+      ]
+    },
+    "txProof": {
+      "type": "object",
+      "required": [
+        "type",
+        "hash"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "tx"
+        },
+        "hash": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "nep413Proof": {
+      "type": "object",
+      "required": [
+        "type",
+        "account_id",
+        "public_key",
+        "signature",
+        "message",
+        "nonce",
+        "recipient"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "nep413"
+        },
+        "account_id": {
+          "type": "string"
+        },
+        "public_key": {
+          "type": "string",
+          "pattern": "^ed25519:"
+        },
+        "signature": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string"
+        },
+        "recipient": {
+          "type": "string"
+        }
+      }
+    },
+    "nearAiProof": {
+      "type": "object",
+      "required": [
+        "type",
+        "model",
+        "completion_id",
+        "text",
+        "signature",
+        "signing_address",
+        "signing_algo"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "nearai"
+        },
+        "model": {
+          "type": "string"
+        },
+        "completion_id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "signature": {
+          "type": "string"
+        },
+        "signing_address": {
+          "type": "string"
+        },
+        "signing_algo": {
+          "enum": [
+            "ecdsa",
+            "ed25519"
+          ]
+        }
+      }
+    }
+  }
+}

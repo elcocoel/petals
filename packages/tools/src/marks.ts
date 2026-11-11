@@ -51,6 +51,7 @@ export async function markMaps(ctx: ToolContext, o: MarkRun = {}): Promise<MarkR
         chain: card.chain,
         address: card.address,
         reader: card.readings[0]?.network ?? null,
+        snapshot: card.readings[0]?.snapshot ?? null,
       },
       { fetch: fetchImpl, lists, ...(o.now ? { now: o.now } : {}) },
     );

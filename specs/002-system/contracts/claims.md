@@ -1,8 +1,10 @@
 # Contract: claims
 
-**Version**: claim/v3 (v1 and v2 still read) | **Code**: `packages/core/src/claims/`, pure | **Schemas**: `packages/core/schema/claim.schema.json` (v1), `claim-v2.schema.json` (v2), `claim-v3.schema.json` (v3) | **Consumers**: a person's annotations (annotation-layer.md), later the relations index and surfaces
+**Version**: claim/v4 (v1, v2 and v3 still read) | **Code**: `packages/core/src/claims/`, pure | **Schemas**: `packages/core/schema/claim.schema.json` (v1), `claim-v2.schema.json` (v2), `claim-v3.schema.json` (v3), `claim-v4.schema.json` (v4) | **Consumers**: a person's annotations (annotation-layer.md), later the relations index and surfaces
 
 **claim/v2 (10 Nov)** adds annotations, what a person or an agent says about an account: `named`, `noted` and `linked`, the kind `stated`, the ground `research`, and `tx`, `proposal` and `quote` in the evidence. Everything else is v1's, word for word. Chain reads are still made as v1, so their ids don't move. A reader picks the schema by `petal`.
+
+**claim/v4 (11 Nov, board #97; Elco: types are data, claims with evidence, any value, several at once)** is claim/v3 with one more verb, `is_a`: the account is of a type, in any word, as a technical form (a contract, a multisig), a role (a treasury, a delegate) or a declared nature (a DAO, a foundation). Several types are several claims. Everything else is v3's. Petals' own readers say a map's types as `is_a` claims in its mark (mark/v2): what its reading shows, `observed` and resting on that reading, and the DAO behind a Baal's shares token, `inferred` from `sharesToken()`. A person's or an agent's own go in their project, as annotations. Published, an `is_a` word is checked as a note is: no person's name.
 
 **claim/v3 (11 Nov; Elco: "make sure that the DATA LAYER contains space for discovered, inferred, osint gathered claims and their evidence")** types every piece of evidence and says who found it and when. Each piece now has:
 - `type`, required: `snapshot` (a reading, `snapshot_sha256`), `tx`, `proposal`, `page` or `post` (`url`), `claim` (`claim_id`) or `note`. Each names the field it must hold, and a page or post is an http(s) URL.
@@ -103,6 +105,7 @@ A new verb is a new version. Anything else is refused. There's no `same_as`: it 
 | `named` | declared, stated, sourced, inferred | a name, one line, up to 128 characters | Someone says the account goes by this name: a handle, a person's, an organisation's or a role's. |
 | `noted` | declared, stated, sourced, inferred | words | A note or research about the account, in words. |
 | `linked` | declared, stated, sourced, inferred | an `http(s)` link | A page about the account. |
+| `is_a` | observed, declared, stated, sourced, inferred | a word | The account is of this type, in any word: a form, a role or a declared nature. One per claim. |
 
 `named`, `noted` and `linked` are v2's, and a v1 claim can't use them. An inferred one takes `grounds`, as any inference does.
 

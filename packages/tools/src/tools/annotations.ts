@@ -136,7 +136,7 @@ export function annotationsOf(drafts: readonly unknown[], by: string, at: string
         ...(evidence !== undefined ? { evidence } : {}),
         by,
       } as ClaimDraft,
-      'claim/v3',
+      'claim/v4',
     );
     const v = validateClaim(claim, { private: true });
     if (v.ok) claims.push(claim);

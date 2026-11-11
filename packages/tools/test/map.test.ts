@@ -265,6 +265,9 @@ describe('one map per address (Elco, 10 Nov)', () => {
         ...mark.logo,
         url: `${(r.ctx.config.apiBase ?? '').replace(/\/+$/, '')}/api/v1/media/${logo}.png`,
       },
+      // a mark/v1 has no types: none, and no words (#97)
+      types: [],
+      type_words: [],
       read_at: at,
     });
     const one = await app.request(`/api/v1/maps/${encodeURIComponent(`eip155:1:${DAO}`)}`);

@@ -259,7 +259,13 @@ describe('a mark: the chain first, then the lists', () => {
       },
       { fetch: fakeFetch({ calls: {}, pages: [] }), now: NOW },
     );
-    expect(mark).toMatchObject({ petal: 'mark/v1', name: null, symbol: null, logo: null });
+    expect(mark).toMatchObject({
+      petal: 'mark/v2',
+      name: null,
+      symbol: null,
+      logo: null,
+      types: [],
+    });
     expect(validateMark(mark).ok).toBe(true);
   });
 });

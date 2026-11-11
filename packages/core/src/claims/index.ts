@@ -38,6 +38,7 @@ export {
   isVerb,
   LABEL_TAGS,
   V2_VERBS,
+  V4_VERBS,
   VERB_RULES,
   VERBS,
   type Verb,

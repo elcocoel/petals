@@ -38,7 +38,14 @@ type Validator = NonNullable<ReturnType<ReturnType<typeof createAjv>['getSchema'
 const compiled = new Map<string, Validator>();
 /** Each version reads by its own schema: a reader picks by the document's `petal`. */
 function schemaValidator(petal: unknown): Validator {
-  const name = petal === 'claim/v3' ? 'claimV3' : petal === 'claim/v2' ? 'claimV2' : 'claim';
+  const name =
+    petal === 'claim/v4'
+      ? 'claimV4'
+      : petal === 'claim/v3'
+        ? 'claimV3'
+        : petal === 'claim/v2'
+          ? 'claimV2'
+          : 'claim';
   let v = compiled.get(name);
   if (!v) {
     v = createAjv().getSchema(schemaId(name));

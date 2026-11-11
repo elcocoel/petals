@@ -115,7 +115,7 @@ export function peopleRuleIssues(c: Claim, scope: PeopleScope = {}): ValidationI
   if (!scope.private) {
     if (c.verb === 'named') add('/object/value', 'no_free_text_name', REASON.name);
     const words: [string, string | undefined][] = [
-      ...(c.verb === 'noted' && typeof c.object !== 'string'
+      ...((c.verb === 'noted' || c.verb === 'is_a') && typeof c.object !== 'string'
         ? ([['/object/value', c.object.value]] as [string, string][])
         : []),
       ...c.evidence.map((e, i): [string, string | undefined] => [`/evidence/${i}/note`, e.note]),

@@ -1,0 +1,24 @@
+{
+  "petal": "claim/v4",
+  "subject": "eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986",
+  "verb": "is_a",
+  "object": {
+    "value": "DAO"
+  },
+  "kind": "inferred",
+  "method": "marks/types@1",
+  "qualifiers": {
+    "grounds": "research"
+  },
+  "issued_at": "2026-11-11T17:00:00.000Z",
+  "by": "tool:petals-marks@1",
+  "evidence": [
+    {
+      "type": "note",
+      "note": "sharesToken() on eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986 names 0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6, the token it owns: a Moloch v3 (Baal) DAO",
+      "found_by": "tool:petals-marks@1",
+      "found_at": "2026-11-11T17:00:00.000Z"
+    }
+  ],
+  "id": "ac87a0c9cfeb18f8f7f03114383620733d87d78130daf43bd948cbcc5af2b7a9"
+}

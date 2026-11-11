@@ -7,6 +7,7 @@ import {
   readFlower,
   renderFlower,
   specHash,
+  typePieces,
   valuePieces,
   viewProblem,
 } from '@petal/core';
@@ -133,6 +134,7 @@ export const renderFlowerTool = defineTool<
     // and each petal's value in dollars, from its map's stored value (#91): none with no price
     const pieces = [
       ...(ctx.names?.length ? namePieces(snapshot, ctx.names) : []),
+      ...(ctx.names?.length ? typePieces(snapshot, ctx.names) : []),
       ...valuePieces(snapshot, (await valuesOf(ctx)).get(mapOf(snapshot)) ?? null),
     ];
     const r = renderFlower(spec, snapshot, {
