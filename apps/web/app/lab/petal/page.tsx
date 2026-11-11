@@ -1,12 +1,14 @@
 // The petal look's bench (#76; design/flower-art-direction/default-system-vnext.md, V1, Elco 11 Nov): the art
 // direction drawn by the live flower on real data, each flower at its normal size and at map distance. ?show=
 // raidguild (the flower it was drawn on, with the accepted highlight), keys (that flower in each key and grey, the
-// highlight checked on every colour) or near (NEAR's recorded backer segments, highlighted). In production it
+// highlight checked on every colour), near (NEAR's recorded backer segments, highlighted), and the two choices
+// #76 left open, as proposals: tail (how "everyone else" shows) and height (a reference across flowers). In production it
 // stays hidden unless PETAL_LAB=1, like the lab, and nothing here reaches a product page until Elco has seen it.
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FlowerCanvas } from '../../../flower/FlowerCanvas.tsx';
 import { type LookFlower, petalBench } from '../../../lab/petal/bench.ts';
+import { heightProposals, tailProposals } from '../../../lab/petal/proposals.ts';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
@@ -21,6 +23,8 @@ const SHOWS = [
   { id: 'raidguild', label: 'RaidGuild' },
   { id: 'keys', label: 'Six colours' },
   { id: 'near', label: 'NEAR segments' },
+  { id: 'tail', label: 'Everyone else?' },
+  { id: 'height', label: 'Height across flowers?' },
 ] as const;
 type Show = (typeof SHOWS)[number]['id'];
 
@@ -116,10 +120,74 @@ function One({ show, flower }: { show: Show; flower: LookFlower }) {
   );
 }
 
+/** The page's head: where you are, and a line about what's on it. */
+function Head({ show, line }: { show: Show; line?: string | undefined }) {
+  return (
+    <header className="flex flex-wrap items-baseline gap-x-space-32 gap-y-space-8 border-hairline border-b p-space-16">
+      <Nav show={show} />
+      {line && <p className="m-0 type-caption">{line}</p>}
+    </header>
+  );
+}
+
+/** A choice, side by side with the others: its name and words over its flower. */
+function Choice({ title, words, flower }: { title: string; words: string[]; flower: LookFlower }) {
+  return (
+    <section className="flex min-h-0 min-w-0 flex-col border-hairline border-r border-b">
+      <div className="flex flex-col gap-space-4 p-space-16">
+        {title && <h2 className="m-0 type-label">{title}</h2>}
+        {words.map((w) => (
+          <p key={w} className="m-0 type-caption text-muted">
+            {w}
+          </p>
+        ))}
+      </div>
+      <Live flower={flower} className="relative min-h-0 flex-1" />
+    </section>
+  );
+}
+
+async function Tail({ show }: { show: Show }) {
+  const choices = await tailProposals();
+  return (
+    <main className="fixed inset-0 flex flex-col bg-surface text-primary">
+      <Head show={show} line={choices[0]?.flower.highlight} />
+      <div className="grid min-h-0 flex-1 grid-cols-3">
+        {choices.map((c) => (
+          <Choice key={c.title} title={c.title} words={c.words} flower={c.flower} />
+        ))}
+      </div>
+    </main>
+  );
+}
+
+async function Height({ show }: { show: Show }) {
+  const scales = await heightProposals();
+  return (
+    <main className="fixed inset-0 flex flex-col bg-surface text-primary">
+      <Head show={show} line="Three real flowers, no highlight, so only height is compared." />
+      <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2">
+        {scales.flatMap((scale) =>
+          scale.flowers.map(({ flower }, i) => (
+            <Choice
+              key={`${scale.title} ${flower.reading.title}`}
+              title={i === 0 ? scale.title : ''}
+              words={[...(i === 0 ? scale.words : []), ...flower.facts]}
+              flower={flower}
+            />
+          )),
+        )}
+      </div>
+    </main>
+  );
+}
+
 export default async function PetalLab({ searchParams }: { searchParams: Promise<Query> }) {
   if (process.env.NODE_ENV === 'production' && process.env.PETAL_LAB !== '1') notFound();
   const q = await searchParams;
   const show: Show = SHOWS.some((s) => s.id === q.show) ? (q.show as Show) : 'raidguild';
+  if (show === 'tail') return <Tail show={show} />;
+  if (show === 'height') return <Height show={show} />;
   const bench = await petalBench();
   if (show === 'raidguild') return <One show={show} flower={bench.raidguild} />;
   if (show === 'near') return <One show={show} flower={bench.near} />;
