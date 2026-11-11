@@ -4,7 +4,11 @@ import { searchRows } from '../lib/map-search.ts';
 
 const flowers = [
   { name: 'Uniswap', map: 'eip155:1:0x1f98', place: { chain: 'eip155:1' } },
-  { name: 'Marketing DAO', map: 'near:marketing.sputnik-dao.near', place: { chain: 'near:mainnet' } },
+  {
+    name: 'Marketing DAO',
+    map: 'near:marketing.sputnik-dao.near',
+    place: { chain: 'near:mainnet' },
+  },
   { name: 'No map', place: { chain: 'eip155:1' } },
 ];
 const label = (c: string) => ({ 'eip155:1': 'Ethereum', 'near:mainnet': 'NEAR' })[c] ?? c;
