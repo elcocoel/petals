@@ -14,8 +14,11 @@ export const RECIPE_VERSION = 'recipe/v1';
 export const CONVENTION_VERSION = 'default/v1';
 /** claim/v2 since 10 Nov: annotations (annotation-layer.md). v1 still reads, and chain reads are still v1. */
 export const CLAIM_VERSION = 'claim/v2';
-/** A person's view: which piece of data each dimension shows (specs/006-the-map/contracts/view.md). */
-export const VIEW_VERSION = 'view/v1';
+/**
+ * A person's view: which piece of data each dimension shows (specs/006-the-map/contracts/view.md). view/v2
+ * since 11 Nov adds labels (annotation-layer.md, step 6); a view/v1 still reads, with labels on identity.
+ */
+export const VIEW_VERSION = 'view/v2';
 
 export const VERSIONS = {
   packages: PACKAGES_VERSION,

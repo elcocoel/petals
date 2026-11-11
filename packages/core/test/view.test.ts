@@ -1,20 +1,26 @@
-// view/v1 (specs/006-the-map/contracts/view.md): the schema is the contract's copy, the fixtures are
-// valid and pinned, each dimension accepts exactly its kinds, and a view draws only what a flower has.
+// view/v1 and view/v2 (specs/006-the-map/contracts/view.md): each schema is the contract's copy, the fixtures
+// are valid and pinned, each dimension accepts exactly its kinds, a view draws only what a flower has, and a
+// view/v1 still reads, as v2 with labels on identity.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { DEFAULT_CONVENTION } from '../src/convention/default.ts';
 import { MEASURE_KINDS } from '../src/layers.ts';
 import { createAjv, schemaId } from '../src/schema/ajv.ts';
-import type { View } from '../src/types/index.ts';
+import type { View, ViewV1, ViewV2 } from '../src/types/index.ts';
 import { VIEW_VERSION } from '../src/versions.ts';
+import { viewProblem } from '../src/view/check.ts';
 import {
   ACCEPTS,
+  DEFAULT_HASHES,
   DEFAULT_VIEW,
+  DEFAULT_VIEW_V1,
   DIMENSIONS,
   EVERY_FLOWER,
+  FROM_ANNOTATIONS,
   fits,
   inUse,
+  latestView,
   type Piece,
   viewHash,
 } from '../src/view/index.ts';
@@ -24,31 +30,55 @@ const read = (p: string) => readFileSync(join(root, p));
 const fixture = (name: string) =>
   JSON.parse(read(`packages/core/schema/fixtures/${name}`).toString()) as View;
 const ajv = createAjv();
-const valid = (doc: unknown) => {
-  const v = ajv.getSchema(schemaId('view'));
-  if (!v) throw new Error('view schema not registered');
+const validAs = (name: 'view' | 'viewV2') => (doc: unknown) => {
+  const v = ajv.getSchema(schemaId(name));
+  if (!v) throw new Error(`${name} schema not registered`);
   return { ok: v(doc) as boolean, errors: v.errors ?? [] };
 };
+const valid = validAs('viewV2');
+const validV1 = validAs('view');
+const schemaOf = (file: string) =>
+  JSON.parse(read(`packages/core/schema/${file}`).toString()) as {
+    properties: { petal: unknown; dimensions: { required: string[] } };
+  };
 
-describe('the schema', () => {
-  test("is a byte copy of 006's contract", () => {
-    expect(read('packages/core/schema/view.schema.json')).toEqual(
-      read('specs/006-the-map/contracts/view-v1.schema.json'),
+describe('the schemas', () => {
+  test.each([
+    ['view.schema.json', 'view-v1.schema.json'],
+    ['view-v2.schema.json', 'view-v2.schema.json'],
+  ])("%s is a byte copy of 006's contract", (mine, contract) => {
+    expect(read(`packages/core/schema/${mine}`)).toEqual(
+      read(`specs/006-the-map/contracts/${contract}`),
     );
   });
 
-  test('names its version, and the version is view/v1', () => {
-    expect(VIEW_VERSION).toBe('view/v1');
-    expect(
-      JSON.parse(read('packages/core/schema/view.schema.json').toString()).properties.petal,
-    ).toEqual({
-      const: VIEW_VERSION,
-    });
+  test('each names its version, and the latest is view/v2', () => {
+    expect(VIEW_VERSION).toBe('view/v2');
+    expect(schemaOf('view-v2.schema.json').properties.petal).toEqual({ const: VIEW_VERSION });
+    expect(schemaOf('view.schema.json').properties.petal).toEqual({ const: 'view/v1' });
   });
 
-  test('has exactly the nine dimensions', () => {
-    const schema = JSON.parse(read('packages/core/schema/view.schema.json').toString());
-    expect([...schema.properties.dimensions.required].sort()).toEqual([...DIMENSIONS].sort());
+  test('v2 has exactly the ten dimensions; v1 has the nine before labels', () => {
+    expect([...schemaOf('view-v2.schema.json').properties.dimensions.required].sort()).toEqual(
+      [...DIMENSIONS].sort(),
+    );
+    expect([...schemaOf('view.schema.json').properties.dimensions.required].sort()).toEqual(
+      DIMENSIONS.filter((d) => d !== 'labels').sort(),
+    );
+  });
+
+  test('each version refuses the other: v1 has no labels, v2 must have them', () => {
+    expect(validV1(DEFAULT_VIEW).ok).toBe(false);
+    expect(valid(DEFAULT_VIEW_V1).ok).toBe(false);
+    expect(valid({ ...DEFAULT_VIEW, petal: 'view/v1' }).ok).toBe(false);
+  });
+
+  test('the check picks the schema by the version the view says, and names any other', () => {
+    expect(viewProblem(DEFAULT_VIEW)).toBeNull();
+    expect(viewProblem(DEFAULT_VIEW_V1)).toBeNull();
+    expect(viewProblem({ ...DEFAULT_VIEW, petal: 'view/v1' })).toMatch(/labels/);
+    expect(viewProblem({ ...DEFAULT_VIEW, petal: 'view/v3' })).toMatch(/view\/v3/);
+    expect(viewProblem(null)).toMatch(/not view\/v1 or view\/v2/);
   });
 
   test('refuses a view with words of its own, a missing dimension, or one more', () => {
@@ -78,22 +108,70 @@ describe('the schema', () => {
 
 describe('the fixtures', () => {
   test.each([
-    ['view.v1.json', '1421e0bf7b2642e78008091c8bd2db8d22f924114d2144344ae8c5f8ae6e7b9b'],
-    ['view.v1.proposals.json', '866a6699ed4708acd19551e63347aa71e83c14fc641e880650ec54b52716a4cb'],
-  ])('%s is valid and pinned', (name, hash) => {
+    ['view.v1.json', '1421e0bf7b2642e78008091c8bd2db8d22f924114d2144344ae8c5f8ae6e7b9b', validV1],
+    [
+      'view.v1.proposals.json',
+      '866a6699ed4708acd19551e63347aa71e83c14fc641e880650ec54b52716a4cb',
+      validV1,
+    ],
+    ['view.v2.json', '4982b8169a9fd4fa39a3681080434dea2786daa1606316637e993511f6b42532', valid],
+    [
+      'view.v2.names.json',
+      '98be4e1731d15f0ea479c798407dc1ee278daf7b2289eb50de4f6db6340894a9',
+      valid,
+    ],
+  ])('%s is valid and pinned', (name, hash, check) => {
     const v = fixture(name);
-    expect(valid(v).errors).toEqual([]);
+    expect(check(v).errors).toEqual([]);
     expect(viewHash(v)).toBe(hash);
   });
 
-  test('the default fixture is the default view', () => {
-    expect(fixture('view.v1.json')).toEqual(DEFAULT_VIEW);
+  test('the default fixtures are the default views, v1 and v2', () => {
+    expect(fixture('view.v1.json')).toEqual(DEFAULT_VIEW_V1);
+    expect(fixture('view.v2.json')).toEqual(DEFAULT_VIEW);
+    expect(DEFAULT_HASHES).toEqual([viewHash(DEFAULT_VIEW), viewHash(DEFAULT_VIEW_V1)]);
   });
 
-  test("Elco's case is the default with proposals as marks", () => {
-    const v = fixture('view.v1.proposals.json');
-    expect({ ...v.dimensions, markings: null }).toEqual(DEFAULT_VIEW.dimensions);
+  test("Elco's case is the v1 default with proposals as marks", () => {
+    const v = fixture('view.v1.proposals.json') as ViewV1;
+    expect({ ...v.dimensions, markings: null }).toEqual(DEFAULT_VIEW_V1.dimensions);
     expect(v.dimensions.markings).toEqual({ data: 'proposals' });
+  });
+
+  test("names on the petals is the default with labels on a person's names, and outline on how they're known", () => {
+    const v = fixture('view.v2.names.json') as ViewV2;
+    expect({
+      ...v.dimensions,
+      labels: { data: 'identity' },
+      outline: { data: 'identity' },
+    }).toEqual(DEFAULT_VIEW.dimensions);
+    expect(v.dimensions.labels).toEqual({ data: 'name' });
+    expect(v.dimensions.outline).toEqual({ data: 'name_kind' });
+  });
+});
+
+describe('a view/v1 still reads', () => {
+  test('as the same view with labels on identity, the names petals always had', () => {
+    expect(latestView(DEFAULT_VIEW_V1)).toEqual(DEFAULT_VIEW);
+    const v = fixture('view.v1.proposals.json') as ViewV1;
+    expect(latestView(v)).toEqual({
+      petal: 'view/v2',
+      dimensions: { ...v.dimensions, labels: { data: 'identity' } },
+    });
+    expect(latestView(DEFAULT_VIEW)).toBe(DEFAULT_VIEW);
+  });
+
+  test('and keeps its own hash: nothing is rewritten in place', () => {
+    expect(viewHash(DEFAULT_VIEW_V1)).toBe(
+      '1421e0bf7b2642e78008091c8bd2db8d22f924114d2144344ae8c5f8ae6e7b9b',
+    );
+    expect(viewHash(DEFAULT_VIEW)).not.toBe(viewHash(DEFAULT_VIEW_V1));
+  });
+
+  test('and meets a flower as v2 does', () => {
+    const near: Piece[] = [...EVERY_FLOWER, { name: 'backers', kind: 'parts' }];
+    expect(inUse(DEFAULT_VIEW_V1, near)).toEqual(inUse(DEFAULT_VIEW, near));
+    expect(inUse(DEFAULT_VIEW_V1, near).labels).toBe('identity');
   });
 });
 
@@ -113,6 +191,7 @@ describe('the default', () => {
     expect(c.order.by).toBe('measure_desc');
     expect(d.order).toEqual({ data: 'share' });
     expect([d.texture, d.markings, d.lines]).toEqual([null, null, null]);
+    expect(d.labels).toEqual({ data: 'identity' });
   });
 });
 
@@ -128,6 +207,7 @@ describe('dimensions and kinds', () => {
       markings: ['count', 'flag'],
       segments: ['parts'],
       lines: ['relation'],
+      labels: ['category'],
     });
   });
 
@@ -176,5 +256,17 @@ describe('a view meeting a flower', () => {
     v.dimensions.colour = { data: 'proposals' };
     v.dimensions.height = { data: 'proposals' };
     expect(inUse(v, moloch)).toMatchObject({ colour: 'proposals', height: 'proposals' });
+  });
+
+  test("labels take a person's names where a flower has them, and only a category", () => {
+    const v = fixture('view.v2.names.json');
+    expect(inUse(v, [...moloch, ...FROM_ANNOTATIONS])).toMatchObject({
+      labels: 'name',
+      outline: 'name_kind',
+    });
+    expect(inUse(v, moloch)).toMatchObject({ labels: null, outline: null });
+    const counted = structuredClone(DEFAULT_VIEW);
+    counted.dimensions.labels = { data: 'proposals' };
+    expect(inUse(counted, moloch).labels).toBeNull();
   });
 });

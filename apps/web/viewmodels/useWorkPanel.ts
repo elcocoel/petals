@@ -8,12 +8,12 @@
 // Profile and Lobby sections and the lobby page all read. No timer.
 
 import type { View } from '@petal/core/types';
-import { type Dimension, EVERY_FLOWER, type Piece } from '@petal/core/view';
+import type { Dimension, Piece } from '@petal/core/view';
 import { layout, sizes } from '@petal/tokens';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { type ConversationRow, conversationRows } from '../lib/conversation-list.ts';
-import { DEFAULT_PERSON_VIEW } from '../lib/person-view.ts';
+import { CHOOSABLE, DEFAULT_PERSON_VIEW } from '../lib/person-view.ts';
 import { tipLine } from '../lib/tip.ts';
 import { isDefault, type Scale, withData, withScale } from '../lib/view-edit.ts';
 import { useConversations } from './useConversations.ts';
@@ -194,11 +194,11 @@ export function usePanelState() {
     view: personView.view,
     defaults,
     choices: personView.choices,
-    pieces: EVERY_FLOWER,
+    pieces: CHOOSABLE,
     open: openDimension,
     onOpen: (d: Dimension) => setOpenDimension((now) => (now === d ? null : d)),
     onPick: (d: Dimension, data: string | null) =>
-      keep(withData(personView.view, d, data, EVERY_FLOWER, defaults)),
+      keep(withData(personView.view, d, data, CHOOSABLE, defaults)),
     onScale: (d: Dimension, scale: Scale) => keep(withScale(personView.view, d, scale)),
     // usePersonView's reset puts the default back: the person's own choice, in the one place
     onReset: isDefault(personView.view, defaults)

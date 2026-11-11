@@ -2,7 +2,7 @@
 // (the session's credential) and when beside it.
 //
 //   GET  /api/v1/me/view       { view, hash }: the person's view, or the default for anyone without one
-//   PUT  /api/v1/me/view       { view } → the same; checked against view/v1
+//   PUT  /api/v1/me/view       { view } → the same; checked against its version, view/v1 or view/v2
 //   GET  /api/v1/views/:hash   { view, hash }: any view by its hash, so anyone can read what a picture shows
 //   GET  /api/v1/me/profile    { profile, updated_at, published }
 //   PUT  /api/v1/me/profile    { profile } → the same; NEAR Social's own shape (social-kv/1)
@@ -31,6 +31,7 @@ import { createHash } from 'node:crypto';
 import {
   canonicalJson,
   DEFAULT_VIEW,
+  DEFAULT_VIEW_V1,
   type Price,
   priceHash,
   TOOLS_VERSION,
@@ -57,6 +58,7 @@ import { reconcile, recordOf } from './usage.ts';
 const HASH = /^[0-9a-f]{64}$/;
 const isPerson = (subject: string | null): subject is string => !!subject?.startsWith('prs_');
 const DEFAULT_HASH = viewHash(DEFAULT_VIEW);
+const DEFAULT_V1_HASH = viewHash(DEFAULT_VIEW_V1);
 const IMMUTABLE = 'public, max-age=31536000, immutable';
 /** how many of a person's latest records their usage lists */
 const USAGE_LISTED = 500;
@@ -146,6 +148,8 @@ export function meRoutes(d: MeDeps): Hono {
 
   async function viewOf(hash: string): Promise<View | null> {
     if (hash === DEFAULT_HASH) return DEFAULT_VIEW;
+    // the default before labels (view/v1): pictures made before view/v2 name it, and it draws the same
+    if (hash === DEFAULT_V1_HASH) return DEFAULT_VIEW_V1;
     const row = await store.viewDoc.get(hash);
     return row ? (JSON.parse(row.body) as View) : null;
   }
@@ -242,7 +246,7 @@ export function meRoutes(d: MeDeps): Hono {
       return fail(c, 'unauthorised', "Sign in to keep your own view: a visitor's is the default.");
     const body = await jsonBody(c);
     const problem = viewProblem(body?.view);
-    if (problem) return fail(c, 'bad_input', `Not a view/v1: ${problem}.`);
+    if (problem) return fail(c, 'bad_input', `Not a view/v1 or view/v2: ${problem}.`);
     const view = body?.view as View;
     const hash = viewHash(view);
     const at = iso();

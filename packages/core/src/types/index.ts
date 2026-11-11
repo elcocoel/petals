@@ -3,6 +3,7 @@
 // from contracts/tools.md, renderer.md, http-api.md, packages.md and shared-map.md.
 // Part of packages/v1 (frozen at T023): changes go through the lead and bump the version.
 
+import type { SeamPiece } from '../seam.ts';
 import type {
   Correction,
   Encoding,
@@ -24,9 +25,14 @@ import type {
   PetalSnapshotCommonTableV1,
 } from './generated/snapshot.ts';
 import type { PetalViewV1 } from './generated/view.ts';
+import type { PetalViewV2 } from './generated/view-v2.ts';
 
-/** view/v1 (specs/006-the-map/contracts/view.md): which piece of data each dimension shows. */
-export type View = PetalViewV1;
+/** view/v1 (specs/006-the-map/contracts/view.md): which piece of data each of nine dimensions shows. */
+export type ViewV1 = PetalViewV1;
+/** view/v2, the latest: v1's nine dimensions and labels, which piece of data names each petal. */
+export type ViewV2 = PetalViewV2;
+/** Any view a person may keep. A v1 one still reads, as v2 with labels on identity (core's latestView). */
+export type View = ViewV1 | ViewV2;
 
 // claim/v1 (specs/002-system/contracts/claims.md)
 export type {
@@ -484,8 +490,13 @@ export interface RenderOptions {
   /** default 800 */
   size?: number;
   thumb?: boolean;
-  /** The viewer's view (view/v1): what each dimension draws. Without one, the spec's own choices. */
+  /** The viewer's view (view/v1 or v2): what each dimension draws. Without one, the spec's own choices. */
   view?: View;
+  /**
+   * Pieces of data beyond the snapshot's own, in the seam's shape: a person's names from their annotations
+   * (core's namePieces), so a view can show them. Without any, the snapshot's own.
+   */
+  pieces?: readonly SeamPiece[];
 }
 
 export interface LegendItem {

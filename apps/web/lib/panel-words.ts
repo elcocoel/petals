@@ -37,7 +37,7 @@ export const panelWords = {
   signOut: 'Disconnect',
   /**
    * Settings (coordinator/one-source.md, step 7): how each dimension draws data, for every petal you look
-   * at. The dimensions' names are the view's own (view/v1); the rest are drafts.
+   * at. The dimensions' names are the view's own (view/v2); the rest are drafts.
    */
   settings: {
     dimensions: {
@@ -50,9 +50,10 @@ export const panelWords = {
       markings: 'Markings',
       segments: 'Segments',
       lines: 'Lines',
+      labels: 'Labels',
     },
-    /** A piece of data as a person reads it: share, amount, kind, identity. */
-    piece: (name: string) => `${name.charAt(0).toUpperCase()}${name.slice(1)}`,
+    /** A piece of data as a person reads it: share, amount, kind, identity, name, name kind. */
+    piece: (name: string) => `${name.charAt(0).toUpperCase()}${name.slice(1)}`.replaceAll('_', ' '),
     none: 'None',
     /** At a choice's end: the one everyone sees until they choose. */
     isDefault: 'default',

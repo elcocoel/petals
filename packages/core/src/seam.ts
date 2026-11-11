@@ -2,7 +2,7 @@
 // look, as one typed document. It names an address, the layers it was made from, the participants, and each
 // piece of data with its kind, its standing and the layer it came from. The look reads it and draws; it never
 // computes data, so whatever a dimension shows (a share, a kind of account, a petal's backers) is in here
-// already. A view (view/v1) names these pieces by name.
+// already. A view (view/v2) names these pieces by name.
 import { applyPolicy } from './claims/policy.ts';
 import { parseRef } from './claims/refs.ts';
 import type { Claim, ClaimKind } from './claims/types.ts';

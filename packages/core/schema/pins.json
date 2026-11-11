@@ -43,6 +43,14 @@
     "schema": "urn:petal:schema:view:v1",
     "sha256": "866a6699ed4708acd19551e63347aa71e83c14fc641e880650ec54b52716a4cb"
   },
+  "view.v2.json": {
+    "schema": "urn:petal:schema:view:v2",
+    "sha256": "4982b8169a9fd4fa39a3681080434dea2786daa1606316637e993511f6b42532"
+  },
+  "view.v2.names.json": {
+    "schema": "urn:petal:schema:view:v2",
+    "sha256": "98be4e1731d15f0ea479c798407dc1ee278daf7b2289eb50de4f6db6340894a9"
+  },
   "seam.v1.json": {
     "schema": "urn:petal:schema:seam:v1",
     "sha256": "16ed4c7874baef1318e14b1e27b733cdb47fe48557eb24cc71f59d581312004a"

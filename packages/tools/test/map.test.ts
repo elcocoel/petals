@@ -1,7 +1,14 @@
 // One map (Elco, 10 Nov: "the workspace and the agent don't seem to be connected to the global power map"):
 // every view stored on the site, named and with who made it, searched by list_flowers and find_target before
 // a fresh read, and handed over whole by GET /api/v1/map. On a real fixture snapshot, offline.
-import { canonicalJson, DEFAULT_VIEW, pictureQuery, sha256Hex, viewHash } from '@petal/core';
+import {
+  canonicalJson,
+  DEFAULT_VIEW,
+  DEFAULT_VIEW_V1,
+  pictureQuery,
+  sha256Hex,
+  viewHash,
+} from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { modules } from '@petal/inputs';
 import { Hono } from 'hono';
@@ -296,7 +303,7 @@ describe("through the viewer's view (one-source.md, step 2)", () => {
     }
   });
 
-  test("a picture is drawn with the view its address names; the default's twelve characters are still the default", async () => {
+  test("a picture is drawn with the view its address names; the v1 default's hash and twelve characters are still the default", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     await keep(IDENTITY);
     const app = appOf();
@@ -309,7 +316,10 @@ describe("through the viewer's view (one-source.md, step 2)", () => {
     );
     const theDefault = (await run('render_flower', { spec, view: DEFAULT_VIEW })).render_sha256;
     expect(await drawn(path)).toBe(theDefault);
-    expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW).slice(0, 12)}`)).toBe(theDefault);
+    // addresses made before view/v2 name the v1 default, which draws the same (annotation-layer.md, step 6)
+    expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW_V1).slice(0, 12)}`)).toBe(theDefault);
+    expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW_V1)}`)).toBe(theDefault);
+    expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW)}`)).toBe(theDefault);
     expect((await app.request(`${path}?view=${'1'.repeat(64)}`)).status).toBe(404);
   });
 
