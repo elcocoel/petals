@@ -5,12 +5,17 @@ import { shortId } from './flower-view.ts';
 export type About =
   | { kind: 'account'; id: string; network: string; asOf: string }
   | { kind: 'group'; label: string; count?: number; network: string; asOf: string }
-  | { kind: 'flower'; id: string; title: string; network: string; asOf: string };
+  | { kind: 'flower'; id: string; title: string; network: string; asOf: string }
+  /** a wallet chosen on the Power Map (LOOK's wallet level), by its account, in the flower it was chosen in */
+  | { kind: 'mapWallet'; id: string; flower: string };
 
 const plain = (s: string) => s.replace(/[[\]]/g, '');
 
 /** The whole prefix, brackets included. */
 export function aboutLine(a: About): string {
+  if (a.kind === 'mapWallet') {
+    return `[About account ${plain(a.id)}, chosen in ${plain(a.flower)} on the Power Map]`;
+  }
   const where = `in the ${plain(a.network)} flower, data as of ${a.asOf.slice(0, 10)}`;
   switch (a.kind) {
     case 'account':

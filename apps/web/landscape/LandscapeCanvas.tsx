@@ -57,6 +57,14 @@ export interface CanvasFlower {
   proposals?: number | undefined;
 }
 
+/** A wallet chosen on the map (LOOK's wallet level): its id as its flower names it, on that flower's chain. */
+export interface MapWallet {
+  id: string;
+  chain: string;
+  /** the flower it was chosen in */
+  flower: string;
+}
+
 export interface CanvasChain {
   chain: string;
   label: string;
@@ -92,6 +100,7 @@ function Land({
   far,
   lines,
   inside,
+  onWallet,
   clearOfChains,
   highlight,
   go,
@@ -108,6 +117,8 @@ function Land({
   lines: LineStyle;
   /** told when the map goes into a flower and comes out */
   inside: (yes: boolean, at: number) => void;
+  /** told when a wallet is chosen, and when it's let go */
+  onWallet: (id: string | null) => void;
   clearOfChains: boolean;
   /** the chosen group's petals to highlight inside the flower you're in (#94), or null */
   highlight: readonly string[] | null;
@@ -124,10 +135,13 @@ function Land({
     far,
     lines,
     inside,
+    onWallet,
     clearOfChains,
     ...(onPick ? { onPick } : {}),
   };
   useLandscape(svg, data, probe, aside, at);
+  // its chain left or the map gone: the wallet chosen on it goes too
+  useEffect(() => () => onWallet(null), [onWallet]);
   useEffect(() => {
     at.current?.choose?.(selected);
   }, [selected]);
@@ -164,6 +178,7 @@ export function LandscapeCanvas({
   clearOfChains = false,
   legend = null,
   search = false,
+  onWallet,
 }: {
   data: {
     flowers: CanvasFlower[];
@@ -196,6 +211,12 @@ export function LandscapeCanvas({
   legend?: 'read' | 'edit' | LegendEdit | null;
   /** a search field at the top of the chain list (board 105; the Power Map) */
   search?: boolean;
+  /**
+   * Told which wallet is chosen, by a press on its petal inside a flower (LOOK's wallet level), and when it's let
+   * go, its chain left or the map gone (null): /make asks Petals' agent about it (Elco, 12 Nov: "a place to
+   * interact with it via the agent and find out more about it").
+   */
+  onWallet?: ((wallet: MapWallet | null) => void) | undefined;
 }) {
   const person = usePersonView();
   // 'edit' (the Power Map, Elco, 11 Nov: "switch the legends live and watching the map adapt"): Settings' own
@@ -312,6 +333,15 @@ export function LandscapeCanvas({
   }, [data, chain, focus]);
   // What Petals' own mapping says about the map you're in, under each petal's name (lib/map-claims.ts)
   const inFlower = land && entered >= 0 ? data.flowers[land.from[entered] ?? -1] : undefined;
+  // the wallet chosen, with the flower it was chosen in, for the page
+  const toldWallet = useRef(onWallet);
+  toldWallet.current = onWallet;
+  const inNow = useRef(inFlower);
+  inNow.current = inFlower;
+  const walletChosen = useCallback((id: string | null) => {
+    const f = inNow.current;
+    toldWallet.current?.(id && f ? { id, chain: f.place.chain, flower: f.name } : null);
+  }, []);
   const claims = useMapClaims(legend ? (inFlower?.map ?? null) : null);
   const blocs = useMapBlocs(legend ? (inFlower?.map ?? null) : null, span);
   const choices = useMemo(() => (blocs ? blocChoices(blocs) : []), [blocs]);
@@ -343,6 +373,7 @@ export function LandscapeCanvas({
           far={far}
           lines={lines}
           inside={toldInside}
+          onWallet={walletChosen}
           clearOfChains={clearOfChains}
           highlight={lit}
           go={go?.chain === chain ? go : null}

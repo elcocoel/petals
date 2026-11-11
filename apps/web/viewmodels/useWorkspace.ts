@@ -2,9 +2,12 @@
 // the panel that opens over it. Which flower is open and which petal is selected are in the chat's reducer,
 // so a new flower can take them; this draws what's needed, projects the panel, says whether its box is
 // open, keeps the address in step and hears Escape.
+import { accountRef } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { MapWallet } from '../landscape/LandscapeCanvas.tsx';
 import { readDrawingSpec, readMapDrawing, saveSettings } from '../lib/agent-client.ts';
+import { aboutLine } from '../lib/ask-about.ts';
 import {
   type Catalogue,
   modelOptions,
@@ -36,7 +39,13 @@ import {
 } from '../lib/panel-view.ts';
 import { payWords } from '../lib/pay.ts';
 import type { Opened, PanelSection } from '../lib/thread.ts';
-import { composerView, type FlowerRow, openFlowerIndex, type Row } from '../lib/thread-view.ts';
+import {
+  type ComposerTarget,
+  composerView,
+  type FlowerRow,
+  openFlowerIndex,
+  type Row,
+} from '../lib/thread-view.ts';
 import { petalWorth } from '../lib/value-view.ts';
 import { conversationAt, workspaceUrl } from '../lib/workspace-url.ts';
 import { useConversationFacts } from './useConversationFacts.ts';
@@ -275,6 +284,8 @@ export function useWorkspace(props: {
   // A link in the conversation to the Power Map or a map on it opens the map here, at that map (#78, 11 Nov:
   // the first message's maps led off /make). It stays until a flower is opened, or a new one is drawn.
   const [mapAt, setMapAt] = useState<{ map: string | null } | null>(null);
+  // a wallet chosen on the map on the canvas (LOOK's wallet level): the question is about it (Elco, 12 Nov)
+  const [mapWallet, setMapWallet] = useState<MapWallet | null>(null);
   const [drawnKey, setDrawnKey] = useState(canvas?.key);
   if (canvas?.key !== drawnKey) {
     setDrawnKey(canvas?.key);
@@ -287,9 +298,23 @@ export function useWorkspace(props: {
 
   // With the map on the canvas from a link, the question isn't about the flower left behind it (#78: the
   // field said 'About this flower…' over the whole map).
+  // A wallet chosen on the map: the question is about that wallet (Elco, 12 Nov: "a place to interact with it
+  // via the agent and find out more about it").
   const target = useMemo(
-    () => (mapAt ? composerTarget(null, null) : composerTarget(panelFlower, selectedPetal)),
-    [mapAt, panelFlower, selectedPetal],
+    (): ComposerTarget =>
+      mapWallet
+        ? {
+            kind: 'wallet',
+            line: aboutLine({
+              kind: 'mapWallet',
+              id: accountRef(mapWallet.chain, mapWallet.id) ?? `${mapWallet.chain}:${mapWallet.id}`,
+              flower: mapWallet.flower,
+            }),
+          }
+        : mapAt
+          ? composerTarget(null, null)
+          : composerTarget(panelFlower, selectedPetal),
+    [mapWallet, mapAt, panelFlower, selectedPetal],
   );
   // A pick holds from now on. It's kept at once on a conversation that's going, and goes with the first
   // message on a new one.
@@ -508,6 +533,8 @@ export function useWorkspace(props: {
         })().catch(() => {});
       },
       closeBox: () => setBoxOpen(false),
+      /** the map on the canvas says which wallet is chosen on it, or none */
+      chooseMapWallet: setMapWallet,
       pay: pay.pay,
       closeDetail: () => dispatch({ type: 'select', petal: null }),
       setSection: (next: PanelSection) => dispatch({ type: 'section', section: next }),

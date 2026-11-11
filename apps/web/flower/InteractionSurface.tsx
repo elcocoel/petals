@@ -163,6 +163,8 @@ export function InteractionSurface({
                 focus={focus}
                 // a petal of the map it opened at opens that flower here (useWorkspace pickOnMap)
                 onPick={actions.pickOnMap}
+                // a wallet chosen on it is what the next question is about (Elco, 12 Nov)
+                onWallet={actions.chooseMapWallet}
                 // the room beside the conversation is narrow: the map keeps clear of its own chains
                 clearOfChains
                 legend={legend}
