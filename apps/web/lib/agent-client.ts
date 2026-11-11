@@ -382,6 +382,21 @@ export interface SnapshotFacts {
 }
 
 /** Facts only decorate a flower, so a snapshot that can't be described just has none. */
+/**
+ * The accounts two groups share (#87), from the relations index, by each one's reading snapshot: each account on
+ * the first side, as the index names it and as its address alone. Empty when it can't be read.
+ */
+export async function readShared(a: string, b: string): Promise<string[]> {
+  const q = new URLSearchParams({ group_a: a, group_b: b, limit: '500' });
+  const res = await fetch(`/api/v1/relations/shared?${q}`).catch(() => null);
+  if (!res?.ok) return [];
+  const json = (await res.json().catch(() => ({}))) as { accounts?: { account_a?: string }[] };
+  // the index names an account with its chain (eip155:1:0x…); a petal by the address alone, so both are given
+  return (json.accounts ?? []).flatMap((x) =>
+    x.account_a ? [x.account_a, x.account_a.slice(x.account_a.lastIndexOf(':') + 1)] : [],
+  );
+}
+
 /** What a map's token is worth (#91), from its card: null when it has none, or it can't be read. */
 export async function readMapValue(map: string): Promise<MapValue | null> {
   const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}`).catch(() => null);

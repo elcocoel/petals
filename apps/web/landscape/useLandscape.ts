@@ -30,7 +30,9 @@ import {
   ZOOM_LIMITS,
 } from '../flower/feel.ts';
 import { clickedAt } from '../flower/live.ts';
+import type { PetalLook } from '../flower/scene.ts';
 import { advance, SNAP, spring, stepOf } from '../flower/spring.ts';
+import { readShared } from '../lib/agent-client.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { type Road, roadWidth } from './roads.ts';
 import {
@@ -40,6 +42,7 @@ import {
   type LandFlower,
   type LineStyle,
   roadEnds,
+  waveFills,
 } from './scene.ts';
 import {
   ENTER_AT,
@@ -131,6 +134,51 @@ export function useLandscape(
     let speaking = -1;
     let marked = -1;
     let hits: ArrowHit[] = [];
+    // The lab's lines lean (#87): inside a flower, the wallets it shares with the flower you came from, or the way
+    // out you point at, take the highlight (relations/shared, by each one's snapshot).
+    const focusLines = at?.current?.lines === 'focus';
+    let cameFrom = -1;
+    let pointedWay = -1;
+    let shown: { flower: number; other: number; ids: string[] } | null = null;
+    let asking = '';
+    const sharedLook = (f: LandFlower, ids: readonly string[]): PetalLook => {
+      const fills = waveFills(f.model);
+      return {
+        fills: Object.fromEntries(f.model.petals.map((p, k) => [p.id, fills[k] as string])),
+        bands: {},
+        highlight: ids,
+      };
+    };
+    /** Re-mounts a live flower, so its look is read again. */
+    const remount = (i: number) => {
+      const d = lives.get(i);
+      if (!d) return;
+      d.scene.dispose();
+      lives.delete(i);
+      tones.delete(i);
+      if (speaking === i) speaking = -1;
+      wake();
+    };
+    /** Asks for the shared wallets of the flower you're in and the other one, when that pair changes. */
+    const wantShared = () => {
+      const other = pointedWay >= 0 ? pointedWay : cameFrom;
+      const key = entered >= 0 && other >= 0 ? `${entered}:${other}` : '';
+      if (key === asking) return;
+      asking = key;
+      const was = shown;
+      shown = null;
+      if (was) remount(was.flower);
+      if (!key) return;
+      const a = flowers[entered]?.snapshot;
+      const b = flowers[other]?.snapshot;
+      if (!a || !b) return;
+      const flower = entered;
+      void readShared(a, b).then((ids) => {
+        if (asking !== key || ids.length === 0) return;
+        shown = { flower, other, ids };
+        remount(flower);
+      });
+    };
     const enter = spring(0);
     // Opened at a flower: the first frame is already inside it, with no flight to it.
     let arriving = false;
@@ -191,6 +239,10 @@ export function useLandscape(
         } else entered = filling();
       }
       enter.t = entered >= 0 ? 1 : 0;
+      if (focusLines) {
+        if (entered < 0) cameFrom = -1;
+        wantShared();
+      }
       if (entered >= 0 !== wasInside) {
         wasInside = entered >= 0;
         at?.current?.inside?.(wasInside);
@@ -219,6 +271,11 @@ export function useLandscape(
           relations: null,
           readout: false,
           bloom: false,
+          // the everything map (#87): the art direction's colours, as the far wave's; inside a flower, the wallets it
+          // shares with the other one take the highlight
+          ...(focusLines
+            ? { look: sharedLook(f, shown && shown.flower === i ? shown.ids : []) }
+            : {}),
         });
         lives.set(i, d);
         node.insertBefore(d.scene.root, scene.top);
@@ -281,6 +338,7 @@ export function useLandscape(
     const enterFlower = (i: number) => {
       const p = places[i];
       if (!p) return;
+      if (entered >= 0 && entered !== i) cameFrom = entered;
       const k = fitScale(p.s, cam.width, cam.height, FIT);
       flyTo(cam, { k, x: cam.width / 2 - p.x * k, y: cam.height / 2 - p.y * k });
       entered = i;
@@ -369,6 +427,23 @@ export function useLandscape(
       pointer.x = p.x;
       pointer.y = p.y;
       pointer.inside = true;
+      if (focusLines) {
+        // the way out the pointer's on, if any: its flower is the one whose shared wallets light
+        const way =
+          entered >= 0
+            ? hits.find(
+                (h) =>
+                  (h.box !== null &&
+                    p.x >= h.box.x0 &&
+                    p.x <= h.box.x1 &&
+                    p.y >= h.box.y0 &&
+                    p.y <= h.box.y1) ||
+                  toSegment(p.x, p.y, ...h.line) <= 8,
+              )
+            : undefined;
+        pointedWay = way ? way.to : -1;
+        wantShared();
+      }
       const over =
         (entered >= 0 && hits.some((h) => toSegment(p.x, p.y, ...h.line) <= 8)) ||
         flowerAt(cam, places, reach, p.x, p.y) >= 0 ||
