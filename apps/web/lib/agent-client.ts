@@ -583,6 +583,15 @@ export function addMyAnnotations(body: {
   return sessionPost('/api/v1/me/annotations', body);
 }
 
+/** The person's moves on one of their jobs (swarm.md, step 3): stop it, send it again, or hand it to an agent. */
+export function moveJob(
+  job: string,
+  move: 'stop' | 'retry' | 'hand-over',
+  to?: string,
+): Promise<{ job: Partial<Job> & { id: string } }> {
+  return sessionPost(`/api/v1/jobs/${encodeURIComponent(job)}/${move}`, to ? { to } : {});
+}
+
 /** The jobs Petals' agent handed out in a conversation, and where each stands (C). Empty on no answer. */
 export async function readJobs(exploration: string): Promise<Job[]> {
   const res = await fetch(`/api/v1/explorations/${encodeURIComponent(exploration)}/jobs`, {

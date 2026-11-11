@@ -3,7 +3,7 @@
 
 import { DEFAULT_VIEW } from '@petal/core/view';
 import { describe, expect, test } from 'vitest';
-import { type Job, jobLine, jobWords } from '../lib/jobs.ts';
+import { heardLine, type Job, jobLine, jobMoves, jobWords } from '../lib/jobs.ts';
 import { fold } from '../lib/thread.ts';
 import { threadView } from '../lib/thread-view.ts';
 
@@ -178,5 +178,23 @@ describe('a stopped job (swarm.md, step 3)', () => {
       n: 2,
     };
     expect(jobLine(stopped, undefined).text).toBe("Stopped: Map RaidGuild's proposals");
+  });
+});
+
+describe('the person’s say over a job (swarm.md, step 3)', () => {
+  test('the moves each state allows, as the server does', () => {
+    expect(jobMoves('open')).toEqual({ stop: true, retry: false, handOver: false });
+    expect(jobMoves('taken')).toEqual({ stop: true, retry: true, handOver: true });
+    expect(jobMoves('failed')).toEqual({ stop: false, retry: true, handOver: true });
+    expect(jobMoves('stopped')).toEqual({ stop: false, retry: true, handOver: true });
+    expect(jobMoves('done')).toEqual({ stop: false, retry: false, handOver: false });
+  });
+
+  test('when its worker was last heard from, only while it’s taken, as a time of day', () => {
+    expect(heardLine({ status: 'taken', last_seen: '2026-11-11T14:02:00Z' })).toMatch(
+      /^Last heard from at \d{2}:\d{2}/,
+    );
+    expect(heardLine({ status: 'done', last_seen: '2026-11-11T14:02:00Z' })).toBeNull();
+    expect(heardLine({ status: 'taken', last_seen: null })).toBeNull();
   });
 });

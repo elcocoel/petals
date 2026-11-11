@@ -41,6 +41,7 @@ import { conversationAt, workspaceUrl } from '../lib/workspace-url.ts';
 import { useConversationFacts } from './useConversationFacts.ts';
 import { useDrawnFlowers } from './useDrawnFlower.ts';
 import { useElsewhere } from './useElsewhere.ts';
+import { useJobControls } from './useJobControls.ts';
 import { useJobs } from './useJobs.ts';
 import { useMakeChat } from './useMakeChat.ts';
 import { usePay } from './usePay.ts';
@@ -216,6 +217,8 @@ export function useWorkspace(props: {
     [items],
   );
   const jobs = useJobs(jobsIn);
+  // the person's say over them: stop, send again, hand to another agent (swarm.md, step 3)
+  const jobControls = useJobControls();
   // A report landed: Petals' agent takes it up at once, in this run (C), so the page follows that turn.
   const reported = useRef<Set<string>>(new Set());
   const follow = chatActions.follow;
@@ -369,6 +372,7 @@ export function useWorkspace(props: {
       panelEdge: panelBus.edge,
       pay: { asking: pay.asking, phase: pay.phase, added: pay.added, topUp },
       jobs,
+      jobControls,
       balance: funds?.balance ? payWords.balance(funds.balance) : null,
       session,
       needsWallet,

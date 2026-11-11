@@ -89,6 +89,7 @@ import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { DrawingKind } from '../lib/figures.ts';
 import { readingKey, svgImage } from '../lib/flower-view.ts';
 import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
+import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
 import type { ProfileEditorView } from '../lib/lobby-view.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
@@ -288,6 +289,47 @@ const LISTED = [
     ],
   },
 ];
+
+/** A job's controls (swarm.md, step 3), as its row shows them at each step. */
+const JOB_ACTIONS = {
+  stop: () => {},
+  retry: () => {},
+  pick: () => {},
+  setTo: () => {},
+  handOver: () => {},
+};
+const JOB_CONTROLS = {
+  taken: {
+    heard: jobWords.heard('14:02'),
+    moves: jobMoves('taken'),
+    picking: null,
+    busy: false,
+    failed: null,
+    actions: JOB_ACTIONS,
+  },
+  picking: {
+    heard: jobWords.heard('14:02'),
+    moves: jobMoves('taken'),
+    picking: {
+      choices: [
+        { value: 'claude-code', label: 'Claude Code' },
+        { value: 'codex', label: 'Codex' },
+      ],
+      to: 'claude-code',
+    },
+    busy: false,
+    failed: null,
+    actions: JOB_ACTIONS,
+  },
+  stopped: {
+    heard: null,
+    moves: jobMoves('stopped'),
+    picking: null,
+    busy: false,
+    failed: null,
+    actions: JOB_ACTIONS,
+  },
+} satisfies Record<string, JobControlsView>;
 
 /** Paying with another token through NEAR Intents, as the pay row shows it at each step. */
 const TOPUP_BASE: TopUpView = {
@@ -1847,7 +1889,23 @@ export const registry: LabEntry[] = [
           <JobRow
             text="Codex 2 is on it: Map RaidGuild's proposals"
             conversation="/make?elsewhere=exp_lab"
+            controls={JOB_CONTROLS.taken}
           />
+        ),
+      },
+      {
+        name: 'handing it to another agent',
+        render: () => (
+          <JobRow
+            text="Codex 2 is on it: Map RaidGuild's proposals"
+            controls={JOB_CONTROLS.picking}
+          />
+        ),
+      },
+      {
+        name: 'stopped',
+        render: () => (
+          <JobRow text="Stopped: Map RaidGuild's proposals" controls={JOB_CONTROLS.stopped} />
         ),
       },
     ],
