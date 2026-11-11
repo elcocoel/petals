@@ -1,5 +1,6 @@
 // The Conversations card (#79, the profile page as the investigator's card): the person's conversations,
-// newest first, the networks they've mapped, each opening where it's held, with when it last moved. The
+// newest first, the networks they've mapped, each opening where it's held, with when it last moved, in a set
+// height that scrolls inside, as the Claims widget's does. The
 // same list the side panel reads (viewmodels/useWorkPanel.ts), so both say the same. Props only. Words from
 // lib/profile-view.ts, drafts.
 import type { ConversationRow } from '../../lib/conversation-list.ts';
@@ -18,7 +19,7 @@ export function Conversations({ rows }: { rows: ConversationRow[] }) {
       {rows.length === 0 ? (
         <p className="my-0 type-body">{profilePageWords.conversationsNone}</p>
       ) : (
-        <ul className="m-0 flex list-none flex-col p-0">
+        <ul className="m-0 flex max-h-figure-height list-none flex-col overflow-y-auto overscroll-none p-0">
           {rows.map((r) => (
             <li
               key={r.key}

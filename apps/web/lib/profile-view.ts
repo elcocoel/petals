@@ -8,8 +8,6 @@ import { chainLabel, dateLabel, shortId } from './flower-view.ts';
 import { shownAccount } from './lobby-view.ts';
 
 export const profilePageWords = {
-  /** What a screen reader hears for the page. */
-  page: 'Profile',
   wallets: 'Wallets',
   /** A wallet's badge: it signed Petals' message, so it's the person's; set against a link's Declared. */
   proven: 'Proven',
