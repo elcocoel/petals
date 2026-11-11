@@ -75,6 +75,7 @@ import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
 import { TextLink } from '../components/ui/TextLink.tsx';
+import { Tip } from '../components/ui/Tip.tsx';
 import { Transcript } from '../components/ui/Transcript.tsx';
 import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
@@ -1508,6 +1509,28 @@ export const registry: LabEntry[] = [
             failed="tip_percent is off the scale"
           />
         ),
+      },
+    ],
+  },
+  {
+    id: 'Tip',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Tip.tsx',
+    states: [
+      {
+        name: 'said for a moment after a press, beside its row (Connect an agent: Copied)',
+        render: () => (
+          <span className="relative flex w-sidebar-width">
+            <NavItem icon="plus" label="Connect an agent" onClick={() => {}} />
+            <Tip label="Copied. Paste it into each agent." side="right" said />
+          </span>
+        ),
+      },
+      {
+        name: 'a name, shown while the pointer or the keyboard is on its control (as IconButton’s)',
+        render: () => <IconButton icon="close" label="Disconnect all agents" onClick={() => {}} />,
       },
     ],
   },

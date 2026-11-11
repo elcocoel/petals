@@ -16,7 +16,7 @@ import {
   moveConversation,
   readAgents,
 } from '../lib/agent-client.ts';
-import { agentRows, agentWords, type ConnectedAgent } from '../lib/agents.ts';
+import { agentRows, agentWords, type ConnectedAgent, type CopiedAt } from '../lib/agents.ts';
 import type { ListedConversation, ListedProject, RowRef } from '../lib/conversation-list.ts';
 import { panelWords, type SectionKey } from '../lib/panel-words.ts';
 
@@ -47,6 +47,9 @@ function keepFolds(keys: readonly SectionKey[]) {
     // a browser that keeps nothing starts with every section open
   }
 }
+
+/** How long Connect an agent's Copied shows (design/side-panel.md, line 45). */
+const COPIED_SHOWS_MS = 2400;
 
 export function useWorkMenu(
   signedIn: boolean,
@@ -91,7 +94,13 @@ export function useWorkMenu(
   // archived conversations (lines 27 and 28)
   const [archived, setArchived] = useState<ListedConversation[]>([]);
   const [archivedOpen, setArchivedOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<CopiedAt | null>(null);
+  // Copied shows for a moment, then goes (design/side-panel.md, line 45)
+  useEffect(() => {
+    if (!copied) return;
+    const gone = setTimeout(() => setCopied(null), COPIED_SHOWS_MS);
+    return () => clearTimeout(gone);
+  }, [copied]);
   // a read again after a disconnect, so the list says what's true
   const [reads, setReads] = useState(0);
   // biome-ignore lint/correctness/useExhaustiveDependencies: `fresh` is the signal to read again
@@ -122,16 +131,23 @@ export function useWorkMenu(
   }, [signedIn, fresh, reads]);
 
   // each copy carries a new link of its own, so pasting into one more agent never cuts off another
-  const copy = useCallback(async () => {
+  const copy = useCallback(async (at: CopiedAt) => {
     const { token } = await mintAgentLink();
     await navigator.clipboard.writeText(agentWords.prompt(window.location.origin, token));
-    setCopied(true);
+    setCopied(at);
   }, []);
 
   const disconnect = useCallback(async (name: string) => {
     await disconnectAgent(name).catch(() => null);
     setReads((n) => n + 1);
   }, []);
+
+  // every agent, all its workers, at once (line 46)
+  const disconnectAll = useCallback(async () => {
+    const names = [...new Set(agents.map((a) => a.name))];
+    await Promise.all(names.map((name) => disconnectAgent(name).catch(() => null)));
+    setReads((n) => n + 1);
+  }, [agents]);
 
   // a new project comes in open, so what goes in it next has somewhere to show
   const nameProject = useCallback(async (name: string) => {
@@ -244,7 +260,8 @@ export function useWorkMenu(
     said,
     agents: agentRows(agents),
     copied,
-    copy: () => void copy().catch(() => {}),
+    copy: (at: CopiedAt) => void copy(at).catch(() => {}),
     disconnect: (name: string) => void disconnect(name),
+    disconnectAll: () => void disconnectAll(),
   };
 }

@@ -3,7 +3,8 @@
 // "once the sidebar is open, I can see all of the sections one after the other"). Docked to the window's
 // left edge, the full height. A bar of icons is always there: first the one collapse control, which always
 // works, then one icon per section, with the person's own two (Profile, Settings) at its foot, as in VS
-// Code and every IDE; each icon's name shows in a tooltip. Open, the panel beside the bar is one column of
+// Code and every IDE; each icon's name shows in a tooltip. Open, under the wordmark, what's always in sight
+// (`top`: connecting an agent, and what's connected); then the panel beside the bar is one column of
 // every section in order, scrolling as one under the wordmark; a section's icon scrolls it to that section,
 // and collapsed, opens it there. Its right edge is a sash that sizes it. It holds no state: open or
 // collapsed, the section asked for and the width's hands come from its ViewModel; it only scrolls.
@@ -59,6 +60,7 @@ export function SideRail({
   onJump,
   jump,
   width,
+  top,
 }: {
   /** What a screen reader hears for the panel. */
   label: string;
@@ -72,6 +74,8 @@ export function SideRail({
   /** The section to bring to the top, and how many times it's been asked, so asking again scrolls again. */
   jump: { key: string; n: number } | null;
   width: RailWidth;
+  /** Under the wordmark, above every section, never folded or scrolled away. */
+  top?: ReactNode;
 }) {
   const column = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -107,6 +111,7 @@ export function SideRail({
           <div className="flex h-control-height shrink-0 items-center px-space-16">
             <Wordmark size="panel" />
           </div>
+          {top && <div className="shrink-0 px-space-8 pb-space-8">{top}</div>}
           <div
             ref={column}
             className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none px-space-8 pb-block-gap"

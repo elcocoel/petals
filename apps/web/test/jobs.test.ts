@@ -81,6 +81,30 @@ describe('your agents in the menu', () => {
     expect(new Set(rows.map((r) => r.key)).size).toBe(3);
   });
 
+  test("the panel's top names each agent once, the busiest state, and nothing with none connected", async () => {
+    const { agentRows, agentsAtTop } = await import('../lib/agents.ts');
+    expect(agentsAtTop([])).toBeNull();
+    const top = agentsAtTop(
+      agentRows([
+        { name: 'codex', n: 1, waiting: true, job: null },
+        { name: 'codex', n: 2, waiting: false, job: { id: 'j', title: 'Map X' } },
+        { name: 'claude-code', waiting: false, job: null },
+      ]),
+    );
+    expect(top).toMatchObject({ label: '2 agents', state: 'busy' });
+    expect(
+      agentsAtTop(agentRows([{ name: 'codex', n: 1, waiting: true, job: null }])),
+    ).toMatchObject({
+      label: 'Codex',
+      state: 'waiting',
+    });
+    expect(top?.title.split('\n')).toEqual([
+      'Codex: Waiting for a job',
+      'Codex 2: On: Map X',
+      'Claude Code: Not connected now',
+    ]);
+  });
+
   test('the one prompt carries the site and a fresh agent key', async () => {
     const { agentWords } = await import('../lib/agents.ts');
     const line = agentWords.prompt('https://p', 'petal_agent_k');

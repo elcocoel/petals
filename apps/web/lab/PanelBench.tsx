@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Mono } from '../components/ui/Mono.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
 import { WorkMenu, type WorkMenuView } from '../components/workspace/WorkMenu.tsx';
+import type { CopiedAt } from '../lib/agents.ts';
 import type { ListedProject, RowRef } from '../lib/conversation-list.ts';
 import { panelWords, type SectionKey } from '../lib/panel-words.ts';
 import { CHOOSABLE, viewChoices } from '../lib/person-view.ts';
@@ -24,7 +25,7 @@ export function PanelBench({ state }: { state: PanelState }) {
   const width = usePanelWidth();
   const [projects, setProjects] = useState<ListedProject[]>(fixture.projects);
   const [opened, setOpened] = useState<string[]>(fixture.opened);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<CopiedAt | null>(null);
   const [naming, setNaming] = useState(false);
   const [placed, setPlaced] = useState<Record<string, string | null>>({});
   // the row's menu, its dialogs and dragging, saved nowhere: the bench only shows them
@@ -109,8 +110,12 @@ export function PanelBench({ state }: { state: PanelState }) {
     placed,
     agents: fixture.agents,
     copied,
-    copy: () => setCopied(true),
+    copy: (at) => {
+      setCopied(at);
+      setTimeout(() => setCopied(null), 2400);
+    },
     disconnect: () => {},
+    disconnectAll: () => {},
   };
   return (
     <main data-workspace="" data-surface="ground" className="flex h-dvh bg-surface">
