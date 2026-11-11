@@ -1,5 +1,5 @@
-// One way to connect your agents (Elco's fix 1, 10 Nov): the first door is the one prompt the menu's "Copy
-// for your agents" copies (agentWords.prompt in lib/agents.ts), with a fresh agent key, so an agent
+// One way to connect your agents (Elco's fix 1, 10 Nov): the first door is the one prompt "Connect an agent"
+// copies (agentWords.prompt in lib/agents.ts), with a fresh agent key, so an agent
 // connected from /connect joins the account, shows under "Your agents" and takes jobs. The page mints the
 // key for a signed-in person, and asks them to Connect first otherwise (WORKSPACE's page). The other doors'
 // words come from the connect chapters' "On Petals' connect page" sections (brain/chapters/connect-*.md,
