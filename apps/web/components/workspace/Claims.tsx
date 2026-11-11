@@ -36,7 +36,9 @@ export function Claims({ claims }: { claims: ClaimsView | 'reading' | 'unread' }
               <Badge key={k.kind}>{`${k.count} ${k.kind}`}</Badge>
             ))}
           </div>
-          <ul className="m-0 flex list-none flex-col p-0">
+          {/* a set height, scrolling inside, as the map's claims box does (Elco, 11 Nov: "I don't like the
+              idea that the claims widget is infinite") */}
+          <ul className="m-0 flex max-h-figure-height list-none flex-col overflow-y-auto overscroll-none p-0">
             {view.groups.map((g) => (
               <li
                 key={g.key}
