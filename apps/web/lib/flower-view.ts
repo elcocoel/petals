@@ -52,6 +52,8 @@ const CHAINS: Record<string, string> = {
   'eip155:8453': 'Base',
   'eip155:42161': 'Arbitrum',
   'eip155:100': 'Gnosis',
+  // a reading off any chain, as a Snapshot vote is: its chain is 'none' (a draft word, META, 11 Nov)
+  none: 'Off-chain',
 };
 
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
