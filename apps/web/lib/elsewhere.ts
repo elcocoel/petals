@@ -2,7 +2,7 @@
 // what that agent saved reaches us (its steps and notes), never what it said to the person. Pure, so a
 // read now and a push later show the same thing.
 import type { Spec } from '@petal/core/types';
-import { workerName } from './jobs.ts';
+import { workerName } from './agents.ts';
 import { parseMarkdown } from './markdown.ts';
 import type { PanelFlower } from './panel-view.ts';
 import type { Row } from './thread-view.ts';
