@@ -20,7 +20,7 @@ export const brainOf = (ctx: ToolContext) =>
 
 const ROUTE = obj(['id', 'kind', 'for', 'file', 'status', 'why', 'score'], {
   id: { type: 'string' },
-  kind: { type: 'string', enum: ['chapter', 'recipe'] },
+  kind: { type: 'string', enum: ['department', 'chapter', 'recipe'] },
   for: { type: 'string' },
   file: { type: 'string' },
   status: { type: 'string', enum: ['ready', 'partial'] },
@@ -67,7 +67,7 @@ export const brainFile = defineTool<{ id: string }, object>({
   name: 'brain_file',
   title: 'Read a chapter',
   description:
-    "One of Petals' chapters or recipes, whole, by its id (brain_route names them; 'doctrine' is the one read first).",
+    "One of Petals' chapters, recipes or department hubs, whole, by its id (brain_route names them; 'doctrine' is the one read first).",
   input: obj(
     ['id'],
     { id: { type: 'string', minLength: 1, maxLength: 100 } },
@@ -76,7 +76,7 @@ export const brainFile = defineTool<{ id: string }, object>({
   output: obj(['commit', 'id', 'kind', 'file', 'text'], {
     commit: COMMIT,
     id: { type: 'string' },
-    kind: { type: 'string', enum: ['doctrine', 'chapter', 'recipe'] },
+    kind: { type: 'string', enum: ['doctrine', 'department', 'chapter', 'recipe'] },
     file: { type: 'string' },
     text: { type: 'string' },
   }),
@@ -100,7 +100,7 @@ export const brainIndexTool = defineTool<Record<string, never>, object>({
   name: 'brain_index',
   title: "List Petals' chapters",
   description:
-    "Every chapter and recipe Petals' brain holds: what each is for and what it answers to.",
+    "Every department, chapter and recipe Petals' brain holds: what each is for, its department and what it answers to.",
   input: obj([], {}, { additionalProperties: false }),
   output: obj(['commit', 'index'], { commit: COMMIT, index: { type: 'object' } }),
   annotations: READS,

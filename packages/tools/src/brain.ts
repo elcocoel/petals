@@ -25,7 +25,7 @@ export type BrainDepartment = (typeof BRAIN_DEPARTMENTS)[number];
 
 export interface BrainEntry {
   id: string;
-  kind: 'doctrine' | 'chapter' | 'recipe';
+  kind: 'doctrine' | 'department' | 'chapter' | 'recipe';
   /** v2: the department it's in; null for the doctrine, which is in every answer */
   department: string | null;
   /** what it's for, in words */
@@ -80,6 +80,24 @@ export function buildBrainIndex(dir: string): BrainIndex {
     file: 'doctrine.md',
     sha256: sha256Hex(doctrine),
   });
+  // each department's hub, <department>/README.md: what it holds, and when to use which of its chapters
+  for (const d of BRAIN_DEPARTMENTS) {
+    const file = `${d}/README.md`;
+    const text = read(file);
+    const h = headerOf(text);
+    entries.push({
+      id: h.id ?? d,
+      kind: 'department',
+      department: d,
+      for: h.for ?? '',
+      recognise: list(h.recognise),
+      tools: [],
+      continues: [],
+      status: h.status === 'ready' ? 'ready' : 'partial',
+      file,
+      sha256: sha256Hex(text),
+    });
+  }
   for (const name of readdirSync(join(dir, 'chapters'))
     .filter((f) => f.endsWith('.md'))
     .sort()) {
@@ -289,8 +307,13 @@ export function wordsOf(text: string): string[] {
     .map((w) => (w.length > 4 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0, -1) : w));
 }
 
-/** What a header offers to words: its id, what it's for, and what it answers to, counted twice. */
+/**
+ * What a header offers to words: its id, what it's for, and what it answers to, counted twice. A department's
+ * hub answers to its name only, so a question in a chapter's own words still reaches the chapter first.
+ */
 function docWords(e: BrainEntry): string[] {
+  if (e.kind === 'department')
+    return [...wordsOf(e.id), ...wordsOf(e.recognise.join(' ')), ...wordsOf(e.recognise.join(' '))];
   return [
     ...wordsOf(e.id.replaceAll('-', ' ')),
     ...wordsOf(e.for),

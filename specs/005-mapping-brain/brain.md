@@ -23,7 +23,7 @@ There's no chapter or reader per DAO type (Elco, 9 Nov: "let's not default to a 
 
 - **`recipes/<framework>.md`:** one per framework or contract type, as `data.md` defines them. Moloch v3 comes first. A recipe's header says how to recognise its contracts, so the index routes to it directly.
 - **`index.json`:** generated from every header. Nobody edits it by hand. Since 12 Nov it's `brain-index/v2`: each entry names its department.
-- **Departments (12 Nov; Elco, 11 Nov: "The department's component is important or else it becomes just a list that goes on forever"):** every chapter and recipe is in one of seven, as Elco named them: connecting, gathering, governance, money, investigation, services (#101's slots only), stewardship. The doctrine is in none: it's in every answer. The plan is `research/brain-departments-2026-11-11.md`.
+- **Departments (12 Nov; Elco, 11 Nov: "The department's component is important or else it becomes just a list that goes on forever"):** every chapter and recipe is in one of seven, as Elco named them: connecting, gathering, governance, money, investigation, services (#101's slots only), stewardship. The doctrine is in none: it's in every answer. Each department has a hub, `<department>/README.md`: a header (`id`, `kind: department`, `for`, `recognise`) and a "when to use which chapter" table. Routing reaches a hub by its department's name, so a question in a chapter's own words still reaches the chapter first. The services hub lists #101's slots, planned, and holds nothing else. The plan is `research/brain-departments-2026-11-11.md`.
 
 ## The brain service
 

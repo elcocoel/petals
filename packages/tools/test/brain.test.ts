@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { RECIPES } from '@petal/inputs';
 import { describe, expect, test } from 'vitest';
-import { BRAIN_DEPARTMENTS, brainProblems, buildBrainIndex } from '../src/brain.ts';
+import { BRAIN_DEPARTMENTS, brainProblems, buildBrainIndex, routeBrain } from '../src/brain.ts';
 import { registry } from '../src/registry.ts';
 
 const BRAIN = fileURLToPath(new URL('../../../brain/', import.meta.url));
@@ -60,7 +60,8 @@ describe('the brain', () => {
       'services',
       'stewardship',
     ]);
-    const by = (d: string) => index.entries.filter((e) => e.department === d).map((e) => e.id);
+    const by = (d: string) =>
+      index.entries.filter((e) => e.department === d && e.kind !== 'department').map((e) => e.id);
     expect(index.entries.find((e) => e.kind === 'doctrine')?.department).toBeNull();
     expect(by('connecting')).toEqual([
       'connect-claude-code',
@@ -89,6 +90,23 @@ describe('the brain', () => {
     // services holds #101's slots only, as planned; nothing is in it yet
     expect(by('services')).toEqual([]);
     expect(by('stewardship')).toEqual(['contributing']);
+  });
+
+  test("each department has its hub, which routing reaches by the department's name", () => {
+    const index = buildBrainIndex(BRAIN);
+    const hubs = index.entries.filter((e) => e.kind === 'department');
+    expect(hubs.map((e) => [e.id, e.file])).toEqual(
+      BRAIN_DEPARTMENTS.map((d) => [d, `${d}/README.md`]),
+    );
+    // services holds #101's slots, planned: nothing is built in it yet
+    expect(hubs.find((e) => e.id === 'services')?.status).toBe('partial');
+    for (const d of BRAIN_DEPARTMENTS) {
+      const hub = readFileSync(join(BRAIN, d, 'README.md'), 'utf8');
+      // a hub names each of its chapters and recipes
+      for (const e of index.entries.filter((x) => x.department === d && x.kind !== 'department'))
+        expect(hub, `${d} names ${e.id}`).toContain(`\`${e.id}\``);
+      expect(routeBrain(index, { words: d })[0]?.id).toBe(d);
+    }
   });
 
   test('the checks catch what they are for', () => {

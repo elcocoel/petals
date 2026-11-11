@@ -14,6 +14,104 @@
       "sha256": "e882bd15b66e4c99046b1375f3c21f176dbab6472a9b7e126a44267cc9644fa1"
     },
     {
+      "id": "connecting",
+      "kind": "department",
+      "department": "connecting",
+      "for": "getting a person and their agent onto Petals",
+      "recognise": [
+        "connecting"
+      ],
+      "tools": [],
+      "continues": [],
+      "status": "ready",
+      "file": "connecting/README.md",
+      "sha256": "f87d1c76aed6d5eee1c31def1996ac621ea554acb21ecfebb2465bf1bd69e5d3"
+    },
+    {
+      "id": "gathering",
+      "kind": "department",
+      "department": "gathering",
+      "for": "what a thing is, and how to read something new",
+      "recognise": [
+        "gathering"
+      ],
+      "tools": [],
+      "continues": [],
+      "status": "ready",
+      "file": "gathering/README.md",
+      "sha256": "128b3dcde707d3bb4445080525467c0ef577952f50a239661638a7209fbeb469"
+    },
+    {
+      "id": "governance",
+      "kind": "department",
+      "department": "governance",
+      "for": "who holds power, who votes, who moves money and who changes rules",
+      "recognise": [
+        "governance"
+      ],
+      "tools": [],
+      "continues": [],
+      "status": "ready",
+      "file": "governance/README.md",
+      "sha256": "e146881ba94c25e66508b0fe38d39e72658191f8fb8f03d42902c9a5a733770e"
+    },
+    {
+      "id": "money",
+      "kind": "department",
+      "department": "money",
+      "for": "what holdings are worth, and when they unlock",
+      "recognise": [
+        "money"
+      ],
+      "tools": [],
+      "continues": [],
+      "status": "ready",
+      "file": "money/README.md",
+      "sha256": "bd6bafa29a53a4599b4c7aac6fd535d1cb95af966754e38a6ed5093a4c96c7ba"
+    },
+    {
+      "id": "investigation",
+      "kind": "department",
+      "department": "investigation",
+      "for": "how to go on from any answer",
+      "recognise": [
+        "investigation"
+      ],
+      "tools": [],
+      "continues": [],
+      "status": "ready",
+      "file": "investigation/README.md",
+      "sha256": "54c1299044357de7d14bc1500b7856ee96e921e7d2bd66f2e70085d7bfd76716"
+    },
+    {
+      "id": "services",
+      "kind": "department",
+      "department": "services",
+      "for": "one-press deliverables and AI services, each a skill: planned (#101), nothing built yet",
+      "recognise": [
+        "services"
+      ],
+      "tools": [],
+      "continues": [],
+      "status": "partial",
+      "file": "services/README.md",
+      "sha256": "d33fbfcafa4affd5e97d783630272a557d8cbcd8bdf26898c83157156f5cd010"
+    },
+    {
+      "id": "stewardship",
+      "kind": "department",
+      "department": "stewardship",
+      "for": "improving the brain",
+      "recognise": [
+        "stewardship"
+      ],
+      "tools": [],
+      "continues": [],
+      "status": "ready",
+      "file": "stewardship/README.md",
+      "sha256": "a67963822fe5ce0558ded84128d9e47466e89ee290dcec23975e051e150cacdf"
+    },
+    {
       "id": "a-new-system",
       "kind": "chapter",
       "department": "gathering",
