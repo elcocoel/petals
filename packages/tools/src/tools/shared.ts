@@ -1,7 +1,7 @@
 // Pieces every tool uses: snapshots by hash, modules by network id, public URLs, schema bits.
 import { COMPOSED, exactValues, formatDecimal } from '@petal/core';
 import type { NetworkDescriptor, Params, Snapshot, Spec } from '@petal/core/types';
-import type { InputModule, SnapshotStore } from '@petal/inputs';
+import { type InputModule, plainCapabilities, type SnapshotStore } from '@petal/inputs';
 import { ToolFailure } from '../errors.ts';
 import type { JSONSchema, ToolContext } from '../types.ts';
 
@@ -71,8 +71,63 @@ export function moduleFor(ctx: ToolContext, id: string): InputModule {
 }
 
 /** The descriptor for a snapshot's network, if a module reads it. */
+/**
+ * A reading made by a reader Petals doesn't have (a mapping wave's, read elsewhere with the brain as its method,
+ * #96's loader): described by the reading itself, a plain flower of its own amounts, each a measure as it named
+ * it, the first its coverage names first; nothing read live. Only a stored reading has one.
+ */
+export function readingDescriptor(s: Snapshot): NetworkDescriptor {
+  const seen = new Map<string, { id: string; unit: string; label: string }>();
+  for (const h of s.holdings)
+    if (!seen.has(h.measure))
+      seen.set(h.measure, { id: h.measure, unit: h.unit, label: h.measure.replaceAll('_', ' ') });
+  const all = [...seen.values()];
+  const first = all.find((m) => m.id === s.coverage.measure) ??
+    all[0] ?? { id: 'amount', unit: '', label: 'amount' };
+  const sources = s.sources.map((x) => x.id);
+  const caps = plainCapabilities({
+    measure: first,
+    sources,
+    kind: { meaning: 'what each account is, as its reading says', sources },
+    identity: { meaning: 'named as its reading names them, or anonymous', sources },
+  });
+  const height = caps.by.height ?? [];
+  return {
+    id: s.network.id,
+    chain: s.network.chain,
+    population: s.network.population,
+    kind: 'other',
+    title: s.network.title ?? s.network.id,
+    description: s.network.description ?? '',
+    params: {},
+    capabilities: {
+      ...caps,
+      measures: [first, ...all.filter((m) => m.id !== first.id)],
+      by: {
+        ...caps.by,
+        height: height.includes('m:<metric>') ? height : [...height, 'm:<metric>'],
+      },
+    },
+    live: false,
+    cost: { calls: 0, seconds: 0, note: 'read elsewhere and kept as it came' },
+    sources: s.sources.map((x) => ({ id: x.id, kind: x.kind, url: x.url ?? '' })),
+  };
+}
+
+/** Whether a reading is what its reader's descriptor says: its default measure there, and one of its sources. */
+function fits(d: NetworkDescriptor, s: Snapshot): boolean {
+  const measure = d.capabilities.defaults.measure ?? d.capabilities.measures[0]?.id;
+  return (
+    (!measure || s.holdings.some((h) => h.measure === measure)) &&
+    d.sources.some((src) => s.sources.some((x) => x.id === src.id))
+  );
+}
+
 export function descriptorOf(ctx: ToolContext, s: Snapshot): NetworkDescriptor | null {
-  const d = ctx.modules[s.network.id]?.descriptor ?? null;
+  const own = ctx.modules[s.network.id]?.descriptor ?? null;
+  // a reading its reader's descriptor doesn't fit (a mapping wave's, with its own measures and sources), or by a
+  // reader Petals doesn't have, is described by itself (#96); a composed view keeps its base's
+  const d = s.module.id === COMPOSED ? own : own && fits(own, s) ? own : readingDescriptor(s);
   if (!d || s.module.id !== COMPOSED) return d;
   // A view over layers (005 seam/v1): what its base reads, plus every measure the layers brought,
   // any of which can be a petal's height.

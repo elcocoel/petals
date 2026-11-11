@@ -35,6 +35,7 @@ import {
   moduleFor,
   obj,
   PARAMS,
+  readingDescriptor,
   SHA256,
   snapshotOf,
 } from './shared.ts';
@@ -325,9 +326,12 @@ export const proposeSpec = defineTool<ProposeIn, object>({
   ),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   async run(input, ctx) {
-    const base = moduleFor(ctx, input.network).descriptor;
-    if (input.params) checkParams(base, input.params);
+    // a stored reading by a reader Petals doesn't have (a mapping wave's) is described by itself (#96)
+    const known = ctx.modules[input.network]?.descriptor;
     const s = await loadSnapshot(ctx, input.sha256);
+    if (!known && s.network.id !== input.network) moduleFor(ctx, input.network);
+    const base = known ?? readingDescriptor(s);
+    if (input.params && known) checkParams(base, input.params);
     const d = descriptorOf(ctx, s) ?? base;
     if (s.network.id !== input.network) {
       throw new ToolFailure(

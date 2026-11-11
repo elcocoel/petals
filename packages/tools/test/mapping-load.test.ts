@@ -1,0 +1,90 @@
+// The mapping waves' loader (board #96): each of Petals' formats checked and refused with its reasons, a good
+// reading kept and drawn as Petals' own mapping, a kept mark left unless --replace, raw receipts left as evidence.
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { gunzipSync } from 'node:zlib';
+import { beforeEach, describe, expect, test } from 'vitest';
+import { privateStore } from '../src/drafts.ts';
+import { mapsOf, mapViews } from '../src/map.ts';
+import { loadMapping } from '../src/mapping-load.ts';
+import { rig, type TestRig } from './helpers.ts';
+
+const MOLOCH = 'c46437a2afb76cc7c3b07195da499a80a93bd3f09f2ce342436a366c68009a9c';
+const DAO = 'eip155:1:0x1fd169a4f5c59acf79d0fd5d91d1201ef1bce9f1';
+let r: TestRig;
+beforeEach(async () => {
+  r = await rig();
+});
+
+function folder() {
+  const root = mkdtempSync(join(tmpdir(), 'petal-waves-'));
+  const dir = join(root, 'ethereum', 'moloch');
+  mkdirSync(dir, { recursive: true });
+  const fixtures = join(import.meta.dirname, '..', '..', '..', 'fixtures', 'snapshots');
+  writeFileSync(
+    join(dir, 'snapshot.json'),
+    gunzipSync(readFileSync(join(fixtures, `${MOLOCH}.json.gz`))),
+  );
+  const at = '2026-11-11T18:00:00.000Z';
+  writeFileSync(
+    join(dir, 'mark.json'),
+    JSON.stringify({
+      petal: 'mark/v1',
+      about: DAO,
+      name: {
+        value: 'Moloch DAO',
+        status: 'self-declared',
+        source: 'daohaus',
+        ref: 'https://data.daohaus.club/dao/x',
+        at,
+      },
+      symbol: null,
+      logo: null,
+      read_at: at,
+    }),
+  );
+  writeFileSync(
+    join(dir, 'claim-bad.json'),
+    JSON.stringify({ petal: 'claim/v3', verb: 'noted', kind: 'observed' }),
+  );
+  writeFileSync(join(dir, 'get_policy.json'), JSON.stringify({ result: 'a raw receipt' }));
+  return root;
+}
+
+describe('loading a mapping wave', () => {
+  test('--dry checks and keeps nothing; a load draws the reading, credited, and keeps its mark', async () => {
+    const root = folder();
+    const dry = await loadMapping(r.ctx, root, { by: 'mapping.petals.near', dry: true });
+    expect(dry).toMatchObject({ files: 4, evidence: 1, drawn: 0 });
+    expect(dry.refused).toHaveLength(1);
+    expect(dry.refused[0]?.file).toBe('ethereum/moloch/claim-bad.json');
+    expect(mapsOf(await mapViews(r.ctx))).toHaveLength(0);
+
+    const done = await loadMapping(r.ctx, root, { by: 'mapping.petals.near' });
+    expect(done).toMatchObject({
+      drawn: 1,
+      formats: { snapshot: { good: 1, kept: 1 }, mark: { good: 1, kept: 1 } },
+    });
+    const [card] = mapsOf(await mapViews(r.ctx));
+    expect(card).toMatchObject({ id: DAO, name: 'Moloch DAO' });
+    expect(card?.readings[0]?.drawings[0]?.made_by).toBe('mapping.petals.near');
+    expect(
+      JSON.parse((await privateStore(r.ctx.config).mark.get(DAO))?.body ?? '{}').name.value,
+    ).toBe('Moloch DAO');
+  });
+
+  test('a mark already kept stays, unless --replace puts the wave’s in its place', async () => {
+    const root = folder();
+    await privateStore(r.ctx.config).mark.put({
+      about: DAO,
+      body: '{"petal":"mark/v2","kept":"first"}',
+      read_at: 'x',
+    });
+    const left = await loadMapping(r.ctx, root, { by: 'mapping.petals.near' });
+    expect(left.formats.mark).toMatchObject({ good: 1, kept: 0, left: 1 });
+    expect((await privateStore(r.ctx.config).mark.get(DAO))?.body).toContain('"kept":"first"');
+    await loadMapping(r.ctx, root, { by: 'mapping.petals.near', replace: true });
+    expect((await privateStore(r.ctx.config).mark.get(DAO))?.body).toContain('Moloch DAO');
+  });
+});
