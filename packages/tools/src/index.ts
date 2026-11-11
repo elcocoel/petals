@@ -55,4 +55,6 @@ export {
 export { workerPlace } from './tools/jobs.ts';
 export { makeReadPage } from './tools/read-page.ts';
 export type { Caller, Config, JSONSchema, Tool, ToolContext } from './types.ts';
+export { type CardValue, cardValue, valuesOf } from './value-store.ts';
+export { type ValueRun, type ValueRunResult, valueMaps } from './values.ts';
 export { viewAsked, viewByHash, viewOfPerson } from './views.ts';

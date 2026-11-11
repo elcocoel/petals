@@ -2,16 +2,19 @@
 import {
   canonicalJson,
   DEFAULT_VIEW,
+  mapOf,
   namePieces,
   readFlower,
   renderFlower,
   specHash,
+  valuePieces,
   viewProblem,
 } from '@petal/core';
 import type { Spec, View } from '@petal/core/types';
 import { defineTool } from '../define.ts';
 import { putSpecBody } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
+import { valuesOf } from '../value-store.ts';
 import { base, obj, SHA256, viewUrl } from './shared.ts';
 import { checkSpec, summarise } from './specs.ts';
 
@@ -127,7 +130,11 @@ export const renderFlowerTool = defineTool<
     // flower's own choices are the record of what its agent proposed, and never draw it.
     const drawWith = view ?? ctx.view ?? DEFAULT_VIEW;
     // the viewer's own names, on the petals they name (annotation step 6); a visitor's are none
-    const pieces = ctx.names?.length ? namePieces(snapshot, ctx.names) : [];
+    // and each petal's value in dollars, from its map's stored value (#91): none with no price
+    const pieces = [
+      ...(ctx.names?.length ? namePieces(snapshot, ctx.names) : []),
+      ...valuePieces(snapshot, (await valuesOf(ctx)).get(mapOf(snapshot)) ?? null),
+    ];
     const r = renderFlower(spec, snapshot, {
       ...(size !== undefined ? { size } : {}),
       view: drawWith,

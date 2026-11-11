@@ -46,6 +46,7 @@ export type {
   StepRow,
   TopUpRow,
   UsageRow,
+  ValueRow,
   WalletBindingRow,
   WorkspaceNoteRow,
 } from './tables.ts';

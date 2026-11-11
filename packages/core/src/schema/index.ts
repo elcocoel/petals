@@ -14,6 +14,7 @@ import priceV2Schema from '../../schema/price-v2.schema.json' with { type: 'json
 import seamSchema from '../../schema/seam.schema.json' with { type: 'json' };
 import snapshotSchema from '../../schema/snapshot.schema.json' with { type: 'json' };
 import usageSchema from '../../schema/usage.schema.json' with { type: 'json' };
+import valueSchema from '../../schema/value.schema.json' with { type: 'json' };
 import viewSchema from '../../schema/view.schema.json' with { type: 'json' };
 import viewV2Schema from '../../schema/view-v2.schema.json' with { type: 'json' };
 
@@ -58,6 +59,8 @@ export const schemas: {
   priceV2: object;
   /** what tells one organisation on the map from another: its name, symbol and logo, each with where it came from (#85) */
   mark: object;
+  /** a map's token in dollars, its supply, and its reading's totals at that price (#91) */
+  value: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -76,6 +79,7 @@ export const schemas: {
   price: priceSchema,
   priceV2: priceV2Schema,
   mark: markSchema,
+  value: valueSchema,
 };
 
 /** The two source documents, unchanged. */

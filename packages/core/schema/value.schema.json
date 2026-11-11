@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:value:v1",
+  "title": "Petal value v1",
+  "description": "What a map's token is worth in dollars, and how much of it there is (board #91; Elco, 11 Nov: 'monetary estimates of the value of these petals and the stakes and the supply and all of these data that we can put about each community and tokens'): its price from NEAR Intents' 1Click list, its supply from its own chain, and its reading's totals at that price. One per map, named by the map's address, read again to refresh. A token 1Click doesn't price has price null: no price, never a guess.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["petal", "about", "asset", "price", "supply", "snapshot", "measure", "totals", "read_at"],
+  "properties": {
+    "petal": { "const": "value/v1" },
+    "about": { "description": "the map, by its address (its card's id)", "type": "string", "minLength": 3 },
+    "asset": {
+      "description": "what is priced: the asset its reading's holdings name (an EVM token's address in lower case, a Solana mint, NEAR), and its symbol",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "symbol"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "symbol": { "type": ["string", "null"] }
+      }
+    },
+    "price": {
+      "description": "dollars for one whole token, as 1Click lists it, or else DefiLlama, or null: no price",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["usd", "source", "ref", "at"],
+          "properties": {
+            "usd": { "type": "number", "minimum": 0 },
+            "source": { "description": "where the price is from, in a word: 1click (NEAR Intents' list), or defillama (its open prices) for what 1Click doesn't list", "type": "string", "pattern": "^[a-z0-9_-]+$" },
+            "ref": { "description": "which asset it is there (1Click's asset id, DefiLlama's chain:address and its confidence), and why when it isn't the token itself (NEAR, priced as wNEAR)", "type": "string", "minLength": 1 },
+            "at": { "description": "when its source priced it", "type": "string", "format": "date-time" }
+          }
+        },
+        { "type": "null" }
+      ]
+    },
+    "supply": {
+      "description": "how much of it there is, read from its own chain, in whole tokens, or null when the chain didn't say",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["amount", "unit", "source", "ref", "at"],
+          "properties": {
+            "amount": { "$ref": "#/$defs/decimal" },
+            "unit": { "type": "string" },
+            "source": { "const": "chain" },
+            "ref": { "description": "the call it answered: totalSupply() on eip155:1:0x…, ft_total_supply on near:mainnet:…, getTokenSupply on solana:…, NEAR's total supply at a block", "type": "string", "minLength": 1 },
+            "at": { "type": "string", "format": "date-time" }
+          }
+        },
+        { "type": "null" }
+      ]
+    },
+    "snapshot": {
+      "description": "the reading its totals are of: the map's newest when it was read",
+      "oneOf": [{ "type": "string", "pattern": "^[0-9a-f]{64}$" }, { "type": "null" }]
+    },
+    "measure": {
+      "description": "the reading's own measure, the one its flower draws by default, or null",
+      "type": ["string", "null"]
+    },
+    "totals": {
+      "description": "each amount measure of the reading held in this asset: its sum, and that at the price, or null with no price",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["measure", "unit", "amount", "usd"],
+        "properties": {
+          "measure": { "type": "string", "minLength": 1 },
+          "unit": { "type": "string" },
+          "amount": { "$ref": "#/$defs/decimal" },
+          "usd": { "oneOf": [{ "$ref": "#/$defs/decimal" }, { "type": "null" }] }
+        }
+      }
+    },
+    "read_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "decimal": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?(e[-+]?[0-9]+)?$" }
+  }
+}

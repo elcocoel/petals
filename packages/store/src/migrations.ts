@@ -490,6 +490,16 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE agent ADD COLUMN can TEXT;
   ALTER TABLE agent_worker ADD COLUMN can TEXT;
   `,
+  // 27: what a map's token is worth (board #91; Elco, 11 Nov: "monetary estimates of the value of these petals
+  // and the stakes and the supply"): one value/v1 per map, by its address, its price from 1Click, its supply
+  // from its chain and its reading's totals at that price. Read again, a map's value is replaced.
+  `
+  CREATE TABLE value (
+    about TEXT PRIMARY KEY,
+    body TEXT NOT NULL,
+    read_at TEXT NOT NULL
+  );
+  `,
 ];
 
 /**
