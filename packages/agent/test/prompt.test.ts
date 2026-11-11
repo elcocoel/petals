@@ -79,7 +79,13 @@ describe('SYSTEM_PROMPT', () => {
   test('talks: answers first, plain words, reads what is stored, picks a reading', () => {
     expect(SYSTEM_PROMPT).toMatch(/Answer first, in sentences/);
     expect(SYSTEM_PROMPT).toMatch(/"one line" means one line/);
-    expect(SYSTEM_PROMPT).toMatch(/No source ids, `fig:` ids, tool or module names, hashes/);
+    expect(SYSTEM_PROMPT).toMatch(
+      /No source ids, `fig:` ids, tool, module or field names, ids with underscores, hashes/,
+    );
+    // the reading's own labels, in people's words (WORKSPACE's walk, 11 Nov: it said 'fastnear-rpc-validators')
+    expect(SYSTEM_PROMPT).toMatch(
+      /Say what the reading's labels say: the petals, what each dimension shows/,
+    );
     expect(SYSTEM_PROMPT).toMatch(/Read what's stored, then answer/);
     expect(SYSTEM_PROMPT).toMatch(/Pick a reading/);
     expect(SYSTEM_PROMPT).toMatch(/say no, then what's close/);
