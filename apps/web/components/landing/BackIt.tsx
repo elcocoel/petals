@@ -5,7 +5,7 @@
 // addresses: until then their tiles show without a link, so nothing goes nowhere. `split`, the old list beside
 // an empty half, stays for the lab.
 import { landingCopy } from '../../lib/landing-copy.ts';
-import { Icon } from '../ui/Icon.tsx';
+import { PlateLink } from '../ui/PlateLink.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 
@@ -21,33 +21,13 @@ function Way({ way }: { way: WayCopy }) {
   );
 }
 
-/** A way as a tile: the plate (box.paper, which rises and tilts) and, under it, where it goes. */
+/** A way as a tile: its words on the plate, and under it where it goes. */
 function WayTile({ way }: { way: WayCopy }) {
-  const plate = (
-    <span
-      data-b="box"
-      data-kind="plate"
-      className="flex min-h-figure-height flex-col justify-between gap-block-gap border border-hairline p-block-gap"
-    >
-      <span className="type-title">{way.title}</span>
-      {way.body && <span className="type-body">{way.body}</span>}
-    </span>
-  );
-  if (!way.href)
-    return (
-      <div className="flex h-full flex-col">
-        {plate}
-        <span className="pt-block-gap type-label text-muted">{way.action}</span>
-      </div>
-    );
   return (
-    <a href={way.href} data-b="link" data-kind="card" className="flex h-full flex-col no-underline">
-      {plate}
-      <span className="mt-block-gap inline-flex items-center gap-space-8 type-label">
-        {way.action}
-        <Icon name="arrow" />
-      </span>
-    </a>
+    <PlateLink href={way.href || undefined} action={way.action}>
+      <span className="min-h-drawing-144 type-title">{way.title}</span>
+      {way.body && <span className="type-body">{way.body}</span>}
+    </PlateLink>
   );
 }
 

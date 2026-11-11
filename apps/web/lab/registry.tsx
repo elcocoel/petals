@@ -80,6 +80,7 @@ import { Nav } from '../components/ui/Nav.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
 import { OrgBadge } from '../components/ui/OrgBadge.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
+import { PlateLink } from '../components/ui/PlateLink.tsx';
 import { Range } from '../components/ui/Range.tsx';
 import { RowField } from '../components/ui/RowField.tsx';
 import { Section } from '../components/ui/Section.tsx';
@@ -831,6 +832,32 @@ export const registry: LabEntry[] = [
         name: 'a picture only',
         render: () => (
           <GalleryCard thumb="even" label={landingCopy.gallery.open} href="#gallerycard" />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'PlateLink',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/PlateLink.tsx',
+    states: [
+      {
+        name: 'a way in, on paper',
+        render: () => (
+          <PlateLink href="#platelink" action={landingCopy.backIt.ways[0].action}>
+            <span className="type-title">{landingCopy.backIt.ways[0].title}</span>
+            <span className="type-body">{landingCopy.backIt.ways[0].body}</span>
+          </PlateLink>
+        ),
+      },
+      {
+        name: 'a slot with no address yet',
+        render: () => (
+          <PlateLink action={landingCopy.backIt.ways[3].action}>
+            <span className="type-title">{landingCopy.backIt.ways[3].title}</span>
+          </PlateLink>
         ),
       },
     ],

@@ -8,6 +8,7 @@ import { siteLinks } from '../../lib/site-links.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Icon } from '../ui/Icon.tsx';
+import { PlateLink } from '../ui/PlateLink.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 
@@ -31,23 +32,13 @@ export function BuildWithUs() {
       }
     >
       {copy.doors.map((door) => (
-        // A door is a box you press (box.glass, the ink band's own: it rises and tilts), only its name and an
-        // arrow. Not a plate: box.paper is a light band's paper and goes white on ink.
-        <a
-          key={door.slug}
-          href={`${siteLinks.docs}/${door.slug}`}
-          data-b="link"
-          data-kind="card"
-          className="flex no-underline"
-        >
-          <span
-            data-b="box"
-            className="flex min-h-drawing-144 w-full items-end justify-between gap-block-gap border border-hairline p-block-gap"
-          >
+        // A door is a tile with only its name and an arrow, on the ink band's own glass.
+        <PlateLink key={door.slug} href={`${siteLinks.docs}/${door.slug}`} glass>
+          <span className="flex min-h-drawing-72 items-end justify-between gap-block-gap">
             <span className="type-title">{door.title}</span>
             <Icon name="arrow" />
           </span>
-        </a>
+        </PlateLink>
       ))}
     </Section>
   );
