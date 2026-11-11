@@ -135,6 +135,20 @@ export const draftOf = (p: SocialProfile | null): ProfileDraft => ({
 /** The standard's limits (standard.md, profile keys). */
 export const PROFILE_LIMITS = { name: 256, about: 10_000, link: 2048 } as const;
 
+/**
+ * The services a link is picked from, by name, each with the key NEAR Social's profiles keep it under, so
+ * what the person picks is what shows (the walk, 11 Nov: a typed "X (Twitter)" was kept as "xtwitter").
+ */
+export const SERVICES = [
+  { key: 'twitter', name: 'X' },
+  { key: 'github', name: 'GitHub' },
+  { key: 'telegram', name: 'Telegram' },
+  { key: 'website', name: 'Website' },
+] as const;
+
+/** A link's service by its name: X for twitter; a key with no name here shows as it's kept. */
+export const serviceName = (key: string) => SERVICES.find((s) => s.key === key)?.name ?? key;
+
 /** A service as a key segment, as the standard has it: lower case letters, digits and _, at most 32. */
 export const serviceKey = (s: string) =>
   s

@@ -1,18 +1,17 @@
 // The profile's editor (Elco, 10 Nov: people create and edit their profile inside Petals, in NEAR Social's
 // shape, "and have a publish button"; the Figma frame "Lobby · editing the public profile", approved): the
-// picture, the name, the bio and the links on the left; on the right a preview, whose profile it is, and
-// the plain lines that Save keeps it in Petals and that publishing puts it on NEAR Social, where earlier
-// versions stay public. Then Save, the one main action, Cancel, and Publish as its own button, off until
-// it's set up on mainnet, with the line beside it saying so. The Profile card opens into this.
+// picture, the name, the bio and the links on the left, each link's service picked by name (X, GitHub, …) so
+// what's picked is what shows; on the right a preview. Then Save, the one main action, Cancel, and Publish
+// as its own button, off until it's set up on mainnet, and under them the one line on where it's kept (the
+// walk, 11 Nov: it was said four times). The Profile card opens into this.
 // Props only: viewmodels/useProfileEditor.ts holds it. Words from lib/lobby-view.ts, drafts.
 import {
   busyPhase,
   type EditPhase,
   editorWords,
   type ProfileEditorView,
-  profileWords,
 } from '../../lib/lobby-view.ts';
-import { PROFILE_LIMITS } from '../../lib/near-social.ts';
+import { PROFILE_LIMITS, SERVICES, serviceName } from '../../lib/near-social.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
@@ -70,6 +69,15 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
           />
           <div className="flex flex-col gap-space-8">
             <span className="type-label">{editorWords.links}</span>
+            {draft.links.length > 0 && (
+              // what each column is, once, over the rows (the walk, 11 Nov: two blank boxes said nothing)
+              <div aria-hidden="true" className="flex items-center gap-text-gap">
+                <span className="w-1/4 shrink-0 type-caption text-muted">
+                  {editorWords.service}
+                </span>
+                <span className="min-w-0 flex-1 type-caption text-muted">{editorWords.handle}</span>
+              </div>
+            )}
             {draft.links.map((l, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: a row is its place in the list while it's edited
               <div key={i} className="flex items-center gap-text-gap">
@@ -80,6 +88,8 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
                     hideLabel
                     value={l.service}
                     onChange={(v) => view.setLink(i, 'service', v)}
+                    choices={[{ group: editorWords.service, choices: servicesFor(l.service) }]}
+                    none={editorWords.pick}
                     disabled={busy}
                   />
                 </div>
@@ -129,20 +139,9 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
             )}
             {links.length > 0 && (
               <p className="my-0 type-caption text-muted wrap-anywhere">
-                {links.map((l) => `${l.service.trim()} ${l.value.trim()}`).join('   ·   ')}
+                {links.map((l) => `${serviceName(l.service)} ${l.value.trim()}`).join('   ·   ')}
               </p>
             )}
-          </div>
-          <div className="flex flex-col gap-space-8 border border-hairline p-space-16">
-            <div className="flex flex-wrap items-center gap-space-8">
-              <span className="type-caption text-muted">{editorWords.keptAs}</span>
-              <span title={view.account.full}>
-                <Mono as="span">{view.account.shown}</Mono>
-              </span>
-              <Badge>{profileWords.chain}</Badge>
-            </div>
-            <p className="my-0 type-caption">{editorWords.keptNote}</p>
-            <p className="my-0 type-caption text-muted">{editorWords.publicNote}</p>
           </div>
         </div>
       </div>
@@ -153,14 +152,9 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
         <Button variant="quiet" disabled={busy} onClick={view.cancel}>
           {editorWords.cancel}
         </Button>
-        <span className="flex flex-wrap items-center gap-text-gap">
-          <Button variant="secondary" disabled={busy || !view.publish} onClick={view.publish}>
-            {PUBLISHING[view.phase] ?? editorWords.publish}
-          </Button>
-          {!view.publish && (
-            <span className="type-caption text-muted">{editorWords.publishLater}</span>
-          )}
-        </span>
+        <Button variant="secondary" disabled={busy || !view.publish} onClick={view.publish}>
+          {PUBLISHING[view.phase] ?? editorWords.publish}
+        </Button>
         {view.phase === 'failed' && (
           <span className="flex items-center gap-space-8">
             <Badge>{editorWords.notSaved}</Badge>
@@ -168,9 +162,20 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
           </span>
         )}
       </div>
+      <p className="my-0 type-caption text-muted">
+        {view.publish ? editorWords.publicNote : editorWords.keptNote}
+      </p>
     </Card>
   );
 }
+
+/** The services a link can be picked from: NEAR Social's, and the one it has when it's another. */
+const servicesFor = (current: string) => [
+  ...SERVICES.map((s) => ({ value: s.key, label: s.name })),
+  ...(current && !SERVICES.some((s) => s.key === current)
+    ? [{ value: current, label: current }]
+    : []),
+];
 
 function Picture({ src, size }: { src: string | null; size: '48' | '72' }) {
   const box = size === '72' ? 'size-drawing-72' : 'size-drawing-48';

@@ -19,6 +19,8 @@ export const siteLinks = {
   make: '/make',
   /** A person's own place (specs/004-workspace, W3): where connecting a wallet lands. */
   lobby: '/lobby',
+  /** A person's own profile page (#79): who they are and what backs them. */
+  profile: '/profile',
   /** The grid of every map's tile (one name per thing: the Gallery). */
   gallery: '/gallery',
   /** The Power Map: the continuous map (coordinator/one-source.md, step 5). */

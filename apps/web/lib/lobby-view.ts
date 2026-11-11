@@ -52,8 +52,7 @@ export const profileWords = {
   /** A link's badge: the account says so; nobody checked it. */
   declared: 'Declared',
   /** Under a profile kept in Petals: who sees it. */
-  notePetals:
-    'Kept in Petals, for you. It goes on NEAR Social, where anyone can see it, only when you publish it. Links are what you declare; nobody checks them.',
+  notePetals: 'Kept in Petals, for you only. Links are what you declare; nobody checks them.',
   /** Under the account's NEAR Social profile, before Petals keeps a copy. */
   noteSocial:
     'This is your profile on NEAR Social, which anyone can see. Edit it here and Petals keeps your copy. Links are what you declare; nobody checks them.',
@@ -85,16 +84,19 @@ export const editorWords = {
   remove: 'Remove',
   addLink: 'Add a link',
   preview: 'Preview: how it shows',
-  /** The box beside the preview: where it's kept, and what publishing will do. */
-  keptAs: 'Kept in Petals for',
-  keptNote: 'Save keeps it in Petals, for you, and costs nothing.',
+  /** The link's service, before one is picked. */
+  pick: 'Pick one',
+  /**
+   * Where it's kept, said once, under the buttons (the walk, 11 Nov: it was said four times): with Publish
+   * off, and with it on.
+   */
+  keptNote:
+    'Save keeps it in Petals, for you only, and costs nothing. Publishing it to NEAR Social, where anyone can see it, comes later.',
   publicNote:
-    'Publishing puts it on NEAR Social, which other NEAR apps show too. Earlier versions stay public there: every change is kept on NEAR.',
+    'Save keeps it in Petals, for you only. Publish puts it on NEAR Social, where anyone can see it, and earlier versions stay public there.',
   save: 'Save',
   saving: 'Saving…',
   publish: 'Publish to NEAR Social',
-  /** Beside Publish, while it's off. LOBBY's draft of Elco's words. */
-  publishLater: 'Saved in Petals. Publishing to NEAR Social comes later.',
   cancel: 'Cancel',
   /** Publishing, step by step, once it's on. */
   picturing: 'Your wallet: the picture first…',
