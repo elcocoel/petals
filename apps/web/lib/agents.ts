@@ -116,4 +116,20 @@ export const agentWords = {
   /** CONNECTORS's line, 9 Nov, routing a cloud chat to the connector since 10 Nov; `site` is this site's address and `key` a fresh agent link's token. */
   prompt: (site: string, key: string) =>
     `Be one of my agents in Petals. If you run on my computer, read ${site}/skill.md and set yourself up, then join with my agent key and wait for my jobs, as its Jobs section says. If you're the Claude app's chat or ChatGPT, run no download: use the Petals connector at ${site}/mcp, or tell me how to add it, then take my open jobs with my agent key. My agent key: ${key}`,
+  /**
+   * The one setup prompt, with no key, for before sign-in (Elco, 11 Nov, through PM): the landing's "Copy
+   * for my agent" and a signed-out /make copy it. It walks the person to Petals one step at a time, skipping
+   * what's done, and brings the agent in with the key Connect an agent copies once they're signed in, the
+   * same join as `prompt`. Steps 1, 2, 3 and 5 are LANDING's words from section 4; `site` is this site's address.
+   */
+  setup: (site: string) =>
+    [
+      `Help me start using Petals (${site}). It maps who holds power in on-chain networks and draws it as flowers. Guide me one step at a time, and skip any step I've already done.`,
+      '1. A NEAR wallet. If I have none, help me set one up (Meteor Wallet works) and get a little NEAR into it.',
+      `2. Log in. I open ${site}, press Connect and approve the sign-in in my wallet. Signing in moves no funds and costs nothing.`,
+      "3. Top up. Petals' agent runs on NEAR AI and is paid as I go. When my conversation with it asks for credit, I add some with Add 1 NEAR, or pay with another token from any chain.",
+      `4. Bring yourself in. Read ${site}/skill.md. Once I'm logged in, I press Connect an agent at the top of Petals' side panel and paste here what it copies: it carries my agent key. Follow it, so you show under Your agents and can take the jobs Petals' agent hands out.`,
+      "5. Talk to Petals. I name a community, a wallet or a contract, and Petals' agent maps how power moves in it.",
+      'Never ask me for my seed phrase or private key.',
+    ].join('\n\n'),
 } as const;
