@@ -5,6 +5,7 @@ import {
   canonicalJson,
   DEFAULT_VIEW,
   DEFAULT_VIEW_V1,
+  DEFAULT_VIEW_V2_0,
   pictureQuery,
   sha256Hex,
   viewHash,
@@ -531,7 +532,7 @@ describe("through the viewer's view (one-source.md, step 2)", () => {
     }
   });
 
-  test("a picture is drawn with the view its address names; the v1 default's hash and twelve characters are still the default", async () => {
+  test("a picture is drawn with the view its address names; a former default's hash draws as it did, twelve characters too", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     await keep(IDENTITY);
     const app = appOf();
@@ -544,10 +545,14 @@ describe("through the viewer's view (one-source.md, step 2)", () => {
     );
     const theDefault = (await run('render_flower', { spec, view: DEFAULT_VIEW })).render_sha256;
     expect(await drawn(path)).toBe(theDefault);
-    // addresses made before view/v2 name the v1 default, which draws the same (annotation-layer.md, step 6)
-    expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW_V1).slice(0, 12)}`)).toBe(theDefault);
-    expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW_V1)}`)).toBe(theDefault);
     expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW)}`)).toBe(theDefault);
+    // addresses made before view/v2 name the v1 default, and those made until 11 Nov the v2 one: each draws as
+    // it did (annotation-layer.md, step 6), the same picture, since v2's added only labels on identity
+    const former = (await run('render_flower', { spec, view: DEFAULT_VIEW_V2_0 })).render_sha256;
+    expect(former).not.toBe(theDefault);
+    expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW_V1).slice(0, 12)}`)).toBe(former);
+    expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW_V1)}`)).toBe(former);
+    expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW_V2_0)}`)).toBe(former);
     expect((await app.request(`${path}?view=${'1'.repeat(64)}`)).status).toBe(404);
   });
 

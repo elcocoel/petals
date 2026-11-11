@@ -1,6 +1,6 @@
 // The petal look, V1 (#76; design/flower-art-direction/default-system-vnext.md, Elco 11 Nov), for /lab first: five
 // keys handed out from the most common value to the rarest, grey apart; the highlight's tones from the petal's own
-// colour; its stroke inside the petal; and a reading with no minimum height when asked for one.
+// colour; its stroke inside the petal; and straight heights with no minimum (the default since 11 Nov).
 import { describe, expect, test } from 'vitest';
 import { HEIGHT_FLOOR } from '../src/reading/encodings.ts';
 import { readFlower } from '../src/reading/index.ts';
@@ -135,20 +135,22 @@ describe('a reading with no minimum height', () => {
     },
   };
 
-  test('asked for one, a petal is as tall as its share over the largest, and no taller', () => {
-    const r = readFlower(goldenSpec(c), c.snapshot(), straight, [], { floor: 0 });
-    const real = r.petals.filter((p) => !p.tail);
-    const max = Math.max(...real.map((p) => p.share));
-    for (const p of real) expect(p.height).toBeCloseTo(p.share / max, 12);
-    // the tail stands for its average member, far under the old floor
+  test('straight, a petal is as tall as its share over the largest, everyone else too, and no taller', () => {
+    const r = readFlower(goldenSpec(c), c.snapshot(), straight);
+    const max = Math.max(...r.petals.map((p) => p.share));
+    for (const p of r.petals) expect(p.height).toBeCloseTo(p.share / max, 12);
+    // no minimum: the smallest are far under the old floor
     expect(Math.min(...r.petals.map((p) => p.height))).toBeLessThan(HEIGHT_FLOOR);
-    expect(new Set(real.map((p) => p.width))).toEqual(new Set([1]));
+    expect(new Set(r.petals.map((p) => p.width))).toEqual(new Set([1]));
   });
 
-  test('not asked, the floor stays, and the default flower reads as it always has', () => {
-    const r = readFlower(goldenSpec(c), c.snapshot(), straight);
+  test('on the other scales the floor stays, the tail its average member, and the flower reads as it always has', () => {
+    const r = readFlower(goldenSpec(c), c.snapshot());
     expect(Math.min(...r.petals.map((p) => p.height))).toBeGreaterThanOrEqual(HEIGHT_FLOOR);
-    expect(readFlower(goldenSpec(c), c.snapshot())).toEqual(readGolden(c));
+    expect(r).toEqual(readGolden(c));
+    // a floor asked for still holds on the straight scale
+    const floored = readFlower(goldenSpec(c), c.snapshot(), straight, [], { floor: HEIGHT_FLOOR });
+    expect(Math.min(...floored.petals.map((p) => p.height))).toBeGreaterThanOrEqual(HEIGHT_FLOOR);
   });
 });
 

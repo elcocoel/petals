@@ -31,7 +31,7 @@ import { createHash } from 'node:crypto';
 import {
   canonicalJson,
   DEFAULT_VIEW,
-  DEFAULT_VIEW_V1,
+  FORMER_DEFAULTS,
   type Price,
   priceHash,
   TOOLS_VERSION,
@@ -58,7 +58,6 @@ import { reconcile, recordOf } from './usage.ts';
 const HASH = /^[0-9a-f]{64}$/;
 const isPerson = (subject: string | null): subject is string => !!subject?.startsWith('prs_');
 const DEFAULT_HASH = viewHash(DEFAULT_VIEW);
-const DEFAULT_V1_HASH = viewHash(DEFAULT_VIEW_V1);
 const IMMUTABLE = 'public, max-age=31536000, immutable';
 /** how many of a person's latest records their usage lists */
 const USAGE_LISTED = 500;
@@ -148,8 +147,9 @@ export function meRoutes(d: MeDeps): Hono {
 
   async function viewOf(hash: string): Promise<View | null> {
     if (hash === DEFAULT_HASH) return DEFAULT_VIEW;
-    // the default before labels (view/v1): pictures made before view/v2 name it, and it draws the same
-    if (hash === DEFAULT_V1_HASH) return DEFAULT_VIEW_V1;
+    // a former default (view/v1's, and view/v2's until 11 Nov): pictures made then name it, and it draws as it did
+    const former = FORMER_DEFAULTS.get(hash);
+    if (former) return former;
     const row = await store.viewDoc.get(hash);
     return row ? (JSON.parse(row.body) as View) : null;
   }

@@ -6,13 +6,14 @@ import { readFlower } from '../src/reading/index.ts';
 import { choicesOf, encodingsOf, piecesOf } from '../src/reading/view.ts';
 import { renderFlower } from '../src/render/index.ts';
 import type { View } from '../src/types/index.ts';
-import { DEFAULT_VIEW } from '../src/view/index.ts';
+import { DEFAULT_VIEW, DEFAULT_VIEW_V2_0 } from '../src/view/index.ts';
 import { GOLDEN_CASES, goldenSpec, readGolden } from './golden-cases.ts';
 
 const caseOf = (name: string) =>
   GOLDEN_CASES.find((c) => c.name === name) as (typeof GOLDEN_CASES)[0];
+// the former default, which reads as the agent's own convention does, so a pick is the only difference
 const withView = (edit: (d: View['dimensions']) => void): View => {
-  const v = structuredClone(DEFAULT_VIEW);
+  const v = structuredClone(DEFAULT_VIEW_V2_0);
   edit(v.dimensions);
   return v;
 };
@@ -27,14 +28,31 @@ describe('without a view', () => {
 
 describe('with the default view', () => {
   test.each(['near-validators-default', 'house-of-stake-default'])(
-    'the default flower %s reads exactly as without one',
+    'the default flower %s reads exactly as without one, in the default until 11 Nov',
     (name) => {
       const c = caseOf(name);
       const spec = goldenSpec(c);
-      expect(readFlower(spec, c.snapshot(), DEFAULT_VIEW)).toEqual(readFlower(spec, c.snapshot()));
-      expect(renderFlower(spec, c.snapshot(), { view: DEFAULT_VIEW }).render_sha256).toBe(
+      expect(readFlower(spec, c.snapshot(), DEFAULT_VIEW_V2_0)).toEqual(
+        readFlower(spec, c.snapshot()),
+      );
+      expect(renderFlower(spec, c.snapshot(), { view: DEFAULT_VIEW_V2_0 }).render_sha256).toBe(
         renderFlower(spec, c.snapshot()).render_sha256,
       );
+    },
+  );
+
+  test.each(['near-validators-default', 'house-of-stake-default'])(
+    "in today's default %s is straight: every petal as wide, as tall as its share, everyone else too, no minimum",
+    (name) => {
+      const c = caseOf(name);
+      const r = readFlower(goldenSpec(c), c.snapshot(), DEFAULT_VIEW);
+      const most = Math.max(...r.petals.map((p) => p.share));
+      for (const p of r.petals) {
+        expect(p.width).toBe(1);
+        expect(p.height).toBeCloseTo(p.share / most, 12);
+      }
+      const tail = r.petals.find((p) => p.tail);
+      expect(tail?.height).toBeCloseTo((tail?.share ?? 0) / most, 12);
     },
   );
 

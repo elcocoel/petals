@@ -4,8 +4,17 @@ import { formatDecimal } from '../decimal.ts';
 import { measureTable } from '../tables.ts';
 import type { Encoding, PetalRow, Snapshot, Spec } from '../types/index.ts';
 
-/** A bar never vanishes: the height encoding resolves into [HEIGHT_FLOOR, 1]. */
+/** A bar never vanishes: the height encoding resolves into [HEIGHT_FLOOR, 1]; on the straight scale it can. */
 export const HEIGHT_FLOOR = 0.03;
+
+/**
+ * Straight heights (share on the linear scale; the art direction's, the default since 11 Nov, #76): twice as
+ * much is twice as tall, with no minimum, and everyone else as tall as all it holds, on the one scale whose top
+ * is the largest petal, it included (Elco, 11 Nov: "everyone else should be 1 petal, the correct size for the
+ * percentage it represents").
+ */
+export const isStraight = (height: Encoding): boolean =>
+  height.by === 'share' && height.scale === 'linear';
 
 /** Width: log share mapped onto [1, max_ratio], so the widest side is at most max_ratio times the
  * narrowest. `equal` gives every side the same length. The tail takes part like any petal. */
@@ -21,7 +30,8 @@ export function widthFactors(rows: PetalRow[], width: Encoding): number[] {
 /**
  * Height per petal: `sqrt` share / max share, `linear` share / max share, `log` amount between the
  * smallest and largest petal, `m:<metric>` metric / max metric, `equal` 0.82. The tail stands for
- * its average member (its mean share, mean amount, mean metric).
+ * its average member (its mean share, mean amount, mean metric), except on the straight scale, where it
+ * stands for all it holds (isStraight).
  */
 export function heightValues(
   rows: PetalRow[],
@@ -31,6 +41,10 @@ export function heightValues(
   const real = rows.filter((r) => !r.tail);
   const per = (r: PetalRow, x: number) => (r.tail && r.count ? x / r.count : x);
   if (height.by === 'equal') return rows.map(() => 0.82);
+  if (isStraight(height)) {
+    const max = Math.max(...rows.map((r) => r.share)) || 1;
+    return rows.map((r) => r.share / max);
+  }
   if (height.by === 'share') {
     const max = Math.max(...real.map((r) => r.share)) || 1;
     return rows.map((r) => {
