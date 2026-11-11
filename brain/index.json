@@ -233,14 +233,14 @@
       "tools": [
         "read_page",
         "search",
-        "add_note"
+        "add_annotation"
       ],
       "continues": [
         "going-deeper"
       ],
       "status": "partial",
       "file": "chapters/open-source-leads.md",
-      "sha256": "e3f6831a23fed211db6ae2f85dfc2a845e92643352a63e298f521f93af03218e"
+      "sha256": "2e92e2650fb5dcdd217b3a3f337dbbcc36b139238f5f9c7af65714ec353cf0d5"
     },
     {
       "id": "over-time",
