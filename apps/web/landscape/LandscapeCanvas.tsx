@@ -16,10 +16,12 @@ import { NavItem } from '../components/ui/NavItem.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
+import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
 import { mapClaimGroups } from '../lib/map-claims.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
 import type { LegendEdit } from '../lib/view-edit.ts';
+import { useMapBlocs } from '../viewmodels/useMapBlocs.ts';
 import { useMapClaims } from '../viewmodels/useMapClaims.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
 import type { Continent, Place } from './places.ts';
@@ -82,6 +84,7 @@ function Land({
   lines,
   inside,
   clearOfChains,
+  highlight,
 }: {
   data: LandscapeData;
   probe: boolean;
@@ -96,6 +99,8 @@ function Land({
   /** told when the map goes into a flower and comes out */
   inside: (yes: boolean, at: number) => void;
   clearOfChains: boolean;
+  /** the chosen group's petals to highlight inside the flower you're in (#94), or null */
+  highlight: readonly string[] | null;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
@@ -114,6 +119,9 @@ function Land({
   useEffect(() => {
     at.current?.choose?.(selected);
   }, [selected]);
+  useEffect(() => {
+    at.current?.highlight?.(highlight);
+  }, [highlight]);
   return (
     // surface.canvas
     <svg
@@ -190,9 +198,17 @@ export function LandscapeCanvas({
   const [inside, setInside] = useState(focus >= 0);
   // the flower it's in, by its place on this chain's map: what's said about its map is asked for then
   const [entered, setEntered] = useState(-1);
+  // the group chosen in the legend's Highlight row (#94), lit inside the flower; leaving it clears it
+  const [bloc, setBloc] = useState<string | null>(null);
+  const [blocsOpen, setBlocsOpen] = useState(false);
+  const [span, setSpan] = useState<BlocSpan>('recent');
   const toldInside = useCallback((yes: boolean, at: number) => {
     setInside(yes);
     setEntered(yes ? at : -1);
+    if (!yes) {
+      setBloc(null);
+      setBlocsOpen(false);
+    }
   }, []);
   const [claimsOpen, setClaimsOpen] = useState(false);
   const [openClaim, setOpenClaim] = useState<string | null>(null);
@@ -236,6 +252,9 @@ export function LandscapeCanvas({
   // What Petals' own mapping says about the map you're in, under each petal's name (lib/map-claims.ts)
   const inFlower = land && entered >= 0 ? data.flowers[land.from[entered] ?? -1] : undefined;
   const claims = useMapClaims(legend ? (inFlower?.map ?? null) : null);
+  const blocs = useMapBlocs(legend ? (inFlower?.map ?? null) : null, span);
+  const choices = useMemo(() => (blocs ? blocChoices(blocs) : []), [blocs]);
+  const lit = useMemo(() => choices.find((c) => c.id === bloc)?.members ?? null, [choices, bloc]);
   const claimGroups = useMemo(() => {
     if (!claims || claims.length === 0 || !inFlower) return [];
     const names = new Map(
@@ -261,6 +280,7 @@ export function LandscapeCanvas({
           lines={lines}
           inside={toldInside}
           clearOfChains={clearOfChains}
+          highlight={lit}
         />
       )}
       {/* The overlays, down the left: the chain list, then the legend under it, so they never meet. The aside is
@@ -307,6 +327,24 @@ export function LandscapeCanvas({
             keys={inFlower ? flowerKeys(inFlower.reading.petals) : []}
             keysNote={inFlower ? undefined : panelWords.legendColours}
             edit={legend === 'read' ? undefined : legend}
+            groups={
+              inFlower && blocs
+                ? {
+                    choices,
+                    chosen: bloc,
+                    open: blocsOpen,
+                    span,
+                    period: periodWords(blocs),
+                    onOpen: () => setBlocsOpen((now) => !now),
+                    onChoose: setBloc,
+                    // other votes are other blocs: the chosen one goes with them
+                    onSpan: (s) => {
+                      setSpan(s);
+                      setBloc(null);
+                    },
+                  }
+                : undefined
+            }
             fold={{ open: legendOpen, onToggle: () => setLegendOpen((now) => !now) }}
           />
         )}
