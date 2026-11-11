@@ -8,7 +8,7 @@
 import { notFound } from 'next/navigation';
 import { LandscapeCanvas } from '../../../landscape/LandscapeCanvas.tsx';
 import { benchLandscape, withMarks } from '../../../landscape/land.ts';
-import { mapList, mapsKeys } from '../../../lib/maps.ts';
+import { mapList } from '../../../lib/maps.ts';
 import { viewerView } from '../../../lib/viewer-view.ts';
 
 export const dynamic = 'force-dynamic';
@@ -27,12 +27,11 @@ export default async function MapLab({ searchParams }: { searchParams: Promise<Q
   const read = await benchLandscape(hash);
   if ('error' in read) return <p className="error">The map couldn't be read: {read.error}</p>;
   const far = q.far === 'wave' ? 'wave' : null;
-  // the maps' cards: the legend's keys, and with the far wave each flower named and marked by its map's own
+  // the maps' cards: with the far wave each flower named and marked by its map's own
   // mark (#85, #84)
   const cards = await mapList(hash);
-  const marked =
+  const data =
     far && cards.ok ? withMarks(read, new Map(cards.value.maps.map((c) => [c.id, c.mark]))) : read;
-  const data = { ...marked, keys: cards.ok ? mapsKeys(cards.value.maps) : [] };
   // the everything map (Elco, 11 Nov): with the far wave, the lines lean too (#87)
   return (
     <LandscapeCanvas

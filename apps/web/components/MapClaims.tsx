@@ -6,13 +6,10 @@
 // with who found it and when. Never "verified". Props only.
 import type { MapClaimGroup } from '../lib/map-claims.ts';
 import { mapClaimWords as words } from '../lib/map-claims.ts';
+import { LineRow } from './ui/LineRow.tsx';
 import { Mono } from './ui/Mono.tsx';
 import { Overlay } from './ui/Overlay.tsx';
 import { TextLink } from './ui/TextLink.tsx';
-
-/** A row that answers as the panel's do (NavItem's fill), but holds a claim's lines. */
-const ROW =
-  'flex h-auto w-full flex-col items-start gap-space-4 bg-transparent px-space-8 py-space-8 text-left whitespace-normal text-primary hover:bg-tint hover:opacity-100 aria-expanded:bg-tint';
 
 export function MapClaims({
   groups,
@@ -43,13 +40,7 @@ export function MapClaims({
             <ul className="m-0 flex list-none flex-col p-0">
               {g.lines.map((l) => (
                 <li key={l.key}>
-                  <button
-                    type="button"
-                    data-b="item"
-                    aria-expanded={open === l.key}
-                    onClick={() => onOpen(l.key)}
-                    className={ROW}
-                  >
+                  <LineRow expanded={open === l.key} onClick={() => onOpen(l.key)}>
                     {/* two lines until it's pressed: a claim can be a paragraph */}
                     <span
                       className={`type-ui wrap-anywhere ${open === l.key ? '' : 'line-clamp-2'}`}
@@ -59,7 +50,7 @@ export function MapClaims({
                     <Mono as="span" tone="muted">
                       {[l.tag, l.kind, l.who].filter(Boolean).join(' · ')}
                     </Mono>
-                  </button>
+                  </LineRow>
                   {open === l.key && (
                     <div className="flex flex-col gap-space-4 px-space-8 pb-space-8">
                       <Mono as="span" tone="muted">

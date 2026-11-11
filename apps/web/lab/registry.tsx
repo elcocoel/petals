@@ -71,6 +71,7 @@ import { Footer } from '../components/ui/Footer.tsx';
 import { GalleryCard } from '../components/ui/GalleryCard.tsx';
 import { Icon, type IconName } from '../components/ui/Icon.tsx';
 import { IconButton } from '../components/ui/IconButton.tsx';
+import { LineRow } from '../components/ui/LineRow.tsx';
 import { MetaRow } from '../components/ui/MetaRow.tsx';
 import { Mono } from '../components/ui/Mono.tsx';
 import { Nav } from '../components/ui/Nav.tsx';
@@ -2955,6 +2956,37 @@ export const registry: LabEntry[] = [
               />
               <OrgBadge name="RaidGuild" symbol="RAID" types={['DAO']} />
             </div>
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'LineRow',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/LineRow.tsx',
+    states: [
+      {
+        name: 'closed: a few lines that wrap, answering as the panel rows do',
+        render: () => (
+          <div className="w-tile-width">
+            <LineRow expanded={false} onClick={() => undefined}>
+              <span className="type-ui">
+                A claim's words, as long as they are, two lines at most here
+              </span>
+            </LineRow>
+          </div>
+        ),
+      },
+      {
+        name: 'open: the soft fill while what is under it shows',
+        render: () => (
+          <div className="w-tile-width">
+            <LineRow expanded onClick={() => undefined}>
+              <span className="type-ui">A claim's words</span>
+            </LineRow>
           </div>
         ),
       },

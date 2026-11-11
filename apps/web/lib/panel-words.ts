@@ -35,6 +35,8 @@ export const panelWords = {
   signOut: 'Disconnect',
   /** The legend's head (design/legend.md): the person's view as a key. */
   legend: 'Legend',
+  /** Under its Colour, on a map: each flower keys its own kinds (#76's keys, by how many petals carry each). */
+  legendColours: "Each flower's own: its most common kind first",
   /**
    * Settings (coordinator/one-source.md, step 7): how each dimension draws data, for every petal you look
    * at. The dimensions' names are the view's own (view/v2); the rest are drafts.

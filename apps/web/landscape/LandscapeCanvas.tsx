@@ -15,9 +15,9 @@ import { NavItem } from '../components/ui/NavItem.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
-import type { LegendKey } from '../lib/flower-view.ts';
 import { mapClaimGroups } from '../lib/map-claims.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
+import { panelWords } from '../lib/panel-words.ts';
 import type { LegendEdit } from '../lib/view-edit.ts';
 import { useMapClaims } from '../viewmodels/useMapClaims.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
@@ -126,12 +126,10 @@ export function LandscapeCanvas({
   clearOfChains = false,
   legend = null,
 }: {
-  /** with the colours its maps paint (their cards' keys), for the legend */
   data: {
     flowers: CanvasFlower[];
     roads: Road[];
     chains: CanvasChain[];
-    keys?: readonly LegendKey[];
   };
   probe?: boolean;
   /** what it fills: the window, or the positioned area it's in */
@@ -289,7 +287,9 @@ export function LandscapeCanvas({
             view={person.view}
             drawn={inUse(person.view, EVERY_FLOWER)}
             pieces={EVERY_FLOWER}
-            keys={data.keys ?? []}
+            // each flower keys its own kinds by how common they are on it (#76), so a map has no one key
+            keys={[]}
+            keysNote={panelWords.legendColours}
             edit={legend === 'read' ? undefined : legend}
             fold={{ open: legendOpen, onToggle: () => setLegendOpen((now) => !now) }}
           />

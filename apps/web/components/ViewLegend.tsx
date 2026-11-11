@@ -36,6 +36,7 @@ export function ViewLegend({
   drawn,
   pieces,
   keys,
+  keysNote,
   edit,
   fold,
 }: {
@@ -46,6 +47,8 @@ export function ViewLegend({
   pieces: readonly Piece[];
   /** The colours this drawing paints, as its own key gives them. */
   keys: readonly LegendKey[];
+  /** What the colours go by, said under Colour where there's no one key to give (a whole map). */
+  keysNote?: string | undefined;
   edit?: LegendEdit | undefined;
   /** It folds to its bar, as every overlay can (design/overlays.md, line 6). */
   fold?: { open: boolean; onToggle: () => void } | undefined;
@@ -87,6 +90,13 @@ export function ViewLegend({
                   onPick={edit.onPick}
                   onScale={edit.onScale}
                 />
+              )}
+              {d === 'colour' && data !== null && keysNote && (
+                <p
+                  className={`my-0 pb-space-8 type-ui text-muted ${edit ? 'pl-space-32' : 'px-space-8'}`}
+                >
+                  {keysNote}
+                </p>
               )}
               {d === 'colour' && data !== null && keys.length > 0 && (
                 // the keys start where the rows' words do, past the chevron where there is one
