@@ -118,7 +118,7 @@ import { oopsWords } from '../lib/oops-words.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
 import { viewChoices } from '../lib/person-view.ts';
-import { claimsView, walletRows } from '../lib/profile-view.ts';
+import { claimsView, usageView, walletRows } from '../lib/profile-view.ts';
 import type { Done } from '../lib/thread.ts';
 import { answeredBy, composerView, type TurnRow, threadView } from '../lib/thread-view.ts';
 import { tipLine } from '../lib/tip.ts';
@@ -2596,6 +2596,43 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/Funds.tsx',
     states: [
       {
+        name: 'with its usage, call by call',
+        render: () => (
+          <Funds
+            balance={{ usd: '1.52', near: '0.42' }}
+            held={null}
+            phase="ready"
+            withdrew={null}
+            onWithdraw={() => {}}
+            usage={usageView(
+              [
+                {
+                  call: 'a',
+                  completion: 'a',
+                  at: '2026-11-11T18:00:00Z',
+                  model: 'deepseek-ai/DeepSeek-V4.1-Flash-1017',
+                  tokens: { in: 12034, cached: 0, out: 812 },
+                  charged_usd: 0.0031,
+                  reconciled_at: '2026-11-11T18:05:00Z',
+                },
+                {
+                  call: 'b',
+                  completion: 'b',
+                  at: '2026-11-11T17:40:00Z',
+                  model: 'zai-org/GLM-4.6',
+                  tokens: { in: 8001, cached: 2000, out: 1203 },
+                  charged_usd: 0.012,
+                  reconciled_at: null,
+                },
+              ],
+              0.0151,
+              3.6,
+              new Date('2026-11-11T20:00:00Z'),
+            )}
+          />
+        ),
+      },
+      {
         name: 'credit, as on the live site (no contract)',
         render: () => (
           <Funds
@@ -2703,6 +2740,18 @@ export const registry: LabEntry[] = [
                 proved_at: '2026-11-09T08:30:00Z',
               },
             ])}
+          />
+        ),
+      },
+      {
+        name: 'with Add a wallet, and a wallet that belongs to someone else',
+        render: () => (
+          <Wallets
+            wallets={walletRows([
+              { network: 'mainnet', account_id: 'a-name.near', proved_at: '2026-11-11T12:00:00Z' },
+            ])}
+            adding={{ kind: 'failed', why: 'That wallet already belongs to another account.' }}
+            onAdd={() => {}}
           />
         ),
       },

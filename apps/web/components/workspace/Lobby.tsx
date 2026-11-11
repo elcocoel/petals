@@ -19,7 +19,7 @@ import {
   type WithdrawPhase,
 } from '../../lib/lobby-view.ts';
 import type { Money } from '../../lib/pay.ts';
-import type { ClaimsView, WalletRow } from '../../lib/profile-view.ts';
+import type { AddWalletPhase, ClaimsView, UsageView, WalletRow } from '../../lib/profile-view.ts';
 import { LegendKeys } from '../Legend.tsx';
 import { MapList } from '../MapList.tsx';
 import { Badge } from '../ui/Badge.tsx';
@@ -42,7 +42,10 @@ export function Lobby({
   profile,
   editor,
   funds,
+  usage,
   wallets,
+  adding,
+  addWallet,
   claims,
   conversations,
   map,
@@ -58,7 +61,11 @@ export function Lobby({
     withdrew: string | null;
     withdraw: () => void;
   };
+  /** Every call charged to them (usage/v1), in the Balance widget. */
+  usage: UsageView | 'reading' | 'unread';
   wallets: WalletRow[] | 'reading' | 'unread';
+  adding: AddWalletPhase;
+  addWallet: () => void;
   claims: ClaimsView | 'reading' | 'unread';
   conversations: ConversationRow[];
   map: LobbyMap;
@@ -77,7 +84,7 @@ export function Lobby({
               <Profile social={profile.social} onEdit={profile.edit} saved={profile.saved} />
             )}
           </div>
-          <Wallets wallets={wallets} />
+          <Wallets wallets={wallets} adding={adding} onAdd={addWallet} />
           <div className="grid min-w-0 lg:col-span-2">
             <Claims claims={claims} />
           </div>
@@ -87,6 +94,7 @@ export function Lobby({
             phase={funds.phase}
             withdrew={funds.withdrew}
             onWithdraw={funds.withdraw}
+            usage={usage}
           />
           <div className="grid min-w-0 lg:col-span-2">
             <Card

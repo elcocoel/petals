@@ -4,8 +4,10 @@
 // agents have kept about accounts, by how each is known, and their conversations. Pure: the words and the
 // arithmetic are here, and the views only lay them out. LOBBY's drafts, listed in design/journey-strings.md.
 import { type AnnotationRow, type ClaimLine, claimLines } from './claim-lines.ts';
+import { shortWhen } from './conversation-list.ts';
 import { chainLabel, dateLabel, shortId } from './flower-view.ts';
 import { shownAccount } from './lobby-view.ts';
+import { type Money, money, moneyWords } from './pay.ts';
 
 export const profilePageWords = {
   wallets: 'Wallets',
@@ -13,7 +15,11 @@ export const profilePageWords = {
   proven: 'Proven',
   /** Under a wallet: when it signed. */
   provedOn: (date: string) => `Signed in on ${date}`,
-  walletsNote: 'Each one signed a message when you signed in with it, so it’s proven yours.',
+  walletsNote: 'Each one signed a message with its own key, so it’s proven yours.',
+  /** The Wallets widget's one action (Elco, 11 Nov: "have the wallets one allow me to add more wallets"). */
+  addWallet: 'Add a wallet',
+  adding: 'Waiting for your wallet…',
+  notAdded: 'That wallet wasn’t added. Try again.',
   claims: 'Claims',
   /** How many accounts the claims are about. */
   about: (n: number) => (n === 1 ? 'About 1 account' : `About ${n} accounts`),
@@ -24,6 +30,12 @@ export const profilePageWords = {
   unread: 'This can’t be read right now.',
   reading: 'Reading…',
 } as const;
+
+/** Where adding a wallet is: offered, waiting for the wallet, or it didn't go through and why. */
+export type AddWalletPhase =
+  | { kind: 'ready' }
+  | { kind: 'adding' }
+  | { kind: 'failed'; why: string };
 
 /** A wallet as GET /api/v1/me lists it. */
 export interface ProvenWallet {
@@ -97,4 +109,68 @@ export function claimsView(rows: readonly AnnotationRow[]): ClaimsView {
     .filter((k) => counted.has(k))
     .map((k) => ({ kind: k, count: counted.get(k) ?? 0 }));
   return { total: groups.reduce((n, g) => n + g.lines.length, 0), kinds, groups };
+}
+
+/**
+ * The Balance widget's usage (Elco, 11 Nov: "turn the balance widget into like a full-blown professional
+ * usages widget"): every model call charged to the person (usage/v1, GET /api/v1/me/usage), newest first,
+ * with its tokens, what it cost, and whether NEAR AI's own bill has confirmed it. LOBBY's drafts.
+ */
+export const usageWords = {
+  title: 'Usage',
+  summary: (calls: number, spent: string) =>
+    `${calls === 1 ? '1 call' : `${calls} calls`}, ${spent} spent`,
+  none: 'No calls yet. Each answer Petals’ agent gives you shows here with what it cost.',
+  tokens: (inn: string, out: string) => `${inn} in · ${out} out`,
+  /** NEAR AI's own bill confirmed it. */
+  billed: 'billed',
+  /** Counted at the list price, before NEAR AI's bill. */
+  counted: 'counted',
+  reading: 'Reading…',
+  unread: 'Your usage can’t be read right now.',
+} as const;
+
+/** A call as GET /api/v1/me/usage lists it (usage/v1): only what the widget reads. */
+export interface UsageCall {
+  call: string | null;
+  completion: string;
+  at: string;
+  model: string;
+  tokens: { in: number; cached: number; out: number };
+  charged_usd: number;
+  reconciled_at: string | null;
+}
+
+export interface UsageView {
+  /** "31 calls, $0.42 · 0.12 NEAR spent" */
+  summary: string;
+  rows: {
+    key: string;
+    model: string;
+    when: string;
+    tokens: string;
+    cost: Money;
+    billed: boolean;
+  }[];
+}
+
+const group = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+export function usageView(
+  calls: readonly UsageCall[],
+  spentUsd: number,
+  nearUsd: number | null,
+  now: Date = new Date(),
+): UsageView {
+  return {
+    summary: usageWords.summary(calls.length, moneyWords(money(spentUsd, nearUsd, 'cost'))),
+    rows: calls.map((c) => ({
+      key: c.call ?? c.completion,
+      model: c.model.split('/').at(-1) ?? c.model,
+      when: shortWhen(c.at, now),
+      tokens: usageWords.tokens(group(c.tokens.in), group(c.tokens.out)),
+      cost: money(c.charged_usd, nearUsd, 'cost'),
+      billed: c.reconciled_at !== null,
+    })),
+  };
 }
