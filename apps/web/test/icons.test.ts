@@ -17,6 +17,8 @@ const DRAWINGS = [
   'components/ui/OrgBadge.tsx',
   // the hero story's flower: a symbol of its own, not the renderer, so it never goes out of date (Elco, 11 Nov)
   'components/landing/StoryFlower.tsx',
+  // the hero's glass: the drawn material behind its two bubbles (Elco, 11 Nov: "Minority Report")
+  'components/landing/HeroGlass.tsx',
 ];
 
 const sources = (dir: string): string[] =>

@@ -44,14 +44,14 @@ const WIDE: readonly Shot[] = [
   { flower: { x: 50, y: 46, scale: 0.9 }, question: topRight(97, 4), answer: bottomLeft(3, 96) },
 ];
 
-/** A narrow stage, three by four: the words above and below, the flower between them moving less. */
+/** A narrow stage, two by three: the words above and below, the flower between them moving less. */
 const NARROW: readonly Shot[] = [
-  { flower: { x: 50, y: 50, scale: 0.92 }, question: topLeft(2, 2), answer: bottomRight(98, 98) },
-  { flower: { x: 46, y: 53, scale: 0.94 }, question: topRight(98, 2), answer: bottomLeft(2, 98) },
-  { flower: { x: 54, y: 50, scale: 0.92 }, question: topLeft(2, 2), answer: bottomRight(98, 98) },
-  { flower: { x: 50, y: 46, scale: 0.88 }, question: topRight(98, 2), answer: bottomLeft(2, 98) },
-  { flower: { x: 50, y: 50, scale: 0.8 }, question: topLeft(2, 2), answer: bottomRight(98, 98) },
-  { flower: { x: 50, y: 48, scale: 0.96 }, question: topRight(98, 2), answer: bottomLeft(2, 98) },
+  { flower: { x: 50, y: 45, scale: 0.9 }, question: topLeft(2, 2), answer: bottomRight(98, 98) },
+  { flower: { x: 47, y: 47, scale: 0.86 }, question: topRight(98, 2), answer: bottomLeft(2, 98) },
+  { flower: { x: 53, y: 45, scale: 0.88 }, question: topLeft(2, 2), answer: bottomRight(98, 98) },
+  { flower: { x: 52, y: 43, scale: 0.84 }, question: topRight(98, 2), answer: bottomLeft(2, 98) },
+  { flower: { x: 50, y: 46, scale: 0.78 }, question: topLeft(2, 2), answer: bottomRight(98, 98) },
+  { flower: { x: 50, y: 44, scale: 0.92 }, question: topRight(98, 2), answer: bottomLeft(2, 98) },
 ];
 
 /** How long the camera takes to move the flower from one shot to the next. */
@@ -64,12 +64,16 @@ export const shotOf = (beat: number, wide: boolean): Shot =>
 /** Where the flower is at a moment: on its way from the last shot to this one, as the beat opens. */
 export function flowerAt(beat: number, t: number, wide: boolean, fresh = false) {
   const to = shotOf(beat, wide).flower;
-  if (fresh && beat === 0) return to;
+  if (fresh && beat === 0) return { ...to, lean: 0 };
   const from = shotOf((beat + 5) % 6, wide).flower;
-  const k = ease.inOutCubic(Math.min(1, Math.max(0, t / MOVE_MS)));
+  const p = Math.min(1, Math.max(0, t / MOVE_MS));
+  const k = ease.inOutCubic(p);
+  // how fast it's travelling, 0 to 1 at the middle of the move: the flower leans into it, then settles
+  const speed = (p < 0.5 ? 12 * p * p : 3 * (2 - 2 * p) ** 2) / 3;
   return {
     x: from.x + (to.x - from.x) * k,
     y: from.y + (to.y - from.y) * k,
     scale: from.scale + (to.scale - from.scale) * k,
+    lean: (to.x - from.x) * speed * 0.45,
   };
 }
