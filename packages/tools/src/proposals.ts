@@ -4,7 +4,16 @@
 // server runs, and adds a DAO's map first when asked. Read again, a map's proposals are replaced.
 import { type Proposals, validateProposals } from '@petal/core';
 import type { Spec } from '@petal/core/types';
-import { defaultPool, readSputnik, resolveNearAt, sputnikProposals } from '@petal/inputs';
+import {
+  baalLogs,
+  baalOf,
+  baalProposals,
+  defaultPool,
+  EVM_CHAINS,
+  readSputnik,
+  resolveNearAt,
+  sputnikProposals,
+} from '@petal/inputs';
 import { privateStore } from './drafts.ts';
 import { mapsOf, mapViews } from './map.ts';
 import { callTool } from './registry.ts';
@@ -33,16 +42,34 @@ export const cardProposals = (p: Proposals): CardProposals => ({
   read_at: p.read_at,
 });
 
-/** The readers whose maps have proposals Petals reads, and how. */
-const READERS: Record<
-  string,
-  (about: string, address: string, readAt: string) => Promise<Proposals>
-> = {
-  'sputnik-dao': async (about, dao, readAt) => {
+type Reader = (
+  card: { id: string; chain: string; address: string },
+  readAt: string,
+) => Promise<Proposals | null>;
+
+/** A token map's DAO, when its token is a Baal's shares (RaidGuild's): that DAO's proposals; else none. */
+const baalBehind: Reader = async (card, readAt) => {
+  const chain = EVM_CHAINS[card.chain];
+  if (!chain) return null;
+  const dao = await baalOf(chain, card.address);
+  return dao ? baalProposals(card.id, chain, dao, await baalLogs(chain, dao), readAt) : null;
+};
+
+/** The readers whose maps have proposals Petals reads, and how; null: this map has none to read. */
+const READERS: Record<string, Reader> = {
+  'sputnik-dao': async (card, readAt) => {
     const pool = defaultPool();
     const at = await resolveNearAt(pool, 'latest');
-    return sputnikProposals(about, dao, await readSputnik(pool, dao, at), at, readAt);
+    return sputnikProposals(
+      card.id,
+      card.address,
+      await readSputnik(pool, card.address, at),
+      at,
+      readAt,
+    );
   },
+  'erc20-holders': baalBehind,
+  'erc20-votes': baalBehind,
 };
 
 export interface ProposalRun {
@@ -66,13 +93,14 @@ export async function proposalMaps(
     const read = READERS[card.readings[0]?.network ?? ''];
     if (!read || !card.address) continue;
     const at = (o.now ?? (() => new Date()))().toISOString();
-    let p: Proposals;
+    let p: Proposals | null;
     try {
-      p = await read(card.id, card.address, at);
+      p = await read({ id: card.id, chain: card.chain, address: card.address }, at);
     } catch (e) {
       log(`${card.id}: not read, ${(e as Error).message}`);
       continue;
     }
+    if (!p) continue;
     const checked = validateProposals(p);
     if (!checked.ok) {
       log(
