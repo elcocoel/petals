@@ -2,7 +2,7 @@
 // claims (lab/map-claims-fixtures.ts, SYSTEMS's samples).
 import { describe, expect, test } from 'vitest';
 import { LAB_CLAIM_NAMES, LAB_MAP_CLAIMS } from '../lab/map-claims-fixtures.ts';
-import { mapClaimGroups, noteOf, toolOf } from '../lib/map-claims.ts';
+import { mapClaimGroups, noteOf, toolOf, wordsOf } from '../lib/map-claims.ts';
 
 describe("the mapping's claims, in words", () => {
   test('who said it: the tool or the model by its name', () => {
@@ -39,5 +39,14 @@ describe("the mapping's claims, in words", () => {
     const inferred = lines.find((l) => l.kind === 'inferred');
     expect(inferred?.method).toBe('retained-ballot-pair-agreement@1');
     expect(inferred?.evidence[0]?.found).toMatch(/^found by codex-solana-wave, 11 Nov 2026$/);
+  });
+
+  test('long addresses and hashes in the words read as their ends, whole on hover', () => {
+    const w = wordsOf(
+      'Ballots: 8HVYKgq2PA4SCDuPZSfHBH1aupTBJYPVru6kq3UfuSX9 and 0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986 agree.',
+    );
+    expect(w.map((x) => x.text).join('')).toBe('Ballots: 8HVYKg…uSX9 and 0xf02f…e986 agree.');
+    expect(w[1]?.whole).toBe('8HVYKgq2PA4SCDuPZSfHBH1aupTBJYPVru6kq3UfuSX9');
+    expect(wordsOf('Plain words, no addresses.')).toEqual([{ text: 'Plain words, no addresses.' }]);
   });
 });
