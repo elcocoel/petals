@@ -1,0 +1,262 @@
+/* The documentation uses the app's type and colour roles, inside the existing site chrome. */
+.shell {
+  display: grid;
+  grid-template-columns: var(--spacing-rail-width) minmax(0, 1fr);
+  gap: var(--spacing-block-gap);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+}
+/* Widen only this reading column. Landing and panel layouts keep their own rules. */
+main:has(.shell) {
+  max-width: var(--spacing-page-width);
+}
+.skip {
+  position: absolute;
+  transform: translateY(-200vh);
+}
+.skip:focus-within {
+  position: static;
+  transform: none;
+  grid-column: 1 / -1;
+}
+.sidebar,
+.contents {
+  align-self: start;
+  position: sticky;
+  top: var(--spacing-block-gap);
+  max-height: calc(100vh - var(--spacing-column-gap));
+  overflow-y: auto;
+}
+.navTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-space-8);
+  margin-bottom: var(--spacing-block-gap);
+  font-weight: 600;
+}
+.navigation details {
+  margin-bottom: var(--spacing-space-16);
+}
+.navigation summary {
+  font-weight: 600;
+  margin-bottom: var(--spacing-space-8);
+}
+.navigation a {
+  display: block;
+  text-decoration: none;
+  padding: var(--spacing-space-4) var(--spacing-space-8);
+  border-left: var(--stroke) solid var(--hairline);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+.navigation a[aria-current="page"] {
+  color: var(--text-primary);
+  background: var(--tint);
+  border-color: var(--text-primary);
+  font-weight: 600;
+}
+.navigation a:hover,
+.contents a:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+.article {
+  min-width: 0;
+}
+.header {
+  margin-bottom: var(--spacing-space-32);
+}
+.eyebrow,
+.source {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-space-8);
+  color: var(--text-muted);
+}
+.eyebrow {
+  margin-bottom: var(--spacing-block-gap);
+}
+.header h1 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: var(--spacing-space-16);
+}
+.source {
+  align-items: start;
+}
+.source code {
+  font: inherit;
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+.status,
+.draft {
+  color: var(--text-muted);
+  margin-top: var(--spacing-space-16);
+}
+.draft {
+  border-left: var(--border-width-heavy) solid var(--hairline);
+  padding-left: var(--spacing-text-gap);
+}
+.prose {
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.prose h2,
+.prose h3,
+.prose h4,
+.sectionPages h2 {
+  font-size: inherit;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: var(--spacing-space-32);
+  margin-bottom: var(--spacing-text-gap);
+  scroll-margin-top: var(--spacing-block-gap);
+}
+.prose h3,
+.prose h4 {
+  margin-top: var(--spacing-block-gap);
+}
+.prose blockquote {
+  border-left: var(--border-width-heavy) solid var(--hairline);
+  padding-left: var(--spacing-space-16);
+  color: var(--text-muted);
+}
+.prose code,
+.prose pre {
+  font-family: var(--font-mono);
+  font-size: inherit;
+}
+.prose pre {
+  background: var(--tint);
+  border: var(--stroke) solid var(--hairline);
+  padding: var(--spacing-space-16);
+  overflow-x: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+  line-height: 1.6;
+}
+.prose table {
+  display: block;
+  overflow-x: auto;
+  width: 100%;
+  font: inherit;
+}
+.prose th {
+  background: var(--tint);
+}
+.prose th,
+.prose td {
+  min-width: var(--spacing-section-padding);
+}
+.prose li {
+  margin-bottom: var(--spacing-space-8);
+}
+.prose ul ul,
+.prose ol ol,
+.prose ul ol,
+.prose ol ul {
+  margin-top: var(--spacing-space-8);
+}
+.sectionPages {
+  margin-top: var(--spacing-space-32);
+}
+.sectionPages a {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-text-gap);
+  border-bottom: var(--stroke) solid var(--hairline);
+  padding-block: var(--spacing-text-gap);
+  text-decoration: none;
+}
+.sectionPages a:hover {
+  text-decoration: underline;
+}
+.footer {
+  margin-top: var(--spacing-column-gap);
+  padding-top: var(--spacing-block-gap);
+  border-top: var(--stroke) solid var(--hairline);
+}
+.footer a {
+  font: inherit;
+  white-space: normal;
+  text-align: left;
+}
+.pager {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-block-gap);
+  margin-top: var(--spacing-space-32);
+}
+.pager > div > span {
+  display: block;
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-space-8);
+}
+.pager > div:last-child {
+  text-align: right;
+}
+.contents {
+  display: none;
+  color: var(--text-muted);
+}
+.contents p {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.contents a,
+.mobileContents a {
+  display: block;
+  margin-bottom: var(--spacing-space-8);
+  text-decoration: none;
+}
+.contents a[data-level="3"],
+.mobileContents a[data-level="3"] {
+  padding-left: var(--spacing-text-gap);
+}
+.contents > a {
+  margin-top: var(--spacing-block-gap);
+}
+.mobileToggle {
+  display: none;
+}
+.mobileContents {
+  margin-bottom: var(--spacing-block-gap);
+}
+.mobileContents summary {
+  margin-bottom: var(--spacing-text-gap);
+  font-weight: 600;
+}
+@media (min-width: 1200px) {
+  .shell {
+    grid-template-columns: var(--spacing-rail-width) minmax(0, 1fr) var(--spacing-rail-width);
+    gap: var(--spacing-space-32);
+  }
+  .contents {
+    display: block;
+  }
+  .mobileContents {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sidebar {
+    position: static;
+    max-height: none;
+  }
+  .mobileToggle {
+    display: block;
+    padding-bottom: var(--spacing-space-16);
+    border-bottom: var(--stroke) solid var(--hairline);
+  }
+  .navigation {
+    display: none;
+    margin-top: var(--spacing-block-gap);
+  }
+  .navigation[data-open="true"] {
+    display: block;
+  }
+}
