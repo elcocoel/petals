@@ -484,6 +484,12 @@ export const MIGRATIONS: readonly string[] = [
     read_at TEXT NOT NULL
   );
   `,
+  // 26: what an agent says it can do, in its own words (Elco's swarm lean 2, 11 Nov), for Petals' agent to read
+  // when it hands out jobs: each worker's, from its waits, and the agent's own, from a connector's take_job.
+  `
+  ALTER TABLE agent ADD COLUMN can TEXT;
+  ALTER TABLE agent_worker ADD COLUMN can TEXT;
+  `,
 ];
 
 /**

@@ -94,7 +94,12 @@ const jobOut = (j: JobRow) => ({
 const THEN_REPORT =
   'Save who or what you find behind addresses with add_annotation as you go, never only in a file. Then report_job with link as exploration, this job id and result: { summary, steps, annotations: the ids add_annotation gave }, or failed and why. Then take_job again, until job is null.';
 
-async function takeWithKey(ctx: ToolContext, key: string, as: string | undefined) {
+async function takeWithKey(
+  ctx: ToolContext,
+  key: string,
+  as: string | undefined,
+  can: string | undefined,
+) {
   const store = lastingStore(ctx);
   const link = await agentKeyOf(store, key);
   if (!link) {
@@ -115,7 +120,8 @@ async function takeWithKey(ctx: ToolContext, key: string, as: string | undefined
     throw new ToolFailure('unauthorised', DISCONNECTED);
   }
   const at = ctx.now().toISOString();
-  await store.agent.seen({ owner, name, last_seen: at });
+  // what it says it can do, in its own words, for Petals' agent to read (swarm lean 2); unsaid, null
+  await store.agent.seen({ owner, name, last_seen: at, can: can?.trim() || null });
   const job = await store.job.takeFor(owner, name, at);
   if (!job) return { job: null, next: 'No job is open for you in any of their projects.' };
   const made = await makeLink(
@@ -137,7 +143,7 @@ async function takeWithKey(ctx: ToolContext, key: string, as: string | undefined
 }
 
 export const takeJob = defineTool<
-  { exploration?: string; agent_key?: string; as?: string },
+  { exploration?: string; agent_key?: string; as?: string; can?: string },
   object
 >({
   name: 'take_job',
@@ -160,6 +166,11 @@ export const takeJob = defineTool<
         maxLength: AGENT_NAME_MAX,
         description: 'with agent_key: the name you go by, e.g. claude-app or chatgpt',
       },
+      can: {
+        type: 'string',
+        description:
+          "with agent_key: what you can do for the person, in your own words: whether you split work among sub-agents, and on which models. Petals' agent reads it when it hands out jobs.",
+      },
     },
     { additionalProperties: false },
   ),
@@ -178,8 +189,8 @@ export const takeJob = defineTool<
     next: { type: 'string' },
   }),
   annotations: WRITES,
-  async run({ exploration, agent_key, as }, ctx) {
-    if (agent_key !== undefined) return takeWithKey(ctx, agent_key, as);
+  async run({ exploration, agent_key, as, can }, ctx) {
+    if (agent_key !== undefined) return takeWithKey(ctx, agent_key, as, can);
     if (!exploration) {
       throw new ToolFailure(
         'bad_input',

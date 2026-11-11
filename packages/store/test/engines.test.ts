@@ -361,8 +361,8 @@ describe.each(engines)('%s', (engine, open) => {
       await store.agent.seen({ owner, name: 'Codex', worker, last_seen: at });
     await store.agent.seen({ owner, name: 'Hermes', last_seen: AT });
     expect(await store.agent.workers(owner)).toEqual([
-      { key: 'codex', worker: 'w2', first_seen: AT, last_seen: LATER },
-      { key: 'codex', worker: 'w1', first_seen: LATER, last_seen: LATER },
+      { key: 'codex', worker: 'w2', first_seen: AT, last_seen: LATER, can: null },
+      { key: 'codex', worker: 'w1', first_seen: LATER, last_seen: LATER, can: null },
     ]);
     const x = u('exp');
     await store.exploration.create({

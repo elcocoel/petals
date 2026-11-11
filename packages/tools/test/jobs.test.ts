@@ -237,6 +237,20 @@ describe('take_job with the agent key', () => {
     expect((await store.job.list(id)).find((j) => j.id === 'job_1')?.taken_by).toBe('claude-app');
   });
 
+  test("a connector says what it can do with can (swarm lean 2): kept as the agent's own, the latest wins", async () => {
+    const { store, take } = await keyed();
+    await take({
+      agent_key: KEY,
+      as: 'claude-app',
+      can: 'I run in the cloud, with no sub-agents.',
+    });
+    expect((await store.agent.list('prs_a'))[0]?.can).toBe(
+      'I run in the cloud, with no sub-agents.',
+    );
+    await take({ agent_key: KEY, as: 'claude-app' });
+    expect((await store.agent.list('prs_a'))[0]?.can).toBeNull();
+  });
+
   test('a job sent to another agent stays for that one', async () => {
     const { id, store, take } = await keyed();
     await store.job.take(id, '2026-11-10T00:00:01.000Z');
