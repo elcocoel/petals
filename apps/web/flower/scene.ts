@@ -17,6 +17,7 @@ import { paintOf } from '@petal/core/wedge/paint';
 import {
   arcPath,
   arcsOf,
+  laneRadius,
   type Proposal,
   ringRadius,
   type Vote,
@@ -392,7 +393,7 @@ export function createScene(
     );
   }
   const arcSlots = arcs.map((a) => {
-    const d = arcPath(a.a0, a.a1);
+    const d = arcPath(a.a0, a.a1, laneRadius(a.lane));
     const seen = slot(
       el(
         'path',
@@ -400,7 +401,7 @@ export function createScene(
           d,
           fill: 'none',
           stroke: MUTED,
-          'stroke-width': 3,
+          'stroke-width': 2,
           'stroke-linecap': 'butt',
           'vector-effect': 'non-scaling-stroke',
         },
@@ -441,7 +442,7 @@ export function createScene(
     pointed = j;
     arcSlots.forEach((s, k) => {
       s.seen.set('stroke', k === j ? INK : MUTED);
-      s.seen.set('stroke-width', k === j ? 4 : 3);
+      s.seen.set('stroke-width', k === j ? 3 : 2);
     });
     dotLayer.replaceChildren();
     const p = j >= 0 ? byId.get(arcSlots[j]?.a.id ?? '') : undefined;
@@ -465,7 +466,9 @@ export function createScene(
     });
     const said = [`${count.for} for`, `${count.against} against`];
     if (count.abstain) said.push(`${count.abstain} abstained`);
-    voteWords?.text(`${p.title}, ${p.outcome}`);
+    // a proposal's own title can run to a paragraph: the first words, then its outcome
+    const title = p.title.length > 44 ? `${p.title.slice(0, 43).trimEnd()}…` : p.title;
+    voteWords?.text(`${title}, ${p.outcome}`);
     voteTally?.text(said.join('   ·   '));
     voteWords?.set('opacity', 1);
     voteTally?.set('opacity', 1);
