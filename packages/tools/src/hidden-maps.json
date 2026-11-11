@@ -1,0 +1,326 @@
+{
+  "note": "Maps hidden from the Power Map, never deleted: each stays in the store, its flower still opens, and taking its line out brings it back. Elco approved DAO SET's review on 11 Nov (board #96, research/dao-set-2026-11-11/REMOVALS.md): the 60 unverified factory groups, FLX and RGT (weak partial views), Nouns (until an NFT reader reads it), UXD (a stablecoin, out of the DAO showcase).",
+  "decided": "Elco, 11 Nov 2026, through PM's question tool (#96)",
+  "hidden": [
+    {
+      "about": "eip155:1:0x6243d8cea23066d098a15582d81a598b4e8391f4",
+      "name": "FLX",
+      "why": "A weak, partial view: 9 Nov reading observed only 3 active addresses in a partial window; live card count is 4. Reflexer itself may be relevant; this observation is not its holder census."
+    },
+    {
+      "about": "eip155:1:0x9c8ff314c9bc7f6e59a9d9225fb22946427edc03",
+      "name": "Nouns",
+      "why": "Hidden until an NFT reader can read it properly; it stays a candidate: ERC-721 Nouns was passed through erc20-holders; 9 Nov audit found residual holder-count vs NFT-unit inconsistency. Keep Nouns as a strong DAO candidate, replace misleading population reading."
+    },
+    {
+      "about": "eip155:1:0xd291e7a03283640fdc51b121ac401383a46cc623",
+      "name": "RGT",
+      "why": "A weak, partial view: 9 Nov reading observed only 3 active addresses in a partial window; live card count is 4, not proof of a four-holder DAO. It cannot explain whole-token power; preserve historical data and reassess the DAO separately."
+    },
+    {
+      "about": "eip155:100:0x30d1185c234a2e460f396e2fe3c71f5dc4a06add",
+      "name": "Accelerationist Voting",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xe4a3f70cc92b1124b9cc9291cd4109605889d4ce",
+      "name": "BBBB",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xf3b2d5ba6c817b84296a2f4ffac7370c86320f1f",
+      "name": "Baal Shares",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 4; no substantiated power story in collected record. Larger population does not establish relevance; verify before final removal."
+    },
+    {
+      "about": "eip155:100:0xf47036f0f89e1ab9beb7324d92d5f02058a060ce",
+      "name": "Baal Shares",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 3; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x2d4e2bb25aa4a2e45619dda1e10165cd4f463543",
+      "name": "Bandera",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x3565ce411050a2c0dc7f1efe8327c8582b000c5c",
+      "name": "BrefCoin",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x44136374ebbaf573d1447865450eed156a10b56f",
+      "name": "Cosmo Tokens",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 3; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xe24d2d0a1a6b1893cd643a2181a28a3c3609d034",
+      "name": "DAOLIST",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x4696a36d0daebc5022a423bd93fa7e1fd678396b",
+      "name": "DAONEW",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xb55f7061ec8171c73bf3104c2046fa508d1a8e67",
+      "name": "DAOtoken",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x7d2cdae751dd8efcd78257a47d14dfb64af7c86d",
+      "name": "DC3 Gold",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 13; no substantiated power story in collected record. Larger population does not establish relevance; verify before final removal."
+    },
+    {
+      "about": "eip155:100:0xb9360ebe22743462352f31b750660e8f4e22bd07",
+      "name": "Damned Cutlass Crew Token",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 5; no substantiated power story in collected record. Larger population does not establish relevance; verify before final removal."
+    },
+    {
+      "about": "eip155:100:0xfcdcd5eb88ef99d66e69c6acca0795a1c407f3fd",
+      "name": "FHNW",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xba04df17810233d0af36603ac5130b45b84d1df4",
+      "name": "FINE",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x4ea7e2b1b89afb5f2a430577e11ab1257dd357cb",
+      "name": "GP QATAR",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x6270e93a9759b41daa505c22e27a3644a68e23d3",
+      "name": "GP QATAR",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xdaff888f846a1c0aef8d984e5ae4e263a63eca87",
+      "name": "GorillaCoin",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x52bba37ba5fd75df4615856199995597efcab686",
+      "name": "Grow Fund 0x21",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x379c0ae332fc03f68090703c509e39a8877b4e64",
+      "name": "Loop",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 3; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xb1ccfbe7cc56ea39bf882ae94aab0999691ee794",
+      "name": "MyVote",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 3; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xb3623c672ad5ea25407ef3a406a0aee780360087",
+      "name": "PITICOIN",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x74fefb754eecf1d9503d5d5aa717ba7cd0121426",
+      "name": "Packer",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xad44911125693308aa945b4d4c4a8656bb89faba",
+      "name": "ROF",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xfdec9e3046e981b91db88d2369eb70f94cfd2451",
+      "name": "RoM",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x549c72dbb065bd25972bbed708a337e210f6ac24",
+      "name": "SBL",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x6adc29c16dbab91488d07f808d2e76f75930145d",
+      "name": "STD",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x00a47a70e8b33a304faaeeceec66260a3d4bdfec",
+      "name": "Skulls",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xa885141d1ae1800375f0457e9a3f6df4ba3db075",
+      "name": "Skulls",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x1e5d6b698ef33f937f8b724cfd6cc88862f33359",
+      "name": "TDAO votes",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x5eede194b8d88df8a57656cc32ac787bc9ab20d7",
+      "name": "TDAO votes",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 4; no substantiated power story in collected record. Larger population does not establish relevance; verify before final removal."
+    },
+    {
+      "about": "eip155:100:0x4a9cef2134fa8e48ff2beaf533d8b5e05e085dc0",
+      "name": "Taxir",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 8; no substantiated power story in collected record. Larger population does not establish relevance; verify before final removal."
+    },
+    {
+      "about": "eip155:100:0xdcbc1bafcf58ca476d4986d872b1bbb2717c52a2",
+      "name": "The Board",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x2a7000ec13d13b16a9b346749227e03a13be210c",
+      "name": "Toko",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x2426637497ab1eac42626844d5dbb0a8679d2c8a",
+      "name": "V-GLD",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xd44a416b327b43536faab17f9782f0d1cf7862ab",
+      "name": "Voter",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x036cbbc6f2aadadb992d3d28c166c18b0c9b005f",
+      "name": "Voting",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x5e0f7947bb6186de2fd1cde5a8fe63656401d5b1",
+      "name": "Voting",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x7443ff3fa7e141a2af011cad498e44d1d7a6e561",
+      "name": "Voting",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x77c5dd159a471a534e8b97f2053cb845a9fd74eb",
+      "name": "Voting",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xa269f8551ab70d7bf5c8c78f193f09426bc38e38",
+      "name": "Voting",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x564b70b03efe69f8baca73e3533e4c29ae16b286",
+      "name": "Voting Iran",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x875db21e8a5ce380a5d6d081cef0240a7bfaf257",
+      "name": "Voting Omnibridge Party Token",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x07b2e39780c22dfed2bc4089b41e629fe03057b8",
+      "name": "Voting Palestine",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x4cf78aa68fa1ffbec610c1326d9820ee6d75d6e7",
+      "name": "Voting Palestine",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xa679b1a27253aa65b273a9be285c4952b4c13554",
+      "name": "Voting Palestine",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x77665bc0fa7b7e5e5ffa4d2cea47cb94d8d5d2c4",
+      "name": "VotingGorilla",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xb11a9938052c8fa59fd3f3875c3cbf1b2c0ac20e",
+      "name": "Yggdrasil",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x147c182ddcf5a4e39f26f877d632ed6f1440e1f6",
+      "name": "circe",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x1228511bce00decdff6ca4292603688bd6c791f3",
+      "name": "lol",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x5db55fed3b9f43549ebebdf762c6eaae1ce8284a",
+      "name": "pan",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x139f3f02a867980f77ff97cb4b04caa1afe14f16",
+      "name": "peixe",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x8f73c4f7fc329bfe97d40a8d46f1bfed5df398d8",
+      "name": "prova",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 2; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x7e1e394bc58fc0ddc4a80bac0b62ac2dd7ae54b8",
+      "name": "r0ar board",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 8; no substantiated power story in collected record. Larger population does not establish relevance; verify before final removal."
+    },
+    {
+      "about": "eip155:100:0x8aa73b99c4fb42643f6036759e1b668476a00e82",
+      "name": "t1 share",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xb9c8b6b9ff5c3a5916c298ba18c44de3dc401ad4",
+      "name": "t2 share",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xc0a53c851b7f2bce0dd57a5e69ac0f0e90377c3e",
+      "name": "v420blazeit nugs n rugs",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x69ee4e52c961466b4a6dcedede4fba0a4a308702",
+      "name": "vCharacterSheets",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 3; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0x3fb9276759f90cdabc14d7a495c054b1aa5a0c6d",
+      "name": "vFoamies 4 the Homies",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 4; no substantiated power story in collected record. Larger population does not establish relevance; verify before final removal."
+    },
+    {
+      "about": "eip155:100:0xc764105d77e49734718255b83a5e16519217c248",
+      "name": "vote",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 1; no substantiated power story in collected record. Minimal distribution makes this a high-priority curation review."
+    },
+    {
+      "about": "eip155:100:0xacf5126f5fafb70009a31d4a23b03ad97979205e",
+      "name": "wgmi",
+      "why": "An unverified factory group, hidden until verified: Factory provenance; project identity/activity unverified in 9 Nov record and live mark remains self-declared. Reported old population 22; no substantiated power story in collected record. Larger population does not establish relevance; verify before final removal."
+    },
+    {
+      "about": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:7kbnvuGBxxj8AG9qp8Scn56muWGaRaFqxg1FsRp3PaFT",
+      "name": "UXD stablecoin",
+      "why": "A stablecoin, out of the DAO showcase: This is UXD stablecoin; UXP is the governance token. Retain only if explicitly selected as a money-distribution example, never label as DAO voting power."
+    }
+  ]
+}
