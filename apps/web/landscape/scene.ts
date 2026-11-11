@@ -5,8 +5,9 @@
 // away each flower is its own silhouette at rest; its name sits under its petals, one size on screen.
 // Colours are token roles, as on the flower. With the lab's far wave (#84), a far flower is one soft ring in
 // its main colour instead, its mark in the ring's hole and its name just under it.
-import { FAR_WAVE, farPath, waveReach } from '@petal/core/wedge/far';
-import { paintOf } from '@petal/core/wedge/paint';
+import { FAR_WAVE, farRuns, waveReach } from '@petal/core/wedge/far';
+import { HIGHLIGHT } from '@petal/core/wedge/highlight';
+import { GREY, keyFor, keysOf } from '@petal/core/wedge/keys';
 import { DETAIL, fade } from '../flower/detail.ts';
 import type { Model } from '../flower/model.ts';
 import { n3, polygonPath, SHAPE, silhouettePath } from '../flower/ring.ts';
@@ -244,24 +245,22 @@ let clips = 0;
 /** How a far flower is drawn: its silhouette, or (the lab's, #84) the far wave. */
 export type FarStyle = 'wave' | null;
 
-/** A flower's main colour: the one most of its petals carry, as the flower paints it. */
-function mainPaint(m: Model): string {
-  const n = new Map<string, number>();
-  for (const p of m.petals) {
-    if (p.tail) continue;
-    const c = paintOf(p);
-    n.set(c, (n.get(c) ?? 0) + 1);
-  }
-  let best = PETAL;
-  let most = 0;
-  for (const [c, k] of n) {
-    if (k > most) {
-      best = c;
-      most = k;
-    }
-  }
-  return best;
+/**
+ * Each petal's colour in the far wave: the art direction's keys, handed out by how many petals carry each kind,
+ * as the lab's petal look keys them (core's wedge/keys.ts); everyone else in grey.
+ */
+function waveFills(m: Model): string[] {
+  const real = m.petals.filter((p) => !p.tail);
+  const kinds = keysOf(
+    real.map((p) => p.colour),
+    real.map((p) => p.share),
+  );
+  return m.petals.map((p) => (p.tail ? GREY.hex : (keyFor(kinds, p.colour)?.hex ?? GREY.hex)));
 }
+
+/** The centre mark's size on screen: a share of the flower's hole, never smaller or larger than these. */
+const MARK_LEAST = 16;
+const MARK_MOST = 44;
 
 export function createLandScene(
   svg: SVGSVGElement,
@@ -271,6 +270,52 @@ export function createLandScene(
 ): LandScene {
   const clip = `landscape-mark-${++clips}`;
   const defs = el('defs', {}, svg);
+  // The far wave's surface: the highlight's light and shade, in the colour under it, as shares of each flower's
+  // own box, so it reads the same at every size.
+  const surface = `landscape-surface-${clips}`;
+  if (far) {
+    const f = el(
+      'filter',
+      {
+        id: surface,
+        x: '-5%',
+        y: '-5%',
+        width: '110%',
+        height: '110%',
+        primitiveUnits: 'objectBoundingBox',
+        'color-interpolation-filters': 'sRGB',
+      },
+      defs,
+    );
+    const inner = (name: string, slope: number, dx: number, opacity: number) => {
+      el('feOffset', { in: 'SourceAlpha', dx, dy: dx, result: `${name}-o` }, f);
+      el('feGaussianBlur', { in: `${name}-o`, stdDeviation: 0.02, result: `${name}-b` }, f);
+      el(
+        'feComposite',
+        {
+          in: 'SourceAlpha',
+          in2: `${name}-b`,
+          operator: 'arithmetic',
+          k1: -1,
+          k2: 1,
+          k3: 0,
+          k4: 0,
+          result: `${name}-e`,
+        },
+        f,
+      );
+      const tone = el('feComponentTransfer', { in: 'SourceGraphic', result: `${name}-c` }, f);
+      for (const fn of ['feFuncR', 'feFuncG', 'feFuncB'] as const) {
+        el(fn, { type: 'linear', slope }, tone);
+      }
+      el('feFuncA', { type: 'linear', slope: opacity }, tone);
+      el('feComposite', { in: `${name}-c`, in2: `${name}-e`, operator: 'in', result: name }, f);
+    };
+    inner('light', HIGHLIGHT.light.lift, 0.012, HIGHLIGHT.light.opacity);
+    inner('shade', HIGHLIGHT.shade.tone, -0.012, HIGHLIGHT.shade.opacity);
+    const merge = el('feMerge', {}, f);
+    for (const name of ['SourceGraphic', 'light', 'shade']) el('feMergeNode', { in: name }, merge);
+  }
   const clipPath = el('clipPath', { id: clip, clipPathUnits: 'objectBoundingBox' }, defs);
   el('circle', { cx: 0.5, cy: 0.5, r: 0.5 }, clipPath);
 
@@ -320,20 +365,15 @@ export function createLandScene(
       ),
     );
     const silhouette = slot(el('path', { fill: PETAL, d: silhouettePath(f.model.ring) }, g.node));
-    // figure.map-far-wave
-    const wave = far
-      ? slot(
-          el(
-            'path',
-            {
-              fill: mainPaint(f.model),
-              'fill-rule': 'evenodd',
-              d: farPath(f.model, SHAPE, FAR_WAVE),
-            },
-            g.node,
-          ),
-        )
-      : null;
+    // figure.map-far-wave: its runs of colour under one soft surface
+    let wave: Slot<SVGGElement> | null = null;
+    if (far) {
+      const w = slot(el('g', { filter: `url(#${surface})` }, g.node));
+      for (const run of farRuns(f.model, SHAPE, waveFills(f.model), FAR_WAVE)) {
+        el('path', { fill: run.fill, d: run.d }, w.node);
+      }
+      wave = w;
+    }
     const polygon = slot(
       el(
         'path',
@@ -434,10 +474,12 @@ export function createLandScene(
         const c = screenCentre(view, f.place);
         const waved = l.centre ? fade(DETAIL.farWave, r) : 0;
         if (l.centre) {
-          // the mark in the ring's hole while the wave shows; the name close under the ring
-          l.centre.show(waved > 0.01);
-          l.centre.set('transform', `translate(${n3(c.x)} ${n3(c.y)})`);
-          l.centre.set('opacity', o2(markShown * waved));
+          // the mark in the flower's middle at every zoom (Elco, 11 Nov: "I don't see why they have to go away at
+          // larger zooms, we just need a minimum and max size"): a share of its hole, between the two
+          const size = Math.max(MARK_LEAST, Math.min(MARK_MOST, r * (SHAPE.r0 / SHAPE.R) * 1.1));
+          l.centre.show(true);
+          l.centre.set('transform', `translate(${n3(c.x)} ${n3(c.y)}) scale(${n3(size / MARK)})`);
+          l.centre.set('opacity', o2(markShown));
         }
         const reach = l.centre ? waveReaches[i] * waved + f.reach * (1 - waved) : f.reach;
         const y = c.y + r * reach + (l.centre ? 6 : 10) + MARK / 2;

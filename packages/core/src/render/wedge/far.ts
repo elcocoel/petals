@@ -23,8 +23,11 @@ export interface FarWave {
   keep: number;
 }
 
-/** The lean: 120 points, a spread of about a twelfth of the circle, so the ring reads round; peaks softened. */
-export const FAR_WAVE: FarWave = { points: 120, spread: 0.5, keep: 2 };
+/**
+ * The lean: 180 points and a spread of about a thirtieth of the circle, so groups of petals show as waves rather than
+ * one bean (Elco, 11 Nov: "it could be more wavey instead of one bean shape - still very minimalistic"); peaks kept.
+ */
+export const FAR_WAVE: FarWave = { points: 180, spread: 0.22, keep: 1.8 };
 
 /**
  * The wave's outer edge: for each angle round the flower (clockwise from twelve, as the petals go), how far
@@ -90,6 +93,64 @@ export function farPath(
   // the hole: the polygon's circle, two arcs
   d += `M${n3(cx)} ${n3(cy - r0)}A${n3(r0)} ${n3(r0)} 0 1 0 ${n3(cx)} ${n3(cy + r0)}A${n3(r0)} ${n3(r0)} 0 1 0 ${n3(cx)} ${n3(cy - r0)}Z`;
   return d;
+}
+
+/**
+ * The wave in its colours: one closed shape per run of the circle whose petals share a colour, each from the
+ * polygon's circle out to the wave's edge, so a flower of several kinds shows them as bands of its one shape
+ * (Elco, 11 Nov: "more interesting visually than a grey shadow"). `fills` is each petal's colour, in order.
+ */
+export function farRuns(
+  rest: Pick<Rest, 'mid' | 'height' | 'ring'>,
+  shape: Pick<Shape, 'cx' | 'cy' | 'r0'>,
+  fills: readonly string[],
+  wave: FarWave = FAR_WAVE,
+): { fill: string; d: string }[] {
+  const hs = waveHeights(rest, wave);
+  const m = hs.length;
+  const { cx, cy, r0 } = shape;
+  const { start } = rest.ring;
+  const n = fills.length;
+  // whose angle each point is in
+  const owner = (a: number) => {
+    let lo = 0;
+    let hi = n - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if ((start[mid] as number) <= a) lo = mid;
+      else hi = mid - 1;
+    }
+    return fills[lo] ?? fills[0] ?? '';
+  };
+  const colour = Array.from({ length: m }, (_, j) => owner(((j + 0.5) / m) * TAU));
+  const outer = (j: number) => {
+    const a = ((((j % m) + m) % m) / m) * TAU;
+    const r = r0 + (hs[((j % m) + m) % m] as number);
+    return `${n3(cx + r * Math.sin(a))} ${n3(cy - r * Math.cos(a))}`;
+  };
+  const inner = (j: number) => {
+    const a = (j / m) * TAU;
+    return `${n3(cx + r0 * Math.sin(a))} ${n3(cy - r0 * Math.cos(a))}`;
+  };
+  // runs of one colour, starting where the colour changes so none wraps oddly
+  let first = colour.findIndex((c, j) => c !== colour[(j - 1 + m) % m]);
+  if (first < 0) first = 0;
+  const runs: { fill: string; d: string }[] = [];
+  let j = first;
+  for (let done = 0; done < m; ) {
+    const fill = colour[j % m] as string;
+    const from = j;
+    while (done < m && colour[j % m] === fill) {
+      j++;
+      done++;
+    }
+    let d = `M${inner(from)}L${outer(from)}`;
+    for (let k = from + 1; k <= j; k++) d += `L${outer(k)}`;
+    const large = (j - from) / m > 0.5 ? 1 : 0;
+    d += `L${inner(j)}A${n3(r0)} ${n3(r0)} 0 ${large} 0 ${inner(from)}Z`;
+    runs.push({ fill, d });
+  }
+  return runs;
 }
 
 /** How far the wave reaches at its highest, as a share of R, as reachOf says for the petals. */
