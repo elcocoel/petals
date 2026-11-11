@@ -13,7 +13,6 @@ import type { FlowerReading } from '../../flower/model.ts';
 import type { PetalLook } from '../../flower/scene.ts';
 import { repoRoot } from '../../lib/config.ts';
 import { LAB_DIR, RAIDGUILD } from './raidguild.ts';
-import { sampleProposals } from './sample-votes.ts';
 
 /**
  * The art direction's view: height is the share, straight, so twice the votes is twice the height; width carries
@@ -58,8 +57,6 @@ export interface LookFlower {
 
 export interface PetalBench {
   raidguild: LookFlower;
-  /** RaidGuild with the vote ring (#93), on sample proposals and votes */
-  votes: LookFlower;
   /** RaidGuild's flower in each key, and grey: colour carries no data here, only the highlight is checked */
   keys: { key: Key; flower: LookFlower }[];
   near: LookFlower;
@@ -268,38 +265,5 @@ export async function petalBench(): Promise<PetalBench> {
     highlight: nearHigh.words,
   };
 
-  // the vote ring (#93): RaidGuild's real delegates, with made-up proposals and votes until SYSTEMS's land
-  const sample = sampleProposals(
-    rgDrawn.map((p) => p.id),
-    rg.snapshot.as_of,
-  );
-  const votes: LookFlower = {
-    ...raidguild,
-    look: {
-      ...raidguild.look,
-      highlight: [],
-      votes: {
-        ...sample,
-        // the reading's meaning for this question (Elco's example): for mint, against pink; abstain is context
-        colours: {
-          for: (KEYS[0] as Key).hex,
-          against: (KEYS[4] as Key).hex,
-          abstain: GREY.hex,
-        },
-      },
-    },
-    key: [
-      { hex: (KEYS[0] as Key).hex, label: 'voted for', petals: 0 },
-      { hex: (KEYS[4] as Key).hex, label: 'voted against', petals: 0 },
-      { hex: GREY.hex, label: 'abstained', petals: 0 },
-    ],
-    facts: [
-      "Sample proposals and votes, made up to try the look, on RaidGuild's real delegates. SYSTEMS's real ones replace them.",
-      `The ring is ${day(sample.from)} to ${day(sample.to)}, clockwise from twelve. Each arc is a proposal, from when it was put up to when its voting closed.`,
-      'Point at an arc: a dot shows under each delegate that voted. No vote, no dot.',
-    ],
-    highlight: '',
-  };
-
-  return { raidguild, votes, keys, near };
+  return { raidguild, keys, near };
 }

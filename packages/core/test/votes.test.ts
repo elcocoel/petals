@@ -2,7 +2,15 @@
 // decided, else when its voting closed, else the ring's end; a vote's dot just inside the polygon; no vote, no dot.
 import { describe, expect, test } from 'vitest';
 import { lay, newRing } from '../src/render/wedge/ring.ts';
-import { ARC_LEAST, arcsOf, type Proposal, voteDot, votesOn } from '../src/render/wedge/votes.ts';
+import {
+  ARC_LEAST,
+  arcsOf,
+  LANE_GAP,
+  laneRadius,
+  type Proposal,
+  voteDot,
+  votesOn,
+} from '../src/render/wedge/votes.ts';
 
 const p = (id: string, at: string, decided: string | null, closes: string | null): Proposal => ({
   id,
@@ -22,7 +30,7 @@ describe('the ring', () => {
   const to = '2026-01-11T00:00:00Z';
 
   test('an arc runs from its time put up to its decision, else its close, else the ring’s end', () => {
-    const [a, b, c] = arcsOf(
+    const arcs = arcsOf(
       [
         p('decided', '2026-01-02T00:00:00Z', '2026-01-04T00:00:00Z', '2026-01-09T00:00:00Z'),
         p('closes', '2026-01-02T00:00:00Z', null, '2026-01-07T00:00:00Z'),
@@ -31,6 +39,7 @@ describe('the ring', () => {
       from,
       to,
     );
+    const [a, b, c] = ['decided', 'closes', 'open'].map((id) => arcs.find((x) => x.id === id));
     const TAU = Math.PI * 2;
     expect(a?.a0).toBeCloseTo(TAU * 0.1, 9);
     expect(a?.a1).toBeCloseTo(TAU * 0.3, 9);
@@ -67,5 +76,23 @@ describe('the ring', () => {
     );
     expect(Math.hypot(d.x - 400, d.y - 400)).toBeLessThan(foot);
     expect(d.r).toBeGreaterThan(0);
+  });
+
+  test('proposals open at once stack outward, each on the first free lane', () => {
+    const arcs = arcsOf(
+      [
+        p('one', '2026-01-02T00:00:00Z', null, '2026-01-05T00:00:00Z'),
+        p('two', '2026-01-03T00:00:00Z', null, '2026-01-06T00:00:00Z'),
+        p('three', '2026-01-07T00:00:00Z', null, '2026-01-08T00:00:00Z'),
+      ],
+      from,
+      to,
+    );
+    expect(arcs.map((a) => [a.id, a.lane])).toEqual([
+      ['one', 0],
+      ['two', 1],
+      ['three', 0],
+    ]);
+    expect(laneRadius(1) - laneRadius(0)).toBe(LANE_GAP);
   });
 });

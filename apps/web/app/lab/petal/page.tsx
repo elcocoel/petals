@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FlowerCanvas } from '../../../flower/FlowerCanvas.tsx';
 import { type LookFlower, petalBench } from '../../../lab/petal/bench.ts';
+import { votesBench } from '../../../lab/petal/votes.ts';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
@@ -23,7 +24,7 @@ const SHOWS = [
   { id: 'keys', label: 'Six colours' },
   { id: 'near', label: 'NEAR segments' },
   { id: 'tail', label: 'Everyone else' },
-  { id: 'votes', label: 'Votes (sample)' },
+  { id: 'votes', label: 'Votes' },
 ] as const;
 type Show = (typeof SHOWS)[number]['id'];
 
@@ -174,11 +175,16 @@ export default async function PetalLab({ searchParams }: { searchParams: Promise
   if (process.env.NODE_ENV === 'production' && process.env.PETAL_LAB !== '1') notFound();
   const q = await searchParams;
   const show: Show = SHOWS.some((s) => s.id === q.show) ? (q.show as Show) : 'raidguild';
+  if (show === 'votes') {
+    const votes = await votesBench();
+    if ('error' in votes) return <p className="error">{votes.error}</p>;
+    return <One show={show} flower={votes} />;
+  }
   const bench = await petalBench();
   if (show === 'tail') return <Tail show={show} flowers={[bench.raidguild, bench.near]} />;
   if (show === 'raidguild') return <One show={show} flower={bench.raidguild} />;
   if (show === 'near') return <One show={show} flower={bench.near} />;
-  if (show === 'votes') return <One show={show} flower={bench.votes} />;
+
   const first = bench.keys[0]?.flower;
   return (
     <main className="fixed inset-0 flex flex-col bg-surface text-primary">

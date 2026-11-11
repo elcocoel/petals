@@ -39,7 +39,12 @@ export interface Arc {
   id: string;
   a0: number;
   a1: number;
+  /** Proposals open at once stack outward: 0 is the ring itself, 1 the first lane past it, and so on. */
+  lane: number;
 }
+
+/** How far apart the lanes of proposals open at once sit, in world units. */
+export const LANE_GAP = 5;
 
 /**
  * Each proposal's arc on the ring: its time from `from` to `to` as angles clockwise from twelve, from `at` to
@@ -50,16 +55,30 @@ export function arcsOf(proposals: readonly Proposal[], from: string, to: string)
   const t1 = Date.parse(to);
   const span = t1 - t0 || 1;
   const angle = (t: number) => (Math.max(0, Math.min(span, t - t0)) / span) * TAU;
-  return proposals.flatMap((p) => {
-    const start = Date.parse(p.at);
-    const closes = p.decided_at ?? p.closes_at ?? null;
-    const end = closes ? Date.parse(closes) : t1;
-    if (end < t0 || start > t1) return [];
-    const a0 = angle(start);
-    const a1 = Math.max(angle(end), a0 + ARC_LEAST);
-    return [{ id: p.id, a0, a1 }];
-  });
+  const arcs = proposals
+    .flatMap((p) => {
+      const start = Date.parse(p.at);
+      const closes = p.decided_at ?? p.closes_at ?? null;
+      const end = closes ? Date.parse(closes) : t1;
+      if (end < t0 || start > t1) return [];
+      const a0 = angle(start);
+      const a1 = Math.max(angle(end), a0 + ARC_LEAST);
+      return [{ id: p.id, a0, a1, lane: 0 }];
+    })
+    .sort((x, y) => x.a0 - y.a0 || (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
+  // each arc takes the first lane that's free when it starts, so none hides another
+  const ends: number[] = [];
+  for (const a of arcs) {
+    let lane = ends.findIndex((e) => e <= a.a0);
+    if (lane < 0) lane = ends.length;
+    ends[lane] = a.a1;
+    a.lane = lane;
+  }
+  return arcs;
 }
+
+/** A lane's radius: the ring's, and LANE_GAP more for each lane out. */
+export const laneRadius = (lane: number): number => SHAPE.R * VOTE_RING + lane * LANE_GAP;
 
 /** An arc of the ring, clockwise from a0 to a1, at radius r round the flower's centre. */
 export function arcPath(a0: number, a1: number, r: number = SHAPE.R * VOTE_RING): string {
