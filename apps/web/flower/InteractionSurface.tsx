@@ -15,6 +15,7 @@ import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
+import { Icon } from '../components/ui/Icon.tsx';
 import { LandscapeCanvas } from '../landscape/LandscapeCanvas.tsx';
 import type { Catalogue } from '../lib/composer-options.ts';
 import {
@@ -27,6 +28,7 @@ import {
   type Size,
 } from '../lib/float-box.ts';
 import type { MapCard } from '../lib/maps.ts';
+import { groundWords } from '../lib/opening.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useGroundMap } from '../viewmodels/useGroundMap.ts';
@@ -109,12 +111,12 @@ export function InteractionSurface({
   }, [state.modelsOpen, raiseOptions]);
   const { onCanvas, panel } = state;
   // The Power Map: at the map a link opened, or whole until the conversation has a flower.
-  const land = useGroundMap();
+  const { land, opening: mapOpening } = useGroundMap();
   const ground = state.mapAt ?? (onCanvas ? null : { map: null });
   const focus = ground?.map && land ? land.flowers.findIndex((f) => f.map === ground.map) : -1;
   // where it starts is measured (what the conversation covers), so it's painted as the boxes are
   const mapArea = useRef<HTMLDivElement>(null);
-  const shown = Boolean(ground && land);
+  const shown = Boolean(ground && (land || mapOpening));
   useLayoutEffect(() => {
     if (!shown || !mapArea.current) return;
     mapArea.current.style.left = `${clear?.left ?? 0}px`;
@@ -124,20 +126,30 @@ export function InteractionSurface({
     <>
       {/* A new flower is a new scene. Anything else, a whole turn included, leaves the camera alone. */}
       <div ref={area} className="relative h-dvh">
-        {ground && land ? (
+        {ground && (land || mapOpening) ? (
           // beside the conversation, as the flower is, so its chains and its flowers aren't under it
           <div ref={mapArea} className="absolute inset-0">
-            <LandscapeCanvas
-              key={ground.map ?? 'whole'}
-              data={land}
-              fill="area"
-              title="Power Map"
-              focus={focus}
-              // a petal of the map it opened at opens that flower here (useWorkspace pickOnMap)
-              onPick={actions.pickOnMap}
-              // the room beside the conversation is narrow: the map keeps clear of its own chains
-              clearOfChains
-            />
+            {!land ? (
+              <p
+                role="status"
+                className="flex h-full items-center justify-center gap-text-gap type-ui text-muted"
+              >
+                <Icon name="petals" />
+                {groundWords.opening}
+              </p>
+            ) : (
+              <LandscapeCanvas
+                key={ground.map ?? 'whole'}
+                data={land}
+                fill="area"
+                title="Power Map"
+                focus={focus}
+                // a petal of the map it opened at opens that flower here (useWorkspace pickOnMap)
+                onPick={actions.pickOnMap}
+                // the room beside the conversation is narrow: the map keeps clear of its own chains
+                clearOfChains
+              />
+            )}
           </div>
         ) : (
           <FlowerCanvas

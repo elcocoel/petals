@@ -34,3 +34,6 @@ export function openingMessage(maps: readonly MapCard[]): string {
     .filter(Boolean)
     .join('\n\n');
 }
+
+/** Drafts (#78, 11 Nov): the room beside the conversation while the Power Map is on its way (megabytes). */
+export const groundWords = { opening: 'Opening the Power Map…' } as const;
