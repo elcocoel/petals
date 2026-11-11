@@ -16,7 +16,7 @@ export const landingCopy = {
   hero: {
     eyebrow: 'SEE POWER MOVE',
     title: 'Power has\na shape.\nNow you\ncan see it.',
-    /** The same words, broken for a hero that runs the page's width (LANDING's lean, in /lab/landing-hero, 11 Nov). */
+    /** The same words, two sentences, wrapping as the hero's column needs (HERO ART's V2, 11 Nov). */
     titleWide: 'Power has a shape.\nNow you can see it.',
     body: 'Point Petals at any wallet or contract, or just name a community, and map how power moves.',
     ask: {

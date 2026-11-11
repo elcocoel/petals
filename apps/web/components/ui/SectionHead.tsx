@@ -9,6 +9,14 @@ import { Icon } from './Icon.tsx';
 import { Mono } from './Mono.tsx';
 
 const SIZES = {
+  // The landing's hero, beside its story: the page's one h1, a size down from display so the stage leads
+  // (HERO ART's V2, 11 Nov: about 64 px wide, 44 px on a phone).
+  hero: {
+    Tag: 'h1',
+    title: 'type-title lg:type-display-compact',
+    gap: 'mt-block-gap',
+    body: 'mt-block-gap type-body',
+  },
   display: {
     Tag: 'h1',
     title: 'type-display-compact md:type-display',
