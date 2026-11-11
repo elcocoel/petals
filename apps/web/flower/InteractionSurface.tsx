@@ -101,13 +101,19 @@ export function InteractionSurface({
   const land = useGroundMap();
   const ground = state.mapAt ?? (onCanvas ? null : { map: null });
   const focus = ground?.map && land ? land.flowers.findIndex((f) => f.map === ground.map) : -1;
+  // where it starts is measured (what the conversation covers), so it's painted as the boxes are
+  const mapArea = useRef<HTMLDivElement>(null);
+  const shown = Boolean(ground && land);
+  useLayoutEffect(() => {
+    if (shown && mapArea.current) mapArea.current.style.left = `${clear?.left ?? 0}px`;
+  }, [shown, clear?.left]);
   return (
     <>
       {/* A new flower is a new scene. Anything else, a whole turn included, leaves the camera alone. */}
       <div ref={area} className="relative h-dvh">
         {ground && land ? (
           // beside the conversation, as the flower is, so its chains and its flowers aren't under it
-          <div className="absolute inset-y-0 right-0" style={{ left: clear?.left ?? 0 }}>
+          <div ref={mapArea} className="absolute inset-y-0 right-0 left-0">
             <LandscapeCanvas
               key={ground.map ?? 'whole'}
               data={land}
