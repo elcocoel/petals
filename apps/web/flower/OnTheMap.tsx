@@ -52,7 +52,7 @@ export function MapAt({
   const { area, hand } = useBox();
   return (
     <div ref={area} className="absolute inset-0">
-      <LandscapeCanvas data={land} fill="area" title="Power Map" focus={focus} />
+      <LandscapeCanvas data={land} fill="area" title="Power Map" focus={focus} legend="read" />
       <FloatBox label="Map" title={title} surface="ground" hand={hand}>
         <div className="flex flex-col gap-text-gap p-block-gap">{children}</div>
       </FloatBox>
@@ -104,6 +104,7 @@ export function FlowerAt({
           focus={focus}
           selected={state.selected}
           onPick={actions.pick}
+          legend="read"
         />
       )}
       <FloatBox

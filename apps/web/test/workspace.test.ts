@@ -350,6 +350,7 @@ describe('how a flower reads', () => {
     expect(dateLabel('soon')).toBe('soon');
     expect(chainLabel('near:mainnet')).toBe('NEAR');
     expect(chainLabel('solana:mainnet')).toBe('Solana');
+    expect(chainLabel('none')).toBe('Off-chain');
     expect(networkLabel('near-validators')).toBe('NEAR validators');
   });
 

@@ -10,7 +10,6 @@ import { LandscapeCanvas } from '../../../landscape/LandscapeCanvas.tsx';
 import { benchLandscape, withMarks } from '../../../landscape/land.ts';
 import { mapList, mapsKeys } from '../../../lib/maps.ts';
 import { viewerView } from '../../../lib/viewer-view.ts';
-import { BenchLegend } from './BenchLegend.tsx';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
@@ -24,26 +23,24 @@ type Query = Record<string, string | string[] | undefined>;
 export default async function MapLab({ searchParams }: { searchParams: Promise<Query> }) {
   if (process.env.NODE_ENV === 'production' && process.env.PETAL_LAB !== '1') notFound();
   const q = await searchParams;
-  const { view, hash } = await viewerView();
+  const { hash } = await viewerView();
   const read = await benchLandscape(hash);
   if ('error' in read) return <p className="error">The map couldn't be read: {read.error}</p>;
   const far = q.far === 'wave' ? 'wave' : null;
   // the maps' cards: the legend's keys, and with the far wave each flower named and marked by its map's own
   // mark (#85, #84)
   const cards = await mapList(hash);
-  const data =
+  const marked =
     far && cards.ok ? withMarks(read, new Map(cards.value.maps.map((c) => [c.id, c.mark]))) : read;
+  const data = { ...marked, keys: cards.ok ? mapsKeys(cards.value.maps) : [] };
   // the everything map (Elco, 11 Nov): with the far wave, the lines lean too (#87)
   return (
-    <>
-      <LandscapeCanvas
-        data={data}
-        probe={q.probe === '1'}
-        far={far}
-        lines={far ? 'focus' : null}
-        overlays
-      />
-      <BenchLegend view={view} keys={cards.ok ? mapsKeys(cards.value.maps) : []} />
-    </>
+    <LandscapeCanvas
+      data={data}
+      probe={q.probe === '1'}
+      far={far}
+      lines={far ? 'focus' : null}
+      legend="read"
+    />
   );
 }

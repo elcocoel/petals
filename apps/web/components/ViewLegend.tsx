@@ -11,7 +11,7 @@ import type { View } from '@petal/core/types';
 import type { Dimension, Piece } from '@petal/core/view';
 import type { LegendKey } from '../lib/flower-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
-import { type Scale, scaleOf } from '../lib/view-edit.ts';
+import { type LegendEdit, scaleOf } from '../lib/view-edit.ts';
 import { LegendKeys } from './Legend.tsx';
 import { NavItem } from './ui/NavItem.tsx';
 import { Overlay } from './ui/Overlay.tsx';
@@ -33,17 +33,7 @@ const ORDER: readonly Dimension[] = [
   'labels',
 ];
 
-/** Settings' hands, where the legend changes the person's view. */
-export interface LegendEdit {
-  defaults: View;
-  /** For each dimension, the data that fits it. */
-  choices: Record<Dimension, readonly Piece[]>;
-  /** The dimension whose choices are open. */
-  open: Dimension | null;
-  onOpen: (d: Dimension) => void;
-  onPick: (d: Dimension, data: string | null) => void;
-  onScale: (d: Dimension, scale: Scale) => void;
-}
+export type { LegendEdit };
 
 export function ViewLegend({
   view,

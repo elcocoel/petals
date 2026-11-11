@@ -10,8 +10,8 @@ import { gunzipSync } from 'node:zlib';
 import type { FlowerReading } from '../flower/model.ts';
 import { api } from '../lib/api.ts';
 import { repoRoot } from '../lib/config.ts';
-import { chainLabel } from '../lib/flower-view.ts';
-import { type MapMark, mapList } from '../lib/maps.ts';
+import { chainLabel, type LegendKey } from '../lib/flower-view.ts';
+import { type MapMark, mapList, mapsKeys } from '../lib/maps.ts';
 import { viewQuery } from '../lib/person-view.ts';
 import {
   LOGOS_DIR,
@@ -30,6 +30,8 @@ import { type Road, roadsBetween } from './roads.ts';
 export interface Mark {
   logo: string | null;
   symbol: string;
+  /** what kind of thing it is, each word once (#97), from its map's card */
+  types?: readonly string[];
 }
 
 export interface BenchFlower {
@@ -53,6 +55,8 @@ export interface BenchLandscape {
   flowers: BenchFlower[];
   roads: Road[];
   chains: BenchChain[];
+  /** the colours its maps paint, as their cards' keys give them: the legend's (#92) */
+  keys?: LegendKey[];
 }
 
 /** A name is cut here, so no name is wider than a flower's room. */
@@ -162,10 +166,15 @@ export async function benchLandscape(view: string): Promise<BenchLandscape | { e
   return 'error' in night ? night : landscapeOf(night);
 }
 
-/** The map's flowers named and marked by their maps' own marks (#85), from the maps' cards; as they were without. */
+/**
+ * The map's flowers named and marked by their maps' own marks (#85), with the colours the maps paint for the
+ * legend (#92), from the maps' cards; as they were without.
+ */
 async function marked(land: BenchLandscape, view: string): Promise<BenchLandscape> {
   const cards = await mapList(view);
-  return cards.ok ? withMarks(land, new Map(cards.value.maps.map((c) => [c.id, c.mark]))) : land;
+  if (!cards.ok) return land;
+  const maps = cards.value.maps;
+  return { ...withMarks(land, new Map(maps.map((c) => [c.id, c.mark]))), keys: mapsKeys(maps) };
 }
 
 /** The Power Map: one flower per map, in the view whose hash is given (the person's: lib/viewer-view.ts). */
@@ -208,7 +217,11 @@ export function withMarks(
       return {
         ...f,
         name: m.name ? cut(m.name.value) : f.name,
-        mark: { logo: m.logo?.url ?? f.mark.logo, symbol: m.symbol?.value ?? f.mark.symbol },
+        mark: {
+          logo: m.logo?.url ?? f.mark.logo,
+          symbol: m.symbol?.value ?? f.mark.symbol,
+          types: m.type_words ?? [],
+        },
       };
     }),
   };

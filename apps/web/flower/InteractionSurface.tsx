@@ -32,6 +32,7 @@ import { groundWords } from '../lib/opening.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useGroundMap } from '../viewmodels/useGroundMap.ts';
+import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import type { Clear } from './camera.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
@@ -112,6 +113,8 @@ export function InteractionSurface({
   const { onCanvas, panel } = state;
   // The Power Map: at the map a link opened, or whole until the conversation has a flower.
   const { land, opening: mapOpening } = useGroundMap();
+  // the legend changes the person's view here, with Settings' own hands (#92)
+  const legend = useLegendEdit();
   // A conversation opened with a flower to come (a run, a stored one, another door's, a drawing) keeps its
   // empty ground until that flower arrives; a new one, with nothing to draw yet, has the map.
   const flowerToCome = Boolean(
@@ -155,6 +158,7 @@ export function InteractionSurface({
                 onPick={actions.pickOnMap}
                 // the room beside the conversation is narrow: the map keeps clear of its own chains
                 clearOfChains
+                legend={legend}
               />
             )}
           </div>
