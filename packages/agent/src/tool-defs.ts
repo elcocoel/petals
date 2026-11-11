@@ -73,6 +73,10 @@ const NOT_FOR_THE_AGENT = new Set([
   'keep_layer',
   'list_layers',
   'fork_dataset',
+  // annotations (annotation-layer.md step 2): the person's agent adds them; Petals' agent gets its own way
+  // in step 3, with prompt words, saving what the person says in the same turn
+  'add_annotation',
+  'list_annotations',
 ]);
 
 export function forAgent(t: AnyTool): boolean {

@@ -1012,6 +1012,7 @@ export async function claimExploration(
   // the layers it held under itself until now are the new owner's (datasets.ts)
   await storeOf(ctx).layer.moveOwner(`exploration:${o.row.id}`, owner);
   await storeOf(ctx).datasetVersion.moveOwner(`exploration:${o.row.id}`, owner);
+  await storeOf(ctx).annotation.moveOwner(`exploration:${o.row.id}`, owner);
   return { exploration: o.row.id, claimed: true };
 }
 

@@ -433,6 +433,26 @@ export const MIGRATIONS: readonly string[] = [
   );
   ALTER TABLE job ADD COLUMN taken_worker TEXT;
   `,
+  // 21: annotations, what a person or an agent adds about an account (Elco, 10 Nov: "the agent and the
+  // person can go CRAZY adding annotation"; coordinator/annotation-layer.md step 2). Each is a claim/v2,
+  // kept privately under the project's owner, with the project it was added in. Names are allowed here.
+  `
+  CREATE TABLE annotation (
+    owner TEXT NOT NULL,
+    id TEXT NOT NULL,
+    exploration TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    verb TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    body TEXT NOT NULL,
+    credential TEXT,
+    created_at TEXT NOT NULL,
+    place INTEGER NOT NULL,
+    PRIMARY KEY (owner, id)
+  );
+  CREATE INDEX annotation_exploration ON annotation(owner, exploration, created_at);
+  CREATE INDEX annotation_subject ON annotation(owner, subject, created_at);
+  `,
 ];
 
 /**

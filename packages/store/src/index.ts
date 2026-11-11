@@ -15,6 +15,7 @@ export { type PgLimits, pgLimitsOf, redacted } from './postgres.ts';
 export type {
   AgentLinkRow,
   AgentRow,
+  AnnotationRow,
   ChallengeCheck,
   ConversationRow,
   CreditEntryRow,

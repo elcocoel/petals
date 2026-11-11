@@ -46,6 +46,8 @@ const PHASE_A = [
   'keep_layer',
   'list_layers',
   'fork_dataset',
+  'add_annotation',
+  'list_annotations',
 ];
 
 describe('registry', () => {

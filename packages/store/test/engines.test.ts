@@ -304,6 +304,53 @@ describe.each(engines)('%s', (engine, open) => {
     expect((await store.job.list(x)).map((j) => j.status)).toEqual(['done', 'failed']);
   });
 
+  test('annotations: kept once under their owner, in the order sent, by project or account, moved at sign-in', async () => {
+    const anon = u('anon');
+    const person = u('prs');
+    const row = (id: string, exploration: string, subject: string, place: number, at = AT) => ({
+      owner: anon,
+      id,
+      exploration,
+      subject,
+      verb: 'named',
+      kind: 'sourced',
+      body: `{"id":"${id}"}`,
+      credential: 'link:l1',
+      created_at: at,
+      place,
+    });
+    expect(
+      await store.annotation.add([
+        row('b', 'exp_1', 'eip155:100:0xaa', 0),
+        row('a', 'exp_1', 'eip155:100:0xbb', 1),
+        row('c', 'exp_2', 'eip155:100:0xaa', 0, LATER),
+      ]),
+    ).toBe(3);
+    expect(await store.annotation.add([row('a', 'exp_2', 'eip155:100:0xbb', 0)])).toBe(0);
+    const ids = (rows: { id: string }[]) => rows.map((r) => r.id);
+    expect(ids(await store.annotation.list(anon))).toEqual(['b', 'a', 'c']);
+    expect(ids(await store.annotation.list(anon, { exploration: 'exp_1' }))).toEqual(['b', 'a']);
+    expect(ids(await store.annotation.list(anon, { subject: 'eip155:100:0xaa' }))).toEqual([
+      'b',
+      'c',
+    ]);
+    expect(
+      ids(await store.annotation.list(anon, { exploration: 'exp_2', subject: 'eip155:100:0xaa' })),
+    ).toEqual(['c']);
+    // the person held 'c' already: theirs stays, the rest come along
+    await store.annotation.add([
+      { ...row('c', 'exp_9', 'eip155:100:0xaa', 0, LATER), owner: person },
+    ]);
+    await store.annotation.moveOwner(anon, person);
+    expect(await store.annotation.list(anon)).toEqual([]);
+    const moved = await store.annotation.list(person);
+    expect(moved.map((r) => [r.id, r.exploration])).toEqual([
+      ['b', 'exp_1'],
+      ['a', 'exp_1'],
+      ['c', 'exp_9'],
+    ]);
+  });
+
   test('workers of one agent: listed in the order they came, each taking its own, forgotten on disconnect', async () => {
     const owner = u('prs');
     for (const [worker, at] of [

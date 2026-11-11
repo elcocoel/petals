@@ -4,6 +4,7 @@
 import type { ToolError } from '@petal/core/types';
 import { type PetalTool, versioned } from './define.ts';
 import { toolError } from './errors.ts';
+import { addAnnotation, listAnnotations } from './tools/annotations.ts';
 import { brainFile, brainIndexTool, brainRoute } from './tools/brain.ts';
 import { forkDataset, keepLayer, listLayers } from './tools/datasets.ts';
 import {
@@ -78,6 +79,8 @@ export const registry: Tool<any, any>[] = [
   keepLayer,
   listLayers,
   forkDataset,
+  addAnnotation,
+  listAnnotations,
 ];
 
 /** Title, description and hints, for doors that list them (MCP, the agent's tool list). */

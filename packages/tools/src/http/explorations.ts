@@ -6,6 +6,7 @@
 //   POST /api/v1/explorations/:ref/steps           save_step
 //   POST /api/v1/explorations/:ref/notes           add_note
 //   POST /api/v1/explorations/:ref/layers          keep_layer; GET lists them (list_layers)
+//   POST /api/v1/explorations/:ref/annotations     add_annotation; GET lists them (list_annotations, ?about=)
 //   POST /api/v1/explorations/:ref/datasets/fork   fork_dataset
 //   POST /api/v1/explorations/:ref/jobs/take       take_job
 //   POST /api/v1/explorations/:ref/jobs/:job/report  report_job
@@ -52,7 +53,9 @@ import { body, fail, respond } from './reply.ts';
 export interface SessionGate {
   subjectOf(c: Context): Promise<string | null>;
   /** The subject and the credential that opened its session, in one look. */
-  callerOf?(c: Context): Promise<{ subject: string | null; credential: string | null }>;
+  callerOf?(
+    c: Context,
+  ): Promise<{ subject: string | null; credential: string | null; by?: string | null }>;
   /** A refusal for a POST from another site; null for one that's fine. */
   refuseForeign(c: Context): Response | null;
   /** Opens an anonymous session on this response, for a browser's first claim. Returns its subject. */
@@ -91,7 +94,12 @@ export function explorationRoutes(
     return {
       ...ctx,
       ...(site ? { config: { ...ctx.config, apiBase: site } } : {}),
-      caller: { subject: who.subject, credential: who.credential, door: 'http' },
+      caller: {
+        subject: who.subject,
+        credential: who.credential,
+        door: 'http',
+        ...('by' in who && who.by ? { by: who.by } : {}),
+      },
     };
   };
   /** A body that wasn't JSON comes here as its error. */
@@ -192,6 +200,17 @@ export function explorationRoutes(
       exploration: c.req.param('ref'),
       ...(q.about ? { about: q.about } : {}),
       ...(q.hash ? { hash: q.hash } : {}),
+    });
+  });
+  // annotations, what a person or an agent adds about an account (annotation-layer.md, annotations.ts)
+  app.post('/api/v1/explorations/:ref/annotations', async (c) =>
+    answer(c, 'add_annotation', await withRef(c)),
+  );
+  app.get('/api/v1/explorations/:ref/annotations', (c) => {
+    const about = c.req.query('about');
+    return answer(c, 'list_annotations', {
+      exploration: c.req.param('ref'),
+      ...(about ? { about } : {}),
     });
   });
   app.post('/api/v1/explorations/:ref/datasets/fork', async (c) =>

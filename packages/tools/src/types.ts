@@ -74,6 +74,11 @@ export interface Caller {
   door?: string;
   /** what the app at the other end calls itself, when its request says so (T404). Its own words */
   client?: string;
+  /**
+   * additive (10 Nov, annotation-layer.md): who answers for what this caller writes, as a claim names them:
+   * the signed-in person's account (`near:mainnet:alice.near`). Set by a door that knows it.
+   */
+  by?: string | null;
 }
 
 /** What every tool run gets: store, modules, map reader/writer, rpc, quotes, progress. */
