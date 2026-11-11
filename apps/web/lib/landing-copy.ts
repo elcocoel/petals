@@ -3,10 +3,13 @@
 // that was an empty slot is a v1 draft by LANDING (Elco, 9 Nov: "lets try to get everything to be 'v1' with no
 // placeholders as much as possible than we critique by looking at the page"). Only the line breaks are ours.
 // The arrows aren't here: Geist Mono and our Mona Sans subset have neither U+2192 nor U+2190, so the
-// components draw them (components/ui/Arrow.tsx).
+// components draw them (components/ui/Arrow.tsx). The words Elco types on the page itself (?edit=1 on a
+// local server, app/edit/CopyEditor.tsx) are kept in landing-copy.edits.json and win over these.
 import { agentWords } from './agents.ts';
+import { withEdits } from './copy-edits.ts';
+import edits from './landing-copy.edits.json' with { type: 'json' };
 
-export const landingCopy = {
+const written = {
   nav: {
     howItWorks: 'How it works',
     gallery: 'Power Map',
@@ -377,3 +380,5 @@ export const landingCopy = {
     built: 'Built for the NEAR Hackathon, November 2026. By Elementary Complexity.',
   },
 } as const;
+
+export const landingCopy = withEdits(written, edits.words);
