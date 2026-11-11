@@ -22,9 +22,14 @@ import { type LandscapeAt, type LandscapeData, useLandscape } from './useLandsca
 
 export interface CanvasFlower {
   name: string;
-  mark: { logo: string | null; symbol: string };
+  mark: {
+    logo: string | null;
+    symbol: string;
+  };
   place: Place;
   reading: FlowerReading;
+  /** its reading's snapshot, the relations index's name for its group */
+  snapshot?: string | undefined;
 }
 
 export interface CanvasChain {
@@ -161,7 +166,14 @@ export function LandscapeCanvas({
       if (f.place.chain !== chain) return;
       at.set(i, flowers.length);
       const model = modelOf(f.reading);
-      flowers.push({ name: f.name, mark: f.mark, place: f.place, model, reach: reachOf(model) });
+      flowers.push({
+        name: f.name,
+        mark: f.mark,
+        place: f.place,
+        model,
+        reach: reachOf(model),
+        snapshot: f.snapshot,
+      });
     });
     const roads = data.roads.flatMap((r) => {
       const a = at.get(r.a);

@@ -38,6 +38,8 @@ export interface LandFlower {
   model: Model;
   /** How far its petals reach, as a share of its room (space.ts reachOf). */
   reach: number;
+  /** its reading's snapshot, the relations index's name for its group */
+  snapshot?: string | undefined;
 }
 
 export interface LandView {
@@ -136,7 +138,7 @@ export type LineStyle = 'focus' | null;
  * Each petal's colour in the far wave: the art direction's keys, handed out by how many petals carry each kind,
  * as the lab's petal look keys them (core's wedge/keys.ts); everyone else in grey.
  */
-function waveFills(m: Model): string[] {
+export function waveFills(m: Model): string[] {
   const real = m.petals.filter((p) => !p.tail);
   const kinds = keysOf(
     real.map((p) => p.colour),

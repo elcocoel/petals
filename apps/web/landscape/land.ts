@@ -39,6 +39,8 @@ export interface BenchFlower {
   reading: FlowerReading;
   /** the map it stands for, an address, when the live map says */
   map: string | null;
+  /** its reading's snapshot, the relations index's name for its group */
+  snapshot?: string;
 }
 
 export interface BenchChain {
@@ -241,6 +243,7 @@ export function landscapeOf(night: Night): BenchLandscape {
       // On the map a flower's name is drawn under it, one way for all, so the flower draws no title.
       reading: { title: '', petals: v.reading.petals },
       map: v.map ?? null,
+      snapshot: v.snapshot,
     };
   });
   return {
