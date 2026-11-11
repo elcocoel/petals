@@ -102,6 +102,9 @@ export const payWords = {
   balance: (m: Money) => `Balance: ${moneyWords(m)}`,
   // credit is kept in dollars, and paid in NEAR or any other token (Elco, 10 Nov)
   out: "You're out of credit for Petals' agent. Add some to keep going.",
+  /** Before the first question, with no credit yet (#78, 11 Nov: credit came up only after asking). */
+  start: "Petals' agent runs on NEAR AI and is paid as you go. Add some credit to start.",
+  addedFirst: (near: string) => `Added ${near} NEAR. Petals' agent is ready.`,
   button: (near: number) => `Add ${near} NEAR`,
   paying: 'Waiting for your wallet…',
   added: (near: string) => `Added ${near} NEAR. Send your question again.`,

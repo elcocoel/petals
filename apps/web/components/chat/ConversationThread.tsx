@@ -80,10 +80,11 @@ export function ConversationThread({
           />
         );
       }}
-      renderPay={(key) =>
-        pay && key === pay.asking ? (
+      renderPay={(row) =>
+        pay && row.key === pay.asking ? (
           <PayRow
-            key={key}
+            key={row.key}
+            first={row.first === true}
             phase={pay.phase}
             added={pay.added}
             onPay={pay.onPay}

@@ -36,7 +36,7 @@ import {
 } from '../lib/panel-view.ts';
 import { payWords } from '../lib/pay.ts';
 import type { Opened, PanelSection } from '../lib/thread.ts';
-import { composerView, type FlowerRow, openFlowerIndex } from '../lib/thread-view.ts';
+import { composerView, type FlowerRow, openFlowerIndex, type Row } from '../lib/thread-view.ts';
 import { conversationAt, workspaceUrl } from '../lib/workspace-url.ts';
 import { useConversationFacts } from './useConversationFacts.ts';
 import { useDrawnFlowers } from './useDrawnFlower.ts';
@@ -239,13 +239,26 @@ export function useWorkspace(props: {
   }, [touch, recorded, runId, busy, elsewhereRef, jobsSignal]);
   const named = chat.named;
   useEffect(() => name(named), [name, named]);
-  // Paying for Petals' agent (B): the newest pay row is the live one.
-  const asking = useMemo(
-    () => shownRows.findLast((r) => r.kind === 'pay')?.key ?? null,
-    [shownRows],
-  );
   // the one balance (useFunds, in the layout): read again after each turn, and after a payment lands
   const funds = panelBus.person?.funds;
+  // Someone with no credit yet meets the way to add some under Petals' greeting, before the first question
+  // (#78, 11 Nov: it came up only after asking). Once offered it stays until they ask, so what a payment
+  // added is said there.
+  const asks = shownRows.some((r) => r.kind === 'user');
+  const [offered, setOffered] = useState(false);
+  if (!offered && !asks && !recorded && !initialElsewhere && funds?.balance?.usd === '0.00') {
+    setOffered(true);
+  }
+  const threadRows = useMemo<Row[]>(
+    () =>
+      offered && !asks ? [...shownRows, { kind: 'pay', key: 'pay-first', first: true }] : shownRows,
+    [offered, asks, shownRows],
+  );
+  // Paying for Petals' agent (B): the newest pay row is the live one.
+  const asking = useMemo(
+    () => threadRows.findLast((r) => r.kind === 'pay')?.key ?? null,
+    [threadRows],
+  );
   const reread = funds?.reread;
   const paid = useCallback(() => reread?.(), [reread]);
   const pay = usePay(funds?.where ?? null, asking, paid);
@@ -361,7 +374,7 @@ export function useWorkspace(props: {
     state: {
       /** This conversation, by its run or another door's id: where a note about a petal is kept. */
       conversationRef: runId ?? elsewhereRef ?? null,
-      rows: shownRows,
+      rows: threadRows,
       composer,
       panel,
       onCanvas,

@@ -80,18 +80,53 @@ export interface TokenChoice {
   label: string;
 }
 
-/** The tokens, a chain's together, the chains with the most tokens first, as 1Click lists each one's. */
+/**
+ * What most people hold, first, so the list doesn't open on two hundred tokens (#78, 11 Nov): the dollar
+ * stablecoins on the biggest chains, and each big coin on its own chain. A symbol and a chain, in this order.
+ */
+export const COMMON: readonly (readonly [symbol: string, chain: string])[] = [
+  ['USDC', 'eth'],
+  ['USDC', 'base'],
+  ['USDC', 'sol'],
+  ['USDC', 'arb'],
+  ['USDC', 'near'],
+  ['USDT', 'eth'],
+  ['USDT', 'tron'],
+  ['USDT', 'sol'],
+  ['ETH', 'eth'],
+  ['ETH', 'base'],
+  ['ETH', 'arb'],
+  ['BTC', 'btc'],
+  ['SOL', 'sol'],
+  ['wNEAR', 'near'],
+];
+
+const choiceOf = (t: PayToken): TokenChoice => ({
+  value: t.asset,
+  label: `${t.symbol} on ${chainName(t.chain)}`,
+});
+
+/**
+ * The tokens: the common ones first, in their own group, then the rest, a chain's together, the chains with
+ * the most tokens first, as 1Click lists each one's.
+ */
 export function tokenChoices(
   tokens: readonly PayToken[],
 ): { group: string; choices: TokenChoice[] }[] {
+  const common = COMMON.flatMap(([symbol, chain]) =>
+    tokens.filter((t) => t.symbol === symbol && t.chain === chain).slice(0, 1),
+  );
+  const first = new Set(common.map((t) => t.asset));
   const by = new Map<string, PayToken[]>();
-  for (const t of tokens) by.set(t.chain, [...(by.get(t.chain) ?? []), t]);
-  return [...by.entries()]
+  for (const t of tokens) {
+    if (!first.has(t.asset)) by.set(t.chain, [...(by.get(t.chain) ?? []), t]);
+  }
+  const rest = [...by.entries()]
     .sort((a, b) => b[1].length - a[1].length)
-    .map(([chain, list]) => ({
-      group: chainName(chain),
-      choices: list.map((t) => ({ value: t.asset, label: `${t.symbol} on ${chainName(t.chain)}` })),
-    }));
+    .map(([chain, list]) => ({ group: chainName(chain), choices: list.map(choiceOf) }));
+  return common.length > 0
+    ? [{ group: intentWords.common, choices: common.map(choiceOf) }, ...rest]
+    : rest;
 }
 
 /** Dollars as typed: a number above 0 and at most 1,000, as the server takes, or null. */
@@ -113,6 +148,8 @@ export const intentWords = {
   other: 'Pay with another token',
   token: 'Token',
   pick: 'Pick a token and its chain',
+  /** The list's first group, what most people hold (tokenChoices). */
+  common: 'Common',
   loading: 'Reading the tokens…',
   usd: 'Dollars to add',
   refund: (chain: string) => `Your address on ${chain}, where anything not swapped goes back`,

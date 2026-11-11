@@ -21,16 +21,34 @@ const token = (symbol: string, chain: string) => ({
 describe('what a person can pay with', () => {
   test('a chain’s tokens together, the chains with the most first, each named as people say it', () => {
     const groups = tokenChoices([
-      token('USDC', 'base'),
-      token('USDC', 'eth'),
-      token('ETH', 'eth'),
-      token('SOL', 'sol'),
+      token('AERO', 'base'),
+      token('UNI', 'eth'),
+      token('LINK', 'eth'),
+      token('JUP', 'sol'),
     ]);
     expect(groups.map((g) => g.group)).toEqual(['Ethereum', 'Base', 'Solana']);
     expect(groups[0]?.choices).toEqual([
-      { value: 'eth:USDC', label: 'USDC on Ethereum' },
-      { value: 'eth:ETH', label: 'ETH on Ethereum' },
+      { value: 'eth:UNI', label: 'UNI on Ethereum' },
+      { value: 'eth:LINK', label: 'LINK on Ethereum' },
     ]);
+  });
+
+  test('what most people hold comes first, in its own group, and isn’t listed twice (#78)', () => {
+    const groups = tokenChoices([
+      token('SHITZU', 'near'),
+      token('wNEAR', 'near'),
+      token('USDC', 'base'),
+      token('USDC', 'eth'),
+      token('ETH', 'eth'),
+    ]);
+    expect(groups.map((g) => g.group)).toEqual(['Common', 'NEAR']);
+    expect(groups[0]?.choices.map((c) => c.label)).toEqual([
+      'USDC on Ethereum',
+      'USDC on Base',
+      'ETH on Ethereum',
+      'wNEAR on NEAR',
+    ]);
+    expect(groups[1]?.choices.map((c) => c.label)).toEqual(['SHITZU on NEAR']);
   });
 
   test('a chain with no name here is its id, capitalised', () => {
