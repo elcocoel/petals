@@ -359,3 +359,21 @@ describe('config', () => {
     expect(plain.configs).toEqual([expect.objectContaining({ root: '/repo', fake: false })]);
   });
 });
+
+describe('join, from the command line', () => {
+  test('--can is kept with the worker, in the agent’s own words', async () => {
+    const { mkdtempSync, readdirSync, readFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const home = mkdtempSync(join(tmpdir(), 'petal-join-'));
+    const key = `petal_agent_${'A'.repeat(43)}`;
+    const r = await run(['join', key, '--as', 'claude-code', '--can', 'runs sub-agents'], {
+      deps: { env: { PETALS_HOME: home } },
+    });
+    expect(r.code).toBe(0);
+    const [file] = readdirSync(join(home, 'workers'));
+    expect(JSON.parse(readFileSync(join(home, 'workers', file as string), 'utf8')).can).toBe(
+      'runs sub-agents',
+    );
+  });
+});

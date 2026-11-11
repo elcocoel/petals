@@ -1,7 +1,14 @@
 // One prompt, several agents (Elco, 9 Nov): an agent joins with the person's agent key, then waits
 // for its next job, asking the site again and again and coming back before its app's own limit.
 // A stand-in site and a stand-in clock; a throwaway PETALS_HOME.
-import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -16,7 +23,7 @@ const home = () => ({ PETALS_HOME: mkdtempSync(join(tmpdir(), 'petal-agent-')) }
 interface Ask {
   url: string;
   auth: string;
-  body: { as: string; worker?: string; wait_s: number };
+  body: { as: string; worker?: string; can?: string; wait_s: number };
 }
 
 /** A site that answers each ask from a list, advancing the clock by what it was asked to hold. */
@@ -60,6 +67,35 @@ describe('join', () => {
   test('refuses what isn’t an agent key, and a name that isn’t short and plain', () => {
     expect(joinAgent(home(), 'sk-123', 'codex')).toMatchObject({ error: { code: 'bad_input' } });
     expect(joinAgent(home(), KEY, 'my agent!')).toMatchObject({ error: { code: 'bad_input' } });
+  });
+});
+
+describe("what an agent says it can do (Elco's lean 2, 11 Nov)", () => {
+  test('join keeps it with the worker, and every wait tells Petals', async () => {
+    const env = home();
+    const said = 'runs sub-agents, on this computer, on Opus and Haiku';
+    const { worker } = joinAgent(env, KEY, 'claude-code', `  ${said} `) as { worker: string };
+    expect(JSON.parse(readFileSync(workerFile(env, worker), 'utf8')).can).toBe(said);
+    const clock = { t: 0 };
+    const s = site([{ body: { job: null } }], clock);
+    await waitForJob({ env, site: SITE, worker, fetch: s.fetch, now: () => clock.t, forS: 60 });
+    expect(s.asks[0]?.body).toMatchObject({ as: 'claude-code', worker, can: said });
+  });
+
+  test('without it, nothing is sent, as an old prompt never says it', async () => {
+    const env = home();
+    const { worker } = joinAgent(env, KEY, 'codex') as { worker: string };
+    const clock = { t: 0 };
+    const s = site([{ body: { job: null } }], clock);
+    await waitForJob({ env, site: SITE, worker, fetch: s.fetch, now: () => clock.t, forS: 60 });
+    expect(s.asks[0]?.body.can).toBeUndefined();
+  });
+
+  test('past what the site keeps, join says so and joins nothing', () => {
+    const env = home();
+    const out = joinAgent(env, KEY, 'hermes', 'x'.repeat(301)) as { error?: { message: string } };
+    expect(out.error?.message).toBe('Say what you can do in 300 characters or fewer.');
+    expect(() => readdirSync(join(env.PETALS_HOME, 'workers'))).toThrow();
   });
 });
 

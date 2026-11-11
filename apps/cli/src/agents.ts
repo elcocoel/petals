@@ -26,6 +26,8 @@ export const WAIT_FOR_S = 570;
 /** Under the site's tunnel, which closes a request idle for 100 seconds. */
 const ASK_S = 85;
 const WAIT = 'node ~/.petals/petal.mjs jobs wait';
+/** What an agent says it can do, as the site keeps it. */
+export const CAN_MAX = 300;
 /** A worker's id, as join makes it. */
 export const WORKER = /^[a-z0-9]{1,12}$/;
 const again = (worker: string | null) => (worker ? `${WAIT} --worker ${worker}` : WAIT);
@@ -40,8 +42,12 @@ const workersDir = (env: NodeJS.ProcessEnv) => join(homeOf(env), 'workers');
 export const workerFile = (env: NodeJS.ProcessEnv, id: string) =>
   join(workersDir(env), `${id}.json`);
 
-/** Keeps the key and the name as a new worker, for `jobs wait`. The key stays on this machine. */
-export function joinAgent(env: NodeJS.ProcessEnv, key: string, as: string): Json {
+/**
+ * Keeps the key and the name as a new worker, for `jobs wait`. The key stays on this machine. `can` is what
+ * the agent says it can do for a job, in its own words (Elco's lean 2, 11 Nov): each wait tells Petals'
+ * agent, which hands out jobs by it.
+ */
+export function joinAgent(env: NodeJS.ProcessEnv, key: string, as: string, can?: string): Json {
   const name = as.trim().toLowerCase();
   if (!AGENT_KEY.test(key.trim())) {
     return {
@@ -56,10 +62,26 @@ export function joinAgent(env: NodeJS.ProcessEnv, key: string, as: string): Json
       },
     };
   }
+  const says = can?.trim();
+  // the site keeps it to its short fields' length, so a wait never fails on it later (SYSTEMS)
+  if (says && says.length > CAN_MAX) {
+    return {
+      error: {
+        code: 'bad_input',
+        message: `Say what you can do in ${CAN_MAX} characters or fewer.`,
+      },
+    };
+  }
   const worker = randomBytes(4).readUInt32BE(0).toString(36).padStart(6, '0').slice(-6);
   const file = workerFile(env, worker);
   mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, `${JSON.stringify({ key: key.trim(), as: name })}\n`, { mode: 0o600 });
+  writeFileSync(
+    file,
+    `${JSON.stringify({ key: key.trim(), as: name, ...(says ? { can: says } : {}) })}\n`,
+    {
+      mode: 0o600,
+    },
+  );
   return {
     joined: true,
     as: name,
@@ -73,13 +95,19 @@ interface Joined {
   as: string;
   /** null for an agent joined before workers */
   worker: string | null;
+  /** what it said it can do, when it joined (lean 2) */
+  can?: string;
 }
 
 const readJoined = (file: string, worker: string | null): Joined | null => {
   try {
-    const j = JSON.parse(readFileSync(file, 'utf8')) as { key?: unknown; as?: unknown };
+    const j = JSON.parse(readFileSync(file, 'utf8')) as {
+      key?: unknown;
+      as?: unknown;
+      can?: unknown;
+    };
     return typeof j.key === 'string' && typeof j.as === 'string'
-      ? { key: j.key, as: j.as, worker }
+      ? { key: j.key, as: j.as, worker, ...(typeof j.can === 'string' ? { can: j.can } : {}) }
       : null;
   } catch {
     return null;
@@ -157,7 +185,12 @@ export async function waitForJob(o: WaitOptions): Promise<Json> {
       res = await f(`${o.site}/api/v1/agents/wait`, {
         method: 'POST',
         headers: { authorization: `Bearer ${me.key}`, 'content-type': 'application/json' },
-        body: JSON.stringify({ as: me.as, ...(me.worker ? { worker: me.worker } : {}), wait_s }),
+        body: JSON.stringify({
+          as: me.as,
+          ...(me.worker ? { worker: me.worker } : {}),
+          ...(me.can ? { can: me.can } : {}),
+          wait_s,
+        }),
         signal: AbortSignal.timeout((wait_s + 15) * 1000),
       });
     } catch (e) {
@@ -203,7 +236,7 @@ export async function waitForJob(o: WaitOptions): Promise<Json> {
     return {
       job,
       project,
-      next: `Do this job now, in its project: pass project.exploration as exploration to the tools, and each flower you draw is saved there, drawn as the person sees it. Save who or what you find behind addresses as you go, with add_annotation (many at once: add-annotation --input @annotations.json), never only in a file. When it's done, report_job with that exploration, the job's id and result: { summary, steps, annotations: the ids add_annotation gave }, or failed and why. Then run ${AGAIN} again.`,
+      next: `Do this job now, in its project: pass project.exploration as exploration to the tools, and each flower you draw is saved there, drawn as the person sees it. If it's big and you run sub-agents, you may split it among them: they pass the same exploration, and you report once. Save who or what you find behind addresses as you go, with add_annotation (many at once: add-annotation --input @annotations.json), never only in a file. When it's done, report_job with that exploration, the job's id and result: { summary, steps, annotations: the ids add_annotation gave }, or failed and why. Then run ${AGAIN} again.`,
     };
   }
 }
