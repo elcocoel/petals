@@ -24,7 +24,7 @@ export { configFromEnv, createContext } from './context.ts';
 export type { PetalTool, ToolAnnotations } from './define.ts';
 export { TOOL_ERROR_SCHEMA } from './define.ts';
 export { nonceStore, privateStore, specBody } from './drafts.ts';
-export { fromThrown, HTTP_STATUS, isToolError, ToolFailure } from './errors.ts';
+export { fromThrown, HTTP_STATUS, isToolError } from './errors.ts';
 export { freshGate, withRunSignal } from './fresh.ts';
 export { type Hidden, hiddenCount, hiddenMap } from './hidden.ts';
 export { httpApp } from './http/app.ts';
@@ -73,6 +73,8 @@ export {
 } from './search-index.ts';
 export {
   fakeSearchModel,
+  SEARCH_EMBEDDING,
+  SEARCH_RERANKER,
   type SearchModel,
   SearchModelDown,
   searchModel,
@@ -91,7 +93,9 @@ export { workerPlace } from './tools/jobs.ts';
 export { makeReadPage } from './tools/read-page.ts';
 export {
   FINDABLE_KINDS,
+  MEANING_OFF,
   type SearchAnswer,
+  type SearchResults,
   searchModelOf,
   searchPetals,
   searchPetalsFor,

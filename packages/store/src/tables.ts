@@ -151,7 +151,6 @@ export interface ValueRow {
   body: string;
   read_at: string;
 }
-/** A map's proposals/v1 (28): each proposal and every account's vote on it, read from the DAO's own chain. */
 /** A text's embedding (29): its sha256 and its float32s, base64. */
 export interface SearchVectorRow {
   sha256: string;
@@ -161,6 +160,7 @@ export interface SearchVectorRow {
 /** Vectors read or written in one statement: well under either engine's limit on bound values. */
 const VECTOR_BATCH = 500;
 
+/** A map's proposals/v1 (28): each proposal and every account's vote on it, read from the DAO's own chain. */
 export interface ProposalsRow {
   /** the map's address, as its card's id */
   about: string;

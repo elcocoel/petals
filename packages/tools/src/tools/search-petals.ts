@@ -10,7 +10,6 @@ import type { Claim } from '@petal/core/types';
 import type { Store } from '@petal/store';
 import { defineTool } from '../define.ts';
 import { privateStore } from '../drafts.ts';
-import { ToolFailure } from '../errors.ts';
 import { type MapCard, mapsOf, mapViews, typeWords } from '../map.ts';
 import { proposalsOf } from '../proposals.ts';
 import {
@@ -155,19 +154,20 @@ const mapSets = new Map<string, Promise<MapSet>>();
  * The shared map's documents, built again only when the map changes: its drawings, its marks or its proposals.
  * Hidden maps (#96) are in none of them.
  */
-async function mapSet(ctx: ToolContext, model: SearchModel): Promise<MapSet> {
+async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapSet> {
   const store = privateStore(ctx.config);
   // the map as anyone sees it: a viewer's names change their drawings, not what's on the map
   const views = await mapViews({ ...ctx, names: [] });
   const marks = await store.mark.list();
   const proposalRows = await store.proposals.list();
   const sig = [
-    model.embedding,
+    model?.embedding ?? 'words',
     views.map((v) => v.sha).join(','),
     marks.map((m) => `${m.about}@${m.read_at}`).join(','),
     proposalRows.map((p) => `${p.about}@${p.read_at}`).join(','),
   ].join('|');
-  const key = ctx.config.databaseUrl ?? ctx.config.stateDir ?? ctx.config.root;
+  // one kept per store and way: words alone, while the model is off, don't push the model's set out
+  const key = `${ctx.config.databaseUrl ?? ctx.config.stateDir ?? ctx.config.root}|${model?.embedding ?? 'words'}`;
   const kept = mapSets.get(key);
   if (kept) {
     const was = await kept.catch(() => null);
@@ -269,9 +269,21 @@ const idOf = (f: Findable) =>
       ? f.id.slice(f.kind.length + 1)
       : f.id;
 
+/** What search says when its model isn't running (Elco, 11 Nov: "Fall back to word search"). */
+export const MEANING_OFF =
+  "Search by meaning is off right now: its model isn't running, so these were found by their words alone.";
+
+export interface SearchResults {
+  results: SearchAnswer[];
+  /** on: words and meaning, reranked; off: the model isn't running, and these are words alone */
+  meaning: 'on' | 'off';
+  says?: string;
+}
+
 /**
  * Everything on the map, and the signed-in person's own (ctx.caller.subject), best first: one answer per map
  * with what matched under it. `prefix` reads the last word as the start of words, for search as someone types.
+ * When the model isn't running (none set, or it doesn't answer), it searches by words alone and says so.
  */
 export async function searchPetals(
   ctx: ToolContext,
@@ -283,63 +295,66 @@ export async function searchPetals(
     rerank?: boolean;
     snippets?: boolean;
   } = {},
-): Promise<SearchAnswer[]> {
+): Promise<SearchResults> {
   const model = searchModelOf(ctx);
-  if (!model) {
-    throw new ToolFailure(
-      'source_failed',
-      'Search has no model on this site.',
-      'PETAL_SEARCH_URL names where its models answer (coordinator/search_model_up.sh).',
-    );
-  }
-  const kinds = new Set(o.kinds ?? FINDABLE_KINDS);
+  const off = async (): Promise<SearchResults> => ({
+    results: await searchWith(ctx, null, q, o),
+    meaning: 'off',
+    says: MEANING_OFF,
+  });
+  if (!model) return off();
   try {
-    const shared = await mapSet(ctx, model);
-    const subject = ctx.caller?.subject ?? null;
-    const own = subject ? await ownDocs(ctx, subject, shared.cards) : [];
-    const set = own.length
-      ? joinSets(shared.set, await searchSet(own, model, keepOf(privateStore(ctx.config))))
-      : shared.set;
-    const found = await find(set, q, model, {
-      n: o.limit ?? 10,
-      rerank: o.rerank === false ? 0 : RERANKED,
-      // a map with what matched under it, when maps are asked for; else each as itself
-      group: kinds.has('map'),
-      prefix: o.prefix === true,
-      only: (d) => kinds.has(d.kind),
-    });
-    const answer = (f: Omit<Found, 'matched'>) => ({
-      kind: f.kind,
-      id: idOf(f),
-      title: f.title,
-      about: f.about ?? null,
-      score: f.score,
-      ranks: f.ranks,
-      ...(f.rerank !== undefined ? { rerank: f.rerank } : {}),
-      ...(f.at ? { at: f.at } : {}),
-      ...(o.snippets ? { snippet: snippetOf(f.text, q) } : {}),
-    });
-    const out: SearchAnswer[] = [];
-    for (const f of found) {
-      const matched = f.matched ?? [];
-      const card = f.kind === 'map' ? shared.cards.get(f.id) : undefined;
-      out.push({
-        ...answer(f),
-        ...(card ? { view_url: card.view_url } : {}),
-        ...(matched.length ? { matched: matched.map(answer) } : {}),
-      });
-    }
-    return out;
+    return { results: await searchWith(ctx, model, q, o), meaning: 'on' };
   } catch (e) {
     if (e instanceof SearchModelDown) {
-      throw new ToolFailure(
-        'source_failed',
-        e.message,
-        'coordinator/search_model_up.sh starts it.',
-      );
+      console.warn(`petal: search by words alone: ${e.message}`);
+      return off();
     }
     throw e;
   }
+}
+
+async function searchWith(
+  ctx: ToolContext,
+  model: SearchModel | null,
+  q: string,
+  o: Parameters<typeof searchPetals>[2] = {},
+): Promise<SearchAnswer[]> {
+  const kinds = new Set(o.kinds ?? FINDABLE_KINDS);
+  const shared = await mapSet(ctx, model);
+  const subject = ctx.caller?.subject ?? null;
+  const own = subject ? await ownDocs(ctx, subject, shared.cards) : [];
+  const set = own.length
+    ? joinSets(shared.set, await searchSet(own, model, keepOf(privateStore(ctx.config))))
+    : shared.set;
+  const found = await find(set, q, model, {
+    n: o.limit ?? 10,
+    rerank: o.rerank === false ? 0 : RERANKED,
+    // a map with what matched under it, when maps are asked for; else each as itself
+    group: kinds.has('map'),
+    prefix: o.prefix === true,
+    only: (d) => kinds.has(d.kind),
+  });
+  const answer = (f: Omit<Found, 'matched'>) => ({
+    kind: f.kind,
+    id: idOf(f),
+    title: f.title,
+    about: f.about ?? null,
+    score: f.score,
+    ranks: f.ranks,
+    ...(f.rerank !== undefined ? { rerank: f.rerank } : {}),
+    ...(f.at ? { at: f.at } : {}),
+    ...(o.snippets ? { snippet: snippetOf(f.text, q) } : {}),
+  });
+  return found.map((f) => {
+    const matched = f.matched ?? [];
+    const card = f.kind === 'map' ? shared.cards.get(f.id) : undefined;
+    return {
+      ...answer(f),
+      ...(card ? { view_url: card.view_url } : {}),
+      ...(matched.length ? { matched: matched.map(answer) } : {}),
+    };
+  });
 }
 
 const ANSWER = obj(['kind', 'id', 'title', 'score', 'ranks'], {
@@ -358,15 +373,15 @@ type SearchInput = { q: string; kinds?: FindableKind[]; limit?: number };
 
 /** The tool, with whose search it is: the door's caller, or the person a run is for. */
 const searchTool = (as: (ctx: ToolContext) => ToolContext) =>
-  defineTool<SearchInput, { results: SearchAnswer[] }>({
+  defineTool<SearchInput, SearchResults>({
     name: 'search_petals',
     title: 'Search Petals',
     description:
       "Searches everything on Petals' map (organisations, their names, symbols and types, and their proposals) " +
       'and, for the signed-in person, their own conversations, explorations, notes, follows and annotations: by ' +
-      'words and by meaning, so a question in any words finds what it is about ("the DAO that funds NEAR ' +
+      'words and by meaning: it finds things on the map by meaning, without their names ("the DAO that funds NEAR ' +
       'marketing", "who paid for a hackathon booth"). One answer per map, with the proposals or claims that ' +
-      'matched under it. The web is search, not this.',
+      'matched under it. When its model is off it searches by words alone and says so. The web is search, not this.',
     input: obj(
       ['q'],
       {
@@ -385,15 +400,17 @@ const searchTool = (as: (ctx: ToolContext) => ToolContext) =>
       },
       { additionalProperties: false },
     ),
-    output: obj(['results'], { results: { type: 'array', items: ANSWER } }),
+    output: obj(['results', 'meaning'], {
+      results: { type: 'array', items: ANSWER },
+      meaning: { type: 'string', enum: ['on', 'off'] },
+      says: { type: 'string' },
+    }),
     annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     async run({ q, kinds, limit }, ctx) {
-      return {
-        results: await searchPetals(as(ctx), q, {
-          ...(kinds ? { kinds } : {}),
-          ...(limit ? { limit } : {}),
-        }),
-      };
+      return searchPetals(as(ctx), q, {
+        ...(kinds ? { kinds } : {}),
+        ...(limit ? { limit } : {}),
+      });
     },
   });
 

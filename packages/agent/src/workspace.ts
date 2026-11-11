@@ -38,7 +38,6 @@ import {
   searchPetals,
   shapeAt,
   type ToolContext,
-  ToolFailure,
 } from '@petal/tools';
 import { type Context, Hono, type MiddlewareHandler } from 'hono';
 import type { RouteAuth } from './auth-routes.ts';
@@ -1162,17 +1161,12 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       return fail(c, 'rate_limited', 'Too many searches from one address.', undefined, wait);
     }
     if (subject) await catchUp(subject);
-    try {
-      const results = await searchPetals(
-        { ...tools, caller: { ...tools.caller, subject: subject ?? null, door: 'http' } },
-        q,
-        { kinds, limit: limitOf(c, 30), prefix: true, snippets: true },
-      );
-      return ok(c, { results });
-    } catch (e) {
-      if (e instanceof ToolFailure) return fail(c, e.code, e.message, e.hint);
-      throw e;
-    }
+    const found = await searchPetals(
+      { ...tools, caller: { ...tools.caller, subject: subject ?? null, door: 'http' } },
+      q,
+      { kinds, limit: limitOf(c, 30), prefix: true, snippets: true },
+    );
+    return ok(c, { ...found });
   });
 
   return app;

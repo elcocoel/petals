@@ -17,6 +17,7 @@ import {
   memoryVectors,
   readBrain,
   routeBrain,
+  SEARCH_RERANKER,
   type SearchSet,
   searchModel,
   searchSet,
@@ -41,7 +42,7 @@ const model = searchModel(values.url ?? 'http://192.168.65.1:8095', {
   ...(values.embedding ? { embedding: values.embedding } : {}),
   ...(values.reranker ? { reranker: values.reranker } : {}),
 });
-console.log(`models: ${model.embedding}, ${values.reranker ?? 'Qwen3-Reranker-0.6B'}`);
+console.log(`models: ${model.embedding}, ${values.reranker ?? SEARCH_RERANKER}`);
 const keep = values.vectors ? fileVectors(values.vectors) : memoryVectors();
 
 /** Vectors kept in a folder between runs, one file per model, so a big model embeds the map once. */

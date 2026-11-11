@@ -15,8 +15,10 @@ export interface SearchModel {
   rerank(question: string, documents: readonly string[]): Promise<number[]>;
 }
 
-export const SEARCH_EMBEDDING = 'Qwen3-Embedding-0.6B';
-export const SEARCH_RERANKER = 'Qwen3-Reranker-0.6B';
+// 4B over 0.6B (scripts/search-eval.ts, 11 Nov): a map without its name 17/26 first/top 3 against 15/20, a proposal
+// in other words 12/12 against 8/10
+export const SEARCH_EMBEDDING = 'Qwen3-Embedding-4B';
+export const SEARCH_RERANKER = 'Qwen3-Reranker-4B';
 /** texts per embedding request */
 const BATCH = 64;
 

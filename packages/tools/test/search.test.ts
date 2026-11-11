@@ -17,7 +17,8 @@ import {
   wordIndex,
   wordsOf,
 } from '../src/search-index.ts';
-import { fakeSearchModel, type SearchModel } from '../src/search-model.ts';
+import { fakeSearchModel, type SearchModel, searchModel } from '../src/search-model.ts';
+import { MEANING_OFF } from '../src/tools/search-petals.ts';
 import { rig, type TestRig } from './helpers.ts';
 
 // biome-ignore lint/suspicious/noExplicitAny: walking tool outputs
@@ -185,6 +186,7 @@ describe('search_petals', () => {
 
   test('finds the map by its name and by its address, and a proposal under its map', async () => {
     const named = await run({ q: 'founders guild' });
+    expect(named.meaning).toBe('on');
     expect(named.results[0]).toMatchObject({ kind: 'map', title: 'Founders Guild v1' });
     expect(named.results[0].view_url).toMatch(/\/d\//);
     expect((await run({ q: DAO })).results[0]).toMatchObject({ kind: 'map' });
@@ -205,10 +207,26 @@ describe('search_petals', () => {
     expect(embedded).toHaveLength(once);
   });
 
-  test('with no model, it says so', async () => {
+  test('with no model running, it searches by words alone and says so (Elco: "Fall back to word search")', async () => {
     // fake mode brings its own; a real site with no PETAL_SEARCH_URL has none
     r.ctx = { ...r.ctx, searchModel: undefined, config: { ...r.ctx.config, fake: false } };
-    const out = await run({ q: 'founders guild' });
-    expect(out.error).toMatchObject({ code: 'source_failed' });
+    const off = await run({ q: 'founders guild' });
+    expect(off).toMatchObject({ meaning: 'off', says: MEANING_OFF });
+    expect(off.results[0]).toMatchObject({
+      kind: 'map',
+      title: 'Founders Guild v1',
+      ranks: { words: 1 },
+    });
+    // and a model that doesn't answer is the same
+    r.ctx = {
+      ...r.ctx,
+      searchModel: searchModel('http://127.0.0.1:9', {
+        fetch: () => Promise.reject(new Error('refused')),
+      }),
+    };
+    const down = await run({ q: 'founders guild' });
+    expect(down).toMatchObject({ meaning: 'off' });
+    expect(down.results[0]).toMatchObject({ title: 'Founders Guild v1' });
+    expect((await run({ q: 'nothing like it' })).results).toEqual([]);
   });
 });
