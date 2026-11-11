@@ -58,6 +58,18 @@ What you find or are told about an account goes into the person's project as dat
 - Save each one as soon as you find it. A name is a lead, not a verified identity: say so when you tell the person.
 - `list_annotations` shows what the project holds, or everything about one account with `about`.
 
+## Formats
+
+Everything Petals keeps is a versioned document whose `petal` field names its format, such as `layer/v1` or `claim/v4`. You can write any of them yourself, without Petals' agent:
+
+- **Each format's JSON Schema** is on the Petals site at `/schema/<format>/<version>.json`, such as `/schema/snapshot/v1.json`. The list of every format is at `/schema`.
+- **A document's name is its hash:** the SHA-256 of its RFC 8785 canonical JSON. The tools make it for you.
+- **Amounts, counts and shares are decimal text, never JSON numbers,** so large ones keep every digit before they're hashed. In a snapshot's holding, `amount` is in whole tokens and `amount_raw` in the chain's base units, as whole-number text.
+- **An account** is written as the reading writes it: a bare address, with the chain on `network.chain`. A map's address is `chain:address`, with an EVM address in lower case.
+- **Check a file before you keep it:** `node ~/.petals/petal.mjs validate-data @file.json` runs the same checks Petals runs, says what's wrong, and gives the document's sha256. It writes nothing.
+- **A reading you made yourself** (`snapshot/v1`): `node ~/.petals/petal.mjs keep-snapshot @snapshot.json --exploration <the project's link>` keeps it on this computer and in the project. When Petals reads its network, draw it like any other: `propose_spec` with the network and its sha256.
+- **Layers and claims** go in with `add_layer` and `add_annotation`, as above. A seam is made by `compose_view`, never by hand.
+
 ## Jobs from Petals
 
 Petals' own agent, in the chat on the page, hands jobs to the person's agents, such as mapping a network. The job is the person's yes for its map, so don't ask again.
