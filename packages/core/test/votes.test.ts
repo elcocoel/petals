@@ -7,9 +7,8 @@ import {
   arcsOf,
   LANE_GAP,
   laneRadius,
-  OTHERS_AT,
   type Proposal,
-  placeDot,
+  placeArc,
   placesOf,
   voteDot,
   votesOn,
@@ -121,10 +120,9 @@ describe('the ring', () => {
       { id: 'c', petal: -1, step: 0 },
       { id: 'd', petal: -1, step: 1 },
     ]);
-    const near = placeDot(OTHERS_AT, 0);
-    const far = placeDot(OTHERS_AT, 3);
-    expect(Math.hypot(far.x - 400, far.y - 400)).toBeGreaterThan(
-      Math.hypot(near.x - 400, near.y - 400),
-    );
+    const ring = newRing(2);
+    lay(ring, Float64Array.from([1, 1]), Float64Array.from([10, 10]), 0);
+    expect(placeArc(ring, 0, 0)).toMatch(/^M[\d.]+ [\d.]+A/);
+    expect(placeArc(ring, -1, 9)).not.toContain('NaN');
   });
 });

@@ -54,6 +54,7 @@ export async function votesBench(days = 90): Promise<LookFlower | { error: strin
       fills: Object.fromEntries(petals.map((p) => [p.id, GREY.hex])),
       bands: {},
       highlight: [],
+      roundTops: true,
       votes: {
         ...stretch,
         proposals,
@@ -69,7 +70,7 @@ export async function votesBench(days = 90): Promise<LookFlower | { error: strin
     facts: [
       `NEAR's Marketing DAO (marketing.sputnik-dao.near): ${petals.length} members, each as tall as the votes they cast.`,
       `${whole(proposals.length)} proposals and ${whole(proposals.reduce((t, p) => t + p.votes.length, 0))} votes, read from the DAO itself on ${day(doc.value.proposals.source.at)}.`,
-      `The ring is ${day(stretch.from)} to ${day(stretch.to)}, the DAO's last ${days} days, clockwise from twelve: ${inStretch.length} proposals. Each dot is a proposal, above the petal of the member who put it up, oldest nearest the ring; a hollow dot was put up by an account not on this flower.`,
+      `The ring is ${day(stretch.from)} to ${day(stretch.to)}, the DAO's last ${days} days, clockwise from twelve: ${inStretch.length} proposals. Each arc is a proposal, over the petal of the member who put it up, oldest nearest the ring; a pale arc was put up by an account not on this flower.`,
       'Point at a proposal: a dot shows under each member that voted. No vote, no dot.',
     ],
     highlight: '',
@@ -110,6 +111,7 @@ export async function raidguildVotes(days = 90): Promise<LookFlower | { error: s
     look: {
       ...raidguild.look,
       highlight: [],
+      roundTops: true,
       votes: { ...stretch, proposals, colours: { for: mint, against: pink, abstain: GREY.hex } },
     },
     key: [
@@ -120,7 +122,7 @@ export async function raidguildVotes(days = 90): Promise<LookFlower | { error: s
     facts: [
       ...raidguild.facts.slice(0, 1),
       `RaidGuild's Baal: ${whole(proposals.length)} proposals and ${whole(votes)} votes, read from its logs on ${day(doc.value.proposals.source.at)}; ${whole(onPetals)} of the votes are by delegates drawn here.`,
-      `The ring is ${day(stretch.from)} to ${day(stretch.to)}, the last ${days} days, clockwise from twelve: ${inStretch.length} proposals. Each dot is a proposal, above the petal of the member who put it up, oldest nearest the ring; a hollow dot was put up by an account not on this flower.`,
+      `The ring is ${day(stretch.from)} to ${day(stretch.to)}, the last ${days} days, clockwise from twelve: ${inStretch.length} proposals. Each arc is a proposal, over the petal of the member who put it up, oldest nearest the ring; a pale arc was put up by an account not on this flower.`,
       'Point at a proposal: a dot shows under each delegate that voted. No vote, no dot.',
     ],
     highlight: '',

@@ -157,23 +157,27 @@ export function placesOf(
 /** The angle the proposals of no petal stack at: just before twelve, where the ring starts and ends. */
 export const OTHERS_AT = -0.05;
 
-/** A stack is this many dots high; past it, the next column starts beside it. */
+/** A stack is this many arcs high; past it, the next column starts beside it (the others' stack only). */
 export const STACK_MOST = 8;
-/** How far apart a stack's columns are, in radians round the ring. */
-const COLUMN_TURN = 0.035;
+/** The others' stack: arcs this wide, in radians, in columns going back from twelve. */
+const OTHERS_WIDTH = 0.05;
 
 /**
- * A placed proposal's dot: above its petal's middle (or at OTHERS_AT), out from the ring by its step, in columns of
- * STACK_MOST so a long stack stays near the flower; the others' stack grows backwards, away from the first petal.
+ * A placed proposal's arc (Elco, 11 Nov: "an arch ... on top of the segment of the actual petal"): over its
+ * proposer's petal's own stretch of the circle, the fine gap kept at each end, out from the ring by its step. A
+ * proposal of no petal sits in the others' stack just before twelve, in columns of STACK_MOST.
  */
-export function placeDot(
-  mid: number,
-  step: number,
-  back = false,
-): { x: number; y: number; r: number } {
+export function placeArc(ring: Ring, petal: number, step: number): string {
+  if (petal >= 0) {
+    const r = SHAPE.R * VOTE_RING + 3 + step * STACK_GAP;
+    const a0 = (ring.start[petal] as number) + ring.rotation;
+    const a1 = (ring.start[petal + 1] as number) + ring.rotation;
+    // the line between petals, as an angle at this radius
+    const pad = Math.min((a1 - a0) / 4, (ring.gut[petal] as number) / r + 0.6 / r);
+    return arcPath(a0 + pad, Math.max(a0 + pad, a1 - pad), r);
+  }
   const column = Math.floor(step / STACK_MOST);
   const row = step % STACK_MOST;
-  const a = mid + (back ? -1 : 1) * column * COLUMN_TURN;
-  const rr = SHAPE.R * VOTE_RING + 3 + row * STACK_GAP;
-  return { x: SHAPE.cx + rr * Math.sin(a), y: SHAPE.cy - rr * Math.cos(a), r: 2.2 };
+  const end = OTHERS_AT - column * (OTHERS_WIDTH + 0.015);
+  return arcPath(end - OTHERS_WIDTH, end, SHAPE.R * VOTE_RING + 3 + row * STACK_GAP);
 }
