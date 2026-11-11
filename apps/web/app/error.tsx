@@ -9,12 +9,16 @@ import { siteLinks } from '../lib/site-links.ts';
 export default function PageError({ reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-dvh flex-col">
-      <Oops title={oopsWords.broke.title} body={oopsWords.broke.body}>
-        <Button onClick={reset}>{oopsWords.broke.again}</Button>
-        <Button href={siteLinks.home} variant="secondary">
-          {oopsWords.home}
-        </Button>
-      </Oops>
+      <Oops
+        title={oopsWords.broke.title}
+        body={oopsWords.broke.body}
+        primary={<Button onClick={reset}>{oopsWords.broke.again}</Button>}
+        secondary={
+          <Button href={siteLinks.home} variant="quiet">
+            {oopsWords.home}
+          </Button>
+        }
+      />
     </div>
   );
 }

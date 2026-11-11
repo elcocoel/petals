@@ -8,7 +8,7 @@ export const oopsWords = {
   },
   broke: {
     title: 'Oops, something went wrong.',
-    body: 'That one’s on us. Try again, or go back to the front page.',
+    body: 'That one’s on us. Try again.',
     again: 'Try again',
   },
   home: 'Back to the front page',
