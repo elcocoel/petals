@@ -226,6 +226,20 @@ export function StoryFlower({
             />
           ))}
         </g>
+        {/* each petal's thickness, a darker slab just under it, lit from the upper left like its highlight */}
+        <g transform="translate(1.4 3)">
+          {lengths.map((r, i) => {
+            const paint = petalPaint(beat, t, i, fresh);
+            return (
+              <path
+                // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
+                key={i}
+                d={petalPath(i, r)}
+                fill={`color-mix(in srgb, ${mix(paint.from, paint.to, paint.k)} 68%, black)`}
+              />
+            );
+          })}
+        </g>
         <g>
           {lengths.map((r, i) => {
             const paint = petalPaint(beat, t, i, fresh);

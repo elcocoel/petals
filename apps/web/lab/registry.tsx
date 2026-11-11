@@ -37,6 +37,7 @@ import { BuildWithUs } from '../components/landing/BuildWithUs.tsx';
 import { GallerySection } from '../components/landing/GallerySection.tsx';
 import { GiveToAgent } from '../components/landing/GiveToAgent.tsx';
 import { Hero } from '../components/landing/Hero.tsx';
+import { Glass } from '../components/landing/HeroGlass.tsx';
 import { HeroStory } from '../components/landing/HeroStory.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
 import { LandingMap } from '../components/landing/LandingMap.tsx';
@@ -698,6 +699,25 @@ export const registry: LabEntry[] = [
       render: () => (
         <div className="aspect-3/2 w-full">
           <StoryLight beat={beat} t={SETTLED_MS} />
+        </div>
+      ),
+    })),
+  },
+  {
+    id: 'Glass',
+    group: 'Marks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/HeroGlass.tsx',
+    // the material behind the hero's bubbles: light for the question, smoked ink for the answer
+    states: (['light', 'dark'] as const).map((tone) => ({
+      name: tone,
+      render: () => (
+        <div className="relative w-1/2 p-block-gap">
+          <Glass tone={tone} glint={0.5} />
+          <p className={`relative my-0 type-lead ${tone === 'dark' ? 'text-on-action' : ''}`}>
+            {tone === 'dark' ? 'Here’s how power is shared.' : 'Show me my community.'}
+          </p>
         </div>
       ),
     })),

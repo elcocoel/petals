@@ -285,6 +285,14 @@ export interface Motion {
   y: number;
   blur: number;
   scale: number;
+  /** degrees it is turned to face the flower; it swings in wider and settles */
+  turn: number;
+  /** px towards the viewer */
+  z: number;
+  /** how far a glint has crossed its glass, 0 to 1 */
+  glint: number;
+  /** how bright its rim is, 0 to 1 */
+  glow: number;
 }
 
 /**
@@ -297,11 +305,16 @@ export function question(beat: number, u: number, fresh = false): Motion {
   const answered = ease.outCubic(at(u, ANSWER_MS - 150, 700));
   const leave = ease.inOutCubic(at(u, beatMs(beat) - QUESTION_LEAVES_MS, 550));
   return {
-    opacity: ease.outCubic(at(u, start, 450)) * (1 - 0.5 * answered) * (1 - leave),
+    opacity: ease.outCubic(at(u, start, 450)) * (1 - 0.45 * answered) * (1 - leave),
     x: -26 * (1 - inQ),
     y: 10 * (1 - inQ) - 16 * leave,
     blur: 8 * (1 - inQ) + 0.6 * answered + 6 * leave,
     scale: 0.94 + 0.06 * inQ - 0.02 * answered,
+    // it swings in like a door, rests turned a little to the flower, and is pushed back once answered
+    turn: 15 + 26 * (1 - spring(at(u, start, 1100))) + 10 * leave,
+    z: 40 - 90 * answered - 60 * leave,
+    glint: at(u, start + 300, 1000),
+    glow: ease.outCubic(at(u, start, 700)) * (1 - 0.5 * answered),
   };
 }
 
@@ -317,6 +330,10 @@ export function answer(beat: number, u: number): Motion {
     y: 10 * (1 - inA) - 16 * leave,
     blur: 6 * leave,
     scale: 0.94 + 0.06 * inA,
+    turn: 13 + 30 * (1 - spring(at(u, ANSWER_MS - 150, 1200))) + 12 * leave,
+    z: 80 - 50 * leave,
+    glint: at(u, ANSWER_MS + 300, 1100),
+    glow: ease.outCubic(at(u, ANSWER_MS - 100, 900)),
   };
 }
 
