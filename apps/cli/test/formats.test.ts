@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { canonicalJson, sha256Hex } from '@petal/core';
-import type { Tool, ToolContext } from '@petal/tools';
+import { mappingProblems, type Tool, type ToolContext } from '@petal/tools';
 import { describe, expect, test } from 'vitest';
 import { validateData } from '../src/formats.ts';
 import { LEFT_OUT, SITE_TOOLS, siteDoor } from '../src/site.ts';
@@ -46,6 +46,57 @@ describe('validate_data', () => {
       "There's no check here for recipe/v9",
     );
     expect(JSON.stringify(validateData({ hello: 1 }))).toContain('petal names the format');
+  });
+});
+
+describe("validate_data --public: what the shared map's loader says (SYSTEMS's mappingProblems)", () => {
+  // the L2 wave's own note on Gnars (research/dao-set-2026-11-11), which a private project takes
+  const NOTE = {
+    petal: 'claim/v3',
+    subject: 'eip155:8453:0x880fb3cf5c6cc2d7dfc13a993e839a9411200c17',
+    verb: 'noted',
+    object: {
+      value:
+        'Gnars is a Nouns Builder NFT membership DAO. Its Base governor is 0x3dd4e53a232b7b715c9ae455f4e732465ed71b4c and treasury is 0x72ad986ebac0246d2b3c565ab2a1ce3a14ce6f88; the governor returned this token and treasury at block 56112646. Current NFT ownership and delegated voting power are separate populations; ballots refer to each proposal snapshot, not today’s balances. No NFT dollar price is assumed, and token supply is not treasury value.',
+    },
+    issued_at: '2026-11-11T16:06:28.478925Z',
+    kind: 'sourced',
+    evidence: [
+      {
+        type: 'page',
+        url: 'https://nouns.build/dao/base/0x880fb3cf5c6cc2d7dfc13a993e839a9411200c17',
+        retrieved_at: '2026-11-11T16:06:28.478925Z',
+        found_by: 'tool:codex-l2-base-community@2026-11-11',
+        found_at: '2026-11-11T16:06:28.478925Z',
+      },
+      {
+        type: 'snapshot',
+        snapshot_sha256: '12b502ce813b26cbda9331352f3af062a55c3964e36233c8f0302aa9e3d50613',
+        found_by: 'tool:codex-l2-base-community@2026-11-11',
+        found_at: '2026-11-11T16:06:28.478925Z',
+      },
+    ],
+    by: 'tool:codex-l2-base-community@2026-11-11',
+    via: 'tool:codex-l2-base-community@2026-11-11',
+    id: 'ed4b56189bc5ec067697d4dbd51a537ecdc8ec7c30da211c04a016c2a41b776f',
+  };
+
+  test("a note the person's project takes is refused for the shared map, in the loader's words", () => {
+    expect(validateData(NOTE)).toMatchObject({ ok: true });
+    const out = validateData(NOTE, { public: true }) as {
+      ok: boolean;
+      errors: { message: string }[];
+    };
+    expect(out.ok).toBe(false);
+    expect(out.errors.map((e) => e.message)).toEqual(mappingProblems(NOTE));
+    expect(out.errors[0]?.message).toMatch(/a note must not name a person/);
+  });
+
+  test("a layer, which the loader doesn't take, says so; a valid snapshot passes both ways", () => {
+    expect(JSON.stringify(validateData(fixture('layer.v1.json'), { public: true }))).toContain(
+      "isn't a format the loader takes",
+    );
+    expect(validateData(fixture('snapshot.v1.json'), { public: true })).toMatchObject({ ok: true });
   });
 });
 

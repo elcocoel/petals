@@ -13,7 +13,7 @@ import {
   validateSnapshot,
   validateValue,
 } from '@petal/core';
-import type { Tool } from '@petal/tools';
+import { mappingProblems, type Tool } from '@petal/tools';
 
 type Json = Record<string, unknown>;
 type Issue = { path: string; message: string };
@@ -50,8 +50,11 @@ const nameOf = (doc: Json): string | null => {
   return /^[a-z][a-zA-Z0-9-]*\/v\d+$/.test(petal) ? (petal.split('/')[0] as string) : null;
 };
 
-/** What `validate_data` answers for one document. */
-export function validateData(doc: unknown): Json {
+/**
+ * What `validate_data` answers for one document: as the person's own project checks it, or with `public`,
+ * word for word what the shared map's loader says of it (SYSTEMS's mappingProblems).
+ */
+export function validateData(doc: unknown, o: { public?: boolean } = {}): Json {
   if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
     return { ok: false, errors: [{ path: '', message: 'A document is a JSON object.' }] };
   }
@@ -64,6 +67,18 @@ export function validateData(doc: unknown): Json {
         { path: '/petal', message: 'petal names the format and its version, such as layer/v1.' },
       ],
     };
+  }
+  if (o.public) {
+    const reasons = mappingProblems(d);
+    const sha = sha256Hex(new TextEncoder().encode(canonicalJson(d)));
+    return reasons.length
+      ? {
+          format: d.petal,
+          ok: false,
+          sha256: sha,
+          errors: reasons.map((message) => ({ path: '', message })),
+        }
+      : { format: d.petal, ok: true, sha256: sha };
   }
   if (name === 'seam') {
     return {
@@ -101,7 +116,7 @@ export function validateData(doc: unknown): Json {
     : { format: d.petal, ok: false, sha256, errors: out.errors };
 }
 
-export const validateDataTool: Tool<{ document: unknown }, Json> & {
+export const validateDataTool: Tool<{ document: unknown; public?: boolean }, Json> & {
   title: string;
   description: string;
   annotations: object;
@@ -116,6 +131,11 @@ export const validateDataTool: Tool<{ document: unknown }, Json> & {
     additionalProperties: false,
     properties: {
       document: { type: 'object', description: 'the document, whose petal field names its format' },
+      public: {
+        type: 'boolean',
+        description:
+          "check it as the shared map's loader does, for a file going there: it refuses a person's name in a claim's words",
+      },
     },
   },
   output: {
@@ -129,5 +149,5 @@ export const validateDataTool: Tool<{ document: unknown }, Json> & {
     },
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  run: async ({ document }) => validateData(document),
+  run: async ({ document, public: pub }) => validateData(document, { public: pub === true }),
 };
