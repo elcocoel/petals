@@ -109,6 +109,30 @@ describe('projects', () => {
   test('a conversation in no project, or in one that is gone, is loose', () => {
     expect(byProject(rows, projects).loose.map((r) => r.key)).toEqual(['c', 'd']);
   });
+
+  // swarm step 2 (SYSTEMS's 0426b0a; design/side-panel.md, line 44): hand_job opens a conversation in the
+  // handing one's project, titled by the job, listed as another door's work
+  test("a job's own conversation sits in the project with the one that handed it out, named by the job", () => {
+    const withJob = conversationRows(
+      [
+        listed({
+          id: 'exp_job',
+          run_id: null,
+          title: 'Map the shares',
+          status: 'elsewhere',
+          folder: 'p2',
+        }),
+        listed({ id: 'a', run_id: 'a', folder: 'p2' }),
+      ],
+      NONE,
+      NOW,
+    );
+    const second = byProject(withJob, projects).projects.find((p) => p.name === 'Second');
+    expect(second?.rows.map((r) => [r.key, r.title, r.by, r.href])).toEqual([
+      ['exp_job', 'Map the shares', 'own', '/make?elsewhere=exp_job'],
+      ['a', 'Who holds Moloch DAO?', 'petals', '/make?run=a'],
+    ]);
+  });
 });
 
 describe('the view', () => {
