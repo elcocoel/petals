@@ -1,7 +1,7 @@
 // The legend (design/legend.md; Elco, 11 Nov: "an interactive visual legend element which is basically
 // settings but it has to show up nice and pretty on published maps and interactive on a map we are working
-// on"; board #92). The person's view drawn as a key: one row for each dimension that draws something on
-// this flower, the brief's behaviours first (height, colour, segments; design/flower-art-direction/
+// on"; board #92). The person's view drawn as a key: one row for each of Settings' rows that draws
+// something on this flower (the brief's behaviours, then Labels; design/flower-art-direction/
 // default-system-vnext.md), each saying the data it shows and, for a number, its scale, with the colours'
 // keys under Colour. On a published map or a still picture it only reads. Handed Settings' own hands (on
 // /make), a row opens the same choices Settings does (DimensionChoices), and a choice changes the person's
@@ -11,6 +11,7 @@ import type { View } from '@petal/core/types';
 import type { Dimension, Piece } from '@petal/core/view';
 import type { LegendKey } from '../lib/flower-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
+import { SETTINGS_ROWS, type SettingsRow } from '../lib/person-view.ts';
 import { type LegendEdit, scaleOf } from '../lib/view-edit.ts';
 import { LegendKeys } from './Legend.tsx';
 import { NavItem } from './ui/NavItem.tsx';
@@ -19,19 +20,14 @@ import { DimensionChoices } from './workspace/ViewControls.tsx';
 
 const words = panelWords.settings;
 
-/** The brief's behaviours first, then the rest of view/v2's dimensions. */
-const ORDER: readonly Dimension[] = [
-  'height',
-  'colour',
-  'segments',
-  'order',
-  'width',
-  'outline',
-  'texture',
-  'markings',
-  'lines',
-  'labels',
-];
+/**
+ * Settings' own rows (lib/person-view.ts SETTINGS_ROWS: the brief's behaviours, then Labels), one source, so
+ * the legend says what Settings sets (META's go, 11 Nov, inside #76's brief). Highlight has no place in a view
+ * yet, so it has no row until a chosen group draws one.
+ */
+const ORDER: readonly Dimension[] = SETTINGS_ROWS.filter(
+  (d): d is Exclude<SettingsRow, 'highlight'> => d !== 'highlight',
+);
 
 export type { LegendEdit };
 
