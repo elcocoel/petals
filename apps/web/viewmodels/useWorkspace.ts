@@ -285,9 +285,11 @@ export function useWorkspace(props: {
     Boolean(onCanvas) &&
     (onCanvas?.key === panelFlower?.key || (storedId !== null && onCanvas?.stored === storedId));
 
+  // With the map on the canvas from a link, the question isn't about the flower left behind it (#78: the
+  // field said 'About this flower…' over the whole map).
   const target = useMemo(
-    () => composerTarget(panelFlower, selectedPetal),
-    [panelFlower, selectedPetal],
+    () => (mapAt ? composerTarget(null, null) : composerTarget(panelFlower, selectedPetal)),
+    [mapAt, panelFlower, selectedPetal],
   );
   // A pick holds from now on. It's kept at once on a conversation that's going, and goes with the first
   // message on a new one.
@@ -428,7 +430,8 @@ export function useWorkspace(props: {
     },
     actions: {
       setQuestion: chatActions.setQuestion,
-      send: () => chatActions.send(questionPrefix(panelFlower, target), picked ?? undefined),
+      send: () =>
+        chatActions.send(questionPrefix(mapAt ? null : panelFlower, target), picked ?? undefined),
       toggleModels: () => setModelsOpen(!modelsOpen),
       pickModel: (id: string) => {
         if (!catalogue || !settings) return;
