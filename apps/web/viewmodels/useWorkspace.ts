@@ -46,6 +46,7 @@ import { useJobControls } from './useJobControls.ts';
 import { useJobs } from './useJobs.ts';
 import { useMakeChat } from './useMakeChat.ts';
 import { useMapValue } from './useMapValue.ts';
+import { useMapVotes } from './useMapVotes.ts';
 import { usePay } from './usePay.ts';
 import { usePersonView } from './usePersonView.ts';
 import { useSession } from './useSession.ts';
@@ -152,6 +153,7 @@ export function useWorkspace(props: {
   );
   const facts = useSnapshotFacts(panelFlower?.spec.snapshot.sha256 ?? null);
   const mapValue = useMapValue(panelFlower?.spec);
+  const mapVotes = useMapVotes(panelFlower?.spec);
   const drawing = panelFlower ? drawings[panelFlower.key] : undefined;
   const selectedPetal = drawing?.petals?.find((p) => p.id === petal) ?? null;
 
@@ -381,6 +383,8 @@ export function useWorkspace(props: {
       composer,
       panel,
       onCanvas,
+      /** the canvas flower's map's proposals on the ring (#93), once it's the panel's */
+      votes: canvasIsOpen ? mapVotes : null,
       /** The Power Map on the canvas, at a map (by id) or whole (null), when a link in the chat opened it. */
       mapAt,
       selected: canvasIsOpen ? petal : null,

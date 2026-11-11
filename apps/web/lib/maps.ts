@@ -49,6 +49,8 @@ export interface MapCard {
   value?: MapValue | null;
   /** what tells its organisation from another (#85): its name, its token's symbol, its logo; null until read */
   mark?: MapMark | null;
+  /** how many proposals SYSTEMS has read for it (#93), or null where it has none; older servers leave it out */
+  proposals?: { count: number; voted: number; read_at: string } | null;
   /** newest first */
   readings: MapReading[];
 }

@@ -16,6 +16,7 @@ import type { PanelSection } from '../lib/thread.ts';
 import { petalWorth } from '../lib/value-view.ts';
 import { useDrawnFlowers } from './useDrawnFlower.ts';
 import { useMapValue } from './useMapValue.ts';
+import { useMapVotes } from './useMapVotes.ts';
 import { usePersonView } from './usePersonView.ts';
 import { useSnapshotFacts } from './useSnapshotFacts.ts';
 
@@ -25,6 +26,7 @@ export function useFlowerPage(flower: PanelFlower) {
   const drawing = useDrawnFlowers(toDraw, person)[flower.key];
   const facts = useSnapshotFacts(flower.spec.snapshot.sha256);
   const value = useMapValue(flower.spec);
+  const votes = useMapVotes(flower.spec);
   const [petal, setPetal] = useState<string | null>(null);
   const [section, setSection] = useState<PanelSection>(null);
   // The page is the flower: its box is open from the start.
@@ -59,6 +61,8 @@ export function useFlowerPage(flower: PanelFlower) {
   return {
     state: {
       canvas,
+      /** its map's proposals on the ring (#93), where it has any */
+      votes,
       panel,
       selected: petal,
       petal: selected && canvasPetal(selected),

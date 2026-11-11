@@ -3,6 +3,7 @@
 // the drawing in scene.ts. React mounts this once and never renders per frame.
 import { type RefObject, useEffect, useRef } from 'react';
 import type { CanvasHit } from '../lib/panel-view.ts';
+import type { VoteRing } from '../lib/vote-ring.ts';
 import {
   type Clear,
   clearSides,
@@ -26,8 +27,10 @@ export interface CanvasOptions {
   reading: FlowerReading | null;
   hover: HoverWay;
   relations: FakeRelations | null;
-  /** The lab's look (#76): none on the product's pages until Elco has seen it. */
+  /** A look of the page's own (the lab's benches); with none, the flower's own (core lookFills). */
   look?: PetalLook | null;
+  /** its map's proposals on the ring (#93) */
+  votes?: VoteRing | null;
   scatter: boolean;
   probe: boolean;
   readout: boolean;
@@ -78,6 +81,7 @@ export function useFlowerCanvas(
       calm: motion.matches,
       relations: options.relations,
       look: options.look ?? null,
+      votes: options.votes ?? null,
       readout: options.readout,
     });
     const { live, scene } = d;

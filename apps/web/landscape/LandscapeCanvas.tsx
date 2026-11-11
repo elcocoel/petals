@@ -35,6 +35,9 @@ export interface CanvasFlower {
   reading: FlowerReading;
   /** its reading's snapshot, the relations index's name for its group */
   snapshot?: string | undefined;
+  /** the map it stands for, and how many proposals that map has (#93: its vote ring up close) */
+  map?: string | null | undefined;
+  proposals?: number | undefined;
 }
 
 export interface CanvasChain {
@@ -187,6 +190,8 @@ export function LandscapeCanvas({
         model,
         reach: reachOf(model),
         snapshot: f.snapshot,
+        map: f.map ?? null,
+        proposals: f.proposals ?? 0,
       });
     });
     const roads = data.roads.flatMap((r) => {

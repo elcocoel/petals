@@ -14,7 +14,7 @@ import type {
   Spec,
   View,
 } from '@petal/core/types';
-
+import type { Proposal } from '@petal/core/wedge/votes';
 import type { BenchLandscape } from '../landscape/land.ts';
 import type { ConnectedAgent } from './agents.ts';
 import type { AnnotationRow } from './claim-lines.ts';
@@ -403,6 +403,14 @@ export async function readMapValue(map: string): Promise<MapValue | null> {
   if (!res?.ok) return null;
   const json = (await res.json().catch(() => ({}))) as { map?: { value?: MapValue | null } };
   return json.map?.value ?? null;
+}
+
+/** A map's proposals with every vote (#93), as SYSTEMS reads them (proposals/v1): null when it has none. */
+export async function readMapProposals(map: string): Promise<Proposal[] | null> {
+  const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}/proposals`).catch(() => null);
+  if (!res?.ok) return null;
+  const json = (await res.json().catch(() => ({}))) as { proposals?: { proposals?: Proposal[] } };
+  return json.proposals?.proposals ?? null;
 }
 
 export async function readSnapshotFacts(sha256: string): Promise<SnapshotFacts> {

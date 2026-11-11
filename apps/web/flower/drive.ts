@@ -1,6 +1,8 @@
 // One flower, one frame: step its state, choose what shows, draw it. The same few lines whether the flower
 // is alone (useFlowerCanvas, on /make and the bench) or one of many on the map (landscape/), so a flower
 // behaves the same everywhere. Needs a DOM only through its scene.
+import { lookFills } from '@petal/core/wedge/keys';
+import type { VoteRing } from '../lib/vote-ring.ts';
 import type { View } from './camera.ts';
 import type { HoverWay } from './hover.ts';
 import { type Live, newLive, noteAt, stepLive } from './live.ts';
@@ -31,12 +33,15 @@ export function newDriven(
     bloom?: boolean;
     /** the lab's look (#76): colours, bands at rest, the highlight */
     look?: PetalLook | null;
+    /** the map's proposals on the ring (#93), in the flower's own look, with round tops */
+    votes?: VoteRing | null;
   },
 ): Driven {
+  const look = o.look ?? null;
   return {
     m,
     live: newLive(m, o.hover, o.width, o.height, o.calm, o.bloom ?? true),
-    scene: createScene(svg, m, o.relations, o.look ?? null),
+    scene: createScene(svg, m, o.relations, look ?? ringLook(m, o.votes ?? null)),
     scratch: new Float64Array(m.n),
     readout: o.readout,
     last: null,
@@ -47,6 +52,10 @@ export function newDriven(
  * One frame. With a view, the camera is the map's (live.ts stepLive). Quiet, it draws no notes or band
  * names: on the map, only the flower you're pointing at or have entered speaks. True while anything moves.
  */
+/** The flower's own look (core lookFills) with its map's ring over it, or none to draw with the scene's own. */
+const ringLook = (m: Model, votes: VoteRing | null): PetalLook | null =>
+  votes ? { ...lookFills(m.petals), highlight: [], roundTops: true, votes } : null;
+
 export function driveFlower(d: Driven, dt: number, view?: View, quiet = false): boolean {
   const { m, live, scene } = d;
   const stepped = stepLive(live, dt, view);
