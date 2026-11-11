@@ -9,11 +9,17 @@ import { n3, type Ring, SHAPE } from './ring.ts';
 
 const TAU = Math.PI * 2;
 
-/** One vote, as proposals/v1 says it. An account that didn't vote isn't there. */
+/**
+ * One vote, as proposals/v1 says it. An account that didn't vote isn't there. proposals/v2: null where its choices
+ * aren't for, against or abstain (weighted, quadratic, ranked choice): it voted, but neither.
+ */
 export interface Vote {
   account: string;
-  vote: 'for' | 'against' | 'abstain';
+  vote: 'for' | 'against' | 'abstain' | null;
 }
+
+/** A vote's colour key: null (proposals/v2's other choices) is drawn as abstain is, voted but neither. */
+export type VoteColour = Exclude<Vote['vote'], null>;
 
 /** One proposal, as proposals/v1 says it (what the ring needs of it). */
 export interface Proposal {

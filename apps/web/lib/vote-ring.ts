@@ -3,7 +3,7 @@
 // member who put it up; pointing at one puts a dot under each voter's petal. The ring is the last RING_DAYS of the
 // map's proposals, up to when the newest one closes, until the legend's period setting (#92). Pure.
 import { GREY, KEYS, type Key } from '@petal/core/wedge/keys';
-import type { Proposal, Vote } from '@petal/core/wedge/votes';
+import type { Proposal, VoteColour } from '@petal/core/wedge/votes';
 
 /** How much of a map's time the ring shows: its last 90 days of proposals. */
 export const RING_DAYS = 90;
@@ -14,11 +14,11 @@ export interface VoteRing {
   from: string;
   to: string;
   proposals: readonly Proposal[];
-  colours: Record<Vote['vote'], string>;
+  colours: Record<VoteColour, string>;
 }
 
 /** The reading's meaning for this question (Elco's example): for mint, against pink; abstain is context. */
-export const VOTE_COLOURS: Record<Vote['vote'], string> = {
+export const VOTE_COLOURS: Record<VoteColour, string> = {
   for: (KEYS[0] as Key).hex,
   against: (KEYS[4] as Key).hex,
   abstain: GREY.hex,
