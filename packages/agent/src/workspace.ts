@@ -20,22 +20,22 @@
 import { randomBytes } from 'node:crypto';
 import { parseRef, TOOLS_VERSION } from '@petal/core';
 import type { ChatMessage } from '@petal/core/types';
-import {
-  type ConversationRow,
-  type ExplorationRow,
-  type FolderRow,
-  type FollowRow,
-  type RunRow,
-  SEARCH_HIT_CLOSE,
-  SEARCH_HIT_OPEN,
-  type Store,
-  type WorkspaceNoteRow,
+import type {
+  ConversationRow,
+  ExplorationRow,
+  FolderRow,
+  FollowRow,
+  RunRow,
+  Store,
+  WorkspaceNoteRow,
 } from '@petal/store';
 import {
   bodyCap,
   clientAddress,
   DATA_FULL,
+  FINDABLE_KINDS,
   isLocalSite,
+  searchPetals,
   shapeAt,
   type ToolContext,
 } from '@petal/tools';
@@ -94,18 +94,6 @@ export function searchWords(q: string): string[] | null {
     .filter((w) => /[\p{L}\p{N}]/u.test(w))
     .slice(0, QUERY_WORDS_MAX);
   return words.length ? words : null;
-}
-
-/** A snippet from the store, in pieces, so a surface never has to treat text as markup. */
-function snippetParts(snippet: string): { text: string; hit: boolean }[] {
-  const parts: { text: string; hit: boolean }[] = [];
-  for (const [i, piece] of snippet.split(SEARCH_HIT_OPEN).entries()) {
-    const close = i === 0 ? -1 : piece.indexOf(SEARCH_HIT_CLOSE);
-    if (close >= 0) parts.push({ text: piece.slice(0, close), hit: true });
-    const rest = close >= 0 ? piece.slice(close + 1) : piece;
-    if (rest) parts.push({ text: rest, hit: false });
-  }
-  return parts;
 }
 
 const idOf = (prefix: string) => `${prefix}_${randomBytes(12).toString('hex')}`;
@@ -1154,33 +1142,31 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     });
   }
 
+  // Everything on the map, and the person's own work, by words and by meaning (#105, search-petals.ts). A
+  // visitor finds what's on the map; what a person keeps is found by them alone.
   app.get('/api/v1/search', async (c) => {
     const q = c.req.query('q') ?? '';
     if (q.length > QUERY_MAX) {
       return fail(c, 'bad_input', `q is too long (${QUERY_MAX} characters at most)`);
     }
     const asked = c.req.query('kinds');
-    const kinds = asked ? asked.split(',') : [...SEARCH_KINDS];
-    if (!kinds.every((k) => (SEARCH_KINDS as readonly string[]).includes(k))) {
-      return fail(c, 'bad_input', `kinds must be some of ${SEARCH_KINDS.join(', ')}`);
+    const kinds = asked ? asked.split(',') : [...FINDABLE_KINDS];
+    if (!kinds.every((k) => (FINDABLE_KINDS as readonly string[]).includes(k))) {
+      return fail(c, 'bad_input', `kinds must be some of ${FINDABLE_KINDS.join(', ')}`);
     }
     const subject = await gate.subjectOf(c);
-    const words = searchWords(q);
-    if (!subject || !words) return ok(c, { results: [] });
+    if (!searchWords(q)) return ok(c, { results: [] });
     const wait = searches(clientAddress(c, local));
     if (wait !== null) {
       return fail(c, 'rate_limited', 'Too many searches from one address.', undefined, wait);
     }
-    await catchUp(subject);
-    const results = (await store.search.query(subject, words, kinds, limitOf(c, 30))).map((h) => ({
-      kind: h.kind,
-      id: h.ref,
-      title: h.title,
-      about: h.about,
-      snippet: snippetParts(h.snippet),
-      at: h.at,
-    }));
-    return ok(c, { results });
+    if (subject) await catchUp(subject);
+    const found = await searchPetals(
+      { ...tools, caller: { ...tools.caller, subject: subject ?? null, door: 'http' } },
+      q,
+      { kinds, limit: limitOf(c, 30), prefix: true, snippets: true },
+    );
+    return ok(c, { ...found });
   });
 
   return app;

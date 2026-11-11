@@ -510,6 +510,17 @@ export const MIGRATIONS: readonly string[] = [
     read_at TEXT NOT NULL
   );
   `,
+  // 29: search's vectors (board #105; Elco, 11 Nov: search "with the embedding model on the server being super
+  // smart"): each text's embedding, by the model that made it and the text's sha256, so a text is embedded
+  // once, whoever kept it, and a restart embeds nothing again. The vector is its float32s, base64.
+  `
+  CREATE TABLE search_vector (
+    model TEXT NOT NULL,
+    sha256 TEXT NOT NULL,
+    vector TEXT NOT NULL,
+    PRIMARY KEY (model, sha256)
+  );
+  `,
 ];
 
 /**

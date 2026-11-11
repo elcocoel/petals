@@ -15,6 +15,7 @@ import type { MapReader, MapWriter } from '@petal/near/map';
 import type { JobRow } from '@petal/store';
 import type { Limits } from './limits.ts';
 import type { LiveHub } from './live.ts';
+import type { SearchModel } from './search-model.ts';
 
 /** A JSON Schema (draft 2020-12) as a plain object; MCP takes it through fromJsonSchema(). */
 export type JSONSchema = Record<string, unknown>;
@@ -69,6 +70,11 @@ export interface Config {
   public?: boolean;
   /** additive (9 Nov, PETAL_BRAIN_DIR): the brain/ the site serves, a copy of the repo that follows main */
   brainDir?: string;
+  /**
+   * additive (11 Nov, #105, PETAL_SEARCH_URL): where search's models answer, Qwen3-Embedding and Qwen3-Reranker
+   * behind oMLX on Elco's Mac (coordinator/search_model_up.sh). Unset: search_petals says it has no model.
+   */
+  searchUrl?: string;
 }
 
 /** Who is calling and through what. A door sets this; a caller can't name itself. */
@@ -117,6 +123,8 @@ export interface ToolContext {
    * person, never taken from what a caller sends; a visitor has none.
    */
   names?: readonly Claim[];
+  /** additive (11 Nov, #105): search's models, when a test brings its own; else Config.searchUrl's */
+  searchModel?: SearchModel;
 }
 
 export type Tool<I, O> = {

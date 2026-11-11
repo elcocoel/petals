@@ -34,6 +34,7 @@ import {
 } from './tools/relations.ts';
 import { renderFlowerTool } from './tools/render.ts';
 import { search } from './tools/search.ts';
+import { searchPetalsTool } from './tools/search-petals.ts';
 import { describeSnapshot, getSnapshotTool } from './tools/snapshots.ts';
 import { proposeSpec, validateSpecTool } from './tools/specs.ts';
 import type { Tool, ToolContext } from './types.ts';
@@ -60,6 +61,7 @@ export const registry: Tool<any, any>[] = [
   readChain,
   readPage,
   search,
+  searchPetalsTool,
   accountGroupsTool,
   sharedAccountsTool,
   relatedGroupsTool,

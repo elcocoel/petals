@@ -151,6 +151,15 @@ export interface ValueRow {
   body: string;
   read_at: string;
 }
+/** A text's embedding (29): its sha256 and its float32s, base64. */
+export interface SearchVectorRow {
+  sha256: string;
+  vector: string;
+}
+
+/** Vectors read or written in one statement: well under either engine's limit on bound values. */
+const VECTOR_BATCH = 500;
+
 /** A map's proposals/v1 (28): each proposal and every account's vote on it, read from the DAO's own chain. */
 export interface ProposalsRow {
   /** the map's address, as its card's id */
@@ -431,6 +440,8 @@ export interface SearchDoc {
   at: string;
 }
 export type SearchHit = Omit<SearchDoc, 'owner'> & { snippet: string };
+/** An indexed document with its words, as search by meaning reads it (#105). */
+export type SearchText = Omit<SearchDoc, 'owner'> & { text: string };
 /** What marks a match inside a hit's snippet. Stripped from anything indexed, so no text can forge one. */
 export const SEARCH_HIT_OPEN = '\uE000';
 export const SEARCH_HIT_CLOSE = '\uE001';
@@ -1130,6 +1141,35 @@ export function tables(db: Db) {
       get: (about: string) =>
         db.get<ProposalsRow>('SELECT * FROM proposals WHERE about = ?', about),
       list: () => db.all<ProposalsRow>('SELECT * FROM proposals ORDER BY about'),
+    },
+
+    /** Search's vectors (29), by model and the sha256 of the text embedded: put once, never changed. */
+    searchVector: {
+      get: async (model: string, shas: readonly string[]): Promise<SearchVectorRow[]> => {
+        const out: SearchVectorRow[] = [];
+        for (let i = 0; i < shas.length; i += VECTOR_BATCH) {
+          const some = shas.slice(i, i + VECTOR_BATCH);
+          out.push(
+            ...(await db.all<SearchVectorRow>(
+              `SELECT sha256, vector FROM search_vector WHERE model = ? AND sha256 IN (${some.map(() => '?').join(', ')})`,
+              model,
+              ...some,
+            )),
+          );
+        }
+        return out;
+      },
+      put: (model: string, rows: readonly SearchVectorRow[]): Promise<void> =>
+        db.tx(async () => {
+          for (let i = 0; i < rows.length; i += VECTOR_BATCH) {
+            const some = rows.slice(i, i + VECTOR_BATCH);
+            await db.run(
+              `INSERT INTO search_vector (model, sha256, vector) VALUES ${some.map(() => '(?, ?, ?)').join(', ')}
+               ON CONFLICT (model, sha256) DO NOTHING`,
+              ...some.flatMap((r) => [model, r.sha256, r.vector]),
+            );
+          }
+        }),
     },
 
     /** Pictures by their sha256: put-if-absent, never changed (15). */
@@ -2146,6 +2186,13 @@ export function tables(db: Db) {
           );
           await db.run('DELETE FROM search_doc WHERE owner = ?', owner);
         }),
+      /** Everything indexed for this owner, with its words (a marker has none, so it isn't here). */
+      texts: (owner: string) =>
+        db.all<SearchText>(
+          `SELECT d.kind, d.ref, d.title, d.about, d.at, s.text
+           FROM search_doc d JOIN search s ON s.rowid = d.id WHERE d.owner = ?`,
+          owner,
+        ),
       // What changed since it was indexed, or was never indexed. Each is bounded by what one owner has.
       staleRuns: (owner: string) =>
         db.all<RunRow>(

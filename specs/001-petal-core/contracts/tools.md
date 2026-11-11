@@ -34,6 +34,7 @@ The agent interprets; the tools count (FR-025). Any number an agent quotes must 
 | `quote_payment` | A (dry) | calls NEAR Intents 1Click with `dry: true`; no money moves (FR-031) |
 | `find_documents` | B | fetches public docs and forum pages for citations |
 | `get_labels` | B | reads the label layer |
+| `search_petals` | #105 | reads the map, the store and search's vectors; embeds a text it has no vector for, once, and keeps the vector (migration 29) |
 | `look_up` | M-Lookup | reads the map, the store and the relations index; for an address, `read_chain`'s first look; for a name, `find_target`'s searching |
 | `find_target` | M-Talk | at most 5 keyless calls to public sources and the chain |
 | `read_chain` | M-Reach | at most 12 view calls and one log query, on our own endpoints only |
@@ -77,6 +78,12 @@ Output: `{ "query", "says", "flowers": [{ "id", "title", "network", "as_of", "wh
 Behaviour: flowers on the map and in the fixtures match by their words, their id, or because they draw a read found here. Stored reads match by their words, their hash, an address in their params, a listed candidate's `draw.stored`, or an account in them. An account (an EVM or NEAR account, `chain:address`, a Solana address) is looked for in the relations index, and each read it's in gives its share and rank by the measure a flower of that read uses (`role: "holder"`), its place in a delegators group (`delegator`), or the group that backs it (`backed`, with `accounts`). An EVM address gets `read_chain`'s first look on every chain, or the one named: no code is an account, with its balance and transactions sent. A name, and an address where a chain holds code, go through `find_target`'s searching; its candidates are `listed`, at most 5, with `draw` and `cannot_draw` as there. A NEAR account, a flower id or a hash is answered from what Petal holds.
 
 Routes for the three tools below: `POST /api/v1/read-chain`, `GET /api/v1/read-page?url=&start=`, `GET /api/v1/web-search?query=`. They're in http-api.md and the skill's table.
+
+### search_petals (#105, 11 Nov; additive, still tools/v1)
+
+Everything on the map (organisations, their names, symbols and types, their proposals, and Petals' own mapping's claims, each under the map whose accounts it's about) and, for the signed-in person, their own conversations, explorations, shapes, notes, follows and annotations, by words and by meaning. Words are BM25 over each document's words, accents and plurals folded; meaning is Qwen3-Embedding's vector of the question against each document's; the two rankings are fused by reciprocal rank (k 60), and Qwen3-Reranker reads the best 30 and orders them. A name, a symbol or an address typed exactly as it is comes first. One answer per map, with what matched under it (its proposals, a claim about its address). The models run on Elco's Mac behind oMLX (`PETAL_SEARCH_URL`, `coordinator/search_model_up.sh`); a text's vector is kept by the model and the text's sha256, so a text is embedded once, and a wave's load is embedded at the next search. When the model isn't running (none set, or it doesn't answer), it searches by words alone and says so (Elco, 11 Nov: "Fall back to word search"): `meaning: "off"` and `says`.
+Input: `{ "q": string (at most 500), "kinds"?: ("map" | "proposal" | "claim" | "conversation" | "exploration" | "shape" | "note" | "follow")[], "limit"?: int (1 to 50, default 10) }`.
+Output: `{ "meaning": "on" | "off", "says"?, "results": [{ "kind", "id", "title", "about", "view_url"?, "score", "ranks": { "words"?, "meaning"? }, "rerank"?, "at"?, "snippet"?, "matched"?: [same, without view_url and matched] }] }`. `ranks` says how each way ranked it (1 first); `rerank` is the reranker's reading, 0 to 1. Petals' agent's copy is bound to the person whose conversation it is (jobs.ts).
 
 ### read_chain (M-Reach, T332; additive, still tools/v1)
 
