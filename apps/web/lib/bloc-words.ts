@@ -7,7 +7,7 @@ import { dayOf } from './map-claims.ts';
 
 /** Which votes the blocs come from: the server's own period (its recent votes), or all of them. */
 export type BlocSpan = 'recent' | 'all';
-export const BLOC_SPANS: readonly BlocSpan[] = ['recent', 'all'];
+export const BLOC_SPANS: readonly BlocSpan[] = ['all', 'recent'];
 
 /** What the read asks for: nothing for the server's own period; from the start for all of them. */
 export const spanAsk = (span: BlocSpan): { from?: string } | undefined =>
