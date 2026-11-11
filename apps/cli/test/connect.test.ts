@@ -659,12 +659,3 @@ describe('the folder the person is in', () => {
     expect(callerCwd({}, '/x')).toBe('/x');
   });
 });
-
-describe('the doors page offers terminals a one-liner with no clone', () => {
-  test('the file from the site, not petal connect', () => {
-    const page = readFileSync(join(ROOT, 'apps/web/lib/doors.ts'), 'utf8');
-    expect(page).toContain('getFile(origin)');
-    expect(page).toContain('keepCommands()');
-    expect(page).not.toContain('pnpm');
-  });
-});

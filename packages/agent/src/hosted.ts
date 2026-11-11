@@ -1,6 +1,6 @@
 // The door for anyone's agent: a prompt a person copies, the skill the server serves, and the
-// commands that fetch Petal as one file. The site shows the prompt and the commands on /connect, and
-// the server serves the skill, so both take them from here and say the same thing. The prompt speaks as
+// commands that fetch Petal as one file. The site copies the prompt and the server serves the skill, so
+// both take them from here and say the same thing. The prompt speaks as
 // the person and says what it is, so an agent can decide to help rather than being told to obey a page.
 
 import { CONNECT_CHAPTERS, type ConnectChapter } from './connect.generated.ts';
@@ -62,40 +62,15 @@ export function connectorAddress(origin: string): string {
   return fill(block, origin);
 }
 
-/** The section of a connect chapter that holds the person's words for /connect. */
-const CONNECT_PAGE = "On Petals' connect page";
-
-/** A door on /connect, in the words its connect chapter gives the person (one source: Elco's fix 1, 10 Nov). */
-export interface ChapterDoor {
-  /** the chapter's app: claude-code, codex, hermes or cloud */
-  app: string;
-  title: string;
-  how: string;
-}
-
-/** Each chapter's doors, in the chapters' order: one per `- **Title:** words` line of its connect-page section. */
-export function chapterDoors(origin: string): ChapterDoor[] {
-  return CONNECT_CHAPTERS.flatMap((c) => {
-    const body = c.sections.find((s) => s.heading === CONNECT_PAGE)?.body ?? '';
-    const doors = [...body.matchAll(/^- \*\*(.+?):\*\* (.+)$/gm)].map((m) => ({
-      app: c.app,
-      title: m[1] ?? '',
-      how: fill(m[2] ?? '', origin),
-    }));
-    if (doors.length === 0) throw new Error(`${c.id}: no doors under "${CONNECT_PAGE}"`);
-    return doors;
-  });
-}
-
-/** Each app's own steps, from its chapter, for /skill.md: every section but the setup (above), the page's box and /connect's words. */
+/** Each app's own steps, from its chapter, for /skill.md: every section but the setup (above). */
 function appSteps(origin: string): string {
   const out: string[] = [];
   for (const c of CONNECT_CHAPTERS) {
     const app = c.title.replace(/^Connect /, '');
     out.push(`### ${app.charAt(0).toUpperCase()}${app.slice(1)}`, '', fill(c.intro, origin), '');
     for (const sec of c.sections) {
-      // the two setup commands are already above, the same for every app, and /connect's words are the person's
-      if (sec.heading === 'Set up, every session' || sec.heading === CONNECT_PAGE) continue;
+      // the two setup commands are already above, the same for every app
+      if (sec.heading === 'Set up, every session') continue;
       out.push(`#### ${sec.heading}`, '', fill(sec.body, origin), '');
     }
     out.push(`All of it, always the latest: \`${origin}/api/v1/brain/files/${c.id}\`.`, '');

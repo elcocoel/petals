@@ -125,7 +125,7 @@ const STOP_GRACE_MS = 2000;
 export const MAX_TOOL_CALLS_PER_ROUND = 8;
 
 export const SKILL_HINT =
-  "Bring your own agent: this site's /skill.md says how, and /connect has the prompt to paste. Then ask it the same question.";
+  "Bring your own agent: this site's /skill.md says how, and /docs/connect-your-agent has the prompt to paste. Then ask it the same question.";
 
 /** The contract signature (packages.md). */
 export function runAgent(input: RunInput, deps: RunDeps): AsyncIterable<AgentEvent> {

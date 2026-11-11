@@ -777,7 +777,7 @@ describe('T196: who pays', () => {
     const { error } = (await res.json()) as Err;
     expect(error.code).toBe('invite_required');
     expect(error.message).toMatch(/nothing was spent/);
-    expect(error.hint).toMatch(/\/connect/);
+    expect(error.hint).toMatch(/\/docs\/connect-your-agent/);
     expect(res.headers.getSetCookie()).toEqual([]);
     expect((llm as ReturnType<typeof scriptedLlm>).requests).toHaveLength(0);
     const s = store();
@@ -884,7 +884,7 @@ describe('T196: who pays', () => {
     const stop = es.find((e) => e.event === 'error')?.data as Err['error'];
     expect(stop.code).toBe('budget_exhausted');
     expect(stop.message).toMatch(/budget is used up/);
-    expect(stop.hint).toMatch(/\/connect/);
+    expect(stop.hint).toMatch(/\/docs\/connect-your-agent/);
     expect(es.at(-1)?.event).toBe('done');
     const bought = llm.requests.length;
     expect(bought).toBe(2);
