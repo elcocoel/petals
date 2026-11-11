@@ -51,8 +51,9 @@ export function Lobby({
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
       <div className="flex min-w-0 flex-1 flex-col gap-space-32 overflow-y-auto px-page-inset py-column-gap">
         <ProfileHead account={profile.account} social={profile.social} />
-        <div className="grid grid-cols-1 items-start gap-block-gap lg:grid-cols-3">
-          <div className={`min-w-0 ${editor ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
+        {/* the Profile and Balance cards the same height, edges and titles on one line (Elco, 11 Nov) */}
+        <div className="grid grid-cols-1 gap-block-gap lg:grid-cols-3">
+          <div className={`grid min-w-0 ${editor ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
             {editor ? (
               <ProfileEditor view={editor} />
             ) : (
