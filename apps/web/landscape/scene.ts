@@ -10,7 +10,7 @@ import { HIGHLIGHT } from '@petal/core/wedge/highlight';
 import { GREY, keyFor, keysOf, wordsOf } from '@petal/core/wedge/keys';
 import { DETAIL, fade } from '../flower/detail.ts';
 import type { Model } from '../flower/model.ts';
-import { n3, polygonPath, SHAPE, silhouettePath } from '../flower/ring.ts';
+import { bandPath, n3, polygonPath, SHAPE } from '../flower/ring.ts';
 import { LINE, MONO, textWidth } from '../flower/words.ts';
 import { drawLabel, LABEL_HEIGHT, type Label, MARK, NAME_GAP } from './labels.ts';
 import type { Place } from './places.ts';
@@ -268,12 +268,23 @@ export function createLandScene(
         flowerLayer.node,
       ),
     );
-    const silhouette = slot(el('path', { fill: PETAL, d: silhouettePath(f.model.ring) }, g.node));
+    // its petals in its own colours, one path per colour, as the far wave before it and the live flower after it
+    // have them, so a flower keeps its colours as it comes closer (Elco, 11 Nov walk: the transition from the small
+    // petal to the one showing its wallets; it went grey in between)
+    const fills = waveFills(f.model);
+    const silhouette = slot(el('g', {}, g.node));
+    const byFill = new Map<string, string>();
+    const { ring } = f.model;
+    for (let i = 0; i < ring.n; i++) {
+      const fill = fills[i] ?? PETAL;
+      byFill.set(fill, (byFill.get(fill) ?? '') + bandPath(ring, i, 0, ring.h[i] as number));
+    }
+    for (const [fill, d] of byFill) el('path', { fill, d }, silhouette.node);
     // figure.map-far-wave: its runs of colour under one soft surface
     let wave: Slot<SVGGElement> | null = null;
     if (far) {
       const w = slot(el('g', { filter: `url(#${surface})` }, g.node));
-      for (const run of farRuns(f.model, SHAPE, waveFills(f.model), FAR_WAVE)) {
+      for (const run of farRuns(f.model, SHAPE, fills, FAR_WAVE)) {
         el('path', { fill: run.fill, d: run.d }, w.node);
       }
       wave = w;
