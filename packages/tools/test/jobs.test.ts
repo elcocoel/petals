@@ -131,6 +131,54 @@ describe('jobs over HTTP', () => {
   });
 });
 
+describe("a job's own conversation (swarm.md step 2)", () => {
+  test('taken with the project link, its work goes in its own conversation, and its report lands there too', async () => {
+    const { app, id, cont, read } = await project();
+    const store = privateStore(r.ctx.config);
+    const own = await send(
+      app,
+      'POST',
+      '/api/v1/explorations',
+      { question: 'Map Moloch' },
+      'prs_a',
+    );
+    await store.job.add({
+      id: 'job_own',
+      exploration: id,
+      run: null,
+      kind: 'map',
+      title: 'Map Moloch',
+      brief: 'who holds the shares?',
+      inputs: {},
+      at: '2026-11-09T11:00:00.000Z',
+      conversation: own.exploration,
+    });
+    const take = () => send(app, 'POST', `/api/v1/explorations/${cont}/jobs/take`, {});
+    // the older jobs come first, in the order handed out; with no conversation, their work is in the project
+    expect(await take()).toMatchObject({ exploration: id, job: { id: 'job_0' } });
+    expect((await take()).job.id).toBe('job_1');
+    const took = await take();
+    expect(took).toMatchObject({ exploration: own.exploration, job: { id: 'job_own' } });
+    expect(took.link).toMatch(/\/s\//);
+    expect(took.next).toContain('passing link as exploration');
+    const there = (took.link as string).split('/').pop() as string;
+    const reported = await send(app, 'POST', `/api/v1/explorations/${there}/jobs/job_own/report`, {
+      result: { summary: 'Three members hold most of the shares.' },
+    });
+    expect(reported.job).toMatchObject({ id: 'job_own', status: 'done' });
+    const opened = await send(app, 'GET', `/api/v1/explorations/${there}`);
+    expect(opened.notes.map((n: Out) => n.text)).toEqual([
+      'Three members hold most of the shares.',
+    ]);
+    // the project that handed it out lists it, with where its work is; it took no worker, so it's the first
+    const listed = await send(app, 'GET', `/api/v1/explorations/${read}/jobs`);
+    expect(listed.jobs.find((j: Out) => j.id === 'job_own')).toMatchObject({
+      status: 'done',
+      conversation: own.exploration,
+    });
+  });
+});
+
 describe('the link the page hands the person’s agent', () => {
   test('opens the open jobs and how to take them; a read link only shows them', async () => {
     const { app, cont, read } = await project();

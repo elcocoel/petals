@@ -6,7 +6,7 @@
 import { randomBytes } from 'node:crypto';
 import type { JobEvent, ToolError } from '@petal/core/types';
 import type { JobRow } from '@petal/store';
-import { privateStore, runExplorationOf, type ToolContext } from '@petal/tools';
+import { jobConversation, privateStore, runExplorationOf, type ToolContext } from '@petal/tools';
 import type { AnyTool } from './tool-defs.ts';
 
 export const HAND_JOB = 'hand_job';
@@ -30,6 +30,7 @@ export const jobEvent = (j: JobRow): JobEvent => ({
   status: j.status,
   to: j.to,
   taken_by: j.taken_by,
+  conversation: j.conversation,
 });
 
 /** Who's connected, for the system message: each agent by name, its workers, and the jobs they hold. */
@@ -131,6 +132,8 @@ export function handJobTool(ctx: ToolContext, runId: string, bell?: Bell): AnyTo
           "This conversation isn't kept anywhere, so it can't hand out a job.",
         );
       }
+      // its own conversation, in this one's folder, so its work doesn't fill this one (swarm.md step 2)
+      const conversation = await jobConversation(ctx, runId, { title, brief });
       const row = await store.job.add({
         id: `job_${randomBytes(9).toString('hex')}`,
         exploration,
@@ -141,6 +144,7 @@ export function handJobTool(ctx: ToolContext, runId: string, bell?: Bell): AnyTo
         inputs,
         at: ctx.now().toISOString(),
         to,
+        conversation,
       });
       if (owner) bell?.ring(owner);
       return {
@@ -171,7 +175,10 @@ export function jobNotes(jobs: readonly JobRow[]): string {
     lines.push('', `- ${j.id} "${j.title}": ${j.status}`);
     if (j.result) {
       lines.push(`  report: ${JSON.stringify(j.result.summary)}`);
-      if (j.result.steps?.length) lines.push(`  saved steps: ${j.result.steps.join(', ')}`);
+      if (j.result.steps?.length)
+        lines.push(
+          `  saved steps: ${j.result.steps.join(', ')}${j.conversation ? `, in its own conversation ${j.conversation}` : ''}`,
+        );
       if (j.result.notes) lines.push(`  notes: ${JSON.stringify(j.result.notes)}`);
       if (j.result.annotations?.length)
         lines.push(`  annotations added in its project: ${j.result.annotations.length}`);

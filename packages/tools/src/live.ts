@@ -7,6 +7,8 @@ export interface Presence {
   client: string | null;
   last_at: string;
   last_tool: string | null;
+  /** additive (10 Nov, swarm.md step 2): which of that agent's workers, by place (1, 2, …), when known */
+  n?: number | null;
 }
 
 export class LiveHub {
@@ -28,11 +30,13 @@ export class LiveHub {
     for (const fn of this.listeners.get(id) ?? []) fn();
   }
 
-  /** A call that names no client keeps the name it had. */
+  /** A call that names no client keeps the name it had, and its worker's place. */
   touch(id: string, p: Presence): void {
-    const client = p.client ?? this.presence.get(id)?.client ?? null;
+    const was = this.presence.get(id);
+    const client = p.client ?? was?.client ?? null;
+    const n = p.n ?? (p.client ? null : (was?.n ?? null));
     this.presence.delete(id);
-    this.presence.set(id, { ...p, client });
+    this.presence.set(id, { ...p, client, ...(n ? { n } : {}) });
     if (this.presence.size > MAX_TRACKED_KEYS) {
       this.presence.delete(this.presence.keys().next().value as string);
     }

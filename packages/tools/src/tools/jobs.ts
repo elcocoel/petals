@@ -4,7 +4,8 @@
 // with the project's link, does it on their machine, and reports back. Jobs are mapping, for now.
 //   take_job    the oldest open job, now taken; or none. With the person's agent key instead of a project
 //               link (10 Nov, for an app at /mcp, which can't hold a wait open): their next job from any
-//               of their projects, sent to this agent or to anyone, with that project's continue link
+//               of their projects, sent to this agent or to anyone. Either way, with a continue link for
+//               the job's own conversation (migration 22), where its work goes
 //   report_job  a taken job, done with its result or failed with why
 //   list_jobs   every job in the project, oldest first, for the page
 // Taking and reporting need what writing a note needs (the owner or a continue link); reading the
@@ -16,6 +17,7 @@ import { ToolFailure } from '../errors.ts';
 import type { ToolContext } from '../types.ts';
 import { viewOfPerson } from '../views.ts';
 import {
+  credentialOf,
   lastingStore,
   makeLink,
   open,
@@ -58,6 +60,27 @@ const RESULT = obj(
 );
 const STATUS = { type: 'string', enum: ['open', 'taken', 'done', 'failed'] };
 
+/**
+ * Which of an agent's workers took a job, by place in the order they first came (1, 2, …), as GET
+ * /api/v1/agents counts them. A take that named no worker is the first. Null when nobody took it, or
+ * its worker is gone.
+ */
+export function workerPlace(
+  workers: readonly { key: string; worker: string }[],
+  name: string | null,
+  worker: string | null,
+): number | null {
+  if (!name) return null;
+  if (!worker) return 1;
+  const i = workers
+    .filter((w) => w.key === name.toLowerCase())
+    .findIndex((w) => w.worker === worker);
+  return i < 0 ? null : i + 1;
+}
+
+/** Where a job's work goes: its own conversation, or the project it was handed out in, for older jobs. */
+const workIn = (j: JobRow) => j.conversation ?? j.exploration;
+
 const jobOut = (j: JobRow) => ({
   id: j.id,
   kind: j.kind,
@@ -97,12 +120,12 @@ async function takeWithKey(ctx: ToolContext, key: string, as: string | undefined
   if (!job) return { job: null, next: 'No job is open for you in any of their projects.' };
   const made = await makeLink(
     { ...ctx, caller: { ...ctx.caller, subject: owner, door: ctx.caller?.door ?? 'agent' } },
-    job.exploration,
+    workIn(job),
     'continue',
   );
-  touched(ctx, job.exploration, 'take_job');
+  touched(ctx, workIn(job), 'take_job', name);
   return {
-    exploration: job.exploration,
+    exploration: workIn(job),
     link: made.url,
     job: jobOut(job),
     // the person's glasses (one-source.md): every flower drawn for them is drawn through these
@@ -165,15 +188,31 @@ export const takeJob = defineTool<
     const o = await open(ctx, exploration);
     writable(o);
     const job = await store.job.take(o.row.id, ctx.now().toISOString());
-    if (job) touched(ctx, o.row.id, 'take_job');
+    if (!job) return { exploration: o.row.id, job: null, next: 'No job is open in this project.' };
+    // its work goes in its own conversation, which a continue link of its own opens, made for the owner
+    const owner = o.row.owner;
+    const own =
+      job.conversation && owner
+        ? await makeLink(
+            {
+              ...ctx,
+              caller: { ...ctx.caller, subject: owner, door: ctx.caller?.door ?? 'agent' },
+            },
+            job.conversation,
+            'continue',
+          )
+        : null;
+    const there = own ? (job.conversation as string) : o.row.id;
+    touched(ctx, there, 'take_job');
     return {
-      exploration: o.row.id,
-      job: job ? jobOut(job) : null,
+      exploration: there,
+      ...(own ? { link: own.url } : {}),
+      job: jobOut(job),
       // the project's owner's glasses (one-source.md): their flowers are drawn through these
-      ...(job ? { view: await viewOfPerson(ctx, o.row.owner) } : {}),
-      next: job
-        ? 'Do what brief says, with the six steps, passing view to render_flower, and add_annotation for who or what you find behind addresses, never only a file. Then report_job with this job id and result: { summary, steps, annotations: the ids add_annotation gave }, or failed and why.'
-        : 'No job is open in this project.',
+      view: await viewOfPerson(ctx, o.row.owner),
+      next: own
+        ? 'Do what brief says, with the six steps, passing link as exploration to save_step, add_note, keep_layer and add_annotation, and view to render_flower. Use add_annotation for who or what you find behind addresses, never only a file. Then report_job with link as exploration, this job id and result: { summary, steps, annotations: the ids add_annotation gave }, or failed and why.'
+        : 'Do what brief says, with the six steps, passing view to render_flower, and add_annotation for who or what you find behind addresses, never only a file. Then report_job with this job id and result: { summary, steps, annotations: the ids add_annotation gave }, or failed and why.',
     };
   },
 });
@@ -227,6 +266,18 @@ export const reportJob = defineTool<
         'take_job gives the id; a job is reported once.',
       );
     }
+    // the report lands in the job's own conversation too, in the worker's words (swarm.md step 2)
+    if (done.conversation) {
+      await store.note.append({
+        exploration: done.conversation,
+        author: o.link ? `link:${o.link.id}` : 'owner',
+        door: ctx.caller?.door ?? null,
+        text: done.result?.summary ?? done.failed ?? '',
+        credential: credentialOf(ctx, o),
+        at,
+      });
+      if (done.conversation !== o.row.id) touched(ctx, done.conversation, 'report_job');
+    }
     touched(ctx, o.row.id, 'report_job');
     ctx.onJobReported?.(done);
     return {
@@ -257,16 +308,30 @@ export const listJobs = defineTool<{ exploration: string }, object>({
         failed: { type: ['string', 'null'] },
         created_at: DATETIME,
         updated_at: DATETIME,
+        conversation: {
+          type: ['string', 'null'],
+          description: "the job's own conversation, where its work goes",
+        },
+        n: {
+          type: ['integer', 'null'],
+          description:
+            "which of taken_by's workers took it: 1, 2, … as the person's agents list them",
+        },
       }),
     },
   }),
   annotations: READS,
   async run({ exploration }, ctx) {
     const o = await open(ctx, exploration);
-    const jobs = await lastingStore(ctx).job.list(o.row.id);
+    const store = lastingStore(ctx);
+    const jobs = await store.job.list(o.row.id);
+    const workers = o.row.owner ? await store.agent.workers(o.row.owner) : [];
     return {
       exploration: o.row.id,
-      jobs: jobs.map(({ run: _run, exploration: _x, ...j }) => j),
+      jobs: jobs.map(({ run: _run, exploration: _x, ...j }) => ({
+        ...j,
+        n: workerPlace(workers, j.taken_by, j.taken_worker),
+      })),
     };
   },
 });

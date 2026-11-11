@@ -7,7 +7,14 @@ import { TOOLS_VERSION } from '@petal/core';
 import { durableNonceStore, nearRpc, type Rpc } from '@petal/near/auth';
 import { nearUsd } from '@petal/near/pay';
 import { type JobRow, stateStore } from '@petal/store';
-import { type Config, createContext, freshGate, httpApp, overDataBudget } from '@petal/tools';
+import {
+  type Config,
+  createContext,
+  freshGate,
+  httpApp,
+  LiveHub,
+  overDataBudget,
+} from '@petal/tools';
 import { Hono } from 'hono';
 import { agentLinkRoutes, JobBell } from './agent-links.ts';
 import { agentAccess, createAuth, type Network, siteOf } from './auth-routes.ts';
@@ -200,7 +207,9 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   // and a report is taken up at once in its run.
   const bell = new JobBell();
   const takeUp: { current?: (job: JobRow) => Promise<void> } = {};
-  app.route('/', agentLinkRoutes({ store, gate: auth.gate, tools: ctx, bell }));
+  // one live hub for the site: a job's conversation hears who took it (swarm.md step 2)
+  const live = new LiveHub();
+  app.route('/', agentLinkRoutes({ store, gate: auth.gate, tools: { ...ctx, live }, bell }));
   // The agent's runs read fresh data apart from the doors, so strangers there can't starve a run. On a
   // public site its runs read the chain, pages and search from here too (Elco, 9 Nov: "yes"): every run that
   // reaches the model is paid for, by the person or an invite. The site's own doors still read nothing.
@@ -215,7 +224,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       .current?.(job)
       .catch((e) => console.warn(`petal: a report's turn failed: ${(e as Error).message}`));
   };
-  app.route('/', httpApp({ ...ctx, onJobReported }, { gate: auth.gate }));
+  app.route('/', httpApp({ ...ctx, live, onJobReported }, { gate: auth.gate }));
   // A store that fails mid-request (a full disk, say) ends in the API's own error shape: no chat
   // starts, so nothing is spent, and the caller is told plainly.
   app.onError((e, c) => {

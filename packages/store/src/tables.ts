@@ -252,11 +252,15 @@ export interface JobRow {
   taken_by: string | null;
   /** which of that agent's workers took it, or null for one that waits as none (migration 20) */
   taken_worker: string | null;
+  /** the job's own conversation, an exploration in the same folder, where its work goes (migration 22) */
+  conversation: string | null;
 }
-interface JobRecord extends Omit<JobRow, 'inputs' | 'result' | 'to' | 'taken_by' | 'taken_worker'> {
+interface JobRecord
+  extends Omit<JobRow, 'inputs' | 'result' | 'to' | 'taken_by' | 'taken_worker' | 'conversation'> {
   assignee?: string | null;
   taken_by?: string | null;
   taken_worker?: string | null;
+  conversation?: string | null;
   seq: number;
   inputs: string;
   result: string | null;
@@ -277,6 +281,7 @@ const jobOf = (r: JobRecord): JobRow => ({
   to: r.assignee ?? null,
   taken_by: r.taken_by ?? null,
   taken_worker: r.taken_worker ?? null,
+  conversation: r.conversation ?? null,
 });
 
 /** A person's agent link (migration 11): only its hash is kept, and it can only wait for jobs. */
@@ -1333,13 +1338,15 @@ export function tables(db: Db) {
         at: string;
         /** an agent's name, or none for any */
         to?: string | null;
+        /** the job's own conversation (migration 22) */
+        conversation?: string | null;
       }): Promise<JobRow> =>
         db.tx(async () => {
           const seq = await nextSeq('job', 'exploration', r.exploration);
           await db.run(
             `INSERT INTO job (id, exploration, seq, run, kind, title, brief, inputs, status, result,
-               failed, created_at, updated_at, assignee)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', NULL, NULL, ?, ?, ?)`,
+               failed, created_at, updated_at, assignee, conversation)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', NULL, NULL, ?, ?, ?, ?)`,
             r.id,
             r.exploration,
             seq,
@@ -1351,6 +1358,7 @@ export function tables(db: Db) {
             r.at,
             r.at,
             r.to ?? null,
+            r.conversation ?? null,
           );
           return jobOf(
             (await db.get<JobRecord>('SELECT * FROM job WHERE id = ?', r.id)) as JobRecord,
@@ -1379,7 +1387,10 @@ export function tables(db: Db) {
           );
           return jobOf({ ...open, status: 'taken', updated_at: at });
         }),
-      /** A taken job, done with its result or failed with why; null for any other job. */
+      /**
+       * A taken job, done with its result or failed with why; null for any other job. `exploration` is the
+       * project it was handed out in, or its own conversation (migration 22), where its worker works.
+       */
       report: (
         exploration: string,
         id: string,
@@ -1388,8 +1399,9 @@ export function tables(db: Db) {
       ): Promise<JobRow | null> =>
         db.tx(async () => {
           const taken = await db.get<JobRecord>(
-            `SELECT * FROM job WHERE id = ? AND exploration = ? AND status = 'taken'`,
+            `SELECT * FROM job WHERE id = ? AND (exploration = ? OR conversation = ?) AND status = 'taken'`,
             id,
+            exploration,
             exploration,
           );
           if (!taken) return null;

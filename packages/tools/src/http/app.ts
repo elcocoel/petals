@@ -76,7 +76,8 @@ function brainVersionOf(ctx: ToolContext): string | null {
 export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hono {
   const app = new Hono();
   // HTTP and MCP are one set of callers, whoever they say they are: fresh reads take turns between them.
-  const ctx: ToolContext = { ...given, fresh: freshGate(given), live: new LiveHub() };
+  // One live hub, the app's when it has one, so what its other routes touch reaches a page that follows.
+  const ctx: ToolContext = { ...given, fresh: freshGate(given), live: given.live ?? new LiveHub() };
   const limit = rateLimit({
     max: 60,
     windowMs: 60_000,

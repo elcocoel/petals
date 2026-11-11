@@ -26,7 +26,9 @@ import {
   disconnectedFor,
   makeLink,
   type ToolContext,
+  touched,
   viewOfPerson,
+  workerPlace,
 } from '@petal/tools';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
@@ -220,7 +222,7 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
         // only while someone is still asking: a job taken for a closed request would sit with nobody on it
         if (signal.aborted) return c.body(null, 204);
         const job = await store.job.takeFor(owner, name, now(), worker);
-        if (job) return ok(c, await delivered(job, owner));
+        if (job) return ok(c, await delivered(job, owner, name, worker));
         const left = deadline - clock();
         if (left <= 0) return ok(c, { job: null });
         await bell.wait(owner, left, signal);
@@ -232,11 +234,17 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
     }
   });
 
-  /** A job as the agent gets it, with a continue link for its project, made for this job. */
-  async function delivered(job: JobRow, owner: string) {
+  /**
+   * A job as the agent gets it, with a continue link for where its work goes: its own conversation (swarm.md
+   * step 2), which now says who's on it, or the project it was handed out in, for an older job.
+   */
+  async function delivered(job: JobRow, owner: string, name: string, worker: string | null) {
     const caller = { ...d.tools, caller: { subject: owner, door: 'agent' } };
-    const made = await makeLink(caller, job.exploration, 'continue');
-    const exploration = await store.exploration.get(job.exploration);
+    const workIn = job.conversation ?? job.exploration;
+    const made = await makeLink(caller, workIn, 'continue');
+    const n = workerPlace(await store.agent.workers(owner), name, worker);
+    touched(caller, workIn, 'take_job', name, n);
+    const exploration = await store.exploration.get(workIn);
     return {
       job: {
         id: job.id,

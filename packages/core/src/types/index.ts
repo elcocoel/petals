@@ -662,6 +662,8 @@ export interface JobEvent {
   to?: string | null;
   /** additive: the agent that took it, or null */
   taken_by?: string | null;
+  /** additive (10 Nov, swarm.md step 2): the job's own conversation, where its work goes */
+  conversation?: string | null;
 }
 
 /** One SSE event of a chat, in order: run, stage/progress/tool_call/tool_result/message…, flower, signature, done. */

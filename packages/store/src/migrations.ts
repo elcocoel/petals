@@ -453,6 +453,11 @@ export const MIGRATIONS: readonly string[] = [
   CREATE INDEX annotation_exploration ON annotation(owner, exploration, created_at);
   CREATE INDEX annotation_subject ON annotation(owner, subject, created_at);
   `,
+  // 22: a conversation per job (Elco, 10 Nov, swarm.md step 2): the job's work goes in its own exploration,
+  // in the same folder, so the conversation that handed it out stays small however much the job reads.
+  `
+  ALTER TABLE job ADD COLUMN conversation TEXT;
+  `,
 ];
 
 /**
