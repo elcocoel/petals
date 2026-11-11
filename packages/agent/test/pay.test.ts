@@ -223,7 +223,7 @@ describe('paying for Petals’ agent in NEAR', () => {
     expect(res.status).toBe(401);
     await w.signIn();
     const priced = await w.pay({ network: 'mainnet', account_id: 'alice.near', tx_hash: HASH });
-    expect(priced.status).toBe(502);
+    expect(priced.status).toBe(503);
     expect(
       ((await (await w.call('GET', '/api/v1/me')).json()) as { credit: unknown }).credit,
     ).toBeNull();
