@@ -85,6 +85,12 @@ export interface LandscapeAt {
    * room is narrow: /make, #78). Off, the home fills the whole map, as on /map. Read when the scene is built.
    */
   clearOfChains?: boolean;
+  /**
+   * Set by the map once it's built, as `choose` is: the wallets (petal ids) to highlight inside the flower you're
+   * in (#94: the chosen bloc, from the legend's Highlight row), or null for none. They stay on that flower until
+   * the next call.
+   */
+  highlight?: (ids: readonly string[] | null) => void;
 }
 
 const LONGEST_FRAME = 1 / 15;
@@ -169,6 +175,16 @@ export function useLandscape(
       highlight: ids,
       ...(ring ? { roundTops: true, votes: ring } : {}),
     });
+    // The chosen group's wallets (#94: a bloc, from the legend's Highlight row), on the flower they were chosen in.
+    let groupIds: readonly string[] = [];
+    let groupFlower = -1;
+    /** A live flower's look: its shared wallets (#87) and its chosen group (#94) highlighted, its ring (#93). */
+    const lookOf = (i: number): PetalLook => {
+      const f = flowers[i] as LandFlower;
+      const shared = shown && shown.flower === i ? shown.ids : [];
+      const group = i === groupFlower ? groupIds : [];
+      return sharedLook(f, [...shared, ...group], ringOf(i));
+    };
     /** Re-mounts a live flower, so its look is read again. */
     const remount = (i: number) => {
       const d = lives.get(i);
@@ -282,8 +298,7 @@ export function useLandscape(
       }
       for (const i of want) {
         if (lives.has(i)) continue;
-        const f = flowers[i] as LandFlower;
-        const d = newDriven(node, f.model, {
+        const d = newDriven(node, (flowers[i] as LandFlower).model, {
           hover: 'dock',
           width: cam.width,
           height: cam.height,
@@ -291,11 +306,9 @@ export function useLandscape(
           relations: null,
           readout: false,
           bloom: false,
-          // the everything map (#87): the art direction's colours, as the far wave's; inside a flower, the wallets it
-          // shares with the other one take the highlight
-          ...(focusLines
-            ? { look: sharedLook(f, shown && shown.flower === i ? shown.ids : [], ringOf(i)) }
-            : { votes: ringOf(i) }),
+          // the art direction's colours, as the far wave's; inside a flower, the wallets it shares with the other one
+          // (#87) and the chosen group's (#94) take the highlight
+          look: lookOf(i),
         });
         lives.set(i, d);
         node.insertBefore(d.scene.root, scene.top);
@@ -573,6 +586,13 @@ export function useLandscape(
     if (at?.current) {
       at.current.choose = (id) => {
         chosen = id;
+        wake();
+      };
+      at.current.highlight = (ids) => {
+        const was = groupFlower;
+        groupIds = ids ?? [];
+        groupFlower = groupIds.length > 0 ? entered : -1;
+        for (const j of new Set([was, groupFlower])) if (j >= 0 && lives.has(j)) remount(j);
         wake();
       };
     }

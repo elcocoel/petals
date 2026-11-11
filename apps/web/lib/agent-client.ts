@@ -1,6 +1,8 @@
 // The adapter: the one place the browser talks to Petal's API (design/frontend-foundation.md, MVVM+).
 // Everything else gets plain values and agent events, so views and ViewModels hold no URLs, no status
 // codes and no `fetch`. layers.test.ts names this file as the only one in lib/ allowed to call it.
+
+import type { Blocs } from '@petal/core';
 import type {
   AgentEvent,
   ChatMessage,
@@ -411,6 +413,26 @@ export async function readMapValue(map: string): Promise<MapValue | null> {
   if (!res?.ok) return null;
   const json = (await res.json().catch(() => ({}))) as { map?: { value?: MapValue | null } };
   return json.map?.value ?? null;
+}
+
+/**
+ * A map's voting blocs (#94), as SYSTEMS finds them over a period (GET /api/v1/maps/:id/blocs): accounts that vote
+ * alike, biggest bloc first, members as petal ids; the period it used (from/to ISO, the last 90 days unless asked).
+ * Null when it has none, or they can't be read.
+ */
+export async function readMapBlocs(
+  map: string,
+  period?: { from?: string; to?: string },
+): Promise<Blocs | null> {
+  const q = new URLSearchParams(
+    Object.entries(period ?? {}).filter((e): e is [string, string] => typeof e[1] === 'string'),
+  ).toString();
+  const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}/blocs${q ? `?${q}` : ''}`).catch(
+    () => null,
+  );
+  if (!res?.ok) return null;
+  const json = (await res.json().catch(() => null)) as Blocs | null;
+  return json && Array.isArray(json.blocs) ? json : null;
 }
 
 /** A map's proposals with every vote (#93), as SYSTEMS reads them (proposals/v1): null when it has none. */
