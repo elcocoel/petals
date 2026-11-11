@@ -90,7 +90,14 @@ export function ConversationThread({
       }
       renderJob={(row) => {
         const line = jobLine(row.job, jobs?.[row.job.id]);
-        return <JobRow key={row.key} text={line.text} summary={line.summary} />;
+        return (
+          <JobRow
+            key={row.key}
+            text={line.text}
+            summary={line.summary}
+            conversation={line.conversation}
+          />
+        );
       }}
       onRefollow={onRefollow}
       onLink={onLink}

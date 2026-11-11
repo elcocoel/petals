@@ -2,6 +2,7 @@
 // what that agent saved reaches us (its steps and notes), never what it said to the person. Pure, so a
 // read now and a push later show the same thing.
 import type { Spec } from '@petal/core/types';
+import { workerName } from './jobs.ts';
 import { parseMarkdown } from './markdown.ts';
 import type { PanelFlower } from './panel-view.ts';
 import type { Row } from './thread-view.ts';
@@ -13,7 +14,13 @@ export interface ElsewherePacket {
   steps: { note: string | null; at: string }[];
   notes: { text: string; at: string }[];
   /** the app at the other end, in this server's memory: null after a restart or if it never said */
-  presence?: { client: string | null; last_at: string; last_tool: string | null } | null;
+  presence?: {
+    client: string | null;
+    /** the worker's place among its agent's workers: 2 is "Codex 2" */
+    n?: number | null;
+    last_at: string;
+    last_tool: string | null;
+  } | null;
 }
 
 export type ElsewhereRead = { packet: ElsewherePacket } | { failed: string };
@@ -24,9 +31,10 @@ export const isOwnId = (ref: string) => ref.startsWith('exp_');
 /** When the agent's own name hasn't reached us. "mcp" isn't a word a person uses. */
 export const WHERE = 'your own agent';
 
-/** The name the agent's app gave, for "happening in <name>". */
+/** The name the agent's app gave, as the side panel names its workers ("Codex 2"), for "with <name>". */
 export function whereOf(read: ElsewhereRead | null): string {
-  return (read && 'packet' in read && read.packet.presence?.client) || WHERE;
+  const presence = read && 'packet' in read ? read.packet.presence : null;
+  return presence?.client ? workerName(presence.client, presence.n) : WHERE;
 }
 
 const speakerOf = (read: ElsewhereRead) => {

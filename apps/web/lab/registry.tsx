@@ -1840,6 +1840,15 @@ export const registry: LabEntry[] = [
           />
         ),
       },
+      {
+        name: 'a worker on it, with its own conversation',
+        render: () => (
+          <JobRow
+            text="Codex 2 is on it: Map RaidGuild's proposals"
+            conversation="/make?elsewhere=exp_lab"
+          />
+        ),
+      },
     ],
   },
   {

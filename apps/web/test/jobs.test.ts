@@ -136,3 +136,33 @@ describe('minimally good, in the workspace', () => {
     );
   });
 });
+
+describe('a job with its own conversation (swarm.md, steps 1 and 2)', () => {
+  const base = {
+    id: 'j1',
+    kind: 'map',
+    title: "Map RaidGuild's proposals",
+    status: 'taken' as const,
+    taken_by: 'codex',
+  };
+
+  test('says which worker took it, as the side panel names them', () => {
+    expect(jobLine({ ...base, n: 2 }, undefined).text).toBe(
+      "Codex 2 is on it: Map RaidGuild's proposals",
+    );
+    expect(jobLine({ ...base, n: 1 }, undefined).text).toBe(
+      "Codex is on it: Map RaidGuild's proposals",
+    );
+  });
+
+  test('links its conversation, in place, once it has one; an older job has none', () => {
+    expect(jobLine({ ...base, conversation: 'exp_abc' }, undefined).conversation).toBe(
+      '/make?elsewhere=exp_abc',
+    );
+    // the list's newer word keeps the conversation the event named
+    expect(
+      jobLine({ ...base, conversation: 'exp_abc' }, { ...base, status: 'done' }).conversation,
+    ).toBe('/make?elsewhere=exp_abc');
+    expect(jobLine(base, undefined)).not.toHaveProperty('conversation');
+  });
+});
