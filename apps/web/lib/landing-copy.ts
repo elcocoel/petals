@@ -317,19 +317,58 @@ export const landingCopy = {
   builders: {
     title: 'Petals is open source. Build it with us.',
     body: "Built in the open, under the MIT licence: the brain that teaches agents to map, the recipes that read each kind of system, the protocol that turns a network's data into a shape, and Petals' agent on NEAR AI. Teach it a new system, sharpen a reading, or bring Petals into your own agent.",
+    /**
+     * The doors into the system Elco named (11 Nov, board card 103: "the brain the data protocol The rendering
+     * protocol And whatever Other parts"), each to its page in /docs (DOCS's catalog). Drafts by LANDING, for Elco.
+     */
+    doors: [
+      {
+        title: 'The brain',
+        body: 'Chapters and recipes that teach any agent how to read power in a network. Add one with a pull request.',
+        slug: 'brain',
+      },
+      {
+        title: 'The data protocol',
+        body: 'The open formats every reading, claim and layer is written in, so any agent can write Petals’ data.',
+        slug: 'data-protocol',
+      },
+      {
+        title: 'The rendering protocol',
+        body: 'How a view turns data into a flower, drawn the same way everywhere.',
+        slug: 'rendering-protocol',
+      },
+      {
+        title: 'Connect your agent',
+        body: 'Bring Claude Code, Codex, Hermes or a cloud app, and let it take jobs from Petals’ agent.',
+        slug: 'connect-your-agent',
+      },
+      {
+        title: 'The API',
+        body: 'HTTP and MCP, for the apps and agents that reach Petals from outside.',
+        slug: 'api',
+      },
+      {
+        title: 'Contribute',
+        body: 'Teach Petals a new system, sharpen a reading, or fix a chapter.',
+        slug: 'build-it-with-us/contributing',
+      },
+    ],
+    /** Draft: each door's link. */
+    doorLink: 'In the docs',
     actions: {
-      github: 'GitHub',
       docs: 'Read the docs',
-      join: 'Join the builders',
     },
   },
   footer: {
+    /** Drafts (LANDING, 11 Nov, board card 104), for Elco: the two groups' names; the links are the site's own. */
+    groups: { petals: 'Petals', build: 'Build' },
     links: {
       gallery: 'Power Map',
       howItWorks: 'How it works',
+      connect: 'Connect',
       docs: 'Docs',
-      github: 'GitHub',
-      community: 'Community',
+      agent: 'Connect your agent',
+      contribute: 'Contribute',
     },
     built: 'Built for the NEAR Hackathon, November 2026. By Elementary Complexity.',
   },

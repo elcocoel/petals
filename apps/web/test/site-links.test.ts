@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
+import { catalog } from '../components/docs/content.ts';
 import { Landing } from '../components/landing/Landing.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
 import { doors } from '../lib/doors.ts';
@@ -40,8 +41,11 @@ describe('the landing page', () => {
     };
     for (const path of Object.values(routes)) expect(existsSync(join(app, path)), path).toBe(true);
     const anchors = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+    // a page inside the docs is one of DOCS's catalog
+    const docs = catalog().map((p) => `${siteLinks.docs}/${p.slug}`);
     for (const href of new Set(hrefs)) {
       if (href.startsWith('/#')) expect(anchors, href).toContain(href.slice(2));
+      else if (href.startsWith(`${siteLinks.docs}/`)) expect(docs, href).toContain(href);
       else expect(routes[href.split(/[?#]/)[0] as string], href).toBeDefined();
     }
   });
