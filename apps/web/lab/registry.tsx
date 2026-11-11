@@ -74,6 +74,7 @@ import { GalleryCard } from '../components/ui/GalleryCard.tsx';
 import { Icon, type IconName } from '../components/ui/Icon.tsx';
 import { IconButton } from '../components/ui/IconButton.tsx';
 import { LineRow } from '../components/ui/LineRow.tsx';
+import { Logo } from '../components/ui/Logo.tsx';
 import { MetaRow } from '../components/ui/MetaRow.tsx';
 import { Mono } from '../components/ui/Mono.tsx';
 import { Nav } from '../components/ui/Nav.tsx';
@@ -1625,6 +1626,33 @@ export const registry: LabEntry[] = [
     states: [
       { name: 'neutral, a fact', render: () => <Badge>Declared</Badge> },
       { name: 'accent, a state that went well', render: () => <Badge tone="accent">Saved</Badge> },
+    ],
+  },
+  {
+    id: 'Logo',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Logo.tsx',
+    states: [
+      {
+        name: "a logo, round, an icon's size",
+        render: () => <Logo src={logo('magic-eden')} />,
+      },
+      {
+        name: "in a row of the map's chain list",
+        render: () => (
+          <div className="w-tile-width">
+            <NavItem
+              onClick={() => undefined}
+              chosen
+              logo={logo('safe')}
+              label="Gnosis"
+              trail="15"
+            />
+          </div>
+        ),
+      },
     ],
   },
   {

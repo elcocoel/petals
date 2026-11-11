@@ -58,6 +58,8 @@ export interface CanvasFlower {
 export interface CanvasChain {
   chain: string;
   label: string;
+  /** its logo, round before its name in the chain list (Elco, 11 Nov: "we need the logo of the chains") */
+  logo?: string | null | undefined;
   continent: Continent;
 }
 
@@ -371,6 +373,7 @@ export function LandscapeCanvas({
                         if (narrow()) setListOpen(false);
                       }}
                       chosen={c.chain === chain}
+                      logo={c.logo}
                       label={c.label}
                       trail={String(counts.get(c.chain) ?? 0)}
                     />

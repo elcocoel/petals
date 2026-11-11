@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import type { DragEvent, MouseEventHandler, ReactNode } from 'react';
 import { Icon, type IconName } from './Icon.tsx';
+import { Logo } from './Logo.tsx';
 import { Mono } from './Mono.tsx';
 
 const BASE =
@@ -50,6 +51,7 @@ type Where =
 export function NavItem({
   label,
   icon,
+  logo,
   trail,
   working,
   muted,
@@ -60,6 +62,8 @@ export function NavItem({
 }: {
   label: string;
   icon?: IconName;
+  /** A logo before the words, round, in the icon's place (a chain's, in the map's chain list). */
+  logo?: string | null | undefined;
   /** When it last moved, or a count: a few characters of mono, never cut. */
   trail?: string;
   /** Something is working there now; the words are read aloud in place of the square. */
@@ -75,6 +79,7 @@ export function NavItem({
   const expanded = 'expanded' in where ? where.expanded : undefined;
   const content = (
     <>
+      {logo && <Logo src={logo} />}
       {icon && (
         <span
           className={`flex shrink-0 text-muted ${expanded ? 'rotate-90' : ''}`}
