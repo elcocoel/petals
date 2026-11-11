@@ -34,17 +34,17 @@ import { Legend, LegendKeys } from '../components/Legend.tsx';
 import { AnnotatedFlower } from '../components/landing/AnnotatedFlower.tsx';
 import { BackIt } from '../components/landing/BackIt.tsx';
 import { BuildWithUs } from '../components/landing/BuildWithUs.tsx';
-import { ChatHero } from '../components/landing/ChatHero.tsx';
 import { GallerySection } from '../components/landing/GallerySection.tsx';
 import { GiveToAgent } from '../components/landing/GiveToAgent.tsx';
 import { Hero } from '../components/landing/Hero.tsx';
-import { HeroPetal } from '../components/landing/HeroPetal.tsx';
+import { HeroStory } from '../components/landing/HeroStory.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
 import { LandingMap } from '../components/landing/LandingMap.tsx';
 import { LiveReading } from '../components/landing/LiveReading.tsx';
 import { MapHero } from '../components/landing/MapHero.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
+import { StoryFlower } from '../components/landing/StoryFlower.tsx';
 import { MapList } from '../components/MapList.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { Oops } from '../components/Oops.tsx';
@@ -102,6 +102,7 @@ import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { AnnotationRow } from '../lib/claim-lines.ts';
 import type { DrawingKind } from '../lib/figures.ts';
 import { keysOf, oneKey, readingKey, svgImage } from '../lib/flower-view.ts';
+import { SETTLED_MS } from '../lib/hero-story.ts';
 import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
@@ -657,24 +658,28 @@ export const registry: LabEntry[] = [
   },
   section('Hero', 'apps/web/components/landing/Hero.tsx', 'Hero', '66:2188', () => <Hero />),
   {
-    id: 'ChatHero',
+    id: 'HeroStory',
     group: 'Sections',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/landing/ChatHero.tsx',
-    // LANDING's second lean for the new hero (11 Nov), in place at /lab/landing-hero; no Figma frame yet
-    states: [{ name: "LANDING's lean", wide: true, render: () => <ChatHero /> }],
+    source: 'apps/web/components/landing/HeroStory.tsx',
+    // HERO ART's V2, approved by Elco (11 Nov); with its lab controls at /lab/landing-hero
+    states: [{ name: 'as approved', wide: true, render: () => <HeroStory /> }],
   },
   {
-    id: 'HeroPetal',
+    id: 'StoryFlower',
     group: 'Marks',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/landing/HeroPetal.tsx',
-    // the hero's symbolic petal at each stage of its chat
-    states: ([0, 1, 2, 3] as const).map((stage) => ({
-      name: `stage ${stage}`,
-      render: () => <HeroPetal stage={stage} />,
+    source: 'apps/web/components/landing/StoryFlower.tsx',
+    // the hero story's symbolic flower, settled at each beat
+    states: [0, 1, 2, 3, 4, 5].map((beat) => ({
+      name: `beat ${beat + 1}`,
+      render: () => (
+        <div className="aspect-3/2 w-full">
+          <StoryFlower beat={beat} t={SETTLED_MS} />
+        </div>
+      ),
     })),
   },
   {
@@ -3246,6 +3251,8 @@ export const registry: LabEntry[] = [
 /** Exported by components/ but not drawn here, each for a stated reason. */
 export const NOT_IN_LAB: Record<string, string> = {
   Landing: 'the whole landing page, at /; each of its sections is here',
+  HeroStoryView:
+    'HeroStory without its clock: HeroStory draws it here, and /lab/landing-hero isolates its layers',
   InteractionSurface: 'wires the ViewModels to the boxes and the flower, and it lives at /make',
   FlowerCanvas: 'the live flower fills the window, so its bench is its own page, /lab/flower',
   ConversationThread: 'Thread and TurnFlower wired together, and each of those is here',

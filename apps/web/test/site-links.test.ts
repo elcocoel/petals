@@ -46,17 +46,11 @@ describe('the landing page', () => {
     }
   });
 
-  test('each starter asks its own question', () => {
-    for (const question of landingCopy.hero.starters) expect(hrefs).toContain(askHref(question));
-  });
-
-  test("its box sends a plain GET to /make: the hero's, the only one since How it works lost its own", () => {
-    const forms = [...html.matchAll(/<form\b[^>]*>/g)].map((m) => m[0]);
-    expect(forms.length).toBe(1);
-    for (const form of forms) {
-      expect(form).toContain('action="/make"');
-      expect(form).toContain('method="get"');
-    }
+  test("its hero tells a story and takes no question: no box and no starters since HERO ART's (11 Nov)", () => {
+    expect([...html.matchAll(/<form\b[^>]*>/g)]).toEqual([]);
+    for (const question of landingCopy.hero.starters)
+      expect(hrefs).not.toContain(askHref(question));
+    for (const beat of landingCopy.heroStory.beats) expect(html).toContain(beat.name);
   });
 
   test("its figures are inline and carry no raw colour, but for the published shape from the API and the landing's illustrations", () => {

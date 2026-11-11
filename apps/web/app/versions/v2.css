@@ -853,8 +853,7 @@
 
 /* figure.grow */
 :root[data-version="2"] [data-b="figure"] [data-part="wedge"] {
-  transition: scale var(--joy-dur-bloom) var(--joy-ease-spring);
-  transition-delay: calc(var(--a) * var(--joy-dur-sweep));
+  transition: fill var(--joy-dur-bloom) var(--joy-ease-reveal);
 }
 
 /* figure.draw */

@@ -45,32 +45,40 @@ export const landingCopy = {
     ],
   },
   /**
-   * The illustrated hero's simulated chat (Elco, 11 Nov: "a simpler, chiller illustrated hero with a
-   * background illustration ... and simulated chat process with an evolving petal (symbolic, iconic) as it
-   * goes"), in /lab/landing-hero. Drafts by LANDING, for Elco. The answers are the NEAR validators reading's
-   * own findings (liveReading below). `stage` is how far the petal has grown once that turn is said.
+   * The hero's story (HERO ART's V2, approved by Elco 11 Nov: "BRO, 10 OUT OF 10 - LFG!!!! now its just a design
+   * issuem finesse - but get this in the hero please"): six beats, each a question and Petals' answer, word for
+   * word from design/hero-illustration/foreground-script-v2.md. The flower is a symbol: no network is named and
+   * nothing is counted. `name` is each beat's word under its tick.
    */
-  heroChat: {
-    title: "NEAR's validators",
+  heroStory: {
     you: 'You',
-    agent: "Petals' agent",
-    turns: [
-      { by: 'you', text: "Who stands behind NEAR's validators?", stage: 0 },
+    petals: 'Petals',
+    beats: [
+      { name: 'Community', q: 'Show me my community.', a: 'Here’s how power is shared.' },
       {
-        by: 'agent',
-        text: "I'll read NEAR's staking pools. Each validator becomes a petal.",
-        stage: 1,
+        name: 'Influence',
+        q: 'Who has the most influence?',
+        a: 'These accounts carry the most weight.',
       },
-      { by: 'agent', text: 'A petal grows with its share of the stake.', stage: 2 },
-      { by: 'you', text: 'How few could stall the chain?', stage: 2 },
+      { name: 'Blocs', q: 'Who votes together?', a: 'These groups tend to vote alike.' },
       {
-        by: 'agent',
-        text: '9 of 371 hold more than a third of the stake. They are the lit petals.',
-        stage: 3,
+        name: 'History',
+        q: 'Has it always been like this?',
+        a: 'Here’s how the balance has changed.',
+      },
+      { name: 'A vote', q: 'Who backed this proposal?', a: 'Here’s who voted for and against.' },
+      {
+        name: 'Connections',
+        q: 'Where else are they involved?',
+        a: 'Follow them into these communities.',
       },
     ],
-    /** Said on the stand-in picture until HERO ART's drawing replaces it. */
-    standIn: 'Stand-in illustration',
+    /** The history beat's line, from then to now. */
+    past: 'Then',
+    now: 'Now',
+    /** Drafts (LANDING, 11 Nov), for Elco: the play control's names, read aloud and shown on hover. */
+    pause: 'Pause',
+    play: 'Play',
   },
   liveReading: {
     title: 'Accounts become petals. Together they shape a network.',

@@ -5,7 +5,7 @@ import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
-import { Landing } from '../components/landing/Landing.tsx';
+import { Hero } from '../components/landing/Hero.tsx';
 import { colourKeys } from '../lib/flower-view.ts';
 import { HERO_SHA, type PowerMapTile } from '../lib/power-map.ts';
 
@@ -79,10 +79,9 @@ describe('the hero', () => {
     href: `/d/${HERO_SHA}`,
     keys: colourKeys([validators]),
   };
+  // The first hero, in the lab since HERO ART's story took the landing's (11 Nov).
   test('draws its flower in the one look, with the key to its colours', () => {
-    const html = renderToStaticMarkup(
-      createElement(Landing, { tiles: [tile], view: DEFAULT_VIEW }),
-    );
+    const html = renderToStaticMarkup(createElement(Hero, { flower: tile }));
     expect(html).toContain('src="data:image/svg+xml;base64,PHN2Zy8+"');
     expect(html).toContain('data-swatch="k-pool"');
     expect(html).not.toContain('data-kind="hero-flower"');

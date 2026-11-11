@@ -21,6 +21,8 @@ import {
   House,
   IdentificationCard,
   MapTrifold,
+  Pause,
+  Play,
   Plug,
   Plus,
   SidebarSimple,
@@ -62,6 +64,9 @@ const GLYPHS = {
   leave: SignOut,
   /** Putting something back as it was. */
   undo: ArrowCounterClockwise,
+  // a story that plays by itself, stopped and started (the hero, 11 Nov)
+  pause: Pause,
+  play: Play,
   /** A row's menu of what can be done with it. */
   more: DotsThree,
   archive: Archive,
