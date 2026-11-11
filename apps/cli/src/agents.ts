@@ -26,8 +26,6 @@ export const WAIT_FOR_S = 570;
 /** Under the site's tunnel, which closes a request idle for 100 seconds. */
 const ASK_S = 85;
 const WAIT = 'node ~/.petals/petal.mjs jobs wait';
-/** What an agent says it can do, as the site keeps it. */
-export const CAN_MAX = 300;
 /** A worker's id, as join makes it. */
 export const WORKER = /^[a-z0-9]{1,12}$/;
 const again = (worker: string | null) => (worker ? `${WAIT} --worker ${worker}` : WAIT);
@@ -63,15 +61,6 @@ export function joinAgent(env: NodeJS.ProcessEnv, key: string, as: string, can?:
     };
   }
   const says = can?.trim();
-  // the site keeps it to its short fields' length, so a wait never fails on it later (SYSTEMS)
-  if (says && says.length > CAN_MAX) {
-    return {
-      error: {
-        code: 'bad_input',
-        message: `Say what you can do in ${CAN_MAX} characters or fewer.`,
-      },
-    };
-  }
   const worker = randomBytes(4).readUInt32BE(0).toString(36).padStart(6, '0').slice(-6);
   const file = workerFile(env, worker);
   mkdirSync(dirname(file), { recursive: true });
