@@ -8,6 +8,8 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import {
+  canonicalJson,
+  sha256Hex,
   validateClaim,
   validateMark,
   validateProposals,
@@ -26,6 +28,8 @@ export interface LoadRun {
   replace?: boolean;
   /** who the drawings are credited to */
   by: string;
+  /** a wave's manifest outside the folder (L2-IMPORT-MANIFEST.json) */
+  manifests?: string[];
   log?: (line: string) => void;
 }
 
@@ -33,6 +37,8 @@ export interface LoadReport {
   files: number;
   /** files that aren't one of Petals' formats: raw receipts and manifests, left as evidence */
   evidence: number;
+  /** Petals documents a wave's manifest marks evidence only (load: false): checked, not loaded */
+  held: number;
   refused: { file: string; why: string[] }[];
   /** per format: how many were good, kept, and left because one is already kept */
   formats: Record<string, { good: number; kept: number; left: number }>;
@@ -48,6 +54,52 @@ function* files(dir: string): Generator<string> {
 }
 
 const formatOf = (petal: string) => petal.split('/')[0] as string;
+
+interface Listed {
+  load: boolean;
+  sha256: string | null;
+}
+
+/**
+ * The waves' manifests: every *IMPORT-MANIFEST.json under the folder, and any given with --manifest. Two shapes:
+ * objects [{ path, load, canonical_sha256 }] (GNOSIS WAVE's), and daos [{ artifacts [{ file, canonical_sha256 }] }]
+ * (the L2 wave's), each path from the manifest's own folder. A listed file loads when the manifest says so and
+ * has the canonical sha256 it gives; within a manifest's folder, a Petals document it doesn't list is held, since
+ * only its listed artifacts are inputs.
+ */
+function manifestsIn(root: string, extra: readonly string[]) {
+  const entries = new Map<string, Listed>();
+  const scopes: string[] = [];
+  const read = (p: string) => {
+    let m: {
+      objects?: { path?: string; load?: boolean; canonical_sha256?: string }[];
+      daos?: { artifacts?: { file?: string; canonical_sha256?: string }[] }[];
+    };
+    try {
+      m = JSON.parse(readFileSync(p, 'utf8'));
+    } catch {
+      return;
+    }
+    const dir = dirname(p);
+    const add = (rel: string | undefined, load: boolean, sha: string | undefined) => {
+      if (typeof rel === 'string') entries.set(join(dir, rel), { load, sha256: sha ?? null });
+    };
+    for (const o of m.objects ?? []) add(o.path, o.load === true, o.canonical_sha256);
+    for (const d of m.daos ?? [])
+      for (const a of d.artifacts ?? []) add(a.file, true, a.canonical_sha256);
+    if (m.objects || m.daos) scopes.push(dir);
+  };
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) walk(p);
+      else if (name.endsWith('IMPORT-MANIFEST.json')) read(p);
+    }
+  };
+  walk(root);
+  for (const p of extra) read(p);
+  return { entries, scopes };
+}
 
 /** Check one document by its own format: the reasons it isn't one, or none. */
 function problems(doc: Record<string, unknown>): string[] {
@@ -72,7 +124,8 @@ function problems(doc: Record<string, unknown>): string[] {
 export async function loadMapping(ctx: ToolContext, root: string, o: LoadRun): Promise<LoadReport> {
   const store = privateStore(ctx.config);
   const log = o.log ?? (() => {});
-  const report: LoadReport = { files: 0, evidence: 0, refused: [], formats: {}, drawn: 0 };
+  const report: LoadReport = { files: 0, evidence: 0, held: 0, refused: [], formats: {}, drawn: 0 };
+  const manifests = manifestsIn(root, o.manifests ?? []);
   const tally = (f: string) => {
     report.formats[f] ??= { good: 0, kept: 0, left: 0 };
     return report.formats[f];
@@ -99,6 +152,25 @@ export async function loadMapping(ctx: ToolContext, root: string, o: LoadRun): P
       continue;
     }
     const d = doc as Record<string, unknown>;
+    // a wave's manifest (IMPORT-MANIFEST.json) says which of its files load, and the hash each must have
+    const listed = manifests.entries.get(path);
+    if (!listed && manifests.scopes.some((dir) => path.startsWith(`${dir}/`))) {
+      report.held++;
+      continue;
+    }
+    if (listed && listed.sha256 && listed.sha256 !== sha256Hex(canonicalJson(d))) {
+      report.refused.push({
+        file,
+        why: [
+          `its canonical sha256 isn't the one its manifest gives (${listed.sha256.slice(0, 12)}…)`,
+        ],
+      });
+      continue;
+    }
+    if (listed && !listed.load) {
+      report.held++;
+      continue;
+    }
     const why = problems(d);
     if (why.length) {
       report.refused.push({ file, why });

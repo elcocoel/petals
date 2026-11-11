@@ -4,12 +4,19 @@
 // own mapping; a good mark, value or proposals kept by its map's address unless one is kept there already
 // (--replace puts the wave's instead); claims checked and held. Hidden maps stay hidden. Where the server runs:
 //   container exec petals node /app/scripts/load-mapping.ts <folder> [--dry] [--replace] [--by mapping.petals.near]
+//     [--manifest <a wave's *IMPORT-MANIFEST.json outside the folder>]
+// A wave's manifest says which files load (and the canonical sha256 each must have); unlisted ones are held.
 import { parseArgs } from 'node:util';
 import { createContext, loadMapping, serverConfig } from '@petal/agent';
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
-  options: { dry: { type: 'boolean' }, replace: { type: 'boolean' }, by: { type: 'string' } },
+  options: {
+    dry: { type: 'boolean' },
+    replace: { type: 'boolean' },
+    by: { type: 'string' },
+    manifest: { type: 'string', multiple: true },
+  },
 });
 const folder = positionals[0];
 if (!folder)
@@ -19,6 +26,7 @@ const r = await loadMapping(ctx, folder, {
   by: values.by ?? 'mapping.petals.near',
   ...(values.dry ? { dry: true } : {}),
   ...(values.replace ? { replace: true } : {}),
+  ...(values.manifest?.length ? { manifests: values.manifest } : {}),
   log: (line) => console.log(line),
 });
 for (const x of r.refused) console.log(`refused ${x.file}: ${x.why.join('; ')}`);
@@ -29,5 +37,5 @@ const per = Object.entries(r.formats)
   )
   .join('; ');
 console.log(
-  `${r.files} files: ${r.evidence} evidence, ${r.refused.length} refused; ${per}; ${r.drawn} drawn${values.dry ? ' (--dry: nothing kept)' : ''}`,
+  `${r.files} files: ${r.evidence} evidence, ${r.held} held by their manifest, ${r.refused.length} refused; ${per}; ${r.drawn} drawn${values.dry ? ' (--dry: nothing kept)' : ''}`,
 );
