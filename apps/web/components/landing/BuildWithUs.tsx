@@ -16,7 +16,10 @@ export function BuildWithUs() {
   return (
     <Section kind="ink" layout="split">
       <div>
-        <SectionHead title={copy.title} body={copy.body} />
+        {/* balanced, so no word is left alone on the headline's last line (11 Nov, at 1280) */}
+        <div className="text-balance">
+          <SectionHead title={copy.title} body={copy.body} />
+        </div>
         <div className="mt-space-32">
           <ActionRow gap="tight">
             {/* GitHub and Join the builders come back with somewhere to go: the repo public on Elco's
