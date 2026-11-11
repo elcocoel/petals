@@ -175,8 +175,18 @@ export function catalog(): DocPage[] {
     }
     if (section === 'data-protocol') {
       const schemaFiles = files('packages/core/schema').filter((p) => p.endsWith('.schema.json'));
+      // Only each format's current version (Elco's walk 8: "why do we have every version of each
+      // protocol?"); the older ones stay in the repo.
+      const version = (s: Schema) => /^urn:petal:schema:([^:]+):v(\d+)$/.exec(s.$id ?? '');
+      const newest = new Map<string, number>();
+      for (const raw of Object.values(schemas)) {
+        const m = version(raw as Schema);
+        if (m) newest.set(m[1] as string, Math.max(newest.get(m[1] as string) ?? 0, Number(m[2])));
+      }
       for (const [key, raw] of Object.entries(schemas)) {
         const schema = raw as Schema;
+        const m = version(schema);
+        if (m && Number(m[2]) < (newest.get(m[1] as string) ?? 0)) continue;
         const file =
           schemaFiles.find((p) => JSON.parse(read(p)).$id === schema.$id) ??
           'packages/core/schema/flower.schema.json';

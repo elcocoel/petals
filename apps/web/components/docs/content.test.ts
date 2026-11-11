@@ -57,6 +57,14 @@ test('rendering overview reads current dimensions and defaults from core', async
   assert.ok(!result.html.includes('Current view vocabulary'));
 });
 
+test('each format shows only its current version', () => {
+  const ids = catalog().flatMap((p) => (p.schemaId ? [p.schemaId] : []));
+  assert.ok(ids.includes('urn:petal:schema:claim:v4'));
+  assert.ok(!ids.includes('urn:petal:schema:claim:v3'));
+  const names = ids.map((id) => id.replace(/:v\d+$/, ''));
+  assert.equal(new Set(names).size, names.length);
+});
+
 test('all registered schemas have nested fields and at least one original pinned example', async () => {
   const pages = catalog();
   for (const page of pages.filter((p) => p.schemaKey)) {
