@@ -47,6 +47,7 @@ import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
 import { MapList } from '../components/MapList.tsx';
 import { Markdown } from '../components/Markdown.tsx';
+import { Oops } from '../components/Oops.tsx';
 import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
 import { PublishFlow } from '../components/PublishFlow.tsx';
@@ -107,6 +108,7 @@ import { landingCopy } from '../lib/landing-copy.ts';
 import type { ProfileEditorView } from '../lib/lobby-view.ts';
 import { drawingTile, type MapCard, mapTile } from '../lib/maps.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
+import { oopsWords } from '../lib/oops-words.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
 import { viewChoices } from '../lib/person-view.ts';
@@ -2210,6 +2212,35 @@ export const registry: LabEntry[] = [
         ),
       },
       { name: 'lost', wide: true, render: () => <TurnStatus row={turnRow('lost')} /> },
+    ],
+  },
+  {
+    id: 'Oops',
+    group: 'The workspace',
+    figmaName: 'Petals / Oops, not logged in',
+    figmaNode: '233:2359',
+    source: 'apps/web/components/Oops.tsx',
+    states: [
+      {
+        name: 'the 404',
+        wide: true,
+        render: () => (
+          <Oops title={oopsWords.notFound.title} body={oopsWords.notFound.body}>
+            <Button arrow>{oopsWords.home}</Button>
+            <Button variant="secondary">{oopsWords.map}</Button>
+          </Oops>
+        ),
+      },
+      {
+        name: 'a page that broke',
+        wide: true,
+        render: () => (
+          <Oops title={oopsWords.broke.title} body={oopsWords.broke.body}>
+            <Button>{oopsWords.broke.again}</Button>
+            <Button variant="secondary">{oopsWords.home}</Button>
+          </Oops>
+        ),
+      },
     ],
   },
   {
