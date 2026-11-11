@@ -16,6 +16,9 @@ export interface CardValue {
   measure: string | null;
   totals: Value['totals'];
   snapshot: string | null;
+  /** value/v2: the treasury's priced total, and how many of its assets have no price; null with no treasury */
+  treasury_usd: string | null;
+  treasury_unpriced: number | null;
   read_at: string;
 }
 
@@ -30,6 +33,8 @@ export function cardValue(v: Value): CardValue {
     measure: v.measure,
     totals: v.totals,
     snapshot: v.snapshot,
+    treasury_usd: v.treasury?.total.usd ?? null,
+    treasury_unpriced: v.treasury?.total.unpriced ?? null,
     read_at: v.read_at,
   };
 }

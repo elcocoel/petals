@@ -28,8 +28,22 @@ export interface ValueTotal {
   amount: string;
   usd: string | null;
 }
+/** value/v2's treasury (11 Nov): what the map's treasury holds, each asset priced or not, and the priced total. */
+export interface ValueTreasuryItem {
+  kind: 'treasury asset';
+  accounts?: string[];
+  asset: { id: string; symbol: string | null };
+  amount: string;
+  price: ValuePrice | null;
+  usd: string | null;
+  source: { snapshot?: string; ref?: string; at: string };
+}
+export interface ValueTreasury {
+  items: ValueTreasuryItem[];
+  total: { usd: string; priced: number; unpriced: number };
+}
 export interface Value {
-  petal: typeof VALUE_VERSION;
+  petal: typeof VALUE_VERSION | 'value/v2';
   about: string;
   asset: { id: string; symbol: string | null };
   price: ValuePrice | null;
@@ -37,15 +51,18 @@ export interface Value {
   snapshot: string | null;
   measure: string | null;
   totals: ValueTotal[];
+  /** value/v2: the map's treasury, or null when none was read */
+  treasury?: ValueTreasury | null;
   read_at: string;
 }
 
-let compiled: ReturnType<ReturnType<typeof createAjv>['getSchema']> | undefined;
+const compiled = new Map<string, ReturnType<ReturnType<typeof createAjv>['getSchema']>>();
 
-/** The value, typed, or every reason it isn't one. */
+/** The value, typed, or every reason it isn't one: value/v1, or value/v2 with its treasury. */
 export function validateValue(x: unknown): Result<Value> {
-  if (!compiled) compiled = createAjv().getSchema(schemaId('value'));
-  const v = compiled;
+  const name = (x as { petal?: unknown } | null)?.petal === 'value/v2' ? 'valueV2' : 'value';
+  if (!compiled.has(name)) compiled.set(name, createAjv().getSchema(schemaId(name)));
+  const v = compiled.get(name);
   if (!v) throw new Error('value schema not registered');
   if (v(x)) return { ok: true, value: x as Value };
   return {

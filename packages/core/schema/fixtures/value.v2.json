@@ -1,0 +1,105 @@
+{
+  "petal": "value/v2",
+  "about": "eip155:42161:0x912ce59144191c1204e64559fe8253a0e49e6548",
+  "asset": {
+    "id": "0x912ce59144191c1204e64559fe8253a0e49e6548",
+    "symbol": "ARB"
+  },
+  "price": null,
+  "supply": {
+    "amount": "9999998977.610261816650915825",
+    "unit": "ARB",
+    "source": "chain",
+    "ref": "https://arb1.arbitrum.io/rpc totalSupply() on eip155:42161:0x912ce59144191c1204e64559fe8253a0e49e6548 at 523318643",
+    "at": "2026-11-11T15:42:57Z"
+  },
+  "snapshot": "f8d92bf5b02ec3f142fb9559320dd71fbf714641260459a74dd442976762d67e",
+  "measure": "delegated_voting_power",
+  "totals": [
+    {
+      "measure": "delegated_voting_power",
+      "unit": "ARB",
+      "amount": "5028026051.018980666435771792",
+      "usd": null
+    }
+  ],
+  "treasury": {
+    "items": [
+      {
+        "kind": "treasury asset",
+        "accounts": [
+          "eip155:42161:0xf3fc178157fb3c87548baa86f9d24ba38e649b58",
+          "eip155:42161:0xbfc1feca8b09a5c5d3effe7429ebe24b9c09ef58"
+        ],
+        "asset": {
+          "id": "0x912ce59144191c1204e64559fe8253a0e49e6548",
+          "symbol": "ARB"
+        },
+        "amount": "2556141991.50965632397522147",
+        "price": {
+          "usd": 0.161301,
+          "source": "1click",
+          "ref": "https://1click.chaindefuser.com/v0/tokens assetId=nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near; exact Arbitrum asset match; price and balance timestamps differ",
+          "at": "2026-11-11T16:04:01.048Z"
+        },
+        "usd": "412308259.37249907471352719833247",
+        "source": {
+          "snapshot": "19c3c2b3a46f83f6722ae2860afc71121eb83bb7abfb0e1bdd5782778cb0df1e",
+          "at": "2026-11-11T16:11:52Z"
+        }
+      },
+      {
+        "kind": "treasury asset",
+        "accounts": [
+          "eip155:42161:0xf3fc178157fb3c87548baa86f9d24ba38e649b58",
+          "eip155:42161:0xbfc1feca8b09a5c5d3effe7429ebe24b9c09ef58"
+        ],
+        "asset": {
+          "id": "native:ETH",
+          "symbol": "ETH"
+        },
+        "amount": "1585.100088995280087488",
+        "price": {
+          "usd": 2074.07,
+          "source": "1click",
+          "ref": "https://1click.chaindefuser.com/v0/tokens assetId=nep141:arb.omft.near; exact Arbitrum asset match; price and balance timestamps differ",
+          "at": "2026-11-11T16:04:01.048Z"
+        },
+        "usd": "3287608.54158244057105623616",
+        "source": {
+          "snapshot": "19c3c2b3a46f83f6722ae2860afc71121eb83bb7abfb0e1bdd5782778cb0df1e",
+          "at": "2026-11-11T16:11:52Z"
+        }
+      },
+      {
+        "kind": "treasury asset",
+        "accounts": [
+          "eip155:42161:0xf3fc178157fb3c87548baa86f9d24ba38e649b58",
+          "eip155:42161:0xbfc1feca8b09a5c5d3effe7429ebe24b9c09ef58"
+        ],
+        "asset": {
+          "id": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+          "symbol": "USDC"
+        },
+        "amount": "5.892",
+        "price": {
+          "usd": 0.999578,
+          "source": "1click",
+          "ref": "https://1click.chaindefuser.com/v0/tokens assetId=nep141:arb-0xaf88d065e77c8cc2239327c5edb3a432268e5831.omft.near; exact Arbitrum asset match; price and balance timestamps differ",
+          "at": "2026-11-11T16:04:01.048Z"
+        },
+        "usd": "5.889513576",
+        "source": {
+          "snapshot": "19c3c2b3a46f83f6722ae2860afc71121eb83bb7abfb0e1bdd5782778cb0df1e",
+          "at": "2026-11-11T16:11:52Z"
+        }
+      }
+    ],
+    "total": {
+      "usd": "415595873.80",
+      "priced": 3,
+      "unpriced": 0
+    }
+  },
+  "read_at": "2026-11-11T16:11:52Z"
+}
