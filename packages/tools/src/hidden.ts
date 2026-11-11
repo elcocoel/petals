@@ -7,6 +7,8 @@ export interface Hidden {
   about: string;
   name: string;
   why: string;
+  /** who decided, where it isn't the file's own decision */
+  decided?: string;
 }
 
 const BY_ABOUT = new Map<string, Hidden>((hidden.hidden as Hidden[]).map((h) => [h.about, h]));
@@ -14,7 +16,7 @@ const BY_ABOUT = new Map<string, Hidden>((hidden.hidden as Hidden[]).map((h) => 
 /** Why a map is hidden, and who decided, or null for a map that's shown. */
 export function hiddenMap(about: string): (Hidden & { decided: string }) | null {
   const h = BY_ABOUT.get(about);
-  return h ? { ...h, decided: hidden.decided } : null;
+  return h ? { ...h, decided: h.decided ?? hidden.decided } : null;
 }
 
 /** How many maps are hidden. */

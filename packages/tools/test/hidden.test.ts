@@ -5,11 +5,11 @@ import { hiddenCount, hiddenMap } from '../src/hidden.ts';
 import hidden from '../src/hidden-maps.json' with { type: 'json' };
 
 describe('maps hidden from the Power Map', () => {
-  test('the 64 Elco approved, each by its address in one form, with its reason and who decided', () => {
-    expect(hiddenCount()).toBe(64);
+  test('the 64 Elco approved and the six retired off-chain cards, each by its address in one form, with its reason and who decided', () => {
+    expect(hiddenCount()).toBe(70);
     for (const h of hidden.hidden) {
       expect(h.about).toMatch(
-        /^(eip155:\d+:0x[0-9a-f]{40}|solana:[A-Za-z0-9]+:[1-9A-HJ-NP-Za-km-z]{32,44})$/,
+        /^(eip155:\d+:0x[0-9a-f]{40}|solana:[A-Za-z0-9]+:[1-9A-HJ-NP-Za-km-z]{32,44}|none:[a-z0-9.-]+)$/,
       );
       expect(h.why.length).toBeGreaterThan(20);
     }
@@ -17,6 +17,11 @@ describe('maps hidden from the Power Map', () => {
       name: 'Nouns',
       why: expect.stringMatching(/^Hidden until an NFT reader can read it properly/),
       decided: expect.stringContaining('#96'),
+    });
+    // a retired card says its own decision
+    expect(hiddenMap('none:cow.eth-cip-91-voters')).toMatchObject({
+      why: expect.stringMatching(/^Retired: Snapshot ballots/),
+      decided: expect.stringMatching(/^META, 11 Nov 2026: retire/),
     });
   });
 
