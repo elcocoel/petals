@@ -24,6 +24,8 @@ export interface FlowerPanelActions {
   onShelf?: () => void;
   onOpenStored?: (id: string) => void;
   onStarter?: (question: string) => void;
+  /** a link in the box, before it goes: true when the page opened it in place (/make) */
+  onLink?: (href: string) => boolean;
 }
 
 function OpenFlower({
@@ -160,7 +162,11 @@ export function FlowerPanel({
   }
   if (view.kind === 'shelf') {
     return (
-      <FlowerShelf view={view} {...(actions.onStarter ? { onStarter: actions.onStarter } : {})} />
+      <FlowerShelf
+        view={view}
+        {...(actions.onStarter ? { onStarter: actions.onStarter } : {})}
+        {...(actions.onLink ? { onLink: actions.onLink } : {})}
+      />
     );
   }
   return (
