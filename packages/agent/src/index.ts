@@ -13,7 +13,7 @@ import { startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
 
 /** Every map's mark, read where the server runs: scripts/map-marks.ts (board #85). */
-export { createContext, markMaps, valueMaps } from '@petal/tools';
+export { addDaoMap, createContext, markMaps, proposalMaps, valueMaps } from '@petal/tools';
 /** petalApp with its options; serveApi, from @petal/agent/serve, runs it under Node. */
 export { buildPetalApp, type PetalAppOptions } from './app.ts';
 /** The daily spend ledger; fileLedger is for scripts that run the agent outside the server (T060). */

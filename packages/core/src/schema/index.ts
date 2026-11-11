@@ -11,6 +11,7 @@ import layerSchema from '../../schema/layer.schema.json' with { type: 'json' };
 import markSchema from '../../schema/mark.schema.json' with { type: 'json' };
 import priceSchema from '../../schema/price.schema.json' with { type: 'json' };
 import priceV2Schema from '../../schema/price-v2.schema.json' with { type: 'json' };
+import proposalsSchema from '../../schema/proposals.schema.json' with { type: 'json' };
 import seamSchema from '../../schema/seam.schema.json' with { type: 'json' };
 import snapshotSchema from '../../schema/snapshot.schema.json' with { type: 'json' };
 import usageSchema from '../../schema/usage.schema.json' with { type: 'json' };
@@ -61,6 +62,8 @@ export const schemas: {
   mark: object;
   /** a map's token in dollars, its supply, and its reading's totals at that price (#91) */
   value: object;
+  /** a DAO's proposals and each account's vote on each (#93) */
+  proposals: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -80,6 +83,7 @@ export const schemas: {
   priceV2: priceV2Schema,
   mark: markSchema,
   value: valueSchema,
+  proposals: proposalsSchema,
 };
 
 /** The two source documents, unchanged. */

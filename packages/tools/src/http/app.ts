@@ -24,6 +24,7 @@ import { freshGate } from '../fresh.ts';
 import { LiveHub } from '../live.ts';
 import { type CardMark, cardMark, mapsOf, mapViews, namesKey } from '../map.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
+import { cardProposals, proposalsOf } from '../proposals.ts';
 import { findTool } from '../registry.ts';
 import { brainOf } from '../tools/brain.ts';
 import { base, findSnapshot } from '../tools/shared.ts';
@@ -374,11 +375,31 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     }
     return out;
   }
+  /** Each DAO map's proposals in short (#93): how many, how many with votes, when read. */
+  async function summaries() {
+    return new Map([...(await proposalsOf(ctx))].map(([about, p]) => [about, cardProposals(p)]));
+  }
+  // A map's proposals and each account's vote on each (#93), as proposals/v1; not_found when none were read.
+  app.get('/api/v1/maps/:id/proposals', limit, async (c) => {
+    const id = aboutKey(c.req.param('id'));
+    const row = await privateStore(ctx.config).proposals.get(id);
+    return respond(
+      c,
+      row
+        ? { proposals: JSON.parse(row.body) }
+        : versioned(toolError('not_found', 'No proposals read for that map.')),
+    );
+  });
   app.get('/api/v1/maps', limit, async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
     return respond(c, {
-      maps: mapsOf(await mapViews(await forViewer(c), view), await marks(), await valuesOf(ctx)),
+      maps: mapsOf(
+        await mapViews(await forViewer(c), view),
+        await marks(),
+        await valuesOf(ctx),
+        await summaries(),
+      ),
     });
   });
   // One map's card, by its id (URL-encoded, since it holds colons), for its page.
@@ -390,6 +411,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       await mapViews(await forViewer(c), view),
       await marks(),
       await valuesOf(ctx),
+      await summaries(),
     ).find((m) => m.id === id);
     return respond(
       c,

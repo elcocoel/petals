@@ -54,6 +54,7 @@ export {
   pullBeanstalk,
   readBeanstalkList,
 } from './modules/beanstalk.ts';
+export { resolveNearAt } from './modules/chain.ts';
 export {
   DEFAULT_WINDOW_DAYS,
   ERC20_HOLDERS_DESCRIPTOR,
@@ -81,6 +82,15 @@ export {
   TOKEN_PROGRAM,
 } from './modules/solana-spl-holders.ts';
 export {
+  readSputnik,
+  SPUTNIK_DAO_DESCRIPTOR,
+  SPUTNIK_DAO_ID,
+  sputnikDao,
+  sputnikProposals,
+  sputnikSnapshot,
+  sputnikTarget,
+} from './modules/sputnik-dao.ts';
+export {
   checkRecipe,
   pullRecipe,
   RECIPES,
@@ -95,6 +105,7 @@ export {
   type BlockInfo,
   type BlockRef,
   DEFAULT_ENDPOINTS,
+  defaultPool,
   endpointHealth,
   type RpcEndpoint,
   RpcError,

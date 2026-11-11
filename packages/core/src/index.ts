@@ -80,6 +80,16 @@ export {
   tipPercentOf,
 } from './price.ts';
 export { PRIMITIVES } from './primitives.ts';
+export {
+  type Outcome,
+  PROPOSALS_VERSION,
+  type Proposal,
+  type Proposals,
+  type ProposalVote,
+  titleOf,
+  type Vote,
+  validateProposals,
+} from './proposals.ts';
 export { categoryOf, type ReadOptions, readFlower, readingHash } from './reading/index.ts';
 export { PAINT, pictureQuery, renderFlower, SKINS } from './render/index.ts';
 export { legendItem } from './render/legend.ts';
