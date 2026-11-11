@@ -26,6 +26,9 @@ export const BAAL_EVENTS = {
 const SIGNATURES =
   'SubmitProposal(uint256,bytes32,uint256,bytes,uint256,uint256,bool,uint256,string), SponsorProposal(address,uint256,uint256), SubmitVote(address,uint256,uint256,bool), ProcessProposal(uint256,bool,bool), CancelProposal(uint256)';
 
+/** How long one endpoint gets for the whole log read (rpc.gnosischain.com took about 10 s for RaidGuild's 1,199 events, 11 Nov). */
+export const LOGS_TIMEOUT_MS = 60_000;
+
 export interface BaalLog {
   topics: string[];
   data: string;
@@ -72,7 +75,8 @@ export async function baalLogs(
     chain,
     'eth_getLogs',
     [{ address: dao, fromBlock: '0x0', toBlock: 'latest', topics: [Object.values(BAAL_EVENTS)] }],
-    { accept: (r) => Array.isArray(r), ...opts(fetchImpl) },
+    // one read of the DAO's whole history: a public endpoint takes seconds for it, more than a call's usual 4
+    { accept: (r) => Array.isArray(r), timeoutMs: LOGS_TIMEOUT_MS, ...opts(fetchImpl) },
   );
   return result;
 }
