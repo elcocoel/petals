@@ -226,6 +226,26 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
   if (o.takeUp) {
     o.takeUp.current = async (job) => {
       if (!job.run || jobs.running(job.run) || !o.auth?.admitOwner) return;
+      // A job in parts (swarm.md step 4) comes back once every part has: the report that completes the group,
+      // and only that one, starts the turn, so two parts reporting together make one.
+      const parts = job.part_of
+        ? (await privateStore(deps.tools.config).job.list(job.exploration)).filter(
+            (j) => j.part_of === job.part_of,
+          )
+        : [];
+      if (parts.some((j) => j.status === 'open' || j.status === 'taken')) return;
+      const last = [...parts]
+        .sort((a, b) =>
+          a.updated_at === b.updated_at
+            ? a.id < b.id
+              ? -1
+              : 1
+            : a.updated_at < b.updated_at
+              ? -1
+              : 1,
+        )
+        .at(-1);
+      if (last && last.id !== job.id) return;
       const owner = await deps.runs.ownerOf?.(job.run);
       const stored = await deps.runs.get(job.run);
       if (!owner || !stored) return;
@@ -233,7 +253,9 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
       if (!admitted?.budget) return;
       const came: ChatMessage = {
         role: 'user',
-        content: `(Petals) The job "${job.title}" came back from ${job.taken_by ?? "the person's own agent"}${job.status === 'failed' ? ', not done' : ''}. Its report is under Jobs: say what it found, in a sentence or two.`,
+        content: parts.length
+          ? `(Petals) All ${parts.length} parts of the job came back. Their reports are under Jobs: put them together into one answer, in a few sentences.`
+          : `(Petals) The job "${job.title}" came back from ${job.taken_by ?? "the person's own agent"}${job.status === 'failed' ? ', not done' : ''}. Its report is under Jobs: say what it found, in a sentence or two.`,
       };
       const input: ChatInput = {
         messages: [...stored.messages, came],

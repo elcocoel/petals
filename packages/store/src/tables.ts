@@ -257,11 +257,21 @@ export interface JobRow {
   /** the continue link its worker got, and when that worker last called through it (migration 23) */
   link: string | null;
   last_seen: string | null;
+  /** the group of parts it's one of, when a job was handed out in parts (migration 24) */
+  part_of: string | null;
 }
 interface JobRecord
   extends Omit<
     JobRow,
-    'inputs' | 'result' | 'to' | 'taken_by' | 'taken_worker' | 'conversation' | 'link' | 'last_seen'
+    | 'inputs'
+    | 'result'
+    | 'to'
+    | 'taken_by'
+    | 'taken_worker'
+    | 'conversation'
+    | 'link'
+    | 'last_seen'
+    | 'part_of'
   > {
   assignee?: string | null;
   taken_by?: string | null;
@@ -269,6 +279,7 @@ interface JobRecord
   conversation?: string | null;
   link?: string | null;
   last_seen?: string | null;
+  part_of?: string | null;
   seq: number;
   inputs: string;
   result: string | null;
@@ -292,6 +303,7 @@ const jobOf = (r: JobRecord): JobRow => ({
   conversation: r.conversation ?? null,
   link: r.link ?? null,
   last_seen: r.last_seen ?? null,
+  part_of: r.part_of ?? null,
 });
 
 /** A person's agent link (migration 11): only its hash is kept, and it can only wait for jobs. */
@@ -1350,13 +1362,15 @@ export function tables(db: Db) {
         to?: string | null;
         /** the job's own conversation (migration 22) */
         conversation?: string | null;
+        /** the group of parts it's one of (migration 24) */
+        part_of?: string | null;
       }): Promise<JobRow> =>
         db.tx(async () => {
           const seq = await nextSeq('job', 'exploration', r.exploration);
           await db.run(
             `INSERT INTO job (id, exploration, seq, run, kind, title, brief, inputs, status, result,
-               failed, created_at, updated_at, assignee, conversation)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', NULL, NULL, ?, ?, ?, ?)`,
+               failed, created_at, updated_at, assignee, conversation, part_of)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', NULL, NULL, ?, ?, ?, ?, ?)`,
             r.id,
             r.exploration,
             seq,
@@ -1369,6 +1383,7 @@ export function tables(db: Db) {
             r.at,
             r.to ?? null,
             r.conversation ?? null,
+            r.part_of ?? null,
           );
           return jobOf(
             (await db.get<JobRecord>('SELECT * FROM job WHERE id = ?', r.id)) as JobRecord,

@@ -325,6 +325,10 @@ export const listJobs = defineTool<{ exploration: string }, object>({
           description:
             'when its worker last called, while it holds it: the page says quiet since then',
         },
+        part_of: {
+          type: ['string', 'null'],
+          description: 'the group of parts it is one of, when the job was handed out in parts',
+        },
       }),
     },
   }),
