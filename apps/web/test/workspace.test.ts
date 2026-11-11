@@ -185,7 +185,7 @@ describe('a stored flower in the thread', () => {
     expect(once.items.filter((x) => x.kind === 'stored')).toHaveLength(1);
     const rows = rowsOf(once.items, { open: { kind: 'stored', id: stored.id } });
     expect(rows.map((r) => r.kind)).toEqual(['user', 'message', 'stored']);
-    expect(rows[0]).toMatchObject({ text: stored.question, label: 'Original question' });
+    expect(rows[0]).toMatchObject({ text: stored.question, label: 'You' });
     expect(rows[1]).toMatchObject({ speaker: 'Petals' });
     expect(rows[2]).toMatchObject({ open: true, id: stored.id });
   });

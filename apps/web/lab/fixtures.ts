@@ -169,7 +169,7 @@ export const STEPS: StepRow[] = [
 /** One turn, using every row but the flower's, in the order a person reads them. */
 export const TURN_ROWS: Row[] = [
   { kind: 'note', key: 'note', text: 'A note from the thread.' },
-  { kind: 'user', key: 'user', text: 'Who decides in this DAO?', label: 'Original question' },
+  { kind: 'user', key: 'user', text: 'Who decides in this DAO?', label: 'You' },
   { kind: 'steps', key: 'steps', summary: '2 tool calls', steps: STEPS },
   {
     kind: 'message',
@@ -180,7 +180,15 @@ export const TURN_ROWS: Row[] = [
   {
     kind: 'done',
     key: 'done',
-    line: [{ t: 'text', v: 'Recorded run: no model answered just now.' }],
+    line: [
+      { t: 'text', v: 'Answered by ' },
+      { t: 'code', v: 'deepseek-ai/DeepSeek-V4.1-Flash-1017' },
+      {
+        t: 'text',
+        v: '. Enclave signature: no. NEAR AI gave no signature for this answer, so nothing proves which model wrote it. Only models with enclave attestation get one. 3 model calls, $0.0084.',
+      },
+    ],
+    summary: '3 model calls · $0.0084',
   },
 ];
 
