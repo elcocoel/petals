@@ -1,7 +1,7 @@
 {
   "name": "near-validators-default",
   "spec_sha256": "f87072c9a4815077c7e562047140ace6456b92edd6c66b4f1740f7379d1c85e3",
-  "render_sha256": "68a5274a599e0a6b2062ec448b448dde70b87b6bcdfdd24eda4f91968437d493",
+  "render_sha256": "99b7020b0555bb85f4bbae177766691f18a8224738e7116e14265620b0b95958",
   "spec": {
     "petal": "spec/v1",
     "network": {
