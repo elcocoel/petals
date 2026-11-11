@@ -24,6 +24,7 @@ export { TOOL_ERROR_SCHEMA } from './define.ts';
 export { nonceStore, privateStore, specBody } from './drafts.ts';
 export { fromThrown, HTTP_STATUS, isToolError } from './errors.ts';
 export { freshGate, withRunSignal } from './fresh.ts';
+export { type Hidden, hiddenCount, hiddenMap } from './hidden.ts';
 export { httpApp } from './http/app.ts';
 export type { SessionGate } from './http/explorations.ts';
 export { clientAddress, isLocalSite, remember } from './http/rate-limit.ts';

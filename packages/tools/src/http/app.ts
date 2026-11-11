@@ -21,6 +21,7 @@ import { versioned } from '../define.ts';
 import { privateStore, specBody } from '../drafts.ts';
 import { fromThrown, isToolError, toolError } from '../errors.ts';
 import { freshGate } from '../fresh.ts';
+import { hiddenMap } from '../hidden.ts';
 import { LiveHub } from '../live.ts';
 import { type CardMark, cardMark, mapsOf, mapViews, namesKey } from '../map.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
@@ -408,14 +409,18 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     if (!view) return respond(c, noView());
     const id = aboutKey(c.req.param('id'));
     const map = mapsOf(
-      await mapViews(await forViewer(c), view),
+      await mapViews(await forViewer(c), view, { hidden: true }),
       await marks(),
       await valuesOf(ctx),
       await summaries(),
     ).find((m) => m.id === id);
+    // a map hidden from the Power Map (#96) still answers here, and says why
+    const hidden = hiddenMap(id);
     return respond(
       c,
-      map ? { map } : versioned(toolError('not_found', 'No map under that address.')),
+      map
+        ? { map, ...(hidden ? { hidden: { why: hidden.why, decided: hidden.decided } } : {}) }
+        : versioned(toolError('not_found', 'No map under that address.')),
     );
   });
   // A view's still picture, as a flower's tile is drawn: with the view its address names. No per-address limit: a

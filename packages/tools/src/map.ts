@@ -20,6 +20,7 @@ import {
 import type { Claim, Spec, View } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
+import { hiddenMap } from './hidden.ts';
 import type { CardProposals } from './proposals.ts';
 import { base, findSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
@@ -136,7 +137,12 @@ async function readOf(
 }
 
 /** Every view on this site's map whose reading is here, the oldest first, through the viewer's view. */
-export async function mapViews(ctx: ToolContext, view: View = DEFAULT_VIEW): Promise<MapView[]> {
+export async function mapViews(
+  ctx: ToolContext,
+  view: View = DEFAULT_VIEW,
+  /** with the maps hidden from the Power Map (#96): only a hidden map's own card asks */
+  o: { hidden?: boolean } = {},
+): Promise<MapView[]> {
   const out: MapView[] = [];
   const through = viewHash(view);
   // keyed by the viewer's names too, so one person's never reach another's, nor a visitor's, reading
@@ -164,7 +170,8 @@ export async function mapViews(ctx: ToolContext, view: View = DEFAULT_VIEW): Pro
       made_by: row.made_by ?? null,
     });
   }
-  return out;
+  // a map hidden from the Power Map (#96) is in no list of it
+  return o.hidden ? out : out.filter((v) => !hiddenMap(v.map));
 }
 
 /** A drawing on a map's card. */
