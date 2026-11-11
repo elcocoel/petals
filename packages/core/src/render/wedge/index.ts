@@ -12,4 +12,5 @@ export * from './order.ts';
 export * from './paint.ts';
 export * from './ring.ts';
 export type { View } from './view.ts';
+export * from './votes.ts';
 export * from './words.ts';
