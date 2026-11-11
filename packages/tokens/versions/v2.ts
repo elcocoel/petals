@@ -215,8 +215,12 @@ const WASH: Record<Washed, { low: Paint; high: Paint }> = {
   mint: { low: ink(0.03), high: ground(0.05) },
 };
 
-/** A floating box's glass, its strongest and weakest stop on each surface it's drawn on. */
-const FLOAT = { ground: [0.96, 0.76], ink: [0.94, 0.82] } as const;
+/**
+ * A floating box's glass, its strongest and weakest stop on each surface it's drawn on. On ground its weakest
+ * stop holds so another box's words and buttons under it don't show through as a blur (WORKSPACE's walk,
+ * 11 Nov: the pay row's button as a grey blob in the flower's box); the map still softens through the frost.
+ */
+const FLOAT = { ground: [0.97, 0.92], ink: [0.94, 0.82] } as const;
 
 const FIELD_RADIUS = 26;
 const FIELD_INSET = 8;
