@@ -268,6 +268,36 @@ async function explorationOfRun(store: Store, runId: string, at: string): Promis
 }
 
 /**
+ * A job's own conversation (10 Nov, swarm.md step 2): an exploration of the run's owner, in the run's folder,
+ * named by the job, where the worker that takes it works. Null for a run nobody owns, or a store that keeps
+ * nothing.
+ */
+export async function jobConversation(
+  ctx: ToolContext,
+  runId: string,
+  job: { title: string; brief: string },
+): Promise<string | null> {
+  const store = storeOf(ctx);
+  if (!store.durable) return null;
+  const at = ctx.now().toISOString();
+  return store.tx(async () => {
+    const run = await store.run.get(runId);
+    if (!run?.owner) return null;
+    const id = newExplorationId();
+    await newExploration(store, {
+      id,
+      owner: run.owner,
+      question: job.brief.slice(0, QUESTION_MAX),
+      target: null,
+      at,
+    });
+    await store.exploration.setTitle(id, job.title);
+    if (run.folder) await store.exploration.setFolder(id, run.folder);
+    return id;
+  });
+}
+
+/**
  * The exploration a run of Petals' agent works in (9 Nov, the jobs it hands out live there), made now if
  * the run has none yet. Null for a run nobody owns, or a store that keeps nothing.
  */
@@ -696,11 +726,18 @@ const MIRROR =
   "Before you finish each answer, add_note with text: the person's words, then your reply word for word. After each render_flower, save_step with its spec_sha256.";
 
 /** The app at the other end and the last thing it wrote here, in memory. A read moves nothing. */
-export function touched(ctx: ToolContext, id: string, tool: string, client?: string): void {
+export function touched(
+  ctx: ToolContext,
+  id: string,
+  tool: string,
+  client?: string,
+  n?: number | null,
+): void {
   ctx.live?.touch(id, {
     client: client ?? ctx.caller?.client ?? null,
     last_at: ctx.now().toISOString(),
     last_tool: tool,
+    ...(n ? { n } : {}),
   });
 }
 

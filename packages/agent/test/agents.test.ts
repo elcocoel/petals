@@ -164,6 +164,69 @@ describe('several workers of one agent (swarm.md step 1)', () => {
   });
 });
 
+describe('a conversation per job (swarm.md step 2)', () => {
+  test("a job's work goes in its own conversation, named by it, which says who's on it; its report lands in both", async () => {
+    const w = setup([
+      {
+        calls: [{ name: 'hand_job', args: { title: 'Map the shares', brief: 'who holds shares' } }],
+      },
+      { content: 'Sent.' },
+      { content: 'Your agent found 42 holders.' },
+    ]);
+    await w.signInFunded();
+    const token = await link(w);
+    await w.waitAs(token, 'Codex', 'w-one');
+    await w.waitAs(token, 'Codex', 'w-two');
+    const events = parseSse(await (await w.call('POST', '/api/v1/agent/chat', ASK)).text());
+    const job = (events.find((e) => e.event === 'job') as { data: Out }).data;
+    expect(job.conversation).toMatch(/^exp_/);
+    expect(job.conversation).not.toBe(job.exploration);
+    // the second worker takes it, and works in the job's own conversation
+    const got = (await (await w.waitAs(token, 'Codex', 'w-two')).json()) as Out;
+    expect(got.job.id).toBe(job.id);
+    const ref = (got.project.exploration as string).split('/s/')[1] as string;
+    const opened = (await (await w.app.request(`/api/v1/explorations/${ref}`)).json()) as Out;
+    expect(opened.exploration).toBe(job.conversation);
+    expect(opened.presence).toMatchObject({ client: 'Codex', n: 2, last_tool: 'take_job' });
+    // its notes go there as it works, and keep saying who's on it
+    const note = await w.app.request(`/api/v1/explorations/${ref}/notes`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text: 'Reading 312 proposals' }),
+    });
+    expect(note.status).toBe(200);
+    // it lists with the person's conversations, named by the job
+    const listed = (
+      ((await (await w.call('GET', '/api/v1/conversations')).json()) as Out).conversations as Out[]
+    ).find((c) => c.id === job.conversation);
+    expect(listed).toMatchObject({ title: 'Map the shares', status: 'elsewhere', run_id: null });
+    // the report, from its own conversation
+    const reported = await w.app.request(`/api/v1/explorations/${ref}/jobs/${job.id}/report`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ result: { summary: '42 holders.' } }),
+    });
+    expect(reported.status).toBe(200);
+    const after = (await (await w.app.request(`/api/v1/explorations/${ref}`)).json()) as Out;
+    expect(after.presence).toMatchObject({ client: 'Codex', n: 2, last_tool: 'report_job' });
+    expect(JSON.stringify(after)).toContain('Reading 312 proposals');
+    expect(JSON.stringify(after)).toContain('42 holders.');
+    // and in the conversation that handed it out: the job, where its work is, and who took it
+    const jobs = (await (
+      await w.call('GET', `/api/v1/explorations/${job.exploration}/jobs`)
+    ).json()) as Out;
+    expect(jobs.jobs).toMatchObject([
+      { id: job.id, status: 'done', conversation: job.conversation, taken_by: 'Codex', n: 2 },
+    ]);
+    // Petals' agent takes the report up at once, as before
+    for (let i = 0; i < 50 && w.llm.requests.length < 3; i++)
+      await new Promise((r) => setTimeout(r, 20));
+    expect(w.llm.requests[2]?.messages.at(-1)?.content).toMatch(
+      /\(Petals\) The job "Map the shares" came back from Codex/,
+    );
+  });
+});
+
 describe('agents across projects', () => {
   test('disconnecting one agent ends its wait, drops it from the list, and keeps it out until it connects again', async () => {
     const w = setup([]);

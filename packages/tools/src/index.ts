@@ -35,6 +35,7 @@ export {
   limitsOf,
   overDataBudget,
 } from './limits.ts';
+export { LiveHub, type Presence } from './live.ts';
 export { mapViews } from './map.ts';
 export { type McpOptions, mcpServer } from './mcp/server.ts';
 export { serveStdio } from './mcp/stdio.ts';
@@ -42,11 +43,14 @@ export type { PublicPage } from './public-fetch.ts';
 export { callTool, describeTool, findTool, registry } from './registry.ts';
 export {
   CONVERSATION_TITLE_MAX,
+  jobConversation,
   makeLink,
   runExplorationOf,
   saveRunStep,
   shapeAt,
+  touched,
 } from './tools/explorations.ts';
+export { workerPlace } from './tools/jobs.ts';
 export { makeReadPage } from './tools/read-page.ts';
 export type { Caller, Config, JSONSchema, Tool, ToolContext } from './types.ts';
 export { viewAsked, viewByHash, viewOfPerson } from './views.ts';
