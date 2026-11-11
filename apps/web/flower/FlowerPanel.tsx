@@ -16,6 +16,7 @@ import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import type { FlowerPanelView, PanelView } from '../lib/panel-view.ts';
 import type { PanelSection } from '../lib/thread.ts';
+import type { WorthLine } from '../lib/value-view.ts';
 
 export interface FlowerPanelActions {
   onCloseDetail?: () => void;
@@ -29,6 +30,7 @@ function OpenFlower({
   view,
   petal,
   unit,
+  worth,
   section,
   actions,
   note,
@@ -38,6 +40,7 @@ function OpenFlower({
   view: FlowerPanelView;
   petal: PetalDetail | null;
   unit?: string | undefined;
+  worth?: WorthLine | 'no price' | null | undefined;
   section: PanelSection;
   actions: FlowerPanelActions;
   note?: ReactNode;
@@ -66,7 +69,7 @@ function OpenFlower({
       {view.keys.length > 0 && <LegendKeys keys={view.keys} />}
       {petal ? (
         <>
-          <PetalDetails petal={petal} unit={unit} onClose={actions.onCloseDetail} />
+          <PetalDetails petal={petal} unit={unit} worth={worth} onClose={actions.onCloseDetail} />
           <PetalClaims account={view.account} conversation={conversation ?? null} />
         </>
       ) : (
@@ -118,6 +121,7 @@ export function FlowerPanel({
   view,
   petal = null,
   unit,
+  worth,
   section = null,
   actions = {},
   note,
@@ -128,6 +132,8 @@ export function FlowerPanel({
   /** The selected petal's own record, when one is selected. */
   petal?: PetalDetail | null;
   unit?: string | undefined;
+  /** The selected petal's dollars at its map's price (#91). */
+  worth?: WorthLine | 'no price' | null | undefined;
   section?: PanelSection;
   actions?: FlowerPanelActions;
   /** what a page says about the flower first, under its date: that it's a draft, or written on NEAR */
@@ -143,6 +149,7 @@ export function FlowerPanel({
         view={view}
         petal={petal}
         unit={unit}
+        worth={worth}
         section={section}
         actions={actions}
         note={note}

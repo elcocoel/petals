@@ -13,7 +13,9 @@ import {
   pickPlan,
 } from '../lib/panel-view.ts';
 import type { PanelSection } from '../lib/thread.ts';
+import { petalWorth } from '../lib/value-view.ts';
 import { useDrawnFlowers } from './useDrawnFlower.ts';
+import { useMapValue } from './useMapValue.ts';
 import { usePersonView } from './usePersonView.ts';
 import { useSnapshotFacts } from './useSnapshotFacts.ts';
 
@@ -22,6 +24,7 @@ export function useFlowerPage(flower: PanelFlower) {
   const toDraw = useMemo(() => [{ key: flower.key, spec: flower.spec }], [flower]);
   const drawing = useDrawnFlowers(toDraw, person)[flower.key];
   const facts = useSnapshotFacts(flower.spec.snapshot.sha256);
+  const value = useMapValue(flower.spec);
   const [petal, setPetal] = useState<string | null>(null);
   const [section, setSection] = useState<PanelSection>(null);
   // The page is the flower: its box is open from the start.
@@ -60,6 +63,8 @@ export function useFlowerPage(flower: PanelFlower) {
       selected: petal,
       petal: selected && canvasPetal(selected),
       unit: facts.units[flower.spec.selection.measure],
+      /** the selected petal's dollars at its map's price (#91) */
+      worth: selected ? petalWorth(selected.amount, flower.spec.selection.measure, value) : null,
       section,
       boxOpen,
     },

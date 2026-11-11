@@ -123,6 +123,7 @@ export function FlowerAt({
             view={panel}
             petal={state.petal}
             unit={state.unit || undefined}
+            worth={state.worth}
             section={state.section}
             actions={{ onCloseDetail: actions.closeDetail, onSection: actions.setSection }}
             note={note}

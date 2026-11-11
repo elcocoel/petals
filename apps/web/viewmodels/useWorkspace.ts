@@ -37,6 +37,7 @@ import {
 import { payWords } from '../lib/pay.ts';
 import type { Opened, PanelSection } from '../lib/thread.ts';
 import { composerView, type FlowerRow, openFlowerIndex, type Row } from '../lib/thread-view.ts';
+import { petalWorth } from '../lib/value-view.ts';
 import { conversationAt, workspaceUrl } from '../lib/workspace-url.ts';
 import { useConversationFacts } from './useConversationFacts.ts';
 import { useDrawnFlowers } from './useDrawnFlower.ts';
@@ -44,6 +45,7 @@ import { useElsewhere } from './useElsewhere.ts';
 import { useJobControls } from './useJobControls.ts';
 import { useJobs } from './useJobs.ts';
 import { useMakeChat } from './useMakeChat.ts';
+import { useMapValue } from './useMapValue.ts';
 import { usePay } from './usePay.ts';
 import { usePersonView } from './usePersonView.ts';
 import { useSession } from './useSession.ts';
@@ -149,6 +151,7 @@ export function useWorkspace(props: {
     [drawings],
   );
   const facts = useSnapshotFacts(panelFlower?.spec.snapshot.sha256 ?? null);
+  const mapValue = useMapValue(panelFlower?.spec);
   const drawing = panelFlower ? drawings[panelFlower.key] : undefined;
   const selectedPetal = drawing?.petals?.find((p) => p.id === petal) ?? null;
 
@@ -384,6 +387,11 @@ export function useWorkspace(props: {
       boxOpen,
       petal: selectedPetal && canvasPetal(selectedPetal),
       unit: panelFlower && facts.units[panelFlower.spec.selection.measure],
+      /** the selected petal's dollars at its map's price (#91) */
+      worth:
+        selectedPetal && panelFlower
+          ? petalWorth(selectedPetal.amount, panelFlower.spec.selection.measure, mapValue)
+          : null,
       section,
       thumbs,
       heading:

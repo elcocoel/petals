@@ -18,9 +18,27 @@ import {
   readingLine,
 } from '../../../../lib/maps.ts';
 import { siteLinks } from '../../../../lib/site-links.ts';
+import { mapWorth } from '../../../../lib/value-view.ts';
 import { viewerView } from '../../../../lib/viewer-view.ts';
 
 export const dynamic = 'force-dynamic';
+
+/** What its token is worth (#91): the reading's total and the supply, each with where and when; or no price. */
+function Worth({ m }: { m: MapCard }) {
+  const worth = mapWorth(m.value);
+  if (!worth) return null;
+  if (worth === 'no price') return <p className="my-0 text-muted">No price</p>;
+  return (
+    <>
+      {worth.map((w) => (
+        <p key={w.text} className="my-0">
+          {w.text}
+          <span className="type-mono text-muted"> {w.source}</span>
+        </p>
+      ))}
+    </>
+  );
+}
 
 /** What the map says about itself, beside it. */
 function Readings({ m }: { m: MapCard }) {
@@ -36,6 +54,7 @@ function Readings({ m }: { m: MapCard }) {
           {m.address && <Mono as="span">{shortId(m.address)}</Mono>}
         </p>
       )}
+      <Worth m={m} />
       <LegendKeys keys={drawingsKeys(m)} />
       {m.readings.map((r) => (
         <section key={r.snapshot} className="mt-block-gap flex flex-col gap-block-gap">

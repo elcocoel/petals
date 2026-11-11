@@ -14,6 +14,7 @@ import type {
   Spec,
   View,
 } from '@petal/core/types';
+
 import type { BenchLandscape } from '../landscape/land.ts';
 import type { ConnectedAgent } from './agents.ts';
 import type { AnnotationRow } from './claim-lines.ts';
@@ -35,6 +36,7 @@ import type { ProvenWallet } from './profile-view.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
 import type { Tip } from './tip.ts';
+import type { MapValue } from './value-view.ts';
 
 export interface ChatRequest {
   messages: ChatMessage[];
@@ -369,6 +371,14 @@ export interface SnapshotFacts {
 }
 
 /** Facts only decorate a flower, so a snapshot that can't be described just has none. */
+/** What a map's token is worth (#91), from its card: null when it has none, or it can't be read. */
+export async function readMapValue(map: string): Promise<MapValue | null> {
+  const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}`).catch(() => null);
+  if (!res?.ok) return null;
+  const json = (await res.json().catch(() => ({}))) as { map?: { value?: MapValue | null } };
+  return json.map?.value ?? null;
+}
+
 export async function readSnapshotFacts(sha256: string): Promise<SnapshotFacts> {
   const none: SnapshotFacts = { sources: {}, units: {} };
   const res = await fetch(`/api/v1/snapshots/${encodeURIComponent(sha256)}/describe`).catch(
