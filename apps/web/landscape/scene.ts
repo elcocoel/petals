@@ -24,10 +24,15 @@ const HAIR = 'var(--hairline)';
 const GROUND = 'var(--surface)';
 const PETAL = 'var(--figure-petal)';
 
-/** A connection at full strength is this see-through, so it never reads heavier than a flower. */
-const ROAD_TONE = 0.4;
-/** The lab's focused lines (#87): one flower's at a time, so a little firmer, still quiet. */
-const LINE_TONE = 0.55;
+/**
+ * A connection at full strength is this see-through, so it never reads heavier than a flower (Elco, 11 Nov walk:
+ * the lines were "way too powerful"; quieter).
+ */
+const ROAD_TONE = 0.25;
+/** The focused lines (#87): one flower's at a time, so a little firmer, still quiet. */
+const LINE_TONE = 0.3;
+/** The arrows out of the organisation you're in: the same lines, as quiet. */
+const ARROW_TONE = 0.45;
 /** The arrows' names keep this far from the window's edge. */
 const EDGE = 28;
 
@@ -537,7 +542,7 @@ export function createLandScene(
         const hx = -uy * size * 0.6;
         const hy = ux * size * 0.6;
         a.g.show(true);
-        a.g.set('opacity', o2(enter));
+        a.g.set('opacity', o2(enter * ARROW_TONE));
         a.at.set('opacity', o2(enter));
         a.line.set('x1', n3(x1));
         a.line.set('y1', n3(y1));

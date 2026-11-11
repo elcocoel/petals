@@ -36,9 +36,12 @@ export function roadsBetween(flowers: readonly Place[], links: readonly Link[]):
   return roads;
 }
 
-/** A road's width far away, in px on screen: thin for a few accounts, never past a few px. */
+/**
+ * A road's width far away, in px on screen: thin for a few accounts, never past two (Elco, 11 Nov walk: the lines
+ * were "way too powerful").
+ */
 export function roadWidth(shared: number): number {
-  return Math.max(0.6, Math.min(3.2, 0.6 + 0.9 * Math.log10(Math.max(1, shared))));
+  return Math.max(0.5, Math.min(2, 0.5 + 0.5 * Math.log10(Math.max(1, shared))));
 }
 
 /** How much a road shows at a distance: the more roads on screen, the fainter each, so it never tangles. */
