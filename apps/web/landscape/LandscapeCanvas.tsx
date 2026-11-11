@@ -9,7 +9,7 @@
 // Where a page asks, the legend is the other overlay, under the chain list: the person's view as a key (#92);
 // and inside a flower, under it, what Petals' own mapping says about that map, folded until asked. Where a page
 // asks (the Power Map), a search field tops the chain list, and while something's typed the maps it finds stand
-// in the chains' place; pressing one goes to its chain and into its flower (#105).
+// in the chains' place; pressing one goes to its chain and into its flower (board 105).
 import { EVERY_FLOWER, inUse } from '@petal/core/view';
 import { flowerKeys } from '@petal/core/wedge/keys';
 import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -189,7 +189,7 @@ export function LandscapeCanvas({
    * only, or changing the view where it's handed Settings' hands (/make).
    */
   legend?: 'read' | LegendEdit | null;
-  /** a search field at the top of the chain list (#105; the Power Map) */
+  /** a search field at the top of the chain list (board 105; the Power Map) */
   search?: boolean;
 }) {
   const person = usePersonView();

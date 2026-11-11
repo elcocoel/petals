@@ -1,4 +1,4 @@
-// Search on the Power Map as someone types (#105, lib/map-search.ts). One search at a time, and when it's back the
+// Search on the Power Map as someone types (board 105, lib/map-search.ts). One search at a time, and when it's back the
 // words as they are now are searched, if they moved: so it keeps up with typing without a timer and without
 // asking more than the server answers. As they type, without the reranker (about 0.35 s); Enter asks for the
 // best order, the reranker's (2 to 3 s), and that order stays until the words change.

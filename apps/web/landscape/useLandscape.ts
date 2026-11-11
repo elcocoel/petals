@@ -93,7 +93,7 @@ export interface LandscapeAt {
   highlight?: (ids: readonly string[] | null) => void;
   /**
    * Set by the map once it's built, as `choose` is: flies to a flower, by its place on this chain's map, and
-   * enters it, as a click on it does (#105: a search's answer, pressed).
+   * enters it, as a click on it does (board 105: a search's answer, pressed).
    */
   enter?: (i: number) => void;
 }

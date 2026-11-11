@@ -1,4 +1,4 @@
-// Search on the Power Map (#105; lib/map-search.ts): a field at the top of the chain list, and while something's
+// Search on the Power Map (board 105; lib/map-search.ts): a field at the top of the chain list, and while something's
 // typed, the maps it finds in the chains' place, each a row (LineRow) with its name, what matched under it and
 // its chain, quiet in mono. Pressing one goes into its flower. Enter asks for the best order; Escape clears it.
 // Props only.
