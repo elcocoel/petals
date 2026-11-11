@@ -1161,10 +1161,12 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       return fail(c, 'rate_limited', 'Too many searches from one address.', undefined, wait);
     }
     if (subject) await catchUp(subject);
+    // rerank=0: without the reranker, about a tenth of the time, for a box that searches as someone types
+    const rerank = !['0', 'false'].includes(c.req.query('rerank') ?? '');
     const found = await searchPetals(
       { ...tools, caller: { ...tools.caller, subject: subject ?? null, door: 'http' } },
       q,
-      { kinds, limit: limitOf(c, 30), prefix: true, snippets: true },
+      { kinds, limit: limitOf(c, 30), prefix: true, snippets: true, rerank },
     );
     return ok(c, { ...found });
   });
