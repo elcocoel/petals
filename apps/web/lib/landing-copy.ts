@@ -4,6 +4,8 @@
 // placeholders as much as possible than we critique by looking at the page"). Only the line breaks are ours.
 // The arrows aren't here: Geist Mono and our Mona Sans subset have neither U+2192 nor U+2190, so the
 // components draw them (components/ui/Arrow.tsx).
+import { agentWords } from './agents.ts';
+
 export const landingCopy = {
   nav: {
     howItWorks: 'How it works',
@@ -126,16 +128,8 @@ export const landingCopy = {
     body: 'Click and paste to any chatbot.\nIt will walk you through setting up a wallet, logging in and topping up—until you’re ready to talk to Petals.',
     copy: 'Copy for my agent',
     copied: 'Copied. Paste it into your agent’s chat to get started.',
-    /** `site` is this site's address; the page swaps in the one it's on when copying. */
-    prompt: (site: string) =>
-      [
-        `Help me start using Petals (${site}). It maps who holds power in on-chain networks and draws it as flowers. Guide me one step at a time, and skip any step I've already done.`,
-        '1. A NEAR wallet. If I have none, help me set one up (Meteor Wallet works) and get a little NEAR into it.',
-        `2. Log in. I open ${site}, press Connect and approve the sign-in in my wallet. Signing in moves no funds and costs nothing.`,
-        "3. Top up. Petals' agent runs on NEAR AI and is paid as I go. When my conversation with it asks for credit, I add some with Add 1 NEAR, or pay with another token from any chain.",
-        "4. Talk to Petals. I name a community, a wallet or a contract, and Petals' agent maps how power moves in it.",
-        "Once I'm in, if I want my own agents to help, Copy for your agents in Petals' side panel connects them. Never ask me for my seed phrase or private key.",
-      ].join('\n\n'),
+    /** The one setup prompt, CONNECTORS's (lib/agents.ts); the page swaps in the address it's on when copying. */
+    prompt: agentWords.setup,
   },
   gallery: {
     title: 'Start with a network you know.',

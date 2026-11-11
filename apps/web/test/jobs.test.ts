@@ -111,6 +111,16 @@ describe('your agents in the menu', () => {
     expect(line).toContain('https://p/skill.md');
     expect(line.endsWith('My agent key: petal_agent_k')).toBe(true);
   });
+
+  test('the one setup prompt has no key, brings the agent in through Connect an agent, and is the landing’s', async () => {
+    const { agentWords } = await import('../lib/agents.ts');
+    const { landingCopy } = await import('../lib/landing-copy.ts');
+    const line = agentWords.setup('https://p');
+    expect(line).not.toContain('petal_agent_');
+    expect(line).toContain('https://p/skill.md');
+    expect(line).toContain(agentWords.copy);
+    expect(landingCopy.giveToAgent.prompt('https://p')).toBe(line);
+  });
 });
 
 describe('a turn Petals starts on a report', () => {
