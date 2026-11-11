@@ -26,7 +26,7 @@ const read: SputnikRead = {
       id: 1050,
       proposer: 'cryptocredit.near',
       description: 'Transfer NEAR balance held in MDAO treasury to marketing-dao.near',
-      kind: { Transfer: {} },
+      kind: { Transfer: { token_id: '', receiver_id: 'marketing-dao.near', amount: '1' } },
       status: 'Approved',
       votes: { 'cryptocredit.near': 'Approve', 'so608.near': 'Approve' },
       submission_time: '1718375951803215557',
@@ -68,6 +68,9 @@ describe('a Sputnik DAO', () => {
   test('its proposals: each vote as for or against with its own word, an account that didn’t vote absent, closes_at by its policy', () => {
     const p = sputnikProposals(`near:mainnet:${DAO}`, DAO, read, AT, AT.as_of);
     expect(validateProposals(p).ok).toBe(true);
+    expect(p.petal).toBe('proposals/v2');
+    // whom a Transfer pays; a Transfer that doesn't say, and every other kind, names none
+    expect(p.proposals.map((x) => x.recipient)).toEqual(['marketing-dao.near', null, null]);
     expect(p.source).toMatchObject({
       kind: 'sputnik',
       contract: `near:mainnet:${DAO}`,

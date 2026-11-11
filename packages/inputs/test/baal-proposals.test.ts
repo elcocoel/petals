@@ -42,6 +42,7 @@ const log = (topics: string[], data: string, block: number, ts: bigint): BaalLog
   data,
   blockNumber: `0x${block.toString(16)}`,
   blockTimestamp: `0x${ts.toString(16)}`,
+  transactionHash: `0x${word(block)}`,
 });
 const DAY = 86400n;
 const LOGS: BaalLog[] = [
@@ -130,8 +131,11 @@ describe('a Baal DAO', () => {
       LOGS,
       '2026-11-11T16:00:00.000Z',
       now,
+      // the sender of proposal 1's SubmitProposal (block 10's transaction); proposal 2's wasn't answered
+      new Map([[`0x${word(10)}`, '0xbbbb000000000000000000000000000000000001']]),
     );
     expect(validateProposals(p).ok).toBe(true);
+    expect(p.petal).toBe('proposals/v2');
     expect(p.source).toMatchObject({ kind: 'baal', contract: `eip155:100:${DAO}` });
     const by = Object.fromEntries(p.proposals.map((x) => [x.id, x]));
     expect(by['1']).toMatchObject({
@@ -141,7 +145,11 @@ describe('a Baal DAO', () => {
       closes_at: '2025-11-06T20:00:00.000Z',
       decided_at: '2025-11-07T20:00:00.000Z',
       ref: `proposal:eip155:100:${DAO}:1`,
+      proposer: '0xbbbb000000000000000000000000000000000001',
+      // what a Baal proposal pays is in its encoded actions, not read: none named
+      recipient: null,
     });
+    expect(by['2']?.proposer).toBeNull();
     expect(by['1']?.votes).toEqual([
       {
         account: '0xaaaa000000000000000000000000000000000001',

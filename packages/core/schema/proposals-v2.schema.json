@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:proposals:v2",
+  "title": "Petal proposals v2",
+  "description": "proposals/v2 (11 Nov; the L2 mapping wave and LOOK) is proposals/v1 with: an outcome 'closed' for a proposal whose voting closed and whose result its source doesn't state (Snapshot), never a guess; each proposal's recipient, where it pays or names one; its options' labels where a ballot chooses among them; and each ballot's choices and weights as said, with its for, against or abstain left null when that doesn't apply (weighted, quadratic, ranked choice). Weights are decimal text, since they can exceed exact JSON numbers. A DAO's proposals and how each account voted on each (board #93; Elco, 11 Nov: 'when a proposal is hovered little dots show up on the inside showing yes and no votes, absent votes show nothing'). One per map, named by the map's address, read from the DAO's own chain and read again to refresh. An account that didn't vote on a proposal isn't in its votes: absent, never a guess. Each vote keeps the DAO's own word for it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "petal",
+    "about",
+    "source",
+    "proposals",
+    "read_at"
+  ],
+  "properties": {
+    "petal": {
+      "const": "proposals/v2"
+    },
+    "about": {
+      "description": "the map, by its address (its card's id)",
+      "type": "string",
+      "minLength": 3
+    },
+    "source": {
+      "description": "where they were read: the DAO's kind, its contract, the calls, and when",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "contract",
+        "ref",
+        "at"
+      ],
+      "properties": {
+        "kind": {
+          "description": "the DAO's kind, in a word: sputnik, baal",
+          "type": "string",
+          "pattern": "^[a-z0-9_-]+$"
+        },
+        "contract": {
+          "description": "the DAO's contract: near:mainnet:<account>, eip155:<chain>:<address>",
+          "type": "string",
+          "minLength": 3
+        },
+        "ref": {
+          "description": "the calls or events they were read from",
+          "type": "string",
+          "minLength": 1
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "proposals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "kind",
+          "proposer",
+          "at",
+          "closes_at",
+          "decided_at",
+          "outcome",
+          "as_said",
+          "ref",
+          "recipient",
+          "votes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "description": "its title, from its own text: a Title line, or its first words",
+            "type": "string"
+          },
+          "kind": {
+            "description": "what it does, in the DAO's own word (Transfer, ChangePolicy, …), or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "proposer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "at": {
+            "description": "when it was submitted",
+            "type": "string",
+            "format": "date-time"
+          },
+          "closes_at": {
+            "description": "when its voting closes: by the DAO's policy (Sputnik's proposal period from submission), or as the DAO set it (Baal's vote end); null when unknown",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decided_at": {
+            "description": "when it was decided, where the DAO records it (Baal's processing); null where it doesn't (Sputnik)",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "passed",
+              "rejected",
+              "removed",
+              "expired",
+              "in progress",
+              "failed",
+              "moved",
+              "cancelled",
+              "closed"
+            ]
+          },
+          "as_said": {
+            "description": "the DAO's own word for its status",
+            "type": "string"
+          },
+          "ref": {
+            "description": "the proposal: proposal:<caip2>:<dao>:<id>",
+            "type": "string",
+            "minLength": 1
+          },
+          "votes": {
+            "description": "each account that voted, once; an account that didn't is absent",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "account",
+                "vote",
+                "as_said",
+                "at"
+              ],
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "vote": {
+                  "description": "for, against or abstain; null when the ballot's choices don't fit those (weighted, quadratic, ranked choice): then choices says what it chose",
+                  "oneOf": [
+                    {
+                      "enum": [
+                        "for",
+                        "against",
+                        "abstain"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "as_said": {
+                  "description": "the DAO's own word for the vote: Approve, Reject, Remove, true, false",
+                  "type": "string"
+                },
+                "at": {
+                  "description": "when it was cast, where the DAO records it (Baal's event), or null (Sputnik)",
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "choices": {
+                  "description": "what the ballot chose, as said: each option (its label, or its number as the source gives it) and the weight given it, in decimal text, or null",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "choice",
+                      "weight"
+                    ],
+                    "properties": {
+                      "choice": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "weight": {
+                        "oneOf": [
+                          {
+                            "$ref": "#/$defs/decimal"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "power": {
+                  "description": "the ballot's voting power as its source says it, in decimal text",
+                  "$ref": "#/$defs/decimal"
+                }
+              },
+              "if": {
+                "properties": {
+                  "vote": {
+                    "type": "null"
+                  }
+                },
+                "required": [
+                  "vote"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "choices": {
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "choices"
+                ]
+              }
+            }
+          },
+          "recipient": {
+            "description": "who it pays or names: Sputnik's Transfer receiver_id, a payout's to; null when it names none or the reader can't tell",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "options": {
+            "description": "its options' labels, in order, where a ballot chooses among them (Snapshot); absent for yes or no",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "read_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "decimal": {
+      "type": "string",
+      "pattern": "^-?[0-9]+(\\.[0-9]+)?(e[-+]?[0-9]+)?$"
+    }
+  }
+}

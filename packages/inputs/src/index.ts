@@ -54,6 +54,7 @@ export {
   baalLogs,
   baalOf,
   baalProposals,
+  baalSenders,
   baalTitle,
 } from './modules/baal-proposals.ts';
 export {
