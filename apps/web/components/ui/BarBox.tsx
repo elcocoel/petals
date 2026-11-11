@@ -13,6 +13,7 @@ export function BarBox({
   barProps,
   folded = false,
   barSize = 'box',
+  solid = false,
   children,
 }: {
   kind: 'term' | 'float';
@@ -26,6 +27,8 @@ export function BarBox({
   folded?: boolean;
   /** The bar's height: the box's own padding, or one row high, as the side panel's heads (an Overlay). */
   barSize?: 'box' | 'row';
+  /** A box raised over another box: its glass on a solid surface, so nothing under it shows through (box.glass). */
+  solid?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -33,6 +36,7 @@ export function BarBox({
       data-b="box"
       data-kind={kind}
       data-surface={surface}
+      data-solid={solid ? '' : undefined}
       className={`border border-primary ${className}`.trim()}
     >
       <div
