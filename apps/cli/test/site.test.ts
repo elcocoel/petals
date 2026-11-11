@@ -512,3 +512,72 @@ describe("a job's flowers are drawn as the person sees them", () => {
     expect((await draw(tools)).drawn_with).toEqual(VIEW);
   });
 });
+
+// What an agent finds about accounts goes into the project as data (annotation-layer.md step 4): through
+// the site, never only on this machine, with the job's project and the worker's name filled in.
+describe('annotations go to the project on the site', () => {
+  const CLAIM = {
+    subject: 'eip155:100:0x0000000000000000000000000000000000000001',
+    verb: 'named',
+    object: { value: 'Example Member' },
+    kind: 'sourced',
+    evidence: [{ url: 'https://example.org/proposal/1' }],
+  };
+  const answering = () => {
+    const site = fakeSite();
+    const fetch = async (url: string, init: RequestInit = {}) => {
+      const path = url.slice(SITE.length);
+      if (path.includes('/annotations')) {
+        site.seen.push({
+          method: init.method ?? 'GET',
+          url,
+          headers: {},
+          body: (init.body as string) ?? null,
+        });
+        return new Response(
+          JSON.stringify({ exploration: 'exp_1', added: 1, existed: 0, ids: ['c'.repeat(64)] }),
+          {
+            headers: { 'content-type': 'application/json' },
+          },
+        );
+      }
+      return site.fetch(url, init);
+    };
+    return { ...site, fetch };
+  };
+
+  test("a batch goes to the job's project, said by the name the worker joined with", async () => {
+    const { writeFileSync } = await import('node:fs');
+    const currentFile = join(mkdtempSync(join(tmpdir(), 'petal-annot-')), 'current.json');
+    writeFileSync(currentFile, `${JSON.stringify({ link: LINK, as: 'codex' })}\n`);
+    const site = answering();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, currentFile }).tools(
+      registry.concat([tool('add_annotation'), tool('list_annotations')]),
+    );
+    const out = (await byName(tools, 'add_annotation').run(
+      { annotations: [CLAIM, CLAIM] } as never,
+      ctx(),
+    )) as Record<string, unknown>;
+    expect(out.ids).toHaveLength(1);
+    const sent = site.seen.find((x) => x.url.endsWith('/annotations'));
+    expect(sent?.method).toBe('POST');
+    expect(sent?.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/annotations`);
+    expect(JSON.parse(sent?.body as string)).toEqual({ annotations: [CLAIM, CLAIM], as: 'codex' });
+  });
+
+  test('a name the call gives wins; listing asks the same project, about one account', async () => {
+    const site = answering();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, initial: LINK }).tools(
+      registry.concat([tool('add_annotation'), tool('list_annotations')]),
+    );
+    await byName(tools, 'add_annotation').run(
+      { annotations: [CLAIM], as: 'claude-code' } as never,
+      ctx(),
+    );
+    expect(JSON.parse(site.seen.at(-1)?.body as string).as).toBe('claude-code');
+    await byName(tools, 'list_annotations').run({ about: CLAIM.subject } as never, ctx());
+    expect(site.seen.at(-1)?.url).toBe(
+      `${SITE}/api/v1/explorations/${TOKEN}/annotations?about=${encodeURIComponent(CLAIM.subject)}`,
+    );
+  });
+});

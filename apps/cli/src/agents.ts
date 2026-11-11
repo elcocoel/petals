@@ -189,14 +189,17 @@ export async function waitForJob(o: WaitOptions): Promise<Json> {
       mkdirSync(dirname(o.currentFile), { recursive: true });
       // the person's view comes with the job, so every flower drawn for it goes through it
       const view = body.view && typeof body.view === 'object' ? { view: body.view } : {};
-      writeFileSync(o.currentFile, `${JSON.stringify({ link: project.exploration, ...view })}\n`, {
-        mode: 0o600,
-      });
+      // and who answers for what the worker adds there: the name it joined with
+      writeFileSync(
+        o.currentFile,
+        `${JSON.stringify({ link: project.exploration, ...view, as: me.as })}\n`,
+        { mode: 0o600 },
+      );
     }
     return {
       job,
       project,
-      next: `Do this job now, in its project: pass project.exploration as exploration to the tools, and each flower you draw is saved there, drawn as the person sees it. When it's done, report_job with that exploration, the job's id and result: { summary, steps }, or failed and why. Then run ${AGAIN} again.`,
+      next: `Do this job now, in its project: pass project.exploration as exploration to the tools, and each flower you draw is saved there, drawn as the person sees it. Save who or what you find behind addresses as you go, with add_annotation (many at once: add-annotation --input @annotations.json), never only in a file. When it's done, report_job with that exploration, the job's id and result: { summary, steps, annotations: the ids add_annotation gave }, or failed and why. Then run ${AGAIN} again.`,
     };
   }
 }

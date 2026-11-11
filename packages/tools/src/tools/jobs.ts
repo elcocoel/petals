@@ -48,6 +48,11 @@ const RESULT = obj(
       description: 'the seq of each step this job saved in the project',
     },
     notes: { type: 'string', maxLength: NOTES_MAX },
+    annotations: {
+      type: 'array',
+      items: { type: 'string', minLength: 1, maxLength: 100 },
+      description: 'the ids add_annotation gave for what this job found',
+    },
   },
   { additionalProperties: false },
 );
@@ -64,7 +69,7 @@ const jobOut = (j: JobRow) => ({
 /** The person's next job for this agent, from any of their projects, with that project's continue link. */
 
 const THEN_REPORT =
-  'Then report_job with link as exploration, this job id and result: { summary, steps }, or failed and why. Then take_job again, until job is null.';
+  'Save who or what you find behind addresses with add_annotation as you go, never only in a file. Then report_job with link as exploration, this job id and result: { summary, steps, annotations: the ids add_annotation gave }, or failed and why. Then take_job again, until job is null.';
 
 async function takeWithKey(ctx: ToolContext, key: string, as: string | undefined) {
   const store = lastingStore(ctx);
@@ -167,7 +172,7 @@ export const takeJob = defineTool<
       // the project's owner's glasses (one-source.md): their flowers are drawn through these
       ...(job ? { view: await viewOfPerson(ctx, o.row.owner) } : {}),
       next: job
-        ? 'Do what brief says, with the six steps, passing view to render_flower. Then report_job with this job id and result: { summary, steps }, or failed and why.'
+        ? 'Do what brief says, with the six steps, passing view to render_flower, and add_annotation for who or what you find behind addresses, never only a file. Then report_job with this job id and result: { summary, steps, annotations: the ids add_annotation gave }, or failed and why.'
         : 'No job is open in this project.',
     };
   },
@@ -177,7 +182,7 @@ export const reportJob = defineTool<
   {
     exploration: string;
     job: string;
-    result?: { summary: string; steps?: number[]; notes?: string };
+    result?: { summary: string; steps?: number[]; notes?: string; annotations?: string[] };
     failed?: string;
   },
   object
@@ -185,7 +190,7 @@ export const reportJob = defineTool<
   name: 'report_job',
   title: 'Report a job',
   description:
-    "Report a job you took with take_job: result, with a summary of two or three plain sentences and the steps it saved in the project, or failed, with why. Petals' agent on the page reads it.",
+    "Report a job you took with take_job: result, with a summary of two or three plain sentences, the steps it saved in the project and the ids of the annotations it added, or failed, with why. Petals' agent on the page reads it.",
   input: obj(
     ['exploration', 'job'],
     {

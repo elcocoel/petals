@@ -49,6 +49,15 @@ One reading is one layer: one thing about one address, such as who holds a DAO's
 - Then draw the joined reading as any other: `propose_spec` with its `sha256` and, for example, `height: "m:proposals_written"`, then `validate_spec` and `render_flower`.
 - With a project open, a layer is also kept in it on the site, privately, and each one makes a new version of the person's dataset about that address (`list_layers` shows them). `fork_dataset` makes a new version with layers added or dropped; the one it came from stays as it was.
 
+## Annotations
+
+What you find or are told about an account goes into the person's project as data, privately, never only in a file on this computer: a name, a note or research, a link. Each one is a claim, saying how it's known and what it rests on, and Petals keeps it with who answers for it.
+
+- `add_annotation`, with the project's link as `exploration` and `annotations`, a list of claims. As a command, many at once from a file: `node ~/.petals/petal.mjs add-annotation --input @annotations.json`, with `{ "annotations": [ … ] }` in it.
+- One claim: `{ "subject": "eip155:100:0xced6…", "verb": "named", "object": { "value": "Dekan" }, "kind": "sourced", "evidence": [ { "tx": "eip155:100:0x75dc…", "quote": "Elect Dekan as Keeper of the Handbook" } ] }`. `named` is a name, `noted` a note or research, `linked` a link. `kind` is `sourced` when a page or a proposal says it (with its `url`, `tx` or `proposal` in `evidence`), and `inferred` when you worked it out (with `method`, such as `research@1`). What the person tells you, they keep in Petals in their own words.
+- Save each one as soon as you find it. A name is a lead, not a verified identity: say so when you tell the person.
+- `list_annotations` shows what the project holds, or everything about one account with `about`.
+
 ## Jobs from Petals
 
 Petals' own agent, in the chat on the page, hands jobs to the person's agents, such as mapping a network. The job is the person's yes for its map, so don't ask again.
@@ -58,10 +67,11 @@ Petals' own agent, in the chat on the page, hands jobs to the person's agents, s
 1. Join once, with a short name for your app, such as `claude-code`, `codex` or `hermes`: `node ~/.petals/petal.mjs join <agent key> --as <name>`. It answers with your `worker` id: each window, and each of your sub-agents, joins once and is a worker of its own.
 2. Wait for a job, always with your worker id: `node ~/.petals/petal.mjs jobs wait --worker <id>`. It comes back with a job, or with none just under ten minutes. Give the command your app's longest limit for one command, as your app's connect chapter says, so it isn't cut short.
 3. Do what the job's `brief` says, on this machine, with the six steps below, in the job's project: `project.exploration` is that project's link, for every tool, and each flower you draw is saved there, drawn as the person sees it: the job brings their view, and the file draws with it.
-4. Report it: `report_job` with that link, the job's `id` and a `result`: a `summary` of two or three plain sentences and the `steps` you saved. If you can't do it, report `failed` with the reason instead.
-5. Run `jobs wait --worker <id>` again, and keep going until the person says stop. Petals' agent takes up your report in the same conversation.
+4. Save who or what you find behind addresses as annotations as you go (above), all at once from a file if there are many.
+5. Report it: `report_job` with that link, the job's `id` and a `result`: a `summary` of two or three plain sentences, the `steps` you saved and `annotations`, the ids `add_annotation` gave. If you can't do it, report `failed` with the reason instead.
+6. Run `jobs wait --worker <id>` again, and keep going until the person says stop. Petals' agent takes up your report in the same conversation.
 
-**In an app that can't run commands here, connected at the site's `/mcp`** (the Claude app, ChatGPT): when the person gives you their agent key and asks you to take their open jobs, call `take_job` with `agent_key` and `as` (your app's short name, such as `claude-app` or `chatgpt`). Do each job in the `link` it gives, passing that as `exploration`, and its `view` to each `render_flower`, so every flower is drawn as the person sees it. Report it, and call `take_job` again until `job` is null. There's no waiting there: you take jobs when the person asks.
+**In an app that can't run commands here, connected at the site's `/mcp`** (the Claude app, ChatGPT): when the person gives you their agent key and asks you to take their open jobs, call `take_job` with `agent_key` and `as` (your app's short name, such as `claude-app` or `chatgpt`). Do each job in the `link` it gives, passing that as `exploration`, and its `view` to each `render_flower`, so every flower is drawn as the person sees it. Save what you find with `add_annotation` and `as`, your app's short name. Report it with the annotations' ids, and call `take_job` again until `job` is null. There's no waiting there: you take jobs when the person asks.
 
 **When the person gives you one project's link** instead: call `take_job` with it as `exploration`, do the job and report it the same way, then take the next one. When there's none, tell the person in one line that the page's agent has your report.
 

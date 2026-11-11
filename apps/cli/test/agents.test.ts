@@ -187,7 +187,7 @@ describe('jobs wait', () => {
       expect(a.body.as).toBe('hermes');
       expect(a.body.wait_s).toBeLessThanOrEqual(85);
     }
-    expect(JSON.parse(readFileSync(current, 'utf8'))).toEqual({ link: LINK });
+    expect(JSON.parse(readFileSync(current, 'utf8'))).toEqual({ link: LINK, as: 'hermes' });
   });
 
   test("the job's view is kept with its project, so the flowers drawn for it go through it", async () => {
@@ -213,7 +213,9 @@ describe('jobs wait', () => {
       currentFile: current,
     });
     expect(out.next).toContain('drawn as the person sees it');
-    expect(JSON.parse(readFileSync(current, 'utf8'))).toEqual({ link: LINK, view });
+    expect(out.next).toContain('add_annotation');
+    expect(out.next).toContain('annotations: the ids add_annotation gave');
+    expect(JSON.parse(readFileSync(current, 'utf8'))).toEqual({ link: LINK, view, as: 'codex' });
   });
 
   test('with no job, it comes back just before its time is up, so the agent runs it again', async () => {

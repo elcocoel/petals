@@ -173,6 +173,8 @@ export function jobNotes(jobs: readonly JobRow[]): string {
       lines.push(`  report: ${JSON.stringify(j.result.summary)}`);
       if (j.result.steps?.length) lines.push(`  saved steps: ${j.result.steps.join(', ')}`);
       if (j.result.notes) lines.push(`  notes: ${JSON.stringify(j.result.notes)}`);
+      if (j.result.annotations?.length)
+        lines.push(`  annotations added in its project: ${j.result.annotations.length}`);
     }
     if (j.failed) lines.push(`  failed: ${JSON.stringify(j.failed)}`);
   }

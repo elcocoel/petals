@@ -242,7 +242,7 @@ export interface JobRow {
   brief: string;
   inputs: Record<string, unknown>;
   status: 'open' | 'taken' | 'done' | 'failed';
-  result: { summary: string; steps?: number[]; notes?: string } | null;
+  result: { summary: string; steps?: number[]; notes?: string; annotations?: string[] } | null;
   failed: string | null;
   created_at: string;
   updated_at: string;

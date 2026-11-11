@@ -45,7 +45,7 @@ const INSTRUCTIONS =
   'prepare_publish, then give the person sign_url; never call publish_flower yourself. When the ' +
   'person gives you their agent key (petal_agent_…) and asks you to take their open jobs: take_job ' +
   'with agent_key and as, your app as a short name such as claude-app or chatgpt; do each job in its ' +
-  'link, passing its view to each render_flower, then report_job, and take_job again until job is null. Never ask for a key or a seed phrase.';
+  'link, passing its view to each render_flower; save who or what you find behind addresses with add_annotation (with as), then report_job with its ids, and take_job again until job is null. Never ask for a key or a seed phrase.';
 
 // Only where the page it hands over opens. Short, because an agent on MCP alone reads nothing else.
 const FOLLOW =
