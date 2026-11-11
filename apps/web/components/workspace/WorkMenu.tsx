@@ -12,7 +12,7 @@
 // - Profile: who's signed in, their public profile's state (it opens the card, where it's edited), and
 //   Disconnect, the one place to sign out.
 // - Settings: first the tip, an optional donation to Petals on the price's scale (TipControl; design/
-//   side-panel.md, lines 34 to 38); then the person's view, how each of the nine dimensions draws data for
+//   side-panel.md, lines 34 to 38); then the person's view, how each dimension draws data for
 //   every petal they look at (ViewControls; coordinator/one-source.md, step 7), saved at once and drawn
 //   everywhere without a reload.
 // It lies in the page's flow, open or collapsed, so a page that lays out beside it isn't covered.
