@@ -40,18 +40,12 @@ function colourKey(colour: Encoding, r: PetalRow): string {
 }
 
 /**
- * A petal's outline: how its identity is known, or, with outline on name_kind, how its name is known
- * (annotation-layer.md, section 3): the account's own word, the person's or a source's is solid, an
- * inference apart. Nothing known, or the tail: none.
+ * A petal's outline, where the spec's own outline (identity) is drawn. Outline can take any category, such as
+ * name_kind, but how a category is drawn on any dimension stays undecided until the look designs it (Elco,
+ * 11 Nov: "dont give data hard coded use of visual manifestations"), so nothing else gives it one.
  */
-function outlineKey(spec: Spec, r: PetalRow, values: Values): ReadingPetal['outline'] {
-  const by = spec.encodings.outline?.by;
-  if (!by || r.tail) return null;
-  if (by === 'name_kind') {
-    const known = values.get('name_kind')?.get(r.id);
-    return known === undefined ? null : known === 'inferred' ? 'inferred' : 'asserted';
-  }
-  if (!r.identity) return null;
+function outlineKey(spec: Spec, r: PetalRow): ReadingPetal['outline'] {
+  if (!spec.encodings.outline || r.tail || !r.identity) return null;
   return r.identity.status === 'inferred' ? 'inferred' : 'asserted';
 }
 
@@ -99,7 +93,7 @@ export function readFlower(
       width: widths[i] ?? 1,
       height: Math.max(HEIGHT_FLOOR, Math.min(1, heights[i] ?? 0)),
       colour: colourKey(spec.encodings.colour, r),
-      outline: outlineKey(spec, r, values),
+      outline: outlineKey(spec, r),
       segments: split && !r.tail ? backerSegments(s, r.id) : [],
     }),
   );
@@ -111,7 +105,7 @@ export function readFlower(
     encodings: spec.encodings,
     petals,
     legend: legendOf(spec, petals, measureTable(s, spec.selection.measure)?.sources ?? []),
-    details: detailsOf(spec, petals, (id) => values.get('name_kind')?.get(id)),
+    details: detailsOf(spec, petals),
   };
 }
 

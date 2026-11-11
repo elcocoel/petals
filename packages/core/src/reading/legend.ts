@@ -35,15 +35,7 @@ export function legendOf(
       }
       item.keys = [...keys].map(([label, key]) => ({ key, label }));
     }
-    if (p === 'outline' && e.by === 'name_kind') {
-      const drawn = new Set(real.map((r) => r.outline));
-      item.keys = [
-        ...(drawn.has('asserted')
-          ? [{ key: 'asserted', label: 'declared, stated or sourced' }]
-          : []),
-        ...(drawn.has('inferred') ? [{ key: 'inferred', label: 'inferred' }] : []),
-      ];
-    } else if (p === 'outline') {
+    if (p === 'outline') {
       const statuses = new Set(real.map((r) => r.identity?.status).filter(Boolean));
       item.keys = [
         ...(statuses.has('self-declared') || statuses.has('verified')
@@ -81,12 +73,7 @@ const HEIGHT_EXPLAINS: Record<string, string> = {
 
 const OUTLINE_WORD = { asserted: 'solid', inferred: 'dashed' } as const;
 
-/** With outline on name_kind, nameKind says how each account's name is known (declared, stated, sourced, inferred). */
-export function detailsOf(
-  spec: Spec,
-  petals: ReadingPetal[],
-  nameKind: (id: string) => string | undefined = () => undefined,
-): PetalDetail[] {
+export function detailsOf(spec: Spec, petals: ReadingPetal[]): PetalDetail[] {
   const narrowest = Math.min(...petals.map((p) => p.width));
   return petals.map((r) => {
     const values: PetalDetail['values'] = [];
@@ -117,18 +104,7 @@ export function detailsOf(
                 explains: `${e.by === 'kind' ? 'kind' : e.by}: ${colourLabel(r.colour)}`,
               },
         );
-      else if (p === 'outline' && e.by === 'name_kind') {
-        const known = nameKind(r.id);
-        values.push({
-          primitive: p,
-          value: r.outline ? OUTLINE_WORD[r.outline] : 'none',
-          explains: r.tail
-            ? 'grouped: no single name'
-            : known
-              ? `name ${known}`
-              : 'no annotation names this account',
-        });
-      } else if (p === 'outline')
+      else if (p === 'outline')
         values.push({
           primitive: p,
           value: r.outline ? OUTLINE_WORD[r.outline] : 'none',

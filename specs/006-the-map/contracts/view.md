@@ -115,7 +115,8 @@ Kinds on every piece of data are what make this work, so it waits on `seam/v1` c
 - **Long names** are cut at 24 characters with "…" on the flower, and shown whole where they're pointed at.
 - **The default** is v1's with `"labels": { "data": "identity" }` (`view.v2.json`). It draws exactly what v1's default draws. It has a new hash, and v1's default hash and its 12-character alias still mean the default.
 - **A view/v1 reads as v2** with labels on identity (core's `latestView`), and keeps its own hash. A person's next choice in Settings writes v2. Nothing is rewritten in place.
-- **Names from annotations** are two pieces, `name` and `name_kind` (declared, stated, sourced or inferred). Outline accepts `name_kind`: declared, stated or sourced is solid, inferred is apart, and no claim draws none. The strongest word is sourced, never verified.
+- **Names from annotations** are two pieces, `name` and `name_kind` (declared, stated, sourced or inferred). The strongest word is sourced, never verified.
+- **No fixed meaning for how data looks (Elco, 11 Nov):** "dont give data hard coded use of visual manifestations - outlines are being designed and could mean different things (just like all the other visual behaviours)". Outline, like any dimension, can take `name_kind` as a category, but how a category is drawn stays undecided until the look work designs it, the same for every dimension. Until then a choice the look can't draw shows nothing, and the legend leaves it out.
 - **Fixtures:** `view.v2.json` (the default) and `view.v2.names.json` (labels on `name`, outline on `name_kind`), pinned.
 - **Who composes:** names are the person's own, so whoever draws for a signed-in person passes their named claims through `namePieces` to the reading (`readFlower`'s `pieces`, `renderFlower`'s option `pieces`). A visitor gets none, so every petal keeps its short address under labels on `name`.
 
