@@ -7,12 +7,12 @@
 // only what it says it draws: outlines, lines and marks at the tips aren't drawn yet, so the legend leaves
 // them out. Pure.
 
-import type { BackerClass } from '../segments/backers.ts';
 import type { LegendItem } from '../types/index.ts';
 import { legendItem } from './legend.ts';
-import { colourStyle, SEGMENT_STYLE, STYLE } from './style.ts';
+import { keyStyle, STYLE } from './style.ts';
 import { esc } from './svg.ts';
 import type { Skin } from './types.ts';
+import { GREY, lookFills } from './wedge/keys.ts';
 import { marks } from './wedge/marks.ts';
 import { modelOf } from './wedge/model.ts';
 import { bandPath, FIT, n3, polygonPath, SHAPE, silhouettePath } from './wedge/ring.ts';
@@ -42,6 +42,8 @@ export const skinV2: Skin = (reading, { size, thumb }) => {
     height: size,
   };
   const mk = marks(m, view, null, m.ring, new Float64Array(m.n), false, -1);
+  // the art direction's colours, as the live flower paints them (#76; wedge/keys.ts lookFills)
+  const look = lookFills(reading.petals);
   const out: string[] = [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" role="img" aria-label="${esc(reading.title)}" data-petal="render/v2" data-spec="${reading.spec_sha256}">`,
     `<style>${STYLE}</style>`,
@@ -62,17 +64,14 @@ export const skinV2: Skin = (reading, { size, thumb }) => {
           const h0 = h * acc;
           acc += x.frac;
           const h1 = j === p.segments.length - 1 ? h : h * acc;
-          const cls = SEGMENT_STYLE[x.key as BackerClass]?.cls ?? 'c-unknown';
           out.push(
-            `<path class="${cls}" data-p="${esc(p.id)}" data-i="${p.index}" data-seg="${esc(x.key)}" d="${bandPath(m.ring, i, h0, h1)}"/>`,
+            `<path class="${keyStyle(look.bands[x.key] ?? GREY.hex).cls}" data-p="${esc(p.id)}" data-i="${p.index}" data-seg="${esc(x.key)}" d="${bandPath(m.ring, i, h0, h1)}"/>`,
           );
         });
         return;
       }
-      const paint = p.tail ? ' style="fill:var(--tail)"' : '';
-      const cls = p.tail ? '' : ` class="${colourStyle(p.colour).cls}"`;
       out.push(
-        `<path${cls}${paint} data-p="${esc(p.id)}" data-i="${p.index}" d="${bandPath(m.ring, i, 0, h)}"/>`,
+        `<path class="${keyStyle(look.fills[p.id] ?? GREY.hex).cls}" data-p="${esc(p.id)}" data-i="${p.index}" d="${bandPath(m.ring, i, 0, h)}"/>`,
       );
     });
     out.push('</g>');
@@ -108,7 +107,7 @@ export const skinV2: Skin = (reading, { size, thumb }) => {
     legend: reading.legend
       .filter((item) => DRAWN.has(item.primitive))
       .map((item) => ({ ...item, meaning: item.meaning.replace('one hatched petal', 'one petal') }))
-      .map(legendItem),
+      .map((item) => legendItem(item, look)),
     petals: reading.details.map((d) => ({
       ...d,
       values: d.values.map((v) => ({ ...v, explains: v.explains.replace(/^hatched: /, '') })),

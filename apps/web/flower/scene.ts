@@ -13,7 +13,7 @@ import {
   roundedPath,
   tonesOf,
 } from '@petal/core/wedge/highlight';
-import { paintOf } from '@petal/core/wedge/paint';
+import { lookFills } from '@petal/core/wedge/keys';
 import {
   type Proposal,
   placeArc,
@@ -175,8 +175,11 @@ export function createScene(
   svg: SVGSVGElement,
   m: Model,
   relations: FakeRelations | null,
-  look: PetalLook | null = null,
+  given: PetalLook | null = null,
 ): Scene {
+  // Every flower in the art direction's look since 11 Nov (#76; Elco: lab into the product): a page that hands
+  // none gets the reading's own colours from core's lookFills, its bands at rest, no highlight.
+  const look: PetalLook = given ?? { ...lookFills(m.petals), highlight: [] };
   // Nothing in the drawing hit-tests: the pointer is read geometrically, against the rest flower.
   const root = el('g', { class: MONO, 'pointer-events': 'none' }, svg);
   const world = slot(el('g', {}, root));
@@ -253,7 +256,7 @@ export function createScene(
 
   // figure.petal-wedge: each petal in its own colour from the reading, as the still picture paints it; with
   // the lab's look, in its key's colour.
-  const paints = m.petals.map((p) => (look ? (look.fills[p.id] ?? PETAL) : paintOf(p)));
+  const paints = m.petals.map((p) => look.fills[p.id] ?? PETAL);
   const bandPaint = (key: string): string => look?.bands[key] ?? PETAL;
   /** With the lab's look, a petal with bands shows them at rest. */
   const restBands = Uint8Array.from(m.petals, (p) =>

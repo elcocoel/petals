@@ -4,6 +4,7 @@
 // its view worked out from the map's camera. A click on a flower, or zooming in until it fills most of the
 // window, enters it: everything else fades, and arrows name the ways out. Esc, or zooming back out, leaves.
 // React mounts this once per chain and never renders per frame.
+import { lookFills } from '@petal/core/wedge/keys';
 import { type RefObject, useEffect } from 'react';
 import {
   type Clear,
@@ -42,7 +43,6 @@ import {
   type LandFlower,
   type LineStyle,
   roadEnds,
-  waveFills,
 } from './scene.ts';
 import {
   ENTER_AT,
@@ -141,14 +141,11 @@ export function useLandscape(
     let pointedWay = -1;
     let shown: { flower: number; other: number; ids: string[] } | null = null;
     let asking = '';
-    const sharedLook = (f: LandFlower, ids: readonly string[]): PetalLook => {
-      const fills = waveFills(f.model);
-      return {
-        fills: Object.fromEntries(f.model.petals.map((p, k) => [p.id, fills[k] as string])),
-        bands: {},
-        highlight: ids,
-      };
-    };
+    // the flower's own look (core lookFills, as every flower has it), the shared wallets highlighted
+    const sharedLook = (f: LandFlower, ids: readonly string[]): PetalLook => ({
+      ...lookFills(f.model.petals),
+      highlight: ids,
+    });
     /** Re-mounts a live flower, so its look is read again. */
     const remount = (i: number) => {
       const d = lives.get(i);

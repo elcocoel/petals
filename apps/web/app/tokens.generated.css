@@ -98,6 +98,12 @@
   --chart-k-org: #4a3aa7;
   --chart-k-delegator: #e34948;
   --chart-k-group: #a0673a;
+  --chart-key-mint: #8bc9bd;
+  --chart-key-blue: #96d4e3;
+  --chart-key-coral: #eb9c94;
+  --chart-key-apricot: #f4c376;
+  --chart-key-pink: #ecb5d5;
+  --chart-key-grey: #c7c7c7;
   --chart-everyone-else: #666661;
   --chart-selected: #8BC9BD;
   --chart-k-staking_pool: #6b8f71;
@@ -233,6 +239,24 @@
 }
 [data-swatch="k-group"] {
   background-color: var(--chart-k-group);
+}
+[data-swatch="key-mint"] {
+  background-color: var(--chart-key-mint);
+}
+[data-swatch="key-blue"] {
+  background-color: var(--chart-key-blue);
+}
+[data-swatch="key-coral"] {
+  background-color: var(--chart-key-coral);
+}
+[data-swatch="key-apricot"] {
+  background-color: var(--chart-key-apricot);
+}
+[data-swatch="key-pink"] {
+  background-color: var(--chart-key-pink);
+}
+[data-swatch="key-grey"] {
+  background-color: var(--chart-key-grey);
 }
 [data-swatch="everyone-else"] {
   background-color: var(--chart-everyone-else);
@@ -435,5 +459,11 @@
   --k-org: var(--chart-k-org);
   --k-delegator: var(--chart-k-delegator);
   --k-group: var(--chart-k-group);
+  --key-mint: var(--chart-key-mint);
+  --key-blue: var(--chart-key-blue);
+  --key-coral: var(--chart-key-coral);
+  --key-apricot: var(--chart-key-apricot);
+  --key-pink: var(--chart-key-pink);
+  --key-grey: var(--chart-key-grey);
 }
 

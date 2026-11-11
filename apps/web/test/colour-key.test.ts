@@ -52,17 +52,32 @@ const stake: LegendItem[] = [
 ];
 
 describe('colourKeys', () => {
-  test('the colours by kind, then everyone else; segments have no swatch here', () => {
+  test('the colours by kind and by band, then everyone else', () => {
     expect(colourKeys([validators])).toEqual([
       { label: 'pool', swatch: 'k-pool' },
       { label: 'liquid staking', swatch: 'k-entity' },
+      { label: 'lockups', swatch: 'seg-lockup' },
       { label: 'everyone else', swatch: 'tail' },
     ]);
+  });
+  test('everyone else last, though grey like a value past the fifth (the keys, #76)', () => {
+    const tail = { label: 'everyone else (311) 13.8%', swatch: 'var(--key-grey)' };
+    const keyed: LegendItem[] = [
+      { primitive: 'tail', meaning: 'everyone else', sources: [], keys: [tail] },
+      {
+        primitive: 'colour',
+        meaning: 'kind',
+        sources: [],
+        keys: [{ label: 'pool', swatch: 'var(--key-mint)' }],
+      },
+    ];
+    expect(colourKeys([keyed]).map((k) => k.label)).toEqual(['pool', tail.label]);
   });
   test('several drawings give one key, each colour once', () => {
     expect(colourKeys([validators, stake]).map((k) => k.label)).toEqual([
       'pool',
       'liquid staking',
+      'lockups',
       'person or organisation',
       'everyone else',
     ]);

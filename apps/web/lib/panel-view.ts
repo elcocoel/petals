@@ -178,10 +178,10 @@ const STARTER = 'Who holds the UNI token on Base?';
 const NOT_ON_CANVAS = new Set<string>(['outline', 'lines', 'markings']);
 
 /**
- * The rows whose swatches are the canvas's own paint (render/wedge/paint.ts): a petal's colour, and the
- * tail's tone. The canvas bands a petal's segments in one tone, so their swatches would say what isn't there.
+ * The rows whose swatches are the canvas's own paint (core wedge/keys.ts lookFills, since 11 Nov): a petal's
+ * key, its bands' keys, and the tail's grey.
  */
-const PAINTED = new Set<string>(['colour', 'tail']);
+const PAINTED = new Set<string>(['colour', 'segments', 'tail']);
 
 /**
  * What a flower says about itself, for what's on the canvas: no row about what it doesn't draw, a swatch

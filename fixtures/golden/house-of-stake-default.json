@@ -1,7 +1,7 @@
 {
   "name": "house-of-stake-default",
   "spec_sha256": "6214e7c5f051370c7893b2e54203224ffbfa537b82c680a2e8b1c23236382569",
-  "render_sha256": "5a5f45adffb2c25b4fb29174b7056577e174d6363001db65474df36b6d04a59a",
+  "render_sha256": "e113c7b23683035fec6cf33acb3ea8a44810e82d82bd6a94bad5367fc0c83d94",
   "spec": {
     "petal": "spec/v1",
     "network": {
@@ -93,7 +93,7 @@
       ],
       "keys": [
         {
-          "swatch": "var(--k-org)",
+          "swatch": "var(--key-blue)",
           "label": "person or organisation"
         }
       ]
@@ -113,7 +113,7 @@
       ],
       "keys": [
         {
-          "swatch": "var(--tail)",
+          "swatch": "var(--key-grey)",
           "label": "everyone else"
         }
       ]
