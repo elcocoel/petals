@@ -91,4 +91,6 @@ export interface LegendEdit {
   onOpen: (d: Dimension) => void;
   onPick: (d: Dimension, data: string | null) => void;
   onScale: (d: Dimension, scale: Scale) => void;
+  /** Puts the default back; absent while the view is the default. */
+  onReset?: (() => void) | undefined;
 }

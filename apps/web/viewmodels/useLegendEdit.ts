@@ -4,7 +4,7 @@
 import type { Dimension } from '@petal/core/view';
 import { useCallback, useState } from 'react';
 import { CHOOSABLE, DEFAULT_PERSON_VIEW } from '../lib/person-view.ts';
-import { type LegendEdit, type Scale, withData, withScale } from '../lib/view-edit.ts';
+import { isDefault, type LegendEdit, type Scale, withData, withScale } from '../lib/view-edit.ts';
 import { usePersonView } from './usePersonView.ts';
 
 export function useLegendEdit(): LegendEdit {
@@ -26,5 +26,11 @@ export function useLegendEdit(): LegendEdit {
     onPick: (d: Dimension, data: string | null) =>
       keep(withData(person.view, d, data, CHOOSABLE, defaults)),
     onScale: (d: Dimension, scale: Scale) => keep(withScale(person.view, d, scale)),
+    // usePersonView's reset, as Settings' (Elco, 11 Nov: "keep a reset to default button handy")
+    onReset: isDefault(person.view, defaults)
+      ? undefined
+      : () => {
+          person.reset().catch(() => undefined);
+        },
   };
 }

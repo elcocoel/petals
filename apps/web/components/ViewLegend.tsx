@@ -15,6 +15,7 @@ import { panelWords } from '../lib/panel-words.ts';
 import { SETTINGS_ROWS, type SettingsRow } from '../lib/person-view.ts';
 import { type LegendEdit, scaleOf } from '../lib/view-edit.ts';
 import { LegendKeys } from './Legend.tsx';
+import { Button } from './ui/Button.tsx';
 import { Mono } from './ui/Mono.tsx';
 import { NavItem } from './ui/NavItem.tsx';
 import { Overlay } from './ui/Overlay.tsx';
@@ -131,11 +132,10 @@ export function ViewLegend({
   /** It folds to its bar, as every overlay can (design/overlays.md, line 6). */
   fold?: { open: boolean; onToggle: () => void } | undefined;
 }) {
-  // a row whose choices are open stays while they are, even at None (design/legend.md, line 6)
-  const shown = ORDER.filter((d) => drawn[d] !== null || edit?.open === d);
-  // the Highlight row stands where Settings has it, before Labels
+  // every row of Settings stays whatever its value, None too, so a choice can always be taken back (Elco, 11 Nov:
+  // "don't let users break their views"); the Highlight row stands where Settings has it, before Labels
   const rows: (Dimension | 'highlight')[] = SETTINGS_ROWS.filter((r) =>
-    r === 'highlight' ? groups !== undefined : shown.includes(r),
+    r === 'highlight' ? groups !== undefined : ORDER.includes(r),
   );
   return (
     <Overlay title={panelWords.legend} fold={fold}>
@@ -191,6 +191,14 @@ export function ViewLegend({
           );
         })}
       </ul>
+      {/* the default back at a press, while the view isn't it (Elco: "keep a reset to default button handy") */}
+      {edit?.onReset && (
+        <div className="px-space-8 pt-space-4 pb-space-8">
+          <Button variant="quiet" onClick={edit.onReset}>
+            {words.reset}
+          </Button>
+        </div>
+      )}
     </Overlay>
   );
 }
