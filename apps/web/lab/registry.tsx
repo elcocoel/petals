@@ -1603,6 +1603,33 @@ export const registry: LabEntry[] = [
         render: () => <OrgBadge name="OHM" symbol="OHM" />,
       },
       {
+        name: 'its type: a DAO',
+        render: () => <OrgBadge name="RaidGuild" symbol="RAID" types={['DAO']} />,
+      },
+      {
+        name: 'several types at once',
+        render: () => (
+          <OrgBadge
+            name="SAFE"
+            symbol="SAFE"
+            logo={logo('safe')}
+            types={['multisig', 'treasury']}
+          />
+        ),
+      },
+      {
+        name: 'any value the data gives',
+        render: () => <OrgBadge name="Moloch DAO" symbol="MOL" types={['Moloch v2', 'DAO']} />,
+      },
+      {
+        name: 'no room: the type is cut before the name',
+        render: () => (
+          <div className="flex w-drawing-144">
+            <OrgBadge name="Seeker" symbol="SKR" types={['token', 'Solana Mobile']} />
+          </div>
+        ),
+      },
+      {
         name: 'a long name in a narrow place',
         render: () => (
           <div className="flex w-drawing-144">
@@ -1622,8 +1649,13 @@ export const registry: LabEntry[] = [
               className="block w-full"
             />
             <div className="absolute inset-0 flex flex-wrap content-center items-center justify-center gap-space-8 p-column-gap">
-              <OrgBadge name="Magic Eden" symbol="ME" logo={logo('magic-eden')} />
-              <OrgBadge name="SAFE" symbol="SAFE" logo={logo('safe')} />
+              <OrgBadge
+                name="Magic Eden"
+                symbol="ME"
+                logo={logo('magic-eden')}
+                types={['marketplace']}
+              />
+              <OrgBadge name="SAFE" symbol="SAFE" logo={logo('safe')} types={['multisig']} />
               <OrgBadge name="Seeker" symbol="SKR" />
               <OrgBadge name="OHM" symbol="OHM" />
               <OrgBadge name="NEAR validators" symbol="NEAR" />
@@ -2856,8 +2888,13 @@ export const registry: LabEntry[] = [
               <LabFoldingLegend keys={goldenKeys()} />
             </div>
             <div className="absolute bottom-space-16 left-space-16 flex gap-space-8">
-              <OrgBadge name="Magic Eden" symbol="ME" logo={logo('magic-eden')} />
-              <OrgBadge name="Seeker" symbol="SKR" />
+              <OrgBadge
+                name="Magic Eden"
+                symbol="ME"
+                logo={logo('magic-eden')}
+                types={['marketplace']}
+              />
+              <OrgBadge name="RaidGuild" symbol="RAID" types={['DAO']} />
             </div>
           </div>
         ),
