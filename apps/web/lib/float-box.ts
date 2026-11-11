@@ -44,6 +44,25 @@ export function kept(r: Rect, win: Size): Rect {
 export const moved = (from: Rect, dx: number, dy: number, win: Size): Rect =>
   kept({ ...from, x: from.x + dx, y: from.y + dy }, win);
 
+/** How near an edge a box let go of lands on it: a bar's height. */
+const SNAP = floatBox.bar;
+
+/**
+ * box.snap: a box let go near the window's edges, or near the side panel's edge (`left`, where it ends, 0
+ * for none), lands flush on them, where the boxes start (Elco, walk 5, 12 Nov: "maybe they would snap to the
+ * edges more easily").
+ */
+export function snapped(r: Rect, win: Size, left = 0): Rect {
+  const { inset } = floatBox;
+  const near = (a: number, b: number) => Math.abs(a - b) <= SNAP;
+  const start = left > 0 ? besidePanel(left) : inset;
+  const end = win.w - inset - r.w;
+  const bottom = win.h - inset - r.h;
+  const x = near(r.x, start) ? start : near(r.x, end) ? end : r.x;
+  const y = near(r.y, inset) ? inset : near(r.y, bottom) ? bottom : r.y;
+  return kept({ ...r, x, y }, win);
+}
+
 /**
  * The edge or corner under the hand follows it; the opposite one stays where it is. With a base, each edge
  * sizes its own part (design/conversation.md, lines 5 to 7): the top the sheet, the bottom the base.

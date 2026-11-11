@@ -3,7 +3,16 @@
 // geometry is in lib/float-box.ts. Positions last as long as the page does.
 import { sizes } from '@petal/tokens';
 import { type HTMLAttributes, type RefCallback, useLayoutEffect, useMemo, useRef } from 'react';
-import { type Edge, kept, moved, type Rect, type Size, seamed, sized } from '../lib/float-box.ts';
+import {
+  type Edge,
+  kept,
+  moved,
+  type Rect,
+  type Size,
+  seamed,
+  sized,
+  snapped,
+} from '../lib/float-box.ts';
 
 type Hold = Pick<
   HTMLAttributes<HTMLElement>,
@@ -107,10 +116,18 @@ export function useFloatBoxes<K extends string>(
     const handFor = (key: K): BoxHand => {
       const held = heldOf(key);
 
-      const holdWith = (next: (from: Rect, dx: number, dy: number, win: Size) => Rect): Hold => {
+      const holdWith = (
+        next: (from: Rect, dx: number, dy: number, win: Size) => Rect,
+        /** where it lands when it's let go, if anywhere but where the hand left it */
+        land?: (r: Rect, win: Size) => Rect,
+      ): Hold => {
         let grip: { id: number; x: number; y: number; from: Rect } | null = null;
         const release = (e: { pointerId: number }) => {
-          if (grip?.id === e.pointerId) grip = null;
+          if (grip?.id !== e.pointerId) return;
+          grip = null;
+          if (!land || !held.el || !held.rect) return;
+          held.rect = land(held.rect, windowSize());
+          paint(held.el, held.rect);
         };
         return {
           onPointerDown: (e) => {
@@ -149,7 +166,10 @@ export function useFloatBoxes<K extends string>(
         raise: () => {
           if (held.el) held.el.style.zIndex = String(++highest.current);
         },
-        bar: holdWith(moved),
+        // box.snap, where the page has a side panel (/make): let go near an edge, it lands on it
+        bar: holdWith(moved, (r, win) =>
+          lastEdge.current === undefined ? r : snapped(r, win, lastEdge.current),
+        ),
         // box.size
         edge: Object.fromEntries(
           (['n', 's', 'e', 'w', 'nw', 'ne', 'sw', 'se'] as const).map((edge) => [
