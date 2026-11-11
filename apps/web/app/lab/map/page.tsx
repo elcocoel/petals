@@ -32,5 +32,8 @@ export default async function MapLab({ searchParams }: { searchParams: Promise<Q
     cards?.ok === true
       ? withMarks(read, new Map(cards.value.maps.map((c) => [c.id, c.mark])))
       : read;
-  return <LandscapeCanvas data={data} probe={q.probe === '1'} far={far} />;
+  // the everything map (Elco, 11 Nov): with the far wave, the lines lean too (#87)
+  return (
+    <LandscapeCanvas data={data} probe={q.probe === '1'} far={far} lines={far ? 'focus' : null} />
+  );
 }

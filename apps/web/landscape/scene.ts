@@ -25,6 +25,8 @@ const PETAL = 'var(--figure-petal)';
 
 /** A connection at full strength is this see-through, so it never reads heavier than a flower. */
 const ROAD_TONE = 0.4;
+/** The lab's focused lines (#87): one flower's at a time, so a little firmer, still quiet. */
+const LINE_TONE = 0.55;
 /** A mark is this many px across on screen, at any zoom. */
 export const MARK = 16;
 const GAP = 6;
@@ -72,6 +74,8 @@ export interface LandFrame {
   enter: number;
   /** The connection a click marked, or -1. */
   marked: number;
+  /** The flower under the pointer, or -1 (the lab's lines lean, #87). */
+  pointed?: number;
   /** Where the window's free space starts on the left, past what sits down its side. */
   left: number;
 }
@@ -246,6 +250,12 @@ let clips = 0;
 export type FarStyle = 'wave' | null;
 
 /**
+ * When connections show (#87): as they always have, or the lab's lean, 'focus': none far away, and at the map's
+ * zoom only the pointed flower's and a marked one, each a quiet ink line as wide as the accounts shared.
+ */
+export type LineStyle = 'focus' | null;
+
+/**
  * Each petal's colour in the far wave: the art direction's keys, handed out by how many petals carry each kind,
  * as the lab's petal look keys them (core's wedge/keys.ts); everyone else in grey.
  */
@@ -267,6 +277,7 @@ export function createLandScene(
   flowers: readonly LandFlower[],
   roads: readonly Road[],
   far: FarStyle = null,
+  lines: LineStyle = null,
 ): LandScene {
   const clip = `landscape-mark-${++clips}`;
   const defs = el('defs', {}, svg);
@@ -418,7 +429,7 @@ export function createLandScene(
 
   return {
     top,
-    draw({ view, live, entered, enter, marked, left }) {
+    draw({ view, live, entered, enter, marked, left, pointed = -1 }) {
       world.set('transform', `translate(${n3(view.x)} ${n3(view.y)}) scale(${view.k})`);
       const rest = 1 - enter;
       flowerLayer.set('opacity', o2(rest));
@@ -524,10 +535,16 @@ export function createLandScene(
         let pair = 0;
         if (rest > 0.01 && (onScreen(view, a) || onScreen(view, b))) {
           pair = Math.min(screenRadius(view, a), screenRadius(view, b));
-          o =
-            i === marked
-              ? 1
-              : fade(DETAIL.road, pair) * (r.strong ? 1 : fade(DETAIL.roadMore, pair));
+          if (lines === 'focus') {
+            // only the pointed flower's, once it's big enough to be told apart, and a marked one
+            const own = pointed >= 0 && (r.a === pointed || r.b === pointed);
+            const size = pointed >= 0 ? screenRadius(view, flowers[pointed]?.place as Place) : 0;
+            o = i === marked ? 1 : own ? fade(DETAIL.lineFocus, size) : 0;
+          } else
+            o =
+              i === marked
+                ? 1
+                : fade(DETAIL.road, pair) * (r.strong ? 1 : fade(DETAIL.roadMore, pair));
         }
         if (o > 0.01) showing.push({ i, o, pair });
         else {
@@ -535,11 +552,14 @@ export function createLandScene(
           s.number.show(false);
         }
       });
-      const crowd = crowdFade(showing.length);
+      const crowd = lines === 'focus' ? 1 : crowdFade(showing.length);
       for (const { i, o, pair } of showing) {
         const s = roadSlots[i] as (typeof roadSlots)[number];
         s.line.show(true);
-        s.line.set('opacity', o2(i === marked ? 0.9 : o * crowd * ROAD_TONE));
+        s.line.set(
+          'opacity',
+          o2(i === marked ? 0.9 : o * crowd * (lines === 'focus' ? LINE_TONE : ROAD_TONE)),
+        );
         const shown = i === marked ? 1 : fade(DETAIL.roadCount, pair) * Math.min(1, o * 2);
         const [x1, y1, x2, y2] = s.ends;
         const mx = view.x + (view.k * (x1 + x2)) / 2;

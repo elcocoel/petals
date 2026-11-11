@@ -38,6 +38,7 @@ import {
   createLandScene,
   type FarStyle,
   type LandFlower,
+  type LineStyle,
   roadEnds,
 } from './scene.ts';
 import {
@@ -71,6 +72,8 @@ export interface LandscapeAt {
   inPage?: boolean;
   /** How a far flower is drawn: the lab's far wave (#84), or its silhouette. Read when the scene is built. */
   far?: FarStyle;
+  /** When connections show: the lab's lines lean (#87), or as always. Read when the scene is built. */
+  lines?: LineStyle;
   /** Told when the map goes into a flower and when it comes out of it (#78: the chains step aside inside). */
   inside?: (yes: boolean) => void;
   /**
@@ -107,7 +110,13 @@ export function useLandscape(
     const places = flowers.map((f) => f.place);
     const reach = flowers.map((f) => f.reach);
     const ends = roads.map((r) => roadEnds(flowers[r.a] as LandFlower, flowers[r.b] as LandFlower));
-    const scene = createLandScene(node, flowers, roads, at?.current?.far ?? null);
+    const scene = createLandScene(
+      node,
+      flowers,
+      roads,
+      at?.current?.far ?? null,
+      at?.current?.lines ?? null,
+    );
     const lives = new Map<number, Driven>();
     const tones = new Map<number, string>();
     let calm = motion.matches;
@@ -253,6 +262,7 @@ export function useLandscape(
         enter: enter.x,
         marked,
         left,
+        pointed: under,
       });
       if (moving) wake();
       else then = 0;
