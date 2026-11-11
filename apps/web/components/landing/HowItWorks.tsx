@@ -4,7 +4,8 @@
 // The scene in focus sits in the middle of a row that runs to the window's edges, and comes forward; the
 // others step back either side. Under version 2 a line fills under it and the row
 // moves on, round and round, while no hand is on it (viewmodels/useSceneCycle.ts). Under the row, a tick
-// for each scene and the two arrows move the focus; the one way in is under them.
+// for each scene and the two arrows move the focus. It has no Connect of its own (Elco, 11 Nov: remove it):
+// the nav's and the hero's stay.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { useSceneCycle } from '../../viewmodels/useSceneCycle.ts';
@@ -24,13 +25,6 @@ export function HowItWorks() {
       rule="top"
       bleed
       id="how-it-works"
-      foot={
-        <div className="flex justify-center">
-          <Button href={siteLinks.make} arrow>
-            {copy.action}
-          </Button>
-        </div>
-      }
     >
       <div className="mb-column-gap">
         <SectionHead size="compact" title={copy.title} />

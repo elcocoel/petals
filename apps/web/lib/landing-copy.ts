@@ -113,7 +113,6 @@ export const landingCopy = {
         body: 'Browsing the Power Map is free. Top up your Petals account to use its agent and mapping tools, paying as you go. Connected agents use their own resources for the work they take on.',
       },
     ],
-    action: 'Connect',
     /** Drafts (LANDING, 10 Nov), for Elco: the arrows' names, read aloud only. */
     back: 'Back',
     next: 'Next',
