@@ -67,7 +67,7 @@ Everything Petals keeps is a versioned document whose `petal` field names its fo
 - **Amounts, counts and shares are decimal text, never JSON numbers,** so large ones keep every digit before they're hashed. In a snapshot's holding, `amount` is in whole tokens and `amount_raw` in the chain's base units, as whole-number text.
 - **An account** is written as the reading writes it: a bare address, with the chain on `network.chain`. A map's address is `chain:address`, with an EVM address in lower case.
 - **Check a file before you keep it:** `node ~/.petals/petal.mjs validate-data @file.json` runs the same checks Petals runs, says what's wrong, and gives the document's sha256. It writes nothing.
-- **A reading you made yourself** (`snapshot/v1`): `node ~/.petals/petal.mjs keep-snapshot @snapshot.json --exploration <the project's link>` keeps it on this computer and in the project. When Petals reads its network, draw it like any other: `propose_spec` with the network and its sha256.
+- **A reading you made yourself** (`snapshot/v1`): `node ~/.petals/petal.mjs keep-snapshot @snapshot.json --exploration <the project's link>` keeps it on this computer and in the project. Then draw it like any other: `propose_spec` with its `network.id` as `network` and its sha256.
 - **Layers and claims** go in with `add_layer` and `add_annotation`, as above. A seam is made by `compose_view`, never by hand.
 
 ## Jobs from Petals

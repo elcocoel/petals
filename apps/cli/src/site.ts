@@ -585,7 +585,7 @@ export function siteDoor(opts: SiteOptions) {
     name: 'keep_snapshot',
     title: 'Keep a snapshot you made',
     description:
-      "Keep a reading you made yourself as a snapshot (snapshot/v1, its schema at the site's /schema/snapshot/v1.json): it's checked, named by the SHA-256 of its canonical JSON, kept on this computer and in the project. When Petals reads its network, draw it as any other: propose_spec with the network and this sha256, then validate_spec and render_flower. Check it first with validate_data if you like.",
+      "Keep a reading you made yourself as a snapshot (snapshot/v1, its schema at the site's /schema/snapshot/v1.json): it's checked, named by the SHA-256 of its canonical JSON, kept on this computer and in the project. Then draw it as any other: propose_spec with its network.id as network and this sha256, then validate_spec and render_flower. Check it first with validate_data if you like.",
     input: {
       type: 'object',
       required: ['snapshot'],
@@ -638,7 +638,7 @@ export function siteDoor(opts: SiteOptions) {
       return {
         sha256,
         exploration: chosen.link,
-        next: 'Kept here and in the project. When Petals reads its network, draw it: propose_spec with the network and this sha256, then validate_spec and render_flower.',
+        next: 'Kept here and in the project. Draw it: propose_spec with its network.id as network and this sha256, then validate_spec and render_flower.',
       };
     },
   };
