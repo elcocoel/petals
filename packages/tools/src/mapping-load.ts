@@ -61,11 +61,12 @@ interface Listed {
 }
 
 /**
- * The waves' manifests: every *IMPORT-MANIFEST.json under the folder, and any given with --manifest. Four shapes,
+ * The waves' manifests: every *IMPORT-MANIFEST.json under the folder, and any given with --manifest. Five shapes,
  * each path from the manifest's own folder: objects [{ path, load, canonical_sha256 }] (GNOSIS WAVE's); daos
  * [{ artifacts [{ file, canonical_sha256 }] }] (the L2 wave's); artifacts [{ file, role, canonical_json_sha256 }],
  * loading its 'load-candidate's (Solana's); records [{ path, status, sha256 }], loading its 'importable…' ones
- * (Ethereum's phase2-ethereum-manifest.json, whose sha256 is the canonical one). A listed file loads when the manifest says so and
+ * (Ethereum's phase2-ethereum-manifest.json, whose sha256 is the canonical one); files [{ path, loadable,
+ * canonical_sha256 }] (NEAR's). A listed file loads when the manifest says so and
  * has the canonical sha256 it gives; within a manifest's folder, a Petals document it doesn't list is held, since
  * only its listed artifacts are inputs.
  */
@@ -78,6 +79,7 @@ function manifestsIn(root: string, extra: readonly string[]) {
       daos?: { artifacts?: { file?: string; canonical_sha256?: string }[] }[];
       artifacts?: { file?: string; role?: string; canonical_json_sha256?: string }[];
       records?: { path?: string; status?: string; sha256?: string }[];
+      files?: { path?: string; loadable?: boolean; canonical_sha256?: string }[];
     };
     try {
       m = JSON.parse(readFileSync(p, 'utf8'));
@@ -95,7 +97,8 @@ function manifestsIn(root: string, extra: readonly string[]) {
       add(a.file, a.role === 'load-candidate', a.canonical_json_sha256);
     for (const r of m.records ?? [])
       add(r.path, String(r.status).startsWith('importable'), r.sha256);
-    if (m.objects || m.daos || m.artifacts || m.records) scopes.push(dir);
+    for (const f of m.files ?? []) add(f.path, f.loadable === true, f.canonical_sha256);
+    if (m.objects || m.daos || m.artifacts || m.records || m.files) scopes.push(dir);
   };
   const walk = (dir: string) => {
     for (const name of readdirSync(dir)) {

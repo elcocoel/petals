@@ -107,6 +107,7 @@ describe('loading a mapping wave', () => {
           { path: 'moloch/mark.json', status: 'importable-with-stated-coverage', sha256: sha },
         ],
       },
+      { files: [{ path: 'moloch/mark.json', loadable: true, canonical_sha256: sha }] },
     ];
     for (const m of shapes) {
       writeFileSync(join(root, 'ethereum', 'IMPORT-MANIFEST.json'), JSON.stringify(m));
