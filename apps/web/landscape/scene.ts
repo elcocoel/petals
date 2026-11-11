@@ -222,6 +222,8 @@ export function createLandScene(
   const top = el('g', { class: MONO, 'pointer-events': 'none' }, svg);
   const names = el('g', {}, top);
   const arrows = el('g', {}, top);
+  // the arrows' names above every arrow's line, so one arrow never runs over another's name (OVERLAYS, 11 Nov)
+  const arrowNames = el('g', {}, top);
 
   // figure.map-road
   const roadSlots = roads.map((r) => {
@@ -303,7 +305,7 @@ export function createLandScene(
     const g = slot(el('g', { display: 'none' }, arrows));
     const line = slot(el('line', { stroke: INK, 'vector-effect': 'non-scaling-stroke' }, g.node));
     const head = slot(el('path', { fill: INK }, g.node));
-    const at = slot(el('g', {}, g.node));
+    const at = slot(el('g', { display: 'none' }, arrowNames));
     return { g, line, head, at, label: null as Label | null, to: -1 };
   });
 
@@ -471,6 +473,7 @@ export function createLandScene(
         const way = out[k];
         if (!way || !e) {
           a.g.show(false);
+          a.at.show(false);
           return;
         }
         const n = flowers[way.to] as LandFlower;
@@ -506,6 +509,7 @@ export function createLandScene(
         const stop = named ? (entersBox(c.x, c.y, ux, uy, box) ?? reachEnd) - 8 : reachEnd;
         if (stop <= from + 12) {
           a.g.show(false);
+          a.at.show(false);
           return;
         }
         if (named) taken.push(box);
@@ -519,6 +523,7 @@ export function createLandScene(
         const hy = ux * size * 0.6;
         a.g.show(true);
         a.g.set('opacity', o2(enter));
+        a.at.set('opacity', o2(enter));
         a.line.set('x1', n3(x1));
         a.line.set('y1', n3(y1));
         a.line.set('x2', n3(x2 - ux * size));
