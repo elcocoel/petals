@@ -24,7 +24,7 @@ import {
   votesOn,
 } from '@petal/core/wedge/votes';
 import type { View } from './camera.ts';
-import { GUTTER } from './feel.ts';
+import { GUTTER, RECEDE } from './feel.ts';
 import { LABEL_POOL, type Marks, NOTE_POOL } from './marks.ts';
 import type { Model } from './model.ts';
 import {
@@ -273,6 +273,11 @@ export function createScene(
   };
   /** figure.petal-highlight: on or off, per petal. */
   const high = Uint8Array.from(m.petals, (p) => (lit.has(p.id) ? 1 : 0));
+  /**
+   * The same highlight state's fourth part (the brief, 11 Nov; Elco: "do it and we'll see"): while a group is
+   * chosen, every petal outside it recedes as a pointed petal's neighbours do, so a group of small petals stands out.
+   */
+  const away = (i: number): number => (lit.size > 0 && !high[i] ? 1 - RECEDE : 1);
   const defs = el('defs', {}, root);
   const sceneId = ++scenes;
   /**
@@ -691,7 +696,7 @@ export function createScene(
           ring,
           k,
           segments[i] as number,
-          i === focusIndex ? 1 : recede,
+          Math.min(i === focusIndex ? 1 : recede, away(i)),
           i === focusIndex ? band : -1,
           moved || rescaled || !bandsOn[i],
         );
@@ -705,7 +710,8 @@ export function createScene(
       }
       // folded, its shape already says it's many; the lighter tone is for the plain tail
       const strength =
-        (m.petals[i]?.tail && !folds[i] ? TAIL_TONE : 1) * (i === focusIndex ? 1 : recede);
+        (m.petals[i]?.tail && !folds[i] ? TAIL_TONE : 1) *
+        Math.min(i === focusIndex ? 1 : recede, away(i));
       if (high[i]) {
         if (fresh || moved || rescaled) {
           drawHigh(path, strokes[i], ring, i, 0, h, k);

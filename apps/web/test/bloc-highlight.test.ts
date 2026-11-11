@@ -45,4 +45,12 @@ describe('the map highlights the chosen group', () => {
     expect(land).toMatch(/sharedLook\(f, \[\.\.\.shared, \.\.\.group\], ringOf\(i\)\)/);
     expect(land).toMatch(/look: lookOf\(i\),/);
   });
+
+  test("while a group is chosen everyone else recedes, as a pointed petal's neighbours do (one highlight state)", () => {
+    const scene = text('flower/scene.ts');
+    expect(scene).toMatch(
+      /const away = \(i: number\): number => \(lit\.size > 0 && !high\[i\] \? 1 - RECEDE : 1\);/,
+    );
+    expect(scene.match(/Math\.min\(i === focusIndex \? 1 : recede, away\(i\)\)/g)?.length).toBe(2);
+  });
 });
