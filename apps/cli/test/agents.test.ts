@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { agentFile, joinAgent, waitForJob, workerFile } from '../src/agents.ts';
+import { workerCurrentFile } from '../src/site.ts';
 
 const KEY = `petal_agent_${'A'.repeat(43)}`;
 const SITE = 'https://petals.example';
@@ -150,9 +151,9 @@ describe('jobs wait', () => {
     expect(out.next).toContain('Run node ~/.petals/petal.mjs jobs wait again');
   });
 
-  test('asks again until a job comes, then sets the job’s project as the current one', async () => {
+  test('asks again until a job comes, then keeps the job’s project in its worker’s own file', async () => {
     const env = home();
-    joinAgent(env, KEY, 'hermes');
+    const { worker } = joinAgent(env, KEY, 'hermes') as { worker: string };
     const clock = { t: 0 };
     const job = {
       id: 'job_1',
@@ -187,16 +188,30 @@ describe('jobs wait', () => {
       expect(a.body.as).toBe('hermes');
       expect(a.body.wait_s).toBeLessThanOrEqual(85);
     }
-    expect(JSON.parse(readFileSync(current, 'utf8'))).toEqual({
+    // its own file, so another worker on this computer never takes it for theirs (swarm.md step 5)
+    expect(JSON.parse(readFileSync(workerCurrentFile(current, worker), 'utf8'))).toEqual({
       link: LINK,
       as: 'hermes',
-      worker: expect.stringMatching(/^[a-z0-9]{6}$/),
+      worker,
     });
+    expect(() => readFileSync(current, 'utf8')).toThrow();
+  });
+
+  test('an agent an old prompt joined, with no worker id, keeps the job in the current file', async () => {
+    const env = home();
+    mkdirSync(join(env.PETALS_HOME as string), { recursive: true });
+    writeFileSync(agentFile(env), JSON.stringify({ key: KEY, as: 'hermes' }));
+    const clock = { t: 0 };
+    const job = { id: 'job_2', kind: 'map', title: 'Map', brief: 'Who?', inputs: {}, to: null };
+    const s = site([{ body: { job, project: { exploration: LINK, question: 'q' } } }], clock);
+    const current = join(env.PETALS_HOME as string, 'state', 'current.json');
+    await waitForJob({ env, site: SITE, fetch: s.fetch, now: () => clock.t, currentFile: current });
+    expect(JSON.parse(readFileSync(current, 'utf8'))).toEqual({ link: LINK, as: 'hermes' });
   });
 
   test("the job's view is kept with its project, so the flowers drawn for it go through it", async () => {
     const env = home();
-    joinAgent(env, KEY, 'codex');
+    const { worker } = joinAgent(env, KEY, 'codex') as { worker: string };
     const clock = { t: 0 };
     const view = { petal: 'view/v1', color: { data: 'kind' } };
     const job = {
@@ -219,7 +234,7 @@ describe('jobs wait', () => {
     expect(out.next).toContain('drawn as the person sees it');
     expect(out.next).toContain('add_annotation');
     expect(out.next).toContain('annotations: the ids add_annotation gave');
-    expect(JSON.parse(readFileSync(current, 'utf8'))).toMatchObject({
+    expect(JSON.parse(readFileSync(workerCurrentFile(current, worker), 'utf8'))).toMatchObject({
       link: LINK,
       view,
       as: 'codex',
