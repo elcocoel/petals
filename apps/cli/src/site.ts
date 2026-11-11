@@ -28,6 +28,8 @@ type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 interface Current {
   link: string;
   view?: Json;
+  /** the name the agent joined with, when the conversation is a job's project: who answers for what it adds */
+  as?: string;
 }
 const isView = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v);
 
@@ -60,6 +62,9 @@ export const SITE_TOOLS = [
   'keep_layer',
   'list_layers',
   'fork_dataset',
+  // annotations: what the agent finds about accounts, kept privately in the project (annotation-layer.md)
+  'add_annotation',
+  'list_annotations',
 ] as const;
 
 /**
@@ -101,8 +106,12 @@ export function siteDoor(opts: SiteOptions) {
   /** when this process last chose its conversation, against the file's own time */
   let chosenAt = first ? Date.now() : 0;
 
-  const remember = (link: string, view?: unknown) => {
-    current = { link, ...(isView(view) ? { view } : {}) };
+  const remember = (link: string, view?: unknown, as?: unknown) => {
+    current = {
+      link,
+      ...(isView(view) ? { view } : {}),
+      ...(typeof as === 'string' && as.trim() ? { as: as.trim() } : {}),
+    };
     chosenAt = Date.now();
     if (!opts.currentFile) return;
     try {
@@ -118,7 +127,11 @@ export function siteDoor(opts: SiteOptions) {
       if (current && statSync(opts.currentFile).mtimeMs <= chosenAt) return null;
       const j = JSON.parse(readFileSync(opts.currentFile, 'utf8')) as Json;
       return typeof j.link === 'string'
-        ? { link: j.link, ...(isView(j.view) ? { view: j.view } : {}) }
+        ? {
+            link: j.link,
+            ...(isView(j.view) ? { view: j.view } : {}),
+            ...(typeof j.as === 'string' ? { as: j.as } : {}),
+          }
         : null;
     } catch {
       return null;
@@ -227,6 +240,8 @@ export function siteDoor(opts: SiteOptions) {
       'keep_layer',
       'list_layers',
       'fork_dataset',
+      'add_annotation',
+      'list_annotations',
     ].includes(tool.name);
     const input = optional ? withoutRequired(tool.input, 'exploration') : tool.input;
     const run = async (raw: unknown, ctx: ToolContext): Promise<Json> => {
@@ -264,7 +279,7 @@ export function siteDoor(opts: SiteOptions) {
             );
             if (isToolError(out) || !out.job) return isToolError(out) ? out : { job: null };
             const link = (out.project as { exploration?: unknown } | undefined)?.exploration;
-            if (typeof link === 'string') remember(link, out.view);
+            if (typeof link === 'string') remember(link, out.view, i.as);
             return { link, job: out.job, ...(isView(out.view) ? { view: out.view } : {}) };
           }
           if (!exploration) return noExploration();
@@ -314,6 +329,27 @@ export function siteDoor(opts: SiteOptions) {
           return post(
             `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/datasets/fork`,
             rest,
+          );
+        }
+        case 'add_annotation': {
+          if (!exploration) return noExploration();
+          const { exploration: _, ...rest } = i;
+          // a job's worker answers for what it adds by the name it joined with, unless it says another
+          const as = rest.as ?? recalledAll()?.as;
+          return post(
+            `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/annotations`,
+            {
+              ...rest,
+              ...(as ? { as } : {}),
+            },
+          );
+        }
+        case 'list_annotations': {
+          if (!exploration) return noExploration();
+          const about = typeof i.about === 'string' ? `?about=${encodeURIComponent(i.about)}` : '';
+          return call(
+            'GET',
+            `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/annotations${about}`,
           );
         }
         case 'brain_route': {
