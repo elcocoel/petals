@@ -1,9 +1,8 @@
 // The landing's sections in Elco's order (11 Nov, board card 100): the hero, How it works, give this to your agent,
 // the Power Map, Make Petals stronger, the questions, Build it with us. "A reading, summarised" went (Elco:
 // "kill it"); the one-click deliverables (board card 101) will sit before the Power Map once they're designed. It only
-// assembles; app/page.tsx hands it the Power Map's drawn readings.
+// assembles.
 
-import type { PowerMapTile } from '../../lib/power-map.ts';
 import { Footer } from '../ui/Footer.tsx';
 import { Nav } from '../ui/Nav.tsx';
 import { BackIt } from './BackIt.tsx';
@@ -15,8 +14,7 @@ import { HeroStory } from './HeroStory.tsx';
 import { HowItWorks } from './HowItWorks.tsx';
 import { Questions } from './Questions.tsx';
 
-/** `tiles` are the Power Map's, drawn in the person's view (lib/viewer-view.ts). */
-export function Landing({ tiles = [] }: { tiles?: readonly PowerMapTile[] }) {
+export function Landing() {
   return (
     <>
       <Nav />
@@ -24,7 +22,7 @@ export function Landing({ tiles = [] }: { tiles?: readonly PowerMapTile[] }) {
         <HeroStory />
         <HowItWorks />
         <GiveToAgent />
-        <GallerySection tiles={tiles} />
+        <GallerySection />
         <BackIt layout="columns" />
         <Questions />
         <BuildWithUs />
