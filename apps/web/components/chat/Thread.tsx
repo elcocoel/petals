@@ -87,7 +87,7 @@ export function Thread({
             case 'job':
               return renderJob?.(row) ?? null;
             case 'done':
-              return <AnsweredBy key={row.key} line={row.line} />;
+              return <AnsweredBy key={row.key} line={row.line} summary={row.summary} />;
             case 'turn':
               return <TurnStatus key={row.key} row={row} onRefollow={onRefollow} />;
             default:

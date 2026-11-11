@@ -233,8 +233,10 @@ describe('the composer', () => {
       label: 'Message Petals',
       placeholder: 'A network, a DAO, a token or an address.',
     });
-    expect(composer({ runId: 'r1' })).toMatchObject({
-      placeholder: 'A follow-up…',
+    expect(composer({ runId: 'r1' })).toMatchObject({ placeholder: 'A follow-up…' });
+    // that it goes on without the page is said only while a turn runs (#78)
+    expect(composer({ runId: 'r1' }).run).toBeUndefined();
+    expect(composer({ runId: 'r1', busy: true })).toMatchObject({
       run: { id: 'r1', href: '/make?run=r1' },
     });
     expect(composer({ recorded: true, question: 'ignored' })).toMatchObject({
@@ -265,7 +267,7 @@ describe('the views only lay it out', () => {
 
   test('who is speaking, then what they said', () => {
     const out = thread(view([you('hi'), say('hello'), you('and?')]));
-    expect(out).toContain('Original question');
+    expect(out).toContain('You');
     expect(out).toContain('hi');
     expect(out).toContain('>Petals<');
     expect(out).toContain('hello');
@@ -289,7 +291,7 @@ describe('the views only lay it out', () => {
     expect(lost).toContain('Follow the run again</button>');
   });
 
-  test('the composer is the one AskBox, and says what the run is', () => {
+  test('the composer is the one AskBox, and says the run goes on without the page', () => {
     const out = renderToStaticMarkup(
       createElement(Composer, {
         view: composerView({ question: 'q', runId: 'r1', busy: true, recorded: false }),
@@ -300,6 +302,7 @@ describe('the views only lay it out', () => {
     expect(out).toContain('id="q"');
     expect(out).toContain('Working…</button>');
     expect(out).toMatch(/<button type="submit" disabled=""/);
-    expect(out).toContain('Run <a href="/make?run=r1">r1</a>');
+    expect(out).toContain('You can leave and come back.');
+    expect(out).not.toContain('r1</a>');
   });
 });

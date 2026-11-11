@@ -19,6 +19,7 @@ import {
   besidePanel,
   clearOfConversation,
   conversationBoxes,
+  overThread,
   recordedBoxes,
   type Size,
 } from '../lib/float-box.ts';
@@ -57,11 +58,14 @@ export function InteractionSurface({
   // The boxes start past the side panel when it's there (the layout's, app/(work)/WorkPanel.tsx), and follow
   // its edge when it's sized or folded, until a hand moves them (design/side-panel.md, line 21).
   const from = state.menuShown ? besidePanel(state.panelEdge) : undefined;
+  // The flower's box opens over the thread, not over the flower (lib/float-box.ts overThread).
   const place = useMemo(
-    () =>
-      workspace.recorded
-        ? (win: Size) => recordedBoxes(win, from)
-        : (win: Size) => conversationBoxes(win, undefined, from),
+    () => (win: Size) => {
+      const boxes = workspace.recorded
+        ? recordedBoxes(win, from)
+        : conversationBoxes(win, undefined, from);
+      return { ...boxes, panel: overThread(boxes.conversation) };
+    },
     [from, workspace.recorded],
   );
   const hands = useFloatBoxes(BOXES, place);

@@ -145,6 +145,16 @@ export function clearOfConversation(
   return width - covered >= width / 3 ? { left: covered, right: 0 } : { left: 0, right: 0 };
 }
 
+/**
+ * On /make, the flower's box opens over the conversation's thread, down to its base, so the flower keeps the
+ * room beside the conversation and the field that asks about the petal stays in sight (#78, 11 Nov: the box
+ * covered the flower's right side).
+ */
+export function overThread(conversation: Rect): Rect {
+  const { x, y, w, h, base = 0 } = conversation;
+  return { x, y, w, h: Math.max(SHEET_MIN, h - base) };
+}
+
 /** The same, with a recorded run's base: a read-only saved question and the button that plays it. */
 export const recordedBoxes = (win: Size, from?: number) =>
   conversationBoxes(win, floatBox['recorded-base-height'], from);

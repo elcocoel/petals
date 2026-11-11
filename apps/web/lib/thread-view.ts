@@ -60,6 +60,15 @@ export function answeredBy(done: Done, signature: ModelSignature | null): Segmen
   ];
 }
 
+/**
+ * The one quiet line the model note folds under, after a turn (#78, 11 Nov: every turn ended in four lines
+ * of it): how many calls and what they cost, the rest a click away. Null when no model answered.
+ */
+export function answeredSummary(done: Done): string | null {
+  if (done.model === 'recorded' || done.turns === 0) return null;
+  return `${done.turns} model ${done.turns === 1 ? 'call' : 'calls'} · $${done.cost_usd.toFixed(4)}`;
+}
+
 export type StepRow =
   | { kind: 'stage'; stage: string; message: string }
   | { kind: 'progress'; text: string }
@@ -151,7 +160,8 @@ export type Row =
    * agent's words, which don't carry Petals' mark.
    */
   | { kind: 'message'; key: string; blocks: MarkdownBlock[]; speaker?: string; foreign?: boolean }
-  | { kind: 'done'; key: string; line: Segment[] }
+  /** `summary` is the one quiet line the whole note folds under (#78: the turns read like a log). */
+  | { kind: 'done'; key: string; line: Segment[]; summary: string | null }
   | FlowerRow
   | StoredRow
   | TurnRow;
@@ -244,7 +254,7 @@ export function threadView(v: ThreadInput): Row[] {
           kind: 'user',
           key,
           text: words,
-          label: asked ? 'You' : 'Original question',
+          label: 'You',
           ...(about ? { about: aboutLabel(about) } : {}),
         });
         asked = true;
@@ -257,7 +267,7 @@ export function threadView(v: ThreadInput): Row[] {
             kind: 'user',
             key: `${key}-question`,
             text: b.question,
-            label: 'Original question',
+            label: 'You',
           });
           asked = true;
         }
@@ -348,7 +358,12 @@ export function threadView(v: ThreadInput): Row[] {
         rows.push({ kind: 'job', key, job: b.job });
         break;
       case 'done':
-        rows.push({ kind: 'done', key, line: answeredBy(b.done, b.signature) });
+        rows.push({
+          kind: 'done',
+          key,
+          line: answeredBy(b.done, b.signature),
+          summary: answeredSummary(b.done),
+        });
         break;
     }
   });
@@ -428,6 +443,7 @@ export function composerView(
     ...(target.kind === 'wallet' || target.kind === 'group'
       ? { about: aboutLabel(target.line) }
       : {}),
-    ...(v.runId && runHref ? { run: { id: v.runId, href: runHref } } : {}),
+    // while a turn runs, it goes on without the page (#78: no run id under the box at rest)
+    ...(v.busy && v.runId && runHref ? { run: { id: v.runId, href: runHref } } : {}),
   };
 }

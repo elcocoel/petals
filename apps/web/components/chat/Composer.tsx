@@ -51,11 +51,7 @@ export function Composer({
           onSend();
         }}
       />
-      {view.run && (
-        <p className="type-mono text-muted">
-          Run <a href={view.run.href}>{view.run.id}</a>. You can leave and come back.
-        </p>
-      )}
+      {view.run && <p className="type-mono text-muted">You can leave and come back.</p>}
     </div>
   );
 }
