@@ -64,6 +64,25 @@ function nameOf(r: PetalRow, by: string | null, values: Values): string {
 }
 
 /**
+ * What a dimension other than labels reads for a petal from a category piece of data: identity's value is how
+ * the identity is known (verified, self-declared, inferred), the kind of account's is its kind, and any other
+ * piece's is its value for that account among the pieces given (a person's name_kind, say). None, and the
+ * tail: null. It says the value only; how a value looks is the look's, and nothing fixes one (Elco, 11 Nov).
+ */
+export function categoryOf(
+  by: string,
+  pieces: readonly SeamPiece[] = [],
+): (p: Pick<PetalRow, 'id' | 'kind' | 'identity' | 'tail'>) => string | null {
+  const values = valuesOf(pieces);
+  return (p) => {
+    if (p.tail) return null;
+    if (by === 'identity') return p.identity?.status ?? null;
+    if (by === 'kind') return p.kind;
+    return values.get(by)?.get(p.id) ?? null;
+  };
+}
+
+/**
  * The reading of a spec over its snapshot. With a person's view (view/v1 or v2), each dimension draws what
  * the view picks (reading/view.ts) and the spec's own choices stay in the spec, as the agent's proposal; the
  * reading is still of that spec. Without one, the spec's choices are drawn, as they always were, and petals

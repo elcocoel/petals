@@ -20,6 +20,13 @@ import {
 import type { Channel } from './spring.ts';
 import { LINE, MONO } from './words.ts';
 
+/**
+ * Each petal's outline, by its id, as an SVG dash pattern ('' a continuous line): the look's lines for the
+ * category the outline shows (core's wedge/outline.ts). Only the lab's bench hands the scene any, until Elco
+ * has seen them (annotation-layer.md, step 7).
+ */
+export type PetalOutlines = Record<string, string>;
+
 /** Lines to judge a feel, with no data behind them. Only the lab's bench hands the scene any. */
 export interface FakeRelations {
   /** Pairs of petal indices, the same seed the same pairs. */
@@ -114,7 +121,12 @@ export interface Scene {
   dispose(): void;
 }
 
-export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelations | null): Scene {
+export function createScene(
+  svg: SVGSVGElement,
+  m: Model,
+  relations: FakeRelations | null,
+  outlines: PetalOutlines | null = null,
+): Scene {
   // Nothing in the drawing hit-tests: the pointer is read geometrically, against the rest flower.
   const root = el('g', { class: MONO, 'pointer-events': 'none' }, svg);
   const world = slot(el('g', {}, root));
@@ -189,7 +201,19 @@ export function createScene(svg: SVGSVGElement, m: Model, relations: FakeRelatio
   const paints = m.petals.map((p) => paintOf(p));
   const petals: Slot<SVGPathElement>[] = [];
   for (let i = 0; i < m.n; i++) {
-    petals.push(slot(el('path', { fill: paints[i] as string }, petalsGroup.node)));
+    // figure.petal-outline: a line round the wedge, where the outline gives its petal one
+    const line = outlines?.[m.petals[i]?.id ?? ''];
+    const drawn =
+      line === undefined
+        ? {}
+        : {
+            stroke: INK,
+            'stroke-width': 1,
+            'stroke-linejoin': 'miter',
+            'vector-effect': 'non-scaling-stroke',
+            ...(line ? { 'stroke-dasharray': line } : {}),
+          };
+    petals.push(slot(el('path', { fill: paints[i] as string, ...drawn }, petalsGroup.node)));
   }
   // Under the raised petal: the ground, a line wider than it, so where its tip lies over a neighbour
   // it's as solid as anywhere and the same line runs round it.
