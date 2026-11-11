@@ -275,6 +275,7 @@ export function InteractionSurface({
               onShelf: actions.showShelf,
               onOpenStored: actions.openStored,
               onStarter: actions.startFrom,
+              onLink: actions.followLink,
             }}
             conversation={state.conversationRef}
           />
