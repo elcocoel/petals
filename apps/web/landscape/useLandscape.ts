@@ -6,10 +6,13 @@
 // React mounts this once per chain and never renders per frame.
 import { type RefObject, useEffect } from 'react';
 import {
+  type Clear,
+  clearSides,
   fitView,
   flyTo,
   type Home,
   letGo,
+  NO_CLEAR,
   newCamera,
   panBy,
   resize,
@@ -70,6 +73,11 @@ export interface LandscapeAt {
   far?: FarStyle;
   /** Told when the map goes into a flower and when it comes out of it (#78: the chains step aside inside). */
   inside?: (yes: boolean) => void;
+  /**
+   * The map's home keeps clear of the chain list down its left, measured from `aside` (a page where the map's
+   * room is narrow: /make, #78). Off, the home fills the whole map, as on /map. Read when the scene is built.
+   */
+  clearOfChains?: boolean;
 }
 
 const LONGEST_FRAME = 1 / 15;
@@ -124,6 +132,14 @@ export function useLandscape(
       left = r ? r.right - node.getBoundingClientRect().left : 0;
     };
     measure();
+    /** What the chain list covers, as far again past it as it stands from the edge, when the page asks. */
+    const chainsClear = (): Clear => {
+      const r = aside?.current?.getBoundingClientRect();
+      if (!at?.current?.clearOfChains || !r || r.width === 0) return NO_CLEAR;
+      const from = node.getBoundingClientRect().left;
+      return { ...NO_CLEAR, left: Math.max(0, r.right - from + (r.left - from)) };
+    };
+    clearSides(cam, chainsClear());
 
     const short = () => Math.min(cam.width, cam.height);
 
@@ -263,7 +279,7 @@ export function useLandscape(
     };
     const flyHome = () => {
       entered = -1;
-      flyTo(cam, fitView(cam.width, cam.height, home));
+      flyTo(cam, fitView(cam.width, cam.height, home, cam.clear));
       wake();
     };
 
@@ -438,6 +454,7 @@ export function useLandscape(
       const r = node.getBoundingClientRect();
       resize(cam, r.width, r.height);
       measure();
+      clearSides(cam, chainsClear());
       wake();
     });
 

@@ -135,6 +135,8 @@ export function InteractionSurface({
               focus={focus}
               // a petal of the map it opened at opens that flower here (useWorkspace pickOnMap)
               onPick={actions.pickOnMap}
+              // the room beside the conversation is narrow: the map keeps clear of its own chains
+              clearOfChains
             />
           </div>
         ) : (
