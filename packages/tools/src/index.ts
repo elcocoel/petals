@@ -38,6 +38,7 @@ export {
 } from './limits.ts';
 export { LiveHub, type Presence } from './live.ts';
 export { type CardMark, cardMark, mapViews } from './map.ts';
+export { keepMappingClaims, MAPPING, mapClaims } from './mapping-claims.ts';
 export { type LoadReport, type LoadRun, loadMapping, mappingProblems } from './mapping-load.ts';
 export {
   type MarkRun,

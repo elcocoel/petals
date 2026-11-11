@@ -24,6 +24,7 @@ import { freshGate } from '../fresh.ts';
 import { hiddenMap } from '../hidden.ts';
 import { LiveHub } from '../live.ts';
 import { type CardMark, cardMark, mapsOf, mapViews, namesKey } from '../map.ts';
+import { mapClaims } from '../mapping-claims.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
 import { cardProposals, proposalsOf } from '../proposals.ts';
 import { findTool } from '../registry.ts';
@@ -390,6 +391,15 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       row
         ? { proposals: JSON.parse(row.body) }
         : versioned(toolError('not_found', 'No proposals read for that map.')),
+    );
+  });
+  // A map's claims by Petals' own mapping (Elco, 11 Nov: "show them"): about its accounts, the same for everyone.
+  app.get('/api/v1/maps/:id/claims', limit, async (c) => {
+    const id = aboutKey(c.req.param('id'));
+    const claims = await mapClaims(ctx, id);
+    return respond(
+      c,
+      claims ? { about: id, claims } : versioned(toolError('not_found', 'No map by that address.')),
     );
   });
   app.get('/api/v1/maps', limit, async (c) => {
