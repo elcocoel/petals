@@ -49,6 +49,14 @@ export {
   NO_GROUPING,
 } from './import/spike.ts';
 export {
+  BAAL_EVENTS,
+  type BaalLog,
+  baalLogs,
+  baalOf,
+  baalProposals,
+  baalTitle,
+} from './modules/baal-proposals.ts';
+export {
   BEANSTALK_DESCRIPTOR,
   beanstalk,
   pullBeanstalk,
