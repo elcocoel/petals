@@ -175,6 +175,17 @@ export async function moveConversation(id: string, project: string | null): Prom
  * A view's spec from its /d/<sha> address: the server answers it with the draft's own address, /draft?spec=,
  * which holds the spec. Only that address is read here; the page it leads to isn't.
  */
+/**
+ * Where a map's flower is drawn (GET /api/v1/maps/:id, its view_url: /d/<sha> or /f/<id>), so the workspace
+ * can open it when a petal of it is clicked on its map (#78). Null when the map isn't there.
+ */
+export async function readMapDrawing(map: string): Promise<string | null> {
+  const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}`);
+  if (!res.ok) return null;
+  const json = (await res.json()) as { map?: { view_url?: string | null } };
+  return json.map?.view_url ?? null;
+}
+
 export async function readDrawingSpec(sha: string): Promise<Spec | null> {
   const res = await fetch(`/d/${encodeURIComponent(sha)}`);
   void res.body?.cancel();
