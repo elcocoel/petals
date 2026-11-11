@@ -58,7 +58,7 @@ export const landingCopy = {
      * Elco's seven scenes, word for word from Figma's "Section 3 · V1 original · working baseline"
      * (181:2343), each with its illustration (public/landing/how-it-works/). Three fixes on Elco's OK
      * (10 Nov): "aks" to "ask", "get's" to "gets", "Near.Social" to "NEAR Social". Case as Figma draws it.
-     * `tick` is the word under each scene's tick in the pager (Elco, 10 Nov, by voice).
+     * `tick` is the word under each scene's tick in the pager (Elco, 10 Nov, by voice; two corrected on 11 Nov).
      */
     scenes: [
       {
@@ -91,7 +91,7 @@ export const landingCopy = {
       },
       {
         id: 'power-map',
-        tick: 'Public Good',
+        tick: 'A Public Good',
         scene: 'THE POWER MAP',
         headline: 'Each ask grows the map',
         body: 'Explore what others have mapped, and add the readings you care about. All data sets come together in the Power Map. It gets more detailed as we explore.',
@@ -105,7 +105,7 @@ export const landingCopy = {
       },
       {
         id: 'costs',
-        tick: 'No Cost, Low Cost, No Setup',
+        tick: 'Low cost, no setup',
         scene: 'LOW COST, NO SETUP',
         headline: 'A few cents go a long way.',
         body: 'Browsing the Power Map is free. Top up your Petals account to use its agent and mapping tools, paying as you go. Connected agents use their own resources for the work they take on.',
@@ -116,24 +116,26 @@ export const landingCopy = {
     back: 'Back',
     next: 'Next',
   },
-  useAnywhere: {
-    title: 'Put your own agents to work.',
-    body: "Petals' agent can hand jobs to the agents you already use. Each one reads on your computer, on the plan you already pay for, so a big map costs you less. Several can map different parts of a network at once, and everything lands in one project.",
-    /** Draft (CONNECTORS, 10 Nov), for Elco: one action, where Copy the prompt and Keep Petals in your agent were. */
-    action: 'Connect your agents',
-    promptNote: 'Works today with Claude Code, Codex, Hermes and any agent that runs commands.',
-    /** The illustrated terminal (Elco, 9 Nov: "let's bring back that terminal visual element here"). */
-    terminal: {
-      start: "YOUR AGENT  ·  A JOB FROM PETALS' AGENT",
-      end: 'ILLUSTRATIVE',
-      lines: [
-        { text: "# Petals' agent hands your agent a job" },
-        { text: '> Map RaidGuild: its shares, and who wrote each proposal.', accent: true },
-        { text: '  reading Gnosis, on this computer…' },
-        { text: '  158 members · 246 proposals' },
-        { text: 'a new layer, in your project', returned: true },
-      ],
-    },
+  /**
+   * Section 4, word for word from the Copy doc's "Sections 3–4 · Elco" tab (Elco, 11 Nov: swap it in for
+   * "Put your own agents to work"). The prompt is LANDING's draft, for Elco, from the tab's build notes:
+   * before sign-in, one step at a time, skipping what's done, wallet → log in → top up → talk to Petals.
+   */
+  giveToAgent: {
+    title: 'Skip the reading.\nGive this to your agent.',
+    body: 'Click and paste to any chatbot.\nIt will walk you through setting up a wallet, logging in and topping up—until you’re ready to talk to Petals.',
+    copy: 'Copy for my agent',
+    copied: 'Copied. Paste it into your agent’s chat to get started.',
+    /** `site` is this site's address; the page swaps in the one it's on when copying. */
+    prompt: (site: string) =>
+      [
+        `Help me start using Petals (${site}). It maps who holds power in on-chain networks and draws it as flowers. Guide me one step at a time, and skip any step I've already done.`,
+        '1. A NEAR wallet. If I have none, help me set one up (Meteor Wallet works) and get a little NEAR into it.',
+        `2. Log in. I open ${site}, press Connect and approve the sign-in in my wallet. Signing in moves no funds and costs nothing.`,
+        "3. Top up. Petals' agent runs on NEAR AI and is paid as I go. When my conversation with it asks for credit, I add some with Add 1 NEAR, or pay with another token from any chain.",
+        "4. Talk to Petals. I name a community, a wallet or a contract, and Petals' agent maps how power moves in it.",
+        "Once I'm in, if I want my own agents to help, Copy for your agents in Petals' side panel connects them. Never ask me for my seed phrase or private key.",
+      ].join('\n\n'),
   },
   gallery: {
     title: 'Start with a network you know.',
@@ -262,7 +264,8 @@ export const landingCopy = {
     ],
   },
   backIt: {
-    title: 'Help the map grow.',
+    /** Elco, 11 Nov: "Make Petals stronger", punctuated like the other headlines. */
+    title: 'Make Petals stronger.',
     ways: [
       {
         title: 'Map a network you care about.',

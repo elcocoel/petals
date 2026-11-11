@@ -72,8 +72,8 @@ describe('the landing page', () => {
 
   test('every door it sends someone to is on /connect', () => {
     const ids = doors('https://x').map((d) => d.id);
+    // Since 11 Nov section 4 copies a prompt instead of sending you to a door, so this may find none.
     const sent = hrefs.filter((href) => href.startsWith(`${siteLinks.connect}#`));
-    expect(sent.length).toBeGreaterThan(0);
     for (const href of sent) expect(ids, href).toContain(href.split('#')[1]);
   });
 });
