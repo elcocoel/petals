@@ -321,18 +321,23 @@ class Cli {
     return isToolError(out) ? 1 : 0;
   }
 
-  /** `petal join <agent key> --as <name>`: this agent joins the person's Petals, to take their jobs. */
+  /** `petal join <agent key> --as <name> [--can "<what it can do>"]`: this agent joins the person's Petals, to take their jobs. */
   async join(argv: string[]): Promise<number> {
     const parsed = tokenize(argv, (n) => CLI_BOOLEAN.has(n));
-    const as = new Map(parsed.flags).get('as');
+    const flags = new Map(parsed.flags);
+    const as = flags.get('as');
+    const can = flags.get('can');
     const key = parsed.positionals[0];
     if (!key || typeof as !== 'string') {
       throw new UsageError(
-        'join takes the agent key and a name: join <agent key> --as claude-code',
+        'join takes the agent key and a name: join <agent key> --as claude-code [--can "<what you can do>"]',
       );
     }
+    if (can !== undefined && typeof can !== 'string') {
+      throw new UsageError('--can takes a few words on what you can do for a job, in quotes');
+    }
     const { joinAgent } = await import('./agents.ts');
-    const out = joinAgent(this.sys.env, key, as);
+    const out = joinAgent(this.sys.env, key, as, can);
     this.sys.stdout(json(out));
     return isToolError(out) ? 1 : 0;
   }

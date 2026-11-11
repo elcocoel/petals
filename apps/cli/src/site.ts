@@ -174,8 +174,12 @@ export function siteDoor(opts: SiteOptions) {
     return at;
   };
   const jobsDir = opts.currentFile ? join(dirname(opts.currentFile), 'current') : null;
-  /** The jobs this computer's workers hold now, one file per worker (step 5). */
-  const jobsHere = (): { file: string; at: number; current: Current }[] => {
+  /**
+   * The jobs this computer's workers hold, one file per worker (step 5). A job stopped or handed over is
+   * still there, marked ended, so the worker's sub-agents that call after the first one hear the same
+   * worker named; it no longer counts as held.
+   */
+  const jobsKept = (): { file: string; at: number; current: Current; ended: boolean }[] => {
     if (!jobsDir) return [];
     let names: string[];
     try {
@@ -186,14 +190,16 @@ export function siteDoor(opts: SiteOptions) {
     return names.flatMap((n) => {
       const file = join(jobsDir, n);
       try {
-        const c = asCurrent(JSON.parse(readFileSync(file, 'utf8')) as Json);
-        return c ? [{ file, at: statSync(file).mtimeMs, current: c }] : [];
+        const j = JSON.parse(readFileSync(file, 'utf8')) as Json;
+        const c = asCurrent(j);
+        return c ? [{ file, at: statSync(file).mtimeMs, current: c, ended: Boolean(j.ended) }] : [];
       } catch {
         return [];
       }
     });
   };
-  /** A worker's job is over here: reported, stopped or handed over. */
+  const jobsHere = () => jobsKept().filter((h) => !h.ended);
+  /** A worker's job is over here: reported. */
   const release = (file: string) => {
     try {
       rmSync(file, { force: true });
@@ -201,7 +207,15 @@ export function siteDoor(opts: SiteOptions) {
       // gone already
     }
   };
-  const mineFor = (link: string) => jobsHere().find((h) => refOf(h.current.link) === refOf(link));
+  /** Stopped or handed over: kept, marked, until the worker's next job takes its place. */
+  const endedHere = (file: string, c: Current, why: string) => {
+    try {
+      writeFileSync(file, `${JSON.stringify({ ...c, ended: why })}\n`, { mode: 0o600 });
+    } catch {
+      release(file);
+    }
+  };
+  const mineFor = (link: string) => jobsKept().find((h) => refOf(h.current.link) === refOf(link));
   /**
    * Where a call goes, with the view, name and worker that come with it. A project the call names is
    * that worker's, when a worker here holds it. None named: the one job a worker here took since this
@@ -233,10 +247,11 @@ export function siteDoor(opts: SiteOptions) {
     const now = recalledAll();
     const ref = /^\/api\/v1\/explorations\/([^/?]+)/.exec(path)?.[1];
     const mine = ref
-      ? jobsHere().find((h) => encodeURIComponent(refOf(h.current.link)) === ref)
+      ? jobsKept().find((h) => encodeURIComponent(refOf(h.current.link)) === ref)
       : undefined;
     const worker = mine?.current.worker ?? now?.worker;
-    if (mine) release(mine.file);
+    const why = (out.error as { ended?: unknown }).ended;
+    if (mine && !mine.ended) endedHere(mine.file, mine.current, String(why));
     if (now && ref && encodeURIComponent(refOf(now.link)) === ref) forget();
     const message = (out.error as { message?: unknown }).message;
     const wait = `node ~/.petals/petal.mjs jobs wait${worker ? ` --worker ${worker}` : ''}`;

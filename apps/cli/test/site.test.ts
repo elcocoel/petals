@@ -777,7 +777,7 @@ describe('several workers on one computer, each with its own job (swarm.md step 
     expect(site.seen.at(-1)?.url).toBe(`${SITE}/api/v1/explorations/${B}/notes`);
   });
 
-  test("a job stopped under one worker names that worker and frees it, and leaves the other's", async () => {
+  test("a job stopped under one worker: each of its sub-agents hears that worker named, and the other's job is left", async () => {
     const { existsSync, readFileSync } = await import('node:fs');
     const { currentFile, a, b } = await twoJobs();
     const site = fakeSite();
@@ -790,16 +790,23 @@ describe('several workers on one computer, each with its own job (swarm.md step 
             { status: 403, headers: { 'content-type': 'application/json' } },
           )
         : site.fetch(url, init);
-    const tools = siteDoor({ site: SITE, fetch, currentFile }).tools(registry);
-    const out = (await byName(tools, 'add_note').run(
-      { text: 'x', exploration: `${SITE}/s/${A}` } as never,
-      ctx(),
-    )) as Record<string, unknown>;
-    expect(out.next).toBe(
-      'This job was stopped. Run node ~/.petals/petal.mjs jobs wait --worker w1 now.',
-    );
-    expect(existsSync(a)).toBe(false);
+    // w1's sub-agents, each its own process, calling after the stop
+    for (const text of ['first', 'second']) {
+      const tools = siteDoor({ site: SITE, fetch, currentFile }).tools(registry);
+      const out = (await byName(tools, 'add_note').run(
+        { text, exploration: `${SITE}/s/${A}` } as never,
+        ctx(),
+      )) as Record<string, unknown>;
+      expect(out.next).toBe(
+        'This job was stopped. Run node ~/.petals/petal.mjs jobs wait --worker w1 now.',
+      );
+    }
+    expect(JSON.parse(readFileSync(a, 'utf8'))).toMatchObject({ worker: 'w1', ended: 'stopped' });
     expect(existsSync(b)).toBe(true);
+    // the stopped job isn't held any more: a call that names none goes to the one job left
+    const tools = siteDoor({ site: SITE, fetch, currentFile }).tools(registry);
+    await byName(tools, 'add_note').run({ text: 'found 40 names' } as never, ctx());
+    expect(site.seen.at(-1)?.url).toBe(`${SITE}/api/v1/explorations/${B}/notes`);
     // the person's own conversation is left as it was
     expect(JSON.parse(readFileSync(currentFile, 'utf8')).link).toBe(PAGE);
   });
