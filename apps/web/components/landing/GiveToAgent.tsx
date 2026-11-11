@@ -4,6 +4,8 @@
 // (agentWords.setup, CONNECTORS's), which any chatbot can follow before sign-in to walk the person to
 // Petals' agent, and which brings the agent in after. Wide, the words take the split's text side and the
 // drawing the other; narrow, the drawing sits between the headline and the paragraph, as Figma's mobile has it.
+// Since Elco's walk (12 Nov: "a bit raw ... could deserve a little love") the button sits on a glass card that
+// shows the prompt's first lines, so you see what you're about to paste: the card is the one thing to press.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { publicOrigin } from '../../lib/site-links.ts';
 import { CopyPrompt } from '../CopyPrompt.tsx';
@@ -30,7 +32,14 @@ export function GiveToAgent() {
         />
         <div className="lg:col-start-1 lg:row-start-2 lg:mt-block-gap lg:self-start">
           <p className="my-0 text-pretty type-body">{copy.body}</p>
-          <div className="mt-space-32">
+          <div
+            data-b="box"
+            className="mt-space-32 flex flex-col items-start gap-block-gap border border-hairline p-block-gap"
+          >
+            {/* the prompt's opening, to see; the button copies all of it */}
+            <p aria-hidden="true" className="my-0 line-clamp-3 type-mono">
+              {copy.prompt(publicOrigin)}
+            </p>
             <CopyPrompt
               prompt={copy.prompt(publicOrigin)}
               originIn={publicOrigin}

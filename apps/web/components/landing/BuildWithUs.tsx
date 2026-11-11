@@ -1,14 +1,16 @@
 // Build it with us, on Figma's For builders (66:2316): the ink band, and the doors into the system Elco named
 // (11 Nov, board card 103): the brain, the data protocol, the rendering protocol, connecting an agent, the API,
-// contributing. Each opens its page in /docs. GitHub joins them once the repo is public at the freeze; until then
-// a link to it would go nowhere (design/minimally-good.md, rule 10).
+// contributing. Each opens its page in /docs, as a plate with only its name (Elco, 12 Nov: "the six things are
+// boring ... a bunch of text"). GitHub joins them once the repo is public; until then a link to it would go
+// nowhere (design/minimally-good.md, rule 10).
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
+import { Icon } from '../ui/Icon.tsx';
+import { PlateLink } from '../ui/PlateLink.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
-import { TextLink } from '../ui/TextLink.tsx';
 
 const copy = landingCopy.builders;
 
@@ -30,16 +32,13 @@ export function BuildWithUs() {
       }
     >
       {copy.doors.map((door) => (
-        <div
-          key={door.slug}
-          className="flex flex-col items-start border-t border-hairline pt-block-gap"
-        >
-          <h3 className="my-0 type-heading">{door.title}</h3>
-          <p className="mt-space-16 mb-space-16 type-body">{door.body}</p>
-          <TextLink href={`${siteLinks.docs}/${door.slug}`} variant="mono" arrow>
-            {copy.doorLink}
-          </TextLink>
-        </div>
+        // A door is a tile with only its name and an arrow, on the ink band's own glass.
+        <PlateLink key={door.slug} href={`${siteLinks.docs}/${door.slug}`} glass>
+          <span className="flex min-h-drawing-72 items-end justify-between gap-block-gap">
+            <span className="type-title">{door.title}</span>
+            <Icon name="arrow" />
+          </span>
+        </PlateLink>
       ))}
     </Section>
   );

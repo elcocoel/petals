@@ -15,6 +15,7 @@
     "landscape",
     "lib",
     "lib/mock/*.json",
+    "lib/landing-copy.edits.json",
     "scripts",
     "test",
     "viewmodels",
