@@ -106,7 +106,7 @@ export const panelWords = {
   /** Your agents with nothing connected: connecting one is at the panel's top. A draft. */
   noAgents: 'Agents you connect show here',
   agents: 'Your agents',
-  /** The one way to connect one: it copies the one prompt, with a fresh agent key, in /connect's words. */
+  /** The one way to connect one: it copies the one prompt, with a fresh agent key. */
   connect: agentWords.copy,
   copied: agentWords.copied,
   disconnect: (agent: string) => `Disconnect ${agent}`,

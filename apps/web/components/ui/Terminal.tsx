@@ -1,5 +1,5 @@
 // The terminal on the builders' band (66:2325): a bar, then mono lines, some in the accent. A picture of a
-// shell, not a shell. What's in it is real: the page passes the same command /connect hands out.
+// shell, not a shell. What's in it is real: the page passes a command Petals hands out.
 import { BarBox } from './BarBox.tsx';
 import { Icon } from './Icon.tsx';
 import { MetaRow } from './MetaRow.tsx';

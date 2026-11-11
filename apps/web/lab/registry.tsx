@@ -13,7 +13,6 @@ import { DEFAULT_VIEW, DIMENSIONS, EVERY_FLOWER, inUse } from '@petal/core/view'
 import type { SurfaceName } from '@petal/tokens';
 import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
-import { AgentKeyCopy } from '../components/AgentKeyCopy.tsx';
 import { CopyPrompt } from '../components/CopyPrompt.tsx';
 import { AnsweredBy } from '../components/chat/AnsweredBy.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
@@ -3432,17 +3431,6 @@ export const registry: LabEntry[] = [
     states: [
       { name: 'not prepared yet', wide: true, render: () => <PublishFlow /> },
       { name: 'prepared', wide: true, render: () => <PublishFlow prepared={prepared()} /> },
-    ],
-  },
-  {
-    id: 'AgentKeyCopy',
-    group: 'Actions',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/AgentKeyCopy.tsx',
-    states: [
-      // as this browser is: Connect when no one is signed in, the copy when someone is
-      { name: 'as this browser is', wide: true, render: () => <AgentKeyCopy /> },
     ],
   },
   {

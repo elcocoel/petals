@@ -8,7 +8,6 @@ import { describe, expect, test } from 'vitest';
 import { catalog } from '../components/docs/content.ts';
 import { Landing } from '../components/landing/Landing.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
-import { doors } from '../lib/doors.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
 import { askHref, siteLinks } from '../lib/site-links.ts';
 
@@ -35,7 +34,6 @@ describe('the landing page', () => {
       [siteLinks.lobby]: '(work)/lobby/page.tsx',
       [siteLinks.gallery]: '(site)/gallery/page.tsx',
       [siteLinks.map]: '(canvas)/map/page.tsx',
-      [siteLinks.connect]: '(site)/connect/page.tsx',
       [siteLinks.docs]: '(site)/docs/[[...slug]]/page.tsx',
       [siteLinks.liveShape]: '(canvas)/f/[id]/page.tsx',
     };
@@ -68,13 +66,6 @@ describe('the landing page', () => {
     for (const drawing of drawings)
       expect(existsSync(join(app, '..', 'public', drawing)), drawing).toBe(true);
     expect(html).not.toMatch(/(?:fill|stroke)="#/);
-  });
-
-  test('every door it sends someone to is on /connect', () => {
-    const ids = doors('https://x').map((d) => d.id);
-    // Since 11 Nov section 4 copies a prompt instead of sending you to a door, so this may find none.
-    const sent = hrefs.filter((href) => href.startsWith(`${siteLinks.connect}#`));
-    for (const href of sent) expect(ids, href).toContain(href.split('#')[1]);
   });
 });
 

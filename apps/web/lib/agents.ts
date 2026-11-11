@@ -108,7 +108,7 @@ export const agentWords = {
   /** The panel's top, with more than one agent connected (design/side-panel.md, line 46). */
   several: (n: number) => `${n} agents`,
   /**
-   * The one prompt's button, the same at the panel's top, in Your agents and on /connect (Elco, 11 Nov:
+   * The one prompt's button, the same at the panel's top and in Your agents (Elco, 11 Nov:
    * "connect an agent or connect more AIs or connect another AI"; a draft of the first).
    */
   copy: 'Connect an agent',
