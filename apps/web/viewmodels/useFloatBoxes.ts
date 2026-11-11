@@ -1,6 +1,7 @@
 // What a hand does to the boxes floating over a canvas: move, size, raise, and keep the wheel. It writes
 // straight to each box's element, so a drag never renders React and a render never moves a box. The
 // geometry is in lib/float-box.ts. Positions last as long as the page does.
+import { sizes } from '@petal/tokens';
 import { type HTMLAttributes, type RefCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { type Edge, kept, moved, type Rect, type Size, seamed, sized } from '../lib/float-box.ts';
 
@@ -29,6 +30,12 @@ interface Held {
 export const keepCursor = (e: { preventDefault(): void }) => e.preventDefault();
 
 const windowSize = (): Size => ({ w: window.innerWidth, h: window.innerHeight });
+
+/**
+ * A box a hand has put next to the side panel, or near it: its left side under the panel, or no further past
+ * the panel's edge than the panel's own width. It moves with the edge (Elco's walk 5, 12 Nov).
+ */
+const nearPanel = (r: Rect, edge: number) => r.x <= edge + sizes['Sidebar width'];
 
 /** A box with a base marks it, so the base's height is painted with the rest (components/ui/FloatBox.tsx). */
 const BASE = '[data-foot]';
@@ -66,9 +73,16 @@ function canScroll(from: EventTarget | null, root: Element, dx: number, dy: numb
 export function useFloatBoxes<K extends string>(
   keys: readonly K[],
   place: (win: Size) => Record<K, Rect>,
+  /**
+   * Where the side panel ends, on a page that has one (/make): when it opens or closes, the boxes next to it
+   * or near it move with it into the room, a hand's too (Elco, walk 5, 12 Nov: "anything that is in its area
+   * of influence or close to it ... would like get out of the way").
+   */
+  edge?: number,
 ): Record<K, BoxHand> {
   const boxes = useRef(new Map<K, Held>());
   const highest = useRef(0);
+  const lastEdge = useRef(edge);
 
   const hands = useMemo(() => {
     const heldOf = (key: K): Held => {
@@ -152,12 +166,23 @@ export function useFloatBoxes<K extends string>(
   }, [keys]);
 
   // Placed again when the placing changes (the side panel's edge, on /make), except a box a hand has put
-  // somewhere: that one stays (design/side-panel.md, line 21).
+  // somewhere (design/side-panel.md, line 21): that one stays, unless it's next to the panel or near it, and
+  // then it moves as far as the panel's edge did.
   useLayoutEffect(() => {
-    const first = place(windowSize());
+    const now = windowSize();
+    const first = place(now);
+    const was = lastEdge.current;
+    lastEdge.current = edge;
+    const shift = edge !== undefined && was !== undefined ? edge - was : 0;
     for (const key of keys) {
       const held = boxes.current.get(key);
-      if (!held?.el || held.moved) continue;
+      if (!held?.el) continue;
+      if (held.moved) {
+        if (shift === 0 || !held.rect || was === undefined || !nearPanel(held.rect, was)) continue;
+        held.rect = kept({ ...held.rect, x: held.rect.x + shift }, now);
+        paint(held.el, held.rect);
+        continue;
+      }
       held.rect = first[key];
       paint(held.el, held.rect);
       hands[key].raise();
@@ -173,7 +198,7 @@ export function useFloatBoxes<K extends string>(
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, [keys, place, hands]);
+  }, [keys, place, hands, edge]);
 
   return hands;
 }
