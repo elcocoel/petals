@@ -1,5 +1,5 @@
 // The Balance card (Elco, 9 and 10 Nov; the redo's frame, "Build it"): the credit the person holds, dollars
-// first in the pixel numerals amounts take, NEAR beside at today's price (wrapping under it when narrow); and Withdraw, the card's one action, which takes
+// first (in the heading's size since Elco, 11 Nov: "the balance card feels gross and huge and large"), NEAR beside at today's price (wrapping under it when narrow); and Withdraw, the card's one action, which takes
 // everything out of the credit contract through their own wallet while it holds something. Withdraw is
 // quiet, as Disconnect is. Props only: viewmodels/useFunds.ts reads the credit and holds the withdrawal.
 // Words from lib/lobby-view.ts, drafts.
@@ -39,7 +39,7 @@ export function Funds({
     >
       {balance !== null ? (
         <p className="my-0 flex flex-wrap items-baseline gap-x-space-8">
-          <span className="type-pixel-numeral whitespace-nowrap">${balance.usd}</span>
+          <span className="type-heading whitespace-nowrap">${balance.usd}</span>
           {balance.near !== null && (
             <span className="type-label whitespace-nowrap text-muted">
               {fundsWords.near(balance.near)}
