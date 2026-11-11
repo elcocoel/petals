@@ -2,7 +2,7 @@
 // opens it. A surface says only where the thread sits and what the open row says.
 import type { Ref } from 'react';
 import type { TopUpView } from '../../lib/intents.ts';
-import { type Job, jobLine } from '../../lib/jobs.ts';
+import { type Job, type JobControlsView, jobLine } from '../../lib/jobs.ts';
 import type { PayPhase } from '../../lib/pay.ts';
 import type { Row } from '../../lib/thread-view.ts';
 import { JobRow } from './JobRow.tsx';
@@ -23,6 +23,7 @@ export function ConversationThread({
   onLink,
   pay,
   jobs,
+  jobControls,
 }: {
   recorded: boolean;
   rows: Row[];
@@ -46,6 +47,8 @@ export function ConversationThread({
   };
   /** Where each handed job stands, and the hand-over (C). */
   jobs?: Record<string, Job>;
+  /** The person's say over each job: its state after a move, and its controls (swarm.md, step 3). */
+  jobControls?: { now: (j: Job) => Job; controlsFor: (j: Job) => JobControlsView };
 }) {
   return (
     <Thread
@@ -89,13 +92,16 @@ export function ConversationThread({
         ) : null
       }
       renderJob={(row) => {
-        const line = jobLine(row.job, jobs?.[row.job.id]);
+        const listed = jobs?.[row.job.id];
+        const known = listed && jobControls ? jobControls.now(listed) : listed;
+        const line = jobLine(row.job, known);
         return (
           <JobRow
             key={row.key}
             text={line.text}
             summary={line.summary}
             conversation={line.conversation}
+            controls={known && jobControls ? jobControls.controlsFor(known) : undefined}
           />
         );
       }}

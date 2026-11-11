@@ -27,6 +27,8 @@ export interface Job {
   n?: number | null;
   /** The job's own conversation, where its work goes (swarm.md, step 2). */
   conversation?: string | null;
+  /** Its worker's last call, while it's taken (swarm.md, step 3). */
+  last_seen?: string | null;
 }
 
 /** Who, as a person reads it: the worker's name, or your own agent when none is named yet. */
@@ -44,7 +46,48 @@ export const jobWords = {
     `${whoOf(by, n)} couldn't finish: ${title}`,
   stopped: (title: string) => `Stopped: ${title}`,
   conversation: 'Open its conversation',
+  heard: (time: string) => `Last heard from at ${time}`,
+  stop: 'Stop',
+  retry: 'Send it again',
+  handTo: 'Hand it to…',
+  pick: 'Hand it to',
+  handOver: 'Hand over',
+  moveFailed: "That didn't work. Try again.",
 } as const;
+
+/** What the person can do with a job, by where it stands, as the server allows (swarm.md, step 3). */
+export function jobMoves(status: JobStatus): { stop: boolean; retry: boolean; handOver: boolean } {
+  return {
+    stop: status === 'open' || status === 'taken',
+    retry: status === 'taken' || status === 'failed' || status === 'stopped',
+    handOver: status === 'taken' || status === 'failed' || status === 'stopped',
+  };
+}
+
+/** When its worker was last heard from, as a time of day: always true, with no clock to keep it so. */
+export function heardLine(j: Pick<Job, 'status' | 'last_seen'>): string | null {
+  if (j.status !== 'taken' || !j.last_seen) return null;
+  const at = new Date(j.last_seen);
+  if (Number.isNaN(at.getTime())) return null;
+  return jobWords.heard(at.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }));
+}
+
+/** A job's controls, as its row shows them. */
+export interface JobControlsView {
+  heard: string | null;
+  moves: { stop: boolean; retry: boolean; handOver: boolean };
+  /** The agents it can go to, while choosing; null until the list is read. */
+  picking: { choices: { value: string; label: string }[] | null; to: string } | null;
+  busy: boolean;
+  failed: string | null;
+  actions: {
+    stop: () => void;
+    retry: () => void;
+    pick: () => void;
+    setTo: (name: string) => void;
+    handOver: () => void;
+  };
+}
 
 /** Where the job's own conversation opens on /make, once it has one. */
 export const jobConversationHref = (j: Pick<Job, 'conversation'>) =>

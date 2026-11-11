@@ -150,6 +150,7 @@ export function InteractionSurface({
           onLink={actions.followLink}
           pay={{ ...state.pay, onPay: actions.pay }}
           jobs={state.jobs}
+          jobControls={state.jobControls}
         />
       </FloatBox>
       <FloatBox
