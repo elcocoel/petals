@@ -14,7 +14,7 @@ import { type FlowerReading, modelOf } from '../flower/model.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import type { Continent, Place } from './places.ts';
 import type { Road } from './roads.ts';
-import type { LandFlower } from './scene.ts';
+import type { FarStyle, LandFlower } from './scene.ts';
 import { reachOf } from './space.ts';
 import { type LandscapeAt, type LandscapeData, useLandscape } from './useLandscape.ts';
 
@@ -43,6 +43,7 @@ function Land({
   selected,
   onPick,
   inPage,
+  far,
 }: {
   data: LandscapeData;
   probe: boolean;
@@ -52,11 +53,12 @@ function Land({
   selected: string | null;
   onPick: ((hit: CanvasHit) => void) | undefined;
   inPage: boolean;
+  far: FarStyle;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
   // Read by the scene when it's built and on each click, so a new pick or petal never builds it again.
-  at.current = { ...at.current, focus, inPage, ...(onPick ? { onPick } : {}) };
+  at.current = { ...at.current, focus, inPage, far, ...(onPick ? { onPick } : {}) };
   useLandscape(svg, data, probe, aside, at);
   useEffect(() => {
     at.current?.choose?.(selected);
@@ -81,6 +83,7 @@ export function LandscapeCanvas({
   selected = null,
   onPick,
   inPage = false,
+  far = null,
 }: {
   data: { flowers: CanvasFlower[]; roads: Road[]; chains: CanvasChain[] };
   probe?: boolean;
@@ -96,6 +99,8 @@ export function LandscapeCanvas({
   onPick?: (hit: CanvasHit) => void;
   /** inside a page that scrolls (the landing): the page keeps its wheel and its vertical swipe */
   inPage?: boolean;
+  /** how a far flower is drawn: only the lab's map bench asks for the far wave (#84) until Elco has seen it */
+  far?: FarStyle;
 }) {
   const aside = useRef<HTMLDivElement>(null);
   const opened = data.flowers[focus]?.place.chain;
@@ -142,6 +147,7 @@ export function LandscapeCanvas({
           selected={selected}
           onPick={onPick}
           inPage={inPage}
+          far={far}
         />
       )}
       <div
