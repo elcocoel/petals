@@ -9,11 +9,11 @@ import { BackIt } from './BackIt.tsx';
 import { BuildWithUs } from './BuildWithUs.tsx';
 import { FrontDoor } from './FrontDoor.tsx';
 import { GallerySection } from './GallerySection.tsx';
+import { GiveToAgent } from './GiveToAgent.tsx';
 import { Hero } from './Hero.tsx';
 import { HowItWorks } from './HowItWorks.tsx';
 import { LiveReading } from './LiveReading.tsx';
 import { Questions } from './Questions.tsx';
-import { UseAnywhere } from './UseAnywhere.tsx';
 
 /** `view` is the person's (lib/viewer-view.ts): every picture on the page is drawn in it. */
 export function Landing({ tiles = [], view }: { tiles?: readonly PowerMapTile[]; view: View }) {
@@ -24,7 +24,7 @@ export function Landing({ tiles = [], view }: { tiles?: readonly PowerMapTile[];
         <Hero flower={tiles.find((t) => t.sha === HERO_SHA)} />
         <LiveReading view={view} />
         <HowItWorks />
-        <UseAnywhere />
+        <GiveToAgent />
         <GallerySection tiles={tiles} />
         <Questions />
         <BackIt />

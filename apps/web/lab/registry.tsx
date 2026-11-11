@@ -35,13 +35,13 @@ import { AnnotatedFlower } from '../components/landing/AnnotatedFlower.tsx';
 import { BackIt } from '../components/landing/BackIt.tsx';
 import { BuildWithUs } from '../components/landing/BuildWithUs.tsx';
 import { GallerySection } from '../components/landing/GallerySection.tsx';
+import { GiveToAgent } from '../components/landing/GiveToAgent.tsx';
 import { Hero } from '../components/landing/Hero.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
 import { LandingMap } from '../components/landing/LandingMap.tsx';
 import { LiveReading } from '../components/landing/LiveReading.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
-import { UseAnywhere } from '../components/landing/UseAnywhere.tsx';
 import { MapList } from '../components/MapList.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { PetalClaims } from '../components/PetalClaims.tsx';
@@ -608,11 +608,11 @@ export const registry: LabEntry[] = [
     () => <HowItWorks />,
   ),
   section(
-    'UseAnywhere',
-    'apps/web/components/landing/UseAnywhere.tsx',
+    'GiveToAgent',
+    'apps/web/components/landing/GiveToAgent.tsx',
     'Closing ask',
     '66:2336',
-    () => <UseAnywhere />,
+    () => <GiveToAgent />,
   ),
   section(
     'GallerySection',
@@ -892,7 +892,7 @@ export const registry: LabEntry[] = [
         wide: true,
         figmaName: 'Ask',
         figmaNode: '66:2337',
-        render: () => <SectionHead size="compact" title={landingCopy.useAnywhere.title} />,
+        render: () => <SectionHead size="compact" title={landingCopy.giveToAgent.title} />,
       },
       {
         name: 'panel: a group in the side panel',
@@ -908,8 +908,8 @@ export const registry: LabEntry[] = [
         render: () => (
           <SectionHead
             eyebrow={specimen.head.eyebrow}
-            title={landingCopy.useAnywhere.title}
-            body={landingCopy.useAnywhere.body}
+            title={landingCopy.giveToAgent.title}
+            body={landingCopy.giveToAgent.body}
           />
         ),
       },
