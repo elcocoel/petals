@@ -52,7 +52,32 @@ export interface MapClaimGroup {
   account: string;
   /** its petal's name, or its short address */
   name: string;
+  /** it's one of this flower's petals, so the map can light it */
+  petal: boolean;
   lines: MapClaimLine[];
+}
+
+/** A run of a claim's words: as written, or a long address or hash shortened to its ends, whole on hover. */
+export interface Words {
+  text: string;
+  whole?: string;
+}
+
+/** An address or a hash: base58 (Solana), 0x hex (EVM), a bare 64-hex hash. Words never run this long. */
+const LONG = /\b(?:0x[0-9a-fA-F]{40,64}|[0-9a-f]{64}|[1-9A-HJ-NP-Za-km-z]{32,44})\b/g;
+
+/** A claim's words with each long address or hash read as its ends (8HVYKg…uSX9). */
+export function wordsOf(text: string): Words[] {
+  const out: Words[] = [];
+  let at = 0;
+  for (const m of text.matchAll(LONG)) {
+    const i = m.index ?? 0;
+    if (i > at) out.push({ text: text.slice(at, i) });
+    out.push({ text: short(m[0]), whole: m[0] });
+    at = i + m[0].length;
+  }
+  if (at < text.length) out.push({ text: text.slice(at) });
+  return out;
 }
 
 const EVIDENCE: Record<string, string> = {
@@ -186,6 +211,7 @@ export function mapClaimGroups(
       g = {
         account,
         name: names.get(account) ?? short(account.split(':').at(-1) ?? account),
+        petal: names.has(account),
         lines: [],
       };
       groups.set(account, g);

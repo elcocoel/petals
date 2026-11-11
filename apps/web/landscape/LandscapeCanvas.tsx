@@ -200,6 +200,8 @@ export function LandscapeCanvas({
   const [entered, setEntered] = useState(-1);
   // the group chosen in the legend's Highlight row (#94), lit inside the flower; leaving it clears it
   const [bloc, setBloc] = useState<string | null>(null);
+  // or one account a claim is about, lit from What's said: one highlight at a time, so each clears the other
+  const [account, setAccount] = useState<string | null>(null);
   const [blocsOpen, setBlocsOpen] = useState(false);
   // all their votes first: the recent ones hold no bloc on most maps (Elco, 11 Nov: "do something reasonable")
   const [span, setSpan] = useState<BlocSpan>('all');
@@ -208,6 +210,7 @@ export function LandscapeCanvas({
     setEntered(yes ? at : -1);
     if (!yes) {
       setBloc(null);
+      setAccount(null);
       setBlocsOpen(false);
     }
   }, []);
@@ -255,7 +258,10 @@ export function LandscapeCanvas({
   const claims = useMapClaims(legend ? (inFlower?.map ?? null) : null);
   const blocs = useMapBlocs(legend ? (inFlower?.map ?? null) : null, span);
   const choices = useMemo(() => (blocs ? blocChoices(blocs) : []), [blocs]);
-  const lit = useMemo(() => choices.find((c) => c.id === bloc)?.members ?? null, [choices, bloc]);
+  const lit = useMemo(
+    () => choices.find((c) => c.id === bloc)?.members ?? (account ? [account] : null),
+    [choices, bloc, account],
+  );
   const claimGroups = useMemo(() => {
     if (!claims || claims.length === 0 || !inFlower) return [];
     const names = new Map(
@@ -337,7 +343,10 @@ export function LandscapeCanvas({
                     span,
                     period: periodWords(blocs),
                     onOpen: () => setBlocsOpen((now) => !now),
-                    onChoose: setBloc,
+                    onChoose: (id) => {
+                      setBloc(id);
+                      setAccount(null);
+                    },
                     // other votes are other blocs: the chosen one goes with them
                     onSpan: (s) => {
                       setSpan(s);
@@ -355,6 +364,11 @@ export function LandscapeCanvas({
             groups={claimGroups}
             open={openClaim}
             onOpen={(key) => setOpenClaim((now) => (now === key ? null : key))}
+            lit={account}
+            onAccount={(a) => {
+              setAccount((now) => (now === a ? null : a));
+              setBloc(null);
+            }}
             fold={{ open: claimsOpen, onToggle: () => setClaimsOpen((now) => !now) }}
           />
         )}
