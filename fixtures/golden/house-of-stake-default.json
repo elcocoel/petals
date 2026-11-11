@@ -1,7 +1,7 @@
 {
   "name": "house-of-stake-default",
   "spec_sha256": "6214e7c5f051370c7893b2e54203224ffbfa537b82c680a2e8b1c23236382569",
-  "render_sha256": "c466fe46be89ae90acc0cc980112e02d8e978efe4c12ef616aa9617a0323f548",
+  "render_sha256": "f1795583d07a835bd5399c182266c0f9294886de9360fcd885773f7bcefeb1d0",
   "spec": {
     "petal": "spec/v1",
     "network": {

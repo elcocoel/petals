@@ -91,11 +91,14 @@ export const SHAPE: Shape = (() => {
   return { cx: SIZE / 2, cy: SIZE / 2, R, r0, L: R - r0 };
 })();
 
-/** Distance along a boundary's radial line at which a wedge reaches height h. */
-const reachAt = (ring: Ring, i: number, h: number): number => {
-  const cw = ring.cw[i] as number;
-  return (SHAPE.r0 * cw + h - (ring.gut[i] as number) * (ring.sw[i] as number)) / cw;
-};
+/**
+ * Distance along a boundary's radial line at which a wedge reaches height h, measured to its corners, so a petal of
+ * full height ends on the flower's circle however few petals share it (Elco, 11 Nov: flowers of fewer than 10
+ * wallets looked "a little broken"; measured along the side's normal, a corner reached r0 + h / cos(half the
+ * wedge), twice as far with three petals, far past the circle).
+ */
+const reachAt = (ring: Ring, i: number, h: number): number =>
+  SHAPE.r0 + h - ((ring.gut[i] as number) * (ring.sw[i] as number)) / (ring.cw[i] as number);
 
 /** The width of a wedge at height h, before any flare. */
 export function widthBefore(ring: Ring, i: number, h: number): number {
