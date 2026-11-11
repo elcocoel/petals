@@ -72,7 +72,7 @@ export {
   tipPercentOf,
 } from './price.ts';
 export { PRIMITIVES } from './primitives.ts';
-export { readFlower, readingHash } from './reading/index.ts';
+export { categoryOf, readFlower, readingHash } from './reading/index.ts';
 export { PAINT, pictureQuery, renderFlower, SKINS } from './render/index.ts';
 export { legendItem } from './render/legend.ts';
 export type { Skin } from './render/types.ts';

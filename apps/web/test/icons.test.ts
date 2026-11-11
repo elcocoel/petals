@@ -11,6 +11,8 @@ const DRAWINGS = [
   'components/ui/Drawing.tsx',
   'components/landing/AnnotatedFlower.tsx',
   'flower/FlowerCanvas.tsx',
+  // the outline bench's key: a short run of each line, as the flower draws it round a petal
+  'lab/flower/OutlineKey.tsx',
 ];
 
 const sources = (dir: string): string[] =>
