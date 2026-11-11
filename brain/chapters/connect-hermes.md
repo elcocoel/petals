@@ -42,6 +42,14 @@ It goes into Hermes's own settings, so it holds in every session. `/reload-mcp` 
 
 As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait --worker <id>`, with the id `join` gave you, with the terminal tool's `timeout` at 600, its longest in the foreground: ten minutes. The default 180 seconds cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way.
 
+## Splitting a job
+
+When a job is big enough to split (the skill's Jobs section), give each part to a child with `delegate_task`, one entry per part in `tasks`. Up to ten run at once unless the person set otherwise. A child knows only its `goal` and `context`, so put the job's link, its part and the steps in `context`. Each child has its own terminal, in your working folder, with your tools; give its commands the same `timeout` as yours.
+
+- **In a session,** `delegate_task` comes back at once, and the children's results arrive as one message when the last one is done. End your turn there, without running `jobs wait`, and report the job once, for all of them, when that message comes.
+- **In a one-shot run** (`hermes chat -q`), `delegate_task` waits for its children itself, and only two can be started in all.
+- **The children's model** is `delegation.model` in the person's `~/.hermes/config.yaml`, or yours when it's empty. It's the person's setting: don't change it.
+
 ## When it can't start
 
 - **Hermes isn't installed:** install it from Nous Research's Hermes Agent guide.
