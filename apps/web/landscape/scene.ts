@@ -12,11 +12,12 @@ import { DETAIL, fade } from '../flower/detail.ts';
 import type { Model } from '../flower/model.ts';
 import { n3, polygonPath, SHAPE, silhouettePath } from '../flower/ring.ts';
 import { LINE, MONO, textWidth } from '../flower/words.ts';
+import { drawLabel, type Label, MARK, NAME_GAP } from './labels.ts';
 import type { Place } from './places.ts';
 import { crowdFade, type Road, roadWidth } from './roads.ts';
 import { edgePoint, onScreen, reachToward, screenCentre, screenRadius } from './space.ts';
+import { el, type Slot, slot } from './svg.ts';
 
-const NS = 'http://www.w3.org/2000/svg';
 const INK = 'var(--text-primary)';
 const MUTED = 'var(--text-muted)';
 const HAIR = 'var(--hairline)';
@@ -27,11 +28,6 @@ const PETAL = 'var(--figure-petal)';
 const ROAD_TONE = 0.4;
 /** The lab's focused lines (#87): one flower's at a time, so a little firmer, still quiet. */
 const LINE_TONE = 0.55;
-/** A mark is this many px across on screen, at any zoom. */
-export const MARK = 16;
-const GAP = 6;
-/** Names keep this far apart. */
-const NAME_GAP = 8;
 /** The arrows' names keep this far from the window's edge. */
 const EDGE = 28;
 
@@ -87,38 +83,6 @@ export interface LandScene {
   dispose(): void;
 }
 
-type Attrs = Record<string, string | number>;
-
-function el<K extends keyof SVGElementTagNameMap>(
-  tag: K,
-  attrs: Attrs = {},
-  parent?: Element,
-): SVGElementTagNameMap[K] {
-  const node = document.createElementNS(NS, tag);
-  for (const [name, value] of Object.entries(attrs)) node.setAttribute(name, String(value));
-  parent?.appendChild(node);
-  return node;
-}
-
-/** Writes an attribute only when it changed. */
-class Slot<E extends SVGElement> {
-  node: E;
-  private last = new Map<string, string>();
-  constructor(node: E) {
-    this.node = node;
-  }
-  set(name: string, value: string | number): void {
-    const s = String(value);
-    if (this.last.get(name) === s) return;
-    this.last.set(name, s);
-    this.node.setAttribute(name, s);
-  }
-  show(on: boolean): void {
-    this.set('display', on ? 'inline' : 'none');
-  }
-}
-
-const slot = <E extends SVGElement>(node: E) => new Slot(node);
 const o2 = (x: number) => Math.round(x * 100) / 100;
 const count = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
@@ -135,93 +99,6 @@ export function roadEnds(a: LandFlower, b: LandFlower): [number, number, number,
   const ra = SHAPE.R * pa.s * a.reach;
   const rb = SHAPE.R * pb.s * b.reach;
   return [pa.x + ux * ra, pa.y + uy * ra, pb.x - ux * rb, pb.y - uy * rb];
-}
-
-/** How wide a mark is: a logo is round, a symbol is a pill around its letters. */
-/** A text's width as the browser draws it, or the flower's estimate where it can't say. */
-function widthOf(t: SVGTextElement): number {
-  try {
-    const w = t.getComputedTextLength();
-    if (w > 0) return w;
-  } catch {
-    // Not drawn (no layout): the estimate below.
-  }
-  return textWidth(t.textContent ?? '');
-}
-
-/**
- * A mark, drawn once, its middle at (0, 0): a round logo, or a pill around the token symbol. Returns its
- * width. Its parent must be on screen, so the symbol can be measured as drawn.
- */
-function drawMark(m: LandFlower['mark'], parent: Element, clip: string): number {
-  if (m.logo) {
-    el(
-      'image',
-      {
-        href: m.logo,
-        x: -MARK / 2,
-        y: -MARK / 2,
-        width: MARK,
-        height: MARK,
-        'clip-path': `url(#${clip})`,
-        preserveAspectRatio: 'xMidYMid slice',
-      },
-      parent,
-    );
-    return MARK;
-  }
-  const t = el('text', { fill: INK, 'text-anchor': 'middle', y: 4 }, parent);
-  t.textContent = m.symbol;
-  const w = Math.max(MARK, widthOf(t) + 10);
-  const pill = el('rect', {
-    x: -w / 2,
-    y: -MARK / 2,
-    width: w,
-    height: MARK,
-    rx: MARK / 2,
-    fill: GROUND,
-    stroke: HAIR,
-    'vector-effect': 'non-scaling-stroke',
-  });
-  parent.insertBefore(pill, t);
-  return w;
-}
-
-interface Label {
-  group: Slot<SVGGElement>;
-  /** With the far wave, the mark alone, drawn at the flower's centre. */
-  centre: Slot<SVGGElement> | null;
-  name: Slot<SVGTextElement>;
-  width: number;
-  markW: number;
-  /** Its name is its symbol, so the mark says it. */
-  said: boolean;
-}
-
-/** A name with its mark before it, laid out once from (0, 0), the mark's middle on the line. */
-function drawLabel(
-  f: Pick<LandFlower, 'name' | 'mark'>,
-  parent: Element,
-  clip: string,
-  centred = false,
-): Label {
-  // Drawn on screen first, so the mark and the name are measured as the browser sets them, then hidden.
-  const group = slot(el('g', {}, parent));
-  const centre = centred ? slot(el('g', {}, parent)) : null;
-  const mark = el('g', {}, centre ? centre.node : group.node);
-  const drawnW = drawMark(f.mark, mark, clip);
-  // centred, the mark sits on the flower's middle and the name stands alone
-  const markW = centre ? 0 : drawnW;
-  if (!centre) mark.setAttribute('transform', `translate(${n3(markW / 2)} 0)`);
-  const name = slot(el('text', { fill: INK, x: centre ? 0 : markW + GAP, y: 4 }, group.node));
-  name.node.textContent = f.name;
-  // A name that's only its symbol is already said by its mark.
-  const said = !f.mark.logo && f.name.toLowerCase() === f.mark.symbol.toLowerCase();
-  const width = said ? markW : markW + (centre ? 0 : GAP) + widthOf(name.node);
-  if (said) name.show(false);
-  group.show(false);
-  centre?.show(false);
-  return { group, centre, name, width: said ? markW : width, markW, said };
 }
 
 /** The ray from (x, y) along (ux, uy): how far along it first enters a box, or null if it doesn't. */
@@ -406,7 +283,8 @@ export function createLandScene(
 
   // head.map-name: one line under each flower, its mark and its name; with the far wave, the mark at the ring's
   // centre and the name alone under it.
-  const labels = flowers.map((f) => drawLabel(f, names, clip, far === 'wave'));
+  const look = far === 'wave' ? 'badge' : 'line';
+  const labels = flowers.map((f) => drawLabel(f, names, clip, far === 'wave', look));
 
   // figure.map-arrow: the ways out of the organisation you've entered, one per connection.
   const ways = flowers.map((_, i) =>
@@ -605,7 +483,7 @@ export function createLandScene(
           a.g.show(true);
           a.at.show(true);
           a.at.node.replaceChildren();
-          a.label = drawLabel(n, a.at.node, clip);
+          a.label = drawLabel(n, a.at.node, clip, false, look);
           a.label.group.show(true);
           a.to = way.to;
         }
