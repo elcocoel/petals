@@ -7,7 +7,6 @@
 // for each scene and the two arrows move the focus. It has no Connect of its own (Elco, 11 Nov: remove it):
 // the nav's and the hero's stay.
 import { landingCopy } from '../../lib/landing-copy.ts';
-import { siteLinks } from '../../lib/site-links.ts';
 import { useSceneCycle } from '../../viewmodels/useSceneCycle.ts';
 import { Button } from '../ui/Button.tsx';
 import { IconButton } from '../ui/IconButton.tsx';
@@ -20,12 +19,7 @@ const copy = landingCopy.howItWorks;
 export function HowItWorks() {
   const cycle = useSceneCycle<HTMLUListElement>(copy.scenes.length);
   return (
-    <Section
-      tone="paper"
-      rule="top"
-      bleed
-      id="how-it-works"
-    >
+    <Section tone="paper" rule="top" bleed id="how-it-works">
       <div className="mb-column-gap">
         <SectionHead size="compact" title={copy.title} />
       </div>
