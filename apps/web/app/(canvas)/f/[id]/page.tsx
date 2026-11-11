@@ -4,6 +4,7 @@
 // made it and who published it. When its reading is on the Power Map, the map opens inside it, at its map's
 // place; otherwise it stands alone.
 import type { Entry } from '@petal/core/types';
+import { notFound } from 'next/navigation';
 import { ReadingColumn } from '../../../../components/SiteChrome.tsx';
 import { Badge } from '../../../../components/ui/Badge.tsx';
 import { FlowerPage } from '../../../../flower/FlowerPage.tsx';
@@ -11,6 +12,7 @@ import { FlowerAt } from '../../../../flower/OnTheMap.tsx';
 import { powerMapAt } from '../../../../landscape/land.ts';
 import { api } from '../../../../lib/api.ts';
 import { dateLabel } from '../../../../lib/flower-view.ts';
+import { isMissing } from '../../../../lib/missing.ts';
 import { storedPanelFlower } from '../../../../lib/panel-view.ts';
 import { explorerTxUrl } from '../../../../lib/publish.ts';
 import { viewerView } from '../../../../lib/viewer-view.ts';
@@ -35,6 +37,8 @@ export default async function FlowerPageRoute({ params }: { params: Promise<{ id
   const { id } = await params;
   const got = await api<GotFlower>(`/api/v1/flowers/${encodeURIComponent(id)}`);
   if (!got.ok) {
+    // not there, or no such id: the site's 404, the bouncer (#78)
+    if (isMissing(got.error)) notFound();
     return (
       <ReadingColumn>
         <h1>Flower {id}</h1>
