@@ -40,6 +40,7 @@ describe('the brain', () => {
       'start-from-an-address',
       'value',
       'vesting',
+      'voting-blocs-over-time',
       'what-kind-of-thing-it-is',
       'where-power-lives',
       'who-can-move-money-or-change-rules',

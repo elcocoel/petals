@@ -64,6 +64,9 @@ const GOVERNANCE: [string, string][] = [
   ['when do these tokens unlock', 'vesting'],
   ['is this a multisig or a DAO', 'what-kind-of-thing-it-is'],
   ['is this an exchange wallet', 'what-kind-of-thing-it-is'],
+  // the voting blocs (#94, 11 Nov)
+  ['who votes together in this DAO', 'voting-blocs-over-time'],
+  ['are there voting blocs', 'voting-blocs-over-time'],
 ];
 
 describe('routing', () => {

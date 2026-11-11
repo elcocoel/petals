@@ -450,6 +450,38 @@
       "sha256": "5dbe16dea09a1e71525ba5e3b9dc6ff123c13d9e095297f826c20a21d5571a88"
     },
     {
+      "id": "voting-blocs-over-time",
+      "kind": "chapter",
+      "for": "comparing actual ballots to find groups that keep voting alike over a stated period",
+      "recognise": [
+        "voting blocs",
+        "voting blocks",
+        "who votes together",
+        "co-voting",
+        "agreement",
+        "voted together",
+        "voting patterns",
+        "stable groups",
+        "coordination"
+      ],
+      "tools": [
+        "find_voting_blocs",
+        "list_networks",
+        "get_network",
+        "read_chain",
+        "read_page",
+        "add_annotation"
+      ],
+      "continues": [
+        "who-gets-a-vote",
+        "from-proposal-to-action",
+        "over-time"
+      ],
+      "status": "partial",
+      "file": "chapters/voting-blocs-over-time.md",
+      "sha256": "35167d16c714a1c93f927379233786b38c5e5fea729e1d1a2bfbb8eb7e1e3923"
+    },
+    {
       "id": "what-kind-of-thing-it-is",
       "kind": "chapter",
       "for": "describing an account or network's technical form, roles and declared organisation type",
