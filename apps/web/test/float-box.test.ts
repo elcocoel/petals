@@ -22,6 +22,7 @@ import {
   type Size,
   seamed,
   sized,
+  snapped,
 } from '../lib/float-box.ts';
 import { composerView } from '../lib/thread-view.ts';
 
@@ -196,6 +197,38 @@ describe('moving', () => {
     const r = moved(BOX, 0, 9000, WIN);
     expect(r.y).toBe(WIN.h - floatBox.bar);
     expect(r.h).toBe(BOX.h);
+  });
+});
+
+describe('snapping (box.snap; Elco, walk 5: "snap to the edges more easily")', () => {
+  const { inset, gap, bar } = floatBox;
+  const PANEL = 312;
+  test("let go near the window's edges, it lands on them, where the boxes start", () => {
+    expect(snapped({ ...BOX, x: inset + bar - 1, y: inset + 10 }, WIN)).toMatchObject({
+      x: inset,
+      y: inset,
+    });
+    const right = WIN.w - inset - BOX.w;
+    const bottom = WIN.h - inset - BOX.h;
+    expect(snapped({ ...BOX, x: right - 20, y: bottom + 20 }, WIN)).toMatchObject({
+      x: right,
+      y: bottom,
+    });
+  });
+
+  test("near the side panel's edge, it lands beside the panel, as a box starts there", () => {
+    expect(snapped({ ...BOX, x: PANEL + 40 }, WIN, PANEL).x).toBe(PANEL + gap);
+    expect(snapped({ ...BOX, x: PANEL - 20 }, WIN, PANEL).x).toBe(PANEL + gap);
+  });
+
+  test('farther than a bar from every edge, it stays where the hand left it', () => {
+    const far = { ...BOX, x: PANEL + gap + bar + 1, y: inset + bar + 1 };
+    expect(snapped(far, WIN, PANEL)).toEqual(far);
+  });
+
+  test('its size and base never change', () => {
+    const r = snapped({ ...BOX, base: 184, x: inset + 5 }, WIN);
+    expect([r.w, r.h, r.base]).toEqual([BOX.w, BOX.h, 184]);
   });
 });
 
