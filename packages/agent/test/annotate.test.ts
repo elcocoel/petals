@@ -127,6 +127,56 @@ describe("Petals' agent keeps what the person tells it", () => {
     expect(notes.annotations).toEqual([]);
   });
 
+  test("the page's Add a note: in a conversation's project, or the person's own with none", async () => {
+    const w = setup([{ content: 'Noted.' }]);
+    const note = {
+      annotations: [
+        {
+          subject: DEKAN,
+          verb: 'noted',
+          object: { value: 'Keeps the handbook.' },
+          kind: 'stated',
+          evidence: [],
+        },
+      ],
+    };
+    expect((await w.call('POST', '/api/v1/me/annotations', note)).status).toBe(401);
+    await w.signInFunded();
+    // with no conversation: theirs, in no project
+    const loose = await w.call('POST', '/api/v1/me/annotations', note);
+    expect(loose.status).toBe(200);
+    expect(await loose.json()).toMatchObject({ exploration: null, added: 1, existed: 0 });
+    // in a chat of Petals' agent: its project, made now if it had none
+    const events = parseSse(await (await w.call('POST', '/api/v1/agent/chat', SAID)).text());
+    const runId = (events[0] as { data: { run_id: string } }).data.run_id;
+    const other = {
+      annotations: [{ ...note.annotations[0], object: { value: 'Elected in proposal 167.' } }],
+    };
+    const inChat = (await (
+      await w.call('POST', '/api/v1/me/annotations', { ...other, conversation: runId })
+    ).json()) as Out;
+    expect(inChat.exploration).toMatch(/^exp_/);
+    expect((await w.kept(inChat.exploration)).map((a) => a.claim.object.value)).toEqual([
+      'Elected in proposal 167.',
+    ]);
+    const mine = (await (await w.call('GET', '/api/v1/me/annotations?verb=noted')).json()) as Out;
+    expect(mine.annotations.map((a: Out) => [a.exploration, a.claim.by])).toEqual([
+      [null, 'near:mainnet:alice.near'],
+      [inChat.exploration, 'near:mainnet:alice.near'],
+    ]);
+    // all or none, with the reason; and only the person's own conversations
+    const bad = await w.call('POST', '/api/v1/me/annotations', {
+      annotations: [{ ...note.annotations[0], subject: '0xced6' }],
+    });
+    expect(bad.status).toBe(400);
+    expect(JSON.stringify(await bad.json())).toMatch(/None was added/);
+    const elsewhere = await w.call('POST', '/api/v1/me/annotations', {
+      ...note,
+      conversation: 'exp_000000000000000000000000',
+    });
+    expect(elsewhere.status).toBe(404);
+  });
+
   test("one that isn't kept goes back to the model, which says so or fixes it", async () => {
     const wrong = { annotations: [{ ...NAMED.annotations[0], subject: '0xced6' }] };
     const w = setup([
