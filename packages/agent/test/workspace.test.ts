@@ -749,6 +749,11 @@ describe('search', () => {
     expect((await body(await a.get('/api/v1/search?q=intere'))).results[0].kind).toBe('follow');
 
     expect((await body(await b.get('/api/v1/search?q=delegate'))).results).toEqual([]);
+    // the reranker reads the best by default; rerank=0 leaves it out, for a box that searches as someone types
+    expect(note.results[0].rerank).toBeTypeOf('number');
+    const quick = await body(await a.get('/api/v1/search?q=delegate&rerank=0'));
+    expect(quick.results[0]).toMatchObject({ kind: 'note', about: ACCOUNT });
+    expect(quick.results.some((r: Out) => 'rerank' in r)).toBe(false);
     expect((await a.get('/api/v1/search?q=x&kinds=wallets')).status).toBe(400);
     const only = await body(await a.get('/api/v1/search?q=poolv1&kinds=follow'));
     expect(only.results.map((r: Out) => r.kind)).toEqual(['follow']);

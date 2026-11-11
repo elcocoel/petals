@@ -7,22 +7,27 @@
 // phone it starts folded to its bar with the chain on show, so it never covers the map (META, 11 Nov: at 390
 // wide it did, on the landing and the hero); pressing the bar opens it, and choosing a chain folds it again.
 // Where a page asks, the legend is the other overlay, under the chain list: the person's view as a key (#92);
-// and inside a flower, under it, what Petals' own mapping says about that map, folded until asked.
+// and inside a flower, under it, what Petals' own mapping says about that map, folded until asked. Where a page
+// asks (the Power Map), a search field tops the chain list, and while something's typed the maps it finds stand
+// in the chains' place; pressing one goes to its chain and into its flower (board 105).
 import { EVERY_FLOWER, inUse } from '@petal/core/view';
 import { flowerKeys } from '@petal/core/wedge/keys';
 import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapClaims } from '../components/MapClaims.tsx';
+import { MapSearch } from '../components/MapSearch.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
 import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
 import { mapClaimGroups } from '../lib/map-claims.ts';
+import { mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
 import type { LegendEdit } from '../lib/view-edit.ts';
 import { useMapBlocs } from '../viewmodels/useMapBlocs.ts';
 import { useMapClaims } from '../viewmodels/useMapClaims.ts';
+import { useMapSearch } from '../viewmodels/useMapSearch.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
 import type { Continent, Place } from './places.ts';
 import type { Road } from './roads.ts';
@@ -85,6 +90,7 @@ function Land({
   inside,
   clearOfChains,
   highlight,
+  go,
 }: {
   data: LandscapeData;
   probe: boolean;
@@ -101,6 +107,8 @@ function Land({
   clearOfChains: boolean;
   /** the chosen group's petals to highlight inside the flower you're in (#94), or null */
   highlight: readonly string[] | null;
+  /** a flower to go into, by its place on this chain's map (a search's answer, pressed), or null */
+  go: { at: number } | null;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
@@ -122,6 +130,10 @@ function Land({
   useEffect(() => {
     at.current?.highlight?.(highlight);
   }, [highlight]);
+  // after the map's own effect, so a chain built just now is there to fly into
+  useEffect(() => {
+    if (go) at.current?.enter?.(go.at);
+  }, [go]);
   return (
     // surface.canvas
     <svg
@@ -146,6 +158,7 @@ export function LandscapeCanvas({
   lines = 'focus',
   clearOfChains = false,
   legend = null,
+  search = false,
 }: {
   data: {
     flowers: CanvasFlower[];
@@ -176,6 +189,8 @@ export function LandscapeCanvas({
    * only, or changing the view where it's handed Settings' hands (/make).
    */
   legend?: 'read' | LegendEdit | null;
+  /** a search field at the top of the chain list (board 105; the Power Map) */
+  search?: boolean;
 }) {
   const person = usePersonView();
   const aside = useRef<HTMLDivElement>(null);
@@ -214,9 +229,34 @@ export function LandscapeCanvas({
       setBlocsOpen(false);
     }
   }, []);
+  const finding = useMapSearch();
+  // the flower a search's answer goes into, by its chain and its place on that chain's map
+  const [go, setGo] = useState<{ chain: string; at: number } | null>(null);
   const [claimsOpen, setClaimsOpen] = useState(false);
   const [openClaim, setOpenClaim] = useState<string | null>(null);
   const shown = data.chains.find((c) => c.chain === chain);
+  const found = useMemo(() => {
+    const body = search && finding.q.trim() ? finding.got?.body : undefined;
+    if (!body) return null;
+    const label = (c: string) => data.chains.find((x) => x.chain === c)?.label ?? c;
+    return searchRows(body, data.flowers, label);
+  }, [search, finding.q, finding.got, data]);
+  const searchStatus = (() => {
+    if (!finding.q.trim()) return null;
+    if (finding.busy === 'ordered') return mapSearchWords.ordering;
+    if (!finding.got) return mapSearchWords.searching;
+    if (!finding.got.body) return mapSearchWords.failed;
+    if (found && found.length === 0)
+      return finding.busy ? mapSearchWords.searching : mapSearchWords.none;
+    return finding.got.body.meaning === 'off' ? mapSearchWords.wordsOnly : null;
+  })();
+  const goTo = (row: SearchRow) => {
+    const f = data.flowers[row.at];
+    if (!f) return;
+    const at = data.flowers.slice(0, row.at).filter((x) => x.place.chain === f.place.chain).length;
+    setChain(f.place.chain);
+    setGo({ chain: f.place.chain, at });
+  };
   const counts = useMemo(() => {
     const n = new Map<string, number>();
     for (const f of data.flowers) n.set(f.place.chain, (n.get(f.place.chain) ?? 0) + 1);
@@ -288,6 +328,7 @@ export function LandscapeCanvas({
           inside={toldInside}
           clearOfChains={clearOfChains}
           highlight={lit}
+          go={go?.chain === chain ? go : null}
         />
       )}
       {/* The overlays, down the left: the chain list, then the legend under it, so they never meet. The aside is
@@ -306,22 +347,37 @@ export function LandscapeCanvas({
             }
             fold={{ open: listOpen, onToggle: () => setListOpen((now) => !now) }}
           >
-            <ul className="m-0 flex list-none flex-col p-0">
-              {data.chains.map((c) => (
-                <li key={c.chain}>
-                  <NavItem
-                    onClick={() => {
-                      setChain(c.chain);
-                      // where the room is narrow the list folds back once a chain is chosen
-                      if (narrow()) setListOpen(false);
-                    }}
-                    chosen={c.chain === chain}
-                    label={c.label}
-                    trail={String(counts.get(c.chain) ?? 0)}
-                  />
-                </li>
-              ))}
-            </ul>
+            {search && (
+              <MapSearch
+                q={finding.q}
+                onType={finding.type}
+                onOrder={finding.order}
+                onClear={finding.clear}
+                rows={found}
+                status={searchStatus}
+                onGo={goTo}
+              />
+            )}
+            {/* while something's typed, what it finds stands in the chains' place */}
+            {!(search && finding.q.trim()) && (
+              <ul className="m-0 flex list-none flex-col p-0">
+                {data.chains.map((c) => (
+                  <li key={c.chain}>
+                    <NavItem
+                      onClick={() => {
+                        setChain(c.chain);
+                        setGo(null);
+                        // where the room is narrow the list folds back once a chain is chosen
+                        if (narrow()) setListOpen(false);
+                      }}
+                      chosen={c.chain === chain}
+                      label={c.label}
+                      trail={String(counts.get(c.chain) ?? 0)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
           </Overlay>
         </div>
         {legend && (

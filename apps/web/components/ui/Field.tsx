@@ -11,6 +11,7 @@ export function Field({
   onChange,
   lines = 'one',
   maxLength,
+  placeholder,
   hideLabel,
   disabled,
   choices,
@@ -29,6 +30,8 @@ export function Field({
   /** The site's type, or the app scale's beside an app surface's rows. */
   scale?: 'site' | 'app';
   maxLength?: number;
+  /** What an empty one-line well says until something's typed (a search box whose label is hidden). */
+  placeholder?: string;
   /** Read aloud, not shown: a field in a row whose first row says what it is. */
   hideLabel?: boolean;
   disabled?: boolean;
@@ -68,8 +71,9 @@ export function Field({
             value={value}
             onChange={change}
             maxLength={maxLength}
+            placeholder={placeholder}
             disabled={disabled}
-            className={look}
+            className={`${look} placeholder:text-muted`}
           />
         ) : (
           <textarea

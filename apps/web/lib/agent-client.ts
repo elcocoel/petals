@@ -27,6 +27,7 @@ import type { ElsewhereRead } from './elsewhere.ts';
 import type { PayToken, TopUp } from './intents.ts';
 import type { Job } from './jobs.ts';
 import type { MapClaims } from './map-claims.ts';
+import type { SearchBody } from './map-search.ts';
 import {
   NEAR_SOCIAL_API,
   type PetalsProfile,
@@ -194,6 +195,19 @@ export async function readMapClaims(map: string): Promise<MapClaims | null> {
   const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}/claims`);
   if (!res.ok) return null;
   return (await res.json()) as MapClaims;
+}
+
+/**
+ * Search over the map (GET /api/v1/search, #105): maps, with the proposals and what Petals' mapping says that
+ * matched under them. Without the reranker unless `ordered` (about 0.35 s in place of 2 to 3 s). Null when it
+ * can't answer.
+ */
+export async function searchMap(q: string, ordered: boolean): Promise<SearchBody | null> {
+  const ask = new URLSearchParams({ q, kinds: 'map,proposal,claim', limit: '8' });
+  if (!ordered) ask.set('rerank', '0');
+  const res = await fetch(`/api/v1/search?${ask}`);
+  if (!res.ok) return null;
+  return (await res.json()) as SearchBody;
 }
 
 export async function readDrawingSpec(sha: string): Promise<Spec | null> {
