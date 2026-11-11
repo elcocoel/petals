@@ -6,7 +6,8 @@
 
 import { readableAgent, workerName } from './agents.ts';
 
-export type JobStatus = 'open' | 'taken' | 'done' | 'failed';
+/** 'stopped' (swarm.md, step 3): the person or Petals' agent stopped it, and its worker reports nothing. */
+export type JobStatus = 'open' | 'taken' | 'done' | 'failed' | 'stopped';
 
 /** A job as GET /api/v1/explorations/:ref/jobs lists it (SYSTEMS). */
 export interface Job {
@@ -41,6 +42,7 @@ export const jobWords = {
     `${whoOf(by, n)} finished: ${title}`,
   failed: (title: string, by?: string | null, n?: number | null) =>
     `${whoOf(by, n)} couldn't finish: ${title}`,
+  stopped: (title: string) => `Stopped: ${title}`,
   conversation: 'Open its conversation',
 } as const;
 
