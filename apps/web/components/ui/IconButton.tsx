@@ -5,21 +5,10 @@
 import Link from 'next/link';
 import type { MouseEventHandler } from 'react';
 import { Icon, type IconName } from './Icon.tsx';
+import { Tip, type TipSide } from './Tip.tsx';
 
 const LOOK =
   'group/tip relative inline-flex size-row-height shrink-0 items-center justify-center bg-transparent p-0 text-muted hover:z-20 hover:bg-tint hover:text-primary hover:opacity-100 focus-visible:z-20 aria-expanded:text-primary data-current:bg-tint data-current:text-primary';
-
-const TIP =
-  'pointer-events-none invisible absolute top-1/2 z-20 -translate-y-1/2 whitespace-nowrap bg-action px-space-8 py-space-4 type-ui text-on-action group-hover/tip:visible group-focus-visible/tip:visible';
-const SIDE = { right: 'left-full ml-space-8', left: 'right-full mr-space-8' } as const;
-
-function Tip({ label, side }: { label: string; side: keyof typeof SIDE }) {
-  return (
-    <span aria-hidden="true" className={`${TIP} ${SIDE[side]}`}>
-      {label}
-    </span>
-  );
-}
 
 export function IconButton({
   icon,
@@ -34,7 +23,7 @@ export function IconButton({
   /** The one of these that's on. */
   current?: boolean;
   /** Where its tooltip shows: right in the bar, left at a row's end. */
-  tip?: keyof typeof SIDE;
+  tip?: TipSide;
 } & (
   | { href: string }
   | {

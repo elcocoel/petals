@@ -66,6 +66,28 @@ export interface AgentRow {
 export const workerName = (name: string, n?: number | null) =>
   n && n > 1 ? `${readableAgent(name)} ${n}` : readableAgent(name);
 
+/** Where Connect an agent was pressed, so its Copied shows there alone (design/side-panel.md, line 45). */
+export type CopiedAt = 'top' | 'agents';
+
+const BUSIEST: readonly AgentRow['state'][] = ['busy', 'waiting', 'away'];
+
+/**
+ * What the panel's top says of the agents (design/side-panel.md, line 46): each agent once, however many
+ * workers it has, and the busiest of them; null with none connected.
+ */
+export function agentsAtTop(
+  rows: readonly AgentRow[],
+): { label: string; state: AgentRow['state']; title: string } | null {
+  if (rows.length === 0) return null;
+  const agents = [...new Set(rows.map((r) => r.agent))];
+  return {
+    // one agent by its name; more by how many, which fits the row (each worker is in its title)
+    label: agents.length === 1 ? (agents[0] as string) : agentWords.several(agents.length),
+    state: BUSIEST.find((s) => rows.some((r) => r.state === s)) ?? 'away',
+    title: rows.map((r) => `${r.label}: ${r.status}`).join('\n'),
+  };
+}
+
 export function agentRows(agents: readonly ConnectedAgent[]): AgentRow[] {
   return agents.map((a) => ({
     key: `${a.name}:${a.n ?? 1}`,
@@ -83,8 +105,13 @@ export const agentWords = {
   waiting: 'Waiting for a job',
   away: 'Not connected now',
   on: (title: string) => `On: ${title}`,
-  /** The one prompt's button, the same in the side panel and on /connect (Elco's fix 1, 10 Nov). */
-  copy: 'Copy for your agents',
+  /** The panel's top, with more than one agent connected (design/side-panel.md, line 46). */
+  several: (n: number) => `${n} agents`,
+  /**
+   * The one prompt's button, the same at the panel's top, in Your agents and on /connect (Elco, 11 Nov:
+   * "connect an agent or connect more AIs or connect another AI"; a draft of the first).
+   */
+  copy: 'Connect an agent',
   copied: 'Copied. Paste it into each agent.',
   /** CONNECTORS's line, 9 Nov, routing a cloud chat to the connector since 10 Nov; `site` is this site's address and `key` a fresh agent link's token. */
   prompt: (site: string, key: string) =>

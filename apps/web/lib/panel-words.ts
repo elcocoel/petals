@@ -103,6 +103,8 @@ export const panelWords = {
   connect: agentWords.copy,
   copied: agentWords.copied,
   disconnect: (agent: string) => `Disconnect ${agent}`,
+  /** The top's way to end every agent at once (line 46): one waiting keeps spending on inference. */
+  disconnectAll: 'Disconnect all agents',
   /** An agent's state, in a few characters at its row's end; the full line shows on hover. */
   state: { busy: 'on a job', waiting: 'waiting', away: 'away' },
   /** Read aloud for a working square. */

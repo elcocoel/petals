@@ -20,7 +20,7 @@
 // lib/panel-words.ts.
 import { DIMENSIONS } from '@petal/core/view';
 import type { DragEvent, ReactNode } from 'react';
-import type { AgentRow } from '../../lib/agents.ts';
+import { type AgentRow, agentsAtTop, type CopiedAt } from '../../lib/agents.ts';
 import {
   byProject,
   type ConversationRow,
@@ -41,6 +41,7 @@ import { NavItem } from '../ui/NavItem.tsx';
 import { RowField } from '../ui/RowField.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 import { type RailSection, type RailWidth, SideRail } from '../ui/SideRail.tsx';
+import { Tip } from '../ui/Tip.tsx';
 import { TipControl, type TipView } from './TipControl.tsx';
 import { ViewControls } from './ViewControls.tsx';
 
@@ -117,11 +118,14 @@ export interface WorkMenuView {
   said: string;
   /** The person's own agents, and what each is doing (the first full test, 9 Nov). */
   agents: AgentRow[];
-  copied: boolean;
+  /** Where Connect an agent was just pressed, for its Copied; null once that's gone. */
+  copied: CopiedAt | null;
   /** Copies the one prompt that connects another agent, with a fresh agent key. */
-  copy: () => void;
+  copy: (at: CopiedAt) => void;
   /** Ends one agent, by the name the server knows it by. */
   disconnect: (name: string) => void;
+  /** Ends every agent, all their workers (design/side-panel.md, line 46). */
+  disconnectAll: () => void;
 }
 
 /** The person, as the Profile and Lobby sections say it: read once, in the layout, with the lobby's. */
@@ -399,13 +403,14 @@ export function WorkMenu({
               />
             </li>
           ))}
-          <li>
+          <li className="relative">
             <NavItem
-              onClick={menu.copy}
+              onClick={() => menu.copy('agents')}
               icon="plus"
-              label={menu.copied ? panelWords.copied : panelWords.connect}
+              label={panelWords.connect}
               muted
             />
+            {menu.copied === 'agents' && <Tip label={panelWords.copied} side="right" said />}
           </li>
         </ul>
       </Group>
@@ -471,11 +476,41 @@ export function WorkMenu({
     ),
   };
 
+  // design/side-panel.md, lines 45 and 46: always in sight, under the wordmark
+  const connected = agentsAtTop(menu.agents);
+  const top = (
+    <ul className="m-0 flex list-none flex-col p-0">
+      <li className="relative">
+        <NavItem onClick={() => menu.copy('top')} icon="plus" label={panelWords.connect} />
+        {menu.copied === 'top' && <Tip label={panelWords.copied} side="right" said />}
+      </li>
+      {connected && (
+        <li>
+          <NavItem
+            icon="agent"
+            label={connected.label}
+            title={connected.title}
+            trail={panelWords.state[connected.state]}
+            muted={connected.state === 'away'}
+            action={
+              <IconButton
+                icon="close"
+                label={panelWords.disconnectAll}
+                onClick={menu.disconnectAll}
+              />
+            }
+          />
+        </li>
+      )}
+    </ul>
+  );
+
   const moving = menu.moving;
   return (
     <>
       <SideRail
         label={panelWords.panel}
+        top={top}
         sections={SECTIONS.map((section) => ({ ...section, content: sections[section.key] }))}
         open={menu.open}
         toggleLabel={menu.open ? panelWords.fold : panelWords.unfold}
