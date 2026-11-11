@@ -14,12 +14,15 @@ import type { Spec } from '@petal/core/types';
 import { modules } from '@petal/inputs';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { blocMaps } from '../src/blocs.ts';
 import { privateStore } from '../src/drafts.ts';
 import { httpApp } from '../src/http/app.ts';
 import { type MapView, mapsOf, mapViews, searchMap } from '../src/map.ts';
+import { MAPPING } from '../src/mapping-claims.ts';
 import { markMaps, typeMaps } from '../src/marks.ts';
 import { proposalMaps } from '../src/proposals.ts';
 import { callTool } from '../src/registry.ts';
+import { loadSnapshot } from '../src/tools/shared.ts';
 import { valueMaps } from '../src/values.ts';
 import { rig, type TestRig } from './helpers.ts';
 
@@ -296,6 +299,64 @@ describe('one map per address (Elco, 10 Nov)', () => {
       );
       expect((await app.request(path, { headers: { 'if-none-match': '"old"' } })).status).toBe(200);
     }
+  });
+
+  test("a DAO map's voting blocs (#94): members as its reading's petal ids, over a period; kept as Petals' mapping's claims", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const store = privateStore(r.ctx.config);
+    const about = `eip155:1:${DAO}`;
+    const [ana, ben, cy] = (await loadSnapshot(r.ctx, MOLOCH)).participants.map((p) => p.id);
+    const vote = (account: string | undefined, v: 'for' | 'against') => ({
+      account: account as string,
+      vote: v,
+      as_said: v === 'for' ? 'approved' : 'not approved',
+      at: null,
+    });
+    const proposals = Array.from({ length: 6 }, (_, i) => ({
+      id: String(i + 1),
+      title: `Proposal ${i + 1}`,
+      kind: null,
+      proposer: null,
+      at: `2025-0${i + 1}-01T00:00:00.000Z`,
+      closes_at: null,
+      decided_at: null,
+      outcome: 'passed' as const,
+      as_said: 'passed',
+      ref: `proposal:${about}:${i + 1}`,
+      recipient: null,
+      // ana and ben alike every time; cy against them half the time
+      votes: [vote(ana, 'for'), vote(ben, 'for'), vote(cy, i % 2 ? 'for' : 'against')],
+    }));
+    const body = {
+      petal: 'proposals/v2',
+      about,
+      source: { kind: 'baal', contract: about, ref: 'test', at: '2026-11-11T00:00:00.000Z' },
+      proposals,
+      read_at: '2026-11-11T00:00:00.000Z',
+    };
+    await store.proposals.put({ about, body: JSON.stringify(body), read_at: body.read_at });
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    const at = async (q: string) =>
+      (await app.request(`/api/v1/maps/${encodeURIComponent(about)}/blocs${q}`)).json();
+    const all = (await at('?from=2025-01-01T00:00:00Z')) as Out;
+    expect(all.period).toEqual({ from: '2025-01-01T00:00:00.000Z', to: null });
+    expect(all.pairs).toMatchObject([{ a: ana, b: ben, shared: 6, agreed: 6, agreement: 1 }]);
+    expect(all.blocs).toMatchObject([{ members: [ana, ben].sort(), pairs: 1 }]);
+    // with no period, the last 90 days, as the vote ring shows: these are older
+    const recent = (await at('')) as Out;
+    expect(recent.proposals).toEqual({ in_period: 0, voted: 0 });
+    expect(recent.pairs).toEqual([]);
+    expect(((await at('?from=soon')) as Out).error).toMatchObject({ code: 'bad_input' });
+
+    // kept as Petals' mapping's claims: once
+    expect(await blocMaps(r.ctx, { save: false })).toMatchObject({ maps: 1, pairs: 1, kept: 0 });
+    expect(await blocMaps(r.ctx)).toMatchObject({ maps: 1, pairs: 1, blocs: 1, kept: 1 });
+    const kept = await store.annotation.list(MAPPING);
+    expect(kept.map((k) => k.verb)).toEqual(['moves_with']);
   });
 
   test("the run over the shared map keeps each map's mark and its logo; --dry keeps nothing", async () => {

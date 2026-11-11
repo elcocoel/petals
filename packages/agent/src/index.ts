@@ -15,6 +15,7 @@ import type { RunStore } from './runs.ts';
 /** Every map's mark, read where the server runs: scripts/map-marks.ts (board #85). */
 export {
   addDaoMap,
+  blocMaps,
   createContext,
   loadMapping,
   markMaps,

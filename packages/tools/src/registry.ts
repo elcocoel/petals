@@ -5,6 +5,7 @@ import type { ToolError } from '@petal/core/types';
 import { type PetalTool, versioned } from './define.ts';
 import { toolError } from './errors.ts';
 import { addAnnotation, listAnnotations } from './tools/annotations.ts';
+import { findVotingBlocs } from './tools/blocs.ts';
 import { brainFile, brainIndexTool, brainRoute } from './tools/brain.ts';
 import { forkDataset, keepLayer, listLayers } from './tools/datasets.ts';
 import {
@@ -62,6 +63,7 @@ export const registry: Tool<any, any>[] = [
   readPage,
   search,
   searchPetalsTool,
+  findVotingBlocs,
   accountGroupsTool,
   sharedAccountsTool,
   relatedGroupsTool,

@@ -9,6 +9,7 @@ export {
   DISCONNECTED,
   disconnectedFor,
 } from './agent-key.ts';
+export { type BlocRun, blocMaps, mapBlocs } from './blocs.ts';
 export {
   BRAIN_INDEX_VERSION,
   type BrainEntry,
