@@ -17,6 +17,7 @@ import {
   observedClaims,
   parseRef,
   V2_VERBS,
+  V4_VERBS,
   VERBS,
   type Verb,
   validateClaim,
@@ -81,14 +82,19 @@ describe('the shape', () => {
     const v2 = schemas.claimV2 as Lists;
     const all = Object.keys(VERBS);
     expect(new Set(v1.properties.verb.enum)).toEqual(
-      new Set(all.filter((v) => !V2_VERBS.has(v as Verb))),
+      new Set(all.filter((v) => !V2_VERBS.has(v as Verb) && !V4_VERBS.has(v as Verb))),
     );
     expect(v1.properties.kind.enum).toEqual(['observed', 'declared', 'sourced', 'inferred']);
-    expect(new Set(v2.properties.verb.enum)).toEqual(new Set(all));
+    const upToV3 = all.filter((v) => !V4_VERBS.has(v as Verb));
+    expect(new Set(v2.properties.verb.enum)).toEqual(new Set(upToV3));
     expect(v2.properties.kind.enum).toEqual([...CLAIM_KINDS]);
     const v3 = schemas.claimV3 as Lists;
-    expect(new Set(v3.properties.verb.enum)).toEqual(new Set(all));
+    expect(new Set(v3.properties.verb.enum)).toEqual(new Set(upToV3));
     expect(v3.properties.kind.enum).toEqual([...CLAIM_KINDS]);
+    // v4 (#97): v3 and is_a
+    const v4 = schemas.claimV4 as Lists;
+    expect(new Set(v4.properties.verb.enum)).toEqual(new Set(all));
+    expect(v4.properties.kind.enum).toEqual([...CLAIM_KINDS]);
   });
 
   test('every verb has a one-line definition, and the vocabulary accuses nobody', () => {

@@ -124,7 +124,7 @@ describe('annotations kept per project', () => {
     expect(listed.body.annotations[0]).toMatchObject({
       exploration: id,
       claim: {
-        petal: 'claim/v3',
+        petal: 'claim/v4',
         subject: ADA,
         verb: 'named',
         object: { value: 'Ada' },
@@ -239,10 +239,13 @@ describe('annotations kept per project', () => {
       'GET',
       `/api/v1/explorations/${second.read}/annotations?about=${encodeURIComponent(ADA)}`,
     );
-    expect(about.body.annotations.map((a: Out) => [a.exploration, a.claim.verb])).toEqual([
-      [first.id, 'named'],
-      [second.id, 'noted'],
-    ]);
+    // both kept at the same moment here, so in either order
+    expect(about.body.annotations.map((a: Out) => [a.exploration, a.claim.verb]).sort()).toEqual(
+      [
+        [first.id, 'named'],
+        [second.id, 'noted'],
+      ].sort(),
+    );
     // without about, only this project's
     const here = await send(app, 'GET', `/api/v1/explorations/${second.read}/annotations`);
     expect(here.body.annotations.map((a: Out) => a.claim.verb)).toEqual(['noted']);

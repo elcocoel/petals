@@ -6,9 +6,11 @@
 import claimSchema from '../../schema/claim.schema.json' with { type: 'json' };
 import claimV2Schema from '../../schema/claim-v2.schema.json' with { type: 'json' };
 import claimV3Schema from '../../schema/claim-v3.schema.json' with { type: 'json' };
+import claimV4Schema from '../../schema/claim-v4.schema.json' with { type: 'json' };
 import flowerSchema from '../../schema/flower.schema.json' with { type: 'json' };
 import layerSchema from '../../schema/layer.schema.json' with { type: 'json' };
 import markSchema from '../../schema/mark.schema.json' with { type: 'json' };
+import markV2Schema from '../../schema/mark-v2.schema.json' with { type: 'json' };
 import priceSchema from '../../schema/price.schema.json' with { type: 'json' };
 import priceV2Schema from '../../schema/price-v2.schema.json' with { type: 'json' };
 import proposalsSchema from '../../schema/proposals.schema.json' with { type: 'json' };
@@ -44,6 +46,8 @@ export const schemas: {
   claimV2: object;
   /** a claim whose every piece of evidence says what it is, who found it and when (11 Nov) */
   claimV3: object;
+  /** claim/v3 with one more verb, is_a: an account's type, in any word (#97, 11 Nov) */
+  claimV4: object;
   /** the data protocol's layer (005, data.md); stored and hashed, so it refuses fields it doesn't know */
   layer: object;
   /** a person's view (006, contracts/view.md): which piece of data each dimension shows */
@@ -60,6 +64,8 @@ export const schemas: {
   priceV2: object;
   /** what tells one organisation on the map from another: its name, symbol and logo, each with where it came from (#85) */
   mark: object;
+  /** the same, with its types as is_a claims (#97) */
+  markV2: object;
   /** a map's token in dollars, its supply, and its reading's totals at that price (#91) */
   value: object;
   /** a DAO's proposals and each account's vote on each (#93) */
@@ -74,6 +80,7 @@ export const schemas: {
   claim: claimSchema,
   claimV2: claimV2Schema,
   claimV3: claimV3Schema,
+  claimV4: claimV4Schema,
   layer: layerSchema,
   view: viewSchema,
   viewV2: viewV2Schema,
@@ -82,6 +89,7 @@ export const schemas: {
   price: priceSchema,
   priceV2: priceV2Schema,
   mark: markSchema,
+  markV2: markV2Schema,
   value: valueSchema,
   proposals: proposalsSchema,
 };

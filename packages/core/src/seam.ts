@@ -159,6 +159,44 @@ export function namePieces(s: Snapshot, claims: readonly Claim[]): SeamPiece[] {
   ];
 }
 
+/**
+ * Types from annotations (#97; Elco, 11 Nov: types are data, several at once): for each of the reading's
+ * participants an is_a claim is about, its words, each once, in the order they were found, as one category,
+ * `type`. What the policy hides doesn't count. A type is never verified: `lead`, the viewer's own. None: none.
+ */
+export function typePieces(s: Snapshot, claims: readonly Claim[]): SeamPiece[] {
+  const chain = s.network.chain;
+  const ids = new Map(s.participants.map((p) => [aboutKey(`${chain}:${p.id}`), p.id]));
+  const words = new Map<string, string[]>();
+  const used: Claim[] = [];
+  for (const { claim: c, show } of applyPolicy(claims, { trusted: 'everyone' })) {
+    if (show === 'hidden' || c.verb !== 'is_a' || typeof c.object === 'string') continue;
+    const ref = parseRef(c.subject);
+    const id = ref?.ns === 'account' ? ids.get(aboutKey(`${ref.chain}:${ref.address}`)) : undefined;
+    const w = c.object.value;
+    if (id === undefined || typeof w !== 'string' || !w) continue;
+    const list = words.get(id) ?? [];
+    if (!list.includes(w)) list.push(w);
+    words.set(id, list);
+    used.push(c);
+  }
+  if (!words.size) return [];
+  return [
+    {
+      name: 'type',
+      kind: 'category',
+      unit: 'type',
+      standing: 'lead',
+      layer: sha256Hex(canonicalJson(used.map((c) => c.id).sort())),
+      as_of: used
+        .map((c) => c.issued_at)
+        .sort()
+        .at(-1) as string,
+      values: [...words].map(([participant, w]) => ({ participant, value: w.join(', ') })),
+    },
+  ];
+}
+
 /** With annotations, the reading's participants they name also get `name` and `name_kind` (namePieces). */
 export function seamOf(
   base: Snapshot,

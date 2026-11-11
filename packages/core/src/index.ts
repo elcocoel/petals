@@ -30,6 +30,7 @@ export {
   SNAPSHOT_READER,
   targetOf,
   V2_VERBS,
+  V4_VERBS,
   VERB_RULES,
   VERBS,
   validateClaim,
@@ -109,6 +110,7 @@ export {
   sameAbout,
   seamHash,
   seamOf,
+  typePieces,
 } from './seam.ts';
 export { backerSegments } from './segments/backers.ts';
 export { selectPetals } from './select.ts';

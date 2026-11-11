@@ -34,7 +34,7 @@ export function annotateTool(ctx: ToolContext, runId: string, accountOf?: Accoun
       type: 'object',
       // the agent's tool list reads the description from here (tool-defs.ts)
       description:
-        "Keep what the person tells you, or what you found, about accounts in their project, privately: a name (named), a note or research (noted), or a link (linked). subject is the account as Petals names it: eip155:<chain id>:0x… in lower case, or near:mainnet:<account>. kind: stated for what the person says, with no evidence; sourced for what a page or proposal says, with evidence [{ url, quote }]; inferred for what you worked out, with method petals-agent@1, qualifiers { grounds: 'research' } and evidence. One or many at once.",
+        "Keep what the person tells you, or what you found, about accounts in their project, privately: a name (named), a note or research (noted), a link (linked), or a type (is_a: a DAO, a multisig, an exchange wallet, any word; several are several claims). subject is the account as Petals names it: eip155:<chain id>:0x… in lower case, or near:mainnet:<account>. kind: stated for what the person says, with no evidence; sourced for what a page or proposal says, with evidence [{ url, quote }]; inferred for what you worked out, with method petals-agent@1, qualifiers { grounds: 'research' } and evidence. One or many at once.",
       required: ['annotations'],
       properties: {
         annotations: {
@@ -48,12 +48,15 @@ export function annotateTool(ctx: ToolContext, runId: string, accountOf?: Accoun
                 type: 'string',
                 description: 'eip155:100:0xabc…, near:mainnet:alice.near',
               },
-              verb: { enum: ['named', 'noted', 'linked'] },
+              verb: { enum: ['named', 'noted', 'linked', 'is_a'] },
               object: {
                 type: 'object',
                 required: ['value'],
                 properties: {
-                  value: { type: 'string', description: 'the name, the note or the link' },
+                  value: {
+                    type: 'string',
+                    description: 'the name, the note, the link or the type',
+                  },
                 },
               },
               kind: { enum: ['stated', 'sourced', 'inferred'] },

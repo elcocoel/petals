@@ -79,7 +79,7 @@ export interface NearAiProof {
 export type ClaimProof = TxProof | Nep413Proof | NearAiProof;
 
 export interface Claim {
-  petal: 'claim/v1' | 'claim/v2' | 'claim/v3';
+  petal: 'claim/v1' | 'claim/v2' | 'claim/v3' | 'claim/v4';
   /** SHA-256 of the canonical claim, without `id` and `proof`. */
   id: string;
   subject: EntityRef;

@@ -1,5 +1,5 @@
 // The closed vocabulary of claims. A new verb is a new version: anything not listed is refused. claim/v2
-// adds named, noted and linked (V2_VERBS); each version's schema lists its own.
+// adds named, noted and linked (V2_VERBS), claim/v4 adds is_a (V4_VERBS); each version's schema lists its own.
 // `same_as` is gone on purpose: it hid one address on two chains (`same_address`) and one controller
 // (`declares_same_controller`, or a neutral inference). `declares_name` is gone too: names stay in
 // the account's own voice, read at draw time (people.ts).
@@ -229,6 +229,14 @@ export const VERBS = {
     object: 'link',
     qualifiers: { grounds: 'grounds' },
   },
+  // v4 (11 Nov, board #97; Elco: types are data, claims with evidence, any value, several at once)
+  is_a: {
+    means:
+      'The account is of this type, in any word: a form, a role or a declared nature. One per claim.',
+    kinds: ['observed', 'declared', 'stated', 'sourced', 'inferred'],
+    object: 'text',
+    qualifiers: { grounds: 'grounds' },
+  },
 
   confidence: {
     means: 'How sure a named person or a named model is of the claim. It overwrites nothing.',
@@ -250,6 +258,8 @@ export const isMetaVerb = (v: Verb): boolean => META.has(v);
 
 /** The verbs claim/v2 added. A v1 claim can't use them: its schema doesn't list them. */
 export const V2_VERBS: ReadonlySet<Verb> = new Set<Verb>(['named', 'noted', 'linked']);
+/** The verb claim/v4 added. Older claims can't use it: their schemas don't list it. */
+export const V4_VERBS: ReadonlySet<Verb> = new Set<Verb>(['is_a']);
 
 export const CLAIM_KINDS = ['observed', 'declared', 'stated', 'sourced', 'inferred'] as const;
 export const CONFIDENCE_BANDS = ['low', 'medium', 'high'] as const;

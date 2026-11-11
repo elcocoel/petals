@@ -1,10 +1,12 @@
 // mark/v1 (board #85; research/org-names-logos-2026-11-11.md, strategy 2, Elco's pick, 11 Nov): what tells one
 // organisation on the map from another, its name, its token's symbol and its logo, each saying where it came
 // from. One per map, named by the map's address. Reading one is @petal/inputs' (marks/); this is the format.
+import type { Claim } from './claims/types.ts';
 import { createAjv, schemaId } from './schema/ajv.ts';
 import type { Result, ValidationIssue } from './types/index.ts';
 
-export const MARK_VERSION = 'mark/v1';
+/** mark/v2 since 11 Nov: mark/v1 with its types, as is_a claims (#97). v1 still reads. */
+export const MARK_VERSION = 'mark/v2';
 
 /** self-declared: the thing says it of itself. verified: a curated list holds the address. inferred: Petals' own. */
 export type MarkStatus = 'self-declared' | 'verified' | 'inferred';
@@ -33,26 +35,28 @@ export interface MarkLogo {
 }
 
 export interface Mark {
-  petal: typeof MARK_VERSION;
+  petal: 'mark/v1' | typeof MARK_VERSION;
   /** the map's address: chain:address, or chain:population */
   about: string;
   name: MarkSaid | null;
   symbol: MarkSaid | null;
   logo: MarkLogo | null;
+  /** v2: its types, each an is_a claim (claim/v4) about its own address, in the order found */
+  types?: Claim[];
   read_at: string;
 }
 
-let compiled: ReturnType<ReturnType<typeof createAjv>['getSchema']> | undefined;
+const compiled = new Map<string, ReturnType<ReturnType<typeof createAjv>['getSchema']>>();
 
-/** The mark, typed, or every reason it isn't one. */
 export function validateMark(x: unknown): Result<Mark> {
-  if (!compiled) compiled = createAjv().getSchema(schemaId('mark'));
-  const v = compiled;
+  const name = (x as { petal?: unknown } | null)?.petal === 'mark/v1' ? 'mark' : 'markV2';
+  if (!compiled.has(name)) compiled.set(name, createAjv().getSchema(schemaId(name)));
+  const v = compiled.get(name);
   if (!v) throw new Error('mark schema not registered');
   if (v(x)) return { ok: true, value: x as Mark };
   return {
     ok: false,
-    errors: (v.errors ?? []).map(
+    errors: (v.errors ?? []).slice(0, 30).map(
       (e): ValidationIssue => ({
         path: e.instancePath,
         rule: 'schema',

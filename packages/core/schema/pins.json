@@ -82,5 +82,13 @@
   "proposals.v1.json": {
     "schema": "urn:petal:schema:proposals:v1",
     "sha256": "64264cac1bfe1a9738b42625e38df3d015598831c920e29f41d3bec5900877d1"
+  },
+  "claim.v4.json": {
+    "schema": "urn:petal:schema:claim:v4",
+    "sha256": "14552ff7c17bb626325868fa391da649056d7e1e87a43a92c0b23f0d5c058224"
+  },
+  "mark.v2.json": {
+    "schema": "urn:petal:schema:mark:v2",
+    "sha256": "dce247b2fed5df72e008eb4faffd7e487ffc3044c3d313374afaef0d4624e103"
   }
 }

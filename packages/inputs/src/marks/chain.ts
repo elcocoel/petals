@@ -27,6 +27,8 @@ export interface SelfSaid {
   symbol: Declared | null;
   /** a picture it points to: a URL, ipfs:// or ar:// */
   image: Declared | null;
+  /** the Baal DAO whose shares this token is, when its owner's sharesToken() names it back (#97) */
+  baal?: string;
 }
 const nothing = (): SelfSaid => ({ org: null, name: null, symbol: null, image: null });
 
@@ -132,6 +134,7 @@ export async function evmSaid(
     const dao = `0x${owner.slice(-40)}`;
     const shares = await call(chain, dao, 'sharesToken()', fetchImpl);
     if (shares && shares.length === 66 && `0x${shares.slice(-40)}` === a) {
+      out.baal = dao;
       const p = await baalProfile(chain, dao, fetchImpl);
       const where = `the DAO's own profile, posted through Poster on ${chain.caip2}:${dao}`;
       if (p?.name) out.org = { value: p.name, source: 'poster', ref: where };

@@ -86,7 +86,7 @@ describe('packages/v1 surface', () => {
       reading: 'reading/v1',
       recipe: 'recipe/v1',
       convention: 'default/v1',
-      claim: 'claim/v3',
+      claim: 'claim/v4',
       view: 'view/v2',
     });
   });

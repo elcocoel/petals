@@ -7,7 +7,17 @@
 // A whole network's map (no token of its own) is marked by the system's token or its chain's coin, which is
 // Petals' own step, so every part of it is inferred, and says why.
 import { createHash } from 'node:crypto';
-import { MARK_VERSION, type Mark, type MarkLogo, type MarkSaid } from '@petal/core';
+import {
+  accountRef,
+  type Claim,
+  MARK_VERSION,
+  type Mark,
+  type MarkLogo,
+  type MarkSaid,
+  makeClaim,
+  validateClaim,
+} from '@petal/core';
+import type { ClaimDraft } from '@petal/core/types';
 import { EVM_CHAINS } from '../evm/chains.ts';
 import { daohausSaid, evmSaid, gateway, nearSaid, type SelfSaid, solanaSaid } from './chain.ts';
 import { type Fetch, type Listed, type ListReader, listReader } from './lists.ts';
@@ -31,6 +41,8 @@ export interface MarkTarget {
   address: string | null;
   /** the reader of its newest reading: erc20-holders, moloch-v1, … */
   reader: string | null;
+  /** its newest reading's sha256: what an observed type rests on (#97) */
+  snapshot?: string | null;
 }
 
 export interface MarkPicture {
@@ -120,6 +132,79 @@ async function selfSaid(
   if (chain === 'solana') return solanaSaid(fetchImpl, address);
   if (chain === 'near:mainnet') return nearSaid(fetchImpl, address);
   return { org: null, name: null, symbol: null, image: null };
+}
+
+const READER_BY = 'tool:petals-marks@1';
+const CAIP2: Record<string, string> = {
+  ethereum: 'eip155:1',
+  base: 'eip155:8453',
+  arbitrum: 'eip155:42161',
+  gnosis: 'eip155:100',
+  solana: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+  'near:mainnet': 'near:mainnet',
+};
+/** What each reader's map is, as its reading shows it: observed, resting on that reading. */
+const READ_AS: Record<string, string[]> = {
+  'erc20-holders': ['token'],
+  'erc20-votes': ['token'],
+  'solana-spl-holders': ['token'],
+  'moloch-v1': ['DAO', 'Moloch v1'],
+  'sputnik-dao': ['DAO', 'Sputnik DAO'],
+};
+
+/**
+ * A map's types (#97; Elco, 11 Nov: types are data, claims with evidence, any value, several at once), as is_a
+ * claims (claim/v4): what its reading shows it is, observed and resting on that reading; and, for a token a Baal
+ * owns whose sharesToken() names it back, that DAO's, inferred from that call. In the order found. A whole
+ * network's map has no account to be about, so none.
+ */
+function typesOf(
+  t: MarkTarget,
+  chain: string,
+  address: string | null,
+  reader: string | null,
+  said: SelfSaid,
+  at: string,
+): Claim[] {
+  const caip2 = CAIP2[chain] ?? (t.chain.startsWith('solana') ? t.chain : null);
+  const subject = caip2 && address ? accountRef(caip2, address) : null;
+  if (!subject) return [];
+  const drafts: ClaimDraft[] = [];
+  for (const value of reader ? (READ_AS[reader] ?? []) : [])
+    if (t.snapshot)
+      drafts.push({
+        subject,
+        verb: 'is_a',
+        object: { value },
+        kind: 'observed',
+        issued_at: at,
+        by: READER_BY,
+        evidence: [
+          { type: 'snapshot', snapshot_sha256: t.snapshot, found_by: READER_BY, found_at: at },
+        ],
+      } as ClaimDraft);
+  const dao = said.baal && caip2 ? accountRef(caip2, said.baal) : null;
+  if (dao)
+    for (const value of ['DAO', 'Moloch v3 (Baal)'])
+      drafts.push({
+        subject: dao,
+        verb: 'is_a',
+        object: { value },
+        kind: 'inferred',
+        method: 'marks/types@1',
+        qualifiers: { grounds: 'research' },
+        issued_at: at,
+        by: READER_BY,
+        evidence: [
+          {
+            type: 'note',
+            note: `sharesToken() on ${dao} names ${address}, the token it owns: a Moloch v3 (Baal) DAO`,
+            found_by: READER_BY,
+            found_at: at,
+          },
+        ],
+      } as ClaimDraft);
+  return drafts.map((d) => makeClaim(d, 'claim/v4')).filter((c) => validateClaim(c).ok);
 }
 
 /** Read one map's mark: the chain first, then the lists. */
@@ -218,8 +303,9 @@ export async function readMark(t: MarkTarget, deps: MarkDeps = {}): Promise<Read
     logo = clean(inferred(logo));
   }
 
+  const types = typesOf(t, chain, address, network ? null : t.reader, said, at);
   return {
-    mark: { petal: MARK_VERSION, about: t.about, name, symbol, logo, read_at: at },
+    mark: { petal: MARK_VERSION, about: t.about, name, symbol, logo, types, read_at: at },
     logo: bytes,
   };
 }

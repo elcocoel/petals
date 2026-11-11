@@ -1,0 +1,90 @@
+{
+  "petal": "mark/v2",
+  "about": "eip155:100:0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6",
+  "name": {
+    "value": "RaidGuild",
+    "status": "self-declared",
+    "source": "poster",
+    "ref": "the DAO's own profile, posted through Poster on eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986",
+    "at": "2026-11-11T15:58:50.889Z"
+  },
+  "symbol": {
+    "value": "RG",
+    "status": "self-declared",
+    "source": "chain",
+    "ref": "symbol() on eip155:100:0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6",
+    "at": "2026-11-11T15:58:50.889Z"
+  },
+  "logo": null,
+  "types": [
+    {
+      "petal": "claim/v4",
+      "subject": "eip155:100:0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6",
+      "verb": "is_a",
+      "object": {
+        "value": "token"
+      },
+      "kind": "observed",
+      "issued_at": "2026-11-11T15:58:50.889Z",
+      "by": "tool:petals-marks@1",
+      "evidence": [
+        {
+          "type": "snapshot",
+          "snapshot_sha256": "c0dbc77a9b2821a140dc603f3c829f97ffc23867b0811b123f3e439b47d63a6f",
+          "found_by": "tool:petals-marks@1",
+          "found_at": "2026-11-11T15:58:50.889Z"
+        }
+      ],
+      "id": "afcbfc086b202ab1fb330a02cbc10d446190d7ec829186f9d964c9a909611e3f"
+    },
+    {
+      "petal": "claim/v4",
+      "subject": "eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986",
+      "verb": "is_a",
+      "object": {
+        "value": "DAO"
+      },
+      "kind": "inferred",
+      "method": "marks/types@1",
+      "qualifiers": {
+        "grounds": "research"
+      },
+      "issued_at": "2026-11-11T15:58:50.889Z",
+      "by": "tool:petals-marks@1",
+      "evidence": [
+        {
+          "type": "note",
+          "note": "sharesToken() on eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986 names 0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6, the token it owns: a Moloch v3 (Baal) DAO",
+          "found_by": "tool:petals-marks@1",
+          "found_at": "2026-11-11T15:58:50.889Z"
+        }
+      ],
+      "id": "1c0b9faccd038c1034fc9c44d4651af5e1d2a4678dfe5b596eeb61bea3b0fc9c"
+    },
+    {
+      "petal": "claim/v4",
+      "subject": "eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986",
+      "verb": "is_a",
+      "object": {
+        "value": "Moloch v3 (Baal)"
+      },
+      "kind": "inferred",
+      "method": "marks/types@1",
+      "qualifiers": {
+        "grounds": "research"
+      },
+      "issued_at": "2026-11-11T15:58:50.889Z",
+      "by": "tool:petals-marks@1",
+      "evidence": [
+        {
+          "type": "note",
+          "note": "sharesToken() on eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986 names 0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6, the token it owns: a Moloch v3 (Baal) DAO",
+          "found_by": "tool:petals-marks@1",
+          "found_at": "2026-11-11T15:58:50.889Z"
+        }
+      ],
+      "id": "5b5e7d4270ec5d7913225c8063a6649cd1d9f19e339aca531629fbdc59f03887"
+    }
+  ],
+  "read_at": "2026-11-11T15:58:50.889Z"
+}
