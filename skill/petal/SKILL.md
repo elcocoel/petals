@@ -62,7 +62,7 @@ What you find or are told about an account goes into the person's project as dat
 
 Petals' own agent, in the chat on the page, hands jobs to the person's agents, such as mapping a network. The job is the person's yes for its map, so don't ask again.
 
-**When the person gives you their agent key** (it starts `petal_agent_`), you're one of their agents, in all of their projects. If your app's connect chapter says how to be many workers at once, with sub-agents, do that instead of joining and waiting yourself. Otherwise:
+**When the person gives you their agent key** (it starts `petal_agent_`), you're one of their agents, in all of their projects:
 
 1. Join once, with a short name for your app, such as `claude-code`, `codex` or `hermes`: `node ~/.petals/petal.mjs join <agent key> --as <name>`. It answers with your `worker` id: each window, and each of your sub-agents, joins once and is a worker of its own.
 2. Wait for a job, always with your worker id: `node ~/.petals/petal.mjs jobs wait --worker <id>`. It comes back with a job, or with none just under ten minutes. Give the command your app's longest limit for one command, as your app's connect chapter says, so it isn't cut short.

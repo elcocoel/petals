@@ -48,14 +48,6 @@ It takes effect in a new session. The tools then show as `mcp__petals__<tool>`, 
 
 As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait --worker <id>`, with the id `join` gave you, with the Bash tool's `timeout` at 600000, its longest: ten minutes. The default two minutes cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way.
 
-## Many workers at once
-
-When the person gives you their agent key, be four workers, not one, so Petals' agent can hand a big job out in parts at once. Don't join or wait yourself: once the file is set up, start four sub-agents with the Agent tool, all in one message and in the background, so you stay free to talk with the person. Give each these words, with the key written in:
-
-> You're one of the person's workers for Petals. Read {site}/skill.md, but skip its setup: the file is already at ~/.petals/petal.mjs, so don't fetch it again, and the person's page is already open. Join once: `node ~/.petals/petal.mjs join <agent key> --as claude-code`. Then follow its Jobs section with the worker id that gives you: wait for a job with the Bash tool's `timeout` at 600000, do it, report it, and wait again, until you're told to stop.
-
-The person then sees Claude Code, Claude Code 2, 3 and 4 under Your agents. If they ask for more or fewer, start that many.
-
 ## When it can't start
 
 - **Claude Code isn't installed:** `curl -fsSL https://claude.ai/install.sh | bash`.
