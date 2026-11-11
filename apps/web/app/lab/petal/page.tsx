@@ -1,14 +1,13 @@
 // The petal look's bench (#76; design/flower-art-direction/default-system-vnext.md, V1, Elco 11 Nov): the art
 // direction drawn by the live flower on real data, each flower at its normal size and at map distance. ?show=
 // raidguild (the flower it was drawn on, with the accepted highlight), keys (that flower in each key and grey, the
-// highlight checked on every colour), near (NEAR's recorded backer segments, highlighted), and the two choices
-// #76 left open, as proposals: tail (how "everyone else" shows) and height (a reference across flowers). In production it
+// highlight checked on every colour), near (NEAR's recorded backer segments, highlighted), and tail (a close look
+// at "everyone else", folded, on both real flowers). In production it
 // stays hidden unless PETAL_LAB=1, like the lab, and nothing here reaches a product page until Elco has seen it.
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FlowerCanvas } from '../../../flower/FlowerCanvas.tsx';
 import { type LookFlower, petalBench } from '../../../lab/petal/bench.ts';
-import { heightProposals, tailProposals } from '../../../lab/petal/proposals.ts';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
@@ -23,8 +22,7 @@ const SHOWS = [
   { id: 'raidguild', label: 'RaidGuild' },
   { id: 'keys', label: 'Six colours' },
   { id: 'near', label: 'NEAR segments' },
-  { id: 'tail', label: 'Everyone else?' },
-  { id: 'height', label: 'Height across flowers?' },
+  { id: 'tail', label: 'Everyone else' },
 ] as const;
 type Show = (typeof SHOWS)[number]['id'];
 
@@ -147,36 +145,23 @@ function Choice({ title, words, flower }: { title: string; words: string[]; flow
   );
 }
 
-async function Tail({ show }: { show: Show }) {
-  const choices = await tailProposals();
+/** "Everyone else", folded, on both real flowers, side by side and big enough to see its steps. */
+function Tail({ show, flowers }: { show: Show; flowers: LookFlower[] }) {
   return (
     <main className="fixed inset-0 flex flex-col bg-surface text-primary">
-      <Head show={show} line={choices[0]?.flower.highlight} />
-      <div className="grid min-h-0 flex-1 grid-cols-3">
-        {choices.map((c) => (
-          <Choice key={c.title} title={c.title} words={c.words} flower={c.flower} />
+      <Head
+        show={show}
+        line="Everyone else is drawn, grey, as its members packed together: one small cell each, as tall as its own petal would be, so the block shows what they hold together without passing for one wallet. Zoom in and the cells are the members, ready to be mapped further."
+      />
+      <div className="grid min-h-0 flex-1 grid-cols-2">
+        {flowers.map((f) => (
+          <Choice
+            key={f.reading.title}
+            title={f.reading.title}
+            words={f.facts.filter((w) => w.startsWith('The other'))}
+            flower={f}
+          />
         ))}
-      </div>
-    </main>
-  );
-}
-
-async function Height({ show }: { show: Show }) {
-  const scales = await heightProposals();
-  return (
-    <main className="fixed inset-0 flex flex-col bg-surface text-primary">
-      <Head show={show} line="Three real flowers, no highlight, so only height is compared." />
-      <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2">
-        {scales.flatMap((scale) =>
-          scale.flowers.map(({ flower }, i) => (
-            <Choice
-              key={`${scale.title} ${flower.reading.title}`}
-              title={i === 0 ? scale.title : ''}
-              words={[...(i === 0 ? scale.words : []), ...flower.facts]}
-              flower={flower}
-            />
-          )),
-        )}
       </div>
     </main>
   );
@@ -186,9 +171,8 @@ export default async function PetalLab({ searchParams }: { searchParams: Promise
   if (process.env.NODE_ENV === 'production' && process.env.PETAL_LAB !== '1') notFound();
   const q = await searchParams;
   const show: Show = SHOWS.some((s) => s.id === q.show) ? (q.show as Show) : 'raidguild';
-  if (show === 'tail') return <Tail show={show} />;
-  if (show === 'height') return <Height show={show} />;
   const bench = await petalBench();
+  if (show === 'tail') return <Tail show={show} flowers={[bench.raidguild, bench.near]} />;
   if (show === 'raidguild') return <One show={show} flower={bench.raidguild} />;
   if (show === 'near') return <One show={show} flower={bench.near} />;
   const first = bench.keys[0]?.flower;
