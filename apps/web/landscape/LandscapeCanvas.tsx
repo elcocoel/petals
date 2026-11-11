@@ -232,7 +232,7 @@ export function LandscapeCanvas({
   const [entered, setEntered] = useState(-1);
   // the group chosen in the legend's Highlight row (#94), lit inside the flower; leaving it clears it
   const [bloc, setBloc] = useState<string | null>(null);
-  // or one account a claim is about, lit from What's said: one highlight at a time, so each clears the other
+  // or one account a claim is about, lit from Insights: one highlight at a time, so each clears the other
   const [account, setAccount] = useState<string | null>(null);
   const [blocsOpen, setBlocsOpen] = useState(false);
   // all their votes first: the recent ones hold no bloc on most maps (Elco, 11 Nov: "do something reasonable")

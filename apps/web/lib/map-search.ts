@@ -36,7 +36,7 @@ export const mapSearchWords = {
   none: 'Nothing on the map matches.',
   failed: "Search couldn't answer just now.",
   wordsOnly: 'By words alone: search by meaning is off right now.',
-  kind: { proposal: 'Proposal', claim: "What's said" } as Record<string, string>,
+  kind: { proposal: 'Proposal', claim: 'Insights' } as Record<string, string>,
 } as const;
 
 /** What matched under a map, in a line: its kind, then its words. */
