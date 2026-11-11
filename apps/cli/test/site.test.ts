@@ -844,3 +844,40 @@ describe("the map's search goes to the site (SEARCH, #105)", () => {
     );
   });
 });
+
+describe('what an agent found goes in the project, privately (keep_data, #98)', () => {
+  test("keep_data posts the document to the job's project; list_data asks by petal", async () => {
+    const { writeFileSync } = await import('node:fs');
+    const currentFile = join(mkdtempSync(join(tmpdir(), 'petal-data-')), 'current.json');
+    writeFileSync(currentFile, `${JSON.stringify({ link: LINK })}\n`);
+    const site = fakeSite();
+    const fetch = async (url: string, init: RequestInit = {}) => {
+      if (url.includes('/data')) {
+        site.seen.push({
+          method: init.method ?? 'GET',
+          url,
+          headers: {},
+          body: (init.body as string) ?? null,
+        });
+        return new Response(
+          JSON.stringify({ sha256: 'c'.repeat(64), petal: 'mark/v2', kept: true }),
+          {
+            headers: { 'content-type': 'application/json' },
+          },
+        );
+      }
+      return site.fetch(url, init);
+    };
+    const tools = siteDoor({ site: SITE, fetch, currentFile }).tools(registry);
+    const mark = { petal: 'mark/v2', about: 'eip155:8453:0x880f', name: 'Gnars' };
+    const kept = (await byName(tools, 'keep_data').run({ document: mark } as never, ctx())) as {
+      kept: boolean;
+    };
+    expect(kept.kept).toBe(true);
+    const post = site.seen.find((s) => s.method === 'POST');
+    expect(post?.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/data`);
+    expect(JSON.parse(post?.body as string)).toEqual({ document: mark });
+    await byName(tools, 'list_data').run({ petal: 'mark/v2' } as never, ctx());
+    expect(site.seen.at(-1)?.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/data?petal=mark%2Fv2`);
+  });
+});
