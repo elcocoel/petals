@@ -118,9 +118,16 @@
           "participant": { "type": "string" },
           "asset": { "type": "string" },
           "measure": { "type": "string" },
-          "amount": { "$ref": "#/$defs/decimal" },
-          "amount_raw": { "type": "string", "pattern": "^[0-9]+$" },
-          "unit": { "type": "string" },
+          "amount": {
+            "$ref": "#/$defs/decimal",
+            "description": "how much, in whole tokens (or whole units of what unit names), as decimal text: never a JSON number, so every digit survives hashing"
+          },
+          "amount_raw": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "description": "the same in the chain's base units, amount times ten to the token's decimals, as whole-number text"
+          },
+          "unit": { "type": "string", "description": "what amount counts: a token's symbol, or a word such as votes" },
           "as_of": { "$ref": "#/$defs/datetime" },
           "source": { "type": "string" }
         }
@@ -136,9 +143,16 @@
           "from": { "type": "string" },
           "to": { "type": "string" },
           "type": { "type": "string", "description": "delegates_to, owned_by, member_of_role, holds_role:*, proposed, voted:*, ..." },
-          "amount": { "$ref": "#/$defs/decimal" },
-          "amount_raw": { "type": "string", "pattern": "^[0-9]+$" },
-          "unit": { "type": "string" },
+          "amount": {
+            "$ref": "#/$defs/decimal",
+            "description": "how much, in whole tokens (or whole units of what unit names), as decimal text: never a JSON number, so every digit survives hashing"
+          },
+          "amount_raw": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "description": "the same in the chain's base units, amount times ten to the token's decimals, as whole-number text"
+          },
+          "unit": { "type": "string", "description": "what amount counts: a token's symbol, or a word such as votes" },
           "role": { "type": "string" },
           "bps": { "type": "integer", "minimum": 0, "maximum": 10000 },
           "as_of": { "$ref": "#/$defs/datetime" },

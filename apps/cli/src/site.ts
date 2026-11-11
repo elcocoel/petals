@@ -21,9 +21,10 @@
 import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { gzipSync } from 'node:zlib';
-import { canonicalJson, TOOLS_VERSION } from '@petal/core';
+import { canonicalJson, sha256Hex, TOOLS_VERSION, validateSnapshot } from '@petal/core';
 import type { Snapshot, Spec } from '@petal/core/types';
 import { isToolError, specBody, type Tool, type ToolContext } from '@petal/tools';
+import { validateDataTool } from './formats.ts';
 
 // biome-ignore lint/suspicious/noExplicitAny: a heterogeneous registry (packages.md)
 type AnyTool = Tool<any, any>;
@@ -576,6 +577,72 @@ export function siteDoor(opts: SiteOptions) {
     return { ...tool, input: withExploration(tool.input), run } as AnyTool;
   }
 
+  /**
+   * A snapshot an agent made itself (#98), kept on this computer, so render_flower can draw it, and in the
+   * job's or this conversation's project on the site, by the route that takes a reading made here.
+   */
+  const keepSnapshot = {
+    name: 'keep_snapshot',
+    title: 'Keep a snapshot you made',
+    description:
+      "Keep a reading you made yourself as a snapshot (snapshot/v1, its schema at the site's /schema/snapshot/v1.json): it's checked, named by the SHA-256 of its canonical JSON, kept on this computer and in the project. When Petals reads its network, draw it as any other: propose_spec with the network and this sha256, then validate_spec and render_flower. Check it first with validate_data if you like.",
+    input: {
+      type: 'object',
+      required: ['snapshot'],
+      additionalProperties: false,
+      properties: {
+        snapshot: { type: 'object', description: 'the snapshot, petal snapshot/v1' },
+        exploration: {
+          type: 'string',
+          description:
+            "an exploration id (exp_…) or a link (/s/…): the job's project to keep it in; default this conversation",
+        },
+      },
+    },
+    output: {
+      type: 'object',
+      required: ['sha256'],
+      properties: {
+        sha256: { type: 'string' },
+        exploration: { type: 'string' },
+        next: { type: 'string' },
+      },
+    },
+    annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: true },
+    run: async (raw: unknown, ctx: ToolContext): Promise<Json> => {
+      const { snapshot, exploration: named } = (raw ?? {}) as Json;
+      const checked = validateSnapshot(snapshot);
+      if (!checked.ok) {
+        const first = checked.errors
+          .slice(0, 5)
+          .map((e) => `${e.path || '/'}: ${e.message}`)
+          .join('; ');
+        return fault(
+          'bad_input',
+          `That isn't a valid snapshot/v1: ${first}.`,
+          'validate_data says what else is off.',
+        );
+      }
+      const sha256 = sha256Hex(new TextEncoder().encode(canonicalJson(checked.value)));
+      await ctx.store.put(checked.value);
+      const chosen = pick(typeof named === 'string' && named.trim() ? named : undefined);
+      if (chosen === SEVERAL) return several();
+      if (!chosen) {
+        return {
+          sha256,
+          next: "Kept on this computer. Call start_exploration, or pass the job's project as exploration, to keep it there too.",
+        };
+      }
+      const failed = await ensureSnapshot(refOf(chosen.link), sha256, ctx);
+      if (failed) return failed;
+      return {
+        sha256,
+        exploration: chosen.link,
+        next: 'Kept here and in the project. When Petals reads its network, draw it: propose_spec with the network and this sha256, then validate_spec and render_flower.',
+      };
+    },
+  };
+
   /** The registry as the file serves it: the site's tools go there, the rest stays here. */
   function tools(registry: readonly AnyTool[]): AnyTool[] {
     const keepTool = registry.find((t) => t.name === 'keep_layer');
@@ -589,7 +656,8 @@ export function siteDoor(opts: SiteOptions) {
             : t.name === 'add_layer' && keepTool
               ? addLayer(t, remote(keepTool))
               : t,
-      );
+      )
+      .concat([keepSnapshot as AnyTool, validateDataTool as AnyTool]);
   }
 
   return { site, tools, current: recalled };

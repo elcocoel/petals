@@ -12,6 +12,8 @@ export const FORWARDED = [
   '/mcp/:path*',
   '/skill.md',
   '/setup',
+  '/schema',
+  '/schema/:path*',
   '/petal.mjs',
   '/d/:path*',
   '/s/:path*',

@@ -110,6 +110,35 @@ describe('what the server serves for agents', () => {
     expect(text).not.toContain('server.local');
   });
 
+  test('every format, its JSON Schema at /schema/<format>/<version>.json, listed at /schema', async () => {
+    const app = serverApp(fresh(), { siteKey: KEY });
+    const list = (await (await call(app, '/schema', { 'x-petal-site-key': KEY })).json()) as {
+      formats: { petal: string; url: string }[];
+      hash: string;
+    };
+    const petals = list.formats.map((f) => f.petal);
+    for (const p of [
+      'snapshot/v1',
+      'layer/v1',
+      'claim/v4',
+      'mark/v2',
+      'proposals/v1',
+      'value/v1',
+      'seam/v1',
+    ])
+      expect(petals).toContain(p);
+    expect(list.formats.find((f) => f.petal === 'claim/v4')?.url).toBe(
+      `${SITE}/schema/claim/v4.json`,
+    );
+    expect(list.hash).toMatch(/RFC 8785/);
+    const res = await call(app, '/schema/claim/v4.json', { 'x-petal-site-key': KEY });
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { $id: string }).$id).toBe('urn:petal:schema:claim:v4');
+    expect((await call(app, '/schema/recipe/v9.json', { 'x-petal-site-key': KEY })).status).toBe(
+      404,
+    );
+  });
+
   test("the setup skill, the brain's setup chapter as plain text, with the website's address", async () => {
     const app = serverApp(fresh(), { siteKey: KEY });
     const res = await call(app, '/setup', { 'x-petal-site-key': KEY });

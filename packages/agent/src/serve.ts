@@ -14,6 +14,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serve } from '@hono/node-server';
+import { schemas } from '@petal/core';
 import { brainAt, type Config, configFromEnv as toolsConfig } from '@petal/tools';
 import { Hono } from 'hono';
 import { buildPetalApp, type PetalAppOptions } from './app.ts';
@@ -116,6 +117,28 @@ export function serverApp(cfg: Config, o: ServerOptions = {}): Hono {
     });
   });
 
+  // Petals' formats, for any agent that writes them without Petals' agent (#98, Elco, 11 Nov): each JSON
+  // Schema at /schema/<format>/<version>.json, the words a document's `petal` field says (claim/v4 at
+  // /schema/claim/v4.json), and every one of them listed at /schema.
+  app.get('/schema', (c) => {
+    const site = siteOf(c.req.raw);
+    return c.json({
+      formats: [...FORMATS.keys()].map((petal) => ({ petal, url: `${site}/schema/${petal}.json` })),
+      hash: 'A document is named by the SHA-256 of its RFC 8785 canonical JSON.',
+    });
+  });
+  app.get('/schema/:format/:version', (c) => {
+    const version = c.req.param('version').replace(/\.json$/, '');
+    const schema = FORMATS.get(`${c.req.param('format')}/${version}`);
+    if (!schema) {
+      return c.json(
+        { error: { code: 'not_found', message: 'No such format. The list is at /schema.' } },
+        404,
+      );
+    }
+    return c.json(schema);
+  });
+
   // The setup skill (Elco, 11 Nov): the brain's setup chapter, for a chatbot the person pasted the setup
   // prompt into, which may open this link. Plain text a fetcher reads without JavaScript, with this site's
   // address written in, and without the chapter's header and notes.
@@ -147,6 +170,14 @@ export function serverApp(cfg: Config, o: ServerOptions = {}): Hono {
   });
   return app;
 }
+
+/** Every format core holds, by the words of its `petal` field: urn:petal:schema:claim:v4 is claim/v4. */
+const FORMATS = new Map(
+  Object.values(schemas).flatMap((s) => {
+    const m = /^urn:petal:schema:([A-Za-z0-9-]+):(v\d+)$/.exec((s as { $id?: string }).$id ?? '');
+    return m ? [[`${m[1]}/${m[2]}`, s] as const] : [];
+  }),
+);
 
 /**
  * The request as petalApp should see it. With a key, the website vouches for the visitor's address,
