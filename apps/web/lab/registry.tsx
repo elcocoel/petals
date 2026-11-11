@@ -45,6 +45,7 @@ import { MapHero } from '../components/landing/MapHero.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
 import { StoryFlower, StoryLight } from '../components/landing/StoryFlower.tsx';
+import { MapClaims } from '../components/MapClaims.tsx';
 import { MapList } from '../components/MapList.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { Oops } from '../components/Oops.tsx';
@@ -70,6 +71,7 @@ import { Footer } from '../components/ui/Footer.tsx';
 import { GalleryCard } from '../components/ui/GalleryCard.tsx';
 import { Icon, type IconName } from '../components/ui/Icon.tsx';
 import { IconButton } from '../components/ui/IconButton.tsx';
+import { LineRow } from '../components/ui/LineRow.tsx';
 import { MetaRow } from '../components/ui/MetaRow.tsx';
 import { Mono } from '../components/ui/Mono.tsx';
 import { Nav } from '../components/ui/Nav.tsx';
@@ -107,6 +109,7 @@ import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
 import type { ProfileEditorView } from '../lib/lobby-view.ts';
+import { mapClaimGroups } from '../lib/map-claims.ts';
 import { drawingTile, type MapCard, mapTile } from '../lib/maps.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
 import { oopsWords } from '../lib/oops-words.ts';
@@ -134,6 +137,7 @@ import {
 import { LabComposer, LabPetalClose } from './LabComposer.tsx';
 import { LabChains, LabFoldingLegend, LabLegend } from './LabOverlays.tsx';
 import { LabAction, LabAgent, LabFold, LabProject, LabRail } from './LabPanel.tsx';
+import { LAB_CLAIM_NAMES, LAB_MAP_CLAIMS } from './map-claims-fixtures.ts';
 import { PANEL_STATES } from './panel-fixtures.ts';
 
 export interface LabState {
@@ -2954,6 +2958,83 @@ export const registry: LabEntry[] = [
             </div>
           </div>
         ),
+      },
+    ],
+  },
+  {
+    id: 'LineRow',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/LineRow.tsx',
+    states: [
+      {
+        name: 'closed: a few lines that wrap, answering as the panel rows do',
+        render: () => (
+          <div className="w-tile-width">
+            <LineRow expanded={false} onClick={() => undefined}>
+              <span className="type-ui">
+                A claim's words, as long as they are, two lines at most here
+              </span>
+            </LineRow>
+          </div>
+        ),
+      },
+      {
+        name: 'open: the soft fill while what is under it shows',
+        render: () => (
+          <div className="w-tile-width">
+            <LineRow expanded onClick={() => undefined}>
+              <span className="type-ui">A claim's words</span>
+            </LineRow>
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'MapClaims',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/MapClaims.tsx',
+    states: [
+      {
+        name: "folded until asked, as on the map: what's said and how many",
+        render: () => (
+          <MapClaims
+            groups={mapClaimGroups(LAB_MAP_CLAIMS, LAB_CLAIM_NAMES)}
+            open={null}
+            onOpen={() => undefined}
+            fold={{ open: false, onToggle: () => undefined }}
+          />
+        ),
+      },
+      {
+        name: 'open: each account under its name, each claim in two lines',
+        render: () => (
+          <MapClaims
+            groups={mapClaimGroups(LAB_MAP_CLAIMS, LAB_CLAIM_NAMES)}
+            open={null}
+            onOpen={() => undefined}
+            fold={{ open: true, onToggle: () => undefined }}
+          />
+        ),
+      },
+      {
+        name: 'an inferred claim pressed: what it rests on, its method and its evidence',
+        render: () => {
+          const groups = mapClaimGroups(LAB_MAP_CLAIMS, LAB_CLAIM_NAMES);
+          const inferred = groups.flatMap((g) => g.lines).find((l) => l.kind === 'inferred');
+          return (
+            <MapClaims
+              groups={groups}
+              open={inferred?.key ?? null}
+              onOpen={() => undefined}
+              fold={{ open: true, onToggle: () => undefined }}
+            />
+          );
+        },
       },
     ],
   },

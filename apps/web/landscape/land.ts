@@ -10,8 +10,8 @@ import { gunzipSync } from 'node:zlib';
 import type { FlowerReading } from '../flower/model.ts';
 import { api } from '../lib/api.ts';
 import { repoRoot } from '../lib/config.ts';
-import { chainLabel, type LegendKey } from '../lib/flower-view.ts';
-import { type MapMark, mapList, mapsKeys } from '../lib/maps.ts';
+import { chainLabel } from '../lib/flower-view.ts';
+import { type MapMark, mapList } from '../lib/maps.ts';
 import { viewQuery } from '../lib/person-view.ts';
 import {
   LOGOS_DIR,
@@ -57,8 +57,6 @@ export interface BenchLandscape {
   flowers: BenchFlower[];
   roads: Road[];
   chains: BenchChain[];
-  /** the colours its maps paint, as their cards' keys give them: the legend's (#92) */
-  keys?: LegendKey[];
 }
 
 /** A name is cut here, so no name is wider than a flower's room. */
@@ -169,8 +167,8 @@ export async function benchLandscape(view: string): Promise<BenchLandscape | { e
 }
 
 /**
- * The map's flowers named and marked by their maps' own marks (#85), with the colours the maps paint for the
- * legend (#92), from the maps' cards; as they were without.
+ * The map's flowers named and marked by their maps' own marks (#85), with how many proposals each map has (#93),
+ * from the maps' cards; as they were without.
  */
 async function marked(land: BenchLandscape, view: string): Promise<BenchLandscape> {
   const cards = await mapList(view);
@@ -178,7 +176,7 @@ async function marked(land: BenchLandscape, view: string): Promise<BenchLandscap
   const maps = cards.value.maps;
   const marks = withMarks(land, new Map(maps.map((c) => [c.id, c.mark])));
   const counts = new Map(maps.map((c) => [c.id, c.proposals?.count ?? 0]));
-  return { ...withProposals(marks, counts), keys: mapsKeys(maps) };
+  return withProposals(marks, counts);
 }
 
 /** Each flower with how many proposals its map's card counts (#93), where it counts any. */
