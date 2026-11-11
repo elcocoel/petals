@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import type { ReadingPetal, Snapshot, Spec, ViewV2 } from '@petal/core/types';
-import { type Fold, foldOf, foldRoom } from '@petal/core/wedge/fold';
+import { type Fold, foldOf } from '@petal/core/wedge/fold';
 import { GREY, KEYS, type Key, keyFor, keysOf } from '@petal/core/wedge/keys';
 import type { FlowerReading } from '../../flower/model.ts';
 import type { PetalLook } from '../../flower/scene.ts';
@@ -112,7 +112,7 @@ export function coverage(
   ];
   if (tail)
     lines.push(
-      `The other ${whole(tail.count ?? 0)} hold ${whole(Number(tail.amount))} ${unit} (${pct(tail.share)}): the grey block, packed, one cell each, every cell as tall as its own petal would be.`,
+      `The other ${whole(tail.count ?? 0)} hold ${whole(Number(tail.amount))} ${unit} (${pct(tail.share)}): one grey petal as tall as that share, its stripes the members, the smallest nearest the centre.`,
     );
   return lines;
 }
@@ -121,9 +121,10 @@ export function coverage(
 const PLAIN_VIEW: ViewV2 = { ...ART_VIEW, dimensions: { ...ART_VIEW.dimensions, segments: null } };
 
 /**
- * "Everyone else", folded: its members packed as cells in a few columns (core's foldOf), each as tall as its own
- * petal would be, in a little more room than a petal (foldRoom). Read again with a selection as large as the
- * population, so every member has its height on the flower's scale.
+ * "Everyone else", one petal (Elco, 11 Nov: "the correct size for the percentage it represents"): as tall as the
+ * share it holds, on one scale with every other petal, so the scale's top is the largest of them all, the tail
+ * included; and made of its members as stripes, the smallest nearest the centre (core's foldOf). Read again with
+ * a selection as large as the population, so every member has its share.
  */
 export function folded(
   core: Awaited<ReturnType<typeof loadCore>>,
@@ -141,13 +142,10 @@ export function folded(
     [],
     { floor: 0 },
   ).petals;
-  const room = foldRoom(tail.count ?? 0);
-  const { fold, tallest } = foldOf(
-    everyone.slice(drawn).map((p) => p.height),
-    room,
-  );
+  const most = Math.max(...all.map((p) => p.share));
+  const { fold } = foldOf(everyone.slice(drawn).map((p) => p.share / most));
   return {
-    petals: all.map((p) => (p.tail ? { ...p, height: tallest, width: p.width * room } : p)),
+    petals: all.map((p) => ({ ...p, height: p.share / most })),
     folds: { [tail.id]: fold },
   };
 }

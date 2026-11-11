@@ -4,7 +4,13 @@
 import { describe, expect, test } from 'vitest';
 import { HEIGHT_FLOOR } from '../src/reading/encodings.ts';
 import { readFlower } from '../src/reading/index.ts';
-import { insetBy, roundedPath, tonesOf } from '../src/render/wedge/highlight.ts';
+import {
+  insetBy,
+  outsidePiece,
+  outsideRadii,
+  roundedPath,
+  tonesOf,
+} from '../src/render/wedge/highlight.ts';
 import { GREY, KEYS, keyFor, keysOf } from '../src/render/wedge/keys.ts';
 import type { ViewV2 } from '../src/types/index.ts';
 import { GOLDEN_CASES, goldenSpec, readGolden } from './golden-cases.ts';
@@ -143,5 +149,25 @@ describe('a reading with no minimum height', () => {
     const r = readFlower(goldenSpec(c), c.snapshot(), straight);
     expect(Math.min(...r.petals.map((p) => p.height))).toBeGreaterThanOrEqual(HEIGHT_FLOOR);
     expect(readFlower(goldenSpec(c), c.snapshot())).toEqual(readGolden(c));
+  });
+});
+
+describe('the highlight on a petal of bands: the outside only (Elco, 11 Nov)', () => {
+  test('the foot corners soften on the first band, the tip on the last, none between', () => {
+    expect(outsideRadii(true, false, 2)).toEqual([0, 0, 2, 2]);
+    expect(outsideRadii(false, true, 2)).toEqual([2, 2, 0, 0]);
+    expect(outsideRadii(false, false, 2)).toEqual([0, 0, 0, 0]);
+  });
+
+  test('a middle band strokes only its two sides, never across', () => {
+    const inner: [number, number][] = [
+      [0, 0],
+      [10, 0],
+      [10, 100],
+      [0, 100],
+    ];
+    const d = outsidePiece(inner, 100, 1, 30, 60, false, false, 1);
+    expect(d.match(/M/g)).toHaveLength(2);
+    expect(d).not.toContain('Q');
   });
 });
