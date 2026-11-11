@@ -1,11 +1,13 @@
 // Server only. The petal look's bench (#76; design/flower-art-direction/default-system-vnext.md, V1, Elco 11 Nov):
 // real flowers read through the art direction's view (height straight, no minimum; width carries nothing), keyed
 // by core's look (wedge/keys.ts) and highlighted by it (wedge/highlight.ts). Only what a drawing needs goes to the
-// browser. Real data only: every flower says its snapshot, what it draws and what it leaves out.
+// browser. Real data only: every flower says its snapshot, what it draws and what it leaves out. "Everyone else" is
+// drawn, folded (wedge/fold.ts): Elco, 11 Nov, "it should be there, and it should somehow clearly be a group".
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import type { ReadingPetal, Snapshot, Spec, ViewV2 } from '@petal/core/types';
+import { type Fold, foldOf, foldRoom } from '@petal/core/wedge/fold';
 import { GREY, KEYS, type Key, keyFor, keysOf } from '@petal/core/wedge/keys';
 import type { FlowerReading } from '../../flower/model.ts';
 import type { PetalLook } from '../../flower/scene.ts';
@@ -110,10 +112,53 @@ export function coverage(
   ];
   if (tail)
     lines.push(
-      `The other ${whole(tail.count ?? 0)} hold ${whole(Number(tail.amount))} ${unit} (${pct(tail.share)}) and aren't drawn here.`,
+      `The other ${whole(tail.count ?? 0)} hold ${whole(Number(tail.amount))} ${unit} (${pct(tail.share)}): the grey block, packed, one cell each, every cell as tall as its own petal would be.`,
     );
   return lines;
 }
+
+/** The art direction's view without segments, to read every member of a tail cheaply. */
+const PLAIN_VIEW: ViewV2 = { ...ART_VIEW, dimensions: { ...ART_VIEW.dimensions, segments: null } };
+
+/**
+ * "Everyone else", folded: its members packed as cells in a few columns (core's foldOf), each as tall as its own
+ * petal would be, in a little more room than a petal (foldRoom). Read again with a selection as large as the
+ * population, so every member has its height on the flower's scale.
+ */
+export function folded(
+  core: Awaited<ReturnType<typeof loadCore>>,
+  spec: Spec,
+  s: Snapshot,
+  all: readonly ReadingPetal[],
+): { petals: ReadingPetal[]; folds: Record<string, Fold> } {
+  const tail = all.find((p) => p.tail);
+  if (!tail) return { petals: [...all], folds: {} };
+  const drawn = all.length - 1;
+  const everyone = core.readFlower(
+    { ...spec, selection: { ...spec.selection, petals: drawn + (tail.count ?? 0) } },
+    s,
+    PLAIN_VIEW,
+    [],
+    { floor: 0 },
+  ).petals;
+  const room = foldRoom(tail.count ?? 0);
+  const { fold, tallest } = foldOf(
+    everyone.slice(drawn).map((p) => p.height),
+    room,
+  );
+  return {
+    petals: all.map((p) => (p.tail ? { ...p, height: tallest, width: p.width * room } : p)),
+    folds: { [tail.id]: fold },
+  };
+}
+
+/** The key's line for the folded tail. */
+const tailLine = (all: readonly ReadingPetal[]): KeyLine[] => {
+  const tail = all.find((p) => p.tail);
+  return tail
+    ? [{ hex: GREY.hex, label: `everyone else, ${whole(tail.count ?? 0)} folded`, petals: 1 }]
+    : [];
+};
 
 export const HEIGHT_WORDS =
   'Height: straight, so twice as much is twice as tall. Every petal has the same width.';
@@ -129,6 +174,7 @@ export async function petalBench(): Promise<PetalBench> {
   ) as Spec;
   const rgAll = core.readFlower(rgSpec, rg, ART_VIEW, [], { floor: 0 }).petals;
   const rgDrawn = rgAll.filter((p) => !p.tail);
+  const rgFolded = folded(core, rgSpec, rg, rgAll);
   const rgHigh = highlighted(rgDrawn, 'delegates');
   const kinds = keysOf(
     rgDrawn.map((p) => p.colour),
@@ -139,21 +185,25 @@ export async function petalBench(): Promise<PetalBench> {
     ...coverage(rg, rgAll, rgDrawn, 'delegates'),
     `${HEIGHT_WORDS} Height is delegated votes.`,
   ];
-  const reading = { title: rg.network.title, petals: rgDrawn };
+  const reading = { title: rg.network.title, petals: rgFolded.petals };
   const raidguild: LookFlower = {
     reading,
     look: {
       fills: Object.fromEntries(
-        rgDrawn.map((p) => [p.id, keyFor(kinds, p.colour)?.hex ?? GREY.hex]),
+        rgFolded.petals.map((p) => [p.id, keyFor(kinds, p.colour)?.hex ?? GREY.hex]),
       ),
       bands: {},
       highlight: rgHigh.ids,
+      folds: rgFolded.folds,
     },
-    key: kinds.map((k) => ({
-      hex: k.key?.hex ?? GREY.hex,
-      label: k.value === 'unknown' ? 'address of unknown kind' : k.value.replaceAll('_', ' '),
-      petals: k.petals,
-    })),
+    key: [
+      ...kinds.map((k) => ({
+        hex: k.key?.hex ?? GREY.hex,
+        label: k.value === 'unknown' ? 'address of unknown kind' : k.value.replaceAll('_', ' '),
+        petals: k.petals,
+      })),
+      ...tailLine(rgAll),
+    ],
     facts: rgFacts,
     highlight: rgHigh.words,
   };
@@ -163,11 +213,15 @@ export async function petalBench(): Promise<PetalBench> {
     flower: {
       ...raidguild,
       look: {
-        fills: Object.fromEntries(rgDrawn.map((p) => [p.id, key.hex])),
+        fills: Object.fromEntries(rgFolded.petals.map((p) => [p.id, p.tail ? GREY.hex : key.hex])),
         bands: {},
         highlight: rgHigh.ids,
+        folds: rgFolded.folds,
       },
-      key: [{ hex: key.hex, label: `${key.name}, carrying no data`, petals: rgDrawn.length }],
+      key: [
+        { hex: key.hex, label: `${key.name}, carrying no data`, petals: rgDrawn.length },
+        ...tailLine(rgAll),
+      ],
     },
   }));
 
@@ -178,6 +232,7 @@ export async function petalBench(): Promise<PetalBench> {
   const ns = snapshotAt(root, golden.spec.snapshot.sha256);
   const nearAll = core.readFlower(golden.spec, ns, ART_VIEW, [], { floor: 0 }).petals;
   const nearDrawn = nearAll.filter((p) => !p.tail);
+  const nearFolded = folded(core, golden.spec, ns, nearAll);
   const nearHigh = highlighted(nearDrawn, 'validators');
   // a band's class is common by how many petals carry a band of it
   const classes = keysOf(
@@ -187,12 +242,13 @@ export async function petalBench(): Promise<PetalBench> {
   const labelOf = new Map(nearDrawn.flatMap((p) => p.segments.map((s) => [s.key, s.label])));
   const bare = nearDrawn.filter((p) => p.segments.length === 0).length;
   const near: LookFlower = {
-    reading: { title: ns.network.title, petals: nearDrawn },
+    reading: { title: ns.network.title, petals: nearFolded.petals },
     look: {
-      // a petal with no recorded backers draws grey: unknown, kept apart
-      fills: Object.fromEntries(nearDrawn.map((p) => [p.id, GREY.hex])),
+      // a petal with no recorded backers draws grey: unknown, kept apart; so does the folded tail
+      fills: Object.fromEntries(nearFolded.petals.map((p) => [p.id, GREY.hex])),
       bands: Object.fromEntries(classes.map((c) => [c.value, c.key?.hex ?? GREY.hex])),
       highlight: nearHigh.ids,
+      folds: nearFolded.folds,
     },
     key: [
       ...classes.map((c) => ({
@@ -201,6 +257,7 @@ export async function petalBench(): Promise<PetalBench> {
         petals: c.petals,
       })),
       ...(bare > 0 ? [{ hex: GREY.hex, label: 'no backers recorded', petals: bare }] : []),
+      ...tailLine(nearAll),
     ],
     facts: [
       `${ns.network.title}, block ${whole(ns.snapshot.block_height ?? 0)}, ${day(ns.snapshot.as_of)}.`,

@@ -37,7 +37,7 @@ describe('the petal look, in the lab only', () => {
     const reading = ['app', 'components', 'flower', 'landscape', 'lib', 'viewmodels', 'lab']
       .flatMap(sourcesIn)
       .filter((f) => /floor: 0/.test(text(f)));
-    expect(reading).toEqual(['lab/petal/bench.ts', 'lab/petal/proposals.ts']);
+    expect(reading).toEqual(['lab/petal/bench.ts']);
   });
 
   test("the bench's own snapshot is the one its name says, and its spec names it", () => {

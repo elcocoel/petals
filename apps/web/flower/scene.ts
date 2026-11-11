@@ -2,6 +2,7 @@
 // mounts, so a frame costs what it costs here and nothing else. Colours are token roles; no other
 // colour appears on this flower.
 
+import { type Fold, foldPath } from '@petal/core/wedge/fold';
 import {
   bandCorners,
   HIGHLIGHT,
@@ -40,6 +41,11 @@ export interface PetalLook {
   bands: Record<string, string>;
   /** the petals the highlight is on, by id */
   highlight: readonly string[];
+  /**
+   * "Everyone else", folded (core's wedge/fold.ts), by its id: its members packed as small cells in a few columns,
+   * each as tall as that member's own petal would be.
+   */
+  folds?: Record<string, Fold>;
 }
 
 /** Each scene's filters get their own names, so two flowers on one page never share one. */
@@ -225,6 +231,13 @@ export function createScene(
     look && Object.keys(look.bands).length > 0 && p.segments.length > 0 ? 1 : 0,
   );
   const lit = new Set(look?.highlight ?? []);
+  /** Each petal's folded members, or undefined. */
+  const folds = m.petals.map((p) => look?.folds?.[p.id]);
+  /** A petal's shape at rest: its wedge, or folded, the rest of the curve. */
+  const shapeOf = (ring: Ring, i: number, h: number): string => {
+    const fold = folds[i];
+    return fold && fold.columns.length > 0 ? foldPath(ring, i, fold) : bandPath(ring, i, 0, h);
+  };
   /** figure.petal-highlight: on or off, per petal. */
   const high = Uint8Array.from(m.petals, (p) => (lit.has(p.id) ? 1 : 0));
   const defs = el('defs', {}, root);
@@ -523,12 +536,14 @@ export function createScene(
         path.set('display', 'inline');
         strokes[i]?.set('display', 'inline');
       }
-      const strength = (m.petals[i]?.tail ? TAIL_TONE : 1) * (i === focusIndex ? 1 : recede);
+      // folded, its shape already says it's many; the lighter tone is for the plain tail
+      const strength =
+        (m.petals[i]?.tail && !folds[i] ? TAIL_TONE : 1) * (i === focusIndex ? 1 : recede);
       if (high[i]) {
         if (fresh || moved || rescaled) {
           drawHigh(path, strokes[i], ring, i, 0, h, k);
         }
-      } else if (fresh || moved) path.node.setAttribute('d', bandPath(ring, i, 0, h));
+      } else if (fresh || moved) path.node.setAttribute('d', shapeOf(ring, i, h));
       path.set('fill-opacity', o2(strength));
       strokes[i]?.set('stroke-opacity', o2(strength));
     }
@@ -661,7 +676,7 @@ export function createScene(
           done += seg.frac;
           add(bandPaint(seg.key), bandPath(ring, i, h0, j === segs.length - 1 ? h : h * done));
         });
-      } else add(paints[i] as string, bandPath(ring, i, 0, h));
+      } else add(paints[i] as string, shapeOf(ring, i, h));
     }
     for (const run of silhouetteRuns) run.path.node.setAttribute('d', ds.get(run.fill) ?? '');
   };
