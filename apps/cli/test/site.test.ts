@@ -8,7 +8,7 @@ import { TOOLS_VERSION } from '@petal/core';
 import { isToolError, type Tool, type ToolContext } from '@petal/tools';
 import { describe, expect, test } from 'vitest';
 import { nodeIsNew, siteOf } from '../src/file.ts';
-import { LEFT_OUT, SITE_TOOLS, siteDoor } from '../src/site.ts';
+import { LEFT_OUT, SITE_TOOLS, siteDoor, workerCurrentFile } from '../src/site.ts';
 
 const SITE = 'https://petals.example';
 const TOKEN = 'YVySpb9eOQx50-27nFFm4wRPn6a3OZq0yLTf5i61Y94';
@@ -667,5 +667,140 @@ describe('a job that ended under the worker', () => {
     const tools = siteDoor({ site: SITE, fetch, currentFile }).tools(registry);
     await byName(tools, 'add_note').run({ text: 'x', exploration: other } as never, ctx());
     expect(JSON.parse(readFileSync(currentFile, 'utf8')).link).toBe(LINK);
+  });
+});
+
+describe('several workers on one computer, each with its own job (swarm.md step 5)', () => {
+  const A = 'A'.repeat(43);
+  const B = 'B'.repeat(43);
+  const PAGE = `${SITE}/s/${'P'.repeat(43)}`;
+  const VIEW_A = { petal: 'view/v2', color: { data: 'kind' } };
+  const VIEW_B = { petal: 'view/v2', color: { data: 'role' } };
+  /** The person's own conversation in the current file, older, and two workers each holding a job. */
+  const twoJobs = async () => {
+    const { mkdirSync, utimesSync, writeFileSync } = await import('node:fs');
+    const currentFile = join(mkdtempSync(join(tmpdir(), 'petal-workers-')), 'current.json');
+    writeFileSync(currentFile, `${JSON.stringify({ link: PAGE })}\n`);
+    utimesSync(currentFile, new Date(Date.now() - 60_000), new Date(Date.now() - 60_000));
+    const held = (worker: string, token: string, view: object, as: string) => {
+      const file = workerCurrentFile(currentFile, worker);
+      mkdirSync(join(file, '..'), { recursive: true });
+      writeFileSync(file, `${JSON.stringify({ link: `${SITE}/s/${token}`, view, as, worker })}\n`);
+      return file;
+    };
+    return {
+      currentFile,
+      a: held('w1', A, VIEW_A, 'claude-code'),
+      b: held('w2', B, VIEW_B, 'codex'),
+    };
+  };
+  const drawing = () => {
+    const got: unknown[] = [];
+    const render = tool('render_flower', async (input) => {
+      got.push(input);
+      return { spec_sha256: 'b'.repeat(64), view_url: '/draft?spec=x', short_url: '/d/x' };
+    });
+    return { got, reg: [...registry.filter((t) => t.name !== 'render_flower'), render] };
+  };
+  const answering = () => {
+    const site = fakeSite();
+    const fetch = async (url: string, init: RequestInit = {}) => {
+      if (!url.includes('/annotations')) return site.fetch(url, init);
+      site.seen.push({
+        method: init.method ?? 'GET',
+        url,
+        headers: {},
+        body: (init.body as string) ?? null,
+      });
+      return new Response(JSON.stringify({ ids: ['c'.repeat(64)] }), {
+        headers: { 'content-type': 'application/json' },
+      });
+    };
+    return { ...site, fetch };
+  };
+
+  test("a call that names its job's project goes there, with that worker's view and name", async () => {
+    const { currentFile } = await twoJobs();
+    const site = answering();
+    const d = drawing();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, currentFile }).tools(d.reg);
+    const drawn = (await byName(tools, 'render_flower').run(
+      { spec: SPEC, exploration: `${SITE}/s/${B}` } as never,
+      ctx(),
+    )) as Record<string, unknown>;
+    expect(isToolError(drawn as never)).toBe(false);
+    // drawn here as B's job sees it, without the project, and saved in B's project
+    expect(d.got).toEqual([{ spec: SPEC, view: VIEW_B }]);
+    expect(site.seen.some((s) => s.url.endsWith(`/explorations/${B}/steps`))).toBe(true);
+    await byName(tools, 'add_annotation').run(
+      { exploration: `${SITE}/s/${A}`, annotations: [] } as never,
+      ctx(),
+    );
+    const said = site.seen.find((s) => s.url.endsWith(`/explorations/${A}/annotations`));
+    expect(JSON.parse(said?.body as string).as).toBe('claude-code');
+  });
+
+  test("a call that names no project can't tell whose, so it says to name it and sends nothing", async () => {
+    const { currentFile } = await twoJobs();
+    const site = fakeSite();
+    const d = drawing();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, currentFile }).tools(d.reg);
+    for (const [name, input] of [
+      ['add_note', { text: 'step 2' }],
+      ['render_flower', { spec: SPEC }],
+      ['add_layer', { layer: {} }],
+    ] as const) {
+      const out = (await byName(tools, name).run(input as never, ctx())) as {
+        error?: { message: string; hint: string };
+      };
+      expect(out.error?.message).toBe(
+        'Several workers hold jobs on this computer, so this needs to know whose.',
+      );
+      expect(out.error?.hint).toMatch(/as exploration \(--exploration on a command\)/);
+    }
+    expect(d.got).toEqual([]);
+    expect(site.seen).toEqual([]);
+  });
+
+  test('a report frees its worker, and then the one job left takes the calls that name none', async () => {
+    const { existsSync } = await import('node:fs');
+    const { currentFile, a, b } = await twoJobs();
+    const site = fakeSite();
+    const tools = siteDoor({ site: SITE, fetch: site.fetch, currentFile }).tools(registry);
+    await byName(tools, 'report_job').run(
+      { exploration: `${SITE}/s/${A}`, job: 'job_1', result: { summary: 'x' } } as never,
+      ctx(),
+    );
+    expect(existsSync(a)).toBe(false);
+    expect(existsSync(b)).toBe(true);
+    await byName(tools, 'add_note').run({ text: 'found 40 names' } as never, ctx());
+    expect(site.seen.at(-1)?.url).toBe(`${SITE}/api/v1/explorations/${B}/notes`);
+  });
+
+  test("a job stopped under one worker names that worker and frees it, and leaves the other's", async () => {
+    const { existsSync, readFileSync } = await import('node:fs');
+    const { currentFile, a, b } = await twoJobs();
+    const site = fakeSite();
+    const fetch = async (url: string, init: RequestInit = {}) =>
+      url.includes(`/explorations/${A}/`)
+        ? new Response(
+            JSON.stringify({
+              error: { code: 'unauthorised', message: 'This job was stopped.', ended: 'stopped' },
+            }),
+            { status: 403, headers: { 'content-type': 'application/json' } },
+          )
+        : site.fetch(url, init);
+    const tools = siteDoor({ site: SITE, fetch, currentFile }).tools(registry);
+    const out = (await byName(tools, 'add_note').run(
+      { text: 'x', exploration: `${SITE}/s/${A}` } as never,
+      ctx(),
+    )) as Record<string, unknown>;
+    expect(out.next).toBe(
+      'This job was stopped. Run node ~/.petals/petal.mjs jobs wait --worker w1 now.',
+    );
+    expect(existsSync(a)).toBe(false);
+    expect(existsSync(b)).toBe(true);
+    // the person's own conversation is left as it was
+    expect(JSON.parse(readFileSync(currentFile, 'utf8')).link).toBe(PAGE);
   });
 });

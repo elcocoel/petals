@@ -13,8 +13,13 @@
 // A job's project comes with the person's view (Elco's glasses rule, 10 Nov), kept with it, so every
 // flower drawn for that job goes through it. `jobs wait` runs as a command of its own while an MCP
 // session may run on, so a file newer than what this process remembers wins.
-import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+//
+// Several workers on one computer (swarm.md step 5) each keep the job they hold in a file of their own,
+// beside that one (current/<worker>.json), so separate jobs never cross: a call that names its project
+// goes there with that worker's view, name and id. A call that names none goes where it went before,
+// unless two or more workers here hold jobs: then it can't tell whose, and says to name the project.
+import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { canonicalJson, TOOLS_VERSION } from '@petal/core';
 import type { Snapshot, Spec } from '@petal/core/types';
@@ -33,9 +38,25 @@ interface Current {
   /** and the worker that took the job, to wait again with when it ends */
   worker?: string;
 }
+/** Where one worker on this computer keeps the job it holds, beside the current file (step 5). */
+export const workerCurrentFile = (currentFile: string, worker: string) =>
+  join(dirname(currentFile), 'current', `${worker}.json`);
+
 /** A job ended from the page (swarm.md step 3): stopped, or handed to another worker. */
 const ENDED = new Set(['stopped', 'handed_over']);
 const isView = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v);
+/** A call that can't tell whose job it's for: two or more workers here hold one (step 5). */
+const SEVERAL = Symbol('several');
+/** A current file's contents, as the site door keeps them. */
+const asCurrent = (j: Json): Current | null =>
+  typeof j.link === 'string'
+    ? {
+        link: j.link,
+        ...(isView(j.view) ? { view: j.view } : {}),
+        ...(typeof j.as === 'string' ? { as: j.as } : {}),
+        ...(typeof j.worker === 'string' ? { worker: j.worker } : {}),
+      }
+    : null;
 
 export interface SiteOptions {
   /** the site's origin, e.g. https://petals.example */
@@ -87,6 +108,13 @@ const fault = (code: string, message: string, hint?: string) => ({
   tools_version: TOOLS_VERSION,
 });
 
+const several = () =>
+  fault(
+    'bad_input',
+    'Several workers hold jobs on this computer, so this needs to know whose.',
+    "Pass your job's project, project.exploration from the jobs wait that gave you the job, as exploration (--exploration on a command).",
+  );
+
 const noExploration = () =>
   fault(
     'bad_input',
@@ -129,20 +157,63 @@ export function siteDoor(opts: SiteOptions) {
     if (!opts.currentFile) return null;
     try {
       if (current && statSync(opts.currentFile).mtimeMs <= chosenAt) return null;
-      const j = JSON.parse(readFileSync(opts.currentFile, 'utf8')) as Json;
-      return typeof j.link === 'string'
-        ? {
-            link: j.link,
-            ...(isView(j.view) ? { view: j.view } : {}),
-            ...(typeof j.as === 'string' ? { as: j.as } : {}),
-            ...(typeof j.worker === 'string' ? { worker: j.worker } : {}),
-          }
-        : null;
+      return asCurrent(JSON.parse(readFileSync(opts.currentFile, 'utf8')) as Json);
     } catch {
       return null;
     }
   };
   const recalledAll = (): Current | null => fromFile() ?? current;
+  /** When this process or the current file last chose a conversation. */
+  const chosenTime = (): number => {
+    let at = current ? chosenAt : 0;
+    try {
+      if (opts.currentFile) at = Math.max(at, statSync(opts.currentFile).mtimeMs);
+    } catch {
+      // no file yet
+    }
+    return at;
+  };
+  const jobsDir = opts.currentFile ? join(dirname(opts.currentFile), 'current') : null;
+  /** The jobs this computer's workers hold now, one file per worker (step 5). */
+  const jobsHere = (): { file: string; at: number; current: Current }[] => {
+    if (!jobsDir) return [];
+    let names: string[];
+    try {
+      names = readdirSync(jobsDir).filter((n) => n.endsWith('.json'));
+    } catch {
+      return [];
+    }
+    return names.flatMap((n) => {
+      const file = join(jobsDir, n);
+      try {
+        const c = asCurrent(JSON.parse(readFileSync(file, 'utf8')) as Json);
+        return c ? [{ file, at: statSync(file).mtimeMs, current: c }] : [];
+      } catch {
+        return [];
+      }
+    });
+  };
+  /** A worker's job is over here: reported, stopped or handed over. */
+  const release = (file: string) => {
+    try {
+      rmSync(file, { force: true });
+    } catch {
+      // gone already
+    }
+  };
+  const mineFor = (link: string) => jobsHere().find((h) => refOf(h.current.link) === refOf(link));
+  /**
+   * Where a call goes, with the view, name and worker that come with it. A project the call names is
+   * that worker's, when a worker here holds it. None named: the one job a worker here took since this
+   * conversation was chosen, else the conversation; with two or more held, there's no telling whose.
+   */
+  const pick = (named?: string): Current | null | typeof SEVERAL => {
+    if (named) return mineFor(named)?.current ?? { ...(recalledAll() ?? {}), link: named };
+    const jobs = jobsHere();
+    if (jobs.length > 1) return SEVERAL;
+    const only = jobs[0];
+    return only && only.at > chosenTime() ? only.current : recalledAll();
+  };
   /** The job's project is no longer this worker's: nothing more goes there. */
   const forget = () => {
     current = null;
@@ -161,15 +232,17 @@ export function siteDoor(opts: SiteOptions) {
   const ended = (path: string, out: Json): Json => {
     const now = recalledAll();
     const ref = /^\/api\/v1\/explorations\/([^/?]+)/.exec(path)?.[1];
-    const worker = now?.worker;
+    const mine = ref
+      ? jobsHere().find((h) => encodeURIComponent(refOf(h.current.link)) === ref)
+      : undefined;
+    const worker = mine?.current.worker ?? now?.worker;
+    if (mine) release(mine.file);
     if (now && ref && encodeURIComponent(refOf(now.link)) === ref) forget();
     const message = (out.error as { message?: unknown }).message;
     const wait = `node ~/.petals/petal.mjs jobs wait${worker ? ` --worker ${worker}` : ''}`;
     return { ...out, next: `${typeof message === 'string' ? `${message} ` : ''}Run ${wait} now.` };
   };
   const recalled = (): string | null => recalledAll()?.link ?? null;
-  /** the person's view, when the conversation is a job's project */
-  const recalledView = (): Json | null => recalledAll()?.view ?? null;
 
   /** One request to the site; its JSON answer as it is, or a ToolError when there is none. */
   async function call(
@@ -239,7 +312,8 @@ export function siteDoor(opts: SiteOptions) {
   }
 
   async function saveStep(input: Json, ctx: ToolContext): Promise<Json> {
-    const exploration = typeof input.exploration === 'string' ? input.exploration : recalled();
+    // every caller has picked where it goes
+    const exploration = typeof input.exploration === 'string' ? input.exploration : null;
     if (!exploration) return noExploration();
     const sha = typeof input.spec_sha256 === 'string' ? input.spec_sha256 : undefined;
     const spec =
@@ -278,8 +352,11 @@ export function siteDoor(opts: SiteOptions) {
     const input = optional ? withoutRequired(tool.input, 'exploration') : tool.input;
     const run = async (raw: unknown, ctx: ToolContext): Promise<Json> => {
       const i = (raw ?? {}) as Json;
-      const exploration =
-        typeof i.exploration === 'string' && i.exploration.trim() ? i.exploration : recalled();
+      const chosen = pick(
+        typeof i.exploration === 'string' && i.exploration.trim() ? i.exploration : undefined,
+      );
+      const exploration = chosen === SEVERAL ? null : (chosen?.link ?? null);
+      const nowhere = () => (chosen === SEVERAL ? several() : noExploration());
       switch (tool.name) {
         case 'start_exploration': {
           const out = await post('/api/v1/explorations', i);
@@ -288,15 +365,16 @@ export function siteDoor(opts: SiteOptions) {
           return out;
         }
         case 'get_exploration': {
-          if (!exploration) return noExploration();
+          if (!exploration) return nowhere();
           return call('GET', `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}`);
         }
         case 'list_explorations':
           return call('GET', '/api/v1/explorations');
         case 'save_step':
-          return saveStep({ ...i, ...(exploration ? { exploration } : {}) }, ctx);
+          if (!exploration) return nowhere();
+          return saveStep({ ...i, exploration }, ctx);
         case 'add_note': {
-          if (!exploration) return noExploration();
+          if (!exploration) return nowhere();
           const { exploration: _, ...rest } = i;
           return post(`/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/notes`, rest);
         }
@@ -314,7 +392,7 @@ export function siteDoor(opts: SiteOptions) {
             if (typeof link === 'string') remember(link, out.view, i.as);
             return { link, job: out.job, ...(isView(out.view) ? { view: out.view } : {}) };
           }
-          if (!exploration) return noExploration();
+          if (!exploration) return nowhere();
           const taken = await post(
             `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/jobs/take`,
             {},
@@ -323,21 +401,25 @@ export function siteDoor(opts: SiteOptions) {
           return taken;
         }
         case 'list_jobs': {
-          if (!exploration) return noExploration();
+          if (!exploration) return nowhere();
           return call('GET', `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/jobs`);
         }
         case 'report_job': {
-          if (!exploration) return noExploration();
+          if (!exploration) return nowhere();
           const { exploration: _, job, ...rest } = i;
           if (typeof job !== 'string' || !job.trim())
             return fault('bad_input', 'Pass job: the id take_job gave you.');
-          return post(
+          const out = await post(
             `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/jobs/${encodeURIComponent(job)}/report`,
             rest,
           );
+          // reported: the worker holds no job here until its next one
+          const mine = isToolError(out) ? undefined : mineFor(exploration);
+          if (mine) release(mine.file);
+          return out;
         }
         case 'keep_layer': {
-          if (!exploration) return noExploration();
+          if (!exploration) return nowhere();
           const { exploration: _, ...rest } = i;
           return post(
             `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/layers`,
@@ -345,7 +427,7 @@ export function siteDoor(opts: SiteOptions) {
           );
         }
         case 'list_layers': {
-          if (!exploration) return noExploration();
+          if (!exploration) return nowhere();
           const q = new URLSearchParams();
           if (typeof i.about === 'string') q.set('about', i.about);
           if (typeof i.hash === 'string') q.set('hash', i.hash);
@@ -356,7 +438,7 @@ export function siteDoor(opts: SiteOptions) {
           );
         }
         case 'fork_dataset': {
-          if (!exploration) return noExploration();
+          if (!exploration) return nowhere();
           const { exploration: _, ...rest } = i;
           return post(
             `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/datasets/fork`,
@@ -364,10 +446,10 @@ export function siteDoor(opts: SiteOptions) {
           );
         }
         case 'add_annotation': {
-          if (!exploration) return noExploration();
+          if (!exploration) return nowhere();
           const { exploration: _, ...rest } = i;
           // a job's worker answers for what it adds by the name it joined with, unless it says another
-          const as = rest.as ?? recalledAll()?.as;
+          const as = rest.as ?? (chosen === SEVERAL ? undefined : chosen?.as);
           return post(
             `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/annotations`,
             {
@@ -377,7 +459,7 @@ export function siteDoor(opts: SiteOptions) {
           );
         }
         case 'list_annotations': {
-          if (!exploration) return noExploration();
+          if (!exploration) return nowhere();
           const about = typeof i.about === 'string' ? `?about=${encodeURIComponent(i.about)}` : '';
           return call(
             'GET',
@@ -411,12 +493,14 @@ export function siteDoor(opts: SiteOptions) {
   function render(tool: AnyTool): AnyTool {
     const run = async (raw: unknown, ctx: ToolContext): Promise<Json> => {
       // a job's flowers go through the person's view, unless the call names one
-      const given = (raw ?? {}) as Json;
-      const view = given.view === undefined ? recalledView() : null;
-      const out = (await tool.run((view ? { ...given, view } : raw) as never, ctx)) as Json;
+      const { exploration: named, ...given } = (raw ?? {}) as Json;
+      const chosen = pick(typeof named === 'string' && named.trim() ? named : undefined);
+      if (chosen === SEVERAL) return several();
+      const view = given.view === undefined ? (chosen?.view ?? null) : null;
+      const out = (await tool.run((view ? { ...given, view } : given) as never, ctx)) as Json;
       if (isToolError(out)) return out;
       const { view_url: _v, short_url: _s, ...rest } = out;
-      const exploration = recalled();
+      const exploration = chosen?.link ?? null;
       if (!exploration) {
         return {
           ...rest,
@@ -424,7 +508,7 @@ export function siteDoor(opts: SiteOptions) {
         };
       }
       // the spec as drawn; the site hashes it the same way
-      const spec = (raw as { spec?: unknown } | null)?.spec;
+      const spec = given.spec;
       const saved = await saveStep(
         { exploration, ...(spec ? { spec } : { spec_sha256: out.spec_sha256 }) },
         ctx,
@@ -442,7 +526,7 @@ export function siteDoor(opts: SiteOptions) {
         saved_step: (saved.step as { seq?: unknown } | undefined)?.seq ?? null,
       };
     };
-    return { ...tool, run } as AnyTool;
+    return { ...tool, input: withExploration(tool.input), run } as AnyTool;
   }
 
   /**
@@ -452,16 +536,19 @@ export function siteDoor(opts: SiteOptions) {
    */
   function addLayer(tool: AnyTool, keep: AnyTool): AnyTool {
     const run = async (raw: unknown, ctx: ToolContext): Promise<Json> => {
-      const out = (await tool.run(raw as never, ctx)) as Json;
+      const { exploration: named, ...given } = (raw ?? {}) as Json;
+      const chosen = pick(typeof named === 'string' && named.trim() ? named : undefined);
+      if (chosen === SEVERAL) return several();
+      const out = (await tool.run(given as never, ctx)) as Json;
       if (isToolError(out)) return out;
-      const exploration = recalled();
+      const exploration = chosen?.link ?? null;
       if (!exploration) {
         return {
           ...out,
           next: 'Kept on this machine. Call start_exploration and add it again to keep it in the project on the site too.',
         };
       }
-      const layer = (raw as { layer?: unknown } | null)?.layer;
+      const layer = given.layer;
       const kept = (await keep.run({ exploration, layer }, ctx)) as Json;
       if (isToolError(kept)) {
         return {
@@ -471,7 +558,7 @@ export function siteDoor(opts: SiteOptions) {
       }
       return { ...out, kept_on_site: { version: kept.version } };
     };
-    return { ...tool, run } as AnyTool;
+    return { ...tool, input: withExploration(tool.input), run } as AnyTool;
   }
 
   /** The registry as the file serves it: the site's tools go there, the rest stays here. */
@@ -499,6 +586,25 @@ async function gzipOf(ctx: ToolContext, sha: string): Promise<Uint8Array | null>
   if (stored) return stored;
   const s: Snapshot | null = await ctx.store.get(sha).catch(() => null);
   return s ? new Uint8Array(gzipSync(canonicalJson(s))) : null;
+}
+
+/**
+ * render_flower and add_layer as the file serves them take the project too, so a worker names its own
+ * job's (step 5); left out, it's this conversation, as before.
+ */
+function withExploration<T>(schema: T): T {
+  const s = schema as { properties?: Record<string, unknown> };
+  return {
+    ...schema,
+    properties: {
+      ...s.properties,
+      exploration: {
+        type: 'string',
+        description:
+          "an exploration id (exp_…) or a link (/s/…): the job's project to save it in; default this conversation",
+      },
+    },
+  };
 }
 
 function withoutRequired<T>(schema: T, field: string): T {

@@ -15,6 +15,7 @@ import { randomBytes } from 'node:crypto';
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { workerCurrentFile } from './site.ts';
 
 /** An agent key, as the site makes it. */
 export const AGENT_KEY = /^petal_agent_[A-Za-z0-9_-]{43}$/;
@@ -186,12 +187,15 @@ export async function waitForJob(o: WaitOptions): Promise<Json> {
     if (!job) continue;
     const project = (body.project ?? {}) as { exploration?: unknown; question?: unknown };
     if (o.currentFile && typeof project.exploration === 'string') {
-      mkdirSync(dirname(o.currentFile), { recursive: true });
+      // a worker keeps the job it holds in its own file, so workers on one computer never cross (step 5);
+      // the one agent an old prompt joined has no id, and keeps the current file
+      const file = me.worker ? workerCurrentFile(o.currentFile, me.worker) : o.currentFile;
+      mkdirSync(dirname(file), { recursive: true });
       // the person's view comes with the job, so every flower drawn for it goes through it
       const view = body.view && typeof body.view === 'object' ? { view: body.view } : {};
       // and who answers for what the worker adds there: the name it joined with
       writeFileSync(
-        o.currentFile,
+        file,
         `${JSON.stringify({ link: project.exploration, ...view, as: me.as, ...(me.worker ? { worker: me.worker } : {}) })}\n`,
         { mode: 0o600 },
       );
