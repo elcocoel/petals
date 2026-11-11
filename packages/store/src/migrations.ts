@@ -500,6 +500,16 @@ export const MIGRATIONS: readonly string[] = [
     read_at TEXT NOT NULL
   );
   `,
+  // 28: a DAO's proposals and how each account voted on each (board #93; Elco, 11 Nov: proposals on the
+  // flower's ring, each wallet's yes and no on hover): one proposals/v1 per map, by its address, read from the
+  // DAO's own chain. Read again, a map's proposals are replaced.
+  `
+  CREATE TABLE proposals (
+    about TEXT PRIMARY KEY,
+    body TEXT NOT NULL,
+    read_at TEXT NOT NULL
+  );
+  `,
 ];
 
 /**

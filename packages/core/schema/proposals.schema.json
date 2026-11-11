@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:proposals:v1",
+  "title": "Petal proposals v1",
+  "description": "A DAO's proposals and how each account voted on each (board #93; Elco, 11 Nov: 'when a proposal is hovered little dots show up on the inside showing yes and no votes, absent votes show nothing'). One per map, named by the map's address, read from the DAO's own chain and read again to refresh. An account that didn't vote on a proposal isn't in its votes: absent, never a guess. Each vote keeps the DAO's own word for it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["petal", "about", "source", "proposals", "read_at"],
+  "properties": {
+    "petal": { "const": "proposals/v1" },
+    "about": { "description": "the map, by its address (its card's id)", "type": "string", "minLength": 3 },
+    "source": {
+      "description": "where they were read: the DAO's kind, its contract, the calls, and when",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "contract", "ref", "at"],
+      "properties": {
+        "kind": { "description": "the DAO's kind, in a word: sputnik, baal", "type": "string", "pattern": "^[a-z0-9_-]+$" },
+        "contract": { "description": "the DAO's contract: near:mainnet:<account>, eip155:<chain>:<address>", "type": "string", "minLength": 3 },
+        "ref": { "description": "the calls or events they were read from", "type": "string", "minLength": 1 },
+        "at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "proposals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "kind", "proposer", "at", "closes_at", "decided_at", "outcome", "as_said", "ref", "votes"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "title": { "description": "its title, from its own text: a Title line, or its first words", "type": "string" },
+          "kind": { "description": "what it does, in the DAO's own word (Transfer, ChangePolicy, …), or null", "type": ["string", "null"] },
+          "proposer": { "type": ["string", "null"] },
+          "at": { "description": "when it was submitted", "type": "string", "format": "date-time" },
+          "closes_at": {
+            "description": "when its voting closes: by the DAO's policy (Sputnik's proposal period from submission), or as the DAO set it (Baal's vote end); null when unknown",
+            "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }]
+          },
+          "decided_at": {
+            "description": "when it was decided, where the DAO records it (Baal's processing); null where it doesn't (Sputnik)",
+            "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }]
+          },
+          "outcome": { "enum": ["passed", "rejected", "removed", "expired", "in progress", "failed", "moved", "cancelled"] },
+          "as_said": { "description": "the DAO's own word for its status", "type": "string" },
+          "ref": { "description": "the proposal: proposal:<caip2>:<dao>:<id>", "type": "string", "minLength": 1 },
+          "votes": {
+            "description": "each account that voted, once; an account that didn't is absent",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["account", "vote", "as_said", "at"],
+              "properties": {
+                "account": { "type": "string", "minLength": 1 },
+                "vote": { "enum": ["for", "against", "abstain"] },
+                "as_said": { "description": "the DAO's own word for the vote: Approve, Reject, Remove, true, false", "type": "string" },
+                "at": {
+                  "description": "when it was cast, where the DAO records it (Baal's event), or null (Sputnik)",
+                  "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "read_at": { "type": "string", "format": "date-time" }
+  }
+}

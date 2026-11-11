@@ -20,6 +20,7 @@ import {
 import type { Claim, Spec, View } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
+import type { CardProposals } from './proposals.ts';
 import { base, findSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
 import { type CardValue, cardValue, valuesOf } from './value-store.ts';
@@ -234,6 +235,8 @@ export interface MapCard {
   mark: CardMark | null;
   /** its token in dollars, its supply and its reading's totals, each with where and when; null until read (#91) */
   value: CardValue | null;
+  /** how many proposals it has and how many have votes, read from its DAO (#93); null for a map with none read */
+  proposals: CardProposals | null;
   /** its sediments, the newest first by their date */
   readings: MapReading[];
 }
@@ -246,6 +249,7 @@ export function mapsOf(
   views: readonly MapView[],
   marks: ReadonlyMap<string, CardMark> = new Map(),
   values: ReadonlyMap<string, Value> = new Map(),
+  proposals: ReadonlyMap<string, CardProposals> = new Map(),
 ): MapCard[] {
   const byMap = new Map<string, MapView[]>();
   for (const v of views) byMap.set(v.map, [...(byMap.get(v.map) ?? []), v]);
@@ -289,6 +293,7 @@ export function mapsOf(
         keys: newest.keys,
         mark: marks.get(id) ?? null,
         value: values.has(id) ? cardValue(values.get(id) as Value) : null,
+        proposals: proposals.get(id) ?? null,
         readings,
       },
     });

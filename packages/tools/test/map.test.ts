@@ -17,6 +17,7 @@ import { privateStore } from '../src/drafts.ts';
 import { httpApp } from '../src/http/app.ts';
 import { type MapView, mapsOf, mapViews, searchMap } from '../src/map.ts';
 import { markMaps } from '../src/marks.ts';
+import { proposalMaps } from '../src/proposals.ts';
 import { callTool } from '../src/registry.ts';
 import { valueMaps } from '../src/values.ts';
 import { rig, type TestRig } from './helpers.ts';
@@ -336,6 +337,64 @@ describe('one map per address (Elco, 10 Nov)', () => {
         priced.totals.find((t: { measure: string }) => t.measure === v.measure)?.usd ?? null,
       supply_usd: null,
     });
+  });
+
+  test("a map's proposals (#93): its card says how many, and GET /api/v1/maps/:id/proposals gives each vote", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const store = privateStore(r.ctx.config);
+    const at = '2026-11-11T15:00:00.000Z';
+    const about = `eip155:1:${DAO}`;
+    const proposals = {
+      petal: 'proposals/v1',
+      about,
+      source: { kind: 'baal', contract: about, ref: 'test', at },
+      proposals: [
+        {
+          id: '1',
+          title: 'Fund the guild',
+          kind: null,
+          proposer: null,
+          at,
+          closes_at: null,
+          decided_at: null,
+          outcome: 'passed',
+          as_said: 'passed',
+          ref: `proposal:eip155:1:${DAO}:1`,
+          votes: [{ account: '0xaaa', vote: 'for', as_said: 'true', at }],
+        },
+        {
+          id: '2',
+          title: 'No one voted',
+          kind: null,
+          proposer: null,
+          at,
+          closes_at: null,
+          decided_at: null,
+          outcome: 'expired',
+          as_said: 'expired',
+          ref: `proposal:eip155:1:${DAO}:2`,
+          votes: [],
+        },
+      ],
+      read_at: at,
+    };
+    await store.proposals.put({ about, body: JSON.stringify(proposals), read_at: at });
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    const { maps } = (await (await app.request('/api/v1/maps')).json()) as Out;
+    expect(maps[0].proposals).toEqual({ count: 2, voted: 1, read_at: at });
+    const res = await app.request(`/api/v1/maps/${encodeURIComponent(about)}/proposals`);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as Out).proposals).toEqual(proposals);
+    expect(
+      (await app.request(`/api/v1/maps/${encodeURIComponent('eip155:1:0xnothing')}/proposals`))
+        .status,
+    ).toBe(404);
+    // a Moloch v1 map has no proposals reader here: the run leaves it as it is
+    expect(await proposalMaps(r.ctx)).toMatchObject({ maps: 0, saved: 0 });
   });
 
   test('a map with no mark read yet says so: null', async () => {

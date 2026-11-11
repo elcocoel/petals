@@ -1,0 +1,1201 @@
+{
+  "petal": "proposals/v1",
+  "about": "near:mainnet:hos-root.sputnik-dao.near",
+  "source": {
+    "kind": "sputnik",
+    "contract": "near:mainnet:hos-root.sputnik-dao.near",
+    "ref": "get_policy, get_last_proposal_id and get_proposals {from_index, limit: 100} on hos-root.sputnik-dao.near at block 224080329 (final), via https://near.drpc.org",
+    "at": "2026-11-11T14:55:00Z"
+  },
+  "proposals": [
+    {
+      "id": "0",
+      "title": "Update Policy - Add New Members",
+      "kind": "ChangePolicy",
+      "proposer": "lane.near",
+      "at": "2025-08-06T14:20:48.632Z",
+      "closes_at": "2025-08-13T14:20:48.632Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:0",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "1",
+      "title": "Update Policy - Add New Members",
+      "kind": "ChangePolicy",
+      "proposer": "lane.near",
+      "at": "2025-08-16T14:53:07.346Z",
+      "closes_at": "2025-08-23T14:53:07.346Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:1",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "Update Policy - Add New Members",
+      "kind": "ChangePolicy",
+      "proposer": "lane.near",
+      "at": "2025-08-17T06:41:40.771Z",
+      "closes_at": "2025-08-24T06:41:40.771Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:2",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "title": "Update Policy - Add New Members",
+      "kind": "ChangePolicy",
+      "proposer": "lane.near",
+      "at": "2025-10-09T14:51:21.705Z",
+      "closes_at": "2025-10-16T14:51:21.705Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:3",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "title": "Update Policy - Edit Members Permissions",
+      "kind": "ChangePolicy",
+      "proposer": "lane.near",
+      "at": "2025-10-09T14:52:48.178Z",
+      "closes_at": "2025-10-16T14:52:48.178Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:4",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "title": "Update Policy - Edit Members Permissions",
+      "kind": "ChangePolicy",
+      "proposer": "lane.near",
+      "at": "2025-10-09T14:53:10.076Z",
+      "closes_at": "2025-10-16T14:53:10.076Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:5",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "title": "Update Policy - Edit Members Permissions",
+      "kind": "ChangePolicy",
+      "proposer": "lane.near",
+      "at": "2025-10-09T14:53:38.974Z",
+      "closes_at": "2025-10-16T14:53:38.974Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:6",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "title": "Update policy - Voting Thresholds",
+      "kind": "ChangePolicy",
+      "proposer": "lane.near",
+      "at": "2025-10-09T14:57:19.446Z",
+      "closes_at": "2025-10-16T14:57:19.446Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:7",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "title": "Update Policy - Edit Members Permissions",
+      "kind": "ChangePolicy",
+      "proposer": "voteagora.near",
+      "at": "2025-10-09T19:08:17.805Z",
+      "closes_at": "2025-10-16T19:08:17.805Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:8",
+      "votes": [
+        {
+          "account": "e953bb69d1129e4da87b99739373884a0b57d5e64a65fdc868478f22e6c31eac",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "title": "Update policy - Voting Thresholds",
+      "kind": "ChangePolicy",
+      "proposer": "voteagora.near",
+      "at": "2025-10-09T19:42:46.358Z",
+      "closes_at": "2025-10-16T19:42:46.358Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:9",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "title": "Set lockup contract hash to EV4eXNuKVkcYisktcT4sk9XfFFRvcefy51Qs2hQkhnK1 and minimum lockup deposit to 2 NEAR",
+      "kind": "FunctionCall",
+      "proposer": "fastnear-hos.near",
+      "at": "2025-10-10T00:18:41.979Z",
+      "closes_at": "2025-10-17T00:18:41.979Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:10",
+      "votes": [
+        {
+          "account": "e953bb69d1129e4da87b99739373884a0b57d5e64a65fdc868478f22e6c31eac",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "title": "PROD: Set lockup contract hash to EV4eXNuKVkcYisktcT4sk9XfFFRvcefy51Qs2hQkhnK1 and minimum lockup deposit to 2 NEAR",
+      "kind": "FunctionCall",
+      "proposer": "fastnear-hos.near",
+      "at": "2025-10-10T16:07:30.657Z",
+      "closes_at": "2025-10-17T16:07:30.657Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:11",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "as.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "e953bb69d1129e4da87b99739373884a0b57d5e64a65fdc868478f22e6c31eac",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "title": "Update Policy - Add New Members",
+      "kind": "ChangePolicy",
+      "proposer": "lane.near",
+      "at": "2025-10-10T16:07:42.380Z",
+      "closes_at": "2025-10-17T16:07:42.380Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:12",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "title": "STAGING: Upgrade voting contract to 1.0.2",
+      "kind": "UpgradeRemote",
+      "proposer": "fastnear-hos.near",
+      "at": "2025-10-25T17:54:47.987Z",
+      "closes_at": "2025-11-01T17:54:47.987Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:13",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "title": "Update Policy - Only Admin group with 3/6 for each action",
+      "kind": "ChangePolicy",
+      "proposer": "fastnear-hos.near",
+      "at": "2025-11-01T16:41:15.745Z",
+      "closes_at": "2025-11-08T16:41:15.745Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:14",
+      "votes": [
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fastnear-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "title": "STAGING: Upgrade voting contract to 1.0.2",
+      "kind": "UpgradeRemote",
+      "proposer": "fastnear-hos.near",
+      "at": "2025-11-08T05:52:45.816Z",
+      "closes_at": "2025-11-15T05:52:45.816Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:15",
+      "votes": [
+        {
+          "account": "root.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "e953bb69d1129e4da87b99739373884a0b57d5e64a65fdc868478f22e6c31eac",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "title": "PRODUCTION: Upgrade voting contract to 1.0.2",
+      "kind": "UpgradeRemote",
+      "proposer": "lane.near",
+      "at": "2025-12-02T07:02:15.629Z",
+      "closes_at": "2025-12-09T07:02:15.629Z",
+      "decided_at": null,
+      "outcome": "expired",
+      "as_said": "Expired",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:16",
+      "votes": [
+        {
+          "account": "e953bb69d1129e4da87b99739373884a0b57d5e64a65fdc868478f22e6c31eac",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fastnear-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "17",
+      "title": "PRODUCTION: Upgrade voting contract to 1.0.2",
+      "kind": "UpgradeRemote",
+      "proposer": "lane.near",
+      "at": "2025-12-15T04:33:48.094Z",
+      "closes_at": "2025-12-22T04:33:48.094Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:17",
+      "votes": [
+        {
+          "account": "fastnear-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "e953bb69d1129e4da87b99739373884a0b57d5e64a65fdc868478f22e6c31eac",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "18",
+      "title": "Remove lane.near from vote.dao guardians and reviewers",
+      "kind": "FunctionCall",
+      "proposer": "lane.near",
+      "at": "2026-02-09T07:08:00.476Z",
+      "closes_at": "2026-02-16T07:08:00.476Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:18",
+      "votes": [
+        {
+          "account": "fastnear-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "19",
+      "title": "Remove lane.near from Admin role",
+      "kind": "RemoveMemberFromRole",
+      "proposer": "lane.near",
+      "at": "2026-02-09T07:13:31.091Z",
+      "closes_at": "2026-02-16T07:13:31.091Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:19",
+      "votes": [
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "lane.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "root.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "20",
+      "title": "Update Policy - Add New Members",
+      "kind": "ChangePolicy",
+      "proposer": "fastnear-hos.near",
+      "at": "2026-04-27T23:13:53.800Z",
+      "closes_at": "2026-05-04T23:13:53.800Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:20",
+      "votes": [
+        {
+          "account": "fastnear-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "root.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "21",
+      "title": "PRODUCTION: Upgrade voting contract to 1.0.3",
+      "kind": "UpgradeRemote",
+      "proposer": "norfolks.near",
+      "at": "2026-05-04T12:32:03.094Z",
+      "closes_at": "2026-05-11T12:32:03.094Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:21",
+      "votes": [
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fastnear-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "22",
+      "title": "PRODUCTION: Update reviewers list on vote.dao",
+      "kind": "FunctionCall",
+      "proposer": "norfolks.near",
+      "at": "2026-05-06T09:55:57.774Z",
+      "closes_at": "2026-05-13T09:55:57.774Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:22",
+      "votes": [
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fastnear-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "23",
+      "title": "PRODUCTION: Upgrade voting contract to 1.1.0",
+      "kind": "UpgradeRemote",
+      "proposer": "norfolks.near",
+      "at": "2026-06-05T07:39:52.736Z",
+      "closes_at": "2026-06-12T07:39:52.736Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:23",
+      "votes": [
+        {
+          "account": "norfolks.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "24",
+      "title": "PRODUCTION: Upgrade voting contract to 1.1.0",
+      "kind": "UpgradeRemote",
+      "proposer": "norfolks.near",
+      "at": "2026-06-05T08:20:51.264Z",
+      "closes_at": "2026-06-12T08:20:51.264Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:24",
+      "votes": [
+        {
+          "account": "root.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "25",
+      "title": "PRODUCTION: Upgrade venear contract to 1.1.0",
+      "kind": "UpgradeRemote",
+      "proposer": "norfolks.near",
+      "at": "2026-06-05T11:32:22.671Z",
+      "closes_at": "2026-06-12T11:32:22.671Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:25",
+      "votes": [
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "root.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "26",
+      "title": "Update Policy - Remove Member",
+      "kind": "ChangePolicy",
+      "proposer": "fastnear-hos.near",
+      "at": "2026-06-12T15:37:46.119Z",
+      "closes_at": "2026-06-19T15:37:46.119Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:26",
+      "votes": [
+        {
+          "account": "fastnear-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "27",
+      "title": "PRODUCTION: Update DAO policy - replace fastnear-hos.near with anton-near-one.near",
+      "kind": "ChangePolicy",
+      "proposer": "norfolks.near",
+      "at": "2026-07-15T09:47:30.610Z",
+      "closes_at": "2026-07-22T09:47:30.610Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:27",
+      "votes": [
+        {
+          "account": "as.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "28",
+      "title": "PRODUCTION: Update council list on vote.dao",
+      "kind": "FunctionCall",
+      "proposer": "norfolks.near",
+      "at": "2026-07-15T10:00:32.707Z",
+      "closes_at": "2026-07-22T10:00:32.707Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:28",
+      "votes": [
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "as.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "29",
+      "title": "PRODUCTION: Upgrade venear contract to 1.1.1",
+      "kind": "UpgradeRemote",
+      "proposer": "norfolks.near",
+      "at": "2026-07-16T03:48:53.467Z",
+      "closes_at": "2026-07-23T03:48:53.467Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:29",
+      "votes": [
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "as.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "30",
+      "title": "Update council list - remove e953bb69d1129e4da87b99739373884a0b57d5e64a65fdc868478f22e6c31eac",
+      "kind": "FunctionCall",
+      "proposer": "norfolks.near",
+      "at": "2026-07-22T16:46:56.575Z",
+      "closes_at": "2026-07-29T16:46:56.575Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:30",
+      "votes": [
+        {
+          "account": "as.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "anton-near-one.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "31",
+      "title": "PRODUCTION: Update DAO policy - remove e953bb69d1129e4da87b99739373884a0b57d5e64a65fdc868478f22e6c31eac",
+      "kind": "ChangePolicy",
+      "proposer": "norfolks.near",
+      "at": "2026-07-22T17:12:56.337Z",
+      "closes_at": "2026-07-29T17:12:56.337Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:31",
+      "votes": [
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "as.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "anton-near-one.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "32",
+      "title": "Remove full-access key ed25519:CUW5uifsT9V5DVFKzMWqsSV1T2JekMvD1rJtzMxvBi5K from pool.near.",
+      "kind": "FunctionCall",
+      "proposer": "root.near",
+      "at": "2026-08-26T17:52:43.241Z",
+      "closes_at": "2026-09-02T17:52:43.241Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:32",
+      "votes": [
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "33",
+      "title": "Remove full-access key ed25519:2gtDEwdLuUBawzFLAnCS9gUso3Ph76bRzMpVrtb66f3J from sputnik-dao.near.",
+      "kind": "FunctionCall",
+      "proposer": "root.near",
+      "at": "2026-08-26T17:52:45.097Z",
+      "closes_at": "2026-09-02T17:52:45.097Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:33",
+      "votes": [
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "34",
+      "title": "Remove full-access key ed25519:9HQ2YfyEpowAcm5PPDEsTRGciXvtqEsBTbpkXKFZmu6h from stake.dao.",
+      "kind": "FunctionCall",
+      "proposer": "root.near",
+      "at": "2026-08-26T17:52:46.869Z",
+      "closes_at": "2026-09-02T17:52:46.869Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:34",
+      "votes": [
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "35",
+      "title": "Remove full-access key ed25519:BMn8XKBmZxScpCFYawvcT4pZkwtT38CE8SHHrzm4wYX8 from signer.",
+      "kind": "FunctionCall",
+      "proposer": "root.near",
+      "at": "2026-08-26T17:52:49.043Z",
+      "closes_at": "2026-09-02T17:52:49.043Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:35",
+      "votes": [
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "36",
+      "title": "Remove full-access key ed25519:BB5Kp7ycfX4DFTXNErtCGj2cRs5s6DKRXzTUrEgFswZv from registrar.",
+      "kind": "FunctionCall",
+      "proposer": "root.near",
+      "at": "2026-08-26T17:52:51.530Z",
+      "closes_at": "2026-09-02T17:52:51.530Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:36",
+      "votes": [
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "37",
+      "title": "Remove full-access key ed25519:4AMyVGwT2Cvkn6qj8ttWCbSLoYwv2YoH54JBKnyCVfTC from near.",
+      "kind": "FunctionCall",
+      "proposer": "root.near",
+      "at": "2026-08-26T17:52:53.330Z",
+      "closes_at": "2026-09-02T17:52:53.330Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:37",
+      "votes": [
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "38",
+      "title": "PRODUCTION: Approve TLA Cohort One batch on registrar",
+      "kind": "FunctionCall",
+      "proposer": "norfolks.near",
+      "at": "2026-09-17T14:54:27.738Z",
+      "closes_at": "2026-09-24T14:54:27.738Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:38",
+      "votes": [
+        {
+          "account": "anton-near-one.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "39",
+      "title": "PRODUCTION: Upgrade opener contract on registrar to c33edd7",
+      "kind": "FunctionCall",
+      "proposer": "norfolks.near",
+      "at": "2026-10-01T04:23:08.007Z",
+      "closes_at": "2026-10-08T04:23:08.007Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:39",
+      "votes": [
+        {
+          "account": "anton-near-one.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "40",
+      "title": "PRODUCTION: Upgrade voting contract to 1.1.2",
+      "kind": "UpgradeRemote",
+      "proposer": "norfolks.near",
+      "at": "2026-10-13T12:59:13.051Z",
+      "closes_at": "2026-10-20T12:59:13.051Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:40",
+      "votes": [
+        {
+          "account": "anton-near-one.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "41",
+      "title": "PRODUCTION: Upgrade voting contract to 1.1.2",
+      "kind": "UpgradeRemote",
+      "proposer": "norfolks.near",
+      "at": "2026-10-14T09:35:31.537Z",
+      "closes_at": "2026-10-21T09:35:31.537Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:41",
+      "votes": [
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "anton-near-one.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "42",
+      "title": "PRODUCTION: Rotate a recovery watcher and the recovery attestation key on rec.hos",
+      "kind": "FunctionCall",
+      "proposer": "norfolks.near",
+      "at": "2026-10-22T17:40:00.662Z",
+      "closes_at": "2026-10-29T17:40:00.662Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:42",
+      "votes": [
+        {
+          "account": "c65255255d689f74ae46b0a89f04bbaab94d3a51ab9dc4b79b1e9b61e7cf6816",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "anton-near-one.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "43",
+      "title": "PRODUCTION: Close far, update name prices, register TLA Cohort Two and set up business TLAs on registry.hos. far: Ope…",
+      "kind": "FunctionCall",
+      "proposer": "norfolks.near",
+      "at": "2026-11-05T00:56:19.362Z",
+      "closes_at": "2026-11-12T00:56:19.362Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:43",
+      "votes": [
+        {
+          "account": "anton-near-one.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "root.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "44",
+      "title": "PRODUCTION: Approve TLA Cohort Two batch on registrar",
+      "kind": "FunctionCall",
+      "proposer": "norfolks.near",
+      "at": "2026-11-05T01:02:22.767Z",
+      "closes_at": "2026-11-12T01:02:22.767Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:hos-root.sputnik-dao.near:44",
+      "votes": [
+        {
+          "account": "anton-near-one.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "root.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    }
+  ],
+  "read_at": "2026-11-11T14:55:00Z"
+}

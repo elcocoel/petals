@@ -78,5 +78,9 @@
   "value.v1.json": {
     "schema": "urn:petal:schema:value:v1",
     "sha256": "0b129ce424d14f171f073e4724e714ab119873116f4ef0c2bbd4d16df1d5bf0f"
+  },
+  "proposals.v1.json": {
+    "schema": "urn:petal:schema:proposals:v1",
+    "sha256": "64264cac1bfe1a9738b42625e38df3d015598831c920e29f41d3bec5900877d1"
   }
 }

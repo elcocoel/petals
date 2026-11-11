@@ -151,6 +151,14 @@ export interface ValueRow {
   body: string;
   read_at: string;
 }
+/** A map's proposals/v1 (28): each proposal and every account's vote on it, read from the DAO's own chain. */
+export interface ProposalsRow {
+  /** the map's address, as its card's id */
+  about: string;
+  /** the proposals/v1, JSON */
+  body: string;
+  read_at: string;
+}
 /** A picture, by the sha256 of its bytes, kept as base64 (15). */
 export interface MediaRow {
   sha256: string;
@@ -1106,6 +1114,22 @@ export function tables(db: Db) {
       },
       get: (about: string) => db.get<ValueRow>('SELECT * FROM value WHERE about = ?', about),
       list: () => db.all<ValueRow>('SELECT * FROM value ORDER BY about'),
+    },
+
+    /** Each map's proposals (28), by the map's address: read again, they're replaced. */
+    proposals: {
+      put: async (r: ProposalsRow) => {
+        await db.run(
+          `INSERT INTO proposals (about, body, read_at) VALUES (?, ?, ?)
+           ON CONFLICT (about) DO UPDATE SET body = excluded.body, read_at = excluded.read_at`,
+          r.about,
+          r.body,
+          r.read_at,
+        );
+      },
+      get: (about: string) =>
+        db.get<ProposalsRow>('SELECT * FROM proposals WHERE about = ?', about),
+      list: () => db.all<ProposalsRow>('SELECT * FROM proposals ORDER BY about'),
     },
 
     /** Pictures by their sha256: put-if-absent, never changed (15). */
