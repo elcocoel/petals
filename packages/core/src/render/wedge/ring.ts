@@ -209,6 +209,18 @@ export function bandPath(ring: Ring, i: number, hA: number, hB: number): string 
   return `M${at(leftAt(ring, i, hB))}L${at(rightAt(ring, i, hB))}L${at(rightAt(ring, i, hA))}L${at(leftAt(ring, i, hA))}Z`;
 }
 
+/**
+ * A whole wedge with its top following the circle (Elco, 11 Nov: "the top of the petals should be rounded to follow
+ * whatever arch they would have"): its straight sides and fine gap as bandPath's, its end an arc round the
+ * flower's centre through both tip corners, so it matches the arcs above it. For /lab first.
+ */
+export function roundTopPath(ring: Ring, i: number, h: number): string {
+  const tl = leftAt(ring, i, h);
+  const tr = rightAt(ring, i, h);
+  const r = Math.hypot(tl[0] - SHAPE.cx, tl[1] - SHAPE.cy);
+  return `M${at(tl)}A${n3(r)} ${n3(r)} 0 0 1 ${at(tr)}L${at(rightAt(ring, i, 0))}L${at(leftAt(ring, i, 0))}Z`;
+}
+
 /** The polygon, closed: both ends of each side, so at any zoom its line runs along the wedges' feet. */
 export function polygonPath(ring: Ring): string {
   let d = '';

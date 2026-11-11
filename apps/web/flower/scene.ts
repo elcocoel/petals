@@ -15,9 +15,8 @@ import {
 } from '@petal/core/wedge/highlight';
 import { paintOf } from '@petal/core/wedge/paint';
 import {
-  OTHERS_AT,
   type Proposal,
-  placeDot,
+  placeArc,
   placesOf,
   ringRadius,
   type Vote,
@@ -35,6 +34,7 @@ import {
   polygonPath,
   type Ring,
   rightAt,
+  roundTopPath,
   SHAPE,
   silhouettePath,
 } from './ring.ts';
@@ -53,6 +53,8 @@ export interface PetalLook {
   bands: Record<string, string>;
   /** the petals the highlight is on, by id */
   highlight: readonly string[];
+  /** each petal's top follows the circle (roundTopPath), to match the arcs above it */
+  roundTops?: boolean;
   /**
    * "Everyone else", folded (core's wedge/fold.ts), by its id: its members packed as small cells in a few columns,
    * each as tall as that member's own petal would be.
@@ -263,7 +265,8 @@ export function createScene(
   /** A petal's shape at rest: its wedge, or folded, the rest of the curve. */
   const shapeOf = (ring: Ring, i: number, h: number): string => {
     const fold = folds[i];
-    return fold && fold.cells.length > 0 ? foldPath(ring, i, fold) : bandPath(ring, i, 0, h);
+    if (fold && fold.cells.length > 0) return foldPath(ring, i, fold);
+    return look?.roundTops ? roundTopPath(ring, i, h) : bandPath(ring, i, 0, h);
   };
   /** figure.petal-highlight: on or off, per petal. */
   const high = Uint8Array.from(m.petals, (p) => (lit.has(p.id) ? 1 : 0));
@@ -402,33 +405,32 @@ export function createScene(
       )
     : [];
   const markSlots = placed.map((pl) => {
-    const mid = pl.petal >= 0 ? (m.mid[pl.petal] as number) : OTHERS_AT;
-    const dot = placeDot(mid, pl.step, pl.petal < 0);
     const own = pl.petal >= 0;
+    const d = placeArc(m.ring, pl.petal, pl.step);
     const seen = slot(
       el(
-        'circle',
+        'path',
         {
-          cx: n3(dot.x),
-          cy: n3(dot.y),
-          r: n3(dot.r),
-          fill: own ? MUTED : GROUND,
-          stroke: MUTED,
-          'stroke-width': 1,
+          d,
+          fill: 'none',
+          stroke: own ? MUTED : HAIR,
+          'stroke-width': 2.5,
+          'stroke-linecap': 'butt',
           'vector-effect': 'non-scaling-stroke',
         },
         voteTop as SVGGElement,
       ),
     );
-    // a wider target nobody sees, for the pointer
+    // a wider line nobody sees, for the pointer
     const hit = el(
-      'circle',
+      'path',
       {
-        cx: n3(dot.x),
-        cy: n3(dot.y),
-        r: n3(dot.r * 2.2),
-        fill: 'transparent',
-        'pointer-events': 'all',
+        d,
+        fill: 'none',
+        stroke: 'transparent',
+        'stroke-width': 8,
+        'vector-effect': 'non-scaling-stroke',
+        'pointer-events': 'stroke',
       },
       voteTop as SVGGElement,
     );
@@ -452,8 +454,8 @@ export function createScene(
     if (!votes || !dotLayer) return;
     pointed = j;
     markSlots.forEach((s, k) => {
-      s.seen.set('stroke', k === j ? INK : MUTED);
-      s.seen.set('fill', k === j ? (s.own ? INK : GROUND) : s.own ? MUTED : GROUND);
+      s.seen.set('stroke', k === j ? INK : s.own ? MUTED : HAIR);
+      s.seen.set('stroke-width', k === j ? 3.5 : 2.5);
     });
     dotLayer.replaceChildren();
     const at = j >= 0 ? markSlots[j] : undefined;
