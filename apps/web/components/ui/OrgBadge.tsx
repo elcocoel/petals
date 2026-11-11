@@ -4,7 +4,7 @@
 // mono (any value, several at once: #97; no colour or shape is a type's): one row high, on a solid fill of the
 // ground it's on with a hairline edge, so nothing behind it shows through. Information only, as Badge is:
 // no hover and no press of its own, square corners in v1.
-import { useId } from 'react';
+import { Logo } from './Logo.tsx';
 import { Mono } from './Mono.tsx';
 
 export function OrgBadge({
@@ -21,8 +21,6 @@ export function OrgBadge({
   /** What kind of thing it is (a DAO, a multisig, any value the data gives), in its order. */
   types?: readonly string[];
 }) {
-  // an id an SVG reference can carry: React's has characters url(#…) doesn't take
-  const clip = `org-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const sym = symbol?.trim() || null;
   // a name that's only its symbol is said once, by the symbol
   const nameIsSymbol = !logo && sym !== null && sym.toLowerCase() === name.trim().toLowerCase();
@@ -32,18 +30,7 @@ export function OrgBadge({
       className="inline-flex h-row-height max-w-full min-w-0 shrink-0 items-center gap-space-8 border border-hairline bg-surface px-space-8 whitespace-nowrap text-primary"
     >
       {logo ? (
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="block size-icon-size shrink-0">
-          <clipPath id={clip}>
-            <circle cx="12" cy="12" r="12" />
-          </clipPath>
-          <image
-            href={logo}
-            width="24"
-            height="24"
-            clipPath={`url(#${clip})`}
-            preserveAspectRatio="xMidYMid slice"
-          />
-        </svg>
+        <Logo src={logo} />
       ) : sym ? (
         <span className="shrink-0">
           <Mono as="span" tone={nameIsSymbol ? 'primary' : 'muted'}>

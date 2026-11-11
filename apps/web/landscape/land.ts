@@ -50,6 +50,8 @@ export interface BenchFlower {
 export interface BenchChain {
   chain: string;
   label: string;
+  /** the chain's own logo, from Trust Wallet's public list, or null (Off-chain has none) */
+  logo: string | null;
   continent: Continent;
 }
 
@@ -249,6 +251,24 @@ export function withMarks(
   };
 }
 
+/** Each chain's logo file, from Trust Wallet's public list (blockchains/<chain>/info/logo.png), as copied. */
+const CHAIN_LOGOS: Record<string, string> = {
+  near: 'near',
+  'eip155:1': 'ethereum',
+  'eip155:8453': 'base',
+  'eip155:42161': 'arbitrum',
+  'eip155:100': 'xdai',
+  solana: 'solana',
+};
+
+/** A chain's logo as a data URL, or null where it has none. */
+function chainLogo(root: string, chain: string): string | null {
+  const name = CHAIN_LOGOS[chain] ?? CHAIN_LOGOS[chain.split(':')[0] ?? ''];
+  if (!name) return null;
+  const path = join(root, LOGOS_DIR, 'chains', `${name}.png`);
+  return existsSync(path) ? `data:image/png;base64,${readFileSync(path).toString('base64')}` : null;
+}
+
 /** A map's flowers at their places: the address book's, and a new place for any view it doesn't have. */
 export function landscapeOf(night: Night): BenchLandscape {
   const root = repoRoot();
@@ -294,6 +314,7 @@ export function landscapeOf(night: Night): BenchLandscape {
       .map((continent) => ({
         chain: continent.chain,
         label: chainLabel(continent.chain),
+        logo: chainLogo(root, continent.chain),
         continent,
       }))
       .sort(

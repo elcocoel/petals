@@ -13,8 +13,9 @@ const DRAWINGS = [
   'flower/FlowerCanvas.tsx',
   // the outline bench's key: a short run of each line, as the flower draws it round a petal
   'lab/flower/OutlineKey.tsx',
-  // an organisation's logo, a picture, drawn round as the map draws it (corners are refused in classes)
-  'components/ui/OrgBadge.tsx',
+  // a logo (an organisation's, a chain's), a picture, drawn round as the map draws it (corners are refused in
+  // classes)
+  'components/ui/Logo.tsx',
   // the hero story's flower: a symbol of its own, not the renderer, so it never goes out of date (Elco, 11 Nov)
   'components/landing/StoryFlower.tsx',
   // the hero's glass: the drawn material behind its two bubbles (Elco, 11 Nov: "Minority Report")
