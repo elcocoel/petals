@@ -7,6 +7,7 @@
 import { useMemo, useRef } from 'react';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { keepCursor } from '../viewmodels/useFloatBoxes.ts';
+import type { Clear } from './camera.ts';
 import type { HoverWay } from './hover.ts';
 import type { FlowerReading } from './model.ts';
 import type { FakeRelations, PetalLook } from './scene.ts';
@@ -23,6 +24,7 @@ export function FlowerCanvas({
   readout = false,
   selected = null,
   onPick,
+  clear,
 }: {
   /** what it fills: the window, or the positioned area it's in */
   fill?: 'window' | 'area';
@@ -39,13 +41,15 @@ export function FlowerCanvas({
   selected?: string | null;
   /** What a click landed on. A bench that doesn't ask for it has no clicks. */
   onPick?: ((hit: CanvasHit) => void) | undefined;
+  /** The sides something covers, so the flower fits beside them (/make's conversation). The scene stays. */
+  clear?: Clear | undefined;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const options = useMemo(
     () => ({ reading, hover, relations, look, scatter, probe, readout }),
     [reading, hover, relations, look, scatter, probe, readout],
   );
-  useFlowerCanvas(svg, options, { selected, onPick });
+  useFlowerCanvas(svg, options, { selected, onPick, clear });
   return (
     // surface.canvas
     <svg

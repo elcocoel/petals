@@ -32,8 +32,21 @@ export interface Home {
 /** One flower: the space /make and the bench draw in. */
 export const FLOWER_HOME: Home = { cx: SHAPE.cx, cy: SHAPE.cy, r: SHAPE.R };
 
+/**
+ * What covers the canvas's sides, in px: on /make, the conversation down its left (#78, 11 Nov: the flower sat
+ * under the chat). Its home fits in what's left, so it isn't drawn under them.
+ */
+export interface Clear {
+  left: number;
+  right: number;
+}
+
+export const NO_CLEAR: Clear = { left: 0, right: 0 };
+
 export interface Camera extends View {
   home: Home;
+  /** The sides the home keeps clear of (Clear). */
+  clear: Clear;
   /** The zoom's limits, as logs of the scale, before the soft edge. */
   lo: number;
   hi: number;
@@ -69,14 +82,19 @@ export function softLimit(raw: number, lo = LN_LO, hi = LN_HI, edge = SOFT_EDGE)
   return raw;
 }
 
-/** The view that shows the whole home in the window: one flower unless a home is given. */
+/**
+ * The view that shows the whole home in the window, or in the part of it the sides leave clear: one flower
+ * unless a home is given.
+ */
 export function fitView(
   width: number,
   height: number,
   home: Home = FLOWER_HOME,
+  clear: Clear = NO_CLEAR,
 ): Omit<View, 'width' | 'height'> {
-  const k = (Math.min(width, height) * FIT) / home.r;
-  return { k, x: width / 2 - home.cx * k, y: height / 2 - home.cy * k };
+  const free = Math.max(1, width - clear.left - clear.right);
+  const k = (Math.min(free, height) * FIT) / home.r;
+  return { k, x: clear.left + free / 2 - home.cx * k, y: height / 2 - home.cy * k };
 }
 
 /** A camera on its home. The limits are scales, as in ZOOM_LIMITS, which is the default. */
@@ -85,13 +103,15 @@ export function newCamera(
   height: number,
   home: Home = FLOWER_HOME,
   limits: readonly [number, number] = ZOOM_LIMITS,
+  clear: Clear = NO_CLEAR,
 ): Camera {
-  const fit = fitView(width, height, home);
+  const fit = fitView(width, height, home, clear);
   return {
     ...fit,
     width,
     height,
     home,
+    clear,
     lo: Math.log(limits[0]),
     hi: Math.log(limits[1]),
     raw: spring(Math.log(fit.k)),
@@ -120,9 +140,16 @@ export function resize(cam: Camera, width: number, height: number): void {
   }
   cam.width = width;
   cam.height = height;
-  const fit = fitView(width, height, cam.home);
+  const fit = fitView(width, height, cam.home, cam.clear);
   Object.assign(cam, fit);
   cam.raw = spring(Math.log(fit.k));
+}
+
+/** The sides change: a camera nobody has moved fits its home again, beside them; a moved one stays. */
+export function clearSides(cam: Camera, clear: Clear): void {
+  if (cam.clear.left === clear.left && cam.clear.right === clear.right) return;
+  cam.clear = clear;
+  if (!cam.touched) resize(cam, cam.width, cam.height);
 }
 
 export interface WheelInput {

@@ -3,7 +3,16 @@
 // the drawing in scene.ts. React mounts this once and never renders per frame.
 import { type RefObject, useEffect, useRef } from 'react';
 import type { CanvasHit } from '../lib/panel-view.ts';
-import { fitView, flyTo, letGo, panBy, resize, zoomWheel } from './camera.ts';
+import {
+  type Clear,
+  clearSides,
+  fitView,
+  flyTo,
+  letGo,
+  panBy,
+  resize,
+  zoomWheel,
+} from './camera.ts';
 import { driveFlower, newDriven } from './drive.ts';
 import { CLICK_LONGEST, CLICK_SLOP } from './feel.ts';
 import type { HoverWay } from './hover.ts';
@@ -34,6 +43,8 @@ export interface CanvasHands {
   selected?: string | null | undefined;
   /** What a click landed on. Without it, a press is only ever the start of a pan. */
   onPick?: ((hit: CanvasHit) => void) | undefined;
+  /** The sides something covers (camera.ts Clear): the flower fits beside them. */
+  clear?: Clear | undefined;
 }
 
 /** A frame is never longer than this for the springs, so a stall doesn't fling anything. */
@@ -51,6 +62,7 @@ export function useFlowerCanvas(
   const held = useRef(hands);
   held.current = hands;
   const choose = useRef<((id: string | null | undefined) => void) | null>(null);
+  const clearTo = useRef<((clear: Clear | undefined) => void) | null>(null);
 
   useEffect(() => {
     const node = svg.current;
@@ -109,6 +121,12 @@ export function useFlowerCanvas(
       wake();
     };
     choose.current(held.current.selected);
+    clearTo.current = (clear) => {
+      if (!clear) return;
+      clearSides(live.camera, clear);
+      wake();
+    };
+    clearTo.current(held.current.clear);
 
     const onMove = (e: PointerEvent) => {
       const p = local(e);
@@ -205,7 +223,10 @@ export function useFlowerCanvas(
       wake();
     };
     const flyBack = () => {
-      flyTo(live.camera, fitView(live.camera.width, live.camera.height));
+      flyTo(
+        live.camera,
+        fitView(live.camera.width, live.camera.height, live.camera.home, live.camera.clear),
+      );
       wake();
     };
     const onKey = (e: KeyboardEvent) => {
@@ -288,8 +309,13 @@ export function useFlowerCanvas(
     };
   }, [svg, options]);
 
-  const { selected } = hands;
+  const { selected, clear } = hands;
   useEffect(() => {
     choose.current?.(selected);
   }, [selected]);
+  const left = clear?.left;
+  const right = clear?.right;
+  useEffect(() => {
+    if (left !== undefined && right !== undefined) clearTo.current?.({ left, right });
+  }, [left, right]);
 }
