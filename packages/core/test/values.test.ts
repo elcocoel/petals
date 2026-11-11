@@ -1,5 +1,7 @@
 // value/v1 (board #91): a map's token in dollars, its reading's totals, and each petal's value as a piece of
 // data beside the snapshot's. No price: no pieces and no dollars, never a guess.
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import type { Snapshot } from '../src/types/index.ts';
 import { usdString, type Value, validateValue, valuePieces, valueTotals } from '../src/values.ts';
@@ -81,5 +83,31 @@ describe('value/v1', () => {
     expect(validateValue(value(PRICE)).ok).toBe(true);
     expect(validateValue(value(null)).ok).toBe(true);
     expect(validateValue({ ...value(PRICE), estimate: '1' }).ok).toBe(false);
+  });
+});
+
+describe('value/v2', () => {
+  const fixture = () =>
+    JSON.parse(
+      readFileSync(join(import.meta.dirname, '..', 'schema', 'fixtures', 'value.v2.json'), 'utf8'),
+    );
+  test("value/v1 with the treasury: Arbitrum's named wallets, each asset priced, and the total of the priced", () => {
+    const v = fixture();
+    expect(validateValue(v).ok).toBe(true);
+    expect(v.treasury.items.map((i: { asset: { symbol: string } }) => i.asset.symbol)).toEqual([
+      'ARB',
+      'ETH',
+      'USDC',
+    ]);
+    expect(v.treasury.total).toMatchObject({ priced: 3, unpriced: 0 });
+  });
+
+  test('an asset says where it was read, a reading or a call; a value/v2 holds its treasury, null when none was read', () => {
+    const v = fixture();
+    const nowhere = { ...v.treasury.items[0], source: { at: v.read_at } };
+    expect(validateValue({ ...v, treasury: { ...v.treasury, items: [nowhere] } }).ok).toBe(false);
+    expect(validateValue({ ...v, treasury: null }).ok).toBe(true);
+    const { treasury: _t, ...without } = v;
+    expect(validateValue(without).ok).toBe(false);
   });
 });
