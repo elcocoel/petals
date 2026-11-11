@@ -47,6 +47,7 @@ import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
 import { StoryFlower, StoryLight } from '../components/landing/StoryFlower.tsx';
 import { MapClaims } from '../components/MapClaims.tsx';
+import { MapSearch } from '../components/MapSearch.tsx';
 import { MapList } from '../components/MapList.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { Oops } from '../components/Oops.tsx';
@@ -3055,6 +3056,78 @@ export const registry: LabEntry[] = [
             />
           );
         },
+      },
+    ],
+  },
+  {
+    id: 'MapSearch',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/MapSearch.tsx',
+    states: [
+      {
+        name: 'empty, at the top of the chain list',
+        render: () => (
+          <div className="w-tile-width">
+            <MapSearch
+              q=""
+              onType={() => undefined}
+              onOrder={() => undefined}
+              onClear={() => undefined}
+              rows={null}
+              status={null}
+              onGo={() => undefined}
+            />
+          </div>
+        ),
+      },
+      {
+        name: 'typed: the maps it finds, each with what matched under it and its chain',
+        render: () => (
+          <div className="w-tile-width">
+            <MapSearch
+              q="money streaming"
+              onType={() => undefined}
+              onOrder={() => undefined}
+              onClear={() => undefined}
+              rows={[
+                {
+                  at: 0,
+                  map: 'eip155:100:0xb152',
+                  name: 'MetaCartel Gnosis v2',
+                  chain: 'Gnosis',
+                  matched: 'Proposal · Sponsorship Proposal: MCON 2 Stream',
+                },
+                {
+                  at: 1,
+                  map: 'eip155:1:0x1f98',
+                  name: 'Uniswap',
+                  chain: 'Ethereum',
+                  matched: null,
+                },
+              ]}
+              status={null}
+              onGo={() => undefined}
+            />
+          </div>
+        ),
+      },
+      {
+        name: 'nothing found',
+        render: () => (
+          <div className="w-tile-width">
+            <MapSearch
+              q="zzzz"
+              onType={() => undefined}
+              onOrder={() => undefined}
+              onClear={() => undefined}
+              rows={[]}
+              status="Nothing on the map matches."
+              onGo={() => undefined}
+            />
+          </div>
+        ),
       },
     ],
   },
