@@ -1,8 +1,8 @@
 // Back it, on what was Figma's Join the community (66:2346): the ways to help, v1 drafts (Elco, 9 Nov). Ways
 // that take money (merch, donations, sponsoring) wait for Elco. Its figure, the old look's repeated cell, went
-// with one-source.md's step 8 (10 Nov); the text keeps its side of the split. `columns` is LANDING's lean for
-// the half that's left empty (11 Nov, in /lab/landing-hero): the three ways side by side under the headline,
-// until a picture (one of Elco's power quotes, illustrated) can take that half.
+// with one-source.md's step 8 (10 Nov), leaving half the band empty, so the landing lays the three ways side by
+// side under the headline (`columns`, 11 Nov; in the product since Elco ended "lab first" the same day). The
+// split stays for when a picture (one of Elco's power quotes, illustrated) can take that half.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';

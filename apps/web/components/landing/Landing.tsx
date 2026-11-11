@@ -27,7 +27,7 @@ export function Landing({ tiles = [], view }: { tiles?: readonly PowerMapTile[];
         <GiveToAgent />
         <GallerySection tiles={tiles} />
         <Questions />
-        <BackIt />
+        <BackIt layout="columns" />
         <BuildWithUs />
       </main>
       <Footer />
