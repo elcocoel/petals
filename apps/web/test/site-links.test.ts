@@ -2,7 +2,6 @@
 // somewhere real. The page is static, so this reads its markup.
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
@@ -13,7 +12,7 @@ import { landingCopy } from '../lib/landing-copy.ts';
 import { askHref, siteLinks } from '../lib/site-links.ts';
 
 const app = join(import.meta.dirname, '..', 'app');
-const html = renderToStaticMarkup(createElement(Landing, { view: DEFAULT_VIEW }));
+const html = renderToStaticMarkup(createElement(Landing, {}));
 // React writes an apostrophe in an attribute as &#x27;, and a browser reads it back.
 const hrefs = [...html.matchAll(/<a\b[^>]*\shref="([^"]*)"/g)].map((m) =>
   (m[1] as string).replaceAll('&#x27;', "'"),
@@ -36,6 +35,7 @@ describe('the landing page', () => {
       [siteLinks.gallery]: '(site)/gallery/page.tsx',
       [siteLinks.map]: '(canvas)/map/page.tsx',
       [siteLinks.connect]: '(site)/connect/page.tsx',
+      [siteLinks.docs]: '(site)/docs/[[...slug]]/page.tsx',
       [siteLinks.liveShape]: '(canvas)/f/[id]/page.tsx',
     };
     for (const path of Object.values(routes)) expect(existsSync(join(app, path)), path).toBe(true);
@@ -53,13 +53,14 @@ describe('the landing page', () => {
     for (const beat of landingCopy.heroStory.beats) expect(html).toContain(beat.name);
   });
 
-  test("its figures are inline and carry no raw colour, but for the published shape from the API and the landing's illustrations", () => {
+  test("its figures are inline and carry no raw colour, but for the landing's illustrations", () => {
     const images = [...html.matchAll(/<img\b[^>]*\ssrc="([^"]*)"/g)].map((m) =>
       m[1]?.replaceAll('&amp;', '&'),
     );
     const scenes = landingCopy.howItWorks.scenes.map((s) => `/landing/how-it-works/${s.id}.webp`);
+    // the published shape went with "A reading, summarised" (Elco, 11 Nov: "kill it")
     const drawings = [...scenes, '/landing/give-to-agent/petals-leading-agents.webp'];
-    expect(images).toEqual([siteLinks.liveShapeImage(DEFAULT_VIEW), ...drawings]);
+    expect(images).toEqual(drawings);
     for (const drawing of drawings)
       expect(existsSync(join(app, '..', 'public', drawing)), drawing).toBe(true);
     expect(html).not.toMatch(/(?:fill|stroke)="#/);

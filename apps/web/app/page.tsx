@@ -9,5 +9,5 @@ export const dynamic = 'force-dynamic';
 
 export default async function Page() {
   const person = await viewerView();
-  return <Landing tiles={await powerMapTiles(person.hash)} view={person.view} />;
+  return <Landing tiles={await powerMapTiles(person.hash)} />;
 }

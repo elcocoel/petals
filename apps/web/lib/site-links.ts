@@ -26,6 +26,8 @@ export const siteLinks = {
   /** The Power Map: the continuous map (coordinator/one-source.md, step 5). */
   map: '/map',
   connect: '/connect',
+  /** The docs: the brain, the data and rendering protocols, connecting an agent, the API (DOCS, 11 Nov). */
+  docs: '/docs',
   /** The doors on /connect (lib/doors.ts), which say plainly what each app asks you to do. */
   doors: {
     prompt: '/connect#prompt',

@@ -1,7 +1,8 @@
-// The landing's sections in the order of the copy doc (T185, Figma frame 66:2180). It only assembles;
-// app/page.tsx hands it the Power Map's drawn readings.
+// The landing's sections in Elco's order (11 Nov, board card 100): the hero, How it works, give this to your agent,
+// the Power Map, Make Petals stronger, the questions, Build it with us. "A reading, summarised" went (Elco:
+// "kill it"); the one-click deliverables (board card 101) will sit before the Power Map once they're designed. It only
+// assembles; app/page.tsx hands it the Power Map's drawn readings.
 
-import type { View } from '@petal/core/types';
 import type { PowerMapTile } from '../../lib/power-map.ts';
 import { Footer } from '../ui/Footer.tsx';
 import { Nav } from '../ui/Nav.tsx';
@@ -12,22 +13,20 @@ import { GallerySection } from './GallerySection.tsx';
 import { GiveToAgent } from './GiveToAgent.tsx';
 import { HeroStory } from './HeroStory.tsx';
 import { HowItWorks } from './HowItWorks.tsx';
-import { LiveReading } from './LiveReading.tsx';
 import { Questions } from './Questions.tsx';
 
-/** `view` is the person's (lib/viewer-view.ts): every picture on the page is drawn in it. */
-export function Landing({ tiles = [], view }: { tiles?: readonly PowerMapTile[]; view: View }) {
+/** `tiles` are the Power Map's, drawn in the person's view (lib/viewer-view.ts). */
+export function Landing({ tiles = [] }: { tiles?: readonly PowerMapTile[] }) {
   return (
     <>
       <Nav />
       <main>
         <HeroStory />
-        <LiveReading view={view} />
         <HowItWorks />
         <GiveToAgent />
         <GallerySection tiles={tiles} />
-        <Questions />
         <BackIt layout="columns" />
+        <Questions />
         <BuildWithUs />
       </main>
       <Footer />
