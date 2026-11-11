@@ -1,12 +1,10 @@
-// The new hero's lean (LANDING, 11 Nov), in the whole landing so it's seen in place. Second take, on Elco's
-// word: ChatHero, illustrated, with a simulated chat and a symbolic petal, where the hero was; the map section
-// stays where it is. Make Petals stronger has its three ways in columns, LANDING's lean for its empty half.
-// (MapHero, the first take, the live map on top, stays in the lab's registry.) In production it stays hidden unless
+// The hero in the whole landing, with its review controls: HERO ART's V2 story (approved by Elco, 11 Nov), the
+// layers one at a time and each beat's note under it (lab/hero/HeroStoryLab.tsx). Make Petals stronger has its
+// three ways in columns, LANDING's lean for its empty half. (MapHero, the first take, stays in the registry.) In production it stays hidden unless
 // PETAL_LAB=1, like the lab, and nothing here reaches the landing until Elco has seen it.
 import { notFound } from 'next/navigation';
 import { BackIt } from '../../../components/landing/BackIt.tsx';
 import { BuildWithUs } from '../../../components/landing/BuildWithUs.tsx';
-import { ChatHero } from '../../../components/landing/ChatHero.tsx';
 import { FrontDoor } from '../../../components/landing/FrontDoor.tsx';
 import { GallerySection } from '../../../components/landing/GallerySection.tsx';
 import { GiveToAgent } from '../../../components/landing/GiveToAgent.tsx';
@@ -15,6 +13,7 @@ import { LiveReading } from '../../../components/landing/LiveReading.tsx';
 import { Questions } from '../../../components/landing/Questions.tsx';
 import { Footer } from '../../../components/ui/Footer.tsx';
 import { Nav } from '../../../components/ui/Nav.tsx';
+import { HeroStoryLab } from '../../../lab/hero/HeroStoryLab.tsx';
 import { powerMapTiles } from '../../../lib/power-map.ts';
 import { viewerView } from '../../../lib/viewer-view.ts';
 
@@ -33,7 +32,7 @@ export default async function HeroLab() {
     <>
       <Nav />
       <main>
-        <ChatHero />
+        <HeroStoryLab />
         <LiveReading view={person.view} />
         <HowItWorks />
         <GiveToAgent />
