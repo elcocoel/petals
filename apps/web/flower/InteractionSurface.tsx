@@ -18,6 +18,7 @@ import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { LandscapeCanvas } from '../landscape/LandscapeCanvas.tsx';
 import type { Catalogue } from '../lib/composer-options.ts';
 import {
+  besideOrBelow,
   besidePanel,
   clearOfConversation,
   conversationBoxes,
@@ -60,16 +61,19 @@ export function InteractionSurface({
   useFollowScroll(refs.thread, refs.following);
   // The boxes start past the side panel when it's there (the layout's, app/(work)/WorkPanel.tsx), and follow
   // its edge when it's sized or folded, until a hand moves them (design/side-panel.md, line 21).
+  const edge = state.menuShown ? state.panelEdge : 0;
   const from = state.menuShown ? besidePanel(state.panelEdge) : undefined;
   // The flower's box opens over the thread, not over the flower (lib/float-box.ts overThread).
   const place = useMemo(
     () => (win: Size) => {
-      const boxes = workspace.recorded
+      const placed = workspace.recorded
         ? recordedBoxes(win, from)
         : conversationBoxes(win, undefined, from);
-      return { ...boxes, panel: overThread(boxes.conversation) };
+      // below the flower when there's no room beside it, as on a phone
+      const conversation = besideOrBelow(placed.conversation, win, edge);
+      return { ...placed, conversation, panel: overThread(conversation) };
     },
-    [from, workspace.recorded],
+    [from, edge, workspace.recorded],
   );
   const hands = useFloatBoxes(BOXES, place);
   // What the conversation covers of the canvas, where it starts, so the flower is drawn beside it.
@@ -81,7 +85,14 @@ export function InteractionSurface({
     const measure = () => {
       const win = { w: window.innerWidth, h: window.innerHeight };
       const r = el.getBoundingClientRect();
-      setClear(clearOfConversation(place(win).conversation, r.left, r.width));
+      setClear(
+        clearOfConversation(place(win).conversation, {
+          left: r.left,
+          top: r.top,
+          width: r.width,
+          height: r.height,
+        }),
+      );
     };
     measure();
     const watch = new ResizeObserver(measure);
@@ -105,15 +116,17 @@ export function InteractionSurface({
   const mapArea = useRef<HTMLDivElement>(null);
   const shown = Boolean(ground && land);
   useLayoutEffect(() => {
-    if (shown && mapArea.current) mapArea.current.style.left = `${clear?.left ?? 0}px`;
-  }, [shown, clear?.left]);
+    if (!shown || !mapArea.current) return;
+    mapArea.current.style.left = `${clear?.left ?? 0}px`;
+    mapArea.current.style.bottom = `${clear?.bottom ?? 0}px`;
+  }, [shown, clear?.left, clear?.bottom]);
   return (
     <>
       {/* A new flower is a new scene. Anything else, a whole turn included, leaves the camera alone. */}
       <div ref={area} className="relative h-dvh">
         {ground && land ? (
           // beside the conversation, as the flower is, so its chains and its flowers aren't under it
-          <div ref={mapArea} className="absolute inset-y-0 right-0 left-0">
+          <div ref={mapArea} className="absolute inset-0">
             <LandscapeCanvas
               key={ground.map ?? 'whole'}
               data={land}
