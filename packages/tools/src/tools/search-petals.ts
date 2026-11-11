@@ -148,6 +148,8 @@ interface MapSet {
   sig: string;
   set: SearchSet;
   cards: Map<string, MapCard>;
+  /** a ref's name: its map's, or what Petals' mapping's name claims say */
+  nameOf: (ref: string) => string | null;
 }
 const mapSets = new Map<string, Promise<MapSet>>();
 
@@ -184,6 +186,7 @@ async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapS
       if (m.ok) markOf.set(r.about, m.value);
     }
     const cards = new Map(mapsOf(views).map((c) => [c.id, c]));
+    const nameOf = namer(cards, claimRows);
     const docs: Findable[] = [...cards.values()].map((c) => mapDoc(c, markOf.get(c.id) ?? null));
     for (const [about, p] of await proposalsOf(ctx)) {
       const card = cards.get(about);
@@ -215,9 +218,10 @@ async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapS
           }
         }
       }
-      for (const r of claimRows) docs.push(claimDoc(r, mapOfAccount.get(accountKey(r.subject))));
+      for (const r of claimRows)
+        docs.push(claimDoc(r, mapOfAccount.get(accountKey(r.subject)), nameOf));
     }
-    return { sig, cards, set: await searchSet(docs, model, keepOf(store)) };
+    return { sig, cards, nameOf, set: await searchSet(docs, model, keepOf(store)) };
   })();
   mapSets.set(key, made);
   return made;
@@ -227,31 +231,120 @@ const objectWords = (o: Claim['object']) => (typeof o === 'string' ? o : o.value
 /** An account as a map's petals have it: an EVM address in lower case. */
 const accountKey = (id: string) => (id.startsWith('eip155:') ? id.toLowerCase() : id);
 
+/** Each verb in words, as a claim's title reads it (core's VERBS say what each means). */
+const VERB_WORDS: Record<string, string> = {
+  holds: 'holds',
+  measured: 'measured',
+  delegates_to: 'delegates to',
+  owned_by: 'is owned by',
+  member_of: 'is a member of',
+  holds_role: 'holds a role in',
+  voted: 'voted on',
+  proposed: 'proposed',
+  reviewed: 'reviewed',
+  paid: 'paid',
+  funded_by: 'was funded by',
+  signer_of: 'can sign for',
+  deployed: 'deployed',
+  controls: 'controls',
+  declares_same_controller: 'says it shares a controller with',
+  shares_signer: 'shares a signer with',
+  moves_with: 'moves with',
+  same_funder: 'shares a funder with',
+  same_address: 'has the same address as',
+  labelled: 'is labelled',
+  requests_correction: 'asks to correct',
+  challenges: 'challenges',
+  responds: 'responds to',
+  retracts: 'retracts',
+  supersedes: 'supersedes',
+  named: 'is named',
+  linked: 'has a page,',
+  is_a: 'is a',
+};
+
+/** An account, proposal or other ref, short: 0xf02f…a155, 8HVY…uSX9, alice.near, proposal 12. */
+export function shortRef(ref: string): string {
+  if (ref.startsWith('proposal:')) return `proposal ${ref.slice(ref.lastIndexOf(':') + 1)}`;
+  const last = ref.slice(ref.lastIndexOf(':') + 1);
+  if (/^0x[0-9a-fA-F]{40}$/.test(last)) return `${last.slice(0, 6)}…${last.slice(-4)}`;
+  if (last.length > 20 && !last.includes('.')) return `${last.slice(0, 4)}…${last.slice(-4)}`;
+  return last;
+}
+
+const TITLE_MAX = 120;
+const shortened = (s: string) => {
+  const one = s.replace(/\s+/g, ' ').trim();
+  if (one.length <= TITLE_MAX) return one;
+  const cut = one.slice(0, TITLE_MAX);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(' '), TITLE_MAX - 20))}…`;
+};
+
+/**
+ * A claim in words: who it's about, by name (its map's, or one a claim gives it) or short address, then what
+ * it says. "Compound: No stable voting bloc is asserted…", "0xf02f…a155 is named Dekan", "RaidGuild is a DAO".
+ */
+export function claimTitle(
+  subject: string,
+  verb: string,
+  object: Claim['object'],
+  nameOf: (ref: string) => string | null,
+): string {
+  // a name claim names its own subject, so its subject reads as its address
+  const who = (verb === 'named' ? null : nameOf(subject)) ?? shortRef(subject);
+  const what =
+    typeof object === 'string'
+      ? (nameOf(object) ?? shortRef(object))
+      : [object.value, object.unit].filter(Boolean).join(' ');
+  if (verb === 'noted') return shortened(`${who}: ${what}`);
+  return shortened(`${who} ${VERB_WORDS[verb] ?? verb.replaceAll('_', ' ')} ${what}`);
+}
+
 /** A claim's document: what it says, who it's about, its evidence's words; under its map when there is one. */
-function claimDoc(r: AnnotationRow, map: string | undefined): Findable {
+function claimDoc(
+  r: AnnotationRow,
+  map: string | undefined,
+  nameOf: (ref: string) => string | null,
+): Findable {
   const c = JSON.parse(r.body) as Claim;
   const evidence = (c.evidence ?? [])
     .map((e) => [e.note, e.quote, e.url, e.platform].filter(Boolean).join(' '))
     .filter(Boolean);
   const object = objectWords(c.object);
+  const title = claimTitle(r.subject, r.verb, c.object, nameOf);
   return {
     kind: 'claim',
     id: `claim:${r.id}`,
-    title: `${r.subject} ${r.verb} ${object}`,
-    text: [`${r.verb} ${object}`, r.subject, ...evidence].join('\n'),
+    title,
+    text: [title, `${r.verb} ${object}`, r.subject, ...evidence].join('\n'),
     about: r.subject,
     ...(map ? { group: map } : {}),
     keys: r.verb === 'named' ? [object] : [],
   };
 }
 
+/** Names for refs: each map's by its address, then what name claims say, the first said winning. */
+function namer(cards: Map<string, MapCard>, named: readonly AnnotationRow[]) {
+  const names = new Map<string, string>();
+  for (const r of named) {
+    if (r.verb !== 'named') continue;
+    const k = accountKey(r.subject);
+    if (!names.has(k)) names.set(k, objectWords((JSON.parse(r.body) as Claim).object));
+  }
+  return (ref: string) => cards.get(ref)?.name ?? names.get(accountKey(ref)) ?? null;
+}
+
 /** The person's own: their annotations, and their work as /api/v1/search has indexed it. */
-async function ownDocs(ctx: ToolContext, subject: string, cards: Map<string, MapCard>) {
+async function ownDocs(ctx: ToolContext, subject: string, shared: MapSet) {
   const store = privateStore(ctx.config);
   const docs: Findable[] = [];
-  for (const r of await store.annotation.list(subject)) {
+  const rows = await store.annotation.list(subject);
+  // their own names first, as their petals show them (annotation step 6), then the map's
+  const own = namer(new Map(), rows);
+  const nameOf = (ref: string) => own(ref) ?? shared.nameOf(ref);
+  for (const r of rows) {
     // a claim about a map's own address sits under that map
-    docs.push(claimDoc(r, cards.has(r.subject) ? r.subject : undefined));
+    docs.push(claimDoc(r, shared.cards.has(r.subject) ? r.subject : undefined, nameOf));
   }
   for (const t of await store.search.texts(subject)) {
     docs.push({
@@ -349,7 +442,7 @@ async function searchWith(
   const kinds = new Set(o.kinds ?? FINDABLE_KINDS);
   const shared = await mapSet(ctx, model);
   const subject = ctx.caller?.subject ?? null;
-  const own = subject ? await ownDocs(ctx, subject, shared.cards) : [];
+  const own = subject ? await ownDocs(ctx, subject, shared) : [];
   const set = own.length
     ? joinSets(shared.set, await searchSet(own, model, keepOf(privateStore(ctx.config))))
     : shared.set;
