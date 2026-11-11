@@ -9,6 +9,7 @@
 // Where a page asks, the legend is the other overlay, under the chain list: the person's view as a key (#92);
 // and inside a flower, under it, what Petals' own mapping says about that map, folded until asked.
 import { EVERY_FLOWER, inUse } from '@petal/core/view';
+import { flowerKeys } from '@petal/core/wedge/keys';
 import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapClaims } from '../components/MapClaims.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
@@ -301,9 +302,10 @@ export function LandscapeCanvas({
             view={person.view}
             drawn={inUse(person.view, EVERY_FLOWER)}
             pieces={EVERY_FLOWER}
-            // each flower keys its own kinds by how common they are on it (#76), so a map has no one key
-            keys={[]}
-            keysNote={panelWords.legendColours}
+            // each flower keys its own kinds by how common they are on it (#76): inside one, its key (core's
+            // flowerKeys, what its fills paint); on the map, no one key, so it says so
+            keys={inFlower ? flowerKeys(inFlower.reading.petals) : []}
+            keysNote={inFlower ? undefined : panelWords.legendColours}
             edit={legend === 'read' ? undefined : legend}
             fold={{ open: legendOpen, onToggle: () => setLegendOpen((now) => !now) }}
           />
