@@ -5,14 +5,14 @@
 // away each flower is its own silhouette at rest; its name sits under its petals, one size on screen.
 // Colours are token roles, as on the flower. With the lab's far wave (#84), a far flower is one soft ring in
 // its main colour instead, its mark in the ring's hole and its name just under it.
-import { FAR_WAVE, farRuns, waveReach } from '@petal/core/wedge/far';
+import { FAR_WAVE, farRuns } from '@petal/core/wedge/far';
 import { HIGHLIGHT } from '@petal/core/wedge/highlight';
 import { GREY, keyFor, keysOf, wordsOf } from '@petal/core/wedge/keys';
 import { DETAIL, fade } from '../flower/detail.ts';
 import type { Model } from '../flower/model.ts';
 import { n3, polygonPath, SHAPE, silhouettePath } from '../flower/ring.ts';
 import { LINE, MONO, textWidth } from '../flower/words.ts';
-import { drawLabel, type Label, MARK, NAME_GAP } from './labels.ts';
+import { drawLabel, LABEL_HEIGHT, type Label, MARK, NAME_GAP } from './labels.ts';
 import type { Place } from './places.ts';
 import { crowdFade, type Road, roadWidth } from './roads.ts';
 import { edgePoint, onScreen, reachToward, screenCentre, screenRadius } from './space.ts';
@@ -155,6 +155,8 @@ export function waveFills(m: Model): string[] {
 /** The centre mark's size on screen: a share of the flower's hole, never smaller or larger than these. */
 const MARK_LEAST = 16;
 const MARK_MOST = 44;
+/** The name's badge sits this far under the centre mark. */
+const NAME_UNDER_MARK = 4;
 
 export function createLandScene(
   svg: SVGSVGElement,
@@ -288,7 +290,6 @@ export function createLandScene(
     return { g, polygon, silhouette, wave, shown: true };
   });
   /** How far each flower's wave reaches, as reach is for its petals. */
-  const waveReaches = flowers.map((f) => (far ? waveReach(f.model, SHAPE, FAR_WAVE) : f.reach));
 
   // head.map-name: each flower's badge under it (labels.ts); with the far wave, its mark at the ring's centre and
   // the badge holding its name.
@@ -369,17 +370,20 @@ export function createLandScene(
           continue;
         }
         const c = screenCentre(view, f.place);
-        const waved = l.centre ? fade(DETAIL.farWave, r) : 0;
+        let size = 0;
         if (l.centre) {
           // the mark in the flower's middle at every zoom (Elco, 11 Nov: "I don't see why they have to go away at
           // larger zooms, we just need a minimum and max size"): a share of its hole, between the two
-          const size = Math.max(MARK_LEAST, Math.min(MARK_MOST, r * (SHAPE.r0 / SHAPE.R) * 1.1));
+          size = Math.max(MARK_LEAST, Math.min(MARK_MOST, r * (SHAPE.r0 / SHAPE.R) * 1.1));
           l.centre.show(true);
           l.centre.set('transform', `translate(${n3(c.x)} ${n3(c.y)}) scale(${n3(size / MARK)})`);
           l.centre.set('opacity', o2(markShown));
         }
-        const reach = l.centre ? waveReaches[i] * waved + f.reach * (1 - waved) : f.reach;
-        const y = c.y + r * reach + (l.centre ? 6 : 10) + MARK / 2;
+        // with the far wave the name sits just under the centre mark (Elco, 11 Nov: "the logo in the center plus
+        // the name ... it's floating super far away"); without it, under the petals
+        const y = l.centre
+          ? c.y + size / 2 + NAME_UNDER_MARK + LABEL_HEIGHT / 2
+          : c.y + r * f.reach + 10 + MARK / 2;
         const nameShown = fade(DETAIL.titleOutside, r) * tone;
         // the badge with its types, else with its name alone (its types are cut first), else none
         let box: Box | null = null;
