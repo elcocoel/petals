@@ -6,6 +6,7 @@
 // followed, checked or trusted. Edit and Create show only when there's something to open them.
 // Props only: viewmodels/useProfile.ts reads it. Words from lib/lobby-view.ts, drafts.
 import { editorWords, profileWords, type SocialState } from '../../lib/lobby-view.ts';
+import { serviceName } from '../../lib/near-social.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
@@ -45,7 +46,7 @@ export function Profile({
               className="flex items-center gap-text-gap border-t border-hairline py-text-gap"
             >
               <span className="w-1/5 shrink-0 type-caption text-muted wrap-anywhere">
-                {l.service}
+                {serviceName(l.service)}
               </span>
               <span className="min-w-0 flex-1 type-label wrap-anywhere">{l.value}</span>
               <Badge>{profileWords.declared}</Badge>

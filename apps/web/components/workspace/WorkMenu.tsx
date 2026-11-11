@@ -9,7 +9,7 @@
 // - Projects: each holding its conversations, named in place; New project is its last row.
 // - Your agents: each with its state and a way to end it, and the one way to connect another.
 // - Lobby: the lobby, the balance and the map, each opening its card on /lobby. Withdraw stays on the card.
-// - Profile: who's signed in, their public profile's state (it opens the card, where it's edited), and
+// - Profile: who's signed in, their public profile's state (it opens their profile page, /profile), and
 //   Disconnect, the one place to sign out.
 // - Settings: first the tip, an optional donation to Petals on the price's scale (TipControl; design/
 //   side-panel.md, lines 34 to 38); then the person's view, how each dimension draws data for
@@ -196,7 +196,7 @@ export function WorkMenu({
   /** New, pressed where a new conversation already is: the address won't move, so this opens it again. */
   restartNew?: (() => void) | undefined;
   /** The page it's on, when that page is one of its places. */
-  here?: 'lobby';
+  here?: 'lobby' | 'profile';
 }) {
   const rows = conversations.map((row) =>
     row.key in menu.placed ? { ...row, project: menu.placed[row.key] ?? null } : row,
@@ -442,10 +442,11 @@ export function WorkMenu({
         folded={menu.folded.includes('profile')}
         onFold={() => menu.fold('profile')}
       >
-        {/* the person, opening their Profile card; the trail says where the profile is kept */}
+        {/* the person, opening their profile page; the trail says where the profile is kept */}
         <NavItem
-          href={lobbyAt('lobby-profile')}
+          href={siteLinks.profile}
           icon="profile"
+          current={here === 'profile'}
           label={name ?? who?.shown ?? '…'}
           {...(who ? { title: who.full } : {})}
           trail={

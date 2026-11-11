@@ -239,7 +239,12 @@ export function usePanelState() {
     settings,
     tip,
     width: width.hand,
-    here: pathname === '/lobby' ? ('lobby' as const) : undefined,
+    here:
+      pathname === '/lobby'
+        ? ('lobby' as const)
+        : pathname === '/profile'
+          ? ('profile' as const)
+          : undefined,
     // New, pressed where a new conversation already is: the address won't change, so it says so itself
     atNew: address === '/make',
     restart,

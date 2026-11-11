@@ -31,6 +31,7 @@ import {
 } from './near-social.ts';
 import type { Credit, PayInfo } from './pay.ts';
 import type { PersonView } from './person-view.ts';
+import type { ProvenWallet } from './profile-view.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
 import type { Tip } from './tip.ts';
@@ -485,6 +486,13 @@ export async function readCredit(): Promise<Credit | null> {
   if (!res.ok) return null;
   const json = (await res.json()) as { credit?: Credit | null };
   return json.credit ?? null;
+}
+
+/** The wallets the person proved by signing in, as GET /api/v1/me lists them; null for nobody or no answer. */
+export async function readWallets(): Promise<ProvenWallet[] | null> {
+  const res = await fetch('/api/v1/me', { cache: 'no-store' });
+  if (!res.ok) return null;
+  return ((await res.json()) as { wallets?: ProvenWallet[] }).wallets ?? [];
 }
 
 /**

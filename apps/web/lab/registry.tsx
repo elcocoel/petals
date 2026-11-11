@@ -80,6 +80,8 @@ import { TextLink } from '../components/ui/TextLink.tsx';
 import { Tip } from '../components/ui/Tip.tsx';
 import { Transcript } from '../components/ui/Transcript.tsx';
 import { Wordmark } from '../components/ui/Wordmark.tsx';
+import { Claims } from '../components/workspace/Claims.tsx';
+import { Conversations } from '../components/workspace/Conversations.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
@@ -88,7 +90,9 @@ import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { TipControl } from '../components/workspace/TipControl.tsx';
 import { ViewControls } from '../components/workspace/ViewControls.tsx';
+import { Wallets } from '../components/workspace/Wallets.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
+import type { AnnotationRow } from '../lib/claim-lines.ts';
 import type { DrawingKind } from '../lib/figures.ts';
 import { readingKey, svgImage } from '../lib/flower-view.ts';
 import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
@@ -100,6 +104,7 @@ import { parseMarkdown } from '../lib/markdown.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
 import { viewChoices } from '../lib/person-view.ts';
+import { claimsView, walletRows } from '../lib/profile-view.ts';
 import type { Done } from '../lib/thread.ts';
 import { answeredBy, composerView, type TurnRow, threadView } from '../lib/thread-view.ts';
 import { tipLine } from '../lib/tip.ts';
@@ -552,6 +557,45 @@ const RAIL_ICONS: IconName[] = [
   'close',
   'petals',
   'agent',
+];
+
+/** Claims for the lab: a name and a note about one account, a sourced link about another. */
+const LAB_CLAIMS: AnnotationRow[] = [
+  {
+    claim: {
+      subject: 'eip155:100:0x3703cde9c3a3f5b0e8fc0e5a3b3c3a3e2e3d03b6',
+      verb: 'named',
+      object: { value: 'RaidGuild' },
+      kind: 'stated',
+      by: 'near:mainnet:a-name.near',
+    },
+    exploration: null,
+    added_at: '2026-11-11T10:00:00Z',
+  },
+  {
+    claim: {
+      subject: 'eip155:100:0x3703cde9c3a3f5b0e8fc0e5a3b3c3a3e2e3d03b6',
+      verb: 'noted',
+      object: { value: 'The guild’s treasury: proposals move its funds.' },
+      kind: 'sourced',
+      evidence: [{ proposal: 'proposal:eip155:100:168', url: 'https://admin.daohaus.club' }],
+      by: 'tool:codex@1',
+    },
+    exploration: null,
+    added_at: '2026-11-11T10:05:00Z',
+  },
+  {
+    claim: {
+      subject: 'near:mainnet:a-validator.poolv1.near',
+      verb: 'linked',
+      object: { value: 'https://near.org' },
+      kind: 'inferred',
+      by: 'near:mainnet:a-name.near',
+      via: 'tool:petals-agent@1',
+    },
+    exploration: null,
+    added_at: '2026-11-10T18:00:00Z',
+  },
 ];
 
 /** The editor's view for the lab: every control does nothing. */
@@ -2385,6 +2429,106 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'Wallets',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/Wallets.tsx',
+    states: [
+      {
+        name: 'one wallet, proven at sign-in',
+        render: () => (
+          <Wallets
+            wallets={walletRows([
+              { network: 'mainnet', account_id: 'a-name.near', proved_at: '2026-11-11T12:00:00Z' },
+            ])}
+          />
+        ),
+      },
+      {
+        name: 'a 64-character account',
+        render: () => (
+          <Wallets
+            wallets={walletRows([
+              {
+                network: 'mainnet',
+                account_id: '02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc',
+                proved_at: '2026-11-09T08:30:00Z',
+              },
+            ])}
+          />
+        ),
+      },
+      { name: 'still reading', render: () => <Wallets wallets="reading" /> },
+      { name: "Petals didn't answer", render: () => <Wallets wallets="unread" /> },
+    ],
+  },
+  {
+    id: 'Claims',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/Claims.tsx',
+    states: [
+      {
+        name: 'claims about two accounts',
+        render: () => <Claims claims={claimsView(LAB_CLAIMS)} />,
+      },
+      { name: 'none yet', render: () => <Claims claims={claimsView([])} /> },
+      { name: 'still reading', render: () => <Claims claims="reading" /> },
+      { name: "Petals didn't answer", render: () => <Claims claims="unread" /> },
+    ],
+  },
+  {
+    id: 'Conversations',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/Conversations.tsx',
+    states: [
+      {
+        name: 'three conversations',
+        render: () => (
+          <Conversations
+            rows={[
+              {
+                key: 'a',
+                title: 'Map RaidGuild',
+                by: 'petals',
+                when: '2h',
+                working: false,
+                project: null,
+                href: '#a',
+                current: false,
+              },
+              {
+                key: 'b',
+                title: 'Who votes in House of Stake',
+                by: 'own',
+                when: '1d',
+                working: false,
+                project: null,
+                href: '#b',
+                current: false,
+              },
+              {
+                key: 'c',
+                title: 'NEAR validators',
+                by: 'petals',
+                when: '9 Nov',
+                working: false,
+                project: null,
+                href: '#c',
+                current: false,
+              },
+            ]}
+          />
+        ),
+      },
+      { name: 'none yet', render: () => <Conversations rows={[]} /> },
+    ],
+  },
+  {
     id: 'PayRow',
     group: 'The conversation',
     figmaName: null,
@@ -2816,6 +2960,8 @@ export const NOT_IN_LAB: Record<string, string> = {
     'wires useFlowerPage to the flower and its box, filling the area under the nav: it lives at /f/<id> and /draft',
   FrontDoor: 'draws nothing: it opens the wallet when the landing is left for /make (proposal)',
   Lobby: 'wires useLobby to the cards and the tiles, and it lives at /lobby',
+  ProfilePage:
+    'lays out ProfileHead, Profile, Wallets, Funds, Claims and Conversations, each here: it lives at /profile',
   Menu: "takes the focus when it shows and closes on any press elsewhere, so it's shown live, from a row's ⋯ at /lab/panel",
   Dialog: "a modal over the page, so it is shown live, from a row's ⋯ menu at /lab/panel",
   WorkMenu:
