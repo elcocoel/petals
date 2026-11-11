@@ -1,6 +1,6 @@
 // The flower panel as a person reads it: which state it is in and every word it says. The panel's
 // flower is the same shape whichever way it came, from a turn of the thread or from the stored ones.
-import { specHash } from '@petal/core';
+import { accountRef, specHash } from '@petal/core';
 import type {
   Entry,
   Interpretation,
@@ -137,6 +137,8 @@ export interface ShelfView {
 export interface FlowerPanelView {
   kind: 'flower';
   key: string;
+  /** The selected petal's account, as claims name it, for what's said about it; null with none selected. */
+  account: string | null;
   title: string;
   where: string;
   date: string;
@@ -258,6 +260,8 @@ export function flowerPanelView(v: {
   return {
     kind: 'flower',
     key: flower.key,
+    // everyone else (the petal with a count) is no one account, so nothing is said about it
+    account: found && found.count === undefined ? accountRef(spec.network.chain, found.id) : null,
     title: (drawing?.svg && svgTitle(drawing.svg)) || networkLabel(spec.network.id),
     where: chainLabel(spec.network.chain),
     date: dateLabel(spec.snapshot.as_of),

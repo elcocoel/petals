@@ -16,6 +16,7 @@ import type {
 } from '@petal/core/types';
 import type { BenchLandscape } from '../landscape/land.ts';
 import type { ConnectedAgent } from './agents.ts';
+import type { AnnotationRow } from './claim-lines.ts';
 import type { Catalogue, Settings } from './composer-options.ts';
 import type { ListedConversation, ListedProject } from './conversation-list.ts';
 import { decodeDraft } from './draft.ts';
@@ -562,6 +563,24 @@ export async function readTopUp(deposit: string): Promise<TopUp | null> {
   });
   if (!res.ok) return null;
   return ((await res.json()) as { top_up?: TopUp }).top_up ?? null;
+}
+
+/** Everything the person and their agents keep about accounts, from all their projects; null for a visitor. */
+export async function readMyAnnotations(): Promise<AnnotationRow[] | null> {
+  const res = await fetch('/api/v1/me/annotations', { cache: 'no-store' });
+  if (!res.ok) return null;
+  return ((await res.json()) as { annotations?: AnnotationRow[] }).annotations ?? [];
+}
+
+/**
+ * Keeps what the person says about an account, as theirs: in a conversation's project when there is one
+ * (a run's id or another door's), or as their own, in none.
+ */
+export function addMyAnnotations(body: {
+  annotations: unknown[];
+  conversation?: string;
+}): Promise<{ added: number; existed: number; ids: string[] }> {
+  return sessionPost('/api/v1/me/annotations', body);
 }
 
 /** The jobs Petals' agent handed out in a conversation, and where each stands (C). Empty on no answer. */

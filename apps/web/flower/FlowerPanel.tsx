@@ -6,6 +6,7 @@ import type { PetalDetail } from '@petal/core/types';
 import type { ReactNode } from 'react';
 import { Interpretation, SignatureLine } from '../components/Interpretation.tsx';
 import { Legend, LegendKeys } from '../components/Legend.tsx';
+import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
 import { SourceList } from '../components/Sources.tsx';
 import { Button } from '../components/ui/Button.tsx';
@@ -32,6 +33,7 @@ function OpenFlower({
   actions,
   note,
   about,
+  conversation,
 }: {
   view: FlowerPanelView;
   petal: PetalDetail | null;
@@ -40,6 +42,8 @@ function OpenFlower({
   actions: FlowerPanelActions;
   note?: ReactNode;
   about?: ReactNode;
+  /** The conversation the flower is open in, where a note about a petal is kept. */
+  conversation?: string | null;
 }) {
   return (
     <div className="flex flex-col gap-text-gap p-block-gap">
@@ -66,7 +70,10 @@ function OpenFlower({
       )}
       {view.keys.length > 0 && <LegendKeys keys={view.keys} />}
       {petal ? (
-        <PetalDetails petal={petal} unit={unit} onClose={actions.onCloseDetail} />
+        <>
+          <PetalDetails petal={petal} unit={unit} onClose={actions.onCloseDetail} />
+          <PetalClaims account={view.account} conversation={conversation ?? null} />
+        </>
       ) : (
         <ReadingKey view={view.reading} />
       )}
@@ -119,6 +126,7 @@ export function FlowerPanel({
   actions = {},
   note,
   about,
+  conversation,
 }: {
   view: PanelView;
   /** The selected petal's own record, when one is selected. */
@@ -130,6 +138,8 @@ export function FlowerPanel({
   note?: ReactNode;
   /** what a page knows about the flower besides its reading (who made it, who published it), with its sources */
   about?: ReactNode;
+  /** The conversation it's open in (a run's id or another door's), where a note about a petal is kept. */
+  conversation?: string | null;
 }) {
   if (view.kind === 'flower') {
     return (
@@ -141,6 +151,7 @@ export function FlowerPanel({
         actions={actions}
         note={note}
         about={about}
+        conversation={conversation ?? null}
       />
     );
   }
