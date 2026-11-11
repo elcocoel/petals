@@ -1,6 +1,6 @@
 // The person's view, as the Settings section sets it (coordinator/one-source.md, section 3 and step 7; Elco,
 // 10 Nov: "I'm basically choosing the glasses through which I see the entire universe"). One row per
-// dimension, all of them (ten since Labels, view/v2), saying the data it shows; pressing one opens its choices under it, as a project
+// dimension it's handed (Settings: the four behaviours and Labels, lib/person-view.ts), saying the data it shows; pressing one opens its choices under it, as a project
 // opens its conversations: only the data that fits it, or none, with the default marked, and, while it
 // shows a number on a dimension that has one, its scale. A dimension no data takes yet can't open: it has no
 // chevron, and says so on hover.
@@ -27,7 +27,8 @@ export function ViewControls({
   onReset,
   failed,
 }: {
-  dimensions: readonly Dimension[];
+  /** The rows, in order: dimensions, and Highlight, which says only that it's to come. */
+  dimensions: readonly (Dimension | 'highlight')[];
   view: View;
   /** The default view, to mark its choices. */
   defaults: View;
@@ -48,6 +49,20 @@ export function ViewControls({
   return (
     <ul className="m-0 flex list-none flex-col p-0">
       {dimensions.map((d) => {
+        if (d === 'highlight') {
+          return (
+            <li key={d}>
+              {/* no data takes it yet: no chevron, and it says so on hover */}
+              <NavItem
+                label={words.dimensions.highlight}
+                trail={words.none}
+                title={`${words.dimensions.highlight}\n${words.highlightSoon}`}
+                muted
+                depth={1}
+              />
+            </li>
+          );
+        }
         const shown = dataOf(view, d);
         const fit = choices[d];
         const trail = shown ? words.piece(shown) : words.none;

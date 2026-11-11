@@ -37,5 +37,14 @@ export const viewChoices = (pieces: readonly Piece[] = CHOOSABLE): ViewChoices =
     DIMENSIONS.map((d) => [d, pieces.filter((p) => fits(d, p.kind))]),
   ) as ViewChoices;
 
+/**
+ * What Settings shows (board #76's brief, design/flower-art-direction/default-system-vnext.md): the four
+ * behaviours, Height, Colour, Segments and Highlight, then Labels. The other dimensions are hidden, not gone:
+ * a view still holds them and every petal still draws them. Highlight has no place in a view yet (a chosen
+ * group comes with the data), so its row only says so.
+ */
+export const SETTINGS_ROWS = ['height', 'colour', 'segments', 'highlight', 'labels'] as const;
+export type SettingsRow = (typeof SETTINGS_ROWS)[number];
+
 /** The query the map's lists take, so their pictures, keys and readings come in this view. */
 export const viewQuery = (hash: string) => `view=${encodeURIComponent(hash)}`;

@@ -51,6 +51,7 @@ export const panelWords = {
       segments: 'Segments',
       lines: 'Lines',
       labels: 'Labels',
+      highlight: 'Highlight',
     },
     /** A piece of data as a person reads it: share, amount, kind, identity, name, name kind. */
     piece: (name: string) => `${name.charAt(0).toUpperCase()}${name.slice(1)}`.replaceAll('_', ' '),
@@ -61,6 +62,8 @@ export const panelWords = {
     scales: { sqrt: 'Square root', linear: 'Straight', log: 'Log' },
     /** A dimension no data takes yet, on hover. */
     nothingFits: 'No data takes this yet',
+    /** Highlight, on hover, until a chosen group comes with the data. A draft. */
+    highlightSoon: 'Comes with a chosen group of petals',
     reset: 'Put the default back',
     failed: (reason: string) => `Not saved: ${reason}`,
   },

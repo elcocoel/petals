@@ -19,7 +19,7 @@
 // It lies in the page's flow, open or collapsed, so a page that lays out beside it isn't covered.
 // Props only: its state comes from viewmodels/useWorkMenu.ts and useWorkPanel.ts. Every word from
 // lib/panel-words.ts.
-import { DIMENSIONS } from '@petal/core/view';
+
 import type { DragEvent, ReactNode } from 'react';
 import { type AgentRow, agentsAtTop, type CopiedAt } from '../../lib/agents.ts';
 import {
@@ -32,6 +32,7 @@ import {
 } from '../../lib/conversation-list.ts';
 import { type SocialState, shownAccount } from '../../lib/lobby-view.ts';
 import { panelWords, type SectionKey } from '../../lib/panel-words.ts';
+import { SETTINGS_ROWS } from '../../lib/person-view.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { ConversationList, type RowActions } from '../chat/ConversationList.tsx';
 import { Dialog } from '../ui/Dialog.tsx';
@@ -461,7 +462,7 @@ export function WorkMenu({
         onFold={() => menu.fold('settings')}
       >
         <TipControl {...tip} />
-        <ViewControls dimensions={DIMENSIONS} {...settings} />
+        <ViewControls dimensions={SETTINGS_ROWS} {...settings} />
       </Group>
     ),
   };
