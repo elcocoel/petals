@@ -26,6 +26,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | Method and path | Tool |
 |---|---|
 | `GET /api/v1/look-up?query=&chain=` | `look_up` |
+| `GET /api/v1/search?q=&kinds=&limit=` | `search_petals` (#105): the map for anyone, a person's own work and annotations for them alone; the last word read as the start of words; each answer with a `snippet` |
 | `GET /api/v1/find?query=&chain=&limit=` | `find_target` |
 | `POST /api/v1/read-chain` | `read_chain` |
 | `GET /api/v1/read-page?url=&start=` | `read_page` |

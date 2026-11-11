@@ -17,12 +17,14 @@ export {
   brainProblems,
   buildBrainIndex,
   headerOf,
+  readBrain,
+  routeBrain,
 } from './brain.ts';
 export { configFromEnv, createContext } from './context.ts';
 export type { PetalTool, ToolAnnotations } from './define.ts';
 export { TOOL_ERROR_SCHEMA } from './define.ts';
 export { nonceStore, privateStore, specBody } from './drafts.ts';
-export { fromThrown, HTTP_STATUS, isToolError } from './errors.ts';
+export { fromThrown, HTTP_STATUS, isToolError, ToolFailure } from './errors.ts';
 export { freshGate, withRunSignal } from './fresh.ts';
 export { type Hidden, hiddenCount, hiddenMap } from './hidden.ts';
 export { httpApp } from './http/app.ts';
@@ -59,6 +61,22 @@ export {
 } from './proposals.ts';
 export type { PublicPage } from './public-fetch.ts';
 export { callTool, describeTool, findTool, registry } from './registry.ts';
+export {
+  type Findable,
+  type Found,
+  find,
+  joinSets,
+  memoryVectors,
+  type SearchSet,
+  searchSet,
+  type VectorKeep,
+} from './search-index.ts';
+export {
+  fakeSearchModel,
+  type SearchModel,
+  SearchModelDown,
+  searchModel,
+} from './search-model.ts';
 export { annotationsOf } from './tools/annotations.ts';
 export {
   CONVERSATION_TITLE_MAX,
@@ -71,6 +89,13 @@ export {
 } from './tools/explorations.ts';
 export { workerPlace } from './tools/jobs.ts';
 export { makeReadPage } from './tools/read-page.ts';
+export {
+  FINDABLE_KINDS,
+  type SearchAnswer,
+  searchModelOf,
+  searchPetals,
+  searchPetalsFor,
+} from './tools/search-petals.ts';
 export type { Caller, Config, JSONSchema, Tool, ToolContext } from './types.ts';
 export { type CardValue, cardValue, valuesOf } from './value-store.ts';
 export { type ValueRun, type ValueRunResult, valueMaps } from './values.ts';

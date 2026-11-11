@@ -73,6 +73,7 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     await run('read_chain', { address: '0x000000000000000000000000000000000000dead' });
     await run('read_page', { url: 'https://example.org/' });
     await run('search', { query: 'near validators' });
+    await run('search_petals', { q: 'near validators' });
     const overview = await run('relations_overview', { kind: 'holdings' });
     const pair = (overview.pairs as { a: string; b: string }[])[0] as { a: string; b: string };
     const shared = await run('shared_accounts', { group_a: pair.a, group_b: pair.b });

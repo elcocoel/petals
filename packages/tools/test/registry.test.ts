@@ -27,6 +27,7 @@ const PHASE_A = [
   'read_chain',
   'read_page',
   'search',
+  'search_petals',
   'account_groups',
   'shared_accounts',
   'related_groups',

@@ -7,6 +7,7 @@ import { canonicalJson, specHash } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { fakeRpcFor, testSigner } from '@petal/near/auth/testing';
 import { openStore, type Store } from '@petal/store';
+import { fakeSearchModel } from '@petal/tools';
 import { afterEach, describe, expect, test } from 'vitest';
 import { buildPetalApp } from '../src/app.ts';
 import { catalogue, modelOf, resolveSettings, settingsOf } from '../src/catalogue.ts';
@@ -48,6 +49,7 @@ function setup(o: { dailyUsd?: number; apiBase?: string } = {}) {
       rpcFor: () => fakeRpcFor([maker]),
       registry: fakeRegistry().registry,
       env: { PETAL_AGENT_ACCESS: 'gated', PETAL_WALLET_KEY: WALLET_KEY, NODE_ENV: 'test' },
+      searchModel: fakeSearchModel(),
     },
   );
   const store = () => {
@@ -711,6 +713,9 @@ describe('notes', () => {
   });
 });
 
+// meaning ranks everything a person has, nearest first; what its words found is what these tests read
+const byWords = (r: Out): Out[] => (r.results as Out[]).filter((x) => x.ranks.words);
+
 describe('search', () => {
   const texts = (r: Out) => r.snippet.map((p: Out) => p.text).join('');
 
@@ -723,25 +728,34 @@ describe('search', () => {
     await a.post('/api/v1/follows', { ref: ACCOUNT, label: 'pool of interest' });
 
     const accents = await body(await a.get('/api/v1/search?q=validadóres'));
-    expect(accents.results.map((r: Out) => [r.kind, r.id])).toEqual([['conversation', id]]);
+    expect(byWords(accents).map((r: Out) => [r.kind, r.id])).toEqual([['conversation', id]]);
+    expect(accents.results[0]).toMatchObject({ kind: 'conversation', id });
     expect(accents.results[0].snippet.some((p: Out) => p.hit && /validadores/i.test(p.text))).toBe(
       true,
     );
 
     const note = await body(await a.get('/api/v1/search?q=delegate'));
-    expect(note.results.map((r: Out) => r.kind)).toEqual(['note']);
+    expect(byWords(note).map((r: Out) => r.kind)).toEqual(['note']);
     expect(note.results[0].about).toBe(ACCOUNT);
     expect(texts(note.results[0])).toContain('watch this delegate');
 
     // the parts of an address, and a word still being typed
     const follow = await body(await a.get('/api/v1/search?q=poolv1.near'));
-    expect(follow.results.map((r: Out) => r.kind).sort()).toEqual(['follow', 'note'].sort());
+    expect(
+      byWords(follow)
+        .map((r: Out) => r.kind)
+        .sort(),
+    ).toEqual(['follow', 'note'].sort());
     expect((await body(await a.get('/api/v1/search?q=intere'))).results[0].kind).toBe('follow');
 
     expect((await body(await b.get('/api/v1/search?q=delegate'))).results).toEqual([]);
     expect((await a.get('/api/v1/search?q=x&kinds=wallets')).status).toBe(400);
     const only = await body(await a.get('/api/v1/search?q=poolv1&kinds=follow'));
     expect(only.results.map((r: Out) => r.kind)).toEqual(['follow']);
+    // a visitor finds what's on the map, never a person's own
+    expect((await body(await new Browser(app).get('/api/v1/search?q=delegate'))).results).toEqual(
+      [],
+    );
   });
 
   test("a person's words are never syntax", async () => {
@@ -762,7 +776,7 @@ describe('search', () => {
     const { app, invite, store } = setup();
     const b = await signedIn(app, invite);
     const id = await b.chat(ask('apples and pears'));
-    const q = async (w: string) => (await body(await b.get(`/api/v1/search?q=${w}`))).results;
+    const q = async (w: string) => byWords(await body(await b.get(`/api/v1/search?q=${w}`)));
     expect(await q('pears')).toHaveLength(1);
 
     await b.chat({ ...ask('now plums'), run_id: id });
@@ -778,6 +792,8 @@ describe('search', () => {
     expect(await q('figs')).toHaveLength(1);
     await b.del(`/api/v1/notes/${note.id}`);
     expect(await q('figs')).toEqual([]);
+    const all = (await body(await b.get('/api/v1/search?q=figs'))).results;
+    expect(all.map((r: Out) => r.kind)).not.toContain('note');
 
     // hidden isn't gone: search still finds it
     await b.patch(`/api/v1/conversations/${id}`, { hidden: true });
@@ -810,7 +826,7 @@ describe('signing in', () => {
     await b.post('/api/v1/follows', { ref: NETWORK });
     await b.post('/api/v1/notes', { about: ACCOUNT, text: 'a keepsake' });
     await b.chat(ask('and this conversation'));
-    expect((await body(await b.get('/api/v1/search?q=keepsake'))).results).toHaveLength(1);
+    expect(byWords(await body(await b.get('/api/v1/search?q=keepsake')))).toHaveLength(1);
 
     const ch = await body(await b.post('/api/v1/auth/challenge'));
     const proof = maker.sign({ message: ch.message, nonce: ch.nonce, recipient: ch.recipient });
@@ -821,7 +837,7 @@ describe('signing in', () => {
     expect((await body(await b.get('/api/v1/follows'))).follows).toHaveLength(2);
     expect((await body(await b.get('/api/v1/notes'))).notes).toHaveLength(1);
     expect((await body(await b.get('/api/v1/conversations'))).conversations).toHaveLength(1);
-    expect((await body(await b.get('/api/v1/search?q=keepsake'))).results).toHaveLength(1);
+    expect(byWords(await body(await b.get('/api/v1/search?q=keepsake')))).toHaveLength(1);
   });
 
   test('a follow the person already has stays one follow', async () => {

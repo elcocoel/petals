@@ -14,6 +14,7 @@ import {
   httpApp,
   LiveHub,
   overDataBudget,
+  type SearchModel,
 } from '@petal/tools';
 import { Hono } from 'hono';
 import { agentLinkRoutes, JobBell } from './agent-links.ts';
@@ -41,6 +42,8 @@ export interface PetalAppOptions extends AgentRouteOptions {
   rpcFor?: (network: Network) => Rpc;
   /** for tests: how a payment is read on chain, NEAR's price, and the credit contract */
   pay?: Pick<PayDeps, 'readTransfer' | 'nearUsd' | 'credit' | 'oneClick'>;
+  /** for tests: search's models (#105); default the ones at PETAL_SEARCH_URL */
+  searchModel?: SearchModel;
 }
 
 /** "recorded", or the NEAR AI client's own up/down. */
@@ -53,6 +56,7 @@ export function llmHealth(llm: LlmClient): 'up' | 'down' | 'recorded' {
 /** The full app; `petalApp` in index.ts is this with the contract's arguments only. */
 export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   const ctx = createContext(cfg);
+  if (o.searchModel) ctx.searchModel = o.searchModel;
   const config = ctx.config ?? cfg;
   const stateDir = stateDirOf(config);
   const key = config.fake ? undefined : config.nearAiApiKey || undefined;
@@ -215,6 +219,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   // public site its runs read the chain, pages and search from here too (Elco, 9 Nov: "yes"): every run that
   // reaches the model is paid for, by the person or an invite. The site's own doors still read nothing.
   const agentCtx = config.public ? createContext({ ...cfg, public: false }) : ctx;
+  if (o.searchModel) agentCtx.searchModel = o.searchModel;
   const tools = { ...agentCtx, fresh: freshGate(agentCtx) };
   app.route(
     '/',

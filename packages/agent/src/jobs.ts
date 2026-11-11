@@ -10,6 +10,7 @@ import {
   mapViews,
   privateStore,
   saveRunStep,
+  searchPetalsFor,
   viewOfPerson,
 } from '@petal/tools';
 import { type AccountOf, annotateTool } from './annotate.ts';
@@ -146,7 +147,10 @@ export function runJobs(
               runId,
               // its own hand_job, name_conversation and annotate, which know this run (and so its exploration)
               registry: [
-                ...(o.registry ?? defaultRegistry),
+                // search_petals as this person's, so it finds their own work too (#105)
+                ...(o.registry ?? defaultRegistry).map((t) =>
+                  t.name === 'search_petals' ? searchPetalsFor(owner) : t,
+                ),
                 handJobTool(deps.tools, runId, o.bell),
                 retryJobTool(deps.tools, runId, o.bell),
                 stopJobTool(deps.tools, runId),

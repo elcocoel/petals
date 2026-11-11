@@ -7,6 +7,7 @@ import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { buildPetalApp, mintInvite, openPrivateStore } from '@petal/agent';
+import { fakeSearchModel } from '@petal/tools';
 import { afterAll, beforeAll, expect, test } from 'vitest';
 import { REPO } from './helpers.ts';
 import { stubModel } from './stub-model.ts';
@@ -57,6 +58,7 @@ beforeAll(async () => {
     {
       nearAi: { baseURL: options.modelBase, signatureDelaysMs: [0] },
       env: { NODE_ENV: 'test', PETAL_AGENT_ACCESS: 'gated', PETAL_WALLET_KEY: WALLET_KEY },
+      searchModel: fakeSearchModel(),
     },
   );
 }, 120_000);

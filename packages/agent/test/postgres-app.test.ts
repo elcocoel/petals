@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fakeRpcFor, testSigner } from '@petal/near/auth/testing';
 import { stateStore } from '@petal/store';
+import { fakeSearchModel } from '@petal/tools';
 import { afterAll, describe, expect, test } from 'vitest';
 import { buildPetalApp } from '../src/app.ts';
 
@@ -42,6 +43,7 @@ describe.each(targets)('%s', (_name, databaseUrl) => {
     {
       env: { PETAL_WALLET_KEY: 'cd'.repeat(32), NODE_ENV: 'production' },
       rpcFor: () => fakeRpcFor([alice, bob]),
+      searchModel: fakeSearchModel(),
     },
   );
 

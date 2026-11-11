@@ -43,6 +43,8 @@ export type {
   RunSummaryRow,
   SearchDoc,
   SearchHit,
+  SearchText,
+  SearchVectorRow,
   SessionRow,
   StepRow,
   TopUpRow,
