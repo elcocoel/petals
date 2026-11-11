@@ -13,7 +13,7 @@ import {
   sha256Hex,
   viewHash,
 } from '@petal/core';
-import type { Spec, View } from '@petal/core/types';
+import type { Claim, Spec, View } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
 import { base, findSnapshot } from './tools/shared.ts';
@@ -71,8 +71,16 @@ export type MapViewRow = Omit<MapView, 'reading'>;
  * The picture's address. The browser and Vercel's edge keep each one for a year, so it names the look and
  * the view it's drawn with (as the site's flower tiles do): when either changes, so does every address.
  */
+/** A set of names, by the hash of its claims' ids: what a person's picture and reading are kept under. */
+export const namesKey = (names: readonly Claim[]): string =>
+  sha256Hex(canonicalJson(names.map((c) => c.id).sort()));
+
+/**
+ * A view's picture. For a person with names, its address also names their set (annotation step 6), so it's
+ * theirs alone, changes when their names do, and is never the public picture a cache keeps.
+ */
 export const pictureOf = (ctx: ToolContext, sha: string, view: View = DEFAULT_VIEW) =>
-  `${base(ctx)}/api/v1/map/${sha}/svg?${pictureQuery(view)}`;
+  `${base(ctx)}/api/v1/map/${sha}/svg?${pictureQuery(view)}${ctx.names?.length ? `&names=${namesKey(ctx.names)}` : ''}`;
 /** Each view's reading through each viewer's view, by `<sha>:<view hash>`: neither ever changes. */
 const read = new Map<string, Read>();
 
@@ -122,9 +130,7 @@ export async function mapViews(ctx: ToolContext, view: View = DEFAULT_VIEW): Pro
   const out: MapView[] = [];
   const through = viewHash(view);
   // keyed by the viewer's names too, so one person's never reach another's, nor a visitor's, reading
-  const named = ctx.names?.length
-    ? `:${sha256Hex(canonicalJson(ctx.names.map((c) => c.id).sort()))}`
-    : '';
+  const named = ctx.names?.length ? `:${namesKey(ctx.names)}` : '';
   for (const row of await privateStore(ctx.config).draft.list()) {
     const key = `${row.sha256}:${through}${named}`;
     let r = read.get(key);
