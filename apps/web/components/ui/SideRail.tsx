@@ -61,6 +61,7 @@ export function SideRail({
   jump,
   width,
   top,
+  over = false,
 }: {
   /** What a screen reader hears for the panel. */
   label: string;
@@ -76,6 +77,8 @@ export function SideRail({
   width: RailWidth;
   /** Under the wordmark, above every section, never folded or scrolled away. */
   top?: ReactNode;
+  /** Opened, the panel lies over the page past the bar instead of beside it: a narrow window. */
+  over?: boolean;
 }) {
   const column = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -106,7 +109,7 @@ export function SideRail({
       {open && (
         <div
           ref={width.panel}
-          className="relative flex w-sidebar-width shrink-0 flex-col border-l border-hairline"
+          className={`${over ? 'absolute top-0 bottom-0 left-full z-50 border-r bg-surface' : 'relative'} flex w-sidebar-width shrink-0 flex-col border-l border-hairline`}
         >
           <div className="flex h-control-height shrink-0 items-center px-space-16">
             <Wordmark size="panel" />
