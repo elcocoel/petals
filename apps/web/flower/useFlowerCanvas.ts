@@ -10,15 +10,15 @@ import type { HoverWay } from './hover.ts';
 import { clickedAt } from './live.ts';
 import { type FlowerReading, modelOf } from './model.ts';
 import { scatter } from './order.ts';
-import type { FakeRelations, PetalOutlines } from './scene.ts';
+import type { FakeRelations, PetalLook } from './scene.ts';
 
 export interface CanvasOptions {
   /** With none, there's nothing to draw and nothing to move. */
   reading: FlowerReading | null;
   hover: HoverWay;
   relations: FakeRelations | null;
-  /** The lab's outlines, by petal id: none on the product's pages yet. */
-  outlines?: PetalOutlines | null;
+  /** The lab's look (#76): none on the product's pages until Elco has seen it. */
+  look?: PetalLook | null;
   scatter: boolean;
   probe: boolean;
   readout: boolean;
@@ -65,7 +65,7 @@ export function useFlowerCanvas(
       height: box.height,
       calm: motion.matches,
       relations: options.relations,
-      outlines: options.outlines ?? null,
+      look: options.look ?? null,
       readout: options.readout,
     });
     const { live, scene } = d;

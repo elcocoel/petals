@@ -2,6 +2,14 @@
 // mounts, so a frame costs what it costs here and nothing else. Colours are token roles; no other
 // colour appears on this flower.
 
+import {
+  bandCorners,
+  HIGHLIGHT,
+  insetBy,
+  REFERENCE,
+  roundedPath,
+  tonesOf,
+} from '@petal/core/wedge/highlight';
 import { paintOf } from '@petal/core/wedge/paint';
 import type { View } from './camera.ts';
 import { GUTTER } from './feel.ts';
@@ -21,11 +29,21 @@ import type { Channel } from './spring.ts';
 import { LINE, MONO } from './words.ts';
 
 /**
- * Each petal's outline, by its id, as an SVG dash pattern ('' a continuous line): the look's lines for the
- * category the outline shows (core's wedge/outline.ts). Only the lab's bench hands the scene any, until Elco
- * has seen them (annotation-layer.md, step 7).
+ * The art direction's look (#76; design/flower-art-direction/default-system-vnext.md, V1, 11 Nov): each petal's
+ * colour and each band's, and the petals the highlight is on (core's wedge/keys.ts and wedge/highlight.ts).
+ * Only the lab hands the scene one, until Elco has seen it; without one the flower draws as it always has.
  */
-export type PetalOutlines = Record<string, string>;
+export interface PetalLook {
+  /** each petal's fill, by its id; a petal not here draws in the plain petal tone */
+  fills: Record<string, string>;
+  /** each band's fill, by the band's key; with any, every petal's bands show at rest */
+  bands: Record<string, string>;
+  /** the petals the highlight is on, by id */
+  highlight: readonly string[];
+}
+
+/** Each scene's filters get their own names, so two flowers on one page never share one. */
+let scenes = 0;
 
 /** Lines to judge a feel, with no data behind them. Only the lab's bench hands the scene any. */
 export interface FakeRelations {
@@ -125,7 +143,7 @@ export function createScene(
   svg: SVGSVGElement,
   m: Model,
   relations: FakeRelations | null,
-  outlines: PetalOutlines | null = null,
+  look: PetalLook | null = null,
 ): Scene {
   // Nothing in the drawing hit-tests: the pointer is read geometrically, against the rest flower.
   const root = el('g', { class: MONO, 'pointer-events': 'none' }, svg);
@@ -178,8 +196,9 @@ export function createScene(
       }
     : null;
 
+  // One path, or with the lab's look one path per colour.
   // figure.flower-silhouette
-  const silhouette = slot(el('path', { fill: PETAL }, worldNode));
+  const silhouette = slot(el('path', { fill: look ? 'none' : PETAL }, worldNode));
   // figure.petal-wedge
   const petalsGroup = slot(el('g', { fill: PETAL }, worldNode));
   // figure.flower-ring
@@ -197,24 +216,108 @@ export function createScene(
     ),
   );
 
-  // figure.petal-wedge: each petal in its own colour from the reading, as the still picture paints it.
-  const paints = m.petals.map((p) => paintOf(p));
+  // figure.petal-wedge: each petal in its own colour from the reading, as the still picture paints it; with
+  // the lab's look, in its key's colour.
+  const paints = m.petals.map((p) => (look ? (look.fills[p.id] ?? PETAL) : paintOf(p)));
+  const bandPaint = (key: string): string => look?.bands[key] ?? PETAL;
+  /** With the lab's look, a petal with bands shows them at rest. */
+  const restBands = Uint8Array.from(m.petals, (p) =>
+    look && Object.keys(look.bands).length > 0 && p.segments.length > 0 ? 1 : 0,
+  );
+  const lit = new Set(look?.highlight ?? []);
+  /** figure.petal-highlight: on or off, per petal. */
+  const high = Uint8Array.from(m.petals, (p) => (lit.has(p.id) ? 1 : 0));
+  const defs = el('defs', {}, root);
+  const sceneId = ++scenes;
+  const filters = new Map<string, string>();
+  /** The highlight's surface for a fill: light from the upper left, shade from the lower right, inside. */
+  const filterFor = (fill: string): string => {
+    const had = filters.get(fill);
+    if (had) return had;
+    const id = `petal-surface-${sceneId}-${filters.size}`;
+    const t = tonesOf(fill);
+    const f = el(
+      'filter',
+      {
+        id,
+        x: '-10%',
+        y: '-10%',
+        width: '120%',
+        height: '120%',
+        'color-interpolation-filters': 'sRGB',
+      },
+      defs,
+    );
+    const inner = (
+      name: string,
+      colour: string,
+      e: { dx: number; dy: number; blur: number; opacity: number },
+    ) => {
+      // an inner shadow: what the shape, moved and blurred, leaves uncovered of itself
+      el(
+        'feOffset',
+        {
+          in: 'SourceAlpha',
+          dx: n3(e.dx / REFERENCE),
+          dy: n3(e.dy / REFERENCE),
+          result: `${name}-o`,
+        },
+        f,
+      );
+      el(
+        'feGaussianBlur',
+        { in: `${name}-o`, stdDeviation: n3(e.blur / 2 / REFERENCE), result: `${name}-b` },
+        f,
+      );
+      el(
+        'feComposite',
+        {
+          in: 'SourceAlpha',
+          in2: `${name}-b`,
+          operator: 'arithmetic',
+          k1: -1,
+          k2: 1,
+          k3: 0,
+          k4: 0,
+          result: `${name}-e`,
+        },
+        f,
+      );
+      el('feFlood', { 'flood-color': colour, 'flood-opacity': e.opacity, result: `${name}-c` }, f);
+      el('feComposite', { in: `${name}-c`, in2: `${name}-e`, operator: 'in', result: name }, f);
+    };
+    inner('light', t.light, HIGHLIGHT.light);
+    inner('shade', t.shade, HIGHLIGHT.shade);
+    const merge = el('feMerge', {}, f);
+    for (const name of ['SourceGraphic', 'light', 'shade']) el('feMergeNode', { in: name }, merge);
+    filters.set(fill, id);
+    return id;
+  };
   const petals: Slot<SVGPathElement>[] = [];
+  const strokes: (Slot<SVGPathElement> | undefined)[] = new Array(m.n);
+  const strokeFor = (fill: string, parent: Element) =>
+    slot(
+      el(
+        'path',
+        { fill: 'none', stroke: tonesOf(fill).stroke, 'stroke-linejoin': 'round' },
+        parent,
+      ),
+    );
   for (let i = 0; i < m.n; i++) {
-    // figure.petal-outline: a line round the wedge, where the outline gives its petal one
-    const line = outlines?.[m.petals[i]?.id ?? ''];
-    const drawn =
-      line === undefined
-        ? {}
-        : {
-            stroke: INK,
-            'stroke-width': 1,
-            'stroke-linejoin': 'miter',
-            'vector-effect': 'non-scaling-stroke',
-            ...(line ? { 'stroke-dasharray': line } : {}),
-          };
-    petals.push(slot(el('path', { fill: paints[i] as string, ...drawn }, petalsGroup.node)));
+    const fill = paints[i] as string;
+    const surface: Attrs =
+      high[i] && fill.startsWith('#') ? { filter: `url(#${filterFor(fill)})` } : {};
+    petals.push(slot(el('path', { fill, ...surface }, petalsGroup.node)));
+    if (high[i] && fill.startsWith('#')) strokes[i] = strokeFor(fill, petalsGroup.node);
   }
+  // with the look, one path per colour for the silhouette
+  const silhouetteRuns = look
+    ? [...new Set([...paints, ...Object.values(look.bands)])].map((fill) => ({
+        fill,
+        path: slot(el('path', { fill }, silhouette.node.parentNode as Element)),
+      }))
+    : [];
+  for (const run of silhouetteRuns) worldNode.insertBefore(run.path.node, petalsGroup.node);
   // Under the raised petal: the ground, a line wider than it, so where its tip lies over a neighbour
   // it's as solid as anywhere and the same line runs round it.
   const backing = slot(
@@ -232,6 +335,10 @@ export function createScene(
   );
   // figure.petal-bands
   const bands: (Slot<SVGPathElement>[] | undefined)[] = new Array(m.n);
+  const bandStrokes: (Slot<SVGPathElement> | undefined)[][] = new Array(m.n);
+  /** What a band is painted with at rest: its key's colour with the lab's look, else the petal tone. */
+  const bandBase = (i: number, j: number): string =>
+    look ? bandPaint(m.petals[i]?.segments[j]?.key ?? '') : PETAL;
   const shown = new Uint8Array(m.n).fill(1);
   const bandsOn = new Uint8Array(m.n);
   const litSteps = new Int16Array(m.n);
@@ -327,6 +434,7 @@ export function createScene(
     if (!bandsOn[i]) return;
     bandsOn[i] = 0;
     for (const b of bands[i] ?? []) b.set('display', 'none');
+    for (const st of bandStrokes[i] ?? []) st?.set('display', 'none');
   };
 
   const seenStart = new Float64Array(m.n).fill(Number.NaN);
@@ -359,6 +467,7 @@ export function createScene(
     focusIndex: number,
     recede: number,
     band: number,
+    rescaled: boolean,
   ) => {
     const { k } = v;
     // A wedge far off screen isn't written or drawn. Only worth asking once it can be off screen.
@@ -385,11 +494,12 @@ export function createScene(
           Math.min(ay, by, ty0, ty1) < yHi;
       }
       const path = petals[i] as Slot<SVGPathElement>;
-      const banded = visible && (segments[i] as number) > 0;
+      const banded = visible && ((segments[i] as number) > 0 || restBands[i] === 1);
       if (!visible || banded) {
         if (shown[i]) {
           shown[i] = 0;
           path.set('display', 'none');
+          strokes[i]?.set('display', 'none');
         }
       }
       if (!banded) hideBands(i);
@@ -403,6 +513,7 @@ export function createScene(
           segments[i] as number,
           i === focusIndex ? 1 : recede,
           i === focusIndex ? band : -1,
+          moved || rescaled || !bandsOn[i],
         );
         continue;
       }
@@ -410,11 +521,46 @@ export function createScene(
       if (fresh) {
         shown[i] = 1;
         path.set('display', 'inline');
+        strokes[i]?.set('display', 'inline');
       }
-      if (fresh || moved) path.node.setAttribute('d', bandPath(ring, i, 0, h));
-      const own = m.petals[i]?.tail ? TAIL_TONE : 1;
-      path.set('fill-opacity', o2(own * (i === focusIndex ? 1 : recede)));
+      const strength = (m.petals[i]?.tail ? TAIL_TONE : 1) * (i === focusIndex ? 1 : recede);
+      if (high[i]) {
+        if (fresh || moved || rescaled) {
+          drawHigh(path, strokes[i], ring, i, 0, h, k);
+        }
+      } else if (fresh || moved) path.node.setAttribute('d', bandPath(ring, i, 0, h));
+      path.set('fill-opacity', o2(strength));
+      strokes[i]?.set('stroke-opacity', o2(strength));
     }
+  };
+
+  /**
+   * A highlighted stretch of a wedge: its fill with softened corners, and the fine stroke just inside it. The
+   * stroke is the reference's 1 px wherever the flower is drawn at least that big, and never thicker than one
+   * px on screen, so a close look doesn't turn it into a contour; too thin a stretch to hold it has none.
+   */
+  const drawHigh = (
+    fill: Slot<SVGPathElement>,
+    stroke: Slot<SVGPathElement> | undefined,
+    ring: Ring,
+    i: number,
+    hA: number,
+    hB: number,
+    k: number,
+  ) => {
+    const corners = bandCorners(ring, i, hA, hB);
+    const r = HIGHLIGHT.radius / REFERENCE;
+    fill.node.setAttribute('d', roundedPath(corners, r));
+    if (!stroke) return;
+    const w = Math.min(HIGHLIGHT.stroke.width / REFERENCE, 1 / k);
+    const inner = insetBy(corners, w / 2);
+    if (!inner) {
+      stroke.set('display', 'none');
+      return;
+    }
+    stroke.set('display', 'inline');
+    stroke.set('stroke-width', n3(w));
+    stroke.node.setAttribute('d', roundedPath(inner, Math.max(0, r - w / 2)));
   };
 
   const writeBands = (
@@ -424,18 +570,40 @@ export function createScene(
     fade: number,
     strength: number,
     band: number,
+    reshape: boolean,
   ) => {
     const segs = m.petals[i]?.segments ?? [];
     let list = bands[i];
     if (!list) {
-      list = segs.map(() => slot(el('path', {}, petalsGroup.node)));
+      list = segs.map((seg) => {
+        const fill = bandPaint(seg.key);
+        const surface: Attrs =
+          high[i] && fill.startsWith('#') ? { filter: `url(#${filterFor(fill)})` } : {};
+        return slot(el('path', look ? { fill, ...surface } : {}, petalsGroup.node));
+      });
       bands[i] = list;
+      bandStrokes[i] = high[i]
+        ? segs.map((seg) => {
+            const fill = bandPaint(seg.key);
+            return fill.startsWith('#') ? strokeFor(fill, petalsGroup.node) : undefined;
+          })
+        : [];
+      // each band's stroke over its own fill
+      list.forEach((b, j) => {
+        const st = bandStrokes[i]?.[j];
+        if (st) b.node.after(st.node);
+      });
       const lit = litSteps[i] as number;
-      if (lit) for (const b of list) b.set('fill', accentFill(lit, PETAL));
+      if (lit) {
+        list.forEach((b, j) => {
+          b.set('fill', accentFill(lit, bandBase(i, j)));
+        });
+      }
     }
     if (!bandsOn[i]) {
       bandsOn[i] = 1;
       for (const b of list) b.set('display', 'inline');
+      for (const st of bandStrokes[i] ?? []) st?.set('display', 'inline');
     }
     const h = ring.h[i] as number;
     const cut = (CUT * fade) / k;
@@ -446,9 +614,14 @@ export function createScene(
       done += seg.frac;
       const h1 = (j === last ? h : h * done) - (j < last ? cut / 2 : 0);
       const path = (list as Slot<SVGPathElement>[])[j] as Slot<SVGPathElement>;
-      path.set('d', bandPath(ring, i, h0, Math.max(h0, h1)));
+      const stroke = bandStrokes[i]?.[j];
+      if (high[i]) {
+        if (reshape || fade > 0) drawHigh(path, stroke, ring, i, h0, Math.max(h0, h1), k);
+      } else path.set('d', bandPath(ring, i, h0, Math.max(h0, h1)));
       const tone = band < 0 || j === band ? 1 : BAND_QUIET;
-      path.set('fill-opacity', o2((1 + (tone - 1) * fade) * strength));
+      const opacity = o2((1 + (tone - 1) * fade) * strength);
+      path.set('fill-opacity', opacity);
+      stroke?.set('stroke-opacity', opacity);
     });
   };
 
@@ -467,8 +640,30 @@ export function createScene(
       const path = petals[i] as Slot<SVGPathElement>;
       const own = paints[i] as string;
       path.set('fill', step === 0 ? own : accentFill(step, own));
-      for (const b of bands[i] ?? []) b.set('fill', step === 0 ? PETAL : accentFill(step, PETAL));
+      (bands[i] ?? []).forEach((b, j) => {
+        const base = bandBase(i, j);
+        b.set('fill', step === 0 ? base : accentFill(step, base));
+      });
     }
+  };
+
+  /** The silhouette with the lab's look: each colour's stretches of wedge, one path per colour. */
+  const writeRuns = (ring: Ring) => {
+    const ds = new Map<string, string>();
+    const add = (fill: string, d: string) => ds.set(fill, (ds.get(fill) ?? '') + d);
+    for (let i = 0; i < m.n; i++) {
+      const h = ring.h[i] as number;
+      const segs = m.petals[i]?.segments ?? [];
+      if (restBands[i] && segs.length > 0) {
+        let done = 0;
+        segs.forEach((seg, j) => {
+          const h0 = h * done;
+          done += seg.frac;
+          add(bandPaint(seg.key), bandPath(ring, i, h0, j === segs.length - 1 ? h : h * done));
+        });
+      } else add(paints[i] as string, bandPath(ring, i, 0, h));
+    }
+    for (const run of silhouetteRuns) run.path.node.setAttribute('d', ds.get(run.fill) ?? '');
   };
 
   const writeRelations = (ring: Ring, focusIndex: number, opacity: number) => {
@@ -527,8 +722,10 @@ export function createScene(
       const showSilhouette = mk.silhouette > 0;
       silhouette.set('display', showSilhouette ? 'inline' : 'none');
       if (showSilhouette && (ringMoved || !silhouetteOn)) {
-        silhouette.node.setAttribute('d', silhouettePath(ring));
+        if (look) writeRuns(ring);
+        else silhouette.node.setAttribute('d', silhouettePath(ring));
       }
+      for (const run of silhouetteRuns) run.path.set('display', showSilhouette ? 'inline' : 'none');
       silhouetteOn = showSilhouette;
 
       const reshape = ringMoved || !petalsOn;
@@ -537,13 +734,19 @@ export function createScene(
         if (raised >= 0) {
           petalsGroup.node.appendChild(backing.node);
           petalsGroup.node.appendChild((petals[raised] as Slot<SVGPathElement>).node);
-          for (const b of bands[raised] ?? []) petalsGroup.node.appendChild(b.node);
+          const st = strokes[raised];
+          if (st) petalsGroup.node.appendChild(st.node);
+          (bands[raised] ?? []).forEach((b, j) => {
+            petalsGroup.node.appendChild(b.node);
+            const bs = bandStrokes[raised]?.[j];
+            if (bs) petalsGroup.node.appendChild(bs.node);
+          });
         }
       }
       backing.set('display', raised >= 0 && mk.petals > 0 ? 'inline' : 'none');
       if (raised >= 0) backing.set('d', bandPath(ring, raised, 0, ring.h[raised] as number));
       if (showPetals && (reshape || rescale || panned || bandsMoved || lastLit !== focusIndex)) {
-        writePetals(ring, view, mk.segments, reshape, focusIndex, mk.recede, band);
+        writePetals(ring, view, mk.segments, reshape, focusIndex, mk.recede, band, rescale);
       }
       petalsOn = showPetals;
       if (ringMoved) polygon.node.setAttribute('d', polygonPath(ring));

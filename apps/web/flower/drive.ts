@@ -6,7 +6,7 @@ import type { HoverWay } from './hover.ts';
 import { type Live, newLive, noteAt, stepLive } from './live.ts';
 import { type Focus, type Marks, marks } from './marks.ts';
 import type { Model } from './model.ts';
-import { createScene, type FakeRelations, type PetalOutlines, type Scene } from './scene.ts';
+import { createScene, type FakeRelations, type PetalLook, type Scene } from './scene.ts';
 
 export interface Driven {
   m: Model;
@@ -29,14 +29,14 @@ export function newDriven(
     relations: FakeRelations | null;
     readout: boolean;
     bloom?: boolean;
-    /** the lab's outlines, by petal id */
-    outlines?: PetalOutlines | null;
+    /** the lab's look (#76): colours, bands at rest, the highlight */
+    look?: PetalLook | null;
   },
 ): Driven {
   return {
     m,
     live: newLive(m, o.hover, o.width, o.height, o.calm, o.bloom ?? true),
-    scene: createScene(svg, m, o.relations, o.outlines ?? null),
+    scene: createScene(svg, m, o.relations, o.look ?? null),
     scratch: new Float64Array(m.n),
     readout: o.readout,
     last: null,

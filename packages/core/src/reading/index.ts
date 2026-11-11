@@ -82,6 +82,14 @@ export function categoryOf(
   };
 }
 
+export interface ReadOptions {
+  /**
+   * The least height a bar is given, HEIGHT_FLOOR unless said. The lab reads with none (Elco's art direction,
+   * 11 Nov: "no artificial minimum"; #76), so a petal is exactly as tall as its share, until Elco has seen it.
+   */
+  floor?: number;
+}
+
 /**
  * The reading of a spec over its snapshot. With a person's view (view/v1 or v2), each dimension draws what
  * the view picks (reading/view.ts) and the spec's own choices stay in the spec, as the agent's proposal; the
@@ -94,7 +102,9 @@ export function readFlower(
   s: Snapshot,
   view?: View,
   pieces: readonly SeamPiece[] = [],
+  options: ReadOptions = {},
 ): Reading {
+  const floor = options.floor ?? HEIGHT_FLOOR;
   const spec = view ? { ...given, encodings: encodingsOf(view, given, s, pieces) } : given;
   const values = valuesOf(pieces);
   const labels = view ? labelsOf(view, s, pieces) : 'identity';
@@ -110,7 +120,7 @@ export function readFlower(
       ...r,
       name: nameOf(r, labels, values),
       width: widths[i] ?? 1,
-      height: Math.max(HEIGHT_FLOOR, Math.min(1, heights[i] ?? 0)),
+      height: Math.max(floor, Math.min(1, heights[i] ?? 0)),
       colour: colourKey(spec.encodings.colour, r),
       outline: outlineKey(spec, r),
       segments: split && !r.tail ? backerSegments(s, r.id) : [],

@@ -5,7 +5,6 @@ import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import type { SeamPiece } from '@petal/core';
 import type { Reading, ReadingPetal, Snapshot, Spec, ToolError } from '@petal/core/types';
-import { type OutlineKey, outlinesOf } from '@petal/core/wedge/outline';
 import type { HoverWay } from '../../flower/hover.ts';
 import type { FlowerReading } from '../../flower/model.ts';
 import { configFromEnv, repoRoot } from '../../lib/config.ts';
@@ -93,48 +92,6 @@ async function benchOf(name: string, names: boolean): Promise<Bench | null> {
   return { reading: slim(core.readFlower(proposed.spec, snapshot, named, pieces)), pieces };
 }
 
-/** The data the outline can show on the bench, and what each is called there. */
-const OUTLINE_DATA = ['kind', 'identity', 'name', 'name_kind'] as const;
-
-export interface OutlineBench {
-  /** the piece of data the outline shows, or null for none */
-  shows: string | null;
-  /** the data it could show on this flower: those with a value on at least one petal */
-  choices: string[];
-  /** each petal's line, by id */
-  byId: Record<string, string>;
-  /** the values drawn, with their lines, in the order the lines were given */
-  keys: OutlineKey[];
-  /** the values past the outline's three, which draw no line */
-  unlined: string[];
-}
-
-/**
- * The outline for a bench flower (annotation-layer.md, step 7; Elco's (b), 11 Nov): the view binds it to a
- * piece of data, core says each petal's value, and the look hands its lines to the values by the order they
- * appear. No value has a line of its own.
- */
-async function outlineOf(
-  petals: readonly ReadingPetal[],
-  pieces: readonly SeamPiece[],
-  asked: string | null,
-): Promise<OutlineBench> {
-  const core = (await import(
-    /* turbopackIgnore: true */ /* webpackIgnore: true */ '@petal/core'
-  )) as typeof import('@petal/core');
-  const has = (by: string) => petals.some((p) => core.categoryOf(by, pieces)(p) !== null);
-  const choices = OUTLINE_DATA.filter(has);
-  const shows = asked && choices.includes(asked as (typeof OUTLINE_DATA)[number]) ? asked : null;
-  if (!shows) return { shows: null, choices, byId: {}, keys: [], unlined: [] };
-  const value = core.categoryOf(shows, pieces);
-  const byPetal = new Map(petals.map((p) => [p.id, value(p)]));
-  const { byId, keys } = outlinesOf(petals, (id) => byPetal.get(id));
-  const unlined = [...new Set([...byPetal.values()].filter((v): v is string => v !== null))].filter(
-    (v) => !keys.some((k) => k.value === v),
-  );
-  return { shows, choices, byId, keys, unlined };
-}
-
 /** What the address chose for a bench, or null if there's no such flower. */
 export async function benchChoice(q: Record<string, string | string[] | undefined>) {
   const name = typeof q.flower === 'string' ? q.flower : DEFAULT_FLOWER;
@@ -142,7 +99,6 @@ export async function benchChoice(q: Record<string, string | string[] | undefine
   const bench = await benchOf(name, names);
   if (!bench) return null;
   const { reading } = bench;
-  const asked = typeof q.outline === 'string' ? q.outline : null;
   const hover: HoverWay = q.hover === 'lift' ? 'lift' : 'dock';
   return {
     name,
@@ -151,8 +107,6 @@ export async function benchChoice(q: Record<string, string | string[] | undefine
     relations: q.relations === '1' ? fakeRelations(reading.petals.length) : null,
     scatter: q.order === 'scatter',
     probe: q.probe === '1',
-    // only when the address asks for it, so every other bench stays as it was
-    outline: asked === null ? null : await outlineOf(reading.petals, bench.pieces, asked),
     names,
   };
 }
