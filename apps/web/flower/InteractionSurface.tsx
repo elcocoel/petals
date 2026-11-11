@@ -133,6 +133,8 @@ export function InteractionSurface({
               fill="area"
               title="Power Map"
               focus={focus}
+              // a petal of the map it opened at opens that flower here (useWorkspace pickOnMap)
+              onPick={actions.pickOnMap}
             />
           </div>
         ) : (

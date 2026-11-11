@@ -4,7 +4,7 @@
 // open, keeps the address in step and hears Escape.
 import type { Spec } from '@petal/core/types';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { readDrawingSpec, saveSettings } from '../lib/agent-client.ts';
+import { readDrawingSpec, readMapDrawing, saveSettings } from '../lib/agent-client.ts';
 import {
   type Catalogue,
   modelOptions,
@@ -460,6 +460,31 @@ export function useWorkspace(props: {
           else dispatch(action);
         }
         if (opensBox) setBoxOpen(true);
+      },
+      /**
+       * A click inside a map on the canvas (#78): a petal opens that map's flower here, as a link to it would,
+       * with the petal chosen and its box open, so it does what a petal does everywhere.
+       */
+      pickOnMap: (hit: CanvasHit) => {
+        const map = mapAt?.map;
+        if (hit.kind !== 'petal' || !map) return;
+        void (async () => {
+          const href = await readMapDrawing(map);
+          const drawing = href ? drawingLink(href, window.location.origin) : null;
+          if (!drawing) return;
+          if ('stored' in drawing) openStored(drawing.stored);
+          else {
+            let spec: Spec | null = null;
+            if ('sha' in drawing) spec = await readDrawingSpec(drawing.sha);
+            else {
+              const read = decodeDraft(drawing.draft);
+              spec = read.ok ? read.spec : null;
+            }
+            if (!spec) return;
+            openDraft(spec);
+          }
+          select(hit.id);
+        })().catch(() => {});
       },
       closeBox: () => setBoxOpen(false),
       pay: pay.pay,
