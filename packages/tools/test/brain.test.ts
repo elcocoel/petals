@@ -124,7 +124,7 @@ describe('the brain', () => {
       ),
     };
     expect(brainProblems(broken, tools, '- see packages/tools/src/x.ts')).toEqual([
-      'money/value.md: its header says treasury, and it's in another department's folder',
+      "money/value.md: its header says treasury, and it's in another department's folder",
       'money/value.md: no department treasury (connecting, gathering, governance, money, investigation, services, stewardship)',
       'money/vesting.md: its header names no department (connecting, gathering, governance, money, investigation, services, stewardship)',
       'investigation/going-deeper.md: no tool teleport',
