@@ -555,6 +555,9 @@ export function nearHouseOfStake(opts: { rpc?: RpcPool } = {}): InputModule {
           population: 'house-of-stake',
           title: 'NEAR House of Stake',
           description: 'veNEAR holders, their voting power and delegations; vote.dao proposals',
+          // its contracts by name, so every reading is on one map, venear.dao's (DAO SET, 12 Nov: the old key
+          // near:mainnet:house-of-stake named no account); the reader takes no parameters of its own
+          params: { token: VENEAR, voting_contract: VOTE },
         },
         snapshot: {
           as_of: asOf,

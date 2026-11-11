@@ -42,3 +42,23 @@ export function retiredReading(snapshot: string): (Retired & { decided: string }
   const r = RETIRED.get(snapshot);
   return r ? { ...r, decided: retired.decided } : null;
 }
+
+export interface RetiredClaim {
+  id: string;
+  replaced_by: string;
+  /** the wave's own record of the change */
+  from: string;
+}
+
+const RETIRED_CLAIMS = new Map<string, RetiredClaim>(
+  ((retired as { claims?: RetiredClaim[] }).claims ?? []).map((c) => [c.id, c]),
+);
+
+/**
+ * A mapping claim a wave reissued (retired-readings.json, claims; DAO SET, 12 Nov), or null: it stays in the store,
+ * but no map's list of the mapping's claims shows it, and search leaves it out.
+ */
+export function retiredClaim(id: string): (RetiredClaim & { decided: string }) | null {
+  const c = RETIRED_CLAIMS.get(id);
+  return c ? { ...c, decided: retired.decided } : null;
+}

@@ -1,6 +1,6 @@
 {
-  "note": "Readings the mapping waves replaced, retired from every list of the map, never deleted (META, 11 Nov: retire, never delete): each stays in the store and its flower still opens by its hash; its map shows the reading that replaced it. Taking its line out brings it back. Each names the wave's own record of the change.",
-  "decided": "META, 11 Nov 2026, from PM's waves: reading identity repairs (GNOSIS, ETHEREUM and L2 waves)",
+  "note": "Readings the mapping waves replaced, retired from every list of the map, never deleted (META, 11 Nov: retire, never delete): each stays in the store and its flower still opens by its hash; its map shows the reading that replaced it. Taking its line out brings it back. Each names the wave's own record of the change. Claims a wave reissued are retired the same way (claims): no map's list of the mapping's claims shows them, and search leaves them out.",
+  "decided": "META, 11 Nov 2026, from PM's waves: reading identity repairs (GNOSIS, ETHEREUM and L2 waves); 12 Nov, DAO SET's NEAR and Solana repairs",
   "retired": [
     {
       "snapshot": "01e4231ee7cb16602e1c644d9fb018022fb04cf311b067e971bc5b5c65eefdbf",
@@ -11,6 +11,16 @@
       "snapshot": "021f3035f9c687456c4e2c399ceabeb0e9f6209574a293fe60ec445937c8065e",
       "replaced_by": "8ed84320bd46ef913daff4aed9b851460db5816cfaa1a3e6c176728d39f091bb",
       "from": "data/gnosis/READING-LINK-REPAIR.json"
+    },
+    {
+      "snapshot": "03718e2fbe92e8b02f87979f14903106cb8a010c7431a2f712080e4c5b4b6cac",
+      "replaced_by": "bf749bb68debf6ecf566a43b8ec9339beef9ed2fb511761bf1fe5302aeb26ddd",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
+      "snapshot": "06622ffbd94c0b690dd02603e5b34d8424083f2c7aa1f804cd021a49520e7787",
+      "replaced_by": "d0da7c6db7f5dc0d56f993a228311cdf83dac9a3fc437356315bfc4467cff59a",
+      "from": "data/solana/MAP-BINDING-FIX.json"
     },
     {
       "snapshot": "08d93d9b3a3e5b53fff0bd8866075b35436b9d10491ae218159117b163e43579",
@@ -48,6 +58,11 @@
       "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
     },
     {
+      "snapshot": "1266ed3dd44b00f550844aa1c27a9631a46bb33ac1581fe0eef5e479b10d8276",
+      "replaced_by": "8ae5f7312ecb16a2e765e8eea2d7be11f075bfc3da8412049c330073d01c939b",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
       "snapshot": "12b502ce813b26cbda9331352f3af062a55c3964e36233c8f0302aa9e3d50613",
       "replaced_by": "7a7c9a7cabf5500717f4f46f1f6532508632da35624451d90ecacab024b0823f",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
@@ -56,6 +71,16 @@
       "snapshot": "157c0b4bfbf04f794d3ec7cfa6770059acb875b169aa4204cec64f3601595a78",
       "replaced_by": "a1e23300296e6e054082d049efb049fa5321d02b6de0261209d5fd3a6e4a5d72",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
+    },
+    {
+      "snapshot": "16c7e2c52bcc5a2c66e366e89fbc6de98297fc1eaa7522594cb334af6780b18e",
+      "replaced_by": "e3db14207135ce47b199d2dfd6c87d5c0add4a9310f408fa34a0c61d5d25bd68",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
+      "snapshot": "17be4480a8f1584a37f61074b9d0fef62941be8e134904802e1bf51964906fc2",
+      "replaced_by": "5ab4cb544e395dc7201d281685750d22f5d84087e1e2f50abdcb027048c19258",
+      "from": "NEAR-HOS-IDENTITY-HOLD.json: Petals' own House of Stake reading (9 Nov) on the old key near:mainnet:house-of-stake, which names no account; the House of Stake is one map on venear.dao"
     },
     {
       "snapshot": "1823e5e7228862c6c7c6a7dd9e48de0397b5b43dc81f5c57d3c7fc76bc035be4",
@@ -76,6 +101,11 @@
       "snapshot": "1d588babc911f91dfdf147ab302e8c4cb3cdd98c8dcc0a012a746a4ce2e31bb6",
       "replaced_by": "3166627170f63ab64448fd3f112e854f04ed0cb3cd9da49cf595f00685fbd97f",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
+    },
+    {
+      "snapshot": "1da671a48e97a328e7d3f2c573d8502e1fa73205929870d77b38c0977a378aed",
+      "replaced_by": "a32ab668856e973850f2f0cae64e93025c2962c7713e46a4ecae86f7a8e52019",
+      "from": "data/solana/MAP-BINDING-FIX.json"
     },
     {
       "snapshot": "20e0de875669ca506ad0171a896ab4d27bd5428e0a8ace028244cdf95b50a57b",
@@ -103,6 +133,11 @@
       "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
     },
     {
+      "snapshot": "2a0bef1e19171a8e4a09de73d7a3ea4bbbc2533748f96ca060109fbcf2324813",
+      "replaced_by": "a5a9860cd4ebfb5f772e3382b075a3f4148ec85eaa8a6d72e42f980ff7d15c7d",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
       "snapshot": "2d1a749c197926d39ba0223fbf4fa902f61520caee856a460e2edc6d06905c54",
       "replaced_by": "e813bf5a9d817f43ea9ee0eeeaee3b61ed42954da9e83c47ed530edc44a49eba",
       "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
@@ -128,9 +163,24 @@
       "from": "readings-reissue/IDENTITY-AUDIT.json"
     },
     {
+      "snapshot": "36bc90a8e7a7b5a06330b195215560602ab22060268fcf7d1b55e486dec114f9",
+      "replaced_by": "bf749bb68debf6ecf566a43b8ec9339beef9ed2fb511761bf1fe5302aeb26ddd",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
+      "snapshot": "3ae0cb03206c65dbb7ef34dcdb1721fa6907a15ac0b66eef5e050e82de87d134",
+      "replaced_by": "74dd1ef94f95125222b822d887930444297b5686c685c1c2021a161109d1cda7",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
       "snapshot": "3c82ad28639bee0115c7034e87f1ca3c6558acc734551903b4f4fd91e76ffbad",
       "replaced_by": "e0c4789882ecba0e712c11f57957cada16932bede657dcd40a55966b5dd5efe9",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
+    },
+    {
+      "snapshot": "3f42c58c33849b3ec20dad068e82f4c344c9ef027eebf18433b42a313e12b123",
+      "replaced_by": "1a60b1b9cd30c04f3a139a291a98e75af4d5377b686973d605be4fea342051ee",
+      "from": "data/solana/MAP-BINDING-FIX.json"
     },
     {
       "snapshot": "417e99b90ce4f007d253dbd0137e256552531fc8db872b4bd95b5393ac2507e1",
@@ -143,9 +193,19 @@
       "from": "readings-reissue/IDENTITY-AUDIT.json"
     },
     {
+      "snapshot": "45b7e910102904d894bb64c823ebb3665bce9f693cb2fa2615b783a19f45d351",
+      "replaced_by": "a3bbde68f4febdd316bf104d20d83fcfa63c730ce06feb6e7976ea2dff04d2e7",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
       "snapshot": "4c0b7e5071f83be35d56bb5e7af6e5e5e119b4472d22f10b96bc8939af71a5e7",
       "replaced_by": "588764b3914fa74b3366e7396cd31e8a53327525f89996d5edbafaa444ba4736",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
+    },
+    {
+      "snapshot": "4cf1aa604fc9ccd6d480056c0139f389ce3923b601e4743dab2b2d728a073b5f",
+      "replaced_by": "f0e7a838fed2a8637f2135187d55c47c21847401f4b8e0b09b9261cfc81bb7f7",
+      "from": "data/solana/MAP-BINDING-FIX.json"
     },
     {
       "snapshot": "5018f1df43b4e81360cb5862a0d02c80dfaaa7d0dc71a2b18408abe8be1b8342",
@@ -183,6 +243,11 @@
       "from": "phase2-ethereum-map-bindings.json"
     },
     {
+      "snapshot": "594265c5b303265307f96cae175f1e121c3fd91d6b5389a449acf74f29aa72de",
+      "replaced_by": "14226b6f198db590be85bf7ef158ce4f0841bc21b6bc7c96a4009587601948d1",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
       "snapshot": "597edda21f55f29540e709d109dc9255b579a6f979d265d74b671f3cf5b179b8",
       "replaced_by": "6dc339e35400c5d7f271fa2138115b855a36996c1d5fa9fbcfbe114855b8fe02",
       "from": "phase2-ethereum-map-bindings.json"
@@ -203,14 +268,34 @@
       "from": "readings-reissue/IDENTITY-AUDIT.json"
     },
     {
+      "snapshot": "62a53a3576567600cea51f0500091df520f17ec842f8507737d7fbcd1668245f",
+      "replaced_by": "14226b6f198db590be85bf7ef158ce4f0841bc21b6bc7c96a4009587601948d1",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
       "snapshot": "63e03fd8202a7675c0ee4ff8b103f025e26f31d7a922bb18a07959f781aee138",
       "replaced_by": "0413e07b50f46b8c24ab72844d54e72278f25c1d9405e0e4967a38f9c5d927f3",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
     },
     {
+      "snapshot": "6923f4700b0d1a289adf823b804dbd6db814d55040b274537d317302dcd01c2e",
+      "replaced_by": "cac0ed22334af4ae40a2791256d92c2ecfd9b26dc377c3cf6d211c825e583191",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
       "snapshot": "6927884d82f352efd35a64f1ca68ad9068f440138a199855203448fd7bdbf823",
       "replaced_by": "60d4d2b71f6a3a6a662c8a8b5d09c3fc21eea8bede40aaaefa142ca17815a5c6",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
+    },
+    {
+      "snapshot": "6a243ed28418b6437cb63c0e31e205639a1d583c6a7ab73d2fc19078720358c6",
+      "replaced_by": "d43a29eecc3eb228a9c430fcb9f80baa3147cfb18c2b0ad6a3cd1ba68f2cc6dc",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
+      "snapshot": "6b5d0dc7a4239732d450db4eb7533157d2031f47ba42b01a6d84bc5bb1a9555d",
+      "replaced_by": "1340317a6c79f488ccc219d386a9df4477ad13a58f300431a40061451b91c33c",
+      "from": "data/solana/MAP-BINDING-FIX.json"
     },
     {
       "snapshot": "6e91ed77e6ba71827b18f88dd60a69e5f792ad21967fb3c8d3d7e030963ee3ee",
@@ -288,6 +373,11 @@
       "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
     },
     {
+      "snapshot": "93b2476c9ac9b3e9e04f5f1cfedc97655119e63cee1874ebc00363b3f51dc485",
+      "replaced_by": "024687b7bef8ce5c339799b215865912dd6db7f624291340e8720e4dea3cc72b",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
       "snapshot": "979ddbc19db34513c96d831f3b78a656acb32ee5c8f5b217eae0ef0c059af3a7",
       "replaced_by": "18120811bf9e3721de1929c2681a2b790d8fb58b329eb9a8882a793d73885468",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
@@ -353,9 +443,19 @@
       "from": "data/gnosis/READING-LINK-REPAIR.json"
     },
     {
+      "snapshot": "adedba8113fcaf0d476460393da0b3495ea68abc6fd5771a260b11ff14b6bece",
+      "replaced_by": "5ab4cb544e395dc7201d281685750d22f5d84087e1e2f50abdcb027048c19258",
+      "from": "NEAR-HOS-IDENTITY-HOLD.json: Petals' own House of Stake reading (11 Nov) on the old key near:mainnet:house-of-stake, which names no account; the House of Stake is one map on venear.dao"
+    },
+    {
       "snapshot": "aed0505ea6be827e7320dc3808aafb5af6a3fc727ec9c6a8d37cc3fdfe549a09",
       "replaced_by": "19c3c2b3a46f83f6722ae2860afc71121eb83bb7abfb0e1bdd5782778cb0df1e",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
+    },
+    {
+      "snapshot": "b5750f7be3579f6cd7a361fd8bd71d6cee8a810802f0b15e285617d992e9cfbe",
+      "replaced_by": "5ab4cb544e395dc7201d281685750d22f5d84087e1e2f50abdcb027048c19258",
+      "from": "NEAR-HOS-IDENTITY-HOLD.json"
     },
     {
       "snapshot": "b756318ff11f308c5b23f37f97bb0a347b63ecdc1d26b223b7aec58899ca7869",
@@ -366,6 +466,11 @@
       "snapshot": "b79247c817fc0c32f5021c0b71ce3ab288ca5ae5009bcd7a2a9eded28c716581",
       "replaced_by": "de9195b8d4bdec3968a7b0b5a3bf6d6fe248204b2d2550c7a764a278944fc7a4",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
+    },
+    {
+      "snapshot": "b7ae0028e17e448dc274cebf8bd6e6209ab04af23869cd35c4f2d117b8e9453c",
+      "replaced_by": "0724566e996aba11533eda054d51b260dd38709d98f38714ac54a65f4897a189",
+      "from": "near-identity-reissue/CHANGES.json"
     },
     {
       "snapshot": "b97f89685d8713de52bba359cd2cb1a52163dc3e6110fc77c424a0eb569958bc",
@@ -403,6 +508,11 @@
       "from": "readings-reissue/IDENTITY-AUDIT.json"
     },
     {
+      "snapshot": "c66dd22f22ba5dddf4cd1584c6cc6e7cf650a6b075cfd51c6479a623d70c7554",
+      "replaced_by": "d43a29eecc3eb228a9c430fcb9f80baa3147cfb18c2b0ad6a3cd1ba68f2cc6dc",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
       "snapshot": "cd3f4c844fba38d578a78a0db0c50e45e75c8e6fc325c101b0eb9ba34cec06d2",
       "replaced_by": "c274f1ed093ccc6f99db849538e1891e293d7ea61eff2ba7ee41b352b4baf45e",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
@@ -428,6 +538,16 @@
       "from": "phase2-ethereum-map-bindings.json"
     },
     {
+      "snapshot": "dcafc51041e1903ad0b7d5b1da3e55e9ec8bc8491194a2ccf190957bdb0fdd84",
+      "replaced_by": "732df1631a797dc21d8e549f4ccaf7f2a1afce413c613e9accba9f4367c9d648",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
+      "snapshot": "e2d3fdd95631e88c71cfa2ebf9245b0f4689190033579998d5949045f65e343a",
+      "replaced_by": "c6367b941bbfea152a6534a3b418a1e9e99922242c0c41c6b8037ad0862e96f8",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
       "snapshot": "e6ee76ae6299206ebaebd9eeaf7ff5086fde68fc3ba91d92fe900c8d5817afe0",
       "replaced_by": "853c6c25ea89b1064ce827b99415186fbfe48e44deec34d77ea0fa9212c0eb06",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
@@ -441,6 +561,16 @@
       "snapshot": "eb256e41c96de032618ec410e07289947d164a03f76222a44eeaa6ce43ba4855",
       "replaced_by": "46eb489013cc1beecebb2c23fe444c55039aba3a53e5fe667564af6ba41072a3",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
+    },
+    {
+      "snapshot": "eb6d770222598813f66417577893eea49da388713bc4206995e351d491555786",
+      "replaced_by": "144fe3834d86f92c98956528866bab35fd981d0b5cf60e485b6cdaa68100623e",
+      "from": "data/solana/MAP-BINDING-FIX.json"
+    },
+    {
+      "snapshot": "ed3d39c1fbad870fbdb30a733757e2de1a06dd5a97f50c962874595eb59626c5",
+      "replaced_by": "22771b57a17a952bcbaa5e817a2ba2a186938603e7b80487ab0fb6dd4f05ef73",
+      "from": "data/solana/MAP-BINDING-FIX.json"
     },
     {
       "snapshot": "f6ca1f5a8482edce8102b88e01a857076dbeb47d1361b207de0b93d9b22127f6",
@@ -461,6 +591,23 @@
       "snapshot": "fed5e3a97553af0d705fdb074fb0d644adfa04f65e04bec3be52103243dea5a6",
       "replaced_by": "83acb671f9388d71e74c521a120fc92d67c73491d0af51a0592c6967a4c03801",
       "from": "phase2-ethereum-map-bindings.json"
+    }
+  ],
+  "claims": [
+    {
+      "id": "0eac654e2f5d974545ecee8de0f11c4882872ff15aa24703ee8a3ad56146883c",
+      "replaced_by": "aa3c3d392ca44d240f497227e837fe6760c6db64f3dbb31c601d2af2fd1fd68a",
+      "from": "near-identity-reissue/CHANGES.json"
+    },
+    {
+      "id": "4a8354829dcdc9720229f2fd61dc9b36d551d9b1a0607ec897895e4107c0b9e0",
+      "replaced_by": "c3b4ca770305157a873085fb2d88bd2d5906fdcf10d5ff3e60db701f630131c0",
+      "from": "near-identity-reissue/CHANGES.json"
+    },
+    {
+      "id": "c046eac4914032142be7621e5dbc834f186cc6ae6a7b1d7db39a2310f5eea1d4",
+      "replaced_by": "f0e6efdc39294717aa5175ceb4f80447ad80074489a5d43c410ffbc5f9da8995",
+      "from": "NEAR-HOS-IDENTITY-HOLD.json"
     }
   ]
 }

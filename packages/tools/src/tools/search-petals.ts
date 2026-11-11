@@ -10,6 +10,7 @@ import type { Claim } from '@petal/core/types';
 import type { AnnotationRow, Store } from '@petal/store';
 import { defineTool } from '../define.ts';
 import { privateStore } from '../drafts.ts';
+import { retiredClaim } from '../hidden.ts';
 import { type MapCard, mapsOf, mapViews, typeWords } from '../map.ts';
 import { MAPPING } from '../mapping-claims.ts';
 import { proposalsOf } from '../proposals.ts';
@@ -164,7 +165,8 @@ async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapS
   const marks = await store.mark.list();
   const proposalRows = await store.proposals.list();
   // Petals' own mapping's claims, the same for every viewer
-  const claimRows = await store.annotation.list(MAPPING);
+  // a claim a wave reissued is retired: its replacement is what's said (hidden.ts)
+  const claimRows = (await store.annotation.list(MAPPING)).filter((c) => !retiredClaim(c.id));
   const sig = [
     model?.embedding ?? 'words',
     views.map((v) => v.sha).join(','),

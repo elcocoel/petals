@@ -1,7 +1,7 @@
 // Maps hidden from the Power Map (board #96; Elco approved DAO SET's review, 11 Nov): never deleted, each with
 // its reason, and the four the review protects stay shown.
 import { describe, expect, test } from 'vitest';
-import { hiddenCount, hiddenMap, retiredReading } from '../src/hidden.ts';
+import { hiddenCount, hiddenMap, retiredClaim, retiredReading } from '../src/hidden.ts';
 import hidden from '../src/hidden-maps.json' with { type: 'json' };
 import retired from '../src/retired-readings.json' with { type: 'json' };
 
@@ -38,7 +38,7 @@ describe('maps hidden from the Power Map', () => {
   });
 
   test("the readings the waves replaced are retired, never deleted: each names its replacement and the wave's record", () => {
-    expect(retired.retired.length).toBe(92);
+    expect(retired.retired.length).toBe(118);
     for (const r of retired.retired) {
       expect(r.snapshot).toMatch(/^[0-9a-f]{64}$/);
       expect(r.replaced_by).toMatch(/^[0-9a-f]{64}$/);
@@ -51,5 +51,27 @@ describe('maps hidden from the Power Map', () => {
       decided: expect.stringMatching(/^META, 11 Nov 2026/),
     });
     expect(retiredReading('0'.repeat(64))).toBeNull();
+  });
+
+  test('the House of Stake is one map: every reading on the old key, which names no account, is retired for the reissue on venear.dao', () => {
+    const onVenear = '5ab4cb544e395dc7201d281685750d22f5d84087e1e2f50abdcb027048c19258';
+    for (const old of [
+      'b5750f7be3579f6cd7a361fd8bd71d6cee8a810802f0b15e285617d992e9cfbe',
+      '17be4480a8f1584a37f61074b9d0fef62941be8e134904802e1bf51964906fc2',
+      'adedba8113fcaf0d476460393da0b3495ea68abc6fd5771a260b11ff14b6bece',
+    ])
+      expect(retiredReading(old)?.replaced_by).toBe(onVenear);
+  });
+
+  test("the claims a wave reissued are retired, never deleted: each names its replacement and the wave's record", () => {
+    const claims = (retired as { claims: { id: string; replaced_by: string; from: string }[] }).claims;
+    expect(claims.length).toBe(3);
+    for (const c of claims) {
+      expect(c.id).toMatch(/^[0-9a-f]{64}$/);
+      expect(c.replaced_by).toMatch(/^[0-9a-f]{64}$/);
+      expect(retiredClaim(c.replaced_by)).toBeNull();
+      expect(retiredClaim(c.id)).toMatchObject({ replaced_by: c.replaced_by, decided: expect.stringContaining('12 Nov') });
+    }
+    expect(retiredClaim('0'.repeat(64))).toBeNull();
   });
 });

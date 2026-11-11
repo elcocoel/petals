@@ -5,6 +5,7 @@
 // contract) or the map's own address, oldest first, the same for every viewer.
 import type { Claim } from '@petal/core/types';
 import { privateStore } from './drafts.ts';
+import { retiredClaim } from './hidden.ts';
 import { mapsOf, mapViews } from './map.ts';
 import { loadSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
@@ -55,6 +56,6 @@ export async function mapClaims(ctx: ToolContext, id: string): Promise<Claim[] |
       if (typeof v === 'string' && ADDRESS.test(v)) accounts.add(key(`${chain}:${v}`));
   }
   return (await privateStore(ctx.config).annotation.list(MAPPING))
-    .filter((r) => accounts.has(key(r.subject)))
+    .filter((r) => accounts.has(key(r.subject)) && !retiredClaim(r.id))
     .map((r) => JSON.parse(r.body) as Claim);
 }
