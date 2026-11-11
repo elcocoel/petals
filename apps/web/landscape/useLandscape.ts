@@ -5,7 +5,7 @@
 // window, enters it: everything else fades, and arrows name the ways out. Esc, or zooming back out, leaves.
 // React mounts this once per chain and never renders per frame.
 import { lookFills } from '@petal/core/wedge/keys';
-import { type RefObject, useEffect } from 'react';
+import { type RefObject, useEffect, useRef } from 'react';
 import {
   type Clear,
   clearSides,
@@ -105,6 +105,17 @@ const FARTHEST = 0.6;
 
 const quiet = () => window.matchMedia('(prefers-reduced-motion: reduce)');
 
+/** A flower, by the map it stands for, so it's found again in new data. */
+const idOf = (f: LandFlower | undefined): string | null =>
+  f ? (f.map ?? f.snapshot ?? f.name) : null;
+
+/** Where the map was when its scene was last taken down: the camera, the flower you were in, the page's own. */
+interface Kept {
+  view: { k: number; x: number; y: number };
+  entered: string | null;
+  focus: string | null;
+}
+
 export function useLandscape(
   svg: RefObject<SVGSVGElement | null>,
   data: LandscapeData,
@@ -113,6 +124,9 @@ export function useLandscape(
   aside?: RefObject<HTMLElement | null>,
   at?: RefObject<LandscapeAt | null>,
 ): void {
+  // The map's data comes again when the view changes (the legend, Elco, 11 Nov: "I want to see me being able to
+  // switch the legends live and watching the map adapt"): the scene is built again where you were.
+  const kept = useRef<Kept | null>(null);
   useEffect(() => {
     const node = svg.current;
     if (!node) return;
@@ -582,7 +596,17 @@ export function useLandscape(
     });
 
     const focus = at?.current?.focus ?? -1;
-    if (focus >= 0 && flowers[focus]) {
+    const focusId = focus >= 0 ? idOf(flowers[focus]) : null;
+    const was = kept.current;
+    kept.current = null;
+    if (was && was.focus === focusId) {
+      // the same page with new data: where you were, at once, inside the flower you were in
+      flyTo(cam, was.view);
+      const j = was.entered ? flowers.findIndex((f) => idOf(f) === was.entered) : -1;
+      if (j >= 0) entered = j;
+      arriving = true;
+      cam.touched = true;
+    } else if (focus >= 0 && flowers[focus]) {
       enterFlower(focus);
       arriving = true;
       // Placed on purpose: the first size the window reports must keep it there, not fit the chain again.
@@ -663,6 +687,14 @@ export function useLandscape(
     }
 
     return () => {
+      // kept once it has drawn (React's second mount in development takes it down before any frame)
+      if (frames > 0) {
+        kept.current = {
+          view: { k: cam.k, x: cam.x, y: cam.y },
+          entered: entered >= 0 ? idOf(flowers[entered]) : null,
+          focus: focusId,
+        };
+      }
       if (raf) cancelAnimationFrame(raf);
       node.removeEventListener('pointermove', onMove);
       node.removeEventListener('pointerleave', onLeave);
