@@ -109,6 +109,24 @@ describe("Petals' agent keeps what the person tells it", () => {
     ]);
   });
 
+  test('the person reads every name they keep, from all their projects; a visitor reads none', async () => {
+    const w = setup([
+      {
+        content: "Kept in your project: 0xced6… is Dekan's.",
+        calls: [{ name: 'annotate', args: NAMED }],
+      },
+    ]);
+    expect((await w.call('GET', '/api/v1/me/annotations')).status).toBe(401);
+    await w.signInFunded();
+    const { exploration } = await w.chat();
+    const mine = (await (await w.call('GET', '/api/v1/me/annotations?verb=named')).json()) as Out;
+    expect(mine.annotations).toMatchObject([
+      { exploration, claim: { subject: DEKAN, object: { value: 'Dekan' }, kind: 'stated' } },
+    ]);
+    const notes = (await (await w.call('GET', '/api/v1/me/annotations?verb=noted')).json()) as Out;
+    expect(notes.annotations).toEqual([]);
+  });
+
   test("one that isn't kept goes back to the model, which says so or fixes it", async () => {
     const wrong = { annotations: [{ ...NAMED.annotations[0], subject: '0xced6' }] };
     const w = setup([

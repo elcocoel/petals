@@ -3,6 +3,9 @@
 // piece of data with its kind, its standing and the layer it came from. The look reads it and draws; it never
 // computes data, so whatever a dimension shows (a share, a kind of account, a petal's backers) is in here
 // already. A view (view/v1) names these pieces by name.
+import { applyPolicy } from './claims/policy.ts';
+import { parseRef } from './claims/refs.ts';
+import type { Claim, ClaimKind } from './claims/types.ts';
 import { canonicalJson, sha256Hex } from './hash.ts';
 import { type Added, LayerError, type MeasureKind, type Standing } from './layers.ts';
 import type { Snapshot } from './types/index.ts';
@@ -90,7 +93,79 @@ function shareOf(part: number, total: number): string {
  * The seam document for a reading and the layers added to it. Each layer, and each added reading, must be
  * about the same address as the base; a name may come from one source only.
  */
-export function seamOf(base: Snapshot, baseHash: string, added: readonly Added[]): Seam {
+/**
+ * The one name a petal shows when several are claimed (annotation-layer.md, with LOOK): the account's own
+ * word, then the person's, then a source's, then an inference; then the newest; then the lower id.
+ */
+const NAME_RANK: readonly ClaimKind[] = ['declared', 'stated', 'sourced', 'inferred'];
+const rankOf = (c: Claim) => {
+  const i = NAME_RANK.indexOf(c.kind);
+  return i < 0 ? NAME_RANK.length : i;
+};
+const before = (a: Claim, b: Claim) =>
+  rankOf(a) !== rankOf(b)
+    ? rankOf(a) < rankOf(b)
+    : a.issued_at !== b.issued_at
+      ? a.issued_at > b.issued_at
+      : a.id < b.id;
+
+/**
+ * Names from annotations (annotation-layer.md step 5): for each of the reading's participants a `named` claim
+ * is about, one name and how it's known, as two categories, `name` and `name_kind`. What the policy hides
+ * (retracted, replaced) doesn't count, in the person's own lens, which counts everyone in their own set. A
+ * name is never verified: both are `lead`, the viewer's own, to check. The set is named by the hash of the
+ * chosen claims' ids. None claimed: no pieces. Pure.
+ */
+export function namePieces(s: Snapshot, claims: readonly Claim[]): SeamPiece[] {
+  const chain = s.network.chain;
+  const ids = new Map(s.participants.map((p) => [aboutKey(`${chain}:${p.id}`), p.id]));
+  const best = new Map<string, Claim>();
+  for (const { claim: c, show } of applyPolicy(claims, { trusted: 'everyone' })) {
+    if (show === 'hidden' || c.verb !== 'named' || typeof c.object === 'string') continue;
+    const ref = parseRef(c.subject);
+    const id = ref?.ns === 'account' ? ids.get(aboutKey(`${ref.chain}:${ref.address}`)) : undefined;
+    if (id === undefined) continue;
+    const was = best.get(id);
+    if (!was || before(c, was)) best.set(id, c);
+  }
+  if (!best.size) return [];
+  const chosen = [...best];
+  const from = {
+    standing: 'lead' as const,
+    layer: sha256Hex(canonicalJson(chosen.map(([, c]) => c.id).sort())),
+    as_of: chosen
+      .map(([, c]) => c.issued_at)
+      .sort()
+      .at(-1) as string,
+  };
+  return [
+    {
+      name: 'name',
+      kind: 'category',
+      unit: 'name',
+      ...from,
+      values: chosen.map(([participant, c]) => ({
+        participant,
+        value: (c.object as { value: string }).value,
+      })),
+    },
+    {
+      name: 'name_kind',
+      kind: 'category',
+      unit: 'how the name is known',
+      ...from,
+      values: chosen.map(([participant, c]) => ({ participant, value: c.kind })),
+    },
+  ];
+}
+
+/** With annotations, the reading's participants they name also get `name` and `name_kind` (namePieces). */
+export function seamOf(
+  base: Snapshot,
+  baseHash: string,
+  added: readonly Added[],
+  annotations: readonly Claim[] = [],
+): Seam {
   const about = aboutOf(base);
   const at = base.snapshot.as_of;
   const data: SeamPiece[] = [];
@@ -205,6 +280,7 @@ export function seamOf(base: Snapshot, baseHash: string, added: readonly Added[]
       }
     }
   }
+  for (const p of namePieces(base, annotations)) push(p);
   return {
     petal: SEAM_DOCUMENT_VERSION,
     about,

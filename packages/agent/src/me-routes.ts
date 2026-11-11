@@ -12,6 +12,9 @@
 //                              their usage; PUT { tip_percent } sets it on the price's scale
 //   GET  /api/v1/me/usage      { usage, totals }: every model call charged to them (usage/v1), the newest
 //                              first, reconciled with NEAR AI's bill first
+//   GET  /api/v1/me/annotations?verb=  { annotations: [{ claim, exploration, added_at }] }: everything they and
+//                              their agents keep about accounts, from all their projects, oldest first; with
+//                              verb=named, the names the page draws on petals (core's namePieces)
 //
 // The view is the glasses every petal the person sees is drawn through (one-source.md, step 1: "When the
 // user has a certain setting selected, all of the petals he will ever interact while those settings are
@@ -134,6 +137,22 @@ export function meRoutes(d: MeDeps): Hono {
     const row = await store.viewDoc.get(hash);
     return row ? (JSON.parse(row.body) as View) : null;
   }
+
+  // -- annotations, from all their projects (annotation-layer.md step 5)
+
+  app.get('/api/v1/me/annotations', async (c) => {
+    const me = await personOf(c);
+    if (!me) return fail(c, 'unauthorised', 'Sign in to read what you keep about accounts.');
+    const verb = c.req.query('verb');
+    const rows = (await store.annotation.list(me.person)).filter((r) => !verb || r.verb === verb);
+    return ok(c, {
+      annotations: rows.map((r) => ({
+        claim: JSON.parse(r.body) as unknown,
+        exploration: r.exploration,
+        added_at: r.created_at,
+      })),
+    });
+  });
 
   // -- the view
 

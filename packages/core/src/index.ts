@@ -82,6 +82,7 @@ export {
   DATA_KINDS,
   type DataKind,
   mapOf,
+  namePieces,
   SEAM_DOCUMENT_VERSION,
   type Seam,
   type SeamPiece,
