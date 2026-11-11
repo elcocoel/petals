@@ -17,7 +17,7 @@ export function Footer() {
           <div className="flex flex-wrap gap-x-space-32 gap-y-text-gap">
             <TextLink href={siteLinks.map}>{copy.links.gallery}</TextLink>
             <TextLink href={siteLinks.howItWorks}>{copy.links.howItWorks}</TextLink>
-            <TextLink href={siteLinks.connect}>{copy.links.docs}</TextLink>
+            <TextLink href={siteLinks.docs}>{copy.links.docs}</TextLink>
           </div>
         </div>
         <Mono>{copy.built}</Mono>

@@ -15,7 +15,7 @@ export function Nav() {
     <>
       <TextLink href={siteLinks.howItWorks}>{copy.howItWorks}</TextLink>
       <TextLink href={siteLinks.map}>{copy.gallery}</TextLink>
-      <TextLink href={siteLinks.connect}>{copy.docs}</TextLink>
+      <TextLink href={siteLinks.docs}>{copy.docs}</TextLink>
     </>
   );
   return (

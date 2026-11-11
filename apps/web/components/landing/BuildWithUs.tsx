@@ -24,7 +24,7 @@ export function BuildWithUs() {
           <ActionRow gap="tight">
             {/* GitHub and Join the builders come back with somewhere to go: the repo public on Elco's
                 go, a builders' channel once chosen (design/minimally-good.md, rule 10). */}
-            <Button href={siteLinks.connect}>{copy.actions.docs}</Button>
+            <Button href={siteLinks.docs}>{copy.actions.docs}</Button>
           </ActionRow>
         </div>
       </div>
