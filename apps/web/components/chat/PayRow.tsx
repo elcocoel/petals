@@ -11,11 +11,14 @@ import { Field } from '../ui/Field.tsx';
 import { Mono } from '../ui/Mono.tsx';
 
 export function PayRow({
+  first = false,
   phase,
   added,
   onPay,
   topUp,
 }: {
+  /** offered before the first question, to someone with no credit yet: its words say so */
+  first?: boolean;
   phase: PayPhase;
   /** What the last payment added, in NEAR, once it has. */
   added: string | null;
@@ -24,7 +27,9 @@ export function PayRow({
   topUp?: TopUpView;
 }) {
   if (phase === 'added' && added) {
-    return <p className="my-0 type-ui">{payWords.added(added)}</p>;
+    return (
+      <p className="my-0 type-ui">{first ? payWords.addedFirst(added) : payWords.added(added)}</p>
+    );
   }
   const sent = topUp?.sent ?? null;
   if (sent?.landed) {
@@ -32,7 +37,7 @@ export function PayRow({
   }
   return (
     <div className="flex flex-col items-start gap-text-gap border border-hairline p-text-gap">
-      <p className="my-0 type-ui">{payWords.out}</p>
+      <p className="my-0 type-ui">{first ? payWords.start : payWords.out}</p>
       <ActionRow gap="tight">
         <Button variant="compact" disabled={phase === 'paying'} onClick={onPay}>
           {phase === 'paying' ? payWords.paying : payWords.button(PAY_NEAR)}

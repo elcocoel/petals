@@ -150,8 +150,11 @@ export type Row =
   /** `about` is what the question carried, kept quiet; `label` says who is speaking */
   | { kind: 'user'; key: string; text: string; label: string; about?: string }
   | { kind: 'note' | 'error'; key: string; text: string }
-  /** Out of credit for Petals' agent: the way to add some, where the person meets it (B). */
-  | { kind: 'pay'; key: string }
+  /**
+   * Out of credit for Petals' agent: the way to add some, where the person meets it (B). `first` is the one
+   * offered before the first question, to someone with no credit yet (#78).
+   */
+  | { kind: 'pay'; key: string; first?: true }
   /** A job handed to the person's own agent (C); where it stands is read apart (useJobs). */
   | JobRowData
   | { kind: 'steps'; key: string; summary: string; steps: StepRow[] }

@@ -30,7 +30,7 @@ export function Thread({
   className?: string;
   renderFlower: (row: FlowerRow | StoredRow) => ReactNode;
   /** The way to add credit, drawn by whoever composes this, as a flower's row is. */
-  renderPay?: (key: string) => ReactNode;
+  renderPay?: (row: { key: string; first?: true }) => ReactNode;
   /** A job handed to the person's own agent, drawn by whoever composes this (C). */
   renderJob?: (row: JobRowData) => ReactNode;
   onRefollow?: () => void;
@@ -83,7 +83,7 @@ export function Thread({
                 </p>
               );
             case 'pay':
-              return renderPay?.(row.key) ?? null;
+              return renderPay?.(row) ?? null;
             case 'job':
               return renderJob?.(row) ?? null;
             case 'done':
