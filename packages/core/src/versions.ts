@@ -12,8 +12,11 @@ export const RENDER_VERSION = 'render/v2';
 export const READING_VERSION = 'reading/v1';
 export const RECIPE_VERSION = 'recipe/v1';
 export const CONVENTION_VERSION = 'default/v1';
-/** claim/v2 since 10 Nov: annotations (annotation-layer.md). v1 still reads, and chain reads are still v1. */
-export const CLAIM_VERSION = 'claim/v2';
+/**
+ * claim/v3 since 11 Nov: typed evidence, who found it and when (Elco). v1 and v2 still read, and chain reads
+ * are still v1.
+ */
+export const CLAIM_VERSION = 'claim/v3';
 /**
  * A person's view: which piece of data each dimension shows (specs/006-the-map/contracts/view.md). view/v2
  * since 11 Nov adds labels (annotation-layer.md, step 6); a view/v1 still reads, with labels on identity.

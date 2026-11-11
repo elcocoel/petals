@@ -1,6 +1,6 @@
 // Annotations: what a person or an agent adds about an account, beside what the chain says (Elco, 10 Nov:
 // "the agent and the person can go CRAZY adding annotation, researching things deeply"; annotation-layer.md
-// step 2). Each is a claim/v2 (a name, a note, a link, anything a claim can say), kept privately under the
+// step 2). Each is a claim/v3 (a name, a note, a link, anything a claim can say), kept privately under the
 // project's owner, with the project it was added in. Names are allowed here and nowhere published (people.ts,
 // Elco's decision 1 (a)).
 //   add_annotation    one or many, all or none; Petals fills each one's id and who answers for it
@@ -41,13 +41,13 @@ const ABOUT = {
 };
 const DRAFT = obj(['subject', 'verb', 'object', 'kind', 'evidence'], {
   subject: { type: 'string', description: 'The account it is about: eip155:100:0xabc…' },
-  verb: { type: 'string', description: 'named, noted, linked, or any claim/v2 verb' },
+  verb: { type: 'string', description: 'named, noted, linked, or any claim verb' },
   object: { description: 'For named, noted and linked: {"value": "Dekan"}' },
   kind: { enum: ['declared', 'stated', 'sourced', 'inferred'] },
   evidence: {
     type: 'array',
     description:
-      'What it rests on: url, tx (<caip2>:<hash>), proposal (proposal:<caip2>:<key>), quote, note',
+      'What it rests on, one piece each: type (snapshot, tx, proposal, page, post, claim or note), and its field: url, tx (<caip2>:<hash>), proposal (proposal:<caip2>:<key>), snapshot_sha256, claim_id or note. For the open web: platform (x, github, discord, forum…), quote, retrieved_at, url_sha256 (the content hash) and archive_url (an archived copy). found_by and found_at say who found it and when; left out, they are you and now.',
   },
   method: { type: 'string', description: 'For inferred: name@version' },
   qualifiers: { type: 'object', description: 'For inferred: {"grounds": "research"}' },
@@ -92,8 +92,29 @@ function writerOf(o: Opened, ctx: ToolContext, as: string | undefined): string {
 }
 
 /**
- * Drafts (claim/v2 without id and by) as claims with `by` and the time filled in, each checked as kept in a
- * person's own project; or every reason, with a ToolFailure, so none is kept. One rule for every door.
+ * What a piece of evidence is, when its writer didn't say: the most particular thing it holds. A URL is a
+ * page unless the writer says post.
+ */
+const ORDER = [
+  ['snapshot', 'snapshot_sha256'],
+  ['proposal', 'proposal'],
+  ['tx', 'tx'],
+  ['claim', 'claim_id'],
+  ['page', 'url'],
+  ['note', 'note'],
+] as const;
+function typed(e: unknown, by: string, at: string): unknown {
+  if (!e || typeof e !== 'object' || Array.isArray(e)) return e;
+  const o = e as Record<string, unknown>;
+  const type = o.type ?? ORDER.find(([, field]) => o[field] !== undefined)?.[0];
+  return { ...(type ? { type } : {}), found_by: by, found_at: at, ...o };
+}
+
+/**
+ * Drafts (claims without id and by) as claim/v3s with `by` and the time filled in, each checked as kept in a
+ * person's own project; or every reason, with a ToolFailure, so none is kept. Each piece of evidence that
+ * doesn't say what it is, who found it or when is given its kind, the writer and the claim's time. One rule
+ * for every door.
  */
 export function annotationsOf(drafts: readonly unknown[], by: string, at: string): Claim[] {
   const claims: Claim[] = [];
@@ -104,7 +125,19 @@ export function annotationsOf(drafts: readonly unknown[], by: string, at: string
       refused.push(`annotation ${i + 1}: by is filled by Petals (${by}), so leave it out`);
       return;
     }
-    const claim = makeClaim({ issued_at: at, ...draft, by } as ClaimDraft, 'claim/v2');
+    const when = typeof draft.issued_at === 'string' ? draft.issued_at : at;
+    const evidence = Array.isArray(draft.evidence)
+      ? draft.evidence.map((e) => typed(e, by, when))
+      : draft.evidence;
+    const claim = makeClaim(
+      {
+        issued_at: at,
+        ...draft,
+        ...(evidence !== undefined ? { evidence } : {}),
+        by,
+      } as ClaimDraft,
+      'claim/v3',
+    );
     const v = validateClaim(claim, { private: true });
     if (v.ok) claims.push(claim);
     else
@@ -114,7 +147,7 @@ export function annotationsOf(drafts: readonly unknown[], by: string, at: string
     throw new ToolFailure(
       'bad_input',
       `None was added: ${refused.slice(0, 10).join('; ')}${refused.length > 10 ? `; and ${refused.length - 10} more` : ''}.`,
-      "Each is a claim/v2 without id and by: see add_annotation's input schema.",
+      "Each is a claim without id and by: see add_annotation's input schema.",
     );
   return claims;
 }

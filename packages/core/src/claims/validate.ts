@@ -10,6 +10,7 @@ import type { Claim, ClaimDraft } from './types.ts';
 import {
   CHALLENGE_REASONS,
   CONFIDENCE_BANDS,
+  EVIDENCE_FIELD,
   GROUNDS,
   isMetaVerb,
   LABEL_TAGS,
@@ -37,7 +38,7 @@ type Validator = NonNullable<ReturnType<ReturnType<typeof createAjv>['getSchema'
 const compiled = new Map<string, Validator>();
 /** Each version reads by its own schema: a reader picks by the document's `petal`. */
 function schemaValidator(petal: unknown): Validator {
-  const name = petal === 'claim/v2' ? 'claimV2' : 'claim';
+  const name = petal === 'claim/v3' ? 'claimV3' : petal === 'claim/v2' ? 'claimV2' : 'claim';
   let v = compiled.get(name);
   if (!v) {
     v = createAjv().getSchema(schemaId(name));
@@ -205,6 +206,22 @@ function ruleIssues(c: Claim, scope: PeopleScope): ValidationIssue[] {
       add(`/evidence/${i}/claim_id`, 'evidence', 'claim_id must be a claim id');
     if (e.proposal !== undefined && parseRef(e.proposal)?.ns !== 'proposal')
       add(`/evidence/${i}/proposal`, 'evidence', 'proposal must be proposal:<caip2>:<key>');
+    // v3: each piece says what it is, holds what that names, and who found it
+    if (e.type !== undefined && e[EVIDENCE_FIELD[e.type]] === undefined)
+      add(`/evidence/${i}/type`, 'evidence', `a ${e.type} names its ${EVIDENCE_FIELD[e.type]}`);
+    if ((e.type === 'page' || e.type === 'post') && !/^https?:\/\//.test(e.url ?? ''))
+      add(`/evidence/${i}/url`, 'evidence', `a ${e.type} is an http(s) URL`);
+    if (e.found_by !== undefined) {
+      const finder = parseRef(e.found_by)?.ns;
+      if (finder !== 'account' && finder !== 'tool' && finder !== 'model')
+        add(
+          `/evidence/${i}/found_by`,
+          'evidence',
+          'found_by is an account, a named tool or a named model',
+        );
+    }
+    if (e.archive_url !== undefined && !/^https?:\/\/\S+$/.test(e.archive_url))
+      add(`/evidence/${i}/archive_url`, 'evidence', 'archive_url is an http(s) URL');
   });
 
   return [...issues, ...peopleRuleIssues(c, scope)];

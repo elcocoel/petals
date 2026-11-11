@@ -30,13 +30,16 @@ describe("Codex's CSV as annotations", () => {
       ['inferred', { value: 'Guild Treasury' }],
     ]);
     expect(claims[0]).toMatchObject({
-      petal: 'claim/v2',
+      petal: 'claim/v3',
       subject: 'eip155:100:0x1111111111111111111111111111111111111111',
       verb: 'named',
       by: BY,
       via: 'tool:codex@2026-11-10',
       evidence: [
         {
+          type: 'proposal',
+          found_by: 'tool:codex@2026-11-10',
+          found_at: AT,
           url: `https://gnosisscan.io/tx/${TX}`,
           tx: `eip155:100:${TX.toLowerCase()}`,
           proposal: 'proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:7',

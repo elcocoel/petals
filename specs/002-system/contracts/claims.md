@@ -1,8 +1,23 @@
 # Contract: claims
 
-**Version**: claim/v2 (v1 still reads) | **Code**: `packages/core/src/claims/`, pure | **Schemas**: `packages/core/schema/claim.schema.json` (v1), `claim-v2.schema.json` (v2) | **Consumers**: a person's annotations (annotation-layer.md), later the relations index and surfaces
+**Version**: claim/v3 (v1 and v2 still read) | **Code**: `packages/core/src/claims/`, pure | **Schemas**: `packages/core/schema/claim.schema.json` (v1), `claim-v2.schema.json` (v2), `claim-v3.schema.json` (v3) | **Consumers**: a person's annotations (annotation-layer.md), later the relations index and surfaces
 
 **claim/v2 (10 Nov)** adds annotations, what a person or an agent says about an account: `named`, `noted` and `linked`, the kind `stated`, the ground `research`, and `tx`, `proposal` and `quote` in the evidence. Everything else is v1's, word for word. Chain reads are still made as v1, so their ids don't move. A reader picks the schema by `petal`.
+
+**claim/v3 (11 Nov; Elco: "make sure that the DATA LAYER contains space for discovered, inferred, osint gathered claims and their evidence")** types every piece of evidence and says who found it and when. Each piece now has:
+- `type`, required: `snapshot` (a reading, `snapshot_sha256`), `tx`, `proposal`, `page` or `post` (`url`), `claim` (`claim_id`) or `note`. Each names the field it must hold, and a page or post is an http(s) URL.
+- `found_by`, required: an account, a named tool or a named model, never a person.
+- `found_at`, required: when it was found.
+- `platform`, optional: where a page or post lives, as a slug (`x`, `github`, `discord`, `forum`…).
+- `archive_url`, optional: an archived copy, so the claim survives the page changing. With `url_sha256` (the content hash), `retrieved_at` (when captured) and `quote`, an open-web find keeps what it rests on.
+
+All four ways of knowing fit:
+- discovered on the chain: `observed`, with its reading or transaction and `as_of`'s block;
+- inferred: its method, its inputs as evidence, who inferred it, and `confidence` claims anyone can give;
+- gathered from the open web: `sourced`, as above;
+- someone's own word: `stated`.
+
+A correction is `supersedes` by its author, or `challenges` plus a writer's own claim. Writers that leave a piece's type, finder or time out (an agent's batch file, the page) get them filled by `annotationsOf`: the type from what the piece holds, and the finder and time as the claim's writer and time. Nothing here has a visual meaning: a kind is data, and the look maps it through the person's view.
 
 Everything is a claim, and one pure function decides what shows. This is the seam, not the crowd: no writer, no contract, no scores and no classifier call exist yet. Observed claims are derived at read time, and nothing here writes to a chain.
 

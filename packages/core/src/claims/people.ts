@@ -83,6 +83,11 @@ export function peopleRuleIssues(c: Claim, scope: PeopleScope = {}): ValidationI
     ['/object', typeof c.object === 'string' ? c.object : undefined],
     ['/by', c.by],
     ['/via', c.via],
+    // v3: who found each piece of evidence names no person either
+    ...c.evidence.map((e, i): [string, string | undefined] => [
+      `/evidence/${i}/found_by`,
+      e.found_by,
+    ]),
   ];
   for (const [path, ref] of refs)
     if (ref !== undefined && PERSON_NAMESPACES.has(namespaceOf(ref)))

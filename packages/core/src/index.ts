@@ -14,6 +14,8 @@ export {
   claimsFromMap,
   DEFAULT_LENS,
   distinctCounts,
+  EVIDENCE_FIELD,
+  EVIDENCE_TYPES,
   GROUNDS,
   groupRef,
   isMetaVerb,

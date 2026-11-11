@@ -86,6 +86,9 @@ describe('the shape', () => {
     expect(v1.properties.kind.enum).toEqual(['observed', 'declared', 'sourced', 'inferred']);
     expect(new Set(v2.properties.verb.enum)).toEqual(new Set(all));
     expect(v2.properties.kind.enum).toEqual([...CLAIM_KINDS]);
+    const v3 = schemas.claimV3 as Lists;
+    expect(new Set(v3.properties.verb.enum)).toEqual(new Set(all));
+    expect(v3.properties.kind.enum).toEqual([...CLAIM_KINDS]);
   });
 
   test('every verb has a one-line definition, and the vocabulary accuses nobody', () => {

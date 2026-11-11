@@ -124,13 +124,22 @@ describe('annotations kept per project', () => {
     expect(listed.body.annotations[0]).toMatchObject({
       exploration: id,
       claim: {
-        petal: 'claim/v2',
+        petal: 'claim/v3',
         subject: ADA,
         verb: 'named',
         object: { value: 'Ada' },
         kind: 'sourced',
         by: 'tool:codex@1',
-        evidence: [{ quote: 'Elect Ada as Keeper of the Handbook', tx: `eip155:100:${TX}` }],
+        // each piece typed, with who found it and when, filled in when the file leaves them out (claim/v3)
+        evidence: [
+          {
+            type: 'proposal',
+            found_by: 'tool:codex@1',
+            found_at: '2026-11-10T12:00:00Z',
+            quote: 'Elect Ada as Keeper of the Handbook',
+            tx: `eip155:100:${TX}`,
+          },
+        ],
       },
     });
     expect(listed.body.annotations[1].claim).toMatchObject({

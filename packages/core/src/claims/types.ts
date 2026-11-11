@@ -1,7 +1,9 @@
 // claim/v1 and claim/v2: the shapes (specs/002-system/contracts/claims.md). The JSON Schemas are
 // packages/core/schema/claim.schema.json and claim-v2.schema.json; test/claims.test.ts keeps them in step.
 // v2 adds annotations: named, noted and linked, a person's own word (stated), research as a ground, and a
-// transaction, a proposal and a quote in the evidence.
+// transaction, a proposal and a quote in the evidence. v3 (11 Nov, Elco: "space for discovered, inferred, osint
+// gathered claims and their evidence") types each piece of evidence and says who found it and when, with an
+// open source's platform and an archived copy.
 import type { Nep413Proof } from '../types/generated/flower.ts';
 import type { Verb } from './verbs.ts';
 
@@ -44,7 +46,20 @@ export interface ClaimEvidence {
   proposal?: string;
   /** v2: the source's own words, exactly as written. */
   quote?: string;
+  /** v3: what this piece is (EVIDENCE_TYPES), which names the field that holds it. Required in v3. */
+  type?: EvidenceType;
+  /** v3: who found this piece: an account, a named tool or a named model. Required in v3. */
+  found_by?: EntityRef;
+  /** v3: when it was found. Required in v3. */
+  found_at?: string;
+  /** v3: where a page or post lives, as a slug: x, github, discord, forum. */
+  platform?: string;
+  /** v3: an archived copy of the page or post, so it survives the page changing. */
+  archive_url?: string;
 }
+
+/** v3: what a piece of evidence is: a reading, a transaction, a proposal, a page, a post, a claim, a note. */
+export type EvidenceType = 'snapshot' | 'tx' | 'proposal' | 'page' | 'post' | 'claim' | 'note';
 
 /** A FastData write records its signer, so a transaction is enough for a direct write. */
 export interface TxProof {
@@ -64,7 +79,7 @@ export interface NearAiProof {
 export type ClaimProof = TxProof | Nep413Proof | NearAiProof;
 
 export interface Claim {
-  petal: 'claim/v1' | 'claim/v2';
+  petal: 'claim/v1' | 'claim/v2' | 'claim/v3';
   /** SHA-256 of the canonical claim, without `id` and `proof`. */
   id: string;
   subject: EntityRef;
