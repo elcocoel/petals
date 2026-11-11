@@ -3,6 +3,7 @@
 // the app's sizes, as the box it sits in (#78, 11 Nov: it was in the landing's).
 import type { PetalDetail } from '@petal/core/types';
 import { petalView } from '../lib/flower-view.ts';
+import type { WorthLine } from '../lib/value-view.ts';
 import { Button } from './ui/Button.tsx';
 
 /** Drafts (#78, 11 Nov): the way back from a petal to its flower, which said "Close detail" as the box did. */
@@ -11,11 +12,14 @@ export const petalWords = { back: 'Back to the flower' } as const;
 export function PetalDetails({
   petal,
   unit,
+  worth,
   onClose,
 }: {
   petal: PetalDetail | null;
   /** What the amount is counted in. */
   unit?: string | undefined;
+  /** Its dollars at its map's price, with where and when (#91); 'no price' when the map has none. */
+  worth?: WorthLine | 'no price' | null | undefined;
   /** Given where a detail can be closed. */
   onClose?: (() => void) | undefined;
 }) {
@@ -30,6 +34,16 @@ export function PetalDetails({
       <h3 className="m-0 type-ui font-semibold wrap-anywhere">{view.heading}</h3>
       {view.full && <p className="type-mono wrap-anywhere text-muted">{view.full}</p>}
       <p className="type-ui whitespace-pre-wrap">{view.stats}</p>
+      {worth === 'no price' ? (
+        <p className="type-ui text-muted">No price</p>
+      ) : (
+        worth && (
+          <p className="type-ui">
+            {worth.text}
+            <span className="type-mono text-muted"> {worth.source}</span>
+          </p>
+        )
+      )}
       <p className="type-ui">
         {view.says}
         {view.source && <span className="type-mono text-muted"> {view.source}</span>}

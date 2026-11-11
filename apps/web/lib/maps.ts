@@ -6,6 +6,7 @@ import { api } from './api.ts';
 import { chainLabel, dateLabel, keysOf, type LegendKey, oneKey, shortId } from './flower-view.ts';
 import { viewName } from './map-views.ts';
 import { viewQuery } from './person-view.ts';
+import type { MapValue } from './value-view.ts';
 
 type Keys = { label: string; swatch: string }[];
 
@@ -44,6 +45,8 @@ export interface MapCard {
   picture: string;
   view_url: string;
   keys: Keys;
+  /** what its token is worth (#91), or null until it's read; older servers leave it out */
+  value?: MapValue | null;
   /** newest first */
   readings: MapReading[];
 }
