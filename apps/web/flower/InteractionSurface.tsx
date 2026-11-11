@@ -220,8 +220,9 @@ export function InteractionSurface({
         hand={hands.panel}
         closed={!state.boxOpen}
         control={
+          // closes the box; the petal's own way back is in it (PetalDetails)
           <Button variant="link" onClick={actions.closeBox}>
-            Close detail
+            Close
           </Button>
         }
       >

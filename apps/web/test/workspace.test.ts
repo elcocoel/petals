@@ -390,8 +390,8 @@ describe('how a flower reads', () => {
   test('a detail closes only where it can', () => {
     const out = (onClose?: () => void) =>
       renderToStaticMarkup(createElement(PetalDetails, { petal: first, onClose }));
-    expect(out()).not.toContain('Close detail');
-    expect(out(() => {})).toContain('Close detail');
+    expect(out()).not.toContain('Back to the flower');
+    expect(out(() => {})).toContain('Back to the flower');
   });
 });
 
@@ -879,20 +879,22 @@ describe('the panel in its box (T202)', () => {
     expect(out).not.toContain('>Fit<');
   });
 
-  test.each([
-    'Explore another flower',
-    'Interpretation and sources',
-    'Publish on NEAR',
-    'Open as a page',
-  ])('keeps its word: %s', (word) => {
-    expect(html(view())).toContain(word);
+  test('an open flower’s box doesn’t send you to another one: the side panel and the map do (#78)', () => {
+    expect(html(view())).not.toContain('Explore another flower');
   });
+
+  test.each(['Interpretation and sources', 'Publish on NEAR', 'Open as a page'])(
+    'keeps its word: %s',
+    (word) => {
+      expect(html(view())).toContain(word);
+    },
+  );
 
   test('the reading key, or the petal in its place', () => {
     expect(html(view())).toContain('60 largest');
     const out = html(view({}, first.id), { petal: canvasPetal(first) });
     expect(out).not.toContain('60 largest');
-    expect(out).toContain('Close detail');
+    expect(out).toContain('Back to the flower');
     expect(out).toContain('Selected');
   });
 
