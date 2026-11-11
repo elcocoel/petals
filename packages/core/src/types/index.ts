@@ -552,6 +552,11 @@ export interface ReadingPetal extends PetalRow {
   outline: 'asserted' | 'inferred' | null;
   /** the segments encoding, bottom to top, as fractions of the bar; empty when not split */
   segments: Segment[];
+  /**
+   * The tail only: its members as stripes from the centre out, each its share of all the tail holds, the
+   * smallest first, at most 120 (neighbours joined; reading/fold.ts). Readings before 11 Nov have none.
+   */
+  fold?: number[];
 }
 
 /** A legend line before it has a look: each key says what it stands for, not its swatch. */

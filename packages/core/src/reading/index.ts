@@ -18,6 +18,7 @@ import type {
 } from '../types/index.ts';
 import { READING_VERSION } from '../versions.ts';
 import { HEIGHT_FLOOR, heightValues, isStraight, metricOf, widthFactors } from './encodings.ts';
+import { foldOf } from './fold.ts';
 import { detailsOf, legendOf } from './legend.ts';
 import { encodingsOf, labelsOf } from './view.ts';
 
@@ -114,6 +115,7 @@ export function readFlower(
   const widths = widthFactors(rows, spec.encodings.width);
   const heights = heightValues(rows, spec.encodings.height, metricOf(s, spec, rows));
   const split = spec.encodings.segments?.by === 'backers';
+  const fold = tailFold(s, spec.selection, rows);
 
   const petals = rows.map(
     (r, i): ReadingPetal => ({
@@ -124,6 +126,7 @@ export function readFlower(
       colour: colourKey(spec.encodings.colour, r),
       outline: outlineKey(spec, r),
       segments: split && !r.tail ? backerSegments(s, r.id) : [],
+      ...(r.tail && fold ? { fold } : {}),
     }),
   );
   return {
@@ -136,6 +139,26 @@ export function readFlower(
     legend: legendOf(spec, petals, measureTable(s, spec.selection.measure)?.sources ?? []),
     details: detailsOf(spec, petals),
   };
+}
+
+/**
+ * The tail's members as stripes (Elco, 11 Nov: "everyone else should be 1 petal, the correct size for the
+ * percentage it represents - the stripey pattern would work better inverted (smaller closer to the center)"): each
+ * member's share of all the tail holds, the smallest first (reading/fold.ts), as render/wedge/fold.ts draws them.
+ */
+function tailFold(
+  s: Snapshot,
+  selection: Spec['selection'],
+  rows: readonly PetalRow[],
+): number[] | null {
+  if (!rows.some((r) => r.tail)) return null;
+  const table = measureTable(s, selection.measure);
+  if (!table) return null;
+  const members = table.rows.slice(rows.length - 1);
+  const sum = members.reduce((a, r) => a + r.value, 0n);
+  if (sum <= 0n) return null;
+  const { fold } = foldOf(members.map((r) => Number((r.value * 1_000_000_000n) / sum) / 1e9));
+  return fold.cells.length > 0 ? fold.cells : null;
 }
 
 /** reading_sha256: SHA-256 of the canonical reading. */
