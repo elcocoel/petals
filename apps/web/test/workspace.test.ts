@@ -371,6 +371,9 @@ describe('how a flower reads', () => {
     expect(shortId('astro-stakers.poolv1.near')).toBe('astro-stakers.poolv1.near');
     expect(shortId('5eosabcdefghijklmnopqrstuvwxyzmGTF')).toBe('5eos…mGTF');
     expect(shortId('short')).toBe('short');
+    // a chain-qualified id is read as its address (#78)
+    expect(shortId('eip155:1:0x1a9c8182c09f50c8318d769245bea52c32be35bc')).toBe('0x1a…35bc');
+    expect(shortId('solana:mainnet:astro.sol')).toBe('astro.sol');
     expect(amountLabel('33270925.6192')).toBe('33,270,925');
   });
 

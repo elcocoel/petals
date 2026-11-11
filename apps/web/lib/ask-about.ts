@@ -1,5 +1,7 @@
 // What a question is about, in the words sent to the model: plain text at its start, which the model
 // can read and a reloaded thread can show. Only the words go back to the box if a send fails.
+import { shortId } from './flower-view.ts';
+
 export type About =
   | { kind: 'account'; id: string; network: string; asOf: string }
   | { kind: 'group'; label: string; count?: number; network: string; asOf: string }
@@ -26,7 +28,10 @@ export const withAbout = (line: string, words: string) => `${line} ${words}`;
 export function aboutLabel(line: string): string {
   const inner = line.replace(/^\[|\]$/g, '');
   const title = /^About flower [^,]+, "([^"]*)"/.exec(inner)?.[1];
-  return title ? `About “${title}”` : (inner.split(',')[0] as string);
+  if (title) return `About “${title}”`;
+  // the model reads the whole id; a person reads it short (#78: 'About account eip155:1:0x…')
+  const account = /^About account ([^,]+)/.exec(inner)?.[1];
+  return account ? `About account ${shortId(account)}` : (inner.split(',')[0] as string);
 }
 
 const PREFIX = /^\[(About [^\]]*)\]\s*/;

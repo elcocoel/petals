@@ -156,8 +156,15 @@ export const svgImage = (svg: string) =>
 
 const shorten = (id: string) => `${id.slice(0, 4)}…${id.slice(-4)}`;
 
-/** Named accounts stay whole; a long hash or address shows its ends. */
-export const shortId = (id: string) => (id.includes('.') || id.length <= 16 ? id : shorten(id));
+/** An account as people read it: a chain-qualified id (CAIP-10, eip155:1:0x…) is its address alone (#78). */
+export const accountOf = (id: string) =>
+  /^[a-z0-9-]+:[A-Za-z0-9-]+:/.test(id) ? id.slice(id.lastIndexOf(':') + 1) : id;
+
+/** Named accounts stay whole; a long hash or address shows its ends, without its chain's prefix. */
+export const shortId = (raw: string) => {
+  const id = accountOf(raw);
+  return id.includes('.') || id.length <= 16 ? id : shorten(id);
+};
 
 /** The whole units of an amount, with commas. It's text, because it may not fit a number. */
 export const amountLabel = (amount: string) =>
@@ -192,7 +199,7 @@ export function petalView(petal: PetalDetail, unit?: string): PetalView {
     id: petal.id,
     group: isGroup,
     heading: isGroup ? capital(heading) : heading,
-    full: !isGroup && heading !== petal.id ? petal.id : null,
+    full: !isGroup && heading !== accountOf(petal.id) ? accountOf(petal.id) : null,
     stats: `${amount}   ·   ${percent(petal.share)} of the total`,
     says,
     source: petal.identity?.source ?? null,
