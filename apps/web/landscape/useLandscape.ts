@@ -44,6 +44,7 @@ import {
   type LandFlower,
   type LineStyle,
   roadEnds,
+  WALLET_AWAY,
 } from './scene.ts';
 import {
   ENTER_AT,
@@ -96,6 +97,12 @@ export interface LandscapeAt {
    * enters it, as a click on it does (board 105: a search's answer, pressed).
    */
   enter?: (i: number) => void;
+  /**
+   * The wallet level (Elco, 11 Nov: "Where it sits everywhere", "Its votes"): told when a wallet is chosen, by a
+   * press on its petal inside the flower you're in, and when it's let go (null), so the page can show what's known
+   * about it.
+   */
+  onWallet?: (id: string | null) => void;
 }
 
 const LONGEST_FRAME = 1 / 15;
@@ -193,7 +200,27 @@ export function useLandscape(
       ...lookFills(f.model.petals),
       highlight: ids,
       ...(ring ? { roundTops: true, votes: ring } : {}),
+      voter: wallet,
     });
+    // The wallet level (Elco, 11 Nov): one wallet chosen, lit in every flower that holds it, its votes on their
+    // rings; the flowers that don't hold it recede.
+    let wallet: string | null = null;
+    let holds: Set<number> | null = null;
+    const chooseWallet = (id: string | null) => {
+      const next = id === wallet ? null : id;
+      if (next === wallet) return;
+      wallet = next;
+      holds = wallet
+        ? new Set(
+            flowers.flatMap((f, i) =>
+              f.model.petals.some((p) => !p.tail && p.id === wallet) ? [i] : [],
+            ),
+          )
+        : null;
+      for (const j of [...lives.keys()]) remount(j);
+      at?.current?.onWallet?.(wallet);
+      wake();
+    };
     // The chosen group's wallets (#94: a bloc, from the legend's Highlight row), on the flower they were chosen in.
     let groupIds: readonly string[] = [];
     let groupFlower = -1;
@@ -202,7 +229,8 @@ export function useLandscape(
       const f = flowers[i] as LandFlower;
       const shared = shown && shown.flower === i ? shown.ids : [];
       const group = i === groupFlower ? groupIds : [];
-      return sharedLook(f, [...shared, ...group], ringOf(i));
+      const own = wallet && holds?.has(i) ? [wallet] : [];
+      return sharedLook(f, [...shared, ...group, ...own], ringOf(i));
     };
     /** Re-mounts a live flower, so its look is read again. */
     const remount = (i: number) => {
@@ -356,7 +384,8 @@ export function useLandscape(
           i === entered && i === at?.current?.focus && chosen
             ? d.live.m.petals.findIndex((petal) => petal.id === chosen)
             : -1;
-        const tone = String(i === entered ? 1 : Math.round((1 - enter.x) * 100) / 100);
+        const away = holds && !holds.has(i) ? WALLET_AWAY : 1;
+        const tone = String(Math.round((i === entered ? 1 : 1 - enter.x) * away * 100) / 100);
         if (tones.get(i) !== tone) {
           d.scene.root.setAttribute('opacity', tone);
           tones.set(i, tone);
@@ -372,6 +401,7 @@ export function useLandscape(
         marked,
         left,
         pointed: under,
+        holds,
       });
       if (moving) wake();
       else then = 0;
@@ -446,11 +476,18 @@ export function useLandscape(
       const tells = entered >= 0 && entered === at?.current?.focus ? at.current.onPick : undefined;
       if (f >= 0 && (entered < 0 || f === entered)) {
         if (f !== entered) enterFlower(f);
-        else if (tells) {
+        else {
           const d = lives.get(f);
           const hit = d ? clickedAt(d.live, x, y) : { kind: 'ground' as const };
-          const petal = hit.kind === 'petal' ? d?.live.m.petals[hit.index]?.id : undefined;
-          tells(
+          const pressed = hit.kind === 'petal' ? d?.live.m.petals[hit.index] : undefined;
+          // the wallet level: a wallet pressed inside the flower you're in is chosen; pressed again, or the ground,
+          // lets it go
+          // (everyone else, or a group of accounts, isn't one wallet)
+          chooseWallet(
+            pressed && !pressed.tail && !pressed.id.startsWith('group:') ? pressed.id : null,
+          );
+          const petal = pressed?.id;
+          tells?.(
             petal
               ? { kind: 'petal', id: petal }
               : { kind: hit.kind === 'centre' ? 'centre' : 'ground' },
@@ -458,6 +495,7 @@ export function useLandscape(
         }
         return;
       }
+      if (entered >= 0) chooseWallet(null);
       if (tells) tells({ kind: 'ground' });
       const r = roadAt(x, y);
       marked = r >= 0 && r !== marked ? r : -1;
@@ -579,6 +617,11 @@ export function useLandscape(
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        // a chosen wallet goes first, then the map goes home
+        if (wallet) {
+          chooseWallet(null);
+          return;
+        }
         marked = -1;
         flyHome();
       }
