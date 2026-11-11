@@ -2,7 +2,6 @@
 
 title: The rendering protocol
 order: 4
-draft: true
 include: ["specs/006-the-map/contracts/view.md"]
 exclude: []
 ---

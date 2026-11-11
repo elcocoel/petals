@@ -2,7 +2,6 @@
 
 title: The brain
 order: 2
-draft: true
 include: ["brain/doctrine.md", "brain/chapters/", "brain/recipes/"]
 exclude: ["setup.md", "connect-*.md", "contributing.md"]
 ---

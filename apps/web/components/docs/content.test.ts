@@ -53,6 +53,8 @@ test('rendering overview reads current dimensions and defaults from core', async
   assert.ok(page);
   const result = await content(page, pages);
   assert.match(result.markdown, /\| labels \| category \| identity \|/);
+  assert.ok(result.reference?.html.includes('Current view vocabulary'));
+  assert.ok(!result.html.includes('Current view vocabulary'));
 });
 
 test('all registered schemas have nested fields and at least one original pinned example', async () => {
@@ -72,4 +74,28 @@ test('all registered schemas have nested fields and at least one original pinned
   const view = pages.find((p) => p.schemaId === 'urn:petal:schema:view:v2');
   assert.ok(view);
   assert.ok((await content(view, pages)).html.includes('&#x3C;layer>:&#x3C;name>'));
+});
+
+test('authored guides are distinct from canonical system reference', () => {
+  const pages = catalog();
+  assert.equal(pages.find((p) => p.slug === 'getting-started')?.kind, 'guide');
+  assert.equal(pages.find((p) => p.source === 'brain/doctrine.md')?.kind, 'reference');
+  assert.equal(pages.find((p) => p.schemaId === 'urn:petal:schema:view:v2')?.kind, 'reference');
+});
+
+test('authored Markdown children appear automatically with frontmatter titles', () => {
+  const page = catalog().find((p) => p.slug === 'getting-started/how-petals-works');
+  assert.equal(page?.title, 'How Petals fits together');
+  assert.equal(page?.kind, 'guide');
+});
+
+test('only local documentation image assets can render', async () => {
+  const result = await renderMarkdown(
+    '![System map](../assets/how-it-fits-together.png)\n\n![Remote](https://example.com/tracker.png)\n\n![Outside](../../README.md)',
+    'docs/getting-started/how-petals-works.md',
+    catalog(),
+  );
+  assert.ok(result.html.includes('src="/docs/assets/how-it-fits-together.png"'));
+  assert.equal((result.html.match(/<img/g) ?? []).length, 1);
+  assert.ok(result.html.includes('alt="System map"'));
 });

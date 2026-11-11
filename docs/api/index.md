@@ -2,7 +2,6 @@
 
 title: The API
 order: 6
-draft: true
 include: ["specs/001-petal-core/contracts/http-api.md"]
 exclude: []
 ---

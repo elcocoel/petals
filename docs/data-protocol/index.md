@@ -2,7 +2,6 @@
 
 title: The data protocol
 order: 3
-draft: true
 include: ["specs/protocols.md"]
 exclude: []
 ---
