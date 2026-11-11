@@ -11,6 +11,7 @@ import type { FlowerReading } from '../flower/model.ts';
 import { api } from '../lib/api.ts';
 import { repoRoot } from '../lib/config.ts';
 import { chainLabel } from '../lib/flower-view.ts';
+import type { MapMark } from '../lib/maps.ts';
 import { viewQuery } from '../lib/person-view.ts';
 import {
   LOGOS_DIR,
@@ -180,6 +181,29 @@ export async function powerMapAt(
     'map' in at ? at.map : (live.views.find((v) => v.snapshot === at.snapshot)?.map ?? null);
   const land = landscapeOf(nightOf({ ...live, views: oneEach(live.views) }));
   return { land, focus: map === null ? -1 : land.flowers.findIndex((f) => f.map === map) };
+}
+
+/**
+ * The map's flowers named and marked by their maps' own marks (#85, SYSTEMS's; for the far wave, #84: Elco, 11 Nov,
+ * "a clear way for showing the logo and the name"): the organisation's name, its token's symbol and its logo,
+ * where its card has them; what the flower had where it doesn't.
+ */
+export function withMarks(
+  land: BenchLandscape,
+  marks: ReadonlyMap<string, MapMark | null | undefined>,
+): BenchLandscape {
+  return {
+    ...land,
+    flowers: land.flowers.map((f) => {
+      const m = f.map ? marks.get(f.map) : null;
+      if (!m) return f;
+      return {
+        ...f,
+        name: m.name ? cut(m.name.value) : f.name,
+        mark: { logo: m.logo?.url ?? f.mark.logo, symbol: m.symbol?.value ?? f.mark.symbol },
+      };
+    }),
+  };
 }
 
 /** A map's flowers at their places: the address book's, and a new place for any view it doesn't have. */

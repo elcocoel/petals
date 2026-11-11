@@ -47,8 +47,18 @@ export interface MapCard {
   keys: Keys;
   /** what its token is worth (#91), or null until it's read; older servers leave it out */
   value?: MapValue | null;
+  /** what tells its organisation from another (#85): its name, its token's symbol, its logo; null until read */
+  mark?: MapMark | null;
   /** newest first */
   readings: MapReading[];
+}
+
+/** A map's mark as its card carries it (mark/v1): each part with how it's known, or null. */
+export interface MapMark {
+  name: { value: string; status: string; source: string } | null;
+  symbol: { value: string; status: string; source: string } | null;
+  logo: { url: string; status: string; source: string } | null;
+  read_at: string;
 }
 
 /** The maps, their pictures, keys and readings in the view whose hash is given (the person's: lib/viewer-view.ts). */
