@@ -2225,20 +2225,24 @@ export const registry: LabEntry[] = [
         name: 'the 404',
         wide: true,
         render: () => (
-          <Oops title={oopsWords.notFound.title} body={oopsWords.notFound.body}>
-            <Button arrow>{oopsWords.home}</Button>
-            <Button variant="secondary">{oopsWords.map}</Button>
-          </Oops>
+          <Oops
+            title={oopsWords.notFound.title}
+            body={oopsWords.notFound.body}
+            primary={<Button arrow>{oopsWords.home}</Button>}
+            secondary={<Button variant="quiet">{oopsWords.map}</Button>}
+          />
         ),
       },
       {
         name: 'a page that broke',
         wide: true,
         render: () => (
-          <Oops title={oopsWords.broke.title} body={oopsWords.broke.body}>
-            <Button>{oopsWords.broke.again}</Button>
-            <Button variant="secondary">{oopsWords.home}</Button>
-          </Oops>
+          <Oops
+            title={oopsWords.broke.title}
+            body={oopsWords.broke.body}
+            primary={<Button>{oopsWords.broke.again}</Button>}
+            secondary={<Button variant="quiet">{oopsWords.home}</Button>}
+          />
         ),
       },
     ],

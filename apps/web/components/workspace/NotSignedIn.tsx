@@ -29,20 +29,26 @@ export function NotSignedIn({
       title={notSignedInWords.title}
       body={notSignedInWords.body}
       note={question && <p className="my-0 type-ui wrap-anywhere text-muted">{question}</p>}
+      primary={
+        // the one Connect, as everywhere else: primary, with its arrow (Elco, 10 Nov)
+        <Button arrow disabled={busy} onClick={onConnect}>
+          {doorWords.connect}
+        </Button>
+      }
+      secondary={
+        <span className="flex items-center gap-space-4 type-caption text-muted">
+          {notSignedInWords.noWallet}
+          <CopyPrompt
+            prompt={setup.prompt(publicOrigin)}
+            originIn={publicOrigin}
+            label={setup.copy}
+            copied={setup.copied}
+            variant="quiet"
+            bare
+          />
+        </span>
+      }
       after={failed && <p className="error my-0">{failed}</p>}
-    >
-      {/* the one Connect, as everywhere else: primary, with its arrow (Elco, 10 Nov) */}
-      <Button arrow disabled={busy} onClick={onConnect}>
-        {doorWords.connect}
-      </Button>
-      <CopyPrompt
-        prompt={setup.prompt(publicOrigin)}
-        originIn={publicOrigin}
-        label={setup.copy}
-        copied={setup.copied}
-        variant="secondary"
-        bare
-      />
-    </Oops>
+    />
   );
 }

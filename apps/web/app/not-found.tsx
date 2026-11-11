@@ -9,14 +9,20 @@ export const metadata = { title: 'Not here · Petals' };
 export default function NotFound() {
   return (
     <div className="flex min-h-dvh flex-col">
-      <Oops title={oopsWords.notFound.title} body={oopsWords.notFound.body}>
-        <Button href={siteLinks.home} arrow>
-          {oopsWords.home}
-        </Button>
-        <Button href={siteLinks.map} variant="secondary">
-          {oopsWords.map}
-        </Button>
-      </Oops>
+      <Oops
+        title={oopsWords.notFound.title}
+        body={oopsWords.notFound.body}
+        primary={
+          <Button href={siteLinks.home} arrow>
+            {oopsWords.home}
+          </Button>
+        }
+        secondary={
+          <Button href={siteLinks.map} variant="quiet">
+            {oopsWords.map}
+          </Button>
+        }
+      />
     </div>
   );
 }

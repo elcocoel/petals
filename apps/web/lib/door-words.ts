@@ -15,5 +15,7 @@ export const doorWords = {
  */
 export const notSignedInWords = {
   title: 'Oops, you’re not logged in.',
-  body: 'Connect a NEAR wallet to talk to Petals’ agent.\nNo wallet yet? Copy this for your agent, and it walks you through it.',
+  body: 'Connect a NEAR wallet to talk to Petals’ agent.',
+  /** before the quieter way in, the setup prompt for the person's own agent */
+  noWallet: 'No wallet yet?',
 } as const;
