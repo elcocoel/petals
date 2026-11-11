@@ -181,4 +181,37 @@ describe('loading a mapping wave', () => {
     const res = await app.request(`/api/v1/maps/${encodeURIComponent(DAO)}/claims`);
     expect(await res.json()).toMatchObject({ about: DAO, claims: [claim] });
   });
+
+  test("a claim about an account the map's readings name in their params (its DAO's governance contract) is the map's", async () => {
+    const root = folder();
+    const dir = join(root, 'ethereum', 'moloch');
+    const snapshot = JSON.parse(readFileSync(join(dir, 'snapshot.json'), 'utf8'));
+    const GOV = '0x00000000000000000000000000000000000000aa';
+    snapshot.network.params = { ...snapshot.network.params, governance_contract: GOV };
+    writeFileSync(join(dir, 'snapshot.json'), JSON.stringify(snapshot));
+    const at = '2026-11-11T18:00:00.000Z';
+    const claim = makeClaim(
+      {
+        subject: `eip155:1:${GOV}`,
+        verb: 'noted',
+        object: { value: 'the governance contract its members vote through' },
+        kind: 'sourced',
+        issued_at: at,
+        by: 'tool:test-wave@1',
+        evidence: [
+          {
+            type: 'page',
+            url: 'https://example.org/dao',
+            found_by: 'tool:test-wave@1',
+            found_at: at,
+          },
+        ],
+      } as ClaimDraft,
+      'claim/v3',
+    );
+    writeFileSync(join(dir, 'claim-gov.json'), JSON.stringify(claim));
+    const done = await loadMapping(r.ctx, root, { by: 'mapping.petals.near' });
+    expect(done.drawn).toBe(1);
+    expect(await mapClaims(r.ctx, DAO)).toEqual([claim]);
+  });
 });
