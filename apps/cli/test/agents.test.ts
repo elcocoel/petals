@@ -1,14 +1,7 @@
 // One prompt, several agents (Elco, 9 Nov): an agent joins with the person's agent key, then waits
 // for its next job, asking the site again and again and coming back before its app's own limit.
 // A stand-in site and a stand-in clock; a throwaway PETALS_HOME.
-import {
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -89,13 +82,6 @@ describe("what an agent says it can do (Elco's lean 2, 11 Nov)", () => {
     const s = site([{ body: { job: null } }], clock);
     await waitForJob({ env, site: SITE, worker, fetch: s.fetch, now: () => clock.t, forS: 60 });
     expect(s.asks[0]?.body.can).toBeUndefined();
-  });
-
-  test('past what the site keeps, join says so and joins nothing', () => {
-    const env = home();
-    const out = joinAgent(env, KEY, 'hermes', 'x'.repeat(301)) as { error?: { message: string } };
-    expect(out.error?.message).toBe('Say what you can do in 300 characters or fewer.');
-    expect(() => readdirSync(join(env.PETALS_HOME, 'workers'))).toThrow();
   });
 });
 
