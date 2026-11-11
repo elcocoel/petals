@@ -98,47 +98,55 @@ export function buildBrainIndex(dir: string): BrainIndex {
       sha256: sha256Hex(text),
     });
   }
-  for (const name of readdirSync(join(dir, 'chapters'))
-    .filter((f) => f.endsWith('.md'))
-    .sort()) {
-    const text = read(`chapters/${name}`);
-    const h = headerOf(text);
-    entries.push({
-      id: h.id ?? name.replace(/\.md$/, ''),
-      kind: 'chapter',
-      department: h.department ?? '',
-      for: h.for ?? '',
-      recognise: list(h.recognise),
-      tools: list(h.tools),
-      continues: list(h.continues),
-      status: h.status === 'ready' ? 'ready' : 'partial',
-      file: `chapters/${name}`,
-      sha256: sha256Hex(text),
-    });
+  // chapters and recipes, each in its department's folder: <department>/<id>.md, <department>/recipes/<id>.json
+  const chapters: BrainEntry[] = [];
+  const recipes: BrainEntry[] = [];
+  for (const d of BRAIN_DEPARTMENTS) {
+    for (const name of readdirSync(join(dir, d)).filter((f) => f.endsWith('.md') && f !== 'README.md')) {
+      const file = `${d}/${name}`;
+      const text = read(file);
+      const h = headerOf(text);
+      chapters.push({
+        id: h.id ?? name.replace(/\.md$/, ''),
+        kind: 'chapter',
+        department: h.department ?? '',
+        for: h.for ?? '',
+        recognise: list(h.recognise),
+        tools: list(h.tools),
+        continues: list(h.continues),
+        status: h.status === 'ready' ? 'ready' : 'partial',
+        file,
+        sha256: sha256Hex(text),
+      });
+    }
+    if (!existsSync(join(dir, d, 'recipes'))) continue;
+    for (const name of readdirSync(join(dir, d, 'recipes')).filter((f) => f.endsWith('.json'))) {
+      const file = `${d}/recipes/${name}`;
+      const text = read(file);
+      const r = JSON.parse(text) as {
+        id: string;
+        department?: string;
+        for: string;
+        recognise?: { answers?: string[] };
+      };
+      recipes.push({
+        id: r.id,
+        kind: 'recipe',
+        department: r.department ?? '',
+        for: r.for,
+        recognise: r.recognise?.answers ?? [],
+        tools: ['get_snapshot', 'compose_view'],
+        continues: ['where-power-lives', 'going-deeper'],
+        status: 'ready',
+        file,
+        sha256: sha256Hex(text),
+      });
+    }
   }
-  for (const name of readdirSync(join(dir, 'recipes'))
-    .filter((f) => f.endsWith('.json'))
-    .sort()) {
-    const text = read(`recipes/${name}`);
-    const r = JSON.parse(text) as {
-      id: string;
-      department?: string;
-      for: string;
-      recognise?: { answers?: string[] };
-    };
-    entries.push({
-      id: r.id,
-      kind: 'recipe',
-      department: r.department ?? '',
-      for: r.for,
-      recognise: r.recognise?.answers ?? [],
-      tools: ['get_snapshot', 'compose_view'],
-      continues: ['where-power-lives', 'going-deeper'],
-      status: 'ready',
-      file: `recipes/${name}`,
-      sha256: sha256Hex(text),
-    });
-  }
+  // in a fixed order, as before the folders: chapters by file name, then recipes
+  const nameOf = (e: BrainEntry) => e.file.slice(e.file.lastIndexOf('/') + 1);
+  const byName = (a: BrainEntry, b: BrainEntry) => (nameOf(a) < nameOf(b) ? -1 : 1);
+  entries.push(...chapters.sort(byName), ...recipes.sort(byName));
   return { petal: BRAIN_INDEX_VERSION, entries };
 }
 
@@ -156,6 +164,8 @@ export function brainProblems(
     if (ids.has(e.id)) out.push(`${e.file}: the id ${e.id} is used twice`);
     ids.add(e.id);
     if (!e.for) out.push(`${e.file}: its header says nothing under for`);
+    if (e.kind !== 'doctrine' && e.department && !e.file.startsWith(`${e.department}/`))
+      out.push(`${e.file}: its header says ${e.department}, and it's in another department's folder`);
     if (
       e.kind !== 'doctrine' &&
       !(BRAIN_DEPARTMENTS as readonly string[]).includes(e.department ?? '')

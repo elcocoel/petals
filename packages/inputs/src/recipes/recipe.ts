@@ -170,7 +170,7 @@ export function recipeDescriptor(recipe: ReadingRecipe): NetworkDescriptor {
     population: recipe.id,
     kind: 'dao',
     title: recipe.title,
-    description: `${recipe.description} (A reading recipe: brain/recipes/${recipe.id}.json.)`,
+    description: `${recipe.description} (A reading recipe: brain/${recipe.department ?? 'governance'}/recipes/${recipe.id}.json.)`,
     params: recipe.params,
     capabilities: capabilitiesOf(recipe, sources),
     live: true,

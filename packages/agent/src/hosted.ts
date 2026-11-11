@@ -27,7 +27,7 @@ export const getFile = (origin: string) =>
 const fill = (text: string, origin: string) =>
   text.replaceAll('{site}', origin).replaceAll('{host}', new URL(origin).host);
 
-/** A chapter by its app, as the generated words hold it (brain/chapters/connect-*.md). */
+/** A chapter by its app, as the generated words hold it (brain/connecting/connect-*.md). */
 const chapterOf = (app: string): ConnectChapter => {
   const c = CONNECT_CHAPTERS.find((x) => x.app === app);
   if (!c) throw new Error(`no connect chapter for ${app}`);

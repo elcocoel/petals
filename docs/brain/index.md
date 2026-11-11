@@ -2,8 +2,8 @@
 
 title: The brain
 order: 2
-include: ["brain/doctrine.md", "brain/chapters/", "brain/recipes/"]
-exclude: ["setup.md", "connect-*.md", "contributing.md"]
+include: ["brain/doctrine.md", "brain/connecting/", "brain/gathering/", "brain/governance/", "brain/money/", "brain/investigation/", "brain/services/", "brain/stewardship/"]
+exclude: ["README.md", "setup.md", "connect-*.md", "contributing.md"]
 ---
 
 The brain holds the doctrine, chapters and reading recipes that agents use. Open a chapter to read its current words and its readiness status. Recipes are shown as their actual JSON.

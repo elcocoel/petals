@@ -124,10 +124,11 @@ describe('the brain', () => {
       ),
     };
     expect(brainProblems(broken, tools, '- see packages/tools/src/x.ts')).toEqual([
-      'chapters/value.md: no department treasury (connecting, gathering, governance, money, investigation, services, stewardship)',
-      'chapters/vesting.md: its header names no department (connecting, gathering, governance, money, investigation, services, stewardship)',
-      'chapters/going-deeper.md: no tool teleport',
-      'chapters/going-deeper.md: no chapter nowhere to continue to',
+      'money/value.md: its header says treasury, and it's in another department's folder',
+      'money/value.md: no department treasury (connecting, gathering, governance, money, investigation, services, stewardship)',
+      'money/vesting.md: its header names no department (connecting, gathering, governance, money, investigation, services, stewardship)',
+      'investigation/going-deeper.md: no tool teleport',
+      'investigation/going-deeper.md: no chapter nowhere to continue to',
       'doctrine.md: it names a path, and the doctrine names none',
     ]);
   });

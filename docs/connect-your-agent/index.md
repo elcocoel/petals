@@ -2,7 +2,7 @@
 
 title: Connect your agent
 order: 5
-include: ["brain/chapters/connect-*.md"]
+include: ["brain/connecting/connect-*.md"]
 exclude: []
 ---
 
