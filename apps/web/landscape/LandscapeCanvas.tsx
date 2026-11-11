@@ -3,9 +3,12 @@
 // and an empty SVG for that chain's scene and its live flowers to draw in, filling the window, or the area
 // under the site's nav on the Power Map (app/(canvas)/map). Each
 // flower's drawing model is made here from its reading, once. The words are the data's: each chain's name
-// and how many flowers it has.
+// and how many flowers it has. On a phone the list folds to the chain on show, so it never covers the map
+// (META, 11 Nov: at 390 wide it did, on the landing and the hero); pressing it opens the list, and choosing
+// a chain folds it again.
 import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../components/ui/Button.tsx';
+import { Icon } from '../components/ui/Icon.tsx';
 import { Mono } from '../components/ui/Mono.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
@@ -99,6 +102,8 @@ export function LandscapeCanvas({
   const [chain, setChain] = useState(
     opened ?? (data.chains.some((c) => c.chain === FIRST) ? FIRST : (data.chains[0]?.chain ?? '')),
   );
+  const [open, setOpen] = useState(false);
+  const shown = data.chains.find((c) => c.chain === chain);
   const counts = useMemo(() => {
     const n = new Map<string, number>();
     for (const f of data.flowers) n.set(f.place.chain, (n.get(f.place.chain) ?? 0) + 1);
@@ -144,19 +149,37 @@ export function LandscapeCanvas({
         className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 flex w-tile-width flex-col gap-space-4`}
       >
         {title && <h1 className="type-label">{title}</h1>}
-        {data.chains.map((c) => (
-          <Button
-            key={c.chain}
-            variant="row"
-            pressed={c.chain === chain}
-            onClick={() => setChain(c.chain)}
-          >
-            <span className="flex w-full items-center justify-between gap-text-gap">
-              <span>{c.label}</span>
-              <Mono as="span">{counts.get(c.chain) ?? 0}</Mono>
-            </span>
-          </Button>
-        ))}
+        {shown && (
+          <div className="md:hidden">
+            <Button variant="row" pressed={open} onClick={() => setOpen(!open)}>
+              <span className="flex w-full items-center justify-between gap-text-gap">
+                <span>{shown.label}</span>
+                <span className="flex items-center gap-space-4">
+                  <Mono as="span">{counts.get(shown.chain) ?? 0}</Mono>
+                  <Icon name="chevron" small />
+                </span>
+              </span>
+            </Button>
+          </div>
+        )}
+        <div className={`${open ? 'flex' : 'hidden md:flex'} flex-col gap-space-4`}>
+          {data.chains.map((c) => (
+            <Button
+              key={c.chain}
+              variant="row"
+              pressed={c.chain === chain}
+              onClick={() => {
+                setChain(c.chain);
+                setOpen(false);
+              }}
+            >
+              <span className="flex w-full items-center justify-between gap-text-gap">
+                <span>{c.label}</span>
+                <Mono as="span">{counts.get(c.chain) ?? 0}</Mono>
+              </span>
+            </Button>
+          ))}
+        </div>
       </div>
     </>
   );
