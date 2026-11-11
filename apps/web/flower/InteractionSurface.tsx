@@ -112,7 +112,14 @@ export function InteractionSurface({
   const { onCanvas, panel } = state;
   // The Power Map: at the map a link opened, or whole until the conversation has a flower.
   const { land, opening: mapOpening } = useGroundMap();
-  const ground = state.mapAt ?? (onCanvas ? null : { map: null });
+  // A conversation opened with a flower to come (a run, a stored one, another door's, a drawing) keeps its
+  // empty ground until that flower arrives; a new one, with nothing to draw yet, has the map.
+  const flowerToCome = Boolean(
+    workspace.initialRun ||
+      workspace.initialElsewhere ||
+      (workspace.initialOpen.kind !== 'latest' && workspace.initialOpen.kind !== 'shelf'),
+  );
+  const ground = state.mapAt ?? (onCanvas || flowerToCome ? null : { map: null });
   const focus = ground?.map && land ? land.flowers.findIndex((f) => f.map === ground.map) : -1;
   // where it starts is measured (what the conversation covers), so it's painted as the boxes are
   const mapArea = useRef<HTMLDivElement>(null);
