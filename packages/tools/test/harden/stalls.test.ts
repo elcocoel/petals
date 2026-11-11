@@ -156,7 +156,7 @@ describe('fresh reads at the doors', () => {
     r.ctx.modules['test-live'] = h.module;
     const app = httpApp(r.ctx);
     const res = await read(app);
-    expect(res.status).toBe(502);
+    expect(res.status).toBe(503);
     expect(((await res.json()) as Out).error.message).toMatch(/too long|longer than/);
     expect(h.waiting[0]?.signal?.aborted).toBe(true);
 
@@ -164,7 +164,7 @@ describe('fresh reads at the doors', () => {
     await until(() => h.waiting.length === 2);
     h.waiting[1]?.go();
     (r.ctx.config as Out).limits = {};
-    expect([200, 502]).toContain((await next).status);
+    expect([200, 503]).toContain((await next).status);
   });
 
   test('in process, with no door, nothing is gated: a local command reads what it is told', async () => {

@@ -346,7 +346,7 @@ describe('T192: refusals', () => {
     const ch = (await (await b.post('/api/v1/auth/challenge')).json()) as Challenge;
     const proof = maker.sign({ message: ch.message, nonce: ch.nonce, recipient: ch.recipient });
     const down = await b.post('/api/v1/auth/verify', { network: 'testnet', proof });
-    expect(down.status).toBe(502);
+    expect(down.status).toBe(503);
     expect(JSON.stringify(await down.json())).not.toContain(maker.accountId);
     expect(error).not.toHaveBeenCalled();
     up = true;

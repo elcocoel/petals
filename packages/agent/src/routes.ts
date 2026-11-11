@@ -53,7 +53,9 @@ export const STATUS: Record<ToolErrorCode, number> = {
   budget_exhausted: 429,
   payment_required: 402,
   not_on_this_site: 403,
-  source_failed: 502,
+  // 503, not 502: Cloudflare, in front of the live server, swaps an origin's 502 or 504 for its own page,
+  // and the person would read that instead of these words (onchain-walk, 11 Nov).
+  source_failed: 503,
   internal: 500,
 };
 

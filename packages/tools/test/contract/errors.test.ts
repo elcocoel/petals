@@ -52,7 +52,7 @@ describe('one test per error code', () => {
       budget_exhausted: 429,
       payment_required: 402,
       not_on_this_site: 403,
-      source_failed: 502,
+      source_failed: 503,
       internal: 500,
     });
     expect([...ERROR_CODES].sort()).toEqual(Object.keys(HTTP_STATUS).sort());
@@ -90,7 +90,7 @@ describe('one test per error code', () => {
     expect(out.error.hint).toMatch(/near-validators/);
   });
 
-  test('source_failed 502: the quote source fails', async () => {
+  test('source_failed 503: the quote source fails', async () => {
     await expectCode((await rig()).ctx, 'source_failed', 'quote_payment', {
       purpose: 'sponsor_coverage',
       amount_usd: 9,

@@ -20,7 +20,7 @@ export const ERROR_CODES: readonly ToolErrorCode[] = [
 /** HTTP status per error code (http-api.md, Rules). */
 export const HTTP_STATUS: Record<
   ToolErrorCode,
-  400 | 401 | 402 | 403 | 404 | 422 | 429 | 500 | 502
+  400 | 401 | 402 | 403 | 404 | 422 | 429 | 500 | 503
 > = {
   bad_input: 400,
   unauthorised: 401,
@@ -32,7 +32,9 @@ export const HTTP_STATUS: Record<
   budget_exhausted: 429,
   payment_required: 402,
   not_on_this_site: 403,
-  source_failed: 502,
+  // 503, not 502: Cloudflare, in front of the live server, swaps an origin's 502 or 504 for its own page,
+  // and the person would read that instead of these words (onchain-walk, 11 Nov).
+  source_failed: 503,
   internal: 500,
 };
 
