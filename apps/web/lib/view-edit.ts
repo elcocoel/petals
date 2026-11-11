@@ -80,3 +80,15 @@ export function withScale(view: View, d: Dimension, scale: Scale): View {
 /** Whether the view is the default, so putting the default back would change nothing. */
 export const isDefault = (view: View, defaults: View): boolean =>
   DIMENSIONS.every((d) => JSON.stringify(entry(view, d)) === JSON.stringify(entry(defaults, d)));
+
+/** Settings' hands, where the legend changes the person's view (components/ViewLegend.tsx). */
+export interface LegendEdit {
+  defaults: View;
+  /** For each dimension, the data that fits it. */
+  choices: Record<Dimension, readonly Piece[]>;
+  /** The dimension whose choices are open. */
+  open: Dimension | null;
+  onOpen: (d: Dimension) => void;
+  onPick: (d: Dimension, data: string | null) => void;
+  onScale: (d: Dimension, scale: Scale) => void;
+}

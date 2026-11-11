@@ -6,11 +6,17 @@
 // and how many flowers it has. The chain list is one of the overlays (design/overlays.md, line 7; #95): on a
 // phone it starts folded to its bar with the chain on show, so it never covers the map (META, 11 Nov: at 390
 // wide it did, on the landing and the hero); pressing the bar opens it, and choosing a chain folds it again.
+// Where a page asks, the legend is the other overlay, under the chain list: the person's view as a key (#92).
+import { EVERY_FLOWER, inUse } from '@petal/core/view';
 import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { NavItem } from '../components/ui/NavItem.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
+import { ViewLegend } from '../components/ViewLegend.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
+import type { LegendKey } from '../lib/flower-view.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
+import type { LegendEdit } from '../lib/view-edit.ts';
+import { usePersonView } from '../viewmodels/usePersonView.ts';
 import type { Continent, Place } from './places.ts';
 import type { Road } from './roads.ts';
 import type { FarStyle, LandFlower, LineStyle } from './scene.ts';
@@ -108,8 +114,15 @@ export function LandscapeCanvas({
   far = 'wave',
   lines = 'focus',
   clearOfChains = false,
+  legend = null,
 }: {
-  data: { flowers: CanvasFlower[]; roads: Road[]; chains: CanvasChain[] };
+  /** with the colours its maps paint (their cards' keys), for the legend */
+  data: {
+    flowers: CanvasFlower[];
+    roads: Road[];
+    chains: CanvasChain[];
+    keys?: readonly LegendKey[];
+  };
   probe?: boolean;
   /** what it fills: the window, or the positioned area it's in */
   fill?: 'window' | 'area';
@@ -129,7 +142,13 @@ export function LandscapeCanvas({
   lines?: LineStyle;
   /** the home keeps clear of the chain list, where the map's room is narrow (/make, #78); off on /map */
   clearOfChains?: boolean;
+  /**
+   * The legend (#92; design/legend.md): the person's view as a key, under the chain list, one of the overlays. Read
+   * only, or changing the view where it's handed Settings' hands (/make).
+   */
+  legend?: 'read' | LegendEdit | null;
 }) {
+  const person = usePersonView();
   const aside = useRef<HTMLDivElement>(null);
   const opened = data.flowers[focus]?.place.chain;
   const [chain, setChain] = useState(
@@ -137,8 +156,11 @@ export function LandscapeCanvas({
   );
   // the overlay's fold: open where there's room, folded to its bar below md, as the phone's toggle was
   const [listOpen, setListOpen] = useState(true);
+  const [legendOpen, setLegendOpen] = useState(true);
   useEffect(() => {
-    if (!window.matchMedia('(min-width: 48rem)').matches) setListOpen(false);
+    if (window.matchMedia('(min-width: 48rem)').matches) return;
+    setListOpen(false);
+    setLegendOpen(false);
   }, []);
   // Inside a flower the chains step aside, so they never cover it; they're back once it's left (#78, LOOK's
   // lean (a)). Invisible, not gone, so the arrows' names still keep clear of where they stand.
@@ -195,35 +217,50 @@ export function LandscapeCanvas({
           clearOfChains={clearOfChains}
         />
       )}
-      {/* One of the overlays: the aside is the Overlay's own outermost box, so its right edge, which the
-          arrows' names keep clear of, is the overlay's; inside a flower it's invisible, not gone (LOOK). */}
+      {/* The overlays, down the left: the chain list, then the legend under it, so they never meet. The aside is
+          the chain list's own outermost box, so its right edge, which the arrows' names keep clear of, is the
+          overlay's; inside a flower it's invisible, not gone (LOOK), and the legend stays, saying the flower. */}
       <div
-        ref={aside}
-        className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 ${inside ? 'invisible' : ''}`}
+        className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 flex flex-col items-start gap-space-8`}
       >
-        <Overlay
-          title={
-            !listOpen && shown ? `${title ?? 'Power Map'} · ${shown.label}` : (title ?? 'Power Map')
-          }
-          fold={{ open: listOpen, onToggle: () => setListOpen((now) => !now) }}
-        >
-          <ul className="m-0 flex list-none flex-col p-0">
-            {data.chains.map((c) => (
-              <li key={c.chain}>
-                <NavItem
-                  onClick={() => {
-                    setChain(c.chain);
-                    // below md the list folds back once a chain is chosen, as the toggle's did
-                    if (!window.matchMedia('(min-width: 48rem)').matches) setListOpen(false);
-                  }}
-                  chosen={c.chain === chain}
-                  label={c.label}
-                  trail={String(counts.get(c.chain) ?? 0)}
-                />
-              </li>
-            ))}
-          </ul>
-        </Overlay>
+        {/* inside a flower, out of the column too, so the legend rises to the top in its place */}
+        <div ref={aside} className={inside ? 'invisible absolute top-0 left-0' : ''}>
+          <Overlay
+            title={
+              !listOpen && shown
+                ? `${title ?? 'Power Map'} · ${shown.label}`
+                : (title ?? 'Power Map')
+            }
+            fold={{ open: listOpen, onToggle: () => setListOpen((now) => !now) }}
+          >
+            <ul className="m-0 flex list-none flex-col p-0">
+              {data.chains.map((c) => (
+                <li key={c.chain}>
+                  <NavItem
+                    onClick={() => {
+                      setChain(c.chain);
+                      // below md the list folds back once a chain is chosen, as the toggle's did
+                      if (!window.matchMedia('(min-width: 48rem)').matches) setListOpen(false);
+                    }}
+                    chosen={c.chain === chain}
+                    label={c.label}
+                    trail={String(counts.get(c.chain) ?? 0)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </Overlay>
+        </div>
+        {legend && (
+          <ViewLegend
+            view={person.view}
+            drawn={inUse(person.view, EVERY_FLOWER)}
+            pieces={EVERY_FLOWER}
+            keys={data.keys ?? []}
+            edit={legend === 'read' ? undefined : legend}
+            fold={{ open: legendOpen, onToggle: () => setLegendOpen((now) => !now) }}
+          />
+        )}
       </div>
     </>
   );
