@@ -75,8 +75,9 @@ const P: Proposals = {
 
 describe('voting blocs', () => {
   test('a pair counts when it shares enough proposals and votes alike on enough; a weighted ballot is not a vote', () => {
-    const b = votingBlocs(P);
-    expect(b.method).toEqual({ name: 'blocs/agreement@1', ...BLOCS_DEFAULTS });
+    // agreement alone (min_kappa 0): ana and ben agree, though mostly where everyone did
+    const b = votingBlocs(P, { min_kappa: 0 });
+    expect(b.method).toEqual({ name: 'blocs/agreement@2', ...BLOCS_DEFAULTS, min_kappa: 0 });
     expect(b.proposals).toEqual({ in_period: 8, voted: 7 });
     // ana and ben: 7 shared, 6 alike (86%); cy shares 3 with each (and its weighted ballot on 7 isn't counted)
     expect(b.pairs).toEqual([
@@ -86,6 +87,8 @@ describe('voting blocs', () => {
         shared: 7,
         agreed: 6,
         agreement: 0.8571,
+        // expected by each proposal's split alone: 0.738, so 0.45 beyond it
+        kappa: 0.4545,
         proposals: [1, 2, 3, 4, 5, 6, 7].map((i) => `proposal:${DAO}:${i}`),
       },
     ]);
@@ -98,8 +101,34 @@ describe('voting blocs', () => {
     ]);
   });
 
+  test('by default a majority agreeing with itself is no bloc; two sides that split each vote are two', () => {
+    // ana and ben agreed mostly where everyone did: 0.45 beyond chance, below the default 0.5
+    expect(votingBlocs(P).pairs).toEqual([]);
+    const sides = (i: number): [string, 'for' | 'against'][] => {
+      const [x, y] = i % 2 ? (['for', 'against'] as const) : (['against', 'for'] as const);
+      return [
+        ['ana.near', x],
+        ['ben.near', x],
+        ['cy.near', y],
+        ['dee.near', y],
+      ];
+    };
+    const split: Proposals = {
+      ...P,
+      proposals: [1, 2, 3, 4, 5, 6].map((i) =>
+        proposal(i, `2025-0${i}-01T00:00:00.000Z`, sides(i)),
+      ),
+    };
+    const b = votingBlocs(split);
+    expect(b.pairs.map((p) => [p.a.split(':')[2], p.b.split(':')[2], p.kappa])).toEqual([
+      ['ana.near', 'ben.near', 1],
+      ['cy.near', 'dee.near', 1],
+    ]);
+    expect(b.blocs.map((x) => x.members.length)).toEqual([2, 2]);
+  });
+
   test('the thresholds and the period are the asker’s; below either there is no bloc', () => {
-    const loose = votingBlocs(P, { min_shared: 2, min_agreement: 0.5 });
+    const loose = votingBlocs(P, { min_shared: 2, min_agreement: 0.5, min_kappa: -1 });
     expect(
       loose.pairs.map((p) => [p.a.split(':')[2], p.b.split(':')[2], p.agreed, p.shared]),
     ).toEqual([
@@ -113,6 +142,7 @@ describe('voting blocs', () => {
     const early = votingBlocs(P, {
       from: '2025-01-01T00:00:00.000Z',
       to: '2025-03-01T00:00:00.000Z',
+      min_kappa: 0,
     });
     expect(early.proposals.in_period).toBe(4);
     expect(early.pairs).toEqual([]);
@@ -123,7 +153,7 @@ describe('voting blocs', () => {
   });
 
   test('each pair as an inferred claim: they act in step, its proposals as evidence, its method and counts in words', () => {
-    const [claim] = blocClaims(votingBlocs(P), {
+    const [claim] = blocClaims(votingBlocs(P, { min_kappa: 0 }), {
       by: 'tool:petals-blocs@1',
       at: '2026-11-11T20:00:00.000Z',
     });
@@ -136,10 +166,10 @@ describe('voting blocs', () => {
       qualifiers: { grounds: 'synchronised_behaviour' },
       by: 'tool:petals-blocs@1',
     });
-    expect(claim?.method).toMatch(/^blocs\/agreement@1#[0-9a-f]{12}$/);
+    expect(claim?.method).toMatch(/^blocs\/agreement@2#[0-9a-f]{12}$/);
     expect(claim?.evidence[0]).toMatchObject({
       type: 'note',
-      note: 'Voted alike on 6 of the 7 proposals both voted on, over every proposal read (blocs/agreement@1: at least 5 in common, 80% alike). Agreement, not proof of coordination.',
+      note: "Voted alike on 6 of the 7 proposals both voted on, over every proposal read, 0.4545 beyond what each proposal's split explains (blocs/agreement@2: at least 5 in common, 80% alike, kappa at least 0). Agreement, not proof of coordination.",
     });
     expect(claim?.evidence.filter((e) => e.type === 'proposal')).toHaveLength(7);
   });
@@ -161,7 +191,7 @@ describe('voting blocs', () => {
           })),
       })),
     };
-    expect(votingBlocs(evm).pairs[0]?.a).toBe(
+    expect(votingBlocs(evm, { min_kappa: -1 }).pairs[0]?.a).toBe(
       'eip155:100:0xaaaa000000000000000000000000000000000001',
     );
   });

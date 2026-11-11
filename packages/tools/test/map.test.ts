@@ -301,7 +301,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     }
   });
 
-  test("a DAO map's voting blocs (#94): members as its reading's petal ids, over a period; kept as Petals' mapping's claims", async () => {
+  test("a DAO map's voting blocs (#94): members as its reading's petal ids, over a period, beyond chance; kept nowhere", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const store = privateStore(r.ctx.config);
     const about = `eip155:1:${DAO}`;
@@ -342,21 +342,27 @@ describe('one map per address (Elco, 10 Nov)', () => {
     );
     const at = async (q: string) =>
       (await app.request(`/api/v1/maps/${encodeURIComponent(about)}/blocs${q}`)).json();
+    // the blocs and a pair count; the pairs only when asked, without their proposals
     const all = (await at('?from=2025-01-01T00:00:00Z')) as Out;
     expect(all.period).toEqual({ from: '2025-01-01T00:00:00.000Z', to: null });
-    expect(all.pairs).toMatchObject([{ a: ana, b: ben, shared: 6, agreed: 6, agreement: 1 }]);
+    expect(all.method).toMatchObject({ name: 'blocs/agreement@2', min_kappa: 0.5 });
+    expect(all).toMatchObject({ pair_count: 1 });
+    expect(all.pairs).toBeUndefined();
     expect(all.blocs).toMatchObject([{ members: [ana, ben].sort(), pairs: 1 }]);
+    const paired = (await at('?from=2025-01-01T00:00:00Z&pairs=true')) as Out;
+    expect(paired.pairs).toEqual([
+      { a: ana, b: ben, shared: 6, agreed: 6, agreement: 1, kappa: 1 },
+    ]);
     // with no period, the last 90 days, as the vote ring shows: these are older
     const recent = (await at('')) as Out;
     expect(recent.proposals).toEqual({ in_period: 0, voted: 0 });
-    expect(recent.pairs).toEqual([]);
+    expect(recent).toMatchObject({ pair_count: 0, blocs: [] });
     expect(((await at('?from=soon')) as Out).error).toMatchObject({ code: 'bad_input' });
+    expect(((await at('?min_kappa=2')) as Out).error).toMatchObject({ code: 'bad_input' });
 
-    // kept as Petals' mapping's claims: once
-    expect(await blocMaps(r.ctx, { save: false })).toMatchObject({ maps: 1, pairs: 1, kept: 0 });
-    expect(await blocMaps(r.ctx)).toMatchObject({ maps: 1, pairs: 1, blocs: 1, kept: 1 });
-    const kept = await store.annotation.list(MAPPING);
-    expect(kept.map((k) => k.verb)).toEqual(['moves_with']);
+    // said, and kept nowhere (META, 11 Nov)
+    expect(await blocMaps(r.ctx)).toEqual({ maps: 1, pairs: 1, blocs: 1 });
+    expect(await store.annotation.list(MAPPING)).toEqual([]);
   });
 
   test("the run over the shared map keeps each map's mark and its logo; --dry keeps nothing", async () => {
