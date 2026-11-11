@@ -1,6 +1,8 @@
 // T053 (tools.md, Contract tests): each tool's input and output validate against their JSON
 // Schemas, on the near-validators fixture; every error validates against the ToolError schema.
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { schemas } from '@petal/core';
 import { describe, expect, test } from 'vitest';
 import { compile, describeErrors, TOOL_ERROR_SCHEMA } from '../../src/define.ts';
@@ -74,6 +76,14 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     await run('read_page', { url: 'https://example.org/' });
     await run('search', { query: 'near validators' });
     await run('search_petals', { q: 'near validators' });
+    const fixtures = join(import.meta.dirname, '..', '..', '..', 'core', 'schema', 'fixtures');
+    const hos = JSON.parse(readFileSync(join(fixtures, 'proposals.v2.json'), 'utf8'));
+    await privateStore(r.ctx.config).proposals.put({
+      about: hos.about,
+      body: JSON.stringify(hos),
+      read_at: hos.read_at,
+    });
+    await run('find_voting_blocs', { map: hos.about, min_shared: 2 });
     const overview = await run('relations_overview', { kind: 'holdings' });
     const pair = (overview.pairs as { a: string; b: string }[])[0] as { a: string; b: string };
     const shared = await run('shared_accounts', { group_a: pair.a, group_b: pair.b });

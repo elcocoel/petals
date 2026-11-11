@@ -17,6 +17,7 @@ import type { Claim } from '@petal/core/types';
 import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
+import { mapBlocs } from '../blocs.ts';
 import { versioned } from '../define.ts';
 import { privateStore, specBody } from '../drafts.ts';
 import { fromThrown, isToolError, toolError } from '../errors.ts';
@@ -404,6 +405,50 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       row
         ? { proposals: JSON.parse(row.body) }
         : versioned(toolError('not_found', 'No proposals read for that map.')),
+    );
+  });
+  // A map's voting blocs (#94; LOOK, 11 Nov): over ?from&to (default the last 90 days, as the vote ring shows),
+  // ?min_shared and ?min_agreement settable; members as the petal ids of the map's newest reading.
+  const DAY = 24 * 60 * 60 * 1000;
+  app.get('/api/v1/maps/:id/blocs', limit, async (c) => {
+    const id = aboutKey(c.req.param('id'));
+    const q = (k: string) => c.req.query(k) || undefined;
+    const time = (k: string) => {
+      const v = q(k);
+      return v === undefined
+        ? undefined
+        : Number.isNaN(Date.parse(v))
+          ? null
+          : new Date(v).toISOString();
+    };
+    const num = (k: string) => (q(k) === undefined ? undefined : Number(q(k)));
+    const [from, to, minShared, minAgreement] = [
+      time('from'),
+      time('to'),
+      num('min_shared'),
+      num('min_agreement'),
+    ];
+    if (from === null || to === null)
+      return respond(c, versioned(toolError('bad_input', 'from and to are ISO times.')));
+    if (
+      (minShared !== undefined && !(Number.isInteger(minShared) && minShared >= 1)) ||
+      (minAgreement !== undefined && !(minAgreement >= 0 && minAgreement <= 1))
+    )
+      return respond(
+        c,
+        versioned(
+          toolError('bad_input', 'min_shared is a whole number from 1; min_agreement from 0 to 1.'),
+        ),
+      );
+    const blocs = await mapBlocs(ctx, id, {
+      from: from ?? (to ? null : new Date(ctx.now().getTime() - 90 * DAY).toISOString()),
+      to: to ?? null,
+      ...(minShared === undefined ? {} : { min_shared: minShared }),
+      ...(minAgreement === undefined ? {} : { min_agreement: minAgreement }),
+    });
+    return respond(
+      c,
+      blocs ?? versioned(toolError('not_found', 'No proposals read for that map.')),
     );
   });
   // A map's claims by Petals' own mapping (Elco, 11 Nov: "show them"): about its accounts, the same for everyone.

@@ -2,6 +2,15 @@
 // No network, no disk (Biome refuses node: imports under src/). Signatures: contracts/packages.md.
 
 export {
+  BLOCS_DEFAULTS,
+  BLOCS_METHOD,
+  type BlocPair,
+  type Blocs,
+  type BlocsAsk,
+  blocClaims,
+  votingBlocs,
+} from './blocs.ts';
+export {
   accountRef,
   applyPolicy,
   assetRef,
