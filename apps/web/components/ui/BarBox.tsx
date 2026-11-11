@@ -11,6 +11,7 @@ export function BarBox({
   bar,
   barClassName = '',
   barProps,
+  folded = false,
   children,
 }: {
   kind: 'term' | 'float';
@@ -20,6 +21,8 @@ export function BarBox({
   bar: ReactNode;
   barClassName?: string;
   barProps?: HTMLAttributes<HTMLDivElement>;
+  /** Folded to its bar (an Overlay): no hairline under the bar, so the box's own edge closes it. */
+  folded?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -31,7 +34,7 @@ export function BarBox({
     >
       <div
         {...barProps}
-        className={`border-b border-primary px-block-gap py-space-16 ${barClassName}`.trim()}
+        className={`${folded ? '' : 'border-b border-primary'} px-block-gap py-space-16 ${barClassName}`.trim()}
       >
         {bar}
       </div>

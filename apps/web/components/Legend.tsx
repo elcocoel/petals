@@ -4,10 +4,21 @@ import type { LegendItem } from '@petal/core/types';
 import { type LegendKey, swatchKey } from '../lib/flower-view.ts';
 import { SourceList } from './Sources.tsx';
 
-/** Figma's "Flower legend" 40:764: the colours in one quiet line, under the drawing. */
-export function LegendKeys({ keys }: { keys: LegendKey[] }) {
+/**
+ * Figma's "Flower legend" 40:764: the colours in one quiet line, under the drawing. In an overlay (the legend),
+ * its words are the app scale's, as the rows around them are.
+ */
+export function LegendKeys({
+  keys,
+  size = 'caption',
+}: {
+  keys: LegendKey[];
+  size?: 'caption' | 'ui';
+}) {
   return (
-    <ul className="m-0 flex list-none flex-wrap items-center gap-x-block-gap gap-y-space-8 p-0 type-caption">
+    <ul
+      className={`m-0 flex list-none flex-wrap items-center gap-x-block-gap gap-y-space-8 p-0 ${size === 'ui' ? 'type-ui' : 'type-caption'}`}
+    >
       {keys.map((k) => (
         <li key={k.label} className="flex items-center gap-space-8">
           <span className="swatch" data-swatch={k.swatch} />
