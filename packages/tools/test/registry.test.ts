@@ -29,6 +29,8 @@ const PHASE_A = [
   'search',
   'search_petals',
   'find_voting_blocs',
+  'keep_data',
+  'list_data',
   'account_groups',
   'shared_accounts',
   'related_groups',

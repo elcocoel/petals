@@ -277,6 +277,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         await store.layer.moveOwner(old.subject, person);
         await store.datasetVersion.moveOwner(old.subject, person);
         await store.annotation.moveOwner(old.subject, person);
+        await store.projectData.moveOwner(old.subject, person);
         await store.search.forgetOwner(old.subject);
       }
       if (old) await store.session.delete(old.hash);

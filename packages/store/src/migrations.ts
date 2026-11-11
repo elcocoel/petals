@@ -521,6 +521,21 @@ export const MIGRATIONS: readonly string[] = [
     PRIMARY KEY (model, sha256)
   );
   `,
+  // 30: what an agent keeps in a person's project (#98; CONNECTORS, 11 Nov: keep_data): a mark, a value or a
+  // proposals it found, private to the project, named by its canonical sha256, until a review takes it to the
+  // shared map. Claims go to annotation and readings to the store, as before.
+  `
+  CREATE TABLE project_data (
+    owner TEXT NOT NULL,
+    exploration TEXT NOT NULL,
+    sha256 TEXT NOT NULL,
+    petal TEXT NOT NULL,
+    about TEXT,
+    body TEXT NOT NULL,
+    kept_at TEXT NOT NULL,
+    PRIMARY KEY (owner, exploration, sha256)
+  );
+  `,
 ];
 
 /**

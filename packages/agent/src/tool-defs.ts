@@ -77,6 +77,9 @@ const NOT_FOR_THE_AGENT = new Set([
   // in step 3, with prompt words, saving what the person says in the same turn
   'add_annotation',
   'list_annotations',
+  // what a person's agents keep in the project (#98): Petals' agent doesn't
+  'keep_data',
+  'list_data',
 ]);
 
 export function forAgent(t: AnyTool): boolean {

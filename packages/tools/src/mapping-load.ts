@@ -118,7 +118,7 @@ function manifestsIn(root: string, extra: readonly string[]) {
  * Check one document by its own format: the reasons it isn't one, or none. Exported as mappingProblems so the
  * file's validate-data --public says exactly what this loader says of a file (#98).
  */
-function problems(doc: Record<string, unknown>): string[] {
+function problems(doc: Record<string, unknown>, scope?: { private: true }): string[] {
   const petal = String(doc.petal);
   const v =
     formatOf(petal) === 'snapshot'
@@ -130,14 +130,17 @@ function problems(doc: Record<string, unknown>): string[] {
           : formatOf(petal) === 'value'
             ? validateValue(doc)
             : formatOf(petal) === 'claim'
-              ? validateClaim(doc)
+              ? validateClaim(doc, scope)
               : null;
   if (!v)
     return [`${petal} isn't a format the loader takes (snapshot, proposals, mark, value, claim)`];
   return v.ok ? [] : v.errors.slice(0, 5).map((e) => `${e.path || '/'} ${e.message}`);
 }
 
-export const mappingProblems = problems;
+export const mappingProblems = (doc: Record<string, unknown>) => problems(doc);
+
+/** The same check as a person's own project makes it (keep_data, #98): a claim may name a person there. */
+export const projectProblems = (doc: Record<string, unknown>) => problems(doc, { private: true });
 
 export async function loadMapping(ctx: ToolContext, root: string, o: LoadRun): Promise<LoadReport> {
   const store = privateStore(ctx.config);

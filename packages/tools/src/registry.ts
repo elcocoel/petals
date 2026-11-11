@@ -7,6 +7,7 @@ import { toolError } from './errors.ts';
 import { addAnnotation, listAnnotations } from './tools/annotations.ts';
 import { findVotingBlocs } from './tools/blocs.ts';
 import { brainFile, brainIndexTool, brainRoute } from './tools/brain.ts';
+import { keepData, listData } from './tools/data.ts';
 import { forkDataset, keepLayer, listLayers } from './tools/datasets.ts';
 import {
   addNote,
@@ -64,6 +65,8 @@ export const registry: Tool<any, any>[] = [
   search,
   searchPetalsTool,
   findVotingBlocs,
+  keepData,
+  listData,
   accountGroupsTool,
   sharedAccountsTool,
   relatedGroupsTool,
