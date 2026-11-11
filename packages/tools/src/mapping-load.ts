@@ -3,10 +3,11 @@
 // checked against its own schema and rules, and a bad one is refused with its reasons, nothing of it kept. A good
 // reading is kept by its hash and drawn as its reader's default flower, credited to Petals' own mapping; a good
 // mark, value or proposals is kept by its map's address, unless one is already kept there (--replace puts the
-// wave's in its place). Claims are checked and held: there's no public place for claims yet (annotation step 8).
+// wave's in its place). A good claim is checked as a published one, naming no person, and kept as Petals' own
+// mapping's (mapping-claims.ts), for every viewer (Elco, 11 Nov: "show them").
 // Hidden maps (#96) stay hidden: the hides are by address, whoever loads them. scripts/load-mapping.ts runs it.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { basename, dirname, join, relative } from 'node:path';
 import {
   canonicalJson,
   sha256Hex,
@@ -16,8 +17,9 @@ import {
   validateSnapshot,
   validateValue,
 } from '@petal/core';
-import type { Snapshot, Spec } from '@petal/core/types';
+import type { Claim, Snapshot, Spec } from '@petal/core/types';
 import { privateStore } from './drafts.ts';
+import { keepMappingClaims } from './mapping-claims.ts';
 import { callTool } from './registry.ts';
 import type { ToolContext } from './types.ts';
 
@@ -237,7 +239,11 @@ export async function loadMapping(ctx: ToolContext, root: string, o: LoadRun): P
       continue;
     }
     if (format === 'claim') {
-      // held: checked, and kept nowhere public yet
+      const added = await keepMappingClaims(ctx, basename(root), [d as unknown as Claim]);
+      if (added) {
+        t.kept++;
+        log(`kept ${file}: ${petal} about ${String(d.subject)}`);
+      } else t.left++;
       continue;
     }
     const about = String(d.about);

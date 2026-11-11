@@ -4,10 +4,14 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
-import { canonicalJson, sha256Hex } from '@petal/core';
+import { canonicalJson, makeClaim, sha256Hex } from '@petal/core';
+import type { ClaimDraft } from '@petal/core/types';
+import { Hono } from 'hono';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { privateStore } from '../src/drafts.ts';
+import { httpApp } from '../src/http/app.ts';
 import { mapsOf, mapViews } from '../src/map.ts';
+import { mapClaims } from '../src/mapping-claims.ts';
 import { loadMapping } from '../src/mapping-load.ts';
 import { rig, type TestRig } from './helpers.ts';
 
@@ -129,5 +133,52 @@ describe('loading a mapping wave', () => {
     const held = await loadMapping(r.ctx, root, { by: 'mapping.petals.near', dry: true });
     expect(held).toMatchObject({ held: 2 });
     expect(held.refused.map((x) => x.file)).toEqual(['ethereum/moloch/snapshot.json']);
+  });
+
+  test("a good claim is kept as Petals' mapping's, and its map answers it for every viewer", async () => {
+    const root = folder();
+    const dir = join(root, 'ethereum', 'moloch');
+    const snapshot = JSON.parse(readFileSync(join(dir, 'snapshot.json'), 'utf8'));
+    // an older reading names its petals by bare address; the claim, by the account on its chain
+    const member = `eip155:1:${String(snapshot.participants[0].id).toLowerCase()}`;
+    const at = '2026-11-11T18:00:00.000Z';
+    const claim = makeClaim(
+      {
+        subject: member,
+        verb: 'noted',
+        object: { value: 'a member of the guild since its first year' },
+        kind: 'sourced',
+        issued_at: at,
+        by: 'tool:test-wave@1',
+        evidence: [
+          {
+            type: 'snapshot',
+            url: 'https://example.org/receipt',
+            snapshot_sha256: MOLOCH,
+            found_by: 'tool:test-wave@1',
+            found_at: at,
+          },
+        ],
+      } as ClaimDraft,
+      'claim/v3',
+    );
+    writeFileSync(join(dir, 'claim-good.json'), JSON.stringify(claim));
+    const done = await loadMapping(r.ctx, root, { by: 'mapping.petals.near' });
+    expect(done.formats.claim).toMatchObject({ good: 1, kept: 1 });
+    // loaded again, it's kept once
+    const again = await loadMapping(r.ctx, root, { by: 'mapping.petals.near' });
+    expect(again.formats.claim).toMatchObject({ good: 1, kept: 0, left: 1 });
+    expect(await mapClaims(r.ctx, DAO)).toEqual([claim]);
+    expect(
+      await mapClaims(r.ctx, 'eip155:1:0x0000000000000000000000000000000000000000'),
+    ).toBeNull();
+
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    const res = await app.request(`/api/v1/maps/${encodeURIComponent(DAO)}/claims`);
+    expect(await res.json()).toMatchObject({ about: DAO, claims: [claim] });
   });
 });
