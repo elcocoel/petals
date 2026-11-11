@@ -175,6 +175,8 @@ export const landingCopy = {
     open: 'Explore the Power Map',
   },
   questions: {
+    /** The Copy doc's v6 title for the FAQ (Elco's), back since Elco's walk (12 Nov: "the FAQ section will need more styling"). */
+    title: 'Questions Petals answers.',
     sign: '−',
     /** The FAQ tab's thirteen, word for word, in its order (Elco, 10 Nov). */
     items: [
@@ -299,18 +301,45 @@ export const landingCopy = {
   backIt: {
     /** Elco, 11 Nov: "Make Petals stronger", punctuated like the other headlines. */
     title: 'Make Petals stronger.',
+    /**
+     * Each way is a tile you press (Elco, 12 Nov: "whatever we foresee that would lead people to action",
+     * "the sensation of a real project that people can join"). `href` is where it goes; an empty one is a slot
+     * waiting for Elco's address, and its tile shows without a link. `action` and the last two ways are
+     * LANDING's drafts, for Elco, from Elco's words: "a small merch pre-sale", "a community front such as a
+     * Telegram chat".
+     */
     ways: [
       {
         title: 'Map a network you care about.',
         body: 'Every layer your agent adds makes the map better for the next person.',
+        action: 'Connect',
+        href: '/lobby',
       },
       {
         title: 'Teach Petals a new system.',
         body: "Write a recipe for a kind of DAO Petals can't read yet, and share it with a pull request.",
+        action: 'In the docs',
+        href: '/docs/build-it-with-us/contributing',
       },
       {
         title: "Talk to Petals' agent.",
         body: 'What you pay in NEAR keeps it reading.',
+        action: 'Connect',
+        href: '/lobby',
+      },
+      {
+        title: 'Join the community.',
+        body: '',
+        action: 'Telegram',
+        /** Elco's address, when there is one. */
+        href: '',
+      },
+      {
+        title: 'Merch pre-sale.',
+        body: '',
+        action: 'Pre-order',
+        /** Elco's address, when there is one. */
+        href: '',
       },
     ],
   },
@@ -320,41 +349,16 @@ export const landingCopy = {
     /**
      * The doors into the system Elco named (11 Nov, board card 103: "the brain the data protocol The rendering
      * protocol And whatever Other parts"), each to its page in /docs (DOCS's catalog). Drafts by LANDING, for Elco.
+     * Each is only its name since Elco's walk (12 Nov: "the six things are boring ... a bunch of text").
      */
     doors: [
-      {
-        title: 'The brain',
-        body: 'Chapters and recipes that teach any agent how to read power in a network. Add one with a pull request.',
-        slug: 'brain',
-      },
-      {
-        title: 'The data protocol',
-        body: 'The open formats every reading, claim and layer is written in, so any agent can write Petals’ data.',
-        slug: 'data-protocol',
-      },
-      {
-        title: 'The rendering protocol',
-        body: 'How a view turns data into a flower, drawn the same way everywhere.',
-        slug: 'rendering-protocol',
-      },
-      {
-        title: 'Connect your agent',
-        body: 'Bring Claude Code, Codex, Hermes or a cloud app, and let it take jobs from Petals’ agent.',
-        slug: 'connect-your-agent',
-      },
-      {
-        title: 'The API',
-        body: 'HTTP and MCP, for the apps and agents that reach Petals from outside.',
-        slug: 'api',
-      },
-      {
-        title: 'Contribute',
-        body: 'Teach Petals a new system, sharpen a reading, or fix a chapter.',
-        slug: 'build-it-with-us/contributing',
-      },
+      { title: 'The brain', slug: 'brain' },
+      { title: 'The data protocol', slug: 'data-protocol' },
+      { title: 'The rendering protocol', slug: 'rendering-protocol' },
+      { title: 'Connect your agent', slug: 'connect-your-agent' },
+      { title: 'The API', slug: 'api' },
+      { title: 'Contribute', slug: 'build-it-with-us/contributing' },
     ],
-    /** Draft: each door's link. */
-    doorLink: 'In the docs',
     actions: {
       docs: 'Read the docs',
     },
