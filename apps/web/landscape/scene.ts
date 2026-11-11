@@ -33,7 +33,7 @@ const EDGE = 28;
 
 export interface LandFlower {
   name: string;
-  mark: { logo: string | null; symbol: string };
+  mark: { logo: string | null; symbol: string; types?: readonly string[] };
   place: Place;
   model: Model;
   /** How far its petals reach, as a share of its room (space.ts reachOf). */
@@ -283,10 +283,9 @@ export function createLandScene(
   /** How far each flower's wave reaches, as reach is for its petals. */
   const waveReaches = flowers.map((f) => (far ? waveReach(f.model, SHAPE, FAR_WAVE) : f.reach));
 
-  // head.map-name: one line under each flower, its mark and its name; with the far wave, the mark at the ring's
-  // centre and the name alone under it.
-  const look = far === 'wave' ? 'badge' : 'line';
-  const labels = flowers.map((f) => drawLabel(f, names, clip, far === 'wave', look));
+  // head.map-name: each flower's badge under it (labels.ts); with the far wave, its mark at the ring's centre and
+  // the badge holding its name.
+  const labels = flowers.map((f) => drawLabel(f, names, clip, far === 'wave'));
 
   // figure.map-arrow: the ways out of the organisation you've entered, one per connection.
   const ways = flowers.map((_, i) =>
@@ -375,33 +374,31 @@ export function createLandScene(
         const reach = l.centre ? waveReaches[i] * waved + f.reach * (1 - waved) : f.reach;
         const y = c.y + r * reach + (l.centre ? 6 : 10) + MARK / 2;
         const nameShown = fade(DETAIL.titleOutside, r) * tone;
-        const full = {
-          x0: c.x - l.width / 2,
-          y0: y - MARK / 2,
-          x1: c.x + l.width / 2,
-          y1: y + MARK / 2,
-        };
-        const bare = { x0: c.x - l.markW / 2, y0: full.y0, x1: c.x + l.markW / 2, y1: full.y1 };
+        // the badge with its types, else with its name alone (its types are cut first), else none
         let box: Box | null = null;
-        let withName = false;
-        if (
-          nameShown > 0.01 &&
-          !l.said &&
-          !placed.some((b) => overlaps(b, full)) &&
-          !onAFlower(full, i)
-        ) {
-          box = full;
-          withName = true;
-        } else if (!l.centre && !placed.some((b) => overlaps(b, bare, 2))) box = bare;
+        let typed = true;
+        if (nameShown > 0.01) {
+          for (const [w, on] of [
+            [l.width, true],
+            [l.short, false],
+          ] as const) {
+            const b = { x0: c.x - w / 2, y0: y - MARK / 2, x1: c.x + w / 2, y1: y + MARK / 2 };
+            if (!placed.some((p) => overlaps(p, b)) && !onAFlower(b, i)) {
+              box = b;
+              typed = on;
+              break;
+            }
+          }
+        }
         if (!box) {
           l.group.show(false);
           continue;
         }
         placed.push(box);
+        l.typed(typed);
         l.group.show(true);
         l.group.set('transform', `translate(${n3(box.x0)} ${n3(y)})`);
-        l.group.set('opacity', o2(withName ? Math.max(markShown, nameShown) : markShown));
-        l.name.show(withName && !l.said);
+        l.group.set('opacity', o2(Math.max(markShown, nameShown)));
       }
 
       // Connections: each flower's strongest few from the farthest, the rest as they grow; fainter the more
@@ -485,7 +482,7 @@ export function createLandScene(
           a.g.show(true);
           a.at.show(true);
           a.at.node.replaceChildren();
-          a.label = drawLabel(n, a.at.node, clip, false, look);
+          a.label = drawLabel(n, a.at.node, clip);
           a.label.group.show(true);
           a.to = way.to;
         }

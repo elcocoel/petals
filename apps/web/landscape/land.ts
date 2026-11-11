@@ -30,6 +30,8 @@ import { type Road, roadsBetween } from './roads.ts';
 export interface Mark {
   logo: string | null;
   symbol: string;
+  /** what kind of thing it is, each word once (#97), from its map's card */
+  types?: readonly string[];
 }
 
 export interface BenchFlower {
@@ -208,7 +210,11 @@ export function withMarks(
       return {
         ...f,
         name: m.name ? cut(m.name.value) : f.name,
-        mark: { logo: m.logo?.url ?? f.mark.logo, symbol: m.symbol?.value ?? f.mark.symbol },
+        mark: {
+          logo: m.logo?.url ?? f.mark.logo,
+          symbol: m.symbol?.value ?? f.mark.symbol,
+          types: m.type_words ?? [],
+        },
       };
     }),
   };

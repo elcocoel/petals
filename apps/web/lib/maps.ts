@@ -58,6 +58,8 @@ export interface MapMark {
   name: { value: string; status: string; source: string } | null;
   symbol: { value: string; status: string; source: string } | null;
   logo: { url: string; status: string; source: string } | null;
+  /** mark/v2 (#97): what kind of thing it is, each word once, in the order its is_a claims were found */
+  type_words?: string[];
   read_at: string;
 }
 
