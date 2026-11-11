@@ -25,3 +25,20 @@ export function drawingLink(href: string, origin: string): DrawingLink | null {
   const d = /^\/d\/([^/]+)$/.exec(url.pathname)?.[1];
   return d && SHA.test(d) ? { sha: d } : null;
 }
+
+/**
+ * A link in the conversation to the Power Map (/map) or to one map on it (/m/<id>), so the workspace opens it
+ * on its own canvas too (#78, 11 Nov): the map's id, or null for the whole map. Null for anything else.
+ */
+export function mapLink(href: string, origin: string): { map: string | null } | null {
+  let url: URL;
+  try {
+    url = new URL(href, origin);
+  } catch {
+    return null;
+  }
+  if (url.origin !== new URL(origin).origin) return null;
+  if (url.pathname === '/map') return { map: null };
+  const id = /^\/m\/([^/]+)$/.exec(url.pathname)?.[1];
+  return id ? { map: decodeURIComponent(id) } : null;
+}
