@@ -45,7 +45,7 @@ There are four steps, and a fifth for later. Take them one at a time, and skip a
 
 ### 4. A first conversation
 
-- Open {site}/make. Type a community, a wallet or a contract to look into, such as "Who holds power in RaidGuild?" or a NEAR account's name.
+- Open {site}/make and type a community, a wallet or a contract to look into, such as "Who holds power in RaidGuild?" or a NEAR account's name.
 - Petals' agent finds it, reads the chain and draws its flower beside the chat.
 - Good next questions: "Show me the source." "Who's behind this petal?" "How did this change over the last year?"
 

@@ -126,9 +126,9 @@ export const agentWords = {
    */
   setup: (site: string) =>
     [
-      `Take me by the hand and set me up to use Petals (${site}). It maps who holds power in on-chain networks and draws it as flowers. Guide me one small step at a time, wait for me after each, and skip anything I've already done. If you can open links, read ${site}/setup first: it has a short introduction to Petals and these same steps, kept up to date. If you can't, here they are.`,
+      `Take me by the hand and set me up to use Petals at ${site} in my browser. It maps who holds power in on-chain networks and draws it as flowers. Guide me one small step at a time, wait for me after each, and skip anything I've already done. If you can open links, first read ${site}/setup and use it, because it has a short introduction to Petals and these same steps, kept up to date. If you can't, here they are.`,
       '1. A NEAR wallet. If I have none, help me make one with Meteor Wallet (meteorwallet.app), in my browser on any computer. It shows me a recovery phrase: I write it on paper and keep it offline. A new wallet needs no NEAR to sign in to Petals.',
-      `2. Sign in. I open ${site}, press Connect, pick my wallet and approve the sign-in. It's a signature, not a payment: it moves no funds and costs nothing.`,
+      `2. Sign in. I open ${site} and press Connect, then pick my wallet and approve the sign-in. It's a signature, not a payment: it moves no funds and costs nothing.`,
       "3. Credit. Petals' agent runs on NEAR AI and is paid as I go; a flower costs a few cents. When my conversation needs credit, the chat shows Add 1 NEAR, which my wallet approves as one transfer, or Pay with another token if I have no NEAR. Then I pick a token and its chain, the dollars, and my address on that chain for refunds, press Get the address to send to, and send exactly that amount, in one transfer from any wallet, before the time shown.",
       `4. My first conversation. I open ${site}/make and name a community, a wallet or a contract I care about. Petals' agent reads the chain and draws its flower beside the chat. Then I can ask "Show me the source" or "Who's behind this petal?"`,
       "Later, if I want my own agents to help, Connect an agent at the top of Petals' side panel brings them in. I don't need it to start.",

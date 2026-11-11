@@ -119,7 +119,7 @@ describe('your agents in the menu', () => {
     expect(line).not.toContain('petal_agent_');
     // the setup skill makes no worker: that's Connect an agent's prompt, named only for later
     expect(line).not.toContain('/skill.md');
-    expect(line).toContain('read https://p/setup first');
+    expect(line).toContain('first read https://p/setup and use it');
     for (const step of [
       '1. A NEAR wallet.',
       '2. Sign in.',
