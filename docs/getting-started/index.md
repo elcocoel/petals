@@ -2,11 +2,12 @@
 
 title: Getting started
 order: 1
-draft: true
-include: ["brain/chapters/setup.md"]
+include: ["README.md", "brain/chapters/setup.md"]
 exclude: []
 ---
 
-Start with [the Power Map](/map), or [connect your agent](/connect). Read the same setup chapter that Petals gives to agents.
+Petals helps you explore how power is arranged in a network, then follow the evidence behind the picture.
 
-The other sections open the brain, the data formats, the rendering rules and the HTTP API. Every source link leads to the file this site renders.
+Start with [a real flower](/docs/getting-started/first-flower), read [how the parts fit together](/docs/getting-started/how-petals-works), or follow the [README](/docs/getting-started/readme) to run it locally.
+
+**Guides** explain a task or an idea. **System reference** renders the files used by the brain, protocols and tools, with their source shown on the page.

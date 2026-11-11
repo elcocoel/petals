@@ -38,27 +38,27 @@ export default async function Docs({ params }: Props) {
         <a href="#doc-content">Skip to the document</a>
       </div>
       <Sidebar pages={pages} current={page} />
-      <article id="doc-content" className={styles.article}>
+      <article id="doc-content" tabIndex={-1} className={styles.article} data-kind={page.kind}>
         <header className={styles.header}>
           <div className={styles.eyebrow}>
             <a href="/docs">Docs</a>
             <Icon name="chevron" small />
             <span>{section?.title}</span>
           </div>
-          <h1 className="type-lead">{page.title}</h1>
-          <div className={styles.source}>
-            <Icon name="project" small />
-            <code>{page.source}</code>
+          <div className={styles.kindLabel}>
+            <Icon name={page.kind === 'guide' ? 'petals' : 'project'} small />
+            <span>{page.kind === 'guide' ? 'Guide' : 'System reference'}</span>
           </div>
+          <h1 className="type-heading">{page.title}</h1>
+          {page.kind === 'reference' && (
+            <div className={styles.provenance}>
+              <span>Rendered from source</span>
+              <a href={editUrl(page.source)}>
+                <code>{page.source}</code>
+              </a>
+            </div>
+          )}
           {page.status && <p className={styles.status}>Brain status: {page.status}</p>}
-          {page.draft && (
-            <p className={styles.draft}>Draft introduction — waiting for Elco's words.</p>
-          )}
-          {page.source.startsWith('specs/') && (
-            <p className={styles.draft}>
-              Source contract. Dated notes and future phases retain their original status.
-            </p>
-          )}
         </header>
         {document.headings.length > 0 && (
           <details className={styles.mobileContents}>
@@ -67,22 +67,61 @@ export default async function Docs({ params }: Props) {
           </details>
         )}
         {/* Only remark/rehype output: raw HTML is discarded, URLs are filtered in content.ts. */}
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: trusted compiler output, never raw Markdown HTML */}
-        <div className={styles.prose} dangerouslySetInnerHTML={{ __html: document.html }} />
+        <div
+          className={`${styles.prose} type-label`}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: trusted compiler output, never raw Markdown HTML
+          dangerouslySetInnerHTML={{ __html: document.html }}
+        />
+        {document.reference && (
+          <section className={styles.generatedReference} aria-label="Generated system reference">
+            <div className={styles.kindLabel}>
+              <Icon name="project" small />
+              <span>System reference</span>
+            </div>
+            <p className={styles.provenance}>
+              <span>Generated from source</span>
+              <a href={editUrl('packages/core/src/view/index.ts')}>View definitions</a>
+              <a href={editUrl('apps/web/lib/person-view.ts')}>Person's default view</a>
+            </p>
+            <div
+              className={`${styles.prose} type-label`}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: compiled Markdown, same filtering as the main document
+              dangerouslySetInnerHTML={{ __html: document.reference.html }}
+            />
+          </section>
+        )}
         {page.overview && (
           <nav aria-label={`${page.title} pages`} className={styles.sectionPages}>
-            <h2>In this section</h2>
-            {pages
-              .filter((p) => p.section === page.section && !p.overview)
-              .map((p) => (
-                <a href={`/docs/${p.slug}`} key={p.slug}>
-                  <span>{p.title}</span>
-                  <Icon name="arrow" />
-                </a>
-              ))}
+            {(['guide', 'reference'] as const).map((kind) => {
+              const children = pages.filter(
+                (p) => p.section === page.section && !p.overview && p.kind === kind,
+              );
+              return (
+                children.length > 0 && (
+                  <section key={kind} data-kind={kind}>
+                    <h2>
+                      <Icon name={kind === 'guide' ? 'petals' : 'project'} small />
+                      {kind === 'guide' ? 'Guides' : 'System reference'}
+                    </h2>
+                    {children.map((p) => (
+                      <a href={`/docs/${p.slug}`} key={p.slug}>
+                        <span>{p.title}</span>
+                        <Icon name="arrow" />
+                      </a>
+                    ))}
+                  </section>
+                )
+              );
+            })}
           </nav>
         )}
         <footer className={styles.footer}>
+          {page.kind === 'guide' && (
+            <div className={styles.guideSource}>
+              <span>Guide source</span>
+              <code>{page.source}</code>
+            </div>
+          )}
           <Button variant="quiet" href={editUrl(page.source)} arrow>
             Edit on GitHub
           </Button>

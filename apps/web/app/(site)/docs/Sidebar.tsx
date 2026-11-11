@@ -24,23 +24,28 @@ export function Sidebar({ pages, current }: { pages: DocPage[]; current: DocPage
           .map((section) => (
             <details key={section.slug} open={current.section === section.section}>
               <summary>{section.title}</summary>
-              <a
-                href={`/docs/${section.slug}`}
-                aria-current={current.slug === section.slug ? 'page' : undefined}
-              >
-                Overview
-              </a>
-              {pages
-                .filter((p) => p.section === section.section && !p.overview)
-                .map((p) => (
-                  <a
-                    key={p.slug}
-                    href={`/docs/${p.slug}`}
-                    aria-current={current.slug === p.slug ? 'page' : undefined}
-                  >
-                    {p.title}
-                  </a>
-                ))}
+              {(['guide', 'reference'] as const).map((kind) => {
+                const group = pages.filter((p) => p.section === section.section && p.kind === kind);
+                return (
+                  group.length > 0 && (
+                    <div className={styles.navGroup} key={kind} data-kind={kind}>
+                      <p className={styles.navGroupTitle}>
+                        <Icon name={kind === 'guide' ? 'petals' : 'project'} small />
+                        {kind === 'guide' ? 'Guides' : 'System reference'}
+                      </p>
+                      {group.map((p) => (
+                        <a
+                          key={p.slug}
+                          href={`/docs/${p.slug}`}
+                          aria-current={current.slug === p.slug ? 'page' : undefined}
+                        >
+                          {p.overview ? 'Overview' : p.title}
+                        </a>
+                      ))}
+                    </div>
+                  )
+                );
+              })}
             </details>
           ))}
       </nav>

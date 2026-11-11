@@ -2,7 +2,6 @@
 
 title: Connect your agent
 order: 5
-draft: true
 include: ["brain/chapters/connect-*.md"]
 exclude: []
 ---

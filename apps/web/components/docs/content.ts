@@ -14,11 +14,11 @@ import { DEFAULT_PERSON_VIEW } from '../../lib/person-view.ts';
 
 export interface DocPage {
   slug: string;
+  kind: 'guide' | 'reference';
   title: string;
   section: string;
   source: string;
   overview?: boolean;
-  draft?: boolean;
   status?: string;
   schemaId?: string;
   schemaKey?: keyof typeof schemas;
@@ -26,7 +26,6 @@ export interface DocPage {
 interface Frontmatter {
   title?: string;
   order?: number;
-  draft?: boolean;
   status?: string;
   include?: string[];
   exclude?: string[];
@@ -69,6 +68,26 @@ export function repoRoot(): string {
     if (existsSync(join(dir, 'pnpm-workspace.yaml'))) return dir;
     if (dir === dirname(dir)) throw new Error('Docs build must run inside the Petals repository');
   }
+}
+/** Only repository-owned raster illustrations are served by the static docs asset route. */
+export function docAssetNames(): string[] {
+  const dir = join(repoRoot(), 'docs/assets');
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((file) => file.isFile() && /^[a-z0-9-]+\.(png|webp)$/.test(file.name))
+    .map((file) => file.name);
+}
+export function docAsset(name: string): Uint8Array | null {
+  return docAssetNames().includes(name)
+    ? new Uint8Array(readFileSync(join(repoRoot(), 'docs/assets', name)))
+    : null;
+}
+function imageUrl(src: string, source: string): string | undefined {
+  const path = posix.normalize(posix.join(posix.dirname(source), src));
+  return path.startsWith('docs/assets/') &&
+    docAssetNames().includes(path.slice('docs/assets/'.length))
+    ? `/docs/assets/${posix.basename(path)}`
+    : undefined;
 }
 function read(source: string): string {
   return readFileSync(join(repoRoot(), source), 'utf8');
@@ -128,19 +147,29 @@ export function catalog(): DocPage[] {
       section,
       source,
       overview: true,
-      draft: meta.draft,
+      kind: 'guide',
     });
-    for (const item of (meta.include ?? []).flatMap(expand)) {
+    const authored = files(posix.dirname(source))
+      .filter((file) => file.endsWith('.md') && file !== source && !file.endsWith('/index.md'))
+      .sort(
+        (a, b) =>
+          (splitMatter(read(a)).meta.order ?? 100) - (splitMatter(read(b)).meta.order ?? 100),
+      );
+    for (const item of [...new Set([...authored, ...(meta.include ?? []).flatMap(expand)])]) {
       if (meta.exclude?.some((p) => matches(posix.basename(item), p))) continue;
       const raw = read(item);
       const json = item.endsWith('.json');
-      const slug = `${section}/${item.includes('/recipes/') ? 'recipes/' : ''}${posix.basename(item).replace(/\.(md|json)$/, '')}`;
+      const localName = item.startsWith(`${posix.dirname(source)}/`)
+        ? posix.relative(posix.dirname(source), item)
+        : `${item.includes('/recipes/') ? 'recipes/' : ''}${posix.basename(item)}`;
+      const slug = `${section}/${localName.replace(/\.(md|json)$/, '').toLowerCase()}`;
       const matter = json ? {} : splitMatter(raw).meta;
       pages.push({
         slug,
         title: json ? posix.basename(item, '.json') : titleOf(raw, posix.basename(item)),
         section,
         source: item,
+        kind: item.startsWith('docs/') || item === 'README.md' ? 'guide' : 'reference',
         status: matter.status,
       });
     }
@@ -157,6 +186,7 @@ export function catalog(): DocPage[] {
           title: name,
           section,
           source: file,
+          kind: 'reference',
           schemaKey: key as keyof typeof schemas,
           schemaId: schema.$id,
         });
@@ -251,15 +281,26 @@ export async function content(page: DocPage, pages: DocPage[]) {
       .body.replace(/^# .+\r?\n?/, '')
       .trim();
   }
+  let referenceMarkdown = '';
   if (page.slug === 'rendering-protocol') {
-    markdown +=
+    referenceMarkdown =
       '\n\n## Current view vocabulary\n\nGenerated from [core’s view definitions](https://github.com/elcocoel/petals/blob/main/packages/core/src/view/index.ts). A format accepting a dimension does not mean every renderer draws it.\n\n| Dimension | Accepts | Default data |\n| --- | --- | --- |\n' +
       DIMENSIONS.map(
         (dimension) =>
           `| ${dimension} | ${ACCEPTS[dimension].join(', ')} | ${latestView(DEFAULT_PERSON_VIEW.view).dimensions[dimension]?.data ?? 'Off'} |`,
       ).join('\n');
   }
-  return { markdown, examples, ...(await renderMarkdown(markdown, page.source, pages)) };
+  const rendered = await renderMarkdown(markdown, page.source, pages);
+  const reference = referenceMarkdown
+    ? await renderMarkdown(referenceMarkdown, page.source, pages)
+    : undefined;
+  return {
+    markdown: markdown + referenceMarkdown,
+    examples,
+    ...rendered,
+    headings: [...rendered.headings, ...(reference?.headings ?? [])],
+    reference,
+  };
 }
 function textOf(node: Tree): string {
   return node.value ?? node.children?.map(textOf).join('') ?? '';
@@ -303,8 +344,18 @@ export async function renderMarkdown(markdown: string, source: string, pages: Do
             if (href) node.properties.href = href;
             else delete node.properties.href;
           }
-          // No external embeds or raw HTML. Only repository text and safe links reach the document.
+          // Raster illustrations are local and explicit; external embeds and raw HTML stay out.
           if (node.tagName === 'img') {
+            const src = imageUrl(String(node.properties?.src ?? ''), source);
+            if (src) {
+              node.properties = {
+                src,
+                alt: String(node.properties?.alt ?? ''),
+                loading: 'lazy',
+                decoding: 'async',
+              };
+              return;
+            }
             node.tagName = 'span';
             node.children = [{ type: 'text', value: String(node.properties?.alt ?? '') }];
             node.properties = {};
