@@ -42,7 +42,7 @@ describe('the map highlights the chosen group', () => {
     const land = text('landscape/useLandscape.ts');
     expect(land).toMatch(/highlight\?: \(ids: readonly string\[\] \| null\) => void;/);
     expect(land).toMatch(/at\.current\.highlight = \(ids\) =>/);
-    expect(land).toMatch(/sharedLook\(f, \[\.\.\.shared, \.\.\.group\], ringOf\(i\)\)/);
+    expect(land).toMatch(/sharedLook\(f, \[\.\.\.shared, \.\.\.group, \.\.\.own\], ringOf\(i\)\)/);
     expect(land).toMatch(/look: lookOf\(i\),/);
   });
 
