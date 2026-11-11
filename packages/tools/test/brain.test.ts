@@ -31,11 +31,15 @@ describe('the brain', () => {
       'connect-codex',
       'connect-hermes',
       'contributing',
+      'from-proposal-to-action',
       'going-deeper',
       'open-source-leads',
       'over-time',
+      'stake-behind-the-network',
       'start-from-an-address',
       'where-power-lives',
+      'who-can-move-money-or-change-rules',
+      'who-gets-a-vote',
     ]);
   });
 

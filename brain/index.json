@@ -184,6 +184,43 @@
       "sha256": "d2e60eff96f50a25010d0323760d88bf9c231446aa625a1064853bde78a4e817"
     },
     {
+      "id": "from-proposal-to-action",
+      "kind": "chapter",
+      "for": "following a proposal from eligibility through voting to execution",
+      "recognise": [
+        "proposal",
+        "Governor",
+        "quorum",
+        "threshold",
+        "voting rules",
+        "voting period",
+        "passed",
+        "executed",
+        "veto",
+        "Snapshot",
+        "Sputnik",
+        "AstroDAO",
+        "Aragon",
+        "Moloch"
+      ],
+      "tools": [
+        "list_networks",
+        "get_network",
+        "get_snapshot",
+        "describe_snapshot",
+        "read_chain",
+        "add_layer"
+      ],
+      "continues": [
+        "who-gets-a-vote",
+        "who-can-move-money-or-change-rules",
+        "over-time"
+      ],
+      "status": "partial",
+      "file": "chapters/from-proposal-to-action.md",
+      "sha256": "fd0038b2db03e9ab80d8a7bcede142fd0b2582b8e53cb759f0040fe7b7cafc18"
+    },
+    {
       "id": "going-deeper",
       "kind": "chapter",
       "for": "what to offer after every answer",
@@ -226,9 +263,7 @@
         "social",
         "who is",
         "names",
-        "people",
-        "proposals",
-        "members"
+        "people"
       ],
       "tools": [
         "read_page",
@@ -240,7 +275,7 @@
       ],
       "status": "partial",
       "file": "chapters/open-source-leads.md",
-      "sha256": "2e92e2650fb5dcdd217b3a3f337dbbcc36b139238f5f9c7af65714ec353cf0d5"
+      "sha256": "5a95ce27d34ee28e83fbe2de78fdb6565c7a00a23819583e5eb619295839c00a"
     },
     {
       "id": "over-time",
@@ -267,6 +302,34 @@
       "status": "partial",
       "file": "chapters/over-time.md",
       "sha256": "1ca3515f6108be2a843762cef2fbc84cf60610c8ba9b3a9e60e6db8a1a7d240c"
+    },
+    {
+      "id": "stake-behind-the-network",
+      "kind": "chapter",
+      "for": "separating validator consensus power from the accounts and stake behind it",
+      "recognise": [
+        "validators",
+        "staking pools",
+        "stake",
+        "backers",
+        "delegators",
+        "consensus",
+        "block producers",
+        "unstake"
+      ],
+      "tools": [
+        "get_snapshot",
+        "describe_snapshot",
+        "compute_figures"
+      ],
+      "continues": [
+        "where-power-lives",
+        "who-gets-a-vote",
+        "going-deeper"
+      ],
+      "status": "partial",
+      "file": "chapters/stake-behind-the-network.md",
+      "sha256": "6761f561d000c40582020664a81b9803841f845fae04fe173bc2efa1da167e38"
     },
     {
       "id": "start-from-an-address",
@@ -302,23 +365,13 @@
       "recognise": [
         "dao",
         "governance",
-        "members",
-        "holders",
+        "power",
         "who holds",
-        "votes",
-        "voting power",
         "who controls",
-        "treasury",
-        "multisig",
-        "signers",
-        "admin",
-        "owner",
-        "upgrade",
-        "pause",
-        "delegation",
-        "proposals",
-        "sponsored",
-        "stake"
+        "who decides",
+        "holders",
+        "members",
+        "votes"
       ],
       "tools": [
         "get_snapshot",
@@ -329,13 +382,99 @@
         "render_flower"
       ],
       "continues": [
+        "who-gets-a-vote",
+        "from-proposal-to-action",
+        "who-can-move-money-or-change-rules",
+        "stake-behind-the-network",
         "going-deeper",
         "over-time",
         "a-new-system"
       ],
       "status": "ready",
       "file": "chapters/where-power-lives.md",
-      "sha256": "b92b802cb32d73095ac7b88b8ceb596c58ff234fdd93cd43b94eb059b1c4db81"
+      "sha256": "d5360e7c7e766f321a0e80eb05c3a20e2a1423d9a5c11044baf23d7e04552995"
+    },
+    {
+      "id": "who-can-move-money-or-change-rules",
+      "kind": "chapter",
+      "for": "tracing treasury execution and authority to change permissions or contract rules",
+      "recognise": [
+        "treasury",
+        "spend",
+        "funds",
+        "money",
+        "Safe",
+        "multisig",
+        "signers",
+        "owners",
+        "modules",
+        "admin",
+        "roles",
+        "permissions",
+        "mint",
+        "upgrade",
+        "pause",
+        "timelock",
+        "shaman",
+        "policy",
+        "Aragon"
+      ],
+      "tools": [
+        "list_networks",
+        "get_network",
+        "get_snapshot",
+        "describe_snapshot",
+        "read_chain",
+        "add_layer"
+      ],
+      "continues": [
+        "from-proposal-to-action",
+        "who-gets-a-vote",
+        "a-new-system"
+      ],
+      "status": "partial",
+      "file": "chapters/who-can-move-money-or-change-rules.md",
+      "sha256": "a9ef7de6765fcdc1eebf21045f78f85439d84c216a8e078a367a96b106e9891a"
+    },
+    {
+      "id": "who-gets-a-vote",
+      "kind": "chapter",
+      "for": "distinguishing holdings, membership, delegation and the right to vote, join or leave",
+      "recognise": [
+        "voting power",
+        "delegates",
+        "delegated",
+        "delegation",
+        "holders",
+        "membership",
+        "shares",
+        "loot",
+        "ERC20Votes",
+        "Moloch",
+        "veNEAR",
+        "House of Stake",
+        "join",
+        "leave",
+        "ragequit",
+        "lock",
+        "unlock"
+      ],
+      "tools": [
+        "list_networks",
+        "get_network",
+        "get_snapshot",
+        "describe_snapshot",
+        "read_chain"
+      ],
+      "continues": [
+        "from-proposal-to-action",
+        "who-can-move-money-or-change-rules",
+        "stake-behind-the-network",
+        "a-new-system"
+      ],
+      "status": "partial",
+      "file": "chapters/who-gets-a-vote.md",
+      "sha256": "002347b5b6f80b7b07537d40cb1e01dec39e66cf10a96e6c2383aab5e78fd7a4"
     },
     {
       "id": "moloch-v3",

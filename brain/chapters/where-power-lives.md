@@ -1,9 +1,9 @@
 ---
 id: where-power-lives
 for: finding where power sits in any on-chain system, and reading it with a shape
-recognise: dao, governance, members, holders, who holds, votes, voting power, who controls, treasury, multisig, signers, admin, owner, upgrade, pause, delegation, proposals, sponsored, stake
+recognise: dao, governance, power, who holds, who controls, who decides, holders, members, votes
 tools: get_snapshot, read_chain, describe_snapshot, compute_figures, propose_spec, render_flower
-continues: going-deeper, over-time, a-new-system
+continues: who-gets-a-vote, from-proposal-to-action, who-can-move-money-or-change-rules, stake-behind-the-network, going-deeper, over-time, a-new-system
 status: ready
 ---
 
@@ -16,6 +16,13 @@ In any system, ask five things, and read each from the chain:
 - **Who can move the money?** A treasury's signers, the owners of a multisig.
 - **Who can change the rules?** An owner, an admin key, who can upgrade or pause a contract.
 - **How do you join or leave?** A token you buy, a vote to admit, a right to quit with your part.
+
+Each has its own chapter, for when the person asks it:
+
+- who holds, who votes, and how you join or leave: `who-gets-a-vote`;
+- how a proposal becomes an action: `from-proposal-to-action`;
+- who can move the money, and who can change the rules: `who-can-move-money-or-change-rules`;
+- a network's validators and the stake behind them: `stake-behind-the-network`.
 
 Petals reads these with a few shapes, and a recipe names which shape reads what:
 
