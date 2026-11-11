@@ -367,6 +367,18 @@ export interface AgentRow {
  * An annotation (migration 21): a claim/v2 a person or an agent added about an account, kept under the
  * project's owner, with the project it was added in. `body` is the claim's canonical JSON.
  */
+/** What an agent keeps in a project (30): a Petals document, by its canonical sha256. */
+export interface ProjectDataRow {
+  owner: string;
+  exploration: string;
+  sha256: string;
+  petal: string;
+  /** the map or account it's about, where it names one */
+  about: string | null;
+  body: string;
+  kept_at: string;
+}
+
 export interface AnnotationRow {
   owner: string;
   id: string;
@@ -1814,6 +1826,41 @@ export function tables(db: Db) {
             to,
           );
           await db.run('UPDATE annotation SET owner = ? WHERE owner = ?', to, from);
+        }),
+    },
+
+    /** What an agent keeps in a project (30): put once, never changed; listed oldest first. */
+    projectData: {
+      keep: async (r: ProjectDataRow): Promise<boolean> =>
+        (await db.run(
+          `INSERT INTO project_data (owner, exploration, sha256, petal, about, body, kept_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (owner, exploration, sha256) DO NOTHING`,
+          r.owner,
+          r.exploration,
+          r.sha256,
+          r.petal,
+          r.about,
+          r.body,
+          r.kept_at,
+        )) === 1,
+      list: (owner: string, exploration: string, petal?: string) =>
+        db.all<ProjectDataRow>(
+          `SELECT * FROM project_data WHERE owner = ? AND exploration = ?
+           ${petal ? 'AND petal LIKE ?' : ''} ORDER BY kept_at, sha256`,
+          owner,
+          exploration,
+          ...(petal ? [`${petal}%`] : []),
+        ),
+      /** A session that signs in, or a project claimed, brings what it kept along. */
+      moveOwner: (from: string, to: string): Promise<void> =>
+        db.tx(async () => {
+          await db.run(
+            `DELETE FROM project_data WHERE owner = ? AND (exploration, sha256) IN
+             (SELECT exploration, sha256 FROM project_data WHERE owner = ?)`,
+            from,
+            to,
+          );
+          await db.run('UPDATE project_data SET owner = ? WHERE owner = ?', to, from);
         }),
     },
 

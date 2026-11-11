@@ -213,6 +213,15 @@ export function explorationRoutes(
       ...(about ? { about } : {}),
     });
   });
+  // what an agent keeps in the project (#98, data.ts): a reading, a mark, a value, proposals or a claim
+  app.post('/api/v1/explorations/:ref/data', async (c) => answer(c, 'keep_data', await withRef(c)));
+  app.get('/api/v1/explorations/:ref/data', (c) => {
+    const petal = c.req.query('petal');
+    return answer(c, 'list_data', {
+      exploration: c.req.param('ref'),
+      ...(petal ? { petal } : {}),
+    });
+  });
   app.post('/api/v1/explorations/:ref/datasets/fork', async (c) =>
     answer(c, 'fork_dataset', await withRef(c)),
   );

@@ -151,6 +151,15 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     });
     await run('list_annotations', { exploration });
     await run('list_annotations', { exploration, about });
+    // what an agent keeps in the project (data.ts)
+    const markFixture = JSON.parse(
+      readFileSync(
+        join(import.meta.dirname, '..', '..', '..', 'core', 'schema', 'fixtures', 'mark.v1.json'),
+        'utf8',
+      ),
+    );
+    await run('keep_data', { exploration, document: markFixture });
+    await run('list_data', { exploration });
     const fork = await run('start_exploration', { fork_of: exploration });
     await run('get_exploration', { exploration: (fork.link as { url: string }).url });
     const signedIn = { ...r.ctx, caller: { subject: 'prs_test', door: 'test' } };

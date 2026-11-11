@@ -36,6 +36,7 @@ export type {
   PersonProfileRow,
   PersonRow,
   PersonViewRow,
+  ProjectDataRow,
   ProposalsRow,
   PublishDraftRow,
   RunEventRow,
