@@ -98,7 +98,7 @@ export const addAnnotation = defineTool<
   name: 'add_annotation',
   title: 'Add annotations to the project',
   description:
-    "Add what you found or were told about accounts to the person's project, privately: a name (named), a note or research (noted), a link (linked), each with how it's known (stated, sourced, inferred) and what it rests on. One or many at once, all or none. Petals fills each one's id and who answers for it. Use it as soon as you find who or what is behind an address, never only a file.",
+    "Add what you found or were told about accounts to the person's project, privately: a name (named), a note or research (noted), a link (linked), each with how it's known (stated, only in the person's own session; sourced or inferred, from an agent) and what it rests on. One or many at once, all or none. Petals fills each one's id and who answers for it. Use it as soon as you find who or what is behind an address, never only a file.",
   input: obj(['exploration', 'annotations'], {
     exploration: REF,
     annotations: { type: 'array', minItems: 1, items: DRAFT },

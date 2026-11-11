@@ -20,6 +20,7 @@ import type {
 } from '@petal/core/types';
 import type { JobRow } from '@petal/store';
 import { registry as defaultRegistry, type ToolContext, withRunSignal } from '@petal/tools';
+import { ANNOTATE, annotateNotes } from './annotate.ts';
 import {
   approvalRequired,
   DRAWING_TOOLS,
@@ -373,6 +374,7 @@ async function loop(
     ...(input.jobs?.length ? [jobNotes(input.jobs)] : []),
     ...(input.agents?.length ? [connectedNotes(input.agents)] : []),
     ...(input.name ? [nameNotes(input.name)] : []),
+    ...(registry.some((t) => t.name === ANNOTATE) ? [annotateNotes()] : []),
   ].join('\n\n');
   const messages: LlmMessage[] = [{ role: 'system', content: system }, ...conversation];
   // Sent with every call, and they count against the window too.
@@ -724,6 +726,7 @@ async function loop(
         break;
       }
       rounds++;
+      const outs: unknown[] = [];
       for (const [i, call] of calls.entries()) {
         if (stopped()) return;
         signal?.throwIfAborted();
@@ -735,6 +738,7 @@ async function loop(
                 `At most ${MAX_TOOL_CALLS_PER_ROUND} tool calls in one round, so ${call.name} was not run.`,
                 'Ask for it again in the next round.',
               );
+        outs.push(out);
         messages.push({
           role: 'tool',
           tool_call_id: call.id,
@@ -742,8 +746,11 @@ async function loop(
         });
         await saveThread();
       }
-      // A name given with the answer ends the turn: the answer is already said, so naming buys no call.
-      if (text && calls.every((call) => call.name === NAME_CONVERSATION)) break;
+      // A name, or an annotation kept, given with the answer ends the turn: the answer is already said, so
+      // they buy no call. An annotation that wasn't kept goes back to the model, which says so or fixes it.
+      const quiet = (call: LlmToolCall, i: number) =>
+        call.name === NAME_CONVERSATION || (call.name === ANNOTATE && !isToolError(outs[i]));
+      if (text && calls.every(quiet)) break;
       if (totals.usd >= budget.usdPerChat) {
         fail('budget_exhausted', `The chat used its $${budget.usdPerChat} budget.`, SKILL_HINT);
         break;
