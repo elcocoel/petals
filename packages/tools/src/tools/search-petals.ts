@@ -7,10 +7,11 @@
 // waited on, it's seen at the next search. Petals' agent, people's agents (/mcp) and GET /api/v1/search use it.
 import { type Mark, validateMark } from '@petal/core';
 import type { Claim } from '@petal/core/types';
-import type { Store } from '@petal/store';
+import type { AnnotationRow, Store } from '@petal/store';
 import { defineTool } from '../define.ts';
 import { privateStore } from '../drafts.ts';
 import { type MapCard, mapsOf, mapViews, typeWords } from '../map.ts';
+import { MAPPING } from '../mapping-claims.ts';
 import { proposalsOf } from '../proposals.ts';
 import {
   type Findable,
@@ -29,7 +30,7 @@ import {
   searchModel,
 } from '../search-model.ts';
 import type { ToolContext } from '../types.ts';
-import { obj } from './shared.ts';
+import { loadSnapshot, obj } from './shared.ts';
 
 /** What can be asked for: the map's kinds, and the person's own. */
 export const MAP_KINDS = ['map', 'proposal'] as const;
@@ -160,11 +161,14 @@ async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapS
   const views = await mapViews({ ...ctx, names: [] });
   const marks = await store.mark.list();
   const proposalRows = await store.proposals.list();
+  // Petals' own mapping's claims, the same for every viewer
+  const claimRows = await store.annotation.list(MAPPING);
   const sig = [
     model?.embedding ?? 'words',
     views.map((v) => v.sha).join(','),
     marks.map((m) => `${m.about}@${m.read_at}`).join(','),
     proposalRows.map((p) => `${p.about}@${p.read_at}`).join(','),
+    claimRows.map((c) => c.id).join(','),
   ].join('|');
   // one kept per store and way: words alone, while the model is off, don't push the model's set out
   const key = `${ctx.config.databaseUrl ?? ctx.config.stateDir ?? ctx.config.root}|${model?.embedding ?? 'words'}`;
@@ -198,6 +202,21 @@ async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapS
         });
       }
     }
+    if (claimRows.length) {
+      // each under the map whose accounts it's about, as mapClaims finds a map's (mapping-claims.ts)
+      const mapOfAccount = new Map<string, string>();
+      for (const card of cards.values()) {
+        mapOfAccount.set(accountKey(card.id), card.id);
+        const chain = card.id.slice(0, card.id.lastIndexOf(':'));
+        for (const r of card.readings) {
+          for (const p of (await loadSnapshot(ctx, r.snapshot)).participants) {
+            const k = accountKey(p.id.includes(':') ? p.id : `${chain}:${p.id}`);
+            if (!mapOfAccount.has(k)) mapOfAccount.set(k, card.id);
+          }
+        }
+      }
+      for (const r of claimRows) docs.push(claimDoc(r, mapOfAccount.get(accountKey(r.subject))));
+    }
     return { sig, cards, set: await searchSet(docs, model, keepOf(store)) };
   })();
   mapSets.set(key, made);
@@ -205,27 +224,34 @@ async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapS
 }
 
 const objectWords = (o: Claim['object']) => (typeof o === 'string' ? o : o.value);
+/** An account as a map's petals have it: an EVM address in lower case. */
+const accountKey = (id: string) => (id.startsWith('eip155:') ? id.toLowerCase() : id);
+
+/** A claim's document: what it says, who it's about, its evidence's words; under its map when there is one. */
+function claimDoc(r: AnnotationRow, map: string | undefined): Findable {
+  const c = JSON.parse(r.body) as Claim;
+  const evidence = (c.evidence ?? [])
+    .map((e) => [e.note, e.quote, e.url, e.platform].filter(Boolean).join(' '))
+    .filter(Boolean);
+  const object = objectWords(c.object);
+  return {
+    kind: 'claim',
+    id: `claim:${r.id}`,
+    title: `${r.subject} ${r.verb} ${object}`,
+    text: [`${r.verb} ${object}`, r.subject, ...evidence].join('\n'),
+    about: r.subject,
+    ...(map ? { group: map } : {}),
+    keys: r.verb === 'named' ? [object] : [],
+  };
+}
 
 /** The person's own: their annotations, and their work as /api/v1/search has indexed it. */
 async function ownDocs(ctx: ToolContext, subject: string, cards: Map<string, MapCard>) {
   const store = privateStore(ctx.config);
   const docs: Findable[] = [];
   for (const r of await store.annotation.list(subject)) {
-    const c = JSON.parse(r.body) as Claim;
-    const evidence = (c.evidence ?? [])
-      .map((e) => [e.note, e.quote, e.url, e.platform].filter(Boolean).join(' '))
-      .filter(Boolean);
-    const object = objectWords(c.object);
-    docs.push({
-      kind: 'claim',
-      id: `claim:${r.id}`,
-      title: `${r.subject} ${r.verb} ${object}`,
-      text: [`${r.verb} ${object}`, r.subject, ...evidence].join('\n'),
-      about: r.subject,
-      // a claim about a map's own address sits under that map
-      ...(cards.has(r.subject) ? { group: r.subject } : {}),
-      keys: r.verb === 'named' ? [object] : [],
-    });
+    // a claim about a map's own address sits under that map
+    docs.push(claimDoc(r, cards.has(r.subject) ? r.subject : undefined));
   }
   for (const t of await store.search.texts(subject)) {
     docs.push({

@@ -1,10 +1,11 @@
 // Search by words and meaning (#105): the ranking on its own, then search_petals over a real stored map, offline,
 // with the fake model (words hashed for meaning). What the real models find is scripts/search-eval.ts's.
-import type { Spec } from '@petal/core/types';
+import type { Claim, Spec } from '@petal/core/types';
 import { modules } from '@petal/inputs';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { privateStore } from '../src/drafts.ts';
 import { mapViews } from '../src/map.ts';
+import { keepMappingClaims, MAPPING } from '../src/mapping-claims.ts';
 import { callTool } from '../src/registry.ts';
 import {
   byWords,
@@ -197,6 +198,26 @@ describe('search_petals', () => {
     });
     const proposals = await run({ q: 'ethereum client grant', kinds: ['proposal'] });
     expect(proposals.results.map((x: Out) => x.kind)).toEqual(['proposal']);
+  });
+
+  test("Petals' mapping's claims are found by anyone, under the map they're about", async () => {
+    const [view] = await mapViews(r.ctx);
+    const about = view?.map as string;
+    const claim = {
+      petal: 'claim/v3',
+      id: 'c'.repeat(64),
+      subject: about,
+      verb: 'is_a',
+      object: { value: 'grants guild' },
+      kind: 'sourced',
+      issued_at: '2026-11-11T00:00:00Z',
+      evidence: [{ type: 'page', url: 'https://example.org', note: 'funds open source tooling' }],
+      by: MAPPING,
+    } as unknown as Claim;
+    expect(await keepMappingClaims(r.ctx, 'test', [claim])).toBe(1);
+    const found = await run({ q: 'funds open source tooling' });
+    expect(found.results[0]).toMatchObject({ kind: 'map', id: about });
+    expect(found.results[0].matched[0]).toMatchObject({ kind: 'claim', id: 'c'.repeat(64) });
   });
 
   test('the map is embedded once: a second search embeds nothing', async () => {
