@@ -102,7 +102,9 @@ export function buildBrainIndex(dir: string): BrainIndex {
   const chapters: BrainEntry[] = [];
   const recipes: BrainEntry[] = [];
   for (const d of BRAIN_DEPARTMENTS) {
-    for (const name of readdirSync(join(dir, d)).filter((f) => f.endsWith('.md') && f !== 'README.md')) {
+    for (const name of readdirSync(join(dir, d)).filter(
+      (f) => f.endsWith('.md') && f !== 'README.md',
+    )) {
       const file = `${d}/${name}`;
       const text = read(file);
       const h = headerOf(text);
@@ -165,7 +167,9 @@ export function brainProblems(
     ids.add(e.id);
     if (!e.for) out.push(`${e.file}: its header says nothing under for`);
     if (e.kind !== 'doctrine' && e.department && !e.file.startsWith(`${e.department}/`))
-      out.push(`${e.file}: its header says ${e.department}, and it's in another department's folder`);
+      out.push(
+        `${e.file}: its header says ${e.department}, and it's in another department's folder`,
+      );
     if (
       e.kind !== 'doctrine' &&
       !(BRAIN_DEPARTMENTS as readonly string[]).includes(e.department ?? '')
