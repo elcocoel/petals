@@ -170,8 +170,11 @@ export async function benchLandscape(view: string): Promise<BenchLandscape | { e
  * The map's flowers named and marked by their maps' own marks (#85), with how many proposals each map has (#93),
  * from the maps' cards; as they were without.
  */
-async function marked(land: BenchLandscape, view: string): Promise<BenchLandscape> {
-  const cards = await mapList(view);
+async function marked(
+  land: BenchLandscape,
+  asked: ReturnType<typeof mapList>,
+): Promise<BenchLandscape> {
+  const cards = await asked;
   if (!cards.ok) return land;
   const maps = cards.value.maps;
   const marks = withMarks(land, new Map(maps.map((c) => [c.id, c.mark])));
@@ -195,8 +198,10 @@ export function withProposals(
 
 /** The Power Map: one flower per map, in the view whose hash is given (the person's: lib/viewer-view.ts). */
 export async function powerMapLandscape(view: string): Promise<BenchLandscape | { error: string }> {
+  // the map and its cards asked for at once (SYSTEMS, 11 Nov: one after the other cost 0.4 s)
+  const cards = mapList(view);
   const night = await liveNight(view, 'map');
-  return 'error' in night ? night : marked(landscapeOf(night), view);
+  return 'error' in night ? night : marked(landscapeOf(night), cards);
 }
 
 /**
@@ -208,11 +213,12 @@ export async function powerMapAt(
   view: string,
   at: { map: string } | { snapshot: string },
 ): Promise<{ land: BenchLandscape; focus: number } | { error: string }> {
+  const cards = mapList(view);
   const live = await liveMap(view);
   if ('error' in live) return live;
   const map =
     'map' in at ? at.map : (live.views.find((v) => v.snapshot === at.snapshot)?.map ?? null);
-  const land = await marked(landscapeOf(nightOf({ ...live, views: oneEach(live.views) })), view);
+  const land = await marked(landscapeOf(nightOf({ ...live, views: oneEach(live.views) })), cards);
   return { land, focus: map === null ? -1 : land.flowers.findIndex((f) => f.map === map) };
 }
 
