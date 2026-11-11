@@ -14,6 +14,15 @@ import {
   tonesOf,
 } from '@petal/core/wedge/highlight';
 import { paintOf } from '@petal/core/wedge/paint';
+import {
+  arcPath,
+  arcsOf,
+  type Proposal,
+  ringRadius,
+  type Vote,
+  voteDot,
+  votesOn,
+} from '@petal/core/wedge/votes';
 import type { View } from './camera.ts';
 import { GUTTER } from './feel.ts';
 import { LABEL_POOL, type Marks, NOTE_POOL } from './marks.ts';
@@ -48,6 +57,18 @@ export interface PetalLook {
    * each as tall as that member's own petal would be.
    */
   folds?: Record<string, Fold>;
+  /**
+   * Proposals on the ring and each wallet's vote (#93; core's wedge/votes.ts): a stretch of time round a thin ring
+   * just outside the petals, each proposal an arc on it; pointing at one puts a dot under each voter's petal in
+   * its vote's colour. No vote, no dot.
+   */
+  votes?: {
+    from: string;
+    to: string;
+    proposals: readonly Proposal[];
+    /** each vote's colour, as the reading gives it */
+    colours: Record<Vote['vote'], string>;
+  };
 }
 
 /** Each scene's filters get their own names, so two flowers on one page never share one. */
@@ -204,6 +225,9 @@ export function createScene(
       }
     : null;
 
+  // figure.vote-ring: the lab's proposals on the ring (#93), drawn under the petals
+  const votes = look?.votes;
+  const voteLayer = votes ? el('g', {}, worldNode) : null;
   // One path, or with the lab's look one path per colour.
   // figure.flower-silhouette
   const silhouette = slot(el('path', { fill: look ? 'none' : PETAL }, worldNode));
@@ -343,6 +367,114 @@ export function createScene(
       }))
     : [];
   for (const run of silhouetteRuns) worldNode.insertBefore(run.path.node, petalsGroup.node);
+
+  // The ring, its proposals' arcs, the dots a pointed one shows, and its words, on top of the petals.
+  let lastView: View | null = null;
+  let lastRing: Ring = m.ring;
+  let pointed = -1;
+  const voteTop = votes ? el('g', {}, worldNode) : null;
+  const dotLayer = votes && voteTop ? el('g', {}, voteTop) : null;
+  const arcs = votes ? arcsOf(votes.proposals, votes.from, votes.to) : [];
+  const byId = new Map((votes?.proposals ?? []).map((p) => [p.id, p]));
+  if (votes && voteLayer) {
+    el(
+      'circle',
+      {
+        cx: SHAPE.cx,
+        cy: SHAPE.cy,
+        r: n3(ringRadius()),
+        fill: 'none',
+        stroke: HAIR,
+        'stroke-width': 1,
+        'vector-effect': 'non-scaling-stroke',
+      },
+      voteLayer,
+    );
+  }
+  const arcSlots = arcs.map((a) => {
+    const d = arcPath(a.a0, a.a1);
+    const seen = slot(
+      el(
+        'path',
+        {
+          d,
+          fill: 'none',
+          stroke: MUTED,
+          'stroke-width': 3,
+          'stroke-linecap': 'butt',
+          'vector-effect': 'non-scaling-stroke',
+        },
+        voteTop as SVGGElement,
+      ),
+    );
+    // a wider line nobody sees, for the pointer
+    const hit = el(
+      'path',
+      {
+        d,
+        fill: 'none',
+        stroke: 'transparent',
+        'stroke-width': 12,
+        'vector-effect': 'non-scaling-stroke',
+        'pointer-events': 'stroke',
+      },
+      voteTop as SVGGElement,
+    );
+    return { a, seen, hit };
+  });
+  // the pointed proposal's words, in the flower's middle under its title, where they always fit
+  const voteWords = votes
+    ? slot(el('text', { fill: INK, opacity: 0, 'text-anchor': 'middle' }, root))
+    : null;
+  const voteTally = votes
+    ? slot(el('text', { fill: MUTED, opacity: 0, 'text-anchor': 'middle' }, root))
+    : null;
+  const placeWords = () => {
+    if (!voteWords || !voteTally || pointed < 0 || !lastView) return;
+    const x = (SHAPE.cx + lastRing.ox) * lastView.k + lastView.x;
+    const y = (SHAPE.cy + lastRing.oy) * lastView.k + lastView.y;
+    voteWords.set('transform', `translate(${n3(x)} ${n3(y + LINE * 1.6)})`);
+    voteTally.set('transform', `translate(${n3(x)} ${n3(y + LINE * 2.8)})`);
+  };
+  const point = (j: number) => {
+    if (!votes || !dotLayer) return;
+    pointed = j;
+    arcSlots.forEach((s, k) => {
+      s.seen.set('stroke', k === j ? INK : MUTED);
+      s.seen.set('stroke-width', k === j ? 4 : 3);
+    });
+    dotLayer.replaceChildren();
+    const p = j >= 0 ? byId.get(arcSlots[j]?.a.id ?? '') : undefined;
+    if (!p) {
+      voteWords?.set('opacity', 0);
+      voteTally?.set('opacity', 0);
+      return;
+    }
+    const cast = votesOn(p);
+    const count = { for: 0, against: 0, abstain: 0 };
+    m.petals.forEach((petal, i) => {
+      const v = cast.get(petal.id);
+      if (!v) return;
+      count[v] += 1;
+      const dot = voteDot(lastRing, i);
+      el(
+        'circle',
+        { cx: n3(dot.x), cy: n3(dot.y), r: n3(dot.r), fill: votes.colours[v] },
+        dotLayer,
+      );
+    });
+    const said = [`${count.for} for`, `${count.against} against`];
+    if (count.abstain) said.push(`${count.abstain} abstained`);
+    voteWords?.text(`${p.title}, ${p.outcome}`);
+    voteTally?.text(said.join('   ·   '));
+    voteWords?.set('opacity', 1);
+    voteTally?.set('opacity', 1);
+    placeWords();
+  };
+  arcSlots.forEach((s, j) => {
+    s.hit.addEventListener('pointerenter', () => point(j));
+    s.hit.addEventListener('pointerleave', () => point(-1));
+  });
   // Under the raised petal: the ground, a line wider than it, so where its tip lies over a neighbour
   // it's as solid as anywhere and the same line runs round it.
   const backing = slot(
@@ -759,6 +891,9 @@ export function createScene(
       band,
     }) {
       const { k } = view;
+      lastView = view;
+      lastRing = ring;
+      if (pointed >= 0) placeWords();
       const rescale = k !== lastK || mk.recede !== lastRecede;
       const panned = view.x !== lastX || view.y !== lastY;
       lastK = k;

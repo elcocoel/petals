@@ -23,6 +23,7 @@ const SHOWS = [
   { id: 'keys', label: 'Six colours' },
   { id: 'near', label: 'NEAR segments' },
   { id: 'tail', label: 'Everyone else' },
+  { id: 'votes', label: 'Votes (sample)' },
 ] as const;
 type Show = (typeof SHOWS)[number]['id'];
 
@@ -51,7 +52,9 @@ function Key({ flower }: { flower: LookFlower }) {
         <li key={k.label} className="flex items-center gap-space-8 type-caption">
           <Swatch hex={k.hex} />
           <span>{k.label}</span>
-          <span className="whitespace-nowrap type-mono text-muted">{k.petals} petals</span>
+          {k.petals > 0 && (
+            <span className="whitespace-nowrap type-mono text-muted">{k.petals} petals</span>
+          )}
         </li>
       ))}
     </ul>
@@ -66,7 +69,7 @@ function Facts({ flower }: { flower: LookFlower }) {
           {f}
         </p>
       ))}
-      <p className="m-0 type-caption">{flower.highlight}</p>
+      {flower.highlight && <p className="m-0 type-caption">{flower.highlight}</p>}
     </div>
   );
 }
@@ -175,6 +178,7 @@ export default async function PetalLab({ searchParams }: { searchParams: Promise
   if (show === 'tail') return <Tail show={show} flowers={[bench.raidguild, bench.near]} />;
   if (show === 'raidguild') return <One show={show} flower={bench.raidguild} />;
   if (show === 'near') return <One show={show} flower={bench.near} />;
+  if (show === 'votes') return <One show={show} flower={bench.votes} />;
   const first = bench.keys[0]?.flower;
   return (
     <main className="fixed inset-0 flex flex-col bg-surface text-primary">
