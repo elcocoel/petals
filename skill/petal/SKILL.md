@@ -68,6 +68,7 @@ Everything Petals keeps is a versioned document whose `petal` field names its fo
 - **An account** is written as the reading writes it: a bare address, with the chain on `network.chain`. A map's address is `chain:address`, with an EVM address in lower case.
 - **Check a file before you keep it:** `node ~/.petals/petal.mjs validate-data @file.json` runs the same checks Petals runs, says what's wrong, and gives the document's sha256. It writes nothing. It checks as the person's own project does. For a file going to the shared map, add `--public`: it runs exactly the shared map's loader's checks, which refuse a person's name in a claim's words. The loader also takes a wave's file only when its manifest lists it, with the same sha256.
 - **A reading you made yourself** (`snapshot/v1`): `node ~/.petals/petal.mjs keep-snapshot @snapshot.json --exploration <the project's link>` keeps it on this computer and in the project. Then draw it like any other: `propose_spec` with its `network.id` as `network` and its sha256.
+- **Proposals, marks, values and readings you found** go in the project with `keep_data`, the project's link as `exploration` and the file as `document`, privately: they reach the shared map only after a review. `list_data` shows what the project keeps.
 - **Layers and claims** go in with `add_layer` and `add_annotation`, as above. A seam is made by `compose_view`, never by hand.
 
 ## Jobs from Petals

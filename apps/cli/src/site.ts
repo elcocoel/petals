@@ -93,6 +93,9 @@ export const SITE_TOOLS = [
   'list_annotations',
   // the map's search (SEARCH, #105): this computer has neither the model nor the map, so the site searches
   'search_petals',
+  // proposals, marks, values and readings an agent found, kept privately in the project (#98, SYSTEMS's)
+  'keep_data',
+  'list_data',
 ] as const;
 
 /**
@@ -366,6 +369,8 @@ export function siteDoor(opts: SiteOptions) {
       'fork_dataset',
       'add_annotation',
       'list_annotations',
+      'keep_data',
+      'list_data',
     ].includes(tool.name);
     const input = optional ? withoutRequired(tool.input, 'exploration') : tool.input;
     const run = async (raw: unknown, ctx: ToolContext): Promise<Json> => {
@@ -482,6 +487,19 @@ export function siteDoor(opts: SiteOptions) {
           return call(
             'GET',
             `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/annotations${about}`,
+          );
+        }
+        case 'keep_data': {
+          if (!exploration) return nowhere();
+          const { exploration: _, ...rest } = i;
+          return post(`/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/data`, rest);
+        }
+        case 'list_data': {
+          if (!exploration) return nowhere();
+          const petal = typeof i.petal === 'string' ? `?petal=${encodeURIComponent(i.petal)}` : '';
+          return call(
+            'GET',
+            `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/data${petal}`,
           );
         }
         case 'search_petals': {
