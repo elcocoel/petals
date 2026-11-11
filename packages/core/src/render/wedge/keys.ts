@@ -76,6 +76,8 @@ export interface Keyable {
   share: number;
   tail?: boolean | undefined;
   segments: readonly { key: string; amount: string }[];
+  /** the tail's members as stripes (ReadingPetal fold) */
+  fold?: readonly number[] | undefined;
 }
 
 /**
@@ -89,6 +91,8 @@ export function lookFills(petals: readonly Keyable[]): {
   bands: Record<string, string>;
   /** each kind's colour, by its value, for the legend; none while the petals are banded */
   kinds: Record<string, string>;
+  /** the tail's stripes, its members smallest first (fold.ts), where the reading has them */
+  folds: Record<string, { cells: number[] }>;
 } {
   const real = petals.filter((p) => !p.tail);
   const kinds = keysOf(
@@ -107,6 +111,9 @@ export function lookFills(petals: readonly Keyable[]): {
     ),
     bands: Object.fromEntries(classes.map((c) => [c.value, c.key?.hex ?? GREY.hex])),
     kinds: banded ? {} : Object.fromEntries(real.map((p) => [p.colour, hexOf(p.colour)])),
+    folds: Object.fromEntries(
+      petals.flatMap((p) => (p.tail && p.fold?.length ? [[p.id, { cells: [...p.fold] }]] : [])),
+    ),
   };
 }
 

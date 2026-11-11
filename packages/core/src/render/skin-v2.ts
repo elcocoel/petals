@@ -12,6 +12,7 @@ import { legendItem } from './legend.ts';
 import { keyStyle, STYLE } from './style.ts';
 import { esc } from './svg.ts';
 import type { Skin } from './types.ts';
+import { foldPath } from './wedge/fold.ts';
 import { GREY, lookFills } from './wedge/keys.ts';
 import { marks } from './wedge/marks.ts';
 import { modelOf } from './wedge/model.ts';
@@ -70,8 +71,10 @@ export const skinV2: Skin = (reading, { size, thumb }) => {
         });
         return;
       }
+      // everyone else as its members' stripes, the smallest nearest the centre, as the live flower draws it
+      const fold = look.folds[p.id];
       out.push(
-        `<path class="${keyStyle(look.fills[p.id] ?? GREY.hex).cls}" data-p="${esc(p.id)}" data-i="${p.index}" d="${bandPath(m.ring, i, 0, h)}"/>`,
+        `<path class="${keyStyle(look.fills[p.id] ?? GREY.hex).cls}" data-p="${esc(p.id)}" data-i="${p.index}" d="${fold ? foldPath(m.ring, i, fold) : bandPath(m.ring, i, 0, h)}"/>`,
       );
     });
     out.push('</g>');

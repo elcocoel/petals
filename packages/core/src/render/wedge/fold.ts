@@ -3,34 +3,15 @@
 // percentage it represents - the stripey pattern would work better inverted (smaller closer to the center)". So
 // the tail is one petal, as wide as any, as tall as the share it holds on the flower's own scale, made of its
 // members stacked as stripes, the smallest nearest the centre, each as tall as its own share. The segments
-// behaviour (recorded parts of a quantity): the parts are real members. For /lab first. Pure.
+// behaviour (recorded parts of a quantity): the parts are real members. The numbers are the reading's
+// (reading/fold.ts, a tail petal's fold); this draws them, on every flower since 11 Nov. Pure.
+import type { Fold } from '../../reading/fold.ts';
 import { GUTTER, n3, pointIn, type Ring } from './ring.ts';
 
-/** The most stripes a folded petal is drawn with; a longer tail joins neighbours into one, their heights summed. */
-export const FOLD_CELLS = 120;
+export { FOLD_CELLS, type Fold, foldOf } from '../../reading/fold.ts';
 
 /** A stripe's line is never more than this share of its own height, so the smallest stay visible. */
 const LINE_SHARE = 0.3;
-
-export interface Fold {
-  /** its members' stripes, from the centre out, as shares of the petal's height: the smallest first */
-  cells: number[];
-}
-
-/**
- * The members stacked, smallest first, in at most FOLD_CELLS stripes. Heights are on the flower's own scale (a
- * petal's height, 0 to 1); `height` is their sum, the share they hold together, which is the petal's height.
- */
-export function foldOf(heights: readonly number[]): { fold: Fold; height: number } {
-  const sorted = [...heights].filter((h) => h > 0).sort((a, b) => a - b);
-  const per = Math.max(1, Math.ceil(sorted.length / FOLD_CELLS));
-  const cells: number[] = [];
-  for (let k = 0; k < sorted.length; k += per) {
-    cells.push(sorted.slice(k, k + per).reduce((a, b) => a + b, 0));
-  }
-  const height = cells.reduce((a, b) => a + b, 0);
-  return { fold: { cells: cells.map((h) => (height > 0 ? h / height : 0)) }, height };
-}
 
 /** The folded petal's stripes, as one path: each a stretch of the wedge, with a fine line between them. */
 export function foldPath(ring: Ring, i: number, fold: Fold): string {
