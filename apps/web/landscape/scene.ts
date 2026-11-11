@@ -3,7 +3,10 @@
 // place by the hook), names and marks, and the arrows out of an organisation you've entered; the flower
 // you're pointing at, or have entered, goes above all of it so its notes are never under anything. Far
 // away each flower is its own silhouette at rest; its name sits under its petals, one size on screen.
-// Colours are token roles, as on the flower.
+// Colours are token roles, as on the flower. With the lab's far wave (#84), a far flower is one soft ring in
+// its main colour instead, its mark in the ring's hole and its name just under it.
+import { FAR_WAVE, farPath, waveReach } from '@petal/core/wedge/far';
+import { paintOf } from '@petal/core/wedge/paint';
 import { DETAIL, fade } from '../flower/detail.ts';
 import type { Model } from '../flower/model.ts';
 import { n3, polygonPath, SHAPE, silhouettePath } from '../flower/ring.ts';
@@ -181,6 +184,8 @@ function drawMark(m: LandFlower['mark'], parent: Element, clip: string): number 
 
 interface Label {
   group: Slot<SVGGElement>;
+  /** With the far wave, the mark alone, drawn at the flower's centre. */
+  centre: Slot<SVGGElement> | null;
   name: Slot<SVGTextElement>;
   width: number;
   markW: number;
@@ -189,20 +194,29 @@ interface Label {
 }
 
 /** A name with its mark before it, laid out once from (0, 0), the mark's middle on the line. */
-function drawLabel(f: Pick<LandFlower, 'name' | 'mark'>, parent: Element, clip: string): Label {
+function drawLabel(
+  f: Pick<LandFlower, 'name' | 'mark'>,
+  parent: Element,
+  clip: string,
+  centred = false,
+): Label {
   // Drawn on screen first, so the mark and the name are measured as the browser sets them, then hidden.
   const group = slot(el('g', {}, parent));
-  const mark = el('g', {}, group.node);
-  const markW = drawMark(f.mark, mark, clip);
-  mark.setAttribute('transform', `translate(${n3(markW / 2)} 0)`);
-  const name = slot(el('text', { fill: INK, x: markW + GAP, y: 4 }, group.node));
+  const centre = centred ? slot(el('g', {}, parent)) : null;
+  const mark = el('g', {}, centre ? centre.node : group.node);
+  const drawnW = drawMark(f.mark, mark, clip);
+  // centred, the mark sits on the flower's middle and the name stands alone
+  const markW = centre ? 0 : drawnW;
+  if (!centre) mark.setAttribute('transform', `translate(${n3(markW / 2)} 0)`);
+  const name = slot(el('text', { fill: INK, x: centre ? 0 : markW + GAP, y: 4 }, group.node));
   name.node.textContent = f.name;
   // A name that's only its symbol is already said by its mark.
   const said = !f.mark.logo && f.name.toLowerCase() === f.mark.symbol.toLowerCase();
-  const width = said ? markW : markW + GAP + widthOf(name.node);
+  const width = said ? markW : markW + (centre ? 0 : GAP) + widthOf(name.node);
   if (said) name.show(false);
   group.show(false);
-  return { group, name, width: said ? markW : width, markW, said };
+  centre?.show(false);
+  return { group, centre, name, width: said ? markW : width, markW, said };
 }
 
 /** The ray from (x, y) along (ux, uy): how far along it first enters a box, or null if it doesn't. */
@@ -227,10 +241,33 @@ function entersBox(x: number, y: number, ux: number, uy: number, b: Box): number
 
 let clips = 0;
 
+/** How a far flower is drawn: its silhouette, or (the lab's, #84) the far wave. */
+export type FarStyle = 'wave' | null;
+
+/** A flower's main colour: the one most of its petals carry, as the flower paints it. */
+function mainPaint(m: Model): string {
+  const n = new Map<string, number>();
+  for (const p of m.petals) {
+    if (p.tail) continue;
+    const c = paintOf(p);
+    n.set(c, (n.get(c) ?? 0) + 1);
+  }
+  let best = PETAL;
+  let most = 0;
+  for (const [c, k] of n) {
+    if (k > most) {
+      best = c;
+      most = k;
+    }
+  }
+  return best;
+}
+
 export function createLandScene(
   svg: SVGSVGElement,
   flowers: readonly LandFlower[],
   roads: readonly Road[],
+  far: FarStyle = null,
 ): LandScene {
   const clip = `landscape-mark-${++clips}`;
   const defs = el('defs', {}, svg);
@@ -282,7 +319,21 @@ export function createLandScene(
         flowerLayer.node,
       ),
     );
-    el('path', { fill: PETAL, d: silhouettePath(f.model.ring) }, g.node);
+    const silhouette = slot(el('path', { fill: PETAL, d: silhouettePath(f.model.ring) }, g.node));
+    // figure.map-far-wave
+    const wave = far
+      ? slot(
+          el(
+            'path',
+            {
+              fill: mainPaint(f.model),
+              'fill-rule': 'evenodd',
+              d: farPath(f.model, SHAPE, FAR_WAVE),
+            },
+            g.node,
+          ),
+        )
+      : null;
     const polygon = slot(
       el(
         'path',
@@ -297,11 +348,14 @@ export function createLandScene(
         g.node,
       ),
     );
-    return { g, polygon, shown: true };
+    return { g, polygon, silhouette, wave, shown: true };
   });
+  /** How far each flower's wave reaches, as reach is for its petals. */
+  const waveReaches = flowers.map((f) => (far ? waveReach(f.model, SHAPE, FAR_WAVE) : f.reach));
 
-  // head.map-name: one line under each flower, its mark and its name.
-  const labels = flowers.map((f) => drawLabel(f, names, clip));
+  // head.map-name: one line under each flower, its mark and its name; with the far wave, the mark at the ring's
+  // centre and the name alone under it.
+  const labels = flowers.map((f) => drawLabel(f, names, clip, far === 'wave'));
 
   // figure.map-arrow: the ways out of the organisation you've entered, one per connection.
   const ways = flowers.map((_, i) =>
@@ -340,7 +394,13 @@ export function createLandScene(
           s.shown = visible;
         }
         if (visible) {
-          s.polygon.set('opacity', o2(fade(DETAIL.polygonLine, screenRadius(view, f.place))));
+          const r = screenRadius(view, f.place);
+          if (s.wave) {
+            const w = fade(DETAIL.farWave, r);
+            s.wave.set('opacity', o2(w));
+            s.silhouette.set('opacity', o2(1 - w));
+            s.polygon.set('opacity', o2(fade(DETAIL.polygonLine, r) * (1 - w)));
+          } else s.polygon.set('opacity', o2(fade(DETAIL.polygonLine, r)));
         }
       });
 
@@ -368,10 +428,19 @@ export function createLandScene(
         const markShown = fade(DETAIL.mark, r) * tone;
         if (!onScreen(view, f.place) || markShown <= 0.01) {
           l.group.show(false);
+          l.centre?.show(false);
           continue;
         }
         const c = screenCentre(view, f.place);
-        const y = c.y + r * f.reach + 10 + MARK / 2;
+        const waved = l.centre ? fade(DETAIL.farWave, r) : 0;
+        if (l.centre) {
+          // the mark in the ring's hole while the wave shows; the name close under the ring
+          l.centre.show(waved > 0.01);
+          l.centre.set('transform', `translate(${n3(c.x)} ${n3(c.y)})`);
+          l.centre.set('opacity', o2(markShown * waved));
+        }
+        const reach = l.centre ? waveReaches[i] * waved + f.reach * (1 - waved) : f.reach;
+        const y = c.y + r * reach + (l.centre ? 6 : 10) + MARK / 2;
         const nameShown = fade(DETAIL.titleOutside, r) * tone;
         const full = {
           x0: c.x - l.width / 2,
@@ -390,7 +459,7 @@ export function createLandScene(
         ) {
           box = full;
           withName = true;
-        } else if (!placed.some((b) => overlaps(b, bare, 2))) box = bare;
+        } else if (!l.centre && !placed.some((b) => overlaps(b, bare, 2))) box = bare;
         if (!box) {
           l.group.show(false);
           continue;

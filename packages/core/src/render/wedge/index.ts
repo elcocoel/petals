@@ -2,6 +2,7 @@
 // draw, what shows at what distance and what to draw at a size, all pure. The live flower (apps/web/flower)
 // draws it in the browser; render/skin-v2.ts draws it as a still picture.
 export * from './detail.ts';
+export * from './far.ts';
 export * from './highlight.ts';
 export * from './keys.ts';
 export * from './marks.ts';

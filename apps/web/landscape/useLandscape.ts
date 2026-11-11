@@ -30,7 +30,13 @@ import { clickedAt } from '../flower/live.ts';
 import { advance, SNAP, spring, stepOf } from '../flower/spring.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { type Road, roadWidth } from './roads.ts';
-import { type ArrowHit, createLandScene, type LandFlower, roadEnds } from './scene.ts';
+import {
+  type ArrowHit,
+  createLandScene,
+  type FarStyle,
+  type LandFlower,
+  roadEnds,
+} from './scene.ts';
 import {
   ENTER_AT,
   fitScale,
@@ -60,6 +66,8 @@ export interface LandscapeAt {
   choose?: (id: string | null) => void;
   /** Inside a page that scrolls (the landing): the wheel scrolls the page unless Ctrl or ⌘ is held, or a pinch. */
   inPage?: boolean;
+  /** How a far flower is drawn: the lab's far wave (#84), or its silhouette. Read when the scene is built. */
+  far?: FarStyle;
 }
 
 const LONGEST_FRAME = 1 / 15;
@@ -89,7 +97,7 @@ export function useLandscape(
     const places = flowers.map((f) => f.place);
     const reach = flowers.map((f) => f.reach);
     const ends = roads.map((r) => roadEnds(flowers[r.a] as LandFlower, flowers[r.b] as LandFlower));
-    const scene = createLandScene(node, flowers, roads);
+    const scene = createLandScene(node, flowers, roads, at?.current?.far ?? null);
     const lives = new Map<number, Driven>();
     const tones = new Map<number, string>();
     let calm = motion.matches;
