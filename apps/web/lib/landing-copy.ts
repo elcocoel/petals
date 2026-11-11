@@ -113,20 +113,19 @@ export const landingCopy = {
         body: 'Browsing the Power Map is free. Top up your Petals account to use its agent and mapping tools, paying as you go. Connected agents use their own resources for the work they take on.',
       },
     ],
-    action: 'Connect',
     /** Drafts (LANDING, 10 Nov), for Elco: the arrows' names, read aloud only. */
     back: 'Back',
     next: 'Next',
   },
   /**
-   * Section 4, word for word from the Copy doc's "Sections 3–4 · Elco" tab (Elco, 11 Nov: swap it in for
-   * "Put your own agents to work"). The prompt is LANDING's draft, for Elco, from the tab's build notes:
-   * before sign-in, one step at a time, skipping what's done, wallet → log in → top up → talk to Petals.
+   * Section 4, Version 4 draft (Elco, 11 Nov, through the design chat): word for word from
+   * design/section-4-agent-bridge.md and Figma 203:2343 (desktop) and 203:2359 (mobile). Only the line
+   * break is ours. "Click and paste" is Elco's on purpose; keep it.
    */
   giveToAgent: {
-    title: 'Skip the reading.\nGive this to your agent.',
-    body: 'Click and paste to any chatbot.\nIt will walk you through setting up a wallet, logging in and topping up—until you’re ready to talk to Petals.',
-    copy: 'Copy for my agent',
+    title: 'Skip the Reading.\nLet your agent set you up',
+    body: 'Click and paste to any chatbot. It will walk you through setting up a wallet, logging in and topping up—until you’re ready to talk to Petals.',
+    copy: 'Copy the Setup Prompt',
     copied: 'Copied. Paste it into your agent’s chat to get started.',
     /** The one setup prompt, CONNECTORS's (lib/agents.ts); the page swaps in the address it's on when copying. */
     prompt: agentWords.setup,

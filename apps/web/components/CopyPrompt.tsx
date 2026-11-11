@@ -10,6 +10,7 @@ export function CopyPrompt({
   label = 'Copy this prompt',
   copied = 'Copied',
   variant,
+  arrow,
   bare,
   originIn,
 }: {
@@ -18,6 +19,8 @@ export function CopyPrompt({
   /** The button's words once it has copied. */
   copied?: string;
   variant?: ButtonVariant;
+  /** The button's trailing arrow. */
+  arrow?: boolean;
   /** Where the prompt can be read, for when the browser won't copy. */
   bare?: { readHref: string } | true;
   /**
@@ -39,7 +42,7 @@ export function CopyPrompt({
     }
   }
   const button = (
-    <Button variant={variant} onClick={() => void copy()}>
+    <Button variant={variant} arrow={arrow} onClick={() => void copy()}>
       {state === 'copied' ? copied : label}
     </Button>
   );

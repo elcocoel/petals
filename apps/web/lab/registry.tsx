@@ -1036,7 +1036,7 @@ export const registry: LabEntry[] = [
         figmaNode: '66:2265',
         render: () => (
           <ActionRow>
-            <Button href="#actionrow">{landingCopy.howItWorks.action}</Button>
+            <Button href="#actionrow">{landingCopy.nav.ask}</Button>
             <TextLink href="#actionrow" arrow>
               {landingCopy.gallery.open}
             </TextLink>
