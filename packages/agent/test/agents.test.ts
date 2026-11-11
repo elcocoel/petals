@@ -227,6 +227,112 @@ describe('a conversation per job (swarm.md step 2)', () => {
   });
 });
 
+describe('supervision, without timers (swarm.md step 3)', () => {
+  const HAND = {
+    calls: [{ name: 'hand_job', args: { title: 'Map the shares', brief: 'who holds shares' } }],
+  };
+  /** A call the worker makes through the link it got with the job. */
+  const note = (w: ReturnType<typeof setup>, ref: string, text: string) =>
+    w.app.request(`/api/v1/explorations/${ref}/notes`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+  const refOf = (got: Out) => (got.project.exploration as string).split('/s/')[1] as string;
+
+  test("each call marks the job alive; stopped, its worker's next call is told so, and nothing lands", async () => {
+    const w = setup([HAND, { content: 'Sent.' }]);
+    await w.signInFunded();
+    const token = await link(w);
+    await w.waitAs(token, 'Codex', 'w-one');
+    const events = parseSse(await (await w.call('POST', '/api/v1/agent/chat', ASK)).text());
+    const job = (events.find((e) => e.event === 'job') as { data: Out }).data;
+    const got = (await (await w.waitAs(token, 'Codex', 'w-one')).json()) as Out;
+    const ref = refOf(got);
+    expect((await note(w, ref, 'Reading 312 proposals')).status).toBe(200);
+    const jobs = async () =>
+      ((await (await w.call('GET', `/api/v1/explorations/${job.exploration}/jobs`)).json()) as Out)
+        .jobs as Out[];
+    expect((await jobs())[0]?.last_seen).toBeTruthy();
+    expect((await jobs())[0]).not.toHaveProperty('link');
+    const stopped = await w.call('POST', `/api/v1/jobs/${job.id}/stop`, {});
+    expect(stopped.status).toBe(200);
+    expect(((await stopped.json()) as Out).job).toMatchObject({ id: job.id, status: 'stopped' });
+    const told = await note(w, ref, 'Found 40 names');
+    expect(told.status).toBe(401);
+    expect(((await told.json()) as Out).error).toMatchObject({
+      code: 'unauthorised',
+      ended: 'stopped',
+      message: expect.stringMatching(/^This job was stopped: report nothing/),
+    });
+    const report = await w.app.request(`/api/v1/explorations/${ref}/jobs/${job.id}/report`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ result: { summary: 'too late' } }),
+    });
+    expect(((await report.json()) as Out).error.ended).toBe('stopped');
+    expect((await jobs())[0]?.status).toBe('stopped');
+    // stopping it again says why it can't
+    expect((await w.call('POST', `/api/v1/jobs/${job.id}/stop`, {})).status).toBe(400);
+  });
+
+  test('a quiet job goes to another worker: the old one is told, the new one works', async () => {
+    const w = setup([HAND, { content: 'Sent.' }]);
+    await w.signInFunded();
+    const token = await link(w);
+    await w.waitAs(token, 'Codex', 'w-one');
+    await w.waitAs(token, 'Codex', 'w-two');
+    const events = parseSse(await (await w.call('POST', '/api/v1/agent/chat', ASK)).text());
+    const job = (events.find((e) => e.event === 'job') as { data: Out }).data;
+    const old = refOf((await (await w.waitAs(token, 'Codex', 'w-one')).json()) as Out);
+    expect(
+      (await w.call('POST', `/api/v1/jobs/${job.id}/hand-over`, { to: 'hermes' })).status,
+    ).toBe(404);
+    const handed = await w.call('POST', `/api/v1/jobs/${job.id}/hand-over`, { to: 'codex' });
+    expect(((await handed.json()) as Out).job).toMatchObject({ status: 'open', to: 'Codex' });
+    const told = await note(w, old, 'still here');
+    expect(((await told.json()) as Out).error).toMatchObject({ ended: 'handed_over' });
+    const fresh = (await (await w.waitAs(token, 'Codex', 'w-two')).json()) as Out;
+    expect(fresh.job.id).toBe(job.id);
+    expect((await note(w, refOf(fresh), 'Reading again')).status).toBe(200);
+    // someone else's job, or none: not theirs to move
+    expect((await w.call('POST', '/api/v1/jobs/job_none/retry', {})).status).toBe(404);
+  });
+
+  test("Petals' agent puts a stopped job back with retry_job, for whoever takes it first", async () => {
+    const turns: ScriptTurn[] = [HAND, { content: 'Sent.' }];
+    const w = setup(turns);
+    await w.signInFunded();
+    const events = parseSse(await (await w.call('POST', '/api/v1/agent/chat', ASK)).text());
+    const job = (events.find((e) => e.event === 'job') as { data: Out }).data;
+    const runId = (events[0] as { data: { run_id: string } }).data.run_id;
+    await w.call('POST', `/api/v1/jobs/${job.id}/stop`, {});
+    turns.push(
+      { calls: [{ name: 'retry_job', args: { job: job.id } }] },
+      { content: 'Waiting again.' },
+    );
+    await (
+      await w.call('POST', '/api/v1/agent/chat', {
+        run_id: runId,
+        messages: [
+          ...ASK.messages,
+          { role: 'assistant', content: 'Sent.' },
+          { role: 'user', content: 'try again' },
+        ],
+      })
+    ).text();
+    // its notes said where the job stood, and the job is open again
+    expect(w.llm.requests[2]?.messages[0]?.content).toContain(
+      `${job.id} "Map the shares": stopped`,
+    );
+    expect(w.llm.requests[3]?.messages.at(-1)?.content).toContain('"status":"open"');
+    const jobs = (await (
+      await w.call('GET', `/api/v1/explorations/${job.exploration}/jobs`)
+    ).json()) as Out;
+    expect(jobs.jobs[0]).toMatchObject({ id: job.id, status: 'open' });
+  });
+});
+
 describe('agents across projects', () => {
   test('disconnecting one agent ends its wait, drops it from the list, and keeps it out until it connects again', async () => {
     const w = setup([]);

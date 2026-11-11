@@ -58,7 +58,7 @@ const RESULT = obj(
   },
   { additionalProperties: false },
 );
-const STATUS = { type: 'string', enum: ['open', 'taken', 'done', 'failed'] };
+const STATUS = { type: 'string', enum: ['open', 'taken', 'done', 'failed', 'stopped'] };
 
 /**
  * Which of an agent's workers took a job, by place in the order they first came (1, 2, …), as GET
@@ -123,6 +123,8 @@ async function takeWithKey(ctx: ToolContext, key: string, as: string | undefined
     workIn(job),
     'continue',
   );
+  // its worker's link, from now (swarm.md step 3)
+  if (job.conversation) await store.job.handOut(job.id, made.id, at);
   touched(ctx, workIn(job), 'take_job', name);
   return {
     exploration: workIn(job),
@@ -202,6 +204,7 @@ export const takeJob = defineTool<
             'continue',
           )
         : null;
+    if (own) await store.job.handOut(job.id, own.id, ctx.now().toISOString());
     const there = own ? (job.conversation as string) : o.row.id;
     touched(ctx, there, 'take_job');
     return {
@@ -317,6 +320,11 @@ export const listJobs = defineTool<{ exploration: string }, object>({
           description:
             "which of taken_by's workers took it: 1, 2, … as the person's agents list them",
         },
+        last_seen: {
+          type: ['string', 'null'],
+          description:
+            'when its worker last called, while it holds it: the page says quiet since then',
+        },
       }),
     },
   }),
@@ -328,7 +336,7 @@ export const listJobs = defineTool<{ exploration: string }, object>({
     const workers = o.row.owner ? await store.agent.workers(o.row.owner) : [];
     return {
       exploration: o.row.id,
-      jobs: jobs.map(({ run: _run, exploration: _x, ...j }) => ({
+      jobs: jobs.map(({ run: _run, exploration: _x, link: _link, ...j }) => ({
         ...j,
         n: workerPlace(workers, j.taken_by, j.taken_worker),
       })),

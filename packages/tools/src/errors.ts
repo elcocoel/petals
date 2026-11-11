@@ -77,12 +77,15 @@ export function fromThrown(err: unknown, fallback: ToolErrorCode = 'internal'): 
   const message = err instanceof Error ? err.message : String(e.message ?? err);
   const code = ERROR_CODES.includes(e.code as ToolErrorCode) ? (e.code as ToolErrorCode) : fallback;
   const retry = (e as { retry_after_s?: unknown }).retry_after_s;
-  return toolError(
+  const out = toolError(
     code,
     message || code,
     typeof e.hint === 'string' ? e.hint : undefined,
     typeof retry === 'number' ? retry : undefined,
   );
+  const ended = (e as { ended?: unknown }).ended;
+  if (ended === 'stopped' || ended === 'handed_over') out.error.ended = ended;
+  return out;
 }
 
 /** An Error carrying a tool error code, for code that throws inside a tool. */
@@ -90,6 +93,8 @@ export class ToolFailure extends Error {
   readonly code: ToolErrorCode;
   readonly hint?: string;
   readonly retry_after_s?: number;
+  /** a worker's job that ended for it (swarm.md step 3) */
+  ended?: 'stopped' | 'handed_over';
   constructor(code: ToolErrorCode, message: string, hint?: string, retryAfterS?: number) {
     super(message);
     this.name = 'ToolFailure';
