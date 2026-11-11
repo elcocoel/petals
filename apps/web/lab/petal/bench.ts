@@ -17,7 +17,7 @@ import { LAB_DIR, RAIDGUILD } from './raidguild.ts';
  * no data, so every petal has the same room; colour is the kind of account; segments are who backs a petal, where
  * the flower has them. A view/v2 like any person's.
  */
-const ART_VIEW: ViewV2 = {
+export const ART_VIEW: ViewV2 = {
   petal: 'view/v2',
   dimensions: {
     height: { data: 'share', scale: 'linear' },
@@ -62,9 +62,9 @@ export interface PetalBench {
 
 const NEAR_GOLDEN = 'near-validators-backers';
 
-const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
-const whole = (x: number) => Math.round(x).toLocaleString('en-US');
-const day = (iso: string) =>
+export const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
+export const whole = (x: number) => Math.round(x).toLocaleString('en-US');
+export const day = (iso: string) =>
   new Date(iso).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -72,19 +72,19 @@ const day = (iso: string) =>
     timeZone: 'UTC',
   });
 
-function snapshotAt(root: string, sha256: string, dir = 'fixtures/snapshots'): Snapshot {
+export function snapshotAt(root: string, sha256: string, dir = 'fixtures/snapshots'): Snapshot {
   const gz = readFileSync(join(root, dir, `${sha256}.json.gz`));
   return JSON.parse(gunzipSync(gz).toString('utf8')) as Snapshot;
 }
 
 /** Loaded by Node itself, like every other use of core in the site (see lib/config.ts). */
-const loadCore = async () =>
+export const loadCore = async () =>
   (await import(
     /* turbopackIgnore: true */ /* webpackIgnore: true */ '@petal/core'
   )) as typeof import('@petal/core');
 
 /** Who the highlight is on, and how much they hold together. */
-function highlighted(petals: readonly ReadingPetal[], who: string) {
+export function highlighted(petals: readonly ReadingPetal[], who: string) {
   const on = petals.filter((p) => p.share >= HIGHLIGHT_SHARE);
   const held = on.reduce((t, p) => t + p.share, 0);
   return {
@@ -94,7 +94,7 @@ function highlighted(petals: readonly ReadingPetal[], who: string) {
 }
 
 /** What a flower draws of its snapshot, and what it leaves out, in words. */
-function coverage(
+export function coverage(
   s: Snapshot,
   all: readonly ReadingPetal[],
   drawn: readonly ReadingPetal[],
@@ -115,7 +115,7 @@ function coverage(
   return lines;
 }
 
-const HEIGHT_WORDS =
+export const HEIGHT_WORDS =
   'Height: straight, so twice as much is twice as tall. Every petal has the same width.';
 
 export async function petalBench(): Promise<PetalBench> {
