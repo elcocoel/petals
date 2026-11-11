@@ -16,7 +16,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { privateStore } from '../src/drafts.ts';
 import { httpApp } from '../src/http/app.ts';
 import { type MapView, mapsOf, mapViews, searchMap } from '../src/map.ts';
-import { markMaps } from '../src/marks.ts';
+import { markMaps, typeMaps } from '../src/marks.ts';
 import { proposalMaps } from '../src/proposals.ts';
 import { callTool } from '../src/registry.ts';
 import { valueMaps } from '../src/values.ts';
@@ -303,6 +303,49 @@ describe('one map per address (Elco, 10 Nov)', () => {
     const picture = await store.media.get(mark.logo.sha256);
     expect(picture).toMatchObject({ type: 'image/png', person: null });
     expect(Buffer.from(picture?.body ?? '', 'base64')).toEqual(Buffer.from(PNG));
+  });
+
+  test("the types pass (#97) adds each kept mark's types and keeps its words; --dry keeps nothing", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const store = privateStore(r.ctx.config);
+    const nothing = (async () => new Response('not found', { status: 404 })) as typeof fetch;
+    // no mark kept: left
+    expect(await typeMaps(r.ctx, { fetch: nothing })).toMatchObject({
+      maps: 1,
+      unmarked: 1,
+      saved: 0,
+    });
+    const at = '2026-11-11T18:00:00.000Z';
+    const wave = {
+      petal: 'mark/v1',
+      about: `eip155:1:${DAO}`,
+      name: { value: 'Moloch DAO', status: 'self-declared', source: 'daohaus', ref: 'a wave', at },
+      symbol: null,
+      logo: null,
+      read_at: at,
+    };
+    await store.mark.put({ about: wave.about, body: JSON.stringify(wave), read_at: at });
+    const dry = await typeMaps(r.ctx, { fetch: nothing, save: false });
+    expect(dry).toMatchObject({ typed: 1, saved: 0 });
+    expect(JSON.parse((await store.mark.get(wave.about))?.body ?? '{}').petal).toBe('mark/v1');
+
+    expect(await typeMaps(r.ctx, { fetch: nothing })).toMatchObject({ typed: 1, saved: 1 });
+    const row = await store.mark.get(wave.about);
+    const mark = JSON.parse(row?.body ?? '{}');
+    expect(mark).toMatchObject({
+      petal: 'mark/v2',
+      name: wave.name,
+      symbol: null,
+      logo: null,
+      read_at: at,
+    });
+    expect(row?.read_at).toBe(at);
+    // a Moloch v1 reading shows a DAO, a Moloch v1, observed on that reading
+    expect(mark.types.map((c: { object: { value: string } }) => c.object.value)).toEqual([
+      'DAO',
+      'Moloch v1',
+    ]);
+    expect(mark.types[0]).toMatchObject({ verb: 'is_a', kind: 'observed', petal: 'claim/v4' });
   });
 
   test("the value run (#91): a token nothing prices says no price, with its reading's totals; a priced one is in dollars", async () => {
