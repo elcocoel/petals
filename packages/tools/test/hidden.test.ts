@@ -64,13 +64,17 @@ describe('maps hidden from the Power Map', () => {
   });
 
   test("the claims a wave reissued are retired, never deleted: each names its replacement and the wave's record", () => {
-    const claims = (retired as { claims: { id: string; replaced_by: string; from: string }[] }).claims;
+    const claims = (retired as { claims: { id: string; replaced_by: string; from: string }[] })
+      .claims;
     expect(claims.length).toBe(3);
     for (const c of claims) {
       expect(c.id).toMatch(/^[0-9a-f]{64}$/);
       expect(c.replaced_by).toMatch(/^[0-9a-f]{64}$/);
       expect(retiredClaim(c.replaced_by)).toBeNull();
-      expect(retiredClaim(c.id)).toMatchObject({ replaced_by: c.replaced_by, decided: expect.stringContaining('12 Nov') });
+      expect(retiredClaim(c.id)).toMatchObject({
+        replaced_by: c.replaced_by,
+        decided: expect.stringContaining('12 Nov'),
+      });
     }
     expect(retiredClaim('0'.repeat(64))).toBeNull();
   });
