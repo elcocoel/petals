@@ -26,6 +26,8 @@ export interface Proposal {
   /** when voting closes under the DAO's policy (Sputnik records no decision time) */
   closes_at?: string | null;
   outcome: string;
+  /** who put it up, when the DAO says */
+  proposer?: string | null;
   votes: Vote[];
 }
 
@@ -110,3 +112,68 @@ export function voteDot(ring: Ring, i: number): { x: number; y: number; r: numbe
 /** Each petal's vote on a proposal, by its id. */
 export const votesOn = (p: Proposal): Map<string, Vote['vote']> =>
   new Map(p.votes.map((v) => [v.account, v.vote]));
+
+/** How far apart a petal's proposals stack outward, in world units. */
+export const STACK_GAP = 5.5;
+
+export interface Placed {
+  id: string;
+  /** the proposer's petal, or -1 when the proposer isn't on this flower (or isn't known) */
+  petal: number;
+  /** how many of its stack come before it, oldest first */
+  step: number;
+}
+
+/**
+ * Where each proposal in the stretch sits (Elco, 11 Nov: "proposals are related to specific wallets - SOMEONE made
+ * that proposal"): above its proposer's petal, stacked outward oldest first; a proposal whose proposer isn't a
+ * petal here goes in one stack of its own. `ids` are the flower's petals in order.
+ */
+export function placesOf(
+  proposals: readonly Proposal[],
+  ids: readonly string[],
+  from: string,
+  to: string,
+): Placed[] {
+  const t0 = Date.parse(from);
+  const t1 = Date.parse(to);
+  const at = new Map(ids.map((id, i) => [id, i]));
+  const counts = new Map<number, number>();
+  return proposals
+    .filter((p) => {
+      const start = Date.parse(p.at);
+      const close = Date.parse(p.decided_at ?? p.closes_at ?? p.at);
+      return start <= t1 && close >= t0;
+    })
+    .sort((a, b) => Date.parse(a.at) - Date.parse(b.at) || (a.id < b.id ? -1 : 1))
+    .map((p) => {
+      const petal = p.proposer ? (at.get(p.proposer) ?? -1) : -1;
+      const step = counts.get(petal) ?? 0;
+      counts.set(petal, step + 1);
+      return { id: p.id, petal, step };
+    });
+}
+
+/** The angle the proposals of no petal stack at: just before twelve, where the ring starts and ends. */
+export const OTHERS_AT = -0.05;
+
+/** A stack is this many dots high; past it, the next column starts beside it. */
+export const STACK_MOST = 8;
+/** How far apart a stack's columns are, in radians round the ring. */
+const COLUMN_TURN = 0.035;
+
+/**
+ * A placed proposal's dot: above its petal's middle (or at OTHERS_AT), out from the ring by its step, in columns of
+ * STACK_MOST so a long stack stays near the flower; the others' stack grows backwards, away from the first petal.
+ */
+export function placeDot(
+  mid: number,
+  step: number,
+  back = false,
+): { x: number; y: number; r: number } {
+  const column = Math.floor(step / STACK_MOST);
+  const row = step % STACK_MOST;
+  const a = mid + (back ? -1 : 1) * column * COLUMN_TURN;
+  const rr = SHAPE.R * VOTE_RING + 3 + row * STACK_GAP;
+  return { x: SHAPE.cx + rr * Math.sin(a), y: SHAPE.cy - rr * Math.cos(a), r: 2.2 };
+}

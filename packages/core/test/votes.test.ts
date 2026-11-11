@@ -7,7 +7,10 @@ import {
   arcsOf,
   LANE_GAP,
   laneRadius,
+  OTHERS_AT,
   type Proposal,
+  placeDot,
+  placesOf,
   voteDot,
   votesOn,
 } from '../src/render/wedge/votes.ts';
@@ -94,5 +97,34 @@ describe('the ring', () => {
       ['three', 0],
     ]);
     expect(laneRadius(1) - laneRadius(0)).toBe(LANE_GAP);
+  });
+
+  test("each proposal stacks above its proposer's petal, oldest first; others in a stack of their own", () => {
+    const by = (id: string, at: string, proposer: string | null) => ({
+      ...p(id, at, null, null),
+      proposer,
+    });
+    const placed = placesOf(
+      [
+        by('b', '2026-01-03T00:00:00Z', 'a'),
+        by('a', '2026-01-02T00:00:00Z', 'a'),
+        by('c', '2026-01-04T00:00:00Z', 'zzz'),
+        by('d', '2026-01-05T00:00:00Z', null),
+      ],
+      ['a', 'b'],
+      from,
+      to,
+    );
+    expect(placed).toEqual([
+      { id: 'a', petal: 0, step: 0 },
+      { id: 'b', petal: 0, step: 1 },
+      { id: 'c', petal: -1, step: 0 },
+      { id: 'd', petal: -1, step: 1 },
+    ]);
+    const near = placeDot(OTHERS_AT, 0);
+    const far = placeDot(OTHERS_AT, 3);
+    expect(Math.hypot(far.x - 400, far.y - 400)).toBeGreaterThan(
+      Math.hypot(near.x - 400, near.y - 400),
+    );
   });
 });

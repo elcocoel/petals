@@ -15,10 +15,10 @@ import {
 } from '@petal/core/wedge/highlight';
 import { paintOf } from '@petal/core/wedge/paint';
 import {
-  arcPath,
-  arcsOf,
-  laneRadius,
+  OTHERS_AT,
   type Proposal,
+  placeDot,
+  placesOf,
   ringRadius,
   type Vote,
   voteDot,
@@ -369,13 +369,12 @@ export function createScene(
     : [];
   for (const run of silhouetteRuns) worldNode.insertBefore(run.path.node, petalsGroup.node);
 
-  // The ring, its proposals' arcs, the dots a pointed one shows, and its words, on top of the petals.
+  // The ring, its proposals above their proposers, the votes a pointed one shows, and its words, on top.
   let lastView: View | null = null;
   let lastRing: Ring = m.ring;
   let pointed = -1;
   const voteTop = votes ? el('g', {}, worldNode) : null;
   const dotLayer = votes && voteTop ? el('g', {}, voteTop) : null;
-  const arcs = votes ? arcsOf(votes.proposals, votes.from, votes.to) : [];
   const byId = new Map((votes?.proposals ?? []).map((p) => [p.id, p]));
   if (votes && voteLayer) {
     el(
@@ -392,36 +391,48 @@ export function createScene(
       voteLayer,
     );
   }
-  const arcSlots = arcs.map((a) => {
-    const d = arcPath(a.a0, a.a1, laneRadius(a.lane));
+  // each proposal above its proposer's petal, oldest nearest the ring (Elco, 11 Nov: "proposals are related to
+  // specific wallets - SOMEONE made that proposal"); a proposer not on this flower: hollow, in a stack of its own
+  const placed = votes
+    ? placesOf(
+        votes.proposals,
+        m.petals.map((p) => p.id),
+        votes.from,
+        votes.to,
+      )
+    : [];
+  const markSlots = placed.map((pl) => {
+    const mid = pl.petal >= 0 ? (m.mid[pl.petal] as number) : OTHERS_AT;
+    const dot = placeDot(mid, pl.step, pl.petal < 0);
+    const own = pl.petal >= 0;
     const seen = slot(
       el(
-        'path',
+        'circle',
         {
-          d,
-          fill: 'none',
+          cx: n3(dot.x),
+          cy: n3(dot.y),
+          r: n3(dot.r),
+          fill: own ? MUTED : GROUND,
           stroke: MUTED,
-          'stroke-width': 2,
-          'stroke-linecap': 'butt',
+          'stroke-width': 1,
           'vector-effect': 'non-scaling-stroke',
         },
         voteTop as SVGGElement,
       ),
     );
-    // a wider line nobody sees, for the pointer
+    // a wider target nobody sees, for the pointer
     const hit = el(
-      'path',
+      'circle',
       {
-        d,
-        fill: 'none',
-        stroke: 'transparent',
-        'stroke-width': 12,
-        'vector-effect': 'non-scaling-stroke',
-        'pointer-events': 'stroke',
+        cx: n3(dot.x),
+        cy: n3(dot.y),
+        r: n3(dot.r * 2.2),
+        fill: 'transparent',
+        'pointer-events': 'all',
       },
       voteTop as SVGGElement,
     );
-    return { a, seen, hit };
+    return { pl, own, seen, hit };
   });
   // the pointed proposal's words, in the flower's middle under its title, where they always fit
   const voteWords = votes
@@ -440,12 +451,13 @@ export function createScene(
   const point = (j: number) => {
     if (!votes || !dotLayer) return;
     pointed = j;
-    arcSlots.forEach((s, k) => {
+    markSlots.forEach((s, k) => {
       s.seen.set('stroke', k === j ? INK : MUTED);
-      s.seen.set('stroke-width', k === j ? 3 : 2);
+      s.seen.set('fill', k === j ? (s.own ? INK : GROUND) : s.own ? MUTED : GROUND);
     });
     dotLayer.replaceChildren();
-    const p = j >= 0 ? byId.get(arcSlots[j]?.a.id ?? '') : undefined;
+    const at = j >= 0 ? markSlots[j] : undefined;
+    const p = at ? byId.get(at.pl.id) : undefined;
     if (!p) {
       voteWords?.set('opacity', 0);
       voteTally?.set('opacity', 0);
@@ -469,12 +481,13 @@ export function createScene(
     // a proposal's own title can run to a paragraph: the first words, then its outcome
     const title = p.title.length > 44 ? `${p.title.slice(0, 43).trimEnd()}…` : p.title;
     voteWords?.text(`${title}, ${p.outcome}`);
-    voteTally?.text(said.join('   ·   '));
+    const by = at && at.pl.petal >= 0 ? (m.petals[at.pl.petal]?.name ?? p.proposer) : p.proposer;
+    voteTally?.text(`${said.join('   ·   ')}   ·   put up by ${by ?? 'an account not known'}`);
     voteWords?.set('opacity', 1);
     voteTally?.set('opacity', 1);
     placeWords();
   };
-  arcSlots.forEach((s, j) => {
+  markSlots.forEach((s, j) => {
     s.hit.addEventListener('pointerenter', () => point(j));
     s.hit.addEventListener('pointerleave', () => point(-1));
   });
