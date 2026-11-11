@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FlowerCanvas } from '../../../flower/FlowerCanvas.tsx';
 import { type LookFlower, petalBench } from '../../../lab/petal/bench.ts';
-import { votesBench } from '../../../lab/petal/votes.ts';
+import { raidguildVotes, votesBench } from '../../../lab/petal/votes.ts';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
@@ -24,7 +24,8 @@ const SHOWS = [
   { id: 'keys', label: 'Six colours' },
   { id: 'near', label: 'NEAR segments' },
   { id: 'tail', label: 'Everyone else' },
-  { id: 'votes', label: 'Votes' },
+  { id: 'votes', label: 'Votes: Marketing DAO' },
+  { id: 'rgvotes', label: 'Votes: RaidGuild' },
 ] as const;
 type Show = (typeof SHOWS)[number]['id'];
 
@@ -175,8 +176,8 @@ export default async function PetalLab({ searchParams }: { searchParams: Promise
   if (process.env.NODE_ENV === 'production' && process.env.PETAL_LAB !== '1') notFound();
   const q = await searchParams;
   const show: Show = SHOWS.some((s) => s.id === q.show) ? (q.show as Show) : 'raidguild';
-  if (show === 'votes') {
-    const votes = await votesBench();
+  if (show === 'votes' || show === 'rgvotes') {
+    const votes = show === 'votes' ? await votesBench() : await raidguildVotes();
     if ('error' in votes) return <p className="error">{votes.error}</p>;
     return <One show={show} flower={votes} />;
   }

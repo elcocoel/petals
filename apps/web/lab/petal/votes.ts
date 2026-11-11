@@ -75,3 +75,54 @@ export async function votesBench(days = 90): Promise<LookFlower | { error: strin
     highlight: '',
   };
 }
+
+/**
+ * RaidGuild's ring (#93): its delegates' flower, the one the art direction was drawn on, with its Baal's 246
+ * proposals and every vote with its time, as SYSTEMS reads them, over the last `days` of its proposals. A voter
+ * who isn't one of the drawn delegates (a member voting by its shares) has no petal, so no dot.
+ */
+export async function raidguildVotes(days = 90): Promise<LookFlower | { error: string }> {
+  const { petalBench } = await import('./bench.ts');
+  const { raidguild } = await petalBench();
+  const doc = await api<{
+    proposals: { proposals: Proposal[]; source: { ref: string; at: string } };
+  }>(
+    `/api/v1/maps/${encodeURIComponent('eip155:100:0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6')}/proposals`,
+  );
+  if (!doc.ok) return { error: "RaidGuild's proposals could not be read" };
+  const proposals = doc.value.proposals.proposals;
+  const stretch = stretchOf(proposals, days);
+  const drawn = new Set(raidguild.reading.petals.map((p) => p.id));
+  const votes = proposals.reduce((t, p) => t + p.votes.length, 0);
+  const onPetals = proposals.reduce(
+    (t, p) => t + p.votes.filter((v) => drawn.has(v.account)).length,
+    0,
+  );
+  const inStretch = proposals.filter(
+    (p) =>
+      Date.parse(p.at) <= Date.parse(stretch.to) &&
+      Date.parse(p.closes_at ?? p.at) >= Date.parse(stretch.from),
+  );
+  const mint = (KEYS[0] as Key).hex;
+  const pink = (KEYS[4] as Key).hex;
+  return {
+    ...raidguild,
+    look: {
+      ...raidguild.look,
+      highlight: [],
+      votes: { ...stretch, proposals, colours: { for: mint, against: pink, abstain: GREY.hex } },
+    },
+    key: [
+      { hex: mint, label: 'voted for', petals: 0 },
+      { hex: pink, label: 'voted against', petals: 0 },
+      ...raidguild.key,
+    ],
+    facts: [
+      ...raidguild.facts.slice(0, 1),
+      `RaidGuild's Baal: ${whole(proposals.length)} proposals and ${whole(votes)} votes, read from its logs on ${day(doc.value.proposals.source.at)}; ${whole(onPetals)} of the votes are by delegates drawn here.`,
+      `The ring is ${day(stretch.from)} to ${day(stretch.to)}, the last ${days} days, clockwise from twelve: ${inStretch.length} proposals. Each arc runs from when a proposal was put up to when its voting closed; ones open at once stack outward.`,
+      'Point at an arc: a dot shows under each delegate that voted. No vote, no dot.',
+    ],
+    highlight: '',
+  };
+}
