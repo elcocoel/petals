@@ -227,6 +227,95 @@ describe('T192: POST /api/v1/auth/verify', () => {
   });
 });
 
+describe('POST /api/v1/me/wallets: another wallet for the person signed in (Elco, 12 Nov)', () => {
+  /** A fresh challenge, signed by this wallet, sent to add it. */
+  async function addWallet(b: Browser, signer = maker, network = 'testnet') {
+    const ch = (await (await b.post('/api/v1/auth/challenge')).json()) as Challenge;
+    const proof = signer.sign({ message: ch.message, nonce: ch.nonce, recipient: ch.recipient });
+    return b.post('/api/v1/me/wallets', { network, proof });
+  }
+
+  test('a second wallet joins the person: same person, same session, both wallets listed', async () => {
+    const other = testSigner('other.testnet');
+    const { app, store } = setup({ rpc: [maker, other] });
+    const b = new Browser(app);
+    const first = (await (await b.signIn()).json()) as { person_id: string };
+    const cookie = b.jar.get(COOKIE);
+    const res = await addWallet(b, other);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { wallets: { account_id: string }[] };
+    expect(body.wallets.map((w) => w.account_id).sort()).toEqual([
+      'maker.testnet',
+      'other.testnet',
+    ]);
+    // the session stays as it was
+    expect(b.jar.get(COOKIE)).toBe(cookie);
+    const me = (await (await b.get('/api/v1/me')).json()) as { person_id: string; account: string };
+    expect(me).toMatchObject({ person_id: first.person_id, account: 'maker.testnet' });
+    // signing in with the added wallet is the same person
+    const again = (await (await new Browser(app).signIn(other)).json()) as { person_id: string };
+    expect(again.person_id).toBe(first.person_id);
+    const s = store();
+    expect(await s.walletBinding.ofPerson(first.person_id)).toHaveLength(2);
+    await s.close();
+  });
+
+  test('a wallet already theirs answers ok, and nothing is added', async () => {
+    const { app, store } = setup();
+    const b = new Browser(app);
+    const first = (await (await b.signIn()).json()) as { person_id: string };
+    const res = await addWallet(b);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ wallets: [{ account_id: 'maker.testnet' }] });
+    const s = store();
+    expect(await s.walletBinding.ofPerson(first.person_id)).toHaveLength(1);
+    await s.close();
+  });
+
+  test("another person's wallet is refused in plain words, and stays theirs", async () => {
+    const other = testSigner('other.testnet');
+    const { app, store } = setup({ rpc: [maker, other] });
+    const theirs = (await (await new Browser(app).signIn(other)).json()) as { person_id: string };
+    const b = new Browser(app);
+    await b.signIn();
+    const res = await addWallet(b, other);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as Err).error).toMatchObject({
+      code: 'bad_input',
+      message: 'That wallet already belongs to another account.',
+    });
+    const s = store();
+    expect(await s.walletBinding.ofPerson(theirs.person_id)).toHaveLength(1);
+    await s.close();
+  });
+
+  test('a visitor, a bad signature and a foreign page are refused', async () => {
+    const other = testSigner('other.testnet');
+    const { app } = setup({ rpc: [maker, other] });
+    const visitor = new Browser(app);
+    expect((await addWallet(visitor, other)).status).toBe(401);
+    const b = new Browser(app);
+    await b.signIn();
+    const ch = (await (await b.post('/api/v1/auth/challenge')).json()) as Challenge;
+    const forged = testSigner('other.testnet', 'not-a-key-of-it').sign({
+      message: ch.message,
+      nonce: ch.nonce,
+      recipient: ch.recipient,
+    });
+    const refused = await b.post('/api/v1/me/wallets', { network: 'testnet', proof: forged });
+    expect(refused.status).toBe(401);
+    const ch2 = (await (await b.post('/api/v1/auth/challenge')).json()) as Challenge;
+    const proof = other.sign({ message: ch2.message, nonce: ch2.nonce, recipient: ch2.recipient });
+    const foreign = new Browser(app, 'https://elsewhere.example');
+    foreign.jar = b.jar;
+    const fromElsewhere = await foreign.post('/api/v1/me/wallets', { network: 'testnet', proof });
+    expect(fromElsewhere.status).toBe(401);
+    expect(((await fromElsewhere.json()) as Err).error.message).toMatch(/another site/);
+    const me = (await (await b.get('/api/v1/me')).json()) as { wallets: unknown[] };
+    expect(me.wallets).toHaveLength(1);
+  });
+});
+
 describe('T192: refusals', () => {
   const refused = async (res: Response, reason: RegExp) => {
     expect(res.status).toBe(401);
