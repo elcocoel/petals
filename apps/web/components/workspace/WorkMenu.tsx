@@ -7,8 +7,9 @@
 // - Conversations: every conversation, newest first, each with who and when, and the way to a project;
 //   New conversation is its first row, where a new one appears.
 // - Projects: each holding its conversations, named in place; New project is its last row.
-// - Your agents: each with its state and a way to end it, and the one way to connect another.
-// - Lobby: the lobby, the balance and the map, each opening its card on /lobby. Withdraw stays on the card.
+// - Your agents: each with its state and a way to end it; connecting one is at the panel's top, once.
+// - Lobby: the balance and the map, each opening its card on /lobby; the head says Lobby, so no row does,
+//   and the balance's amount is on the page beside it (WORKSPACE's walk, 11 Nov). Withdraw stays on the card.
 // - Profile: who's signed in, their public profile's state (it opens their profile page, /profile), and
 //   Disconnect, the one place to sign out.
 // - Settings: first the tip, an optional donation to Petals on the price's scale (TipControl; design/
@@ -31,7 +32,6 @@ import {
 } from '../../lib/conversation-list.ts';
 import { type SocialState, shownAccount } from '../../lib/lobby-view.ts';
 import { panelWords, type SectionKey } from '../../lib/panel-words.ts';
-import { type Money, moneyWords } from '../../lib/pay.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { ConversationList, type RowActions } from '../chat/ConversationList.tsx';
 import { Dialog } from '../ui/Dialog.tsx';
@@ -132,8 +132,6 @@ export interface WorkMenuView {
 export interface PanelYou {
   account: string | null;
   social: SocialState;
-  /** What's left, dollars first and NEAR beside (useFunds, the one balance), or null until it's read. */
-  balance: Money | null;
   /** Signs out. */
   leave: () => void;
 }
@@ -403,15 +401,12 @@ export function WorkMenu({
               />
             </li>
           ))}
-          <li className="relative">
-            <NavItem
-              onClick={() => menu.copy('agents')}
-              icon="plus"
-              label={panelWords.connect}
-              muted
-            />
-            {menu.copied === 'agents' && <Tip label={panelWords.copied} side="right" said />}
-          </li>
+          {/* connecting one is at the panel's top, once (design/side-panel.md, lines 12 and 45) */}
+          {menu.agents.length === 0 && (
+            <li>
+              <NavItem label={panelWords.noAgents} muted />
+            </li>
+          )}
         </ul>
       </Group>
     ),
@@ -421,18 +416,7 @@ export function WorkMenu({
         folded={menu.folded.includes('lobby')}
         onFold={() => menu.fold('lobby')}
       >
-        <NavItem
-          href={siteLinks.lobby}
-          current={here === 'lobby'}
-          icon="home"
-          label={panelWords.lobby}
-        />
-        <NavItem
-          href={lobbyAt('lobby-balance')}
-          icon="balance"
-          label={panelWords.balance}
-          {...(you.balance === null ? {} : { trail: moneyWords(you.balance) })}
-        />
+        <NavItem href={lobbyAt('lobby-balance')} icon="balance" label={panelWords.balance} />
         <NavItem href={lobbyAt('lobby-map')} icon="map" label={panelWords.onTheMap} />
       </Group>
     ),
@@ -449,17 +433,19 @@ export function WorkMenu({
           current={here === 'profile'}
           label={name ?? who?.shown ?? '…'}
           {...(who ? { title: who.full } : {})}
-          trail={
-            panelWords.socialState[
-              you.social.kind === 'profile'
-                ? you.social.source === 'petals'
-                  ? 'petals'
-                  : 'profile'
-                : you.social.kind === 'none'
-                  ? 'none'
-                  : you.social.kind
-            ]
-          }
+          // nothing at its end while there's no profile (WORKSPACE's walk, 11 Nov: "None")
+          {...(you.social.kind === 'none'
+            ? {}
+            : {
+                trail:
+                  panelWords.socialState[
+                    you.social.kind === 'profile'
+                      ? you.social.source === 'petals'
+                        ? 'petals'
+                        : 'profile'
+                      : you.social.kind
+                  ],
+              })}
         />
         {/* rule 4: the one place to sign out */}
         <NavItem onClick={you.leave} icon="leave" label={panelWords.signOut} muted />

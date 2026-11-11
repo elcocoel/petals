@@ -228,7 +228,6 @@ export function usePanelState() {
   const you = {
     account: session.account,
     social: profile.social,
-    balance: funds.balance,
     leave: session.disconnect,
   };
   return {
