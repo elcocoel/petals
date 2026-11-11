@@ -4,6 +4,9 @@
 // keyed again gets the same colours and another flower's commonest value is mint too. Only the keys needed. On
 // every flower and still picture since 11 Nov (#76; Elco: the lab into the product). Pure.
 
+import { colourLabel } from '../../reading/words.ts';
+import { BACKER_LABELS, type BackerClass } from '../../segments/backers.ts';
+
 export type KeyName = 'mint' | 'blue' | 'coral' | 'apricot' | 'pink' | 'grey';
 
 export interface Key {
@@ -63,6 +66,9 @@ export const keyFor = (keyed: readonly Keyed[], value: string | null | undefined
     ? null
     : (keyed.find((k) => k.value === value)?.key ?? null);
 
+/** A kind's words, as the reading says it: kinds that read the same (pool, staking pool, validator) share a key. */
+export const wordsOf = (colour: string): string => colourLabel(colour);
+
 /** What the look needs of a petal to colour it. */
 export interface Keyable {
   id: string;
@@ -86,7 +92,7 @@ export function lookFills(petals: readonly Keyable[]): {
 } {
   const real = petals.filter((p) => !p.tail);
   const kinds = keysOf(
-    real.map((p) => p.colour),
+    real.map((p) => wordsOf(p.colour)),
     real.map((p) => p.share),
   );
   const classes = keysOf(
@@ -94,14 +100,45 @@ export function lookFills(petals: readonly Keyable[]): {
     real.flatMap((p) => p.segments.map((s) => Number(s.amount))),
   );
   const banded = classes.length > 0;
+  const hexOf = (colour: string) => keyFor(kinds, wordsOf(colour))?.hex ?? GREY.hex;
   return {
     fills: Object.fromEntries(
-      petals.map((p) => [
-        p.id,
-        p.tail || banded ? GREY.hex : (keyFor(kinds, p.colour)?.hex ?? GREY.hex),
-      ]),
+      petals.map((p) => [p.id, p.tail || banded ? GREY.hex : hexOf(p.colour)]),
     ),
     bands: Object.fromEntries(classes.map((c) => [c.value, c.key?.hex ?? GREY.hex])),
-    kinds: banded ? {} : Object.fromEntries(kinds.map((k) => [k.value, k.key?.hex ?? GREY.hex])),
+    kinds: banded ? {} : Object.fromEntries(real.map((p) => [p.colour, hexOf(p.colour)])),
   };
+}
+
+/** One line of a flower's key: the reading's words, and the swatch's name as the site's data-swatch rules have it. */
+export interface FlowerKey {
+  label: string;
+  swatch: string;
+}
+
+/**
+ * A flower's key, in the order its colours were handed (most common first): its kinds, or its bands' classes when
+ * its petals are banded, a value past the fifth in grey, then everyone else in grey. The legend inside a flower
+ * says what lookFills paints, in the same words.
+ */
+export function flowerKeys(petals: readonly Keyable[]): FlowerKey[] {
+  const real = petals.filter((p) => !p.tail);
+  const swatch = (k: Key | null) => `key-${(k ?? GREY).name}`;
+  const classes = keysOf(
+    real.flatMap((p) => p.segments.map((s) => s.key)),
+    real.flatMap((p) => p.segments.map((s) => Number(s.amount))),
+  );
+  const rows =
+    classes.length > 0
+      ? classes.map((c) => ({
+          label: BACKER_LABELS[c.value as BackerClass] ?? c.value,
+          swatch: swatch(c.key),
+        }))
+      : keysOf(
+          real.map((p) => wordsOf(p.colour)),
+          real.map((p) => p.share),
+        ).map((k) => ({ label: k.value, swatch: swatch(k.key) }));
+  return petals.some((p) => p.tail)
+    ? [...rows, { label: 'everyone else', swatch: swatch(GREY) }]
+    : rows;
 }

@@ -11,9 +11,54 @@ import {
   roundedPath,
   tonesOf,
 } from '../src/render/wedge/highlight.ts';
-import { GREY, KEYS, keyFor, keysOf } from '../src/render/wedge/keys.ts';
+import { flowerKeys, GREY, KEYS, keyFor, keysOf, lookFills } from '../src/render/wedge/keys.ts';
 import type { ViewV2 } from '../src/types/index.ts';
 import { GOLDEN_CASES, goldenSpec, readGolden } from './golden-cases.ts';
+
+describe("a flower's key (flowerKeys) and its fills (lookFills)", () => {
+  const petal = (
+    id: string,
+    colour: string,
+    share: number,
+    segments: { key: string; amount: string }[] = [],
+  ) => ({
+    id,
+    colour,
+    share,
+    segments,
+  });
+  test('kinds that read the same share one key: staking pool and validator are both pool', () => {
+    const petals = [
+      petal('a', 'staking_pool', 0.3),
+      petal('b', 'validator', 0.2),
+      petal('c', 'exchange', 0.4),
+      { ...petal('t', 'tail', 0.1), tail: true },
+    ];
+    const look = lookFills(petals);
+    expect(look.fills.a).toBe(look.fills.b);
+    expect(look.fills.a).toBe(KEYS[0]?.hex);
+    expect(look.fills.c).toBe(KEYS[1]?.hex);
+    expect(look.fills.t).toBe(GREY.hex);
+    expect(flowerKeys(petals)).toEqual([
+      { label: 'pool', swatch: 'key-mint' },
+      { label: 'exchange', swatch: 'key-blue' },
+      { label: 'everyone else', swatch: 'key-grey' },
+    ]);
+  });
+  test("a banded flower's key is its bands' classes, in the reading's words", () => {
+    const petals = [
+      petal('a', 'staking_pool', 0.5, [
+        { key: 'other', amount: '5' },
+        { key: 'lockup', amount: '1' },
+      ]),
+      petal('b', 'staking_pool', 0.5, [{ key: 'other', amount: '3' }]),
+    ];
+    expect(flowerKeys(petals)).toEqual([
+      { label: 'other delegators', swatch: 'key-mint' },
+      { label: 'lockups (vesting)', swatch: 'key-blue' },
+    ]);
+  });
+});
 
 describe('the keys', () => {
   test("Elco's five, most common first, and grey apart from them", () => {

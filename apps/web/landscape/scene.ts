@@ -7,7 +7,7 @@
 // its main colour instead, its mark in the ring's hole and its name just under it.
 import { FAR_WAVE, farRuns, waveReach } from '@petal/core/wedge/far';
 import { HIGHLIGHT } from '@petal/core/wedge/highlight';
-import { GREY, keyFor, keysOf } from '@petal/core/wedge/keys';
+import { GREY, keyFor, keysOf, wordsOf } from '@petal/core/wedge/keys';
 import { DETAIL, fade } from '../flower/detail.ts';
 import type { Model } from '../flower/model.ts';
 import { n3, polygonPath, SHAPE, silhouettePath } from '../flower/ring.ts';
@@ -144,10 +144,12 @@ export type LineStyle = 'focus' | null;
 export function waveFills(m: Model): string[] {
   const real = m.petals.filter((p) => !p.tail);
   const kinds = keysOf(
-    real.map((p) => p.colour),
+    real.map((p) => wordsOf(p.colour)),
     real.map((p) => p.share),
   );
-  return m.petals.map((p) => (p.tail ? GREY.hex : (keyFor(kinds, p.colour)?.hex ?? GREY.hex)));
+  return m.petals.map((p) =>
+    p.tail ? GREY.hex : (keyFor(kinds, wordsOf(p.colour))?.hex ?? GREY.hex),
+  );
 }
 
 /** The centre mark's size on screen: a share of the flower's hole, never smaller or larger than these. */
