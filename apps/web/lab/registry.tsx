@@ -3473,9 +3473,8 @@ export const NOT_IN_LAB: Record<string, string> = {
   FlowerPage:
     'wires useFlowerPage to the flower and its box, filling the area under the nav: it lives at /f/<id> and /draft',
   FrontDoor: 'draws nothing: it opens the wallet when the landing is left for /make (proposal)',
-  Lobby: 'wires useLobby to the cards and the tiles, and it lives at /lobby',
-  ProfilePage:
-    'lays out ProfileHead, Profile, Wallets, Funds, Claims and Conversations, each here: it lives at /profile',
+  Lobby:
+    'lays out ProfileHead, Profile, Wallets, Claims, Funds, Conversations and the map, each here: it lives at /lobby and /profile',
   Menu: "takes the focus when it shows and closes on any press elsewhere, so it's shown live, from a row's ⋯ at /lab/panel",
   Dialog: "a modal over the page, so it is shown live, from a row's ⋯ menu at /lab/panel",
   WorkMenu:

@@ -3,7 +3,7 @@
 // all their projects, by the account it's about, newest first. Over them, how many of each kind (observed,
 // sourced, stated, inferred: how each is known, never "verified"). Each claim as a petal's details say it:
 // what it says, how it's known, where it rests and who said it, with its source. Props only:
-// viewmodels/useProfilePage.ts reads it. Words from lib/profile-view.ts and lib/claim-lines.ts, drafts.
+// viewmodels/useLobby.ts reads it. Words from lib/profile-view.ts and lib/claim-lines.ts, drafts.
 import { claimWords } from '../../lib/claim-lines.ts';
 import { type ClaimsView, profilePageWords } from '../../lib/profile-view.ts';
 import { Badge } from '../ui/Badge.tsx';

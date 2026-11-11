@@ -1,7 +1,7 @@
 // The Wallets card (#79, the profile page as the investigator's card): the wallets the person proved by
 // signing in with them, each with its chain and when it signed, and the badge PROVEN, set against a link's
 // DECLARED, so it reads what backs the person and what's only their word. Null while it's read; with no
-// answer, it says so. Props only: viewmodels/useProfilePage.ts reads it. Words from lib/profile-view.ts, drafts.
+// answer, it says so. Props only: viewmodels/useLobby.ts reads it. Words from lib/profile-view.ts, drafts.
 import { profilePageWords, type WalletRow } from '../../lib/profile-view.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
