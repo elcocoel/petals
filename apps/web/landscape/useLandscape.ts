@@ -91,6 +91,11 @@ export interface LandscapeAt {
    * the next call.
    */
   highlight?: (ids: readonly string[] | null) => void;
+  /**
+   * Set by the map once it's built, as `choose` is: flies to a flower, by its place on this chain's map, and
+   * enters it, as a click on it does (#105: a search's answer, pressed).
+   */
+  enter?: (i: number) => void;
 }
 
 const LONGEST_FRAME = 1 / 15;
@@ -594,6 +599,12 @@ export function useLandscape(
         groupFlower = groupIds.length > 0 ? entered : -1;
         for (const j of new Set([was, groupFlower])) if (j >= 0 && lives.has(j)) remount(j);
         wake();
+      };
+      at.current.enter = (i) => {
+        if (!flowers[i]) return;
+        enterFlower(i);
+        // placed on purpose, as the flower it opens in is: the window's next size keeps it there
+        cam.touched = true;
       };
     }
 
