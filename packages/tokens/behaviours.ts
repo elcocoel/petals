@@ -214,6 +214,12 @@ export const behaviours = [
   },
   { name: 'figure.bloom', purpose: 'Petals grow out of the centre, around the clock', via: 'both' },
   {
+    name: 'figure.grow',
+    purpose:
+      "A symbol's wedges grow to their new heights around the clock, as the hero's chat goes on",
+    via: 'css',
+  },
+  {
     name: 'figure.draw',
     purpose: 'Lines draw themselves in, from what the bloom split',
     via: 'css',

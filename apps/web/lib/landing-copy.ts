@@ -44,6 +44,34 @@ export const landingCopy = {
       'Can Petals read a DAO it has never seen?',
     ],
   },
+  /**
+   * The illustrated hero's simulated chat (Elco, 11 Nov: "a simpler, chiller illustrated hero with a
+   * background illustration ... and simulated chat process with an evolving petal (symbolic, iconic) as it
+   * goes"), in /lab/landing-hero. Drafts by LANDING, for Elco. The answers are the NEAR validators reading's
+   * own findings (liveReading below). `stage` is how far the petal has grown once that turn is said.
+   */
+  heroChat: {
+    title: "NEAR's validators",
+    you: 'You',
+    agent: "Petals' agent",
+    turns: [
+      { by: 'you', text: "Who stands behind NEAR's validators?", stage: 0 },
+      {
+        by: 'agent',
+        text: "I'll read NEAR's staking pools. Each validator becomes a petal.",
+        stage: 1,
+      },
+      { by: 'agent', text: 'A petal grows with its share of the stake.', stage: 2 },
+      { by: 'you', text: 'How few could stall the chain?', stage: 2 },
+      {
+        by: 'agent',
+        text: '9 of 371 hold more than a third of the stake. They are the lit petals.',
+        stage: 3,
+      },
+    ],
+    /** Said on the stand-in picture until HERO ART's drawing replaces it. */
+    standIn: 'Stand-in illustration',
+  },
   liveReading: {
     title: 'Accounts become petals. Together they shape a network.',
     caption: 'NEAR VALIDATORS · 3 NOV 2026 · BLOCK 222,915,356',
