@@ -60,8 +60,7 @@ describe('the brain', () => {
       'services',
       'stewardship',
     ]);
-    const by = (d: string) =>
-      index.entries.filter((e) => e.department === d).map((e) => e.id);
+    const by = (d: string) => index.entries.filter((e) => e.department === d).map((e) => e.id);
     expect(index.entries.find((e) => e.kind === 'doctrine')?.department).toBeNull();
     expect(by('connecting')).toEqual([
       'connect-claude-code',

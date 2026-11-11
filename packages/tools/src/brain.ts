@@ -138,7 +138,10 @@ export function brainProblems(
     if (ids.has(e.id)) out.push(`${e.file}: the id ${e.id} is used twice`);
     ids.add(e.id);
     if (!e.for) out.push(`${e.file}: its header says nothing under for`);
-    if (e.kind !== 'doctrine' && !(BRAIN_DEPARTMENTS as readonly string[]).includes(e.department ?? ''))
+    if (
+      e.kind !== 'doctrine' &&
+      !(BRAIN_DEPARTMENTS as readonly string[]).includes(e.department ?? '')
+    )
       out.push(
         `${e.file}: ${e.department ? `no department ${e.department}` : 'its header names no department'} (${BRAIN_DEPARTMENTS.join(', ')})`,
       );
