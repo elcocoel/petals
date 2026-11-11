@@ -12,6 +12,8 @@ export const landingCopy = {
     gallery: 'Power Map',
     docs: 'Docs',
     ask: 'Connect',
+    /** Draft (LANDING, 11 Nov), for Elco: the phone's button that unfolds the links, read aloud. */
+    menu: 'Menu',
   },
   hero: {
     eyebrow: 'SEE POWER MOVE',
