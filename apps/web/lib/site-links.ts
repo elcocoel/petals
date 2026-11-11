@@ -10,9 +10,9 @@ const LIVE_SHAPE = '9ac16c8917aa5ca579c8421a';
 
 /**
  * The address other people's AI reaches Petals at, on every page, so what the landing hands out works
- * from anyone's machine. It changes here when the site gets its own address (T191).
+ * from anyone's machine: the site's own address since 11 Nov (T191; petal-flowers.vercel.app redirects here).
  */
-export const publicOrigin = 'https://petal-flowers.vercel.app';
+export const publicOrigin = 'https://petals.elementarycomplexity.com';
 
 export const siteLinks = {
   home: '/',
