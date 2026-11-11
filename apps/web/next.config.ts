@@ -81,6 +81,11 @@ const config: NextConfig = {
   typescript: { tsconfigPath: 'tsconfig.next.json' },
   // Next 16.4 writes an AGENTS.md into the app on dev; the repo keeps its own instructions.
   agentRules: false,
+  // The connect page is retired (Elco, walk 7, 12 Nov: "retire it and hunt any old links that lead into it"):
+  // the prompt in the panel connects an agent, and the docs say how each app connects.
+  redirects: async () => [
+    { source: '/connect', destination: '/docs/connect-your-agent', permanent: true },
+  ],
 };
 
 export default config;
