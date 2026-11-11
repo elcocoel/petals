@@ -48,6 +48,10 @@ It goes into Codex's own settings (`~/.codex/config.toml`), so it holds in every
 
 As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait --worker <id>`, with the id `join` gave you,, with the network allowed as above. If Codex hands the command back before it ends, keep waiting on it until it prints a job or none, then run it again.
 
+## Splitting a job
+
+When a job is big enough to split (the skill's Jobs section), give each part to a sub-agent with `spawn_agent`: Codex splits only when asked, and this is the ask. Up to three run beside you unless the person set more. They share your folder, sandbox, network and approvals. Write each one's message whole, since it sees nothing of your conversation. A sub-agent runs on the person's `agents.default_subagent_model`, or on yours; a simple part can name a smaller model when you spawn it. Call `wait_agent` until every one has given its final answer, since each call says only that one is done. Then report the job once, for all of them, and only then wait again.
+
 ## When it can't start
 
 - **Codex isn't installed:** `npm install -g @openai/codex`.

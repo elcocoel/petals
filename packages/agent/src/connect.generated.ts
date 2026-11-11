@@ -37,6 +37,10 @@ export const CONNECT_CHAPTERS: readonly ConnectChapter[] = [
         "body": "As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait --worker <id>`, with the id `join` gave you, with the Bash tool's `timeout` at 600000, its longest: ten minutes. The default two minutes cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way."
       },
       {
+        "heading": "Splitting a job",
+        "body": "When a job is big enough to split (the skill's Jobs section), give each part to a sub-agent with the Agent tool, in the background, so they run at once. A simple part can run on a smaller model: the Agent tool's `model`, such as `haiku`. Write each sub-agent's prompt whole, since it sees nothing of your conversation. Its Bash commands need the same `timeout` as yours. When the last one is back, report the job once, for all of them, and only then wait again."
+      },
+      {
         "heading": "When it can't start",
         "body": "- **Claude Code isn't installed:** `curl -fsSL https://claude.ai/install.sh | bash`.\n- **It isn't signed in** (\"Not logged in · Please run /login\"): the person runs `claude` once in a terminal and signs in there."
       },
@@ -70,6 +74,10 @@ export const CONNECT_CHAPTERS: readonly ConnectChapter[] = [
         "body": "As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait --worker <id>`, with the id `join` gave you,, with the network allowed as above. If Codex hands the command back before it ends, keep waiting on it until it prints a job or none, then run it again."
       },
       {
+        "heading": "Splitting a job",
+        "body": "When a job is big enough to split (the skill's Jobs section), give each part to a sub-agent with `spawn_agent`: Codex splits only when asked, and this is the ask. Up to three run beside you unless the person set more. They share your folder, sandbox, network and approvals. Write each one's message whole, since it sees nothing of your conversation. A sub-agent runs on the person's `agents.default_subagent_model`, or on yours; a simple part can name a smaller model when you spawn it. Call `wait_agent` until every one has given its final answer, since each call says only that one is done. Then report the job once, for all of them, and only then wait again."
+      },
+      {
         "heading": "When it can't start",
         "body": "- **Codex isn't installed:** `npm install -g @openai/codex`.\n- **It isn't signed in:** the person runs `codex` once in a terminal and signs in there, with their ChatGPT account or an API key."
       },
@@ -97,6 +105,10 @@ export const CONNECT_CHAPTERS: readonly ConnectChapter[] = [
       {
         "heading": "Waiting for jobs",
         "body": "As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait --worker <id>`, with the id `join` gave you, with the terminal tool's `timeout` at 600, its longest in the foreground: ten minutes. The default 180 seconds cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way."
+      },
+      {
+        "heading": "Splitting a job",
+        "body": "When a job is big enough to split (the skill's Jobs section), give each part to a child with `delegate_task`, one entry per part in `tasks`. Up to ten run at once unless the person set otherwise. A child knows only its `goal` and `context`, so put the job's link, its part and the steps in `context`. Each child has its own terminal, in your working folder, with your tools; give its commands the same `timeout` as yours.\n\n- **In a session,** `delegate_task` comes back at once, and the children's results arrive as one message when the last one is done. End your turn there, without running `jobs wait`, and report the job once, for all of them, when that message comes.\n- **In a one-shot run** (`hermes chat -q`), `delegate_task` waits for its children itself, and only two can be started in all.\n- **The children's model** is `delegation.model` in the person's `~/.hermes/config.yaml`, or yours when it's empty. It's the person's setting: don't change it."
       },
       {
         "heading": "When it can't start",

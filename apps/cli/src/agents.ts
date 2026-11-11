@@ -225,7 +225,7 @@ export async function waitForJob(o: WaitOptions): Promise<Json> {
     return {
       job,
       project,
-      next: `Do this job now, in its project: pass project.exploration as exploration to the tools, and each flower you draw is saved there, drawn as the person sees it. If it's big and you run sub-agents, you may split it among them: they pass the same exploration, and you report once. Save who or what you find behind addresses as you go, with add_annotation (many at once: add-annotation --input @annotations.json), never only in a file. When it's done, report_job with that exploration, the job's id and result: { summary, steps, annotations: the ids add_annotation gave }, or failed and why. Then run ${AGAIN} again.`,
+      next: `Do this job now, in its project: pass project.exploration as exploration to the tools, and each flower you draw is saved there, drawn as the person sees it. If it's big and you run sub-agents, you may split it among them, as your app's connect chapter says: give each one this exploration and its part, and report once, when they're all back. Save who or what you find behind addresses as you go, with add_annotation (many at once: add-annotation --input @annotations.json), never only in a file. When it's done, report_job with that exploration, the job's id and result: { summary, steps, annotations: the ids add_annotation gave }, or failed and why. Then run ${AGAIN} again.`,
     };
   }
 }

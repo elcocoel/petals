@@ -48,6 +48,10 @@ It takes effect in a new session. The tools then show as `mcp__petals__<tool>`, 
 
 As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait --worker <id>`, with the id `join` gave you, with the Bash tool's `timeout` at 600000, its longest: ten minutes. The default two minutes cuts the wait short. It comes back just under ten minutes, with a job or none; run it again either way.
 
+## Splitting a job
+
+When a job is big enough to split (the skill's Jobs section), give each part to a sub-agent with the Agent tool, in the background, so they run at once. A simple part can run on a smaller model: the Agent tool's `model`, such as `haiku`. Write each sub-agent's prompt whole, since it sees nothing of your conversation. Its Bash commands need the same `timeout` as yours. When the last one is back, report the job once, for all of them, and only then wait again.
+
 ## When it can't start
 
 - **Claude Code isn't installed:** `curl -fsSL https://claude.ai/install.sh | bash`.
