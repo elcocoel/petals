@@ -24,6 +24,7 @@ import { decodeDraft } from './draft.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
 import type { PayToken, TopUp } from './intents.ts';
 import type { Job } from './jobs.ts';
+import type { MapClaims } from './map-claims.ts';
 import {
   NEAR_SOCIAL_API,
   type PetalsProfile,
@@ -184,6 +185,13 @@ export async function readMapDrawing(map: string): Promise<string | null> {
   if (!res.ok) return null;
   const json = (await res.json()) as { map?: { view_url?: string | null } };
   return json.map?.view_url ?? null;
+}
+
+/** What Petals' own mapping says about a map's accounts (GET /api/v1/maps/:id/claims), or null. */
+export async function readMapClaims(map: string): Promise<MapClaims | null> {
+  const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}/claims`);
+  if (!res.ok) return null;
+  return (await res.json()) as MapClaims;
 }
 
 export async function readDrawingSpec(sha: string): Promise<Spec | null> {

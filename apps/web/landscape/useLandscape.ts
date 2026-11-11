@@ -79,7 +79,7 @@ export interface LandscapeAt {
   /** When connections show: the lab's lines lean (#87), or as always. Read when the scene is built. */
   lines?: LineStyle;
   /** Told when the map goes into a flower and when it comes out of it (#78: the chains step aside inside). */
-  inside?: (yes: boolean) => void;
+  inside?: (yes: boolean, at: number) => void;
   /**
    * The map's home keeps clear of the chain list down its left, measured from `aside` (a page where the map's
    * room is narrow: /make, #78). Off, the home fills the whole map, as on /map. Read when the scene is built.
@@ -265,7 +265,7 @@ export function useLandscape(
       }
       if (entered >= 0 !== wasInside) {
         wasInside = entered >= 0;
-        at?.current?.inside?.(wasInside);
+        at?.current?.inside?.(wasInside, entered);
       }
       if (advance(enter, calm || arriving ? SNAP : stepOf(PRESENCE, dt))) moving = true;
       arriving = false;
