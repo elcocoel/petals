@@ -275,6 +275,29 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(((await one.json()) as Out).map.mark).toEqual(maps[0].mark);
   });
 
+  test('the map and its list are named by what they hold: asked again with the tag, a 304 (/map/data, 11 Nov)', async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    for (const path of ['/api/v1/map', '/api/v1/maps']) {
+      const first = await app.request(path);
+      const etag = first.headers.get('etag') ?? '';
+      expect(etag).toMatch(/^"[0-9a-f]{64}"$/);
+      // the same map, asked again: the same tag, though its made time moved on
+      expect((await app.request(path)).headers.get('etag')).toBe(etag);
+      const again = await app.request(path, { headers: { 'if-none-match': etag } });
+      expect(again.status).toBe(304);
+      // Cloudflare's weak form of the same tag
+      expect((await app.request(path, { headers: { 'if-none-match': `W/${etag}` } })).status).toBe(
+        304,
+      );
+      expect((await app.request(path, { headers: { 'if-none-match': '"old"' } })).status).toBe(200);
+    }
+  });
+
   test("the run over the shared map keeps each map's mark and its logo; --dry keeps nothing", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 7, 7]);
