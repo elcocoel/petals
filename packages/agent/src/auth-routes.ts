@@ -151,6 +151,11 @@ export interface RouteAuth {
     accounts: string[];
     account: string | null;
   } | null>;
+  /**
+   * A person's account, as a claim names who answers for what they keep (annotation-layer.md): their first
+   * mainnet wallet, else their first; null for one with none. For a turn no request started.
+   */
+  accountOf?(person: string): Promise<string | null>;
 }
 
 export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
@@ -438,6 +443,14 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     },
     refuseForeign: (c) => (originAllowed(c) ? null : badOrigin(c)),
     openAnonymous: async (c) => (await newHandle(c)).subject,
+    async accountOf(person) {
+      if (!isPerson(person)) return null;
+      const wallets = await walletsOf(person);
+      const w = wallets.find((x) => x.network === 'mainnet') ?? wallets[0];
+      return w
+        ? accountRef(`near:${w.network === 'testnet' ? 'testnet' : 'mainnet'}`, w.account_id)
+        : null;
+    },
     async personOf(c) {
       const s = await sessionOf(c);
       if (!s || !isPerson(s.subject)) return null;

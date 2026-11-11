@@ -214,7 +214,12 @@ function sse(c: Context, events: AsyncIterable<Observed>, leave: () => void) {
 /** The full routes; `agentRoutes` in index.ts is this with the contract's arguments only. */
 export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {}): Hono {
   const clock = o.clock ?? Date.now;
-  const jobs = runJobs(deps, o);
+  const jobs = runJobs(deps, {
+    ...o,
+    ...(o.auth?.accountOf
+      ? { accountOf: (person: string) => o.auth?.accountOf?.(person) ?? Promise.resolve(null) }
+      : {}),
+  });
   // A report that comes back (report_job): Petals' agent takes it up at once, as a turn in the run that handed
   // the job out, paid from the person's own credit (Elco, 9 Nov), or else from the invite they chat on (10 Nov).
   // With neither, or the run already going, it waits in the job row for the person's next message, as before.

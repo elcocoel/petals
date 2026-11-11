@@ -12,6 +12,7 @@ import {
   saveRunStep,
   viewOfPerson,
 } from '@petal/tools';
+import { type AccountOf, annotateTool } from './annotate.ts';
 import { Channel } from './channel.ts';
 import { agentsOfRun, type Bell, handJobTool, jobsOfRun } from './hand-job.ts';
 import type { Budget, LlmMessage } from './llm.ts';
@@ -57,7 +58,12 @@ class Job {
 
 export function runJobs(
   deps: RunDeps & { runs: RunStore },
-  o: Pick<RunOptions, 'registry' | 'heartbeatMs'> & { bell?: Bell; price?: Price } = {},
+  o: Pick<RunOptions, 'registry' | 'heartbeatMs'> & {
+    bell?: Bell;
+    price?: Price;
+    /** whose account answers for what Petals' agent keeps for the person (annotate.ts) */
+    accountOf?: AccountOf;
+  } = {},
 ) {
   const { runs } = deps;
   const jobs = new Map<string, Job>();
@@ -131,11 +137,12 @@ export function runJobs(
             { tools, llm: deps.llm, budget },
             {
               runId,
-              // its own hand_job and name_conversation, which know this run (and so its exploration)
+              // its own hand_job, name_conversation and annotate, which know this run (and so its exploration)
               registry: [
                 ...(o.registry ?? defaultRegistry),
                 handJobTool(deps.tools, runId, o.bell),
                 nameConversationTool(deps.tools, runId),
+                annotateTool(deps.tools, runId, o.accountOf),
               ],
               ...(o.heartbeatMs ? { heartbeatMs: o.heartbeatMs } : {}),
               signal: job.abort.signal,
