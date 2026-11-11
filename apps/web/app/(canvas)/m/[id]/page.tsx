@@ -2,6 +2,7 @@
 // a flower is the map zoomed in). The Power Map opens inside this map's flower, and the box beside it says
 // what it maps, the key to its colours, and its readings newest first, each with who made it and its
 // drawings. No sign-in.
+import { notFound } from 'next/navigation';
 import { FlowerTile } from '../../../../components/FlowerTile.tsx';
 import { LegendKeys } from '../../../../components/Legend.tsx';
 import { ReadingColumn } from '../../../../components/SiteChrome.tsx';
@@ -17,6 +18,7 @@ import {
   mapOne,
   readingLine,
 } from '../../../../lib/maps.ts';
+import { isMissing } from '../../../../lib/missing.ts';
 import { siteLinks } from '../../../../lib/site-links.ts';
 import { mapWorth } from '../../../../lib/value-view.ts';
 import { viewerView } from '../../../../lib/viewer-view.ts';
@@ -78,14 +80,12 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
   const { hash } = await viewerView();
   const [got, at] = await Promise.all([mapOne(map, hash), powerMapAt(hash, { map })]);
   if (!got.ok) {
+    // not there: the site's 404, the bouncer (#78)
+    if (isMissing(got.error)) notFound();
     return (
       <ReadingColumn>
         <h1>Power Map</h1>
-        <p className="error">
-          {got.error.code === 'not_found'
-            ? 'This map isn’t on the Power Map.'
-            : `${got.error.code}: ${got.error.message}`}
-        </p>
+        <p className="error">{`${got.error.code}: ${got.error.message}`}</p>
         <p>
           <a href={siteLinks.map}>Back to the Power Map</a>
         </p>
