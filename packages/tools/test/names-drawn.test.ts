@@ -1,7 +1,14 @@
 // A person's names on the petals drawn for them (annotation-layer.md step 6, the server's side): POST
 // /api/v1/render and the map's readings compose the signed-in person's named annotations (core's namePieces),
 // a visitor's carry none, and nothing that carries a person's is kept by a cache. The name is invented.
-import { accountRef, DEFAULT_VIEW, makeClaim, readFlower } from '@petal/core';
+import {
+  accountRef,
+  canonicalJson,
+  DEFAULT_VIEW,
+  makeClaim,
+  readFlower,
+  viewHash,
+} from '@petal/core';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { privateStore } from '../src/drafts.ts';
@@ -102,6 +109,38 @@ describe("a person's names on the petals drawn for them", () => {
       expect(((await res.json()) as Out).svg).not.toContain('Ada Pool');
       expect(res.headers.get('cache-control')).not.toBe('private, no-store');
     }
+  });
+
+  test("a tile is the person's when its address names their set: drawn with it for them, kept by no cache", async () => {
+    const { spec, named } = await flowerAndName();
+    await run('render_flower', { spec });
+    // the person's view, kept as a person's is when they set it, so its picture can name it by hash
+    await privateStore(r.ctx.config).viewDoc.put(
+      viewHash(NAMES_ON),
+      canonicalJson(NAMES_ON),
+      '2026-11-11T12:00:00Z',
+    );
+    const app = door();
+    const [mine] = await mapViews({ ...r.ctx, names: [named] }, NAMES_ON);
+    const [public_] = await mapViews(r.ctx, NAMES_ON);
+    const path = (url: string) => url.slice(url.indexOf('/api/v1/'));
+    expect(mine?.picture).toMatch(/&names=[0-9a-f]{64}$/);
+    expect(public_?.picture).not.toContain('names=');
+    const get = (url: string, subject?: string) =>
+      app.request(path(url), { headers: subject ? { 'x-test-subject': subject } : {} });
+    const theirs = await get(mine?.picture as string, 'prs_a');
+    expect(await theirs.text()).toContain('Ada Pool');
+    expect(theirs.headers.get('cache-control')).toBe('private, no-store');
+    // the same address for anyone else draws no names, and isn't kept either
+    for (const who of [undefined, 'prs_b']) {
+      const res = await get(mine?.picture as string, who);
+      expect(await res.text()).not.toContain('Ada Pool');
+      expect(res.headers.get('cache-control')).toBe('private, no-store');
+    }
+    // the public tile stays the public one, kept a year
+    const plain = await get(public_?.picture as string, 'prs_a');
+    expect(await plain.text()).not.toContain('Ada Pool');
+    expect(plain.headers.get('cache-control')).toMatch(/immutable/);
   });
 
   test("the map's readings carry the person's names, kept apart from a visitor's", async () => {

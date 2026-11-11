@@ -21,7 +21,7 @@ import { privateStore, specBody } from '../drafts.ts';
 import { fromThrown, isToolError, toolError } from '../errors.ts';
 import { freshGate } from '../fresh.ts';
 import { LiveHub } from '../live.ts';
-import { mapsOf, mapViews } from '../map.ts';
+import { mapsOf, mapViews, namesKey } from '../map.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
 import { findTool } from '../registry.ts';
 import { brainOf } from '../tools/brain.ts';
@@ -393,12 +393,17 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     }
     if (!spec)
       return respond(c, versioned(toolError('not_found', 'No view on the map under that hash.')));
-    const r = await run('render_flower', { spec, include_svg: true, view });
+    // A person's picture (annotation step 6): its address names their set of names, and it's drawn with them
+    // only for that person, whose set it is now. Never kept by a cache, whoever asks.
+    const names = c.req.query('names');
+    const viewer = names ? await forViewer(c) : ctx;
+    const theirs = !!names && !!viewer.names?.length && namesKey(viewer.names) === names;
+    const r = await run('render_flower', { spec, include_svg: true, view }, theirs ? viewer : ctx);
     if (isToolError(r)) return respond(c, r);
     const { svg, render_sha256 } = r as { svg: string; render_sha256: string };
     return c.body(svg, 200, {
       'Content-Type': 'image/svg+xml; charset=utf-8',
-      'Cache-Control': IMMUTABLE,
+      'Cache-Control': names ? 'private, no-store' : IMMUTABLE,
       ETag: `"${render_sha256}"`,
     });
   });
