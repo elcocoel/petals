@@ -17,7 +17,7 @@ import type {
   View,
 } from '../types/index.ts';
 import { READING_VERSION } from '../versions.ts';
-import { HEIGHT_FLOOR, heightValues, metricOf, widthFactors } from './encodings.ts';
+import { HEIGHT_FLOOR, heightValues, isStraight, metricOf, widthFactors } from './encodings.ts';
 import { detailsOf, legendOf } from './legend.ts';
 import { encodingsOf, labelsOf } from './view.ts';
 
@@ -84,8 +84,8 @@ export function categoryOf(
 
 export interface ReadOptions {
   /**
-   * The least height a bar is given, HEIGHT_FLOOR unless said. The lab reads with none (Elco's art direction,
-   * 11 Nov: "no artificial minimum"; #76), so a petal is exactly as tall as its share, until Elco has seen it.
+   * The least height a bar is given: none on the straight scale (Elco's art direction, 11 Nov: "no artificial
+   * minimum"; #76), so a petal is exactly as tall as its share, and HEIGHT_FLOOR on the others, unless said.
    */
   floor?: number;
 }
@@ -104,8 +104,8 @@ export function readFlower(
   pieces: readonly SeamPiece[] = [],
   options: ReadOptions = {},
 ): Reading {
-  const floor = options.floor ?? HEIGHT_FLOOR;
   const spec = view ? { ...given, encodings: encodingsOf(view, given, s, pieces) } : given;
+  const floor = options.floor ?? (isStraight(spec.encodings.height) ? 0 : HEIGHT_FLOOR);
   const values = valuesOf(pieces);
   const labels = view ? labelsOf(view, s, pieces) : 'identity';
   // petals clockwise from twelve o'clock in encodings.order.by; measure_desc is the only order

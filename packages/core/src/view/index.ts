@@ -98,18 +98,38 @@ export function latestView(view: View): ViewV2 {
 }
 
 /**
- * The default: default/v1's choices, with labels on identity, written as a view/v2. It draws what
- * DEFAULT_VIEW_V1 draws; its hash is new, and the v1 default's still means the default.
+ * The default from view/v2 until 11 Nov: default/v1's choices, with labels on identity. Addresses made then
+ * carry its hash, and it draws as it did.
  */
-export const DEFAULT_VIEW: ViewV2 = latestView(DEFAULT_VIEW_V1);
+export const DEFAULT_VIEW_V2_0: ViewV2 = latestView(DEFAULT_VIEW_V1);
+
+/**
+ * The default since 11 Nov, the art direction's (design/flower-art-direction/default-system-vnext.md, V1; #76,
+ * Elco: the lab into the product): heights straight, so twice as much is twice as tall, everyone else too, with
+ * no minimum (the linear scale, reading/encodings.ts); every petal as wide. The rest as before.
+ */
+export const DEFAULT_VIEW: ViewV2 = {
+  petal: VIEW_VERSION,
+  dimensions: {
+    ...DEFAULT_VIEW_V2_0.dimensions,
+    height: { data: 'share', scale: 'linear' },
+    width: null,
+  },
+};
 
 /** A view's identity: the hash of its canonical JSON, as a spec's is. A v1 view keeps its own. */
 export const viewHash = (view: View): string => sha256Hex(canonicalJson(view));
 
-/** The default's hashes: the v2 default's, and the v1 default's, which addresses made before v2 carry. */
+/** The defaults before this one, by hash: an address that carries one still draws as it did. */
+export const FORMER_DEFAULTS: ReadonlyMap<string, View> = new Map<string, View>([
+  [viewHash(DEFAULT_VIEW_V2_0), DEFAULT_VIEW_V2_0],
+  [viewHash(DEFAULT_VIEW_V1), DEFAULT_VIEW_V1],
+]);
+
+/** The default's hashes: today's, then the former defaults', which older addresses carry. */
 export const DEFAULT_HASHES: readonly string[] = [
   viewHash(DEFAULT_VIEW),
-  viewHash(DEFAULT_VIEW_V1),
+  ...FORMER_DEFAULTS.keys(),
 ];
 
 /**

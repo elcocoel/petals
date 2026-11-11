@@ -2,7 +2,7 @@
 // see the entire universe"): every drawing on this server is drawn through a view, never through a flower's
 // own choices, which are only the record of what its agent proposed. A person keeps theirs (me-routes.ts in
 // @petal/agent); a picture's address names the view it's drawn with by its whole hash.
-import { DEFAULT_VIEW, DEFAULT_VIEW_V1, viewHash } from '@petal/core';
+import { DEFAULT_VIEW, DEFAULT_VIEW_V1, FORMER_DEFAULTS, viewHash } from '@petal/core';
 import type { View } from '@petal/core/types';
 import { privateStore } from './drafts.ts';
 import type { ToolContext } from './types.ts';
@@ -12,10 +12,11 @@ const DEFAULT_HASH = viewHash(DEFAULT_VIEW);
 const DEFAULT_V1_HASH = viewHash(DEFAULT_VIEW_V1);
 const HASH = /^[0-9a-f]{64}$/;
 
-/** A view by its whole hash: the default's (v2's, or v1's) without anyone keeping it, or one someone kept. */
+/** A view by its whole hash: the default's (today's, or a former one's) without anyone keeping it, or one kept. */
 export async function viewByHash(ctx: ToolContext, hash: string): Promise<View | null> {
   if (hash === DEFAULT_HASH) return DEFAULT_VIEW;
-  if (hash === DEFAULT_V1_HASH) return DEFAULT_VIEW_V1;
+  const former = FORMER_DEFAULTS.get(hash);
+  if (former) return former;
   if (!HASH.test(hash)) return null;
   const row = await privateStore(ctx.config).viewDoc.get(hash);
   return row ? (JSON.parse(row.body) as View) : null;

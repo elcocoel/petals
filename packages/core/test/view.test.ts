@@ -15,8 +15,10 @@ import {
   DEFAULT_HASHES,
   DEFAULT_VIEW,
   DEFAULT_VIEW_V1,
+  DEFAULT_VIEW_V2_0,
   DIMENSIONS,
   EVERY_FLOWER,
+  FORMER_DEFAULTS,
   FROM_ANNOTATIONS,
   fits,
   inUse,
@@ -126,10 +128,16 @@ describe('the fixtures', () => {
     expect(viewHash(v)).toBe(hash);
   });
 
-  test('the default fixtures are the default views, v1 and v2', () => {
+  test('the default fixtures are the former defaults, v1 and v2 until 11 Nov, and their hashes still mean the default', () => {
     expect(fixture('view.v1.json')).toEqual(DEFAULT_VIEW_V1);
-    expect(fixture('view.v2.json')).toEqual(DEFAULT_VIEW);
-    expect(DEFAULT_HASHES).toEqual([viewHash(DEFAULT_VIEW), viewHash(DEFAULT_VIEW_V1)]);
+    expect(fixture('view.v2.json')).toEqual(DEFAULT_VIEW_V2_0);
+    expect(DEFAULT_HASHES).toEqual([
+      viewHash(DEFAULT_VIEW),
+      viewHash(DEFAULT_VIEW_V2_0),
+      viewHash(DEFAULT_VIEW_V1),
+    ]);
+    expect(FORMER_DEFAULTS.get(viewHash(DEFAULT_VIEW_V2_0))).toBe(DEFAULT_VIEW_V2_0);
+    expect(FORMER_DEFAULTS.get(viewHash(DEFAULT_VIEW_V1))).toBe(DEFAULT_VIEW_V1);
   });
 
   test("Elco's case is the v1 default with proposals as marks", () => {
@@ -144,7 +152,7 @@ describe('the fixtures', () => {
       ...v.dimensions,
       labels: { data: 'identity' },
       outline: { data: 'identity' },
-    }).toEqual(DEFAULT_VIEW.dimensions);
+    }).toEqual(DEFAULT_VIEW_V2_0.dimensions);
     expect(v.dimensions.labels).toEqual({ data: 'name' });
     expect(v.dimensions.outline).toEqual({ data: 'name_kind' });
   });
@@ -152,7 +160,7 @@ describe('the fixtures', () => {
 
 describe('a view/v1 still reads', () => {
   test('as the same view with labels on identity, the names petals always had', () => {
-    expect(latestView(DEFAULT_VIEW_V1)).toEqual(DEFAULT_VIEW);
+    expect(latestView(DEFAULT_VIEW_V1)).toEqual(DEFAULT_VIEW_V2_0);
     const v = fixture('view.v1.proposals.json') as ViewV1;
     expect(latestView(v)).toEqual({
       petal: 'view/v2',
@@ -170,15 +178,24 @@ describe('a view/v1 still reads', () => {
 
   test('and meets a flower as v2 does', () => {
     const near: Piece[] = [...EVERY_FLOWER, { name: 'backers', kind: 'parts' }];
-    expect(inUse(DEFAULT_VIEW_V1, near)).toEqual(inUse(DEFAULT_VIEW, near));
+    expect(inUse(DEFAULT_VIEW_V1, near)).toEqual(inUse(DEFAULT_VIEW_V2_0, near));
     expect(inUse(DEFAULT_VIEW_V1, near).labels).toBe('identity');
   });
 });
 
 describe('the default', () => {
-  test("is default/v1's choices, written as a view", () => {
+  test("since 11 Nov, the art direction's: straight heights, every petal as wide, the rest as before (#76)", () => {
+    expect(DEFAULT_VIEW.dimensions).toEqual({
+      ...DEFAULT_VIEW_V2_0.dimensions,
+      height: { data: 'share', scale: 'linear' },
+      width: null,
+    });
+    expect(viewProblem(DEFAULT_VIEW)).toBeNull();
+  });
+
+  test("until then, default/v1's choices, written as a view", () => {
     const c = DEFAULT_CONVENTION.encodings;
-    const d = DEFAULT_VIEW.dimensions;
+    const d = DEFAULT_VIEW_V2_0.dimensions;
     expect(d.height).toEqual({ data: c.height.by, scale: c.height.scale });
     expect(d.width).toEqual({
       data: c.width.by,
@@ -230,9 +247,9 @@ describe('a view meeting a flower', () => {
   const near: Piece[] = [...EVERY_FLOWER, { name: 'backers', kind: 'parts' }];
   const moloch: Piece[] = [...EVERY_FLOWER, { name: 'proposals', kind: 'count' }];
 
-  test('the default draws what every flower has, and no bands, as default/v1', () => {
+  test('the default draws what every flower has, every petal as wide, and no bands', () => {
     const a = inUse(DEFAULT_VIEW, near);
-    expect(a).toMatchObject({ height: 'share', width: 'share', colour: 'kind', segments: null });
+    expect(a).toMatchObject({ height: 'share', width: null, colour: 'kind', segments: null });
     const banded = structuredClone(DEFAULT_VIEW);
     banded.dimensions.segments = { data: 'backers' };
     expect(inUse(banded, near).segments).toBe('backers');

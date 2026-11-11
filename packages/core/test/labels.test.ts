@@ -9,7 +9,7 @@ import { renderFlower } from '../src/render/index.ts';
 import { noteText } from '../src/render/wedge/words.ts';
 import { namePieces } from '../src/seam.ts';
 import type { Claim, ClaimDraft, View } from '../src/types/index.ts';
-import { DEFAULT_VIEW, DEFAULT_VIEW_V1 } from '../src/view/index.ts';
+import { DEFAULT_VIEW, DEFAULT_VIEW_V1, DEFAULT_VIEW_V2_0 } from '../src/view/index.ts';
 import { GOLDEN_CASES, goldenSpec, readGolden } from './golden-cases.ts';
 
 const c = GOLDEN_CASES.find((g) => g.name === 'house-of-stake-default') as (typeof GOLDEN_CASES)[0];
@@ -59,15 +59,15 @@ const both = withView((d) => {
 describe('by default', () => {
   test('every flower reads as it always did, with names or without', () => {
     const golden = readGolden(c);
-    expect(readFlower(spec, s, DEFAULT_VIEW)).toEqual(readFlower(spec, s, DEFAULT_VIEW_V1));
+    expect(readFlower(spec, s, DEFAULT_VIEW_V2_0)).toEqual(readFlower(spec, s, DEFAULT_VIEW_V1));
     expect(readFlower(spec, s, DEFAULT_VIEW, pieces)).toEqual(readFlower(spec, s, DEFAULT_VIEW));
     expect(readFlower(spec, s, DEFAULT_VIEW).petals.map((p) => p.name)).toEqual(
       golden.petals.map((p) => p.name),
     );
   });
 
-  test('the picture is the same picture, v1 default or v2', () => {
-    expect(renderFlower(spec, s, { view: DEFAULT_VIEW, pieces }).svg).toBe(
+  test('the picture is the same picture, v1 default or v2 until 11 Nov', () => {
+    expect(renderFlower(spec, s, { view: DEFAULT_VIEW_V2_0, pieces }).svg).toBe(
       renderFlower(spec, s, { view: DEFAULT_VIEW_V1 }).svg,
     );
   });

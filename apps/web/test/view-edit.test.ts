@@ -1,5 +1,5 @@
 // The Settings section's choices, as edits of the person's view.
-import { DEFAULT_VIEW, EVERY_FLOWER } from '@petal/core/view';
+import { DEFAULT_VIEW, DEFAULT_VIEW_V2_0, EVERY_FLOWER } from '@petal/core/view';
 import { describe, expect, test } from 'vitest';
 import { viewChoices } from '../lib/person-view.ts';
 import { dataOf, isDefault, scaleOf, takesScale, withData, withScale } from '../lib/view-edit.ts';
@@ -21,11 +21,14 @@ describe('a choice in Settings', () => {
 
   test('a number keeps its scale; a category has none to choose', () => {
     const amount = withData(DEFAULT_VIEW, 'height', 'amount', EVERY_FLOWER, DEFAULT_VIEW);
-    expect(scaleOf(amount, 'height', EVERY_FLOWER)).toBe('sqrt');
+    expect(scaleOf(amount, 'height', EVERY_FLOWER)).toBe('linear');
     expect(takesScale(DEFAULT_VIEW, 'colour', EVERY_FLOWER)).toBe(false);
-    expect(takesScale(DEFAULT_VIEW, 'width', EVERY_FLOWER)).toBe(true);
+    // the default has every petal as wide since 11 Nov; the one before had width, so it shows the scale kept
+    expect(takesScale(DEFAULT_VIEW, 'width', EVERY_FLOWER)).toBe(false);
+    expect(takesScale(DEFAULT_VIEW_V2_0, 'width', EVERY_FLOWER)).toBe(true);
     expect(
-      withData(DEFAULT_VIEW, 'width', 'amount', EVERY_FLOWER, DEFAULT_VIEW).dimensions.width,
+      withData(DEFAULT_VIEW_V2_0, 'width', 'amount', EVERY_FLOWER, DEFAULT_VIEW_V2_0).dimensions
+        .width,
     ).toEqual({
       data: 'amount',
       scale: 'log',
