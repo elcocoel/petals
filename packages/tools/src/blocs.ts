@@ -4,14 +4,12 @@
 import {
   type Blocs,
   type BlocsAsk,
-  blocClaims,
   type Proposals,
   validateProposals,
   votingBlocs,
 } from '@petal/core';
 import { privateStore } from './drafts.ts';
 import { mapsOf, mapViews } from './map.ts';
-import { keepMappingClaims } from './mapping-claims.ts';
 import { loadSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
 
@@ -24,6 +22,18 @@ export async function keptProposals(ctx: ToolContext, id: string): Promise<Propo
   if (!row) return null;
   const p = validateProposals(JSON.parse(row.body));
   return p.ok ? p.value : null;
+}
+
+/**
+ * The vote ring's stretch (LOOK, 11 Nov: one period for the ring and the blocs): the 90 days up to the map's newest
+ * proposal's close (decided_at, else closes_at, else when it was submitted, at its latest), so a quiet DAO still
+ * shows its last stretch. Null with no proposals.
+ */
+export function lastStretch(p: Proposals, days = 90): { from: string; to: string } | null {
+  const ends = p.proposals.map((x) => x.decided_at ?? x.closes_at ?? x.at).sort();
+  const to = ends.at(-1);
+  if (!to) return null;
+  return { from: new Date(Date.parse(to) - days * 24 * 60 * 60 * 1000).toISOString(), to };
 }
 
 /** A map's blocs over the period asked, its members as its newest reading's petal ids; null: no proposals. */
@@ -51,23 +61,19 @@ export async function mapBlocs(ctx: ToolContext, id: string, ask: BlocsAsk): Pro
 export interface BlocRun extends BlocsAsk {
   /** only the maps whose address holds this */
   only?: string;
-  /** false: find and say, keep nothing */
-  save?: boolean;
   log?: (line: string) => void;
 }
 
 /**
- * Every DAO map's blocs over one period, kept as Petals' mapping's claims (scripts/map-blocs.ts; META, 11 Nov:
- * run by hand per period, never on a timer). A pair found again is the same claim only when nothing about it
- * changed; each run's claims say their period and thresholds.
+ * Every DAO map's blocs over one period, said and kept nowhere (scripts/map-blocs.ts; META, 11 Nov: keep nothing
+ * as Petals' mapping's claims for now, compute them live; an agent keeps what it needs in its person's project).
  */
 export async function blocMaps(
   ctx: ToolContext,
   o: BlocRun = {},
-): Promise<{ maps: number; pairs: number; blocs: number; kept: number }> {
-  const { only, save, log = () => {}, ...ask } = o;
-  const out = { maps: 0, pairs: 0, blocs: 0, kept: 0 };
-  const at = ctx.now().toISOString();
+): Promise<{ maps: number; pairs: number; blocs: number }> {
+  const { only, log = () => {}, ...ask } = o;
+  const out = { maps: 0, pairs: 0, blocs: 0 };
   for (const row of await privateStore(ctx.config).proposals.list()) {
     if (only && !row.about.includes(only)) continue;
     const p = validateProposals(JSON.parse(row.body));
@@ -79,8 +85,16 @@ export async function blocMaps(
     log(
       `${row.about}: ${b.proposals.in_period} proposals in the period, ${b.pairs.length} pairs, ${b.blocs.length} blocs${b.blocs[0] ? ` (largest ${b.blocs[0].members.length})` : ''}`,
     );
-    if (save === false || !b.pairs.length) continue;
-    out.kept += await keepMappingClaims(ctx, 'blocs', blocClaims(b, { by: BLOCS_BY, at }));
   }
   return out;
+}
+
+/** The blocs as the site and agents read them first: each bloc's members, how many pairs; the pairs on asking. */
+export function shownBlocs(b: Blocs, pairs: boolean) {
+  const { pairs: all, ...rest } = b;
+  return {
+    ...rest,
+    pair_count: all.length,
+    ...(pairs ? { pairs: all.map(({ proposals: _p, ...x }) => x) } : {}),
+  };
 }

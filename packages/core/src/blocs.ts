@@ -1,6 +1,7 @@
 // Voting blocs over a period (board #94; Elco, 11 Nov: "a super important feature"): from a DAO's proposals,
-// each pair of accounts that voted on enough of the same proposals and voted alike on enough of them, and the
-// blocs such pairs link. Agreement, never proof of coordination: each pair is an inferred claim (moves_with,
+// each pair of accounts that voted on enough of the same proposals, voted alike on enough of them, and agreed
+// beyond what each proposal's own split explains (kappa; META, 11 Nov: a majority agreeing with itself is no bloc),
+// and the blocs such pairs link. Agreement, never proof of coordination: each pair is an inferred claim (moves_with,
 // grounds synchronised_behaviour) with its proposals as evidence and its method and thresholds in its words.
 // A vote of null (a ballot of choices) isn't for or against, so it isn't counted.
 import { makeClaim } from './claims/index.ts';
@@ -8,9 +9,9 @@ import { canonicalJson, sha256Hex } from './hash.ts';
 import type { Proposals } from './proposals.ts';
 import type { Claim, ClaimDraft } from './types/index.ts';
 
-export const BLOCS_METHOD = 'blocs/agreement@1';
+export const BLOCS_METHOD = 'blocs/agreement@2';
 /** The method's defaults (META, 11 Nov: stated in every claim, settable per call, Elco can change them). */
-export const BLOCS_DEFAULTS = { min_shared: 5, min_agreement: 0.8 } as const;
+export const BLOCS_DEFAULTS = { min_shared: 5, min_agreement: 0.8, min_kappa: 0.5 } as const;
 
 export interface BlocsAsk {
   /** the period, by when each proposal was submitted: from (inclusive) and to (exclusive), ISO times */
@@ -20,6 +21,8 @@ export interface BlocsAsk {
   min_shared?: number;
   /** the least share of those they voted alike on */
   min_agreement?: number;
+  /** the least agreement beyond chance: (agreement - expected) / (1 - expected) */
+  min_kappa?: number;
 }
 
 export interface BlocPair {
@@ -31,6 +34,8 @@ export interface BlocPair {
   agreed: number;
   /** agreed / shared */
   agreement: number;
+  /** how far it agreed beyond what each shared proposal's split explains, from -1 to 1 (Cohen's kappa) */
+  kappa: number;
   /** the shared proposals, by ref */
   proposals: string[];
 }
@@ -38,7 +43,12 @@ export interface BlocPair {
 export interface Blocs {
   about: string;
   period: { from: string | null; to: string | null };
-  method: { name: typeof BLOCS_METHOD; min_shared: number; min_agreement: number };
+  method: {
+    name: typeof BLOCS_METHOD;
+    min_shared: number;
+    min_agreement: number;
+    min_kappa: number;
+  };
   /** how many proposals the period holds, and how many of them anyone voted on */
   proposals: { in_period: number; voted: number };
   /** every pair that meets both thresholds, the most agreed first */
@@ -57,10 +67,14 @@ function accountOf(contract: string, account: string): string {
 export function votingBlocs(p: Proposals, ask: BlocsAsk = {}): Blocs {
   const min_shared = ask.min_shared ?? BLOCS_DEFAULTS.min_shared;
   const min_agreement = ask.min_agreement ?? BLOCS_DEFAULTS.min_agreement;
+  const min_kappa = ask.min_kappa ?? BLOCS_DEFAULTS.min_kappa;
   const from = ask.from ?? null;
   const to = ask.to ?? null;
   const inPeriod = p.proposals.filter((x) => (!from || x.at >= from) && (!to || x.at < to));
-  const tally = new Map<string, { shared: number; agreed: number; proposals: string[] }>();
+  const tally = new Map<
+    string,
+    { shared: number; agreed: number; expected: number; proposals: string[] }
+  >();
   let voted = 0;
   for (const x of inPeriod) {
     const votes = x.votes
@@ -68,24 +82,38 @@ export function votingBlocs(p: Proposals, ask: BlocsAsk = {}): Blocs {
       .map((v) => ({ account: accountOf(p.source.contract, v.account), vote: v.vote }))
       .sort((m, n) => (m.account < n.account ? -1 : 1));
     if (votes.length) voted++;
+    // how likely two of its voters vote alike by its split alone: the sum of each choice's share squared
+    const count = new Map<string, number>();
+    for (const v of votes) count.set(String(v.vote), (count.get(String(v.vote)) ?? 0) + 1);
+    const chance = [...count.values()].reduce((sum, c) => sum + (c / votes.length) ** 2, 0);
     for (let i = 0; i < votes.length; i++)
       for (let j = i + 1; j < votes.length; j++) {
         const [m, n] = [votes[i], votes[j]] as [(typeof votes)[0], (typeof votes)[0]];
         if (m.account === n.account) continue;
         const key = `${m.account} ${n.account}`;
-        const t = tally.get(key) ?? { shared: 0, agreed: 0, proposals: [] };
+        const t = tally.get(key) ?? { shared: 0, agreed: 0, expected: 0, proposals: [] };
         t.shared++;
         if (m.vote === n.vote) t.agreed++;
+        t.expected += chance;
         t.proposals.push(x.ref);
         tally.set(key, t);
       }
   }
   const pairs: BlocPair[] = [];
-  for (const [key, t] of tally) {
+  for (const [key, { expected, ...t }] of tally) {
     const agreement = t.agreed / t.shared;
-    if (t.shared < min_shared || agreement < min_agreement) continue;
+    const chance = expected / t.shared;
+    // where every shared vote was unanimous, agreeing says nothing about the pair
+    const kappa = chance >= 1 ? 0 : Math.max(-1, (agreement - chance) / (1 - chance));
+    if (t.shared < min_shared || agreement < min_agreement || kappa < min_kappa) continue;
     const [a, b] = key.split(' ') as [string, string];
-    pairs.push({ a, b, ...t, agreement: Number(agreement.toFixed(4)) });
+    pairs.push({
+      a,
+      b,
+      ...t,
+      agreement: Number(agreement.toFixed(4)),
+      kappa: Number(kappa.toFixed(4)),
+    });
   }
   pairs.sort((m, n) => n.agreement - m.agreement || n.shared - m.shared || (m.a < n.a ? -1 : 1));
   // blocs: the accounts the pairs link
@@ -114,7 +142,7 @@ export function votingBlocs(p: Proposals, ask: BlocsAsk = {}): Blocs {
   return {
     about: p.about,
     period: { from, to },
-    method: { name: BLOCS_METHOD, min_shared, min_agreement },
+    method: { name: BLOCS_METHOD, min_shared, min_agreement, min_kappa },
     proposals: { in_period: inPeriod.length, voted },
     pairs,
     blocs,
@@ -144,7 +172,7 @@ export function blocClaims(b: Blocs, o: { by: string; at: string }): Claim[] {
         evidence: [
           {
             type: 'note',
-            note: `Voted alike on ${pair.agreed} of the ${pair.shared} proposals both voted on, ${period} (${b.method.name}: at least ${b.method.min_shared} in common, ${Math.round(b.method.min_agreement * 100)}% alike). Agreement, not proof of coordination.`,
+            note: `Voted alike on ${pair.agreed} of the ${pair.shared} proposals both voted on, ${period}, ${pair.kappa} beyond what each proposal's split explains (${b.method.name}: at least ${b.method.min_shared} in common, ${Math.round(b.method.min_agreement * 100)}% alike, kappa at least ${b.method.min_kappa}). Agreement, not proof of coordination.`,
             found_by: o.by,
             found_at: o.at,
           },
