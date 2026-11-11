@@ -281,6 +281,13 @@ export const chart = {
   'k-org': '#4a3aa7',
   'k-delegator': '#e34948',
   'k-group': '#a0673a',
+  // The art direction's keys (#76; core render/wedge/keys.ts), common to rare, and grey for context.
+  'key-mint': '#8bc9bd',
+  'key-blue': '#96d4e3',
+  'key-coral': '#eb9c94',
+  'key-apricot': '#f4c376',
+  'key-pink': '#ecb5d5',
+  'key-grey': '#c7c7c7',
   'everyone-else': '#666661',
   selected: primitives.Mint,
   // Only the API mock's legend names these (apps/web/lib/mock/near-validators.json).
@@ -307,6 +314,12 @@ export const rendererVariables = [
   'k-org',
   'k-delegator',
   'k-group',
+  'key-mint',
+  'key-blue',
+  'key-coral',
+  'key-apricot',
+  'key-pink',
+  'key-grey',
 ] as const satisfies readonly (keyof typeof chart)[];
 
 export interface Tokens {

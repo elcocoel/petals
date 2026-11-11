@@ -1,7 +1,7 @@
 {
   "name": "near-validators-backers",
   "spec_sha256": "0f475a0fb0f11115569b2f74cc9b884d0f6ba98cb101d7d49ed4c7b05c409cd4",
-  "render_sha256": "3a05fe26dc2bf5e27c61eb8bb28633f7420a0bebb5e481afe3836592d2e9c2aa",
+  "render_sha256": "a9e82aa9038f3c6321acc44b24546d4b419eb420ac8e55ba2586302f8c1f4b33",
   "spec": {
     "petal": "spec/v1",
     "network": {
@@ -97,16 +97,6 @@
       "meaning": "kind of account",
       "sources": [
         "nearblocks-validators"
-      ],
-      "keys": [
-        {
-          "swatch": "var(--k-pool)",
-          "label": "pool"
-        },
-        {
-          "swatch": "var(--k-entity)",
-          "label": "liquid staking"
-        }
       ]
     },
     {
@@ -117,19 +107,19 @@
       ],
       "keys": [
         {
-          "swatch": "var(--k-pool)",
+          "swatch": "var(--key-mint)",
           "label": "other delegators"
         },
         {
-          "swatch": "var(--k-org)",
+          "swatch": "var(--key-blue)",
           "label": "accounts with 1M+ NEAR"
         },
         {
-          "swatch": "var(--k-entity)",
+          "swatch": "var(--key-coral)",
           "label": "liquid-staking contracts"
         },
         {
-          "swatch": "var(--k-contract)",
+          "swatch": "var(--key-apricot)",
           "label": "lockups (vesting)"
         }
       ]
@@ -149,7 +139,7 @@
       ],
       "keys": [
         {
-          "swatch": "var(--tail)",
+          "swatch": "var(--key-grey)",
           "label": "everyone else"
         }
       ]

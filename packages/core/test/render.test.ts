@@ -92,7 +92,7 @@ describe('renderFlower on the NEAR validators fixture (segments: backers)', () =
   });
 
   test('the tail: data-p="__tail", in the tail\'s tone, named with its count and share', () => {
-    expect(r.svg).toMatch(/style="fill:var\(--tail\)" data-p="__tail" data-i="60"/);
+    expect(r.svg).toMatch(/class="c-key-grey" data-p="__tail" data-i="60"/);
     expect(r.svg).toContain('>everyone else (311) 13.8%</text>');
   });
 

@@ -1,7 +1,7 @@
 {
   "name": "near-validators-default",
   "spec_sha256": "f87072c9a4815077c7e562047140ace6456b92edd6c66b4f1740f7379d1c85e3",
-  "render_sha256": "a5e283220ed0d7689c8017c2dc46acfffc93db814991800429c74768e94c07a2",
+  "render_sha256": "c4f60278c44f61837a156a13e494a4152175fa6facf25d2ce1682f68ef296656",
   "spec": {
     "petal": "spec/v1",
     "network": {
@@ -94,11 +94,11 @@
       ],
       "keys": [
         {
-          "swatch": "var(--k-pool)",
+          "swatch": "var(--key-mint)",
           "label": "pool"
         },
         {
-          "swatch": "var(--k-entity)",
+          "swatch": "var(--key-blue)",
           "label": "liquid staking"
         }
       ]
@@ -118,7 +118,7 @@
       ],
       "keys": [
         {
-          "swatch": "var(--tail)",
+          "swatch": "var(--key-grey)",
           "label": "everyone else"
         }
       ]

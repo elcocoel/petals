@@ -93,8 +93,9 @@ export {
 } from './proposals.ts';
 export { categoryOf, type ReadOptions, readFlower, readingHash } from './reading/index.ts';
 export { PAINT, pictureQuery, renderFlower, SKINS } from './render/index.ts';
-export { legendItem } from './render/legend.ts';
+export { type LegendLook, legendItem } from './render/legend.ts';
 export type { Skin } from './render/types.ts';
+export { lookFills } from './render/wedge/keys.ts';
 export { runSignal, setRunSignalSource } from './run-signal.ts';
 export { schemas } from './schema/index.ts';
 export {

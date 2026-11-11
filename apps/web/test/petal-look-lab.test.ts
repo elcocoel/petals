@@ -27,10 +27,13 @@ describe('the petal look, in the lab only', () => {
     expect(handing).toEqual(['app/lab/petal/page.tsx']);
   });
 
-  test('the canvas draws none unless it is handed one', () => {
+  test("a page that hands no look gets the reading's own colours in the keys (core lookFills)", () => {
     expect(text('flower/FlowerCanvas.tsx')).toMatch(/look = null,/);
     expect(text('flower/drive.ts')).toMatch(/o\.look \?\? null/);
-    expect(text('flower/scene.ts')).toMatch(/look: PetalLook \| null = null/);
+    expect(text('flower/scene.ts')).toMatch(/given: PetalLook \| null = null/);
+    expect(text('flower/scene.ts')).toMatch(
+      /given \?\? \{ \.\.\.lookFills\(m\.petals\), highlight: \[\] \}/,
+    );
   });
 
   test('only the lab reads a flower with no minimum height', () => {

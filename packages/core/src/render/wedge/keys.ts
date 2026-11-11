@@ -1,8 +1,8 @@
 // The look's colours (design/flower-art-direction/default-system-vnext.md, V1, Elco 11 Nov; exact values in
 // palette-final.json): five keys handed to a category's values from the most common to the rarest, and grey for
 // context. No value has a colour of its own: the keys go by how many petals carry each value, so the same flower
-// keyed again gets the same colours and another flower's commonest value is mint too. Only the keys needed. For
-// /lab first (#76): nothing on the live flowers uses them until Elco has seen them. Pure.
+// keyed again gets the same colours and another flower's commonest value is mint too. Only the keys needed. On
+// every flower and still picture since 11 Nov (#76; Elco: the lab into the product). Pure.
 
 export type KeyName = 'mint' | 'blue' | 'coral' | 'apricot' | 'pink' | 'grey';
 
@@ -62,3 +62,46 @@ export const keyFor = (keyed: readonly Keyed[], value: string | null | undefined
   value === null || value === undefined
     ? null
     : (keyed.find((k) => k.value === value)?.key ?? null);
+
+/** What the look needs of a petal to colour it. */
+export interface Keyable {
+  id: string;
+  colour: string;
+  share: number;
+  tail?: boolean | undefined;
+  segments: readonly { key: string; amount: string }[];
+}
+
+/**
+ * The art direction's colours for a reading (#76, on every flower since 11 Nov): each petal in its kind's key, the
+ * kinds handed out by how many petals carry each, everyone else in grey; each band in its class's key, the classes
+ * by how many petals carry a band of each. A value past the fifth, and a petal of bands with none recorded, grey.
+ * The same for the live flower and the still picture.
+ */
+export function lookFills(petals: readonly Keyable[]): {
+  fills: Record<string, string>;
+  bands: Record<string, string>;
+  /** each kind's colour, by its value, for the legend; none while the petals are banded */
+  kinds: Record<string, string>;
+} {
+  const real = petals.filter((p) => !p.tail);
+  const kinds = keysOf(
+    real.map((p) => p.colour),
+    real.map((p) => p.share),
+  );
+  const classes = keysOf(
+    real.flatMap((p) => p.segments.map((s) => s.key)),
+    real.flatMap((p) => p.segments.map((s) => Number(s.amount))),
+  );
+  const banded = classes.length > 0;
+  return {
+    fills: Object.fromEntries(
+      petals.map((p) => [
+        p.id,
+        p.tail || banded ? GREY.hex : (keyFor(kinds, p.colour)?.hex ?? GREY.hex),
+      ]),
+    ),
+    bands: Object.fromEntries(classes.map((c) => [c.value, c.key?.hex ?? GREY.hex])),
+    kinds: banded ? {} : Object.fromEntries(kinds.map((k) => [k.value, k.key?.hex ?? GREY.hex])),
+  };
+}

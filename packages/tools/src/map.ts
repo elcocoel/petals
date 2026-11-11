@@ -8,6 +8,7 @@ import {
   canonicalJson,
   DEFAULT_VIEW,
   legendItem,
+  lookFills,
   mapOf,
   namePieces,
   pictureQuery,
@@ -110,8 +111,9 @@ async function readOf(
       // each petal's value in dollars, from its map's stored value (#91): none with no price
       ...valuePieces(snapshot, values.get(mapOf(snapshot)) ?? null),
     ]);
-    // the picture's colours: its legend, as render_flower dresses it
-    const legend = reading.legend.map(legendItem);
+    // the picture's colours: its legend, as render_flower dresses it (in the keys, core lookFills)
+    const look = lookFills(reading.petals);
+    const legend = reading.legend.map((item) => legendItem(item, look));
     const keysOf = (primitive: string) =>
       legend.filter((i) => i.primitive === primitive).flatMap((i) => i.keys ?? []);
     const params = (spec.network.params ?? {}) as Record<string, string>;

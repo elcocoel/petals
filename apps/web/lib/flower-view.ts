@@ -117,15 +117,15 @@ export interface LegendKey {
 export const swatchKey = (swatch: string) => /^var\(--([\w-]+)\)$/.exec(swatch)?.[1];
 
 /**
- * The colours a drawing paints, as its key: the legend's colours by kind, then "everyone else". Segments
- * are banded in the petal's own tone, so they have no swatch. Several legends give one key, each colour once.
+ * The colours a drawing paints, as its key: the legend's keys by kind or by band (core lookFills, since 11
+ * Nov), then "everyone else". Several legends give one key, each colour once.
  */
 export const colourKeys = (legends: readonly (readonly LegendItem[])[]): LegendKey[] =>
   oneKey(
     legends.map((legend) =>
       keysOf(
         legend
-          .filter((item) => item.primitive === 'colour' || item.primitive === 'tail')
+          .filter((item) => ['colour', 'segments', 'tail'].includes(item.primitive))
           .flatMap((item) => item.keys ?? []),
       ),
     ),
@@ -135,14 +135,14 @@ export const colourKeys = (legends: readonly (readonly LegendItem[])[]): LegendK
 export const keysOf = (keys: readonly { label: string; swatch: string }[]): LegendKey[] =>
   keys.map((k) => ({ label: k.label, swatch: swatchKey(k.swatch) }));
 
+// "Everyone else" is grey since the keys (#76), as a value past the fifth is: told apart by its words.
+const isTail = (k: LegendKey) => k.swatch === 'tail' || k.label.startsWith('everyone else');
+
 /** One key from several: each colour once, and "everyone else" last. */
 export function oneKey(lists: readonly (readonly LegendKey[])[]): LegendKey[] {
   const all = lists.flat();
   const out: LegendKey[] = [];
-  for (const k of [
-    ...all.filter((k) => k.swatch !== 'tail'),
-    ...all.filter((k) => k.swatch === 'tail'),
-  ]) {
+  for (const k of [...all.filter((k) => !isTail(k)), ...all.filter(isTail)]) {
     if (!out.some((o) => o.label === k.label && o.swatch === k.swatch)) out.push(k);
   }
   return out;
