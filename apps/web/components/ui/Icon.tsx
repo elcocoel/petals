@@ -20,6 +20,7 @@ import {
   GearSix,
   House,
   IdentificationCard,
+  List,
   MapTrifold,
   Pause,
   Play,
@@ -64,6 +65,8 @@ const GLYPHS = {
   leave: SignOut,
   /** Putting something back as it was. */
   undo: ArrowCounterClockwise,
+  // the nav's links, folded on a phone
+  menu: List,
   // a story that plays by itself, stopped and started (the hero, 11 Nov)
   pause: Pause,
   play: Play,
