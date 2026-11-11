@@ -64,6 +64,8 @@ export function useWorkMenu(
   // box.fold: the panel starts open, as an IDE's does (design/side-panel.md); the one collapse control
   // hides it to the bar and shows it again; a section's icon opens it, if need be, and asks for that section
   const [open, setOpen] = useState(true);
+  // a narrow window folds it back to the bar (useWorkPanel.ts; design/side-panel.md, lines 47 to 49)
+  const shut = useCallback(() => setOpen(false), []);
   const [jump, setJump] = useState<{ key: SectionKey; n: number } | null>(null);
   // sections folded to their heads; read after the first paint, so the server's page and the browser's agree
   const [folded, setFolded] = useState<SectionKey[]>([]);
@@ -203,6 +205,7 @@ export function useWorkMenu(
   return {
     open,
     toggleOpen: () => setOpen((now) => !now),
+    shut,
     jump,
     jumpTo: (key: SectionKey) => {
       setOpen(true);

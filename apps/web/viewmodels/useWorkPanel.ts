@@ -9,9 +9,17 @@
 
 import type { View } from '@petal/core/types';
 import type { Dimension, Piece } from '@petal/core/view';
-import { layout, sizes } from '@petal/tokens';
+import { floatBox, layout, sizes } from '@petal/tokens';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { type ConversationRow, conversationRows } from '../lib/conversation-list.ts';
 import { CHOOSABLE, DEFAULT_PERSON_VIEW } from '../lib/person-view.ts';
 import { tipLine } from '../lib/tip.ts';
@@ -77,6 +85,21 @@ export interface WorkPanelBus {
 
 /** The bar's width: one control with Space 8 on each side, and its hairline. */
 const BAR = sizes['Row height'] + 2 * layout['Space 8'] + 1;
+
+/**
+ * A window too narrow for the bar, the panel and a box's least width side by side: a phone
+ * (design/side-panel.md, line 47). Read after the first paint and again when the window is sized.
+ */
+function useNarrow(panel: number): boolean {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const look = () => setNarrow(window.innerWidth < BAR + panel + floatBox['min-width']);
+    look();
+    window.addEventListener('resize', look);
+    return () => window.removeEventListener('resize', look);
+  }, [panel]);
+  return narrow;
+}
 
 /** An address as the router reports it, so a claimed one and a seen one compare the same. */
 export const addressOf = (path: string, query: string) => {
@@ -144,8 +167,18 @@ export function usePanelState() {
   );
   const menu = useWorkMenu(signedIn, signal, reread);
   const width = usePanelWidth();
+  const narrow = useNarrow(width.width);
+  // on a narrow window the panel starts folded and folds back on every move; opened, it lies over the
+  // page (design/side-panel.md, lines 47 to 49)
+  const { shut } = menu;
+  const moves = visits.current;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `moves` is the signal: each move folds it again
+  useEffect(() => {
+    if (narrow) shut();
+  }, [narrow, moves, shut]);
   // the bar (a control with Space 8 around it, and its hairline), and the panel beside it when it's open
-  const edge = BAR + (menu.open ? width.width : 0);
+  // and beside the page, not over it
+  const edge = BAR + (menu.open && !narrow ? width.width : 0);
   // the one balance: read again after each turn (the page's signal) and on every move
   const funds = useFunds(signedIn ? `${pathname}?${params.toString()}:${signal}` : '');
   // a name Petals' agent gives the open conversation shows as it arrives, not only when the list is read
@@ -238,6 +271,7 @@ export function usePanelState() {
     settings,
     tip,
     width: width.hand,
+    over: narrow,
     here:
       pathname === '/lobby'
         ? ('lobby' as const)

@@ -180,6 +180,7 @@ export function WorkMenu({
   settings,
   tip,
   width,
+  over = false,
   here,
   restartNew,
 }: {
@@ -191,6 +192,8 @@ export function WorkMenu({
   tip: TipView;
   /** The sash's hands: the panel's width is sized at its edge. */
   width: RailWidth;
+  /** The window is narrow: opened, the panel lies over the page (design/side-panel.md, line 48). */
+  over?: boolean;
   /** New, pressed where a new conversation already is: the address won't move, so this opens it again. */
   restartNew?: (() => void) | undefined;
   /** The page it's on, when that page is one of its places. */
@@ -505,6 +508,7 @@ export function WorkMenu({
         onJump={(key) => menu.jumpTo(key as SectionKey)}
         jump={menu.jump}
         width={width}
+        over={over}
       />
       {/* line 26: move to a project, found by name */}
       <Dialog
