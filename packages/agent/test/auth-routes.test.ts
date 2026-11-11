@@ -244,7 +244,10 @@ describe('POST /api/v1/me/wallets: another wallet for the person signed in (Elco
     const res = await addWallet(b, other);
     expect(res.status).toBe(200);
     const body = (await res.json()) as { wallets: { account_id: string }[] };
-    expect(body.wallets.map((w) => w.account_id).sort()).toEqual(['maker.testnet', 'other.testnet']);
+    expect(body.wallets.map((w) => w.account_id).sort()).toEqual([
+      'maker.testnet',
+      'other.testnet',
+    ]);
     // the session stays as it was
     expect(b.jar.get(COOKIE)).toBe(cookie);
     const me = (await (await b.get('/api/v1/me')).json()) as { person_id: string; account: string };
