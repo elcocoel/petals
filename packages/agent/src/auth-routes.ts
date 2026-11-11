@@ -15,7 +15,7 @@
 // origin is refused here, following the same rule as Go's CrossOriginProtection: a request with no
 // Origin and no Sec-Fetch-Site isn't from a browser, and it holds no cookie unless its owner gave it one.
 import { createHash, randomBytes } from 'node:crypto';
-import { TOOLS_VERSION } from '@petal/core';
+import { accountRef, TOOLS_VERSION } from '@petal/core';
 import type { Nep413Proof } from '@petal/core/types';
 import { type NonceStore, type Rpc, verifyNep413 } from '@petal/near/auth';
 import type { SessionRow, Store } from '@petal/store';
@@ -134,7 +134,9 @@ export interface RouteAuth {
   admitOwner?(subject: string, llm: LlmClient, budget: Budget): Promise<ChatAdmission | null>;
   subjectOf(c: Context): Promise<string | null>;
   /** The subject and the credential that opened its session (TGT-005), in one look. */
-  callerOf(c: Context): Promise<{ subject: string | null; credential: string | null }>;
+  callerOf(
+    c: Context,
+  ): Promise<{ subject: string | null; credential: string | null; by?: string | null }>;
   /** A refusal for a POST from another site; null for one that's fine. */
   refuseForeign(c: Context): Response | null;
   /** Opens an anonymous session on this response, for a first write. Returns its subject. */
@@ -269,6 +271,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         await store.folder.moveOwner(old.subject, person);
         await store.layer.moveOwner(old.subject, person);
         await store.datasetVersion.moveOwner(old.subject, person);
+        await store.annotation.moveOwner(old.subject, person);
         await store.search.forgetOwner(old.subject);
       }
       if (old) await store.session.delete(old.hash);
@@ -424,7 +427,14 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     subjectOf: async (c) => (await sessionOf(c))?.subject ?? null,
     callerOf: async (c) => {
       const s = await sessionOf(c);
-      return { subject: s?.subject ?? null, credential: s?.credential ?? null };
+      // who answers for what a signed-in person writes: their account, as a claim names it
+      const account = s ? await sessionAccount(s) : null;
+      const network = s?.network === 'testnet' ? 'testnet' : 'mainnet';
+      return {
+        subject: s?.subject ?? null,
+        credential: s?.credential ?? null,
+        by: account ? accountRef(`near:${network}`, account) : null,
+      };
     },
     refuseForeign: (c) => (originAllowed(c) ? null : badOrigin(c)),
     openAnonymous: async (c) => (await newHandle(c)).subject,

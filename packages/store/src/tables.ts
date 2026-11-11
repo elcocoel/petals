@@ -298,6 +298,25 @@ export interface AgentRow {
   disconnected_at?: string | null;
 }
 
+/**
+ * An annotation (migration 21): a claim/v2 a person or an agent added about an account, kept under the
+ * project's owner, with the project it was added in. `body` is the claim's canonical JSON.
+ */
+export interface AnnotationRow {
+  owner: string;
+  id: string;
+  exploration: string;
+  subject: string;
+  verb: string;
+  kind: string;
+  body: string;
+  /** what authorised it: the link it came by, or the session's credential */
+  credential: string | null;
+  created_at: string;
+  /** its place in the batch it came in, so a batch lists back in the order it was sent */
+  place: number;
+}
+
 /** A bookmark on something a person is following. It points, and proves nothing about who owns it. */
 export interface FollowRow {
   id: string;
@@ -1528,6 +1547,50 @@ export function tables(db: Db) {
           if (changed === 1 && at !== null)
             await db.run('DELETE FROM agent_worker WHERE owner = ? AND key = ?', owner, key);
           return changed === 1;
+        }),
+    },
+
+    annotation: {
+      /** Keeps each under its owner, all or none; one they hold already stays as it was. How many are new. */
+      add: (rows: readonly AnnotationRow[]): Promise<number> =>
+        db.tx(async () => {
+          let added = 0;
+          for (const r of rows)
+            added += await db.run(
+              `INSERT INTO annotation (owner, id, exploration, subject, verb, kind, body, credential, created_at, place)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (owner, id) DO NOTHING`,
+              r.owner,
+              r.id,
+              r.exploration,
+              r.subject,
+              r.verb,
+              r.kind,
+              r.body,
+              r.credential,
+              r.created_at,
+              r.place,
+            );
+          return added;
+        }),
+      /** The owner's, oldest first: those added in one project, about one account, or both. */
+      list: (owner: string, by: { exploration?: string; subject?: string } = {}) =>
+        db.all<AnnotationRow>(
+          `SELECT * FROM annotation WHERE owner = ?
+           ${by.exploration ? 'AND exploration = ?' : ''} ${by.subject ? 'AND subject = ?' : ''}
+           ORDER BY created_at, place, id`,
+          owner,
+          ...(by.exploration ? [by.exploration] : []),
+          ...(by.subject ? [by.subject] : []),
+        ),
+      /** A session that signs in, or a project claimed, brings its annotations along, as layers do. */
+      moveOwner: (from: string, to: string): Promise<void> =>
+        db.tx(async () => {
+          await db.run(
+            'DELETE FROM annotation WHERE owner = ? AND id IN (SELECT id FROM annotation WHERE owner = ?)',
+            from,
+            to,
+          );
+          await db.run('UPDATE annotation SET owner = ? WHERE owner = ?', to, from);
         }),
     },
 

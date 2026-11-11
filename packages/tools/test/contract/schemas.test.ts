@@ -123,6 +123,23 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
       version: (kept.version as { id: string }).id,
       drop: [],
     });
+    // annotations, what an agent adds about an account (annotations.ts)
+    const about = 'eip155:100:0x1111111111111111111111111111111111111111';
+    await run('add_annotation', {
+      exploration,
+      as: 'codex',
+      annotations: [
+        {
+          subject: about,
+          verb: 'noted',
+          object: { value: 'Signs for the treasury.' },
+          kind: 'sourced',
+          evidence: [{ url: 'https://example.org/signers' }],
+        },
+      ],
+    });
+    await run('list_annotations', { exploration });
+    await run('list_annotations', { exploration, about });
     const fork = await run('start_exploration', { fork_of: exploration });
     await run('get_exploration', { exploration: (fork.link as { url: string }).url });
     const signedIn = { ...r.ctx, caller: { subject: 'prs_test', door: 'test' } };

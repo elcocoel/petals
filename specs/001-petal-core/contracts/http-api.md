@@ -50,6 +50,8 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `GET /api/v1/brain/files/:id` | `brain_file`: one, whole, by id; `doctrine` is read first |
 | `POST /api/v1/explorations/:ref/layers` | `keep_layer` (005): a layer kept privately under the project's owner, and the dataset version it makes; owner or continue link |
 | `GET /api/v1/explorations/:ref/layers?about=&hash=` | `list_layers`: the owner's layers and versions about an address, or one layer whole; any link |
+| `POST /api/v1/explorations/:ref/annotations` | `add_annotation` (10 Nov, annotation-layer.md): `{ annotations: [claim/v2 without id and by], as? }`, one or many, all or none, kept privately under the project's owner. Who answers for each (`by`) comes from the door: the signed-in person's account, or, on a continue link, `tool:<as>@1`. → `{ added, existed, ids }`. Owner or continue link; migration 21 |
+| `GET /api/v1/explorations/:ref/annotations?about=` | `list_annotations`: this project's, oldest first and in the order sent, or with `about` everything the owner holds about that account, from any of their projects. Each `{ claim, exploration, added_at }`. Any link |
 | `POST /api/v1/explorations/:ref/datasets/fork` | `fork_dataset`: a new version from one of the owner's, `{ version, add?, drop? }`, naming it as parent; owner or continue link |
 | `POST /api/v1/figures/compare` | `compare_figures` (Phase B) |
 | `POST /api/v1/corrections/prepare` | `prepare_correction` (Phase B) |
