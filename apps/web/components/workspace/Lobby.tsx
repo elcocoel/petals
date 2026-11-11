@@ -13,8 +13,8 @@ import {
   type WithdrawPhase,
 } from '../../lib/lobby-view.ts';
 import type { Money } from '../../lib/pay.ts';
-import { FlowerTile } from '../FlowerTile.tsx';
 import { LegendKeys } from '../Legend.tsx';
+import { MapList } from '../MapList.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
 import { Funds } from './Funds.tsx';
@@ -75,19 +75,7 @@ export function Lobby({
           {map.tiles.length > 0 ? (
             <>
               <LegendKeys keys={map.keys} />
-              <ul className="gallery">
-                {map.tiles.map((t) => (
-                  <li key={t.key}>
-                    <FlowerTile
-                      title={t.title}
-                      where={t.where}
-                      badge={t.badge}
-                      image={t.image}
-                      href={t.href}
-                    />
-                  </li>
-                ))}
-              </ul>
+              <MapList label={lobbyWords.map} rows={map.tiles} />
             </>
           ) : (
             <p className="my-0 type-caption text-muted">{lobbyWords.mapEmpty}</p>

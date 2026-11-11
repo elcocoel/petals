@@ -2,7 +2,7 @@
 // The panel before there's a flower in it (Figma's "New question" 43:736 and "Reading the record"
 // 39:668): what to do here, and maps already made, one per address, each opening its page.
 import type { ShelfView } from '../../lib/panel-view.ts';
-import { FlowerTile } from '../FlowerTile.tsx';
+import { MapList } from '../MapList.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Icon } from '../ui/Icon.tsx';
 import { TextLink } from '../ui/TextLink.tsx';
@@ -28,15 +28,7 @@ export function FlowerShelf({
           </div>
         )}
       </div>
-      {view.tiles.length > 0 && (
-        <ul className="flex flex-wrap gap-block-gap">
-          {view.tiles.map(({ key, ...tile }) => (
-            <li key={key}>
-              <FlowerTile {...tile} />
-            </li>
-          ))}
-        </ul>
-      )}
+      {view.tiles.length > 0 && <MapList label={view.heading} rows={view.tiles} />}
       <div>
         <TextLink variant="quiet" href="/map">
           The whole Power Map

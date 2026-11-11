@@ -3,8 +3,8 @@
 // what it maps, the key to its colours, and its readings newest first, each with who made it and its
 // drawings. No sign-in.
 import { notFound } from 'next/navigation';
-import { FlowerTile } from '../../../../components/FlowerTile.tsx';
 import { LegendKeys } from '../../../../components/Legend.tsx';
+import { MapList } from '../../../../components/MapList.tsx';
 import { ReadingColumn } from '../../../../components/SiteChrome.tsx';
 import { Mono } from '../../../../components/ui/Mono.tsx';
 import { MapAt } from '../../../../flower/OnTheMap.tsx';
@@ -61,13 +61,10 @@ function Readings({ m }: { m: MapCard }) {
       {m.readings.map((r) => (
         <section key={r.snapshot} className="mt-block-gap flex flex-col gap-block-gap">
           <p className="my-0 type-label">{readingLine(r)}</p>
-          <ul className="gallery">
-            {r.drawings.map((d) => (
-              <li key={d.sha}>
-                <FlowerTile {...drawingTile(m, r, d)} />
-              </li>
-            ))}
-          </ul>
+          <MapList
+            label={readingLine(r)}
+            rows={r.drawings.map((d) => ({ key: d.sha, ...drawingTile(m, r, d) }))}
+          />
         </section>
       ))}
     </>

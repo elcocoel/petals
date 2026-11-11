@@ -1,8 +1,9 @@
 // The Gallery (T063): one card per map, an address with every reading of it together (Elco,
 // 10 Nov: one map per address; SYSTEMS's GET /api/v1/maps). Each card is its newest drawing's picture, drawn
 // by the server in the person's view (lib/viewer-view.ts), and opens the map's page. No sign-in.
-import { FlowerTile } from '../../../components/FlowerTile.tsx';
+
 import { LegendKeys } from '../../../components/Legend.tsx';
+import { MapList } from '../../../components/MapList.tsx';
 import { mapList, mapsKeys, mapTile } from '../../../lib/maps.ts';
 import { viewerView } from '../../../lib/viewer-view.ts';
 
@@ -30,13 +31,10 @@ export default async function Gallery() {
           <div className="mb-block-gap">
             <LegendKeys keys={mapsKeys(res.value.maps)} />
           </div>
-          <ul className="gallery">
-            {res.value.maps.map((m) => (
-              <li key={m.id}>
-                <FlowerTile {...mapTile(m)} />
-              </li>
-            ))}
-          </ul>
+          <MapList
+            label="Gallery"
+            rows={res.value.maps.map((m) => ({ key: m.id, ...mapTile(m) }))}
+          />
         </>
       )}
     </>
