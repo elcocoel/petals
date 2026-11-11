@@ -166,3 +166,17 @@ describe('a job with its own conversation (swarm.md, steps 1 and 2)', () => {
     expect(jobLine(base, undefined)).not.toHaveProperty('conversation');
   });
 });
+
+describe('a stopped job (swarm.md, step 3)', () => {
+  test('says so, and the line is drawn, not thrown', () => {
+    const stopped: Job = {
+      id: 'j2',
+      kind: 'map',
+      title: "Map RaidGuild's proposals",
+      status: 'stopped',
+      taken_by: 'codex',
+      n: 2,
+    };
+    expect(jobLine(stopped, undefined).text).toBe("Stopped: Map RaidGuild's proposals");
+  });
+});
