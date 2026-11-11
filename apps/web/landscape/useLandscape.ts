@@ -33,8 +33,9 @@ import {
 import { clickedAt } from '../flower/live.ts';
 import type { PetalLook } from '../flower/scene.ts';
 import { advance, SNAP, spring, stepOf } from '../flower/spring.ts';
-import { readShared } from '../lib/agent-client.ts';
+import { readMapProposals, readShared } from '../lib/agent-client.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
+import { type VoteRing, voteRing } from '../lib/vote-ring.ts';
 import { type Road, roadWidth } from './roads.ts';
 import {
   type ArrowHit,
@@ -141,10 +142,32 @@ export function useLandscape(
     let pointedWay = -1;
     let shown: { flower: number; other: number; ids: string[] } | null = null;
     let asking = '';
+    // Each map's proposals on its flower's ring up close (#93), read once a flower of a map with any comes alive.
+    const rings = new Map<string, VoteRing | null>();
+    const ringOf = (i: number): VoteRing | null => {
+      const f = flowers[i];
+      if (!f?.map || !f.proposals) return null;
+      const map = f.map;
+      if (!rings.has(map)) {
+        rings.set(map, null);
+        void readMapProposals(map).then((p) => {
+          rings.set(map, voteRing(p));
+          flowers.forEach((g, j) => {
+            if (g.map === map && lives.has(j)) remount(j);
+          });
+        });
+      }
+      return rings.get(map) ?? null;
+    };
     // the flower's own look (core lookFills, as every flower has it), the shared wallets highlighted
-    const sharedLook = (f: LandFlower, ids: readonly string[]): PetalLook => ({
+    const sharedLook = (
+      f: LandFlower,
+      ids: readonly string[],
+      ring: VoteRing | null,
+    ): PetalLook => ({
       ...lookFills(f.model.petals),
       highlight: ids,
+      ...(ring ? { roundTops: true, votes: ring } : {}),
     });
     /** Re-mounts a live flower, so its look is read again. */
     const remount = (i: number) => {
@@ -271,8 +294,8 @@ export function useLandscape(
           // the everything map (#87): the art direction's colours, as the far wave's; inside a flower, the wallets it
           // shares with the other one take the highlight
           ...(focusLines
-            ? { look: sharedLook(f, shown && shown.flower === i ? shown.ids : []) }
-            : {}),
+            ? { look: sharedLook(f, shown && shown.flower === i ? shown.ids : [], ringOf(i)) }
+            : { votes: ringOf(i) }),
         });
         lives.set(i, d);
         node.insertBefore(d.scene.root, scene.top);

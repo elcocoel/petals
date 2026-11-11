@@ -40,6 +40,9 @@ export interface LandFlower {
   reach: number;
   /** its reading's snapshot, the relations index's name for its group */
   snapshot?: string | undefined;
+  /** the map it stands for, and how many proposals that map has (#93) */
+  map?: string | null | undefined;
+  proposals?: number | undefined;
 }
 
 export interface LandView {

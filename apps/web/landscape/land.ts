@@ -43,6 +43,8 @@ export interface BenchFlower {
   map: string | null;
   /** its reading's snapshot, the relations index's name for its group */
   snapshot?: string;
+  /** how many proposals its map has (#93): a flower with any draws its vote ring up close */
+  proposals?: number;
 }
 
 export interface BenchChain {
@@ -174,7 +176,23 @@ async function marked(land: BenchLandscape, view: string): Promise<BenchLandscap
   const cards = await mapList(view);
   if (!cards.ok) return land;
   const maps = cards.value.maps;
-  return { ...withMarks(land, new Map(maps.map((c) => [c.id, c.mark]))), keys: mapsKeys(maps) };
+  const marks = withMarks(land, new Map(maps.map((c) => [c.id, c.mark])));
+  const counts = new Map(maps.map((c) => [c.id, c.proposals?.count ?? 0]));
+  return { ...withProposals(marks, counts), keys: mapsKeys(maps) };
+}
+
+/** Each flower with how many proposals its map's card counts (#93), where it counts any. */
+export function withProposals(
+  land: BenchLandscape,
+  counts: ReadonlyMap<string, number>,
+): BenchLandscape {
+  return {
+    ...land,
+    flowers: land.flowers.map((f) => {
+      const n = f.map ? (counts.get(f.map) ?? 0) : 0;
+      return n > 0 ? { ...f, proposals: n } : f;
+    }),
+  };
 }
 
 /** The Power Map: one flower per map, in the view whose hash is given (the person's: lib/viewer-view.ts). */

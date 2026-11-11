@@ -39,6 +39,7 @@ export function FlowerPage({
         key={state.canvas?.key ?? 'ground'}
         fill="area"
         reading={state.canvas?.reading ?? null}
+        votes={state.votes}
         selected={state.selected}
         onPick={actions.pick}
       />

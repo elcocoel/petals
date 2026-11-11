@@ -6,6 +6,7 @@
 // What it's told to mark and what a click does are apart from those: they never rebuild the scene.
 import { useMemo, useRef } from 'react';
 import type { CanvasHit } from '../lib/panel-view.ts';
+import type { VoteRing } from '../lib/vote-ring.ts';
 import { keepCursor } from '../viewmodels/useFloatBoxes.ts';
 import type { Clear } from './camera.ts';
 import type { HoverWay } from './hover.ts';
@@ -19,6 +20,7 @@ export function FlowerCanvas({
   hover = 'dock',
   relations = null,
   look = null,
+  votes = null,
   scatter = false,
   probe = false,
   readout = false,
@@ -31,8 +33,10 @@ export function FlowerCanvas({
   reading: FlowerReading | null;
   hover?: HoverWay;
   relations?: FakeRelations | null;
-  /** The art direction's look (#76): only the lab hands one until Elco has seen it. */
+  /** A look of the page's own (the lab's benches); with none, the flower's own (core lookFills). */
   look?: PetalLook | null;
+  /** Its map's proposals on the ring (#93), where it has any. */
+  votes?: VoteRing | null;
   scatter?: boolean;
   probe?: boolean;
   /** The tiny zoom and share in the corner: an instrument for tuning. */
@@ -46,8 +50,8 @@ export function FlowerCanvas({
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const options = useMemo(
-    () => ({ reading, hover, relations, look, scatter, probe, readout }),
-    [reading, hover, relations, look, scatter, probe, readout],
+    () => ({ reading, hover, relations, look, votes, scatter, probe, readout }),
+    [reading, hover, relations, look, votes, scatter, probe, readout],
   );
   useFlowerCanvas(svg, options, { selected, onPick, clear });
   return (

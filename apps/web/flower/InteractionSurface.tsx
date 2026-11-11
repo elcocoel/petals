@@ -167,6 +167,7 @@ export function InteractionSurface({
             key={onCanvas?.key ?? 'ground'}
             fill="area"
             reading={onCanvas?.reading ?? null}
+            votes={state.votes}
             scatter={scatter}
             probe={probe}
             selected={state.selected}

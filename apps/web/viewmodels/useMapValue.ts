@@ -7,7 +7,7 @@ import { readMapValue } from '../lib/agent-client.ts';
 import type { MapValue } from '../lib/value-view.ts';
 
 /** The map a spec draws, by core's own rule: its network's address, in one form. */
-const mapOfSpec = (spec: Spec) => mapOf({ network: spec.network } as unknown as Snapshot);
+export const mapOfSpec = (spec: Spec) => mapOf({ network: spec.network } as unknown as Snapshot);
 
 export function useMapValue(spec: Spec | null | undefined): MapValue | null {
   const map = spec ? mapOfSpec(spec) : null;
