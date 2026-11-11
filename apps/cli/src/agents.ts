@@ -192,7 +192,7 @@ export async function waitForJob(o: WaitOptions): Promise<Json> {
       // and who answers for what the worker adds there: the name it joined with
       writeFileSync(
         o.currentFile,
-        `${JSON.stringify({ link: project.exploration, ...view, as: me.as })}\n`,
+        `${JSON.stringify({ link: project.exploration, ...view, as: me.as, ...(me.worker ? { worker: me.worker } : {}) })}\n`,
         { mode: 0o600 },
       );
     }

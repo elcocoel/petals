@@ -581,3 +581,91 @@ describe('annotations go to the project on the site', () => {
     );
   });
 });
+
+// Swarm step 3: a job stopped or handed over from the page. The worker's next call through its link is
+// refused with why; petal.mjs forgets that project and says to wait again, as this worker.
+describe('a job that ended under the worker', () => {
+  const refusing = (ended: 'stopped' | 'handed_over') => {
+    const site = fakeSite();
+    const fetch = async (url: string, init: RequestInit = {}) => {
+      if (url.includes(`/explorations/${TOKEN}/`)) {
+        const message =
+          ended === 'stopped'
+            ? 'This job was stopped: report nothing, and run jobs wait for your next one.'
+            : 'This job was handed to another worker: report nothing, and run jobs wait for your next one.';
+        return new Response(JSON.stringify({ error: { code: 'unauthorised', message, ended } }), {
+          status: 403,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return site.fetch(url, init);
+    };
+    return { ...site, fetch };
+  };
+  const inJob = async () => {
+    const { writeFileSync } = await import('node:fs');
+    const currentFile = join(mkdtempSync(join(tmpdir(), 'petal-ended-')), 'current.json');
+    writeFileSync(
+      currentFile,
+      `${JSON.stringify({ link: LINK, as: 'codex', worker: 'k3m9qa' })}\n`,
+    );
+    return currentFile;
+  };
+
+  test('stopped: the project is forgotten, and next says to wait again as this worker', async () => {
+    const { readFileSync } = await import('node:fs');
+    const currentFile = await inJob();
+    const tools = siteDoor({ site: SITE, fetch: refusing('stopped').fetch, currentFile }).tools(
+      registry,
+    );
+    const out = (await byName(tools, 'add_note').run({ text: 'step 2' } as never, ctx())) as Record<
+      string,
+      unknown
+    >;
+    expect(isToolError(out as never)).toBe(true);
+    expect(out.next).toBe(
+      'This job was stopped: report nothing, and run jobs wait for your next one. Run node ~/.petals/petal.mjs jobs wait --worker k3m9qa now.',
+    );
+    expect(JSON.parse(readFileSync(currentFile, 'utf8'))).toEqual({});
+    // nothing more goes to that project
+    const drawn = (await byName(tools, 'render_flower').run(
+      { spec: SPEC } as never,
+      ctx(),
+    )) as Record<string, unknown>;
+    expect(drawn.next).toMatch(/start_exploration first/);
+  });
+
+  test('handed over: the same, with its own words', async () => {
+    const currentFile = await inJob();
+    const tools = siteDoor({ site: SITE, fetch: refusing('handed_over').fetch, currentFile }).tools(
+      registry,
+    );
+    const out = (await byName(tools, 'report_job').run(
+      { job: 'job_1', result: { summary: 'x' } } as never,
+      ctx(),
+    )) as Record<string, unknown>;
+    expect(out.next).toMatch(/^This job was handed to another worker.* --worker k3m9qa now\.$/);
+  });
+
+  test("a refusal for another project leaves this worker's project alone", async () => {
+    const { readFileSync } = await import('node:fs');
+    const currentFile = await inJob();
+    const other = `${SITE}/s/${'Z'.repeat(43)}`;
+    const site = refusing('stopped');
+    const fetch = async (url: string, init: RequestInit = {}) =>
+      url.includes('/explorations/ZZZZ')
+        ? new Response(
+            JSON.stringify({
+              error: { code: 'unauthorised', message: 'stopped', ended: 'stopped' },
+            }),
+            {
+              status: 403,
+              headers: { 'content-type': 'application/json' },
+            },
+          )
+        : site.fetch(url, init);
+    const tools = siteDoor({ site: SITE, fetch, currentFile }).tools(registry);
+    await byName(tools, 'add_note').run({ text: 'x', exploration: other } as never, ctx());
+    expect(JSON.parse(readFileSync(currentFile, 'utf8')).link).toBe(LINK);
+  });
+});

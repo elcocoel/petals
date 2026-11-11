@@ -30,7 +30,11 @@ interface Current {
   view?: Json;
   /** the name the agent joined with, when the conversation is a job's project: who answers for what it adds */
   as?: string;
+  /** and the worker that took the job, to wait again with when it ends */
+  worker?: string;
 }
+/** A job ended from the page (swarm.md step 3): stopped, or handed to another worker. */
+const ENDED = new Set(['stopped', 'handed_over']);
 const isView = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v);
 
 export interface SiteOptions {
@@ -131,6 +135,7 @@ export function siteDoor(opts: SiteOptions) {
             link: j.link,
             ...(isView(j.view) ? { view: j.view } : {}),
             ...(typeof j.as === 'string' ? { as: j.as } : {}),
+            ...(typeof j.worker === 'string' ? { worker: j.worker } : {}),
           }
         : null;
     } catch {
@@ -138,6 +143,30 @@ export function siteDoor(opts: SiteOptions) {
     }
   };
   const recalledAll = (): Current | null => fromFile() ?? current;
+  /** The job's project is no longer this worker's: nothing more goes there. */
+  const forget = () => {
+    current = null;
+    chosenAt = Date.now();
+    if (!opts.currentFile) return;
+    try {
+      writeFileSync(opts.currentFile, '{}\n', { mode: 0o600 });
+    } catch {
+      // memory has forgotten it
+    }
+  };
+  /**
+   * A refusal because the job behind this project was stopped or handed over: forget the project if it's
+   * the one this worker is in, and say what to run next, with the worker's own id.
+   */
+  const ended = (path: string, out: Json): Json => {
+    const now = recalledAll();
+    const ref = /^\/api\/v1\/explorations\/([^/?]+)/.exec(path)?.[1];
+    const worker = now?.worker;
+    if (now && ref && encodeURIComponent(refOf(now.link)) === ref) forget();
+    const message = (out.error as { message?: unknown }).message;
+    const wait = `node ~/.petals/petal.mjs jobs wait${worker ? ` --worker ${worker}` : ''}`;
+    return { ...out, next: `${typeof message === 'string' ? `${message} ` : ''}Run ${wait} now.` };
+  };
   const recalled = (): string | null => recalledAll()?.link ?? null;
   /** the person's view, when the conversation is a job's project */
   const recalledView = (): Json | null => recalledAll()?.view ?? null;
@@ -166,7 +195,10 @@ export function siteDoor(opts: SiteOptions) {
     const text = await res.text();
     try {
       const out = JSON.parse(text) as unknown;
-      if (out && typeof out === 'object' && !Array.isArray(out)) return out as Json;
+      if (out && typeof out === 'object' && !Array.isArray(out)) {
+        const why = (out as { error?: { ended?: unknown } }).error?.ended;
+        return typeof why === 'string' && ENDED.has(why) ? ended(path, out as Json) : (out as Json);
+      }
     } catch {
       // below
     }
