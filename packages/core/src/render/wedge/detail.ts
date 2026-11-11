@@ -82,6 +82,11 @@ export const DETAIL = {
   mark: { driver: 'flowerRadius', fadeIn: [5, 10] },
   /** A connection: one line between two flowers, its width the accounts they share. It stays as you zoom. */
   road: { driver: 'pairRadius', fadeIn: [0, 0] },
+  /**
+   * The lab's lines lean (#87): the pointed flower's connections, once it's big enough to be told apart; none far
+   * away.
+   */
+  lineFocus: { driver: 'pairRadius', fadeIn: [12, 24] },
   /** A flower's weaker connections, past its strongest few, once its flowers are big enough to tell apart. */
   roadMore: { driver: 'pairRadius', fadeIn: [20, 60] },
   /** A connection's number, at its middle, once its flowers are big enough. A click shows it at any size. */

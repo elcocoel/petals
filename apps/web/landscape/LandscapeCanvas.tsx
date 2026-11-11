@@ -14,7 +14,7 @@ import { type FlowerReading, modelOf } from '../flower/model.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import type { Continent, Place } from './places.ts';
 import type { Road } from './roads.ts';
-import type { FarStyle, LandFlower } from './scene.ts';
+import type { FarStyle, LandFlower, LineStyle } from './scene.ts';
 import { reachOf } from './space.ts';
 import { type LandscapeAt, type LandscapeData, useLandscape } from './useLandscape.ts';
 
@@ -44,6 +44,7 @@ function Land({
   onPick,
   inPage,
   far,
+  lines,
   inside,
   clearOfChains,
 }: {
@@ -56,6 +57,7 @@ function Land({
   onPick: ((hit: CanvasHit) => void) | undefined;
   inPage: boolean;
   far: FarStyle;
+  lines: LineStyle;
   /** told when the map goes into a flower and comes out */
   inside: (yes: boolean) => void;
   clearOfChains: boolean;
@@ -68,6 +70,7 @@ function Land({
     focus,
     inPage,
     far,
+    lines,
     inside,
     clearOfChains,
     ...(onPick ? { onPick } : {}),
@@ -97,6 +100,7 @@ export function LandscapeCanvas({
   onPick,
   inPage = false,
   far = null,
+  lines = null,
   clearOfChains = false,
 }: {
   data: { flowers: CanvasFlower[]; roads: Road[]; chains: CanvasChain[] };
@@ -115,6 +119,8 @@ export function LandscapeCanvas({
   inPage?: boolean;
   /** how a far flower is drawn: only the lab's map bench asks for the far wave (#84) until Elco has seen it */
   far?: FarStyle;
+  /** when connections show: only the lab's map bench asks for the lines lean (#87) until Elco has seen it */
+  lines?: LineStyle;
   /** the home keeps clear of the chain list, where the map's room is narrow (/make, #78); off on /map */
   clearOfChains?: boolean;
 }) {
@@ -167,6 +173,7 @@ export function LandscapeCanvas({
           onPick={onPick}
           inPage={inPage}
           far={far}
+          lines={lines}
           inside={setInside}
           clearOfChains={clearOfChains}
         />
