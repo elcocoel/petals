@@ -151,7 +151,7 @@ function Tail({ show, flowers }: { show: Show; flowers: LookFlower[] }) {
     <main className="fixed inset-0 flex flex-col bg-surface text-primary">
       <Head
         show={show}
-        line="Everyone else is drawn, grey, as its members packed together: one small cell each, as tall as its own petal would be, so the block shows what they hold together without passing for one wallet. Zoom in and the cells are the members, ready to be mapped further."
+        line="Everyone else is one grey petal, as wide as any and as tall as the share it holds, on the same scale as the rest. Its stripes are its members, the smallest nearest the centre: zoom in to see them, ready to be mapped further."
       />
       <div className="grid min-h-0 flex-1 grid-cols-2">
         {flowers.map((f) => (

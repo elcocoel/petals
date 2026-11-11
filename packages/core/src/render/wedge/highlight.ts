@@ -123,10 +123,11 @@ export function insetBy(q: readonly Point[], d: number): Point[] | null {
 const n3 = (x: number): string => `${Math.round(x * 1000) / 1000}`;
 
 /**
- * A closed path round a convex shape with its corners softened to radius r, each corner's radius cut to half
- * its shorter side, so a small petal is never made bigger or rounder than it is.
+ * A closed path round a convex shape with its corners softened, each corner by its own radius (one number for
+ * all), each cut to half its shorter side, so a small petal is never made bigger or rounder than it is. A radius
+ * of 0 leaves that corner square: a band in the middle of a petal keeps its straight edges.
  */
-export function roundedPath(q: readonly Point[], r: number): string {
+export function roundedPath(q: readonly Point[], r: number | readonly number[]): string {
   const n = q.length;
   let d = '';
   for (let j = 0; j < n; j++) {
@@ -135,10 +136,76 @@ export function roundedPath(q: readonly Point[], r: number): string {
     const next = q[(j + 1) % n] as Point;
     const lp = Math.hypot(prev[0] - c[0], prev[1] - c[1]) || 1;
     const ln = Math.hypot(next[0] - c[0], next[1] - c[1]) || 1;
-    const rr = Math.max(0, Math.min(r, lp / 2, ln / 2));
+    const want = typeof r === 'number' ? r : (r[j] ?? 0);
+    const rr = Math.max(0, Math.min(want, lp / 2, ln / 2));
     const a: Point = [c[0] + ((prev[0] - c[0]) * rr) / lp, c[1] + ((prev[1] - c[1]) * rr) / lp];
     const b: Point = [c[0] + ((next[0] - c[0]) * rr) / ln, c[1] + ((next[1] - c[1]) * rr) / ln];
     d += `${j ? 'L' : 'M'}${n3(a[0])} ${n3(a[1])}Q${n3(c[0])} ${n3(c[1])} ${n3(b[0])} ${n3(b[1])}`;
   }
   return `${d}Z`;
+}
+
+/**
+ * The radii of a band's four corners (tip left, tip right, foot right, foot left) when only the petal's outside
+ * is softened (Elco, 11 Nov: "radius and stroke only on the outside shape, so the colour separations and the
+ * overall shape of the petal remain on straight lines"): the foot's corners on the first band, the tip's on the
+ * last, none between.
+ */
+export const outsideRadii = (first: boolean, last: boolean, r: number): number[] => [
+  last ? r : 0,
+  last ? r : 0,
+  first ? r : 0,
+  first ? r : 0,
+];
+
+const lerp = (a: Point, b: Point, t: number): Point => [
+  a[0] + (b[0] - a[0]) * t,
+  a[1] + (b[1] - a[1]) * t,
+];
+
+/** A point `rr` along from corner c towards p. */
+const toward = (c: Point, p: Point, rr: number): Point => {
+  const l = Math.hypot(p[0] - c[0], p[1] - c[1]) || 1;
+  return [c[0] + ((p[0] - c[0]) * rr) / l, c[1] + ((p[1] - c[1]) * rr) / l];
+};
+
+/**
+ * The stretch of a petal's outside stroke that runs along one band, between heights a and b of a petal h tall:
+ * its two sides, and round the foot on the first band and the tip on the last, so the stroke goes round the petal
+ * once and never between its bands. `inner` is the whole petal moved in by half the stroke (insetBy), tip left,
+ * tip right, foot right, foot left; `w` the stroke's width; `r` the corners' radius on that inner shape.
+ */
+export function outsidePiece(
+  inner: readonly Point[],
+  h: number,
+  w: number,
+  a: number,
+  b: number,
+  first: boolean,
+  last: boolean,
+  r: number,
+): string {
+  const [tl, tr, fr, fl] = inner as [Point, Point, Point, Point];
+  const span = h - w || 1;
+  const at = (y: number) => Math.max(0, Math.min(1, (y - w / 2) / span));
+  const left = (y: number) => lerp(fl, tl, at(y));
+  const right = (y: number) => lerp(fr, tr, at(y));
+  const p = (x: Point) => `${n3(x[0])} ${n3(x[1])}`;
+  const corner = (c: Point, from: Point, to: Point) => {
+    const rr = Math.max(
+      0,
+      Math.min(
+        r,
+        Math.hypot(from[0] - c[0], from[1] - c[1]) / 2,
+        Math.hypot(to[0] - c[0], to[1] - c[1]) / 2,
+      ),
+    );
+    return `L${p(toward(c, from, rr))}Q${p(c)} ${p(toward(c, to, rr))}`;
+  };
+  if (first && last) return roundedPath(inner, r);
+  if (first)
+    return `M${p(left(b))}${corner(fl, left(b), fr)}${corner(fr, fl, right(b))}L${p(right(b))}`;
+  if (last)
+    return `M${p(left(a))}${corner(tl, left(a), tr)}${corner(tr, tl, right(a))}L${p(right(a))}`;
+  return `M${p(left(a))}L${p(left(b))}M${p(right(a))}L${p(right(b))}`;
 }
