@@ -21,6 +21,8 @@ export interface BoxHand {
 interface Held {
   el: HTMLElement | null;
   rect: Rect | null;
+  /** A hand moved or sized it: placing the boxes again leaves it where it was put. */
+  moved: boolean;
 }
 
 /** box.hold: pressing here leaves the cursor where it was, so what's being typed stays in focus. */
@@ -72,7 +74,7 @@ export function useFloatBoxes<K extends string>(
     const heldOf = (key: K): Held => {
       let held = boxes.current.get(key);
       if (!held) {
-        held = { el: null, rect: null };
+        held = { el: null, rect: null, moved: false };
         boxes.current.set(key, held);
       }
       return held;
@@ -111,6 +113,7 @@ export function useFloatBoxes<K extends string>(
             }
             const dx = e.clientX - grip.x;
             const dy = e.clientY - grip.y;
+            held.moved = true;
             held.rect = next(grip.from, dx, dy, windowSize());
             paint(held.el, held.rect);
           },
@@ -148,11 +151,13 @@ export function useFloatBoxes<K extends string>(
     return Object.fromEntries(keys.map((key) => [key, handFor(key)])) as Record<K, BoxHand>;
   }, [keys]);
 
+  // Placed again when the placing changes (the side panel's edge, on /make), except a box a hand has put
+  // somewhere: that one stays (design/side-panel.md, line 21).
   useLayoutEffect(() => {
     const first = place(windowSize());
     for (const key of keys) {
       const held = boxes.current.get(key);
-      if (!held?.el) continue;
+      if (!held?.el || held.moved) continue;
       held.rect = first[key];
       paint(held.el, held.rect);
       hands[key].raise();

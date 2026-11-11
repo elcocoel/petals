@@ -2,11 +2,11 @@
 // The page where people work (design/interaction-surface.md): the live flower fills the window, and the
 // conversation floats above it, one box a hand can move and size: its thread a light sheet rising out of the
 // dark base its input is (design/conversation.md). Another, the same box, shows the flower's own details
-// once something asks for them. This only wires the ViewModels to the views. The
-// camera isn't told about the boxes. Until the conversation has a flower, the canvas is empty ground
-// (Elco, 8 Nov: no flower hard-coded in).
+// once something asks for them. This only wires the ViewModels to the views. The canvas starts at the side
+// panel's edge, and the camera fits the flower beside the conversation, not under it (#78, 11 Nov). Until
+// the conversation has a flower, the canvas is empty ground (Elco, 8 Nov: no flower hard-coded in).
 import type { SurfaceName } from '@petal/tokens';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Composer } from '../components/chat/Composer.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
@@ -15,11 +15,18 @@ import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import type { Catalogue } from '../lib/composer-options.ts';
-import { besidePanel, conversationBoxes, recordedBoxes, type Size } from '../lib/float-box.ts';
+import {
+  besidePanel,
+  clearOfConversation,
+  conversationBoxes,
+  recordedBoxes,
+  type Size,
+} from '../lib/float-box.ts';
 import type { MapCard } from '../lib/maps.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
+import type { Clear } from './camera.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
 import { FlowerPanel } from './FlowerPanel.tsx';
 
@@ -47,16 +54,9 @@ export function InteractionSurface({
 }) {
   const { state, actions, refs } = useWorkspace(workspace);
   useFollowScroll(refs.thread, refs.following);
-  // The boxes start past the side panel when it's there (the layout's, app/(work)/WorkPanel.tsx). Placed
-  // again only if that changes.
-  // At the panel's width when this conversation opens (design/side-panel.md, line 21): sizing or
-  // collapsing it afterwards doesn't move a box.
-  const openedBeside = useRef<number | null>(null);
-  if (state.menuShown && openedBeside.current === null) openedBeside.current = state.panelEdge;
-  const from =
-    state.menuShown && openedBeside.current !== null
-      ? besidePanel(openedBeside.current)
-      : undefined;
+  // The boxes start past the side panel when it's there (the layout's, app/(work)/WorkPanel.tsx), and follow
+  // its edge when it's sized or folded, until a hand moves them (design/side-panel.md, line 21).
+  const from = state.menuShown ? besidePanel(state.panelEdge) : undefined;
   const place = useMemo(
     () =>
       workspace.recorded
@@ -65,6 +65,22 @@ export function InteractionSurface({
     [from, workspace.recorded],
   );
   const hands = useFloatBoxes(BOXES, place);
+  // What the conversation covers of the canvas, where it starts, so the flower is drawn beside it.
+  const area = useRef<HTMLDivElement>(null);
+  const [clear, setClear] = useState<Clear | undefined>(undefined);
+  useLayoutEffect(() => {
+    const el = area.current;
+    if (!el) return;
+    const measure = () => {
+      const win = { w: window.innerWidth, h: window.innerHeight };
+      const r = el.getBoundingClientRect();
+      setClear(clearOfConversation(place(win).conversation, r.left, r.width));
+    };
+    measure();
+    const watch = new ResizeObserver(measure);
+    watch.observe(el);
+    return () => watch.disconnect();
+  }, [place]);
   const raisePanel = hands.panel.raise;
   useEffect(() => {
     if (state.boxOpen) raisePanel();
@@ -77,14 +93,18 @@ export function InteractionSurface({
   return (
     <>
       {/* A new flower is a new scene. Anything else, a whole turn included, leaves the camera alone. */}
-      <FlowerCanvas
-        key={onCanvas?.key ?? 'ground'}
-        reading={onCanvas?.reading ?? null}
-        scatter={scatter}
-        probe={probe}
-        selected={state.selected}
-        onPick={actions.pick}
-      />
+      <div ref={area} className="relative h-dvh">
+        <FlowerCanvas
+          key={onCanvas?.key ?? 'ground'}
+          fill="area"
+          reading={onCanvas?.reading ?? null}
+          scatter={scatter}
+          probe={probe}
+          selected={state.selected}
+          onPick={actions.pick}
+          clear={clear}
+        />
+      </div>
       <FloatBox
         label={state.heading}
         title={state.heading}

@@ -131,6 +131,20 @@ export function boxUnder(win: Size, top: number): Rect {
   return { ...panel, y: panel.y + top };
 }
 
+/**
+ * What the conversation, where it starts, covers of a canvas whose left edge is at `left` and that is `width`
+ * wide, so the flower fits beside it (#78, 11 Nov). Nothing when that would leave the flower under a third of
+ * the canvas, as on a phone, where the conversation covers most of it anyway.
+ */
+export function clearOfConversation(
+  conversation: Rect,
+  left: number,
+  width: number,
+): { left: number; right: number } {
+  const covered = Math.max(0, conversation.x + conversation.w + floatBox.gap - left);
+  return width - covered >= width / 3 ? { left: covered, right: 0 } : { left: 0, right: 0 };
+}
+
 /** The same, with a recorded run's base: a read-only saved question and the button that plays it. */
 export const recordedBoxes = (win: Size, from?: number) =>
   conversationBoxes(win, floatBox['recorded-base-height'], from);

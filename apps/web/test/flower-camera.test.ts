@@ -2,6 +2,8 @@
 import { describe, expect, test } from 'vitest';
 import {
   type Camera,
+  clearSides,
+  FLOWER_HOME,
   fitView,
   flyTo,
   letGo,
@@ -187,5 +189,26 @@ describe('a drag', () => {
     const { x } = c;
     stepCamera(c, FRAME, true);
     expect(c.x).toBe(x);
+  });
+});
+
+describe('a canvas with a side covered (#78: the flower under /make’s conversation)', () => {
+  test('the home fits in what the side leaves, centred there', () => {
+    const whole = fitView(1200, 800);
+    const beside = fitView(1200, 800, undefined, { left: 500, right: 0 });
+    expect(beside.k).toBeLessThan(whole.k);
+    // the flower's centre is in the middle of the 700 px the conversation leaves
+    expect(beside.x + FLOWER_HOME.cx * beside.k).toBeCloseTo(500 + 350);
+  });
+
+  test('a camera nobody moved fits again when the side changes; a moved one stays', () => {
+    const cam = newCamera(1200, 800);
+    clearSides(cam, { left: 500, right: 0 });
+    expect(cam.x + FLOWER_HOME.cx * cam.k).toBeCloseTo(850);
+    const moved = newCamera(1200, 800);
+    moved.touched = true;
+    const x = moved.x;
+    clearSides(moved, { left: 500, right: 0 });
+    expect(moved.x).toBe(x);
   });
 });

@@ -11,6 +11,7 @@ import { Terminal } from '../components/ui/Terminal.tsx';
 import { MAP_BOTTOM, MAP_SIZE } from '../flower/marks.ts';
 import {
   besideMenu,
+  clearOfConversation,
   conversationBoxes,
   type Edge,
   kept,
@@ -352,5 +353,21 @@ describe('the views', () => {
       );
     expect(row()).toContain('In the panel');
     expect(row('')).not.toContain('In the panel');
+  });
+});
+
+describe('what the conversation covers of /make’s canvas (#78)', () => {
+  const conversation = { x: 330, y: 24, w: 480, h: 700 };
+  test('its right edge and the gap, from the canvas’s left', () => {
+    expect(clearOfConversation(conversation, 312, 1128)).toEqual({
+      left: 330 + 480 + floatBox.gap - 312,
+      right: 0,
+    });
+  });
+  test('nothing when the flower would be left under a third of the canvas, as on a phone', () => {
+    expect(clearOfConversation({ x: 24, y: 24, w: 342, h: 700 }, 0, 390)).toEqual({
+      left: 0,
+      right: 0,
+    });
   });
 });
