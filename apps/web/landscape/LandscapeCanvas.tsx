@@ -201,7 +201,8 @@ export function LandscapeCanvas({
   // the group chosen in the legend's Highlight row (#94), lit inside the flower; leaving it clears it
   const [bloc, setBloc] = useState<string | null>(null);
   const [blocsOpen, setBlocsOpen] = useState(false);
-  const [span, setSpan] = useState<BlocSpan>('recent');
+  // all their votes first: the recent ones hold no bloc on most maps (Elco, 11 Nov: "do something reasonable")
+  const [span, setSpan] = useState<BlocSpan>('all');
   const toldInside = useCallback((yes: boolean, at: number) => {
     setInside(yes);
     setEntered(yes ? at : -1);
