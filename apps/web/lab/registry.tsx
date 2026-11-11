@@ -80,6 +80,7 @@ import { TextLink } from '../components/ui/TextLink.tsx';
 import { Tip } from '../components/ui/Tip.tsx';
 import { Transcript } from '../components/ui/Transcript.tsx';
 import { Wordmark } from '../components/ui/Wordmark.tsx';
+import { NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
@@ -2053,6 +2054,32 @@ export const registry: LabEntry[] = [
         ),
       },
       { name: 'lost', wide: true, render: () => <TurnStatus row={turnRow('lost')} /> },
+    ],
+  },
+  {
+    id: 'NotSignedIn',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/NotSignedIn.tsx',
+    states: [
+      {
+        name: '/make, not logged in',
+        wide: true,
+        render: () => <NotSignedIn question="" busy={false} failed={null} onConnect={() => {}} />,
+      },
+      {
+        name: 'a question from the landing waiting, and the last try failed',
+        wide: true,
+        render: () => (
+          <NotSignedIn
+            question="Who stands behind NEAR's validators?"
+            busy={false}
+            failed="NEAR didn't answer. Try again."
+            onConnect={() => {}}
+          />
+        ),
+      },
     ],
   },
   {
