@@ -254,6 +254,20 @@ export const V2_VERBS: ReadonlySet<Verb> = new Set<Verb>(['named', 'noted', 'lin
 export const CLAIM_KINDS = ['observed', 'declared', 'stated', 'sourced', 'inferred'] as const;
 export const CONFIDENCE_BANDS = ['low', 'medium', 'high'] as const;
 /**
+ * claim/v3's kinds of evidence, and the field each names: a reading (snapshot_sha256), a transaction (tx), a
+ * proposal (proposal), a web page or a post on a platform (url), another claim (claim_id), a note alone (note).
+ */
+export const EVIDENCE_FIELD = {
+  snapshot: 'snapshot_sha256',
+  tx: 'tx',
+  proposal: 'proposal',
+  page: 'url',
+  post: 'url',
+  claim: 'claim_id',
+  note: 'note',
+} as const;
+export const EVIDENCE_TYPES = Object.keys(EVIDENCE_FIELD) as (keyof typeof EVIDENCE_FIELD)[];
+/**
  * What an inference may rest on. `inbound_transfers` can't be the only one (people.ts). `research`
  * (reading proposals, pages and posts) is claim/v2's.
  */

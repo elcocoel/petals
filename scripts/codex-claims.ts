@@ -1,5 +1,5 @@
-// Codex's research into who is behind RaidGuild's addresses (Elco's test, 10 Nov), as claim/v2 annotations:
-// one `named` claim a row. A row whose proposal names the address is sourced, with its transaction, proposal
+// Codex's research into who is behind RaidGuild's addresses (Elco's test, 10 Nov), as claim/v3 annotations:
+// one `named` claim/v3 a row. A row whose proposal names the address is sourced, with its transaction, proposal
 // and quote; a row Codex worked out is inferred, from research. The CSV stays on the person's computer and
 // out of the repo: names are kept in a person's own project only (people.ts, decision 1 (a)). Run from build/:
 //   node scripts/codex-claims.ts --csv <address-name-claims.csv> --by near:mainnet:<account> [--out <claims.json>]
@@ -54,7 +54,11 @@ export function claimOfRow(
   const proposal = row.proposal
     ? proposalRef(RAIDGUILD.chain, `${RAIDGUILD.dao}:${row.proposal}`)
     : null;
+  // the proposal Codex read, with its transaction, its page and its words: found by Codex, when it wrote
   const evidence = {
+    type: proposal ? ('proposal' as const) : row.transaction ? ('tx' as const) : ('page' as const),
+    found_by: VIA,
+    found_at: at,
     ...(row.quote_source ? { url: row.quote_source } : {}),
     ...(row.transaction ? { tx: `${RAIDGUILD.chain}:${row.transaction.toLowerCase()}` } : {}),
     ...(proposal ? { proposal } : {}),
@@ -75,7 +79,7 @@ export function claimOfRow(
         by,
         via: VIA,
       },
-      'claim/v2',
+      'claim/v3',
     ),
   };
 }
@@ -120,7 +124,7 @@ if (import.meta.main) {
     {},
   );
   console.log(
-    `${claims.length} of ${claims.length + refused.length} rows pass as claim/v2, kept in a person's own project: ${Object.entries(
+    `${claims.length} of ${claims.length + refused.length} rows pass as claim/v3, kept in a person's own project: ${Object.entries(
       kinds,
     )
       .map(([k, n]) => `${n} ${k}`)
