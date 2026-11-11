@@ -96,12 +96,16 @@ export async function proposalMaps(
 ): Promise<{ maps: number; saved: number; proposals: number; votes: number }> {
   const store = privateStore(ctx.config);
   const log = o.log ?? (() => {});
+  // a card's reader: its first reading Petals reads proposals for, newest first (a wave's newest reading can be
+  // of a network Petals has no reader for, beside an older one it has: RaidGuild's moloch-v3 by its erc20-holders)
+  const readerOf = (c: { readings: { network: string }[] }) =>
+    c.readings.map((r) => READERS[r.network]).find((r): r is Reader => !!r);
   const cards = mapsOf(await mapViews(ctx)).filter(
-    (c) => (!o.only || c.id.includes(o.only)) && READERS[c.readings[0]?.network ?? ''],
+    (c) => (!o.only || c.id.includes(o.only)) && readerOf(c),
   );
   const out = { maps: cards.length, saved: 0, proposals: 0, votes: 0 };
   for (const card of cards) {
-    const read = READERS[card.readings[0]?.network ?? ''];
+    const read = readerOf(card);
     if (!read || !card.address) continue;
     const at = (o.now ?? (() => new Date()))().toISOString();
     let p: Proposals | null;
