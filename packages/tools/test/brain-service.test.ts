@@ -16,7 +16,7 @@ const QUESTIONS: [string, string][] = [
   ['who holds the power in RaidGuild?', 'where-power-lives'],
   ['who controls this treasury', 'where-power-lives'],
   ['map the members of this DAO and how they vote', 'where-power-lives'],
-  ['who can upgrade this contract or pause it', 'where-power-lives'],
+  ['who can upgrade this contract or pause it', 'who-can-move-money-or-change-rules'],
   ['who are the signers of this multisig', 'where-power-lives'],
   ['who delegates to whom in this governance', 'where-power-lives'],
   ['who sponsored the most proposals', 'where-power-lives'],
@@ -41,6 +41,23 @@ const QUESTIONS: [string, string][] = [
   ['connect the claude app as a custom connector', 'connect-cloud'],
   ['keep petals in claude code for next time', 'connect-claude-code'],
   ['cursor remote mcp url for petals', 'connect-cloud'],
+  // "more" is going-deeper's word, so this one's chapter is second
+  ['can anyone mint more of this token', 'who-can-move-money-or-change-rules'],
+];
+
+/** Governance (Elco's four chapters, #80, 11 Nov): each question reaches its own chapter first. */
+const GOVERNANCE: [string, string][] = [
+  ['who holds the delegated voting power of ENS', 'who-gets-a-vote'],
+  ['how do I leave this DAO, can I ragequit', 'who-gets-a-vote'],
+  ['who voted on proposals in this Governor contract', 'from-proposal-to-action'],
+  ['the quorum and voting rules of this DAO', 'from-proposal-to-action'],
+  ['did this proposal pass and get executed in Moloch DAO', 'from-proposal-to-action'],
+  ['who are the signers of this Safe multisig treasury', 'who-can-move-money-or-change-rules'],
+  ['who can upgrade or pause this contract', 'who-can-move-money-or-change-rules'],
+  ["who can spend the DAO's funds", 'who-can-move-money-or-change-rules'],
+  ['who can mint this token', 'who-can-move-money-or-change-rules'],
+  ["who are NEAR's validators and who backs them", 'stake-behind-the-network'],
+  ['who controls this DAO', 'where-power-lives'],
 ];
 
 describe('routing', () => {
@@ -48,6 +65,10 @@ describe('routing', () => {
 
   test.each(QUESTIONS)('%s reaches %s in the top three', (q, want) => {
     expect(routeBrain(index, { words: q }).map((r) => r.id)).toContain(want);
+  });
+
+  test.each(GOVERNANCE)('%s reaches %s first', (q, want) => {
+    expect(routeBrain(index, { words: q })[0]?.id).toBe(want);
   });
 
   test('a contract that answers a recipe’s calls reaches that recipe first, saying why', () => {
