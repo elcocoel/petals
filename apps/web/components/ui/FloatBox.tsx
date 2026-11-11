@@ -46,6 +46,7 @@ export function FloatBox({
   control,
   foot,
   footSurface = 'ink',
+  solid = false,
   children,
 }: {
   /** What a screen reader hears for the box. */
@@ -61,6 +62,8 @@ export function FloatBox({
   /** The base the sheet rises out of, on its own surface: the conversation's input. */
   foot?: ReactNode;
   footSurface?: SurfaceName;
+  /** It opens over another box (the flower's over the thread): its glass sits on a solid surface. */
+  solid?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -75,6 +78,7 @@ export function FloatBox({
       <BarBox
         kind="float"
         surface={surface}
+        solid={solid}
         className={`flex min-h-0 flex-1 flex-col bg-surface ${foot ? 'mx-space-8 -mb-space-16' : ''}`}
         bar={
           control ? (

@@ -500,6 +500,14 @@
   backdrop-filter: var(--joy-glass-blur);
 }
 
+/* A box raised over another box (the flower's over the thread): its glass on the solid surface, so nothing of
+   the box under it shows through. The rest keep their glass over the canvas. */
+/* box.glass */
+:root[data-version="2"] [data-b="box"][data-kind="float"][data-solid] {
+  background-color: var(--surface);
+  backdrop-filter: none;
+}
+
 /* The thread scrolls under the box's soft foot. */
 /* box.glass */
 :root[data-version="2"] [data-b="box"][data-kind="float"] > :last-child {

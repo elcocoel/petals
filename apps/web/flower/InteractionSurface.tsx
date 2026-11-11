@@ -259,6 +259,9 @@ export function InteractionSurface({
         title={panel.kind === 'flower' ? panel.title : undefined}
         surface={surface}
         hand={hands.panel}
+        // it opens over the conversation's thread (overThread), so its glass sits on a solid surface: the
+        // thread's words and buttons never show through it (WORKSPACE's walk, META's go, 11 Nov)
+        solid
         closed={!state.boxOpen}
         control={
           // closes the box; the petal's own way back is in it (PetalDetails)
