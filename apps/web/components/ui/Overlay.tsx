@@ -20,18 +20,23 @@ export function Overlay({
 }) {
   const open = fold ? fold.open : true;
   return (
-    <section aria-label={title} className="flex w-tile-width flex-col">
+    // folded, it's as wide as its bar, so it covers only that much of the map
+    <section
+      aria-label={title}
+      className={`flex flex-col ${open ? 'w-tile-width' : 'w-fit max-w-tile-width'}`}
+    >
       <BarBox
         kind="float"
         className="bg-surface"
         folded={!open}
+        barSize="row"
         bar={
           fold ? (
             <button
               type="button"
               aria-expanded={fold.open}
               onClick={fold.onToggle}
-              className="flex w-full min-w-0 items-center justify-start gap-space-8 bg-transparent p-0 type-mono text-primary hover:opacity-100"
+              className="flex h-row-height w-full min-w-0 items-center justify-start gap-space-8 bg-transparent p-0 type-mono text-primary hover:opacity-100"
             >
               <span className={`flex shrink-0 text-muted ${fold.open ? 'rotate-90' : ''}`}>
                 <Icon name="chevron" small />

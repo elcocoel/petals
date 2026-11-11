@@ -10,6 +10,8 @@ import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../components/ui/Button.tsx';
 import { Icon } from '../components/ui/Icon.tsx';
 import { Mono } from '../components/ui/Mono.tsx';
+import { NavItem } from '../components/ui/NavItem.tsx';
+import { Overlay } from '../components/ui/Overlay.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import type { Continent, Place } from './places.ts';
@@ -102,6 +104,7 @@ export function LandscapeCanvas({
   far = null,
   lines = null,
   clearOfChains = false,
+  overlays = false,
 }: {
   data: { flowers: CanvasFlower[]; roads: Road[]; chains: CanvasChain[] };
   probe?: boolean;
@@ -123,6 +126,11 @@ export function LandscapeCanvas({
   lines?: LineStyle;
   /** the home keeps clear of the chain list, where the map's room is narrow (/make, #78); off on /map */
   clearOfChains?: boolean;
+  /**
+   * The chain list as one of the overlays (design/overlays.md, line 7): only the lab's map bench asks for it
+   * until Elco has seen it (#95, the everything map).
+   */
+  overlays?: boolean;
 }) {
   const aside = useRef<HTMLDivElement>(null);
   const opened = data.flowers[focus]?.place.chain;
@@ -130,6 +138,11 @@ export function LandscapeCanvas({
     opened ?? (data.chains.some((c) => c.chain === FIRST) ? FIRST : (data.chains[0]?.chain ?? '')),
   );
   const [open, setOpen] = useState(false);
+  // the overlay's fold: open where there's room, folded to its bar below md, as the phone's toggle was
+  const [listOpen, setListOpen] = useState(true);
+  useEffect(() => {
+    if (overlays && !window.matchMedia('(min-width: 48rem)').matches) setListOpen(false);
+  }, [overlays]);
   // Inside a flower the chains step aside, so they never cover it; they're back once it's left (#78, LOOK's
   // lean (a)). Invisible, not gone, so the arrows' names still keep clear of where they stand.
   const [inside, setInside] = useState(focus >= 0);
@@ -178,43 +191,78 @@ export function LandscapeCanvas({
           clearOfChains={clearOfChains}
         />
       )}
-      <div
-        ref={aside}
-        className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 flex w-tile-width flex-col gap-space-4 ${inside ? 'invisible' : ''}`}
-      >
-        {title && <h1 className="type-label">{title}</h1>}
-        {shown && (
-          <div className="md:hidden">
-            <Button variant="row" pressed={open} onClick={() => setOpen(!open)}>
-              <span className="flex w-full items-center justify-between gap-text-gap">
-                <span>{shown.label}</span>
-                <span className="flex items-center gap-space-4">
-                  <Mono as="span">{counts.get(shown.chain) ?? 0}</Mono>
-                  <Icon name="chevron" small />
-                </span>
-              </span>
-            </Button>
-          </div>
-        )}
-        <div className={`${open ? 'flex' : 'hidden md:flex'} flex-col gap-space-4`}>
-          {data.chains.map((c) => (
-            <Button
-              key={c.chain}
-              variant="row"
-              pressed={c.chain === chain}
-              onClick={() => {
-                setChain(c.chain);
-                setOpen(false);
-              }}
-            >
-              <span className="flex w-full items-center justify-between gap-text-gap">
-                <span>{c.label}</span>
-                <Mono as="span">{counts.get(c.chain) ?? 0}</Mono>
-              </span>
-            </Button>
-          ))}
+      {overlays ? (
+        // one of the overlays: the aside is the Overlay's own outermost box, so its right edge, which the
+        // arrows' names keep clear of, is the overlay's; inside a flower it's invisible, not gone (LOOK)
+        <div
+          ref={aside}
+          className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 ${inside ? 'invisible' : ''}`}
+        >
+          <Overlay
+            title={
+              !listOpen && shown
+                ? `${title ?? 'Power Map'} · ${shown.label}`
+                : (title ?? 'Power Map')
+            }
+            fold={{ open: listOpen, onToggle: () => setListOpen((now) => !now) }}
+          >
+            <ul className="m-0 flex list-none flex-col p-0">
+              {data.chains.map((c) => (
+                <li key={c.chain}>
+                  <NavItem
+                    onClick={() => {
+                      setChain(c.chain);
+                      // below md the list folds back once a chain is chosen, as the toggle's did
+                      if (!window.matchMedia('(min-width: 48rem)').matches) setListOpen(false);
+                    }}
+                    chosen={c.chain === chain}
+                    label={c.label}
+                    trail={String(counts.get(c.chain) ?? 0)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </Overlay>
         </div>
-      </div>
+      ) : (
+        <div
+          ref={aside}
+          className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 flex w-tile-width flex-col gap-space-4 ${inside ? 'invisible' : ''}`}
+        >
+          {title && <h1 className="type-label">{title}</h1>}
+          {shown && (
+            <div className="md:hidden">
+              <Button variant="row" pressed={open} onClick={() => setOpen(!open)}>
+                <span className="flex w-full items-center justify-between gap-text-gap">
+                  <span>{shown.label}</span>
+                  <span className="flex items-center gap-space-4">
+                    <Mono as="span">{counts.get(shown.chain) ?? 0}</Mono>
+                    <Icon name="chevron" small />
+                  </span>
+                </span>
+              </Button>
+            </div>
+          )}
+          <div className={`${open ? 'flex' : 'hidden md:flex'} flex-col gap-space-4`}>
+            {data.chains.map((c) => (
+              <Button
+                key={c.chain}
+                variant="row"
+                pressed={c.chain === chain}
+                onClick={() => {
+                  setChain(c.chain);
+                  setOpen(false);
+                }}
+              >
+                <span className="flex w-full items-center justify-between gap-text-gap">
+                  <span>{c.label}</span>
+                  <Mono as="span">{counts.get(c.chain) ?? 0}</Mono>
+                </span>
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 }
