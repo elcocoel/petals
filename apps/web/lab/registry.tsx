@@ -9,7 +9,7 @@
 // QuotePanel, PublishFlow, CopyPrompt and Flower still keep their later states in hooks, so only the
 // first state shows here until they take them as props, as the chat's views do. Their controls are
 // live on the page.
-import { DEFAULT_VIEW, DIMENSIONS, EVERY_FLOWER } from '@petal/core/view';
+import { DEFAULT_VIEW, DIMENSIONS, EVERY_FLOWER, inUse } from '@petal/core/view';
 import type { SurfaceName } from '@petal/tokens';
 import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
@@ -74,6 +74,7 @@ import { Mono } from '../components/ui/Mono.tsx';
 import { Nav } from '../components/ui/Nav.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
 import { OrgBadge } from '../components/ui/OrgBadge.tsx';
+import { Overlay } from '../components/ui/Overlay.tsx';
 import { Range } from '../components/ui/Range.tsx';
 import { RowField } from '../components/ui/RowField.tsx';
 import { Section } from '../components/ui/Section.tsx';
@@ -83,6 +84,7 @@ import { TextLink } from '../components/ui/TextLink.tsx';
 import { Tip } from '../components/ui/Tip.tsx';
 import { Transcript } from '../components/ui/Transcript.tsx';
 import { Wordmark } from '../components/ui/Wordmark.tsx';
+import { ViewLegend } from '../components/ViewLegend.tsx';
 import { Claims } from '../components/workspace/Claims.tsx';
 import { Conversations } from '../components/workspace/Conversations.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
@@ -93,12 +95,12 @@ import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { TipControl } from '../components/workspace/TipControl.tsx';
-import { ViewControls } from '../components/workspace/ViewControls.tsx';
+import { DimensionChoices, ViewControls } from '../components/workspace/ViewControls.tsx';
 import { Wallets } from '../components/workspace/Wallets.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { AnnotationRow } from '../lib/claim-lines.ts';
 import type { DrawingKind } from '../lib/figures.ts';
-import { readingKey, svgImage } from '../lib/flower-view.ts';
+import { keysOf, oneKey, readingKey, svgImage } from '../lib/flower-view.ts';
 import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
@@ -112,7 +114,7 @@ import { claimsView, walletRows } from '../lib/profile-view.ts';
 import type { Done } from '../lib/thread.ts';
 import { answeredBy, composerView, type TurnRow, threadView } from '../lib/thread-view.ts';
 import { tipLine } from '../lib/tip.ts';
-import { withScale } from '../lib/view-edit.ts';
+import { withData, withScale } from '../lib/view-edit.ts';
 import {
   entry,
   flowerRow,
@@ -127,6 +129,7 @@ import {
   TURN_ROWS,
 } from './fixtures.ts';
 import { LabComposer, LabPetalClose } from './LabComposer.tsx';
+import { LabChains, LabFoldingLegend, LabLegend } from './LabOverlays.tsx';
 import { LabAction, LabAgent, LabFold, LabProject, LabRail } from './LabPanel.tsx';
 import { PANEL_STATES } from './panel-fixtures.ts';
 
@@ -430,6 +433,14 @@ const maps = () => {
   ).map((m, i) => mapCard([...m], i, pics));
 };
 const mapRows = (maps: readonly MapCard[]) => maps.map((m) => ({ key: m.id, ...mapTile(m) }));
+
+/** The colours a golden drawing paints, and its tail's tone last, as its own key gives them: the legend's keys. */
+const goldenKeys = () => {
+  const legend = golden('near-validators-default').rendered.legend;
+  const of = (primitive: string) =>
+    keysOf(legend.find((i) => i.primitive === primitive)?.keys ?? []);
+  return oneKey([of('colour'), of('tail')]);
+};
 
 /** A job's controls (swarm.md, step 3), as its row shows them at each step. */
 const JOB_ACTIONS = {
@@ -1735,6 +1746,29 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'DimensionChoices',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/ViewControls.tsx',
+    states: [
+      {
+        name: 'height’s choices, with its scale (Settings and the legend open these)',
+        render: () => (
+          <DimensionChoices
+            dimension="height"
+            view={DEFAULT_VIEW}
+            defaults={DEFAULT_VIEW}
+            fit={viewChoices().height}
+            pieces={EVERY_FLOWER}
+            onPick={() => {}}
+            onScale={() => {}}
+          />
+        ),
+      },
+    ],
+  },
+  {
     id: 'TipControl',
     group: 'The workspace',
     figmaName: null,
@@ -2777,6 +2811,128 @@ export const registry: LabEntry[] = [
           const { spec, rendered } = golden('house-of-stake-default');
           return <FlowerSheet spec={spec} rendered={rendered} />;
         },
+      },
+    ],
+  },
+  {
+    id: 'Overlay',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Overlay.tsx',
+    states: [
+      {
+        name: 'the chain list as an overlay: press a chain, press the bar to fold',
+        render: () => <LabChains />,
+      },
+      {
+        name: 'folded to its bar',
+        render: () => <LabChains startsFolded />,
+      },
+      {
+        name: 'one that never folds: no chevron',
+        render: () => (
+          <Overlay title="Seeker">
+            <NavItem label="Readings" trail="1" />
+            <NavItem label="Accounts" trail="3,327" />
+          </Overlay>
+        ),
+      },
+      {
+        name: 'the family over a busy flower: the chain list, the legend, a badge',
+        wide: true,
+        render: () => (
+          <div className="relative w-full max-w-flower-width">
+            {/* biome-ignore lint/performance/noImgElement: a data URL of a golden drawing */}
+            <img
+              src={svgImage(golden('near-validators-default').rendered.svg)}
+              alt=""
+              className="block w-full"
+            />
+            <div className="absolute top-space-16 left-space-16">
+              <LabChains />
+            </div>
+            <div className="absolute top-space-16 right-space-16">
+              <LabFoldingLegend keys={goldenKeys()} />
+            </div>
+            <div className="absolute bottom-space-16 left-space-16 flex gap-space-8">
+              <OrgBadge name="Magic Eden" symbol="ME" logo={logo('magic-eden')} />
+              <OrgBadge name="Seeker" symbol="SKR" />
+            </div>
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'ViewLegend',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ViewLegend.tsx',
+    states: [
+      {
+        name: 'read only, as on a published map: the default view',
+        render: () => (
+          <ViewLegend
+            view={DEFAULT_VIEW}
+            drawn={inUse(DEFAULT_VIEW, EVERY_FLOWER)}
+            pieces={EVERY_FLOWER}
+            keys={goldenKeys()}
+          />
+        ),
+      },
+      {
+        name: 'read only: height straight, no width, no labels',
+        render: () => {
+          const view = withData(
+            withData(
+              withScale(DEFAULT_VIEW, 'height', 'linear'),
+              'width',
+              null,
+              EVERY_FLOWER,
+              DEFAULT_VIEW,
+            ),
+            'labels',
+            null,
+            EVERY_FLOWER,
+            DEFAULT_VIEW,
+          );
+          return (
+            <ViewLegend
+              view={view}
+              drawn={inUse(view, EVERY_FLOWER)}
+              pieces={EVERY_FLOWER}
+              keys={goldenKeys()}
+            />
+          );
+        },
+      },
+      {
+        name: 'changing the view, as on /make (choose, and it redraws; nothing is saved)',
+        render: () => <LabLegend keys={goldenKeys()} />,
+      },
+      {
+        name: 'over a busy flower',
+        wide: true,
+        render: () => (
+          <div className="relative w-full max-w-flower-width">
+            {/* biome-ignore lint/performance/noImgElement: a data URL of a golden drawing */}
+            <img
+              src={svgImage(golden('near-validators-default').rendered.svg)}
+              alt=""
+              className="block w-full"
+            />
+            <div className="absolute top-space-16 left-space-16">
+              <ViewLegend
+                view={DEFAULT_VIEW}
+                drawn={inUse(DEFAULT_VIEW, EVERY_FLOWER)}
+                pieces={EVERY_FLOWER}
+                keys={goldenKeys()}
+              />
+            </div>
+          </div>
+        ),
       },
     ],
   },

@@ -33,6 +33,8 @@ export const panelWords = {
     unread: 'No answer',
   },
   signOut: 'Disconnect',
+  /** The legend's head (design/legend.md): the person's view as a key. */
+  legend: 'Legend',
   /**
    * Settings (coordinator/one-source.md, step 7): how each dimension draws data, for every petal you look
    * at. The dimensions' names are the view's own (view/v2); the rest are drafts.
