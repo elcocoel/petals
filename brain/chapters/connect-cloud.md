@@ -58,11 +58,3 @@ Add the address as a remote server. In Cursor that's `~/.cursor/mcp.json`:
 ```
 
 An app like Cursor also runs commands on the person's computer, so the prompt for Claude Code, Codex or Hermes works there too, with fresh readings.
-
-## On Petals' connect page
-
-What the person reads on `{site}/connect`, next to the address above:
-
-- **The Claude app:** Add Petals as a connector: Customize > Connectors, then + Add and Add custom connector. Name it Petals and paste this address. On a Team or Enterprise plan, an Owner adds it first, under Organization settings > Connectors. It reads and draws what Petals already holds, and takes your jobs when you ask it to. For new readings, use Claude Code.
-- **ChatGPT:** Add Petals as a custom MCP server: in ChatGPT’s Plugins, choose +, then Add custom MCP server, and paste this address. It reads and draws what Petals already holds, and takes your jobs when you ask it to. For new readings, use Codex.
-- **Anything else:** Any agent that can run commands on your computer can use the prompt above. An app that takes an MCP server’s address, such as Cursor, can add Petals with this one instead: it reads and draws what Petals already holds.

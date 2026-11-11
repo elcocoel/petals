@@ -9,7 +9,8 @@ import { openStore, type Store } from '@petal/store';
 import type { BudgetLedger, SpendHold } from './llm.ts';
 
 /** What to do instead, in plain words. Own agents need no invite and no sign-in. */
-export const CONNECT_HINT = 'Connect your own agent at /connect: it can use every tool, for free.';
+export const CONNECT_HINT =
+  'Connect your own agent at /docs/connect-your-agent: it can use every tool, for free.';
 export const NO_INVITE =
   "Petals' own agent runs only on a sponsored invite, and this session doesn't hold one, so nothing was spent. You can use your own agent instead.";
 export const INVITE_SPENT =

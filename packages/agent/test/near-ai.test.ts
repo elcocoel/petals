@@ -571,7 +571,7 @@ describe('nearAiClient', () => {
       expect(err.code).toBe('budget_exhausted');
       expect(err.message).toMatch(message);
       expect(err.message).not.toMatch(/HTTP|402|is down/);
-      expect(err.hint).toMatch(/\/connect/);
+      expect(err.hint).toMatch(/\/docs\/connect-your-agent/);
       expect(fake.log.filter((l) => l.body)).toHaveLength(1);
     }
   });

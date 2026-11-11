@@ -566,7 +566,7 @@ async function realClaude(owner: Browser, id: string) {
       await owner.post(`/explorations/${id}/links`, { scope: 'continue' })
     ).json()) as Out;
     const before = await owner.json(`/explorations/${id}`);
-    // "Using Petal": the words apps/web/lib/doors.ts tells a person to use. Without them a small model
+    // "Using Petal": the words a person uses to ask for it. Without them a small model
     // doesn't always connect a bare URL to tools it hasn't loaded yet.
     const say = `Using Petal, pick up the work I started: ${link.url} Tell me where it stands in two lines, and leave a note on it for whoever comes next about what you'd look at next.`;
     const out = await new Promise<{ code: number | null; text: string }>((done) => {

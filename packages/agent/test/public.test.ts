@@ -61,7 +61,7 @@ test('a stranger’s chat is refused before anything is read or spent, with the 
   expect(res.status).toBe(403);
   expect(((await res.json()) as Out).error).toMatchObject({
     code: 'invite_required',
-    hint: expect.stringContaining('/connect'),
+    hint: expect.stringContaining('/docs/connect-your-agent'),
   });
   expect(outside).toEqual([]);
 });

@@ -63,7 +63,7 @@
       ],
       "status": "ready",
       "file": "chapters/connect-claude-code.md",
-      "sha256": "e843e53b02e1195589de909ecae0f885e94db017a4fe5438de64af02ab75a5f6"
+      "sha256": "81fc79b6fb300a436369d53f96b6291f00ab44117e5aa818d2f1dfe0c720a282"
     },
     {
       "id": "connect-cloud",
@@ -101,7 +101,7 @@
       ],
       "status": "partial",
       "file": "chapters/connect-cloud.md",
-      "sha256": "f49be2aa8f46bdf294bbebd882f231eba72d82d1540e1ea4d7670ccd3b5e5126"
+      "sha256": "80285f548ec7739b3ec04d38ab71b172b816690906b8bb7f2a20aab821219bed"
     },
     {
       "id": "connect-codex",
@@ -129,7 +129,7 @@
       ],
       "status": "ready",
       "file": "chapters/connect-codex.md",
-      "sha256": "bc866a7271e62d4ddd9669e9df5ffe8bfb09a222c934c49eaa7068343ccc4da0"
+      "sha256": "8cb603e313aa1bbfc07584f480c165488ec931e88cbcf27a06c9a16e96039a59"
     },
     {
       "id": "connect-hermes",
@@ -159,7 +159,7 @@
       ],
       "status": "ready",
       "file": "chapters/connect-hermes.md",
-      "sha256": "6e6bdc0abf87ccac485334a591247e2bd358fc3cda7733056505a0036350614a"
+      "sha256": "936a14c3ba99b84af8b9bd643a1dc3693ad5bf1afacf525066ae1ce1dec9bd1d"
     },
     {
       "id": "contributing",
