@@ -11,6 +11,9 @@
 //                                     and answers it with a continue link for its project; {job: null} if
 //                                     none comes. The agent's own command runs it again. `worker` is the
 //                                     window or sub-agent asking, so several of one name each hold a job.
+//   POST /api/v1/jobs/:job/stop       signed in: one of their jobs, stopped; its worker is told on its next call
+//   POST /api/v1/jobs/:job/retry      signed in: a taken, failed or stopped one, open again for whoever takes it
+//   POST /api/v1/jobs/:job/hand-over  signed in, {to}: the same, for that agent; its old worker is told
 //   GET  /api/v1/agents               signed in: who's connected, one entry per worker (n: 1, 2, …),
 //                                     whether each is waiting now, and the job each holds
 // Presence is a wait that's open right now: nothing runs once the agent's session stops asking (Elco: no
@@ -234,6 +237,80 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
     }
   });
 
+  // -- supervision, without timers (swarm.md step 3): the person stops a job, or sends it again
+
+  /** One of the signed-in person's jobs, from any of their projects; null for anyone else's. */
+  async function ownJob(c: Context): Promise<{ owner: string; job: JobRow } | null> {
+    const owner = await personOr(c);
+    const job = owner ? await store.job.get(c.req.param('job') ?? '') : null;
+    const exploration = job ? await store.exploration.get(job.exploration) : null;
+    return owner && job && exploration?.owner === owner ? { owner, job } : null;
+  }
+  const jobOut = (j: JobRow) => ({
+    id: j.id,
+    status: j.status,
+    to: j.to,
+    taken_by: j.taken_by,
+    conversation: j.conversation,
+    updated_at: j.updated_at,
+  });
+  /** Pages following the job's project and its own conversation read it again. */
+  const changed = (j: JobRow) => {
+    d.tools.live?.changed(j.exploration);
+    if (j.conversation) d.tools.live?.changed(j.conversation);
+  };
+  const NO_JOB = 'You have no job by that id.';
+
+  app.post('/api/v1/jobs/:job/stop', small, async (c) => {
+    const foreign = gate.refuseForeign(c);
+    if (foreign) return foreign;
+    const own = await ownJob(c);
+    if (!own) return fail(c, 'not_found', NO_JOB);
+    const stopped = await store.job.stop(own.job.id, now());
+    if (!stopped)
+      return fail(
+        c,
+        'bad_input',
+        `Only an open or taken job can be stopped; this one is ${own.job.status}.`,
+      );
+    changed(stopped);
+    return ok(c, { job: jobOut(stopped) });
+  });
+
+  /** Open again, for anyone or for `to`, and the waiting agents wake. */
+  async function again(c: Context, to?: string) {
+    const own = await ownJob(c);
+    if (!own) return fail(c, 'not_found', NO_JOB);
+    const open = await store.job.reopen(own.job.id, now(), to);
+    if (!open)
+      return fail(
+        c,
+        'bad_input',
+        `Only a taken, failed or stopped job can go again; this one is ${own.job.status}.`,
+      );
+    changed(open);
+    bell.ring(own.owner);
+    return ok(c, { job: jobOut(open) });
+  }
+
+  app.post('/api/v1/jobs/:job/retry', small, async (c) => {
+    const foreign = gate.refuseForeign(c);
+    if (foreign) return foreign;
+    return again(c);
+  });
+
+  app.post('/api/v1/jobs/:job/hand-over', small, async (c) => {
+    const foreign = gate.refuseForeign(c);
+    if (foreign) return foreign;
+    const owner = await personOr(c);
+    if (!owner) return fail(c, 'not_found', NO_JOB);
+    const body = (await c.req.json().catch(() => ({}))) as { to?: unknown };
+    const asked = typeof body.to === 'string' ? body.to.trim().toLowerCase() : '';
+    const agent = (await store.agent.list(owner)).find((a) => a.name.toLowerCase() === asked);
+    if (!agent) return fail(c, 'not_found', 'to must be one of your connected agents, by name.');
+    return again(c, agent.name);
+  });
+
   /**
    * A job as the agent gets it, with a continue link for where its work goes: its own conversation (swarm.md
    * step 2), which now says who's on it, or the project it was handed out in, for an older job.
@@ -242,6 +319,8 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
     const caller = { ...d.tools, caller: { subject: owner, door: 'agent' } };
     const workIn = job.conversation ?? job.exploration;
     const made = await makeLink(caller, workIn, 'continue');
+    // its worker's link, from now: each call through it marks the job alive (swarm.md step 3)
+    if (job.conversation) await store.job.handOut(job.id, made.id, now());
     const n = workerPlace(await store.agent.workers(owner), name, worker);
     touched(caller, workIn, 'take_job', name, n);
     const exploration = await store.exploration.get(workIn);

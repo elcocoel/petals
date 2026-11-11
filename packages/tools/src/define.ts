@@ -122,6 +122,7 @@ export const TOOL_ERROR_SCHEMA: JSONSchema = {
         message: { type: 'string' },
         hint: { type: 'string' },
         retry_after_s: { type: 'number' },
+        ended: { enum: ['stopped', 'handed_over'] },
       },
     },
     ...VERSION_PROP,

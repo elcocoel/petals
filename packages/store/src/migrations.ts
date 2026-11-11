@@ -458,6 +458,17 @@ export const MIGRATIONS: readonly string[] = [
   `
   ALTER TABLE job ADD COLUMN conversation TEXT;
   `,
+  // 23: supervising a job without timers (Elco, 10 Nov, swarm.md step 3): the continue link its worker got, so
+  // that worker's calls mark it alive (last_seen), and once it's stopped or handed on, are told so. Each link
+  // a job was ever handed out on stays known, so an old worker is told, not just refused.
+  `
+  ALTER TABLE job ADD COLUMN link TEXT;
+  ALTER TABLE job ADD COLUMN last_seen TEXT;
+  CREATE TABLE job_link (
+    link TEXT PRIMARY KEY,
+    job TEXT NOT NULL
+  );
+  `,
 ];
 
 /**

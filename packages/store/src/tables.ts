@@ -241,7 +241,7 @@ export interface JobRow {
   /** plain words for the agent that takes it */
   brief: string;
   inputs: Record<string, unknown>;
-  status: 'open' | 'taken' | 'done' | 'failed';
+  status: 'open' | 'taken' | 'done' | 'failed' | 'stopped';
   result: { summary: string; steps?: number[]; notes?: string; annotations?: string[] } | null;
   failed: string | null;
   created_at: string;
@@ -254,13 +254,21 @@ export interface JobRow {
   taken_worker: string | null;
   /** the job's own conversation, an exploration in the same folder, where its work goes (migration 22) */
   conversation: string | null;
+  /** the continue link its worker got, and when that worker last called through it (migration 23) */
+  link: string | null;
+  last_seen: string | null;
 }
 interface JobRecord
-  extends Omit<JobRow, 'inputs' | 'result' | 'to' | 'taken_by' | 'taken_worker' | 'conversation'> {
+  extends Omit<
+    JobRow,
+    'inputs' | 'result' | 'to' | 'taken_by' | 'taken_worker' | 'conversation' | 'link' | 'last_seen'
+  > {
   assignee?: string | null;
   taken_by?: string | null;
   taken_worker?: string | null;
   conversation?: string | null;
+  link?: string | null;
+  last_seen?: string | null;
   seq: number;
   inputs: string;
   result: string | null;
@@ -282,6 +290,8 @@ const jobOf = (r: JobRecord): JobRow => ({
   taken_by: r.taken_by ?? null,
   taken_worker: r.taken_worker ?? null,
   conversation: r.conversation ?? null,
+  link: r.link ?? null,
+  last_seen: r.last_seen ?? null,
 });
 
 /** A person's agent link (migration 11): only its hash is kept, and it can only wait for jobs. */
@@ -1454,6 +1464,66 @@ export function tables(db: Db) {
             taken_worker: worker,
             updated_at: at,
           });
+        }),
+      get: async (id: string): Promise<JobRow | null> => {
+        const r = await db.get<JobRecord>('SELECT * FROM job WHERE id = ?', id);
+        return r ? jobOf(r) : null;
+      },
+      /** The continue link a taken job was handed out on (migration 23): its worker's, from now. */
+      handOut: (id: string, link: string, at: string): Promise<void> =>
+        db.tx(async () => {
+          await db.run('UPDATE job SET link = ?, last_seen = ? WHERE id = ?', link, at, id);
+          await db.run(
+            'INSERT INTO job_link (link, job) VALUES (?, ?) ON CONFLICT (link) DO NOTHING',
+            link,
+            id,
+          );
+        }),
+      /** The job a continue link was ever handed out on, whoever holds it now; null for any other link. */
+      ofLink: async (link: string): Promise<JobRow | null> => {
+        const r = await db.get<JobRecord>(
+          'SELECT job.* FROM job_link JOIN job ON job.id = job_link.job WHERE job_link.link = ?',
+          link,
+        );
+        return r ? jobOf(r) : null;
+      },
+      /** Its worker called just now: the job is alive. */
+      seen: async (id: string, at: string): Promise<void> => {
+        await db.run("UPDATE job SET last_seen = ? WHERE id = ? AND status = 'taken'", at, id);
+      },
+      /** Stopped, from open or taken; null for a job that's done, failed or stopped already. */
+      stop: (id: string, at: string): Promise<JobRow | null> =>
+        db.tx(async () => {
+          const changed = await db.run(
+            "UPDATE job SET status = 'stopped', updated_at = ? WHERE id = ? AND status IN ('open', 'taken')",
+            at,
+            id,
+          );
+          if (!changed) return null;
+          return jobOf(
+            (await db.get<JobRecord>('SELECT * FROM job WHERE id = ?', id)) as JobRecord,
+          );
+        }),
+      /**
+       * Open again, for whoever takes it first, or with `to`, for that agent (a retry, or a hand-over): from
+       * taken, failed or stopped. Its worker, link and result are cleared; its old link stays known, so that
+       * worker is told. Null for a job that's open or done.
+       */
+      reopen: (id: string, at: string, to?: string | null): Promise<JobRow | null> =>
+        db.tx(async () => {
+          const changed = await db.run(
+            `UPDATE job SET status = 'open', taken_by = NULL, taken_worker = NULL, link = NULL,
+               last_seen = NULL, result = NULL, failed = NULL, updated_at = ?
+               ${to === undefined ? '' : ', assignee = ?'}
+             WHERE id = ? AND status IN ('taken', 'failed', 'stopped')`,
+            at,
+            ...(to === undefined ? [] : [to]),
+            id,
+          );
+          if (!changed) return null;
+          return jobOf(
+            (await db.get<JobRecord>('SELECT * FROM job WHERE id = ?', id)) as JobRecord,
+          );
         }),
       /** The jobs `owner`'s agents have taken and not reported yet, in any of their projects. */
       held: async (owner: string): Promise<JobRow[]> =>

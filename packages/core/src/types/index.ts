@@ -165,7 +165,14 @@ export type ToolErrorCode =
   | 'internal';
 /** Errors are returned, not thrown across a door. */
 export interface ToolError {
-  error: { code: ToolErrorCode; message: string; hint?: string; retry_after_s?: number };
+  error: {
+    code: ToolErrorCode;
+    message: string;
+    hint?: string;
+    retry_after_s?: number;
+    /** additive (11 Nov, swarm.md step 3): the worker's job ended for it, so it waits for the next one */
+    ended?: 'stopped' | 'handed_over';
+  };
 }
 /**
  * Additive (J4): what Petal's own agent loop answers a held tool with, until the person has said yes.

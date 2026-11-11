@@ -398,6 +398,59 @@ describe.each(engines)('%s', (engine, open) => {
     expect(await store.agent.workers(owner)).toEqual([]);
   });
 
+  test('a job supervised: its link known, its worker seen, stopped, sent again, the old link still known', async () => {
+    const owner = u('prs');
+    const x = u('exp');
+    await store.exploration.create({
+      id: x,
+      owner,
+      question: 'who?',
+      target: null,
+      head: null,
+      visibility: 'private',
+      share_token_hash: null,
+      forked_from: null,
+      created_at: AT,
+      updated_at: AT,
+    });
+    const job = await store.job.add({
+      id: u('job'),
+      exploration: x,
+      run: null,
+      kind: 'map',
+      title: 'Map',
+      brief: 'map it',
+      inputs: {},
+      at: AT,
+    });
+    await store.job.takeFor(owner, 'Codex', AT, 'w1');
+    await store.job.handOut(job.id, 'lnk_one', AT);
+    await store.job.seen(job.id, LATER);
+    expect(await store.job.ofLink('lnk_one')).toMatchObject({
+      id: job.id,
+      status: 'taken',
+      link: 'lnk_one',
+      last_seen: LATER,
+    });
+    expect(await store.job.ofLink('lnk_other')).toBeNull();
+    expect(await store.job.stop(job.id, LATER)).toMatchObject({ status: 'stopped' });
+    expect(await store.job.stop(job.id, LATER)).toBeNull();
+    // sent again, to Hermes: open, its worker and link cleared, and the old link still names the job
+    expect(await store.job.reopen(job.id, LATER, 'Hermes')).toMatchObject({
+      status: 'open',
+      to: 'Hermes',
+      taken_by: null,
+      taken_worker: null,
+      link: null,
+      last_seen: null,
+    });
+    expect((await store.job.ofLink('lnk_one'))?.link).toBeNull();
+    expect(await store.job.reopen(job.id, LATER)).toBeNull();
+    // a seen with nobody on it changes nothing
+    await store.job.seen(job.id, LATER);
+    expect((await store.job.get(job.id))?.last_seen).toBeNull();
+  });
+
   test("a person's agents asking at once take one job each, never the same one", async () => {
     const owner = u('prs');
     const x = u('exp');

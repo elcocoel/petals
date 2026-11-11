@@ -106,7 +106,28 @@ export async function open(ctx: ToolContext, ref: string): Promise<Opened> {
   if (!link || link.revoked_at) throw missing();
   const row = await store.exploration.get(link.exploration);
   if (!row) throw missing();
+  // A worker's link for its job (swarm.md step 3): each call marks the job alive, and once the job is
+  // stopped or handed on, its next call is told, and nothing more of its work lands.
+  const job = await store.job.ofLink(link.id);
+  if (job) {
+    if (job.status === 'stopped' || job.link !== link.id) throw ended(job.status === 'stopped');
+    if (job.status === 'taken') await store.job.seen(job.id, ctx.now().toISOString());
+  }
   return { row, as: link.scope as LinkScope, link };
+}
+
+/** What a worker hears once its job ended for it: report nothing, and wait for the next one. */
+function ended(stopped: boolean): ToolFailure {
+  const next = 'Report nothing, and run jobs wait for your next one.';
+  const e = new ToolFailure(
+    'unauthorised',
+    stopped
+      ? `This job was stopped: ${next.charAt(0).toLowerCase()}${next.slice(1)}`
+      : `This job was handed to another worker: ${next.charAt(0).toLowerCase()}${next.slice(1)}`,
+    next,
+  );
+  e.ended = stopped ? 'stopped' : 'handed_over';
+  return e;
 }
 
 /** Which exploration a ref opens, for this caller. Same failure as reading it. */

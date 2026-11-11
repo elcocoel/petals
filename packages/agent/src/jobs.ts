@@ -14,7 +14,7 @@ import {
 } from '@petal/tools';
 import { type AccountOf, annotateTool } from './annotate.ts';
 import { Channel } from './channel.ts';
-import { agentsOfRun, type Bell, handJobTool, jobsOfRun } from './hand-job.ts';
+import { agentsOfRun, type Bell, handJobTool, jobsOfRun, retryJobTool } from './hand-job.ts';
 import type { Budget, LlmMessage } from './llm.ts';
 import { nameConversationTool, nameOfRun } from './name-conversation.ts';
 import { chargeBase, PRICE } from './price.ts';
@@ -141,6 +141,7 @@ export function runJobs(
               registry: [
                 ...(o.registry ?? defaultRegistry),
                 handJobTool(deps.tools, runId, o.bell),
+                retryJobTool(deps.tools, runId, o.bell),
                 nameConversationTool(deps.tools, runId),
                 annotateTool(deps.tools, runId, o.accountOf),
               ],
