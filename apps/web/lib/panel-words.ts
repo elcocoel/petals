@@ -22,7 +22,6 @@ export const panelWords = {
     settings: 'Settings',
   },
   newConversation: 'New conversation',
-  lobby: 'Lobby',
   /** The Lobby section's rows: each opens its card on /lobby. */
   balance: 'Balance',
   onTheMap: 'On the map',
@@ -30,7 +29,6 @@ export const panelWords = {
   socialState: {
     petals: 'In Petals',
     profile: 'NEAR Social',
-    none: 'None',
     reading: '…',
     unread: 'No answer',
   },
@@ -98,6 +96,8 @@ export const panelWords = {
   conversations: 'Conversations',
   /** Rule 2: what goes here, and the way to it is the first row of the panel. */
   noConversations: 'Your conversations show here',
+  /** Your agents with nothing connected: connecting one is at the panel's top. A draft. */
+  noAgents: 'Agents you connect show here',
   agents: 'Your agents',
   /** The one way to connect one: it copies the one prompt, with a fresh agent key, in /connect's words. */
   connect: agentWords.copy,

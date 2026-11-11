@@ -67,7 +67,7 @@ export const workerName = (name: string, n?: number | null) =>
   n && n > 1 ? `${readableAgent(name)} ${n}` : readableAgent(name);
 
 /** Where Connect an agent was pressed, so its Copied shows there alone (design/side-panel.md, line 45). */
-export type CopiedAt = 'top' | 'agents';
+export type CopiedAt = 'top';
 
 const BUSIEST: readonly AgentRow['state'][] = ['busy', 'waiting', 'away'];
 

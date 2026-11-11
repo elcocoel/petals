@@ -33,7 +33,10 @@ const SECTIONS: readonly SectionKey[] = [
 
 function keptFolds(): SectionKey[] {
   try {
-    const raw: unknown = JSON.parse(window.localStorage.getItem(FOLDED) ?? '[]');
+    const kept = window.localStorage.getItem(FOLDED);
+    // Settings starts folded until the person opens it once (design/side-panel.md, line 41)
+    if (kept === null) return ['settings'];
+    const raw: unknown = JSON.parse(kept);
     return Array.isArray(raw) ? SECTIONS.filter((k) => raw.includes(k)) : [];
   } catch {
     return [];
