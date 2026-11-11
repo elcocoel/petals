@@ -44,7 +44,7 @@ import { LiveReading } from '../components/landing/LiveReading.tsx';
 import { MapHero } from '../components/landing/MapHero.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
-import { StoryFlower } from '../components/landing/StoryFlower.tsx';
+import { StoryFlower, StoryLight } from '../components/landing/StoryFlower.tsx';
 import { MapList } from '../components/MapList.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { Oops } from '../components/Oops.tsx';
@@ -678,6 +678,22 @@ export const registry: LabEntry[] = [
       render: () => (
         <div className="aspect-3/2 w-full">
           <StoryFlower beat={beat} t={SETTLED_MS} />
+        </div>
+      ),
+    })),
+  },
+  {
+    id: 'StoryLight',
+    group: 'Marks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/StoryFlower.tsx',
+    // the light behind the hero's flower, its own layer; tinted while the blocs show
+    states: [0, 2].map((beat) => ({
+      name: `beat ${beat + 1}`,
+      render: () => (
+        <div className="aspect-3/2 w-full">
+          <StoryLight beat={beat} t={SETTLED_MS} />
         </div>
       ),
     })),

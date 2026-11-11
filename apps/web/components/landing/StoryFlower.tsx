@@ -115,7 +115,6 @@ export function StoryFlower({
   const id = useId().replace(/[^\w-]/g, '');
   const lengths = petalLengths(beat, t, fresh);
   const cam = camera(beat, t, fresh);
-  const light = glow(beat, t, fresh);
   const core = centre(beat, t, fresh);
   const vote = proposal(beat, t);
   const net = network(beat, t);
@@ -133,15 +132,6 @@ export function StoryFlower({
       style={KEYED}
     >
       <defs>
-        <radialGradient id={`${id}-glow`}>
-          <stop offset="0" stopColor="var(--figure-accent)" stopOpacity={0.3} />
-          <stop offset="0.55" stopColor="var(--figure-accent)" stopOpacity={0.08} />
-          <stop offset="1" stopColor="var(--figure-accent)" stopOpacity={0} />
-        </radialGradient>
-        <radialGradient id={`${id}-second`}>
-          <stop offset="0" stopColor="var(--story-second)" stopOpacity={0.28} />
-          <stop offset="1" stopColor="var(--story-second)" stopOpacity={0} />
-        </radialGradient>
         {/* the highlight's surface: what the petal, moved and blurred, leaves uncovered of itself, toned */}
         <filter
           id={`${id}-surface`}
@@ -198,14 +188,6 @@ export function StoryFlower({
           </mask>
         ))}
       </defs>
-      {/* Behind: a light that moves less than the flower, so the two sit at different depths. */}
-      <g
-        transform={`translate(${CENTRE.x} ${CENTRE.y}) scale(${light.scale.toFixed(4)})`}
-        opacity={light.opacity}
-      >
-        <circle r={250} fill={`url(#${id}-glow)`} />
-        <circle r={210} fill={`url(#${id}-second)`} opacity={light.second} />
-      </g>
       {/* In groups, so the joy layer's split of a drawing's own paths leaves these to React. */}
       <g opacity={others} visibility={seen(others)}>
         {LINKS.map((d, n) => (
@@ -354,6 +336,52 @@ export function StoryFlower({
           })}
         </g>
         <circle r={3.5 * core.dot} fill="var(--text-primary)" />
+      </g>
+    </svg>
+  );
+}
+
+/**
+ * Behind the flower, its own layer: a light that moves a third as much as the flower does, so the two sit at
+ * different depths, tinted by the blocs' second key while they show. The page places it as it places the flower.
+ */
+export function StoryLight({
+  beat,
+  t,
+  fresh = false,
+}: {
+  beat: number;
+  t: number;
+  fresh?: boolean;
+}) {
+  const id = useId().replace(/[^\w-]/g, '');
+  const light = glow(beat, t, fresh);
+  return (
+    <svg
+      data-b="figure"
+      data-kind="symbol"
+      aria-hidden="true"
+      viewBox="0 0 600 440"
+      className="block size-full overflow-visible"
+      style={KEYED}
+    >
+      <defs>
+        <radialGradient id={`${id}-glow`}>
+          <stop offset="0" stopColor="var(--figure-accent)" stopOpacity={0.3} />
+          <stop offset="0.55" stopColor="var(--figure-accent)" stopOpacity={0.08} />
+          <stop offset="1" stopColor="var(--figure-accent)" stopOpacity={0} />
+        </radialGradient>
+        <radialGradient id={`${id}-second`}>
+          <stop offset="0" stopColor="var(--story-second)" stopOpacity={0.28} />
+          <stop offset="1" stopColor="var(--story-second)" stopOpacity={0} />
+        </radialGradient>
+      </defs>
+      <g
+        transform={`translate(${CENTRE.x} ${CENTRE.y}) scale(${light.scale.toFixed(4)})`}
+        opacity={light.opacity}
+      >
+        <circle r={250} fill={`url(#${id}-glow)`} />
+        <circle r={210} fill={`url(#${id}-second)`} opacity={light.second} />
       </g>
     </svg>
   );

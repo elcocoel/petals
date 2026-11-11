@@ -2,12 +2,15 @@
 // It plays by itself and loops; it sleeps while the hero is out of sight or the tab is hidden, and wakes where it
 // left off. `fresh` is the first beat on arrival, which grows from the bare centre; once the story has gone round
 // (or a beat has been chosen) it is false. With reduced motion it starts paused on a settled scene, and the beats
-// are stepped by hand. Choosing a beat pauses it there, settled; play goes on from it.
+// are stepped by hand. Choosing a beat pauses it there, settled; play goes on from it. `wide` says which of the
+// stage's two compositions is on (lib/hero-shots.ts), from the same breakpoint the page lays out by.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BEAT_MS, SETTLED_MS } from '../lib/hero-story.ts';
+import { beatMs, SETTLED_MS } from '../lib/hero-story.ts';
 
 /** The longest step one frame may take, so a stalled frame doesn't jump the story. */
 const MAX_STEP_MS = 50;
+/** Tailwind's lg, where the hero puts its words beside the stage. */
+const WIDE = '(min-width: 64rem)';
 
 export function useHeroStory<T extends HTMLElement>(beats: number) {
   const stage = useRef<T>(null);
@@ -15,6 +18,7 @@ export function useHeroStory<T extends HTMLElement>(beats: number) {
   const [t, setT] = useState(0);
   const [fresh, setFresh] = useState(true);
   const [playing, setPlaying] = useState(true);
+  const [wide, setWide] = useState(true);
   const visible = useRef(true);
   const clock = useRef({ beat: 0, t: 0 });
   /** Starts the frames again after the hero comes back into sight; set while playing. */
@@ -26,6 +30,10 @@ export function useHeroStory<T extends HTMLElement>(beats: number) {
       clock.current.t = SETTLED_MS;
       setT(SETTLED_MS);
     }
+    const screen = matchMedia(WIDE);
+    const fit = () => setWide(screen.matches);
+    fit();
+    screen.addEventListener('change', fit);
     const el = stage.current;
     const watch = el
       ? new IntersectionObserver(
@@ -43,6 +51,7 @@ export function useHeroStory<T extends HTMLElement>(beats: number) {
     document.addEventListener('visibilitychange', tab);
     return () => {
       watch?.disconnect();
+      screen.removeEventListener('change', fit);
       document.removeEventListener('visibilitychange', tab);
     };
   }, []);
@@ -59,7 +68,7 @@ export function useHeroStory<T extends HTMLElement>(beats: number) {
       last = now;
       const c = clock.current;
       c.t += dt;
-      if (c.t > BEAT_MS) {
+      if (c.t > beatMs(c.beat)) {
         c.beat = (c.beat + 1) % beats;
         c.t = 0;
         setBeat(c.beat);
@@ -91,7 +100,7 @@ export function useHeroStory<T extends HTMLElement>(beats: number) {
   const toggle = useCallback(() => {
     setPlaying((on) => {
       // played again from a beat whose words have left: that beat starts over
-      if (!on && clock.current.t > BEAT_MS - 900) {
+      if (!on && clock.current.t > beatMs(clock.current.beat) - 900) {
         clock.current.t = 0;
         setT(0);
       }
@@ -99,7 +108,7 @@ export function useHeroStory<T extends HTMLElement>(beats: number) {
     });
   }, []);
 
-  return { stage, beat, t, fresh, playing, choose, toggle };
+  return { stage, beat, t, fresh, wide, playing, choose, toggle };
 }
 
 export type HeroStoryClock = ReturnType<typeof useHeroStory<HTMLDivElement>>;

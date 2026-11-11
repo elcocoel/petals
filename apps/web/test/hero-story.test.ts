@@ -2,17 +2,19 @@
 // each beat's last frame is the next one's first, the settled moment is still, and heights stay the story's.
 import { describe, expect, test } from 'vitest';
 import {
-  BEAT_MS,
+  answer,
+  beatMs,
   camera,
   INNER,
+  OVERLAP_MS,
   PETALS,
   petalLengths,
   petalLit,
   petalPaint,
   petalPath,
+  question,
   SETTLED_MS,
   spring,
-  words,
 } from '../lib/hero-story.ts';
 
 const near = (a: readonly number[], b: readonly number[], eps = 0.5) =>
@@ -22,18 +24,28 @@ describe('the hero story', () => {
   test('each beat ends where the next begins', () => {
     for (let beat = 0; beat < 6; beat++) {
       const next = (beat + 1) % 6;
-      expect(near(petalLengths(beat, BEAT_MS), petalLengths(next, 0))).toBe(true);
-      const a = camera(beat, BEAT_MS);
+      expect(near(petalLengths(beat, beatMs(beat)), petalLengths(next, 0))).toBe(true);
+      const a = camera(beat, beatMs(beat));
       const b = camera(next, 0);
       expect(Math.abs(a.scale - b.scale)).toBeLessThan(0.002);
       expect(a.rotate).toBeCloseTo(b.rotate, 3);
       for (let i = 0; i < PETALS; i++) {
-        const end = petalPaint(beat, BEAT_MS, i);
+        const end = petalPaint(beat, beatMs(beat), i);
         const start = petalPaint(next, 0, i);
         // the colour a beat ends on is the one the next starts from
         expect(end.k === 1 ? end.to : end.from).toBe(start.k === 0 ? start.from : start.to);
-        expect(Math.abs(petalLit(beat, BEAT_MS, i) - petalLit(next, 0, i))).toBeLessThan(0.01);
+        expect(Math.abs(petalLit(beat, beatMs(beat), i) - petalLit(next, 0, i))).toBeLessThan(0.01);
       }
+    }
+  });
+
+  test('an answer is still leaving as the next question comes in, and gone soon after', () => {
+    for (let beat = 0; beat < 6; beat++) {
+      const next = (beat + 1) % 6;
+      expect(answer(beat, beatMs(beat)).opacity).toBeGreaterThan(0);
+      expect(answer(beat, beatMs(beat) + OVERLAP_MS).opacity).toBeLessThan(0.002);
+      expect(question(beat, beatMs(beat)).opacity).toBeLessThan(0.002);
+      expect(question(next, 200).opacity).toBeGreaterThan(0.2);
     }
   });
 
@@ -49,9 +61,10 @@ describe('the hero story', () => {
         true,
       );
     }
-    const w = words(SETTLED_MS);
-    expect(w.question.opacity).toBeGreaterThan(0.4);
-    expect(w.answer.opacity).toBeCloseTo(1, 3);
+    for (let beat = 0; beat < 6; beat++) {
+      expect(question(beat, SETTLED_MS).opacity).toBeGreaterThan(0.4);
+      expect(answer(beat, SETTLED_MS).opacity).toBeCloseTo(1, 3);
+    }
   });
 
   test('the spring arrives at its end and passes it only a little', () => {
