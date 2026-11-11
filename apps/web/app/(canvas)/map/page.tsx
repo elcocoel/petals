@@ -28,5 +28,5 @@ export default async function PowerMap() {
       </ReadingColumn>
     );
   }
-  return <LandscapeCanvas data={data} fill="area" title="Power Map" legend="read" search />;
+  return <LandscapeCanvas data={data} fill="area" title="Power Map" legend="edit" search />;
 }

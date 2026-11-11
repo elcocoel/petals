@@ -25,10 +25,12 @@ import { mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
 import type { LegendEdit } from '../lib/view-edit.ts';
+import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
 import { useMapBlocs } from '../viewmodels/useMapBlocs.ts';
 import { useMapClaims } from '../viewmodels/useMapClaims.ts';
 import { useMapSearch } from '../viewmodels/useMapSearch.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
+import { useSession } from '../viewmodels/useSession.ts';
 import type { Continent, Place } from './places.ts';
 import type { Road } from './roads.ts';
 import type { FarStyle, LandFlower, LineStyle } from './scene.ts';
@@ -189,13 +191,25 @@ export function LandscapeCanvas({
   clearOfChains?: boolean;
   /**
    * The legend (#92; design/legend.md): the person's view as a key, under the chain list, one of the overlays. Read
-   * only, or changing the view where it's handed Settings' hands (/make).
+   * only; changing the view where it's handed Settings' hands (/make); or 'edit', with its own (the Power Map).
    */
-  legend?: 'read' | LegendEdit | null;
+  legend?: 'read' | 'edit' | LegendEdit | null;
   /** a search field at the top of the chain list (board 105; the Power Map) */
   search?: boolean;
 }) {
   const person = usePersonView();
+  // 'edit' (the Power Map, Elco, 11 Nov: "switch the legends live and watching the map adapt"): Settings' own
+  // hands for someone signed in, whose view is kept; a visitor's can't be, so theirs reads only
+  const ownHands = useLegendEdit();
+  const session = useSession(legend === 'edit');
+  const hands =
+    legend === 'edit'
+      ? session.account
+        ? ownHands
+        : undefined
+      : legend === 'read'
+        ? undefined
+        : legend;
   const aside = useRef<HTMLDivElement>(null);
   const opened = data.flowers[focus]?.place.chain;
   const [chain, setChain] = useState(
@@ -393,7 +407,7 @@ export function LandscapeCanvas({
             // flowerKeys, what its fills paint); on the map, no one key, so it says so
             keys={inFlower ? flowerKeys(inFlower.reading.petals) : []}
             keysNote={inFlower ? undefined : panelWords.legendColours}
-            edit={legend === 'read' ? undefined : legend}
+            edit={hands ?? undefined}
             groups={
               inFlower && blocs
                 ? {
