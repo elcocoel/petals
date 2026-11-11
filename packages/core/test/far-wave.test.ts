@@ -1,7 +1,7 @@
 // The far wave (#84): one soft ring from a flower's own heights, smoothed round the circle so wallets merge, with
 // a hole for the organisation's mark. Drawn only by the map bench in /lab until Elco has seen it.
 import { describe, expect, test } from 'vitest';
-import { FAR_WAVE, farPath, waveHeights, waveReach } from '../src/render/wedge/far.ts';
+import { FAR_WAVE, farPath, farRuns, waveHeights, waveReach } from '../src/render/wedge/far.ts';
 import { modelOf } from '../src/render/wedge/model.ts';
 import { SHAPE } from '../src/render/wedge/ring.ts';
 import { GOLDEN_CASES, readGolden } from './golden-cases.ts';
@@ -29,5 +29,14 @@ describe('the far wave', () => {
     expect(d).not.toContain('NaN');
     expect(waveReach(m, SHAPE)).toBeGreaterThan(SHAPE.r0 / SHAPE.R);
     expect(waveReach(m, SHAPE)).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('the far wave in its colours', () => {
+  test('one shape per run of one colour round the circle, together the whole ring', () => {
+    const fills = Array.from(m.petals, (_, i) => (i < 10 ? '#8BC9BD' : '#96D4E3'));
+    const runs = farRuns(m, SHAPE, fills);
+    expect(new Set(runs.map((r) => r.fill))).toEqual(new Set(['#8BC9BD', '#96D4E3']));
+    for (const r of runs) expect(r.d).not.toContain('NaN');
   });
 });
