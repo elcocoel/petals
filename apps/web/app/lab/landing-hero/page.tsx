@@ -1,15 +1,17 @@
-// The new hero's lean (LANDING, 11 Nov), in the whole landing so it's seen in place: MapHero where the hero
-// was, and the map section gone, since the map is now on top. Make Petals stronger has its three ways in
-// columns, LANDING's lean for its empty half. In production it stays hidden unless
+// The new hero's lean (LANDING, 11 Nov), in the whole landing so it's seen in place. Second take, on Elco's
+// word: ChatHero, illustrated, with a simulated chat and a symbolic petal, where the hero was; the map section
+// stays where it is. Make Petals stronger has its three ways in columns, LANDING's lean for its empty half.
+// (MapHero, the first take, the live map on top, stays in the lab's registry.) In production it stays hidden unless
 // PETAL_LAB=1, like the lab, and nothing here reaches the landing until Elco has seen it.
 import { notFound } from 'next/navigation';
 import { BackIt } from '../../../components/landing/BackIt.tsx';
 import { BuildWithUs } from '../../../components/landing/BuildWithUs.tsx';
+import { ChatHero } from '../../../components/landing/ChatHero.tsx';
 import { FrontDoor } from '../../../components/landing/FrontDoor.tsx';
+import { GallerySection } from '../../../components/landing/GallerySection.tsx';
 import { GiveToAgent } from '../../../components/landing/GiveToAgent.tsx';
 import { HowItWorks } from '../../../components/landing/HowItWorks.tsx';
 import { LiveReading } from '../../../components/landing/LiveReading.tsx';
-import { MapHero } from '../../../components/landing/MapHero.tsx';
 import { Questions } from '../../../components/landing/Questions.tsx';
 import { Footer } from '../../../components/ui/Footer.tsx';
 import { Nav } from '../../../components/ui/Nav.tsx';
@@ -31,10 +33,11 @@ export default async function HeroLab() {
     <>
       <Nav />
       <main>
-        <MapHero tiles={tiles} />
+        <ChatHero />
         <LiveReading view={person.view} />
         <HowItWorks />
         <GiveToAgent />
+        <GallerySection tiles={tiles} />
         <Questions />
         <BackIt layout="columns" />
         <BuildWithUs />

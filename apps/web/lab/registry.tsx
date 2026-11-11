@@ -34,9 +34,11 @@ import { Legend, LegendKeys } from '../components/Legend.tsx';
 import { AnnotatedFlower } from '../components/landing/AnnotatedFlower.tsx';
 import { BackIt } from '../components/landing/BackIt.tsx';
 import { BuildWithUs } from '../components/landing/BuildWithUs.tsx';
+import { ChatHero } from '../components/landing/ChatHero.tsx';
 import { GallerySection } from '../components/landing/GallerySection.tsx';
 import { GiveToAgent } from '../components/landing/GiveToAgent.tsx';
 import { Hero } from '../components/landing/Hero.tsx';
+import { HeroPetal } from '../components/landing/HeroPetal.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
 import { LandingMap } from '../components/landing/LandingMap.tsx';
 import { LiveReading } from '../components/landing/LiveReading.tsx';
@@ -641,6 +643,27 @@ export const registry: LabEntry[] = [
     ],
   },
   section('Hero', 'apps/web/components/landing/Hero.tsx', 'Hero', '66:2188', () => <Hero />),
+  {
+    id: 'ChatHero',
+    group: 'Sections',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/ChatHero.tsx',
+    // LANDING's second lean for the new hero (11 Nov), in place at /lab/landing-hero; no Figma frame yet
+    states: [{ name: "LANDING's lean", wide: true, render: () => <ChatHero /> }],
+  },
+  {
+    id: 'HeroPetal',
+    group: 'Marks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/HeroPetal.tsx',
+    // the hero's symbolic petal at each stage of its chat
+    states: ([0, 1, 2, 3] as const).map((stage) => ({
+      name: `stage ${stage}`,
+      render: () => <HeroPetal stage={stage} />,
+    })),
+  },
   {
     id: 'MapHero',
     group: 'Sections',

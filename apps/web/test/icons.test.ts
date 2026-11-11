@@ -15,6 +15,8 @@ const DRAWINGS = [
   'lab/flower/OutlineKey.tsx',
   // an organisation's logo, a picture, drawn round as the map draws it (corners are refused in classes)
   'components/ui/OrgBadge.tsx',
+  // the hero's petal: a symbol of its own, not the renderer, so it never goes out of date (Elco, 11 Nov)
+  'components/landing/HeroPetal.tsx',
 ];
 
 const sources = (dir: string): string[] =>
