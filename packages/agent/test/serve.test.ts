@@ -110,6 +110,18 @@ describe('what the server serves for agents', () => {
     expect(text).not.toContain('server.local');
   });
 
+  test("the setup skill, the brain's setup chapter as plain text, with the website's address", async () => {
+    const app = serverApp(fresh(), { siteKey: KEY });
+    const res = await call(app, '/setup', { 'x-petal-site-key': KEY });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toMatch(/^text\/plain/);
+    const text = await res.text();
+    expect(text.startsWith('# Setting up Petals')).toBe(true);
+    expect(text).toContain(`Open ${SITE} and press **Connect**`);
+    expect(text).not.toMatch(/\{site\}|<!--|^---/m);
+    expect(text).not.toContain('server.local');
+  });
+
   test("the file, with the website's address written in", async () => {
     const root = mkdtempSync(join(tmpdir(), 'petal-root-'));
     mkdirSync(join(root, 'apps/cli/dist'), { recursive: true });

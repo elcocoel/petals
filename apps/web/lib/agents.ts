@@ -117,19 +117,21 @@ export const agentWords = {
   prompt: (site: string, key: string) =>
     `Be one of my agents in Petals. If you run on my computer, read ${site}/skill.md and set yourself up, then join with my agent key and wait for my jobs, as its Jobs section says. If you're the Claude app's chat or ChatGPT, run no download: use the Petals connector at ${site}/mcp, or tell me how to add it, then take my open jobs with my agent key. My agent key: ${key}`,
   /**
-   * The one setup prompt, with no key, for before sign-in (Elco, 11 Nov, through PM): the landing's "Copy
-   * for my agent" and a signed-out /make copy it. It walks the person to Petals one step at a time, skipping
-   * what's done, and brings the agent in with the key Connect an agent copies once they're signed in, the
-   * same join as `prompt`. Steps 1, 2, 3 and 5 are LANDING's words from section 4; `site` is this site's address.
+   * The setup skill's paste (Elco, 11 Nov: "really for the laziest of people ... it should work on any chat
+   * bot"): the landing's "Copy for my agent" and a signed-out /make copy it. It has no key and makes the
+   * chatbot no worker: it takes the person by the hand to their first conversation. Every step is here, in
+   * the person's own voice, because most chatbots can't be counted on to open a link. One that can reads
+   * {site}/setup (the brain's setup chapter), with an introduction to Petals and the same steps, kept current.
+   * Drafts for Elco's words; `site` is this site's address.
    */
   setup: (site: string) =>
     [
-      `Help me start using Petals (${site}). It maps who holds power in on-chain networks and draws it as flowers. Guide me one step at a time, and skip any step I've already done.`,
-      '1. A NEAR wallet. If I have none, help me set one up (Meteor Wallet works) and get a little NEAR into it.',
-      `2. Log in. I open ${site}, press Connect and approve the sign-in in my wallet. Signing in moves no funds and costs nothing.`,
-      "3. Top up. Petals' agent runs on NEAR AI and is paid as I go. When my conversation with it asks for credit, I add some with Add 1 NEAR, or pay with another token from any chain.",
-      `4. Bring yourself in. Read ${site}/skill.md. Once I'm logged in, I press Connect an agent at the top of Petals' side panel and paste here what it copies: it carries my agent key. Follow it, so you show under Your agents and can take the jobs Petals' agent hands out.`,
-      "5. Talk to Petals. I name a community, a wallet or a contract, and Petals' agent maps how power moves in it.",
-      'Never ask me for my seed phrase or private key.',
+      `Take me by the hand and set me up to use Petals (${site}). It maps who holds power in on-chain networks and draws it as flowers. Guide me one small step at a time, wait for me after each, and skip anything I've already done. If you can open links, read ${site}/setup first: it has a short introduction to Petals and these same steps, kept up to date. If you can't, here they are.`,
+      '1. A NEAR wallet. If I have none, help me make one with Meteor Wallet (meteorwallet.app), in my browser on any computer. It shows me a recovery phrase: I write it on paper and keep it offline. A new wallet needs no NEAR to sign in to Petals.',
+      `2. Sign in. I open ${site}, press Connect, pick my wallet and approve the sign-in. It's a signature, not a payment: it moves no funds and costs nothing.`,
+      "3. Credit. Petals' agent runs on NEAR AI and is paid as I go; a flower costs a few cents. When my conversation needs credit, the chat shows Add 1 NEAR, which my wallet approves as one transfer, or Pay with another token if I have no NEAR. Then I pick a token and its chain, the dollars, and my address on that chain for refunds, press Get the address to send to, and send exactly that amount, in one transfer from any wallet, before the time shown.",
+      `4. My first conversation. I open ${site}/make and name a community, a wallet or a contract I care about. Petals' agent reads the chain and draws its flower beside the chat. Then I can ask "Show me the source" or "Who's behind this petal?"`,
+      "Later, if I want my own agents to help, Connect an agent at the top of Petals' side panel brings them in. I don't need it to start.",
+      'Never ask me for my recovery phrase or a private key, and stop me if I start to paste one. Signing in and paying are always approved in my wallet.',
     ].join('\n\n'),
 } as const;

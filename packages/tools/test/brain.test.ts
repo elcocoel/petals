@@ -35,6 +35,7 @@ describe('the brain', () => {
       'going-deeper',
       'open-source-leads',
       'over-time',
+      'setup',
       'stake-behind-the-network',
       'start-from-an-address',
       'where-power-lives',

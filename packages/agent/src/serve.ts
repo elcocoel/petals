@@ -116,6 +116,21 @@ export function serverApp(cfg: Config, o: ServerOptions = {}): Hono {
     });
   });
 
+  // The setup skill (Elco, 11 Nov): the brain's setup chapter, for a chatbot the person pasted the setup
+  // prompt into, which may open this link. Plain text a fetcher reads without JavaScript, with this site's
+  // address written in, and without the chapter's header and notes.
+  app.get('/setup', async (c) => {
+    const dir = cfg.brainDir ?? join(root, 'brain');
+    const md = await readFile(join(dir, 'chapters', 'setup.md'), 'utf8').catch(() => null);
+    if (!md) return c.text('No setup here yet.\n', 404);
+    const site = siteOf(c.req.raw);
+    const body = md
+      .replace(/^---\n[\s\S]*?\n---\n+/, '')
+      .replace(/<!--[\s\S]*?-->\n*/g, '')
+      .replaceAll('{site}', site);
+    return c.body(body, 200, { 'content-type': 'text/plain; charset=utf-8' });
+  });
+
   app.get('/petal.mjs', async (c) => {
     const out = await served(siteOf(c.req.raw));
     if (!out) return c.text('petal.mjs is not built on this server.\n', 404);

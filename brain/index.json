@@ -304,6 +304,32 @@
       "sha256": "1ca3515f6108be2a843762cef2fbc84cf60610c8ba9b3a9e60e6db8a1a7d240c"
     },
     {
+      "id": "setup",
+      "kind": "chapter",
+      "for": "a person setting up Petals from any chatbot, step by step: a wallet, signing in, credit, a first conversation",
+      "recognise": [
+        "set up",
+        "setup",
+        "get started",
+        "new to petals",
+        "wallet",
+        "sign in",
+        "log in",
+        "connect",
+        "top up",
+        "credit",
+        "first time",
+        "how do I start"
+      ],
+      "tools": [],
+      "continues": [
+        "start-from-an-address"
+      ],
+      "status": "ready",
+      "file": "chapters/setup.md",
+      "sha256": "7c9ff2c1e556f1b9b87e3643aa478f78e89eb8833337a9610e5a11eb0ab8c704"
+    },
+    {
       "id": "stake-behind-the-network",
       "kind": "chapter",
       "for": "separating validator consensus power from the accounts and stake behind it",
