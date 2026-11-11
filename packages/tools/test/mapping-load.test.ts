@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
+import { canonicalJson, sha256Hex } from '@petal/core';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { privateStore } from '../src/drafts.ts';
 import { mapsOf, mapViews } from '../src/map.ts';
@@ -86,5 +87,46 @@ describe('loading a mapping wave', () => {
     expect((await privateStore(r.ctx.config).mark.get(DAO))?.body).toContain('"kept":"first"');
     await loadMapping(r.ctx, root, { by: 'mapping.petals.near', replace: true });
     expect((await privateStore(r.ctx.config).mark.get(DAO))?.body).toContain('Moloch DAO');
+  });
+
+  test("a wave's manifest says which files load, in each of the waves' shapes; an unlisted one is held", async () => {
+    const root = folder();
+    const dir = join(root, 'ethereum', 'moloch');
+    const mark = JSON.parse(readFileSync(join(dir, 'mark.json'), 'utf8'));
+    const sha = sha256Hex(canonicalJson(mark));
+    const shapes = [
+      { objects: [{ path: 'moloch/mark.json', load: true, canonical_sha256: sha }] },
+      { daos: [{ artifacts: [{ file: 'moloch/mark.json', canonical_sha256: sha }] }] },
+      {
+        artifacts: [
+          { file: 'moloch/mark.json', role: 'load-candidate', canonical_json_sha256: sha },
+        ],
+      },
+      {
+        records: [
+          { path: 'moloch/mark.json', status: 'importable-with-stated-coverage', sha256: sha },
+        ],
+      },
+    ];
+    for (const m of shapes) {
+      writeFileSync(join(root, 'ethereum', 'IMPORT-MANIFEST.json'), JSON.stringify(m));
+      const dry = await loadMapping(r.ctx, root, { by: 'mapping.petals.near', dry: true });
+      // the mark loads; the snapshot and the bad claim aren't listed, so they're held; the manifest is evidence
+      expect(dry).toMatchObject({ held: 2, evidence: 2, formats: { mark: { good: 1 } } });
+      expect(dry.refused).toEqual([]);
+    }
+    // a role or status that doesn't load holds it; a hash that isn't its own refuses it
+    writeFileSync(
+      join(root, 'ethereum', 'IMPORT-MANIFEST.json'),
+      JSON.stringify({
+        artifacts: [
+          { file: 'moloch/mark.json', role: 'research-only-hold', canonical_json_sha256: sha },
+        ],
+        records: [{ path: 'moloch/snapshot.json', status: 'importable', sha256: '0'.repeat(64) }],
+      }),
+    );
+    const held = await loadMapping(r.ctx, root, { by: 'mapping.petals.near', dry: true });
+    expect(held).toMatchObject({ held: 2 });
+    expect(held.refused.map((x) => x.file)).toEqual(['ethereum/moloch/snapshot.json']);
   });
 });

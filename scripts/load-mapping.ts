@@ -4,7 +4,7 @@
 // own mapping; a good mark, value or proposals kept by its map's address unless one is kept there already
 // (--replace puts the wave's instead); claims checked and held. Hidden maps stay hidden. Where the server runs:
 //   container exec petals node /app/scripts/load-mapping.ts <folder> [--dry] [--replace] [--by mapping.petals.near]
-//     [--manifest <a wave's *IMPORT-MANIFEST.json outside the folder>]
+//     [--manifest <a wave's manifest outside the folder: L2-IMPORT-MANIFEST.json, phase2-ethereum-manifest.json>]
 // A wave's manifest says which files load (and the canonical sha256 each must have); unlisted ones are held.
 import { parseArgs } from 'node:util';
 import { createContext, loadMapping, serverConfig } from '@petal/agent';
