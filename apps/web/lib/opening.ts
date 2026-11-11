@@ -12,10 +12,22 @@ const MAX_SHOWN = 3;
 
 /**
  * What's offered as already mapped, in the first message and on /make's shelf alike: maps, one per address
- * (Elco, 10 Nov), the largest first, as the readiest first cases.
+ * (Elco, 10 Nov), the largest first, as the readiest first cases. Two maps that read the same name are
+ * offered once, the larger (#78, 11 Nov: two 'Marinade MNDE deposits and lock schedules' side by side).
  */
-export function firstCases<M extends Pick<MapCard, 'readings'>>(maps: readonly M[]): M[] {
-  return [...maps].sort((a, b) => sizeOf(b) - sizeOf(a)).slice(0, MAX_SHOWN);
+export function firstCases<M extends Pick<MapCard, 'readings' | 'name' | 'title'>>(
+  maps: readonly M[],
+): M[] {
+  const seen = new Set<string>();
+  return [...maps]
+    .sort((a, b) => sizeOf(b) - sizeOf(a))
+    .filter((m) => {
+      const name = viewName(m).toLowerCase();
+      if (seen.has(name)) return false;
+      seen.add(name);
+      return true;
+    })
+    .slice(0, MAX_SHOWN);
 }
 
 export function openingMessage(maps: readonly MapCard[]): string {

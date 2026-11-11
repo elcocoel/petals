@@ -35,6 +35,17 @@ const card = (
 const map = card('near:validators', 'NEAR validators', [8487]);
 
 describe('openingMessage', () => {
+  test('two maps that read the same name are offered once, the larger (#78)', () => {
+    const text = openingMessage([
+      card('sol:mnde-a', 'Marinade MNDE deposits and lock schedules', [40]),
+      card('sol:mnde-b', 'Marinade MNDE deposits and lock schedules', [90]),
+      card('near:validators', 'NEAR validators', [60]),
+    ]);
+    expect(text.match(/Marinade MNDE deposits and lock schedules/g)).toHaveLength(1);
+    expect(text).toContain('/m/sol%3Amnde-b');
+    expect(text).toContain('[NEAR validators]');
+  });
+
   test('offers maps, one per address, each by its page', () => {
     const text = openingMessage([map]);
     expect(text).toContain('[NEAR validators](/m/near%3Avalidators)');
