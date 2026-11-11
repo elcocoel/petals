@@ -4,7 +4,7 @@
 // event says it was handed; GET /api/v1/explorations/:ref/jobs says where each stands. Pure. The words
 // are drafts, shipped on Elco's word (9 Nov: "Ship the drafts, I'll change them later").
 
-import { readableAgent } from './agents.ts';
+import { readableAgent, workerName } from './agents.ts';
 
 export type JobStatus = 'open' | 'taken' | 'done' | 'failed';
 
@@ -27,10 +27,6 @@ export interface Job {
   /** The job's own conversation, where its work goes (swarm.md, step 2). */
   conversation?: string | null;
 }
-
-/** A worker as the side panel names it: the agent's name made readable, and its place when it's not the first. */
-export const workerName = (name: string, n?: number | null) =>
-  `${readableAgent(name)}${n && n > 1 ? ` ${n}` : ''}`;
 
 /** Who, as a person reads it: the worker's name, or your own agent when none is named yet. */
 const whoOf = (name: string | null | undefined, n?: number | null) =>

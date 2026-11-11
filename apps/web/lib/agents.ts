@@ -59,9 +59,12 @@ export interface AgentRow {
   state: 'busy' | 'waiting' | 'away';
 }
 
-/** A worker's name: its agent's, then its place after the first (Codex, Codex 2, Codex 3). */
-export const workerName = (name: string, n = 1) =>
-  n > 1 ? `${readableAgent(name)} ${n}` : readableAgent(name);
+/**
+ * A worker's name, the one way the panel and the chat say it: its agent's, then its place after the first
+ * (Codex, Codex 2, Codex 3). No place, or the first, is the agent alone.
+ */
+export const workerName = (name: string, n?: number | null) =>
+  n && n > 1 ? `${readableAgent(name)} ${n}` : readableAgent(name);
 
 export function agentRows(agents: readonly ConnectedAgent[]): AgentRow[] {
   return agents.map((a) => ({
