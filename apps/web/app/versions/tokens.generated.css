@@ -111,7 +111,7 @@
   --joy-gradient-glow: radial-gradient(circle at 100% 0%, rgb(139 201 189 / 0.2), transparent 46%);
   --joy-gradient-gloss: linear-gradient(180deg, rgb(255 255 255 / 0.05), transparent 62%);
   --joy-glass-fill: linear-gradient(145deg, rgb(255 255 255 / 0.96), rgb(255 255 255 / 0.76));
-  --joy-glass-float: linear-gradient(145deg, rgb(255 255 255 / 0.96), rgb(255 255 255 / 0.76));
+  --joy-glass-float: linear-gradient(145deg, rgb(255 255 255 / 0.97), rgb(255 255 255 / 0.92));
   --joy-texture-grain: none;
   --joy-texture-rules: repeating-linear-gradient(90deg, rgb(23 23 23 / 0.06) 0 1px, transparent 1px 24px), repeating-linear-gradient(0deg, rgb(23 23 23 / 0.06) 0 1px, transparent 1px 24px);
 }
@@ -161,7 +161,7 @@
   --joy-gradient-glow: radial-gradient(circle at 100% 0%, rgb(255 255 255 / 0.4), transparent 46%);
   --joy-gradient-gloss: linear-gradient(180deg, rgb(255 255 255 / 0.05), transparent 62%);
   --joy-glass-fill: linear-gradient(145deg, rgb(255 255 255 / 0.62), rgb(255 255 255 / 0.32));
-  --joy-glass-float: linear-gradient(145deg, rgb(255 255 255 / 0.96), rgb(255 255 255 / 0.76));
+  --joy-glass-float: linear-gradient(145deg, rgb(255 255 255 / 0.97), rgb(255 255 255 / 0.92));
   --joy-texture-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.2 .85' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='2.4 0 0 0 -.7 2.4 0 0 0 -.7 2.4 0 0 0 -.7 2.4 0 0 0 -.7'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='.09 1'/%3E%3CfeFuncG type='discrete' tableValues='.09 1'/%3E%3CfeFuncB type='discrete' tableValues='.09 1'/%3E%3CfeFuncA type='table' tableValues='0.115 0 0.115'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect x='-300' y='-300' width='900' height='900' filter='url(%23f)' transform='rotate(-20 150 150)'/%3E%3C/svg%3E");
   --joy-texture-rules: repeating-linear-gradient(90deg, rgb(23 23 23 / 0.06) 0 1px, transparent 1px 24px), repeating-linear-gradient(0deg, rgb(23 23 23 / 0.06) 0 1px, transparent 1px 24px);
 }
