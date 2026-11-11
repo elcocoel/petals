@@ -1,0 +1,1129 @@
+{
+  "petal": "proposals/v2",
+  "about": "near:mainnet:houseofstake-ops.sputnik-dao.near",
+  "source": {
+    "kind": "sputnik",
+    "contract": "near:mainnet:houseofstake-ops.sputnik-dao.near",
+    "ref": "get_policy, get_last_proposal_id and get_proposals {from_index, limit: 100} on houseofstake-ops.sputnik-dao.near at block 224106202 (final), via https://near.drpc.org",
+    "at": "2026-11-11T19:10:47Z"
+  },
+  "proposals": [
+    {
+      "id": "0",
+      "title": "Update Policy - Add New Members",
+      "kind": "ChangePolicy",
+      "proposer": "alshik.near",
+      "at": "2026-07-14T12:10:17.133Z",
+      "closes_at": "2026-07-16T12:10:17.133Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:0",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "1",
+      "title": "Update Policy - Edit Member Permissions",
+      "kind": "ChangePolicy",
+      "proposer": "alshik.near",
+      "at": "2026-07-14T12:13:14.376Z",
+      "closes_at": "2026-07-16T12:13:14.376Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:1",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "Update Policy - Add New Members",
+      "kind": "ChangePolicy",
+      "proposer": "alshik.near",
+      "at": "2026-07-14T12:15:27.507Z",
+      "closes_at": "2026-07-16T12:15:27.507Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:2",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "title": "Update policy - Voting Thresholds",
+      "kind": "ChangePolicy",
+      "proposer": "alshik.near",
+      "at": "2026-07-14T12:16:54.128Z",
+      "closes_at": "2026-07-16T12:16:54.128Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:3",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "title": "Update policy - Voting Duration",
+      "kind": "ChangePolicyUpdateParameters",
+      "proposer": "alshik.near",
+      "at": "2026-07-14T12:18:15.213Z",
+      "closes_at": "2026-07-16T12:18:15.213Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:4",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "title": "Update policy - Voting Thresholds",
+      "kind": "ChangePolicy",
+      "proposer": "alshik.near",
+      "at": "2026-07-14T12:19:47.607Z",
+      "closes_at": "2026-07-16T12:19:47.607Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:5",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "ak-hog-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "title": "Proposal Action: asset-exchange",
+      "kind": "FunctionCall",
+      "proposer": "ak-hog-hos.near",
+      "at": "2026-07-16T12:42:39.743Z",
+      "closes_at": "2026-07-18T12:42:39.743Z",
+      "decided_at": null,
+      "outcome": "failed",
+      "as_said": "Failed",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:6",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "ak-hog-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "trezufn.norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "title": "Notes: Test transaction, Cavenwell onboarding",
+      "kind": "Transfer",
+      "proposer": "ak-hog-hos.near",
+      "at": "2026-07-16T12:50:02.142Z",
+      "closes_at": "2026-07-18T12:50:02.142Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:7",
+      "recipient": "1988029414d6b7c680a071e7ace1f40145d12318be567122c9c535caf399d36b",
+      "votes": [
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "ak-hog-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "trezufn.norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "title": "Proposal Action: asset-exchange",
+      "kind": "FunctionCall",
+      "proposer": "ak-hog-hos.near",
+      "at": "2026-07-17T13:27:01.414Z",
+      "closes_at": "2026-07-19T13:27:01.414Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:8",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "trezufn.norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "ak-hog-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "title": "Update Policy - Edit Member Permissions",
+      "kind": "ChangePolicy",
+      "proposer": "ak-hog-hos.near",
+      "at": "2026-07-20T16:05:17.778Z",
+      "closes_at": "2026-07-22T16:05:17.778Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:9",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "ak-hog-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "3006939ff4e72cde91cf29f769f5633fba6750344eeebb9e4687dce12650226e",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "title": "Update Policy - Edit Member Permissions",
+      "kind": "ChangePolicy",
+      "proposer": "ak-hog-hos.near",
+      "at": "2026-07-21T15:16:23.990Z",
+      "closes_at": "2026-07-23T15:16:23.990Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:10",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "ak-hog-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hosops.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "3006939ff4e72cde91cf29f769f5633fba6750344eeebb9e4687dce12650226e",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "title": "Update Policy - Edit Member Permissions",
+      "kind": "ChangePolicy",
+      "proposer": "ak-hog-hos.near",
+      "at": "2026-07-21T18:48:23.108Z",
+      "closes_at": "2026-07-23T18:48:23.108Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:11",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "3006939ff4e72cde91cf29f769f5633fba6750344eeebb9e4687dce12650226e",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "ak-hog-hos.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hosops.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "title": "Notes: Harris and Trotter test tx",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-08-03T02:46:39.975Z",
+      "closes_at": "2026-08-05T02:46:39.975Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:12",
+      "recipient": "52f1b346c85c99b2377cbf445eab8412775241d240c37262b2f567109770260a",
+      "votes": [
+        {
+          "account": "trezufn.norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "title": "Notes: Test tx for Bianca Momand (HOS ops)",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-08-03T02:49:47.184Z",
+      "closes_at": "2026-08-05T02:49:47.184Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:13",
+      "recipient": "1400772e4193e774b7b65b6630a96c16584c2527b50f55e0ac7da1ab7b758390",
+      "votes": [
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "trezufn.norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "title": "Notes: Test tx for Oleksii P (HOS security)",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-08-03T02:51:06.638Z",
+      "closes_at": "2026-08-05T02:51:06.638Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:14",
+      "recipient": "vastkale359.near",
+      "votes": [
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "trezufn.norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "title": "Proposal Action: asset-exchange",
+      "kind": "FunctionCall",
+      "proposer": "hosops.near",
+      "at": "2026-08-05T00:45:29.308Z",
+      "closes_at": "2026-08-07T00:45:29.308Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:15",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "title": "Notes: Security contractor July services payment",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-08-05T00:55:44.664Z",
+      "closes_at": "2026-08-07T00:55:44.664Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:16",
+      "recipient": "vastkale359.near",
+      "votes": [
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "17",
+      "title": "Notes: July ops services payment",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-08-05T00:59:58.991Z",
+      "closes_at": "2026-08-07T00:59:58.991Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:17",
+      "recipient": "1400772e4193e774b7b65b6630a96c16584c2527b50f55e0ac7da1ab7b758390",
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "18",
+      "title": "Proposal Action: asset-exchange",
+      "kind": "FunctionCall",
+      "proposer": "hosops.near",
+      "at": "2026-08-05T14:52:31.504Z",
+      "closes_at": "2026-08-07T14:52:31.504Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:18",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "trezufn.norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "19",
+      "title": "Notes: Q3 payment to Cavenwell",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-08-05T23:36:12.209Z",
+      "closes_at": "2026-08-07T23:36:12.209Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:19",
+      "recipient": "1988029414d6b7c680a071e7ace1f40145d12318be567122c9c535caf399d36b",
+      "votes": [
+        {
+          "account": "trezufn.norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "20",
+      "title": "Notes: Cavenwell test transaction return",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-08-05T23:38:48.693Z",
+      "closes_at": "2026-08-07T23:38:48.693Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:20",
+      "recipient": "1988029414d6b7c680a071e7ace1f40145d12318be567122c9c535caf399d36b",
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "trezufn.norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "21",
+      "title": "Notes: August 1-31 ops",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-09-02T12:14:54.768Z",
+      "closes_at": "2026-09-04T12:14:54.768Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:21",
+      "recipient": "1400772e4193e774b7b65b6630a96c16584c2527b50f55e0ac7da1ab7b758390",
+      "votes": [
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "22",
+      "title": "Notes: August 1-31  Security support",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-09-02T12:20:17.924Z",
+      "closes_at": "2026-09-04T12:20:17.924Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:22",
+      "recipient": "vastkale359.near",
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "24",
+      "title": "Notes: HTDS-TCW-0323 (Sept services)",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-09-14T12:07:12.673Z",
+      "closes_at": "2026-09-16T12:07:12.673Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:24",
+      "recipient": "52f1b346c85c99b2377cbf445eab8412775241d240c37262b2f567109770260a",
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "trezufn.norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "25",
+      "title": "",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-09-29T12:13:57.173Z",
+      "closes_at": "2026-10-01T12:13:57.173Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:25",
+      "recipient": "52f1b346c85c99b2377cbf445eab8412775241d240c37262b2f567109770260a",
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "26",
+      "title": "Notes: September Operations",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-10-01T12:16:52.373Z",
+      "closes_at": "2026-10-03T12:16:52.373Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:26",
+      "recipient": "1400772e4193e774b7b65b6630a96c16584c2527b50f55e0ac7da1ab7b758390",
+      "votes": [
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "trezufn.norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "27",
+      "title": "Notes: IT and Security Sept",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-10-01T12:19:00.980Z",
+      "closes_at": "2026-10-03T12:19:00.980Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:27",
+      "recipient": "vastkale359.near",
+      "votes": [
+        {
+          "account": "trezufn.norfolks.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "28",
+      "title": "Update Policy - Add New Members",
+      "kind": "ChangePolicy",
+      "proposer": "ak-hog-hos.near",
+      "at": "2026-10-12T16:38:03.806Z",
+      "closes_at": "2026-10-14T16:38:03.806Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:28",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "hosops.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "3006939ff4e72cde91cf29f769f5633fba6750344eeebb9e4687dce12650226e",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "29",
+      "title": "Update Policy - Remove Member",
+      "kind": "ChangePolicy",
+      "proposer": "ak-hog-hos.near",
+      "at": "2026-10-13T14:21:10.986Z",
+      "closes_at": "2026-10-15T14:21:10.986Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:29",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "3006939ff4e72cde91cf29f769f5633fba6750344eeebb9e4687dce12650226e",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hosops.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "30",
+      "title": "Proposal Action: asset-exchange",
+      "kind": "FunctionCall",
+      "proposer": "hosops.near",
+      "at": "2026-10-27T11:54:22.818Z",
+      "closes_at": "2026-10-29T11:54:22.818Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:30",
+      "recipient": null,
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "31",
+      "title": "Notes: INV-2573",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-10-28T13:44:54.486Z",
+      "closes_at": "2026-10-30T13:44:54.486Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:31",
+      "recipient": "1988029414d6b7c680a071e7ace1f40145d12318be567122c9c535caf399d36b",
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "32",
+      "title": "Notes: HT/HOS Sept invoice 0365",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-10-28T13:50:31.797Z",
+      "closes_at": "2026-10-30T13:50:31.797Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:32",
+      "recipient": "52f1b346c85c99b2377cbf445eab8412775241d240c37262b2f567109770260a",
+      "votes": [
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "33",
+      "title": "Notes: October ops support",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-11-03T11:34:44.532Z",
+      "closes_at": "2026-11-05T11:34:44.532Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:33",
+      "recipient": "1400772e4193e774b7b65b6630a96c16584c2527b50f55e0ac7da1ab7b758390",
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "34",
+      "title": "Notes: October security services",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-11-03T11:37:58.068Z",
+      "closes_at": "2026-11-05T11:37:58.068Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:34",
+      "recipient": "vastkale359.near",
+      "votes": [
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "35",
+      "title": "Notes: October services Invoice 0415",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-11-03T11:40:22.601Z",
+      "closes_at": "2026-11-05T11:40:22.601Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:35",
+      "recipient": "52f1b346c85c99b2377cbf445eab8412775241d240c37262b2f567109770260a",
+      "votes": [
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "36",
+      "title": "Notes: Balance of payment for September services Inv: 0365",
+      "kind": "Transfer",
+      "proposer": "hosops.near",
+      "at": "2026-11-03T11:47:07.800Z",
+      "closes_at": "2026-11-05T11:47:07.800Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:houseofstake-ops.sputnik-dao.near:36",
+      "recipient": "52f1b346c85c99b2377cbf445eab8412775241d240c37262b2f567109770260a",
+      "votes": [
+        {
+          "account": "alshik.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "hofront.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "28c4bb0d700e1db4dd2293c1f7a12b2ad147f0e0bb37e4960e98657f043d3cc5",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    }
+  ],
+  "read_at": "2026-11-11T19:10:50.783Z"
+}

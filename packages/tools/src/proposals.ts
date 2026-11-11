@@ -8,6 +8,7 @@ import {
   baalLogs,
   baalOf,
   baalProposals,
+  baalSenders,
   defaultPool,
   EVM_CHAINS,
   readSputnik,
@@ -52,7 +53,17 @@ const baalBehind: Reader = async (card, readAt) => {
   const chain = EVM_CHAINS[card.chain];
   if (!chain) return null;
   const dao = await baalOf(chain, card.address);
-  return dao ? baalProposals(card.id, chain, dao, await baalLogs(chain, dao), readAt) : null;
+  if (!dao) return null;
+  const logs = await baalLogs(chain, dao);
+  return baalProposals(
+    card.id,
+    chain,
+    dao,
+    logs,
+    readAt,
+    Date.now(),
+    await baalSenders(chain, logs),
+  );
 };
 
 /** The readers whose maps have proposals Petals reads, and how; null: this map has none to read. */

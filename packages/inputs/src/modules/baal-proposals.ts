@@ -81,6 +81,32 @@ export async function baalLogs(
   return result;
 }
 
+/** Who sent each SubmitProposal's transaction (its proposer), by the transaction's hash, one read each. */
+export async function baalSenders(
+  chain: EvmChain,
+  logs: readonly BaalLog[],
+  fetchImpl?: Fetch,
+): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  for (const l of logs) {
+    if (l.topics[0] !== BAAL_EVENTS.submit || !l.transactionHash) continue;
+    const hash = l.transactionHash.toLowerCase();
+    if (out.has(hash)) continue;
+    try {
+      const { result } = await askChain<{ from?: string } | null>(
+        chain,
+        'eth_getTransactionByHash',
+        [hash],
+        { accept: (r) => !!r && typeof r === 'object', ...opts(fetchImpl) },
+      );
+      if (result?.from) out.set(hash, result.from.toLowerCase());
+    } catch {
+      // a transaction the chain didn't answer for: that proposer stays null
+    }
+  }
+  return out;
+}
+
 const timeOf = (l: BaalLog): string | null =>
   l.blockTimestamp ? new Date(Number(BigInt(l.blockTimestamp)) * 1000).toISOString() : null;
 const idOf = (topic: string) => BigInt(topic).toString();
@@ -105,6 +131,8 @@ export function baalProposals(
   logs: readonly BaalLog[],
   readAt: string,
   now = Date.now(),
+  /** v2: who sent each SubmitProposal's transaction, by its hash: the proposer */
+  senders: ReadonlyMap<string, string> = new Map(),
 ): Proposals {
   const byId = new Map<
     string,
@@ -127,13 +155,15 @@ export function baalProposals(
       id,
       title: baalTitle(details),
       kind: null,
-      proposer: null,
+      proposer: (l.transactionHash && senders.get(l.transactionHash.toLowerCase())) || null,
       at: submitted > 0n ? secondsIso(submitted) : (timeOf(l) ?? readAt),
       closes_at: null,
       decided_at: null,
       outcome: 'in progress',
       as_said: 'submitted',
       ref: `proposal:${chain.caip2}:${dao}:${id}`,
+      // what a Baal proposal pays is in its encoded actions: not read here
+      recipient: null,
       votes: [],
       expiration,
       period,
@@ -197,7 +227,7 @@ export function baalProposals(
     source: {
       kind: 'baal',
       contract: `${chain.caip2}:${dao}`,
-      ref: `eth_getLogs on ${dao} from its first block: ${SIGNATURES}`,
+      ref: `eth_getLogs on ${dao} from its first block: ${SIGNATURES}${senders.size ? '; each proposer is the sender of its SubmitProposal transaction (eth_getTransactionByHash)' : ''}`,
       at: readAt,
     },
     proposals,

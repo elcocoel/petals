@@ -14,6 +14,7 @@ import markV2Schema from '../../schema/mark-v2.schema.json' with { type: 'json' 
 import priceSchema from '../../schema/price.schema.json' with { type: 'json' };
 import priceV2Schema from '../../schema/price-v2.schema.json' with { type: 'json' };
 import proposalsSchema from '../../schema/proposals.schema.json' with { type: 'json' };
+import proposalsV2Schema from '../../schema/proposals-v2.schema.json' with { type: 'json' };
 import seamSchema from '../../schema/seam.schema.json' with { type: 'json' };
 import snapshotSchema from '../../schema/snapshot.schema.json' with { type: 'json' };
 import usageSchema from '../../schema/usage.schema.json' with { type: 'json' };
@@ -72,6 +73,8 @@ export const schemas: {
   valueV2: object;
   /** a DAO's proposals and each account's vote on each (#93) */
   proposals: object;
+  /** the same with closed, recipients, options, and a ballot's choices and weights (11 Nov) */
+  proposalsV2: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -95,6 +98,7 @@ export const schemas: {
   value: valueSchema,
   valueV2: valueV2Schema,
   proposals: proposalsSchema,
+  proposalsV2: proposalsV2Schema,
 };
 
 /** The two source documents, unchanged. */

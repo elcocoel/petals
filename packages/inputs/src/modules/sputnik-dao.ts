@@ -124,7 +124,14 @@ const OUTCOME: Record<string, Outcome> = {
 /** Sputnik's three votes: Approve is for; Reject, and Remove (reject and take it away), are against. */
 const VOTE: Record<string, Vote> = { Approve: 'for', Reject: 'against', Remove: 'against' };
 
-/** The DAO's proposals as proposals/v1: each with its title, when, outcome and every account's vote. */
+/** Whom a proposal pays: a Transfer's receiver_id; null for every other kind. */
+const recipientOf = (kind: RawProposal['kind']): string | null => {
+  if (typeof kind !== 'object' || !kind) return null;
+  const t = (kind as { Transfer?: { receiver_id?: unknown } }).Transfer;
+  return typeof t?.receiver_id === 'string' && t.receiver_id ? t.receiver_id : null;
+};
+
+/** The DAO's proposals as proposals/v2: each with its title, when, outcome, recipient and every account's vote. */
 export function sputnikProposals(
   about: string,
   dao: string,
@@ -144,6 +151,8 @@ export function sputnikProposals(
     outcome: OUTCOME[p.status] ?? 'in progress',
     as_said: p.status,
     ref: `proposal:near:mainnet:${dao}:${p.id}`,
+    // v2: whom a Transfer pays
+    recipient: recipientOf(p.kind),
     votes: Object.entries(p.votes ?? {}).flatMap(([account, said]) =>
       VOTE[said] ? [{ account, vote: VOTE[said] as Vote, as_said: said, at: null }] : [],
     ),

@@ -4,7 +4,8 @@
 import { createAjv, schemaId } from './schema/ajv.ts';
 import type { Result, ValidationIssue } from './types/index.ts';
 
-export const PROPOSALS_VERSION = 'proposals/v1';
+/** proposals/v2 since 11 Nov: closed, recipients, options, a ballot's choices and weights. v1 still reads. */
+export const PROPOSALS_VERSION = 'proposals/v2';
 
 export type Vote = 'for' | 'against' | 'abstain';
 export type Outcome =
@@ -15,11 +16,18 @@ export type Outcome =
   | 'in progress'
   | 'failed'
   | 'moved'
-  | 'cancelled';
+  | 'cancelled'
+  /** v2: voting closed and its source doesn't say the result (Snapshot) */
+  | 'closed';
 
 export interface ProposalVote {
   account: string;
-  vote: Vote;
+  /** v2: null when the ballot's choices don't fit for, against or abstain */
+  vote: Vote | null;
+  /** v2: what it chose, as said, each with its weight in decimal text */
+  choices?: { choice: string; weight: string | null }[];
+  /** v2: its voting power as its source says it, in decimal text */
+  power?: string;
   /** the DAO's own word: Approve, Reject, Remove, true, false */
   as_said: string;
   at: string | null;
@@ -35,22 +43,28 @@ export interface Proposal {
   outcome: Outcome;
   as_said: string;
   ref: string;
+  /** v2: who it pays or names, or null */
+  recipient?: string | null;
+  /** v2: its options' labels, where a ballot chooses among them */
+  options?: string[];
   votes: ProposalVote[];
 }
 export interface Proposals {
-  petal: typeof PROPOSALS_VERSION;
+  petal: 'proposals/v1' | typeof PROPOSALS_VERSION;
   about: string;
   source: { kind: string; contract: string; ref: string; at: string };
   proposals: Proposal[];
   read_at: string;
 }
 
-let compiled: ReturnType<ReturnType<typeof createAjv>['getSchema']> | undefined;
+const compiled = new Map<string, ReturnType<ReturnType<typeof createAjv>['getSchema']>>();
 
-/** The proposals, typed, or every reason they aren't proposals/v1. */
+/** The proposals, typed, or every reason they aren't proposals (v1 or v2, by their petal). */
 export function validateProposals(x: unknown): Result<Proposals> {
-  if (!compiled) compiled = createAjv().getSchema(schemaId('proposals'));
-  const v = compiled;
+  const name =
+    (x as { petal?: unknown } | null)?.petal === 'proposals/v1' ? 'proposals' : 'proposalsV2';
+  if (!compiled.has(name)) compiled.set(name, createAjv().getSchema(schemaId(name)));
+  const v = compiled.get(name);
   if (!v) throw new Error('proposals schema not registered');
   if (v(x)) return { ok: true, value: x as Proposals };
   return {
