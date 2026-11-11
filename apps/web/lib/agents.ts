@@ -4,9 +4,16 @@
 // and older ones keep working until revoked. Pure. The words are drafts (Elco, 9 Nov: "Ship the drafts,
 // I'll change them later").
 
-/** An agent as GET /api/v1/agents lists it: the name it called itself, as a person reads it. */
+/**
+ * An agent's worker as GET /api/v1/agents lists it (swarm step 1, 10 Nov: one entry per worker): the name
+ * the agent called itself, and the worker's place among its kind, 1 for the first.
+ */
 export interface ConnectedAgent {
   name: string;
+  /** The worker's place, 1 for the first; an agent from before workers is one entry, 1. */
+  n?: number;
+  /** The window or sub-agent, as petal.mjs named it when it joined; null for one from before workers. */
+  worker?: string | null;
   /** It has a wait open right now. */
   waiting: boolean;
   last_seen?: string | null;
@@ -37,10 +44,14 @@ export function readableAgent(name: string): string {
     .join(' ');
 }
 
-/** One row of the menu's list: who, and what it's doing. */
+/** One row of the menu's list, a worker: who, and what it's doing. */
 export interface AgentRow {
   key: string;
+  /** What the server knows the agent by, for disconnecting it and all its workers. */
   name: string;
+  /** The agent, as a person reads it: what disconnecting it ends. */
+  agent: string;
+  /** The worker: the agent, then its place after the first (Codex, Codex 2). */
   label: string;
   status: string;
   here: boolean;
@@ -48,12 +59,16 @@ export interface AgentRow {
   state: 'busy' | 'waiting' | 'away';
 }
 
+/** A worker's name: its agent's, then its place after the first (Codex, Codex 2, Codex 3). */
+export const workerName = (name: string, n = 1) =>
+  n > 1 ? `${readableAgent(name)} ${n}` : readableAgent(name);
+
 export function agentRows(agents: readonly ConnectedAgent[]): AgentRow[] {
   return agents.map((a) => ({
-    key: a.name,
-    /** what the server knows it by, for disconnecting it */
+    key: `${a.name}:${a.n ?? 1}`,
     name: a.name,
-    label: readableAgent(a.name),
+    agent: readableAgent(a.name),
+    label: workerName(a.name, a.n),
     status: a.job ? agentWords.on(a.job.title) : a.waiting ? agentWords.waiting : agentWords.away,
     here: Boolean(a.job) || a.waiting,
     state: a.job ? 'busy' : a.waiting ? 'waiting' : 'away',

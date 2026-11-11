@@ -66,6 +66,21 @@ describe('your agents in the menu', () => {
     ]);
   });
 
+  test('one row per worker: the agent, then its place after the first; disconnecting ends the agent', async () => {
+    const { agentRows } = await import('../lib/agents.ts');
+    const rows = agentRows([
+      { name: 'codex', n: 1, worker: 'a', waiting: true, job: null },
+      { name: 'codex', n: 2, worker: 'b', waiting: false, job: { id: 'j', title: 'Map X' } },
+      { name: 'claude-code', waiting: true, job: null },
+    ]);
+    expect(rows.map((r) => [r.label, r.agent, r.name])).toEqual([
+      ['Codex', 'Codex', 'codex'],
+      ['Codex 2', 'Codex', 'codex'],
+      ['Claude Code', 'Claude Code', 'claude-code'],
+    ]);
+    expect(new Set(rows.map((r) => r.key)).size).toBe(3);
+  });
+
   test('the one prompt carries the site and a fresh agent key', async () => {
     const { agentWords } = await import('../lib/agents.ts');
     const line = agentWords.prompt('https://p', 'petal_agent_k');

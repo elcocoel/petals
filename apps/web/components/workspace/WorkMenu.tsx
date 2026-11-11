@@ -391,7 +391,8 @@ export function WorkMenu({
                 action={
                   <IconButton
                     icon="close"
-                    label={panelWords.disconnect(a.label)}
+                    // it ends the agent, all its workers (swarm step 1): Disconnect Codex, on Codex 2 too
+                    label={panelWords.disconnect(a.agent)}
                     onClick={() => menu.disconnect(a.name)}
                   />
                 }
