@@ -13,7 +13,7 @@ import {
   withModel,
 } from '../lib/composer-options.ts';
 import { decodeDraft } from '../lib/draft.ts';
-import { drawingLink } from '../lib/drawing-link.ts';
+import { drawingLink, mapLink } from '../lib/drawing-link.ts';
 import { elsewhereFlower, elsewhereRows, whereOf } from '../lib/elsewhere.ts';
 import { svgImage } from '../lib/flower-view.ts';
 import type { MapCard } from '../lib/maps.ts';
@@ -254,6 +254,14 @@ export function useWorkspace(props: {
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
   const onCanvas = canvas;
+  // A link in the conversation to the Power Map or a map on it opens the map here, at that map (#78, 11 Nov:
+  // the first message's maps led off /make). It stays until a flower is opened, or a new one is drawn.
+  const [mapAt, setMapAt] = useState<{ map: string | null } | null>(null);
+  const [drawnKey, setDrawnKey] = useState(canvas?.key);
+  if (canvas?.key !== drawnKey) {
+    setDrawnKey(canvas?.key);
+    if (mapAt) setMapAt(null);
+  }
   // The canvas's flower is the panel's, or is on its way there: only then does it have a selected petal.
   const canvasIsOpen =
     Boolean(onCanvas) &&
@@ -325,6 +333,7 @@ export function useWorkspace(props: {
   }, [dispatch]);
 
   const openStored = (id: string) => {
+    setMapAt(null);
     dispatch({ type: 'open', open: { kind: 'stored', id } });
     setBoxOpen(true);
   };
@@ -338,6 +347,7 @@ export function useWorkspace(props: {
         : index === turnFlowers.length - 1
           ? { kind: 'latest' }
           : { kind: 'turn', index };
+    setMapAt(null);
     dispatch({ type: 'open', open });
     setBoxOpen(true);
   };
@@ -355,6 +365,8 @@ export function useWorkspace(props: {
       composer,
       panel,
       onCanvas,
+      /** The Power Map on the canvas, at a map (by id) or whole (null), when a link in the chat opened it. */
+      mapAt,
       selected: canvasIsOpen ? petal : null,
       boxOpen,
       petal: selectedPetal && canvasPetal(selectedPetal),
@@ -402,6 +414,7 @@ export function useWorkspace(props: {
       },
       refollow: chatActions.refollow,
       openTurn: (index: number) => {
+        setMapAt(null);
         dispatch({
           type: 'open',
           // the newest is what `latest` already means, and it keeps following
@@ -438,9 +451,16 @@ export function useWorkspace(props: {
       /**
        * A link in the conversation to one of this site's flowers opens it here, on the canvas beside it (Elco,
        * 10 Nov: not outside the work surface): a stored one (/f/), a drawing (/draft?spec=) or a view on the
-       * map (/d/<sha>, read first). One that can't be read goes where it points, as any link would.
+       * map (/d/<sha>, read first). One that can't be read goes where it points, as any link would. A link to
+       * the Power Map (/map) or a map on it (/m/<id>) opens the map here (#78).
        */
       followLink: (href: string) => {
+        const map = mapLink(href, window.location.origin);
+        if (map) {
+          setMapAt(map);
+          setBoxOpen(false);
+          return true;
+        }
         const drawing = drawingLink(href, window.location.origin);
         if (!drawing) return false;
         if ('stored' in drawing) {

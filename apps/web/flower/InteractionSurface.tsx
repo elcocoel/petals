@@ -4,7 +4,8 @@
 // dark base its input is (design/conversation.md). Another, the same box, shows the flower's own details
 // once something asks for them. This only wires the ViewModels to the views. The canvas starts at the side
 // panel's edge, and the camera fits the flower beside the conversation, not under it (#78, 11 Nov). Until
-// the conversation has a flower, the canvas is empty ground (Elco, 8 Nov: no flower hard-coded in).
+// the conversation has a flower, and when a link in it opens a map, the Power Map stands beside the
+// conversation, the same live map as /map (#78), with no flower of the conversation's hard-coded in.
 import type { SurfaceName } from '@petal/tokens';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Composer } from '../components/chat/Composer.tsx';
@@ -14,6 +15,7 @@ import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
+import { LandscapeCanvas } from '../landscape/LandscapeCanvas.tsx';
 import type { Catalogue } from '../lib/composer-options.ts';
 import {
   besidePanel,
@@ -26,6 +28,7 @@ import {
 import type { MapCard } from '../lib/maps.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
+import { useGroundMap } from '../viewmodels/useGroundMap.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import type { Clear } from './camera.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
@@ -94,20 +97,37 @@ export function InteractionSurface({
     if (state.modelsOpen) raiseOptions();
   }, [state.modelsOpen, raiseOptions]);
   const { onCanvas, panel } = state;
+  // The Power Map: at the map a link opened, or whole until the conversation has a flower.
+  const land = useGroundMap();
+  const ground = state.mapAt ?? (onCanvas ? null : { map: null });
+  const focus = ground?.map && land ? land.flowers.findIndex((f) => f.map === ground.map) : -1;
   return (
     <>
       {/* A new flower is a new scene. Anything else, a whole turn included, leaves the camera alone. */}
       <div ref={area} className="relative h-dvh">
-        <FlowerCanvas
-          key={onCanvas?.key ?? 'ground'}
-          fill="area"
-          reading={onCanvas?.reading ?? null}
-          scatter={scatter}
-          probe={probe}
-          selected={state.selected}
-          onPick={actions.pick}
-          clear={clear}
-        />
+        {ground && land ? (
+          // beside the conversation, as the flower is, so its chains and its flowers aren't under it
+          <div className="absolute inset-y-0 right-0" style={{ left: clear?.left ?? 0 }}>
+            <LandscapeCanvas
+              key={ground.map ?? 'whole'}
+              data={land}
+              fill="area"
+              title="Power Map"
+              focus={focus}
+            />
+          </div>
+        ) : (
+          <FlowerCanvas
+            key={onCanvas?.key ?? 'ground'}
+            fill="area"
+            reading={onCanvas?.reading ?? null}
+            scatter={scatter}
+            probe={probe}
+            selected={state.selected}
+            onPick={actions.pick}
+            clear={clear}
+          />
+        )}
       </div>
       <FloatBox
         label={state.heading}

@@ -3,7 +3,7 @@
 import type { Spec } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
 import { encodeDraft } from '../lib/draft.ts';
-import { drawingLink } from '../lib/drawing-link.ts';
+import { drawingLink, mapLink } from '../lib/drawing-link.ts';
 import { addressOpensBox } from '../lib/panel-view.ts';
 import { openFlowerIndex } from '../lib/thread-view.ts';
 import { openFromParams, workspaceUrl } from '../lib/workspace-url.ts';
@@ -49,5 +49,18 @@ describe('a drawing opened here', () => {
 
   test('a draft that can’t be read opens nothing', () => {
     expect(openFromParams({ draft: 'not base64 json' }).open).toEqual({ kind: 'latest' });
+  });
+});
+
+describe('a link to the Power Map or a map on it (#78, 11 Nov)', () => {
+  test('the whole map, one map whole or as a path, and nothing else', () => {
+    expect(mapLink('/map', SITE)).toEqual({ map: null });
+    expect(mapLink(`${SITE}/m/eip155%3A1%3A0xabc`, SITE)).toEqual({ map: 'eip155:1:0xabc' });
+    expect(mapLink('/m/near%3Amainnet%3Avalidators', SITE)).toEqual({
+      map: 'near:mainnet:validators',
+    });
+    expect(mapLink('https://elsewhere.test/map', SITE)).toBeNull();
+    expect(mapLink('/f/abc', SITE)).toBeNull();
+    expect(mapLink('/gallery', SITE)).toBeNull();
   });
 });
