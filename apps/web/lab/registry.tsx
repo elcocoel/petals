@@ -42,6 +42,7 @@ import { LiveReading } from '../components/landing/LiveReading.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
 import { UseAnywhere } from '../components/landing/UseAnywhere.tsx';
+import { MapList } from '../components/MapList.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
@@ -93,6 +94,7 @@ import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
 import type { ProfileEditorView } from '../lib/lobby-view.ts';
+import { drawingTile, type MapCard, mapTile } from '../lib/maps.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
@@ -290,6 +292,133 @@ const LISTED = [
     ],
   },
 ];
+
+/** Maps as the live list gives them (names from it, 11 Nov), each picture one of the goldens: MapList's rows. */
+const pictures = () =>
+  (['near-validators-default', 'house-of-stake-default', 'near-validators-backers'] as const).map(
+    (g) => svgImage(golden(g).rendered.svg),
+  );
+const mapCard = (
+  [id, name, title, chain, address, readings, as_of]: [
+    string,
+    string,
+    string,
+    string,
+    string | null,
+    number,
+    string,
+  ],
+  i: number,
+  pics: readonly string[],
+): MapCard => ({
+  id,
+  name,
+  title,
+  about: title,
+  chain,
+  address,
+  picture: pics[i % pics.length] as string,
+  view_url: '#maplist',
+  keys: [],
+  readings: Array.from({ length: readings }, (_, n) => ({
+    snapshot: `${id}:${n}`,
+    as_of,
+    network: id,
+    about: title,
+    title,
+    count: null,
+    made_by: 'mapping.petals.near',
+    drawings: ['Default', 'Who backs it'].map((d, k) => ({
+      sha: `${id}:${n}:${k}`,
+      name: d,
+      view_url: '#maplist',
+      picture: pics[(i + k) % pics.length] as string,
+      keys: [],
+      made_by: 'mapping.petals.near',
+    })),
+  })),
+});
+const SOL = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
+const maps = () => {
+  const pics = pictures();
+  return (
+    [
+      [
+        'near:validators',
+        'NEAR validators',
+        'NEAR validators',
+        'near:mainnet',
+        null,
+        3,
+        '2026-11-10T19:42:00Z',
+      ],
+      [
+        `${SOL}:SKRb`,
+        'Seeker / SKR',
+        'SPL holders SKRb…ZhW3',
+        SOL,
+        'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3',
+        1,
+        '2026-11-09T03:08:50Z',
+      ],
+      [
+        'eip155:100:0x30d1',
+        'Accelerationist Voting',
+        'vACCL holders, Gnosis',
+        'gnosis',
+        '0x30d1185c234a2e460f396e2fe3c71f5dc4a06add',
+        1,
+        '2026-11-09T03:03:40Z',
+      ],
+      [
+        `${SOL}:WCTk`,
+        'WalletConnect Token / WCT',
+        'SPL holders WCTk…YTBY',
+        SOL,
+        'WCTk5xWdn5SYg56twGj32sUF3W4WFQ48ogezLBuYTBY',
+        2,
+        '2026-11-09T03:02:09Z',
+      ],
+      [
+        'eip155:100:0xb11a',
+        'Yggdrasil',
+        'YGG holders, Gnosis',
+        'gnosis',
+        '0xb11a9938052c8fa59fd3f3875c3cbf1b2c0ac20e',
+        1,
+        '2026-11-09T02:55:40Z',
+      ],
+      [
+        'eip155:1:0xdefa',
+        'KNC',
+        'KNC active holders, Ethereum',
+        'ethereum',
+        '0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202',
+        1,
+        '2026-11-09T02:37:11Z',
+      ],
+      [
+        'eip155:1:0x64aa',
+        'OHM',
+        'OHM active holders, Ethereum',
+        'ethereum',
+        '0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5',
+        4,
+        '2026-11-09T02:30:47Z',
+      ],
+      [
+        'near:house-of-stake',
+        'House of Stake',
+        'veNEAR holders',
+        'near:mainnet',
+        'venear.dao',
+        1,
+        '2026-11-08T12:00:00Z',
+      ],
+    ] as const
+  ).map((m, i) => mapCard([...m], i, pics));
+};
+const mapRows = (maps: readonly MapCard[]) => maps.map((m) => ({ key: m.id, ...mapTile(m) }));
 
 /** A job's controls (swarm.md, step 3), as its row shows them at each step. */
 const JOB_ACTIONS = {
@@ -1588,6 +1717,48 @@ export const registry: LabEntry[] = [
         name: 'NEAR validators',
         wide: true,
         render: () => <ReadingKey view={readingKey(golden('near-validators-default').spec)} />,
+      },
+    ],
+  },
+  {
+    id: 'MapList',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/MapList.tsx',
+    states: [
+      {
+        name: 'every map, as the lobby and the gallery would list them',
+        wide: true,
+        render: () => (
+          <div className="w-full max-w-content-width">
+            <MapList label="On the map" rows={mapRows(maps())} />
+          </div>
+        ),
+      },
+      {
+        name: 'narrow, as in the flower’s box before a flower',
+        render: () => (
+          <div className="w-gallery-flower-width">
+            <MapList label="Already mapped" rows={mapRows(maps().slice(0, 3))} />
+          </div>
+        ),
+      },
+      {
+        name: 'a map’s drawings, on its page',
+        render: () => {
+          const m = maps()[6] as MapCard;
+          return (
+            <div className="w-gallery-flower-width">
+              <MapList
+                label="Its drawings"
+                rows={m.readings
+                  .slice(0, 1)
+                  .flatMap((r) => r.drawings.map((d) => ({ key: d.sha, ...drawingTile(m, r, d) })))}
+              />
+            </div>
+          );
+        },
       },
     ],
   },
