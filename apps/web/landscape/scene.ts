@@ -373,8 +373,19 @@ export function createLandScene(
         let size = 0;
         if (l.centre) {
           // the mark in the flower's middle at every zoom (Elco, 11 Nov: "I don't see why they have to go away at
-          // larger zooms, we just need a minimum and max size"): a share of its hole, between the two
-          size = Math.max(MARK_LEAST, Math.min(MARK_MOST, r * (SHAPE.r0 / SHAPE.R) * 1.1));
+          // larger zooms, we just need a minimum and max size"). From far away it fills the flower's centre
+          // (Elco, 11 Nov, on live /map: "The logo should take the full fucking space available in the center from
+          // any far away vision and only when I get to the Dao itself it will become less important in the
+          // center"): the far wave's round hole, or the polygon's inscribed circle, a hair inside its line; in
+          // the organisation you've entered it steps back to a share of its hole, between the two
+          const waved = fade(DETAIL.farWave, r);
+          const hole =
+            r *
+            (SHAPE.r0 / SHAPE.R) *
+            (waved + (1 - waved) * Math.cos(Math.PI / Math.max(3, f.model.n)));
+          const full = Math.max(MARK_LEAST, 2 * hole - 3);
+          const back = Math.max(MARK_LEAST, Math.min(MARK_MOST, r * (SHAPE.r0 / SHAPE.R) * 1.1));
+          size = full + (back - full) * (i === entered ? enter : 0);
           l.centre.show(true);
           l.centre.set('transform', `translate(${n3(c.x)} ${n3(c.y)}) scale(${n3(size / MARK)})`);
           l.centre.set('opacity', o2(markShown));
