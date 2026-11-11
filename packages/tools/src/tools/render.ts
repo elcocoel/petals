@@ -2,6 +2,7 @@
 import {
   canonicalJson,
   DEFAULT_VIEW,
+  namePieces,
   readFlower,
   renderFlower,
   specHash,
@@ -125,13 +126,16 @@ export const renderFlowerTool = defineTool<
     // Always through a view (one-source.md, step 2): the one given, or the viewer's, or the default. A
     // flower's own choices are the record of what its agent proposed, and never draw it.
     const drawWith = view ?? ctx.view ?? DEFAULT_VIEW;
+    // the viewer's own names, on the petals they name (annotation step 6); a visitor's are none
+    const pieces = ctx.names?.length ? namePieces(snapshot, ctx.names) : [];
     const r = renderFlower(spec, snapshot, {
       ...(size !== undefined ? { size } : {}),
       view: drawWith,
+      ...(pieces.length ? { pieces } : {}),
     });
     const stored = await putSpecBody(ctx.config, spec, ctx.now().toISOString());
     // renderFlower reads the same thing and keeps it to itself, so this is only paid for when asked.
-    const reading = include_reading ? readFlower(spec, snapshot, drawWith) : null;
+    const reading = include_reading ? readFlower(spec, snapshot, drawWith, pieces) : null;
     return {
       spec_sha256: specHash(spec),
       render_sha256: r.render_sha256,

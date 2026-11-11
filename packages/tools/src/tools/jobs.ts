@@ -173,7 +173,7 @@ export const takeJob = defineTool<
     view: {
       type: 'object',
       description:
-        "the person's view (view/v1), with a job: pass it to render_flower, so every flower is drawn as they see it",
+        "the person's view (view/v1 or view/v2), with a job: pass it to render_flower, so every flower is drawn as they see it",
     },
     next: { type: 'string' },
   }),

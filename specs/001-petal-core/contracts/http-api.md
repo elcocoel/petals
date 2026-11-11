@@ -38,7 +38,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `POST /api/v1/figures` | `compute_figures` |
 | `POST /api/v1/specs/propose` | `propose_spec` |
 | `POST /api/v1/specs/validate` | `validate_spec` |
-| `POST /api/v1/render` | `render_flower` (`?format=svg` returns `image/svg+xml`). With no `view` of its own, it's drawn through the signed-in person's view, or the default (one-source.md, step 2) |
+| `POST /api/v1/render` | `render_flower` (`?format=svg` returns `image/svg+xml`). With no `view` of its own, it's drawn through the signed-in person's view, or the default (one-source.md, step 2). For a signed-in person it also carries their own names, from their named annotations (core's `namePieces`), on the petals they name where the view's labels show `name` (annotation step 6). A visitor's carries none, and a response with a person's names is `Cache-Control: private, no-store`. The map's lists (`/api/v1/map`, `/map/views`, `/maps`, `/maps/:id`) read the same way. Their pictures (`/map/:sha/svg`, `/flowers/:id/svg`), kept a year by view, never carry anyone's |
 | `GET /api/v1/flowers?network=&maker=&limit=` | `list_flowers` |
 | `GET /api/v1/flowers/:id` | `get_flower` |
 | `GET /api/v1/flowers/:id/svg` | the published flower's SVG, drawn with the view its address names (`?view=<whole hash>`, none: the default; an unknown hash is `not_found`) |

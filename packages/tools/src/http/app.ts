@@ -12,11 +12,12 @@ import {
   sha256Hex,
   TOOLS_VERSION,
 } from '@petal/core';
+import type { Claim } from '@petal/core/types';
 import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
 import { versioned } from '../define.ts';
-import { specBody } from '../drafts.ts';
+import { privateStore, specBody } from '../drafts.ts';
 import { fromThrown, isToolError, toolError } from '../errors.ts';
 import { freshGate } from '../fresh.ts';
 import { LiveHub } from '../live.ts';
@@ -109,13 +110,18 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   };
 
   /** Run a tool for this request: JSON, or SSE (`progress` events, then `result`) when asked. */
-  async function answer(c: Context, name: string, input: unknown): Promise<Response> {
+  async function answer(
+    c: Context,
+    name: string,
+    input: unknown,
+    base: ToolContext = ctx,
+  ): Promise<Response> {
     if (isToolError(input)) return respond(c, input);
-    if (!wantsSse(c)) return respond(c, await run(name, input));
+    if (!wantsSse(c)) return respond(c, await run(name, input, base));
     return streamSSE(c, async (stream) => {
       let chain: Promise<void> = Promise.resolve();
       const runCtx: ToolContext = {
-        ...ctx,
+        ...base,
         onProgress: (e) => {
           ctx.onProgress?.(e);
           chain = chain.then(() => stream.writeSSE({ event: 'progress', data: JSON.stringify(e) }));
@@ -218,6 +224,22 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     return c.body(new Uint8Array(await gunzip(gz)), 200, headers);
   });
 
+  /**
+   * The viewer's own names (annotation step 6), for a drawing or a list made for them: the signed-in person's
+   * named annotations, from all their projects. A visitor has none, and a response that carries a person's
+   * is never kept by a cache.
+   */
+  async function forViewer(c: Context): Promise<ToolContext> {
+    const subject = (await o.gate?.subjectOf(c)) ?? null;
+    if (!subject) return ctx;
+    const names = (await privateStore(ctx.config).annotation.list(subject))
+      .filter((r) => r.verb === 'named')
+      .map((r) => JSON.parse(r.body) as Claim);
+    if (!names.length) return ctx;
+    c.header('Cache-Control', 'private, no-store');
+    return { ...ctx, names };
+  }
+
   // -- counting, specs, render
   app.post('/api/v1/figures', limit, async (c) => answer(c, 'compute_figures', await body(c)));
   app.post('/api/v1/specs/propose', limit, async (c) => answer(c, 'propose_spec', await body(c)));
@@ -239,10 +261,12 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       given && (input as Out).include_svg === undefined
         ? { ...(input as Out), include_svg: true }
         : input;
-    if (c.req.query('format') !== 'svg') return answer(c, 'render_flower', withSvg);
+    const viewer = await forViewer(c);
+    if (c.req.query('format') !== 'svg') return answer(c, 'render_flower', withSvg, viewer);
     const out = await run(
       'render_flower',
       given ? { ...(input as Out), include_svg: true } : input,
+      viewer,
     );
     if (isToolError(out)) return respond(c, out);
     const r = out as { svg: string; render_sha256: string };
@@ -309,7 +333,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     return respond(c, {
       made: new Date().toISOString(),
       source: (ctx.config.apiBase ?? '').replace(/\/+$/, ''),
-      views: await mapViews(ctx, view),
+      views: await mapViews(await forViewer(c), view),
       groups: (overview.groups ?? []).map((g) => ({
         id: g.id,
         chain: g.chain,
@@ -332,21 +356,23 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   app.get('/api/v1/map/views', limit, async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
-    return respond(c, { views: (await mapViews(ctx, view)).map(({ reading: _r, ...row }) => row) });
+    return respond(c, {
+      views: (await mapViews(await forViewer(c), view)).map(({ reading: _r, ...row }) => row),
+    });
   });
   // One card per map (Elco, 10 Nov: "maps that map the same address need to come together as versions of
   // the same map"): each address, its readings (the sediments) newest first, and each reading's drawings.
   app.get('/api/v1/maps', limit, async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
-    return respond(c, { maps: mapsOf(await mapViews(ctx, view)) });
+    return respond(c, { maps: mapsOf(await mapViews(await forViewer(c), view)) });
   });
   // One map's card, by its id (URL-encoded, since it holds colons), for its page.
   app.get('/api/v1/maps/:id', limit, async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
     const id = aboutKey(c.req.param('id'));
-    const map = mapsOf(await mapViews(ctx, view)).find((m) => m.id === id);
+    const map = mapsOf(await mapViews(await forViewer(c), view)).find((m) => m.id === id);
     return respond(
       c,
       map ? { map } : versioned(toolError('not_found', 'No map under that address.')),

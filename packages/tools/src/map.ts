@@ -2,7 +2,17 @@
 // every view stored on this site, each with its reading, its name, its date and who made it. Read-only and
 // public: GET /api/v1/map hands it over whole, list_flowers and find_target search it before a fresh read.
 // A view's spec is content-addressed, so its reading never changes: each is read once per process.
-import { DEFAULT_VIEW, legendItem, mapOf, pictureQuery, readFlower, viewHash } from '@petal/core';
+import {
+  canonicalJson,
+  DEFAULT_VIEW,
+  legendItem,
+  mapOf,
+  namePieces,
+  pictureQuery,
+  readFlower,
+  sha256Hex,
+  viewHash,
+} from '@petal/core';
 import type { Spec, View } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
@@ -71,8 +81,14 @@ async function readOf(ctx: ToolContext, body: string, view: View): Promise<Read 
     const spec = JSON.parse(body) as Spec;
     const snapshot = await findSnapshot(ctx, spec.snapshot.sha256);
     if (!snapshot) return null;
-    // through the viewer's view, never the flower's own choices (one-source.md, step 2)
-    const reading = readFlower(spec, snapshot, view);
+    // through the viewer's view, never the flower's own choices (one-source.md, step 2), with the viewer's
+    // own names on the petals they name (annotation step 6)
+    const reading = readFlower(
+      spec,
+      snapshot,
+      view,
+      ctx.names?.length ? namePieces(snapshot, ctx.names) : [],
+    );
     // the picture's colours: its legend, as render_flower dresses it
     const legend = reading.legend.map(legendItem);
     const keysOf = (primitive: string) =>
@@ -105,8 +121,12 @@ async function readOf(ctx: ToolContext, body: string, view: View): Promise<Read 
 export async function mapViews(ctx: ToolContext, view: View = DEFAULT_VIEW): Promise<MapView[]> {
   const out: MapView[] = [];
   const through = viewHash(view);
+  // keyed by the viewer's names too, so one person's never reach another's, nor a visitor's, reading
+  const named = ctx.names?.length
+    ? `:${sha256Hex(canonicalJson(ctx.names.map((c) => c.id).sort()))}`
+    : '';
   for (const row of await privateStore(ctx.config).draft.list()) {
-    const key = `${row.sha256}:${through}`;
+    const key = `${row.sha256}:${through}${named}`;
     let r = read.get(key);
     if (!r) {
       const got = await readOf(ctx, row.body, view);
