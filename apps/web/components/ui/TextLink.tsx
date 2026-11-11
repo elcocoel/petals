@@ -1,6 +1,7 @@
 // Petals / Link 23:159: a label you can follow, no box. Underlined only under the pointer. The rail's
 // items are this link with an icon, a quiet one is the same link a size down, and a mono one is the
 // action line of a note box (Figma's "ASK WHY", 66:2231).
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Icon, type IconName } from './Icon.tsx';
 
@@ -18,6 +19,7 @@ export function TextLink({
   variant = 'label',
   icon,
   arrow,
+  inPlace,
   children,
 }: {
   href: string;
@@ -27,22 +29,31 @@ export function TextLink({
   icon?: IconName;
   /** A trailing arrow, drawn. */
   arrow?: boolean;
+  /** One of this site's own pages, moved to inside the page (next/link), as the side panel's rows are. */
+  inPlace?: boolean;
   children: ReactNode;
 }) {
   const withArrow = arrow
     ? `inline-flex items-center ${variant === 'mono' ? 'gap-text-gap' : 'gap-space-4'}`
     : '';
-  return (
-    <a
-      href={href}
-      rel={rel}
-      target={target}
-      data-b="link"
-      className={`no-underline hover:underline ${VARIANTS[variant]} ${withArrow}`}
-    >
+  const look = `no-underline hover:underline ${VARIANTS[variant]} ${withArrow}`;
+  const inner = (
+    <>
       {icon && <Icon name={icon} />}
       {children}
       {arrow && <Icon name="arrow" />}
+    </>
+  );
+  if (inPlace) {
+    return (
+      <Link href={href} prefetch={false} data-b="link" className={look}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <a href={href} rel={rel} target={target} data-b="link" className={look}>
+      {inner}
     </a>
   );
 }

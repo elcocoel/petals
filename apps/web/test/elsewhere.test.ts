@@ -38,6 +38,13 @@ describe('what the thread shows', () => {
     });
   });
 
+  test('names the worker as the side panel does, with its place when it isn’t the first', () => {
+    const rows = elsewhereRows({
+      packet: packet({ presence: { client: 'codex', n: 2, last_at: '', last_tool: null } }),
+    });
+    expect(JSON.stringify(rows.at(-1))).toContain('with Codex 2, so it goes on there');
+  });
+
   test('names the app when it said who it is', () => {
     const rows = elsewhereRows({
       packet: packet({ presence: { client: 'Claude Code', last_at: '', last_tool: null } }),
