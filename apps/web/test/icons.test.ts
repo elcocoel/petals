@@ -13,6 +13,8 @@ const DRAWINGS = [
   'flower/FlowerCanvas.tsx',
   // the outline bench's key: a short run of each line, as the flower draws it round a petal
   'lab/flower/OutlineKey.tsx',
+  // an organisation's logo, a picture, drawn round as the map draws it (corners are refused in classes)
+  'components/ui/OrgBadge.tsx',
 ];
 
 const sources = (dir: string): string[] =>

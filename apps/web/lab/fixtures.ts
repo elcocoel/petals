@@ -19,8 +19,12 @@ export const FIXTURE_FILES = [
   'golden/house-of-stake-default.svg',
   'map/3394fb875bf97c1af8191566.json',
   'transcripts/skeleton.json',
+  // two logos the map has (Trust Wallet's, by landscape/night.ts's logoFile): Magic Eden's and Safe's
+  'landscape/logos/d9ef1a55e5a52375eb44b8b8.png',
+  'landscape/logos/8231943617e6c45375cf405d.png',
 ] as const;
 
+/** Every file as its text, and a picture as its data URL. */
 export type FixtureFiles = Record<(typeof FIXTURE_FILES)[number], string>;
 
 let files: Partial<FixtureFiles> = {};
@@ -35,6 +39,14 @@ const read = (path: (typeof FIXTURE_FILES)[number]) => {
   if (text === undefined) throw new Error(`lab: fixtures/${path} wasn't handed to the lab`);
   return text;
 };
+
+/** A logo the map has, as a data URL. */
+export const logo = (which: 'magic-eden' | 'safe') =>
+  read(
+    which === 'magic-eden'
+      ? 'landscape/logos/d9ef1a55e5a52375eb44b8b8.png'
+      : 'landscape/logos/8231943617e6c45375cf405d.png',
+  );
 
 export type GoldenName =
   | 'near-validators-default'

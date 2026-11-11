@@ -70,6 +70,7 @@ import { MetaRow } from '../components/ui/MetaRow.tsx';
 import { Mono } from '../components/ui/Mono.tsx';
 import { Nav } from '../components/ui/Nav.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
+import { OrgBadge } from '../components/ui/OrgBadge.tsx';
 import { Range } from '../components/ui/Range.tsx';
 import { RowField } from '../components/ui/RowField.tsx';
 import { Section } from '../components/ui/Section.tsx';
@@ -107,6 +108,7 @@ import {
   entry,
   flowerRow,
   golden,
+  logo,
   MARKDOWN,
   petal,
   prepared,
@@ -1473,6 +1475,60 @@ export const registry: LabEntry[] = [
     states: [
       { name: 'neutral, a fact', render: () => <Badge>Declared</Badge> },
       { name: 'accent, a state that went well', render: () => <Badge tone="accent">Saved</Badge> },
+    ],
+  },
+  {
+    id: 'OrgBadge',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/OrgBadge.tsx',
+    states: [
+      {
+        name: 'with its logo',
+        render: () => <OrgBadge name="Magic Eden" symbol="ME" logo={logo('magic-eden')} />,
+      },
+      {
+        name: 'its logo, and a name that is its symbol',
+        render: () => <OrgBadge name="SAFE" symbol="SAFE" logo={logo('safe')} />,
+      },
+      {
+        name: 'no logo: its token symbol',
+        render: () => <OrgBadge name="Seeker" symbol="SKR" />,
+      },
+      {
+        name: 'no logo, and a name that is its symbol',
+        render: () => <OrgBadge name="OHM" symbol="OHM" />,
+      },
+      {
+        name: 'a long name in a narrow place',
+        render: () => (
+          <div className="flex w-drawing-144">
+            <OrgBadge name="Accelerationist Voting" symbol="vACCL" />
+          </div>
+        ),
+      },
+      {
+        name: 'over a busy flower',
+        wide: true,
+        render: () => (
+          <div className="relative w-full max-w-flower-width">
+            {/* biome-ignore lint/performance/noImgElement: a data URL of a golden drawing */}
+            <img
+              src={svgImage(golden('near-validators-default').rendered.svg)}
+              alt=""
+              className="block w-full"
+            />
+            <div className="absolute inset-0 flex flex-wrap content-center items-center justify-center gap-space-8 p-column-gap">
+              <OrgBadge name="Magic Eden" symbol="ME" logo={logo('magic-eden')} />
+              <OrgBadge name="SAFE" symbol="SAFE" logo={logo('safe')} />
+              <OrgBadge name="Seeker" symbol="SKR" />
+              <OrgBadge name="OHM" symbol="OHM" />
+              <OrgBadge name="NEAR validators" symbol="NEAR" />
+            </div>
+          </div>
+        ),
+      },
     ],
   },
   {
