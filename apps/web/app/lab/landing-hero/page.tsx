@@ -14,7 +14,6 @@ import { Questions } from '../../../components/landing/Questions.tsx';
 import { Footer } from '../../../components/ui/Footer.tsx';
 import { Nav } from '../../../components/ui/Nav.tsx';
 import { HeroStoryLab } from '../../../lab/hero/HeroStoryLab.tsx';
-import { powerMapTiles } from '../../../lib/power-map.ts';
 import { viewerView } from '../../../lib/viewer-view.ts';
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +26,6 @@ export const metadata = {
 export default async function HeroLab() {
   if (process.env.NODE_ENV === 'production' && process.env.PETAL_LAB !== '1') notFound();
   const person = await viewerView();
-  const tiles = await powerMapTiles(person.hash);
   return (
     <>
       <Nav />
@@ -36,7 +34,7 @@ export default async function HeroLab() {
         <LiveReading view={person.view} />
         <HowItWorks />
         <GiveToAgent />
-        <GallerySection tiles={tiles} />
+        <GallerySection />
         <Questions />
         <BackIt layout="columns" />
         <BuildWithUs />

@@ -140,7 +140,8 @@ function Land({
       ref={svg}
       role="img"
       aria-label="Power Map"
-      className={`${fill === 'window' ? 'fixed' : 'absolute'} inset-0 block size-full ${inPage ? 'touch-pan-y' : 'touch-none'} select-none bg-surface`}
+      // in a page it lies on the page's own ground, with no box of its own (the landing, Elco, 12 Nov)
+      className={`${fill === 'window' ? 'fixed' : 'absolute'} inset-0 block size-full ${inPage ? 'touch-pan-y' : 'touch-none bg-surface'} select-none`}
     />
   );
 }
