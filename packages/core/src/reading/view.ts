@@ -55,12 +55,7 @@ export function choicesOf(
     width: used.width === 'share' ? `r${near}` : 'equal',
     height,
     colour: used.colour === 'kind' ? 'kind' : used.colour === 'identity' ? 'identity' : 'single',
-    outline:
-      used.outline === 'identity'
-        ? 'identity_status'
-        : used.outline === 'name_kind'
-          ? 'name_kind'
-          : 'none',
+    outline: used.outline === 'identity' ? 'identity_status' : 'none',
     segments: used.segments === 'backers' ? 'backers' : 'none',
     lines: 'none',
     markings: 'none',

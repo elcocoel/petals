@@ -58,7 +58,6 @@ export const STANDARD_MEANINGS: Record<string, string> = {
   'colour:identity': 'named (a source names the account) or anonymous',
   'colour:single': 'one colour for every petal',
   'outline:identity_status': DEFAULT_CONVENTION.encodings.outline?.meaning ?? '',
-  'outline:name_kind': 'name: solid when declared, stated or sourced, dashed when inferred',
   'segments:backers':
     'who backs the pool, bottom to top: other delegators, accounts with 1M+ NEAR, liquid-staking contracts, lockups',
   'order:measure_desc': DEFAULT_CONVENTION.encodings.order.meaning,

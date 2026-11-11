@@ -1,7 +1,7 @@
 // The labels dimension (annotation-layer.md, step 6; view/v2): with labels on a person's names, each petal an
-// annotation names shows that name, and the rest keep their short address; the tail keeps its own label. With
-// outline on how the name is known, a sourced name and an inferred one look different, and nothing says
-// verified (step 7). By default every flower reads as it always did. The names here are invented.
+// annotation names shows that name, and the rest keep their short address; the tail keeps its own label.
+// Outline can take how the name is known, but no visual meaning is fixed for it (Elco, 11 Nov), so it draws
+// nothing yet. By default every flower reads as it always did. The names here are invented.
 import { describe, expect, test } from 'vitest';
 import { makeClaim } from '../src/claims/index.ts';
 import { readFlower } from '../src/reading/index.ts';
@@ -129,40 +129,23 @@ describe('labels on names', () => {
 });
 
 describe('outline on how the name is known', () => {
+  // Elco, 11 Nov: "dont give data hard coded use of visual manifestations - outlines are being designed and
+  // could mean different things". Outline takes name_kind as a category, and nothing yet says how it looks.
   const r = readFlower(spec, s, both, pieces);
-  const byId = new Map(r.petals.map((p) => [p.id, p]));
 
-  test('a sourced or stated name is solid, an inferred one apart, an unnamed petal none', () => {
-    expect([first, second, third].map((p) => byId.get(p.id)?.outline)).toEqual([
-      'asserted',
-      'inferred',
-      'asserted',
-    ]);
-    const rest = r.petals.filter((p) => ![first.id, second.id, third.id].includes(p.id));
-    expect(rest.every((p) => p.outline === null)).toBe(true);
+  test('is a choice the view can make, and draws nothing until the look designs it', () => {
+    expect(both.dimensions).toMatchObject({ outline: { data: 'name_kind' } });
+    expect(r.encodings.outline ?? null).toBeNull();
+    expect(r.petals.every((p) => p.outline === null)).toBe(true);
   });
 
-  test('the legend and the details say it in words, and never verified', () => {
-    const outline = r.legend.find((i) => i.primitive === 'outline');
-    expect(outline?.meaning).toBe(
-      'name: solid when declared, stated or sourced, dashed when inferred',
-    );
-    expect(outline?.keys).toEqual([
-      { key: 'asserted', label: 'declared, stated or sourced' },
-      { key: 'inferred', label: 'inferred' },
-    ]);
-    const said = (id: string) =>
-      r.details.find((d) => d.id === id)?.values.find((v) => v.primitive === 'outline');
-    expect(said(first.id)).toEqual({
-      primitive: 'outline',
-      value: 'solid',
-      explains: 'name sourced',
-    });
-    expect(said(second.id)).toEqual({
-      primitive: 'outline',
-      value: 'dashed',
-      explains: 'name inferred',
-    });
-    expect(JSON.stringify([outline, r.details.map((d) => d.values)])).not.toMatch(/verified/);
+  test('gives it no words either: no legend entry, no detail, never verified', () => {
+    expect(r.legend.some((i) => i.primitive === 'outline')).toBe(false);
+    expect(r.details.some((d) => d.values.some((v) => v.primitive === 'outline'))).toBe(false);
+    expect(JSON.stringify(r)).not.toMatch(/verified/);
+  });
+
+  test('the names still show', () => {
+    expect(r.petals.find((p) => p.id === second.id)?.name).toBe('EC');
   });
 });
