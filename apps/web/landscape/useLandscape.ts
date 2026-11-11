@@ -68,6 +68,8 @@ export interface LandscapeAt {
   inPage?: boolean;
   /** How a far flower is drawn: the lab's far wave (#84), or its silhouette. Read when the scene is built. */
   far?: FarStyle;
+  /** Told when the map goes into a flower and when it comes out of it (#78: the chains step aside inside). */
+  inside?: (yes: boolean) => void;
 }
 
 const LONGEST_FRAME = 1 / 15;
@@ -108,6 +110,7 @@ export function useLandscape(
     const pointer = { x: 0, y: 0, inside: false, dragging: false };
     let under = -1;
     let entered = -1;
+    let wasInside = false;
     let speaking = -1;
     let marked = -1;
     let hits: ArrowHit[] = [];
@@ -163,6 +166,10 @@ export function useLandscape(
         } else entered = filling();
       }
       enter.t = entered >= 0 ? 1 : 0;
+      if (entered >= 0 !== wasInside) {
+        wasInside = entered >= 0;
+        at?.current?.inside?.(wasInside);
+      }
       if (advance(enter, calm || arriving ? SNAP : stepOf(PRESENCE, dt))) moving = true;
       arriving = false;
 
