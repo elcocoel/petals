@@ -336,18 +336,21 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     });
   });
 
-  app.post('/api/v1/auth/verify', smallBody, async (c) => {
+  /** The wallet a body's NEP-413 proof shows its sender holds, or the answer that refuses it. */
+  async function provenWallet(
+    c: Context,
+  ): Promise<{ network: Network; accountId: string } | { refused: Response }> {
     const body = (await c.req.json().catch(() => null)) as {
       network?: unknown;
       proof?: Nep413Proof;
     } | null;
     const network = body?.network;
     if (network !== 'testnet' && network !== 'mainnet') {
-      return fail(c, 'bad_input', 'network must be testnet or mainnet');
+      return { refused: fail(c, 'bad_input', 'network must be testnet or mainnet') };
     }
     const proof = body?.proof;
     if (!proof || typeof proof !== 'object' || !NEAR_ACCOUNT.test(String(proof.account_id))) {
-      return fail(c, 'bad_input', 'proof must be a NEP-413 proof from a NEAR account');
+      return { refused: fail(c, 'bad_input', 'proof must be a NEP-413 proof from a NEAR account') };
     }
     let check: { ok: boolean; reason?: string };
     try {
@@ -360,18 +363,29 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       );
     } catch {
       // the error can name the account, so it isn't logged
-      return fail(
-        c,
-        'source_failed',
-        "Couldn't reach NEAR to check the signature, so nothing changed. Try again.",
-      );
+      return {
+        refused: fail(
+          c,
+          'source_failed',
+          "Couldn't reach NEAR to check the signature, so nothing changed. Try again.",
+        ),
+      };
     }
-    if (!check.ok) return fail(c, 'unauthorised', `The signature was refused: ${check.reason}.`);
+    if (!check.ok) {
+      return { refused: fail(c, 'unauthorised', `The signature was refused: ${check.reason}.`) };
+    }
+    return { network, accountId: String(proof.account_id) };
+  }
+
+  app.post('/api/v1/auth/verify', smallBody, async (c) => {
+    const proven = await provenWallet(c);
+    if ('refused' in proven) return proven.refused;
+    const { network, accountId } = proven;
     const known = await store.walletBinding.byHash(
-      d.cipher().index(`near:${network}:${proof.account_id}`),
+      d.cipher().index(`near:${network}:${accountId}`),
     );
     if (!known && (await d.full?.())) return fail(c, 'budget_exhausted', DATA_FULL);
-    const { person, claimed, explorations } = await signIn(c, network, proof.account_id);
+    const { person, claimed, explorations } = await signIn(c, network, accountId);
     return ok(c, {
       person_id: person,
       network,
@@ -427,6 +441,46 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       // null: no credit of their own, so a chat needs an invite like anyone else's
       credit: credit && { ...credit, usd_per_chat: usdPerOwnChat },
     });
+  });
+
+  // Another wallet for the person signed in (Elco, 12 Nov, on /profile: "allow me to add more wallets"; LOBBY):
+  // the same NEP-413 proof as signing in, after a challenge, bound to this person. The session stays as it is.
+  app.options('/api/v1/me/wallets', (c) => c.body(null, 204));
+  app.post('/api/v1/me/wallets', smallBody, async (c) => {
+    c.header('Cache-Control', 'no-store');
+    if (!originAllowed(c)) return badOrigin(c);
+    const wait = limit(clientAddress(c, local));
+    if (wait !== null) {
+      return fail(c, 'rate_limited', 'Too many tries from one address.', undefined, wait);
+    }
+    const session = await sessionOf(c);
+    if (!session || !isPerson(session.subject)) return fail(c, 'unauthorised', 'Not signed in.');
+    const person = session.subject;
+    const proven = await provenWallet(c);
+    if ('refused' in proven) return proven.refused;
+    const { network, accountId } = proven;
+    const cipher = d.cipher();
+    const address = `near:${network}:${accountId}`;
+    const index = cipher.index(address);
+    const known = await store.walletBinding.byHash(index);
+    if (known && known.person !== person) {
+      return fail(c, 'bad_input', 'That wallet already belongs to another account.');
+    }
+    if (!known) {
+      if (await d.full?.()) return fail(c, 'budget_exhausted', DATA_FULL);
+      const bound = await store.walletBinding.bind({
+        person,
+        network,
+        caip10_encrypted: cipher.seal(address),
+        caip10_hash: index,
+        proved_at: iso(),
+      });
+      // bound by someone else in the meantime
+      if (!bound && (await store.walletBinding.byHash(index))?.person !== person) {
+        return fail(c, 'bad_input', 'That wallet already belongs to another account.');
+      }
+    }
+    return ok(c, { wallets: await walletsOf(person) });
   });
 
   const gate: RouteAuth = {
