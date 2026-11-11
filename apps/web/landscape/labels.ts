@@ -22,6 +22,8 @@ export const NAME_GAP = 8;
 
 /** The badge: a row this high, its words this far in from its edge, a logo inside it this big. */
 const BADGE = { height: 20, pad: 6, mark: 14 };
+/** How tall a name's badge is on screen, for placing it. */
+export const LABEL_HEIGHT = BADGE.height;
 /** The app's type classes (packages/tokens): UI 13/18 for names, Mono 11/16 for symbols and types. */
 const UI = 'type-ui';
 const MONO = 'type-mono';
