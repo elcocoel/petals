@@ -195,7 +195,7 @@ describe('a drag', () => {
 describe('a canvas with a side covered (#78: the flower under /make’s conversation)', () => {
   test('the home fits in what the side leaves, centred there', () => {
     const whole = fitView(1200, 800);
-    const beside = fitView(1200, 800, undefined, { left: 500, right: 0 });
+    const beside = fitView(1200, 800, undefined, { left: 500, right: 0, top: 0, bottom: 0 });
     expect(beside.k).toBeLessThan(whole.k);
     // the flower's centre is in the middle of the 700 px the conversation leaves
     expect(beside.x + FLOWER_HOME.cx * beside.k).toBeCloseTo(500 + 350);
@@ -203,12 +203,17 @@ describe('a canvas with a side covered (#78: the flower under /make’s conversa
 
   test('a camera nobody moved fits again when the side changes; a moved one stays', () => {
     const cam = newCamera(1200, 800);
-    clearSides(cam, { left: 500, right: 0 });
+    clearSides(cam, { left: 500, right: 0, top: 0, bottom: 0 });
     expect(cam.x + FLOWER_HOME.cx * cam.k).toBeCloseTo(850);
     const moved = newCamera(1200, 800);
     moved.touched = true;
     const x = moved.x;
-    clearSides(moved, { left: 500, right: 0 });
+    clearSides(moved, { left: 500, right: 0, top: 0, bottom: 0 });
     expect(moved.x).toBe(x);
   });
+});
+
+test('below the conversation, on a phone, the flower fits in the top that’s left', () => {
+  const above = fitView(390, 844, undefined, { left: 0, right: 0, top: 0, bottom: 500 });
+  expect(above.y + FLOWER_HOME.cy * above.k).toBeCloseTo(172);
 });

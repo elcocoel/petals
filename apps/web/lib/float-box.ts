@@ -132,17 +132,38 @@ export function boxUnder(win: Size, top: number): Rect {
 }
 
 /**
- * What the conversation, where it starts, covers of a canvas whose left edge is at `left` and that is `width`
- * wide, so the flower fits beside it (#78, 11 Nov). Nothing when that would leave the flower under a third of
- * the canvas, as on a phone, where the conversation covers most of it anyway.
+ * What the conversation, where it starts, covers of the canvas, so the flower fits beside it (#78, 11 Nov), or
+ * above it on a phone. Nothing when neither leaves the flower a third of the canvas.
  */
 export function clearOfConversation(
   conversation: Rect,
-  left: number,
-  width: number,
-): { left: number; right: number } {
-  const covered = Math.max(0, conversation.x + conversation.w + floatBox.gap - left);
-  return width - covered >= width / 3 ? { left: covered, right: 0 } : { left: 0, right: 0 };
+  canvas: { left: number; top: number; width: number; height: number },
+): { left: number; right: number; top: number; bottom: number } {
+  const none = { left: 0, right: 0, top: 0, bottom: 0 };
+  const { width, height } = canvas;
+  const beside = Math.max(0, conversation.x + conversation.w + floatBox.gap - canvas.left);
+  if (width - beside >= width / 3) return { ...none, left: beside };
+  // below it, on a phone (besideOrBelow): the flower keeps the top
+  const under = Math.max(0, canvas.top + height - (conversation.y - floatBox.gap));
+  return height - under >= height / 3 ? { ...none, bottom: under } : none;
+}
+
+/** How much of a narrow window's height the flower keeps above the conversation (a phone). */
+const ABOVE = 0.4;
+
+/**
+ * Where the conversation stands so the flower has room (#78, 11 Nov: on a phone the flower wasn't seen at
+ * all): beside it when what's left beside is a third of the canvas or more; otherwise below it, the flower
+ * keeping the top of the window. `left` is where the canvas starts, the side panel's edge.
+ */
+export function besideOrBelow(conversation: Rect, win: Size, left: number): Rect {
+  const width = win.w - left;
+  const beside = width - (conversation.x + conversation.w + floatBox.gap - left);
+  if (beside >= width / 3) return conversation;
+  const { inset } = floatBox;
+  const x = win.w - conversation.x - inset >= floatBox['min-width'] ? conversation.x : inset;
+  const y = Math.round(win.h * ABOVE);
+  return kept({ ...conversation, x, y, w: win.w - x - inset, h: win.h - y - inset }, win);
 }
 
 /**

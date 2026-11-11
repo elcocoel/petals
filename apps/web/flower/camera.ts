@@ -39,9 +39,12 @@ export const FLOWER_HOME: Home = { cx: SHAPE.cx, cy: SHAPE.cy, r: SHAPE.R };
 export interface Clear {
   left: number;
   right: number;
+  /** Below the flower, on a phone, where the conversation stands under it. */
+  top: number;
+  bottom: number;
 }
 
-export const NO_CLEAR: Clear = { left: 0, right: 0 };
+export const NO_CLEAR: Clear = { left: 0, right: 0, top: 0, bottom: 0 };
 
 export interface Camera extends View {
   home: Home;
@@ -92,9 +95,14 @@ export function fitView(
   home: Home = FLOWER_HOME,
   clear: Clear = NO_CLEAR,
 ): Omit<View, 'width' | 'height'> {
-  const free = Math.max(1, width - clear.left - clear.right);
-  const k = (Math.min(free, height) * FIT) / home.r;
-  return { k, x: clear.left + free / 2 - home.cx * k, y: height / 2 - home.cy * k };
+  const freeW = Math.max(1, width - clear.left - clear.right);
+  const freeH = Math.max(1, height - clear.top - clear.bottom);
+  const k = (Math.min(freeW, freeH) * FIT) / home.r;
+  return {
+    k,
+    x: clear.left + freeW / 2 - home.cx * k,
+    y: clear.top + freeH / 2 - home.cy * k,
+  };
 }
 
 /** A camera on its home. The limits are scales, as in ZOOM_LIMITS, which is the default. */
@@ -147,7 +155,15 @@ export function resize(cam: Camera, width: number, height: number): void {
 
 /** The sides change: a camera nobody has moved fits its home again, beside them; a moved one stays. */
 export function clearSides(cam: Camera, clear: Clear): void {
-  if (cam.clear.left === clear.left && cam.clear.right === clear.right) return;
+  const { left, right, top, bottom } = cam.clear;
+  if (
+    left === clear.left &&
+    right === clear.right &&
+    top === clear.top &&
+    bottom === clear.bottom
+  ) {
+    return;
+  }
   cam.clear = clear;
   if (!cam.touched) resize(cam, cam.width, cam.height);
 }

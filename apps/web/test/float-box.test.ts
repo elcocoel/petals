@@ -11,6 +11,7 @@ import { Terminal } from '../components/ui/Terminal.tsx';
 import { MAP_BOTTOM, MAP_SIZE } from '../flower/marks.ts';
 import {
   besideMenu,
+  besideOrBelow,
   clearOfConversation,
   conversationBoxes,
   type Edge,
@@ -359,15 +360,21 @@ describe('the views', () => {
 describe('what the conversation covers of /make’s canvas (#78)', () => {
   const conversation = { x: 330, y: 24, w: 480, h: 700 };
   test('its right edge and the gap, from the canvas’s left', () => {
-    expect(clearOfConversation(conversation, 312, 1128)).toEqual({
-      left: 330 + 480 + floatBox.gap - 312,
-      right: 0,
-    });
+    expect(
+      clearOfConversation(conversation, { left: 312, top: 0, width: 1128, height: 900 }),
+    ).toEqual({ left: 330 + 480 + floatBox.gap - 312, right: 0, top: 0, bottom: 0 });
   });
-  test('nothing when the flower would be left under a third of the canvas, as on a phone', () => {
-    expect(clearOfConversation({ x: 24, y: 24, w: 342, h: 700 }, 0, 390)).toEqual({
-      left: 0,
-      right: 0,
-    });
+  test('on a phone, the conversation below the flower: the flower keeps the top', () => {
+    const below = besideOrBelow({ x: 24, y: 24, w: 342, h: 700, base: 184 }, { w: 390, h: 844 }, 0);
+    expect(below.y).toBeGreaterThan(300);
+    expect(below.x + below.w).toBeLessThanOrEqual(390);
+    expect(
+      clearOfConversation(below, { left: 0, top: 0, width: 390, height: 844 }).bottom,
+    ).toBeGreaterThan(0);
+  });
+
+  test('room beside it, the conversation stays where it starts', () => {
+    const c = { x: 330, y: 24, w: 480, h: 700 };
+    expect(besideOrBelow(c, { w: 1440, h: 900 }, 312)).toBe(c);
   });
 });

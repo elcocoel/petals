@@ -315,7 +315,11 @@ export function useFlowerCanvas(
   }, [selected]);
   const left = clear?.left;
   const right = clear?.right;
+  const top = clear?.top;
+  const bottom = clear?.bottom;
   useEffect(() => {
-    if (left !== undefined && right !== undefined) clearTo.current?.({ left, right });
-  }, [left, right]);
+    if (left === undefined || right === undefined || top === undefined || bottom === undefined)
+      return;
+    clearTo.current?.({ left, right, top, bottom });
+  }, [left, right, top, bottom]);
 }
