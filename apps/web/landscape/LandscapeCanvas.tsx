@@ -44,6 +44,7 @@ function Land({
   onPick,
   inPage,
   far,
+  inside,
 }: {
   data: LandscapeData;
   probe: boolean;
@@ -54,11 +55,13 @@ function Land({
   onPick: ((hit: CanvasHit) => void) | undefined;
   inPage: boolean;
   far: FarStyle;
+  /** told when the map goes into a flower and comes out */
+  inside: (yes: boolean) => void;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
   // Read by the scene when it's built and on each click, so a new pick or petal never builds it again.
-  at.current = { ...at.current, focus, inPage, far, ...(onPick ? { onPick } : {}) };
+  at.current = { ...at.current, focus, inPage, far, inside, ...(onPick ? { onPick } : {}) };
   useLandscape(svg, data, probe, aside, at);
   useEffect(() => {
     at.current?.choose?.(selected);
@@ -108,6 +111,9 @@ export function LandscapeCanvas({
     opened ?? (data.chains.some((c) => c.chain === FIRST) ? FIRST : (data.chains[0]?.chain ?? '')),
   );
   const [open, setOpen] = useState(false);
+  // Inside a flower the chains step aside, so they never cover it; they're back once it's left (#78, LOOK's
+  // lean (a)). Invisible, not gone, so the arrows' names still keep clear of where they stand.
+  const [inside, setInside] = useState(focus >= 0);
   const shown = data.chains.find((c) => c.chain === chain);
   const counts = useMemo(() => {
     const n = new Map<string, number>();
@@ -148,11 +154,12 @@ export function LandscapeCanvas({
           onPick={onPick}
           inPage={inPage}
           far={far}
+          inside={setInside}
         />
       )}
       <div
         ref={aside}
-        className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 flex w-tile-width flex-col gap-space-4`}
+        className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 flex w-tile-width flex-col gap-space-4 ${inside ? 'invisible' : ''}`}
       >
         {title && <h1 className="type-label">{title}</h1>}
         {shown && (
