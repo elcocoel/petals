@@ -3,7 +3,7 @@
 // drawing runs here, on the person's machine, and the site only receives and shows: the
 // conversation and what it drew.
 //
-// Only these reach the site, agreed with SYSTEMS: start_exploration, get_exploration,
+// Only these reach the site, agreed with SYSTEMS (and search_petals with SEARCH): start_exploration, get_exploration,
 // list_explorations, save_step and add_note (the exploration routes), GET of a snapshot, and PUT of
 // a snapshot under the exploration. Nothing else here makes a request to it.
 //
@@ -91,6 +91,8 @@ export const SITE_TOOLS = [
   // annotations: what the agent finds about accounts, kept privately in the project (annotation-layer.md)
   'add_annotation',
   'list_annotations',
+  // the map's search (SEARCH, #105): this computer has neither the model nor the map, so the site searches
+  'search_petals',
 ] as const;
 
 /**
@@ -481,6 +483,13 @@ export function siteDoor(opts: SiteOptions) {
             'GET',
             `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/annotations${about}`,
           );
+        }
+        case 'search_petals': {
+          const q = new URLSearchParams();
+          if (typeof i.q === 'string') q.set('q', i.q);
+          if (Array.isArray(i.kinds) && i.kinds.length) q.set('kinds', i.kinds.join(','));
+          if (typeof i.limit === 'number') q.set('limit', String(i.limit));
+          return call('GET', `/api/v1/search?${q}`);
         }
         case 'brain_route': {
           const q = new URLSearchParams();

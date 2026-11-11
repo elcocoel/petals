@@ -811,3 +811,36 @@ describe('several workers on one computer, each with its own job (swarm.md step 
     expect(JSON.parse(readFileSync(currentFile, 'utf8')).link).toBe(PAGE);
   });
 });
+
+describe("the map's search goes to the site (SEARCH, #105)", () => {
+  test('search_petals asks GET /api/v1/search with q, kinds and limit, and runs nothing here', async () => {
+    const site = fakeSite();
+    const fetch = async (url: string, init: RequestInit = {}) => {
+      if (url.includes('/api/v1/search')) {
+        site.seen.push({ method: init.method ?? 'GET', url, headers: {}, body: null });
+        return new Response(
+          JSON.stringify({ meaning: 'on', results: [{ kind: 'organisation', id: 'x' }] }),
+          {
+            headers: { 'content-type': 'application/json' },
+          },
+        );
+      }
+      return site.fetch(url, init);
+    };
+    let ranHere = false;
+    const local = tool('search_petals', async () => {
+      ranHere = true;
+      return { results: [] };
+    });
+    const tools = siteDoor({ site: SITE, fetch }).tools([...registry, local]);
+    const out = (await byName(tools, 'search_petals').run(
+      { q: 'Gnars', kinds: ['organisation', 'proposal'], limit: 5 } as never,
+      ctx(),
+    )) as { meaning: string; results: unknown[] };
+    expect(ranHere).toBe(false);
+    expect(out).toMatchObject({ meaning: 'on', results: [{ kind: 'organisation' }] });
+    expect(site.seen.at(-1)?.url).toBe(
+      `${SITE}/api/v1/search?q=Gnars&kinds=organisation%2Cproposal&limit=5`,
+    );
+  });
+});
