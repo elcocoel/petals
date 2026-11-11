@@ -58,6 +58,12 @@ const GOVERNANCE: [string, string][] = [
   ['who can mint this token', 'who-can-move-money-or-change-rules'],
   ["who are NEAR's validators and who backs them", 'stake-behind-the-network'],
   ['who controls this DAO', 'where-power-lives'],
+  // the second round of Elco's governance chapters (#91, #97, 11 Nov)
+  ['what is this token worth in dollars', 'value'],
+  ["what's the treasury worth", 'value'],
+  ['when do these tokens unlock', 'vesting'],
+  ['is this a multisig or a DAO', 'what-kind-of-thing-it-is'],
+  ['is this an exchange wallet', 'what-kind-of-thing-it-is'],
 ];
 
 describe('routing', () => {

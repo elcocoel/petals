@@ -218,7 +218,7 @@
       ],
       "status": "partial",
       "file": "chapters/from-proposal-to-action.md",
-      "sha256": "fd0038b2db03e9ab80d8a7bcede142fd0b2582b8e53cb759f0040fe7b7cafc18"
+      "sha256": "574f86c873dedc4cf8bd0e1f06ad679b77f53342ab89fc2fa8835013d54c7e7e"
     },
     {
       "id": "going-deeper",
@@ -385,6 +385,108 @@
       "sha256": "997116b1c2fe7888833f7c687bf47917ba65b111c232c8eb1002b74b904bb831"
     },
     {
+      "id": "value",
+      "kind": "chapter",
+      "for": "estimating the value of identified holdings and separating price, backing and spending power",
+      "recognise": [
+        "value",
+        "worth",
+        "price",
+        "dollars",
+        "USD",
+        "holdings",
+        "treasury",
+        "market cap",
+        "supply",
+        "backing",
+        "liquidity",
+        "wrapped"
+      ],
+      "tools": [
+        "list_networks",
+        "get_network",
+        "get_snapshot",
+        "describe_snapshot",
+        "read_chain",
+        "read_page",
+        "add_layer"
+      ],
+      "continues": [
+        "who-gets-a-vote",
+        "who-can-move-money-or-change-rules",
+        "vesting",
+        "over-time"
+      ],
+      "status": "partial",
+      "file": "chapters/value.md",
+      "sha256": "314af216b5c3a2dadd0438fb33bb0c87b05d9727817524f68de364f6ea107fa1"
+    },
+    {
+      "id": "vesting",
+      "kind": "chapter",
+      "for": "finding when an allocation becomes available and who controls its release or claim rights",
+      "recognise": [
+        "vesting",
+        "locked",
+        "unlock",
+        "cliff",
+        "claimable",
+        "streams",
+        "allocation",
+        "beneficiary",
+        "release schedule"
+      ],
+      "tools": [
+        "read_chain",
+        "add_annotation"
+      ],
+      "continues": [
+        "value",
+        "who-can-move-money-or-change-rules",
+        "going-deeper"
+      ],
+      "status": "partial",
+      "file": "chapters/vesting.md",
+      "sha256": "5dbe16dea09a1e71525ba5e3b9dc6ff123c13d9e095297f826c20a21d5571a88"
+    },
+    {
+      "id": "what-kind-of-thing-it-is",
+      "kind": "chapter",
+      "for": "describing an account or network's technical form, roles and declared organisation type",
+      "recognise": [
+        "type",
+        "kind",
+        "kind of thing",
+        "classification",
+        "DAO",
+        "foundation",
+        "protocol",
+        "community",
+        "multisig",
+        "contract",
+        "exchange",
+        "custodian",
+        "wallet"
+      ],
+      "tools": [
+        "look_up",
+        "get_network",
+        "get_snapshot",
+        "read_chain",
+        "read_page",
+        "add_annotation"
+      ],
+      "continues": [
+        "start-from-an-address",
+        "where-power-lives",
+        "who-can-move-money-or-change-rules",
+        "open-source-leads"
+      ],
+      "status": "partial",
+      "file": "chapters/what-kind-of-thing-it-is.md",
+      "sha256": "16f743a8e8371dc78626c454b8f3e07d23b1fc1fa47528a7144cac9bac8e1771"
+    },
+    {
       "id": "where-power-lives",
       "kind": "chapter",
       "for": "finding where power sits in any on-chain system, and reading it with a shape",
@@ -460,7 +562,7 @@
       ],
       "status": "partial",
       "file": "chapters/who-can-move-money-or-change-rules.md",
-      "sha256": "a9ef7de6765fcdc1eebf21045f78f85439d84c216a8e078a367a96b106e9891a"
+      "sha256": "a170e11abc38f10980d86e8d45f8f4bf88ef9a1d59ce654c5393d61d22cb7541"
     },
     {
       "id": "who-gets-a-vote",
@@ -500,7 +602,7 @@
       ],
       "status": "partial",
       "file": "chapters/who-gets-a-vote.md",
-      "sha256": "002347b5b6f80b7b07537d40cb1e01dec39e66cf10a96e6c2383aab5e78fd7a4"
+      "sha256": "18d010ba56e71855142ff89490f44e4a2ab22512147858bede4ee58e021ecfc0"
     },
     {
       "id": "moloch-v3",
