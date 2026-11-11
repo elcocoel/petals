@@ -106,8 +106,8 @@ export function LandscapeCanvas({
   selected = null,
   onPick,
   inPage = false,
-  far = null,
-  lines = null,
+  far = 'wave',
+  lines = 'focus',
   clearOfChains = false,
   overlays = false,
 }: {
@@ -125,9 +125,9 @@ export function LandscapeCanvas({
   onPick?: (hit: CanvasHit) => void;
   /** inside a page that scrolls (the landing): the page keeps its wheel and its vertical swipe */
   inPage?: boolean;
-  /** how a far flower is drawn: only the lab's map bench asks for the far wave (#84) until Elco has seen it */
+  /** how a far flower is drawn: the far wave (#84) on every map since 11 Nov (Elco: lab into the product) */
   far?: FarStyle;
-  /** when connections show: only the lab's map bench asks for the lines lean (#87) until Elco has seen it */
+  /** when connections show: only the pointed flower's (#87), on every map since 11 Nov */
   lines?: LineStyle;
   /** the home keeps clear of the chain list, where the map's room is narrow (/make, #78); off on /map */
   clearOfChains?: boolean;

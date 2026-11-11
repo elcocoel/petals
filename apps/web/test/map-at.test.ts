@@ -24,6 +24,8 @@ const asked: string[] = [];
 vi.mock('../lib/api.ts', () => ({
   api: async (path: string) => {
     asked.push(path);
+    // the maps' cards, for their marks (#85): none here, so every flower keeps its own name
+    if (path.startsWith('/api/v1/maps')) return { ok: true, value: { maps: [] } };
     return { ok: true, value: { ...night, views } };
   },
 }));
@@ -34,7 +36,7 @@ describe('the Power Map opened at one map', () => {
     const at = await powerMapAt('ab'.repeat(32), { map: `map:${views[5]?.sha}` });
     if ('error' in at) throw new Error(at.error);
     expect(at.land.flowers[at.focus]?.map).toBe(`map:${views[5]?.sha}`);
-    expect(asked.at(-1)).toBe(`/api/v1/map?view=${'ab'.repeat(32)}`);
+    expect(asked).toContain(`/api/v1/map?view=${'ab'.repeat(32)}`);
   });
 
   test('by a reading of it: an older reading opens the map that holds it, which shows its newest', async () => {
