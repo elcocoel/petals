@@ -525,7 +525,12 @@ async function loop(
       },
     });
     if (!ok) return out;
-    if (call.name === HAND_JOB) emit({ event: 'job', data: (out as { job: JobEvent }).job });
+    if (call.name === HAND_JOB) {
+      // one, or each part of a job handed out in parts
+      const handed = out as { job?: JobEvent; jobs?: JobEvent[] };
+      for (const j of handed.jobs ?? (handed.job ? [handed.job] : []))
+        emit({ event: 'job', data: j });
+    }
     if (call.name === NAME_CONVERSATION) {
       emit({ event: 'title', data: { title: (out as { title: string }).title } });
     }

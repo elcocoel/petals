@@ -469,6 +469,11 @@ export const MIGRATIONS: readonly string[] = [
     job TEXT NOT NULL
   );
   `,
+  // 24: a job in parts (Elco, 10 Nov, swarm.md step 4): each part is a job of its own, for any worker, and
+  // all share one group, so when the last one reports they're taken up together, as one.
+  `
+  ALTER TABLE job ADD COLUMN part_of TEXT;
+  `,
 ];
 
 /**

@@ -333,6 +333,64 @@ describe('supervision, without timers (swarm.md step 3)', () => {
   });
 });
 
+describe('a job in parts (swarm.md step 4)', () => {
+  test('one research job in four parts, four workers, comes back as one answer, in one turn', async () => {
+    const parts = [
+      'proposals 1-60',
+      'proposals 61-120',
+      'proposals 121-180',
+      'proposals 181-246',
+    ].map((range) => ({ title: `Read ${range}`, brief: `Who is named in ${range}?` }));
+    const w = setup([
+      {
+        calls: [{ name: 'hand_job', args: { title: 'Name the members', brief: 'all 246', parts } }],
+      },
+      { content: 'Sent in four parts.' },
+      { content: 'Your agents named 67 members.' },
+    ]);
+    await w.signInFunded();
+    const token = await link(w);
+    for (const id of ['w1', 'w2', 'w3', 'w4']) await w.waitAs(token, 'Codex', id);
+    const events = parseSse(await (await w.call('POST', '/api/v1/agent/chat', ASK)).text());
+    const handed = events.filter((e) => e.event === 'job').map((e) => (e as { data: Out }).data);
+    expect(handed.map((j) => j.title)).toEqual(parts.map((p) => p.title));
+    // one group, one conversation for all four
+    expect(new Set(handed.map((j) => j.part_of)).size).toBe(1);
+    expect(handed[0]?.part_of).toMatch(/^prt_/);
+    expect(new Set(handed.map((j) => j.conversation)).size).toBe(1);
+    // each worker takes one, and reports it
+    const report = async (worker: string, n: number) => {
+      const got = (await (await w.waitAs(token, 'Codex', worker)).json()) as Out;
+      const ref = (got.project.exploration as string).split('/s/')[1] as string;
+      const res = await w.app.request(`/api/v1/explorations/${ref}/jobs/${got.job.id}/report`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ result: { summary: `${n * 16} names.` } }),
+      });
+      expect(res.status).toBe(200);
+    };
+    await report('w1', 1);
+    await report('w2', 2);
+    await report('w3', 3);
+    // three of four in: nothing taken up yet
+    await new Promise((r) => setTimeout(r, 60));
+    expect(w.llm.requests).toHaveLength(2);
+    await report('w4', 4);
+    for (let i = 0; i < 50 && w.llm.requests.length < 3; i++)
+      await new Promise((r) => setTimeout(r, 20));
+    await new Promise((r) => setTimeout(r, 60));
+    expect(w.llm.requests).toHaveLength(3);
+    const turn = w.llm.requests[2];
+    expect(turn?.messages.at(-1)?.content).toMatch(
+      /^\(Petals\) All 4 parts of the job came back\. Their reports are under Jobs: put them together/,
+    );
+    const notes = turn?.messages[0]?.content as string;
+    for (const [i, p] of parts.entries())
+      expect(notes).toContain(`"${p.title}" (part ${i + 1} of 4): done`);
+    for (const n of [16, 32, 48, 64]) expect(notes).toContain(`report: "${n} names."`);
+  });
+});
+
 describe('agents across projects', () => {
   test('disconnecting one agent ends its wait, drops it from the list, and keeps it out until it connects again', async () => {
     const w = setup([]);

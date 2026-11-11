@@ -31,6 +31,7 @@ export const jobEvent = (j: JobRow & { status: JobEvent['status'] }): JobEvent =
   to: j.to,
   taken_by: j.taken_by,
   conversation: j.conversation,
+  part_of: j.part_of,
 });
 
 /** Who's connected, for the system message: each agent by name, its workers, and the jobs they hold. */
@@ -79,7 +80,7 @@ export function handJobTool(ctx: ToolContext, runId: string, bell?: Bell): AnyTo
       type: 'object',
       // the agent's tool list reads the description from here (tool-defs.ts)
       description:
-        "Hand a job to the person's own agent (Claude Code, Codex, ChatGPT or Claude), which does it on their machine and reports back into this conversation. Use it when the person asks for their own agent to do something, or for a mapping too big for this chat. title: a few words. brief: plain words for that agent, saying what to map and what to look for. to: one of the agents under 'Agents connected', by name, to send it to that one only; leave it out for whichever takes it first. Its report comes back into this conversation.",
+        "Hand a job to the person's own agent (Claude Code, Codex, ChatGPT or Claude), which does it on their machine and reports back into this conversation. Use it when the person asks for their own agent to do something, or for a mapping too big for this chat. title: a few words. brief: plain words for that agent, saying what to map and what to look for. to: one of the agents under 'Agents connected', by name, to send it to that one only; leave it out for whichever takes it first. parts: to split a big job among the person's agents, each part's own title and brief (and to), taken by different workers in one conversation; when the last part reports, they all come back to you together, to put together into one answer. Its report comes back into this conversation.",
       required: ['title', 'brief'],
       properties: {
         title: { type: 'string', minLength: 1, maxLength: TITLE_MAX },
@@ -89,6 +90,22 @@ export function handJobTool(ctx: ToolContext, runId: string, bell?: Bell): AnyTo
           description: 'anything the job needs by name, such as an account',
         },
         to: { type: 'string', minLength: 1, maxLength: 60, description: 'an agent by its name' },
+        parts: {
+          type: 'array',
+          minItems: 2,
+          description: 'the job in parts, each taken by its own worker',
+          items: {
+            type: 'object',
+            required: ['title', 'brief'],
+            properties: {
+              title: { type: 'string', minLength: 1, maxLength: TITLE_MAX },
+              brief: { type: 'string', minLength: 1, maxLength: BRIEF_MAX },
+              inputs: { type: 'object' },
+              to: { type: 'string', minLength: 1, maxLength: 60 },
+            },
+            additionalProperties: false,
+          },
+        },
       },
       additionalProperties: false,
     },
@@ -109,21 +126,45 @@ export function handJobTool(ctx: ToolContext, runId: string, bell?: Bell): AnyTo
       const store = privateStore(ctx.config);
       const owner = (await store.run.get(runId))?.owner ?? null;
       // sent to one agent: it must be one this person has connected
-      let to: string | null = null;
-      if (typeof args.to === 'string' && args.to.trim()) {
-        const known = owner ? await store.agent.list(owner) : [];
-        const match = known.find(
-          (a) => a.name.toLowerCase() === (args.to as string).trim().toLowerCase(),
+      const known = owner ? await store.agent.list(owner) : [];
+      const agentOf = (asked: unknown): string | null | ToolError => {
+        if (typeof asked !== 'string' || !asked.trim()) return null;
+        const match = known.find((a) => a.name.toLowerCase() === asked.trim().toLowerCase());
+        if (match) return match.name;
+        return toolError(
+          'not_found',
+          known.length
+            ? `No agent ${String(asked)} is connected. Connected: ${known.map((a) => a.name).join(', ')}.`
+            : 'No agent of the person is connected yet: leave to out, or ask them to connect one.',
         );
-        if (!match) {
-          return toolError(
-            'not_found',
-            known.length
-              ? `No agent ${String(args.to)} is connected. Connected: ${known.map((a) => a.name).join(', ')}.`
-              : 'No agent of the person is connected yet: leave to out, or ask them to connect one.',
-          );
-        }
-        to = match.name;
+      };
+      const to = agentOf(args.to);
+      if (to !== null && typeof to !== 'string') return to;
+      // in parts (swarm.md step 4): each its own job, for its own worker, all in one conversation
+      const parts = Array.isArray(args.parts) ? args.parts : [];
+      const each: {
+        title: string;
+        brief: string;
+        inputs: Record<string, unknown>;
+        to: string | null;
+      }[] = [];
+      for (const [i, p] of parts.entries()) {
+        const part = (p ?? {}) as Record<string, unknown>;
+        const t = text(part.title, TITLE_MAX);
+        const b = text(part.brief, BRIEF_MAX);
+        if (!t || !b)
+          return toolError('bad_input', `part ${i + 1} needs a title and a brief, as the job does`);
+        const pt = agentOf(part.to);
+        if (pt !== null && typeof pt !== 'string') return pt;
+        each.push({
+          title: t,
+          brief: b,
+          inputs:
+            part.inputs && typeof part.inputs === 'object' && !Array.isArray(part.inputs)
+              ? (part.inputs as Record<string, unknown>)
+              : inputs,
+          to: pt ?? to,
+        });
       }
       const exploration = await runExplorationOf(ctx, runId);
       if (!exploration) {
@@ -134,23 +175,36 @@ export function handJobTool(ctx: ToolContext, runId: string, bell?: Bell): AnyTo
       }
       // its own conversation, in this one's folder, so its work doesn't fill this one (swarm.md step 2)
       const conversation = await jobConversation(ctx, runId, { title, brief });
-      const row = await store.job.add({
-        id: `job_${randomBytes(9).toString('hex')}`,
-        exploration,
-        run: runId,
-        kind: 'map',
-        title,
-        brief,
-        inputs,
-        at: ctx.now().toISOString(),
-        to,
-        conversation,
-      });
+      const at = ctx.now().toISOString();
+      const part_of = each.length ? `prt_${randomBytes(9).toString('hex')}` : null;
+      const rows: JobRow[] = [];
+      for (const j of each.length ? each : [{ title, brief, inputs, to }])
+        rows.push(
+          await store.job.add({
+            id: `job_${randomBytes(9).toString('hex')}`,
+            exploration,
+            run: runId,
+            kind: 'map',
+            title: j.title,
+            brief: j.brief,
+            inputs: j.inputs,
+            at,
+            to: j.to,
+            conversation,
+            part_of,
+          }),
+        );
       if (owner) bell?.ring(owner);
-      return {
-        job: jobEvent({ ...row, status: 'open' }),
-        next: `Tell the person, in a sentence, that the job is waiting for ${to ?? 'their own agent'}, and that its report comes back here.`,
-      };
+      const jobs = rows.map((r) => jobEvent({ ...r, status: 'open' }));
+      return part_of
+        ? {
+            jobs,
+            next: `Tell the person, in a sentence, that the job is waiting in ${jobs.length} parts for their own agents, and that it comes back here once every part has.`,
+          }
+        : {
+            job: jobs[0],
+            next: `Tell the person, in a sentence, that the job is waiting for ${to ?? 'their own agent'}, and that its report comes back here.`,
+          };
     },
   };
 }
@@ -233,7 +287,10 @@ export function jobNotes(jobs: readonly JobRow[]): string {
       j.status === 'taken' && j.taken_by
         ? `, by ${j.taken_by}${j.last_seen ? `, last seen ${j.last_seen}` : ''}`
         : '';
-    lines.push('', `- ${j.id} "${j.title}": ${j.status}${who}`);
+    const part = j.part_of
+      ? ` (part ${jobs.filter((x) => x.part_of === j.part_of).indexOf(j) + 1} of ${jobs.filter((x) => x.part_of === j.part_of).length})`
+      : '';
+    lines.push('', `- ${j.id} "${j.title}"${part}: ${j.status}${who}`);
     if (j.result) {
       lines.push(`  report: ${JSON.stringify(j.result.summary)}`);
       if (j.result.steps?.length)
