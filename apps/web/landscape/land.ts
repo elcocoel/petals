@@ -120,7 +120,7 @@ type LiveMap = Omit<Night, 'views'> & { views: LiveView[] };
 
 /** The live map in the view whose hash is given, as GET /api/v1/map gives it. */
 async function liveMap(view: string): Promise<LiveMap | { error: string }> {
-  const got = await api<LiveMap>(`/api/v1/map?${viewQuery(view)}`);
+  const got = await api<LiveMap>(`/api/v1/map?${viewQuery(view)}`, { named: true });
   return got.ok ? got.value : { error: got.error.message };
 }
 

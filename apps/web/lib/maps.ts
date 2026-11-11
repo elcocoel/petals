@@ -67,7 +67,7 @@ export interface MapMark {
 
 /** The maps, their pictures, keys and readings in the view whose hash is given (the person's: lib/viewer-view.ts). */
 export const mapList = (view: string) =>
-  api<{ maps: MapCard[] }>(`/api/v1/maps?${viewQuery(view)}`);
+  api<{ maps: MapCard[] }>(`/api/v1/maps?${viewQuery(view)}`, { named: true });
 export const mapOne = (id: string, view: string) =>
   api<{ map: MapCard }>(`/api/v1/maps/${encodeURIComponent(id)}?${viewQuery(view)}`);
 

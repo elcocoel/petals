@@ -9,9 +9,21 @@ export type ApiResult<T> =
   | { ok: true; value: T }
   | { ok: false; status: number; error: ToolError['error'] };
 
+/**
+ * The server's public answers it names by what they hold (ETag), the last one kept by its path: asked again,
+ * a 304 gives the kept one, so the map's megabytes travel once while no reading changes (/map/data, 11 Nov).
+ */
+const named = new Map<string, { etag: string; value: unknown }>();
+
 export async function api<T>(
   path: string,
-  init?: { method?: string; body?: unknown; cookie?: string | null },
+  init?: {
+    method?: string;
+    body?: unknown;
+    cookie?: string | null;
+    /** a public GET the server names (ETag): the same for everyone, kept by its path */
+    named?: boolean;
+  },
 ): Promise<ApiResult<T>> {
   const key = siteKey();
   let res: Response;
@@ -25,6 +37,9 @@ export async function api<T>(
         ...(key ? { [SITE_KEY_HEADER]: key } : {}),
         // the caller's own session comes along only when a page passes it on
         ...(init?.cookie ? { cookie: init.cookie } : {}),
+        ...(init?.named && named.has(path)
+          ? { 'if-none-match': (named.get(path) as { etag: string }).etag }
+          : {}),
       },
       body: init?.body === undefined ? undefined : JSON.stringify(init.body),
       cache: 'no-store',
@@ -39,6 +54,8 @@ export async function api<T>(
       },
     };
   }
+  const kept = init?.named ? named.get(path) : undefined;
+  if (res.status === 304 && kept) return { ok: true, value: kept.value as T };
   const text = await res.text();
   let json: unknown;
   try {
@@ -46,7 +63,11 @@ export async function api<T>(
   } catch {
     json = undefined;
   }
-  if (res.ok && json !== undefined) return { ok: true, value: json as T };
+  if (res.ok && json !== undefined) {
+    const etag = res.headers.get('etag');
+    if (init?.named && etag) named.set(path, { etag, value: json });
+    return { ok: true, value: json as T };
+  }
   const error = (json as ToolError | undefined)?.error ?? {
     code: 'internal' as const,
     message: `${path}: HTTP ${res.status}`,

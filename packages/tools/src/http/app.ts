@@ -328,6 +328,19 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   );
   // One map (Elco, 10 Nov): every view stored here with its reading, name, date and maker, and the relations
   // index's groups and pairs, in one answer, as the map bench's copy had them (specs/006-the-map).
+  /**
+   * A public answer named by what it holds, its `made` time aside (/map/data's cache, 11 Nov): a 304 when the
+   * asker holds it already, so the map's megabytes travel once while no reading changes. Cloudflare marks a
+   * compressed answer's tag weak (W/), so the tag is compared without it.
+   */
+  function named(c: Context, out: Record<string, unknown>): Response {
+    const { made: _made, ...held } = out;
+    const etag = `"${sha256Hex(JSON.stringify(held))}"`;
+    c.header('ETag', etag);
+    if ((c.req.header('if-none-match') ?? '').replace(/^W\//, '') === etag)
+      return c.body(null, 304);
+    return respond(c, out);
+  }
   app.get('/api/v1/map', limit, async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
@@ -336,7 +349,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       pairs?: Record<string, unknown>[];
     };
     if (isToolError(overview)) return respond(c, overview);
-    return respond(c, {
+    return named(c, {
       made: new Date().toISOString(),
       source: (ctx.config.apiBase ?? '').replace(/\/+$/, ''),
       views: await mapViews(await forViewer(c), view),
@@ -405,7 +418,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   app.get('/api/v1/maps', limit, async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
-    return respond(c, {
+    return named(c, {
       maps: mapsOf(
         await mapViews(await forViewer(c), view),
         await marks(),
