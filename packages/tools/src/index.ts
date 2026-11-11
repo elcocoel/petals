@@ -11,6 +11,7 @@ export {
 } from './agent-key.ts';
 export { type BlocRun, blocMaps, mapBlocs } from './blocs.ts';
 export {
+  BRAIN_DEPARTMENTS,
   BRAIN_INDEX_VERSION,
   type BrainEntry,
   type BrainIndex,

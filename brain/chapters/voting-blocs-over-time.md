@@ -1,5 +1,6 @@
 ---
 id: voting-blocs-over-time
+department: governance
 for: comparing actual ballots to find groups that keep voting alike over a stated period
 recognise: voting blocs, voting blocks, who votes together, co-voting, agreement, voted together, voting patterns, stable groups, coordination
 tools: find_voting_blocs, list_networks, get_network, read_chain, read_page, add_annotation

@@ -7,7 +7,7 @@ The brain is what the agent knows how to do: a short doctrine, a few chapters an
 A folder in the repo, `brain/`:
 
 - **`doctrine.md`:** about 15 lines, read first, always. It names no file paths. Its words are in `spec.md`.
-- **`chapters/<id>.md`:** what to do, in plain words. Each opens with a header: what it's for, how to recognise its case, which tools and shapes it uses, and where it continues. The first chapters:
+- **`chapters/<id>.md`:** what to do, in plain words. Each opens with a header: its department, what it's for, how to recognise its case, which tools and shapes it uses, and where it continues. The first chapters:
 
 | Chapter | What it teaches |
 |---|---|
@@ -22,7 +22,8 @@ A folder in the repo, `brain/`:
 There's no chapter or reader per DAO type (Elco, 9 Nov: "let's not default to a one module per DAO type"). A framework is a recipe, and `where-power-lives` is the chapter.
 
 - **`recipes/<framework>.md`:** one per framework or contract type, as `data.md` defines them. Moloch v3 comes first. A recipe's header says how to recognise its contracts, so the index routes to it directly.
-- **`index.json`:** generated from every header. Nobody edits it by hand.
+- **`index.json`:** generated from every header. Nobody edits it by hand. Since 12 Nov it's `brain-index/v2`: each entry names its department.
+- **Departments (12 Nov; Elco, 11 Nov: "The department's component is important or else it becomes just a list that goes on forever"):** every chapter and recipe is in one of seven, as Elco named them: connecting, gathering, governance, money, investigation, services (#101's slots only), stewardship. The doctrine is in none: it's in every answer. The plan is `research/brain-departments-2026-11-11.md`.
 
 ## The brain service
 
@@ -82,6 +83,7 @@ Elco, 9 Nov: "cant that be the repo, and we build a thin API or MCP or whatever 
 It runs before every merge, and fails if any of these is true:
 - the index differs from what the headers generate;
 - a chapter or recipe names a tool, a shape or a continuation that doesn't exist;
+- a chapter or recipe names no department, or one that isn't among the seven;
 - a recipe asks for something outside its bounds;
 - the doctrine names a path.
 

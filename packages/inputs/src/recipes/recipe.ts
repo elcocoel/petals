@@ -45,6 +45,8 @@ export interface RecipeMeasure {
 export interface ReadingRecipe {
   petal: typeof RECIPE_VERSION;
   id: string;
+  /** the brain's department it's in (brain-index/v2) */
+  department?: string;
   title: string;
   for: string;
   description: string;

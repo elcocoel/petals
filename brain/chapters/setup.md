@@ -1,5 +1,6 @@
 ---
 id: setup
+department: connecting
 for: a person setting up Petals from any chatbot, step by step: a wallet, signing in, credit, a first conversation
 recognise: set up, setup, get started, new to petals, wallet, sign in, log in, connect, top up, credit, first time, how do I start
 tools:

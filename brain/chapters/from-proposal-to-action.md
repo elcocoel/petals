@@ -1,5 +1,6 @@
 ---
 id: from-proposal-to-action
+department: governance
 for: following a proposal from eligibility through voting to execution
 recognise: proposal, Governor, quorum, threshold, voting rules, voting period, passed, executed, veto, Snapshot, Sputnik, AstroDAO, Aragon, Moloch
 tools: list_networks, get_network, get_snapshot, describe_snapshot, read_chain, add_layer

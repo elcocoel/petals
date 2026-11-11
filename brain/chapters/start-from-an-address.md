@@ -1,5 +1,6 @@
 ---
 id: start-from-an-address
+department: gathering
 for: any address or account, when nothing is known about it yet
 recognise: address, account, wallet, contract, who is, what is this
 tools: look_up, read_chain, find_target, account_groups

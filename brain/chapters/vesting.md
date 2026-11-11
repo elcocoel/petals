@@ -1,5 +1,6 @@
 ---
 id: vesting
+department: money
 for: finding when an allocation becomes available and who controls its release or claim rights
 recognise: vesting, locked, unlock, cliff, claimable, streams, allocation, beneficiary, release schedule
 tools: read_chain, add_annotation

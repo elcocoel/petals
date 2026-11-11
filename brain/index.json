@@ -1,9 +1,10 @@
 {
-  "petal": "brain-index/v1",
+  "petal": "brain-index/v2",
   "entries": [
     {
       "id": "doctrine",
       "kind": "doctrine",
+      "department": null,
       "for": "what every answer holds to, read before anything else",
       "recognise": [],
       "tools": [],
@@ -15,6 +16,7 @@
     {
       "id": "a-new-system",
       "kind": "chapter",
+      "department": "gathering",
       "for": "a contract or system Petals has no recipe for yet",
       "recognise": [
         "unknown contract",
@@ -34,11 +36,12 @@
       ],
       "status": "partial",
       "file": "chapters/a-new-system.md",
-      "sha256": "d0e92bde3644dd00cd0c4e6e594a246378af92686ce836d55cffc748499481fa"
+      "sha256": "12a86d9228e274f2df913e92463206422dd1fadf1b1b9707f7ace9c82fd8da48"
     },
     {
       "id": "connect-claude-code",
       "kind": "chapter",
+      "department": "connecting",
       "for": "connecting Claude Code to Petals, in a terminal or under Code in the Claude desktop app, and keeping it for next time",
       "recognise": [
         "claude code",
@@ -63,11 +66,12 @@
       ],
       "status": "ready",
       "file": "chapters/connect-claude-code.md",
-      "sha256": "81fc79b6fb300a436369d53f96b6291f00ab44117e5aa818d2f1dfe0c720a282"
+      "sha256": "c74269ebddffe7ffe82299dbf0ed0d3bf96f8169efb3861df9a2df84a7ab8b01"
     },
     {
       "id": "connect-cloud",
       "kind": "chapter",
+      "department": "connecting",
       "for": "connecting an app that runs in the cloud, or takes a remote MCP server's URL, to Petals as a connector: the Claude app, ChatGPT, Cursor",
       "recognise": [
         "claude app",
@@ -101,11 +105,12 @@
       ],
       "status": "partial",
       "file": "chapters/connect-cloud.md",
-      "sha256": "80285f548ec7739b3ec04d38ab71b172b816690906b8bb7f2a20aab821219bed"
+      "sha256": "3ed33f30a05d83cfeba1c703a608e002667c7007fd88cd30bb18696e8917d9b8"
     },
     {
       "id": "connect-codex",
       "kind": "chapter",
+      "department": "connecting",
       "for": "connecting Codex to Petals, in a terminal, and keeping it for next time",
       "recognise": [
         "codex",
@@ -129,11 +134,12 @@
       ],
       "status": "ready",
       "file": "chapters/connect-codex.md",
-      "sha256": "8cb603e313aa1bbfc07584f480c165488ec931e88cbcf27a06c9a16e96039a59"
+      "sha256": "70acb6700264ba7218f2bb75a29701b6a795f8d0ad1227f199e11f7b0f5e7295"
     },
     {
       "id": "connect-hermes",
       "kind": "chapter",
+      "department": "connecting",
       "for": "connecting Hermes, Nous Research's agent, to Petals, in a terminal or over ACP, and keeping it for next time",
       "recognise": [
         "hermes",
@@ -159,11 +165,12 @@
       ],
       "status": "ready",
       "file": "chapters/connect-hermes.md",
-      "sha256": "936a14c3ba99b84af8b9bd643a1dc3693ad5bf1afacf525066ae1ce1dec9bd1d"
+      "sha256": "75d5c2e665d8785a8a48a10476362b18465b1f2c7ea0dd08c5021a34583c8341"
     },
     {
       "id": "contributing",
       "kind": "chapter",
+      "department": "stewardship",
       "for": "improving a chapter or a recipe, by pull request",
       "recognise": [
         "improve",
@@ -181,11 +188,12 @@
       ],
       "status": "partial",
       "file": "chapters/contributing.md",
-      "sha256": "d2e60eff96f50a25010d0323760d88bf9c231446aa625a1064853bde78a4e817"
+      "sha256": "aa2167f9e98e53237d7d38adc2c6f5c4a1ce08c6ce7bdd4a377ea1615130a551"
     },
     {
       "id": "from-proposal-to-action",
       "kind": "chapter",
+      "department": "governance",
       "for": "following a proposal from eligibility through voting to execution",
       "recognise": [
         "proposal",
@@ -218,11 +226,12 @@
       ],
       "status": "partial",
       "file": "chapters/from-proposal-to-action.md",
-      "sha256": "574f86c873dedc4cf8bd0e1f06ad679b77f53342ab89fc2fa8835013d54c7e7e"
+      "sha256": "1cb796632fc91dd1001097585690d9e2f1d6800744975d14ab5eb92adccf4100"
     },
     {
       "id": "going-deeper",
       "kind": "chapter",
+      "department": "investigation",
       "for": "what to offer after every answer",
       "recognise": [
         "more",
@@ -246,11 +255,12 @@
       ],
       "status": "ready",
       "file": "chapters/going-deeper.md",
-      "sha256": "f3b1122a6a8cdda53b2647441748348e6312bafd421bd0b6b7cfb68512600d91"
+      "sha256": "7d9bb229b39d01f4089f42b1b96107e875fd5989c6c60219a876eda62c58148b"
     },
     {
       "id": "open-source-leads",
       "kind": "chapter",
+      "department": "gathering",
       "for": "public traces that might say what an address did, as directions only",
       "recognise": [
         "osint",
@@ -275,11 +285,12 @@
       ],
       "status": "partial",
       "file": "chapters/open-source-leads.md",
-      "sha256": "5a95ce27d34ee28e83fbe2de78fdb6565c7a00a23819583e5eb619295839c00a"
+      "sha256": "9c75a83bcd71db709eac2a236c412e0893459ea5b0f38292817e4b33b171057f"
     },
     {
       "id": "over-time",
       "kind": "chapter",
+      "department": "investigation",
       "for": "how a group changed over a span, at an interval agreed with the person",
       "recognise": [
         "over time",
@@ -301,11 +312,12 @@
       ],
       "status": "partial",
       "file": "chapters/over-time.md",
-      "sha256": "1ca3515f6108be2a843762cef2fbc84cf60610c8ba9b3a9e60e6db8a1a7d240c"
+      "sha256": "a8cec938f1a08211bf12ab714f6438e50b262805ddcb85e3e42807c380faa256"
     },
     {
       "id": "setup",
       "kind": "chapter",
+      "department": "connecting",
       "for": "a person setting up Petals from any chatbot, step by step: a wallet, signing in, credit, a first conversation",
       "recognise": [
         "set up",
@@ -327,11 +339,12 @@
       ],
       "status": "ready",
       "file": "chapters/setup.md",
-      "sha256": "d2fbc2333686993e957240e1b5e9239c35d33bb5fdc332c769c16e3a8e330dd8"
+      "sha256": "1f1d22bc59e523a4de72cf0b80285206cc7cdb6d76d750f7169b77ec0f6a66c0"
     },
     {
       "id": "stake-behind-the-network",
       "kind": "chapter",
+      "department": "governance",
       "for": "separating validator consensus power from the accounts and stake behind it",
       "recognise": [
         "validators",
@@ -355,11 +368,12 @@
       ],
       "status": "partial",
       "file": "chapters/stake-behind-the-network.md",
-      "sha256": "6761f561d000c40582020664a81b9803841f845fae04fe173bc2efa1da167e38"
+      "sha256": "7db6d5e0d456848e63cea15d65d5403c31977ef1f9efadb7860c809a3ad7087a"
     },
     {
       "id": "start-from-an-address",
       "kind": "chapter",
+      "department": "gathering",
       "for": "any address or account, when nothing is known about it yet",
       "recognise": [
         "address",
@@ -382,11 +396,12 @@
       ],
       "status": "ready",
       "file": "chapters/start-from-an-address.md",
-      "sha256": "997116b1c2fe7888833f7c687bf47917ba65b111c232c8eb1002b74b904bb831"
+      "sha256": "1cb4e842f497f7975e7397c04cd099bb999ff303bd9b2a92358b87578792938c"
     },
     {
       "id": "value",
       "kind": "chapter",
+      "department": "money",
       "for": "estimating the value of identified holdings and separating price, backing and spending power",
       "recognise": [
         "value",
@@ -419,11 +434,12 @@
       ],
       "status": "partial",
       "file": "chapters/value.md",
-      "sha256": "314af216b5c3a2dadd0438fb33bb0c87b05d9727817524f68de364f6ea107fa1"
+      "sha256": "41e3e173d09b080ef69b3bb84fbe4b1be5fd097a7e01d3a6edf924a287fb17a6"
     },
     {
       "id": "vesting",
       "kind": "chapter",
+      "department": "money",
       "for": "finding when an allocation becomes available and who controls its release or claim rights",
       "recognise": [
         "vesting",
@@ -447,11 +463,12 @@
       ],
       "status": "partial",
       "file": "chapters/vesting.md",
-      "sha256": "5dbe16dea09a1e71525ba5e3b9dc6ff123c13d9e095297f826c20a21d5571a88"
+      "sha256": "d6788e4852912c256239864167043d4cab591f85147fc06e3ee91f0a3d08ce82"
     },
     {
       "id": "voting-blocs-over-time",
       "kind": "chapter",
+      "department": "governance",
       "for": "comparing actual ballots to find groups that keep voting alike over a stated period",
       "recognise": [
         "voting blocs",
@@ -479,11 +496,12 @@
       ],
       "status": "partial",
       "file": "chapters/voting-blocs-over-time.md",
-      "sha256": "35167d16c714a1c93f927379233786b38c5e5fea729e1d1a2bfbb8eb7e1e3923"
+      "sha256": "44fedbc06c12748865b83e4654cdb7e7d4470a0f886f4f4e25ed9fa9b1bd47b3"
     },
     {
       "id": "what-kind-of-thing-it-is",
       "kind": "chapter",
+      "department": "gathering",
       "for": "describing an account or network's technical form, roles and declared organisation type",
       "recognise": [
         "type",
@@ -516,11 +534,12 @@
       ],
       "status": "partial",
       "file": "chapters/what-kind-of-thing-it-is.md",
-      "sha256": "16f743a8e8371dc78626c454b8f3e07d23b1fc1fa47528a7144cac9bac8e1771"
+      "sha256": "76044e52226f569aa3b7d0db081935cbb79266371bf52120878281d2e82ff3f0"
     },
     {
       "id": "where-power-lives",
       "kind": "chapter",
+      "department": "governance",
       "for": "finding where power sits in any on-chain system, and reading it with a shape",
       "recognise": [
         "dao",
@@ -552,11 +571,12 @@
       ],
       "status": "ready",
       "file": "chapters/where-power-lives.md",
-      "sha256": "d5360e7c7e766f321a0e80eb05c3a20e2a1423d9a5c11044baf23d7e04552995"
+      "sha256": "502a749f65ecd8549f065f66553cc6bbd9523f9e370816faab8b3019192774e4"
     },
     {
       "id": "who-can-move-money-or-change-rules",
       "kind": "chapter",
+      "department": "governance",
       "for": "tracing treasury execution and authority to change permissions or contract rules",
       "recognise": [
         "treasury",
@@ -594,11 +614,12 @@
       ],
       "status": "partial",
       "file": "chapters/who-can-move-money-or-change-rules.md",
-      "sha256": "a170e11abc38f10980d86e8d45f8f4bf88ef9a1d59ce654c5393d61d22cb7541"
+      "sha256": "f45913ae1a3a77f3b3eeb999e8e421471ac91d96f583e0ee233c9cac87e1652d"
     },
     {
       "id": "who-gets-a-vote",
       "kind": "chapter",
+      "department": "governance",
       "for": "distinguishing holdings, membership, delegation and the right to vote, join or leave",
       "recognise": [
         "voting power",
@@ -634,11 +655,12 @@
       ],
       "status": "partial",
       "file": "chapters/who-gets-a-vote.md",
-      "sha256": "18d010ba56e71855142ff89490f44e4a2ab22512147858bede4ee58e021ecfc0"
+      "sha256": "401946c8c16cfbd04c0e89476733ce931634511cc7e825b033ed81b63d2df25c"
     },
     {
       "id": "moloch-v3",
       "kind": "recipe",
+      "department": "governance",
       "for": "A Moloch v3 DAO (Baal, as DAOhaus deploys it): who holds its shares and loot, and what they did in it",
       "recognise": [
         "sharesToken()",
@@ -655,7 +677,7 @@
       ],
       "status": "ready",
       "file": "recipes/moloch-v3.json",
-      "sha256": "274af5920291219c7f751561a7149407ec2b531d75838934e64f317120750af4"
+      "sha256": "533bcf09479f5b34b47abeef0d0cc9b190587d32badd9507766779299fe039b3"
     }
   ]
 }

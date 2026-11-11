@@ -1,5 +1,6 @@
 ---
 id: contributing
+department: stewardship
 for: improving a chapter or a recipe, by pull request
 recognise: improve, fix this, add recipe, contribute, pull request, github
 tools: add_note

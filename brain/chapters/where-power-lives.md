@@ -1,5 +1,6 @@
 ---
 id: where-power-lives
+department: governance
 for: finding where power sits in any on-chain system, and reading it with a shape
 recognise: dao, governance, power, who holds, who controls, who decides, holders, members, votes
 tools: get_snapshot, read_chain, describe_snapshot, compute_figures, propose_spec, render_flower

@@ -1,5 +1,6 @@
 ---
 id: connect-hermes
+department: connecting
 app: hermes
 for: connecting Hermes, Nous Research's agent, to Petals, in a terminal or over ACP, and keeping it for next time
 recognise: hermes, hermes agent, nous, nous research, acp, connect, set up, install, mcp, add petals, keep petals

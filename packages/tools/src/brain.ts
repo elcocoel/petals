@@ -5,11 +5,29 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { canonicalJson, sha256Hex } from '@petal/core';
 
-export const BRAIN_INDEX_VERSION = 'brain-index/v1';
+export const BRAIN_INDEX_VERSION = 'brain-index/v2';
+
+/**
+ * The brain's departments (research/brain-departments-2026-11-11.md; Elco, 11 Nov: "The department's component
+ * is important or else it becomes just a list that goes on forever"), as Elco named them. Every chapter and
+ * recipe is in one; the doctrine is in none.
+ */
+export const BRAIN_DEPARTMENTS = [
+  'connecting',
+  'gathering',
+  'governance',
+  'money',
+  'investigation',
+  'services',
+  'stewardship',
+] as const;
+export type BrainDepartment = (typeof BRAIN_DEPARTMENTS)[number];
 
 export interface BrainEntry {
   id: string;
   kind: 'doctrine' | 'chapter' | 'recipe';
+  /** v2: the department it's in; null for the doctrine, which is in every answer */
+  department: string | null;
   /** what it's for, in words */
   for: string;
   /** what it answers to: words for a chapter, the calls a contract answers for a recipe */
@@ -53,6 +71,7 @@ export function buildBrainIndex(dir: string): BrainIndex {
   entries.push({
     id: 'doctrine',
     kind: 'doctrine',
+    department: null,
     for: headerOf(doctrine).for ?? 'what every answer holds to',
     recognise: [],
     tools: [],
@@ -69,6 +88,7 @@ export function buildBrainIndex(dir: string): BrainIndex {
     entries.push({
       id: h.id ?? name.replace(/\.md$/, ''),
       kind: 'chapter',
+      department: h.department ?? '',
       for: h.for ?? '',
       recognise: list(h.recognise),
       tools: list(h.tools),
@@ -82,10 +102,16 @@ export function buildBrainIndex(dir: string): BrainIndex {
     .filter((f) => f.endsWith('.json'))
     .sort()) {
     const text = read(`recipes/${name}`);
-    const r = JSON.parse(text) as { id: string; for: string; recognise?: { answers?: string[] } };
+    const r = JSON.parse(text) as {
+      id: string;
+      department?: string;
+      for: string;
+      recognise?: { answers?: string[] };
+    };
     entries.push({
       id: r.id,
       kind: 'recipe',
+      department: r.department ?? '',
       for: r.for,
       recognise: r.recognise?.answers ?? [],
       tools: ['get_snapshot', 'compose_view'],
@@ -99,7 +125,8 @@ export function buildBrainIndex(dir: string): BrainIndex {
 }
 
 /** What's wrong with an index against what exists: an unknown tool, a continuation that isn't a
- * chapter, an id twice, or a doctrine that names a path. Empty when it's sound. */
+ * chapter, an id twice, a chapter or recipe in no department Elco named, or a doctrine that names a path. Empty
+ * when it's sound. */
 export function brainProblems(
   index: BrainIndex,
   tools: readonly string[],
@@ -111,6 +138,10 @@ export function brainProblems(
     if (ids.has(e.id)) out.push(`${e.file}: the id ${e.id} is used twice`);
     ids.add(e.id);
     if (!e.for) out.push(`${e.file}: its header says nothing under for`);
+    if (e.kind !== 'doctrine' && !(BRAIN_DEPARTMENTS as readonly string[]).includes(e.department ?? ''))
+      out.push(
+        `${e.file}: ${e.department ? `no department ${e.department}` : 'its header names no department'} (${BRAIN_DEPARTMENTS.join(', ')})`,
+      );
   }
   const chapters = new Set(index.entries.filter((e) => e.kind === 'chapter').map((e) => e.id));
   for (const e of index.entries) {
