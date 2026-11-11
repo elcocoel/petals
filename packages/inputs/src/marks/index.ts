@@ -207,6 +207,22 @@ function typesOf(
   return drafts.map((d) => makeClaim(d, 'claim/v4')).filter((c) => validateClaim(c).ok);
 }
 
+/**
+ * A map's types alone, as readMark finds them: its chain's own words, with no lists and no logo. For the pass
+ * that adds types to a mark already kept (#97; META, 11 Nov: "only adds types to each kept mark").
+ */
+export async function readTypes(t: MarkTarget, deps: MarkDeps = {}): Promise<Claim[]> {
+  const fetchImpl = deps.fetch ?? ((...a: Parameters<Fetch>) => globalThis.fetch(...a));
+  const at = (deps.now ?? (() => new Date()))().toISOString();
+  const network = NETWORK_MARKS[t.about];
+  const chain = chainOf(network?.chain ?? t.chain);
+  const address = network ? network.address : t.address;
+  const said: SelfSaid = address
+    ? await selfSaid(fetchImpl, chain, address, network ? null : t.reader)
+    : { org: null, name: null, symbol: null, image: null };
+  return typesOf(t, chain, address, network ? null : t.reader, said, at);
+}
+
 /** Read one map's mark: the chain first, then the lists. */
 export async function readMark(t: MarkTarget, deps: MarkDeps = {}): Promise<ReadMark> {
   const fetchImpl = deps.fetch ?? ((...a: Parameters<Fetch>) => globalThis.fetch(...a));

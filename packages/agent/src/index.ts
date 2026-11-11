@@ -19,6 +19,7 @@ export {
   loadMapping,
   markMaps,
   proposalMaps,
+  typeMaps,
   valueMaps,
 } from '@petal/tools';
 /** petalApp with its options; serveApi, from @petal/agent/serve, runs it under Node. */

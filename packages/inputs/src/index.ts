@@ -156,6 +156,7 @@ export {
   pictureType,
   type ReadMark,
   readMark,
+  readTypes,
 } from './marks/index.ts';
 export { type Fetch, type ListReader, listReader } from './marks/lists.ts';
 export {

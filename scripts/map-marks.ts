@@ -3,13 +3,25 @@
 // map's address. It writes to the server's own store, so run it where the server runs:
 //   container exec petals node /app/scripts/map-marks.ts [--dry] [--only <part of a map's address>]
 // --dry reads and says, and keeps nothing. Read again, a map's mark is replaced.
+// --types only adds each kept mark's types (#97), keeping its name, symbol and logo as they are.
 import { parseArgs } from 'node:util';
-import { createContext, markMaps, serverConfig } from '@petal/agent';
+import { createContext, markMaps, serverConfig, typeMaps } from '@petal/agent';
 
 const { values } = parseArgs({
-  options: { dry: { type: 'boolean' }, only: { type: 'string' } },
+  options: { dry: { type: 'boolean' }, only: { type: 'string' }, types: { type: 'boolean' } },
 });
 const ctx = createContext(serverConfig(process.env));
+if (values.types) {
+  const t = await typeMaps(ctx, {
+    save: !values.dry,
+    ...(values.only ? { only: values.only } : {}),
+    log: (line) => console.log(line),
+  });
+  console.log(
+    `${t.maps} maps: ${t.typed} kept marks with types, ${t.unmarked} with no mark kept; ${values.dry ? 'nothing kept (--dry)' : `${t.saved} kept`}`,
+  );
+  process.exit(0);
+}
 const r = await markMaps(ctx, {
   save: !values.dry,
   ...(values.only ? { only: values.only } : {}),
