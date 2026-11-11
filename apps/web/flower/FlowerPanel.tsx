@@ -1,6 +1,6 @@
 'use client';
 // What the flower's own box shows: the flower's date, then the selected petal or the reading key, and
-// the rest one quiet click away. Before there's a flower, the shelf, or the words for why not. The flower
+// the rest one quiet click away: with a petal open, only what's about the petal (#78, 11 Nov). Before there's a flower, the shelf, or the words for why not. The flower
 // itself is the canvas under this, and its title is the box's bar, so neither is here.
 import type { PetalDetail } from '@petal/core/types';
 import type { ReactNode } from 'react';
@@ -53,11 +53,6 @@ function OpenFlower({
           {'   /   '}
           {view.date}
         </p>
-        {actions.onShelf && (
-          <Button variant="quiet" onClick={actions.onShelf}>
-            Explore another flower
-          </Button>
-        )}
       </header>
       {note}
       {view.failed ? (
@@ -77,7 +72,8 @@ function OpenFlower({
       ) : (
         <ReadingKey view={view.reading} />
       )}
-      <div className="flex flex-wrap items-center gap-x-block-gap">
+      {/* With a petal open, the box is about the petal; what's about the whole flower waits (#78). */}
+      <div hidden={Boolean(petal)} className="flex flex-wrap items-center gap-x-block-gap">
         <Button
           variant="quiet"
           pressed={section === 'reading'}
@@ -96,7 +92,7 @@ function OpenFlower({
           </TextLink>
         )}
       </div>
-      {section === 'reading' && (
+      {section === 'reading' && !petal && (
         <div>
           {view.interpretation && (
             <Interpretation reading={view.interpretation} sources={view.sources} />

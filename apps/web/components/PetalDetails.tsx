@@ -1,8 +1,12 @@
 // One petal's details (T064, Figma's "Selected petal detail" 39:924): the account, its size, what's
-// known of who it is, and, one step further in, why it looks this way. Words from lib/flower-view.ts.
+// known of who it is, and, one step further in, why it looks this way. Words from lib/flower-view.ts. In
+// the app's sizes, as the box it sits in (#78, 11 Nov: it was in the landing's).
 import type { PetalDetail } from '@petal/core/types';
 import { petalView } from '../lib/flower-view.ts';
 import { Button } from './ui/Button.tsx';
+
+/** Drafts (#78, 11 Nov): the way back from a petal to its flower, which said "Close detail" as the box did. */
+export const petalWords = { back: 'Back to the flower' } as const;
 
 export function PetalDetails({
   petal,
@@ -23,10 +27,10 @@ export function PetalDetails({
       aria-live="polite"
       className="flex min-h-detail-height flex-col items-start gap-space-4 border-l-heavy border-accent pl-space-16"
     >
-      <h3 className="m-0 type-heading wrap-anywhere">{view.heading}</h3>
+      <h3 className="m-0 type-ui font-semibold wrap-anywhere">{view.heading}</h3>
       {view.full && <p className="type-mono wrap-anywhere text-muted">{view.full}</p>}
-      <p className="type-label whitespace-pre-wrap">{view.stats}</p>
-      <p className="type-body">
+      <p className="type-ui whitespace-pre-wrap">{view.stats}</p>
+      <p className="type-ui">
         {view.says}
         {view.source && <span className="type-mono text-muted"> {view.source}</span>}
       </p>
@@ -68,8 +72,8 @@ export function PetalDetails({
         </details>
       )}
       {onClose && (
-        <Button variant="link" onClick={onClose}>
-          Close detail
+        <Button variant="quiet" onClick={onClose}>
+          {petalWords.back}
         </Button>
       )}
     </section>

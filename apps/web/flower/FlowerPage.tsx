@@ -50,7 +50,7 @@ export function FlowerPage({
         closed={!state.boxOpen}
         control={
           <Button variant="link" onClick={actions.closeBox}>
-            Close detail
+            Close
           </Button>
         }
       >

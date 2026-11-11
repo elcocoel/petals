@@ -114,7 +114,7 @@ export function FlowerAt({
         closed={!state.boxOpen}
         control={
           <Button variant="link" onClick={actions.closeBox}>
-            Close detail
+            Close
           </Button>
         }
       >
