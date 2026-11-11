@@ -112,7 +112,10 @@ function manifestsIn(root: string, extra: readonly string[]) {
   return { entries, scopes };
 }
 
-/** Check one document by its own format: the reasons it isn't one, or none. */
+/**
+ * Check one document by its own format: the reasons it isn't one, or none. Exported as mappingProblems so the
+ * file's validate-data --public says exactly what this loader says of a file (#98).
+ */
 function problems(doc: Record<string, unknown>): string[] {
   const petal = String(doc.petal);
   const v =
@@ -131,6 +134,8 @@ function problems(doc: Record<string, unknown>): string[] {
     return [`${petal} isn't a format the loader takes (snapshot, proposals, mark, value, claim)`];
   return v.ok ? [] : v.errors.slice(0, 5).map((e) => `${e.path || '/'} ${e.message}`);
 }
+
+export const mappingProblems = problems;
 
 export async function loadMapping(ctx: ToolContext, root: string, o: LoadRun): Promise<LoadReport> {
   const store = privateStore(ctx.config);
