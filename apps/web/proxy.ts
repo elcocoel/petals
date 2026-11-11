@@ -36,6 +36,7 @@ export const config = {
     '/mcp',
     '/mcp/:path*',
     '/skill.md',
+    '/setup',
     '/petal.mjs',
     '/d/:path*',
     '/s/:path*',

@@ -112,13 +112,23 @@ describe('your agents in the menu', () => {
     expect(line.endsWith('My agent key: petal_agent_k')).toBe(true);
   });
 
-  test('the one setup prompt has no key, brings the agent in through Connect an agent, and is the landing’s', async () => {
+  test('the setup paste has no key, carries every step, points at /setup, and is the landing’s', async () => {
     const { agentWords } = await import('../lib/agents.ts');
     const { landingCopy } = await import('../lib/landing-copy.ts');
     const line = agentWords.setup('https://p');
     expect(line).not.toContain('petal_agent_');
-    expect(line).toContain('https://p/skill.md');
+    // the setup skill makes no worker: that's Connect an agent's prompt, named only for later
+    expect(line).not.toContain('/skill.md');
+    expect(line).toContain('read https://p/setup first');
+    for (const step of [
+      '1. A NEAR wallet.',
+      '2. Sign in.',
+      '3. Credit.',
+      '4. My first conversation.',
+    ])
+      expect(line).toContain(step);
     expect(line).toContain(agentWords.copy);
+    expect(line).toContain('Never ask me for my recovery phrase or a private key');
     expect(landingCopy.giveToAgent.prompt('https://p')).toBe(line);
   });
 });
