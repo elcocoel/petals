@@ -92,8 +92,9 @@ const EVIDENCE: Record<string, string> = {
 
 /** Drafts (Elco changes them later). */
 export const mapClaimWords = {
-  title: "What's said",
-  folded: (n: number) => `What's said · ${n}`,
+  // Elco, 11 Nov, walk 5: "Let's call this insights"
+  title: 'Insights',
+  folded: (n: number) => `Insights · ${n}`,
   mapping: "Petals' mapping",
   method: 'method',
   basis: 'rests on',
