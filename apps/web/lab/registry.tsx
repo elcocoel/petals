@@ -40,6 +40,7 @@ import { Hero } from '../components/landing/Hero.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
 import { LandingMap } from '../components/landing/LandingMap.tsx';
 import { LiveReading } from '../components/landing/LiveReading.tsx';
+import { MapHero } from '../components/landing/MapHero.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
 import { MapList } from '../components/MapList.tsx';
@@ -595,6 +596,15 @@ export const registry: LabEntry[] = [
     ],
   },
   section('Hero', 'apps/web/components/landing/Hero.tsx', 'Hero', '66:2188', () => <Hero />),
+  {
+    id: 'MapHero',
+    group: 'Sections',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/MapHero.tsx',
+    // LANDING's lean for the new hero (11 Nov), in place at /lab/landing-hero; no Figma frame yet
+    states: [{ name: "LANDING's lean", wide: true, render: () => <MapHero /> }],
+  },
   section(
     'LiveReading',
     'apps/web/components/landing/LiveReading.tsx',
@@ -630,13 +640,26 @@ export const registry: LabEntry[] = [
     '66:2289',
     () => <Questions />,
   ),
-  section(
-    'BackIt',
-    'apps/web/components/landing/BackIt.tsx',
-    'Join the community',
-    '66:2346',
-    () => <BackIt />,
-  ),
+  {
+    ...section(
+      'BackIt',
+      'apps/web/components/landing/BackIt.tsx',
+      'Join the community',
+      '66:2346',
+      () => <BackIt />,
+    ),
+    states: [
+      {
+        name: 'as designed',
+        wide: true,
+        figmaName: 'Join the community',
+        figmaNode: '66:2346',
+        render: () => <BackIt />,
+      },
+      // LANDING's lean for the split's empty half (11 Nov), in place at /lab/landing-hero
+      { name: 'columns', wide: true, render: () => <BackIt layout="columns" /> },
+    ],
+  },
   section(
     'BuildWithUs',
     'apps/web/components/landing/BuildWithUs.tsx',
