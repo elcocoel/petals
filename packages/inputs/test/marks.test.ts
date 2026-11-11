@@ -109,11 +109,16 @@ describe('reading what the chain says', () => {
     ).toBeNull();
   });
 
-  test('ipfs and arweave through a gateway, anything else as it is', () => {
+  test('ipfs, by any gateway, through one that answers; arweave through Arweave; anything else as it is', () => {
     expect(gateway('ipfs://QmXttGpZrECX5qCyXbBQiqgQNytVGeZW5Anewvh2jc4psg')).toBe(
-      'https://ipfs.near.social/ipfs/QmXttGpZrECX5qCyXbBQiqgQNytVGeZW5Anewvh2jc4psg',
+      'https://gateway.pinata.cloud/ipfs/QmXttGpZrECX5qCyXbBQiqgQNytVGeZW5Anewvh2jc4psg',
     );
     expect(gateway('ar://abc')).toBe('https://arweave.net/abc');
+    expect(
+      gateway('https://ipfs.io/ipfs/QmXttGpZrECX5qCyXbBQiqgQNytVGeZW5Anewvh2jc4psg/logo.png'),
+    ).toBe(
+      'https://gateway.pinata.cloud/ipfs/QmXttGpZrECX5qCyXbBQiqgQNytVGeZW5Anewvh2jc4psg/logo.png',
+    );
     expect(gateway('https://x.org/a.png')).toBe('https://x.org/a.png');
   });
 });
@@ -143,7 +148,7 @@ describe('a mark: the chain first, then the lists', () => {
         { data: abiString('not a profile'), blockNumber: '0x20' },
       ],
       pages: [
-        ['https://ipfs.near.social/ipfs/', () => new Response(PNG)],
+        ['https://gateway.pinata.cloud/ipfs/', () => new Response(PNG)],
         ['https://tokens.', EMPTY_LIST],
         ['https://files.cow.fi/', EMPTY_LIST],
         ['https://api.llama.fi/', () => json([])],

@@ -303,13 +303,19 @@ export async function nearSaid(
   return out;
 }
 
-/** An address a picture can be fetched from: ipfs:// and bare CIDs through a gateway, ar:// through Arweave. */
+const IPFS = 'https://gateway.pinata.cloud/ipfs/';
+
+/**
+ * An address a picture can be fetched from: ipfs://, a bare CID or any gateway's /ipfs/ path through one gateway
+ * that answers (an IPFS path names its content, so every gateway gives the same bytes; ipfs.io and most public
+ * ones refuse scripts, 11 Nov), ar:// through Arweave, anything else as it is.
+ */
 export function gateway(url: string): string {
   const u = url.trim();
-  if (u.startsWith('ipfs://'))
-    return `https://ipfs.near.social/ipfs/${u.slice(7).replace(/^ipfs\//, '')}`;
+  if (u.startsWith('ipfs://')) return `${IPFS}${u.slice(7).replace(/^ipfs\//, '')}`;
   if (u.startsWith('ar://')) return `https://arweave.net/${u.slice(5)}`;
-  if (/^(Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{50,})(\/.*)?$/.test(u))
-    return `https://ipfs.near.social/ipfs/${u}`;
+  if (/^(Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{50,})(\/.*)?$/.test(u)) return `${IPFS}${u}`;
+  const path = /^https?:\/\/[^/]+\/ipfs\/(.+)$/.exec(u);
+  if (path) return `${IPFS}${path[1]}`;
   return u;
 }
