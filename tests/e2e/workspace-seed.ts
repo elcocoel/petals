@@ -130,11 +130,28 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
   }
   const runOf = async (id: string) =>
     (await (await wanted(await call(`/api/v1/agent/runs/${id}`, 'GET'))).json()) as Run;
+  /**
+   * The flower a conversation drew: the run's, or its last flower event; if it drew none, a stop that
+   * says which conversation and the run's last error, not a TypeError further on (PANEL, 11 Nov).
+   */
+  const drawnIn = async (id: string): Promise<FlowerResult> => {
+    const run = await runOf(id);
+    const drawn =
+      run.flower ??
+      (run.events.findLast((e) => e.event === 'flower')?.data as FlowerResult | undefined);
+    if (drawn) return drawn;
+    const why = run.events.findLast((e) => e.event === 'error')?.data as
+      | { code?: string; message?: string }
+      | undefined;
+    throw new Error(
+      `seed: conversation ${id} drew no flower${why ? ` (${why.code}: ${why.message})` : ''}. The stub's recorded run draws it on the yes, so a tool that couldn't answer stops it there; its events are at /api/v1/agent/runs/${id}.`,
+    );
+  };
 
   // 1. A question, the agent asking, a yes and a flower, on the default.
   const first = await say("Who stands behind NEAR's validators?");
   await say('yes', { run_id: first });
-  const flower = (await runOf(first)).flower as FlowerResult;
+  const flower = await drawnIn(first);
 
   // 2. The same again on another pick, and a second flower: one conversation, two shapes. The stub only
   // replays one flower, so the second is the first with fewer petals, stored as the agent's would be.
