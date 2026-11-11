@@ -11,6 +11,7 @@ import {
   DEFAULT_VIEW,
   sha256Hex,
   TOOLS_VERSION,
+  validateMark,
 } from '@petal/core';
 import type { Claim } from '@petal/core/types';
 import { type Context, Hono } from 'hono';
@@ -21,11 +22,11 @@ import { privateStore, specBody } from '../drafts.ts';
 import { fromThrown, isToolError, toolError } from '../errors.ts';
 import { freshGate } from '../fresh.ts';
 import { LiveHub } from '../live.ts';
-import { mapsOf, mapViews, namesKey } from '../map.ts';
+import { type CardMark, cardMark, mapsOf, mapViews, namesKey } from '../map.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
 import { findTool } from '../registry.ts';
 import { brainOf } from '../tools/brain.ts';
-import { findSnapshot } from '../tools/shared.ts';
+import { base, findSnapshot } from '../tools/shared.ts';
 import type { ToolContext } from '../types.ts';
 import { viewAsked, viewOfPerson } from '../views.ts';
 import {
@@ -362,17 +363,29 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   });
   // One card per map (Elco, 10 Nov: "maps that map the same address need to come together as versions of
   // the same map"): each address, its readings (the sediments) newest first, and each reading's drawings.
+  /** Each map's mark (board #85), by the map's address: its name, symbol and logo, each with where it came from. */
+  async function marks(): Promise<Map<string, CardMark>> {
+    const site = base(ctx);
+    const out = new Map<string, CardMark>();
+    for (const r of await privateStore(ctx.config).mark.list()) {
+      const m = validateMark(JSON.parse(r.body));
+      if (m.ok) out.set(r.about, cardMark(m.value, site));
+    }
+    return out;
+  }
   app.get('/api/v1/maps', limit, async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
-    return respond(c, { maps: mapsOf(await mapViews(await forViewer(c), view)) });
+    return respond(c, { maps: mapsOf(await mapViews(await forViewer(c), view), await marks()) });
   });
   // One map's card, by its id (URL-encoded, since it holds colons), for its page.
   app.get('/api/v1/maps/:id', limit, async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
     const id = aboutKey(c.req.param('id'));
-    const map = mapsOf(await mapViews(await forViewer(c), view)).find((m) => m.id === id);
+    const map = mapsOf(await mapViews(await forViewer(c), view), await marks()).find(
+      (m) => m.id === id,
+    );
     return respond(
       c,
       map ? { map } : versioned(toolError('not_found', 'No map under that address.')),

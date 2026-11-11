@@ -61,6 +61,14 @@ export {
   SEAM_VERSION,
   type Standing,
 } from './layers.ts';
+export {
+  MARK_VERSION,
+  type Mark,
+  type MarkLogo,
+  type MarkSaid,
+  type MarkStatus,
+  validateMark,
+} from './marks.ts';
 export { NotImplementedError, notImplemented } from './not-implemented.ts';
 export {
   baseFee,

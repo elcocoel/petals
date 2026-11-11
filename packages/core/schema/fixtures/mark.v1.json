@@ -1,0 +1,41 @@
+{
+  "petal": "mark/v1",
+  "about": "eip155:1:0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+  "name": {
+    "value": "Uniswap",
+    "status": "verified",
+    "source": "chain",
+    "ref": "name() on eip155:1:0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+    "verified_by": [
+      "uniswap: Uniswap Labs Default v22.34.0 (https://tokens.uniswap.org)",
+      "cow: CoW Swap v7.12.0 (https://files.cow.fi/tokens/CowSwap.json)",
+      "coingecko: CoinGecko v1638.0.0 (https://tokens.coingecko.com/uniswap/all.json)",
+      "trustwallet: https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/info.json",
+      "defillama: https://api.llama.fi/protocols (Uniswap V3)"
+    ],
+    "at": "2026-11-11T13:08:51.147Z"
+  },
+  "symbol": {
+    "value": "UNI",
+    "status": "verified",
+    "source": "chain",
+    "ref": "symbol() on eip155:1:0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+    "verified_by": [
+      "uniswap: Uniswap Labs Default v22.34.0 (https://tokens.uniswap.org)",
+      "cow: CoW Swap v7.12.0 (https://files.cow.fi/tokens/CowSwap.json)",
+      "coingecko: CoinGecko v1638.0.0 (https://tokens.coingecko.com/uniswap/all.json)",
+      "trustwallet: https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/info.json",
+      "defillama: https://api.llama.fi/protocols (Uniswap V3)"
+    ],
+    "at": "2026-11-11T13:08:51.147Z"
+  },
+  "logo": {
+    "sha256": "8eaddfb8ec20f7792036f88e88ebf216d5b8eb5e09c4dbfd3c5790ce6f7dc001",
+    "media_type": "image/png",
+    "status": "verified",
+    "source": "cow",
+    "ref": "https://files.cow.fi/token-lists/images/1/0x1f9840a85d5af5bf1d1762f925bdaddc4201f984/logo.png",
+    "at": "2026-11-11T13:08:51.147Z"
+  },
+  "read_at": "2026-11-11T13:08:51.147Z"
+}

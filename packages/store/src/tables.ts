@@ -135,6 +135,14 @@ export interface UsageRow {
   billed_usd: number | null;
   reconciled_at: string | null;
 }
+/** A map's mark/v1 (25): its name, symbol and logo, each with where it came from. */
+export interface MarkRow {
+  /** the map's address, as its card's id */
+  about: string;
+  /** the mark/v1, JSON */
+  body: string;
+  read_at: string;
+}
 /** A picture, by the sha256 of its bytes, kept as base64 (15). */
 export interface MediaRow {
   sha256: string;
@@ -1055,6 +1063,21 @@ export function tables(db: Db) {
           id,
         );
       },
+    },
+
+    /** Each map's mark (25), by the map's address: read again, it's replaced. */
+    mark: {
+      put: async (r: MarkRow) => {
+        await db.run(
+          `INSERT INTO mark (about, body, read_at) VALUES (?, ?, ?)
+           ON CONFLICT (about) DO UPDATE SET body = excluded.body, read_at = excluded.read_at`,
+          r.about,
+          r.body,
+          r.read_at,
+        );
+      },
+      get: (about: string) => db.get<MarkRow>('SELECT * FROM mark WHERE about = ?', about),
+      list: () => db.all<MarkRow>('SELECT * FROM mark ORDER BY about'),
     },
 
     /** Pictures by their sha256: put-if-absent, never changed (15). */

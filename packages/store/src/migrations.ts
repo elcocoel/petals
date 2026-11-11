@@ -474,6 +474,16 @@ export const MIGRATIONS: readonly string[] = [
   `
   ALTER TABLE job ADD COLUMN part_of TEXT;
   `,
+  // 25: what tells one organisation on the map from another (board #85, Elco's pick, 11 Nov: the chain first,
+  // then curated lists): one mark/v1 per map, named by the map's address, its name, symbol and logo each
+  // saying where it came from. Its logo is a picture in media. Read again, a map's mark is replaced.
+  `
+  CREATE TABLE mark (
+    about TEXT PRIMARY KEY,
+    body TEXT NOT NULL,
+    read_at TEXT NOT NULL
+  );
+  `,
 ];
 
 /**

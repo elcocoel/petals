@@ -30,6 +30,7 @@ export type {
   JobRow,
   LayerRow,
   LedgerRow,
+  MarkRow,
   MediaRow,
   NoteRow,
   PersonProfileRow,

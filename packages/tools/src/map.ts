@@ -2,6 +2,8 @@
 // every view stored on this site, each with its reading, its name, its date and who made it. Read-only and
 // public: GET /api/v1/map hands it over whole, list_flowers and find_target search it before a fresh read.
 // A view's spec is content-addressed, so its reading never changes: each is read once per process.
+
+import type { Mark, MarkLogo, MarkSaid } from '@petal/core';
 import {
   canonicalJson,
   DEFAULT_VIEW,
@@ -172,6 +174,35 @@ export interface MapReading {
   drawings: MapDrawing[];
 }
 
+/**
+ * What tells one organisation from another on its card (board #85): its name, its token's symbol and its logo,
+ * each saying where it came from (mark/v1), the logo with where this site serves it.
+ */
+export interface CardMark {
+  name: MarkSaid | null;
+  symbol: MarkSaid | null;
+  logo: (MarkLogo & { url: string }) | null;
+  read_at: string;
+}
+
+const EXTENSION: Record<MarkLogo['media_type'], string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+};
+
+/** A stored mark as its card carries it: the logo at /api/v1/media/<sha256>.<ext>, on this site. */
+export function cardMark(m: Mark, site: string): CardMark {
+  return {
+    name: m.name,
+    symbol: m.symbol,
+    logo: m.logo
+      ? { ...m.logo, url: `${site}/api/v1/media/${m.logo.sha256}.${EXTENSION[m.logo.media_type]}` }
+      : null,
+    read_at: m.read_at,
+  };
+}
+
 /** One map: everything read about one address (Elco, 10 Nov), as one card. */
 export interface MapCard {
   /** the address, in one form: chain:address, or chain:population for a whole network */
@@ -187,6 +218,8 @@ export interface MapCard {
   picture: string;
   view_url: string;
   keys: MapView['keys'];
+  /** its organisation's name, symbol and logo, each with where it came from; null until it's read (#85) */
+  mark: CardMark | null;
   /** its sediments, the newest first by their date */
   readings: MapReading[];
 }
@@ -195,7 +228,10 @@ export interface MapCard {
  * The map's views as maps: one card per address, the newest first by its newest drawing. The holders and the
  * delegates of one token are two readings of one map; two drawings of one reading sit under that reading.
  */
-export function mapsOf(views: readonly MapView[]): MapCard[] {
+export function mapsOf(
+  views: readonly MapView[],
+  marks: ReadonlyMap<string, CardMark> = new Map(),
+): MapCard[] {
   const byMap = new Map<string, MapView[]>();
   for (const v of views) byMap.set(v.map, [...(byMap.get(v.map) ?? []), v]);
   const drawing = (v: MapView): MapDrawing => ({
@@ -236,6 +272,7 @@ export function mapsOf(views: readonly MapView[]): MapCard[] {
         picture: newest.picture,
         view_url: newest.view_url,
         keys: newest.keys,
+        mark: marks.get(id) ?? null,
         readings,
       },
     });

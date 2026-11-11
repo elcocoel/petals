@@ -16,6 +16,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { privateStore } from '../src/drafts.ts';
 import { httpApp } from '../src/http/app.ts';
 import { type MapView, mapsOf, mapViews, searchMap } from '../src/map.ts';
+import { markMaps } from '../src/marks.ts';
 import { callTool } from '../src/registry.ts';
 import { rig, type TestRig } from './helpers.ts';
 
@@ -218,6 +219,90 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(card?.readings[1]?.drawings.map((d) => d.sha)).toEqual(['a', 'd']);
     // nobody named the other one
     expect(maps[1]?.name).toBeNull();
+  });
+
+  test("a map's card carries its mark (board #85): each part with where it came from, its logo on this site", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const store = privateStore(r.ctx.config);
+    const at = '2026-11-11T13:00:00.000Z';
+    const logo = 'a'.repeat(64);
+    const mark = {
+      petal: 'mark/v1',
+      about: `eip155:1:${DAO}`,
+      name: {
+        value: 'Moloch DAO',
+        status: 'self-declared',
+        source: 'daohaus',
+        ref: `https://data.daohaus.club/dao/${DAO}`,
+        at,
+      },
+      symbol: null,
+      logo: {
+        sha256: logo,
+        media_type: 'image/png',
+        status: 'self-declared',
+        source: 'daohaus',
+        ref: 'ipfs://Qm…',
+        at,
+      },
+      read_at: at,
+    };
+    await store.mark.put({ about: mark.about, body: JSON.stringify(mark), read_at: at });
+    // a stored mark that isn't one is left off, never shown half
+    await store.mark.put({ about: 'eip155:1:0xbroken', body: '{"petal":"mark/v1"}', read_at: at });
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    const { maps } = (await (await app.request('/api/v1/maps')).json()) as Out;
+    expect(maps[0].mark).toEqual({
+      name: mark.name,
+      symbol: null,
+      logo: {
+        ...mark.logo,
+        url: `${(r.ctx.config.apiBase ?? '').replace(/\/+$/, '')}/api/v1/media/${logo}.png`,
+      },
+      read_at: at,
+    });
+    const one = await app.request(`/api/v1/maps/${encodeURIComponent(`eip155:1:${DAO}`)}`);
+    expect(((await one.json()) as Out).map.mark).toEqual(maps[0].mark);
+  });
+
+  test("the run over the shared map keeps each map's mark and its logo; --dry keeps nothing", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 7, 7]);
+    const fetchImpl = (async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.startsWith('https://data.daohaus.club/dao/'))
+        return new Response(
+          JSON.stringify([{ name: 'Moloch DAO', avatarImg: 'https://img.example/moloch.png' }]),
+        );
+      if (url === 'https://img.example/moloch.png') return new Response(PNG);
+      return new Response('not found', { status: 404 });
+    }) as typeof fetch;
+    const store = privateStore(r.ctx.config);
+    const dry = await markMaps(r.ctx, { save: false, fetch: fetchImpl });
+    expect(dry).toMatchObject({ maps: 1, saved: 0, named: 1, logos: 1 });
+    expect(await store.mark.get(`eip155:1:${DAO}`)).toBeFalsy();
+
+    const done = await markMaps(r.ctx, { fetch: fetchImpl });
+    expect(done).toMatchObject({ maps: 1, saved: 1, named: 1, symbols: 0, logos: 1 });
+    const row = await store.mark.get(`eip155:1:${DAO}`);
+    const mark = JSON.parse(row?.body ?? '{}');
+    expect(mark.name).toMatchObject({
+      value: 'Moloch DAO',
+      source: 'daohaus',
+      status: 'self-declared',
+    });
+    const picture = await store.media.get(mark.logo.sha256);
+    expect(picture).toMatchObject({ type: 'image/png', person: null });
+    expect(Buffer.from(picture?.body ?? '', 'base64')).toEqual(Buffer.from(PNG));
+  });
+
+  test('a map with no mark read yet says so: null', async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    expect(mapsOf(await mapViews(r.ctx))[0]?.mark).toBeNull();
   });
 
   test('GET /api/v1/maps gives one card per address, and each drawing says its map', async () => {

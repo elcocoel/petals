@@ -12,6 +12,8 @@ import { createAgentRoutes } from './routes.ts';
 import { startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
 
+/** Every map's mark, read where the server runs: scripts/map-marks.ts (board #85). */
+export { createContext, markMaps } from '@petal/tools';
 /** petalApp with its options; serveApi, from @petal/agent/serve, runs it under Node. */
 export { buildPetalApp, type PetalAppOptions } from './app.ts';
 /** The daily spend ledger; fileLedger is for scripts that run the agent outside the server (T060). */
@@ -72,6 +74,7 @@ export {
   type RunSummary,
   sqliteRunStore,
 } from './runs.ts';
+export { serverConfig } from './serve.ts';
 export { flowersOf } from './thread.ts';
 /** How wallets are sealed and found; scripts/bind-wallet.ts adds one to a person. */
 export { parseWalletKey, type WalletCipher, walletCipher } from './wallet-cipher.ts';
