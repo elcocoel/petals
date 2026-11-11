@@ -12,7 +12,10 @@ describe('the far wave and the lines, on every map', () => {
     expect(text('landscape/LandscapeCanvas.tsx')).toMatch(/lines = 'focus',/);
   });
 
-  test("every map takes its maps' own marks", () => {
-    expect(text('landscape/land.ts')).toMatch(/marked\(landscapeOf\(night\), view\)/);
+  test("every map takes its maps' own marks, its cards asked for with the map, not after it", () => {
+    const land = text('landscape/land.ts');
+    expect(land).toMatch(/marked\(landscapeOf\(night\), cards\)/);
+    expect(land).toMatch(/const cards = mapList\(view\);\n\s+const night = await liveNight/);
+    expect(land).toMatch(/const cards = mapList\(view\);\n\s+const live = await liveMap/);
   });
 });
