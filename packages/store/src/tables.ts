@@ -329,6 +329,11 @@ export interface AgentRow {
   last_seen: string;
   /** the worker that asked, when it waits as one (migration 20): each window or sub-agent of this name */
   worker?: string | null;
+  /**
+   * What it says it can do, in its own words (migration 26; Elco's swarm lean 2): kept with the worker that said
+   * it, or with the agent when it calls with no worker (a connector's take_job); the latest wins, null if unsaid.
+   */
+  can?: string | null;
   /** when the person disconnected it; null while connected */
   disconnected_at?: string | null;
 }
@@ -1611,29 +1616,40 @@ export function tables(db: Db) {
     agent: {
       /** The name a person's link was used with, seen now; its case is kept as last given. So is its worker. */
       seen: async (r: AgentRow) => {
+        // with no worker, what it says it can do is the agent's own; a worker's is its own (migration 26)
+        const own = r.worker ? undefined : r.can;
         await db.run(
-          `INSERT INTO agent (owner, key, name, last_seen) VALUES (?, ?, ?, ?)
-           ON CONFLICT (owner, key) DO UPDATE SET name = excluded.name, last_seen = excluded.last_seen`,
+          `INSERT INTO agent (owner, key, name, last_seen, can) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT (owner, key) DO UPDATE SET name = excluded.name, last_seen = excluded.last_seen${own !== undefined ? ', can = excluded.can' : ''}`,
           r.owner,
           r.name.toLowerCase(),
           r.name,
           r.last_seen,
+          own ?? null,
         );
         if (!r.worker) return;
         await db.run(
-          `INSERT INTO agent_worker (owner, key, worker, first_seen, last_seen) VALUES (?, ?, ?, ?, ?)
-           ON CONFLICT (owner, key, worker) DO UPDATE SET last_seen = excluded.last_seen`,
+          `INSERT INTO agent_worker (owner, key, worker, first_seen, last_seen, can) VALUES (?, ?, ?, ?, ?, ?)
+           ON CONFLICT (owner, key, worker) DO UPDATE SET last_seen = excluded.last_seen${r.can !== undefined ? ', can = excluded.can' : ''}`,
           r.owner,
           r.name.toLowerCase(),
           r.worker,
           r.last_seen,
           r.last_seen,
+          r.can ?? null,
         );
       },
       /** The workers of the person's connected agents, each agent's in the order they first came (migration 20). */
       workers: (owner: string) =>
-        db.all<{ key: string; worker: string; first_seen: string; last_seen: string }>(
-          `SELECT agent_worker.key, agent_worker.worker, agent_worker.first_seen, agent_worker.last_seen
+        db.all<{
+          key: string;
+          worker: string;
+          first_seen: string;
+          last_seen: string;
+          can: string | null;
+        }>(
+          `SELECT agent_worker.key, agent_worker.worker, agent_worker.first_seen, agent_worker.last_seen,
+                  agent_worker.can
            FROM agent_worker JOIN agent ON agent.owner = agent_worker.owner AND agent.key = agent_worker.key
            WHERE agent_worker.owner = ? AND agent.disconnected_at IS NULL
            ORDER BY agent_worker.key, agent_worker.first_seen, agent_worker.worker`,
@@ -1642,7 +1658,7 @@ export function tables(db: Db) {
       /** The person's connected agents, the last seen first. */
       list: (owner: string) =>
         db.all<AgentRow>(
-          'SELECT owner, name, last_seen FROM agent WHERE owner = ? AND disconnected_at IS NULL ORDER BY last_seen DESC',
+          'SELECT owner, name, last_seen, can FROM agent WHERE owner = ? AND disconnected_at IS NULL ORDER BY last_seen DESC',
           owner,
         ),
       get: (owner: string, name: string) =>

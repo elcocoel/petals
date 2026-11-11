@@ -192,6 +192,7 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
       as?: unknown;
       worker?: unknown;
       wait_s?: unknown;
+      can?: unknown;
     } | null;
     const name = typeof body?.as === 'string' ? body.as.trim() : '';
     if (!name || name.length > AGENT_NAME_MAX) {
@@ -217,7 +218,9 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
       typeof body?.wait_s === 'number' && body.wait_s >= 0 ? body.wait_s : WAIT_DEFAULT_S;
     const waitMs = Math.min(asked, WAIT_MAX_S) * 1000;
     const signal = c.req.raw.signal;
-    await store.agent.seen({ owner, name, worker, last_seen: now() });
+    // what this worker says it can do, in its own words, each wait (swarm lean 2): the latest wins, null if unsaid
+    const can = typeof body?.can === 'string' && body.can.trim() ? body.can.trim() : null;
+    await store.agent.seen({ owner, name, worker, last_seen: now(), can });
     presence.enter(owner, name, worker);
     try {
       const deadline = clock() + waitMs;
@@ -359,6 +362,8 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
             presence.waiting(owner, a.name, w.worker) ||
             (i === 0 && presence.waiting(owner, a.name, null)),
           last_seen: w.last_seen,
+          // what it says it can do, in its own words (swarm lean 2), or null
+          can: w.can,
           job: job ? { id: job.id, title: job.title, exploration: job.exploration } : null,
         };
       }),
@@ -375,10 +380,15 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
  * its only entry, as before workers.
  */
 export function workersOf(
-  a: { name: string; last_seen: string },
-  workers: readonly { key: string; worker: string; last_seen: string }[],
-): { n: number; worker: string | null; last_seen: string }[] {
+  a: { name: string; last_seen: string; can?: string | null },
+  workers: readonly { key: string; worker: string; last_seen: string; can?: string | null }[],
+): { n: number; worker: string | null; last_seen: string; can: string | null }[] {
   const own = workers.filter((w) => w.key === a.name.toLowerCase());
-  if (!own.length) return [{ n: 1, worker: null, last_seen: a.last_seen }];
-  return own.map((w, i) => ({ n: i + 1, worker: w.worker, last_seen: w.last_seen }));
+  if (!own.length) return [{ n: 1, worker: null, last_seen: a.last_seen, can: a.can ?? null }];
+  return own.map((w, i) => ({
+    n: i + 1,
+    worker: w.worker,
+    last_seen: w.last_seen,
+    can: w.can ?? a.can ?? null,
+  }));
 }
