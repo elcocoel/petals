@@ -1,0 +1,75 @@
+{
+  "petal": "spec/v1",
+  "network": {
+    "id": "erc20-votes",
+    "chain": "eip155:100",
+    "population": "erc20-votes-gnosis-0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6",
+    "params": {
+      "chain": "gnosis",
+      "token": "0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6"
+    }
+  },
+  "snapshot": {
+    "sha256": "d9542b40672f1ffdb7d4bc4c0724615d55e5458cc2576fd6332e9e22f23a24e3",
+    "as_of": "2026-11-09T00:47:40Z",
+    "block_height": 49181976
+  },
+  "labels": "none",
+  "selection": {
+    "measure": "delegated_votes",
+    "petals": 60,
+    "tail": {
+      "group": true,
+      "label": "everyone else"
+    }
+  },
+  "encodings": {
+    "width": {
+      "by": "share",
+      "scale": "log",
+      "max_ratio": 2,
+      "meaning": "share of delegated votes, compressed into a band",
+      "sources": [
+        "erc20-votes-logs",
+        "erc20-votes-state"
+      ]
+    },
+    "height": {
+      "by": "share",
+      "scale": "sqrt",
+      "meaning": "square root of share of delegated votes",
+      "sources": [
+        "erc20-votes-logs",
+        "erc20-votes-state"
+      ]
+    },
+    "colour": {
+      "by": "kind",
+      "meaning": "every delegate is an address of unknown kind",
+      "sources": [
+        "erc20-votes-logs"
+      ]
+    },
+    "outline": {
+      "by": "identity_status",
+      "meaning": "solid when a source names the address and the name is self-declared; none when no source names it",
+      "sources": [
+        "erc20-votes-logs"
+      ]
+    },
+    "segments": null,
+    "order": {
+      "by": "measure_desc",
+      "meaning": "largest delegated votes first, clockwise from the top",
+      "sources": [
+        "erc20-votes-logs",
+        "erc20-votes-state"
+      ]
+    }
+  },
+  "convention": {
+    "id": "default/v1",
+    "variation_of": null,
+    "changes": []
+  }
+}

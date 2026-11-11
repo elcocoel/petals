@@ -9,7 +9,7 @@ import type { CanvasHit } from '../lib/panel-view.ts';
 import { keepCursor } from '../viewmodels/useFloatBoxes.ts';
 import type { HoverWay } from './hover.ts';
 import type { FlowerReading } from './model.ts';
-import type { FakeRelations, PetalOutlines } from './scene.ts';
+import type { FakeRelations, PetalLook } from './scene.ts';
 import { useFlowerCanvas } from './useFlowerCanvas.ts';
 
 export function FlowerCanvas({
@@ -17,7 +17,7 @@ export function FlowerCanvas({
   reading,
   hover = 'dock',
   relations = null,
-  outlines = null,
+  look = null,
   scatter = false,
   probe = false,
   readout = false,
@@ -29,8 +29,8 @@ export function FlowerCanvas({
   reading: FlowerReading | null;
   hover?: HoverWay;
   relations?: FakeRelations | null;
-  /** Each petal's outline, by id: only the lab's bench draws them until Elco has seen them. */
-  outlines?: PetalOutlines | null;
+  /** The art direction's look (#76): only the lab hands one until Elco has seen it. */
+  look?: PetalLook | null;
   scatter?: boolean;
   probe?: boolean;
   /** The tiny zoom and share in the corner: an instrument for tuning. */
@@ -42,8 +42,8 @@ export function FlowerCanvas({
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const options = useMemo(
-    () => ({ reading, hover, relations, outlines, scatter, probe, readout }),
-    [reading, hover, relations, outlines, scatter, probe, readout],
+    () => ({ reading, hover, relations, look, scatter, probe, readout }),
+    [reading, hover, relations, look, scatter, probe, readout],
   );
   useFlowerCanvas(svg, options, { selected, onPick });
   return (
