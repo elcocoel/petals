@@ -346,6 +346,8 @@ export function useWorkspace(props: {
 
   return {
     state: {
+      /** This conversation, by its run or another door's id: where a note about a petal is kept. */
+      conversationRef: runId ?? elsewhereRef ?? null,
       rows: shownRows,
       composer,
       panel,

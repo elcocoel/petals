@@ -43,6 +43,7 @@ import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
 import { UseAnywhere } from '../components/landing/UseAnywhere.tsx';
 import { Markdown } from '../components/Markdown.tsx';
+import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
 import { PublishFlow } from '../components/PublishFlow.tsx';
 import { QuotePanel } from '../components/QuotePanel.tsx';
@@ -2307,6 +2308,21 @@ export const registry: LabEntry[] = [
             href="#flowertile"
           />
         ),
+      },
+    ],
+  },
+  {
+    id: 'PetalClaims',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/PetalClaims.tsx',
+    states: [
+      // as this browser is: nothing for a visitor; for someone signed in, what they've said and the field
+      {
+        name: 'as this browser is',
+        wide: true,
+        render: () => <PetalClaims account="near:mainnet:astro-stakers.poolv1.near" />,
       },
     ],
   },

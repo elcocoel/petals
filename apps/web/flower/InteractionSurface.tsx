@@ -187,6 +187,7 @@ export function InteractionSurface({
               onOpenStored: actions.openStored,
               onStarter: actions.startFrom,
             }}
+            conversation={state.conversationRef}
           />
         )}
       </FloatBox>
