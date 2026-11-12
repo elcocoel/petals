@@ -13,7 +13,7 @@
 // from the indexer (GET /v1/tx/{hash}), never from the receipt. The waits ask a few times, a moment apart,
 // and only after the person pressed Publish. lib/near-social.ts holds the data and lib/lobby-view.ts the words.
 import { useCallback, useState } from 'react';
-import { fastfsServes, readSocialTx, saveMyProfile } from '../lib/agent-client.ts';
+import { fastfsServes, readKeptPicture, readSocialTx, saveMyProfile } from '../lib/agent-client.ts';
 import type { EditPhase, ProfileEditorView, SocialState } from '../lib/lobby-view.ts';
 import { editorWords, PUBLISH_TO_NEAR_SOCIAL, shownAccount } from '../lib/lobby-view.ts';
 import {
@@ -24,6 +24,7 @@ import {
   fastfsSimple,
   fastfsUri,
   fastfsUrl,
+  isPetalsMedia,
   KV_METHOD,
   keptAvatar,
   type PetalsProfile,
@@ -128,7 +129,12 @@ export function useProfileEditor(
   /** Petals' own copy as it's kept; null before it keeps one. */
   kept: PetalsProfile | null,
   reload: () => Promise<void>,
-): { open: (() => void) | undefined; view: ProfileEditorView | null; saved: boolean } {
+): {
+  open: (() => void) | undefined;
+  view: ProfileEditorView | null;
+  saved: boolean;
+  published: boolean;
+} {
   const profile = social.kind === 'profile' ? social.profile : null;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<ProfileDraft>(draftOf(null));
@@ -140,6 +146,7 @@ export function useProfileEditor(
   const [phase, setPhase] = useState<EditPhase>('editing');
   const [problem, setProblem] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [published, setPublished] = useState(false);
 
   const open = useCallback(() => {
     setDraft(draftOf(profile));
@@ -147,6 +154,7 @@ export function useProfileEditor(
     setPhase('editing');
     setProblem(null);
     setSaved(false);
+    setPublished(false);
     setEditing(true);
   }, [profile]);
 
@@ -162,6 +170,7 @@ export function useProfileEditor(
       await reload();
       setEditing(false);
       setSaved(true);
+      setPublished(false);
       setPhase('editing');
     } catch (e) {
       setProblem(editorWords.notKept(message(e)));
@@ -177,11 +186,22 @@ export function useProfileEditor(
         throw new Stop(editorWords.refused);
       });
       if (wallet !== account) throw new Stop(editorWords.otherWallet(wallet, account));
+      // the picture to store: a new one, or the one Petals keeps at its own address (a fastfs:// one is
+      // on NEAR Social already, so it stays as it is)
+      let bytes = picture.bytes;
+      let mime = picture.mime;
+      if (!bytes && picture.src && isPetalsMedia(picture.src)) {
+        const stored = await readKeptPicture(picture.src).catch((e) => {
+          throw new Stop(editorWords.notKept(message(e)));
+        });
+        bytes = stored.bytes;
+        mime = stored.mime;
+      }
       let avatar: string | null = null;
-      if (picture.bytes && picture.mime) {
+      if (bytes && mime) {
         setPhase('picturing');
-        const path = fastfsPath(await sha256Hex(picture.bytes), picture.mime);
-        const hash = await send(FASTFS_METHOD, fastfsSimple(path, picture.mime, picture.bytes));
+        const path = fastfsPath(await sha256Hex(bytes), mime);
+        const hash = await send(FASTFS_METHOD, fastfsSimple(path, mime, bytes));
         setPhase('storing');
         accepted(await confirmed(hash));
         if (!(await served(fastfsUrl(account, path)))) throw new Stop(editorWords.slow);
@@ -191,15 +211,18 @@ export function useProfileEditor(
       const hash = await send(KV_METHOD, profileArgs(profile, draft, avatar));
       setPhase('checking');
       accepted(await confirmed(hash));
+      // Petals keeps what was published, the picture at its fastfs:// address, so the two say the same
+      await saveMyProfile(toPetals(draft, avatar ?? kept?.avatar ?? keptAvatar(picture.src), kept));
       await reload();
       setEditing(false);
-      setSaved(true);
+      setSaved(false);
+      setPublished(true);
       setPhase('editing');
     } catch (e) {
       setProblem(e instanceof Stop ? e.message : editorWords.refused);
       setPhase('failed');
     }
-  }, [account, picture, profile, draft, reload]);
+  }, [account, picture, profile, draft, kept, reload]);
 
   const view: ProfileEditorView | null =
     editing && account
@@ -239,5 +262,5 @@ export function useProfileEditor(
 
   // Opening needs an account whose profile has been read: a profile, or none there yet.
   const canOpen = account && (social.kind === 'profile' || social.kind === 'none');
-  return { open: canOpen ? open : undefined, view, saved };
+  return { open: canOpen ? open : undefined, view, saved, published };
 }

@@ -15,12 +15,15 @@ export function Profile({
   social,
   onEdit,
   saved,
+  published,
 }: {
   social: SocialState;
   /** Opens the editor: Edit with a profile, Create without one. */
   onEdit?: () => void;
-  /** The person just published a change and NEAR Social took it. */
+  /** The person just saved a change into Petals. */
   saved?: boolean;
+  /** The person just published it and NEAR Social took it. */
+  published?: boolean;
 }) {
   const profile = social.kind === 'profile' ? social.profile : null;
   return (
@@ -63,6 +66,12 @@ export function Profile({
         <p className="my-0 flex flex-wrap items-center gap-space-8">
           <Badge tone="accent">{editorWords.saved}</Badge>
           <span className="type-caption">{editorWords.savedLine}</span>
+        </p>
+      )}
+      {published && (
+        <p className="my-0 flex flex-wrap items-center gap-space-8">
+          <Badge tone="accent">{editorWords.published}</Badge>
+          <span className="type-caption">{editorWords.publishedLine}</span>
         </p>
       )}
       {social.kind === 'none' && (

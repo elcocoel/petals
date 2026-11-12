@@ -101,6 +101,7 @@ export function useLobby() {
       social: profile.social,
       edit: editor.open,
       saved: editor.saved,
+      published: editor.published,
     },
     editor: editor.view,
     funds,

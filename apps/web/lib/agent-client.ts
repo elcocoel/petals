@@ -554,6 +554,18 @@ export async function readSocialTx(hash: string): Promise<unknown> {
   return res.json();
 }
 
+/** A picture Petals keeps (GET /api/v1/media/<sha256>.<ext>), as bytes, to store on FastFS when publishing. */
+export async function readKeptPicture(
+  url: string,
+): Promise<{ bytes: Uint8Array<ArrayBuffer>; mime: string }> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`the picture couldn't be read (${res.status})`);
+  return {
+    bytes: new Uint8Array(await res.arrayBuffer()),
+    mime: res.headers.get('content-type') ?? 'image/webp',
+  };
+}
+
 /** Whether FastFS serves a stored file yet. Asked with a fresh query each time: its CDN keeps a 404. */
 export async function fastfsServes(url: string, fresh: string): Promise<boolean> {
   const res = await fetch(`${url}?v=${encodeURIComponent(fresh)}`);

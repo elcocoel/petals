@@ -105,6 +105,10 @@ export const editorWords = {
   checking: 'Checking NEAR Social has it…',
   saved: 'Saved',
   savedLine: 'Saved in Petals.',
+  /** After Publish went through: NEAR Social has it (Elco, 12 Nov: "make sure that we are connected to near
+   * social that it's not test net anymore"). */
+  published: 'Published',
+  publishedLine: 'On NEAR Social now, where anyone can see it.',
   notSaved: 'Not saved',
   notKept: (why: string) => `Petals didn’t keep it: ${why}`,
   refused: 'Your wallet didn’t send it, so nothing changed.',
@@ -117,9 +121,10 @@ export const editorWords = {
 
 /**
  * Publish to NEAR Social, on or off (Elco, 10 Nov: "test look and feel for free and then rig to mainnet
- * effortlessly later"): off until it's set up on mainnet, with Elco there for the first run.
+ * effortlessly later"): on since 12 Nov, on mainnet (Elco: "make sure that we are connected to near social
+ * that it's not test net anymore"), the person's own wallet signing each write.
  */
-export const PUBLISH_TO_NEAR_SOCIAL = false;
+export const PUBLISH_TO_NEAR_SOCIAL = true;
 
 /** Where saving or publishing is. */
 export type EditPhase =

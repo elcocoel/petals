@@ -2603,6 +2603,20 @@ export const registry: LabEntry[] = [
         ),
       },
       {
+        name: 'just published to NEAR Social',
+        render: () => (
+          <Profile
+            social={{
+              kind: 'profile',
+              profile: { name: 'A name', about: 'A short bio.', avatar: null, links: [] },
+              source: 'petals',
+            }}
+            onEdit={() => {}}
+            published
+          />
+        ),
+      },
+      {
         name: 'no profile yet',
         render: () => <Profile social={{ kind: 'none' }} onEdit={() => {}} />,
       },
