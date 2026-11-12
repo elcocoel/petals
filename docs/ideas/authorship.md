@@ -20,6 +20,8 @@ Forking a version makes another version; the original stays untouched. For now, 
 
 A claim names who answers for it: an account, a named tool or a named model. It can also name the tool or model that produced it. Each piece of evidence records who found it and when.
 
+A claim you publish to the shared map is signed by your own wallet and credited to you. The signed message and its signature are kept with it, so anyone can check them.
+
 A claim never changes. Changing your mind is a new claim. An author can replace or retract their claim; another writer can challenge it with a claim of their own.
 
 Read [claims](/docs/ideas/claims) for the distinction between an account's own declaration, a source and an inference.

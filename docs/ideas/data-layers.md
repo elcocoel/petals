@@ -18,6 +18,6 @@ A layer records its method, sources, date and the readings or layers it was buil
 
 A flower is drawn from its data and a view: settings that assign pieces of data to visual dimensions such as height, width, colour and segments. Height might show a share of voting power; bands inside a petal might show the backers behind a staking pool. Changing the view changes how you read the data, not the underlying records.
 
-Layers and annotations are private first, kept in your project. Publishing a dataset version to the shared map is not built yet.
+Layers and annotations are private first, kept in your project. What you kept about a map’s accounts, your names and other claims, goes to the shared Power Map with one press on that map, signed by your own wallet and credited to you. A name goes only as the system’s own records declare it, such as a proposal or a transaction that quotes it; what stays private says why. Publishing a dataset version is not built yet.
 
 See [layer/v1](/docs/data-protocol/schemas/layer-v1) for the fields and [authorship](/docs/ideas/authorship) for how prior work is kept.
