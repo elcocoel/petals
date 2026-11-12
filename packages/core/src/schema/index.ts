@@ -19,6 +19,7 @@ import priceSchema from '../../schema/price.schema.json' with { type: 'json' };
 import priceV2Schema from '../../schema/price-v2.schema.json' with { type: 'json' };
 import proposalsSchema from '../../schema/proposals.schema.json' with { type: 'json' };
 import proposalsV2Schema from '../../schema/proposals-v2.schema.json' with { type: 'json' };
+import proposalsV3Schema from '../../schema/proposals-v3.schema.json' with { type: 'json' };
 import seamSchema from '../../schema/seam.schema.json' with { type: 'json' };
 import snapshotSchema from '../../schema/snapshot.schema.json' with { type: 'json' };
 import usageSchema from '../../schema/usage.schema.json' with { type: 'json' };
@@ -85,6 +86,8 @@ export const schemas: {
   proposals: object;
   /** the same with closed, recipients, options, and a ballot's choices and weights (11 Nov) */
   proposalsV2: object;
+  /** the same with each proposal's summary and a link to read it, saying what kind of link (12 Nov) */
+  proposalsV3: object;
   /** what a DAO paid out, each payout dated by its own transfer and priced on that day (12 Nov) */
   payouts: object;
 } = {
@@ -114,6 +117,7 @@ export const schemas: {
   calls: callsSchema,
   proposals: proposalsSchema,
   proposalsV2: proposalsV2Schema,
+  proposalsV3: proposalsV3Schema,
   payouts: payoutsSchema,
 };
 

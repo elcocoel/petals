@@ -46,6 +46,7 @@ import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
 import { StoryFlower, StoryLight } from '../components/landing/StoryFlower.tsx';
 import { MapClaims } from '../components/MapClaims.tsx';
+import { MapLayers } from '../components/MapLayers.tsx';
 import { MapList } from '../components/MapList.tsx';
 import { MapSearch } from '../components/MapSearch.tsx';
 import { Markdown } from '../components/Markdown.tsx';
@@ -87,6 +88,7 @@ import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { Select } from '../components/ui/Select.tsx';
 import { SourceLink } from '../components/ui/SourceLink.tsx';
+import { Switch } from '../components/ui/Switch.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
 import { TextLink } from '../components/ui/TextLink.tsx';
 import { Tip } from '../components/ui/Tip.tsx';
@@ -3148,6 +3150,23 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'Switch',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Switch.tsx',
+    states: [
+      {
+        name: "on, in a tool panel's row: the browser's own switch in the accent",
+        render: () => <Switch label="Treasury and price" on onChange={() => undefined} />,
+      },
+      {
+        name: 'off',
+        render: () => <Switch label="Insights" on={false} onChange={() => undefined} />,
+      },
+    ],
+  },
+  {
     id: 'LineRow',
     group: 'The flower',
     figmaName: null,
@@ -3173,6 +3192,54 @@ export const registry: LabEntry[] = [
             <LineRow expanded onClick={() => undefined}>
               <span className="type-ui">A claim's words</span>
             </LineRow>
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'MapLayers',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/MapLayers.tsx',
+    states: [
+      {
+        name: 'Ref Finance: its members, its proposals, its price, its insights, each with its period',
+        render: () => (
+          <div className="w-tile-width">
+            <MapLayers
+              layers={[
+                {
+                  key: 'r',
+                  name: 'Sputnik DAO members on NEAR',
+                  period: 'As of 11 Nov 2026',
+                  count: '46 accounts',
+                  by: "Petals' own mapping",
+                },
+                {
+                  key: 'p',
+                  name: 'Proposals',
+                  period: '30 Jun 2021 to 5 Nov 2026',
+                  count: '1,060',
+                },
+                {
+                  key: 'v',
+                  name: 'NEAR price',
+                  period: 'On 11 Nov 2026',
+                  count: '$3.74',
+                  by: '1Click',
+                  link: 'https://1click.chaindefuser.com/v0/tokens',
+                },
+                {
+                  key: 'i',
+                  name: 'Insights',
+                  period: 'On 11 Nov 2026',
+                  count: '2',
+                  by: "Petals' mapping",
+                },
+              ]}
+            />
           </div>
         ),
       },

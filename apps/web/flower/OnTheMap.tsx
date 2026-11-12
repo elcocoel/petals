@@ -37,7 +37,10 @@ function useBox() {
   return { area, hand: useFloatBoxes(BOXES, place).panel };
 }
 
-/** A map's page: the map opened inside its flower, its readings in the box. */
+/**
+ * A map's page: the map opened inside its flower, and what the page says about the map (what it maps, its
+ * worth, its readings) first in the map's Information box (Elco's walk 3: two boxes, Tools and Information).
+ */
 export function MapAt({
   land,
   focus,
@@ -49,13 +52,17 @@ export function MapAt({
   title: string;
   children: ReactNode;
 }) {
-  const { area, hand } = useBox();
   return (
-    <div ref={area} className="absolute inset-0">
-      <LandscapeCanvas data={land} fill="area" title="Power Map" focus={focus} legend="read" />
-      <FloatBox label="Map" title={title} surface="ground" hand={hand}>
-        <div className="flex flex-col gap-text-gap p-block-gap">{children}</div>
-      </FloatBox>
+    <div className="absolute inset-0">
+      <LandscapeCanvas
+        data={land}
+        fill="area"
+        title="Power Map"
+        focus={focus}
+        legend="edit"
+        search
+        information={{ title, body: children }}
+      />
     </div>
   );
 }
@@ -104,7 +111,10 @@ export function FlowerAt({
           focus={focus}
           selected={state.selected}
           onPick={actions.pick}
-          legend="read"
+          legend="edit"
+          search
+          // the flower's own box stands at the top right: Information starts under Tools
+          ownBox
         />
       )}
       <FloatBox

@@ -158,7 +158,12 @@ interface Kept {
   entered: string | null;
   focus: string | null;
   layout: string | undefined;
+  /** where each flower stood, by its map, so a new arrangement glides in from there */
+  places: Map<string, { x: number; y: number }>;
 }
+
+/** How long a new arrangement takes to glide in, in seconds (Elco, 12 Nov walk 3: "if it was animated"). */
+const GLIDE = 0.8;
 
 export function useLandscape(
   svg: RefObject<SVGSVGElement | null>,
@@ -177,6 +182,30 @@ export function useLandscape(
     const motion = quiet();
     const box = node.getBoundingClientRect();
     const { flowers, roads, home } = data;
+    // A new arrangement on the same page (a DAO put in the middle, or let go) glides in from where each flower stood
+    // while the camera moves to it (Elco, 12 Nov walk 3: "the camera should move to it and the other ones should be
+    // organized around it. If it was animated would be much more elegant"); with reduced motion, it's there at once.
+    const prior = kept.current;
+    const earlyFocus = at?.current?.focus ?? -1;
+    const glideFrom =
+      prior &&
+      prior.layout !== data.layout &&
+      prior.focus === (earlyFocus >= 0 ? idOf(flowers[earlyFocus]) : null) &&
+      !quiet().matches
+        ? prior.places
+        : null;
+    const glideTo = glideFrom ? flowers.map((f) => ({ x: f.place.x, y: f.place.y })) : [];
+    if (glideFrom) {
+      for (const f of flowers) {
+        const was = glideFrom.get(idOf(f) ?? '');
+        if (was) {
+          f.place.x = was.x;
+          f.place.y = was.y;
+        }
+      }
+    }
+    let glide = glideFrom ? 0 : -1;
+    let flyNext: ReturnType<typeof fitView> | null = null;
     const far = fitView(box.width, box.height, home).k * FARTHEST;
     // As close as one flower alone lets you come (camera.ts ZOOM_LIMITS), for the smallest size.
     const cam = newCamera(box.width, box.height, home, [far, ZOOM_LIMITS[1]]);
@@ -466,6 +495,28 @@ export function useLandscape(
       }
       if (advance(enter, calm || arriving ? SNAP : stepOf(PRESENCE, dt))) moving = true;
       arriving = false;
+      if (flyNext) {
+        flyTo(cam, flyNext);
+        flyNext = null;
+        moving = true;
+      }
+      if (glide >= 0 && glideFrom) {
+        glide = Math.min(1, glide + dt / GLIDE);
+        const e = glide * glide * (3 - 2 * glide);
+        flowers.forEach((f, i) => {
+          const from = glideFrom.get(idOf(f) ?? '');
+          const to = glideTo[i];
+          if (!from || !to) return;
+          f.place.x = from.x + (to.x - from.x) * e;
+          f.place.y = from.y + (to.y - from.y) * e;
+        });
+        roads.forEach((r, i) => {
+          ends[i] = roadEnds(flowers[r.a] as LandFlower, flowers[r.b] as LandFlower);
+        });
+        scene.move();
+        if (glide >= 1) glide = -1;
+        else moving = true;
+      }
 
       // Who's live: mount the new ones open, as their silhouettes already are, under the names.
       // the mini shape held for the whole chain until you're close on a group, then petals for all at once
@@ -913,6 +964,12 @@ export function useLandscape(
       if (j >= 0) entered = j;
       arriving = true;
       cam.touched = true;
+    } else if (glideFrom && was) {
+      // from where you were, then the camera moves to the new arrangement as it glides in
+      flyTo(cam, was.view);
+      arriving = true;
+      cam.touched = true;
+      flyNext = fitView(cam.width, cam.height, home, cam.clear);
     } else if (focus >= 0 && flowers[focus]) {
       enterFlower(focus);
       arriving = true;
@@ -1007,6 +1064,7 @@ export function useLandscape(
           entered: entered >= 0 ? idOf(flowers[entered]) : null,
           focus: focusId,
           layout: data.layout,
+          places: new Map(flowers.map((f) => [idOf(f) ?? '', { x: f.place.x, y: f.place.y }])),
         };
       }
       if (raf) cancelAnimationFrame(raf);

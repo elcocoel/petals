@@ -118,7 +118,7 @@ const written = {
         tick: 'Agent Swarms',
         scene: 'MANY HANDS MAKE LIGHT WORK',
         headline: 'Connect your own agents.',
-        body: 'Petals can outsource the heavy mapping and research to agents you pay for. They work with their own tools and resources, bringing results back while you keep exploring with Petals.',
+        body: 'Petals can outsource the heavy mapping and research to agents you already pay for. They work with their own tools and resources, bringing results back while you keep exploring with Petals.',
       },
       {
         id: 'brain',

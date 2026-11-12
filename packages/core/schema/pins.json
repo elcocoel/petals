@@ -114,5 +114,9 @@
   "payouts.v1.json": {
     "schema": "urn:petal:schema:payouts:v1",
     "sha256": "f029ff358918b078f06eb3c7a87a22d2a2aa59ca9aad62f51d3a222bac92b5a1"
+  },
+  "proposals.v3.json": {
+    "schema": "urn:petal:schema:proposals:v3",
+    "sha256": "a4c7f39232b6b1c7a5d687297ff004edc0af9027aa2519dd827aee3d562943db"
   }
 }

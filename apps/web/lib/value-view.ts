@@ -62,9 +62,12 @@ const priced = (p: NonNullable<MapValue['price']>) => {
   return { source: priceSource(p), ...(link ? { link } : {}) };
 };
 
+/** A source by its own name: 1Click, DefiLlama, the chain. */
+export const sourceName = (source: string): string => SOURCES[source] ?? source;
+
 /** Where and when a price was read. */
 export const priceSource = (p: NonNullable<MapValue['price']>): string =>
-  `${SOURCES[p.source] ?? p.source}, ${day(p.at)}`;
+  `${sourceName(p.source)}, ${day(p.at)}`;
 
 /** A token's name in a line: its symbol, or "token". */
 const tokenOf = (v: MapValue) => v.asset.symbol ?? 'token';

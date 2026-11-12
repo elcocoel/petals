@@ -4,10 +4,13 @@
 // Sputnik keeps each vote in its proposal (Approve, Reject or Remove) and no time for it, nor when a proposal
 // was decided: closes_at is its policy's proposal period from submission.
 import {
+  firstAddress,
   type Outcome,
   PROPOSALS_VERSION,
   type Proposal,
+  type ProposalLink,
   type Proposals,
+  splitAstro,
   titleOf,
   type Vote,
 } from '@petal/core';
@@ -131,7 +134,15 @@ const recipientOf = (kind: RawProposal['kind']): string | null => {
   return typeof t?.receiver_id === 'string' && t.receiver_id ? t.receiver_id : null;
 };
 
-/** The DAO's proposals as proposals/v2: each with its title, when, outcome, recipient and every account's vote. */
+/** A Sputnik proposal's summary, its own text, and the address it names (Astro's after '$$$$', or the first). */
+function textOf(description: string): { summary: string | null; link: ProposalLink | null } {
+  const { text, link } = splitAstro(description ?? '');
+  const summary = text.trim() || null;
+  const url = link ?? firstAddress(text);
+  return { summary, link: url ? { url, kind: 'named in its text' } : null };
+}
+
+/** The DAO's proposals as proposals/v3: each with its title, when, outcome, recipient and every account's vote. */
 export function sputnikProposals(
   about: string,
   dao: string,
@@ -153,6 +164,8 @@ export function sputnikProposals(
     ref: `proposal:near:mainnet:${dao}:${p.id}`,
     // v2: whom a Transfer pays
     recipient: recipientOf(p.kind),
+    // v3: its own text, and a link: Sputnik has no page of its own, so only an address its text names
+    ...textOf(p.description),
     votes: Object.entries(p.votes ?? {}).flatMap(([account, said]) =>
       VOTE[said] ? [{ account, vote: VOTE[said] as Vote, as_said: said, at: null }] : [],
     ),

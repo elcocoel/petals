@@ -4,8 +4,8 @@
 import { createAjv, schemaId } from './schema/ajv.ts';
 import type { Result, ValidationIssue } from './types/index.ts';
 
-/** proposals/v2 since 11 Nov: closed, recipients, options, a ballot's choices and weights. v1 still reads. */
-export const PROPOSALS_VERSION = 'proposals/v2';
+/** proposals/v3 since 12 Nov: v2 with each proposal's summary and a link to read it. v1 and v2 still read. */
+export const PROPOSALS_VERSION = 'proposals/v3';
 
 export type Vote = 'for' | 'against' | 'abstain';
 export type Outcome =
@@ -32,6 +32,11 @@ export interface ProposalVote {
   as_said: string;
   at: string | null;
 }
+/** v3: a link to read a proposal: its own page on its source, or an address its own text names. */
+export interface ProposalLink {
+  url: string;
+  kind: 'where it was made' | 'named in its text';
+}
 export interface Proposal {
   id: string;
   title: string;
@@ -47,10 +52,14 @@ export interface Proposal {
   recipient?: string | null;
   /** v2: its options' labels, where a ballot chooses among them */
   options?: string[];
+  /** v3: its own text, whole, as its source says it, or null */
+  summary?: string | null;
+  /** v3: where to read it, and whether that's where it was made or an address its text names */
+  link?: ProposalLink | null;
   votes: ProposalVote[];
 }
 export interface Proposals {
-  petal: 'proposals/v1' | typeof PROPOSALS_VERSION;
+  petal: 'proposals/v1' | 'proposals/v2' | typeof PROPOSALS_VERSION;
   about: string;
   source: { kind: string; contract: string; ref: string; at: string };
   proposals: Proposal[];
@@ -59,10 +68,16 @@ export interface Proposals {
 
 const compiled = new Map<string, ReturnType<ReturnType<typeof createAjv>['getSchema']>>();
 
-/** The proposals, typed, or every reason they aren't proposals (v1 or v2, by their petal). */
+const PROPOSALS_SCHEMA: Record<string, 'proposals' | 'proposalsV2' | 'proposalsV3'> = {
+  'proposals/v1': 'proposals',
+  'proposals/v2': 'proposalsV2',
+  'proposals/v3': 'proposalsV3',
+};
+
+/** The proposals, typed, or every reason they aren't proposals (v1, v2 or v3, by their petal). */
 export function validateProposals(x: unknown): Result<Proposals> {
-  const name =
-    (x as { petal?: unknown } | null)?.petal === 'proposals/v1' ? 'proposals' : 'proposalsV2';
+  const petal = (x as { petal?: unknown } | null)?.petal;
+  const name = (typeof petal === 'string' && PROPOSALS_SCHEMA[petal]) || 'proposalsV2';
   if (!compiled.has(name)) compiled.set(name, createAjv().getSchema(schemaId(name)));
   const v = compiled.get(name);
   if (!v) throw new Error('proposals schema not registered');
@@ -81,8 +96,23 @@ export function validateProposals(x: unknown): Result<Proposals> {
 
 /** A proposal's title from its own text: a "Title:" line, else its first words. */
 export function titleOf(text: string): string {
-  const t = (text ?? '').replace(/<br\s*\/?>/gi, '\n');
+  // Astro's proposals end their text with '$$$$' and a link: the title is the text before it
+  const t = splitAstro(text ?? '').text.replace(/<br\s*\/?>/gi, '\n');
   const line = /(?:^|\n)\s*[*#-]*\s*Title\s*:\s*(.+)/i.exec(t)?.[1];
   const first = (line ?? t.split('\n').find((l) => l.trim()) ?? '').replace(/[*#_`]/g, '').trim();
   return first.length > 120 ? `${first.slice(0, 117).trimEnd()}…` : first;
+}
+
+/** A proposal's text as Astro wrote it, 'text$$$$link': the text, and the link when one follows. */
+export function splitAstro(text: string): { text: string; link: string | null } {
+  const i = text.indexOf('$$$$');
+  if (i < 0) return { text, link: null };
+  const after = text.slice(i + 4).trim();
+  return { text: text.slice(0, i), link: /^https?:\/\/\S+$/.test(after) ? after : null };
+}
+
+/** The first web address a proposal's own text names, or null. */
+export function firstAddress(text: string): string | null {
+  const m = /https?:\/\/[^\s)<>\]"'`]+/.exec(text);
+  return m ? m[0].replace(/[.,;:!?]+$/, '') : null;
 }

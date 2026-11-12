@@ -29,6 +29,7 @@ import { Overlay } from './ui/Overlay.tsx';
 import { Range } from './ui/Range.tsx';
 import { SectionHead } from './ui/SectionHead.tsx';
 import { Select } from './ui/Select.tsx';
+import { Switch } from './ui/Switch.tsx';
 
 const words = panelWords.settings;
 
@@ -56,6 +57,8 @@ export interface LegendGroups {
   period: string;
   onChoose: (id: string | null) => void;
   onSpan: (span: BlocSpan) => void;
+  /** Outside any flower: nothing to choose yet, and the rows stay where they are (one menu, Elco's walk 3). */
+  away?: boolean;
 }
 
 /** One row of the panel: its category on the left, its input or value on the right. */
@@ -139,7 +142,8 @@ export function ViewLegend({
   edit,
   groups,
   gravity,
-  worth: _worth,
+  worth,
+  insights,
   between,
   fold,
   bare = false,
@@ -166,6 +170,8 @@ export function ViewLegend({
    * walk 3: "switchable from OVERLAYS' tools box"); OVERLAYS draws its row.
    */
   worth?: { on: boolean; onChange: (on: boolean) => void } | undefined;
+  /** On a map, whether Insights shows in its Information box (Elco, walk 3: "turn on insights on and off"). */
+  insights?: { on: boolean; onChange: (on: boolean) => void } | undefined;
   /** On a map, what a line between two flowers is: its name and what it says. */
   between?: { label: string; says: string } | undefined;
   /** It folds to its bar, as every overlay can (design/overlays.md, line 6). */
@@ -192,7 +198,7 @@ export function ViewLegend({
           </div>
         ))}
       </div>
-      {(groups || gravity || between) && (
+      {(groups || gravity || worth || insights || between) && (
         <>
           <SectionHead size="panel" title={panelWords.legendMap} />
           <div className="flex flex-col py-space-4">
@@ -221,8 +227,17 @@ export function ViewLegend({
                   />
                 </ToolRow>
                 <Note>
-                  {groups.choices.length === 0 ? `${blocWords.noneHere}. ` : ''}
-                  {groups.period}. {chosen ? `${blocWords.caveat}.` : ''}
+                  {groups.away
+                    ? `${blocWords.away}.`
+                    : [
+                        groups.choices.length === 0 && groups.period
+                          ? `${blocWords.noneHere}.`
+                          : '',
+                        groups.period ? `${groups.period}.` : '',
+                        chosen ? `${blocWords.caveat}.` : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                 </Note>
               </>
             )}
@@ -241,6 +256,20 @@ export function ViewLegend({
                     onSet={() => undefined}
                   />
                 </span>
+              </ToolRow>
+            )}
+            {worth && (
+              <ToolRow label={panelWords.legendWorth}>
+                <Switch label={panelWords.legendWorth} on={worth.on} onChange={worth.onChange} />
+              </ToolRow>
+            )}
+            {insights && (
+              <ToolRow label={panelWords.legendInsights}>
+                <Switch
+                  label={panelWords.legendInsights}
+                  on={insights.on}
+                  onChange={insights.onChange}
+                />
               </ToolRow>
             )}
             {between && (

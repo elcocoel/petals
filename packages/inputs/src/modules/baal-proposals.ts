@@ -123,7 +123,22 @@ export function baalTitle(details: string): string {
   return titleOf(details);
 }
 
-/** The DAO's proposals as proposals/v1, from its events. */
+/** A Baal proposal's summary: the description in its details' JSON, or the details themselves. */
+export function baalSummary(details: string): string | null {
+  try {
+    const d = JSON.parse(details) as { description?: unknown };
+    if (typeof d.description === 'string') return d.description.trim() || null;
+    return null;
+  } catch {
+    return details.trim() || null;
+  }
+}
+
+/** Where a Baal proposal was made: its page on DAOhaus, by its chain, DAO and id. */
+export const daohausPage = (chain: EvmChain, dao: string, id: string): string =>
+  `https://admin.daohaus.club/#/molochv3/0x${Number(chain.caip2.split(':')[1]).toString(16)}/${dao.toLowerCase()}/proposal/${id}`;
+
+/** The DAO's proposals as proposals/v3, from its events. */
 export function baalProposals(
   about: string,
   chain: EvmChain,
@@ -164,6 +179,9 @@ export function baalProposals(
       ref: `proposal:${chain.caip2}:${dao}:${id}`,
       // what a Baal proposal pays is in its encoded actions: not read here
       recipient: null,
+      // v3: its own text, and its page on DAOhaus, where it was made
+      summary: baalSummary(details),
+      link: { url: daohausPage(chain, dao, id), kind: 'where it was made' },
       votes: [],
       expiration,
       period,
