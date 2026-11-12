@@ -359,3 +359,29 @@ describe("each petal's activity reaches every drawing of the map (activity.ts, 1
     expect(cast.values.filter((v) => v.value === '0')).toHaveLength(s.participants.length - 1);
   });
 });
+
+describe('what a press adds, by layer (Elco, 12 Nov: "a clear indicator of what data layers and claims I would be adding")', () => {
+  test("a reading the person drew of the map shows, and can't go yet, with why", async () => {
+    const person = { ...r.ctx, caller: { subject: 'prs_elco', by: 'near:mainnet:elco.near' } };
+    const started = await run('start_exploration', { question: 'who runs the guild?' }, person);
+    const proposed = await run('propose_spec', { network: 'moloch-v1', sha256: MOLOCH });
+    const saved = await run(
+      'save_step',
+      { exploration: started.exploration, spec: proposed.spec, note: 'a first look' },
+      person,
+    );
+    expect(saved.error).toBeUndefined();
+    const o = await run('list_publishable', { map: MAP }, person);
+    expect(o.adds).toEqual([
+      {
+        layer: 'Readings',
+        kind: 'drawn',
+        label: 'Readings you drew',
+        count: 1,
+        goes: false,
+        why: 'a reading you drew is on the map already, uncredited; publishing it in your name comes later',
+      },
+    ]);
+    expect(o.ready).toBe(0);
+  });
+});
