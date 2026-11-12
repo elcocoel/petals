@@ -26,6 +26,8 @@ import { cardProposals } from '../proposals.ts';
 import { publishable } from '../publish-data.ts';
 import type { ToolContext } from '../types.ts';
 import { valuesOf } from '../value-store.ts';
+import { layerOwnerOf } from './datasets.ts';
+import { open, REF } from './explorations.ts';
 import { base, obj } from './shared.ts';
 
 /** A map's page: opened from a chat on /make, it opens on the canvas beside it (the web's mapLink). */
@@ -398,14 +400,18 @@ export function nextSteps(m: {
  * with one press, which stay private and why, and how many are on the shared map already. The press and the
  * signature are theirs, on the map's page; nothing here publishes.
  */
-export const listPublishable = defineTool<{ map: string }, Record<string, unknown>>({
+export const listPublishable = defineTool<
+  { map: string; exploration?: string },
+  Record<string, unknown>
+>({
   name: 'list_publishable',
   title: 'List what can be published',
   description:
     'What the signed-in person kept about a map in their projects (their names and other claims about its ' +
     'accounts) and could publish to the shared Power Map with one press on that map, signed by their own wallet ' +
     'and credited to them: how many go, which stay private and why (the people rule: a name goes only as the ' +
-    "DAO's own records declare it), and how many are published already. It publishes nothing; never sign for them.",
+    "DAO's own records declare it), and how many are published already. It publishes nothing; never sign for them. " +
+    "A person's own agent names their project by its link (exploration); on the site it's the person signed in.",
   input: obj(
     ['map'],
     {
@@ -414,6 +420,7 @@ export const listPublishable = defineTool<{ map: string }, Record<string, unknow
         minLength: 3,
         description: "the map's address (its id in look_up's maps), or its map_url",
       },
+      exploration: { ...REF, description: "the person's project, by its link: whose data it is" },
     },
     { additionalProperties: false },
   ),
@@ -435,9 +442,12 @@ export const listPublishable = defineTool<{ map: string }, Record<string, unknow
   }),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   failure: 'not_found',
-  async run({ map }, ctx) {
-    const owner = ctx.caller?.subject;
-    if (!owner?.startsWith('prs_'))
+  async run({ map, exploration }, ctx) {
+    // through a project's link, its owner's (CONNECTORS, 12 Nov: a person's own agent has no session here)
+    const owner = exploration
+      ? layerOwnerOf((await open(ctx, exploration)).row)
+      : ctx.caller?.subject;
+    if (!owner || (!exploration && !owner.startsWith('prs_')))
       throw new ToolFailure(
         'unauthorised',
         'Only a signed-in person has data of their own to publish.',
