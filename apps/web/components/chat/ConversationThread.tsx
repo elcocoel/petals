@@ -1,10 +1,12 @@
 // The thread as every surface shows it: its rows, the recorded notice, and a flower's row wired to what
 // opens it. A surface says only where the thread sits and what the open row says.
+import type { NextStep as StepOnMap } from '@petal/core/types';
 import type { Ref } from 'react';
 import type { TopUpView } from '../../lib/intents.ts';
 import { type Job, type JobControlsView, jobLine } from '../../lib/jobs.ts';
 import type { PayPhase } from '../../lib/pay.ts';
 import type { Row } from '../../lib/thread-view.ts';
+import { NextSteps } from '../NextSteps.tsx';
 import { CeremonyCard } from './CeremonyCard.tsx';
 import { JobRow } from './JobRow.tsx';
 import { PayRow } from './PayRow.tsx';
@@ -26,6 +28,7 @@ export function ConversationThread({
   jobs,
   jobControls,
   onMapIt,
+  next,
 }: {
   recorded: boolean;
   rows: Row[];
@@ -53,6 +56,8 @@ export function ConversationThread({
   jobControls?: { now: (j: Job) => Job; controlsFor: (j: Job) => JobControlsView };
   /** A new map's ceremony, pressed: Petals' agent hears the person's yes (lib/ceremony.ts). */
   onMapIt?: () => void;
+  /** What can be done next on the map just read: each step pressed, and the services folded under More. */
+  next?: { onStep: (step: StepOnMap) => void; moreOpen: boolean; onMore: () => void };
 }) {
   return (
     <Thread
@@ -113,6 +118,25 @@ export function ConversationThread({
       renderCeremony={(row) =>
         onMapIt ? <CeremonyCard key={row.key} view={row.view} onMapIt={onMapIt} /> : null
       }
+      renderNext={(row) => {
+        if (!next) return null;
+        const bind = (s: StepOnMap) => ({
+          key: `${s.label}:${s.ask}`,
+          label: s.label,
+          onPress: () => next.onStep(s),
+        });
+        return (
+          <NextSteps
+            key={row.key}
+            steps={row.next.steps.map(bind)}
+            more={{
+              open: next.moreOpen,
+              onToggle: next.onMore,
+              steps: row.next.services.map(bind),
+            }}
+          />
+        );
+      }}
       onRefollow={onRefollow}
       onLink={onLink}
     />
