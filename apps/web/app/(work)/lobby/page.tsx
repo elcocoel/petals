@@ -4,7 +4,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { api } from '../../../lib/api.ts';
-import { mapList, mapsKeys, mapTile } from '../../../lib/maps.ts';
+import { mapList, mapTile } from '../../../lib/maps.ts';
 import { viewerView } from '../../../lib/viewer-view.ts';
 import { LobbySurface } from './LobbySurface.tsx';
 
@@ -20,9 +20,5 @@ export default async function LobbyPage() {
   // map reads and opens the same in both. No answer is the same as none.
   const maps = await mapList((await viewerView()).hash);
   const cards = maps.ok ? maps.value.maps : [];
-  return (
-    <LobbySurface
-      map={{ tiles: cards.map((m) => ({ key: m.id, ...mapTile(m) })), keys: mapsKeys(cards) }}
-    />
-  );
+  return <LobbySurface map={{ tiles: cards.map((m) => ({ key: m.id, ...mapTile(m) })) }} />;
 }

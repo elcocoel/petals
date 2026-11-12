@@ -10,7 +10,6 @@
 // Props only: app/(work)/lobby/LobbySurface.tsx wires useLobby to it. Words from lib/lobby-view.ts and
 // lib/profile-view.ts.
 import type { ConversationRow } from '../../lib/conversation-list.ts';
-import type { LegendKey } from '../../lib/flower-view.ts';
 import {
   lobbyWords,
   type MapTile,
@@ -20,7 +19,6 @@ import {
 } from '../../lib/lobby-view.ts';
 import type { Money } from '../../lib/pay.ts';
 import type { AddWalletPhase, ClaimsView, UsageView, WalletRow } from '../../lib/profile-view.ts';
-import { LegendKeys } from '../Legend.tsx';
 import { MapList } from '../MapList.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
@@ -32,10 +30,10 @@ import { ProfileEditor } from './ProfileEditor.tsx';
 import { ProfileHead } from './ProfileHead.tsx';
 import { Wallets } from './Wallets.tsx';
 
-/** The one map, a row per address, as the Power Map lists it, with one colour key over the pictures. */
+/** The one map, a row per address, as the Power Map lists it. No colour key over it (Elco, 12 Nov: "having
+ * this hard coded legend on the top. Probably not going to stay this way"). */
 export interface LobbyMap {
   tiles: MapTile[];
-  keys: LegendKey[];
 }
 
 export function Lobby({
@@ -103,12 +101,9 @@ export function Lobby({
               badge={map.tiles.length > 0 ? <Badge>{map.tiles.length}</Badge> : undefined}
             >
               {map.tiles.length > 0 ? (
-                <>
-                  <LegendKeys keys={map.keys} />
-                  <div className="max-h-figure-height overflow-y-auto overscroll-none">
-                    <MapList label={lobbyWords.map} rows={map.tiles} />
-                  </div>
-                </>
+                <div className="max-h-figure-height overflow-y-auto overscroll-none">
+                  <MapList label={lobbyWords.map} rows={map.tiles} />
+                </div>
               ) : (
                 <p className="my-0 type-caption text-muted">{lobbyWords.mapEmpty}</p>
               )}
