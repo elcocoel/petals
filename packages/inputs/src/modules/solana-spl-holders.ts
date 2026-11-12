@@ -30,6 +30,7 @@ import { type RpcEndpoint, RpcError, type RpcPool, rpcPool } from '../rpc/pool.t
 import {
   type FoldedHolders,
   foldHolders,
+  fromBase58,
   type HolderScan,
   scanHolders,
 } from '../solana/holders.ts';
@@ -39,6 +40,8 @@ import { paramModule } from './stored.ts';
 export const SOLANA_CHAIN = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
 export const SOLANA_OFFICIAL = 'https://api.mainnet-beta.solana.com';
 export const SOLANA_VIBE_STATION = 'https://public.rpc.solanavibestation.com/';
+/** Helius's RPC (12 Nov, Elco's free key): its key follows in the query and is never written anywhere. */
+export const HELIUS_RPC = 'https://mainnet.helius-rpc.com';
 export const SPL_MODULE_ID = 'solana-spl-holders';
 export const SPL_MODULE_VERSION = 'solana/1';
 export const TOKEN_PROGRAM = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
@@ -159,6 +162,8 @@ export interface PullSplOptions {
   keep?: number;
   /** the size where a scan stops, default 200 MB. Offline pulls lift it */
   maxBytes?: number;
+  /** Helius's key (12 Nov): its paged token accounts (DAS getTokenAccounts) are read first */
+  heliusKey?: string;
   onProgress?: Progress;
 }
 
@@ -190,6 +195,90 @@ export function holderScanRequest(mint: string): string {
       },
     ],
   });
+}
+
+/**
+ * Every token account of the mint from Helius's DAS getTokenAccounts, page by page by its cursor, kept as a
+ * running total per owner like the scan. Read over several calls, so it isn't pinned to one slot: the slot
+ * is the one Helius had indexed when the first page was read.
+ */
+async function scanFromHelius(
+  mint: string,
+  key: string,
+  opts: PullSplOptions,
+): Promise<{ scan: HolderScan; url: string }> {
+  const doFetch = opts.fetch ?? globalThis.fetch;
+  const maxBytes = opts.maxBytes ?? SCAN_BYTE_BUDGET;
+  const wallets = new Map<string, bigint>();
+  let slot: number | null = null;
+  let tokenAccounts = 0;
+  let nonzero = 0;
+  let bytes = 0;
+  let cursor: string | undefined;
+  for (;;) {
+    let text: string;
+    try {
+      const res = await doFetch(`${HELIUS_RPC}/?api-key=${key}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 'petal',
+          method: 'getTokenAccounts',
+          params: { mint, limit: 1000, ...(cursor ? { cursor } : {}) },
+        }),
+        signal: runSignal(AbortSignal.timeout(STREAM_IDLE_MS)),
+      });
+      if (!res.ok) throw new InputError('source_failed', `Helius answered HTTP ${res.status}`);
+      text = await res.text();
+    } catch (e) {
+      if (e instanceof InputError) throw e;
+      throw new InputError('source_failed', `Helius did not answer: ${(e as Error).name}`);
+    }
+    bytes += text.length;
+    if (bytes > maxBytes)
+      throw new InputError(
+        'cannot_read',
+        `the holder list of ${mint} is over ${maxBytes / 1_000_000} MB: stopped there`,
+        { hint: 'read it offline with pull-module.ts --full, never in a chat' },
+      );
+    // amounts can pass 2^53: read them as text
+    const body = JSON.parse(text.replace(/"amount":(\d+)/g, '"amount":"$1"')) as {
+      result?: {
+        last_indexed_slot?: number;
+        cursor?: string | null;
+        token_accounts?: { owner?: string; amount?: string }[];
+      };
+      error?: { message?: string };
+    };
+    if (body.error || !body.result)
+      throw new InputError(
+        'source_failed',
+        `Helius refused the token accounts of ${mint}: ${body.error?.message ?? 'no result'}`,
+      );
+    slot ??= body.result.last_indexed_slot ?? null;
+    const page = body.result.token_accounts ?? [];
+    for (const a of page) {
+      tokenAccounts++;
+      const raw = a.amount && /^[0-9]+$/.test(a.amount) ? BigInt(a.amount) : 0n;
+      const owner = a.owner ? fromBase58(a.owner) : null;
+      if (raw === 0n || !owner) continue;
+      nonzero++;
+      const k = owner.toString('latin1');
+      wallets.set(k, (wallets.get(k) ?? 0n) + raw);
+    }
+    opts.onProgress?.({
+      stage: 'fetching',
+      message: `${tokenAccounts} token accounts through Helius`,
+    });
+    cursor = body.result.cursor || undefined;
+    if (!cursor || page.length === 0) break;
+  }
+  if (slot === null) throw new InputError('source_failed', `Helius gave no slot for ${mint}`);
+  return {
+    scan: { slot, token_accounts: tokenAccounts, nonzero_accounts: nonzero, bytes, wallets },
+    url: HELIUS_RPC,
+  };
 }
 
 /** Stream the holder scan from the first endpoint that answers it whole. */
@@ -334,9 +423,20 @@ export async function pullSplHolders(
     );
 
   const before = opts.stored?.supply_before ?? (await readSupply(rpc, mint));
+  const helius = async () => {
+    if (!opts.heliusKey) return null;
+    try {
+      return await scanFromHelius(mint, opts.heliusKey, opts);
+    } catch (e) {
+      if (!(e instanceof InputError) || e.code === 'cannot_read') throw e;
+      say(`${e.message}; scanning through the public endpoints instead`);
+      return null;
+    }
+  };
   const { scan, url } = opts.stored
     ? { scan: await scanHolders(opts.stored.body), url: opts.stored.url }
-    : await scanFromEndpoints(mint, opts);
+    : ((await helius()) ?? (await scanFromEndpoints(mint, opts)));
+  const paged = url === HELIUS_RPC;
   const after = await readSupply(rpc, mint);
   say(
     `${grouped(scan.token_accounts)} token accounts, ${grouped(scan.wallets.size)} wallets at slot ${grouped(scan.slot)}`,
@@ -423,7 +523,9 @@ export async function pullSplHolders(
       id: S.scan,
       kind: 'chain',
       url,
-      method: `getProgramAccounts on the Token Program, mint filter, owner and amount only${opts.stored ? ', from a stored answer of the same call' : ''}`,
+      method: paged
+        ? `Helius's getTokenAccounts (DAS) for the mint, page by page by its cursor: each account's owner and amount, read after slot ${grouped(scan.slot)} and not pinned to it`
+        : `getProgramAccounts on the Token Program, mint filter, owner and amount only${opts.stored ? ', from a stored answer of the same call' : ''}`,
       fetched_at: asOf,
       block_height: scan.slot,
     },
@@ -453,7 +555,7 @@ export async function pullSplHolders(
       description: SPL_DESCRIPTOR.description,
       params: { mint },
     },
-    snapshot: { as_of: asOf, block_height: scan.slot, final: true },
+    snapshot: { as_of: asOf, block_height: scan.slot, final: !paged },
     coverage: {
       participants_total: walletCount,
       participants_included: walletCount,
@@ -509,8 +611,10 @@ export function solanaSplHolders(
       return { block_height: slot, as_of: await slotTime(rpc, slot) };
     },
     pull: async (_at, params, onProgress) => {
+      const helius = process.env.HELIUS_API_KEY?.trim();
       const { snapshot } = await pullSplHolders(splMint(params), {
         ...pullOpts,
+        ...(helius ? { heliusKey: helius } : {}),
         ...(onProgress ? { onProgress } : {}),
       });
       return snapshot;

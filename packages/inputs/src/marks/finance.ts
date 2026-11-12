@@ -6,7 +6,8 @@
 //   circulating:  CoinGecko's (no chain can prove it: it's a method)
 //   market cap:   CoinGecko's
 //   treasury:     DefiLlama's, where it knows the map's token or DAO, one protocol at a time
-// Nothing a source doesn't say is guessed: no answer is null.
+// Nothing a source doesn't say is guessed: no answer is null. With CoinGecko's free Demo key (12 Nov) its calls
+// carry it in a header; keyless without it.
 import type {
   ValueMarketCap,
   ValueMax,
@@ -65,9 +66,13 @@ const decimal = (n: number) => {
   return /^[0-9]+(\.[0-9]+)?(e[-+]?[0-9]+)?$/.test(s) ? s : null;
 };
 
-async function getJson<T>(fetchImpl: Fetch, url: string): Promise<T | null> {
+async function getJson<T>(
+  fetchImpl: Fetch,
+  url: string,
+  headers: Record<string, string> = {},
+): Promise<T | null> {
   try {
-    const res = await fetchImpl(url, { headers: { accept: 'application/json' } });
+    const res = await fetchImpl(url, { headers: { accept: 'application/json', ...headers } });
     return res.ok ? ((await res.json()) as T) : null;
   } catch {
     return null;
@@ -121,14 +126,17 @@ export async function coinGeckoMarkets(
   fetchImpl: Fetch,
   wanted: Array<{ chain: string; asset: string }>,
   now: () => Date = () => new Date(),
+  /** CoinGecko's free Demo key (12 Nov): a header only, never in a ref; keyless without it */
+  apiKey?: string,
 ): Promise<{ markets: Map<string, CoinMarket>; failed: string[]; ambiguous: string[] }> {
+  const headers: Record<string, string> = apiKey ? { 'x-cg-demo-api-key': apiKey } : {};
   const failed: string[] = [];
   const ambiguous: string[] = [];
   const markets = new Map<string, CoinMarket>();
   const ids = new Map<string, string>();
   const needsList = wanted.some((w) => w.asset !== 'NEAR');
   const listUrl = `${COINGECKO}/coins/list?include_platform=true`;
-  const list = needsList ? await getJson<GeckoCoin[]>(fetchImpl, listUrl) : [];
+  const list = needsList ? await getJson<GeckoCoin[]>(fetchImpl, listUrl, headers) : [];
   if (!Array.isArray(list)) failed.push(listUrl);
   const byAddress = new Map<string, string[]>();
   for (const c of Array.isArray(list) ? list : []) {
@@ -155,7 +163,7 @@ export async function coinGeckoMarkets(
   for (let i = 0; i < unique.length; i += 250) {
     const part = unique.slice(i, i + 250);
     const url = `${COINGECKO}/coins/markets?vs_currency=usd&per_page=250&ids=${part.join(',')}`;
-    const got = await getJson<GeckoMarket[]>(fetchImpl, url);
+    const got = await getJson<GeckoMarket[]>(fetchImpl, url, headers);
     if (!Array.isArray(got)) {
       failed.push(url);
       continue;

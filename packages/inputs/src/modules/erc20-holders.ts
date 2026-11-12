@@ -164,7 +164,7 @@ export function tokenText(data: string): string {
 
 export interface HoldersChecks {
   block: number;
-  list: 'blockscout' | 'replay';
+  list: 'ankr' | 'blockscout' | 'replay';
   /** every holder, where the list knows them; null for a window */
   holders_total: number | null;
   /** a window replay: which blocks, and how many addresses with a balance it found */
@@ -199,7 +199,7 @@ interface ListedHolder {
 }
 
 interface HolderList {
-  source: 'blockscout' | 'replay';
+  source: 'ankr' | 'blockscout' | 'replay';
   holders: ListedHolder[];
   /** every holder, when the source knows them */
   total: number | null;
@@ -221,7 +221,9 @@ export interface PullHoldersOptions {
   hypersyncToken?: string;
   hypersyncFetch?: typeof globalThis.fetch;
   /** force a list source; default: Blockscout where it answers, otherwise a replay */
-  list?: 'blockscout' | 'replay';
+  list?: 'ankr' | 'blockscout' | 'replay';
+  /** Ankr's key (12 Nov, Elco's free key): its token holder list, every holder on the chains it knows */
+  ankrKey?: string;
   block?: number;
   keep?: number;
   /** a replay's window, default 7 days */
@@ -303,6 +305,101 @@ async function listFromBlockscout(
     ...(typeof supply === 'string' ? { source_supply: BigInt(supply) } : {}),
     url: base,
     method: `Blockscout /api/v2/tokens/${token}/holders, ${PAGE_SIZE} rows a page: who, and the holder count; read after the block, not pinned to it`,
+    kind: 'api',
+  };
+}
+
+/** Ankr's names for the chains its token holder list knows. */
+export const ANKR_CHAIN: Record<string, string> = {
+  'eip155:1': 'eth',
+  'eip155:42161': 'arbitrum',
+  'eip155:8453': 'base',
+  'eip155:100': 'gnosis',
+};
+/** Ankr's multichain address; its key follows it in the path and is never written anywhere. */
+export const ANKR_MULTICHAIN = 'https://rpc.ankr.com/multichain';
+/** The most rows Ankr gives in one page. */
+const ANKR_PAGE_MAX = 10_000;
+
+/** Ankr's token holder list, largest first, with its holder count: needs Ankr's key. */
+async function listFromAnkr(
+  chain: EvmChain,
+  token: string,
+  keep: number,
+  opts: PullHoldersOptions,
+): Promise<HolderList> {
+  const blockchain = ANKR_CHAIN[chain.caip2];
+  const key = opts.ankrKey;
+  if (!blockchain || !key)
+    throw new InputError(
+      'cannot_read',
+      `Ankr's holder list doesn't cover ${chain.name}, or no key is set`,
+    );
+  const doFetch = opts.fetch ?? ((...a: Parameters<typeof fetch>) => globalThis.fetch(...a));
+  const holders: ListedHolder[] = [];
+  let total: number | null = null;
+  let synced: number | null = null;
+  let next: string | undefined;
+  while (holders.length < keep) {
+    let body: {
+      result?: {
+        holders?: { holderAddress?: string; balanceRawInteger?: string }[];
+        holdersCount?: number;
+        nextPageToken?: string;
+        syncStatus?: { blockNumber?: number };
+      };
+      error?: { message?: string };
+    };
+    try {
+      const res = await doFetch(`${ANKR_MULTICHAIN}/${key}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'ankr_getTokenHolders',
+          params: {
+            blockchain,
+            contractAddress: token,
+            pageSize: Math.min(ANKR_PAGE_MAX, keep - holders.length),
+            ...(next ? { pageToken: next } : {}),
+          },
+        }),
+        signal: runSignal(AbortSignal.timeout(BLOCKSCOUT_TIMEOUT_MS)),
+      });
+      if (!res.ok)
+        throw new InputError('source_failed', `Ankr on ${chain.name} answered HTTP ${res.status}`);
+      body = (await res.json()) as typeof body;
+    } catch (e) {
+      if (e instanceof InputError) throw e;
+      throw new InputError(
+        'source_failed',
+        `Ankr on ${chain.name} did not answer: ${(e as Error).name}`,
+      );
+    }
+    if (body.error || !body.result)
+      throw new InputError(
+        'source_failed',
+        `Ankr on ${chain.name} refused the holder list: ${body.error?.message ?? 'no result'}`,
+      );
+    const r = body.result;
+    total ??= typeof r.holdersCount === 'number' ? r.holdersCount : null;
+    synced ??= r.syncStatus?.blockNumber ?? null;
+    for (const h of r.holders ?? []) {
+      if (!h.holderAddress || !h.balanceRawInteger || !/^[0-9]+$/.test(h.balanceRawInteger))
+        continue;
+      holders.push({ address: h.holderAddress.toLowerCase(), listed: BigInt(h.balanceRawInteger) });
+    }
+    opts.onProgress?.({ stage: 'fetching', message: `${holders.length} holders listed` });
+    next = r.nextPageToken || undefined;
+    if (!next || (r.holders ?? []).length === 0) break;
+  }
+  return {
+    source: 'ankr',
+    holders: holders.slice(0, keep),
+    total: total ?? holders.length,
+    url: ANKR_MULTICHAIN,
+    method: `Ankr's ankr_getTokenHolders (${blockchain}), largest first: who, and the holder count; synced to block ${synced ?? 'unknown'}, read after this block and not pinned to it`,
     kind: 'api',
   };
 }
@@ -462,6 +559,7 @@ export async function pullErc20Holders(
   const replayList = () => listFromReplay(target, reader, at.number, keep, opts, hypersync);
   let list: HolderList;
   if (source === 'replay') list = await replayList();
+  else if (source === 'ankr') list = await listFromAnkr(chain, token, keep, opts);
   else {
     try {
       list = await listFromBlockscout(chain, token, keep, opts);
@@ -600,11 +698,14 @@ export async function pullErc20Holders(
   const provenance = w
     ? `Who: only addresses in a Transfer log between block ${grouped(w.from_block)} (${w.from_as_of}) and this block, the last ${w.days} days: ${grouped(list.logs ?? 0)} logs, ${grouped(withBalance.length)} addresses with a balance, the largest ${rows.length} drawn. This is not every holder: an address that did not move tokens in the window is missing, however much it holds, so the largest holders may not be here. ` +
       `Check: drawn holdings plus the tail equal totalSupply() by construction, and each drawn amount is what balanceOf answers at this block. The tail is totalSupply() minus the drawn holdings: it was not read, it is not attributed to anyone, and how many addresses hold it is not known. `
-    : list.source === 'blockscout'
-      ? `Who: the ${rows.length} largest of ${grouped(list.total ?? 0)} holders on Blockscout, read after this block and not pinned to it, so this is not a final snapshot. ` +
-        `Check: listed holders plus the tail equal totalSupply() by construction, because the tail is what the listed holders leave. Independent of that: Blockscout's total supply differs from totalSupply() by ${amountText(list.source_supply !== undefined ? (list.source_supply > supply ? list.source_supply - supply : supply - list.source_supply) : 0n)}, and balanceOf differs from Blockscout's figure for ${differences} of ${rows.length} holders, by ${amountText(differenceSum)} in all. `
-      : `Who: every Transfer log up to this block, ${grouped(list.logs ?? 0)} logs, summed per address: ${grouped(list.total ?? 0)} holders. ` +
-        `Check: the replayed balances sum to ${amountText(list.sum ?? 0n)}, ${replayDifference === 0n ? 'equal to' : `${amountText((replayDifference ?? 0n) < 0n ? -(replayDifference ?? 0n) : (replayDifference ?? 0n))} ${(replayDifference ?? 0n) > 0n ? 'above' : 'below'}`} totalSupply(), and balanceOf differs from the replay for ${differences} of ${rows.length} listed holders. `;
+    : list.source === 'ankr'
+      ? `Who: the ${rows.length} largest of ${grouped(list.total ?? 0)} holders on Ankr's token holder list, read after this block and not pinned to it, so this is not a final snapshot. ` +
+        `Check: listed holders plus the tail equal totalSupply() by construction, because the tail is what the listed holders leave. Independent of that: balanceOf differs from Ankr's figure for ${differences} of ${rows.length} holders, by ${amountText(differenceSum)} in all. `
+      : list.source === 'blockscout'
+        ? `Who: the ${rows.length} largest of ${grouped(list.total ?? 0)} holders on Blockscout, read after this block and not pinned to it, so this is not a final snapshot. ` +
+          `Check: listed holders plus the tail equal totalSupply() by construction, because the tail is what the listed holders leave. Independent of that: Blockscout's total supply differs from totalSupply() by ${amountText(list.source_supply !== undefined ? (list.source_supply > supply ? list.source_supply - supply : supply - list.source_supply) : 0n)}, and balanceOf differs from Blockscout's figure for ${differences} of ${rows.length} holders, by ${amountText(differenceSum)} in all. `
+        : `Who: every Transfer log up to this block, ${grouped(list.logs ?? 0)} logs, summed per address: ${grouped(list.total ?? 0)} holders. ` +
+          `Check: the replayed balances sum to ${amountText(list.sum ?? 0n)}, ${replayDifference === 0n ? 'equal to' : `${amountText((replayDifference ?? 0n) < 0n ? -(replayDifference ?? 0n) : (replayDifference ?? 0n))} ${(replayDifference ?? 0n) > 0n ? 'above' : 'below'}`} totalSupply(), and balanceOf differs from the replay for ${differences} of ${rows.length} listed holders. `;
   const sources: Snapshot['sources'] = [
     {
       id: S.list,
@@ -638,7 +739,10 @@ export async function pullErc20Holders(
       params: {
         chain: chain.id,
         token,
-        window_days: opts.full ? 'full' : String(w?.days ?? opts.windowDays ?? DEFAULT_WINDOW_DAYS),
+        window_days:
+          opts.full || list.source === 'ankr'
+            ? 'full'
+            : String(w?.days ?? opts.windowDays ?? DEFAULT_WINDOW_DAYS),
       },
     },
     snapshot: {
@@ -784,9 +888,11 @@ export function erc20Holders(
     },
     pull: async (at, params, onProgress) => {
       const token = process.env.ENVIO_API_TOKEN;
+      const ankr = process.env.ANKR_API_KEY?.trim();
       const common: PullHoldersOptions = {
         block: at.block_height,
         ...(token ? { hypersyncToken: token } : {}),
+        ...(ankr ? { ankrKey: ankr } : {}),
         ...(opts.fetch ? { fetch: opts.fetch } : {}),
         ...(opts.sleep ? { sleep: opts.sleep } : {}),
         ...(onProgress ? { onProgress } : {}),
@@ -802,6 +908,15 @@ export function erc20Holders(
       const asked = params?.window_days;
       if (asked && asked !== 'full') return window(Number(asked));
       const target = holdersTarget({ ...params, window_days: 'full' });
+      // with Ankr's key (12 Nov), its list is every holder, largest first: no replay needed
+      if (ankr && ANKR_CHAIN[target.chain.caip2]) {
+        try {
+          return (await pullErc20Holders(target, { ...common, list: 'ankr' })).snapshot;
+        } catch (e) {
+          if (!(e instanceof InputError)) throw e;
+          onProgress?.({ stage: 'fetching', message: `${e.message}; reading the chain instead` });
+        }
+      }
       if (!asked && !triesWhole(target.chain)) return window(DEFAULT_WINDOW_DAYS);
       try {
         const { snapshot } = await pullErc20Holders(target, {

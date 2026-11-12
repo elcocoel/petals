@@ -211,6 +211,45 @@ describe('pullSplHolders, offline on a small real mint', () => {
     }
   });
 
+  test("with Helius's key, its token accounts page by page, the same wallets and check; the key nowhere in the snapshot", async () => {
+    const { base58 } = await import('../src/solana/holders.ts');
+    const { HELIUS_RPC } = await import('../src/modules/solana-spl-holders.ts');
+    const answer = recordedScan.response as {
+      result: { context: { slot: number }; value: { account: { data: [string, string] } }[] };
+    };
+    const accounts = answer.result.value.map((a) => {
+      const b = Buffer.from(a.account.data[0], 'base64');
+      return { owner: base58(b.subarray(0, 32)), amount: b.readBigUInt64LE(32).toString() };
+    });
+    const replay = replayFetch(small);
+    const asked: string[] = [];
+    const fetch: typeof globalThis.fetch = async (url, init) => {
+      if (String(url).startsWith(HELIUS_RPC)) {
+        asked.push(String(url));
+        const body = JSON.parse(String(init?.body));
+        const from = Number(body.params.cursor ?? 0);
+        const page = accounts.slice(from, from + 300);
+        // amounts as bare numbers, as Helius sends them
+        const rows = page.map((a) => `{"owner":"${a.owner}","amount":${a.amount}}`).join(',');
+        return new Response(
+          `{"result":{"last_indexed_slot":${answer.result.context.slot},"cursor":${from + 300 < accounts.length ? `"${from + 300}"` : 'null'},"token_accounts":[${rows}]}}`,
+        );
+      }
+      return replay.fetch(url, init);
+    };
+    const { snapshot, checks } = await pullSplHolders(SMALL_MINT, {
+      fetch,
+      sleep: noSleep,
+      heliusKey: 'k-secret',
+    });
+    expect(asked).toHaveLength(2);
+    expect(checks).toMatchObject({ token_accounts: 404, wallets: 401, difference_raw: '0' });
+    expect(validateSnapshot(snapshot).ok).toBe(true);
+    expect(snapshot.sources.find((x) => x.id === 'spl-token-accounts')?.url).toBe(HELIUS_RPC);
+    expect(snapshot.snapshot.final).toBe(false);
+    expect(JSON.stringify(snapshot)).not.toContain('k-secret');
+  });
+
   test('stops a scan over the size budget, and does not try the next endpoint', async () => {
     const urls: string[] = [];
     const replay = replayFetch(small);
@@ -267,5 +306,20 @@ describe('pullSplHolders, offline on a small real mint', () => {
       code: 'cannot_read',
       hint: expect.stringContaining('Token-2022'),
     });
+  });
+});
+
+describe("Helius's token accounts (12 Nov, Elco's free key)", () => {
+  test('a base58 key reads back to its bytes', async () => {
+    const { base58, fromBase58 } = await import('../src/solana/holders.ts');
+    for (const k of [
+      '11111111111111111111111111111111',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+    ]) {
+      const bytes = fromBase58(k);
+      expect(bytes?.length).toBe(32);
+      expect(base58(bytes as Buffer)).toBe(k);
+    }
+    expect(fromBase58('0OIl')).toBeNull();
   });
 });

@@ -1210,3 +1210,65 @@ describe.each([
     expect(text).not.toMatch(/bearer|authorization|ENVIO/i);
   });
 });
+
+describe("Ankr's holder list (12 Nov, Elco's free key)", () => {
+  const balances = { [addr(1)]: 500n, [addr(2)]: 300n, [addr(3)]: 100n };
+  /** An Ankr that lists these holders, largest first, two a page. */
+  const fakeAnkr = (calls: { url: string; body: Record<string, unknown> }[]) =>
+    (async (input: string | URL | Request, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body));
+      calls.push({ url: String(input), body });
+      const all = [
+        [addr(1), 500n],
+        [addr(2), 300n],
+        [addr(3), 100n],
+      ] as const;
+      const from = Number(body.params.pageToken ?? 0);
+      const page = all.slice(from, from + 2);
+      return Response.json({
+        result: {
+          holders: page.map(([a, v]) => ({
+            holderAddress: a.toUpperCase().replace('0X', '0x'),
+            balanceRawInteger: v.toString(),
+          })),
+          holdersCount: 13,
+          nextPageToken: from + 2 < all.length ? String(from + 2) : '',
+          syncStatus: { blockNumber: 99 },
+        },
+      });
+    }) as typeof fetch;
+
+  test('every holder, largest first, with its count: the top plus a declared tail equal the supply, and the key is nowhere in the snapshot', async () => {
+    const calls: { url: string; body: Record<string, unknown> }[] = [];
+    const { snapshot: s, checks } = await pullErc20Holders(target(ETHEREUM), {
+      reader: fakeReader(balances, 1000n),
+      fetch: fakeAnkr(calls),
+      list: 'ankr',
+      ankrKey: 'k-secret',
+    });
+    expect(validateSnapshot(s).ok).toBe(true);
+    expect(checks).toMatchObject({
+      list: 'ankr',
+      holders_total: 13,
+      listed: 3,
+      drawn_vs_supply_raw: '0',
+      balance_differences: 0,
+    });
+    expect(calls).toHaveLength(2);
+    expect(calls[0]?.body).toMatchObject({
+      method: 'ankr_getTokenHolders',
+      params: { blockchain: 'eth', contractAddress: TOKEN },
+    });
+    expect(JSON.stringify(s)).not.toContain('k-secret');
+    expect(s.sources[0]).toMatchObject({ url: 'https://rpc.ankr.com/multichain', kind: 'api' });
+    expect(s.snapshot.final).toBe(false);
+    expect(s.network.params).toMatchObject({ window_days: 'full' });
+    expect(s.coverage.note).toMatch(/Ankr's token holder list/);
+  });
+
+  test('without a key, or on a chain Ankr does not list, it says so', async () => {
+    await expect(
+      pullErc20Holders(target(ETHEREUM), { reader: fakeReader(balances, 1000n), list: 'ankr' }),
+    ).rejects.toThrow(/no key/);
+  });
+});

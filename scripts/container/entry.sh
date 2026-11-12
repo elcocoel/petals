@@ -10,7 +10,10 @@ cap="${PETAL_LLM_DAILY_USD:-}"
 public="${PETAL_PUBLIC:-}"
 # Since 9 Nov a public site runs Petals' own agent for people who pay for it in NEAR (TGT-030, amended), so
 # it loads the model key too.
-for env_file in /secrets/near-ai.env /secrets/petal-wallet.env /secrets/one-click.env; do
+# 12 Nov: the free data keys (KEYS chat), each optional: Ankr and Helius for holder lists, CoinGecko for
+# supply, Safe for treasuries and payouts. The readers work keyless without them.
+for env_file in /secrets/near-ai.env /secrets/petal-wallet.env /secrets/one-click.env \
+  /secrets/ankr.env /secrets/helius.env /secrets/coingecko.env /secrets/safe.env; do
   if [ -f "$env_file" ]; then
     set -a
     # shellcheck disable=SC1090

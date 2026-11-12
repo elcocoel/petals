@@ -10,6 +10,7 @@
 //   usd:   DefiLlama's price nearest when it was paid (coins.llama.fi/batchHistorical), named as DefiLlama's
 // What isn't found stays null, never a guess.
 import type { Payout, Payouts } from '@petal/core';
+import { runSignal } from '@petal/core';
 import type { ResolvedAt } from '@petal/core/types';
 import type { Fetch } from '../marks/lists.ts';
 import type { RpcPool } from '../rpc/pool.ts';
@@ -164,6 +165,8 @@ interface FnTx {
 /** How long to wait before asking a keyless API again after it says "too many" or fails: 1 s, doubling. */
 export const RETRY_WAITS = [1000, 2000, 4000, 8000, 16000, 32000];
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** How long one request may take before it counts as not answered, as the Blockscout reader has it. */
+const REQUEST_TIMEOUT_MS = 60_000;
 
 async function post<T>(
   fetchImpl: Fetch,
@@ -178,6 +181,7 @@ async function post<T>(
         method: 'POST',
         headers: { 'content-type': 'application/json', accept: 'application/json' },
         body: JSON.stringify(body),
+        signal: runSignal(AbortSignal.timeout(REQUEST_TIMEOUT_MS)),
       });
       if (res.ok) return (await res.json()) as T;
       status = res.status;
@@ -331,7 +335,10 @@ interface LlamaPrices {
 }
 async function getPrices(fetchImpl: Fetch, url: string): Promise<LlamaPrices | null> {
   try {
-    const res = await fetchImpl(url, { headers: { accept: 'application/json' } });
+    const res = await fetchImpl(url, {
+      headers: { accept: 'application/json' },
+      signal: runSignal(AbortSignal.timeout(REQUEST_TIMEOUT_MS)),
+    });
     return res.ok ? ((await res.json()) as LlamaPrices) : null;
   } catch {
     return null;
