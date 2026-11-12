@@ -1,15 +1,17 @@
 // What Petals' own mapping says about the map you're in (lib/map-claims.ts; Elco, 11 Nov: "we need to design
-// how authored claims show on the map"): one of the overlays, quiet until asked, folded to its bar with how
-// many there are. Open, each account under its petal's name (pressed, that petal lights on the flower), long
-// addresses in the words at their ends and whole on hover, each claim as the flower's box says one: its
-// words, then how it's known and who said it, quiet in mono. Pressing a claim says which tool made it and when,
-// and what it rests on: what a note rests on and doesn't claim, an inference's method, each piece of evidence
-// with who found it and when. Never "verified". Props only.
+// how authored claims show on the map"), Insights, as a tool panel (Elco, 12 Nov, walk 2: "we need to create a
+// specific look for insights ... The typography inside the insight panel is confusing ... a utilitarian look
+// ... inspired by the side panel"). Folded to its bar with how many until asked. Open, each account under one
+// of the side panel's heads, its petal's name and how many; each claim its words, two lines until it's pressed,
+// then how it's known as a badge and who said it, quiet. Pressed, its fields, each named: by which tool and
+// when it was said, what it rests on and doesn't claim, an inference's method, each piece of evidence with who
+// found it and when. Long addresses read at their ends, whole on hover. Never "verified". Props only.
 import { type MapClaimGroup, mapClaimWords as words, wordsOf } from '../lib/map-claims.ts';
+import { Badge } from './ui/Badge.tsx';
 import { LineRow } from './ui/LineRow.tsx';
 import { Mono } from './ui/Mono.tsx';
-import { NavItem } from './ui/NavItem.tsx';
 import { Overlay } from './ui/Overlay.tsx';
+import { SectionHead } from './ui/SectionHead.tsx';
 import { TextLink } from './ui/TextLink.tsx';
 
 /** A claim's words, each long address or hash at its ends and whole on hover. */
@@ -30,118 +32,112 @@ function Said({ text }: { text: string }) {
   );
 }
 
+/** One named field of an opened claim: its name small and quiet, then what it holds. */
+function Field({ name, children }: { name: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-space-4">
+      <Mono as="span" tone="muted">
+        {name}
+      </Mono>
+      <div className="type-ui text-primary wrap-anywhere">{children}</div>
+    </div>
+  );
+}
+
 export function MapClaims({
   groups,
   open,
   onOpen,
-  lit = null,
-  onAccount,
   empty,
   fold,
 }: {
   groups: readonly MapClaimGroup[];
-  /** The claim whose evidence is open, by its key. */
+  /** The claim whose fields are open, by its key. */
   open: string | null;
   onOpen: (key: string) => void;
-  /** The account lit on the flower, and the hand that lights one: pressing a petal's name lights it there. */
-  lit?: string | null;
-  onAccount?: ((account: string) => void) | undefined;
   /** What it says when there's nothing to list (a chosen wallet nothing is said about). */
   empty?: string | undefined;
   fold: { open: boolean; onToggle: () => void };
 }) {
   const count = groups.reduce((n, g) => n + g.lines.length, 0);
   return (
-    <Overlay title={fold.open ? words.title : words.folded(count)} fold={fold}>
-      <div className="flex max-h-figure-height flex-col gap-space-8 overflow-y-auto overscroll-none">
+    <Overlay title={fold.open ? words.title : words.folded(count)} fold={fold} tool>
+      {/* edge to edge, so the heads reach the panel's sides as the side panel's do */}
+      <div className="-mx-space-8 flex max-h-figure-height flex-col overflow-y-auto overscroll-none px-space-8">
         {groups.length === 0 && empty && (
-          <p className="my-0 px-space-8 py-space-4 type-ui text-muted">{empty}</p>
+          <p className="my-0 px-space-8 py-space-8 type-ui text-muted">{empty}</p>
         )}
         {groups.map((g) => (
           <section key={g.account} aria-label={g.name} className="flex flex-col">
-            {g.petal && onAccount ? (
-              <NavItem
-                onClick={() => onAccount(g.account)}
-                chosen={lit === g.account}
-                label={g.name}
-                trail={String(g.lines.length)}
-                muted
-              />
-            ) : (
-              <p className="my-0 flex min-w-0 items-baseline justify-between gap-space-8 px-space-8 py-space-4">
-                <span className="min-w-0 truncate type-ui text-muted" title={g.account}>
-                  {g.name}
-                </span>
-                <Mono as="span" tone="muted">
-                  {g.lines.length}
-                </Mono>
-              </p>
-            )}
-            <ul className="m-0 flex list-none flex-col p-0">
+            <SectionHead size="panel" title={`${g.name} · ${g.lines.length}`} />
+            <ul className="m-0 flex list-none flex-col divide-y divide-hairline p-0">
               {g.lines.map((l) => (
                 <li key={l.key}>
                   <LineRow expanded={open === l.key} onClick={() => onOpen(l.key)}>
                     {/* two lines until it's pressed: a claim can be a paragraph */}
                     <span
-                      className={`type-ui wrap-anywhere ${open === l.key ? '' : 'line-clamp-2'}`}
+                      className={`type-ui text-primary wrap-anywhere ${open === l.key ? '' : 'line-clamp-2'}`}
                     >
                       <Said text={l.says} />
                     </span>
-                    <Mono as="span" tone="muted">
-                      {[l.tag, l.kind, l.who].filter(Boolean).join(' · ')}
-                    </Mono>
-                  </LineRow>
-                  {open === l.key && (
-                    <div className="flex flex-col gap-space-4 px-space-8 pb-space-8">
-                      <Mono as="span" tone="muted">
-                        {words.made(l.tool, l.when)}
-                      </Mono>
-                      <Mono as="span" tone="muted">
-                        {words.rests}
-                      </Mono>
-                      {l.basis && (
-                        <p className="my-0 type-ui wrap-anywhere">
-                          <span className="text-muted">{words.basis} </span>
-                          <Said text={l.basis} />
-                        </p>
-                      )}
-                      {l.limits && (
-                        <p className="my-0 type-ui wrap-anywhere">
-                          <span className="text-muted">{words.limits} </span>
-                          <Said text={l.limits} />
-                        </p>
-                      )}
-                      {l.more.map(([k, v]) => (
-                        <p key={k} className="my-0 type-ui wrap-anywhere">
-                          <span className="text-muted">{k} </span>
-                          <Said text={v} />
-                        </p>
-                      ))}
-                      {l.method && (
+                    <span className="flex flex-wrap items-center gap-space-8">
+                      <Badge>{l.kind}</Badge>
+                      {l.tag && (
                         <Mono as="span" tone="muted">
-                          {`${words.method}  ${l.method}`}
+                          {l.tag}
                         </Mono>
                       )}
-                      <ul className="m-0 flex list-none flex-col gap-space-4 p-0">
-                        {l.evidence.map((e, i) => (
-                          // a claim's evidence is a list in its order, and two pieces can say the same
-                          // biome-ignore lint/suspicious/noArrayIndexKey: the pieces have no ids of their own
-                          <li key={i} className="flex flex-col">
-                            <span className="type-ui wrap-anywhere">
-                              {e.link ? (
-                                <TextLink href={e.link} rel="noreferrer" target="_blank">
-                                  {e.says ?? e.what}
-                                </TextLink>
-                              ) : (
-                                <Said text={e.says ?? e.what} />
-                              )}
-                            </span>
-                            <Mono as="span" tone="muted">
-                              {[e.says ? e.what : null, e.found].filter(Boolean).join(' · ')}
-                            </Mono>
-                          </li>
-                        ))}
-                      </ul>
+                      <Mono as="span" tone="muted">
+                        {l.who}
+                      </Mono>
+                    </span>
+                  </LineRow>
+                  {open === l.key && (
+                    <div className="flex flex-col gap-space-8 px-space-8 pt-space-4 pb-space-16">
+                      <Field name={words.fields.by}>
+                        {l.tool ? `${l.who} (${l.tool})` : l.who}
+                      </Field>
+                      <Field name={words.fields.said}>{l.when}</Field>
+                      {l.basis && (
+                        <Field name={words.fields.basis}>
+                          <Said text={l.basis} />
+                        </Field>
+                      )}
+                      {l.limits && (
+                        <Field name={words.fields.limits}>
+                          <Said text={l.limits} />
+                        </Field>
+                      )}
+                      {l.more.map(([k, v]) => (
+                        <Field key={k} name={k}>
+                          <Said text={v} />
+                        </Field>
+                      ))}
+                      {l.method && <Field name={words.fields.method}>{l.method}</Field>}
+                      {l.evidence.length > 0 && (
+                        <Field name={words.fields.evidence}>
+                          <ul className="m-0 flex list-none flex-col gap-space-8 p-0">
+                            {l.evidence.map((e, i) => (
+                              // a claim's evidence is a list in its order, and two pieces can say the same
+                              // biome-ignore lint/suspicious/noArrayIndexKey: the pieces have no ids of their own
+                              <li key={i} className="flex flex-col">
+                                <span>
+                                  {e.link ? (
+                                    <TextLink href={e.link} rel="noreferrer" target="_blank">
+                                      {e.says ?? e.what}
+                                    </TextLink>
+                                  ) : (
+                                    <Said text={e.says ?? e.what} />
+                                  )}
+                                </span>
+                                <Mono as="span" tone="muted">
+                                  {[e.says ? e.what : null, e.found].filter(Boolean).join(' · ')}
+                                </Mono>
+                              </li>
+                            ))}
+                          </ul>
+                        </Field>
+                      )}
                     </div>
                   )}
                 </li>

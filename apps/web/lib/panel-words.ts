@@ -39,6 +39,11 @@ export const panelWords = {
   legendColours: "Each flower's own: its most common kind first",
   /** What a line between two flowers on the map is (Elco, 12 Nov, walk 2: "a little bit mysterious"). Drafts. */
   legendLines: 'Lines',
+  /** The legend's two sections, and the map's own rows (Elco, 12 Nov, walk 2: "a tool panel"). Drafts. */
+  legendDimensions: 'Dimensions',
+  legendMap: 'Map',
+  legendGravity: 'Gravity',
+  legendVotes: 'Votes',
   legendLinesSay:
     'Wallets two maps both hold. The thicker the line, the more of them; its number says how many.',
   /**

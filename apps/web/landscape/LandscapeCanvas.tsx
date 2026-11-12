@@ -253,11 +253,8 @@ export function LandscapeCanvas({
   const [entered, setEntered] = useState(-1);
   // the group chosen in the legend's Highlight row (#94), lit inside the flower; leaving it clears it
   const [bloc, setBloc] = useState<string | null>(null);
-  // or one account a claim is about, lit from Insights: one highlight at a time, so each clears the other
-  const [account, setAccount] = useState<string | null>(null);
   // the wallet chosen on the map (the wallet level, Elco, 11 Nov: "Its insights"): Insights says what's said about it
   const [wallet, setWallet] = useState<string | null>(null);
-  const [blocsOpen, setBlocsOpen] = useState(false);
   // all their votes first: the recent ones hold no bloc on most maps (Elco, 11 Nov: "do something reasonable")
   const [span, setSpan] = useState<BlocSpan>('all');
   const toldInside = useCallback((yes: boolean, at: number) => {
@@ -265,8 +262,6 @@ export function LandscapeCanvas({
     setEntered(yes ? at : -1);
     if (!yes) {
       setBloc(null);
-      setAccount(null);
-      setBlocsOpen(false);
     }
   }, []);
   const finding = useMapSearch();
@@ -363,10 +358,7 @@ export function LandscapeCanvas({
   const claims = useMapClaims(legend ? (inFlower?.map ?? null) : null);
   const blocs = useMapBlocs(legend ? (inFlower?.map ?? null) : null, span);
   const choices = useMemo(() => (blocs ? blocChoices(blocs) : []), [blocs]);
-  const lit = useMemo(
-    () => choices.find((c) => c.id === bloc)?.members ?? (account ? [account] : null),
-    [choices, bloc, account],
-  );
+  const lit = useMemo(() => choices.find((c) => c.id === bloc)?.members ?? null, [choices, bloc]);
   const claimGroups = useMemo(() => {
     if (!claims || claims.length === 0 || !inFlower) return [];
     const names = new Map(
@@ -460,20 +452,17 @@ export function LandscapeCanvas({
             keysNote={inFlower ? undefined : panelWords.legendColours}
             // what a line between two flowers is, for anyone who doesn't know (Elco, 12 Nov, walk 2)
             between={{ label: panelWords.legendLines, says: panelWords.legendLinesSay }}
+            // how much the map's flowers draw together (Elco, 12 Nov, walk 2: "gravity"), for the visit
+            gravity={{ value: gravity, onChange: setGravity }}
             edit={hands ?? undefined}
             groups={
               inFlower && blocs
                 ? {
                     choices,
                     chosen: bloc,
-                    open: blocsOpen,
                     span,
                     period: periodWords(blocs),
-                    onOpen: () => setBlocsOpen((now) => !now),
-                    onChoose: (id) => {
-                      setBloc(id);
-                      setAccount(null);
-                    },
+                    onChoose: setBloc,
                     // other votes are other blocs: the chosen one goes with them
                     onSpan: (s) => {
                       setSpan(s);
@@ -491,12 +480,7 @@ export function LandscapeCanvas({
             groups={claimGroups}
             open={openClaim}
             onOpen={(key) => setOpenClaim((now) => (now === key ? null : key))}
-            lit={account}
             empty={wallet ? mapClaimWords.noneAboutWallet : undefined}
-            onAccount={(a) => {
-              setAccount((now) => (now === a ? null : a));
-              setBloc(null);
-            }}
             fold={{ open: claimsOpen, onToggle: () => setClaimsOpen((now) => !now) }}
           />
         )}
