@@ -2,7 +2,7 @@
 // but at super speed", not through the site's saves): every file in a folder that is one of Petals' formats is
 // checked against its own schema and rules, and a bad one is refused with its reasons, nothing of it kept. A good
 // reading is kept by its hash and drawn as its reader's default flower, credited to Petals' own mapping; a good
-// mark, value or proposals is kept by its map's address, unless one is already kept there (--replace puts the
+// mark, value, proposals or vesting is kept by its map's address, unless one is already kept there (--replace puts the
 // wave's in its place). A good claim is checked as a published one, naming no person, and kept as Petals' own
 // mapping's (mapping-claims.ts), for every viewer (Elco, 11 Nov: "show them").
 // Hidden maps (#96) stay hidden: the hides are by address, whoever loads them. scripts/load-mapping.ts runs it.
@@ -16,6 +16,7 @@ import {
   validateProposals,
   validateSnapshot,
   validateValue,
+  validateVesting,
 } from '@petal/core';
 import type { Claim, Snapshot, Spec } from '@petal/core/types';
 import { privateStore } from './drafts.ts';
@@ -131,9 +132,13 @@ function problems(doc: Record<string, unknown>, scope?: { private: true }): stri
             ? validateValue(doc)
             : formatOf(petal) === 'claim'
               ? validateClaim(doc, scope)
-              : null;
+              : formatOf(petal) === 'vesting'
+                ? validateVesting(doc)
+                : null;
   if (!v)
-    return [`${petal} isn't a format the loader takes (snapshot, proposals, mark, value, claim)`];
+    return [
+      `${petal} isn't a format the loader takes (snapshot, proposals, mark, value, claim, vesting)`,
+    ];
   return v.ok ? [] : v.errors.slice(0, 5).map((e) => `${e.path || '/'} ${e.message}`);
 }
 
@@ -251,7 +256,13 @@ export async function loadMapping(ctx: ToolContext, root: string, o: LoadRun): P
     }
     const about = String(d.about);
     const table =
-      format === 'mark' ? store.mark : format === 'value' ? store.value : store.proposals;
+      format === 'mark'
+        ? store.mark
+        : format === 'value'
+          ? store.value
+          : format === 'vesting'
+            ? store.vesting
+            : store.proposals;
     const existing = await table.get(about);
     if (existing && !o.replace) {
       t.left++;

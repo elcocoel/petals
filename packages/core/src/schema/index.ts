@@ -26,6 +26,7 @@ import usageSchema from '../../schema/usage.schema.json' with { type: 'json' };
 import valueSchema from '../../schema/value.schema.json' with { type: 'json' };
 import valueV2Schema from '../../schema/value-v2.schema.json' with { type: 'json' };
 import valueV3Schema from '../../schema/value-v3.schema.json' with { type: 'json' };
+import vestingSchema from '../../schema/vesting.schema.json' with { type: 'json' };
 import viewSchema from '../../schema/view.schema.json' with { type: 'json' };
 import viewV2Schema from '../../schema/view-v2.schema.json' with { type: 'json' };
 import viewV3Schema from '../../schema/view-v3.schema.json' with { type: 'json' };
@@ -94,6 +95,8 @@ export const schemas: {
   proposalsV3: object;
   /** what a DAO paid out, each payout dated by its own transfer and priced on that day (12 Nov) */
   payouts: object;
+  /** a token's vesting schedules, one allocation each, each saying how it's known (12 Nov, wave 7) */
+  vesting: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -124,6 +127,7 @@ export const schemas: {
   proposalsV2: proposalsV2Schema,
   proposalsV3: proposalsV3Schema,
   payouts: payoutsSchema,
+  vesting: vestingSchema,
 };
 
 /** The two source documents, unchanged. */

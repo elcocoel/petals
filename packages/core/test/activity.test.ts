@@ -106,6 +106,9 @@ describe("each petal's activity in its map's proposals", () => {
       'votes_cast',
       'last_active',
       'voted',
+      'vesting',
+      'next_unlock',
+      'tranche',
     ]);
     expect(ACTIVITY.map((p) => p.kind)).toEqual(['count', 'date', 'category']);
     const names = (extra: ReturnType<typeof activityPieces>) =>
