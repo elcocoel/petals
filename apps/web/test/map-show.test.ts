@@ -28,3 +28,9 @@ test('the map shows it with the four clicks: enter, wallet level, line, pinned p
   expect(land).toMatch(/if \(!open\.includes\(petal\)\) open\.push\(petal\);/);
   expect(land).toMatch(/if \(voted && flowers\[voted\.flower\]\?\.map === map\) tellProposal\(\);/);
 });
+
+test('a change in Tools redraws the map in the browser at once (core redress over the pieces given)', () => {
+  const canvas = text('landscape/LandscapeCanvas.tsx');
+  expect(canvas).toMatch(/petals: redress\(f\.reading\.petals, view, f\.given\)/);
+  expect(canvas).toMatch(/if \(!data\.flowers\.some\(\(f\) => f\.given\)\) return data;/);
+});
