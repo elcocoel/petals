@@ -648,6 +648,52 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(again.price).toEqual(wave.price);
   });
 
+  test("NEAR under a wave's name for it gets today's NEAR price, its totals' dollars at it, the rest kept (Elco, 12 Nov: 3.40 beside 3.74)", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const store = privateStore(r.ctx.config);
+    const about = `eip155:1:${DAO}`;
+    const fetchImpl = (async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.startsWith('https://1click.chaindefuser.com/'))
+        return new Response(
+          JSON.stringify([
+            {
+              blockchain: 'near',
+              contractAddress: 'wrap.near',
+              assetId: 'nep141:wrap.near',
+              symbol: 'wNEAR',
+              price: 3.4,
+              priceUpdatedAt: '2026-11-12T14:40:00.000Z',
+            },
+          ]),
+        );
+      if (url.includes('api.coingecko.com')) return new Response('[]');
+      return new Response(JSON.stringify({ coins: {} }));
+    }) as typeof fetch;
+    const wave = {
+      petal: 'value/v1',
+      about,
+      asset: { id: 'near:native', symbol: 'NEAR' },
+      price: { usd: 3.74, source: '1click', ref: 'wave', at: '2026-11-11T00:00:00.000Z' },
+      supply: null,
+      snapshot: MOLOCH,
+      measure: 'shares',
+      totals: [{ measure: 'shares', unit: 'NEAR', amount: '10', usd: '37.4' }],
+      read_at: '2026-11-11T00:00:00.000Z',
+    };
+    await store.value.put({ about, body: JSON.stringify(wave), read_at: wave.read_at });
+    await valueMaps(r.ctx, { fetch: fetchImpl });
+    const v = JSON.parse((await store.value.get(about))?.body ?? '{}');
+    expect(v).toMatchObject({
+      petal: 'value/v3',
+      asset: wave.asset,
+      price: { usd: 3.4, source: '1click', at: '2026-11-12T14:40:00.000Z' },
+      totals: [{ measure: 'shares', unit: 'NEAR', amount: '10', usd: '34.00' }],
+      snapshot: MOLOCH,
+    });
+    expect(v.price.ref).toMatch(/^NEAR, priced as wNEAR one to one/);
+  });
+
   test("a map's proposals (#93): its card says how many, and GET /api/v1/maps/:id/proposals gives each vote", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const store = privateStore(r.ctx.config);
