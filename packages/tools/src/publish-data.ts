@@ -103,15 +103,27 @@ function sourceOf(c: Claim): RowSource | null {
   };
 }
 
-/** How the claim reads as a question to the reranker: does its evidence say this? */
-const statementOf = (c: Claim) =>
-  c.verb === 'named' ? `This account is named ${wordsOf(c)}` : `${c.verb}: ${wordsOf(c)}`;
+/** A piece of evidence, as a question names it. */
+const RECORD: Record<string, string> = {
+  proposal: 'proposal',
+  tx: 'transaction',
+  page: 'page',
+  post: 'post',
+};
 
-/** The evidence's own words, each piece one document. */
-const evidenceTexts = (c: Claim) =>
-  c.evidence
-    .map((e) => [e.quote, e.note].filter(Boolean).join('\n'))
-    .filter((t) => t.trim().length > 0);
+/**
+ * How the claim reads to the reranker against one piece of its evidence: a name as the record names it ("A
+ * proposal names Dekan"); anything else in its own words. Measured on Elco's 68 names (12 Nov, read only): this
+ * phrasing put 2 under 0.3 where "This account is named Dekan" put 6, the record's quote unchanged.
+ */
+const statementOf = (c: Claim, e: ClaimEvidence) =>
+  c.verb === 'named'
+    ? `A ${RECORD[e.type ?? ''] ?? 'record'} names ${wordsOf(c)}`
+    : wordsOf(c) || c.verb;
+
+/** A piece's own words, its quote and its note, each one document. */
+const wordsIn = (e: ClaimEvidence) =>
+  [e.quote, e.note].filter((t): t is string => typeof t === 'string' && t.trim().length > 0);
 
 /**
  * The qualifier's confidence for each claim: the reranker's reading of how well its own evidence says it, the
@@ -128,12 +140,15 @@ async function confidences(
   try {
     const scores: (number | null)[] = [];
     for (const c of claims) {
-      const docs = evidenceTexts(c);
-      scores.push(
-        docs.length
-          ? Math.round(Math.max(...(await model.rerank(statementOf(c), docs))) * 100) / 100
-          : null,
-      );
+      // the best piece's reading: one record that says it is enough
+      let best: number | null = null;
+      for (const e of c.evidence) {
+        const docs = wordsIn(e);
+        if (!docs.length) continue;
+        const read = Math.max(...(await model.rerank(statementOf(c, e), docs)));
+        best = best === null ? read : Math.max(best, read);
+      }
+      scores.push(best === null ? null : Math.round(best * 100) / 100);
     }
     return { scores, scored_by: ctx.config.fake ? 'fake-words' : SEARCH_RERANKER };
   } catch (e) {
