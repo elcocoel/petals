@@ -81,6 +81,7 @@ export const SITE_TOOLS = [
   'report_job',
   'list_jobs',
   // the brain (005): the site holds the latest from the repo, with its commit
+  'brain_context',
   'brain_route',
   'brain_file',
   'brain_index',
@@ -508,6 +509,12 @@ export function siteDoor(opts: SiteOptions) {
           if (Array.isArray(i.kinds) && i.kinds.length) q.set('kinds', i.kinds.join(','));
           if (typeof i.limit === 'number') q.set('limit', String(i.limit));
           return call('GET', `/api/v1/search?${q}`);
+        }
+        case 'brain_context': {
+          const q = new URLSearchParams();
+          if (typeof i.question === 'string') q.set('q', i.question);
+          if (Array.isArray(i.answers)) q.set('answers', i.answers.join(','));
+          return call('GET', `/api/v1/brain/context?${q}`);
         }
         case 'brain_route': {
           const q = new URLSearchParams();

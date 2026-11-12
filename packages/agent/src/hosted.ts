@@ -152,7 +152,7 @@ function commands(): string {
 | \`render_flower\` | \`render @spec.json\` |
 | \`list_flowers\`, \`get_flower\` | \`flowers [network]\`, \`flower <id>\` |
 | \`start_exploration\`, \`add_note\` | \`start --client … --question …\` (and it opens the page), \`note [--title …]\` (text from a heredoc) |
-| \`brain_route\`, \`brain_file\` | \`brain-route --question …\` (your app and what you're doing), \`brain-file <id>\` |
+| \`brain_context\` | \`brain-context --question …\` (your app and what you're doing) |
 | \`take_job\`, \`report_job\` | \`take-job\`, \`report-job --job <id> --input @report.json\` |
 | one of the person's agents | \`join <agent link> --as <your app>\` once (it answers with your worker id), then \`jobs wait --worker <id>\`, again after each job |
 
@@ -214,7 +214,7 @@ export function hostedSkill(
   md = section(
     md,
     'Resources',
-    `## Connecting\n\nThe file is at \`${origin}/petal.mjs\`, and these instructions stay at \`${origin}/skill.md\`.${brainVersion ? ` Petals' brain here is version \`${brainVersion}\`: \`${origin}/api/v1/brain/files/doctrine\` first, then \`${origin}/api/v1/brain/route?q=<your app and what you're doing>\`.` : ''}\n`,
+    `## Connecting\n\nThe file is at \`${origin}/petal.mjs\`, and these instructions stay at \`${origin}/skill.md\`.${brainVersion ? ` Petals' brain here is version \`${brainVersion}\`: \`${origin}/api/v1/brain/context?q=<your app and what you're doing>\`, the doctrine and the chapters that fit, in one call.` : ''}\n`,
   );
   return md;
 }

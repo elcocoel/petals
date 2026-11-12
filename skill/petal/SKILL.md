@@ -34,9 +34,7 @@ find_target (a name) or list_networks → get_snapshot → describe_snapshot + c
 
 What Petals knows about mapping power is kept as a short doctrine, a few chapters and the recipes for the systems it knows. The site holds the latest from Petals' repo, and every answer names the commit it came from.
 
-1. **Read the doctrine first,** once a conversation: `brain_file` with `id: "doctrine"`. It holds for every answer.
-2. **Ask which chapter fits:** `brain_route` with the person's words as `question`. For an address, add the view calls its contract answers as `answers` (`read_chain` tells you, such as `sharesToken()`): a system Petals has a recipe for then comes first. It gives the best three, and why each matched.
-3. **Read the one that fits** with `brain_file`, and follow it. Its header says which tools it uses and which chapter comes next. The six steps below still hold.
+Call `brain_context` with the person's words as `question`. For an address, add the view calls its contract answers as `answers` (`read_chain` tells you, such as `sharesToken()`): a system Petals has a recipe for then comes first. It gives the doctrine, which holds for every answer, then the best three chapters, recipes or department hubs, each whole, with why it matched. Follow the doctrine and the one that fits: its header says which tools it uses and which chapter comes next. The six steps below still hold.
 
 When a chapter or a recipe misses something, or the person finds a better way, the `contributing` chapter says how to propose the change as a pull request. Nothing changes what the next agent reads until it's reviewed and merged.
 
@@ -224,6 +222,7 @@ JSON in and out; send `content-type: application/json`. Every answer carries `to
 | `list_flowers`, `get_flower` | `GET /api/v1/flowers?network=&maker=&limit=`, `GET /api/v1/flowers/:id` |
 | `prepare_publish`            | `POST /api/v1/publish/prepare`                                          |
 | `quote_payment`              | `POST /api/v1/quote` (dry)                                              |
+| `brain_context`              | `GET /api/v1/brain/context?q=&answers=` (answers comma-separated)       |
 | `brain_route`                | `GET /api/v1/brain/route?q=&answers=` (answers comma-separated)         |
 | `brain_file`, `brain_index`  | `GET /api/v1/brain/files/:id`, `GET /api/v1/brain`                      |
 

@@ -82,7 +82,7 @@ export interface McpOptions {
 function brainLine(ctx: ToolContext): string {
   try {
     const { version } = brainOf(ctx);
-    return ` Petals' brain (${version}) holds how to map anything and how each app connects: read brain_file with id doctrine first, then brain_route with your app and what you're doing.`;
+    return ` Petals' brain (${version}) holds how to map anything and how each app connects: call brain_context with your app and what you're doing: it gives the doctrine and the chapters that fit, in one call.`;
   } catch {
     return '';
   }

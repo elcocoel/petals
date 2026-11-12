@@ -392,6 +392,14 @@ describe('jobs from the page’s agent', () => {
     expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/brain/files/where-power-lives`);
     await byName(tools, 'brain_index').run({}, ctx());
     expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/brain`);
+    await byName(tools, 'brain_context').run(
+      { question: 'who controls this treasury', answers: ['sharesToken()'] },
+      ctx(),
+    );
+    const context = new URL((site.seen.at(-1) as Seen).url);
+    expect(context.pathname).toBe('/api/v1/brain/context');
+    expect(context.searchParams.get('q')).toBe('who controls this treasury');
+    expect(context.searchParams.get('answers')).toBe('sharesToken()');
   });
 
   test('add_layer keeps the layer here, then in the open project on the site too', async () => {
