@@ -427,17 +427,23 @@ export function llamaItems(
               }
             : null,
         usd: usd !== null ? usdString(usd) : null,
-        source: { ref: `${url} (${chainKey})`, at },
+        source: { ref: `${chainKey} (${url})`, at },
       });
     }
   }
   return items;
 }
 
-/** Where a treasury's amounts were read, in a word: defillama when every item is DefiLlama's, else chain. */
-export function treasuryFrom(t: ValueTreasury | null | undefined): string | null {
+/** Where a treasury's amounts were read: DefiLlama's treasury (its address) when every item is DefiLlama's, else the chain. */
+export function treasurySource(
+  t: ValueTreasury | null | undefined,
+): { source: string; ref: string } | null {
   if (!t) return null;
-  return t.items.length > 0 && t.items.every((i) => i.source.ref?.startsWith(LLAMA_TREASURY))
-    ? 'defillama'
-    : 'chain';
+  const llama = t.items.map(
+    (i) => /\((https:\/\/api\.llama\.fi\/treasury\/[^)\s]+)\)/.exec(i.source.ref ?? '')?.[1],
+  );
+  const first = llama[0];
+  return first && llama.every((u) => u === first)
+    ? { source: 'defillama', ref: `DefiLlama's treasury (${first})` }
+    : { source: 'chain', ref: "its treasury's accounts, read from their chain" };
 }

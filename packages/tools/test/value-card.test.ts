@@ -31,10 +31,13 @@ describe("a card's value", () => {
       max: { amount: '1000000000', source: 'coingecko' },
       market_cap: { usd: '3695648655', source: 'coingecko' },
       treasury_usd: '1620436914.59',
-      treasury_from: 'defillama',
+      treasury_source: {
+        source: 'defillama',
+        ref: "DefiLlama's treasury (https://api.llama.fi/treasury/uniswap)",
+      },
     });
     expect(cardValue(fixture(2))).toMatchObject({
-      treasury_from: 'chain',
+      treasury_source: { source: 'chain', ref: "its treasury's accounts, read from their chain" },
       circulating: null,
       max: null,
     });

@@ -63,7 +63,7 @@
         },
         "usd": "1620435291.57",
         "source": {
-          "ref": "https://api.llama.fi/treasury/uniswap (Ethereum-OwnTokens)",
+          "ref": "Ethereum-OwnTokens (https://api.llama.fi/treasury/uniswap)",
           "at": "2026-11-12T03:37:11.000Z"
         }
       },
@@ -82,7 +82,7 @@
         },
         "usd": "135.35",
         "source": {
-          "ref": "https://api.llama.fi/treasury/uniswap (Ethereum)",
+          "ref": "Ethereum (https://api.llama.fi/treasury/uniswap)",
           "at": "2026-11-12T03:37:11.000Z"
         }
       },
@@ -101,7 +101,7 @@
         },
         "usd": "1001.02",
         "source": {
-          "ref": "https://api.llama.fi/treasury/uniswap (Ethereum)",
+          "ref": "Ethereum (https://api.llama.fi/treasury/uniswap)",
           "at": "2026-11-12T03:37:11.000Z"
         }
       },
@@ -120,7 +120,7 @@
         },
         "usd": "486.65",
         "source": {
-          "ref": "https://api.llama.fi/treasury/uniswap (Ethereum)",
+          "ref": "Ethereum (https://api.llama.fi/treasury/uniswap)",
           "at": "2026-11-12T03:37:11.000Z"
         }
       }

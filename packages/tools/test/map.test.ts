@@ -521,7 +521,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
       amount: '100',
       usd: '99.50',
       price: { usd: 0.995, source: 'defillama' },
-      source: { ref: 'https://api.llama.fi/treasury/founders (Ethereum)' },
+      source: { ref: 'Ethereum (https://api.llama.fi/treasury/founders)' },
     });
     expect(v.treasury.items[1]).toMatchObject({ price: null, usd: null });
 

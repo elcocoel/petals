@@ -159,7 +159,7 @@ export {
   llamaTreasuries,
   marketOf,
   readChainMax,
-  treasuryFrom,
+  treasurySource,
 } from './marks/finance.ts';
 export {
   type MarkDeps,

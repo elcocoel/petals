@@ -97,7 +97,7 @@
   },
   "value.v3.json": {
     "schema": "urn:petal:schema:value:v3",
-    "sha256": "695af760b0cd1ff2d881f6067e4c792d68c39ccd65f2140e3356256b7827d733"
+    "sha256": "c29a376827793ba21f989714b71d007982208c892bade7fa3283da0778f0812c"
   },
   "proposals.v2.json": {
     "schema": "urn:petal:schema:proposals:v2",

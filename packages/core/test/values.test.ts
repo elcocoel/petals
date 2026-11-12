@@ -122,7 +122,7 @@ describe('value/v3', () => {
     expect(validateValue(v).ok).toBe(true);
     expect(v.circulating.source).toBe('coingecko');
     expect(v.treasury.items[0].source.ref).toBe(
-      'https://api.llama.fi/treasury/uniswap (Ethereum-OwnTokens)',
+      'Ethereum-OwnTokens (https://api.llama.fi/treasury/uniswap)',
     );
   });
 

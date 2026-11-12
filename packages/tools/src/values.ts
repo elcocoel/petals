@@ -26,7 +26,7 @@ import {
   readChainMax,
   readSupply,
   tokenPrices,
-  treasuryFrom,
+  treasurySource,
 } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
 import { type MapCard, mapsOf, mapViews } from './map.ts';
@@ -146,7 +146,9 @@ export async function valueMaps(ctx: ToolContext, o: ValueRun = {}): Promise<Val
     const storedRow = await store.value.get(card.id);
     const stored = storedRow ? validateValue(JSON.parse(storedRow.body)) : null;
     const kept: ValueTreasury | null =
-      stored?.ok && stored.value.treasury && treasuryFrom(stored.value.treasury) === 'chain'
+      stored?.ok &&
+      stored.value.treasury &&
+      treasurySource(stored.value.treasury)?.source === 'chain'
         ? stored.value.treasury
         : null;
     const llamaFound =

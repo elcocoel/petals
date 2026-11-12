@@ -8,7 +8,7 @@ import {
   llamaTreasuries,
   marketOf,
   readChainMax,
-  treasuryFrom,
+  treasurySource,
 } from '../src/marks/finance.ts';
 
 const AT = '2026-11-12T12:00:00.000Z';
@@ -132,7 +132,7 @@ describe("DefiLlama's treasury", () => {
       amount: '262247996.30584',
       usd: '1620435291.57',
       price: { source: 'defillama', usd: 6.17902 },
-      source: { ref: 'https://api.llama.fi/treasury/uniswap (Ethereum-OwnTokens)' },
+      source: { ref: 'Ethereum-OwnTokens (https://api.llama.fi/treasury/uniswap)' },
     });
   });
 
@@ -150,7 +150,7 @@ describe("DefiLlama's treasury", () => {
     const found = await l.treasuryOf('ethereum', UNI, { id: UNI, symbol: 'UNI' });
     expect(found?.slug).toBe('uniswap');
     expect(found?.treasury.total).toEqual({ usd: '1620435913.57', priced: 3, unpriced: 0 });
-    expect(treasuryFrom(found?.treasury)).toBe('defillama');
+    expect(treasurySource(found?.treasury)?.source).toBe('defillama');
     expect(await l.treasuryOf('base', UNI, null)).toBeNull();
     expect(asked.filter((u) => u.endsWith('/protocols'))).toHaveLength(1);
   });

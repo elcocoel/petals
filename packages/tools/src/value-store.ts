@@ -1,7 +1,7 @@
 // Each map's stored value (board #91), as the map's cards and readings take it: the values by the map's
 // address, and a card's own block, with its supply and its own total in dollars.
 import { usdString, type Value, validateValue } from '@petal/core';
-import { treasuryFrom } from '@petal/inputs';
+import { treasurySource } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
 import type { ToolContext } from './types.ts';
 
@@ -20,8 +20,8 @@ export interface CardValue {
   /** value/v2: the treasury's priced total, and how many of its assets have no price; null with no treasury */
   treasury_usd: string | null;
   treasury_unpriced: number | null;
-  /** value/v3: where the treasury's amounts were read, chain or defillama; null with no treasury */
-  treasury_from: string | null;
+  /** value/v3: where the treasury's amounts were read, chain or defillama, and its address; null with no treasury */
+  treasury_source: { source: string; ref: string } | null;
   /** value/v3: how much is out there, as its source counts it (CoinGecko's), or null */
   circulating: Value['circulating'] | null;
   /** value/v3: the most there can be, the chain's or CoinGecko's, amount null when its source says none */
@@ -44,7 +44,7 @@ export function cardValue(v: Value): CardValue {
     snapshot: v.snapshot,
     treasury_usd: v.treasury?.total.usd ?? null,
     treasury_unpriced: v.treasury?.total.unpriced ?? null,
-    treasury_from: treasuryFrom(v.treasury),
+    treasury_source: treasurySource(v.treasury),
     circulating: v.circulating ?? null,
     max: v.max ?? null,
     market_cap: v.market_cap ?? null,
