@@ -50,7 +50,7 @@ export function usePublishPress(map: string | null) {
         setPhase('failed');
         return;
       }
-      setSaid(publishWords.published(out.published));
+      setSaid(publishWords.publishedAll(out.published, out.readings ?? 0));
       setPhase('published');
     } catch {
       setSaid(publishWords.failed);

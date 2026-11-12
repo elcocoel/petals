@@ -17,7 +17,10 @@ export function PublishPress({
       {/* every item, read before the press (Elco: "Let me look first") */}
       {view.rows && (
         <>
-          <Rows heading={view.rows.goes} rows={view.rows.going} />
+          {view.rows.readings && (
+            <Rows heading={view.rows.readings.heading} rows={view.rows.readings.rows} />
+          )}
+          {view.rows.going.length > 0 && <Rows heading={view.rows.goes} rows={view.rows.going} />}
           {view.rows.staying.length > 0 && (
             <Rows heading={view.rows.stays} rows={view.rows.staying} />
           )}
