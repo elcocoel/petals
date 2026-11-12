@@ -84,7 +84,12 @@ export interface LandFrame {
   pointed?: number;
   /** Where the window's free space starts on the left, past what sits down its side. */
   left: number;
+  /** The wallet level: the flowers that hold the chosen wallet, or null with none chosen. The rest recede. */
+  holds?: ReadonlySet<number> | null;
 }
+
+/** A flower that doesn't hold the chosen wallet keeps this much of itself (the wallet level). */
+export const WALLET_AWAY = 0.25;
 
 export interface LandScene {
   /** Live flowers go just under this, so names stay above them. */
@@ -332,7 +337,7 @@ export function createLandScene(
 
   return {
     top,
-    draw({ view, live, entered, enter, marked, left, pointed = -1 }) {
+    draw({ view, live, entered, enter, marked, left, pointed = -1, holds = null }) {
       world.set('transform', `translate(${n3(view.x)} ${n3(view.y)}) scale(${view.k})`);
       const rest = 1 - enter;
       flowerLayer.set('opacity', o2(rest));
@@ -349,6 +354,7 @@ export function createLandScene(
         }
         if (visible) {
           const r = screenRadius(view, f.place);
+          s.g.set('opacity', holds && !holds.has(i) ? WALLET_AWAY : 1);
           if (s.wave) {
             const w = fade(DETAIL.farWave, r);
             s.wave.set('opacity', o2(w));
@@ -377,7 +383,8 @@ export function createLandScene(
       for (const i of order) {
         const f = flowers[i] as LandFlower;
         const l = labels[i] as Label;
-        const tone = i === entered ? 1 : rest;
+        // with a wallet chosen, the flowers that don't hold it recede, their marks and names too
+        const tone = (i === entered ? 1 : rest) * (holds && !holds.has(i) ? WALLET_AWAY : 1);
         const r = screenRadius(view, f.place);
         const markShown = fade(DETAIL.mark, r) * tone;
         if (!onScreen(view, f.place) || markShown <= 0.01) {

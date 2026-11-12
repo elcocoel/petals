@@ -72,6 +72,11 @@ export interface PetalLook {
     /** each vote's colour, as the reading gives it */
     colours: Record<VoteColour, string>;
   };
+  /**
+   * The wallet level (Elco, 11 Nov: "Its votes"): the chosen wallet, by its id, whose vote on each proposal colours
+   * that proposal's arc, as its dot would be; the proposals it didn't vote on stay quiet.
+   */
+  voter?: string | null;
 }
 
 /** Each scene's filters get their own names, so two flowers on one page never share one. */
@@ -412,8 +417,17 @@ export function createScene(
         votes.to,
       )
     : [];
+  const voter = look?.voter ?? null;
+  /** An arc at rest: the chosen wallet's vote in its colour, else quiet (its proposer's, ink; no one's, hairline). */
+  const restOf = (id: string, own: boolean): string => {
+    const p = voter ? votes?.proposals.find((q) => q.id === id) : undefined;
+    const cast = p ? votesOn(p) : null;
+    if (votes && voter && cast?.has(voter)) return votes.colours[cast.get(voter) ?? 'abstain'];
+    return own ? MUTED : HAIR;
+  };
   const markSlots = placed.map((pl) => {
     const own = pl.petal >= 0;
+    const rest = restOf(pl.id, own);
     const d = placeArc(m.ring, pl.petal, pl.step);
     const seen = slot(
       el(
@@ -421,7 +435,7 @@ export function createScene(
         {
           d,
           fill: 'none',
-          stroke: own ? MUTED : HAIR,
+          stroke: rest,
           'stroke-width': 2.5,
           'stroke-linecap': 'butt',
           'vector-effect': 'non-scaling-stroke',
@@ -442,7 +456,7 @@ export function createScene(
       },
       voteTop as SVGGElement,
     );
-    return { pl, own, seen, hit };
+    return { pl, own, rest, seen, hit };
   });
   // the pointed proposal's words, in the flower's middle under its title, where they always fit
   const voteWords = votes
@@ -462,7 +476,7 @@ export function createScene(
     if (!votes || !dotLayer) return;
     pointed = j;
     markSlots.forEach((s, k) => {
-      s.seen.set('stroke', k === j ? INK : s.own ? MUTED : HAIR);
+      s.seen.set('stroke', k === j ? INK : s.rest);
       s.seen.set('stroke-width', k === j ? 3.5 : 2.5);
     });
     dotLayer.replaceChildren();
