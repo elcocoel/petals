@@ -24,6 +24,7 @@ import {
   useState,
 } from 'react';
 import { MapClaims } from '../components/MapClaims.tsx';
+import { MapLayers } from '../components/MapLayers.tsx';
 import { MapSearch } from '../components/MapSearch.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { IconButton } from '../components/ui/IconButton.tsx';
@@ -35,6 +36,7 @@ import { type FlowerReading, modelOf } from '../flower/model.ts';
 import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
 import type { Rect, Size } from '../lib/float-box.ts';
 import { mapClaimGroups, mapClaimWords } from '../lib/map-claims.ts';
+import { layerWords, mapLayers } from '../lib/map-layers.ts';
 import { MAP_SEARCH_ID, mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
@@ -42,6 +44,7 @@ import type { LegendEdit } from '../lib/view-edit.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
 import { useMapBlocs } from '../viewmodels/useMapBlocs.ts';
+import { useMapCard } from '../viewmodels/useMapCard.ts';
 import { useMapClaims } from '../viewmodels/useMapClaims.ts';
 import { useMapSearch } from '../viewmodels/useMapSearch.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
@@ -479,6 +482,9 @@ export function LandscapeCanvas({
     toldWallet.current?.(id && f ? { id, chain: f.place.chain, flower: f.name } : null);
   }, []);
   const claims = useMapClaims(legend ? (inFlower?.map ?? null) : null);
+  // the map's layers, each with its period and who mapped it (Elco's walk 3), from its card and its insights
+  const card = useMapCard(legend && movable ? (inFlower?.map ?? null) : null);
+  const layers = useMemo(() => (card ? mapLayers(card, claims) : []), [card, claims]);
   const blocs = useMapBlocs(legend ? (inFlower?.map ?? null) : null, span);
   const choices = useMemo(() => (blocs ? blocChoices(blocs) : []), [blocs]);
   const lit = useMemo(() => choices.find((c) => c.id === bloc)?.members ?? null, [choices, bloc]);
@@ -730,6 +736,14 @@ export function LandscapeCanvas({
                     <SectionHead size="panel" title={information.title} />
                     <div className="flex flex-col gap-text-gap px-space-8 py-space-8">
                       {information.body}
+                    </div>
+                  </div>
+                )}
+                {layers.length > 0 && (
+                  <div className="flex flex-col px-space-8">
+                    <SectionHead size="panel" title={layerWords.title} />
+                    <div className="px-space-8 py-space-8">
+                      <MapLayers layers={layers} />
                     </div>
                   </div>
                 )}
