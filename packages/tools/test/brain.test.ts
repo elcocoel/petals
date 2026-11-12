@@ -39,6 +39,7 @@ describe('the brain', () => {
       'full-dao-report',
       'going-deeper',
       'governance-health-report',
+      'on-the-map',
       'open-calls',
       'open-source-leads',
       'over-time',
@@ -100,7 +101,7 @@ describe('the brain', () => {
       'moloch-v3',
     ]);
     expect(by('money')).toEqual(['payouts', 'value', 'vesting']);
-    expect(by('investigation')).toEqual(['going-deeper', 'over-time']);
+    expect(by('investigation')).toEqual(['going-deeper', 'on-the-map', 'over-time']);
     // services holds #101's nine chapters (Elco, 12 Nov: all free)
     expect(by('services')).toEqual([
       'authority-map',
@@ -135,7 +136,7 @@ describe('the brain', () => {
 
   test('the routing table (routing.md) is in the index, names only files there are, and every chapter is in a row', () => {
     const index = buildBrainIndex(BRAIN);
-    expect(index.tasks.length).toBe(32);
+    expect(index.tasks.length).toBe(33);
     expect(index.tasks[0]).toEqual({
       task: 'Set up Petals',
       words: ['setup', 'set up', 'sign in', 'wallet', 'credit', 'first conversation'],

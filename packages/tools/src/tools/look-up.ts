@@ -3,6 +3,7 @@
 // unknown word gives an empty answer that says what was searched and what was down. Never an error on a
 // guess.
 //
+//   maps      on the Power Map, each with its link and what it holds in short (get_map gives the rest)
 //   flowers   on the map and in the fixtures, each with its link
 //   stored    reads Petal holds, with their dates
 //   accounts  where an address or account id is a participant in a stored read: its share and rank
@@ -15,9 +16,11 @@ import { computeFigures } from '@petal/core';
 import type { IndexRow, Snapshot } from '@petal/core/types';
 import { defineTool, type PetalTool } from '../define.ts';
 import { isToolError } from '../errors.ts';
+import { retiredReading } from '../hidden.ts';
 import type { ToolContext } from '../types.ts';
 import { makeFindTarget, parseQuery } from './find.ts';
 import { allFlowers, type Found, summaryOf } from './flowers.ts';
+import { MAP_ROW, mapIndex, mapRow } from './maps.ts';
 import { makeReadChain } from './read-chain.ts';
 import { accountGroupsTool } from './relations.ts';
 import { defaultMeasure, descriptorOf, findSnapshot, obj } from './shared.ts';
@@ -314,6 +317,7 @@ const SOURCE_STATUS: Record<string, Searched['status']> = {
 // --- Saying it
 
 const PLACES: Record<string, string> = {
+  maps: 'the Power Map',
   flowers: 'flowers',
   stored: 'stored reads',
   accounts: 'accounts in stored reads',
@@ -326,11 +330,16 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? o
 function sayIt(
   query: string,
   shape: Shape,
-  found: { flowers: number; stored: number; accounts: number; listed: number },
+  found: { maps: number; flowers: number; stored: number; accounts: number; listed: number },
   chain: Json[],
   searched: Searched[],
 ): string {
   const parts: string[] = [];
+  // What's already there comes first (Elco, 12 Nov): the person goes to a map by its link, before any reading.
+  if (found.maps)
+    parts.push(
+      `${plural(found.maps, 'map')} on the Power Map, each with its map_url: the link that takes the person there, to give exactly as it is; get_map tells what each holds`,
+    );
   // Models put an invented host in front of a relative link ("https://petal.example/f/…").
   if (found.flowers)
     parts.push(
@@ -377,7 +386,7 @@ export function makeLookUp(
     onTheirMachine: true,
     title: 'Look up',
     description:
-      "What Petals knows about any word (a name, ticker, address, account): flowers with view_url, stored reads with dates, accounts in them, what the chain says of an address, and what market and DAO lists name, each marked how it's known. Never fails on a guess.",
+      "What Petals knows about any word (a name, ticker, address, account): the Power Map's maps with their map_url and what each holds, flowers with view_url, stored reads with dates, accounts in them, what the chain says of an address, and what market and DAO lists name, each marked how it's known. Never fails on a guess.",
     input: obj(
       ['query'],
       {
@@ -386,65 +395,71 @@ export function makeLookUp(
       },
       { additionalProperties: false },
     ),
-    output: obj(['query', 'says', 'flowers', 'stored', 'accounts', 'chain', 'listed', 'searched'], {
-      query: { type: 'string' },
-      says: { type: 'string' },
-      flowers: {
-        type: 'array',
-        items: obj(['id', 'title', 'network', 'as_of', 'where', 'view_url', 'known'], {
-          id: { type: 'string' },
-          title: { type: 'string' },
-          network: { type: 'string' },
-          as_of: { type: 'string' },
-          where: { enum: ['map', 'fixture'] },
-          view_url: { type: 'string' },
-          known: KNOWN,
-        }),
+    output: obj(
+      ['query', 'says', 'maps', 'flowers', 'stored', 'accounts', 'chain', 'listed', 'searched'],
+      {
+        query: { type: 'string' },
+        says: { type: 'string' },
+        maps: { type: 'array', items: MAP_ROW },
+        flowers: {
+          type: 'array',
+          items: obj(['id', 'title', 'network', 'as_of', 'where', 'view_url', 'known'], {
+            id: { type: 'string' },
+            title: { type: 'string' },
+            network: { type: 'string' },
+            as_of: { type: 'string' },
+            where: { enum: ['map', 'fixture'] },
+            view_url: { type: 'string' },
+            known: KNOWN,
+          }),
+        },
+        stored: {
+          type: 'array',
+          items: obj(['network', 'title', 'sha256', 'as_of', 'block_height', 'known'], {
+            network: { type: 'string' },
+            title: { type: 'string' },
+            params: { type: 'object' },
+            sha256: { type: 'string' },
+            as_of: { type: 'string' },
+            block_height: { type: ['integer', 'null'] },
+            known: KNOWN,
+          }),
+        },
+        accounts: {
+          type: 'array',
+          items: obj(['account', 'role', 'in', 'network', 'sha256', 'as_of', 'known'], {
+            account: { type: 'string' },
+            role: { enum: ['holder', 'delegator', 'backed'] },
+            in: { type: 'string' },
+            network: { type: 'string' },
+            sha256: { type: 'string' },
+            as_of: { type: 'string' },
+            known: KNOWN,
+          }),
+        },
+        chain: ROWS,
+        listed: ROWS,
+        ambiguous: { type: 'boolean' },
+        searched: {
+          type: 'array',
+          items: obj(['id', 'status'], {
+            id: { type: 'string' },
+            status: { enum: ['answered', 'down', 'skipped'] },
+            note: { type: 'string' },
+          }),
+        },
       },
-      stored: {
-        type: 'array',
-        items: obj(['network', 'title', 'sha256', 'as_of', 'block_height', 'known'], {
-          network: { type: 'string' },
-          title: { type: 'string' },
-          params: { type: 'object' },
-          sha256: { type: 'string' },
-          as_of: { type: 'string' },
-          block_height: { type: ['integer', 'null'] },
-          known: KNOWN,
-        }),
-      },
-      accounts: {
-        type: 'array',
-        items: obj(['account', 'role', 'in', 'network', 'sha256', 'as_of', 'known'], {
-          account: { type: 'string' },
-          role: { enum: ['holder', 'delegator', 'backed'] },
-          in: { type: 'string' },
-          network: { type: 'string' },
-          sha256: { type: 'string' },
-          as_of: { type: 'string' },
-          known: KNOWN,
-        }),
-      },
-      chain: ROWS,
-      listed: ROWS,
-      ambiguous: { type: 'boolean' },
-      searched: {
-        type: 'array',
-        items: obj(['id', 'status'], {
-          id: { type: 'string' },
-          status: { enum: ['answered', 'down', 'skipped'] },
-          note: { type: 'string' },
-        }),
-      },
-    }),
+    ),
     annotations: { readOnlyHint: true, idempotentHint: false, openWorldHint: true },
     async run({ query, chain }, ctx) {
       const q = query.trim();
       const shape = shapeOf(q);
       const searched: Searched[] = [];
-      const asked = wordsOf(parseQuery(q, chain).core);
+      const parsed = parseQuery(q, chain);
+      const asked = wordsOf(parsed.core);
 
-      const [flowersAll, rows, accounts, chainRead] = await Promise.all([
+      const [index, flowersAll, rows, accounts, chainRead] = await Promise.all([
+        mapIndex(ctx).catch(() => null),
         allFlowers(ctx),
         ctx.store.list().catch(() => null),
         isAccount(shape) ? accountsOf(ctx, q) : null,
@@ -452,6 +467,7 @@ export function makeLookUp(
           ? readChain.run({ address: q, ...(chain ? { chain } : {}) }, ctx).then((o) => o as Json)
           : null,
       ]);
+      searched.push({ id: 'maps', status: index ? 'answered' : 'down' });
       searched.push({ id: 'flowers', status: flowersAll.map === 'down' ? 'down' : 'answered' });
       searched.push(rows ? { id: 'stored', status: 'answered' } : { id: 'stored', status: 'down' });
       if (accounts) searched.push(accounts.searched);
@@ -494,7 +510,6 @@ export function makeLookUp(
       }
 
       // Stored reads: by their words, by hash, by what a list says Petal holds, or where the account is.
-      const index = rows ?? [];
       const shas = new Set<string>();
       for (const r of accounts?.rows ?? []) shas.add(r.sha256);
       for (const c of listed)
@@ -502,7 +517,9 @@ export function makeLookUp(
           const st = d.stored as Json | undefined;
           if (typeof st?.sha256 === 'string') shas.add(st.sha256);
         }
-      const stored = index
+      const stored = (rows ?? [])
+        // a reading a wave replaced is in no list of the map (#96): it's never offered to draw
+        .filter((r) => !retiredReading(r.sha256))
         .filter(
           (r) =>
             shas.has(r.sha256) ||
@@ -545,10 +562,30 @@ export function makeLookUp(
           };
         });
 
+      // Maps: by their words, by an address that is theirs or their readings', or because they hold a read
+      // the account is in. The one named exactly comes first, then those on the chain asked.
+      const k = q.toLowerCase();
+      const heldBy = new Set((accounts?.rows ?? []).map((r) => r.sha256));
+      const onMap = (index ?? []).filter(
+        (m) =>
+          (shape === 'name' && matches(asked, m.text)) ||
+          (isAccount(shape) &&
+            m.addresses.some((a) => a.toLowerCase() === k || a.toLowerCase().endsWith(`:${k}`))) ||
+          m.card.readings.some((r) => heldBy.has(r.snapshot) || r.snapshot === q),
+      );
+      const exact = asked.join(' ');
+      const rank = (r: { name: string; chain: string }) =>
+        (wordsOf(r.name).join(' ') === exact ? 0 : 2) +
+        (parsed.chain && r.chain !== parsed.chain ? 1 : 0);
+      const maps = (await Promise.all(onMap.map((m) => mapRow(ctx, m.card)))).sort(
+        (a, b) => rank(a) - rank(b),
+      );
+
       const says = sayIt(
         q,
         shape,
         {
+          maps: maps.length,
           flowers: flowers.length,
           stored: stored.length,
           accounts: accounts?.rows.length ?? 0,
@@ -560,6 +597,7 @@ export function makeLookUp(
       return {
         query: q,
         says,
+        maps,
         flowers,
         stored,
         accounts: accounts?.rows ?? [],

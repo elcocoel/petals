@@ -6,7 +6,7 @@
 import type { Claim } from '@petal/core/types';
 import { privateStore } from './drafts.ts';
 import { retiredClaim } from './hidden.ts';
-import { mapsOf, mapViews } from './map.ts';
+import { type MapCard, mapsOf, mapViews } from './map.ts';
 import { loadSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
 
@@ -39,23 +39,44 @@ export async function keepMappingClaims(
   );
 }
 
+/** An account as a map's petals have it: an EVM address in lower case. */
+const accountKey = (id: string) => (id.startsWith('eip155:') ? id.toLowerCase() : id);
+
+/**
+ * The accounts a map is about: its own address, its readings' petals, and the accounts its readings name as
+ * theirs in their params (the DAO, its governance contract, an escrow), each as accountKey has it.
+ */
+export async function cardAccounts(ctx: ToolContext, card: MapCard): Promise<Set<string>> {
+  // a petal's id is its account in CAIP-10, or, in older readings, its bare address on the map's chain
+  const chain = card.id.slice(0, card.id.lastIndexOf(':'));
+  const accounts = new Set<string>([accountKey(card.id)]);
+  for (const r of card.readings) {
+    const s = await loadSnapshot(ctx, r.snapshot);
+    for (const p of s.participants)
+      accounts.add(accountKey(p.id.includes(':') ? p.id : `${chain}:${p.id}`));
+    for (const v of Object.values(s.network.params ?? {}))
+      if (typeof v === 'string' && ADDRESS.test(v)) accounts.add(accountKey(`${chain}:${v}`));
+  }
+  return accounts;
+}
+
+/** Whether a claim is about one of these accounts. */
+export const aboutOneOf = (accounts: ReadonlySet<string>, subject: string) =>
+  accounts.has(accountKey(subject));
+
 /** A map's claims by Petals' mapping, or null for a map that isn't on the map. */
 export async function mapClaims(ctx: ToolContext, id: string): Promise<Claim[] | null> {
   const card = mapsOf(await mapViews(ctx, undefined, { hidden: true })).find((m) => m.id === id);
   if (!card) return null;
-  // a petal's id is its account in CAIP-10, or, in older readings, its bare address on the map's chain
-  const chain = card.id.slice(0, card.id.lastIndexOf(':'));
-  const key = (id: string) => (id.startsWith('eip155:') ? id.toLowerCase() : id);
-  const accounts = new Set<string>([key(card.id)]);
-  for (const r of card.readings) {
-    const s = await loadSnapshot(ctx, r.snapshot);
-    for (const p of s.participants)
-      accounts.add(key(p.id.includes(':') ? p.id : `${chain}:${p.id}`));
-    // and the accounts its readings name as theirs: the DAO, its governance contract, an escrow (params)
-    for (const v of Object.values(s.network.params ?? {}))
-      if (typeof v === 'string' && ADDRESS.test(v)) accounts.add(key(`${chain}:${v}`));
-  }
+  return claimsAbout(ctx, await cardAccounts(ctx, card));
+}
+
+/** Petals' mapping's claims about these accounts, oldest first, none retired. */
+export async function claimsAbout(
+  ctx: ToolContext,
+  accounts: ReadonlySet<string>,
+): Promise<Claim[]> {
   return (await privateStore(ctx.config).annotation.list(MAPPING))
-    .filter((r) => accounts.has(key(r.subject)) && !retiredClaim(r.id))
+    .filter((r) => aboutOneOf(accounts, r.subject) && !retiredClaim(r.id))
     .map((r) => JSON.parse(r.body) as Claim);
 }

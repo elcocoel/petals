@@ -81,7 +81,7 @@
       "continues": [],
       "status": "ready",
       "file": "investigation/README.md",
-      "sha256": "54c1299044357de7d14bc1500b7856ee96e921e7d2bd66f2e70085d7bfd76716"
+      "sha256": "655045ddbe299c01e2c4f72dcc5a206067357fb0db1c94946560e0abcc170312"
     },
     {
       "id": "services",
@@ -500,7 +500,7 @@
       ],
       "status": "ready",
       "file": "investigation/going-deeper.md",
-      "sha256": "7d9bb229b39d01f4089f42b1b96107e875fd5989c6c60219a876eda62c58148b"
+      "sha256": "dab10857d73399a80fd2ff1d227fe837ed3b693a74dc95111fff66259b5c9795"
     },
     {
       "id": "governance-health-report",
@@ -531,6 +531,41 @@
       "status": "partial",
       "file": "services/governance-health-report.md",
       "sha256": "2e085107652b8a572f850011e66318ceb46a42cdfff944a052fde2949cb4c0fa"
+    },
+    {
+      "id": "on-the-map",
+      "kind": "chapter",
+      "department": "investigation",
+      "for": "going to what's already on the Power Map and interpreting it, before any new reading",
+      "recognise": [
+        "navigate",
+        "take me",
+        "go to",
+        "open",
+        "show me",
+        "what's there",
+        "already",
+        "on the map",
+        "what do we have",
+        "what we found"
+      ],
+      "tools": [
+        "look_up",
+        "get_map",
+        "find_voting_blocs",
+        "list_payouts",
+        "describe_snapshot",
+        "compute_figures"
+      ],
+      "continues": [
+        "going-deeper",
+        "where-power-lives",
+        "payouts",
+        "voting-blocs-over-time"
+      ],
+      "status": "ready",
+      "file": "investigation/on-the-map.md",
+      "sha256": "4dc0003aaf7721db35fcac18ec4c8568826ca86b153463faab8e27c43ac05a79"
     },
     {
       "id": "open-calls",
@@ -708,7 +743,7 @@
       ],
       "status": "ready",
       "file": "connecting/setup.md",
-      "sha256": "1f1d22bc59e523a4de72cf0b80285206cc7cdb6d76d750f7169b77ec0f6a66c0"
+      "sha256": "375e3e5b6533137df7f30751be2c1ab30d21954ca9a28dc4b0caca5ef794f413"
     },
     {
       "id": "stake-behind-the-network",
@@ -1383,6 +1418,25 @@
         "over-time"
       ],
       "also": []
+    },
+    {
+      "task": "What's already on the map, and going there",
+      "words": [
+        "navigate",
+        "take me",
+        "go to",
+        "open",
+        "what's there",
+        "already",
+        "on the map",
+        "what we found"
+      ],
+      "load": [
+        "on-the-map"
+      ],
+      "also": [
+        "going-deeper"
+      ]
     },
     {
       "task": "What to offer after an answer",

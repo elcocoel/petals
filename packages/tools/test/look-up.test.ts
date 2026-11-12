@@ -76,7 +76,7 @@ describe('look_up', () => {
       expect.objectContaining({ id: FLOWER, view_url: `/f/${FLOWER}`, known: 'stored' }),
     ]);
     // a NEAR account is answered by what Petal holds: no market list is asked about it
-    expect(o.searched.map((s: Json) => s.id)).toEqual(['flowers', 'stored', 'accounts']);
+    expect(o.searched.map((s: Json) => s.id)).toEqual(['maps', 'flowers', 'stored', 'accounts']);
     expect(o.says).toMatch(
       /^Found 1 flower, each with its view_url: a working link, to give exactly as it is/,
     );
@@ -113,7 +113,8 @@ describe('look_up', () => {
     const o = await look('zzqx-not-a-thing');
     expect(o.error).toBeUndefined();
     expect(fits(o), describeErrors(fits.errors)).toBe(true);
-    for (const k of ['flowers', 'stored', 'accounts', 'chain', 'listed']) expect(o[k]).toEqual([]);
+    for (const k of ['maps', 'flowers', 'stored', 'accounts', 'chain', 'listed'])
+      expect(o[k]).toEqual([]);
     expect(o.says).toMatch(/Nothing Petals holds or lists answers to "zzqx-not-a-thing"/);
     expect(o.says).toMatch(/isn't the same as not existing/);
     // in fake mode the lists are skipped, and said so, not reported as empty

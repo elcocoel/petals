@@ -331,7 +331,17 @@ export const proposeSpec = defineTool<ProposeIn, object>({
     const s = await loadSnapshot(ctx, input.sha256);
     if (!known && s.network.id !== input.network) moduleFor(ctx, input.network);
     const base = known ?? readingDescriptor(s);
-    if (input.params && known) checkParams(base, input.params);
+    // A stored reading's own params are the spec's whatever its reader calls them (a wave's governance_contract):
+    // passing them back, as list_flowers and get_map give them, is never refused (12 Nov, a wasted turn).
+    // Only what's added to them is checked, with them standing for what its reader needs.
+    const own = s.network.params ?? {};
+    if (known && Object.entries(input.params ?? {}).some(([k, v]) => own[k] !== v)) {
+      const asked = Object.entries({ ...own, ...input.params }).filter(
+        (e): e is [string, string] =>
+          typeof e[1] === 'string' && (e[0] in base.params || own[e[0]] !== e[1]),
+      );
+      checkParams(base, Object.fromEntries(asked));
+    }
     const d = descriptorOf(ctx, s) ?? base;
     if (s.network.id !== input.network) {
       throw new ToolFailure(

@@ -69,7 +69,10 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     const got = await run('get_flower', { id: pub.id });
     await run('quote_payment', { purpose: 'sponsor_refresh' });
     await run('find_target', { query: 'near validators' });
-    await run('look_up', { query: 'near validators' });
+    const found = await run('look_up', { query: 'near validators' });
+    // the map the flow drew is on the Power Map: look_up gives its id, get_map what it holds
+    const [onMap] = found.maps as { id: string }[];
+    await run('get_map', { map: onMap?.id ?? 'none' });
     await run('look_up', { query: '0x000000000000000000000000000000000000dead' });
     await run('look_up', { query: 'astro-stakers.poolv1.near' });
     await run('read_chain', { address: '0x000000000000000000000000000000000000dead' });
