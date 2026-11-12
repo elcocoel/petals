@@ -54,8 +54,7 @@ describe('a map’s layers', () => {
       proposals: {
         count: 1060,
         read_at: '2026-11-11T16:01:45.540Z',
-        from: '2021-06-30T23:01:52Z',
-        to: '2026-11-05T12:47:40Z',
+        period: { from: '2021-06-30T23:01:52Z', to: '2026-11-05T12:47:40Z' },
       },
     };
     expect(mapLayers(spanned, null)[1]?.period).toBe('30 Jun 2021 to 5 Nov 2026');

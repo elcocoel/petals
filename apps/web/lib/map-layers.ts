@@ -23,12 +23,14 @@ export interface LayerLine {
   link?: string | undefined;
 }
 
-/** What a card says of its proposals: how many, when they were read, and the span they cover when it says. */
+/**
+ * What a card says of its proposals: how many, when they were read, and the span they cover, from the earliest
+ * proposal's own time to the latest's (SYSTEMS's sys/cardperiod), when it says.
+ */
 export interface CardProposals {
   count: number;
   read_at: string;
-  from?: string | null;
-  to?: string | null;
+  period?: { from: string; to: string } | null;
 }
 
 export type LayerCard = Pick<MapCard, 'readings' | 'value'> & { proposals?: CardProposals | null };
@@ -72,10 +74,9 @@ export function mapLayers(card: LayerCard, claims: readonly Claim[] | null): Lay
     lines.push({
       key: 'proposals',
       name: layerWords.proposals,
-      period:
-        p.from && p.to
-          ? layerWords.span(dateLabel(p.from), dateLabel(p.to))
-          : layerWords.read(dateLabel(p.read_at)),
+      period: p.period
+        ? layerWords.span(dateLabel(p.period.from), dateLabel(p.period.to))
+        : layerWords.read(dateLabel(p.read_at)),
       count: layerWords.proposalCount(p.count),
     });
   const price = card.value?.price;
