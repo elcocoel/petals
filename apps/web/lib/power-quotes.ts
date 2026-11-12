@@ -1,0 +1,103 @@
+// The illustrated power quotes (#89), Elco's final selection from Figma #44–60
+// (design/quotes/selected-13-2026-11-11/manifest.json), shown wherever a screen is empty (wave 7, Elco: "the quotes
+// are made but not finished ... let's put the shitty version in and fix forward"). The pictures are in
+// public/quotes/, 960 px wide. Pure.
+
+export interface PowerQuoteItem {
+  id: string;
+  quote: string;
+  /** who said it, and where */
+  author: string;
+  image: string;
+}
+
+export const POWER_QUOTES: readonly PowerQuoteItem[] = [
+  {
+    id: '01-sunlight',
+    quote: 'Sunlight is said to be the best of disinfectants.',
+    author: "Louis Brandeis, Other People's Money (1914)",
+    image: '/quotes/01-sunlight.webp',
+  },
+  {
+    id: '02-watchers',
+    quote: 'Who will guard the guards themselves?',
+    author: 'Juvenal, Satires (c. 120 CE)',
+    image: '/quotes/02-watchers.webp',
+  },
+  {
+    id: '03-throne',
+    quote: 'On the highest throne in the world, we still sit only on our own bottom.',
+    author: 'Michel de Montaigne, Essays (1588)',
+    image: '/quotes/03-throne.webp',
+  },
+  {
+    id: '04-politics',
+    quote: 'Politics: a strife of interests masquerading as a contest of principles.',
+    author: "Ambrose Bierce, The Devil's Dictionary (1911)",
+    image: '/quotes/04-politics.webp',
+  },
+  {
+    id: '06-fish',
+    quote:
+      'Just as fish moving under water cannot possibly be found out either as drinking or not drinking water, so government servants... cannot be found out (while) taking money.',
+    author: 'Kautilya, Arthashastra (c. 300 BCE)',
+    image: '/quotes/06-fish.webp',
+  },
+  {
+    id: '08-caesar',
+    quote: 'Take care that thou art not made into a Caesar.',
+    author: 'Marcus Aurelius, Meditations (c. 170 CE)',
+    image: '/quotes/08-caesar.webp',
+  },
+  {
+    id: '10-small-fish',
+    quote:
+      'Governing a large country is like frying a small fish. You spoil it with too much poking.',
+    author: "Laozi, Tao Te Ching (Stephen Mitchell's translation)",
+    image: '/quotes/10-small-fish.webp',
+  },
+  {
+    id: '11-money',
+    quote: "Money doesn't stink.",
+    author: 'Emperor Vespasian, defending a tax on public toilets',
+    image: '/quotes/11-money.webp',
+  },
+  {
+    id: '12-magnetic',
+    quote: 'It is not that power corrupts but that it is magnetic to the corruptible.',
+    author: 'Frank Herbert, Chapterhouse: Dune (1985)',
+    image: '/quotes/12-magnetic.webp',
+  },
+  {
+    id: '13-candle',
+    quote: 'To light a candle is to cast a shadow.',
+    author: 'Ursula K. Le Guin, A Wizard of Earthsea (1968)',
+    image: '/quotes/13-candle.webp',
+  },
+  {
+    id: '14-grip',
+    quote:
+      'The more you tighten your grip, Tarkin, the more star systems will slip through your fingers.',
+    author: 'Princess Leia, Star Wars (1977)',
+    image: '/quotes/14-grip.webp',
+  },
+  {
+    id: '15-feed-us',
+    quote: 'Make us your slaves, but feed us.',
+    author: 'The Grand Inquisitor, Fyodor Dostoevsky, The Brothers Karamazov (1880)',
+    image: '/quotes/15-feed-us.webp',
+  },
+  {
+    id: '16-sausages',
+    quote: 'Laws are like sausages. It is better not to see them being made.',
+    author:
+      'Usually credited to Bismarck. The earliest version is the poet John Godfrey Saxe (1869).',
+    image: '/quotes/16-sausages.webp',
+  },
+];
+
+/** One quote for a seed, any whole number: the same seed, the same quote. */
+export function quoteFor(seed: number): PowerQuoteItem {
+  const n = POWER_QUOTES.length;
+  return POWER_QUOTES[((Math.trunc(seed) % n) + n) % n] as PowerQuoteItem;
+}

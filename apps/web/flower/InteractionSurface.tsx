@@ -15,6 +15,7 @@ import { ConversationThread } from '../components/chat/ConversationThread.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { PetalClaims } from '../components/PetalClaims.tsx';
+import { PowerQuote } from '../components/PowerQuote.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { Icon } from '../components/ui/Icon.tsx';
@@ -38,6 +39,7 @@ import { groundWords } from '../lib/opening.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useGroundMap } from '../viewmodels/useGroundMap.ts';
+import { usePowerQuote } from '../viewmodels/usePowerQuote.ts';
 import { usePublishPress } from '../viewmodels/usePublishPress.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import type { Clear } from './camera.ts';
@@ -196,6 +198,9 @@ export function InteractionSurface({
   const [inMap, setInMap] = useState<string | null>(null);
   const publishMap = inMap ?? flowerMap ?? state.mapAt?.map ?? made?.held.existing_map ?? null;
   const publishing = usePublishPress(publishMap);
+  // a power quote wherever /make has nothing to show yet (#89, wave 7): the map on its way, an empty Mapping
+  const openingQuote = usePowerQuote(0);
+  const mappingQuote = usePowerQuote(1);
   // the wallet chosen on the map (the wallet level): in Mapping, a note or a name about it, or having it mapped
   const chosen = state.mapWallet;
   const chosenAccount = chosen
@@ -229,13 +234,13 @@ export function InteractionSurface({
           // beside the conversation, as the flower is, so its chains and its flowers aren't under it
           <div ref={mapArea} className="absolute inset-0">
             {!land ? (
-              <p
-                role="status"
-                className="flex h-full items-center justify-center gap-text-gap type-ui text-muted"
-              >
-                <Icon name="petals" />
-                {groundWords.opening}
-              </p>
+              <div className="flex h-full flex-col items-center justify-center gap-block-gap">
+                {openingQuote && <PowerQuote quote={openingQuote} />}
+                <p role="status" className="m-0 flex items-center gap-text-gap type-ui text-muted">
+                  <Icon name="petals" />
+                  {groundWords.opening}
+                </p>
+              </div>
             ) : (
               <LandscapeCanvas
                 key={ground.map ?? (atFlower ? `flower:${focus}` : 'whole')}
@@ -365,6 +370,7 @@ export function InteractionSurface({
             view={mapping}
             press={publishing.view}
             onPublish={() => void publishing.publish()}
+            quote={mappingQuote && <PowerQuote quote={mappingQuote} />}
             wallet={
               chosen && chosenAccount
                 ? {
