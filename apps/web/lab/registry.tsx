@@ -2398,6 +2398,7 @@ export const registry: LabEntry[] = [
             failed={null}
             onConnect={() => {}}
             onConnectEvm={() => {}}
+            onConnectSolana={() => {}}
           />
         ),
       },
