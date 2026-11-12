@@ -11,8 +11,11 @@ import {
   INFRASTRUCTURE_COMMITTEE,
   karmaCalls,
   type RpcPool,
+  type SnapshotSpace,
+  snapshotCalls,
 } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
+import { proposalsOf } from './proposals.ts';
 import type { ToolContext } from './types.ts';
 
 export interface CallsRead {
@@ -37,6 +40,7 @@ export async function readCalls(
   const readers: [string, () => Promise<Call[]>][] = [
     ['karma', () => karmaCalls(fetchImpl, readAt)],
     [INFRASTRUCTURE_COMMITTEE, () => committeeCalls(o.pool ?? defaultPool(), readAt)],
+    ['snapshot', async () => snapshotCalls(fetchImpl, await snapshotSpaces(ctx), readAt)],
   ];
   const out: CallsRead = { sources: [] };
   for (const [name, read] of readers) {
@@ -61,6 +65,17 @@ export async function readCalls(
       );
     out.sources.push({ name, calls: calls.length, kept: o.save, failed: null });
     o.log?.(`${name}: ${calls.length} open calls${o.save ? ', kept' : ''}`);
+  }
+  return out;
+}
+
+/** The Snapshot spaces Petals' maps vote in, from their kept proposals (proposals/v2's snapshot:<space>). */
+export async function snapshotSpaces(ctx: ToolContext): Promise<SnapshotSpace[]> {
+  const out: SnapshotSpace[] = [];
+  for (const [about, p] of await proposalsOf(ctx)) {
+    const contract = (p.source as { kind?: string; contract?: string }).contract ?? '';
+    if (contract.startsWith('snapshot:'))
+      out.push({ space: contract.slice('snapshot:'.length), about });
   }
   return out;
 }

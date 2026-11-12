@@ -2,7 +2,7 @@
 // calls/v1, every field as the source says it. Stubbed sources: nothing here reads the web.
 import { validateCall } from '@petal/core';
 import { describe, expect, test } from 'vitest';
-import { committeeCalls, karmaCalls } from '../src/calls/index.ts';
+import { committeeCalls, karmaCalls, snapshotCalls } from '../src/calls/index.ts';
 import type { RpcPool } from '../src/rpc/pool.ts';
 
 const AT = '2026-11-12T12:00:00.000Z';
@@ -117,5 +117,20 @@ describe("NEAR's Infrastructure Committee", () => {
       closes: '2025-05-29T00:00:00.000Z',
       link: 'https://near.social/infrastructure-committee.near/widget/app?page=rfp&id=8',
     });
+  });
+});
+
+describe("Snapshot's open votes", () => {
+  test('no spaces, no request; an error from the hub throws, so the votes kept stay', async () => {
+    let asked = 0;
+    const counting = (async () => {
+      asked++;
+      return new Response(JSON.stringify({ errors: [{ message: 'too many requests' }] }));
+    }) as unknown as typeof fetch;
+    expect(await snapshotCalls(counting, [], AT)).toEqual([]);
+    expect(asked).toBe(0);
+    await expect(snapshotCalls(counting, [{ space: 'cow.eth', about: null }], AT)).rejects.toThrow(
+      /too many requests/,
+    );
   });
 });

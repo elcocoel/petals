@@ -153,3 +153,77 @@ export async function committeeCalls(pool: RpcPool, readAt: string): Promise<Cal
   }
   return out;
 }
+
+export const SNAPSHOT_HUB = 'https://hub.snapshot.org/graphql';
+
+/** A Snapshot space a map's DAO votes in, and the map's address. */
+export interface SnapshotSpace {
+  space: string;
+  about: string | null;
+}
+
+interface SnapshotProposal {
+  id?: string;
+  title?: string;
+  start?: number;
+  end?: number;
+  state?: string;
+  link?: string;
+  space?: { id?: string; name?: string };
+}
+
+/**
+ * Snapshot's open votes (state active) in the spaces given: each a call to that DAO's voters, not for work
+ * (kind vote), with the map it belongs to. Asked by GET, keyless; a page of 1000 at a time.
+ */
+export async function snapshotCalls(
+  fetchImpl: Fetch,
+  spaces: readonly SnapshotSpace[],
+  readAt: string,
+): Promise<Call[]> {
+  if (!spaces.length) return [];
+  const about = new Map(spaces.map((s) => [s.space, s.about]));
+  const out: Call[] = [];
+  const PAGE = 1000;
+  for (let skip = 0; ; skip += PAGE) {
+    const query = `{ proposals(first: ${PAGE}, skip: ${skip}, where: {space_in: ${JSON.stringify([...about.keys()])}, state: "active"}, orderBy: "end", orderDirection: asc) { id title start end state link space { id name } } }`;
+    const res = await fetchImpl(`${SNAPSHOT_HUB}?query=${encodeURIComponent(query)}`, {
+      headers: { accept: 'application/json' },
+    });
+    if (!res.ok) throw new Error(`${SNAPSHOT_HUB} answered ${res.status}`);
+    const body = (await res.json()) as {
+      data?: { proposals?: SnapshotProposal[] };
+      errors?: { message?: string }[];
+    };
+    if (body.errors?.length)
+      throw new Error(`${SNAPSHOT_HUB}: ${body.errors[0]?.message ?? 'an error'}`);
+    const page = body.data?.proposals ?? [];
+    for (const p of page) {
+      const space = text(p.space?.id);
+      const title = text(p.title);
+      const link = httpUrl(p.link);
+      if (!p.id || !space || !title || !link) continue;
+      out.push({
+        petal: 'calls/v1',
+        id: `snapshot:${p.id}`,
+        kind: 'vote',
+        title,
+        summary: null,
+        offered_by: { name: text(p.space?.name) ?? space, about: about.get(space) ?? null },
+        budget: null,
+        opens: typeof p.start === 'number' ? new Date(p.start * 1000).toISOString() : null,
+        closes: typeof p.end === 'number' ? new Date(p.end * 1000).toISOString() : null,
+        status: text(p.state),
+        link,
+        source: {
+          name: 'snapshot',
+          ref: `${SNAPSHOT_HUB} state:active space:${space}`,
+          read_at: readAt,
+        },
+        how: 'sourced',
+      });
+    }
+    if (page.length < PAGE) break;
+  }
+  return out;
+}
