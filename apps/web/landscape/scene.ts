@@ -114,6 +114,8 @@ export interface LandScene {
   /** Live flowers go just under this, so names stay above them. */
   top: SVGGElement;
   draw(f: LandFrame): ArrowHit[];
+  /** The flowers' places changed (a new arrangement gliding in): set their positions and the lines between them. */
+  move(): void;
   dispose(): void;
 }
 
@@ -281,14 +283,15 @@ export function createLandScene(
       el('text', { fill: MUTED, 'text-anchor': 'middle', display: 'none' }, counts.node),
     );
     number.node.textContent = count(r.shared);
-    return { line, number, ends, numberWidth: textWidth(count(r.shared)) };
+    return { r, line, number, ends, numberWidth: textWidth(count(r.shared)) };
   });
 
   // figure.map-centre: the dashed ring round the DAO a click put in the middle, what the rest is compared to
   const middle = flowers[centre];
+  let middleRing: SVGElement | null = null;
   if (middle) {
     const { x, y, s: size } = middle.place;
-    el(
+    middleRing = el(
       'circle',
       {
         cx: n3(x),
@@ -650,6 +653,27 @@ export function createLandScene(
         hits.push({ to: way.to, box: named ? box : null, line: [x1, y1, x2, y2] });
       });
       return hits;
+    },
+    move() {
+      flowers.forEach((f, i) => {
+        const { x, y, s } = f.place;
+        flowerSlots[i]?.g.set(
+          'transform',
+          `translate(${n3(x - s * SHAPE.cx)} ${n3(y - s * SHAPE.cy)}) scale(${n3(s)})`,
+        );
+      });
+      for (const s of roadSlots) {
+        s.ends = roadEnds(flowers[s.r.a] as LandFlower, flowers[s.r.b] as LandFlower);
+        const [x1, y1, x2, y2] = s.ends;
+        s.line.set('x1', n3(x1));
+        s.line.set('y1', n3(y1));
+        s.line.set('x2', n3(x2));
+        s.line.set('y2', n3(y2));
+      }
+      if (middle && middleRing) {
+        middleRing.setAttribute('cx', n3(middle.place.x));
+        middleRing.setAttribute('cy', n3(middle.place.y));
+      }
     },
     dispose() {
       defs.remove();
