@@ -14,6 +14,7 @@ const PIECE_WORDS: Record<string, string> = {
   identity: 'Who it is',
   name: 'Its name',
   name_kind: 'Kind of name',
+  backers: 'Who backs it',
 };
 
 export const panelWords = {

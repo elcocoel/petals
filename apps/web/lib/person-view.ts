@@ -12,6 +12,7 @@ import {
   FROM_ANNOTATIONS,
   fits,
   type Piece,
+  SOME_FLOWERS,
   viewHash,
 } from '@petal/core/view';
 
@@ -27,10 +28,11 @@ export const DEFAULT_PERSON_VIEW: PersonView = { view: DEFAULT_VIEW, hash: viewH
 export type ViewChoices = Record<Dimension, Piece[]>;
 
 /**
- * The data a person can choose from: what every flower has, and the names their annotations give accounts
+ * The data a person can choose from: what every flower has, what some have (who backs a wallet, where a reading
+ * has delegations; a flower without it draws none), and the names their annotations give accounts
  * (annotation-layer.md, step 6). A petal no one named keeps its short address.
  */
-export const CHOOSABLE: readonly Piece[] = [...EVERY_FLOWER, ...FROM_ANNOTATIONS];
+export const CHOOSABLE: readonly Piece[] = [...EVERY_FLOWER, ...SOME_FLOWERS, ...FROM_ANNOTATIONS];
 
 export const viewChoices = (pieces: readonly Piece[] = CHOOSABLE): ViewChoices =>
   Object.fromEntries(

@@ -60,6 +60,13 @@ export const EVERY_FLOWER: readonly Piece[] = [
 ];
 
 /**
+ * The pieces of data some flowers' readings have (reading/view.ts piecesOf): a petal cut into who backs it, where
+ * its reading has delegations. The only data of parts today, so the only data Segments can show (Elco, 12 Nov,
+ * walk 3: "I don't have any choices on label segments").
+ */
+export const SOME_FLOWERS: readonly Piece[] = [{ name: 'backers', kind: 'parts' }];
+
+/**
  * The pieces of data a person's annotations give the accounts they name (seam.ts, namePieces): the one name a
  * petal shows, and how it's known (declared, stated, sourced or inferred). A flower has them for the accounts
  * someone named; the rest keep their short address.

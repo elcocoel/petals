@@ -87,7 +87,8 @@ describe('what can go where', () => {
       outline: ['kind', 'identity', 'name', 'name_kind'],
       texture: ['kind', 'identity', 'name', 'name_kind'],
       markings: [],
-      segments: [],
+      // who backs each wallet, where a flower's reading has delegations (Elco's walk 3: no choices on segments)
+      segments: ['backers'],
       lines: [],
       // a person's annotations name accounts (annotation-layer.md, step 6): labels show them once chosen
       labels: ['kind', 'identity', 'name', 'name_kind'],

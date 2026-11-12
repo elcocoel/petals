@@ -81,7 +81,7 @@ function Note({ children }: { children: ReactNode }) {
   return <p className="my-0 px-space-8 pb-space-8 type-ui text-muted">{children}</p>;
 }
 
-/** A dimension's input: its data, and for a number its scale, as dropdowns; or what they are, in words. */
+/** A dimension's input: its data as a dropdown; or what it shows, with its scale, in words. */
 function DimensionInput({
   d,
   view,
@@ -111,25 +111,38 @@ function DimensionInput({
     { value: NONE, label: words.none },
   ];
   return (
-    <>
+    <Select
+      label={words.dimensions[d]}
+      value={data ?? NONE}
+      options={dataOptions}
+      onChange={(v) => edit.onPick(d, v === NONE ? null : v)}
+    />
+  );
+}
+
+/** A number's scale, on its own row under its dimension, where the legend changes the view. */
+function ScaleRow({
+  d,
+  view,
+  pieces,
+  edit,
+}: {
+  d: Dimension;
+  view: View;
+  pieces: readonly Piece[];
+  edit: LegendEdit | undefined;
+}) {
+  const scale = scaleOf(view, d, pieces);
+  if (!edit || !scale || !takesScale(view, d, pieces)) return null;
+  return (
+    <ToolRow label={words.scale}>
       <Select
-        label={words.dimensions[d]}
-        value={data ?? NONE}
-        options={dataOptions}
-        onChange={(v) => edit.onPick(d, v === NONE ? null : v)}
+        label={`${words.dimensions[d]}, ${words.scale}`}
+        value={scale}
+        options={SCALES.map((s) => ({ value: s, label: words.scales[s] }))}
+        onChange={(v) => edit.onScale(d, v as Scale)}
       />
-      {takesScale(view, d, pieces) && scale && (
-        <Select
-          label={`${words.dimensions[d]}, ${words.scale}`}
-          value={scale}
-          options={SCALES.map((s) => ({
-            value: s,
-            label: words.scales[s],
-          }))}
-          onChange={(v) => edit.onScale(d, v as Scale)}
-        />
-      )}
-    </>
+    </ToolRow>
   );
 }
 
@@ -189,6 +202,7 @@ export function ViewLegend({
             <ToolRow label={words.dimensions[d]}>
               <DimensionInput d={d} view={view} pieces={pieces} edit={edit} />
             </ToolRow>
+            <ScaleRow d={d} view={view} pieces={pieces} edit={edit} />
             {d === 'colour' && drawn.colour !== null && keysNote && <Note>{keysNote}</Note>}
             {d === 'colour' && drawn.colour !== null && keys.length > 0 && (
               <div className="px-space-8 pb-space-8">

@@ -174,5 +174,6 @@ export {
   fits,
   inUse,
   latestView,
+  SOME_FLOWERS,
   viewHash,
 } from './view/index.ts';
