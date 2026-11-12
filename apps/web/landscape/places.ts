@@ -300,6 +300,23 @@ export function placeFlowers(
   return { petal: PLACES_VERSION, continents: placed, flowers: out };
 }
 
+/**
+ * Gravity (Elco, 12 Nov walk: "we're unnecessarily hyper clustering ... gravity so how much things attract each
+ * other so we can give more space between them"): 1 keeps the saved places as packed as the force map left them,
+ * 0 gives three times the room. Places stay addresses: a flower moves out from its continent's middle along its
+ * own line, so the arrangement is the same, only the space between changes.
+ */
+export const GRAVITY_DEFAULT = 0.75;
+export const spreadOf = (gravity: number): number =>
+  1 + 2 * (1 - Math.max(0, Math.min(1, gravity)));
+
+/** A place, spread about its continent's middle. */
+export const spreadPlace = (p: Place, c: Pick<Continent, 'x' | 'y'>, spread: number): Place => ({
+  ...p,
+  x: c.x + (p.x - c.x) * spread,
+  y: c.y + (p.y - c.y) * spread,
+});
+
 /** The circle that holds every continent: the map's home for the camera. */
 export function homeOf(places: Places): { cx: number; cy: number; r: number } {
   if (places.continents.length === 0) return { cx: 0, cy: 0, r: SHAPE.R };

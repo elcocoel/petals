@@ -31,7 +31,7 @@ import { useMapClaims } from '../viewmodels/useMapClaims.ts';
 import { useMapSearch } from '../viewmodels/useMapSearch.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
 import { useSession } from '../viewmodels/useSession.ts';
-import type { Continent, Place } from './places.ts';
+import { type Continent, GRAVITY_DEFAULT, type Place, spreadOf, spreadPlace } from './places.ts';
 import type { Road } from './roads.ts';
 import type { FarStyle, LandFlower, LineStyle } from './scene.ts';
 import { reachOf } from './space.ts';
@@ -302,7 +302,10 @@ export function LandscapeCanvas({
     for (const f of data.flowers) n.set(f.place.chain, (n.get(f.place.chain) ?? 0) + 1);
     return n;
   }, [data]);
-  const land = useMemo<(LandscapeData & { focus: number; from: number[] }) | null>(() => {
+  // Gravity: how close the flowers on a chain sit (OVERLAYS hands it the legend's control)
+  const [gravity, setGravity] = useState(GRAVITY_DEFAULT);
+  // the chain's flowers and their drawing models, once per chain; gravity only moves their places
+  const built = useMemo<(LandscapeData & { focus: number; from: number[] }) | null>(() => {
     const here = data.chains.find((c) => c.chain === chain);
     if (!here) return null;
     const at = new Map<number, number>();
@@ -333,6 +336,16 @@ export function LandscapeCanvas({
     const { x, y, r } = here.continent;
     return { flowers, roads, home: { cx: x, cy: y, r }, focus: at.get(focus) ?? -1, from };
   }, [data, chain, focus]);
+  const land = useMemo(() => {
+    if (!built) return null;
+    const spread = spreadOf(gravity);
+    const middle = { x: built.home.cx, y: built.home.cy };
+    return {
+      ...built,
+      flowers: built.flowers.map((f) => ({ ...f, place: spreadPlace(f.place, middle, spread) })),
+      home: { ...built.home, r: built.home.r * spread },
+    };
+  }, [built, gravity]);
   // What Petals' own mapping says about the map you're in, under each petal's name (lib/map-claims.ts)
   const inFlower = land && entered >= 0 ? data.flowers[land.from[entered] ?? -1] : undefined;
   // the wallet chosen, with the flower it was chosen in, for the page
