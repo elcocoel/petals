@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MapWallet } from '../landscape/LandscapeCanvas.tsx';
 import { readDrawingSpec, readMapDrawing, saveSettings } from '../lib/agent-client.ts';
 import { aboutLine } from '../lib/ask-about.ts';
-import { ceremonyWords, creating } from '../lib/ceremony.ts';
+import { ceremonyWords, creating, making, turnShow } from '../lib/ceremony.ts';
 import {
   type Catalogue,
   modelOptions,
@@ -287,6 +287,8 @@ export function useWorkspace(props: {
   const [mapAt, setMapAt] = useState<{ map: string | null } | null>(null);
   // a wallet chosen on the map on the canvas (LOOK's wallet level): the question is about it (Elco, 12 Nov)
   const [mapWallet, setMapWallet] = useState<MapWallet | null>(null);
+  // the services under a map's next steps, folded until pressed (one list at a time: the last turn's)
+  const [nextMore, setNextMore] = useState(false);
   const [drawnKey, setDrawnKey] = useState(canvas?.key);
   if (canvas?.key !== drawnKey) {
     setDrawnKey(canvas?.key);
@@ -414,6 +416,13 @@ export function useWorkspace(props: {
       composer,
       panel,
       onCanvas,
+      /** what the last answer is about on the Power Map (SYSTEMS's show): the map moves to it */
+      mapShow: turnShow(items),
+      /** a new map being made: the held read the person said yes to, what it's doing, and its flower once drawn */
+      making: making(items, busy),
+      /** the readings drawn here, by their spec's hash: a new map's lands on the Power Map */
+      drawings,
+      nextMore,
       /** the snapshot the conversation's flower reads, which the Power Map may hold as one of its flowers */
       flowerSnapshot: panelFlower?.spec.snapshot.sha256 ?? null,
       /** the canvas flower's map's proposals on the ring (#93), once it's the panel's */
@@ -537,6 +546,17 @@ export function useWorkspace(props: {
         })().catch(() => {});
       },
       closeBox: () => setBoxOpen(false),
+      /** A next step pressed: it goes to Petals' agent as the person's words, or only fills the field. */
+      step: (s: { ask: string; finish: boolean }) => {
+        setNextMore(false);
+        if (!s.finish) {
+          chatActions.setQuestion(s.ask);
+          refs.box.current?.focus();
+          return;
+        }
+        void chatActions.send(undefined, picked ?? undefined, s.ask);
+      },
+      toggleNextMore: () => setNextMore((open) => !open),
       /** A new map's ceremony, pressed: Petals' agent hears a plain yes, and its read starts (lib/ceremony.ts). */
       mapIt: () => {
         void chatActions.send(undefined, picked ?? undefined, ceremonyWords.yes);

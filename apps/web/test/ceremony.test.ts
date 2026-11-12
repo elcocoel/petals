@@ -1,6 +1,6 @@
 // Mapping something new is a ceremony (Elco, 12 Nov): the card for a held read, and the composer's state.
 import { describe, expect, test } from 'vitest';
-import { ceremonyView, ceremonyWords, creating } from '../lib/ceremony.ts';
+import { ceremonyView, ceremonyWords, creating, making, turnShow } from '../lib/ceremony.ts';
 import { fold, type Item } from '../lib/thread.ts';
 import { composerView, threadView } from '../lib/thread-view.ts';
 
@@ -71,5 +71,39 @@ describe("the composer's state", () => {
     const base = { question: '', runId: 'r', busy: true, recorded: false };
     expect(composerView({ ...base, creating: true }).state).toBe(ceremonyWords.creating);
     expect(composerView({ ...base, creating: false }).state).toBe(ceremonyWords.exploring);
+  });
+});
+
+describe('a new map being made, and what an answer is about', () => {
+  test('making: after the yes, the held read with what it does, then its flower; nothing once it ended with none', () => {
+    const yes = turn([
+      { kind: 'user', text: 'Yes' },
+      { kind: 'stage', stage: 'reading', message: 'Reading the DAO' },
+    ]);
+    expect(making(yes, true)).toMatchObject({ held, doing: 'Reading the DAO', flower: null });
+    expect(making(yes, false)).toBeNull();
+    expect(making(turn(), true)).toBeNull();
+  });
+
+  test('the card says it adds to a map that is there, its words and its cost, and skips a 0 s estimate', () => {
+    const v = ceremonyView({
+      ...held,
+      existing_map: 'eip155:100:0xf02f',
+      name: 'RaidGuild',
+      what: 'Moloch v3 (Baal) members on Gnosis',
+      cost: { usd: 0.02, seconds: 0, calls: 3 },
+    });
+    expect(v.heading).toBe('Add to RaidGuild');
+    expect(v.what).toBe('Moloch v3 (Baal) members on Gnosis');
+    expect(v.cost).toBe('About $0.02');
+  });
+
+  test('the last turn says what it is about on the map; an earlier turn says nothing now', () => {
+    const shown: Item[] = [
+      { kind: 'user', text: 'raidguild' },
+      { kind: 'show', show: { map: 'eip155:100:0xf02f' } },
+    ];
+    expect(turnShow(shown)).toEqual({ map: 'eip155:100:0xf02f' });
+    expect(turnShow([...shown, { kind: 'user', text: 'and now?' }])).toBeNull();
   });
 });

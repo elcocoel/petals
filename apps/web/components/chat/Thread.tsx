@@ -1,6 +1,8 @@
 // The thread: rows from thread-view.ts, in order, the newest at the bottom. It scrolls inside its
 // column, and the box stays below it. A flower's row is drawn by whoever composes this, so the view
 // holds no state and no calls.
+
+import type { NextSteps as NextOnMap } from '@petal/core/types';
 import type { ReactNode, Ref } from 'react';
 import type { CeremonyView } from '../../lib/ceremony.ts';
 import type { FlowerRow, JobRowData, Row, StoredRow } from '../../lib/thread-view.ts';
@@ -20,6 +22,7 @@ export function Thread({
   renderPay,
   renderJob,
   renderCeremony,
+  renderNext,
   onRefollow,
   onLink,
 }: {
@@ -37,6 +40,8 @@ export function Thread({
   renderJob?: (row: JobRowData) => ReactNode;
   /** A new map waiting for the person's yes, drawn by whoever composes this (lib/ceremony.ts). */
   renderCeremony?: (row: { key: string; view: CeremonyView }) => ReactNode;
+  /** What can be done next on the map just read, drawn by whoever composes this. */
+  renderNext?: (row: { key: string; next: NextOnMap }) => ReactNode;
   onRefollow?: () => void;
   /** A link in the agent's words: true when it was handled here and shouldn't navigate. */
   onLink?: (href: string) => boolean;
@@ -92,6 +97,8 @@ export function Thread({
               return renderJob?.(row) ?? null;
             case 'ceremony':
               return renderCeremony?.(row) ?? null;
+            case 'next':
+              return renderNext?.(row) ?? null;
             case 'done':
               return <AnsweredBy key={row.key} line={row.line} summary={row.summary} />;
             case 'turn':
