@@ -77,6 +77,13 @@ export interface LandscapeData {
  * what a click inside that flower tells the page, as a flower's own canvas does (flower/FlowerCanvas.tsx).
  * `choose` is set by the map, so the page can mark a petal without the scene being built again.
  */
+/** What the page shows on the map, by each flower's place on this chain's map (LandscapeCanvas resolves it). */
+export type LandShow =
+  | { kind: 'map'; i: number }
+  | { kind: 'wallet'; id: string }
+  | { kind: 'line'; a: number; b: number }
+  | { kind: 'proposal'; i: number; id: string };
+
 export interface LandscapeAt {
   focus: number;
   onPick?: (hit: CanvasHit) => void;
@@ -100,6 +107,13 @@ export interface LandscapeAt {
    * the next call.
    */
   highlight?: (ids: readonly string[] | null) => void;
+  /**
+   * Set by the map once it's built, as `enter` is: shows what the page's conversation is about (Elco, 12 Nov on
+   * /make: "the power map should always be there ... an answer moves the map"), with the four clicks' own states:
+   * a DAO flown to and entered; a wallet lit everywhere it sits, the camera taking in the DAOs that hold it; the line
+   * between two DAOs lit; a proposal pinned in its DAO. null lets go of what it lit.
+   */
+  show?: (s: LandShow | null) => void;
   /**
    * Set by the map once it's built, as `choose` is: flies to a flower, by its place on this chain's map, and
    * enters it, as a click on it does (board 105: a search's answer, pressed).
@@ -254,6 +268,8 @@ export function useLandscape(
           flowers.forEach((g, j) => {
             if (g.map === map && lives.has(j)) remount(j);
           });
+          // a proposal pinned before its ring came: the page hears it again, with the proposal now
+          if (voted && flowers[voted.flower]?.map === map) tellProposal();
         });
       }
       return rings.get(map) ?? null;
@@ -352,6 +368,13 @@ export function useLandscape(
       const voters = voted?.flower === i ? votersOf(i, voted.id) : [];
       const look = sharedLook(f, [...shared, ...group, ...own, ...lined, ...voters], ringOf(i));
       const open = [...(opened.get(i) ?? [])];
+      // a pinned proposal's own stack stands open, so it's seen (a page's show can pin one in a folded stack)
+      const pin =
+        voted?.flower === i ? ringOf(i)?.proposals.find((p) => p.id === voted?.id) : undefined;
+      if (pin) {
+        const petal = pin.proposer ? f.model.petals.findIndex((p) => p.id === pin.proposer) : -1;
+        if (!open.includes(petal)) open.push(petal);
+      }
       return {
         ...look,
         ...(voted?.flower === i ? { pinned: voted.id } : {}),
@@ -662,6 +685,18 @@ export function useLandscape(
         remount(lit.a);
         remount(lit.b);
       });
+    };
+    /** The room round some flowers, their petals' reach and all, for the camera to take in. */
+    const around = (is: readonly number[]) => {
+      const ps = is.map((i) => flowers[i] as LandFlower);
+      const cx = ps.reduce((sum, f) => sum + f.place.x, 0) / ps.length;
+      const cy = ps.reduce((sum, f) => sum + f.place.y, 0) / ps.length;
+      const r = Math.max(
+        ...ps.map(
+          (f) => Math.hypot(f.place.x - cx, f.place.y - cy) + SHAPE.R * f.place.s * f.reach,
+        ),
+      );
+      return { cx, cy, r };
     };
     const flyHome = () => {
       entered = -1;
@@ -994,6 +1029,52 @@ export function useLandscape(
         enterFlower(i);
         // placed on purpose, as the flower it opens in is: the window's next size keeps it there
         cam.touched = true;
+      };
+      at.current.show = (s) => {
+        if (!s) {
+          chooseWallet(null);
+          letGoProposal();
+          if (marked >= 0) {
+            marked = -1;
+            lightLine();
+          }
+          wake();
+          return;
+        }
+        if (s.kind === 'map' || s.kind === 'proposal') {
+          if (!flowers[s.i]) return;
+          enterFlower(s.i);
+          if (s.kind === 'proposal' && (voted?.flower !== s.i || voted.id !== s.id)) {
+            const was = voted;
+            voted = { flower: s.i, id: s.id };
+            for (const j of new Set([was?.flower ?? -1, s.i])) if (j >= 0) remount(j);
+            tellProposal();
+          }
+        } else if (s.kind === 'wallet') {
+          // the petal's own id, however the page names it (0x…, eip155:1:0x…)
+          const bare = (id: string) => id.slice(id.lastIndexOf(':') + 1).toLowerCase();
+          const id =
+            flowers.flatMap((f) => f.model.petals).find((p) => !p.tail && bare(p.id) === bare(s.id))
+              ?.id ?? s.id;
+          if (wallet !== id) chooseWallet(id);
+          const held = [...(holds ?? [])];
+          if (held.length > 0) {
+            entered = -1;
+            flyTo(cam, fitView(cam.width, cam.height, around(held), cam.clear));
+          }
+        } else {
+          const r = roads.findIndex(
+            (road) => (road.a === s.a && road.b === s.b) || (road.a === s.b && road.b === s.a),
+          );
+          entered = -1;
+          if (r >= 0) {
+            marked = r;
+            lightLine();
+          } else flyTo(cam, fitView(cam.width, cam.height, around([s.a, s.b]), cam.clear));
+        }
+        // placed on purpose: the window's next size keeps it there
+        cam.touched = true;
+        wake();
       };
     }
 
