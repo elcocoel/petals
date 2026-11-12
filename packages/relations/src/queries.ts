@@ -218,6 +218,10 @@ const parseIdentity = (text: string | null): unknown => (text ? JSON.parse(text)
 const CAIP_ACCOUNT = /^((?:[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,32})|none):(.+)$/;
 const SHA256 = /^[0-9a-f]{64}$/;
 
+/** An account's name, chain:address; an address a reading already wrote with its chain is named once. */
+const accountName = (chain: string, address: string): string =>
+  address.startsWith(`${chain}:`) ? address : `${chain}:${address}`;
+
 /** `chain:address`, or a bare address when no chain was said. */
 export function parseAccount(text: string): { chain: string | null; address: string } {
   const m = CAIP_ACCOUNT.exec(text.trim());
@@ -324,7 +328,7 @@ export class Queries {
     );
     const groups: MembershipRow[] = rows.slice(0, limit).map((r) => ({
       group: facts(r),
-      account: `${r.chain}:${r.address}`,
+      account: accountName(r.chain, r.address),
       match: this.#matchOf(asked, r.chain, resolved.length),
       amount: r.amount,
       share: round6(r.share),
@@ -343,7 +347,7 @@ export class Queries {
     const index = this.indexFacts();
     return {
       asked: account,
-      accounts: resolved.map((r) => `${r.chain}:${r.address}`),
+      accounts: resolved.map((r) => accountName(r.chain, r.address)),
       groups,
       total: rows.length,
       more: Math.max(0, rows.length - groups.length),
@@ -460,8 +464,8 @@ export class Queries {
     const shared = totals?.n ?? 0;
     const p = pair(a, b);
     const accounts: SharedAccountRow[] = rows.map((r) => ({
-      account_a: `${a.chain}:${r.address}`,
-      account_b: `${b.chain}:${r.address}`,
+      account_a: accountName(a.chain, r.address),
+      account_b: accountName(b.chain, r.address),
       match: p.match,
       amount_a: r.ax,
       amount_b: r.ay,
@@ -639,7 +643,7 @@ export class Queries {
         rows: accounts,
         end: {
           asked: text,
-          accounts: accounts.map((r) => `${r.chain}:${r.address}`),
+          accounts: accounts.map((r) => accountName(r.chain, r.address)),
           /** null: no stored group holds it, so there is nothing to match */
           match: accounts[0] ? this.#matchOf(chain, accounts[0].chain, accounts.length) : null,
         },
@@ -720,7 +724,7 @@ export class Queries {
       'SELECT a.chain, n.address, a.node_id FROM account a JOIN node n ON n.id = a.node_id WHERE a.id = ?',
       id,
     );
-    return { name: `${r?.chain}:${r?.address}`, node: r?.node_id ?? 0 };
+    return { name: accountName(String(r?.chain), String(r?.address)), node: r?.node_id ?? 0 };
   }
 
   #inGroup(
