@@ -116,7 +116,7 @@ describe('the brain', () => {
 
   test('the routing table (routing.md) is in the index, names only files there are, and every chapter is in a row', () => {
     const index = buildBrainIndex(BRAIN);
-    expect(index.tasks.length).toBe(22);
+    expect(index.tasks.length).toBe(23);
     expect(index.tasks[0]).toEqual({
       task: 'Set up Petals',
       words: ['setup', 'set up', 'sign in', 'wallet', 'credit', 'first conversation'],
