@@ -39,7 +39,7 @@
       "continues": [],
       "status": "ready",
       "file": "gathering/README.md",
-      "sha256": "128b3dcde707d3bb4445080525467c0ef577952f50a239661638a7209fbeb469"
+      "sha256": "cb418ed70085273bf913ce065220a47a448872626ce73a012555f6b64401e011"
     },
     {
       "id": "governance",
@@ -354,6 +354,43 @@
       "status": "ready",
       "file": "investigation/going-deeper.md",
       "sha256": "7d9bb229b39d01f4089f42b1b96107e875fd5989c6c60219a876eda62c58148b"
+    },
+    {
+      "id": "open-calls",
+      "kind": "chapter",
+      "department": "gathering",
+      "for": "who is paying for work right now, so people can earn from DAOs and DAOs can find people: open RFPs, grants programs, bounties, hackathons and open votes, keyless",
+      "recognise": [
+        "rfp",
+        "rfps",
+        "grants",
+        "grant program",
+        "grants program",
+        "bounty",
+        "bounties",
+        "hackathon",
+        "funding",
+        "open call",
+        "open calls",
+        "apply",
+        "get paid",
+        "earn",
+        "work for a dao",
+        "talent",
+        "contributors",
+        "hire",
+        "hiring"
+      ],
+      "tools": [
+        "read_page",
+        "search"
+      ],
+      "continues": [
+        "open-source-leads"
+      ],
+      "status": "partial",
+      "file": "gathering/open-calls.md",
+      "sha256": "6f0bf908d40951310d42211bd2de45458068982a0d5212482e7389aa2ccdbadd"
     },
     {
       "id": "open-source-leads",
@@ -1036,6 +1073,26 @@
       ],
       "also": [
         "going-deeper"
+      ]
+    },
+    {
+      "task": "Open calls: RFPs, grants, bounties, hackathons",
+      "words": [
+        "rfp",
+        "grants",
+        "bounty",
+        "hackathon",
+        "funding",
+        "apply",
+        "earn",
+        "hire",
+        "talent"
+      ],
+      "load": [
+        "open-calls"
+      ],
+      "also": [
+        "open-source-leads"
       ]
     },
     {

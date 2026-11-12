@@ -29,6 +29,9 @@ const QUESTIONS: [string, string][] = [
   ['who are the signers of this multisig', 'who-can-move-money-or-change-rules'],
   ['who delegates to whom in this governance', 'where-power-lives'],
   ['who sponsored the most proposals', 'where-power-lives'],
+  // open calls (Elco, 12 Nov: "an Osint chapter on the brain helping people make money from daos")
+  ['what grants can I apply for on NEAR right now?', 'open-calls'],
+  ['are there open RFPs or bounties I could work on?', 'open-calls'],
   ['what is 0x1234abcd, is it a wallet or a contract?', 'start-from-an-address'],
   ['I have an address, tell me what it is', 'start-from-an-address'],
   ['how did the holders change over the last year', 'over-time'],

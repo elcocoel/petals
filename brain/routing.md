@@ -26,6 +26,7 @@ Which files to load for each task. The doctrine always comes first, so no row li
 | How it changed over time | changed, history, since, over time | `over-time` | n/a |
 | What to offer after an answer | more, deeper, next | `going-deeper` | n/a |
 | Who is behind it, names | behind, names, twitter, forum, ens | `open-source-leads` | `going-deeper` |
+| Open calls: RFPs, grants, bounties, hackathons | rfp, grants, bounty, hackathon, funding, apply, earn, hire, talent | `open-calls` | `open-source-leads` |
 | A system Petals can't read | cannot read, not supported, framework | `a-new-system` | `contributing` |
 | Improve a chapter or a recipe | improve, contribute, pull request, github, fix | `contributing` | n/a |
 | A one-press service (#101) | service, deliverable | `services` | n/a |
