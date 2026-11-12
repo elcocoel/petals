@@ -85,6 +85,11 @@ const config: NextConfig = {
   // the prompt in the panel connects an agent, and the docs say how each app connects.
   redirects: async () => [
     { source: '/connect', destination: '/docs/connect-your-agent', permanent: true },
+    {
+      source: '/docs/getting-started/first-flower',
+      destination: '/docs/ideas/read-a-flower',
+      permanent: true,
+    },
   ],
 };
 
