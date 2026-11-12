@@ -5,6 +5,7 @@
 // window, enters it: everything else fades, and arrows name the ways out. Esc, or zooming back out, leaves.
 // React mounts this once per chain and never renders per frame.
 import { lookFills } from '@petal/core/wedge/keys';
+import type { Proposal } from '@petal/core/wedge/votes';
 import { type RefObject, useEffect, useRef } from 'react';
 import {
   type Camera,
@@ -116,10 +117,11 @@ export interface LandscapeAt {
    */
   onCentre?: (id: string | null) => void;
   /**
-   * Told which proposal a click pins, by its flower (as `onCentre` names it) and its id, and when it's let go
-   * (null), so the page can say what it's about (OVERLAYS's Information box; Elco, 12 Nov walk 3 on Ref Finance).
+   * Told which proposal a click pins, by its flower (as `onCentre` names it) and its id, with the proposal as the
+   * ring read it (the server's whole object, proposals/v3's summary and link with it), and when it's let go (null),
+   * so the page can say what it's about (OVERLAYS's Information box; Elco, 12 Nov walk 3 on Ref Finance).
    */
-  onProposal?: (p: { flower: string; id: string } | null) => void;
+  onProposal?: (p: { flower: string; id: string; proposal: Proposal | null } | null) => void;
   /** Treasury and token price under the names at some magnification (Elco, 12 Nov walk 3); on unless off. */
   worth?: boolean;
   /** Set by the map once it's built: draws it again, for a change it reads on each frame (`worth`). */
@@ -285,7 +287,10 @@ export function useLandscape(
     /** The page told which proposal is pinned now, or none. */
     const tellProposal = () => {
       const f = voted ? idOf(flowers[voted.flower]) : null;
-      at?.current?.onProposal?.(voted && f ? { flower: f, id: voted.id } : null);
+      const proposal = voted
+        ? (ringOf(voted.flower)?.proposals.find((p) => p.id === voted?.id) ?? null)
+        : null;
+      at?.current?.onProposal?.(voted && f ? { flower: f, id: voted.id, proposal } : null);
     };
     /** The pinned proposal let go, its flower drawn again without its voters lit. */
     const letGoProposal = () => {
