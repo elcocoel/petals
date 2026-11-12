@@ -27,7 +27,9 @@ test('a proposal pressed stays pinned, its voters lit; pressed again, let go', (
   );
   expect(land).toMatch(/\.\.\.\(voted\?\.flower === i \? \{ pinned: voted\.id \} : \{\}\),/);
   const scene = text('flower/scene.ts');
-  expect(scene).toMatch(/s\.hit\.addEventListener\('pointerleave', \(\) => point\(pinnedAt\)\);/);
+  expect(scene).toMatch(
+    /s\.hit\.addEventListener\('pointerleave', \(\) => \{\s+overArc = false;\s+point\(pinnedAt\);/,
+  );
   expect(scene).toMatch(/if \(pinnedAt >= 0\) point\(pinnedAt\);/);
 });
 

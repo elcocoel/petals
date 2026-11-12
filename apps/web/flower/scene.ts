@@ -20,6 +20,7 @@ import {
   placeArc,
   placesOf,
   ringRadius,
+  STACK_GAP,
   VOTE_RING,
   type VoteColour,
   voteDot,
@@ -113,6 +114,43 @@ function stackAt(ring: Ring, petal: number) {
   return { x: SHAPE.cx + r * dx, y: SHAPE.cy + r * dy, dx, dy, half };
 }
 
+/** Room from (x, y) along (dx, dy), in screen pixels, before the window's edge (less `inset`) or the first box. */
+export function roomAlong(
+  x: number,
+  y: number,
+  dx: number,
+  dy: number,
+  width: number,
+  height: number,
+  boxes: readonly Box[],
+  inset: number,
+): number {
+  let t = Number.POSITIVE_INFINITY;
+  if (dx > 0) t = Math.min(t, (width - inset - x) / dx);
+  if (dx < 0) t = Math.min(t, (inset - x) / dx);
+  if (dy > 0) t = Math.min(t, (height - inset - y) / dy);
+  if (dy < 0) t = Math.min(t, (inset - y) / dy);
+  for (const b of boxes) {
+    let t0 = 0;
+    let t1 = Number.POSITIVE_INFINITY;
+    for (const [p, d, lo, hi] of [
+      [x, dx, b.x0, b.x1],
+      [y, dy, b.y0, b.y1],
+    ] as const) {
+      if (Math.abs(d) < 1e-9) {
+        if (p < lo || p > hi) t0 = Number.POSITIVE_INFINITY;
+        continue;
+      }
+      const a = (lo - p) / d;
+      const c = (hi - p) / d;
+      t0 = Math.max(t0, Math.min(a, c));
+      t1 = Math.min(t1, Math.max(a, c));
+    }
+    if (t0 <= t1) t = Math.min(t, t0);
+  }
+  return Math.max(0, t);
+}
+
 /** A stack taller than this folds into one mark with its count, until a click opens it. */
 export const STACK_FOLD = 3;
 
@@ -188,6 +226,7 @@ interface NoteSlot {
   group: Slot<SVGGElement>;
   leader: Slot<SVGPathElement>;
   dot: Slot<SVGCircleElement>;
+  ground: Slot<SVGRectElement>;
   text: Slot<SVGTextElement>;
   owner: number;
 }
@@ -478,9 +517,15 @@ export function createScene(
   for (const pl of placed) perPetal.set(pl.petal, (perPetal.get(pl.petal) ?? 0) + 1);
   const folded = (petal: number) => (perPetal.get(petal) ?? 0) > STACK_FOLD && !opened.has(petal);
   let stackPointed: number | null = null;
+  // An opened stack reaches as far as there's room: as many arcs as fit between its petal and the window's edge or a
+  // box, its earlier ones folded nearest the petal, where the oldest sit, with their count; so an open stack never
+  // runs behind the header or under a box (VISUAL QA pass 2, 12 Nov: Ref Finance's 189 opened). How many of each
+  // opened petal's proposals are folded, by petal; none until the first draw measures the room.
+  const hidden = new Map<number, number>();
   const stacks = [...perPetal]
-    .filter(([petal]) => folded(petal))
+    .filter(([petal]) => folded(petal) || opened.has(petal))
     .map(([petal, n]) => {
+      const open = opened.has(petal);
       const d = placeArc(m.ring, petal, 0);
       const mark = el(
         'path',
@@ -514,19 +559,69 @@ export function createScene(
       });
       const label = slot(el('text', { fill: MUTED, 'text-anchor': 'middle' }, root));
       label.text(String(n));
-      return { label, mark, hit, petal, n: String(n), ...stackAt(m.ring, petal) };
+      if (open) {
+        mark.setAttribute('display', 'none');
+        hit.setAttribute('display', 'none');
+        label.set('display', 'none');
+      }
+      return {
+        label,
+        mark,
+        hit,
+        petal,
+        open,
+        n: open ? '0' : String(n),
+        ...stackAt(m.ring, petal),
+      };
     });
+  /** How many of each opened stack fit the room it has now; true when that changed. */
+  const fitOpened = (ring: Ring, view: View, taken: readonly Box[]): boolean => {
+    let changed = false;
+    for (const s of stacks) {
+      if (!s.open) continue;
+      const count = perPetal.get(s.petal) ?? 0;
+      const at = stackAt(ring, s.petal);
+      const x = (at.x + ring.ox) * view.k + view.x;
+      const y = (at.y + ring.oy) * view.k + view.y;
+      // a line's height clear of the edge, like the words
+      const room = roomAlong(x, y, at.dx, at.dy, view.width, view.height, taken, LINE);
+      const fit = Math.max(1, Math.floor(room / (STACK_GAP * view.k)) + 1);
+      const hide = count <= fit ? 0 : count - (fit - 1);
+      if (hide !== (hidden.get(s.petal) ?? 0)) changed = true;
+      hidden.set(s.petal, hide);
+    }
+    return changed;
+  };
+  // the arcs have been laid on a measured ring at least once
+  let laid = false;
+  // The pointer is on an arc or a stack: the arcs hold still under it, so a click lands where it pointed,
+  // and catch up with the ring once it leaves (VISUAL QA pass 2, wave 6).
+  let overArc = false;
+  let arcsBehind = false;
   /**
    * The proposals' marks on the ring as it is now: on top of their petals as the petals turn, swell and open with
    * the pointer and the zoom (Elco, 12 Nov, wave 4: "arcs floating off their petals").
    */
   const arcsOn = (ring: Ring) => {
     for (const s of markSlots) {
-      const d = placeArc(ring, s.pl.petal, s.pl.step);
+      const hide = hidden.get(s.pl.petal) ?? 0;
+      const shown = s.pl.step >= hide;
+      s.seen.set('display', shown ? 'inline' : 'none');
+      s.hit.setAttribute('display', shown ? 'inline' : 'none');
+      if (!shown) continue;
+      const d = placeArc(ring, s.pl.petal, hide ? s.pl.step - hide + 1 : s.pl.step);
       s.seen.set('d', d);
       s.hit.setAttribute('d', d);
     }
     for (const s of stacks) {
+      if (s.open) {
+        const hide = hidden.get(s.petal) ?? 0;
+        s.mark.setAttribute('display', hide ? 'inline' : 'none');
+        s.hit.setAttribute('display', hide ? 'inline' : 'none');
+        if (String(hide) !== s.n) s.label.text(String(hide));
+        s.n = String(hide);
+        if (!hide) continue;
+      }
       const d = placeArc(ring, s.petal, 0);
       s.mark.setAttribute('d', d);
       s.hit.setAttribute('d', d);
@@ -556,17 +651,25 @@ export function createScene(
       });
     const k = lastView.k;
     for (const s of stacks) {
+      if (s.n === '0') {
+        s.label.set('display', 'none');
+        continue;
+      }
       const mx = (s.x + lastRing.ox) * k + lastView.x;
       const my = (s.y + lastRing.oy) * k + lastView.y;
       // a few pixels out from the mark, whatever the zoom; else further out, else beside its ends; else none
       const w = s.n.length * 7 + 4;
       const along = s.half * k + w / 2 + 4;
-      const spots = [
+      const out = [
         [s.dx * 12, s.dy * 12],
         [s.dx * 26, s.dy * 26],
+      ];
+      const beside = [
         [-s.dy * along, s.dx * along],
         [s.dy * along, -s.dx * along],
       ];
+      // an opened stack's arcs run outward from its count's mark: the count goes beside its ends
+      const spots = s.open ? [...beside, ...out] : [...out, ...beside];
       const free = spots
         .map(([ox, oy]) => ({ x: mx + (ox as number), y: my + (oy as number) }))
         .find(
@@ -676,8 +779,14 @@ export function createScene(
   // a pinned proposal stays pointed; pointing at another shows it until the pointer leaves
   const pinnedAt = look?.pinned ? markSlots.findIndex((s) => s.pl.id === look.pinned) : -1;
   markSlots.forEach((s, j) => {
-    s.hit.addEventListener('pointerenter', () => point(j));
-    s.hit.addEventListener('pointerleave', () => point(pinnedAt));
+    s.hit.addEventListener('pointerenter', () => {
+      overArc = true;
+      point(j);
+    });
+    s.hit.addEventListener('pointerleave', () => {
+      overArc = false;
+      point(pinnedAt);
+    });
   });
   if (pinnedAt >= 0) point(pinnedAt);
   // Under the raised petal: the ground, a line wider than it, so where its tip lies over a neighbour
@@ -717,10 +826,14 @@ export function createScene(
     const dot = slot(
       el('circle', { r: 2.5, fill: GROUND, stroke: INK, 'stroke-width': 1 }, group.node),
     );
+    // the ground under its words, so a line behind (a proposal's arc, a petal's edge) never crosses them (wave 6)
+    const ground = slot(
+      el('rect', { fill: GROUND, height: 14, 'pointer-events': 'none' }, group.node),
+    );
     const text = slot(
       el('text', { fill: INK, 'text-rendering': 'geometricPrecision' }, group.node),
     );
-    return { group, leader, dot, text, owner: -1 };
+    return { group, leader, dot, ground, text, owner: -1 };
   };
   const noteLayer = el('g', {}, screen);
   const noteSlots = Array.from({ length: NOTE_POOL }, () => makeNote(noteLayer));
@@ -1100,7 +1213,16 @@ export function createScene(
       const { k } = view;
       lastView = view;
       lastRing = ring;
-      if (ringMoved && votes) arcsOn(ring);
+      // the arcs follow the ring, but hold still while the pointer is on one, so the petal swelling under it never
+      // carries it away from the pointer before a press lands
+      if (votes && (!laid || (!overArc && stackPointed === null))) {
+        const refit = fitOpened(ring, view, taken);
+        if (refit || ringMoved || arcsBehind || !laid) {
+          arcsOn(ring);
+          arcsBehind = false;
+          laid = true;
+        }
+      } else if (ringMoved) arcsBehind = true;
       if (pointed >= 0) placeWords();
       placeStacks(mk, taken);
       const rescale = k !== lastK || mk.recede !== lastRecede;
@@ -1188,6 +1310,9 @@ export function createScene(
         s.dot.set('cx', n3(note.dotX));
         s.dot.set('cy', n3(note.dotY));
         s.text.set('transform', `translate(${n3(note.x)} ${n3(note.y)})`);
+        s.ground.set('x', n3(note.x - 2));
+        s.ground.set('y', n3(note.y - 12));
+        s.ground.set('width', n3(note.width + 4));
       }
 
       labelSlots.forEach((s, i) => {
