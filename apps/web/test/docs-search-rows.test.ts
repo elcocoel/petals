@@ -1,4 +1,5 @@
-// Search in /docs (Elco, 12 Nov: "the search function"): the answers that are pages /docs renders, as rows.
+// Search in /docs (Elco, 12 Nov: "the search function"): the answers that are pages /docs renders, as rows. SEARCH's
+// docs-search.test.ts keeps its list of pages equal to the docs'.
 import { describe, expect, test } from 'vitest';
 import { docsRows, docsSearchStatus, docsSearchWords } from '../lib/docs-search.ts';
 
@@ -17,6 +18,13 @@ const pages = [
     source: 'docs/brain/index.md',
     section: 'brain',
     overview: true,
+  },
+  {
+    slug: 'data-protocol/schemas/calls-v1',
+    title: 'calls/v1',
+    source: 'packages/core/schema/calls-v1.schema.json',
+    schemaId: 'urn:petal:schema:calls:v1',
+    section: 'data-protocol',
   },
   {
     slug: 'brain/open-calls',
@@ -49,6 +57,8 @@ describe('docs search rows', () => {
             ],
           },
           { kind: 'doc', id: 'docs/ideas/claims.md', title: 'Claims' },
+          // a format, by its schema's $id
+          { kind: 'doc', id: 'urn:petal:schema:calls:v1', title: 'calls/v1' },
           // the same page twice, and a file /docs doesn't render, and another kind: left out
           { kind: 'doc', id: 'docs/ideas/claims.md', title: 'Claims' },
           { kind: 'doc', id: 'specs/not-rendered.md', title: 'Not here' },
@@ -74,6 +84,13 @@ describe('docs search rows', () => {
         title: 'Claims',
         heading: null,
         section: 'The ideas',
+        snippet: [],
+      },
+      {
+        href: '/docs/data-protocol/schemas/calls-v1',
+        title: 'calls/v1',
+        heading: null,
+        section: 'data-protocol',
         snippet: [],
       },
     ]);

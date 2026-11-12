@@ -1,6 +1,6 @@
 // Search in /docs (Elco, 12 Nov, through META: "another feature for us to add on the docs that make us legit -> the
 // search function"), the map's box on the docs: GET /api/v1/search with kinds=doc answers the files /docs renders,
-// each by its path in the repository, with the sections that matched (SEARCH's side). Here each answer becomes a
+// each by its path in the repository (a format by its schema's $id), with the sections that matched (SEARCH's side). Here each answer becomes a
 // row: the page that renders that file, the first section that matched, and the words around the match. A path
 // /docs doesn't render is left out. Pure. Words are drafts for Elco.
 import { mapSearchWords, type SearchBody } from './map-search.ts';
@@ -18,11 +18,15 @@ export const docsSearchWords = {
   wordsOnly: mapSearchWords.wordsOnly,
 } as const;
 
-/** A docs page as the row needs it: where it's served, its title, the file it renders and its section. */
+/**
+ * A docs page as the row needs it: where it's served, its title, the file it renders (or, for a format, its schema's
+ * $id, since several formats share one file) and its section.
+ */
 export interface DocsPage {
   slug: string;
   title: string;
   source: string;
+  schemaId?: string;
   section: string;
   overview?: boolean;
 }
@@ -45,7 +49,7 @@ export function docsRows(body: SearchBody, pages: readonly DocsPage[]): DocsRow[
   const seen = new Set<string>();
   return body.results.flatMap((r) => {
     if (r.kind !== 'doc') return [];
-    const page = pages.find((p) => p.source === r.id);
+    const page = pages.find((p) => (p.schemaId ?? p.source) === r.id);
     if (!page || seen.has(page.slug)) return [];
     seen.add(page.slug);
     const deep = r.matched?.find((m) => m.id.startsWith(`${r.id}#`));
