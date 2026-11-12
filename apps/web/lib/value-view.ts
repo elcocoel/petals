@@ -46,7 +46,18 @@ export interface WorthLine {
   text: string;
   /** where and when, as a source line */
   source: string;
+  /** where an outside source gave it (a price), linked beside it; none for what Petals read itself */
+  link?: string;
 }
+
+/** The address a value was read from, as its ref says it in brackets; the chain's own reading has none. */
+const linkOf = (ref: string): string | undefined => /\((https?:\/\/[^)\s]+)\)/.exec(ref)?.[1];
+
+/** A price's source and, when it's outside Petals, where it was read. */
+const priced = (p: NonNullable<MapValue['price']>) => {
+  const link = p.source === 'chain' ? undefined : linkOf(p.ref);
+  return { source: priceSource(p), ...(link ? { link } : {}) };
+};
 
 /** Where and when a price was read. */
 export const priceSource = (p: NonNullable<MapValue['price']>): string =>
@@ -69,7 +80,7 @@ export function petalWorth(
   if (!v.price) return 'no price';
   return {
     text: `${dollars(usdString(Number(amount) * v.price.usd))} at ${dollars(v.price.usd)} per ${tokenOf(v)}`,
-    source: priceSource(v.price),
+    ...priced(v.price),
   };
 }
 
@@ -82,7 +93,7 @@ export function mapWorth(v: MapValue | null | undefined): WorthLine[] | 'no pric
   if (total && v.total_usd)
     lines.push({
       text: `${dollars(v.total_usd)} in this reading: ${whole(total.amount)} ${total.unit} at ${dollars(v.price.usd)}`,
-      source: priceSource(v.price),
+      ...priced(v.price),
     });
   if (v.supply)
     lines.push({

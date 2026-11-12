@@ -7,6 +7,7 @@ import { LegendKeys } from '../../../../components/Legend.tsx';
 import { MapList } from '../../../../components/MapList.tsx';
 import { ReadingColumn } from '../../../../components/SiteChrome.tsx';
 import { Mono } from '../../../../components/ui/Mono.tsx';
+import { SourceLink } from '../../../../components/ui/SourceLink.tsx';
 import { MapAt } from '../../../../flower/OnTheMap.tsx';
 import { powerMapAt } from '../../../../landscape/land.ts';
 import { shortId } from '../../../../lib/flower-view.ts';
@@ -36,6 +37,7 @@ function Worth({ m }: { m: MapCard }) {
         <p key={w.text} className="my-0">
           {w.text}
           <span className="type-mono text-muted"> {w.source}</span>
+          {w.link && <SourceLink href={w.link} name={w.source} />}
         </p>
       ))}
     </>

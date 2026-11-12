@@ -86,6 +86,7 @@ import { RowField } from '../components/ui/RowField.tsx';
 import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { Select } from '../components/ui/Select.tsx';
+import { SourceLink } from '../components/ui/SourceLink.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
 import { TextLink } from '../components/ui/TextLink.tsx';
 import { Tip } from '../components/ui/Tip.tsx';
@@ -3082,6 +3083,28 @@ export const registry: LabEntry[] = [
               <OrgBadge name="RaidGuild" symbol="RAID" types={['DAO']} />
             </div>
           </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'SourceLink',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/SourceLink.tsx',
+    states: [
+      {
+        name: 'beside a value an outside source gave, its source and when',
+        render: () => (
+          <p className="my-0 type-ui">
+            $15,099,497 at $0.02 per MNDE
+            <span className="type-mono text-muted"> DefiLlama, 11 Nov 2026</span>
+            <SourceLink
+              href="https://coins.llama.fi/prices/current/solana:MNDEFzGvMt87ueuHvVU9VcTqsAP5b3fTGPsHuuPA5ey"
+              name="DefiLlama, 11 Nov 2026"
+            />
+          </p>
         ),
       },
     ],

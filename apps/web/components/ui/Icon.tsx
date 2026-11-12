@@ -11,6 +11,7 @@ import {
   ArrowCounterClockwise,
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   ArrowUUpLeft,
   CaretRight,
   ChatCircle,
@@ -42,6 +43,8 @@ const GLYPHS = {
   gallery: SquaresFour,
   connect: Plug,
   arrow: ArrowRight,
+  // a source outside Petals, linked beside what it gave (Elco, 12 Nov: "the little diagonal arrow")
+  outside: ArrowUpRight,
   back: ArrowLeft,
   /** The side panel's fold. */
   sidebar: SidebarSimple,
@@ -94,7 +97,7 @@ export function Icon({
   small?: boolean;
 }) {
   const Drawn = GLYPHS[name];
-  const inText = name === 'arrow' || name === 'back';
+  const inText = name === 'arrow' || name === 'back' || name === 'outside';
   const box = inText ? 'inline' : small ? 'size-icon-small' : 'size-icon-size';
   return (
     <Drawn

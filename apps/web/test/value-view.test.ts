@@ -30,7 +30,12 @@ describe('dollars as people read them', () => {
 describe("a petal's dollars", () => {
   test('its amount at the price, with where and when', () => {
     const w = petalWorth('1000', 'delegated_votes', card);
-    expect(w).toEqual({ text: '$4,440 at $4.44 per ENS', source: 'DefiLlama, 11 Nov 2026' });
+    // an outside source's price links where it was read; the chain's supply, read by Petals, doesn't
+    expect(w).toEqual({
+      text: '$4,440 at $4.44 per ENS',
+      source: 'DefiLlama, 11 Nov 2026',
+      link: 'https://coins.llama.fi/prices/current/ethereum:0xc18360217d8f7ab5e7c516566761ea12ce7f9d72',
+    });
   });
   test('no price says so; another measure, or no value, says nothing', () => {
     expect(petalWorth('1000', 'delegated_votes', { ...card, price: null })).toBe('no price');
@@ -45,6 +50,7 @@ describe("the map's worth", () => {
       {
         text: '$17,697,347 in this reading: 3,986,198 ENS at $4.44',
         source: 'DefiLlama, 11 Nov 2026',
+        link: 'https://coins.llama.fi/prices/current/ethereum:0xc18360217d8f7ab5e7c516566761ea12ce7f9d72',
       },
       { text: 'Supply 100,000,000 ENS, $443,965,579', source: 'the chain, 11 Nov 2026' },
     ]);
