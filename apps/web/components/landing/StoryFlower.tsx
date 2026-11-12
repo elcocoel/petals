@@ -9,7 +9,7 @@
 // opens, its arc draws over the top and the vote marks land; the camera pulls back as two neighbours bloom, reached
 // by running lines, and then all the way out to the far map. A light behind it moves less than it does, for depth.
 // Every number comes from those files; this only draws.
-import { KEYS } from '@petal/core/wedge/keys';
+import { GREY, KEYS } from '@petal/core/wedge/keys';
 import type { CSSProperties } from 'react';
 import { useId } from 'react';
 import { type Community, MINE, NEIGHBOURS, OTHERS } from '../../lib/hero-map.ts';
@@ -32,19 +32,26 @@ import {
   proposal,
   relationDrawn,
   relations,
+  sharePercent,
   voteOf,
   world,
 } from '../../lib/hero-story.ts';
 
 /** The look's own keys, handed over as data on the drawing (as the flower's fills are), and painted from there. */
 const key = (name: string) => KEYS.find((k) => k.name === name)?.hex ?? '';
-const KEYED = { '--story-second': key('blue'), '--story-against': key('pink') } as CSSProperties;
+const FILLS: readonly Fill[] = ['mint', 'blue', 'coral', 'apricot', 'pink'];
+const KEYED = Object.fromEntries([
+  ...FILLS.map((f) => [`--story-${f}`, key(f)]),
+  ['--story-grey', GREY.hex],
+]) as CSSProperties;
 const PAINT: Record<Fill, string> = {
-  petal: 'var(--figure-petal)',
-  accent: 'var(--figure-accent)',
-  second: 'var(--story-second)',
+  mint: 'var(--story-mint)',
+  blue: 'var(--story-blue)',
+  coral: 'var(--story-coral)',
+  apricot: 'var(--story-apricot)',
+  pink: 'var(--story-pink)',
+  grey: 'var(--story-grey)',
 };
-const AGAINST = 'var(--story-against)';
 
 /** A colour on its way from one key to another, mixed by the browser so a theme's keys are kept. */
 const mix = (from: Fill, to: Fill, k: number) =>
@@ -64,19 +71,23 @@ const darker = (fill: string) => `color-mix(in srgb, ${fill} 62%, black)`;
 
 /** Where my community sits in the drawing when the camera is on it. */
 const CENTRE = { x: 300, y: 205 };
-/** The proposal's ring and its arc, over the top of the flower. */
-const ORBIT = 187;
 /** How far out my community's petals reach at most, for the lines and the focus ring. */
 const REACH = 215;
+/** The faint circle round my community, where the labels of its strongest sit; the proposal's arc draws on it. */
+const OUTER = 196;
+/** Where the proposal's arc starts and ends, a quarter of the circle over the top. */
+const ARC = OUTER * Math.SQRT1_2;
 
 const seen = (v: number) => (v > 0.001 ? undefined : 'hidden');
+/** A community's mark from far, as much of the hole in its wave as a logo fills on the real map. */
+const MARK = 0.72;
 
 /** A community from far: its soft wave, the hole in it, and a dark mark where its logo would be. */
 function FarCommunity({ c, opacity = 1 }: { c: Community; opacity?: number }) {
   return (
     <g transform={`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`} opacity={opacity * c.seen}>
-      <path d={c.wave} fill={PAINT.petal} fillRule="evenodd" />
-      <circle r={c.inner * 0.55} fill="var(--text-primary)" />
+      <path d={c.wave} fill={PAINT.mint} fillRule="evenodd" />
+      <circle r={c.inner * MARK} fill="var(--text-primary)" />
     </g>
   );
 }
@@ -91,14 +102,26 @@ function Neighbour({ c, bloom }: { c: Community; bloom: (j: number) => number })
           // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
           key={j}
           d={petalPath(j, c.inner + h * bloom(j), { inner: c.inner, count: n, gutter: GUTTER })}
-          fill={j < 3 ? PAINT.accent : PAINT.petal}
+          fill={PAINT[NEIGHBOUR_KINDS[j % NEIGHBOUR_KINDS.length] ?? 'mint']}
         />
       ))}
       <circle r={c.inner - 0.5} fill="var(--surface)" />
-      <circle r={c.inner * 0.55} fill="var(--text-primary)" />
+      <circle r={c.inner * MARK} fill="var(--text-primary)" />
     </g>
   );
 }
+
+/** A neighbour's petals by kind, as my community's are: mostly mint. */
+const NEIGHBOUR_KINDS: readonly Fill[] = [
+  'mint',
+  'mint',
+  'blue',
+  'mint',
+  'coral',
+  'mint',
+  'apricot',
+  'blue',
+];
 
 /** A line from my community's edge out to a neighbour's, bending a little to one side. */
 function linkTo(c: Community, side: number): string {
@@ -114,15 +137,7 @@ function linkTo(c: Community, side: number): string {
 }
 const LINKS = NEIGHBOURS.map((c, n) => linkTo(c, n % 2 ? 1 : -1));
 
-export function StoryFlower({
-  beat,
-  t,
-  fresh = false,
-}: {
-  beat: number;
-  t: number;
-  fresh?: boolean;
-}) {
+export function StoryFlower({ beat, t }: { beat: number; t: number }) {
   const id = useId().replace(/[^\w-]/g, '');
   const lengths = petalLengths(beat, t);
   const cam = camera(beat, t);
@@ -274,23 +289,9 @@ export function StoryFlower({
               />
             ))}
           </g>
-          {/* each petal's thickness, a darker slab just under it, lit from the upper left like its highlight */}
-          <g transform="translate(1.4 3)">
-            {lengths.map((r, i) => {
-              const paint = petalPaint(beat, t, i, fresh);
-              return (
-                <path
-                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
-                  key={i}
-                  d={petalPath(i, r)}
-                  fill={`color-mix(in srgb, ${mix(paint.from, paint.to, paint.k)} 68%, black)`}
-                />
-              );
-            })}
-          </g>
           <g>
             {lengths.map((r, i) => {
-              const paint = petalPaint(beat, t, i, fresh);
+              const paint = petalPaint(beat, t, i);
               const fill = mix(paint.from, paint.to, paint.k);
               const lit = petalLit(beat, t, i);
               const d = petalPath(i, r, { round: HL.round * lit });
@@ -322,12 +323,49 @@ export function StoryFlower({
               );
             })}
           </g>
-          <circle r={34} fill="var(--surface)" />
-          <circle r={34} fill="none" stroke="var(--hairline)" strokeWidth={1} />
+          {/* the centre, wide and white as the real flower's, with a dark mark where its logo would be */}
+          <circle r={INNER - 1} fill="var(--surface)" />
+          <circle r={INNER - 1} fill="none" stroke="var(--hairline)" strokeWidth={1} />
+          <circle r={INNER * 0.22} fill="var(--text-primary)" />
+          {/* the faint circle the real flower stands in, where its labels sit */}
+          <circle r={OUTER} fill="none" stroke="var(--hairline)" strokeWidth={1} opacity={0.7} />
+          {/* the strongest few's shares, on leader lines from their tips, as each is highlighted */}
+          {lengths.slice(0, 3).map((r, i) => {
+            const lit = petalLit(beat, t, i);
+            if (lit < 0.002) return null;
+            const [x1, y1] = atPetal(i, r + 3);
+            const [x2, y2] = atPetal(i, OUTER + 4);
+            const right = 10 + 6 * i;
+            return (
+              <g
+                // biome-ignore lint/suspicious/noArrayIndexKey: one label per strongest petal
+                key={i}
+                opacity={lit}
+              >
+                <circle cx={x1} cy={y1} r={2} fill="var(--text-primary)" />
+                <path
+                  d={`M${x1.toFixed(2)} ${y1.toFixed(2)} L${x2.toFixed(2)} ${y2.toFixed(2)} l${right} 0`}
+                  fill="none"
+                  stroke="var(--text-primary)"
+                  strokeWidth={0.8}
+                  opacity={0.6}
+                />
+                <text
+                  x={x2 + right + 4}
+                  y={y2}
+                  dominantBaseline="middle"
+                  className="type-mono"
+                  fill="var(--text-primary)"
+                >
+                  {`${(sharePercent[i] ?? 0).toFixed(1)}%`}
+                </text>
+              </g>
+            );
+          })}
           <g opacity={blocs} visibility={seen(blocs)}>
             {relations.map(([a, b], n) => {
-              const [x1, y1] = atPetal(a, 35);
-              const [x2, y2] = atPetal(b, 35);
+              const [x1, y1] = atPetal(a, INNER - 3);
+              const [x2, y2] = atPetal(b, INNER - 3);
               return (
                 <path
                   key={`${a}-${b}`}
@@ -345,16 +383,8 @@ export function StoryFlower({
             })}
           </g>
           <g opacity={votes} visibility={seen(votes)}>
-            <circle
-              r={ORBIT}
-              fill="none"
-              stroke="var(--hairline)"
-              strokeWidth={1}
-              opacity={0.6 * vote.ring}
-              transform={`scale(${(0.92 + 0.08 * vote.ring).toFixed(4)})`}
-            />
             <path
-              d={`M-132 -132 A${ORBIT} ${ORBIT} 0 0 1 132 -132`}
+              d={`M${-ARC} ${-ARC} A${OUTER} ${OUTER} 0 0 1 ${ARC} ${-ARC}`}
               fill="none"
               stroke="var(--figure-accent)"
               strokeWidth={2.5}
@@ -364,7 +394,7 @@ export function StoryFlower({
               strokeDashoffset={1 - vote.arc}
             />
             <circle
-              cy={-ORBIT}
+              cy={-OUTER}
               r={6 * vote.point}
               fill="var(--figure-accent)"
               stroke="var(--surface)"
@@ -373,22 +403,21 @@ export function StoryFlower({
             {Array.from({ length: PETALS }, (_, i) => {
               const v = voteOf(i);
               if (!v) return null;
-              const [cx, cy] = atPetal(i, 28);
+              const [cx, cy] = atPetal(i, (lengths[i] ?? INNER) - 8);
               return (
                 <circle
                   // biome-ignore lint/suspicious/noArrayIndexKey: one mark per petal position
                   key={i}
                   cx={cx}
                   cy={cy}
-                  r={3.2 * vote.vote(i)}
-                  fill={v === 'against' ? AGAINST : PAINT.accent}
-                  stroke="var(--surface)"
-                  strokeWidth={1.5}
+                  r={3 * vote.vote(i)}
+                  fill={v === 'against' ? 'var(--surface)' : 'var(--text-primary)'}
+                  stroke="var(--text-primary)"
+                  strokeWidth={1.2}
                 />
               );
             })}
           </g>
-          <circle r={3.5} fill="var(--text-primary)" />
         </g>
       </g>
     </svg>

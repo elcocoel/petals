@@ -282,7 +282,7 @@ export function HeroStoryView({
                   transformOrigin: `50% ${cy}%`,
                 }}
               >
-                <StoryFlower beat={beat} t={t} fresh={fresh} />
+                <StoryFlower beat={beat} t={t} />
                 <div
                   aria-hidden="true"
                   className="absolute inset-x-1/4 top-0 flex items-center gap-text-gap"

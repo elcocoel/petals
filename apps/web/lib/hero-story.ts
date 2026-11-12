@@ -76,10 +76,10 @@ export const whipAt = (beat: number) => (beat === 0 ? count(6) : 0);
 export const driftAt = (beat: number) => (beat === 0 ? count(2) : 0);
 
 export const PETALS = 24;
-/** Where the petals start: the centre's edge. */
-export const INNER = 36;
+/** Where the petals start: the centre's edge; a wide centre, as the real flower has (Elco, 12 Nov: closer to the real thing). */
+export const INNER = 56;
 /** Every petal's length when the community first opens, all equal. */
-const EVEN = 106;
+const EVEN = 118;
 /** Half the line between two petals: the same width from foot to tip (Elco, 5 Nov: "a relatively stable line"). */
 export const GUTTER = 1.5;
 
@@ -389,46 +389,105 @@ export function layerOpacity(own: number, beat: number, t: number): number {
   return 0;
 }
 
-export type Fill = 'petal' | 'accent' | 'second';
+/**
+ * A petal's paint: one of the real flower's five keys, most common first, or grey for context
+ * (@petal/core/wedge/keys; Elco, 12 Nov: "closer to the real thing ... colors change").
+ */
+export type Fill = 'mint' | 'blue' | 'coral' | 'apricot' | 'pink' | 'grey';
 
 const LIT = 3;
 const BLOC_A = [0, 1, 8, 9, 16, 17];
 const BLOC_B = [4, 5, 12, 13, 20, 21];
 
-/** What each petal is painted with once a beat has settled: the few that carry the most, or two groups. */
+/**
+ * What kind of account each petal is, as the real flower colours it by default: the commonest kind in mint, then
+ * blue, coral, apricot and pink, each key going to the kind more petals carry. Made up, and scattered round.
+ */
+const KIND: readonly Fill[] = [
+  'mint',
+  'blue',
+  'mint',
+  'mint',
+  'apricot',
+  'mint',
+  'coral',
+  'mint',
+  'blue',
+  'mint',
+  'mint',
+  'pink',
+  'mint',
+  'blue',
+  'mint',
+  'coral',
+  'mint',
+  'mint',
+  'blue',
+  'apricot',
+  'mint',
+  'coral',
+  'mint',
+  'blue',
+];
+
+/**
+ * What each petal is painted with once a beat has settled, as the real tools would set it: by kind of account on
+ * the community, history and connections beats; the strongest three highlighted and everyone else receding to grey
+ * for influence; two voting blocs, one mint and one blue, the rest grey; on the vote, for in mint, against in coral,
+ * and grey for those who never voted.
+ */
 export function petalFill(beat: number, i: number): Fill {
-  if (beat === 1 || beat === 5) return i < LIT ? 'accent' : 'petal';
-  if (beat === 2 || beat === 3)
-    return BLOC_A.includes(i) ? 'accent' : BLOC_B.includes(i) ? 'second' : 'petal';
-  return 'petal';
+  const kind = KIND[i] ?? 'mint';
+  if (beat === 1) return i < LIT ? kind : 'grey';
+  if (beat === 2) return BLOC_A.includes(i) ? 'mint' : BLOC_B.includes(i) ? 'blue' : 'grey';
+  if (beat === 4) {
+    const v = voteOf(i);
+    return v === 'for' ? 'mint' : v === 'against' ? 'coral' : 'grey';
+  }
+  return kind;
 }
 
 /**
- * When a petal's colour hits in a beat: the strongest three one on each eighth after the heights (boom, boom,
- * boom), quicker on sixteenths when they come back at the end; one bloc on the three, the other on the four; the
- * rest on the cut.
+ * When a petal's colour hits in a beat: everyone else recedes on the three; one bloc on the three, the other on
+ * the four; on the vote, those who never voted go grey on the three and the voters take their side as the votes
+ * roll in; the whole picture comes back on the one.
  */
 function paintStart(beat: number, i: number): number {
-  if (beat === 1) return count(3.5) + i * EIGHTH;
-  if (beat === 5) return count(2) + i * SIXTEENTH;
+  if (beat === 1) return reactAt(1);
   if (beat === 2) return BLOC_B.includes(i) ? count(4) : REACT;
+  if (beat === 4) return voteOf(i) ? count(4.5) + (i * COUNT_MS) / 12 : REACT;
   return CALL;
 }
 
+/** When the highlight lands on one of the strongest three: one on each eighth (boom, boom, boom), quicker at the end. */
+function litStart(beat: number, i: number): number {
+  return beat === 5 ? count(2) + i * SIXTEENTH : count(3.5) + i * EIGHTH;
+}
+
 /** A petal's paint at a moment: from the last beat's colour to this one's, `k` of the way. */
-export function petalPaint(beat: number, t: number, i: number, fresh = false) {
-  const from: Fill = fresh && beat === 0 ? 'petal' : petalFill(prior(beat), i);
+export function petalPaint(beat: number, t: number, i: number) {
+  const from: Fill = petalFill(prior(beat), i);
   const to = petalFill(beat, i);
   return { from, to, k: from === to ? 1 : ease.outCubic(at(t, paintStart(beat, i), SIXTEENTH)) };
 }
 
-/** How strongly the highlight is on a petal, 0 to 1: on the strongest few, as their colour hits. */
+/**
+ * How strongly the highlight is on a petal, 0 to 1: on the strongest few, as each lands; their share labels come
+ * with it.
+ */
 export function petalLit(beat: number, t: number, i: number): number {
   if (i >= LIT) return 0;
-  if (beat === 1 || beat === 5) return ease.outCubic(at(t, paintStart(beat, i), SIXTEENTH));
+  if (beat === 1 || beat === 5) return ease.outCubic(at(t, litStart(beat, i), SIXTEENTH));
   if (beat === 2 || beat === 0) return 1 - ease.outCubic(at(t, CALL, SIXTEENTH));
   return 0;
 }
+
+/** Each petal's share of the whole once influence shows, in %: what its label says. Symbolic, as the heights are. */
+export const sharePercent = (() => {
+  const held = base.map((r) => r - INNER);
+  const all = held.reduce((sum, h) => sum + h, 0);
+  return held.map((h) => (100 * h) / all);
+})();
 
 /** The petals the voting blocs' few inner lines join. */
 export const relations: readonly (readonly [number, number])[] = [
