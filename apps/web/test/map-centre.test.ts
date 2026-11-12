@@ -49,3 +49,16 @@ test('a click centres, a click on the centre goes in, Shift shows only the pair,
   expect(scene).toMatch(/if \(only !== -1\) o = i === only \? 1 : 0;/);
   expect(scene).toMatch(/'stroke-dasharray': '6 6'/);
 });
+
+test("inside a DAO, the neighbours' names stay on the edges; the line and its count show for the way pointed at", () => {
+  const scene = readFileSync(join(import.meta.dirname, '..', 'landscape', 'scene.ts'), 'utf8');
+  expect(scene).toMatch(
+    /const lit = way\.to === wayPointed;\s+a\.g\.set\('opacity', o2\(lit \? enter \* ARROW_TONE : 0\)\);/,
+  );
+  expect(scene).toMatch(/a\.num\.node\.textContent = count\(way\.shared\);/);
+  const land = readFileSync(
+    join(import.meta.dirname, '..', 'landscape', 'useLandscape.ts'),
+    'utf8',
+  );
+  expect(land).toMatch(/way: entered >= 0 \? pointedWay : -1,/);
+});

@@ -430,6 +430,7 @@ export function useLandscape(
         pointed: under,
         holds,
         only,
+        way: entered >= 0 ? pointedWay : -1,
         waved,
       });
       if (moving) wake();

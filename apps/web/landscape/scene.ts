@@ -92,6 +92,13 @@ export interface LandFrame {
    */
   only?: number;
   /**
+   * Inside a DAO, the way out the pointer is on, by the flower it goes to, or -1 (Elco, 12 Nov walk: "we don't need
+   * all of them to be showing up all the time. Maybe just having the neighbor Daos on the edges and then if I hover
+   * the space in between the Daos I would see the connection and see how many users are in between them"): only its
+   * line shows, with how many wallets the two share; the neighbours' names stay on the edges.
+   */
+  way?: number;
+  /**
    * How much of every flower is its far wave, 1 to 0, the same for all at once (Elco, 12 Nov walk: "the transfer
    * from the mini shape to the individual petals shape right now it's too soon ... the transition happens at
    * different times depending on something related to the size of petals"): the map works it out from its zoom.
@@ -363,7 +370,11 @@ export function createLandScene(
     const line = slot(el('line', { stroke: INK, 'vector-effect': 'non-scaling-stroke' }, g.node));
     const head = slot(el('path', { fill: INK }, g.node));
     const at = slot(el('g', { display: 'none' }, arrowNames));
-    return { g, line, head, at, label: null as Label | null, to: -1 };
+    // how many wallets the two share, at the line's middle, while the pointer is on it
+    const num = slot(
+      el('text', { fill: MUTED, 'text-anchor': 'middle', display: 'none' }, arrowNames),
+    );
+    return { g, line, head, at, num, label: null as Label | null, to: -1 };
   });
 
   const order = flowers
@@ -382,6 +393,7 @@ export function createLandScene(
       pointed = -1,
       holds = null,
       only = -1,
+      way: wayPointed = -1,
       waved: allWaved,
     }) {
       world.set('transform', `translate(${n3(view.x)} ${n3(view.y)}) scale(${view.k})`);
@@ -563,6 +575,7 @@ export function createLandScene(
         if (!way || !e) {
           a.g.show(false);
           a.at.show(false);
+          a.num.show(false);
           return;
         }
         const n = flowers[way.to] as LandFlower;
@@ -599,6 +612,7 @@ export function createLandScene(
         if (stop <= from + 12) {
           a.g.show(false);
           a.at.show(false);
+          a.num.show(false);
           return;
         }
         if (named) taken.push(box);
@@ -611,8 +625,16 @@ export function createLandScene(
         const hx = -uy * size * 0.6;
         const hy = ux * size * 0.6;
         a.g.show(true);
-        a.g.set('opacity', o2(enter * ARROW_TONE));
+        const lit = way.to === wayPointed;
+        a.g.set('opacity', o2(lit ? enter * ARROW_TONE : 0));
         a.at.set('opacity', o2(enter));
+        a.num.show(lit);
+        if (lit) {
+          a.num.node.textContent = count(way.shared);
+          a.num.set('x', n3((x1 + x2) / 2 - uy * 10));
+          a.num.set('y', n3((y1 + y2) / 2 + ux * 10 + 4));
+          a.num.set('opacity', o2(enter));
+        }
         a.line.set('x1', n3(x1));
         a.line.set('y1', n3(y1));
         a.line.set('x2', n3(x2 - ux * size));
