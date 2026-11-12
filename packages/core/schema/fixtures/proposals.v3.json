@@ -1,0 +1,1213 @@
+{
+  "petal": "proposals/v3",
+  "about": "near:mainnet:near-africa-community-dao.sputnik-dao.near",
+  "source": {
+    "kind": "sputnik",
+    "contract": "near:mainnet:near-africa-community-dao.sputnik-dao.near",
+    "ref": "get_policy, get_last_proposal_id and get_proposals {from_index, limit: 100} on near-africa-community-dao.sputnik-dao.near at block 224230408 (final), via https://near.drpc.org",
+    "at": "2026-11-12T15:13:23Z"
+  },
+  "proposals": [
+    {
+      "id": "0",
+      "title": "Update config",
+      "kind": "ChangeConfig",
+      "proposer": "igboze_builder.near",
+      "at": "2024-02-24T04:37:15.322Z",
+      "closes_at": "2024-03-02T04:37:15.322Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:0",
+      "recipient": null,
+      "summary": "Update config",
+      "link": null,
+      "votes": [
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fatokunmayowa.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "1",
+      "title": "Transfer proposal",
+      "kind": "Transfer",
+      "proposer": "igboze_builder.near",
+      "at": "2024-03-28T12:45:38.594Z",
+      "closes_at": "2024-04-04T12:45:38.594Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:1",
+      "recipient": "igboze_builder.near",
+      "summary": "Transfer proposal",
+      "link": null,
+      "votes": [
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "mrmoh.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "Update policy",
+      "kind": "ChangePolicy",
+      "proposer": "igboze_builder.near",
+      "at": "2024-03-28T12:49:21.613Z",
+      "closes_at": "2024-04-04T12:49:21.613Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:2",
+      "recipient": null,
+      "summary": "Update policy",
+      "link": null,
+      "votes": [
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fatokunmayowa.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "title": "Description",
+      "kind": "Transfer",
+      "proposer": "alphaflexhub.near",
+      "at": "2024-03-28T15:43:47.710Z",
+      "closes_at": "2024-04-04T15:43:47.710Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:3",
+      "recipient": "tne_society.near",
+      "summary": "Description\nTNE-Society 50% Funding Request for April 2024. Request amount: $750  (7215 NEAR @ $7.2 CoinMarketCap at 3:30PM WAT 3/28/24).\n\nProposal on forum: https://gov.near.org/t/approved-tne-society-for-april-2024-community-building-1500/38333/25\n\nTarget wallet: tne_society.near\n\nI accept the Terms & Conditions of the Africa DAO\n\ni have passed NDC KYC",
+      "link": {
+        "url": "https://gov.near.org/t/approved-tne-society-for-april-2024-community-building-1500/38333/25",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fatokunmayowa.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "title": "Near Africa Gamers funding request for April 2024",
+      "kind": "Transfer",
+      "proposer": "omajari199.near",
+      "at": "2024-03-28T20:02:38.094Z",
+      "closes_at": "2024-04-04T20:02:38.094Z",
+      "decided_at": null,
+      "outcome": "rejected",
+      "as_said": "Rejected",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:4",
+      "recipient": "near_africa_gamers.near",
+      "summary": "Near Africa Gamers funding request for April 2024\nTotal Amount: $500 ~ 69.25 NEAR\nLink to approved proposal: [https://gov.near.org/t/approved-near-africa-gamers-april/38370?u=clinton](https://)\nTarget wallet: near_africa_gamers.near",
+      "link": {
+        "url": "https://gov.near.org/t/approved-near-africa-gamers-april/38370?u=clinton",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "igboze_builder.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "mrmoh.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "title": "Near Africa Gamers funding request for April 2024",
+      "kind": "Transfer",
+      "proposer": "omajari199.near",
+      "at": "2024-03-28T21:04:52.203Z",
+      "closes_at": "2024-04-04T21:04:52.203Z",
+      "decided_at": null,
+      "outcome": "rejected",
+      "as_said": "Rejected",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:5",
+      "recipient": "near_africa_gamers.near",
+      "summary": "Near Africa Gamers funding request for April 2024\n\nTotal amount: $500 ~ 69.44\n\nLink to approved proposal: https://gov.near.org/t/proposal-near-africa-gamers-april/38370?u=clinton\n\nTarget wallet: near_africa_gamers.near",
+      "link": {
+        "url": "https://gov.near.org/t/proposal-near-africa-gamers-april/38370?u=clinton",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "mrmoh.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "title": "50% SouthSouth West Near Club of Nigerai (SWNCN) April FundingFunding for Community Project",
+      "kind": "Transfer",
+      "proposer": "lehleh.near",
+      "at": "2024-03-29T02:54:43.936Z",
+      "closes_at": "2024-04-05T02:54:43.936Z",
+      "decided_at": null,
+      "outcome": "rejected",
+      "as_said": "Rejected",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:6",
+      "recipient": "southwest-near-club-of-nigeria.sputnik-dao.near",
+      "summary": "50% SouthSouth West Near Club of Nigerai (SWNCN) April FundingFunding for Community Project",
+      "link": null,
+      "votes": [
+        {
+          "account": "mrmoh.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "title": "Near Africa Gamers 50% funding request for April 2024.",
+      "kind": "Transfer",
+      "proposer": "omajari199.near",
+      "at": "2024-03-29T06:07:09.888Z",
+      "closes_at": "2024-04-05T06:07:09.888Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:7",
+      "recipient": "near_africa_gamers.near",
+      "summary": "Near Africa Gamers 50% funding request for April 2024.\n\nRequest amount: $500 (71.4 NEAR @$7 Coinmarketcap at 7am WAT 29/3/2024\n\nLink to approved proposal: https://gov.near.org/t/proposal-near-africa-gamers-april/38370?u=clinton\n\nTarget wallet: near_africa_gamers.near\n\nI accept Near Africa Dao terms and conditions\ni have passed KYC",
+      "link": {
+        "url": "https://gov.near.org/t/proposal-near-africa-gamers-april/38370?u=clinton",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "mrmoh.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "title": "South West Near Club of Nigeria (SWNCN) 50% Funding Request for April 2024. Request amount: $400 =57.3 NEAR @ $6.95 C…",
+      "kind": "Transfer",
+      "proposer": "lehleh.near",
+      "at": "2024-03-29T08:07:41.689Z",
+      "closes_at": "2024-04-05T08:07:41.689Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:8",
+      "recipient": "southwest-near-club-of-nigeria.sputnik-dao.near",
+      "summary": "South West Near Club of Nigeria (SWNCN) 50% Funding Request for April 2024. Request amount: $400 =57.3 NEAR @ $6.95 CoinMarketCapTime: 9:03am WAT, 29/03/24.\nLinkLinkLinkLink to Approved Proposal:https://gov.near.org/t/approved-south-west-near-club-of-nigeria-swncn-campus-tour-in-yoruba-language-800-for-community-activities/38332?u=officerlehleh_01South West Near Club of Nig",
+      "link": {
+        "url": "https://gov.near.org/t/approved-south-west-near-club-of-nigeria-swncn-campus-tour-in-yoruba-language-800-for-community-activities/38332?u=officerlehleh_01South",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "mrmoh.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "title": "NEAR Ghana funding reguest for April 2024. 50% of the total amount: $1100 (157 NEAR at $7 current price)",
+      "kind": "Transfer",
+      "proposer": "nearghana.near",
+      "at": "2024-03-29T10:38:30.390Z",
+      "closes_at": "2024-04-05T10:38:30.390Z",
+      "decided_at": null,
+      "outcome": "rejected",
+      "as_said": "Rejected",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:9",
+      "recipient": "nearghana.near",
+      "summary": "NEAR Ghana funding reguest for April 2024. 50% of the total amount: $1100 (157 NEAR at $7 current price)\n\nApproved Proposal on forum: https://gov.near.org/t/approved-near-ghana-community-proposal/38362?u=immanuelnft\n\nTarget Wallet: nearghana.near",
+      "link": {
+        "url": "https://gov.near.org/t/approved-near-ghana-community-proposal/38362?u=immanuelnft",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "abbakaka.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "mrmoh.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "title": "NEAR Ghana funding reguest for April 2024. 50% of the total amount: $1100 (157 NEAR at $7 current price)",
+      "kind": "Transfer",
+      "proposer": "nearghana.near",
+      "at": "2024-03-29T10:39:11.802Z",
+      "closes_at": "2024-04-05T10:39:11.802Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:10",
+      "recipient": "nearghana.near",
+      "summary": "NEAR Ghana funding reguest for April 2024. 50% of the total amount: $1100 (157 NEAR at $7 current price)\n\nApproved Proposal on forum: https://gov.near.org/t/approved-near-ghana-community-proposal/38362?u=immanuelnft\n\nTarget Wallet: nearghana.near",
+      "link": {
+        "url": "https://gov.near.org/t/approved-near-ghana-community-proposal/38362?u=immanuelnft",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fatokunmayowa.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "mrmoh.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "title": "NEAR Ghana funding reguest for April 2024. 50% of the total amount for community activities: $600 (86 NEAR at $7 curr…",
+      "kind": "Transfer",
+      "proposer": "nearghana.near",
+      "at": "2024-03-29T13:27:31.020Z",
+      "closes_at": "2024-04-05T13:27:31.020Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:11",
+      "recipient": "nearghana.near",
+      "summary": "NEAR Ghana funding reguest for April 2024. 50% of the total amount for community activities: $600 (86 NEAR at $7 current price)\n\nApproved Proposal on forum: https://gov.near.org/t/approved-near-ghana-community-proposal/38362?u=immanuelnft\n\nTarget Wallet: nearghana.near",
+      "link": {
+        "url": "https://gov.near.org/t/approved-near-ghana-community-proposal/38362?u=immanuelnft",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "mrmoh.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "title": "Near Hausa funding request for April 2024. 100% of IRL Event = $1,000 and 50% for community activities = $,1400 of th…",
+      "kind": "Transfer",
+      "proposer": "nearhausa.near",
+      "at": "2024-03-29T13:41:03.050Z",
+      "closes_at": "2024-04-05T13:41:03.050Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:12",
+      "recipient": "nearhausa.near",
+      "summary": "Near Hausa funding request for April 2024. 100% of IRL Event = $1,000 and 50% for community activities = $,1400 of the total amount: $2,400 (342.85 NEAR at $7 current price)\n\nApproved Proposal on forum: https://gov.near.org/t/approved-near-hausa-community-april-2024/38337\n\nTarget Wallet: nearhausa.near",
+      "link": {
+        "url": "https://gov.near.org/t/approved-near-hausa-community-april-2024/38337",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "mrmoh.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "title": "NEAR Ghana funding reguest for April 2024. 50% of the total amount for community activities: $600 (85.71 NEAR at $7.1…",
+      "kind": "Transfer",
+      "proposer": "nearghana.near",
+      "at": "2024-03-29T13:50:51.732Z",
+      "closes_at": "2024-04-05T13:50:51.732Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:13",
+      "recipient": "nearghana.near",
+      "summary": "NEAR Ghana funding reguest for April 2024. 50% of the total amount for community activities: $600 (85.71 NEAR at $7.1 current price)\n\nApproved Proposal on forum: https://gov.near.org/t/approved-near-ghana-community-proposal/38362?u=immanuelnft\n\nTarget Wallet: nearghana.near",
+      "link": {
+        "url": "https://gov.near.org/t/approved-near-ghana-community-proposal/38362?u=immanuelnft",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "mrmoh.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "title": "Council Renumeration for work done $1500 as seen in https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-ho…",
+      "kind": "Transfer",
+      "proposer": "igboze_builder.near",
+      "at": "2024-03-29T14:08:28.315Z",
+      "closes_at": "2024-04-05T14:08:28.315Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:14",
+      "recipient": "igboze_builder.near",
+      "summary": "Council Renumeration for work done $1500 as seen in https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491 \n\nKYC verified \n\nI accept all Africa DAO terms.",
+      "link": {
+        "url": "https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "mrmoh.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "title": "social media renumeration as highlighted  https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-20…",
+      "kind": "Transfer",
+      "proposer": "fatokunmayowa.near",
+      "at": "2024-03-29T14:54:23.237Z",
+      "closes_at": "2024-04-05T14:54:23.237Z",
+      "decided_at": null,
+      "outcome": "rejected",
+      "as_said": "Rejected",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:15",
+      "recipient": "fatokunmayowa.near",
+      "summary": "social media renumeration as highlighted  https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491",
+      "link": {
+        "url": "https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "mrmoh.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "title": "$750 social media management renumeration",
+      "kind": "Transfer",
+      "proposer": "fatokunmayowa.near",
+      "at": "2024-03-29T15:16:57.981Z",
+      "closes_at": "2024-04-05T15:16:57.981Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:16",
+      "recipient": "fatokunmayowa.near",
+      "summary": "$750 social media management renumeration\n\nhttps://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491",
+      "link": {
+        "url": "https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fatokunmayowa.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "17",
+      "title": "Africa DAO Community Management requesting for remuneration of 750$ at Near current price on CMC of 6.9$/N https://go…",
+      "kind": "Transfer",
+      "proposer": "psalm.near",
+      "at": "2024-03-30T00:14:29.641Z",
+      "closes_at": "2024-04-06T00:14:29.641Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:17",
+      "recipient": "psalm.near",
+      "summary": "Africa DAO Community Management requesting for remuneration of 750$ at Near current price on CMC of 6.9$/N https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491",
+      "link": {
+        "url": "https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "mrmoh.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "18",
+      "title": "Council Renumeration for work done $1500 as seen in https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-ho…",
+      "kind": "Transfer",
+      "proposer": "abbakaka.near",
+      "at": "2024-03-30T10:36:38.755Z",
+      "closes_at": "2024-04-06T10:36:38.755Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:18",
+      "recipient": "abbakaka.near",
+      "summary": "Council Renumeration for work done $1500 as seen in https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491\n\nKYC verified\n\nI accept all Africa DAO terms.",
+      "link": {
+        "url": "https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "mrmoh.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fatokunmayowa.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "19",
+      "title": "Council Renumeration for work done $1500 as seen in https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-ho…",
+      "kind": "Transfer",
+      "proposer": "mrmoh.near",
+      "at": "2024-03-31T14:03:50.347Z",
+      "closes_at": "2024-04-07T14:03:50.347Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:19",
+      "recipient": "mrmoh.near",
+      "summary": "Council Renumeration for work done $1500 as seen in https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491\n\nKYC verified\n\nI accept all Africa DAO terms.",
+      "link": {
+        "url": "https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "mrmoh.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fatokunmayowa.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "20",
+      "title": "Council Renumeration for work done $1500 as seen in https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-ho…",
+      "kind": "Transfer",
+      "proposer": "mrmoh.near",
+      "at": "2024-03-31T15:32:03.501Z",
+      "closes_at": "2024-04-07T15:32:03.501Z",
+      "decided_at": null,
+      "outcome": "expired",
+      "as_said": "Expired",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:20",
+      "recipient": "mrmoh.near",
+      "summary": "Council Renumeration for work done $1500 as seen in https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491\n\nKYC verified\n\nI accept all Africa DAO terms.",
+      "link": {
+        "url": "https://gov.near.org/t/approved-by-hom-didnt-pay-africa-dao-to-hom-april-2024/38491",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "igboze_builder.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "21",
+      "title": "TNE-Society Remaining 50% Funding Request for April 2024. Request amount: $750 (112 NEAR @ $6.7 CoinMarketCap at 00:0…",
+      "kind": "Transfer",
+      "proposer": "alphaflexhub.near",
+      "at": "2024-04-24T23:11:22.769Z",
+      "closes_at": "2024-05-01T23:11:22.769Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:21",
+      "recipient": "tne_society.near",
+      "summary": "TNE-Society Remaining 50% Funding Request for April 2024. Request amount: $750 (112 NEAR @ $6.7 CoinMarketCap at 00:00AM WAT 5/24/24).\n\nReport on forum: https://gov.near.org/t/mid-report-tne-society-for-april/39043?u=alphaflex\n\nTarget wallet: tne_society.near\nI accept the Terms & Conditions of the Africa DAO\ni have passed NDC KYC",
+      "link": {
+        "url": "https://gov.near.org/t/mid-report-tne-society-for-april/39043?u=alphaflex",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fatokunmayowa.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "22",
+      "title": "Near Africa Gamers 50% balance reqest for April.",
+      "kind": "Transfer",
+      "proposer": "omajari199.near",
+      "at": "2024-04-24T23:23:54.817Z",
+      "closes_at": "2024-05-01T23:23:54.817Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:22",
+      "recipient": "near-africa-gamers.near",
+      "summary": "Near Africa Gamers 50% balance reqest for April.\namount reqested: $500 (73.5 Near, Near @ $6.8 on CMC at 12am WAT)\n\nmid-month report: https://gov.near.org/t/near-africa-gamers-mid-april-report/39058?u=clinton\n\nTarget wallet: near-africa-gamers.near\n\nNCD KYC approved \nI accept all terms and conditions",
+      "link": {
+        "url": "https://gov.near.org/t/near-africa-gamers-mid-april-report/39058?u=clinton",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fatokunmayowa.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "23",
+      "title": "NEAR Ghana funding request for April 2024. Remaining 50% of the total amount: $500 (73.5 NEAR at $6.8 current price)",
+      "kind": "Transfer",
+      "proposer": "nearghana.near",
+      "at": "2024-04-24T23:45:50.277Z",
+      "closes_at": "2024-05-01T23:45:50.277Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:23",
+      "recipient": "nearghana.near",
+      "summary": "NEAR Ghana funding request for April 2024. Remaining 50% of the total amount: $500 (73.5 NEAR at $6.8 current price)\n\nMid month report: https://gov.near.org/t/report-near-ghana-april-2024/39064?u=immanuelnft\n\nTarget Wallet: nearghana.near",
+      "link": {
+        "url": "https://gov.near.org/t/report-near-ghana-april-2024/39064?u=immanuelnft",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "fatokunmayowa.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "24",
+      "title": "Description",
+      "kind": "Transfer",
+      "proposer": "nearhausa.near",
+      "at": "2024-04-25T01:24:55.181Z",
+      "closes_at": "2024-05-02T01:24:55.181Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:24",
+      "recipient": "nearhausa.near",
+      "summary": "Description\nNEAR Hausa funding request for April 2024. Remaining 50% of the total amount: $1,400 (205.8 NEAR at $6.8 current price)\n\nMid month report: https: https://gov.near.org/t/near-hausa-april-mid-month-report/39052?u=msageer\nApproved proposal https://gov.near.org/t/approved-near-hausa-community-april-2024/38337?u=msageer\nTarget Wallet: nearhausa.near",
+      "link": {
+        "url": "https://gov.near.org/t/near-hausa-april-mid-month-report/39052?u=msageer",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "fatokunmayowa.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "25",
+      "title": "South WestWest Near ClubClubClub.",
+      "kind": "Transfer",
+      "proposer": "lehleh.near",
+      "at": "2024-04-25T09:20:07.134Z",
+      "closes_at": "2024-05-02T09:20:07.134Z",
+      "decided_at": null,
+      "outcome": "rejected",
+      "as_said": "Rejected",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:25",
+      "recipient": "southwest-near-club-of-nigeria.sputnik-dao.near",
+      "summary": "South WestWest Near ClubClubClub.\nSouth West Near Club of Nigeria (SWNCN) 50% Funding Request forfor April 2024. Request amount: $400 =59.9 NEAR @ $6.70 Coin Market CapTime: 10:05am WAT, 25/04/24.\n\n Link to Approved Proposal:https://gov.near.org/t/approved-south-west-near-club-of-nigeria-swncn-campus-tour-in-yoruba-language-800-for-community-activities/38332?u=officerlehleh_01South",
+      "link": {
+        "url": "https://gov.near.org/t/approved-south-west-near-club-of-nigeria-swncn-campus-tour-in-yoruba-language-800-for-community-activities/38332?u=officerlehleh_01South",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "igboze_builder.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        },
+        {
+          "account": "mrmoh.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "26",
+      "title": "Transfer proposal",
+      "kind": "Transfer",
+      "proposer": "lehleh.near",
+      "at": "2024-05-12T05:56:27.711Z",
+      "closes_at": "2024-05-19T05:56:27.711Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:26",
+      "recipient": "southwest-near-club-of-nigeria.sputnik-dao.near",
+      "summary": "Transfer proposal",
+      "link": null,
+      "votes": []
+    },
+    {
+      "id": "27",
+      "title": "Transfer proposal",
+      "kind": "Transfer",
+      "proposer": "lehleh.near",
+      "at": "2024-05-12T06:02:16.570Z",
+      "closes_at": "2024-05-19T06:02:16.570Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:27",
+      "recipient": "southwest-near-club-of-nigeria.sputnik-dao.near",
+      "summary": "Transfer proposal",
+      "link": null,
+      "votes": []
+    },
+    {
+      "id": "28",
+      "title": "",
+      "kind": "Transfer",
+      "proposer": "lehleh.near",
+      "at": "2024-05-12T06:20:33.032Z",
+      "closes_at": "2024-05-19T06:20:33.032Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:28",
+      "recipient": "southwest-near-club-of-nigeria.sputnik-dao.near",
+      "summary": null,
+      "link": null,
+      "votes": []
+    },
+    {
+      "id": "29",
+      "title": "South WestWest Near Club. South West Near Club of Nigeria (SWNCN) 50% Funding Balance Request for April 2024. Request…",
+      "kind": "Transfer",
+      "proposer": "lehleh.near",
+      "at": "2024-05-12T06:30:51.235Z",
+      "closes_at": "2024-05-19T06:30:51.235Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:29",
+      "recipient": "southwest-near-club-of-nigeria.sputnik-dao.near",
+      "summary": "South WestWest Near Club. South West Near Club of Nigeria (SWNCN) 50% Funding Balance Request for April 2024. Request amount: $400 =57.4 NEANEANEARNEANEANEARNEARNEANEANEANEANEAR @ $7.00Coin Market CapTime: 07:30am WAT, 12/05/24.",
+      "link": null,
+      "votes": [
+        {
+          "account": "igboze_builder.near",
+          "vote": "against",
+          "as_said": "Reject",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "30",
+      "title": "Africa DAO Graphics Design requesting 400$ at Near current price on CMC of 6.98$/N for 2 design work.",
+      "kind": "Transfer",
+      "proposer": "dopedesigner.near",
+      "at": "2024-05-14T23:19:26.497Z",
+      "closes_at": "2024-05-21T23:19:26.497Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:30",
+      "recipient": "dopedesigner.near",
+      "summary": "Africa DAO Graphics Design requesting 400$ at Near current price on CMC of 6.98$/N for 2 design work.\n\nDesigns include\n1. Africa DAO Headers design\n2. Africa DAO AMA with communities announcement banner.\n3. Africa DAO AMA with 8  communities announcement banner.\n4. Africa DAO announcement banner of approved communities \n5. Africa DAO announcement banner for proposal timeline.\n6. Africa DAO infographics of how to submit proposal.\n7. Africa DAO partnerships announcement banners\n8. Africa DAO AMA with extra communities announcement banner.\n9. Africa DAO welcome banner to new onboarded communities.\n10. Africa DA MAY AMA of Communities \n11. among others",
+      "link": null,
+      "votes": []
+    },
+    {
+      "id": "31",
+      "title": "Africa DAO Graphics Design requesting 400$ at Near current price on CMC of 6.98$/N for 2 design work.",
+      "kind": "Transfer",
+      "proposer": "dopedesigner.near",
+      "at": "2024-05-14T23:20:02.010Z",
+      "closes_at": "2024-05-21T23:20:02.010Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:31",
+      "recipient": "dopedesigner.near",
+      "summary": "Africa DAO Graphics Design requesting 400$ at Near current price on CMC of 6.98$/N for 2 design work.\n\nDesigns include\n1. Africa DAO Headers design\n2. Africa DAO AMA with communities announcement banner.\n3. Africa DAO AMA with 8  communities announcement banner.\n4. Africa DAO announcement banner of approved communities \n5. Africa DAO announcement banner for proposal timeline.\n6. Africa DAO infographics of how to submit proposal.\n7. Africa DAO partnerships announcement banners\n8. Africa DAO AMA with extra communities announcement banner.\n9. Africa DAO welcome banner to new onboarded communities.\n10. Africa DA MAY AMA of Communities \n11. among others",
+      "link": null,
+      "votes": [
+        {
+          "account": "mrmoh.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "32",
+      "title": "I request the sum of $200 in NEAR @7.10 token price onon coinmarketcap @ 12:24 PM WAT.",
+      "kind": "Transfer",
+      "proposer": "mamanayaro.near",
+      "at": "2024-05-15T11:27:21.234Z",
+      "closes_at": "2024-05-22T11:27:21.234Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:32",
+      "recipient": "mamanayaro.near",
+      "summary": "I request the sum of $200 in NEAR @7.10 token price onon coinmarketcap @ 12:24 PM WAT. \n Being payment for my work with the DAO in creating a Trello Board, KPI sheet and keeping records for March and April with the following receipts. \n https://docs.google.com/spreadsheets/d/1M4249_3UDRXxEuktXgKcTI6Xn66ksOAwVpVU1oUE8hk/edit#gid=914547319 \n https://trello.com/b/RHxRTxZq/africa-dao",
+      "link": {
+        "url": "https://docs.google.com/spreadsheets/d/1M4249_3UDRXxEuktXgKcTI6Xn66ksOAwVpVU1oUE8hk/edit#gid=914547319",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "mrmoh.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "33",
+      "title": "For completion of BOS components proposed in the previous month’s funding request. https://nearfortune.netlify.app/",
+      "kind": "Transfer",
+      "proposer": "nearhausa.near",
+      "at": "2024-06-04T12:54:21.020Z",
+      "closes_at": "2024-06-11T12:54:21.020Z",
+      "decided_at": null,
+      "outcome": "in progress",
+      "as_said": "InProgress",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:33",
+      "recipient": "nearhausa.near",
+      "summary": "For completion of BOS components proposed in the previous month’s funding request. https://nearfortune.netlify.app/\n\nhttps://gov.near.org/t/report-near-hausa-may-not-funded/39487",
+      "link": {
+        "url": "https://nearfortune.netlify.app/",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    },
+    {
+      "id": "34",
+      "title": "For completion of BOS components proposed in the previous monthâs funding request. https://nearfortune.netlify.app/…",
+      "kind": "Transfer",
+      "proposer": "nearhausa.near",
+      "at": "2024-06-04T21:30:13.207Z",
+      "closes_at": "2024-06-11T21:30:13.207Z",
+      "decided_at": null,
+      "outcome": "passed",
+      "as_said": "Approved",
+      "ref": "proposal:near:mainnet:near-africa-community-dao.sputnik-dao.near:34",
+      "recipient": "nearhausa.near",
+      "summary": "For completion of BOS components proposed in the previous monthâs funding request. https://nearfortune.netlify.app/https://gov.near.org/t/report-near-hausa-may-not-funded/39487",
+      "link": {
+        "url": "https://nearfortune.netlify.app/https://gov.near.org/t/report-near-hausa-may-not-funded/39487",
+        "kind": "named in its text"
+      },
+      "votes": [
+        {
+          "account": "abbakaka.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "fatokunmayowa.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        },
+        {
+          "account": "igboze_builder.near",
+          "vote": "for",
+          "as_said": "Approve",
+          "at": null
+        }
+      ]
+    }
+  ],
+  "read_at": "2026-11-12T15:13:23Z"
+}
