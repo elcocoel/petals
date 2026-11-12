@@ -214,6 +214,7 @@ export function LandscapeCanvas({
   clearOfChains = false,
   legend = null,
   search = false,
+  panelEdge,
   onWallet,
 }: {
   data: {
@@ -247,6 +248,11 @@ export function LandscapeCanvas({
   legend?: 'read' | 'edit' | LegendEdit | null;
   /** a search field at the top of the chain list (board 105; the Power Map) */
   search?: boolean;
+  /**
+   * Where /make's side panel ends (0 with none): the map's boxes snap beside it and move with it, as every box
+   * on /make does (WORKSPACE's room rule, Elco's walk 5). Left out on /map, /m and /f.
+   */
+  panelEdge?: number | undefined;
   /**
    * Told which wallet is chosen, by a press on its petal inside a flower (LOOK's wallet level), and when it's let
    * go, its chain left or the map gone (null): /make asks Petals' agent about it (Elco, 12 Nov: "a place to
@@ -532,6 +538,7 @@ export function LandscapeCanvas({
   const panels = useFloatBoxes(PANELS, place, {
     top: () => room.current?.getBoundingClientRect().top ?? 0,
     snap: true,
+    edge: panelEdge,
   });
   // the box the map measures (the aside: the arrows' names keep clear of it) is the chain list's, or the legend's
   // while the chain list is closed inside a flower; both are the boxes the hand holds
