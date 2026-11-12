@@ -35,7 +35,7 @@ const card: LayerCard = {
   proposals: { count: 1060, read_at: '2026-11-11T16:01:45.540Z' },
 };
 
-const said = (at: string) => ({ issued_at: at }) as Claim;
+const said = (at: string, by = 'tool:codex-solana-wave@1') => ({ issued_at: at, by }) as Claim;
 
 describe('a map’s layers', () => {
   test('each reading as of its moment, with how many and who mapped it', () => {
