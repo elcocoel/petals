@@ -1,6 +1,6 @@
 // The hero's motion (lib/hero-story.ts, lib/hero-shots.ts) is a pure function of the beat and its time, so its seams
 // can be read: each beat's last frame is the next one's first, the camera cuts on the one and holds (Elco, 12 Nov:
-// cut to the beat), a hit lands a hair past its mark and comes back onto it, and a chosen beat is still.
+// cut to the beat), a hit lands elastic, wobbling onto its mark, and nothing is dead still for long.
 import { describe, expect, test } from 'vitest';
 import { flowerAt, shotOf } from '../lib/hero-shots.ts';
 import {
@@ -8,7 +8,6 @@ import {
   beatMs,
   COUNT_MS,
   camera,
-  hit,
   INNER,
   kick,
   OVERLAP_MS,
@@ -20,6 +19,7 @@ import {
   pulse,
   question,
   settledMs,
+  spring,
 } from '../lib/hero-story.ts';
 
 const near = (a: readonly number[], b: readonly number[], eps = 0.5) =>
@@ -59,14 +59,15 @@ describe('the hero story', () => {
     expect(camera(0, 0, true).scale).toBeCloseTo(1, 5);
   });
 
-  test('a chosen beat is still, with both lines in view', () => {
+  test('a chosen beat shows both lines over its settled flower', () => {
     for (let beat = 0; beat < 6; beat++) {
       expect(question(beat, settledMs(beat)).opacity).toBeGreaterThan(0.4);
       expect(answer(beat, settledMs(beat)).opacity).toBeCloseTo(1, 3);
-      expect(
-        near(petalLengths(beat, settledMs(beat)), petalLengths(beat, beatMs(beat)), 0.01),
-      ).toBe(true);
-      expect(kick(beat, settledMs(beat))).toBeLessThan(0.002);
+      // only the ripple still moves it
+      expect(near(petalLengths(beat, settledMs(beat)), petalLengths(beat, beatMs(beat)), 3)).toBe(
+        true,
+      );
+      expect(Math.abs(kick(beat, settledMs(beat)))).toBeLessThan(0.002);
     }
   });
 
@@ -77,12 +78,18 @@ describe('the hero story', () => {
     }
   });
 
-  test('a hit lands a hair past its mark and comes back onto it', () => {
-    expect(hit(0)).toBe(0);
-    expect(hit(1)).toBe(1);
-    const most = Math.max(...Array.from({ length: 200 }, (_, k) => hit(k / 200)));
-    expect(most).toBeGreaterThan(1.02);
-    expect(most).toBeLessThan(1.08);
+  test('an elastic landing passes its mark, swings back, and lands on it', () => {
+    expect(spring(0)).toBe(0);
+    expect(spring(1)).toBe(1);
+    const path = Array.from({ length: 400 }, (_, k) => spring(k / 400));
+    const most = Math.max(...path);
+    expect(most).toBeGreaterThan(1.1);
+    expect(most).toBeLessThan(1.2);
+    // after its peak it comes back under its mark once
+    expect(Math.min(...path.slice(path.indexOf(most)))).toBeLessThan(1);
+    expect(Math.max(...Array.from({ length: 400 }, (_, k) => spring(k / 400, 0.7)))).toBeLessThan(
+      1.06,
+    );
   });
 
   test('the pulse thumps on every count, harder on the one and the three', () => {
@@ -94,7 +101,7 @@ describe('the hero story', () => {
     expect(pulse(COUNT_MS - 1)).toBeLessThan(0.05);
   });
 
-  test('the camera cuts on the one, holds the shot, and joins every beat to the next', () => {
+  test('the camera whips on the one, lands, keeps drifting, and joins every beat to the next', () => {
     for (const wide of [true, false]) {
       for (let beat = 0; beat < 6; beat++) {
         const next = (beat + 1) % 6;
@@ -103,13 +110,19 @@ describe('the hero story', () => {
         expect(
           Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.scale - b.scale),
         ).toBeLessThan(1e-9);
-        // moving hardest on the one, in the shot and still by the second count
+        // landed near its shot by the second count, no longer smeared
         const shot = shotOf(beat, wide).flower;
-        const held = flowerAt(beat, COUNT_MS, wide);
-        expect(held.x).toBeCloseTo(shot.x, 9);
-        expect(held.blur).toBe(0);
-        if (shotOf(next, wide).flower.x !== shot.x)
-          expect(flowerAt(next, 0, wide).blur).toBeGreaterThan(0);
+        const landed = flowerAt(beat, COUNT_MS * 1.2, wide);
+        expect(Math.hypot(landed.x - shot.x, landed.y - shot.y)).toBeLessThan(3);
+        expect(landed.blur).toBe(0);
+        // and never dead still
+        for (let t = 0; t < beatMs(beat); t += 100) {
+          const p = flowerAt(beat, t, wide);
+          const q = flowerAt(beat, t + 100, wide);
+          expect(
+            Math.abs(q.x - p.x) + Math.abs(q.y - p.y) + Math.abs(q.scale - p.scale),
+          ).toBeGreaterThan(1e-4);
+        }
       }
     }
   });

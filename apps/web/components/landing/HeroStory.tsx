@@ -10,6 +10,7 @@ import {
   layerOpacity,
   type Motion,
   OVERLAP_MS,
+  pulse,
   question,
 } from '../../lib/hero-story.ts';
 // The landing's hero (HERO ART's V2, approved by Elco 11 Nov: "get this in the hero please"; HERO MOTION's
@@ -210,7 +211,8 @@ export function HeroStoryView({
   const prior = (beat + 5) % 6;
   const marker = historyLine(beat, t);
   const f = flowerAt(beat, t, wide, fresh);
-  const punch = 1 + kick(beat, t, fresh);
+  // punched in by each hit, and thumping lightly with every count
+  const punch = 1 + kick(beat, t, fresh) + 0.006 * pulse(t);
   const cy = centreY(wide);
   const back = layer === 'words' ? 0.08 : 1;
   return (
@@ -263,7 +265,7 @@ export function HeroStoryView({
                   {/* the line fills behind the marker as time passes */}
                   <span
                     className="absolute inset-0 block origin-left bg-primary"
-                    style={{ scale: `${marker.toFixed(4)} 1` }}
+                    style={{ scale: `${Math.min(1, marker).toFixed(4)} 1` }}
                   />
                   {/* the marker rides a layer as wide as the line, moved along by its own width */}
                   <span

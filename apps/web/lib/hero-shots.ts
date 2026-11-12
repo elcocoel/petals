@@ -1,10 +1,12 @@
 // Where the hero's layers stand in each beat (Elco, 11 Nov: the question, the answer, the flower and the
 // background "have to be separate so that we can compose the page as needed for mobile or for large screens").
 // Each beat is a shot: the flower's place and size, and the corner each bubble is pinned by. On each beat's one the
-// camera whips the flower from the last shot to this one and holds it (Elco, 12 Nov: cut to the beat), and the
+// camera whips the flower from the last shot to this one, lands elastic and keeps drifting (Elco, 12 Nov: cut to
+// the beat, with ins and outs, never dead still), and the
 // question and answer swap sides from beat to beat, shot and reverse shot, so the conversation crosses the flower
 // instead of sitting in two fixed corners.
 // A wide stage and a narrow one have their own tables. Numbers only, a pure function of the beat and its time.
+import { beatMs, COUNT_MS, ease, spring } from './hero-story.ts';
 
 /** A point of the stage, in % of its width and height. */
 export interface Pin {
@@ -54,32 +56,65 @@ const NARROW: readonly Shot[] = [
   { flower: { x: 50, y: 44, scale: 0.92 }, question: topRight(98, 2), answer: bottomLeft(2, 98) },
 ];
 
-/** How long the camera's whip from the last shot to this one takes, from the one. */
-const WHIP_MS = 380;
+/** How long the camera's whip from the last shot to this one takes, from the one, landing elastic. */
+const WHIP_MS = 560;
+/** How far the camera keeps travelling the way it whipped, across the beat, in % of the stage. */
+const DRIFT = 1.6;
+/** How much it pushes in across a beat. */
+const PUSH = 0.025;
+/** How far it draws back against the next whip, over the beat's last sixteenth, in % of the stage. */
+const WIND = 1.2;
+const WIND_MS = COUNT_MS / 4;
 
 /** The shot a beat holds. */
 export const shotOf = (beat: number, wide: boolean): Shot =>
-  ((wide ? WIDE : NARROW)[beat] ?? (wide ? WIDE : NARROW)[0]) as Shot;
+  ((wide ? WIDE : NARROW)[(beat + 6) % 6] ?? (wide ? WIDE : NARROW)[0]) as Shot;
+
+/** Which way the camera whips into a beat's shot, as a unit step. */
+function way(beat: number, wide: boolean) {
+  const a = shotOf(beat - 1, wide).flower;
+  const b = shotOf(beat, wide).flower;
+  const far = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+  return { x: (b.x - a.x) / far, y: (b.y - a.y) / far };
+}
+
+/** Where a beat leaves the flower: past its shot by the drift, pushed in, drawn back against the next whip. */
+function endOf(beat: number, wide: boolean) {
+  const shot = shotOf(beat, wide).flower;
+  const into = way(beat, wide);
+  const next = way(beat + 1, wide);
+  return {
+    x: shot.x + into.x * DRIFT - next.x * WIND,
+    y: shot.y + into.y * DRIFT - next.y * WIND,
+    scale: shot.scale * (1 + PUSH),
+  };
+}
 
 /**
- * Where the flower is at a moment (Elco, 12 Nov: cut to the beat): on the one the camera whips it from the last
- * shot to this one, all its speed at the start and braking hard into the shot, then holds it there. It leans into
- * the whip and is smeared by it, `blur` px at the start.
+ * Where the flower is at a moment (Elco, 12 Nov: cut to the beat, with ins and outs, never dead still): on the one
+ * the camera whips it from where the last beat left it to this beat's shot, from still, fast, a little past and
+ * back onto it; then it keeps drifting the way it came and pushing in, slowing; on the last sixteenth it draws
+ * back against the next whip. It leans into the whip and is smeared by it, `blur` px.
  */
 export function flowerAt(beat: number, t: number, wide: boolean, fresh = false) {
   const to = shotOf(beat, wide).flower;
-  if (fresh && beat === 0) return { ...to, lean: 0, blur: 0 };
-  const from = shotOf((beat + 5) % 6, wide).flower;
+  const from = fresh && beat === 0 ? { ...to, scale: to.scale * 0.94 } : endOf(beat - 1, wide);
   const p = Math.min(1, Math.max(0, t / WHIP_MS));
-  const k = 1 - (1 - p) ** 4;
-  // how fast it is going, 1 on the one, 0 in the shot
-  const speed = (1 - p) ** 3;
+  const k = spring(p, 0.7);
+  // how fast it is going, per whole whip
+  const speed = p < 1 ? (spring(Math.min(1, p + 0.01), 0.7) - k) / 0.01 : 0;
+  const long = Math.min(1, Math.max(0, t / beatMs(beat)));
+  const flow = ease.outSine(long);
+  const push = ease.inOutSine(long);
+  const wind = ease.inOutSine(Math.min(1, Math.max(0, (t - beatMs(beat) + WIND_MS) / WIND_MS)));
+  const into = way(beat, wide);
+  const next = way(beat + 1, wide);
   const far = Math.hypot(to.x - from.x, to.y - from.y);
   return {
-    x: from.x + (to.x - from.x) * k,
-    y: from.y + (to.y - from.y) * k,
-    scale: from.scale + (to.scale - from.scale) * k,
-    lean: (to.x - from.x) * speed * 0.35,
-    blur: far * speed * 0.12,
+    x: from.x + (to.x - from.x) * k + into.x * DRIFT * flow - next.x * WIND * wind,
+    y: from.y + (to.y - from.y) * k + into.y * DRIFT * flow - next.y * WIND * wind,
+    scale: (from.scale + (to.scale - from.scale) * k) * (1 + PUSH * push),
+    lean: (to.x - from.x) * Math.max(0, speed) * 0.1,
+    blur: far * Math.max(0, speed) * 0.035,
   };
 }
