@@ -395,6 +395,30 @@ export function nextSteps(m: {
   return { map: m.id, steps, services };
 }
 
+/** One item as the person reads it before publishing: what it says, about which account, from where, how sure. */
+const PUBLISH_ROW = obj(['id', 'subject', 'verb', 'name', 'source', 'confidence'], {
+  id: { type: 'string' },
+  subject: { type: 'string' },
+  verb: { type: 'string' },
+  name: { type: 'string' },
+  source: {
+    type: ['object', 'null'],
+    properties: {
+      kind: { type: 'string' },
+      ref: { type: ['string', 'null'] },
+      quote: { type: 'string' },
+      url: { type: 'string' },
+    },
+  },
+  confidence: {
+    type: ['number', 'null'],
+    minimum: 0,
+    maximum: 1,
+    description: "how strongly its own evidence says it, by search's reranker; null when unread",
+  },
+  why: { type: 'string', description: 'why it stays private' },
+});
+
 /**
  * What the signed-in person could publish on a map (publish-data.ts): how many of the claims they kept about it go
  * with one press, which stay private and why, and how many are on the shared map already. The press and the
@@ -409,7 +433,8 @@ export const listPublishable = defineTool<
   description:
     'What the signed-in person kept about a map in their projects (their names and other claims about its ' +
     'accounts) and could publish to the shared Power Map with one press on that map, signed by their own wallet ' +
-    'and credited to them: how many go, which stay private and why (the people rule: a name goes only as the ' +
+    'and credited to them: each item one per row (its name, address, source and a confidence from the reranker on ' +
+    "Elco's Mac, how strongly its own evidence says it), which stay private and why (the people rule: a name goes only as the " +
     "DAO's own records declare it), and how many are published already. It publishes nothing; never sign for them. " +
     "A person's own agent names their project by its link (exploration); on the site it's the person signed in.",
   input: obj(
@@ -424,22 +449,26 @@ export const listPublishable = defineTool<
     },
     { additionalProperties: false },
   ),
-  output: obj(['about', 'name', 'map_url', 'ready', 'private', 'published'], {
-    about: { type: 'string' },
-    name: { type: 'string' },
-    map_url: { type: 'string' },
-    ready: { type: 'integer', minimum: 0 },
-    private: {
-      type: 'array',
-      items: obj(['id', 'subject', 'verb', 'why'], {
-        id: { type: 'string' },
-        subject: { type: 'string' },
-        verb: { type: 'string' },
-        why: { type: 'string' },
-      }),
+  output: obj(
+    ['about', 'name', 'map_url', 'ready', 'claims', 'private', 'published', 'scored_by'],
+    {
+      about: { type: 'string' },
+      name: { type: 'string' },
+      map_url: { type: 'string' },
+      ready: { type: 'integer', minimum: 0 },
+      claims: { type: 'array', items: PUBLISH_ROW },
+      private: {
+        type: 'array',
+        items: { ...PUBLISH_ROW, required: [...(PUBLISH_ROW.required as string[]), 'why'] },
+      },
+      published: { type: 'integer', minimum: 0 },
+      scored_by: {
+        type: ['string', 'null'],
+        description: 'the model that read the confidences, or null when it was off',
+      },
+      unscored: { type: 'string', description: 'why nothing was scored' },
     },
-    published: { type: 'integer', minimum: 0 },
-  }),
+  ),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   failure: 'not_found',
   async run({ map, exploration }, ctx) {
@@ -460,8 +489,11 @@ export const listPublishable = defineTool<
       name: p.name,
       map_url: mapUrl(ctx, p.about),
       ready: p.claims.length,
+      claims: p.rows,
       private: p.private,
       published: p.published,
+      scored_by: p.scored_by,
+      ...(p.unscored ? { unscored: p.unscored } : {}),
     };
   },
 });
