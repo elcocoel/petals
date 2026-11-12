@@ -168,6 +168,8 @@ export function InteractionSurface({
                 // the room beside the conversation is narrow: the map keeps clear of its own chains
                 clearOfChains
                 legend={legend}
+                // the map's boxes keep the side panel's room rule, as the conversation's do
+                panelEdge={edge}
               />
             )}
           </div>
