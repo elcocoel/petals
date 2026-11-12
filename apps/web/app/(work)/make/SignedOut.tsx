@@ -13,6 +13,8 @@ export function SignedOut({ question }: { question: string }) {
         busy={session.busy}
         failed={session.failed}
         onConnect={session.connect}
+        // an Ethereum wallet's way in, beside NEAR's (wave 5, LOBBY's connectEvm)
+        onConnectEvm={session.connectEvm}
       />
     </div>
   );

@@ -2388,6 +2388,19 @@ export const registry: LabEntry[] = [
           />
         ),
       },
+      {
+        name: 'a NEAR or an Ethereum wallet (wave 5)',
+        wide: true,
+        render: () => (
+          <NotSignedIn
+            question=""
+            busy={false}
+            failed={null}
+            onConnect={() => {}}
+            onConnectEvm={() => {}}
+          />
+        ),
+      },
     ],
   },
   {
