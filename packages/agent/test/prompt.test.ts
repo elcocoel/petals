@@ -1,5 +1,6 @@
 // T054: the shared prompt. One source (prompt.md) for SYSTEM_PROMPT and skill/petal/SKILL.md.
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { specHash } from '@petal/core';
 import { describe, expect, test } from 'vitest';
 import { SYSTEM_PROMPT as fromIndex } from '../src/index.ts';
@@ -105,8 +106,20 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/Never invent data, numbers, sources or options/);
     expect(SYSTEM_PROMPT).toMatch(/Never ask anyone for a key, a seed phrase or a signature/);
     expect(SYSTEM_PROMPT).toMatch(/Addresses are not people/);
-    expect(SYSTEM_PROMPT).toMatch(/Never call an inferred identity proven/);
     expect(SYSTEM_PROMPT).toMatch(/Publish, only when asked/);
+  });
+
+  test("what the doctrine says left the prompt (the brain's step 11): the agent reads the brain first", () => {
+    expect(SYSTEM_PROMPT).toMatch(/Before your first answer about a network, an address or a name/);
+    expect(SYSTEM_PROMPT).toMatch(/call `brain_context`/);
+    const doctrine = readFileSync(
+      join(import.meta.dirname, '..', '..', '..', 'brain', 'doctrine.md'),
+      'utf8',
+    );
+    expect(doctrine).toMatch(/The tools count; you quote what they counted/);
+    expect(doctrine).toMatch(/as a lead, never verified/);
+    expect(doctrine).toMatch(/Say how you know: verified/);
+    expect(SYSTEM_PROMPT).not.toMatch(/Never call an inferred identity proven/);
   });
 
   test('a token is a ledger of holdings; Moloch shares are one, transferable or not', () => {
@@ -117,11 +130,10 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).not.toMatch(/Moloch[^.]*(isn't|is not|not) a token/i);
   });
 
-  test('keeps the six rules of the 7/7 skill', () => {
+  test('keeps the rules of the 7/7 skill the doctrine does not hold', () => {
     const rules = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf('## Rules'));
-    expect(rules.match(/^\d\. /gm)).toHaveLength(6);
+    expect(rules.match(/^\d\. /gm)).toHaveLength(5);
     expect(rules).toMatch(/Addresses are not people/);
-    expect(rules).toMatch(/Never call an inferred identity proven/);
     expect(rules).toMatch(/under 60 words/);
   });
 
@@ -135,8 +147,8 @@ describe('SYSTEM_PROMPT', () => {
     const block = lines.slice(begin + 1, end);
     expect(block[0]).toBe('## Talk first');
     const rules = block.slice(block.indexOf('## Rules') + 1).filter((l) => /^\d\. /.test(l));
-    expect(rules.map((l) => l.slice(0, 3))).toEqual(['1. ', '2. ', '3. ', '4. ', '5. ', '6. ']);
-    expect(lines[end - 1]?.slice(0, 3)).toBe('6. ');
+    expect(rules.map((l) => l.slice(0, 3))).toEqual(['1. ', '2. ', '3. ', '4. ', '5. ']);
+    expect(lines[end - 1]?.slice(0, 3)).toBe('5. ');
   });
 
   test('is door-neutral: no transport, no agent-only limits', () => {
