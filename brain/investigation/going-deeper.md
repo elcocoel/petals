@@ -10,7 +10,7 @@ status: ready
 
 # Going deeper
 
-After every answer, offer the next layer down, from what you just found. Offer; don't take the step until the person says yes.
+After every answer, offer the next layer down, from what you just found. Offer; don't take the step until the person says yes. What the map already holds comes first (`on-the-map`): its blocs, its payouts, its Insights.
 
 - **The largest holder:** what other groups it's in (`account_groups`), and what it holds.
 - **Two groups that share members:** `shared_accounts` and `related_groups`, and the path between two accounts (`power_path`).

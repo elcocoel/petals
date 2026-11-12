@@ -147,6 +147,7 @@ export function llmTools(registry: readonly AnyTool[]): LlmToolDef[] {
 
 export const STAGE_OF: Record<string, Stage> = {
   look_up: 'reading_map',
+  get_map: 'reading_map',
   find_target: 'fetching',
   read_chain: 'fetching',
   read_page: 'fetching',
