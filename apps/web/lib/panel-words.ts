@@ -19,6 +19,12 @@ const PIECE_WORDS: Record<string, string> = {
   last_active: 'Last active',
   votes_cast: 'Most active',
   voted: 'Voted or never',
+  // a token's vesting, any token's (Elco, wave 7: "vesting reader for anything ... the petal segmentation"): each
+  // petal cut into unlocked, next unlock and later under Segments; its next unlock as a date; its allocation where a
+  // reading names allocations
+  vesting: 'Vesting',
+  next_unlock: 'Next unlock',
+  tranche: 'Allocation',
 };
 
 export const panelWords = {
