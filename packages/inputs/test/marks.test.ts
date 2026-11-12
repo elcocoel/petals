@@ -269,3 +269,63 @@ describe('a mark: the chain first, then the lists', () => {
     expect(validateMark(mark).ok).toBe(true);
   });
 });
+
+describe("a Sputnik DAO's own logo (12 Nov, walk 3: DAOs with logos that show none)", () => {
+  const DAO = 'she-is-near.sputnik-dao.near';
+  /** NEAR's RPC answering get_config with this metadata (base64 JSON, as Sputnik keeps it); everything else per page */
+  const sputnik = (metadata: unknown, pages: [string, () => Response][] = []) =>
+    (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input instanceof Request ? input.url : input);
+      if (url === 'https://rpc.mainnet.fastnear.com') {
+        const body = JSON.parse(String(init?.body)) as { params: { method_name: string } };
+        if (body.params.method_name !== 'get_config') return json({ error: 'unknown' });
+        const config = {
+          name: 'she-is-near',
+          purpose: '',
+          metadata: Buffer.from(JSON.stringify(metadata)).toString('base64'),
+        };
+        return json({ result: { result: [...Buffer.from(JSON.stringify(config))] } });
+      }
+      const page = pages.find(([prefix]) => url.startsWith(prefix));
+      return page ? page[1]() : new Response('not found', { status: 404 });
+    }) as typeof fetch;
+  const target = {
+    about: `near:mainnet:${DAO}`,
+    chain: 'near:mainnet',
+    address: DAO,
+    reader: 'sputnik-dao',
+  };
+
+  test('its flagLogo, from where it says: the address as given first', async () => {
+    const at =
+      'https://ipfs.near.social/ipfs/bafkreibmhq4fseqpcbywiq4hfojghxvhj47mjsri2trggt7d5h5sqeiwx4';
+    const { mark, logo } = await readMark(target, {
+      fetch: sputnik({ flagLogo: at }, [[at, () => new Response(PNG)]]),
+      now: NOW,
+    });
+    expect(mark.logo).toMatchObject({ media_type: 'image/png', source: 'sputnik' });
+    expect(mark.logo?.ref).toBe(at);
+    expect(logo?.bytes).toEqual(PNG);
+    // names stay as they are: only the picture
+    expect(mark.name).toBeNull();
+    expect(validateMark(mark).ok).toBe(true);
+  });
+
+  test('then through the gateway, when the address as given is no web address or answers nothing', async () => {
+    const cid = 'QmXttGpZrECX5qCyXbBQiqgQNytVGeZW5Anewvh2jc4psg';
+    const { logo } = await readMark(target, {
+      fetch: sputnik({ flagLogo: `ipfs://${cid}` }, [
+        [`https://gateway.pinata.cloud/ipfs/${cid}`, () => new Response(PNG)],
+      ]),
+      now: NOW,
+    });
+    expect(logo?.bytes).toEqual(PNG);
+  });
+
+  test("Astro's own file ids (its store is gone) and no metadata give no logo", async () => {
+    for (const metadata of [{ flagLogo: 'aBcDeFgHiJkLmNoPqRsTu' }, {}]) {
+      const { mark } = await readMark(target, { fetch: sputnik(metadata), now: NOW });
+      expect(mark.logo).toBeNull();
+    }
+  });
+});

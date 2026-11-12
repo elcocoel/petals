@@ -4,11 +4,17 @@
 //   container exec petals node /app/scripts/map-marks.ts [--dry] [--only <part of a map's address>]
 // --dry reads and says, and keeps nothing. Read again, a map's mark is replaced.
 // --types only adds each kept mark's types (#97), keeping its name, symbol and logo as they are.
+// --logos only adds a logo to each kept mark that has none (Elco, 12 Nov, walk 3), keeping the rest as it is.
 import { parseArgs } from 'node:util';
-import { createContext, markMaps, serverConfig, typeMaps } from '@petal/agent';
+import { createContext, logoMaps, markMaps, serverConfig, typeMaps } from '@petal/agent';
 
 const { values } = parseArgs({
-  options: { dry: { type: 'boolean' }, only: { type: 'string' }, types: { type: 'boolean' } },
+  options: {
+    dry: { type: 'boolean' },
+    only: { type: 'string' },
+    types: { type: 'boolean' },
+    logos: { type: 'boolean' },
+  },
 });
 const ctx = createContext(serverConfig(process.env));
 if (values.types) {
@@ -19,6 +25,17 @@ if (values.types) {
   });
   console.log(
     `${t.maps} maps: ${t.typed} kept marks with types, ${t.unmarked} with no mark kept; ${values.dry ? 'nothing kept (--dry)' : `${t.saved} kept`}`,
+  );
+  process.exit(0);
+}
+if (values.logos) {
+  const l = await logoMaps(ctx, {
+    save: !values.dry,
+    ...(values.only ? { only: values.only } : {}),
+    log: (line) => console.log(line),
+  });
+  console.log(
+    `${l.maps} maps: ${l.without} showed no logo, ${l.found} given one; ${values.dry ? 'nothing kept (--dry)' : `${l.saved} kept`}${l.failed_lists.length ? `; lists not read: ${l.failed_lists.join(', ')}` : ''}`,
   );
   process.exit(0);
 }
