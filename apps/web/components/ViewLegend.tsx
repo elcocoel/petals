@@ -22,8 +22,8 @@ import {
   scaleOf,
   takesScale,
 } from '../lib/view-edit.ts';
-import { LegendKeys } from './Legend.tsx';
 import { Button } from './ui/Button.tsx';
+import { Mono } from './ui/Mono.tsx';
 import { Overlay } from './ui/Overlay.tsx';
 import { Range } from './ui/Range.tsx';
 import { SectionHead } from './ui/SectionHead.tsx';
@@ -61,12 +61,50 @@ export interface LegendGroups {
   away?: boolean;
 }
 
-/** One row of the panel: its category on the left, its input or value on the right. */
-function ToolRow({ label, children }: { label: string; children?: ReactNode }) {
+/**
+ * One row of the panel: its category on the left, its input or value on the right; under the category, when it
+ * has one, a quiet line saying what it does (Elco, 12 Nov, wave 3: "I don't understand all of these options here").
+ */
+function ToolRow({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string | undefined;
+  children?: ReactNode;
+}) {
   return (
-    <div className="flex min-h-row-height items-center justify-between gap-space-8 px-space-8">
-      <span className="min-w-0 shrink-0 type-ui text-muted">{label}</span>
-      <span className="flex min-w-0 items-center justify-end gap-space-4">{children}</span>
+    <div className={`flex flex-col px-space-8 ${hint ? 'pb-space-4' : ''}`}>
+      <div className="flex min-h-row-height items-center justify-between gap-space-8">
+        <span className={`min-w-0 shrink-0 type-ui ${hint ? 'text-primary' : 'text-muted'}`}>
+          {label}
+        </span>
+        <span className="flex min-w-0 items-center justify-end gap-space-4">{children}</span>
+      </div>
+      {hint && <span className="type-ui text-muted">{hint}</span>}
+    </div>
+  );
+}
+
+/**
+ * What each colour stands for, under Colour: one value a line, its swatch before it (wave 3: "Just feels very
+ * disorganized, especially the color parts"), led by a quiet line that says so.
+ */
+function ColourMeans({ keys }: { keys: readonly LegendKey[] }) {
+  return (
+    <div className="flex flex-col gap-space-4 px-space-8 pb-space-8">
+      <Mono as="span" tone="muted">
+        {words.colourMeans}
+      </Mono>
+      <ul className="m-0 flex list-none flex-col gap-space-4 p-0">
+        {keys.map((k) => (
+          <li key={k.label} className="flex items-center gap-space-8 type-ui text-primary">
+            <span className="swatch" data-swatch={k.swatch} />
+            {`${k.label.charAt(0).toUpperCase()}${k.label.slice(1)}`}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -149,7 +187,7 @@ function ScaleRow({
   const scale = scaleOf(view, d, pieces);
   if (!edit || !scale || !takesScale(view, d, pieces)) return null;
   return (
-    <ToolRow label={words.scale}>
+    <ToolRow label={words.scale} hint={words.scaleDoes}>
       <Select
         label={`${words.dimensions[d]}, ${words.scale}`}
         value={scale}
@@ -184,7 +222,7 @@ function DimensionRows({
 }) {
   return (
     <div className="flex flex-col">
-      <ToolRow label={words.dimensions[d]}>
+      <ToolRow label={words.dimensions[d]} hint={words.does[d]}>
         {edit?.drawing === d && <Drawing />}
         <DimensionInput d={d} view={view} pieces={pieces} edit={edit} />
       </ToolRow>
@@ -192,11 +230,7 @@ function DimensionRows({
       {edit && edit.choices[d].length === 0 && dataOf(view, d) === null && (
         <Note>{words.nothingFits}</Note>
       )}
-      {d === 'colour' && drawn.colour !== null && keys.length > 0 && (
-        <div className="px-space-8 pb-space-8">
-          <LegendKeys keys={[...keys]} size="ui" />
-        </div>
-      )}
+      {d === 'colour' && drawn.colour !== null && keys.length > 0 && <ColourMeans keys={keys} />}
       {d === 'colour' && drawn.colour !== null && keys.length === 0 && keysNote && (
         <Note>{keysNote}</Note>
       )}

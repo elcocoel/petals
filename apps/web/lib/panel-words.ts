@@ -158,6 +158,26 @@ export const panelWords = {
     /** Highlight, on hover, until a chosen group comes with the data. A draft. */
     highlightSoon: 'Comes with a chosen group of petals',
     reset: 'Put the default back',
+    /**
+     * What each dimension does, a quiet line under its name in Tools (Elco, 12 Nov, wave 3: "I don't understand all
+     * of these options here"). Drafts.
+     */
+    does: {
+      order: 'How the petals go round the circle',
+      height: 'How far each petal reaches',
+      width: 'How wide each petal is',
+      colour: "What a petal's colour says",
+      outline: "What a petal's edge says",
+      texture: "What a petal's fill pattern says",
+      markings: 'Marks drawn on a petal',
+      segments: 'What a petal is cut into',
+      lines: 'What joins one petal to another',
+      labels: 'What names each petal',
+    } as Record<string, string>,
+    /** Under a number's scale. A draft. */
+    scaleDoes: 'How the number grows into the size',
+    /** Over Colour's values in Tools. A draft. */
+    colourMeans: 'Each colour means',
     /** While the map is drawn again in a change (wave 3). A draft. */
     drawing: 'Updating the map',
     failed: (reason: string) => `Not saved: ${reason}`,
