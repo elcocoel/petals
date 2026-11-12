@@ -63,3 +63,13 @@ describe("a map's ring", () => {
     expect(scene).toMatch(/chose otherwise/);
   });
 });
+
+test('one look: every flower has round tops, with a vote ring or without (Elco, 12 Nov walk: no fork)', () => {
+  expect(text('flower/scene.ts')).toMatch(
+    /given \?\? \{ \.\.\.lookFills\(m\.petals\), highlight: \[\], roundTops: true \}/,
+  );
+  expect(text('landscape/useLandscape.ts')).toMatch(
+    /roundTops: true,\s+\.\.\.\(ring \? \{ votes: ring \} : \{\}\)/,
+  );
+  expect(text('landscape/scene.ts')).toMatch(/roundTopPath\(ring, i, ring\.h\[i\] as number\)/);
+});

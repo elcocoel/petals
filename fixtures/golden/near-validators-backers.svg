@@ -98,7 +98,7 @@
 <path class="c-key-blue" data-p="stakin.poolv1.near" data-i="31" data-seg="large" d="M325.103 542.369L311.654 534.437L332.421 502.963L342.597 508.964Z"/>
 <path class="c-key-coral" data-p="stakin.poolv1.near" data-i="31" data-seg="liquid" d="M323.911 544.644L310.239 536.581L311.654 534.437L325.103 542.369Z"/>
 <path class="c-key-apricot" data-p="stakin.poolv1.near" data-i="31" data-seg="lockup" d="M321.716 548.835L307.634 540.53L310.239 536.581L323.911 544.644Z"/>
-<path class="c-key-grey" data-p="lst-pool.near" data-i="32" d="M307.744 539.273L294.737 529.721L343.66 469.652L350.411 474.609Z"/>
+<path class="c-key-grey" data-p="lst-pool.near" data-i="32" d="M307.744 539.273A167.057 167.057 0 0 1 294.737 529.721L343.66 469.652L350.411 474.609Z"/>
 <path class="c-key-mint" data-p="legends.poolv1.near" data-i="33" data-seg="other" d="M338.382 475.181L331.75 469.216L337.117 463.807L343.194 469.273Z"/>
 <path class="c-key-blue" data-p="legends.poolv1.near" data-i="33" data-seg="large" d="M297.301 525.622L285.932 515.397L331.75 469.216L338.382 475.181Z"/>
 <path class="c-key-apricot" data-p="legends.poolv1.near" data-i="33" data-seg="lockup" d="M296.837 526.193L285.413 515.919L285.932 515.397L297.301 525.622Z"/>

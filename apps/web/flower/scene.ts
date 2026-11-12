@@ -184,7 +184,9 @@ export function createScene(
 ): Scene {
   // Every flower in the art direction's look since 11 Nov (#76; Elco: lab into the product): a page that hands
   // none gets the reading's own colours from core's lookFills, its bands at rest, no highlight.
-  const look: PetalLook = given ?? { ...lookFills(m.petals), highlight: [] };
+  // Round tops on every flower, with a vote ring or without (Elco, 12 Nov walk: "this one doesn't have the rounded
+  // tops and it looks different than the ones that have proposals ... check if we're not creating a fork").
+  const look: PetalLook = given ?? { ...lookFills(m.petals), highlight: [], roundTops: true };
   // Nothing in the drawing hit-tests: the pointer is read geometrically, against the rest flower.
   const root = el('g', { class: MONO, 'pointer-events': 'none' }, svg);
   const world = slot(el('g', {}, root));

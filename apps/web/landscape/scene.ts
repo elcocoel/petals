@@ -10,7 +10,7 @@ import { HIGHLIGHT } from '@petal/core/wedge/highlight';
 import { GREY, keyFor, keysOf, wordsOf } from '@petal/core/wedge/keys';
 import { DETAIL, fade } from '../flower/detail.ts';
 import type { Model } from '../flower/model.ts';
-import { bandPath, n3, polygonPath, SHAPE } from '../flower/ring.ts';
+import { n3, polygonPath, roundTopPath, SHAPE } from '../flower/ring.ts';
 import { LINE, MONO, textWidth } from '../flower/words.ts';
 import { drawLabel, LABEL_HEIGHT, type Label, MARK, NAME_GAP } from './labels.ts';
 import type { Place } from './places.ts';
@@ -282,7 +282,8 @@ export function createLandScene(
     const { ring } = f.model;
     for (let i = 0; i < ring.n; i++) {
       const fill = fills[i] ?? PETAL;
-      byFill.set(fill, (byFill.get(fill) ?? '') + bandPath(ring, i, 0, ring.h[i] as number));
+      // round tops, as the live flower's (one look)
+      byFill.set(fill, (byFill.get(fill) ?? '') + roundTopPath(ring, i, ring.h[i] as number));
     }
     for (const [fill, d] of byFill) el('path', { fill, d }, silhouette.node);
     // figure.map-far-wave: its runs of colour under one soft surface

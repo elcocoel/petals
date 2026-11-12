@@ -32,7 +32,7 @@ describe('the petal look, in the lab only', () => {
     expect(text('flower/drive.ts')).toMatch(/o\.look \?\? null/);
     expect(text('flower/scene.ts')).toMatch(/given: PetalLook \| null = null/);
     expect(text('flower/scene.ts')).toMatch(
-      /given \?\? \{ \.\.\.lookFills\(m\.petals\), highlight: \[\] \}/,
+      /given \?\? \{ \.\.\.lookFills\(m\.petals\), highlight: \[\], roundTops: true \}/,
     );
   });
 
