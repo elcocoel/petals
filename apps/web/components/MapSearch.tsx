@@ -2,7 +2,7 @@
 // typed, the maps it finds in the chains' place, each a row (LineRow) with its name, what matched under it and
 // its chain, quiet in mono. Pressing one goes into its flower. Enter asks for the best order; Escape clears it.
 // Props only.
-import { type SearchRow, mapSearchWords as words } from '../lib/map-search.ts';
+import { MAP_SEARCH_ID, type SearchRow, mapSearchWords as words } from '../lib/map-search.ts';
 import { Field } from './ui/Field.tsx';
 import { LineRow } from './ui/LineRow.tsx';
 import { Mono } from './ui/Mono.tsx';
@@ -42,7 +42,7 @@ export function MapSearch({
         }}
       >
         <Field
-          id="map-search"
+          id={MAP_SEARCH_ID}
           label={words.label}
           hideLabel
           placeholder={words.placeholder}

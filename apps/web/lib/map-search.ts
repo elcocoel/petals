@@ -28,6 +28,9 @@ export interface SearchRow {
   matched: string | null;
 }
 
+/** The search field's id: Cmd+K puts the cursor in it. */
+export const MAP_SEARCH_ID = 'map-search';
+
 export const mapSearchWords = {
   label: 'Search the map',
   placeholder: 'Search the map',
