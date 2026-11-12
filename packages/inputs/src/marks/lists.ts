@@ -69,6 +69,17 @@ const LIST_URLS: Record<string, string> = {
   arbitrum: 'https://bridge.arbitrum.io/token-list-42161.json',
 };
 const coingeckoUrl = (slug: string) => `https://tokens.coingecko.com/${slug}/all.json`;
+interface GeckoCoin {
+  id: string;
+  platforms?: Record<string, string | null>;
+}
+interface GeckoMarket {
+  name?: string;
+  symbol?: string;
+  image?: string;
+}
+const GECKO_COINS = 'https://api.coingecko.com/api/v3/coins/list?include_platform=true';
+const GECKO_MARKETS = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=';
 const TRUST_WALLET = 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains';
 const LLAMA = 'https://api.llama.fi/protocols';
 const JUPITER = 'https://lite-api.jup.ag/tokens/v2/search?query=';
@@ -136,6 +147,62 @@ export function listReader(fetchImpl: Fetch = globalThis.fetch) {
     });
     return llama;
   };
+  // CoinGecko's own coins (12 Nov, walk 3): a coin CoinGecko lists by its contract on this chain, with its image,
+  // for a token its token lists don't carry. Its coin list once a run, then that coin's market entry.
+  const geckoHeaders: Record<string, string> = process.env.COINGECKO_API_KEY?.trim()
+    ? { 'x-cg-demo-api-key': process.env.COINGECKO_API_KEY.trim() }
+    : {};
+  let gecko: Promise<Map<string, string[]>> | null = null;
+  const geckoIndex = () => {
+    gecko ??= (async () => {
+      const out = new Map<string, string[]>();
+      let all: GeckoCoin[] | null = null;
+      try {
+        const res = await fetchImpl(GECKO_COINS, {
+          headers: { accept: 'application/json', ...geckoHeaders },
+        });
+        all = res.ok ? ((await res.json()) as GeckoCoin[]) : null;
+      } catch {
+        all = null;
+      }
+      if (!Array.isArray(all)) failed.push(`coingecko coins (${GECKO_COINS})`);
+      for (const c of all ?? [])
+        for (const [platform, a] of Object.entries(c.platforms ?? {}))
+          if (a) {
+            const k = `${platform}|${a.toLowerCase()}`;
+            out.set(k, [...(out.get(k) ?? []), c.id]);
+          }
+      return out;
+    })();
+    return gecko;
+  };
+  const geckoCoin = async (platform: string, address: string): Promise<Listed | null> => {
+    const ids = [
+      ...new Set((await geckoIndex()).get(`${platform}|${address.toLowerCase()}`) ?? []),
+    ];
+    if (ids.length !== 1) return null;
+    const id = ids[0] as string;
+    const url = `${GECKO_MARKETS}${encodeURIComponent(id)}`;
+    let m: GeckoMarket[] | null = null;
+    try {
+      const res = await fetchImpl(url, {
+        headers: { accept: 'application/json', ...geckoHeaders },
+      });
+      m = res.ok ? ((await res.json()) as GeckoMarket[]) : null;
+    } catch {
+      m = null;
+    }
+    const coin = Array.isArray(m) ? m[0] : undefined;
+    if (!coin) return null;
+    return {
+      source: 'coingecko',
+      ref: `${id}, CoinGecko's coin for ${platform}:${address.toLowerCase()} (${url})`,
+      curated: true,
+      name: coin.name?.trim() || null,
+      symbol: coin.symbol?.trim().toUpperCase() || null,
+      logo: coin.image && /^https:\/\//.test(coin.image) ? coin.image : null,
+    };
+  };
   const versionOf = (l: TokenList) =>
     l.version ? `v${l.version.major}.${l.version.minor}.${l.version.patch}` : 'unversioned';
 
@@ -160,6 +227,10 @@ export function listReader(fetchImpl: Fetch = globalThis.fetch) {
     };
     for (const id of c.lists) await fromList(id, LIST_URLS[id] as string);
     await fromList('coingecko', coingeckoUrl(c.coingecko));
+    if (chain !== 'solana' && !out.some((l) => l.source === 'coingecko' && l.logo)) {
+      const coin = await geckoCoin(c.coingecko, address);
+      if (coin) out.push(coin);
+    }
 
     // Trust Wallet: a folder per token, named by its checksummed address (a Solana mint as it is)
     const folder = `${TRUST_WALLET}/${c.trustwallet}/assets/${chain === 'solana' ? address : checksumAddress(address)}`;
