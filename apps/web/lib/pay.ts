@@ -43,8 +43,30 @@ export function payAction(info: PayInfo, yocto: string): PayAction {
     : { type: 'Transfer', params: { deposit: yocto } };
 }
 
-/** What one press of the pay button sends, in NEAR. A proposal, for Elco to set. */
+/** What one press of the pay button sends, in NEAR, where there's no price to send dollars' worth. */
 export const PAY_NEAR = 1;
+
+/** What the pay row offers to add, in dollars, before the person changes it (Elco's mainnet test, #71: about $1). */
+export const PAY_USD = 1;
+
+/** NEAR for `usd` dollars at today's price, in thousandths and never less than asked; null without a price. */
+export function nearFor(usd: number, near_usd: number | null): number | null {
+  if (!near_usd || near_usd <= 0 || !(usd > 0)) return null;
+  return Math.ceil((usd / near_usd) * 1000) / 1000;
+}
+
+/**
+ * A transfer the wallet sent and the server hasn't confirmed yet: kept, in the browser too, so pressing again
+ * confirms this one instead of sending a second (wave 5, Elco's mainnet test).
+ */
+export interface PendingPay {
+  network: string;
+  account: string;
+  hash: string;
+  near: number;
+}
+
+export const PENDING_KEY = 'petals:pay:pending';
 
 /** NEAR in yoctoNEAR, the unit a transfer is written in, as the exact string a wallet takes. */
 export function yoctoOf(near: number): string {
@@ -106,6 +128,12 @@ export const payWords = {
   start: "Petals' agent runs on NEAR AI and is paid as you go. Add some credit to start.",
   addedFirst: (near: string) => `Added ${near} NEAR. Petals' agent is ready.`,
   button: (near: number) => `Add ${near} NEAR`,
+  /** what the press sends, in dollars with NEAR beside it at today's price */
+  buttonUsd: (m: Money) => `Add ${moneyWords(m)}`,
+  amount: 'Dollars to add',
+  /** a transfer that went out and isn't confirmed yet: the press confirms it, and sends nothing */
+  confirm: 'Confirm my transfer',
+  pending: 'Your transfer went out and isn’t confirmed yet. Confirm it: nothing is sent twice.',
   paying: 'Waiting for your wallet…',
   added: (near: string) => `Added ${near} NEAR. Send your question again.`,
   failed: "That payment didn't go through. Try again.",

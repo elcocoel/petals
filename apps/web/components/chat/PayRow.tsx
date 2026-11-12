@@ -16,6 +16,10 @@ export function PayRow({
   added,
   onPay,
   topUp,
+  label = payWords.button(PAY_NEAR),
+  amount,
+  failedWords = payWords.failed,
+  canPay = true,
 }: {
   /** offered before the first question, to someone with no credit yet: its words say so */
   first?: boolean;
@@ -25,6 +29,13 @@ export function PayRow({
   onPay: () => void;
   /** Paying with any other token, through NEAR Intents. */
   topUp?: TopUpView;
+  /** what the press says: dollars with NEAR beside it, or Confirm my transfer while one waits */
+  label?: string;
+  /** the dollars the person chooses to add, where there's a price to send them in */
+  amount?: { usd: string; label: string; onUsd: (usd: string) => void } | null;
+  /** what a failed press says: a transfer that went out says it isn't confirmed yet */
+  failedWords?: string;
+  canPay?: boolean;
 }) {
   if (phase === 'added' && added) {
     return (
@@ -38,9 +49,18 @@ export function PayRow({
   return (
     <div className="flex flex-col items-start gap-text-gap border border-hairline p-text-gap">
       <p className="my-0 type-ui">{first ? payWords.start : payWords.out}</p>
+      {amount && (
+        <Field
+          id="pay-usd"
+          label={amount.label}
+          value={amount.usd}
+          onChange={amount.onUsd}
+          scale="app"
+        />
+      )}
       <ActionRow gap="tight">
-        <Button variant="compact" disabled={phase === 'paying'} onClick={onPay}>
-          {phase === 'paying' ? payWords.paying : payWords.button(PAY_NEAR)}
+        <Button variant="compact" disabled={phase === 'paying' || !canPay} onClick={onPay}>
+          {phase === 'paying' ? payWords.paying : label}
         </Button>
         {topUp && !topUp.open && (
           <Button variant="quiet" onClick={topUp.actions.open}>
@@ -48,7 +68,7 @@ export function PayRow({
           </Button>
         )}
       </ActionRow>
-      {phase === 'failed' && <p className="my-0 type-ui text-muted">{payWords.failed}</p>}
+      {phase === 'failed' && <p className="my-0 type-ui text-muted">{failedWords}</p>}
       {topUp?.open &&
         (sent && !sent.ended ? <Sending sent={sent} topUp={topUp} /> : <Form topUp={topUp} />)}
       {sent?.ended && <p className="my-0 type-ui text-muted">{sent.status}</p>}

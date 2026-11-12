@@ -47,6 +47,10 @@ export function ConversationThread({
     phase: PayPhase;
     added: string | null;
     onPay: () => void;
+    label?: string;
+    amount?: { usd: string; label: string; onUsd: (usd: string) => void } | null;
+    failedWords?: string;
+    canPay?: boolean;
     /** Paying with any other token, through NEAR Intents. */
     topUp?: TopUpView;
   };
@@ -97,6 +101,10 @@ export function ConversationThread({
             phase={pay.phase}
             added={pay.added}
             onPay={pay.onPay}
+            {...(pay.label ? { label: pay.label } : {})}
+            {...(pay.amount !== undefined ? { amount: pay.amount } : {})}
+            {...(pay.failedWords ? { failedWords: pay.failedWords } : {})}
+            {...(pay.canPay !== undefined ? { canPay: pay.canPay } : {})}
             {...(pay.topUp ? { topUp: pay.topUp } : {})}
           />
         ) : null

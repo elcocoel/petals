@@ -463,7 +463,16 @@ export function useWorkspace(props: {
       menuShown: panelBus.shown,
       /** Where the side panel ends now, in pixels. */
       panelEdge: panelBus.edge,
-      pay: { asking: pay.asking, phase: pay.phase, added: pay.added, topUp },
+      pay: {
+        asking: pay.asking,
+        phase: pay.phase,
+        added: pay.added,
+        topUp,
+        label: pay.label,
+        amount: pay.amount,
+        failedWords: pay.failedWords,
+        canPay: pay.canPay,
+      },
       jobs,
       jobControls,
       balance: funds?.balance ? payWords.balance(funds.balance) : null,
