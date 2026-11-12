@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { catalog, content, editUrl } from '../../../../components/docs/content.ts';
 import styles from '../../../../components/docs/docs.module.css';
+import { byDepartment } from '../../../../components/docs/groups.ts';
 import { Button } from '../../../../components/ui/Button.tsx';
 import { Icon } from '../../../../components/ui/Icon.tsx';
 import { Sidebar } from '../Sidebar.tsx';
@@ -92,27 +93,24 @@ export default async function Docs({ params }: Props) {
         )}
         {page.overview && (
           <nav aria-label={`${page.title} pages`} className={styles.sectionPages}>
-            {(['guide', 'reference'] as const).map((kind) => {
-              const children = pages.filter(
-                (p) => p.section === page.section && !p.overview && p.kind === kind,
-              );
-              return (
-                children.length > 0 && (
-                  <section key={kind} data-kind={kind}>
-                    <h2>
-                      <Icon name={kind === 'guide' ? 'petals' : 'project'} small />
-                      {kind === 'guide' ? 'Guides' : 'System reference'}
-                    </h2>
-                    {children.map((p) => (
-                      <a href={`/docs/${p.slug}`} key={p.slug}>
-                        <span>{p.title}</span>
-                        <Icon name="arrow" />
-                      </a>
-                    ))}
-                  </section>
-                )
-              );
-            })}
+            {(['guide', 'reference'] as const).flatMap((kind) =>
+              byDepartment(
+                pages.filter((p) => p.section === page.section && !p.overview && p.kind === kind),
+              ).map((group) => (
+                <section key={`${kind}:${group.department ?? ''}`} data-kind={kind}>
+                  <h2>
+                    <Icon name={kind === 'guide' ? 'petals' : 'project'} small />
+                    {group.title ?? (kind === 'guide' ? 'Guides' : 'System reference')}
+                  </h2>
+                  {group.pages.map((p) => (
+                    <a href={`/docs/${p.slug}`} key={p.slug}>
+                      <span>{p.hub ? 'Overview' : p.title}</span>
+                      <Icon name="arrow" />
+                    </a>
+                  ))}
+                </section>
+              )),
+            )}
           </nav>
         )}
         <footer className={styles.footer}>

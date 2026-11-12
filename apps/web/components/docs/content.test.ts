@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { catalog, content, renderMarkdown, repoRoot } from './content.ts';
+import { byDepartment } from './groups.ts';
 
 test('all seven sections and canonical files have navigable, unique pages', async () => {
   const pages = catalog();
@@ -106,4 +107,19 @@ test('only local documentation image assets can render', async () => {
   assert.ok(result.html.includes('src="/docs/assets/how-it-fits-together.png"'));
   assert.equal((result.html.match(/<img/g) ?? []).length, 1);
   assert.ok(result.html.includes('alt="System map"'));
+});
+
+test('/docs/brain is grouped by department, each hub first, with the routing table beside the doctrine', () => {
+  const brain = catalog().filter((p) => p.section === 'brain' && p.kind === 'reference');
+  const groups = byDepartment(brain);
+  assert.deepEqual(
+    groups[0]?.pages.map((p) => p.slug),
+    ['brain/doctrine', 'brain/routing'],
+  );
+  const governance = groups.find((g) => g.department === 'governance');
+  assert.equal(governance?.title, 'Governance');
+  assert.equal(governance?.pages[0]?.slug, 'brain/governance');
+  assert.ok(governance?.pages.some((p) => p.slug === 'brain/who-gets-a-vote'));
+  assert.ok(governance?.pages.some((p) => p.slug === 'brain/recipes/moloch-v3'));
+  assert.equal(groups.filter((g) => g.department).length, 7);
 });
