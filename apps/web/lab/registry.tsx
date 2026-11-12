@@ -9,7 +9,9 @@
 // QuotePanel, PublishFlow, CopyPrompt and Flower still keep their later states in hooks, so only the
 // first state shows here until they take them as props, as the chat's views do. Their controls are
 // live on the page.
+
 import { DEFAULT_VIEW, DIMENSIONS, EVERY_FLOWER, inUse } from '@petal/core/view';
+import { grades } from '@petal/core/wedge/keys';
 import type { SurfaceName } from '@petal/tokens';
 import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
@@ -69,6 +71,7 @@ import { Button } from '../components/ui/Button.tsx';
 import { Callout } from '../components/ui/Callout.tsx';
 import { Card } from '../components/ui/Card.tsx';
 import { ChooseFile } from '../components/ui/ChooseFile.tsx';
+import { ColourPick } from '../components/ui/ColourPick.tsx';
 import { Drawing } from '../components/ui/Drawing.tsx';
 import { EmptySlot } from '../components/ui/EmptySlot.tsx';
 import { FaqItem } from '../components/ui/FaqItem.tsx';
@@ -86,6 +89,7 @@ import { NavItem } from '../components/ui/NavItem.tsx';
 import { OrgBadge } from '../components/ui/OrgBadge.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
 import { PlateLink } from '../components/ui/PlateLink.tsx';
+import { Ramp } from '../components/ui/Ramp.tsx';
 import { Range } from '../components/ui/Range.tsx';
 import { RowField } from '../components/ui/RowField.tsx';
 import { Section } from '../components/ui/Section.tsx';
@@ -3259,6 +3263,50 @@ export const registry: LabEntry[] = [
             ]}
             onChange={() => undefined}
           />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'ColourPick',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ColourPick.tsx',
+    states: [
+      {
+        name: "a value's swatch: press it for the six keys and 'As it comes'",
+        render: () => (
+          <span className="flex items-center gap-space-4 type-ui">
+            <ColourPick
+              label="Colour for contract"
+              swatch="key-blue"
+              keys={['mint', 'blue', 'coral', 'apricot', 'pink', 'grey']}
+              chosen="blue"
+              asItComes="As it comes"
+              onPick={() => undefined}
+            />
+            Contract
+          </span>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'Ramp',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Ramp.tsx',
+    states: [
+      {
+        name: "a grade's five steps, lightest to darkest",
+        render: () => (
+          <span className="flex w-tile-width items-center gap-space-8 type-ui text-muted">
+            fewest 3
+            <Ramp fills={grades().map((k) => k.hex)} label="fewest 3 to most 534" />
+            most 534
+          </span>
         ),
       },
     ],

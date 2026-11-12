@@ -20,6 +20,8 @@ const DRAWINGS = [
   'components/landing/StoryFlower.tsx',
   // the hero's glass: the drawn material behind its two bubbles (Elco, 11 Nov: "Minority Report")
   'components/landing/HeroGlass.tsx',
+  // a grade's five steps in the look's own colours, under Colour in Tools (LOOK's grade, Elco, wave 4)
+  'components/ui/Ramp.tsx',
 ];
 
 const sources = (dir: string): string[] =>
