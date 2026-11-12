@@ -27,6 +27,7 @@ import type { ElsewhereRead } from './elsewhere.ts';
 import type { PayToken, TopUp } from './intents.ts';
 import type { Job } from './jobs.ts';
 import type { MapClaims } from './map-claims.ts';
+import type { LayerCard } from './map-layers.ts';
 import type { SearchBody } from './map-search.ts';
 import {
   NEAR_SOCIAL_API,
@@ -435,6 +436,14 @@ export async function readShared(a: string, b: string): Promise<string[]> {
   return (json.accounts ?? []).flatMap((x) =>
     x.account_a ? [x.account_a, x.account_a.slice(x.account_a.lastIndexOf(':') + 1)] : [],
   );
+}
+
+/** A map's card (GET /api/v1/maps/:id), for its layers in the map's Information box: null when it can't be read. */
+export async function readMapCard(map: string): Promise<LayerCard | null> {
+  const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}`).catch(() => null);
+  if (!res?.ok) return null;
+  const json = (await res.json().catch(() => ({}))) as { map?: LayerCard };
+  return json.map ?? null;
 }
 
 /** What a map's token is worth (#91), from its card: null when it has none, or it can't be read. */
