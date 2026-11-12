@@ -40,9 +40,41 @@ export interface BrainEntry {
   sha256: string;
 }
 
+/** One row of the master routing table (routing.md): a task, the words it answers to, and what it loads. */
+export interface BrainTask {
+  task: string;
+  words: string[];
+  /** ids: departments' hubs, chapters, recipes */
+  load: string[];
+  also: string[];
+}
+
 export interface BrainIndex {
   petal: typeof BRAIN_INDEX_VERSION;
   entries: BrainEntry[];
+  /** v2: the master routing table's rows, in its order */
+  tasks: BrainTask[];
+}
+
+/**
+ * The master routing table, routing.md (research/brain-departments-2026-11-11.md, step 4): one authored file,
+ * read by people and by the machine, so no second copy drifts. Each row: Task | Words | Load | Also load, with
+ * the ids in backticks and "n/a" for none.
+ */
+export function routingOf(text: string): BrainTask[] {
+  const ids = (cell: string) => [...cell.matchAll(/`([^`]+)`/g)].map((m) => m[1] as string);
+  const out: BrainTask[] = [];
+  for (const line of text.split('\n')) {
+    if (!line.startsWith('|')) continue;
+    const cells = line
+      .split('|')
+      .slice(1, -1)
+      .map((c) => c.trim());
+    if (cells.length !== 4 || cells[0] === 'Task' || /^-+$/.test(cells[0] as string)) continue;
+    const [task, words, load, also] = cells as [string, string, string, string];
+    out.push({ task, words: list(words), load: ids(load), also: ids(also) });
+  }
+  return out;
 }
 
 /** A file's header: `key: value` lines between two `---` lines; lists are comma-separated. */
@@ -149,12 +181,12 @@ export function buildBrainIndex(dir: string): BrainIndex {
   const nameOf = (e: BrainEntry) => e.file.slice(e.file.lastIndexOf('/') + 1);
   const byName = (a: BrainEntry, b: BrainEntry) => (nameOf(a) < nameOf(b) ? -1 : 1);
   entries.push(...chapters.sort(byName), ...recipes.sort(byName));
-  return { petal: BRAIN_INDEX_VERSION, entries };
+  return { petal: BRAIN_INDEX_VERSION, entries, tasks: routingOf(read('routing.md')) };
 }
 
 /** What's wrong with an index against what exists: an unknown tool, a continuation that isn't a
- * chapter, an id twice, a chapter or recipe in no department Elco named, or a doctrine that names a path. Empty
- * when it's sound. */
+ * chapter, an id twice, a chapter or recipe in no department Elco named, a routing row naming a file that isn't
+ * there or a chapter in no row, or a doctrine that names a path. Empty when it's sound. */
 export function brainProblems(
   index: BrainIndex,
   tools: readonly string[],
@@ -179,6 +211,19 @@ export function brainProblems(
       );
   }
   const chapters = new Set(index.entries.filter((e) => e.kind === 'chapter').map((e) => e.id));
+  // routing.md: every row names files that exist, and every chapter is in a row
+  const known = new Set(index.entries.filter((e) => e.kind !== 'doctrine').map((e) => e.id));
+  const rowed = new Set<string>();
+  for (const t of index.tasks) {
+    if (!t.load.length) out.push(`routing.md: the row ${t.task} loads nothing`);
+    for (const id of [...t.load, ...t.also]) {
+      if (!known.has(id))
+        out.push(`routing.md: the row ${t.task} names ${id}, which isn't in the brain`);
+      rowed.add(id);
+    }
+  }
+  for (const c of chapters)
+    if (!rowed.has(c)) out.push(`routing.md: no row names the chapter ${c}`);
   for (const e of index.entries) {
     for (const t of e.tools) if (!tools.includes(t)) out.push(`${e.file}: no tool ${t}`);
     for (const c of e.continues)
@@ -300,6 +345,8 @@ export function brainAt(dir: string) {
 export interface BrainRoute {
   id: string;
   kind: BrainEntry['kind'];
+  /** the department it's in */
+  department: string | null;
   for: string;
   file: string;
   status: BrainEntry['status'];
@@ -339,6 +386,7 @@ function docWords(e: BrainEntry): string[] {
 const routeOf = (e: BrainEntry, why: string, score: number): BrainRoute => ({
   id: e.id,
   kind: e.kind,
+  department: e.department,
   for: e.for,
   file: e.file,
   status: e.status,
@@ -374,11 +422,19 @@ export function routeBrain(
   }
   const asked = wordsOf(q.words ?? '');
   if (asked.length) {
-    const docs = entries.map((e) => ({ e, words: docWords(e) }));
+    const byId = new Map(entries.map((e) => [e.id, e]));
+    type Doc =
+      | { e: BrainEntry; t?: undefined; words: string[] }
+      | { e?: undefined; t: BrainTask; words: string[] };
+    const docs: Doc[] = [
+      ...entries.map((e) => ({ e, words: docWords(e) })),
+      // a routing row answers to its task's words and the words beside it
+      ...index.tasks.map((t) => ({ t, words: wordsOf(`${t.task} ${t.words.join(' ')}`) })),
+    ];
     const avg = docs.reduce((s, d) => s + d.words.length, 0) / Math.max(1, docs.length);
     const k1 = 1.2;
     const b = 0.75;
-    const scored = docs.map(({ e, words }) => {
+    const scored = docs.map(({ e, t, words }) => {
       let score = 0;
       const hit: string[] = [];
       for (const w of new Set(asked)) {
@@ -389,11 +445,34 @@ export function routeBrain(
         score += (idf * tf * (k1 + 1)) / (tf + k1 * (1 - b + (b * words.length) / avg));
         hit.push(w);
       }
-      return { e, score, hit };
+      return { e, t, score, hit };
     });
     for (const s of scored.filter((x) => x.score > 0).sort((x, y) => y.score - x.score)) {
-      if (!out.some((r) => r.id === s.e.id))
-        out.push(routeOf(s.e, `words: ${s.hit.join(', ')}`, s.score));
+      if (s.e) {
+        if (!out.some((r) => r.id === s.e.id))
+          out.push(routeOf(s.e, `words: ${s.hit.join(', ')}`, s.score));
+        continue;
+      }
+      // a row that fires brings what it loads, its chapters before its departments' hubs, then what it also loads
+      const loads = [
+        ...s.t.load.filter((id) => byId.get(id)?.kind !== 'department'),
+        ...s.t.load.filter((id) => byId.get(id)?.kind === 'department'),
+      ];
+      const brings = [
+        ...loads.map((id) => [id, 'loads'] as const),
+        ...s.t.also.map((id) => [id, 'also loads'] as const),
+      ];
+      brings.forEach(([id, how], i) => {
+        const e = byId.get(id);
+        if (e && !out.some((r) => r.id === id))
+          out.push(
+            routeOf(
+              e,
+              `the task "${s.t.task}" ${how} it (words: ${s.hit.join(', ')})`,
+              s.score - i / 1e6,
+            ),
+          );
+      });
     }
   }
   return out.sort((x, y) => y.score - x.score).slice(0, n);

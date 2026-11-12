@@ -18,9 +18,10 @@ const COMMIT = { type: ['string', 'null'], description: 'the brain commit this a
 export const brainOf = (ctx: ToolContext) =>
   brainAt(ctx.config.brainDir ?? join(ctx.config.root, 'brain')).current();
 
-const ROUTE = obj(['id', 'kind', 'for', 'file', 'status', 'why', 'score'], {
+const ROUTE = obj(['id', 'kind', 'department', 'for', 'file', 'status', 'why', 'score'], {
   id: { type: 'string' },
   kind: { type: 'string', enum: ['department', 'chapter', 'recipe'] },
+  department: { type: ['string', 'null'] },
   for: { type: 'string' },
   file: { type: 'string' },
   status: { type: 'string', enum: ['ready', 'partial'] },

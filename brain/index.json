@@ -777,5 +777,305 @@
       "file": "governance/recipes/moloch-v3.json",
       "sha256": "533bcf09479f5b34b47abeef0d0cc9b190587d32badd9507766779299fe039b3"
     }
+  ],
+  "tasks": [
+    {
+      "task": "Set up Petals",
+      "words": [
+        "setup",
+        "set up",
+        "sign in",
+        "wallet",
+        "credit",
+        "first conversation"
+      ],
+      "load": [
+        "connecting",
+        "setup"
+      ],
+      "also": []
+    },
+    {
+      "task": "Connect Claude Code",
+      "words": [
+        "claude code",
+        "terminal",
+        "desktop app",
+        "install"
+      ],
+      "load": [
+        "connecting",
+        "connect-claude-code"
+      ],
+      "also": [
+        "setup"
+      ]
+    },
+    {
+      "task": "Connect Codex",
+      "words": [
+        "codex"
+      ],
+      "load": [
+        "connecting",
+        "connect-codex"
+      ],
+      "also": [
+        "setup"
+      ]
+    },
+    {
+      "task": "Connect Hermes",
+      "words": [
+        "hermes"
+      ],
+      "load": [
+        "connecting",
+        "connect-hermes"
+      ],
+      "also": [
+        "setup"
+      ]
+    },
+    {
+      "task": "Connect a cloud app",
+      "words": [
+        "chatgpt",
+        "claude app",
+        "custom connector",
+        "cursor",
+        "mcp url",
+        "remote"
+      ],
+      "load": [
+        "connecting",
+        "connect-cloud"
+      ],
+      "also": [
+        "setup"
+      ]
+    },
+    {
+      "task": "What is this address",
+      "words": [
+        "address",
+        "account",
+        "wallet or contract"
+      ],
+      "load": [
+        "start-from-an-address"
+      ],
+      "also": [
+        "what-kind-of-thing-it-is"
+      ]
+    },
+    {
+      "task": "Who holds power in this DAO or system",
+      "words": [
+        "power",
+        "holds",
+        "controls",
+        "members"
+      ],
+      "load": [
+        "governance",
+        "where-power-lives"
+      ],
+      "also": [
+        "who-gets-a-vote",
+        "going-deeper"
+      ]
+    },
+    {
+      "task": "Voting power, delegation, joining or leaving",
+      "words": [
+        "voting power",
+        "delegate",
+        "delegated",
+        "delegation",
+        "join",
+        "leave",
+        "ragequit"
+      ],
+      "load": [
+        "who-gets-a-vote"
+      ],
+      "also": [
+        "where-power-lives"
+      ]
+    },
+    {
+      "task": "Follow a proposal, its rules and quorum",
+      "words": [
+        "proposal",
+        "quorum",
+        "passed",
+        "executed",
+        "voting rules"
+      ],
+      "load": [
+        "from-proposal-to-action"
+      ],
+      "also": [
+        "who-gets-a-vote"
+      ]
+    },
+    {
+      "task": "Treasury, signers, admin keys, upgrades, minting",
+      "words": [
+        "treasury",
+        "signers",
+        "multisig",
+        "admin",
+        "upgrade",
+        "pause",
+        "mint",
+        "spend"
+      ],
+      "load": [
+        "who-can-move-money-or-change-rules"
+      ],
+      "also": [
+        "from-proposal-to-action"
+      ]
+    },
+    {
+      "task": "Who votes together",
+      "words": [
+        "votes together",
+        "blocs",
+        "alike"
+      ],
+      "load": [
+        "voting-blocs-over-time"
+      ],
+      "also": [
+        "from-proposal-to-action"
+      ]
+    },
+    {
+      "task": "Validators and the stake behind them",
+      "words": [
+        "validators",
+        "stake",
+        "staking"
+      ],
+      "load": [
+        "stake-behind-the-network"
+      ],
+      "also": [
+        "where-power-lives"
+      ]
+    },
+    {
+      "task": "What it's worth",
+      "words": [
+        "worth",
+        "value",
+        "price",
+        "dollars"
+      ],
+      "load": [
+        "value"
+      ],
+      "also": [
+        "vesting"
+      ]
+    },
+    {
+      "task": "When it unlocks",
+      "words": [
+        "unlock",
+        "vesting",
+        "cliff",
+        "release"
+      ],
+      "load": [
+        "vesting"
+      ],
+      "also": [
+        "value"
+      ]
+    },
+    {
+      "task": "How it changed over time",
+      "words": [
+        "changed",
+        "history",
+        "since",
+        "over time"
+      ],
+      "load": [
+        "over-time"
+      ],
+      "also": []
+    },
+    {
+      "task": "What to offer after an answer",
+      "words": [
+        "more",
+        "deeper",
+        "next"
+      ],
+      "load": [
+        "going-deeper"
+      ],
+      "also": []
+    },
+    {
+      "task": "Who is behind it, names",
+      "words": [
+        "behind",
+        "names",
+        "twitter",
+        "forum",
+        "ens"
+      ],
+      "load": [
+        "open-source-leads"
+      ],
+      "also": [
+        "going-deeper"
+      ]
+    },
+    {
+      "task": "A system Petals can't read",
+      "words": [
+        "cannot read",
+        "not supported",
+        "framework"
+      ],
+      "load": [
+        "a-new-system"
+      ],
+      "also": [
+        "contributing"
+      ]
+    },
+    {
+      "task": "Improve a chapter or a recipe",
+      "words": [
+        "improve",
+        "contribute",
+        "pull request",
+        "github",
+        "fix"
+      ],
+      "load": [
+        "contributing"
+      ],
+      "also": []
+    },
+    {
+      "task": "A one-press service (#101)",
+      "words": [
+        "service",
+        "deliverable"
+      ],
+      "load": [
+        "services"
+      ],
+      "also": []
+    }
   ]
 }

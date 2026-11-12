@@ -109,6 +109,30 @@ describe('the brain', () => {
     }
   });
 
+  test('the routing table (routing.md) is in the index, names only files there are, and every chapter is in a row', () => {
+    const index = buildBrainIndex(BRAIN);
+    expect(index.tasks.length).toBe(20);
+    expect(index.tasks[0]).toEqual({
+      task: 'Set up Petals',
+      words: ['setup', 'set up', 'sign in', 'wallet', 'credit', 'first conversation'],
+      load: ['connecting', 'setup'],
+      also: [],
+    });
+    const broken = {
+      ...index,
+      tasks: [
+        ...index.tasks.filter((t) => ![...t.load, ...t.also].includes('vesting')),
+        { task: 'Teleport', words: ['teleport'], load: ['teleporting'], also: [] },
+      ],
+    };
+    expect(brainProblems(broken, tools, '')).toEqual([
+      "routing.md: the row Teleport names teleporting, which isn't in the brain",
+      // value's only rows also name vesting
+      'routing.md: no row names the chapter value',
+      'routing.md: no row names the chapter vesting',
+    ]);
+  });
+
   test('the checks catch what they are for', () => {
     const index = buildBrainIndex(BRAIN);
     const broken = {
