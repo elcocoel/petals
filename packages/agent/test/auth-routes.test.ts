@@ -4,10 +4,12 @@ import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  evmTestSigner,
   fakeRpc,
   fakeRpcFor,
   functionCall,
   implicitSigner,
+  solanaTestSigner,
   testSigner,
 } from '@petal/near/auth/testing';
 import { openStore } from '@petal/store';
@@ -1249,5 +1251,129 @@ describe('T192, T196: the key at start', () => {
     const me = await later.get('/api/v1/me');
     expect(me.status).toBe(200);
     expect(await me.json()).toMatchObject({ wallets: [] });
+  });
+});
+
+describe('EVM and Solana wallets (12 Nov, wave 5: "multi chain wallet connection")', () => {
+  const evm = evmTestSigner('wave5');
+  const sol = solanaTestSigner('wave5');
+  /** A challenge for this wallet, signed as its wallet would, sent to verify or to /me/wallets. */
+  async function prove(b: Browser, chain: 'eip155' | 'solana', path = '/api/v1/auth/verify') {
+    const signer = chain === 'eip155' ? evm : sol;
+    const ch = (await (
+      await b.post('/api/v1/auth/challenge', { chain, address: signer.address, chain_id: 8453 })
+    ).json()) as { message: string; nonce: string };
+    const proof = {
+      type: chain === 'eip155' ? 'eip191' : 'ed25519',
+      address: signer.address,
+      message: ch.message,
+      signature: signer.sign(ch.message),
+    };
+    return { res: await b.post(path, { network: chain, proof }), ch, proof };
+  }
+
+  test('an EVM wallet signs in with one Sign-In with Ethereum message; one binding for every EVM chain', async () => {
+    const { app } = setup();
+    const b = new Browser(app);
+    const { res, ch } = await prove(b, 'eip155');
+    expect(ch.message).toMatch(
+      /^petals\.example wants you to sign in with your Ethereum account:\n0x/,
+    );
+    expect(ch.message).toMatch(/\nChain ID: 8453\n/);
+    expect(res.status).toBe(200);
+    const me = (await (await b.get('/api/v1/me')).json()) as {
+      network: string;
+      account: string;
+      wallets: { caip10: string; network: string; account_id: string }[];
+    };
+    expect(me.network).toBe('eip155');
+    expect(me.account).toBe(evm.address);
+    expect(me.wallets).toEqual([
+      expect.objectContaining({
+        caip10: `eip155:1:${evm.address}`,
+        network: 'eip155',
+        account_id: evm.address,
+      }),
+    ]);
+    // signing in again, from any chain id, is the same person
+    const again = new Browser(app);
+    await prove(again, 'eip155');
+    const me2 = (await (await again.get('/api/v1/me')).json()) as { person_id: string };
+    expect(me2.person_id).toBe(((await res.json()) as { person_id: string }).person_id);
+  });
+
+  test("a NEAR person adds an EVM wallet and a Solana one; another person can't take them", async () => {
+    const otherNear = testSigner('other.testnet');
+    const { app } = setup({ rpc: [maker, otherNear] });
+    const near = new Browser(app);
+    await near.signIn();
+    expect((await prove(near, 'eip155', '/api/v1/me/wallets')).res.status).toBe(200);
+    const added = await prove(near, 'solana', '/api/v1/me/wallets');
+    expect(added.res.status).toBe(200);
+    const { wallets } = (await added.res.json()) as { wallets: { network: string }[] };
+    expect(wallets.map((w) => w.network).sort()).toEqual(['eip155', 'solana', 'testnet']);
+    // the same EVM wallet signing in is that person
+    const evmIn = new Browser(app);
+    const signed = (await (await prove(evmIn, 'eip155')).res.json()) as { person_id: string };
+    const nearMe = (await (await near.get('/api/v1/me')).json()) as { person_id: string };
+    expect(signed.person_id).toBe(nearMe.person_id);
+    // someone else adding it is refused
+    const other = new Browser(app);
+    await other.signIn(otherNear);
+    const taken = await prove(other, 'eip155', '/api/v1/me/wallets');
+    expect(taken.res.status).toBe(400);
+  });
+
+  test("refused: another site's message, another address, a spent nonce, a bad signature", async () => {
+    const { app } = setup();
+    const b = new Browser(app);
+    const { proof } = await prove(b, 'eip155');
+    // the nonce was spent by the first sign-in
+    const reused = await new Browser(app).post('/api/v1/auth/verify', { network: 'eip155', proof });
+    expect(reused.status).toBe(401);
+    const ch = (await (
+      await b.post('/api/v1/auth/challenge', { chain: 'eip155', address: evm.address })
+    ).json()) as { message: string };
+    const elsewhere = ch.message.replace(/^petals\.example/, 'evil.example');
+    const forged = await b.post('/api/v1/auth/verify', {
+      network: 'eip155',
+      proof: {
+        type: 'eip191',
+        address: evm.address,
+        message: elsewhere,
+        signature: evm.sign(elsewhere),
+      },
+    });
+    expect(((await forged.json()) as { error: { message: string } }).error.message).toMatch(
+      /not this site's/,
+    );
+    const someoneElse = evmTestSigner('someone');
+    const wrong = await b.post('/api/v1/auth/verify', {
+      network: 'eip155',
+      proof: {
+        type: 'eip191',
+        address: evm.address,
+        message: ch.message,
+        signature: someoneElse.sign(ch.message),
+      },
+    });
+    expect(wrong.status).toBe(401);
+    expect(((await wrong.json()) as { error: { message: string } }).error.message).toMatch(
+      /not this address/,
+    );
+  });
+
+  test('a Solana wallet signs in with its signMessage', async () => {
+    const { app } = setup();
+    const b = new Browser(app);
+    const { res, ch } = await prove(b, 'solana');
+    expect(ch.message).toMatch(/^petals\.example wants you to sign in with your Solana account:\n/);
+    expect(res.status).toBe(200);
+    const me = (await (await b.get('/api/v1/me')).json()) as {
+      network: string;
+      wallets: { caip10: string }[];
+    };
+    expect(me.network).toBe('solana');
+    expect(me.wallets[0]?.caip10).toBe(`solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:${sol.address}`);
   });
 });

@@ -17,7 +17,16 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { accountRef, TOOLS_VERSION } from '@petal/core';
 import type { Nep413Proof } from '@petal/core/types';
-import { type NonceStore, type Rpc, verifyNep413 } from '@petal/near/auth';
+import {
+  type Eip191Proof,
+  type NonceStore,
+  type Rpc,
+  type SolanaProof,
+  siweMessage,
+  solanaMessage,
+  verifyNep413,
+  verifyWalletProof,
+} from '@petal/near/auth';
 import type { SessionRow, Store } from '@petal/store';
 import { clientAddress, DATA_FULL, isLocalSite } from '@petal/tools';
 import { type Context, Hono } from 'hono';
@@ -46,6 +55,28 @@ import type { WalletCipher } from './wallet-cipher.ts';
 /** none: no agent for anyone. A public site set it until 9 Nov; since then it runs the paid agent (gated). */
 export type AgentAccess = 'gated' | 'open' | 'none';
 export type Network = 'testnet' | 'mainnet';
+/**
+ * Where a wallet is (12 Nov, wave 5: "multi chain wallet connection"): NEAR on its network, one EVM wallet for every
+ * EVM chain, or a Solana wallet.
+ */
+export type WalletNetwork = Network | 'eip155' | 'solana';
+
+/** Solana's mainnet, as CAIP-2 names it. */
+const SOLANA_MAINNET = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
+
+/** A wallet as its binding keeps it, in CAIP-10: an EVM one once for every chain, by Ethereum's id, in lower case. */
+export function caip10Of(network: WalletNetwork, account: string): string {
+  if (network === 'eip155') return `eip155:1:${account.toLowerCase()}`;
+  if (network === 'solana') return `${SOLANA_MAINNET}:${account}`;
+  return `near:${network}:${account}`;
+}
+
+/** Who answers for what a person writes, as a claim names them, for a wallet on its network. */
+function byOf(network: string | null | undefined, account: string): string | null {
+  if (network === 'eip155') return accountRef('eip155:1', account);
+  if (network === 'solana') return accountRef(SOLANA_MAINNET, account);
+  return accountRef(`near:${network === 'testnet' ? 'testnet' : 'mainnet'}`, account);
+}
 
 /** PETAL_AGENT_ACCESS. Anything but `open` is gated: a typo must not open the budget. */
 export function agentAccess(env: Record<string, string | undefined> = process.env): AgentAccess {
@@ -247,9 +278,9 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
    * explorations moved to them, and a new session in place of the old one, keeping its invite. A
    * person signing in with another wallet changes person: their work stays where it is.
    */
-  async function signIn(c: Context, network: Network, accountId: string) {
+  async function signIn(c: Context, network: WalletNetwork, accountId: string) {
     const cipher = d.cipher();
-    const address = `near:${network}:${accountId}`;
+    const address = caip10Of(network, accountId);
     const index = cipher.index(address);
     const old = await sessionOf(c);
     const at = iso();
@@ -326,6 +357,33 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
 
   app.post('/api/v1/auth/challenge', async (c) => {
     const { nonce, expires_at } = await d.nonces.issue();
+    // an EVM or a Solana wallet signs a text naming this site, its address and this nonce (wave 5); NEAR's below
+    const asked = (await c.req.json().catch(() => null)) as {
+      chain?: unknown;
+      address?: unknown;
+      chain_id?: unknown;
+    } | null;
+    if (asked?.chain === 'eip155' || asked?.chain === 'solana') {
+      const address = typeof asked.address === 'string' ? asked.address.trim() : '';
+      const evm = asked.chain === 'eip155';
+      if (
+        evm ? !/^0x[0-9a-fA-F]{40}$/.test(address) : !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)
+      )
+        return fail(c, 'bad_input', `address must be ${evm ? 'an EVM' : 'a Solana'} address`);
+      const chainId = typeof asked.chain_id === 'number' && asked.chain_id > 0 ? asked.chain_id : 1;
+      const said = {
+        domain: site.hostname,
+        address,
+        nonce,
+        issuedAt: iso(),
+        expiresAt: expires_at,
+        statement: signInMessage(site.hostname),
+      };
+      const message = evm
+        ? siweMessage({ ...said, uri: site.origin ?? `https://${site.hostname}`, chainId })
+        : solanaMessage(said);
+      return ok(c, { nonce, message, expires_at });
+    }
     return ok(c, {
       nonce,
       message: signInMessage(site.hostname),
@@ -339,14 +397,33 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
   /** The wallet a body's NEP-413 proof shows its sender holds, or the answer that refuses it. */
   async function provenWallet(
     c: Context,
-  ): Promise<{ network: Network; accountId: string } | { refused: Response }> {
+  ): Promise<{ network: WalletNetwork; accountId: string } | { refused: Response }> {
     const body = (await c.req.json().catch(() => null)) as {
       network?: unknown;
       proof?: Nep413Proof;
     } | null;
     const network = body?.network;
+    // an EVM or a Solana wallet's signed text (wave 5): checked here, no chain asked
+    if (network === 'eip155' || network === 'solana') {
+      const checked = await verifyWalletProof(
+        body?.proof as unknown as Eip191Proof | SolanaProof,
+        { domain: site.hostname, now: now() },
+        d.nonces,
+      ).catch(() => ({ ok: false as const, reason: "the nonce couldn't be checked" }));
+      if (!checked.ok)
+        return {
+          refused: fail(c, 'unauthorised', `The signature was refused: ${checked.reason}.`),
+        };
+      if (network === 'eip155' && (body?.proof as unknown as Eip191Proof)?.type !== 'eip191')
+        return { refused: fail(c, 'bad_input', 'an EVM wallet signs with eip191') };
+      if (network === 'solana' && (body?.proof as unknown as SolanaProof)?.type !== 'ed25519')
+        return { refused: fail(c, 'bad_input', 'a Solana wallet signs with ed25519') };
+      return { network, accountId: checked.address };
+    }
     if (network !== 'testnet' && network !== 'mainnet') {
-      return { refused: fail(c, 'bad_input', 'network must be testnet or mainnet') };
+      return {
+        refused: fail(c, 'bad_input', 'network must be testnet, mainnet, eip155 or solana'),
+      };
     }
     const proof = body?.proof;
     if (!proof || typeof proof !== 'object' || !NEAR_ACCOUNT.test(String(proof.account_id))) {
@@ -381,9 +458,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     const proven = await provenWallet(c);
     if ('refused' in proven) return proven.refused;
     const { network, accountId } = proven;
-    const known = await store.walletBinding.byHash(
-      d.cipher().index(`near:${network}:${accountId}`),
-    );
+    const known = await store.walletBinding.byHash(d.cipher().index(caip10Of(network, accountId)));
     if (!known && (await d.full?.())) return fail(c, 'budget_exhausted', DATA_FULL);
     const { person, claimed, explorations } = await signIn(c, network, accountId);
     return ok(c, {
@@ -460,7 +535,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     if ('refused' in proven) return proven.refused;
     const { network, accountId } = proven;
     const cipher = d.cipher();
-    const address = `near:${network}:${accountId}`;
+    const address = caip10Of(network, accountId);
     const index = cipher.index(address);
     const known = await store.walletBinding.byHash(index);
     if (known && known.person !== person) {
@@ -489,11 +564,10 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       const s = await sessionOf(c);
       // who answers for what a signed-in person writes: their account, as a claim names it
       const account = s ? await sessionAccount(s) : null;
-      const network = s?.network === 'testnet' ? 'testnet' : 'mainnet';
       return {
         subject: s?.subject ?? null,
         credential: s?.credential ?? null,
-        by: account ? accountRef(`near:${network}`, account) : null,
+        by: account ? byOf(s?.network, account) : null,
       };
     },
     refuseForeign: (c) => (originAllowed(c) ? null : badOrigin(c)),
@@ -502,9 +576,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       if (!isPerson(person)) return null;
       const wallets = await walletsOf(person);
       const w = wallets.find((x) => x.network === 'mainnet') ?? wallets[0];
-      return w
-        ? accountRef(`near:${w.network === 'testnet' ? 'testnet' : 'mainnet'}`, w.account_id)
-        : null;
+      return w ? byOf(w.network, w.account_id) : null;
     },
     async personOf(c) {
       const s = await sessionOf(c);

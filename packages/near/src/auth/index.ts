@@ -20,6 +20,17 @@ export {
   type NonceStore,
   type NonceTable,
 } from './nonce.ts';
+export {
+  checksumAddress,
+  type Eip191Proof,
+  eip191Signer,
+  type SolanaProof,
+  siweMessage,
+  siweNonce,
+  solanaMessage,
+  solanaSigned,
+  verifyWalletProof,
+} from './wallets.ts';
 export type { Nep413Proof };
 
 /** One NEAR JSON-RPC `query` call, e.g. view_access_key. A near-api-js JsonRpcProvider fits. */
