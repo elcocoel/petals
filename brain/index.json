@@ -59,7 +59,7 @@
       "id": "money",
       "kind": "department",
       "department": "money",
-      "for": "what holdings are worth, and when they unlock",
+      "for": "what holdings are worth, when they unlock, and what a treasury paid out",
       "recognise": [
         "money"
       ],
@@ -67,7 +67,7 @@
       "continues": [],
       "status": "ready",
       "file": "money/README.md",
-      "sha256": "bd6bafa29a53a4599b4c7aac6fd535d1cb95af966754e38a6ed5093a4c96c7ba"
+      "sha256": "4c01857d943d89b65b01c52f1ccef513877372bd3b4443327ff0b7e87c5ae3ee"
     },
     {
       "id": "investigation",
@@ -448,6 +448,38 @@
       "status": "partial",
       "file": "investigation/over-time.md",
       "sha256": "a8cec938f1a08211bf12ab714f6438e50b262805ddcb85e3e42807c380faa256"
+    },
+    {
+      "id": "payouts",
+      "kind": "chapter",
+      "department": "money",
+      "for": "what a treasury paid out over a period, to whom, and what it was worth on the day it was paid",
+      "recognise": [
+        "payouts",
+        "paid out",
+        "spending",
+        "spent",
+        "paid",
+        "recipients",
+        "grants paid",
+        "outflows",
+        "how much they spend"
+      ],
+      "tools": [
+        "list_payouts",
+        "get_snapshot",
+        "read_chain",
+        "read_page",
+        "add_layer"
+      ],
+      "continues": [
+        "value",
+        "from-proposal-to-action",
+        "who-can-move-money-or-change-rules"
+      ],
+      "status": "partial",
+      "file": "money/payouts.md",
+      "sha256": "45dbd1008ef9fce18b2db31fb6631fd951428e4ac459f39ec71a172b1bacc7ae"
     },
     {
       "id": "setup",
@@ -1047,6 +1079,22 @@
       ],
       "also": [
         "vesting"
+      ]
+    },
+    {
+      "task": "What a treasury paid out",
+      "words": [
+        "payouts",
+        "paid out",
+        "spending",
+        "spent",
+        "recipients"
+      ],
+      "load": [
+        "payouts"
+      ],
+      "also": [
+        "from-proposal-to-action"
       ]
     },
     {

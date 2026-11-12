@@ -172,6 +172,14 @@ export interface ValueRow {
   body: string;
   read_at: string;
 }
+/** A map's payouts/v1 (33): what its DAO paid out, each payout dated and priced. */
+export interface PayoutsRow {
+  /** the map's address, as its card's id */
+  about: string;
+  /** the payouts/v1, JSON */
+  body: string;
+  read_at: string;
+}
 /** A text's embedding (29): its sha256 and its float32s, base64. */
 export interface SearchVectorRow {
   sha256: string;
@@ -1218,6 +1226,21 @@ export function tables(db: Db) {
       get: (about: string) =>
         db.get<ProposalsRow>('SELECT * FROM proposals WHERE about = ?', about),
       list: () => db.all<ProposalsRow>('SELECT * FROM proposals ORDER BY about'),
+    },
+
+    /** Each map's payouts (33), by the map's address: read again, they're replaced. */
+    payouts: {
+      put: async (r: PayoutsRow) => {
+        await db.run(
+          `INSERT INTO payouts (about, body, read_at) VALUES (?, ?, ?)
+           ON CONFLICT (about) DO UPDATE SET body = excluded.body, read_at = excluded.read_at`,
+          r.about,
+          r.body,
+          r.read_at,
+        );
+      },
+      get: (about: string) => db.get<PayoutsRow>('SELECT * FROM payouts WHERE about = ?', about),
+      list: () => db.all<PayoutsRow>('SELECT * FROM payouts ORDER BY about'),
     },
 
     /** Search's vectors (29), by model and the sha256 of the text embedded: put once, never changed. */

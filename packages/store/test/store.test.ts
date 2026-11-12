@@ -825,3 +825,35 @@ describe('migration 32, the open calls', () => {
     await store.close();
   });
 });
+
+describe('migration 33, the payouts', () => {
+  test("a map's payouts are kept by its address, replaced when read again, listed in order", async () => {
+    const store = openStore(':memory:');
+    await store.payouts.put({
+      about: 'near:mainnet:b.sputnik-dao.near',
+      body: '{"n":1}',
+      read_at: AT,
+    });
+    await store.payouts.put({
+      about: 'near:mainnet:a.sputnik-dao.near',
+      body: '{"n":2}',
+      read_at: AT,
+    });
+    await store.payouts.put({
+      about: 'near:mainnet:b.sputnik-dao.near',
+      body: '{"n":3}',
+      read_at: LATER,
+    });
+    expect(await store.payouts.get('near:mainnet:b.sputnik-dao.near')).toEqual({
+      about: 'near:mainnet:b.sputnik-dao.near',
+      body: '{"n":3}',
+      read_at: LATER,
+    });
+    expect((await store.payouts.list()).map((r) => r.about)).toEqual([
+      'near:mainnet:a.sputnik-dao.near',
+      'near:mainnet:b.sputnik-dao.near',
+    ]);
+    expect(await store.payouts.get('near:mainnet:none.near')).toBeFalsy();
+    await store.close();
+  });
+});

@@ -36,6 +36,7 @@ describe('the brain', () => {
       'open-calls',
       'open-source-leads',
       'over-time',
+      'payouts',
       'setup',
       'stake-behind-the-network',
       'start-from-an-address',
@@ -89,7 +90,7 @@ describe('the brain', () => {
       'who-gets-a-vote',
       'moloch-v3',
     ]);
-    expect(by('money')).toEqual(['value', 'vesting']);
+    expect(by('money')).toEqual(['payouts', 'value', 'vesting']);
     expect(by('investigation')).toEqual(['going-deeper', 'over-time']);
     // services holds #101's slots only, as planned; nothing is in it yet
     expect(by('services')).toEqual([]);

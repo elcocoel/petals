@@ -83,6 +83,16 @@ export {
 } from './marks.ts';
 export { NotImplementedError, notImplemented } from './not-implemented.ts';
 export {
+  PAYOUTS_VERSION,
+  type Payout,
+  type Payouts,
+  type PayoutsAsk,
+  type PayoutsInPeriod,
+  type PayoutUsd,
+  payoutsIn,
+  validatePayouts,
+} from './payouts.ts';
+export {
   baseFee,
   type Price,
   type Priced,

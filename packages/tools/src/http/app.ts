@@ -10,6 +10,7 @@ import {
   aboutKey,
   canonicalJson,
   DEFAULT_VIEW,
+  payoutsIn,
   sha256Hex,
   TOOLS_VERSION,
   validateMark,
@@ -28,6 +29,7 @@ import { LiveHub } from '../live.ts';
 import { type CardMark, cardMark, mapsOf, mapViews, namesKey } from '../map.ts';
 import { mapClaims } from '../mapping-claims.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
+import { payoutsOf } from '../payouts.ts';
 import { cardProposals, proposalsOf } from '../proposals.ts';
 import { findTool } from '../registry.ts';
 import { brainOf } from '../tools/brain.ts';
@@ -501,6 +503,34 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
             q('pairs') === 'true',
           )
         : versioned(toolError('not_found', 'No proposals read for that map.')),
+    );
+  });
+  // What a DAO map paid out (payouts/v1, 12 Nov): over ?since (inclusive) and ?until (exclusive), by when each
+  // was paid, or all of them; each payout and the period's totals: how many, to how many, each asset, dollars.
+  app.get('/api/v1/maps/:id/payouts', limit, async (c) => {
+    const id = aboutKey(c.req.param('id'));
+    const time = (k: string) => {
+      const v = c.req.query(k) || undefined;
+      return v === undefined
+        ? undefined
+        : Number.isNaN(Date.parse(v))
+          ? null
+          : new Date(v).toISOString();
+    };
+    const [since, until] = [time('since'), time('until')];
+    if (since === null || until === null)
+      return respond(c, versioned(toolError('bad_input', 'since and until are ISO times.')));
+    const p = await payoutsOf(ctx, id);
+    return respond(
+      c,
+      p
+        ? {
+            about: p.about,
+            source: p.source,
+            read_at: p.read_at,
+            ...payoutsIn(p, { ...(since ? { since } : {}), ...(until ? { until } : {}) }),
+          }
+        : versioned(toolError('not_found', 'No payouts read for that map.')),
     );
   });
   // A map's claims by Petals' own mapping (Elco, 11 Nov: "show them"): about its accounts, the same for everyone.
