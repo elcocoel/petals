@@ -8,7 +8,6 @@ import { Interpretation, SignatureLine } from '../components/Interpretation.tsx'
 import { Legend, LegendKeys } from '../components/Legend.tsx';
 import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
-import { PublishPress } from '../components/PublishPress.tsx';
 import { SourceList } from '../components/Sources.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Icon } from '../components/ui/Icon.tsx';
@@ -17,7 +16,6 @@ import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { populationWords } from '../lib/flower-view.ts';
 import type { FlowerPanelView, PanelView } from '../lib/panel-view.ts';
-import type { PublishPressView } from '../lib/publish-press.ts';
 import type { PanelSection } from '../lib/thread.ts';
 import type { WorthLine } from '../lib/value-view.ts';
 
@@ -46,7 +44,6 @@ function OpenFlower({
   note,
   about,
   conversation,
-  publish,
 }: {
   view: FlowerPanelView;
   petal: PetalDetail | null;
@@ -58,8 +55,6 @@ function OpenFlower({
   about?: ReactNode;
   /** The conversation the flower is open in, where a note about a petal is kept. */
   conversation?: string | null;
-  /** What the person kept about its map, published with one press, where there's some (/make) */
-  publish?: { view: PublishPressView; onPublish: () => void } | undefined;
 }) {
   return (
     <div className="flex flex-col gap-text-gap p-block-gap">
@@ -115,8 +110,6 @@ function OpenFlower({
           </TextLink>
         )}
       </div>
-      {/* what the person kept about this map, under what's said about it (Elco, 12 Nov: "get our information published") */}
-      {publish && <PublishPress view={publish.view} onPublish={publish.onPublish} />}
       {section === 'reading' && !petal && (
         <div>
           {view.interpretation && (
@@ -149,7 +142,6 @@ export function FlowerPanel({
   note,
   about,
   conversation,
-  publish,
 }: {
   view: PanelView;
   /** The selected petal's own record, when one is selected. */
@@ -165,8 +157,6 @@ export function FlowerPanel({
   about?: ReactNode;
   /** The conversation it's open in (a run's id or another door's), where a note about a petal is kept. */
   conversation?: string | null;
-  /** What the person kept about its map, published with one press (/make) */
-  publish?: { view: PublishPressView; onPublish: () => void } | undefined;
 }) {
   if (view.kind === 'flower') {
     return (
@@ -180,7 +170,6 @@ export function FlowerPanel({
         note={note}
         about={about}
         conversation={conversation ?? null}
-        publish={publish}
       />
     );
   }

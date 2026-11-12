@@ -218,6 +218,19 @@ export interface PublishableData {
   }[];
   /** already on the shared map */
   published: number;
+  /** what the press would add, per layer and kind, and what can't go yet and why (SYSTEMS, wave 3) */
+  adds?: PublishAdds[];
+}
+
+/** One layer's share of a publish: Insights · Names · 35, or Readings, which can't go yet, and why. */
+export interface PublishAdds {
+  layer: string;
+  kind: string;
+  verb?: string;
+  label: string;
+  count: number;
+  goes: boolean;
+  why?: string;
 }
 
 /** Where a name comes from: the proposal that declares it, with its words, or a transaction. */

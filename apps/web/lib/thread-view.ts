@@ -12,6 +12,7 @@ import type {
 import { aboutLabel, readAbout } from './ask-about.ts';
 import { type CeremonyView, ceremonyView, ceremonyWords } from './ceremony.ts';
 import { chainLabel, dateLabel, flowerImage, networkLabel } from './flower-view.ts';
+import { modeWords } from './mapping.ts';
 import { type Block as MarkdownBlock, parseMarkdown } from './markdown.ts';
 import { PAYMENT_REQUIRED } from './pay.ts';
 import { blocksOf, type ChatState, type Done, type Opened, type Step } from './thread.ts';
@@ -424,6 +425,8 @@ export interface ComposerView {
   away?: boolean;
   /** which state the person is in: exploring what's there, or creating a new data packet (Elco, 12 Nov) */
   state?: string;
+  /** the two states, the one the person is in pressed (lib/mapping.ts) */
+  modes?: { now: 'exploring' | 'mapping'; exploring: string; mapping: string };
 }
 
 // Drafts (design/minimally-good.md, rule 5: no "Ask" as a label).
@@ -443,6 +446,8 @@ export function composerView(
     unavailable?: boolean;
     /** the person said yes to a new map and its read is running (lib/ceremony.ts) */
     creating?: boolean;
+    /** exploring or mapping (lib/mapping.ts) */
+    mode?: 'exploring' | 'mapping';
   },
 ): ComposerView {
   if (v.elsewhere) {
@@ -474,7 +479,17 @@ export function composerView(
           : 'A network, a DAO, a token or an address.',
     button: v.busy ? 'Working…' : v.recorded ? 'Play the recorded run' : 'Send',
     disabled: v.busy || (!v.recorded && !v.question.trim()),
-    ...(v.recorded ? {} : { state: v.creating ? ceremonyWords.creating : ceremonyWords.exploring }),
+    // the two states, switchable; while a new read runs, it says so under them
+    ...(v.recorded
+      ? {}
+      : {
+          modes: {
+            now: v.mode ?? 'exploring',
+            exploring: modeWords.exploring,
+            mapping: modeWords.mapping,
+          },
+          ...(v.creating ? { state: ceremonyWords.creating } : {}),
+        }),
     ...(target.kind === 'wallet' || target.kind === 'group'
       ? { about: aboutLabel(target.line) }
       : {}),
