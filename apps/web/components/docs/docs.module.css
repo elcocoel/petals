@@ -459,3 +459,35 @@ main:has(.shell) {
   padding-top: var(--spacing-block-gap);
   border-top: var(--stroke) solid var(--hairline);
 }
+
+/* The search over the navigation (Elco, 12 Nov: "the search function"): its field, then the pages it finds. */
+.search {
+  margin-bottom: var(--spacing-space-16);
+}
+.hits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-space-8);
+  margin-top: var(--spacing-space-16);
+}
+.hits a {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-space-4);
+}
+.hitTitle {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.hitHeading {
+  color: var(--text-primary);
+}
+.hitSnippet {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.hitSnippet strong {
+  color: var(--text-primary);
+}
