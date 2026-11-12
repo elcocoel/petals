@@ -10,6 +10,8 @@ export interface SearchAnswer {
   id: string;
   title: string;
   about?: string | null;
+  /** the words around the match, in pieces, each saying whether it matched */
+  snippet?: { text: string; hit: boolean }[];
   matched?: { kind: string; id: string; title: string }[];
 }
 

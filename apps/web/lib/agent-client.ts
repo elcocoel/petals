@@ -211,6 +211,18 @@ export async function searchMap(q: string, ordered: boolean): Promise<SearchBody
   return (await res.json()) as SearchBody;
 }
 
+/**
+ * Search in /docs (Elco, 12 Nov: "the search function"): the pages /docs renders, each by its file's path in the
+ * repository, with the sections that matched. The same quick and ordered asks as the map's.
+ */
+export async function searchDocs(q: string, ordered: boolean): Promise<SearchBody | null> {
+  const ask = new URLSearchParams({ q, kinds: 'doc', limit: '8' });
+  if (!ordered) ask.set('rerank', '0');
+  const res = await fetch(`/api/v1/search?${ask}`);
+  if (!res.ok) return null;
+  return (await res.json()) as SearchBody;
+}
+
 export async function readDrawingSpec(sha: string): Promise<Spec | null> {
   const res = await fetch(`/d/${encodeURIComponent(sha)}`);
   void res.body?.cancel();
