@@ -155,3 +155,27 @@ describe("DefiLlama's treasury", () => {
     expect(asked.filter((u) => u.endsWith('/protocols'))).toHaveLength(1);
   });
 });
+
+describe("CoinGecko's Demo key", () => {
+  test('goes in a header only, never in the address or a ref', async () => {
+    const seen: Array<{ url: string; key: string | null }> = [];
+    const fetchImpl = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      seen.push({ url, key: new Headers(init?.headers).get('x-cg-demo-api-key') });
+      if (url.includes('/coins/list'))
+        return new Response(JSON.stringify([{ id: 'uniswap', platforms: { ethereum: UNI } }]));
+      return new Response(
+        JSON.stringify([{ id: 'uniswap', circulating_supply: 1, last_updated: AT }]),
+      );
+    }) as typeof fetch;
+    const r = await coinGeckoMarkets(
+      fetchImpl,
+      [{ chain: 'ethereum', asset: UNI }],
+      undefined,
+      'k-secret',
+    );
+    expect(seen.map((s) => s.key)).toEqual(['k-secret', 'k-secret']);
+    expect(seen.some((s) => s.url.includes('k-secret'))).toBe(false);
+    expect(JSON.stringify([...r.markets.values()])).not.toContain('k-secret');
+  });
+});

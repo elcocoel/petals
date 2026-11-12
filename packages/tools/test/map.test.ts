@@ -550,6 +550,63 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(again).toMatchObject({ petal: 'value/v3', treasury: chainTreasury });
   });
 
+  test("the value run keeps what's kept (12 Nov): a value for another asset stays whole and gains only value/v3's fields; a price read before stays when this read finds none", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const store = privateStore(r.ctx.config);
+    const about = `eip155:1:${DAO}`;
+    const fetchImpl = (async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.startsWith('https://1click.chaindefuser.com/')) return new Response('[]');
+      if (url.includes('api.coingecko.com') && url.includes('/coins/markets'))
+        return new Response(
+          JSON.stringify([{ id: 'near', circulating_supply: 1311498499, market_cap: 4516665124 }]),
+        );
+      if (url.includes('api.coingecko.com')) return new Response('[]');
+      return new Response(JSON.stringify({ coins: {} }));
+    }) as typeof fetch;
+    // a wave's value for NEAR, as it wrote it
+    const wave = {
+      petal: 'value/v1',
+      about,
+      asset: { id: 'near:native', symbol: 'NEAR' },
+      price: { usd: 3.74, source: '1click', ref: 'wave', at: '2026-11-11T00:00:00.000Z' },
+      supply: null,
+      snapshot: MOLOCH,
+      measure: 'shares',
+      totals: [],
+      read_at: '2026-11-11T00:00:00.000Z',
+    };
+    await store.value.put({ about, body: JSON.stringify(wave), read_at: wave.read_at });
+    await valueMaps(r.ctx, { fetch: fetchImpl });
+    const v = JSON.parse((await store.value.get(about))?.body ?? '{}');
+    expect(v).toMatchObject({
+      petal: 'value/v3',
+      asset: wave.asset,
+      price: wave.price,
+      totals: [],
+      circulating: { amount: '1311498499', source: 'coingecko' },
+    });
+
+    // the asset this pass picks itself, priced before: a read that finds no price keeps that price
+    const fresh = await rig();
+    fresh.ctx.modules = r.ctx.modules;
+    const own = privateStore(fresh.ctx.config);
+    r = fresh;
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    await valueMaps(r.ctx, { fetch: fetchImpl });
+    const picked = JSON.parse((await own.value.get(about))?.body ?? '{}');
+    expect(picked.price).toBeNull();
+    await own.value.put({
+      about,
+      body: JSON.stringify({ ...picked, price: wave.price }),
+      read_at: picked.read_at,
+    });
+    await valueMaps(r.ctx, { fetch: fetchImpl });
+    const again = JSON.parse((await own.value.get(about))?.body ?? '{}');
+    expect(again.asset).toEqual(picked.asset);
+    expect(again.price).toEqual(wave.price);
+  });
+
   test("a map's proposals (#93): its card says how many, and GET /api/v1/maps/:id/proposals gives each vote", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const store = privateStore(r.ctx.config);

@@ -51,12 +51,31 @@ function assetOf(
   return typeof h?.asset === 'string' ? h.asset : null;
 }
 
+const sameId = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+
+/** The asset a kept value names, when it isn't the one this pass would pick: then the kept value stays. */
+const keptAsset = (p: { asset: string; stored: Value | null }): string | null =>
+  p.stored && !sameId(p.stored.asset.id, p.asset) ? p.stored.asset.id : null;
+
+/** NEAR's own coin, as readings write it. */
+const NEAR_FORMS = new Set(['NEAR', 'near:native', 'near:mainnet:NEAR']);
+
+/** How the markets know an asset a reading names: NEAR by name, a NEAR token by its contract. */
+const marketAsset = (id: string): string =>
+  NEAR_FORMS.has(id)
+    ? 'NEAR'
+    : id.startsWith('near:mainnet:')
+      ? id.slice('near:mainnet:'.length)
+      : id;
+
 export interface ValueRun {
   only?: string;
   save?: boolean;
   fetch?: Fetch;
   now?: () => Date;
   log?: (line: string) => void;
+  /** CoinGecko's Demo key; default COINGECKO_API_KEY, keyless without it */
+  coingeckoKey?: string;
 }
 export interface ValueRunResult {
   maps: number;
@@ -98,6 +117,8 @@ export async function valueMaps(ctx: ToolContext, o: ValueRun = {}): Promise<Val
     reader: string | null;
     measure: string | null;
     asset: string;
+    /** the value kept for this map, when there is one */
+    stored: Value | null;
   }> = [];
   for (const card of cards) {
     const newest = card.readings[0];
@@ -114,18 +135,76 @@ export async function valueMaps(ctx: ToolContext, o: ValueRun = {}): Promise<Val
       log(`${card.id}: holds nothing to value`);
       continue;
     }
-    plans.push({ card, newest, snapshot, reader, measure, asset });
+    const storedRow = await store.value.get(card.id);
+    const checked = storedRow ? validateValue(JSON.parse(storedRow.body)) : null;
+    plans.push({
+      card,
+      newest,
+      snapshot,
+      reader,
+      measure,
+      asset,
+      stored: checked?.ok ? checked.value : null,
+    });
   }
   // CoinGecko's markets for every token at once: its coin list, then 250 coins a call
   const gecko = await coinGeckoMarkets(
     fetchImpl,
-    plans.map((p) => ({ chain: chainOf(p.card), asset: p.asset })),
+    plans.map((p) => ({ chain: chainOf(p.card), asset: marketAsset(keptAsset(p) ?? p.asset) })),
     now,
+    o.coingeckoKey ?? (process.env.COINGECKO_API_KEY?.trim() || undefined),
   );
   for (const a of gecko.ambiguous) log(`coingecko: two coins claim ${a}, left unsaid`);
-  for (const { card, newest, snapshot, reader, measure, asset } of plans) {
+  for (const plan of plans) {
+    const { card, newest, snapshot, reader, measure, asset, stored } = plan;
     const at = now().toISOString();
     const chain = chainOf(card);
+    // a value kept for another asset than this pass would pick (the mapping waves' own) stays whole, and
+    // gains only what value/v3 adds: its token as the markets count it, and a treasury where it has none
+    const other = keptAsset(plan);
+    if (other && stored) {
+      const m = marketAsset(other);
+      const market = marketOf(gecko.markets, chain, m);
+      const max = (await readChainMax(fetchImpl, chain, m, at)) ?? market?.max ?? null;
+      const kept =
+        stored.treasury && treasurySource(stored.treasury)?.source === 'chain'
+          ? stored.treasury
+          : null;
+      const found =
+        kept || !card.address ? null : await llama.treasuryOf(chain, card.address, stored.asset);
+      const value: Value = {
+        petal: VALUE_V3,
+        about: stored.about,
+        asset: stored.asset,
+        price: stored.price,
+        supply: stored.supply,
+        circulating: market?.circulating ?? null,
+        max,
+        ...(market?.market_cap ? { market_cap: market.market_cap } : {}),
+        snapshot: stored.snapshot,
+        measure: stored.measure,
+        totals: stored.totals,
+        treasury: kept ?? found?.treasury ?? stored.treasury ?? null,
+        read_at: at,
+      };
+      if (!validateValue(value).ok) {
+        log(`${card.id}: kept as it was, its value/v3 isn't valid`);
+        continue;
+      }
+      if (value.price) out.priced++;
+      if (value.supply) out.supplied++;
+      if (value.circulating) out.circulating++;
+      if (max) out.maxed++;
+      if (value.treasury) out.treasuries++;
+      log(
+        `${card.id}: kept for ${other}, as it was · circulating ${value.circulating?.amount ?? '-'} · max ${max ? (max.amount ?? 'none') : '-'}`,
+      );
+      if (o.save === false) continue;
+      await store.value.put({ about: value.about, body: JSON.stringify(value), read_at: at });
+      out.saved++;
+      continue;
+    }
+    const sameKept = stored && sameId(stored.asset.id, asset) ? stored : null;
     const priced = await prices.priceOf(chain, asset);
     // the symbol its mark says, when the price doesn't
     const markRow = await store.mark.get(card.id);
@@ -133,23 +212,21 @@ export async function valueMaps(ctx: ToolContext, o: ValueRun = {}): Promise<Val
     const markSymbol = mark?.ok ? ((mark.value.symbol as MarkSaid | null)?.value ?? null) : null;
     const symbol = priced?.symbol ?? markSymbol;
     const pricedHere = priced || STAKED.has(reader ?? '') || PRICED.has(reader ?? '');
-    const supply = pricedHere
-      ? await readSupply(fetchImpl, chain, asset, at, symbol ?? 'tokens')
-      : null;
+    // a price or supply read before stays when this read finds none: what's kept isn't lost
+    const supply =
+      (pricedHere ? await readSupply(fetchImpl, chain, asset, at, symbol ?? 'tokens') : null) ??
+      sameKept?.supply ??
+      null;
     const price = priced
       ? { usd: priced.usd, source: priced.source, ref: priced.ref, at: priced.at }
-      : null;
+      : (sameKept?.price ?? null);
     const market = marketOf(gecko.markets, chain, asset);
     const max =
       (pricedHere ? await readChainMax(fetchImpl, chain, asset, at) : null) ?? market?.max ?? null;
     // a treasury the chain gave (the waves' value/v2) stays; else DefiLlama's, read again
-    const storedRow = await store.value.get(card.id);
-    const stored = storedRow ? validateValue(JSON.parse(storedRow.body)) : null;
     const kept: ValueTreasury | null =
-      stored?.ok &&
-      stored.value.treasury &&
-      treasurySource(stored.value.treasury)?.source === 'chain'
-        ? stored.value.treasury
+      stored?.treasury && treasurySource(stored.treasury)?.source === 'chain'
+        ? stored.treasury
         : null;
     const llamaFound =
       kept || !card.address

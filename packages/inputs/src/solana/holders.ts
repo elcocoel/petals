@@ -171,6 +171,22 @@ export function base58(bytes: Uint8Array): string {
   return out;
 }
 
+/** A base58 public key as its raw bytes, the form a scan keeps an owner in; null when it isn't one. */
+export function fromBase58(text: string, size = 32): Buffer | null {
+  let n = 0n;
+  for (const c of text) {
+    const i = ALPHABET.indexOf(c);
+    if (i < 0) return null;
+    n = n * 58n + BigInt(i);
+  }
+  const hex = n === 0n ? '' : n.toString(16);
+  const body = Buffer.from(hex.length % 2 ? `0${hex}` : hex, 'hex');
+  const zeros = text.length - text.replace(/^1+/, '').length;
+  const bytes = Buffer.concat([Buffer.alloc(zeros), body]);
+  if (bytes.length > size) return null;
+  return Buffer.concat([Buffer.alloc(size - bytes.length), bytes]);
+}
+
 /** One rank band of folded wallets. */
 export interface HolderBand {
   /** first and last rank in the band, 1 is the largest wallet */
