@@ -2,6 +2,7 @@
 // column, and the box stays below it. A flower's row is drawn by whoever composes this, so the view
 // holds no state and no calls.
 import type { ReactNode, Ref } from 'react';
+import type { CeremonyView } from '../../lib/ceremony.ts';
 import type { FlowerRow, JobRowData, Row, StoredRow } from '../../lib/thread-view.ts';
 import { Markdown } from '../Markdown.tsx';
 import { AnsweredBy } from './AnsweredBy.tsx';
@@ -18,6 +19,7 @@ export function Thread({
   renderFlower,
   renderPay,
   renderJob,
+  renderCeremony,
   onRefollow,
   onLink,
 }: {
@@ -33,6 +35,8 @@ export function Thread({
   renderPay?: (row: { key: string; first?: true }) => ReactNode;
   /** A job handed to the person's own agent, drawn by whoever composes this (C). */
   renderJob?: (row: JobRowData) => ReactNode;
+  /** A new map waiting for the person's yes, drawn by whoever composes this (lib/ceremony.ts). */
+  renderCeremony?: (row: { key: string; view: CeremonyView }) => ReactNode;
   onRefollow?: () => void;
   /** A link in the agent's words: true when it was handled here and shouldn't navigate. */
   onLink?: (href: string) => boolean;
@@ -86,6 +90,8 @@ export function Thread({
               return renderPay?.(row) ?? null;
             case 'job':
               return renderJob?.(row) ?? null;
+            case 'ceremony':
+              return renderCeremony?.(row) ?? null;
             case 'done':
               return <AnsweredBy key={row.key} line={row.line} summary={row.summary} />;
             case 'turn':
