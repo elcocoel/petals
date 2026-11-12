@@ -757,10 +757,15 @@ export function LandscapeCanvas({
                 )}
                 <div className="flex flex-col px-space-8">
                   <SectionHead size="panel" title={panelWords.infoSeen} />
-                  <div className="flex flex-col gap-space-4 px-space-8 py-space-8">
-                    <p className="my-0 type-ui text-muted">{panelWords.legendLines}</p>
-                    <p className="my-0 type-ui text-primary">{panelWords.legendLinesSay}</p>
-                  </div>
+                  {/* each mark on the map, far to near: its name, quiet, then what it is (Elco, walk 3) */}
+                  <dl className="my-0 flex flex-col gap-space-8 px-space-8 py-space-8">
+                    {panelWords.seen.map((m) => (
+                      <div key={m.label} className="flex flex-col">
+                        <dt className="type-ui text-muted">{m.label}</dt>
+                        <dd className="m-0 type-ui text-primary">{m.says}</dd>
+                      </div>
+                    ))}
+                  </dl>
                 </div>
               </div>
             </FloatBox>
