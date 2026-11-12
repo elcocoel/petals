@@ -18,8 +18,8 @@ describe('SYSTEM_PROMPT', () => {
   test('came out shorter, because every byte is resent each turn', () => {
     // 8,122 before the cut, which came to about 8,100; the section on investigating adds about 450, and
     // who's behind an address (Elco, 10 Nov, run 9c599a61) about 160; what's already on the map (Elco, 12 Nov,
-    // run 421a5e8a: thirteen tool calls to count what the map held) about 1,040.
-    expect(Buffer.byteLength(readFileSync(PROMPT_FILE, 'utf8'))).toBeLessThan(10300);
+    // run 421a5e8a: thirteen tool calls to count what the map held) about 1,040; publishing (12 Nov) about 160.
+    expect(Buffer.byteLength(readFileSync(PROMPT_FILE, 'utf8'))).toBeLessThan(10500);
   });
 
   test('walks the six steps in the skill order, list_flowers first', () => {

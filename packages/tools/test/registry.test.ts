@@ -24,6 +24,7 @@ const PHASE_A = [
   'quote_payment',
   'look_up',
   'get_map',
+  'list_publishable',
   'find_target',
   'read_chain',
   'read_page',

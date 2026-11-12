@@ -24,6 +24,7 @@ export {
   claimRef,
   claimsFromMap,
   DEFAULT_LENS,
+  declaredName,
   distinctCounts,
   EVIDENCE_FIELD,
   EVIDENCE_TYPES,

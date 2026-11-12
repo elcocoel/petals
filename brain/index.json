@@ -555,7 +555,8 @@
         "find_voting_blocs",
         "list_payouts",
         "describe_snapshot",
-        "compute_figures"
+        "compute_figures",
+        "list_publishable"
       ],
       "continues": [
         "going-deeper",
@@ -565,7 +566,7 @@
       ],
       "status": "ready",
       "file": "investigation/on-the-map.md",
-      "sha256": "4dc0003aaf7721db35fcac18ec4c8568826ca86b153463faab8e27c43ac05a79"
+      "sha256": "ba25b9c6b81a6454250b51342ab338792296fe7d01f6dd5f0146686ac276f428"
     },
     {
       "id": "open-calls",

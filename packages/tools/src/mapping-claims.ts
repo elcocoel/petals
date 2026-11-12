@@ -17,6 +17,12 @@ export const ADDRESS =
 /** Whose they are: Petals' own mapping, which no person's id can be. */
 export const MAPPING = 'mapping.petals.near';
 
+/**
+ * What people published to the shared map (publish-data.ts, 12 Nov): everyone's to read, beside the mapping's,
+ * each claim saying who answers for it (its `by`), and its row keeping the signature that published it.
+ */
+export const PUBLISHED = 'published';
+
 /** Keep a wave's checked claims as the mapping's; one kept already stays as it was. How many are new. */
 export async function keepMappingClaims(
   ctx: ToolContext,
@@ -71,12 +77,13 @@ export async function mapClaims(ctx: ToolContext, id: string): Promise<Claim[] |
   return claimsAbout(ctx, await cardAccounts(ctx, card));
 }
 
-/** Petals' mapping's claims about these accounts, oldest first, none retired. */
+/** The claims about these accounts that everyone reads: Petals' mapping's, then what people published; none retired. */
 export async function claimsAbout(
   ctx: ToolContext,
   accounts: ReadonlySet<string>,
 ): Promise<Claim[]> {
-  return (await privateStore(ctx.config).annotation.list(MAPPING))
+  const store = privateStore(ctx.config);
+  return [...(await store.annotation.list(MAPPING)), ...(await store.annotation.list(PUBLISHED))]
     .filter((r) => aboutOneOf(accounts, r.subject) && !retiredClaim(r.id))
     .map((r) => JSON.parse(r.body) as Claim);
 }
