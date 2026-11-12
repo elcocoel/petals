@@ -67,11 +67,10 @@ const pinned = (pin: Pin, m: Motion): CSSProperties => {
 const centreY = (wide: boolean) => (wide ? 46.59 : 48.33);
 const trackY = (wide: boolean) => (wide ? 86 : 70);
 
-/** The stage's edges, where the world fades out; with its own perspective, as the stage has. */
-const EDGE = 'linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent)';
+/** The stage's edges, where the world fades out (the version's stage-fade); with its own perspective, as the stage has. */
 const EDGES: CSSProperties = {
   perspective: '900px',
-  maskImage: `${EDGE}, ${EDGE.replace('90deg', '180deg')}`,
+  maskImage: 'var(--joy-gradient-stage-fade)',
   maskComposite: 'intersect',
   WebkitMaskComposite: 'source-in',
 };
