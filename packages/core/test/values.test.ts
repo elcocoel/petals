@@ -111,3 +111,31 @@ describe('value/v2', () => {
     expect(validateValue(without).ok).toBe(false);
   });
 });
+
+describe('value/v3', () => {
+  const fixture = () =>
+    JSON.parse(
+      readFileSync(join(import.meta.dirname, '..', 'schema', 'fixtures', 'value.v3.json'), 'utf8'),
+    );
+  test("value/v2 with circulating, max and market cap, each naming its source: Uniswap's, with DefiLlama's treasury", () => {
+    const v = fixture();
+    expect(validateValue(v).ok).toBe(true);
+    expect(v.circulating.source).toBe('coingecko');
+    expect(v.treasury.items[0].source.ref).toBe(
+      'Ethereum-OwnTokens (https://api.llama.fi/treasury/uniswap)',
+    );
+  });
+
+  test('each amount names where it came from; max may say there is none; market cap may be absent', () => {
+    const v = fixture();
+    const { source: _s, ...nameless } = v.circulating;
+    expect(validateValue({ ...v, circulating: nameless }).ok).toBe(false);
+    const none = { amount: null, source: 'chain', ref: 'max_inflation_rate 1/40', at: v.read_at };
+    expect(validateValue({ ...v, max: none }).ok).toBe(true);
+    expect(validateValue({ ...v, circulating: null, max: null }).ok).toBe(true);
+    const { market_cap: _m, ...noCap } = v;
+    expect(validateValue(noCap).ok).toBe(true);
+    const { circulating: _c, ...without } = v;
+    expect(validateValue(without).ok).toBe(false);
+  });
+});

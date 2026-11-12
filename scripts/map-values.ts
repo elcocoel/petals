@@ -1,7 +1,9 @@
 // What each map's token is worth (board #91; Elco, 11 Nov: "monetary estimates of the value of these petals
 // and the stakes and the supply"): each map on the shared map, its token's price from NEAR Intents' 1Click
-// list, its supply from its chain and its newest reading's totals at that price, kept as value/v1 by the
-// map's address. A token 1Click doesn't list says no price. It writes to the server's own store, so run it
+// list, its supply from its chain and its newest reading's totals at that price, kept as value/v3 by the
+// map's address, with its circulating supply, max and market cap (the chain's max first, else CoinGecko's)
+// and its treasury (one the chain gave stays; else DefiLlama's). A token nothing prices says no price.
+// It writes to the server's own store, so run it
 // where the server runs:
 //   container exec petals node /app/scripts/map-values.ts [--dry] [--only <part of a map's address>]
 // --dry reads and says, and keeps nothing. Read again, a map's value is replaced.
@@ -18,5 +20,5 @@ const r = await valueMaps(ctx, {
   log: (line) => console.log(line),
 });
 console.log(
-  `${r.maps} maps: ${r.priced} priced, ${r.supplied} with a supply; ${values.dry ? 'nothing kept (--dry)' : `${r.saved} kept`}${r.failed_lists.length ? `; not read: ${r.failed_lists.join(', ')}` : ''}`,
+  `${r.maps} maps: ${r.priced} priced, ${r.supplied} with a supply, ${r.circulating} circulating, ${r.maxed} with a max, ${r.treasuries} with a treasury; ${values.dry ? 'nothing kept (--dry)' : `${r.saved} kept`}${r.failed_lists.length ? `; not read: ${r.failed_lists.join(', ')}` : ''}`,
 );

@@ -129,11 +129,17 @@ export type * from './types/index.ts';
 export { validateSnapshot, validateSpec } from './validate/index.ts';
 export {
   usdString,
+  VALUE_V3,
   VALUE_VERSION,
   type Value,
+  type ValueMarketCap,
+  type ValueMax,
   type ValuePrice,
+  type ValueSaid,
   type ValueSupply,
   type ValueTotal,
+  type ValueTreasury,
+  type ValueTreasuryItem,
   validateValue,
   valuePieces,
   valueTotals,

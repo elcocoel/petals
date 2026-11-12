@@ -22,6 +22,7 @@ import snapshotSchema from '../../schema/snapshot.schema.json' with { type: 'jso
 import usageSchema from '../../schema/usage.schema.json' with { type: 'json' };
 import valueSchema from '../../schema/value.schema.json' with { type: 'json' };
 import valueV2Schema from '../../schema/value-v2.schema.json' with { type: 'json' };
+import valueV3Schema from '../../schema/value-v3.schema.json' with { type: 'json' };
 import viewSchema from '../../schema/view.schema.json' with { type: 'json' };
 import viewV2Schema from '../../schema/view-v2.schema.json' with { type: 'json' };
 
@@ -75,6 +76,8 @@ export const schemas: {
   /** a map's token in dollars, its supply, and its reading's totals at that price (#91) */
   value: object;
   valueV2: object;
+  /** the same with the token's circulating supply, its max and its market cap, each naming its source (12 Nov) */
+  valueV3: object;
   /** a DAO's proposals and each account's vote on each (#93) */
   proposals: object;
   /** the same with closed, recipients, options, and a ballot's choices and weights (11 Nov) */
@@ -102,6 +105,7 @@ export const schemas: {
   markV2: markV2Schema,
   value: valueSchema,
   valueV2: valueV2Schema,
+  valueV3: valueV3Schema,
   proposals: proposalsSchema,
   proposalsV2: proposalsV2Schema,
 };

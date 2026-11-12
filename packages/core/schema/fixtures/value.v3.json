@@ -1,0 +1,135 @@
+{
+  "petal": "value/v3",
+  "about": "eip155:1:0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+  "asset": {
+    "id": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+    "symbol": "UNI"
+  },
+  "price": {
+    "usd": 6.44,
+    "source": "1click",
+    "ref": "nep141:eth-0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.omft.near (https://1click.chaindefuser.com/v0/tokens)",
+    "at": "2026-11-11T14:31:01.004Z"
+  },
+  "supply": {
+    "amount": "1000000000",
+    "unit": "UNI",
+    "source": "chain",
+    "ref": "totalSupply() and decimals() on eip155:1:0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+    "at": "2026-11-11T14:39:34.986Z"
+  },
+  "circulating": {
+    "amount": "607715895.875979",
+    "source": "coingecko",
+    "ref": "uniswap, circulating_supply (https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=uniswap)",
+    "at": "2026-11-12T12:11:54.000Z"
+  },
+  "max": {
+    "amount": "1000000000",
+    "source": "coingecko",
+    "ref": "uniswap, max_supply (https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=uniswap); the token holds no cap() to read",
+    "at": "2026-11-12T12:11:54.000Z"
+  },
+  "market_cap": {
+    "usd": "3695648655",
+    "source": "coingecko",
+    "ref": "uniswap, market_cap (https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=uniswap)",
+    "at": "2026-11-12T12:11:54.000Z"
+  },
+  "snapshot": "09e468bf6e3d4627d463e70d6cbed1f0764a1322a1f4275adf07c6055bef7828",
+  "measure": "delegated_votes",
+  "totals": [
+    {
+      "measure": "delegated_votes",
+      "unit": "UNI",
+      "amount": "163454421.51614004",
+      "usd": "1052646474.56"
+    }
+  ],
+  "treasury": {
+    "items": [
+      {
+        "kind": "treasury asset",
+        "asset": {
+          "id": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+          "symbol": "UNI"
+        },
+        "amount": "262247996.30584",
+        "price": {
+          "usd": 6.179019,
+          "source": "defillama",
+          "ref": "UNI on Ethereum-OwnTokens, its dollars over its amount (https://api.llama.fi/treasury/uniswap)",
+          "at": "2026-11-12T03:37:11.000Z"
+        },
+        "usd": "1620435291.57",
+        "source": {
+          "ref": "Ethereum-OwnTokens (https://api.llama.fi/treasury/uniswap)",
+          "at": "2026-11-12T03:37:11.000Z"
+        }
+      },
+      {
+        "kind": "treasury asset",
+        "asset": {
+          "id": "defillama:ethereum:USDC",
+          "symbol": "USDC"
+        },
+        "amount": "135.38301",
+        "price": {
+          "usd": 0.999756,
+          "source": "defillama",
+          "ref": "USDC on Ethereum, its dollars over its amount (https://api.llama.fi/treasury/uniswap)",
+          "at": "2026-11-12T03:37:11.000Z"
+        },
+        "usd": "135.35",
+        "source": {
+          "ref": "Ethereum (https://api.llama.fi/treasury/uniswap)",
+          "at": "2026-11-12T03:37:11.000Z"
+        }
+      },
+      {
+        "kind": "treasury asset",
+        "asset": {
+          "id": "defillama:ethereum:USDT",
+          "symbol": "USDT"
+        },
+        "amount": "1002.28228",
+        "price": {
+          "usd": 0.998741,
+          "source": "defillama",
+          "ref": "USDT on Ethereum, its dollars over its amount (https://api.llama.fi/treasury/uniswap)",
+          "at": "2026-11-12T03:37:11.000Z"
+        },
+        "usd": "1001.02",
+        "source": {
+          "ref": "Ethereum (https://api.llama.fi/treasury/uniswap)",
+          "at": "2026-11-12T03:37:11.000Z"
+        }
+      },
+      {
+        "kind": "treasury asset",
+        "asset": {
+          "id": "defillama:ethereum:WETH",
+          "symbol": "WETH"
+        },
+        "amount": "0.23765",
+        "price": {
+          "usd": 2047.75931,
+          "source": "defillama",
+          "ref": "WETH on Ethereum, its dollars over its amount (https://api.llama.fi/treasury/uniswap)",
+          "at": "2026-11-12T03:37:11.000Z"
+        },
+        "usd": "486.65",
+        "source": {
+          "ref": "Ethereum (https://api.llama.fi/treasury/uniswap)",
+          "at": "2026-11-12T03:37:11.000Z"
+        }
+      }
+    ],
+    "total": {
+      "usd": "1620436914.59",
+      "priced": 4,
+      "unpriced": 0
+    }
+  },
+  "read_at": "2026-11-12T12:20:00.000Z"
+}

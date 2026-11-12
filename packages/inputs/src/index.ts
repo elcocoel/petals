@@ -150,6 +150,18 @@ export interface SnapshotStore {
   gz?(sha256: string): Promise<Uint8Array | null>;
 }
 export {
+  COINGECKO,
+  type CoinMarket,
+  coinGeckoMarkets,
+  LLAMA_PROTOCOLS,
+  LLAMA_TREASURY,
+  llamaItems,
+  llamaTreasuries,
+  marketOf,
+  readChainMax,
+  treasurySource,
+} from './marks/finance.ts';
+export {
   type MarkDeps,
   type MarkPicture,
   type MarkTarget,

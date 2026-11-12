@@ -455,7 +455,14 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(done).toMatchObject({ maps: 1, saved: 1, priced: 0 });
     const row = await store.value.get(`eip155:1:${DAO}`);
     const v = JSON.parse(row?.body ?? '{}');
-    expect(v).toMatchObject({ petal: 'value/v1', price: null, snapshot: MOLOCH });
+    expect(v).toMatchObject({
+      petal: 'value/v3',
+      price: null,
+      snapshot: MOLOCH,
+      circulating: null,
+      max: null,
+      treasury: null,
+    });
     expect(v.totals[0]).toMatchObject({ usd: null });
     expect(Number(v.totals[0].amount)).toBeGreaterThan(0);
 
@@ -478,6 +485,69 @@ describe('one map per address (Elco, 10 Nov)', () => {
         priced.totals.find((t: { measure: string }) => t.measure === v.measure)?.usd ?? null,
       supply_usd: null,
     });
+  });
+
+  test("the value run's treasury (value/v3, 12 Nov): DefiLlama's where it knows the map's DAO, naming its URL; one the chain gave stays", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const store = privateStore(r.ctx.config);
+    const day = 1794464231;
+    const fetchImpl = (async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.startsWith('https://1click.chaindefuser.com/')) return new Response('[]');
+      if (url.startsWith('https://api.coingecko.com/')) return new Response('[]');
+      if (url === 'https://api.llama.fi/protocols')
+        return new Response(
+          JSON.stringify([{ slug: 'founders', governanceID: [`eip155:1:${DAO}`] }]),
+        );
+      if (url === 'https://api.llama.fi/treasury/founders')
+        return new Response(
+          JSON.stringify({
+            chainTvls: {
+              Ethereum: {
+                tokens: [{ date: day, tokens: { USDC: 100, DUST: 3 } }],
+                tokensInUsd: [{ date: day, tokens: { USDC: 99.5 } }],
+              },
+            },
+          }),
+        );
+      return new Response(JSON.stringify({ coins: {} }));
+    }) as typeof fetch;
+    const done = await valueMaps(r.ctx, { fetch: fetchImpl });
+    expect(done).toMatchObject({ saved: 1, treasuries: 1 });
+    const v = JSON.parse((await store.value.get(`eip155:1:${DAO}`))?.body ?? '{}');
+    expect(v.treasury.total).toEqual({ usd: '99.50', priced: 1, unpriced: 1 });
+    expect(v.treasury.items[0]).toMatchObject({
+      asset: { id: 'defillama:ethereum:USDC', symbol: 'USDC' },
+      amount: '100',
+      usd: '99.50',
+      price: { usd: 0.995, source: 'defillama' },
+      source: { ref: 'Ethereum (https://api.llama.fi/treasury/founders)' },
+    });
+    expect(v.treasury.items[1]).toMatchObject({ price: null, usd: null });
+
+    // a treasury the chain gave (a wave's value/v2) is kept as it is, not DefiLlama's
+    const chainTreasury = {
+      items: [
+        {
+          kind: 'treasury asset',
+          asset: { id: 'native:ETH', symbol: 'ETH' },
+          amount: '2',
+          price: null,
+          usd: null,
+          source: { snapshot: MOLOCH, at: v.read_at },
+        },
+      ],
+      total: { usd: '0', priced: 0, unpriced: 1 },
+    };
+    const { circulating: _c, max: _m, ...rest } = v;
+    await store.value.put({
+      about: v.about,
+      body: JSON.stringify({ ...rest, petal: 'value/v2', treasury: chainTreasury }),
+      read_at: v.read_at,
+    });
+    await valueMaps(r.ctx, { fetch: fetchImpl });
+    const again = JSON.parse((await store.value.get(`eip155:1:${DAO}`))?.body ?? '{}');
+    expect(again).toMatchObject({ petal: 'value/v3', treasury: chainTreasury });
   });
 
   test("a map's proposals (#93): its card says how many, and GET /api/v1/maps/:id/proposals gives each vote", async () => {
