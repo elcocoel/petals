@@ -53,7 +53,8 @@ export async function readCalls(
         name,
         calls.map((c) => ({
           id: c.id,
-          closes: c.closes,
+          // one form for every source, so the text sorts as time (SYSTEMS's review)
+          closes: c.closes ? new Date(c.closes).toISOString() : null,
           body: JSON.stringify(c),
           read_at: readAt,
         })),

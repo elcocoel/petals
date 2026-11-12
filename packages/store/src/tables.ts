@@ -151,20 +151,20 @@ export interface MarkRow {
   body: string;
   read_at: string;
 }
-/** A map's value/v1 (27): its token's price, its supply and its reading's totals, each with where and when. */
 /** One open call (32), by its id: the calls/v1 as its source's reader last found it. */
 export interface OpenCallRow {
   /** the call's id, <source>:<id> or its link */
   id: string;
   /** the source that keeps it open: replaced as a whole on each read */
   source: string;
-  /** its deadline, as said, or null */
+  /** its deadline as an ISO string with milliseconds (sorted as text), or null */
   closes: string | null;
   /** the calls/v1, JSON */
   body: string;
   read_at: string;
 }
 
+/** A map's value/v1 (27): its token's price, its supply and its reading's totals, each with where and when. */
 export interface ValueRow {
   /** the map's address, as its card's id */
   about: string;

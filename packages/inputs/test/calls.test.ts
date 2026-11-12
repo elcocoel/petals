@@ -114,7 +114,7 @@ describe("NEAR's Infrastructure Committee", () => {
       id: 'infrastructure-committee.near:8',
       kind: 'rfp',
       status: 'ACCEPTING_SUBMISSIONS',
-      closes: '2025-05-29T00:00:00Z',
+      closes: '2025-05-29T00:00:00.000Z',
       link: 'https://near.social/infrastructure-committee.near/widget/app?page=rfp&id=8',
     });
   });

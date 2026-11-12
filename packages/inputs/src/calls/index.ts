@@ -140,7 +140,7 @@ export async function committeeCalls(pool: RpcPool, readAt: string): Promise<Cal
       offered_by: { name: 'NEAR Infrastructure Committee', about: null },
       budget: null,
       opens: null,
-      closes: s.submission_deadline ? nsToIso(s.submission_deadline) : null,
+      closes: s.submission_deadline ? new Date(nsToIso(s.submission_deadline)).toISOString() : null,
       status: s.timeline.status,
       link: `https://near.social/${INFRASTRUCTURE_COMMITTEE}/widget/app?page=rfp&id=${r.id}`,
       source: {
