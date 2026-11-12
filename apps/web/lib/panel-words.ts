@@ -37,6 +37,10 @@ export const panelWords = {
   legend: 'Legend',
   /** Under its Colour, on a map: each flower keys its own kinds (#76's keys, by how many petals carry each). */
   legendColours: "Each flower's own: its most common kind first",
+  /** What a line between two flowers on the map is (Elco, 12 Nov, walk 2: "a little bit mysterious"). Drafts. */
+  legendLines: 'Lines',
+  legendLinesSay:
+    'Wallets two maps both hold. The thicker the line, the more of them; its number says how many.',
   /**
    * Settings (coordinator/one-source.md, step 7): how each dimension draws data, for every petal you look
    * at. The dimensions' names are the view's own (view/v2); the rest are drafts.

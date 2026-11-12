@@ -112,6 +112,7 @@ export function ViewLegend({
   keysNote,
   edit,
   groups,
+  between,
   fold,
 }: {
   view: View;
@@ -129,6 +130,8 @@ export function ViewLegend({
    * them and choose one. Choosing highlights a group on the map; it changes no one's view.
    */
   groups?: LegendGroups | undefined;
+  /** On a map, what a line between two flowers is: its name and what it says. */
+  between?: { label: string; says: string } | undefined;
   /** It folds to its bar, as every overlay can (design/overlays.md, line 6). */
   fold?: { open: boolean; onToggle: () => void } | undefined;
 }) {
@@ -190,6 +193,12 @@ export function ViewLegend({
             </li>
           );
         })}
+        {between && (
+          <li>
+            <NavItem label={between.label} />
+            <p className="my-0 px-space-8 pb-space-8 type-ui text-muted">{between.says}</p>
+          </li>
+        )}
       </ul>
       {/* the default back at a press, while the view isn't it (Elco: "keep a reset to default button handy") */}
       {edit?.onReset && (
