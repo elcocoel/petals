@@ -10,6 +10,7 @@ export {
   blocClaims,
   votingBlocs,
 } from './blocs.ts';
+export { validateBrainReceipt } from './brain-receipt.ts';
 export {
   accountRef,
   applyPolicy,
@@ -155,4 +156,3 @@ export {
   latestView,
   viewHash,
 } from './view/index.ts';
-export { validateBrainReceipt } from './brain-receipt.ts';

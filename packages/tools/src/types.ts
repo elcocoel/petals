@@ -1,7 +1,6 @@
 // The tool contract types (packages.md, @petal/tools). Re-exported by index.ts; frozen at
 // packages/v1, so their shapes do not change here.
 
-import type { BrainReceipt } from './brain.ts';
 import type {
   Claim,
   Progress,
@@ -14,6 +13,7 @@ import type { FreshGate, InputModule, SnapshotStore } from '@petal/inputs';
 import type { Rpc } from '@petal/near/auth';
 import type { MapReader, MapWriter } from '@petal/near/map';
 import type { JobRow } from '@petal/store';
+import type { BrainReceipt } from './brain.ts';
 import type { Limits } from './limits.ts';
 import type { LiveHub } from './live.ts';
 import type { SearchModel } from './search-model.ts';

@@ -3,6 +3,8 @@
 // view-v2.schema.json of specs/006-the-map/contracts/view-v1.schema.json and view-v2.schema.json.
 // `spec`, `interpretation`, `entry`, `entryV2` and `correction` are self-contained views of the flower
 // schema: the same $defs with a different root, so any JSON Schema tool can use them alone.
+
+import brainReceiptSchema from '../../schema/brain-receipt.schema.json' with { type: 'json' };
 import claimSchema from '../../schema/claim.schema.json' with { type: 'json' };
 import claimV2Schema from '../../schema/claim-v2.schema.json' with { type: 'json' };
 import claimV3Schema from '../../schema/claim-v3.schema.json' with { type: 'json' };
@@ -18,7 +20,6 @@ import proposalsV2Schema from '../../schema/proposals-v2.schema.json' with { typ
 import seamSchema from '../../schema/seam.schema.json' with { type: 'json' };
 import snapshotSchema from '../../schema/snapshot.schema.json' with { type: 'json' };
 import usageSchema from '../../schema/usage.schema.json' with { type: 'json' };
-import brainReceiptSchema from '../../schema/brain-receipt.schema.json' with { type: 'json' };
 import valueSchema from '../../schema/value.schema.json' with { type: 'json' };
 import valueV2Schema from '../../schema/value-v2.schema.json' with { type: 'json' };
 import viewSchema from '../../schema/view.schema.json' with { type: 'json' };
