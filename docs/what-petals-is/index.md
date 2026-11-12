@@ -58,4 +58,4 @@ Each petal represents an account. A large one might represent many others throug
 
 A flower is drawn from its data and a view: settings that assign pieces of data to visual dimensions such as height, width, colour and segments. Height might show a share of voting power; bands inside a petal might show the backers behind a staking pool. Changing the view changes how you read the data, not the underlying records.
 
-[Read your first flower](/docs/getting-started/first-flower).
+[Read your first flower](/docs/ideas/read-a-flower).
