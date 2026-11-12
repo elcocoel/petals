@@ -668,6 +668,14 @@ export interface Motion {
 /** How far a bubble floats up and down while it is on, in px; and how far it sways, in degrees. */
 const FLOAT_PX = 3;
 const SWAY = 1.5;
+/**
+ * How far the call and the response are turned towards the flower once settled, in degrees, and how much wider they
+ * swing in: barely, a hint of depth (Elco, 12 Nov: the messages' 3D "way less aggressive ... it's not adding anything
+ * to the narrative to have it so tilted"); their sway as gentle.
+ */
+const TILT = 4;
+const TILT_IN = 6;
+const TILT_SWAY = 0.5;
 /** The question's float, once every two bars of its own beat. */
 const float = (u: number, phase: number) => Math.sin((Math.PI * u) / (4 * COUNT_MS) + phase);
 /** The whole story's length, and the answer box's float on it: six times round, so it never jumps as the loop turns. */
@@ -691,7 +699,7 @@ export function question(beat: number, u: number, fresh = false): Motion {
     y: 10 * (1 - inQ) - 16 * ease.backIn(out) + FLOAT_PX * float(u, 0),
     blur: 6 * (1 - ease.outCubic(at(u, start, EIGHTH))) + 0.6 * answered + 6 * leave,
     scale: 0.9 + 0.1 * inQ - 0.02 * answered,
-    turn: 15 + 20 * (1 - inQ) + 10 * leave + SWAY * float(u, 1),
+    turn: TILT + TILT_IN * (1 - inQ) + 3 * leave + TILT_SWAY * float(u, 1),
     z: 40 - 90 * answered - 60 * leave,
     glint: at(u, start + SIXTEENTH, COUNT_MS),
     glow: ease.outCubic(at(u, start, EIGHTH)) * (1 - 0.5 * answered),
@@ -711,7 +719,7 @@ export function answerBox(beat: number, t: number, fresh = false): Motion {
     y: 8 * (1 - inA) + FLOAT_PX * drift(beat, t, Math.PI),
     blur: 0,
     scale: 0.94 + 0.06 * inA,
-    turn: 13 + 16 * (1 - inA) + SWAY * drift(beat, t, Math.PI + 1),
+    turn: TILT + TILT_IN * (1 - inA) + TILT_SWAY * drift(beat, t, Math.PI + 1),
     z: 80,
     glint: at(t, respondAt(beat), 1.5 * COUNT_MS),
     glow: inA,

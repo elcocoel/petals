@@ -87,19 +87,32 @@ function Column({ children }: { children: ReactNode }) {
 }
 
 /** Where the flower's centre is in its own layer, in %: the drawing's 205 of 440, fitted to the stage's shape. */
-const centreY = (wide: boolean) => (wide ? 46.59 : 48.33);
+const centreY = (wide: boolean) => (wide ? 46.59 : 47.2);
 
-/** The words beside the stage: they never move, so they never redraw with it. */
+/** On a phone or a tablet each part of the words keeps the column's own gutter; beside the stage, the column's. */
+const GUTTER = 'px-block-gap md:px-page-inset lg:px-0';
+
+/**
+ * The words: they never move, so they never redraw with the stage. Beside the stage on a wide screen; on a phone
+ * or a tablet the headline, then the story, then the line under it and Connect (Elco, 12 Nov: words and stage in
+ * one screen; the nav carries Connect there too), so each part is placed on its own (`order`).
+ */
 const Intro = memo(function Intro() {
   return (
-    <div>
-      <SectionHead size="hero" eyebrow={hero.eyebrow} title={hero.titleWide} body={hero.body} />
-      <div className="mt-column-gap">
+    <>
+      <div className={`order-1 ${GUTTER}`}>
+        <SectionHead size="hero" eyebrow={hero.eyebrow} title={hero.titleWide} />
+      </div>
+      {/* the hero's body, as SectionHead sets it, rising as the head's does (head.rise) */}
+      <div data-b="head" className={`order-3 ${GUTTER}`}>
+        <p className="mt-block-gap mb-0 whitespace-pre-line text-pretty type-body">{hero.body}</p>
+      </div>
+      <div className={`order-4 mt-column-gap ${GUTTER}`}>
         <Button href={siteLinks.lobby} arrow>
           {hero.ask.action}
         </Button>
       </div>
-    </div>
+    </>
   );
 });
 
@@ -121,18 +134,19 @@ function Question({
   const m = question(beat, u, fresh);
   return (
     <div
-      className="absolute top-0 left-0 w-max max-w-4/5 lg:max-w-1/4"
+      className="absolute top-0 left-0 w-max max-w-3/5 sm:max-w-4/5 lg:max-w-1/4"
       style={pinned(questionPin(wide), m)}
     >
       <Glass tone="light" facing="right" glint={m.glint} glow={m.glow} />
-      <div className="relative flex flex-col gap-space-4 px-block-gap py-space-16">
+      {/* on a phone a size down and closer in, so the flower between the call and the response still shows */}
+      <div className="relative flex flex-col gap-space-4 px-space-16 py-space-8 sm:px-block-gap sm:py-space-16">
         <Mono>{story.you}</Mono>
         <div className="grid">
           {story.beats.map((b, own) => (
             <p
               key={b.name}
               aria-hidden={own !== beat}
-              className="col-start-1 row-start-1 my-0 text-pretty type-body lg:type-lead"
+              className="col-start-1 row-start-1 my-0 text-pretty type-caption sm:type-body lg:type-lead"
               style={{ visibility: own === beat ? undefined : 'hidden' }}
             >
               {b.q}
@@ -164,12 +178,12 @@ function Answer({
   const m = answerBox(beat, t, fresh);
   return (
     <div
-      className="absolute top-0 left-0 w-max max-w-9/10 lg:max-w-1/4"
+      className="absolute top-0 left-0 w-max max-w-2/3 sm:max-w-9/10 lg:max-w-1/4"
       style={pinned(answerPin(wide), m)}
     >
       {/* its rim lit from the flower's side */}
       <Glass tone="dark" facing="left" glint={m.glint} glow={m.glow} />
-      <div className="relative flex flex-col gap-space-8 px-block-gap py-space-16 text-on-action">
+      <div className="relative flex flex-col gap-space-4 px-space-16 py-space-8 text-on-action sm:gap-space-8 sm:px-block-gap sm:py-space-16">
         <p className="my-0 flex items-center gap-space-8 type-mono" style={{ opacity: 0.7 }}>
           <Icon name="petals" small />
           {story.petals}
@@ -181,7 +195,7 @@ function Answer({
               <p
                 key={b.name}
                 aria-hidden={own !== beat}
-                className="col-start-1 row-start-1 my-0 text-pretty type-heading"
+                className="col-start-1 row-start-1 my-0 text-pretty type-label sm:type-heading"
                 style={{
                   visibility: line.opacity > 0.002 ? undefined : 'hidden',
                   opacity: line.opacity,
@@ -250,21 +264,23 @@ export function HeroStoryView({
     <Section bleed padding="bar">
       {/*
         The story runs the whole width of the window (Elco, 12 Nov: "it just feels like a graph in a box instead of a
-        cinematic story"), sixteen by nine and short of the first screen, so the next band shows, with a way down to it; on a wide window the words sit over its
+        cinematic story"), sixteen by nine; on a very wide or tall window no taller than sixteen by nine of the page's
+        width (Elco, 12 Nov: "a max height here that tries to stay within what would be a video aspect ratio"), and
+        short of the first screen, so the next band shows, with a way down to it; on a wide window the words sit over its
         left side, in the page's column, and the story happens on the right, a little of it under the words. On a
-        phone, the words and then the stage.
+        phone or a tablet, the headline, the story four by three, then the rest of the words.
       */}
       <div className="relative left-1/2 flex w-screen -translate-x-1/2 flex-col">
-        <div className="pointer-events-none lg:absolute lg:inset-0 lg:z-10">
-          <div className="mx-auto flex h-full w-full max-w-page-width items-center px-block-gap pb-column-gap md:px-page-inset lg:pb-0">
-            <div className="pointer-events-auto lg:w-1/3">
+        <div className="contents lg:pointer-events-none lg:absolute lg:inset-0 lg:z-10 lg:block">
+          <div className="contents lg:mx-auto lg:flex lg:h-full lg:w-full lg:max-w-page-width lg:items-center lg:px-page-inset">
+            <div className="contents lg:pointer-events-auto lg:block lg:w-1/3">
               <Intro />
             </div>
           </div>
         </div>
         <div
           ref={clock.stage}
-          className="relative aspect-2/3 w-full lg:aspect-video lg:max-h-[calc(100svh-12rem)]" /* token-exempt: the story fits the first screen under the nav and leaves the next band in sight */
+          className="relative order-2 mt-space-16 aspect-4/3 max-h-[max(16rem,calc(100svh-24rem))] w-full lg:order-none lg:mt-0 lg:aspect-16/9 lg:max-h-[min(calc(100svh-12rem),calc(var(--spacing-page-width)*9/16))]" /* token-exempt: on a phone, four by three, shorter on a short screen so the headline and the story share the first screen under the nav; wide, sixteen by nine of the window, never taller than sixteen by nine of the page's width nor than the first screen, so the next band stays in sight */
           style={{ containerType: 'size', perspective: '900px' }}
         >
           {/* The world stays inside the stage, so the far map never spills onto the page; the map fades its own
