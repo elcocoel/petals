@@ -24,6 +24,11 @@ export interface Pin {
   cap?: number;
   /** In place of `y`: that many px below the column's top, where a measure of the page puts it. */
   py?: number;
+  /**
+   * In place of `x`: that many px in from where the Tools box reaches on the frame's side, as seen on screen
+   * (TOOLS_REACH); the view works the reach out from the window.
+   */
+  inFromReach?: number;
 }
 
 export interface Shot {
@@ -73,13 +78,30 @@ const NARROW: readonly Shot[] = [
 export const questionPin = (wide: boolean): Pin =>
   wide ? pin(34, 26, 0, 0, 200) : pin(0, 2, 0, 0);
 export const answerPin = (wide: boolean): Pin =>
-  wide ? pin(100, 64, 1, 0, 130) : pin(100, 98, 1, 1);
+  wide ? { ...pin(100, 64, 1, 0, 130), inFromReach: TOOLS_PAST } : pin(100, 98, 1, 1);
+
 /**
- * Where the Tools box sits on a wide stage, the same in every shot: on the column's right, over the flower, its top
- * level with the headline's and never above it (Elco, 12 Nov: "the top of the tools panel should not be taller than
- * the title"); the words are centred, so where that is comes from the page (`py`).
+ * How far past the column's right edge the Tools box reaches on a wide stage, at most, in px: towards the frame's
+ * edge, a gutter short of it, and no further than this on a very wide window, so it stays with the story (Elco, 12
+ * Nov: "the tool need to move to the edge of the frame").
  */
-export const toolsPin = (titleTop: number): Pin => ({ ...pin(100, 0, 1, 0), py: titleTop });
+export const TOOLS_REACH = 144;
+/**
+ * How much of the Tools box always shows past the right edge of Petals' answer, in px, so the answer is clearly in
+ * front of it and the two never read as one (Elco, 12 Nov: "some of it should be more to the right then the edge of
+ * the message, establishing a clear separation and silhouette").
+ */
+export const TOOLS_PAST = 80;
+/**
+ * Where the Tools box sits on a wide stage, the same in every shot: out on the frame's side as far as it reaches,
+ * over the flower, its top level with the headline's and never above it (Elco, 12 Nov: "the top of the tools panel
+ * should not be taller than the title"); the words are centred, so where that is comes from the page (`py`).
+ */
+export const toolsPin = (titleTop: number): Pin => ({
+  ...pin(100, 0, 1, 0),
+  py: titleTop,
+  inFromReach: 0,
+});
 
 /** How long the camera's whip from the last shot to this one takes, from the one, landing with a little give. */
 const WHIP_MS = 560;

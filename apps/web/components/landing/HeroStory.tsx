@@ -7,7 +7,14 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { answerPin, flowerAt, type Pin, questionPin, toolsPin } from '../../lib/hero-shots.ts';
+import {
+  answerPin,
+  flowerAt,
+  type Pin,
+  questionPin,
+  TOOLS_REACH,
+  toolsPin,
+} from '../../lib/hero-shots.ts';
 import {
   answerBox,
   answerLine,
@@ -59,16 +66,35 @@ const topOf = (p: Pin) =>
       ? `${p.y}cqh`
       : `calc(50cqh + clamp(-${p.cap}px, ${p.y - 50}cqh, ${p.cap}px))`;
 
+/** The column's depth of field: how far the viewer stands from it, in px. */
+const PERSPECTIVE = 900;
+
+/**
+ * How far past the column's right edge the Tools box reaches: to the frame's edge less a gutter (the window's
+ * margin round the page plus the page's inset), never further than TOOLS_REACH.
+ */
+const REACH = `min((100vw - min(100vw, var(--spacing-page-width))) / 2 + var(--spacing-page-inset) - var(--spacing-block-gap), ${TOOLS_REACH}px)`;
+
+/**
+ * Where a pin's point is across the column, as CSS: its % of the column; or, with `inFromReach`, where that point is
+ * to land on screen, undone through the column's perspective at the box's depth, so a box in front, which depth
+ * pushes outwards, still lands there (`deep`: the box is in the column's perspective; the Tools box is flat).
+ */
+const leftOf = (p: Pin, z: number, deep: boolean) =>
+  p.inFromReach === undefined
+    ? `${p.x}cqw`
+    : `(50cqw + (50cqw + ${REACH} - ${p.inFromReach}px) * ${deep ? ((PERSPECTIVE - z) / PERSPECTIVE).toFixed(4) : 1})`;
+
 /**
  * A box on its pin: that corner of it on that point of the column, moved by its motion, at its depth, turned
  * towards the flower (Elco, 12 Nov: the 3D "more for the messages").
  */
-const pinned = (pin: Pin, m: Motion): CSSProperties => {
+const pinned = (pin: Pin, m: Motion, deep = true): CSSProperties => {
   const side = pin.ax > 0.5 ? -1 : 1;
   return {
     opacity: m.opacity,
     visibility: m.opacity < 0.002 ? 'hidden' : undefined,
-    translate: `calc(${pin.x}cqw - ${pin.ax * 100}% + ${n2(m.x * side)}px) calc(${topOf(pin)} - ${pin.ay * 100}% + ${n2(m.y)}px) ${n2(m.z)}px`,
+    translate: `calc(${leftOf(pin, m.z, deep)} - ${pin.ax * 100}% + ${n2(m.x * side)}px) calc(${topOf(pin)} - ${pin.ay * 100}% + ${n2(m.y)}px) ${n2(m.z)}px`,
     scale: m.scale.toFixed(4),
     transform: `rotateY(${n2(side * m.turn)}deg)`,
     transformOrigin: `${pin.ax * 100}% ${pin.ay * 100}%`,
@@ -86,7 +112,7 @@ function Column({ children }: { children: ReactNode }) {
       <div className="mx-auto h-full w-full max-w-page-width px-block-gap md:px-page-inset">
         <div
           className="relative h-full w-full"
-          style={{ containerType: 'size', perspective: '900px' }}
+          style={{ containerType: 'size', perspective: `${PERSPECTIVE}px` }}
         >
           {children}
         </div>
@@ -271,7 +297,8 @@ function useTitleTop(stage: RefObject<HTMLElement | null>) {
 function Tools({ beat, t, top }: { beat: number; t: number; top: number }) {
   const m = toolsBox(beat, t);
   return (
-    <div className="absolute top-0 left-0 w-1/5" style={pinned(toolsPin(top), m)}>
+    // flat: it sits in its own layer, not in the column's perspective
+    <div className="absolute top-0 left-0 w-1/5" style={pinned(toolsPin(top), m, false)}>
       <HeroTools beat={beat} t={t} />
     </div>
   );
