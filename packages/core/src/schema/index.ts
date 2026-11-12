@@ -28,11 +28,13 @@ import valueV2Schema from '../../schema/value-v2.schema.json' with { type: 'json
 import valueV3Schema from '../../schema/value-v3.schema.json' with { type: 'json' };
 import viewSchema from '../../schema/view.schema.json' with { type: 'json' };
 import viewV2Schema from '../../schema/view-v2.schema.json' with { type: 'json' };
+import viewV3Schema from '../../schema/view-v3.schema.json' with { type: 'json' };
 
 export const SNAPSHOT_SCHEMA_ID = 'urn:petal:schema:snapshot:v1';
 export const FLOWER_SCHEMA_ID = 'urn:petal:schema:flower:v1';
 export const VIEW_SCHEMA_ID = 'urn:petal:schema:view:v1';
 export const VIEW_V2_SCHEMA_ID = 'urn:petal:schema:view:v2';
+export const VIEW_V3_SCHEMA_ID = 'urn:petal:schema:view:v3';
 
 const view = (def: 'spec' | 'interpretation' | 'entry' | 'entryV2' | 'correction'): object => ({
   ...flowerSchema,
@@ -62,6 +64,8 @@ export const schemas: {
   view: object;
   /** the same, with labels: which piece of data names each petal (view/v2, which v1 reads as) */
   viewV2: object;
+  /** the same, with colour's keys: which key each value takes, as the person chose it (view/v3, 12 Nov) */
+  viewV3: object;
   /** what crosses from data to the look (005, seam.md): every piece of data with its kind and standing */
   seam: object;
   /** one model call, counted and charged, and NEAR AI's own bill for it (pricing-protocol.md) */
@@ -104,6 +108,7 @@ export const schemas: {
   layer: layerSchema,
   view: viewSchema,
   viewV2: viewV2Schema,
+  viewV3: viewV3Schema,
   seam: seamSchema,
   usage: usageSchema,
   brainReceipt: brainReceiptSchema,

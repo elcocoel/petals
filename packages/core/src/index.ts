@@ -174,6 +174,9 @@ export {
   ACCEPTS,
   ACTIVITY,
   BACKERS,
+  COLOUR_KEYS,
+  type ColourKey,
+  colourKeysOf,
   DEFAULT_HASHES,
   DEFAULT_VIEW,
   DEFAULT_VIEW_V1,
@@ -188,5 +191,7 @@ export {
   inUse,
   latestView,
   SOME_FLOWERS,
+  VIEW_KEYS_VERSION,
   viewHash,
+  withColourKeys,
 } from './view/index.ts';

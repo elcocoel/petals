@@ -7,11 +7,13 @@ import { describe, expect, test } from 'vitest';
 import { DEFAULT_CONVENTION } from '../src/convention/default.ts';
 import { MEASURE_KINDS } from '../src/layers.ts';
 import { createAjv, schemaId } from '../src/schema/ajv.ts';
-import type { View, ViewV1, ViewV2 } from '../src/types/index.ts';
+import type { View, ViewV1, ViewV2, ViewV3 } from '../src/types/index.ts';
 import { VIEW_VERSION } from '../src/versions.ts';
 import { viewProblem } from '../src/view/check.ts';
 import {
   ACCEPTS,
+  COLOUR_KEYS,
+  colourKeysOf,
   DEFAULT_HASHES,
   DEFAULT_VIEW,
   DEFAULT_VIEW_V1,
@@ -24,7 +26,9 @@ import {
   inUse,
   latestView,
   type Piece,
+  VIEW_KEYS_VERSION,
   viewHash,
+  withColourKeys,
 } from '../src/view/index.ts';
 
 const root = join(import.meta.dirname, '..', '..', '..');
@@ -32,13 +36,14 @@ const read = (p: string) => readFileSync(join(root, p));
 const fixture = (name: string) =>
   JSON.parse(read(`packages/core/schema/fixtures/${name}`).toString()) as View;
 const ajv = createAjv();
-const validAs = (name: 'view' | 'viewV2') => (doc: unknown) => {
+const validAs = (name: 'view' | 'viewV2' | 'viewV3') => (doc: unknown) => {
   const v = ajv.getSchema(schemaId(name));
   if (!v) throw new Error(`${name} schema not registered`);
   return { ok: v(doc) as boolean, errors: v.errors ?? [] };
 };
 const valid = validAs('viewV2');
 const validV1 = validAs('view');
+const validV3 = validAs('viewV3');
 const schemaOf = (file: string) =>
   JSON.parse(read(`packages/core/schema/${file}`).toString()) as {
     properties: { petal: unknown; dimensions: { required: string[] } };
@@ -48,6 +53,7 @@ describe('the schemas', () => {
   test.each([
     ['view.schema.json', 'view-v1.schema.json'],
     ['view-v2.schema.json', 'view-v2.schema.json'],
+    ['view-v3.schema.json', 'view-v3.schema.json'],
   ])("%s is a byte copy of 006's contract", (mine, contract) => {
     expect(read(`packages/core/schema/${mine}`)).toEqual(
       read(`specs/006-the-map/contracts/${contract}`),
@@ -79,8 +85,10 @@ describe('the schemas', () => {
     expect(viewProblem(DEFAULT_VIEW)).toBeNull();
     expect(viewProblem(DEFAULT_VIEW_V1)).toBeNull();
     expect(viewProblem({ ...DEFAULT_VIEW, petal: 'view/v1' })).toMatch(/labels/);
-    expect(viewProblem({ ...DEFAULT_VIEW, petal: 'view/v3' })).toMatch(/view\/v3/);
-    expect(viewProblem(null)).toMatch(/not view\/v1 or view\/v2/);
+    // view/v3 only adds colour's keys, so the default is a valid v3 too (12 Nov, wave 4); a v4 is no version
+    expect(viewProblem({ ...DEFAULT_VIEW, petal: 'view/v3' })).toBeNull();
+    expect(viewProblem({ ...DEFAULT_VIEW, petal: 'view/v4' })).toMatch(/view\/v4/);
+    expect(viewProblem(null)).toMatch(/not view\/v1, view\/v2 or view\/v3/);
   });
 
   test('refuses a view with words of its own, a missing dimension, or one more', () => {
@@ -122,6 +130,7 @@ describe('the fixtures', () => {
       '98be4e1731d15f0ea479c798407dc1ee278daf7b2289eb50de4f6db6340894a9',
       valid,
     ],
+    ['view.v3.json', '190ec41d6fbd3942e29b99b3145bf51343af2f25ffa554deeb1173a871cfb713', validV3],
   ])('%s is valid and pinned', (name, hash, check) => {
     const v = fixture(name);
     expect(check(v).errors).toEqual([]);
@@ -293,5 +302,32 @@ describe('a view meeting a flower', () => {
     const counted = structuredClone(DEFAULT_VIEW);
     counted.dimensions.labels = { data: 'proposals' };
     expect(inUse(counted, moloch).labels).toBeNull();
+  });
+});
+
+describe('view/v3: the key each value of colour takes, as the person chose it (Elco, 12 Nov, wave 4)', () => {
+  const keyed = fixture('view.v3.json');
+
+  test("colour names its keys from the look's six; any other key or field is refused", () => {
+    expect(viewProblem(keyed)).toBeNull();
+    const wrong = structuredClone(keyed) as ViewV3;
+    (wrong.dimensions.colour as { keys: Record<string, string> }).keys.voted = 'purple';
+    expect(viewProblem(wrong)).not.toBeNull();
+    // keys belong to colour only, and a v2 doesn't take them
+    const v2 = { ...structuredClone(keyed), petal: 'view/v2' };
+    expect(viewProblem(v2)).not.toBeNull();
+  });
+
+  test('choosing a key makes a v3; taking the last one away gives back the v2 and its hash', () => {
+    const v2 = latestView(fixture('view.v2.json'));
+    const chosen = withColourKeys(v2, { voted: 'mint' });
+    expect(chosen.petal).toBe(VIEW_KEYS_VERSION);
+    expect(colourKeysOf(chosen)).toEqual({ voted: 'mint' });
+    expect(latestView(chosen)).toBe(chosen);
+    const back = withColourKeys(chosen, {});
+    expect(back).toEqual(v2);
+    expect(viewHash(back)).toBe(viewHash(v2));
+    expect(colourKeysOf(v2)).toEqual({});
+    expect(COLOUR_KEYS).toEqual(['mint', 'blue', 'coral', 'apricot', 'pink', 'grey']);
   });
 });

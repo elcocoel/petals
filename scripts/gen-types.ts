@@ -12,6 +12,7 @@ const jobs = [
   { schema: 'flower.schema.json', out: 'flower.ts' },
   { schema: 'view.schema.json', out: 'view.ts' },
   { schema: 'view-v2.schema.json', out: 'view-v2.ts' },
+  { schema: 'view-v3.schema.json', out: 'view-v3.ts' },
 ];
 
 for (const job of jobs) {

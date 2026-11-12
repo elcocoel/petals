@@ -118,5 +118,9 @@
   "proposals.v3.json": {
     "schema": "urn:petal:schema:proposals:v3",
     "sha256": "a4c7f39232b6b1c7a5d687297ff004edc0af9027aa2519dd827aee3d562943db"
+  },
+  "view.v3.json": {
+    "schema": "urn:petal:schema:view:v3",
+    "sha256": "190ec41d6fbd3942e29b99b3145bf51343af2f25ffa554deeb1173a871cfb713"
   }
 }
