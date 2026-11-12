@@ -50,6 +50,7 @@ export function MapClaims({
   onOpen,
   empty,
   fold,
+  bare = false,
 }: {
   groups: readonly MapClaimGroup[];
   /** The claim whose fields are open, by its key. */
@@ -58,10 +59,12 @@ export function MapClaims({
   /** What it says when there's nothing to list (a chosen wallet nothing is said about). */
   empty?: string | undefined;
   fold: { open: boolean; onToggle: () => void };
+  /** Its rows alone, for a box that frames it (the map's floating boxes). */
+  bare?: boolean;
 }) {
   const count = groups.reduce((n, g) => n + g.lines.length, 0);
-  return (
-    <Overlay title={fold.open ? words.title : words.folded(count)} fold={fold} tool>
+  const body = (
+    <>
       {/* edge to edge, so the heads reach the panel's sides as the side panel's do */}
       <div className="-mx-space-8 flex max-h-figure-height flex-col overflow-y-auto overscroll-none px-space-8">
         {groups.length === 0 && empty && (
@@ -146,6 +149,13 @@ export function MapClaims({
           </section>
         ))}
       </div>
+    </>
+  );
+  // in a box floating over the map (LandscapeCanvas) the box is its frame; elsewhere, one of the overlays
+  if (bare) return <div className="flex flex-col px-space-8 pb-space-8">{body}</div>;
+  return (
+    <Overlay title={fold.open ? words.title : words.folded(count)} fold={fold} tool>
+      {body}
     </Overlay>
   );
 }

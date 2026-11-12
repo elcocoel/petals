@@ -12,19 +12,32 @@
 // in the chains' place; pressing one goes to its chain and into its flower (board 105).
 import { EVERY_FLOWER, inUse } from '@petal/core/view';
 import { flowerKeys } from '@petal/core/wedge/keys';
-import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { floatBox } from '@petal/tokens';
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { MapClaims } from '../components/MapClaims.tsx';
 import { MapSearch } from '../components/MapSearch.tsx';
+import { FloatBox } from '../components/ui/FloatBox.tsx';
+import { IconButton } from '../components/ui/IconButton.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
 import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
+import type { Rect, Size } from '../lib/float-box.ts';
 import { mapClaimGroups, mapClaimWords } from '../lib/map-claims.ts';
 import { MAP_SEARCH_ID, mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
 import type { LegendEdit } from '../lib/view-edit.ts';
+import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
 import { useMapBlocs } from '../viewmodels/useMapBlocs.ts';
 import { useMapClaims } from '../viewmodels/useMapClaims.ts';
@@ -80,6 +93,18 @@ export interface CanvasChain {
   continent: Continent;
 }
 
+/** The map's floating boxes (Elco, 12 Nov: "move these things just like we did in the workspace"). */
+const PANELS = ['chains', 'legend', 'insights'] as const;
+type Panel = (typeof PANELS)[number];
+/** A panel row's height, and where the legend and Insights start: as tall as their rows mostly are. */
+const PANEL_ROW = 32;
+/** The overlays' width, as the column's (w-tile-width). */
+const PANEL_W = 280;
+const LEGEND_H = 440;
+const INSIGHTS_H = 320;
+/** The least an opened Insights takes under the legend. */
+const INSIGHTS_LEAST = 200;
+
 /** Below this much room (md, 48rem) the overlays start folded to their bars. */
 const ROOM = 768;
 
@@ -115,7 +140,7 @@ function Land({
 }: {
   data: LandscapeData;
   probe: boolean;
-  aside: RefObject<HTMLDivElement | null>;
+  aside: RefObject<HTMLElement | null>;
   fill: 'window' | 'area';
   focus: number;
   selected: string | null;
@@ -242,7 +267,11 @@ export function LandscapeCanvas({
       : legend === 'read'
         ? undefined
         : legend;
-  const aside = useRef<HTMLDivElement>(null);
+  const aside = useRef<HTMLElement | null>(null);
+  // the map's panels float, move, snap and size (Elco, 12 Nov) wherever the map fills its page; the landing's
+  // map scrolls with its page, so there they stay a column
+  const movable = !inPage;
+  const room = useRef<HTMLDivElement>(null);
   const opened = data.flowers[focus]?.place.chain;
   const [chain, setChain] = useState(
     opened ?? (data.chains.some((c) => c.chain === FIRST) ? FIRST : (data.chains[0]?.chain ?? '')),
@@ -251,7 +280,11 @@ export function LandscapeCanvas({
   // /make's beside the conversation (WORKSPACE's walk, 11 Nov): its own room, not the window's
   const [listOpen, setListOpen] = useState(true);
   const [legendOpen, setLegendOpen] = useState(true);
-  const narrow = useCallback(() => (roomOf(aside.current) ?? window.innerWidth) < ROOM, []);
+  const narrow = useCallback(
+    () =>
+      ((movable ? room.current?.clientWidth : roomOf(aside.current)) ?? window.innerWidth) < ROOM,
+    [movable],
+  );
   useEffect(() => {
     if (!narrow()) return;
     setListOpen(false);
@@ -418,6 +451,164 @@ export function LandscapeCanvas({
     return mapClaimGroups(about, names, selected);
   }, [claims, inFlower, selected, wallet]);
 
+  // the chain list's words and rows, the legend and Insights: one each, in a floating box or in the column
+  const chainTitle =
+    !listOpen && shown ? `${title ?? 'Power Map'} · ${shown.label}` : (title ?? 'Power Map');
+  const chainRows = (
+    <>
+      {search && (
+        <MapSearch
+          q={finding.q}
+          onType={finding.type}
+          onOrder={finding.order}
+          onClear={finding.clear}
+          rows={found}
+          status={searchStatus}
+          onGo={goTo}
+        />
+      )}
+      {/* while something's typed, what it finds stands in the chains' place */}
+      {!(search && (finding.q.trim() || inside)) && (
+        <ul className="m-0 flex list-none flex-col p-0">
+          {data.chains.map((c) => (
+            <li key={c.chain}>
+              <NavItem
+                onClick={() => {
+                  setChain(c.chain);
+                  setGo(null);
+                  // where the room is narrow the list folds back once a chain is chosen
+                  if (narrow()) setListOpen(false);
+                }}
+                chosen={c.chain === chain}
+                logo={c.logo}
+                label={c.label}
+                trail={String(counts.get(c.chain) ?? 0)}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+  const showClaims = Boolean(legend && inside && (claimGroups.length > 0 || (wallet && claims)));
+  const claimCount = claimGroups.reduce((n, g) => n + g.lines.length, 0);
+  // where each box starts: down the room's left, the chain list, the legend under it, Insights under that,
+  // each as tall as its rows or the room leaves it; a hand moves and sizes them for the visit
+  const chainCount = data.chains.length;
+  const chainsClosed = inside && !search;
+  const place = useCallback(
+    (win: Size): Record<Panel, Rect> => {
+      const r = room.current?.getBoundingClientRect() ?? null;
+      const top = r?.top ?? 0;
+      const left = (r?.left ?? 0) + floatBox.inset;
+      const bottom = (r?.bottom ?? win.h) - floatBox.inset;
+      const w = PANEL_W;
+      const y0 = top + floatBox.inset;
+      // inside a flower without a search the chain list is closed, and the legend starts where it stood
+      const chainsH = Math.min(
+        floatBox.bar + PANEL_ROW * (chainCount + 3),
+        Math.max(floatBox.bar, (bottom - y0) * 0.45),
+      );
+      const legendY = chainsClosed ? y0 : y0 + chainsH + floatBox.gap;
+      // the legend leaves Insights room enough to open below it, inside the window
+      const legendH = Math.max(
+        floatBox.bar,
+        Math.min(LEGEND_H, bottom - legendY - INSIGHTS_LEAST - floatBox.gap),
+      );
+      const insightsY = legendY + legendH + floatBox.gap;
+      return {
+        chains: { x: left, y: y0, w, h: chainsH },
+        legend: { x: left, y: legendY, w, h: legendH },
+        insights: {
+          x: left,
+          y: insightsY,
+          w,
+          h: Math.max(floatBox.bar, Math.min(INSIGHTS_H, bottom - insightsY)),
+        },
+      };
+    },
+    [chainCount, chainsClosed],
+  );
+  const panels = useFloatBoxes(PANELS, place, {
+    top: () => room.current?.getBoundingClientRect().top ?? 0,
+    snap: true,
+  });
+  // the box the map measures (the aside: the arrows' names keep clear of it) is the chain list's, or the legend's
+  // while the chain list is closed inside a flower; both are the boxes the hand holds
+  const chainsEl = useRef<HTMLElement | null>(null);
+  const legendEl = useRef<HTMLElement | null>(null);
+  const chainsRoot = useCallback(
+    (el: HTMLElement | null) => {
+      chainsEl.current = el;
+      panels.chains.root(el);
+    },
+    [panels.chains],
+  );
+  const legendRoot = useCallback(
+    (el: HTMLElement | null) => {
+      legendEl.current = el;
+      panels.legend.root(el);
+    },
+    [panels.legend],
+  );
+  useLayoutEffect(() => {
+    if (movable) aside.current = chainsClosed ? legendEl.current : chainsEl.current;
+  });
+  // folded, a box is its bar; open, the height it had
+  useEffect(() => {
+    if (movable) panels.chains.fold(listOpen ? null : floatBox.bar);
+  }, [movable, panels.chains, listOpen]);
+  useEffect(() => {
+    if (movable) panels.legend.fold(legendOpen ? null : floatBox.bar);
+  }, [movable, panels.legend, legendOpen]);
+  useEffect(() => {
+    if (movable) panels.insights.fold(claimsOpen ? null : floatBox.bar);
+  }, [movable, panels.insights, claimsOpen]);
+  const legendBody = (bare: boolean) => (
+    <ViewLegend
+      view={person.view}
+      drawn={inUse(person.view, EVERY_FLOWER)}
+      pieces={EVERY_FLOWER}
+      // each flower keys its own kinds by how common they are on it (#76): inside one, its key (core's
+      // flowerKeys, what its fills paint); on the map, no one key, so it says so
+      keys={inFlower ? flowerKeys(inFlower.reading.petals) : []}
+      keysNote={inFlower ? undefined : panelWords.legendColours}
+      // what a line between two flowers is, for anyone who doesn't know (Elco, 12 Nov, walk 2)
+      between={{ label: panelWords.legendLines, says: panelWords.legendLinesSay }}
+      // how much the map's flowers draw together (Elco, 12 Nov, walk 2: "gravity"), for the visit
+      gravity={{ value: gravity, onChange: setGravity }}
+      edit={hands ?? undefined}
+      groups={
+        inFlower && blocs
+          ? {
+              choices,
+              chosen: bloc,
+              span,
+              period: periodWords(blocs),
+              onChoose: setBloc,
+              // other votes are other blocs: the chosen one goes with them
+              onSpan: (s) => {
+                setSpan(s);
+                setBloc(null);
+              },
+            }
+          : undefined
+      }
+      fold={{ open: legendOpen, onToggle: () => setLegendOpen((now) => !now) }}
+      bare={bare}
+    />
+  );
+  const claimsBody = (bare: boolean) => (
+    <MapClaims
+      groups={claimGroups}
+      open={openClaim}
+      onOpen={(key) => setOpenClaim((now) => (now === key ? null : key))}
+      empty={wallet ? mapClaimWords.noneAboutWallet : undefined}
+      fold={{ open: claimsOpen, onToggle: () => setClaimsOpen((now) => !now) }}
+      bare={bare}
+    />
+  );
+
   return (
     <>
       {land && (
@@ -441,102 +632,96 @@ export function LandscapeCanvas({
           go={go?.chain === chain ? go : null}
         />
       )}
-      {/* The overlays, down the left: the chain list, then the legend under it, so they never meet. The aside is
-          the chain list's own outermost box, so its right edge, which the arrows' names keep clear of, is the
-          overlay's; inside a flower it's invisible, not gone (LOOK), and the legend stays, saying the flower.
-          Where there's a search, it never goes (Elco, 12 Nov: "the search bar doesn't disappear"): inside a
-          flower the box stays with the search alone, and the chains step aside. */}
-      <div
-        className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 flex flex-col items-start gap-space-8`}
-      >
-        {/* inside a flower, out of the column too, so the legend rises to the top in its place */}
-        <div ref={aside} className={inside && !search ? 'invisible absolute top-0 left-0' : ''}>
-          <Overlay
-            title={
-              !listOpen && shown
-                ? `${title ?? 'Power Map'} · ${shown.label}`
-                : (title ?? 'Power Map')
+      {movable ? (
+        <>
+          {/* the room the map's boxes stand in: its top and its size are read from here */}
+          <div ref={room} aria-hidden="true" className="pointer-events-none absolute inset-0" />
+          {/* Elco, 12 Nov: "I want to be able to move these things just like we did in the workspace and they
+              should snap ... I want to be able to resize them": the chain list (with the search, which never
+              goes), the legend and Insights are the workspace's floating boxes. The chain list's box is the
+              aside, so the arrows' names keep clear of it; inside a flower it's closed unless it holds the search. */}
+          <FloatBox
+            label={chainTitle}
+            title={chainTitle}
+            hand={{ ...panels.chains, root: chainsRoot }}
+            closed={chainsClosed}
+            control={
+              <span className={`flex ${listOpen ? 'rotate-90' : ''}`}>
+                <IconButton
+                  icon="chevron"
+                  label={listOpen ? panelWords.boxFold : panelWords.boxOpen}
+                  expanded={listOpen}
+                  onClick={() => setListOpen((now) => !now)}
+                />
+              </span>
             }
-            fold={{ open: listOpen, onToggle: () => setListOpen((now) => !now) }}
           >
-            {search && (
-              <MapSearch
-                q={finding.q}
-                onType={finding.type}
-                onOrder={finding.order}
-                onClear={finding.clear}
-                rows={found}
-                status={searchStatus}
-                onGo={goTo}
-              />
-            )}
-            {/* while something's typed, what it finds stands in the chains' place */}
-            {!(search && (finding.q.trim() || inside)) && (
-              <ul className="m-0 flex list-none flex-col p-0">
-                {data.chains.map((c) => (
-                  <li key={c.chain}>
-                    <NavItem
-                      onClick={() => {
-                        setChain(c.chain);
-                        setGo(null);
-                        // where the room is narrow the list folds back once a chain is chosen
-                        if (narrow()) setListOpen(false);
-                      }}
-                      chosen={c.chain === chain}
-                      logo={c.logo}
-                      label={c.label}
-                      trail={String(counts.get(c.chain) ?? 0)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Overlay>
+            <div className="flex flex-col px-space-8 py-space-8">{chainRows}</div>
+          </FloatBox>
+          {legend && (
+            <FloatBox
+              label={panelWords.legend}
+              title={panelWords.legend}
+              hand={{ ...panels.legend, root: legendRoot }}
+              control={
+                <span className={`flex ${legendOpen ? 'rotate-90' : ''}`}>
+                  <IconButton
+                    icon="chevron"
+                    label={legendOpen ? panelWords.boxFold : panelWords.boxOpen}
+                    expanded={legendOpen}
+                    onClick={() => setLegendOpen((now) => !now)}
+                  />
+                </span>
+              }
+            >
+              {legendBody(true)}
+            </FloatBox>
+          )}
+          {legend && (
+            <FloatBox
+              label={mapClaimWords.title}
+              title={claimsOpen ? mapClaimWords.title : mapClaimWords.folded(claimCount)}
+              hand={panels.insights}
+              closed={!showClaims}
+              control={
+                <span className={`flex ${claimsOpen ? 'rotate-90' : ''}`}>
+                  <IconButton
+                    icon="chevron"
+                    label={claimsOpen ? panelWords.boxFold : panelWords.boxOpen}
+                    expanded={claimsOpen}
+                    onClick={() => setClaimsOpen((now) => !now)}
+                  />
+                </span>
+              }
+            >
+              {claimsBody(true)}
+            </FloatBox>
+          )}
+        </>
+      ) : (
+        /* The landing's map scrolls with its page, so its overlays stay a column down the left: the chain list,
+           then the legend under it. The aside is the chain list's own outermost box; inside a flower it's
+           invisible, not gone (LOOK), and the legend rises in its place. */
+        <div
+          className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 flex flex-col items-start gap-space-8`}
+        >
+          <div
+            ref={(el) => {
+              aside.current = el;
+            }}
+            className={inside && !search ? 'invisible absolute top-0 left-0' : ''}
+          >
+            <Overlay
+              title={chainTitle}
+              fold={{ open: listOpen, onToggle: () => setListOpen((now) => !now) }}
+            >
+              {chainRows}
+            </Overlay>
+          </div>
+          {legend && legendBody(false)}
+          {showClaims && claimsBody(false)}
         </div>
-        {legend && (
-          <ViewLegend
-            view={person.view}
-            drawn={inUse(person.view, EVERY_FLOWER)}
-            pieces={EVERY_FLOWER}
-            // each flower keys its own kinds by how common they are on it (#76): inside one, its key (core's
-            // flowerKeys, what its fills paint); on the map, no one key, so it says so
-            keys={inFlower ? flowerKeys(inFlower.reading.petals) : []}
-            keysNote={inFlower ? undefined : panelWords.legendColours}
-            // what a line between two flowers is, for anyone who doesn't know (Elco, 12 Nov, walk 2)
-            between={{ label: panelWords.legendLines, says: panelWords.legendLinesSay }}
-            // how much the map's flowers draw together (Elco, 12 Nov, walk 2: "gravity"), for the visit
-            gravity={{ value: gravity, onChange: setGravity }}
-            edit={hands ?? undefined}
-            groups={
-              inFlower && blocs
-                ? {
-                    choices,
-                    chosen: bloc,
-                    span,
-                    period: periodWords(blocs),
-                    onChoose: setBloc,
-                    // other votes are other blocs: the chosen one goes with them
-                    onSpan: (s) => {
-                      setSpan(s);
-                      setBloc(null);
-                    },
-                  }
-                : undefined
-            }
-            fold={{ open: legendOpen, onToggle: () => setLegendOpen((now) => !now) }}
-          />
-        )}
-        {/* where the legend is asked for: what's said about the map you're in, folded until asked */}
-        {legend && inside && (claimGroups.length > 0 || (wallet && claims)) && (
-          <MapClaims
-            groups={claimGroups}
-            open={openClaim}
-            onOpen={(key) => setOpenClaim((now) => (now === key ? null : key))}
-            empty={wallet ? mapClaimWords.noneAboutWallet : undefined}
-            fold={{ open: claimsOpen, onToggle: () => setClaimsOpen((now) => !now) }}
-          />
-        )}
-      </div>
+      )}
     </>
   );
 }
