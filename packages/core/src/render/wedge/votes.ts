@@ -179,7 +179,7 @@ export function placeArc(ring: Ring, petal: number, step: number): string {
   if (petal >= 0) {
     const r = SHAPE.r0 + (ring.h[petal] as number) + 4 + step * STACK_GAP;
     const a0 = (ring.start[petal] as number) + ring.rotation;
-    const a1 = (ring.start[petal + 1] as number) + ring.rotation;
+    const a1 = (ring.end[petal] as number) + ring.rotation;
     // the line between petals, as an angle at this radius
     const pad = Math.min((a1 - a0) / 4, (ring.gut[petal] as number) / r + 0.6 / r);
     return arcPath(a0 + pad, Math.max(a0 + pad, a1 - pad), r);
