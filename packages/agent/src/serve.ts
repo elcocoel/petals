@@ -144,7 +144,7 @@ export function serverApp(cfg: Config, o: ServerOptions = {}): Hono {
   // address written in, and without the chapter's header and notes.
   app.get('/setup', async (c) => {
     const dir = cfg.brainDir ?? join(root, 'brain');
-    const md = await readFile(join(dir, 'chapters', 'setup.md'), 'utf8').catch(() => null);
+    const md = await readFile(join(dir, 'connecting', 'setup.md'), 'utf8').catch(() => null);
     if (!md) return c.text('No setup here yet.\n', 404);
     const site = siteOf(c.req.raw);
     const body = md

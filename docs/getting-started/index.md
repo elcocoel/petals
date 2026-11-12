@@ -2,7 +2,7 @@
 
 title: Getting started
 order: 1
-include: ["README.md", "brain/chapters/setup.md"]
+include: ["README.md", "brain/connecting/setup.md"]
 exclude: []
 ---
 

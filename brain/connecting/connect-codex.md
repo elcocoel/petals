@@ -1,5 +1,6 @@
 ---
 id: connect-codex
+department: connecting
 app: codex
 for: connecting Codex to Petals, in a terminal, and keeping it for next time
 recognise: codex, codex cli, openai codex, connect, set up, install, mcp, add petals, keep petals

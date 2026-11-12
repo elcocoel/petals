@@ -1,5 +1,6 @@
 ---
 id: stake-behind-the-network
+department: governance
 for: separating validator consensus power from the accounts and stake behind it
 recognise: validators, staking pools, stake, backers, delegators, consensus, block producers, unstake
 tools: get_snapshot, describe_snapshot, compute_figures

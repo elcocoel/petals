@@ -2,7 +2,7 @@
 
 title: Build it with us
 order: 7
-include: ["brain/chapters/contributing.md"]
+include: ["brain/stewardship/contributing.md"]
 exclude: []
 ---
 

@@ -17,7 +17,8 @@ const QUESTIONS: [string, string][] = [
   ['who controls this treasury', 'where-power-lives'],
   ['map the members of this DAO and how they vote', 'where-power-lives'],
   ['who can upgrade this contract or pause it', 'who-can-move-money-or-change-rules'],
-  ['who are the signers of this multisig', 'where-power-lives'],
+  // signers are the routing table's treasury row (routing.md, 12 Nov)
+  ['who are the signers of this multisig', 'who-can-move-money-or-change-rules'],
   ['who delegates to whom in this governance', 'where-power-lives'],
   ['who sponsored the most proposals', 'where-power-lives'],
   ['what is 0x1234abcd, is it a wallet or a contract?', 'start-from-an-address'],
@@ -78,6 +79,20 @@ describe('routing', () => {
 
   test.each(GOVERNANCE)('%s reaches %s first', (q, want) => {
     expect(routeBrain(index, { words: q })[0]?.id).toBe(want);
+  });
+
+  // the departments (research/brain-departments-2026-11-11.md, step 4): each question that reaches its chapter
+  // first reaches its chapter's department first
+  const departmentOf = (id: string) => index.entries.find((e) => e.id === id)?.department;
+  test.each(GOVERNANCE)('%s reaches the department of %s first', (q, want) => {
+    expect(routeBrain(index, { words: q })[0]?.department).toBe(departmentOf(want));
+  });
+
+  test('a routing row that fires brings what it loads, saying which task', () => {
+    const routes = routeBrain(index, { words: 'who votes together in this DAO' });
+    expect(routes[0]).toMatchObject({ id: 'voting-blocs-over-time', department: 'governance' });
+    expect(routes[0]?.why).toContain('the task "Who votes together" loads it');
+    expect(routes.map((r) => r.id)).toContain('from-proposal-to-action');
   });
 
   test('a contract that answers a recipe’s calls reaches that recipe first, saying why', () => {

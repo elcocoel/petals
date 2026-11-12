@@ -1,6 +1,7 @@
 // Reading recipes (specs/005-mapping-brain/data.md): the brain's files are all listed and valid, a
 // bad recipe is refused, and the counting shapes read a contract's events as a recipe says.
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
 import { eventTopic } from '../src/evm/abi.ts';
@@ -8,7 +9,7 @@ import type { EvmLog, EvmReader } from '../src/evm/reader.ts';
 import { checkRecipe, pullRecipe, RECIPES } from '../src/index.ts';
 import { countByParticipant, countBySender } from '../src/recipes/shapes.ts';
 
-const RECIPE_DIR = fileURLToPath(new URL('../../../brain/recipes/', import.meta.url));
+const BRAIN_DIR = fileURLToPath(new URL('../../../brain/', import.meta.url));
 const DAO = '0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986';
 const word = (a: string) => `0x${a.slice(2).padStart(64, '0')}`;
 const A = '0x1a9c000000000000000000000000000000020cd0';
@@ -50,8 +51,12 @@ const SUBMIT = 'SubmitProposal(uint256,bytes32,uint256,bytes,uint256,uint256,boo
 const VOTE = 'SubmitVote(address,uint256,uint256,bool)';
 
 describe("the brain's recipes", () => {
-  test('every file in brain/recipes is listed, and each is a valid recipe', () => {
-    const files = readdirSync(RECIPE_DIR).filter((f) => f.endsWith('.json'));
+  test("every file in a department's recipes folder is listed, and each is a valid recipe", () => {
+    // brain/<department>/recipes/<id>.json
+    const files = readdirSync(BRAIN_DIR, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && existsSync(join(BRAIN_DIR, d.name, 'recipes')))
+      .flatMap((d) => readdirSync(join(BRAIN_DIR, d.name, 'recipes')))
+      .filter((f) => f.endsWith('.json'));
     expect(RECIPES.map((r) => `${r.id}.json`).sort()).toEqual(files.sort());
     expect(RECIPES.find((r) => r.id === 'moloch-v3')?.measures.map((m) => m.name)).toEqual([
       'shares',

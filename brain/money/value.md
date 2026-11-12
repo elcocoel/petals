@@ -1,5 +1,6 @@
 ---
 id: value
+department: money
 for: estimating the value of identified holdings and separating price, backing and spending power
 recognise: value, worth, price, dollars, USD, holdings, treasury, market cap, supply, backing, liquidity, wrapped
 tools: list_networks, get_network, get_snapshot, describe_snapshot, read_chain, read_page, add_layer

@@ -5,11 +5,29 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { canonicalJson, sha256Hex } from '@petal/core';
 
-export const BRAIN_INDEX_VERSION = 'brain-index/v1';
+export const BRAIN_INDEX_VERSION = 'brain-index/v2';
+
+/**
+ * The brain's departments (research/brain-departments-2026-11-11.md; Elco, 11 Nov: "The department's component
+ * is important or else it becomes just a list that goes on forever"), as Elco named them. Every chapter and
+ * recipe is in one; the doctrine is in none.
+ */
+export const BRAIN_DEPARTMENTS = [
+  'connecting',
+  'gathering',
+  'governance',
+  'money',
+  'investigation',
+  'services',
+  'stewardship',
+] as const;
+export type BrainDepartment = (typeof BRAIN_DEPARTMENTS)[number];
 
 export interface BrainEntry {
   id: string;
-  kind: 'doctrine' | 'chapter' | 'recipe';
+  kind: 'doctrine' | 'department' | 'chapter' | 'recipe';
+  /** v2: the department it's in; null for the doctrine, which is in every answer */
+  department: string | null;
   /** what it's for, in words */
   for: string;
   /** what it answers to: words for a chapter, the calls a contract answers for a recipe */
@@ -22,9 +40,41 @@ export interface BrainEntry {
   sha256: string;
 }
 
+/** One row of the master routing table (routing.md): a task, the words it answers to, and what it loads. */
+export interface BrainTask {
+  task: string;
+  words: string[];
+  /** ids: departments' hubs, chapters, recipes */
+  load: string[];
+  also: string[];
+}
+
 export interface BrainIndex {
   petal: typeof BRAIN_INDEX_VERSION;
   entries: BrainEntry[];
+  /** v2: the master routing table's rows, in its order */
+  tasks: BrainTask[];
+}
+
+/**
+ * The master routing table, routing.md (research/brain-departments-2026-11-11.md, step 4): one authored file,
+ * read by people and by the machine, so no second copy drifts. Each row: Task | Words | Load | Also load, with
+ * the ids in backticks and "n/a" for none.
+ */
+export function routingOf(text: string): BrainTask[] {
+  const ids = (cell: string) => [...cell.matchAll(/`([^`]+)`/g)].map((m) => m[1] as string);
+  const out: BrainTask[] = [];
+  for (const line of text.split('\n')) {
+    if (!line.startsWith('|')) continue;
+    const cells = line
+      .split('|')
+      .slice(1, -1)
+      .map((c) => c.trim());
+    if (cells.length !== 4 || cells[0] === 'Task' || /^-+$/.test(cells[0] as string)) continue;
+    const [task, words, load, also] = cells as [string, string, string, string];
+    out.push({ task, words: list(words), load: ids(load), also: ids(also) });
+  }
+  return out;
 }
 
 /** A file's header: `key: value` lines between two `---` lines; lists are comma-separated. */
@@ -53,6 +103,7 @@ export function buildBrainIndex(dir: string): BrainIndex {
   entries.push({
     id: 'doctrine',
     kind: 'doctrine',
+    department: null,
     for: headerOf(doctrine).for ?? 'what every answer holds to',
     recognise: [],
     tools: [],
@@ -61,45 +112,81 @@ export function buildBrainIndex(dir: string): BrainIndex {
     file: 'doctrine.md',
     sha256: sha256Hex(doctrine),
   });
-  for (const name of readdirSync(join(dir, 'chapters'))
-    .filter((f) => f.endsWith('.md'))
-    .sort()) {
-    const text = read(`chapters/${name}`);
+  // each department's hub, <department>/README.md: what it holds, and when to use which of its chapters
+  for (const d of BRAIN_DEPARTMENTS) {
+    const file = `${d}/README.md`;
+    const text = read(file);
     const h = headerOf(text);
     entries.push({
-      id: h.id ?? name.replace(/\.md$/, ''),
-      kind: 'chapter',
+      id: h.id ?? d,
+      kind: 'department',
+      department: d,
       for: h.for ?? '',
       recognise: list(h.recognise),
-      tools: list(h.tools),
-      continues: list(h.continues),
+      tools: [],
+      continues: [],
       status: h.status === 'ready' ? 'ready' : 'partial',
-      file: `chapters/${name}`,
+      file,
       sha256: sha256Hex(text),
     });
   }
-  for (const name of readdirSync(join(dir, 'recipes'))
-    .filter((f) => f.endsWith('.json'))
-    .sort()) {
-    const text = read(`recipes/${name}`);
-    const r = JSON.parse(text) as { id: string; for: string; recognise?: { answers?: string[] } };
-    entries.push({
-      id: r.id,
-      kind: 'recipe',
-      for: r.for,
-      recognise: r.recognise?.answers ?? [],
-      tools: ['get_snapshot', 'compose_view'],
-      continues: ['where-power-lives', 'going-deeper'],
-      status: 'ready',
-      file: `recipes/${name}`,
-      sha256: sha256Hex(text),
-    });
+  // chapters and recipes, each in its department's folder: <department>/<id>.md, <department>/recipes/<id>.json
+  const chapters: BrainEntry[] = [];
+  const recipes: BrainEntry[] = [];
+  for (const d of BRAIN_DEPARTMENTS) {
+    for (const name of readdirSync(join(dir, d)).filter(
+      (f) => f.endsWith('.md') && f !== 'README.md',
+    )) {
+      const file = `${d}/${name}`;
+      const text = read(file);
+      const h = headerOf(text);
+      chapters.push({
+        id: h.id ?? name.replace(/\.md$/, ''),
+        kind: 'chapter',
+        department: h.department ?? '',
+        for: h.for ?? '',
+        recognise: list(h.recognise),
+        tools: list(h.tools),
+        continues: list(h.continues),
+        status: h.status === 'ready' ? 'ready' : 'partial',
+        file,
+        sha256: sha256Hex(text),
+      });
+    }
+    if (!existsSync(join(dir, d, 'recipes'))) continue;
+    for (const name of readdirSync(join(dir, d, 'recipes')).filter((f) => f.endsWith('.json'))) {
+      const file = `${d}/recipes/${name}`;
+      const text = read(file);
+      const r = JSON.parse(text) as {
+        id: string;
+        department?: string;
+        for: string;
+        recognise?: { answers?: string[] };
+      };
+      recipes.push({
+        id: r.id,
+        kind: 'recipe',
+        department: r.department ?? '',
+        for: r.for,
+        recognise: r.recognise?.answers ?? [],
+        tools: ['get_snapshot', 'compose_view'],
+        continues: ['where-power-lives', 'going-deeper'],
+        status: 'ready',
+        file,
+        sha256: sha256Hex(text),
+      });
+    }
   }
-  return { petal: BRAIN_INDEX_VERSION, entries };
+  // in a fixed order, as before the folders: chapters by file name, then recipes
+  const nameOf = (e: BrainEntry) => e.file.slice(e.file.lastIndexOf('/') + 1);
+  const byName = (a: BrainEntry, b: BrainEntry) => (nameOf(a) < nameOf(b) ? -1 : 1);
+  entries.push(...chapters.sort(byName), ...recipes.sort(byName));
+  return { petal: BRAIN_INDEX_VERSION, entries, tasks: routingOf(read('routing.md')) };
 }
 
 /** What's wrong with an index against what exists: an unknown tool, a continuation that isn't a
- * chapter, an id twice, or a doctrine that names a path. Empty when it's sound. */
+ * chapter, an id twice, a chapter or recipe in no department Elco named, a routing row naming a file that isn't
+ * there or a chapter in no row, or a doctrine that names a path. Empty when it's sound. */
 export function brainProblems(
   index: BrainIndex,
   tools: readonly string[],
@@ -111,8 +198,32 @@ export function brainProblems(
     if (ids.has(e.id)) out.push(`${e.file}: the id ${e.id} is used twice`);
     ids.add(e.id);
     if (!e.for) out.push(`${e.file}: its header says nothing under for`);
+    if (e.kind !== 'doctrine' && e.department && !e.file.startsWith(`${e.department}/`))
+      out.push(
+        `${e.file}: its header says ${e.department}, and it's in another department's folder`,
+      );
+    if (
+      e.kind !== 'doctrine' &&
+      !(BRAIN_DEPARTMENTS as readonly string[]).includes(e.department ?? '')
+    )
+      out.push(
+        `${e.file}: ${e.department ? `no department ${e.department}` : 'its header names no department'} (${BRAIN_DEPARTMENTS.join(', ')})`,
+      );
   }
   const chapters = new Set(index.entries.filter((e) => e.kind === 'chapter').map((e) => e.id));
+  // routing.md: every row names files that exist, and every chapter is in a row
+  const known = new Set(index.entries.filter((e) => e.kind !== 'doctrine').map((e) => e.id));
+  const rowed = new Set<string>();
+  for (const t of index.tasks) {
+    if (!t.load.length) out.push(`routing.md: the row ${t.task} loads nothing`);
+    for (const id of [...t.load, ...t.also]) {
+      if (!known.has(id))
+        out.push(`routing.md: the row ${t.task} names ${id}, which isn't in the brain`);
+      rowed.add(id);
+    }
+  }
+  for (const c of chapters)
+    if (!rowed.has(c)) out.push(`routing.md: no row names the chapter ${c}`);
   for (const e of index.entries) {
     for (const t of e.tools) if (!tools.includes(t)) out.push(`${e.file}: no tool ${t}`);
     for (const c of e.continues)
@@ -234,6 +345,8 @@ export function brainAt(dir: string) {
 export interface BrainRoute {
   id: string;
   kind: BrainEntry['kind'];
+  /** the department it's in */
+  department: string | null;
   for: string;
   file: string;
   status: BrainEntry['status'];
@@ -255,8 +368,13 @@ export function wordsOf(text: string): string[] {
     .map((w) => (w.length > 4 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0, -1) : w));
 }
 
-/** What a header offers to words: its id, what it's for, and what it answers to, counted twice. */
+/**
+ * What a header offers to words: its id, what it's for, and what it answers to, counted twice. A department's
+ * hub answers to its name only, so a question in a chapter's own words still reaches the chapter first.
+ */
 function docWords(e: BrainEntry): string[] {
+  if (e.kind === 'department')
+    return [...wordsOf(e.id), ...wordsOf(e.recognise.join(' ')), ...wordsOf(e.recognise.join(' '))];
   return [
     ...wordsOf(e.id.replaceAll('-', ' ')),
     ...wordsOf(e.for),
@@ -268,6 +386,7 @@ function docWords(e: BrainEntry): string[] {
 const routeOf = (e: BrainEntry, why: string, score: number): BrainRoute => ({
   id: e.id,
   kind: e.kind,
+  department: e.department,
   for: e.for,
   file: e.file,
   status: e.status,
@@ -303,11 +422,19 @@ export function routeBrain(
   }
   const asked = wordsOf(q.words ?? '');
   if (asked.length) {
-    const docs = entries.map((e) => ({ e, words: docWords(e) }));
+    const byId = new Map(entries.map((e) => [e.id, e]));
+    type Doc =
+      | { e: BrainEntry; t?: undefined; words: string[] }
+      | { e?: undefined; t: BrainTask; words: string[] };
+    const docs: Doc[] = [
+      ...entries.map((e) => ({ e, words: docWords(e) })),
+      // a routing row answers to its task's words and the words beside it
+      ...index.tasks.map((t) => ({ t, words: wordsOf(`${t.task} ${t.words.join(' ')}`) })),
+    ];
     const avg = docs.reduce((s, d) => s + d.words.length, 0) / Math.max(1, docs.length);
     const k1 = 1.2;
     const b = 0.75;
-    const scored = docs.map(({ e, words }) => {
+    const scored = docs.map(({ e, t, words }) => {
       let score = 0;
       const hit: string[] = [];
       for (const w of new Set(asked)) {
@@ -318,11 +445,36 @@ export function routeBrain(
         score += (idf * tf * (k1 + 1)) / (tf + k1 * (1 - b + (b * words.length) / avg));
         hit.push(w);
       }
-      return { e, score, hit };
+      return { e, t, score, hit };
     });
     for (const s of scored.filter((x) => x.score > 0).sort((x, y) => y.score - x.score)) {
-      if (!out.some((r) => r.id === s.e.id))
-        out.push(routeOf(s.e, `words: ${s.hit.join(', ')}`, s.score));
+      const { e: entry, t: task } = s;
+      if (entry) {
+        if (!out.some((r) => r.id === entry.id))
+          out.push(routeOf(entry, `words: ${s.hit.join(', ')}`, s.score));
+        continue;
+      }
+      if (!task) continue;
+      // a row that fires brings what it loads, its chapters before its departments' hubs, then what it also loads
+      const loads = [
+        ...task.load.filter((id) => byId.get(id)?.kind !== 'department'),
+        ...task.load.filter((id) => byId.get(id)?.kind === 'department'),
+      ];
+      const brings = [
+        ...loads.map((id) => [id, 'loads'] as const),
+        ...task.also.map((id) => [id, 'also loads'] as const),
+      ];
+      brings.forEach(([id, how], i) => {
+        const e = byId.get(id);
+        if (e && !out.some((r) => r.id === id))
+          out.push(
+            routeOf(
+              e,
+              `the task "${task.task}" ${how} it (words: ${s.hit.join(', ')})`,
+              s.score - i / 1e6,
+            ),
+          );
+      });
     }
   }
   return out.sort((x, y) => y.score - x.score).slice(0, n);

@@ -1,5 +1,6 @@
 ---
 id: what-kind-of-thing-it-is
+department: gathering
 for: describing an account or network's technical form, roles and declared organisation type
 recognise: type, kind, kind of thing, classification, DAO, foundation, protocol, community, multisig, contract, exchange, custodian, wallet
 tools: look_up, get_network, get_snapshot, read_chain, read_page, add_annotation

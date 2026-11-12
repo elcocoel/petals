@@ -1,6 +1,7 @@
 {
   "petal": "recipe/v1",
   "id": "moloch-v3",
+  "department": "governance",
   "title": "Moloch v3 (Baal) members",
   "for": "A Moloch v3 DAO (Baal, as DAOhaus deploys it): who holds its shares and loot, and what they did in it",
   "description": "Members of a Moloch v3 (Baal) DAO. Shares are votes and a claim on the treasury; loot is a claim with no vote. Both are tokens the DAO names. Proposals sponsored and votes cast come from the DAO's own events. Proposals written are counted by who sent each submission, which costs one call per proposal, so ask for it with measures=proposals_written. Give the DAO's address.",

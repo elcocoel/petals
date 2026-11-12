@@ -9,8 +9,8 @@ test('all seven sections and canonical files have navigable, unique pages', asyn
   assert.equal(new Set(pages.map((p) => p.slug)).size, pages.length);
   for (const source of [
     'brain/doctrine.md',
-    'brain/chapters/connect-codex.md',
-    'brain/recipes/moloch-v3.json',
+    'brain/connecting/connect-codex.md',
+    'brain/governance/recipes/moloch-v3.json',
     'specs/protocols.md',
     'specs/001-petal-core/contracts/http-api.md',
   ]) {

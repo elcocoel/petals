@@ -1,5 +1,6 @@
 ---
 id: over-time
+department: investigation
 for: how a group changed over a span, at an interval agreed with the person
 recognise: over time, history, change, since, trend, month, year, before
 tools: get_snapshot, compute_figures, describe_snapshot

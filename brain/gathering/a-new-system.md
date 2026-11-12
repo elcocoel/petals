@@ -1,5 +1,6 @@
 ---
 id: a-new-system
+department: gathering
 for: a contract or system Petals has no recipe for yet
 recognise: unknown contract, not supported, no module, new framework, can't read
 tools: read_chain, add_layer, get_snapshot

@@ -27,7 +27,7 @@ describe('hostedSkill', () => {
 
   test("keeps the file as MCP tools only when asked, with each agent's own command", () => {
     const setup = part('Set yourself up first');
-    // the connect chapters' words (brain/chapters/connect-*.md), generated into the skill
+    // the connect chapters' words (brain/connecting/connect-*.md), generated into the skill
     expect(setup).toMatch(/Only when they ask, add the file as an MCP server/);
     expect(setup).toContain(
       'claude mcp add -s user petals -- "$(command -v node)" "$HOME/.petals/petal.mjs" mcp',

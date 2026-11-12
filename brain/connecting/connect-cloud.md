@@ -1,5 +1,6 @@
 ---
 id: connect-cloud
+department: connecting
 app: cloud
 for: connecting an app that runs in the cloud, or takes a remote MCP server's URL, to Petals as a connector: the Claude app, ChatGPT, Cursor
 recognise: claude app, claude.ai, claude desktop chat, claude mobile, chatgpt, openai, cursor, connector, custom connector, remote mcp, mcp url, connect, set up, add petals, cloud sandbox, code execution, blocked domain

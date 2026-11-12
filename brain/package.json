@@ -7,7 +7,7 @@
   "description": "What Petals' agent knows how to do: the doctrine, the chapters and the reading recipes (specs/005-mapping-brain). Plain files; the repo is their only source.",
   "exports": {
     ".": "./index.ts",
-    "./recipes/*": "./recipes/*",
+    "./*.json": "./*.json",
     "./index.json": "./index.json",
     "./package.json": "./package.json"
   }

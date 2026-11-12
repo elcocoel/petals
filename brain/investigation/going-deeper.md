@@ -1,5 +1,6 @@
 ---
 id: going-deeper
+department: investigation
 for: what to offer after every answer
 recognise: more, deeper, next, why, who else, tell me more
 tools: account_groups, related_groups, shared_accounts, power_path, get_snapshot

@@ -1,5 +1,6 @@
 ---
 id: who-gets-a-vote
+department: governance
 for: distinguishing holdings, membership, delegation and the right to vote, join or leave
 recognise: voting power, delegates, delegated, delegation, holders, membership, shares, loot, ERC20Votes, Moloch, veNEAR, House of Stake, join, leave, ragequit, lock, unlock
 tools: list_networks, get_network, get_snapshot, describe_snapshot, read_chain

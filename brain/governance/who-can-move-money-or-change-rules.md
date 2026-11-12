@@ -1,5 +1,6 @@
 ---
 id: who-can-move-money-or-change-rules
+department: governance
 for: tracing treasury execution and authority to change permissions or contract rules
 recognise: treasury, spend, funds, money, Safe, multisig, signers, owners, modules, admin, roles, permissions, mint, upgrade, pause, timelock, shaman, policy, Aragon
 tools: list_networks, get_network, get_snapshot, describe_snapshot, read_chain, add_layer

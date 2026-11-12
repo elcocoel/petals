@@ -1,5 +1,6 @@
 ---
 id: open-source-leads
+department: gathering
 for: public traces that might say what an address did, as directions only
 recognise: osint, forum, twitter, x, ens, who wrote, discussion, social, who is, names, people
 tools: read_page, search, add_annotation

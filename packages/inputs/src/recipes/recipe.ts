@@ -45,6 +45,8 @@ export interface RecipeMeasure {
 export interface ReadingRecipe {
   petal: typeof RECIPE_VERSION;
   id: string;
+  /** the brain's department it's in (brain-index/v2) */
+  department?: string;
   title: string;
   for: string;
   description: string;
@@ -168,7 +170,7 @@ export function recipeDescriptor(recipe: ReadingRecipe): NetworkDescriptor {
     population: recipe.id,
     kind: 'dao',
     title: recipe.title,
-    description: `${recipe.description} (A reading recipe: brain/recipes/${recipe.id}.json.)`,
+    description: `${recipe.description} (A reading recipe: brain/${recipe.department ?? 'governance'}/recipes/${recipe.id}.json.)`,
     params: recipe.params,
     capabilities: capabilitiesOf(recipe, sources),
     live: true,

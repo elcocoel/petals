@@ -1,5 +1,6 @@
 ---
 id: connect-claude-code
+department: connecting
 app: claude-code
 for: connecting Claude Code to Petals, in a terminal or under Code in the Claude desktop app, and keeping it for next time
 recognise: claude code, claude cli, claude desktop code, anthropic, connect, set up, install, mcp, add petals, keep petals
