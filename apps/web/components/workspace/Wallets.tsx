@@ -1,19 +1,38 @@
 // The Wallets card (#79, the profile page as the investigator's card): the wallets the person proved by
 // signing in with them, each with its chain and when it signed, and the badge PROVEN, set against a link's
 // DECLARED, so it reads what backs the person and what's only their word. Null while it's read; with no
-// answer, it says so. Props only: viewmodels/useLobby.ts reads it. Words from lib/profile-view.ts, drafts.
-import { profilePageWords, type WalletRow } from '../../lib/profile-view.ts';
+// answer, it says so. Its one action, Add a wallet (Elco, 11 Nov: "allow me to add more wallets"), asks
+// another wallet to sign, as signing in does. Props only: viewmodels/useLobby.ts reads it and adds. Words
+// from lib/profile-view.ts, drafts.
+import { type AddWalletPhase, profilePageWords, type WalletRow } from '../../lib/profile-view.ts';
 import { Badge } from '../ui/Badge.tsx';
+import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
 import { Mono } from '../ui/Mono.tsx';
 
-export function Wallets({ wallets }: { wallets: WalletRow[] | 'reading' | 'unread' }) {
+export function Wallets({
+  wallets,
+  adding = { kind: 'ready' },
+  onAdd,
+}: {
+  wallets: WalletRow[] | 'reading' | 'unread';
+  adding?: AddWalletPhase;
+  /** Asks another wallet to sign; absent, there's no button. */
+  onAdd?: () => void;
+}) {
   const rows = Array.isArray(wallets) ? wallets : [];
   return (
     <Card
       title={profilePageWords.wallets}
       labelledBy="profile-wallets"
       badge={rows.length > 0 ? <Badge>{rows.length}</Badge> : undefined}
+      action={
+        onAdd ? (
+          <Button variant="secondary" disabled={adding.kind === 'adding'} onClick={onAdd}>
+            {profilePageWords.addWallet}
+          </Button>
+        ) : undefined
+      }
     >
       {wallets === 'reading' && (
         <p className="my-0 type-caption text-muted">{profilePageWords.reading}</p>
@@ -43,6 +62,10 @@ export function Wallets({ wallets }: { wallets: WalletRow[] | 'reading' | 'unrea
           <p className="my-0 type-caption text-muted">{profilePageWords.walletsNote}</p>
         </>
       )}
+      {adding.kind === 'adding' && (
+        <p className="my-0 type-caption text-muted">{profilePageWords.adding}</p>
+      )}
+      {adding.kind === 'failed' && <p className="my-0 type-caption">{adding.why}</p>}
     </Card>
   );
 }

@@ -36,7 +36,7 @@ import {
 } from './near-social.ts';
 import type { Credit, PayInfo } from './pay.ts';
 import type { PersonView } from './person-view.ts';
-import type { ProvenWallet } from './profile-view.ts';
+import type { ProvenWallet, UsageCall } from './profile-view.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
 import type { Tip } from './tip.ts';
@@ -574,6 +574,24 @@ export async function readCredit(): Promise<Credit | null> {
   if (!res.ok) return null;
   const json = (await res.json()) as { credit?: Credit | null };
   return json.credit ?? null;
+}
+
+/** Every model call charged to the person (usage/v1), newest first, and what they came to; null for nobody. */
+export async function readMyUsage(): Promise<{
+  usage: UsageCall[];
+  totals: { charged_usd: number };
+} | null> {
+  const res = await fetch('/api/v1/me/usage', { cache: 'no-store' });
+  if (!res.ok) return null;
+  return (await res.json()) as { usage: UsageCall[]; totals: { charged_usd: number } };
+}
+
+/** Another wallet for the person signed in (POST /api/v1/me/wallets): its proof, as signing in sends one. */
+export function addMyWallet(
+  network: string,
+  proof: Nep413Proof,
+): Promise<{ wallets: ProvenWallet[] }> {
+  return sessionPost('/api/v1/me/wallets', { network, proof });
 }
 
 /** The wallets the person proved by signing in, as GET /api/v1/me lists them; null for nobody or no answer. */
