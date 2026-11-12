@@ -546,7 +546,7 @@ export function createScene(
       );
       return { pl, own, rest, seen, hit };
     });
-  // the pointed proposal's words, in the flower's middle under its title, where they always fit
+  // the pointed proposal's words, in the flower's middle above its logo and name, where they always fit
   const voteWords = votes
     ? slot(el('text', { fill: INK, opacity: 0, 'text-anchor': 'middle' }, root))
     : null;
@@ -557,8 +557,9 @@ export function createScene(
     if (!voteWords || !voteTally || pointed < 0 || !lastView) return;
     const x = (SHAPE.cx + lastRing.ox) * lastView.k + lastView.x;
     const y = (SHAPE.cy + lastRing.oy) * lastView.k + lastView.y;
-    voteWords.set('transform', `translate(${n3(x)} ${n3(y + LINE * 1.6)})`);
-    voteTally.set('transform', `translate(${n3(x)} ${n3(y + LINE * 2.8)})`);
+    // above the middle, so they never sit on the DAO's name under its logo (Elco, 12 Nov walk 3)
+    voteWords.set('transform', `translate(${n3(x)} ${n3(y - LINE * 3.4)})`);
+    voteTally.set('transform', `translate(${n3(x)} ${n3(y - LINE * 2.2)})`);
   };
   const point = (j: number) => {
     if (!votes || !dotLayer) return;

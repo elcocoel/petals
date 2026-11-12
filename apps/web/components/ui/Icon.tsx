@@ -13,6 +13,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   ArrowUUpLeft,
+  CaretDown,
   CaretRight,
   ChatCircle,
   DotsThree,
@@ -51,6 +52,8 @@ const GLYPHS = {
   project: FolderSimple,
   /** A row that opens: it turns down when open. */
   chevron: CaretRight,
+  /** The same row, open: a control that folds it again, drawn turned, so its own tooltip never turns. */
+  down: CaretDown,
   close: X,
   /** A conversation with Petals' agent. */
   petals: Flower,

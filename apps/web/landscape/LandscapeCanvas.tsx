@@ -388,7 +388,8 @@ export function LandscapeCanvas({
       const model = modelOf(f.reading);
       flowers.push({
         name: f.name,
-        mark: f.mark,
+        // the chain's logo for the centre of a flower with none of its own
+        mark: { ...f.mark, chain: here.logo ?? null },
         place: f.place,
         model,
         reach: reachOf(model),
@@ -672,14 +673,13 @@ export function LandscapeCanvas({
             folded={!listOpen}
             closed={chainsClosed}
             control={
-              <span className={`flex ${listOpen ? 'rotate-90' : ''}`}>
-                <IconButton
-                  icon="chevron"
-                  label={listOpen ? panelWords.boxFold : panelWords.boxOpen}
-                  expanded={listOpen}
-                  onClick={() => setListOpen((now) => !now)}
-                />
-              </span>
+              <IconButton
+                icon={listOpen ? 'down' : 'chevron'}
+                label={listOpen ? panelWords.boxFold : panelWords.boxOpen}
+                tip="right"
+                expanded={listOpen}
+                onClick={() => setListOpen((now) => !now)}
+              />
             }
           >
             <div className="flex flex-col px-space-8 py-space-8">{chainRows}</div>
@@ -691,14 +691,13 @@ export function LandscapeCanvas({
               hand={{ ...panels.legend, root: legendRoot }}
               folded={!legendOpen}
               control={
-                <span className={`flex ${legendOpen ? 'rotate-90' : ''}`}>
-                  <IconButton
-                    icon="chevron"
-                    label={legendOpen ? panelWords.boxFold : panelWords.boxOpen}
-                    expanded={legendOpen}
-                    onClick={() => setLegendOpen((now) => !now)}
-                  />
-                </span>
+                <IconButton
+                  icon={legendOpen ? 'down' : 'chevron'}
+                  label={legendOpen ? panelWords.boxFold : panelWords.boxOpen}
+                  tip="right"
+                  expanded={legendOpen}
+                  onClick={() => setLegendOpen((now) => !now)}
+                />
               }
             >
               {legendBody(true)}
@@ -712,14 +711,13 @@ export function LandscapeCanvas({
               folded={!claimsOpen}
               closed={!showClaims}
               control={
-                <span className={`flex ${claimsOpen ? 'rotate-90' : ''}`}>
-                  <IconButton
-                    icon="chevron"
-                    label={claimsOpen ? panelWords.boxFold : panelWords.boxOpen}
-                    expanded={claimsOpen}
-                    onClick={() => setClaimsOpen((now) => !now)}
-                  />
-                </span>
+                <IconButton
+                  icon={claimsOpen ? 'down' : 'chevron'}
+                  label={claimsOpen ? panelWords.boxFold : panelWords.boxOpen}
+                  tip="right"
+                  expanded={claimsOpen}
+                  onClick={() => setClaimsOpen((now) => !now)}
+                />
               }
             >
               {claimsBody(true)}
