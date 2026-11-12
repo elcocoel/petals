@@ -35,6 +35,7 @@ import { NavItem } from '../components/ui/NavItem.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
+import { WalletFacts } from '../components/WalletFacts.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
 import { SHAPE } from '../flower/ring.ts';
 import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
@@ -47,6 +48,7 @@ import { panelWords } from '../lib/panel-words.ts';
 import { CHOOSABLE } from '../lib/person-view.ts';
 import { proposalView, proposalWords } from '../lib/proposal-view.ts';
 import { type LegendEdit, onlyWhatDraws } from '../lib/view-edit.ts';
+import { walletView, walletWords } from '../lib/wallet-view.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
 import { useMapBlocs } from '../viewmodels/useMapBlocs.ts';
@@ -750,6 +752,10 @@ export function LandscapeCanvas({
   // the map's layers, each with its period and who mapped it (Elco's walk 3), from its card and its insights
   const card = useMapCard(legend && movable ? (inFlower?.map ?? null) : null);
   const layers = useMemo(() => (card ? mapLayers(card, claims) : []), [card, claims]);
+  // the wallet chosen on the map, its own facts first in Information (WORKSPACE, wave 4: the same on /make)
+  const chosenWallet = wallet
+    ? (inFlower?.reading.petals.find((p) => p.id === wallet) ?? null)
+    : null;
   const blocs = useMapBlocs(legend ? (inFlower?.map ?? null) : null, span);
   const choices = useMemo(() => (blocs ? blocChoices(blocs) : []), [blocs]);
   const lit = useMemo(() => choices.find((c) => c.id === bloc)?.members ?? null, [choices, bloc]);
@@ -1043,6 +1049,14 @@ export function LandscapeCanvas({
             >
               {/* each part under its head, the heads edge to edge (SectionHead's panel size) */}
               <div className="flex flex-col pb-space-8">
+                {chosenWallet && (
+                  <div className="flex flex-col px-space-8">
+                    <SectionHead size="panel" title={walletWords.title} />
+                    <div className="px-space-8 py-space-8">
+                      <WalletFacts view={walletView(chosenWallet, card?.value)} />
+                    </div>
+                  </div>
+                )}
                 {pinned && (
                   <div className="flex flex-col px-space-8">
                     <SectionHead size="panel" title={proposalWords.title} />

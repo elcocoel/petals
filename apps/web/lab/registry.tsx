@@ -99,6 +99,7 @@ import { Tip } from '../components/ui/Tip.tsx';
 import { Transcript } from '../components/ui/Transcript.tsx';
 import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
+import { WalletFacts } from '../components/WalletFacts.tsx';
 import { Claims } from '../components/workspace/Claims.tsx';
 import { Conversations } from '../components/workspace/Conversations.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
@@ -3367,6 +3368,35 @@ export const registry: LabEntry[] = [
                   },
                   { key: 'claims', label: 'What Petals’ mapping says', onPress: () => undefined },
                 ],
+              }}
+            />
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'WalletFacts',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/WalletFacts.tsx',
+    states: [
+      {
+        name: 'a chosen wallet in Information: who it is, its kind, what it holds, its share, its dollars',
+        render: () => (
+          <div className="w-tile-width">
+            <WalletFacts
+              view={{
+                title: 'cronus.near',
+                address: null,
+                facts: [
+                  ['Who it is', 'Not named yet'],
+                  ['Kind', 'unknown'],
+                  ['Holds', '534 NEAR'],
+                  ['Share', '8.19%'],
+                ],
+                worth: { text: '$1,997.16 at $3.74 per NEAR', source: '1Click, 11 Nov 2026' },
               }}
             />
           </div>
