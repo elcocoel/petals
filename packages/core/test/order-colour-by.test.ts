@@ -4,7 +4,7 @@
 // first; votes_cast, a count, most first); Colour takes voted, 'never voted' in grey; and a map's keys are ranked
 // once over all its flowers.
 import { describe, expect, test } from 'vitest';
-import { readFlower } from '../src/reading/index.ts';
+import { readFlower, redress } from '../src/reading/index.ts';
 import { GREY, KEYS, keysOf, mapKeys, wordsOf } from '../src/render/wedge/keys.ts';
 import type { SeamPiece } from '../src/seam.ts';
 import type { View } from '../src/types/index.ts';
@@ -195,4 +195,37 @@ describe('Colour graded by a number or a date, and chosen colours (Elco, wave 4)
     expect(keyed.find((k) => k.value === 'b')?.key?.name).toBe('mint');
     expect(keyed.find((k) => k.value === 'a')?.key?.name).toBe('blue');
   });
+});
+
+test('Segments draws any parts piece given (vesting: unlocked, next unlock, later), bottom to top', () => {
+  const vesting = {
+    name: 'vesting',
+    kind: 'parts',
+    unit: 'token',
+    standing: 'verified',
+    layer: 'test',
+    as_of: '2026-11-12T00:00:00Z',
+    parts: [
+      { participant: a, part: 'unlocked', value: '30' },
+      { participant: a, part: 'next unlock', value: '10' },
+      { participant: a, part: 'later', value: '60' },
+    ],
+  } as SeamPiece;
+  const view = withView((d) => (d.segments = { data: 'vesting' }));
+  const r = readFlower(spec, s, view, [...pieces, vesting]);
+  const seg = r.petals.find((p) => p.id === a)?.segments ?? [];
+  expect(seg.map((x) => [x.key, x.frac])).toEqual([
+    ['unlocked', 0.3],
+    ['next unlock', 0.1],
+    ['later', 0.6],
+  ]);
+  // the browser's redress draws the same
+  const again = redress(readFlower(spec, s, DEFAULT_VIEW, [...pieces, vesting]).petals, view, [
+    vesting,
+  ]);
+  expect(again.find((p) => p.id === a)?.segments.map((x) => x.key)).toEqual([
+    'unlocked',
+    'next unlock',
+    'later',
+  ]);
 });
