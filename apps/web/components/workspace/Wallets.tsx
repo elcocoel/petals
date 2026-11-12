@@ -4,7 +4,12 @@
 // answer, it says so. Its one action, Add a wallet (Elco, 11 Nov: "allow me to add more wallets"), asks
 // another wallet to sign, as signing in does. Props only: viewmodels/useLobby.ts reads it and adds. Words
 // from lib/profile-view.ts, drafts.
-import { type AddWalletPhase, profilePageWords, type WalletRow } from '../../lib/profile-view.ts';
+import {
+  type AddWalletPhase,
+  profilePageWords,
+  type WalletKind,
+  type WalletRow,
+} from '../../lib/profile-view.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
@@ -18,7 +23,7 @@ export function Wallets({
   wallets: WalletRow[] | 'reading' | 'unread';
   adding?: AddWalletPhase;
   /** Asks another wallet to sign, a NEAR or an EVM one; absent, there are no buttons. */
-  onAdd?: (kind: 'near' | 'evm') => void;
+  onAdd?: (kind: WalletKind) => void;
 }) {
   const rows = Array.isArray(wallets) ? wallets : [];
   return (
@@ -70,6 +75,13 @@ export function Wallets({
             onClick={() => onAdd('evm')}
           >
             {profilePageWords.connectEvm}
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={adding.kind === 'adding'}
+            onClick={() => onAdd('solana')}
+          >
+            {profilePageWords.connectSolana}
           </Button>
         </div>
       )}

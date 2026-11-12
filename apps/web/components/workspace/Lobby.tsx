@@ -18,7 +18,13 @@ import {
   type WithdrawPhase,
 } from '../../lib/lobby-view.ts';
 import type { Money } from '../../lib/pay.ts';
-import type { AddWalletPhase, ClaimsView, UsageView, WalletRow } from '../../lib/profile-view.ts';
+import type {
+  AddWalletPhase,
+  ClaimsView,
+  UsageView,
+  WalletKind,
+  WalletRow,
+} from '../../lib/profile-view.ts';
 import { MapList } from '../MapList.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
@@ -69,7 +75,7 @@ export function Lobby({
   usage: UsageView | 'reading' | 'unread';
   wallets: WalletRow[] | 'reading' | 'unread';
   adding: AddWalletPhase;
-  addWallet: (kind: 'near' | 'evm') => void;
+  addWallet: (kind: WalletKind) => void;
   claims: ClaimsView | 'reading' | 'unread';
   conversations: ConversationRow[];
   map: LobbyMap;

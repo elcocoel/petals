@@ -21,6 +21,7 @@ export const profilePageWords = {
   /** The two ways to add one (wave 5; buttons say Connect; WORKSPACE's door says the same). */
   connectNear: 'Connect a NEAR wallet',
   connectEvm: 'Connect an Ethereum wallet',
+  connectSolana: 'Connect a Solana wallet',
   adding: 'Waiting for your wallet…',
   notAdded: 'That wallet wasn’t added. Try again.',
   claims: 'Claims',
@@ -33,6 +34,9 @@ export const profilePageWords = {
   unread: 'This can’t be read right now.',
   reading: 'Reading…',
 } as const;
+
+/** Which wallet to add: NEAR, an EVM one, or a Solana one (wave 5). */
+export type WalletKind = 'near' | 'evm' | 'solana';
 
 /** Where adding a wallet is: offered, waiting for the wallet, or it didn't go through and why. */
 export type AddWalletPhase =
