@@ -1,6 +1,6 @@
 'use client';
-import { type CSSProperties, memo } from 'react';
-import { conversationAt, flowerAt, type Pin, toolsPin } from '../../lib/hero-shots.ts';
+import { type CSSProperties, memo, type ReactNode } from 'react';
+import { answerPin, flowerAt, type Pin, questionPin, toolsPin } from '../../lib/hero-shots.ts';
 import {
   answerBox,
   answerLine,
@@ -44,12 +44,22 @@ export type StoryLayer = 'all' | 'words' | 'petals';
 const soft = (px: number) => (px > 0.05 ? `blur(${px.toFixed(2)}px)` : 'none');
 const n2 = (x: number) => x.toFixed(2);
 
-/** A box on its pin: that corner of it on that point of the stage, moved by its motion, at its depth. */
+/** A pin's height as CSS: its % of the column, or within its cap of the middle. */
+const topOf = (p: Pin) =>
+  p.cap === undefined
+    ? `${p.y}cqh`
+    : `calc(50cqh + clamp(-${p.cap}px, ${p.y - 50}cqh, ${p.cap}px))`;
+
+/**
+ * A box on its pin: that corner of it on that point of the column, moved by its motion, at its depth, turned
+ * towards the flower (Elco, 12 Nov: the 3D "more for the messages").
+ */
 const pinned = (pin: Pin, m: Motion): CSSProperties => {
   const side = pin.ax > 0.5 ? -1 : 1;
   return {
     opacity: m.opacity,
-    translate: `calc(${pin.x}cqw - ${pin.ax * 100}% + ${n2(m.x * side)}px) calc(${pin.y}cqh - ${pin.ay * 100}% + ${n2(m.y)}px) ${n2(m.z)}px`,
+    visibility: m.opacity < 0.002 ? 'hidden' : undefined,
+    translate: `calc(${pin.x}cqw - ${pin.ax * 100}% + ${n2(m.x * side)}px) calc(${topOf(pin)} - ${pin.ay * 100}% + ${n2(m.y)}px) ${n2(m.z)}px`,
     scale: m.scale.toFixed(4),
     transform: `rotateY(${n2(side * m.turn)}deg)`,
     transformOrigin: `${pin.ax * 100}% ${pin.ay * 100}%`,
@@ -58,18 +68,23 @@ const pinned = (pin: Pin, m: Motion): CSSProperties => {
 };
 
 /**
- * A message in the conversation, moved by its motion where the conversation puts it: in depth, turned towards the
- * flower, as it swings in (Elco, 12 Nov: the 3D "more for the messages").
+ * The page's column over the stage (Elco, 12 Nov: on a wide window the messages ran onto the headline): the story
+ * is composed in it, as the words are, so it stays with them however wide the window; the world runs on past it.
  */
-const moved = (m: Motion): CSSProperties => ({
-  opacity: m.opacity,
-  visibility: m.opacity < 0.002 ? 'hidden' : undefined,
-  translate: `${n2(m.x)}px ${n2(m.y)}px ${n2(m.z)}px`,
-  scale: m.scale.toFixed(4),
-  transform: `rotateY(${n2(m.turn)}deg)`,
-  transformOrigin: '0% 50%',
-  filter: soft(m.blur),
-});
+function Column({ children }: { children: ReactNode }) {
+  return (
+    <div className="pointer-events-none absolute inset-0">
+      <div className="mx-auto h-full w-full max-w-page-width px-block-gap md:px-page-inset">
+        <div
+          className="relative h-full w-full"
+          style={{ containerType: 'size', perspective: '900px' }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /** Where the flower's centre is in its own layer, in %: the drawing's 205 of 440, fitted to the stage's shape. */
 const centreY = (wide: boolean) => (wide ? 46.59 : 48.33);
@@ -89,13 +104,26 @@ const Intro = memo(function Intro() {
 });
 
 /**
- * The question, in a light bubble: it swings in on the one and leaves on the last and. Every question sits in the
- * same cell, so the bubble is the size of the longest and the answer under it never moves.
+ * The question, in a light bubble, the call: it swings in on the one and leaves on the last and. Every question sits
+ * in the same cell, so the bubble is the size of the longest.
  */
-function Question({ beat, u, fresh }: { beat: number; u: number; fresh: boolean }) {
+function Question({
+  beat,
+  u,
+  fresh,
+  wide,
+}: {
+  beat: number;
+  u: number;
+  fresh: boolean;
+  wide: boolean;
+}) {
   const m = question(beat, u, fresh);
   return (
-    <div className="relative w-full" style={moved(m)}>
+    <div
+      className="absolute top-0 left-0 w-max max-w-4/5 lg:max-w-1/4"
+      style={pinned(questionPin(wide), m)}
+    >
       <Glass tone="light" facing="right" glint={m.glint} glow={m.glow} />
       <div className="relative flex flex-col gap-space-4 px-block-gap py-space-16">
         <Mono>{story.you}</Mono>
@@ -117,16 +145,30 @@ function Question({ beat, u, fresh }: { beat: number; u: number; fresh: boolean 
 }
 
 /**
- * Petals' answer, in a dark box under the question, that comes with the first answer and stays (Elco, 12 Nov):
+ * Petals' answer, the response, in a dark box across the flower from the question, that comes with the first answer
+ * and stays (Elco, 12 Nov):
  * only its words change, the last answer giving way to the next word by word. Every answer sits in the same cell,
  * so the box is the size of the longest and never changes size.
  */
-function Answer({ beat, t, fresh }: { beat: number; t: number; fresh: boolean }) {
+function Answer({
+  beat,
+  t,
+  fresh,
+  wide,
+}: {
+  beat: number;
+  t: number;
+  fresh: boolean;
+  wide: boolean;
+}) {
   const m = answerBox(beat, t, fresh);
   return (
-    <div className="relative w-full" style={moved(m)}>
+    <div
+      className="absolute top-0 left-0 w-max max-w-9/10 lg:max-w-1/4"
+      style={pinned(answerPin(wide), m)}
+    >
       {/* its rim lit from the flower's side */}
-      <Glass tone="dark" facing="right" glint={m.glint} glow={m.glow} />
+      <Glass tone="dark" facing="left" glint={m.glint} glow={m.glow} />
       <div className="relative flex flex-col gap-space-8 px-block-gap py-space-16 text-on-action">
         <p className="my-0 flex items-center gap-space-8 type-mono" style={{ opacity: 0.7 }}>
           <Icon name="petals" small />
@@ -173,33 +215,6 @@ function Answer({ beat, t, fresh }: { beat: number; t: number; fresh: boolean })
           })}
         </div>
       </div>
-    </div>
-  );
-}
-
-/**
- * The conversation: the question with Petals' answer just under it, in one place near the words, so the eye has
- * little way to travel, never further up or down than a glance however tall the stage (conversationAt).
- */
-function Conversation({
-  beat,
-  t,
-  fresh,
-  wide,
-}: {
-  beat: number;
-  t: number;
-  fresh: boolean;
-  wide: boolean;
-}) {
-  const at = conversationAt(wide);
-  return (
-    <div
-      className="absolute top-0 left-0 flex w-11/12 flex-col gap-space-8 lg:w-1/5"
-      style={{ translate: `${at.left} ${at.top}`, perspective: '900px' }}
-    >
-      <Question beat={beat} u={t} fresh={fresh} />
-      <Answer beat={beat} t={t} fresh={fresh} />
     </div>
   );
 }
@@ -258,27 +273,28 @@ export function HeroStoryView({
             className="pointer-events-none absolute inset-0 overflow-hidden"
             style={{ perspective: '900px' }}
           >
-            {/* The middle: the flower where the shot puts it, flat to the screen. */}
-            <div
-              className="absolute inset-0"
-              style={{
-                opacity: back,
-                translate: `${n2(f.x - 50)}% ${n2(f.y - cy)}%`,
-                scale: (f.scale * punch).toFixed(4),
-                transformOrigin: `50% ${cy}%`,
-              }}
-            >
-              <StoryFlower beat={beat} t={t} />
-            </div>
-            {/* The middle ground: the tools, over the flower and behind the question and the answer. */}
-            {wide && (
+            {/* The middle: the flower where the shot puts it, flat to the screen; over it the tools. */}
+            <Column>
               <div
-                className="pointer-events-none absolute inset-0"
-                style={{ opacity: layer === 'petals' ? 0 : back }}
+                className="absolute inset-0"
+                style={{
+                  opacity: back,
+                  translate: `${n2(f.x - 50)}% ${n2(f.y - cy)}%`,
+                  scale: (f.scale * punch).toFixed(4),
+                  transformOrigin: `50% ${cy}%`,
+                }}
               >
-                <Tools beat={beat} t={t} />
+                <StoryFlower beat={beat} t={t} />
               </div>
-            )}
+              {wide && (
+                <div
+                  className="absolute inset-0"
+                  style={{ opacity: layer === 'petals' ? 0 : back }}
+                >
+                  <Tools beat={beat} t={t} />
+                </div>
+              )}
+            </Column>
             {/* Under the words, the world fades into the page, so what runs beneath them never fights them. */}
             <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/2 bg-linear-to-r from-surface from-35% to-transparent lg:block" />
           </div>
@@ -294,12 +310,15 @@ export function HeroStoryView({
               />
             </div>
           </div>
-          {/* In front: the conversation, the question and then Petals' answer. */}
+          {/* In front: the call and the response, on either side of the flower. */}
           <div
             className="pointer-events-none absolute inset-0"
             style={{ opacity: layer === 'petals' ? 0 : 1 }}
           >
-            <Conversation beat={beat} t={t} fresh={fresh} wide={wide} />
+            <Column>
+              <Question beat={beat} u={t} fresh={fresh} wide={wide} />
+              <Answer beat={beat} t={t} fresh={fresh} wide={wide} />
+            </Column>
           </div>
         </div>
       </div>

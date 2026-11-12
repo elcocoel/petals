@@ -3,69 +3,77 @@
 // Each beat is a shot: the flower's place and size. On each beat's one the camera whips the flower from the last
 // shot to this one, lands with a little give and keeps drifting (Elco, 12 Nov: cut to the beat, with ins and outs,
 // never dead still); the flower stays flat to the screen (Elco, 12 Nov: "this 3Dness is 100% not working for the
-// petal"). The question and Petals' answer stay together in one place, near the words, so the eye has little way
-// to travel, and never further up or down than a reader's glance (conversationAt). A wide stage and a narrow one
-// have their own tables. Numbers only, a pure function of the beat and its time.
+// petal"). Everything is placed in the page's column, so it stays composed with the words however wide the window;
+// the question and Petals' answer sit on either side of the flower, call and response, never further up or down
+// than a glance. A wide stage and a narrow one have their own tables. Numbers only, a pure function of the beat and
+// its time.
 import { beatMs, driftAt, spring, whipAt } from './hero-story.ts';
 
-/** A point of the stage, in % of its width and height. */
+/**
+ * A point of the page's column, the words' column the stage's story is composed in (Elco, 12 Nov, on a wide window:
+ * the messages over the headline), in % of its width and height; with `cap`, never more than that many px above or
+ * below its middle, however tall the stage (Elco, 12 Nov: "there should be a limit to how up or down the text boxes
+ * are going to go").
+ */
 export interface Pin {
   x: number;
   y: number;
   /** Which point of the box sits on it: 0 its left or top edge, 1 its right or bottom. */
   ax: number;
   ay: number;
+  cap?: number;
 }
 
 export interface Shot {
-  /** The flower's centre, in % of the stage, and its size against the stage. */
+  /** The flower's centre, in % of the column's width and the stage's height, and its size against the stage. */
   flower: { x: number; y: number; scale: number };
 }
 
-const topRight = (x: number, y: number): Pin => ({ x, y, ax: 1, ay: 0 });
+const pin = (x: number, y: number, ax: number, ay: number, cap?: number): Pin =>
+  cap === undefined ? { x, y, ax, ay } : { x, y, ax, ay, cap };
 
 /**
  * A wide stage, sixteen by nine and the whole width of the window (Elco, 12 Nov: "most of the action is on the
- * right side, biased towards the top"): the words over the left third, the conversation just right of them, the
- * flower right of that, the Tools box high on the right.
+ * right side, biased towards the top"): the words over the left third of the column, the flower in the right two
+ * thirds, the Tools box high on the column's right.
  */
 const WIDE: readonly Shot[] = [
   // a community: where the far map the story opens on is framed
-  { flower: { x: 71, y: 46, scale: 0.6 } },
+  { flower: { x: 66, y: 46, scale: 0.6 } },
   // influence: in a little closer and lower, so the tallest petals have the sky
-  { flower: { x: 70, y: 50, scale: 0.63 } },
+  { flower: { x: 64, y: 50, scale: 0.63 } },
   // blocs
-  { flower: { x: 72, y: 46, scale: 0.6 } },
+  { flower: { x: 67, y: 46, scale: 0.6 } },
   // history: back, for the petals' travel round the circle
-  { flower: { x: 71, y: 47, scale: 0.57 } },
-  // a vote: further back for the proposals stacked over the petals
-  { flower: { x: 71, y: 49, scale: 0.55 } },
-  // connections: its neighbours reaching left, towards the conversation
-  { flower: { x: 71, y: 46, scale: 0.6 } },
+  { flower: { x: 66, y: 47, scale: 0.58 } },
+  // a vote: the camera goes right into a petal and back out
+  { flower: { x: 66, y: 48, scale: 0.56 } },
+  // connections: its neighbours reaching left, towards the words
+  { flower: { x: 66, y: 46, scale: 0.6 } },
 ];
 
-/** A narrow stage, two by three: the flower high, the conversation under it. */
+/** A narrow stage, two by three: the question above the flower, the answer under it. */
 const NARROW: readonly Shot[] = [
-  { flower: { x: 50, y: 34, scale: 0.86 } },
-  { flower: { x: 49, y: 36, scale: 0.84 } },
-  { flower: { x: 51, y: 34, scale: 0.84 } },
-  { flower: { x: 50, y: 34, scale: 0.8 } },
-  { flower: { x: 50, y: 35, scale: 0.76 } },
-  { flower: { x: 50, y: 34, scale: 0.86 } },
+  { flower: { x: 50, y: 45, scale: 0.86 } },
+  { flower: { x: 49, y: 47, scale: 0.84 } },
+  { flower: { x: 51, y: 45, scale: 0.84 } },
+  { flower: { x: 50, y: 45, scale: 0.8 } },
+  { flower: { x: 50, y: 46, scale: 0.76 } },
+  { flower: { x: 50, y: 45, scale: 0.86 } },
 ];
-
-/** Where the Tools box sits on a wide stage, the same in every shot: high on the right, over the flower. */
-export const toolsPin: Pin = topRight(97, 4);
 
 /**
- * Where the conversation's top left corner is, as CSS: on a wide stage just right of the words, a little above
- * the middle but never more than a glance above it, however tall the stage grows (Elco, 12 Nov: "there should be
- * a limit to how up or down the text boxes are going to go"); on a narrow one under the flower.
+ * The call and the response, on either side of the flower (Elco, 12 Nov: "I want a call and response dynamic so
+ * they would be on different sides"): on a wide stage the question just right of the words, above the flower's
+ * left, and Petals' answer below its right, each held within a glance of the middle; on a narrow one the question
+ * above the flower and the answer under it.
  */
-export const conversationAt = (wide: boolean) =>
-  wide
-    ? { left: '37cqw', top: 'calc(50cqh - min(17cqh, 150px))' }
-    : { left: '4cqw', top: 'calc(60cqh - min(4cqh, 40px))' };
+export const questionPin = (wide: boolean): Pin =>
+  wide ? pin(34, 26, 0, 0, 200) : pin(0, 2, 0, 0);
+export const answerPin = (wide: boolean): Pin =>
+  wide ? pin(100, 64, 1, 0, 130) : pin(100, 98, 1, 1);
+/** Where the Tools box sits on a wide stage, the same in every shot: high on the column's right, over the flower. */
+export const toolsPin: Pin = pin(100, 0, 1, 0);
 
 /** How long the camera's whip from the last shot to this one takes, from the one, landing with a little give. */
 const WHIP_MS = 560;

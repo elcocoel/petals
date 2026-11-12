@@ -12,7 +12,7 @@
 import { GREY, KEYS } from '@petal/core/wedge/keys';
 import type { CSSProperties } from 'react';
 import { useId } from 'react';
-import { type Community, MINE, NEIGHBOURS, OTHERS } from '../../lib/hero-map.ts';
+import { type Community, MINE, NEIGHBOURS, OTHERS, type Token } from '../../lib/hero-map.ts';
 import {
   atPetal,
   camera,
@@ -30,6 +30,7 @@ import {
   petalPath,
   placeOf,
   proposal,
+  STACK,
   STACK_FOLD,
   sharePercent,
   voteOf,
@@ -66,13 +67,79 @@ const CENTRE = { x: 300, y: 205 };
 const REACH = 185;
 /** The faint circle round my community, where the labels of its strongest sit. */
 const OUTER = 196;
-/** How far apart a petal's proposals stack outward, and how far over its top the first sits (the real STACK_GAP). */
-const STACK = { gap: 6, over: 6 };
 const STEP = (2 * Math.PI) / PETALS;
 
 const seen = (v: number) => (v > 0.001 ? undefined : 'hidden');
 /** A community's mark from far, as much of the hole in its wave as a logo fills on the real map. */
 const MARK = 0.72;
+
+/** A glyph's points round a circle of radius 1, the first at twelve. */
+const poly = (n: number, turn = 0) =>
+  Array.from({ length: n }, (_, k) => {
+    const a = -Math.PI / 2 + turn + (k * 2 * Math.PI) / n;
+    return `${Math.cos(a).toFixed(3)},${Math.sin(a).toFixed(3)}`;
+  }).join(' ');
+const SHAPES = { tri: poly(3), diamond: poly(4), hex: poly(6, Math.PI / 6) };
+
+/**
+ * A made-up token's mark where a logo sits (Elco, 12 Nov: "cute simulated imaginary token symbols", never a black
+ * dot): a disc in one of the look's keys with a simple glyph in white, drawn at radius `r`.
+ */
+function TokenMark({ token, r }: { token: Token; r: number }) {
+  const g = r * 0.48;
+  const line = Math.max(0.6, r * 0.14);
+  const glyph = (() => {
+    switch (token.glyph) {
+      case 'ring':
+        return <circle r={g} fill="none" stroke="var(--surface)" strokeWidth={line} />;
+      case 'bars':
+        return (
+          <path
+            d={[-1, 0, 1]
+              .map((k) => `M${(k * g * 0.6).toFixed(2)} ${(-g).toFixed(2)}v${(2 * g).toFixed(2)}`)
+              .join('')}
+            stroke="var(--surface)"
+            strokeWidth={line}
+            strokeLinecap="round"
+          />
+        );
+      case 'star':
+        return (
+          <path
+            d={[0, 1, 2]
+              .map((k) => {
+                const a = (k * Math.PI) / 3 - Math.PI / 2;
+                const [x, y] = [Math.cos(a) * g, Math.sin(a) * g];
+                return `M${(-x).toFixed(2)} ${(-y).toFixed(2)}L${x.toFixed(2)} ${y.toFixed(2)}`;
+              })
+              .join('')}
+            stroke="var(--surface)"
+            strokeWidth={line}
+            strokeLinecap="round"
+          />
+        );
+      case 'half':
+        return <path d={`M0 ${-g}A${g} ${g} 0 0 1 0 ${g}Z`} fill="var(--surface)" />;
+      default:
+        return (
+          <polygon
+            points={SHAPES[token.glyph]}
+            transform={`scale(${g.toFixed(3)})`}
+            fill="none"
+            stroke="var(--surface)"
+            strokeWidth={line / g}
+            strokeLinejoin="round"
+          />
+        );
+    }
+  })();
+  return (
+    <g>
+      <circle r={r} fill={PAINT[token.key]} />
+      {glyph}
+    </g>
+  );
+}
 
 /** A neighbour's petals by kind, as my community's are: mostly mint. */
 const NEIGHBOUR_KINDS: readonly Fill[] = [
@@ -89,12 +156,12 @@ const NEIGHBOUR_KINDS: readonly Fill[] = [
 /** A vote's colour, as the real legend says it: mint for, pink against, grey abstained or neither. */
 const VOTE_PAINT = { for: 'mint', against: 'pink', abstain: 'grey' } as const;
 
-/** A community from far: its soft wave, the hole in it, and a dark mark where its logo would be. */
+/** A community from far: its soft wave, the hole in it, and its token's mark where a logo sits. */
 function FarCommunity({ c, opacity = 1 }: { c: Community; opacity?: number }) {
   return (
     <g transform={`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`} opacity={opacity * c.seen}>
       <path d={c.wave} fill={PAINT.mint} fillRule="evenodd" />
-      <circle r={c.inner * MARK} fill="var(--text-primary)" />
+      <TokenMark token={c.token} r={c.inner * MARK} />
     </g>
   );
 }
@@ -113,7 +180,7 @@ function Neighbour({ c, bloom }: { c: Community; bloom: (j: number) => number })
         />
       ))}
       <circle r={c.inner - 0.5} fill="var(--surface)" />
-      <circle r={c.inner * MARK * 0.4} fill="var(--text-primary)" />
+      <TokenMark token={c.token} r={c.inner * 0.42} />
     </g>
   );
 }
@@ -331,10 +398,10 @@ export function StoryFlower({ beat, t }: { beat: number; t: number }) {
               );
             })}
           </g>
-          {/* the centre, wide and white as the real flower's, with a dark mark where its logo would be */}
+          {/* the centre, wide and white as the real flower's, with its made-up token's mark where a logo sits */}
           <circle r={INNER - 1} fill="var(--surface)" />
           <circle r={INNER - 1} fill="none" stroke="var(--hairline)" strokeWidth={1} />
-          <circle r={INNER * 0.22} fill="var(--text-primary)" />
+          <TokenMark token={MINE.token} r={INNER * 0.34} />
           {/* the faint circle the real flower stands in, where its labels sit */}
           <circle r={OUTER} fill="none" stroke="var(--hairline)" strokeWidth={1} opacity={0.7} />
           {/* the strongest few's shares, on leader lines from their tips, as each is highlighted */}

@@ -18,7 +18,24 @@ export interface Community {
   wave: string;
   /** how much of it shows on the far map, 0 to 1: those near the far frame's edges fade, so the map has no hard edge */
   seen: number;
+  /** its made-up token's mark, where a logo sits on the real map */
+  token: Token;
 }
+
+/**
+ * A made-up token's mark (Elco, 12 Nov: "we are not going to have black dots in the center ... some kind of cute
+ * simulated imaginary token symbols"): a simple glyph in white on a disc in one of the look's keys.
+ */
+export interface Token {
+  glyph: 'ring' | 'tri' | 'diamond' | 'hex' | 'bars' | 'star' | 'half';
+  key: 'blue' | 'coral' | 'apricot' | 'pink' | 'mint';
+}
+const GLYPHS: readonly Token['glyph'][] = ['ring', 'tri', 'diamond', 'hex', 'bars', 'star', 'half'];
+const TOKEN_KEYS: readonly Token['key'][] = ['blue', 'coral', 'apricot', 'pink'];
+const tokenOf = (next: () => number): Token => ({
+  glyph: GLYPHS[Math.floor(next() * GLYPHS.length)] ?? 'ring',
+  key: TOKEN_KEYS[Math.floor(next() * TOKEN_KEYS.length)] ?? 'blue',
+});
 
 /**
  * The whole far frame, in the drawing's units: the full width of a wide stage, the words' side included, since the
@@ -65,13 +82,29 @@ function community(x: number, y: number, size: number, next: () => number): Comm
     return (i + 1) ** -(0.5 + next()) * (0.6 + 0.8 * r);
   }).map((h) => 128 * size * h);
   if (next() < 0.7) heights.sort((a, b) => b - a);
-  return { x, y, inner, heights, wave: waveOf(inner, heights), seen: seenAt(x, y) };
+  return {
+    x,
+    y,
+    inner,
+    heights,
+    wave: waveOf(inner, heights),
+    seen: seenAt(x, y),
+    token: tokenOf(next),
+  };
 }
 
 /** My community from far: its wave from its petals' heights as influence shows them. */
 export const MINE: Community = (() => {
   const heights = base.map((r) => r - INNER);
-  return { x: 0, y: 0, inner: INNER, heights, wave: waveOf(INNER, heights), seen: 1 };
+  return {
+    x: 0,
+    y: 0,
+    inner: INNER,
+    heights,
+    wave: waveOf(INNER, heights),
+    seen: 1,
+    token: { glyph: 'hex', key: 'coral' },
+  };
 })();
 
 /** The two neighbours the connections beat follows its lines to. */

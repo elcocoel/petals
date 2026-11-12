@@ -37,11 +37,10 @@ const WIND_MS = SIXTEENTH;
 const ROLL = 12;
 
 /**
- * How many bars each story beat lasts: the history beat is the slow one, and the community beat opens with a bar
- * on the far map before the camera dives (Elco, 12 Nov: the far scene "goes by waaay too fast and starts moving
- * before the questions").
+ * How many bars each story beat lasts: the community beat opens with a bar on the far map before the camera dives
+ * (Elco, 12 Nov: the far scene "goes by waaay too fast and starts moving before the questions").
  */
-const BARS: readonly number[] = [3, 2, 2, 3, 2, 2];
+const BARS: readonly number[] = [3, 2, 2, 2, 2, 2];
 export const BEATS_MS: readonly number[] = BARS.map((bars) => bars * 4 * COUNT_MS);
 /** The longest beat, for whatever needs one number. */
 export const BEAT_MS = Math.max(...BEATS_MS);
@@ -197,11 +196,10 @@ const KICKS: readonly (readonly (readonly [number, number])[])[] = [
     [4, 0.035],
     [5, 0.015],
   ],
-  // history: the slow travel lands on the third bar's one
+  // history: the petals snap round to their new order with the answer
   [
     [3, 0.015],
-    [5, 0.015],
-    [9, 0.055],
+    [5, 0.045],
   ],
   // a vote: the ring on the three, its point on the four
   [
@@ -294,27 +292,15 @@ export function petalLengths(beat: number, t: number): number[] {
 
 /**
  * Where each petal is round the circle, as a place clockwise from twelve (fractional while it travels): by share
- * until the history beat, which orders them by when they last voted, travelling there slowly and landing on the
- * third bar's one; they keep that order to the end, and the next community starts by share again, from nothing.
+ * until the history beat, which orders them by when they last voted, each petal a moment after the one before,
+ * swiftly, with a little give (Elco, 12 Nov: "it could be like a swift little thing"); they keep that order to the
+ * end, and the next community starts by share again, from nothing.
  */
 export function placeOf(beat: number, t: number, i: number): number {
   const recent = RECENT[i] ?? i;
-  if (beat === 3) return lerp(i, recent, historyAt(t));
+  if (beat === 3) return lerp(i, recent, spring(at(t, RESPOND + i * 8, 1.2 * COUNT_MS), 0.8));
   if (beat === 4 || beat === 5) return recent;
   return i;
-}
-
-/** When the history beat's new order lands: the third bar's one. */
-const LAND = count(9);
-
-/**
- * How far the history beat has gone from the old order to the new, 0 to 1: the slow one. It sets off with the
- * answer, gathers speed through the whole second bar, lands hard on the third bar's one and gives a little there.
- */
-export function historyAt(t: number): number {
-  if (t < LAND) return ease.inSine(at(t, RESPOND, LAND - RESPOND));
-  const d = t - LAND;
-  return 1 + 0.03 * Math.exp(-d / 200) * Math.sin(d / 110);
 }
 
 export interface Camera {
@@ -338,6 +324,14 @@ export function camera(beat: number, t: number): Camera {
 export const FAR = 0.2;
 /** Where the far frame looks, in the drawing's units from my community's centre: the middle of the map. */
 export const MAP_CENTRE = { x: 380, y: -110 };
+/** How close the vote beat goes into the petal whose proposals it shows. */
+const PETAL_ZOOM = 3.2;
+/** How far over its petal's top a proposal stack starts, and how far apart its arcs sit (the real STACK_GAP). */
+export const STACK = { over: 6, gap: 6 };
+/** Where the camera looks on the vote beat: in the pressed proposal's petal, just under its stack. */
+const pressedAt = (t: number) =>
+  atPetal(placeOf(4, t, PRESSED.petal), (base[PRESSED.petal] ?? INNER) - 4);
+
 /** The connections beat's first pull back: my community with its two neighbours. */
 const NEAR_NEIGHBOURS = 0.55;
 /** The camera's closeness from a 0 (far) to 1 (my community) that moves evenly through the zoom. */
@@ -380,6 +374,17 @@ export function world(beat: number, t: number): World {
     wave = 1 - ease.inOutSine(at(t, reactAt(0), 3 * EIGHTH));
     ring =
       ease.outCubic(at(t, count(5), EIGHTH)) * (1 - ease.inOutSine(at(t, count(6.5), COUNT_MS)));
+  }
+  if (beat === 4) {
+    // right into the petal whose proposal is pressed, and back out as the answer comes and the votes land
+    const into = ease.inOutCubic(at(t, count(1.5), COUNT_MS));
+    const back = ease.inOutCubic(at(t, count(4.5), 1.25 * COUNT_MS));
+    const s = into * (1 - back);
+    const zoom = 1 + (PETAL_ZOOM - 1) * s;
+    const p = pressedAt(t);
+    // the petal glides to the middle evenly as the zoom grows, as the dive into the community does
+    const near = 1 - (1 - s) / zoom;
+    return { zoom, x: p[0] * near, y: p[1] * near, ring: 0, wave: 0, map: 0 };
   }
   if (beat === 5) {
     const out = ease.inOutCubic(at(t, count(6), 2.5 * COUNT_MS));
