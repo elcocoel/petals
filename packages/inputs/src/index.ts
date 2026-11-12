@@ -13,6 +13,9 @@ import type {
 
 export {
   committeeCalls,
+  FORUMS,
+  type Forum,
+  forumCalls,
   INFRASTRUCTURE_COMMITTEE,
   KARMA_PROGRAMS,
   karmaCalls,

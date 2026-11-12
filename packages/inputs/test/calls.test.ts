@@ -2,7 +2,7 @@
 // calls/v1, every field as the source says it. Stubbed sources: nothing here reads the web.
 import { validateCall } from '@petal/core';
 import { describe, expect, test } from 'vitest';
-import { committeeCalls, karmaCalls, snapshotCalls } from '../src/calls/index.ts';
+import { committeeCalls, forumCalls, karmaCalls, snapshotCalls } from '../src/calls/index.ts';
 import type { RpcPool } from '../src/rpc/pool.ts';
 
 const AT = '2026-11-12T12:00:00.000Z';
@@ -132,5 +132,45 @@ describe("Snapshot's open votes", () => {
     await expect(snapshotCalls(counting, [{ space: 'cow.eth', about: null }], AT)).rejects.toThrow(
       /too many requests/,
     );
+  });
+});
+
+describe('the forums', () => {
+  test('only titles that say RFP, request for proposals or grants program, each inferred with its topic', async () => {
+    const forum = (async (url: string) => {
+      const q = decodeURIComponent(new URL(url).searchParams.get('q') ?? '');
+      const topics = q.startsWith('RFP')
+        ? [
+            {
+              id: 1,
+              title: '[RFP] Wallet Selector Maintenance',
+              slug: 'rfp-wallet',
+              created_at: '2024-04-01T19:33:57.675Z',
+            },
+            { id: 2, title: 'Monthly report', slug: 'report', created_at: '2024-04-02T00:00:00Z' },
+          ]
+        : q.startsWith('"grants program"')
+          ? [
+              {
+                id: 3,
+                title: 'Gaming DAO Grants Program (May)',
+                slug: 'gaming',
+                created_at: '2024-04-02T00:00:00Z',
+              },
+            ]
+          : [];
+      return new Response(JSON.stringify({ topics }));
+    }) as unknown as typeof fetch;
+    const calls = await forumCalls(forum, { base: 'https://gov.near.org', name: 'NEAR' }, AT, 0);
+    expect(calls.map((c) => [c.id, c.kind, c.how, c.status, c.closes])).toEqual([
+      ['gov.near.org:1', 'rfp', 'inferred', null, null],
+      ['gov.near.org:3', 'grants', 'inferred', null, null],
+    ]);
+    expect(calls[0]).toMatchObject({
+      link: 'https://gov.near.org/t/rfp-wallet/1',
+      evidence: 'https://gov.near.org/t/rfp-wallet/1',
+      offered_by: { name: 'NEAR', about: null },
+    });
+    expect(calls.every((c) => validateCall(c).ok)).toBe(true);
   });
 });

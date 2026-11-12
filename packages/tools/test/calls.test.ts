@@ -62,6 +62,7 @@ describe('reading the open calls', () => {
       ]),
       pool: committee(),
       now: () => NOW,
+      pauseMs: 0,
     });
     expect((await callsOf(ctx)).map((c) => c.id)).toEqual([
       'infrastructure-committee.near:8',
@@ -74,6 +75,7 @@ describe('reading the open calls', () => {
       fetch: karma([program('1', 'grant', '2027-01-31T00:00:00.000Z')]),
       pool: committee(false),
       now: () => NOW,
+      pauseMs: 0,
     });
     expect(r.sources).toEqual([
       { name: 'karma', calls: 1, kept: true, failed: null },
@@ -84,6 +86,8 @@ describe('reading the open calls', () => {
         failed: 'no endpoint answered',
       },
       { name: 'snapshot', calls: 0, kept: true, failed: null },
+      { name: 'gov.near.org', calls: 0, kept: true, failed: null },
+      { name: 'forum.arbitrum.foundation', calls: 0, kept: true, failed: null },
     ]);
     expect((await callsOf(ctx)).map((c) => c.id)).toEqual([
       'infrastructure-committee.near:8',
@@ -97,11 +101,14 @@ describe('reading the open calls', () => {
       save: false,
       fetch: karma([program('1', 'grant', null)]),
       pool: committee(),
+      pauseMs: 0,
     });
     expect(r.sources.map((s) => [s.name, s.calls, s.kept])).toEqual([
       ['karma', 1, false],
       ['infrastructure-committee.near', 1, false],
       ['snapshot', 0, false],
+      ['gov.near.org', 0, false],
+      ['forum.arbitrum.foundation', 0, false],
     ]);
     expect(await callsOf(ctx)).toEqual([]);
   });
@@ -149,7 +156,13 @@ describe("Snapshot's open votes, for the DAOs Petals maps", () => {
         );
       return new Response(JSON.stringify({ programs: [], hasNext: false }));
     }) as unknown as typeof fetch;
-    await readCalls(ctx, { save: true, fetch: sources, pool: committee(), now: () => NOW });
+    await readCalls(ctx, {
+      save: true,
+      fetch: sources,
+      pool: committee(),
+      now: () => NOW,
+      pauseMs: 0,
+    });
     expect(decodeURIComponent(asked.find((u) => u.includes('snapshot')) ?? '')).toContain(
       'space_in: ["cow.eth"]',
     );
@@ -175,6 +188,7 @@ describe('serving them', () => {
       ]),
       pool: committee(),
       now: () => NOW,
+      pauseMs: 0,
     });
     return httpApp(ctx);
   }

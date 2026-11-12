@@ -8,6 +8,8 @@ import {
   committeeCalls,
   defaultPool,
   type Fetch,
+  FORUMS,
+  forumCalls,
   INFRASTRUCTURE_COMMITTEE,
   karmaCalls,
   type RpcPool,
@@ -30,6 +32,8 @@ export async function readCalls(
     fetch?: Fetch;
     pool?: RpcPool;
     now?: () => Date;
+    /** between a forum's searches (forumCalls); tests pass 0 */
+    pauseMs?: number;
     log?: (line: string) => void;
   } = {
     save: false,
@@ -41,6 +45,11 @@ export async function readCalls(
     ['karma', () => karmaCalls(fetchImpl, readAt)],
     [INFRASTRUCTURE_COMMITTEE, () => committeeCalls(o.pool ?? defaultPool(), readAt)],
     ['snapshot', async () => snapshotCalls(fetchImpl, await snapshotSpaces(ctx), readAt)],
+    // each forum its own source, so one that doesn't answer keeps its calls
+    ...FORUMS.map((f): [string, () => Promise<Call[]>] => [
+      new URL(f.base).host,
+      () => forumCalls(fetchImpl, f, readAt, o.pauseMs),
+    ]),
   ];
   const out: CallsRead = { sources: [] };
   for (const [name, read] of readers) {
