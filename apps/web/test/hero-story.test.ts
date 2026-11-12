@@ -1,22 +1,24 @@
 // The hero's motion (lib/hero-story.ts, lib/hero-shots.ts) is a pure function of the beat and its time, so its seams
-// can be read: each beat's last frame is the next one's first, the camera never stops (Elco, 12 Nov: one take),
-// nothing bounces, and a chosen beat shows both lines over a flower all but at rest.
+// can be read: each beat's last frame is the next one's first, the camera cuts on the one and holds (Elco, 12 Nov:
+// cut to the beat), a hit lands a hair past its mark and comes back onto it, and a chosen beat is still.
 import { describe, expect, test } from 'vitest';
-import { flowerAt } from '../lib/hero-shots.ts';
+import { flowerAt, shotOf } from '../lib/hero-shots.ts';
 import {
   answer,
   beatMs,
-  CARRY_MS,
+  COUNT_MS,
   camera,
+  hit,
   INNER,
+  kick,
   OVERLAP_MS,
   PETALS,
   petalLengths,
   petalLit,
   petalPaint,
   petalPath,
+  pulse,
   question,
-  settle,
   settledMs,
 } from '../lib/hero-story.ts';
 
@@ -57,37 +59,42 @@ describe('the hero story', () => {
     expect(camera(0, 0, true).scale).toBeCloseTo(1, 5);
   });
 
-  test('a chosen beat shows both lines over a flower all but at rest', () => {
+  test('a chosen beat is still, with both lines in view', () => {
     for (let beat = 0; beat < 6; beat++) {
       expect(question(beat, settledMs(beat)).opacity).toBeGreaterThan(0.4);
       expect(answer(beat, settledMs(beat)).opacity).toBeCloseTo(1, 3);
-      if (beat === 3) continue; // the history beat is still travelling from then to now
-      const rest = petalLengths(beat, beatMs(beat) + CARRY_MS);
-      expect(near(petalLengths(beat, settledMs(beat)), rest, 8)).toBe(true);
+      expect(
+        near(petalLengths(beat, settledMs(beat)), petalLengths(beat, beatMs(beat)), 0.01),
+      ).toBe(true);
+      expect(kick(beat, settledMs(beat))).toBeLessThan(0.002);
     }
   });
 
-  test('the flower is still settling as the next question comes, and at rest once it has landed', () => {
+  test('every beat is whole bars of the one tempo', () => {
     for (let beat = 0; beat < 6; beat++) {
-      const end = petalLengths(beat, beatMs(beat));
-      const rest = petalLengths(beat, beatMs(beat) + CARRY_MS);
-      // the beats whose heights move are a little short of rest as the next question comes, never far
-      const off = Math.max(...end.map((r, i) => Math.abs(r - (rest[i] as number))));
-      if ([0, 1, 3, 4].includes(beat)) expect(off).toBeGreaterThan(0.5);
-      expect(off).toBeLessThan(3);
-      expect(near(petalLengths(beat, beatMs(beat) + CARRY_MS + 500), rest, 1e-9)).toBe(true);
+      const bars = beatMs(beat) / (4 * COUNT_MS);
+      expect(Math.abs(bars - Math.round(bars))).toBeLessThan(1e-9);
     }
   });
 
-  test('a move comes to rest without passing its end', () => {
-    expect(settle(0)).toBe(0);
-    expect(settle(1)).toBe(1);
-    const path = Array.from({ length: 201 }, (_, k) => settle(k / 200));
-    expect(Math.max(...path)).toBeLessThanOrEqual(1);
-    expect(path.every((x, k) => k === 0 || x >= (path[k - 1] as number))).toBe(true);
+  test('a hit lands a hair past its mark and comes back onto it', () => {
+    expect(hit(0)).toBe(0);
+    expect(hit(1)).toBe(1);
+    const most = Math.max(...Array.from({ length: 200 }, (_, k) => hit(k / 200)));
+    expect(most).toBeGreaterThan(1.02);
+    expect(most).toBeLessThan(1.08);
   });
 
-  test('the camera never stops, and joins every beat to the next', () => {
+  test('the pulse thumps on every count, harder on the one and the three', () => {
+    const peak = (c: number) =>
+      Math.max(...Array.from({ length: 40 }, (_, k) => pulse((c - 1) * COUNT_MS + k * 5)));
+    expect(peak(1)).toBeGreaterThan(peak(2));
+    expect(peak(3)).toBeGreaterThan(peak(4));
+    expect(peak(2)).toBeGreaterThan(0.3);
+    expect(pulse(COUNT_MS - 1)).toBeLessThan(0.05);
+  });
+
+  test('the camera cuts on the one, holds the shot, and joins every beat to the next', () => {
     for (const wide of [true, false]) {
       for (let beat = 0; beat < 6; beat++) {
         const next = (beat + 1) % 6;
@@ -95,15 +102,14 @@ describe('the hero story', () => {
         const b = flowerAt(next, 0, wide);
         expect(
           Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.scale - b.scale),
-        ).toBeLessThan(1e-6);
-        for (let t = 0; t < beatMs(beat); t += 100) {
-          const p = flowerAt(beat, t, wide);
-          const q = flowerAt(beat, t + 100, wide);
-          // at least a hundredth of a % of the stage, or of its size, every tenth of a second
-          expect(
-            Math.abs(q.x - p.x) + Math.abs(q.y - p.y) + Math.abs(q.scale - p.scale) * 100,
-          ).toBeGreaterThan(0.01);
-        }
+        ).toBeLessThan(1e-9);
+        // moving hardest on the one, in the shot and still by the second count
+        const shot = shotOf(beat, wide).flower;
+        const held = flowerAt(beat, COUNT_MS, wide);
+        expect(held.x).toBeCloseTo(shot.x, 9);
+        expect(held.blur).toBe(0);
+        if (shotOf(next, wide).flower.x !== shot.x)
+          expect(flowerAt(next, 0, wide).blur).toBeGreaterThan(0);
       }
     }
   });

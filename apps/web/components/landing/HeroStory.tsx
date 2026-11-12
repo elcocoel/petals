@@ -6,6 +6,7 @@ import {
   answerWord,
   beatMs,
   historyLine,
+  kick,
   layerOpacity,
   type Motion,
   OVERLAP_MS,
@@ -15,8 +16,9 @@ import {
 // choreography): the approved eyebrow, headline, subline and Connect, and beside them a stage of four separate
 // layers, each placed by the beat's shot (lib/hero-shots.ts), so the page can compose them for a phone or a wide
 // screen (Elco, 11 Nov). Behind, a light that moves less than the flower, for depth. In the middle, one symbolic
-// flower that performs each answer (StoryFlower); the camera carries it from shot to shot without stopping, and
-// the depth is the camera's own, never the visitor's pointer (Elco, 12 Nov). In front, the question
+// flower that performs each answer (StoryFlower); the camera whips it from shot to shot on each beat's one and is
+// punched in by every hit, and the depth is the camera's own, never the visitor's pointer (Elco, 12 Nov). In
+// front, the question
 // in a light bubble and Petals' answer in a dark one, on opposite sides, swapping sides from beat to beat; the
 // question comes in, the flower answers, the answer comes in word by word, and it is still leaving as the next
 // question arrives, so no transcript builds up and there is no dead air. Under the hero, apart from the stage, the
@@ -208,6 +210,7 @@ export function HeroStoryView({
   const prior = (beat + 5) % 6;
   const marker = historyLine(beat, t);
   const f = flowerAt(beat, t, wide, fresh);
+  const punch = 1 + kick(beat, t, fresh);
   const cy = centreY(wide);
   const back = layer === 'words' ? 0.08 : 1;
   return (
@@ -239,9 +242,10 @@ export function HeroStoryView({
               style={{
                 opacity: back,
                 translate: `${n2(f.x - 50)}% ${n2(f.y - cy)}%`,
-                scale: f.scale.toFixed(4),
-                // turned towards the middle of the stage, as a thing standing in it is, and leaning into its travel
+                scale: (f.scale * punch).toFixed(4),
+                // turned towards the middle of the stage, as a thing standing in it is, and leaning into the whip
                 transform: `rotateY(${n2((50 - f.x) * 0.32 + f.lean)}deg) rotateX(5deg)`,
+                filter: soft(f.blur),
                 transformOrigin: `50% ${cy}%`,
               }}
             >

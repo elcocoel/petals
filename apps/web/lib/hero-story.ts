@@ -1,42 +1,49 @@
 // The hero's story, as numbers (HERO ART's V2, approved by Elco 11 Nov: "BRO, 10 OUT OF 10 - LFG!!!! ... get
-// this in the hero please"; design/hero-illustration/foreground-script-v2.md), choreographed as motion (HERO
-// MOTION, 11 Nov: "this shit will be cinematic"), shot as one take (Elco, 12 Nov: no seams, the camera never stops,
-// the next question arrives while the flower is still settling). Six beats, each its own length (BEATS_MS): the
-// question arrives, the flower answers and takes the rest of its beat to come to rest, the words answer and leave;
-// the flower is still settling under the next question (CARRY_MS), and nothing bounces.
+// this in the hero please"; design/hero-illustration/foreground-script-v2.md), cut to a beat (Elco, 12 Nov: "boom,
+// action, reaction, beat, counterbeats, call, response, fast, something slow, fast, fast, fast, boom, boom, boom
+// ... we need pulse ... think musically, almost like to the beat of rap"). One tempo drives everything: each story
+// beat is a phrase of bars and every move lands on a count. On the one, the cut and the call: the camera whips to
+// its shot and the question slams in. A rest to read it. On the three, the reaction: the flower hits, and fast
+// accents follow it. On the next bar's one, the response: the answer, a word on every thirty-second. A hold where
+// only the pulse moves, and the words cut out on the next one. The history beat is the slow one: its heights travel
+// a whole bar and land on a boom. Under it all the light thumps on every count, harder on one and three.
 // Everything a frame draws is a pure function of the beat and the time into it, so choosing a beat settles it at
 // once, a test can read any moment, and a video can be rendered frame by frame from the same numbers. The flower
 // is a symbol, not a reading: no network, no counts. Heights stay linear and widths equal (the art direction's
 // brief); the motion only decides how each state is reached.
 
-/**
- * How long each beat lasts, from its question arriving to its answer leaving (Elco, 11 Nov: "focus on the timing
- * of each section"). The opening and the close hold longest; the middle beats keep the pace up; the history beat
- * has time to travel.
- */
-export const BEATS_MS: readonly number[] = [6600, 5600, 5800, 6800, 6000, 7200];
+/** The tempo, a rap beat's: every time below is counted in it. */
+export const BPM = 96;
+/** One count (a quarter note), in ms. */
+export const COUNT_MS = 60000 / BPM;
+/** Where a count falls in its story beat: 1 is the downbeat, 3.5 the and of three, 5 the second bar's one. */
+const count = (c: number) => (c - 1) * COUNT_MS;
+const EIGHTH = COUNT_MS / 2;
+const SIXTEENTH = COUNT_MS / 4;
+const THIRTYSECOND = COUNT_MS / 8;
+/** How long a hit takes to land. */
+const HIT_MS = EIGHTH;
+/** Per petal, how much later than its neighbour before it (clockwise from twelve) it lands: a roll round the clock. */
+const ROLL = 12;
+
+/** How many bars each story beat lasts: the history beat is the slow one. */
+const BARS: readonly number[] = [2, 2, 2, 3, 2, 2];
+export const BEATS_MS: readonly number[] = BARS.map((bars) => bars * 4 * COUNT_MS);
 /** The longest beat, for whatever needs one number. */
 export const BEAT_MS = Math.max(...BEATS_MS);
 export const beatMs = (beat: number) => BEATS_MS[beat] ?? BEAT_MS;
-/**
- * How far past its beat's end the flower is still coming to rest, under the next question: each beat starts from
- * the last one as it is at that moment, so nothing is reset.
- */
-export const CARRY_MS = 600;
-/** A moment late in a beat where both lines are in view and the flower is all but at rest: a chosen beat stops here. */
-export const settledMs = (beat: number) => beatMs(beat) - 1200;
-/** When the flower starts its answer: while the question is still landing, so the shape answers first. */
-const RESPOND_MS = 600;
-/** The question on arrival waits for the centre to land; after that each question comes in at once. */
-const QUESTION_FRESH_MS = 300;
-const ANSWER_MS = 1500;
-/** How long before its beat ends a question leaves, and its answer after it; the answer's exit runs into the next beat. */
-const QUESTION_LEAVES_MS = 700;
-const ANSWER_LEAVES_MS = 450;
-/** How far into the next beat an answer is still leaving, while the next question comes in. */
-export const OVERLAP_MS = 300;
-/** When the history beat's heights start moving from then to now; they travel the rest of the beat. */
-const HISTORY_FROM = 700;
+/** The last count of a beat, before the words cut out: both lines in view, the flower at rest. A chosen beat stops here. */
+export const settledMs = (beat: number) => beatMs(beat) - COUNT_MS;
+
+/** The call lands on the one; on arrival on the two, after the centre's boom. */
+const CALL = count(1);
+const CALL_FRESH = count(2);
+/** The reaction: the flower hits on the three. */
+const REACT = count(3);
+/** The response: the answer lands on the second bar's one. */
+const RESPOND = count(5);
+/** How far into the next beat the answer is still cutting out, as the next question slams in. */
+export const OVERLAP_MS = SIXTEENTH;
 
 export const PETALS = 24;
 /** Where the petals start: the centre's edge. */
@@ -67,29 +74,90 @@ export const ease = {
   inCubic: (p: number) => p ** 3,
   inOutCubic: (p: number) => (p < 0.5 ? 4 * p ** 3 : 1 - (-2 * p + 2) ** 3 / 2),
   outExpo: (p: number) => (p >= 1 ? 1 : 1 - 2 ** (-10 * p)),
-  inOutSine: (p: number) => -(Math.cos(Math.PI * p) - 1) / 2,
+  inSine: (p: number) => 1 - Math.cos((Math.PI * p) / 2),
 };
 
-/** How soon a move comes to rest: the higher, the sooner. */
-const WEIGHT = 6;
-const REST = 1 - (1 + WEIGHT) * Math.exp(-WEIGHT);
-
-/**
- * A weight coming to rest (Elco, 12 Nov: one take, no bounce): it starts gently, covers most of the way early, then
- * settles slowly, and never passes its end.
- */
-export function settle(p: number): number {
+/** A hit: there at once, a hair past, and back onto it, like a drum. */
+export function hit(p: number): number {
   if (p <= 0) return 0;
   if (p >= 1) return 1;
-  return (1 - (1 + WEIGHT * p) * Math.exp(-WEIGHT * p)) / REST;
+  const s = 1.2;
+  const q = p - 1;
+  return 1 + (s + 1) * q ** 3 + s * q ** 2;
 }
-
-/** A move that starts at `start` and comes to rest as the next beat's question lands. */
-const grow = (beat: number, t: number, start: number) =>
-  settle(at(t, start, beatMs(beat) + CARRY_MS - start));
 
 /** The beat before this one, round the loop. */
 const prior = (beat: number) => (beat + 5) % 6;
+
+/**
+ * The hits that punch the camera in, per beat, as [count, how hard]: the reaction on the three, its accents, the
+ * response on the five.
+ */
+const KICKS: readonly (readonly (readonly [number, number])[])[] = [
+  // a community: the last one implodes on the one, the new one bursts on the three
+  [
+    [1, 0.03],
+    [3, 0.05],
+    [5, 0.015],
+  ],
+  // influence: the heights part on the three, then the strongest three light, boom, boom, boom
+  [
+    [3, 0.04],
+    [3.5, 0.02],
+    [4, 0.02],
+    [4.5, 0.025],
+    [5, 0.015],
+  ],
+  // blocs: one group on the three, the other answers on the four
+  [
+    [3, 0.035],
+    [4, 0.035],
+    [5, 0.015],
+  ],
+  // history: the slow travel lands on the third bar's one
+  [
+    [3, 0.015],
+    [5, 0.015],
+    [9, 0.055],
+  ],
+  // a vote: the ring on the three, its point on the four
+  [
+    [3, 0.03],
+    [4, 0.03],
+    [5, 0.015],
+  ],
+  // connections: pulled back on the one, then each community blooms
+  [
+    [1, 0.03],
+    [3.5, 0.04],
+    [4.5, 0.04],
+    [5, 0.015],
+  ],
+];
+/** On arrival: the centre lands on the one, the flower bursts on the three. */
+const FRESH_KICKS: readonly (readonly [number, number])[] = [
+  [1, 0.02],
+  [3, 0.05],
+  [5, 0.015],
+];
+
+/** How much the camera is punched in at a moment, from 0: each hit a sharp push that dies away. */
+export function kick(beat: number, t: number, fresh = false): number {
+  const hits = fresh && beat === 0 ? FRESH_KICKS : (KICKS[beat] ?? []);
+  let k = 0;
+  for (const [c, amp] of hits) {
+    const d = t - count(c);
+    if (d > 0) k += amp * Math.min(1, d / 30) * Math.exp(-d / 140);
+  }
+  return k;
+}
+
+/** The pulse under it all, 0 to 1: a thump on every count, the one and the three harder than the two and the four. */
+export function pulse(t: number): number {
+  const n = Math.floor(t / COUNT_MS);
+  const d = t - n * COUNT_MS;
+  return (n % 2 === 0 ? 1 : 0.5) * Math.min(1, d / 25) * Math.exp(-d / 180);
+}
 
 // ----- the flower -----
 
@@ -100,56 +168,49 @@ function settled(beat: number): readonly number[] {
   return base;
 }
 
-/** Per petal, how much later than its neighbour before it (clockwise from twelve) it moves. */
-const STAGGER = 40;
-
 /**
- * Each petal's length. `fresh` is the very first beat on arrival, which grows from the bare centre; round the
- * loop, the first beat closes the last flower first, back round the clock, and opens it again. Every other beat
- * starts from the last one as it is, still coming to rest for its first CARRY_MS.
+ * Each petal's length. `fresh` is the very first beat on arrival, which bursts from the bare centre; round the
+ * loop, the first beat implodes the last flower on the one and bursts it open again on the three.
  */
 export function petalLengths(beat: number, t: number, fresh = false): number[] {
-  const last = prior(beat);
-  const before =
-    fresh && beat === 0
-      ? Array(PETALS).fill(INNER)
-      : t < CARRY_MS
-        ? petalLengths(last, beatMs(last) + t, fresh)
-        : settled(last);
+  const before = fresh && beat === 0 ? Array(PETALS).fill(INNER) : settled(prior(beat));
   return Array.from({ length: PETALS }, (_, i) => {
     const from = before[i] as number;
     switch (beat) {
       case 0: {
-        const shut = ease.inOutCubic(at(t, (PETALS - 1 - i) * 14, 700));
-        const open = grow(0, t, RESPOND_MS + i * STAGGER);
+        const shut = ease.inCubic(at(t, CALL, SIXTEENTH * 1.5));
+        const open = hit(at(t, REACT + i * ROLL, HIT_MS * 1.5));
         return lerp(lerp(from, INNER, shut), EVEN, open);
       }
       case 1: {
-        // anticipation: the even flower draws in a breath before the heights part
-        const breath = 1 - 0.07 * Math.sin(Math.PI * at(t, 200, 480));
-        const grown = lerp(from, base[i] as number, grow(1, t, RESPOND_MS + i * STAGGER));
-        return INNER + (grown - INNER) * breath;
+        // the even flower draws in on the and of two, holds its breath, and the heights burst apart on the three
+        const held = ease.inCubic(at(t, count(2.5), EIGHTH)) * (1 - at(t, REACT, SIXTEENTH));
+        const grown = lerp(
+          from,
+          base[i] as number,
+          hit(at(t, REACT + i * (ROLL / 2), HIT_MS * 1.5)),
+        );
+        return INNER + (grown - INNER) * (1 - 0.1 * held);
       }
       case 3:
         return lerp(from, later[i] as number, historyAt(t));
       case 4:
-        return lerp(from, base[i] as number, grow(4, t, 150 + i * 24));
+        return lerp(from, base[i] as number, hit(at(t, REACT + i * (ROLL / 2), HIT_MS * 1.5)));
       default:
-        return from;
+        return base[i] as number;
     }
   });
 }
 
 /**
- * How far the history beat has gone from then to now, 0 to 1: the marker and the heights move as one, across the
- * whole beat, arriving under the next question.
+ * How far the history beat has gone from then to now, 0 to 1: the slow one. It sets off with the answer and gathers
+ * speed through the whole second bar, landing hard on the third bar's one.
  */
-export const historyAt = (t: number) =>
-  ease.inOutSine(at(t, HISTORY_FROM, beatMs(3) + CARRY_MS - HISTORY_FROM));
+export const historyAt = (t: number) => ease.inSine(at(t, RESPOND, 4 * COUNT_MS));
 
-/** Where the history beat's marker is, in any beat: it keeps travelling into the next while it fades. */
+/** Where the history beat's marker is, in any beat: arrived, while it cuts out on the next one. */
 export const historyLine = (beat: number, t: number) =>
-  beat === 3 ? historyAt(t) : beat === 4 ? historyAt(beatMs(3) + t) : 0;
+  beat === 3 ? historyAt(t) : beat === 4 ? 1 : 0;
 
 export interface Camera {
   scale: number;
@@ -159,51 +220,55 @@ export interface Camera {
   y: number;
 }
 
-/** The pull back to make room for the communities the last beat leads to, and the push back in after it. */
+/** A whip: all its speed at the start, braking hard into place. */
+const whip = (p: number) => 1 - (1 - p) ** 4;
+
+/** The pull back on the one to make room for the communities the last beat leads to, and the push back in after it. */
 function pullOf(beat: number, t: number, fresh: boolean): number {
-  if (beat === 5) return lerp(1, 0.65, ease.inOutCubic(at(t, RESPOND_MS, 2600)));
-  if (beat === 0 && !fresh) return lerp(0.65, 1, ease.inOutCubic(at(t, 0, 2400)));
+  if (beat === 5) return lerp(1, 0.65, whip(at(t, CALL, COUNT_MS)));
+  if (beat === 0 && !fresh) return lerp(0.65, 1, whip(at(t, CALL, COUNT_MS)));
   return 1;
 }
 
-/**
- * The camera on the main flower, inside its drawing: it turns a little as the community unfurls, and pulls back
- * slowly at the end. Its travel across the stage, which never stops, is the shots' (lib/hero-shots.ts).
- */
+/** The camera on the main flower, inside its drawing: a twist as the community bursts open, the pull back at the end. */
 export function camera(beat: number, t: number, fresh = false): Camera {
   const pull = pullOf(beat, t, fresh);
-  // the petals are all at the centre's edge when the turn begins, so it starts from nothing seen
-  const rotate =
-    beat === 0 && t >= RESPOND_MS ? -16 * (1 - ease.outCubic(at(t, RESPOND_MS, 3000))) : 0;
+  // the petals are all at the centre's edge when the twist begins, so it starts from nothing seen
+  const rotate = beat === 0 && t >= REACT ? -16 * (1 - ease.outExpo(at(t, REACT, COUNT_MS))) : 0;
   return { scale: pull, rotate, y: (1 - (pull - 0.65) / 0.35) * 8 };
 }
 
-/** The light behind the flower: it moves a third as much as the flower does, so the two sit at different depths. */
+/** The light behind the flower: it moves a third as much as the flower does, and thumps with the pulse. */
 export function glow(beat: number, t: number, fresh = false) {
   const pull = pullOf(beat, t, fresh);
-  const born = fresh && beat === 0 ? ease.outCubic(at(t, 300, 1600)) : 1;
-  // the blocs' second key tints the light while they show
+  const born = fresh && beat === 0 ? ease.outCubic(at(t, CALL, 2 * COUNT_MS)) : 1;
+  // the blocs' second key tints the light while they show, from the second group's hit
   const second =
     beat === 2
-      ? ease.outCubic(at(t, RESPOND_MS, 1400))
+      ? ease.outCubic(at(t, count(4), EIGHTH))
       : beat === 3
         ? 1
         : beat === 4
-          ? 1 - ease.outCubic(at(t, 0, 1200))
+          ? 1 - ease.outCubic(at(t, CALL, EIGHTH))
           : 0;
-  return { opacity: born, scale: 1 + (pull - 1) * 0.35, second };
+  const thump = pulse(t) + 8 * kick(beat, t, fresh);
+  return {
+    opacity: born * Math.min(1, 0.78 + 0.22 * thump),
+    scale: (1 + (pull - 1) * 0.35) * (1 + 0.02 * thump),
+    second,
+  };
 }
 
-/** The centre: its dot lands, then its ring draws round, the first time only; after that it stays. */
+/** The centre: its dot lands on the one, its ring snaps round on the and; the first time only, after that it stays. */
 export function centre(beat: number, t: number, fresh = false) {
   if (!(fresh && beat === 0)) return { dot: 1, ring: 1 };
-  return { dot: settle(at(t, 150, 900)), ring: ease.inOutCubic(at(t, 380, 900)) };
+  return { dot: hit(at(t, CALL, HIT_MS)), ring: ease.outExpo(at(t, count(1.5), EIGHTH)) };
 }
 
-/** A layer that belongs to one beat: it comes in with the flower's answer and goes as the next beat starts. */
+/** A layer that belongs to one beat: it snaps in with the flower's reaction and cuts out on the next one. */
 export function layerOpacity(own: number, beat: number, t: number): number {
-  if (beat === own) return ease.outCubic(at(t, RESPOND_MS, 700));
-  if (beat === (own + 1) % 6) return 1 - ease.outCubic(at(t, 0, 800));
+  if (beat === own) return ease.outCubic(at(t, REACT, SIXTEENTH));
+  if (beat === (own + 1) % 6) return 1 - ease.outCubic(at(t, CALL, EIGHTH));
   return 0;
 }
 
@@ -221,32 +286,30 @@ export function petalFill(beat: number, i: number): Fill {
   return 'petal';
 }
 
-/** When a petal's colour starts to change in a beat: the strongest one by one, the blocs one group then the other. */
+/**
+ * When a petal's colour hits in a beat: the strongest three one on each eighth after the heights (boom, boom,
+ * boom), quicker on sixteenths when they come back at the end; one bloc on the three, the other on the four; the
+ * rest on the cut.
+ */
 function paintStart(beat: number, i: number): number {
-  if (beat === 0) return (PETALS - 1 - i) * 8;
-  if (beat === 1 || beat === 5) return 1100 + i * 110;
-  if (beat === 2) {
-    const a = BLOC_A.indexOf(i);
-    const b = BLOC_B.indexOf(i);
-    if (a >= 0) return RESPOND_MS + a * 80;
-    if (b >= 0) return RESPOND_MS + 420 + b * 80;
-    return RESPOND_MS;
-  }
-  return 200 + i * 12;
+  if (beat === 1) return count(3.5) + i * EIGHTH;
+  if (beat === 5) return count(2) + i * SIXTEENTH;
+  if (beat === 2) return BLOC_B.includes(i) ? count(4) : REACT;
+  return CALL;
 }
 
 /** A petal's paint at a moment: from the last beat's colour to this one's, `k` of the way. */
 export function petalPaint(beat: number, t: number, i: number, fresh = false) {
   const from: Fill = fresh && beat === 0 ? 'petal' : petalFill(prior(beat), i);
   const to = petalFill(beat, i);
-  return { from, to, k: from === to ? 1 : ease.outCubic(at(t, paintStart(beat, i), 900)) };
+  return { from, to, k: from === to ? 1 : ease.outCubic(at(t, paintStart(beat, i), SIXTEENTH)) };
 }
 
-/** How strongly the highlight is on a petal, 0 to 1: on the strongest few, as their colour lands. */
+/** How strongly the highlight is on a petal, 0 to 1: on the strongest few, as their colour hits. */
 export function petalLit(beat: number, t: number, i: number): number {
   if (i >= LIT) return 0;
-  if (beat === 1 || beat === 5) return ease.outCubic(at(t, paintStart(beat, i) + 250, 800));
-  if (beat === 2 || beat === 0) return 1 - ease.outCubic(at(t, 0, 800));
+  if (beat === 1 || beat === 5) return ease.outCubic(at(t, paintStart(beat, i), SIXTEENTH));
+  if (beat === 2 || beat === 0) return 1 - ease.outCubic(at(t, CALL, SIXTEENTH));
   return 0;
 }
 
@@ -260,35 +323,36 @@ export const relations: readonly (readonly [number, number])[] = [
   [5, 13],
 ];
 
-/** How far each of the blocs' lines has drawn itself, 0 to 1: after the colours, one after another. */
+/** How far each of the blocs' lines has drawn itself, 0 to 1: after the second group, fast, one on each thirty-second. */
 export const relationDrawn = (beat: number, t: number, n: number) =>
-  beat === 2 ? ease.inOutCubic(at(t, 1250 + n * 160, 900)) : 1;
+  beat === 2 ? ease.outExpo(at(t, count(4.5) + n * THIRTYSECOND, EIGHTH)) : 1;
 
-/** How far the history beat's earlier outline has drawn round, 0 to 1. */
+/** How far the history beat's earlier outline has drawn round, 0 to 1: snapped round on the three. */
 export const ghostDrawn = (beat: number, t: number, i: number) =>
-  beat === 3 ? ease.outCubic(at(t, 450 + i * 24, 900)) : 1;
+  beat === 3 ? ease.outExpo(at(t, REACT + i * 10, EIGHTH)) : 1;
 
 /** A vote mark inside each petal at the proposal beat: against on every fourth, none on every fifth. */
 export const voteOf = (i: number): 'for' | 'against' | null =>
   i % 5 === 0 ? null : i % 4 === 0 ? 'against' : 'for';
 
-/** The proposal's ring, its arc drawn over the top, its point landing, then each vote mark landing round the clock. */
+/** The proposal's ring whips round on the three, its arc on the and, its point hits on the four, the votes roll in. */
 export function proposal(beat: number, t: number) {
   if (beat !== 4) return { ring: 1, arc: 1, point: 1, vote: (_: number) => 1 };
   return {
-    ring: ease.outExpo(at(t, RESPOND_MS, 1400)),
-    arc: ease.inOutCubic(at(t, 900, 1100)),
-    point: settle(at(t, 1300, 1000)),
-    vote: (i: number) => settle(at(t, 1500 + i * 40, 1100)),
+    ring: ease.outExpo(at(t, REACT, EIGHTH)),
+    arc: ease.outExpo(at(t, count(3.5), EIGHTH)),
+    point: hit(at(t, count(4), HIT_MS)),
+    // a roll, a vote on every forty-eighth, round the clock
+    vote: (i: number) => hit(at(t, count(4.5) + (i * COUNT_MS) / 12, SIXTEENTH)),
   };
 }
 
-/** The two communities the last beat opens onto: each blooms round the clock, after the line that reaches it. */
+/** The two communities the last beat opens onto: a line shoots out on the three, its community bursts on the and. */
 export function network(beat: number, t: number) {
   if (beat === 5)
     return {
-      link: (n: number) => ease.outCubic(at(t, 1050 + n * 300, 1100)),
-      bloom: (n: number, j: number) => settle(at(t, 1400 + n * 300 + j * 36, 1400)),
+      link: (n: number) => ease.outExpo(at(t, REACT + n * COUNT_MS, EIGHTH)),
+      bloom: (n: number, j: number) => hit(at(t, count(3.5) + n * COUNT_MS + j * 10, HIT_MS)),
       // the dashes run outward, towards the communities, a dash's length each second
       flow: -t * 0.009,
       scale: 1,
@@ -298,7 +362,7 @@ export function network(beat: number, t: number) {
       link: () => 1,
       bloom: () => 1,
       flow: -(beatMs(5) + t) * 0.009,
-      scale: 1 - 0.25 * ease.inCubic(at(t, 0, 800)),
+      scale: 1 - 0.25 * ease.inCubic(at(t, CALL, EIGHTH)),
     };
   return { link: () => 1, bloom: () => 1, flow: 0, scale: 1 };
 }
@@ -322,52 +386,53 @@ export interface Motion {
 }
 
 /**
- * The question, `u` into its beat (past its end while it leaves): it comes in from its side and sharpens; once
- * answered it steps back, dimmer and a little soft, as a camera racks focus; it lifts away before its beat ends.
+ * The question, `u` into its beat: the call. It slams in on the one from its side; once answered it steps back,
+ * dimmer and a little soft, as a camera racks focus; it cuts out on the last and.
  */
 export function question(beat: number, u: number, fresh = false): Motion {
-  const start = fresh && beat === 0 ? QUESTION_FRESH_MS : 0;
-  const inQ = ease.outExpo(at(u, start, 900));
-  const answered = ease.outCubic(at(u, ANSWER_MS - 150, 700));
-  const leave = ease.inOutCubic(at(u, beatMs(beat) - QUESTION_LEAVES_MS, 550));
+  const start = fresh && beat === 0 ? CALL_FRESH : CALL;
+  const inQ = hit(at(u, start, HIT_MS));
+  const answered = ease.outCubic(at(u, RESPOND, SIXTEENTH * 1.5));
+  const leave = ease.inCubic(at(u, beatMs(beat) - EIGHTH, EIGHTH * 0.8));
   return {
-    opacity: ease.outCubic(at(u, start, 450)) * (1 - 0.45 * answered) * (1 - leave),
+    opacity: ease.outCubic(at(u, start, SIXTEENTH)) * (1 - 0.45 * answered) * (1 - leave),
     x: -26 * (1 - inQ),
     y: 10 * (1 - inQ) - 16 * leave,
-    blur: 8 * (1 - inQ) + 0.6 * answered + 6 * leave,
-    scale: 0.94 + 0.06 * inQ - 0.02 * answered,
-    // it swings in like a door, rests turned a little to the flower, and is pushed back once answered
-    turn: 15 + 26 * (1 - settle(at(u, start, 1300))) + 10 * leave,
+    blur: 6 * (1 - ease.outCubic(at(u, start, EIGHTH))) + 0.6 * answered + 6 * leave,
+    scale: 0.9 + 0.1 * inQ - 0.02 * answered,
+    turn: 15 + 20 * (1 - inQ) + 10 * leave,
     z: 40 - 90 * answered - 60 * leave,
-    glint: at(u, start + 300, 1000),
-    glow: ease.outCubic(at(u, start, 700)) * (1 - 0.5 * answered),
+    glint: at(u, start + SIXTEENTH, COUNT_MS),
+    glow: ease.outCubic(at(u, start, EIGHTH)) * (1 - 0.5 * answered),
   };
 }
 
-/** The answer, `u` into its beat: it comes in from the other side as the flower finishes, and leaves last. */
+/** The answer, `u` into its beat: the response. It slams in on the second bar's one, and cuts out on the next one. */
 export function answer(beat: number, u: number): Motion {
-  const inA = ease.outExpo(at(u, ANSWER_MS - 150, 1000));
-  const leave = ease.inOutCubic(
-    at(u, beatMs(beat) - ANSWER_LEAVES_MS, ANSWER_LEAVES_MS + OVERLAP_MS),
-  );
+  const inA = hit(at(u, RESPOND, HIT_MS));
+  const leave = ease.inCubic(at(u, beatMs(beat) - THIRTYSECOND, THIRTYSECOND + OVERLAP_MS));
   return {
-    opacity: ease.outCubic(at(u, ANSWER_MS - 150, 400)) * (1 - leave),
+    opacity: ease.outCubic(at(u, RESPOND, SIXTEENTH)) * (1 - leave),
     x: 26 * (1 - inA),
     y: 10 * (1 - inA) - 16 * leave,
     blur: 6 * leave,
-    scale: 0.94 + 0.06 * inA,
-    turn: 13 + 30 * (1 - settle(at(u, ANSWER_MS - 150, 1400))) + 12 * leave,
+    scale: 0.9 + 0.1 * inA,
+    turn: 13 + 20 * (1 - inA) + 12 * leave,
     z: 80 - 50 * leave,
-    glint: at(u, ANSWER_MS + 300, 1100),
-    glow: ease.outCubic(at(u, ANSWER_MS - 100, 900)),
+    glint: at(u, RESPOND + SIXTEENTH, COUNT_MS),
+    glow: ease.outCubic(at(u, RESPOND, EIGHTH)),
   };
 }
 
-/** One word of the answer, `j` from its start: it rises into place and sharpens, a little after the one before. */
+/** One word of the answer, `j` from its start: each lands on its own thirty-second, a hit of its own. */
 export function answerWord(u: number, j: number) {
-  const start = ANSWER_MS + j * 55;
-  const p = ease.outExpo(at(u, start, 900));
-  return { opacity: ease.outCubic(at(u, start, 450)), y: 14 * (1 - p), blur: 6 * (1 - p) };
+  const start = RESPOND + SIXTEENTH + j * THIRTYSECOND;
+  const p = hit(at(u, start, EIGHTH));
+  return {
+    opacity: ease.outCubic(at(u, start, THIRTYSECOND * 1.5)),
+    y: 14 * (1 - p),
+    blur: 6 * (1 - ease.outCubic(at(u, start, EIGHTH))),
+  };
 }
 
 // ----- the shapes -----

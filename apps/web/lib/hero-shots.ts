@@ -1,11 +1,10 @@
 // Where the hero's layers stand in each beat (Elco, 11 Nov: the question, the answer, the flower and the
 // background "have to be separate so that we can compose the page as needed for mobile or for large screens").
-// Each beat is a shot: the flower's place and size, and the corner each bubble is pinned by. The camera never stops
-// (Elco, 12 Nov: one take): it travels one smooth path through every shot, passing through each once its answer is
-// in; and the question and answer swap sides from beat to beat, so the conversation crosses the flower instead of
-// sitting in two fixed corners.
+// Each beat is a shot: the flower's place and size, and the corner each bubble is pinned by. On each beat's one the
+// camera whips the flower from the last shot to this one and holds it (Elco, 12 Nov: cut to the beat), and the
+// question and answer swap sides from beat to beat, shot and reverse shot, so the conversation crosses the flower
+// instead of sitting in two fixed corners.
 // A wide stage and a narrow one have their own tables. Numbers only, a pure function of the beat and its time.
-import { BEATS_MS, beatMs } from './hero-story.ts';
 
 /** A point of the stage, in % of its width and height. */
 export interface Pin {
@@ -55,102 +54,32 @@ const NARROW: readonly Shot[] = [
   { flower: { x: 50, y: 44, scale: 0.92 }, question: topRight(98, 2), answer: bottomLeft(2, 98) },
 ];
 
-/** Where in its beat the camera passes through the beat's shot: once its answer is in, as a share of the beat. */
-const HIT = 0.45;
-
-/** When each beat starts, on one clock round the whole story. */
-const STARTS = BEATS_MS.map((_, k) => BEATS_MS.slice(0, k).reduce((sum, ms) => sum + ms, 0));
-const LOOP = BEATS_MS.reduce((sum, ms) => sum + ms, 0);
-/** When the camera passes through beat `k`'s shot. */
-const hitAt = (k: number) => (STARTS[k] ?? 0) + beatMs(k) * HIT;
+/** How long the camera's whip from the last shot to this one takes, from the one. */
+const WHIP_MS = 380;
 
 /** The shot a beat holds. */
 export const shotOf = (beat: number, wide: boolean): Shot =>
   ((wide ? WIDE : NARROW)[beat] ?? (wide ? WIDE : NARROW)[0]) as Shot;
 
-type Place = { x: number; y: number; scale: number };
-const AXES = ['x', 'y', 'scale'] as const;
-const place = (k: number, wide: boolean): Place => shotOf((k + 6) % 6, wide).flower;
-
 /**
- * How fast the camera passes through shot `k`, per ms: the way from the shot before to the shot after, so it goes
- * through each shot without stopping.
- */
-function pace(k: number, wide: boolean): Place {
-  const before = place(k - 1, wide);
-  const after = place(k + 1, wide);
-  const ms = hitAt((k + 1) % 6) - hitAt((k + 5) % 6) + (k === 0 || k === 5 ? LOOP : 0);
-  return {
-    x: (after.x - before.x) / ms,
-    y: (after.y - before.y) / ms,
-    scale: (after.scale - before.scale) / ms,
-  };
-}
-
-/** One leg of the path, `s` of the way from `a` to `b` over `ms`, leaving and arriving at their paces; and its speed. */
-function leg(a: Place, va: Place, b: Place, vb: Place, ms: number, s: number) {
-  const s2 = s * s;
-  const s3 = s2 * s;
-  const at = {} as Place;
-  const speed = {} as Place;
-  for (const key of AXES) {
-    at[key] =
-      (2 * s3 - 3 * s2 + 1) * a[key] +
-      (s3 - 2 * s2 + s) * ms * va[key] +
-      (-2 * s3 + 3 * s2) * b[key] +
-      (s3 - s2) * ms * vb[key];
-    speed[key] =
-      ((6 * s2 - 6 * s) * a[key] +
-        (3 * s2 - 4 * s + 1) * ms * va[key] +
-        (-6 * s2 + 6 * s) * b[key] +
-        (3 * s2 - 2 * s) * ms * vb[key]) /
-      ms;
-  }
-  return { at, speed };
-}
-
-const STILL: Place = { x: 0, y: 0, scale: 0 };
-
-/**
- * Where the flower is at a moment (Elco, 12 Nov: one take, the camera never stops): on one smooth path through every
- * beat's shot, round the whole story, so it is always on its way from one shot to the next. On arrival it starts
- * still, a little further back, and pushes in. It leans into its travel.
+ * Where the flower is at a moment (Elco, 12 Nov: cut to the beat): on the one the camera whips it from the last
+ * shot to this one, all its speed at the start and braking hard into the shot, then holds it there. It leans into
+ * the whip and is smeared by it, `blur` px at the start.
  */
 export function flowerAt(beat: number, t: number, wide: boolean, fresh = false) {
-  const now = (STARTS[beat] ?? 0) + t;
-  let path: ReturnType<typeof leg>;
-  if (fresh && now < hitAt(0)) {
-    const to = place(0, wide);
-    const v = pace(0, wide);
-    const ms = hitAt(0);
-    const from = { x: to.x - (v.x * ms) / 2, y: to.y - (v.y * ms) / 2, scale: to.scale * 0.92 };
-    path = leg(from, STILL, to, v, ms, now / ms);
-  } else {
-    // the last shot passed, and the next, round the loop
-    let k = 5;
-    for (let j = 0; j < 6; j++) if (hitAt(j) <= now) k = j;
-    const from = now < hitAt(0) ? hitAt(5) - LOOP : hitAt(k);
-    const to = k === 5 ? hitAt(0) + (now < hitAt(0) ? 0 : LOOP) : hitAt(k + 1);
-    path = leg(
-      place(k, wide),
-      pace(k, wide),
-      place(k + 1, wide),
-      pace(k + 1, wide),
-      to - from,
-      (now - from) / (to - from),
-    );
-  }
-  // and a slow float round a small circle, once round the whole story, so even passing a shot it is moving
-  const turn = (2 * Math.PI * now) / LOOP;
+  const to = shotOf(beat, wide).flower;
+  if (fresh && beat === 0) return { ...to, lean: 0, blur: 0 };
+  const from = shotOf((beat + 5) % 6, wide).flower;
+  const p = Math.min(1, Math.max(0, t / WHIP_MS));
+  const k = 1 - (1 - p) ** 4;
+  // how fast it is going, 1 on the one, 0 in the shot
+  const speed = (1 - p) ** 3;
+  const far = Math.hypot(to.x - from.x, to.y - from.y);
   return {
-    x: path.at.x + FLOAT * Math.cos(turn),
-    y: path.at.y + FLOAT * Math.sin(turn),
-    scale: path.at.scale,
-    lean: path.speed.x * LEAN,
+    x: from.x + (to.x - from.x) * k,
+    y: from.y + (to.y - from.y) * k,
+    scale: from.scale + (to.scale - from.scale) * k,
+    lean: (to.x - from.x) * speed * 0.35,
+    blur: far * speed * 0.12,
   };
 }
-
-/** How far the flower leans into its travel: degrees per % of the stage a ms. */
-const LEAN = 700;
-/** The camera's float, in % of the stage. */
-const FLOAT = 1.2;
