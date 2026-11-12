@@ -254,6 +254,24 @@ describe('payouts/v1', () => {
     expect(doc.payouts[1]).toMatchObject({ amount: '2', when: null, usd: null, evidence: null });
   });
 
+  test('DefiLlama asked again after a refusal', async () => {
+    let calls = 0;
+    const fetchImpl = (async () => {
+      calls++;
+      if (calls === 1) return new Response('', { status: 429 });
+      return new Response(
+        JSON.stringify({
+          coins: { 'coingecko:near': { prices: [{ timestamp: 1000, price: 5 }] } },
+        }),
+      );
+    }) as typeof fetch;
+    const at = new Date(1000 * 1000).toISOString();
+    const p = await pastPrices(fetchImpl, [{ token: '', at }], [0]);
+    expect(calls).toBe(2);
+    expect(p.priceOf('', at)?.price).toBe(5);
+    expect(p.failed).toEqual([]);
+  });
+
   test("DefiLlama's price nearest each moment, within six hours, or none", async () => {
     const fetchImpl = (async () =>
       new Response(
