@@ -316,6 +316,7 @@ export async function content(page: DocPage, pages: DocPage[]) {
   }
   let referenceMarkdown = '';
   if (page.slug === 'brand-kit/assets') referenceMarkdown = `\n\n${brandReference()}`;
+  if (page.slug === 'ideas/interface') referenceMarkdown = `\n\n${interfaceReference()}`;
   if (page.slug === 'rendering-protocol') {
     referenceMarkdown =
       '\n\n## Current view vocabulary\n\nGenerated from [core’s view definitions](https://github.com/elcocoel/petals/blob/main/packages/core/src/view/index.ts). A format accepting a dimension does not mean every renderer draws it.\n\n| Dimension | Accepts | Default data |\n| --- | --- | --- |\n' +
@@ -363,6 +364,19 @@ function brandReference(): string {
       .map((font) => `- ${font.family}`)
       .join('\n'),
   ].join('\n\n');
+}
+/**
+ * How the interface stays manageable, counted when the site is built so the numbers stay true (Elco, 12 Nov,
+ * through META: "count them yourself"): the shared components, and the data formats with their versions.
+ */
+function interfaceReference(): string {
+  const components = readdirSync(join(repoRoot(), 'apps/web/components/ui')).filter(
+    (name) => name.endsWith('.tsx') && !name.includes('.test.'),
+  ).length;
+  const ids = Object.values(schemas)
+    .map((raw) => /^urn:petal:schema:([^:]+):v\d+$/.exec((raw as Schema).$id ?? '')?.[1])
+    .filter((kind): kind is string => kind !== undefined);
+  return `## Counted when the site is built\n\n- ${components} components in \`apps/web/components/ui/\`.\n- ${new Set(ids).size} data formats, ${ids.length} versions in all, each a JSON Schema.`;
 }
 function textOf(node: Tree): string {
   return node.value ?? node.children?.map(textOf).join('') ?? '';

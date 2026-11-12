@@ -133,6 +133,15 @@ test('the brand kit reads its colours and type from the design tokens (card 110,
   assert.ok(result.reference);
 });
 
+test('the interface page counts its components and formats when the site is built', async () => {
+  const pages = catalog();
+  const page = pages.find((p) => p.slug === 'ideas/interface');
+  assert.ok(page);
+  const result = await content(page, pages);
+  assert.match(result.markdown, /- \d+ components in `apps\/web\/components\/ui\/`/);
+  assert.match(result.markdown, /- \d+ data formats, \d+ versions in all/);
+});
+
 test('/docs/brain is grouped by department, each hub first, with the routing table beside the doctrine', () => {
   const brain = catalog().filter((p) => p.section === 'brain' && p.kind === 'reference');
   const groups = byDepartment(brain);
