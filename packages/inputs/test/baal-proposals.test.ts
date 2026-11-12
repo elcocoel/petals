@@ -135,7 +135,12 @@ describe('a Baal DAO', () => {
       new Map([[`0x${word(10)}`, '0xbbbb000000000000000000000000000000000001']]),
     );
     expect(validateProposals(p).ok).toBe(true);
-    expect(p.petal).toBe('proposals/v2');
+    expect(p.petal).toBe('proposals/v3');
+    // its page on DAOhaus is where it was made (walk 3)
+    expect(p.proposals[0]?.link).toEqual({
+      url: `https://admin.daohaus.club/#/molochv3/0x64/${DAO.toLowerCase()}/proposal/${p.proposals[0]?.id}`,
+      kind: 'where it was made',
+    });
     expect(p.source).toMatchObject({ kind: 'baal', contract: `eip155:100:${DAO}` });
     const by = Object.fromEntries(p.proposals.map((x) => [x.id, x]));
     expect(by['1']).toMatchObject({

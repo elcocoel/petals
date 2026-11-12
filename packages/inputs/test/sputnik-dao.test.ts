@@ -63,12 +63,58 @@ describe('a Sputnik DAO', () => {
       'MDAO Design services',
     );
     expect(titleOf('Transfer NEAR balance\nmore')).toBe('Transfer NEAR balance');
+    // Astro's 'text$$$$link': the title is the text before it (walk 3, 12 Nov)
+    expect(titleOf('Part of funds to return back to Aurora DAO$$$$')).toBe(
+      'Part of funds to return back to Aurora DAO',
+    );
+  });
+
+  test("a proposal's summary is its own text; its link is an address that text names, and says so (walk 3)", () => {
+    const p = sputnikProposals(`near:mainnet:${DAO}`, DAO, read, AT, AT.as_of);
+    for (const x of p.proposals) {
+      expect(x).toHaveProperty('summary');
+      if (x.link) expect(x.link.kind).toBe('named in its text');
+    }
+    const astro = sputnikProposals(
+      `near:mainnet:${DAO}`,
+      DAO,
+      {
+        ...read,
+        proposals: [
+          {
+            ...(read.proposals[0] as (typeof read.proposals)[number]),
+            description: 'Fund the meetup$$$$https://gov.near.org/t/meetup/1',
+          },
+          {
+            ...(read.proposals[0] as (typeof read.proposals)[number]),
+            id: 9,
+            description: 'See https://gov.near.org/t/x/2. Thanks',
+          },
+          { ...(read.proposals[0] as (typeof read.proposals)[number]), id: 10, description: '' },
+        ],
+      },
+      AT,
+      AT.as_of,
+    );
+    expect(astro.proposals.map((x) => [x.title, x.summary, x.link])).toEqual([
+      [
+        'Fund the meetup',
+        'Fund the meetup',
+        { url: 'https://gov.near.org/t/meetup/1', kind: 'named in its text' },
+      ],
+      [
+        'See https://gov.near.org/t/x/2. Thanks',
+        'See https://gov.near.org/t/x/2. Thanks',
+        { url: 'https://gov.near.org/t/x/2', kind: 'named in its text' },
+      ],
+      ['', null, null],
+    ]);
   });
 
   test('its proposals: each vote as for or against with its own word, an account that didn’t vote absent, closes_at by its policy', () => {
     const p = sputnikProposals(`near:mainnet:${DAO}`, DAO, read, AT, AT.as_of);
     expect(validateProposals(p).ok).toBe(true);
-    expect(p.petal).toBe('proposals/v2');
+    expect(p.petal).toBe('proposals/v3');
     // whom a Transfer pays; a Transfer that doesn't say, and every other kind, names none
     expect(p.proposals.map((x) => x.recipient)).toEqual(['marketing-dao.near', null, null]);
     expect(p.source).toMatchObject({

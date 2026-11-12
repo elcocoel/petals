@@ -103,11 +103,14 @@ export {
 } from './price.ts';
 export { PRIMITIVES } from './primitives.ts';
 export {
+  firstAddress,
   type Outcome,
   PROPOSALS_VERSION,
   type Proposal,
+  type ProposalLink,
   type Proposals,
   type ProposalVote,
+  splitAstro,
   titleOf,
   type Vote,
   validateProposals,

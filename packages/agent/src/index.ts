@@ -22,6 +22,7 @@ export {
   payoutMaps,
   proposalMaps,
   readCalls,
+  snapshotTexts,
   typeMaps,
   valueMaps,
 } from '@petal/tools';
