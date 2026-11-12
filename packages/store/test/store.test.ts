@@ -779,3 +779,26 @@ describe('migration 5, the workspace', () => {
     await store.close();
   });
 });
+
+describe('migration 31, the brain receipts', () => {
+  test('a receipt is added once, read from a time on, oldest first, and never rewritten', async () => {
+    const store = openStore(':memory:');
+    const row = (id: string, at: string, body = '{}') => ({
+      id,
+      at,
+      version: 'abc@def',
+      client_id: 'mcp',
+      body,
+    });
+    await store.brainReceipt.add(row('brc_2', LATER));
+    await store.brainReceipt.add(row('brc_1', AT));
+    // the same id again changes nothing
+    await store.brainReceipt.add(row('brc_1', AT, '{"changed":true}'));
+    expect((await store.brainReceipt.since()).map((r) => [r.id, r.body])).toEqual([
+      ['brc_1', '{}'],
+      ['brc_2', '{}'],
+    ]);
+    expect((await store.brainReceipt.since(LATER)).map((r) => r.id)).toEqual(['brc_2']);
+    await store.close();
+  });
+});

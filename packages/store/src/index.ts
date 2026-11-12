@@ -50,6 +50,7 @@ export type {
   StepRow,
   TopUpRow,
   UsageRow,
+  BrainReceiptRow,
   ValueRow,
   WalletBindingRow,
   WorkspaceNoteRow,

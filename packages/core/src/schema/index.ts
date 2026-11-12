@@ -18,6 +18,7 @@ import proposalsV2Schema from '../../schema/proposals-v2.schema.json' with { typ
 import seamSchema from '../../schema/seam.schema.json' with { type: 'json' };
 import snapshotSchema from '../../schema/snapshot.schema.json' with { type: 'json' };
 import usageSchema from '../../schema/usage.schema.json' with { type: 'json' };
+import brainReceiptSchema from '../../schema/brain-receipt.schema.json' with { type: 'json' };
 import valueSchema from '../../schema/value.schema.json' with { type: 'json' };
 import valueV2Schema from '../../schema/value-v2.schema.json' with { type: 'json' };
 import viewSchema from '../../schema/view.schema.json' with { type: 'json' };
@@ -60,6 +61,8 @@ export const schemas: {
   seam: object;
   /** one model call, counted and charged, and NEAR AI's own bill for it (pricing-protocol.md) */
   usage: object;
+  /** one serving of the brain's text by a door, the Harness's access log field for field (12 Nov) */
+  brainReceipt: object;
   /** what Petals charges: NEAR AI's bill, plus the fees switched on times the tip, plus the protocol rate */
   price: object;
   /** what a person pays: NEAR AI's bill, plus a base fee, plus their own tip (price/v2, which replaces v1) */
@@ -91,6 +94,7 @@ export const schemas: {
   viewV2: viewV2Schema,
   seam: seamSchema,
   usage: usageSchema,
+  brainReceipt: brainReceiptSchema,
   price: priceSchema,
   priceV2: priceV2Schema,
   mark: markSchema,

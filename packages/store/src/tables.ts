@@ -135,6 +135,14 @@ export interface UsageRow {
   billed_usd: number | null;
   reconciled_at: string | null;
 }
+/** A brain-receipt/v1 (31): one serving of the brain's text, as body, with what counts read by. */
+export interface BrainReceiptRow {
+  id: string;
+  at: string;
+  version: string;
+  client_id: string | null;
+  body: string;
+}
 /** A map's mark/v1 (25): its name, symbol and logo, each with where it came from. */
 export interface MarkRow {
   /** the map's address, as its card's id */
@@ -1071,6 +1079,27 @@ export function tables(db: Db) {
     },
 
     /** A usage record per model call (17): added once; only its bill is filled in later. */
+    brainReceipt: {
+      /** Added once; a receipt is never rewritten or deleted. */
+      add: async (r: BrainReceiptRow) => {
+        await db.run(
+          `INSERT INTO brain_receipt (id, at, version, client_id, body)
+           VALUES (?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`,
+          r.id,
+          r.at,
+          r.version,
+          r.client_id,
+          r.body,
+        );
+      },
+      /** Every receipt from `since` on (all, without it), the oldest first. */
+      since: (since?: string) =>
+        db.all<BrainReceiptRow>(
+          'SELECT * FROM brain_receipt WHERE at >= ? ORDER BY at, id',
+          since ?? '',
+        ),
+    },
+
     usage: {
       add: async (r: UsageRow) => {
         await db.run(

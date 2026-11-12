@@ -1,6 +1,7 @@
 // The tool contract types (packages.md, @petal/tools). Re-exported by index.ts; frozen at
 // packages/v1, so their shapes do not change here.
 
+import type { BrainReceipt } from './brain.ts';
 import type {
   Claim,
   Progress,
@@ -112,6 +113,11 @@ export interface ToolContext {
   live?: LiveHub;
   /** additive (9 Nov, agent-house): told when a job is reported, so Petals' agent takes it up at once */
   onJobReported?: (job: JobRow) => void;
+  /**
+   * additive (12 Nov, the brain's receipts): told each time a door serves the brain's text, set by the server
+   * that holds the store, which keeps it. None: nothing is kept, and the answer's receipt is null.
+   */
+  onBrainServed?: (receipt: BrainReceipt) => Promise<void>;
   /**
    * additive (10 Nov, one-source.md step 2): the viewer's view, the glasses every drawing without a view of
    * its own is drawn through: the person's, or the default. A flower's own choices never draw it.

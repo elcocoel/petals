@@ -8,6 +8,7 @@ import { durableNonceStore, nearRpc, type Rpc } from '@petal/near/auth';
 import { nearUsd } from '@petal/near/pay';
 import { type JobRow, stateStore } from '@petal/store';
 import {
+  type BrainReceipt,
   type Config,
   createContext,
   freshGate,
@@ -230,7 +231,17 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       .current?.(job)
       .catch((e) => console.warn(`petal: a report's turn failed: ${(e as Error).message}`));
   };
-  app.route('/', httpApp({ ...ctx, live, onJobReported }, { gate: auth.gate }));
+  // the brain's receipts (12 Nov, step 5): one brain-receipt/v1 each time a door serves the brain's text
+  const onBrainServed = async (r: BrainReceipt) => {
+    await store.brainReceipt.add({
+      id: r.id,
+      at: r.at,
+      version: r.version,
+      client_id: r.client_id,
+      body: JSON.stringify(r),
+    });
+  };
+  app.route('/', httpApp({ ...ctx, live, onJobReported, onBrainServed }, { gate: auth.gate }));
   // A store that fails mid-request (a full disk, say) ends in the API's own error shape: no chat
   // starts, so nothing is spent, and the caller is told plainly.
   app.onError((e, c) => {

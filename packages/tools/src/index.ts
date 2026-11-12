@@ -15,6 +15,7 @@ export {
   BRAIN_INDEX_VERSION,
   type BrainEntry,
   type BrainIndex,
+  type BrainReceipt,
   brainAt,
   brainProblems,
   buildBrainIndex,

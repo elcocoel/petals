@@ -4,8 +4,15 @@
 import { cpSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { validateBrainReceipt } from '@petal/core';
 import { describe, expect, test } from 'vitest';
-import { brainService, gitCommitOf, readBrain, routeBrain } from '../src/brain.ts';
+import {
+  type BrainReceipt,
+  brainService,
+  gitCommitOf,
+  readBrain,
+  routeBrain,
+} from '../src/brain.ts';
 import { createContext } from '../src/context.ts';
 import { httpApp } from '../src/http/app.ts';
 
@@ -150,5 +157,50 @@ describe('the service', () => {
     };
     expect(file.text).toContain('# Where power lives');
     expect((await app.request('/api/v1/brain/files/nothing')).status).toBe(404);
+  });
+});
+
+describe('receipts (research/brain-departments-2026-11-11.md, step 5)', () => {
+  test('each door keeps one brain-receipt/v1 the moment it answers, and says its id', async () => {
+    const kept: BrainReceipt[] = [];
+    const ctx = createContext({ root: REPO, map: null, llmDailyUsd: 0, fake: true });
+    const app = httpApp({ ...ctx, onBrainServed: async (r) => void kept.push(r) });
+    const route = (await (
+      await app.request('/api/v1/brain/route?q=who%20votes%20together%20in%20this%20DAO')
+    ).json()) as { receipt: string; routes: { id: string }[] };
+    const file = (await (await app.request('/api/v1/brain/files/doctrine')).json()) as {
+      receipt: string;
+      text: string;
+    };
+    const index = (await (await app.request('/api/v1/brain')).json()) as { receipt: string };
+    expect(kept.map((r) => r.id)).toEqual([route.receipt, file.receipt, index.receipt]);
+    for (const r of kept) expect(validateBrainReceipt(r)).toMatchObject({ ok: true });
+    const [byRoute, byFile] = kept as [BrainReceipt, BrainReceipt];
+    expect(byRoute).toMatchObject({
+      petal: 'brain-receipt/v1',
+      keywords: ['who', 'vote', 'together', 'dao'],
+      served_docs: route.routes.map((r) => r.id),
+      doc_count: route.routes.length,
+      core_doctrine: false,
+      client_id: 'http',
+      consumer_context: null,
+    });
+    expect(byRoute.matched_entries).toEqual(
+      expect.arrayContaining(['task: Who votes together', 'department: governance']),
+    );
+    expect(byRoute.version).toMatch(/^[0-9a-f]{16}@/);
+    expect(byFile).toMatchObject({
+      served_docs: ['doctrine'],
+      core_doctrine: true,
+      chars_served: file.text.length,
+    });
+  });
+
+  test('a context that keeps none answers with a null receipt', async () => {
+    const app = httpApp(createContext({ root: REPO, map: null, llmDailyUsd: 0, fake: true }));
+    const file = (await (await app.request('/api/v1/brain/files/value')).json()) as {
+      receipt: unknown;
+    };
+    expect(file.receipt).toBeNull();
   });
 });

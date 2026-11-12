@@ -339,6 +339,25 @@ export function brainAt(dir: string) {
   return s;
 }
 
+// -- receipts (research/brain-departments-2026-11-11.md, step 5): brain-receipt/v1, the Harness's access log
+
+/** One serving of the brain's text by a door, field for field the Harness's brain_access_log. */
+export interface BrainReceipt {
+  petal: 'brain-receipt/v1';
+  id: string;
+  at: string;
+  version: string;
+  keywords: string[];
+  matched_entries: string[];
+  served_docs: string[];
+  doc_count: number;
+  chars_served: number;
+  core_doctrine: boolean;
+  client_id: string | null;
+  client_label: string | null;
+  consumer_context: { run?: string; job?: string; exploration?: string; subject?: string } | null;
+}
+
 // -- routing (brain.md, "Routing"): the chain's answers first, then words ranked by BM25 over the headers
 
 /** One way in, with why. */
@@ -347,6 +366,8 @@ export interface BrainRoute {
   kind: BrainEntry['kind'];
   /** the department it's in */
   department: string | null;
+  /** the routing table's row that brought it, or null when its own header matched */
+  task: string | null;
   for: string;
   file: string;
   status: BrainEntry['status'];
@@ -383,10 +404,16 @@ function docWords(e: BrainEntry): string[] {
   ];
 }
 
-const routeOf = (e: BrainEntry, why: string, score: number): BrainRoute => ({
+const routeOf = (
+  e: BrainEntry,
+  why: string,
+  score: number,
+  task: string | null = null,
+): BrainRoute => ({
   id: e.id,
   kind: e.kind,
   department: e.department,
+  task,
   for: e.for,
   file: e.file,
   status: e.status,
@@ -472,6 +499,7 @@ export function routeBrain(
               e,
               `the task "${task.task}" ${how} it (words: ${s.hit.join(', ')})`,
               s.score - i / 1e6,
+              task.task,
             ),
           );
       });
