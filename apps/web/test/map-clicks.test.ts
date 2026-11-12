@@ -52,3 +52,13 @@ test('a stack of more than STACK_FOLD proposals folds into one mark with its cou
   expect(land).toMatch(/set\.add\(petal\);\s+opened\.set\(flower, set\);\s+remount\(flower\);/);
   expect(land).toMatch(/\.\.\.\(open\.length \? \{ opened: open \} : \{\}\),/);
 });
+
+test('the page hears which proposal is pinned, and when it is let go (OVERLAYS, Elco walk 3)', () => {
+  const land = text('landscape/useLandscape.ts');
+  expect(land).toMatch(
+    /onProposal\?: \(p: \{ flower: string; id: string; proposal: Proposal \| null \} \| null\) => void;/,
+  );
+  expect(land).toMatch(/remount\(j\);\s+tellProposal\(\);\s+\};/);
+  expect(land).toMatch(/if \(j >= 0\) remount\(j\);\s+tellProposal\(\);/);
+  expect(land).toMatch(/if \(voted\) at\?\.current\?\.onProposal\?\.\(null\);/);
+});
