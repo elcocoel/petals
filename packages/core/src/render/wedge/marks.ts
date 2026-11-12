@@ -295,8 +295,16 @@ export function marks(
     // doesn't lie across it. How far is how much it had to slide, so there's no jump.
     const halfBar = ((ring.len[fi] as number) * k) / 2 + 8;
     const left1 = elbowX0 - (width * (1 - s)) / 2;
-    const left0 = clamp(left1, INSET, v.width - INSET - width);
-    const slidX = Math.abs(left1 - left0);
+    // clear of the boxes over the map as of the window's edge (12 Nov, wave 4: a chosen wallet's address ran under
+    // Tools), sliding along its line as the clicked petal's note does
+    const atEdge = clamp(left1, INSET, v.width - INSET - width);
+    const left0 = clamp(
+      clearOfTaken(atEdge, width, elbowY0 - LINE, elbowY0 + LINE, s),
+      INSET,
+      v.width - INSET - width,
+    );
+    // the step off its bar's end is for the window's edge only
+    const slidX = Math.abs(left1 - atEdge);
     const off = Math.min(slidX, halfBar + LINE);
     const listed = m.petals[fi]?.segments ?? [];
     const shown = segments[fi] as number;

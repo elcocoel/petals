@@ -65,6 +65,21 @@ test("the chosen petal's note slides clear of a box over the map", () => {
   expect(s.x + s.width).toBeLessThanOrEqual(panel.x0);
 });
 
+test("the pointed petal's note slides clear of a box over the map too (12 Nov, wave 4)", () => {
+  const i = m.order[0] as number;
+  const k = 140 / m.R;
+  const free = marks(m, at(k), { index: i, presence: 1 }).focus;
+  expect(free).not.toBeNull();
+  const f = free as NonNullable<typeof free>;
+  // a box where the note would stand, as Tools down the window's left side
+  const box = { x0: f.x - 10, y0: 0, x1: f.x + f.width + 10, y1: H };
+  const slid = marks(m, at(k), { index: i, presence: 1 }, m.ring, undefined, false, -1, [
+    box,
+  ]).focus;
+  const g = slid as NonNullable<typeof slid>;
+  expect(g.x + g.width <= box.x0 || g.x >= box.x1).toBe(true);
+});
+
 test('on the map: the boxes over it, the names inside the window, the speaker under the names', () => {
   const land = text('landscape/useLandscape.ts');
   expect(land).toMatch(/document\.querySelectorAll<HTMLElement>\('section\[data-float\]'\)/);
