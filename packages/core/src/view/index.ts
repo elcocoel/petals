@@ -40,9 +40,9 @@ export const ACCEPTS: Record<Dimension, readonly DataKind[]> = {
   // a date orders newest first ('Last active'), a count most first ('Votes cast'); Elco, 12 Nov: "the dimension of
   // time specifically is particularly absent ... it always looks like a shell, like a nautilus"
   order: ['amount', 'count', 'share', 'category', 'date'],
-  // a category's values, each in its key; an amount, count or share as a scale waits for the look to draw one, so
-  // Tools never offers what Colour can't draw (OVERLAYS, 12 Nov)
-  colour: ['category'],
+  // a category's values, each in its key; an amount, a count, a share or a date as a grade of one hue, lightest to
+  // darkest (Elco, 12 Nov, wave 4: "color graded by a number or a date")
+  colour: ['category', 'amount', 'count', 'share', 'date'],
   outline: ['flag', 'category'],
   // texture and markings take no data until the look draws them: a choice draws, or isn't offered (Elco, 12 Nov)
   texture: [],

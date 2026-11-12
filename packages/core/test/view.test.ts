@@ -218,7 +218,8 @@ describe('dimensions and kinds', () => {
       height: ['amount', 'count', 'share'],
       width: ['amount', 'count', 'share'],
       order: ['amount', 'count', 'share', 'category', 'date'],
-      colour: ['category'],
+      // a category's values, or a number's or a date's grade (wave 4)
+      colour: ['category', 'amount', 'count', 'share', 'date'],
       outline: ['flag', 'category'],
       // texture and markings take nothing until the look draws them (12 Nov: a choice draws, or isn't offered)
       texture: [],
@@ -276,9 +277,9 @@ describe('a view meeting a flower', () => {
     v.dimensions.order = { data: 'proposals' };
     v.dimensions.height = { data: 'proposals' };
     expect(inUse(v, moloch)).toMatchObject({ order: 'proposals', height: 'proposals' });
-    // Colour takes a category only, until the look draws a scale (12 Nov)
+    // Colour takes a count as a grade (wave 4)
     v.dimensions.colour = { data: 'proposals' };
-    expect(inUse(v, moloch).colour).toBeNull();
+    expect(inUse(v, moloch).colour).toBe('proposals');
   });
 
   test("labels take a person's names where a flower has them, and only a category", () => {

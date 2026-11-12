@@ -13,7 +13,7 @@
 import { type Proposal, redress, type SeamPiece } from '@petal/core';
 import type { View } from '@petal/core/types';
 import { EVERY_FLOWER, inUse, latestView } from '@petal/core/view';
-import { flowerKeys, keyLines, mapKeys } from '@petal/core/wedge/keys';
+import { flowerKeys, grades, KEY_BY_NAME, keyLines, mapKeys } from '@petal/core/wedge/keys';
 import { floatBox } from '@petal/tokens';
 import {
   type ReactNode,
@@ -126,6 +126,63 @@ function dressedIn<D extends { flowers: CanvasFlower[] }>(data: D, view: View): 
         ? { ...f, reading: { ...f.reading, petals: redress(f.reading.petals, view, f.given) } }
         : f,
     ),
+  };
+}
+
+/**
+ * A grade's legend (Elco, wave 4: "color graded by a number or a date"): where Colour shows a count, a date, a share
+ * or an amount, its two ends over the drawn petals, in words ('fewest 3' and 'most 534', 'oldest 17 Aug 2023' and
+ * 'newest 12 Nov 2026'), and the five steps' colours, lightest first; null for a category or one colour.
+ */
+function gradeWords(
+  flowers: readonly CanvasFlower[],
+  view: View,
+  chosen: Readonly<Record<string, string>>,
+): { from: string; to: string; fills: string[] } | null {
+  const by = latestView(view).dimensions.colour?.data ?? null;
+  if (!by) return null;
+  const pieceKind = flowers.flatMap((f) => f.given ?? []).find((p) => p.name === by)?.kind;
+  const kind = by === 'share' || by === 'amount' ? by : pieceKind;
+  if (kind !== 'share' && kind !== 'amount' && kind !== 'count' && kind !== 'date') return null;
+  const xs: number[] = [];
+  for (const f of flowers) {
+    const piece = f.given?.find((p) => p.name === by);
+    for (const p of f.reading.petals) {
+      if (p.tail) continue;
+      if (kind === 'share') xs.push(p.share);
+      else if (kind === 'amount') xs.push(Number(p.amount));
+      else {
+        const v =
+          piece && 'values' in piece
+            ? piece.values.find((x) => x.participant === p.id)?.value
+            : undefined;
+        const x = v === undefined ? Number.NaN : kind === 'date' ? Date.parse(v) : Number(v);
+        if (Number.isFinite(x)) xs.push(x);
+      }
+    }
+  }
+  if (xs.length === 0) return null;
+  const lo = Math.min(...xs);
+  const hi = Math.max(...xs);
+  const day = (t: number) =>
+    new Date(t).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
+  const say = (x: number) =>
+    kind === 'date'
+      ? day(x)
+      : kind === 'share'
+        ? `${(x * 100).toFixed(x < 0.001 ? 3 : 1)}%`
+        : Math.round(x).toLocaleString('en-US');
+  const [low, high] = kind === 'date' ? ['oldest', 'newest'] : ['fewest', 'most'];
+  const hue = KEY_BY_NAME.get(chosen.grade ?? '');
+  return {
+    from: `${kind === 'share' || kind === 'amount' ? 'least' : low} ${say(lo)}`,
+    to: `${high} ${say(hi)}`,
+    fills: grades(hue).map((k) => k.hex),
   };
 }
 
@@ -631,7 +688,26 @@ export function LandscapeCanvas({
   const [insightsOn, setInsightsOn] = useState(true);
   // the chain's flowers and their drawing models, once per chain; gravity only moves their places
   // the map's keys, ranked once over every flower on it, whatever chain: a value has one colour everywhere
-  const mapKeyed = useMemo(() => mapKeys(data.flowers.map((f) => f.reading.petals)), [data]);
+  // the view's chosen colours (colour.keys: { value: key }; Elco, wave 4: "choosing which colour a value gets")
+  const chosen = useMemo(
+    () =>
+      (latestView(person.view).dimensions.colour as { keys?: Record<string, string> } | null)
+        ?.keys ?? {},
+    [person.view],
+  );
+  const mapKeyed = useMemo(
+    () =>
+      mapKeys(
+        data.flowers.map((f) => f.reading.petals),
+        chosen,
+      ),
+    [data, chosen],
+  );
+  // a number or a date on Colour: its grade's two ends in words, and the five steps' colours (OVERLAYS draws it)
+  const gradeKeys = useMemo(
+    () => gradeWords(data.flowers, person.view, chosen),
+    [data, person.view, chosen],
+  );
   const built = useMemo<(LandscapeData & { focus: number; from: number[] }) | null>(() => {
     const here = data.chains.find((c) => c.chain === chain);
     if (!here) return null;
@@ -910,6 +986,7 @@ export function LandscapeCanvas({
       // on the map, what each colour stands for everywhere (Elco, 12 Nov: "the legend tells me what each color is")
       keys={inFlower ? flowerKeys(inFlower.reading.petals, mapKeyed) : keyLines(mapKeyed)}
       keysNote={inFlower || mapKeyed.length > 0 ? undefined : panelWords.legendColours}
+      gradeKeys={gradeKeys ?? undefined}
       // what a line between two flowers is, for anyone who doesn't know (Elco, 12 Nov, walk 2); in Information
       // on the map's boxes, as what's seen, not a tool
       between={

@@ -9,7 +9,7 @@ const text = (f: string) => readFileSync(join(import.meta.dirname, '..', f), 'ut
 test("the map's keys are ranked once and used by every flower, its far shape and the legend", () => {
   const canvas = text('landscape/LandscapeCanvas.tsx');
   expect(canvas).toMatch(
-    /const mapKeyed = useMemo\(\(\) => mapKeys\(data\.flowers\.map\(\(f\) => f\.reading\.petals\)\), \[data\]\);/,
+    /mapKeys\(\s+data\.flowers\.map\(\(f\) => f\.reading\.petals\),\s+chosen,\s+\)/,
   );
   expect(canvas).toMatch(
     /keys=\{inFlower \? flowerKeys\(inFlower\.reading\.petals, mapKeyed\) : keyLines\(mapKeyed\)\}/,

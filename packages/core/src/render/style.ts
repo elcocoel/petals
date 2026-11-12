@@ -60,7 +60,7 @@ export const KEY_STYLE: Record<KeyName, { cls: string; swatch: string }> = {
   pink: { cls: 'c-key-pink', swatch: 'var(--key-pink)' },
   grey: { cls: 'c-key-grey', swatch: 'var(--key-grey)' },
 };
-const BY_HEX = new Map(KEY_ALL.map((k) => [k.hex, KEY_STYLE[k.name]]));
+const BY_HEX = new Map(KEY_ALL.map((k) => [k.hex, KEY_STYLE[k.name as KeyName]]));
 
 /** The class and swatch that paint a colour lookFills handed (a key's hex); anything else is grey. */
 export const keyStyle = (hex: string): { cls: string; swatch: string } =>
