@@ -79,7 +79,7 @@ export function InteractionSurface({
     [from, edge, workspace.recorded],
   );
   // the boxes next to the side panel, or near it, move with it as it opens and closes (Elco's walk 5)
-  const hands = useFloatBoxes(BOXES, place, edge);
+  const hands = useFloatBoxes(BOXES, place, { edge, snap: true });
   // What the conversation covers of the canvas, where it starts, so the flower is drawn beside it.
   const area = useRef<HTMLDivElement>(null);
   const [clear, setClear] = useState<Clear | undefined>(undefined);

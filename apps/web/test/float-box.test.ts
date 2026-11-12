@@ -232,6 +232,27 @@ describe('snapping (box.snap; Elco, walk 5: "snap to the edges more easily")', (
   });
 });
 
+describe("a room that starts below the site's nav (top; OVERLAYS, 12 Nov: the map's panels as boxes)", () => {
+  const NAV = 96;
+  const { inset, bar } = floatBox;
+  test('no bar goes above it, moved or kept', () => {
+    expect(kept({ ...BOX, y: 10 }, WIN, NAV).y).toBe(NAV);
+    expect(moved(BOX, 0, -500, WIN, NAV).y).toBe(NAV);
+  });
+
+  test('a box no taller than the room below it', () => {
+    expect(kept({ ...BOX, h: WIN.h }, WIN, NAV).h).toBe(WIN.h - NAV);
+  });
+
+  test("it snaps to where boxes start below it, not to the window's top", () => {
+    expect(snapped({ ...BOX, y: NAV + inset + bar - 1 }, WIN, 0, NAV).y).toBe(NAV + inset);
+  });
+
+  test('a top edge sized up stops at it', () => {
+    expect(sized(BOX, 'n', 0, -500, WIN, NAV).y).toBe(NAV);
+  });
+});
+
 describe('sizing', () => {
   const EDGES: [Edge, Partial<Rect>][] = [
     ['n', { y: 190, h: 510 }],
