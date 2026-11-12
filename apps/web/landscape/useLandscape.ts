@@ -425,8 +425,15 @@ export function useLandscape(
     const chainsClear = (): Clear => {
       const r = aside?.current?.getBoundingClientRect();
       if (!at?.current?.clearOfChains || !r || r.width === 0) return NO_CLEAR;
-      const from = node.getBoundingClientRect().left;
-      return { ...NO_CLEAR, left: Math.max(0, r.right - from + (r.left - from)) };
+      const from = node.getBoundingClientRect();
+      // beside it while it's a tall column, below it while it's a bar along the top: whichever leaves the map
+      // more room, so a folded box doesn't take the room's whole left (WORKSPACE, 12 Nov: on /make the map,
+      // always the ground now, sat small against the right edge)
+      const left = Math.max(0, r.right - from.left + (r.left - from.left));
+      const top = Math.max(0, r.bottom - from.top + (r.top - from.top));
+      const besideRoom = Math.min(from.width - left, from.height);
+      const belowRoom = Math.min(from.width, from.height - top);
+      return belowRoom > besideRoom ? { ...NO_CLEAR, top } : { ...NO_CLEAR, left };
     };
     clearSides(cam, chainsClear());
 
