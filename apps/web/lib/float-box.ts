@@ -28,21 +28,24 @@ const BASE_MIN = floatBox['base-min-height'];
 /** The base, inside a box this tall: never below its least, and never so tall the sheet goes below its own. */
 const baseIn = (base: number, h: number) => clamp(base, BASE_MIN, h - SHEET_MIN);
 
-/** The same box, inside this window. What a drag and a window resize both come down to. */
-export function kept(r: Rect, win: Size): Rect {
+/**
+ * The same box, inside this window. What a drag and a window resize both come down to. `top` is where the
+ * boxes' room starts, below the site's nav on a page that has one: no bar goes above it.
+ */
+export function kept(r: Rect, win: Size, top = 0): Rect {
   const w = Math.min(r.w, win.w);
-  const h = Math.min(r.h, win.h);
+  const h = Math.min(r.h, win.h - top);
   return {
     w,
     h,
     x: clamp(r.x, 0, win.w - w),
-    y: clamp(r.y, 0, win.h - floatBox.bar),
+    y: clamp(r.y, top, win.h - floatBox.bar),
     ...(r.base === undefined ? {} : { base: baseIn(r.base, h) }),
   };
 }
 
-export const moved = (from: Rect, dx: number, dy: number, win: Size): Rect =>
-  kept({ ...from, x: from.x + dx, y: from.y + dy }, win);
+export const moved = (from: Rect, dx: number, dy: number, win: Size, top = 0): Rect =>
+  kept({ ...from, x: from.x + dx, y: from.y + dy }, win, top);
 
 /** How near an edge a box let go of lands on it: a bar's height. */
 const SNAP = floatBox.bar;
@@ -50,24 +53,33 @@ const SNAP = floatBox.bar;
 /**
  * box.snap: a box let go near the window's edges, or near the side panel's edge (`left`, where it ends, 0
  * for none), lands flush on them, where the boxes start (Elco, walk 5, 12 Nov: "maybe they would snap to the
- * edges more easily").
+ * edges more easily"). Its room's top is `top` (below the site's nav, on a page that has one).
  */
-export function snapped(r: Rect, win: Size, left = 0): Rect {
+export function snapped(r: Rect, win: Size, left = 0, top = 0): Rect {
   const { inset } = floatBox;
   const near = (a: number, b: number) => Math.abs(a - b) <= SNAP;
   const start = left > 0 ? besidePanel(left) : inset;
   const end = win.w - inset - r.w;
+  const first = top + inset;
   const bottom = win.h - inset - r.h;
   const x = near(r.x, start) ? start : near(r.x, end) ? end : r.x;
-  const y = near(r.y, inset) ? inset : near(r.y, bottom) ? bottom : r.y;
-  return kept({ ...r, x, y }, win);
+  const y = near(r.y, first) ? first : near(r.y, bottom) ? bottom : r.y;
+  return kept({ ...r, x, y }, win, top);
 }
 
 /**
  * The edge or corner under the hand follows it; the opposite one stays where it is. With a base, each edge
  * sizes its own part (design/conversation.md, lines 5 to 7): the top the sheet, the bottom the base.
  */
-export function sized(from: Rect, edge: Edge, dx: number, dy: number, win: Size): Rect {
+export function sized(
+  from: Rect,
+  edge: Edge,
+  dx: number,
+  dy: number,
+  win: Size,
+  /** where the boxes' room starts (kept) */
+  room = 0,
+): Rect {
   const minW = Math.min(floatBox['min-width'], win.w);
   const { base } = from;
   // the part this edge doesn't size keeps its height
@@ -80,7 +92,7 @@ export function sized(from: Rect, edge: Edge, dx: number, dy: number, win: Size)
   if (edge.includes('w')) left = clamp(left + dx, 0, right - minW);
   if (edge.includes('e')) right = clamp(right + dx, left + minW, win.w);
   if (edge.includes('n')) {
-    top = clamp(top + dy, 0, Math.min(bottom - Math.min(minN, win.h), win.h - floatBox.bar));
+    top = clamp(top + dy, room, Math.min(bottom - Math.min(minN, win.h), win.h - floatBox.bar));
   }
   if (edge.includes('s')) bottom = clamp(bottom + dy, top + Math.min(minS, win.h), win.h);
   const h = bottom - top;

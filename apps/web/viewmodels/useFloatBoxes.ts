@@ -1,6 +1,6 @@
 // What a hand does to the boxes floating over a canvas: move, size, raise, and keep the wheel. It writes
 // straight to each box's element, so a drag never renders React and a render never moves a box. The
-// geometry is in lib/float-box.ts. Positions last as long as the page does.
+// geometry is in lib/float-box.ts. Positions last as long as the page does (a visit, not kept per person).
 import { sizes } from '@petal/tokens';
 import { type HTMLAttributes, type RefCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import {
@@ -26,6 +26,25 @@ export interface BoxHand {
   edge: Record<Edge, Hold>;
   /** box.split: the line between a box's sheet and its base, where it has one. */
   seam: Hold;
+  /**
+   * The page sets the box's height (a fold to its bar, say), and null puts back the height it had before;
+   * a box with a base isn't folded. Sizing it by hand ends the fold where it is.
+   */
+  fold: (to: number | null) => void;
+}
+
+/** Where a page's boxes live, and how they behave there (OVERLAYS, 12 Nov: the map's panels as boxes). */
+export interface FloatRoom {
+  /**
+   * Where the side panel ends, on a page that has one (/make): when it opens or closes, the boxes next to it
+   * or near it move with it into the room, a hand's too (Elco, walk 5, 12 Nov: "anything that is in its area
+   * of influence or close to it ... would like get out of the way"), and they snap beside it.
+   */
+  edge?: number | undefined;
+  /** Where the boxes' room starts from the window's top, as it is now (below the site's nav): no bar goes above it. */
+  top?: (() => number) | undefined;
+  /** box.snap: a box let go near the room's edges lands on them (Elco, walk 5: "snap to the edges"). */
+  snap?: boolean | undefined;
 }
 
 interface Held {
@@ -33,7 +52,12 @@ interface Held {
   rect: Rect | null;
   /** A hand moved or sized it: placing the boxes again leaves it where it was put. */
   moved: boolean;
+  /** folded by the page to `to`, and the height it goes back to */
+  folded: { to: number; back: number } | null;
 }
+
+/** One order for every box on the page, whichever group it's in, so the one raised last is on top. */
+let highest = 0;
 
 /** box.hold: pressing here leaves the cursor where it was, so what's being typed stays in focus. */
 export const keepCursor = (e: { preventDefault(): void }) => e.preventDefault();
@@ -82,22 +106,20 @@ function canScroll(from: EventTarget | null, root: Element, dx: number, dy: numb
 export function useFloatBoxes<K extends string>(
   keys: readonly K[],
   place: (win: Size) => Record<K, Rect>,
-  /**
-   * Where the side panel ends, on a page that has one (/make): when it opens or closes, the boxes next to it
-   * or near it move with it into the room, a hand's too (Elco, walk 5, 12 Nov: "anything that is in its area
-   * of influence or close to it ... would like get out of the way").
-   */
-  edge?: number,
+  room: FloatRoom = {},
 ): Record<K, BoxHand> {
+  const { edge } = room;
   const boxes = useRef(new Map<K, Held>());
-  const highest = useRef(0);
   const lastEdge = useRef(edge);
+  // read when a hand moves a box, so a room that changes never builds the hands again
+  const roomNow = useRef(room);
+  roomNow.current = room;
 
   const hands = useMemo(() => {
     const heldOf = (key: K): Held => {
       let held = boxes.current.get(key);
       if (!held) {
-        held = { el: null, rect: null, moved: false };
+        held = { el: null, rect: null, moved: false, folded: null };
         boxes.current.set(key, held);
       }
       return held;
@@ -112,6 +134,8 @@ export function useFloatBoxes<K extends string>(
         e.preventDefault();
       }
     };
+
+    const topNow = () => roomNow.current.top?.() ?? 0;
 
     const handFor = (key: K): BoxHand => {
       const held = heldOf(key);
@@ -164,21 +188,38 @@ export function useFloatBoxes<K extends string>(
         },
         // box.move
         raise: () => {
-          if (held.el) held.el.style.zIndex = String(++highest.current);
+          if (held.el) held.el.style.zIndex = String(++highest);
         },
-        // box.snap, where the page has a side panel (/make): let go near an edge, it lands on it
-        bar: holdWith(moved, (r, win) =>
-          lastEdge.current === undefined ? r : snapped(r, win, lastEdge.current),
+        // box.snap, where the page asks for it: let go near an edge, it lands on it
+        bar: holdWith(
+          (from, dx, dy, win) => moved(from, dx, dy, win, topNow()),
+          (r, win) => (roomNow.current.snap ? snapped(r, win, lastEdge.current ?? 0, topNow()) : r),
         ),
         // box.size
         edge: Object.fromEntries(
           (['n', 's', 'e', 'w', 'nw', 'ne', 'sw', 'se'] as const).map((edge) => [
             edge,
-            holdWith((from, dx, dy, win) => sized(from, edge, dx, dy, win)),
+            holdWith((from, dx, dy, win) => {
+              // sized by hand, a folded box is no longer folded
+              held.folded = null;
+              return sized(from, edge, dx, dy, win, topNow());
+            }),
           ]),
         ) as Record<Edge, Hold>,
         // box.split
         seam: holdWith((from, _dx, dy) => seamed(from, dy)),
+        fold: (to) => {
+          if (!held.el || !held.rect || held.rect.base !== undefined) return;
+          if (to === null) {
+            if (!held.folded) return;
+            held.rect = kept({ ...held.rect, h: held.folded.back }, windowSize(), topNow());
+            held.folded = null;
+          } else {
+            held.folded = { to, back: held.folded?.back ?? held.rect.h };
+            held.rect = { ...held.rect, h: to };
+          }
+          paint(held.el, held.rect);
+        },
       };
     };
 
@@ -190,6 +231,7 @@ export function useFloatBoxes<K extends string>(
   // then it moves as far as the panel's edge did.
   useLayoutEffect(() => {
     const now = windowSize();
+    const top = roomNow.current.top?.() ?? 0;
     const first = place(now);
     const was = lastEdge.current;
     lastEdge.current = edge;
@@ -199,20 +241,24 @@ export function useFloatBoxes<K extends string>(
       if (!held?.el) continue;
       if (held.moved) {
         if (shift === 0 || !held.rect || was === undefined || !nearPanel(held.rect, was)) continue;
-        held.rect = kept({ ...held.rect, x: held.rect.x + shift }, now);
+        held.rect = kept({ ...held.rect, x: held.rect.x + shift }, now, top);
         paint(held.el, held.rect);
         continue;
       }
-      held.rect = first[key];
+      const placed = first[key];
+      // folded by the page, it stays folded where it's placed, and goes back to the placed height
+      if (held.folded) held.folded = { ...held.folded, back: placed.h };
+      held.rect = held.folded ? { ...placed, h: held.folded.to } : placed;
       paint(held.el, held.rect);
       hands[key].raise();
       held.el.style.visibility = 'visible';
     }
     const onResize = () => {
       const win = windowSize();
+      const room = roomNow.current.top?.() ?? 0;
       for (const held of boxes.current.values()) {
         if (!held.el || !held.rect) continue;
-        held.rect = kept(held.rect, win);
+        held.rect = kept(held.rect, win, room);
         paint(held.el, held.rect);
       }
     };
