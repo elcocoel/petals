@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, posix } from 'node:path';
 import { schemas } from '@petal/core';
 import { ACCEPTS, DIMENSIONS, latestView } from '@petal/core/view';
+import { chart, fonts, primitives } from '@petal/tokens';
 import rehypeSlug from 'rehype-slug';
 import rehypeStringify from 'rehype-stringify';
 import remarkGfm from 'remark-gfm';
@@ -86,7 +87,18 @@ export function docAsset(name: string): Uint8Array | null {
     ? new Uint8Array(readFileSync(join(repoRoot(), 'docs/assets', name)))
     : null;
 }
+/**
+ * The site's own pictures (apps/web/public), such as the landing's illustrations, at the address the site
+ * serves them: the brand kit shows the same files the landing does, never a copy (card 110, part 4).
+ */
+function siteImage(src: string): string | undefined {
+  return /^(\/[a-z0-9-]+)+\.(png|webp)$/.test(src) &&
+    existsSync(join(repoRoot(), 'apps/web/public', src))
+    ? src
+    : undefined;
+}
 function imageUrl(src: string, source: string): string | undefined {
+  if (src.startsWith('/')) return siteImage(src);
   const path = posix.normalize(posix.join(posix.dirname(source), src));
   return path.startsWith('docs/assets/') &&
     docAssetNames().includes(path.slice('docs/assets/'.length))
@@ -303,6 +315,7 @@ export async function content(page: DocPage, pages: DocPage[]) {
       .trim();
   }
   let referenceMarkdown = '';
+  if (page.slug === 'brand-kit/assets') referenceMarkdown = `\n\n${brandReference()}`;
   if (page.slug === 'rendering-protocol') {
     referenceMarkdown =
       '\n\n## Current view vocabulary\n\nGenerated from [core’s view definitions](https://github.com/elcocoel/petals/blob/main/packages/core/src/view/index.ts). A format accepting a dimension does not mean every renderer draws it.\n\n| Dimension | Accepts | Default data |\n| --- | --- | --- |\n' +
@@ -322,6 +335,34 @@ export async function content(page: DocPage, pages: DocPage[]) {
     headings: [...rendered.headings, ...(reference?.headings ?? [])],
     reference,
   };
+}
+/**
+ * The brand kit's colours and type, read from the design tokens at build time, so they change in one place
+ * (card 110, part 4): the brand's colours, the petals' keys (most common first, and grey for context), and the
+ * three families.
+ */
+function brandReference(): string {
+  const table = (head: string, rows: [string, string][]) =>
+    `| ${head} | Value |\n| --- | --- |\n${rows.map(([n, v]) => `| ${n} | \`${v.toUpperCase()}\` |`).join('\n')}`;
+  const keys = Object.entries(chart)
+    .filter(([name]) => name.startsWith('key-'))
+    .map(([name, value]): [string, string] => [
+      `${name.charAt(4).toUpperCase()}${name.slice(5)}`,
+      value,
+    ]);
+  return [
+    '## Colours',
+    `Generated from [the design tokens](${blobUrl('packages/tokens/source.ts')}).`,
+    '### The brand',
+    table('Colour', Object.entries(primitives)),
+    '### The petals’ keys',
+    'Most common first, and grey for context.',
+    table('Key', keys),
+    '## Type',
+    Object.values(fonts)
+      .map((font) => `- ${font.family}`)
+      .join('\n'),
+  ].join('\n\n');
 }
 function textOf(node: Tree): string {
   return node.value ?? node.children?.map(textOf).join('') ?? '';

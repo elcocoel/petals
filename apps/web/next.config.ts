@@ -90,6 +90,12 @@ const config: NextConfig = {
       destination: '/docs/ideas/read-a-flower',
       permanent: true,
     },
+    // the media kit is part of the brand kit (card 110, part 4)
+    {
+      source: '/docs/build-it-with-us/media-kit',
+      destination: '/docs/brand-kit/media-kit',
+      permanent: true,
+    },
   ],
 };
 
