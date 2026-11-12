@@ -250,8 +250,12 @@ export function useFloatBoxes<K extends string>(
       if (held.folded) held.folded = { ...held.folded, back: placed.h };
       held.rect = held.folded ? { ...placed, h: held.folded.to } : placed;
       paint(held.el, held.rect);
-      hands[key].raise();
-      held.el.style.visibility = 'visible';
+      // raised when it first shows, never when it's placed again: a box a hand raised last stays on top
+      // while the side panel opens or closes
+      if (held.el.style.visibility !== 'visible') {
+        hands[key].raise();
+        held.el.style.visibility = 'visible';
+      }
     }
     const onResize = () => {
       const win = windowSize();
