@@ -11,7 +11,7 @@ import { loadSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
 
 /** An address a reading's params can name: an EVM address, a NEAR account, a Solana account. */
-const ADDRESS =
+export const ADDRESS =
   /^(0x[0-9a-fA-F]{40}|[a-z0-9_-]+(\.[a-z0-9_-]+)*\.(near|tg)|[1-9A-HJ-NP-Za-km-z]{32,44})$/;
 
 /** Whose they are: Petals' own mapping, which no person's id can be. */
