@@ -749,6 +749,26 @@ export const evmChallenge = (address: string, chainId: number) =>
     chain_id: chainId,
   });
 
+/** A Solana wallet's proof (an ed25519 signature, base64, of the text the challenge gave). */
+export interface SolanaProof {
+  type: 'ed25519';
+  address: string;
+  message: string;
+  signature: string;
+}
+
+/** The text a Solana wallet signs to sign in or be added, for this address (SYSTEMS). */
+export const solanaChallenge = (address: string) =>
+  sessionPost<{ message: string; nonce: string; expires_at: string }>('/api/v1/auth/challenge', {
+    chain: 'solana',
+    address,
+  });
+
+/** Signs in with a Solana wallet: a new person, or the one this wallet already belongs to. */
+export async function verifySolana(proof: SolanaProof): Promise<void> {
+  await sessionPost('/api/v1/auth/verify', { network: 'solana', proof });
+}
+
 /** Signs in with an EVM wallet: a new person, or the one this wallet already belongs to. */
 export async function verifyEvm(proof: EvmProof): Promise<void> {
   await sessionPost('/api/v1/auth/verify', { network: 'eip155', proof });
@@ -757,7 +777,7 @@ export async function verifyEvm(proof: EvmProof): Promise<void> {
 /** Another wallet for the person signed in (POST /api/v1/me/wallets): its proof, as signing in sends one. */
 export function addMyWallet(
   network: string,
-  proof: Nep413Proof | EvmProof,
+  proof: Nep413Proof | EvmProof | SolanaProof,
 ): Promise<{ wallets: ProvenWallet[] }> {
   return sessionPost('/api/v1/me/wallets', { network, proof });
 }

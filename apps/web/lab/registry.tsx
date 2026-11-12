@@ -2802,7 +2802,7 @@ export const registry: LabEntry[] = [
         ),
       },
       {
-        name: 'a NEAR and an Ethereum wallet, with the two Connects, and one that belongs to someone else',
+        name: 'NEAR, Ethereum and Solana wallets, with the three Connects, and one that belongs to someone else',
         render: () => (
           <Wallets
             wallets={walletRows([
@@ -2811,6 +2811,11 @@ export const registry: LabEntry[] = [
                 network: 'eip155',
                 account_id: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be',
                 proved_at: '2026-11-12T20:00:00Z',
+              },
+              {
+                network: 'solana',
+                account_id: '4buheNoQAwBLYzPF3GASEpZoNhCPot1B1VCwxGLdpW1A',
+                proved_at: '2026-11-12T21:00:00Z',
               },
             ])}
             adding={{ kind: 'failed', why: 'That wallet already belongs to another account.' }}

@@ -21,11 +21,13 @@ import {
   profilePageWords,
   type UsageCall,
   usageView,
+  type WalletKind,
   type WalletRow,
   walletRows,
 } from '../lib/profile-view.ts';
+import { hasSolanaWallet, NO_SOLANA_WALLET } from '../lib/solana-wallet.ts';
 import { SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
-import { evmProof } from './useSession.ts';
+import { evmProof, solanaProof } from './useSession.ts';
 import { useWorkPanel } from './useWorkPanel.ts';
 
 const why = (e: unknown) =>
@@ -69,9 +71,13 @@ export function useLobby() {
   );
 
   /** Adds a wallet: a NEAR one signs Petals' challenge as signing in does, an EVM one its Sign-In text (wave 5). */
-  const addWallet = useCallback(async (kind: 'near' | 'evm') => {
+  const addWallet = useCallback(async (kind: WalletKind) => {
     if (kind === 'evm' && !hasEvmWallet()) {
       setAdding({ kind: 'failed', why: NO_EVM_WALLET });
+      return;
+    }
+    if (kind === 'solana' && !hasSolanaWallet()) {
+      setAdding({ kind: 'failed', why: NO_SOLANA_WALLET });
       return;
     }
     setAdding({ kind: 'adding' });
@@ -81,6 +87,9 @@ export function useLobby() {
       if (kind === 'evm') {
         network = 'eip155';
         proof = await evmProof();
+      } else if (kind === 'solana') {
+        network = 'solana';
+        proof = await solanaProof();
       } else {
         const challenge = await sessionClient.challenge();
         const signed = await signPrepared({ ...challenge, entry_sha256: '' }, SIGN_IN_NETWORK);
@@ -122,7 +131,7 @@ export function useLobby() {
     usage: usageShown,
     wallets,
     adding,
-    addWallet: (kind: 'near' | 'evm') => void addWallet(kind),
+    addWallet: (kind: WalletKind) => void addWallet(kind),
     claims,
     conversations: bus.rows,
   };
