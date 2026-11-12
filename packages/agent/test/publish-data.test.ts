@@ -156,6 +156,7 @@ describe('publishing what a person kept about a map', () => {
       petal: 'publish-data/v1',
       about: w.map,
       claims: 1,
+      readings: 0,
       sha256: prep.sha256,
     });
 
