@@ -2,9 +2,10 @@
 // person's projects and which of them are showing their conversations (Elco, 10 Nov), the person's agents
 // and what each is doing, and the one prompt that connects another (Elco, 9 Nov, the first full test).
 // The agents and the projects are read when the page opens, again whenever `fresh` changes (a run ending, or a
-// conversation's change signal), and when the window comes back into focus. No timer.
+// conversation's change signal), and when the window comes back into focus. One timer, on Elco's ask: after
+// Connect an agent, a watch for the agent joining.
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   archiveConversation,
   deleteConversation,
@@ -53,6 +54,16 @@ function keepFolds(keys: readonly SectionKey[]) {
 
 /** How long Connect an agent's Copied shows (design/side-panel.md, line 45). */
 const COPIED_SHOWS_MS = 2400;
+/**
+ * After Connect an agent is pressed, the panel watches for the agent joining, so it shows without a reload (Elco,
+ * 12 Nov: "keep a watch for the model joining for a certain amount of time after a copy click"): it looks every
+ * five seconds for ten minutes, and stops the moment a new one shows. Codex took two and a half minutes from the
+ * copy to joining that day; ten leaves room for a slow install.
+ */
+const WATCH_AFTER_COPY_MS = 10 * 60_000;
+const WATCH_EVERY_MS = 5_000;
+/** One worker of one agent, as the list names it. */
+const workerOf = (a: ConnectedAgent) => `${a.name}\u0000${a.worker ?? ''}`;
 
 export function useWorkMenu(
   signedIn: boolean,
@@ -134,6 +145,34 @@ export function useWorkMenu(
       gone = true;
     };
   }, [signedIn, fresh, reads]);
+  // after each copy, a watch for the agent it brings: every few seconds until a worker that wasn't listed shows
+  const listed = useRef(agents);
+  listed.current = agents;
+  const [watches, setWatches] = useState(0);
+  useEffect(() => {
+    if (!signedIn || !watches) return;
+    const known = new Set(listed.current.map(workerOf));
+    const until = Date.now() + WATCH_AFTER_COPY_MS;
+    let gone = false;
+    const look = setInterval(() => {
+      if (Date.now() > until) {
+        clearInterval(look);
+        return;
+      }
+      void readAgents().then(
+        (list) => {
+          if (gone) return;
+          setAgents(list);
+          if (list.some((a) => !known.has(workerOf(a)))) clearInterval(look);
+        },
+        () => {},
+      );
+    }, WATCH_EVERY_MS);
+    return () => {
+      gone = true;
+      clearInterval(look);
+    };
+  }, [signedIn, watches]);
   // and again when the person comes back to this window: an agent they connect is pasted into another window and
   // joins while this one is away (Elco, 12 Nov: Codex "didnt show up on the ui"). An event, not a timer.
   useEffect(() => {
@@ -148,6 +187,7 @@ export function useWorkMenu(
     const { token } = await mintAgentLink();
     await navigator.clipboard.writeText(agentWords.prompt(window.location.origin, token));
     setCopied(at);
+    setWatches((n) => n + 1);
   }, []);
 
   const disconnect = useCallback(async (name: string) => {
