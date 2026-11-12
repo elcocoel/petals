@@ -9,6 +9,7 @@ import type { View } from '../flower/camera.ts';
 import { marks } from '../flower/marks.ts';
 import { modelOf } from '../flower/model.ts';
 import { SHAPE } from '../flower/ring.ts';
+import { roomAlong } from '../flower/scene.ts';
 
 const text = (f: string) => readFileSync(join(import.meta.dirname, '..', f), 'utf8');
 const GOLDEN = join(import.meta.dirname, '..', '..', '..', 'fixtures', 'golden');
@@ -31,8 +32,29 @@ const at = (k: number): View => ({
 
 test('the proposals sit on their petals as the petals move: drawn from the ring as it is now', () => {
   const scene = text('flower/scene.ts');
-  expect(scene).toMatch(/if \(ringMoved && votes\) arcsOn\(ring\);/);
-  expect(scene).toMatch(/const d = placeArc\(ring, s\.pl\.petal, s\.pl\.step\);/);
+  expect(scene).toMatch(
+    /if \(refit \|\| ringMoved \|\| arcsBehind \|\| !laid\) \{\s+arcsOn\(ring\);/,
+  );
+  expect(scene).toMatch(
+    /placeArc\(ring, s\.pl\.petal, hide \? s\.pl\.step - hide \+ 1 : s\.pl\.step\)/,
+  );
+});
+
+// VISUAL QA pass 2, 12 Nov: Ref Finance's 189 opened ran behind the header and across its neighbours' names.
+test('an opened stack reaches only as far as there is room, the rest folded into its count', () => {
+  // straight up from y 300 in a 900-high window, 16 clear of the top: 284 of room
+  expect(roomAlong(500, 300, 0, -1, 1440, 900, [], 16)).toBeCloseTo(284);
+  // a box across the way stops it at the box's edge
+  const box = { x0: 400, y0: 100, x1: 600, y1: 200 };
+  expect(roomAlong(500, 300, 0, -1, 1440, 900, [box], 16)).toBeCloseTo(100);
+  // a box beside the way doesn't
+  expect(roomAlong(700, 300, 0, -1, 1440, 900, [box], 16)).toBeCloseTo(284);
+  // starting under a box: no room
+  expect(roomAlong(500, 150, 0, -1, 1440, 900, [box], 16)).toBe(0);
+  const scene = text('flower/scene.ts');
+  expect(scene).toMatch(/const hide = count <= fit \? 0 : count - \(fit - 1\);/);
+  // the arcs hold still while the pointer is on one, so a press lands where it pointed
+  expect(scene).toMatch(/if \(votes && \(!laid \|\| \(!overArc && stackPointed === null\)\)\)/);
 });
 
 test('the small dial stands at the top right, left of any box there', () => {
