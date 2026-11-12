@@ -260,8 +260,9 @@ export function useMakeChat({
     dispatch,
     actions: {
       setQuestion: (text: string) => typeQuestion(deps, chat, text),
-      send: async (about?: string, settings?: Settings) => {
-        const text = recorded ? RECORDED_QUESTION : question.trim();
+      /** `words`, when given, are sent in place of what's in the field (a shortcut's ask) */
+      send: async (about?: string, settings?: Settings, words?: string) => {
+        const text = recorded ? RECORDED_QUESTION : (words ?? question).trim();
         if (!text || busy) return;
         following.current = true;
         await sendQuestion(deps, { text, recorded, greeting, runId, about, settings });

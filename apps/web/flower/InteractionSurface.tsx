@@ -124,6 +124,12 @@ export function InteractionSurface({
       (workspace.initialOpen.kind !== 'latest' && workspace.initialOpen.kind !== 'shelf'),
   );
   const ground = state.mapAt ?? (onCanvas || flowerToCome ? null : { map: null });
+  // the open wallet has no map of its own on the Power Map (Elco, walk 5: "population not mapped")
+  const unmapped =
+    panel.kind === 'flower' &&
+    panel.account !== null &&
+    land !== null &&
+    !land.flowers.some((f) => f.map === panel.account);
   const focus = ground?.map && land ? land.flowers.findIndex((f) => f.map === ground.map) : -1;
   // where it starts is measured (what the conversation covers), so it's painted as the boxes are
   const mapArea = useRef<HTMLDivElement>(null);
@@ -285,6 +291,10 @@ export function InteractionSurface({
               onOpenStored: actions.openStored,
               onStarter: actions.startFrom,
               onLink: actions.followLink,
+              onMapPopulation:
+                unmapped && !state.busy && !state.composer.away && !workspace.recorded
+                  ? actions.mapPopulation
+                  : undefined,
             }}
             conversation={state.conversationRef}
           />

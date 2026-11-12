@@ -15,7 +15,7 @@ import {
 import { decodeDraft } from '../lib/draft.ts';
 import { drawingLink, mapLink } from '../lib/drawing-link.ts';
 import { elsewhereFlower, elsewhereRows, whereOf } from '../lib/elsewhere.ts';
-import { svgImage } from '../lib/flower-view.ts';
+import { populationWords, svgImage } from '../lib/flower-view.ts';
 import type { MapCard } from '../lib/maps.ts';
 import {
   addressOpensBox,
@@ -381,6 +381,8 @@ export function useWorkspace(props: {
     state: {
       /** This conversation, by its run or another door's id: where a note about a petal is kept. */
       conversationRef: runId ?? elsewhereRef ?? null,
+      /** a turn is running: nothing more can be sent until it ends */
+      busy,
       rows: threadRows,
       composer,
       panel,
@@ -432,6 +434,18 @@ export function useWorkspace(props: {
       setQuestion: chatActions.setQuestion,
       send: () =>
         chatActions.send(questionPrefix(mapAt ? null : panelFlower, target), picked ?? undefined),
+      /**
+       * A wallet's "Population not mapped", pressed: Petals' agent is asked to map it, about that wallet, and the
+       * box steps aside so the conversation shows the ask running (the box covers the thread).
+       */
+      mapPopulation: () => {
+        setBoxOpen(false);
+        void chatActions.send(
+          questionPrefix(mapAt ? null : panelFlower, target),
+          picked ?? undefined,
+          populationWords.ask,
+        );
+      },
       toggleModels: () => setModelsOpen(!modelsOpen),
       pickModel: (id: string) => {
         if (!catalogue || !settings) return;

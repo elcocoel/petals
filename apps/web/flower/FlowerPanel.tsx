@@ -14,6 +14,7 @@ import { Icon } from '../components/ui/Icon.tsx';
 import { TextLink } from '../components/ui/TextLink.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
+import { populationWords } from '../lib/flower-view.ts';
 import type { FlowerPanelView, PanelView } from '../lib/panel-view.ts';
 import type { PanelSection } from '../lib/thread.ts';
 import type { WorthLine } from '../lib/value-view.ts';
@@ -26,6 +27,11 @@ export interface FlowerPanelActions {
   onStarter?: (question: string) => void;
   /** a link in the box, before it goes: true when the page opened it in place (/make) */
   onLink?: (href: string) => boolean;
+  /**
+   * Given where the open wallet has no map of its own and Petals' agent can be asked now (/make): the box says
+   * so, and pressing it asks the agent to map it (Elco, walk 5, 12 Nov).
+   */
+  onMapPopulation?: (() => void) | undefined;
 }
 
 function OpenFlower({
@@ -72,6 +78,13 @@ function OpenFlower({
       {petal ? (
         <>
           <PetalDetails petal={petal} unit={unit} worth={worth} onClose={actions.onCloseDetail} />
+          {actions.onMapPopulation && (
+            <div className="flex">
+              <Button variant="quiet" onClick={actions.onMapPopulation}>
+                {populationWords.notMapped}
+              </Button>
+            </div>
+          )}
           <PetalClaims account={view.account} conversation={conversation ?? null} />
         </>
       ) : (

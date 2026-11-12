@@ -157,6 +157,16 @@ export const svgImage = (svg: string) =>
 const shorten = (id: string) => `${id.slice(0, 4)}…${id.slice(-4)}`;
 
 /** An account as people read it: a chain-qualified id (CAIP-10, eip155:1:0x…) is its address alone (#78). */
+/**
+ * A wallet with no map of its own (Elco, walk 5, 12 Nov: "if I am looking at a wallet and I see population not
+ * mapped ... click it and get it mapped"): what its box says, and what pressing it asks Petals' agent, about
+ * that wallet. The ask is a draft.
+ */
+export const populationWords = {
+  notMapped: 'Population not mapped',
+  ask: 'Map its population.',
+} as const;
+
 export const accountOf = (id: string) =>
   /^[a-z0-9-]+:[A-Za-z0-9-]+:/.test(id) ? id.slice(id.lastIndexOf(':') + 1) : id;
 
