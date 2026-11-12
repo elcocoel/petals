@@ -124,6 +124,11 @@ export interface LandFrame {
    * of each other (META's QA, 12 Nov: "labels never sit on each other or run off the window").
    */
   over?: readonly Box[];
+  /**
+   * How far each live flower's ring has slid on screen, by its index (a petal opening keeps itself under the
+   * pointer, flower/live.ts): its mark and name slide with it, so the flower's middle stays its own.
+   */
+  slid?: ReadonlyMap<number, { x: number; y: number }>;
 }
 
 /** The treasury and price under a name come in as a flower grows to this radius on screen, in px. */
@@ -468,6 +473,7 @@ export function createLandScene(
       pending = null,
       progress = null,
       over = [],
+      slid,
     }) {
       world.set('transform', `translate(${n3(view.x)} ${n3(view.y)}) scale(${view.k})`);
       const rest = 1 - enter;
@@ -527,6 +533,11 @@ export function createLandScene(
           continue;
         }
         const c = screenCentre(view, f.place);
+        const moved = slid?.get(i);
+        if (moved) {
+          c.x += moved.x;
+          c.y += moved.y;
+        }
         let size = 0;
         if (l.centre) {
           // the mark in the flower's middle at every zoom (Elco, 11 Nov: "I don't see why they have to go away at

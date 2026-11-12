@@ -94,6 +94,25 @@ export interface PetalLook {
 /** A box on the screen, in px. */
 type Box = { x0: number; y0: number; x1: number; y1: number };
 
+/**
+ * Where a folded stack's count sits on a ring: just out from its mark, where its petal points (the stack of no
+ * petal: before twelve), and the mark's half-length along the ring, for the places beside its ends.
+ */
+function stackAt(ring: Ring, petal: number) {
+  const a =
+    petal >= 0
+      ? ((ring.start[petal] as number) + (ring.end[petal] as number)) / 2 + ring.rotation
+      : OTHERS_AT - 0.025;
+  const r = petal >= 0 ? SHAPE.r0 + (ring.h[petal] as number) + 4 : SHAPE.R * VOTE_RING + 3;
+  const dx = Math.sin(a);
+  const dy = -Math.cos(a);
+  const half =
+    petal >= 0
+      ? (r * ((ring.end[petal] as number) - (ring.start[petal] as number))) / 2
+      : r * 0.025;
+  return { x: SHAPE.cx + r * dx, y: SHAPE.cy + r * dy, dx, dy, half };
+}
+
 /** A stack taller than this folds into one mark with its count, until a click opens it. */
 export const STACK_FOLD = 3;
 
@@ -463,7 +482,7 @@ export function createScene(
     .filter(([petal]) => folded(petal))
     .map(([petal, n]) => {
       const d = placeArc(m.ring, petal, 0);
-      el(
+      const mark = el(
         'path',
         {
           d,
@@ -493,23 +512,27 @@ export function createScene(
       hit.addEventListener('pointerleave', () => {
         stackPointed = null;
       });
-      // its count, just out from the mark, where the petal points (the stack of no petal: before twelve)
-      const a =
-        petal >= 0
-          ? ((m.ring.start[petal] as number) + (m.ring.end[petal] as number)) / 2 + m.ring.rotation
-          : OTHERS_AT - 0.025;
-      const r = petal >= 0 ? SHAPE.r0 + (m.ring.h[petal] as number) + 4 : SHAPE.R * VOTE_RING + 3;
       const label = slot(el('text', { fill: MUTED, 'text-anchor': 'middle' }, root));
       label.text(String(n));
-      const dx = Math.sin(a);
-      const dy = -Math.cos(a);
-      // the mark's half-length along the ring, for the places beside its ends
-      const half =
-        petal >= 0
-          ? (r * ((m.ring.end[petal] as number) - (m.ring.start[petal] as number))) / 2
-          : r * 0.025;
-      return { label, x: SHAPE.cx + r * dx, y: SHAPE.cy + r * dy, dx, dy, half, n: String(n) };
+      return { label, mark, hit, petal, n: String(n), ...stackAt(m.ring, petal) };
     });
+  /**
+   * The proposals' marks on the ring as it is now: on top of their petals as the petals turn, swell and open with
+   * the pointer and the zoom (Elco, 12 Nov, wave 4: "arcs floating off their petals").
+   */
+  const arcsOn = (ring: Ring) => {
+    for (const s of markSlots) {
+      const d = placeArc(ring, s.pl.petal, s.pl.step);
+      s.seen.set('d', d);
+      s.hit.setAttribute('d', d);
+    }
+    for (const s of stacks) {
+      const d = placeArc(ring, s.petal, 0);
+      s.mark.setAttribute('d', d);
+      s.hit.setAttribute('d', d);
+      Object.assign(s, stackAt(ring, s.petal));
+    }
+  };
   /** The folded stacks' counts, kept at their marks in screen space, so they read at any zoom. */
   const placeStacks = (mk: Marks | null, taken: readonly Box[]) => {
     if (!lastView || stacks.length === 0) return;
@@ -1077,6 +1100,7 @@ export function createScene(
       const { k } = view;
       lastView = view;
       lastRing = ring;
+      if (ringMoved && votes) arcsOn(ring);
       if (pointed >= 0) placeWords();
       placeStacks(mk, taken);
       const rescale = k !== lastK || mk.recede !== lastRecede;
