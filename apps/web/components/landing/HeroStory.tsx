@@ -1,5 +1,12 @@
 'use client';
-import { type CSSProperties, memo, type ReactNode } from 'react';
+import {
+  type CSSProperties,
+  memo,
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useState,
+} from 'react';
 import { answerPin, flowerAt, type Pin, questionPin, toolsPin } from '../../lib/hero-shots.ts';
 import {
   answerBox,
@@ -44,11 +51,13 @@ export type StoryLayer = 'all' | 'words' | 'petals';
 const soft = (px: number) => (px > 0.05 ? `blur(${px.toFixed(2)}px)` : 'none');
 const n2 = (x: number) => x.toFixed(2);
 
-/** A pin's height as CSS: its % of the column, or within its cap of the middle. */
+/** A pin's height as CSS: px below the column's top, its % of the column, or within its cap of the middle. */
 const topOf = (p: Pin) =>
-  p.cap === undefined
-    ? `${p.y}cqh`
-    : `calc(50cqh + clamp(-${p.cap}px, ${p.y - 50}cqh, ${p.cap}px))`;
+  p.py !== undefined
+    ? `${n2(p.py)}px`
+    : p.cap === undefined
+      ? `${p.y}cqh`
+      : `calc(50cqh + clamp(-${p.cap}px, ${p.y - 50}cqh, ${p.cap}px))`;
 
 /**
  * A box on its pin: that corner of it on that point of the column, moved by its motion, at its depth, turned
@@ -234,14 +243,35 @@ function Answer({
 }
 
 /**
+ * How far below the stage's top the headline's top sits, in px, kept as the window, the stage or the words change
+ * size (the words are centred beside the stage, so it moves with them); null until measured.
+ */
+function useTitleTop(stage: RefObject<HTMLElement | null>) {
+  const [top, setTop] = useState<number | null>(null);
+  useEffect(() => {
+    const el = stage.current;
+    const words = el?.parentElement;
+    const title = words?.querySelector('h1');
+    if (!el || !words || !title) return;
+    const fit = () => setTop(title.getBoundingClientRect().top - el.getBoundingClientRect().top);
+    fit();
+    const watch = new ResizeObserver(fit);
+    watch.observe(el);
+    for (const part of words.querySelectorAll('[data-b="head"]')) watch.observe(part);
+    return () => watch.disconnect();
+  }, [stage]);
+  return top;
+}
+
+/**
  * The Tools box, in the middle ground on a wide stage (Elco, 12 Nov: "it should be in the middle plane ... above the
  * petals ... behind the messages"): the map's own Tools box (HeroTools: the real ViewLegend in the real box), set as
  * the flower is, smaller than the words in front of it.
  */
-function Tools({ beat, t }: { beat: number; t: number }) {
+function Tools({ beat, t, top }: { beat: number; t: number; top: number }) {
   const m = toolsBox(beat, t);
   return (
-    <div className="absolute top-0 left-0 w-1/5" style={pinned(toolsPin, m)}>
+    <div className="absolute top-0 left-0 w-1/5" style={pinned(toolsPin(top), m)}>
       <HeroTools beat={beat} t={t} />
     </div>
   );
@@ -260,6 +290,7 @@ export function HeroStoryView({
   const punch = 1 + kick(beat, t);
   const cy = centreY(wide);
   const back = layer === 'words' ? 0.08 : 1;
+  const titleTop = useTitleTop(clock.stage);
   return (
     <Section bleed padding="bar">
       {/*
@@ -302,12 +333,12 @@ export function HeroStoryView({
               >
                 <StoryFlower beat={beat} t={t} />
               </div>
-              {wide && (
+              {wide && titleTop !== null && (
                 <div
                   className="absolute inset-0"
                   style={{ opacity: layer === 'petals' ? 0 : back }}
                 >
-                  <Tools beat={beat} t={t} />
+                  <Tools beat={beat} t={t} top={titleTop} />
                 </div>
               )}
             </Column>

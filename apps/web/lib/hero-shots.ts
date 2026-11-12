@@ -22,6 +22,8 @@ export interface Pin {
   ax: number;
   ay: number;
   cap?: number;
+  /** In place of `y`: that many px below the column's top, where a measure of the page puts it. */
+  py?: number;
 }
 
 export interface Shot {
@@ -72,8 +74,12 @@ export const questionPin = (wide: boolean): Pin =>
   wide ? pin(34, 26, 0, 0, 200) : pin(0, 2, 0, 0);
 export const answerPin = (wide: boolean): Pin =>
   wide ? pin(100, 64, 1, 0, 130) : pin(100, 98, 1, 1);
-/** Where the Tools box sits on a wide stage, the same in every shot: high on the column's right, over the flower. */
-export const toolsPin: Pin = pin(100, 0, 1, 0);
+/**
+ * Where the Tools box sits on a wide stage, the same in every shot: on the column's right, over the flower, its top
+ * level with the headline's and never above it (Elco, 12 Nov: "the top of the tools panel should not be taller than
+ * the title"); the words are centred, so where that is comes from the page (`py`).
+ */
+export const toolsPin = (titleTop: number): Pin => ({ ...pin(100, 0, 1, 0), py: titleTop });
 
 /** How long the camera's whip from the last shot to this one takes, from the one, landing with a little give. */
 const WHIP_MS = 560;
