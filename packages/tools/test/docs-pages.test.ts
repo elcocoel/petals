@@ -46,6 +46,31 @@ describe('a page cut into its sections', () => {
     expect(sections[0]?.text).toContain('## not a heading');
     expect(sections[0]?.text).toContain('Under the small one.');
   });
+
+  test('its words in plain text: no links, ticks, emphasis, fences, table rules or quote marks; snake_case kept', () => {
+    const { intro } = sectionsOf(
+      [
+        '[Open Petals](https://petals.example) and **read** the `keep_data` tool, _gently_.',
+        '> A quote.',
+        '| Field | Type |',
+        '| --- | --- |',
+        '| `id` | string |',
+        '```json',
+        '{ "a": 1 }',
+        '```',
+        '[ref]: https://example.com',
+      ].join('\n'),
+    );
+    expect(intro).toBe(
+      [
+        'Open Petals and read the keep_data tool, gently.',
+        'A quote.',
+        'Field  Type',
+        'id  string',
+        '{ "a": 1 }',
+      ].join('\n'),
+    );
+  });
 });
 
 describe('the pages', () => {
