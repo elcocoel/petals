@@ -32,6 +32,7 @@ import {
   ZOOM_LIMITS,
 } from '../flower/feel.ts';
 import { clickedAt } from '../flower/live.ts';
+import { SHAPE } from '../flower/ring.ts';
 import type { PetalLook } from '../flower/scene.ts';
 import { advance, SNAP, spring, stepOf } from '../flower/spring.ts';
 import { readMapProposals, readShared } from '../lib/agent-client.ts';
@@ -248,6 +249,29 @@ export function useLandscape(
       at?.current?.onWallet?.(wallet);
       wake();
     };
+    // Two clicks Elco named (12 Nov): a line lights, in both its flowers, the wallets it stands for ("a click on the
+    // line can do is highlight the petals that hold that token"); a proposal lights the wallets that voted on it, its
+    // dots for and against kept ("clicking a proposal should highlight the wallets that voted").
+    let line: { a: number; b: number; ids: string[] } | null = null;
+    let voted: { flower: number; id: string } | null = null;
+    /** the proposal pressed, read as the press starts (the map takes the pointer after), for the click to pin */
+    let pressed: { flower: number; id: string } | null = null;
+    /**
+     * The shared wallets' petals in a flower; those not among its own petals are in its everyone else, so it lights
+     * too.
+     */
+    const litIn = (f: LandFlower, ids: readonly string[]): string[] => {
+      // by the address alone: a petal may be named 0x…, eip155:1:0x… or as the index names it
+      const bare = (id: string) => id.slice(id.lastIndexOf(':') + 1).toLowerCase();
+      const want = new Set(ids.map(bare));
+      const own = f.model.petals.filter((p) => !p.tail && want.has(bare(p.id))).map((p) => p.id);
+      const tail = f.model.petals.find((p) => p.tail)?.id;
+      return tail && own.length < want.size ? [...own, tail] : own;
+    };
+    const votersOf = (i: number, id: string): string[] =>
+      ringOf(i)
+        ?.proposals.find((p) => p.id === id)
+        ?.votes.map((v) => v.account) ?? [];
     // The chosen group's wallets (#94: a bloc, from the legend's Highlight row), on the flower they were chosen in.
     let groupIds: readonly string[] = [];
     let groupFlower = -1;
@@ -257,7 +281,10 @@ export function useLandscape(
       const shared = shown && shown.flower === i ? shown.ids : [];
       const group = i === groupFlower ? groupIds : [];
       const own = wallet && holds?.has(i) ? [wallet] : [];
-      return sharedLook(f, [...shared, ...group, ...own], ringOf(i));
+      const lined = line && (i === line.a || i === line.b) ? litIn(f, line.ids) : [];
+      const voters = voted?.flower === i ? votersOf(i, voted.id) : [];
+      const look = sharedLook(f, [...shared, ...group, ...own, ...lined, ...voters], ringOf(i));
+      return voted?.flower === i ? { ...look, pinned: voted.id } : look;
     };
     /** Re-mounts a live flower, so its look is read again. */
     const remount = (i: number) => {
@@ -364,6 +391,11 @@ export function useLandscape(
       // the mini shape held for the whole chain until you're close on a group, then petals for all at once
       const waved = farOf(cam, home);
       const want = waved >= 0.99 ? new Set<number>() : liveSet(cam, places, new Set(lives.keys()));
+      // a line a click lit: its two flowers alive at any zoom, so their lit petals show
+      if (line) {
+        want.add(line.a);
+        want.add(line.b);
+      }
       if (entered >= 0) want.add(entered);
       for (const [i, d] of lives) {
         if (want.has(i)) continue;
@@ -459,8 +491,38 @@ export function useLandscape(
       marked = -1;
       wake();
     };
+    /** The marked line's shared wallets, lit in its two flowers, which the camera takes in together. */
+    const lightLine = () => {
+      const was = line;
+      const road = marked >= 0 ? roads[marked] : undefined;
+      line = road ? { a: road.a, b: road.b, ids: [] } : null;
+      for (const j of new Set([was?.a ?? -1, was?.b ?? -1])) if (j >= 0) remount(j);
+      if (!road || !line) return;
+      const lit = line;
+      const fa = flowers[road.a] as LandFlower;
+      const fb = flowers[road.b] as LandFlower;
+      const pa = fa.place;
+      const pb = fb.place;
+      const cx = (pa.x + pb.x) / 2;
+      const cy = (pa.y + pb.y) / 2;
+      const r =
+        Math.hypot(pb.x - pa.x, pb.y - pa.y) / 2 +
+        SHAPE.R * Math.max(pa.s * fa.reach, pb.s * fb.reach);
+      flyTo(cam, fitView(cam.width, cam.height, { cx, cy, r }, cam.clear));
+      if (!fa.snapshot || !fb.snapshot) return;
+      void readShared(fa.snapshot, fb.snapshot).then((ids) => {
+        if (line !== lit) return;
+        lit.ids = ids;
+        remount(lit.a);
+        remount(lit.b);
+      });
+    };
     const flyHome = () => {
       entered = -1;
+      if (line) {
+        marked = -1;
+        lightLine();
+      }
       flyTo(cam, fitView(cam.width, cam.height, home, cam.clear));
       wake();
     };
@@ -505,6 +567,15 @@ export function useLandscape(
             return;
           }
         }
+      }
+      // a proposal pressed: its voters lit, its dots kept; pressed again, let go
+      if (pressed) {
+        const was = voted;
+        voted = was && was.flower === pressed.flower && was.id === pressed.id ? null : pressed;
+        for (const j of new Set([was?.flower ?? -1, pressed.flower])) if (j >= 0) remount(j);
+        pressed = null;
+        wake();
+        return;
       }
       const f = flowerAt(cam, places, reach, x, y);
       const tells = entered >= 0 && entered === at?.current?.focus ? at.current.onPick : undefined;
@@ -553,6 +624,7 @@ export function useLandscape(
       only = -1;
       const r = roadAt(x, y);
       marked = r >= 0 && r !== marked ? r : -1;
+      lightLine();
       wake();
     };
 
@@ -617,6 +689,11 @@ export function useLandscape(
     };
     const onDown = (e: PointerEvent) => {
       const p = local(e);
+      pressed = null;
+      for (const [i, d] of lives) {
+        const id = d.scene.pointedProposal();
+        if (id) pressed = { flower: i, id };
+      }
       for (const [i, d] of lives) {
         if (d.last && d.scene.onMap(p.x, p.y, d.last)) {
           enterFlower(i);

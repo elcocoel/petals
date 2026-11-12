@@ -77,6 +77,11 @@ export interface PetalLook {
    * that proposal's arc, as its dot would be; the proposals it didn't vote on stay quiet.
    */
   voter?: string | null;
+  /**
+   * A proposal a click pinned, by its id (Elco, 12 Nov: "clicking a proposal should highlight the wallets that voted
+   * and show dots for positive and negative votes"): it stays pointed, its dots shown, while the page lights its voters.
+   */
+  pinned?: string | null;
 }
 
 /** Each scene's filters get their own names, so two flowers on one page never share one. */
@@ -171,6 +176,8 @@ export interface Scene {
   }): void;
   /** Is this screen point on the small map? */
   onMap(x: number, y: number, marks: Marks): boolean;
+  /** The proposal the pointer is on now, by its id, or null: read when a press starts, so a click can pin it. */
+  pointedProposal(): string | null;
   /** The drawing's own group in the SVG, so a space of many flowers can set what's on top of what. */
   root: SVGGElement;
   dispose(): void;
@@ -515,10 +522,13 @@ export function createScene(
     voteTally?.set('opacity', 1);
     placeWords();
   };
+  // a pinned proposal stays pointed; pointing at another shows it until the pointer leaves
+  const pinnedAt = look?.pinned ? markSlots.findIndex((s) => s.pl.id === look.pinned) : -1;
   markSlots.forEach((s, j) => {
     s.hit.addEventListener('pointerenter', () => point(j));
-    s.hit.addEventListener('pointerleave', () => point(-1));
+    s.hit.addEventListener('pointerleave', () => point(pinnedAt));
   });
+  if (pinnedAt >= 0) point(pinnedAt);
   // Under the raised petal: the ground, a line wider than it, so where its tip lies over a neighbour
   // it's as solid as anywhere and the same line runs round it.
   const backing = slot(
@@ -1125,6 +1135,9 @@ export function createScene(
         y >= map.y &&
         y <= map.y + map.size
       );
+    },
+    pointedProposal() {
+      return pointed >= 0 ? (markSlots[pointed]?.pl.id ?? null) : null;
     },
     dispose() {
       root.remove();
