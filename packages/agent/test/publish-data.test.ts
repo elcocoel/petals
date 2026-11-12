@@ -4,7 +4,7 @@
 // 12 Nov). Through petalApp, signed in with a test wallet, on the real NEAR validators fixture. No model is called.
 import { fileURLToPath } from 'node:url';
 import { fakeRpcFor, testSigner } from '@petal/near/auth/testing';
-import { callTool, createContext, type ToolContext } from '@petal/tools';
+import { callTool, createContext, privateStore, type ToolContext } from '@petal/tools';
 import { describe, expect, test } from 'vitest';
 import { buildPetalApp } from '../src/app.ts';
 import { scriptedLlm, tmpRoot } from './helpers.ts';
@@ -58,7 +58,7 @@ async function setup() {
       proof: alice.sign(c as never),
     });
   };
-  return { map, request, signIn };
+  return { map, request, signIn, ctx };
 }
 
 /** A name the DAO's own records tie to the pool, and one only a page says. */
@@ -97,10 +97,38 @@ describe('publishing what a person kept about a map', () => {
     });
     expect(kept.body, JSON.stringify(kept.body)).toMatchObject({ added: 2 });
 
+    // every item, one row each, read before the press (Elco: 'Let me look first'), with the qualifier's confidence
     const ready = await w.request(`/api/v1/publish/data?map=${encodeURIComponent(w.map)}`);
-    expect(ready.body).toMatchObject({ about: w.map, ready: 1, published: 0 });
-    expect(ready.body.private).toHaveLength(1);
-    expect(ready.body.private[0].why).toMatch(/the system's own records/);
+    expect(ready.body).toMatchObject({
+      about: w.map,
+      ready: 1,
+      published: 0,
+      scored_by: 'fake-words',
+    });
+    expect(ready.body.claims).toEqual([
+      {
+        id: expect.any(String),
+        subject: POOL,
+        verb: 'named',
+        name: 'Astro',
+        source: {
+          kind: 'proposal',
+          ref: 'proposal:near:mainnet:astro.sputnik-dao.near:12',
+          quote: 'Pay Astro for running the pool',
+          url: 'https://nearblocks.io/address/astro.sputnik-dao.near',
+        },
+        confidence: expect.any(Number),
+      },
+    ]);
+    expect(ready.body.claims[0].confidence).toBeGreaterThan(0);
+    expect(ready.body.private).toEqual([
+      expect.objectContaining({
+        subject: POOL,
+        name: 'Astro Stakers',
+        source: expect.objectContaining({ kind: 'page', url: 'https://astrostakers.com/' }),
+        why: expect.stringMatching(/the system's own records/),
+      }),
+    ]);
 
     const prep = (await w.request('/api/v1/publish/data/prepare', 'POST', { map: w.map })).body;
     expect(prep).toMatchObject({
@@ -136,6 +164,14 @@ describe('publishing what a person kept about a map', () => {
       map_url: `${SITE}/m/${encodeURIComponent(w.map)}`,
     });
 
+    // kept with the signature that published it and the confidence seen before the press
+    const rows = await privateStore(w.ctx.config).annotation.list('published');
+    expect(rows).toHaveLength(1);
+    expect(JSON.parse(rows[0]?.credential ?? '{}')).toMatchObject({
+      proof: { account_id: 'alice.near', message: prep.message },
+      confidence: ready.body.claims[0].confidence,
+      scored_by: 'fake-words',
+    });
     // on the map for everyone, saying who answers for it; and once only
     const said = await w.request(`/api/v1/maps/${encodeURIComponent(w.map)}/claims`);
     expect(said.body.claims).toContainEqual(

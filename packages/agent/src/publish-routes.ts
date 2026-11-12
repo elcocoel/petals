@@ -74,8 +74,11 @@ export function publishRoutes(d: PublishDeps): Hono {
         about: p.about,
         name: p.name,
         ready: p.claims.length,
+        claims: p.rows,
         private: p.private,
         published: p.published,
+        scored_by: p.scored_by,
+        ...(p.unscored ? { unscored: p.unscored } : {}),
       });
     } catch (e) {
       return failed(c, e);
