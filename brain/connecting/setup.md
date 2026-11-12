@@ -47,7 +47,7 @@ There are four steps, and a fifth for later. Take them one at a time, and skip a
 ### 4. A first conversation
 
 - Open {site}/make and type a community, a wallet or a contract to look into, such as "Who holds power in RaidGuild?" or a NEAR account's name.
-- Petals' agent finds it, reads the chain and draws its flower beside the chat.
+- Petals' agent finds it on the Power Map, opens it beside the chat and says what's already there; it reads the chain only for what's missing.
 - Good next questions: "Show me the source." "Who's behind this petal?" "How did this change over the last year?"
 
 ### 5. Later, if wanted: your own agents
