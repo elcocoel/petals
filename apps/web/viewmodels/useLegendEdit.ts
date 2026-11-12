@@ -10,6 +10,8 @@ import { usePersonView } from './usePersonView.ts';
 export function useLegendEdit(): LegendEdit {
   const person = usePersonView();
   const [open, setOpen] = useState<Dimension | null>(null);
+  // the row last changed, said while the map is drawn again in it
+  const [changed, setChanged] = useState<Dimension | null>(null);
   const defaults = DEFAULT_PERSON_VIEW.view;
   // a refused save leaves the view as it was (the legend has no line to say why; Settings does)
   const keep = useCallback(
@@ -23,9 +25,15 @@ export function useLegendEdit(): LegendEdit {
     choices: person.choices,
     open,
     onOpen: (d: Dimension) => setOpen((now) => (now === d ? null : d)),
-    onPick: (d: Dimension, data: string | null) =>
-      keep(withData(person.view, d, data, CHOOSABLE, defaults)),
-    onScale: (d: Dimension, scale: Scale) => keep(withScale(person.view, d, scale)),
+    onPick: (d: Dimension, data: string | null) => {
+      setChanged(d);
+      keep(withData(person.view, d, data, CHOOSABLE, defaults));
+    },
+    onScale: (d: Dimension, scale: Scale) => {
+      setChanged(d);
+      keep(withScale(person.view, d, scale));
+    },
+    drawing: person.busy ? changed : null,
     // usePersonView's reset, as Settings' (Elco, 11 Nov: "keep a reset to default button handy")
     onReset: isDefault(person.view, defaults)
       ? undefined
