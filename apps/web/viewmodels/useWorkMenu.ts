@@ -1,8 +1,8 @@
 // The work menu's own state, the same on the lobby and the workspace (WorkMenu): open or folded, the
 // person's projects and which of them are showing their conversations (Elco, 10 Nov), the person's agents
 // and what each is doing, and the one prompt that connects another (Elco, 9 Nov, the first full test).
-// The agents and the projects are read when the page opens and again whenever `fresh` changes: a run
-// ending, or a conversation's change signal. No timer.
+// The agents and the projects are read when the page opens, again whenever `fresh` changes (a run ending, or a
+// conversation's change signal), and when the window comes back into focus. No timer.
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -134,6 +134,14 @@ export function useWorkMenu(
       gone = true;
     };
   }, [signedIn, fresh, reads]);
+  // and again when the person comes back to this window: an agent they connect is pasted into another window and
+  // joins while this one is away (Elco, 12 Nov: Codex "didnt show up on the ui"). An event, not a timer.
+  useEffect(() => {
+    if (!signedIn) return;
+    const back = () => setReads((n) => n + 1);
+    window.addEventListener('focus', back);
+    return () => window.removeEventListener('focus', back);
+  }, [signedIn]);
 
   // each copy carries a new link of its own, so pasting into one more agent never cuts off another
   const copy = useCallback(async (at: CopiedAt) => {
