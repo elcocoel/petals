@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { DocPage } from '../../../components/docs/content.ts';
 import styles from '../../../components/docs/docs.module.css';
+import { byDepartment } from '../../../components/docs/groups.ts';
 import { Button } from '../../../components/ui/Button.tsx';
 import { Icon } from '../../../components/ui/Icon.tsx';
 
@@ -24,28 +25,31 @@ export function Sidebar({ pages, current }: { pages: DocPage[]; current: DocPage
           .map((section) => (
             <details key={section.slug} open={current.section === section.section}>
               <summary>{section.title}</summary>
-              {(['guide', 'reference'] as const).map((kind) => {
-                const group = pages.filter((p) => p.section === section.section && p.kind === kind);
-                return (
-                  group.length > 0 && (
-                    <div className={styles.navGroup} key={kind} data-kind={kind}>
-                      <p className={styles.navGroupTitle}>
-                        <Icon name={kind === 'guide' ? 'petals' : 'project'} small />
-                        {kind === 'guide' ? 'Guides' : 'System reference'}
-                      </p>
-                      {group.map((p) => (
-                        <a
-                          key={p.slug}
-                          href={`/docs/${p.slug}`}
-                          aria-current={current.slug === p.slug ? 'page' : undefined}
-                        >
-                          {p.overview ? 'Overview' : p.title}
-                        </a>
-                      ))}
-                    </div>
-                  )
-                );
-              })}
+              {(['guide', 'reference'] as const).flatMap((kind) =>
+                byDepartment(
+                  pages.filter((p) => p.section === section.section && p.kind === kind),
+                ).map((group) => (
+                  <div
+                    className={styles.navGroup}
+                    key={`${kind}:${group.department ?? ''}`}
+                    data-kind={kind}
+                  >
+                    <p className={styles.navGroupTitle}>
+                      <Icon name={kind === 'guide' ? 'petals' : 'project'} small />
+                      {group.title ?? (kind === 'guide' ? 'Guides' : 'System reference')}
+                    </p>
+                    {group.pages.map((p) => (
+                      <a
+                        key={p.slug}
+                        href={`/docs/${p.slug}`}
+                        aria-current={current.slug === p.slug ? 'page' : undefined}
+                      >
+                        {p.overview || p.hub ? 'Overview' : p.title}
+                      </a>
+                    ))}
+                  </div>
+                )),
+              )}
             </details>
           ))}
       </nav>

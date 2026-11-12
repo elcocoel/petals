@@ -22,6 +22,10 @@ export interface DocPage {
   status?: string;
   schemaId?: string;
   schemaKey?: keyof typeof schemas;
+  /** the brain's department a brain file sits in (brain/<department>/), for /docs/brain's groups (step 9) */
+  department?: string;
+  /** the department's hub, its README.md */
+  hub?: boolean;
 }
 interface Frontmatter {
   title?: string;
@@ -162,7 +166,12 @@ export function catalog(): DocPage[] {
       const localName = item.startsWith(`${posix.dirname(source)}/`)
         ? posix.relative(posix.dirname(source), item)
         : `${item.includes('/recipes/') ? 'recipes/' : ''}${posix.basename(item)}`;
-      const slug = `${section}/${localName.replace(/\.(md|json)$/, '').toLowerCase()}`;
+      const department = /^brain\/([a-z][a-z-]*)\//.exec(item)?.[1];
+      const hub = department !== undefined && posix.basename(item) === 'README.md';
+      // a hub is its department's page: brain/governance/README.md is /docs/brain/governance
+      const slug = hub
+        ? `${section}/${department}`
+        : `${section}/${localName.replace(/\.(md|json)$/, '').toLowerCase()}`;
       const matter = json ? {} : splitMatter(raw).meta;
       pages.push({
         slug,
@@ -171,6 +180,8 @@ export function catalog(): DocPage[] {
         source: item,
         kind: item.startsWith('docs/') || item === 'README.md' ? 'guide' : 'reference',
         status: matter.status,
+        ...(department ? { department } : {}),
+        ...(hub ? { hub } : {}),
       });
     }
     if (section === 'data-protocol') {
