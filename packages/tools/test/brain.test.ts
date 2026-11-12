@@ -33,6 +33,7 @@ describe('the brain', () => {
       'contributing',
       'from-proposal-to-action',
       'going-deeper',
+      'open-calls',
       'open-source-leads',
       'over-time',
       'setup',
@@ -72,6 +73,7 @@ describe('the brain', () => {
     ]);
     expect(by('gathering')).toEqual([
       'a-new-system',
+      'open-calls',
       'open-source-leads',
       'start-from-an-address',
       'what-kind-of-thing-it-is',
@@ -111,7 +113,7 @@ describe('the brain', () => {
 
   test('the routing table (routing.md) is in the index, names only files there are, and every chapter is in a row', () => {
     const index = buildBrainIndex(BRAIN);
-    expect(index.tasks.length).toBe(20);
+    expect(index.tasks.length).toBe(21);
     expect(index.tasks[0]).toEqual({
       task: 'Set up Petals',
       words: ['setup', 'set up', 'sign in', 'wallet', 'credit', 'first conversation'],
