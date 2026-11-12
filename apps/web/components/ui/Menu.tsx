@@ -10,7 +10,9 @@ import { NavItem } from './NavItem.tsx';
 export interface MenuItem {
   key: string;
   label: string;
-  icon: IconName;
+  icon?: IconName;
+  /** A choice, and this one is chosen: lit, and the focus starts on it (a dropdown's list, ui/Select). */
+  chosen?: boolean;
   onPick: () => void;
 }
 
@@ -27,7 +29,10 @@ export function Menu({
   const list = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const own = list.current?.parentElement;
-    list.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    (
+      list.current?.querySelector<HTMLElement>('[role="menuitem"][data-current]') ??
+      list.current?.querySelector<HTMLElement>('[role="menuitem"]')
+    )?.focus();
     const away = (e: PointerEvent) => {
       if (own && !own.contains(e.target as Node)) onClose();
     };
@@ -66,7 +71,8 @@ export function Menu({
               item.onPick();
             }}
             menuItem
-            icon={item.icon}
+            {...(item.icon ? { icon: item.icon } : {})}
+            {...(item.chosen !== undefined ? { chosen: item.chosen } : {})}
             label={item.label}
           />
         </div>
