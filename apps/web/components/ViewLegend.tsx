@@ -263,6 +263,11 @@ export function ViewLegend({
   keys: readonly LegendKey[];
   /** What the colours go by, said under Colour where there's no one key to give (a whole map). */
   keysNote?: string | undefined;
+  /**
+   * Where Colour shows a number or a date (a grade, LOOK's wave 4): its two ends in words and its five steps'
+   * colours, lightest first, for a ramp under Colour (OVERLAYS draws it).
+   */
+  gradeKeys?: { from: string; to: string; fills: string[] } | undefined;
   edit?: LegendEdit | undefined;
   /**
    * The flower's groups for the Highlight row (#94): its voting blocs, the chosen one, and the hands that

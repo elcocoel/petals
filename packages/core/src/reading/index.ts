@@ -69,6 +69,53 @@ function countHeights(rows: readonly PetalRow[], by: ReadonlyMap<string, string>
   return rows.map((r, i) => (r.tail ? tail : (own[i] as number)) / max);
 }
 
+/** How many steps a grade has: a number or a date on Colour, lightest to darkest (render/wedge/keys.ts GRADES). */
+export const GRADE_STEPS = 5;
+
+/**
+ * Each petal's colour key where Colour shows a piece of data or a number: a category's own values (voted); a count,
+ * a date, a share or an amount as its grade, 'grade:0' (the fewest, oldest) to 'grade:4' (the most, newest), by
+ * rank between the two ends, equal values on one step (Elco, 12 Nov, wave 4: "color graded by a number or a
+ * date", last active as a fade). null where Colour shows the reading's own kind or who it is, or nothing.
+ */
+function coloursOf(
+  by: string | null,
+  rows: readonly PetalRow[],
+  values: Values,
+  kinds: ReadonlyMap<string, string>,
+): Map<string, string> | null {
+  if (!by) return null;
+  const given = values.get(by);
+  const kind = given ? kinds.get(by) : by === 'share' || by === 'amount' ? 'share' : null;
+  if (!kind) return null;
+  if (kind === 'category') return new Map(given);
+  const real = rows.filter((r) => !r.tail);
+  const numberOf = (r: PetalRow): number | null => {
+    if (kind === 'share') return r.share;
+    const v = given?.get(r.id);
+    if (v === undefined) return null;
+    const x = kind === 'date' ? Date.parse(v) : Number(v);
+    return Number.isFinite(x) ? x : null;
+  };
+  const known = real
+    .map((r) => ({ id: r.id, x: numberOf(r) }))
+    .filter((v): v is { id: string; x: number } => v.x !== null)
+    .sort((a, b) => a.x - b.x);
+  const out = new Map<string, string>();
+  const firstAt = new Map<number, number>();
+  known.forEach((v, i) => {
+    if (!firstAt.has(v.x)) firstAt.set(v.x, i);
+    const rank = firstAt.get(v.x) as number;
+    // the fewest (oldest) the lightest, the most (newest) the darkest, the rest between by rank
+    const step =
+      known.length > 1
+        ? Math.round((rank / (known.length - 1)) * (GRADE_STEPS - 1))
+        : GRADE_STEPS - 1;
+    out.set(v.id, `grade:${step}`);
+  });
+  return out;
+}
+
 /** A petal's colour key where the piece Colour shows has no value for it: drawn grey (render/wedge/keys.ts). */
 export const NO_VALUE = 'no value';
 
@@ -205,12 +252,7 @@ export function readFlower(
   };
   const widthBy = sizeBy('width');
   const heightBy = sizeBy('height');
-  // Colour by a piece: a category's values (voted), never a count's or a date's raw numbers, which want a graded
-  // scale the look hasn't drawn yet
-  const colourBy =
-    used?.colour && values.has(used.colour) && kinds.get(used.colour) === 'category'
-      ? used.colour
-      : null;
+  // Colour by a piece or a number: a category's values (voted), or a number's or a date's grade (Elco, wave 4)
   // petals clockwise from twelve o'clock: by size (selectPetals gives them so, tail last), or by the piece Order
   // shows (Elco, 12 Nov: "last active, most active")
   const selected = selectPetals(s, spec.selection);
@@ -228,6 +270,7 @@ export function readFlower(
     : heightValues(rows, spec.encodings.height, metricOf(s, spec, rows));
   const split = spec.encodings.segments?.by === 'backers';
   const fold = tailFold(s, spec.selection, rows);
+  const colours = coloursOf(used?.colour ?? null, rows, values, kinds);
 
   const petals = rows.map(
     (r, i): ReadingPetal => ({
@@ -236,9 +279,7 @@ export function readFlower(
       width: widths[i] ?? 1,
       height: Math.max(floor, Math.min(1, heights[i] ?? 0)),
       colour:
-        colourBy && !r.tail
-          ? (values.get(colourBy)?.get(r.id) ?? NO_VALUE)
-          : colourKey(spec.encodings.colour, r),
+        colours && !r.tail ? (colours.get(r.id) ?? NO_VALUE) : colourKey(spec.encodings.colour, r),
       outline: outlineKey(spec, r),
       segments: split && !r.tail ? backerSegments(s, r.id) : [],
       ...(r.tail && fold ? { fold } : {}),
@@ -364,11 +405,8 @@ export function redress(
   const heights = heightBy
     ? countHeights(rows, values.get(heightBy) as Map<string, string>)
     : heightValues(rows, heightEnc, () => 0);
-  // Colour: a category given, else the reading's own kind, who it is, or one colour
-  const colourBy =
-    used.colour && values.has(used.colour) && kinds.get(used.colour) === 'category'
-      ? used.colour
-      : null;
+  // Colour: a category given, a number's or a date's grade, else the reading's own kind, who it is, or one colour
+  const colours = coloursOf(used.colour, rows, values, kinds);
   const colourEnc = {
     by: used.colour === 'kind' ? 'kind' : used.colour === 'identity' ? 'identity' : 'single',
   } as Encoding;
@@ -380,10 +418,7 @@ export function redress(
       name: nameOf(r, used.labels, values),
       width: widths[i] ?? 1,
       height: metric ? was.height : Math.max(floor, Math.min(1, heights[i] ?? 0)),
-      colour:
-        colourBy && !r.tail
-          ? (values.get(colourBy)?.get(r.id) ?? NO_VALUE)
-          : colourKey(colourEnc, r),
+      colour: colours && !r.tail ? (colours.get(r.id) ?? NO_VALUE) : colourKey(colourEnc, r),
       outline:
         used.outline === 'identity' && !r.tail && r.identity
           ? r.identity.status === 'inferred'

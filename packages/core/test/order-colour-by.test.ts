@@ -170,3 +170,29 @@ describe('Colour', () => {
     expect(keyed[1]?.value).toBe(wordsOf('dao'));
   });
 });
+
+describe('Colour graded by a number or a date, and chosen colours (Elco, wave 4)', () => {
+  test('last active as a grade: five steps, the newest darkest, one hue', () => {
+    const r = readFlower(
+      spec,
+      s,
+      withView((d) => (d.colour = { data: 'last_active' })),
+      pieces,
+    );
+    const at = (id: string) => r.petals.find((p) => p.id === id)?.colour;
+    // b voted last, c3 first: b the darkest step, c3 the lightest
+    expect(at(b)).toBe('grade:4');
+    expect(at(c3)).toBe('grade:0');
+    const keyed = keysOf(r.petals.filter((p) => !p.tail).map((p) => wordsOf(p.colour)));
+    const g = keyed.filter((k) => /^grade:/.test(k.value));
+    expect(new Set(g.map((k) => k.key?.name))).toEqual(
+      new Set(g.map((k) => `grade-${k.value.slice(6)}`)),
+    );
+  });
+
+  test('a value given a colour takes it; the rest share the keys left', () => {
+    const keyed = keysOf(['a', 'a', 'b', 'c'], [], { b: 'mint' });
+    expect(keyed.find((k) => k.value === 'b')?.key?.name).toBe('mint');
+    expect(keyed.find((k) => k.value === 'a')?.key?.name).toBe('blue');
+  });
+});
