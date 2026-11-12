@@ -15,6 +15,10 @@ const PIECE_WORDS: Record<string, string> = {
   name: 'Its name',
   name_kind: 'Kind of name',
   backers: 'Who backs it',
+  // each wallet's activity over its DAO's proposals (SYSTEMS's sys/activity; Elco, wave 2: "time is absent")
+  last_active: 'Last active',
+  votes_cast: 'Most active',
+  voted: 'Voted or never',
 };
 
 export const panelWords = {
@@ -47,7 +51,8 @@ export const panelWords = {
   /** The legend's head (design/legend.md): the person's view as a key. */
   legend: 'Legend',
   /** Under its Colour, on a map: each flower keys its own kinds (#76's keys, by how many petals carry each). */
-  legendColours: "Each flower's own: its most common kind first",
+  legendColours:
+    'Each DAO colours its own values, the most common first: inside one, what each colour stands for',
   /** What a line between two flowers on the map is (Elco, 12 Nov, walk 2: "a little bit mysterious"). Drafts. */
   legendLines: 'Lines',
   /**
@@ -105,6 +110,12 @@ export const panelWords = {
   /** The legend's two sections, and the map's own rows (Elco, 12 Nov, walk 2: "a tool panel"). Drafts. */
   legendDimensions: 'Dimensions',
   legendMap: 'Map',
+  /** Tools' sections (Elco, 12 Nov, wave 2: "the visual organization of this tool panel is still failing us"). Drafts. */
+  toolsChains: 'Chains',
+  legendPetals: 'Petals',
+  legendMore: (n: number) => `More dimensions · ${n}`,
+  legendOnMap: 'On the map',
+  legendBlocs: 'Voting blocs',
   legendGravity: 'Gravity',
   legendVotes: 'Votes',
   /** What the map's Tools turn on and off (Elco, walk 3: "insights on and off ... pricing etc"). Drafts. */

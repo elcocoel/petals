@@ -10,8 +10,7 @@
 // it reads over a map: one of the overlays (Overlay; design/overlays.md). Props only.
 import type { View } from '@petal/core/types';
 import { DIMENSIONS, type Dimension, type Piece } from '@petal/core/view';
-import { GREY, KEYS } from '@petal/core/wedge/keys';
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { BLOC_SPANS, type BlocChoice, type BlocSpan, blocWords } from '../lib/bloc-words.ts';
 import type { LegendKey } from '../lib/flower-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
@@ -34,17 +33,14 @@ import { Switch } from './ui/Switch.tsx';
 const words = panelWords.settings;
 
 /**
- * Every dimension of the view, in core's order (Elco, 12 Nov, walk 3, twice: "I barely have any choices here!"):
- * the ones the 11 Nov art direction hid from Settings too, each with its choices. Highlight has no place in a
- * view: its row is the flower's groups (its voting blocs, #94), under Map.
+ * Every dimension of the view (Elco, 12 Nov, walk 3, twice: "I barely have any choices here!"), grouped as a person
+ * reads a flower (wave 2: "the visual organization of this tool panel is still failing us"): first the four that
+ * say most, how the petals go round the circle, how tall, what colour means and what names them; then the rest,
+ * folded under their head until asked. Highlight has no place in a view: its row is the flower's groups (its
+ * voting blocs, #94), under Highlight.
  */
-const ORDER: readonly Dimension[] = DIMENSIONS;
-
-/** The look's colours, as core hands them to a category's values: the most common first, grey for context. */
-const PALETTE: readonly LegendKey[] = [...KEYS, GREY].map((k) => ({
-  label: `${k.name.charAt(0).toUpperCase()}${k.name.slice(1)}`,
-  swatch: `key-${k.name}`,
-}));
+const PETALS: readonly Dimension[] = ['order', 'height', 'colour', 'labels'];
+const MORE: readonly Dimension[] = DIMENSIONS.filter((d) => !PETALS.includes(d));
 
 /** A select's value for None. */
 const NONE = '';
@@ -152,6 +148,49 @@ function ScaleRow({
   );
 }
 
+/**
+ * One dimension's rows: its data, its scale where it's a number, a word where no data takes it yet, and under
+ * Colour what each colour stands for (Elco, wave 2: "the legend tells me what each color is ... Not the name of the
+ * color"): inside a flower its values, each with its swatch; on the whole map, where each DAO keys its own, a word.
+ */
+function DimensionRows({
+  d,
+  view,
+  drawn,
+  pieces,
+  keys,
+  keysNote,
+  edit,
+}: {
+  d: Dimension;
+  view: View;
+  drawn: Record<Dimension, string | null>;
+  pieces: readonly Piece[];
+  keys: readonly LegendKey[];
+  keysNote: string | undefined;
+  edit: LegendEdit | undefined;
+}) {
+  return (
+    <div className="flex flex-col">
+      <ToolRow label={words.dimensions[d]}>
+        <DimensionInput d={d} view={view} pieces={pieces} edit={edit} />
+      </ToolRow>
+      <ScaleRow d={d} view={view} pieces={pieces} edit={edit} />
+      {edit && edit.choices[d].length === 0 && dataOf(view, d) === null && (
+        <Note>{words.nothingFits}</Note>
+      )}
+      {d === 'colour' && drawn.colour !== null && keys.length > 0 && (
+        <div className="px-space-8 pb-space-8">
+          <LegendKeys keys={[...keys]} size="ui" />
+        </div>
+      )}
+      {d === 'colour' && drawn.colour !== null && keys.length === 0 && keysNote && (
+        <Note>{keysNote}</Note>
+      )}
+    </div>
+  );
+}
+
 export function ViewLegend({
   view,
   drawn,
@@ -199,77 +238,73 @@ export function ViewLegend({
   bare?: boolean;
 }) {
   const chosen = groups?.choices.find((c) => c.id === groups.chosen);
+  // the rest of the dimensions, folded until asked: their head says how many there are
+  const [moreOpen, setMoreOpen] = useState(false);
+  const rows = { view, drawn, pieces, keys, keysNote, edit };
   const body = (
     <>
-      <SectionHead size="panel" title={panelWords.legendDimensions} />
+      <SectionHead size="panel" title={panelWords.legendPetals} />
       <div className="flex flex-col py-space-4">
-        {ORDER.map((d) => (
-          <div key={d} className="flex flex-col">
-            <ToolRow label={words.dimensions[d]}>
-              <DimensionInput d={d} view={view} pieces={pieces} edit={edit} />
-            </ToolRow>
-            <ScaleRow d={d} view={view} pieces={pieces} edit={edit} />
-            {edit && edit.choices[d].length === 0 && dataOf(view, d) === null && (
-              <Note>{words.nothingFits}</Note>
-            )}
-            {d === 'colour' && drawn.colour !== null && keysNote && <Note>{keysNote}</Note>}
-            {d === 'colour' && drawn.colour !== null && keys.length === 0 && (
-              // the colours themselves, where no one flower's key is shown (the whole map)
-              <div className="px-space-8 pb-space-8">
-                <LegendKeys keys={[...PALETTE]} size="ui" />
-              </div>
-            )}
-            {d === 'colour' && drawn.colour !== null && keys.length > 0 && (
-              <div className="px-space-8 pb-space-8">
-                <LegendKeys keys={[...keys]} size="ui" />
-              </div>
-            )}
-          </div>
+        {PETALS.map((d) => (
+          <DimensionRows key={d} d={d} {...rows} />
         ))}
       </div>
-      {(groups || gravity || worth || insights || between) && (
+      <SectionHead
+        size="panel"
+        title={panelWords.legendMore(MORE.length)}
+        fold={{ open: moreOpen, onToggle: () => setMoreOpen((now) => !now) }}
+      />
+      {moreOpen && (
+        <div className="flex flex-col py-space-4">
+          {MORE.map((d) => (
+            <DimensionRows key={d} d={d} {...rows} />
+          ))}
+        </div>
+      )}
+      {groups && (
         <>
-          <SectionHead size="panel" title={panelWords.legendMap} />
+          <SectionHead size="panel" title={words.dimensions.highlight} />
           <div className="flex flex-col py-space-4">
-            {groups && (
-              <>
-                <ToolRow label={words.dimensions.highlight}>
-                  <Select
-                    label={words.dimensions.highlight}
-                    value={groups.chosen ?? NONE}
-                    options={[
-                      { value: NONE, label: blocWords.none },
-                      ...groups.choices.map((c) => ({
-                        value: c.id,
-                        label: `${c.label}, ${c.trail}`,
-                      })),
-                    ]}
-                    onChange={(v) => groups.onChoose(v === NONE ? null : v)}
-                  />
-                </ToolRow>
-                <ToolRow label={panelWords.legendVotes}>
-                  <Select
-                    label={panelWords.legendVotes}
-                    value={groups.span}
-                    options={BLOC_SPANS.map((s) => ({ value: s, label: blocWords.spans[s] }))}
-                    onChange={(v) => groups.onSpan(v as BlocSpan)}
-                  />
-                </ToolRow>
-                <Note>
-                  {groups.away
-                    ? `${blocWords.away}.`
-                    : [
-                        groups.choices.length === 0 && groups.period
-                          ? `${blocWords.noneHere}.`
-                          : '',
-                        groups.period ? `${groups.period}.` : '',
-                        chosen ? `${blocWords.caveat}.` : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                </Note>
-              </>
-            )}
+            <ToolRow label={panelWords.legendBlocs}>
+              <Select
+                label={panelWords.legendBlocs}
+                value={groups.chosen ?? NONE}
+                options={[
+                  { value: NONE, label: blocWords.none },
+                  ...groups.choices.map((c) => ({
+                    value: c.id,
+                    label: `${c.label}, ${c.trail}`,
+                  })),
+                ]}
+                onChange={(v) => groups.onChoose(v === NONE ? null : v)}
+              />
+            </ToolRow>
+            <ToolRow label={panelWords.legendVotes}>
+              <Select
+                label={panelWords.legendVotes}
+                value={groups.span}
+                options={BLOC_SPANS.map((s) => ({ value: s, label: blocWords.spans[s] }))}
+                onChange={(v) => groups.onSpan(v as BlocSpan)}
+              />
+            </ToolRow>
+            <Note>
+              {groups.away
+                ? `${blocWords.away}.`
+                : [
+                    groups.choices.length === 0 && groups.period ? `${blocWords.noneHere}.` : '',
+                    groups.period ? `${groups.period}.` : '',
+                    chosen ? `${blocWords.caveat}.` : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+            </Note>
+          </div>
+        </>
+      )}
+      {(gravity || worth || insights || between) && (
+        <>
+          <SectionHead size="panel" title={panelWords.legendOnMap} />
+          <div className="flex flex-col py-space-4">
             {gravity && (
               <ToolRow label={panelWords.legendGravity}>
                 <span className="w-full min-w-0">
