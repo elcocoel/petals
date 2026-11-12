@@ -118,7 +118,7 @@ export interface LandFrame {
    * Work running on a map (Elco, 12 Nov on /make: the map stays while it runs): a small strip under that flower, or
    * under the placeholder, with the page's words and how far it is, when it's known.
    */
-  progress?: { at: number | 'pending'; words: string; share: number | null } | null;
+  progress?: { at: number | 'pending' | 'map'; words: string; share: number | null } | null;
   /**
    * The boxes over the map (the chain list, the legend, a flower's panel), in its px: names keep clear of them, as
    * of each other (META's QA, 12 Nov: "labels never sit on each other or run off the window").
@@ -644,18 +644,21 @@ export function createLandScene(
       // The strip of work running: under its flower's name (or the placeholder's), inside the window
       const named = typeof progress?.at === 'number' ? wordsEnd.get(progress.at) : undefined;
       const at =
-        progress?.at === 'pending'
-          ? pending
-            ? { c: screenCentre(view, pending), r: screenRadius(view, pending) * 0.8 }
-            : null
-          : progress && flowers[progress.at]
-            ? {
-                c: screenCentre(view, (flowers[progress.at] as LandFlower).place),
-                r:
-                  screenRadius(view, (flowers[progress.at] as LandFlower).place) *
-                  (flowers[progress.at] as LandFlower).reach,
-              }
-            : null;
+        progress?.at === 'map'
+          ? // the whole map: at its foot, in the middle
+            { c: { x: view.width / 2, y: view.height }, r: 0 }
+          : progress?.at === 'pending'
+            ? pending
+              ? { c: screenCentre(view, pending), r: screenRadius(view, pending) * 0.8 }
+              : null
+            : progress && flowers[progress.at]
+              ? {
+                  c: screenCentre(view, (flowers[progress.at] as LandFlower).place),
+                  r:
+                    screenRadius(view, (flowers[progress.at] as LandFlower).place) *
+                    (flowers[progress.at] as LandFlower).reach,
+                }
+              : null;
       let stripBox: Box | null = null;
       if (progress && at) {
         if (stripWords.textContent !== progress.words) stripWords.textContent = progress.words;

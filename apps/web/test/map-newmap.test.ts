@@ -49,3 +49,12 @@ test("on the map a flower's own title keeps quiet: the map's badge names it", ()
     /const mk = view\s+\? \{\s+\.\.\.spoken,\s+titleInside: \{ \.\.\.spoken\.titleInside, opacity: 0 \},/,
   );
 });
+
+test('while a change in Tools reads the map again, a strip says so under the DAO you are in or at the foot', () => {
+  const canvas = text('landscape/LandscapeCanvas.tsx');
+  expect(canvas).toMatch(
+    /if \(!progress && person\.busy\)\s+return \{ at: entered >= 0 \? entered : \('map' as const\), words: UPDATING, share: null \};/,
+  );
+  expect(canvas).toMatch(/const UPDATING = 'Updating the map';/);
+  expect(text('landscape/scene.ts')).toMatch(/progress\?\.at === 'map'/);
+});
