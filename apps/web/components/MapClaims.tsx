@@ -36,6 +36,7 @@ export function MapClaims({
   onOpen,
   lit = null,
   onAccount,
+  empty,
   fold,
 }: {
   groups: readonly MapClaimGroup[];
@@ -45,12 +46,17 @@ export function MapClaims({
   /** The account lit on the flower, and the hand that lights one: pressing a petal's name lights it there. */
   lit?: string | null;
   onAccount?: ((account: string) => void) | undefined;
+  /** What it says when there's nothing to list (a chosen wallet nothing is said about). */
+  empty?: string | undefined;
   fold: { open: boolean; onToggle: () => void };
 }) {
   const count = groups.reduce((n, g) => n + g.lines.length, 0);
   return (
     <Overlay title={fold.open ? words.title : words.folded(count)} fold={fold}>
       <div className="flex max-h-figure-height flex-col gap-space-8 overflow-y-auto overscroll-none">
+        {groups.length === 0 && empty && (
+          <p className="my-0 px-space-8 py-space-4 type-ui text-muted">{empty}</p>
+        )}
         {groups.map((g) => (
           <section key={g.account} aria-label={g.name} className="flex flex-col">
             {g.petal && onAccount ? (

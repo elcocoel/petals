@@ -20,7 +20,7 @@ import { Overlay } from '../components/ui/Overlay.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
 import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
-import { mapClaimGroups } from '../lib/map-claims.ts';
+import { mapClaimGroups, mapClaimWords } from '../lib/map-claims.ts';
 import { mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
@@ -255,6 +255,8 @@ export function LandscapeCanvas({
   const [bloc, setBloc] = useState<string | null>(null);
   // or one account a claim is about, lit from Insights: one highlight at a time, so each clears the other
   const [account, setAccount] = useState<string | null>(null);
+  // the wallet chosen on the map (the wallet level, Elco, 11 Nov: "Its insights"): Insights says what's said about it
+  const [wallet, setWallet] = useState<string | null>(null);
   const [blocsOpen, setBlocsOpen] = useState(false);
   // all their votes first: the recent ones hold no bloc on most maps (Elco, 11 Nov: "do something reasonable")
   const [span, setSpan] = useState<BlocSpan>('all');
@@ -339,6 +341,9 @@ export function LandscapeCanvas({
   const inNow = useRef(inFlower);
   inNow.current = inFlower;
   const walletChosen = useCallback((id: string | null) => {
+    // Insights opens on what's said about it (OVERLAYS), then the page is told (WORKSPACE)
+    setWallet(id);
+    if (id) setClaimsOpen(true);
     const f = inNow.current;
     toldWallet.current?.(id && f ? { id, chain: f.place.chain, flower: f.name } : null);
   }, []);
@@ -354,8 +359,10 @@ export function LandscapeCanvas({
     const names = new Map(
       inFlower.reading.petals.filter((p) => !p.tail).map((p) => [p.id, p.name] as const),
     );
-    return mapClaimGroups(claims, names, selected);
-  }, [claims, inFlower, selected]);
+    // a chosen wallet's insights alone (Elco, 11 Nov: "Its insights")
+    const about = wallet ? claims.filter((c) => c.subject === wallet) : claims;
+    return mapClaimGroups(about, names, selected);
+  }, [claims, inFlower, selected, wallet]);
 
   return (
     <>
@@ -464,12 +471,13 @@ export function LandscapeCanvas({
           />
         )}
         {/* where the legend is asked for: what's said about the map you're in, folded until asked */}
-        {legend && inside && claimGroups.length > 0 && (
+        {legend && inside && (claimGroups.length > 0 || (wallet && claims)) && (
           <MapClaims
             groups={claimGroups}
             open={openClaim}
             onOpen={(key) => setOpenClaim((now) => (now === key ? null : key))}
             lit={account}
+            empty={wallet ? mapClaimWords.noneAboutWallet : undefined}
             onAccount={(a) => {
               setAccount((now) => (now === a ? null : a));
               setBloc(null);

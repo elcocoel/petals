@@ -103,6 +103,7 @@ export const mapClaimWords = {
   rests: 'What it rests on',
   made: (tool: string | undefined, when: string) => (tool ? `by ${tool}, ${when}` : when),
   none: 'Nothing said about this map yet.',
+  noneAboutWallet: "Petals' mapping says nothing about this wallet yet.",
 } as const;
 
 const DAY = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
