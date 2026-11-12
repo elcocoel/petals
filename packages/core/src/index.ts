@@ -118,6 +118,7 @@ export {
   validateProposals,
 } from './proposals.ts';
 export { categoryOf, type ReadOptions, readFlower, readingHash } from './reading/index.ts';
+export { piecesOf } from './reading/view.ts';
 export { PAINT, pictureQuery, renderFlower, SKINS } from './render/index.ts';
 export { type LegendLook, legendItem } from './render/legend.ts';
 export type { Skin } from './render/types.ts';

@@ -12,6 +12,7 @@ import {
   mapOf,
   namePieces,
   pictureQuery,
+  piecesOf,
   readFlower,
   sha256Hex,
   typePieces,
@@ -67,6 +68,12 @@ export interface MapView {
   picture: string;
   /** the colours that picture draws, as its legend has them: colour's keys, then the tail's */
   keys: { label: string; swatch: string }[];
+  /**
+   * the pieces of data its reading has, as core's piecesOf gives them (OVERLAYS, 12 Nov, wave 3: Tools offers only
+   * what draws): the four every flower has, its holdings' measures, backers where it has delegations, its dollar
+   * values where priced, its activity where its proposals were read, and the viewer's own names and types
+   */
+  pieces: { name: string; kind: string }[];
   /** who made it (a NEAR account), when that's recorded */
   made_by: string | null;
   reading: { title: string; petals: unknown[] };
@@ -107,14 +114,15 @@ async function readOf(
     if (!snapshot) return null;
     // through the viewer's view, never the flower's own choices (one-source.md, step 2), with the viewer's
     // own names on the petals they name (annotation step 6)
-    const reading = readFlower(spec, snapshot, view, [
+    const extra = [
       ...(ctx.names?.length ? namePieces(snapshot, ctx.names) : []),
       ...(ctx.names?.length ? typePieces(snapshot, ctx.names) : []),
       // each petal's value in dollars, from its map's stored value (#91): none with no price
       ...valuePieces(snapshot, values.get(mapOf(snapshot)) ?? null),
       // each petal's activity in its map's proposals (activity.ts, 12 Nov): none where none were read
       ...(await activityOf(ctx, snapshot, stamps)),
-    ]);
+    ];
+    const reading = readFlower(spec, snapshot, view, extra);
     // the picture's colours: its legend, as render_flower dresses it (in the keys, core lookFills)
     const look = lookFills(reading.petals);
     const legend = reading.legend.map((item) => legendItem(item, look));
@@ -136,6 +144,7 @@ async function readOf(
       snapshot: spec.snapshot.sha256,
       params,
       keys: [...keysOf('colour'), ...keysOf('tail')],
+      pieces: piecesOf(snapshot, extra),
       reading: { title: reading.title, petals: reading.petals },
     };
   } catch {
