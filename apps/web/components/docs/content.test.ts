@@ -4,9 +4,9 @@ import { test } from 'node:test';
 import { catalog, content, renderMarkdown, repoRoot } from './content.ts';
 import { byDepartment } from './groups.ts';
 
-test('all nine sections and canonical files have navigable, unique pages', async () => {
+test('all ten sections and canonical files have navigable, unique pages', async () => {
   const pages = catalog();
-  assert.equal(pages.filter((p) => p.overview).length, 9);
+  assert.equal(pages.filter((p) => p.overview).length, 10);
   // What Petals is comes first (card 110: the docs are for people)
   assert.equal(pages[0]?.slug, 'what-petals-is');
   assert.equal(new Set(pages.map((p) => p.slug)).size, pages.length);
