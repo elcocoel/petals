@@ -25,7 +25,7 @@ import { creditFrom } from './credit.ts';
 import { DEFAULT_BUDGET, type LlmClient, personUsdPerChat, runMaxSeconds } from './llm.ts';
 import { meRoutes } from './me-routes.ts';
 import { chosenModel, createNearAiClient, FALLBACK_MODELS, type NearAiOptions } from './near-ai.ts';
-import { type PayDeps, payRoutes } from './pay-routes.ts';
+import { type PayDeps, payRoutes, settleOpenTopUps } from './pay-routes.ts';
 import { publishRoutes } from './publish-routes.ts';
 import { recordedClient, SKELETON_TRANSCRIPT } from './recorded.ts';
 import { type AgentRouteOptions, createAgentRoutes, stateDirOf } from './routes.ts';
@@ -161,6 +161,24 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       headers,
     });
   });
+  // A person's own page reading who they are settles their top-ups that haven't landed (wave 5): closing the tab
+  // before NEAR Intents finished never loses a credit. Before the auth routes, which answer /api/v1/me.
+  const pay = {
+    store,
+    ...(o.price ? { price: o.price } : {}),
+    ...(o.clock ? { clock: o.clock } : {}),
+    oneClick: {
+      ...(env.ONE_CLICK_API_KEY?.trim() ? { apiKey: env.ONE_CLICK_API_KEY.trim() } : {}),
+      ...o.pay?.oneClick,
+    },
+  };
+  app.use('/api/v1/me', async (c, next) => {
+    if (c.req.method === 'GET') {
+      const me = await auth.gate.personOf(c);
+      if (me) await settleOpenTopUps(pay, me.person).catch(() => {});
+    }
+    await next();
+  });
   // Before the tool routes, whose open CORS must not answer for them.
   app.route('/', auth.routes);
   app.route(
@@ -180,10 +198,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
         : {}),
       ...(o.pay?.readTransfer ? { readTransfer: o.pay.readTransfer } : {}),
       // Petals' 1Click partner key, when it's set (never printed)
-      oneClick: {
-        ...(env.ONE_CLICK_API_KEY?.trim() ? { apiKey: env.ONE_CLICK_API_KEY.trim() } : {}),
-        ...o.pay?.oneClick,
-      },
+      oneClick: pay.oneClick,
     }),
   );
   // a person's own view and profile (Elco, 10 Nov), and the pictures in profiles

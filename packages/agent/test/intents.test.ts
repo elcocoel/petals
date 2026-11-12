@@ -182,3 +182,42 @@ describe('a top-up through NEAR Intents', () => {
     expect((await w.request('/api/v1/pay/intents/0xnobody')).status).toBe(404);
   });
 });
+
+describe('a top-up lands though the tab was closed (META, 12 Nov, wave 5)', () => {
+  test('the person reading who they are settles it, once; a quote nothing was sent to expires', async () => {
+    const w = setup();
+    await w.signIn();
+    await w.request('/api/v1/pay/intents', 'POST', {
+      usd: 5,
+      origin_asset: BASE_USDC,
+      refund_to: '0xmine',
+    });
+    // the tab closed before NEAR Intents finished; it lands, and nobody asks the top-up's own address
+    w.one.land();
+    const me = (await (await w.request('/api/v1/me')).json()) as Out;
+    expect(me.credit.left_usd).toBe(5);
+    await w.request('/api/v1/me');
+    expect(
+      (await w.entries()).filter((e) => e.id === 'intents:0xdeposit').map((e) => e.delta_usd),
+    ).toEqual([5]);
+  });
+
+  test('a quote past its deadline with nothing sent is asked once more, then never again', async () => {
+    const w = setup();
+    await w.signIn();
+    await w.request('/api/v1/pay/intents', 'POST', {
+      usd: 5,
+      origin_asset: BASE_USDC,
+      refund_to: '0xmine',
+    });
+    // the fake quote's deadline is 10 Nov: past
+    await w.request('/api/v1/me');
+    const asked = () => w.one.asked.filter((a) => a.path === '/v0/status').length;
+    const after = asked();
+    expect(after).toBe(1);
+    await w.request('/api/v1/me');
+    expect(asked()).toBe(after);
+    const row = (await (await w.request('/api/v1/pay/intents/0xdeposit')).json()) as Out;
+    expect(row.top_up.status).toBe('EXPIRED');
+  });
+});
