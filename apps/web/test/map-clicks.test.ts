@@ -32,3 +32,11 @@ test('a proposal pressed stays pinned, its voters lit; pressed again, let go', (
   expect(scene).toMatch(/s\.hit\.addEventListener\('pointerleave', \(\) => point\(pinnedAt\)\);/);
   expect(scene).toMatch(/if \(pinnedAt >= 0\) point\(pinnedAt\);/);
 });
+
+test('a click on empty space clears the choice: the wallet, the pinned proposal, the line, the DAO in the middle', () => {
+  const land = text('landscape/useLandscape.ts');
+  expect(land).toMatch(
+    /if \(r < 0\) \{\s+chooseWallet\(null\);\s+letGoProposal\(\);\s+if \(entered < 0 && \(data\.centre \?\? -1\) >= 0\) at\?\.current\?\.onCentre\?\.\(null\);/,
+  );
+  expect(land).toMatch(/if \(!pressed\) letGoProposal\(\);/);
+});
