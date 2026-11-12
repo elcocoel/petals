@@ -139,6 +139,7 @@ export function ViewLegend({
   edit,
   groups,
   gravity,
+  worth: _worth,
   between,
   fold,
   bare = false,
@@ -160,6 +161,11 @@ export function ViewLegend({
   groups?: LegendGroups | undefined;
   /** On a map, how much its flowers draw together (Elco, 12 Nov: "gravity"), 0 apart to 1 close, kept for the visit. */
   gravity?: { value: number; onChange: (value: number) => void } | undefined;
+  /**
+   * On a map, whether each DAO's treasury and token price show under its name at some magnification (Elco, 12 Nov
+   * walk 3: "switchable from OVERLAYS' tools box"); OVERLAYS draws its row.
+   */
+  worth?: { on: boolean; onChange: (on: boolean) => void } | undefined;
   /** On a map, what a line between two flowers is: its name and what it says. */
   between?: { label: string; says: string } | undefined;
   /** It folds to its bar, as every overlay can (design/overlays.md, line 6). */

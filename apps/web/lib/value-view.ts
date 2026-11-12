@@ -14,6 +14,9 @@ export interface MapValue {
   measure: string | null;
   totals: { measure: string; unit: string; amount: string; usd: string | null }[];
   snapshot: string | null;
+  /** value/v2: the treasury's priced total, and how many of its assets have no price; older servers leave it out */
+  treasury_usd?: string | null;
+  treasury_unpriced?: number | null;
   read_at: string;
 }
 
@@ -82,6 +85,21 @@ export function petalWorth(
     text: `${dollars(usdString(Number(amount) * v.price.usd))} at ${dollars(v.price.usd)} per ${tokenOf(v)}`,
     ...priced(v.price),
   };
+}
+
+/**
+ * A map's treasury and its token's price, short, for the map at some magnification (Elco, 12 Nov walk 3 on Ref
+ * Finance: "show treasury and token price"): each where its card has it, none where it doesn't, never a guess.
+ */
+export function worthWords(v: MapValue | null | undefined): string[] {
+  if (!v) return [];
+  const out: string[] = [];
+  if (v.treasury_usd)
+    out.push(
+      `Treasury ${dollars(v.treasury_usd)}${v.treasury_unpriced ? ` (${v.treasury_unpriced} unpriced)` : ''}`,
+    );
+  if (v.price) out.push(`${tokenOf(v)} ${dollars(v.price.usd)}`);
+  return out;
 }
 
 /** A map's worth for its page: the reading's total, and the token's whole supply, each at the price. */

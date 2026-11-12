@@ -31,7 +31,12 @@ const MONO = 'type-mono';
 export interface LabelFlower {
   name: string;
   mark: { logo: string | null; symbol: string; types?: readonly string[] };
+  /** its map's treasury and token price, in words, for the line under its badge (LOOK, Elco's walk 3) */
+  worth?: readonly string[] | undefined;
 }
+
+/** The treasury and price line under a badge: this tall on screen. */
+export const WORTH_HEIGHT = 16;
 
 export interface Label {
   group: Slot<SVGGElement>;
@@ -42,6 +47,9 @@ export interface Label {
   short: number;
   /** Shows its types or cuts them, the ground following. */
   typed(on: boolean): void;
+  /** Its treasury and token price, laid out from (0, 0) at its left edge, its middle on the line; null with none. */
+  worth: Slot<SVGGElement> | null;
+  worthWidth: number;
 }
 
 /** A text's width as the browser draws it, or the flower's estimate where it can't say. */
@@ -137,5 +145,22 @@ export function drawLabel(f: LabelFlower, parent: Element, clip: string, centred
   typed(true);
   group.show(false);
   centre?.show(false);
-  return { group, centre, width, short, typed };
+  // its treasury and token price, quiet in mono on the ground, so the lines behind never cross them
+  let worth: Slot<SVGGElement> | null = null;
+  let worthWidth = 0;
+  if (f.worth && f.worth.length > 0) {
+    worth = slot(el('g', {}, parent));
+    const wh = WORTH_HEIGHT;
+    const back = el(
+      'rect',
+      { y: -wh / 2, height: wh, fill: GROUND, stroke: HAIR, 'vector-effect': 'non-scaling-stroke' },
+      worth.node,
+    );
+    const t = el('text', { class: MONO, fill: MUTED, x: BADGE.pad, y: 4 }, worth.node);
+    t.textContent = f.worth.join(' · ');
+    worthWidth = Math.round(widthOf(t) + 2 * BADGE.pad);
+    back.setAttribute('width', String(worthWidth));
+    worth.show(false);
+  }
+  return { group, centre, width, short, typed, worth, worthWidth };
 }

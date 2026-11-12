@@ -13,6 +13,7 @@ import { repoRoot } from '../lib/config.ts';
 import { chainLabel } from '../lib/flower-view.ts';
 import { type MapMark, mapList } from '../lib/maps.ts';
 import { viewQuery } from '../lib/person-view.ts';
+import { worthWords } from '../lib/value-view.ts';
 import {
   LOGOS_DIR,
   linksOf,
@@ -45,6 +46,8 @@ export interface BenchFlower {
   snapshot?: string;
   /** how many proposals its map has (#93): a flower with any draws its vote ring up close */
   proposals?: number;
+  /** its map's treasury and token price, in words (lib/value-view.ts worthWords), where its card has them */
+  worth?: readonly string[];
 }
 
 export interface BenchChain {
@@ -181,7 +184,24 @@ async function marked(
   const maps = cards.value.maps;
   const marks = withMarks(land, new Map(maps.map((c) => [c.id, c.mark])));
   const counts = new Map(maps.map((c) => [c.id, c.proposals?.count ?? 0]));
-  return withProposals(marks, counts);
+  return withWorth(
+    withProposals(marks, counts),
+    new Map(maps.map((c) => [c.id, worthWords(c.value)])),
+  );
+}
+
+/** Each flower with its map's treasury and token price in words (Elco, 12 Nov walk 3), where its card has any. */
+export function withWorth(
+  land: BenchLandscape,
+  words: ReadonlyMap<string, readonly string[]>,
+): BenchLandscape {
+  return {
+    ...land,
+    flowers: land.flowers.map((f) => {
+      const w = f.map ? (words.get(f.map) ?? []) : [];
+      return w.length > 0 ? { ...f, worth: w } : f;
+    }),
+  };
 }
 
 /** Each flower with how many proposals its map's card counts (#93), where it counts any. */
