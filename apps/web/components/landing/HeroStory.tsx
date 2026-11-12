@@ -9,6 +9,7 @@ import {
   kick,
   layerOpacity,
   type Motion,
+  pulse,
   question,
   toolsBox,
 } from '../../lib/hero-story.ts';
@@ -29,6 +30,7 @@ import { siteLinks } from '../../lib/site-links.ts';
 import { type HeroStoryClock, useHeroStory } from '../../viewmodels/useHeroStory.ts';
 import { Button } from '../ui/Button.tsx';
 import { Icon } from '../ui/Icon.tsx';
+import { IconButton } from '../ui/IconButton.tsx';
 import { Mono } from '../ui/Mono.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
@@ -182,17 +184,14 @@ function Answer({
 }
 
 /**
- * The Tools box, in the middle ground on a wide stage (Elco, 12 Nov: "it should be in the middle plane ... maybe it's
- * blurred ... it shouldn't be very on the top"): the map's own Tools rows (HeroTools, the real ViewLegend), set as
- * the flower is, a little back, soft and quiet, so the question and the answer tell the story.
+ * The Tools box, in the middle ground on a wide stage (Elco, 12 Nov: "it should be in the middle plane ... above the
+ * petals ... behind the messages"): the map's own Tools rows (HeroTools, the real ViewLegend), set as the flower is,
+ * smaller than the words in front of it, so the question and the answer tell the story.
  */
 function Tools({ beat, t }: { beat: number; t: number }) {
   const m = toolsBox(beat, t);
   return (
-    <div
-      className="absolute top-0 left-0 w-1/5"
-      style={{ ...pinned(toolsPin, m), opacity: 0.5, filter: soft(1.4) }}
-    >
+    <div className="absolute top-0 left-0 w-1/5" style={pinned(toolsPin, m)}>
       <Glass tone="light" facing="left" glint={m.glint} glow={m.glow} />
       <HeroTools beat={beat} t={t} />
     </div>
@@ -217,7 +216,7 @@ export function HeroStoryView({
     <Section bleed padding="bar">
       {/*
         The story runs the whole width of the window (Elco, 12 Nov: "it just feels like a graph in a box instead of a
-        cinematic story"), sixteen by nine and never taller than the screen under the nav; on a wide window the words sit over its
+        cinematic story"), sixteen by nine and short of the first screen, so the next band shows, with a way down to it; on a wide window the words sit over its
         left side, in the page's column, and the story happens on the right, a little of it under the words. On a
         phone, the words and then the stage.
       */}
@@ -231,7 +230,7 @@ export function HeroStoryView({
         </div>
         <div
           ref={clock.stage}
-          className="relative aspect-2/3 w-full lg:aspect-video lg:max-h-[calc(100svh-7.5rem)]" /* token-exempt: the story fits the first screen under the nav, whatever the window */
+          className="relative aspect-2/3 w-full lg:aspect-video lg:max-h-[calc(100svh-12rem)]" /* token-exempt: the story fits the first screen under the nav and leaves the next band in sight */
           style={{ containerType: 'size', perspective: '900px' }}
         >
           {/* The world stays inside the stage, so the far map never spills onto the page; the map fades its own
@@ -252,15 +251,6 @@ export function HeroStoryView({
             >
               <StoryLight beat={beat} t={t} fresh={fresh} />
             </div>
-            {/* The middle ground: the tools, a little back and soft. */}
-            {wide && (
-              <div
-                className="pointer-events-none absolute inset-0"
-                style={{ opacity: layer === 'petals' ? 0 : back }}
-              >
-                <Tools beat={beat} t={t} />
-              </div>
-            )}
             {/* The middle: the flower where the shot puts it, and the history beat's line from then to now. */}
             <div
               className="absolute inset-0"
@@ -301,8 +291,29 @@ export function HeroStoryView({
                 <Mono>{story.now}</Mono>
               </div>
             </div>
+            {/* The middle ground: the tools, over the flower and behind the question and the answer. */}
+            {wide && (
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{ opacity: layer === 'petals' ? 0 : back }}
+              >
+                <Tools beat={beat} t={t} />
+              </div>
+            )}
             {/* Under the words, the world fades into the page, so what runs beneath them never fights them. */}
             <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/2 bg-linear-to-r from-surface from-35% to-transparent lg:block" />
+          </div>
+          {/* The way on to the rest of the page, at the stage's foot, nodding with the beat (Elco, 12 Nov: "little
+              arrows pointing down for people to actually look at the rest of the website"). */}
+          <div className="absolute inset-x-0 bottom-0 z-10 hidden justify-center lg:flex">
+            <div style={{ translate: `0 ${n2(4 * pulse(t))}px` }}>
+              <IconButton
+                icon="down"
+                label={landingCopy.nav.howItWorks}
+                href={siteLinks.howItWorks}
+                tip="right"
+              />
+            </div>
           </div>
           {/* In front: the question, then Petals' answer. */}
           <div
