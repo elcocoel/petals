@@ -3,7 +3,6 @@
 // what it maps, the key to its colours, and its readings newest first, each with who made it and its
 // drawings. No sign-in.
 import { notFound } from 'next/navigation';
-import { LegendKeys } from '../../../../components/Legend.tsx';
 import { MapList } from '../../../../components/MapList.tsx';
 import { ReadingColumn } from '../../../../components/SiteChrome.tsx';
 import { Mono } from '../../../../components/ui/Mono.tsx';
@@ -12,13 +11,7 @@ import { MapAt } from '../../../../flower/OnTheMap.tsx';
 import { powerMapAt } from '../../../../landscape/land.ts';
 import { shortId } from '../../../../lib/flower-view.ts';
 import { viewName } from '../../../../lib/map-views.ts';
-import {
-  drawingsKeys,
-  drawingTile,
-  type MapCard,
-  mapOne,
-  readingLine,
-} from '../../../../lib/maps.ts';
+import { drawingTile, type MapCard, mapOne, readingLine } from '../../../../lib/maps.ts';
 import { isMissing } from '../../../../lib/missing.ts';
 import { siteLinks } from '../../../../lib/site-links.ts';
 import { mapWorth } from '../../../../lib/value-view.ts';
@@ -30,11 +23,11 @@ export const dynamic = 'force-dynamic';
 function Worth({ m }: { m: MapCard }) {
   const worth = mapWorth(m.value);
   if (!worth) return null;
-  if (worth === 'no price') return <p className="my-0 text-muted">No price</p>;
+  if (worth === 'no price') return <p className="my-0 type-ui text-muted">No price</p>;
   return (
     <>
       {worth.map((w) => (
-        <p key={w.text} className="my-0">
+        <p key={w.text} className="my-0 type-ui">
           {w.text}
           <span className="type-mono text-muted"> {w.source}</span>
           {w.link && <SourceLink href={w.link} name={w.source} />}
@@ -44,7 +37,11 @@ function Worth({ m }: { m: MapCard }) {
   );
 }
 
-/** What the map says about itself, beside it. */
+/**
+ * What the map says about itself, first in the map's Information box, at the app's scale as the side panel's
+ * words are (Elco, 12 Nov, walk 3: "the typography here right now is still very getting left behind"): what it
+ * maps and its address, its worth, and each reading's drawings. Its colours' key is Tools' Colour row.
+ */
 function Readings({ m }: { m: MapCard }) {
   const name = viewName(m);
   // What it maps, unless that only says its name again, and its address when it has one.
@@ -52,17 +49,20 @@ function Readings({ m }: { m: MapCard }) {
   return (
     <>
       {(about || m.address) && (
-        <p className="my-0">
+        <p className="my-0 type-ui">
           {about}
-          {about && m.address && '   ·   '}
-          {m.address && <Mono as="span">{shortId(m.address)}</Mono>}
+          {about && m.address && ' · '}
+          {m.address && (
+            <Mono as="span" tone="muted">
+              {shortId(m.address)}
+            </Mono>
+          )}
         </p>
       )}
       <Worth m={m} />
-      <LegendKeys keys={drawingsKeys(m)} />
       {m.readings.map((r) => (
-        <section key={r.snapshot} className="mt-block-gap flex flex-col gap-block-gap">
-          <p className="my-0 type-label">{readingLine(r)}</p>
+        // each reading's line is in Layers, with its period; here its drawings, named by it
+        <section key={r.snapshot} className="mt-space-8 flex flex-col">
           <MapList
             label={readingLine(r)}
             rows={r.drawings.map((d) => ({ key: d.sha, ...drawingTile(m, r, d) }))}
