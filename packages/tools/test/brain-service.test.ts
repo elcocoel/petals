@@ -204,3 +204,32 @@ describe('receipts (research/brain-departments-2026-11-11.md, step 5)', () => {
     expect(file.receipt).toBeNull();
   });
 });
+
+describe('brain_context (step 6, the Harness query_brain)', () => {
+  test('one call: the doctrine, the routed files whole, why each matched, the version and the receipt', async () => {
+    const kept: BrainReceipt[] = [];
+    const ctx = createContext({ root: REPO, map: null, llmDailyUsd: 0, fake: true });
+    const app = httpApp({ ...ctx, onBrainServed: async (r) => void kept.push(r) });
+    const out = (await (
+      await app.request('/api/v1/brain/context?q=when%20do%20these%20tokens%20unlock')
+    ).json()) as {
+      version: string;
+      doctrine: string;
+      files: { id: string; department: string; why: string; text: string }[];
+      receipt: string;
+    };
+    expect(out.doctrine).toContain('# Doctrine');
+    expect(out.files[0]).toMatchObject({ id: 'vesting', department: 'money' });
+    expect(out.files[0]?.text).toContain('---\nid: vesting');
+    expect(out.files[0]?.why).toContain('When it unlocks');
+    expect(kept).toHaveLength(1);
+    expect(kept[0]).toMatchObject({
+      id: out.receipt,
+      version: out.version,
+      core_doctrine: true,
+      served_docs: ['doctrine', ...out.files.map((f) => f.id)],
+      chars_served: out.doctrine.length + out.files.reduce((n, f) => n + f.text.length, 0),
+    });
+    expect(validateBrainReceipt(kept[0])).toMatchObject({ ok: true });
+  });
+});

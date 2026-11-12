@@ -171,6 +171,19 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       await brainReader(c),
     );
   });
+  app.get('/api/v1/brain/context', limit, async (c) => {
+    const q = c.req.query();
+    const answers = (q.answers ?? '')
+      .split(',')
+      .map((a) => a.trim())
+      .filter(Boolean);
+    return answer(
+      c,
+      'brain_context',
+      { ...(q.q ? { question: q.q } : {}), ...(answers.length ? { answers } : {}) },
+      await brainReader(c),
+    );
+  });
   app.get('/api/v1/brain/files/:id', limit, async (c) =>
     answer(c, 'brain_file', { id: c.req.param('id') }, await brainReader(c)),
   );

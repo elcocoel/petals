@@ -4,6 +4,7 @@
 //   brain_route   the best three chapters or recipes for a question, the calls a contract answers, or both
 //   brain_file    one of them, whole, by its id
 //   brain_index   every header
+//   brain_context the doctrine and the routed files, whole, in one call (the Harness's query_brain, 12 Nov)
 import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
 import { type BrainCopy, type BrainReceipt, brainAt, routeBrain, wordsOf } from '../brain.ts';
@@ -189,6 +190,84 @@ export const brainIndexTool = defineTool<Record<string, never>, object>({
         served_docs: [],
         chars_served: JSON.stringify(b.index).length,
         core_doctrine: false,
+      }),
+    };
+  },
+});
+
+/**
+ * One call for what the brain says about a question (research/brain-departments-2026-11-11.md, step 6; the Harness's
+ * query_brain): the doctrine, then the routed files whole, why each matched, the version and the receipt.
+ */
+export const brainContext = defineTool<{ question?: string; answers?: string[] }, object>({
+  name: 'brain_context',
+  title: 'Read what the brain says for this',
+  description:
+    "What Petals' brain says for a question, in one call: the doctrine, which every answer holds to, then the best three of its chapters, recipes or department hubs for the person's question in words, the calls a contract answers (from identify), or both, each whole with why it matched. Read it before answering, and follow the doctrine.",
+  input: obj(
+    [],
+    {
+      question: { type: 'string', minLength: 1, maxLength: 2000 },
+      answers: {
+        type: 'array',
+        items: { type: 'string', minLength: 1, maxLength: 200 },
+        maxItems: 100,
+        description: 'the view calls a contract answered, such as sharesToken()',
+      },
+    },
+    { additionalProperties: false },
+  ),
+  output: obj(['commit', 'version', 'doctrine', 'files', 'receipt'], {
+    commit: COMMIT,
+    version: { type: 'string', description: 'the brain version, <index hash>@<commit>' },
+    doctrine: { type: 'string', description: 'the doctrine, whole: read first, always' },
+    files: {
+      type: 'array',
+      items: obj(['id', 'kind', 'department', 'task', 'file', 'status', 'why', 'text'], {
+        id: { type: 'string' },
+        kind: { type: 'string', enum: ['department', 'chapter', 'recipe'] },
+        department: { type: ['string', 'null'] },
+        task: { type: ['string', 'null'] },
+        file: { type: 'string' },
+        status: { type: 'string', enum: ['ready', 'partial'] },
+        why: { type: 'string' },
+        text: { type: 'string' },
+      }),
+    },
+    receipt: RECEIPT,
+  }),
+  annotations: READS,
+  async run({ question, answers }, ctx) {
+    if (!question?.trim() && !answers?.length) {
+      throw new ToolFailure('bad_input', 'Give a question, the calls a contract answers, or both.');
+    }
+    const b = brainOf(ctx);
+    const routes = routeBrain(b.index, {
+      ...(question ? { words: question } : {}),
+      ...(answers ? { answers } : {}),
+    });
+    const doctrine = b.texts.get('doctrine') ?? '';
+    const files = routes.map((r) => ({
+      id: r.id,
+      kind: r.kind,
+      department: r.department,
+      task: r.task,
+      file: r.file,
+      status: r.status,
+      why: r.why,
+      text: b.texts.get(r.id) ?? '',
+    }));
+    return {
+      commit: b.commit,
+      version: b.version,
+      doctrine,
+      files,
+      receipt: await receipt(ctx, b, {
+        keywords: [...wordsOf(question ?? ''), ...(answers ?? [])],
+        matched_entries: matchedOf(routes),
+        served_docs: ['doctrine', ...files.map((f) => f.id)],
+        chars_served: doctrine.length + files.reduce((n, f) => n + f.text.length, 0),
+        core_doctrine: true,
       }),
     };
   },

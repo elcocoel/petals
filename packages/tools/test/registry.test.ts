@@ -47,6 +47,7 @@ const PHASE_A = [
   'brain_route',
   'brain_file',
   'brain_index',
+  'brain_context',
   'keep_layer',
   'list_layers',
   'fork_dataset',

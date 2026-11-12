@@ -49,6 +49,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `GET /api/v1/brain` | `brain_index` (005): every department's, chapter's and recipe's header, and the routing table's rows (`brain-index/v2`, 12 Nov), with the brain commit |
 | `GET /api/v1/brain/route?q=&answers=` | `brain_route`: the best three for a question, the calls a contract answers (comma-separated), or both; each route names its department and the routing table's row that brought it (`task`, or null) |
 | `GET /api/v1/brain/files/:id` | `brain_file`: one, whole, by id (a department's hub too); `doctrine` is read first |
+| `GET /api/v1/brain/context?q=&answers=` | `brain_context` (12 Nov, step 6; the Harness's query_brain): in one call, the doctrine, then the best three for a question, the calls a contract answers (comma-separated), or both, each whole with why it matched, the version and the receipt |
 | | Each of the three answers with `receipt` (12 Nov, research/brain-departments-2026-11-11.md step 5): the id of the `brain-receipt/v1` kept for that serving (`packages/core/schema/brain-receipt.schema.json`, the Harness's access log field for field), or null where nothing keeps one |
 | `POST /api/v1/explorations/:ref/layers` | `keep_layer` (005): a layer kept privately under the project's owner, and the dataset version it makes; owner or continue link |
 | `GET /api/v1/explorations/:ref/layers?about=&hash=` | `list_layers`: the owner's layers and versions about an address, or one layer whole; any link |

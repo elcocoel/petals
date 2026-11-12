@@ -125,6 +125,7 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     await run('brain_index', {});
     await run('brain_route', { question: 'who holds the power here?', answers: ['sharesToken()'] });
     await run('brain_file', { id: 'doctrine' });
+    await run('brain_context', { question: 'who votes together in this DAO' });
     // layers kept on the site, and a fork of the version that made
     const kept = await run('keep_layer', { exploration, layer: testLayer });
     await run('list_layers', { exploration });
