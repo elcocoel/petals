@@ -435,6 +435,8 @@ export function useWorkspace(props: {
       drawings,
       nextMore,
       mode,
+      /** the wallet chosen on the map (the wallet level), or null */
+      mapWallet,
       /** the snapshot the conversation's flower reads, which the Power Map may hold as one of its flowers */
       flowerSnapshot: panelFlower?.spec.snapshot.sha256 ?? null,
       /** the canvas flower's map's proposals on the ring (#93), once it's the panel's */

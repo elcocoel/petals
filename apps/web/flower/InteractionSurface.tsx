@@ -6,6 +6,7 @@
 // panel's edge, and the camera fits the flower beside the conversation, not under it (#78, 11 Nov). Until
 // the conversation has a flower, and when a link in it opens a map, the Power Map stands beside the
 // conversation, the same live map as /map (#78), with no flower of the conversation's hard-coded in.
+import { accountRef } from '@petal/core';
 import type { SurfaceName } from '@petal/tokens';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Composer } from '../components/chat/Composer.tsx';
@@ -13,6 +14,7 @@ import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
+import { PetalClaims } from '../components/PetalClaims.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { Icon } from '../components/ui/Icon.tsx';
@@ -29,14 +31,13 @@ import {
   recordedBoxes,
   type Size,
 } from '../lib/float-box.ts';
-import { networkLabel } from '../lib/flower-view.ts';
+import { networkLabel, populationWords, shortId } from '../lib/flower-view.ts';
 import { mappingView, modeWords } from '../lib/mapping.ts';
 import type { MapCard } from '../lib/maps.ts';
 import { groundWords } from '../lib/opening.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useGroundMap } from '../viewmodels/useGroundMap.ts';
-import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
 import { usePublishPress } from '../viewmodels/usePublishPress.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import type { Clear } from './camera.ts';
@@ -79,8 +80,14 @@ export function InteractionSurface({
         : conversationBoxes(win, undefined, from);
       // below the flower when there's no room beside it, as on a phone
       const conversation = besideOrBelow(placed.conversation, win, edge);
-      // the mapping state's box waits where the flower's used to, at the top right, clear of the conversation
-      return { ...placed, conversation, panel: overThread(conversation), mapping: placed.panel };
+      // the mapping state's box opens over the conversation's thread, so the map stays in full view to go
+      // into a map, and the composer, with its switch back to exploring, stays under it
+      return {
+        ...placed,
+        conversation,
+        panel: overThread(conversation),
+        mapping: overThread(conversation),
+      };
     },
     [from, edge, workspace.recorded],
   );
@@ -126,7 +133,6 @@ export function InteractionSurface({
   // The Power Map: at the map a link opened, or whole until the conversation has a flower.
   const { land, opening: mapOpening } = useGroundMap();
   // the legend changes the person's view here, with Settings' own hands (#92)
-  const legend = useLegendEdit();
   // The Power Map is always the ground (Elco, 12 Nov: "the power map should always be there"): the
   // conversation floats over it, and its flower, where the map holds it, opens the map there instead of
   // replacing it. Only a flower the map doesn't hold yet is drawn apart, until it lands on the map (LOOK's
@@ -190,6 +196,15 @@ export function InteractionSurface({
   const [inMap, setInMap] = useState<string | null>(null);
   const publishMap = inMap ?? flowerMap ?? state.mapAt?.map ?? made?.held.existing_map ?? null;
   const publishing = usePublishPress(publishMap);
+  // the wallet chosen on the map (the wallet level): in Mapping, a note or a name about it, or having it mapped
+  const chosen = state.mapWallet;
+  const chosenAccount = chosen
+    ? (accountRef(chosen.chain, chosen.id) ?? `${chosen.chain}:${chosen.id}`)
+    : null;
+  const chosenUnmapped = Boolean(
+    chosenAccount && land && !land.flowers.some((f) => f.map === chosenAccount),
+  );
+  const canAsk = !state.busy && !state.composer.away && !workspace.recorded;
   const mapping = mappingView(
     publishMap,
     (publishMap && land?.flowers.find((f) => f.map === publishMap)?.name) || null,
@@ -228,21 +243,20 @@ export function InteractionSurface({
                 fill="area"
                 title="Power Map"
                 focus={focus}
-                selected={atFlower ? state.selected : null}
                 show={show}
                 placeholder={placeholder}
                 progress={progress}
                 landed={landed}
-                // inside the conversation's flower a petal is chosen as on the flower; inside a map a link
-                // opened, it opens that map's flower here (useWorkspace pickOnMap)
-                onPick={atFlower ? actions.pick : actions.pickOnMap}
                 // a wallet chosen on it is what the next question is about (Elco, 12 Nov)
                 onWallet={actions.chooseMapWallet}
                 // the map in front, for the mapping state: the flower the person is inside
                 onEnter={setInMap}
                 // the room beside the conversation is narrow: the map keeps clear of its own chains
                 clearOfChains
-                legend={legend}
+                // the same map as /map's, from the same code (Elco, wave 4: "if we make them exactly the same, we only
+                // have one thing to edit"): its legend, Tools with the search at every zoom, and Cmd+K
+                legend="edit"
+                search
                 // the map's boxes keep the side panel's room rule, as the conversation's do
                 panelEdge={edge}
               />
@@ -351,6 +365,25 @@ export function InteractionSurface({
             view={mapping}
             press={publishing.view}
             onPublish={() => void publishing.publish()}
+            wallet={
+              chosen && chosenAccount
+                ? {
+                    heading: shortId(chosen.id),
+                    body: (
+                      <>
+                        <PetalClaims account={chosenAccount} conversation={state.conversationRef} />
+                        {chosenUnmapped && canAsk && (
+                          <div className="flex">
+                            <Button variant="quiet" onClick={actions.mapPopulation}>
+                              {populationWords.notMapped}
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    ),
+                  }
+                : undefined
+            }
           />
         )}
       </FloatBox>
