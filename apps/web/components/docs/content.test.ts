@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { chart, primitives } from '@petal/tokens';
 import { catalog, content, renderMarkdown, repoRoot } from './content.ts';
 import { byDepartment } from './groups.ts';
 
-test('all ten sections and canonical files have navigable, unique pages', async () => {
+test('all eleven sections and canonical files have navigable, unique pages', async () => {
   const pages = catalog();
-  assert.equal(pages.filter((p) => p.overview).length, 10);
+  assert.equal(pages.filter((p) => p.overview).length, 11);
   // What Petals is comes first (card 110: the docs are for people)
   assert.equal(pages[0]?.slug, 'what-petals-is');
   assert.equal(new Set(pages.map((p) => p.slug)).size, pages.length);
@@ -109,6 +110,27 @@ test('only local documentation image assets can render', async () => {
   assert.ok(result.html.includes('src="/docs/assets/how-it-fits-together.png"'));
   assert.equal((result.html.match(/<img/g) ?? []).length, 1);
   assert.ok(result.html.includes('alt="System map"'));
+});
+
+test("the site's own pictures render where the site serves them, and only those it has", async () => {
+  const result = await renderMarkdown(
+    '![Scene](/landing/how-it-works/brain.webp)\n\n![Missing](/landing/none.webp)\n\n![Up](/../secrets.png)',
+    'docs/brand-kit/assets.md',
+    catalog(),
+  );
+  assert.ok(result.html.includes('src="/landing/how-it-works/brain.webp"'));
+  assert.equal((result.html.match(/<img/g) ?? []).length, 1);
+});
+
+test('the brand kit reads its colours and type from the design tokens (card 110, part 4)', async () => {
+  const pages = catalog();
+  const page = pages.find((p) => p.slug === 'brand-kit/assets');
+  assert.ok(page);
+  const result = await content(page, pages);
+  assert.ok(result.markdown.includes(`| Mint | \`${primitives.Mint.toUpperCase()}\` |`));
+  assert.ok(result.markdown.includes(`| Apricot | \`${chart['key-apricot'].toUpperCase()}\` |`));
+  assert.match(result.markdown, /- Bitcount Grid Single/);
+  assert.ok(result.reference);
 });
 
 test('/docs/brain is grouped by department, each hub first, with the routing table beside the doctrine', () => {
