@@ -1,36 +1,48 @@
 // The legend (design/legend.md; Elco, 11 Nov: "an interactive visual legend element which is basically
 // settings but it has to show up nice and pretty on published maps and interactive on a map we are working
-// on"; board #92). The person's view drawn as a key: one row for each of Settings' rows that draws
-// something on this flower (the brief's behaviours, then Labels; design/flower-art-direction/
-// default-system-vnext.md), each saying the data it shows and, for a number, its scale, with the colours'
-// keys under Colour. On a published map or a still picture it only reads. Handed Settings' own hands (on
-// /make), a row opens the same choices Settings does (DimensionChoices), and a choice changes the person's
-// view everywhere at once: the glasses are the person's, never the petal's. Opaque, so it reads over a
-// map: one of the overlays (Overlay; design/overlays.md). Props only.
+// on"; board #92), as a tool panel (Elco, 12 Nov, walk 2: "like a tool panel where I would have drop downs to
+// changing the things that it's very clearly to see what is category, what is input ... more inspired by the
+// side panel"). Two sections under the side panel's heads: Dimensions, the person's view as a key (Settings'
+// rows, one source, each always there, None too), and Map, what the map itself shows (the flower's groups to
+// highlight, gravity, what a line is). Each row is its category on the left, quiet, and its input on the right:
+// a dropdown where the legend changes the view (Settings' own hands: /make, and /map signed in), the value as
+// words where it only reads. Under Colour, its keys. The glasses are the person's, never the petal's. Opaque, so
+// it reads over a map: one of the overlays (Overlay; design/overlays.md). Props only.
 import type { View } from '@petal/core/types';
 import type { Dimension, Piece } from '@petal/core/view';
+import type { ReactNode } from 'react';
 import { BLOC_SPANS, type BlocChoice, type BlocSpan, blocWords } from '../lib/bloc-words.ts';
 import type { LegendKey } from '../lib/flower-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
 import { SETTINGS_ROWS, type SettingsRow } from '../lib/person-view.ts';
-import { type LegendEdit, scaleOf } from '../lib/view-edit.ts';
+import {
+  dataOf,
+  type LegendEdit,
+  SCALES,
+  type Scale,
+  scaleOf,
+  takesScale,
+} from '../lib/view-edit.ts';
 import { LegendKeys } from './Legend.tsx';
 import { Button } from './ui/Button.tsx';
-import { Mono } from './ui/Mono.tsx';
-import { NavItem } from './ui/NavItem.tsx';
 import { Overlay } from './ui/Overlay.tsx';
-import { DimensionChoices } from './workspace/ViewControls.tsx';
+import { Range } from './ui/Range.tsx';
+import { SectionHead } from './ui/SectionHead.tsx';
+import { Select } from './ui/Select.tsx';
 
 const words = panelWords.settings;
 
 /**
  * Settings' own rows (lib/person-view.ts SETTINGS_ROWS: the brief's behaviours, then Labels), one source, so
  * the legend says what Settings sets (META's go, 11 Nov, inside #76's brief). Highlight has no place in a view:
- * its row is the flower's groups (its voting blocs, #94), when it's handed them.
+ * its row is the flower's groups (its voting blocs, #94), under Map.
  */
 const ORDER: readonly Dimension[] = SETTINGS_ROWS.filter(
   (d): d is Exclude<SettingsRow, 'highlight'> => d !== 'highlight',
 );
+
+/** A select's value for None. */
+const NONE = '';
 
 export type { LegendEdit };
 
@@ -39,68 +51,82 @@ export interface LegendGroups {
   choices: readonly BlocChoice[];
   /** the chosen group, by its id, or null */
   chosen: string | null;
-  /** its choices are open */
-  open: boolean;
   /** which votes they come from, and the period that is, in words */
   span: BlocSpan;
   period: string;
-  onOpen: () => void;
   onChoose: (id: string | null) => void;
   onSpan: (span: BlocSpan) => void;
 }
 
-/** Highlight: the chosen group or None; pressed, the flower's groups, None first, then what they rest on. */
-function HighlightRow({ groups }: { groups: LegendGroups }) {
-  const chosen = groups.choices.find((c) => c.id === groups.chosen);
+/** One row of the panel: its category on the left, its input or value on the right. */
+function ToolRow({ label, children }: { label: string; children?: ReactNode }) {
   return (
-    <li>
-      <NavItem
-        onClick={groups.onOpen}
-        expanded={groups.open}
-        icon="chevron"
-        label={words.dimensions.highlight}
-        trail={chosen?.label ?? blocWords.none}
+    <div className="flex min-h-row-height items-center justify-between gap-space-8 px-space-8">
+      <span className="min-w-0 shrink-0 type-ui text-muted">{label}</span>
+      <span className="flex min-w-0 items-center justify-end gap-space-4">{children}</span>
+    </div>
+  );
+}
+
+/** A value the legend only says: the words, in the words' colour. */
+function Value({ children }: { children: ReactNode }) {
+  return <span className="min-w-0 truncate type-ui text-primary">{children}</span>;
+}
+
+/** Words under a row, quiet. */
+function Note({ children }: { children: ReactNode }) {
+  return <p className="my-0 px-space-8 pb-space-8 type-ui text-muted">{children}</p>;
+}
+
+/** A dimension's input: its data, and for a number its scale, as dropdowns; or what they are, in words. */
+function DimensionInput({
+  d,
+  view,
+  pieces,
+  edit,
+}: {
+  d: Dimension;
+  view: View;
+  pieces: readonly Piece[];
+  edit: LegendEdit | undefined;
+}) {
+  const data = dataOf(view, d);
+  const scale = scaleOf(view, d, pieces);
+  if (!edit) {
+    return (
+      <Value>
+        {data === null
+          ? words.none
+          : scale
+            ? `${words.piece(data)} · ${words.scales[scale].toLowerCase()}`
+            : words.piece(data)}
+      </Value>
+    );
+  }
+  const dataOptions = [
+    ...edit.choices[d].map((p) => ({ value: p.name, label: words.piece(p.name) })),
+    { value: NONE, label: words.none },
+  ];
+  return (
+    <>
+      <Select
+        label={words.dimensions[d]}
+        value={data ?? NONE}
+        options={dataOptions}
+        onChange={(v) => edit.onPick(d, v === NONE ? null : v)}
       />
-      {groups.open && (
-        <ul className="m-0 flex list-none flex-col p-0 pl-space-32">
-          <li>
-            <NavItem
-              onClick={() => groups.onChoose(null)}
-              chosen={groups.chosen === null}
-              label={blocWords.none}
-            />
-          </li>
-          {groups.choices.length === 0 && (
-            <li className="px-space-8 py-space-4 type-ui text-muted">{blocWords.noneHere}</li>
-          )}
-          {groups.choices.map((c) => (
-            <li key={c.id}>
-              <NavItem
-                onClick={() => groups.onChoose(c.id)}
-                chosen={groups.chosen === c.id}
-                label={c.label}
-                trail={c.trail}
-              />
-            </li>
-          ))}
-          {BLOC_SPANS.map((s) => (
-            <li key={s}>
-              <NavItem
-                onClick={() => groups.onSpan(s)}
-                chosen={groups.span === s}
-                label={blocWords.spans[s]}
-              />
-            </li>
-          ))}
-          <li className="flex flex-col gap-space-4 px-space-8 pt-space-4 pb-space-8">
-            <Mono as="span" tone="muted">
-              {groups.period}
-            </Mono>
-            <span className="type-ui text-muted">{blocWords.caveat}</span>
-          </li>
-        </ul>
+      {takesScale(view, d, pieces) && scale && (
+        <Select
+          label={`${words.dimensions[d]}, ${words.scale}`}
+          value={scale}
+          options={SCALES.map((s) => ({
+            value: s,
+            label: words.scales[s],
+          }))}
+          onChange={(v) => edit.onScale(d, v as Scale)}
+        />
       )}
-    </li>
+    </>
   );
 }
 
@@ -112,6 +138,7 @@ export function ViewLegend({
   keysNote,
   edit,
   groups,
+  gravity,
   between,
   fold,
 }: {
@@ -126,80 +153,96 @@ export function ViewLegend({
   keysNote?: string | undefined;
   edit?: LegendEdit | undefined;
   /**
-   * The flower's groups for the Highlight row (#94): its voting blocs, the chosen one, and the hands that open
-   * them and choose one. Choosing highlights a group on the map; it changes no one's view.
+   * The flower's groups for the Highlight row (#94): its voting blocs, the chosen one, and the hands that
+   * choose one and the votes they come from. Choosing highlights a group on the map; it changes no one's view.
    */
   groups?: LegendGroups | undefined;
+  /** On a map, how much its flowers draw together (Elco, 12 Nov: "gravity"), 0 apart to 1 close, kept for the visit. */
+  gravity?: { value: number; onChange: (value: number) => void } | undefined;
   /** On a map, what a line between two flowers is: its name and what it says. */
   between?: { label: string; says: string } | undefined;
   /** It folds to its bar, as every overlay can (design/overlays.md, line 6). */
   fold?: { open: boolean; onToggle: () => void } | undefined;
 }) {
-  // every row of Settings stays whatever its value, None too, so a choice can always be taken back (Elco, 11 Nov:
-  // "don't let users break their views"); the Highlight row stands where Settings has it, before Labels
-  const rows: (Dimension | 'highlight')[] = SETTINGS_ROWS.filter((r) =>
-    r === 'highlight' ? groups !== undefined : ORDER.includes(r),
-  );
+  const chosen = groups?.choices.find((c) => c.id === groups.chosen);
   return (
-    <Overlay title={panelWords.legend} fold={fold}>
-      <ul className="m-0 flex list-none flex-col p-0">
-        {rows.map((d) => {
-          if (d === 'highlight') return groups ? <HighlightRow key={d} groups={groups} /> : null;
-          const data = drawn[d];
-          const scale = scaleOf(view, d, pieces);
-          const trail =
-            data === null
-              ? words.none
-              : scale
-                ? `${words.piece(data)} · ${words.scales[scale].toLowerCase()}`
-                : words.piece(data);
-          return (
-            <li key={d}>
-              {edit ? (
-                <NavItem
-                  onClick={() => edit.onOpen(d)}
-                  expanded={edit.open === d}
-                  icon="chevron"
-                  label={words.dimensions[d]}
-                  trail={trail}
-                />
-              ) : (
-                <NavItem label={words.dimensions[d]} trail={trail} />
-              )}
-              {edit && edit.open === d && (
-                <DimensionChoices
-                  dimension={d}
-                  view={view}
-                  defaults={edit.defaults}
-                  fit={edit.choices[d]}
-                  pieces={pieces}
-                  onPick={edit.onPick}
-                  onScale={edit.onScale}
-                />
-              )}
-              {d === 'colour' && data !== null && keysNote && (
-                <p
-                  className={`my-0 pb-space-8 type-ui text-muted ${edit ? 'pl-space-32' : 'px-space-8'}`}
-                >
-                  {keysNote}
-                </p>
-              )}
-              {d === 'colour' && data !== null && keys.length > 0 && (
-                // the keys start where the rows' words do, past the chevron where there is one
-                <div className={`pb-space-8 ${edit ? 'pl-space-32' : 'px-space-8'}`}>
-                  <LegendKeys keys={[...keys]} size="ui" />
-                </div>
-              )}
-            </li>
-          );
-        })}
-        {between && (
-          <li>
-            <NavItem label={between.label} />
-            <p className="my-0 px-space-8 pb-space-8 type-ui text-muted">{between.says}</p>
-          </li>
-        )}
-      </ul>
+    <Overlay title={panelWords.legend} fold={fold} tool>
+      <SectionHead size="panel" title={panelWords.legendDimensions} />
+      <div className="flex flex-col py-space-4">
+        {ORDER.map((d) => (
+          <div key={d} className="flex flex-col">
+            <ToolRow label={words.dimensions[d]}>
+              <DimensionInput d={d} view={view} pieces={pieces} edit={edit} />
+            </ToolRow>
+            {d === 'colour' && drawn.colour !== null && keysNote && <Note>{keysNote}</Note>}
+            {d === 'colour' && drawn.colour !== null && keys.length > 0 && (
+              <div className="px-space-8 pb-space-8">
+                <LegendKeys keys={[...keys]} size="ui" />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      {(groups || gravity || between) && (
+        <>
+          <SectionHead size="panel" title={panelWords.legendMap} />
+          <div className="flex flex-col py-space-4">
+            {groups && (
+              <>
+                <ToolRow label={words.dimensions.highlight}>
+                  <Select
+                    label={words.dimensions.highlight}
+                    value={groups.chosen ?? NONE}
+                    options={[
+                      { value: NONE, label: blocWords.none },
+                      ...groups.choices.map((c) => ({
+                        value: c.id,
+                        label: `${c.label}, ${c.trail}`,
+                      })),
+                    ]}
+                    onChange={(v) => groups.onChoose(v === NONE ? null : v)}
+                  />
+                </ToolRow>
+                <ToolRow label={panelWords.legendVotes}>
+                  <Select
+                    label={panelWords.legendVotes}
+                    value={groups.span}
+                    options={BLOC_SPANS.map((s) => ({ value: s, label: blocWords.spans[s] }))}
+                    onChange={(v) => groups.onSpan(v as BlocSpan)}
+                  />
+                </ToolRow>
+                <Note>
+                  {groups.choices.length === 0 ? `${blocWords.noneHere}. ` : ''}
+                  {groups.period}. {chosen ? `${blocWords.caveat}.` : ''}
+                </Note>
+              </>
+            )}
+            {gravity && (
+              <ToolRow label={panelWords.legendGravity}>
+                <span className="w-full min-w-0">
+                  <Range
+                    label={panelWords.legendGravity}
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={gravity.value}
+                    shown={`${Math.round(gravity.value * 100)}%`}
+                    onChange={gravity.onChange}
+                    // it's for the visit, not kept in the view: nothing to keep when the hand lets go
+                    onSet={() => undefined}
+                  />
+                </span>
+              </ToolRow>
+            )}
+            {between && (
+              <>
+                <ToolRow label={between.label} />
+                <Note>{between.says}</Note>
+              </>
+            )}
+          </div>
+        </>
+      )}
       {/* the default back at a press, while the view isn't it (Elco: "keep a reset to default button handy") */}
       {edit?.onReset && (
         <div className="px-space-8 pt-space-4 pb-space-8">

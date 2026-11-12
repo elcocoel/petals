@@ -85,6 +85,7 @@ import { Range } from '../components/ui/Range.tsx';
 import { RowField } from '../components/ui/RowField.tsx';
 import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
+import { Select } from '../components/ui/Select.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
 import { TextLink } from '../components/ui/TextLink.tsx';
 import { Tip } from '../components/ui/Tip.tsx';
@@ -3081,6 +3082,30 @@ export const registry: LabEntry[] = [
               <OrgBadge name="RaidGuild" symbol="RAID" types={['DAO']} />
             </div>
           </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'Select',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Select.tsx',
+    states: [
+      {
+        name: "a dropdown in a tool panel's row: the value it's at, a chevron pointing down",
+        render: () => (
+          <Select
+            label="Height"
+            value="share"
+            options={[
+              { value: 'share', label: 'Share (default)' },
+              { value: 'count', label: 'Count' },
+              { value: '', label: 'None' },
+            ]}
+            onChange={() => undefined}
+          />
         ),
       },
     ],

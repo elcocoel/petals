@@ -10,12 +10,15 @@ import { Icon } from './Icon.tsx';
 export function Overlay({
   title,
   fold,
+  tool = false,
   children,
 }: {
   /** Its name, in its bar, and what a screen reader hears for it. */
   title: string;
   /** It folds to its bar: whether it's open now, and the hand that folds it. */
   fold?: { open: boolean; onToggle: () => void } | undefined;
+  /** A tool panel (the legend, Insights): its sections' heads reach its edges, as the side panel's do. */
+  tool?: boolean;
   children: ReactNode;
 }) {
   const open = fold ? fold.open : true;
@@ -48,7 +51,13 @@ export function Overlay({
           )
         }
       >
-        {open && <div className="flex flex-col px-space-16 py-space-8">{children}</div>}
+        {open && (
+          <div
+            className={`flex flex-col ${tool ? 'px-space-8 pb-space-8' : 'px-space-16 py-space-8'}`}
+          >
+            {children}
+          </div>
+        )}
       </BarBox>
     </section>
   );

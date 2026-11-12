@@ -96,12 +96,16 @@ export const mapClaimWords = {
   title: 'Insights',
   folded: (n: number) => `Insights · ${n}`,
   mapping: "Petals' mapping",
-  method: 'method',
-  basis: 'rests on',
-  limits: "doesn't claim",
   found: (who: string, when: string) => `found by ${who}, ${when}`,
-  rests: 'What it rests on',
-  made: (tool: string | undefined, when: string) => (tool ? `by ${tool}, ${when}` : when),
+  // an opened claim's fields, named (Elco, 12 Nov, walk 2: "the typography inside the insight panel is confusing")
+  fields: {
+    by: 'By',
+    said: 'Said',
+    basis: 'Rests on',
+    limits: "Doesn't claim",
+    method: 'Method',
+    evidence: 'Evidence',
+  },
   none: 'Nothing said about this map yet.',
   noneAboutWallet: "Petals' mapping says nothing about this wallet yet.",
 } as const;
