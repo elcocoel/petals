@@ -2,7 +2,7 @@
 // claims (lab/map-claims-fixtures.ts, SYSTEMS's samples).
 import { describe, expect, test } from 'vitest';
 import { LAB_CLAIM_NAMES, LAB_MAP_CLAIMS } from '../lab/map-claims-fixtures.ts';
-import { mapClaimGroups, noteOf, toolOf, wordsOf } from '../lib/map-claims.ts';
+import { claimWho, mapClaimGroups, noteOf, toolOf, wordsOf } from '../lib/map-claims.ts';
 
 describe("the mapping's claims, in words", () => {
   test('who said it: the tool or the model by its name', () => {
@@ -10,6 +10,13 @@ describe("the mapping's claims, in words", () => {
     expect(toolOf('tool:dao-set-near-direct@2026-11-11')).toBe('dao-set-near-direct');
     expect(toolOf('model:glm@unreported')).toBe('glm');
     expect(toolOf('near:mainnet:someone.near')).toBeNull();
+  });
+
+  test('who answers for it: a person who published it by their account, else Petals’ mapping', () => {
+    expect(claimWho('near:mainnet:raidguild-scribe.near')).toBe('raidguild-scribe.near');
+    expect(claimWho('tool:codex-solana-wave@1')).toBe("Petals' mapping");
+    expect(claimWho('model:gpt-6-astra@unreported')).toBe("Petals' mapping");
+    expect(claimWho(undefined)).toBe("Petals' mapping");
   });
 
   test("a note that's a record says its words, its kind, and the rest as parts", () => {
