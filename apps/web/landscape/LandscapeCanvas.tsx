@@ -399,7 +399,8 @@ export function LandscapeCanvas({
       const model = modelOf(f.reading);
       flowers.push({
         name: f.name,
-        mark: f.mark,
+        // the chain's logo for the centre of a flower with none of its own
+        mark: { ...f.mark, chain: here.logo ?? null },
         place: f.place,
         model,
         reach: reachOf(model),

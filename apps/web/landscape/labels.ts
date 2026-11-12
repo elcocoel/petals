@@ -30,7 +30,8 @@ const MONO = 'type-mono';
 
 export interface LabelFlower {
   name: string;
-  mark: { logo: string | null; symbol: string; types?: readonly string[] };
+  /** `chain`: the logo of the chain it's on, for the centre where it has none of its own */
+  mark: { logo: string | null; symbol: string; types?: readonly string[]; chain?: string | null };
   /** its map's treasury and token price, in words, for the line under its badge (LOOK, Elco's walk 3) */
   worth?: readonly string[] | undefined;
 }
@@ -80,10 +81,16 @@ function drawLogo(logo: string, parent: Element, clip: string, size: number): vo
   );
 }
 
-/** The far wave's centre mark, its middle at (0, 0): a round logo, or the symbol's first letter in a ring. */
+/**
+ * The far wave's centre mark, its middle at (0, 0): a round logo; with none of its own, the logo of the chain it's on
+ * (Elco, 12 Nov walk 3: "We should find a better visual representation for daos that don't have a logo ... maybe
+ * there's something that we can display there for example which chain they're on"); else the symbol's first letter
+ * in a ring.
+ */
 function drawCentreMark(m: LabelFlower['mark'], parent: Element, clip: string): void {
-  if (m.logo) {
-    drawLogo(m.logo, parent, clip, MARK);
+  const logo = m.logo ?? m.chain;
+  if (logo) {
+    drawLogo(logo, parent, clip, MARK);
     return;
   }
   el(

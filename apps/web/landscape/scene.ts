@@ -38,7 +38,7 @@ const EDGE = 28;
 
 export interface LandFlower {
   name: string;
-  mark: { logo: string | null; symbol: string; types?: readonly string[] };
+  mark: { logo: string | null; symbol: string; types?: readonly string[]; chain?: string | null };
   place: Place;
   model: Model;
   /** How far its petals reach, as a share of its room (space.ts reachOf). */
