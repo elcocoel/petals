@@ -32,6 +32,7 @@ const QUESTIONS: [string, string][] = [
   // open calls (Elco, 12 Nov: "an Osint chapter on the brain helping people make money from daos")
   ['what grants can I apply for on NEAR right now?', 'open-calls'],
   ['are there open RFPs or bounties I could work on?', 'open-calls'],
+  ['tell me when a new grants program opens', 'watch-open-calls'],
   ['what is 0x1234abcd, is it a wallet or a contract?', 'start-from-an-address'],
   ['I have an address, tell me what it is', 'start-from-an-address'],
   ['how did the holders change over the last year', 'over-time'],
