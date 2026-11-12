@@ -73,6 +73,14 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     // the map the flow drew is on the Power Map: look_up gives its id, get_map what it holds
     const [onMap] = found.maps as { id: string }[];
     await run('get_map', { map: onMap?.id ?? 'none' });
+    await run(
+      'list_publishable',
+      { map: onMap?.id ?? 'none' },
+      {
+        ...r.ctx,
+        caller: { subject: 'prs_contract' },
+      },
+    );
     await run('look_up', { query: '0x000000000000000000000000000000000000dead' });
     await run('look_up', { query: 'astro-stakers.poolv1.near' });
     await run('read_chain', { address: '0x000000000000000000000000000000000000dead' });

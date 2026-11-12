@@ -3,7 +3,7 @@ id: on-the-map
 department: investigation
 for: going to what's already on the Power Map and interpreting it, before any new reading
 recognise: navigate, take me, go to, open, show me, what's there, already, on the map, what do we have, what we found
-tools: look_up, get_map, find_voting_blocs, list_payouts, describe_snapshot, compute_figures
+tools: look_up, get_map, find_voting_blocs, list_payouts, describe_snapshot, compute_figures, list_publishable
 continues: going-deeper, where-power-lives, payouts, voting-blocs-over-time
 status: ready
 ---
@@ -23,4 +23,4 @@ The Power Map already holds most of what people ask about. Start from it: never 
 3. **Interpret, don't recount.** Say what the layers show together, in a few sentences. For more, the same `id` goes to `find_voting_blocs` (who votes alike) and `list_payouts` (who was paid, over a period), and a reading's `snapshot` to `describe_snapshot` and `compute_figures`.
 4. **Read anew only when asked,** or when nothing on the map answers. Then say what a read would take, and ask.
 
-Publishing a person's own data (their names, a reading they kept) to the shared map is coming, and isn't built yet: say so plainly when they ask.
+Publishing: what a person kept about a map (their names and other claims about its accounts) goes to the shared map with one press on that map, signed by their own wallet and credited to them. `list_publishable` says what would go, and what stays private and why: a name goes only as the system's own records declare it, a proposal or a transaction it quotes. The press and the signature are always theirs.

@@ -26,6 +26,7 @@ import { DEFAULT_BUDGET, type LlmClient, personUsdPerChat, runMaxSeconds } from 
 import { meRoutes } from './me-routes.ts';
 import { chosenModel, createNearAiClient, FALLBACK_MODELS, type NearAiOptions } from './near-ai.ts';
 import { type PayDeps, payRoutes } from './pay-routes.ts';
+import { publishRoutes } from './publish-routes.ts';
 import { recordedClient, SKELETON_TRANSCRIPT } from './recorded.ts';
 import { type AgentRouteOptions, createAgentRoutes, stateDirOf } from './routes.ts';
 import { importRunFiles, interruptRuns, sqliteRunStore } from './runs.ts';
@@ -196,6 +197,17 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       ...(o.price ? { price: o.price } : {}),
       ...(config.apiBase ? { apiBase: config.apiBase } : {}),
       ...(o.clock ? { clock: o.clock } : {}),
+    }),
+  );
+  // publishing what a person kept about a map to the shared map, signed by their wallet (12 Nov)
+  app.route(
+    '/',
+    publishRoutes({
+      tools: ctx,
+      gate: auth.gate,
+      site: siteOf(config.apiBase),
+      nonces: durableNonceStore(store.challenge),
+      rpcFor: o.rpcFor ?? (config.fake ? () => ctx.rpc : nearRpc),
     }),
   );
   app.route(

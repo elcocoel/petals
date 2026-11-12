@@ -269,3 +269,52 @@ describe('the next steps on a map just read (META, from Elco, 12 Nov)', () => {
     expect(bare.services.map((s) => s.label)).toEqual(['A distribution card', 'An authority map']);
   });
 });
+
+describe("list_publishable through a project's link (CONNECTORS, 12 Nov: a person's own agent has no session)", () => {
+  test("the link's owner is whose data it is: what their agents kept about the map, and what stays private", async () => {
+    // a project their agent works in by its link (an unclaimed one here: its owner is the project itself)
+    const started = await run('start_exploration', { question: 'who runs the guild?' });
+    const exploration = (started.link as { url: string }).url;
+    const member = (await loadSnapshot(r.ctx, MOLOCH)).participants[0]?.id as string;
+    const account = member.includes(':') ? member : `eip155:1:${member}`;
+    const proposal = {
+      type: 'proposal',
+      proposal: `proposal:eip155:1:${DAO}:7`,
+      url: 'https://etherscan.io/tx/0x1',
+      quote: 'Pay Ada for the guild',
+    };
+    const kept = await run('add_annotation', {
+      exploration,
+      as: 'codex',
+      annotations: [
+        {
+          subject: account,
+          verb: 'named',
+          object: { value: 'Ada' },
+          kind: 'sourced',
+          evidence: [proposal],
+        },
+        {
+          subject: account,
+          verb: 'named',
+          object: { value: 'Ada B' },
+          kind: 'sourced',
+          evidence: [{ type: 'page', url: 'https://example.org/ada' }],
+        },
+      ],
+    });
+    expect(kept.error).toBeUndefined();
+    // their agent, with no session: through the link
+    const o = await run('list_publishable', { map: MAP, exploration });
+    expect(o).toMatchObject({
+      about: MAP,
+      name: 'Founders Guild v1',
+      map_url: MAP_URL,
+      ready: 1,
+      published: 0,
+    });
+    expect(o.private).toHaveLength(1);
+    // with neither a link nor a person signed in, nobody's data
+    expect((await run('list_publishable', { map: MAP })).error.code).toBe('unauthorised');
+  });
+});

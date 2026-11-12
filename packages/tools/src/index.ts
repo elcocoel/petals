@@ -69,6 +69,7 @@ export {
   snapshotTexts,
 } from './proposals.ts';
 export type { PublicPage } from './public-fetch.ts';
+export { type Publishable, preparePublishData, publishable, publishData } from './publish-data.ts';
 export { callTool, describeTool, findTool, registry } from './registry.ts';
 export {
   type Findable,

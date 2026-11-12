@@ -23,8 +23,11 @@ import {
 import { ADDRESS, aboutOneOf, cardAccounts, claimsAbout } from '../mapping-claims.ts';
 import { payoutsOf } from '../payouts.ts';
 import { cardProposals } from '../proposals.ts';
+import { publishable } from '../publish-data.ts';
 import type { ToolContext } from '../types.ts';
 import { valuesOf } from '../value-store.ts';
+import { layerOwnerOf } from './datasets.ts';
+import { open, REF } from './explorations.ts';
 import { base, obj } from './shared.ts';
 
 /** A map's page: opened from a chat on /make, it opens on the canvas beside it (the web's mapLink). */
@@ -157,6 +160,8 @@ function insight(c: Claim) {
     says: typeof object === 'string' ? object : JSON.stringify(object),
     kind: c.kind,
     at: c.issued_at,
+    // who answers for it: Petals' mapping, or the person who published it
+    ...(c.by ? { by: c.by } : {}),
   };
 }
 
@@ -167,8 +172,9 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
     "One map on the Power Map, by its address (look_up's maps give it) or its link: everything already there, " +
     'to interpret without reading anew. Its link; its readings, each with its date, size and who mapped it; its ' +
     'proposals and the period they cover; its value (price, supply, market cap, treasury), each with its source ' +
-    "and date; its payouts in short; Insights, the claims Petals' mapping made about its accounts; and the " +
-    "signed-in person's own names for its accounts, which are theirs alone and not on the shared map. " +
+    "and date; its payouts in short; Insights, the claims Petals' mapping made about its accounts and those people " +
+    'published, each with who answers for it; and the ' +
+    "signed-in person's own names for its accounts, which are theirs alone until they publish them. " +
     'describe_snapshot and compute_figures count a reading; find_voting_blocs and list_payouts go deeper.',
   input: obj(
     ['map'],
@@ -228,6 +234,7 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
           says: { type: 'string' },
           kind: { type: 'string' },
           at: { type: 'string' },
+          by: { type: 'string' },
         }),
       },
       your_names: {
@@ -387,3 +394,74 @@ export function nextSteps(m: {
   }));
   return { map: m.id, steps, services };
 }
+
+/**
+ * What the signed-in person could publish on a map (publish-data.ts): how many of the claims they kept about it go
+ * with one press, which stay private and why, and how many are on the shared map already. The press and the
+ * signature are theirs, on the map's page; nothing here publishes.
+ */
+export const listPublishable = defineTool<
+  { map: string; exploration?: string },
+  Record<string, unknown>
+>({
+  name: 'list_publishable',
+  title: 'List what can be published',
+  description:
+    'What the signed-in person kept about a map in their projects (their names and other claims about its ' +
+    'accounts) and could publish to the shared Power Map with one press on that map, signed by their own wallet ' +
+    'and credited to them: how many go, which stay private and why (the people rule: a name goes only as the ' +
+    "DAO's own records declare it), and how many are published already. It publishes nothing; never sign for them. " +
+    "A person's own agent names their project by its link (exploration); on the site it's the person signed in.",
+  input: obj(
+    ['map'],
+    {
+      map: {
+        type: 'string',
+        minLength: 3,
+        description: "the map's address (its id in look_up's maps), or its map_url",
+      },
+      exploration: { ...REF, description: "the person's project, by its link: whose data it is" },
+    },
+    { additionalProperties: false },
+  ),
+  output: obj(['about', 'name', 'map_url', 'ready', 'private', 'published'], {
+    about: { type: 'string' },
+    name: { type: 'string' },
+    map_url: { type: 'string' },
+    ready: { type: 'integer', minimum: 0 },
+    private: {
+      type: 'array',
+      items: obj(['id', 'subject', 'verb', 'why'], {
+        id: { type: 'string' },
+        subject: { type: 'string' },
+        verb: { type: 'string' },
+        why: { type: 'string' },
+      }),
+    },
+    published: { type: 'integer', minimum: 0 },
+  }),
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  failure: 'not_found',
+  async run({ map, exploration }, ctx) {
+    // through a project's link, its owner's (CONNECTORS, 12 Nov: a person's own agent has no session here)
+    const owner = exploration
+      ? layerOwnerOf((await open(ctx, exploration)).row)
+      : ctx.caller?.subject;
+    if (!owner || (!exploration && !owner.startsWith('prs_')))
+      throw new ToolFailure(
+        'unauthorised',
+        'Only a signed-in person has data of their own to publish.',
+        'Sign in with a NEAR wallet first.',
+      );
+    const id = mapIdOf(map);
+    const p = await publishable(ctx, owner, id);
+    return {
+      about: p.about,
+      name: p.name,
+      map_url: mapUrl(ctx, p.about),
+      ready: p.claims.length,
+      private: p.private,
+      published: p.published,
+    };
+  },
+});

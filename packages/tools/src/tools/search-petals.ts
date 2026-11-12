@@ -13,7 +13,7 @@ import { docsPages } from '../docs-pages.ts';
 import { privateStore } from '../drafts.ts';
 import { retiredClaim } from '../hidden.ts';
 import { type MapCard, mapsOf, mapViews, typeWords } from '../map.ts';
-import { MAPPING } from '../mapping-claims.ts';
+import { MAPPING, PUBLISHED } from '../mapping-claims.ts';
 import { proposalsOf } from '../proposals.ts';
 import {
   type Findable,
@@ -169,9 +169,12 @@ async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapS
   const views = await mapViews({ ...ctx, names: [] });
   const marks = await store.mark.list();
   const proposalRows = await store.proposals.list();
-  // Petals' own mapping's claims, the same for every viewer
+  // Petals' own mapping's claims and what people published (publish-data.ts), the same for every viewer
   // a claim a wave reissued is retired: its replacement is what's said (hidden.ts)
-  const claimRows = (await store.annotation.list(MAPPING)).filter((c) => !retiredClaim(c.id));
+  const claimRows = [
+    ...(await store.annotation.list(MAPPING)),
+    ...(await store.annotation.list(PUBLISHED)),
+  ].filter((c) => !retiredClaim(c.id));
   const sig = [
     model?.embedding ?? 'words',
     views.map((v) => v.sha).join(','),
