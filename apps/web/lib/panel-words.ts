@@ -6,6 +6,16 @@ import { agentWords } from './agents.ts';
 /** The side panel's sections, as WorkMenu draws them and useWorkMenu keeps which one is open. */
 export type SectionKey = 'conversations' | 'projects' | 'agents' | 'lobby' | 'profile' | 'settings';
 
+/** What every flower has (core's EVERY_FLOWER), in plainer words. Drafts. */
+const PIECE_WORDS: Record<string, string> = {
+  share: 'Share of the whole',
+  amount: 'Amount held',
+  kind: 'Kind of account',
+  identity: 'Who it is',
+  name: 'Its name',
+  name_kind: 'Kind of name',
+};
+
 export const panelWords = {
   /** What a screen reader hears for the panel. */
   panel: 'Your work',
@@ -77,13 +87,18 @@ export const panelWords = {
       labels: 'Labels',
       highlight: 'Highlight',
     },
-    /** A piece of data as a person reads it: share, amount, kind, identity, name, name kind. */
-    piece: (name: string) => `${name.charAt(0).toUpperCase()}${name.slice(1)}`.replaceAll('_', ' '),
+    /**
+     * A piece of data as a person reads it (Elco, 12 Nov, walk 3: "the dimensions copy is confusing"): what every
+     * flower has in plainer words, drafts; any other piece by its own name.
+     */
+    piece: (name: string) =>
+      PIECE_WORDS[name] ?? `${name.charAt(0).toUpperCase()}${name.slice(1)}`.replaceAll('_', ' '),
     none: 'None',
     /** At a choice's end: the one everyone sees until they choose. */
     isDefault: 'default',
     scale: 'Scale',
-    scales: { sqrt: 'Square root', linear: 'Straight', log: 'Log' },
+    /** How a number grows into a petal's size: as it is, or softened. Drafts (walk 3: clearer words). */
+    scales: { sqrt: 'Softened', linear: 'As it is', log: 'Much softened' },
     /** A dimension no data takes yet, on hover. */
     nothingFits: 'No data takes this yet',
     /** Highlight, on hover, until a chosen group comes with the data. A draft. */

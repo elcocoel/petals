@@ -5,9 +5,19 @@
 import { api } from './api.ts';
 import { DEFAULT_PERSON_VIEW, type PersonView } from './person-view.ts';
 import { requestCookie } from './visitor.ts';
+import { visitorViewOf } from './visitor-view.ts';
 
-/** When the server can't answer, there's no view of theirs to draw with, and the default is what anyone sees. */
+/**
+ * When the server can't answer, there's no view of theirs to draw with, and the default is what anyone sees. Where
+ * it gives the default, a visitor's own, kept by its hash in their browser (lib/visitor-view.ts), is theirs.
+ */
 export async function viewerView(): Promise<PersonView> {
-  const res = await api<PersonView>('/api/v1/me/view', { cookie: await requestCookie() });
-  return res.ok ? res.value : DEFAULT_PERSON_VIEW;
+  const cookie = await requestCookie();
+  const res = await api<PersonView>('/api/v1/me/view', { cookie });
+  if (!res.ok) return DEFAULT_PERSON_VIEW;
+  const kept = visitorViewOf(cookie);
+  if (!kept || kept === res.value.hash || res.value.hash !== DEFAULT_PERSON_VIEW.hash)
+    return res.value;
+  const theirs = await api<PersonView>(`/api/v1/views/${kept}`);
+  return theirs.ok ? theirs.value : res.value;
 }
