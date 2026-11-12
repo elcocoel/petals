@@ -96,8 +96,10 @@ describe('renderFlower on the NEAR validators fixture (segments: backers)', () =
     expect(r.svg).toContain('>everyone else (311) 13.8%</text>');
   });
 
-  test('straight edges only: paths use M and L, closed by Z, nothing that curves', () => {
-    for (const [, d] of r.svg.matchAll(/ d="([^"]+)"/g)) expect(d).toMatch(/^(M[-0-9. L]+Z?)+$/);
+  // Straight sides; since 11 Nov a petal's top follows the circle's arc (Elco), on every flower since 12 Nov (one
+  // look): M, L and that one arc, closed by Z; nothing else curves.
+  test('straight sides and a round top only: paths use M, L and A, closed by Z, no other curve', () => {
+    for (const [, d] of r.svg.matchAll(/ d="([^"]+)"/g)) expect(d).toMatch(/^(M[-0-9. LA]+Z?)+$/);
   });
 
   test('coordinates are written with at most three decimals, and no -0', () => {
@@ -283,7 +285,7 @@ describe('renderFlower geometry', () => {
       const tail = r.petals.at(-1);
       expect(tail?.id).toBe('__tail');
       expect(tail?.count).toBe(1000 - (c.petals ?? 60));
-      for (const [, d] of r.svg.matchAll(/ d="([^"]+)"/g)) expect(d).toMatch(/^(M[-0-9. L]+Z?)+$/);
+      for (const [, d] of r.svg.matchAll(/ d="([^"]+)"/g)) expect(d).toMatch(/^(M[-0-9. LA]+Z?)+$/);
     }
   });
 

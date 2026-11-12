@@ -16,7 +16,15 @@ import { foldPath } from './wedge/fold.ts';
 import { GREY, lookFills } from './wedge/keys.ts';
 import { marks } from './wedge/marks.ts';
 import { modelOf } from './wedge/model.ts';
-import { bandPath, FIT, n3, polygonPath, SHAPE, silhouettePath } from './wedge/ring.ts';
+import {
+  bandPath,
+  FIT,
+  n3,
+  polygonPath,
+  roundTopPath,
+  SHAPE,
+  silhouettePath,
+} from './wedge/ring.ts';
 import type { View } from './wedge/view.ts';
 
 /** The dimensions this look draws; the legend says nothing about the others. */
@@ -74,7 +82,7 @@ export const skinV2: Skin = (reading, { size, thumb }) => {
       // everyone else as its members' stripes, the smallest nearest the centre, as the live flower draws it
       const fold = look.folds[p.id];
       out.push(
-        `<path class="${keyStyle(look.fills[p.id] ?? GREY.hex).cls}" data-p="${esc(p.id)}" data-i="${p.index}" d="${fold ? foldPath(m.ring, i, fold) : bandPath(m.ring, i, 0, h)}"/>`,
+        `<path class="${keyStyle(look.fills[p.id] ?? GREY.hex).cls}" data-p="${esc(p.id)}" data-i="${p.index}" d="${fold ? foldPath(m.ring, i, fold) : roundTopPath(m.ring, i, h)}"/>`,
       );
     });
     out.push('</g>');

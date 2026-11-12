@@ -224,7 +224,9 @@ export function useLandscape(
     ): PetalLook => ({
       ...lookFills(f.model.petals),
       highlight: ids,
-      ...(ring ? { roundTops: true, votes: ring } : {}),
+      // round tops on every flower, its ring or not (one look, Elco, 12 Nov walk)
+      roundTops: true,
+      ...(ring ? { votes: ring } : {}),
       voter: wallet,
     });
     // The wallet level (Elco, 11 Nov): one wallet chosen, lit in every flower that holds it, its votes on their
