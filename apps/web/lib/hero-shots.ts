@@ -6,7 +6,7 @@
 // question and answer swap sides from beat to beat, shot and reverse shot, so the conversation crosses the flower
 // instead of sitting in two fixed corners.
 // A wide stage and a narrow one have their own tables. Numbers only, a pure function of the beat and its time.
-import { beatMs, spring } from './hero-story.ts';
+import { beatMs, driftAt, spring, whipAt } from './hero-story.ts';
 
 /** A point of the stage, in % of its width and height. */
 export interface Pin {
@@ -88,17 +88,19 @@ function endOf(beat: number, wide: boolean) {
 /**
  * Where the flower is at a moment (Elco, 12 Nov: cut to the beat, with ins and outs, never dead still, never
  * jerking): on the one the camera whips it from where the last beat left it to this beat's shot, from still, fast,
- * easing onto it; then it keeps drifting the way it came and pushing in, steadily. It leans into the whip and is
+ * easing onto it; then it keeps drifting the way it came and pushing in, steadily. On the community beat it holds
+ * still until the question has landed, and whips with the dive (whipAt, driftAt). It leans into the whip and is
  * smeared by it, `blur` px.
  */
 export function flowerAt(beat: number, t: number, wide: boolean, fresh = false) {
   const to = shotOf(beat, wide).flower;
   const from = fresh && beat === 0 ? { ...to, scale: to.scale * 0.94 } : endOf(beat - 1, wide);
-  const p = Math.min(1, Math.max(0, t / WHIP_MS));
+  const p = Math.min(1, Math.max(0, (t - whipAt(beat)) / WHIP_MS));
   const k = spring(p, 0.85);
   // how fast it is going, per whole whip
-  const speed = p < 1 ? (spring(Math.min(1, p + 0.01), 0.85) - k) / 0.01 : 0;
-  const long = Math.min(1, Math.max(0, t / beatMs(beat)));
+  const speed = p > 0 && p < 1 ? (spring(Math.min(1, p + 0.01), 0.85) - k) / 0.01 : 0;
+  const drift = driftAt(beat);
+  const long = Math.min(1, Math.max(0, (t - drift) / (beatMs(beat) - drift)));
   // steady, so it is still moving as the next whip takes over
   const flow = long;
   const push = long;

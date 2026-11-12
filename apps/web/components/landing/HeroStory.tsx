@@ -162,7 +162,7 @@ function Answer({
               >
                 {line.words
                   ? b.a.split(' ').map((w, j) => {
-                      const word = answerWord(t, j);
+                      const word = answerWord(beat, t, j);
                       return (
                         // biome-ignore lint/suspicious/noArrayIndexKey: a word's place in its fixed sentence
                         <span key={j}>

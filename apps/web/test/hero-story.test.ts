@@ -141,8 +141,8 @@ describe('the hero story', () => {
         const landed = flowerAt(beat, COUNT_MS * 1.2, wide);
         expect(Math.hypot(landed.x - shot.x, landed.y - shot.y)).toBeLessThan(3);
         expect(landed.blur).toBe(0);
-        // and never dead still
-        for (let t = 0; t < beatMs(beat); t += 100) {
+        // and never dead still, but for the far map's first count, while the question lands
+        for (let t = beat === 0 ? COUNT_MS : 0; t < beatMs(beat); t += 100) {
           const p = flowerAt(beat, t, wide);
           const q = flowerAt(beat, t + 100, wide);
           expect(

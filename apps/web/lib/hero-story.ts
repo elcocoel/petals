@@ -39,8 +39,12 @@ const RIPPLE = 1.4;
 /** Per petal, how much later than its neighbour before it (clockwise from twelve) it lands: a roll round the clock. */
 const ROLL = 12;
 
-/** How many bars each story beat lasts: the history beat is the slow one. */
-const BARS: readonly number[] = [2, 2, 2, 3, 2, 2];
+/**
+ * How many bars each story beat lasts: the history beat is the slow one, and the community beat opens with a bar
+ * on the far map before the camera dives (Elco, 12 Nov: the far scene "goes by waaay too fast and starts moving
+ * before the questions").
+ */
+const BARS: readonly number[] = [3, 2, 2, 3, 2, 2];
 export const BEATS_MS: readonly number[] = BARS.map((bars) => bars * 4 * COUNT_MS);
 /** The longest beat, for whatever needs one number. */
 export const BEAT_MS = Math.max(...BEATS_MS);
@@ -60,6 +64,16 @@ const CALL_FRESH = count(1.5);
 const REACT = count(3);
 /** The response: the answer lands on the second bar's one. */
 const RESPOND = count(5);
+/** The community beat's phrase starts a bar late, after its bar on the far map. */
+const LEAD = 4 * COUNT_MS;
+const reactAt = (beat: number) => REACT + (beat === 0 ? LEAD : 0);
+const respondAt = (beat: number) => RESPOND + (beat === 0 ? LEAD : 0);
+/**
+ * When the camera starts its whip to a beat's shot, and when its drift starts: on the one; on the community beat
+ * the whip goes with the dive, and the drift only once the question has landed, so nothing moves before it.
+ */
+export const whipAt = (beat: number) => (beat === 0 ? count(6) : 0);
+export const driftAt = (beat: number) => (beat === 0 ? count(2) : 0);
 
 export const PETALS = 24;
 /** Where the petals start: the centre's edge. */
@@ -127,10 +141,11 @@ const prior = (beat: number) => (beat + 5) % 6;
  * response on the five.
  */
 const KICKS: readonly (readonly (readonly [number, number])[])[] = [
-  // a community: the camera dives in and it bursts open on the three
+  // a community: the focus ring picks it out on the second bar's one, the camera dives in, it bursts open
   [
-    [3, 0.05],
     [5, 0.015],
+    [7, 0.05],
+    [9, 0.015],
   ],
   // influence: the heights part on the three, then the strongest three light, boom, boom, boom
   [
@@ -212,7 +227,7 @@ function shaped(beat: number, t: number, i: number, from: number): number {
   switch (beat) {
     case 0:
       // as the camera arrives, it bursts out of its wave on the three, rolling round the clock
-      return lerp(INNER, EVEN, pop(t, REACT + i * ROLL));
+      return lerp(INNER, EVEN, pop(t, reactAt(0) + i * ROLL));
     case 1: {
       // the even flower draws in on the and of two, holds its breath, and the heights burst apart on the three
       const held =
@@ -279,7 +294,7 @@ export interface Camera {
 /** My community's twist as it bursts open: the petals are all at the centre's edge when it begins. */
 export function camera(beat: number, t: number): Camera {
   const rotate =
-    beat === 0 && t >= REACT ? -16 * (1 - spring(at(t, REACT, 1.5 * COUNT_MS), 0.8)) : 0;
+    beat === 0 && t >= reactAt(0) ? -16 * (1 - spring(at(t, reactAt(0), 1.5 * COUNT_MS), 0.8)) : 0;
   return { scale: 1, rotate, y: 0 };
 }
 
@@ -313,9 +328,9 @@ export interface World {
 const MAP_FADES = { from: 0.28, to: 0.48 };
 
 /**
- * The world camera. On the community beat it starts on the far map; my community takes a dashed focus ring on the
- * and of one, and on the two the camera dives into it, my community gliding to the middle as it grows, and it
- * bursts out of its wave on the three. On the connections beat the camera pulls back on the one to show its two
+ * The world camera. On the community beat it holds on the far map while the question lands and is read; my
+ * community takes a dashed focus ring on the second bar's one, and on its two the camera dives into it, my community
+ * gliding to the middle as it grows, and it bursts out of its wave on the three. On the connections beat the camera pulls back on the one to show its two
  * neighbours, and once the answer is in it goes all the way out to the far map, my community folding back into
  * its wave, ending on the very frame the community beat starts from.
  */
@@ -325,12 +340,12 @@ export function world(beat: number, t: number): World {
   let wave = 0;
   let ring = 0;
   if (beat === 0) {
-    const dive = ease.inOutCubic(at(t, count(2), 1.5 * COUNT_MS));
+    const dive = ease.inOutCubic(at(t, count(6), 1.5 * COUNT_MS));
     k = dive;
     slide = dive;
-    wave = 1 - ease.inOutSine(at(t, REACT, 3 * EIGHTH));
+    wave = 1 - ease.inOutSine(at(t, reactAt(0), 3 * EIGHTH));
     ring =
-      ease.outCubic(at(t, count(1.5), EIGHTH)) * (1 - ease.inOutSine(at(t, count(2.5), COUNT_MS)));
+      ease.outCubic(at(t, count(5), EIGHTH)) * (1 - ease.inOutSine(at(t, count(6.5), COUNT_MS)));
   }
   if (beat === 5) {
     const out = ease.inOutCubic(at(t, count(6), 2.5 * COUNT_MS));
@@ -502,7 +517,7 @@ const drift = (beat: number, t: number, phase: number) =>
 export function question(beat: number, u: number, fresh = false): Motion {
   const start = fresh && beat === 0 ? CALL_FRESH : CALL;
   const inQ = spring(at(u, start, SPRING_MS), 0.85);
-  const answered = ease.inOutSine(at(u, RESPOND - SIXTEENTH, EIGHTH));
+  const answered = ease.inOutSine(at(u, respondAt(beat) - SIXTEENTH, EIGHTH));
   const out = at(u, beatMs(beat) - 1.5 * EIGHTH, 1.3 * EIGHTH);
   const leave = ease.inCubic(out);
   return {
@@ -524,16 +539,16 @@ export function question(beat: number, u: number, fresh = false): Motion {
  */
 export function answerBox(beat: number, t: number, fresh = false): Motion {
   const first = fresh && beat === 0;
-  const inA = first ? spring(at(t, RESPOND - SIXTEENTH, SPRING_MS), 0.85) : 1;
+  const inA = first ? spring(at(t, respondAt(0) - SIXTEENTH, SPRING_MS), 0.85) : 1;
   return {
-    opacity: first ? ease.outCubic(at(t, RESPOND - SIXTEENTH, EIGHTH)) : 1,
+    opacity: first ? ease.outCubic(at(t, respondAt(0) - SIXTEENTH, EIGHTH)) : 1,
     x: 20 * (1 - inA),
     y: 8 * (1 - inA) + FLOAT_PX * drift(beat, t, Math.PI),
     blur: 0,
     scale: 0.94 + 0.06 * inA,
     turn: 13 + 16 * (1 - inA) + SWAY * drift(beat, t, Math.PI + 1),
     z: 80,
-    glint: at(t, RESPOND, 1.5 * COUNT_MS),
+    glint: at(t, respondAt(beat), 1.5 * COUNT_MS),
     glow: inA,
   };
 }
@@ -544,9 +559,9 @@ export function answerBox(beat: number, t: number, fresh = false): Motion {
  * each word is drawn with its own motion (answerWord).
  */
 export function answerLine(own: number, beat: number, t: number, fresh = false) {
-  if (own === beat) return { opacity: t >= RESPOND ? 1 : 0, y: 0, blur: 0, words: true };
+  if (own === beat) return { opacity: t >= respondAt(beat) ? 1 : 0, y: 0, blur: 0, words: true };
   if (own === prior(beat) && !(fresh && beat === 0)) {
-    const out = at(t, RESPOND - EIGHTH, EIGHTH);
+    const out = at(t, respondAt(beat) - EIGHTH, EIGHTH);
     return {
       opacity: 1 - ease.inOutSine(out),
       y: -8 * ease.inCubic(out),
@@ -558,8 +573,8 @@ export function answerLine(own: number, beat: number, t: number, fresh = false) 
 }
 
 /** One word of the answer coming in, `j` from its start: one on each sixteenth, easing up into the line. */
-export function answerWord(t: number, j: number) {
-  const start = RESPOND + j * SIXTEENTH;
+export function answerWord(beat: number, t: number, j: number) {
+  const start = respondAt(beat) + j * SIXTEENTH;
   const p = ease.outCubic(at(t, start, 1.5 * EIGHTH));
   return { opacity: ease.outCubic(at(t, start, EIGHTH)), y: 8 * (1 - p), blur: 4 * (1 - p) };
 }
