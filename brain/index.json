@@ -87,7 +87,7 @@
       "id": "services",
       "kind": "department",
       "department": "services",
-      "for": "one-press deliverables and AI services, each a skill: planned (#101), nothing built yet",
+      "for": "one-press deliverables, each a chapter an agent follows, all free (#101)",
       "recognise": [
         "services"
       ],
@@ -95,7 +95,7 @@
       "continues": [],
       "status": "partial",
       "file": "services/README.md",
-      "sha256": "d33fbfcafa4affd5e97d783630272a557d8cbcd8bdf26898c83157156f5cd010"
+      "sha256": "73655fcc46b5c0d5790d1dd9d06a76b2ceabd660d611d9dcf1e54000f5859799"
     },
     {
       "id": "stewardship",
@@ -135,6 +135,63 @@
       "status": "partial",
       "file": "gathering/a-new-system.md",
       "sha256": "12a86d9228e274f2df913e92463206422dd1fadf1b1b9707f7ace9c82fd8da48"
+    },
+    {
+      "id": "authority-map",
+      "kind": "chapter",
+      "department": "services",
+      "for": "tracing who can choose, approve, block or execute spending and rule changes",
+      "recognise": [
+        "authority map",
+        "who can move money",
+        "who can change rules",
+        "signers",
+        "admin powers"
+      ],
+      "tools": [
+        "brain_context",
+        "search_petals",
+        "read_page",
+        "list_annotations",
+        "describe_snapshot",
+        "read_chain"
+      ],
+      "continues": [
+        "who-can-move-money-or-change-rules",
+        "from-proposal-to-action"
+      ],
+      "status": "partial",
+      "file": "services/authority-map.md",
+      "sha256": "9b29e7800214266a1f325ae16ff24a2f51fd7729115f973e877717f3fcd0c076"
+    },
+    {
+      "id": "compare-daos-or-periods",
+      "kind": "chapter",
+      "department": "services",
+      "for": "comparing two DAO distributions or two recorded periods of one DAO on compatible measures",
+      "recognise": [
+        "compare DAOs",
+        "two DAOs",
+        "DAO over time",
+        "before and after",
+        "comparison"
+      ],
+      "tools": [
+        "brain_context",
+        "search_petals",
+        "read_page",
+        "describe_snapshot",
+        "compute_figures",
+        "find_voting_blocs"
+      ],
+      "continues": [
+        "over-time",
+        "governance-health-report",
+        "value"
+      ],
+      "status": "partial",
+      "file": "services/compare-daos-or-periods.md",
+      "sha256": "492d82f05a6fc4e5359af536c7d4fef7e9624329b46ea92413349555ba35ff6c"
     },
     {
       "id": "connect-claude-code",
@@ -289,6 +346,58 @@
       "sha256": "aa2167f9e98e53237d7d38adc2c6f5c4a1ce08c6ce7bdd4a377ea1615130a551"
     },
     {
+      "id": "delegate-scorecard",
+      "kind": "chapter",
+      "department": "services",
+      "for": "describing a delegate's recorded power, participation and voting pattern",
+      "recognise": [
+        "delegate scorecard",
+        "delegate participation",
+        "delegate record"
+      ],
+      "tools": [
+        "brain_context",
+        "search_petals",
+        "read_page",
+        "describe_snapshot",
+        "compute_figures",
+        "find_voting_blocs"
+      ],
+      "continues": [
+        "who-gets-a-vote",
+        "voting-blocs-over-time"
+      ],
+      "status": "partial",
+      "file": "services/delegate-scorecard.md",
+      "sha256": "e04e2d1d1cf6d5ae3166da75ce1808439a1275a22737dff290ae6fb0e1e7099b"
+    },
+    {
+      "id": "distribution-card",
+      "kind": "chapter",
+      "department": "services",
+      "for": "a shareable picture and evidence of one network's distribution",
+      "recognise": [
+        "distribution card",
+        "shareable card",
+        "distribution",
+        "concentration card"
+      ],
+      "tools": [
+        "brain_context",
+        "search_petals",
+        "read_page",
+        "describe_snapshot",
+        "compute_figures"
+      ],
+      "continues": [
+        "where-power-lives",
+        "governance-health-report"
+      ],
+      "status": "partial",
+      "file": "services/distribution-card.md",
+      "sha256": "d2169dc6d9afd607b4cce56d9adedb99937efe522217467b50ef68777169ce82"
+    },
+    {
       "id": "from-proposal-to-action",
       "kind": "chapter",
       "department": "governance",
@@ -327,6 +436,44 @@
       "sha256": "1cb796632fc91dd1001097585690d9e2f1d6800744975d14ab5eb92adccf4100"
     },
     {
+      "id": "full-dao-report",
+      "kind": "chapter",
+      "department": "services",
+      "for": "combining the service chapters into one sourced DAO report without duplicating evidence",
+      "recognise": [
+        "full DAO report",
+        "complete DAO report",
+        "combined report"
+      ],
+      "tools": [
+        "brain_context",
+        "brain_file",
+        "search_petals",
+        "read_page",
+        "describe_snapshot",
+        "compute_figures",
+        "find_voting_blocs",
+        "list_annotations",
+        "read_chain",
+        "list_calls",
+        "search",
+        "list_payouts"
+      ],
+      "continues": [
+        "governance-health-report",
+        "distribution-card",
+        "proposal-brief",
+        "delegate-scorecard",
+        "treasury-and-unlocks-calendar",
+        "authority-map",
+        "compare-daos-or-periods",
+        "write-a-proposal"
+      ],
+      "status": "partial",
+      "file": "services/full-dao-report.md",
+      "sha256": "08b9c2e52247941a6877074e268ef8a2d2f90b87d1dea26bc370ff0d6f541caf"
+    },
+    {
       "id": "going-deeper",
       "kind": "chapter",
       "department": "investigation",
@@ -354,6 +501,36 @@
       "status": "ready",
       "file": "investigation/going-deeper.md",
       "sha256": "7d9bb229b39d01f4089f42b1b96107e875fd5989c6c60219a876eda62c58148b"
+    },
+    {
+      "id": "governance-health-report",
+      "kind": "chapter",
+      "department": "services",
+      "for": "a sourced account of concentration, participation, delegation and voting agreement in one DAO",
+      "recognise": [
+        "governance health report",
+        "health check",
+        "concentration",
+        "how few decide",
+        "turnout"
+      ],
+      "tools": [
+        "brain_context",
+        "search_petals",
+        "read_page",
+        "describe_snapshot",
+        "compute_figures",
+        "find_voting_blocs"
+      ],
+      "continues": [
+        "where-power-lives",
+        "who-gets-a-vote",
+        "voting-blocs-over-time",
+        "authority-map"
+      ],
+      "status": "partial",
+      "file": "services/governance-health-report.md",
+      "sha256": "2e085107652b8a572f850011e66318ceb46a42cdfff944a052fde2949cb4c0fa"
     },
     {
       "id": "open-calls",
@@ -482,6 +659,31 @@
       "sha256": "45dbd1008ef9fce18b2db31fb6631fd951428e4ac459f39ec71a172b1bacc7ae"
     },
     {
+      "id": "proposal-brief",
+      "kind": "chapter",
+      "department": "services",
+      "for": "explaining one proposal's ballots, voting alignments and requested money movements",
+      "recognise": [
+        "proposal brief",
+        "proposal money",
+        "vote breakdown"
+      ],
+      "tools": [
+        "brain_context",
+        "search_petals",
+        "read_page",
+        "find_voting_blocs"
+      ],
+      "continues": [
+        "from-proposal-to-action",
+        "voting-blocs-over-time",
+        "value"
+      ],
+      "status": "partial",
+      "file": "services/proposal-brief.md",
+      "sha256": "31abc50dfd8a2c37e79ed851ffa1ccfddc87dca99147db6d5d41658528132d2c"
+    },
+    {
       "id": "setup",
       "kind": "chapter",
       "department": "connecting",
@@ -564,6 +766,34 @@
       "status": "ready",
       "file": "gathering/start-from-an-address.md",
       "sha256": "1cb4e842f497f7975e7397c04cd099bb999ff303bd9b2a92358b87578792938c"
+    },
+    {
+      "id": "treasury-and-unlocks-calendar",
+      "kind": "chapter",
+      "department": "services",
+      "for": "showing recorded treasury assets and evidenced upcoming releases",
+      "recognise": [
+        "treasury calendar",
+        "unlock calendar",
+        "treasury and unlocks",
+        "upcoming releases"
+      ],
+      "tools": [
+        "brain_context",
+        "search_petals",
+        "read_page",
+        "list_annotations",
+        "read_chain",
+        "list_payouts"
+      ],
+      "continues": [
+        "value",
+        "vesting",
+        "who-can-move-money-or-change-rules"
+      ],
+      "status": "partial",
+      "file": "services/treasury-and-unlocks-calendar.md",
+      "sha256": "f16abe14eb9d42de251d06da5e36d2fe13c1522808ea83efce4798ed64b8c100"
     },
     {
       "id": "value",
@@ -855,6 +1085,34 @@
       "sha256": "401946c8c16cfbd04c0e89476733ce931634511cc7e825b033ed81b63d2df25c"
     },
     {
+      "id": "write-a-proposal",
+      "kind": "chapter",
+      "department": "services",
+      "for": "matching an evidenced DAO need to what this person can deliver and drafting that proposal",
+      "recognise": [
+        "write a proposal",
+        "work for a DAO",
+        "proposal draft",
+        "match expertise",
+        "hiring needs"
+      ],
+      "tools": [
+        "brain_context",
+        "search_petals",
+        "list_calls",
+        "search",
+        "read_page"
+      ],
+      "continues": [
+        "open-calls",
+        "open-source-leads",
+        "from-proposal-to-action"
+      ],
+      "status": "partial",
+      "file": "services/write-a-proposal.md",
+      "sha256": "0c7b27d27d33b08426d5ae05a1286eda90e4a96b7e219b4a75d91b87e5261d69"
+    },
+    {
       "id": "moloch-v3",
       "kind": "recipe",
       "department": "governance",
@@ -974,7 +1232,8 @@
         "power",
         "holds",
         "controls",
-        "members"
+        "members",
+        "sponsored"
       ],
       "load": [
         "governance",
@@ -1190,6 +1449,126 @@
       ],
       "also": [
         "open-calls"
+      ]
+    },
+    {
+      "task": "A governance health report",
+      "words": [
+        "governance health report",
+        "health check"
+      ],
+      "load": [
+        "governance-health-report"
+      ],
+      "also": [
+        "where-power-lives"
+      ]
+    },
+    {
+      "task": "A distribution card",
+      "words": [
+        "distribution card",
+        "shareable card"
+      ],
+      "load": [
+        "distribution-card"
+      ],
+      "also": [
+        "where-power-lives"
+      ]
+    },
+    {
+      "task": "A proposal brief",
+      "words": [
+        "proposal brief",
+        "vote breakdown"
+      ],
+      "load": [
+        "proposal-brief"
+      ],
+      "also": [
+        "from-proposal-to-action"
+      ]
+    },
+    {
+      "task": "A delegate scorecard",
+      "words": [
+        "delegate scorecard",
+        "delegate record"
+      ],
+      "load": [
+        "delegate-scorecard"
+      ],
+      "also": [
+        "who-gets-a-vote"
+      ]
+    },
+    {
+      "task": "A treasury and unlocks calendar",
+      "words": [
+        "treasury calendar",
+        "unlock calendar",
+        "upcoming releases"
+      ],
+      "load": [
+        "treasury-and-unlocks-calendar"
+      ],
+      "also": [
+        "who-can-move-money-or-change-rules"
+      ]
+    },
+    {
+      "task": "An authority map",
+      "words": [
+        "authority map",
+        "admin powers"
+      ],
+      "load": [
+        "authority-map"
+      ],
+      "also": [
+        "who-can-move-money-or-change-rules"
+      ]
+    },
+    {
+      "task": "Compare two DAOs or two periods",
+      "words": [
+        "compare daos",
+        "two daos",
+        "before and after",
+        "comparison"
+      ],
+      "load": [
+        "compare-daos-or-periods"
+      ],
+      "also": [
+        "over-time"
+      ]
+    },
+    {
+      "task": "Write a proposal",
+      "words": [
+        "write a proposal",
+        "match expertise"
+      ],
+      "load": [
+        "write-a-proposal"
+      ],
+      "also": [
+        "open-calls"
+      ]
+    },
+    {
+      "task": "A full DAO report",
+      "words": [
+        "full dao report",
+        "combined report"
+      ],
+      "load": [
+        "full-dao-report"
+      ],
+      "also": [
+        "governance-health-report"
       ]
     },
     {

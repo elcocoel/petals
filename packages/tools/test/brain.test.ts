@@ -26,20 +26,28 @@ describe('the brain', () => {
     expect(recipes).toEqual(RECIPES.map((r) => r.id).sort());
     expect(index.entries.filter((e) => e.kind === 'chapter').map((e) => e.id)).toEqual([
       'a-new-system',
+      'authority-map',
+      'compare-daos-or-periods',
       'connect-claude-code',
       'connect-cloud',
       'connect-codex',
       'connect-hermes',
       'contributing',
+      'delegate-scorecard',
+      'distribution-card',
       'from-proposal-to-action',
+      'full-dao-report',
       'going-deeper',
+      'governance-health-report',
       'open-calls',
       'open-source-leads',
       'over-time',
       'payouts',
+      'proposal-brief',
       'setup',
       'stake-behind-the-network',
       'start-from-an-address',
+      'treasury-and-unlocks-calendar',
       'value',
       'vesting',
       'voting-blocs-over-time',
@@ -48,6 +56,7 @@ describe('the brain', () => {
       'where-power-lives',
       'who-can-move-money-or-change-rules',
       'who-gets-a-vote',
+      'write-a-proposal',
     ]);
   });
 
@@ -92,8 +101,18 @@ describe('the brain', () => {
     ]);
     expect(by('money')).toEqual(['payouts', 'value', 'vesting']);
     expect(by('investigation')).toEqual(['going-deeper', 'over-time']);
-    // services holds #101's slots only, as planned; nothing is in it yet
-    expect(by('services')).toEqual([]);
+    // services holds #101's nine chapters (Elco, 12 Nov: all free)
+    expect(by('services')).toEqual([
+      'authority-map',
+      'compare-daos-or-periods',
+      'delegate-scorecard',
+      'distribution-card',
+      'full-dao-report',
+      'governance-health-report',
+      'proposal-brief',
+      'treasury-and-unlocks-calendar',
+      'write-a-proposal',
+    ]);
     expect(by('stewardship')).toEqual(['contributing']);
   });
 
@@ -103,7 +122,7 @@ describe('the brain', () => {
     expect(hubs.map((e) => [e.id, e.file])).toEqual(
       BRAIN_DEPARTMENTS.map((d) => [d, `${d}/README.md`]),
     );
-    // services holds #101's slots, planned: nothing is built in it yet
+    // services' chapters are partial: what each can show depends on what Petals reads
     expect(hubs.find((e) => e.id === 'services')?.status).toBe('partial');
     for (const d of BRAIN_DEPARTMENTS) {
       const hub = readFileSync(join(BRAIN, d, 'README.md'), 'utf8');
@@ -116,7 +135,7 @@ describe('the brain', () => {
 
   test('the routing table (routing.md) is in the index, names only files there are, and every chapter is in a row', () => {
     const index = buildBrainIndex(BRAIN);
-    expect(index.tasks.length).toBe(23);
+    expect(index.tasks.length).toBe(32);
     expect(index.tasks[0]).toEqual({
       task: 'Set up Petals',
       words: ['setup', 'set up', 'sign in', 'wallet', 'credit', 'first conversation'],

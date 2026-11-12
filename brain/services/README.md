@@ -1,24 +1,25 @@
 ---
 id: services
 kind: department
-for: one-press deliverables and AI services, each a skill: planned (#101), nothing built yet
+for: one-press deliverables, each a chapter an agent follows, all free (#101)
 recognise: services
 status: partial
 ---
 
 # Services
 
-One-press deliverables and AI services, each a skill: planned (#101), nothing built yet.
+One-press deliverables, each a chapter an agent follows, all free (#101; Elco named all eight and a full DAO report).
 
-Nothing is built here yet (#101: "nothing is built until then"). These are slots, named in PM's seeds and Elco's words; each becomes a skill in this department when Elco names it, with its row in the routing table.
+## When to use which chapter
 
-## Planned slots
-
-- a governance health report
-- a distribution card
-- a proposal brief
-- a delegate scorecard
-- a treasury and unlock calendar
-- an authority map
-- two DAOs compared, or one over time
-- write a proposal
+| Chapter | Use it for |
+|---|---|
+| `governance-health-report` | a sourced account of concentration, participation, delegation and voting agreement in one DAO |
+| `distribution-card` | a shareable picture and evidence of one network's distribution |
+| `proposal-brief` | explaining one proposal's ballots, voting alignments and requested money movements |
+| `delegate-scorecard` | describing a delegate's recorded power, participation and voting pattern |
+| `treasury-and-unlocks-calendar` | showing recorded treasury assets and evidenced upcoming releases |
+| `authority-map` | tracing who can choose, approve, block or execute spending and rule changes |
+| `compare-daos-or-periods` | comparing two DAO distributions or two recorded periods of one DAO on compatible measures |
+| `write-a-proposal` | matching an evidenced DAO need to what this person can deliver and drafting that proposal |
+| `full-dao-report` | combining the service chapters into one sourced DAO report without duplicating evidence |
