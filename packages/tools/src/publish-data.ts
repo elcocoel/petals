@@ -10,7 +10,7 @@
 // stays private and says why. The confidence is how strongly the claim's own evidence says it, read by search's
 // reranker on Elco's Mac (Qwen3-Reranker, search-model.ts): nothing new runs and nothing is spent. With the model
 // off, confidence is null and says so; it never holds a publish back.
-import { canonicalJson, sha256Hex, validateClaim } from '@petal/core';
+import { canonicalJson, mapOf, sha256Hex, validateClaim } from '@petal/core';
 import type { Claim, ClaimEvidence, Nep413Proof } from '@petal/core/types';
 import { nonceStore, privateStore } from './drafts.ts';
 import { ToolFailure } from './errors.ts';
@@ -19,6 +19,7 @@ import { aboutOneOf, cardAccounts, PUBLISHED } from './mapping-claims.ts';
 import { SEARCH_RERANKER, SearchModelDown } from './search-model.ts';
 import { mapIndex, mapUrl } from './tools/maps.ts';
 import { searchModelOf } from './tools/search-petals.ts';
+import { findSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
 
 export { PUBLISHED };
@@ -36,6 +37,8 @@ export interface RowSource {
 
 /** One item, as the person reads it before the press (WORKSPACE's rows, 12 Nov). */
 export interface PublishRow {
+  /** the layer of the map it joins: Insights, for a claim */
+  layer: string;
   id: string;
   /** the account it's about */
   subject: string;
@@ -52,6 +55,21 @@ export interface StaysPrivate extends PublishRow {
   why: string;
 }
 
+/**
+ * What one press adds to the map, by layer and kind (Elco, 12 Nov: "a clear indicator of what data layers and
+ * claims I would be adding"): goes, what the press publishes; else why it can't go yet.
+ */
+export interface Adds {
+  layer: string;
+  kind: string;
+  /** a claim's verb, for claims */
+  verb?: string;
+  label: string;
+  count: number;
+  goes: boolean;
+  why?: string;
+}
+
 /** What one press would publish on a map, and what stays private. */
 export interface Publishable {
   about: string;
@@ -62,6 +80,8 @@ export interface Publishable {
   private: StaysPrivate[];
   /** of what they kept about it, how many are already on the shared map */
   published: number;
+  /** what the press adds, by layer and kind, and what the person kept that can't go yet */
+  adds: Adds[];
   /** the model that read the confidences, or null */
   scored_by: string | null;
   /** why nothing was scored, when nothing was */
@@ -158,7 +178,112 @@ async function confidences(
   }
 }
 
+/** Each verb as the box names it (WORKSPACE's 'Insights · Names · 35'). */
+const VERB_LABEL: Record<string, string> = {
+  named: 'Names',
+  noted: 'Notes',
+  is_a: 'Types',
+  holds: 'Holdings',
+  controls: 'Control',
+  member_of: 'Memberships',
+  delegates_to: 'Delegations',
+  moves_with: 'Voting together',
+};
+
+/** Where a claim goes on a map: Insights, beside Petals' mapping's. */
+const INSIGHTS = 'Insights';
+
+/** Claims counted by verb, as entries of what a press adds. */
+function claimAdds(claims: readonly Claim[], goes: boolean, why?: string): Adds[] {
+  const by = new Map<string, number>();
+  for (const c of claims) by.set(c.verb, (by.get(c.verb) ?? 0) + 1);
+  return [...by].map(([verb, count]) => ({
+    layer: INSIGHTS,
+    kind: 'claims',
+    verb,
+    label: VERB_LABEL[verb] ?? verb.replaceAll('_', ' '),
+    count,
+    goes,
+    ...(why ? { why } : {}),
+  }));
+}
+
+/** What a person kept in a project, by its kind, as the box names it, and why it can't go yet. */
+const KEPT: Record<string, { layer: string; label: string; why: string }> = {
+  reading: {
+    layer: 'Readings',
+    label: 'Readings kept',
+    why: 'a reading you kept publishes later',
+  },
+  value: { layer: 'Value', label: 'Values kept', why: 'a value you kept publishes later' },
+  proposals: {
+    layer: 'Proposals',
+    label: 'Proposals kept',
+    why: 'proposals you kept publish later',
+  },
+  mark: { layer: 'Mark', label: 'Names and logos kept', why: 'a mark you kept publishes later' },
+  layer: { layer: 'Layers', label: 'Layers kept', why: 'a layer you kept publishes later' },
+};
+
+/**
+ * What the person made or kept of this map that the press can't publish yet: the readings they drew in their
+ * projects (on the map already, uncredited), and the data and layers their agents kept about it.
+ */
+async function keptAdds(ctx: ToolContext, owner: string, about: string): Promise<Adds[]> {
+  const store = privateStore(ctx.config);
+  const out: Adds[] = [];
+  const projects = await store.exploration.listByOwner(owner, Number.MAX_SAFE_INTEGER);
+  const drawn = new Set<string>();
+  const kept = new Map<string, number>();
+  for (const project of projects) {
+    for (const step of await store.step.list(project.id)) {
+      const sha = step.snapshot_sha256;
+      if (!sha || drawn.has(sha)) continue;
+      const snapshot = await findSnapshot(ctx, sha).catch(() => null);
+      if (snapshot && mapOf(snapshot) === about) drawn.add(sha);
+    }
+    for (const row of await store.projectData.list(owner, project.id)) {
+      if (row.about !== about) continue;
+      const kind = row.petal.split('/')[0] ?? row.petal;
+      // a claim kept this way is an annotation, counted with the claims
+      if (kind === 'claim') continue;
+      kept.set(kind, (kept.get(kind) ?? 0) + 1);
+    }
+  }
+  if (drawn.size)
+    out.push({
+      layer: 'Readings',
+      kind: 'drawn',
+      label: 'Readings you drew',
+      count: drawn.size,
+      goes: false,
+      why: 'a reading you drew is on the map already, uncredited; publishing it in your name comes later',
+    });
+  for (const [kind, count] of kept) {
+    const k = KEPT[kind] ?? {
+      layer: kind,
+      label: `${kind} kept`,
+      why: `what you kept publishes later`,
+    };
+    out.push({ layer: k.layer, kind, label: k.label, count, goes: false, why: k.why });
+  }
+  const layers = await store.layer.list(owner, about);
+  if (layers.length) {
+    const k = KEPT.layer as { layer: string; label: string; why: string };
+    out.push({
+      layer: k.layer,
+      kind: 'layer',
+      label: k.label,
+      count: layers.length,
+      goes: false,
+      why: k.why,
+    });
+  }
+  return out;
+}
+
 const rowOf = (c: Claim, confidence: number | null): PublishRow => ({
+  layer: INSIGHTS,
   id: c.id,
   subject: c.subject,
   verb: c.verb,
@@ -205,6 +330,15 @@ export async function publishable(
   }
   const scored = await confidences(ctx, [...claims, ...kept.map((k) => k.claim)]);
   const c = found.card;
+  const adds = [
+    ...claimAdds(claims, true),
+    ...claimAdds(
+      kept.map((k) => k.claim),
+      false,
+      'they stay private: each says why',
+    ),
+    ...(await keptAdds(ctx, owner, about)),
+  ];
   return {
     about,
     name: c.name ?? c.mark?.name?.value ?? c.title,
@@ -215,6 +349,7 @@ export async function publishable(
       why: k.why,
     })),
     published,
+    adds,
     scored_by: scored.scored_by,
     ...(scored.unscored ? { unscored: scored.unscored } : {}),
   };

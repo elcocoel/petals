@@ -18,7 +18,7 @@ const FIELDS = ['width', 'height', 'colour', 'outline', 'segments', 'lines', 'ma
 type Field = (typeof FIELDS)[number];
 
 /** Width keeps its band to the ratios the look has words for. */
-const RATIOS = [1.5, 2, 3];
+export const RATIOS = [1.5, 2, 3];
 
 /**
  * The pieces of data a snapshot holds, as seamOf names them from a reading: the four every flower has, each
@@ -52,7 +52,8 @@ export function choicesOf(
   const ratio = d.width?.max_ratio ?? 2;
   const near = RATIOS.reduce((a, b) => (Math.abs(b - ratio) < Math.abs(a - ratio) ? b : a));
   return {
-    width: used.width === 'share' ? `r${near}` : 'equal',
+    // the amount held draws as its share does (in one reading the two are in proportion)
+    width: used.width === 'share' || used.width === 'amount' ? `r${near}` : 'equal',
     height,
     colour: used.colour === 'kind' ? 'kind' : used.colour === 'identity' ? 'identity' : 'single',
     outline: used.outline === 'identity' ? 'identity_status' : 'none',

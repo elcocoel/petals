@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { activityOf } from '../src/activity.ts';
 import { compile, describeErrors } from '../src/define.ts';
 import { privateStore } from '../src/drafts.ts';
+import { mapViews } from '../src/map.ts';
 import { keepMappingClaims } from '../src/mapping-claims.ts';
 import { callTool } from '../src/registry.ts';
 import { getMap, mapIdOf, nextSteps, whereItLands } from '../src/tools/maps.ts';
@@ -324,6 +325,11 @@ describe("each petal's activity reaches every drawing of the map (activity.ts, 1
   test("from the map's proposals as last read; none before any were read", async () => {
     const s = await loadSnapshot(r.ctx, MOLOCH);
     expect(await activityOf(r.ctx, s)).toEqual([]);
+    // each view says the pieces its reading has, so Tools offers only what draws (OVERLAYS, wave 3)
+    const names = async () => (await mapViews(r.ctx))[0]?.pieces.map((p) => p.name) ?? [];
+    expect(await names()).toEqual(expect.arrayContaining(['share', 'amount', 'kind', 'identity']));
+    expect(await names()).not.toContain('votes_cast');
+    expect(await names()).not.toContain('backers');
     const member = s.participants[0]?.id as string;
     const at = '2026-11-11T15:00:00.000Z';
     const body = {
@@ -354,8 +360,44 @@ describe("each petal's activity reaches every drawing of the map (activity.ts, 1
     });
     const pieces = await activityOf(r.ctx, s);
     expect(pieces.map((p) => p.name)).toEqual(['votes_cast', 'voted', 'last_active']);
+    expect(await names()).toEqual(expect.arrayContaining(['votes_cast', 'voted', 'last_active']));
+    // and the pieces themselves, as readFlower took them, for the drawn petals only (LOOK, wave 4: redraw at once)
+    const [v] = await mapViews(r.ctx);
+    if (!v) throw new Error('no view on the map');
+    const drawn = new Set((v.reading.petals as { id: string }[]).map((p) => p.id));
+    const given = v.given.find((p) => p.name === 'votes_cast') as {
+      values: { participant: string; value: string }[];
+    };
+    expect(given.values.length).toBeGreaterThan(0);
+    expect(given.values.every((x) => drawn.has(x.participant))).toBe(true);
     const cast = pieces[0] as { values: { participant: string; value: string }[] };
     expect(cast.values.find((v) => v.participant === member)?.value).toBe('1');
     expect(cast.values.filter((v) => v.value === '0')).toHaveLength(s.participants.length - 1);
+  });
+});
+
+describe('what a press adds, by layer (Elco, 12 Nov: "a clear indicator of what data layers and claims I would be adding")', () => {
+  test("a reading the person drew of the map shows, and can't go yet, with why", async () => {
+    const person = { ...r.ctx, caller: { subject: 'prs_elco', by: 'near:mainnet:elco.near' } };
+    const started = await run('start_exploration', { question: 'who runs the guild?' }, person);
+    const proposed = await run('propose_spec', { network: 'moloch-v1', sha256: MOLOCH });
+    const saved = await run(
+      'save_step',
+      { exploration: started.exploration, spec: proposed.spec, note: 'a first look' },
+      person,
+    );
+    expect(saved.error).toBeUndefined();
+    const o = await run('list_publishable', { map: MAP }, person);
+    expect(o.adds).toEqual([
+      {
+        layer: 'Readings',
+        kind: 'drawn',
+        label: 'Readings you drew',
+        count: 1,
+        goes: false,
+        why: 'a reading you drew is on the map already, uncredited; publishing it in your name comes later',
+      },
+    ]);
+    expect(o.ready).toBe(0);
   });
 });

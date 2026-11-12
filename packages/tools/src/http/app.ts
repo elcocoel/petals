@@ -419,7 +419,9 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
     return respond(c, {
-      views: (await mapViews(await forViewer(c), view)).map(({ reading: _r, ...row }) => row),
+      views: (await mapViews(await forViewer(c), view)).map(
+        ({ reading: _r, given: _g, ...row }) => row,
+      ),
     });
   });
   // One card per map (Elco, 10 Nov: "maps that map the same address need to come together as versions of

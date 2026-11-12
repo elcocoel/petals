@@ -117,7 +117,14 @@ export {
   type Vote,
   validateProposals,
 } from './proposals.ts';
-export { categoryOf, type ReadOptions, readFlower, readingHash } from './reading/index.ts';
+export {
+  categoryOf,
+  type ReadOptions,
+  readFlower,
+  readingHash,
+  redress,
+} from './reading/index.ts';
+export { piecesOf } from './reading/view.ts';
 export { PAINT, pictureQuery, renderFlower, SKINS } from './render/index.ts';
 export { type LegendLook, legendItem } from './render/legend.ts';
 export type { Skin } from './render/types.ts';
@@ -167,11 +174,16 @@ export {
   ACCEPTS,
   ACTIVITY,
   BACKERS,
+  COLOUR_KEYS,
+  type ColourKey,
+  colourKeysOf,
   DEFAULT_HASHES,
   DEFAULT_VIEW,
   DEFAULT_VIEW_V1,
   DEFAULT_VIEW_V2_0,
   DIMENSIONS,
+  DRAWS_ONLY,
+  draws,
   EVERY_FLOWER,
   FORMER_DEFAULTS,
   FROM_ANNOTATIONS,
@@ -179,5 +191,7 @@ export {
   inUse,
   latestView,
   SOME_FLOWERS,
+  VIEW_KEYS_VERSION,
   viewHash,
+  withColourKeys,
 } from './view/index.ts';

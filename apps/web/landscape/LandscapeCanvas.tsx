@@ -10,9 +10,10 @@
 // and inside a flower, under it, what Petals' own mapping says about that map, folded until asked. Where a page
 // asks (the Power Map), a search field tops the chain list, and while something's typed the maps it finds stand
 // in the chains' place; pressing one goes to its chain and into its flower (board 105).
-import type { Proposal } from '@petal/core';
-import { EVERY_FLOWER, inUse } from '@petal/core/view';
-import { flowerKeys, keyLines, mapKeys } from '@petal/core/wedge/keys';
+import { type Proposal, redress, type SeamPiece } from '@petal/core';
+import type { View } from '@petal/core/types';
+import { EVERY_FLOWER, inUse, latestView } from '@petal/core/view';
+import { flowerKeys, grades, KEY_BY_NAME, keyLines, mapKeys } from '@petal/core/wedge/keys';
 import { floatBox } from '@petal/tokens';
 import {
   type ReactNode,
@@ -34,6 +35,7 @@ import { NavItem } from '../components/ui/NavItem.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
+import { WalletFacts } from '../components/WalletFacts.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
 import { SHAPE } from '../flower/ring.ts';
 import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
@@ -45,7 +47,8 @@ import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
 import { CHOOSABLE } from '../lib/person-view.ts';
 import { proposalView, proposalWords } from '../lib/proposal-view.ts';
-import type { LegendEdit } from '../lib/view-edit.ts';
+import { type LegendEdit, onlyWhatDraws } from '../lib/view-edit.ts';
+import { walletView, walletWords } from '../lib/wallet-view.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
 import { useMapBlocs } from '../viewmodels/useMapBlocs.ts';
@@ -93,6 +96,10 @@ export interface CanvasFlower {
   proposals?: number | undefined;
   /** its map's treasury and token price, in words, where its card has them (Elco, 12 Nov walk 3) */
   worth?: readonly string[] | undefined;
+  /** the pieces of data its reading has, by name, when the live map says: what Tools offers inside it (wave 3) */
+  pieces?: readonly string[] | undefined;
+  /** the pieces its reading got, values for its drawn petals: what the browser dresses it again with (wave 4) */
+  given?: SeamPiece[] | undefined;
 }
 
 /** A wallet chosen on the map (LOOK's wallet level): its id as its flower names it, on that flower's chain. */
@@ -105,6 +112,79 @@ export type MapShow =
 
 /** The strip's words while a change in Tools reads the map again. */
 const UPDATING = 'Updating the map';
+
+/**
+ * Each flower dressed in a view, in the browser (core redress): where the server gave its reading's pieces; a
+ * flower without them (an older server) as the server read it.
+ */
+function dressedIn<D extends { flowers: CanvasFlower[] }>(data: D, view: View): D {
+  if (!data.flowers.some((f) => f.given)) return data;
+  return {
+    ...data,
+    flowers: data.flowers.map((f) =>
+      f.given
+        ? { ...f, reading: { ...f.reading, petals: redress(f.reading.petals, view, f.given) } }
+        : f,
+    ),
+  };
+}
+
+/**
+ * A grade's legend (Elco, wave 4: "color graded by a number or a date"): where Colour shows a count, a date, a share
+ * or an amount, its two ends over the drawn petals, in words ('fewest 3' and 'most 534', 'oldest 17 Aug 2023' and
+ * 'newest 12 Nov 2026'), and the five steps' colours, lightest first; null for a category or one colour.
+ */
+function gradeWords(
+  flowers: readonly CanvasFlower[],
+  view: View,
+  chosen: Readonly<Record<string, string>>,
+): { from: string; to: string; fills: string[] } | null {
+  const by = latestView(view).dimensions.colour?.data ?? null;
+  if (!by) return null;
+  const pieceKind = flowers.flatMap((f) => f.given ?? []).find((p) => p.name === by)?.kind;
+  const kind = by === 'share' || by === 'amount' ? by : pieceKind;
+  if (kind !== 'share' && kind !== 'amount' && kind !== 'count' && kind !== 'date') return null;
+  const xs: number[] = [];
+  for (const f of flowers) {
+    const piece = f.given?.find((p) => p.name === by);
+    for (const p of f.reading.petals) {
+      if (p.tail) continue;
+      if (kind === 'share') xs.push(p.share);
+      else if (kind === 'amount') xs.push(Number(p.amount));
+      else {
+        const v =
+          piece && 'values' in piece
+            ? piece.values.find((x) => x.participant === p.id)?.value
+            : undefined;
+        const x = v === undefined ? Number.NaN : kind === 'date' ? Date.parse(v) : Number(v);
+        if (Number.isFinite(x)) xs.push(x);
+      }
+    }
+  }
+  if (xs.length === 0) return null;
+  const lo = Math.min(...xs);
+  const hi = Math.max(...xs);
+  const day = (t: number) =>
+    new Date(t).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
+  const say = (x: number) =>
+    kind === 'date'
+      ? day(x)
+      : kind === 'share'
+        ? `${(x * 100).toFixed(x < 0.001 ? 3 : 1)}%`
+        : Math.round(x).toLocaleString('en-US');
+  const [low, high] = kind === 'date' ? ['oldest', 'newest'] : ['fewest', 'most'];
+  const hue = KEY_BY_NAME.get(chosen.grade ?? '');
+  return {
+    from: `${kind === 'share' || kind === 'amount' ? 'least' : low} ${say(lo)}`,
+    to: `${high} ${say(hi)}`,
+    fills: grades(hue).map((k) => k.hex),
+  };
+}
 
 /** A reading just made, for the map (LandscapeCanvas `landed`; WORKSPACE hands it from the conversation's turn). */
 export interface MapLanded {
@@ -238,6 +318,7 @@ function Land({
   show,
   pending,
   progress,
+  unlabelled,
 }: {
   data: LandscapeData;
   probe: boolean;
@@ -268,6 +349,8 @@ function Land({
   show: LandShow | null | undefined;
   /** a new map's placeholder on this chain's map, or null */
   pending: { x: number; y: number; s: number; name: string } | null;
+  /** Labels None in the person's view: the petals say nothing, but the one pointed at */
+  unlabelled: boolean;
   /** work running on this chain's map: under a flower (its place here), the placeholder or the map's foot, or null */
   progress: { at: number | 'pending' | 'map'; words: string; share: number | null } | null;
 }) {
@@ -288,6 +371,7 @@ function Land({
     worth,
     pending,
     progress,
+    unlabelled,
     ...(onPick ? { onPick } : {}),
   };
   useLandscape(svg, data, probe, aside, at);
@@ -319,6 +403,9 @@ function Land({
   useEffect(() => {
     if (pending !== undefined || progress !== undefined) at.current?.redraw?.();
   }, [pending, progress]);
+  useEffect(() => {
+    if (unlabelled !== undefined) at.current?.redraw?.();
+  }, [unlabelled]);
   return (
     // surface.canvas
     <svg
@@ -347,6 +434,7 @@ export function LandscapeCanvas({
   search = false,
   panelEdge,
   onWallet,
+  onEnter,
   information,
   ownBox = false,
   show,
@@ -396,6 +484,8 @@ export function LandscapeCanvas({
    * interact with it via the agent and find out more about it").
    */
   onWallet?: ((wallet: MapWallet | null) => void) | undefined;
+  /** Told the map of the flower the person goes into, and null when they come out (/make's mapping state). */
+  onEnter?: ((map: string | null) => void) | undefined;
   /**
    * What the page's conversation is about (Elco, 12 Nov on /make: "the power map should always be there ... an answer
    * moves the map"): a DAO by its map, flown to and entered; a wallet, lit everywhere it sits on its chain (the
@@ -424,8 +514,13 @@ export function LandscapeCanvas({
   ownBox?: boolean;
 }) {
   // a reading just made lands on the map: a new layer of a map that's here, or a new map in its placeholder's place
-  const data = useMemo(() => withLanded(given, landed), [given, landed]);
   const person = usePersonView();
+  // and dressed in the person's view in the browser, at once (core redress; Elco, wave 4: after a change in Tools
+  // the map redraws without the second's wait): the server's reading in that view comes after and draws the same
+  const data = useMemo(
+    () => dressedIn(withLanded(given, landed), person.view),
+    [given, landed, person.view],
+  );
   // 'edit' (the Power Map, Elco, 11 Nov: "switch the legends live and watching the map adapt"): Settings' own
   // hands, for anyone: a person's view is kept on the server, a visitor's by its hash in their browser (Elco,
   // 12 Nov, walk 3: "is it expensive do allow me to change here too?")
@@ -593,7 +688,26 @@ export function LandscapeCanvas({
   const [insightsOn, setInsightsOn] = useState(true);
   // the chain's flowers and their drawing models, once per chain; gravity only moves their places
   // the map's keys, ranked once over every flower on it, whatever chain: a value has one colour everywhere
-  const mapKeyed = useMemo(() => mapKeys(data.flowers.map((f) => f.reading.petals)), [data]);
+  // the view's chosen colours (colour.keys: { value: key }; Elco, wave 4: "choosing which colour a value gets")
+  const chosen = useMemo(
+    () =>
+      (latestView(person.view).dimensions.colour as { keys?: Record<string, string> } | null)
+        ?.keys ?? {},
+    [person.view],
+  );
+  const mapKeyed = useMemo(
+    () =>
+      mapKeys(
+        data.flowers.map((f) => f.reading.petals),
+        chosen,
+      ),
+    [data, chosen],
+  );
+  // a number or a date on Colour: its grade's two ends in words, and the five steps' colours (OVERLAYS draws it)
+  const gradeKeys = useMemo(
+    () => gradeWords(data.flowers, person.view, chosen),
+    [data, person.view, chosen],
+  );
   const built = useMemo<(LandscapeData & { focus: number; from: number[] }) | null>(() => {
     const here = data.chains.find((c) => c.chain === chain);
     if (!here) return null;
@@ -691,6 +805,13 @@ export function LandscapeCanvas({
   }, [built, gravity, centre]);
   // What Petals' own mapping says about the map you're in, under each petal's name (lib/map-claims.ts)
   const inFlower = land && entered >= 0 ? data.flowers[land.from[entered] ?? -1] : undefined;
+  // the map the person is inside, for a page that asks (/make's mapping state)
+  const toldEnter = useRef(onEnter);
+  toldEnter.current = onEnter;
+  const enteredMap = inFlower?.map ?? null;
+  useEffect(() => {
+    toldEnter.current?.(enteredMap);
+  }, [enteredMap]);
   // the wallet chosen, with the flower it was chosen in, for the page
   const toldWallet = useRef(onWallet);
   toldWallet.current = onWallet;
@@ -707,6 +828,10 @@ export function LandscapeCanvas({
   // the map's layers, each with its period and who mapped it (Elco's walk 3), from its card and its insights
   const card = useMapCard(legend && movable ? (inFlower?.map ?? null) : null);
   const layers = useMemo(() => (card ? mapLayers(card, claims) : []), [card, claims]);
+  // the wallet chosen on the map, its own facts first in Information (WORKSPACE, wave 4: the same on /make)
+  const chosenWallet = wallet
+    ? (inFlower?.reading.petals.find((p) => p.id === wallet) ?? null)
+    : null;
   const blocs = useMapBlocs(legend ? (inFlower?.map ?? null) : null, span);
   const choices = useMemo(() => (blocs ? blocChoices(blocs) : []), [blocs]);
   const lit = useMemo(() => choices.find((c) => c.id === bloc)?.members ?? null, [choices, bloc]);
@@ -833,6 +958,21 @@ export function LandscapeCanvas({
   useEffect(() => {
     if (movable) panels.info.fold(claimsOpen ? null : barOf(infoEl.current));
   }, [movable, panels.info, claimsOpen]);
+  // Tools offers only what draws (META, wave 3: 'Who backs it' on a DAO with no delegations drew nothing): the data
+  // some DAOs have (who backs a wallet, its activity) only where the DAO you're in has it, or on the whole map where
+  // some DAO on this chain does; what every flower has, and a person's own names, always. Unknown (an older server):
+  // all of it, as before.
+  const offered = useMemo(() => {
+    if (!hands) return undefined;
+    const here = inFlower ? [inFlower] : data.flowers.filter((f) => f.place.chain === chain);
+    return {
+      ...hands,
+      choices: onlyWhatDraws(
+        hands.choices,
+        here.map((f) => f.pieces),
+      ),
+    };
+  }, [hands, inFlower, data.flowers, chain]);
   const legendBody = (bare: boolean) => (
     <ViewLegend
       view={person.view}
@@ -846,6 +986,7 @@ export function LandscapeCanvas({
       // on the map, what each colour stands for everywhere (Elco, 12 Nov: "the legend tells me what each color is")
       keys={inFlower ? flowerKeys(inFlower.reading.petals, mapKeyed) : keyLines(mapKeyed)}
       keysNote={inFlower || mapKeyed.length > 0 ? undefined : panelWords.legendColours}
+      gradeKeys={gradeKeys ?? undefined}
       // what a line between two flowers is, for anyone who doesn't know (Elco, 12 Nov, walk 2); in Information
       // on the map's boxes, as what's seen, not a tool
       between={
@@ -854,9 +995,21 @@ export function LandscapeCanvas({
       // how much the map's flowers draw together (Elco, 12 Nov, walk 2: "gravity"), for the visit
       gravity={{ value: gravity, onChange: setGravity }}
       worth={{ on: worth, onChange: setWorth }}
+      // the map's own controls back as they came, from the same 'Put the default back' as the view's
+      resetMap={
+        gravity !== GRAVITY_DEFAULT || span !== 'all' || !worth || !insightsOn || bloc !== null
+          ? () => {
+              setGravity(GRAVITY_DEFAULT);
+              setSpan('all');
+              setWorth(true);
+              setInsightsOn(true);
+              setBloc(null);
+            }
+          : undefined
+      }
       // Insights in Information, on or off by hand (Elco, walk 3), on the map's boxes
       insights={bare ? { on: insightsOn, onChange: setInsightsOn } : undefined}
-      edit={hands ?? undefined}
+      edit={offered}
       // on the map's boxes the rows stay outside a flower too, with nothing to choose yet (one menu, walk 3)
       groups={
         inFlower || bare
@@ -916,6 +1069,7 @@ export function LandscapeCanvas({
           show={shownOn?.chain === chain ? shownOn.show : undefined}
           pending={pendingHere}
           progress={progressHere}
+          unlabelled={latestView(person.view).dimensions.labels === null}
         />
       )}
       {movable ? (
@@ -972,6 +1126,14 @@ export function LandscapeCanvas({
             >
               {/* each part under its head, the heads edge to edge (SectionHead's panel size) */}
               <div className="flex flex-col pb-space-8">
+                {chosenWallet && (
+                  <div className="flex flex-col px-space-8">
+                    <SectionHead size="panel" title={walletWords.title} />
+                    <div className="px-space-8 py-space-8">
+                      <WalletFacts view={walletView(chosenWallet, card?.value)} />
+                    </div>
+                  </div>
+                )}
                 {pinned && (
                   <div className="flex flex-col px-space-8">
                     <SectionHead size="panel" title={proposalWords.title} />

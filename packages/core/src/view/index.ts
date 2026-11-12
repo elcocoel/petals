@@ -3,7 +3,7 @@
 // dimension, and the look never sees a data name: this joins them. Pure.
 import { canonicalJson, sha256Hex } from '../hash.ts';
 import type { DataKind } from '../seam.ts';
-import type { View, ViewV1, ViewV2 } from '../types/index.ts';
+import type { View, ViewV1, ViewV2, ViewV3 } from '../types/index.ts';
 import { VIEW_VERSION } from '../versions.ts';
 
 /**
@@ -40,12 +40,13 @@ export const ACCEPTS: Record<Dimension, readonly DataKind[]> = {
   // a date orders newest first ('Last active'), a count most first ('Votes cast'); Elco, 12 Nov: "the dimension of
   // time specifically is particularly absent ... it always looks like a shell, like a nautilus"
   order: ['amount', 'count', 'share', 'category', 'date'],
-  // a category's values, each in its key; an amount, count or share as a scale waits for the look to draw one, so
-  // Tools never offers what Colour can't draw (OVERLAYS, 12 Nov)
-  colour: ['category'],
+  // a category's values, each in its key; an amount, a count, a share or a date as a grade of one hue, lightest to
+  // darkest (Elco, 12 Nov, wave 4: "color graded by a number or a date")
+  colour: ['category', 'amount', 'count', 'share', 'date'],
   outline: ['flag', 'category'],
-  texture: ['flag', 'category'],
-  markings: ['count', 'flag'],
+  // texture and markings take no data until the look draws them: a choice draws, or isn't offered (Elco, 12 Nov)
+  texture: [],
+  markings: [],
   segments: ['parts'],
   lines: ['relation'],
   labels: ['category'],
@@ -109,12 +110,16 @@ export const DEFAULT_VIEW_V1: ViewV1 = {
   },
 };
 
+/** view/v3 (12 Nov, wave 4): view/v2 with colour's keys, the key each value takes as the person chose it. */
+export const VIEW_KEYS_VERSION = 'view/v3';
+
 /**
  * Any view as the latest version: a view/v1 is the same view with labels on identity, the names every
- * petal had before labels, so it draws exactly as it did. A v2 view is itself.
+ * petal had before labels, so it draws exactly as it did. A v2 view is itself, and so is a v3, which only adds
+ * colour's chosen keys.
  */
-export function latestView(view: View): ViewV2 {
-  if (view.petal === VIEW_VERSION) return view;
+export function latestView(view: View): ViewV2 | ViewV3 {
+  if (view.petal === VIEW_VERSION || view.petal === VIEW_KEYS_VERSION) return view;
   return {
     petal: VIEW_VERSION,
     dimensions: { ...view.dimensions, labels: { data: 'identity' } },
@@ -125,7 +130,7 @@ export function latestView(view: View): ViewV2 {
  * The default from view/v2 until 11 Nov: default/v1's choices, with labels on identity. Addresses made then
  * carry its hash, and it draws as it did.
  */
-export const DEFAULT_VIEW_V2_0: ViewV2 = latestView(DEFAULT_VIEW_V1);
+export const DEFAULT_VIEW_V2_0 = latestView(DEFAULT_VIEW_V1) as ViewV2;
 
 /**
  * The default since 11 Nov, the art direction's (design/flower-art-direction/default-system-vnext.md, V1; #76,
@@ -161,6 +166,16 @@ export const DEFAULT_HASHES: readonly string[] = [
  * leaves it out, the flower lacks that piece, or has it as a kind the dimension doesn't accept. There's no
  * fallback: a missing fact shows nothing.
  */
+/**
+ * The pieces a dimension draws, where it draws only some of what fits (Elco, 12 Nov: a choice draws, or isn't
+ * offered): an outline says how a petal's identity is known (asserted or inferred), and nothing else yet.
+ */
+export const DRAWS_ONLY: Partial<Record<Dimension, readonly string[]>> = { outline: ['identity'] };
+
+/** Does this dimension draw this piece of data: it fits, and the dimension draws it (DRAWS_ONLY)? */
+export const draws = (dimension: Dimension, piece: Piece): boolean =>
+  fits(dimension, piece.kind) && (DRAWS_ONLY[dimension]?.includes(piece.name) ?? true);
+
 export function inUse(view: View, data: readonly Piece[]): Record<Dimension, string | null> {
   const kinds = new Map(data.map((p) => [p.name, p.kind]));
   const dims = latestView(view).dimensions;
@@ -168,7 +183,39 @@ export function inUse(view: View, data: readonly Piece[]): Record<Dimension, str
   for (const d of DIMENSIONS) {
     const name = dims[d]?.data ?? null;
     const kind = name === null ? undefined : kinds.get(name);
-    out[d] = name !== null && kind !== undefined && fits(d, kind) ? name : null;
+    out[d] = name !== null && kind !== undefined && draws(d, { name, kind }) ? name : null;
   }
   return out;
+}
+
+/** The look's keys a person can give a value (view/v3's colour.keys). */
+export const COLOUR_KEYS = ['mint', 'blue', 'coral', 'apricot', 'pink', 'grey'] as const;
+export type ColourKey = (typeof COLOUR_KEYS)[number];
+
+/** The keys a person chose for colour's values; none for a v1 or v2 view. */
+export function colourKeysOf(view: View): Readonly<Record<string, ColourKey>> {
+  if (view.petal !== VIEW_KEYS_VERSION) return {};
+  return (view.dimensions.colour?.keys ?? {}) as Record<string, ColourKey>;
+}
+
+/**
+ * The view with colour's keys as given (Elco, 12 Nov, wave 4: "choosing which colour a value gets"): a view/v3
+ * when any key is chosen, a view/v2 when none is, so a view with nothing chosen keeps the hash it had.
+ */
+export function withColourKeys(
+  view: View,
+  keys: Readonly<Record<string, ColourKey>>,
+): ViewV2 | ViewV3 {
+  const latest = latestView(view);
+  const { keys: _was, ...colour } = (latest.dimensions.colour ?? {}) as NonNullable<
+    ViewV3['dimensions']['colour']
+  >;
+  const chosen = Object.keys(keys).length > 0;
+  if (!latest.dimensions.colour) return latest;
+  if (!chosen)
+    return { petal: VIEW_VERSION, dimensions: { ...latest.dimensions, colour } } as ViewV2;
+  return {
+    petal: VIEW_KEYS_VERSION,
+    dimensions: { ...latest.dimensions, colour: { ...colour, keys: { ...keys } } },
+  } as ViewV3;
 }

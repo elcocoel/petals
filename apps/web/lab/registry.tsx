@@ -100,10 +100,12 @@ import { Tip } from '../components/ui/Tip.tsx';
 import { Transcript } from '../components/ui/Transcript.tsx';
 import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
+import { WalletFacts } from '../components/WalletFacts.tsx';
 import { Claims } from '../components/workspace/Claims.tsx';
 import { Conversations } from '../components/workspace/Conversations.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
+import { MappingBox } from '../components/workspace/MappingBox.tsx';
 import { NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
 import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
@@ -123,6 +125,7 @@ import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
 import type { ProfileEditorView } from '../lib/lobby-view.ts';
 import { mapClaimGroups } from '../lib/map-claims.ts';
+import { mappingView } from '../lib/mapping.ts';
 import { drawingTile, type MapCard, mapTile } from '../lib/maps.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
 import { oopsWords } from '../lib/oops-words.ts';
@@ -2894,6 +2897,55 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'MappingBox',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/MappingBox.tsx',
+    states: [
+      {
+        name: 'names that go, readings not yet',
+        render: () => (
+          <MappingBox
+            view={mappingView('eip155:100:0xf02f', 'RaidGuild', {
+              about: 'eip155:100:0xf02f',
+              name: 'RaidGuild',
+              ready: 35,
+              private: [],
+              published: 0,
+              adds: [
+                {
+                  layer: 'Insights',
+                  kind: 'claims',
+                  verb: 'named',
+                  label: 'Names',
+                  count: 35,
+                  goes: true,
+                },
+                {
+                  layer: 'Readings',
+                  kind: 'readings',
+                  label: 'Readings',
+                  count: 2,
+                  goes: false,
+                  why: 'Publishing a reading in your name comes later.',
+                },
+              ],
+            })}
+            press={null}
+            onPublish={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'no map in front',
+        render: () => (
+          <MappingBox view={mappingView(null, null, null)} press={null} onPublish={() => {}} />
+        ),
+      },
+    ],
+  },
+  {
     id: 'PublishPress',
     group: 'The conversation',
     figmaName: null,
@@ -3334,6 +3386,35 @@ export const registry: LabEntry[] = [
                   },
                   { key: 'claims', label: 'What Petals’ mapping says', onPress: () => undefined },
                 ],
+              }}
+            />
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'WalletFacts',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/WalletFacts.tsx',
+    states: [
+      {
+        name: 'a chosen wallet in Information: who it is, its kind, what it holds, its share, its dollars',
+        render: () => (
+          <div className="w-tile-width">
+            <WalletFacts
+              view={{
+                title: 'cronus.near',
+                address: null,
+                facts: [
+                  ['Who it is', 'Not named yet'],
+                  ['Kind', 'unknown'],
+                  ['Holds', '534 NEAR'],
+                  ['Share', '8.19%'],
+                ],
+                worth: { text: '$1,997.16 at $3.74 per NEAR', source: '1Click, 11 Nov 2026' },
               }}
             />
           </div>

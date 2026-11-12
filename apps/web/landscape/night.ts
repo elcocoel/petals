@@ -2,6 +2,8 @@
 // pairs, joined. A view's spec names its snapshot, and a group's latest observation names the same
 // snapshot, so a flower finds its group, and two flowers share a road when their groups share accounts.
 // Pure: the scripts and the bench's loader both use it.
+
+import type { SeamPiece } from '@petal/core';
 import { sha256Hex } from '@petal/core';
 import type { Reading } from '@petal/core/types';
 import type { Link, Seed } from './places.ts';
@@ -25,7 +27,14 @@ export interface NightView {
   snapshot: string;
   /** the map it's on, its reading's address, when the live map says (GET /api/v1/map) */
   map?: string;
+  /** the pieces of data its reading has, by name, when the live map says (core's piecesOf; SYSTEMS, wave 3) */
+  pieces?: readonly string[];
   reading: Pick<Reading, 'title' | 'petals'>;
+  /**
+   * The pieces of data its reading got (SYSTEMS's 'given': names, dollars, activity), values for its drawn petals:
+   * what the browser dresses it again with when Tools changes the view (core redress; Elco, wave 4)
+   */
+  given?: SeamPiece[];
 }
 
 export interface NightGroup {

@@ -95,10 +95,23 @@ describe('what can go where', () => {
         'name',
         'name_kind',
       ],
-      colour: ['kind', 'identity', 'voted', 'name', 'name_kind'],
-      outline: ['kind', 'identity', 'voted', 'name', 'name_kind'],
-      texture: ['kind', 'identity', 'voted', 'name', 'name_kind'],
-      markings: ['votes_cast'],
+      // a category's values, or a number's or a date's grade (wave 4)
+      colour: [
+        'share',
+        'amount',
+        'kind',
+        'identity',
+        'votes_cast',
+        'last_active',
+        'voted',
+        'name',
+        'name_kind',
+      ],
+      // only what each dimension draws (12 Nov: a choice draws, or isn't offered): an outline says how an identity is
+      // known; texture and markings draw nothing yet
+      outline: ['identity'],
+      texture: [],
+      markings: [],
       // who backs each wallet, where a flower's reading has delegations (Elco's walk 3: no choices on segments)
       segments: ['backers'],
       lines: [],

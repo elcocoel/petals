@@ -70,7 +70,13 @@ describe("the composer's state", () => {
     expect(creating(turn(), true)).toBe(false);
     const base = { question: '', runId: 'r', busy: true, recorded: false };
     expect(composerView({ ...base, creating: true }).state).toBe(ceremonyWords.creating);
-    expect(composerView({ ...base, creating: false }).state).toBe(ceremonyWords.exploring);
+    expect(composerView({ ...base, creating: false }).state).toBeUndefined();
+    // the two states, switchable, the one the person is in pressed (wave 3)
+    expect(composerView({ ...base, mode: 'mapping' }).modes).toMatchObject({
+      now: 'mapping',
+      exploring: 'Exploring',
+      mapping: 'Mapping',
+    });
   });
 });
 

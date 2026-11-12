@@ -3,6 +3,7 @@
 import type { ReactNode, Ref } from 'react';
 import type { ComposerView } from '../../lib/thread-view.ts';
 import { AskBox } from '../ui/AskBox.tsx';
+import { Button } from '../ui/Button.tsx';
 
 export function Composer({
   view,
@@ -12,6 +13,7 @@ export function Composer({
   device = false,
   onChange,
   onSend,
+  onMode,
 }: {
   view: ComposerView;
   boxRef?: Ref<HTMLTextAreaElement>;
@@ -23,11 +25,28 @@ export function Composer({
   device?: boolean;
   onChange: (text: string) => void;
   onSend: () => void;
+  /** the person moves between exploring and mapping */
+  onMode?: (mode: 'exploring' | 'mapping') => void;
 }) {
   return (
     <div
       className={`flex flex-col gap-space-8 ${device ? 'min-h-0 flex-1' : 'shrink-0'} ${className}`}
     >
+      {view.modes && onMode && (
+        <div className="flex items-center gap-space-8">
+          {(['exploring', 'mapping'] as const).map((m) => (
+            // the state the person is in is filled, as Send is; the other one a press away
+            <Button
+              key={m}
+              variant={view.modes?.now === m ? 'compact' : 'pill'}
+              pressed={view.modes?.now === m}
+              onClick={() => onMode(m)}
+            >
+              {view.modes?.[m]}
+            </Button>
+          ))}
+        </div>
+      )}
       {view.state && (
         <p data-quiet className="type-mono text-muted">
           {view.state}

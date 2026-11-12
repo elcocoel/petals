@@ -69,7 +69,7 @@ test('on the map: the boxes over it, the names inside the window, the speaker un
   const land = text('landscape/useLandscape.ts');
   expect(land).toMatch(/document\.querySelectorAll<HTMLElement>\('section\[data-float\]'\)/);
   expect(land).toMatch(
-    /if \(driveFlower\(d, dt, view, i !== speaking, scene\.taken\(\)\)\) moving = true;/,
+    /if \(driveFlower\(d, dt, view, quietHere, scene\.taken\(\)\)\) moving = true;/,
   );
   expect(land).toMatch(/if \(onTop\) node\.insertBefore\(d\.scene\.root, scene\.top\);/);
   expect(land).toMatch(
