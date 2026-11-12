@@ -417,3 +417,36 @@ test('the file holds public derived tables, and nothing about people', () => {
     'snapshot',
   ]);
 });
+
+describe('an account a reading already wrote with its chain', () => {
+  test('is named with its chain once (LOOK, 12 Nov: eip155:1:eip155:1:0x… on GET /api/v1/relations/shared)', async () => {
+    const caip = (a: string) => `eip155:1:${a}`;
+    const P = snap({
+      id: 'erc20',
+      params: { token: '0xp' },
+      title: 'P holders',
+      as_of: '2026-01-01T00:00:00Z',
+      holders: [
+        [caip(x as string), '60'],
+        [caip(y as string), '40'],
+      ],
+    });
+    const Q = snap({
+      id: 'erc20',
+      params: { token: '0xq' },
+      title: 'Q holders',
+      as_of: '2026-01-01T00:00:00Z',
+      holders: [
+        [caip(y as string), '50'],
+        [caip(z as string), '50'],
+      ],
+    });
+    const own = new RelationsIndex(tmpIndexPath());
+    const r = await own.answer(source(P, Q), (queries) =>
+      queries.sharedAccounts(groupId('0xp'), groupId('0xq')),
+    );
+    expect(r.accounts.map((a) => [a.account_a, a.account_b])).toEqual([
+      [caip(y as string), caip(y as string)],
+    ]);
+  });
+});
