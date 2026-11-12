@@ -363,8 +363,9 @@ describe("each petal's activity reaches every drawing of the map (activity.ts, 1
     expect(await names()).toEqual(expect.arrayContaining(['votes_cast', 'voted', 'last_active']));
     // and the pieces themselves, as readFlower took them, for the drawn petals only (LOOK, wave 4: redraw at once)
     const [v] = await mapViews(r.ctx);
-    const drawn = new Set((v?.reading.petals as { id: string }[]).map((p) => p.id));
-    const given = v?.given.find((p) => p.name === 'votes_cast') as {
+    if (!v) throw new Error('no view on the map');
+    const drawn = new Set((v.reading.petals as { id: string }[]).map((p) => p.id));
+    const given = v.given.find((p) => p.name === 'votes_cast') as {
       values: { participant: string; value: string }[];
     };
     expect(given.values.length).toBeGreaterThan(0);
