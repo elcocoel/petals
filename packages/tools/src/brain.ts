@@ -448,19 +448,21 @@ export function routeBrain(
       return { e, t, score, hit };
     });
     for (const s of scored.filter((x) => x.score > 0).sort((x, y) => y.score - x.score)) {
-      if (s.e) {
-        if (!out.some((r) => r.id === s.e.id))
-          out.push(routeOf(s.e, `words: ${s.hit.join(', ')}`, s.score));
+      const { e: entry, t: task } = s;
+      if (entry) {
+        if (!out.some((r) => r.id === entry.id))
+          out.push(routeOf(entry, `words: ${s.hit.join(', ')}`, s.score));
         continue;
       }
+      if (!task) continue;
       // a row that fires brings what it loads, its chapters before its departments' hubs, then what it also loads
       const loads = [
-        ...s.t.load.filter((id) => byId.get(id)?.kind !== 'department'),
-        ...s.t.load.filter((id) => byId.get(id)?.kind === 'department'),
+        ...task.load.filter((id) => byId.get(id)?.kind !== 'department'),
+        ...task.load.filter((id) => byId.get(id)?.kind === 'department'),
       ];
       const brings = [
         ...loads.map((id) => [id, 'loads'] as const),
-        ...s.t.also.map((id) => [id, 'also loads'] as const),
+        ...task.also.map((id) => [id, 'also loads'] as const),
       ];
       brings.forEach(([id, how], i) => {
         const e = byId.get(id);
@@ -468,7 +470,7 @@ export function routeBrain(
           out.push(
             routeOf(
               e,
-              `the task "${s.t.task}" ${how} it (words: ${s.hit.join(', ')})`,
+              `the task "${task.task}" ${how} it (words: ${s.hit.join(', ')})`,
               s.score - i / 1e6,
             ),
           );
