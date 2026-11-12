@@ -28,11 +28,11 @@ const PETAL = 'var(--figure-petal)';
  * A connection at full strength is this see-through, so it never reads heavier than a flower (Elco, 11 Nov walk:
  * the lines were "way too powerful"; quieter).
  */
-const ROAD_TONE = 0.25;
+const ROAD_TONE = 0.15;
 /** The focused lines (#87): one flower's at a time, so a little firmer, still quiet. */
-const LINE_TONE = 0.3;
+const LINE_TONE = 0.18;
 /** The arrows out of the organisation you're in: the same lines, as quiet. */
-const ARROW_TONE = 0.45;
+const ARROW_TONE = 0.3;
 /** The arrows' names keep this far from the window's edge. */
 const EDGE = 28;
 
@@ -448,7 +448,7 @@ export function createLandScene(
 
       // Connections: each flower's strongest few from the farthest, the rest as they grow; fainter the more
       // there are. The number at the middle once there's room, or at any size once a click marks it.
-      const showing: { i: number; o: number; pair: number }[] = [];
+      const showing: { i: number; o: number }[] = [];
       roads.forEach((r, i) => {
         const s = roadSlots[i] as (typeof roadSlots)[number];
         const a = flowers[r.a]?.place as Place;
@@ -468,21 +468,23 @@ export function createLandScene(
                 ? 1
                 : fade(DETAIL.road, pair) * (r.strong ? 1 : fade(DETAIL.roadMore, pair));
         }
-        if (o > 0.01) showing.push({ i, o, pair });
+        if (o > 0.01) showing.push({ i, o });
         else {
           s.line.show(false);
           s.number.show(false);
         }
       });
       const crowd = lines === 'focus' ? 1 : crowdFade(showing.length);
-      for (const { i, o, pair } of showing) {
+      for (const { i, o } of showing) {
         const s = roadSlots[i] as (typeof roadSlots)[number];
         s.line.show(true);
         s.line.set(
           'opacity',
           o2(i === marked ? 0.9 : o * crowd * (lines === 'focus' ? LINE_TONE : ROAD_TONE)),
         );
-        const shown = i === marked ? 1 : fade(DETAIL.roadCount, pair) * Math.min(1, o * 2);
+        // a connection's number only where it's asked for, on the one a click marks (Elco, 12 Nov walk: the numbers
+        // were "a little bit mysterious"; "only put them in certain situations")
+        const shown = i === marked ? 1 : 0;
         const [x1, y1, x2, y2] = s.ends;
         const mx = view.x + (view.k * (x1 + x2)) / 2;
         const my = view.y + (view.k * (y1 + y2)) / 2;
