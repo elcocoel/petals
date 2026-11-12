@@ -29,7 +29,6 @@ export const COUNT_MS = 60000 / BPM;
 const count = (c: number) => (c - 1) * COUNT_MS;
 const EIGHTH = COUNT_MS / 2;
 const SIXTEENTH = COUNT_MS / 4;
-const THIRTYSECOND = COUNT_MS / 8;
 /** How long an elastic landing takes, from the hit to still on its mark. */
 const SPRING_MS = 3 * EIGHTH;
 /** How long a wind-up before a hit takes. */
@@ -433,28 +432,26 @@ const KIND: readonly Fill[] = [
 /**
  * What each petal is painted with once a beat has settled, as the real tools would set it: by kind of account on
  * the community, history and connections beats; the strongest three highlighted and everyone else receding to grey
- * for influence; two voting blocs, one mint and one blue, the rest grey; on the vote, for in mint, against in coral,
- * and grey for those who never voted.
+ * for influence; a voting bloc in its own colours and everyone else grey, as the real Highlight shows one (the
+ * first bloc on the three, the second taking over on the four); on the vote, Colour set to Voted or never:
+ * the voters mint and those who never voted grey, each voter's side in the dot at its tip.
  */
 export function petalFill(beat: number, i: number): Fill {
   const kind = KIND[i] ?? 'mint';
   if (beat === 1) return i < LIT ? kind : 'grey';
-  if (beat === 2) return BLOC_A.includes(i) ? 'mint' : BLOC_B.includes(i) ? 'blue' : 'grey';
-  if (beat === 4) {
-    const v = voteOf(i);
-    return v === 'for' ? 'mint' : v === 'against' ? 'coral' : 'grey';
-  }
+  if (beat === 2) return BLOC_B.includes(i) ? kind : 'grey';
+  if (beat === 4) return voteOf(i) ? 'mint' : 'grey';
   return kind;
 }
 
 /**
  * When a petal's colour hits in a beat: everyone else recedes on the three; one bloc on the three, the other on
- * the four; on the vote, those who never voted go grey on the three and the voters take their side as the votes
- * roll in; the whole picture comes back on the one.
+ * the four; on the vote, those who never voted go grey on the three and the voters turn mint as the votes roll
+ * in; the whole picture comes back on the one.
  */
 function paintStart(beat: number, i: number): number {
   if (beat === 1) return reactAt(1);
-  if (beat === 2) return BLOC_B.includes(i) ? count(4) : REACT;
+  if (beat === 2) return REACT;
   if (beat === 4) return voteOf(i) ? count(4.5) + (i * COUNT_MS) / 12 : REACT;
   return CALL;
 }
@@ -464,8 +461,20 @@ function litStart(beat: number, i: number): number {
   return beat === 5 ? count(2) + i * SIXTEENTH : count(3.5) + i * EIGHTH;
 }
 
+/** On the blocs beat, the first bloc highlighted, before the second takes over on the four. */
+const firstBloc = (i: number): Fill => (BLOC_A.includes(i) ? (KIND[i] ?? 'mint') : 'grey');
+const SECOND_BLOC = count(4);
+
 /** A petal's paint at a moment: from the last beat's colour to this one's, `k` of the way. */
 export function petalPaint(beat: number, t: number, i: number) {
+  if (beat === 2) {
+    // call and response: the first bloc lights on the three, the second takes over on the four
+    const second = t >= SECOND_BLOC;
+    const from: Fill = second ? firstBloc(i) : petalFill(1, i);
+    const to = second ? petalFill(2, i) : firstBloc(i);
+    const start = second ? SECOND_BLOC : REACT;
+    return { from, to, k: from === to ? 1 : ease.outCubic(at(t, start, SIXTEENTH)) };
+  }
   const from: Fill = petalFill(prior(beat), i);
   const to = petalFill(beat, i);
   return { from, to, k: from === to ? 1 : ease.outCubic(at(t, paintStart(beat, i), SIXTEENTH)) };
@@ -488,20 +497,6 @@ export const sharePercent = (() => {
   const all = held.reduce((sum, h) => sum + h, 0);
   return held.map((h) => (100 * h) / all);
 })();
-
-/** The petals the voting blocs' few inner lines join. */
-export const relations: readonly (readonly [number, number])[] = [
-  [0, 8],
-  [1, 9],
-  [8, 16],
-  [9, 17],
-  [4, 12],
-  [5, 13],
-];
-
-/** How far each of the blocs' lines has drawn itself, 0 to 1: after the second group, fast, one on each thirty-second. */
-export const relationDrawn = (beat: number, t: number, n: number) =>
-  beat === 2 ? ease.outExpo(at(t, count(4.5) + n * THIRTYSECOND, EIGHTH)) : 1;
 
 /** How far the history beat's earlier outline has drawn round, 0 to 1: snapped round on the three. */
 export const ghostDrawn = (beat: number, t: number, i: number) =>
@@ -539,6 +534,71 @@ export function network(beat: number, t: number) {
     };
   if (beat === 0) return { link: () => 1, bloom: () => 0, flow: -(beatMs(5) + t) * 0.009 };
   return { link: () => 1, bloom: () => 0, flow: 0 };
+}
+
+// ----- the tools -----
+
+/**
+ * The rows of the real Tools box the hero shows (ViewLegend's dimensions; Elco, 12 Nov: "there is tooling and
+ * things that change and colors change"), and what each is set to once a beat has settled: the tools are what the
+ * flower does. Height goes from None to Share of the whole as the heights part; Labels show the strongest's shares;
+ * Highlight takes the voting blocs; Colour goes from Kind of account to Voted or never for the vote.
+ */
+export type ToolRow = 'height' | 'colour' | 'labels' | 'highlight';
+export type ToolValue = 'none' | 'share' | 'kind' | 'voted' | 'blocs';
+export const TOOL_ROWS: readonly ToolRow[] = ['height', 'colour', 'labels', 'highlight'];
+const SETTINGS: readonly Record<ToolRow, ToolValue>[] = [
+  { height: 'none', colour: 'kind', labels: 'none', highlight: 'none' },
+  { height: 'share', colour: 'kind', labels: 'share', highlight: 'none' },
+  { height: 'share', colour: 'kind', labels: 'none', highlight: 'blocs' },
+  { height: 'share', colour: 'kind', labels: 'none', highlight: 'none' },
+  { height: 'share', colour: 'voted', labels: 'none', highlight: 'none' },
+  { height: 'share', colour: 'kind', labels: 'share', highlight: 'none' },
+];
+
+/** When a row changes in a beat: on the count the flower does what it says. */
+function setAt(beat: number, row: ToolRow): number {
+  if (row === 'height') return reactAt(beat);
+  if (row === 'colour') return beat === 4 ? REACT : CALL;
+  if (row === 'labels') return beat === 1 ? count(3.5) : beat === 5 ? count(2) : CALL;
+  return beat === 2 ? REACT : CALL;
+}
+
+/**
+ * A row at a moment: what it was set to and what it is set to now, `k` of the way from one to the other, and a
+ * `flash` that lights the row as it changes and fades over a count.
+ */
+export function tool(beat: number, t: number, row: ToolRow) {
+  const from = (SETTINGS[prior(beat)] ?? SETTINGS[0])?.[row] ?? 'none';
+  const to = (SETTINGS[beat] ?? SETTINGS[0])?.[row] ?? 'none';
+  const lit = (when: number) => {
+    const d = t - when;
+    return d < 0 ? 0 : ease.inOutSine(Math.min(1, d / 60)) * Math.exp(-d / COUNT_MS);
+  };
+  // the second voting bloc takes over the Highlight row on the four
+  const again = beat === 2 && row === 'highlight' ? lit(SECOND_BLOC) : 0;
+  if (from === to) return { from, to, k: 1, flash: again };
+  return {
+    from,
+    to,
+    k: ease.outCubic(at(t, setAt(beat, row), SIXTEENTH)),
+    flash: Math.max(lit(setAt(beat, row)), again),
+  };
+}
+
+/** The Tools box: always there, as the real one is on the map, floating against the answer. */
+export function toolsBox(beat: number, t: number): Motion {
+  return {
+    opacity: 1,
+    x: 0,
+    y: FLOAT_PX * drift(beat, t, 0.6),
+    blur: 0,
+    scale: 1,
+    turn: 10 + SWAY * drift(beat, t, 1.6),
+    z: 50,
+    glint: 0,
+    glow: 1,
+  };
 }
 
 // ----- the words -----

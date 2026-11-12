@@ -70,8 +70,8 @@ export const MINE: Community = (() => {
 
 /** The two neighbours the connections beat follows its lines to. */
 export const NEIGHBOURS: readonly Community[] = [
-  community(-430, 130, 0.56, 16, 1.4),
-  community(450, -40, 0.62, 18, 2.2),
+  community(-430, 150, 0.56, 16, 1.4),
+  community(-400, -120, 0.62, 18, 2.2),
 ];
 
 /**

@@ -27,20 +27,23 @@ const topLeft = (x: number, y: number): Pin => ({ x, y, ax: 0, ay: 0 });
 const topRight = (x: number, y: number): Pin => ({ x, y, ax: 1, ay: 0 });
 const bottomRight = (x: number, y: number): Pin => ({ x, y, ax: 1, ay: 1 });
 
-/** A wide stage, eight by five. The question swaps sides; Petals' answer stays low on the right (answerPin). */
+/**
+ * A wide stage, eight by five. The question high on the left, the Tools box high on the right (toolsPin) and
+ * Petals' answer low on the right (answerPin): the flower keeps to the left two thirds, clear of both boxes.
+ */
 const WIDE: readonly Shot[] = [
-  // a community: in the middle, where the far map the story opens on is framed, the question high on the left
+  // a community: in the middle, where the far map the story opens on is framed
   { flower: { x: 50, y: 46, scale: 0.9 }, question: topLeft(3, 4) },
-  // influence: in closer and further left, low, so the tallest petals have the sky; the question crosses over
-  { flower: { x: 31, y: 54, scale: 0.84 }, question: topRight(97, 4) },
-  // blocs: across to the right, high enough to clear the answer
-  { flower: { x: 56, y: 44, scale: 0.78 }, question: topLeft(3, 4) },
+  // influence: in closer and further left, low, so the tallest petals have the sky
+  { flower: { x: 31, y: 54, scale: 0.84 }, question: topLeft(3, 4) },
+  // blocs: back across to the middle
+  { flower: { x: 46, y: 50, scale: 0.8 }, question: topLeft(3, 4) },
   // history: back to the left, the line from then to now under it
   { flower: { x: 33, y: 48, scale: 0.76 }, question: topLeft(3, 4) },
-  // a vote: high on the right, further back for the proposal's ring, clear of the answer
-  { flower: { x: 54, y: 42, scale: 0.66 }, question: topLeft(3, 4) },
+  // a vote: further back for the proposal's arc
+  { flower: { x: 45, y: 47, scale: 0.7 }, question: topLeft(3, 4) },
   // connections: the widest shot, the network across the stage
-  { flower: { x: 50, y: 46, scale: 0.9 }, question: topRight(97, 4) },
+  { flower: { x: 50, y: 46, scale: 0.9 }, question: topLeft(3, 4) },
 ];
 
 /** A narrow stage, two by three: the question above, the answer below, the flower between them moving less. */
@@ -58,6 +61,8 @@ const NARROW: readonly Shot[] = [
  * shots keep the flower clear of it.
  */
 export const answerPin = (wide: boolean): Pin => (wide ? bottomRight(97, 96) : bottomRight(98, 98));
+/** Where the Tools box sits on a wide stage, the same in every shot: high on the right. */
+export const toolsPin: Pin = topRight(97, 4);
 
 /** How long the camera's whip from the last shot to this one takes, from the one, landing with a little give. */
 const WHIP_MS = 560;

@@ -1,6 +1,6 @@
 'use client';
 import { type CSSProperties, memo } from 'react';
-import { answerPin, flowerAt, type Pin, shotOf } from '../../lib/hero-shots.ts';
+import { answerPin, flowerAt, type Pin, shotOf, toolsPin } from '../../lib/hero-shots.ts';
 import {
   answerBox,
   answerLine,
@@ -11,6 +11,7 @@ import {
   layerOpacity,
   type Motion,
   question,
+  toolsBox,
 } from '../../lib/hero-story.ts';
 // The landing's hero (HERO ART's V2, approved by Elco 11 Nov: "get this in the hero please"; HERO MOTION's
 // choreography): the approved eyebrow, headline, subline and Connect, and beside them a stage of four separate
@@ -34,6 +35,7 @@ import { Mono } from '../ui/Mono.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 import { Glass } from './HeroGlass.tsx';
+import { HeroTools } from './HeroTools.tsx';
 import { StoryFlower, StoryLight } from './StoryFlower.tsx';
 
 const hero = landingCopy.hero;
@@ -182,6 +184,20 @@ function Answer({
 }
 
 /**
+ * The Tools box, high on the right on a wide stage (Elco, 12 Nov: the tooling layer): the map's own rows, each
+ * changing as the flower does what it says (HeroTools).
+ */
+function Tools({ beat, t }: { beat: number; t: number }) {
+  const m = toolsBox(beat, t);
+  return (
+    <div className="absolute top-0 left-0 w-3/10" style={pinned(toolsPin, m)}>
+      <Glass tone="light" facing="left" glint={m.glint} glow={m.glow} />
+      <HeroTools beat={beat} t={t} />
+    </div>
+  );
+}
+
+/**
  * The chapters, apart from the stage (Elco, 11 Nov: "a separate element of the animation, not stuck in it"):
  * pause, and the six beats to stop at any of them, the current one filling as it plays.
  */
@@ -322,6 +338,7 @@ export function HeroStoryView({
               style={{ opacity: layer === 'petals' ? 0 : 1 }}
             >
               <Answer beat={beat} t={t} fresh={fresh} wide={wide} />
+              {wide && <Tools beat={beat} t={t} />}
             </div>
           </div>
         </div>

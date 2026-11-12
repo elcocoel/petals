@@ -4,8 +4,7 @@
 // the look's keys; in a world the camera moves through (Elco, 12 Nov): the far map the story opens and closes on,
 // my community and its two neighbours, each drawn from far as the real far map draws one (lib/hero-map.ts). Per
 // beat (lib/hero-story.ts): the camera dives in from the far map and my community bursts out of its wave; the
-// heights part, petal after petal, and the strongest take the highlight; two groups take shared colours and a few
-// lines draw between them; the heights move against an earlier outline that draws itself round; a proposal's ring
+// heights part, petal after petal, and the strongest take the highlight; one voting bloc lights, then another; the heights move against an earlier outline that draws itself round; a proposal's ring
 // opens, its arc draws over the top and the vote marks land; the camera pulls back as two neighbours bloom, reached
 // by running lines, and then all the way out to the far map. A light behind it moves less than it does, for depth.
 // Every number comes from those files; this only draws.
@@ -30,8 +29,6 @@ import {
   petalPaint,
   petalPath,
   proposal,
-  relationDrawn,
-  relations,
   sharePercent,
   voteOf,
   world,
@@ -145,7 +142,6 @@ export function StoryFlower({ beat, t }: { beat: number; t: number }) {
   const vote = proposal(beat, t);
   const net = network(beat, t);
   const ghosts = layerOpacity(3, beat, t);
-  const blocs = layerOpacity(2, beat, t);
   const votes = layerOpacity(4, beat, t);
   const links = layerOpacity(5, beat, t);
   // strokes that keep one width on screen whatever the camera's zoom
@@ -362,26 +358,6 @@ export function StoryFlower({ beat, t }: { beat: number; t: number }) {
               </g>
             );
           })}
-          <g opacity={blocs} visibility={seen(blocs)}>
-            {relations.map(([a, b], n) => {
-              const [x1, y1] = atPetal(a, INNER - 3);
-              const [x2, y2] = atPetal(b, INNER - 3);
-              return (
-                <path
-                  key={`${a}-${b}`}
-                  d={`M${x1.toFixed(2)} ${y1.toFixed(2)} Q${n % 2 ? 9 : -9} 4 ${x2.toFixed(2)} ${y2.toFixed(2)}`}
-                  fill="none"
-                  stroke="var(--text-primary)"
-                  strokeWidth={1.2}
-                  strokeLinecap="round"
-                  pathLength={1}
-                  strokeDasharray="1 1"
-                  strokeDashoffset={1 - relationDrawn(beat, t, n)}
-                  opacity={0.45}
-                />
-              );
-            })}
-          </g>
           <g opacity={votes} visibility={seen(votes)}>
             <path
               d={`M${-ARC} ${-ARC} A${OUTER} ${OUTER} 0 0 1 ${ARC} ${-ARC}`}
@@ -411,9 +387,10 @@ export function StoryFlower({ beat, t }: { beat: number; t: number }) {
                   cx={cx}
                   cy={cy}
                   r={3 * vote.vote(i)}
-                  fill={v === 'against' ? 'var(--surface)' : 'var(--text-primary)'}
-                  stroke="var(--text-primary)"
-                  strokeWidth={1.2}
+                  // as the real legend says: mint for, pink against
+                  fill={v === 'against' ? PAINT.pink : PAINT.mint}
+                  stroke="var(--surface)"
+                  strokeWidth={1.5}
                 />
               );
             })}
