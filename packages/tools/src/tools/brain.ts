@@ -5,9 +5,17 @@
 //   brain_file    one of them, whole, by its id
 //   brain_index   every header
 //   brain_context the doctrine and the routed files, whole, in one call (the Harness's query_brain, 12 Nov)
+//   brain_usage   how often what gets read, worked out from the receipts (the librarian's report, 12 Nov)
 import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
-import { type BrainCopy, type BrainReceipt, brainAt, routeBrain, wordsOf } from '../brain.ts';
+import {
+  type BrainCopy,
+  type BrainReceipt,
+  brainAt,
+  brainCounts,
+  routeBrain,
+  wordsOf,
+} from '../brain.ts';
 import { defineTool } from '../define.ts';
 import { ToolFailure } from '../errors.ts';
 import type { ToolContext } from '../types.ts';
@@ -270,5 +278,69 @@ export const brainContext = defineTool<{ question?: string; answers?: string[] }
         core_doctrine: true,
       }),
     };
+  },
+});
+
+const COUNT = (key: string, type: unknown) =>
+  ({
+    type: 'array',
+    items: obj([key, 'reads'], { [key]: type, reads: { type: 'integer' } }),
+  }) as const;
+
+/**
+ * How often what gets read (research/brain-departments-2026-11-11.md, step 7; Elco, 11 Nov: anyone reads the counts
+ * through this door), worked out from the receipts when asked: per file, department and routing row; what found
+ * nothing; files and characters per read; by door, app and brain version; and the layers' coverage.
+ */
+export const brainUsage = defineTool<{ since?: string }, object>({
+  name: 'brain_usage',
+  title: 'How the brain is read',
+  description:
+    "How often each part of Petals' brain is read, worked out from its receipts: reads per file, department and routing row, the questions that found nothing, files and characters per read, reads by door, app and brain version, and how many kept layers carry the brain version. Everything, or since a date.",
+  input: obj(
+    [],
+    { since: { type: 'string', format: 'date-time' } },
+    { additionalProperties: false },
+  ),
+  output: obj(
+    [
+      'since',
+      'reads',
+      'by_file',
+      'by_department',
+      'by_task',
+      'nothing_matched',
+      'per_read',
+      'by_door',
+      'by_app',
+      'by_version',
+      'coverage',
+    ],
+    {
+      since: { type: ['string', 'null'] },
+      reads: { type: 'integer' },
+      by_file: COUNT('id', { type: 'string' }),
+      by_department: COUNT('department', { type: 'string' }),
+      by_task: COUNT('task', { type: 'string' }),
+      nothing_matched: obj(['reads', 'questions'], {
+        reads: { type: 'integer' },
+        questions: { type: 'array', items: { type: 'string' } },
+      }),
+      per_read: obj(['files', 'chars'], { files: { type: 'number' }, chars: { type: 'number' } }),
+      by_door: COUNT('door', { type: ['string', 'null'] }),
+      by_app: COUNT('app', { type: ['string', 'null'] }),
+      by_version: COUNT('version', { type: 'string' }),
+      coverage: obj(['layers', 'layers_with_brain'], {
+        layers: { type: 'integer' },
+        layers_with_brain: { type: 'integer' },
+      }),
+    },
+  ),
+  annotations: READS,
+  async run({ since }, ctx) {
+    if (!ctx.brainUsage)
+      throw new ToolFailure('not_on_this_site', 'This site keeps no brain receipts to count.');
+    const { receipts, layers } = await ctx.brainUsage(since);
+    return brainCounts(receipts, layers, since ?? null);
   },
 });

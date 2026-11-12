@@ -184,6 +184,9 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       await brainReader(c),
     );
   });
+  app.get('/api/v1/brain/usage', limit, (c) =>
+    answer(c, 'brain_usage', pick(c.req.query(), ['since'])),
+  );
   app.get('/api/v1/brain/files/:id', limit, async (c) =>
     answer(c, 'brain_file', { id: c.req.param('id') }, await brainReader(c)),
   );

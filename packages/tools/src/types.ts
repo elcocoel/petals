@@ -119,6 +119,13 @@ export interface ToolContext {
    */
   onBrainServed?: (receipt: BrainReceipt) => Promise<void>;
   /**
+   * additive (12 Nov, brain_usage): the receipts from a time on and the layers' coverage, read from the server's
+   * store. None: this site keeps no receipts.
+   */
+  brainUsage?: (
+    since?: string,
+  ) => Promise<{ receipts: BrainReceipt[]; layers: { total: number; with_brain: number } }>;
+  /**
    * additive (10 Nov, one-source.md step 2): the viewer's view, the glasses every drawing without a view of
    * its own is drawn through: the person's, or the default. A flower's own choices never draw it.
    */

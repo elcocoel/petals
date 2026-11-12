@@ -241,7 +241,17 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       body: JSON.stringify(r),
     });
   };
-  app.route('/', httpApp({ ...ctx, live, onJobReported, onBrainServed }, { gate: auth.gate }));
+  // and the counts, worked out from them when asked (12 Nov, step 7: brain_usage)
+  const brainUsage = async (since?: string) => ({
+    receipts: (await store.brainReceipt.since(since)).map(
+      (r) => JSON.parse(r.body) as BrainReceipt,
+    ),
+    layers: await store.layer.brainCoverage(),
+  });
+  app.route(
+    '/',
+    httpApp({ ...ctx, live, onJobReported, onBrainServed, brainUsage }, { gate: auth.gate }),
+  );
   // A store that fails mid-request (a full disk, say) ends in the API's own error shape: no chat
   // starts, so nothing is spent, and the caller is told plainly.
   app.onError((e, c) => {

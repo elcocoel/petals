@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { validateBrainReceipt } from '@petal/core';
 import { describe, expect, test } from 'vitest';
 import {
+  type BrainCounts,
   type BrainReceipt,
   brainService,
   gitCommitOf,
@@ -231,5 +232,51 @@ describe('brain_context (step 6, the Harness query_brain)', () => {
       chars_served: out.doctrine.length + out.files.reduce((n, f) => n + f.text.length, 0),
     });
     expect(validateBrainReceipt(kept[0])).toMatchObject({ ok: true });
+  });
+});
+
+describe('brain_usage (step 7, the counts from the receipts)', () => {
+  test('per file, department and row, what found nothing, per read, by door, app and version, and coverage', async () => {
+    const kept: BrainReceipt[] = [];
+    const ctx = createContext({ root: REPO, map: null, llmDailyUsd: 0, fake: true });
+    const app = httpApp({
+      ...ctx,
+      onBrainServed: async (r) => void kept.push(r),
+      brainUsage: async (since) => ({
+        receipts: kept.filter((r) => !since || r.at >= since),
+        layers: { total: 4, with_brain: 3 },
+      }),
+    });
+    await app.request('/api/v1/brain/context?q=when%20do%20these%20tokens%20unlock');
+    await app.request('/api/v1/brain/route?q=who%20votes%20together');
+    await app.request('/api/v1/brain/route?q=zzzz%20qqqq');
+    await app.request('/api/v1/brain/files/vesting');
+    const u = (await (await app.request('/api/v1/brain/usage')).json()) as BrainCounts;
+    expect(u.reads).toBe(4);
+    expect(u.by_file[0]).toEqual({ id: 'vesting', reads: 2 });
+    expect(u.by_department).toEqual(expect.arrayContaining([{ department: 'money', reads: 2 }]));
+    expect(u.by_task).toEqual(
+      expect.arrayContaining([
+        { task: 'When it unlocks', reads: 1 },
+        { task: 'Who votes together', reads: 1 },
+      ]),
+    );
+    expect(u.nothing_matched).toEqual({ reads: 1, questions: ['zzzz qqqq'] });
+    expect(u.by_door).toEqual([{ door: 'http', reads: 4 }]);
+    expect(u.by_version).toHaveLength(1);
+    expect(u.per_read.files).toBeGreaterThan(0);
+    expect(u.coverage).toEqual({ layers: 4, layers_with_brain: 3 });
+    const later = (await (
+      await app.request(
+        `/api/v1/brain/usage?since=${encodeURIComponent('2999-01-01T00:00:00.000Z')}`,
+      )
+    ).json()) as BrainCounts;
+    expect(later).toMatchObject({ reads: 0, since: '2999-01-01T00:00:00.000Z' });
+  });
+
+  test('a site that keeps no receipts says so', async () => {
+    const app = httpApp(createContext({ root: REPO, map: null, llmDailyUsd: 0, fake: true }));
+    const res = await app.request('/api/v1/brain/usage');
+    expect(((await res.json()) as { error: { code: string } }).error.code).toBe('not_on_this_site');
   });
 });

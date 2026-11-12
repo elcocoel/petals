@@ -1894,6 +1894,13 @@ export function tables(db: Db) {
     },
 
     layer: {
+      /** How many layers are kept, and how many carry the brain version they were read with (brain_usage). */
+      brainCoverage: async () => {
+        const r = await db.get<{ total: number | string; with_brain: number | string }>(
+          'SELECT COUNT(*) AS total, COUNT(brain) AS with_brain FROM layer',
+        );
+        return { total: Number(r?.total ?? 0), with_brain: Number(r?.with_brain ?? 0) };
+      },
       /** Keeps it under its owner; false, and no change, when they hold that hash already. */
       keep: async (r: LayerRow): Promise<boolean> =>
         (await db.run(
