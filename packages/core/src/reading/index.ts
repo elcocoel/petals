@@ -17,10 +17,11 @@ import type {
   View,
 } from '../types/index.ts';
 import { READING_VERSION } from '../versions.ts';
+import { inUse } from '../view/index.ts';
 import { HEIGHT_FLOOR, heightValues, isStraight, metricOf, widthFactors } from './encodings.ts';
 import { foldOf } from './fold.ts';
 import { detailsOf, legendOf } from './legend.ts';
-import { encodingsOf, labelsOf } from './view.ts';
+import { encodingsOf, labelsOf, piecesOf } from './view.ts';
 
 /** Each piece's value for each account, of the pieces given beyond the snapshot's own. */
 type Values = Map<string, Map<string, string>>;
@@ -31,6 +32,44 @@ function valuesOf(pieces: readonly SeamPiece[]): Values {
     if ('values' in p) out.set(p.name, new Map(p.values.map((v) => [v.participant, v.value])));
   }
   return out;
+}
+
+/** A petal's colour key where the piece Colour shows has no value for it: drawn grey (render/wedge/keys.ts). */
+export const NO_VALUE = 'no value';
+
+/**
+ * The petals in the order a piece of data gives them (Elco, 12 Nov: "make sure ... we add the capacity to show last
+ * active and other ways to on how we organize how the petals go around the circle"): a date newest first, a count or
+ * an amount most first, a category its commonest value first; between equals, as before (biggest first); a petal
+ * with no value after those with one; the tail last.
+ */
+function orderedBy(
+  rows: readonly PetalRow[],
+  by: ReadonlyMap<string, string>,
+  kind: string | undefined,
+): PetalRow[] {
+  const real = rows.filter((r) => !r.tail);
+  const tail = rows.filter((r) => r.tail);
+  const counts = new Map<string, number>();
+  for (const r of real) {
+    const v = by.get(r.id);
+    if (v !== undefined) counts.set(v, (counts.get(v) ?? 0) + 1);
+  }
+  const rank = (v: string): number => {
+    if (kind === 'date') return Date.parse(v) || 0;
+    if (kind === 'category') return counts.get(v) ?? 0;
+    return Number(v) || 0;
+  };
+  const keyed = real.map((r, i) => ({ r, i, v: by.get(r.id) }));
+  keyed.sort((a, b) => {
+    if (a.v === undefined || b.v === undefined)
+      return a.v === b.v ? a.i - b.i : a.v === undefined ? 1 : -1;
+    const d = rank(b.v) - rank(a.v);
+    if (d !== 0) return d;
+    if (kind === 'category' && a.v !== b.v) return a.v < b.v ? -1 : 1;
+    return a.i - b.i;
+  });
+  return [...keyed.map((k) => k.r), ...tail];
 }
 
 function colourKey(colour: Encoding, r: PetalRow): string {
@@ -109,9 +148,21 @@ export function readFlower(
   const floor = options.floor ?? (isStraight(spec.encodings.height) ? 0 : HEIGHT_FLOOR);
   const values = valuesOf(pieces);
   const labels = view ? labelsOf(view, s, pieces) : 'identity';
-  // petals clockwise from twelve o'clock in encodings.order.by; measure_desc is the only order
-  // this build draws, and selectPetals already returns it (tail last)
-  const rows = selectPetals(s, spec.selection);
+  // what the view gives Order and Colour, where it's a piece of data given with the reading (last_active,
+  // votes_cast, voted: SYSTEMS's activity); the reading's own pieces (share, kind, identity) draw as they did
+  const used = view ? inUse(view, piecesOf(s, pieces)) : null;
+  const kinds = new Map(pieces.map((p) => [p.name, p.kind]));
+  const orderBy = used?.order && values.has(used.order) ? used.order : null;
+  const colourBy = used?.colour && values.has(used.colour) ? used.colour : null;
+  // petals clockwise from twelve o'clock: by size (selectPetals gives them so, tail last), or by the piece Order
+  // shows (Elco, 12 Nov: "last active, most active")
+  const rows = orderBy
+    ? orderedBy(
+        selectPetals(s, spec.selection),
+        values.get(orderBy) as Map<string, string>,
+        kinds.get(orderBy),
+      )
+    : selectPetals(s, spec.selection);
   const widths = widthFactors(rows, spec.encodings.width);
   const heights = heightValues(rows, spec.encodings.height, metricOf(s, spec, rows));
   const split = spec.encodings.segments?.by === 'backers';
@@ -123,7 +174,10 @@ export function readFlower(
       name: nameOf(r, labels, values),
       width: widths[i] ?? 1,
       height: Math.max(floor, Math.min(1, heights[i] ?? 0)),
-      colour: colourKey(spec.encodings.colour, r),
+      colour:
+        colourBy && !r.tail
+          ? (values.get(colourBy)?.get(r.id) ?? NO_VALUE)
+          : colourKey(spec.encodings.colour, r),
       outline: outlineKey(spec, r),
       segments: split && !r.tail ? backerSegments(s, r.id) : [],
       ...(r.tail && fold ? { fold } : {}),

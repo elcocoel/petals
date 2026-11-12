@@ -12,7 +12,7 @@
 // in the chains' place; pressing one goes to its chain and into its flower (board 105).
 import type { Proposal } from '@petal/core';
 import { EVERY_FLOWER, inUse } from '@petal/core/view';
-import { flowerKeys } from '@petal/core/wedge/keys';
+import { flowerKeys, keyLines, mapKeys } from '@petal/core/wedge/keys';
 import { floatBox } from '@petal/tokens';
 import {
   type ReactNode,
@@ -588,6 +588,8 @@ export function LandscapeCanvas({
   const [worth, setWorth] = useState(true);
   const [insightsOn, setInsightsOn] = useState(true);
   // the chain's flowers and their drawing models, once per chain; gravity only moves their places
+  // the map's keys, ranked once over every flower on it, whatever chain: a value has one colour everywhere
+  const mapKeyed = useMemo(() => mapKeys(data.flowers.map((f) => f.reading.petals)), [data]);
   const built = useMemo<(LandscapeData & { focus: number; from: number[] }) | null>(() => {
     const here = data.chains.find((c) => c.chain === chain);
     if (!here) return null;
@@ -619,8 +621,15 @@ export function LandscapeCanvas({
       return a === undefined || b === undefined ? [] : [{ ...r, a, b }];
     });
     const { x, y, r } = here.continent;
-    return { flowers, roads, home: { cx: x, cy: y, r }, focus: at.get(focus) ?? -1, from };
-  }, [data, chain, focus]);
+    return {
+      flowers,
+      roads,
+      home: { cx: x, cy: y, r },
+      focus: at.get(focus) ?? -1,
+      from,
+      keyed: mapKeyed,
+    };
+  }, [data, chain, focus, mapKeyed]);
   // the DAO a click put in the middle, by its map (Elco, 12 Nov walk: "one click put something in the center"); the
   // rest arranged round it by the wallets they share with it
   const [centre, setCentre] = useState<string | null>(null);
@@ -823,8 +832,10 @@ export function LandscapeCanvas({
       pieces={EVERY_FLOWER}
       // each flower keys its own kinds by how common they are on it (#76): inside one, its key (core's
       // flowerKeys, what its fills paint); on the map, no one key, so it says so
-      keys={inFlower ? flowerKeys(inFlower.reading.petals) : []}
-      keysNote={inFlower ? undefined : panelWords.legendColours}
+      // one colour per value across the map (core mapKeys): inside a flower, its own values in the map's colours;
+      // on the map, what each colour stands for everywhere (Elco, 12 Nov: "the legend tells me what each color is")
+      keys={inFlower ? flowerKeys(inFlower.reading.petals, mapKeyed) : keyLines(mapKeyed)}
+      keysNote={inFlower || mapKeyed.length > 0 ? undefined : panelWords.legendColours}
       // what a line between two flowers is, for anyone who doesn't know (Elco, 12 Nov, walk 2); in Information
       // on the map's boxes, as what's seen, not a tool
       between={
