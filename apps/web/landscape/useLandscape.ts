@@ -114,6 +114,12 @@ export interface LandscapeAt {
    * between two DAOs lit; a proposal pinned in its DAO. null lets go of what it lit.
    */
   show?: (s: LandShow | null) => void;
+  /** A new map's placeholder on this chain's map, read on each frame (LandscapeCanvas places it). */
+  pending?: { x: number; y: number; s: number; name: string } | null;
+  /** Work running on a map, read on each frame: a strip under that flower, or under the placeholder. */
+  progress?: { at: number | 'pending'; words: string; share: number | null } | null;
+  /** Set by the map once it's built: the camera flies to take in this room (a placeholder's). */
+  fit?: (room: { cx: number; cy: number; r: number }) => void;
   /**
    * Set by the map once it's built, as `choose` is: flies to a flower, by its place on this chain's map, and
    * enters it, as a click on it does (board 105: a search's answer, pressed).
@@ -623,6 +629,8 @@ export function useLandscape(
         way: entered >= 0 ? pointedWay : -1,
         waved,
         worth: at?.current?.worth !== false,
+        pending: at?.current?.pending ?? null,
+        progress: at?.current?.progress ?? null,
         over: overOf(),
       });
       // the names moved since the notes gave way to them: once more, so the notes keep clear where they settle
@@ -1029,6 +1037,12 @@ export function useLandscape(
         enterFlower(i);
         // placed on purpose, as the flower it opens in is: the window's next size keeps it there
         cam.touched = true;
+      };
+      at.current.fit = (room) => {
+        entered = -1;
+        flyTo(cam, fitView(cam.width, cam.height, room, cam.clear));
+        cam.touched = true;
+        wake();
       };
       at.current.show = (s) => {
         if (!s) {

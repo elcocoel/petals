@@ -110,6 +110,16 @@ export interface LandFrame {
   /** Treasury and token price under the names, at some magnification; the switch in the legend (OVERLAYS) */
   worth?: boolean;
   /**
+   * A new map on its way (Elco, 12 Nov on /make: "if it's completely new, than we have a 'place holder'"): where it
+   * will stand, in the map's own units, and its name. Drawn as a dashed round place, its name and 'new'.
+   */
+  pending?: { x: number; y: number; s: number; name: string } | null;
+  /**
+   * Work running on a map (Elco, 12 Nov on /make: the map stays while it runs): a small strip under that flower, or
+   * under the placeholder, with the page's words and how far it is, when it's known.
+   */
+  progress?: { at: number | 'pending'; words: string; share: number | null } | null;
+  /**
    * The boxes over the map (the chain list, the legend, a flower's panel), in its px: names keep clear of them, as
    * of each other (META's QA, 12 Nov: "labels never sit on each other or run off the window").
    */
@@ -273,6 +283,38 @@ export function createLandScene(
   const arrows = el('g', {}, top);
   // the arrows' names above every arrow's line, so one arrow never runs over another's name (OVERLAYS, 11 Nov)
   const arrowNames = el('g', {}, top);
+  // the placeholder for a new map, and the strip of work running (Elco, 12 Nov on /make)
+  const pendingRing = slot(
+    el(
+      'circle',
+      {
+        fill: 'none',
+        stroke: INK,
+        'stroke-width': 1,
+        'stroke-dasharray': '4 4',
+        'vector-effect': 'non-scaling-stroke',
+        opacity: 0.6,
+        display: 'none',
+      },
+      world.node,
+    ),
+  );
+  let pendingLabel: { name: string; label: Label } | null = null;
+  const strip = slot(el('g', { display: 'none' }, top));
+  const stripGround = el(
+    'rect',
+    { fill: GROUND, stroke: HAIR, 'vector-effect': 'non-scaling-stroke' },
+    strip.node,
+  );
+  const stripWords = el('text', { class: MONO, fill: MUTED, y: 4 }, strip.node);
+  const stripTrack = el('rect', { height: 2, fill: HAIR }, strip.node);
+  const stripDone = el('rect', { height: 2, fill: INK }, strip.node);
+  // with no share known, a short piece runs along the track (SMIL: no frames of the map's own)
+  const stripRun = el(
+    'animate',
+    { attributeName: 'x', dur: '1.6s', repeatCount: 'indefinite' },
+    stripDone,
+  );
 
   // figure.map-road
   const roadSlots = roads.map((r) => {
@@ -415,6 +457,8 @@ export function createLandScene(
       way: wayPointed = -1,
       waved: allWaved,
       worth: worthOn = true,
+      pending = null,
+      progress = null,
       over = [],
     }) {
       world.set('transform', `translate(${n3(view.x)} ${n3(view.y)}) scale(${view.k})`);
@@ -446,6 +490,8 @@ export function createLandScene(
       // Names: biggest flowers first; where two collide, the smaller keeps only its mark, or nothing. A
       // name never sits on a flower: every flower on screen, at its petals' reach, is in the way.
       const placed: Box[] = [...over];
+      /** where each flower's words end (its name, its treasury line), for the strip of work under them */
+      const wordsEnd = new Map<number, Box>();
       const discs: { x: number; y: number; r: number; i: number }[] = [];
       flowers.forEach((f, i) => {
         if (!onScreen(view, f.place) || (rest <= 0.01 && i !== entered)) return;
@@ -524,6 +570,7 @@ export function createLandScene(
           continue;
         }
         placed.push(box);
+        wordsEnd.set(i, box);
         l.typed(typed);
         l.group.show(true);
         l.group.set('transform', `translate(${n3(box.x0)} ${n3(y)})`);
@@ -546,12 +593,98 @@ export function createLandScene(
           const inside = x0 >= EDGE / 2 && b.y1 <= view.height;
           if (inside && shown > 0.01 && !placed.some((p) => overlaps(p, b)) && !onAFlower(b, i)) {
             placed.push(b);
+            wordsEnd.set(i, b);
             l.worth.show(true);
             l.worth.set('transform', `translate(${n3(b.x0)} ${n3(wy)})`);
             l.worth.set('opacity', o2(shown));
           } else l.worth.show(false);
         }
       }
+
+      // The placeholder: a dashed round place where the new map will stand, its name and 'new' under it
+      if (pending) {
+        pendingRing.show(true);
+        pendingRing.set('cx', n3(pending.x));
+        pendingRing.set('cy', n3(pending.y));
+        pendingRing.set('r', n3(SHAPE.R * pending.s * 0.8));
+        if (pendingLabel?.name !== pending.name) {
+          pendingLabel?.label.group.node.remove();
+          pendingLabel = {
+            name: pending.name,
+            label: drawLabel(
+              { name: pending.name, mark: { logo: null, symbol: '', types: ['new'] } },
+              names,
+              clip,
+            ),
+          };
+        }
+        const l = pendingLabel.label;
+        const c = screenCentre(view, pending);
+        const y = c.y + screenRadius(view, pending) * 0.8 + 10 + MARK / 2;
+        const x0 = Math.max(EDGE / 2, Math.min(view.width - EDGE / 2 - l.width, c.x - l.width / 2));
+        const b = { x0, y0: y - MARK / 2, x1: x0 + l.width, y1: y + MARK / 2 };
+        const free = b.y0 >= 0 && b.y1 <= view.height && !placed.some((p) => overlaps(p, b));
+        l.group.show(free);
+        if (free) {
+          placed.push(b);
+          l.group.set('transform', `translate(${n3(x0)} ${n3(y)})`);
+        }
+      } else {
+        pendingRing.show(false);
+        pendingLabel?.label.group.show(false);
+      }
+      // The strip of work running: under its flower's name (or the placeholder's), inside the window
+      const named = typeof progress?.at === 'number' ? wordsEnd.get(progress.at) : undefined;
+      const at =
+        progress?.at === 'pending'
+          ? pending
+            ? { c: screenCentre(view, pending), r: screenRadius(view, pending) * 0.8 }
+            : null
+          : progress && flowers[progress.at]
+            ? {
+                c: screenCentre(view, (flowers[progress.at] as LandFlower).place),
+                r:
+                  screenRadius(view, (flowers[progress.at] as LandFlower).place) *
+                  (flowers[progress.at] as LandFlower).reach,
+              }
+            : null;
+      let stripBox: Box | null = null;
+      if (progress && at) {
+        if (stripWords.textContent !== progress.words) stripWords.textContent = progress.words;
+        const pad = 8;
+        const w = Math.max(120, textWidth(progress.words) + 2 * pad);
+        const h = 30;
+        const x0 = Math.max(EDGE / 2, Math.min(view.width - EDGE / 2 - w, at.c.x - w / 2));
+        // just under its name (and its treasury line) where they show; else under the flower
+        const y0 = Math.max(
+          EDGE / 2,
+          Math.min(
+            view.height - EDGE / 2 - h,
+            named ? named.y1 + 8 : at.c.y + at.r + 10 + LABEL_HEIGHT + 6,
+          ),
+        );
+        stripGround.setAttribute('width', String(w));
+        stripGround.setAttribute('height', String(h));
+        stripWords.setAttribute('x', String(pad));
+        stripWords.setAttribute('y', '14');
+        stripTrack.setAttribute('x', String(pad));
+        stripTrack.setAttribute('y', '21');
+        stripTrack.setAttribute('width', String(w - 2 * pad));
+        const track = w - 2 * pad;
+        stripDone.setAttribute('y', '21');
+        if (progress.share === null) {
+          stripDone.setAttribute('width', String(track * 0.3));
+          stripRun.setAttribute('values', `${pad};${pad + track * 0.7};${pad}`);
+        } else {
+          stripRun.removeAttribute('values');
+          stripDone.setAttribute('x', String(pad));
+          stripDone.setAttribute('width', String(track * Math.max(0, Math.min(1, progress.share))));
+        }
+        strip.show(true);
+        strip.set('transform', `translate(${n3(x0)} ${n3(y0)})`);
+        stripBox = { x0, y0, x1: x0 + w, y1: y0 + h };
+        placed.push(stripBox);
+      } else strip.show(false);
 
       // Connections: each flower's strongest few from the farthest, the rest as they grow; fainter the more
       // there are. The number at the middle once there's room, or at any size once a click marks it.
@@ -618,7 +751,8 @@ export function createLandScene(
       const hits: ArrowHit[] = [];
       const e = entered >= 0 && enter > 0.01 ? (flowers[entered] as LandFlower) : null;
       const out = e ? (ways[entered] ?? []) : [];
-      const taken: Box[] = [...over];
+      // the neighbours' names keep clear of the boxes over the map and of the strip of work
+      const taken: Box[] = [...over, ...(stripBox ? [stripBox] : [])];
       arrowSlots.forEach((a, k) => {
         const way = out[k];
         if (!way || !e) {
@@ -715,7 +849,7 @@ export function createLandScene(
         if (named) a.at.set('transform', `translate(${n3(x0)} ${n3(y0 + MARK / 2)})`);
         hits.push({ to: way.to, box: named ? box : null, line: [x1, y1, x2, y2] });
       });
-      lastTaken = [...placed, ...taken.slice(over.length)];
+      lastTaken = [...placed, ...taken.slice(over.length + (stripBox ? 1 : 0))];
       return hits;
     },
     taken: () => lastTaken,

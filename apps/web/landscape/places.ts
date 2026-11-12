@@ -388,3 +388,31 @@ export function homeOf(places: Places): { cx: number; cy: number; r: number } {
   const r = Math.max(...places.continents.map((c) => Math.hypot(c.x - cx, c.y - cy) + c.r));
   return { cx, cy, r };
 }
+
+/**
+ * Where a new map stands on its chain's map before it's read (Elco, 12 Nov on /make: "if it's completely new, than
+ * we have a 'place holder'"): the first free place, from the middle outward, as big as the chain's middling
+ * flower, clear of every flower there; its reading lands there.
+ */
+export function freePlace(
+  on: readonly Place[],
+  home: { x: number; y: number; r: number },
+  chain: string,
+  id: string,
+): Place {
+  const sizes = on.map((p) => p.s).sort((a, b) => a - b);
+  const s = sizes[Math.floor(sizes.length / 2)] ?? 1;
+  const clear = (x: number, y: number) =>
+    on.every((p) => Math.hypot(p.x - x, p.y - y) >= SHAPE.R * (p.s + s) * 1.05);
+  for (const share of [0, 0.35, 0.55, 0.75, 0.95, 1.15, 1.35]) {
+    const steps = share === 0 ? 1 : 24;
+    for (let k = 0; k < steps; k++) {
+      // clockwise from twelve, as the petals go
+      const a = (k / steps) * Math.PI * 2;
+      const x = home.x + home.r * share * Math.sin(a);
+      const y = home.y - home.r * share * Math.cos(a);
+      if (clear(x, y)) return { id, chain, x, y, s };
+    }
+  }
+  return { id, chain, x: home.x, y: home.y - home.r * 1.5, s };
+}
