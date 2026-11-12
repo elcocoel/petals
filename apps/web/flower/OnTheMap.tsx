@@ -1,25 +1,20 @@
 'use client';
-import { floatBox } from '@petal/tokens';
 // A map's page and a flower's page are the Power Map zoomed in (coordinator/one-source.md, step 6; Elco,
 // 10 Nov: "It's always the same continuous map"). The map opens already inside that flower, under the site's
 // nav, with a box beside it: a map's readings, or the flower's own box as on /make. Zooming out, Escape or an
 // arrow goes on into the rest of the map. This only wires the ViewModels to the views.
 import type { ReactNode } from 'react';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
-import { IconButton } from '../components/ui/IconButton.tsx';
 import {
-  barOf,
   type CanvasChain,
   type CanvasFlower,
   LandscapeCanvas,
-  ROOM,
 } from '../landscape/LandscapeCanvas.tsx';
 import type { Road } from '../landscape/roads.ts';
 import { boxUnder, type Size } from '../lib/float-box.ts';
 import type { PanelFlower } from '../lib/panel-view.ts';
-import { panelWords } from '../lib/panel-words.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useFlowerPage } from '../viewmodels/useFlowerPage.ts';
 import { FlowerPanel } from './FlowerPanel.tsx';
@@ -43,47 +38,9 @@ function useBox() {
 }
 
 /**
- * A map's box, which folds to its bar as the map's panels do (PM's sweep, 12 Nov: on a phone it covered the
- * flower and the legend with no way to close it). Where the map's room is narrow, a phone's, it starts folded,
- * and its bar sits at the room's foot, clear of the flower and the panels at the top; opened there, it rises
- * from the foot. Elsewhere it opens at the top right, as a flower's box does, and folds where it is.
+ * A map's page: the map opened inside its flower, and what the page says about the map (what it maps, its
+ * worth, its readings) first in the map's Information box (Elco's walk 3: two boxes, Tools and Information).
  */
-function useMapBox() {
-  const area = useRef<HTMLDivElement>(null);
-  const el = useRef<HTMLElement | null>(null);
-  const [open, setOpen] = useState(true);
-  const [low, setLow] = useState(false);
-  const place = useCallback(
-    (win: Size) => {
-      const box = boxUnder(win, area.current?.getBoundingClientRect().top ?? 0);
-      if (!low) return { panel: box };
-      const shown = open ? box.h : barOf(el.current);
-      return { panel: { ...box, y: win.h - floatBox.inset - shown } };
-    },
-    [low, open],
-  );
-  const hand = useFloatBoxes(BOXES, place).panel;
-  // before the first paint, so a phone never sees it open over the flower
-  useLayoutEffect(() => {
-    if ((area.current?.clientWidth ?? window.innerWidth) >= ROOM) return;
-    setLow(true);
-    setOpen(false);
-  }, []);
-  // folded, the box is its bar; open, the height it had
-  useEffect(() => {
-    hand.fold(open ? null : barOf(el.current));
-  }, [hand, open]);
-  const root = useCallback(
-    (node: HTMLElement | null) => {
-      el.current = node;
-      hand.root(node);
-    },
-    [hand],
-  );
-  return { area, hand: { ...hand, root }, open, toggle: () => setOpen((now) => !now) };
-}
-
-/** A map's page: the map opened inside its flower, its readings in the box. */
 export function MapAt({
   land,
   focus,
@@ -95,27 +52,17 @@ export function MapAt({
   title: string;
   children: ReactNode;
 }) {
-  const { area, hand, open, toggle } = useMapBox();
   return (
-    <div ref={area} className="absolute inset-0">
-      <LandscapeCanvas data={land} fill="area" title="Power Map" focus={focus} legend="read" />
-      <FloatBox
-        label="Map"
-        title={title}
-        surface="ground"
-        hand={hand}
-        folded={!open}
-        control={
-          <IconButton
-            icon={open ? 'down' : 'chevron'}
-            label={open ? panelWords.boxFold : panelWords.boxOpen}
-            expanded={open}
-            onClick={toggle}
-          />
-        }
-      >
-        <div className="flex flex-col gap-text-gap p-block-gap">{children}</div>
-      </FloatBox>
+    <div className="absolute inset-0">
+      <LandscapeCanvas
+        data={land}
+        fill="area"
+        title="Power Map"
+        focus={focus}
+        legend="read"
+        search
+        information={{ title, body: children }}
+      />
     </div>
   );
 }
@@ -165,6 +112,9 @@ export function FlowerAt({
           selected={state.selected}
           onPick={actions.pick}
           legend="read"
+          search
+          // the flower's own box stands at the top right: Information starts under Tools
+          ownBox
         />
       )}
       <FloatBox

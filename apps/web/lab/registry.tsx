@@ -87,6 +87,7 @@ import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { Select } from '../components/ui/Select.tsx';
 import { SourceLink } from '../components/ui/SourceLink.tsx';
+import { Switch } from '../components/ui/Switch.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
 import { TextLink } from '../components/ui/TextLink.tsx';
 import { Tip } from '../components/ui/Tip.tsx';
@@ -3144,6 +3145,23 @@ export const registry: LabEntry[] = [
             onChange={() => undefined}
           />
         ),
+      },
+    ],
+  },
+  {
+    id: 'Switch',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Switch.tsx',
+    states: [
+      {
+        name: "on, in a tool panel's row: the browser's own switch in the accent",
+        render: () => <Switch label="Treasury and price" on onChange={() => undefined} />,
+      },
+      {
+        name: 'off',
+        render: () => <Switch label="Insights" on={false} onChange={() => undefined} />,
       },
     ],
   },
