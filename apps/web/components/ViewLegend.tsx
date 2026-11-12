@@ -76,6 +76,18 @@ function Value({ children }: { children: ReactNode }) {
   return <span className="min-w-0 truncate type-ui text-primary">{children}</span>;
 }
 
+/** A square of accent while the map is drawn again in this row's choice, as a working row's is in the panel. */
+function Drawing() {
+  return (
+    <span className="flex shrink-0 items-center" title={words.drawing}>
+      <span aria-hidden="true" className="size-space-8 bg-accent" />
+      <span className="sr-only" role="status">
+        {words.drawing}
+      </span>
+    </span>
+  );
+}
+
 /** Words under a row, quiet. */
 function Note({ children }: { children: ReactNode }) {
   return <p className="my-0 px-space-8 pb-space-8 type-ui text-muted">{children}</p>;
@@ -173,6 +185,7 @@ function DimensionRows({
   return (
     <div className="flex flex-col">
       <ToolRow label={words.dimensions[d]}>
+        {edit?.drawing === d && <Drawing />}
         <DimensionInput d={d} view={view} pieces={pieces} edit={edit} />
       </ToolRow>
       <ScaleRow d={d} view={view} pieces={pieces} edit={edit} />

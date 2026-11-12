@@ -274,6 +274,7 @@ describe('the first paint', () => {
     choices: viewChoices(),
     save: async () => {},
     reset: async () => {},
+    busy: false,
   };
   const paint = (o: { q?: string; run?: string; recorded?: boolean; stored?: string }) =>
     renderToStaticMarkup(

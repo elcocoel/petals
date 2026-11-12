@@ -158,6 +158,8 @@ export const panelWords = {
     /** Highlight, on hover, until a chosen group comes with the data. A draft. */
     highlightSoon: 'Comes with a chosen group of petals',
     reset: 'Put the default back',
+    /** While the map is drawn again in a change (wave 3). A draft. */
+    drawing: 'Updating the map',
     failed: (reason: string) => `Not saved: ${reason}`,
   },
   projects: 'Projects',

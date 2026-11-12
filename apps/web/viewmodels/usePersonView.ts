@@ -8,7 +8,7 @@
 import type { View } from '@petal/core/types';
 import { DEFAULT_VIEW } from '@petal/core/view';
 import { useRouter } from 'next/navigation';
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, useTransition } from 'react';
 import { keepView, SignInFirst, saveView } from '../lib/agent-client.ts';
 import {
   DEFAULT_PERSON_VIEW,
@@ -25,6 +25,11 @@ export interface PersonViewState extends PersonView {
   save: (view: View) => Promise<void>;
   /** Puts the default back. */
   reset: () => Promise<void>;
+  /**
+   * A change is on its way: from the press until the server has read the pages again in it (Elco, 12 Nov, wave 3:
+   * "some form of visual feedback that something is being updated in the back").
+   */
+  busy: boolean;
 }
 
 export const PersonViewContext = createContext<PersonViewState | null>(null);
@@ -47,27 +52,39 @@ export function usePersonViewState(initial: PersonView): PersonViewState {
     setRead(initial.hash);
     setPerson(initial);
   }
+  const [saving, setSaving] = useState(false);
+  // the server's pages read again in the new view: pending until they're back
+  const [refreshing, startRefresh] = useTransition();
   const save = useCallback(
     async (view: View) => {
-      let kept: PersonView;
+      setSaving(true);
       try {
-        // the person's own, on the server; a visitor's browser has nothing more to keep
-        kept = await saveView(view);
-        document.cookie = visitorViewCookie(null);
-      } catch (e) {
-        if (!(e instanceof SignInFirst)) throw e;
-        // a visitor's (Elco's walk 3): kept by its hash, the hash in their browser, the default forgotten
-        kept = await keepView(view);
-        document.cookie = visitorViewCookie(
-          kept.hash === DEFAULT_PERSON_VIEW.hash ? null : kept.hash,
-        );
+        let kept: PersonView;
+        try {
+          // the person's own, on the server; a visitor's browser has nothing more to keep
+          kept = await saveView(view);
+          document.cookie = visitorViewCookie(null);
+        } catch (e) {
+          if (!(e instanceof SignInFirst)) throw e;
+          // a visitor's (Elco's walk 3): kept by its hash, the hash in their browser, the default forgotten
+          kept = await keepView(view);
+          document.cookie = visitorViewCookie(
+            kept.hash === DEFAULT_PERSON_VIEW.hash ? null : kept.hash,
+          );
+        }
+        setPerson(kept);
+        startRefresh(() => router.refresh());
+      } finally {
+        setSaving(false);
       }
-      setPerson(kept);
-      router.refresh();
     },
     [router],
   );
   const reset = useCallback(() => save(DEFAULT_VIEW), [save]);
   const choices = useMemo(() => viewChoices(), []);
-  return useMemo(() => ({ ...person, choices, save, reset }), [person, choices, save, reset]);
+  const busy = saving || refreshing;
+  return useMemo(
+    () => ({ ...person, choices, save, reset, busy }),
+    [person, choices, save, reset, busy],
+  );
 }
