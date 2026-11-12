@@ -496,8 +496,7 @@ export function createScene(
       // its count, just out from the mark, where the petal points (the stack of no petal: before twelve)
       const a =
         petal >= 0
-          ? ((m.ring.start[petal] as number) + (m.ring.start[petal + 1] as number)) / 2 +
-            m.ring.rotation
+          ? ((m.ring.start[petal] as number) + (m.ring.end[petal] as number)) / 2 + m.ring.rotation
           : OTHERS_AT - 0.025;
       const r = petal >= 0 ? SHAPE.r0 + (m.ring.h[petal] as number) + 4 : SHAPE.R * VOTE_RING + 3;
       const label = slot(el('text', { fill: MUTED, 'text-anchor': 'middle' }, root));
@@ -507,7 +506,7 @@ export function createScene(
       // the mark's half-length along the ring, for the places beside its ends
       const half =
         petal >= 0
-          ? (r * ((m.ring.start[petal + 1] as number) - (m.ring.start[petal] as number))) / 2
+          ? (r * ((m.ring.end[petal] as number) - (m.ring.start[petal] as number))) / 2
           : r * 0.025;
       return { label, x: SHAPE.cx + r * dx, y: SHAPE.cy + r * dy, dx, dy, half, n: String(n) };
     });
@@ -785,7 +784,7 @@ export function createScene(
   /** Has this wedge changed since it was last looked at? Calm hover only moves a few of them. */
   const changed = (ring: Ring, i: number): boolean => {
     const a0 = (ring.start[i] as number) + ring.rotation;
-    const a1 = (ring.start[i + 1] as number) + ring.rotation;
+    const a1 = (ring.end[i] as number) + ring.rotation;
     const h = ring.h[i] as number;
     const f = ring.flare[i] as number;
     if (a0 === seenStart[i] && a1 === seenEnd[i] && h === seenH[i] && f === seenFlare[i]) {

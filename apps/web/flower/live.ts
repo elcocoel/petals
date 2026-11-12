@@ -21,7 +21,7 @@ import {
 } from './feel.ts';
 import { type HoverWay, heightOf, hoverTargets, reachOf } from './hover.ts';
 import { bandUnder, type Model, type Picked, pick } from './model.ts';
-import { insideWedge, lay, newRing, pointIn, type Ring } from './ring.ts';
+import { FEW, insideWedge, lay, newRing, pointIn, type Ring } from './ring.ts';
 import {
   advance,
   advanceAll,
@@ -296,7 +296,15 @@ export function stepLive(l: Live, dt: number, view?: View): Stepped {
 
   // The fixed point: whatever's at the pointer's angle at rest is drawn at the pointer's angle now.
   const restAt = alongOf(m, l.angle, atIndex);
-  const swollenAngle = ((before + restAt * (l.widths[atIndex] as number)) / (total || 1)) * TAU;
+  // a flower of few lays its petals in even slots (ring.ts lay): where that point is in them, as lay will put it
+  const few = m.n > 0 && m.n < FEW;
+  const slot = TAU / (m.n || 1);
+  const fewW = few
+    ? Math.min(slot * 0.9, ((l.widths[atIndex] as number) * TAU) / FEW / (total / m.n || 1))
+    : 0;
+  const swollenAngle = few
+    ? atIndex * slot - fewW / 2 + restAt * fewW
+    : ((before + restAt * (l.widths[atIndex] as number)) / (total || 1)) * TAU;
   l.rotation.t = l.angle - swollenAngle;
   const rotationMoved = advance(l.rotation, snap ? SNAP : stepOf(ROTATION, dt));
 
@@ -380,6 +388,11 @@ export function stepLive(l: Live, dt: number, view?: View): Stepped {
 const TAU = Math.PI * 2;
 
 function locatePetal(m: Model, angle: number): number {
+  // a flower of few: its petals stand in even slots round the circle, the first at twelve: the nearest slot's
+  if (m.n > 0 && m.n < FEW) {
+    const a = ((angle % TAU) + TAU) % TAU;
+    return Math.round(a / (TAU / m.n)) % m.n;
+  }
   const { start } = m.ring;
   let lo = 0;
   let hi = m.n - 1;
@@ -393,7 +406,7 @@ function locatePetal(m: Model, angle: number): number {
 
 function alongOf(m: Model, angle: number, at: number): number {
   const s0 = m.ring.start[at] as number;
-  const s1 = m.ring.start[at + 1] as number;
+  const s1 = m.ring.end[at] as number;
   return (angle - s0) / (s1 - s0 || 1);
 }
 

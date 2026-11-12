@@ -23,6 +23,14 @@ export interface Ring {
   n: number;
   /** Where each side starts, in radians clockwise from twelve, before `rotation`. n + 1 values. */
   start: Float64Array;
+  /**
+   * Where each wedge ends: the next one's start, except in a flower of few (FEW), whose wedges stand apart with
+   * open circle between them. n values.
+   */
+  end: Float64Array;
+  /** The radial direction at each wedge's end (the next one's start, but in a flower of few). n values. */
+  vx: Float64Array;
+  vy: Float64Array;
   rotation: number;
   /** The radial direction at each boundary between wedges. n + 1 values, the last is the first. */
   ux: Float64Array;
@@ -56,6 +64,9 @@ export function newRing(n: number): Ring {
   return {
     n,
     start: new Float64Array(n + 1),
+    end: f(),
+    vx: f(),
+    vy: f(),
     rotation: 0,
     ux: new Float64Array(n + 1),
     uy: new Float64Array(n + 1),
@@ -139,8 +150,8 @@ export function leftAt(ring: Ring, i: number, h: number): [number, number] {
 export function rightAt(ring: Ring, i: number, h: number): [number, number] {
   const rho = reachAt(ring, i, h);
   const g = ring.gut[i] as number;
-  const ux = ring.ux[i + 1] as number;
-  const uy = ring.uy[i + 1] as number;
+  const ux = ring.vx[i] as number;
+  const uy = ring.vy[i] as number;
   const push = pushAt(ring, i, h);
   return [
     SHAPE.cx + rho * ux + g * uy - push * (ring.ny[i] as number),
@@ -148,23 +159,40 @@ export function rightAt(ring: Ring, i: number, h: number): [number, number] {
   ];
 }
 
+/**
+ * A flower of fewer petals than this keeps each as wide as in a flower of this many, its petals evenly round the
+ * circle with open circle between (Elco, 12 Nov: "we haven't yet figure out how to make those with a small group
+ * number of people to show up. In a nice way"): two people are two petals, not two half discs.
+ */
+export const FEW = 5;
+
 /** Lays the ring out from widths (any scale, they share the circle) and heights (world units). */
 export function lay(ring: Ring, widths: Float64Array, heights: Float64Array, rotation: number) {
   const { cx, cy, r0 } = SHAPE;
-  const { n, start, ux, uy, cw, sw, gut, ax, ay, bx, by, nx, ny, len, h } = ring;
+  const { n, start, end, ux, uy, vx, vy, cw, sw, gut, ax, ay, bx, by, nx, ny, len, h } = ring;
   let total = 0;
   for (let i = 0; i < n; i++) total += widths[i] as number;
-  const scale = TAU / (total || 1);
+  // few: each petal as wide as in a flower of FEW, at most its own slot of the circle, the slots evenly round
+  const few = n > 0 && n < FEW;
+  const slot = TAU / (n || 1);
+  const scale = few ? TAU / FEW / (total / n || 1) : TAU / (total || 1);
   ring.rotation = rotation;
   let a = 0;
-  let sin0 = Math.sin(rotation);
-  let cos0 = Math.cos(rotation);
   for (let i = 0; i < n; i++) {
+    const w = few
+      ? Math.min(slot * 0.9, (widths[i] as number) * scale)
+      : (widths[i] as number) * scale;
+    // few: each petal in the middle of its slot, the first at twelve
+    if (few) a = i * slot - w / 2;
     start[i] = a;
-    const w = (widths[i] as number) * scale;
     const a1 = a + w;
+    const sin0 = Math.sin(a + rotation);
+    const cos0 = Math.cos(a + rotation);
     const sin1 = Math.sin(a1 + rotation);
     const cos1 = Math.cos(a1 + rotation);
+    end[i] = a1;
+    vx[i] = sin1;
+    vy[i] = -cos1;
     const mid = a + w / 2 + rotation;
     ux[i] = sin0;
     uy[i] = -cos0;
@@ -194,10 +222,8 @@ export function lay(ring: Ring, widths: Float64Array, heights: Float64Array, rot
     len[i] = l;
     h[i] = heights[i] as number;
     a = a1;
-    sin0 = sin1;
-    cos0 = cos1;
   }
-  start[n] = a;
+  start[n] = few ? (start[0] as number) + TAU : a;
   ux[n] = ux[0] as number;
   uy[n] = uy[0] as number;
 }
@@ -226,6 +252,13 @@ export function roundTopPath(ring: Ring, i: number, h: number): string {
 
 /** The polygon, closed: both ends of each side, so at any zoom its line runs along the wedges' feet. */
 export function polygonPath(ring: Ring): string {
+  // a flower of few: the circle the petals' feet stand on, touching each foot at its middle
+  if (ring.n > 0 && ring.n < FEW) {
+    let rho = SHAPE.r0;
+    for (let i = 0; i < ring.n; i++) rho = Math.min(rho, SHAPE.r0 * (ring.cw[i] as number));
+    const { cx, cy } = SHAPE;
+    return `M${n3(cx - rho)} ${n3(cy)}A${n3(rho)} ${n3(rho)} 0 1 1 ${n3(cx + rho)} ${n3(cy)}A${n3(rho)} ${n3(rho)} 0 1 1 ${n3(cx - rho)} ${n3(cy)}Z`;
+  }
   let d = '';
   for (let i = 0; i < ring.n; i++) {
     d += `${i ? 'L' : 'M'}${n3(ring.ax[i] as number)} ${n3(ring.ay[i] as number)}`;
@@ -281,7 +314,7 @@ export function restOf(petals: PetalShape[]): Rest {
   lay(ring, width, height, 0);
   const mid = new Float64Array(n);
   for (let i = 0; i < n; i++) {
-    mid[i] = ((ring.start[i] as number) + (ring.start[i + 1] as number)) / 2;
+    mid[i] = ((ring.start[i] as number) + (ring.end[i] as number)) / 2;
   }
   return { ring, width, height, mid };
 }
