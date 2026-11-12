@@ -691,6 +691,53 @@ export interface JobEvent {
   part_of?: string | null;
 }
 
+/**
+ * What an answer is about on the Power Map (LOOK's LandscapeCanvas `show`; WORKSPACE, 12 Nov): a map flown to,
+ * a wallet lit wherever it sits (chain as the maps' cards name it: gnosis, near:mainnet), the line between two
+ * maps, a proposal pinned in its map.
+ */
+export type MapShow =
+  | { map: string }
+  | { wallet: string; chain?: string | null }
+  | { line: readonly [string, string] }
+  | { proposal: { map: string; id: string } };
+
+/**
+ * The ceremony's facts (Elco, 12 Nov: "mapping something new is a ceremony"), on the yes a new map waits for:
+ * where it lands (a map already there, or a new one on that chain), what will be read, its rough cost, whose
+ * name the new data packet goes out in, and who else could do it.
+ */
+export interface Ceremony {
+  /** the map already at that address, or null: a new map, a placeholder until it's read */
+  existing_map: string | null;
+  /** that map's name, or null */
+  name: string | null;
+  /** the chain it lands on, as the maps' cards name it */
+  chain: string | null;
+  /** what will be read, in words: "Moloch v3 (Baal) members on Gnosis" */
+  what: string;
+  /** rough cost: the chat's model's estimate for a new flower in dollars, and the read's own calls and seconds */
+  cost: { usd: number | null; seconds: number | null; calls: number | null };
+  /** the person's account the new data packet goes out in, or null */
+  by: string | null;
+  /** the person's own connected agents, who could take it as a job instead */
+  agents: string[];
+}
+
+/** One next step: its label, the message pressing it sends, and whether pressing sends it (false: it only fills the composer). */
+export interface NextStep {
+  label: string;
+  ask: string;
+  finish: boolean;
+}
+
+/** The next steps on a map just read (META, from Elco, 12 Nov): what it holds, then the brain's services. */
+export interface NextSteps {
+  map: string;
+  steps: NextStep[];
+  services: NextStep[];
+}
+
 /** One SSE event of a chat, in order: run, stage/progress/tool_call/tool_result/message…, flower, signature, done. */
 export type AgentEvent =
   | { event: 'run'; data: { run_id: string; resume_url: string } }
@@ -710,8 +757,12 @@ export type AgentEvent =
         network: string;
         params?: Record<string, unknown>;
         target_key: string;
-      };
+      } & Partial<Ceremony>;
     }
+  /** additive (12 Nov, /make: an answer moves the map): what the answer is about, on the Power Map */
+  | { event: 'show'; data: MapShow }
+  /** additive (12 Nov, /make): after a map is read, the next steps on it, each a message to send */
+  | { event: 'next'; data: NextSteps }
   | { event: 'flower'; data: FlowerResult }
   /** additive (9 Nov): Petals' agent handed a job to the person's own agent, in this exploration */
   | { event: 'job'; data: JobEvent }

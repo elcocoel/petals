@@ -7,7 +7,7 @@ import { compile, describeErrors } from '../src/define.ts';
 import { privateStore } from '../src/drafts.ts';
 import { keepMappingClaims } from '../src/mapping-claims.ts';
 import { callTool } from '../src/registry.ts';
-import { getMap, mapIdOf } from '../src/tools/maps.ts';
+import { getMap, mapIdOf, nextSteps, whereItLands } from '../src/tools/maps.ts';
 import { loadSnapshot } from '../src/tools/shared.ts';
 import type { ToolContext } from '../src/types.ts';
 import { rig, type TestRig } from './helpers.ts';
@@ -212,5 +212,60 @@ describe("propose_spec takes a stored reading's own params back (12 Nov: the was
       params: { ...waved.network.params, colour_me: 'blue' },
     });
     expect(refused.error.message).toMatch(/takes no parameter "colour_me"/);
+  });
+});
+
+describe("the ceremony's card: where a new read would land (Elco, 12 Nov)", () => {
+  test('a target at an address already on the map lands on that map; a new one on its chain, with none', async () => {
+    const at = await whereItLands(r.ctx, 'moloch-v1', {
+      dao: DAO.toUpperCase().replace('0X', '0x'),
+    });
+    expect(at).toEqual({
+      existing_map: MAP,
+      name: 'Founders Guild v1',
+      chain: 'ethereum',
+      what: 'Moloch v1 members on Ethereum',
+    });
+    const fresh = await whereItLands(r.ctx, 'moloch-v1', {
+      dao: '0x000000000000000000000000000000000000dead',
+    });
+    expect(fresh).toEqual({
+      existing_map: null,
+      name: null,
+      chain: 'ethereum',
+      what: 'Moloch v1 members on Ethereum',
+    });
+  });
+});
+
+describe('the next steps on a map just read (META, from Elco, 12 Nov)', () => {
+  test("what it holds gives the steps; Compare only fills the composer; the brain's services that fit", () => {
+    const all = nextSteps({
+      id: MAP,
+      name: 'RaidGuild',
+      proposals: { voted: 3 },
+      payouts: { count: 2 },
+      value: { treasury_usd: '10' },
+    });
+    expect(all.steps).toEqual([
+      { label: 'Show the blocs', ask: 'Who votes together in RaidGuild?', finish: true },
+      { label: 'What it paid out', ask: 'What has RaidGuild paid out?', finish: true },
+      { label: 'Compare with…', ask: 'Compare RaidGuild with ', finish: false },
+    ]);
+    expect(all.services.map((s) => s.label)).toEqual([
+      'A governance health report',
+      'A distribution card',
+      'An authority map',
+      'A treasury and unlocks calendar',
+      'A full DAO report',
+    ]);
+    expect(all.services[1]).toEqual({
+      label: 'A distribution card',
+      ask: 'A distribution card for RaidGuild',
+      finish: true,
+    });
+    const bare = nextSteps({ id: MAP, name: 'X', proposals: null, payouts: null, value: null });
+    expect(bare.steps.map((s) => s.label)).toEqual(['Compare with…']);
+    expect(bare.services.map((s) => s.label)).toEqual(['A distribution card', 'An authority map']);
   });
 });

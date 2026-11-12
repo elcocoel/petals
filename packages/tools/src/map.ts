@@ -29,11 +29,11 @@ import type { ToolContext } from './types.ts';
 import { type CardValue, cardValue, valuesOf } from './value-store.ts';
 
 /** A chain by the name a reader's chain parameter takes (ethereum, gnosis), as find_target names it. */
-const chainName = (caip2: string) =>
+export const chainName = (caip2: string) =>
   Object.values(EVM_CHAINS).find((c) => c.caip2 === caip2)?.id ?? caip2;
 
 /** A chain as people name it: Gnosis, Solana, NEAR. */
-const chainWords = (caip2: string) =>
+export const chainWords = (caip2: string) =>
   Object.values(EVM_CHAINS).find((c) => c.caip2 === caip2)?.name ??
   (caip2.startsWith('solana:') ? 'Solana' : caip2.startsWith('near:') ? 'NEAR' : caip2);
 

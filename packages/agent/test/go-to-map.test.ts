@@ -66,5 +66,64 @@ describe('going to a map', () => {
     expect(got[1]?.readings[0].snapshot).toBe(VALIDATORS);
     const said = es.find((e) => e.event === 'message')?.data as Out;
     expect(said.text).toContain(map.map_url);
+    // the map moves once, before the answer, to the map both reads were about (WORKSPACE's 'show')
+    const shows = es.filter((e) => e.event === 'show');
+    expect(shows.map((e) => e.data)).toEqual([{ map: map.id }]);
+    expect(es.indexOf(shows[0] as AgentEvent)).toBeLessThan(
+      es.indexOf(es.find((e) => e.event === 'message') as AgentEvent),
+    );
+    // and the next steps on it come last, before done: nothing it doesn't hold, the services that fit
+    const names = es.map((e) => e.event);
+    expect(names.slice(-2)).toEqual(['next', 'done']);
+    const next = es.at(-2)?.data as Out;
+    expect(next.map).toBe(map.id);
+    expect(next.steps).toEqual([
+      { label: 'Compare with…', ask: `Compare ${got[1]?.name} with `, finish: false },
+    ]);
+    expect(next.services.every((x: Out) => x.finish === true)).toBe(true);
+  });
+});
+
+describe('the ceremony (Elco, 12 Nov: "mapping something new is a ceremony")', () => {
+  test("a new map waiting for its yes says where it lands, what's read, its rough cost and whose it is", async () => {
+    const ctx = {
+      ...(await withAMap()),
+      caller: { subject: 'prs_test', by: 'near:mainnet:elco.near' },
+    };
+    const found = (await callTool('look_up', { query: 'near validators' }, ctx)) as Out;
+    const llm = scriptedLlm(
+      [
+        {
+          calls: [
+            { name: 'propose_spec', args: { network: 'near-validators', sha256: VALIDATORS } },
+          ],
+        },
+        { content: 'Shall I draw it?' },
+      ],
+      { model: 'deepseek-ai/DeepSeek-V4.1-Flash-1017' },
+    );
+    const es: AgentEvent[] = await collect(
+      startRun(
+        {
+          messages: [{ role: 'user', content: 'who holds NEAR stake?' }],
+          agents: [
+            { name: 'Claude Code', last_seen: '2026-11-12T00:00:00Z', workers: 1, jobs: [] },
+          ],
+        },
+        { tools: ctx, llm, budget: DEFAULT_BUDGET },
+      ),
+    );
+    const held = es.find((e) => e.event === 'approval_required')?.data as Out;
+    expect(held).toMatchObject({
+      tool: 'propose_spec',
+      network: 'near-validators',
+      existing_map: found.maps[0].id,
+      chain: found.maps[0].chain,
+      what: expect.stringMatching(/validators/i),
+      // the chat's model's estimate for a new flower; the fixture's reader reads nothing live
+      cost: { usd: 0.0205, seconds: 0, calls: 0 },
+      by: 'near:mainnet:elco.near',
+      agents: ['Claude Code'],
+    });
   });
 });
