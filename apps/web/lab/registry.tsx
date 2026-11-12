@@ -39,6 +39,7 @@ import { GiveToAgent } from '../components/landing/GiveToAgent.tsx';
 import { Hero } from '../components/landing/Hero.tsx';
 import { Glass } from '../components/landing/HeroGlass.tsx';
 import { HeroStory } from '../components/landing/HeroStory.tsx';
+import { HeroTools } from '../components/landing/HeroTools.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
 import { LandingMap } from '../components/landing/LandingMap.tsx';
 import { LiveReading } from '../components/landing/LiveReading.tsx';
@@ -711,6 +712,23 @@ export const registry: LabEntry[] = [
       render: () => (
         <div className="aspect-3/2 w-full">
           <StoryLight beat={beat} t={settledMs(beat)} />
+        </div>
+      ),
+    })),
+  },
+  {
+    id: 'HeroTools',
+    group: 'Marks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/HeroTools.tsx',
+    // the hero's Tools box, the map's own rows, settled at each beat
+    states: [0, 1, 2, 4].map((beat) => ({
+      name: `beat ${beat + 1}`,
+      render: () => (
+        <div className="relative w-1/3">
+          <Glass tone="light" />
+          <HeroTools beat={beat} t={settledMs(beat)} />
         </div>
       ),
     })),
