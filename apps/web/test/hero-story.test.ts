@@ -4,13 +4,13 @@
 import { describe, expect, test } from 'vitest';
 import { flowerAt, shotOf } from '../lib/hero-shots.ts';
 import {
-  answer,
+  answerBox,
+  answerLine,
   beatMs,
   COUNT_MS,
   camera,
   INNER,
   kick,
-  OVERLAP_MS,
   PETALS,
   petalLengths,
   petalLit,
@@ -44,14 +44,20 @@ describe('the hero story', () => {
     }
   });
 
-  test('an answer is still leaving as the next question comes in, and gone soon after', () => {
+  test('the answer box stays on, and its words give way to the next answer on the response', () => {
     for (let beat = 0; beat < 6; beat++) {
       const next = (beat + 1) % 6;
-      expect(answer(beat, beatMs(beat)).opacity).toBeGreaterThan(0);
-      expect(answer(beat, beatMs(beat) + OVERLAP_MS).opacity).toBeLessThan(0.002);
+      for (let t = 0; t <= beatMs(beat); t += 50) expect(answerBox(beat, t).opacity).toBe(1);
+      // the answer is still there as the next question comes in, and gone once the next one is in
+      expect(answerLine(beat, next, 0).opacity).toBe(1);
+      expect(answerLine(beat, next, settledMs(next)).opacity).toBe(0);
+      expect(answerLine(next, next, settledMs(next)).opacity).toBe(1);
       expect(question(beat, beatMs(beat)).opacity).toBeLessThan(0.002);
       expect(question(next, 200).opacity).toBeGreaterThan(0.2);
     }
+    // on arrival the box comes with the first answer
+    expect(answerBox(0, 0, true).opacity).toBe(0);
+    expect(answerBox(0, settledMs(0), true).opacity).toBeCloseTo(1, 5);
   });
 
   test('the first beat on arrival grows from the bare centre', () => {
@@ -62,7 +68,7 @@ describe('the hero story', () => {
   test('a chosen beat shows both lines over its settled flower', () => {
     for (let beat = 0; beat < 6; beat++) {
       expect(question(beat, settledMs(beat)).opacity).toBeGreaterThan(0.4);
-      expect(answer(beat, settledMs(beat)).opacity).toBeCloseTo(1, 3);
+      expect(answerLine(beat, beat, settledMs(beat)).opacity).toBe(1);
       // only the ripple still moves it
       expect(near(petalLengths(beat, settledMs(beat)), petalLengths(beat, beatMs(beat)), 3)).toBe(
         true,
@@ -78,7 +84,7 @@ describe('the hero story', () => {
     }
   });
 
-  test('an elastic landing passes its mark, swings back, and lands on it', () => {
+  test('an elastic landing passes its mark and lands on it; with more damping it barely passes', () => {
     expect(spring(0)).toBe(0);
     expect(spring(1)).toBe(1);
     const path = Array.from({ length: 400 }, (_, k) => spring(k / 400));

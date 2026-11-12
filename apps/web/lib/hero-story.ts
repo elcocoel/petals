@@ -4,13 +4,14 @@
 // ... we need pulse ... think musically, almost like to the beat of rap"). One tempo drives everything: each story
 // beat is a phrase of bars and every move lands on a count. On the one, the cut and the call: the camera whips to
 // its shot and the question slams in. A rest to read it. On the three, the reaction: the flower hits, and fast
-// accents follow it. On the next bar's one, the response: the answer, a word on every thirty-second. A hold where
-// only the pulse moves, and the words cut out on the next one. The history beat is the slow one: its heights travel
+// accents follow it. On the next bar's one, the response: Petals' answer, in a box that came with the first one and
+// stays, the last answer giving way to this one word by word (Elco, 12 Nov: "no reason for them to go away before
+// the next question comes in"). The question leaves on the last and. The history beat is the slow one: its heights travel
 // a whole bar and land on a boom. Under it all the light thumps on every count, harder on one and three.
 // And it is organic, never dead still (Elco, 12 Nov: "ins and outs and elastic or sine wave ... not just bursts";
-// "completely stopped needs to be an exception"): each hit winds up before it and lands elastic, wobbling onto its
-// mark; exits dip before they go; and between the hits the petals ripple in a slow wave round the clock, the
-// flower thumps with the pulse, the words float and the camera keeps drifting.
+// "completely stopped needs to be an exception"), and smooth (Elco, 12 Nov: no bumpiness, no jerking): each hit
+// eases in and lands with a little give, never a bounce; exits dip before they go; and between the hits the petals
+// ripple in a slow wave round the clock, the words float and the camera keeps drifting.
 // Everything a frame draws is a pure function of the beat and the time into it, so choosing a beat settles it at
 // once, a test can read any moment, and a video can be rendered frame by frame from the same numbers. The flower
 // is a symbol, not a reading: no network, no counts. Heights stay linear and widths equal (the art direction's
@@ -52,8 +53,6 @@ const CALL_FRESH = count(2);
 const REACT = count(3);
 /** The response: the answer lands on the second bar's one. */
 const RESPOND = count(5);
-/** How far into the next beat the answer is still cutting out, as the next question slams in. */
-export const OVERLAP_MS = SIXTEENTH;
 
 export const PETALS = 24;
 /** Where the petals start: the centre's edge. */
@@ -104,8 +103,10 @@ export function spring(p: number, damping = 0.5): number {
   return 1 - decay * (Math.cos(wd * p) + ((damping * w) / wd) * Math.sin(wd * p));
 }
 
-/** A petal, a bloom, a word: an elastic pop. */
-const pop = (t: number, start: number, ms = SPRING_MS) => spring(at(t, start, ms));
+/** How much a petal, a bloom or a vote gives as it lands: a few % past its mark, no swing back to speak of. */
+const GIVE = 0.72;
+/** A petal, a bloom, a vote: an elastic pop, with a little give. */
+const pop = (t: number, start: number, ms = SPRING_MS) => spring(at(t, start, ms), GIVE);
 
 /** The wind-up before a hit at `start`, 0 to 1: drawn in over a sixteenth, let go as the hit comes. */
 const windUp = (t: number, start: number) =>
@@ -168,20 +169,21 @@ const FRESH_KICKS: readonly (readonly [number, number])[] = [
 
 /**
  * How much the camera is punched in at a moment, from 0: before each hit it eases back a little (the wind-up), on
- * the hit it punches in, and the punch dies away in a wobble. A hit on the one has no wind-up: that is the cut.
+ * the hit it eases in, and lets go slowly. A hit on the one has no wind-up: that is the cut.
  */
 export function kick(beat: number, t: number, fresh = false): number {
   const hits = fresh && beat === 0 ? FRESH_KICKS : (KICKS[beat] ?? []);
   let k = 0;
   for (const [c, amp] of hits) {
     const d = t - count(c);
-    const back = c > 1 ? 0.35 : 0;
+    const back = c > 1 ? 0.2 : 0;
     if (d < 0) {
-      k -= back * amp * ease.inSine(Math.max(0, (d + WIND_MS) / WIND_MS));
+      k -= back * amp * ease.inOutSine(Math.max(0, (d + WIND_MS) / WIND_MS));
       continue;
     }
-    const punch = (1 - Math.exp(-d / 25)) * Math.exp(-d / 170) * Math.cos(d / 95);
-    k += amp * (punch - back * Math.exp(-d / 25));
+    // eased in from the wind-up, then let go slowly
+    const rise = ease.inOutSine(Math.min(1, d / 90));
+    k += amp * (lerp(-back, 1, rise) * Math.exp(-Math.max(0, d - 90) / 220));
   }
   return k;
 }
@@ -190,7 +192,9 @@ export function kick(beat: number, t: number, fresh = false): number {
 export function pulse(t: number): number {
   const n = Math.floor(t / COUNT_MS);
   const d = t - n * COUNT_MS;
-  return (n % 2 === 0 ? 1 : 0.5) * Math.min(1, d / 25) * Math.exp(-d / (0.3 * COUNT_MS));
+  return (
+    (n % 2 === 0 ? 1 : 0.5) * ease.inOutSine(Math.min(1, d / 60)) * Math.exp(-d / (0.3 * COUNT_MS))
+  );
 }
 
 // ----- the flower -----
@@ -213,9 +217,10 @@ function shaped(beat: number, t: number, i: number, from: number): number {
     }
     case 1: {
       // the even flower draws in on the and of two, holds its breath, and the heights burst apart on the three
-      const held = ease.inCubic(at(t, count(2.5), EIGHTH)) * (1 - at(t, REACT, SIXTEENTH));
+      const held =
+        ease.inOutSine(at(t, count(2.5), EIGHTH)) * (1 - ease.inOutSine(at(t, REACT, EIGHTH)));
       const grown = lerp(from, base[i] as number, pop(t, REACT + i * (ROLL / 2)));
-      return INNER + (grown - INNER) * (1 - 0.1 * held);
+      return INNER + (grown - INNER) * (1 - 0.06 * held);
     }
     case 3:
       return lerp(from, later[i] as number, historyAt(t));
@@ -250,12 +255,12 @@ const LAND = count(9);
 
 /**
  * How far the history beat has gone from then to now, 0 to 1: the slow one. It sets off with the answer, gathers
- * speed through the whole second bar, lands hard on the third bar's one and wobbles there a moment.
+ * speed through the whole second bar, lands hard on the third bar's one and gives a little there.
  */
 export function historyAt(t: number): number {
   if (t < LAND) return ease.inSine(at(t, RESPOND, LAND - RESPOND));
   const d = t - LAND;
-  return 1 + 0.08 * Math.exp(-d / 160) * Math.sin(d / 70);
+  return 1 + 0.03 * Math.exp(-d / 200) * Math.sin(d / 110);
 }
 
 /** Where the history beat's marker is, in any beat: arrived, while it cuts out on the next one. */
@@ -272,8 +277,8 @@ export interface Camera {
 
 /** The pull back on the one to make room for the communities the last beat leads to, and the push back in after it. */
 function pullOf(beat: number, t: number, fresh: boolean): number {
-  if (beat === 5) return lerp(1, 0.65, spring(at(t, CALL, 1.5 * COUNT_MS), 0.75));
-  if (beat === 0 && !fresh) return lerp(0.65, 1, spring(at(t, CALL, 1.5 * COUNT_MS), 0.75));
+  if (beat === 5) return lerp(1, 0.65, spring(at(t, CALL, 1.5 * COUNT_MS), 0.85));
+  if (beat === 0 && !fresh) return lerp(0.65, 1, spring(at(t, CALL, 1.5 * COUNT_MS), 0.85));
   return 1;
 }
 
@@ -282,7 +287,7 @@ export function camera(beat: number, t: number, fresh = false): Camera {
   const pull = pullOf(beat, t, fresh);
   // the petals are all at the centre's edge when the twist begins, so it starts from nothing seen
   const rotate =
-    beat === 0 && t >= REACT ? -16 * (1 - spring(at(t, REACT, 1.5 * COUNT_MS), 0.6)) : 0;
+    beat === 0 && t >= REACT ? -16 * (1 - spring(at(t, REACT, 1.5 * COUNT_MS), 0.8)) : 0;
   return { scale: pull, rotate, y: (1 - (pull - 0.65) / 0.35) * 8 };
 }
 
@@ -433,23 +438,28 @@ export interface Motion {
   glow: number;
 }
 
-/** How far a bubble floats up and down while it is on, in px, once every two bars; and how far it sways, in degrees. */
+/** How far a bubble floats up and down while it is on, in px; and how far it sways, in degrees. */
 const FLOAT_PX = 3;
 const SWAY = 1.5;
+/** The question's float, once every two bars of its own beat. */
 const float = (u: number, phase: number) => Math.sin((Math.PI * u) / (4 * COUNT_MS) + phase);
+/** The whole story's length, and the answer box's float on it: six times round, so it never jumps as the loop turns. */
+const LOOP = startOf(6);
+const drift = (beat: number, t: number, phase: number) =>
+  Math.sin((12 * Math.PI * (startOf(beat) + t)) / LOOP + phase);
 
 /**
- * The question, `u` into its beat: the call. It springs in on the one from its side; once answered it eases back,
+ * The question, `u` into its beat: the call. It eases in on the one from its side; once answered it eases back,
  * dimmer and a little soft, as a camera racks focus; it floats while it is on; it dips and is gone on the last and.
  */
 export function question(beat: number, u: number, fresh = false): Motion {
   const start = fresh && beat === 0 ? CALL_FRESH : CALL;
-  const inQ = spring(at(u, start, SPRING_MS), 0.6);
+  const inQ = spring(at(u, start, SPRING_MS), 0.85);
   const answered = ease.inOutSine(at(u, RESPOND - SIXTEENTH, EIGHTH));
   const out = at(u, beatMs(beat) - 1.5 * EIGHTH, 1.3 * EIGHTH);
   const leave = ease.inCubic(out);
   return {
-    opacity: ease.outCubic(at(u, start, SIXTEENTH)) * (1 - 0.45 * answered) * (1 - leave),
+    opacity: ease.outCubic(at(u, start, EIGHTH)) * (1 - 0.45 * answered) * (1 - leave),
     x: -26 * (1 - inQ),
     y: 10 * (1 - inQ) - 16 * ease.backIn(out) + FLOAT_PX * float(u, 0),
     blur: 6 * (1 - ease.outCubic(at(u, start, EIGHTH))) + 0.6 * answered + 6 * leave,
@@ -462,35 +472,49 @@ export function question(beat: number, u: number, fresh = false): Motion {
 }
 
 /**
- * The answer, `u` into its beat: the response. It springs in on the second bar's one, floats against the question,
- * and dips and is gone on the next one.
+ * Petals' answer box: it comes in with the very first answer and stays from then on, floating; a glint crosses it
+ * as each new answer lands.
  */
-export function answer(beat: number, u: number): Motion {
-  const inA = spring(at(u, RESPOND, SPRING_MS), 0.6);
-  const out = at(u, beatMs(beat) - THIRTYSECOND, THIRTYSECOND + OVERLAP_MS);
-  const leave = ease.inCubic(out);
+export function answerBox(beat: number, t: number, fresh = false): Motion {
+  const first = fresh && beat === 0;
+  const inA = first ? spring(at(t, RESPOND - SIXTEENTH, SPRING_MS), 0.85) : 1;
   return {
-    opacity: ease.outCubic(at(u, RESPOND, SIXTEENTH)) * (1 - leave),
-    x: 26 * (1 - inA),
-    y: 10 * (1 - inA) - 16 * ease.backIn(out) + FLOAT_PX * float(u, Math.PI),
-    blur: 6 * leave,
-    scale: 0.9 + 0.1 * inA,
-    turn: 13 + 20 * (1 - inA) + 12 * leave + SWAY * float(u, Math.PI + 1),
-    z: 80 - 50 * leave,
-    glint: at(u, RESPOND + SIXTEENTH, COUNT_MS),
-    glow: ease.outCubic(at(u, RESPOND, EIGHTH)),
+    opacity: first ? ease.outCubic(at(t, RESPOND - SIXTEENTH, EIGHTH)) : 1,
+    x: 20 * (1 - inA),
+    y: 8 * (1 - inA) + FLOAT_PX * drift(beat, t, Math.PI),
+    blur: 0,
+    scale: 0.94 + 0.06 * inA,
+    turn: 13 + 16 * (1 - inA) + SWAY * drift(beat, t, Math.PI + 1),
+    z: 80,
+    glint: at(t, RESPOND, 1.5 * COUNT_MS),
+    glow: inA,
   };
 }
 
-/** One word of the answer, `j` from its start: each lands on its own thirty-second, bouncing onto the line. */
-export function answerWord(u: number, j: number) {
-  const start = RESPOND + SIXTEENTH + j * THIRTYSECOND;
-  const p = spring(at(u, start, SPRING_MS), 0.5);
-  return {
-    opacity: ease.outCubic(at(u, start, THIRTYSECOND * 1.5)),
-    y: 14 * (1 - p),
-    blur: 6 * (1 - ease.outCubic(at(u, start, EIGHTH))),
-  };
+/**
+ * One beat's answer in the box at a moment: this beat's comes in on the response, word by word; the last beat's
+ * stays until then and gives way just before it; any other is not there. `words` says the line is coming in, so
+ * each word is drawn with its own motion (answerWord).
+ */
+export function answerLine(own: number, beat: number, t: number, fresh = false) {
+  if (own === beat) return { opacity: t >= RESPOND ? 1 : 0, y: 0, blur: 0, words: true };
+  if (own === prior(beat) && !(fresh && beat === 0)) {
+    const out = at(t, RESPOND - EIGHTH, EIGHTH);
+    return {
+      opacity: 1 - ease.inOutSine(out),
+      y: -8 * ease.inCubic(out),
+      blur: 4 * ease.inCubic(out),
+      words: false,
+    };
+  }
+  return { opacity: 0, y: 0, blur: 0, words: false };
+}
+
+/** One word of the answer coming in, `j` from its start: one on each sixteenth, easing up into the line. */
+export function answerWord(t: number, j: number) {
+  const start = RESPOND + j * SIXTEENTH;
+  const p = ease.outCubic(at(t, start, 1.5 * EIGHTH));
+  return { opacity: ease.outCubic(at(t, start, EIGHTH)), y: 8 * (1 - p), blur: 4 * (1 - p) };
 }
 
 // ----- the shapes -----

@@ -1,16 +1,15 @@
 'use client';
 import { type CSSProperties, memo } from 'react';
-import { flowerAt, type Pin, shotOf } from '../../lib/hero-shots.ts';
+import { answerPin, flowerAt, type Pin, shotOf } from '../../lib/hero-shots.ts';
 import {
-  answer,
+  answerBox,
+  answerLine,
   answerWord,
   beatMs,
   historyLine,
   kick,
   layerOpacity,
   type Motion,
-  OVERLAP_MS,
-  pulse,
   question,
 } from '../../lib/hero-story.ts';
 // The landing's hero (HERO ART's V2, approved by Elco 11 Nov: "get this in the hero please"; HERO MOTION's
@@ -20,9 +19,8 @@ import {
 // flower that performs each answer (StoryFlower); the camera whips it from shot to shot on each beat's one and is
 // punched in by every hit, and the depth is the camera's own, never the visitor's pointer (Elco, 12 Nov). In
 // front, the question
-// in a light bubble and Petals' answer in a dark one, on opposite sides, swapping sides from beat to beat; the
-// question comes in, the flower answers, the answer comes in word by word, and it is still leaving as the next
-// question arrives, so no transcript builds up and there is no dead air. Under the hero, apart from the stage, the
+// in a light bubble, swapping sides from beat to beat, and Petals' answer in a dark box that stays, low on the right,
+// its words giving way to the next answer's (Elco, 12 Nov); so no transcript builds up and there is no dead air. Under the hero, apart from the stage, the
 // chapters: pause, and the six beats with the current one filling as it plays.
 // It plays by itself (viewmodels/useHeroStory.ts). `HeroStoryView` only draws, so the lab can hand it a layer to
 // isolate. Only the stage and the chapters redraw each frame.
@@ -110,46 +108,74 @@ function Question({
   );
 }
 
-/** Petals' answer, in a dark bubble, word by word into one line; the sentence is the approved one, whole. */
-function Answer({ beat, u, wide }: { beat: number; u: number; wide: boolean }) {
-  const said = story.beats[beat] ?? story.beats[0];
-  const pin = shotOf(beat, wide).answer;
-  const m = answer(beat, u);
+/**
+ * Petals' answer, in a dark box that comes with the first answer and stays (Elco, 12 Nov): only its words change,
+ * the last answer giving way to the next word by word. Every answer sits in the same cell, so the box is the size
+ * of the longest and never changes size.
+ */
+function Answer({
+  beat,
+  t,
+  fresh,
+  wide,
+}: {
+  beat: number;
+  t: number;
+  fresh: boolean;
+  wide: boolean;
+}) {
+  const pin = answerPin(wide);
+  const m = answerBox(beat, t, fresh);
   if (m.opacity < 0.002) return null;
-  const label = answerWord(u, -2);
   return (
     <div className="absolute top-0 left-0 w-max max-w-9/10 lg:max-w-2/5" style={pinned(pin, m)}>
       {/* its rim lit from the flower's side */}
       <Glass tone="dark" facing={pin.ax > 0.5 ? 'left' : 'right'} glint={m.glint} glow={m.glow} />
       <div className="relative flex flex-col gap-space-8 px-block-gap py-space-16 text-on-action">
-        <p
-          className="my-0 flex items-center gap-space-8 type-mono"
-          style={{ opacity: label.opacity * 0.7, filter: soft(label.blur) }}
-        >
+        <p className="my-0 flex items-center gap-space-8 type-mono" style={{ opacity: 0.7 }}>
           <Icon name="petals" small />
           {story.petals}
         </p>
-        <p className="my-0 text-pretty type-heading">
-          {said.a.split(' ').map((w, j) => {
-            const word = answerWord(u, j);
+        <div className="grid">
+          {story.beats.map((b, own) => {
+            const line = answerLine(own, beat, t, fresh);
             return (
-              // biome-ignore lint/suspicious/noArrayIndexKey: a word's place in its fixed sentence
-              <span key={j}>
-                {j > 0 && ' '}
-                <span
-                  className="inline-block"
-                  style={{
-                    opacity: word.opacity,
-                    translate: `0 ${n2(word.y)}px`,
-                    filter: soft(word.blur),
-                  }}
-                >
-                  {w}
-                </span>
-              </span>
+              <p
+                key={b.name}
+                aria-hidden={own !== beat}
+                className="col-start-1 row-start-1 my-0 text-pretty type-heading"
+                style={{
+                  visibility: line.opacity > 0.002 ? undefined : 'hidden',
+                  opacity: line.opacity,
+                  translate: `0 ${n2(line.y)}px`,
+                  filter: soft(line.blur),
+                }}
+              >
+                {line.words
+                  ? b.a.split(' ').map((w, j) => {
+                      const word = answerWord(t, j);
+                      return (
+                        // biome-ignore lint/suspicious/noArrayIndexKey: a word's place in its fixed sentence
+                        <span key={j}>
+                          {j > 0 && ' '}
+                          <span
+                            className="inline-block"
+                            style={{
+                              opacity: word.opacity,
+                              translate: `0 ${n2(word.y)}px`,
+                              filter: soft(word.blur),
+                            }}
+                          >
+                            {w}
+                          </span>
+                        </span>
+                      );
+                    })
+                  : b.a}
+              </p>
             );
           })}
-        </p>
+        </div>
       </div>
     </div>
   );
@@ -208,11 +234,10 @@ export function HeroStoryView({
   layer?: StoryLayer;
 }) {
   const { beat, t, fresh, wide } = clock;
-  const prior = (beat + 5) % 6;
   const marker = historyLine(beat, t);
   const f = flowerAt(beat, t, wide, fresh);
-  // punched in by each hit, and thumping lightly with every count
-  const punch = 1 + kick(beat, t, fresh) + 0.006 * pulse(t);
+  // punched in by each hit
+  const punch = 1 + kick(beat, t, fresh);
   const cy = centreY(wide);
   const back = layer === 'words' ? 0.08 : 1;
   return (
@@ -289,11 +314,7 @@ export function HeroStoryView({
               className="pointer-events-none absolute inset-0"
               style={{ opacity: layer === 'petals' ? 0 : 1 }}
             >
-              {/* the last answer still leaving; on arrival there is none */}
-              {!(fresh && beat === 0) && t < OVERLAP_MS && (
-                <Answer beat={prior} u={beatMs(prior) + t} wide={wide} />
-              )}
-              <Answer beat={beat} u={t} wide={wide} />
+              <Answer beat={beat} t={t} fresh={fresh} wide={wide} />
             </div>
           </div>
         </div>
