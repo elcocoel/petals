@@ -78,7 +78,7 @@ test('on the map: the boxes over it, the names inside the window, the speaker un
   expect(text('components/ui/FloatBox.tsx')).toMatch(/data-float=""/);
   const scene = text('landscape/scene.ts');
   expect(scene).toMatch(/const placed: Box\[\] = \[\.\.\.over\];/);
-  expect(scene).toMatch(/const taken: Box\[\] = \[\.\.\.over\];/);
+  expect(scene).toMatch(/const taken: Box\[\] = \[\.\.\.over, /);
   expect(scene).toMatch(
     /x0 = Math\.min\(view\.width - EDGE \/ 2 - w, Math\.max\(left \+ EDGE \/ 2, x0\)\);/,
   );

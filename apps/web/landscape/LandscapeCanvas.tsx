@@ -35,6 +35,7 @@ import { Overlay } from '../components/ui/Overlay.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
+import { SHAPE } from '../flower/ring.ts';
 import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
 import type { Rect, Size } from '../lib/float-box.ts';
 import { mapClaimGroups, mapClaimWords } from '../lib/map-claims.ts';
@@ -53,6 +54,7 @@ import { useMapSearch } from '../viewmodels/useMapSearch.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
 import {
   type Continent,
+  freePlace,
   GRAVITY_DEFAULT,
   type Place,
   ringsAround,
@@ -99,6 +101,63 @@ export type MapShow =
   | { wallet: string; chain?: string | null }
   | { line: readonly [string, string] }
   | { proposal: { map: string; id: string } };
+
+/** A reading just made, for the map (LandscapeCanvas `landed`; WORKSPACE hands it from the conversation's turn). */
+export interface MapLanded {
+  /** the chain its map is on */
+  chain: string;
+  /** its name, as the conversation calls it */
+  name: string;
+  reading: FlowerReading;
+  /** the map it's a new layer of, or null for a completely new map */
+  map: string | null;
+  /** its reading's snapshot */
+  snapshot?: string | undefined;
+  /** its token's symbol, and its logo, where known */
+  symbol?: string | undefined;
+  logo?: string | null | undefined;
+}
+
+/** Where a new map stands on its chain before and after it's read: the first free place (places.ts freePlace). */
+const placeOfNew = (
+  data: { flowers: CanvasFlower[]; chains: CanvasChain[] },
+  chain: string,
+  id: string,
+) => {
+  const home = data.chains.find((c) => c.chain === chain)?.continent;
+  if (!home) return null;
+  const on = data.flowers.filter((f) => f.place.chain === chain).map((f) => f.place);
+  return freePlace(on, home, chain, id);
+};
+
+/** The map with a reading just made: a map that's here drawn from it, a new one in its placeholder's place. */
+function withLanded<D extends { flowers: CanvasFlower[]; chains: CanvasChain[] }>(
+  data: D,
+  landed: MapLanded | null,
+): D {
+  if (!landed) return data;
+  const i = landed.map ? data.flowers.findIndex((f) => f.map === landed.map) : -1;
+  const here = data.flowers[i];
+  if (here) {
+    const flowers = data.flowers.slice();
+    flowers[i] = { ...here, reading: landed.reading, snapshot: landed.snapshot ?? here.snapshot };
+    return { ...data, flowers };
+  }
+  const place = placeOfNew(data, landed.chain, `new:${landed.name}`);
+  if (!place) return data;
+  const flower: CanvasFlower = {
+    name: landed.name,
+    mark: {
+      logo: landed.logo ?? null,
+      symbol: landed.symbol ?? (Array.from(landed.name.trim())[0] ?? '').toUpperCase(),
+    },
+    place,
+    reading: landed.reading,
+    snapshot: landed.snapshot,
+    map: landed.map,
+  };
+  return { ...data, flowers: [...data.flowers, flower] };
+}
 
 export interface MapWallet {
   id: string;
@@ -173,6 +232,8 @@ function Land({
   go,
   worth,
   show,
+  pending,
+  progress,
 }: {
   data: LandscapeData;
   probe: boolean;
@@ -201,6 +262,10 @@ function Land({
   worth: boolean;
   /** what the page's conversation is about, on this chain's map (undefined: the page says nothing) */
   show: LandShow | null | undefined;
+  /** a new map's placeholder on this chain's map, or null */
+  pending: { x: number; y: number; s: number; name: string } | null;
+  /** work running on this chain's map: under a flower (its place here) or the placeholder, or null */
+  progress: { at: number | 'pending'; words: string; share: number | null } | null;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
@@ -217,6 +282,8 @@ function Land({
     onProposal,
     clearOfChains,
     worth,
+    pending,
+    progress,
     ...(onPick ? { onPick } : {}),
   };
   useLandscape(svg, data, probe, aside, at);
@@ -238,6 +305,16 @@ function Land({
   useEffect(() => {
     if (show !== undefined) at.current?.show?.(show);
   }, [show]);
+  // the placeholder: the camera flies to take it in (Elco, 12 Nov: "a recognizable 'state'")
+  const pendingAt = pending ? `${pending.x},${pending.y},${pending.s}` : null;
+  useEffect(() => {
+    const p = at.current?.pending;
+    if (!pendingAt || !p) return;
+    at.current?.fit?.({ cx: p.x, cy: p.y, r: SHAPE.R * p.s * 3 });
+  }, [pendingAt]);
+  useEffect(() => {
+    if (pending !== undefined || progress !== undefined) at.current?.redraw?.();
+  }, [pending, progress]);
   return (
     // surface.canvas
     <svg
@@ -251,7 +328,7 @@ function Land({
 }
 
 export function LandscapeCanvas({
-  data,
+  data: given,
   probe = false,
   fill = 'window',
   title,
@@ -269,6 +346,9 @@ export function LandscapeCanvas({
   information,
   ownBox = false,
   show,
+  placeholder = null,
+  progress = null,
+  landed = null,
 }: {
   data: {
     flowers: CanvasFlower[];
@@ -319,6 +399,18 @@ export function LandscapeCanvas({
    * what it lit; undefined, the page says nothing.
    */
   show?: MapShow | null | undefined;
+  /**
+   * A completely new map on its way (Elco, 12 Nov on /make: "if it's completely new, than we have a 'place
+   * holder'"): a dashed round place on its chain's map, its name and 'new', the camera taking it in.
+   */
+  placeholder?: { chain: string; name: string } | null | undefined;
+  /** Work running (Elco, 12 Nov on /make): a strip under that map's flower, or under the placeholder ('new'). */
+  progress?: { map: string | 'new'; words: string; share: number | null } | null | undefined;
+  /**
+   * A reading just made (Elco, 12 Nov on /make: "the result lands on the map as a new layer"): on a map that's here,
+   * its flower is drawn from it; a completely new one stands where its placeholder stood.
+   */
+  landed?: MapLanded | null | undefined;
   /** What the page says about where it is (a map's page: what it maps, its worth, its readings), first in Information. */
   information?: { title: string; body: ReactNode } | undefined;
   /**
@@ -327,6 +419,8 @@ export function LandscapeCanvas({
    */
   ownBox?: boolean;
 }) {
+  // a reading just made lands on the map: a new layer of a map that's here, or a new map in its placeholder's place
+  const data = useMemo(() => withLanded(given, landed), [given, landed]);
   const person = usePersonView();
   // 'edit' (the Power Map, Elco, 11 Nov: "switch the legends live and watching the map adapt"): Settings' own
   // hands, for anyone: a person's view is kept on the server, a visitor's by its hash in their browser (Elco,
@@ -381,6 +475,15 @@ export function LandscapeCanvas({
     setChain(next.chain);
     setShownOn(next);
   }, [show]);
+  // the placeholder, where its map will stand (the same free place its reading lands in), on its chain
+  const pendingPlace = useMemo(
+    () => (placeholder ? placeOfNew(given, placeholder.chain, `new:${placeholder.name}`) : null),
+    [given, placeholder],
+  );
+  const placeholderChain = placeholder?.chain ?? null;
+  useEffect(() => {
+    if (placeholderChain) setChain(placeholderChain);
+  }, [placeholderChain]);
   // the overlays' folds: open where the map has room, folded to their bars where it's narrow, a phone's or
   // /make's beside the conversation (WORKSPACE's walk, 11 Nov): its own room, not the window's
   // (on the map's boxes the chain list's fold is Tools', and Insights' is Information's)
@@ -521,6 +624,25 @@ export function LandscapeCanvas({
   // the DAO a click put in the middle, by its map (Elco, 12 Nov walk: "one click put something in the center"); the
   // rest arranged round it by the wallets they share with it
   const [centre, setCentre] = useState<string | null>(null);
+  // drawn where its reading will land: spread by the gravity, as every place on the map is
+  const pendingHere = useMemo(() => {
+    if (!placeholder || !pendingPlace || pendingPlace.chain !== chain) return null;
+    const home = data.chains.find((c) => c.chain === chain)?.continent;
+    const at = home ? spreadPlace(pendingPlace, home, spreadOf(gravity)) : pendingPlace;
+    return { x: at.x, y: at.y, s: at.s, name: placeholder.name };
+  }, [placeholder, pendingPlace, chain, data, gravity]);
+  const progressHere = useMemo(() => {
+    if (!progress) return null;
+    if (progress.map === 'new')
+      return pendingHere
+        ? { at: 'pending' as const, words: progress.words, share: progress.share }
+        : null;
+    const i = data.flowers.findIndex((f) => f.map === progress.map);
+    const f = data.flowers[i];
+    if (!f || f.place.chain !== chain) return null;
+    const at = data.flowers.slice(0, i).filter((x) => x.place.chain === chain).length;
+    return { at, words: progress.words, share: progress.share };
+  }, [progress, pendingHere, data, chain]);
   const land = useMemo(() => {
     if (!built) return null;
     const middle = { x: built.home.cx, y: built.home.cy };
@@ -769,6 +891,8 @@ export function LandscapeCanvas({
           worth={worth}
           go={go?.chain === chain ? go : null}
           show={shownOn?.chain === chain ? shownOn.show : undefined}
+          pending={pendingHere}
+          progress={progressHere}
         />
       )}
       {movable ? (
