@@ -28,7 +28,7 @@ import {
   TX_HASH,
   yoctoToNear,
 } from '@petal/near/pay';
-import type { Store } from '@petal/store';
+import type { Store, TopUpRow } from '@petal/store';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import type { Network, RouteAuth } from './auth-routes.ts';
@@ -364,8 +364,8 @@ export function payRoutes(d: PayDeps): Hono {
     const row = await d.store.topUp.get(c.req.param('deposit'));
     if (!row || row.person !== me.person)
       return fail(c, 'not_found', 'No top-up of yours at that address.');
-    const quote = JSON.parse(row.quote) as { deposit_memo: string | null };
-    if (row.settled_at) {
+    // landed, or over (refunded, failed, expired): as it stands
+    if (row.settled_at || OVER.has(row.status)) {
       return ok(c, {
         top_up: {
           deposit_address: row.deposit_address,
@@ -375,42 +375,13 @@ export function payRoutes(d: PayDeps): Hono {
         credit: await personCredit(d.store, me.person),
       });
     }
-    let s: Awaited<ReturnType<typeof swapStatus>>;
+    let s: Awaited<ReturnType<typeof settleTopUp>>;
     try {
-      s = await swapStatus(row.deposit_address, quote.deposit_memo, d.oneClick);
+      s = await settleTopUp(d, me.person, row);
     } catch (e) {
       return fail(c, 'source_failed', `NEAR Intents couldn't say: ${(e as Error).message}`);
     }
-    let credited: number | null = null;
-    if (s.status === 'SUCCESS') {
-      // the dollars it delivered, as USDC (six decimals), at the price it came in at
-      const delivered =
-        s.amount_out_usd !== null
-          ? Number(s.amount_out_usd)
-          : s.amount_out !== null
-            ? Number(s.amount_out) / 1e6
-            : row.usd;
-      const usdIn = Math.round(delivered * 1e6) / 1e6;
-      const at = new Date(clock()).toISOString();
-      if (await d.store.topUp.settle(row.deposit_address, usdIn, at)) {
-        await payPerson(d.store, me.person, {
-          id: `intents:${row.deposit_address}`,
-          usd: usdIn,
-          now: new Date(clock()),
-        });
-        await chargeBase(
-          d.store,
-          d.price ?? PRICE,
-          me.person,
-          { kind: 'top_up', usd: usdIn },
-          `intents:${row.deposit_address}`,
-          at,
-        );
-      }
-      credited = usdIn;
-    } else if (s.status !== row.status) {
-      await d.store.topUp.setStatus(row.deposit_address, s.status);
-    }
+    const credited = s.credited;
     return ok(c, {
       top_up: {
         deposit_address: row.deposit_address,
@@ -424,4 +395,75 @@ export function payRoutes(d: PayDeps): Hono {
   });
 
   return app;
+}
+
+type Settling = Pick<PayDeps, 'store' | 'oneClick' | 'price' | 'clock'>;
+
+/**
+ * One top-up asked again of NEAR Intents: at SUCCESS what it delivered lands on the person's credit, once (the
+ * row settles once, whoever asks), else its status is kept. Throws when 1Click can't say.
+ */
+export async function settleTopUp(d: Settling, person: string, row: TopUpRow) {
+  const clock = d.clock ?? Date.now;
+  const quote = JSON.parse(row.quote) as { deposit_memo: string | null };
+  const s = await swapStatus(row.deposit_address, quote.deposit_memo, d.oneClick);
+  let credited: number | null = null;
+  if (s.status === 'SUCCESS') {
+    // the dollars it delivered, as USDC (six decimals), at the price it came in at
+    const delivered =
+      s.amount_out_usd !== null
+        ? Number(s.amount_out_usd)
+        : s.amount_out !== null
+          ? Number(s.amount_out) / 1e6
+          : row.usd;
+    const usdIn = Math.round(delivered * 1e6) / 1e6;
+    const at = new Date(clock()).toISOString();
+    if (await d.store.topUp.settle(row.deposit_address, usdIn, at)) {
+      await payPerson(d.store, person, {
+        id: `intents:${row.deposit_address}`,
+        usd: usdIn,
+        now: new Date(clock()),
+      });
+      await chargeBase(
+        d.store,
+        d.price ?? PRICE,
+        person,
+        { kind: 'top_up', usd: usdIn },
+        `intents:${row.deposit_address}`,
+        at,
+      );
+    }
+    credited = usdIn;
+  } else if (s.status !== row.status) {
+    await d.store.topUp.setStatus(row.deposit_address, s.status);
+  }
+  return { ...s, credited };
+}
+
+/**
+ * The ends of a swap that delivered nothing: 1Click's, and EXPIRED, ours, for a quote nothing was sent to before
+ * its deadline (1Click refunds what comes after). Nothing more will come of them.
+ */
+const OVER = new Set(['REFUNDED', 'FAILED', 'EXPIRED']);
+
+/**
+ * Each of the person's top-ups that hasn't landed, asked again (META, 12 Nov, wave 5: "closing the tab never loses
+ * a credit"): read when their own page reads /api/v1/me, never on a timer, all at once. A quote still waiting for
+ * its deposit after its deadline is asked once more, and if nothing came it's EXPIRED, never asked again; one sent
+ * in time says so (KNOWN_DEPOSIT_TX, PROCESSING) and is asked until it lands. A source that can't say now is asked
+ * at the next read.
+ */
+export async function settleOpenTopUps(d: Settling, person: string): Promise<void> {
+  const now = (d.clock ?? Date.now)();
+  const open = (await d.store.topUp.ofPerson(person, Number.MAX_SAFE_INTEGER)).filter(
+    (row) => !row.settled_at && !OVER.has(row.status),
+  );
+  await Promise.all(
+    open.map(async (row) => {
+      const s = await settleTopUp(d, person, row).catch(() => null);
+      const { deadline } = JSON.parse(row.quote) as { deadline?: string };
+      if (s?.status === 'PENDING_DEPOSIT' && deadline && Date.parse(deadline) < now)
+        await d.store.topUp.setStatus(row.deposit_address, 'EXPIRED');
+    }),
+  );
 }

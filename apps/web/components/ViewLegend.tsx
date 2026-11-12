@@ -9,7 +9,7 @@
 // words where it only reads. Under Colour, its keys. The glasses are the person's, never the petal's. Opaque, so
 // it reads over a map: one of the overlays (Overlay; design/overlays.md). Props only.
 import type { View } from '@petal/core/types';
-import { DIMENSIONS, type Dimension, type Piece } from '@petal/core/view';
+import { COLOUR_KEYS, DIMENSIONS, type Dimension, type Piece } from '@petal/core/view';
 import { type ReactNode, useState } from 'react';
 import { BLOC_SPANS, type BlocChoice, type BlocSpan, blocWords } from '../lib/bloc-words.ts';
 import type { LegendKey } from '../lib/flower-view.ts';
@@ -23,8 +23,10 @@ import {
   takesScale,
 } from '../lib/view-edit.ts';
 import { Button } from './ui/Button.tsx';
+import { ColourPick } from './ui/ColourPick.tsx';
 import { Mono } from './ui/Mono.tsx';
 import { Overlay } from './ui/Overlay.tsx';
+import { Ramp } from './ui/Ramp.tsx';
 import { Range } from './ui/Range.tsx';
 import { SectionHead } from './ui/SectionHead.tsx';
 import { Select } from './ui/Select.tsx';
@@ -91,7 +93,7 @@ function ToolRow({
  * What each colour stands for, under Colour: one value a line, its swatch before it (wave 3: "Just feels very
  * disorganized, especially the color parts"), led by a quiet line that says so.
  */
-function ColourMeans({ keys }: { keys: readonly LegendKey[] }) {
+function ColourMeans({ keys, edit }: { keys: readonly LegendKey[]; edit: LegendEdit | undefined }) {
   return (
     <div className="flex flex-col gap-space-4 px-space-8 pb-space-8">
       <Mono as="span" tone="muted">
@@ -99,8 +101,20 @@ function ColourMeans({ keys }: { keys: readonly LegendKey[] }) {
       </Mono>
       <ul className="m-0 flex list-none flex-col gap-space-4 p-0">
         {keys.map((k) => (
-          <li key={k.label} className="flex items-center gap-space-8 type-ui text-primary">
-            <span className="swatch" data-swatch={k.swatch} />
+          <li key={k.label} className="flex items-center gap-space-4 type-ui text-primary">
+            {edit?.onKey ? (
+              // its swatch chooses its colour (Elco, wave 4: "choosing which colour a value gets")
+              <ColourPick
+                label={words.colourOf(k.label)}
+                swatch={k.swatch}
+                keys={COLOUR_KEYS}
+                chosen={edit.colourKeys?.[k.label] ?? null}
+                asItComes={words.asItComes}
+                onPick={(key) => edit.onKey?.(k.label, key)}
+              />
+            ) : (
+              <span className="swatch" data-swatch={k.swatch} />
+            )}
             {`${k.label.charAt(0).toUpperCase()}${k.label.slice(1)}`}
           </li>
         ))}
@@ -199,6 +213,45 @@ function ScaleRow({
 }
 
 /**
+ * A number or a date on Colour, as its grade (LOOK's, wave 4): its two ends in words either side of the ramp, and,
+ * where the legend changes the view, the grade's colour chosen by its own swatch.
+ */
+function ColourGrade({
+  grade,
+  edit,
+}: {
+  grade: { from: string; to: string; fills: string[] };
+  edit: LegendEdit | undefined;
+}) {
+  const hue = edit?.colourKeys?.grade ?? null;
+  return (
+    <div className="flex flex-col gap-space-4 px-space-8 pb-space-8">
+      <Mono as="span" tone="muted">
+        {words.colourGrade}
+      </Mono>
+      <div className="flex items-center gap-space-8 type-ui text-muted">
+        <span className="shrink-0">{grade.from}</span>
+        <Ramp fills={grade.fills} label={`${grade.from} to ${grade.to}`} />
+        <span className="shrink-0">{grade.to}</span>
+      </div>
+      {edit?.onKey && (
+        <span className="flex items-center gap-space-4 type-ui text-muted">
+          <ColourPick
+            label={words.gradeHue}
+            swatch={`key-${hue ?? 'mint'}`}
+            keys={COLOUR_KEYS.filter((k) => k !== 'grey')}
+            chosen={hue}
+            asItComes={words.asItComes}
+            onPick={(key) => edit.onKey?.('grade', key)}
+          />
+          {words.gradeHue}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
  * One dimension's rows: its data, its scale where it's a number, a word where no data takes it yet, and under
  * Colour what each colour stands for (Elco, wave 2: "the legend tells me what each color is ... Not the name of the
  * color"): inside a flower its values, each with its swatch; on the whole map, where each DAO keys its own, a word.
@@ -210,6 +263,7 @@ function DimensionRows({
   pieces,
   keys,
   keysNote,
+  gradeKeys,
   edit,
 }: {
   d: Dimension;
@@ -218,6 +272,7 @@ function DimensionRows({
   pieces: readonly Piece[];
   keys: readonly LegendKey[];
   keysNote: string | undefined;
+  gradeKeys: { from: string; to: string; fills: string[] } | undefined;
   edit: LegendEdit | undefined;
 }) {
   return (
@@ -230,8 +285,13 @@ function DimensionRows({
       {edit && edit.choices[d].length === 0 && dataOf(view, d) === null && (
         <Note>{words.nothingFits}</Note>
       )}
-      {d === 'colour' && drawn.colour !== null && keys.length > 0 && <ColourMeans keys={keys} />}
-      {d === 'colour' && drawn.colour !== null && keys.length === 0 && keysNote && (
+      {d === 'colour' && drawn.colour !== null && gradeKeys && (
+        <ColourGrade grade={gradeKeys} edit={edit} />
+      )}
+      {d === 'colour' && drawn.colour !== null && !gradeKeys && keys.length > 0 && (
+        <ColourMeans keys={keys} edit={edit} />
+      )}
+      {d === 'colour' && drawn.colour !== null && !gradeKeys && keys.length === 0 && keysNote && (
         <Note>{keysNote}</Note>
       )}
     </div>
@@ -244,6 +304,7 @@ export function ViewLegend({
   pieces,
   keys,
   keysNote,
+  gradeKeys,
   edit,
   groups,
   gravity,
@@ -295,15 +356,26 @@ export function ViewLegend({
   const chosen = groups?.choices.find((c) => c.id === groups.chosen);
   // the rest of the dimensions, folded until asked: their head says how many there are
   const [moreOpen, setMoreOpen] = useState(false);
-  const rows = { view, drawn, pieces, keys, keysNote, edit };
+  // every section folds under its head, so a long panel never loses you (Elco, 12 Nov, wave 4 walk: "they don't
+  // have a collapse component ... it's really easy to get lost"); open as they come
+  const [petalsOpen, setPetalsOpen] = useState(true);
+  const [highlightOpen, setHighlightOpen] = useState(true);
+  const [mapOpen, setMapOpen] = useState(true);
+  const rows = { view, drawn, pieces, keys, keysNote, gradeKeys, edit };
   const body = (
     <>
-      <SectionHead size="panel" title={panelWords.legendPetals} />
-      <div className="flex flex-col py-space-4">
-        {PETALS.map((d) => (
-          <DimensionRows key={d} d={d} {...rows} />
-        ))}
-      </div>
+      <SectionHead
+        size="panel"
+        title={panelWords.legendPetals}
+        fold={{ open: petalsOpen, onToggle: () => setPetalsOpen((now) => !now) }}
+      />
+      {petalsOpen && (
+        <div className="flex flex-col py-space-4">
+          {PETALS.map((d) => (
+            <DimensionRows key={d} d={d} {...rows} />
+          ))}
+        </div>
+      )}
       <SectionHead
         size="panel"
         title={panelWords.legendMore(MORE.length)}
@@ -318,8 +390,12 @@ export function ViewLegend({
       )}
       {groups && (
         <>
-          <SectionHead size="panel" title={words.dimensions.highlight} />
-          <div className="flex flex-col py-space-4">
+          <SectionHead
+            size="panel"
+            title={words.dimensions.highlight}
+            fold={{ open: highlightOpen, onToggle: () => setHighlightOpen((now) => !now) }}
+          />
+          <div className={`flex-col py-space-4 ${highlightOpen ? 'flex' : 'hidden'}`}>
             <ToolRow label={panelWords.legendBlocs}>
               <Select
                 label={panelWords.legendBlocs}
@@ -358,8 +434,12 @@ export function ViewLegend({
       )}
       {(gravity || worth || insights || between) && (
         <>
-          <SectionHead size="panel" title={panelWords.legendOnMap} />
-          <div className="flex flex-col py-space-4">
+          <SectionHead
+            size="panel"
+            title={panelWords.legendOnMap}
+            fold={{ open: mapOpen, onToggle: () => setMapOpen((now) => !now) }}
+          />
+          <div className={`flex-col py-space-4 ${mapOpen ? 'flex' : 'hidden'}`}>
             {gravity && (
               <ToolRow label={panelWords.legendGravity}>
                 <span className="w-full min-w-0">

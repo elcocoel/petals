@@ -178,6 +178,11 @@ export const panelWords = {
     scaleDoes: 'How the number grows into the size',
     /** Over Colour's values in Tools. A draft. */
     colourMeans: 'Each colour means',
+    /** Choosing colours, and a grade (Elco, wave 4). Drafts. */
+    colourOf: (value: string) => `Colour for ${value}`,
+    asItComes: 'As it comes',
+    colourGrade: 'Lighter to darker',
+    gradeHue: 'Its colour',
     /** While the map is drawn again in a change (wave 3). A draft. */
     drawing: 'Updating the map',
     failed: (reason: string) => `Not saved: ${reason}`,

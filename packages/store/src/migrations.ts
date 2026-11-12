@@ -571,6 +571,15 @@ export const MIGRATIONS: readonly string[] = [
     read_at TEXT NOT NULL
   );
   `,
+  // 34: a token's vesting schedules (12 Nov, wave 7; Elco: "it's vesting reader for anything"): one vesting/v1 per
+  // map, by its address, one allocation each with how it's known. Read again, a map's vesting is replaced.
+  `
+  CREATE TABLE vesting (
+    about TEXT PRIMARY KEY,
+    body TEXT NOT NULL,
+    read_at TEXT NOT NULL
+  );
+  `,
 ];
 
 /**

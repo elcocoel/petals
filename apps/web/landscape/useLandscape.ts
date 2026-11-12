@@ -608,6 +608,7 @@ export function useLandscape(
         if (speaks >= 0) lift(speaks, true);
         speaking = speaks;
       }
+      const slid = new Map<number, { x: number; y: number }>();
       for (const [i, d] of lives) {
         const p = d.live.pointer;
         p.x = pointer.x;
@@ -631,6 +632,9 @@ export function useLandscape(
         const view = flowerView(cam, places[i] as (typeof places)[number]);
         const quietHere = i !== speaking || at?.current?.unlabelled === true;
         if (driveFlower(d, dt, view, quietHere, scene.taken())) moving = true;
+        // a petal opening slides the whole ring under the pointer: the map's mark and name for it slide with it
+        const { ox, oy } = d.live.ring;
+        if (ox || oy) slid.set(i, { x: ox * view.k, y: oy * view.k });
       }
       hits = scene.draw({
         view: cam,
@@ -645,6 +649,7 @@ export function useLandscape(
         way: entered >= 0 ? pointedWay : -1,
         waved,
         worth: at?.current?.worth !== false,
+        slid,
         pending: at?.current?.pending ?? null,
         progress: at?.current?.progress ?? null,
         over: overOf(),

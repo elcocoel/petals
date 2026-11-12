@@ -9,7 +9,9 @@
 // QuotePanel, PublishFlow, CopyPrompt and Flower still keep their later states in hooks, so only the
 // first state shows here until they take them as props, as the chat's views do. Their controls are
 // live on the page.
+
 import { DEFAULT_VIEW, DIMENSIONS, EVERY_FLOWER, inUse } from '@petal/core/view';
+import { grades } from '@petal/core/wedge/keys';
 import type { SurfaceName } from '@petal/tokens';
 import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
@@ -57,6 +59,7 @@ import { NextSteps } from '../components/NextSteps.tsx';
 import { Oops } from '../components/Oops.tsx';
 import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
+import { PowerQuote } from '../components/PowerQuote.tsx';
 import { PublishFlow } from '../components/PublishFlow.tsx';
 import { PublishPress } from '../components/PublishPress.tsx';
 import { QuotePanel } from '../components/QuotePanel.tsx';
@@ -70,6 +73,7 @@ import { Button } from '../components/ui/Button.tsx';
 import { Callout } from '../components/ui/Callout.tsx';
 import { Card } from '../components/ui/Card.tsx';
 import { ChooseFile } from '../components/ui/ChooseFile.tsx';
+import { ColourPick } from '../components/ui/ColourPick.tsx';
 import { Drawing } from '../components/ui/Drawing.tsx';
 import { EmptySlot } from '../components/ui/EmptySlot.tsx';
 import { FaqItem } from '../components/ui/FaqItem.tsx';
@@ -87,6 +91,7 @@ import { NavItem } from '../components/ui/NavItem.tsx';
 import { OrgBadge } from '../components/ui/OrgBadge.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
 import { PlateLink } from '../components/ui/PlateLink.tsx';
+import { Ramp } from '../components/ui/Ramp.tsx';
 import { Range } from '../components/ui/Range.tsx';
 import { RowField } from '../components/ui/RowField.tsx';
 import { Section } from '../components/ui/Section.tsx';
@@ -132,6 +137,7 @@ import { oopsWords } from '../lib/oops-words.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
 import { viewChoices } from '../lib/person-view.ts';
+import { POWER_QUOTES } from '../lib/power-quotes.ts';
 import { claimsView, usageView, walletRows } from '../lib/profile-view.ts';
 import { publishPressView } from '../lib/publish-press.ts';
 import type { Done } from '../lib/thread.ts';
@@ -2385,6 +2391,20 @@ export const registry: LabEntry[] = [
           />
         ),
       },
+      {
+        name: 'a NEAR or an Ethereum wallet (wave 5)',
+        wide: true,
+        render: () => (
+          <NotSignedIn
+            question=""
+            busy={false}
+            failed={null}
+            onConnect={() => {}}
+            onConnectEvm={() => {}}
+            onConnectSolana={() => {}}
+          />
+        ),
+      },
     ],
   },
   {
@@ -2799,11 +2819,21 @@ export const registry: LabEntry[] = [
         ),
       },
       {
-        name: 'with Add a wallet, and a wallet that belongs to someone else',
+        name: 'NEAR, Ethereum and Solana wallets, with the three Connects, and one that belongs to someone else',
         render: () => (
           <Wallets
             wallets={walletRows([
               { network: 'mainnet', account_id: 'a-name.near', proved_at: '2026-11-11T12:00:00Z' },
+              {
+                network: 'eip155',
+                account_id: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be',
+                proved_at: '2026-11-12T20:00:00Z',
+              },
+              {
+                network: 'solana',
+                account_id: '4buheNoQAwBLYzPF3GASEpZoNhCPot1B1VCwxGLdpW1A',
+                proved_at: '2026-11-12T21:00:00Z',
+              },
             ])}
             adding={{ kind: 'failed', why: 'That wallet already belongs to another account.' }}
             onAdd={() => {}}
@@ -2878,6 +2908,17 @@ export const registry: LabEntry[] = [
       },
       { name: 'none yet', render: () => <Conversations rows={[]} /> },
     ],
+  },
+  {
+    id: 'PowerQuote',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/PowerQuote.tsx',
+    states: POWER_QUOTES.slice(0, 3).map((q) => ({
+      name: q.id,
+      render: () => <PowerQuote quote={q} />,
+    })),
   },
   {
     id: 'MappingBox',
@@ -3260,6 +3301,50 @@ export const registry: LabEntry[] = [
             ]}
             onChange={() => undefined}
           />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'ColourPick',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ColourPick.tsx',
+    states: [
+      {
+        name: "a value's swatch: press it for the six keys and 'As it comes'",
+        render: () => (
+          <span className="flex items-center gap-space-4 type-ui">
+            <ColourPick
+              label="Colour for contract"
+              swatch="key-blue"
+              keys={['mint', 'blue', 'coral', 'apricot', 'pink', 'grey']}
+              chosen="blue"
+              asItComes="As it comes"
+              onPick={() => undefined}
+            />
+            Contract
+          </span>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'Ramp',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Ramp.tsx',
+    states: [
+      {
+        name: "a grade's five steps, lightest to darkest",
+        render: () => (
+          <span className="flex w-tile-width items-center gap-space-8 type-ui text-muted">
+            fewest 3
+            <Ramp fills={grades().map((k) => k.hex)} label="fewest 3 to most 534" />
+            most 534
+          </span>
         ),
       },
     ],

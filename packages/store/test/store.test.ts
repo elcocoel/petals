@@ -857,3 +857,23 @@ describe('migration 33, the payouts', () => {
     await store.close();
   });
 });
+
+describe('migration 34, the vesting', () => {
+  test("a map's vesting is kept by its address, replaced when read again, with its stamps", async () => {
+    const store = openStore(':memory:');
+    await store.vesting.put({ about: 'solana:x:b', body: '{"n":1}', read_at: AT });
+    await store.vesting.put({ about: 'solana:x:a', body: '{"n":2}', read_at: AT });
+    await store.vesting.put({ about: 'solana:x:b', body: '{"n":3}', read_at: LATER });
+    expect(await store.vesting.get('solana:x:b')).toEqual({
+      about: 'solana:x:b',
+      body: '{"n":3}',
+      read_at: LATER,
+    });
+    expect(await store.vesting.stamps()).toEqual([
+      { about: 'solana:x:a', read_at: AT },
+      { about: 'solana:x:b', read_at: LATER },
+    ]);
+    expect(await store.vesting.get('solana:x:none')).toBeFalsy();
+    await store.close();
+  });
+});

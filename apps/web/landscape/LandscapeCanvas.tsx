@@ -12,7 +12,7 @@
 // in the chains' place; pressing one goes to its chain and into its flower (board 105).
 import { type Proposal, redress, type SeamPiece } from '@petal/core';
 import type { View } from '@petal/core/types';
-import { EVERY_FLOWER, inUse, latestView } from '@petal/core/view';
+import { colourKeysOf, EVERY_FLOWER, inUse, latestView } from '@petal/core/view';
 import { flowerKeys, grades, KEY_BY_NAME, keyLines, mapKeys } from '@petal/core/wedge/keys';
 import { floatBox } from '@petal/tokens';
 import {
@@ -177,7 +177,8 @@ function gradeWords(
       : kind === 'share'
         ? `${(x * 100).toFixed(x < 0.001 ? 3 : 1)}%`
         : Math.round(x).toLocaleString('en-US');
-  const [low, high] = kind === 'date' ? ['oldest', 'newest'] : ['fewest', 'most'];
+  // a date's ends: earliest and latest, past (last active) or still to come (an allocation's next unlock; OVERLAYS)
+  const [low, high] = kind === 'date' ? ['earliest', 'latest'] : ['fewest', 'most'];
   const hue = KEY_BY_NAME.get(chosen.grade ?? '');
   return {
     from: `${kind === 'share' || kind === 'amount' ? 'least' : low} ${say(lo)}`,
@@ -587,6 +588,8 @@ export function LandscapeCanvas({
   // /make's beside the conversation (WORKSPACE's walk, 11 Nov): its own room, not the window's
   // (on the map's boxes the chain list's fold is Tools', and Insights' is Information's)
   const [listOpen, setListOpen] = useState(true);
+  // Tools' Chains section, folded under its head by hand (Elco, wave 4 walk: "they don't have a collapse component")
+  const [chainsOpen, setChainsOpen] = useState(true);
   const [legendOpen, setLegendOpen] = useState(true);
   // Information opens where the page says where it is (a map's page); Insights is folded until asked
   const [claimsOpen, setClaimsOpen] = useState(movable && Boolean(information));
@@ -689,12 +692,7 @@ export function LandscapeCanvas({
   // the chain's flowers and their drawing models, once per chain; gravity only moves their places
   // the map's keys, ranked once over every flower on it, whatever chain: a value has one colour everywhere
   // the view's chosen colours (colour.keys: { value: key }; Elco, wave 4: "choosing which colour a value gets")
-  const chosen = useMemo(
-    () =>
-      (latestView(person.view).dimensions.colour as { keys?: Record<string, string> } | null)
-        ?.keys ?? {},
-    [person.view],
-  );
+  const chosen = useMemo(() => colourKeysOf(person.view), [person.view]);
   const mapKeyed = useMemo(
     () =>
       mapKeys(
@@ -1101,8 +1099,12 @@ export function LandscapeCanvas({
               {searchRow}
               {chainList && (
                 <>
-                  <SectionHead size="panel" title={panelWords.toolsChains} />
-                  <div className="py-space-4">{chainList}</div>
+                  <SectionHead
+                    size="panel"
+                    title={panelWords.toolsChains}
+                    fold={{ open: chainsOpen, onToggle: () => setChainsOpen((now) => !now) }}
+                  />
+                  {chainsOpen && <div className="py-space-4">{chainList}</div>}
                 </>
               )}
             </div>

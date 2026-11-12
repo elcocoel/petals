@@ -5,12 +5,25 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   type Challenge,
+  type EvmProof,
+  evmChallenge,
   refusalCode,
   type SessionClient,
+  type SolanaProof,
   sessionClient,
+  solanaChallenge,
+  verifyEvm,
+  verifySolana,
 } from '../lib/agent-client.ts';
 import { doorWords } from '../lib/door-words.ts';
+import { evmAccount, evmSign, hasEvmWallet, NO_EVM_WALLET } from '../lib/evm-wallet.ts';
 import type { WalletSignature } from '../lib/publish.ts';
+import {
+  hasSolanaWallet,
+  NO_SOLANA_WALLET,
+  solanaAccount,
+  solanaSign,
+} from '../lib/solana-wallet.ts';
 import { SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
 
 export interface SessionDeps {
@@ -52,6 +65,67 @@ export async function signIn(d: SessionDeps): Promise<void> {
     d.failed(
       refusalCode(e) === 'source_failed' ? doorWords.nearDidntAnswer : doorWords.badSignature,
     );
+  }
+}
+
+/**
+ * An EVM wallet's proof (wave 5; Elco, 12 Nov: "multi chain wallet connection ... evm is priority"): the
+ * browser's own EVM wallet names its account, Petals' challenge gives the Sign-In with Ethereum text for it,
+ * and the wallet signs that text. No transaction, no spend. It rejects when there's no wallet or the person
+ * says no.
+ */
+export async function evmProof(): Promise<EvmProof> {
+  const { address, chainId } = await evmAccount();
+  const { message } = await evmChallenge(address, chainId);
+  const signature = await evmSign(message, address);
+  return { type: 'eip191', address, message, signature };
+}
+
+/** Signs in with an EVM wallet, as signIn does with a NEAR one; closing the wallet or saying no isn't an error. */
+export async function signInEvm(arrived: () => void, failed: (words: string) => void) {
+  if (!hasEvmWallet()) {
+    failed(NO_EVM_WALLET);
+    return;
+  }
+  let proof: EvmProof;
+  try {
+    proof = await evmProof();
+  } catch {
+    return;
+  }
+  try {
+    await verifyEvm(proof);
+    arrived();
+  } catch (e) {
+    failed(refusalCode(e) === 'source_failed' ? doorWords.nearDidntAnswer : doorWords.badSignature);
+  }
+}
+
+/** A Solana wallet's proof (wave 5): the browser's Solana wallet connects, Petals' challenge gives the text, the wallet signs it. */
+export async function solanaProof(): Promise<SolanaProof> {
+  const address = await solanaAccount();
+  const { message } = await solanaChallenge(address);
+  const signature = await solanaSign(message);
+  return { type: 'ed25519', address, message, signature };
+}
+
+/** Signs in with a Solana wallet, as signInEvm does with an EVM one. */
+export async function signInSolana(arrived: () => void, failed: (words: string) => void) {
+  if (!hasSolanaWallet()) {
+    failed(NO_SOLANA_WALLET);
+    return;
+  }
+  let proof: SolanaProof;
+  try {
+    proof = await solanaProof();
+  } catch {
+    return;
+  }
+  try {
+    await verifySolana(proof);
+    arrived();
+  } catch (e) {
+    failed(refusalCode(e) === 'source_failed' ? doorWords.nearDidntAnswer : doorWords.badSignature);
   }
 }
 
@@ -97,6 +171,20 @@ export function useSession(reading: boolean) {
       setBusy(true);
       setFailed(null);
       void signIn(deps).finally(() => setBusy(false));
+    },
+    /** The same with an EVM wallet (wave 5): one signed message, then the page loads again. */
+    connectEvm: () => {
+      if (busy) return;
+      setBusy(true);
+      setFailed(null);
+      void signInEvm(deps.arrived, setFailed).finally(() => setBusy(false));
+    },
+    /** The same with a Solana wallet (wave 5). */
+    connectSolana: () => {
+      if (busy) return;
+      setBusy(true);
+      setFailed(null);
+      void signInSolana(deps.arrived, setFailed).finally(() => setBusy(false));
     },
     disconnect: () => {
       // Proposal (8 Nov, fe-frontdoor): leaving the account leaves the app, back to the front page.

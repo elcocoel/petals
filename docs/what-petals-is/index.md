@@ -38,11 +38,9 @@ Connect a NEAR wallet to save your conversations, notes and maps. Return to them
 
 Browsing the Power Map is free. Top up your Petals account to use its agent and mapping tools, paying as you go. Connected agents use their own resources for the work they take on.
 
-## Why map power
+<!-- card 110: a section only its author writes, kept off the page until it's written (META, 12 Nov): put back here a heading "Why map power" and, under it, its words; "What can I do with what I find?" then goes back to a third-level heading under it. -->
 
-{slot}
-
-### What can I do with what I find?
+## What can I do with what I find?
 
 Keep notes alongside the evidence, return to an investigation, and compare networks or different moments in their history. Use what you learn to prepare a proposal, understand who might support it, choose a delegate or question a decision. You can also ask the agent to help turn an investigation into a clear explanation for your community.
 

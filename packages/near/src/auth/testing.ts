@@ -8,8 +8,10 @@
 //           callbackUrl: Option<string> }) ), signed with ed25519.
 // noble 2.x needs the .js subpaths: @noble/curves/ed25519.js, @noble/hashes/sha2.js.
 import { ed25519 } from '@noble/curves/ed25519.js';
+import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { sha256 } from '@noble/hashes/sha2.js';
-import { utf8ToBytes } from '@noble/hashes/utils.js';
+import { keccak_256 } from '@noble/hashes/sha3.js';
+import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils.js';
 import type { Nep413Proof } from '@petal/core/types';
 import { base58, base64 } from '@scure/base';
 import { RPC_URLS } from '../network.ts';
@@ -229,4 +231,34 @@ export async function testnetTransfer(
     status: unknown;
   };
   return outcome;
+}
+
+/** An EVM wallet for tests: its address, and personal_sign as a wallet does it (EIP-191, r||s||v). */
+export function evmTestSigner(seed = 'evm'): { address: string; sign(message: string): string } {
+  const secretKey = sha256(utf8ToBytes(`petal-test-signer:evm:${seed}`));
+  const key = secp256k1.getPublicKey(secretKey, false).slice(1);
+  const address = `0x${bytesToHex(keccak_256(key).slice(-20))}`;
+  return {
+    address,
+    sign(message) {
+      const bytes = utf8ToBytes(message);
+      const digest = keccak_256(
+        new Uint8Array([...utf8ToBytes(`\x19Ethereum Signed Message:\n${bytes.length}`), ...bytes]),
+      );
+      const s = secp256k1.sign(digest, secretKey, { prehash: false, format: 'recovered' });
+      return `0x${bytesToHex(s.slice(1))}${(27 + (s[0] as number)).toString(16)}`;
+    },
+  };
+}
+
+/** A Solana wallet for tests: its address (base58), and signMessage as a wallet does it (ed25519, base64). */
+export function solanaTestSigner(seed = 'solana'): {
+  address: string;
+  sign(message: string): string;
+} {
+  const secretKey = sha256(utf8ToBytes(`petal-test-signer:solana:${seed}`));
+  return {
+    address: base58.encode(ed25519.getPublicKey(secretKey)),
+    sign: (message) => base64.encode(ed25519.sign(utf8ToBytes(message), secretKey)),
+  };
 }

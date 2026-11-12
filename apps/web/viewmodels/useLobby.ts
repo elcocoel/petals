@@ -13,6 +13,7 @@ import {
   readWallets,
   sessionClient,
 } from '../lib/agent-client.ts';
+import { hasEvmWallet, NO_EVM_WALLET } from '../lib/evm-wallet.ts';
 import {
   type AddWalletPhase,
   type ClaimsView,
@@ -20,10 +21,13 @@ import {
   profilePageWords,
   type UsageCall,
   usageView,
+  type WalletKind,
   type WalletRow,
   walletRows,
 } from '../lib/profile-view.ts';
+import { hasSolanaWallet, NO_SOLANA_WALLET } from '../lib/solana-wallet.ts';
 import { SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
+import { evmProof, solanaProof } from './useSession.ts';
 import { useWorkPanel } from './useWorkPanel.ts';
 
 const why = (e: unknown) =>
@@ -66,28 +70,47 @@ export function useLobby() {
     [usage, nearUsd],
   );
 
-  const addWallet = useCallback(async () => {
+  /** Adds a wallet: a NEAR one signs Petals' challenge as signing in does, an EVM one its Sign-In text (wave 5). */
+  const addWallet = useCallback(async (kind: WalletKind) => {
+    if (kind === 'evm' && !hasEvmWallet()) {
+      setAdding({ kind: 'failed', why: NO_EVM_WALLET });
+      return;
+    }
+    if (kind === 'solana' && !hasSolanaWallet()) {
+      setAdding({ kind: 'failed', why: NO_SOLANA_WALLET });
+      return;
+    }
     setAdding({ kind: 'adding' });
-    let challenge: Awaited<ReturnType<typeof sessionClient.challenge>>;
-    let signed: Awaited<ReturnType<typeof signPrepared>>;
+    let network: string;
+    let proof: Parameters<typeof addMyWallet>[1];
     try {
-      challenge = await sessionClient.challenge();
-      signed = await signPrepared({ ...challenge, entry_sha256: '' }, SIGN_IN_NETWORK);
+      if (kind === 'evm') {
+        network = 'eip155';
+        proof = await evmProof();
+      } else if (kind === 'solana') {
+        network = 'solana';
+        proof = await solanaProof();
+      } else {
+        const challenge = await sessionClient.challenge();
+        const signed = await signPrepared({ ...challenge, entry_sha256: '' }, SIGN_IN_NETWORK);
+        network = SIGN_IN_NETWORK;
+        proof = {
+          type: 'nep413',
+          account_id: signed.accountId,
+          public_key: signed.publicKey,
+          signature: signed.signature,
+          message: challenge.message,
+          nonce: challenge.nonce,
+          recipient: challenge.recipient,
+        };
+      }
     } catch {
       // closing the picker, or saying no in the wallet, adds nothing and isn't an error
       setAdding({ kind: 'ready' });
       return;
     }
     try {
-      const { wallets: now } = await addMyWallet(SIGN_IN_NETWORK, {
-        type: 'nep413',
-        account_id: signed.accountId,
-        public_key: signed.publicKey,
-        signature: signed.signature,
-        message: challenge.message,
-        nonce: challenge.nonce,
-        recipient: challenge.recipient,
-      });
+      const { wallets: now } = await addMyWallet(network, proof);
       setWallets(walletRows(now));
       setAdding({ kind: 'ready' });
     } catch (e) {
@@ -108,7 +131,7 @@ export function useLobby() {
     usage: usageShown,
     wallets,
     adding,
-    addWallet: () => void addWallet(),
+    addWallet: (kind: WalletKind) => void addWallet(kind),
     claims,
     conversations: bus.rows,
   };

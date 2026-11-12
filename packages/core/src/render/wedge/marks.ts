@@ -168,9 +168,13 @@ function panelOf(m: Model, v: View, i: number, opacity: number, band: number): P
   const height = 2 * PANEL_PAD + LINE * PANEL_HEADER + lines.length * LINE;
   const right = (m.ring.nx[i] as number) >= 0;
   const bottom = (m.ring.ny[i] as number) >= 0;
-  const leftEdge = bottom ? MAP_INSET + MAP_SIZE + PANEL_PAD : PANEL_INSET;
-  const x = right ? v.width - PANEL_INSET - width : leftEdge;
-  const y = bottom ? v.height - PANEL_BOTTOM - height : PANEL_INSET;
+  // the small map is at the top right (way-back-map): a panel there stands under it
+  const x = right ? v.width - PANEL_INSET - width : PANEL_INSET;
+  const y = bottom
+    ? v.height - PANEL_BOTTOM - height
+    : right
+      ? MAP_INSET + MAP_SIZE + PANEL_PAD
+      : PANEL_INSET;
   return {
     opacity,
     x,
@@ -295,16 +299,36 @@ export function marks(
     // doesn't lie across it. How far is how much it had to slide, so there's no jump.
     const halfBar = ((ring.len[fi] as number) * k) / 2 + 8;
     const left1 = elbowX0 - (width * (1 - s)) / 2;
-    const left0 = clamp(left1, INSET, v.width - INSET - width);
-    const slidX = Math.abs(left1 - left0);
+    // clear of the boxes over the map as of the window's edge (12 Nov, wave 4: a chosen wallet's address ran under
+    // Tools), sliding along its line as the clicked petal's note does
+    const atEdge = clamp(left1, INSET, v.width - INSET - width);
+    const left0 = atEdge;
+    // the step off its bar's end is for the window's edge only
+    const slidX = Math.abs(left1 - atEdge);
     const off = Math.min(slidX, halfBar + LINE);
     const listed = m.petals[fi]?.segments ?? [];
     const shown = segments[fi] as number;
     const below = LINE * (1 + listed.length * ramp(0, 0.2, shown));
     const elbowY1 = clamp(elbowY0 + (ny > 0 ? off : -off), INSET + LINE, v.height - INSET - below);
     const slidY = Math.abs(elbowY0 - elbowY1);
+    // clear of the boxes over the map, where the note finally stands (12 Nov, wave 4: a chosen wallet's address
+    // ran under Tools, and at the window's top under Information), sliding along its line as the clicked petal's does
     const elbowX1 =
-      clamp(left0 + (nx >= 0 ? 1 : -1) * Math.min(slidY, halfBar), INSET, v.width - INSET - width) +
+      clamp(
+        clearOfTaken(
+          clamp(
+            left0 + (nx >= 0 ? 1 : -1) * Math.min(slidY, halfBar),
+            INSET,
+            v.width - INSET - width,
+          ),
+          width,
+          elbowY1 - LINE,
+          elbowY1 + below,
+          s,
+        ),
+        INSET,
+        v.width - INSET - width,
+      ) +
       (width * (1 - s)) / 2;
     const leftFinal = elbowX1 - (width * (1 - s)) / 2;
     const e = fade(DETAIL.panel, open);
@@ -385,12 +409,18 @@ export function marks(
   claim(titleBox(titleOutside.y), titleOutside.opacity);
 
   // figure.way-back-map
-  // The small map claims its corner.
+  // The small map claims its corner: the top right, as a game's minimap (Elco, 12 Nov, wave 4: "I think it should be
+  // on the top right as if I was playing a video game"), left of any box over the map there
   const mapOpacity = fade(DETAIL.wayBack, radius / (Math.min(v.width, v.height) / 2));
+  const mapX = clamp(
+    clearOfTaken(v.width - MAP_INSET - MAP_SIZE, MAP_SIZE, MAP_INSET, MAP_INSET + MAP_SIZE, 1),
+    MAP_INSET,
+    v.width - MAP_INSET - MAP_SIZE,
+  );
   const map = {
     opacity: mapOpacity,
-    x: MAP_INSET,
-    y: v.height - MAP_BOTTOM - MAP_SIZE,
+    x: mapX,
+    y: MAP_INSET,
     size: MAP_SIZE,
     litIndex: fi >= 0 ? fi : chosen,
   };
