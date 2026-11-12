@@ -58,6 +58,7 @@ import { NextSteps } from '../components/NextSteps.tsx';
 import { Oops } from '../components/Oops.tsx';
 import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
+import { PowerQuote } from '../components/PowerQuote.tsx';
 import { PublishFlow } from '../components/PublishFlow.tsx';
 import { PublishPress } from '../components/PublishPress.tsx';
 import { QuotePanel } from '../components/QuotePanel.tsx';
@@ -135,6 +136,7 @@ import { oopsWords } from '../lib/oops-words.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
 import { viewChoices } from '../lib/person-view.ts';
+import { POWER_QUOTES } from '../lib/power-quotes.ts';
 import { claimsView, usageView, walletRows } from '../lib/profile-view.ts';
 import { publishPressView } from '../lib/publish-press.ts';
 import type { Done } from '../lib/thread.ts';
@@ -2388,6 +2390,20 @@ export const registry: LabEntry[] = [
           />
         ),
       },
+      {
+        name: 'a NEAR or an Ethereum wallet (wave 5)',
+        wide: true,
+        render: () => (
+          <NotSignedIn
+            question=""
+            busy={false}
+            failed={null}
+            onConnect={() => {}}
+            onConnectEvm={() => {}}
+            onConnectSolana={() => {}}
+          />
+        ),
+      },
     ],
   },
   {
@@ -2891,6 +2907,17 @@ export const registry: LabEntry[] = [
       },
       { name: 'none yet', render: () => <Conversations rows={[]} /> },
     ],
+  },
+  {
+    id: 'PowerQuote',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/PowerQuote.tsx',
+    states: POWER_QUOTES.slice(0, 3).map((q) => ({
+      name: q.id,
+      render: () => <PowerQuote quote={q} />,
+    })),
   },
   {
     id: 'MappingBox',

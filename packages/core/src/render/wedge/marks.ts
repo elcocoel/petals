@@ -168,9 +168,13 @@ function panelOf(m: Model, v: View, i: number, opacity: number, band: number): P
   const height = 2 * PANEL_PAD + LINE * PANEL_HEADER + lines.length * LINE;
   const right = (m.ring.nx[i] as number) >= 0;
   const bottom = (m.ring.ny[i] as number) >= 0;
-  const leftEdge = bottom ? MAP_INSET + MAP_SIZE + PANEL_PAD : PANEL_INSET;
-  const x = right ? v.width - PANEL_INSET - width : leftEdge;
-  const y = bottom ? v.height - PANEL_BOTTOM - height : PANEL_INSET;
+  // the small map is at the top right (way-back-map): a panel there stands under it
+  const x = right ? v.width - PANEL_INSET - width : PANEL_INSET;
+  const y = bottom
+    ? v.height - PANEL_BOTTOM - height
+    : right
+      ? MAP_INSET + MAP_SIZE + PANEL_PAD
+      : PANEL_INSET;
   return {
     opacity,
     x,
@@ -405,12 +409,18 @@ export function marks(
   claim(titleBox(titleOutside.y), titleOutside.opacity);
 
   // figure.way-back-map
-  // The small map claims its corner.
+  // The small map claims its corner: the top right, as a game's minimap (Elco, 12 Nov, wave 4: "I think it should be
+  // on the top right as if I was playing a video game"), left of any box over the map there
   const mapOpacity = fade(DETAIL.wayBack, radius / (Math.min(v.width, v.height) / 2));
+  const mapX = clamp(
+    clearOfTaken(v.width - MAP_INSET - MAP_SIZE, MAP_SIZE, MAP_INSET, MAP_INSET + MAP_SIZE, 1),
+    MAP_INSET,
+    v.width - MAP_INSET - MAP_SIZE,
+  );
   const map = {
     opacity: mapOpacity,
-    x: MAP_INSET,
-    y: v.height - MAP_BOTTOM - MAP_SIZE,
+    x: mapX,
+    y: MAP_INSET,
     size: MAP_SIZE,
     litIndex: fi >= 0 ? fi : chosen,
   };

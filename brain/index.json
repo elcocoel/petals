@@ -873,7 +873,7 @@
       "id": "vesting",
       "kind": "chapter",
       "department": "money",
-      "for": "finding when an allocation becomes available and who controls its release or claim rights",
+      "for": "finding a token's vesting schedules, writing them as vesting/v1, and how they cut its petals into unlocked, next unlock and later",
       "recognise": [
         "vesting",
         "locked",
@@ -883,10 +883,14 @@
         "streams",
         "allocation",
         "beneficiary",
-        "release schedule"
+        "release schedule",
+        "tranche"
       ],
       "tools": [
+        "get_map",
         "read_chain",
+        "read_page",
+        "keep_data",
         "add_annotation"
       ],
       "continues": [
@@ -896,7 +900,7 @@
       ],
       "status": "partial",
       "file": "money/vesting.md",
-      "sha256": "d6788e4852912c256239864167043d4cab591f85147fc06e3ee91f0a3d08ce82"
+      "sha256": "7f287e54b9f37199c15c487286c78dc2dc0a53e22241e3035b5fcafc7c0ea334"
     },
     {
       "id": "voting-blocs-over-time",

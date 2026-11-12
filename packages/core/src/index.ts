@@ -168,6 +168,20 @@ export {
   valueTotals,
 } from './values.ts';
 export * from './versions.ts';
+export {
+  type Allocation,
+  type Known,
+  LATER,
+  type Lump,
+  NEXT_UNLOCK,
+  type Release,
+  type Stream,
+  UNLOCKED,
+  VESTING_VERSION,
+  type Vesting,
+  validateVesting,
+  vestingPieces,
+} from './vesting.ts';
 export { isView, viewProblem } from './view/check.ts';
 export type { Dimension, Piece } from './view/index.ts';
 export {
@@ -191,6 +205,7 @@ export {
   inUse,
   latestView,
   SOME_FLOWERS,
+  VESTING,
   VIEW_KEYS_VERSION,
   viewHash,
   withColourKeys,

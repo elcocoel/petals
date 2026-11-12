@@ -9,6 +9,15 @@ export type PublishPhase = 'ready' | 'signing' | 'published' | 'failed';
 
 export const publishWords = {
   press: 'Publish your names and notes',
+  /** with readings too (wave 7) */
+  pressAll: 'Publish in your name',
+  readings: 'Readings you drew',
+  readingsCount: (n: number) =>
+    n === 1 ? '1 reading you drew goes with them.' : `${n} readings you drew go with them.`,
+  publishedAll: (claims: number, readings: number) =>
+    readings > 0
+      ? `Published on the shared map: ${claims} names and notes, ${readings} ${readings === 1 ? 'reading' : 'readings'}.`
+      : `Published on the shared map: ${claims}.`,
   /** how many can go, and how many stay */
   counts: (ready: number, kept: number) =>
     kept > 0
@@ -54,7 +63,14 @@ export interface PublishPressView {
   /** the private ones and why, folded */
   why: { label: string; lines: string[] } | null;
   /** every item, read before the press: what goes, then what stays and why */
-  rows: { goes: string; stays: string; going: PublishRow[]; staying: PublishRow[] } | null;
+  rows: {
+    goes: string;
+    stays: string;
+    going: PublishRow[];
+    staying: PublishRow[];
+    /** the readings that go with them, credited to the person (wave 7) */
+    readings?: { heading: string; rows: PublishRow[] } | undefined;
+  } | null;
   /** what happened, once something did */
   said: string | null;
   busy: boolean;
@@ -77,8 +93,18 @@ export function publishPressView(
       busy: false,
     };
   }
-  if (data.ready <= 0) return null;
+  const drawn = data.readings ?? [];
+  if (data.ready <= 0 && drawn.length === 0) return null;
   const kept = data.private.length;
+  const readingRows: PublishRow[] = drawn.map((r) => ({
+    key: r.id,
+    name: r.what || r.title,
+    address: `${r.accounts} accounts`,
+    source: null,
+    sourceUrl: null,
+    confidence: null,
+    why: null,
+  }));
   const going: PublishRow[] = (data.claims ?? []).map((c) => ({
     key: c.id,
     name: c.name,
@@ -104,8 +130,18 @@ export function publishPressView(
     why: p.why,
   }));
   return {
-    press: phase === 'signing' ? publishWords.signing : publishWords.press,
-    counts: publishWords.counts(data.ready, kept),
+    press:
+      phase === 'signing'
+        ? publishWords.signing
+        : drawn.length > 0
+          ? publishWords.pressAll
+          : publishWords.press,
+    counts: [
+      data.ready > 0 ? publishWords.counts(data.ready, kept) : null,
+      drawn.length > 0 ? publishWords.readingsCount(drawn.length) : null,
+    ]
+      .filter(Boolean)
+      .join(' '),
     sign: publishWords.sign,
     // with the list, the private ones are in it, each with why; without it, folded under one line
     why:
@@ -113,8 +149,16 @@ export function publishPressView(
         ? { label: publishWords.why, lines: data.private.map((p) => `${p.subject}: ${p.why}`) }
         : null,
     rows:
-      going.length > 0
-        ? { goes: publishWords.goes, stays: publishWords.stays, going, staying }
+      going.length > 0 || readingRows.length > 0
+        ? {
+            goes: publishWords.goes,
+            stays: publishWords.stays,
+            going,
+            staying,
+            ...(readingRows.length > 0
+              ? { readings: { heading: publishWords.readings, rows: readingRows } }
+              : {}),
+          }
         : null,
     said: phase === 'failed' ? said : null,
     busy: phase === 'signing',

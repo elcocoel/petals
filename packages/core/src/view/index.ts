@@ -81,8 +81,19 @@ export const ACTIVITY: readonly Piece[] = [
   { name: 'voted', kind: 'category' },
 ];
 
-/** What some flowers have and others don't: who backs each petal, and each petal's activity. */
-export const SOME_FLOWERS: readonly Piece[] = [BACKERS, ...ACTIVITY];
+/**
+ * Each petal's vesting, where its map's vesting schedules were read (vesting.ts; Elco, 12 Nov, wave 7: "it's vesting
+ * reader for anything"): what it holds cut into unlocked, next unlock and later; its next unlock; and, where it
+ * holds one allocation, which.
+ */
+export const VESTING: readonly Piece[] = [
+  { name: 'vesting', kind: 'parts' },
+  { name: 'next_unlock', kind: 'date' },
+  { name: 'tranche', kind: 'category' },
+];
+
+/** What some flowers have and others don't: who backs each petal, each petal's activity, and its vesting. */
+export const SOME_FLOWERS: readonly Piece[] = [BACKERS, ...ACTIVITY, ...VESTING];
 
 /**
  * The pieces of data a person's annotations give the accounts they name (seam.ts, namePieces): the one name a
