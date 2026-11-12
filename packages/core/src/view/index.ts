@@ -44,8 +44,9 @@ export const ACCEPTS: Record<Dimension, readonly DataKind[]> = {
   // Tools never offers what Colour can't draw (OVERLAYS, 12 Nov)
   colour: ['category'],
   outline: ['flag', 'category'],
-  texture: ['flag', 'category'],
-  markings: ['count', 'flag'],
+  // texture and markings take no data until the look draws them: a choice draws, or isn't offered (Elco, 12 Nov)
+  texture: [],
+  markings: [],
   segments: ['parts'],
   lines: ['relation'],
   labels: ['category'],
@@ -161,6 +162,16 @@ export const DEFAULT_HASHES: readonly string[] = [
  * leaves it out, the flower lacks that piece, or has it as a kind the dimension doesn't accept. There's no
  * fallback: a missing fact shows nothing.
  */
+/**
+ * The pieces a dimension draws, where it draws only some of what fits (Elco, 12 Nov: a choice draws, or isn't
+ * offered): an outline says how a petal's identity is known (asserted or inferred), and nothing else yet.
+ */
+export const DRAWS_ONLY: Partial<Record<Dimension, readonly string[]>> = { outline: ['identity'] };
+
+/** Does this dimension draw this piece of data: it fits, and the dimension draws it (DRAWS_ONLY)? */
+export const draws = (dimension: Dimension, piece: Piece): boolean =>
+  fits(dimension, piece.kind) && (DRAWS_ONLY[dimension]?.includes(piece.name) ?? true);
+
 export function inUse(view: View, data: readonly Piece[]): Record<Dimension, string | null> {
   const kinds = new Map(data.map((p) => [p.name, p.kind]));
   const dims = latestView(view).dimensions;
@@ -168,7 +179,7 @@ export function inUse(view: View, data: readonly Piece[]): Record<Dimension, str
   for (const d of DIMENSIONS) {
     const name = dims[d]?.data ?? null;
     const kind = name === null ? undefined : kinds.get(name);
-    out[d] = name !== null && kind !== undefined && fits(d, kind) ? name : null;
+    out[d] = name !== null && kind !== undefined && draws(d, { name, kind }) ? name : null;
   }
   return out;
 }

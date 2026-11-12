@@ -17,7 +17,7 @@ import type {
   View,
 } from '../types/index.ts';
 import { READING_VERSION } from '../versions.ts';
-import { inUse } from '../view/index.ts';
+import { inUse, latestView } from '../view/index.ts';
 import { HEIGHT_FLOOR, heightValues, isStraight, metricOf, widthFactors } from './encodings.ts';
 import { foldOf } from './fold.ts';
 import { detailsOf, legendOf } from './legend.ts';
@@ -32,6 +32,41 @@ function valuesOf(pieces: readonly SeamPiece[]): Values {
     if ('values' in p) out.set(p.name, new Map(p.values.map((v) => [v.participant, v.value])));
   }
   return out;
+}
+
+/**
+ * Widths by a count given with the reading (votes cast): the most at the view's ratio, the fewest at one, in a
+ * straight line between; the tail and a petal with none, one.
+ */
+function countWidths(
+  rows: readonly PetalRow[],
+  by: ReadonlyMap<string, string>,
+  width: Encoding,
+): number[] {
+  const ratio = width.max_ratio ?? 2;
+  const of = (r: PetalRow) => (r.tail ? null : Number(by.get(r.id) ?? Number.NaN));
+  const xs = rows.map(of).filter((x): x is number => x !== null && Number.isFinite(x));
+  const lo = Math.min(...xs);
+  const hi = Math.max(...xs);
+  return rows.map((r) => {
+    const x = of(r);
+    return x === null || !Number.isFinite(x) || hi <= lo
+      ? 1
+      : 1 + ((ratio - 1) * (x - lo)) / (hi - lo);
+  });
+}
+
+/**
+ * Heights by a count given with the reading (votes cast): each its own count over the most, in a straight line;
+ * the tail its average member's, from the counts of those not drawn on their own.
+ */
+function countHeights(rows: readonly PetalRow[], by: ReadonlyMap<string, string>): number[] {
+  const drawn = new Set(rows.filter((r) => !r.tail).map((r) => r.id));
+  const own = rows.map((r) => (r.tail ? 0 : Number(by.get(r.id) ?? 0) || 0));
+  const rest = [...by].filter(([id]) => !drawn.has(id)).map(([, v]) => Number(v) || 0);
+  const tail = rest.length ? rest.reduce((a, b) => a + b, 0) / rest.length : 0;
+  const max = Math.max(...own, tail) || 1;
+  return rows.map((r, i) => (r.tail ? tail : (own[i] as number)) / max);
 }
 
 /** A petal's colour key where the piece Colour shows has no value for it: drawn grey (render/wedge/keys.ts). */
@@ -152,7 +187,24 @@ export function readFlower(
   // votes_cast, voted: SYSTEMS's activity); the reading's own pieces (share, kind, identity) draw as they did
   const used = view ? inUse(view, piecesOf(s, pieces)) : null;
   const kinds = new Map(pieces.map((p) => [p.name, p.kind]));
+  // Order by a piece given with the reading, or by the reading's own kind, who it is, or the name each petal shows
+  // (a person's, else its own label): every choice Tools offers turns the petals (VISUAL QA, 12 Nov)
+  const orderData = view ? (latestView(view).dimensions.order?.data ?? null) : null;
+  const ownOrder = (rs: readonly PetalRow[]): Map<string, string> | null => {
+    if (orderData === 'kind') return new Map(rs.map((r) => [r.id, r.kind]));
+    if (orderData === 'identity')
+      return new Map(rs.map((r) => [r.id, r.identity?.name ?? r.label]));
+    if (orderData === 'name') return new Map(rs.map((r) => [r.id, nameOf(r, 'name', values)]));
+    return null;
+  };
   const orderBy = used?.order && values.has(used.order) ? used.order : null;
+  // Width and Height by a count given with the reading (votes cast): each petal by its own count
+  const sizeBy = (d: 'width' | 'height') => {
+    const name = used?.[d];
+    return name && values.has(name) && kinds.get(name) === 'count' ? name : null;
+  };
+  const widthBy = sizeBy('width');
+  const heightBy = sizeBy('height');
   // Colour by a piece: a category's values (voted), never a count's or a date's raw numbers, which want a graded
   // scale the look hasn't drawn yet
   const colourBy =
@@ -161,15 +213,19 @@ export function readFlower(
       : null;
   // petals clockwise from twelve o'clock: by size (selectPetals gives them so, tail last), or by the piece Order
   // shows (Elco, 12 Nov: "last active, most active")
+  const selected = selectPetals(s, spec.selection);
+  const own = orderBy ? null : ownOrder(selected);
   const rows = orderBy
-    ? orderedBy(
-        selectPetals(s, spec.selection),
-        values.get(orderBy) as Map<string, string>,
-        kinds.get(orderBy),
-      )
-    : selectPetals(s, spec.selection);
-  const widths = widthFactors(rows, spec.encodings.width);
-  const heights = heightValues(rows, spec.encodings.height, metricOf(s, spec, rows));
+    ? orderedBy(selected, values.get(orderBy) as Map<string, string>, kinds.get(orderBy))
+    : own
+      ? orderedBy(selected, own, 'category')
+      : selected;
+  const widths = widthBy
+    ? countWidths(rows, values.get(widthBy) as Map<string, string>, spec.encodings.width)
+    : widthFactors(rows, spec.encodings.width);
+  const heights = heightBy
+    ? countHeights(rows, values.get(heightBy) as Map<string, string>)
+    : heightValues(rows, spec.encodings.height, metricOf(s, spec, rows));
   const split = spec.encodings.segments?.by === 'backers';
   const fold = tailFold(s, spec.selection, rows);
 

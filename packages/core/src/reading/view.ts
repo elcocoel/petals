@@ -52,7 +52,8 @@ export function choicesOf(
   const ratio = d.width?.max_ratio ?? 2;
   const near = RATIOS.reduce((a, b) => (Math.abs(b - ratio) < Math.abs(a - ratio) ? b : a));
   return {
-    width: used.width === 'share' ? `r${near}` : 'equal',
+    // the amount held draws as its share does (in one reading the two are in proportion)
+    width: used.width === 'share' || used.width === 'amount' ? `r${near}` : 'equal',
     height,
     colour: used.colour === 'kind' ? 'kind' : used.colour === 'identity' ? 'identity' : 'single',
     outline: used.outline === 'identity' ? 'identity_status' : 'none',

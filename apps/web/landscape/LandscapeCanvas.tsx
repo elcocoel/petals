@@ -11,7 +11,7 @@
 // asks (the Power Map), a search field tops the chain list, and while something's typed the maps it finds stand
 // in the chains' place; pressing one goes to its chain and into its flower (board 105).
 import type { Proposal } from '@petal/core';
-import { EVERY_FLOWER, inUse } from '@petal/core/view';
+import { EVERY_FLOWER, inUse, latestView } from '@petal/core/view';
 import { flowerKeys, keyLines, mapKeys } from '@petal/core/wedge/keys';
 import { floatBox } from '@petal/tokens';
 import {
@@ -238,6 +238,7 @@ function Land({
   show,
   pending,
   progress,
+  unlabelled,
 }: {
   data: LandscapeData;
   probe: boolean;
@@ -268,6 +269,8 @@ function Land({
   show: LandShow | null | undefined;
   /** a new map's placeholder on this chain's map, or null */
   pending: { x: number; y: number; s: number; name: string } | null;
+  /** Labels None in the person's view: the petals say nothing, but the one pointed at */
+  unlabelled: boolean;
   /** work running on this chain's map: under a flower (its place here), the placeholder or the map's foot, or null */
   progress: { at: number | 'pending' | 'map'; words: string; share: number | null } | null;
 }) {
@@ -288,6 +291,7 @@ function Land({
     worth,
     pending,
     progress,
+    unlabelled,
     ...(onPick ? { onPick } : {}),
   };
   useLandscape(svg, data, probe, aside, at);
@@ -319,6 +323,9 @@ function Land({
   useEffect(() => {
     if (pending !== undefined || progress !== undefined) at.current?.redraw?.();
   }, [pending, progress]);
+  useEffect(() => {
+    if (unlabelled !== undefined) at.current?.redraw?.();
+  }, [unlabelled]);
   return (
     // surface.canvas
     <svg
@@ -928,6 +935,7 @@ export function LandscapeCanvas({
           show={shownOn?.chain === chain ? shownOn.show : undefined}
           pending={pendingHere}
           progress={progressHere}
+          unlabelled={latestView(person.view).dimensions.labels === null}
         />
       )}
       {movable ? (
