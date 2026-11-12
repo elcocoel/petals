@@ -65,6 +65,7 @@ export {
   type ProposalRun,
   proposalMaps,
   proposalsOf,
+  snapshotTexts,
 } from './proposals.ts';
 export type { PublicPage } from './public-fetch.ts';
 export { callTool, describeTool, findTool, registry } from './registry.ts';

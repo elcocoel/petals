@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { validateProposals } from '../src/proposals.ts';
 
-const fixture = (v: 1 | 2) =>
+const fixture = (v: 1 | 2 | 3) =>
   JSON.parse(
     readFileSync(
       join(import.meta.dirname, '..', 'schema', 'fixtures', `proposals.v${v}.json`),
@@ -63,5 +63,34 @@ describe('proposals/v2', () => {
         proposals: [{ ...fixture(1).proposals[0], outcome: 'closed' }],
       }).ok,
     ).toBe(false);
+  });
+});
+
+describe('proposals/v3', () => {
+  test("the Near Africa Community DAO's proposals: each with its own text and, where its text names one, a link that says so; v2 still reads", () => {
+    const v3 = fixture(3);
+    expect(validateProposals(v3).ok).toBe(true);
+    expect(v3.petal).toBe('proposals/v3');
+    const linked = v3.proposals.filter((p: { link: unknown }) => p.link);
+    expect(linked.length).toBeGreaterThan(0);
+    for (const p of linked) expect(p.link.kind).toBe('named in its text');
+    expect(validateProposals(fixture(2)).ok).toBe(true);
+  });
+
+  test('a link is a web address and says its kind; summary and link are both there, null when none', () => {
+    const v3 = fixture(3);
+    const base = v3.proposals[0];
+    const withLink = (link: unknown) => ({ ...v3, proposals: [{ ...base, link }] });
+    expect(
+      validateProposals(
+        withLink({ url: 'https://snapshot.org/#/x/proposal/1', kind: 'where it was made' }),
+      ).ok,
+    ).toBe(true);
+    expect(validateProposals(withLink({ url: 'https://x.org', kind: 'somewhere' })).ok).toBe(false);
+    expect(
+      validateProposals(withLink({ url: 'javascript:alert(1)', kind: 'named in its text' })).ok,
+    ).toBe(false);
+    const { summary: _s, ...noSummary } = base;
+    expect(validateProposals({ ...v3, proposals: [noSummary] }).ok).toBe(false);
   });
 });

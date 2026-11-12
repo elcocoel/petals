@@ -16,7 +16,7 @@ Name a community, wallet or contract. Petals’ agent, powered by NEAR AI, explo
 
 ### Connect your own agents.
 
-Petals can outsource the heavy mapping and research to agents you pay for. They work with their own tools and resources, bringing results back while you keep exploring with Petals.
+Petals can outsource the heavy mapping and research to agents you already pay for. They work with their own tools and resources, bringing results back while you keep exploring with Petals.
 
 ### Behind Petals is a Brain
 

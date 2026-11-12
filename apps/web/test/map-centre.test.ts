@@ -62,3 +62,18 @@ test("inside a DAO, the neighbours' names stay on the edges; the line and its co
   );
   expect(land).toMatch(/way: entered >= 0 \? pointedWay : -1,/);
 });
+
+test('a new arrangement glides in from where each flower stood, the camera moving to it; reduced motion, at once', () => {
+  const land = readFileSync(
+    join(import.meta.dirname, '..', 'landscape', 'useLandscape.ts'),
+    'utf8',
+  );
+  expect(land).toMatch(/prior\.layout !== data\.layout &&[\s\S]{0,140}!quiet\(\)\.matches/);
+  expect(land).toMatch(/flyNext = fitView\(cam\.width, cam\.height, home, cam\.clear\);/);
+  expect(land).toMatch(/const e = glide \* glide \* \(3 - 2 \* glide\);/);
+  expect(land).toMatch(
+    /places: new Map\(flowers\.map\(\(f\) => \[idOf\(f\) \?\? '', \{ x: f\.place\.x, y: f\.place\.y \}\]\)\)/,
+  );
+  const scene = readFileSync(join(import.meta.dirname, '..', 'landscape', 'scene.ts'), 'utf8');
+  expect(scene).toMatch(/move\(\) \{/);
+});

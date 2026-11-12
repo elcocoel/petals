@@ -110,13 +110,14 @@ const INSIGHTS_LEAST = 200;
 const BAR_FOLDED = 66;
 
 /** How tall a floating box is folded to its bar: its bar as drawn, with the box's edge; or the bar's usual height. */
-function barOf(box: HTMLElement | null): number {
+export function barOf(box: HTMLElement | null): number {
   const bar = box?.querySelector<HTMLElement>('[data-b="box"] > :first-child');
-  return bar ? bar.offsetHeight + 2 : BAR_FOLDED;
+  // a box not on the page yet (Insights before it's asked) has no height to measure
+  return bar?.offsetHeight ? bar.offsetHeight + 2 : BAR_FOLDED;
 }
 
-/** Below this much room (md, 48rem) the overlays start folded to their bars. */
-const ROOM = 768;
+/** Below this much room (md, 48rem) the overlays start folded to their bars, and so does a map page's box. */
+export const ROOM = 768;
 
 /**
  * How wide the map's own room is: the positioned area the overlays' column stands in (the column's offset
@@ -544,7 +545,8 @@ export function LandscapeCanvas({
         floatBox.bar,
         Math.min(LEGEND_H, bottom - legendY - (inside ? INSIGHTS_LEAST + floatBox.gap : 0)),
       );
-      const insightsY = legendY + legendH + floatBox.gap;
+      // folded, the legend is its bar alone, and Insights starts right under it (a phone's first load)
+      const insightsY = legendY + (legendOpen ? legendH : BAR_FOLDED) + floatBox.gap;
       return {
         chains: { x: left, y: y0, w, h: chainsH },
         legend: { x: left, y: legendY, w, h: legendH },
@@ -556,7 +558,7 @@ export function LandscapeCanvas({
         },
       };
     },
-    [chainCount, chainsClosed, inside, listOpen],
+    [chainCount, chainsClosed, inside, listOpen, legendOpen],
   );
   const panels = useFloatBoxes(PANELS, place, {
     top: () => room.current?.getBoundingClientRect().top ?? 0,
