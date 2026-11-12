@@ -10,16 +10,16 @@
 // stays private and says why. The confidence is how strongly the claim's own evidence says it, read by search's
 // reranker on Elco's Mac (Qwen3-Reranker, search-model.ts): nothing new runs and nothing is spent. With the model
 // off, confidence is null and says so; it never holds a publish back.
-import { canonicalJson, mapOf, sha256Hex, validateClaim } from '@petal/core';
+import { canonicalJson, sha256Hex, validateClaim } from '@petal/core';
 import type { Claim, ClaimEvidence, Nep413Proof } from '@petal/core/types';
 import { nonceStore, privateStore } from './drafts.ts';
 import { ToolFailure } from './errors.ts';
 import { retiredClaim } from './hidden.ts';
+import { mapViews } from './map.ts';
 import { aboutOneOf, cardAccounts, PUBLISHED } from './mapping-claims.ts';
 import { SEARCH_RERANKER, SearchModelDown } from './search-model.ts';
 import { mapIndex, mapUrl } from './tools/maps.ts';
 import { searchModelOf } from './tools/search-petals.ts';
-import { findSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
 
 export { PUBLISHED };
@@ -70,11 +70,25 @@ export interface Adds {
   why?: string;
 }
 
+/** A reading the person drew of the map, as the box lists it (WORKSPACE, wave 7). */
+export interface ReadingRow {
+  layer: 'Readings';
+  /** the view's hash, as in its /d/ link */
+  id: string;
+  title: string;
+  /** what was read, in words, and its day: 'Moloch v3 (Baal) members on Gnosis, 11 Nov' */
+  what: string;
+  as_of: string;
+  accounts: number;
+}
+
 /** What one press would publish on a map, and what stays private. */
 export interface Publishable {
   about: string;
   name: string;
   claims: Claim[];
+  /** the readings they drew of it that no one is credited with yet, credited to them by the press (#16, wave 7) */
+  readings: ReadingRow[];
   /** the claims, one row each, in the order they'd go */
   rows: PublishRow[];
   private: StaysPrivate[];
@@ -95,6 +109,8 @@ interface Prepared {
   owner: string;
   by: string;
   claims: string[];
+  /** the views of their readings the press credits to them */
+  readings?: string[];
   /** each claim's confidence as the person saw it, by its id, and the model that read it */
   confidence?: Record<string, number | null>;
   scored_by?: string | null;
@@ -229,19 +245,51 @@ const KEPT: Record<string, { layer: string; label: string; why: string }> = {
  * What the person made or kept of this map that the press can't publish yet: the readings they drew in their
  * projects (on the map already, uncredited), and the data and layers their agents kept about it.
  */
+/** A day as the box says it: 11 Nov. */
+const dayOf = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+/**
+ * The readings the person drew of this map in their projects (the views of their steps): those no one is
+ * credited with yet go with the press, in their name; those already theirs are counted as published; a view
+ * someone else is credited with isn't theirs to take.
+ */
+async function drawnReadings(
+  ctx: ToolContext,
+  owner: string,
+  about: string,
+  by: string | null,
+): Promise<{ readings: ReadingRow[]; theirs: number }> {
+  const store = privateStore(ctx.config);
+  const specs = new Set<string>();
+  for (const project of await store.exploration.listByOwner(owner, Number.MAX_SAFE_INTEGER))
+    for (const step of await store.step.list(project.id))
+      if (step.spec_sha256) specs.add(step.spec_sha256);
+  if (!specs.size) return { readings: [], theirs: 0 };
+  const views = (await mapViews(ctx, undefined, { hidden: true })).filter(
+    (v) => v.map === about && specs.has(v.sha),
+  );
+  return {
+    readings: views
+      .filter((v) => v.made_by === null)
+      .map((v) => ({
+        layer: 'Readings' as const,
+        id: v.sha,
+        title: v.name ?? v.title,
+        what: `${v.about}, ${dayOf(v.as_of)}`,
+        as_of: v.as_of,
+        accounts: v.count,
+      })),
+    theirs: by ? views.filter((v) => v.made_by === by).length : 0,
+  };
+}
+
 async function keptAdds(ctx: ToolContext, owner: string, about: string): Promise<Adds[]> {
   const store = privateStore(ctx.config);
   const out: Adds[] = [];
   const projects = await store.exploration.listByOwner(owner, Number.MAX_SAFE_INTEGER);
-  const drawn = new Set<string>();
   const kept = new Map<string, number>();
   for (const project of projects) {
-    for (const step of await store.step.list(project.id)) {
-      const sha = step.snapshot_sha256;
-      if (!sha || drawn.has(sha)) continue;
-      const snapshot = await findSnapshot(ctx, sha).catch(() => null);
-      if (snapshot && mapOf(snapshot) === about) drawn.add(sha);
-    }
     for (const row of await store.projectData.list(owner, project.id)) {
       if (row.about !== about) continue;
       const kind = row.petal.split('/')[0] ?? row.petal;
@@ -250,15 +298,6 @@ async function keptAdds(ctx: ToolContext, owner: string, about: string): Promise
       kept.set(kind, (kept.get(kind) ?? 0) + 1);
     }
   }
-  if (drawn.size)
-    out.push({
-      layer: 'Readings',
-      kind: 'drawn',
-      label: 'Readings you drew',
-      count: drawn.size,
-      goes: false,
-      why: 'a reading you drew is on the map already, uncredited; publishing it in your name comes later',
-    });
   for (const [kind, count] of kept) {
     const k = KEPT[kind] ?? {
       layer: kind,
@@ -303,6 +342,7 @@ export async function publishable(
   ctx: ToolContext,
   owner: string,
   about: string,
+  by: string | null = ctx.caller?.by ?? null,
 ): Promise<Publishable> {
   const found = (await mapIndex(ctx, { hidden: true })).find((m) => m.card.id === about);
   if (!found)
@@ -330,7 +370,20 @@ export async function publishable(
   }
   const scored = await confidences(ctx, [...claims, ...kept.map((k) => k.claim)]);
   const c = found.card;
+  const drawn = await drawnReadings(ctx, owner, about, by);
+  published += drawn.theirs;
   const adds = [
+    ...(drawn.readings.length
+      ? [
+          {
+            layer: 'Readings',
+            kind: 'drawn',
+            label: 'Readings you drew',
+            count: drawn.readings.length,
+            goes: true,
+          },
+        ]
+      : []),
     ...claimAdds(claims, true),
     ...claimAdds(
       kept.map((k) => k.claim),
@@ -343,6 +396,7 @@ export async function publishable(
     about,
     name: c.name ?? c.mark?.name?.value ?? c.title,
     claims,
+    readings: drawn.readings,
     rows: claims.map((x, i) => rowOf(x, scored.scores[i] ?? null)),
     private: kept.map((k, i) => ({
       ...rowOf(k.claim, scored.scores[claims.length + i] ?? null),
@@ -369,8 +423,8 @@ export async function preparePublishData(
   about: string,
   recipient: string,
 ) {
-  const p = await publishable(ctx, who.owner, about);
-  if (!p.claims.length)
+  const p = await publishable(ctx, who.owner, about, who.by);
+  if (!p.claims.length && !p.readings.length)
     throw new ToolFailure(
       'not_found',
       p.private.length
@@ -379,8 +433,15 @@ export async function preparePublishData(
       p.private[0] ? `Why: ${p.private[0].why}` : undefined,
     );
   const ids = p.claims.map((c) => c.id);
-  const sha256 = hashOf(about, who.by, ids);
-  const message = JSON.stringify({ petal: VERSION, about, claims: ids.length, sha256 });
+  const readings = p.readings.map((r) => r.id);
+  const sha256 = hashOf(about, who.by, [...ids, ...readings.map((r) => `reading:${r}`)]);
+  const message = JSON.stringify({
+    petal: VERSION,
+    about,
+    claims: ids.length,
+    readings: readings.length,
+    sha256,
+  });
   const { nonce, expires_at } = await nonceStore(ctx.config).issue();
   const prepared: Prepared = {
     petal: VERSION,
@@ -388,6 +449,7 @@ export async function preparePublishData(
     owner: who.owner,
     by: who.by,
     claims: ids,
+    readings,
     confidence: Object.fromEntries(p.rows.map((r) => [r.id, r.confidence])),
     scored_by: p.scored_by,
     message,
@@ -406,6 +468,7 @@ export async function preparePublishData(
     about,
     name: p.name,
     claims: ids.length,
+    readings: readings.length,
     private: p.private.length,
     message,
     nonce,
@@ -484,10 +547,18 @@ export async function publishData(
       place,
     })),
   );
+  // the readings they drew, credited to them: a view no one was credited with since the press was prepared
+  let readings = 0;
+  for (const sha of prepared.readings ?? []) {
+    const row = await store.draft.get(sha);
+    if (!row || row.made_by) continue;
+    if (await store.draft.label(sha, { name: row.name ?? null, made_by: who.by })) readings++;
+  }
   return {
     about: prepared.about,
     sha256,
     published: added,
+    readings,
     by: who.by,
     map_url: mapUrl(ctx, prepared.about),
   };

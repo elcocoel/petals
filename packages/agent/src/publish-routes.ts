@@ -75,6 +75,7 @@ export function publishRoutes(d: PublishDeps): Hono {
         name: p.name,
         ready: p.claims.length,
         claims: p.rows,
+        readings: p.readings,
         private: p.private,
         published: p.published,
         adds: p.adds,
