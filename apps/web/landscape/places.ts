@@ -317,6 +317,67 @@ export const spreadPlace = (p: Place, c: Pick<Continent, 'x' | 'y'>, spread: num
   y: c.y + (p.y - c.y) * spread,
 });
 
+/**
+ * The map around one DAO (Elco, 12 Nov walk: "one click put something in the center ... we could put a dashed line
+ * on the center for focus all the dowels are organized around that and then I can put something in the center to
+ * be what everything else gets compared to"): it in the middle; the others on rings round it, those sharing the
+ * most wallets with it nearest, those sharing none on rings past them; each ring clockwise from twelve. Sizes stay.
+ * `shared` is how many wallets each flower shares with the one in the middle. Pure.
+ */
+export function ringsAround(
+  places: readonly Place[],
+  shared: readonly number[],
+  c: number,
+  middle: { x: number; y: number },
+): { places: Place[]; r: number } {
+  const gap = SHAPE.R * 0.6;
+  const out = places.map((p) => ({ ...p }));
+  const centre = places[c] as Place;
+  out[c] = { ...centre, x: middle.x, y: middle.y };
+  const tier = (i: number) => ((shared[i] ?? 0) > 0 ? 0 : 1);
+  const others = places
+    .map((_, i) => i)
+    .filter((i) => i !== c)
+    .sort(
+      (a, b) =>
+        tier(a) - tier(b) ||
+        (shared[b] ?? 0) - (shared[a] ?? 0) ||
+        (places[b] as Place).s - (places[a] as Place).s ||
+        a - b,
+    );
+  const fp = (i: number) => footprint((places[i] as Place).s);
+  let edge = footprint(centre.s);
+  let k = 0;
+  while (k < others.length) {
+    // a ring: the next flowers that fit round it, never two tiers on one ring
+    const first = others[k] as number;
+    const ring = [first];
+    let r = edge + gap + fp(first);
+    let used = 2 * fp(first) + gap;
+    while (k + ring.length < others.length) {
+      const next = others[k + ring.length] as number;
+      if (tier(next) !== tier(first) || used + 2 * fp(next) + gap > 2 * Math.PI * r) break;
+      ring.push(next);
+      used += 2 * fp(next) + gap;
+      r = Math.max(r, edge + gap + fp(next));
+    }
+    let along = 0;
+    for (const i of ring) {
+      const share = (2 * fp(i) + gap) / used;
+      const a = -Math.PI / 2 + 2 * Math.PI * (along + share / 2);
+      along += share;
+      out[i] = {
+        ...(out[i] as Place),
+        x: middle.x + r * Math.cos(a),
+        y: middle.y + r * Math.sin(a),
+      };
+    }
+    edge = r + Math.max(...ring.map(fp));
+    k += ring.length;
+  }
+  return { places: out, r: edge + gap };
+}
+
 /** The circle that holds every continent: the map's home for the camera. */
 export function homeOf(places: Places): { cx: number; cy: number; r: number } {
   if (places.continents.length === 0) return { cx: 0, cy: 0, r: SHAPE.R };
