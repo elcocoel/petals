@@ -7,9 +7,11 @@ import {
   agentClient,
   askQuote,
   drawFlower,
+  keepView,
   preparePublish,
   publishEntry,
   refusalCode,
+  SignInFirst,
   saveView,
 } from '../lib/agent-client.ts';
 
@@ -167,6 +169,23 @@ describe('saveView', () => {
     await expect(saveView(DEFAULT_VIEW)).rejects.toThrow('sign in first');
     serve(json({}, 500));
     await expect(saveView(DEFAULT_VIEW)).rejects.toThrow('HTTP 500');
+  });
+});
+
+describe('keepView', () => {
+  test('keeps a visitor’s view by its hash, nobody’s', async () => {
+    const kept = { view: DEFAULT_VIEW, hash: 'cd'.repeat(32) };
+    const calls = serve(json(kept));
+    expect(await keepView(DEFAULT_VIEW)).toEqual(kept);
+    expect(calls[0]?.url).toBe('/api/v1/views');
+    expect(calls[0]?.init?.method).toBe('PUT');
+  });
+
+  test('a visitor’s own view refused on /me is told apart, with the server’s words', async () => {
+    serve(json({ error: { message: 'Sign in to keep your own view' } }, 401));
+    const refused = saveView(DEFAULT_VIEW);
+    await expect(refused).rejects.toBeInstanceOf(SignInFirst);
+    await expect(refused).rejects.toThrow('Sign in to keep your own view');
   });
 });
 

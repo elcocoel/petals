@@ -59,7 +59,7 @@ export function MapAt({
         fill="area"
         title="Power Map"
         focus={focus}
-        legend="read"
+        legend="edit"
         search
         information={{ title, body: children }}
       />
@@ -111,7 +111,7 @@ export function FlowerAt({
           focus={focus}
           selected={state.selected}
           onPick={actions.pick}
-          legend="read"
+          legend="edit"
           search
           // the flower's own box stands at the top right: Information starts under Tools
           ownBox

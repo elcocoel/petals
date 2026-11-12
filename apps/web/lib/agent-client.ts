@@ -370,7 +370,22 @@ export async function drawFlower(specJson: string, view: View): Promise<Drawn> {
  * signed in has one to keep. Throws with the server's reason when it's refused.
  */
 export async function saveView(view: View): Promise<PersonView> {
-  const res = await fetch('/api/v1/me/view', {
+  return putView('/api/v1/me/view', view);
+}
+
+/** The server's refusal of a visitor's own view (401): theirs is kept by its hash instead (keepView). */
+export class SignInFirst extends Error {}
+
+/**
+ * Keeps a visitor's view by its hash (PUT /api/v1/views; Elco, 12 Nov, walk 3: "is it expensive do allow me to
+ * change here too?"): nobody's, so their browser keeps the hash and the pages ask for it. Throws the reason.
+ */
+export async function keepView(view: View): Promise<PersonView> {
+  return putView('/api/v1/views', view);
+}
+
+async function putView(path: string, view: View): Promise<PersonView> {
+  const res = await fetch(path, {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ view }),
@@ -379,7 +394,8 @@ export async function saveView(view: View): Promise<PersonView> {
     error?: { message: string };
   };
   if (res.ok && json.view && json.hash) return { view: json.view, hash: json.hash };
-  throw new Error(json.error?.message ?? `HTTP ${res.status}`);
+  const reason = json.error?.message ?? `HTTP ${res.status}`;
+  throw res.status === 401 ? new SignInFirst(reason) : new Error(reason);
 }
 
 /** A stored flower: what /f/[id] reads, for the panel. */

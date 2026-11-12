@@ -45,7 +45,6 @@ import { useMapBlocs } from '../viewmodels/useMapBlocs.ts';
 import { useMapClaims } from '../viewmodels/useMapClaims.ts';
 import { useMapSearch } from '../viewmodels/useMapSearch.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
-import { useSession } from '../viewmodels/useSession.ts';
 import {
   type Continent,
   GRAVITY_DEFAULT,
@@ -293,17 +292,10 @@ export function LandscapeCanvas({
 }) {
   const person = usePersonView();
   // 'edit' (the Power Map, Elco, 11 Nov: "switch the legends live and watching the map adapt"): Settings' own
-  // hands for someone signed in, whose view is kept; a visitor's can't be, so theirs reads only
+  // hands, for anyone: a person's view is kept on the server, a visitor's by its hash in their browser (Elco,
+  // 12 Nov, walk 3: "is it expensive do allow me to change here too?")
   const ownHands = useLegendEdit();
-  const session = useSession(legend === 'edit');
-  const hands =
-    legend === 'edit'
-      ? session.account
-        ? ownHands
-        : undefined
-      : legend === 'read'
-        ? undefined
-        : legend;
+  const hands = legend === 'edit' ? ownHands : legend === 'read' ? undefined : legend;
   const aside = useRef<HTMLElement | null>(null);
   // the map's panels float, move, snap and size (Elco, 12 Nov) wherever the map fills its page; the landing's
   // map scrolls with its page, so there they stay a column
