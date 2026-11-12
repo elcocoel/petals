@@ -40,7 +40,7 @@ test('under the name at some magnification, only where nothing stands, switched 
   );
   expect(scene).toMatch(/const shown = worthOn \? fade\(WORTH_AT, r\) \* tone : 0;/);
   expect(scene).toMatch(
-    /if \(shown > 0\.01 && !placed\.some\(\(p\) => overlaps\(p, b\)\) && !onAFlower\(b, i\)\) \{/,
+    /if \(inside && shown > 0\.01 && !placed\.some\(\(p\) => overlaps\(p, b\)\) && !onAFlower\(b, i\)\) \{/,
   );
   const canvas = text('landscape/LandscapeCanvas.tsx');
   expect(canvas).toMatch(/worth=\{\{ on: worth, onChange: setWorth \}\}/);

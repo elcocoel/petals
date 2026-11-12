@@ -76,6 +76,8 @@ export function FloatBox({
       onPointerDownCapture={hand.raise}
       // box.close
       hidden={closed}
+      // the map reads where the boxes over it stand, so its names and notes keep clear of them (LOOK)
+      data-float=""
       className="invisible fixed top-0 left-0 flex flex-col"
     >
       <BarBox

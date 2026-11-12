@@ -197,6 +197,12 @@ export function marks(
   readout = false,
   /** The petal a click chose, or -1. */
   chosen = -1,
+  /**
+   * What's already on the screen around it, in screen px (on the map: the names, the neighbours' names, the boxes
+   * over the map): the notes give way to it, and the chosen petal's slides clear of it (META's QA, 12 Nov: "labels
+   * never sit on each other or run off the window").
+   */
+  taken: readonly { x0: number; y0: number; x1: number; y1: number }[] = [],
 ): Marks {
   const { k } = v;
   const toX = (x: number) => (x + ring.ox) * k + v.x;
@@ -206,6 +212,17 @@ export function marks(
   const placed: Box[] = [];
   const claim = (box: Omit<Box, 'opacity'>, opacity: number) => {
     if (opacity > 0.01) placed.push({ ...box, opacity });
+  };
+  for (const t of taken) claim(t, 1);
+  /** A kept note's left edge, slid along its line out of anything already there, toward where it points from. */
+  const clearOfTaken = (x: number, width: number, y0: number, y1: number, s: number) => {
+    let at = x;
+    for (let pass = 0; pass < taken.length; pass++) {
+      const t = taken.find((o) => y1 > o.y0 && y0 < o.y1 && at + width > o.x0 && at < o.x1);
+      if (!t) break;
+      at = s > 0 ? t.x0 - CLEAR - width : t.x1 + CLEAR;
+    }
+    return at;
   };
 
   // figure.account-opening
@@ -404,10 +421,18 @@ export function marks(
     const reach = tipX + nx * lift;
     const fromEnd = s > 0 ? reach : reach - width;
     // Everyone else fades at the window's edge. A note that's kept slides along it, as the focus's does.
-    const x = kept ? clamp(fromEnd, INSET, v.width - INSET - width) : fromEnd;
-    const elbowX = kept ? (s > 0 ? x : x + width) : reach;
-    const rule = clearOfBars(m, ring, toX, toY, i, x, x + width, tipY + ny * lift, ny);
+    const along = kept ? clamp(fromEnd, INSET, v.width - INSET - width) : fromEnd;
+    const rule = clearOfBars(m, ring, toX, toY, i, along, along + width, tipY + ny * lift, ny);
     const elbowY = kept ? clamp(rule, INSET + LINE, v.height - INSET) : rule;
+    // the chosen petal's note slides clear of what's already there, as it slides along the window's edge
+    const x = kept
+      ? clamp(
+          clearOfTaken(along, width, elbowY - LINE, elbowY + 2, s),
+          INSET,
+          v.width - INSET - width,
+        )
+      : along;
+    const elbowX = kept ? (s > 0 ? x : x + width) : reach;
     const y = elbowY - 4;
     const box = { x0: x - 1, y0: y - LINE + 4, x1: x + width + 1, y1: elbowY + 2 };
     const edge = kept
