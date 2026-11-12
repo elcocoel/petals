@@ -28,6 +28,7 @@ const PHASE_A = [
   'read_page',
   'search',
   'search_petals',
+  'list_calls',
   'find_voting_blocs',
   'keep_data',
   'list_data',

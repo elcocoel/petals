@@ -802,3 +802,26 @@ describe('migration 31, the brain receipts', () => {
     await store.close();
   });
 });
+
+describe('migration 32, the open calls', () => {
+  test("a source's calls are replaced as a whole, listed closing soonest first, the ones with no deadline last", async () => {
+    const store = openStore(':memory:');
+    const row = (id: string, closes: string | null) => ({
+      id,
+      closes,
+      body: `{"id":"${id}"}`,
+      read_at: AT,
+    });
+    await store.openCall.replace('karma', [row('karma:2', LATER), row('karma:1', null)]);
+    await store.openCall.replace('infrastructure-committee.near', [row('ic:8', AT)]);
+    expect((await store.openCall.list()).map((r) => [r.id, r.source])).toEqual([
+      ['ic:8', 'infrastructure-committee.near'],
+      ['karma:2', 'karma'],
+      ['karma:1', 'karma'],
+    ]);
+    // read again, karma no longer finds karma:2: it leaves, and the other source's stay
+    await store.openCall.replace('karma', [row('karma:1', null)]);
+    expect((await store.openCall.list()).map((r) => r.id)).toEqual(['ic:8', 'karma:1']);
+    await store.close();
+  });
+});

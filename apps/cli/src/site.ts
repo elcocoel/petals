@@ -94,6 +94,8 @@ export const SITE_TOOLS = [
   'list_annotations',
   // the map's search (SEARCH, #105): this computer has neither the model nor the map, so the site searches
   'search_petals',
+  // the open-calls feed (Elco, 12 Nov): the site keeps it, read from its sources
+  'list_calls',
   // proposals, marks, values and readings an agent found, kept privately in the project (#98, SYSTEMS's)
   'keep_data',
   'list_data',
@@ -509,6 +511,12 @@ export function siteDoor(opts: SiteOptions) {
           if (Array.isArray(i.kinds) && i.kinds.length) q.set('kinds', i.kinds.join(','));
           if (typeof i.limit === 'number') q.set('limit', String(i.limit));
           return call('GET', `/api/v1/search?${q}`);
+        }
+        case 'list_calls': {
+          const q = new URLSearchParams();
+          for (const k of ['kind', 'q', 'closes_before'] as const)
+            if (typeof i[k] === 'string') q.set(k, i[k] as string);
+          return call('GET', `/api/v1/calls?${q}`);
         }
         case 'brain_context': {
           const q = new URLSearchParams();

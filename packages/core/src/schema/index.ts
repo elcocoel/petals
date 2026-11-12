@@ -5,6 +5,7 @@
 // schema: the same $defs with a different root, so any JSON Schema tool can use them alone.
 
 import brainReceiptSchema from '../../schema/brain-receipt.schema.json' with { type: 'json' };
+import callsSchema from '../../schema/calls-v1.schema.json' with { type: 'json' };
 import claimSchema from '../../schema/claim.schema.json' with { type: 'json' };
 import claimV2Schema from '../../schema/claim-v2.schema.json' with { type: 'json' };
 import claimV3Schema from '../../schema/claim-v3.schema.json' with { type: 'json' };
@@ -78,6 +79,7 @@ export const schemas: {
   valueV2: object;
   /** the same with the token's circulating supply, its max and its market cap, each naming its source (12 Nov) */
   valueV3: object;
+  calls: object;
   /** a DAO's proposals and each account's vote on each (#93) */
   proposals: object;
   /** the same with closed, recipients, options, and a ballot's choices and weights (11 Nov) */
@@ -106,6 +108,7 @@ export const schemas: {
   value: valueSchema,
   valueV2: valueV2Schema,
   valueV3: valueV3Schema,
+  calls: callsSchema,
   proposals: proposalsSchema,
   proposalsV2: proposalsV2Schema,
 };

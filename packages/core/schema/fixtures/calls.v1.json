@@ -1,0 +1,22 @@
+{
+  "petal": "calls/v1",
+  "id": "infrastructure-committee.near:8",
+  "kind": "rfp",
+  "title": "Chain Abstracted Relayer RFP",
+  "summary": "This is a request for proposal to build a Chain Abstracted relayer, SDK, and accompanying documentation that allows apps, wallets, and users to leverage existing infrastructure.",
+  "offered_by": {
+    "name": "NEAR Infrastructure Committee",
+    "about": null
+  },
+  "budget": null,
+  "opens": null,
+  "closes": "2025-05-29T00:00:00.000Z",
+  "status": "ACCEPTING_SUBMISSIONS",
+  "link": "https://near.social/infrastructure-committee.near/widget/app?page=rfp&id=8",
+  "source": {
+    "name": "infrastructure-committee.near",
+    "ref": "near:infrastructure-committee.near get_rfps",
+    "read_at": "2026-11-12T12:20:00.000Z"
+  },
+  "how": "sourced"
+}

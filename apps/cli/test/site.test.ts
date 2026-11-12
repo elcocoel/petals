@@ -392,6 +392,9 @@ describe('jobs from the page’s agent', () => {
     expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/brain/files/where-power-lives`);
     await byName(tools, 'brain_index').run({}, ctx());
     expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/brain`);
+    // the open-calls feed is the site's: this computer keeps none (Elco, 12 Nov)
+    await byName(tools, 'list_calls').run({ kind: 'rfp', q: 'relayer' }, ctx());
+    expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/calls?kind=rfp&q=relayer`);
     await byName(tools, 'brain_context').run(
       { question: 'who controls this treasury', answers: ['sharesToken()'] },
       ctx(),

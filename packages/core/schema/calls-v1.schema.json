@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:calls:v1",
+  "title": "Petal calls v1",
+  "description": "calls/v1 (12 Nov; Elco: 'open calls is the most useful ... helping people make money from daos and helping daos to source talent'): one open call, someone paying for work or asking for a vote right now: a request for proposals, a grants program, a bounty, a hackathon, an accelerator, a fund, or an open vote. Read from a public source without a key, every field as that source says it: a status is kept as said beside its deadline, even when the two disagree, and a budget in the call's own words. Its fields follow the RFP Object Standard's (DAOIP-5, schema.org/Grant), so other tools can read Petals' feed. Any agent can write one (#98).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "petal",
+    "id",
+    "kind",
+    "title",
+    "summary",
+    "offered_by",
+    "budget",
+    "opens",
+    "closes",
+    "status",
+    "link",
+    "source",
+    "how"
+  ],
+  "properties": {
+    "petal": {
+      "const": "calls/v1"
+    },
+    "id": {
+      "description": "the call's own id where its source gives one, as <source>:<id> (karma:1508, infrastructure-committee.near:8); else its link",
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "description": "what kind of call, as its source says it: an open vote calls a DAO's voters, not for work",
+      "enum": ["rfp", "grants", "bounty", "hackathon", "accelerator", "fund", "vote", "other"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "description": "its short description, as said; null when the source gives none",
+      "type": ["string", "null"]
+    },
+    "offered_by": {
+      "description": "who offers it: the DAO, program or community by name, and its address on Petals' shared map when the chain ties the two",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "about"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "about": {
+          "description": "the map's address (its card's id), or null",
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "budget": {
+      "description": "the budget in the call's own words and currency, never a dollar figure it didn't give; null when it says none",
+      "type": ["string", "null"]
+    },
+    "opens": {
+      "description": "when it opened, as said, or null",
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "closes": {
+      "description": "its deadline, as said, or null when it has none",
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "status": {
+      "description": "its status in its source's own words (ACCEPTING_SUBMISSIONS, Active, active), or null",
+      "type": ["string", "null"]
+    },
+    "link": {
+      "description": "where to read it and apply",
+      "type": "string",
+      "format": "uri"
+    },
+    "source": {
+      "description": "where and when it was read",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "ref", "read_at"],
+      "properties": {
+        "name": {
+          "description": "the source: karma, infrastructure-committee.near, snapshot, a forum's host",
+          "type": "string",
+          "minLength": 1
+        },
+        "ref": {
+          "description": "what was read: the address of the list, or the chain's account and view call",
+          "type": "string",
+          "minLength": 1
+        },
+        "read_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "how": {
+      "description": "sourced: the source itself says it is an open call. inferred: a reading that a post is one, with the post as evidence",
+      "enum": ["sourced", "inferred"]
+    },
+    "evidence": {
+      "description": "for an inferred call, the post it was read from",
+      "type": ["string", "null"],
+      "format": "uri"
+    }
+  }
+}

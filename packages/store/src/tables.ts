@@ -152,6 +152,19 @@ export interface MarkRow {
   read_at: string;
 }
 /** A map's value/v1 (27): its token's price, its supply and its reading's totals, each with where and when. */
+/** One open call (32), by its id: the calls/v1 as its source's reader last found it. */
+export interface OpenCallRow {
+  /** the call's id, <source>:<id> or its link */
+  id: string;
+  /** the source that keeps it open: replaced as a whole on each read */
+  source: string;
+  /** its deadline, as said, or null */
+  closes: string | null;
+  /** the calls/v1, JSON */
+  body: string;
+  read_at: string;
+}
+
 export interface ValueRow {
   /** the map's address, as its card's id */
   about: string;
@@ -1166,6 +1179,29 @@ export function tables(db: Db) {
       },
       get: (about: string) => db.get<ValueRow>('SELECT * FROM value WHERE about = ?', about),
       list: () => db.all<ValueRow>('SELECT * FROM value ORDER BY about'),
+    },
+
+    /** Open calls (32): each source's, as its reader last found them. */
+    openCall: {
+      /** A source's calls, all at once: the ones its reader no longer finds leave. */
+      replace: (source: string, rows: readonly Omit<OpenCallRow, 'source'>[]) =>
+        db.tx(async () => {
+          await db.run('DELETE FROM open_call WHERE source = ?', source);
+          for (const r of rows)
+            await db.run(
+              `INSERT INTO open_call (id, source, closes, body, read_at) VALUES (?, ?, ?, ?, ?)
+               ON CONFLICT (id) DO UPDATE SET source = excluded.source, closes = excluded.closes,
+                 body = excluded.body, read_at = excluded.read_at`,
+              r.id,
+              source,
+              r.closes,
+              r.body,
+              r.read_at,
+            );
+        }),
+      /** Every open call, closing soonest first, the ones with no deadline last. */
+      list: () =>
+        db.all<OpenCallRow>('SELECT * FROM open_call ORDER BY closes IS NULL, closes, id'),
     },
 
     /** Each map's proposals (28), by the map's address: read again, they're replaced. */
