@@ -1,6 +1,6 @@
 # Contract: the view (`view/v2`), how data becomes a flower
 
-**Version**: view/v2 since 11 Nov (labels; see "view/v2" below), view/v1 still read | **Owner**: LOOK | **Status**: v1 reviewed by META, 9 Nov; v2 by Elco's go on `coordinator/annotation-layer.md`, step 6. Built under `specs/protocols.md`, the one rule for every format.
+**Version**: view/v2 since 11 Nov (labels; see "view/v2" below), view/v3 since 12 Nov for a person who chooses colour's keys (see "view/v3" below), view/v1 still read | **Owner**: LOOK | **Status**: v1 reviewed by META, 9 Nov; v2 by Elco's go on `coordinator/annotation-layer.md`, step 6. Built under `specs/protocols.md`, the one rule for every format.
 **Schemas**: `view-v1.schema.json` and `view-v2.schema.json`, next to this file.
 
 ## Elco's words (9 Nov, through META)
@@ -123,3 +123,7 @@ Kinds on every piece of data are what make this work, so it waits on `seam/v1` c
 ## Not in v1
 
 The lobby's settings, modes, storing a person's view on the server, and the agent's tool for proposing one all come later. v1 is the format, the default, the fixtures and the checks.
+
+## view/v3: colour's keys (12 Nov)
+
+Elco, wave 4: "choosing which colour a value gets". `view/v3` is `view/v2` with one optional field on colour, `keys`: `{ [value]: 'mint' | 'blue' | 'coral' | 'apricot' | 'pink' | 'grey' }`, the key each named value of colour's piece of data takes, as the person chose it. A value not named there takes its key as before. Nothing else changes, so a v2 view is a v3 view with no keys chosen, and the default stays `view/v2` with its hash: core's `withColourKeys` writes a v3 only while a key is chosen and gives back the v2 when the last one goes. SYSTEMS proposed it with OVERLAYS and LOOK; the schema is `view-v3.schema.json`, its fixture `view.v3.json`.

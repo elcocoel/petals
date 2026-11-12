@@ -5,14 +5,19 @@
 import { createAjv, type SchemaName, schemaId } from '../schema/ajv.ts';
 import type { View } from '../types/index.ts';
 
-const BY_VERSION: Record<string, SchemaName> = { 'view/v1': 'view', 'view/v2': 'viewV2' };
+const BY_VERSION: Record<string, SchemaName> = {
+  'view/v1': 'view',
+  'view/v2': 'viewV2',
+  'view/v3': 'viewV3',
+};
 let ajv: ReturnType<typeof createAjv> | undefined;
 
 /** Null when it's a valid view/v1 or view/v2; otherwise why not, in a line. */
 export function viewProblem(x: unknown): string | null {
   const petal = (x as { petal?: unknown } | null)?.petal;
   const name = typeof petal === 'string' ? BY_VERSION[petal] : undefined;
-  if (!name) return `the view's petal is ${JSON.stringify(petal ?? null)}, not view/v1 or view/v2`;
+  if (!name)
+    return `the view's petal is ${JSON.stringify(petal ?? null)}, not view/v1, view/v2 or view/v3`;
   ajv ??= createAjv();
   const compiled = ajv.getSchema(schemaId(name));
   if (!compiled) throw new Error(`${name} schema not registered`);

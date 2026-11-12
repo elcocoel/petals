@@ -3,7 +3,7 @@
 // dimension, and the look never sees a data name: this joins them. Pure.
 import { canonicalJson, sha256Hex } from '../hash.ts';
 import type { DataKind } from '../seam.ts';
-import type { View, ViewV1, ViewV2 } from '../types/index.ts';
+import type { View, ViewV1, ViewV2, ViewV3 } from '../types/index.ts';
 import { VIEW_VERSION } from '../versions.ts';
 
 /**
@@ -110,12 +110,16 @@ export const DEFAULT_VIEW_V1: ViewV1 = {
   },
 };
 
+/** view/v3 (12 Nov, wave 4): view/v2 with colour's keys, the key each value takes as the person chose it. */
+export const VIEW_KEYS_VERSION = 'view/v3';
+
 /**
  * Any view as the latest version: a view/v1 is the same view with labels on identity, the names every
- * petal had before labels, so it draws exactly as it did. A v2 view is itself.
+ * petal had before labels, so it draws exactly as it did. A v2 view is itself, and so is a v3, which only adds
+ * colour's chosen keys.
  */
-export function latestView(view: View): ViewV2 {
-  if (view.petal === VIEW_VERSION) return view;
+export function latestView(view: View): ViewV2 | ViewV3 {
+  if (view.petal === VIEW_VERSION || view.petal === VIEW_KEYS_VERSION) return view;
   return {
     petal: VIEW_VERSION,
     dimensions: { ...view.dimensions, labels: { data: 'identity' } },
@@ -126,7 +130,7 @@ export function latestView(view: View): ViewV2 {
  * The default from view/v2 until 11 Nov: default/v1's choices, with labels on identity. Addresses made then
  * carry its hash, and it draws as it did.
  */
-export const DEFAULT_VIEW_V2_0: ViewV2 = latestView(DEFAULT_VIEW_V1);
+export const DEFAULT_VIEW_V2_0 = latestView(DEFAULT_VIEW_V1) as ViewV2;
 
 /**
  * The default since 11 Nov, the art direction's (design/flower-art-direction/default-system-vnext.md, V1; #76,
@@ -182,4 +186,36 @@ export function inUse(view: View, data: readonly Piece[]): Record<Dimension, str
     out[d] = name !== null && kind !== undefined && draws(d, { name, kind }) ? name : null;
   }
   return out;
+}
+
+/** The look's keys a person can give a value (view/v3's colour.keys). */
+export const COLOUR_KEYS = ['mint', 'blue', 'coral', 'apricot', 'pink', 'grey'] as const;
+export type ColourKey = (typeof COLOUR_KEYS)[number];
+
+/** The keys a person chose for colour's values; none for a v1 or v2 view. */
+export function colourKeysOf(view: View): Readonly<Record<string, ColourKey>> {
+  if (view.petal !== VIEW_KEYS_VERSION) return {};
+  return (view.dimensions.colour?.keys ?? {}) as Record<string, ColourKey>;
+}
+
+/**
+ * The view with colour's keys as given (Elco, 12 Nov, wave 4: "choosing which colour a value gets"): a view/v3
+ * when any key is chosen, a view/v2 when none is, so a view with nothing chosen keeps the hash it had.
+ */
+export function withColourKeys(
+  view: View,
+  keys: Readonly<Record<string, ColourKey>>,
+): ViewV2 | ViewV3 {
+  const latest = latestView(view);
+  const { keys: _was, ...colour } = (latest.dimensions.colour ?? {}) as NonNullable<
+    ViewV3['dimensions']['colour']
+  >;
+  const chosen = Object.keys(keys).length > 0;
+  if (!latest.dimensions.colour) return latest;
+  if (!chosen)
+    return { petal: VIEW_VERSION, dimensions: { ...latest.dimensions, colour } } as ViewV2;
+  return {
+    petal: VIEW_KEYS_VERSION,
+    dimensions: { ...latest.dimensions, colour: { ...colour, keys: { ...keys } } },
+  } as ViewV3;
 }

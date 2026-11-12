@@ -1,0 +1,34 @@
+{
+  "petal": "view/v3",
+  "dimensions": {
+    "height": {
+      "data": "share",
+      "scale": "sqrt"
+    },
+    "width": {
+      "data": "share",
+      "scale": "log",
+      "max_ratio": 2
+    },
+    "order": {
+      "data": "share"
+    },
+    "colour": {
+      "data": "voted",
+      "keys": {
+        "voted": "mint",
+        "never voted": "grey"
+      }
+    },
+    "outline": {
+      "data": "identity"
+    },
+    "texture": null,
+    "markings": null,
+    "segments": null,
+    "lines": null,
+    "labels": {
+      "data": "identity"
+    }
+  }
+}

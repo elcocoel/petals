@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:view:v3",
+  "title": "Petal view v3",
+  "description": "Which piece of data each dimension shows. One per person, for every flower they look at; a default for everyone else. The data never names a dimension and the look never sees a data name: the view joins them. A dimension whose piece of data a flower lacks, or has as a kind the dimension doesn't accept, shows nothing on that flower. Kinds are checked when a view meets a flower's data, by the table in specs/006-the-map/contracts/view.md; the schema holds the shape. v2 adds labels: which piece of data names each petal (a category), so a person's annotations can name them. v3 adds colour's keys: which of the look's keys a value of colour's piece of data takes, as the person chose it (Elco, 12 Nov, wave 4: 'choosing which colour a value gets'); a value not named there takes its key as before. A view/v1 reads as v2 with labels on identity, and a view/v2 is a view/v3 with no keys chosen. See specs/006-the-map/contracts/view.md.",
+  "type": "object",
+  "required": [
+    "petal",
+    "dimensions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "petal": {
+      "const": "view/v3"
+    },
+    "dimensions": {
+      "type": "object",
+      "description": "The ten dimensions, all present. null means the dimension isn't in use.",
+      "required": [
+        "height",
+        "width",
+        "order",
+        "colour",
+        "outline",
+        "texture",
+        "markings",
+        "segments",
+        "lines",
+        "labels"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "$ref": "#/$defs/sized"
+        },
+        "width": {
+          "$ref": "#/$defs/width"
+        },
+        "order": {
+          "$ref": "#/$defs/plain"
+        },
+        "colour": {
+          "$ref": "#/$defs/coloured"
+        },
+        "outline": {
+          "$ref": "#/$defs/plain"
+        },
+        "texture": {
+          "$ref": "#/$defs/plain"
+        },
+        "markings": {
+          "$ref": "#/$defs/plain"
+        },
+        "segments": {
+          "$ref": "#/$defs/plain"
+        },
+        "lines": {
+          "$ref": "#/$defs/plain"
+        },
+        "labels": {
+          "$ref": "#/$defs/plain"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "data": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[a-z0-9_.-]+(:[a-z0-9_.-]+)?$",
+      "description": "A piece of data by its name, as the flower's data names it (share, amount, kind, identity, backers, or a layer's own name), or <layer>:<name> when two layers use the same name (005's seam)."
+    },
+    "scale": {
+      "enum": [
+        "sqrt",
+        "linear",
+        "log"
+      ],
+      "description": "How a number becomes the dimension's value, with spec/v1's meanings."
+    },
+    "plain": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "data"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "data": {
+              "$ref": "#/$defs/data"
+            }
+          }
+        }
+      ]
+    },
+    "sized": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "data"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "data": {
+              "$ref": "#/$defs/data"
+            },
+            "scale": {
+              "$ref": "#/$defs/scale"
+            }
+          }
+        }
+      ]
+    },
+    "width": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "data"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "data": {
+              "$ref": "#/$defs/data"
+            },
+            "scale": {
+              "$ref": "#/$defs/scale"
+            },
+            "max_ratio": {
+              "type": "number",
+              "minimum": 1.5,
+              "maximum": 3,
+              "description": "widest side over narrowest side, so the polygon holds"
+            }
+          }
+        }
+      ]
+    },
+    "key": {
+      "enum": [
+        "mint",
+        "blue",
+        "coral",
+        "apricot",
+        "pink",
+        "grey"
+      ],
+      "description": "one of the look's five keys, or grey"
+    },
+    "coloured": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "data"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "data": {
+              "$ref": "#/$defs/data"
+            },
+            "scale": {
+              "$ref": "#/$defs/scale"
+            },
+            "keys": {
+              "type": "object",
+              "description": "the key each named value of colour's piece of data takes, as the person chose it; a value not named here takes its key as before",
+              "propertyNames": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "additionalProperties": {
+                "$ref": "#/$defs/key"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -26,13 +26,16 @@ import type {
 } from './generated/snapshot.ts';
 import type { PetalViewV1 } from './generated/view.ts';
 import type { PetalViewV2 } from './generated/view-v2.ts';
+import type { PetalViewV3 } from './generated/view-v3.ts';
 
 /** view/v1 (specs/006-the-map/contracts/view.md): which piece of data each of nine dimensions shows. */
 export type ViewV1 = PetalViewV1;
 /** view/v2, the latest: v1's nine dimensions and labels, which piece of data names each petal. */
 export type ViewV2 = PetalViewV2;
+/** view/v3: view/v2 with colour's keys, the key each value takes as the person chose it (12 Nov, wave 4). */
+export type ViewV3 = PetalViewV3;
 /** Any view a person may keep. A v1 one still reads, as v2 with labels on identity (core's latestView). */
-export type View = ViewV1 | ViewV2;
+export type View = ViewV1 | ViewV2 | ViewV3;
 
 // claim/v1 (specs/002-system/contracts/claims.md)
 export type {
