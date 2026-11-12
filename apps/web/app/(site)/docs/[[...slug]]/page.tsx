@@ -15,7 +15,7 @@ export function generateStaticParams() {
   return [{ slug: [] }, ...catalog().map((p) => ({ slug: p.slug.split('/') }))];
 }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const slug = (await params).slug?.join('/') || 'getting-started';
+  const slug = (await params).slug?.join('/') || 'what-petals-is';
   const page = catalog().find((p) => p.slug === slug);
   return {
     title: `${page?.title ?? 'Documentation'} · Petals`,
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 export default async function Docs({ params }: Props) {
-  const slug = (await params).slug?.join('/') || 'getting-started';
+  const slug = (await params).slug?.join('/') || 'what-petals-is';
   const pages = catalog();
   const index = pages.findIndex((p) => p.slug === slug);
   const page = pages[index];
