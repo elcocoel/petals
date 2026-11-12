@@ -24,6 +24,7 @@ import { listJobs, reportJob, takeJob } from './tools/jobs.ts';
 import { addLayer, composeViewTool } from './tools/layers.ts';
 import { lookUp } from './tools/look-up.ts';
 import { getNetwork, listNetworks } from './tools/networks.ts';
+import { listPayouts } from './tools/payouts.ts';
 import { preparePublish, publishFlower } from './tools/publish.ts';
 import { quotePayment } from './tools/quote.ts';
 import { readChain } from './tools/read-chain.ts';
@@ -67,6 +68,7 @@ export const registry: Tool<any, any>[] = [
   searchPetalsTool,
   listCalls,
   findVotingBlocs,
+  listPayouts,
   keepData,
   listData,
   accountGroupsTool,

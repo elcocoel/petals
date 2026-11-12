@@ -1,0 +1,103 @@
+{
+  "petal": "payouts/v1",
+  "about": "near:mainnet:build.sputnik-dao.near",
+  "source": {
+    "kind": "sputnik",
+    "contract": "near:mainnet:build.sputnik-dao.near",
+    "ref": "get_policy, get_last_proposal_id and get_proposals on build.sputnik-dao.near at block 175500000 (final), via https://rpc.mainnet.fastnear.com; when paid from https://tx.main.fastnear.com/v0; dollars from https://coins.llama.fi/batchHistorical",
+    "at": "2026-11-12T12:32:49Z"
+  },
+  "payouts": [
+    {
+      "from": "near:mainnet:build.sputnik-dao.near",
+      "to": "near:mainnet:nearbuilders1.near",
+      "asset": {
+        "id": "near:mainnet:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
+        "symbol": "USDC",
+        "decimals": 6
+      },
+      "amount": "8500",
+      "raw": "8500000000",
+      "when": "2024-10-17T15:59:30.709Z",
+      "proposal": {
+        "id": "384",
+        "kind": "Transfer",
+        "ref": "proposal:near:mainnet:build.sputnik-dao.near:384",
+        "at": "2024-10-17T15:33:59.405Z"
+      },
+      "usd": {
+        "usd": "8499.17",
+        "price": 0.999902,
+        "source": "defillama",
+        "ref": "near:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1 at 1729180743 (https://coins.llama.fi/batchHistorical)",
+        "at": "2024-10-17T15:59:03.000Z"
+      },
+      "evidence": {
+        "tx": "HgK2aKHsTob2hR1ZWzjcr4cbmr5U5asJuEFgNr6EC3xW",
+        "block": 130566356,
+        "ref": "the DAO's own transfer in HgK2aKHsTob2hR1ZWzjcr4cbmr5U5asJuEFgNr6EC3xW (https://tx.main.fastnear.com/v0/transactions)"
+      }
+    },
+    {
+      "from": "near:mainnet:build.sputnik-dao.near",
+      "to": "near:mainnet:jass.near",
+      "asset": {
+        "id": "near:mainnet:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
+        "symbol": "USDC",
+        "decimals": 6
+      },
+      "amount": "1000",
+      "raw": "1000000000",
+      "when": "2024-12-19T18:47:33.106Z",
+      "proposal": {
+        "id": "386",
+        "kind": "Transfer",
+        "ref": "proposal:near:mainnet:build.sputnik-dao.near:386",
+        "at": "2024-12-19T12:22:05.495Z"
+      },
+      "usd": {
+        "usd": "999.96",
+        "price": 0.999962,
+        "source": "defillama",
+        "ref": "near:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1 at 1734634080 (https://coins.llama.fi/batchHistorical)",
+        "at": "2024-12-19T18:48:00.000Z"
+      },
+      "evidence": {
+        "tx": "JDYekUyjmnnW5W5qugpAtZo4nei4dR4W8197gCrE2st2",
+        "block": 135355051,
+        "ref": "the DAO's own transfer in JDYekUyjmnnW5W5qugpAtZo4nei4dR4W8197gCrE2st2 (https://tx.main.fastnear.com/v0/transactions)"
+      }
+    },
+    {
+      "from": "near:mainnet:build.sputnik-dao.near",
+      "to": "near:mainnet:megha19.near",
+      "asset": {
+        "id": "near:mainnet:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
+        "symbol": "USDC",
+        "decimals": 6
+      },
+      "amount": "2000",
+      "raw": "2000000000",
+      "when": "2024-12-19T18:46:20.352Z",
+      "proposal": {
+        "id": "387",
+        "kind": "Transfer",
+        "ref": "proposal:near:mainnet:build.sputnik-dao.near:387",
+        "at": "2024-12-19T13:23:43.228Z"
+      },
+      "usd": {
+        "usd": "1998.87",
+        "price": 0.999437,
+        "source": "defillama",
+        "ref": "near:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1 at 1734633960 (https://coins.llama.fi/batchHistorical)",
+        "at": "2024-12-19T18:46:00.000Z"
+      },
+      "evidence": {
+        "tx": "933ZVhwW5gPKWeMhqM1bxC8XYLa1HVnygGEKgWBRtfNs",
+        "block": 135354984,
+        "ref": "the DAO's own transfer in 933ZVhwW5gPKWeMhqM1bxC8XYLa1HVnygGEKgWBRtfNs (https://tx.main.fastnear.com/v0/transactions)"
+      }
+    }
+  ],
+  "read_at": "2026-11-12T12:32:58.736Z"
+}

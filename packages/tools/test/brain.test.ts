@@ -36,6 +36,7 @@ describe('the brain', () => {
       'open-calls',
       'open-source-leads',
       'over-time',
+      'payouts',
       'setup',
       'stake-behind-the-network',
       'start-from-an-address',
@@ -89,7 +90,7 @@ describe('the brain', () => {
       'who-gets-a-vote',
       'moloch-v3',
     ]);
-    expect(by('money')).toEqual(['value', 'vesting']);
+    expect(by('money')).toEqual(['payouts', 'value', 'vesting']);
     expect(by('investigation')).toEqual(['going-deeper', 'over-time']);
     // services holds #101's slots only, as planned; nothing is in it yet
     expect(by('services')).toEqual([]);
@@ -115,7 +116,7 @@ describe('the brain', () => {
 
   test('the routing table (routing.md) is in the index, names only files there are, and every chapter is in a row', () => {
     const index = buildBrainIndex(BRAIN);
-    expect(index.tasks.length).toBe(22);
+    expect(index.tasks.length).toBe(23);
     expect(index.tasks[0]).toEqual({
       task: 'Set up Petals',
       words: ['setup', 'set up', 'sign in', 'wallet', 'credit', 'first conversation'],

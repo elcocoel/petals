@@ -1,0 +1,266 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:payouts:v1",
+  "title": "Petal payouts v1",
+  "description": "payouts/v1 (12 Nov; Elco: 'how much money DAOs have and even more interestingly how much they spend, which DAOs are actually spending'; 'an unopinionated payouts from this treasury over period x'): what a DAO paid out, one payout each, read from its own chain, kept by the map's address. A payout is money that left the DAO for someone by a proposal that passed and ran: from, to, what, how much, when it was paid, the proposal and its kind, and its dollars on the day it was paid, named as its source's. A move between the DAO's own accounts isn't one; neither is a proposal's bond coming back. What isn't known is null, never a guess. One per map, read again to refresh.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "petal",
+    "about",
+    "source",
+    "payouts",
+    "read_at"
+  ],
+  "properties": {
+    "petal": {
+      "const": "payouts/v1"
+    },
+    "about": {
+      "description": "the map, by its address (its card's id)",
+      "type": "string",
+      "minLength": 3
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "contract",
+        "ref",
+        "at"
+      ],
+      "properties": {
+        "kind": {
+          "description": "the DAO's kind, in a word: sputnik",
+          "type": "string",
+          "pattern": "^[a-z0-9_-]+$"
+        },
+        "contract": {
+          "description": "the DAO's contract: near:mainnet:<account>",
+          "type": "string",
+          "minLength": 3
+        },
+        "ref": {
+          "description": "the calls and services they were read from",
+          "type": "string",
+          "minLength": 1
+        },
+        "at": {
+          "description": "the block its proposals were read at, as a time",
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "where they were read"
+    },
+    "payouts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to",
+          "asset",
+          "amount",
+          "raw",
+          "when",
+          "proposal",
+          "usd",
+          "evidence"
+        ],
+        "properties": {
+          "from": {
+            "description": "the DAO's account that paid (near:mainnet:<account>, eip155:<chain>:<address>)",
+            "type": "string",
+            "minLength": 3
+          },
+          "to": {
+            "description": "the account paid, in the same form",
+            "type": "string",
+            "minLength": 3
+          },
+          "asset": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "symbol",
+              "decimals"
+            ],
+            "properties": {
+              "id": {
+                "description": "what was paid: NEAR, or a token by its contract (near:mainnet:<account>)",
+                "type": "string",
+                "minLength": 1
+              },
+              "symbol": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "decimals": {
+                "description": "the token's decimals, as its contract says them, or null when they couldn't be read",
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 77
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "amount": {
+            "description": "whole tokens as decimal text, or null when the decimals are unknown",
+            "oneOf": [
+              {
+                "$ref": "#/$defs/decimal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "raw": {
+            "description": "the amount in the token's smallest unit, as the chain says it",
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          },
+          "when": {
+            "description": "when it was paid: the block of the DAO's own transfer; null when that transfer wasn't found",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "proposal": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "ref",
+              "at"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "description": "the proposal's kind, as its DAO names it: Transfer, FunctionCall (its ft_transfer), BountyDone",
+                "type": "string",
+                "minLength": 1
+              },
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "at": {
+                "description": "when it was proposed",
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "description": "the proposal that paid it"
+          },
+          "usd": {
+            "description": "its dollars on the day it was paid, at its source's price nearest then, or null with no price or no date",
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "usd",
+                  "price",
+                  "source",
+                  "ref",
+                  "at"
+                ],
+                "properties": {
+                  "usd": {
+                    "$ref": "#/$defs/decimal"
+                  },
+                  "price": {
+                    "description": "one whole token in dollars",
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "source": {
+                    "description": "where the price is from, in a word: defillama (its past prices)",
+                    "type": "string",
+                    "pattern": "^[a-z0-9_-]+$"
+                  },
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "at": {
+                    "description": "when its source priced it",
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence": {
+            "description": "the transaction that paid it, when found",
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "tx",
+                  "block",
+                  "ref"
+                ],
+                "properties": {
+                  "tx": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "block": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "read_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "decimal": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]+)?(e[-+]?[0-9]+)?$"
+    }
+  }
+}

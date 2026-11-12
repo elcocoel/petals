@@ -107,6 +107,20 @@ export {
   sputnikTarget,
 } from './modules/sputnik-dao.ts';
 export {
+  FASTNEAR_TX,
+  LLAMA_HISTORICAL,
+  type Planned,
+  pastPrices,
+  plannedPayouts,
+  RETRY_WAITS,
+  readBounties,
+  type SentReceipt,
+  sentByApprovals,
+  sentIn,
+  sputnikPayouts,
+  tokenFacts,
+} from './modules/sputnik-payouts.ts';
+export {
   checkRecipe,
   pullRecipe,
   RECIPES,

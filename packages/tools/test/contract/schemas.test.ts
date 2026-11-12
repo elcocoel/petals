@@ -90,6 +90,13 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
       read_at: hos.read_at,
     });
     await run('find_voting_blocs', { map: hos.about, min_shared: 2 });
+    const paid = JSON.parse(readFileSync(join(fixtures, 'payouts.v1.json'), 'utf8'));
+    await privateStore(r.ctx.config).payouts.put({
+      about: paid.about,
+      body: JSON.stringify(paid),
+      read_at: paid.read_at,
+    });
+    await run('list_payouts', { map: paid.about, since: '2024-01-01T00:00:00.000Z' });
     const overview = await run('relations_overview', { kind: 'holdings' });
     const pair = (overview.pairs as { a: string; b: string }[])[0] as { a: string; b: string };
     const shared = await run('shared_accounts', { group_a: pair.a, group_b: pair.b });

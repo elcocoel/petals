@@ -14,6 +14,7 @@ import flowerSchema from '../../schema/flower.schema.json' with { type: 'json' }
 import layerSchema from '../../schema/layer.schema.json' with { type: 'json' };
 import markSchema from '../../schema/mark.schema.json' with { type: 'json' };
 import markV2Schema from '../../schema/mark-v2.schema.json' with { type: 'json' };
+import payoutsSchema from '../../schema/payouts.schema.json' with { type: 'json' };
 import priceSchema from '../../schema/price.schema.json' with { type: 'json' };
 import priceV2Schema from '../../schema/price-v2.schema.json' with { type: 'json' };
 import proposalsSchema from '../../schema/proposals.schema.json' with { type: 'json' };
@@ -84,6 +85,8 @@ export const schemas: {
   proposals: object;
   /** the same with closed, recipients, options, and a ballot's choices and weights (11 Nov) */
   proposalsV2: object;
+  /** what a DAO paid out, each payout dated by its own transfer and priced on that day (12 Nov) */
+  payouts: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -111,6 +114,7 @@ export const schemas: {
   calls: callsSchema,
   proposals: proposalsSchema,
   proposalsV2: proposalsV2Schema,
+  payouts: payoutsSchema,
 };
 
 /** The two source documents, unchanged. */

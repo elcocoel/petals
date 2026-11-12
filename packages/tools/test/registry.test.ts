@@ -30,6 +30,7 @@ const PHASE_A = [
   'search_petals',
   'list_calls',
   'find_voting_blocs',
+  'list_payouts',
   'keep_data',
   'list_data',
   'account_groups',

@@ -561,6 +561,16 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX open_call_source ON open_call(source);
   `,
+  // 33: what a DAO paid out (12 Nov; Elco: "an unopinionated 'payouts from this treasury over period x'"): one
+  // payouts/v1 per map, by its address, read from the DAO's own chain, each payout dated by the DAO's own
+  // transfer and priced on that day. Read again, a map's payouts are replaced.
+  `
+  CREATE TABLE payouts (
+    about TEXT PRIMARY KEY,
+    body TEXT NOT NULL,
+    read_at TEXT NOT NULL
+  );
+  `,
 ];
 
 /**

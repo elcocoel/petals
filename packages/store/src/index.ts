@@ -35,6 +35,7 @@ export type {
   MediaRow,
   NoteRow,
   OpenCallRow,
+  PayoutsRow,
   PersonProfileRow,
   PersonRow,
   PersonViewRow,

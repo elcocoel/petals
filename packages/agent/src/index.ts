@@ -19,6 +19,7 @@ export {
   createContext,
   loadMapping,
   markMaps,
+  payoutMaps,
   proposalMaps,
   readCalls,
   typeMaps,
