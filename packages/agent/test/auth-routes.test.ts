@@ -1299,7 +1299,7 @@ describe('EVM and Solana wallets (12 Nov, wave 5: "multi chain wallet connection
     const again = new Browser(app);
     await prove(again, 'eip155');
     const me2 = (await (await again.get('/api/v1/me')).json()) as { person_id: string };
-    expect(me2.person_id).toBe((await res.json()).person_id);
+    expect(me2.person_id).toBe(((await res.json()) as { person_id: string }).person_id);
   });
 
   test("a NEAR person adds an EVM wallet and a Solana one; another person can't take them", async () => {
