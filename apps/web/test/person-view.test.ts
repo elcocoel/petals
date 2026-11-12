@@ -92,6 +92,8 @@ describe('what can go where', () => {
         'votes_cast',
         'last_active',
         'voted',
+        'next_unlock',
+        'tranche',
         'name',
         'name_kind',
       ],
@@ -104,6 +106,8 @@ describe('what can go where', () => {
         'votes_cast',
         'last_active',
         'voted',
+        'next_unlock',
+        'tranche',
         'name',
         'name_kind',
       ],
@@ -112,11 +116,12 @@ describe('what can go where', () => {
       outline: ['identity'],
       texture: [],
       markings: [],
-      // who backs each wallet, where a flower's reading has delegations (Elco's walk 3: no choices on segments)
-      segments: ['backers'],
+      // who backs each wallet, where a flower's reading has delegations (Elco's walk 3: no choices on segments), and
+      // what it holds by its vesting schedules (wave 7)
+      segments: ['backers', 'vesting'],
       lines: [],
       // a person's annotations name accounts (annotation-layer.md, step 6): labels show them once chosen
-      labels: ['kind', 'identity', 'voted', 'name', 'name_kind'],
+      labels: ['kind', 'identity', 'voted', 'tranche', 'name', 'name_kind'],
     });
   });
 
