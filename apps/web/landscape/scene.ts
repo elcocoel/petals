@@ -86,6 +86,13 @@ export interface LandFrame {
   left: number;
   /** The wallet level: the flowers that hold the chosen wallet, or null with none chosen. The rest recede. */
   holds?: ReadonlySet<number> | null;
+  /**
+   * How much of every flower is its far wave, 1 to 0, the same for all at once (Elco, 12 Nov walk: "the transfer
+   * from the mini shape to the individual petals shape right now it's too soon ... the transition happens at
+   * different times depending on something related to the size of petals"): the map works it out from its zoom.
+   * Without it, each flower by its own size, as before.
+   */
+  waved?: number;
 }
 
 /** A flower that doesn't hold the chosen wallet keeps this much of itself (the wallet level). */
@@ -337,7 +344,17 @@ export function createLandScene(
 
   return {
     top,
-    draw({ view, live, entered, enter, marked, left, pointed = -1, holds = null }) {
+    draw({
+      view,
+      live,
+      entered,
+      enter,
+      marked,
+      left,
+      pointed = -1,
+      holds = null,
+      waved: allWaved,
+    }) {
       world.set('transform', `translate(${n3(view.x)} ${n3(view.y)}) scale(${view.k})`);
       const rest = 1 - enter;
       flowerLayer.set('opacity', o2(rest));
@@ -356,7 +373,7 @@ export function createLandScene(
           const r = screenRadius(view, f.place);
           s.g.set('opacity', holds && !holds.has(i) ? WALLET_AWAY : 1);
           if (s.wave) {
-            const w = fade(DETAIL.farWave, r);
+            const w = allWaved ?? fade(DETAIL.farWave, r);
             s.wave.set('opacity', o2(w));
             s.silhouette.set('opacity', o2(1 - w));
             s.polygon.set('opacity', o2(fade(DETAIL.polygonLine, r) * (1 - w)));
@@ -401,7 +418,7 @@ export function createLandScene(
           // any far away vision and only when I get to the Dao itself it will become less important in the
           // center"): the far wave's round hole, or the polygon's inscribed circle, a hair inside its line; in
           // the organisation you've entered it steps back to a share of its hole, between the two
-          const waved = fade(DETAIL.farWave, r);
+          const waved = l.centre && allWaved !== undefined ? allWaved : fade(DETAIL.farWave, r);
           const hole =
             r *
             (SHAPE.r0 / SHAPE.R) *
