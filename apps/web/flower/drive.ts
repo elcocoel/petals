@@ -56,7 +56,22 @@ export function newDriven(
 const ringLook = (m: Model, votes: VoteRing | null): PetalLook | null =>
   votes ? { ...lookFills(m.petals), highlight: [], roundTops: true, votes } : null;
 
-export function driveFlower(d: Driven, dt: number, view?: View, quiet = false): boolean {
+/** A box on the screen, in px, that a flower's notes give way to. */
+export interface Taken {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
+export function driveFlower(
+  d: Driven,
+  dt: number,
+  view?: View,
+  quiet = false,
+  /** what's already on the screen around it (the map's names and boxes): its notes give way to it */
+  taken: readonly Taken[] = [],
+): boolean {
   const { m, live, scene } = d;
   const stepped = stepLive(live, dt, view);
   const presence = live.presence.x;
@@ -72,7 +87,7 @@ export function driveFlower(d: Driven, dt: number, view?: View, quiet = false): 
           named: live.named.x,
         }
       : null;
-  const said = marks(m, live.camera, focus, live.ring, d.scratch, d.readout, live.chosen);
+  const said = marks(m, live.camera, focus, live.ring, d.scratch, d.readout, live.chosen, taken);
   const mk = quiet ? { ...said, notes: [], labels: [] } : said;
   scene.draw({
     marks: mk,
@@ -85,6 +100,7 @@ export function driveFlower(d: Driven, dt: number, view?: View, quiet = false): 
     raised: focus ? live.focusIndex : -1,
     bandsMoved: stepped.bandsMoved,
     band: focus ? (focus.band ?? -1) : -1,
+    taken,
   });
   d.last = mk;
   return stepped.moving;

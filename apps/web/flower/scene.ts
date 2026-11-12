@@ -91,6 +91,9 @@ export interface PetalLook {
   opened?: readonly number[];
 }
 
+/** A box on the screen, in px. */
+type Box = { x0: number; y0: number; x1: number; y1: number };
+
 /** A stack taller than this folds into one mark with its count, until a click opens it. */
 export const STACK_FOLD = 3;
 
@@ -183,6 +186,8 @@ export interface Scene {
     raised: number;
     bandsMoved: boolean;
     band: number;
+    /** What's already on the screen around it (the map's names and boxes), in screen px: its words keep clear. */
+    taken?: readonly { x0: number; y0: number; x1: number; y1: number }[];
   }): void;
   /** Is this screen point on the small map? */
   onMap(x: number, y: number, marks: Marks): boolean;
@@ -499,16 +504,60 @@ export function createScene(
       label.text(String(n));
       const dx = Math.sin(a);
       const dy = -Math.cos(a);
-      return { label, x: SHAPE.cx + r * dx, y: SHAPE.cy + r * dy, dx, dy };
+      // the mark's half-length along the ring, for the places beside its ends
+      const half =
+        petal >= 0
+          ? (r * ((m.ring.start[petal + 1] as number) - (m.ring.start[petal] as number))) / 2
+          : r * 0.025;
+      return { label, x: SHAPE.cx + r * dx, y: SHAPE.cy + r * dy, dx, dy, half, n: String(n) };
     });
   /** The folded stacks' counts, kept at their marks in screen space, so they read at any zoom. */
-  const placeStacks = () => {
-    if (!lastView) return;
+  const placeStacks = (mk: Marks | null, taken: readonly Box[]) => {
+    if (!lastView || stacks.length === 0) return;
+    // what's there already: the notes, the pointed one's two lines, the map's names and boxes (META's QA, 12 Nov:
+    // "labels never sit on each other")
+    const there: Box[] = [...taken];
+    for (const note of mk?.notes ?? [])
+      there.push({
+        x0: note.x - 1,
+        y0: note.y - LINE + 4,
+        x1: note.x + note.width + 1,
+        y1: note.elbowY + 2,
+      });
+    const f = mk?.focus;
+    if (f)
+      there.push({
+        x0: f.x - 1,
+        y0: f.y - LINE + 4,
+        x1: f.x + f.width + 1,
+        y1: f.elbowY + LINE + 2,
+      });
+    const k = lastView.k;
     for (const s of stacks) {
-      // a few pixels out from the mark, whatever the zoom
-      const x = (s.x + lastRing.ox) * lastView.k + lastView.x + s.dx * 12;
-      const y = (s.y + lastRing.oy) * lastView.k + lastView.y + s.dy * 12;
-      s.label.set('transform', `translate(${n3(x)} ${n3(y + 4)})`);
+      const mx = (s.x + lastRing.ox) * k + lastView.x;
+      const my = (s.y + lastRing.oy) * k + lastView.y;
+      // a few pixels out from the mark, whatever the zoom; else further out, else beside its ends; else none
+      const w = s.n.length * 7 + 4;
+      const along = s.half * k + w / 2 + 4;
+      const spots = [
+        [s.dx * 12, s.dy * 12],
+        [s.dx * 26, s.dy * 26],
+        [-s.dy * along, s.dx * along],
+        [s.dy * along, -s.dx * along],
+      ];
+      const free = spots
+        .map(([ox, oy]) => ({ x: mx + (ox as number), y: my + (oy as number) }))
+        .find(
+          (p) =>
+            !there.some(
+              (b) => p.x - w / 2 < b.x1 && p.x + w / 2 > b.x0 && p.y - 5 < b.y1 && p.y + 6 > b.y0,
+            ),
+        );
+      s.label.set('display', free ? 'inline' : 'none');
+      if (free) {
+        s.label.set('transform', `translate(${n3(free.x)} ${n3(free.y + 4)})`);
+        there.push({ x0: free.x - w / 2, y0: free.y - 5, x1: free.x + w / 2, y1: free.y + 6 });
+      }
     }
   };
   const markSlots = placed
@@ -1024,12 +1073,13 @@ export function createScene(
       raised,
       bandsMoved,
       band,
+      taken = [],
     }) {
       const { k } = view;
       lastView = view;
       lastRing = ring;
       if (pointed >= 0) placeWords();
-      placeStacks();
+      placeStacks(mk, taken);
       const rescale = k !== lastK || mk.recede !== lastRecede;
       const panned = view.x !== lastX || view.y !== lastY;
       lastK = k;

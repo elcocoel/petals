@@ -41,6 +41,7 @@ import { type VoteRing, voteRing } from '../lib/vote-ring.ts';
 import { type Road, roadWidth } from './roads.ts';
 import {
   type ArrowHit,
+  type Box,
   createLandScene,
   type FarStyle,
   type LandFlower,
@@ -379,12 +380,49 @@ export function useLandscape(
       return best;
     };
 
+    // the one that speaks goes over the other flowers, under the names, so no name or arrow is ever under its
+    // petals or its proposals (META's QA, 12 Nov: "labels never sit on each other"); its notes keep clear of them
     const lift = (i: number, onTop: boolean) => {
       const d = lives.get(i);
       if (!d) return;
-      if (onTop) node.appendChild(d.scene.root);
-      else node.insertBefore(d.scene.root, scene.top);
+      if (onTop) node.insertBefore(d.scene.root, scene.top);
+      else node.insertBefore(d.scene.root, firstLive(d));
     };
+    /** The lowest live flower drawn, where a flower that stops speaking goes back under the others. */
+    const firstLive = (d: Driven): Node => {
+      let first: Node = scene.top;
+      for (const [, o] of lives)
+        if (
+          o !== d &&
+          o.scene.root.parentNode === node &&
+          first.compareDocumentPosition(o.scene.root) & Node.DOCUMENT_POSITION_PRECEDING
+        )
+          first = o.scene.root;
+      return first;
+    };
+    /** The boxes over the map (data-float: the chain list, the legend, a flower's panel), in the map's px. */
+    const boxSizes = new ResizeObserver(() => wake());
+    const overOf = (): Box[] => {
+      const at = node.getBoundingClientRect();
+      const out: Box[] = [];
+      for (const b of document.querySelectorAll<HTMLElement>('section[data-float]')) {
+        boxSizes.observe(b);
+        if (b.hidden || !(b.checkVisibility?.({ visibilityProperty: true }) ?? true)) continue;
+        const r = b.getBoundingClientRect();
+        if (r.width <= 0 || r.height <= 0) continue;
+        if (r.right < at.left || r.left > at.right || r.bottom < at.top || r.top > at.bottom)
+          continue;
+        out.push({
+          x0: r.left - at.left,
+          y0: r.top - at.top,
+          x1: r.right - at.left,
+          y1: r.bottom - at.top,
+        });
+      }
+      return out;
+    };
+    /** What the flowers' notes gave way to on the last frame, as a key, so a change draws them once more. */
+    let takenKey = '';
 
     const frame = (now: number) => {
       const began = probe ? performance.now() : 0;
@@ -453,7 +491,7 @@ export function useLandscape(
       const speaks = entered >= 0 ? entered : under;
       if (
         speaks !== speaking ||
-        (speaks >= 0 && node.lastChild !== lives.get(speaks)?.scene.root)
+        (speaks >= 0 && scene.top.previousSibling !== lives.get(speaks)?.scene.root)
       ) {
         if (speaking >= 0 && speaking !== speaks) lift(speaking, false);
         if (speaks >= 0) lift(speaks, true);
@@ -463,7 +501,9 @@ export function useLandscape(
         const p = d.live.pointer;
         p.x = pointer.x;
         p.y = pointer.y;
-        p.inside = pointer.inside && i === under && (entered < 0 || i === entered);
+        // on a way out, the pointer is the way's, not a petal's (META's QA, 12 Nov: a note over the way's count)
+        p.inside =
+          pointer.inside && i === under && (entered < 0 || i === entered) && pointedWay < 0;
         p.dragging = pointer.dragging;
         d.live.calm = calm;
         // The page's chosen petal, marked only in the flower it opened in.
@@ -478,7 +518,7 @@ export function useLandscape(
           tones.set(i, tone);
         }
         const view = flowerView(cam, places[i] as (typeof places)[number]);
-        if (driveFlower(d, dt, view, i !== speaking)) moving = true;
+        if (driveFlower(d, dt, view, i !== speaking, scene.taken())) moving = true;
       }
       hits = scene.draw({
         view: cam,
@@ -493,7 +533,19 @@ export function useLandscape(
         way: entered >= 0 ? pointedWay : -1,
         waved,
         worth: at?.current?.worth !== false,
+        over: overOf(),
       });
+      // the names moved since the notes gave way to them: once more, so the notes keep clear where they settle
+      const key = scene
+        .taken()
+        .map(
+          (b) => `${Math.round(b.x0)},${Math.round(b.y0)},${Math.round(b.x1)},${Math.round(b.y1)}`,
+        )
+        .join(' ');
+      if (key !== takenKey) {
+        takenKey = key;
+        moving = true;
+      }
       if (moving) wake();
       else then = 0;
       if (probe) spent.push(performance.now() - began);
@@ -874,6 +926,9 @@ export function useLandscape(
     node.addEventListener('pointermove', onMove);
     node.addEventListener('pointerleave', onLeave);
     node.addEventListener('pointerdown', onDown);
+    // a box over the map that grows, folds or is put down somewhere else: drawn once more, so the names and notes
+    // keep clear of where it is now
+    window.addEventListener('pointerup', wake);
     node.addEventListener('pointerup', onUp);
     node.addEventListener('pointercancel', onUp);
     node.addEventListener('wheel', onWheel, { passive: false });
@@ -939,6 +994,8 @@ export function useLandscape(
       node.removeEventListener('pointermove', onMove);
       node.removeEventListener('pointerleave', onLeave);
       node.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointerup', wake);
+      boxSizes.disconnect();
       node.removeEventListener('pointerup', onUp);
       node.removeEventListener('pointercancel', onUp);
       node.removeEventListener('wheel', onWheel);

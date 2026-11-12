@@ -109,6 +109,11 @@ export interface LandFrame {
   waved?: number;
   /** Treasury and token price under the names, at some magnification; the switch in the legend (OVERLAYS) */
   worth?: boolean;
+  /**
+   * The boxes over the map (the chain list, the legend, a flower's panel), in its px: names keep clear of them, as
+   * of each other (META's QA, 12 Nov: "labels never sit on each other or run off the window").
+   */
+  over?: readonly Box[];
 }
 
 /** The treasury and price under a name come in as a flower grows to this radius on screen, in px. */
@@ -121,6 +126,8 @@ export interface LandScene {
   /** Live flowers go just under this, so names stay above them. */
   top: SVGGElement;
   draw(f: LandFrame): ArrowHit[];
+  /** Everything the last draw put on the screen (names, the neighbours' names, the boxes over it), for the notes. */
+  taken(): readonly Box[];
   dispose(): void;
 }
 
@@ -389,6 +396,7 @@ export function createLandScene(
     .map((_, i) => i)
     .sort((a, b) => (flowers[b]?.place.s ?? 0) - (flowers[a]?.place.s ?? 0) || a - b);
 
+  let lastTaken: Box[] = [];
   return {
     top,
     draw({
@@ -404,6 +412,7 @@ export function createLandScene(
       way: wayPointed = -1,
       waved: allWaved,
       worth: worthOn = true,
+      over = [],
     }) {
       world.set('transform', `translate(${n3(view.x)} ${n3(view.y)}) scale(${view.k})`);
       const rest = 1 - enter;
@@ -433,7 +442,7 @@ export function createLandScene(
 
       // Names: biggest flowers first; where two collide, the smaller keeps only its mark, or nothing. A
       // name never sits on a flower: every flower on screen, at its petals' reach, is in the way.
-      const placed: Box[] = [];
+      const placed: Box[] = [...over];
       const discs: { x: number; y: number; r: number; i: number }[] = [];
       flowers.forEach((f, i) => {
         if (!onScreen(view, f.place) || (rest <= 0.01 && i !== entered)) return;
@@ -495,8 +504,11 @@ export function createLandScene(
             [l.width, true],
             [l.short, false],
           ] as const) {
-            const b = { x0: c.x - w / 2, y0: y - MARK / 2, x1: c.x + w / 2, y1: y + MARK / 2 };
-            if (!placed.some((p) => overlaps(p, b)) && !onAFlower(b, i)) {
+            // inside the window: slid along its side, never cut at its top or foot (META's QA, 12 Nov)
+            const x0 = Math.max(EDGE / 2, Math.min(view.width - EDGE / 2 - w, c.x - w / 2));
+            const b = { x0, y0: y - MARK / 2, x1: x0 + w, y1: y + MARK / 2 };
+            const inside = x0 >= EDGE / 2 && b.y0 >= 0 && b.y1 <= view.height;
+            if (inside && !placed.some((p) => overlaps(p, b)) && !onAFlower(b, i)) {
               box = b;
               typed = on;
               break;
@@ -518,13 +530,18 @@ export function createLandScene(
         if (l.worth) {
           const shown = worthOn ? fade(WORTH_AT, r) * tone : 0;
           const wy = y + LABEL_HEIGHT / 2 + 2 + WORTH_HEIGHT / 2;
+          const x0 = Math.max(
+            EDGE / 2,
+            Math.min(view.width - EDGE / 2 - l.worthWidth, c.x - l.worthWidth / 2),
+          );
           const b = {
-            x0: c.x - l.worthWidth / 2,
+            x0,
             y0: wy - WORTH_HEIGHT / 2,
-            x1: c.x + l.worthWidth / 2,
+            x1: x0 + l.worthWidth,
             y1: wy + WORTH_HEIGHT / 2,
           };
-          if (shown > 0.01 && !placed.some((p) => overlaps(p, b)) && !onAFlower(b, i)) {
+          const inside = x0 >= EDGE / 2 && b.y1 <= view.height;
+          if (inside && shown > 0.01 && !placed.some((p) => overlaps(p, b)) && !onAFlower(b, i)) {
             placed.push(b);
             l.worth.show(true);
             l.worth.set('transform', `translate(${n3(b.x0)} ${n3(wy)})`);
@@ -598,7 +615,7 @@ export function createLandScene(
       const hits: ArrowHit[] = [];
       const e = entered >= 0 && enter > 0.01 ? (flowers[entered] as LandFlower) : null;
       const out = e ? (ways[entered] ?? []) : [];
-      const taken: Box[] = [];
+      const taken: Box[] = [...over];
       arrowSlots.forEach((a, k) => {
         const way = out[k];
         if (!way || !e) {
@@ -626,16 +643,29 @@ export function createLandScene(
           a.to = way.to;
         }
         const label = a.label as Label;
-        // The name sits against the edge the arrow meets, inside the window.
-        const w = label.width;
-        let x0 = end.x - w / 2;
-        let y0 = end.y - MARK / 2;
-        if (Math.abs(ux) >= Math.abs(uy)) x0 = ux > 0 ? end.x - w : end.x;
-        else y0 = uy > 0 ? end.y - MARK : end.y;
-        x0 = Math.max(left + EDGE / 2, Math.min(view.width - EDGE / 2 - w, x0));
-        y0 = Math.max(EDGE / 2, Math.min(view.height - EDGE / 2 - MARK, y0));
-        const box = { x0, y0, x1: x0 + w, y1: y0 + MARK };
-        const named = !taken.some((b) => overlaps(b, box));
+        // The name sits against the edge the arrow meets, inside the window: with its types, else its name alone,
+        // else none, never off the window or on another name or box (META's QA, 12 Nov)
+        let box = { x0: 0, y0: 0, x1: 0, y1: 0 };
+        let named = false;
+        for (const [w, on] of [
+          [label.width, true],
+          [label.short, false],
+        ] as const) {
+          let x0 = end.x - w / 2;
+          let y0 = end.y - MARK / 2;
+          if (Math.abs(ux) >= Math.abs(uy)) x0 = ux > 0 ? end.x - w : end.x;
+          else y0 = uy > 0 ? end.y - MARK : end.y;
+          // clear of the chain list where there's room; the window's edge first
+          x0 = Math.min(view.width - EDGE / 2 - w, Math.max(left + EDGE / 2, x0));
+          y0 = Math.max(EDGE / 2, Math.min(view.height - EDGE / 2 - MARK, y0));
+          box = { x0, y0, x1: x0 + w, y1: y0 + MARK };
+          if (x0 >= EDGE / 2 && !taken.some((b) => overlaps(b, box))) {
+            named = true;
+            label.typed(on);
+            break;
+          }
+        }
+        const { x0, y0 } = box;
         const reachEnd = Math.hypot(end.x - c.x, end.y - c.y);
         const stop = named ? (entersBox(c.x, c.y, ux, uy, box) ?? reachEnd) - 8 : reachEnd;
         if (stop <= from + 12) {
@@ -660,9 +690,14 @@ export function createLandScene(
         a.num.show(lit);
         if (lit) {
           a.num.node.textContent = count(way.shared);
-          a.num.set('x', n3((x1 + x2) / 2 - uy * 10));
-          a.num.set('y', n3((y1 + y2) / 2 + ux * 10 + 4));
+          const nx = (x1 + x2) / 2 - uy * 10;
+          const ny = (y1 + y2) / 2 + ux * 10 + 4;
+          a.num.set('x', n3(nx));
+          a.num.set('y', n3(ny));
           a.num.set('opacity', o2(enter));
+          // the notes give way to it too
+          const half = (a.num.node.textContent.length * 7) / 2 + 2;
+          taken.push({ x0: nx - half, y0: ny - 12, x1: nx + half, y1: ny + 3 });
         }
         a.line.set('x1', n3(x1));
         a.line.set('y1', n3(y1));
@@ -677,8 +712,10 @@ export function createLandScene(
         if (named) a.at.set('transform', `translate(${n3(x0)} ${n3(y0 + MARK / 2)})`);
         hits.push({ to: way.to, box: named ? box : null, line: [x1, y1, x2, y2] });
       });
+      lastTaken = [...placed, ...taken.slice(over.length)];
       return hits;
     },
+    taken: () => lastTaken,
     dispose() {
       defs.remove();
       land.remove();
