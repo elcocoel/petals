@@ -98,6 +98,10 @@ export interface LegendEdit {
    * something is being updated"), or null.
    */
   drawing?: Dimension | null | undefined;
+  /** The colours chosen for Colour's values (view/v3 colour.keys), by value; 'grade' names a grade's colour. */
+  colourKeys?: Readonly<Record<string, string>> | undefined;
+  /** Chooses a value's colour, or hands it back to the ranking (null) (Elco, wave 4). */
+  onKey?: ((value: string, key: string | null) => void) | undefined;
 }
 
 /**
