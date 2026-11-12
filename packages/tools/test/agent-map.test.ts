@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { activityOf } from '../src/activity.ts';
 import { compile, describeErrors } from '../src/define.ts';
 import { privateStore } from '../src/drafts.ts';
+import { mapViews } from '../src/map.ts';
 import { keepMappingClaims } from '../src/mapping-claims.ts';
 import { callTool } from '../src/registry.ts';
 import { getMap, mapIdOf, nextSteps, whereItLands } from '../src/tools/maps.ts';
@@ -324,6 +325,11 @@ describe("each petal's activity reaches every drawing of the map (activity.ts, 1
   test("from the map's proposals as last read; none before any were read", async () => {
     const s = await loadSnapshot(r.ctx, MOLOCH);
     expect(await activityOf(r.ctx, s)).toEqual([]);
+    // each view says the pieces its reading has, so Tools offers only what draws (OVERLAYS, wave 3)
+    const names = async () => (await mapViews(r.ctx))[0]?.pieces.map((p) => p.name) ?? [];
+    expect(await names()).toEqual(expect.arrayContaining(['share', 'amount', 'kind', 'identity']));
+    expect(await names()).not.toContain('votes_cast');
+    expect(await names()).not.toContain('backers');
     const member = s.participants[0]?.id as string;
     const at = '2026-11-11T15:00:00.000Z';
     const body = {
@@ -354,6 +360,7 @@ describe("each petal's activity reaches every drawing of the map (activity.ts, 1
     });
     const pieces = await activityOf(r.ctx, s);
     expect(pieces.map((p) => p.name)).toEqual(['votes_cast', 'voted', 'last_active']);
+    expect(await names()).toEqual(expect.arrayContaining(['votes_cast', 'voted', 'last_active']));
     const cast = pieces[0] as { values: { participant: string; value: string }[] };
     expect(cast.values.find((v) => v.participant === member)?.value).toBe('1');
     expect(cast.values.filter((v) => v.value === '0')).toHaveLength(s.participants.length - 1);
