@@ -16,6 +16,7 @@ export function NotSignedIn({
   busy,
   failed,
   onConnect,
+  onConnectEvm,
 }: {
   /** a question that came with the link: it waits in the conversation once they're in */
   question: string;
@@ -23,17 +24,26 @@ export function NotSignedIn({
   /** why the last try didn't work */
   failed: string | null;
   onConnect: () => void;
+  /** an Ethereum wallet's way in, where the page has one (wave 5) */
+  onConnectEvm?: (() => void) | undefined;
 }) {
   return (
     <Oops
       title={notSignedInWords.title}
-      body={notSignedInWords.body}
+      body={onConnectEvm ? notSignedInWords.bodyAny : notSignedInWords.body}
       note={question && <p className="my-0 type-ui wrap-anywhere text-muted">{question}</p>}
       primary={
         // the one Connect, as everywhere else: primary, with its arrow (Elco, 10 Nov)
-        <Button arrow disabled={busy} onClick={onConnect}>
-          {doorWords.connect}
-        </Button>
+        <span className="flex flex-wrap items-center gap-text-gap">
+          <Button arrow disabled={busy} onClick={onConnect}>
+            {onConnectEvm ? notSignedInWords.near : doorWords.connect}
+          </Button>
+          {onConnectEvm && (
+            <Button variant="secondary" disabled={busy} onClick={onConnectEvm}>
+              {notSignedInWords.evm}
+            </Button>
+          )}
+        </span>
       }
       secondary={
         <span className="flex items-center gap-space-4 type-caption text-muted">
