@@ -118,6 +118,8 @@ export interface ToolContext {
    * that holds the store, which keeps it. None: nothing is kept, and the answer's receipt is null.
    */
   onBrainServed?: (receipt: BrainReceipt) => Promise<void>;
+  /** additive (12 Nov, step 10): what a brain read happens in, for its receipt: Petals' agent's run */
+  consumer?: { run?: string; job?: string; exploration?: string };
   /**
    * additive (12 Nov, brain_usage): the receipts from a time on and the layers' coverage, read from the server's
    * store. None: this site keeps no receipts.

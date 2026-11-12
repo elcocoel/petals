@@ -69,8 +69,6 @@ const NOT_FOR_THE_AGENT = new Set([
   'brain_route',
   'brain_file',
   'brain_index',
-  // Petals' own agent gets brain_context in step 10 (research/brain-departments-2026-11-11.md), not before
-  'brain_context',
   // the counts are for anyone through the doors; Petals' agent has no use for them
   'brain_usage',
   // layers kept on the site (005): the person's agent keeps them; Petals' agent doesn't yet
