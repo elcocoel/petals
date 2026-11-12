@@ -89,6 +89,45 @@ describe('Order', () => {
   });
 });
 
+describe('every choice Tools offers draws (VISUAL QA, 12 Nov)', () => {
+  test('order by kind, who it is, or the name each petal shows', () => {
+    for (const data of ['kind', 'identity', 'name']) {
+      const r = readFlower(
+        spec,
+        s,
+        withView((d) => (d.order = { data })),
+        pieces,
+      );
+      expect(new Set(r.petals.map((p) => p.id))).toEqual(new Set(plain.petals.map((p) => p.id)));
+    }
+    // by name: a to z (a person's names, else each petal's own label)
+    const byName = readFlower(
+      spec,
+      s,
+      withView((d) => (d.order = { data: 'name' })),
+      pieces,
+    )
+      .petals.filter((p) => !p.tail)
+      .map((p) => p.name);
+    expect(byName).toEqual([...byName].sort());
+  });
+
+  test('width and height by a count: each petal by its own count', () => {
+    const r = readFlower(
+      spec,
+      s,
+      withView((d) => {
+        d.width = { data: 'votes_cast', max_ratio: 2 };
+        d.height = { data: 'votes_cast', scale: 'linear' };
+      }),
+      pieces,
+    );
+    const at = (id: string) => r.petals.find((p) => p.id === id);
+    expect(at(b)?.width).toBeCloseTo(2, 6);
+    expect((at(b)?.height ?? 0) > (at(a)?.height ?? 0)).toBe(true);
+  });
+});
+
 describe('Colour', () => {
   test("voted or never: each petal's value is its key, 'never voted' grey and taking no key", () => {
     const r = readFlower(

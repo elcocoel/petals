@@ -149,6 +149,8 @@ export interface LandscapeAt {
   onProposal?: (p: { flower: string; id: string; proposal: Proposal | null } | null) => void;
   /** Treasury and token price under the names at some magnification (Elco, 12 Nov walk 3); on unless off. */
   worth?: boolean;
+  /** Labels None in the view: the petals say nothing, but the one pointed at (VISUAL QA, 12 Nov). */
+  unlabelled?: boolean;
   /** Set by the map once it's built: draws it again, for a change it reads on each frame (`worth`). */
   redraw?: () => void;
 }
@@ -627,7 +629,8 @@ export function useLandscape(
           tones.set(i, tone);
         }
         const view = flowerView(cam, places[i] as (typeof places)[number]);
-        if (driveFlower(d, dt, view, i !== speaking, scene.taken())) moving = true;
+        const quietHere = i !== speaking || at?.current?.unlabelled === true;
+        if (driveFlower(d, dt, view, quietHere, scene.taken())) moving = true;
       }
       hits = scene.draw({
         view: cam,
@@ -1015,8 +1018,22 @@ export function useLandscape(
     kept.current = null;
     if (was && was.focus === focusId && was.layout === data.layout) {
       // the same page with new data: where you were, at once, inside the flower you were in
-      flyTo(cam, was.view);
       const j = was.entered ? flowers.findIndex((f) => idOf(f) === was.entered) : -1;
+      // the flower you're in (or the DAO in the middle) stays where it was on screen when the places move under it
+      // (a gravity change: VISUAL QA, 12 Nov, the DAO you were in went off the window)
+      const anchor = j >= 0 ? j : (data.centre ?? -1);
+      const moved = anchor >= 0 ? flowers[anchor] : undefined;
+      const from = moved ? was.places.get(idOf(moved) ?? '') : undefined;
+      flyTo(
+        cam,
+        moved && from
+          ? {
+              ...was.view,
+              x: was.view.x - (moved.place.x - from.x) * was.view.k,
+              y: was.view.y - (moved.place.y - from.y) * was.view.k,
+            }
+          : was.view,
+      );
       if (j >= 0) entered = j;
       arriving = true;
       cam.touched = true;

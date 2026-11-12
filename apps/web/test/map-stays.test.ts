@@ -15,7 +15,7 @@ test('new data on the same page keeps the camera and the flower you were in', ()
   );
   // and put back at once on the same page, before the page's own flower would fly there again
   expect(hook).toMatch(
-    /if \(was && was\.focus === focusId && was\.layout === data\.layout\) \{\s+[^}]*flyTo\(cam, was\.view\);/,
+    /if \(was && was\.focus === focusId && was\.layout === data\.layout\) \{[\s\S]*?flyTo\(\s+cam,\s+moved && from[\s\S]*?: was\.view,\s+\);/,
   );
   expect(hook.indexOf('was.focus === focusId')).toBeLessThan(hook.indexOf('enterFlower(focus);'));
 });

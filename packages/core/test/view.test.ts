@@ -220,8 +220,9 @@ describe('dimensions and kinds', () => {
       order: ['amount', 'count', 'share', 'category', 'date'],
       colour: ['category'],
       outline: ['flag', 'category'],
-      texture: ['flag', 'category'],
-      markings: ['count', 'flag'],
+      // texture and markings take nothing until the look draws them (12 Nov: a choice draws, or isn't offered)
+      texture: [],
+      markings: [],
       segments: ['parts'],
       lines: ['relation'],
       labels: ['category'],
@@ -258,9 +259,10 @@ describe('a view meeting a flower', () => {
   });
 
   test('a piece of data a flower lacks shows nothing there, with no fallback', () => {
-    const v = fixture('view.v1.proposals.json');
-    expect(inUse(v, moloch).markings).toBe('proposals');
-    expect(inUse(v, near).markings).toBeNull();
+    const v = structuredClone(DEFAULT_VIEW);
+    v.dimensions.order = { data: 'proposals' };
+    expect(inUse(v, moloch).order).toBe('proposals');
+    expect(inUse(v, near).order).toBeNull();
   });
 
   test("a piece of data of a kind the dimension doesn't take shows nothing", () => {
@@ -281,9 +283,10 @@ describe('a view meeting a flower', () => {
 
   test("labels take a person's names where a flower has them, and only a category", () => {
     const v = fixture('view.v2.names.json');
+    // an outline draws how an identity is known, and nothing else yet (DRAWS_ONLY), so name_kind takes none
     expect(inUse(v, [...moloch, ...FROM_ANNOTATIONS])).toMatchObject({
       labels: 'name',
-      outline: 'name_kind',
+      outline: null,
     });
     expect(inUse(v, moloch)).toMatchObject({ labels: null, outline: null });
     const counted = structuredClone(DEFAULT_VIEW);

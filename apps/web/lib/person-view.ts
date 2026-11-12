@@ -8,9 +8,9 @@ import {
   DEFAULT_VIEW,
   DIMENSIONS,
   type Dimension,
+  draws,
   EVERY_FLOWER,
   FROM_ANNOTATIONS,
-  fits,
   type Piece,
   SOME_FLOWERS,
   viewHash,
@@ -36,7 +36,8 @@ export const CHOOSABLE: readonly Piece[] = [...EVERY_FLOWER, ...SOME_FLOWERS, ..
 
 export const viewChoices = (pieces: readonly Piece[] = CHOOSABLE): ViewChoices =>
   Object.fromEntries(
-    DIMENSIONS.map((d) => [d, pieces.filter((p) => fits(d, p.kind))]),
+    // only what the dimension draws: a choice draws, or isn't offered (Elco, 12 Nov)
+    DIMENSIONS.map((d) => [d, pieces.filter((p) => draws(d, p))]),
   ) as ViewChoices;
 
 /**
