@@ -170,12 +170,14 @@ const OTHERS_WIDTH = 0.05;
 
 /**
  * A placed proposal's arc (Elco, 11 Nov: "an arch ... on top of the segment of the actual petal"): over its
- * proposer's petal's own stretch of the circle, the fine gap kept at each end, out from the ring by its step. A
- * proposal of no petal sits in the others' stack just before twelve, in columns of STACK_MOST.
+ * proposer's petal's own stretch of the circle, the fine gap kept at each end, right above the petal's own top and
+ * out from it by its step (12 Nov walk 3: "the proposals shouldn't necessarily be on the outside of the circle. They
+ * should actually be right above the wallets themselves"). A proposal of no petal sits in the others' stack just
+ * before twelve on the ring, in columns of STACK_MOST.
  */
 export function placeArc(ring: Ring, petal: number, step: number): string {
   if (petal >= 0) {
-    const r = SHAPE.R * VOTE_RING + 3 + step * STACK_GAP;
+    const r = SHAPE.r0 + (ring.h[petal] as number) + 4 + step * STACK_GAP;
     const a0 = (ring.start[petal] as number) + ring.rotation;
     const a1 = (ring.start[petal + 1] as number) + ring.rotation;
     // the line between petals, as an angle at this radius
