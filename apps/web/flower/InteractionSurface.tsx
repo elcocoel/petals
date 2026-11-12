@@ -259,6 +259,7 @@ export function InteractionSurface({
           pay={{ ...state.pay, onPay: actions.pay }}
           jobs={state.jobs}
           jobControls={state.jobControls}
+          onMapIt={actions.mapIt}
         />
       </FloatBox>
       <FloatBox

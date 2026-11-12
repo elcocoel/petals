@@ -8,22 +8,30 @@
 import type {
   AgentError,
   AgentEvent,
+  Ceremony,
   ChatMessage,
   FlowerResult,
   Interpretation,
   JobEvent,
   ModelSignature,
+  NextSteps,
   Spec,
   Stage,
   ToolError,
   Validation,
 } from '@petal/core/types';
 import type { JobRow } from '@petal/store';
-import { registry as defaultRegistry, type ToolContext, withRunSignal } from '@petal/tools';
+import {
+  registry as defaultRegistry,
+  type ToolContext,
+  whereItLands,
+  withRunSignal,
+} from '@petal/tools';
 import { ANNOTATE, annotateNotes } from './annotate.ts';
 import {
   approvalRequired,
   DRAWING_TOOLS,
+  type Held,
   hashOf,
   type OnTheMap,
   STORED_ONLY,
@@ -44,6 +52,7 @@ import { NAME_CONVERSATION, nameNotes, type RunName } from './name-conversation.
 import { LlmCallError } from './near-ai.ts';
 import { agentNotes, SYSTEM_PROMPT } from './prompt.ts';
 import { newRunId } from './runs.ts';
+import { nextOf, showKey, showOf } from './show.ts';
 import { storedRead } from './stored-read.ts';
 import { draftLink, forModel, isToolError, summarize } from './summary.ts';
 import {
@@ -409,9 +418,37 @@ async function loop(
   const saveThread = () =>
     Promise.resolve(opts.onThread?.(closeThread(messages.slice(1)))).catch(() => {});
 
+  // What the answer is about on the map, once per target in this turn, and the next steps on the map last read.
+  const shown = new Set<string>();
+  let next: NextSteps | null = null;
+
   async function finish() {
     await saveThread();
+    if (next) emit({ event: 'next', data: next });
     done();
+  }
+
+  /**
+   * The ceremony's facts for a new map waiting for its yes (Elco, 12 Nov): where it lands, what will be read, its
+   * rough cost, whose name it goes out in, and who else could do it. A store that can't say leaves them out.
+   */
+  async function ceremony(held: Held): Promise<Partial<Ceremony>> {
+    try {
+      const lands = await whereItLands(deps.tools, held.network, held.params ?? {});
+      const d = deps.tools.modules[held.network]?.descriptor;
+      return {
+        ...lands,
+        cost: {
+          usd: modelOf(pick?.model ?? llm.model)?.usd_per_flower ?? null,
+          seconds: d?.cost.seconds ?? null,
+          calls: d?.cost.calls ?? null,
+        },
+        by: deps.tools.caller?.by ?? null,
+        agents: (input.agents ?? []).map((a) => a.name),
+      };
+    } catch {
+      return {};
+    }
   }
 
   /** A call's arguments, when they are a JSON object. */
@@ -495,7 +532,8 @@ async function loop(
         'Call validate_spec with { spec, interpretation } first, fix any errors, then render_flower with the same spec.',
       );
     } else if (held) {
-      if (!refused.has(held.target_key)) emit({ event: 'approval_required', data: held });
+      if (!refused.has(held.target_key))
+        emit({ event: 'approval_required', data: { ...held, ...(await ceremony(held)) } });
       refused.add(held.target_key);
       refusedCalls.add(refusedCall(call.name, held.target_key, args as Obj));
       out = approvalRequired(held, gate?.why(held, messages.slice(1)));
@@ -536,6 +574,12 @@ async function loop(
     if (call.name === NAME_CONVERSATION) {
       emit({ event: 'title', data: { title: (out as { title: string }).title } });
     }
+    const show = showOf(call.name, out);
+    if (show && !shown.has(showKey(show))) {
+      shown.add(showKey(show));
+      emit({ event: 'show', data: show });
+    }
+    next = nextOf(call.name, out) ?? next;
     remember(call.name, args as Obj, out as Obj, by);
     if (stored) return { ...(out as Obj), [STORED_ONLY]: true };
     gate?.passed(call.name, args as Obj, out as Obj);

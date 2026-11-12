@@ -13,6 +13,9 @@ import { readAbout } from './ask-about.ts';
 
 export type Done = Extract<AgentEvent, { event: 'done' }>['data'];
 
+/** A fresh read Petals' agent holds until the person says yes (J4): the ceremony's start (lib/ceremony.ts). */
+export type Held = Extract<AgentEvent, { event: 'approval_required' }>['data'];
+
 export type Step =
   | { kind: 'stage'; stage: string; message: string }
   | { kind: 'progress'; message: string; done?: number; total?: number }
@@ -35,6 +38,8 @@ export type Item =
   | { kind: 'error'; code: string; message: string; hint?: string }
   /** A job Petals' agent handed to the person's own agent (C), as the run said it. */
   | { kind: 'job'; job: JobEvent }
+  /** A new map waiting for the person's yes (lib/ceremony.ts) */
+  | { kind: 'ceremony'; held: Held }
   | { kind: 'done'; done: Done; signature: ModelSignature | null };
 
 export interface StoredItem {
@@ -85,6 +90,8 @@ export function fold(items: Item[], e: AgentEvent): Item[] {
     }
     case 'job':
       return [...items, { kind: 'job', job: e.data }];
+    case 'approval_required':
+      return [...items, { kind: 'ceremony', held: e.data }];
     case 'error':
       return [...items, { kind: 'error', ...e.data }];
     case 'done': {
@@ -154,13 +161,17 @@ export type Block = Exclude<Item, Step> | { kind: 'steps'; steps: Step[] };
 /** Stages, progress and tool calls in a row become one collapsible block between the answers. */
 export function blocksOf(items: Item[]): Block[] {
   const out: Block[] = [];
+  // a held new map arrives between a tool's call and its result: it waits, so the steps stay one group
+  const waiting: Block[] = [];
   for (const x of items) {
     if (x.kind === 'stage' || x.kind === 'progress' || x.kind === 'tool') {
       const last = out[out.length - 1];
       if (last?.kind === 'steps') last.steps.push(x);
       else out.push({ kind: 'steps', steps: [x] });
-    } else out.push(x);
+    } else if (x.kind === 'ceremony') waiting.push(x);
+    else out.push(...waiting.splice(0), x);
   }
+  out.push(...waiting);
   return out;
 }
 

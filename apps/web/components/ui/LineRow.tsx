@@ -1,5 +1,5 @@
-// A row that holds a few lines and opens what's under it (a claim on the map, MapClaims): it answers as the
-// side panel's rows do (NavItem's fill under the pointer, and while it's open), but it's as tall as its
+// A row that holds a few lines and opens what's under it (a claim on the map, MapClaims), or does one thing (a
+// next step, NextSteps): it answers as the side panel's rows do (NavItem's fill under the pointer, and while it's open), but it's as tall as its
 // lines, its words wrap and it starts at the panel's inset. Props only.
 import type { ReactNode } from 'react';
 
@@ -8,8 +8,8 @@ export function LineRow({
   onClick,
   children,
 }: {
-  /** What's under it is open. */
-  expanded: boolean;
+  /** What's under it is open; left out where it opens nothing. */
+  expanded?: boolean;
   onClick: () => void;
   children: ReactNode;
 }) {

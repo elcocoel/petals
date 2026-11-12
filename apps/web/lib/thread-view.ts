@@ -4,6 +4,7 @@
 
 import type { FlowerResult, JobEvent, ModelSignature, View } from '@petal/core/types';
 import { aboutLabel, readAbout } from './ask-about.ts';
+import { type CeremonyView, ceremonyView, ceremonyWords } from './ceremony.ts';
 import { chainLabel, dateLabel, flowerImage, networkLabel } from './flower-view.ts';
 import { type Block as MarkdownBlock, parseMarkdown } from './markdown.ts';
 import { PAYMENT_REQUIRED } from './pay.ts';
@@ -167,7 +168,9 @@ export type Row =
   | { kind: 'done'; key: string; line: Segment[]; summary: string | null }
   | FlowerRow
   | StoredRow
-  | TurnRow;
+  | TurnRow
+  /** A new map waiting for the person's yes, at the end of the last turn (lib/ceremony.ts) */
+  | { kind: 'ceremony'; key: string; view: CeremonyView };
 
 export type ThreadInput = Pick<ChatState, 'items' | 'busy' | 'runId' | 'turn' | 'lostAgain'> & {
   recorded: boolean;
@@ -245,6 +248,9 @@ export function threadView(v: ThreadInput): Row[] {
   // the agent's name goes where it starts speaking
   let spoke = false;
   let flowers = 0;
+  // the new maps this turn holds for a yes: their card goes after the agent's words, before its note
+  let held: { key: string; view: CeremonyView }[] = [];
+  const lastAsked = blocks.findLastIndex((x) => x.kind === 'user');
   const rows: Row[] = [];
   blocks.forEach((b, i) => {
     const key = `${i}-${b.kind}`;
@@ -360,7 +366,13 @@ export function threadView(v: ThreadInput): Row[] {
       case 'job':
         rows.push({ kind: 'job', key, job: b.job });
         break;
+      case 'ceremony':
+        // only the last turn's, while nothing runs: a question since is the person's answer
+        if (i > lastAsked && !v.busy && !v.recorded) held.push({ key, view: ceremonyView(b.held) });
+        break;
       case 'done':
+        for (const c of held) rows.push({ kind: 'ceremony', ...c });
+        held = [];
         rows.push({
           kind: 'done',
           key,
@@ -395,6 +407,8 @@ export interface ComposerView {
   run?: { id: string; href: string };
   /** the conversation is happening somewhere else, so nothing can be typed here */
   away?: boolean;
+  /** which state the person is in: exploring what's there, or creating a new data packet (Elco, 12 Nov) */
+  state?: string;
 }
 
 // Drafts (design/minimally-good.md, rule 5: no "Ask" as a label).
@@ -412,6 +426,8 @@ export function composerView(
     elsewhere?: string | undefined;
     /** that conversation can't be read, so nothing can be said about where it's happening */
     unavailable?: boolean;
+    /** the person said yes to a new map and its read is running (lib/ceremony.ts) */
+    creating?: boolean;
   },
 ): ComposerView {
   if (v.elsewhere) {
@@ -443,6 +459,7 @@ export function composerView(
           : 'A network, a DAO, a token or an address.',
     button: v.busy ? 'Working…' : v.recorded ? 'Play the recorded run' : 'Send',
     disabled: v.busy || (!v.recorded && !v.question.trim()),
+    ...(v.recorded ? {} : { state: v.creating ? ceremonyWords.creating : ceremonyWords.exploring }),
     ...(target.kind === 'wallet' || target.kind === 'group'
       ? { about: aboutLabel(target.line) }
       : {}),

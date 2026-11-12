@@ -15,6 +15,7 @@ import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
 import { CopyPrompt } from '../components/CopyPrompt.tsx';
 import { AnsweredBy } from '../components/chat/AnsweredBy.tsx';
+import { CeremonyCard } from '../components/chat/CeremonyCard.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { JobRow } from '../components/chat/JobRow.tsx';
@@ -51,6 +52,7 @@ import { MapList } from '../components/MapList.tsx';
 import { MapProposal } from '../components/MapProposal.tsx';
 import { MapSearch } from '../components/MapSearch.tsx';
 import { Markdown } from '../components/Markdown.tsx';
+import { NextSteps } from '../components/NextSteps.tsx';
 import { Oops } from '../components/Oops.tsx';
 import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
@@ -109,6 +111,7 @@ import { TipControl } from '../components/workspace/TipControl.tsx';
 import { DimensionChoices, ViewControls } from '../components/workspace/ViewControls.tsx';
 import { Wallets } from '../components/workspace/Wallets.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
+import { ceremonyView } from '../lib/ceremony.ts';
 import type { AnnotationRow } from '../lib/claim-lines.ts';
 import type { DrawingKind } from '../lib/figures.ts';
 import { keysOf, oneKey, readingKey, svgImage } from '../lib/flower-view.ts';
@@ -2871,6 +2874,29 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'CeremonyCard',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/CeremonyCard.tsx',
+    states: [
+      {
+        name: 'a new map, waiting for the press',
+        render: () => (
+          <CeremonyCard
+            view={ceremonyView({
+              tool: 'propose_spec',
+              network: 'moloch-v3',
+              params: { chain: 'gnosis', dao: '0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986' },
+              target_key: 'moloch-v3',
+            })}
+            onMapIt={() => {}}
+          />
+        ),
+      },
+    ],
+  },
+  {
     id: 'PayRow',
     group: 'The conversation',
     figmaName: null,
@@ -3193,6 +3219,70 @@ export const registry: LabEntry[] = [
             <LineRow expanded onClick={() => undefined}>
               <span className="type-ui">A claim's words</span>
             </LineRow>
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'NextSteps',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/NextSteps.tsx',
+    states: [
+      {
+        name: 'three steps under the agent’s reading, one running, More folded',
+        render: () => (
+          <div className="w-tile-width">
+            <NextSteps
+              steps={[
+                {
+                  key: 'blocs',
+                  label: 'Show the blocs',
+                  says: 'Who votes alike, on all their votes',
+                  onPress: () => undefined,
+                },
+                {
+                  key: 'payouts',
+                  label: 'What it paid out',
+                  says: 'From its proposals, 2021 to now',
+                  busy: true,
+                  onPress: () => undefined,
+                },
+                { key: 'compare', label: 'Compare with…', onPress: () => undefined },
+              ]}
+              more={{
+                open: false,
+                onToggle: () => undefined,
+                steps: [
+                  { key: 'holders', label: 'Read its holders again', onPress: () => undefined },
+                ],
+              }}
+            />
+          </div>
+        ),
+      },
+      {
+        name: 'More open: the brain’s services, one press each',
+        render: () => (
+          <div className="w-tile-width">
+            <NextSteps
+              steps={[{ key: 'blocs', label: 'Show the blocs', onPress: () => undefined }]}
+              more={{
+                open: true,
+                onToggle: () => undefined,
+                steps: [
+                  {
+                    key: 'holders',
+                    label: 'Read its holders again',
+                    says: 'Petals’ agent · a few cents',
+                    onPress: () => undefined,
+                  },
+                  { key: 'claims', label: 'What Petals’ mapping says', onPress: () => undefined },
+                ],
+              }}
+            />
           </div>
         ),
       },

@@ -4,13 +4,23 @@
 // over to be interpreted: its readings, proposals, value, payouts, Petals' mapping's Insights and the person's
 // own names on its accounts, each saying where and when. Nothing here reads anew: it's what the map holds.
 import { payoutsIn, validateMark, validateProposals } from '@petal/core';
-import type { Claim } from '@petal/core/types';
+import type { Claim, NextStep, NextSteps } from '@petal/core/types';
+import { EVM_CHAINS } from '@petal/inputs';
 import { defineTool } from '../define.ts';
 import { privateStore } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
 import { hiddenMap } from '../hidden.ts';
-import { type CardMark, cardMark, type MapCard, madeByWords, mapsOf, mapViews } from '../map.ts';
-import { aboutOneOf, cardAccounts, claimsAbout } from '../mapping-claims.ts';
+import {
+  type CardMark,
+  cardMark,
+  chainName,
+  chainWords,
+  type MapCard,
+  madeByWords,
+  mapsOf,
+  mapViews,
+} from '../map.ts';
+import { ADDRESS, aboutOneOf, cardAccounts, claimsAbout } from '../mapping-claims.ts';
 import { payoutsOf } from '../payouts.ts';
 import { cardProposals } from '../proposals.ts';
 import type { ToolContext } from '../types.ts';
@@ -296,3 +306,84 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
     };
   },
 });
+
+/** An address as mapIndex keeps it: an EVM address in lower case. */
+const addressKey = (a: string) => (/^0x[0-9a-fA-F]{40}$/.test(a) ? a.toLowerCase() : a);
+
+/**
+ * Where a new read of this target would land, for the ceremony's card (Elco, 12 Nov: "are we adding to a map that
+ * already exists? than we look at that - if it's completely new, than we have a 'place holder'"): the map already
+ * at one of its addresses (or, for a whole network, the map its reader already drew), its name and chain, and
+ * what will be read, in words. Nothing is read.
+ */
+export async function whereItLands(
+  ctx: ToolContext,
+  network: string,
+  params: Record<string, unknown> = {},
+): Promise<{
+  existing_map: string | null;
+  name: string | null;
+  chain: string | null;
+  what: string;
+}> {
+  const d = ctx.modules[network]?.descriptor;
+  const asked = typeof params.chain === 'string' ? params.chain.trim().toLowerCase() : null;
+  const caip2 = asked ? (EVM_CHAINS[asked]?.caip2 ?? asked) : (d?.chain ?? null);
+  const chain = asked ?? (caip2 && caip2 !== 'none' ? chainName(caip2) : null);
+  const addresses = Object.values(params)
+    .filter((v): v is string => typeof v === 'string' && ADDRESS.test(v.trim()))
+    .map((v) => addressKey(v.trim()));
+  const index = await mapIndex(ctx, { hidden: true });
+  const on = (m: Indexed) => !chain || m.card.chain === chain;
+  const found = addresses.length
+    ? index.find((m) => on(m) && addresses.some((a) => m.addresses.includes(a)))
+    : index.find(
+        (m) => on(m) && !m.card.address && m.card.readings.some((r) => r.network === network),
+      );
+  const reader = d?.title ?? network;
+  const where = caip2 && caip2 !== 'none' ? chainWords(caip2) : null;
+  const what =
+    where && !reader.toLowerCase().includes(where.toLowerCase()) ? `${reader} on ${where}` : reader;
+  return {
+    existing_map: found?.card.id ?? null,
+    name: found ? nameOf(found.card) : null,
+    chain: found?.card.chain ?? chain,
+    what,
+  };
+}
+
+/** The brain's services that go with a map (brain/services), each by its task's words in brain/routing.md. */
+const SERVICES: { label: string; needs?: 'proposals' | 'treasury' }[] = [
+  { label: 'A governance health report', needs: 'proposals' },
+  { label: 'A distribution card' },
+  { label: 'An authority map' },
+  { label: 'A treasury and unlocks calendar', needs: 'treasury' },
+  { label: 'A full DAO report', needs: 'proposals' },
+];
+
+/**
+ * The next steps on a map just read (META, from Elco, 12 Nov: "three next-step buttons that drive the map ('show
+ * the blocs', 'what it paid out', 'compare with…'), the brain's services as one-press options"), from what get_map
+ * said it holds: each a message to send, or, finish false, words for the person to finish.
+ */
+export function nextSteps(m: {
+  id: string;
+  name: string;
+  proposals: { voted?: number } | null;
+  payouts: { count?: number } | null;
+  value: { treasury_usd?: string | null } | null;
+}): NextSteps {
+  const steps: NextStep[] = [];
+  if ((m.proposals?.voted ?? 0) > 0)
+    steps.push({ label: 'Show the blocs', ask: `Who votes together in ${m.name}?`, finish: true });
+  if ((m.payouts?.count ?? 0) > 0)
+    steps.push({ label: 'What it paid out', ask: `What has ${m.name} paid out?`, finish: true });
+  steps.push({ label: 'Compare with…', ask: `Compare ${m.name} with `, finish: false });
+  const has = { proposals: !!m.proposals, treasury: !!m.value?.treasury_usd };
+  const services = SERVICES.filter((x) => !x.needs || has[x.needs]).map((x) => ({
+    label: x.label,
+    ask: `${x.label} for ${m.name}`,
+    finish: true,
+  }));
+  return { map: m.id, steps, services };
+}

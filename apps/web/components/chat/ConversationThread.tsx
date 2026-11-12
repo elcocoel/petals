@@ -5,6 +5,7 @@ import type { TopUpView } from '../../lib/intents.ts';
 import { type Job, type JobControlsView, jobLine } from '../../lib/jobs.ts';
 import type { PayPhase } from '../../lib/pay.ts';
 import type { Row } from '../../lib/thread-view.ts';
+import { CeremonyCard } from './CeremonyCard.tsx';
 import { JobRow } from './JobRow.tsx';
 import { PayRow } from './PayRow.tsx';
 import { Thread } from './Thread.tsx';
@@ -24,6 +25,7 @@ export function ConversationThread({
   pay,
   jobs,
   jobControls,
+  onMapIt,
 }: {
   recorded: boolean;
   rows: Row[];
@@ -49,6 +51,8 @@ export function ConversationThread({
   jobs?: Record<string, Job>;
   /** The person's say over each job: its state after a move, and its controls (swarm.md, step 3). */
   jobControls?: { now: (j: Job) => Job; controlsFor: (j: Job) => JobControlsView };
+  /** A new map's ceremony, pressed: Petals' agent hears the person's yes (lib/ceremony.ts). */
+  onMapIt?: () => void;
 }) {
   return (
     <Thread
@@ -106,6 +110,9 @@ export function ConversationThread({
           />
         );
       }}
+      renderCeremony={(row) =>
+        onMapIt ? <CeremonyCard key={row.key} view={row.view} onMapIt={onMapIt} /> : null
+      }
       onRefollow={onRefollow}
       onLink={onLink}
     />

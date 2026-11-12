@@ -28,6 +28,11 @@ export function Composer({
     <div
       className={`flex flex-col gap-space-8 ${device ? 'min-h-0 flex-1' : 'shrink-0'} ${className}`}
     >
+      {view.state && (
+        <p data-quiet className="type-mono text-muted">
+          {view.state}
+        </p>
+      )}
       {view.about && (
         <p data-quiet className="type-mono text-muted">
           {view.about}
