@@ -26,9 +26,9 @@ describe('the mapping state', () => {
     const v = mappingView('eip155:100:0xf02f', 'RaidGuild', data);
     expect(v.heading).toBe('Mapping RaidGuild');
     expect(v.adds).toEqual([
-      { key: 'Insights:claims:named', line: 'Insights · Names · 35', goes: true, why: null },
+      { key: 'Insights:claims:named:goes', line: 'Insights · Names · 35', goes: true, why: null },
       {
-        key: 'Readings:readings:Readings',
+        key: 'Readings:readings:Readings:stays',
         line: 'Readings · 2',
         goes: false,
         why: data.adds[1]?.why,
