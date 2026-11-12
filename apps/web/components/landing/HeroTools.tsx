@@ -6,11 +6,12 @@
 // here too. The stage sets it back and soft (HeroStory).
 'use client';
 import type { View } from '@petal/core/types';
-import { ACTIVITY, DEFAULT_VIEW, EVERY_FLOWER, inUse } from '@petal/core/view';
+import { ACTIVITY, EVERY_FLOWER, inUse } from '@petal/core/view';
 import { wordsOf } from '@petal/core/wedge/keys';
 import { blocWords } from '../../lib/bloc-words.ts';
 import type { LegendKey } from '../../lib/flower-view.ts';
 import { blocChosen, type ToolRow, type ToolValue, tool } from '../../lib/hero-story.ts';
+import { DEFAULT_PERSON_VIEW } from '../../lib/person-view.ts';
 import { withData } from '../../lib/view-edit.ts';
 import { ViewLegend } from '../ViewLegend.tsx';
 
@@ -18,10 +19,13 @@ import { ViewLegend } from '../ViewLegend.tsx';
 const PIECES = [...EVERY_FLOWER, ...ACTIVITY];
 
 /** The view with Height at share or None, and Colour at kind of account or voted or never: the four the story uses. */
+/** Everyone's default view, from the one place it comes from. */
+const DEFAULT = DEFAULT_PERSON_VIEW.view;
+
 function viewOf(height: ToolValue, colour: ToolValue) {
-  let view: View = DEFAULT_VIEW;
-  if (height === 'none') view = withData(view, 'height', null, PIECES, DEFAULT_VIEW);
-  if (colour === 'voted') view = withData(view, 'colour', 'voted', PIECES, DEFAULT_VIEW);
+  let view: View = DEFAULT;
+  if (height === 'none') view = withData(view, 'height', null, PIECES, DEFAULT);
+  if (colour === 'voted') view = withData(view, 'colour', 'voted', PIECES, DEFAULT);
   return { view, drawn: inUse(view, PIECES) };
 }
 const VIEWS = {
