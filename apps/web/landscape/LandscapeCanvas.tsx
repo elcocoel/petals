@@ -21,7 +21,7 @@ import { ViewLegend } from '../components/ViewLegend.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
 import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
 import { mapClaimGroups, mapClaimWords } from '../lib/map-claims.ts';
-import { mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
+import { MAP_SEARCH_ID, mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
 import type { LegendEdit } from '../lib/view-edit.ts';
@@ -296,6 +296,22 @@ export function LandscapeCanvas({
       return finding.busy ? mapSearchWords.searching : mapSearchWords.none;
     return finding.got.body.meaning === 'off' ? mapSearchWords.wordsOnly : null;
   })();
+  // Cmd+K (Ctrl+K off a Mac) opens the list and puts the cursor in the search (Elco, 12 Nov: "a standard shortcut")
+  const [searchAsked, setSearchAsked] = useState(0);
+  useEffect(() => {
+    if (!search) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'k') return;
+      e.preventDefault();
+      setListOpen(true);
+      setSearchAsked((n) => n + 1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [search]);
+  useEffect(() => {
+    if (searchAsked) document.getElementById(MAP_SEARCH_ID)?.focus();
+  }, [searchAsked]);
   const goTo = (row: SearchRow) => {
     const f = data.flowers[row.at];
     if (!f) return;
@@ -427,12 +443,14 @@ export function LandscapeCanvas({
       )}
       {/* The overlays, down the left: the chain list, then the legend under it, so they never meet. The aside is
           the chain list's own outermost box, so its right edge, which the arrows' names keep clear of, is the
-          overlay's; inside a flower it's invisible, not gone (LOOK), and the legend stays, saying the flower. */}
+          overlay's; inside a flower it's invisible, not gone (LOOK), and the legend stays, saying the flower.
+          Where there's a search, it never goes (Elco, 12 Nov: "the search bar doesn't disappear"): inside a
+          flower the box stays with the search alone, and the chains step aside. */}
       <div
         className={`${fill === 'window' ? 'fixed' : 'absolute'} top-space-16 left-space-16 flex flex-col items-start gap-space-8`}
       >
         {/* inside a flower, out of the column too, so the legend rises to the top in its place */}
-        <div ref={aside} className={inside ? 'invisible absolute top-0 left-0' : ''}>
+        <div ref={aside} className={inside && !search ? 'invisible absolute top-0 left-0' : ''}>
           <Overlay
             title={
               !listOpen && shown
@@ -453,7 +471,7 @@ export function LandscapeCanvas({
               />
             )}
             {/* while something's typed, what it finds stands in the chains' place */}
-            {!(search && finding.q.trim()) && (
+            {!(search && (finding.q.trim() || inside)) && (
               <ul className="m-0 flex list-none flex-col p-0">
                 {data.chains.map((c) => (
                   <li key={c.chain}>
