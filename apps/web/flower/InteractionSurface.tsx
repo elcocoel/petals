@@ -35,6 +35,7 @@ import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useGroundMap } from '../viewmodels/useGroundMap.ts';
 import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
+import { usePublishPress } from '../viewmodels/usePublishPress.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import type { Clear } from './camera.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
@@ -176,6 +177,9 @@ export function InteractionSurface({
   // what the map shows: the map a new read adds to, else what the last answer is about (SYSTEMS's show), else the
   // conversation's flower where the map holds it; undefined says nothing (Elco, 12 Nov: "an answer moves the map")
   const flowerMap = atFlower && land ? (land.flowers[flowerOnMap]?.map ?? null) : null;
+  // what the person kept about the map in front of them, published with one press (Elco, 12 Nov)
+  const publishMap = flowerMap ?? state.mapAt?.map ?? made?.held.existing_map ?? null;
+  const publishing = usePublishPress(publishMap);
   const show = made?.held.existing_map
     ? { map: made.held.existing_map }
     : (state.mapShow ?? (flowerMap ? { map: flowerMap } : undefined));
@@ -357,6 +361,11 @@ export function InteractionSurface({
                   : undefined,
             }}
             conversation={state.conversationRef}
+            publish={
+              publishing.view
+                ? { view: publishing.view, onPublish: () => void publishing.publish() }
+                : undefined
+            }
           />
         )}
       </FloatBox>

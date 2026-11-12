@@ -191,6 +191,91 @@ export async function readMapDrawing(map: string): Promise<string | null> {
   return json.map?.view_url ?? null;
 }
 
+/** What a signed-in person kept about a map and can publish (SYSTEMS, 12 Nov: GET /api/v1/publish/data). */
+export interface PublishableData {
+  about: string;
+  name: string | null;
+  /** the claims that can go on the shared map now */
+  ready: number;
+  /** the rest, each with why it stays private */
+  private: {
+    id: string;
+    subject: string;
+    verb: string;
+    why: string;
+    name?: string;
+    source?: PublishSource | null;
+    confidence?: number | null;
+  }[];
+  /** each one that can go, in the order it would (Elco, 12 Nov: "Let me look first") */
+  claims?: {
+    id: string;
+    subject: string;
+    name: string;
+    source?: PublishSource | null;
+    /** 0 to 1, or null when the model that scores it is off */
+    confidence?: number | null;
+  }[];
+  /** already on the shared map */
+  published: number;
+}
+
+/** Where a name comes from: the proposal that declares it, with its words, or a transaction. */
+export interface PublishSource {
+  kind: 'proposal' | 'transaction' | string;
+  /** the proposal's or transaction's ref, else the address it was read at */
+  ref: string | null;
+  quote?: string;
+  /** where it can be read */
+  url?: string;
+}
+
+export async function readPublishable(map: string): Promise<PublishableData | null> {
+  const res = await fetch(`/api/v1/publish/data?map=${encodeURIComponent(map)}`);
+  if (!res.ok) return null;
+  return (await res.json()) as PublishableData;
+}
+
+/** The message the wallet signs for it, good for five minutes (POST /api/v1/publish/data/prepare). */
+export interface PublishPrepared {
+  sha256: string;
+  message: string;
+  nonce: string;
+  recipient: string;
+  expires_at: string;
+}
+
+export async function preparePublishable(map: string): Promise<PublishPrepared> {
+  const res = await fetch('/api/v1/publish/data/prepare', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ map }),
+  });
+  if (!res.ok) throw new Error(await failureOf(res));
+  return (await res.json()) as PublishPrepared;
+}
+
+/** Sends the signed proof: the claims go on the shared map in the person's name. 401: another wallet signed. */
+export async function publishPublishable(
+  sha256: string,
+  proof: unknown,
+): Promise<
+  { published: number; by: string; map_url: string } | { refused: number; message: string }
+> {
+  const res = await fetch('/api/v1/publish/data', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ sha256, proof }),
+  });
+  if (!res.ok) return { refused: res.status, message: await failureOf(res) };
+  return (await res.json()) as { published: number; by: string; map_url: string };
+}
+
+async function failureOf(res: Response): Promise<string> {
+  const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+  return body?.error?.message ?? `HTTP ${res.status}`;
+}
+
 /** What Petals' own mapping says about a map's accounts (GET /api/v1/maps/:id/claims), or null. */
 export async function readMapClaims(map: string): Promise<MapClaims | null> {
   const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}/claims`);
