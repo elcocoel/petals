@@ -155,7 +155,7 @@ describe('the brain version at every door (step 4)', () => {
       '0123456789abcdef@abcdef012345',
     );
     expect(md).toContain("Petals' brain here is version `0123456789abcdef@abcdef012345`");
-    expect(md).toContain('https://petals.example/api/v1/brain/files/doctrine');
+    expect(md).toContain('https://petals.example/api/v1/brain/context?q=');
     expect(hostedSkill(skill, 'https://petals.example')).not.toContain("Petals' brain here");
   });
 });
