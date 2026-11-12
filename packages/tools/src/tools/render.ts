@@ -12,6 +12,7 @@ import {
   viewProblem,
 } from '@petal/core';
 import type { Spec, View } from '@petal/core/types';
+import { activityOf } from '../activity.ts';
 import { defineTool } from '../define.ts';
 import { putSpecBody } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
@@ -136,6 +137,8 @@ export const renderFlowerTool = defineTool<
       ...(ctx.names?.length ? namePieces(snapshot, ctx.names) : []),
       ...(ctx.names?.length ? typePieces(snapshot, ctx.names) : []),
       ...valuePieces(snapshot, (await valuesOf(ctx)).get(mapOf(snapshot)) ?? null),
+      // and each petal's activity in its map's proposals (activity.ts, 12 Nov)
+      ...(await activityOf(ctx, snapshot)),
     ];
     const r = renderFlower(spec, snapshot, {
       ...(size !== undefined ? { size } : {}),
