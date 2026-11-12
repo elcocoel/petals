@@ -1,7 +1,9 @@
 // The hero's story, as numbers (HERO ART's V2, approved by Elco 11 Nov: "BRO, 10 OUT OF 10 - LFG!!!! ... get
 // this in the hero please"; design/hero-illustration/foreground-script-v2.md), choreographed as motion (HERO
-// MOTION, 11 Nov: "this shit will be cinematic"). Six beats, each its own length (BEATS_MS): the question arrives, the
-// flower anticipates and answers, the words answer, a quiet hold while the camera breathes, the words leave.
+// MOTION, 11 Nov: "this shit will be cinematic"), shot as one take (Elco, 12 Nov: no seams, the camera never stops,
+// the next question arrives while the flower is still settling). Six beats, each its own length (BEATS_MS): the
+// question arrives, the flower answers and takes the rest of its beat to come to rest, the words answer and leave;
+// the flower is still settling under the next question (CARRY_MS), and nothing bounces.
 // Everything a frame draws is a pure function of the beat and the time into it, so choosing a beat settles it at
 // once, a test can read any moment, and a video can be rendered frame by frame from the same numbers. The flower
 // is a symbol, not a reading: no network, no counts. Heights stay linear and widths equal (the art direction's
@@ -16,8 +18,13 @@ export const BEATS_MS: readonly number[] = [6600, 5600, 5800, 6800, 6000, 7200];
 /** The longest beat, for whatever needs one number. */
 export const BEAT_MS = Math.max(...BEATS_MS);
 export const beatMs = (beat: number) => BEATS_MS[beat] ?? BEAT_MS;
-/** A moment inside a beat where everything has settled and both lines are in view. */
-export const SETTLED_MS = 3600;
+/**
+ * How far past its beat's end the flower is still coming to rest, under the next question: each beat starts from
+ * the last one as it is at that moment, so nothing is reset.
+ */
+export const CARRY_MS = 600;
+/** A moment late in a beat where both lines are in view and the flower is all but at rest: a chosen beat stops here. */
+export const settledMs = (beat: number) => beatMs(beat) - 1200;
 /** When the flower starts its answer: while the question is still landing, so the shape answers first. */
 const RESPOND_MS = 600;
 /** The question on arrival waits for the centre to land; after that each question comes in at once. */
@@ -28,8 +35,8 @@ const QUESTION_LEAVES_MS = 700;
 const ANSWER_LEAVES_MS = 450;
 /** How far into the next beat an answer is still leaving, while the next question comes in. */
 export const OVERLAP_MS = 300;
-/** How long the history beat's heights take to move from then to now. */
-const HISTORY = { from: 700, ms: 3300 };
+/** When the history beat's heights start moving from then to now; they travel the rest of the beat. */
+const HISTORY_FROM = 700;
 
 export const PETALS = 24;
 /** Where the petals start: the centre's edge. */
@@ -63,15 +70,23 @@ export const ease = {
   inOutSine: (p: number) => -(Math.cos(Math.PI * p) - 1) / 2,
 };
 
-/** A damped spring that settles at 1 by p = 1, passing it once by about 4%: a petal arriving, not snapping. */
-export function spring(p: number): number {
+/** How soon a move comes to rest: the higher, the sooner. */
+const WEIGHT = 6;
+const REST = 1 - (1 + WEIGHT) * Math.exp(-WEIGHT);
+
+/**
+ * A weight coming to rest (Elco, 12 Nov: one take, no bounce): it starts gently, covers most of the way early, then
+ * settles slowly, and never passes its end.
+ */
+export function settle(p: number): number {
   if (p <= 0) return 0;
   if (p >= 1) return 1;
-  const z = 0.7;
-  const w = 10;
-  const wd = w * Math.sqrt(1 - z * z);
-  return 1 - Math.exp(-z * w * p) * (Math.cos(wd * p) + ((z * w) / wd) * Math.sin(wd * p));
+  return (1 - (1 + WEIGHT * p) * Math.exp(-WEIGHT * p)) / REST;
 }
+
+/** A move that starts at `start` and comes to rest as the next beat's question lands. */
+const grow = (beat: number, t: number, start: number) =>
+  settle(at(t, start, beatMs(beat) + CARRY_MS - start));
 
 /** The beat before this one, round the loop. */
 const prior = (beat: number) => (beat + 5) % 6;
@@ -86,40 +101,55 @@ function settled(beat: number): readonly number[] {
 }
 
 /** Per petal, how much later than its neighbour before it (clockwise from twelve) it moves. */
-const STAGGER = 26;
+const STAGGER = 40;
 
 /**
  * Each petal's length. `fresh` is the very first beat on arrival, which grows from the bare centre; round the
- * loop, the first beat closes the last flower first, back round the clock, and opens it again.
+ * loop, the first beat closes the last flower first, back round the clock, and opens it again. Every other beat
+ * starts from the last one as it is, still coming to rest for its first CARRY_MS.
  */
 export function petalLengths(beat: number, t: number, fresh = false): number[] {
-  const before = fresh && beat === 0 ? Array(PETALS).fill(INNER) : settled(prior(beat));
+  const last = prior(beat);
+  const before =
+    fresh && beat === 0
+      ? Array(PETALS).fill(INNER)
+      : t < CARRY_MS
+        ? petalLengths(last, beatMs(last) + t, fresh)
+        : settled(last);
   return Array.from({ length: PETALS }, (_, i) => {
     const from = before[i] as number;
     switch (beat) {
       case 0: {
-        const shut = ease.inOutCubic(at(t, (PETALS - 1 - i) * 8, 380));
-        const open = spring(at(t, RESPOND_MS + i * STAGGER, 950));
+        const shut = ease.inOutCubic(at(t, (PETALS - 1 - i) * 14, 700));
+        const open = grow(0, t, RESPOND_MS + i * STAGGER);
         return lerp(lerp(from, INNER, shut), EVEN, open);
       }
       case 1: {
         // anticipation: the even flower draws in a breath before the heights part
         const breath = 1 - 0.07 * Math.sin(Math.PI * at(t, 200, 480));
-        const grown = lerp(from, base[i] as number, spring(at(t, RESPOND_MS + i * STAGGER, 1050)));
+        const grown = lerp(from, base[i] as number, grow(1, t, RESPOND_MS + i * STAGGER));
         return INNER + (grown - INNER) * breath;
       }
       case 3:
-        return lerp(base[i] as number, later[i] as number, historyAt(t));
+        return lerp(from, later[i] as number, historyAt(t));
       case 4:
-        return lerp(from, base[i] as number, spring(at(t, 150 + i * 16, 800)));
+        return lerp(from, base[i] as number, grow(4, t, 150 + i * 24));
       default:
-        return base[i] as number;
+        return from;
     }
   });
 }
 
-/** How far the history beat has gone from then to now, 0 to 1: the marker and the heights move as one. */
-export const historyAt = (t: number) => ease.inOutSine(at(t, HISTORY.from, HISTORY.ms));
+/**
+ * How far the history beat has gone from then to now, 0 to 1: the marker and the heights move as one, across the
+ * whole beat, arriving under the next question.
+ */
+export const historyAt = (t: number) =>
+  ease.inOutSine(at(t, HISTORY_FROM, beatMs(3) + CARRY_MS - HISTORY_FROM));
+
+/** Where the history beat's marker is, in any beat: it keeps travelling into the next while it fades. */
+export const historyLine = (beat: number, t: number) =>
+  beat === 3 ? historyAt(t) : beat === 4 ? historyAt(beatMs(3) + t) : 0;
 
 export interface Camera {
   scale: number;
@@ -129,27 +159,23 @@ export interface Camera {
   y: number;
 }
 
-/** A slow push in and back out across a beat, still at both ends so the beats join without a seam. */
-const breath = (beat: number, t: number, depth: number) =>
-  1 + depth * Math.sin((Math.PI * Math.min(t, beatMs(beat))) / beatMs(beat));
-
 /** The pull back to make room for the communities the last beat leads to, and the push back in after it. */
 function pullOf(beat: number, t: number, fresh: boolean): number {
-  if (beat === 5) return lerp(1, 0.65, ease.inOutCubic(at(t, RESPOND_MS, 1200)));
-  if (beat === 0 && !fresh) return lerp(0.65, 1, ease.inOutCubic(at(t, 0, 1000)));
+  if (beat === 5) return lerp(1, 0.65, ease.inOutCubic(at(t, RESPOND_MS, 2600)));
+  if (beat === 0 && !fresh) return lerp(0.65, 1, ease.inOutCubic(at(t, 0, 2400)));
   return 1;
 }
 
 /**
- * The camera on the main flower: it breathes in across every beat, turns a little as the community unfurls, and
- * pulls back at the end.
+ * The camera on the main flower, inside its drawing: it turns a little as the community unfurls, and pulls back
+ * slowly at the end. Its travel across the stage, which never stops, is the shots' (lib/hero-shots.ts).
  */
 export function camera(beat: number, t: number, fresh = false): Camera {
   const pull = pullOf(beat, t, fresh);
   // the petals are all at the centre's edge when the turn begins, so it starts from nothing seen
   const rotate =
-    beat === 0 && t >= RESPOND_MS ? -16 * (1 - ease.outCubic(at(t, RESPOND_MS, 1900))) : 0;
-  return { scale: pull * breath(beat, t, 0.016), rotate, y: (1 - (pull - 0.65) / 0.35) * 8 };
+    beat === 0 && t >= RESPOND_MS ? -16 * (1 - ease.outCubic(at(t, RESPOND_MS, 3000))) : 0;
+  return { scale: pull, rotate, y: (1 - (pull - 0.65) / 0.35) * 8 };
 }
 
 /** The light behind the flower: it moves a third as much as the flower does, so the two sit at different depths. */
@@ -159,25 +185,25 @@ export function glow(beat: number, t: number, fresh = false) {
   // the blocs' second key tints the light while they show
   const second =
     beat === 2
-      ? ease.outCubic(at(t, RESPOND_MS, 900))
+      ? ease.outCubic(at(t, RESPOND_MS, 1400))
       : beat === 3
         ? 1
         : beat === 4
-          ? 1 - ease.outCubic(at(t, 0, 700))
+          ? 1 - ease.outCubic(at(t, 0, 1200))
           : 0;
-  return { opacity: born, scale: (1 + (pull - 1) * 0.35) * breath(beat, t, 0.006), second };
+  return { opacity: born, scale: 1 + (pull - 1) * 0.35, second };
 }
 
 /** The centre: its dot lands, then its ring draws round, the first time only; after that it stays. */
 export function centre(beat: number, t: number, fresh = false) {
   if (!(fresh && beat === 0)) return { dot: 1, ring: 1 };
-  return { dot: spring(at(t, 150, 700)), ring: ease.inOutCubic(at(t, 380, 700)) };
+  return { dot: settle(at(t, 150, 900)), ring: ease.inOutCubic(at(t, 380, 900)) };
 }
 
 /** A layer that belongs to one beat: it comes in with the flower's answer and goes as the next beat starts. */
 export function layerOpacity(own: number, beat: number, t: number): number {
-  if (beat === own) return ease.outCubic(at(t, RESPOND_MS, 400));
-  if (beat === (own + 1) % 6) return 1 - ease.outCubic(at(t, 0, 450));
+  if (beat === own) return ease.outCubic(at(t, RESPOND_MS, 700));
+  if (beat === (own + 1) % 6) return 1 - ease.outCubic(at(t, 0, 800));
   return 0;
 }
 
@@ -213,14 +239,14 @@ function paintStart(beat: number, i: number): number {
 export function petalPaint(beat: number, t: number, i: number, fresh = false) {
   const from: Fill = fresh && beat === 0 ? 'petal' : petalFill(prior(beat), i);
   const to = petalFill(beat, i);
-  return { from, to, k: from === to ? 1 : ease.outCubic(at(t, paintStart(beat, i), 650)) };
+  return { from, to, k: from === to ? 1 : ease.outCubic(at(t, paintStart(beat, i), 900)) };
 }
 
 /** How strongly the highlight is on a petal, 0 to 1: on the strongest few, as their colour lands. */
 export function petalLit(beat: number, t: number, i: number): number {
   if (i >= LIT) return 0;
-  if (beat === 1 || beat === 5) return ease.outCubic(at(t, paintStart(beat, i) + 250, 600));
-  if (beat === 2 || beat === 0) return 1 - ease.outCubic(at(t, 0, 450));
+  if (beat === 1 || beat === 5) return ease.outCubic(at(t, paintStart(beat, i) + 250, 800));
+  if (beat === 2 || beat === 0) return 1 - ease.outCubic(at(t, 0, 800));
   return 0;
 }
 
@@ -236,11 +262,11 @@ export const relations: readonly (readonly [number, number])[] = [
 
 /** How far each of the blocs' lines has drawn itself, 0 to 1: after the colours, one after another. */
 export const relationDrawn = (beat: number, t: number, n: number) =>
-  beat === 2 ? ease.inOutCubic(at(t, 1250 + n * 130, 650)) : 1;
+  beat === 2 ? ease.inOutCubic(at(t, 1250 + n * 160, 900)) : 1;
 
 /** How far the history beat's earlier outline has drawn round, 0 to 1. */
 export const ghostDrawn = (beat: number, t: number, i: number) =>
-  beat === 3 ? ease.outCubic(at(t, 450 + i * 20, 700)) : 1;
+  beat === 3 ? ease.outCubic(at(t, 450 + i * 24, 900)) : 1;
 
 /** A vote mark inside each petal at the proposal beat: against on every fourth, none on every fifth. */
 export const voteOf = (i: number): 'for' | 'against' | null =>
@@ -250,10 +276,10 @@ export const voteOf = (i: number): 'for' | 'against' | null =>
 export function proposal(beat: number, t: number) {
   if (beat !== 4) return { ring: 1, arc: 1, point: 1, vote: (_: number) => 1 };
   return {
-    ring: ease.outExpo(at(t, RESPOND_MS, 1100)),
-    arc: ease.inOutCubic(at(t, 900, 900)),
-    point: spring(at(t, 1300, 700)),
-    vote: (i: number) => spring(at(t, 1500 + i * 34, 650)),
+    ring: ease.outExpo(at(t, RESPOND_MS, 1400)),
+    arc: ease.inOutCubic(at(t, 900, 1100)),
+    point: settle(at(t, 1300, 1000)),
+    vote: (i: number) => settle(at(t, 1500 + i * 40, 1100)),
   };
 }
 
@@ -261,8 +287,8 @@ export function proposal(beat: number, t: number) {
 export function network(beat: number, t: number) {
   if (beat === 5)
     return {
-      link: (n: number) => ease.outCubic(at(t, 1050 + n * 260, 750)),
-      bloom: (n: number, j: number) => spring(at(t, 1400 + n * 260 + j * 32, 800)),
+      link: (n: number) => ease.outCubic(at(t, 1050 + n * 300, 1100)),
+      bloom: (n: number, j: number) => settle(at(t, 1400 + n * 300 + j * 36, 1400)),
       // the dashes run outward, towards the communities, a dash's length each second
       flow: -t * 0.009,
       scale: 1,
@@ -272,7 +298,7 @@ export function network(beat: number, t: number) {
       link: () => 1,
       bloom: () => 1,
       flow: -(beatMs(5) + t) * 0.009,
-      scale: 1 - 0.25 * ease.inCubic(at(t, 0, 450)),
+      scale: 1 - 0.25 * ease.inCubic(at(t, 0, 800)),
     };
   return { link: () => 1, bloom: () => 1, flow: 0, scale: 1 };
 }
@@ -311,7 +337,7 @@ export function question(beat: number, u: number, fresh = false): Motion {
     blur: 8 * (1 - inQ) + 0.6 * answered + 6 * leave,
     scale: 0.94 + 0.06 * inQ - 0.02 * answered,
     // it swings in like a door, rests turned a little to the flower, and is pushed back once answered
-    turn: 15 + 26 * (1 - spring(at(u, start, 1100))) + 10 * leave,
+    turn: 15 + 26 * (1 - settle(at(u, start, 1300))) + 10 * leave,
     z: 40 - 90 * answered - 60 * leave,
     glint: at(u, start + 300, 1000),
     glow: ease.outCubic(at(u, start, 700)) * (1 - 0.5 * answered),
@@ -330,7 +356,7 @@ export function answer(beat: number, u: number): Motion {
     y: 10 * (1 - inA) - 16 * leave,
     blur: 6 * leave,
     scale: 0.94 + 0.06 * inA,
-    turn: 13 + 30 * (1 - spring(at(u, ANSWER_MS - 150, 1200))) + 12 * leave,
+    turn: 13 + 30 * (1 - settle(at(u, ANSWER_MS - 150, 1400))) + 12 * leave,
     z: 80 - 50 * leave,
     glint: at(u, ANSWER_MS + 300, 1100),
     glow: ease.outCubic(at(u, ANSWER_MS - 100, 900)),

@@ -115,7 +115,7 @@ import { ceremonyView } from '../lib/ceremony.ts';
 import type { AnnotationRow } from '../lib/claim-lines.ts';
 import type { DrawingKind } from '../lib/figures.ts';
 import { keysOf, oneKey, readingKey, svgImage } from '../lib/flower-view.ts';
-import { SETTLED_MS } from '../lib/hero-story.ts';
+import { settledMs } from '../lib/hero-story.ts';
 import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
@@ -692,7 +692,7 @@ export const registry: LabEntry[] = [
       name: `beat ${beat + 1}`,
       render: () => (
         <div className="aspect-3/2 w-full">
-          <StoryFlower beat={beat} t={SETTLED_MS} />
+          <StoryFlower beat={beat} t={settledMs(beat)} />
         </div>
       ),
     })),
@@ -708,7 +708,7 @@ export const registry: LabEntry[] = [
       name: `beat ${beat + 1}`,
       render: () => (
         <div className="aspect-3/2 w-full">
-          <StoryLight beat={beat} t={SETTLED_MS} />
+          <StoryLight beat={beat} t={settledMs(beat)} />
         </div>
       ),
     })),

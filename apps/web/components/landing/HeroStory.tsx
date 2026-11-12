@@ -5,7 +5,7 @@ import {
   answer,
   answerWord,
   beatMs,
-  historyAt,
+  historyLine,
   layerOpacity,
   type Motion,
   OVERLAP_MS,
@@ -15,7 +15,8 @@ import {
 // choreography): the approved eyebrow, headline, subline and Connect, and beside them a stage of four separate
 // layers, each placed by the beat's shot (lib/hero-shots.ts), so the page can compose them for a phone or a wide
 // screen (Elco, 11 Nov). Behind, a light that moves less than the flower, for depth. In the middle, one symbolic
-// flower that performs each answer (StoryFlower); the camera moves it from shot to shot. In front, the question
+// flower that performs each answer (StoryFlower); the camera carries it from shot to shot without stopping, and
+// the depth is the camera's own, never the visitor's pointer (Elco, 12 Nov). In front, the question
 // in a light bubble and Petals' answer in a dark one, on opposite sides, swapping sides from beat to beat; the
 // question comes in, the flower answers, the answer comes in word by word, and it is still leaving as the next
 // question arrives, so no transcript builds up and there is no dead air. Under the hero, apart from the stage, the
@@ -24,7 +25,6 @@ import {
 // isolate. Only the stage and the chapters redraw each frame.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
-import { useHeroLook } from '../../viewmodels/useHeroLook.ts';
 import { type HeroStoryClock, useHeroStory } from '../../viewmodels/useHeroStory.ts';
 import { Button } from '../ui/Button.tsx';
 import { Icon } from '../ui/Icon.tsx';
@@ -45,20 +45,14 @@ export type StoryLayer = 'all' | 'words' | 'petals';
 const soft = (px: number) => (px > 0.05 ? `blur(${px.toFixed(2)}px)` : 'none');
 const n2 = (x: number) => x.toFixed(2);
 
-/** Where the visitor looks from (useHeroLook), -1 to 1 each way. */
-type Look = { x: number; y: number };
-
-/**
- * A bubble on its pin: that corner of it on that point of the stage, moved by its motion, at its depth, turned
- * towards the flower; the nearer it is (`depth`), the more it drifts with the visitor's look.
- */
-const pinned = (pin: Pin, m: Motion, look: Look, depth: number): CSSProperties => {
+/** A bubble on its pin: that corner of it on that point of the stage, moved by its motion, at its depth, turned towards the flower. */
+const pinned = (pin: Pin, m: Motion): CSSProperties => {
   const side = pin.ax > 0.5 ? -1 : 1;
   return {
     opacity: m.opacity,
-    translate: `calc(${pin.x}cqw - ${pin.ax * 100}% + ${n2(m.x * side + look.x * depth * 9)}px) calc(${pin.y}cqh - ${pin.ay * 100}% + ${n2(m.y + look.y * depth * 6)}px) ${n2(m.z)}px`,
+    translate: `calc(${pin.x}cqw - ${pin.ax * 100}% + ${n2(m.x * side)}px) calc(${pin.y}cqh - ${pin.ay * 100}% + ${n2(m.y)}px) ${n2(m.z)}px`,
     scale: m.scale.toFixed(4),
-    transform: `rotateY(${n2(side * m.turn + look.x * 5)}deg) rotateX(${n2(-look.y * 4)}deg)`,
+    transform: `rotateY(${n2(side * m.turn)}deg)`,
     // a bubble grows and turns from the point it is pinned by
     transformOrigin: `${pin.ax * 100}% ${pin.ay * 100}%`,
     filter: soft(m.blur),
@@ -92,23 +86,18 @@ function Question({
   u,
   fresh,
   wide,
-  gaze,
 }: {
   beat: number;
   u: number;
   fresh: boolean;
   wide: boolean;
-  gaze: Look;
 }) {
   const said = story.beats[beat] ?? story.beats[0];
   const pin = shotOf(beat, wide).question;
   const m = question(beat, u, fresh);
   if (m.opacity < 0.002) return null;
   return (
-    <div
-      className="absolute top-0 left-0 w-max max-w-4/5 lg:max-w-3/5"
-      style={pinned(pin, m, gaze, 1.4)}
-    >
+    <div className="absolute top-0 left-0 w-max max-w-4/5 lg:max-w-3/5" style={pinned(pin, m)}>
       <Glass tone="light" facing="left" glint={m.glint} glow={m.glow} />
       <div className="relative flex flex-col gap-space-4 px-block-gap py-space-16">
         <Mono>{story.you}</Mono>
@@ -119,17 +108,14 @@ function Question({
 }
 
 /** Petals' answer, in a dark bubble, word by word into one line; the sentence is the approved one, whole. */
-function Answer({ beat, u, wide, gaze }: { beat: number; u: number; wide: boolean; gaze: Look }) {
+function Answer({ beat, u, wide }: { beat: number; u: number; wide: boolean }) {
   const said = story.beats[beat] ?? story.beats[0];
   const pin = shotOf(beat, wide).answer;
   const m = answer(beat, u);
   if (m.opacity < 0.002) return null;
   const label = answerWord(u, -2);
   return (
-    <div
-      className="absolute top-0 left-0 w-max max-w-9/10 lg:max-w-2/5"
-      style={pinned(pin, m, gaze, 2.2)}
-    >
+    <div className="absolute top-0 left-0 w-max max-w-9/10 lg:max-w-2/5" style={pinned(pin, m)}>
       {/* its rim lit from the flower's side */}
       <Glass tone="dark" facing={pin.ax > 0.5 ? 'left' : 'right'} glint={m.glint} glow={m.glow} />
       <div className="relative flex flex-col gap-space-8 px-block-gap py-space-16 text-on-action">
@@ -219,9 +205,8 @@ export function HeroStoryView({
   layer?: StoryLayer;
 }) {
   const { beat, t, fresh, wide } = clock;
-  const gaze = useHeroLook(clock.stage);
   const prior = (beat + 5) % 6;
-  const marker = historyAt(t);
+  const marker = historyLine(beat, t);
   const f = flowerAt(beat, t, wide, fresh);
   const cy = centreY(wide);
   const back = layer === 'words' ? 0.08 : 1;
@@ -241,7 +226,7 @@ export function HeroStoryView({
               className="pointer-events-none absolute inset-0"
               style={{
                 opacity: back,
-                translate: `calc(${n2((f.x - 50) * 0.5)}% - ${n2(gaze.x * 6)}px) calc(${n2((f.y - cy) * 0.5)}% - ${n2(gaze.y * 4)}px) -60px`,
+                translate: `${n2((f.x - 50) * 0.5)}% ${n2((f.y - cy) * 0.5)}% -60px`,
                 scale: (1 + (f.scale - 0.85) * 0.4).toFixed(4),
                 transformOrigin: `50% ${cy}%`,
               }}
@@ -253,10 +238,10 @@ export function HeroStoryView({
               className="absolute inset-0"
               style={{
                 opacity: back,
-                translate: `calc(${n2(f.x - 50)}% + ${n2(gaze.x * 7)}px) calc(${n2(f.y - cy)}% + ${n2(gaze.y * 5)}px)`,
+                translate: `${n2(f.x - 50)}% ${n2(f.y - cy)}%`,
                 scale: f.scale.toFixed(4),
-                // turned towards the middle of the stage, as a thing standing in it is, and with the visitor's look
-                transform: `rotateY(${n2((50 - f.x) * 0.32 + f.lean + gaze.x * 7)}deg) rotateX(${n2(5 - gaze.y * 6)}deg)`,
+                // turned towards the middle of the stage, as a thing standing in it is, and leaning into its travel
+                transform: `rotateY(${n2((50 - f.x) * 0.32 + f.lean)}deg) rotateX(5deg)`,
                 transformOrigin: `50% ${cy}%`,
               }}
             >
@@ -292,16 +277,17 @@ export function HeroStoryView({
               className="pointer-events-none absolute inset-0"
               style={{ opacity: layer === 'petals' ? 0 : 1 }}
             >
-              <Question beat={beat} u={t} fresh={fresh} wide={wide} gaze={gaze} />
+              <Question beat={beat} u={t} fresh={fresh} wide={wide} />
             </div>
             <div
               className="pointer-events-none absolute inset-0"
               style={{ opacity: layer === 'petals' ? 0 : 1 }}
             >
-              {!fresh && t < OVERLAP_MS && (
-                <Answer beat={prior} u={beatMs(prior) + t} wide={wide} gaze={gaze} />
+              {/* the last answer still leaving; on arrival there is none */}
+              {!(fresh && beat === 0) && t < OVERLAP_MS && (
+                <Answer beat={prior} u={beatMs(prior) + t} wide={wide} />
               )}
-              <Answer beat={beat} u={t} wide={wide} gaze={gaze} />
+              <Answer beat={beat} u={t} wide={wide} />
             </div>
           </div>
         </div>
