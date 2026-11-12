@@ -21,13 +21,19 @@ export interface FarWave {
    * higher keeps a peak where the flower has one.
    */
   keep: number;
+  /**
+   * The least the wave reaches anywhere round the circle, as a share of its own peak, so a flower stays a round shape
+   * round its mark however one-sided its petals (Elco, 12 Nov walk 3: the small DAOs were "still weird", a blob pulled
+   * to one side by one big holder, the mark at its edge).
+   */
+  floor: number;
 }
 
 /**
  * The lean: 180 points and a spread of about a thirtieth of the circle, so groups of petals show as waves rather than
  * one bean (Elco, 11 Nov: "it could be more wavey instead of one bean shape - still very minimalistic"); peaks kept.
  */
-export const FAR_WAVE: FarWave = { points: 180, spread: 0.22, keep: 1.8 };
+export const FAR_WAVE: FarWave = { points: 180, spread: 0.22, keep: 1.8, floor: 0.6 };
 
 /**
  * The wave's outer edge: for each angle round the flower (clockwise from twelve, as the petals go), how far
@@ -55,6 +61,8 @@ export function waveHeights(
     }
     out[j] = weight > 0 ? (sum / weight) ** (1 / wave.keep) : 0;
   }
+  const least = Math.max(...out) * (wave.floor ?? 0);
+  for (let j = 0; j < out.length; j++) out[j] = Math.max(out[j] as number, least);
   return out;
 }
 

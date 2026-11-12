@@ -40,3 +40,16 @@ describe('the far wave in its colours', () => {
     for (const r of runs) expect(r.d).not.toContain('NaN');
   });
 });
+
+describe('a one-sided flower far away', () => {
+  test('stays a round shape round its mark: the wave never dips under its floor share of its own peak', () => {
+    const rest = {
+      mid: Float64Array.from([0.3, 0.9, 1.5]),
+      height: Float64Array.from([300, 20, 0]),
+    };
+    const hs = waveHeights(rest);
+    const peak = Math.max(...hs);
+    expect(Math.min(...hs)).toBeGreaterThanOrEqual(peak * FAR_WAVE.floor - 1e-9);
+    expect(peak).toBeLessThanOrEqual(300);
+  });
+});
