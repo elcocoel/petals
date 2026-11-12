@@ -79,12 +79,14 @@ const REASON = {
 const namespaceOf = (ref: string): string => ref.slice(0, Math.max(0, ref.indexOf(':')));
 
 /**
- * A name the system's own records tie to the address (12 Nov): a `named` claim with a piece of evidence that is
- * a proposal or a transaction, naming which, and quoting its own words. Said as declared there, as a lead.
+ * A name the system's own records tie to the address (12 Nov): a `named` claim taken from its source (sourced,
+ * never worked out), with a piece of evidence that is a proposal or a transaction, naming which, and quoting its
+ * own words. Said as declared there, as a lead.
  */
 export function declaredName(c: Claim): boolean {
   return (
     c.verb === 'named' &&
+    c.kind === 'sourced' &&
     c.evidence.some(
       (e) =>
         ((e.type === 'proposal' && !!e.proposal) || (e.type === 'tx' && !!e.tx)) &&
