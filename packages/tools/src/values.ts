@@ -10,6 +10,7 @@
 // read again each run. Each names where it came from.
 import {
   type MarkSaid,
+  usdString,
   VALUE_V3,
   type Value,
   type ValueTreasury,
@@ -164,6 +165,16 @@ export async function valueMaps(ctx: ToolContext, o: ValueRun = {}): Promise<Val
     const other = keptAsset(plan);
     if (other && stored) {
       const m = marketAsset(other);
+      // NEAR under a wave's name for it (near:native, near:mainnet:NEAR) is NEAR: today's price, as every NEAR map
+      // has it, with its totals' dollars at that price; the rest of the wave's value stays (Elco, 12 Nov: House of
+      // Stake at 3.40 beside Sputnik DAOs at 3.74, "which I actually don't know why")
+      const near = NEAR_FORMS.has(other) ? await prices.priceOf(chain, 'NEAR') : null;
+      const price = near
+        ? { usd: near.usd, source: near.source, ref: near.ref, at: near.at }
+        : stored.price;
+      const totals = near
+        ? stored.totals.map((t) => ({ ...t, usd: usdString(Number(t.amount) * near.usd) }))
+        : stored.totals;
       const market = marketOf(gecko.markets, chain, m);
       const max = (await readChainMax(fetchImpl, chain, m, at)) ?? market?.max ?? null;
       const kept =
@@ -176,14 +187,14 @@ export async function valueMaps(ctx: ToolContext, o: ValueRun = {}): Promise<Val
         petal: VALUE_V3,
         about: stored.about,
         asset: stored.asset,
-        price: stored.price,
+        price,
         supply: stored.supply,
         circulating: market?.circulating ?? null,
         max,
         ...(market?.market_cap ? { market_cap: market.market_cap } : {}),
         snapshot: stored.snapshot,
         measure: stored.measure,
-        totals: stored.totals,
+        totals,
         treasury: kept ?? found?.treasury ?? stored.treasury ?? null,
         read_at: at,
       };
@@ -197,7 +208,7 @@ export async function valueMaps(ctx: ToolContext, o: ValueRun = {}): Promise<Val
       if (max) out.maxed++;
       if (value.treasury) out.treasuries++;
       log(
-        `${card.id}: kept for ${other}, as it was · circulating ${value.circulating?.amount ?? '-'} · max ${max ? (max.amount ?? 'none') : '-'}`,
+        `${card.id}: kept for ${other}, ${near ? `at today's NEAR price, $${near.usd}` : 'as it was'} · circulating ${value.circulating?.amount ?? '-'} · max ${max ? (max.amount ?? 'none') : '-'}`,
       );
       if (o.save === false) continue;
       await store.value.put({ about: value.about, body: JSON.stringify(value), read_at: at });
