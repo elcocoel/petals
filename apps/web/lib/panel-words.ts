@@ -54,6 +54,9 @@ export const panelWords = {
   legendMap: 'Map',
   legendGravity: 'Gravity',
   legendVotes: 'Votes',
+  /** What the map's Tools turn on and off (Elco, walk 3: "insights on and off ... pricing etc"). Drafts. */
+  legendWorth: 'Treasury and price',
+  legendInsights: 'Insights',
   legendLinesSay:
     'Wallets two maps both hold. The thicker the line, the more of them; its number says how many.',
   /**

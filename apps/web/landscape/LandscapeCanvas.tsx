@@ -405,6 +405,7 @@ export function LandscapeCanvas({
   const [gravity, setGravity] = useState(GRAVITY_DEFAULT);
   // treasury and token price under the names at some magnification (Elco, 12 Nov walk 3), switched in the legend
   const [worth, setWorth] = useState(true);
+  const [insightsOn, setInsightsOn] = useState(true);
   // the chain's flowers and their drawing models, once per chain; gravity only moves their places
   const built = useMemo<(LandscapeData & { focus: number; from: number[] }) | null>(() => {
     const here = data.chains.find((c) => c.chain === chain);
@@ -627,6 +628,8 @@ export function LandscapeCanvas({
       // how much the map's flowers draw together (Elco, 12 Nov, walk 2: "gravity"), for the visit
       gravity={{ value: gravity, onChange: setGravity }}
       worth={{ on: worth, onChange: setWorth }}
+      // Insights in Information, on or off by hand (Elco, walk 3), on the map's boxes
+      insights={bare ? { on: insightsOn, onChange: setInsightsOn } : undefined}
       edit={hands ?? undefined}
       // on the map's boxes the rows stay outside a flower too, with nothing to choose yet (one menu, walk 3)
       groups={
@@ -738,7 +741,7 @@ export function LandscapeCanvas({
                     </div>
                   </div>
                 )}
-                {showClaims && (
+                {showClaims && insightsOn && (
                   <>
                     <div className="flex flex-col px-space-8">
                       <SectionHead size="panel" title={mapClaimWords.folded(claimCount)} />
