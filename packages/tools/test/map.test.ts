@@ -133,7 +133,7 @@ describe('the map', () => {
     const res = await app.request('/api/v1/map/views');
     expect(res.status).toBe(200);
     const { views } = (await res.json()) as Out;
-    const { reading: _r, ...row } = whole.views[0];
+    const { reading: _r, given: _g, ...row } = whole.views[0];
     expect(views).toEqual([row]);
     expect(views[0].reading).toBeUndefined();
     // the picture names the look and the view it's drawn with, so a cached one is never the old one
