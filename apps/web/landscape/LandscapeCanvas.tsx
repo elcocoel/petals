@@ -12,7 +12,7 @@
 // in the chains' place; pressing one goes to its chain and into its flower (board 105).
 import { type Proposal, redress, type SeamPiece } from '@petal/core';
 import type { View } from '@petal/core/types';
-import { EVERY_FLOWER, inUse, latestView } from '@petal/core/view';
+import { colourKeysOf, EVERY_FLOWER, inUse, latestView } from '@petal/core/view';
 import { flowerKeys, grades, KEY_BY_NAME, keyLines, mapKeys } from '@petal/core/wedge/keys';
 import { floatBox } from '@petal/tokens';
 import {
@@ -689,12 +689,7 @@ export function LandscapeCanvas({
   // the chain's flowers and their drawing models, once per chain; gravity only moves their places
   // the map's keys, ranked once over every flower on it, whatever chain: a value has one colour everywhere
   // the view's chosen colours (colour.keys: { value: key }; Elco, wave 4: "choosing which colour a value gets")
-  const chosen = useMemo(
-    () =>
-      (latestView(person.view).dimensions.colour as { keys?: Record<string, string> } | null)
-        ?.keys ?? {},
-    [person.view],
-  );
+  const chosen = useMemo(() => colourKeysOf(person.view), [person.view]);
   const mapKeyed = useMemo(
     () =>
       mapKeys(
