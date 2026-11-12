@@ -113,6 +113,11 @@
       "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
     },
     {
+      "snapshot": "19e1a1e04b98e4b03e4afae8b032f15563ac54df0ab4cc5b1f1d1aa4fec43a99",
+      "replaced_by": "00c709058b517d83d3eb89780217c319f21c12885cd98c132ea1c9fc2f46028c",
+      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+    },
+    {
       "snapshot": "19f5aa9143f3ef54f80ec530d029d04dd0b4c533b8c4c2a0f060a136b0746694",
       "replaced_by": "f60345358e91f6ca88727631255b67b49d0ce1d0ca43158d3bbd05d105e226fe",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
@@ -120,6 +125,11 @@
     {
       "snapshot": "1a5835549d9bfc3bd1f431979e30d75965b834ac09ffc7dc3efab0d29f827bd5",
       "replaced_by": "639b3f439783e4a457770da9c4c41673bf9913dae40a12c9ae7fa4866144f015",
+      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+    },
+    {
+      "snapshot": "1a83c849f74036f710d3b2035b3b405d449b8328bde899470a015c8489b4e78e",
+      "replaced_by": "763b1da0f261ae15c7d0e5240d093b355d304c5f70d7744477e5e6f646df951e",
       "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
     },
     {
@@ -163,14 +173,29 @@
       "from": "data/solana/MAP-BINDING-FIX.json"
     },
     {
+      "snapshot": "2c2bbd337256a344c27e80dd2ba5b195c20f03413dbb2a9be4f7c9ac62bfe483",
+      "replaced_by": "54f681b911df95d39160d126828346a0cdb016c338866f54bba30b3615bffd97",
+      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+    },
+    {
       "snapshot": "2d1a749c197926d39ba0223fbf4fa902f61520caee856a460e2edc6d06905c54",
       "replaced_by": "e813bf5a9d817f43ea9ee0eeeaee3b61ed42954da9e83c47ed530edc44a49eba",
       "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
     },
     {
+      "snapshot": "2ece961d64fa0ddc29bc0b03352dfa1ef159e743b2487b8b3152c83ff2fe1d7e",
+      "replaced_by": "d974208fc1958337498769bb1803661046f1041ca42a67c78c079f5dea799d9d",
+      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+    },
+    {
       "snapshot": "30793b8ef005adb120c0fbe585e679d51e05c7bfd8db48e9e401321c5a632217",
       "replaced_by": "beafd3ee291b480a72cf5ddf7b630666a10e560da8923c6285dc60c1033bcb13",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
+    },
+    {
+      "snapshot": "329b7d8277af97ccc2e103be43f42f54f6bd48f763f37ca6fa56b52083f5f613",
+      "replaced_by": "7e70c960b6f82a41b30f8de97e4c2bb6c56c99622545498bc74c816e962cbcac",
+      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
     },
     {
       "snapshot": "32c72ee17783ff5b35aaa26fcc3cfe57c7aa52617b811056204173ffb0b36bbf",
@@ -313,6 +338,11 @@
       "from": "readings-reissue/IDENTITY-AUDIT.json"
     },
     {
+      "snapshot": "6718b5c641a808d1e50de68765fe5c3bff9ba8a010d741fdce776257c6f39fb1",
+      "replaced_by": "f4cc54f22486be6fea3ad33e6c4488556ac510a08d645d34fc730526fe83e9a5",
+      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+    },
+    {
       "snapshot": "6923f4700b0d1a289adf823b804dbd6db814d55040b274537d317302dcd01c2e",
       "replaced_by": "cac0ed22334af4ae40a2791256d92c2ecfd9b26dc377c3cf6d211c825e583191",
       "from": "data/solana/MAP-BINDING-FIX.json"
@@ -321,6 +351,11 @@
       "snapshot": "6927884d82f352efd35a64f1ca68ad9068f440138a199855203448fd7bdbf823",
       "replaced_by": "60d4d2b71f6a3a6a662c8a8b5d09c3fc21eea8bede40aaaefa142ca17815a5c6",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
+    },
+    {
+      "snapshot": "694bfe11d5ad10611852f3028a55f50e46a14b3a155720140adff85a1796a571",
+      "replaced_by": "ec450bf0c2ada00e5006d64772168debdb6bbf94a9634708ef85c2139b58c679",
+      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
     },
     {
       "snapshot": "6a243ed28418b6437cb63c0e31e205639a1d583c6a7ab73d2fc19078720358c6",
@@ -388,6 +423,11 @@
       "from": "readings-reissue/IDENTITY-AUDIT.json"
     },
     {
+      "snapshot": "8608de3fc69a1c9cc45996747d496b958ff3a1d1a73adf4c259d314b6e2377e4",
+      "replaced_by": "5dcffd30ab21d7e13e9718549f3d505b6c670918f944020e2cec855748429bd6",
+      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+    },
+    {
       "snapshot": "8763ee338c6b48ca08ed7a259b4ae1e2960e620cd585d419c10ef197c9f6d68c",
       "replaced_by": "8f37996bf3d916f9c1218ac74293ef77e8d7dc0e2b1b3e30cdbe49d389097b86",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
@@ -451,6 +491,11 @@
       "snapshot": "a1420e457ea5318b4d5d790437e938a23573a03215d8a902d44f1582bb3c6153",
       "replaced_by": "75dae7826f6d7416f6f1fd60a2beef7cbd7343c71499c672debc5420ecad7a28",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
+    },
+    {
+      "snapshot": "a2ca9db80764a0de54770c74508f9fa8bee81c75cb1eb8696a9bb71a40f05951",
+      "replaced_by": "b9e8a64eda70239155a50b3d871c4df55da118361ff7e31dcfad7bfbb40bbebc",
+      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
     },
     {
       "snapshot": "a2fde54c4e1a70735a4cf271246e76e5fda483e09a3478e9d0141ff52a355e35",
@@ -518,6 +563,11 @@
       "from": "NEAR-HOS-IDENTITY-HOLD.json"
     },
     {
+      "snapshot": "b67510a880c4b2db2f2bec87c401545819a7b14d8206d6bc651ee7e3026c9fe7",
+      "replaced_by": "8ee64f4f636028950e69a99e37d2cadc16af41c2b60ee141027cc6733d405853",
+      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+    },
+    {
       "snapshot": "b756318ff11f308c5b23f37f97bb0a347b63ecdc1d26b223b7aec58899ca7869",
       "replaced_by": "74def63085c8a0449d9de9ef060eb56f4b0a7d5d5b6025eee72443ceeb99882d",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
@@ -551,6 +601,16 @@
       "snapshot": "bc880869e033cd94aa97b26ee5f1a17aad88888681707bec4f03da95af45be66",
       "replaced_by": "99fd9c50ed6674a9cb616ed265c532b587ccee85005c583c7fe3b93bd16520dd",
       "from": "readings-reissue/IDENTITY-AUDIT.json"
+    },
+    {
+      "snapshot": "bcd6122d90bf49e7bdf05d1bb5605a87c67c7b673b9e7040484b066ffefab996",
+      "replaced_by": "027d2f2f74b98badc33fb25de22f5cc725810154ffedb8cc958ff47641107d9f",
+      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+    },
+    {
+      "snapshot": "bd2528dd079e29b2829469d7a6d40a63aabdb5599f6b86a9b344766894bac9e4",
+      "replaced_by": "68a4c864c5fe7d6c873a24967357412b245990b5059cc64429eb1664aac0437e",
+      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
     },
     {
       "snapshot": "bd30b9daf4665ee04b200414a1a769eca089014ad801ec6b7f0c86cf7fd0666c",
