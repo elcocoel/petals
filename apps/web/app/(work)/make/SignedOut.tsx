@@ -15,6 +15,8 @@ export function SignedOut({ question }: { question: string }) {
         onConnect={session.connect}
         // an Ethereum wallet's way in, beside NEAR's (wave 5, LOBBY's connectEvm)
         onConnectEvm={session.connectEvm}
+        // and a Solana wallet's (wave 5, LOBBY's connectSolana)
+        onConnectSolana={session.connectSolana}
       />
     </div>
   );

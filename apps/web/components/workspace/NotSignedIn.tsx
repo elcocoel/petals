@@ -17,6 +17,7 @@ export function NotSignedIn({
   failed,
   onConnect,
   onConnectEvm,
+  onConnectSolana,
 }: {
   /** a question that came with the link: it waits in the conversation once they're in */
   question: string;
@@ -26,21 +27,34 @@ export function NotSignedIn({
   onConnect: () => void;
   /** an Ethereum wallet's way in, where the page has one (wave 5) */
   onConnectEvm?: (() => void) | undefined;
+  /** a Solana wallet's way in, where the page has one (wave 5) */
+  onConnectSolana?: (() => void) | undefined;
 }) {
   return (
     <Oops
       title={notSignedInWords.title}
-      body={onConnectEvm ? notSignedInWords.bodyAny : notSignedInWords.body}
+      body={
+        onConnectSolana
+          ? notSignedInWords.bodyAll
+          : onConnectEvm
+            ? notSignedInWords.bodyAny
+            : notSignedInWords.body
+      }
       note={question && <p className="my-0 type-ui wrap-anywhere text-muted">{question}</p>}
       primary={
         // the one Connect, as everywhere else: primary, with its arrow (Elco, 10 Nov)
         <span className="flex flex-wrap items-center gap-text-gap">
           <Button arrow disabled={busy} onClick={onConnect}>
-            {onConnectEvm ? notSignedInWords.near : doorWords.connect}
+            {onConnectEvm || onConnectSolana ? notSignedInWords.near : doorWords.connect}
           </Button>
           {onConnectEvm && (
             <Button variant="secondary" disabled={busy} onClick={onConnectEvm}>
               {notSignedInWords.evm}
+            </Button>
+          )}
+          {onConnectSolana && (
+            <Button variant="secondary" disabled={busy} onClick={onConnectSolana}>
+              {notSignedInWords.solana}
             </Button>
           )}
         </span>
