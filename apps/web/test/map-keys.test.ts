@@ -19,3 +19,9 @@ test("the map's keys are ranked once and used by every flower, its far shape and
   );
   expect(text('landscape/scene.ts')).toMatch(/const fills = waveFills\(f\.model, keyed\);/);
 });
+
+test("the legend's keys show for a piece Tools offers (voted), not only the reading's own pieces", () => {
+  expect(text('landscape/LandscapeCanvas.tsx')).toMatch(
+    /drawn=\{inUse\(person\.view, CHOOSABLE\)\}/,
+  );
+});
