@@ -77,6 +77,7 @@ export function publishRoutes(d: PublishDeps): Hono {
         claims: p.rows,
         private: p.private,
         published: p.published,
+        adds: p.adds,
         scored_by: p.scored_by,
         ...(p.unscored ? { unscored: p.unscored } : {}),
       });

@@ -107,6 +107,7 @@ describe('publishing what a person kept about a map', () => {
     });
     expect(ready.body.claims).toEqual([
       {
+        layer: 'Insights',
         id: expect.any(String),
         subject: POOL,
         verb: 'named',
@@ -121,6 +122,20 @@ describe('publishing what a person kept about a map', () => {
       },
     ]);
     expect(ready.body.claims[0].confidence).toBeGreaterThan(0);
+    // what the press adds, by layer and kind (Elco: 'a clear indicator of what data layers and claims I would be
+    // adding'), and what can't go, with why
+    expect(ready.body.adds).toEqual([
+      { layer: 'Insights', kind: 'claims', verb: 'named', label: 'Names', count: 1, goes: true },
+      {
+        layer: 'Insights',
+        kind: 'claims',
+        verb: 'named',
+        label: 'Names',
+        count: 1,
+        goes: false,
+        why: 'they stay private: each says why',
+      },
+    ]);
     expect(ready.body.private).toEqual([
       expect.objectContaining({
         subject: POOL,

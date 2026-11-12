@@ -396,7 +396,8 @@ export function nextSteps(m: {
 }
 
 /** One item as the person reads it before publishing: what it says, about which account, from where, how sure. */
-const PUBLISH_ROW = obj(['id', 'subject', 'verb', 'name', 'source', 'confidence'], {
+const PUBLISH_ROW = obj(['layer', 'id', 'subject', 'verb', 'name', 'source', 'confidence'], {
+  layer: { type: 'string', description: 'the layer of the map it joins: Insights' },
   id: { type: 'string' },
   subject: { type: 'string' },
   verb: { type: 'string' },
@@ -450,7 +451,7 @@ export const listPublishable = defineTool<
     { additionalProperties: false },
   ),
   output: obj(
-    ['about', 'name', 'map_url', 'ready', 'claims', 'private', 'published', 'scored_by'],
+    ['about', 'name', 'map_url', 'ready', 'claims', 'private', 'published', 'adds', 'scored_by'],
     {
       about: { type: 'string' },
       name: { type: 'string' },
@@ -462,6 +463,19 @@ export const listPublishable = defineTool<
         items: { ...PUBLISH_ROW, required: [...(PUBLISH_ROW.required as string[]), 'why'] },
       },
       published: { type: 'integer', minimum: 0 },
+      adds: {
+        type: 'array',
+        description: "what the press adds, by layer and kind, and what can't go yet, with why",
+        items: obj(['layer', 'kind', 'label', 'count', 'goes'], {
+          layer: { type: 'string' },
+          kind: { type: 'string' },
+          verb: { type: 'string' },
+          label: { type: 'string' },
+          count: { type: 'integer', minimum: 0 },
+          goes: { type: 'boolean' },
+          why: { type: 'string' },
+        }),
+      },
       scored_by: {
         type: ['string', 'null'],
         description: 'the model that read the confidences, or null when it was off',
@@ -492,6 +506,7 @@ export const listPublishable = defineTool<
       claims: p.rows,
       private: p.private,
       published: p.published,
+      adds: p.adds,
       scored_by: p.scored_by,
       ...(p.unscored ? { unscored: p.unscored } : {}),
     };
