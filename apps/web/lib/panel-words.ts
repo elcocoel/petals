@@ -56,6 +56,48 @@ export const panelWords = {
   tools: 'Tools',
   information: 'Information',
   infoSeen: 'On the map',
+  /**
+   * What each mark on the map is, far to near (Elco, 12 Nov, walk 3: "what these circles and lines mean"), in LOOK's
+   * words of what it draws. Drafts.
+   */
+  seen: [
+    {
+      label: 'A round shape, far away',
+      says: 'A DAO. Its outline swells where its biggest holders are; its mark in the middle.',
+    },
+    {
+      label: 'Lines',
+      says: 'Wallets two maps both hold. The thicker the line, the more of them; its number says how many.',
+    },
+    {
+      label: 'The mark in the middle',
+      says: "The DAO's logo; without one, its chain's, or its first letter in a thin ring. It steps back once you're inside.",
+    },
+    {
+      label: 'The dashed ring',
+      says: 'The DAO a click put in the middle. The others stand round it, nearest those sharing the most wallets with it.',
+    },
+    {
+      label: 'The ring at the petals’ feet',
+      says: 'Where the petals stand. With many petals it reads as a circle.',
+    },
+    {
+      label: 'The thin circle round a DAO',
+      says: 'Its outer edge, just past where a petal holding everything would reach. Drawn on DAOs whose proposals are read.',
+    },
+    {
+      label: 'Short arcs on a petal',
+      says: 'Proposals that wallet put up, oldest nearest. A grey arc with a number is more than three, folded: a click opens it.',
+    },
+    {
+      label: 'Coloured dots at the petals’ feet',
+      says: 'How each wallet voted on the proposal pointed at: mint for, pink against, grey abstained or neither. No dot, no vote.',
+    },
+    {
+      label: 'The hollow dot at the end of a name',
+      says: 'The petal that name belongs to.',
+    },
+  ],
   /** A map's floating box folds to its bar and opens again (Elco, 12 Nov: the map's panels move like /make's). */
   boxFold: 'Fold to its bar',
   boxOpen: 'Open',
