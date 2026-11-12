@@ -44,7 +44,8 @@ export function mappingView(
   const heading = modeWords.heading(name ?? data?.name ?? null);
   if (!map) return { heading, intro: modeWords.intro, adds: [], empty: modeWords.noMap };
   const adds = (data?.adds ?? []).map((a) => ({
-    key: `${a.layer}:${a.kind}:${a.verb ?? a.label}`,
+    // a layer's kind can come twice, what goes and what stays private (SYSTEMS's adds)
+    key: `${a.layer}:${a.kind}:${a.verb ?? a.label}:${a.goes ? 'goes' : 'stays'}`,
     line: modeWords.adds(a),
     goes: a.goes,
     why: a.goes ? null : (a.why ?? modeWords.later),
