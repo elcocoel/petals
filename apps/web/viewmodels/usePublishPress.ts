@@ -57,5 +57,5 @@ export function usePublishPress(map: string | null) {
       setPhase('failed');
     }
   }, [map]);
-  return { view: publishPressView(data, phase, said), publish };
+  return { data, view: publishPressView(data, phase, said), publish };
 }

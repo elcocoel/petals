@@ -20,6 +20,7 @@ import { decodeDraft } from '../lib/draft.ts';
 import { drawingLink, mapLink } from '../lib/drawing-link.ts';
 import { elsewhereFlower, elsewhereRows, whereOf } from '../lib/elsewhere.ts';
 import { populationWords, svgImage } from '../lib/flower-view.ts';
+import type { Mode } from '../lib/mapping.ts';
 import type { MapCard } from '../lib/maps.ts';
 import {
   addressOpensBox,
@@ -289,6 +290,15 @@ export function useWorkspace(props: {
   const [mapWallet, setMapWallet] = useState<MapWallet | null>(null);
   // the services under a map's next steps, folded until pressed (one list at a time: the last turn's)
   const [nextMore, setNextMore] = useState(false);
+  // exploring what's there, or mapping: what the person would add, in their name (lib/mapping.ts)
+  const [mode, setMode] = useState<Mode>('exploring');
+  // a new read the person said yes to puts them in mapping, where what it adds shows
+  const reading = creating(items, busy);
+  const [wasReading, setWasReading] = useState(reading);
+  if (reading !== wasReading) {
+    setWasReading(reading);
+    if (reading) setMode('mapping');
+  }
   const [drawnKey, setDrawnKey] = useState(canvas?.key);
   if (canvas?.key !== drawnKey) {
     setDrawnKey(canvas?.key);
@@ -341,7 +351,8 @@ export function useWorkspace(props: {
     target,
     elsewhere: initialElsewhere ? whereOf(elsewhere) : undefined,
     unavailable: Boolean(elsewhere && 'failed' in elsewhere),
-    creating: creating(items, busy),
+    creating: reading,
+    mode,
   });
 
   // the address holds what a reload needs, while it's still this conversation's: once a move has put
@@ -423,6 +434,7 @@ export function useWorkspace(props: {
       /** the readings drawn here, by their spec's hash: a new map's lands on the Power Map */
       drawings,
       nextMore,
+      mode,
       /** the snapshot the conversation's flower reads, which the Power Map may hold as one of its flowers */
       flowerSnapshot: panelFlower?.spec.snapshot.sha256 ?? null,
       /** the canvas flower's map's proposals on the ring (#93), once it's the panel's */
@@ -557,8 +569,10 @@ export function useWorkspace(props: {
         void chatActions.send(undefined, picked ?? undefined, s.ask);
       },
       toggleNextMore: () => setNextMore((open) => !open),
+      setMode,
       /** A new map's ceremony, pressed: Petals' agent hears a plain yes, and its read starts (lib/ceremony.ts). */
       mapIt: () => {
+        setMode('mapping');
         void chatActions.send(undefined, picked ?? undefined, ceremonyWords.yes);
       },
       /** the map on the canvas says which wallet is chosen on it, or none */

@@ -354,6 +354,7 @@ export function LandscapeCanvas({
   search = false,
   panelEdge,
   onWallet,
+  onEnter,
   information,
   ownBox = false,
   show,
@@ -403,6 +404,8 @@ export function LandscapeCanvas({
    * interact with it via the agent and find out more about it").
    */
   onWallet?: ((wallet: MapWallet | null) => void) | undefined;
+  /** Told the map of the flower the person goes into, and null when they come out (/make's mapping state). */
+  onEnter?: ((map: string | null) => void) | undefined;
   /**
    * What the page's conversation is about (Elco, 12 Nov on /make: "the power map should always be there ... an answer
    * moves the map"): a DAO by its map, flown to and entered; a wallet, lit everywhere it sits on its chain (the
@@ -698,6 +701,13 @@ export function LandscapeCanvas({
   }, [built, gravity, centre]);
   // What Petals' own mapping says about the map you're in, under each petal's name (lib/map-claims.ts)
   const inFlower = land && entered >= 0 ? data.flowers[land.from[entered] ?? -1] : undefined;
+  // the map the person is inside, for a page that asks (/make's mapping state)
+  const toldEnter = useRef(onEnter);
+  toldEnter.current = onEnter;
+  const enteredMap = inFlower?.map ?? null;
+  useEffect(() => {
+    toldEnter.current?.(enteredMap);
+  }, [enteredMap]);
   // the wallet chosen, with the flower it was chosen in, for the page
   const toldWallet = useRef(onWallet);
   toldWallet.current = onWallet;

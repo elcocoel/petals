@@ -16,6 +16,7 @@ import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { Icon } from '../components/ui/Icon.tsx';
+import { MappingBox } from '../components/workspace/MappingBox.tsx';
 import { LandscapeCanvas } from '../landscape/LandscapeCanvas.tsx';
 import { ceremonyWords } from '../lib/ceremony.ts';
 import type { Catalogue } from '../lib/composer-options.ts';
@@ -29,6 +30,7 @@ import {
   type Size,
 } from '../lib/float-box.ts';
 import { networkLabel } from '../lib/flower-view.ts';
+import { mappingView, modeWords } from '../lib/mapping.ts';
 import type { MapCard } from '../lib/maps.ts';
 import { groundWords } from '../lib/opening.ts';
 import type { Opened } from '../lib/thread.ts';
@@ -41,7 +43,7 @@ import type { Clear } from './camera.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
 import { FlowerPanel } from './FlowerPanel.tsx';
 
-const BOXES = ['conversation', 'panel', 'options'] as const;
+const BOXES = ['conversation', 'panel', 'options', 'mapping'] as const;
 
 export function InteractionSurface({
   scatter,
@@ -77,7 +79,8 @@ export function InteractionSurface({
         : conversationBoxes(win, undefined, from);
       // below the flower when there's no room beside it, as on a phone
       const conversation = besideOrBelow(placed.conversation, win, edge);
-      return { ...placed, conversation, panel: overThread(conversation) };
+      // the mapping state's box waits where the flower's used to, at the top right, clear of the conversation
+      return { ...placed, conversation, panel: overThread(conversation), mapping: placed.panel };
     },
     [from, edge, workspace.recorded],
   );
@@ -110,6 +113,11 @@ export function InteractionSurface({
   useEffect(() => {
     if (state.boxOpen) raisePanel();
   }, [state.boxOpen, raisePanel]);
+  // the mapping state's box comes to the top when the person moves into it
+  const raiseMapping = hands.mapping.raise;
+  useEffect(() => {
+    if (state.mode === 'mapping') raiseMapping();
+  }, [state.mode, raiseMapping]);
   const raiseOptions = hands.options.raise;
   useEffect(() => {
     if (state.modelsOpen) raiseOptions();
@@ -178,8 +186,15 @@ export function InteractionSurface({
   // conversation's flower where the map holds it; undefined says nothing (Elco, 12 Nov: "an answer moves the map")
   const flowerMap = atFlower && land ? (land.flowers[flowerOnMap]?.map ?? null) : null;
   // what the person kept about the map in front of them, published with one press (Elco, 12 Nov)
-  const publishMap = flowerMap ?? state.mapAt?.map ?? made?.held.existing_map ?? null;
+  // the map in front: the flower the person is inside on the map, else the conversation's (lib/mapping.ts)
+  const [inMap, setInMap] = useState<string | null>(null);
+  const publishMap = inMap ?? flowerMap ?? state.mapAt?.map ?? made?.held.existing_map ?? null;
   const publishing = usePublishPress(publishMap);
+  const mapping = mappingView(
+    publishMap,
+    (publishMap && land?.flowers.find((f) => f.map === publishMap)?.name) || null,
+    publishing.data,
+  );
   const show = made?.held.existing_map
     ? { map: made.held.existing_map }
     : (state.mapShow ?? (flowerMap ? { map: flowerMap } : undefined));
@@ -223,6 +238,8 @@ export function InteractionSurface({
                 onPick={atFlower ? actions.pick : actions.pickOnMap}
                 // a wallet chosen on it is what the next question is about (Elco, 12 Nov)
                 onWallet={actions.chooseMapWallet}
+                // the map in front, for the mapping state: the flower the person is inside
+                onEnter={setInMap}
                 // the room beside the conversation is narrow: the map keeps clear of its own chains
                 clearOfChains
                 legend={legend}
@@ -290,6 +307,7 @@ export function InteractionSurface({
                   }
                   onChange={actions.setQuestion}
                   onSend={() => void actions.send()}
+                  onMode={actions.setMode}
                 />
               </div>
             </>
@@ -314,6 +332,27 @@ export function InteractionSurface({
           onMapIt={actions.mapIt}
           next={{ onStep: actions.step, moreOpen: state.nextMore, onMore: actions.toggleNextMore }}
         />
+      </FloatBox>
+      {/* the mapping state: what the person would add to the map in front, in their name (Elco, 12 Nov) */}
+      <FloatBox
+        label="Mapping"
+        title={mapping.heading}
+        surface={surface}
+        hand={hands.mapping}
+        closed={state.mode !== 'mapping'}
+        control={
+          <Button variant="link" onClick={() => actions.setMode('exploring')}>
+            {modeWords.exploring}
+          </Button>
+        }
+      >
+        {state.mode === 'mapping' && (
+          <MappingBox
+            view={mapping}
+            press={publishing.view}
+            onPublish={() => void publishing.publish()}
+          />
+        )}
       </FloatBox>
       <FloatBox
         label="Model"
@@ -361,11 +400,6 @@ export function InteractionSurface({
                   : undefined,
             }}
             conversation={state.conversationRef}
-            publish={
-              publishing.view
-                ? { view: publishing.view, onPublish: () => void publishing.publish() }
-                : undefined
-            }
           />
         )}
       </FloatBox>
