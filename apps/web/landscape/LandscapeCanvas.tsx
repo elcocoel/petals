@@ -104,6 +104,14 @@ const LEGEND_H = 440;
 const INSIGHTS_H = 320;
 /** The least an opened Insights takes under the legend. */
 const INSIGHTS_LEAST = 200;
+/** A floating box folded to its bar: the bar's own height and the box's edge (FloatBox's bar is a control high, padded). */
+const BAR_FOLDED = 66;
+
+/** How tall a floating box is folded to its bar: its bar as drawn, with the box's edge; or the bar's usual height. */
+function barOf(box: HTMLElement | null): number {
+  const bar = box?.querySelector<HTMLElement>('[data-b="box"] > :first-child');
+  return bar ? bar.offsetHeight + 2 : BAR_FOLDED;
+}
 
 /** Below this much room (md, 48rem) the overlays start folded to their bars. */
 const ROOM = 768;
@@ -515,11 +523,13 @@ export function LandscapeCanvas({
         floatBox.bar + PANEL_ROW * (chainCount + 3),
         Math.max(floatBox.bar, (bottom - y0) * 0.45),
       );
-      const legendY = chainsClosed ? y0 : y0 + chainsH + floatBox.gap;
-      // the legend leaves Insights room enough to open below it, inside the window
+      // folded, the chain list is its bar alone, and the legend starts right under it
+      const legendY = chainsClosed ? y0 : y0 + (listOpen ? chainsH : BAR_FOLDED) + floatBox.gap;
+      // inside a flower the legend leaves Insights room enough to open below it, inside the window; on the map
+      // there's no Insights, so the legend has the room
       const legendH = Math.max(
         floatBox.bar,
-        Math.min(LEGEND_H, bottom - legendY - INSIGHTS_LEAST - floatBox.gap),
+        Math.min(LEGEND_H, bottom - legendY - (inside ? INSIGHTS_LEAST + floatBox.gap : 0)),
       );
       const insightsY = legendY + legendH + floatBox.gap;
       return {
@@ -533,7 +543,7 @@ export function LandscapeCanvas({
         },
       };
     },
-    [chainCount, chainsClosed],
+    [chainCount, chainsClosed, inside, listOpen],
   );
   const panels = useFloatBoxes(PANELS, place, {
     top: () => room.current?.getBoundingClientRect().top ?? 0,
@@ -551,6 +561,14 @@ export function LandscapeCanvas({
     },
     [panels.chains],
   );
+  const insightsEl = useRef<HTMLElement | null>(null);
+  const insightsRoot = useCallback(
+    (el: HTMLElement | null) => {
+      insightsEl.current = el;
+      panels.insights.root(el);
+    },
+    [panels.insights],
+  );
   const legendRoot = useCallback(
     (el: HTMLElement | null) => {
       legendEl.current = el;
@@ -563,13 +581,13 @@ export function LandscapeCanvas({
   });
   // folded, a box is its bar; open, the height it had
   useEffect(() => {
-    if (movable) panels.chains.fold(listOpen ? null : floatBox.bar);
+    if (movable) panels.chains.fold(listOpen ? null : barOf(chainsEl.current));
   }, [movable, panels.chains, listOpen]);
   useEffect(() => {
-    if (movable) panels.legend.fold(legendOpen ? null : floatBox.bar);
+    if (movable) panels.legend.fold(legendOpen ? null : barOf(legendEl.current));
   }, [movable, panels.legend, legendOpen]);
   useEffect(() => {
-    if (movable) panels.insights.fold(claimsOpen ? null : floatBox.bar);
+    if (movable) panels.insights.fold(claimsOpen ? null : barOf(insightsEl.current));
   }, [movable, panels.insights, claimsOpen]);
   const legendBody = (bare: boolean) => (
     <ViewLegend
@@ -651,6 +669,7 @@ export function LandscapeCanvas({
             label={chainTitle}
             title={chainTitle}
             hand={{ ...panels.chains, root: chainsRoot }}
+            folded={!listOpen}
             closed={chainsClosed}
             control={
               <span className={`flex ${listOpen ? 'rotate-90' : ''}`}>
@@ -670,6 +689,7 @@ export function LandscapeCanvas({
               label={panelWords.legend}
               title={panelWords.legend}
               hand={{ ...panels.legend, root: legendRoot }}
+              folded={!legendOpen}
               control={
                 <span className={`flex ${legendOpen ? 'rotate-90' : ''}`}>
                   <IconButton
@@ -688,7 +708,8 @@ export function LandscapeCanvas({
             <FloatBox
               label={mapClaimWords.title}
               title={claimsOpen ? mapClaimWords.title : mapClaimWords.folded(claimCount)}
-              hand={panels.insights}
+              hand={{ ...panels.insights, root: insightsRoot }}
+              folded={!claimsOpen}
               closed={!showClaims}
               control={
                 <span className={`flex ${claimsOpen ? 'rotate-90' : ''}`}>
