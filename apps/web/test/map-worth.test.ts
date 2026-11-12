@@ -24,9 +24,10 @@ const value = (over: Partial<MapValue>): MapValue => ({
 test('the treasury and the token price, each where the card has it, never a guess', () => {
   expect(worthWords(value({ treasury_usd: '7034000.25', treasury_unpriced: 1 }))).toEqual([
     'Treasury $7,034,000 (1 unpriced)',
-    'COMP $19.85',
+    '1 COMP = $19.85, 12 Nov',
   ]);
-  expect(worthWords(value({ treasury_usd: null }))).toEqual(['COMP $19.85']);
+  // a price says it's a price, and its day: never a treasury of a few dollars (Elco, 12 Nov)
+  expect(worthWords(value({ treasury_usd: null }))).toEqual(['1 COMP = $19.85, 12 Nov']);
   expect(worthWords(value({ price: null, treasury_usd: '60.81', treasury_unpriced: 0 }))).toEqual([
     'Treasury $60.81',
   ]);
