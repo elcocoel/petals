@@ -9,6 +9,7 @@ import { type Mark, validateMark } from '@petal/core';
 import type { Claim } from '@petal/core/types';
 import type { AnnotationRow, Store } from '@petal/store';
 import { defineTool } from '../define.ts';
+import { docsPages } from '../docs-pages.ts';
 import { privateStore } from '../drafts.ts';
 import { retiredClaim } from '../hidden.ts';
 import { type MapCard, mapsOf, mapViews, typeWords } from '../map.ts';
@@ -43,8 +44,12 @@ export const OWN_KINDS = [
   'note',
   'follow',
 ] as const;
-export const FINDABLE_KINDS = [...MAP_KINDS, ...OWN_KINDS] as const;
+/** The pages /docs shows (Elco, 12 Nov: "the search function" on the docs): asked for by name, never by default. */
+export const DOC_KINDS = ['doc'] as const;
+export const FINDABLE_KINDS = [...MAP_KINDS, ...OWN_KINDS, ...DOC_KINDS] as const;
 export type FindableKind = (typeof FINDABLE_KINDS)[number];
+/** What's searched when no kinds are asked: the map and the person's own, as before the docs were. */
+export const DEFAULT_KINDS = [...MAP_KINDS, ...OWN_KINDS] as const;
 
 /** How many of the best the reranker reads, a map with what matched under it as one. */
 const RERANKED = 30;
@@ -226,6 +231,52 @@ async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapS
     return { sig, cards, nameOf, set: await searchSet(docs, model, keepOf(store)) };
   })();
   mapSets.set(key, made);
+  return made;
+}
+
+/**
+ * The docs' documents (docs-pages.ts): each page by its repo path, and each of its sections under it by the path
+ * and its anchor, so meaning finds what's deep in a long page. The files change only with a deploy, so they're
+ * read once a process.
+ */
+export function docDocs(root: string): Findable[] {
+  const docs: Findable[] = [];
+  for (const page of docsPages(root)) {
+    docs.push({
+      kind: 'doc',
+      id: page.path,
+      title: page.title,
+      text: [page.title, page.summary, page.intro, ...page.sections.map((x) => x.title)]
+        .filter(Boolean)
+        .join('\n'),
+      group: page.path,
+      keys: [page.title],
+    });
+    for (const x of page.sections) {
+      docs.push({
+        kind: 'doc',
+        id: `${page.path}#${x.anchor}`,
+        title: x.title,
+        // its page's name too, so a section's meaning is read in its page's
+        text: `${x.title}\n${page.title}\n${x.text}`,
+        about: page.path,
+        group: page.path,
+      });
+    }
+  }
+  return docs;
+}
+
+const docSets = new Map<string, Promise<SearchSet>>();
+function docSet(ctx: ToolContext, model: SearchModel | null): Promise<SearchSet> {
+  const key = `${ctx.config.root}|${model?.embedding ?? 'words'}`;
+  let made = docSets.get(key);
+  if (!made) {
+    made = searchSet(docDocs(ctx.config.root), model, keepOf(privateStore(ctx.config)));
+    // a model that stopped answering while it was built: the next search builds it again
+    made.catch(() => docSets.delete(key));
+    docSets.set(key, made);
+  }
   return made;
 }
 
@@ -441,18 +492,25 @@ async function searchWith(
   q: string,
   o: Parameters<typeof searchPetals>[2] = {},
 ): Promise<SearchAnswer[]> {
-  const kinds = new Set(o.kinds ?? FINDABLE_KINDS);
-  const shared = await mapSet(ctx, model);
-  const subject = ctx.caller?.subject ?? null;
-  const own = subject ? await ownDocs(ctx, subject, shared) : [];
-  const set = own.length
-    ? joinSets(shared.set, await searchSet(own, model, keepOf(privateStore(ctx.config))))
-    : shared.set;
+  const kinds = new Set(o.kinds ?? DEFAULT_KINDS);
+  const sets: SearchSet[] = [];
+  // the map, and the person's own, only when something other than the docs is asked for
+  const shared = [...kinds].some((k) => k !== 'doc') ? await mapSet(ctx, model) : null;
+  if (shared) {
+    sets.push(shared.set);
+    const subject = ctx.caller?.subject ?? null;
+    const own = subject ? await ownDocs(ctx, subject, shared) : [];
+    if (own.length) sets.push(await searchSet(own, model, keepOf(privateStore(ctx.config))));
+  }
+  if (kinds.has('doc')) sets.push(await docSet(ctx, model));
+  const [first, ...rest] = sets;
+  if (!first) return [];
+  const set = rest.reduce(joinSets, first);
   const found = await find(set, q, model, {
     n: o.limit ?? 10,
     rerank: o.rerank === false ? 0 : RERANKED,
-    // a map with what matched under it, when maps are asked for; else each as itself
-    group: kinds.has('map'),
+    // a map with what matched under it, or a page with its sections, when those are asked for; else each as itself
+    group: kinds.has('map') || kinds.has('doc'),
     prefix: o.prefix === true,
     only: (d) => kinds.has(d.kind),
   });
@@ -469,7 +527,7 @@ async function searchWith(
   });
   return found.map((f) => {
     const matched = f.matched ?? [];
-    const card = f.kind === 'map' ? shared.cards.get(f.id) : undefined;
+    const card = f.kind === 'map' ? shared?.cards.get(f.id) : undefined;
     return {
       ...answer(f),
       ...(card ? { view_url: card.view_url } : {}),
@@ -515,7 +573,9 @@ const searchTool = (as: (ctx: ToolContext) => ToolContext) =>
         kinds: {
           type: 'array',
           items: { type: 'string', enum: [...FINDABLE_KINDS] },
-          description: 'only these kinds; all when absent',
+          description:
+            "only these kinds; when absent, the map's and the person's own. 'doc' searches Petals' docs " +
+            '(/docs), each page by its repo path with the sections that matched under it',
         },
         limit: { type: 'integer', minimum: 1, maximum: 50, default: 10 },
       },

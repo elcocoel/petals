@@ -229,6 +229,22 @@ describe('search_petals', () => {
     });
   });
 
+  test("finds /docs' pages when asked for, each by its repo path with its sections under it, never by default", async () => {
+    const found = await run({ q: 'open calls feed', kinds: ['doc'] });
+    expect(found.results.length).toBeGreaterThan(0);
+    expect(found.results.every((r: Out) => r.kind === 'doc')).toBe(true);
+    expect(found.results.map((r: Out) => r.id)).toContain('docs/use-it/open-calls.md');
+    const sections = found.results.flatMap((r: Out) => r.matched ?? []);
+    expect(sections.some((m: Out) => /^[^#]+\.md#[a-z0-9-_]+$/.test(m.id))).toBe(true);
+    // a format by its schema's id
+    expect(
+      (await run({ q: 'proposals votes ballot', kinds: ['doc'] })).results.map((r: Out) => r.id),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/^urn:petal:schema:proposals:v\d+$/)]));
+    expect((await run({ q: 'open calls feed' })).results.some((r: Out) => r.kind === 'doc')).toBe(
+      false,
+    );
+  });
+
   test('finds the map by its name and by its address, and a proposal under its map', async () => {
     const named = await run({ q: 'founders guild' });
     expect(named.meaning).toBe('on');

@@ -33,6 +33,7 @@ import {
   bodyCap,
   clientAddress,
   DATA_FULL,
+  DEFAULT_KINDS,
   FINDABLE_KINDS,
   isLocalSite,
   searchPetals,
@@ -1150,7 +1151,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
       return fail(c, 'bad_input', `q is too long (${QUERY_MAX} characters at most)`);
     }
     const asked = c.req.query('kinds');
-    const kinds = asked ? asked.split(',') : [...FINDABLE_KINDS];
+    const kinds = asked ? asked.split(',') : [...DEFAULT_KINDS];
     if (!kinds.every((k) => (FINDABLE_KINDS as readonly string[]).includes(k))) {
       return fail(c, 'bad_input', `kinds must be some of ${FINDABLE_KINDS.join(', ')}`);
     }
