@@ -39,6 +39,9 @@ export const panelWords = {
   legendColours: "Each flower's own: its most common kind first",
   /** What a line between two flowers on the map is (Elco, 12 Nov, walk 2: "a little bit mysterious"). Drafts. */
   legendLines: 'Lines',
+  /** A map's floating box folds to its bar and opens again (Elco, 12 Nov: the map's panels move like /make's). */
+  boxFold: 'Fold to its bar',
+  boxOpen: 'Open',
   /** The legend's two sections, and the map's own rows (Elco, 12 Nov, walk 2: "a tool panel"). Drafts. */
   legendDimensions: 'Dimensions',
   legendMap: 'Map',

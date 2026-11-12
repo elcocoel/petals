@@ -141,6 +141,7 @@ export function ViewLegend({
   gravity,
   between,
   fold,
+  bare = false,
 }: {
   view: View;
   /** What each dimension draws on this flower, or null: core's inUse, in the person's view. */
@@ -163,10 +164,12 @@ export function ViewLegend({
   between?: { label: string; says: string } | undefined;
   /** It folds to its bar, as every overlay can (design/overlays.md, line 6). */
   fold?: { open: boolean; onToggle: () => void } | undefined;
+  /** Its rows alone, for a box that frames it (the map's floating boxes). */
+  bare?: boolean;
 }) {
   const chosen = groups?.choices.find((c) => c.id === groups.chosen);
-  return (
-    <Overlay title={panelWords.legend} fold={fold} tool>
+  const body = (
+    <>
       <SectionHead size="panel" title={panelWords.legendDimensions} />
       <div className="flex flex-col py-space-4">
         {ORDER.map((d) => (
@@ -251,6 +254,13 @@ export function ViewLegend({
           </Button>
         </div>
       )}
+    </>
+  );
+  // in a box floating over the map (LandscapeCanvas) the box is its frame; elsewhere, one of the overlays
+  if (bare) return <div className="flex flex-col px-space-8 pb-space-8">{body}</div>;
+  return (
+    <Overlay title={panelWords.legend} fold={fold} tool>
+      {body}
     </Overlay>
   );
 }
