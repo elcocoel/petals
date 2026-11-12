@@ -115,6 +115,11 @@ export interface LandscapeAt {
    * map, or null to put the saved map back; the page arranges the rest round it.
    */
   onCentre?: (id: string | null) => void;
+  /**
+   * Told which proposal a click pins, by its flower (as `onCentre` names it) and its id, and when it's let go
+   * (null), so the page can say what it's about (OVERLAYS's Information box; Elco, 12 Nov walk 3 on Ref Finance).
+   */
+  onProposal?: (p: { flower: string; id: string } | null) => void;
   /** Treasury and token price under the names at some magnification (Elco, 12 Nov walk 3); on unless off. */
   worth?: boolean;
   /** Set by the map once it's built: draws it again, for a change it reads on each frame (`worth`). */
@@ -277,12 +282,18 @@ export function useLandscape(
       const tail = f.model.petals.find((p) => p.tail)?.id;
       return tail && own.length < want.size ? [...own, tail] : own;
     };
+    /** The page told which proposal is pinned now, or none. */
+    const tellProposal = () => {
+      const f = voted ? idOf(flowers[voted.flower]) : null;
+      at?.current?.onProposal?.(voted && f ? { flower: f, id: voted.id } : null);
+    };
     /** The pinned proposal let go, its flower drawn again without its voters lit. */
     const letGoProposal = () => {
       if (!voted) return;
       const j = voted.flower;
       voted = null;
       remount(j);
+      tellProposal();
     };
     /** The opened stacks folded again, their flowers drawn again (a click on empty space clears the choice). */
     const foldStacks = () => {
@@ -663,6 +674,7 @@ export function useLandscape(
         const was = voted;
         voted = was && was.flower === pressed.flower && was.id === pressed.id ? null : pressed;
         for (const j of new Set([was?.flower ?? -1, pressed.flower])) if (j >= 0) remount(j);
+        tellProposal();
         pressed = null;
         wake();
         return;
@@ -981,6 +993,8 @@ export function useLandscape(
     }
 
     return () => {
+      // the map taken down: nothing's pinned on it any more
+      if (voted) at?.current?.onProposal?.(null);
       // kept once it has drawn (React's second mount in development takes it down before any frame)
       if (frames > 0) {
         kept.current = {
