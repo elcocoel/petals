@@ -43,3 +43,9 @@ test('the placeholder, the strip of work and the landed reading', () => {
     /const taken: Box\[\] = \[\.\.\.over, \.\.\.\(stripBox \? \[stripBox\] : \[\]\)\];/,
   );
 });
+
+test("on the map a flower's own title keeps quiet: the map's badge names it", () => {
+  expect(text('flower/drive.ts')).toMatch(
+    /const mk = view\s+\? \{\s+\.\.\.spoken,\s+titleInside: \{ \.\.\.spoken\.titleInside, opacity: 0 \},/,
+  );
+});

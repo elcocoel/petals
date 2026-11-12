@@ -88,7 +88,16 @@ export function driveFlower(
         }
       : null;
   const said = marks(m, live.camera, focus, live.ring, d.scratch, d.readout, live.chosen, taken);
-  const mk = quiet ? { ...said, notes: [], labels: [] } : said;
+  const spoken = quiet ? { ...said, notes: [], labels: [] } : said;
+  // on the map (a view is the map's camera) the map's badge names the flower, so its own title keeps quiet: a
+  // reading landed on a map has a title of its own, and the two sat on each other (WORKSPACE's walk, 12 Nov)
+  const mk = view
+    ? {
+        ...spoken,
+        titleInside: { ...spoken.titleInside, opacity: 0 },
+        titleOutside: { ...spoken.titleOutside, opacity: 0 },
+      }
+    : spoken;
   scene.draw({
     marks: mk,
     ring: live.ring,
