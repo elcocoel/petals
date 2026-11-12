@@ -20,11 +20,15 @@ import { mapsOf, mapViews } from './map.ts';
 import { callTool } from './registry.ts';
 import type { ToolContext } from './types.ts';
 
-/** What a map's card carries of its proposals: how many, how many have votes, and when they were read. */
+/** What a map's card carries of its proposals: how many, how many have votes, when they were read, and the span they cover. */
 export interface CardProposals {
   count: number;
   voted: number;
   read_at: string;
+  /** the earliest and latest proposal's own time (Elco, 12 Nov, walk 3: the period each layer contains); null with none */
+  period: { from: string; to: string } | null;
+  /** the earliest and latest vote's time, where its source keeps one (Sputnik keeps none); null when none does */
+  votes_period: { from: string; to: string } | null;
 }
 
 /** Each map's stored proposals, by its address, as stored and valid. */
@@ -37,10 +41,26 @@ export async function proposalsOf(ctx: ToolContext): Promise<Map<string, Proposa
   return out;
 }
 
+/** The earliest and latest of some times, by their instant, as they were written; null for none. */
+function spanOf(
+  times: readonly (string | null | undefined)[],
+): { from: string; to: string } | null {
+  let from: string | null = null;
+  let to: string | null = null;
+  for (const t of times) {
+    if (!t || Number.isNaN(Date.parse(t))) continue;
+    if (from === null || Date.parse(t) < Date.parse(from)) from = t;
+    if (to === null || Date.parse(t) > Date.parse(to)) to = t;
+  }
+  return from && to ? { from, to } : null;
+}
+
 export const cardProposals = (p: Proposals): CardProposals => ({
   count: p.proposals.length,
   voted: p.proposals.filter((x) => x.votes.length > 0).length,
   read_at: p.read_at,
+  period: spanOf(p.proposals.map((x) => x.at)),
+  votes_period: spanOf(p.proposals.flatMap((x) => x.votes.map((v) => v.at))),
 });
 
 type Reader = (

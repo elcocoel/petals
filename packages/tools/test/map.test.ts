@@ -646,6 +646,9 @@ describe('one map per address (Elco, 10 Nov)', () => {
       ],
       read_at: at,
     };
+    // the second proposal a day earlier: the card's period is the earliest to the latest (walk 3, 12 Nov)
+    const earlier = new Date(Date.parse(at) - 86_400_000).toISOString();
+    (proposals.proposals[1] as { at: string }).at = earlier;
     await store.proposals.put({ about, body: JSON.stringify(proposals), read_at: at });
     const app = new Hono();
     app.route(
@@ -653,7 +656,13 @@ describe('one map per address (Elco, 10 Nov)', () => {
       httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
     );
     const { maps } = (await (await app.request('/api/v1/maps')).json()) as Out;
-    expect(maps[0].proposals).toEqual({ count: 2, voted: 1, read_at: at });
+    expect(maps[0].proposals).toEqual({
+      count: 2,
+      voted: 1,
+      read_at: at,
+      period: { from: earlier, to: at },
+      votes_period: { from: at, to: at },
+    });
     const res = await app.request(`/api/v1/maps/${encodeURIComponent(about)}/proposals`);
     expect(res.status).toBe(200);
     expect(((await res.json()) as Out).proposals).toEqual(proposals);
