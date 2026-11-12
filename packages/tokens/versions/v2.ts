@@ -362,13 +362,6 @@ const groups = {
       ({ x, y, across, down }) =>
         `radial-gradient(${across * 100}% ${down * 100}% at ${x * 100}% ${y * 100}%, ${primitives.Ink}, transparent)`,
     ).join(', '),
-    /** The hero's stage: a mask, so only its alpha counts; its world fades out at the four edges (Elco, 12 Nov). */
-    'stage-fade': ['90deg', '180deg']
-      .map(
-        (to) =>
-          `linear-gradient(${to}, transparent, ${primitives.Ink} 6%, ${primitives.Ink} 94%, transparent)`,
-      )
-      .join(', '),
     /** A hairline between two stars, soft at both ends. */
     connect: `linear-gradient(90deg, transparent, ${c(gray(CONNECT))} 22%, ${c(gray(CONNECT))} 78%, transparent)`,
   },

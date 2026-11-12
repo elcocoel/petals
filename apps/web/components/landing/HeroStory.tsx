@@ -67,14 +67,6 @@ const pinned = (pin: Pin, m: Motion): CSSProperties => {
 const centreY = (wide: boolean) => (wide ? 46.59 : 48.33);
 const trackY = (wide: boolean) => (wide ? 86 : 70);
 
-/** The stage's edges, where the world fades out (the version's stage-fade); with its own perspective, as the stage has. */
-const EDGES: CSSProperties = {
-  perspective: '900px',
-  maskImage: 'var(--joy-gradient-stage-fade)',
-  maskComposite: 'intersect',
-  WebkitMaskComposite: 'source-in',
-};
-
 /** The words beside the stage: they never move, so they never redraw with it. */
 const Intro = memo(function Intro() {
   return (
@@ -259,8 +251,12 @@ export function HeroStoryView({
             className="relative aspect-2/3 w-full lg:aspect-8/5"
             style={{ containerType: 'size', perspective: '900px' }}
           >
-            {/* The world fades out at the stage's edges, so the far map never spills onto the page. */}
-            <div className="pointer-events-none absolute inset-0" style={EDGES}>
+            {/* The world stays inside the stage, so the far map never spills onto the page; the map fades its
+                own edges (lib/hero-map.ts). With the stage's perspective, for the layers' depth. */}
+            <div
+              className="pointer-events-none absolute inset-0 overflow-hidden"
+              style={{ perspective: '900px' }}
+            >
               {/* Behind: the light, following the flower at half its travel, so it reads as further away. */}
               <div
                 className="pointer-events-none absolute inset-0"

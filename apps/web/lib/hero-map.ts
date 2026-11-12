@@ -16,6 +16,17 @@ export interface Community {
   heights: readonly number[];
   /** the soft wave it is from far, round 0, 0 */
   wave: string;
+  /** how much of it shows on the far map, 0 to 1: those near the far frame's edges fade, so the map has no hard edge */
+  seen: number;
+}
+
+/** How far the far frame reaches from its middle, in the drawing's units, on a wide stage. */
+const HALF = { x: 1765, y: 1100 };
+/** How much of a community shows at its place on the far frame: all of it, fading over the last part to the edge. */
+function seenAt(x: number, y: number): number {
+  const out = Math.max(Math.abs(x - MAP_CENTRE.x) / HALF.x, Math.abs(y - MAP_CENTRE.y) / HALF.y);
+  const p = Math.min(1, Math.max(0, (out - 0.72) / 0.28));
+  return 1 - p * p * (3 - 2 * p);
 }
 
 const TAU = Math.PI * 2;
@@ -48,13 +59,13 @@ function community(x: number, y: number, size: number, petals: number, steep: nu
     { length: petals },
     (_, i) => 128 * size * (0.12 + 0.88 * (1 - i / petals) ** steep),
   );
-  return { x, y, inner, heights, wave: waveOf(inner, heights) };
+  return { x, y, inner, heights, wave: waveOf(inner, heights), seen: seenAt(x, y) };
 }
 
 /** My community from far: its wave from its petals' heights as influence shows them. */
 export const MINE: Community = (() => {
   const heights = base.map((r) => r - INNER);
-  return { x: 0, y: 0, inner: INNER, heights, wave: waveOf(INNER, heights) };
+  return { x: 0, y: 0, inner: INNER, heights, wave: waveOf(INNER, heights), seen: 1 };
 })();
 
 /** The two neighbours the connections beat follows its lines to. */

@@ -74,7 +74,7 @@ const seen = (v: number) => (v > 0.001 ? undefined : 'hidden');
 /** A community from far: its soft wave, the hole in it, and a dark mark where its logo would be. */
 function FarCommunity({ c, opacity = 1 }: { c: Community; opacity?: number }) {
   return (
-    <g transform={`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`} opacity={opacity}>
+    <g transform={`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`} opacity={opacity * c.seen}>
       <path d={c.wave} fill={PAINT.petal} fillRule="evenodd" />
       <circle r={c.inner * 0.55} fill="var(--text-primary)" />
     </g>
