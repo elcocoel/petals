@@ -7,7 +7,7 @@ import { byDepartment } from './groups.ts';
 test('all eight sections and canonical files have navigable, unique pages', async () => {
   const pages = catalog();
   assert.equal(pages.filter((p) => p.overview).length, 8);
-  // What Petals is comes first (#110: the docs are for people)
+  // What Petals is comes first (card 110: the docs are for people)
   assert.equal(pages[0]?.slug, 'what-petals-is');
   assert.equal(new Set(pages.map((p) => p.slug)).size, pages.length);
   for (const source of [
@@ -126,7 +126,7 @@ test('/docs/brain is grouped by department, each hub first, with the routing tab
   assert.equal(groups.filter((g) => g.department).length, 7);
 });
 
-test('an empty slot is a space with no words in it (#110)', async () => {
+test('an empty slot is a space with no words in it (card 110)', async () => {
   const { html } = await renderMarkdown('## Why\n\n{slot}\n\nAfter.', 'docs/x/index.md', []);
   assert.match(html, /<div data-slot=""><\/div>/);
   assert.ok(!html.includes('{slot}'));

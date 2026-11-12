@@ -203,7 +203,7 @@ main:has(.shell) {
 .prose a:hover {
   text-decoration-color: var(--text-primary);
 }
-/* an empty slot (#110): the space Elco fills, with no words in it */
+/* an empty slot (card 110): the space Elco fills, with no words in it */
 .prose [data-slot] {
   max-width: var(--spacing-panel-width);
   min-height: calc(var(--spacing-space-32) * 3);
