@@ -2,7 +2,15 @@
 import { DEFAULT_VIEW, DEFAULT_VIEW_V2_0, EVERY_FLOWER } from '@petal/core/view';
 import { describe, expect, test } from 'vitest';
 import { viewChoices } from '../lib/person-view.ts';
-import { dataOf, isDefault, scaleOf, takesScale, withData, withScale } from '../lib/view-edit.ts';
+import {
+  dataOf,
+  isDefault,
+  onlyWhatDraws,
+  scaleOf,
+  takesScale,
+  withData,
+  withScale,
+} from '../lib/view-edit.ts';
 
 describe('a choice in Settings', () => {
   test('colour switches from kind to identity, and nothing else moves', () => {
@@ -56,5 +64,26 @@ describe('a choice in Settings', () => {
 
   test('the default is the default', () => {
     expect(isDefault(DEFAULT_VIEW, DEFAULT_VIEW)).toBe(true);
+  });
+});
+
+describe('what Tools offers where you are (wave 3: every offered choice draws)', () => {
+  const choices = viewChoices();
+  test('who backs a wallet, and its activity, only where a flower here has them', () => {
+    const ref = onlyWhatDraws(choices, [
+      ['share', 'amount', 'kind', 'identity', 'votes_cast', 'last_active', 'voted'],
+    ]);
+    expect(ref.segments.map((p) => p.name)).toEqual([]);
+    expect(ref.order.map((p) => p.name)).toContain('last_active');
+    const hos = onlyWhatDraws(choices, [['share', 'amount', 'kind', 'identity', 'backers']]);
+    expect(hos.segments.map((p) => p.name)).toEqual(['backers']);
+    expect(hos.order.map((p) => p.name)).not.toContain('last_active');
+  });
+  test('what every flower has, and a person’s own names, always', () => {
+    const none = onlyWhatDraws(choices, [['share', 'amount', 'kind', 'identity']]);
+    expect(none.labels.map((p) => p.name)).toEqual(['kind', 'identity', 'name', 'name_kind']);
+  });
+  test('unknown pieces leave every choice offered', () => {
+    expect(onlyWhatDraws(choices, [undefined])).toBe(choices);
   });
 });
