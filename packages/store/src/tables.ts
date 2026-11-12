@@ -1226,6 +1226,11 @@ export function tables(db: Db) {
       get: (about: string) =>
         db.get<ProposalsRow>('SELECT * FROM proposals WHERE about = ?', about),
       list: () => db.all<ProposalsRow>('SELECT * FROM proposals ORDER BY about'),
+      /** Each map's address and when its proposals were read, without their bodies: what changed, cheaply. */
+      stamps: () =>
+        db.all<{ about: string; read_at: string }>(
+          'SELECT about, read_at FROM proposals ORDER BY about',
+        ),
     },
 
     /** Each map's payouts (33), by the map's address: read again, they're replaced. */

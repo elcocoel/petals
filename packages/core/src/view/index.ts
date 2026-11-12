@@ -66,7 +66,20 @@ export const EVERY_FLOWER: readonly Piece[] = [
  * its reading has delegations. The only data of parts today, so the only data Segments can show (Elco, 12 Nov,
  * walk 3: "I don't have any choices on label segments").
  */
-export const SOME_FLOWERS: readonly Piece[] = [{ name: 'backers', kind: 'parts' }];
+export const BACKERS: Piece = { name: 'backers', kind: 'parts' };
+
+/**
+ * Each petal's activity, where its map's proposals were read (activity.ts; Elco, 12 Nov: "the dimension of time
+ * specifically is particularly absent"): how many it voted on, when it last voted, and whether it ever did.
+ */
+export const ACTIVITY: readonly Piece[] = [
+  { name: 'votes_cast', kind: 'count' },
+  { name: 'last_active', kind: 'date' },
+  { name: 'voted', kind: 'category' },
+];
+
+/** What some flowers have and others don't: who backs each petal, and each petal's activity. */
+export const SOME_FLOWERS: readonly Piece[] = [BACKERS, ...ACTIVITY];
 
 /**
  * The pieces of data a person's annotations give the accounts they name (seam.ts, namePieces): the one name a

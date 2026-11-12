@@ -715,40 +715,42 @@ export function LandscapeCanvas({
   // the chain list's words and rows, the legend and Insights: one each, in a floating box or in the column
   const chainTitle =
     !listOpen && shown ? `${title ?? 'Power Map'} · ${shown.label}` : (title ?? 'Power Map');
+  const searchRow = search && (
+    <MapSearch
+      q={finding.q}
+      onType={finding.type}
+      onOrder={finding.order}
+      onClear={finding.clear}
+      rows={found}
+      status={searchStatus}
+      onGo={goTo}
+    />
+  );
+  // while something's typed, what it finds stands in the chains' place
+  const chainList = !(search && finding.q.trim()) && (
+    <ul className="m-0 flex list-none flex-col p-0">
+      {data.chains.map((c) => (
+        <li key={c.chain}>
+          <NavItem
+            onClick={() => {
+              setChain(c.chain);
+              setGo(null);
+              // where the room is narrow the list folds back once a chain is chosen
+              if (narrow()) setListOpen(false);
+            }}
+            chosen={c.chain === chain}
+            logo={c.logo}
+            label={c.label}
+            trail={String(counts.get(c.chain) ?? 0)}
+          />
+        </li>
+      ))}
+    </ul>
+  );
   const chainRows = (
     <>
-      {search && (
-        <MapSearch
-          q={finding.q}
-          onType={finding.type}
-          onOrder={finding.order}
-          onClear={finding.clear}
-          rows={found}
-          status={searchStatus}
-          onGo={goTo}
-        />
-      )}
-      {/* while something's typed, what it finds stands in the chains' place */}
-      {!(search && finding.q.trim()) && (
-        <ul className="m-0 flex list-none flex-col p-0">
-          {data.chains.map((c) => (
-            <li key={c.chain}>
-              <NavItem
-                onClick={() => {
-                  setChain(c.chain);
-                  setGo(null);
-                  // where the room is narrow the list folds back once a chain is chosen
-                  if (narrow()) setListOpen(false);
-                }}
-                chosen={c.chain === chain}
-                logo={c.logo}
-                label={c.label}
-                trail={String(counts.get(c.chain) ?? 0)}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      {searchRow}
+      {chainList}
     </>
   );
   const showClaims = Boolean(legend && inside && (claimGroups.length > 0 || (wallet && claims)));
@@ -930,7 +932,16 @@ export function LandscapeCanvas({
               />
             }
           >
-            <div className="flex flex-col px-space-8 pt-space-8">{chainRows}</div>
+            {/* the search, then the chains under their head, then the view's sections (ViewLegend) */}
+            <div className="flex flex-col px-space-8 pt-space-8">
+              {searchRow}
+              {chainList && (
+                <>
+                  <SectionHead size="panel" title={panelWords.toolsChains} />
+                  <div className="py-space-4">{chainList}</div>
+                </>
+              )}
+            </div>
             {legend && legendBody(true)}
           </FloatBox>
           {legend && (
