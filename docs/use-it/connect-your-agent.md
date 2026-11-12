@@ -4,7 +4,7 @@ title: Connect your agent
 order: 20
 ---
 
-Petals can outsource the heavy mapping and research to agents you pay for. They work with their own tools and resources, bringing results back while you keep exploring with Petals.
+Petals can outsource the heavy mapping and research to agents you already pay for. They work with their own tools and resources, bringing results back while you keep exploring with Petals.
 
 Claude Code, Codex, Hermes and other agents that can run commands can help you map. Copy the connection prompt into your agent to bring it into your Petals project.
 
