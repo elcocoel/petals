@@ -14,6 +14,7 @@ import {
   pictureQuery,
   piecesOf,
   readFlower,
+  type SeamPiece,
   sha256Hex,
   typePieces,
   type Value,
@@ -74,6 +75,12 @@ export interface MapView {
    * values where priced, its activity where its proposals were read, and the viewer's own names and types
    */
   pieces: { name: string; kind: string }[];
+  /**
+   * the pieces given beside the reading, as readFlower took them (the viewer's names and types, the dollars, the
+   * activity), their values only for the petals drawn: what the page redraws with when a view changes, without
+   * reading again (LOOK, wave 4)
+   */
+  given: SeamPiece[];
   /** who made it (a NEAR account), when that's recorded */
   made_by: string | null;
   reading: { title: string; petals: unknown[] };
@@ -81,8 +88,23 @@ export interface MapView {
 
 type Read = Omit<MapView, 'sha' | 'name' | 'view_url' | 'picture' | 'made_by'>;
 
-/** A view's row in a list of the map (GET /api/v1/map/views): all of it but its reading. */
-export type MapViewRow = Omit<MapView, 'reading'>;
+/** A view's row in a list of the map (GET /api/v1/map/views): all of it but its reading and what was given with it. */
+export type MapViewRow = Omit<MapView, 'reading' | 'given'>;
+
+/** Pieces of data, their values only for the petals drawn (the tail keeps no values of its own here). */
+function drawnOnly(pieces: readonly SeamPiece[], petals: readonly unknown[]): SeamPiece[] {
+  const drawn = new Set(
+    petals
+      .map((p) => (p as { id?: unknown }).id)
+      .filter((id): id is string => typeof id === 'string'),
+  );
+  return pieces.map((p) => {
+    if (p.kind === 'parts') return { ...p, parts: p.parts.filter((x) => drawn.has(x.participant)) };
+    if (p.kind === 'relation')
+      return { ...p, lines: p.lines.filter((x) => drawn.has(x.from) && drawn.has(x.to)) };
+    return { ...p, values: p.values.filter((x) => drawn.has(x.participant)) };
+  });
+}
 
 /**
  * The picture's address. The browser and Vercel's edge keep each one for a year, so it names the look and
@@ -145,6 +167,7 @@ async function readOf(
       params,
       keys: [...keysOf('colour'), ...keysOf('tail')],
       pieces: piecesOf(snapshot, extra),
+      given: drawnOnly(extra, reading.petals),
       reading: { title: reading.title, petals: reading.petals },
     };
   } catch {
