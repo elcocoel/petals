@@ -218,7 +218,7 @@ describe('dimensions and kinds', () => {
       height: ['amount', 'count', 'share'],
       width: ['amount', 'count', 'share'],
       order: ['amount', 'count', 'share', 'category', 'date'],
-      colour: ['category', 'amount', 'count', 'share'],
+      colour: ['category'],
       outline: ['flag', 'category'],
       texture: ['flag', 'category'],
       markings: ['count', 'flag'],
@@ -271,9 +271,12 @@ describe('a view meeting a flower', () => {
 
   test('any piece of data of a fitting kind can go in any dimension that takes it', () => {
     const v = structuredClone(DEFAULT_VIEW);
-    v.dimensions.colour = { data: 'proposals' };
+    v.dimensions.order = { data: 'proposals' };
     v.dimensions.height = { data: 'proposals' };
-    expect(inUse(v, moloch)).toMatchObject({ colour: 'proposals', height: 'proposals' });
+    expect(inUse(v, moloch)).toMatchObject({ order: 'proposals', height: 'proposals' });
+    // Colour takes a category only, until the look draws a scale (12 Nov)
+    v.dimensions.colour = { data: 'proposals' };
+    expect(inUse(v, moloch).colour).toBeNull();
   });
 
   test("labels take a person's names where a flower has them, and only a category", () => {

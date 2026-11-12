@@ -35,7 +35,7 @@ The nine in today's vocabulary (`packages/core/src/primitives.ts`, `spec/v1`'s c
 | **height** (how far a petal reaches) | amount, count, share | Yes |
 | **width** (the angle a petal takes, kept within 1.5x to 3x) | amount, count, share | Yes |
 | **order** (where on the ring) | amount, count, share, category, date | Yes: largest first (share, the default), a date newest first, a count or amount most first, a category its commonest value first (12 Nov, Elco: last active, most active); a petal with no value after those with one, everyone else last |
-| **colour** | category (up to about 8), or amount, count or share as a scale | Yes, a category: five keys, ranked once over a whole map so a value has one colour everywhere; 'never voted' and a missing value grey (12 Nov) |
+| **colour** | category (up to about 8); amount, count or share as a scale once the look draws one | Yes, a category: five keys, ranked once over a whole map so a value has one colour everywhere; 'never voted' and a missing value grey (12 Nov) |
 | **outline** | flag, or a category of up to 3 | Not yet on the live flower |
 | **texture** | flag, or a category of up to 3 | Not yet |
 | **markings** (a mark at each petal's tip) | count, flag | Not yet |

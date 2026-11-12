@@ -105,6 +105,16 @@ describe('Colour', () => {
     expect(keyed.find((k) => k.value === 'never voted')?.key).toBe(GREY);
   });
 
+  test("a count on Colour isn't drawn as categories: its raw numbers never become keys", () => {
+    const r = readFlower(
+      spec,
+      s,
+      withView((d) => (d.colour = { data: 'votes_cast' })),
+      pieces,
+    );
+    expect(r.petals.some((p) => p.colour === '12')).toBe(false);
+  });
+
   test('a map ranks its keys once, so a value has one colour on every flower', () => {
     const one = [{ id: '1', colour: 'dao', share: 1, segments: [] }];
     const two = [

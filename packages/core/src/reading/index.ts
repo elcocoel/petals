@@ -153,7 +153,12 @@ export function readFlower(
   const used = view ? inUse(view, piecesOf(s, pieces)) : null;
   const kinds = new Map(pieces.map((p) => [p.name, p.kind]));
   const orderBy = used?.order && values.has(used.order) ? used.order : null;
-  const colourBy = used?.colour && values.has(used.colour) ? used.colour : null;
+  // Colour by a piece: a category's values (voted), never a count's or a date's raw numbers, which want a graded
+  // scale the look hasn't drawn yet
+  const colourBy =
+    used?.colour && values.has(used.colour) && kinds.get(used.colour) === 'category'
+      ? used.colour
+      : null;
   // petals clockwise from twelve o'clock: by size (selectPetals gives them so, tail last), or by the piece Order
   // shows (Elco, 12 Nov: "last active, most active")
   const rows = orderBy
