@@ -43,6 +43,7 @@ import { layerWords, mapLayers } from '../lib/map-layers.ts';
 import { MAP_SEARCH_ID, mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
+import { CHOOSABLE } from '../lib/person-view.ts';
 import { proposalView, proposalWords } from '../lib/proposal-view.ts';
 import type { LegendEdit } from '../lib/view-edit.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
@@ -828,7 +829,9 @@ export function LandscapeCanvas({
   const legendBody = (bare: boolean) => (
     <ViewLegend
       view={person.view}
-      drawn={inUse(person.view, EVERY_FLOWER)}
+      // what each dimension draws, among everything Tools offers (a map's activity, a person's names), so Colour's
+      // keys list a piece's values ('voted', 'never voted'), not only the reading's own pieces' (wave 2)
+      drawn={inUse(person.view, CHOOSABLE)}
       pieces={EVERY_FLOWER}
       // each flower keys its own kinds by how common they are on it (#76): inside one, its key (core's
       // flowerKeys, what its fills paint); on the map, no one key, so it says so
