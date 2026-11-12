@@ -95,7 +95,7 @@ describe('what can go where', () => {
         'name',
         'name_kind',
       ],
-      colour: ['share', 'amount', 'kind', 'identity', 'votes_cast', 'voted', 'name', 'name_kind'],
+      colour: ['kind', 'identity', 'voted', 'name', 'name_kind'],
       outline: ['kind', 'identity', 'voted', 'name', 'name_kind'],
       texture: ['kind', 'identity', 'voted', 'name', 'name_kind'],
       markings: ['votes_cast'],

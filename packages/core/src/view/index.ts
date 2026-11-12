@@ -40,7 +40,9 @@ export const ACCEPTS: Record<Dimension, readonly DataKind[]> = {
   // a date orders newest first ('Last active'), a count most first ('Votes cast'); Elco, 12 Nov: "the dimension of
   // time specifically is particularly absent ... it always looks like a shell, like a nautilus"
   order: ['amount', 'count', 'share', 'category', 'date'],
-  colour: ['category', 'amount', 'count', 'share'],
+  // a category's values, each in its key; an amount, count or share as a scale waits for the look to draw one, so
+  // Tools never offers what Colour can't draw (OVERLAYS, 12 Nov)
+  colour: ['category'],
   outline: ['flag', 'category'],
   texture: ['flag', 'category'],
   markings: ['count', 'flag'],
