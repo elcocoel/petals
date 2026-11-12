@@ -38,7 +38,7 @@ describe('maps hidden from the Power Map', () => {
   });
 
   test("the readings the waves replaced are retired, never deleted: each names its replacement and the wave's record", () => {
-    expect(retired.retired.length).toBe(118);
+    expect(retired.retired.length).toBe(137);
     for (const r of retired.retired) {
       expect(r.snapshot).toMatch(/^[0-9a-f]{64}$/);
       expect(r.replaced_by).toMatch(/^[0-9a-f]{64}$/);
