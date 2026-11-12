@@ -260,6 +260,10 @@ export function useLandscape(
     let voted: { flower: number; id: string } | null = null;
     /** the proposal pressed, read as the press starts (the map takes the pointer after), for the click to pin */
     let pressed: { flower: number; id: string } | null = null;
+    /** Each flower's opened proposal stacks, by petal (the rest stay folded into a mark with a count) */
+    const opened = new Map<number, Set<number>>();
+    /** the folded stack pressed, read as the press starts, for the click to open */
+    let pressedStack: { flower: number; petal: number } | null = null;
     /**
      * The shared wallets' petals in a flower; those not among its own petals are in its everyone else, so it lights
      * too.
@@ -279,6 +283,12 @@ export function useLandscape(
       voted = null;
       remount(j);
     };
+    /** The opened stacks folded again, their flowers drawn again (a click on empty space clears the choice). */
+    const foldStacks = () => {
+      const was = [...opened.keys()];
+      opened.clear();
+      for (const j of was) if (j !== voted?.flower) remount(j);
+    };
     const votersOf = (i: number, id: string): string[] =>
       ringOf(i)
         ?.proposals.find((p) => p.id === id)
@@ -295,7 +305,12 @@ export function useLandscape(
       const lined = line && (i === line.a || i === line.b) ? litIn(f, line.ids) : [];
       const voters = voted?.flower === i ? votersOf(i, voted.id) : [];
       const look = sharedLook(f, [...shared, ...group, ...own, ...lined, ...voters], ringOf(i));
-      return voted?.flower === i ? { ...look, pinned: voted.id } : look;
+      const open = [...(opened.get(i) ?? [])];
+      return {
+        ...look,
+        ...(voted?.flower === i ? { pinned: voted.id } : {}),
+        ...(open.length ? { opened: open } : {}),
+      };
     };
     /** Re-mounts a live flower, so its look is read again. */
     const remount = (i: number) => {
@@ -580,6 +595,17 @@ export function useLandscape(
           }
         }
       }
+      // a folded stack pressed opens, its proposals each their own arc again (Elco, 12 Nov walk 3)
+      if (pressedStack) {
+        const { flower, petal } = pressedStack;
+        const set = opened.get(flower) ?? new Set<number>();
+        set.add(petal);
+        opened.set(flower, set);
+        remount(flower);
+        pressedStack = null;
+        wake();
+        return;
+      }
       // a proposal pressed: its voters lit, its dots kept; pressed again, let go
       if (pressed) {
         const was = voted;
@@ -623,7 +649,10 @@ export function useLandscape(
             pressed && !pressed.tail && !pressed.id.startsWith('group:') ? pressed.id : null,
           );
           // the ground inside it lets the pinned proposal go too
-          if (!pressed) letGoProposal();
+          if (!pressed) {
+            foldStacks();
+            letGoProposal();
+          }
           const petal = pressed?.id;
           tells?.(
             petal
@@ -642,6 +671,7 @@ export function useLandscape(
       // line (above), and on the map the DAO in the middle
       if (r < 0) {
         chooseWallet(null);
+        foldStacks();
         letGoProposal();
         if (entered < 0 && (data.centre ?? -1) >= 0) at?.current?.onCentre?.(null);
       }
@@ -710,9 +740,12 @@ export function useLandscape(
     const onDown = (e: PointerEvent) => {
       const p = local(e);
       pressed = null;
+      pressedStack = null;
       for (const [i, d] of lives) {
         const id = d.scene.pointedProposal();
         if (id) pressed = { flower: i, id };
+        const petal = d.scene.pointedStack();
+        if (petal !== null) pressedStack = { flower: i, petal };
       }
       for (const [i, d] of lives) {
         if (d.last && d.scene.onMap(p.x, p.y, d.last)) {

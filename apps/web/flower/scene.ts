@@ -15,10 +15,12 @@ import {
 } from '@petal/core/wedge/highlight';
 import { lookFills } from '@petal/core/wedge/keys';
 import {
+  OTHERS_AT,
   type Proposal,
   placeArc,
   placesOf,
   ringRadius,
+  VOTE_RING,
   type VoteColour,
   voteDot,
   votesOn,
@@ -82,7 +84,15 @@ export interface PetalLook {
    * and show dots for positive and negative votes"): it stays pointed, its dots shown, while the page lights its voters.
    */
   pinned?: string | null;
+  /**
+   * The proposal stacks a click opened, by their petal's index (-1 the stack of no petal here); every other stack of
+   * more than STACK_FOLD folds into one mark with its count (Elco, 12 Nov walk 3).
+   */
+  opened?: readonly number[];
 }
+
+/** A stack taller than this folds into one mark with its count, until a click opens it. */
+export const STACK_FOLD = 3;
 
 /** Each scene's filters get their own names, so two flowers on one page never share one. */
 let scenes = 0;
@@ -178,6 +188,8 @@ export interface Scene {
   onMap(x: number, y: number, marks: Marks): boolean;
   /** The proposal the pointer is on now, by its id, or null: read when a press starts, so a click can pin it. */
   pointedProposal(): string | null;
+  /** The folded stack the pointer is on now, by its petal's index (-1 the stack of no petal), or null. */
+  pointedStack(): number | null;
   /** The drawing's own group in the SVG, so a space of many flowers can set what's on top of what. */
   root: SVGGElement;
   dispose(): void;
@@ -434,39 +446,106 @@ export function createScene(
     if (votes && voter && cast?.has(voter)) return votes.colours[cast.get(voter) ?? 'abstain'];
     return own ? MUTED : HAIR;
   };
-  const markSlots = placed.map((pl) => {
-    const own = pl.petal >= 0;
-    const rest = restOf(pl.id, own);
-    const d = placeArc(m.ring, pl.petal, pl.step);
-    const seen = slot(
+  // A stack of more than STACK_FOLD proposals over one petal folds into one mark with its count; a click opens it
+  // (Elco, 12 Nov walk 3: "a collapsed version of the proposal stack as shows that there are several proposals in a
+  // number and then you could click and it would open").
+  const opened = new Set(look?.opened ?? []);
+  const perPetal = new Map<number, number>();
+  for (const pl of placed) perPetal.set(pl.petal, (perPetal.get(pl.petal) ?? 0) + 1);
+  const folded = (petal: number) => (perPetal.get(petal) ?? 0) > STACK_FOLD && !opened.has(petal);
+  let stackPointed: number | null = null;
+  const stacks = [...perPetal]
+    .filter(([petal]) => folded(petal))
+    .map(([petal, n]) => {
+      const d = placeArc(m.ring, petal, 0);
       el(
         'path',
         {
           d,
           fill: 'none',
-          stroke: rest,
-          'stroke-width': 2.5,
+          stroke: petal >= 0 ? MUTED : HAIR,
+          'stroke-width': 5,
           'stroke-linecap': 'butt',
           'vector-effect': 'non-scaling-stroke',
         },
         voteTop as SVGGElement,
-      ),
-    );
-    // a wider line nobody sees, for the pointer
-    const hit = el(
-      'path',
-      {
-        d,
-        fill: 'none',
-        stroke: 'transparent',
-        'stroke-width': 8,
-        'vector-effect': 'non-scaling-stroke',
-        'pointer-events': 'stroke',
-      },
-      voteTop as SVGGElement,
-    );
-    return { pl, own, rest, seen, hit };
-  });
+      );
+      const hit = el(
+        'path',
+        {
+          d,
+          fill: 'none',
+          stroke: 'transparent',
+          'stroke-width': 12,
+          'vector-effect': 'non-scaling-stroke',
+          'pointer-events': 'stroke',
+        },
+        voteTop as SVGGElement,
+      );
+      hit.addEventListener('pointerenter', () => {
+        stackPointed = petal;
+      });
+      hit.addEventListener('pointerleave', () => {
+        stackPointed = null;
+      });
+      // its count, just out from the mark, where the petal points (the stack of no petal: before twelve)
+      const a =
+        petal >= 0
+          ? ((m.ring.start[petal] as number) + (m.ring.start[petal + 1] as number)) / 2 +
+            m.ring.rotation
+          : OTHERS_AT - 0.025;
+      const r = petal >= 0 ? SHAPE.r0 + (m.ring.h[petal] as number) + 4 : SHAPE.R * VOTE_RING + 3;
+      const label = slot(el('text', { fill: MUTED, 'text-anchor': 'middle' }, root));
+      label.text(String(n));
+      const dx = Math.sin(a);
+      const dy = -Math.cos(a);
+      return { label, x: SHAPE.cx + r * dx, y: SHAPE.cy + r * dy, dx, dy };
+    });
+  /** The folded stacks' counts, kept at their marks in screen space, so they read at any zoom. */
+  const placeStacks = () => {
+    if (!lastView) return;
+    for (const s of stacks) {
+      // a few pixels out from the mark, whatever the zoom
+      const x = (s.x + lastRing.ox) * lastView.k + lastView.x + s.dx * 12;
+      const y = (s.y + lastRing.oy) * lastView.k + lastView.y + s.dy * 12;
+      s.label.set('transform', `translate(${n3(x)} ${n3(y + 4)})`);
+    }
+  };
+  const markSlots = placed
+    .filter((pl) => !folded(pl.petal))
+    .map((pl) => {
+      const own = pl.petal >= 0;
+      const rest = restOf(pl.id, own);
+      const d = placeArc(m.ring, pl.petal, pl.step);
+      const seen = slot(
+        el(
+          'path',
+          {
+            d,
+            fill: 'none',
+            stroke: rest,
+            'stroke-width': 2.5,
+            'stroke-linecap': 'butt',
+            'vector-effect': 'non-scaling-stroke',
+          },
+          voteTop as SVGGElement,
+        ),
+      );
+      // a wider line nobody sees, for the pointer
+      const hit = el(
+        'path',
+        {
+          d,
+          fill: 'none',
+          stroke: 'transparent',
+          'stroke-width': 8,
+          'vector-effect': 'non-scaling-stroke',
+          'pointer-events': 'stroke',
+        },
+        voteTop as SVGGElement,
+      );
+      return { pl, own, rest, seen, hit };
+    });
   // the pointed proposal's words, in the flower's middle above its logo and name, where they always fit
   const voteWords = votes
     ? slot(el('text', { fill: INK, opacity: 0, 'text-anchor': 'middle' }, root))
@@ -950,6 +1029,7 @@ export function createScene(
       lastView = view;
       lastRing = ring;
       if (pointed >= 0) placeWords();
+      placeStacks();
       const rescale = k !== lastK || mk.recede !== lastRecede;
       const panned = view.x !== lastX || view.y !== lastY;
       lastK = k;
@@ -1136,6 +1216,9 @@ export function createScene(
         y >= map.y &&
         y <= map.y + map.size
       );
+    },
+    pointedStack() {
+      return stackPointed;
     },
     pointedProposal() {
       return pointed >= 0 ? (markSlots[pointed]?.pl.id ?? null) : null;
