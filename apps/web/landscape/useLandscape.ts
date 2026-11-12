@@ -122,7 +122,7 @@ export interface LandscapeAt {
   /** A new map's placeholder on this chain's map, read on each frame (LandscapeCanvas places it). */
   pending?: { x: number; y: number; s: number; name: string } | null;
   /** Work running on a map, read on each frame: a strip under that flower, or under the placeholder. */
-  progress?: { at: number | 'pending'; words: string; share: number | null } | null;
+  progress?: { at: number | 'pending' | 'map'; words: string; share: number | null } | null;
   /** Set by the map once it's built: the camera flies to take in this room (a placeholder's). */
   fit?: (room: { cx: number; cy: number; r: number }) => void;
   /**

@@ -103,6 +103,9 @@ export type MapShow =
   | { line: readonly [string, string] }
   | { proposal: { map: string; id: string } };
 
+/** The strip's words while a change in Tools reads the map again. */
+const UPDATING = 'Updating the map';
+
 /** A reading just made, for the map (LandscapeCanvas `landed`; WORKSPACE hands it from the conversation's turn). */
 export interface MapLanded {
   /** the chain its map is on */
@@ -265,8 +268,8 @@ function Land({
   show: LandShow | null | undefined;
   /** a new map's placeholder on this chain's map, or null */
   pending: { x: number; y: number; s: number; name: string } | null;
-  /** work running on this chain's map: under a flower (its place here) or the placeholder, or null */
-  progress: { at: number | 'pending'; words: string; share: number | null } | null;
+  /** work running on this chain's map: under a flower (its place here), the placeholder or the map's foot, or null */
+  progress: { at: number | 'pending' | 'map'; words: string; share: number | null } | null;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
@@ -642,6 +645,10 @@ export function LandscapeCanvas({
     return { x: at.x, y: at.y, s: at.s, name: placeholder.name };
   }, [placeholder, pendingPlace, chain, data, gravity]);
   const progressHere = useMemo(() => {
+    // a change in Tools reads the map again: meanwhile a strip says so, under the DAO you're in or at the map's
+    // foot (Elco, 12 Nov: "some form of visual feedback that something is being updated in the back")
+    if (!progress && person.busy)
+      return { at: entered >= 0 ? entered : ('map' as const), words: UPDATING, share: null };
     if (!progress) return null;
     if (progress.map === 'new')
       return pendingHere
@@ -652,7 +659,7 @@ export function LandscapeCanvas({
     if (!f || f.place.chain !== chain) return null;
     const at = data.flowers.slice(0, i).filter((x) => x.place.chain === chain).length;
     return { at, words: progress.words, share: progress.share };
-  }, [progress, pendingHere, data, chain]);
+  }, [progress, pendingHere, data, chain, person.busy, entered]);
   const land = useMemo(() => {
     if (!built) return null;
     const middle = { x: built.home.cx, y: built.home.cy };
