@@ -204,7 +204,7 @@ export interface PublishableData {
     verb: string;
     why: string;
     name?: string;
-    source?: PublishSource;
+    source?: PublishSource | null;
     confidence?: number | null;
   }[];
   /** each one that can go, in the order it would (Elco, 12 Nov: "Let me look first") */
@@ -212,7 +212,7 @@ export interface PublishableData {
     id: string;
     subject: string;
     name: string;
-    source?: PublishSource;
+    source?: PublishSource | null;
     /** 0 to 1, or null when the model that scores it is off */
     confidence?: number | null;
   }[];
@@ -223,7 +223,8 @@ export interface PublishableData {
 /** Where a name comes from: the proposal that declares it, with its words, or a transaction. */
 export interface PublishSource {
   kind: 'proposal' | 'transaction' | string;
-  ref: string;
+  /** the proposal's or transaction's ref, else the address it was read at */
+  ref: string | null;
   quote?: string;
   /** where it can be read */
   url?: string;

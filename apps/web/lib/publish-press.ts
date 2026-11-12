@@ -23,12 +23,13 @@ export const publishWords = {
   /** the list, read before the press (Elco: "Let me look first") */
   goes: 'What goes on the shared map',
   stays: 'Stays private',
-  source: (s: PublishSource) =>
-    s.kind === 'proposal'
-      ? `Proposal ${s.ref}${s.quote ? `: “${s.quote}”` : ''}`
-      : s.kind === 'transaction'
-        ? `Transaction ${shortId(s.ref)}`
-        : s.ref,
+  source: (s: PublishSource) => {
+    const quote = s.quote ? `: “${s.quote}”` : '';
+    if (s.kind === 'proposal') return `${s.ref ? `Proposal ${s.ref}` : 'A proposal'}${quote}`;
+    if (s.kind === 'transaction')
+      return `${s.ref ? `Transaction ${shortId(s.ref)}` : 'A transaction'}${quote}`;
+    return `${s.ref ?? s.kind}${quote}`;
+  },
   confidence: (c: number) => `Confidence ${Math.round(c * 100)}%`,
 } as const;
 
