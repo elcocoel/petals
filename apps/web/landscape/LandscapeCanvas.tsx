@@ -587,6 +587,8 @@ export function LandscapeCanvas({
   // /make's beside the conversation (WORKSPACE's walk, 11 Nov): its own room, not the window's
   // (on the map's boxes the chain list's fold is Tools', and Insights' is Information's)
   const [listOpen, setListOpen] = useState(true);
+  // Tools' Chains section, folded under its head by hand (Elco, wave 4 walk: "they don't have a collapse component")
+  const [chainsOpen, setChainsOpen] = useState(true);
   const [legendOpen, setLegendOpen] = useState(true);
   // Information opens where the page says where it is (a map's page); Insights is folded until asked
   const [claimsOpen, setClaimsOpen] = useState(movable && Boolean(information));
@@ -1096,8 +1098,12 @@ export function LandscapeCanvas({
               {searchRow}
               {chainList && (
                 <>
-                  <SectionHead size="panel" title={panelWords.toolsChains} />
-                  <div className="py-space-4">{chainList}</div>
+                  <SectionHead
+                    size="panel"
+                    title={panelWords.toolsChains}
+                    fold={{ open: chainsOpen, onToggle: () => setChainsOpen((now) => !now) }}
+                  />
+                  {chainsOpen && <div className="py-space-4">{chainList}</div>}
                 </>
               )}
             </div>
