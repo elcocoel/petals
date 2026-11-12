@@ -29,6 +29,7 @@ export { type CallsRead, callsOf, readCalls } from './calls.ts';
 export { configFromEnv, createContext } from './context.ts';
 export type { PetalTool, ToolAnnotations } from './define.ts';
 export { TOOL_ERROR_SCHEMA } from './define.ts';
+export { type DocPageText, docsPages } from './docs-pages.ts';
 export { nonceStore, privateStore, specBody } from './drafts.ts';
 export { fromThrown, HTTP_STATUS, isToolError } from './errors.ts';
 export { freshGate, withRunSignal } from './fresh.ts';
@@ -100,6 +101,8 @@ export {
 export { workerPlace } from './tools/jobs.ts';
 export { makeReadPage } from './tools/read-page.ts';
 export {
+  DEFAULT_KINDS,
+  docDocs,
   FINDABLE_KINDS,
   MEANING_OFF,
   type SearchAnswer,

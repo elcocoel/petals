@@ -26,7 +26,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | Method and path | Tool |
 |---|---|
 | `GET /api/v1/look-up?query=&chain=` | `look_up` |
-| `GET /api/v1/search?q=&kinds=&limit=&rerank=` | `search_petals` (#105): the map for anyone, a person's own work and annotations for them alone; the last word read as the start of words; each answer with a `snippet`. `rerank=0` leaves the reranker out (about 0.35 s in place of 2 to 3 s, a little less well ordered), for a box that searches as someone types; its answers carry no `rerank` |
+| `GET /api/v1/search?q=&kinds=&limit=&rerank=` | `search_petals` (#105): the map for anyone, a person's own work and annotations for them alone; the last word read as the start of words; each answer with a `snippet`. `rerank=0` leaves the reranker out (about 0.35 s in place of 2 to 3 s, a little less well ordered), for a box that searches as someone types; its answers carry no `rerank`. `kinds=doc` (12 Nov, Elco: search on /docs) searches the pages /docs shows, for anyone, and is never in the default kinds: each answer `{ kind: 'doc', id, title, snippet }`, `id` the page's repo path (`docs/use-it/open-calls.md`, `brain/gathering/open-calls.md`) or a format's schema `$id` (`urn:petal:schema:proposals:v3`), and `matched` its sections that matched, each `id` the path and its heading's anchor (`docs/use-it/open-calls.md#watch-it`, as rehype-slug makes it) |
 | `GET /api/v1/find?query=&chain=&limit=` | `find_target` |
 | `POST /api/v1/read-chain` | `read_chain` |
 | `GET /api/v1/read-page?url=&start=` | `read_page` |
