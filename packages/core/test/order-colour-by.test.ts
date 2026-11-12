@@ -100,7 +100,10 @@ describe('Colour', () => {
     const real = r.petals.filter((p) => !p.tail);
     expect(real.find((p) => p.id === a)?.colour).toBe('voted');
     expect(real.find((p) => p.id === ids[0])?.colour).toBe('never voted');
-    const keyed = keysOf(real.map((p) => p.colour));
+    // its words are its own (wordsOf), never 'unknown': the keys and the legend name it
+    expect(wordsOf('voted')).toBe('voted');
+    expect(wordsOf('never voted')).toBe('never voted');
+    const keyed = keysOf(real.map((p) => wordsOf(p.colour)));
     expect(keyed.find((k) => k.value === 'voted')?.key).toBe(KEYS[0]);
     expect(keyed.find((k) => k.value === 'never voted')?.key).toBe(GREY);
   });

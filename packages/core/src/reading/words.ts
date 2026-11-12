@@ -26,9 +26,13 @@ const OTHER_COLOUR_LABELS: Record<string, string> = {
   single: 'every petal',
 };
 
-/** The words for a colour key: a kind, `named`, `anonymous` or `single`. */
+/**
+ * The words for a colour key: a kind, `named`, `anonymous` or `single`; any other is a value of the piece of data
+ * Colour shows (voted, never voted: SYSTEMS's activity), said as itself, so its key and the legend name it (12 Nov:
+ * a category from given pieces read 'unknown').
+ */
 export function colourLabel(key: string): string {
-  return OTHER_COLOUR_LABELS[key] ?? KIND_LABELS[key as Kind] ?? KIND_LABELS.unknown;
+  return OTHER_COLOUR_LABELS[key] ?? KIND_LABELS[key as Kind] ?? key;
 }
 
 /** 0.0561 -> "5.61%"; 0.1234 -> "12.3%"; under 0.1% -> "<0.1%" (the spike's format). */
