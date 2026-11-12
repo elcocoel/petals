@@ -99,6 +99,9 @@ export const SITE_TOOLS = [
   // proposals, marks, values and readings an agent found, kept privately in the project (#98, SYSTEMS's)
   'keep_data',
   'list_data',
+  // what the person kept about a map and could publish with one press there (SYSTEMS's sys/publish, 12 Nov): the
+  // site holds their claims; the press and the wallet's signature stay theirs, on the page
+  'list_publishable',
 ] as const;
 
 /**
@@ -503,6 +506,14 @@ export function siteDoor(opts: SiteOptions) {
           return call(
             'GET',
             `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/data${petal}`,
+          );
+        }
+        case 'list_publishable': {
+          if (!exploration) return nowhere();
+          const map = typeof i.map === 'string' ? i.map : '';
+          return call(
+            'GET',
+            `/api/v1/explorations/${encodeURIComponent(refOf(exploration))}/publishable?map=${encodeURIComponent(map)}`,
           );
         }
         case 'search_petals': {

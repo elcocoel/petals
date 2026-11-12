@@ -30,7 +30,7 @@ export interface MapClaimLine {
   key: string;
   says: string;
   kind: string;
-  /** "Petals' mapping" */
+  /** "Petals' mapping", or the account of the person who published it */
   who: string;
   /** the tool or model that made it, quiet beside who */
   tool?: string;
@@ -124,6 +124,13 @@ export function toolOf(ref: string | undefined): string | null {
   const m = /^(?:tool|model):([^@]+)/.exec(ref ?? '');
   return m?.[1] ?? null;
 }
+
+/**
+ * Who answers for a claim (SYSTEMS, 12 Nov): a person who published it to the shared map, by their account
+ * ('near:mainnet:<account>' in its by), or else Petals' mapping, whose by names the wave's tool or model.
+ */
+export const claimWho = (by: string | undefined): string =>
+  by?.startsWith('near:') ? (by.split(':').at(-1) ?? by) : mapClaimWords.mapping;
 
 /** Who found a piece: the tool or model by its name, else the account as it's written. */
 const finder = (ref: string | undefined) => toolOf(ref) ?? ref ?? '';
@@ -228,7 +235,7 @@ export function mapClaimGroups(
       key: c.id,
       says: said.says,
       kind: c.kind,
-      who: mapClaimWords.mapping,
+      who: claimWho(c.by),
       ...(tool ? { tool } : {}),
       when: dayOf(c.issued_at),
       ...(c.method ? { method: c.method } : {}),

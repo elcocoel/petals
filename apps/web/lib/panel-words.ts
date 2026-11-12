@@ -15,6 +15,10 @@ const PIECE_WORDS: Record<string, string> = {
   name: 'Its name',
   name_kind: 'Kind of name',
   backers: 'Who backs it',
+  // each wallet's activity over its DAO's proposals (SYSTEMS's sys/activity; Elco, wave 2: "time is absent")
+  last_active: 'Last active',
+  votes_cast: 'Most active',
+  voted: 'Voted or never',
 };
 
 export const panelWords = {
@@ -47,7 +51,8 @@ export const panelWords = {
   /** The legend's head (design/legend.md): the person's view as a key. */
   legend: 'Legend',
   /** Under its Colour, on a map: each flower keys its own kinds (#76's keys, by how many petals carry each). */
-  legendColours: "Each flower's own: its most common kind first",
+  legendColours:
+    'Each DAO colours its own values, the most common first: inside one, what each colour stands for',
   /** What a line between two flowers on the map is (Elco, 12 Nov, walk 2: "a little bit mysterious"). Drafts. */
   legendLines: 'Lines',
   /**
@@ -105,6 +110,12 @@ export const panelWords = {
   /** The legend's two sections, and the map's own rows (Elco, 12 Nov, walk 2: "a tool panel"). Drafts. */
   legendDimensions: 'Dimensions',
   legendMap: 'Map',
+  /** Tools' sections (Elco, 12 Nov, wave 2: "the visual organization of this tool panel is still failing us"). Drafts. */
+  toolsChains: 'Chains',
+  legendPetals: 'Petals',
+  legendMore: (n: number) => `More dimensions · ${n}`,
+  legendOnMap: 'On the map',
+  legendBlocs: 'Voting blocs',
   legendGravity: 'Gravity',
   legendVotes: 'Votes',
   /** What the map's Tools turn on and off (Elco, walk 3: "insights on and off ... pricing etc"). Drafts. */
@@ -147,6 +158,28 @@ export const panelWords = {
     /** Highlight, on hover, until a chosen group comes with the data. A draft. */
     highlightSoon: 'Comes with a chosen group of petals',
     reset: 'Put the default back',
+    /**
+     * What each dimension does, a quiet line under its name in Tools (Elco, 12 Nov, wave 3: "I don't understand all
+     * of these options here"). Drafts.
+     */
+    does: {
+      order: 'How the petals go round the circle',
+      height: 'How far each petal reaches',
+      width: 'How wide each petal is',
+      colour: "What a petal's colour says",
+      outline: "What a petal's edge says",
+      texture: "What a petal's fill pattern says",
+      markings: 'Marks drawn on a petal',
+      segments: 'What a petal is cut into',
+      lines: 'What joins one petal to another',
+      labels: 'What names each petal',
+    } as Record<string, string>,
+    /** Under a number's scale. A draft. */
+    scaleDoes: 'How the number grows into the size',
+    /** Over Colour's values in Tools. A draft. */
+    colourMeans: 'Each colour means',
+    /** While the map is drawn again in a change (wave 3). A draft. */
+    drawing: 'Updating the map',
     failed: (reason: string) => `Not saved: ${reason}`,
   },
   projects: 'Projects',

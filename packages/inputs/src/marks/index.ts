@@ -19,7 +19,15 @@ import {
 } from '@petal/core';
 import type { ClaimDraft } from '@petal/core/types';
 import { EVM_CHAINS } from '../evm/chains.ts';
-import { daohausSaid, evmSaid, gateway, nearSaid, type SelfSaid, solanaSaid } from './chain.ts';
+import {
+  daohausSaid,
+  evmSaid,
+  gateway,
+  nearSaid,
+  type SelfSaid,
+  solanaSaid,
+  sputnikSaid,
+} from './chain.ts';
 import { type Fetch, type Listed, type ListReader, listReader } from './lists.ts';
 
 export {
@@ -98,6 +106,9 @@ export function pictureType(b: Uint8Array): MarkLogo['media_type'] | null {
   return null;
 }
 
+/** How long one picture may take to arrive. */
+const PICTURE_TIMEOUT_MS = 30_000;
+
 /** A picture from an address, or a data: URI, when it's one Petals keeps; null for anything else. */
 async function picture(fetchImpl: Fetch, url: string): Promise<MarkPicture | null> {
   let bytes: Uint8Array;
@@ -105,9 +116,27 @@ async function picture(fetchImpl: Fetch, url: string): Promise<MarkPicture | nul
     const data = /^data:[^;,]+;base64,(.*)$/s.exec(url);
     if (data) bytes = new Uint8Array(Buffer.from(data[1] as string, 'base64'));
     else {
-      const res = await fetchImpl(gateway(url), { headers: { 'user-agent': 'petal/0.1 (marks)' } });
-      if (!res.ok) return null;
-      bytes = new Uint8Array(await res.arrayBuffer());
+      // the address as given, then through the gateway (12 Nov: ipfs.near.social answers, Pinata timed out)
+      let got: Uint8Array | null = null;
+      for (const u of [...new Set([url, gateway(url)])]) {
+        if (!/^https?:\/\//.test(u)) continue;
+        try {
+          const res = await fetchImpl(u, {
+            headers: { 'user-agent': 'petal/0.1 (marks)' },
+            signal: AbortSignal.timeout(PICTURE_TIMEOUT_MS),
+          });
+          if (!res.ok) continue;
+          const b = new Uint8Array(await res.arrayBuffer());
+          if (pictureType(b)) {
+            got = b;
+            break;
+          }
+        } catch {
+          // this address didn't answer: the next
+        }
+      }
+      if (!got) return null;
+      bytes = got;
     }
   } catch {
     return null;
@@ -130,7 +159,10 @@ async function selfSaid(
     return evmSaid(evm, address, fetchImpl);
   }
   if (chain === 'solana') return solanaSaid(fetchImpl, address);
-  if (chain === 'near:mainnet') return nearSaid(fetchImpl, address);
+  if (chain === 'near:mainnet')
+    return reader === 'sputnik-dao'
+      ? sputnikSaid(fetchImpl, address)
+      : nearSaid(fetchImpl, address);
   return { org: null, name: null, symbol: null, image: null };
 }
 

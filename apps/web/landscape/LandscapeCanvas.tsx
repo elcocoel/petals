@@ -12,7 +12,7 @@
 // in the chains' place; pressing one goes to its chain and into its flower (board 105).
 import type { Proposal } from '@petal/core';
 import { EVERY_FLOWER, inUse } from '@petal/core/view';
-import { flowerKeys } from '@petal/core/wedge/keys';
+import { flowerKeys, keyLines, mapKeys } from '@petal/core/wedge/keys';
 import { floatBox } from '@petal/tokens';
 import {
   type ReactNode,
@@ -43,6 +43,7 @@ import { layerWords, mapLayers } from '../lib/map-layers.ts';
 import { MAP_SEARCH_ID, mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
+import { CHOOSABLE } from '../lib/person-view.ts';
 import { proposalView, proposalWords } from '../lib/proposal-view.ts';
 import type { LegendEdit } from '../lib/view-edit.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
@@ -101,6 +102,9 @@ export type MapShow =
   | { wallet: string; chain?: string | null }
   | { line: readonly [string, string] }
   | { proposal: { map: string; id: string } };
+
+/** The strip's words while a change in Tools reads the map again. */
+const UPDATING = 'Updating the map';
 
 /** A reading just made, for the map (LandscapeCanvas `landed`; WORKSPACE hands it from the conversation's turn). */
 export interface MapLanded {
@@ -264,8 +268,8 @@ function Land({
   show: LandShow | null | undefined;
   /** a new map's placeholder on this chain's map, or null */
   pending: { x: number; y: number; s: number; name: string } | null;
-  /** work running on this chain's map: under a flower (its place here) or the placeholder, or null */
-  progress: { at: number | 'pending'; words: string; share: number | null } | null;
+  /** work running on this chain's map: under a flower (its place here), the placeholder or the map's foot, or null */
+  progress: { at: number | 'pending' | 'map'; words: string; share: number | null } | null;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
@@ -588,6 +592,8 @@ export function LandscapeCanvas({
   const [worth, setWorth] = useState(true);
   const [insightsOn, setInsightsOn] = useState(true);
   // the chain's flowers and their drawing models, once per chain; gravity only moves their places
+  // the map's keys, ranked once over every flower on it, whatever chain: a value has one colour everywhere
+  const mapKeyed = useMemo(() => mapKeys(data.flowers.map((f) => f.reading.petals)), [data]);
   const built = useMemo<(LandscapeData & { focus: number; from: number[] }) | null>(() => {
     const here = data.chains.find((c) => c.chain === chain);
     if (!here) return null;
@@ -619,8 +625,15 @@ export function LandscapeCanvas({
       return a === undefined || b === undefined ? [] : [{ ...r, a, b }];
     });
     const { x, y, r } = here.continent;
-    return { flowers, roads, home: { cx: x, cy: y, r }, focus: at.get(focus) ?? -1, from };
-  }, [data, chain, focus]);
+    return {
+      flowers,
+      roads,
+      home: { cx: x, cy: y, r },
+      focus: at.get(focus) ?? -1,
+      from,
+      keyed: mapKeyed,
+    };
+  }, [data, chain, focus, mapKeyed]);
   // the DAO a click put in the middle, by its map (Elco, 12 Nov walk: "one click put something in the center"); the
   // rest arranged round it by the wallets they share with it
   const [centre, setCentre] = useState<string | null>(null);
@@ -632,6 +645,10 @@ export function LandscapeCanvas({
     return { x: at.x, y: at.y, s: at.s, name: placeholder.name };
   }, [placeholder, pendingPlace, chain, data, gravity]);
   const progressHere = useMemo(() => {
+    // a change in Tools reads the map again: meanwhile a strip says so, under the DAO you're in or at the map's
+    // foot (Elco, 12 Nov: "some form of visual feedback that something is being updated in the back")
+    if (!progress && person.busy)
+      return { at: entered >= 0 ? entered : ('map' as const), words: UPDATING, share: null };
     if (!progress) return null;
     if (progress.map === 'new')
       return pendingHere
@@ -642,7 +659,7 @@ export function LandscapeCanvas({
     if (!f || f.place.chain !== chain) return null;
     const at = data.flowers.slice(0, i).filter((x) => x.place.chain === chain).length;
     return { at, words: progress.words, share: progress.share };
-  }, [progress, pendingHere, data, chain]);
+  }, [progress, pendingHere, data, chain, person.busy, entered]);
   const land = useMemo(() => {
     if (!built) return null;
     const middle = { x: built.home.cx, y: built.home.cy };
@@ -706,40 +723,42 @@ export function LandscapeCanvas({
   // the chain list's words and rows, the legend and Insights: one each, in a floating box or in the column
   const chainTitle =
     !listOpen && shown ? `${title ?? 'Power Map'} · ${shown.label}` : (title ?? 'Power Map');
+  const searchRow = search && (
+    <MapSearch
+      q={finding.q}
+      onType={finding.type}
+      onOrder={finding.order}
+      onClear={finding.clear}
+      rows={found}
+      status={searchStatus}
+      onGo={goTo}
+    />
+  );
+  // while something's typed, what it finds stands in the chains' place
+  const chainList = !(search && finding.q.trim()) && (
+    <ul className="m-0 flex list-none flex-col p-0">
+      {data.chains.map((c) => (
+        <li key={c.chain}>
+          <NavItem
+            onClick={() => {
+              setChain(c.chain);
+              setGo(null);
+              // where the room is narrow the list folds back once a chain is chosen
+              if (narrow()) setListOpen(false);
+            }}
+            chosen={c.chain === chain}
+            logo={c.logo}
+            label={c.label}
+            trail={String(counts.get(c.chain) ?? 0)}
+          />
+        </li>
+      ))}
+    </ul>
+  );
   const chainRows = (
     <>
-      {search && (
-        <MapSearch
-          q={finding.q}
-          onType={finding.type}
-          onOrder={finding.order}
-          onClear={finding.clear}
-          rows={found}
-          status={searchStatus}
-          onGo={goTo}
-        />
-      )}
-      {/* while something's typed, what it finds stands in the chains' place */}
-      {!(search && finding.q.trim()) && (
-        <ul className="m-0 flex list-none flex-col p-0">
-          {data.chains.map((c) => (
-            <li key={c.chain}>
-              <NavItem
-                onClick={() => {
-                  setChain(c.chain);
-                  setGo(null);
-                  // where the room is narrow the list folds back once a chain is chosen
-                  if (narrow()) setListOpen(false);
-                }}
-                chosen={c.chain === chain}
-                logo={c.logo}
-                label={c.label}
-                trail={String(counts.get(c.chain) ?? 0)}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      {searchRow}
+      {chainList}
     </>
   );
   const showClaims = Boolean(legend && inside && (claimGroups.length > 0 || (wallet && claims)));
@@ -817,12 +836,16 @@ export function LandscapeCanvas({
   const legendBody = (bare: boolean) => (
     <ViewLegend
       view={person.view}
-      drawn={inUse(person.view, EVERY_FLOWER)}
+      // what each dimension draws, among everything Tools offers (a map's activity, a person's names), so Colour's
+      // keys list a piece's values ('voted', 'never voted'), not only the reading's own pieces' (wave 2)
+      drawn={inUse(person.view, CHOOSABLE)}
       pieces={EVERY_FLOWER}
       // each flower keys its own kinds by how common they are on it (#76): inside one, its key (core's
       // flowerKeys, what its fills paint); on the map, no one key, so it says so
-      keys={inFlower ? flowerKeys(inFlower.reading.petals) : []}
-      keysNote={inFlower ? undefined : panelWords.legendColours}
+      // one colour per value across the map (core mapKeys): inside a flower, its own values in the map's colours;
+      // on the map, what each colour stands for everywhere (Elco, 12 Nov: "the legend tells me what each color is")
+      keys={inFlower ? flowerKeys(inFlower.reading.petals, mapKeyed) : keyLines(mapKeyed)}
+      keysNote={inFlower || mapKeyed.length > 0 ? undefined : panelWords.legendColours}
       // what a line between two flowers is, for anyone who doesn't know (Elco, 12 Nov, walk 2); in Information
       // on the map's boxes, as what's seen, not a tool
       between={
@@ -919,7 +942,16 @@ export function LandscapeCanvas({
               />
             }
           >
-            <div className="flex flex-col px-space-8 pt-space-8">{chainRows}</div>
+            {/* the search, then the chains under their head, then the view's sections (ViewLegend) */}
+            <div className="flex flex-col px-space-8 pt-space-8">
+              {searchRow}
+              {chainList && (
+                <>
+                  <SectionHead size="panel" title={panelWords.toolsChains} />
+                  <div className="py-space-4">{chainList}</div>
+                </>
+              )}
+            </div>
             {legend && legendBody(true)}
           </FloatBox>
           {legend && (

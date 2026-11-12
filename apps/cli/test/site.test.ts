@@ -892,3 +892,39 @@ describe('what an agent found goes in the project, privately (keep_data, #98)', 
     expect(site.seen.at(-1)?.url).toBe(`${SITE}/api/v1/explorations/${TOKEN}/data?petal=mark%2Fv2`);
   });
 });
+
+describe("what would publish, from a person's own agent (list_publishable, SYSTEMS's sys/publish)", () => {
+  test("list_publishable asks the site through the project's link, never publishing", async () => {
+    const { writeFileSync } = await import('node:fs');
+    const currentFile = join(mkdtempSync(join(tmpdir(), 'petal-publishable-')), 'current.json');
+    writeFileSync(currentFile, `${JSON.stringify({ link: LINK })}\n`);
+    const site = fakeSite();
+    const fetch = async (url: string, init: RequestInit = {}) => {
+      if (url.includes('/publishable')) {
+        site.seen.push({ method: init.method ?? 'GET', url, headers: {}, body: null });
+        return new Response(
+          JSON.stringify({
+            about: 'eip155:8453:0x880f',
+            name: 'Gnars',
+            map_url: `${SITE}/map?at=eip155:8453:0x880f`,
+            ready: 2,
+            private: [],
+            published: 0,
+          }),
+          { headers: { 'content-type': 'application/json' } },
+        );
+      }
+      return site.fetch(url, init);
+    };
+    const tools = siteDoor({ site: SITE, fetch, currentFile }).tools(registry);
+    const out = (await byName(tools, 'list_publishable').run(
+      { map: 'eip155:8453:0x880f' } as never,
+      ctx(),
+    )) as { ready: number };
+    expect(out.ready).toBe(2);
+    expect(site.seen.at(-1)).toMatchObject({
+      method: 'GET',
+      url: `${SITE}/api/v1/explorations/${TOKEN}/publishable?map=eip155%3A8453%3A0x880f`,
+    });
+  });
+});

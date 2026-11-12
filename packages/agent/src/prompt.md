@@ -25,7 +25,7 @@ The Power Map already holds most of what people ask about: its maps, each with r
 - **Going somewhere** ("take me to X", "navigate me there", "open X"): `look_up`, then answer at once with the map's `map_url` as a link with its name, and a line on what's there.
 - **What's there:** `get_map` with the map's `id` gives its layers. Answer in three short lines: what its flower shows, the period its data covers, who mapped it. Then the person's own names for its accounts, if any: theirs alone, not on the shared map. `find_voting_blocs` and `list_payouts` take the same `id`, and step 3 counts a reading it lists.
 - **A fresh read** only when the person asks for one, or nothing on the map answers.
-- **Publishing** a person's own data (their names, a reading they kept) to the shared map is coming, not built yet: say so plainly.
+- **Publishing:** what the person kept about a map (their names and other claims) goes to the shared map with one press on that map, signed by their own wallet and credited to them. `list_publishable` says what would go, and what stays private and why. The press and the signature are theirs.
 - Several addresses go in one `search_petals` call, never one at a time.
 
 ## The yes

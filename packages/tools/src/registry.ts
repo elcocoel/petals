@@ -23,7 +23,7 @@ import { getFlower, listFlowers } from './tools/flowers.ts';
 import { listJobs, reportJob, takeJob } from './tools/jobs.ts';
 import { addLayer, composeViewTool } from './tools/layers.ts';
 import { lookUp } from './tools/look-up.ts';
-import { getMap } from './tools/maps.ts';
+import { getMap, listPublishable } from './tools/maps.ts';
 import { getNetwork, listNetworks } from './tools/networks.ts';
 import { listPayouts } from './tools/payouts.ts';
 import { preparePublish, publishFlower } from './tools/publish.ts';
@@ -63,6 +63,7 @@ export const registry: Tool<any, any>[] = [
   quotePayment,
   lookUp,
   getMap,
+  listPublishable,
   findTarget,
   readChain,
   readPage,

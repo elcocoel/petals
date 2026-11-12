@@ -79,19 +79,31 @@ describe('what can go where', () => {
     const names = Object.fromEntries(
       Object.entries(viewChoices()).map(([d, pieces]) => [d, pieces.map((p) => p.name)]),
     );
+    // each wallet's activity where its map's proposals were read (Elco, 12 Nov: time is absent): votes cast is a
+    // count, voted a category; last active is a date, which Order takes, newest first (LOOK's fe-orderby)
     expect(names).toEqual({
-      height: ['share', 'amount'],
-      width: ['share', 'amount'],
-      order: ['share', 'amount', 'kind', 'identity', 'name', 'name_kind'],
-      colour: ['share', 'amount', 'kind', 'identity', 'name', 'name_kind'],
-      outline: ['kind', 'identity', 'name', 'name_kind'],
-      texture: ['kind', 'identity', 'name', 'name_kind'],
-      markings: [],
+      height: ['share', 'amount', 'votes_cast'],
+      width: ['share', 'amount', 'votes_cast'],
+      order: [
+        'share',
+        'amount',
+        'kind',
+        'identity',
+        'votes_cast',
+        'last_active',
+        'voted',
+        'name',
+        'name_kind',
+      ],
+      colour: ['kind', 'identity', 'voted', 'name', 'name_kind'],
+      outline: ['kind', 'identity', 'voted', 'name', 'name_kind'],
+      texture: ['kind', 'identity', 'voted', 'name', 'name_kind'],
+      markings: ['votes_cast'],
       // who backs each wallet, where a flower's reading has delegations (Elco's walk 3: no choices on segments)
       segments: ['backers'],
       lines: [],
       // a person's annotations name accounts (annotation-layer.md, step 6): labels show them once chosen
-      labels: ['kind', 'identity', 'name', 'name_kind'],
+      labels: ['kind', 'identity', 'voted', 'name', 'name_kind'],
     });
   });
 

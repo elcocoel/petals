@@ -194,3 +194,52 @@ describe('claims about claims: a correction, Tae → Sasquatch', () => {
     expect(name.values.map((v) => v.value)).toEqual(['Sasquatch']);
   });
 });
+
+describe("a published name, as the system's own records declare it (people.ts, 12 Nov)", () => {
+  const named = (evidence: ClaimEvidence[]) =>
+    v3({
+      subject: ADA,
+      verb: 'named',
+      object: { value: 'Dekan' },
+      issued_at: WHEN,
+      kind: 'sourced',
+      evidence,
+      by: PERSON,
+    });
+  const found = { found_by: CODEX, found_at: WHEN };
+  const proposal = {
+    type: 'proposal' as const,
+    proposal: 'proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:167',
+    url: 'https://gnosisscan.io/tx/0x75dc',
+    quote: 'Elect Dekan as Keeper of the Handbook (Q1, 2026)',
+    ...found,
+  };
+
+  test('a proposal or a transaction it rests on, quoted: it publishes, the record in its own words', () => {
+    expect(ok(named([proposal])).ok).toBe(true);
+    expect(
+      ok(
+        named([
+          {
+            type: 'tx',
+            tx: 'eip155:100:0x75dc363d5cb9f27d79eb5dca9ade9da7d00f48fb4f9ad5946abdb1362077d803',
+            url: 'https://gnosisscan.io/tx/0x75dc',
+            quote: 'Pay Dekan',
+            ...found,
+          },
+        ]),
+      ).ok,
+    ).toBe(true);
+  });
+
+  test("a name a page says, or a record not quoted, stays in a person's own project; a note still names no one", () => {
+    const page = named([
+      { type: 'page', url: 'https://example.org/', quote: 'Dekan Smith', ...found },
+    ]);
+    expect(ok(page).ok).toBe(false);
+    expect(ok(page, { private: true }).ok).toBe(true);
+    const { quote: _q, ...unquoted } = proposal;
+    expect(ok(named([unquoted])).ok).toBe(false);
+    expect(ok(named([{ ...proposal, note: 'Also Jane Doe in #245' }])).ok).toBe(false);
+  });
+});

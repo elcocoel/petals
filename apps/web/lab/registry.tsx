@@ -57,6 +57,7 @@ import { Oops } from '../components/Oops.tsx';
 import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
 import { PublishFlow } from '../components/PublishFlow.tsx';
+import { PublishPress } from '../components/PublishPress.tsx';
 import { QuotePanel } from '../components/QuotePanel.tsx';
 import { SourceList } from '../components/Sources.tsx';
 import { ActionRow } from '../components/ui/ActionRow.tsx';
@@ -128,6 +129,7 @@ import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
 import { viewChoices } from '../lib/person-view.ts';
 import { claimsView, usageView, walletRows } from '../lib/profile-view.ts';
+import { publishPressView } from '../lib/publish-press.ts';
 import type { Done } from '../lib/thread.ts';
 import { answeredBy, composerView, type TurnRow, threadView } from '../lib/thread-view.ts';
 import { tipLine } from '../lib/tip.ts';
@@ -2871,6 +2873,39 @@ export const registry: LabEntry[] = [
         ),
       },
       { name: 'none yet', render: () => <Conversations rows={[]} /> },
+    ],
+  },
+  {
+    id: 'PublishPress',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/PublishPress.tsx',
+    states: [
+      {
+        name: 'names that can go, some private',
+        render: () => {
+          const view = publishPressView(
+            {
+              about: 'eip155:100:0xf02f',
+              name: 'RaidGuild',
+              ready: 63,
+              private: [
+                {
+                  id: 'c1',
+                  subject: '0xced6…075b',
+                  verb: 'named',
+                  why: 'No proposal or transaction declares it.',
+                },
+              ],
+              published: 0,
+            },
+            'ready',
+            null,
+          );
+          return view ? <PublishPress view={view} onPublish={() => {}} /> : null;
+        },
+      },
     ],
   },
   {

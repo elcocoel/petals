@@ -5,7 +5,9 @@ import type {
   AgentEvent,
   FlowerResult,
   JobEvent,
+  MapShow,
   ModelSignature,
+  NextSteps,
   Run,
   Spec,
 } from '@petal/core/types';
@@ -40,6 +42,10 @@ export type Item =
   | { kind: 'job'; job: JobEvent }
   /** A new map waiting for the person's yes (lib/ceremony.ts) */
   | { kind: 'ceremony'; held: Held }
+  /** what the answer is about on the Power Map: the map moves to it, nothing is said (SYSTEMS, 12 Nov) */
+  | { kind: 'show'; show: MapShow }
+  /** the next steps on a map just read, each a message to send (SYSTEMS, 12 Nov) */
+  | { kind: 'next'; next: NextSteps }
   | { kind: 'done'; done: Done; signature: ModelSignature | null };
 
 export interface StoredItem {
@@ -92,6 +98,10 @@ export function fold(items: Item[], e: AgentEvent): Item[] {
       return [...items, { kind: 'job', job: e.data }];
     case 'approval_required':
       return [...items, { kind: 'ceremony', held: e.data }];
+    case 'show':
+      return [...items, { kind: 'show', show: e.data }];
+    case 'next':
+      return [...items, { kind: 'next', next: e.data }];
     case 'error':
       return [...items, { kind: 'error', ...e.data }];
     case 'done': {
@@ -168,7 +178,7 @@ export function blocksOf(items: Item[]): Block[] {
       const last = out[out.length - 1];
       if (last?.kind === 'steps') last.steps.push(x);
       else out.push({ kind: 'steps', steps: [x] });
-    } else if (x.kind === 'ceremony') waiting.push(x);
+    } else if (x.kind === 'ceremony' || x.kind === 'show' || x.kind === 'next') waiting.push(x);
     else out.push(...waiting.splice(0), x);
   }
   out.push(...waiting);

@@ -1,6 +1,7 @@
 // @petal/core (W1): schemas, types, canonical hash, validation, counting, conventions, renderer.
 // No network, no disk (Biome refuses node: imports under src/). Signatures: contracts/packages.md.
 
+export { activityPieces, NEVER_VOTED, VOTED } from './activity.ts';
 export {
   BLOCS_DEFAULTS,
   BLOCS_METHOD,
@@ -24,6 +25,7 @@ export {
   claimRef,
   claimsFromMap,
   DEFAULT_LENS,
+  declaredName,
   distinctCounts,
   EVIDENCE_FIELD,
   EVIDENCE_TYPES,
@@ -163,6 +165,8 @@ export { isView, viewProblem } from './view/check.ts';
 export type { Dimension, Piece } from './view/index.ts';
 export {
   ACCEPTS,
+  ACTIVITY,
+  BACKERS,
   DEFAULT_HASHES,
   DEFAULT_VIEW,
   DEFAULT_VIEW_V1,

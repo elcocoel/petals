@@ -2,7 +2,13 @@
 // decision made and every word chosen. The views under components/chat only lay these out, so a
 // redesign replaces them without touching a decision.
 
-import type { FlowerResult, JobEvent, ModelSignature, View } from '@petal/core/types';
+import type {
+  FlowerResult,
+  JobEvent,
+  ModelSignature,
+  NextSteps as NextOnMap,
+  View,
+} from '@petal/core/types';
 import { aboutLabel, readAbout } from './ask-about.ts';
 import { type CeremonyView, ceremonyView, ceremonyWords } from './ceremony.ts';
 import { chainLabel, dateLabel, flowerImage, networkLabel } from './flower-view.ts';
@@ -170,7 +176,9 @@ export type Row =
   | StoredRow
   | TurnRow
   /** A new map waiting for the person's yes, at the end of the last turn (lib/ceremony.ts) */
-  | { kind: 'ceremony'; key: string; view: CeremonyView };
+  | { kind: 'ceremony'; key: string; view: CeremonyView }
+  /** What can be done next on the map just read, at the end of the last turn (SYSTEMS's next, OVERLAYS's NextSteps) */
+  | { kind: 'next'; key: string; next: NextOnMap };
 
 export type ThreadInput = Pick<ChatState, 'items' | 'busy' | 'runId' | 'turn' | 'lostAgain'> & {
   recorded: boolean;
@@ -250,6 +258,7 @@ export function threadView(v: ThreadInput): Row[] {
   let flowers = 0;
   // the new maps this turn holds for a yes: their card goes after the agent's words, before its note
   let held: { key: string; view: CeremonyView }[] = [];
+  let next: { key: string; next: NextOnMap } | null = null;
   const lastAsked = blocks.findLastIndex((x) => x.kind === 'user');
   const rows: Row[] = [];
   blocks.forEach((b, i) => {
@@ -370,9 +379,15 @@ export function threadView(v: ThreadInput): Row[] {
         // only the last turn's, while nothing runs: a question since is the person's answer
         if (i > lastAsked && !v.busy && !v.recorded) held.push({ key, view: ceremonyView(b.held) });
         break;
+      case 'next':
+        // the last turn's, while nothing runs: what can be done next on the map it read
+        if (i > lastAsked && !v.busy && !v.recorded) next = { key, next: b.next };
+        break;
       case 'done':
+        if (next) rows.push({ kind: 'next', ...next });
         for (const c of held) rows.push({ kind: 'ceremony', ...c });
         held = [];
+        next = null;
         rows.push({
           kind: 'done',
           key,

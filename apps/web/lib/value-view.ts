@@ -20,6 +20,10 @@ export interface MapValue {
   read_at: string;
 }
 
+/** A day as the map's short lines say it: '11 Nov'. */
+const dayShort = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+
 /** Where a price comes from, by its source's own name. */
 const SOURCES: Record<string, string> = {
   '1click': '1Click',
@@ -101,7 +105,9 @@ export function worthWords(v: MapValue | null | undefined): string[] {
     out.push(
       `Treasury ${dollars(v.treasury_usd)}${v.treasury_unpriced ? ` (${v.treasury_unpriced} unpriced)` : ''}`,
     );
-  if (v.price) out.push(`${tokenOf(v)} ${dollars(v.price.usd)}`);
+  // the token's price, said as a price and when it was read, so it never reads as a treasury (Elco, 12 Nov: "I
+  // first thought, like, all of these have only 3 dollars in their treasury") and two days' prices tell apart
+  if (v.price) out.push(`1 ${tokenOf(v)} = ${dollars(v.price.usd)}, ${dayShort(v.price.at)}`);
   return out;
 }
 

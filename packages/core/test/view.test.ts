@@ -217,8 +217,8 @@ describe('dimensions and kinds', () => {
     expect(ACCEPTS).toEqual({
       height: ['amount', 'count', 'share'],
       width: ['amount', 'count', 'share'],
-      order: ['amount', 'count', 'share', 'category'],
-      colour: ['category', 'amount', 'count', 'share'],
+      order: ['amount', 'count', 'share', 'category', 'date'],
+      colour: ['category'],
       outline: ['flag', 'category'],
       texture: ['flag', 'category'],
       markings: ['count', 'flag'],
@@ -233,7 +233,8 @@ describe('dimensions and kinds', () => {
     for (const k of MEASURE_KINDS) expect(all.has(k)).toBe(true);
     expect(
       [...all].filter((k) => !(MEASURE_KINDS as readonly string[]).includes(k)).sort(),
-    ).toEqual(['parts', 'relation']);
+      // a date comes as a piece given with the reading (last_active), not as a measure; Order takes it
+    ).toEqual(['date', 'parts', 'relation']);
   });
 
   test('fits says the same as the table', () => {
@@ -270,9 +271,12 @@ describe('a view meeting a flower', () => {
 
   test('any piece of data of a fitting kind can go in any dimension that takes it', () => {
     const v = structuredClone(DEFAULT_VIEW);
-    v.dimensions.colour = { data: 'proposals' };
+    v.dimensions.order = { data: 'proposals' };
     v.dimensions.height = { data: 'proposals' };
-    expect(inUse(v, moloch)).toMatchObject({ colour: 'proposals', height: 'proposals' });
+    expect(inUse(v, moloch)).toMatchObject({ order: 'proposals', height: 'proposals' });
+    // Colour takes a category only, until the look draws a scale (12 Nov)
+    v.dimensions.colour = { data: 'proposals' };
+    expect(inUse(v, moloch).colour).toBeNull();
   });
 
   test("labels take a person's names where a flower has them, and only a category", () => {

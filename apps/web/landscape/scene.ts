@@ -7,7 +7,7 @@
 // its main colour instead, its mark in the ring's hole and its name just under it.
 import { FAR_WAVE, farRuns } from '@petal/core/wedge/far';
 import { HIGHLIGHT } from '@petal/core/wedge/highlight';
-import { GREY, keyFor, keysOf, wordsOf } from '@petal/core/wedge/keys';
+import { GREY, type Keyed, keyFor, keysOf, wordsOf } from '@petal/core/wedge/keys';
 import { DETAIL, fade, type Row } from '../flower/detail.ts';
 import type { Model } from '../flower/model.ts';
 import { n3, polygonPath, roundTopPath, SHAPE } from '../flower/ring.ts';
@@ -118,7 +118,7 @@ export interface LandFrame {
    * Work running on a map (Elco, 12 Nov on /make: the map stays while it runs): a small strip under that flower, or
    * under the placeholder, with the page's words and how far it is, when it's known.
    */
-  progress?: { at: number | 'pending'; words: string; share: number | null } | null;
+  progress?: { at: number | 'pending' | 'map'; words: string; share: number | null } | null;
   /**
    * The boxes over the map (the chain list, the legend, a flower's panel), in its px: names keep clear of them, as
    * of each other (META's QA, 12 Nov: "labels never sit on each other or run off the window").
@@ -196,12 +196,18 @@ export type LineStyle = 'focus' | null;
  * Each petal's colour in the far wave: the art direction's keys, handed out by how many petals carry each kind,
  * as the lab's petal look keys them (core's wedge/keys.ts); everyone else in grey.
  */
-export function waveFills(m: Model): string[] {
+export function waveFills(
+  m: Model,
+  /** the map's keys (core mapKeys), so a value has one colour on every flower; without, the flower's own */
+  keyed?: readonly Keyed[],
+): string[] {
   const real = m.petals.filter((p) => !p.tail);
-  const kinds = keysOf(
-    real.map((p) => wordsOf(p.colour)),
-    real.map((p) => p.share),
-  );
+  const kinds =
+    keyed ??
+    keysOf(
+      real.map((p) => wordsOf(p.colour)),
+      real.map((p) => p.share),
+    );
   return m.petals.map((p) =>
     p.tail ? GREY.hex : (keyFor(kinds, wordsOf(p.colour))?.hex ?? GREY.hex),
   );
@@ -221,6 +227,8 @@ export function createLandScene(
   lines: LineStyle = null,
   /** the DAO in the middle, by its index here, or -1: a dashed ring round it, and its lines when none is pointed */
   centre = -1,
+  /** the map's keys: one colour per value on every flower (core mapKeys) */
+  keyed?: readonly Keyed[],
 ): LandScene {
   const clip = `landscape-mark-${++clips}`;
   const defs = el('defs', {}, svg);
@@ -377,7 +385,7 @@ export function createLandScene(
     // its petals in its own colours, one path per colour, as the far wave before it and the live flower after it
     // have them, so a flower keeps its colours as it comes closer (Elco, 11 Nov walk: the transition from the small
     // petal to the one showing its wallets; it went grey in between)
-    const fills = waveFills(f.model);
+    const fills = waveFills(f.model, keyed);
     const silhouette = slot(el('g', {}, g.node));
     const byFill = new Map<string, string>();
     const { ring } = f.model;
@@ -636,18 +644,21 @@ export function createLandScene(
       // The strip of work running: under its flower's name (or the placeholder's), inside the window
       const named = typeof progress?.at === 'number' ? wordsEnd.get(progress.at) : undefined;
       const at =
-        progress?.at === 'pending'
-          ? pending
-            ? { c: screenCentre(view, pending), r: screenRadius(view, pending) * 0.8 }
-            : null
-          : progress && flowers[progress.at]
-            ? {
-                c: screenCentre(view, (flowers[progress.at] as LandFlower).place),
-                r:
-                  screenRadius(view, (flowers[progress.at] as LandFlower).place) *
-                  (flowers[progress.at] as LandFlower).reach,
-              }
-            : null;
+        progress?.at === 'map'
+          ? // the whole map: at its foot, in the middle
+            { c: { x: view.width / 2, y: view.height }, r: 0 }
+          : progress?.at === 'pending'
+            ? pending
+              ? { c: screenCentre(view, pending), r: screenRadius(view, pending) * 0.8 }
+              : null
+            : progress && flowers[progress.at]
+              ? {
+                  c: screenCentre(view, (flowers[progress.at] as LandFlower).place),
+                  r:
+                    screenRadius(view, (flowers[progress.at] as LandFlower).place) *
+                    (flowers[progress.at] as LandFlower).reach,
+                }
+              : null;
       let stripBox: Box | null = null;
       if (progress && at) {
         if (stripWords.textContent !== progress.words) stripWords.textContent = progress.words;

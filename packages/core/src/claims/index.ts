@@ -10,6 +10,7 @@ export {
   type SnapshotRead,
 } from './observed.ts';
 export {
+  declaredName,
   FORBIDDEN_WORDS,
   PERSON_NAMESPACES,
   type PeopleScope,

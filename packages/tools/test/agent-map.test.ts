@@ -3,6 +3,7 @@
 // there"): look_up finds a map with its link, get_map hands over its layers, and the turns it lost go. Offline.
 import { modules } from '@petal/inputs';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { activityOf } from '../src/activity.ts';
 import { compile, describeErrors } from '../src/define.ts';
 import { privateStore } from '../src/drafts.ts';
 import { keepMappingClaims } from '../src/mapping-claims.ts';
@@ -267,5 +268,94 @@ describe('the next steps on a map just read (META, from Elco, 12 Nov)', () => {
     const bare = nextSteps({ id: MAP, name: 'X', proposals: null, payouts: null, value: null });
     expect(bare.steps.map((s) => s.label)).toEqual(['Compare with…']);
     expect(bare.services.map((s) => s.label)).toEqual(['A distribution card', 'An authority map']);
+  });
+});
+
+describe("list_publishable through a project's link (CONNECTORS, 12 Nov: a person's own agent has no session)", () => {
+  test("the link's owner is whose data it is: what their agents kept about the map, and what stays private", async () => {
+    // a project their agent works in by its link (an unclaimed one here: its owner is the project itself)
+    const started = await run('start_exploration', { question: 'who runs the guild?' });
+    const exploration = (started.link as { url: string }).url;
+    const member = (await loadSnapshot(r.ctx, MOLOCH)).participants[0]?.id as string;
+    const account = member.includes(':') ? member : `eip155:1:${member}`;
+    const proposal = {
+      type: 'proposal',
+      proposal: `proposal:eip155:1:${DAO}:7`,
+      url: 'https://etherscan.io/tx/0x1',
+      quote: 'Pay Ada for the guild',
+    };
+    const kept = await run('add_annotation', {
+      exploration,
+      as: 'codex',
+      annotations: [
+        {
+          subject: account,
+          verb: 'named',
+          object: { value: 'Ada' },
+          kind: 'sourced',
+          evidence: [proposal],
+        },
+        {
+          subject: account,
+          verb: 'named',
+          object: { value: 'Ada B' },
+          kind: 'sourced',
+          evidence: [{ type: 'page', url: 'https://example.org/ada' }],
+        },
+      ],
+    });
+    expect(kept.error).toBeUndefined();
+    // their agent, with no session: through the link
+    const o = await run('list_publishable', { map: MAP, exploration });
+    expect(o).toMatchObject({
+      about: MAP,
+      name: 'Founders Guild v1',
+      map_url: MAP_URL,
+      ready: 1,
+      published: 0,
+    });
+    expect(o.private).toHaveLength(1);
+    // with neither a link nor a person signed in, nobody's data
+    expect((await run('list_publishable', { map: MAP })).error.code).toBe('unauthorised');
+  });
+});
+
+describe("each petal's activity reaches every drawing of the map (activity.ts, 12 Nov)", () => {
+  test("from the map's proposals as last read; none before any were read", async () => {
+    const s = await loadSnapshot(r.ctx, MOLOCH);
+    expect(await activityOf(r.ctx, s)).toEqual([]);
+    const member = s.participants[0]?.id as string;
+    const at = '2026-11-11T15:00:00.000Z';
+    const body = {
+      petal: 'proposals/v1',
+      about: MAP,
+      source: { kind: 'baal', contract: MAP, ref: 'test', at },
+      proposals: [
+        {
+          id: '1',
+          title: 'Fund the guild',
+          kind: null,
+          proposer: null,
+          at,
+          closes_at: null,
+          decided_at: null,
+          outcome: 'passed',
+          as_said: 'passed',
+          ref: `proposal:${MAP}:1`,
+          votes: [{ account: member, vote: 'for', as_said: 'true', at }],
+        },
+      ],
+      read_at: at,
+    };
+    await privateStore(r.ctx.config).proposals.put({
+      about: MAP,
+      body: JSON.stringify(body),
+      read_at: at,
+    });
+    const pieces = await activityOf(r.ctx, s);
+    expect(pieces.map((p) => p.name)).toEqual(['votes_cast', 'voted', 'last_active']);
+    const cast = pieces[0] as { values: { participant: string; value: string }[] };
+    expect(cast.values.find((v) => v.participant === member)?.value).toBe('1');
+    expect(cast.values.filter((v) => v.value === '0')).toHaveLength(s.participants.length - 1);
   });
 });

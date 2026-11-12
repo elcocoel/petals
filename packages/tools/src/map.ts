@@ -21,6 +21,7 @@ import {
 } from '@petal/core';
 import type { Claim, Spec, View } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
+import { activityOf, proposalStamps } from './activity.ts';
 import { privateStore } from './drafts.ts';
 import { hiddenMap, retiredReading } from './hidden.ts';
 import type { CardProposals } from './proposals.ts';
@@ -98,6 +99,7 @@ async function readOf(
   body: string,
   view: View,
   values: ReadonlyMap<string, Value> = new Map(),
+  stamps: ReadonlyMap<string, string> = new Map(),
 ): Promise<Read | null> {
   try {
     const spec = JSON.parse(body) as Spec;
@@ -110,6 +112,8 @@ async function readOf(
       ...(ctx.names?.length ? typePieces(snapshot, ctx.names) : []),
       // each petal's value in dollars, from its map's stored value (#91): none with no price
       ...valuePieces(snapshot, values.get(mapOf(snapshot)) ?? null),
+      // each petal's activity in its map's proposals (activity.ts, 12 Nov): none where none were read
+      ...(await activityOf(ctx, snapshot, stamps)),
     ]);
     // the picture's colours: its legend, as render_flower dresses it (in the keys, core lookFills)
     const look = lookFills(reading.petals);
@@ -156,11 +160,16 @@ export async function mapViews(
   const priced = values.size
     ? `:${sha256Hex([...values.values()].map((v) => `${v.about}@${v.read_at}`).join(','))}`
     : '';
+  // and by when its proposals were read (activity.ts), so a new reading of them counts again
+  const stamps = await proposalStamps(ctx);
+  const voted = stamps.size
+    ? `:${sha256Hex([...stamps].map(([about, at]) => `${about}@${at}`).join(','))}`
+    : '';
   for (const row of await privateStore(ctx.config).draft.list()) {
-    const key = `${row.sha256}:${through}${named}${priced}`;
+    const key = `${row.sha256}:${through}${named}${priced}${voted}`;
     let r = read.get(key);
     if (!r) {
-      const got = await readOf(ctx, row.body, view, values);
+      const got = await readOf(ctx, row.body, view, values, stamps);
       if (!got) continue;
       read.set(key, got);
       r = got;

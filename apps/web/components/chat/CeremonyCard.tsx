@@ -9,6 +9,7 @@ export function CeremonyCard({ view, onMapIt }: { view: CeremonyView; onMapIt: (
     <section className="flex flex-col items-start gap-text-gap border border-hairline p-text-gap">
       <h3 className="m-0 type-ui font-semibold">{view.heading}</h3>
       <p className="my-0 type-ui">{view.what}</p>
+      {view.cost && <p className="my-0 type-ui text-muted">{view.cost}</p>}
       <p className="my-0 type-ui text-muted">{view.who}</p>
       <p className="my-0 type-ui text-muted">{view.note}</p>
       <Button variant="compact" onClick={onMapIt}>

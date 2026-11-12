@@ -5,6 +5,7 @@
 // it, its insights. Each says only what its source says: a reading holds a moment, a price its day. Pure. Drafts.
 import type { Claim } from '@petal/core/types';
 import { dateLabel } from './flower-view.ts';
+import { claimWho } from './map-claims.ts';
 import { type MapCard, makerWords } from './maps.ts';
 import { dollars, sourceName } from './value-view.ts';
 
@@ -47,7 +48,6 @@ export const layerWords = {
   price: (symbol: string | null) => (symbol ? `${symbol} price` : 'Price'),
   insights: 'Insights',
   insightCount: (n: number) => n.toLocaleString('en-US'),
-  mapping: "Petals' mapping",
 } as const;
 
 /** The address a price was read from, as its ref gives it in brackets. */
@@ -96,7 +96,7 @@ export function mapLayers(card: LayerCard, claims: readonly Claim[] | null): Lay
       name: layerWords.insights,
       period: said,
       count: layerWords.insightCount(claims.length),
-      by: layerWords.mapping,
+      by: [...new Set(claims.map((c) => claimWho(c.by)))].join(', '),
     });
   return lines;
 }

@@ -17,6 +17,7 @@ import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { Icon } from '../components/ui/Icon.tsx';
 import { LandscapeCanvas } from '../landscape/LandscapeCanvas.tsx';
+import { ceremonyWords } from '../lib/ceremony.ts';
 import type { Catalogue } from '../lib/composer-options.ts';
 import {
   besideOrBelow,
@@ -27,12 +28,14 @@ import {
   recordedBoxes,
   type Size,
 } from '../lib/float-box.ts';
+import { networkLabel } from '../lib/flower-view.ts';
 import type { MapCard } from '../lib/maps.ts';
 import { groundWords } from '../lib/opening.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useGroundMap } from '../viewmodels/useGroundMap.ts';
 import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
+import { usePublishPress } from '../viewmodels/usePublishPress.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import type { Clear } from './camera.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
@@ -124,7 +127,43 @@ export function InteractionSurface({
     onCanvas && land && state.flowerSnapshot
       ? land.flowers.findIndex((f) => f.snapshot === state.flowerSnapshot)
       : -1;
-  const ground = state.mapAt ?? (onCanvas && flowerOnMap < 0 ? null : { map: null });
+  // A new map being made (lib/ceremony.ts): a placeholder on its chain's map, or the map it adds to, a strip under
+  // it while the read runs, and its flower landing there (LOOK's placeholder, progress and landed).
+  const made = state.making;
+  const madeChain =
+    made?.held.chain && land
+      ? (land.chains.find(
+          (c) =>
+            c.chain === made.held.chain || c.label.toLowerCase() === made.held.chain?.toLowerCase(),
+        )?.chain ?? null)
+      : null;
+  const madeName = made
+    ? (made.held.name ?? made.held.what ?? networkLabel(made.held.network))
+    : '';
+  const madeReading = made?.flower ? state.drawings[made.flower.spec_sha256]?.reading : undefined;
+  const landed =
+    made && madeChain && madeReading
+      ? {
+          chain: madeChain,
+          name: madeName,
+          reading: madeReading,
+          map: made.held.existing_map ?? null,
+          snapshot: made.flower?.spec.snapshot.sha256,
+        }
+      : null;
+  const placeholder =
+    made && madeChain && !made.flower && !made.held.existing_map
+      ? { chain: madeChain, name: madeName }
+      : null;
+  const progress =
+    made && !made.flower && (madeChain || made.held.existing_map)
+      ? {
+          map: made.held.existing_map ?? ('new' as const),
+          words: made.doing ?? ceremonyWords.reading,
+          share: null,
+        }
+      : null;
+  const ground = state.mapAt ?? (onCanvas && flowerOnMap < 0 && !landed ? null : { map: null });
   // the open wallet has no map of its own on the Power Map (Elco, walk 5: "population not mapped")
   const unmapped =
     panel.kind === 'flower' &&
@@ -135,6 +174,15 @@ export function InteractionSurface({
     ground?.map && land ? land.flowers.findIndex((f) => f.map === ground.map) : flowerOnMap;
   // the map opens at the conversation's flower: a petal pressed in it is that flower's, as on the flower itself
   const atFlower = !state.mapAt && flowerOnMap >= 0;
+  // what the map shows: the map a new read adds to, else what the last answer is about (SYSTEMS's show), else the
+  // conversation's flower where the map holds it; undefined says nothing (Elco, 12 Nov: "an answer moves the map")
+  const flowerMap = atFlower && land ? (land.flowers[flowerOnMap]?.map ?? null) : null;
+  // what the person kept about the map in front of them, published with one press (Elco, 12 Nov)
+  const publishMap = flowerMap ?? state.mapAt?.map ?? made?.held.existing_map ?? null;
+  const publishing = usePublishPress(publishMap);
+  const show = made?.held.existing_map
+    ? { map: made.held.existing_map }
+    : (state.mapShow ?? (flowerMap ? { map: flowerMap } : undefined));
   // where it starts is measured (what the conversation covers), so it's painted as the boxes are
   const mapArea = useRef<HTMLDivElement>(null);
   const shown = Boolean(ground && (land || mapOpening));
@@ -166,6 +214,10 @@ export function InteractionSurface({
                 title="Power Map"
                 focus={focus}
                 selected={atFlower ? state.selected : null}
+                show={show}
+                placeholder={placeholder}
+                progress={progress}
+                landed={landed}
                 // inside the conversation's flower a petal is chosen as on the flower; inside a map a link
                 // opened, it opens that map's flower here (useWorkspace pickOnMap)
                 onPick={atFlower ? actions.pick : actions.pickOnMap}
@@ -260,6 +312,7 @@ export function InteractionSurface({
           jobs={state.jobs}
           jobControls={state.jobControls}
           onMapIt={actions.mapIt}
+          next={{ onStep: actions.step, moreOpen: state.nextMore, onMore: actions.toggleNextMore }}
         />
       </FloatBox>
       <FloatBox
@@ -308,6 +361,11 @@ export function InteractionSurface({
                   : undefined,
             }}
             conversation={state.conversationRef}
+            publish={
+              publishing.view
+                ? { view: publishing.view, onPublish: () => void publishing.publish() }
+                : undefined
+            }
           />
         )}
       </FloatBox>

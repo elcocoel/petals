@@ -19,7 +19,7 @@ import { privateStore } from '../src/drafts.ts';
 import { httpApp } from '../src/http/app.ts';
 import { type MapView, mapsOf, mapViews, searchMap } from '../src/map.ts';
 import { MAPPING } from '../src/mapping-claims.ts';
-import { markMaps, typeMaps } from '../src/marks.ts';
+import { logoMaps, markMaps, typeMaps } from '../src/marks.ts';
 import { proposalMaps } from '../src/proposals.ts';
 import { callTool } from '../src/registry.ts';
 import { loadSnapshot } from '../src/tools/shared.ts';
@@ -400,6 +400,47 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(Buffer.from(picture?.body ?? '', 'base64')).toEqual(Buffer.from(PNG));
   });
 
+  test('the logos pass (12 Nov, walk 3) adds only a logo to a kept mark without one; its words stay; --dry keeps nothing', async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const store = privateStore(r.ctx.config);
+    const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 5, 5]);
+    const fetchImpl = (async (input: string | URL | Request) => {
+      const url = String(input);
+      // the DAO's own profile says another name: only its picture is taken
+      if (url.startsWith('https://data.daohaus.club/dao/'))
+        return new Response(
+          JSON.stringify([{ name: 'Another Name', avatarImg: 'https://img.example/moloch.png' }]),
+        );
+      if (url === 'https://img.example/moloch.png') return new Response(PNG);
+      return new Response('not found', { status: 404 });
+    }) as typeof fetch;
+    const at = '2026-11-11T18:00:00.000Z';
+    const wave = {
+      petal: 'mark/v1',
+      about: `eip155:1:${DAO}`,
+      name: { value: 'Moloch DAO', status: 'self-declared', source: 'daohaus', ref: 'a wave', at },
+      symbol: null,
+      logo: null,
+      read_at: at,
+    };
+    await store.mark.put({ about: wave.about, body: JSON.stringify(wave), read_at: at });
+
+    const dry = await logoMaps(r.ctx, { fetch: fetchImpl, save: false });
+    expect(dry).toMatchObject({ maps: 1, without: 1, found: 1, saved: 0 });
+    expect(JSON.parse((await store.mark.get(wave.about))?.body ?? '{}').logo).toBeNull();
+
+    expect(await logoMaps(r.ctx, { fetch: fetchImpl })).toMatchObject({ found: 1, saved: 1 });
+    const row = await store.mark.get(wave.about);
+    const mark = JSON.parse(row?.body ?? '{}');
+    expect(mark).toMatchObject({ name: wave.name, symbol: null, read_at: at });
+    expect(mark.logo).toMatchObject({ media_type: 'image/png', source: 'daohaus' });
+    expect(row?.read_at).toBe(at);
+    const picture = await store.media.get(mark.logo.sha256);
+    expect(Buffer.from(picture?.body ?? '', 'base64')).toEqual(Buffer.from(PNG));
+    // a mark with a logo is left as it is
+    expect(await logoMaps(r.ctx, { fetch: fetchImpl })).toMatchObject({ without: 0, found: 0 });
+  });
+
   test("the types pass (#97) adds each kept mark's types and keeps its words; --dry keeps nothing", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const store = privateStore(r.ctx.config);
@@ -605,6 +646,52 @@ describe('one map per address (Elco, 10 Nov)', () => {
     const again = JSON.parse((await own.value.get(about))?.body ?? '{}');
     expect(again.asset).toEqual(picked.asset);
     expect(again.price).toEqual(wave.price);
+  });
+
+  test("NEAR under a wave's name for it gets today's NEAR price, its totals' dollars at it, the rest kept (Elco, 12 Nov: 3.40 beside 3.74)", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const store = privateStore(r.ctx.config);
+    const about = `eip155:1:${DAO}`;
+    const fetchImpl = (async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.startsWith('https://1click.chaindefuser.com/'))
+        return new Response(
+          JSON.stringify([
+            {
+              blockchain: 'near',
+              contractAddress: 'wrap.near',
+              assetId: 'nep141:wrap.near',
+              symbol: 'wNEAR',
+              price: 3.4,
+              priceUpdatedAt: '2026-11-12T14:40:00.000Z',
+            },
+          ]),
+        );
+      if (url.includes('api.coingecko.com')) return new Response('[]');
+      return new Response(JSON.stringify({ coins: {} }));
+    }) as typeof fetch;
+    const wave = {
+      petal: 'value/v1',
+      about,
+      asset: { id: 'near:native', symbol: 'NEAR' },
+      price: { usd: 3.74, source: '1click', ref: 'wave', at: '2026-11-11T00:00:00.000Z' },
+      supply: null,
+      snapshot: MOLOCH,
+      measure: 'shares',
+      totals: [{ measure: 'shares', unit: 'NEAR', amount: '10', usd: '37.4' }],
+      read_at: '2026-11-11T00:00:00.000Z',
+    };
+    await store.value.put({ about, body: JSON.stringify(wave), read_at: wave.read_at });
+    await valueMaps(r.ctx, { fetch: fetchImpl });
+    const v = JSON.parse((await store.value.get(about))?.body ?? '{}');
+    expect(v).toMatchObject({
+      petal: 'value/v3',
+      asset: wave.asset,
+      price: { usd: 3.4, source: '1click', at: '2026-11-12T14:40:00.000Z' },
+      totals: [{ measure: 'shares', unit: 'NEAR', amount: '10', usd: '34.00' }],
+      snapshot: MOLOCH,
+    });
+    expect(v.price.ref).toMatch(/^NEAR, priced as wNEAR one to one/);
   });
 
   test("a map's proposals (#93): its card says how many, and GET /api/v1/maps/:id/proposals gives each vote", async () => {

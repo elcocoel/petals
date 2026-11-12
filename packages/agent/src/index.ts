@@ -18,6 +18,7 @@ export {
   blocMaps,
   createContext,
   loadMapping,
+  logoMaps,
   markMaps,
   payoutMaps,
   proposalMaps,

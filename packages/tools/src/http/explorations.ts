@@ -222,6 +222,13 @@ export function explorationRoutes(
       ...(petal ? { petal } : {}),
     });
   });
+  // what the project's owner could publish on a map (publish-data.ts, 12 Nov): for their own agent, read only
+  app.get('/api/v1/explorations/:ref/publishable', (c) =>
+    answer(c, 'list_publishable', {
+      exploration: c.req.param('ref'),
+      map: c.req.query('map') ?? '',
+    }),
+  );
   app.post('/api/v1/explorations/:ref/datasets/fork', async (c) =>
     answer(c, 'fork_dataset', await withRef(c)),
   );

@@ -120,6 +120,19 @@ describe('tool routes', () => {
     expect((await app.request('/api/v1/networks', from('5.6.7.8'))).status).toBe(200);
     expect((await app.request('/api/v1/health', from('1.2.3.4'))).status).toBe(200);
   });
+
+  test("the map itself isn't a tool call: a person clicking through Tools draws it again and again (12 Nov)", async () => {
+    const { app } = await setup();
+    const from = { headers: { 'cf-connecting-ip': '9.9.9.9' } };
+    for (let i = 0; i < 61; i++) {
+      for (const path of ['/api/v1/map', '/api/v1/map/views', '/api/v1/maps'])
+        expect((await app.request(path, from)).status, path).toBe(200);
+      expect((await app.request('/api/v1/maps/eip155%3A1%3A0xnone', from)).status).toBe(404);
+    }
+    // the tools still count
+    for (let i = 0; i < 60; i++) await app.request('/api/v1/networks', from);
+    expect((await app.request('/api/v1/networks', from)).status).toBe(429);
+  });
 });
 
 describe('SSE, bodies, health', () => {

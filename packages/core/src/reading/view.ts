@@ -11,7 +11,7 @@ import type { SeamPiece } from '../seam.ts';
 import { hasBackers } from '../segments/backers.ts';
 import { holdingMeasures, measureTable } from '../tables.ts';
 import type { Encoding, Snapshot, SourceIds, Spec, SpecPrimitive, View } from '../types/index.ts';
-import { EVERY_FLOWER, inUse, latestView, type Piece, SOME_FLOWERS } from '../view/index.ts';
+import { BACKERS, EVERY_FLOWER, inUse, latestView, type Piece } from '../view/index.ts';
 
 /** The dimensions a view picks for that today's look can draw, in spec/v1's words. Order isn't one yet. */
 const FIELDS = ['width', 'height', 'colour', 'outline', 'segments', 'lines', 'markings'] as const;
@@ -30,7 +30,7 @@ export function piecesOf(s: Snapshot, extra: readonly SeamPiece[] = []): Piece[]
   for (const m of holdingMeasures(s)) {
     if (!out.some((p) => p.name === m.id)) out.push({ name: m.id, kind: 'amount' });
   }
-  if (hasBackers(s)) out.push(...SOME_FLOWERS);
+  if (hasBackers(s)) out.push(BACKERS);
   for (const p of extra) {
     if (!out.some((o) => o.name === p.name)) out.push({ name: p.name, kind: p.kind });
   }
