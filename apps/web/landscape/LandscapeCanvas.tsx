@@ -62,7 +62,13 @@ import {
 import type { Road } from './roads.ts';
 import type { FarStyle, LandFlower, LineStyle } from './scene.ts';
 import { reachOf } from './space.ts';
-import { idOf, type LandscapeAt, type LandscapeData, useLandscape } from './useLandscape.ts';
+import {
+  idOf,
+  type LandShow,
+  type LandscapeAt,
+  type LandscapeData,
+  useLandscape,
+} from './useLandscape.ts';
 
 export interface CanvasFlower {
   name: string;
@@ -87,6 +93,13 @@ export interface CanvasFlower {
 }
 
 /** A wallet chosen on the map (LOOK's wallet level): its id as its flower names it, on that flower's chain. */
+/** What a page shows on the map (LandscapeCanvas `show`): a DAO, a wallet, the line between two DAOs, a proposal. */
+export type MapShow =
+  | { map: string }
+  | { wallet: string; chain?: string | null }
+  | { line: readonly [string, string] }
+  | { proposal: { map: string; id: string } };
+
 export interface MapWallet {
   id: string;
   chain: string;
@@ -159,6 +172,7 @@ function Land({
   highlight,
   go,
   worth,
+  show,
 }: {
   data: LandscapeData;
   probe: boolean;
@@ -185,6 +199,8 @@ function Land({
   go: { at: number } | null;
   /** treasury and token price under the names at some magnification (the legend's switch) */
   worth: boolean;
+  /** what the page's conversation is about, on this chain's map (undefined: the page says nothing) */
+  show: LandShow | null | undefined;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
@@ -219,6 +235,9 @@ function Land({
   useEffect(() => {
     if (go) at.current?.enter?.(go.at);
   }, [go]);
+  useEffect(() => {
+    if (show !== undefined) at.current?.show?.(show);
+  }, [show]);
   return (
     // surface.canvas
     <svg
@@ -249,6 +268,7 @@ export function LandscapeCanvas({
   onWallet,
   information,
   ownBox = false,
+  show,
 }: {
   data: {
     flowers: CanvasFlower[];
@@ -292,6 +312,13 @@ export function LandscapeCanvas({
    * interact with it via the agent and find out more about it").
    */
   onWallet?: ((wallet: MapWallet | null) => void) | undefined;
+  /**
+   * What the page's conversation is about (Elco, 12 Nov on /make: "the power map should always be there ... an answer
+   * moves the map"): a DAO by its map, flown to and entered; a wallet, lit everywhere it sits on its chain (the
+   * chosen chain, else the one on screen); the line between two DAOs; a proposal pinned in its DAO. null lets go of
+   * what it lit; undefined, the page says nothing.
+   */
+  show?: MapShow | null | undefined;
   /** What the page says about where it is (a map's page: what it maps, its worth, its readings), first in Information. */
   information?: { title: string; body: ReactNode } | undefined;
   /**
@@ -315,6 +342,45 @@ export function LandscapeCanvas({
   const [chain, setChain] = useState(
     opened ?? (data.chains.some((c) => c.chain === FIRST) ? FIRST : (data.chains[0]?.chain ?? '')),
   );
+  // what the page's conversation is about, on its chain's map (Elco, 12 Nov on /make: "an answer moves the map")
+  const [shownOn, setShownOn] = useState<{ chain: string; show: LandShow | null } | null>(null);
+  const flowersNow = useRef(data.flowers);
+  flowersNow.current = data.flowers;
+  const chainNow = useRef(chain);
+  chainNow.current = chain;
+  useEffect(() => {
+    if (show === undefined) return;
+    if (show === null) {
+      setShownOn((was) => (was ? { chain: was.chain, show: null } : null));
+      return;
+    }
+    const all = flowersNow.current;
+    const byMap = (map: string) => all.findIndex((f) => f.map === map);
+    // a flower's place on its own chain's map, as the map counts them
+    const local = (i: number) =>
+      all.slice(0, i).filter((x) => x.place.chain === all[i]?.place.chain).length;
+    const on = (i: number) => all[i]?.place.chain ?? chainNow.current;
+    let next: { chain: string; show: LandShow } | null = null;
+    if ('map' in show) {
+      const i = byMap(show.map);
+      if (i >= 0) next = { chain: on(i), show: { kind: 'map', i: local(i) } };
+    } else if ('proposal' in show) {
+      const i = byMap(show.proposal.map);
+      if (i >= 0)
+        next = { chain: on(i), show: { kind: 'proposal', i: local(i), id: show.proposal.id } };
+    } else if ('line' in show) {
+      const a = byMap(show.line[0]);
+      const b = byMap(show.line[1]);
+      if (a >= 0 && b >= 0 && on(a) === on(b))
+        next = { chain: on(a), show: { kind: 'line', a: local(a), b: local(b) } };
+      else if (a >= 0) next = { chain: on(a), show: { kind: 'map', i: local(a) } };
+    } else {
+      next = { chain: show.chain ?? chainNow.current, show: { kind: 'wallet', id: show.wallet } };
+    }
+    if (!next) return;
+    setChain(next.chain);
+    setShownOn(next);
+  }, [show]);
   // the overlays' folds: open where the map has room, folded to their bars where it's narrow, a phone's or
   // /make's beside the conversation (WORKSPACE's walk, 11 Nov): its own room, not the window's
   // (on the map's boxes the chain list's fold is Tools', and Insights' is Information's)
@@ -702,6 +768,7 @@ export function LandscapeCanvas({
           highlight={lit}
           worth={worth}
           go={go?.chain === chain ? go : null}
+          show={shownOn?.chain === chain ? shownOn.show : undefined}
         />
       )}
       {movable ? (
