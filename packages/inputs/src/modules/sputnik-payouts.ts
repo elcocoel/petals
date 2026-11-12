@@ -333,15 +333,28 @@ const wholeOf = (raw: string, decimals: number) => {
 interface LlamaPrices {
   coins?: Record<string, { prices?: Array<{ timestamp: number; price: number }> }>;
 }
-async function getPrices(fetchImpl: Fetch, url: string): Promise<LlamaPrices | null> {
-  try {
-    const res = await fetchImpl(url, {
-      headers: { accept: 'application/json' },
-      signal: runSignal(AbortSignal.timeout(REQUEST_TIMEOUT_MS)),
-    });
-    return res.ok ? ((await res.json()) as LlamaPrices) : null;
-  } catch {
-    return null;
+async function getPrices(
+  fetchImpl: Fetch,
+  url: string,
+  waits: readonly number[] = RETRY_WAITS,
+): Promise<LlamaPrices | null> {
+  for (let i = 0; ; i++) {
+    let status = 0;
+    try {
+      const res = await fetchImpl(url, {
+        headers: { accept: 'application/json' },
+        signal: runSignal(AbortSignal.timeout(REQUEST_TIMEOUT_MS)),
+      });
+      if (res.ok) return (await res.json()) as LlamaPrices;
+      status = res.status;
+    } catch {
+      status = 0;
+    }
+    // asked too often, or the service failed: wait and ask again, as the FastNEAR calls do
+    const again = status === 0 || status === 429 || status >= 500;
+    const ms = waits[i];
+    if (!again || ms === undefined) return null;
+    await wait(ms);
   }
 }
 
@@ -355,6 +368,7 @@ const llamaCoin = (token: string) => (token === '' ? 'coingecko:near' : `near:${
 export async function pastPrices(
   fetchImpl: Fetch,
   asks: Array<{ token: string; at: string }>,
+  waits: readonly number[] = RETRY_WAITS,
 ): Promise<{
   priceOf: (token: string, at: string) => { price: number; at: string; ref: string } | null;
   failed: string[];
@@ -387,7 +401,7 @@ export async function pastPrices(
   if (n) parts.push(part);
   for (const coins of parts) {
     const url = `${LLAMA_HISTORICAL}?coins=${encodeURIComponent(JSON.stringify(coins))}&searchWidth=6h`;
-    const body = await getPrices(fetchImpl, url);
+    const body = await getPrices(fetchImpl, url, waits);
     if (!body?.coins) {
       failed.push(`${LLAMA_HISTORICAL} (${Object.keys(coins).length} coins)`);
       continue;

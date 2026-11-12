@@ -87,6 +87,7 @@ export async function payoutMaps(
       const prices = await pastPrices(
         fetchImpl,
         sent.sent.map((s) => ({ token: s.token, at: s.at })),
+        o.waits ?? RETRY_WAITS,
       );
       out.failed.push(...sent.failed, ...prices.failed);
       doc = sputnikPayouts({
