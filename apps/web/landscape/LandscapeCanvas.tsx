@@ -854,6 +854,18 @@ export function LandscapeCanvas({
       // how much the map's flowers draw together (Elco, 12 Nov, walk 2: "gravity"), for the visit
       gravity={{ value: gravity, onChange: setGravity }}
       worth={{ on: worth, onChange: setWorth }}
+      // the map's own controls back as they came, from the same 'Put the default back' as the view's
+      resetMap={
+        gravity !== GRAVITY_DEFAULT || span !== 'all' || !worth || !insightsOn || bloc !== null
+          ? () => {
+              setGravity(GRAVITY_DEFAULT);
+              setSpan('all');
+              setWorth(true);
+              setInsightsOn(true);
+              setBloc(null);
+            }
+          : undefined
+      }
       // Insights in Information, on or off by hand (Elco, walk 3), on the map's boxes
       insights={bare ? { on: insightsOn, onChange: setInsightsOn } : undefined}
       edit={hands ?? undefined}

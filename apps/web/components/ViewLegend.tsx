@@ -250,6 +250,7 @@ export function ViewLegend({
   worth,
   insights,
   between,
+  resetMap,
   fold,
   bare = false,
 }: {
@@ -279,6 +280,8 @@ export function ViewLegend({
   insights?: { on: boolean; onChange: (on: boolean) => void } | undefined;
   /** On a map, what a line between two flowers is: its name and what it says. */
   between?: { label: string; says: string } | undefined;
+  /** Puts the map's own controls back as they came (Gravity, Votes, the switches, a chosen bloc), while one isn't. */
+  resetMap?: (() => void) | undefined;
   /** It folds to its bar, as every overlay can (design/overlays.md, line 6). */
   fold?: { open: boolean; onToggle: () => void } | undefined;
   /** Its rows alone, for a box that frames it (the map's floating boxes). */
@@ -392,10 +395,17 @@ export function ViewLegend({
           </div>
         </>
       )}
-      {/* the default back at a press, while the view isn't it (Elco: "keep a reset to default button handy") */}
-      {edit?.onReset && (
+      {/* the default back at a press, while anything in Tools isn't it (Elco: "keep a reset to default button
+          handy"): the view, and the map's own controls for the visit (VISUAL QA, wave 3: it did nothing to them) */}
+      {(edit?.onReset || resetMap) && (
         <div className="px-space-8 pt-space-4 pb-space-8">
-          <Button variant="quiet" onClick={edit.onReset}>
+          <Button
+            variant="quiet"
+            onClick={() => {
+              edit?.onReset?.();
+              resetMap?.();
+            }}
+          >
             {words.reset}
           </Button>
         </div>
