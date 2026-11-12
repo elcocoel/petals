@@ -198,9 +198,35 @@ export interface PublishableData {
   /** the claims that can go on the shared map now */
   ready: number;
   /** the rest, each with why it stays private */
-  private: { id: string; subject: string; verb: string; why: string }[];
+  private: {
+    id: string;
+    subject: string;
+    verb: string;
+    why: string;
+    name?: string;
+    source?: PublishSource;
+    confidence?: number | null;
+  }[];
+  /** each one that can go, in the order it would (Elco, 12 Nov: "Let me look first") */
+  claims?: {
+    id: string;
+    subject: string;
+    name: string;
+    source?: PublishSource;
+    /** 0 to 1, or null when the model that scores it is off */
+    confidence?: number | null;
+  }[];
   /** already on the shared map */
   published: number;
+}
+
+/** Where a name comes from: the proposal that declares it, with its words, or a transaction. */
+export interface PublishSource {
+  kind: 'proposal' | 'transaction' | string;
+  ref: string;
+  quote?: string;
+  /** where it can be read */
+  url?: string;
 }
 
 export async function readPublishable(map: string): Promise<PublishableData | null> {
