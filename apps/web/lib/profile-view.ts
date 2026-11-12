@@ -18,6 +18,9 @@ export const profilePageWords = {
   walletsNote: 'Each one signed a message with its own key, so it’s proven yours.',
   /** The Wallets widget's one action (Elco, 11 Nov: "have the wallets one allow me to add more wallets"). */
   addWallet: 'Add a wallet',
+  /** The two ways to add one (wave 5; buttons say Connect; WORKSPACE's door says the same). */
+  connectNear: 'Connect a NEAR wallet',
+  connectEvm: 'Connect an Ethereum wallet',
   adding: 'Waiting for your wallet…',
   notAdded: 'That wallet wasn’t added. Try again.',
   claims: 'Claims',
@@ -58,8 +61,17 @@ export interface WalletRow {
 export function walletRows(wallets: readonly ProvenWallet[]): WalletRow[] {
   return wallets.map((w) => ({
     key: `${w.network}:${w.account_id}`,
-    ...shownAccount(w.account_id),
-    chain: w.network === 'testnet' ? 'NEAR testnet' : 'NEAR',
+    ...(w.network === 'eip155' || w.network === 'solana'
+      ? { shown: shortId(w.account_id), full: w.account_id }
+      : shownAccount(w.account_id)),
+    chain:
+      w.network === 'eip155'
+        ? 'Ethereum'
+        : w.network === 'solana'
+          ? 'Solana'
+          : w.network === 'testnet'
+            ? 'NEAR testnet'
+            : 'NEAR',
     when: profilePageWords.provedOn(dateLabel(w.proved_at)),
   }));
 }

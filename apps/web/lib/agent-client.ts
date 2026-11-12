@@ -733,10 +733,31 @@ export async function readMyUsage(): Promise<{
   return (await res.json()) as { usage: UsageCall[]; totals: { charged_usd: number } };
 }
 
+/** An EVM wallet's proof (EIP-191 personal_sign of the text the challenge gave), as /auth/verify and /me/wallets take it. */
+export interface EvmProof {
+  type: 'eip191';
+  address: string;
+  message: string;
+  signature: string;
+}
+
+/** The text an EVM wallet signs, Sign-In with Ethereum, for this address on the chain it's on (SYSTEMS). */
+export const evmChallenge = (address: string, chainId: number) =>
+  sessionPost<{ message: string; nonce: string; expires_at: string }>('/api/v1/auth/challenge', {
+    chain: 'eip155',
+    address,
+    chain_id: chainId,
+  });
+
+/** Signs in with an EVM wallet: a new person, or the one this wallet already belongs to. */
+export async function verifyEvm(proof: EvmProof): Promise<void> {
+  await sessionPost('/api/v1/auth/verify', { network: 'eip155', proof });
+}
+
 /** Another wallet for the person signed in (POST /api/v1/me/wallets): its proof, as signing in sends one. */
 export function addMyWallet(
   network: string,
-  proof: Nep413Proof,
+  proof: Nep413Proof | EvmProof,
 ): Promise<{ wallets: ProvenWallet[] }> {
   return sessionPost('/api/v1/me/wallets', { network, proof });
 }
