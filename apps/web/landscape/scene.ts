@@ -28,11 +28,11 @@ const PETAL = 'var(--figure-petal)';
  * A connection at full strength is this see-through, so it never reads heavier than a flower (Elco, 11 Nov walk:
  * the lines were "way too powerful"; quieter).
  */
-const ROAD_TONE = 0.25;
+const ROAD_TONE = 0.15;
 /** The focused lines (#87): one flower's at a time, so a little firmer, still quiet. */
-const LINE_TONE = 0.3;
+const LINE_TONE = 0.18;
 /** The arrows out of the organisation you're in: the same lines, as quiet. */
-const ARROW_TONE = 0.45;
+const ARROW_TONE = 0.3;
 /** The arrows' names keep this far from the window's edge. */
 const EDGE = 28;
 
@@ -91,6 +91,13 @@ export interface LandFrame {
    * connection between them, shown alone with its number; -2 when they share none, so none shows; -1 for none chosen.
    */
   only?: number;
+  /**
+   * How much of every flower is its far wave, 1 to 0, the same for all at once (Elco, 12 Nov walk: "the transfer
+   * from the mini shape to the individual petals shape right now it's too soon ... the transition happens at
+   * different times depending on something related to the size of petals"): the map works it out from its zoom.
+   * Without it, each flower by its own size, as before.
+   */
+  waved?: number;
 }
 
 /** A flower that doesn't hold the chosen wallet keeps this much of itself (the wallet level). */
@@ -365,7 +372,18 @@ export function createLandScene(
 
   return {
     top,
-    draw({ view, live, entered, enter, marked, left, pointed = -1, holds = null, only = -1 }) {
+    draw({
+      view,
+      live,
+      entered,
+      enter,
+      marked,
+      left,
+      pointed = -1,
+      holds = null,
+      only = -1,
+      waved: allWaved,
+    }) {
       world.set('transform', `translate(${n3(view.x)} ${n3(view.y)}) scale(${view.k})`);
       const rest = 1 - enter;
       flowerLayer.set('opacity', o2(rest));
@@ -384,7 +402,7 @@ export function createLandScene(
           const r = screenRadius(view, f.place);
           s.g.set('opacity', holds && !holds.has(i) ? WALLET_AWAY : 1);
           if (s.wave) {
-            const w = fade(DETAIL.farWave, r);
+            const w = allWaved ?? fade(DETAIL.farWave, r);
             s.wave.set('opacity', o2(w));
             s.silhouette.set('opacity', o2(1 - w));
             s.polygon.set('opacity', o2(fade(DETAIL.polygonLine, r) * (1 - w)));
@@ -429,7 +447,7 @@ export function createLandScene(
           // any far away vision and only when I get to the Dao itself it will become less important in the
           // center"): the far wave's round hole, or the polygon's inscribed circle, a hair inside its line; in
           // the organisation you've entered it steps back to a share of its hole, between the two
-          const waved = fade(DETAIL.farWave, r);
+          const waved = l.centre && allWaved !== undefined ? allWaved : fade(DETAIL.farWave, r);
           const hole =
             r *
             (SHAPE.r0 / SHAPE.R) *
@@ -476,7 +494,7 @@ export function createLandScene(
 
       // Connections: each flower's strongest few from the farthest, the rest as they grow; fainter the more
       // there are. The number at the middle once there's room, or at any size once a click marks it.
-      const showing: { i: number; o: number; pair: number }[] = [];
+      const showing: { i: number; o: number }[] = [];
       roads.forEach((r, i) => {
         const s = roadSlots[i] as (typeof roadSlots)[number];
         const a = flowers[r.a]?.place as Place;
@@ -499,21 +517,23 @@ export function createLandScene(
                 ? 1
                 : fade(DETAIL.road, pair) * (r.strong ? 1 : fade(DETAIL.roadMore, pair));
         }
-        if (o > 0.01) showing.push({ i, o, pair });
+        if (o > 0.01) showing.push({ i, o });
         else {
           s.line.show(false);
           s.number.show(false);
         }
       });
       const crowd = lines === 'focus' ? 1 : crowdFade(showing.length);
-      for (const { i, o, pair } of showing) {
+      for (const { i, o } of showing) {
         const s = roadSlots[i] as (typeof roadSlots)[number];
         s.line.show(true);
         s.line.set(
           'opacity',
           o2(i === marked ? 0.9 : o * crowd * (lines === 'focus' ? LINE_TONE : ROAD_TONE)),
         );
-        const shown = i === marked ? 1 : fade(DETAIL.roadCount, pair) * Math.min(1, o * 2);
+        // a connection's number only where it's asked for, on the one a click marks (Elco, 12 Nov walk: the numbers
+        // were "a little bit mysterious"; "only put them in certain situations")
+        const shown = i === marked ? 1 : 0;
         const [x1, y1, x2, y2] = s.ends;
         const mx = view.x + (view.k * (x1 + x2)) / 2;
         const my = view.y + (view.k * (y1 + y2)) / 2;

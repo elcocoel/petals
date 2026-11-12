@@ -7,6 +7,7 @@
 import { lookFills } from '@petal/core/wedge/keys';
 import { type RefObject, useEffect, useRef } from 'react';
 import {
+  type Camera,
   type Clear,
   clearSides,
   fitView,
@@ -20,7 +21,7 @@ import {
   stepCamera,
   zoomWheel,
 } from '../flower/camera.ts';
-import { DETAIL, fade } from '../flower/detail.ts';
+import { DETAIL, fade, ramp } from '../flower/detail.ts';
 import { type Driven, driveFlower, newDriven } from '../flower/drive.ts';
 import {
   CLICK_LONGEST,
@@ -120,6 +121,19 @@ const LONGEST_THROW = 2400;
 const FARTHEST = 0.6;
 
 const quiet = () => window.matchMedia('(prefers-reduced-motion: reduce)');
+
+/**
+ * How far in from the chain's home the far wave hands over to petals, for every flower at once (Elco, 12 Nov walk:
+ * "we have to hold on to the mini shape longer until I'm actually focusing on one or another group of dowels"): at
+ * four times the home's zoom, over a short stretch so the mid-state where both show is brief.
+ */
+export const FAR_HOLD: readonly [number, number] = [3.6, 4.4];
+
+/** The far wave's share of every flower now: 1 at the chain's home and out to FAR_HOLD, 0 past it. */
+export function farOf(cam: Camera, home: Home): number {
+  const k = fitView(cam.width, cam.height, home, cam.clear).k;
+  return 1 - ramp(FAR_HOLD[0], FAR_HOLD[1], cam.k / (k || 1));
+}
 
 /** A flower, by the map it stands for, so it's found again in new data. */
 export const idOf = (f: LandFlower | undefined): string | null =>
@@ -345,7 +359,9 @@ export function useLandscape(
       arriving = false;
 
       // Who's live: mount the new ones open, as their silhouettes already are, under the names.
-      const want = liveSet(cam, places, new Set(lives.keys()));
+      // the mini shape held for the whole chain until you're close on a group, then petals for all at once
+      const waved = farOf(cam, home);
+      const want = waved >= 0.99 ? new Set<number>() : liveSet(cam, places, new Set(lives.keys()));
       if (entered >= 0) want.add(entered);
       for (const [i, d] of lives) {
         if (want.has(i)) continue;
@@ -414,6 +430,7 @@ export function useLandscape(
         pointed: under,
         holds,
         only,
+        waved,
       });
       if (moving) wake();
       else then = 0;

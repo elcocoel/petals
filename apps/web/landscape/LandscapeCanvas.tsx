@@ -492,6 +492,8 @@ export function LandscapeCanvas({
             // flowerKeys, what its fills paint); on the map, no one key, so it says so
             keys={inFlower ? flowerKeys(inFlower.reading.petals) : []}
             keysNote={inFlower ? undefined : panelWords.legendColours}
+            // what a line between two flowers is, for anyone who doesn't know (Elco, 12 Nov, walk 2)
+            between={{ label: panelWords.legendLines, says: panelWords.legendLinesSay }}
             edit={hands ?? undefined}
             groups={
               inFlower && blocs
