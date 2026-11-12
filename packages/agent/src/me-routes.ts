@@ -262,6 +262,22 @@ export function meRoutes(d: MeDeps): Hono {
     return ok(c, { view, hash });
   });
 
+  // A visitor's own view (Elco, 12 Nov, walk 3: "is it expensive do allow me to change here too?"): kept by its
+  // hash like any view, nobody's, so ?view=<hash> draws the map and its pictures in it. Signed in or not; the
+  // same view twice is kept once. A person's own stays PUT /api/v1/me/view.
+  app.put('/api/v1/views', bodyCap, async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const foreign = gate.refuseForeign(c);
+    if (foreign) return foreign;
+    const body = await jsonBody(c);
+    const problem = viewProblem(body?.view);
+    if (problem) return fail(c, 'bad_input', `Not a view/v1 or view/v2: ${problem}.`);
+    const view = body?.view as View;
+    const hash = viewHash(view);
+    await store.viewDoc.put(hash, canonicalJson(view), iso());
+    return ok(c, { view, hash });
+  });
+
   app.get('/api/v1/views/:hash', async (c) => {
     const hash = c.req.param('hash');
     const view = HASH.test(hash) ? await viewOf(hash) : null;

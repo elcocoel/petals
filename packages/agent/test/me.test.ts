@@ -71,6 +71,26 @@ describe("a person's view", () => {
     expect((await w.request('/api/v1/me/view', 'PUT', { view: IDENTITY })).status).toBe(401);
   });
 
+  test("a visitor keeps a view by its hash, nobody's (walk 3, 12 Nov): read back by the hash, kept once, checked, same-origin only", async () => {
+    const w = setup();
+    const put = await w.request('/api/v1/views', 'PUT', { view: IDENTITY });
+    expect(put.status).toBe(200);
+    expect(await w.json(put)).toMatchObject({ view: IDENTITY, hash: viewHash(IDENTITY) });
+    expect((await w.json(await w.request(`/api/v1/views/${viewHash(IDENTITY)}`))).view).toEqual(
+      IDENTITY,
+    );
+    expect((await w.request('/api/v1/views', 'PUT', { view: IDENTITY })).status).toBe(200);
+    // the visitor's own view as a person's stays the default: nothing kept under anyone
+    expect((await w.json(await w.request('/api/v1/me/view'))).hash).toBe(viewHash(DEFAULT_VIEW));
+    expect(
+      (await w.request('/api/v1/views', 'PUT', { view: { ...IDENTITY, extra: 1 } })).status,
+    ).toBe(400);
+    expect(
+      (await w.request('/api/v1/views', 'PUT', { view: IDENTITY }, 'https://elsewhere.example'))
+        .status,
+    ).toBe(401);
+  });
+
   test('a signed-in person keeps their own, reads it back, and anyone reads it by its hash', async () => {
     const w = setup();
     await w.signIn();
