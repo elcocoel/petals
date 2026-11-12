@@ -227,3 +227,80 @@ export async function snapshotCalls(
   }
   return out;
 }
+
+/** A DAO's Discourse forum, and who it speaks for. */
+export interface Forum {
+  base: string;
+  name: string;
+}
+
+/** The forums read for now (META, 12 Nov, Elco's order: smallest first): NEAR's and Arbitrum's. */
+export const FORUMS: readonly Forum[] = [
+  { base: 'https://gov.near.org', name: 'NEAR' },
+  { base: 'https://forum.arbitrum.foundation', name: 'Arbitrum DAO' },
+];
+
+/** A title that says it's a call: an RFP, a request for proposals, a grants program. */
+const CALL_TITLE = /\bRFPs?\b|\brequests? for proposals?\b|\bgrants? programs?\b/i;
+const FORUM_WORDS = ['RFP', '"request for proposals"', '"grants program"', '"grant program"'];
+
+interface ForumTopic {
+  id?: number;
+  title?: string;
+  slug?: string;
+  created_at?: string;
+}
+
+/**
+ * A forum's open topics whose title says RFP, request for proposals or grants program: inferred calls, each
+ * with its topic as evidence. A forum says no deadline or status, so neither is given.
+ */
+export async function forumCalls(
+  fetchImpl: Fetch,
+  forum: Forum,
+  readAt: string,
+  /** between two searches: Discourse answers 429 to an anonymous burst */
+  pauseMs = 2000,
+): Promise<Call[]> {
+  let asked = 0;
+  const host = new URL(forum.base).host;
+  const seen = new Map<number, Call>();
+  for (const words of FORUM_WORDS) {
+    const q = `${words} in:title status:open order:latest`;
+    for (let page = 1; ; page++) {
+      if (asked++ && pauseMs) await new Promise((r) => setTimeout(r, pauseMs));
+      const url = `${forum.base}/search.json?q=${encodeURIComponent(q)}&page=${page}`;
+      const res = await fetchImpl(url, { headers: { accept: 'application/json' } });
+      if (!res.ok) throw new Error(`${host} answered ${res.status}`);
+      const topics = ((await res.json()) as { topics?: ForumTopic[] }).topics ?? [];
+      for (const t of topics) {
+        const title = text(t.title);
+        if (typeof t.id !== 'number' || !title || !CALL_TITLE.test(title) || seen.has(t.id))
+          continue;
+        const link = `${forum.base}/t/${encodeURIComponent(t.slug ?? 'topic')}/${t.id}`;
+        seen.set(t.id, {
+          petal: 'calls/v1',
+          id: `${host}:${t.id}`,
+          kind: /\bRFPs?\b|\brequests? for proposals?\b/i.test(title) ? 'rfp' : 'grants',
+          title,
+          summary: null,
+          offered_by: { name: forum.name, about: null },
+          budget: null,
+          opens: isoOrNull(t.created_at),
+          closes: null,
+          status: null,
+          link,
+          source: {
+            name: host,
+            ref: `${forum.base}/search.json?q=<RFP | request for proposals | grants program> in:title status:open`,
+            read_at: readAt,
+          },
+          how: 'inferred',
+          evidence: link,
+        });
+      }
+      if (topics.length < 50) break;
+    }
+  }
+  return [...seen.values()];
+}

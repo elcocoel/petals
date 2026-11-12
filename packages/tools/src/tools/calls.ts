@@ -38,7 +38,7 @@ export const listCalls = defineTool<ListCallsInput, object>({
   name: 'list_calls',
   title: 'List open calls',
   description:
-    "Petals' feed of open calls: who is paying for work right now, or asking for a vote: RFPs, grants programs, bounties, hackathons, accelerators and funds, read without a key from Karma's program registry, NEAR's Infrastructure Committee, and Snapshot for the DAOs Petals maps (their open votes, kind vote). Each is a calls/v1, every field as its source says it: a status kept beside its deadline even when they disagree, a budget in the call's own words. Closing soonest first. Filter by kind, by words (in its title, summary or who offers it), or closing before a time.",
+    "Petals' feed of open calls: who is paying for work right now, or asking for a vote: RFPs, grants programs, bounties, hackathons, accelerators and funds, read without a key from Karma's program registry, NEAR's Infrastructure Committee, Snapshot for the DAOs Petals maps (their open votes, kind vote), and NEAR's and Arbitrum's forums, whose topics titled RFP, request for proposals or grants program are inferred calls, each with its topic as evidence. Each is a calls/v1, every field as its source says it: a status kept beside its deadline even when they disagree, a budget in the call's own words. Closing soonest first. Filter by kind, by words (in its title, summary or who offers it), or closing before a time.",
   input: obj(
     [],
     {
