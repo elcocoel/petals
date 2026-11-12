@@ -39,7 +39,7 @@
       "continues": [],
       "status": "ready",
       "file": "gathering/README.md",
-      "sha256": "cb418ed70085273bf913ce065220a47a448872626ce73a012555f6b64401e011"
+      "sha256": "8bc17ead56c86991e00a38c1c14e9352208e136f2b39d9d917ecca108f262b14"
     },
     {
       "id": "governance",
@@ -634,6 +634,36 @@
       "sha256": "44fedbc06c12748865b83e4654cdb7e7d4470a0f886f4f4e25ed9fa9b1bd47b3"
     },
     {
+      "id": "watch-open-calls",
+      "kind": "chapter",
+      "department": "gathering",
+      "for": "setting a watcher on Petals' feed of open calls, so the person hears when a call they'd care about opens or closes soon",
+      "recognise": [
+        "watch",
+        "watcher",
+        "alert",
+        "alerts",
+        "notify",
+        "tell me when",
+        "subscribe",
+        "feed",
+        "rss",
+        "new rfp",
+        "new grants",
+        "keep an eye",
+        "closing soon"
+      ],
+      "tools": [
+        "list_calls"
+      ],
+      "continues": [
+        "open-calls"
+      ],
+      "status": "partial",
+      "file": "gathering/watch-open-calls.md",
+      "sha256": "23dd4c838f125f7f6047a5f8e096246d768672ac8a2e63527392ad1e88f6a1ed"
+    },
+    {
       "id": "what-kind-of-thing-it-is",
       "kind": "chapter",
       "department": "gathering",
@@ -1093,6 +1123,25 @@
       ],
       "also": [
         "open-source-leads"
+      ]
+    },
+    {
+      "task": "Watch open calls",
+      "words": [
+        "watch",
+        "watcher",
+        "alert",
+        "notify",
+        "subscribe",
+        "feed",
+        "rss",
+        "closing soon"
+      ],
+      "load": [
+        "watch-open-calls"
+      ],
+      "also": [
+        "open-calls"
       ]
     },
     {

@@ -11,6 +11,7 @@ export {
   votingBlocs,
 } from './blocs.ts';
 export { validateBrainReceipt } from './brain-receipt.ts';
+export { CALLS_VERSION, type Call, type CallKind, validateCall } from './calls.ts';
 export {
   accountRef,
   applyPolicy,

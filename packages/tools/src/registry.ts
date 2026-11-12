@@ -7,6 +7,7 @@ import { toolError } from './errors.ts';
 import { addAnnotation, listAnnotations } from './tools/annotations.ts';
 import { findVotingBlocs } from './tools/blocs.ts';
 import { brainContext, brainFile, brainIndexTool, brainRoute, brainUsage } from './tools/brain.ts';
+import { listCalls } from './tools/calls.ts';
 import { keepData, listData } from './tools/data.ts';
 import { forkDataset, keepLayer, listLayers } from './tools/datasets.ts';
 import {
@@ -64,6 +65,7 @@ export const registry: Tool<any, any>[] = [
   readPage,
   search,
   searchPetalsTool,
+  listCalls,
   findVotingBlocs,
   keepData,
   listData,

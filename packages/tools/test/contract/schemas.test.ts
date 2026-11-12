@@ -76,6 +76,12 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     await run('read_page', { url: 'https://example.org/' });
     await run('search', { query: 'near validators' });
     await run('search_petals', { q: 'near validators' });
+    await run('list_calls', {});
+    await run('list_calls', {
+      kind: 'rfp',
+      q: 'relayer',
+      closes_before: '2027-01-01T00:00:00.000Z',
+    });
     const fixtures = join(import.meta.dirname, '..', '..', '..', 'core', 'schema', 'fixtures');
     const hos = JSON.parse(readFileSync(join(fixtures, 'proposals.v2.json'), 'utf8'));
     await privateStore(r.ctx.config).proposals.put({

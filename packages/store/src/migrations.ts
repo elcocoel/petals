@@ -549,6 +549,18 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX brain_receipt_at ON brain_receipt(at);
   `,
+  // 32: open calls (Elco, 12 Nov: "open calls is the most useful"): one calls/v1 per open call, by its id, as
+  // its source's reader last found them. Read again, a source's calls are replaced, so one no longer open leaves.
+  `
+  CREATE TABLE open_call (
+    id TEXT PRIMARY KEY,
+    source TEXT NOT NULL,
+    closes TEXT,
+    body TEXT NOT NULL,
+    read_at TEXT NOT NULL
+  );
+  CREATE INDEX open_call_source ON open_call(source);
+  `,
 ];
 
 /**

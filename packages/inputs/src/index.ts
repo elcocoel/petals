@@ -11,6 +11,12 @@ import type {
   Snapshot,
 } from '@petal/core/types';
 
+export {
+  committeeCalls,
+  INFRASTRUCTURE_COMMITTEE,
+  KARMA_PROGRAMS,
+  karmaCalls,
+} from './calls/index.ts';
 export { InputError, isInputError, type SourceFailure } from './errors.ts';
 export { encodeCall, eventTopic, selector } from './evm/abi.ts';
 export {

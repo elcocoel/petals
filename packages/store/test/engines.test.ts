@@ -562,4 +562,23 @@ describe.each(engines)('%s', (engine, open) => {
     await store.search.forget(a, 'note', 'n1');
     expect(await hits(a, ['cafe'])).toEqual([]);
   });
+
+  test("open calls (32): a source's replaced as a whole, closing soonest first, no deadline last", async () => {
+    const src = u('src');
+    const id = (n: string) => `${src}:${n}`;
+    const row = (n: string, closes: string | null) => ({
+      id: id(n),
+      closes,
+      body: '{}',
+      read_at: AT,
+    });
+    const mine = async () =>
+      (await store.openCall.list()).filter((r) => r.source === src).map((r) => r.id);
+    await store.openCall.replace(src, [row('b', null), row('a', LATER), row('c', AT)]);
+    expect(await mine()).toEqual([id('c'), id('a'), id('b')]);
+    await store.openCall.replace(src, [row('b', null)]);
+    expect(await mine()).toEqual([id('b')]);
+    await store.openCall.replace(src, []);
+    expect(await mine()).toEqual([]);
+  });
 });

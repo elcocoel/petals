@@ -42,6 +42,7 @@ describe('the brain', () => {
       'value',
       'vesting',
       'voting-blocs-over-time',
+      'watch-open-calls',
       'what-kind-of-thing-it-is',
       'where-power-lives',
       'who-can-move-money-or-change-rules',
@@ -76,6 +77,7 @@ describe('the brain', () => {
       'open-calls',
       'open-source-leads',
       'start-from-an-address',
+      'watch-open-calls',
       'what-kind-of-thing-it-is',
     ]);
     expect(by('governance')).toEqual([
@@ -113,7 +115,7 @@ describe('the brain', () => {
 
   test('the routing table (routing.md) is in the index, names only files there are, and every chapter is in a row', () => {
     const index = buildBrainIndex(BRAIN);
-    expect(index.tasks.length).toBe(21);
+    expect(index.tasks.length).toBe(22);
     expect(index.tasks[0]).toEqual({
       task: 'Set up Petals',
       words: ['setup', 'set up', 'sign in', 'wallet', 'credit', 'first conversation'],

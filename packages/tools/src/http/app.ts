@@ -4,6 +4,7 @@
 // HTTP statuses, reads query strings, and streams progress as SSE when asked.
 import { promisify } from 'node:util';
 import { gunzip as gunzipCb, gzip as gzipCb } from 'node:zlib';
+import type { Call } from '@petal/core';
 import {
   API_VERSION,
   aboutKey,
@@ -34,6 +35,7 @@ import { base, findSnapshot } from '../tools/shared.ts';
 import type { ToolContext } from '../types.ts';
 import { valuesOf } from '../value-store.ts';
 import { viewAsked, viewOfPerson } from '../views.ts';
+import { callsRss } from './calls-feed.ts';
 import {
   explorationRoutes,
   isSnapshotPost,
@@ -156,6 +158,18 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   const brainReader = async (c: Context): Promise<ToolContext> => ({
     ...ctx,
     caller: { ...ctx.caller, door: 'http', subject: (await o.gate?.subjectOf(c)) ?? null },
+  });
+  // the open-calls feed (Elco, 12 Nov): JSON here, RSS for any feed reader, the same filters in the address
+  const callFilters = (c: Context) => pick(c.req.query(), ['kind', 'q', 'closes_before']);
+  app.get('/api/v1/calls', limit, (c) => answer(c, 'list_calls', callFilters(c)));
+  app.get('/api/v1/calls.rss', limit, async (c) => {
+    const out = await run('list_calls', callFilters(c)).catch((e: unknown) => fromThrown(e));
+    if (isToolError(out)) return respond(c, out);
+    const site = (ctx.config.apiBase ?? new URL(c.req.url).origin).replace(/\/+$/, '');
+    const self = `${site}/api/v1/calls.rss${new URL(c.req.url).search}`;
+    return c.body(callsRss((out as { calls: Call[] }).calls, site, self), 200, {
+      'content-type': 'application/rss+xml; charset=utf-8',
+    });
   });
   app.get('/api/v1/brain', limit, async (c) => answer(c, 'brain_index', {}, await brainReader(c)));
   app.get('/api/v1/brain/route', limit, async (c) => {

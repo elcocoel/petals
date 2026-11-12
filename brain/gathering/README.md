@@ -19,3 +19,4 @@ What a thing is, and how to read something new.
 | `a-new-system` | a contract or system Petals has no recipe for yet |
 | `open-source-leads` | public traces that might say what an address did, as directions only |
 | `open-calls` | who is paying for work right now: open RFPs, grants programs, bounties, hackathons and open votes |
+| `watch-open-calls` | setting a watcher on Petals' feed of open calls, with a feed reader or the person's own agent |

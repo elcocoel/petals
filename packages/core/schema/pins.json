@@ -99,6 +99,10 @@
     "schema": "urn:petal:schema:value:v3",
     "sha256": "c29a376827793ba21f989714b71d007982208c892bade7fa3283da0778f0812c"
   },
+  "calls.v1.json": {
+    "schema": "urn:petal:schema:calls:v1",
+    "sha256": "5731e39ce266ab79c705a701dfa1d75df134178c57a50029597342905a04ac7c"
+  },
   "proposals.v2.json": {
     "schema": "urn:petal:schema:proposals:v2",
     "sha256": "ec7fc9a44f1d9ade45ab702d1c1ad7c6b351c724daa24c9fabeda8b69b0ec465"

@@ -25,6 +25,7 @@ export {
   readBrain,
   routeBrain,
 } from './brain.ts';
+export { type CallsRead, callsOf, readCalls } from './calls.ts';
 export { configFromEnv, createContext } from './context.ts';
 export type { PetalTool, ToolAnnotations } from './define.ts';
 export { TOOL_ERROR_SCHEMA } from './define.ts';
