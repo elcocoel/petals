@@ -17,8 +17,8 @@ export function Wallets({
 }: {
   wallets: WalletRow[] | 'reading' | 'unread';
   adding?: AddWalletPhase;
-  /** Asks another wallet to sign; absent, there's no button. */
-  onAdd?: () => void;
+  /** Asks another wallet to sign, a NEAR or an EVM one; absent, there are no buttons. */
+  onAdd?: (kind: 'near' | 'evm') => void;
 }) {
   const rows = Array.isArray(wallets) ? wallets : [];
   return (
@@ -26,13 +26,6 @@ export function Wallets({
       title={profilePageWords.wallets}
       labelledBy="profile-wallets"
       badge={rows.length > 0 ? <Badge>{rows.length}</Badge> : undefined}
-      action={
-        onAdd ? (
-          <Button variant="secondary" disabled={adding.kind === 'adding'} onClick={onAdd}>
-            {profilePageWords.addWallet}
-          </Button>
-        ) : undefined
-      }
     >
       {wallets === 'reading' && (
         <p className="my-0 type-caption text-muted">{profilePageWords.reading}</p>
@@ -61,6 +54,24 @@ export function Wallets({
           </ul>
           <p className="my-0 type-caption text-muted">{profilePageWords.walletsNote}</p>
         </>
+      )}
+      {onAdd && (
+        <div className="flex flex-wrap items-center gap-text-gap">
+          <Button
+            variant="secondary"
+            disabled={adding.kind === 'adding'}
+            onClick={() => onAdd('near')}
+          >
+            {profilePageWords.connectNear}
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={adding.kind === 'adding'}
+            onClick={() => onAdd('evm')}
+          >
+            {profilePageWords.connectEvm}
+          </Button>
+        </div>
       )}
       {adding.kind === 'adding' && (
         <p className="my-0 type-caption text-muted">{profilePageWords.adding}</p>

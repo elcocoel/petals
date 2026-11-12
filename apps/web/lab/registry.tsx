@@ -2802,11 +2802,16 @@ export const registry: LabEntry[] = [
         ),
       },
       {
-        name: 'with Add a wallet, and a wallet that belongs to someone else',
+        name: 'a NEAR and an Ethereum wallet, with the two Connects, and one that belongs to someone else',
         render: () => (
           <Wallets
             wallets={walletRows([
               { network: 'mainnet', account_id: 'a-name.near', proved_at: '2026-11-11T12:00:00Z' },
+              {
+                network: 'eip155',
+                account_id: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be',
+                proved_at: '2026-11-12T20:00:00Z',
+              },
             ])}
             adding={{ kind: 'failed', why: 'That wallet already belongs to another account.' }}
             onAdd={() => {}}

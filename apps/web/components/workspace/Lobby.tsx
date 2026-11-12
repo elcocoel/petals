@@ -69,7 +69,7 @@ export function Lobby({
   usage: UsageView | 'reading' | 'unread';
   wallets: WalletRow[] | 'reading' | 'unread';
   adding: AddWalletPhase;
-  addWallet: () => void;
+  addWallet: (kind: 'near' | 'evm') => void;
   claims: ClaimsView | 'reading' | 'unread';
   conversations: ConversationRow[];
   map: LobbyMap;
