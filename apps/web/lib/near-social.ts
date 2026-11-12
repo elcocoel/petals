@@ -248,6 +248,9 @@ const shownAvatar = (a: string | null | undefined): string | null => {
 /** Where Petals keeps a picture: GET /api/v1/media/<sha256>.<ext> (SYSTEMS, 10 Nov). */
 const MEDIA = /^https?:\/\/[^/]+\/api\/v1\/media\/[0-9a-f]{64}\.(?:webp|jpg|png)$/;
 
+/** A picture Petals keeps, at its own address: publishing has to store it on FastFS first. */
+export const isPetalsMedia = (src: string | null) => src !== null && MEDIA.test(src);
+
 /** Petals' copy as the lobby shows a profile; null when it has nothing in it. */
 export function fromPetals(p: PetalsProfile | null): SocialProfile | null {
   if (!p) return null;

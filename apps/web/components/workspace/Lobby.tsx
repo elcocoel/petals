@@ -49,7 +49,13 @@ export function Lobby({
   map,
 }: {
   /** The wallet this session signed in with, and the profile Petals keeps or NEAR Social's. */
-  profile: { account: string | null; social: SocialState; edit?: () => void; saved: boolean };
+  profile: {
+    account: string | null;
+    social: SocialState;
+    edit?: () => void;
+    saved: boolean;
+    published: boolean;
+  };
   /** The profile's editor, while it's open: it takes the Profile card's place. */
   editor: ProfileEditorView | null;
   funds: {
@@ -79,7 +85,12 @@ export function Lobby({
             {editor ? (
               <ProfileEditor view={editor} />
             ) : (
-              <Profile social={profile.social} onEdit={profile.edit} saved={profile.saved} />
+              <Profile
+                social={profile.social}
+                onEdit={profile.edit}
+                saved={profile.saved}
+                published={profile.published}
+              />
             )}
           </div>
           <Wallets wallets={wallets} adding={adding} onAdd={addWallet} />
