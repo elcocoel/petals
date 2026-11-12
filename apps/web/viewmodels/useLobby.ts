@@ -27,6 +27,7 @@ import {
 } from '../lib/profile-view.ts';
 import { hasSolanaWallet, NO_SOLANA_WALLET } from '../lib/solana-wallet.ts';
 import { SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
+import { usePowerQuote } from './usePowerQuote.ts';
 import { evmProof, solanaProof } from './useSession.ts';
 import { useWorkPanel } from './useWorkPanel.ts';
 
@@ -64,6 +65,13 @@ export function useLobby() {
     };
   }, []);
 
+  // one illustrated power quote per empty widget, each its own (#89, wave 7)
+  const quotes = {
+    profile: usePowerQuote(0),
+    claims: usePowerQuote(1),
+    usage: usePowerQuote(2),
+    conversations: usePowerQuote(3),
+  };
   const nearUsd = funds.where?.near_usd ?? null;
   const usageShown = useMemo(
     () => (typeof usage === 'string' ? usage : usageView(usage.calls, usage.spent, nearUsd)),
@@ -134,5 +142,6 @@ export function useLobby() {
     addWallet: (kind: WalletKind) => void addWallet(kind),
     claims,
     conversations: bus.rows,
+    quotes,
   };
 }

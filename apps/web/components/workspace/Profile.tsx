@@ -7,6 +7,8 @@
 // Props only: viewmodels/useProfile.ts reads it. Words from lib/lobby-view.ts, drafts.
 import { editorWords, profileWords, type SocialState } from '../../lib/lobby-view.ts';
 import { serviceName } from '../../lib/near-social.ts';
+import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
+import { PowerQuote } from '../PowerQuote.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
@@ -16,6 +18,7 @@ export function Profile({
   onEdit,
   saved,
   published,
+  quote,
 }: {
   social: SocialState;
   /** Opens the editor: Edit with a profile, Create without one. */
@@ -24,6 +27,8 @@ export function Profile({
   saved?: boolean;
   /** The person just published it and NEAR Social took it. */
   published?: boolean;
+  /** An illustrated power quote for when there's no profile yet (#89, wave 7). */
+  quote?: PowerQuoteItem | null;
 }) {
   const profile = social.kind === 'profile' ? social.profile : null;
   return (
@@ -82,6 +87,11 @@ export function Profile({
               <Button variant="primary" onClick={onEdit}>
                 {profileWords.create}
               </Button>
+            </div>
+          )}
+          {quote && (
+            <div className="flex justify-center">
+              <PowerQuote quote={quote} />
             </div>
           )}
         </>

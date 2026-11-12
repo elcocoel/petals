@@ -5,13 +5,22 @@
 // what it says, how it's known, where it rests and who said it, with its source. Props only:
 // viewmodels/useLobby.ts reads it. Words from lib/profile-view.ts and lib/claim-lines.ts, drafts.
 import { claimWords } from '../../lib/claim-lines.ts';
+import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
 import { type ClaimsView, profilePageWords } from '../../lib/profile-view.ts';
+import { PowerQuote } from '../PowerQuote.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
 import { Mono } from '../ui/Mono.tsx';
 import { TextLink } from '../ui/TextLink.tsx';
 
-export function Claims({ claims }: { claims: ClaimsView | 'reading' | 'unread' }) {
+export function Claims({
+  claims,
+  quote,
+}: {
+  claims: ClaimsView | 'reading' | 'unread';
+  /** An illustrated power quote for when there's nothing yet (#89, wave 7). */
+  quote?: PowerQuoteItem | null;
+}) {
   const view = typeof claims === 'string' ? null : claims;
   return (
     <Card
@@ -25,7 +34,16 @@ export function Claims({ claims }: { claims: ClaimsView | 'reading' | 'unread' }
       {claims === 'unread' && (
         <p className="my-0 type-caption text-muted">{profilePageWords.unread}</p>
       )}
-      {view && view.total === 0 && <p className="my-0 type-body">{profilePageWords.claimsNone}</p>}
+      {view && view.total === 0 && (
+        <>
+          <p className="my-0 type-body">{profilePageWords.claimsNone}</p>
+          {quote && (
+            <div className="flex justify-center">
+              <PowerQuote quote={quote} />
+            </div>
+          )}
+        </>
+      )}
       {view && view.total > 0 && (
         <>
           <div className="flex flex-wrap items-center gap-text-gap">
