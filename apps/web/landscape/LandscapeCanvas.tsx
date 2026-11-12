@@ -10,6 +10,7 @@
 // and inside a flower, under it, what Petals' own mapping says about that map, folded until asked. Where a page
 // asks (the Power Map), a search field tops the chain list, and while something's typed the maps it finds stand
 // in the chains' place; pressing one goes to its chain and into its flower (board 105).
+import type { Proposal } from '@petal/core';
 import { EVERY_FLOWER, inUse } from '@petal/core/view';
 import { flowerKeys } from '@petal/core/wedge/keys';
 import { floatBox } from '@petal/tokens';
@@ -25,6 +26,7 @@ import {
 } from 'react';
 import { MapClaims } from '../components/MapClaims.tsx';
 import { MapLayers } from '../components/MapLayers.tsx';
+import { MapProposal } from '../components/MapProposal.tsx';
 import { MapSearch } from '../components/MapSearch.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { IconButton } from '../components/ui/IconButton.tsx';
@@ -40,6 +42,7 @@ import { layerWords, mapLayers } from '../lib/map-layers.ts';
 import { MAP_SEARCH_ID, mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
+import { proposalView, proposalWords } from '../lib/proposal-view.ts';
 import type { LegendEdit } from '../lib/view-edit.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
@@ -151,6 +154,7 @@ function Land({
   inside,
   onWallet,
   onCentre,
+  onProposal,
   clearOfChains,
   highlight,
   go,
@@ -172,6 +176,8 @@ function Land({
   onWallet: (id: string | null) => void;
   /** told which DAO a click puts in the middle, by its map, or null to put the saved map back */
   onCentre: (id: string | null) => void;
+  /** told which proposal a click pins, with the proposal, and when it's let go */
+  onProposal: NonNullable<LandscapeAt['onProposal']>;
   clearOfChains: boolean;
   /** the chosen group's petals to highlight inside the flower you're in (#94), or null */
   highlight: readonly string[] | null;
@@ -192,6 +198,7 @@ function Land({
     inside,
     onWallet,
     onCentre,
+    onProposal,
     clearOfChains,
     worth,
     ...(onPick ? { onPick } : {}),
@@ -341,12 +348,22 @@ export function LandscapeCanvas({
   const [wallet, setWallet] = useState<string | null>(null);
   // all their votes first: the recent ones hold no bloc on most maps (Elco, 11 Nov: "do something reasonable")
   const [span, setSpan] = useState<BlocSpan>('all');
+  // the proposal a click pinned (LOOK's onProposal): Information says what it's about (Elco, walk 3: "when I
+  // click the proposal there's no way for me to know what this proposal is about")
+  const [pinned, setPinned] = useState<Proposal | null>(null);
   const toldInside = useCallback((yes: boolean, at: number) => {
     setInside(yes);
     setEntered(yes ? at : -1);
     if (!yes) {
       setBloc(null);
+      setPinned(null);
     }
+  }, []);
+  const proposalPinned = useCallback<NonNullable<LandscapeAt['onProposal']>>((p) => {
+    // the ring's own object is the server's whole proposal (LOOK, e9e29a9): its summary and link come with it
+    setPinned((p?.proposal as Proposal | null | undefined) ?? null);
+    // Information opens on it, as on a chosen wallet's insights
+    if (p?.proposal) setClaimsOpen(true);
   }, []);
   const finding = useMapSearch();
   // the flower a search's answer goes into, by its chain and its place on that chain's map
@@ -680,6 +697,7 @@ export function LandscapeCanvas({
           inside={toldInside}
           onWallet={walletChosen}
           onCentre={setCentre}
+          onProposal={proposalPinned}
           clearOfChains={clearOfChains}
           highlight={lit}
           worth={worth}
@@ -731,6 +749,14 @@ export function LandscapeCanvas({
             >
               {/* each part under its head, the heads edge to edge (SectionHead's panel size) */}
               <div className="flex flex-col pb-space-8">
+                {pinned && (
+                  <div className="flex flex-col px-space-8">
+                    <SectionHead size="panel" title={proposalWords.title} />
+                    <div className="px-space-8 py-space-8">
+                      <MapProposal view={proposalView(pinned)} />
+                    </div>
+                  </div>
+                )}
                 {information && (
                   <div className="flex flex-col px-space-8">
                     <SectionHead size="panel" title={information.title} />

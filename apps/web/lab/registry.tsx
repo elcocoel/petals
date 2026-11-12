@@ -48,6 +48,7 @@ import { StoryFlower, StoryLight } from '../components/landing/StoryFlower.tsx';
 import { MapClaims } from '../components/MapClaims.tsx';
 import { MapLayers } from '../components/MapLayers.tsx';
 import { MapList } from '../components/MapList.tsx';
+import { MapProposal } from '../components/MapProposal.tsx';
 import { MapSearch } from '../components/MapSearch.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { Oops } from '../components/Oops.tsx';
@@ -3192,6 +3193,33 @@ export const registry: LabEntry[] = [
             <LineRow expanded onClick={() => undefined}>
               <span className="type-ui">A claim's words</span>
             </LineRow>
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'MapProposal',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/MapProposal.tsx',
+    states: [
+      {
+        name: 'a Sputnik proposal: its words, and the link its text names',
+        render: () => (
+          <div className="w-tile-width">
+            <MapProposal
+              view={{
+                title: 'Schedule an auction of 2.5% of the total REF supply on Skyward',
+                facts: 'Vote · Approved · 13 Jul 2021',
+                who: 'By refchef.near',
+                votes: '3 for',
+                words:
+                  'Schedule an auction of 2.5% of the total REF supply on Skyward, as discussed on the forum: the proceeds go to the treasury, and the auction runs for a week.',
+                link: { url: 'https://bit.ly/36AJr6G', label: 'A link its text names' },
+              }}
+            />
           </div>
         ),
       },
