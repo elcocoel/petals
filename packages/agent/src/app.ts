@@ -221,16 +221,6 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
   // reaches the model is paid for, by the person or an invite. The site's own doors still read nothing.
   const agentCtx = config.public ? createContext({ ...cfg, public: false }) : ctx;
   if (o.searchModel) agentCtx.searchModel = o.searchModel;
-  const tools = { ...agentCtx, fresh: freshGate(agentCtx) };
-  app.route(
-    '/',
-    createAgentRoutes({ tools, llm, budget, runs }, { ...o, auth: auth.gate, bell, takeUp }),
-  );
-  const onJobReported = (job: JobRow) => {
-    void takeUp
-      .current?.(job)
-      .catch((e) => console.warn(`petal: a report's turn failed: ${(e as Error).message}`));
-  };
   // the brain's receipts (12 Nov, step 5): one brain-receipt/v1 each time a door serves the brain's text
   const onBrainServed = async (r: BrainReceipt) => {
     await store.brainReceipt.add({
@@ -240,6 +230,17 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       client_id: r.client_id,
       body: JSON.stringify(r),
     });
+  };
+  // Petals' own agent reads the brain too (step 10), and its reads are kept like everyone else's
+  const tools = { ...agentCtx, fresh: freshGate(agentCtx), onBrainServed };
+  app.route(
+    '/',
+    createAgentRoutes({ tools, llm, budget, runs }, { ...o, auth: auth.gate, bell, takeUp }),
+  );
+  const onJobReported = (job: JobRow) => {
+    void takeUp
+      .current?.(job)
+      .catch((e) => console.warn(`petal: a report's turn failed: ${(e as Error).message}`));
   };
   // and the counts, worked out from them when asked (12 Nov, step 7: brain_usage)
   const brainUsage = async (since?: string) => ({

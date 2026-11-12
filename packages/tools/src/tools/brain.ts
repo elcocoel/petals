@@ -51,7 +51,8 @@ async function receipt(
     doc_count: served.served_docs.length,
     client_id: ctx.caller?.door ?? null,
     client_label: ctx.caller?.client ?? null,
-    consumer_context: subject ? { subject } : null,
+    consumer_context:
+      ctx.consumer || subject ? { ...(ctx.consumer ?? {}), ...(subject ? { subject } : {}) } : null,
   };
   await ctx.onBrainServed(r);
   return r.id;

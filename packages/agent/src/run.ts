@@ -501,6 +501,8 @@ async function loop(
       out = approvalRequired(held, gate?.why(held, messages.slice(1)));
     } else {
       const ctx = withProgress(stored ?? deps.tools, (e) => emit({ event: 'progress', data: e }));
+      // what its brain reads happen in, for their receipts (12 Nov, step 10)
+      ctx.consumer = { ...ctx.consumer, run: runId };
       try {
         // inside this, its fetches find the run's signal through runSignal()
         const running = signal
