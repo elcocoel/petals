@@ -220,6 +220,15 @@ export interface PublishableData {
   published: number;
   /** what the press would add, per layer and kind, and what can't go yet and why (SYSTEMS, wave 3) */
   adds?: PublishAdds[];
+  /** the person's readings of the map that go with the press, credited to them (SYSTEMS, wave 7) */
+  readings?: {
+    layer: string;
+    id: string;
+    title: string;
+    what: string;
+    as_of: string;
+    accounts: number;
+  }[];
 }
 
 /** One layer's share of a publish: Insights · Names · 35, or Readings, which can't go yet, and why. */
@@ -273,7 +282,8 @@ export async function publishPublishable(
   sha256: string,
   proof: unknown,
 ): Promise<
-  { published: number; by: string; map_url: string } | { refused: number; message: string }
+  | { published: number; by: string; map_url: string; readings?: number }
+  | { refused: number; message: string }
 > {
   const res = await fetch('/api/v1/publish/data', {
     method: 'POST',
@@ -281,7 +291,12 @@ export async function publishPublishable(
     body: JSON.stringify({ sha256, proof }),
   });
   if (!res.ok) return { refused: res.status, message: await failureOf(res) };
-  return (await res.json()) as { published: number; by: string; map_url: string };
+  return (await res.json()) as {
+    published: number;
+    by: string;
+    map_url: string;
+    readings?: number;
+  };
 }
 
 async function failureOf(res: Response): Promise<string> {
@@ -749,6 +764,26 @@ export const evmChallenge = (address: string, chainId: number) =>
     chain_id: chainId,
   });
 
+/** A Solana wallet's proof (an ed25519 signature, base64, of the text the challenge gave). */
+export interface SolanaProof {
+  type: 'ed25519';
+  address: string;
+  message: string;
+  signature: string;
+}
+
+/** The text a Solana wallet signs to sign in or be added, for this address (SYSTEMS). */
+export const solanaChallenge = (address: string) =>
+  sessionPost<{ message: string; nonce: string; expires_at: string }>('/api/v1/auth/challenge', {
+    chain: 'solana',
+    address,
+  });
+
+/** Signs in with a Solana wallet: a new person, or the one this wallet already belongs to. */
+export async function verifySolana(proof: SolanaProof): Promise<void> {
+  await sessionPost('/api/v1/auth/verify', { network: 'solana', proof });
+}
+
 /** Signs in with an EVM wallet: a new person, or the one this wallet already belongs to. */
 export async function verifyEvm(proof: EvmProof): Promise<void> {
   await sessionPost('/api/v1/auth/verify', { network: 'eip155', proof });
@@ -757,7 +792,7 @@ export async function verifyEvm(proof: EvmProof): Promise<void> {
 /** Another wallet for the person signed in (POST /api/v1/me/wallets): its proof, as signing in sends one. */
 export function addMyWallet(
   network: string,
-  proof: Nep413Proof | EvmProof,
+  proof: Nep413Proof | EvmProof | SolanaProof,
 ): Promise<{ wallets: ProvenWallet[] }> {
   return sessionPost('/api/v1/me/wallets', { network, proof });
 }

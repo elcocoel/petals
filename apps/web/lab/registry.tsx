@@ -41,13 +41,14 @@ import { GiveToAgent } from '../components/landing/GiveToAgent.tsx';
 import { Hero } from '../components/landing/Hero.tsx';
 import { Glass } from '../components/landing/HeroGlass.tsx';
 import { HeroStory } from '../components/landing/HeroStory.tsx';
+import { HeroTools } from '../components/landing/HeroTools.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
 import { LandingMap } from '../components/landing/LandingMap.tsx';
 import { LiveReading } from '../components/landing/LiveReading.tsx';
 import { MapHero } from '../components/landing/MapHero.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
-import { StoryFlower, StoryLight } from '../components/landing/StoryFlower.tsx';
+import { StoryFlower } from '../components/landing/StoryFlower.tsx';
 import { MapClaims } from '../components/MapClaims.tsx';
 import { MapLayers } from '../components/MapLayers.tsx';
 import { MapList } from '../components/MapList.tsx';
@@ -58,6 +59,7 @@ import { NextSteps } from '../components/NextSteps.tsx';
 import { Oops } from '../components/Oops.tsx';
 import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
+import { PowerQuote } from '../components/PowerQuote.tsx';
 import { PublishFlow } from '../components/PublishFlow.tsx';
 import { PublishPress } from '../components/PublishPress.tsx';
 import { QuotePanel } from '../components/QuotePanel.tsx';
@@ -122,7 +124,7 @@ import { ceremonyView } from '../lib/ceremony.ts';
 import type { AnnotationRow } from '../lib/claim-lines.ts';
 import type { DrawingKind } from '../lib/figures.ts';
 import { keysOf, oneKey, readingKey, svgImage } from '../lib/flower-view.ts';
-import { SETTLED_MS } from '../lib/hero-story.ts';
+import { settledMs } from '../lib/hero-story.ts';
 import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
@@ -135,6 +137,7 @@ import { oopsWords } from '../lib/oops-words.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
 import { viewChoices } from '../lib/person-view.ts';
+import { POWER_QUOTES } from '../lib/power-quotes.ts';
 import { claimsView, usageView, walletRows } from '../lib/profile-view.ts';
 import { publishPressView } from '../lib/publish-press.ts';
 import type { Done } from '../lib/thread.ts';
@@ -701,23 +704,23 @@ export const registry: LabEntry[] = [
       name: `beat ${beat + 1}`,
       render: () => (
         <div className="aspect-3/2 w-full">
-          <StoryFlower beat={beat} t={SETTLED_MS} />
+          <StoryFlower beat={beat} t={settledMs(beat)} />
         </div>
       ),
     })),
   },
   {
-    id: 'StoryLight',
+    id: 'HeroTools',
     group: 'Marks',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/landing/StoryFlower.tsx',
-    // the light behind the hero's flower, its own layer; tinted while the blocs show
-    states: [0, 2].map((beat) => ({
+    source: 'apps/web/components/landing/HeroTools.tsx',
+    // the hero's Tools box, the map's own rows, settled at each beat
+    states: [0, 1, 2, 4].map((beat) => ({
       name: `beat ${beat + 1}`,
       render: () => (
-        <div className="aspect-3/2 w-full">
-          <StoryLight beat={beat} t={SETTLED_MS} />
+        <div className="w-1/3">
+          <HeroTools beat={beat} t={settledMs(beat)} />
         </div>
       ),
     })),
@@ -2388,6 +2391,20 @@ export const registry: LabEntry[] = [
           />
         ),
       },
+      {
+        name: 'a NEAR or an Ethereum wallet (wave 5)',
+        wide: true,
+        render: () => (
+          <NotSignedIn
+            question=""
+            busy={false}
+            failed={null}
+            onConnect={() => {}}
+            onConnectEvm={() => {}}
+            onConnectSolana={() => {}}
+          />
+        ),
+      },
     ],
   },
   {
@@ -2802,7 +2819,7 @@ export const registry: LabEntry[] = [
         ),
       },
       {
-        name: 'a NEAR and an Ethereum wallet, with the two Connects, and one that belongs to someone else',
+        name: 'NEAR, Ethereum and Solana wallets, with the three Connects, and one that belongs to someone else',
         render: () => (
           <Wallets
             wallets={walletRows([
@@ -2811,6 +2828,11 @@ export const registry: LabEntry[] = [
                 network: 'eip155',
                 account_id: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be',
                 proved_at: '2026-11-12T20:00:00Z',
+              },
+              {
+                network: 'solana',
+                account_id: '4buheNoQAwBLYzPF3GASEpZoNhCPot1B1VCwxGLdpW1A',
+                proved_at: '2026-11-12T21:00:00Z',
               },
             ])}
             adding={{ kind: 'failed', why: 'That wallet already belongs to another account.' }}
@@ -2886,6 +2908,17 @@ export const registry: LabEntry[] = [
       },
       { name: 'none yet', render: () => <Conversations rows={[]} /> },
     ],
+  },
+  {
+    id: 'PowerQuote',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/PowerQuote.tsx',
+    states: POWER_QUOTES.slice(0, 3).map((q) => ({
+      name: q.id,
+      render: () => <PowerQuote quote={q} />,
+    })),
   },
   {
     id: 'MappingBox',

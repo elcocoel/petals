@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:vesting:v1",
+  "title": "Petal vesting v1",
+  "description": "vesting/v1 (12 Nov, wave 7; Elco: 'it's vesting reader for anything - the model has to know how to figure out a vesting schedule and have a strategy to deal with the petal segmentation and that's it'): a token's vesting schedules, one allocation each, as whoever found them wrote them, kept by the token's map. Each allocation names the account its locked tokens sit in, who can claim them, its total, how it releases (lumps at a moment, streams from one moment to another in steps or continuously; the amounts add up to the total), what was withdrawn when read, and how it's known: verified (read on chain), published (the project's own table) or inferred (from the same pattern as one read on chain). From it, at a reading's date, each petal that holds allocations is cut into unlocked, next unlock and later. One per map, read again to refresh.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["petal", "about", "token", "allocations", "read_at"],
+  "properties": {
+    "petal": { "const": "vesting/v1" },
+    "about": {
+      "description": "the token's map, by its address (its card's id): <chain>:<token>",
+      "type": "string",
+      "minLength": 3
+    },
+    "token": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "symbol", "decimals"],
+      "properties": {
+        "id": { "description": "the token, as <chain>:<address>", "type": "string", "minLength": 3 },
+        "symbol": { "type": ["string", "null"] },
+        "decimals": { "description": "as its contract or mint says", "type": "integer", "minimum": 0, "maximum": 36 }
+      },
+      "description": "the token the allocations are in"
+    },
+    "allocations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/allocation" }
+    },
+    "read_at": { "description": "when the schedules were read", "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "amount": {
+      "description": "whole tokens, as decimal text",
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]+)?$"
+    },
+    "lump": {
+      "description": "all of the amount at one moment: a cliff, a lump",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "amount"],
+      "properties": {
+        "at": { "type": "string", "format": "date-time" },
+        "amount": { "$ref": "#/$defs/amount" }
+      }
+    },
+    "stream": {
+      "description": "the amount from one moment to another: in equal steps every `every` seconds, the first at from + every and the last at `to`; or, with every null, continuously",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "every", "amount"],
+      "properties": {
+        "from": { "type": "string", "format": "date-time" },
+        "to": { "type": "string", "format": "date-time" },
+        "every": { "type": ["integer", "null"], "minimum": 1 },
+        "amount": { "$ref": "#/$defs/amount" }
+      }
+    },
+    "account": {
+      "description": "an account, as CAIP-10: <chain>:<address>",
+      "type": "string",
+      "minLength": 3
+    },
+    "allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "holder", "beneficiary", "total", "schedule", "released", "known", "how", "evidence"],
+      "properties": {
+        "name": { "description": "the allocation's name, as its source gives it", "type": "string", "minLength": 1 },
+        "holder": {
+          "$ref": "#/$defs/account",
+          "description": "the account its locked tokens sit in: a lock program's account, a stream, a vesting contract"
+        },
+        "beneficiary": {
+          "description": "who can claim them, or null where not known",
+          "anyOf": [{ "$ref": "#/$defs/account" }, { "type": "null" }]
+        },
+        "total": { "$ref": "#/$defs/amount" },
+        "schedule": {
+          "description": "how it releases; the amounts add up to its total",
+          "type": "array",
+          "minItems": 1,
+          "items": { "anyOf": [{ "$ref": "#/$defs/lump" }, { "$ref": "#/$defs/stream" }] }
+        },
+        "released": {
+          "description": "what was withdrawn from it, as read, or null where not read",
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["amount", "at"],
+              "properties": {
+                "amount": { "$ref": "#/$defs/amount" },
+                "at": { "type": "string", "format": "date-time" }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
+        "known": {
+          "description": "verified: read on chain; published: the project's own table; inferred: from the same pattern as one read on chain",
+          "enum": ["verified", "published", "inferred"]
+        },
+        "how": { "description": "how it's known, in a sentence", "type": "string", "minLength": 1 },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "ref"],
+            "properties": {
+              "kind": { "description": "chain, published, dataset", "type": "string", "pattern": "^[a-z0-9_-]+$" },
+              "ref": { "description": "a transaction, an account, a page", "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

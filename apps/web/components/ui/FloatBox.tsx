@@ -107,10 +107,15 @@ export function FloatBox({
         barClassName="min-h-control-height shrink-0 cursor-grab touch-none select-none active:cursor-grabbing"
         barProps={hand.bar}
       >
-        <div
-          className={`flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none ${foot ? 'pb-space-16' : ''}`}
-        >
-          {children}
+        {/* its rows scroll above the box's rounded foot, so nothing is cut by the corner and the scroll bar stays
+            inside it (Elco, 12 Nov, wave 4 walk: "things going out of the visual frame in this radius ... Even the
+            scroll bar just falls out of the thing"); with a base, the base closes it instead */}
+        <div className={`flex min-h-0 flex-1 flex-col ${foot ? '' : 'pb-space-32'}`}>
+          <div
+            className={`flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none ${foot ? 'pb-space-16' : ''}`}
+          >
+            {children}
+          </div>
         </div>
       </BarBox>
       {foot && (

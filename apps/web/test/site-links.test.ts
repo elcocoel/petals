@@ -52,7 +52,10 @@ describe('the landing page', () => {
     expect([...html.matchAll(/<form\b[^>]*>/g)]).toEqual([]);
     for (const question of landingCopy.hero.starters)
       expect(hrefs).not.toContain(askHref(question));
-    for (const beat of landingCopy.heroStory.beats) expect(html).toContain(beat.name);
+    // the story plays on its stage; the chapters under it went (Elco, 12 Nov: "we don't need this chapter control
+    // in the bottom at all")
+    expect(html).toContain('data-kind="symbol"');
+    for (const beat of landingCopy.heroStory.beats) expect(html).not.toContain(`>${beat.name}<`);
   });
 
   test("its figures are inline and carry no raw colour, but for the landing's illustrations", () => {

@@ -12,6 +12,7 @@ import type {
   PetalRow,
   Reading,
   ReadingPetal,
+  Segment,
   Snapshot,
   Spec,
   View,
@@ -25,6 +26,28 @@ import { encodingsOf, labelsOf, piecesOf, RATIOS } from './view.ts';
 
 /** Each piece's value for each account, of the pieces given beyond the snapshot's own. */
 type Values = Map<string, Map<string, string>>;
+
+/**
+ * A petal's bands from a piece of parts given with the reading (Elco, 12 Nov, wave 7: "a vesting reader for anything
+ * ... a strategy to deal with the petal segmentation"): its parts in the order given, bottom to top, each its share
+ * of the petal's whole; none where the piece has none for it.
+ */
+function partSegments(piece: SeamPiece | undefined, id: string): Segment[] {
+  if (!piece || !('parts' in piece)) return [];
+  const mine = piece.parts.filter((p) => p.participant === id);
+  const total = mine.reduce((sum, p) => sum + (Number(p.value) || 0), 0);
+  if (total <= 0) return [];
+  return mine.map((p) => ({
+    key: p.part,
+    label: p.part,
+    amount: p.value,
+    frac: (Number(p.value) || 0) / total,
+  }));
+}
+
+/** The parts piece Segments shows, where it's a piece given with the reading (not the reading's own backers). */
+const partsPiece = (by: string | null | undefined, pieces: readonly SeamPiece[]) =>
+  by && by !== 'backers' ? pieces.find((p) => p.name === by && p.kind === 'parts') : undefined;
 
 function valuesOf(pieces: readonly SeamPiece[]): Values {
   const out: Values = new Map();
@@ -269,6 +292,7 @@ export function readFlower(
     ? countHeights(rows, values.get(heightBy) as Map<string, string>)
     : heightValues(rows, spec.encodings.height, metricOf(s, spec, rows));
   const split = spec.encodings.segments?.by === 'backers';
+  const parts = partsPiece(used?.segments, pieces);
   const fold = tailFold(s, spec.selection, rows);
   const colours = coloursOf(used?.colour ?? null, rows, values, kinds);
 
@@ -281,7 +305,13 @@ export function readFlower(
       colour:
         colours && !r.tail ? (colours.get(r.id) ?? NO_VALUE) : colourKey(spec.encodings.colour, r),
       outline: outlineKey(spec, r),
-      segments: split && !r.tail ? backerSegments(s, r.id) : [],
+      segments: r.tail
+        ? []
+        : parts
+          ? partSegments(parts, r.id)
+          : split
+            ? backerSegments(s, r.id)
+            : [],
       ...(r.tail && fold ? { fold } : {}),
     }),
   );
@@ -414,6 +444,10 @@ export function redress(
     const was = before.get(r.id) as ReadingPetal;
     return {
       ...was,
+      // bands from a piece of parts given (vesting) are dressed again; the backers' wait for the server
+      ...(partsPiece(used.segments, given) && !r.tail
+        ? { segments: partSegments(partsPiece(used.segments, given), r.id) }
+        : {}),
       ...r,
       name: nameOf(r, used.labels, values),
       width: widths[i] ?? 1,

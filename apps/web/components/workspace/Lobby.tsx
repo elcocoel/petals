@@ -18,7 +18,14 @@ import {
   type WithdrawPhase,
 } from '../../lib/lobby-view.ts';
 import type { Money } from '../../lib/pay.ts';
-import type { AddWalletPhase, ClaimsView, UsageView, WalletRow } from '../../lib/profile-view.ts';
+import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
+import type {
+  AddWalletPhase,
+  ClaimsView,
+  UsageView,
+  WalletKind,
+  WalletRow,
+} from '../../lib/profile-view.ts';
 import { MapList } from '../MapList.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
@@ -47,6 +54,7 @@ export function Lobby({
   claims,
   conversations,
   map,
+  quotes,
 }: {
   /** The wallet this session signed in with, and the profile Petals keeps or NEAR Social's. */
   profile: {
@@ -69,10 +77,12 @@ export function Lobby({
   usage: UsageView | 'reading' | 'unread';
   wallets: WalletRow[] | 'reading' | 'unread';
   adding: AddWalletPhase;
-  addWallet: (kind: 'near' | 'evm') => void;
+  addWallet: (kind: WalletKind) => void;
   claims: ClaimsView | 'reading' | 'unread';
   conversations: ConversationRow[];
   map: LobbyMap;
+  /** An illustrated power quote for each widget with nothing in it yet (#89, wave 7). */
+  quotes: Record<'profile' | 'claims' | 'usage' | 'conversations', PowerQuoteItem | null>;
 }) {
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
@@ -90,12 +100,13 @@ export function Lobby({
                 onEdit={profile.edit}
                 saved={profile.saved}
                 published={profile.published}
+                quote={quotes.profile}
               />
             )}
           </div>
           <Wallets wallets={wallets} adding={adding} onAdd={addWallet} />
           <div className="grid min-w-0 lg:col-span-2">
-            <Claims claims={claims} />
+            <Claims claims={claims} quote={quotes.claims} />
           </div>
           <Funds
             balance={funds.balance}
@@ -104,6 +115,7 @@ export function Lobby({
             withdrew={funds.withdrew}
             onWithdraw={funds.withdraw}
             usage={usage}
+            quote={quotes.usage}
           />
           <div className="grid min-w-0 lg:col-span-2">
             <Card
@@ -120,7 +132,7 @@ export function Lobby({
               )}
             </Card>
           </div>
-          <Conversations rows={conversations} />
+          <Conversations rows={conversations} quote={quotes.conversations} />
         </div>
       </div>
     </main>

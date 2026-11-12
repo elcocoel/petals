@@ -356,15 +356,26 @@ export function ViewLegend({
   const chosen = groups?.choices.find((c) => c.id === groups.chosen);
   // the rest of the dimensions, folded until asked: their head says how many there are
   const [moreOpen, setMoreOpen] = useState(false);
+  // every section folds under its head, so a long panel never loses you (Elco, 12 Nov, wave 4 walk: "they don't
+  // have a collapse component ... it's really easy to get lost"); open as they come
+  const [petalsOpen, setPetalsOpen] = useState(true);
+  const [highlightOpen, setHighlightOpen] = useState(true);
+  const [mapOpen, setMapOpen] = useState(true);
   const rows = { view, drawn, pieces, keys, keysNote, gradeKeys, edit };
   const body = (
     <>
-      <SectionHead size="panel" title={panelWords.legendPetals} />
-      <div className="flex flex-col py-space-4">
-        {PETALS.map((d) => (
-          <DimensionRows key={d} d={d} {...rows} />
-        ))}
-      </div>
+      <SectionHead
+        size="panel"
+        title={panelWords.legendPetals}
+        fold={{ open: petalsOpen, onToggle: () => setPetalsOpen((now) => !now) }}
+      />
+      {petalsOpen && (
+        <div className="flex flex-col py-space-4">
+          {PETALS.map((d) => (
+            <DimensionRows key={d} d={d} {...rows} />
+          ))}
+        </div>
+      )}
       <SectionHead
         size="panel"
         title={panelWords.legendMore(MORE.length)}
@@ -379,8 +390,12 @@ export function ViewLegend({
       )}
       {groups && (
         <>
-          <SectionHead size="panel" title={words.dimensions.highlight} />
-          <div className="flex flex-col py-space-4">
+          <SectionHead
+            size="panel"
+            title={words.dimensions.highlight}
+            fold={{ open: highlightOpen, onToggle: () => setHighlightOpen((now) => !now) }}
+          />
+          <div className={`flex-col py-space-4 ${highlightOpen ? 'flex' : 'hidden'}`}>
             <ToolRow label={panelWords.legendBlocs}>
               <Select
                 label={panelWords.legendBlocs}
@@ -419,8 +434,12 @@ export function ViewLegend({
       )}
       {(gravity || worth || insights || between) && (
         <>
-          <SectionHead size="panel" title={panelWords.legendOnMap} />
-          <div className="flex flex-col py-space-4">
+          <SectionHead
+            size="panel"
+            title={panelWords.legendOnMap}
+            fold={{ open: mapOpen, onToggle: () => setMapOpen((now) => !now) }}
+          />
+          <div className={`flex-col py-space-4 ${mapOpen ? 'flex' : 'hidden'}`}>
             {gravity && (
               <ToolRow label={panelWords.legendGravity}>
                 <span className="w-full min-w-0">

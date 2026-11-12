@@ -5,7 +5,9 @@
 // Words from lib/lobby-view.ts, drafts.
 import { canWithdraw, fundsWords, type WithdrawPhase } from '../../lib/lobby-view.ts';
 import type { Money } from '../../lib/pay.ts';
+import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
 import { type UsageView, usageWords } from '../../lib/profile-view.ts';
+import { PowerQuote } from '../PowerQuote.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
@@ -18,6 +20,7 @@ export function Funds({
   withdrew,
   onWithdraw,
   usage,
+  quote,
 }: {
   /** What's left, dollars first and NEAR beside, as /make shows it; null until it can be read. */
   balance: Money | null;
@@ -32,6 +35,8 @@ export function Funds({
    * like a full-blown professional usages widget"); absent where only the balance shows.
    */
   usage?: UsageView | 'reading' | 'unread';
+  /** An illustrated power quote for when there's no usage yet (#89, wave 7). */
+  quote?: PowerQuoteItem | null;
 }) {
   const offer = held !== null && canWithdraw(held) && phase !== 'withdrew';
   return (
@@ -71,7 +76,14 @@ export function Funds({
               {usage === 'reading' ? usageWords.reading : usageWords.unread}
             </p>
           ) : usage.rows.length === 0 ? (
-            <p className="my-0 type-caption text-muted">{usageWords.none}</p>
+            <>
+              <p className="my-0 type-caption text-muted">{usageWords.none}</p>
+              {quote && (
+                <div className="flex justify-center">
+                  <PowerQuote quote={quote} />
+                </div>
+              )}
+            </>
           ) : (
             <>
               <p className="my-0 type-caption text-muted">{usage.summary}</p>

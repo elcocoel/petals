@@ -4,12 +4,21 @@
 // same list the side panel reads (viewmodels/useWorkPanel.ts), so both say the same. Props only. Words from
 // lib/profile-view.ts, drafts.
 import type { ConversationRow } from '../../lib/conversation-list.ts';
+import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
 import { profilePageWords } from '../../lib/profile-view.ts';
+import { PowerQuote } from '../PowerQuote.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
 import { TextLink } from '../ui/TextLink.tsx';
 
-export function Conversations({ rows }: { rows: ConversationRow[] }) {
+export function Conversations({
+  rows,
+  quote,
+}: {
+  rows: ConversationRow[];
+  /** An illustrated power quote for when there's nothing yet (#89, wave 7). */
+  quote?: PowerQuoteItem | null;
+}) {
   return (
     <Card
       title={profilePageWords.conversations}
@@ -17,7 +26,14 @@ export function Conversations({ rows }: { rows: ConversationRow[] }) {
       badge={rows.length > 0 ? <Badge>{rows.length}</Badge> : undefined}
     >
       {rows.length === 0 ? (
-        <p className="my-0 type-body">{profilePageWords.conversationsNone}</p>
+        <>
+          <p className="my-0 type-body">{profilePageWords.conversationsNone}</p>
+          {quote && (
+            <div className="flex justify-center">
+              <PowerQuote quote={quote} />
+            </div>
+          )}
+        </>
       ) : (
         <ul className="m-0 flex max-h-figure-height list-none flex-col overflow-y-auto overscroll-none p-0">
           {rows.map((r) => (

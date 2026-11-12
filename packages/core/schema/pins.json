@@ -122,5 +122,9 @@
   "view.v3.json": {
     "schema": "urn:petal:schema:view:v3",
     "sha256": "190ec41d6fbd3942e29b99b3145bf51343af2f25ffa554deeb1173a871cfb713"
+  },
+  "vesting.v1.json": {
+    "schema": "urn:petal:schema:vesting:v1",
+    "sha256": "b3525e85ce690f58e8ec918703313b74feae3857a0f469dff676cbe645f9783a"
   }
 }

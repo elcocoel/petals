@@ -30,6 +30,7 @@ import type { CardProposals } from './proposals.ts';
 import { base, findSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
 import { type CardValue, cardValue, valuesOf } from './value-store.ts';
+import { vestingOf, vestingStamps } from './vesting.ts';
 
 /** A chain by the name a reader's chain parameter takes (ethereum, gnosis), as find_target names it. */
 export const chainName = (caip2: string) =>
@@ -129,6 +130,7 @@ async function readOf(
   view: View,
   values: ReadonlyMap<string, Value> = new Map(),
   stamps: ReadonlyMap<string, string> = new Map(),
+  vested: ReadonlyMap<string, string> = new Map(),
 ): Promise<Read | null> {
   try {
     const spec = JSON.parse(body) as Spec;
@@ -143,6 +145,8 @@ async function readOf(
       ...valuePieces(snapshot, values.get(mapOf(snapshot)) ?? null),
       // each petal's activity in its map's proposals (activity.ts, 12 Nov): none where none were read
       ...(await activityOf(ctx, snapshot, stamps)),
+      // each petal's vesting at the reading's date (vesting.ts, wave 7): none where its map's wasn't read
+      ...(await vestingOf(ctx, snapshot, vested)),
     ];
     const reading = readFlower(spec, snapshot, view, extra);
     // the picture's colours: its legend, as render_flower dresses it (in the keys, core lookFills)
@@ -197,11 +201,16 @@ export async function mapViews(
   const voted = stamps.size
     ? `:${sha256Hex([...stamps].map(([about, at]) => `${about}@${at}`).join(','))}`
     : '';
+  // and by when its vesting was read (vesting.ts), so a new reading of it cuts the petals again
+  const vested = await vestingStamps(ctx);
+  const vesting = vested.size
+    ? `:v${sha256Hex([...vested].map(([about, at]) => `${about}@${at}`).join(','))}`
+    : '';
   for (const row of await privateStore(ctx.config).draft.list()) {
-    const key = `${row.sha256}:${through}${named}${priced}${voted}`;
+    const key = `${row.sha256}:${through}${named}${priced}${voted}${vesting}`;
     let r = read.get(key);
     if (!r) {
-      const got = await readOf(ctx, row.body, view, values, stamps);
+      const got = await readOf(ctx, row.body, view, values, stamps, vested);
       if (!got) continue;
       read.set(key, got);
       r = got;

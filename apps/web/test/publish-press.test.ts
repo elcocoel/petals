@@ -102,3 +102,50 @@ describe('the list, read before the press (Elco: "Let me look first")', () => {
     expect(v?.why).toBeNull();
   });
 });
+
+describe('readings you drew go with them (wave 7)', () => {
+  test('listed first, each in words with its accounts; the press and the result say so', () => {
+    const v = publishPressView(
+      {
+        ...data,
+        readings: [
+          {
+            layer: 'Readings',
+            id: 'r1',
+            title: 'RaidGuild',
+            what: 'Moloch v3 (Baal) members on Gnosis, 11 Nov',
+            as_of: '2026-11-11',
+            accounts: 174,
+          },
+        ],
+      },
+      'ready',
+      null,
+    );
+    expect(v?.press).toBe(publishWords.pressAll);
+    expect(v?.counts).toContain('1 reading you drew goes with them.');
+    expect(v?.rows?.readings?.rows[0]).toMatchObject({
+      name: 'Moloch v3 (Baal) members on Gnosis, 11 Nov',
+      address: '174 accounts',
+    });
+    expect(publishWords.publishedAll(62, 1)).toBe(
+      'Published on the shared map: 62 names and notes, 1 reading.',
+    );
+  });
+
+  test('readings alone, with no names to go, still offer the press', () => {
+    const v = publishPressView(
+      {
+        ...data,
+        ready: 0,
+        private: [],
+        readings: [
+          { layer: 'Readings', id: 'r1', title: 'X', what: 'X', as_of: '2026-11-11', accounts: 3 },
+        ],
+      },
+      'ready',
+      null,
+    );
+    expect(v?.press).toBe(publishWords.pressAll);
+  });
+});

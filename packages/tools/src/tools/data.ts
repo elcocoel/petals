@@ -1,5 +1,5 @@
 // keep_data and list_data (#98; CONNECTORS, 11 Nov: so people's agents can keep what they find): any Petals
-// document an agent found or made (a reading, a mark, a value, proposals, a claim), kept private to the person's
+// document an agent found or made (a reading, a mark, a value, proposals, vesting, a claim), kept private to the person's
 // project, named by its canonical sha256, until a review takes it to the shared map. Checked by its own format as
 // the person's own project checks it, so a claim may name a person there. A claim goes to the project's
 // annotations, as add_annotation keeps it; a reading to the store, so propose_spec draws it; the rest to
@@ -40,7 +40,7 @@ export const keepData = defineTool<
   title: 'Keep a document in the project',
   description:
     "Keep a Petals document you found or made in the person's project, privately: a reading (snapshot/v1), a " +
-    "map's mark, value or proposals, or a claim. It's checked by its own format, as the person's own project " +
+    "map's mark, value, proposals or vesting, or a claim. It's checked by its own format, as the person's own project " +
     'checks it, named by the SHA-256 of its canonical JSON, and kept once. It reaches the shared map only after a ' +
     'review. A reading can then be drawn: propose_spec with its network.id and this sha256.',
   input: obj(

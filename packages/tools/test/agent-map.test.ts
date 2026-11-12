@@ -377,27 +377,36 @@ describe("each petal's activity reaches every drawing of the map (activity.ts, 1
 });
 
 describe('what a press adds, by layer (Elco, 12 Nov: "a clear indicator of what data layers and claims I would be adding")', () => {
-  test("a reading the person drew of the map shows, and can't go yet, with why", async () => {
+  test("a reading the person drew of the map goes with the press; once another maker has it, it doesn't", async () => {
     const person = { ...r.ctx, caller: { subject: 'prs_elco', by: 'near:mainnet:elco.near' } };
     const started = await run('start_exploration', { question: 'who runs the guild?' }, person);
-    const proposed = await run('propose_spec', { network: 'moloch-v1', sha256: MOLOCH });
+    const drawn = await run('propose_spec', { network: 'moloch-v1', sha256: MOLOCH });
     const saved = await run(
       'save_step',
-      { exploration: started.exploration, spec: proposed.spec, note: 'a first look' },
+      { exploration: started.exploration, spec: drawn.spec, note: 'a look' },
       person,
     );
     expect(saved.error).toBeUndefined();
+    const store = privateStore(r.ctx.config);
+    // the mapping drew the same view: it isn't theirs to take
+    expect((await run('list_publishable', { map: MAP }, person)).readings).toEqual([]);
+    // a view nobody is credited with yet, drawn in their project, goes with the press
+    await store.draft.label(drawn.spec_sha256, { name: null, made_by: null });
     const o = await run('list_publishable', { map: MAP }, person);
-    expect(o.adds).toEqual([
-      {
+    expect(o.readings).toEqual([
+      expect.objectContaining({
         layer: 'Readings',
-        kind: 'drawn',
-        label: 'Readings you drew',
-        count: 1,
-        goes: false,
-        why: 'a reading you drew is on the map already, uncredited; publishing it in your name comes later',
-      },
+        id: drawn.spec_sha256,
+        accounts: expect.any(Number),
+      }),
     ]);
-    expect(o.ready).toBe(0);
+    expect(o.readings[0].what).toMatch(/^Moloch v1 members on Ethereum, \d+ \w+$/);
+    expect(o.adds).toContainEqual({
+      layer: 'Readings',
+      kind: 'drawn',
+      label: 'Readings you drew',
+      count: 1,
+      goes: true,
+    });
   });
 });

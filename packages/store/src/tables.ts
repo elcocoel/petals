@@ -180,6 +180,14 @@ export interface PayoutsRow {
   body: string;
   read_at: string;
 }
+/** A map's vesting/v1 (34): its token's vesting schedules, one allocation each. */
+export interface VestingRow {
+  /** the map's address, as its card's id */
+  about: string;
+  /** the vesting/v1, JSON */
+  body: string;
+  read_at: string;
+}
 /** A text's embedding (29): its sha256 and its float32s, base64. */
 export interface SearchVectorRow {
   sha256: string;
@@ -1246,6 +1254,26 @@ export function tables(db: Db) {
       },
       get: (about: string) => db.get<PayoutsRow>('SELECT * FROM payouts WHERE about = ?', about),
       list: () => db.all<PayoutsRow>('SELECT * FROM payouts ORDER BY about'),
+    },
+
+    /** Each map's vesting (34), by the map's address: read again, it's replaced. */
+    vesting: {
+      put: async (r: VestingRow) => {
+        await db.run(
+          `INSERT INTO vesting (about, body, read_at) VALUES (?, ?, ?)
+           ON CONFLICT (about) DO UPDATE SET body = excluded.body, read_at = excluded.read_at`,
+          r.about,
+          r.body,
+          r.read_at,
+        );
+      },
+      get: (about: string) => db.get<VestingRow>('SELECT * FROM vesting WHERE about = ?', about),
+      list: () => db.all<VestingRow>('SELECT * FROM vesting ORDER BY about'),
+      /** Each map's address and when its vesting was read, without the bodies: what changed, cheaply. */
+      stamps: () =>
+        db.all<{ about: string; read_at: string }>(
+          'SELECT about, read_at FROM vesting ORDER BY about',
+        ),
     },
 
     /** Search's vectors (29), by model and the sha256 of the text embedded: put once, never changed. */
