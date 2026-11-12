@@ -177,7 +177,8 @@ function gradeWords(
       : kind === 'share'
         ? `${(x * 100).toFixed(x < 0.001 ? 3 : 1)}%`
         : Math.round(x).toLocaleString('en-US');
-  const [low, high] = kind === 'date' ? ['oldest', 'newest'] : ['fewest', 'most'];
+  // a date's ends: earliest and latest, past (last active) or still to come (an allocation's next unlock; OVERLAYS)
+  const [low, high] = kind === 'date' ? ['earliest', 'latest'] : ['fewest', 'most'];
   const hue = KEY_BY_NAME.get(chosen.grade ?? '');
   return {
     from: `${kind === 'share' || kind === 'amount' ? 'least' : low} ${say(lo)}`,
