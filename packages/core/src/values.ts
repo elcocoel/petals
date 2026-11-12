@@ -42,8 +42,30 @@ export interface ValueTreasury {
   items: ValueTreasuryItem[];
   total: { usd: string; priced: number; unpriced: number };
 }
+/** value/v3 (12 Nov): an amount of the token as its source says it, the chain's own or an outside source's. */
+export interface ValueSaid {
+  amount: string;
+  source: string;
+  ref: string;
+  at: string;
+}
+/** value/v3's max: amount null when its source says there is none (NEAR's inflation, from the chain). */
+export interface ValueMax {
+  amount: string | null;
+  source: string;
+  ref: string;
+  at: string;
+}
+/** value/v3's market cap, in dollars as its source says it. */
+export interface ValueMarketCap {
+  usd: string;
+  source: string;
+  ref: string;
+  at: string;
+}
+export const VALUE_V3 = 'value/v3';
 export interface Value {
-  petal: typeof VALUE_VERSION | 'value/v2';
+  petal: typeof VALUE_VERSION | 'value/v2' | typeof VALUE_V3;
   about: string;
   asset: { id: string; symbol: string | null };
   price: ValuePrice | null;
@@ -53,14 +75,26 @@ export interface Value {
   totals: ValueTotal[];
   /** value/v2: the map's treasury, or null when none was read */
   treasury?: ValueTreasury | null;
+  /** value/v3: how much is out there, as its source counts it, or null when none said */
+  circulating?: ValueSaid | null;
+  /** value/v3: the most there can ever be, the chain's where it proves one, or else an outside source's */
+  max?: ValueMax | null;
+  /** value/v3: the market cap as its source says it */
+  market_cap?: ValueMarketCap | null;
   read_at: string;
 }
 
 const compiled = new Map<string, ReturnType<ReturnType<typeof createAjv>['getSchema']>>();
 
-/** The value, typed, or every reason it isn't one: value/v1, or value/v2 with its treasury. */
+const VALUE_SCHEMA: Record<string, 'valueV2' | 'valueV3'> = {
+  'value/v2': 'valueV2',
+  'value/v3': 'valueV3',
+};
+
+/** The value, typed, or every reason it isn't one: value/v1, value/v2 with its treasury, or value/v3. */
 export function validateValue(x: unknown): Result<Value> {
-  const name = (x as { petal?: unknown } | null)?.petal === 'value/v2' ? 'valueV2' : 'value';
+  const petal = (x as { petal?: unknown } | null)?.petal;
+  const name = (typeof petal === 'string' && VALUE_SCHEMA[petal]) || 'value';
   if (!compiled.has(name)) compiled.set(name, createAjv().getSchema(schemaId(name)));
   const v = compiled.get(name);
   if (!v) throw new Error('value schema not registered');
