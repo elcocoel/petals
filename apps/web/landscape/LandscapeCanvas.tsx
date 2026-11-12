@@ -734,7 +734,7 @@ export function LandscapeCanvas({
                 {information && (
                   <div className="flex flex-col px-space-8">
                     <SectionHead size="panel" title={information.title} />
-                    <div className="flex flex-col gap-text-gap px-space-8 py-space-8">
+                    <div className="flex flex-col gap-space-4 px-space-8 py-space-8">
                       {information.body}
                     </div>
                   </div>
