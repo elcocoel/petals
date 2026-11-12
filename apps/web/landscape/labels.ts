@@ -104,7 +104,8 @@ function drawCentreMark(m: LabelFlower['mark'], parent: Element, clip: string): 
 
 /**
  * A flower's badge, laid out once from (0, 0) at its left edge, its middle on the line: the logo inside it
- * unless the mark is the far wave's centre, the symbol where there's no logo, the name, its types. Its parent
+ * unless the mark is the far wave's centre, the token's symbol where there's no logo (never a lone initial), the
+ * name, its types. Its parent
  * must be on screen, so the words are measured as the browser sets them; then it's hidden.
  */
 export function drawLabel(f: LabelFlower, parent: Element, clip: string, centred = false): Label {
@@ -128,7 +129,10 @@ export function drawLabel(f: LabelFlower, parent: Element, clip: string, centred
     drawLogo(f.mark.logo, m, clip, BADGE.mark);
     x += BADGE.mark + GAP;
   }
-  if (!f.mark.logo && symbol && !said) {
+  // a symbol of one letter is only the name's initial (no token symbol was found): it says nothing before the
+  // name (Elco, 12 Nov, wave 3: "there's like, D, R, A, H, I bet these mean something. I just have no idea")
+  const initial = Array.from(symbol).length <= 1;
+  if (!f.mark.logo && symbol && !said && !initial) {
     const t = el('text', { class: MONO, fill: MUTED, x, y: 4 }, group.node);
     t.textContent = symbol;
     x += widthOf(t) + GAP;
