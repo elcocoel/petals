@@ -1,51 +1,130 @@
 // The hero's story, as numbers (HERO ART's V2, approved by Elco 11 Nov: "BRO, 10 OUT OF 10 - LFG!!!! ... get
-// this in the hero please"; design/hero-illustration/foreground-script-v2.md), choreographed as motion (HERO
-// MOTION, 11 Nov: "this shit will be cinematic"). Six beats, each its own length (BEATS_MS): the question arrives, the
-// flower anticipates and answers, the words answer, a quiet hold while the camera breathes, the words leave.
+// this in the hero please"; design/hero-illustration/foreground-script-v2.md), cut to a beat (Elco, 12 Nov: "boom,
+// action, reaction, beat, counterbeats, call, response, fast, something slow, fast, fast, fast, boom, boom, boom
+// ... we need pulse ... think musically, almost like to the beat of rap"). One tempo drives everything: each story
+// beat is a phrase of bars and every move lands on a count. On the one, the cut and the call: the camera whips to
+// its shot and the question slams in. A rest to read it. On the three, the reaction: the flower hits, and fast
+// accents follow it. On the next bar's one, the response: Petals' answer, in a box that came with the first one and
+// stays, the last answer giving way to this one word by word (Elco, 12 Nov: "no reason for them to go away before
+// the next question comes in"). The question leaves on the last and. The history beat is the slow one: its heights travel
+// a whole bar and land on a boom. Under it all the light thumps on every count, harder on one and three.
+// And it is organic, never dead still (Elco, 12 Nov: "ins and outs and elastic or sine wave ... not just bursts";
+// "completely stopped needs to be an exception"), and smooth (Elco, 12 Nov: no bumpiness, no jerking): each hit
+// eases in and lands with a little give, never a bounce; exits dip before they go; and between the hits the petals
+// ripple in a slow wave round the clock, the words float and the camera keeps drifting.
+// It is one loop (Elco, 12 Nov: "start in the beginning from a far away situation ... then we zoom in into my
+// community ... following to other communities and then it zooms out to the same frame it started"): it opens on
+// the far map, dives into my community as it bursts open, and the connections beat pulls back to its two
+// neighbours and then all the way out, to the very frame it opened on (world()).
 // Everything a frame draws is a pure function of the beat and the time into it, so choosing a beat settles it at
 // once, a test can read any moment, and a video can be rendered frame by frame from the same numbers. The flower
 // is a symbol, not a reading: no network, no counts. Heights stay linear and widths equal (the art direction's
 // brief); the motion only decides how each state is reached.
 
+/** The tempo, a rap beat's: every time below is counted in it. */
+export const BPM = 112;
+/** One count (a quarter note), in ms. */
+export const COUNT_MS = 60000 / BPM;
+/** Where a count falls in its story beat: 1 is the downbeat, 3.5 the and of three, 5 the second bar's one. */
+const count = (c: number) => (c - 1) * COUNT_MS;
+const EIGHTH = COUNT_MS / 2;
+const SIXTEENTH = COUNT_MS / 4;
+/** How long an elastic landing takes, from the hit to still on its mark. */
+const SPRING_MS = 3 * EIGHTH;
+/** How long a wind-up before a hit takes. */
+const WIND_MS = SIXTEENTH;
+/** Per petal, how much later than its neighbour before it (clockwise from twelve) it lands: a roll round the clock. */
+const ROLL = 12;
+
 /**
- * How long each beat lasts, from its question arriving to its answer leaving (Elco, 11 Nov: "focus on the timing
- * of each section"). The opening and the close hold longest; the middle beats keep the pace up; the history beat
- * has time to travel.
+ * How many bars each story beat lasts: the community beat opens with a bar on the far map before the camera dives
+ * (Elco, 12 Nov: the far scene "goes by waaay too fast and starts moving before the questions").
  */
-export const BEATS_MS: readonly number[] = [6600, 5600, 5800, 6800, 6000, 7200];
+const BARS: readonly number[] = [3, 2, 2, 2, 2, 2];
+export const BEATS_MS: readonly number[] = BARS.map((bars) => bars * 4 * COUNT_MS);
 /** The longest beat, for whatever needs one number. */
 export const BEAT_MS = Math.max(...BEATS_MS);
 export const beatMs = (beat: number) => BEATS_MS[beat] ?? BEAT_MS;
-/** A moment inside a beat where everything has settled and both lines are in view. */
-export const SETTLED_MS = 3600;
-/** When the flower starts its answer: while the question is still landing, so the shape answers first. */
-const RESPOND_MS = 600;
-/** The question on arrival waits for the centre to land; after that each question comes in at once. */
-const QUESTION_FRESH_MS = 300;
-const ANSWER_MS = 1500;
-/** How long before its beat ends a question leaves, and its answer after it; the answer's exit runs into the next beat. */
-const QUESTION_LEAVES_MS = 700;
-const ANSWER_LEAVES_MS = 450;
-/** How far into the next beat an answer is still leaving, while the next question comes in. */
-export const OVERLAP_MS = 300;
-/** How long the history beat's heights take to move from then to now. */
-const HISTORY = { from: 700, ms: 3300 };
+/** When each beat starts on one clock round the whole story, for what keeps going across the beats. */
+export const startOf = (beat: number) => BEATS_MS.slice(0, beat).reduce((sum, ms) => sum + ms, 0);
+/**
+ * The last count of a beat, before the words cut out: both lines in view, the flower at rest; for the connections
+ * beat, before the camera goes back out to the far map. A chosen beat stops here.
+ */
+export const settledMs = (beat: number) => (beat === 5 ? count(6) : beatMs(beat) - COUNT_MS);
 
-export const PETALS = 24;
-/** Where the petals start: the centre's edge. */
-export const INNER = 36;
+/** The call lands on the one; on arrival half a count later, so the far map is seen first. */
+const CALL = count(1);
+const CALL_FRESH = count(1.5);
+/** The reaction: the flower hits on the three. */
+const REACT = count(3);
+/** The response: the answer lands on the second bar's one. */
+const RESPOND = count(5);
+/** The community beat's phrase starts a bar late, after its bar on the far map. */
+const LEAD = 4 * COUNT_MS;
+const reactAt = (beat: number) => REACT + (beat === 0 ? LEAD : 0);
+const respondAt = (beat: number) => RESPOND + (beat === 0 ? LEAD : 0);
+/**
+ * When the camera starts its whip to a beat's shot, and when its drift starts: on the one; on the community beat
+ * the whip goes with the dive, and the drift only once the question has landed, so nothing moves before it.
+ */
+export const whipAt = (beat: number) => (beat === 0 ? count(6) : 0);
+export const driftAt = (beat: number) => (beat === 0 ? count(2) : 0);
+
+/** How many wallets my community has: enough for a long tail, as real flowers have. */
+export const PETALS = 36;
+/** Where the petals start: the centre's edge; a wide centre, as the real flower has (Elco, 12 Nov: closer to the real thing). */
+export const INNER = 56;
 /** Every petal's length when the community first opens, all equal. */
-const EVEN = 106;
+const EVEN = 118;
 /** Half the line between two petals: the same width from foot to tip (Elco, 5 Nov: "a relatively stable line"). */
 export const GUTTER = 1.5;
 
-/** Tallest at twelve o'clock, then shorter around the clock: the same symbolic sequence the earlier hero drew. */
-const shares = Array.from({ length: PETALS }, (_, i) => 0.3 + 0.7 * (1 - i / (PETALS - 1)) ** 1.8);
-/** Each petal's length once influence shows. */
-const base = shares.map((s) => 43 + s * 128);
-/** The same petals at the history beat's "now": another balance, the positions kept. */
-const later = shares.map((_, i) => 49 + (shares[(i + 7) % PETALS] as number) * 119);
-export const ghostLengths: readonly number[] = base;
+/** The same made-up numbers every time: a small seeded generator. */
+export function seeded(seed: number) {
+  let a = seed;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let r = Math.imul(a ^ (a >>> 15), 1 | a);
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * What each wallet holds, as real communities hold it (Elco, 12 Nov: "it looks completely unrealistic ... we need a
+ * bit more variation"): a few large holders, unevenly far apart, and a long uneven tail; the largest first, as the
+ * real flower orders them by default. Made up.
+ */
+const shares = (() => {
+  const next = seeded(7);
+  const raw = Array.from({ length: PETALS }, (_, i) => (i + 1) ** -0.95 * (0.7 + 0.6 * next()));
+  raw.sort((a, b) => b - a);
+  const top = raw[0] as number;
+  return raw.map((x) => x / top);
+})();
+/** Each petal's length once influence shows, heights straight as the real default draws them; from far, my
+ * community's wave is drawn from these. */
+export const base = shares.map((s) => INNER + 6 + 109 * s);
+
+/**
+ * Where each petal goes round the circle when the history beat orders them by when they last voted (Elco, 12 Nov:
+ * "when he starts talking about time ... we should see who voted more recently ... not always ordered from bigger to
+ * smaller"): its place, clockwise from twelve. Made up: some of the largest are long quiet.
+ */
+const RECENT: readonly number[] = (() => {
+  const next = seeded(23);
+  const when = Array.from({ length: PETALS }, (_, i) => ({
+    i,
+    at: next() + (i % 7 === 0 ? 0.6 : 0),
+  }));
+  when.sort((a, b) => a.at - b.at);
+  const slot = Array<number>(PETALS).fill(0);
+  when.forEach((w, k) => {
+    slot[w.i] = k;
+  });
+  return slot;
+})();
 
 // ----- time -----
 
@@ -60,66 +139,169 @@ export const ease = {
   inCubic: (p: number) => p ** 3,
   inOutCubic: (p: number) => (p < 0.5 ? 4 * p ** 3 : 1 - (-2 * p + 2) ** 3 / 2),
   outExpo: (p: number) => (p >= 1 ? 1 : 1 - 2 ** (-10 * p)),
+  inSine: (p: number) => 1 - Math.cos((Math.PI * p) / 2),
+  outSine: (p: number) => Math.sin((Math.PI * p) / 2),
   inOutSine: (p: number) => -(Math.cos(Math.PI * p) - 1) / 2,
+  /** an exit: it dips back a little first, then goes */
+  backIn: (p: number) => p * p * (2.2 * p - 1.2),
 };
 
-/** A damped spring that settles at 1 by p = 1, passing it once by about 4%: a petal arriving, not snapping. */
-export function spring(p: number): number {
+/**
+ * An elastic landing: from still, fast to its mark, past it, back, and onto it by p = 1. `damping` says how much it
+ * wobbles: 0.5 passes by about a sixth and swings back once; 0.7 only nudges past.
+ */
+export function spring(p: number, damping = 0.5): number {
   if (p <= 0) return 0;
   if (p >= 1) return 1;
-  const z = 0.7;
-  const w = 10;
-  const wd = w * Math.sqrt(1 - z * z);
-  return 1 - Math.exp(-z * w * p) * (Math.cos(wd * p) + ((z * w) / wd) * Math.sin(wd * p));
+  const w = 5.5 / damping;
+  const wd = w * Math.sqrt(1 - damping * damping);
+  const decay = Math.exp(-damping * w * p);
+  return 1 - decay * (Math.cos(wd * p) + ((damping * w) / wd) * Math.sin(wd * p));
 }
+
+/** How much a petal, a bloom or a vote gives as it lands: a few % past its mark, no swing back to speak of. */
+const GIVE = 0.72;
+/** A petal, a bloom, a vote: an elastic pop, with a little give. */
+const pop = (t: number, start: number, ms = SPRING_MS) => spring(at(t, start, ms), GIVE);
+
+/** The wind-up before a hit at `start`, 0 to 1: drawn in over a sixteenth, let go as the hit comes. */
+const windUp = (t: number, start: number) =>
+  ease.inSine(at(t, start - WIND_MS, WIND_MS)) * (1 - ease.outCubic(at(t, start, WIND_MS)));
 
 /** The beat before this one, round the loop. */
 const prior = (beat: number) => (beat + 5) % 6;
+
+/**
+ * The hits that punch the camera in, per beat, as [count, how hard]: the reaction on the three, its accents, the
+ * response on the five.
+ */
+const KICKS: readonly (readonly (readonly [number, number])[])[] = [
+  // a community: the focus ring picks it out on the second bar's one, the camera dives in, it bursts open
+  [
+    [5, 0.015],
+    [7, 0.05],
+    [9, 0.015],
+  ],
+  // influence: the heights part on the three, then the strongest three light, boom, boom, boom
+  [
+    [3, 0.04],
+    [3.5, 0.02],
+    [4, 0.02],
+    [4.5, 0.025],
+    [5, 0.015],
+  ],
+  // blocs: one group on the three, the other answers on the four
+  [
+    [3, 0.035],
+    [4, 0.035],
+    [5, 0.015],
+  ],
+  // history: the petals snap round to their new order with the answer
+  [
+    [3, 0.015],
+    [5, 0.045],
+  ],
+  // a vote: the ring on the three, its point on the four
+  [
+    [3, 0.03],
+    [4, 0.03],
+    [5, 0.015],
+  ],
+  // connections: pulled back on the one, then each community blooms
+  [
+    [1, 0.03],
+    [3.5, 0.04],
+    [4.5, 0.04],
+    [5, 0.015],
+  ],
+];
+
+/**
+ * How much the camera is punched in at a moment, from 0: before each hit it eases back a little (the wind-up), on
+ * the hit it eases in, and lets go slowly. A hit on the one has no wind-up: that is the cut.
+ */
+export function kick(beat: number, t: number): number {
+  const hits = KICKS[beat] ?? [];
+  let k = 0;
+  for (const [c, amp] of hits) {
+    const d = t - count(c);
+    const back = c > 1 ? 0.2 : 0;
+    if (d < 0) {
+      k -= 0.5 * back * amp * ease.inOutSine(Math.max(0, (d + WIND_MS) / WIND_MS));
+      continue;
+    }
+    // eased in from the wind-up, then let go slowly
+    const rise = ease.inOutSine(Math.min(1, d / 90));
+    k += 0.5 * amp * (lerp(-back, 1, rise) * Math.exp(-Math.max(0, d - 90) / 220));
+  }
+  return k;
+}
+
+/** The pulse under it all, 0 to 1: a thump on every count, the one and the three harder than the two and the four. */
+export function pulse(t: number): number {
+  const n = Math.floor(t / COUNT_MS);
+  const d = t - n * COUNT_MS;
+  return (
+    (n % 2 === 0 ? 1 : 0.5) * ease.inOutSine(Math.min(1, d / 60)) * Math.exp(-d / (0.3 * COUNT_MS))
+  );
+}
 
 // ----- the flower -----
 
 /** Each petal's length once a beat has settled, which is where the next beat starts from. */
 function settled(beat: number): readonly number[] {
   if (beat === 0) return Array(PETALS).fill(EVEN);
-  if (beat === 3) return later;
+  if (beat === 5) return Array(PETALS).fill(INNER);
   return base;
 }
 
-/** Per petal, how much later than its neighbour before it (clockwise from twelve) it moves. */
-const STAGGER = 26;
-
-/**
- * Each petal's length. `fresh` is the very first beat on arrival, which grows from the bare centre; round the
- * loop, the first beat closes the last flower first, back round the clock, and opens it again.
- */
-export function petalLengths(beat: number, t: number, fresh = false): number[] {
-  const before = fresh && beat === 0 ? Array(PETALS).fill(INNER) : settled(prior(beat));
-  return Array.from({ length: PETALS }, (_, i) => {
-    const from = before[i] as number;
-    switch (beat) {
-      case 0: {
-        const shut = ease.inOutCubic(at(t, (PETALS - 1 - i) * 8, 380));
-        const open = spring(at(t, RESPOND_MS + i * STAGGER, 950));
-        return lerp(lerp(from, INNER, shut), EVEN, open);
-      }
-      case 1: {
-        // anticipation: the even flower draws in a breath before the heights part
-        const breath = 1 - 0.07 * Math.sin(Math.PI * at(t, 200, 480));
-        const grown = lerp(from, base[i] as number, spring(at(t, RESPOND_MS + i * STAGGER, 1050)));
-        return INNER + (grown - INNER) * breath;
-      }
-      case 3:
-        return lerp(base[i] as number, later[i] as number, historyAt(t));
-      case 4:
-        return lerp(from, base[i] as number, spring(at(t, 150 + i * 16, 800)));
-      default:
-        return base[i] as number;
+/** A petal's length as the beat has it. */
+function shaped(beat: number, t: number, i: number, from: number): number {
+  switch (beat) {
+    case 0:
+      // as the camera arrives, it bursts out of its wave on the three, rolling round the clock
+      return lerp(INNER, EVEN, pop(t, reactAt(0) + i * ROLL));
+    case 1: {
+      // the even flower draws in on the and of two, holds its breath, and the heights burst apart on the three
+      const held =
+        ease.inOutSine(at(t, count(2.5), EIGHTH)) * (1 - ease.inOutSine(at(t, REACT, EIGHTH)));
+      const grown = lerp(from, base[i] as number, pop(t, REACT + i * (ROLL / 2)));
+      return INNER + (grown - INNER) * (1 - 0.06 * held);
     }
-  });
+    case 4: {
+      const start = REACT + i * (ROLL / 2);
+      const r = lerp(from, base[i] as number, pop(t, start));
+      return INNER + (r - INNER) * (1 - 0.06 * windUp(t, start));
+    }
+    case 5:
+      // once its wave has covered it on the way out, the petals fold away, ready to burst again
+      return lerp(base[i] as number, INNER, ease.inOutSine(at(t, count(8.25), EIGHTH)));
+    default:
+      return base[i] as number;
+  }
 }
 
-/** How far the history beat has gone from then to now, 0 to 1: the marker and the heights move as one. */
-export const historyAt = (t: number) => ease.inOutSine(at(t, HISTORY.from, HISTORY.ms));
+/**
+ * Each petal's length. The first beat bursts out of the centre on the three, as the camera arrives; the last
+ * folds the petals away under the wave once the camera has pulled back.
+ */
+export function petalLengths(beat: number, t: number): number[] {
+  const before = settled(prior(beat));
+  return Array.from({ length: PETALS }, (_, i) => shaped(beat, t, i, before[i] as number));
+}
+
+/**
+ * Where each petal is round the circle, as a place clockwise from twelve (fractional while it travels): by share
+ * until the history beat, which orders them by when they last voted, each petal a moment after the one before,
+ * swiftly, with a little give (Elco, 12 Nov: "it could be like a swift little thing"); they keep that order to the
+ * end, and the next community starts by share again, from nothing.
+ */
+export function placeOf(beat: number, t: number, i: number): number {
+  const recent = RECENT[i] ?? i;
+  if (beat === 3) return lerp(i, recent, spring(at(t, RESPOND + i * 8, 1.2 * COUNT_MS), 0.8));
+  if (beat === 4 || beat === 5) return recent;
+  return i;
+}
 
 export interface Camera {
   scale: number;
@@ -129,152 +311,340 @@ export interface Camera {
   y: number;
 }
 
-/** A slow push in and back out across a beat, still at both ends so the beats join without a seam. */
-const breath = (beat: number, t: number, depth: number) =>
-  1 + depth * Math.sin((Math.PI * Math.min(t, beatMs(beat))) / beatMs(beat));
+/** My community's twist as it bursts open: the petals are all at the centre's edge when it begins. */
+export function camera(beat: number, t: number): Camera {
+  const rotate =
+    beat === 0 && t >= reactAt(0) ? -16 * (1 - spring(at(t, reactAt(0), 1.5 * COUNT_MS), 0.8)) : 0;
+  return { scale: 1, rotate, y: 0 };
+}
 
-/** The pull back to make room for the communities the last beat leads to, and the push back in after it. */
-function pullOf(beat: number, t: number, fresh: boolean): number {
-  if (beat === 5) return lerp(1, 0.65, ease.inOutCubic(at(t, RESPOND_MS, 1200)));
-  if (beat === 0 && !fresh) return lerp(0.65, 1, ease.inOutCubic(at(t, 0, 1000)));
-  return 1;
+// ----- the world: the far map, the dive and the way back out -----
+
+/** How close the camera is at the far frame: the whole map in view. */
+export const FAR = 0.2;
+/** Where the far frame looks, in the drawing's units from my community's centre: the middle of the map. */
+export const MAP_CENTRE = { x: 380, y: -110 };
+/** How close the vote beat goes into the petal whose proposals it shows. */
+const PETAL_ZOOM = 3.2;
+/** How far over its petal's top a proposal stack starts, and how far apart its arcs sit (the real STACK_GAP). */
+export const STACK = { over: 6, gap: 6 };
+/** Where the camera looks on the vote beat: in the pressed proposal's petal, just under its stack. */
+const pressedAt = (t: number) =>
+  atPetal(placeOf(4, t, PRESSED.petal), (base[PRESSED.petal] ?? INNER) - 4);
+
+/** The connections beat's first pull back: my community with its two neighbours. */
+const NEAR_NEIGHBOURS = 0.55;
+/** The camera's closeness from a 0 (far) to 1 (my community) that moves evenly through the zoom. */
+const zoomOf = (k: number) => FAR * (1 / FAR) ** k;
+const kOf = (zoom: number) => Math.log(zoom / FAR) / Math.log(1 / FAR);
+
+export interface World {
+  /** how close the camera is: 1 at my community, FAR for the whole map */
+  zoom: number;
+  /** the point it looks at, in the drawing's units from my community's centre */
+  x: number;
+  y: number;
+  /** the dashed focus ring round my community, 0 to 1 */
+  ring: number;
+  /** my community's soft wave, as seen from far, 0 to 1; its petals show the rest of the way */
+  wave: number;
+  /** the rest of the map, 0 to 1: there from far, gone by the time the camera is close */
+  map: number;
+}
+
+/** The zooms between which the rest of the map fades as the camera comes in. */
+const MAP_FADES = { from: 0.28, to: 0.48 };
+
+/**
+ * The world camera. On the community beat it holds on the far map while the question lands and is read; my
+ * community takes a dashed focus ring on the second bar's one, and on its two the camera dives into it, my community
+ * gliding to the middle as it grows, and it bursts out of its wave on the three. On the connections beat the camera pulls back on the one to show its two
+ * neighbours, and once the answer is in it goes all the way out to the far map, my community folding back into
+ * its wave, ending on the very frame the community beat starts from.
+ */
+export function world(beat: number, t: number): World {
+  let k = 1;
+  let slide = 1;
+  let wave = 0;
+  let ring = 0;
+  if (beat === 0) {
+    const dive = ease.inOutCubic(at(t, count(6), 1.5 * COUNT_MS));
+    k = dive;
+    slide = dive;
+    wave = 1 - ease.inOutSine(at(t, reactAt(0), 3 * EIGHTH));
+    ring =
+      ease.outCubic(at(t, count(5), EIGHTH)) * (1 - ease.inOutSine(at(t, count(6.5), COUNT_MS)));
+  }
+  if (beat === 4) {
+    // right into the petal whose proposal is pressed, and back out as the answer comes and the votes land
+    const into = ease.inOutCubic(at(t, count(1.5), COUNT_MS));
+    const back = ease.inOutCubic(at(t, count(4.5), 1.25 * COUNT_MS));
+    const s = into * (1 - back);
+    const zoom = 1 + (PETAL_ZOOM - 1) * s;
+    const p = pressedAt(t);
+    // the petal glides to the middle evenly as the zoom grows, as the dive into the community does
+    const near = 1 - (1 - s) / zoom;
+    return { zoom, x: p[0] * near, y: p[1] * near, ring: 0, wave: 0, map: 0 };
+  }
+  if (beat === 5) {
+    const out = ease.inOutCubic(at(t, count(6), 2.5 * COUNT_MS));
+    const back = spring(at(t, CALL, 1.5 * COUNT_MS), 0.85);
+    k = lerp(lerp(1, kOf(NEAR_NEIGHBOURS), back), 0, out);
+    slide = 1 - out;
+    wave = ease.inOutSine(at(t, count(7), 1.25 * COUNT_MS));
+  }
+  const zoom = zoomOf(k);
+  // my community moves evenly across the screen while the zoom grows, so the dive reads as one glide
+  const away = (FAR * (1 - slide)) / zoom;
+  const map = 1 - ease.inOutSine(at(zoom, MAP_FADES.from, MAP_FADES.to - MAP_FADES.from));
+  return { zoom, x: MAP_CENTRE.x * away, y: MAP_CENTRE.y * away, ring, wave, map };
+}
+
+/** A layer that belongs to one beat: it snaps in with the flower's reaction and cuts out on the next one. */
+export function layerOpacity(own: number, beat: number, t: number): number {
+  if (beat === own) return ease.outCubic(at(t, REACT, SIXTEENTH));
+  if (beat === (own + 1) % 6) return 1 - ease.outCubic(at(t, CALL, EIGHTH));
+  return 0;
 }
 
 /**
- * The camera on the main flower: it breathes in across every beat, turns a little as the community unfurls, and
- * pulls back at the end.
+ * A petal's paint: one of the real flower's five keys, most common first, or grey for context
+ * (@petal/core/wedge/keys; Elco, 12 Nov: "closer to the real thing ... colors change").
  */
-export function camera(beat: number, t: number, fresh = false): Camera {
-  const pull = pullOf(beat, t, fresh);
-  // the petals are all at the centre's edge when the turn begins, so it starts from nothing seen
-  const rotate =
-    beat === 0 && t >= RESPOND_MS ? -16 * (1 - ease.outCubic(at(t, RESPOND_MS, 1900))) : 0;
-  return { scale: pull * breath(beat, t, 0.016), rotate, y: (1 - (pull - 0.65) / 0.35) * 8 };
-}
-
-/** The light behind the flower: it moves a third as much as the flower does, so the two sit at different depths. */
-export function glow(beat: number, t: number, fresh = false) {
-  const pull = pullOf(beat, t, fresh);
-  const born = fresh && beat === 0 ? ease.outCubic(at(t, 300, 1600)) : 1;
-  // the blocs' second key tints the light while they show
-  const second =
-    beat === 2
-      ? ease.outCubic(at(t, RESPOND_MS, 900))
-      : beat === 3
-        ? 1
-        : beat === 4
-          ? 1 - ease.outCubic(at(t, 0, 700))
-          : 0;
-  return { opacity: born, scale: (1 + (pull - 1) * 0.35) * breath(beat, t, 0.006), second };
-}
-
-/** The centre: its dot lands, then its ring draws round, the first time only; after that it stays. */
-export function centre(beat: number, t: number, fresh = false) {
-  if (!(fresh && beat === 0)) return { dot: 1, ring: 1 };
-  return { dot: spring(at(t, 150, 700)), ring: ease.inOutCubic(at(t, 380, 700)) };
-}
-
-/** A layer that belongs to one beat: it comes in with the flower's answer and goes as the next beat starts. */
-export function layerOpacity(own: number, beat: number, t: number): number {
-  if (beat === own) return ease.outCubic(at(t, RESPOND_MS, 400));
-  if (beat === (own + 1) % 6) return 1 - ease.outCubic(at(t, 0, 450));
-  return 0;
-}
-
-export type Fill = 'petal' | 'accent' | 'second';
+export type Fill = 'mint' | 'blue' | 'coral' | 'apricot' | 'pink' | 'grey';
 
 const LIT = 3;
-const BLOC_A = [0, 1, 8, 9, 16, 17];
-const BLOC_B = [4, 5, 12, 13, 20, 21];
+/** The two voting blocs, scattered round the flower as real ones are. Made up. */
+const BLOC_A = [0, 2, 5, 9, 14, 20, 27, 33];
+const BLOC_B = [1, 4, 7, 12, 17, 23, 29];
 
-/** What each petal is painted with once a beat has settled: the few that carry the most, or two groups. */
+/**
+ * What kind of account each petal is, as the real flower colours it by default: the commonest kind in mint, then
+ * blue, coral, apricot and pink, each key going to the kind more petals carry. Made up, and scattered round.
+ */
+const KIND: readonly Fill[] = (() => {
+  const next = seeded(41);
+  return Array.from({ length: PETALS }, () => {
+    const x = next();
+    return x < 0.52
+      ? 'mint'
+      : x < 0.74
+        ? 'blue'
+        : x < 0.87
+          ? 'coral'
+          : x < 0.95
+            ? 'apricot'
+            : 'pink';
+  });
+})();
+
+/**
+ * What each petal is painted with once a beat has settled, as the real tools would set it: by kind of account on
+ * the community, history and connections beats; the strongest three highlighted and everyone else receding to grey
+ * for influence; a voting bloc in its own colours and everyone else grey, as the real Highlight shows one (the
+ * first bloc on the three, the second taking over on the four); on the vote, Colour set to Voted or never:
+ * the voters mint and those who never voted grey, each voter's side in the dot at its tip.
+ */
 export function petalFill(beat: number, i: number): Fill {
-  if (beat === 1 || beat === 5) return i < LIT ? 'accent' : 'petal';
-  if (beat === 2 || beat === 3)
-    return BLOC_A.includes(i) ? 'accent' : BLOC_B.includes(i) ? 'second' : 'petal';
-  return 'petal';
+  const kind = KIND[i] ?? 'mint';
+  if (beat === 1) return i < LIT ? kind : 'grey';
+  if (beat === 2) return BLOC_B.includes(i) ? kind : 'grey';
+  if (beat === 4) return voteOf(i) ? 'mint' : 'grey';
+  return kind;
 }
 
-/** When a petal's colour starts to change in a beat: the strongest one by one, the blocs one group then the other. */
+/**
+ * When a petal's colour hits in a beat: everyone else recedes on the three; one bloc on the three, the other on
+ * the four; on the vote, those who never voted go grey on the three and the voters turn mint as the votes roll
+ * in; the whole picture comes back on the one.
+ */
 function paintStart(beat: number, i: number): number {
-  if (beat === 0) return (PETALS - 1 - i) * 8;
-  if (beat === 1 || beat === 5) return 1100 + i * 110;
-  if (beat === 2) {
-    const a = BLOC_A.indexOf(i);
-    const b = BLOC_B.indexOf(i);
-    if (a >= 0) return RESPOND_MS + a * 80;
-    if (b >= 0) return RESPOND_MS + 420 + b * 80;
-    return RESPOND_MS;
-  }
-  return 200 + i * 12;
+  if (beat === 1) return reactAt(1);
+  if (beat === 2) return REACT;
+  if (beat === 4) return voteOf(i) ? count(4.5) + (i * COUNT_MS) / 12 : REACT;
+  return CALL;
 }
+
+/** When the highlight lands on one of the strongest three: one on each eighth (boom, boom, boom), quicker at the end. */
+function litStart(beat: number, i: number): number {
+  return beat === 5 ? count(2) + i * SIXTEENTH : count(3.5) + i * EIGHTH;
+}
+
+/** On the blocs beat, the first bloc highlighted, before the second takes over on the four. */
+const firstBloc = (i: number): Fill => (BLOC_A.includes(i) ? (KIND[i] ?? 'mint') : 'grey');
+const SECOND_BLOC = count(4);
 
 /** A petal's paint at a moment: from the last beat's colour to this one's, `k` of the way. */
-export function petalPaint(beat: number, t: number, i: number, fresh = false) {
-  const from: Fill = fresh && beat === 0 ? 'petal' : petalFill(prior(beat), i);
+export function petalPaint(beat: number, t: number, i: number) {
+  if (beat === 2) {
+    // call and response: the first bloc lights on the three, the second takes over on the four
+    const second = t >= SECOND_BLOC;
+    const from: Fill = second ? firstBloc(i) : petalFill(1, i);
+    const to = second ? petalFill(2, i) : firstBloc(i);
+    const start = second ? SECOND_BLOC : REACT;
+    return { from, to, k: from === to ? 1 : ease.outCubic(at(t, start, SIXTEENTH)) };
+  }
+  const from: Fill = petalFill(prior(beat), i);
   const to = petalFill(beat, i);
-  return { from, to, k: from === to ? 1 : ease.outCubic(at(t, paintStart(beat, i), 650)) };
+  return { from, to, k: from === to ? 1 : ease.outCubic(at(t, paintStart(beat, i), SIXTEENTH)) };
 }
 
-/** How strongly the highlight is on a petal, 0 to 1: on the strongest few, as their colour lands. */
+/**
+ * How strongly the highlight is on a petal, 0 to 1: on the strongest few, as each lands; their share labels come
+ * with it.
+ */
 export function petalLit(beat: number, t: number, i: number): number {
   if (i >= LIT) return 0;
-  if (beat === 1 || beat === 5) return ease.outCubic(at(t, paintStart(beat, i) + 250, 600));
-  if (beat === 2 || beat === 0) return 1 - ease.outCubic(at(t, 0, 450));
+  if (beat === 1 || beat === 5) return ease.outCubic(at(t, litStart(beat, i), SIXTEENTH));
+  if (beat === 2 || beat === 0) return 1 - ease.outCubic(at(t, CALL, SIXTEENTH));
   return 0;
 }
 
-/** The petals the voting blocs' few inner lines join. */
-export const relations: readonly (readonly [number, number])[] = [
-  [0, 8],
-  [1, 9],
-  [8, 16],
-  [9, 17],
-  [4, 12],
-  [5, 13],
+/** Each petal's share of the whole once influence shows, in %: what its label says. Symbolic, as the heights are. */
+export const sharePercent = (() => {
+  const held = base.map((r) => r - INNER);
+  const all = held.reduce((sum, h) => sum + h, 0);
+  return held.map((h) => (100 * h) / all);
+})();
+
+/** How each petal voted on the proposal the vote beat presses, as the real reading says it; null, it didn't vote. */
+export const voteOf = (i: number): 'for' | 'against' | 'abstain' | null =>
+  i % 6 === 5
+    ? null
+    : i % 7 === 3
+      ? 'against'
+      : i % 11 === 8
+        ? 'abstain'
+        : i % 9 === 6
+          ? null
+          : 'for';
+
+/**
+ * The proposals on my community, as the real flower draws them (Elco, 11 and 12 Nov: "proposals are related to
+ * specific wallets - SOMEONE made that proposal ... right above the wallets themselves"): stacked over the petal of
+ * whoever put them up, oldest nearest; a stack of more than three folds into one mark with how many it holds.
+ * Which petals and how many: made up. The one the vote beat presses is the second over the largest petal.
+ */
+export const PROPOSALS: readonly { petal: number; count: number }[] = [
+  { petal: 0, count: 3 },
+  { petal: 1, count: 14 },
+  { petal: 3, count: 2 },
+  { petal: 6, count: 1 },
+  { petal: 10, count: 2 },
+  { petal: 16, count: 1 },
+  { petal: 25, count: 1 },
 ];
+/** A stack of more than this folds into one mark with a count (the real flower's STACK_FOLD). */
+export const STACK_FOLD = 3;
+export const PRESSED = { petal: 0, step: 1 };
 
-/** How far each of the blocs' lines has drawn itself, 0 to 1: after the colours, one after another. */
-export const relationDrawn = (beat: number, t: number, n: number) =>
-  beat === 2 ? ease.inOutCubic(at(t, 1250 + n * 130, 650)) : 1;
-
-/** How far the history beat's earlier outline has drawn round, 0 to 1. */
-export const ghostDrawn = (beat: number, t: number, i: number) =>
-  beat === 3 ? ease.outCubic(at(t, 450 + i * 20, 700)) : 1;
-
-/** A vote mark inside each petal at the proposal beat: against on every fourth, none on every fifth. */
-export const voteOf = (i: number): 'for' | 'against' | null =>
-  i % 5 === 0 ? null : i % 4 === 0 ? 'against' : 'for';
-
-/** The proposal's ring, its arc drawn over the top, its point landing, then each vote mark landing round the clock. */
+/**
+ * The proposals at a moment: on the vote beat they stack up on the three, one arc on each forty-eighth; one is
+ * pressed on the four; then each voter's dot lands at its petal's foot, round the clock. They go with the next one.
+ */
 export function proposal(beat: number, t: number) {
-  if (beat !== 4) return { ring: 1, arc: 1, point: 1, vote: (_: number) => 1 };
+  if (beat !== 4)
+    return {
+      arc: (_: number) => 1,
+      pressed: 1,
+      vote: (_: number) => 1,
+      on: layerOpacity(4, beat, t),
+    };
   return {
-    ring: ease.outExpo(at(t, RESPOND_MS, 1100)),
-    arc: ease.inOutCubic(at(t, 900, 900)),
-    point: spring(at(t, 1300, 700)),
-    vote: (i: number) => spring(at(t, 1500 + i * 34, 650)),
+    arc: (n: number) => pop(t, REACT + (n * COUNT_MS) / 12, 2 * EIGHTH),
+    pressed: ease.outCubic(at(t, count(4), SIXTEENTH)),
+    // a roll, a vote on every forty-eighth, round the clock
+    vote: (i: number) => pop(t, count(4.5) + (i * COUNT_MS) / 16, 2 * EIGHTH),
+    on: layerOpacity(4, beat, t),
   };
 }
 
-/** The two communities the last beat opens onto: each blooms round the clock, after the line that reaches it. */
+/**
+ * The two neighbours the last beat opens onto: a line shoots out to each on the three and four, and each bursts
+ * out of its wave on the and; on the way out they fold back into their waves with my community. The lines stay
+ * until the next one.
+ */
 export function network(beat: number, t: number) {
+  const fold = 1 - ease.inOutSine(at(t, count(7), 1.25 * COUNT_MS));
   if (beat === 5)
     return {
-      link: (n: number) => ease.outCubic(at(t, 1050 + n * 260, 750)),
-      bloom: (n: number, j: number) => spring(at(t, 1400 + n * 260 + j * 32, 800)),
+      link: (n: number) => ease.inOutCubic(at(t, REACT + n * COUNT_MS, 1.5 * EIGHTH)),
+      bloom: (n: number, j: number) => pop(t, count(3.5) + n * COUNT_MS + j * 10) * fold,
       // the dashes run outward, towards the communities, a dash's length each second
       flow: -t * 0.009,
-      scale: 1,
     };
-  if (beat === 0)
-    return {
-      link: () => 1,
-      bloom: () => 1,
-      flow: -(beatMs(5) + t) * 0.009,
-      scale: 1 - 0.25 * ease.inCubic(at(t, 0, 450)),
-    };
-  return { link: () => 1, bloom: () => 1, flow: 0, scale: 1 };
+  if (beat === 0) return { link: () => 1, bloom: () => 0, flow: -(beatMs(5) + t) * 0.009 };
+  return { link: () => 1, bloom: () => 0, flow: 0 };
+}
+
+// ----- the tools -----
+
+/**
+ * The rows of the real Tools box the hero shows (ViewLegend's dimensions; Elco, 12 Nov: "there is tooling and
+ * things that change and colors change"), and what each is set to once a beat has settled: the tools are what the
+ * flower does. Height goes from None to Share of the whole as the heights part; Highlight takes the voting blocs;
+ * Order goes from Share of the whole to Last active as the petals travel round; Colour goes from Kind of account to
+ * Voted or never for the vote.
+ */
+export type ToolRow = 'order' | 'height' | 'colour' | 'highlight';
+export type ToolValue = 'none' | 'share' | 'recent' | 'kind' | 'voted' | 'blocs';
+const SETTINGS: readonly Record<ToolRow, ToolValue>[] = [
+  { order: 'share', height: 'none', colour: 'kind', highlight: 'none' },
+  { order: 'share', height: 'share', colour: 'kind', highlight: 'none' },
+  { order: 'share', height: 'share', colour: 'kind', highlight: 'blocs' },
+  { order: 'recent', height: 'share', colour: 'kind', highlight: 'none' },
+  { order: 'recent', height: 'share', colour: 'voted', highlight: 'none' },
+  { order: 'recent', height: 'share', colour: 'kind', highlight: 'none' },
+];
+
+/** When a row changes in a beat: on the count the flower does what it says. */
+function setAt(beat: number, row: ToolRow): number {
+  if (row === 'height') return reactAt(beat);
+  if (row === 'order') return beat === 3 ? RESPOND : CALL;
+  if (row === 'colour') return beat === 4 ? REACT : CALL;
+  return beat === 2 ? REACT : CALL;
+}
+
+/** Which voting bloc the Highlight row has chosen at a moment: the first on the three, the second on the four. */
+export const blocChosen = (beat: number, t: number): string | null =>
+  beat !== 2 ? null : t >= SECOND_BLOC ? 'second' : t >= REACT ? 'first' : null;
+
+/**
+ * A row at a moment: what it was set to and what it is set to now, `k` of the way from one to the other, and a
+ * `flash` that lights the row as it changes and fades over a count.
+ */
+export function tool(beat: number, t: number, row: ToolRow) {
+  const from = (SETTINGS[prior(beat)] ?? SETTINGS[0])?.[row] ?? 'none';
+  const to = (SETTINGS[beat] ?? SETTINGS[0])?.[row] ?? 'none';
+  const lit = (when: number) => {
+    const d = t - when;
+    return d < 0 ? 0 : ease.inOutSine(Math.min(1, d / 60)) * Math.exp(-d / COUNT_MS);
+  };
+  // the second voting bloc takes over the Highlight row on the four
+  const again = beat === 2 && row === 'highlight' ? lit(SECOND_BLOC) : 0;
+  if (from === to) return { from, to, k: 1, flash: again };
+  return {
+    from,
+    to,
+    k: ease.outCubic(at(t, setAt(beat, row), SIXTEENTH)),
+    flash: Math.max(lit(setAt(beat, row)), again),
+  };
+}
+
+/** The Tools box: always there, as the real one is on the map, set back in the middle ground, floating. */
+export function toolsBox(beat: number, t: number): Motion {
+  return {
+    opacity: 1,
+    x: 0,
+    y: FLOAT_PX * drift(beat, t, 0.6),
+    blur: 0,
+    // set back: smaller than the words in front of it
+    scale: 0.78,
+    turn: 10 + SWAY * drift(beat, t, 1.6),
+    z: 50,
+    glint: 0,
+    glow: 1,
+  };
 }
 
 // ----- the words -----
@@ -295,53 +665,91 @@ export interface Motion {
   glow: number;
 }
 
+/** How far a bubble floats up and down while it is on, in px; and how far it sways, in degrees. */
+const FLOAT_PX = 3;
+const SWAY = 1.5;
 /**
- * The question, `u` into its beat (past its end while it leaves): it comes in from its side and sharpens; once
- * answered it steps back, dimmer and a little soft, as a camera racks focus; it lifts away before its beat ends.
+ * How far the call and the response are turned towards the flower once settled, in degrees, and how much wider they
+ * swing in: barely, a hint of depth (Elco, 12 Nov: the messages' 3D "way less aggressive ... it's not adding anything
+ * to the narrative to have it so tilted"); their sway as gentle.
+ */
+const TILT = 4;
+const TILT_IN = 6;
+const TILT_SWAY = 0.5;
+/** The question's float, once every two bars of its own beat. */
+const float = (u: number, phase: number) => Math.sin((Math.PI * u) / (4 * COUNT_MS) + phase);
+/** The whole story's length, and the answer box's float on it: six times round, so it never jumps as the loop turns. */
+const LOOP = startOf(6);
+const drift = (beat: number, t: number, phase: number) =>
+  Math.sin((12 * Math.PI * (startOf(beat) + t)) / LOOP + phase);
+
+/**
+ * The question, `u` into its beat: the call. It eases in on the one from its side; once answered it eases back,
+ * dimmer and a little soft, as a camera racks focus; it floats while it is on; it dips and is gone on the last and.
  */
 export function question(beat: number, u: number, fresh = false): Motion {
-  const start = fresh && beat === 0 ? QUESTION_FRESH_MS : 0;
-  const inQ = ease.outExpo(at(u, start, 900));
-  const answered = ease.outCubic(at(u, ANSWER_MS - 150, 700));
-  const leave = ease.inOutCubic(at(u, beatMs(beat) - QUESTION_LEAVES_MS, 550));
+  const start = fresh && beat === 0 ? CALL_FRESH : CALL;
+  const inQ = spring(at(u, start, SPRING_MS), 0.85);
+  const answered = ease.inOutSine(at(u, respondAt(beat) - SIXTEENTH, EIGHTH));
+  const out = at(u, beatMs(beat) - 1.5 * EIGHTH, 1.3 * EIGHTH);
+  const leave = ease.inCubic(out);
   return {
-    opacity: ease.outCubic(at(u, start, 450)) * (1 - 0.45 * answered) * (1 - leave),
+    opacity: ease.outCubic(at(u, start, EIGHTH)) * (1 - 0.45 * answered) * (1 - leave),
     x: -26 * (1 - inQ),
-    y: 10 * (1 - inQ) - 16 * leave,
-    blur: 8 * (1 - inQ) + 0.6 * answered + 6 * leave,
-    scale: 0.94 + 0.06 * inQ - 0.02 * answered,
-    // it swings in like a door, rests turned a little to the flower, and is pushed back once answered
-    turn: 15 + 26 * (1 - spring(at(u, start, 1100))) + 10 * leave,
+    y: 10 * (1 - inQ) - 16 * ease.backIn(out) + FLOAT_PX * float(u, 0),
+    blur: 6 * (1 - ease.outCubic(at(u, start, EIGHTH))) + 0.6 * answered + 6 * leave,
+    scale: 0.9 + 0.1 * inQ - 0.02 * answered,
+    turn: TILT + TILT_IN * (1 - inQ) + 3 * leave + TILT_SWAY * float(u, 1),
     z: 40 - 90 * answered - 60 * leave,
-    glint: at(u, start + 300, 1000),
-    glow: ease.outCubic(at(u, start, 700)) * (1 - 0.5 * answered),
+    glint: at(u, start + SIXTEENTH, COUNT_MS),
+    glow: ease.outCubic(at(u, start, EIGHTH)) * (1 - 0.5 * answered),
   };
 }
 
-/** The answer, `u` into its beat: it comes in from the other side as the flower finishes, and leaves last. */
-export function answer(beat: number, u: number): Motion {
-  const inA = ease.outExpo(at(u, ANSWER_MS - 150, 1000));
-  const leave = ease.inOutCubic(
-    at(u, beatMs(beat) - ANSWER_LEAVES_MS, ANSWER_LEAVES_MS + OVERLAP_MS),
-  );
+/**
+ * Petals' answer box: it comes in with the very first answer and stays from then on, floating; a glint crosses it
+ * as each new answer lands.
+ */
+export function answerBox(beat: number, t: number, fresh = false): Motion {
+  const first = fresh && beat === 0;
+  const inA = first ? spring(at(t, respondAt(0) - SIXTEENTH, SPRING_MS), 0.85) : 1;
   return {
-    opacity: ease.outCubic(at(u, ANSWER_MS - 150, 400)) * (1 - leave),
-    x: 26 * (1 - inA),
-    y: 10 * (1 - inA) - 16 * leave,
-    blur: 6 * leave,
+    opacity: first ? ease.outCubic(at(t, respondAt(0) - SIXTEENTH, EIGHTH)) : 1,
+    x: 20 * (1 - inA),
+    y: 8 * (1 - inA) + FLOAT_PX * drift(beat, t, Math.PI),
+    blur: 0,
     scale: 0.94 + 0.06 * inA,
-    turn: 13 + 30 * (1 - spring(at(u, ANSWER_MS - 150, 1200))) + 12 * leave,
-    z: 80 - 50 * leave,
-    glint: at(u, ANSWER_MS + 300, 1100),
-    glow: ease.outCubic(at(u, ANSWER_MS - 100, 900)),
+    turn: TILT + TILT_IN * (1 - inA) + TILT_SWAY * drift(beat, t, Math.PI + 1),
+    z: 80,
+    glint: at(t, respondAt(beat), 1.5 * COUNT_MS),
+    glow: inA,
   };
 }
 
-/** One word of the answer, `j` from its start: it rises into place and sharpens, a little after the one before. */
-export function answerWord(u: number, j: number) {
-  const start = ANSWER_MS + j * 55;
-  const p = ease.outExpo(at(u, start, 900));
-  return { opacity: ease.outCubic(at(u, start, 450)), y: 14 * (1 - p), blur: 6 * (1 - p) };
+/**
+ * One beat's answer in the box at a moment: this beat's comes in on the response, word by word; the last beat's
+ * stays until then and gives way just before it; any other is not there. `words` says the line is coming in, so
+ * each word is drawn with its own motion (answerWord).
+ */
+export function answerLine(own: number, beat: number, t: number, fresh = false) {
+  if (own === beat) return { opacity: t >= respondAt(beat) ? 1 : 0, y: 0, blur: 0, words: true };
+  if (own === prior(beat) && !(fresh && beat === 0)) {
+    const out = at(t, respondAt(beat) - EIGHTH, EIGHTH);
+    return {
+      opacity: 1 - ease.inOutSine(out),
+      y: -8 * ease.inCubic(out),
+      blur: 4 * ease.inCubic(out),
+      words: false,
+    };
+  }
+  return { opacity: 0, y: 0, blur: 0, words: false };
+}
+
+/** One word of the answer coming in, `j` from its start: one on each sixteenth, easing up into the line. */
+export function answerWord(beat: number, t: number, j: number) {
+  const start = respondAt(beat) + j * SIXTEENTH;
+  const p = ease.outCubic(at(t, start, 1.5 * EIGHTH));
+  return { opacity: ease.outCubic(at(t, start, EIGHTH)), y: 8 * (1 - p), blur: 4 * (1 - p) };
 }
 
 // ----- the shapes -----

@@ -41,13 +41,14 @@ import { GiveToAgent } from '../components/landing/GiveToAgent.tsx';
 import { Hero } from '../components/landing/Hero.tsx';
 import { Glass } from '../components/landing/HeroGlass.tsx';
 import { HeroStory } from '../components/landing/HeroStory.tsx';
+import { HeroTools } from '../components/landing/HeroTools.tsx';
 import { HowItWorks } from '../components/landing/HowItWorks.tsx';
 import { LandingMap } from '../components/landing/LandingMap.tsx';
 import { LiveReading } from '../components/landing/LiveReading.tsx';
 import { MapHero } from '../components/landing/MapHero.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
-import { StoryFlower, StoryLight } from '../components/landing/StoryFlower.tsx';
+import { StoryFlower } from '../components/landing/StoryFlower.tsx';
 import { MapClaims } from '../components/MapClaims.tsx';
 import { MapLayers } from '../components/MapLayers.tsx';
 import { MapList } from '../components/MapList.tsx';
@@ -123,7 +124,7 @@ import { ceremonyView } from '../lib/ceremony.ts';
 import type { AnnotationRow } from '../lib/claim-lines.ts';
 import type { DrawingKind } from '../lib/figures.ts';
 import { keysOf, oneKey, readingKey, svgImage } from '../lib/flower-view.ts';
-import { SETTLED_MS } from '../lib/hero-story.ts';
+import { settledMs } from '../lib/hero-story.ts';
 import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
@@ -703,23 +704,23 @@ export const registry: LabEntry[] = [
       name: `beat ${beat + 1}`,
       render: () => (
         <div className="aspect-3/2 w-full">
-          <StoryFlower beat={beat} t={SETTLED_MS} />
+          <StoryFlower beat={beat} t={settledMs(beat)} />
         </div>
       ),
     })),
   },
   {
-    id: 'StoryLight',
+    id: 'HeroTools',
     group: 'Marks',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/landing/StoryFlower.tsx',
-    // the light behind the hero's flower, its own layer; tinted while the blocs show
-    states: [0, 2].map((beat) => ({
+    source: 'apps/web/components/landing/HeroTools.tsx',
+    // the hero's Tools box, the map's own rows, settled at each beat
+    states: [0, 1, 2, 4].map((beat) => ({
       name: `beat ${beat + 1}`,
       render: () => (
-        <div className="aspect-3/2 w-full">
-          <StoryLight beat={beat} t={SETTLED_MS} />
+        <div className="w-1/3">
+          <HeroTools beat={beat} t={settledMs(beat)} />
         </div>
       ),
     })),

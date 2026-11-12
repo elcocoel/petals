@@ -17,6 +17,7 @@ import { defineTool } from '../define.ts';
 import { putSpecBody } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
 import { valuesOf } from '../value-store.ts';
+import { vestingOf } from '../vesting.ts';
 import { base, obj, SHA256, viewUrl } from './shared.ts';
 import { checkSpec, summarise } from './specs.ts';
 
@@ -139,6 +140,8 @@ export const renderFlowerTool = defineTool<
       ...valuePieces(snapshot, (await valuesOf(ctx)).get(mapOf(snapshot)) ?? null),
       // and each petal's activity in its map's proposals (activity.ts, 12 Nov)
       ...(await activityOf(ctx, snapshot)),
+      // and each petal's vesting at the reading's date (vesting.ts, wave 7)
+      ...(await vestingOf(ctx, snapshot)),
     ];
     const r = renderFlower(spec, snapshot, {
       ...(size !== undefined ? { size } : {}),

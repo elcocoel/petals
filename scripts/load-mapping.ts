@@ -1,7 +1,7 @@
 // The mapping waves' files onto the shared map (board #96; Elco, 11 Nov: "map it ourselves using the brain but
-// at super speed"): each of Petals' formats in a folder (snapshot, proposals, mark, value, claim) checked
+// at super speed"): each of Petals' formats in a folder (snapshot, proposals, mark, value, claim, vesting) checked
 // against its own schema, a bad one refused with its reasons; a good reading kept and drawn, credited to Petals'
-// own mapping; a good mark, value or proposals kept by its map's address unless one is kept there already
+// own mapping; a good mark, value, proposals or vesting kept by its map's address unless one is kept there already
 // (--replace puts the wave's instead); claims checked as published and kept as Petals' mapping's. Hidden maps stay hidden. Where the server runs:
 //   container exec petals node /app/scripts/load-mapping.ts <folder> [--dry] [--replace] [--by mapping.petals.near]
 //     [--manifest <a wave's manifest outside the folder: L2-IMPORT-MANIFEST.json, phase2-ethereum-manifest.json>]
