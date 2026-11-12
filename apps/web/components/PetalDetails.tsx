@@ -5,6 +5,7 @@ import type { PetalDetail } from '@petal/core/types';
 import { petalView } from '../lib/flower-view.ts';
 import type { WorthLine } from '../lib/value-view.ts';
 import { Button } from './ui/Button.tsx';
+import { SourceLink } from './ui/SourceLink.tsx';
 
 /** Drafts (#78, 11 Nov): the way back from a petal to its flower, which said "Close detail" as the box did. */
 export const petalWords = { back: 'Back to the flower' } as const;
@@ -41,6 +42,7 @@ export function PetalDetails({
           <p className="type-ui">
             {worth.text}
             <span className="type-mono text-muted"> {worth.source}</span>
+            {worth.link && <SourceLink href={worth.link} name={worth.source} />}
           </p>
         )
       )}
