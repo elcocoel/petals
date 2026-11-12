@@ -5,7 +5,7 @@
 // are stepped by hand. Choosing a beat pauses it there, settled; play goes on from it. `wide` says which of the
 // stage's two compositions is on (lib/hero-shots.ts), from the same breakpoint the page lays out by.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { beatMs, SETTLED_MS } from '../lib/hero-story.ts';
+import { beatMs, settledMs } from '../lib/hero-story.ts';
 
 /** The longest step one frame may take, so a stalled frame doesn't jump the story. */
 const MAX_STEP_MS = 50;
@@ -27,8 +27,8 @@ export function useHeroStory<T extends HTMLElement>(beats: number) {
   useEffect(() => {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setPlaying(false);
-      clock.current.t = SETTLED_MS;
-      setT(SETTLED_MS);
+      clock.current.t = settledMs(0);
+      setT(settledMs(0));
     }
     const screen = matchMedia(WIDE);
     const fit = () => setWide(screen.matches);
@@ -91,9 +91,9 @@ export function useHeroStory<T extends HTMLElement>(beats: number) {
 
   const choose = useCallback((to: number) => {
     setPlaying(false);
-    clock.current = { beat: to, t: SETTLED_MS };
+    clock.current = { beat: to, t: settledMs(to) };
     setBeat(to);
-    setT(SETTLED_MS);
+    setT(settledMs(to));
     setFresh(false);
   }, []);
 
