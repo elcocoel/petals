@@ -31,11 +31,18 @@ import { useMapClaims } from '../viewmodels/useMapClaims.ts';
 import { useMapSearch } from '../viewmodels/useMapSearch.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
 import { useSession } from '../viewmodels/useSession.ts';
-import { type Continent, GRAVITY_DEFAULT, type Place, spreadOf, spreadPlace } from './places.ts';
+import {
+  type Continent,
+  GRAVITY_DEFAULT,
+  type Place,
+  ringsAround,
+  spreadOf,
+  spreadPlace,
+} from './places.ts';
 import type { Road } from './roads.ts';
 import type { FarStyle, LandFlower, LineStyle } from './scene.ts';
 import { reachOf } from './space.ts';
-import { type LandscapeAt, type LandscapeData, useLandscape } from './useLandscape.ts';
+import { idOf, type LandscapeAt, type LandscapeData, useLandscape } from './useLandscape.ts';
 
 export interface CanvasFlower {
   name: string;
@@ -101,6 +108,7 @@ function Land({
   lines,
   inside,
   onWallet,
+  onCentre,
   clearOfChains,
   highlight,
   go,
@@ -119,6 +127,8 @@ function Land({
   inside: (yes: boolean, at: number) => void;
   /** told when a wallet is chosen, and when it's let go */
   onWallet: (id: string | null) => void;
+  /** told which DAO a click puts in the middle, by its map, or null to put the saved map back */
+  onCentre: (id: string | null) => void;
   clearOfChains: boolean;
   /** the chosen group's petals to highlight inside the flower you're in (#94), or null */
   highlight: readonly string[] | null;
@@ -136,6 +146,7 @@ function Land({
     lines,
     inside,
     onWallet,
+    onCentre,
     clearOfChains,
     ...(onPick ? { onPick } : {}),
   };
@@ -336,16 +347,38 @@ export function LandscapeCanvas({
     const { x, y, r } = here.continent;
     return { flowers, roads, home: { cx: x, cy: y, r }, focus: at.get(focus) ?? -1, from };
   }, [data, chain, focus]);
+  // the DAO a click put in the middle, by its map (Elco, 12 Nov walk: "one click put something in the center"); the
+  // rest arranged round it by the wallets they share with it
+  const [centre, setCentre] = useState<string | null>(null);
   const land = useMemo(() => {
     if (!built) return null;
-    const spread = spreadOf(gravity);
     const middle = { x: built.home.cx, y: built.home.cy };
+    const c = centre ? built.flowers.findIndex((f) => idOf(f) === centre) : -1;
+    let places = built.flowers.map((f) => f.place);
+    let reach = built.home.r;
+    if (c >= 0) {
+      const shared = built.flowers.map(
+        (_, i) =>
+          built.roads.find((r) => (r.a === c && r.b === i) || (r.a === i && r.b === c))?.shared ??
+          0,
+      );
+      const around = ringsAround(places, shared, c, middle);
+      places = around.places;
+      reach = around.r;
+    }
+    const spread = spreadOf(gravity);
     return {
       ...built,
-      flowers: built.flowers.map((f) => ({ ...f, place: spreadPlace(f.place, middle, spread) })),
-      home: { ...built.home, r: built.home.r * spread },
+      flowers: built.flowers.map((f, i) => ({
+        ...f,
+        place: spreadPlace(places[i] as Place, middle, spread),
+      })),
+      home: { ...built.home, r: reach * spread },
+      centre: c,
+      // the camera fits a new arrangement; a gravity change keeps it where it is
+      layout: c >= 0 ? `centre:${centre}` : 'saved',
     };
-  }, [built, gravity]);
+  }, [built, gravity, centre]);
   // What Petals' own mapping says about the map you're in, under each petal's name (lib/map-claims.ts)
   const inFlower = land && entered >= 0 ? data.flowers[land.from[entered] ?? -1] : undefined;
   // the wallet chosen, with the flower it was chosen in, for the page
@@ -394,6 +427,7 @@ export function LandscapeCanvas({
           lines={lines}
           inside={toldInside}
           onWallet={walletChosen}
+          onCentre={setCentre}
           clearOfChains={clearOfChains}
           highlight={lit}
           go={go?.chain === chain ? go : null}

@@ -86,6 +86,11 @@ export interface LandFrame {
   left: number;
   /** The wallet level: the flowers that hold the chosen wallet, or null with none chosen. The rest recede. */
   holds?: ReadonlySet<number> | null;
+  /**
+   * Two DAOs chosen (Elco, 12 Nov walk: "how could I select two dowels and see only those connections"): the one
+   * connection between them, shown alone with its number; -2 when they share none, so none shows; -1 for none chosen.
+   */
+  only?: number;
 }
 
 /** A flower that doesn't hold the chosen wallet keeps this much of itself (the wallet level). */
@@ -174,6 +179,8 @@ export function createLandScene(
   roads: readonly Road[],
   far: FarStyle = null,
   lines: LineStyle = null,
+  /** the DAO in the middle, by its index here, or -1: a dashed ring round it, and its lines when none is pointed */
+  centre = -1,
 ): LandScene {
   const clip = `landscape-mark-${++clips}`;
   const defs = el('defs', {}, svg);
@@ -263,6 +270,27 @@ export function createLandScene(
     return { line, number, ends, numberWidth: textWidth(count(r.shared)) };
   });
 
+  // figure.map-centre: the dashed ring round the DAO a click put in the middle, what the rest is compared to
+  const middle = flowers[centre];
+  if (middle) {
+    const { x, y, s: size } = middle.place;
+    el(
+      'circle',
+      {
+        cx: n3(x),
+        cy: n3(y),
+        r: n3(SHAPE.R * size * (middle.reach + 0.15)),
+        fill: 'none',
+        stroke: INK,
+        'stroke-width': 1,
+        'stroke-dasharray': '6 6',
+        'vector-effect': 'non-scaling-stroke',
+        opacity: 0.5,
+      },
+      flowerLayer.node,
+    );
+  }
+
   // figure.map-flower: each flower's silhouette and polygon line, set once at its place and size.
   const flowerSlots = flowers.map((f) => {
     const { x, y, s } = f.place;
@@ -337,7 +365,7 @@ export function createLandScene(
 
   return {
     top,
-    draw({ view, live, entered, enter, marked, left, pointed = -1, holds = null }) {
+    draw({ view, live, entered, enter, marked, left, pointed = -1, holds = null, only = -1 }) {
       world.set('transform', `translate(${n3(view.x)} ${n3(view.y)}) scale(${view.k})`);
       const rest = 1 - enter;
       flowerLayer.set('opacity', o2(rest));
@@ -457,10 +485,13 @@ export function createLandScene(
         let pair = 0;
         if (rest > 0.01 && (onScreen(view, a) || onScreen(view, b))) {
           pair = Math.min(screenRadius(view, a), screenRadius(view, b));
-          if (lines === 'focus') {
-            // only the pointed flower's, once it's big enough to be told apart, and a marked one
-            const own = pointed >= 0 && (r.a === pointed || r.b === pointed);
-            const size = pointed >= 0 ? screenRadius(view, flowers[pointed]?.place as Place) : 0;
+          if (only !== -1) o = i === only ? 1 : 0;
+          else if (lines === 'focus') {
+            // only the pointed flower's (else the one in the middle's), once it's big enough to be told apart, and a
+            // marked one
+            const by = pointed >= 0 ? pointed : centre;
+            const own = by >= 0 && (r.a === by || r.b === by);
+            const size = by >= 0 ? screenRadius(view, flowers[by]?.place as Place) : 0;
             o = i === marked ? 1 : own ? fade(DETAIL.lineFocus, size) : 0;
           } else
             o =

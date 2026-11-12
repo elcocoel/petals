@@ -62,6 +62,10 @@ export interface LandscapeData {
   flowers: LandFlower[];
   roads: Road[];
   home: Home;
+  /** the DAO in the middle, by its index here, or -1 */
+  centre?: number;
+  /** which arrangement the places are: a new one is fitted to, the same one keeps the camera where it is */
+  layout?: string;
 }
 
 /**
@@ -103,6 +107,11 @@ export interface LandscapeAt {
    * about it.
    */
   onWallet?: (id: string | null) => void;
+  /**
+   * Told which DAO a click puts in the middle (Elco, 12 Nov walk: "one click put something in the center"), by its
+   * map, or null to put the saved map back; the page arranges the rest round it.
+   */
+  onCentre?: (id: string | null) => void;
 }
 
 const LONGEST_FRAME = 1 / 15;
@@ -113,7 +122,7 @@ const FARTHEST = 0.6;
 const quiet = () => window.matchMedia('(prefers-reduced-motion: reduce)');
 
 /** A flower, by the map it stands for, so it's found again in new data. */
-const idOf = (f: LandFlower | undefined): string | null =>
+export const idOf = (f: LandFlower | undefined): string | null =>
   f ? (f.map ?? f.snapshot ?? f.name) : null;
 
 /** Where the map was when its scene was last taken down: the camera, the flower you were in, the page's own. */
@@ -121,6 +130,7 @@ interface Kept {
   view: { k: number; x: number; y: number };
   entered: string | null;
   focus: string | null;
+  layout: string | undefined;
 }
 
 export function useLandscape(
@@ -152,6 +162,7 @@ export function useLandscape(
       roads,
       at?.current?.far ?? null,
       at?.current?.lines ?? null,
+      data.centre ?? -1,
     );
     const lives = new Map<number, Driven>();
     const tones = new Map<number, string>();
@@ -402,6 +413,7 @@ export function useLandscape(
         left,
         pointed: under,
         holds,
+        only,
       });
       if (moving) wake();
       else then = 0;
@@ -461,7 +473,9 @@ export function useLandscape(
     };
 
     /** What a click at a point does: an arrow out, a flower in, a connection marked, or nothing. */
-    const click = (x: number, y: number) => {
+    // two DAOs chosen: the connection between them, shown alone (-2 when they share none), or -1
+    let only = -1;
+    const click = (x: number, y: number, add = false) => {
       if (entered >= 0) {
         for (const h of hits) {
           const onName =
@@ -474,6 +488,25 @@ export function useLandscape(
       }
       const f = flowerAt(cam, places, reach, x, y);
       const tells = entered >= 0 && entered === at?.current?.focus ? at.current.onPick : undefined;
+      // Elco, 12 Nov walk: "one click put something in the center"; with one there, Shift and a click on another
+      // shows only the connection between the two; a click on the one in the middle goes into it
+      const centre = data.centre ?? -1;
+      const toCentre = at?.current?.onCentre;
+      if (f >= 0 && entered < 0 && add && centre >= 0 && f !== centre) {
+        const between = roads.findIndex(
+          (r) => (r.a === centre && r.b === f) || (r.a === f && r.b === centre),
+        );
+        only = between >= 0 ? between : -2;
+        marked = between;
+        wake();
+        return;
+      }
+      if (f >= 0 && entered < 0 && toCentre && f !== centre) {
+        only = -1;
+        marked = -1;
+        toCentre(idOf(flowers[f]));
+        return;
+      }
       if (f >= 0 && (entered < 0 || f === entered)) {
         if (f !== entered) enterFlower(f);
         else {
@@ -497,6 +530,7 @@ export function useLandscape(
       }
       if (entered >= 0) chooseWallet(null);
       if (tells) tells({ kind: 'ground' });
+      only = -1;
       const r = roadAt(x, y);
       marked = r >= 0 && r !== marked ? r : -1;
       wake();
@@ -595,7 +629,7 @@ export function useLandscape(
       dragFrom = null;
       if (isClick) {
         const p = local(e);
-        click(p.x, p.y);
+        click(p.x, p.y, e.shiftKey);
       }
       wake();
     };
@@ -622,6 +656,17 @@ export function useLandscape(
           chooseWallet(null);
           return;
         }
+        // then two DAOs chosen, then the one in the middle (the saved map comes back), then home
+        if (only !== -1) {
+          only = -1;
+          marked = -1;
+          wake();
+          return;
+        }
+        if ((data.centre ?? -1) >= 0 && entered < 0) {
+          at?.current?.onCentre?.(null);
+          return;
+        }
         marked = -1;
         flyHome();
       }
@@ -642,7 +687,7 @@ export function useLandscape(
     const focusId = focus >= 0 ? idOf(flowers[focus]) : null;
     const was = kept.current;
     kept.current = null;
-    if (was && was.focus === focusId) {
+    if (was && was.focus === focusId && was.layout === data.layout) {
       // the same page with new data: where you were, at once, inside the flower you were in
       flyTo(cam, was.view);
       const j = was.entered ? flowers.findIndex((f) => idOf(f) === was.entered) : -1;
@@ -736,6 +781,7 @@ export function useLandscape(
           view: { k: cam.k, x: cam.x, y: cam.y },
           entered: entered >= 0 ? idOf(flowers[entered]) : null,
           focus: focusId,
+          layout: data.layout,
         };
       }
       if (raf) cancelAnimationFrame(raf);
