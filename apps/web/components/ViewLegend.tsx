@@ -9,12 +9,12 @@
 // words where it only reads. Under Colour, its keys. The glasses are the person's, never the petal's. Opaque, so
 // it reads over a map: one of the overlays (Overlay; design/overlays.md). Props only.
 import type { View } from '@petal/core/types';
-import type { Dimension, Piece } from '@petal/core/view';
+import { DIMENSIONS, type Dimension, type Piece } from '@petal/core/view';
+import { GREY, KEYS } from '@petal/core/wedge/keys';
 import type { ReactNode } from 'react';
 import { BLOC_SPANS, type BlocChoice, type BlocSpan, blocWords } from '../lib/bloc-words.ts';
 import type { LegendKey } from '../lib/flower-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
-import { SETTINGS_ROWS, type SettingsRow } from '../lib/person-view.ts';
 import {
   dataOf,
   type LegendEdit,
@@ -34,13 +34,17 @@ import { Switch } from './ui/Switch.tsx';
 const words = panelWords.settings;
 
 /**
- * Settings' own rows (lib/person-view.ts SETTINGS_ROWS: the brief's behaviours, then Labels), one source, so
- * the legend says what Settings sets (META's go, 11 Nov, inside #76's brief). Highlight has no place in a view:
- * its row is the flower's groups (its voting blocs, #94), under Map.
+ * Every dimension of the view, in core's order (Elco, 12 Nov, walk 3, twice: "I barely have any choices here!"):
+ * the ones the 11 Nov art direction hid from Settings too, each with its choices. Highlight has no place in a
+ * view: its row is the flower's groups (its voting blocs, #94), under Map.
  */
-const ORDER: readonly Dimension[] = SETTINGS_ROWS.filter(
-  (d): d is Exclude<SettingsRow, 'highlight'> => d !== 'highlight',
-);
+const ORDER: readonly Dimension[] = DIMENSIONS;
+
+/** The look's colours, as core hands them to a category's values: the most common first, grey for context. */
+const PALETTE: readonly LegendKey[] = [...KEYS, GREY].map((k) => ({
+  label: `${k.name.charAt(0).toUpperCase()}${k.name.slice(1)}`,
+  swatch: `key-${k.name}`,
+}));
 
 /** A select's value for None. */
 const NONE = '';
@@ -95,6 +99,8 @@ function DimensionInput({
 }) {
   const data = dataOf(view, d);
   const scale = scaleOf(view, d, pieces);
+  // a dimension no data takes yet says so, as Settings does (core's table: nothing of its kind exists today)
+  if (edit && edit.choices[d].length === 0 && data === null) return <Value>{words.none}</Value>;
   if (!edit) {
     return (
       <Value>
@@ -203,7 +209,16 @@ export function ViewLegend({
               <DimensionInput d={d} view={view} pieces={pieces} edit={edit} />
             </ToolRow>
             <ScaleRow d={d} view={view} pieces={pieces} edit={edit} />
+            {edit && edit.choices[d].length === 0 && dataOf(view, d) === null && (
+              <Note>{words.nothingFits}</Note>
+            )}
             {d === 'colour' && drawn.colour !== null && keysNote && <Note>{keysNote}</Note>}
+            {d === 'colour' && drawn.colour !== null && keys.length === 0 && (
+              // the colours themselves, where no one flower's key is shown (the whole map)
+              <div className="px-space-8 pb-space-8">
+                <LegendKeys keys={[...PALETTE]} size="ui" />
+              </div>
+            )}
             {d === 'colour' && drawn.colour !== null && keys.length > 0 && (
               <div className="px-space-8 pb-space-8">
                 <LegendKeys keys={[...keys]} size="ui" />
