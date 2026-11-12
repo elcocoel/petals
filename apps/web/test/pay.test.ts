@@ -5,7 +5,16 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { PayRow } from '../components/chat/PayRow.tsx';
-import { money, moneyWords, PAY_NEAR, payAction, payWords, sentBy, yoctoOf } from '../lib/pay.ts';
+import {
+  money,
+  moneyWords,
+  nearFor,
+  PAY_NEAR,
+  payAction,
+  payWords,
+  sentBy,
+  yoctoOf,
+} from '../lib/pay.ts';
 import { threadView } from '../lib/thread-view.ts';
 
 describe('paying for Petals’ agent', () => {
@@ -73,5 +82,36 @@ describe('paying for Petals’ agent', () => {
     expect(at('ready')).toContain(payWords.button(PAY_NEAR));
     expect(at('paying')).toContain(payWords.paying);
     expect(at('added', '1')).toContain(payWords.added('1'));
+  });
+});
+
+describe('about $1, never twice (wave 5, Elco’s mainnet test)', () => {
+  test('dollars become NEAR at today’s price, in thousandths, never less than asked', () => {
+    expect(nearFor(1, 3.42)).toBe(0.293);
+    expect(nearFor(1, null)).toBeNull();
+    expect(nearFor(0, 3.42)).toBeNull();
+    expect(payWords.buttonUsd(money(1, 3.42))).toBe('Add $1.00 · 0.29 NEAR');
+  });
+
+  test('the row lets the person set the dollars, and a transfer that went out is confirmed, not sent again', () => {
+    const row = (props: Record<string, unknown>) =>
+      renderToStaticMarkup(
+        createElement(PayRow, { phase: 'ready', added: null, onPay: () => {}, ...props }),
+      );
+    const asking = row({
+      label: payWords.buttonUsd(money(1, 3.42)),
+      amount: { usd: '1', label: payWords.amount, onUsd: () => {} },
+    });
+    expect(asking).toContain(payWords.amount);
+    expect(asking).toContain('Add $1.00 · 0.29 NEAR');
+    const waiting = row({
+      phase: 'failed',
+      label: payWords.confirm,
+      amount: null,
+      failedWords: payWords.pending,
+    });
+    expect(waiting).toContain(payWords.confirm);
+    expect(waiting).toContain(payWords.pending);
+    expect(waiting).not.toContain(payWords.amount);
   });
 });
