@@ -116,21 +116,25 @@ export function InteractionSurface({
   const { land, opening: mapOpening } = useGroundMap();
   // the legend changes the person's view here, with Settings' own hands (#92)
   const legend = useLegendEdit();
-  // A conversation opened with a flower to come (a run, a stored one, another door's, a drawing) keeps its
-  // empty ground until that flower arrives; a new one, with nothing to draw yet, has the map.
-  const flowerToCome = Boolean(
-    workspace.initialRun ||
-      workspace.initialElsewhere ||
-      (workspace.initialOpen.kind !== 'latest' && workspace.initialOpen.kind !== 'shelf'),
-  );
-  const ground = state.mapAt ?? (onCanvas || flowerToCome ? null : { map: null });
+  // The Power Map is always the ground (Elco, 12 Nov: "the power map should always be there"): the
+  // conversation floats over it, and its flower, where the map holds it, opens the map there instead of
+  // replacing it. Only a flower the map doesn't hold yet is drawn apart, until it lands on the map (LOOK's
+  // placeholder and new layer, next); never an empty ground while one is on its way.
+  const flowerOnMap =
+    onCanvas && land && state.flowerSnapshot
+      ? land.flowers.findIndex((f) => f.snapshot === state.flowerSnapshot)
+      : -1;
+  const ground = state.mapAt ?? (onCanvas && flowerOnMap < 0 ? null : { map: null });
   // the open wallet has no map of its own on the Power Map (Elco, walk 5: "population not mapped")
   const unmapped =
     panel.kind === 'flower' &&
     panel.account !== null &&
     land !== null &&
     !land.flowers.some((f) => f.map === panel.account);
-  const focus = ground?.map && land ? land.flowers.findIndex((f) => f.map === ground.map) : -1;
+  const focus =
+    ground?.map && land ? land.flowers.findIndex((f) => f.map === ground.map) : flowerOnMap;
+  // the map opens at the conversation's flower: a petal pressed in it is that flower's, as on the flower itself
+  const atFlower = !state.mapAt && flowerOnMap >= 0;
   // where it starts is measured (what the conversation covers), so it's painted as the boxes are
   const mapArea = useRef<HTMLDivElement>(null);
   const shown = Boolean(ground && (land || mapOpening));
@@ -156,13 +160,15 @@ export function InteractionSurface({
               </p>
             ) : (
               <LandscapeCanvas
-                key={ground.map ?? 'whole'}
+                key={ground.map ?? (atFlower ? `flower:${focus}` : 'whole')}
                 data={land}
                 fill="area"
                 title="Power Map"
                 focus={focus}
-                // a petal of the map it opened at opens that flower here (useWorkspace pickOnMap)
-                onPick={actions.pickOnMap}
+                selected={atFlower ? state.selected : null}
+                // inside the conversation's flower a petal is chosen as on the flower; inside a map a link
+                // opened, it opens that map's flower here (useWorkspace pickOnMap)
+                onPick={atFlower ? actions.pick : actions.pickOnMap}
                 // a wallet chosen on it is what the next question is about (Elco, 12 Nov)
                 onWallet={actions.chooseMapWallet}
                 // the room beside the conversation is narrow: the map keeps clear of its own chains

@@ -412,6 +412,8 @@ export function useWorkspace(props: {
       composer,
       panel,
       onCanvas,
+      /** the snapshot the conversation's flower reads, which the Power Map may hold as one of its flowers */
+      flowerSnapshot: panelFlower?.spec.snapshot.sha256 ?? null,
       /** the canvas flower's map's proposals on the ring (#93), once it's the panel's */
       votes: canvasIsOpen ? mapVotes : null,
       /** The Power Map on the canvas, at a map (by id) or whole (null), when a link in the chat opened it. */

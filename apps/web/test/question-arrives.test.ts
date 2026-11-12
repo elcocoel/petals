@@ -317,9 +317,12 @@ describe('the first paint', () => {
   test.each([
     ['a run', { run: 'r1' }],
     ['a stored flower', { stored: 'abc' }],
-  ])('%s on its way back is empty ground until it arrives', (_name, o) => {
-    expect(paint(o)).toContain('<svg aria-hidden="true"');
-  });
+  ])(
+    '%s on its way back keeps the Power Map as the ground, never an empty canvas (Elco, 12 Nov)',
+    (_name, o) => {
+      expect(paint(o)).toContain('Opening the Power Map…');
+    },
+  );
 
   test('a new conversation, nothing to draw yet: the Power Map on its way, and the boxes are there (#78)', () => {
     const html = paint({});
