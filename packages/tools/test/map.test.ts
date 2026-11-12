@@ -19,7 +19,7 @@ import { privateStore } from '../src/drafts.ts';
 import { httpApp } from '../src/http/app.ts';
 import { type MapView, mapsOf, mapViews, searchMap } from '../src/map.ts';
 import { MAPPING } from '../src/mapping-claims.ts';
-import { markMaps, typeMaps } from '../src/marks.ts';
+import { logoMaps, markMaps, typeMaps } from '../src/marks.ts';
 import { proposalMaps } from '../src/proposals.ts';
 import { callTool } from '../src/registry.ts';
 import { loadSnapshot } from '../src/tools/shared.ts';
@@ -398,6 +398,47 @@ describe('one map per address (Elco, 10 Nov)', () => {
     const picture = await store.media.get(mark.logo.sha256);
     expect(picture).toMatchObject({ type: 'image/png', person: null });
     expect(Buffer.from(picture?.body ?? '', 'base64')).toEqual(Buffer.from(PNG));
+  });
+
+  test('the logos pass (12 Nov, walk 3) adds only a logo to a kept mark without one; its words stay; --dry keeps nothing', async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const store = privateStore(r.ctx.config);
+    const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 5, 5]);
+    const fetchImpl = (async (input: string | URL | Request) => {
+      const url = String(input);
+      // the DAO's own profile says another name: only its picture is taken
+      if (url.startsWith('https://data.daohaus.club/dao/'))
+        return new Response(
+          JSON.stringify([{ name: 'Another Name', avatarImg: 'https://img.example/moloch.png' }]),
+        );
+      if (url === 'https://img.example/moloch.png') return new Response(PNG);
+      return new Response('not found', { status: 404 });
+    }) as typeof fetch;
+    const at = '2026-11-11T18:00:00.000Z';
+    const wave = {
+      petal: 'mark/v1',
+      about: `eip155:1:${DAO}`,
+      name: { value: 'Moloch DAO', status: 'self-declared', source: 'daohaus', ref: 'a wave', at },
+      symbol: null,
+      logo: null,
+      read_at: at,
+    };
+    await store.mark.put({ about: wave.about, body: JSON.stringify(wave), read_at: at });
+
+    const dry = await logoMaps(r.ctx, { fetch: fetchImpl, save: false });
+    expect(dry).toMatchObject({ maps: 1, without: 1, found: 1, saved: 0 });
+    expect(JSON.parse((await store.mark.get(wave.about))?.body ?? '{}').logo).toBeNull();
+
+    expect(await logoMaps(r.ctx, { fetch: fetchImpl })).toMatchObject({ found: 1, saved: 1 });
+    const row = await store.mark.get(wave.about);
+    const mark = JSON.parse(row?.body ?? '{}');
+    expect(mark).toMatchObject({ name: wave.name, symbol: null, read_at: at });
+    expect(mark.logo).toMatchObject({ media_type: 'image/png', source: 'daohaus' });
+    expect(row?.read_at).toBe(at);
+    const picture = await store.media.get(mark.logo.sha256);
+    expect(Buffer.from(picture?.body ?? '', 'base64')).toEqual(Buffer.from(PNG));
+    // a mark with a logo is left as it is
+    expect(await logoMaps(r.ctx, { fetch: fetchImpl })).toMatchObject({ without: 0, found: 0 });
   });
 
   test("the types pass (#97) adds each kept mark's types and keeps its words; --dry keeps nothing", async () => {
