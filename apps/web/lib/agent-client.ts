@@ -220,6 +220,15 @@ export interface PublishableData {
   published: number;
   /** what the press would add, per layer and kind, and what can't go yet and why (SYSTEMS, wave 3) */
   adds?: PublishAdds[];
+  /** the person's readings of the map that go with the press, credited to them (SYSTEMS, wave 7) */
+  readings?: {
+    layer: string;
+    id: string;
+    title: string;
+    what: string;
+    as_of: string;
+    accounts: number;
+  }[];
 }
 
 /** One layer's share of a publish: Insights · Names · 35, or Readings, which can't go yet, and why. */
@@ -273,7 +282,8 @@ export async function publishPublishable(
   sha256: string,
   proof: unknown,
 ): Promise<
-  { published: number; by: string; map_url: string } | { refused: number; message: string }
+  | { published: number; by: string; map_url: string; readings?: number }
+  | { refused: number; message: string }
 > {
   const res = await fetch('/api/v1/publish/data', {
     method: 'POST',
@@ -281,7 +291,12 @@ export async function publishPublishable(
     body: JSON.stringify({ sha256, proof }),
   });
   if (!res.ok) return { refused: res.status, message: await failureOf(res) };
-  return (await res.json()) as { published: number; by: string; map_url: string };
+  return (await res.json()) as {
+    published: number;
+    by: string;
+    map_url: string;
+    readings?: number;
+  };
 }
 
 async function failureOf(res: Response): Promise<string> {
