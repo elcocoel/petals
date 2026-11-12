@@ -1,0 +1,15 @@
+{
+  "petal": "brain-receipt/v1",
+  "id": "brc_5f1c0e2a9b7d4c31",
+  "at": "2026-11-12T10:00:00.000Z",
+  "version": "0696c3d188117753@57256ad00152",
+  "keywords": ["vote", "together", "dao"],
+  "matched_entries": ["task: Who votes together", "department: governance"],
+  "served_docs": ["voting-blocs-over-time", "from-proposal-to-action"],
+  "doc_count": 2,
+  "chars_served": 412,
+  "core_doctrine": false,
+  "client_id": "mcp",
+  "client_label": "Claude Code",
+  "consumer_context": null
+}

@@ -151,21 +151,44 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     answer(c, 'read_page', pick(c.req.query(), ['url', 'start'], ['start'])),
   );
   app.get('/api/v1/web-search', limit, (c) => answer(c, 'search', pick(c.req.query(), ['query'])));
-  // The brain (005): every header, a route for a question or a contract's answers, one file by id.
-  app.get('/api/v1/brain', limit, (c) => answer(c, 'brain_index', {}));
-  app.get('/api/v1/brain/route', limit, (c) => {
+  // The brain (005): every header, a route for a question or a contract's answers, one file by id. Each
+  // serving's receipt names this door and the session's subject, when there is one (12 Nov, step 5).
+  const brainReader = async (c: Context): Promise<ToolContext> => ({
+    ...ctx,
+    caller: { ...ctx.caller, door: 'http', subject: (await o.gate?.subjectOf(c)) ?? null },
+  });
+  app.get('/api/v1/brain', limit, async (c) => answer(c, 'brain_index', {}, await brainReader(c)));
+  app.get('/api/v1/brain/route', limit, async (c) => {
     const q = c.req.query();
     const answers = (q.answers ?? '')
       .split(',')
       .map((a) => a.trim())
       .filter(Boolean);
-    return answer(c, 'brain_route', {
-      ...(q.q ? { question: q.q } : {}),
-      ...(answers.length ? { answers } : {}),
-    });
+    return answer(
+      c,
+      'brain_route',
+      { ...(q.q ? { question: q.q } : {}), ...(answers.length ? { answers } : {}) },
+      await brainReader(c),
+    );
   });
-  app.get('/api/v1/brain/files/:id', limit, (c) =>
-    answer(c, 'brain_file', { id: c.req.param('id') }),
+  app.get('/api/v1/brain/context', limit, async (c) => {
+    const q = c.req.query();
+    const answers = (q.answers ?? '')
+      .split(',')
+      .map((a) => a.trim())
+      .filter(Boolean);
+    return answer(
+      c,
+      'brain_context',
+      { ...(q.q ? { question: q.q } : {}), ...(answers.length ? { answers } : {}) },
+      await brainReader(c),
+    );
+  });
+  app.get('/api/v1/brain/usage', limit, (c) =>
+    answer(c, 'brain_usage', pick(c.req.query(), ['since'])),
+  );
+  app.get('/api/v1/brain/files/:id', limit, async (c) =>
+    answer(c, 'brain_file', { id: c.req.param('id') }, await brainReader(c)),
   );
   app.get('/api/v1/networks', limit, (c) =>
     answer(c, 'list_networks', pick(c.req.query(), ['query'])),

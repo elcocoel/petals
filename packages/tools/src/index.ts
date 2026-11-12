@@ -13,9 +13,12 @@ export { type BlocRun, blocMaps, mapBlocs } from './blocs.ts';
 export {
   BRAIN_DEPARTMENTS,
   BRAIN_INDEX_VERSION,
+  type BrainCounts,
   type BrainEntry,
   type BrainIndex,
+  type BrainReceipt,
   brainAt,
+  brainCounts,
   brainProblems,
   buildBrainIndex,
   headerOf,

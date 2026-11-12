@@ -16,6 +16,7 @@ export type {
   AgentLinkRow,
   AgentRow,
   AnnotationRow,
+  BrainReceiptRow,
   ChallengeCheck,
   ConversationRow,
   CreditEntryRow,

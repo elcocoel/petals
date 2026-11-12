@@ -13,6 +13,7 @@ import type { FreshGate, InputModule, SnapshotStore } from '@petal/inputs';
 import type { Rpc } from '@petal/near/auth';
 import type { MapReader, MapWriter } from '@petal/near/map';
 import type { JobRow } from '@petal/store';
+import type { BrainReceipt } from './brain.ts';
 import type { Limits } from './limits.ts';
 import type { LiveHub } from './live.ts';
 import type { SearchModel } from './search-model.ts';
@@ -112,6 +113,18 @@ export interface ToolContext {
   live?: LiveHub;
   /** additive (9 Nov, agent-house): told when a job is reported, so Petals' agent takes it up at once */
   onJobReported?: (job: JobRow) => void;
+  /**
+   * additive (12 Nov, the brain's receipts): told each time a door serves the brain's text, set by the server
+   * that holds the store, which keeps it. None: nothing is kept, and the answer's receipt is null.
+   */
+  onBrainServed?: (receipt: BrainReceipt) => Promise<void>;
+  /**
+   * additive (12 Nov, brain_usage): the receipts from a time on and the layers' coverage, read from the server's
+   * store. None: this site keeps no receipts.
+   */
+  brainUsage?: (
+    since?: string,
+  ) => Promise<{ receipts: BrainReceipt[]; layers: { total: number; with_brain: number } }>;
   /**
    * additive (10 Nov, one-source.md step 2): the viewer's view, the glasses every drawing without a view of
    * its own is drawn through: the person's, or the default. A flower's own choices never draw it.

@@ -536,6 +536,19 @@ export const MIGRATIONS: readonly string[] = [
     PRIMARY KEY (owner, exploration, sha256)
   );
   `,
+  // 31: the brain's receipts (research/brain-departments-2026-11-11.md, step 5; Elco, 11 Nov: "keep it exactly
+  // like harness does"): one brain-receipt/v1 each time a door serves the brain's text, as the Harness's
+  // brain_access_log keeps them. Added, never rewritten or deleted; every count is worked out from them.
+  `
+  CREATE TABLE brain_receipt (
+    id TEXT PRIMARY KEY,
+    at TEXT NOT NULL,
+    version TEXT NOT NULL,
+    client_id TEXT,
+    body TEXT NOT NULL
+  );
+  CREATE INDEX brain_receipt_at ON brain_receipt(at);
+  `,
 ];
 
 /**

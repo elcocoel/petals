@@ -3,6 +3,8 @@
 // view-v2.schema.json of specs/006-the-map/contracts/view-v1.schema.json and view-v2.schema.json.
 // `spec`, `interpretation`, `entry`, `entryV2` and `correction` are self-contained views of the flower
 // schema: the same $defs with a different root, so any JSON Schema tool can use them alone.
+
+import brainReceiptSchema from '../../schema/brain-receipt.schema.json' with { type: 'json' };
 import claimSchema from '../../schema/claim.schema.json' with { type: 'json' };
 import claimV2Schema from '../../schema/claim-v2.schema.json' with { type: 'json' };
 import claimV3Schema from '../../schema/claim-v3.schema.json' with { type: 'json' };
@@ -60,6 +62,8 @@ export const schemas: {
   seam: object;
   /** one model call, counted and charged, and NEAR AI's own bill for it (pricing-protocol.md) */
   usage: object;
+  /** one serving of the brain's text by a door, the Harness's access log field for field (12 Nov) */
+  brainReceipt: object;
   /** what Petals charges: NEAR AI's bill, plus the fees switched on times the tip, plus the protocol rate */
   price: object;
   /** what a person pays: NEAR AI's bill, plus a base fee, plus their own tip (price/v2, which replaces v1) */
@@ -91,6 +95,7 @@ export const schemas: {
   viewV2: viewV2Schema,
   seam: seamSchema,
   usage: usageSchema,
+  brainReceipt: brainReceiptSchema,
   price: priceSchema,
   priceV2: priceV2Schema,
   mark: markSchema,

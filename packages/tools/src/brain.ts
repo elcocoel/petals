@@ -339,6 +339,94 @@ export function brainAt(dir: string) {
   return s;
 }
 
+// -- receipts (research/brain-departments-2026-11-11.md, step 5): brain-receipt/v1, the Harness's access log
+
+/** One serving of the brain's text by a door, field for field the Harness's brain_access_log. */
+export interface BrainReceipt {
+  petal: 'brain-receipt/v1';
+  id: string;
+  at: string;
+  version: string;
+  keywords: string[];
+  matched_entries: string[];
+  served_docs: string[];
+  doc_count: number;
+  chars_served: number;
+  core_doctrine: boolean;
+  client_id: string | null;
+  client_label: string | null;
+  consumer_context: { run?: string; job?: string; exploration?: string; subject?: string } | null;
+}
+
+/** What brain_usage counts (step 7, the librarian's report, like the Harness's Pulse), from receipts only. */
+export interface BrainCounts {
+  since: string | null;
+  reads: number;
+  by_file: { id: string; reads: number }[];
+  by_department: { department: string; reads: number }[];
+  by_task: { task: string; reads: number }[];
+  /** reads that asked something and were served nothing past the doctrine, and what they asked */
+  nothing_matched: { reads: number; questions: string[] };
+  per_read: { files: number; chars: number };
+  by_door: { door: string | null; reads: number }[];
+  by_app: { app: string | null; reads: number }[];
+  by_version: { version: string; reads: number }[];
+  /** the layers kept that carry the brain version they were read with */
+  coverage: { layers: number; layers_with_brain: number };
+}
+
+/** Each key's count, the most first, then by key. */
+function tally<K extends string | null>(keys: K[]): { key: K; reads: number }[] {
+  const m = new Map<K, number>();
+  for (const k of keys) m.set(k, (m.get(k) ?? 0) + 1);
+  return [...m]
+    .map(([key, reads]) => ({ key, reads }))
+    .sort((a, b) => b.reads - a.reads || String(a.key).localeCompare(String(b.key)));
+}
+
+/** The counts, worked out from the receipts when asked; nothing is counted by hand. */
+export function brainCounts(
+  receipts: readonly BrainReceipt[],
+  layers: { total: number; with_brain: number },
+  since: string | null = null,
+): BrainCounts {
+  const n = receipts.length;
+  const avg = (f: (r: BrainReceipt) => number) =>
+    n ? Math.round((receipts.reduce((s, r) => s + f(r), 0) / n) * 100) / 100 : 0;
+  const prefixed = (p: string) =>
+    receipts.flatMap((r) =>
+      r.matched_entries.filter((m) => m.startsWith(p)).map((m) => m.slice(p.length)),
+    );
+  const missed = receipts.filter(
+    (r) => r.keywords.length && !r.served_docs.some((d) => d !== 'doctrine'),
+  );
+  return {
+    since,
+    reads: n,
+    by_file: tally(receipts.flatMap((r) => r.served_docs)).map((t) => ({
+      id: t.key,
+      reads: t.reads,
+    })),
+    by_department: tally(prefixed('department: ')).map((t) => ({
+      department: t.key,
+      reads: t.reads,
+    })),
+    by_task: tally(prefixed('task: ')).map((t) => ({ task: t.key, reads: t.reads })),
+    nothing_matched: {
+      reads: missed.length,
+      questions: [...new Set(missed.map((r) => r.keywords.join(' ')))],
+    },
+    per_read: { files: avg((r) => r.doc_count), chars: avg((r) => r.chars_served) },
+    by_door: tally(receipts.map((r) => r.client_id)).map((t) => ({ door: t.key, reads: t.reads })),
+    by_app: tally(receipts.map((r) => r.client_label)).map((t) => ({ app: t.key, reads: t.reads })),
+    by_version: tally(receipts.map((r) => r.version)).map((t) => ({
+      version: t.key,
+      reads: t.reads,
+    })),
+    coverage: { layers: layers.total, layers_with_brain: layers.with_brain },
+  };
+}
+
 // -- routing (brain.md, "Routing"): the chain's answers first, then words ranked by BM25 over the headers
 
 /** One way in, with why. */
@@ -347,6 +435,8 @@ export interface BrainRoute {
   kind: BrainEntry['kind'];
   /** the department it's in */
   department: string | null;
+  /** the routing table's row that brought it, or null when its own header matched */
+  task: string | null;
   for: string;
   file: string;
   status: BrainEntry['status'];
@@ -383,10 +473,16 @@ function docWords(e: BrainEntry): string[] {
   ];
 }
 
-const routeOf = (e: BrainEntry, why: string, score: number): BrainRoute => ({
+const routeOf = (
+  e: BrainEntry,
+  why: string,
+  score: number,
+  task: string | null = null,
+): BrainRoute => ({
   id: e.id,
   kind: e.kind,
   department: e.department,
+  task,
   for: e.for,
   file: e.file,
   status: e.status,
@@ -472,6 +568,7 @@ export function routeBrain(
               e,
               `the task "${task.task}" ${how} it (words: ${s.hit.join(', ')})`,
               s.score - i / 1e6,
+              task.task,
             ),
           );
       });

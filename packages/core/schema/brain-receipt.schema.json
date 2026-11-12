@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:brain-receipt:v1",
+  "title": "Petal brain receipt v1",
+  "description": "One serving of the brain's text by a door (research/brain-departments-2026-11-11.md, section 3; Elco, 11 Nov: \"keep it exactly like harness does\"): the Harness's brain_access_log, field for field, with the brain version as its commit. Written the moment the door answers, never rewritten; every count is worked out from these.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["petal", "id", "at", "version", "keywords", "matched_entries", "served_docs", "doc_count", "chars_served", "core_doctrine", "client_id", "client_label", "consumer_context"],
+  "properties": {
+    "petal": { "const": "brain-receipt/v1" },
+    "id": { "description": "the receipt's id, returned to the caller as receipt", "type": "string", "pattern": "^brc_[0-9a-f]{16,}$" },
+    "at": { "description": "when the door answered (the Harness's created_at)", "type": "string", "format": "date-time" },
+    "version": { "description": "the brain version served, <index hash>@<commit> (the Harness's source_commit_sha)", "type": "string", "minLength": 1 },
+    "keywords": { "description": "what was asked: the question's words, as routing used them, and the calls the contract answers", "type": "array", "items": { "type": "string" } },
+    "matched_entries": { "description": "what fired: the routing table's task rows and the departments reached", "type": "array", "items": { "type": "string" } },
+    "served_docs": { "description": "the ids of the files served", "type": "array", "items": { "type": "string" } },
+    "doc_count": { "type": "integer", "minimum": 0 },
+    "chars_served": { "description": "how many characters of the brain's text were served", "type": "integer", "minimum": 0 },
+    "core_doctrine": { "description": "whether the doctrine was in it", "type": "boolean" },
+    "client_id": { "description": "the door: mcp, http, cli or site, or null when none said", "type": ["string", "null"] },
+    "client_label": { "description": "the app's own name for itself, when its request says so", "type": ["string", "null"] },
+    "consumer_context": {
+      "description": "what it was read in: the run, job or exploration, and the subject (a person id or an anonymous handle), when there is one; null for none",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "run": { "type": "string" },
+            "job": { "type": "string" },
+            "exploration": { "type": "string" },
+            "subject": { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}

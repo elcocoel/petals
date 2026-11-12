@@ -10,6 +10,7 @@ export {
   blocClaims,
   votingBlocs,
 } from './blocs.ts';
+export { validateBrainReceipt } from './brain-receipt.ts';
 export {
   accountRef,
   applyPolicy,

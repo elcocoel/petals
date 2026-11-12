@@ -98,5 +98,9 @@
   "proposals.v2.json": {
     "schema": "urn:petal:schema:proposals:v2",
     "sha256": "ec7fc9a44f1d9ade45ab702d1c1ad7c6b351c724daa24c9fabeda8b69b0ec465"
+  },
+  "brain-receipt.v1.json": {
+    "schema": "urn:petal:schema:brain-receipt:v1",
+    "sha256": "e280e583c9292ce0a5e6b219ab4bdf7d273ce1b696cdf1ba5dbf0c332b2457ad"
   }
 }
