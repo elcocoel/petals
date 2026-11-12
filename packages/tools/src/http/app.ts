@@ -89,6 +89,9 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   // HTTP and MCP are one set of callers, whoever they say they are: fresh reads take turns between them.
   // One live hub, the app's when it has one, so what its other routes touch reaches a page that follows.
   const ctx: ToolContext = { ...given, fresh: freshGate(given), live: given.live ?? new LiveHub() };
+  // 60 tool calls a minute from one address (http-api.md). The map itself, drawn through a person's view, isn't a
+  // tool call: a change in Tools draws it again, and a person clicking through them hit this limit (wave 3, 12 Nov:
+  // 'Elco never asked for a limit there'). GET /api/v1/map, /map/views, /maps and /maps/:id take no part in it.
   const limit = rateLimit({
     max: 60,
     windowMs: 60_000,
@@ -381,7 +384,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       return c.body(null, 304);
     return respond(c, out);
   }
-  app.get('/api/v1/map', limit, async (c) => {
+  app.get('/api/v1/map', async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
     const overview = (await run('relations_overview', { kind: 'holdings', limit: 5000 })) as {
@@ -412,7 +415,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   // The map as a list (Elco, 10 Nov: the gallery, the lobby and /make read the one map): every view as
   // /api/v1/map has it, in the same order, each with its picture, without its reading.
   // Each list takes ?view=<hash>: its pictures, keys and readings are then that view's (one-source.md, step 2).
-  app.get('/api/v1/map/views', limit, async (c) => {
+  app.get('/api/v1/map/views', async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
     return respond(c, {
@@ -542,7 +545,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       claims ? { about: id, claims } : versioned(toolError('not_found', 'No map by that address.')),
     );
   });
-  app.get('/api/v1/maps', limit, async (c) => {
+  app.get('/api/v1/maps', async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
     return named(c, {
@@ -555,7 +558,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     });
   });
   // One map's card, by its id (URL-encoded, since it holds colons), for its page.
-  app.get('/api/v1/maps/:id', limit, async (c) => {
+  app.get('/api/v1/maps/:id', async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
     const id = aboutKey(c.req.param('id'));
