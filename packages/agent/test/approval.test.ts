@@ -90,8 +90,8 @@ const pick = <N extends AgentEvent['event']>(es: AgentEvent[], n: N) =>
   es.filter((e): e is Extract<AgentEvent, { event: N }> => e.event === n);
 const names = (es: AgentEvent[]) => es.map((e) => e.event);
 /** What was held, without the ceremony's facts (go-to-map.test.ts has those): the gate's own part. */
-const held = (es: AgentEvent[]) =>
-  (es as { event: string; data: unknown }[])
+const held = (es: readonly { event: string; data: unknown }[]) =>
+  es
     .filter((e) => e.event === 'approval_required')
     .map((e) => {
       const { tool, network, params, target_key } = e.data as Record<string, unknown>;
