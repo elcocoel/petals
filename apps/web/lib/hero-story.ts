@@ -12,6 +12,10 @@
 // "completely stopped needs to be an exception"), and smooth (Elco, 12 Nov: no bumpiness, no jerking): each hit
 // eases in and lands with a little give, never a bounce; exits dip before they go; and between the hits the petals
 // ripple in a slow wave round the clock, the words float and the camera keeps drifting.
+// It is one loop (Elco, 12 Nov: "start in the beginning from a far away situation ... then we zoom in into my
+// community ... following to other communities and then it zooms out to the same frame it started"): it opens on
+// the far map, dives into my community as it bursts open, and the connections beat pulls back to its two
+// neighbours and then all the way out, to the very frame it opened on (world()).
 // Everything a frame draws is a pure function of the beat and the time into it, so choosing a beat settles it at
 // once, a test can read any moment, and a video can be rendered frame by frame from the same numbers. The flower
 // is a symbol, not a reading: no network, no counts. Heights stay linear and widths equal (the art direction's
@@ -43,12 +47,15 @@ export const BEAT_MS = Math.max(...BEATS_MS);
 export const beatMs = (beat: number) => BEATS_MS[beat] ?? BEAT_MS;
 /** When each beat starts on one clock round the whole story, for what keeps going across the beats. */
 export const startOf = (beat: number) => BEATS_MS.slice(0, beat).reduce((sum, ms) => sum + ms, 0);
-/** The last count of a beat, before the words cut out: both lines in view, the flower at rest. A chosen beat stops here. */
-export const settledMs = (beat: number) => beatMs(beat) - COUNT_MS;
+/**
+ * The last count of a beat, before the words cut out: both lines in view, the flower at rest; for the connections
+ * beat, before the camera goes back out to the far map. A chosen beat stops here.
+ */
+export const settledMs = (beat: number) => (beat === 5 ? count(6) : beatMs(beat) - COUNT_MS);
 
-/** The call lands on the one; on arrival on the two, after the centre's boom. */
+/** The call lands on the one; on arrival half a count later, so the far map is seen first. */
 const CALL = count(1);
-const CALL_FRESH = count(2);
+const CALL_FRESH = count(1.5);
 /** The reaction: the flower hits on the three. */
 const REACT = count(3);
 /** The response: the answer lands on the second bar's one. */
@@ -64,8 +71,8 @@ export const GUTTER = 1.5;
 
 /** Tallest at twelve o'clock, then shorter around the clock: the same symbolic sequence the earlier hero drew. */
 const shares = Array.from({ length: PETALS }, (_, i) => 0.3 + 0.7 * (1 - i / (PETALS - 1)) ** 1.8);
-/** Each petal's length once influence shows. */
-const base = shares.map((s) => 43 + s * 128);
+/** Each petal's length once influence shows; from far, my community's wave is drawn from these. */
+export const base = shares.map((s) => 43 + s * 128);
 /** The same petals at the history beat's "now": another balance, the positions kept. */
 const later = shares.map((_, i) => 49 + (shares[(i + 7) % PETALS] as number) * 119);
 export const ghostLengths: readonly number[] = base;
@@ -120,9 +127,8 @@ const prior = (beat: number) => (beat + 5) % 6;
  * response on the five.
  */
 const KICKS: readonly (readonly (readonly [number, number])[])[] = [
-  // a community: the last one implodes on the one, the new one bursts on the three
+  // a community: the camera dives in and it bursts open on the three
   [
-    [1, 0.03],
     [3, 0.05],
     [5, 0.015],
   ],
@@ -160,19 +166,13 @@ const KICKS: readonly (readonly (readonly [number, number])[])[] = [
     [5, 0.015],
   ],
 ];
-/** On arrival: the centre lands on the one, the flower bursts on the three. */
-const FRESH_KICKS: readonly (readonly [number, number])[] = [
-  [1, 0.02],
-  [3, 0.05],
-  [5, 0.015],
-];
 
 /**
  * How much the camera is punched in at a moment, from 0: before each hit it eases back a little (the wind-up), on
  * the hit it eases in, and lets go slowly. A hit on the one has no wind-up: that is the cut.
  */
-export function kick(beat: number, t: number, fresh = false): number {
-  const hits = fresh && beat === 0 ? FRESH_KICKS : (KICKS[beat] ?? []);
+export function kick(beat: number, t: number): number {
+  const hits = KICKS[beat] ?? [];
   let k = 0;
   for (const [c, amp] of hits) {
     const d = t - count(c);
@@ -203,18 +203,16 @@ export function pulse(t: number): number {
 function settled(beat: number): readonly number[] {
   if (beat === 0) return Array(PETALS).fill(EVEN);
   if (beat === 3) return later;
+  if (beat === 5) return Array(PETALS).fill(INNER);
   return base;
 }
 
 /** A petal's shape as the beat has it, before the ripple. */
 function shaped(beat: number, t: number, i: number, from: number): number {
   switch (beat) {
-    case 0: {
-      // the last flower implodes on the one, and the new one bursts out on the three, rolling round the clock
-      const shut = ease.inCubic(at(t, CALL, SIXTEENTH * 1.5));
-      const open = pop(t, REACT + i * ROLL);
-      return lerp(lerp(from, INNER, shut), EVEN, open);
-    }
+    case 0:
+      // as the camera arrives, it bursts out of its wave on the three, rolling round the clock
+      return lerp(INNER, EVEN, pop(t, REACT + i * ROLL));
     case 1: {
       // the even flower draws in on the and of two, holds its breath, and the heights burst apart on the three
       const held =
@@ -229,19 +227,22 @@ function shaped(beat: number, t: number, i: number, from: number): number {
       const r = lerp(from, base[i] as number, pop(t, start));
       return INNER + (r - INNER) * (1 - 0.06 * windUp(t, start));
     }
+    case 5:
+      // once its wave has covered it on the way out, the petals fold away, ready to burst again
+      return lerp(base[i] as number, INNER, ease.inOutSine(at(t, count(8.25), EIGHTH)));
     default:
       return base[i] as number;
   }
 }
 
 /**
- * Each petal's length. `fresh` is the very first beat on arrival, which bursts from the bare centre; round the
- * loop, the first beat implodes the last flower on the one and bursts it open again on the three. Over it all a
+ * Each petal's length. The first beat bursts out of the centre on the three, as the camera arrives; the last
+ * folds the petals away under the wave once the camera has pulled back. Over it all a
  * slow wave runs round the clock once a bar, the longer the petal the more it ripples, on one clock across the
  * beats so it never jumps.
  */
-export function petalLengths(beat: number, t: number, fresh = false): number[] {
-  const before = fresh && beat === 0 ? Array(PETALS).fill(INNER) : settled(prior(beat));
+export function petalLengths(beat: number, t: number): number[] {
+  const before = settled(prior(beat));
   const wave = (2 * Math.PI * (startOf(beat) + t)) / (4 * COUNT_MS);
   return Array.from({ length: PETALS }, (_, i) => {
     const r = shaped(beat, t, i, before[i] as number);
@@ -275,25 +276,79 @@ export interface Camera {
   y: number;
 }
 
-/** The pull back on the one to make room for the communities the last beat leads to, and the push back in after it. */
-function pullOf(beat: number, t: number, fresh: boolean): number {
-  if (beat === 5) return lerp(1, 0.65, spring(at(t, CALL, 1.5 * COUNT_MS), 0.85));
-  if (beat === 0 && !fresh) return lerp(0.65, 1, spring(at(t, CALL, 1.5 * COUNT_MS), 0.85));
-  return 1;
-}
-
-/** The camera on the main flower, inside its drawing: a twist as the community bursts open, the pull back at the end. */
-export function camera(beat: number, t: number, fresh = false): Camera {
-  const pull = pullOf(beat, t, fresh);
-  // the petals are all at the centre's edge when the twist begins, so it starts from nothing seen
+/** My community's twist as it bursts open: the petals are all at the centre's edge when it begins. */
+export function camera(beat: number, t: number): Camera {
   const rotate =
     beat === 0 && t >= REACT ? -16 * (1 - spring(at(t, REACT, 1.5 * COUNT_MS), 0.8)) : 0;
-  return { scale: pull, rotate, y: (1 - (pull - 0.65) / 0.35) * 8 };
+  return { scale: 1, rotate, y: 0 };
+}
+
+// ----- the world: the far map, the dive and the way back out -----
+
+/** How close the camera is at the far frame: the whole map in view. */
+export const FAR = 0.2;
+/** Where the far frame looks, in the drawing's units from my community's centre: the middle of the map. */
+export const MAP_CENTRE = { x: 380, y: -110 };
+/** The connections beat's first pull back: my community with its two neighbours. */
+const NEAR_NEIGHBOURS = 0.55;
+/** The camera's closeness from a 0 (far) to 1 (my community) that moves evenly through the zoom. */
+const zoomOf = (k: number) => FAR * (1 / FAR) ** k;
+const kOf = (zoom: number) => Math.log(zoom / FAR) / Math.log(1 / FAR);
+
+export interface World {
+  /** how close the camera is: 1 at my community, FAR for the whole map */
+  zoom: number;
+  /** the point it looks at, in the drawing's units from my community's centre */
+  x: number;
+  y: number;
+  /** the dashed focus ring round my community, 0 to 1 */
+  ring: number;
+  /** my community's soft wave, as seen from far, 0 to 1; its petals show the rest of the way */
+  wave: number;
+  /** the rest of the map, 0 to 1: there from far, gone by the time the camera is close */
+  map: number;
+}
+
+/** The zooms between which the rest of the map fades as the camera comes in. */
+const MAP_FADES = { from: 0.28, to: 0.48 };
+
+/**
+ * The world camera. On the community beat it starts on the far map; my community takes a dashed focus ring on the
+ * and of one, and on the two the camera dives into it, my community gliding to the middle as it grows, and it
+ * bursts out of its wave on the three. On the connections beat the camera pulls back on the one to show its two
+ * neighbours, and once the answer is in it goes all the way out to the far map, my community folding back into
+ * its wave, ending on the very frame the community beat starts from.
+ */
+export function world(beat: number, t: number): World {
+  let k = 1;
+  let slide = 1;
+  let wave = 0;
+  let ring = 0;
+  if (beat === 0) {
+    const dive = ease.inOutCubic(at(t, count(2), 1.5 * COUNT_MS));
+    k = dive;
+    slide = dive;
+    wave = 1 - ease.inOutSine(at(t, REACT, 3 * EIGHTH));
+    ring =
+      ease.outCubic(at(t, count(1.5), EIGHTH)) * (1 - ease.inOutSine(at(t, count(2.5), COUNT_MS)));
+  }
+  if (beat === 5) {
+    const out = ease.inOutCubic(at(t, count(6), 2.5 * COUNT_MS));
+    const back = spring(at(t, CALL, 1.5 * COUNT_MS), 0.85);
+    k = lerp(lerp(1, kOf(NEAR_NEIGHBOURS), back), 0, out);
+    slide = 1 - out;
+    wave = ease.inOutSine(at(t, count(7), 1.25 * COUNT_MS));
+  }
+  const zoom = zoomOf(k);
+  // my community moves evenly across the screen while the zoom grows, so the dive reads as one glide
+  const away = (FAR * (1 - slide)) / zoom;
+  const map = 1 - ease.inOutSine(at(zoom, MAP_FADES.from, MAP_FADES.to - MAP_FADES.from));
+  return { zoom, x: MAP_CENTRE.x * away, y: MAP_CENTRE.y * away, ring, wave, map };
 }
 
 /** The light behind the flower: it moves a third as much as the flower does, and thumps with the pulse. */
 export function glow(beat: number, t: number, fresh = false) {
-  const pull = pullOf(beat, t, fresh);
+  const pull = world(beat, t).zoom;
   const born = fresh && beat === 0 ? ease.outCubic(at(t, CALL, 2 * COUNT_MS)) : 1;
   // the blocs' second key tints the light while they show, from the second group's hit
   const second =
@@ -304,18 +359,12 @@ export function glow(beat: number, t: number, fresh = false) {
         : beat === 4
           ? 1 - ease.outCubic(at(t, CALL, EIGHTH))
           : 0;
-  const thump = pulse(t) + 8 * kick(beat, t, fresh);
+  const thump = pulse(t) + 8 * kick(beat, t);
   return {
     opacity: born * Math.min(1, 0.78 + 0.22 * thump),
     scale: (1 + (pull - 1) * 0.35) * (1 + 0.02 * thump),
     second,
   };
-}
-
-/** The centre: its dot lands on the one, its ring snaps round on the and; the first time only, after that it stays. */
-export function centre(beat: number, t: number, fresh = false) {
-  if (!(fresh && beat === 0)) return { dot: 1, ring: 1 };
-  return { dot: pop(t, CALL), ring: ease.inOutCubic(at(t, count(1.5), 1.5 * EIGHTH)) };
 }
 
 /** A layer that belongs to one beat: it snaps in with the flower's reaction and cuts out on the next one. */
@@ -400,24 +449,22 @@ export function proposal(beat: number, t: number) {
   };
 }
 
-/** The two communities the last beat opens onto: a line shoots out on the three, its community bursts on the and. */
+/**
+ * The two neighbours the last beat opens onto: a line shoots out to each on the three and four, and each bursts
+ * out of its wave on the and; on the way out they fold back into their waves with my community. The lines stay
+ * until the next one.
+ */
 export function network(beat: number, t: number) {
+  const fold = 1 - ease.inOutSine(at(t, count(7), 1.25 * COUNT_MS));
   if (beat === 5)
     return {
-      link: (n: number) => ease.outExpo(at(t, REACT + n * COUNT_MS, EIGHTH)),
-      bloom: (n: number, j: number) => pop(t, count(3.5) + n * COUNT_MS + j * 10),
+      link: (n: number) => ease.inOutCubic(at(t, REACT + n * COUNT_MS, 1.5 * EIGHTH)),
+      bloom: (n: number, j: number) => pop(t, count(3.5) + n * COUNT_MS + j * 10) * fold,
       // the dashes run outward, towards the communities, a dash's length each second
       flow: -t * 0.009,
-      scale: 1,
     };
-  if (beat === 0)
-    return {
-      link: () => 1,
-      bloom: () => 1,
-      flow: -(beatMs(5) + t) * 0.009,
-      scale: 1 - 0.25 * ease.inCubic(at(t, CALL, EIGHTH)),
-    };
-  return { link: () => 1, bloom: () => 1, flow: 0, scale: 1 };
+  if (beat === 0) return { link: () => 1, bloom: () => 0, flow: -(beatMs(5) + t) * 0.009 };
+  return { link: () => 1, bloom: () => 0, flow: 0 };
 }
 
 // ----- the words -----

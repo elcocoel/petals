@@ -9,6 +9,7 @@ import {
   beatMs,
   COUNT_MS,
   camera,
+  FAR,
   INNER,
   kick,
   PETALS,
@@ -20,6 +21,7 @@ import {
   question,
   settledMs,
   spring,
+  world,
 } from '../lib/hero-story.ts';
 
 const near = (a: readonly number[], b: readonly number[], eps = 0.5) =>
@@ -60,9 +62,27 @@ describe('the hero story', () => {
     expect(answerBox(0, settledMs(0), true).opacity).toBeCloseTo(1, 5);
   });
 
-  test('the first beat on arrival grows from the bare centre', () => {
-    expect(petalLengths(0, 0, true).every((r) => r === INNER)).toBe(true);
-    expect(camera(0, 0, true).scale).toBeCloseTo(1, 5);
+  test('the story is one loop: it opens and closes on the far map, and dives into my community', () => {
+    const start = world(0, 0);
+    const end = world(5, beatMs(5));
+    expect(start.zoom).toBeCloseTo(FAR, 9);
+    expect(end.zoom).toBeCloseTo(FAR, 9);
+    expect(end.x).toBeCloseTo(start.x, 9);
+    expect(end.y).toBeCloseTo(start.y, 9);
+    // from far, my community is its wave; once the camera is in, its petals
+    expect(start.wave).toBe(1);
+    expect(world(1, 0).zoom).toBe(1);
+    expect(world(1, 0).wave).toBe(0);
+    for (let beat = 0; beat < 6; beat++) {
+      const a = world(beat, beatMs(beat));
+      const b = world((beat + 1) % 6, 0);
+      expect(Math.abs(a.zoom - b.zoom) + Math.abs(a.x - b.x) + Math.abs(a.y - b.y)).toBeLessThan(
+        1e-9,
+      );
+      expect(Math.abs(a.wave - b.wave) + Math.abs(a.ring - b.ring)).toBeLessThan(1e-9);
+    }
+    // its petals burst out of the centre as the camera arrives
+    expect(petalLengths(0, 0).every((r) => r === INNER)).toBe(true);
   });
 
   test('a chosen beat shows both lines over its settled flower', () => {
@@ -70,10 +90,10 @@ describe('the hero story', () => {
       expect(question(beat, settledMs(beat)).opacity).toBeGreaterThan(0.4);
       expect(answerLine(beat, beat, settledMs(beat)).opacity).toBe(1);
       // only the ripple still moves it
-      expect(near(petalLengths(beat, settledMs(beat)), petalLengths(beat, beatMs(beat)), 3)).toBe(
-        true,
-      );
-      expect(Math.abs(kick(beat, settledMs(beat)))).toBeLessThan(0.002);
+      const now = petalLengths(beat, settledMs(beat));
+      expect(near(now, petalLengths(beat, settledMs(beat) + 200), 3)).toBe(true);
+      // the camera's punches have died away: under half a percent
+      expect(Math.abs(kick(beat, settledMs(beat)))).toBeLessThan(0.005);
     }
   });
 

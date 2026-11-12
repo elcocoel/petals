@@ -67,6 +67,15 @@ const pinned = (pin: Pin, m: Motion): CSSProperties => {
 const centreY = (wide: boolean) => (wide ? 46.59 : 48.33);
 const trackY = (wide: boolean) => (wide ? 86 : 70);
 
+/** The stage's edges, where the world fades out; with its own perspective, as the stage has. */
+const EDGE = 'linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent)';
+const EDGES: CSSProperties = {
+  perspective: '900px',
+  maskImage: `${EDGE}, ${EDGE.replace('90deg', '180deg')}`,
+  maskComposite: 'intersect',
+  WebkitMaskComposite: 'source-in',
+};
+
 /** The words beside the stage: they never move, so they never redraw with it. */
 const Intro = memo(function Intro() {
   return (
@@ -237,7 +246,7 @@ export function HeroStoryView({
   const marker = historyLine(beat, t);
   const f = flowerAt(beat, t, wide, fresh);
   // punched in by each hit
-  const punch = 1 + kick(beat, t, fresh);
+  const punch = 1 + kick(beat, t);
   const cy = centreY(wide);
   const back = layer === 'words' ? 0.08 : 1;
   return (
@@ -251,56 +260,59 @@ export function HeroStoryView({
             className="relative aspect-2/3 w-full lg:aspect-8/5"
             style={{ containerType: 'size', perspective: '900px' }}
           >
-            {/* Behind: the light, following the flower at half its travel, so it reads as further away. */}
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                opacity: back,
-                translate: `${n2((f.x - 50) * 0.5)}% ${n2((f.y - cy) * 0.5)}% -60px`,
-                scale: (1 + (f.scale - 0.85) * 0.4).toFixed(4),
-                transformOrigin: `50% ${cy}%`,
-              }}
-            >
-              <StoryLight beat={beat} t={t} fresh={fresh} />
-            </div>
-            {/* The middle: the flower where the shot puts it, and the history beat's line from then to now. */}
-            <div
-              className="absolute inset-0"
-              style={{
-                opacity: back,
-                translate: `${n2(f.x - 50)}% ${n2(f.y - cy)}%`,
-                scale: (f.scale * punch).toFixed(4),
-                // turned towards the middle of the stage, as a thing standing in it is, and leaning into the whip
-                transform: `rotateY(${n2((50 - f.x) * 0.32 + f.lean)}deg) rotateX(5deg)`,
-                filter: soft(f.blur),
-                transformOrigin: `50% ${cy}%`,
-              }}
-            >
-              <StoryFlower beat={beat} t={t} fresh={fresh} />
+            {/* The world fades out at the stage's edges, so the far map never spills onto the page. */}
+            <div className="pointer-events-none absolute inset-0" style={EDGES}>
+              {/* Behind: the light, following the flower at half its travel, so it reads as further away. */}
               <div
-                aria-hidden="true"
-                className="absolute inset-x-1/4 top-0 flex items-center gap-text-gap"
+                className="pointer-events-none absolute inset-0"
                 style={{
-                  opacity: layerOpacity(3, beat, t),
-                  translate: `0 ${trackY(wide)}cqh`,
+                  opacity: back,
+                  translate: `${n2((f.x - 50) * 0.5)}% ${n2((f.y - cy) * 0.5)}% -60px`,
+                  scale: (1 + (f.scale - 0.85) * 0.4).toFixed(4),
+                  transformOrigin: `50% ${cy}%`,
                 }}
               >
-                <Mono>{story.past}</Mono>
-                <span className="relative block h-px flex-1 bg-hairline">
-                  {/* the line fills behind the marker as time passes */}
-                  <span
-                    className="absolute inset-0 block origin-left bg-primary"
-                    style={{ scale: `${Math.min(1, marker).toFixed(4)} 1` }}
-                  />
-                  {/* the marker rides a layer as wide as the line, moved along by its own width */}
-                  <span
-                    className="absolute inset-0 block"
-                    style={{ translate: `${(marker * 100).toFixed(2)}% 0` }}
-                  >
-                    <span className="absolute -top-space-4 -left-space-4 block size-space-8 bg-primary" />
+                <StoryLight beat={beat} t={t} fresh={fresh} />
+              </div>
+              {/* The middle: the flower where the shot puts it, and the history beat's line from then to now. */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  opacity: back,
+                  translate: `${n2(f.x - 50)}% ${n2(f.y - cy)}%`,
+                  scale: (f.scale * punch).toFixed(4),
+                  // turned towards the middle of the stage, as a thing standing in it is, and leaning into the whip
+                  transform: `rotateY(${n2((50 - f.x) * 0.32 + f.lean)}deg) rotateX(5deg)`,
+                  filter: soft(f.blur),
+                  transformOrigin: `50% ${cy}%`,
+                }}
+              >
+                <StoryFlower beat={beat} t={t} fresh={fresh} />
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-x-1/4 top-0 flex items-center gap-text-gap"
+                  style={{
+                    opacity: layerOpacity(3, beat, t),
+                    translate: `0 ${trackY(wide)}cqh`,
+                  }}
+                >
+                  <Mono>{story.past}</Mono>
+                  <span className="relative block h-px flex-1 bg-hairline">
+                    {/* the line fills behind the marker as time passes */}
+                    <span
+                      className="absolute inset-0 block origin-left bg-primary"
+                      style={{ scale: `${Math.min(1, marker).toFixed(4)} 1` }}
+                    />
+                    {/* the marker rides a layer as wide as the line, moved along by its own width */}
+                    <span
+                      className="absolute inset-0 block"
+                      style={{ translate: `${(marker * 100).toFixed(2)}% 0` }}
+                    >
+                      <span className="absolute -top-space-4 -left-space-4 block size-space-8 bg-primary" />
+                    </span>
                   </span>
-                </span>
-                <Mono>{story.now}</Mono>
+                  <Mono>{story.now}</Mono>
+                </div>
               </div>
             </div>
             {/* In front: the question, then the answer; the last answer still leaving as the next question comes. */}

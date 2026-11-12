@@ -29,8 +29,8 @@ const bottomRight = (x: number, y: number): Pin => ({ x, y, ax: 1, ay: 1 });
 
 /** A wide stage, eight by five. The question swaps sides; Petals' answer stays low on the right (answerPin). */
 const WIDE: readonly Shot[] = [
-  // a community: the flower left of middle, the question high on the left
-  { flower: { x: 37, y: 48, scale: 0.8 }, question: topLeft(3, 4) },
+  // a community: in the middle, where the far map the story opens on is framed, the question high on the left
+  { flower: { x: 50, y: 46, scale: 0.9 }, question: topLeft(3, 4) },
   // influence: in closer and further left, low, so the tallest petals have the sky; the question crosses over
   { flower: { x: 31, y: 54, scale: 0.84 }, question: topRight(97, 4) },
   // blocs: across to the right, high enough to clear the answer

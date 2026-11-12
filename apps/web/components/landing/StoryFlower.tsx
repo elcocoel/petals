@@ -1,18 +1,21 @@
 // The hero story's flower (HERO ART's V2, Elco 11 Nov; HERO MOTION's choreography): one symbolic flower that
 // changes with the story, not a reading and not the live renderer, so it never goes out of date as the look
 // evolves. 24 petals round a centre, straight sides and arc tops with a fine line of one width between them, in
-// the look's keys. Per beat (lib/hero-story.ts): it lands and unfurls; the heights part, petal after petal, and
-// the strongest take the highlight; two groups take shared colours and a few lines draw between them; the heights
-// move against an earlier outline that draws itself round; a proposal's ring opens, its arc draws over the top and
-// the vote marks land; the camera pulls back as two other communities bloom, reached by running lines. A light
-// behind it moves less than it does, for depth. Every number comes from that file; this only draws.
+// the look's keys; in a world the camera moves through (Elco, 12 Nov): the far map the story opens and closes on,
+// my community and its two neighbours, each drawn from far as the real far map draws one (lib/hero-map.ts). Per
+// beat (lib/hero-story.ts): the camera dives in from the far map and my community bursts out of its wave; the
+// heights part, petal after petal, and the strongest take the highlight; two groups take shared colours and a few
+// lines draw between them; the heights move against an earlier outline that draws itself round; a proposal's ring
+// opens, its arc draws over the top and the vote marks land; the camera pulls back as two neighbours bloom, reached
+// by running lines, and then all the way out to the far map. A light behind it moves less than it does, for depth.
+// Every number comes from those files; this only draws.
 import { KEYS } from '@petal/core/wedge/keys';
 import type { CSSProperties } from 'react';
 import { useId } from 'react';
+import { type Community, MINE, NEIGHBOURS, OTHERS } from '../../lib/hero-map.ts';
 import {
   atPetal,
   camera,
-  centre,
   type Fill,
   GUTTER,
   ghostDrawn,
@@ -30,6 +33,7 @@ import {
   relationDrawn,
   relations,
   voteOf,
+  world,
 } from '../../lib/hero-story.ts';
 
 /** The look's own keys, handed over as data on the drawing (as the flower's fills are), and painted from there. */
@@ -58,50 +62,57 @@ const mix = (from: Fill, to: Fill, k: number) =>
 const HL = { stroke: 0.8, round: 2, offset: 1.2, blur: 2 };
 const darker = (fill: string) => `color-mix(in srgb, ${fill} 62%, black)`;
 
-/** Where the main flower sits in the drawing, and where the two it leads to sit. */
+/** Where my community sits in the drawing when the camera is on it. */
 const CENTRE = { x: 300, y: 205 };
-const OTHERS = [
-  { x: 92, y: 235 },
-  { x: 490, y: 134 },
-];
-const LINKS = ['M243 229 C193 264 179 183 138 232', 'M356 186 C415 198 401 112 447 133'];
-const OTHER_PETALS = 14;
-const otherLength = (j: number) => 30 + 18 * (0.5 + 0.5 * Math.cos(j * 0.55));
 /** The proposal's ring and its arc, over the top of the flower. */
 const ORBIT = 187;
+/** How far out my community's petals reach at most, for the lines and the focus ring. */
+const REACH = 215;
 
 const seen = (v: number) => (v > 0.001 ? undefined : 'hidden');
 
-function Other({
-  x,
-  y,
-  bloom,
-  scale,
-}: {
-  x: number;
-  y: number;
-  bloom: (j: number) => number;
-  scale: number;
-}) {
+/** A community from far: its soft wave, the hole in it, and a dark mark where its logo would be. */
+function FarCommunity({ c, opacity = 1 }: { c: Community; opacity?: number }) {
   return (
-    <g transform={`translate(${x} ${y}) scale(${scale.toFixed(4)})`}>
-      {Array.from({ length: OTHER_PETALS }, (_, j) => (
-        <path
-          // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
-          key={j}
-          d={petalPath(j, 12 + (otherLength(j) - 12) * bloom(j), {
-            inner: 12,
-            count: OTHER_PETALS,
-            gutter: 0.8,
-          })}
-          fill={j < 3 ? PAINT.accent : PAINT.petal}
-        />
-      ))}
-      <circle r={10.5} fill="var(--surface)" />
-      <circle r={1.8 * Math.min(1, bloom(0) * 1.4)} fill="var(--text-primary)" />
+    <g transform={`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`} opacity={opacity}>
+      <path d={c.wave} fill={PAINT.petal} fillRule="evenodd" />
+      <circle r={c.inner * 0.55} fill="var(--text-primary)" />
     </g>
   );
 }
+
+/** A neighbour up close: its petals bursting out of its wave, the biggest few in the accent. */
+function Neighbour({ c, bloom }: { c: Community; bloom: (j: number) => number }) {
+  const n = c.heights.length;
+  return (
+    <g transform={`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`}>
+      {c.heights.map((h, j) => (
+        <path
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
+          key={j}
+          d={petalPath(j, c.inner + h * bloom(j), { inner: c.inner, count: n, gutter: GUTTER })}
+          fill={j < 3 ? PAINT.accent : PAINT.petal}
+        />
+      ))}
+      <circle r={c.inner - 0.5} fill="var(--surface)" />
+      <circle r={c.inner * 0.55} fill="var(--text-primary)" />
+    </g>
+  );
+}
+
+/** A line from my community's edge out to a neighbour's, bending a little to one side. */
+function linkTo(c: Community, side: number): string {
+  const far = Math.hypot(c.x, c.y);
+  const ux = c.x / far;
+  const uy = c.y / far;
+  const out = Math.max(...c.heights) + c.inner;
+  const [x1, y1] = [ux * REACH, uy * REACH];
+  const [x2, y2] = [c.x - ux * out * 1.05, c.y - uy * out * 1.05];
+  const bend = 0.18 * far * side;
+  const [mx, my] = [(x1 + x2) / 2 - uy * bend, (y1 + y2) / 2 + ux * bend];
+  return `M${x1.toFixed(1)} ${y1.toFixed(1)} Q${mx.toFixed(1)} ${my.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+}
+const LINKS = NEIGHBOURS.map((c, n) => linkTo(c, n % 2 ? 1 : -1));
 
 export function StoryFlower({
   beat,
@@ -113,15 +124,17 @@ export function StoryFlower({
   fresh?: boolean;
 }) {
   const id = useId().replace(/[^\w-]/g, '');
-  const lengths = petalLengths(beat, t, fresh);
-  const cam = camera(beat, t, fresh);
-  const core = centre(beat, t, fresh);
+  const lengths = petalLengths(beat, t);
+  const cam = camera(beat, t);
+  const w = world(beat, t);
   const vote = proposal(beat, t);
   const net = network(beat, t);
   const ghosts = layerOpacity(3, beat, t);
   const blocs = layerOpacity(2, beat, t);
   const votes = layerOpacity(4, beat, t);
-  const others = layerOpacity(5, beat, t);
+  const links = layerOpacity(5, beat, t);
+  // strokes that keep one width on screen whatever the camera's zoom
+  const px = (n: number) => n / w.zoom;
   return (
     <svg
       data-b="figure"
@@ -180,7 +193,7 @@ export function StoryFlower({
               d={d}
               fill="none"
               stroke="white"
-              strokeWidth={8}
+              strokeWidth={px(10)}
               pathLength={1}
               strokeDasharray="1 1"
               strokeDashoffset={1 - net.link(n)}
@@ -188,168 +201,195 @@ export function StoryFlower({
           </mask>
         ))}
       </defs>
-      {/* In groups, so the joy layer's split of a drawing's own paths leaves these to React. */}
-      <g opacity={others} visibility={seen(others)}>
-        {LINKS.map((d, n) => (
-          <path
-            key={d}
-            d={d}
-            mask={`url(#${id}-link-${n})`}
-            fill="none"
-            stroke="var(--text-primary)"
-            strokeWidth={1.2}
-            strokeDasharray="4 5"
-            strokeDashoffset={net.flow}
-            opacity={0.45}
-          />
-        ))}
-        {OTHERS.map((o, n) => (
-          <Other key={`${o.x},${o.y}`} {...o} bloom={(j) => net.bloom(n, j)} scale={net.scale} />
-        ))}
-      </g>
+      {/* the camera on the world: zoomed round the point it looks at, which it puts where my community sits */}
       <g
-        transform={`translate(${CENTRE.x} ${(CENTRE.y + cam.y).toFixed(2)}) scale(${cam.scale.toFixed(4)}) rotate(${cam.rotate.toFixed(3)})`}
+        transform={`translate(${CENTRE.x} ${CENTRE.y}) scale(${w.zoom.toFixed(5)}) translate(${(-w.x).toFixed(2)} ${(-w.y).toFixed(2)})`}
       >
-        <g opacity={ghosts} visibility={seen(ghosts)}>
-          {ghostLengths.map((r, i) => (
-            <path
-              // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
-              key={i}
-              d={petalPath(i, r)}
-              fill="none"
-              stroke="var(--hairline)"
-              strokeWidth={1}
-              pathLength={1}
-              strokeDasharray="1 1"
-              strokeDashoffset={1 - ghostDrawn(beat, t, i)}
-              opacity={0.75}
-            />
+        {/* In groups, so the joy layer's split of a drawing's own paths leaves these to React. */}
+        <g opacity={w.map} visibility={seen(w.map)}>
+          {OTHERS.map((c) => (
+            <FarCommunity key={`${c.x},${c.y}`} c={c} />
           ))}
         </g>
-        {/* each petal's thickness, a darker slab just under it, lit from the upper left like its highlight */}
-        <g transform="translate(1.4 3)">
-          {lengths.map((r, i) => {
-            const paint = petalPaint(beat, t, i, fresh);
-            return (
-              <path
-                // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
-                key={i}
-                d={petalPath(i, r)}
-                fill={`color-mix(in srgb, ${mix(paint.from, paint.to, paint.k)} 68%, black)`}
-              />
-            );
-          })}
-        </g>
         <g>
-          {lengths.map((r, i) => {
-            const paint = petalPaint(beat, t, i, fresh);
-            const fill = mix(paint.from, paint.to, paint.k);
-            const lit = petalLit(beat, t, i);
-            const d = petalPath(i, r, { round: HL.round * lit });
+          {NEIGHBOURS.map((c, n) => {
+            const open = net.bloom(n, 0);
+            // on the map from far; up close only when the connections beat goes to them
+            const there = beat === 5 ? 1 : w.map;
             return (
-              <g
-                // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
-                key={i}
-              >
-                {/* colours are moved here, frame by frame, so the joy layer's softening stands aside */}
-                <path data-part="wedge" d={d} fill={fill} style={{ transition: 'none' }} />
-                {lit > 0.001 && (
-                  <>
-                    <path d={d} fill={fill} filter={`url(#${id}-surface)`} opacity={lit} />
-                    <path
-                      d={petalPath(i, r - HL.stroke / 2, {
-                        inner: INNER + HL.stroke / 2,
-                        gutter: GUTTER + HL.stroke / 2,
-                        round: Math.max(0, HL.round - HL.stroke / 2) * lit,
-                      })}
-                      fill="none"
-                      stroke={darker(fill)}
-                      strokeWidth={HL.stroke}
-                      strokeLinejoin="round"
-                      opacity={lit}
-                    />
-                  </>
-                )}
+              <g key={`${c.x},${c.y}`}>
+                <FarCommunity c={c} opacity={there * (1 - Math.min(1, open * 1.5))} />
+                {open > 0.001 && <Neighbour c={c} bloom={(j) => net.bloom(n, j)} />}
               </g>
             );
           })}
         </g>
-        <circle r={34 * (0.6 + 0.4 * core.dot)} fill="var(--surface)" />
+        <g opacity={links} visibility={seen(links)}>
+          {LINKS.map((d, n) => (
+            <path
+              key={d}
+              d={d}
+              mask={`url(#${id}-link-${n})`}
+              fill="none"
+              stroke="var(--text-primary)"
+              strokeWidth={px(1.2)}
+              strokeDasharray={`${px(4)} ${px(5)}`}
+              strokeDashoffset={px(net.flow)}
+              opacity={0.45}
+            />
+          ))}
+        </g>
+        {/* my community from far, its wave, until it bursts open */}
+        <g visibility={seen(w.wave)}>
+          <FarCommunity c={MINE} opacity={w.wave} />
+        </g>
+        {/* the dashed focus ring that picks it out on the far map */}
         <circle
-          r={34}
+          r={REACH * 1.25}
           fill="none"
-          stroke="var(--hairline)"
-          strokeWidth={1}
-          pathLength={1}
-          strokeDasharray="1 1"
-          strokeDashoffset={1 - core.ring}
-          transform="rotate(-90)"
+          stroke="var(--text-primary)"
+          strokeWidth={px(1.2)}
+          strokeDasharray={`${px(5)} ${px(4)}`}
+          opacity={0.55 * w.ring}
+          visibility={seen(w.ring)}
         />
-        <g opacity={blocs} visibility={seen(blocs)}>
-          {relations.map(([a, b], n) => {
-            const [x1, y1] = atPetal(a, 35);
-            const [x2, y2] = atPetal(b, 35);
-            return (
+        <g
+          transform={`rotate(${cam.rotate.toFixed(3)})`}
+          opacity={1 - w.wave}
+          visibility={seen(1 - w.wave)}
+        >
+          <g opacity={ghosts} visibility={seen(ghosts)}>
+            {ghostLengths.map((r, i) => (
               <path
-                key={`${a}-${b}`}
-                d={`M${x1.toFixed(2)} ${y1.toFixed(2)} Q${n % 2 ? 9 : -9} 4 ${x2.toFixed(2)} ${y2.toFixed(2)}`}
+                // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
+                key={i}
+                d={petalPath(i, r)}
                 fill="none"
-                stroke="var(--text-primary)"
-                strokeWidth={1.2}
-                strokeLinecap="round"
+                stroke="var(--hairline)"
+                strokeWidth={1}
                 pathLength={1}
                 strokeDasharray="1 1"
-                strokeDashoffset={1 - relationDrawn(beat, t, n)}
-                opacity={0.45}
+                strokeDashoffset={1 - ghostDrawn(beat, t, i)}
+                opacity={0.75}
               />
-            );
-          })}
+            ))}
+          </g>
+          {/* each petal's thickness, a darker slab just under it, lit from the upper left like its highlight */}
+          <g transform="translate(1.4 3)">
+            {lengths.map((r, i) => {
+              const paint = petalPaint(beat, t, i, fresh);
+              return (
+                <path
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
+                  key={i}
+                  d={petalPath(i, r)}
+                  fill={`color-mix(in srgb, ${mix(paint.from, paint.to, paint.k)} 68%, black)`}
+                />
+              );
+            })}
+          </g>
+          <g>
+            {lengths.map((r, i) => {
+              const paint = petalPaint(beat, t, i, fresh);
+              const fill = mix(paint.from, paint.to, paint.k);
+              const lit = petalLit(beat, t, i);
+              const d = petalPath(i, r, { round: HL.round * lit });
+              return (
+                <g
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
+                  key={i}
+                >
+                  {/* colours are moved here, frame by frame, so the joy layer's softening stands aside */}
+                  <path data-part="wedge" d={d} fill={fill} style={{ transition: 'none' }} />
+                  {lit > 0.001 && (
+                    <>
+                      <path d={d} fill={fill} filter={`url(#${id}-surface)`} opacity={lit} />
+                      <path
+                        d={petalPath(i, r - HL.stroke / 2, {
+                          inner: INNER + HL.stroke / 2,
+                          gutter: GUTTER + HL.stroke / 2,
+                          round: Math.max(0, HL.round - HL.stroke / 2) * lit,
+                        })}
+                        fill="none"
+                        stroke={darker(fill)}
+                        strokeWidth={HL.stroke}
+                        strokeLinejoin="round"
+                        opacity={lit}
+                      />
+                    </>
+                  )}
+                </g>
+              );
+            })}
+          </g>
+          <circle r={34} fill="var(--surface)" />
+          <circle r={34} fill="none" stroke="var(--hairline)" strokeWidth={1} />
+          <g opacity={blocs} visibility={seen(blocs)}>
+            {relations.map(([a, b], n) => {
+              const [x1, y1] = atPetal(a, 35);
+              const [x2, y2] = atPetal(b, 35);
+              return (
+                <path
+                  key={`${a}-${b}`}
+                  d={`M${x1.toFixed(2)} ${y1.toFixed(2)} Q${n % 2 ? 9 : -9} 4 ${x2.toFixed(2)} ${y2.toFixed(2)}`}
+                  fill="none"
+                  stroke="var(--text-primary)"
+                  strokeWidth={1.2}
+                  strokeLinecap="round"
+                  pathLength={1}
+                  strokeDasharray="1 1"
+                  strokeDashoffset={1 - relationDrawn(beat, t, n)}
+                  opacity={0.45}
+                />
+              );
+            })}
+          </g>
+          <g opacity={votes} visibility={seen(votes)}>
+            <circle
+              r={ORBIT}
+              fill="none"
+              stroke="var(--hairline)"
+              strokeWidth={1}
+              opacity={0.6 * vote.ring}
+              transform={`scale(${(0.92 + 0.08 * vote.ring).toFixed(4)})`}
+            />
+            <path
+              d={`M-132 -132 A${ORBIT} ${ORBIT} 0 0 1 132 -132`}
+              fill="none"
+              stroke="var(--figure-accent)"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              pathLength={1}
+              strokeDasharray="1 1"
+              strokeDashoffset={1 - vote.arc}
+            />
+            <circle
+              cy={-ORBIT}
+              r={6 * vote.point}
+              fill="var(--figure-accent)"
+              stroke="var(--surface)"
+              strokeWidth={2}
+            />
+            {Array.from({ length: PETALS }, (_, i) => {
+              const v = voteOf(i);
+              if (!v) return null;
+              const [cx, cy] = atPetal(i, 28);
+              return (
+                <circle
+                  // biome-ignore lint/suspicious/noArrayIndexKey: one mark per petal position
+                  key={i}
+                  cx={cx}
+                  cy={cy}
+                  r={3.2 * vote.vote(i)}
+                  fill={v === 'against' ? AGAINST : PAINT.accent}
+                  stroke="var(--surface)"
+                  strokeWidth={1.5}
+                />
+              );
+            })}
+          </g>
+          <circle r={3.5} fill="var(--text-primary)" />
         </g>
-        <g opacity={votes} visibility={seen(votes)}>
-          <circle
-            r={ORBIT}
-            fill="none"
-            stroke="var(--hairline)"
-            strokeWidth={1}
-            opacity={0.6 * vote.ring}
-            transform={`scale(${(0.92 + 0.08 * vote.ring).toFixed(4)})`}
-          />
-          <path
-            d={`M-132 -132 A${ORBIT} ${ORBIT} 0 0 1 132 -132`}
-            fill="none"
-            stroke="var(--figure-accent)"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            pathLength={1}
-            strokeDasharray="1 1"
-            strokeDashoffset={1 - vote.arc}
-          />
-          <circle
-            cy={-ORBIT}
-            r={6 * vote.point}
-            fill="var(--figure-accent)"
-            stroke="var(--surface)"
-            strokeWidth={2}
-          />
-          {Array.from({ length: PETALS }, (_, i) => {
-            const v = voteOf(i);
-            if (!v) return null;
-            const [cx, cy] = atPetal(i, 28);
-            return (
-              <circle
-                // biome-ignore lint/suspicious/noArrayIndexKey: one mark per petal position
-                key={i}
-                cx={cx}
-                cy={cy}
-                r={3.2 * vote.vote(i)}
-                fill={v === 'against' ? AGAINST : PAINT.accent}
-                stroke="var(--surface)"
-                strokeWidth={1.5}
-              />
-            );
-          })}
-        </g>
-        <circle r={3.5 * core.dot} fill="var(--text-primary)" />
       </g>
     </svg>
   );
