@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MapWallet } from '../landscape/LandscapeCanvas.tsx';
 import { readDrawingSpec, readMapDrawing, saveSettings } from '../lib/agent-client.ts';
 import { aboutLine } from '../lib/ask-about.ts';
+import { ceremonyWords, creating } from '../lib/ceremony.ts';
 import {
   type Catalogue,
   modelOptions,
@@ -338,6 +339,7 @@ export function useWorkspace(props: {
     target,
     elsewhere: initialElsewhere ? whereOf(elsewhere) : undefined,
     unavailable: Boolean(elsewhere && 'failed' in elsewhere),
+    creating: creating(items, busy),
   });
 
   // the address holds what a reload needs, while it's still this conversation's: once a move has put
@@ -535,6 +537,10 @@ export function useWorkspace(props: {
         })().catch(() => {});
       },
       closeBox: () => setBoxOpen(false),
+      /** A new map's ceremony, pressed: Petals' agent hears a plain yes, and its read starts (lib/ceremony.ts). */
+      mapIt: () => {
+        void chatActions.send(undefined, picked ?? undefined, ceremonyWords.yes);
+      },
       /** the map on the canvas says which wallet is chosen on it, or none */
       chooseMapWallet: setMapWallet,
       pay: pay.pay,

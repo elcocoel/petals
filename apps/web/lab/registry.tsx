@@ -15,6 +15,7 @@ import { surfaceNames } from '@petal/tokens';
 import type { ReactNode } from 'react';
 import { CopyPrompt } from '../components/CopyPrompt.tsx';
 import { AnsweredBy } from '../components/chat/AnsweredBy.tsx';
+import { CeremonyCard } from '../components/chat/CeremonyCard.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
 import { JobRow } from '../components/chat/JobRow.tsx';
@@ -109,6 +110,7 @@ import { TipControl } from '../components/workspace/TipControl.tsx';
 import { DimensionChoices, ViewControls } from '../components/workspace/ViewControls.tsx';
 import { Wallets } from '../components/workspace/Wallets.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
+import { ceremonyView } from '../lib/ceremony.ts';
 import type { AnnotationRow } from '../lib/claim-lines.ts';
 import type { DrawingKind } from '../lib/figures.ts';
 import { keysOf, oneKey, readingKey, svgImage } from '../lib/flower-view.ts';
@@ -2868,6 +2870,29 @@ export const registry: LabEntry[] = [
         ),
       },
       { name: 'none yet', render: () => <Conversations rows={[]} /> },
+    ],
+  },
+  {
+    id: 'CeremonyCard',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/CeremonyCard.tsx',
+    states: [
+      {
+        name: 'a new map, waiting for the press',
+        render: () => (
+          <CeremonyCard
+            view={ceremonyView({
+              tool: 'propose_spec',
+              network: 'moloch-v3',
+              params: { chain: 'gnosis', dao: '0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986' },
+              target_key: 'moloch-v3',
+            })}
+            onMapIt={() => {}}
+          />
+        ),
+      },
     ],
   },
   {
