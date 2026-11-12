@@ -4,9 +4,11 @@ import { test } from 'node:test';
 import { catalog, content, renderMarkdown, repoRoot } from './content.ts';
 import { byDepartment } from './groups.ts';
 
-test('all seven sections and canonical files have navigable, unique pages', async () => {
+test('all eight sections and canonical files have navigable, unique pages', async () => {
   const pages = catalog();
-  assert.equal(pages.filter((p) => p.overview).length, 7);
+  assert.equal(pages.filter((p) => p.overview).length, 8);
+  // What Petals is comes first (#110: the docs are for people)
+  assert.equal(pages[0]?.slug, 'what-petals-is');
   assert.equal(new Set(pages.map((p) => p.slug)).size, pages.length);
   for (const source of [
     'brain/doctrine.md',
@@ -122,4 +124,11 @@ test('/docs/brain is grouped by department, each hub first, with the routing tab
   assert.ok(governance?.pages.some((p) => p.slug === 'brain/who-gets-a-vote'));
   assert.ok(governance?.pages.some((p) => p.slug === 'brain/recipes/moloch-v3'));
   assert.equal(groups.filter((g) => g.department).length, 7);
+});
+
+test('an empty slot is a space with no words in it (#110)', async () => {
+  const { html } = await renderMarkdown('## Why\n\n{slot}\n\nAfter.', 'docs/x/index.md', []);
+  assert.match(html, /<div data-slot=""><\/div>/);
+  assert.ok(!html.includes('{slot}'));
+  assert.match(html, /<p>After\.<\/p>/);
 });

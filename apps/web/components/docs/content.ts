@@ -360,6 +360,13 @@ export async function renderMarkdown(markdown: string, source: string, pages: Do
               title: textOf(node),
               level: Number(node.tagName[1]),
             });
+          // {slot}: a space only Elco can fill (#110), kept empty and visibly so, with no words in it
+          if (node.tagName === 'p' && textOf(node).trim() === '{slot}') {
+            node.tagName = 'div';
+            node.properties = { dataSlot: '' };
+            node.children = [];
+            return;
+          }
           if (node.tagName === 'a' && node.properties) {
             const href = hrefFor(String(node.properties.href ?? ''), source, pages);
             if (href) node.properties.href = href;

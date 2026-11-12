@@ -203,6 +203,13 @@ main:has(.shell) {
 .prose a:hover {
   text-decoration-color: var(--text-primary);
 }
+/* an empty slot (#110): the space Elco fills, with no words in it */
+.prose [data-slot] {
+  max-width: var(--spacing-panel-width);
+  min-height: calc(var(--spacing-space-32) * 3);
+  margin-bottom: var(--spacing-block-gap);
+  border: var(--stroke) dashed var(--hairline);
+}
 .prose blockquote {
   margin-block: var(--spacing-space-32);
   padding: var(--spacing-space-16) var(--spacing-block-gap);
