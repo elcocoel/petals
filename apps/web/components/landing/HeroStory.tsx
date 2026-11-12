@@ -76,14 +76,16 @@ const PERSPECTIVE = 900;
 const REACH = `min((100vw - min(100vw, var(--spacing-page-width))) / 2 + var(--spacing-page-inset) - var(--spacing-block-gap), ${TOOLS_REACH}px)`;
 
 /**
- * Where a pin's point is across the column, as CSS: its % of the column; or, with `inFromReach`, where that point is
- * to land on screen, undone through the column's perspective at the box's depth, so a box in front, which depth
+ * Where a pin's point is across the column, as CSS: its % of the column; with `onScreen`, that % as seen on screen;
+ * or, with `inFromReach`, where that point is to land on screen, undone through the column's perspective at the box's depth, so a box in front, which depth
  * pushes outwards, still lands there (`deep`: the box is in the column's perspective; the Tools box is flat).
  */
-const leftOf = (p: Pin, z: number, deep: boolean) =>
-  p.inFromReach === undefined
-    ? `${p.x}cqw`
-    : `(50cqw + (50cqw + ${REACH} - ${p.inFromReach}px) * ${deep ? ((PERSPECTIVE - z) / PERSPECTIVE).toFixed(4) : 1})`;
+const leftOf = (p: Pin, z: number, deep: boolean) => {
+  const undo = deep ? ((PERSPECTIVE - z) / PERSPECTIVE).toFixed(4) : '1';
+  if (p.inFromReach !== undefined)
+    return `(50cqw + (50cqw + ${REACH} - ${p.inFromReach}px) * ${undo})`;
+  return p.onScreen ? `(50cqw + ${p.x - 50}cqw * ${undo})` : `${p.x}cqw`;
+};
 
 /**
  * A box on its pin: that corner of it on that point of the column, moved by its motion, at its depth, turned
@@ -122,7 +124,7 @@ function Column({ children }: { children: ReactNode }) {
 }
 
 /** Where the flower's centre is in its own layer, in %: the drawing's 205 of 440, fitted to the stage's shape. */
-const centreY = (wide: boolean) => (wide ? 46.59 : 47.2);
+const centreY = (wide: boolean) => (wide ? 46.59 : 48.2);
 
 /** On a phone or a tablet each part of the words keeps the column's own gutter; beside the stage, the column's. */
 const GUTTER = 'px-block-gap md:px-page-inset lg:px-0';
@@ -326,7 +328,8 @@ export function HeroStoryView({
         width (Elco, 12 Nov: "a max height here that tries to stay within what would be a video aspect ratio"), and
         short of the first screen, so the next band shows, with a way down to it; on a wide window the words sit over its
         left side, in the page's column, and the story happens on the right, a little of it under the words. On a
-        phone or a tablet, the headline, the story four by three, then the rest of the words.
+        phone or a tablet, the headline, then the story four by five, the question above a big flower and the
+        answer under it, then the rest of the words (Elco, 12 Nov: "purposefully layouted to work on mobile").
       */}
       <div className="relative left-1/2 flex w-screen -translate-x-1/2 flex-col">
         <div className="contents lg:pointer-events-none lg:absolute lg:inset-0 lg:z-10 lg:block">
@@ -338,7 +341,7 @@ export function HeroStoryView({
         </div>
         <div
           ref={clock.stage}
-          className="relative order-2 mt-space-16 aspect-4/3 max-h-[max(16rem,calc(100svh-24rem))] w-full lg:order-none lg:mt-0 lg:aspect-16/9 lg:max-h-[min(calc(100svh-12rem),calc(var(--spacing-page-width)*9/16))]" /* token-exempt: on a phone, four by three, shorter on a short screen so the headline and the story share the first screen under the nav; wide, sixteen by nine of the window, never taller than sixteen by nine of the page's width nor than the first screen, so the next band stays in sight */
+          className="relative order-2 mt-space-16 aspect-4/5 max-h-[calc(100svh-6rem)] w-full lg:order-none lg:mt-0 lg:aspect-16/9 lg:max-h-[min(calc(100svh-12rem),calc(var(--spacing-page-width)*9/16))]" /* token-exempt: on a phone or a tablet, four by five and never taller than the screen under the nav, so the question, a big flower and the answer each have their own room; wide, sixteen by nine of the window, never taller than sixteen by nine of the page's width nor than the first screen, so the next band stays in sight */
           style={{ containerType: 'size', perspective: '900px' }}
         >
           {/* The world stays inside the stage, so the far map never spills onto the page; the map fades its own

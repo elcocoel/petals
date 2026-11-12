@@ -29,6 +29,8 @@ export interface Pin {
    * (TOOLS_REACH); the view works the reach out from the window.
    */
   inFromReach?: number;
+  /** `x` is where the point lands on screen, its depth undone, so a box in front never spills past the gutter. */
+  onScreen?: boolean;
 }
 
 export interface Shot {
@@ -59,14 +61,18 @@ const WIDE: readonly Shot[] = [
   { flower: { x: 66, y: 46, scale: 0.6 } },
 ];
 
-/** A narrow stage, two by three: the question above the flower, the answer under it. */
+/**
+ * A narrow stage, a phone's or a tablet's, four by five: the flower big in the middle, nearly the column's width,
+ * with the question above it and the answer under it, clear of its petals.
+ */
 const NARROW: readonly Shot[] = [
-  { flower: { x: 50, y: 45, scale: 0.86 } },
-  { flower: { x: 49, y: 47, scale: 0.84 } },
-  { flower: { x: 51, y: 45, scale: 0.84 } },
-  { flower: { x: 50, y: 45, scale: 0.8 } },
-  { flower: { x: 50, y: 46, scale: 0.76 } },
-  { flower: { x: 50, y: 45, scale: 0.86 } },
+  { flower: { x: 50, y: 50, scale: 1.29 } },
+  // influence: a little lower, so the tallest petals and their shares have the sky
+  { flower: { x: 49, y: 52, scale: 1.26 } },
+  { flower: { x: 51, y: 50, scale: 1.26 } },
+  { flower: { x: 50, y: 50, scale: 1.2 } },
+  { flower: { x: 50, y: 51, scale: 1.14 } },
+  { flower: { x: 50, y: 50, scale: 1.29 } },
 ];
 
 /**
@@ -76,9 +82,11 @@ const NARROW: readonly Shot[] = [
  * above the flower and the answer under it.
  */
 export const questionPin = (wide: boolean): Pin =>
-  wide ? pin(34, 26, 0, 0, 200) : pin(0, 2, 0, 0);
+  wide ? pin(34, 26, 0, 0, 200) : { ...pin(0, 2, 0, 0), onScreen: true };
 export const answerPin = (wide: boolean): Pin =>
-  wide ? { ...pin(100, 64, 1, 0, 130), inFromReach: TOOLS_PAST } : pin(100, 98, 1, 1);
+  wide
+    ? { ...pin(100, 64, 1, 0, 130), inFromReach: TOOLS_PAST }
+    : { ...pin(100, 98, 1, 1), onScreen: true };
 
 /**
  * How far past the column's right edge the Tools box reaches on a wide stage, at most, in px: towards the frame's
