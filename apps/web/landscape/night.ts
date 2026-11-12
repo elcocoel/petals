@@ -25,6 +25,8 @@ export interface NightView {
   snapshot: string;
   /** the map it's on, its reading's address, when the live map says (GET /api/v1/map) */
   map?: string;
+  /** the pieces of data its reading has, by name, when the live map says (core's piecesOf; SYSTEMS, wave 3) */
+  pieces?: readonly string[];
   reading: Pick<Reading, 'title' | 'petals'>;
 }
 

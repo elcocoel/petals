@@ -45,7 +45,7 @@ import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
 import { CHOOSABLE } from '../lib/person-view.ts';
 import { proposalView, proposalWords } from '../lib/proposal-view.ts';
-import type { LegendEdit } from '../lib/view-edit.ts';
+import { type LegendEdit, onlyWhatDraws } from '../lib/view-edit.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
 import { useMapBlocs } from '../viewmodels/useMapBlocs.ts';
@@ -93,6 +93,8 @@ export interface CanvasFlower {
   proposals?: number | undefined;
   /** its map's treasury and token price, in words, where its card has them (Elco, 12 Nov walk 3) */
   worth?: readonly string[] | undefined;
+  /** the pieces of data its reading has, by name, when the live map says: what Tools offers inside it (wave 3) */
+  pieces?: readonly string[] | undefined;
 }
 
 /** A wallet chosen on the map (LOOK's wallet level): its id as its flower names it, on that flower's chain. */
@@ -850,6 +852,21 @@ export function LandscapeCanvas({
   useEffect(() => {
     if (movable) panels.info.fold(claimsOpen ? null : barOf(infoEl.current));
   }, [movable, panels.info, claimsOpen]);
+  // Tools offers only what draws (META, wave 3: 'Who backs it' on a DAO with no delegations drew nothing): the data
+  // some DAOs have (who backs a wallet, its activity) only where the DAO you're in has it, or on the whole map where
+  // some DAO on this chain does; what every flower has, and a person's own names, always. Unknown (an older server):
+  // all of it, as before.
+  const offered = useMemo(() => {
+    if (!hands) return undefined;
+    const here = inFlower ? [inFlower] : data.flowers.filter((f) => f.place.chain === chain);
+    return {
+      ...hands,
+      choices: onlyWhatDraws(
+        hands.choices,
+        here.map((f) => f.pieces),
+      ),
+    };
+  }, [hands, inFlower, data.flowers, chain]);
   const legendBody = (bare: boolean) => (
     <ViewLegend
       view={person.view}
@@ -885,7 +902,7 @@ export function LandscapeCanvas({
       }
       // Insights in Information, on or off by hand (Elco, walk 3), on the map's boxes
       insights={bare ? { on: insightsOn, onChange: setInsightsOn } : undefined}
-      edit={hands ?? undefined}
+      edit={offered}
       // on the map's boxes the rows stay outside a flower too, with nothing to choose yet (one menu, walk 3)
       groups={
         inFlower || bare

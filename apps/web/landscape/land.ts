@@ -48,6 +48,8 @@ export interface BenchFlower {
   proposals?: number;
   /** its map's treasury and token price, in words (lib/value-view.ts worthWords), where its card has them */
   worth?: readonly string[];
+  /** the pieces of data its reading has, by name, when the live map says: what Tools offers inside it */
+  pieces?: readonly string[];
 }
 
 export interface BenchChain {
@@ -104,6 +106,8 @@ interface LiveView {
   /** the map it's on: its reading's address (core's mapOf), as GET /api/v1/maps groups them */
   map: string;
   reading: NightView['reading'];
+  /** the pieces of data its reading has (core's piecesOf, with the activity and dollars beside it; wave 3) */
+  pieces?: { name: string; kind: string }[];
 }
 
 /**
@@ -144,6 +148,7 @@ function nightOf({ views, ...rest }: LiveMap): Night {
       snapshot: v.snapshot,
       map: v.map,
       reading: v.reading,
+      ...(v.pieces ? { pieces: v.pieces.map((p) => p.name) } : {}),
     })),
   };
 }
@@ -325,6 +330,7 @@ export function landscapeOf(night: Night): BenchLandscape {
       reading: { title: '', petals: v.reading.petals },
       map: v.map ?? null,
       snapshot: v.snapshot,
+      ...(v.pieces ? { pieces: v.pieces } : {}),
     };
   });
   return {

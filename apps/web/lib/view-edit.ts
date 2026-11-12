@@ -4,7 +4,7 @@
 // choice keeps the view valid. The default is handed in (it's named only in lib/person-view.ts): it gives a
 // number its usual scale, and says when there's nothing to put back. Pure.
 import type { View } from '@petal/core/types';
-import { DIMENSIONS, type Dimension, latestView, type Piece } from '@petal/core/view';
+import { DIMENSIONS, type Dimension, latestView, type Piece, SOME_FLOWERS } from '@petal/core/view';
 
 export type Scale = 'sqrt' | 'linear' | 'log';
 
@@ -98,4 +98,24 @@ export interface LegendEdit {
    * something is being updated"), or null.
    */
   drawing?: Dimension | null | undefined;
+}
+
+/**
+ * What Tools offers where you are (META, wave 3: 'Who backs it' on a DAO with no delegations drew nothing; every
+ * offered choice draws): the data some DAOs have (core's SOME_FLOWERS: who backs a wallet, its activity) only where
+ * one of the flowers here has it; what every flower has, and a person's own names, always. A flower whose pieces
+ * aren't known (an older server) leaves every choice offered.
+ */
+export function onlyWhatDraws(
+  choices: Record<Dimension, readonly Piece[]>,
+  here: readonly (readonly string[] | undefined)[],
+): Record<Dimension, readonly Piece[]> {
+  if (here.length === 0 || here.some((p) => !p)) return choices;
+  const has = new Set(here.flatMap((p) => p ?? []));
+  const some = new Set(SOME_FLOWERS.map((p) => p.name));
+  const out = { ...choices };
+  for (const d of DIMENSIONS) {
+    out[d] = choices[d].filter((p) => !some.has(p.name) || has.has(p.name));
+  }
+  return out;
 }
