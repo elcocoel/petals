@@ -18,7 +18,7 @@ const FIELDS = ['width', 'height', 'colour', 'outline', 'segments', 'lines', 'ma
 type Field = (typeof FIELDS)[number];
 
 /** Width keeps its band to the ratios the look has words for. */
-const RATIOS = [1.5, 2, 3];
+export const RATIOS = [1.5, 2, 3];
 
 /**
  * The pieces of data a snapshot holds, as seamOf names them from a reading: the four every flower has, each

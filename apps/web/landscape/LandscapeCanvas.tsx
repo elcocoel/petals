@@ -10,7 +10,8 @@
 // and inside a flower, under it, what Petals' own mapping says about that map, folded until asked. Where a page
 // asks (the Power Map), a search field tops the chain list, and while something's typed the maps it finds stand
 // in the chains' place; pressing one goes to its chain and into its flower (board 105).
-import type { Proposal } from '@petal/core';
+import { type Proposal, redress, type SeamPiece } from '@petal/core';
+import type { View } from '@petal/core/types';
 import { EVERY_FLOWER, inUse, latestView } from '@petal/core/view';
 import { flowerKeys, keyLines, mapKeys } from '@petal/core/wedge/keys';
 import { floatBox } from '@petal/tokens';
@@ -95,6 +96,8 @@ export interface CanvasFlower {
   worth?: readonly string[] | undefined;
   /** the pieces of data its reading has, by name, when the live map says: what Tools offers inside it (wave 3) */
   pieces?: readonly string[] | undefined;
+  /** the pieces its reading got, values for its drawn petals: what the browser dresses it again with (wave 4) */
+  given?: SeamPiece[] | undefined;
 }
 
 /** A wallet chosen on the map (LOOK's wallet level): its id as its flower names it, on that flower's chain. */
@@ -107,6 +110,22 @@ export type MapShow =
 
 /** The strip's words while a change in Tools reads the map again. */
 const UPDATING = 'Updating the map';
+
+/**
+ * Each flower dressed in a view, in the browser (core redress): where the server gave its reading's pieces; a
+ * flower without them (an older server) as the server read it.
+ */
+function dressedIn<D extends { flowers: CanvasFlower[] }>(data: D, view: View): D {
+  if (!data.flowers.some((f) => f.given)) return data;
+  return {
+    ...data,
+    flowers: data.flowers.map((f) =>
+      f.given
+        ? { ...f, reading: { ...f.reading, petals: redress(f.reading.petals, view, f.given) } }
+        : f,
+    ),
+  };
+}
 
 /** A reading just made, for the map (LandscapeCanvas `landed`; WORKSPACE hands it from the conversation's turn). */
 export interface MapLanded {
@@ -436,8 +455,13 @@ export function LandscapeCanvas({
   ownBox?: boolean;
 }) {
   // a reading just made lands on the map: a new layer of a map that's here, or a new map in its placeholder's place
-  const data = useMemo(() => withLanded(given, landed), [given, landed]);
   const person = usePersonView();
+  // and dressed in the person's view in the browser, at once (core redress; Elco, wave 4: after a change in Tools
+  // the map redraws without the second's wait): the server's reading in that view comes after and draws the same
+  const data = useMemo(
+    () => dressedIn(withLanded(given, landed), person.view),
+    [given, landed, person.view],
+  );
   // 'edit' (the Power Map, Elco, 11 Nov: "switch the legends live and watching the map adapt"): Settings' own
   // hands, for anyone: a person's view is kept on the server, a visitor's by its hash in their browser (Elco,
   // 12 Nov, walk 3: "is it expensive do allow me to change here too?")

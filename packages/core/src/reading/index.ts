@@ -17,11 +17,11 @@ import type {
   View,
 } from '../types/index.ts';
 import { READING_VERSION } from '../versions.ts';
-import { inUse, latestView } from '../view/index.ts';
+import { EVERY_FLOWER, inUse, latestView } from '../view/index.ts';
 import { HEIGHT_FLOOR, heightValues, isStraight, metricOf, widthFactors } from './encodings.ts';
 import { foldOf } from './fold.ts';
 import { detailsOf, legendOf } from './legend.ts';
-import { encodingsOf, labelsOf, piecesOf } from './view.ts';
+import { encodingsOf, labelsOf, piecesOf, RATIOS } from './view.ts';
 
 /** Each piece's value for each account, of the pieces given beyond the snapshot's own. */
 type Values = Map<string, Map<string, string>>;
@@ -279,4 +279,117 @@ function tailFold(
 /** reading_sha256: SHA-256 of the canonical reading. */
 export function readingHash(reading: Reading): string {
   return sha256Hex(canonicalJson(reading));
+}
+
+/**
+ * A reading's petals dressed again through another view, in the browser, at once (Elco, 12 Nov, wave 4: after a
+ * change in Tools the map redraws without the second's wait): their own data (share, amount, kind, who it is,
+ * their label) and the pieces given with the reading (`given`: a person's names, the dollars, the activity) turn,
+ * size, colour and name them as readFlower would. What only the snapshot knows stays as it was until the server's
+ * reading comes: heights by another measure (a metric), and the bands inside a petal.
+ */
+export function redress(
+  petals: readonly ReadingPetal[],
+  view: View,
+  given: readonly SeamPiece[] = [],
+): ReadingPetal[] {
+  const values = valuesOf(given);
+  const kinds = new Map(given.map((p) => [p.name, p.kind]));
+  const used = inUse(view, [
+    ...EVERY_FLOWER,
+    ...given.map((p) => ({ name: p.name, kind: p.kind })),
+  ]);
+  const dims = latestView(view).dimensions;
+  const before = new Map(petals.map((p) => [p.id, p]));
+  // as selectPetals gives them: by rank, the tail last
+  const base: PetalRow[] = [...petals]
+    .sort((a, b) => (a.tail ? 1 : 0) - (b.tail ? 1 : 0) || a.rank - b.rank)
+    .map((p) => ({
+      index: p.index,
+      id: p.id,
+      label: p.label,
+      kind: p.kind,
+      identity: p.identity,
+      amount: p.amount,
+      share: p.share,
+      rank: p.rank,
+      ...(p.tail ? { tail: p.tail } : {}),
+      ...(p.count !== undefined ? { count: p.count } : {}),
+    }));
+  // Order: a piece given, or the reading's own kind, who it is, or the name each petal shows
+  const orderData = dims.order?.data ?? null;
+  const orderBy = used.order && values.has(used.order) ? used.order : null;
+  const own =
+    orderData === 'kind'
+      ? new Map(base.map((r) => [r.id, r.kind]))
+      : orderData === 'identity'
+        ? new Map(base.map((r) => [r.id, r.identity?.name ?? r.label]))
+        : orderData === 'name'
+          ? new Map(base.map((r) => [r.id, nameOf(r, 'name', values)]))
+          : null;
+  const rows = orderBy
+    ? orderedBy(base, values.get(orderBy) as Map<string, string>, kinds.get(orderBy))
+    : own
+      ? orderedBy(base, own, 'category')
+      : base;
+  // Width: a count given, else the share's (or the amount's, in proportion), else equal
+  const countOf = (d: 'width' | 'height') => {
+    const name = used[d];
+    return name && values.has(name) && kinds.get(name) === 'count' ? name : null;
+  };
+  const ratio = dims.width?.max_ratio ?? 2;
+  const near = RATIOS.reduce((a, b) => (Math.abs(b - ratio) < Math.abs(a - ratio) ? b : a));
+  const widthEnc = (
+    used.width === 'share' || used.width === 'amount'
+      ? { by: 'share', scale: 'log', max_ratio: near }
+      : { by: 'equal', scale: 'equal' }
+  ) as Encoding;
+  const widthBy = countOf('width');
+  const widths = widthBy
+    ? countWidths(rows, values.get(widthBy) as Map<string, string>, widthEnc)
+    : widthFactors(rows, widthEnc);
+  // Height: a count given, the share (straight or as its root), the amount, equal; another measure waits
+  const heightBy = countOf('height');
+  const heightData = dims.height?.data ?? null;
+  const heightEnc = (
+    used.height === 'share'
+      ? { by: 'share', scale: dims.height?.scale === 'linear' ? 'linear' : 'sqrt' }
+      : used.height === 'amount'
+        ? { by: 'amount', scale: 'log' }
+        : { by: 'equal', scale: 'equal' }
+  ) as Encoding;
+  const metric =
+    heightData !== null && !heightBy && used.height !== 'share' && used.height !== 'amount';
+  const floor = isStraight(heightEnc) ? 0 : HEIGHT_FLOOR;
+  const heights = heightBy
+    ? countHeights(rows, values.get(heightBy) as Map<string, string>)
+    : heightValues(rows, heightEnc, () => 0);
+  // Colour: a category given, else the reading's own kind, who it is, or one colour
+  const colourBy =
+    used.colour && values.has(used.colour) && kinds.get(used.colour) === 'category'
+      ? used.colour
+      : null;
+  const colourEnc = {
+    by: used.colour === 'kind' ? 'kind' : used.colour === 'identity' ? 'identity' : 'single',
+  } as Encoding;
+  return rows.map((r, i): ReadingPetal => {
+    const was = before.get(r.id) as ReadingPetal;
+    return {
+      ...was,
+      ...r,
+      name: nameOf(r, used.labels, values),
+      width: widths[i] ?? 1,
+      height: metric ? was.height : Math.max(floor, Math.min(1, heights[i] ?? 0)),
+      colour:
+        colourBy && !r.tail
+          ? (values.get(colourBy)?.get(r.id) ?? NO_VALUE)
+          : colourKey(colourEnc, r),
+      outline:
+        used.outline === 'identity' && !r.tail && r.identity
+          ? r.identity.status === 'inferred'
+            ? 'inferred'
+            : 'asserted'
+          : null,
+    };
+  });
 }

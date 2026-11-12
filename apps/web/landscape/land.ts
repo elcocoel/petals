@@ -7,6 +7,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
+import type { SeamPiece } from '@petal/core';
 import type { FlowerReading } from '../flower/model.ts';
 import { api } from '../lib/api.ts';
 import { repoRoot } from '../lib/config.ts';
@@ -50,6 +51,8 @@ export interface BenchFlower {
   worth?: readonly string[];
   /** the pieces of data its reading has, by name, when the live map says: what Tools offers inside it */
   pieces?: readonly string[];
+  /** the pieces its reading got, for dressing it again in the browser (core redress; wave 4) */
+  given?: SeamPiece[];
 }
 
 export interface BenchChain {
@@ -108,6 +111,8 @@ interface LiveView {
   reading: NightView['reading'];
   /** the pieces of data its reading has (core's piecesOf, with the activity and dollars beside it; wave 3) */
   pieces?: { name: string; kind: string }[];
+  /** the pieces its reading got, values for its drawn petals (SYSTEMS's 'given', wave 4) */
+  given?: SeamPiece[];
 }
 
 /**
@@ -149,6 +154,7 @@ function nightOf({ views, ...rest }: LiveMap): Night {
       map: v.map,
       reading: v.reading,
       ...(v.pieces ? { pieces: v.pieces.map((p) => p.name) } : {}),
+      ...(v.given ? { given: v.given } : {}),
     })),
   };
 }
@@ -330,6 +336,7 @@ export function landscapeOf(night: Night): BenchLandscape {
       reading: { title: '', petals: v.reading.petals },
       map: v.map ?? null,
       snapshot: v.snapshot,
+      ...(v.given ? { given: v.given } : {}),
       ...(v.pieces ? { pieces: v.pieces } : {}),
     };
   });
