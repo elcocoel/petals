@@ -43,7 +43,7 @@ export function callsRss(calls: readonly Call[], site: string, self: string): st
     '  <channel>',
     '    <title>Petals: open calls</title>',
     `    <link>${xml(site)}</link>`,
-    '    <description>Open RFPs, grants programs, bounties, hackathons, accelerators and funds, closing soonest first, each as its source says it.</description>',
+    '    <description>Open RFPs, grants programs, bounties, hackathons, accelerators, funds and DAO votes, closing soonest first, each as its source says it.</description>',
     `    <atom:link href="${xml(self)}" rel="self" type="application/rss+xml"/>`,
     ...items,
     '  </channel>',
