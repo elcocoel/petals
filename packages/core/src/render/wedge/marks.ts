@@ -298,11 +298,7 @@ export function marks(
     // clear of the boxes over the map as of the window's edge (12 Nov, wave 4: a chosen wallet's address ran under
     // Tools), sliding along its line as the clicked petal's note does
     const atEdge = clamp(left1, INSET, v.width - INSET - width);
-    const left0 = clamp(
-      clearOfTaken(atEdge, width, elbowY0 - LINE, elbowY0 + LINE, s),
-      INSET,
-      v.width - INSET - width,
-    );
+    const left0 = atEdge;
     // the step off its bar's end is for the window's edge only
     const slidX = Math.abs(left1 - atEdge);
     const off = Math.min(slidX, halfBar + LINE);
@@ -311,8 +307,24 @@ export function marks(
     const below = LINE * (1 + listed.length * ramp(0, 0.2, shown));
     const elbowY1 = clamp(elbowY0 + (ny > 0 ? off : -off), INSET + LINE, v.height - INSET - below);
     const slidY = Math.abs(elbowY0 - elbowY1);
+    // clear of the boxes over the map, where the note finally stands (12 Nov, wave 4: a chosen wallet's address
+    // ran under Tools, and at the window's top under Information), sliding along its line as the clicked petal's does
     const elbowX1 =
-      clamp(left0 + (nx >= 0 ? 1 : -1) * Math.min(slidY, halfBar), INSET, v.width - INSET - width) +
+      clamp(
+        clearOfTaken(
+          clamp(
+            left0 + (nx >= 0 ? 1 : -1) * Math.min(slidY, halfBar),
+            INSET,
+            v.width - INSET - width,
+          ),
+          width,
+          elbowY1 - LINE,
+          elbowY1 + below,
+          s,
+        ),
+        INSET,
+        v.width - INSET - width,
+      ) +
       (width * (1 - s)) / 2;
     const leftFinal = elbowX1 - (width * (1 - s)) / 2;
     const e = fade(DETAIL.panel, open);
