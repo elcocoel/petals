@@ -39,6 +39,13 @@ export const panelWords = {
   legendColours: "Each flower's own: its most common kind first",
   /** What a line between two flowers on the map is (Elco, 12 Nov, walk 2: "a little bit mysterious"). Drafts. */
   legendLines: 'Lines',
+  /**
+   * The map's two boxes (Elco, 12 Nov, walk 3: "one is the tools and things that the user can change by hand and
+   * the other ones are informational"), and Information's part on what the map shows. Drafts.
+   */
+  tools: 'Tools',
+  information: 'Information',
+  infoSeen: 'On the map',
   /** A map's floating box folds to its bar and opens again (Elco, 12 Nov: the map's panels move like /make's). */
   boxFold: 'Fold to its bar',
   boxOpen: 'Open',

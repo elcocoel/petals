@@ -56,6 +56,8 @@ export interface LegendGroups {
   period: string;
   onChoose: (id: string | null) => void;
   onSpan: (span: BlocSpan) => void;
+  /** Outside any flower: nothing to choose yet, and the rows stay where they are (one menu, Elco's walk 3). */
+  away?: boolean;
 }
 
 /** One row of the panel: its category on the left, its input or value on the right. */
@@ -221,8 +223,17 @@ export function ViewLegend({
                   />
                 </ToolRow>
                 <Note>
-                  {groups.choices.length === 0 ? `${blocWords.noneHere}. ` : ''}
-                  {groups.period}. {chosen ? `${blocWords.caveat}.` : ''}
+                  {groups.away
+                    ? `${blocWords.away}.`
+                    : [
+                        groups.choices.length === 0 && groups.period
+                          ? `${blocWords.noneHere}.`
+                          : '',
+                        groups.period ? `${groups.period}.` : '',
+                        chosen ? `${blocWords.caveat}.` : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                 </Note>
               </>
             )}

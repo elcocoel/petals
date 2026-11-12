@@ -35,6 +35,7 @@ export const blocWords = {
   caveat: 'Voting alike, not proof they act together',
   spans: { recent: 'Recent votes', all: 'All their votes' } as Record<BlocSpan, string>,
   noneHere: 'None vote alike in these votes',
+  away: 'Inside a DAO, the wallets that vote alike',
 } as const;
 
 /** The flower's blocs, the largest first, as the row's choices. */

@@ -14,6 +14,7 @@ import { EVERY_FLOWER, inUse } from '@petal/core/view';
 import { flowerKeys } from '@petal/core/wedge/keys';
 import { floatBox } from '@petal/tokens';
 import {
+  type ReactNode,
   type RefObject,
   useCallback,
   useEffect,
@@ -28,6 +29,7 @@ import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { IconButton } from '../components/ui/IconButton.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
+import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
 import { type FlowerReading, modelOf } from '../flower/model.ts';
 import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
@@ -95,29 +97,31 @@ export interface CanvasChain {
   continent: Continent;
 }
 
-/** The map's floating boxes (Elco, 12 Nov: "move these things just like we did in the workspace"). */
-const PANELS = ['chains', 'legend', 'insights'] as const;
+/**
+ * The map's floating boxes (Elco, 12 Nov: "move these things just like we did in the workspace"): two, Tools and
+ * Information (Elco's walk 3: "pretty much two boxes one is the tools and things that the user can change by hand
+ * and the other ones are informational which could be like insights and all the data layers").
+ */
+const PANELS = ['tools', 'info'] as const;
 type Panel = (typeof PANELS)[number];
-/** A panel row's height, and where the legend and Insights start: as tall as their rows mostly are. */
+/** A panel row's height: Tools starts as tall as its rows mostly are. */
 const PANEL_ROW = 32;
-/** The overlays' width, as the column's (w-tile-width). */
+/** Tools' rows besides the chains: the search, the heads, the dimensions, the map's rows and the reset. */
+const TOOLS_ROWS = 17;
+/** Tools' width, as the column's (w-tile-width). */
 const PANEL_W = 280;
-const LEGEND_H = 440;
-const INSIGHTS_H = 320;
-/** The least an opened Insights takes under the legend. */
-const INSIGHTS_LEAST = 200;
 /** A floating box folded to its bar: the bar's own height and the box's edge (FloatBox's bar is a control high, padded). */
 const BAR_FOLDED = 66;
 
 /** How tall a floating box is folded to its bar: its bar as drawn, with the box's edge; or the bar's usual height. */
-export function barOf(box: HTMLElement | null): number {
+function barOf(box: HTMLElement | null): number {
   const bar = box?.querySelector<HTMLElement>('[data-b="box"] > :first-child');
   // a box not on the page yet (Insights before it's asked) has no height to measure
   return bar?.offsetHeight ? bar.offsetHeight + 2 : BAR_FOLDED;
 }
 
-/** Below this much room (md, 48rem) the overlays start folded to their bars, and so does a map page's box. */
-export const ROOM = 768;
+/** Below this much room (md, 48rem) the overlays start folded to their bars. */
+const ROOM = 768;
 
 /**
  * How wide the map's own room is: the positioned area the overlays' column stands in (the column's offset
@@ -234,6 +238,8 @@ export function LandscapeCanvas({
   search = false,
   panelEdge,
   onWallet,
+  information,
+  ownBox = false,
 }: {
   data: {
     flowers: CanvasFlower[];
@@ -277,6 +283,13 @@ export function LandscapeCanvas({
    * interact with it via the agent and find out more about it").
    */
   onWallet?: ((wallet: MapWallet | null) => void) | undefined;
+  /** What the page says about where it is (a map's page: what it maps, its worth, its readings), first in Information. */
+  information?: { title: string; body: ReactNode } | undefined;
+  /**
+   * The page keeps a box of its own at the top right (a flower's page; /make has its own too): Information starts
+   * under Tools instead of there.
+   */
+  ownBox?: boolean;
 }) {
   const person = usePersonView();
   // 'edit' (the Power Map, Elco, 11 Nov: "switch the legends live and watching the map adapt"): Settings' own
@@ -302,17 +315,25 @@ export function LandscapeCanvas({
   );
   // the overlays' folds: open where the map has room, folded to their bars where it's narrow, a phone's or
   // /make's beside the conversation (WORKSPACE's walk, 11 Nov): its own room, not the window's
+  // (on the map's boxes the chain list's fold is Tools', and Insights' is Information's)
   const [listOpen, setListOpen] = useState(true);
   const [legendOpen, setLegendOpen] = useState(true);
+  // Information opens where the page says where it is (a map's page); Insights is folded until asked
+  const [claimsOpen, setClaimsOpen] = useState(movable && Boolean(information));
+  // the room was narrow when the map came (a phone): Information's bar sits at the room's foot
+  const [low, setLow] = useState(false);
   const narrow = useCallback(
     () =>
       ((movable ? room.current?.clientWidth : roomOf(aside.current)) ?? window.innerWidth) < ROOM,
     [movable],
   );
-  useEffect(() => {
+  // before the first paint, so a phone never sees a box open over the flower
+  useLayoutEffect(() => {
     if (!narrow()) return;
     setListOpen(false);
     setLegendOpen(false);
+    setClaimsOpen(false);
+    setLow(true);
   }, [narrow]);
   // Inside a flower the chains step aside, so they never cover it; they're back once it's left (#78, LOOK's
   // lean (a)). Invisible, not gone, so the arrows' names still keep clear of where they stand.
@@ -335,7 +356,6 @@ export function LandscapeCanvas({
   const finding = useMapSearch();
   // the flower a search's answer goes into, by its chain and its place on that chain's map
   const [go, setGo] = useState<{ chain: string; at: number } | null>(null);
-  const [claimsOpen, setClaimsOpen] = useState(false);
   const [openClaim, setOpenClaim] = useState<string | null>(null);
   const shown = data.chains.find((c) => c.chain === chain);
   const found = useMemo(() => {
@@ -496,7 +516,7 @@ export function LandscapeCanvas({
         />
       )}
       {/* while something's typed, what it finds stands in the chains' place */}
-      {!(search && (finding.q.trim() || inside)) && (
+      {!(search && finding.q.trim()) && (
         <ul className="m-0 flex list-none flex-col p-0">
           {data.chains.map((c) => (
             <li key={c.chain}>
@@ -520,90 +540,76 @@ export function LandscapeCanvas({
   );
   const showClaims = Boolean(legend && inside && (claimGroups.length > 0 || (wallet && claims)));
   const claimCount = claimGroups.reduce((n, g) => n + g.lines.length, 0);
-  // where each box starts: down the room's left, the chain list, the legend under it, Insights under that,
-  // each as tall as its rows or the room leaves it; a hand moves and sizes them for the visit
+  // where each box starts: Tools down the room's left, as tall as its rows or the room; Information at the top
+  // right, where a page's box starts (a map's page had its readings there), or under Tools where the page keeps a
+  // box of its own there (a flower's page; /make's side panel and boxes). A hand moves and sizes them for the visit.
   const chainCount = data.chains.length;
-  const chainsClosed = inside && !search;
+  const infoUnder = ownBox || panelEdge !== undefined;
+  const toolsEl = useRef<HTMLElement | null>(null);
+  const infoEl = useRef<HTMLElement | null>(null);
   const place = useCallback(
     (win: Size): Record<Panel, Rect> => {
       const r = room.current?.getBoundingClientRect() ?? null;
       const top = r?.top ?? 0;
       const left = (r?.left ?? 0) + floatBox.inset;
+      const right = (r?.right ?? win.w) - floatBox.inset;
       const bottom = (r?.bottom ?? win.h) - floatBox.inset;
-      const w = PANEL_W;
       const y0 = top + floatBox.inset;
-      // inside a flower without a search the chain list is closed, and the legend starts where it stood
-      const chainsH = Math.min(
-        floatBox.bar + PANEL_ROW * (chainCount + 3),
-        Math.max(floatBox.bar, (bottom - y0) * 0.45),
-      );
-      // folded, the chain list is its bar alone, and the legend starts right under it
-      const legendY = chainsClosed ? y0 : y0 + (listOpen ? chainsH : BAR_FOLDED) + floatBox.gap;
-      // inside a flower the legend leaves Insights room enough to open below it, inside the window; on the map
-      // there's no Insights, so the legend has the room
-      const legendH = Math.max(
+      const tall = bottom - y0;
+      // under Tools, Information keeps the rest: Tools takes a little over half
+      const toolsH = Math.max(
         floatBox.bar,
-        Math.min(LEGEND_H, bottom - legendY - (inside ? INSIGHTS_LEAST + floatBox.gap : 0)),
+        Math.min(
+          floatBox.bar + PANEL_ROW * (chainCount + TOOLS_ROWS),
+          infoUnder ? tall * 0.55 : tall,
+        ),
       );
-      // folded, the legend is its bar alone, and Insights starts right under it (a phone's first load)
-      const insightsY = legendY + (legendOpen ? legendH : BAR_FOLDED) + floatBox.gap;
-      return {
-        chains: { x: left, y: y0, w, h: chainsH },
-        legend: { x: left, y: legendY, w, h: legendH },
-        insights: {
-          x: left,
-          y: insightsY,
-          w,
-          h: Math.max(floatBox.bar, Math.min(INSIGHTS_H, bottom - insightsY)),
-        },
-      };
+      const tools = { x: left, y: y0, w: PANEL_W, h: toolsH };
+      if (infoUnder) {
+        // folded, Tools is its bar alone, and Information starts right under it
+        const y = y0 + (listOpen ? toolsH : barOf(toolsEl.current)) + floatBox.gap;
+        return { tools, info: { x: left, y, w: PANEL_W, h: Math.max(floatBox.bar, bottom - y) } };
+      }
+      const w = Math.min(floatBox['panel-width'], right - left);
+      const h = Math.max(floatBox.bar, Math.min(floatBox['panel-height'], tall));
+      // where the room was narrow (a phone), its bar sits at the room's foot, clear of the flower and of Tools;
+      // opened there, it rises from the foot
+      const y = low ? bottom - (claimsOpen ? h : barOf(infoEl.current)) : y0;
+      return { tools, info: { x: right - w, y, w, h } };
     },
-    [chainCount, chainsClosed, inside, listOpen, legendOpen],
+    [chainCount, infoUnder, listOpen, claimsOpen, low],
   );
   const panels = useFloatBoxes(PANELS, place, {
     top: () => room.current?.getBoundingClientRect().top ?? 0,
     snap: true,
     edge: panelEdge,
   });
-  // the box the map measures (the aside: the arrows' names keep clear of it) is the chain list's, or the legend's
-  // while the chain list is closed inside a flower; both are the boxes the hand holds
-  const chainsEl = useRef<HTMLElement | null>(null);
-  const legendEl = useRef<HTMLElement | null>(null);
-  const chainsRoot = useCallback(
+  // Tools is the box the map measures (the aside: the arrows' names keep clear of it), and both are the boxes
+  // the hand holds
+  const toolsRoot = useCallback(
     (el: HTMLElement | null) => {
-      chainsEl.current = el;
-      panels.chains.root(el);
+      toolsEl.current = el;
+      panels.tools.root(el);
     },
-    [panels.chains],
+    [panels.tools],
   );
-  const insightsEl = useRef<HTMLElement | null>(null);
-  const insightsRoot = useCallback(
+  const infoRoot = useCallback(
     (el: HTMLElement | null) => {
-      insightsEl.current = el;
-      panels.insights.root(el);
+      infoEl.current = el;
+      panels.info.root(el);
     },
-    [panels.insights],
-  );
-  const legendRoot = useCallback(
-    (el: HTMLElement | null) => {
-      legendEl.current = el;
-      panels.legend.root(el);
-    },
-    [panels.legend],
+    [panels.info],
   );
   useLayoutEffect(() => {
-    if (movable) aside.current = chainsClosed ? legendEl.current : chainsEl.current;
+    if (movable) aside.current = toolsEl.current;
   });
   // folded, a box is its bar; open, the height it had
   useEffect(() => {
-    if (movable) panels.chains.fold(listOpen ? null : barOf(chainsEl.current));
-  }, [movable, panels.chains, listOpen]);
+    if (movable) panels.tools.fold(listOpen ? null : barOf(toolsEl.current));
+  }, [movable, panels.tools, listOpen]);
   useEffect(() => {
-    if (movable) panels.legend.fold(legendOpen ? null : barOf(legendEl.current));
-  }, [movable, panels.legend, legendOpen]);
-  useEffect(() => {
-    if (movable) panels.insights.fold(claimsOpen ? null : barOf(insightsEl.current));
-  }, [movable, panels.insights, claimsOpen]);
+    if (movable) panels.info.fold(claimsOpen ? null : barOf(infoEl.current));
+  }, [movable, panels.info, claimsOpen]);
   const legendBody = (bare: boolean) => (
     <ViewLegend
       view={person.view}
@@ -613,25 +619,30 @@ export function LandscapeCanvas({
       // flowerKeys, what its fills paint); on the map, no one key, so it says so
       keys={inFlower ? flowerKeys(inFlower.reading.petals) : []}
       keysNote={inFlower ? undefined : panelWords.legendColours}
-      // what a line between two flowers is, for anyone who doesn't know (Elco, 12 Nov, walk 2)
-      between={{ label: panelWords.legendLines, says: panelWords.legendLinesSay }}
+      // what a line between two flowers is, for anyone who doesn't know (Elco, 12 Nov, walk 2); in Information
+      // on the map's boxes, as what's seen, not a tool
+      between={
+        bare ? undefined : { label: panelWords.legendLines, says: panelWords.legendLinesSay }
+      }
       // how much the map's flowers draw together (Elco, 12 Nov, walk 2: "gravity"), for the visit
       gravity={{ value: gravity, onChange: setGravity }}
       worth={{ on: worth, onChange: setWorth }}
       edit={hands ?? undefined}
+      // on the map's boxes the rows stay outside a flower too, with nothing to choose yet (one menu, walk 3)
       groups={
-        inFlower && blocs
+        inFlower || bare
           ? {
               choices,
               chosen: bloc,
               span,
-              period: periodWords(blocs),
+              period: blocs && inFlower ? periodWords(blocs) : '',
               onChoose: setBloc,
               // other votes are other blocs: the chosen one goes with them
               onSpan: (s) => {
                 setSpan(s);
                 setBloc(null);
               },
+              away: !inFlower,
             }
           : undefined
       }
@@ -679,15 +690,15 @@ export function LandscapeCanvas({
           {/* the room the map's boxes stand in: its top and its size are read from here */}
           <div ref={room} aria-hidden="true" className="pointer-events-none absolute inset-0" />
           {/* Elco, 12 Nov: "I want to be able to move these things just like we did in the workspace and they
-              should snap ... I want to be able to resize them": the chain list (with the search, which never
-              goes), the legend and Insights are the workspace's floating boxes. The chain list's box is the
-              aside, so the arrows' names keep clear of it; inside a flower it's closed unless it holds the search. */}
+              should snap ... I want to be able to resize them". Two boxes (Elco's walk 3): Tools, all a hand
+              changes, one menu the same everywhere, inside a flower or out ("the user should have to learn it
+              once and then it stays the same forever"): the search, the chains, the dimensions, the map's own;
+              and Information: what the page says about where it is, Insights, and what's seen on the map. */}
           <FloatBox
-            label={chainTitle}
-            title={chainTitle}
-            hand={{ ...panels.chains, root: chainsRoot }}
+            label={panelWords.tools}
+            title={listOpen || !shown ? panelWords.tools : `${panelWords.tools} · ${shown.label}`}
+            hand={{ ...panels.tools, root: toolsRoot }}
             folded={!listOpen}
-            closed={chainsClosed}
             control={
               <IconButton
                 icon={listOpen ? 'down' : 'chevron'}
@@ -698,45 +709,51 @@ export function LandscapeCanvas({
               />
             }
           >
-            <div className="flex flex-col px-space-8 py-space-8">{chainRows}</div>
+            <div className="flex flex-col px-space-8 pt-space-8">{chainRows}</div>
+            {legend && legendBody(true)}
           </FloatBox>
           {legend && (
             <FloatBox
-              label={panelWords.legend}
-              title={panelWords.legend}
-              hand={{ ...panels.legend, root: legendRoot }}
-              folded={!legendOpen}
-              control={
-                <IconButton
-                  icon={legendOpen ? 'down' : 'chevron'}
-                  label={legendOpen ? panelWords.boxFold : panelWords.boxOpen}
-                  tip="right"
-                  expanded={legendOpen}
-                  onClick={() => setLegendOpen((now) => !now)}
-                />
-              }
-            >
-              {legendBody(true)}
-            </FloatBox>
-          )}
-          {legend && (
-            <FloatBox
-              label={mapClaimWords.title}
-              title={claimsOpen ? mapClaimWords.title : mapClaimWords.folded(claimCount)}
-              hand={{ ...panels.insights, root: insightsRoot }}
+              label={panelWords.information}
+              title={panelWords.information}
+              hand={{ ...panels.info, root: infoRoot }}
               folded={!claimsOpen}
-              closed={!showClaims}
               control={
                 <IconButton
                   icon={claimsOpen ? 'down' : 'chevron'}
                   label={claimsOpen ? panelWords.boxFold : panelWords.boxOpen}
-                  tip="right"
+                  tip={infoUnder ? 'right' : 'left'}
                   expanded={claimsOpen}
                   onClick={() => setClaimsOpen((now) => !now)}
                 />
               }
             >
-              {claimsBody(true)}
+              {/* each part under its head, the heads edge to edge (SectionHead's panel size) */}
+              <div className="flex flex-col pb-space-8">
+                {information && (
+                  <div className="flex flex-col px-space-8">
+                    <SectionHead size="panel" title={information.title} />
+                    <div className="flex flex-col gap-text-gap px-space-8 py-space-8">
+                      {information.body}
+                    </div>
+                  </div>
+                )}
+                {showClaims && (
+                  <>
+                    <div className="flex flex-col px-space-8">
+                      <SectionHead size="panel" title={mapClaimWords.folded(claimCount)} />
+                    </div>
+                    {claimsBody(true)}
+                  </>
+                )}
+                <div className="flex flex-col px-space-8">
+                  <SectionHead size="panel" title={panelWords.infoSeen} />
+                  <div className="flex flex-col gap-space-4 px-space-8 py-space-8">
+                    <p className="my-0 type-ui text-muted">{panelWords.legendLines}</p>
+                    <p className="my-0 type-ui text-primary">{panelWords.legendLinesSay}</p>
+                  </div>
+                </div>
+              </div>
             </FloatBox>
           )}
         </>
