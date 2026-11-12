@@ -47,6 +47,7 @@ export function FloatBox({
   foot,
   footSurface = 'ink',
   solid = false,
+  folded = false,
   children,
 }: {
   /** What a screen reader hears for the box. */
@@ -64,6 +65,8 @@ export function FloatBox({
   footSurface?: SurfaceName;
   /** It opens over another box (the flower's over the thread): its glass sits on a solid surface. */
   solid?: boolean;
+  /** Folded to its bar by the page (the map's boxes): no line under the bar, so the box's own edge closes it. */
+  folded?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -79,6 +82,7 @@ export function FloatBox({
         kind="float"
         surface={surface}
         solid={solid}
+        folded={folded}
         className={`flex min-h-0 flex-1 flex-col bg-surface ${foot ? 'mx-space-8 -mb-space-16' : ''}`}
         bar={
           control ? (
