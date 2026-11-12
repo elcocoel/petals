@@ -306,6 +306,59 @@ export async function nearSaid(
   return out;
 }
 
+/**
+ * A Sputnik DAO's own logo (12 Nov, walk 3): get_config's metadata (base64 JSON) holds flagLogo, an address the
+ * DAO set itself. Only a web or IPFS address is kept: Astro's 21-character file ids pointed at Astro's own store,
+ * which is gone. Names stay as they are: only the picture.
+ */
+export async function sputnikSaid(
+  fetchImpl: Fetch,
+  dao: string,
+  rpc = NEAR_RPC,
+): Promise<SelfSaid> {
+  const out = nothing();
+  try {
+    const res = await fetchImpl(rpc, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'query',
+        params: {
+          request_type: 'call_function',
+          finality: 'final',
+          account_id: dao,
+          method_name: 'get_config',
+          args_base64: 'e30=',
+        },
+      }),
+    });
+    const body = (await res.json()) as { result?: { result?: number[] } };
+    const bytes = body.result?.result;
+    if (!bytes) return out;
+    const config = JSON.parse(Buffer.from(bytes).toString('utf8')) as { metadata?: string };
+    if (!config.metadata) return out;
+    const meta = JSON.parse(Buffer.from(config.metadata, 'base64').toString('utf8')) as {
+      flagLogo?: unknown;
+    };
+    const logo = typeof meta.flagLogo === 'string' ? meta.flagLogo.trim() : '';
+    const isAddress =
+      /^https?:\/\//.test(logo) ||
+      logo.startsWith('ipfs://') ||
+      /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{50,})$/.test(logo);
+    if (isAddress)
+      out.image = {
+        value: logo,
+        source: 'sputnik',
+        ref: `get_config on near:mainnet:${dao}, its metadata's flagLogo`,
+      };
+  } catch {
+    // not a Sputnik DAO, or NEAR didn't answer
+  }
+  return out;
+}
+
 const IPFS = 'https://gateway.pinata.cloud/ipfs/';
 
 /**
