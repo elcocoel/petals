@@ -8,7 +8,15 @@
 import type { View } from '@petal/core/types';
 import { DEFAULT_VIEW } from '@petal/core/view';
 import { useRouter } from 'next/navigation';
-import { createContext, useCallback, useContext, useMemo, useState, useTransition } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
 import { keepView, SignInFirst, saveView } from '../lib/agent-client.ts';
 import {
   DEFAULT_PERSON_VIEW,
@@ -53,27 +61,45 @@ export function usePersonViewState(initial: PersonView): PersonViewState {
     setPerson(initial);
   }
   const [saving, setSaving] = useState(false);
+  // the server said 'sign in first' once: a visitor's next saves go straight to the visitor's way
+  const visitor = useRef(false);
   // the server's pages read again in the new view: pending until they're back
   const [refreshing, startRefresh] = useTransition();
   const save = useCallback(
     async (view: View) => {
       setSaving(true);
+      // the view at the press, so the live flowers redraw at once (LOOK, wave 4); the server's answer wins after,
+      // and a refusal puts the one before back
+      let before: PersonView | null = null;
+      setPerson((p) => {
+        before = p;
+        return { ...p, view };
+      });
       try {
         let kept: PersonView;
-        try {
-          // the person's own, on the server; a visitor's browser has nothing more to keep
-          kept = await saveView(view);
-          document.cookie = visitorViewCookie(null);
-        } catch (e) {
-          if (!(e instanceof SignInFirst)) throw e;
+        const asVisitor = async () => {
           // a visitor's (Elco's walk 3): kept by its hash, the hash in their browser, the default forgotten
-          kept = await keepView(view);
-          document.cookie = visitorViewCookie(
-            kept.hash === DEFAULT_PERSON_VIEW.hash ? null : kept.hash,
-          );
+          const k = await keepView(view);
+          document.cookie = visitorViewCookie(k.hash === DEFAULT_PERSON_VIEW.hash ? null : k.hash);
+          return k;
+        };
+        if (visitor.current) kept = await asVisitor();
+        else {
+          try {
+            // the person's own, on the server; a visitor's browser has nothing more to keep
+            kept = await saveView(view);
+            document.cookie = visitorViewCookie(null);
+          } catch (e) {
+            if (!(e instanceof SignInFirst)) throw e;
+            visitor.current = true;
+            kept = await asVisitor();
+          }
         }
         setPerson(kept);
         startRefresh(() => router.refresh());
+      } catch (e) {
+        if (before) setPerson(before);
+        throw e;
       } finally {
         setSaving(false);
       }
