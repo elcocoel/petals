@@ -39,6 +39,12 @@ export interface Keyed {
 }
 
 /**
+ * Values that say nothing happened draw grey and take no key (Elco, 12 Nov: "a way to color grade the [wallets] that
+ * never voted"): a wallet that never voted, and a petal the piece has no value for (reading/index.ts NO_VALUE).
+ */
+export const QUIET_VALUES: ReadonlySet<string> = new Set(['never voted', 'no value']);
+
+/**
  * The keys for a category's values: the value most petals carry first; between two carried by as many, the one
  * with more weight (power held) behind it, then the one that comes first round the flower. A petal with no value
  * (null) takes none.
@@ -55,10 +61,33 @@ export function keysOf(
     was.weight += weights[i] ?? 0;
     seen.set(value, was);
   });
-  return [...seen.entries()]
-    .sort(([, a], [, b]) => b.petals - a.petals || b.weight - a.weight || a.first - b.first)
-    .map(([value, s], rank) => ({ value, key: KEYS[rank] ?? null, petals: s.petals }));
+  const ranked = [...seen.entries()].sort(
+    ([, a], [, b]) => b.petals - a.petals || b.weight - a.weight || a.first - b.first,
+  );
+  const loud = ranked.filter(([value]) => !QUIET_VALUES.has(value));
+  const quiet = ranked.filter(([value]) => QUIET_VALUES.has(value));
+  return [
+    ...loud.map(([value, s], rank) => ({ value, key: KEYS[rank] ?? null, petals: s.petals })),
+    ...quiet.map(([value, s]) => ({ value, key: GREY, petals: s.petals })),
+  ];
 }
+
+/**
+ * One colour per value across a whole map (Elco, 12 Nov: "I have a drop down to say what color means and then the
+ * legend tells me what each color is"): the keys ranked once over every flower's petals, so mint is the same value
+ * on every flower and the map's legend can say what each colour stands for.
+ */
+export function mapKeys(flowers: readonly (readonly Keyable[])[]): Keyed[] {
+  const real = flowers.flatMap((petals) => petals.filter((p) => !p.tail));
+  return keysOf(
+    real.map((p) => wordsOf(p.colour)),
+    real.map((p) => p.share),
+  );
+}
+
+/** A map's keys as legend lines: each value's words and its swatch, as flowerKeys gives a flower's. */
+export const keyLines = (keyed: readonly Keyed[]): FlowerKey[] =>
+  keyed.map((k) => ({ label: k.value, swatch: `key-${(k.key ?? GREY).name}` }));
 
 /** A value's colour among keyed values, or null. */
 export const keyFor = (keyed: readonly Keyed[], value: string | null | undefined): Key | null =>
@@ -86,7 +115,11 @@ export interface Keyable {
  * by how many petals carry a band of each. A value past the fifth, and a petal of bands with none recorded, grey.
  * The same for the live flower and the still picture.
  */
-export function lookFills(petals: readonly Keyable[]): {
+export function lookFills(
+  petals: readonly Keyable[],
+  /** the map's keys (mapKeys), so a value has one colour on every flower; without, the flower's own */
+  keyed?: readonly Keyed[],
+): {
   fills: Record<string, string>;
   bands: Record<string, string>;
   /** each kind's colour, by its value, for the legend; none while the petals are banded */
@@ -95,10 +128,12 @@ export function lookFills(petals: readonly Keyable[]): {
   folds: Record<string, { cells: number[] }>;
 } {
   const real = petals.filter((p) => !p.tail);
-  const kinds = keysOf(
-    real.map((p) => wordsOf(p.colour)),
-    real.map((p) => p.share),
-  );
+  const kinds =
+    keyed ??
+    keysOf(
+      real.map((p) => wordsOf(p.colour)),
+      real.map((p) => p.share),
+    );
   const classes = keysOf(
     real.flatMap((p) => p.segments.map((s) => s.key)),
     real.flatMap((p) => p.segments.map((s) => Number(s.amount))),
@@ -128,7 +163,11 @@ export interface FlowerKey {
  * its petals are banded, a value past the fifth in grey, then everyone else in grey. The legend inside a flower
  * says what lookFills paints, in the same words.
  */
-export function flowerKeys(petals: readonly Keyable[]): FlowerKey[] {
+export function flowerKeys(
+  petals: readonly Keyable[],
+  /** the map's keys (mapKeys): the flower's own values, in the map's colours */
+  keyed?: readonly Keyed[],
+): FlowerKey[] {
   const real = petals.filter((p) => !p.tail);
   const swatch = (k: Key | null) => `key-${(k ?? GREY).name}`;
   const classes = keysOf(
@@ -141,9 +180,12 @@ export function flowerKeys(petals: readonly Keyable[]): FlowerKey[] {
           label: BACKER_LABELS[c.value as BackerClass] ?? c.value,
           swatch: swatch(c.key),
         }))
-      : keysOf(
-          real.map((p) => wordsOf(p.colour)),
-          real.map((p) => p.share),
+      : (keyed
+          ? keyed.filter((k) => real.some((p) => wordsOf(p.colour) === k.value))
+          : keysOf(
+              real.map((p) => wordsOf(p.colour)),
+              real.map((p) => p.share),
+            )
         ).map((k) => ({ label: k.value, swatch: swatch(k.key) }));
   return petals.some((p) => p.tail)
     ? [...rows, { label: 'everyone else', swatch: swatch(GREY) }]

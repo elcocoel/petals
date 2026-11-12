@@ -24,7 +24,7 @@ export const DIMENSIONS = [
 ] as const;
 export type Dimension = (typeof DIMENSIONS)[number];
 
-/** The kinds a piece of data can be: seam/v1's eight (seam.ts, DATA_KINDS). No dimension takes a date yet. */
+/** The kinds a piece of data can be: seam/v1's eight (seam.ts, DATA_KINDS). Order takes a date, newest first. */
 export type { DataKind };
 
 /** A piece of data a flower has: its name, as the view names it, and its kind. */
@@ -37,7 +37,9 @@ export interface Piece {
 export const ACCEPTS: Record<Dimension, readonly DataKind[]> = {
   height: ['amount', 'count', 'share'],
   width: ['amount', 'count', 'share'],
-  order: ['amount', 'count', 'share', 'category'],
+  // a date orders newest first ('Last active'), a count most first ('Votes cast'); Elco, 12 Nov: "the dimension of
+  // time specifically is particularly absent ... it always looks like a shell, like a nautilus"
+  order: ['amount', 'count', 'share', 'category', 'date'],
   colour: ['category', 'amount', 'count', 'share'],
   outline: ['flag', 'category'],
   texture: ['flag', 'category'],

@@ -4,7 +4,7 @@
 // its view worked out from the map's camera. A click on a flower, or zooming in until it fills most of the
 // window, enters it: everything else fades, and arrows name the ways out. Esc, or zooming back out, leaves.
 // React mounts this once per chain and never renders per frame.
-import { lookFills } from '@petal/core/wedge/keys';
+import { type Keyed, lookFills } from '@petal/core/wedge/keys';
 import type { Proposal } from '@petal/core/wedge/votes';
 import { type RefObject, useEffect, useRef } from 'react';
 import {
@@ -70,6 +70,11 @@ export interface LandscapeData {
   centre?: number;
   /** which arrangement the places are: a new one is fitted to, the same one keeps the camera where it is */
   layout?: string;
+  /**
+   * The map's keys, ranked once over every flower (core mapKeys): a value has one colour on every flower, so the
+   * map's legend can say what each colour stands for (Elco, 12 Nov). Without, each flower its own.
+   */
+  keyed?: readonly Keyed[];
 }
 
 /**
@@ -239,6 +244,7 @@ export function useLandscape(
       at?.current?.far ?? null,
       at?.current?.lines ?? null,
       data.centre ?? -1,
+      data.keyed,
     );
     const lives = new Map<number, Driven>();
     const tones = new Map<number, string>();
@@ -286,7 +292,7 @@ export function useLandscape(
       ids: readonly string[],
       ring: VoteRing | null,
     ): PetalLook => ({
-      ...lookFills(f.model.petals),
+      ...lookFills(f.model.petals, data.keyed),
       highlight: ids,
       // round tops on every flower, its ring or not (one look, Elco, 12 Nov walk)
       roundTops: true,

@@ -217,7 +217,7 @@ describe('dimensions and kinds', () => {
     expect(ACCEPTS).toEqual({
       height: ['amount', 'count', 'share'],
       width: ['amount', 'count', 'share'],
-      order: ['amount', 'count', 'share', 'category'],
+      order: ['amount', 'count', 'share', 'category', 'date'],
       colour: ['category', 'amount', 'count', 'share'],
       outline: ['flag', 'category'],
       texture: ['flag', 'category'],
@@ -233,7 +233,8 @@ describe('dimensions and kinds', () => {
     for (const k of MEASURE_KINDS) expect(all.has(k)).toBe(true);
     expect(
       [...all].filter((k) => !(MEASURE_KINDS as readonly string[]).includes(k)).sort(),
-    ).toEqual(['parts', 'relation']);
+      // a date comes as a piece given with the reading (last_active), not as a measure; Order takes it
+    ).toEqual(['date', 'parts', 'relation']);
   });
 
   test('fits says the same as the table', () => {
