@@ -1,0 +1,88 @@
+{
+  "petal": "vesting/v1",
+  "about": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+  "token": {
+    "id": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+    "symbol": "TRUMP",
+    "decimals": 6
+  },
+  "allocations": [
+    {
+      "name": "Creators & CIC Digital 1",
+      "holder": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:2RH6rUTPBJ9rUDPpuV9b8z1YL56k1tYU6Uk5ZoaEFFSK",
+      "beneficiary": null,
+      "total": "360000000",
+      "schedule": [
+        {
+          "from": "2025-01-17T09:00:00Z",
+          "to": "2025-04-17T09:00:00Z",
+          "every": 7776000,
+          "amount": "36000000"
+        },
+        {
+          "from": "2025-04-17T09:00:00Z",
+          "to": "2027-04-17T09:00:00Z",
+          "every": 86400,
+          "amount": "324000000"
+        }
+      ],
+      "released": {
+        "amount": "0",
+        "at": "2026-11-12T00:00:00Z"
+      },
+      "known": "inferred",
+      "how": "its share (36%), lock-up (3 months) and 10% at the cliff from the project's published table; its dates and daily steps from CIC 4's leaf, read on chain with the same lock-up; it has no claim record (never withdrew), so its own leaf isn't on chain",
+      "evidence": [
+        {
+          "kind": "published",
+          "ref": "https://web.archive.org/web/20250126015323/http://gettrumpmemes.com/"
+        },
+        {
+          "kind": "dataset",
+          "ref": "https://defillama-datasets.llama.fi/emissions/official-trump"
+        }
+      ]
+    },
+    {
+      "name": "Creators & CIC Digital 4",
+      "holder": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:2RH6rUTPBJ9rUDPpuV9b8z1YL56k1tYU6Uk5ZoaEFFSK",
+      "beneficiary": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:3S7zwPM8AytWyHJ7zhS8H1mixQPD6nTu6yXEK4HCEd9D",
+      "total": "39868000",
+      "schedule": [
+        {
+          "from": "2025-01-17T09:00:00Z",
+          "to": "2025-04-17T09:00:00Z",
+          "every": 7776000,
+          "amount": "3986800"
+        },
+        {
+          "from": "2025-04-17T09:00:00Z",
+          "to": "2027-04-17T09:00:00Z",
+          "every": 86400,
+          "amount": "35881200"
+        }
+      ],
+      "released": {
+        "amount": "28169745.753424",
+        "at": "2026-11-12T00:00:00Z"
+      },
+      "known": "verified",
+      "how": "its leaf in Magna's Merkle distributor, read on chain from its Withdraw (leaf 681a598117634e3b9e0139a226b30aa2); named by its total and its 3 months lock-up in the project's published table",
+      "evidence": [
+        {
+          "kind": "chain",
+          "ref": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:tx/396bF8P7v6diC2HwMPo82RCZNKJPEsEv3rdm3BFJnbJUsuit4vhZgLxEsgmc4HaREfiCGvFebtYHWLdZNQk6KCdQ"
+        },
+        {
+          "kind": "chain",
+          "ref": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:J58txachsJbDfYDiAXSZ3PpgGVtYm21gdPUi6YCLdT82 (its claim record, owned by magnaSHyv8zzKJJmr8NSz5JXmtdGDTTFPEADmvNAwbj)"
+        },
+        {
+          "kind": "published",
+          "ref": "https://web.archive.org/web/20250126015323/http://gettrumpmemes.com/"
+        }
+      ]
+    }
+  ],
+  "read_at": "2026-11-12T00:00:00Z"
+}
