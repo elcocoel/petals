@@ -268,6 +268,13 @@ export function useLandscape(
       const tail = f.model.petals.find((p) => p.tail)?.id;
       return tail && own.length < want.size ? [...own, tail] : own;
     };
+    /** The pinned proposal let go, its flower drawn again without its voters lit. */
+    const letGoProposal = () => {
+      if (!voted) return;
+      const j = voted.flower;
+      voted = null;
+      remount(j);
+    };
     const votersOf = (i: number, id: string): string[] =>
       ringOf(i)
         ?.proposals.find((p) => p.id === id)
@@ -610,6 +617,8 @@ export function useLandscape(
           chooseWallet(
             pressed && !pressed.tail && !pressed.id.startsWith('group:') ? pressed.id : null,
           );
+          // the ground inside it lets the pinned proposal go too
+          if (!pressed) letGoProposal();
           const petal = pressed?.id;
           tells?.(
             petal
@@ -619,12 +628,18 @@ export function useLandscape(
         }
         return;
       }
-      if (entered >= 0) chooseWallet(null);
       if (tells) tells({ kind: 'ground' });
       only = -1;
       const r = roadAt(x, y);
       marked = r >= 0 && r !== marked ? r : -1;
       lightLine();
+      // a click on empty space clears the choice (Elco's four clicks, 12 Nov): the wallet, the pinned proposal, the
+      // line (above), and on the map the DAO in the middle
+      if (r < 0) {
+        chooseWallet(null);
+        letGoProposal();
+        if (entered < 0 && (data.centre ?? -1) >= 0) at?.current?.onCentre?.(null);
+      }
       wake();
     };
 
