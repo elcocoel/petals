@@ -136,11 +136,10 @@ describe('the hero story', () => {
         expect(
           Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.scale - b.scale),
         ).toBeLessThan(1e-9);
-        // landed near its shot by the second count, no longer smeared
+        // landed near its shot by the second count
         const shot = shotOf(beat, wide).flower;
         const landed = flowerAt(beat, COUNT_MS * 1.2, wide);
         expect(Math.hypot(landed.x - shot.x, landed.y - shot.y)).toBeLessThan(3);
-        expect(landed.blur).toBe(0);
         // and never dead still, but for the far map's first count, while the question lands
         for (let t = beat === 0 ? COUNT_MS : 0; t < beatMs(beat); t += 100) {
           const p = flowerAt(beat, t, wide);

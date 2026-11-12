@@ -1,9 +1,10 @@
 // The hero's Tools box (Elco, 12 Nov: "either we find a visual shorthand or we use the real thing but we make sure
 // it's connected to the components for real so they change with whatever I change there"): the real one, the map's
-// own Tools rows (ViewLegend), read only, handed the view the flower is drawn in at each moment: Height to None
-// while the community is even, back to Share of the whole as the heights part; Colour to Voted or never for the vote,
-// with what each colour means; Highlight to one voting bloc and then the other. Whatever changes in ViewLegend shows
-// here too. The stage sets it back and soft (HeroStory).
+// own Tools rows (ViewLegend), read only, in the map's own box (BarBox, the floating boxes' glass, solid so the
+// petals under it don't show through), handed the view the flower is drawn in at each moment: Height to None while
+// the community is even, back to Share of the whole as the heights part; Order to Last active as the petals travel
+// round; Colour to Voted or never for the vote, with what each colour means; Highlight to one voting bloc and then
+// the other. Whatever changes in ViewLegend or the box shows here too.
 'use client';
 import type { View } from '@petal/core/types';
 import { ACTIVITY, EVERY_FLOWER, inUse } from '@petal/core/view';
@@ -11,29 +12,33 @@ import { wordsOf } from '@petal/core/wedge/keys';
 import { blocWords } from '../../lib/bloc-words.ts';
 import type { LegendKey } from '../../lib/flower-view.ts';
 import { blocChosen, type ToolRow, type ToolValue, tool } from '../../lib/hero-story.ts';
+import { panelWords } from '../../lib/panel-words.ts';
 import { DEFAULT_PERSON_VIEW } from '../../lib/person-view.ts';
 import { withData } from '../../lib/view-edit.ts';
+import { BarBox } from '../ui/BarBox.tsx';
+import { Mono } from '../ui/Mono.tsx';
 import { ViewLegend } from '../ViewLegend.tsx';
 
 /** The data the hero's flower has, as a reading with its proposals read would: every flower's, and its activity. */
 const PIECES = [...EVERY_FLOWER, ...ACTIVITY];
 
-/** The view with Height at share or None, and Colour at kind of account or voted or never: the four the story uses. */
 /** Everyone's default view, from the one place it comes from. */
 const DEFAULT = DEFAULT_PERSON_VIEW.view;
 
-function viewOf(height: ToolValue, colour: ToolValue) {
+/** The view with Order, Height and Colour as the story sets them: made once each, as the story comes to them. */
+const VIEWS = new Map<string, { view: View; drawn: ReturnType<typeof inUse> }>();
+function viewOf(order: ToolValue, height: ToolValue, colour: ToolValue) {
+  const name = `${order}-${height}-${colour}`;
+  const made = VIEWS.get(name);
+  if (made) return made;
   let view: View = DEFAULT;
+  if (order === 'recent') view = withData(view, 'order', 'last_active', PIECES, DEFAULT);
   if (height === 'none') view = withData(view, 'height', null, PIECES, DEFAULT);
   if (colour === 'voted') view = withData(view, 'colour', 'voted', PIECES, DEFAULT);
-  return { view, drawn: inUse(view, PIECES) };
+  const out = { view, drawn: inUse(view, PIECES) };
+  VIEWS.set(name, out);
+  return out;
 }
-const VIEWS = {
-  'share-kind': viewOf('share', 'kind'),
-  'none-kind': viewOf('none', 'kind'),
-  'share-voted': viewOf('share', 'voted'),
-  'none-voted': viewOf('none', 'voted'),
-} as const;
 
 /** What each colour means under Colour, in the core's words, with the look's own key swatches. */
 const KEYS: Record<'kind' | 'voted', readonly LegendKey[]> = {
@@ -67,9 +72,9 @@ const at = (beat: number, t: number, row: ToolRow) => {
 
 export function HeroTools({ beat, t }: { beat: number; t: number }) {
   const colour = at(beat, t, 'colour') === 'voted' ? 'voted' : 'kind';
-  const { view, drawn } = VIEWS[`${at(beat, t, 'height') === 'none' ? 'none' : 'share'}-${colour}`];
+  const { view, drawn } = viewOf(at(beat, t, 'order'), at(beat, t, 'height'), colour);
   return (
-    <div className="relative">
+    <BarBox kind="float" solid barSize="row" bar={<Mono as="span">{panelWords.tools}</Mono>}>
       <ViewLegend
         view={view}
         drawn={drawn}
@@ -85,6 +90,6 @@ export function HeroTools({ beat, t }: { beat: number; t: number }) {
         }}
         bare
       />
-    </div>
+    </BarBox>
   );
 }

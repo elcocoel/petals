@@ -33,8 +33,6 @@ const SIXTEENTH = COUNT_MS / 4;
 const SPRING_MS = 3 * EIGHTH;
 /** How long a wind-up before a hit takes. */
 const WIND_MS = SIXTEENTH;
-/** How far the petals ripple either way, in the drawing's units, as a wave goes round the clock once a bar. */
-const RIPPLE = 1.4;
 /** Per petal, how much later than its neighbour before it (clockwise from twelve) it lands: a roll round the clock. */
 const ROLL = 12;
 
@@ -74,7 +72,8 @@ const respondAt = (beat: number) => RESPOND + (beat === 0 ? LEAD : 0);
 export const whipAt = (beat: number) => (beat === 0 ? count(6) : 0);
 export const driftAt = (beat: number) => (beat === 0 ? count(2) : 0);
 
-export const PETALS = 24;
+/** How many wallets my community has: enough for a long tail, as real flowers have. */
+export const PETALS = 36;
 /** Where the petals start: the centre's edge; a wide centre, as the real flower has (Elco, 12 Nov: closer to the real thing). */
 export const INNER = 56;
 /** Every petal's length when the community first opens, all equal. */
@@ -82,13 +81,51 @@ const EVEN = 118;
 /** Half the line between two petals: the same width from foot to tip (Elco, 5 Nov: "a relatively stable line"). */
 export const GUTTER = 1.5;
 
-/** Tallest at twelve o'clock, then shorter around the clock: the same symbolic sequence the earlier hero drew. */
-const shares = Array.from({ length: PETALS }, (_, i) => 0.3 + 0.7 * (1 - i / (PETALS - 1)) ** 1.8);
-/** Each petal's length once influence shows; from far, my community's wave is drawn from these. */
-export const base = shares.map((s) => 43 + s * 128);
-/** The same petals at the history beat's "now": another balance, the positions kept. */
-const later = shares.map((_, i) => 49 + (shares[(i + 7) % PETALS] as number) * 119);
-export const ghostLengths: readonly number[] = base;
+/** The same made-up numbers every time: a small seeded generator. */
+export function seeded(seed: number) {
+  let a = seed;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let r = Math.imul(a ^ (a >>> 15), 1 | a);
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * What each wallet holds, as real communities hold it (Elco, 12 Nov: "it looks completely unrealistic ... we need a
+ * bit more variation"): a few large holders, unevenly far apart, and a long uneven tail; the largest first, as the
+ * real flower orders them by default. Made up.
+ */
+const shares = (() => {
+  const next = seeded(7);
+  const raw = Array.from({ length: PETALS }, (_, i) => (i + 1) ** -0.95 * (0.7 + 0.6 * next()));
+  raw.sort((a, b) => b - a);
+  const top = raw[0] as number;
+  return raw.map((x) => x / top);
+})();
+/** Each petal's length once influence shows, heights straight as the real default draws them; from far, my
+ * community's wave is drawn from these. */
+export const base = shares.map((s) => INNER + 6 + 109 * s);
+
+/**
+ * Where each petal goes round the circle when the history beat orders them by when they last voted (Elco, 12 Nov:
+ * "when he starts talking about time ... we should see who voted more recently ... not always ordered from bigger to
+ * smaller"): its place, clockwise from twelve. Made up: some of the largest are long quiet.
+ */
+const RECENT: readonly number[] = (() => {
+  const next = seeded(23);
+  const when = Array.from({ length: PETALS }, (_, i) => ({
+    i,
+    at: next() + (i % 7 === 0 ? 0.6 : 0),
+  }));
+  when.sort((a, b) => a.at - b.at);
+  const slot = Array<number>(PETALS).fill(0);
+  when.forEach((w, k) => {
+    slot[w.i] = k;
+  });
+  return slot;
+})();
 
 // ----- time -----
 
@@ -192,12 +229,12 @@ export function kick(beat: number, t: number): number {
     const d = t - count(c);
     const back = c > 1 ? 0.2 : 0;
     if (d < 0) {
-      k -= back * amp * ease.inOutSine(Math.max(0, (d + WIND_MS) / WIND_MS));
+      k -= 0.5 * back * amp * ease.inOutSine(Math.max(0, (d + WIND_MS) / WIND_MS));
       continue;
     }
     // eased in from the wind-up, then let go slowly
     const rise = ease.inOutSine(Math.min(1, d / 90));
-    k += amp * (lerp(-back, 1, rise) * Math.exp(-Math.max(0, d - 90) / 220));
+    k += 0.5 * amp * (lerp(-back, 1, rise) * Math.exp(-Math.max(0, d - 90) / 220));
   }
   return k;
 }
@@ -216,12 +253,11 @@ export function pulse(t: number): number {
 /** Each petal's length once a beat has settled, which is where the next beat starts from. */
 function settled(beat: number): readonly number[] {
   if (beat === 0) return Array(PETALS).fill(EVEN);
-  if (beat === 3) return later;
   if (beat === 5) return Array(PETALS).fill(INNER);
   return base;
 }
 
-/** A petal's shape as the beat has it, before the ripple. */
+/** A petal's length as the beat has it. */
 function shaped(beat: number, t: number, i: number, from: number): number {
   switch (beat) {
     case 0:
@@ -234,8 +270,6 @@ function shaped(beat: number, t: number, i: number, from: number): number {
       const grown = lerp(from, base[i] as number, pop(t, REACT + i * (ROLL / 2)));
       return INNER + (grown - INNER) * (1 - 0.06 * held);
     }
-    case 3:
-      return lerp(from, later[i] as number, historyAt(t));
     case 4: {
       const start = REACT + i * (ROLL / 2);
       const r = lerp(from, base[i] as number, pop(t, start));
@@ -251,36 +285,37 @@ function shaped(beat: number, t: number, i: number, from: number): number {
 
 /**
  * Each petal's length. The first beat bursts out of the centre on the three, as the camera arrives; the last
- * folds the petals away under the wave once the camera has pulled back. Over it all a
- * slow wave runs round the clock once a bar, the longer the petal the more it ripples, on one clock across the
- * beats so it never jumps.
+ * folds the petals away under the wave once the camera has pulled back.
  */
 export function petalLengths(beat: number, t: number): number[] {
   const before = settled(prior(beat));
-  const wave = (2 * Math.PI * (startOf(beat) + t)) / (4 * COUNT_MS);
-  return Array.from({ length: PETALS }, (_, i) => {
-    const r = shaped(beat, t, i, before[i] as number);
-    const reach = Math.min(1, Math.max(0, (r - INNER) / 60));
-    return r + RIPPLE * reach * Math.sin(wave - (2 * Math.PI * i) / PETALS);
-  });
+  return Array.from({ length: PETALS }, (_, i) => shaped(beat, t, i, before[i] as number));
 }
 
-/** When the history beat's heights land: the third bar's one. */
+/**
+ * Where each petal is round the circle, as a place clockwise from twelve (fractional while it travels): by share
+ * until the history beat, which orders them by when they last voted, travelling there slowly and landing on the
+ * third bar's one; they keep that order to the end, and the next community starts by share again, from nothing.
+ */
+export function placeOf(beat: number, t: number, i: number): number {
+  const recent = RECENT[i] ?? i;
+  if (beat === 3) return lerp(i, recent, historyAt(t));
+  if (beat === 4 || beat === 5) return recent;
+  return i;
+}
+
+/** When the history beat's new order lands: the third bar's one. */
 const LAND = count(9);
 
 /**
- * How far the history beat has gone from then to now, 0 to 1: the slow one. It sets off with the answer, gathers
- * speed through the whole second bar, lands hard on the third bar's one and gives a little there.
+ * How far the history beat has gone from the old order to the new, 0 to 1: the slow one. It sets off with the
+ * answer, gathers speed through the whole second bar, lands hard on the third bar's one and gives a little there.
  */
 export function historyAt(t: number): number {
   if (t < LAND) return ease.inSine(at(t, RESPOND, LAND - RESPOND));
   const d = t - LAND;
   return 1 + 0.03 * Math.exp(-d / 200) * Math.sin(d / 110);
 }
-
-/** Where the history beat's marker is, in any beat: arrived, while it cuts out on the next one. */
-export const historyLine = (beat: number, t: number) =>
-  beat === 3 ? historyAt(t) : beat === 4 ? 1 : 0;
 
 export interface Camera {
   scale: number;
@@ -360,27 +395,6 @@ export function world(beat: number, t: number): World {
   return { zoom, x: MAP_CENTRE.x * away, y: MAP_CENTRE.y * away, ring, wave, map };
 }
 
-/** The light behind the flower: it moves a third as much as the flower does, and thumps with the pulse. */
-export function glow(beat: number, t: number, fresh = false) {
-  const pull = world(beat, t).zoom;
-  const born = fresh && beat === 0 ? ease.outCubic(at(t, CALL, 2 * COUNT_MS)) : 1;
-  // the blocs' second key tints the light while they show, from the second group's hit
-  const second =
-    beat === 2
-      ? ease.outCubic(at(t, count(4), EIGHTH))
-      : beat === 3
-        ? 1
-        : beat === 4
-          ? 1 - ease.outCubic(at(t, CALL, EIGHTH))
-          : 0;
-  const thump = pulse(t) + 8 * kick(beat, t);
-  return {
-    opacity: born * Math.min(1, 0.78 + 0.22 * thump),
-    scale: (1 + (pull - 1) * 0.35) * (1 + 0.02 * thump),
-    second,
-  };
-}
-
 /** A layer that belongs to one beat: it snaps in with the flower's reaction and cuts out on the next one. */
 export function layerOpacity(own: number, beat: number, t: number): number {
   if (beat === own) return ease.outCubic(at(t, REACT, SIXTEENTH));
@@ -395,39 +409,29 @@ export function layerOpacity(own: number, beat: number, t: number): number {
 export type Fill = 'mint' | 'blue' | 'coral' | 'apricot' | 'pink' | 'grey';
 
 const LIT = 3;
-const BLOC_A = [0, 1, 8, 9, 16, 17];
-const BLOC_B = [4, 5, 12, 13, 20, 21];
+/** The two voting blocs, scattered round the flower as real ones are. Made up. */
+const BLOC_A = [0, 2, 5, 9, 14, 20, 27, 33];
+const BLOC_B = [1, 4, 7, 12, 17, 23, 29];
 
 /**
  * What kind of account each petal is, as the real flower colours it by default: the commonest kind in mint, then
  * blue, coral, apricot and pink, each key going to the kind more petals carry. Made up, and scattered round.
  */
-const KIND: readonly Fill[] = [
-  'mint',
-  'blue',
-  'mint',
-  'mint',
-  'apricot',
-  'mint',
-  'coral',
-  'mint',
-  'blue',
-  'mint',
-  'mint',
-  'pink',
-  'mint',
-  'blue',
-  'mint',
-  'coral',
-  'mint',
-  'mint',
-  'blue',
-  'apricot',
-  'mint',
-  'coral',
-  'mint',
-  'blue',
-];
+const KIND: readonly Fill[] = (() => {
+  const next = seeded(41);
+  return Array.from({ length: PETALS }, () => {
+    const x = next();
+    return x < 0.52
+      ? 'mint'
+      : x < 0.74
+        ? 'blue'
+        : x < 0.87
+          ? 'coral'
+          : x < 0.95
+            ? 'apricot'
+            : 'pink';
+  });
+})();
 
 /**
  * What each petal is painted with once a beat has settled, as the real tools would set it: by kind of account on
@@ -498,23 +502,55 @@ export const sharePercent = (() => {
   return held.map((h) => (100 * h) / all);
 })();
 
-/** How far the history beat's earlier outline has drawn round, 0 to 1: snapped round on the three. */
-export const ghostDrawn = (beat: number, t: number, i: number) =>
-  beat === 3 ? ease.outExpo(at(t, REACT + i * 10, EIGHTH)) : 1;
+/** How each petal voted on the proposal the vote beat presses, as the real reading says it; null, it didn't vote. */
+export const voteOf = (i: number): 'for' | 'against' | 'abstain' | null =>
+  i % 6 === 5
+    ? null
+    : i % 7 === 3
+      ? 'against'
+      : i % 11 === 8
+        ? 'abstain'
+        : i % 9 === 6
+          ? null
+          : 'for';
 
-/** A vote mark inside each petal at the proposal beat: against on every fourth, none on every fifth. */
-export const voteOf = (i: number): 'for' | 'against' | null =>
-  i % 5 === 0 ? null : i % 4 === 0 ? 'against' : 'for';
+/**
+ * The proposals on my community, as the real flower draws them (Elco, 11 and 12 Nov: "proposals are related to
+ * specific wallets - SOMEONE made that proposal ... right above the wallets themselves"): stacked over the petal of
+ * whoever put them up, oldest nearest; a stack of more than three folds into one mark with how many it holds.
+ * Which petals and how many: made up. The one the vote beat presses is the second over the largest petal.
+ */
+export const PROPOSALS: readonly { petal: number; count: number }[] = [
+  { petal: 0, count: 3 },
+  { petal: 1, count: 14 },
+  { petal: 3, count: 2 },
+  { petal: 6, count: 1 },
+  { petal: 10, count: 2 },
+  { petal: 16, count: 1 },
+  { petal: 25, count: 1 },
+];
+/** A stack of more than this folds into one mark with a count (the real flower's STACK_FOLD). */
+export const STACK_FOLD = 3;
+export const PRESSED = { petal: 0, step: 1 };
 
-/** The proposal's ring whips round on the three, its arc on the and, its point hits on the four, the votes roll in. */
+/**
+ * The proposals at a moment: on the vote beat they stack up on the three, one arc on each forty-eighth; one is
+ * pressed on the four; then each voter's dot lands at its petal's foot, round the clock. They go with the next one.
+ */
 export function proposal(beat: number, t: number) {
-  if (beat !== 4) return { ring: 1, arc: 1, point: 1, vote: (_: number) => 1 };
+  if (beat !== 4)
+    return {
+      arc: (_: number) => 1,
+      pressed: 1,
+      vote: (_: number) => 1,
+      on: layerOpacity(4, beat, t),
+    };
   return {
-    ring: ease.outExpo(at(t, REACT, EIGHTH)),
-    arc: ease.outExpo(at(t, count(3.5), EIGHTH)),
-    point: pop(t, count(4)),
+    arc: (n: number) => pop(t, REACT + (n * COUNT_MS) / 12, 2 * EIGHTH),
+    pressed: ease.outCubic(at(t, count(4), SIXTEENTH)),
     // a roll, a vote on every forty-eighth, round the clock
-    vote: (i: number) => pop(t, count(4.5) + (i * COUNT_MS) / 12, 2 * EIGHTH),
+    vote: (i: number) => pop(t, count(4.5) + (i * COUNT_MS) / 16, 2 * EIGHTH),
+    on: layerOpacity(4, beat, t),
   };
 }
 
@@ -542,22 +578,24 @@ export function network(beat: number, t: number) {
  * The rows of the real Tools box the hero shows (ViewLegend's dimensions; Elco, 12 Nov: "there is tooling and
  * things that change and colors change"), and what each is set to once a beat has settled: the tools are what the
  * flower does. Height goes from None to Share of the whole as the heights part; Highlight takes the voting blocs;
- * Colour goes from Kind of account to Voted or never for the vote.
+ * Order goes from Share of the whole to Last active as the petals travel round; Colour goes from Kind of account to
+ * Voted or never for the vote.
  */
-export type ToolRow = 'height' | 'colour' | 'highlight';
-export type ToolValue = 'none' | 'share' | 'kind' | 'voted' | 'blocs';
+export type ToolRow = 'order' | 'height' | 'colour' | 'highlight';
+export type ToolValue = 'none' | 'share' | 'recent' | 'kind' | 'voted' | 'blocs';
 const SETTINGS: readonly Record<ToolRow, ToolValue>[] = [
-  { height: 'none', colour: 'kind', highlight: 'none' },
-  { height: 'share', colour: 'kind', highlight: 'none' },
-  { height: 'share', colour: 'kind', highlight: 'blocs' },
-  { height: 'share', colour: 'kind', highlight: 'none' },
-  { height: 'share', colour: 'voted', highlight: 'none' },
-  { height: 'share', colour: 'kind', highlight: 'none' },
+  { order: 'share', height: 'none', colour: 'kind', highlight: 'none' },
+  { order: 'share', height: 'share', colour: 'kind', highlight: 'none' },
+  { order: 'share', height: 'share', colour: 'kind', highlight: 'blocs' },
+  { order: 'recent', height: 'share', colour: 'kind', highlight: 'none' },
+  { order: 'recent', height: 'share', colour: 'voted', highlight: 'none' },
+  { order: 'recent', height: 'share', colour: 'kind', highlight: 'none' },
 ];
 
 /** When a row changes in a beat: on the count the flower does what it says. */
 function setAt(beat: number, row: ToolRow): number {
   if (row === 'height') return reactAt(beat);
+  if (row === 'order') return beat === 3 ? RESPOND : CALL;
   if (row === 'colour') return beat === 4 ? REACT : CALL;
   return beat === 2 ? REACT : CALL;
 }

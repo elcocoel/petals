@@ -1,13 +1,14 @@
 // The hero story's flower (HERO ART's V2, Elco 11 Nov; HERO MOTION's choreography): one symbolic flower that
 // changes with the story, not a reading and not the live renderer, so it never goes out of date as the look
-// evolves. 24 petals round a centre, straight sides and arc tops with a fine line of one width between them, in
-// the look's keys; in a world the camera moves through (Elco, 12 Nov): the far map the story opens and closes on,
-// my community and its two neighbours, each drawn from far as the real far map draws one (lib/hero-map.ts). Per
-// beat (lib/hero-story.ts): the camera dives in from the far map and my community bursts out of its wave; the
-// heights part, petal after petal, and the strongest take the highlight; one voting bloc lights, then another; the heights move against an earlier outline that draws itself round; a proposal's ring
-// opens, its arc draws over the top and the vote marks land; the camera pulls back as two neighbours bloom, reached
-// by running lines, and then all the way out to the far map. A light behind it moves less than it does, for depth.
-// Every number comes from those files; this only draws.
+// evolves; closer to the real thing (Elco, 12 Nov): flat petals in the look's keys, straight sides and arc tops
+// with a fine line of one width between them, a wide white centre, no light, shade or glow. In a world the camera
+// moves through: the far map the story opens and closes on, my community and its two neighbours, each drawn from
+// far as the real far map draws one (lib/hero-map.ts). Per beat (lib/hero-story.ts): the camera dives in from the
+// far map and my community bursts out of its wave; the heights part, and the strongest three keep their colour as
+// everyone else recedes, their shares on leader lines; one voting bloc lights, then another; the petals travel
+// round the circle to the order of who voted last; proposals stack over the petals of whoever put them up, one is
+// pressed and its voters' dots land at their petals' feet; the camera pulls back as two neighbours bloom, reached
+// by running lines, and then all the way out to the far map. Every number comes from those files; this only draws.
 import { GREY, KEYS } from '@petal/core/wedge/keys';
 import type { CSSProperties } from 'react';
 import { useId } from 'react';
@@ -17,18 +18,19 @@ import {
   camera,
   type Fill,
   GUTTER,
-  ghostDrawn,
-  ghostLengths,
-  glow,
   INNER,
   layerOpacity,
   network,
   PETALS,
+  PRESSED,
+  PROPOSALS,
   petalLengths,
   petalLit,
   petalPaint,
   petalPath,
+  placeOf,
   proposal,
+  STACK_FOLD,
   sharePercent,
   voteOf,
   world,
@@ -58,26 +60,34 @@ const mix = (from: Fill, to: Fill, k: number) =>
       ? PAINT[from]
       : `color-mix(in srgb, ${PAINT[to]} ${(k * 100).toFixed(1)}%, ${PAINT[from]})`;
 
-/**
- * The highlight (default-system-vnext.md, highlight-style-v1.json): a fine stroke inside, the fill × 0.62;
- * softened corners; light from the upper left (the fill × 1.15) and shade from the lower right (× 0.78), feathered.
- * Here in the drawing's units, about 1.3 px each on a wide window.
- */
-const HL = { stroke: 0.8, round: 2, offset: 1.2, blur: 2 };
-const darker = (fill: string) => `color-mix(in srgb, ${fill} 62%, black)`;
-
 /** Where my community sits in the drawing when the camera is on it. */
 const CENTRE = { x: 300, y: 205 };
 /** How far out my community's petals reach at most, for the lines and the focus ring. */
-const REACH = 215;
-/** The faint circle round my community, where the labels of its strongest sit; the proposal's arc draws on it. */
+const REACH = 185;
+/** The faint circle round my community, where the labels of its strongest sit. */
 const OUTER = 196;
-/** Where the proposal's arc starts and ends, a quarter of the circle over the top. */
-const ARC = OUTER * Math.SQRT1_2;
+/** How far apart a petal's proposals stack outward, and how far over its top the first sits (the real STACK_GAP). */
+const STACK = { gap: 6, over: 6 };
+const STEP = (2 * Math.PI) / PETALS;
 
 const seen = (v: number) => (v > 0.001 ? undefined : 'hidden');
 /** A community's mark from far, as much of the hole in its wave as a logo fills on the real map. */
 const MARK = 0.72;
+
+/** A neighbour's petals by kind, as my community's are: mostly mint. */
+const NEIGHBOUR_KINDS: readonly Fill[] = [
+  'mint',
+  'mint',
+  'blue',
+  'mint',
+  'coral',
+  'mint',
+  'apricot',
+  'blue',
+];
+
+/** A vote's colour, as the real legend says it: mint for, pink against, grey abstained or neither. */
+const VOTE_PAINT = { for: 'mint', against: 'pink', abstain: 'grey' } as const;
 
 /** A community from far: its soft wave, the hole in it, and a dark mark where its logo would be. */
 function FarCommunity({ c, opacity = 1 }: { c: Community; opacity?: number }) {
@@ -89,7 +99,7 @@ function FarCommunity({ c, opacity = 1 }: { c: Community; opacity?: number }) {
   );
 }
 
-/** A neighbour up close: its petals bursting out of its wave, the biggest few in the accent. */
+/** A neighbour up close: its petals bursting out of its wave. */
 function Neighbour({ c, bloom }: { c: Community; bloom: (j: number) => number }) {
   const n = c.heights.length;
   return (
@@ -103,22 +113,10 @@ function Neighbour({ c, bloom }: { c: Community; bloom: (j: number) => number })
         />
       ))}
       <circle r={c.inner - 0.5} fill="var(--surface)" />
-      <circle r={c.inner * MARK} fill="var(--text-primary)" />
+      <circle r={c.inner * MARK * 0.4} fill="var(--text-primary)" />
     </g>
   );
 }
-
-/** A neighbour's petals by kind, as my community's are: mostly mint. */
-const NEIGHBOUR_KINDS: readonly Fill[] = [
-  'mint',
-  'mint',
-  'blue',
-  'mint',
-  'coral',
-  'mint',
-  'apricot',
-  'blue',
-];
 
 /** A line from my community's edge out to a neighbour's, bending a little to one side. */
 function linkTo(c: Community, side: number): string {
@@ -134,15 +132,105 @@ function linkTo(c: Community, side: number): string {
 }
 const LINKS = NEIGHBOURS.map((c, n) => linkTo(c, n % 2 ? 1 : -1));
 
+/** An arc over a petal's own stretch of the circle, at `r`, the fine gap kept at each end, as the real ones sit. */
+function arcOver(place: number, r: number): string {
+  const a0 = -Math.PI / 2 + place * STEP;
+  const pad = Math.min(STEP / 4, (GUTTER + 0.6) / r);
+  const [x0, y0] = [Math.cos(a0 + pad) * r, Math.sin(a0 + pad) * r];
+  const [x1, y1] = [Math.cos(a0 + STEP - pad) * r, Math.sin(a0 + STEP - pad) * r];
+  return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r.toFixed(2)} ${r.toFixed(2)} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+}
+
+/**
+ * The proposals, as the real flower stacks them over the petal of whoever put them up, oldest nearest; a stack of
+ * more than three folds into one mark with its count. One is pressed, darker, and each voter's dot lands just inside
+ * the centre, under its petal's foot, in its vote's colour; no vote, no dot.
+ */
+function Proposals({
+  beat,
+  t,
+  lengths,
+  places,
+}: {
+  beat: number;
+  t: number;
+  lengths: readonly number[];
+  places: readonly number[];
+}) {
+  const p = proposal(beat, t);
+  if (p.on < 0.002) return null;
+  let n = 0;
+  return (
+    <g opacity={p.on}>
+      {PROPOSALS.map(({ petal, count }) => {
+        const place = places[petal] ?? petal;
+        const top = (lengths[petal] ?? INNER) + STACK.over;
+        const folded = count > STACK_FOLD;
+        const arcs = folded ? 1 : count;
+        return (
+          <g key={petal}>
+            {Array.from({ length: arcs }, (_, step) => {
+              const k = p.arc(n++);
+              if (k < 0.002) return null;
+              const pressed = petal === PRESSED.petal && step === PRESSED.step;
+              return (
+                <path
+                  // biome-ignore lint/suspicious/noArrayIndexKey: one arc per place in the stack
+                  key={step}
+                  d={arcOver(place, top + step * STACK.gap)}
+                  fill="none"
+                  stroke="var(--text-primary)"
+                  strokeWidth={folded ? 3.2 : pressed ? 1.8 + 1.4 * p.pressed : 1.8}
+                  opacity={k * (pressed ? 0.5 + 0.5 * p.pressed : 0.5)}
+                />
+              );
+            })}
+            {folded &&
+              (() => {
+                const [x, y] = atPetal(place, top + 12);
+                return (
+                  <text
+                    x={x}
+                    y={y}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className="type-mono"
+                    fill="var(--text-primary)"
+                    opacity={p.arc(n - 1)}
+                  >
+                    {count}
+                  </text>
+                );
+              })()}
+          </g>
+        );
+      })}
+      {places.map((place, i) => {
+        const v = voteOf(i);
+        if (!v) return null;
+        const [cx, cy] = atPetal(place, INNER - 7);
+        return (
+          <circle
+            // biome-ignore lint/suspicious/noArrayIndexKey: one dot per petal
+            key={i}
+            cx={cx}
+            cy={cy}
+            r={2.8 * p.vote(i)}
+            fill={PAINT[VOTE_PAINT[v]]}
+          />
+        );
+      })}
+    </g>
+  );
+}
+
 export function StoryFlower({ beat, t }: { beat: number; t: number }) {
   const id = useId().replace(/[^\w-]/g, '');
   const lengths = petalLengths(beat, t);
+  const places = lengths.map((_, i) => placeOf(beat, t, i));
   const cam = camera(beat, t);
   const w = world(beat, t);
-  const vote = proposal(beat, t);
   const net = network(beat, t);
-  const ghosts = layerOpacity(3, beat, t);
-  const votes = layerOpacity(4, beat, t);
   const links = layerOpacity(5, beat, t);
   // strokes that keep one width on screen whatever the camera's zoom
   const px = (n: number) => n / w.zoom;
@@ -156,48 +244,6 @@ export function StoryFlower({ beat, t }: { beat: number; t: number }) {
       style={KEYED}
     >
       <defs>
-        {/* the highlight's surface: what the petal, moved and blurred, leaves uncovered of itself, toned */}
-        <filter
-          id={`${id}-surface`}
-          x="-10%"
-          y="-10%"
-          width="120%"
-          height="120%"
-          colorInterpolationFilters="sRGB"
-        >
-          {(
-            [
-              ['light', 1.15, 0.65, HL.offset],
-              ['shade', 0.78, 0.32, -HL.offset],
-            ] as const
-          ).map(([name, slope, opacity, d]) => (
-            <g key={name}>
-              <feOffset in="SourceAlpha" dx={d} dy={d} result={`${name}-o`} />
-              <feGaussianBlur in={`${name}-o`} stdDeviation={HL.blur} result={`${name}-b`} />
-              <feComposite
-                in="SourceAlpha"
-                in2={`${name}-b`}
-                operator="arithmetic"
-                k1={-1}
-                k2={1}
-                k3={0}
-                k4={0}
-                result={`${name}-e`}
-              />
-              <feComponentTransfer in="SourceGraphic" result={`${name}-c`}>
-                <feFuncR type="linear" slope={slope} />
-                <feFuncG type="linear" slope={slope} />
-                <feFuncB type="linear" slope={slope} />
-                <feFuncA type="linear" slope={opacity} />
-              </feComponentTransfer>
-              <feComposite in={`${name}-c`} in2={`${name}-e`} operator="in" result={name} />
-            </g>
-          ))}
-          <feMerge>
-            <feMergeNode in="light" />
-            <feMergeNode in="shade" />
-          </feMerge>
-        </filter>
         {LINKS.map((d, n) => (
           <mask key={d} id={`${id}-link-${n}`} maskUnits="userSpaceOnUse">
             <path
@@ -256,7 +302,7 @@ export function StoryFlower({ beat, t }: { beat: number; t: number }) {
         </g>
         {/* the dashed focus ring that picks it out on the far map */}
         <circle
-          r={REACH * 1.25}
+          r={REACH * 1.35}
           fill="none"
           stroke="var(--text-primary)"
           strokeWidth={px(1.2)}
@@ -269,53 +315,19 @@ export function StoryFlower({ beat, t }: { beat: number; t: number }) {
           opacity={1 - w.wave}
           visibility={seen(1 - w.wave)}
         >
-          <g opacity={ghosts} visibility={seen(ghosts)}>
-            {ghostLengths.map((r, i) => (
-              <path
-                // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
-                key={i}
-                d={petalPath(i, r)}
-                fill="none"
-                stroke="var(--hairline)"
-                strokeWidth={1}
-                pathLength={1}
-                strokeDasharray="1 1"
-                strokeDashoffset={1 - ghostDrawn(beat, t, i)}
-                opacity={0.75}
-              />
-            ))}
-          </g>
           <g>
             {lengths.map((r, i) => {
               const paint = petalPaint(beat, t, i);
-              const fill = mix(paint.from, paint.to, paint.k);
-              const lit = petalLit(beat, t, i);
-              const d = petalPath(i, r, { round: HL.round * lit });
               return (
-                <g
-                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per position
+                // colours are moved here, frame by frame, so the joy layer's softening stands aside
+                <path
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed petals, one per wallet
                   key={i}
-                >
-                  {/* colours are moved here, frame by frame, so the joy layer's softening stands aside */}
-                  <path data-part="wedge" d={d} fill={fill} style={{ transition: 'none' }} />
-                  {lit > 0.001 && (
-                    <>
-                      <path d={d} fill={fill} filter={`url(#${id}-surface)`} opacity={lit} />
-                      <path
-                        d={petalPath(i, r - HL.stroke / 2, {
-                          inner: INNER + HL.stroke / 2,
-                          gutter: GUTTER + HL.stroke / 2,
-                          round: Math.max(0, HL.round - HL.stroke / 2) * lit,
-                        })}
-                        fill="none"
-                        stroke={darker(fill)}
-                        strokeWidth={HL.stroke}
-                        strokeLinejoin="round"
-                        opacity={lit}
-                      />
-                    </>
-                  )}
-                </g>
+                  data-part="wedge"
+                  d={petalPath(places[i] ?? i, r)}
+                  fill={mix(paint.from, paint.to, paint.k)}
+                  style={{ transition: 'none' }}
+                />
               );
             })}
           </g>
@@ -329,8 +341,9 @@ export function StoryFlower({ beat, t }: { beat: number; t: number }) {
           {lengths.slice(0, 3).map((r, i) => {
             const lit = petalLit(beat, t, i);
             if (lit < 0.002) return null;
-            const [x1, y1] = atPetal(i, r + 3);
-            const [x2, y2] = atPetal(i, OUTER + 4);
+            const place = places[i] ?? i;
+            const [x1, y1] = atPetal(place, r + 3);
+            const [x2, y2] = atPetal(place, OUTER + 4);
             const right = 10 + 6 * i;
             return (
               <g
@@ -358,90 +371,8 @@ export function StoryFlower({ beat, t }: { beat: number; t: number }) {
               </g>
             );
           })}
-          <g opacity={votes} visibility={seen(votes)}>
-            <path
-              d={`M${-ARC} ${-ARC} A${OUTER} ${OUTER} 0 0 1 ${ARC} ${-ARC}`}
-              fill="none"
-              stroke="var(--figure-accent)"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              pathLength={1}
-              strokeDasharray="1 1"
-              strokeDashoffset={1 - vote.arc}
-            />
-            <circle
-              cy={-OUTER}
-              r={6 * vote.point}
-              fill="var(--figure-accent)"
-              stroke="var(--surface)"
-              strokeWidth={2}
-            />
-            {Array.from({ length: PETALS }, (_, i) => {
-              const v = voteOf(i);
-              if (!v) return null;
-              const [cx, cy] = atPetal(i, (lengths[i] ?? INNER) - 8);
-              return (
-                <circle
-                  // biome-ignore lint/suspicious/noArrayIndexKey: one mark per petal position
-                  key={i}
-                  cx={cx}
-                  cy={cy}
-                  r={3 * vote.vote(i)}
-                  // as the real legend says: mint for, pink against
-                  fill={v === 'against' ? PAINT.pink : PAINT.mint}
-                  stroke="var(--surface)"
-                  strokeWidth={1.5}
-                />
-              );
-            })}
-          </g>
+          <Proposals beat={beat} t={t} lengths={lengths} places={places} />
         </g>
-      </g>
-    </svg>
-  );
-}
-
-/**
- * Behind the flower, its own layer: a light that moves a third as much as the flower does, so the two sit at
- * different depths, tinted by the blocs' second key while they show. The page places it as it places the flower.
- */
-export function StoryLight({
-  beat,
-  t,
-  fresh = false,
-}: {
-  beat: number;
-  t: number;
-  fresh?: boolean;
-}) {
-  const id = useId().replace(/[^\w-]/g, '');
-  const light = glow(beat, t, fresh);
-  return (
-    <svg
-      data-b="figure"
-      data-kind="symbol"
-      aria-hidden="true"
-      viewBox="0 0 600 440"
-      className="block size-full overflow-visible"
-      style={KEYED}
-    >
-      <defs>
-        <radialGradient id={`${id}-glow`}>
-          <stop offset="0" stopColor="var(--figure-accent)" stopOpacity={0.3} />
-          <stop offset="0.55" stopColor="var(--figure-accent)" stopOpacity={0.08} />
-          <stop offset="1" stopColor="var(--figure-accent)" stopOpacity={0} />
-        </radialGradient>
-        <radialGradient id={`${id}-second`}>
-          <stop offset="0" stopColor="var(--story-second)" stopOpacity={0.28} />
-          <stop offset="1" stopColor="var(--story-second)" stopOpacity={0} />
-        </radialGradient>
-      </defs>
-      <g
-        transform={`translate(${CENTRE.x} ${CENTRE.y}) scale(${light.scale.toFixed(4)})`}
-        opacity={light.opacity}
-      >
-        <circle r={250} fill={`url(#${id}-glow)`} />
-        <circle r={210} fill={`url(#${id}-second)`} opacity={light.second} />
       </g>
     </svg>
   );

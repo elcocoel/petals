@@ -5,7 +5,7 @@
 // (@petal/core/wedge/far: a soft wave made from its own petals' heights, a hole for its mark), tallest at twelve
 // as the real petals are ordered. Positions are in the drawing's units, my community at 0, 0. Pure; built once.
 import { farPath } from '@petal/core/wedge/far';
-import { base, INNER, MAP_CENTRE } from './hero-story.ts';
+import { base, INNER, MAP_CENTRE, seeded } from './hero-story.ts';
 
 export interface Community {
   x: number;
@@ -45,24 +45,26 @@ const waveOf = (inner: number, heights: readonly number[]) =>
     { cx: 0, cy: 0, r0: inner },
   );
 
-/** The same made-up map every time: a small seeded generator. */
-function seeded(seed: number) {
-  let a = seed;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let r = Math.imul(a ^ (a >>> 15), 1 | a);
-    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/** A community `size` times mine: some petals, the biggest holders first, as lopsided as `steep` says. */
-function community(x: number, y: number, size: number, petals: number, steep: number): Community {
+/**
+ * A community `size` times mine, its holders made up as real ones come (Elco, 12 Nov: "you are using the same shape
+ * for things ... it looks completely unrealistic"): one whale and a tail, a few large holders, an even and ragged
+ * spread, or a long tail; anywhere from a handful of wallets to dozens; most ordered largest first, as the real
+ * default orders them, some by when they last voted. So no two have the same outline.
+ */
+function community(x: number, y: number, size: number, next: () => number): Community {
   const inner = INNER * size;
-  const heights = Array.from(
-    { length: petals },
-    (_, i) => 128 * size * (0.12 + 0.88 * (1 - i / petals) ** steep),
-  );
+  const petals = 5 + Math.floor(next() * 45);
+  const kind = next();
+  const big = 1 + Math.floor(next() * 4);
+  const heights = Array.from({ length: petals }, (_, i) => {
+    const r = next();
+    const tail = 1 - i / petals;
+    if (kind < 0.25) return i === 0 ? 1 : 0.06 + 0.22 * r * tail;
+    if (kind < 0.5) return i < big ? 0.65 + 0.35 * r : 0.08 + 0.3 * r * tail;
+    if (kind < 0.72) return 0.35 + 0.5 * r;
+    return (i + 1) ** -(0.5 + next()) * (0.6 + 0.8 * r);
+  }).map((h) => 128 * size * h);
+  if (next() < 0.7) heights.sort((a, b) => b - a);
   return { x, y, inner, heights, wave: waveOf(inner, heights), seen: seenAt(x, y) };
 }
 
@@ -73,10 +75,10 @@ export const MINE: Community = (() => {
 })();
 
 /** The two neighbours the connections beat follows its lines to. */
-export const NEIGHBOURS: readonly Community[] = [
-  community(-430, 150, 0.56, 16, 1.4),
-  community(-400, -120, 0.62, 18, 2.2),
-];
+export const NEIGHBOURS: readonly Community[] = (() => {
+  const next = seeded(31);
+  return [community(-430, 150, 0.56, next), community(-400, -120, 0.62, next)];
+})();
 
 /**
  * Everyone else on the map: one to a cell of a loose grid over the whole far frame, nudged off the grid, kept clear
@@ -93,12 +95,10 @@ export const OTHERS: readonly Community[] = (() => {
     for (let col = 0; col < cols; col++) {
       const x = FRAME.x - w / 2 + ((col + 0.2 + 0.6 * next()) / cols) * w;
       const y = FRAME.y - h / 2 + ((row + 0.2 + 0.6 * next()) / rows) * h;
-      const size = 0.32 + 0.45 * next();
-      const petals = 8 + Math.floor(next() * 22);
-      const steep = 0.8 + 2.4 * next();
+      const size = 0.28 + 0.5 * next();
       const reach = INNER * size + 140 * size;
       if (taken.some((c) => Math.hypot(c.x - x, c.y - y) < c.r + reach)) continue;
-      out.push(community(x, y, size, petals, steep));
+      out.push(community(x, y, size, next));
     }
   }
   return out;
