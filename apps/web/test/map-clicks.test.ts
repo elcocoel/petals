@@ -25,9 +25,7 @@ test('a proposal pressed stays pinned, its voters lit; pressed again, let go', (
   expect(land).toMatch(
     /voted = was && was\.flower === pressed\.flower && was\.id === pressed\.id \? null : pressed;/,
   );
-  expect(land).toMatch(
-    /return voted\?\.flower === i \? \{ \.\.\.look, pinned: voted\.id \} : look;/,
-  );
+  expect(land).toMatch(/\.\.\.\(voted\?\.flower === i \? \{ pinned: voted\.id \} : \{\}\),/);
   const scene = text('flower/scene.ts');
   expect(scene).toMatch(/s\.hit\.addEventListener\('pointerleave', \(\) => point\(pinnedAt\)\);/);
   expect(scene).toMatch(/if \(pinnedAt >= 0\) point\(pinnedAt\);/);
@@ -36,7 +34,21 @@ test('a proposal pressed stays pinned, its voters lit; pressed again, let go', (
 test('a click on empty space clears the choice: the wallet, the pinned proposal, the line, the DAO in the middle', () => {
   const land = text('landscape/useLandscape.ts');
   expect(land).toMatch(
-    /if \(r < 0\) \{\s+chooseWallet\(null\);\s+letGoProposal\(\);\s+if \(entered < 0 && \(data\.centre \?\? -1\) >= 0\) at\?\.current\?\.onCentre\?\.\(null\);/,
+    /if \(r < 0\) \{\s+chooseWallet\(null\);\s+foldStacks\(\);\s+letGoProposal\(\);\s+if \(entered < 0 && \(data\.centre \?\? -1\) >= 0\) at\?\.current\?\.onCentre\?\.\(null\);/,
   );
-  expect(land).toMatch(/if \(!pressed\) letGoProposal\(\);/);
+  expect(land).toMatch(/if \(!pressed\) \{\s+foldStacks\(\);\s+letGoProposal\(\);/);
+});
+
+test('a stack of more than STACK_FOLD proposals folds into one mark with its count; a click opens it', () => {
+  const scene = text('flower/scene.ts');
+  expect(scene).toMatch(/export const STACK_FOLD = 3;/);
+  expect(scene).toMatch(
+    /const folded = \(petal: number\) => \(perPetal\.get\(petal\) \?\? 0\) > STACK_FOLD && !opened\.has\(petal\);/,
+  );
+  expect(scene).toMatch(/\.filter\(\(pl\) => !folded\(pl\.petal\)\)/);
+  expect(scene).toMatch(/label\.text\(String\(n\)\);/);
+  const land = text('landscape/useLandscape.ts');
+  expect(land).toMatch(/const petal = d\.scene\.pointedStack\(\);/);
+  expect(land).toMatch(/set\.add\(petal\);\s+opened\.set\(flower, set\);\s+remount\(flower\);/);
+  expect(land).toMatch(/\.\.\.\(open\.length \? \{ opened: open \} : \{\}\),/);
 });
