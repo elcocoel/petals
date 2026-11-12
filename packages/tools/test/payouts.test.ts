@@ -1,10 +1,12 @@
 // What a DAO map paid out (payouts/v1, 12 Nov): list_payouts and GET /api/v1/maps/:id/payouts over a period.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { Payout, Payouts } from '@petal/core';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { privateStore } from '../src/drafts.ts';
 import { httpApp } from '../src/http/app.ts';
+import { keepKnown } from '../src/payouts.ts';
 import { callTool } from '../src/registry.ts';
 import { rig, type TestRig } from './helpers.ts';
 
@@ -70,5 +72,33 @@ describe('payouts', () => {
       (await app.request(`/api/v1/maps/${encodeURIComponent('near:mainnet:none.near')}/payouts`))
         .status,
     ).toBe(404);
+  });
+});
+
+describe('a read again never knows less than the one kept (META, 12 Nov, after run 3)', () => {
+  test("a payout this read couldn't price or date keeps the kept read's; what this read found stands", () => {
+    const kept = paid as Payouts;
+    const first = kept.payouts.find((p) => p.usd !== null && p.when !== null) as Payout;
+    expect(first).toBeDefined();
+    const refused = {
+      ...kept,
+      payouts: kept.payouts.map((p) =>
+        p === first ? { ...p, usd: null, when: null, evidence: null } : p,
+      ),
+    };
+    const kept2 = keepKnown(refused, kept);
+    expect(kept2.payouts.find((p) => p.proposal.ref === first.proposal.ref)).toEqual(first);
+    // a price this read found itself is kept as found, never the old one
+    const repriced = {
+      ...kept,
+      payouts: kept.payouts.map((p) =>
+        p === first ? { ...p, usd: { ...(p.usd as NonNullable<Payout['usd']>), usd: '1.00' } } : p,
+      ),
+    };
+    expect(
+      keepKnown(repriced, kept).payouts.find((p) => p.proposal.ref === first.proposal.ref)?.usd
+        ?.usd,
+    ).toBe('1.00');
+    expect(keepKnown(refused, null)).toBe(refused);
   });
 });

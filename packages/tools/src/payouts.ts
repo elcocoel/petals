@@ -2,7 +2,7 @@
 // 'payouts from this treasury over period x'"; NEAR first): for each map of a Sputnik DAO, every passed
 // proposal's payment, dated by the DAO's own transfer and priced on that day, kept by the map's address.
 // scripts/map-payouts.ts runs it where the server runs. Read again, a map's payouts are replaced.
-import { type Payouts, validatePayouts } from '@petal/core';
+import { type Payout, type Payouts, validatePayouts } from '@petal/core';
 import {
   defaultPool,
   FASTNEAR_TX,
@@ -38,6 +38,32 @@ export interface PayoutRun {
   log?: (line: string) => void;
   /** how long to wait before asking a keyless service again; tests pass none */
   waits?: readonly number[];
+}
+
+/** One payout, the same in two reads: the proposal that paid it, what, to whom, how much. */
+const payoutKey = (p: Payout) => `${p.proposal.ref}|${p.asset.id}|${p.to}|${p.raw}`;
+
+/**
+ * A read again never knows less than the one kept (META, 12 Nov, after run 3: DefiLlama refused past prices in the
+ * real run that it gave in the dry one): a payout this read found no dollars or date for keeps the kept read's,
+ * with the transfer that dated it. What this read found itself stands.
+ */
+export function keepKnown(doc: Payouts, kept: Payouts | null): Payouts {
+  if (!kept) return doc;
+  const before = new Map(kept.payouts.map((p) => [payoutKey(p), p]));
+  return {
+    ...doc,
+    payouts: doc.payouts.map((p) => {
+      const was = before.get(payoutKey(p));
+      if (!was) return p;
+      const dated = p.when === null && was.when !== null;
+      return {
+        ...p,
+        ...(dated ? { when: was.when, evidence: was.evidence } : {}),
+        ...(p.usd === null && was.usd !== null ? { usd: was.usd } : {}),
+      };
+    }),
+  };
 }
 
 export async function payoutMaps(
@@ -105,6 +131,7 @@ export async function payoutMaps(
       log(`${card.id}: not read, ${(e as Error).message}`);
       continue;
     }
+    doc = keepKnown(doc, await payoutsOf(ctx, card.id));
     const checked = validatePayouts(doc);
     if (!checked.ok) {
       log(
