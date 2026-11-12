@@ -20,11 +20,15 @@ export interface Community {
   seen: number;
 }
 
-/** How far the far frame reaches from its middle, in the drawing's units, on a wide stage. */
-const HALF = { x: 1765, y: 1100 };
+/**
+ * The whole far frame, in the drawing's units: the full width of a wide stage, the words' side included, since the
+ * story runs under them too (Elco, 12 Nov); my community sits right of its middle, where the story happens.
+ */
+const FRAME = { x: MAP_CENTRE.x - 1000, y: MAP_CENTRE.y, w: 6600, h: 3600 };
+const HALF = { x: FRAME.w / 2, y: FRAME.h / 2 };
 /** How much of a community shows at its place on the far frame: all of it, fading over the last part to the edge. */
 function seenAt(x: number, y: number): number {
-  const out = Math.max(Math.abs(x - MAP_CENTRE.x) / HALF.x, Math.abs(y - MAP_CENTRE.y) / HALF.y);
+  const out = Math.max(Math.abs(x - FRAME.x) / HALF.x, Math.abs(y - FRAME.y) / HALF.y);
   const p = Math.min(1, Math.max(0, (out - 0.72) / 0.28));
   return 1 - p * p * (3 - 2 * p);
 }
@@ -75,21 +79,20 @@ export const NEIGHBOURS: readonly Community[] = [
 ];
 
 /**
- * Everyone else on the map: one to a cell of a loose grid round the far frame's middle, nudged off the grid, kept
- * clear of my community and its neighbours.
+ * Everyone else on the map: one to a cell of a loose grid over the whole far frame, nudged off the grid, kept clear
+ * of my community and its neighbours.
  */
 export const OTHERS: readonly Community[] = (() => {
   const next = seeded(12);
-  const cols = 8;
-  const rows = 5;
-  const w = 3700;
-  const h = 2300;
+  const cols = 13;
+  const rows = 7;
+  const { w, h } = FRAME;
   const out: Community[] = [];
   const taken = [MINE, ...NEIGHBOURS].map((c) => ({ x: c.x, y: c.y, r: c.inner + 200 }));
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
-      const x = MAP_CENTRE.x - w / 2 + ((col + 0.2 + 0.6 * next()) / cols) * w;
-      const y = MAP_CENTRE.y - h / 2 + ((row + 0.2 + 0.6 * next()) / rows) * h;
+      const x = FRAME.x - w / 2 + ((col + 0.2 + 0.6 * next()) / cols) * w;
+      const y = FRAME.y - h / 2 + ((row + 0.2 + 0.6 * next()) / rows) * h;
       const size = 0.32 + 0.45 * next();
       const petals = 8 + Math.floor(next() * 22);
       const steep = 0.8 + 2.4 * next();

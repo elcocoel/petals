@@ -5,7 +5,6 @@ import {
   answerBox,
   answerLine,
   answerWord,
-  beatMs,
   historyLine,
   kick,
   layerOpacity,
@@ -30,7 +29,6 @@ import { siteLinks } from '../../lib/site-links.ts';
 import { type HeroStoryClock, useHeroStory } from '../../viewmodels/useHeroStory.ts';
 import { Button } from '../ui/Button.tsx';
 import { Icon } from '../ui/Icon.tsx';
-import { IconButton } from '../ui/IconButton.tsx';
 import { Mono } from '../ui/Mono.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
@@ -72,7 +70,7 @@ const trackY = (wide: boolean) => (wide ? 86 : 70);
 /** The words beside the stage: they never move, so they never redraw with it. */
 const Intro = memo(function Intro() {
   return (
-    <div className="lg:w-1/3 lg:shrink-0">
+    <div>
       <SectionHead size="hero" eyebrow={hero.eyebrow} title={hero.titleWide} body={hero.body} />
       <div className="mt-column-gap">
         <Button href={siteLinks.lobby} arrow>
@@ -130,7 +128,7 @@ function Answer({
   const m = answerBox(beat, t, fresh);
   if (m.opacity < 0.002) return null;
   return (
-    <div className="absolute top-0 left-0 w-max max-w-9/10 lg:max-w-2/5" style={pinned(pin, m)}>
+    <div className="absolute top-0 left-0 w-max max-w-9/10 lg:max-w-1/4" style={pinned(pin, m)}>
       {/* its rim lit from the flower's side */}
       <Glass tone="dark" facing={pin.ax > 0.5 ? 'left' : 'right'} glint={m.glint} glow={m.glow} />
       <div className="relative flex flex-col gap-space-8 px-block-gap py-space-16 text-on-action">
@@ -184,60 +182,19 @@ function Answer({
 }
 
 /**
- * The Tools box, high on the right on a wide stage (Elco, 12 Nov: the tooling layer): the map's own rows, each
- * changing as the flower does what it says (HeroTools).
+ * The Tools box, in the middle ground on a wide stage (Elco, 12 Nov: "it should be in the middle plane ... maybe it's
+ * blurred ... it shouldn't be very on the top"): the map's own Tools rows (HeroTools, the real ViewLegend), set as
+ * the flower is, a little back, soft and quiet, so the question and the answer tell the story.
  */
 function Tools({ beat, t }: { beat: number; t: number }) {
   const m = toolsBox(beat, t);
   return (
-    <div className="absolute top-0 left-0 w-3/10" style={pinned(toolsPin, m)}>
+    <div
+      className="absolute top-0 left-0 w-1/5"
+      style={{ ...pinned(toolsPin, m), opacity: 0.5, filter: soft(1.4) }}
+    >
       <Glass tone="light" facing="left" glint={m.glint} glow={m.glow} />
       <HeroTools beat={beat} t={t} />
-    </div>
-  );
-}
-
-/**
- * The chapters, apart from the stage (Elco, 11 Nov: "a separate element of the animation, not stuck in it"):
- * pause, and the six beats to stop at any of them, the current one filling as it plays.
- */
-function Chapters({
-  beat,
-  progress,
-  playing,
-  toggle,
-  choose,
-}: {
-  beat: number;
-  progress: number;
-  playing: boolean;
-  toggle: () => void;
-  choose: (beat: number) => void;
-}) {
-  return (
-    <div className="mt-column-gap flex items-start gap-space-8">
-      <IconButton
-        icon={playing ? 'pause' : 'play'}
-        label={playing ? story.pause : story.play}
-        onClick={toggle}
-      />
-      <div className="flex min-w-0 flex-1">
-        {story.beats.map((b, i) => (
-          <Button key={b.name} variant="tick" current={i === beat} onClick={() => choose(i)}>
-            <span className="flex w-full flex-col gap-space-8">
-              <span className="relative block w-full border-t-heavy border-hairline">
-                {/* the beat's own length, filling as it plays */}
-                <span
-                  className="absolute inset-x-0 -top-px block origin-left border-t-heavy border-primary"
-                  style={{ scale: `${i < beat ? 1 : i === beat ? progress.toFixed(4) : 0} 1` }}
-                />
-              </span>
-              {/* Under each tick on a wide window; read aloud everywhere. */}
-              <span className="sr-only type-caption lg:not-sr-only">{b.name}</span>
-            </span>
-          </Button>
-        ))}
-      </div>
     </div>
   );
 }
@@ -257,99 +214,111 @@ export function HeroStoryView({
   const cy = centreY(wide);
   const back = layer === 'words' ? 0.08 : 1;
   return (
-    <Section>
-      {/* A third for the words, two thirds for the stage, as the sketch has them; stacked on a phone. */}
-      <div className="flex flex-col gap-column-gap lg:flex-row lg:items-center">
-        <Intro />
-        <div className="min-w-0 flex-1">
-          <div
-            ref={clock.stage}
-            className="relative aspect-2/3 w-full lg:aspect-8/5"
-            style={{ containerType: 'size', perspective: '900px' }}
-          >
-            {/* The world stays inside the stage, so the far map never spills onto the page; the map fades its
-                own edges (lib/hero-map.ts). With the stage's perspective, for the layers' depth. */}
-            <div
-              className="pointer-events-none absolute inset-0 overflow-hidden"
-              style={{ perspective: '900px' }}
-            >
-              {/* Behind: the light, following the flower at half its travel, so it reads as further away. */}
-              <div
-                className="pointer-events-none absolute inset-0"
-                style={{
-                  opacity: back,
-                  translate: `${n2((f.x - 50) * 0.5)}% ${n2((f.y - cy) * 0.5)}% -60px`,
-                  scale: (1 + (f.scale - 0.85) * 0.4).toFixed(4),
-                  transformOrigin: `50% ${cy}%`,
-                }}
-              >
-                <StoryLight beat={beat} t={t} fresh={fresh} />
-              </div>
-              {/* The middle: the flower where the shot puts it, and the history beat's line from then to now. */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  opacity: back,
-                  translate: `${n2(f.x - 50)}% ${n2(f.y - cy)}%`,
-                  scale: (f.scale * punch).toFixed(4),
-                  // turned towards the middle of the stage, as a thing standing in it is, and leaning into the whip
-                  transform: `rotateY(${n2((50 - f.x) * 0.32 + f.lean)}deg) rotateX(5deg)`,
-                  filter: soft(f.blur),
-                  transformOrigin: `50% ${cy}%`,
-                }}
-              >
-                <StoryFlower beat={beat} t={t} />
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-x-1/4 top-0 flex items-center gap-text-gap"
-                  style={{
-                    opacity: layerOpacity(3, beat, t),
-                    translate: `0 ${trackY(wide)}cqh`,
-                  }}
-                >
-                  <Mono>{story.past}</Mono>
-                  <span className="relative block h-px flex-1 bg-hairline">
-                    {/* the line fills behind the marker as time passes */}
-                    <span
-                      className="absolute inset-0 block origin-left bg-primary"
-                      style={{ scale: `${Math.min(1, marker).toFixed(4)} 1` }}
-                    />
-                    {/* the marker rides a layer as wide as the line, moved along by its own width */}
-                    <span
-                      className="absolute inset-0 block"
-                      style={{ translate: `${(marker * 100).toFixed(2)}% 0` }}
-                    >
-                      <span className="absolute -top-space-4 -left-space-4 block size-space-8 bg-primary" />
-                    </span>
-                  </span>
-                  <Mono>{story.now}</Mono>
-                </div>
-              </div>
-            </div>
-            {/* In front: the question, then the answer; the last answer still leaving as the next question comes. */}
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{ opacity: layer === 'petals' ? 0 : 1 }}
-            >
-              <Question beat={beat} u={t} fresh={fresh} wide={wide} />
-            </div>
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{ opacity: layer === 'petals' ? 0 : 1 }}
-            >
-              <Answer beat={beat} t={t} fresh={fresh} wide={wide} />
-              {wide && <Tools beat={beat} t={t} />}
+    <Section bleed padding="bar">
+      {/*
+        The story runs the whole width of the window (Elco, 12 Nov: "it just feels like a graph in a box instead of a
+        cinematic story"), sixteen by nine and never taller than the screen under the nav; on a wide window the words sit over its
+        left side, in the page's column, and the story happens on the right, a little of it under the words. On a
+        phone, the words and then the stage.
+      */}
+      <div className="relative left-1/2 flex w-screen -translate-x-1/2 flex-col">
+        <div className="pointer-events-none lg:absolute lg:inset-0 lg:z-10">
+          <div className="mx-auto flex h-full w-full max-w-page-width items-center px-block-gap pb-column-gap md:px-page-inset lg:pb-0">
+            <div className="pointer-events-auto lg:w-1/3">
+              <Intro />
             </div>
           </div>
         </div>
+        <div
+          ref={clock.stage}
+          className="relative aspect-2/3 w-full lg:aspect-video lg:max-h-[calc(100svh-7.5rem)]" /* token-exempt: the story fits the first screen under the nav, whatever the window */
+          style={{ containerType: 'size', perspective: '900px' }}
+        >
+          {/* The world stays inside the stage, so the far map never spills onto the page; the map fades its own
+              edges (lib/hero-map.ts). With the stage's perspective, for the layers' depth. */}
+          <div
+            className="pointer-events-none absolute inset-0 overflow-hidden"
+            style={{ perspective: '900px' }}
+          >
+            {/* Behind: the light, following the flower at half its travel, so it reads as further away. */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                opacity: back,
+                translate: `${n2((f.x - 50) * 0.5)}% ${n2((f.y - cy) * 0.5)}% -60px`,
+                scale: (1 + (f.scale - 0.85) * 0.4).toFixed(4),
+                transformOrigin: `50% ${cy}%`,
+              }}
+            >
+              <StoryLight beat={beat} t={t} fresh={fresh} />
+            </div>
+            {/* The middle ground: the tools, a little back and soft. */}
+            {wide && (
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{ opacity: layer === 'petals' ? 0 : back }}
+              >
+                <Tools beat={beat} t={t} />
+              </div>
+            )}
+            {/* The middle: the flower where the shot puts it, and the history beat's line from then to now. */}
+            <div
+              className="absolute inset-0"
+              style={{
+                opacity: back,
+                translate: `${n2(f.x - 50)}% ${n2(f.y - cy)}%`,
+                scale: (f.scale * punch).toFixed(4),
+                // turned towards the middle of the stage, as a thing standing in it is, and leaning into the whip
+                transform: `rotateY(${n2((50 - f.x) * 0.32 + f.lean)}deg) rotateX(5deg)`,
+                filter: soft(f.blur),
+                transformOrigin: `50% ${cy}%`,
+              }}
+            >
+              <StoryFlower beat={beat} t={t} />
+              <div
+                aria-hidden="true"
+                className="absolute inset-x-1/4 top-0 flex items-center gap-text-gap"
+                style={{
+                  opacity: layerOpacity(3, beat, t),
+                  translate: `0 ${trackY(wide)}cqh`,
+                }}
+              >
+                <Mono>{story.past}</Mono>
+                <span className="relative block h-px flex-1 bg-hairline">
+                  {/* the line fills behind the marker as time passes */}
+                  <span
+                    className="absolute inset-0 block origin-left bg-primary"
+                    style={{ scale: `${Math.min(1, marker).toFixed(4)} 1` }}
+                  />
+                  {/* the marker rides a layer as wide as the line, moved along by its own width */}
+                  <span
+                    className="absolute inset-0 block"
+                    style={{ translate: `${(marker * 100).toFixed(2)}% 0` }}
+                  >
+                    <span className="absolute -top-space-4 -left-space-4 block size-space-8 bg-primary" />
+                  </span>
+                </span>
+                <Mono>{story.now}</Mono>
+              </div>
+            </div>
+            {/* Under the words, the world fades into the page, so what runs beneath them never fights them. */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/2 bg-linear-to-r from-surface from-35% to-transparent lg:block" />
+          </div>
+          {/* In front: the question, then Petals' answer. */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ opacity: layer === 'petals' ? 0 : 1 }}
+          >
+            <Question beat={beat} u={t} fresh={fresh} wide={wide} />
+          </div>
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ opacity: layer === 'petals' ? 0 : 1 }}
+          >
+            <Answer beat={beat} t={t} fresh={fresh} wide={wide} />
+          </div>
+        </div>
       </div>
-      <Chapters
-        beat={beat}
-        progress={Math.min(1, t / beatMs(beat))}
-        playing={clock.playing}
-        toggle={clock.toggle}
-        choose={clock.choose}
-      />
     </Section>
   );
 }

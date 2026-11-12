@@ -541,28 +541,30 @@ export function network(beat: number, t: number) {
 /**
  * The rows of the real Tools box the hero shows (ViewLegend's dimensions; Elco, 12 Nov: "there is tooling and
  * things that change and colors change"), and what each is set to once a beat has settled: the tools are what the
- * flower does. Height goes from None to Share of the whole as the heights part; Labels show the strongest's shares;
- * Highlight takes the voting blocs; Colour goes from Kind of account to Voted or never for the vote.
+ * flower does. Height goes from None to Share of the whole as the heights part; Highlight takes the voting blocs;
+ * Colour goes from Kind of account to Voted or never for the vote.
  */
-export type ToolRow = 'height' | 'colour' | 'labels' | 'highlight';
+export type ToolRow = 'height' | 'colour' | 'highlight';
 export type ToolValue = 'none' | 'share' | 'kind' | 'voted' | 'blocs';
-export const TOOL_ROWS: readonly ToolRow[] = ['height', 'colour', 'labels', 'highlight'];
 const SETTINGS: readonly Record<ToolRow, ToolValue>[] = [
-  { height: 'none', colour: 'kind', labels: 'none', highlight: 'none' },
-  { height: 'share', colour: 'kind', labels: 'share', highlight: 'none' },
-  { height: 'share', colour: 'kind', labels: 'none', highlight: 'blocs' },
-  { height: 'share', colour: 'kind', labels: 'none', highlight: 'none' },
-  { height: 'share', colour: 'voted', labels: 'none', highlight: 'none' },
-  { height: 'share', colour: 'kind', labels: 'share', highlight: 'none' },
+  { height: 'none', colour: 'kind', highlight: 'none' },
+  { height: 'share', colour: 'kind', highlight: 'none' },
+  { height: 'share', colour: 'kind', highlight: 'blocs' },
+  { height: 'share', colour: 'kind', highlight: 'none' },
+  { height: 'share', colour: 'voted', highlight: 'none' },
+  { height: 'share', colour: 'kind', highlight: 'none' },
 ];
 
 /** When a row changes in a beat: on the count the flower does what it says. */
 function setAt(beat: number, row: ToolRow): number {
   if (row === 'height') return reactAt(beat);
   if (row === 'colour') return beat === 4 ? REACT : CALL;
-  if (row === 'labels') return beat === 1 ? count(3.5) : beat === 5 ? count(2) : CALL;
   return beat === 2 ? REACT : CALL;
 }
+
+/** Which voting bloc the Highlight row has chosen at a moment: the first on the three, the second on the four. */
+export const blocChosen = (beat: number, t: number): string | null =>
+  beat !== 2 ? null : t >= SECOND_BLOC ? 'second' : t >= REACT ? 'first' : null;
 
 /**
  * A row at a moment: what it was set to and what it is set to now, `k` of the way from one to the other, and a
@@ -586,14 +588,15 @@ export function tool(beat: number, t: number, row: ToolRow) {
   };
 }
 
-/** The Tools box: always there, as the real one is on the map, floating against the answer. */
+/** The Tools box: always there, as the real one is on the map, set back in the middle ground, floating. */
 export function toolsBox(beat: number, t: number): Motion {
   return {
     opacity: 1,
     x: 0,
     y: FLOAT_PX * drift(beat, t, 0.6),
     blur: 0,
-    scale: 1,
+    // set back: smaller than the words in front of it
+    scale: 0.78,
     turn: 10 + SWAY * drift(beat, t, 1.6),
     z: 50,
     glint: 0,
