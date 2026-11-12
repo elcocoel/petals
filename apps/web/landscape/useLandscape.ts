@@ -114,6 +114,10 @@ export interface LandscapeAt {
    * map, or null to put the saved map back; the page arranges the rest round it.
    */
   onCentre?: (id: string | null) => void;
+  /** Treasury and token price under the names at some magnification (Elco, 12 Nov walk 3); on unless off. */
+  worth?: boolean;
+  /** Set by the map once it's built: draws it again, for a change it reads on each frame (`worth`). */
+  redraw?: () => void;
 }
 
 const LONGEST_FRAME = 1 / 15;
@@ -539,6 +543,7 @@ export function useLandscape(
         only,
         way: entered >= 0 ? pointedWay : -1,
         waved,
+        worth: at?.current?.worth !== false,
       });
       if (moving) wake();
       else then = 0;
@@ -914,6 +919,7 @@ export function useLandscape(
         for (const j of new Set([was, groupFlower])) if (j >= 0 && lives.has(j)) remount(j);
         wake();
       };
+      at.current.redraw = wake;
       at.current.enter = (i) => {
         if (!flowers[i]) return;
         enterFlower(i);

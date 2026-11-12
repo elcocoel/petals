@@ -8,11 +8,11 @@
 import { FAR_WAVE, farRuns } from '@petal/core/wedge/far';
 import { HIGHLIGHT } from '@petal/core/wedge/highlight';
 import { GREY, keyFor, keysOf, wordsOf } from '@petal/core/wedge/keys';
-import { DETAIL, fade } from '../flower/detail.ts';
+import { DETAIL, fade, type Row } from '../flower/detail.ts';
 import type { Model } from '../flower/model.ts';
 import { n3, polygonPath, roundTopPath, SHAPE } from '../flower/ring.ts';
 import { LINE, MONO, textWidth } from '../flower/words.ts';
-import { drawLabel, LABEL_HEIGHT, type Label, MARK, NAME_GAP } from './labels.ts';
+import { drawLabel, LABEL_HEIGHT, type Label, MARK, NAME_GAP, WORTH_HEIGHT } from './labels.ts';
 import type { Place } from './places.ts';
 import { crowdFade, type Road, roadWidth } from './roads.ts';
 import { edgePoint, onScreen, reachToward, screenCentre, screenRadius } from './space.ts';
@@ -48,6 +48,8 @@ export interface LandFlower {
   /** the map it stands for, and how many proposals that map has (#93) */
   map?: string | null | undefined;
   proposals?: number | undefined;
+  /** its map's treasury and token price, in words, shown under its name at some magnification (Elco, 12 Nov walk 3) */
+  worth?: readonly string[] | undefined;
 }
 
 export interface LandView {
@@ -105,7 +107,12 @@ export interface LandFrame {
    * Without it, each flower by its own size, as before.
    */
   waved?: number;
+  /** Treasury and token price under the names, at some magnification; the switch in the legend (OVERLAYS) */
+  worth?: boolean;
 }
+
+/** The treasury and price under a name come in as a flower grows to this radius on screen, in px. */
+export const WORTH_AT: Row = { driver: 'flowerRadius', fadeIn: [56, 72] };
 
 /** A flower that doesn't hold the chosen wallet keeps this much of itself (the wallet level). */
 export const WALLET_AWAY = 0.25;
@@ -399,6 +406,7 @@ export function createLandScene(
       only = -1,
       way: wayPointed = -1,
       waved: allWaved,
+      worth: worthOn = true,
     }) {
       world.set('transform', `translate(${n3(view.x)} ${n3(view.y)}) scale(${view.k})`);
       const rest = 1 - enter;
@@ -452,6 +460,7 @@ export function createLandScene(
         if (!onScreen(view, f.place) || markShown <= 0.01) {
           l.group.show(false);
           l.centre?.show(false);
+          l.worth?.show(false);
           continue;
         }
         const c = screenCentre(view, f.place);
@@ -499,6 +508,7 @@ export function createLandScene(
         }
         if (!box) {
           l.group.show(false);
+          l.worth?.show(false);
           continue;
         }
         placed.push(box);
@@ -506,6 +516,24 @@ export function createLandScene(
         l.group.show(true);
         l.group.set('transform', `translate(${n3(box.x0)} ${n3(y)})`);
         l.group.set('opacity', o2(Math.max(markShown, nameShown)));
+        // its treasury and token price just under its name, once it's big enough (Elco, 12 Nov walk 3 on Ref
+        // Finance: "at some magnification show treasury and token price"), where nothing else stands
+        if (l.worth) {
+          const shown = worthOn ? fade(WORTH_AT, r) * tone : 0;
+          const wy = y + LABEL_HEIGHT / 2 + 2 + WORTH_HEIGHT / 2;
+          const b = {
+            x0: c.x - l.worthWidth / 2,
+            y0: wy - WORTH_HEIGHT / 2,
+            x1: c.x + l.worthWidth / 2,
+            y1: wy + WORTH_HEIGHT / 2,
+          };
+          if (shown > 0.01 && !placed.some((p) => overlaps(p, b)) && !onAFlower(b, i)) {
+            placed.push(b);
+            l.worth.show(true);
+            l.worth.set('transform', `translate(${n3(b.x0)} ${n3(wy)})`);
+            l.worth.set('opacity', o2(shown));
+          } else l.worth.show(false);
+        }
       }
 
       // Connections: each flower's strongest few from the farthest, the rest as they grow; fainter the more

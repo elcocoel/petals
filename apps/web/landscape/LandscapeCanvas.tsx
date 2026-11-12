@@ -75,6 +75,8 @@ export interface CanvasFlower {
    */
   map?: string | null | undefined;
   proposals?: number | undefined;
+  /** its map's treasury and token price, in words, where its card has them (Elco, 12 Nov walk 3) */
+  worth?: readonly string[] | undefined;
 }
 
 /** A wallet chosen on the map (LOOK's wallet level): its id as its flower names it, on that flower's chain. */
@@ -146,6 +148,7 @@ function Land({
   clearOfChains,
   highlight,
   go,
+  worth,
 }: {
   data: LandscapeData;
   probe: boolean;
@@ -168,6 +171,8 @@ function Land({
   highlight: readonly string[] | null;
   /** a flower to go into, by its place on this chain's map (a search's answer, pressed), or null */
   go: { at: number } | null;
+  /** treasury and token price under the names at some magnification (the legend's switch) */
+  worth: boolean;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
@@ -182,6 +187,7 @@ function Land({
     onWallet,
     onCentre,
     clearOfChains,
+    worth,
     ...(onPick ? { onPick } : {}),
   };
   useLandscape(svg, data, probe, aside, at);
@@ -193,6 +199,9 @@ function Land({
   useEffect(() => {
     at.current?.highlight?.(highlight);
   }, [highlight]);
+  useEffect(() => {
+    if (worth !== undefined) at.current?.redraw?.();
+  }, [worth]);
   // after the map's own effect, so a chain built just now is there to fly into
   useEffect(() => {
     if (go) at.current?.enter?.(go.at);
@@ -374,6 +383,8 @@ export function LandscapeCanvas({
   }, [data]);
   // Gravity: how close the flowers on a chain sit (OVERLAYS hands it the legend's control)
   const [gravity, setGravity] = useState(GRAVITY_DEFAULT);
+  // treasury and token price under the names at some magnification (Elco, 12 Nov walk 3), switched in the legend
+  const [worth, setWorth] = useState(true);
   // the chain's flowers and their drawing models, once per chain; gravity only moves their places
   const built = useMemo<(LandscapeData & { focus: number; from: number[] }) | null>(() => {
     const here = data.chains.find((c) => c.chain === chain);
@@ -397,6 +408,7 @@ export function LandscapeCanvas({
         snapshot: f.snapshot,
         map: f.map ?? null,
         proposals: f.proposals ?? 0,
+        worth: f.worth,
       });
     });
     const roads = data.roads.flatMap((r) => {
@@ -605,6 +617,7 @@ export function LandscapeCanvas({
       between={{ label: panelWords.legendLines, says: panelWords.legendLinesSay }}
       // how much the map's flowers draw together (Elco, 12 Nov, walk 2: "gravity"), for the visit
       gravity={{ value: gravity, onChange: setGravity }}
+      worth={{ on: worth, onChange: setWorth }}
       edit={hands ?? undefined}
       groups={
         inFlower && blocs
@@ -657,6 +670,7 @@ export function LandscapeCanvas({
           onCentre={setCentre}
           clearOfChains={clearOfChains}
           highlight={lit}
+          worth={worth}
           go={go?.chain === chain ? go : null}
         />
       )}
