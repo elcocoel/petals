@@ -62,14 +62,55 @@ function titleOf(raw: string, fallback: string): string {
   return field(matter, 'title') ?? /^# (.+)$/m.exec(body)?.[1]?.replace(/`/g, '') ?? fallback;
 }
 
-/** A heading's words as the page shows them: no code ticks, links, emphasis or HTML. */
+/** Words as the page shows them: no code ticks, links, emphasis or HTML; snake_case stays as it is. */
 function plain(md: string): string {
   return md
     .replace(/`([^`]*)`/g, '$1')
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/<[^>]+>/g, '')
-    .replace(/(\*\*|__|\*|_|~~)(.+?)\1/g, '$2')
+    .replace(/(\*\*|\*|~~)(.+?)\1/g, '$2')
+    .replace(/(?<![\p{L}\p{N}])(__|_)(.+?)\1(?![\p{L}\p{N}])/gu, '$2')
     .trim();
+}
+
+/**
+ * A page's words in plain text, as search shows them around a match (CONNECTORS, 12 Nov: raw Markdown read badly
+ * in the snippets): each line's links, ticks and emphasis gone; no fence marks, table rules, quote or heading
+ * marks, or link definitions; a table's cells apart by spaces.
+ */
+function prose(lines: readonly string[]): string {
+  const out: string[] = [];
+  let fence = false;
+  for (const l of lines) {
+    if (/^\s*(```|~~~)/.test(l)) {
+      fence = !fence;
+      continue;
+    }
+    // code stays as it's written
+    if (fence) {
+      out.push(l);
+      continue;
+    }
+    if (/^\s*\|?\s*:?-{3,}/.test(l) || /^\s*\[[^\]]+\]:\s/.test(l)) continue;
+    out.push(
+      plain(
+        l
+          .replace(/^\s*>\s?/, '')
+          .replace(/^#{1,6}\s+/, '')
+          .replace(/^\s*\|/, '')
+          .replace(/\|\s*$/, '')
+          .replace(/\s*\|\s*/g, '  '),
+      ),
+    );
+  }
+  return (
+    out
+      .join('\n')
+      // a link or a picture whose words run over more than one line
+      .replace(/!?\[([^\]]*)\]\([^)\s]*\)/g, '$1')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+  );
 }
 
 /** GitHub's anchors, as github-slugger (rehype-slug's) makes them: a repeated one gets -1, -2. */
@@ -97,7 +138,7 @@ export function sectionsOf(body: string): { intro: string; sections: DocSection[
   let fence = false;
   let at: { anchor: string; title: string; lines: string[] } | null = null;
   const close = () => {
-    if (at) sections.push({ anchor: at.anchor, title: at.title, text: at.lines.join('\n').trim() });
+    if (at) sections.push({ anchor: at.anchor, title: at.title, text: prose(at.lines) });
   };
   // the page drops its own # title, as /docs does
   for (const line of body.replace(/^# .+\r?\n?/, '').split('\n')) {
@@ -115,7 +156,7 @@ export function sectionsOf(body: string): { intro: string; sections: DocSection[
     (at ? at.lines : intro).push(line);
   }
   close();
-  return { intro: intro.join('\n').trim(), sections };
+  return { intro: prose(intro), sections };
 }
 
 interface Schema {
