@@ -1,7 +1,6 @@
 'use client';
-// A dropdown: one value chosen from a few, in a tool panel (Elco, 12 Nov, walk 2: "drop downs to changing the
-// things ... very clearly to see what is category, what is input"; walk 3: "style these drop downs a little bit
-// better"). In the side panel's look, from its parts: the value in UI words with a caret, answering as a row does
+// A dropdown: one value chosen from a few, in a tool panel, so what is a category and what is an input reads
+// clearly. In the side panel's look, from its parts: the value in UI words with a caret, answering as a row does
 // (the item's fill under the pointer and while it's open), and its choices as the panel's menu (ui/Menu): NavItem
 // rows, the chosen one lit, the keys moving through them, Escape or a press elsewhere closing it. The list opens
 // in the browser's top layer, under its button, so no box's edge or scroll cuts it. Props only, and whether it's

@@ -2,8 +2,10 @@
 // the record once. For each map, Petals' own rows (the readings its mapping drew, and the map's mark, value,
 // proposals, payouts and vesting) as one publication by mapping.petals.near, "imported, unsigned"; and each press a
 // person signed before the protocol (the published claims of 12 Nov) as that person's publication, with its own
-// NEP-413 proof, whose message names the hash of what it signed. A map already in the record isn't imported again.
-// scripts/publish-import.ts runs it, --dry first.
+// NEP-413 proof, whose message names the hash of what it signed. A map whose own rows changed since Petals' latest
+// version of it (a re-read replaced its value, its proposals, a reading) gets the next version, its parent and
+// previous that one, so the composed map follows what Petals holds now and the record keeps what it held before;
+// a map unchanged is left. scripts/publish-import.ts runs it, --dry first.
 import {
   aboutKey,
   canonicalJson,
@@ -32,6 +34,10 @@ export interface ImportReport {
   left: string[];
 }
 
+/** The same layers, in any order. */
+const sameLayers = (a: Publication['layers'], b: Publication['layers']) =>
+  a.length === b.length && new Set([...a, ...b].map((l) => l.sha256)).size === a.length;
+
 const hashOf = (doc: unknown) => sha256Hex(canonicalJson(doc));
 const kindOf = (petal: string) => petal.split('/')[0] as string;
 const counts = (layers: Publication['layers']) =>
@@ -46,10 +52,15 @@ export async function importRecord(
 ): Promise<ImportReport> {
   const store = privateStore(ctx.config);
   const at = ctx.now().toISOString();
+  const record = await recordOf(ctx);
   const inRecord = new Set(
-    (await recordOf(ctx)).map(
-      (e) => `${aboutKey(e.publication.about)}\u0000${e.publication.author}`,
-    ),
+    record.map((e) => `${aboutKey(e.publication.about)}\u0000${e.publication.author}`),
+  );
+  // Petals' own latest version of each map, in record order
+  const ownLatest = new Map(
+    record
+      .filter((e) => e.publication.author === IMPORTED_AUTHOR)
+      .map((e) => [aboutKey(e.publication.about), e] as const),
   );
   const byMap = new Map<string, { layers: Publication['layers']; bodies: Map<string, unknown> }>();
   const add = (about: string, doc: unknown, petal: string, sha = hashOf(doc)) => {
@@ -78,7 +89,8 @@ export async function importRecord(
     }
   const report: ImportReport = { maps: byMap.size, publications: [], left: [] };
   for (const [about, m] of [...byMap].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
-    if (inRecord.has(`${about}\u0000${IMPORTED_AUTHOR}`)) {
+    const last = ownLatest.get(about);
+    if (last && sameLayers(last.publication.layers, m.layers)) {
       report.left.push(about);
       continue;
     }
@@ -88,8 +100,8 @@ export async function importRecord(
       author: IMPORTED_AUTHOR,
       via: null,
       layers: m.layers,
-      parent: null,
-      previous: null,
+      parent: last?.hash ?? null,
+      previous: last?.hash ?? null,
       published_at: at,
       proof: null,
     };

@@ -1,4 +1,4 @@
-// What each provider offers (T312; design/workspace-data.md, design/connectors.md 1A and 1B). A table in
+// What each provider offers (T312). A table in
 // code, and the allow-list too: a person's pick spends the sponsor's money, so a chat can only name what
 // is here. Effort, the cap, the window and fallback are facts about a model, not about the server. For v1
 // only NEAR AI's models run inside Petals, and other agents keep their door, so `near-ai` is the one
@@ -7,8 +7,8 @@
 // This file imports nothing, so anything can read a model's facts from it with a plain import: the thread
 // its window, the client its effort. Don't give it dependencies.
 //
-// Prices and windows are from research/connectors/near-agents-now.md, as read on 2026-11-06. A flower's
-// price is its estimate there, and only DeepSeek's is measured. `usd_per_chat` is Petals' own number: the
+// Prices and windows are as NEAR AI listed them on 2026-11-06. A flower's
+// price is an estimate, and only DeepSeek's is measured. `usd_per_chat` is Petals' own number: the
 // $0.05 is http-api.md's, and Sonnet's $0.30 is ours, about twice its estimated flower, and has never run.
 // Only `low` has ever run; medium and high are listed and untried.
 

@@ -1,4 +1,4 @@
-// J4 (#49): the yes, held in code. Petal's own agent can't start a new map until the person has said
+// J4: the yes, held in code. Petal's own agent can't start a new map until the person has said
 // so, whatever its prompt or the person's first message tells it. $0: scripted models, fake tools.
 import { join } from 'node:path';
 import type { AgentEvent } from '@petal/core/types';
@@ -192,6 +192,26 @@ describe('a model that goes straight to a new map', () => {
     expect(pick(es, 'error').map((e) => e.data.code)).toEqual(['source_failed']);
     expect(pick(es, 'error')[0]?.data.message).toMatch(/empty answer/);
     expect(names(es).at(-1)).toBe('done');
+  });
+
+  test('a model that goes quiet after drawing gets one call with no tools, so the flower comes with words', async () => {
+    const first = await asked();
+    const { es, llm } = await chat(
+      [
+        { calls: [NEAR] },
+        { calls: [PROPOSE] },
+        { calls: [VALIDATE] },
+        { calls: [RENDER] },
+        { content: '' },
+        { content: HERE },
+      ],
+      { said: 'yes', thread: reply(first.thread, 'yes') },
+    );
+    expect(pick(es, 'flower')).toHaveLength(1);
+    expect(llm.requests).toHaveLength(6);
+    expect(llm.requests[5]?.tools).toBeUndefined();
+    expect(said(es)).toEqual([HERE]);
+    expect(names(es)).not.toContain('error');
   });
 
   test('one event per target in a chat; what is not held in the same round still runs', async () => {
@@ -959,7 +979,7 @@ describe('naming one is the yes, when several things carry the name', () => {
   });
 });
 
-describe('what the map already holds (Elco, 10 Nov, run 9c599a61: "show me the graph here")', () => {
+describe('what the map already holds (run 9c599a61: "show me the graph here")', () => {
   test('is drawn without a yes, from its stored read: nothing new is read', async () => {
     const { es, tools } = await chat(TO_FLOWER, {
       said: 'show me the graph here',

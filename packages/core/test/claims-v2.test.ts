@@ -1,7 +1,7 @@
-// claim/v2 (10 Nov, annotation-layer.md step 1): what a person or an agent adds about an account. A name, a
+// claim/v2 (10 Nov): what a person or an agent adds about an account. A name, a
 // note and a link, a person's own word, research as a ground, and a transaction, a proposal and a quote in
-// the evidence. Names are allowed in a person's own project and refused for anything published (Elco's
-// decision 1 (a)). Every account, name and URL here is invented.
+// the evidence. Names are allowed in a person's own project and refused for anything published. Every
+// account, name and URL here is invented.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';

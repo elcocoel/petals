@@ -91,8 +91,8 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   // One live hub, the app's when it has one, so what its other routes touch reaches a page that follows.
   const ctx: ToolContext = { ...given, fresh: freshGate(given), live: given.live ?? new LiveHub() };
   // 60 tool calls a minute from one address (http-api.md). The map itself, drawn through a person's view, isn't a
-  // tool call: a change in Tools draws it again, and a person clicking through them hit this limit (wave 3, 12 Nov:
-  // 'Elco never asked for a limit there'). GET /api/v1/map, /map/views, /maps and /maps/:id take no part in it.
+  // tool call: a change in Tools draws it again, and a person clicking through them hit this limit.
+  // GET /api/v1/map, /map/views, /maps and /maps/:id take no part in it.
   const limit = rateLimit({
     max: 60,
     windowMs: 60_000,
@@ -160,12 +160,12 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   );
   app.get('/api/v1/web-search', limit, (c) => answer(c, 'search', pick(c.req.query(), ['query'])));
   // The brain (005): every header, a route for a question or a contract's answers, one file by id. Each
-  // serving's receipt names this door and the session's subject, when there is one (12 Nov, step 5).
+  // serving's receipt names this door and the session's subject, when there is one.
   const brainReader = async (c: Context): Promise<ToolContext> => ({
     ...ctx,
     caller: { ...ctx.caller, door: 'http', subject: (await o.gate?.subjectOf(c)) ?? null },
   });
-  // the open-calls feed (Elco, 12 Nov): JSON here, RSS for any feed reader, the same filters in the address
+  // the open-calls feed: JSON here, RSS for any feed reader, the same filters in the address
   const callFilters = (c: Context) => pick(c.req.query(), ['kind', 'q', 'closes_before']);
   app.get('/api/v1/calls', limit, (c) => answer(c, 'list_calls', callFilters(c)));
   app.get('/api/v1/calls.rss', limit, async (c) => {
@@ -274,7 +274,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   });
 
   /**
-   * The viewer's own names (annotation step 6), for a drawing or a list made for them: the signed-in person's
+   * The viewer's own names, for a drawing or a list made for them: the signed-in person's
    * named annotations, from all their projects. A visitor has none, and a response that carries a person's
    * is never kept by a cache.
    */
@@ -282,7 +282,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     const subject = (await o.gate?.subjectOf(c)) ?? null;
     if (!subject) return ctx;
     const names = (await privateStore(ctx.config).annotation.list(subject))
-      // their names and their types (#97), each drawn on the petals it's about
+      // their names and their types, each drawn on the petals it's about
       .filter((r) => r.verb === 'named' || r.verb === 'is_a')
       .map((r) => JSON.parse(r.body) as Claim);
     if (!names.length) return ctx;
@@ -370,10 +370,10 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       pick(c.req.query(), ['min_shared', 'kind', 'limit'], ['min_shared', 'limit']),
     ),
   );
-  // One map (Elco, 10 Nov): every view stored here with its reading, name, date and maker, and the relations
+  // One map: every view stored here with its reading, name, date and maker, and the relations
   // index's groups and pairs, in one answer, as the map bench's copy had them (specs/006-the-map).
   /**
-   * A public answer named by what it holds, its `made` time aside (/map/data's cache, 11 Nov): a 304 when the
+   * A public answer named by what it holds, its `made` time aside (/map/data's cache): a 304 when the
    * asker holds it already, so the map's megabytes travel once while no reading changes. Cloudflare marks a
    * compressed answer's tag weak (W/), so the tag is compared without it.
    */
@@ -413,9 +413,9 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       })),
     });
   });
-  // The map as a list (Elco, 10 Nov: the gallery, the lobby and /make read the one map): every view as
+  // The map as a list (the gallery, the lobby and /make read the one map): every view as
   // /api/v1/map has it, in the same order, each with its picture, without its reading.
-  // Each list takes ?view=<hash>: its pictures, keys and readings are then that view's (one-source.md, step 2).
+  // Each list takes ?view=<hash>: its pictures, keys and readings are then that view's.
   app.get('/api/v1/map/views', async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
@@ -425,9 +425,9 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       ),
     });
   });
-  // One card per map (Elco, 10 Nov: "maps that map the same address need to come together as versions of
-  // the same map"): each address, its readings (the sediments) newest first, and each reading's drawings.
-  /** Each map's mark (board #85), by the map's address: its name, symbol and logo, each with where it came from. */
+  // One card per map (maps of the same address come together as versions of
+  // the same map): each address, its readings (the sediments) newest first, and each reading's drawings.
+  /** Each map's mark, by the map's address: its name, symbol and logo, each with where it came from. */
   async function marks(): Promise<Map<string, CardMark>> {
     const site = base(ctx);
     const out = new Map<string, CardMark>();
@@ -437,11 +437,11 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     }
     return out;
   }
-  /** Each DAO map's proposals in short (#93): how many, how many with votes, when read. */
+  /** Each DAO map's proposals in short: how many, how many with votes, when read. */
   async function summaries() {
     return new Map([...(await proposalsOf(ctx))].map(([about, p]) => [about, cardProposals(p)]));
   }
-  // A map's proposals and each account's vote on each (#93), as proposals/v1; not_found when none were read.
+  // A map's proposals and each account's vote on each, as proposals/v1; not_found when none were read.
   app.get('/api/v1/maps/:id/proposals', limit, async (c) => {
     const id = aboutKey(c.req.param('id'));
     const row = await privateStore(ctx.config).proposals.get(id);
@@ -452,10 +452,10 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
         : versioned(toolError('not_found', 'No proposals read for that map.')),
     );
   });
-  // A map's voting blocs (#94; LOOK, 11 Nov): over ?from&to (default the 90 days up to its newest proposal's close,
+  // A map's voting blocs: over ?from&to (default the 90 days up to its newest proposal's close,
   // as the vote ring shows them),
   // ?min_shared, ?min_agreement and ?min_kappa settable; members as the petal ids of the map's newest reading. The
-  // blocs and a pair count; the pairs only on ?pairs=true, without each pair's proposals (META, 11 Nov).
+  // blocs and a pair count; the pairs only on ?pairs=true, without each pair's proposals.
   app.get('/api/v1/maps/:id/blocs', limit, async (c) => {
     const id = aboutKey(c.req.param('id'));
     const q = (k: string) => c.req.query(k) || undefined;
@@ -539,7 +539,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
         : versioned(toolError('not_found', 'No payouts read for that map.')),
     );
   });
-  // A map's claims by Petals' own mapping (Elco, 11 Nov: "show them"): about its accounts, the same for everyone.
+  // A map's claims by Petals' own mapping: about its accounts, the same for everyone.
   app.get('/api/v1/maps/:id/claims', limit, async (c) => {
     const id = aboutKey(c.req.param('id'));
     const claims = await mapClaims(ctx, id);
@@ -571,10 +571,10 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       await valuesOf(ctx),
       await summaries(),
     ).find((m) => m.id === id);
-    // a map hidden from the Power Map (#96) still answers here, and says why
+    // a map hidden from the Power Map still answers here, and says why
     const hidden = hiddenMap(id);
     if (!map) return respond(c, versioned(toolError('not_found', 'No map under that address.')));
-    // its layers, their authors with their three counts, and how many slots differ (wave 8, composition.md)
+    // its layers, their authors with their three counts, and how many slots differ (composition.md)
     const record = await mapRecord(ctx, id);
     return respond(c, {
       map,
@@ -584,7 +584,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       differs: record.differs,
     });
   });
-  // A map's composed reading (wave 8, composition.md section 9): the reading of the layers asked (all by default)
+  // A map's composed reading (composition.md section 9): the reading of the layers asked (all by default)
   // at a moment (the newest by default), through the viewer's view, with who stated each value it draws.
   app.get('/api/v1/maps/:id/reading', async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
@@ -632,7 +632,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
           : { pieces: {}, petals: {}, publications: {}, authors: {} },
     });
   });
-  // An author's credit (credit/v1, wave 8): computed from the whole record, with its hash, so anyone can check it.
+  // An author's credit (credit/v1): computed from the whole record, with its hash, so anyone can check it.
   app.get('/api/v1/credit/:account', async (c) =>
     respond(c, await creditFor(ctx, authorOf(c.req.param('account')))),
   );
@@ -651,7 +651,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     }
     if (!spec)
       return respond(c, versioned(toolError('not_found', 'No view on the map under that hash.')));
-    // A person's picture (annotation step 6): its address names their set of names, and it's drawn with them
+    // A person's picture: its address names their set of names, and it's drawn with them
     // only for that person, whose set it is now. Never kept by a cache, whoever asks.
     const names = c.req.query('names');
     const viewer = names ? await forViewer(c) : ctx;
@@ -683,7 +683,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       ok: true,
       map: await mapStatus(ctx),
       llm: ctx.config.nearAiApiKey ? 'up' : 'recorded',
-      // additive (step 4): the brain every door serves, as <index hash>@<commit>; null without a brain/
+      // additive: the brain every door serves, as <index hash>@<commit>; null without a brain/
       brain_version: brainVersionOf(ctx),
       // additive: true on a public site (PETAL_PUBLIC=1), which does no outside work for visitors
       public: ctx.config.public === true,

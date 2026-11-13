@@ -1,7 +1,6 @@
 // One turn's words: who is speaking, then what they said (Figma's "You" 39:894 and "Petals" 39:898). A
-// speaker is left out where the same one goes on speaking. On the app scale (design/conversation.md, lines
-// 21 to 23): who in a small muted mono line, as the side panel heads its groups; what in UI. Your own turn
-// sits on the panel's fill.
+// speaker is left out where the same one goes on speaking. On the app scale: who in a small muted mono line,
+// as the side panel heads its groups; what in UI. Your own turn sits on the panel's fill.
 import type { ReactNode } from 'react';
 import { Icon } from '../ui/Icon.tsx';
 

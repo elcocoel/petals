@@ -8,8 +8,7 @@ import { canonicalJson, sha256Hex } from '@petal/core';
 export const BRAIN_INDEX_VERSION = 'brain-index/v2';
 
 /**
- * The brain's departments (research/brain-departments-2026-11-11.md; Elco, 11 Nov: "The department's component
- * is important or else it becomes just a list that goes on forever"), as Elco named them. Every chapter and
+ * The brain's departments, so the brain never becomes just a list that goes on forever. Every chapter and
  * recipe is in one; the doctrine is in none.
  */
 export const BRAIN_DEPARTMENTS = [
@@ -57,7 +56,7 @@ export interface BrainIndex {
 }
 
 /**
- * The master routing table, routing.md (research/brain-departments-2026-11-11.md, step 4): one authored file,
+ * The master routing table, routing.md: one authored file,
  * read by people and by the machine, so no second copy drifts. Each row: Task | Words | Load | Also load, with
  * the ids in backticks and "n/a" for none.
  */
@@ -185,7 +184,7 @@ export function buildBrainIndex(dir: string): BrainIndex {
 }
 
 /** What's wrong with an index against what exists: an unknown tool, a continuation that isn't a
- * chapter, an id twice, a chapter or recipe in no department Elco named, a routing row naming a file that isn't
+ * chapter, an id twice, a chapter or recipe in no department, a routing row naming a file that isn't
  * there or a chapter in no row, or a doctrine that names a path. Empty when it's sound. */
 export function brainProblems(
   index: BrainIndex,
@@ -244,7 +243,7 @@ export interface BrainCopy {
   /**
    * The brain's version: the hash of its index, which changes with any file, then the commit it came from,
    * as `<16 hex>@<12 hex>` (`@unknown` with no commit). The one version shown at every door and kept with
-   * every layer (systems check, step 4).
+   * every layer.
    */
   version: string;
   index: BrainIndex;
@@ -339,9 +338,9 @@ export function brainAt(dir: string) {
   return s;
 }
 
-// -- receipts (research/brain-departments-2026-11-11.md, step 5): brain-receipt/v1, the Harness's access log
+// -- receipts: brain-receipt/v1, the brain's access log
 
-/** One serving of the brain's text by a door, field for field the Harness's brain_access_log. */
+/** One serving of the brain's text by a door, as one row of its access log. */
 export interface BrainReceipt {
   petal: 'brain-receipt/v1';
   id: string;
@@ -358,7 +357,7 @@ export interface BrainReceipt {
   consumer_context: { run?: string; job?: string; exploration?: string; subject?: string } | null;
 }
 
-/** What brain_usage counts (step 7, the librarian's report, like the Harness's Pulse), from receipts only. */
+/** What brain_usage counts (the librarian's report), from receipts only. */
 export interface BrainCounts {
   since: string | null;
   reads: number;

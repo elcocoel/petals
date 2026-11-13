@@ -222,7 +222,7 @@ export interface PullHoldersOptions {
   hypersyncFetch?: typeof globalThis.fetch;
   /** force a list source; default: Blockscout where it answers, otherwise a replay */
   list?: 'ankr' | 'blockscout' | 'replay';
-  /** Ankr's key (12 Nov, Elco's free key): its token holder list, every holder on the chains it knows */
+  /** Ankr's key (a free key): its token holder list, every holder on the chains it knows */
   ankrKey?: string;
   block?: number;
   keep?: number;
@@ -908,7 +908,7 @@ export function erc20Holders(
       const asked = params?.window_days;
       if (asked && asked !== 'full') return window(Number(asked));
       const target = holdersTarget({ ...params, window_days: 'full' });
-      // with Ankr's key (12 Nov), its list is every holder, largest first: no replay needed
+      // with Ankr's key, its list is every holder, largest first: no replay needed
       if (ankr && ANKR_CHAIN[target.chain.caip2]) {
         try {
           return (await pullErc20Holders(target, { ...common, list: 'ankr' })).snapshot;

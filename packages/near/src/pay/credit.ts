@@ -1,4 +1,4 @@
-// Petals' credit contract, from the server's side (9 Nov; packages/near/contract, proposal-payment.md
+// Petals' credit contract, from the server's side (packages/near/contract, proposal-payment.md
 // section 6). A person's NEAR sits in the contract under their own account. The server reads a balance (a
 // view call, no key) and, after each turn, charges what the turn cost with a key that can call `charge` and
 // nothing else.

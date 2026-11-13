@@ -35,17 +35,40 @@ export const blocWords = {
   caveat: 'Voting alike, not proof they act together',
   spans: { recent: 'Recent votes', all: 'All their votes' } as Record<BlocSpan, string>,
   noneHere: 'None vote alike in these votes',
+  drawn: (n: number, of: number) => `${n} of ${of} drawn`,
+  elsewhere: "Its voters aren't on this flower",
   away: 'Inside a DAO, the wallets that vote alike',
 } as const;
 
-/** The flower's blocs, the largest first, as the row's choices. */
-export const blocChoices = (b: Blocs): BlocChoice[] =>
-  b.blocs.map((x) => ({
-    id: x.id,
-    label: blocWords.alike(x.members.length),
-    trail: blocWords.pairs(x.pairs),
-    members: x.members,
-  }));
+/** An address alone: a petal or a member may be named 0x…, eip155:1:0x… or as the index names it. */
+const bare = (id: string) => id.slice(id.lastIndexOf(':') + 1).toLowerCase();
+
+/** Fewer drawn members than this and a bloc has nothing to show on the flower. */
+const SHOWN = 2;
+
+/**
+ * The flower's blocs, the largest first, as the row's choices: only those with at least two members among the
+ * flower's drawn petals (`drawn`, their ids), each saying how many of its members are drawn, its members as those
+ * petals' own ids, so the count is what lights.
+ */
+export function blocChoices(b: Pick<Blocs, 'blocs'>, drawn: readonly string[]): BlocChoice[] {
+  const petals = new Map(drawn.map((id) => [bare(id), id] as const));
+  return b.blocs.flatMap((x) => {
+    const here = x.members.flatMap((m) => {
+      const id = petals.get(bare(m));
+      return id === undefined ? [] : [id];
+    });
+    if (here.length < SHOWN) return [];
+    return [
+      {
+        id: x.id,
+        label: `${blocWords.alike(x.members.length)} · ${blocWords.drawn(here.length, x.members.length)}`,
+        trail: blocWords.pairs(x.pairs),
+        members: here,
+      },
+    ];
+  });
+}
 
 /** The period the votes come from, in words (from inclusive, to exclusive, by when each was submitted). */
 export function periodWords(b: Pick<Blocs, 'period'>): string {

@@ -32,7 +32,7 @@ import type { PetalViewV3 } from './generated/view-v3.ts';
 export type ViewV1 = PetalViewV1;
 /** view/v2, the latest: v1's nine dimensions and labels, which piece of data names each petal. */
 export type ViewV2 = PetalViewV2;
-/** view/v3: view/v2 with colour's keys, the key each value takes as the person chose it (12 Nov, wave 4). */
+/** view/v3: view/v2 with colour's keys, the key each value takes as the person chose it (12 Nov). */
 export type ViewV3 = PetalViewV3;
 /** Any view a person may keep. A v1 one still reads, as v2 with labels on identity (core's latestView). */
 export type View = ViewV1 | ViewV2 | ViewV3;
@@ -179,7 +179,7 @@ export interface ToolError {
     message: string;
     hint?: string;
     retry_after_s?: number;
-    /** additive (11 Nov, swarm.md step 3): the worker's job ended for it, so it waits for the next one */
+    /** additive (11 Nov): the worker's job ended for it, so it waits for the next one */
     ended?: 'stopped' | 'handed_over';
   };
 }
@@ -673,7 +673,7 @@ export type AgentError = Omit<ToolError['error'], 'code'> & {
 };
 
 /**
- * A job Petals' own agent handed to the person's own agent (9 Nov, C): it lives in the conversation's
+ * A job Petals' own agent handed to the person's own agent (9 Nov): it lives in the conversation's
  * exploration, their agent takes it there and reports back, and GET /api/v1/explorations/:ref/jobs says
  * where it stands.
  */
@@ -684,18 +684,18 @@ export interface JobEvent {
   title: string;
   brief: string;
   status: 'open' | 'taken' | 'done' | 'failed';
-  /** additive (9 Nov, agent-house): the agent it was sent to, by name, or null for any */
+  /** additive (9 Nov): the agent it was sent to, by name, or null for any */
   to?: string | null;
   /** additive: the agent that took it, or null */
   taken_by?: string | null;
-  /** additive (10 Nov, swarm.md step 2): the job's own conversation, where its work goes */
+  /** additive (10 Nov): the job's own conversation, where its work goes */
   conversation?: string | null;
-  /** additive (11 Nov, swarm.md step 4): the group of parts it's one of, when handed out in parts */
+  /** additive (11 Nov): the group of parts it's one of, when handed out in parts */
   part_of?: string | null;
 }
 
 /**
- * What an answer is about on the Power Map (LOOK's LandscapeCanvas `show`; WORKSPACE, 12 Nov): a map flown to,
+ * What an answer is about on the Power Map (the LandscapeCanvas `show`): a map flown to,
  * a wallet lit wherever it sits (chain as the maps' cards name it: gnosis, near:mainnet), the line between two
  * maps, a proposal pinned in its map.
  */
@@ -706,7 +706,7 @@ export type MapShow =
   | { proposal: { map: string; id: string } };
 
 /**
- * The ceremony's facts (Elco, 12 Nov: "mapping something new is a ceremony"), on the yes a new map waits for:
+ * The ceremony's facts (mapping something new is a ceremony), on the yes a new map waits for:
  * where it lands (a map already there, or a new one on that chain), what will be read, its rough cost, whose
  * name the new data packet goes out in, and who else could do it.
  */
@@ -734,7 +734,7 @@ export interface NextStep {
   finish: boolean;
 }
 
-/** The next steps on a map just read (META, from Elco, 12 Nov): what it holds, then the brain's services. */
+/** The next steps on a map just read: what it holds, then the brain's services. */
 export interface NextSteps {
   map: string;
   steps: NextStep[];

@@ -129,18 +129,18 @@ export const renderFlowerTool = defineTool<
         'validate_spec lists every error; propose_spec builds a valid spec.',
       );
     }
-    // Always through a view (one-source.md, step 2): the one given, or the viewer's, or the default. A
+    // Always through a view: the one given, or the viewer's, or the default. A
     // flower's own choices are the record of what its agent proposed, and never draw it.
     const drawWith = view ?? ctx.view ?? DEFAULT_VIEW;
-    // the viewer's own names, on the petals they name (annotation step 6); a visitor's are none
-    // and each petal's value in dollars, from its map's stored value (#91): none with no price
+    // the viewer's own names, on the petals they name; a visitor's are none
+    // and each petal's value in dollars, from its map's stored value: none with no price
     const pieces = [
       ...(ctx.names?.length ? namePieces(snapshot, ctx.names) : []),
       ...(ctx.names?.length ? typePieces(snapshot, ctx.names) : []),
       ...valuePieces(snapshot, (await valuesOf(ctx)).get(mapOf(snapshot)) ?? null),
-      // and each petal's activity in its map's proposals (activity.ts, 12 Nov)
+      // and each petal's activity in its map's proposals (activity.ts)
       ...(await activityOf(ctx, snapshot)),
-      // and each petal's vesting at the reading's date (vesting.ts, wave 7)
+      // and each petal's vesting at the reading's date (vesting.ts)
       ...(await vestingOf(ctx, snapshot)),
     ];
     const r = renderFlower(spec, snapshot, {

@@ -326,7 +326,7 @@ function isAlive(pid: number): boolean {
  * spent, on the day and on the invite. Nothing is resumed: that would spend money with nobody
  * watching. A person's next message continues the run from its saved thread.
  *
- * Building the app isn't always a restart: scripts/check.sh builds it on build/.petal, with Elco's
+ * Building the app isn't always a restart: scripts/check.sh builds it on build/.petal, with the live
  * server up on the same folder. So a process that started a chat here and is still alive keeps its
  * runs, and this scan leaves them for the next boot.
  */

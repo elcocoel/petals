@@ -1,6 +1,6 @@
 'use client';
 
-// The docs' navigation, and over it the search (Elco, 12 Nov: "the search function"): the map's box on the docs.
+// The docs' navigation, and over it the search: the map's box on the docs.
 // While something's typed, the pages it finds stand in the sections' place, each with the section that matched and
 // the words around the match. Enter asks for the best order; Escape clears it; Cmd+K (Ctrl+K off a Mac) puts the
 // cursor in it, opening the navigation on a phone.

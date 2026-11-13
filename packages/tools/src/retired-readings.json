@@ -1,768 +1,768 @@
 {
-  "note": "Readings the mapping waves replaced, retired from every list of the map, never deleted (META, 11 Nov: retire, never delete): each stays in the store and its flower still opens by its hash; its map shows the reading that replaced it. Taking its line out brings it back. Each names the wave's own record of the change. Claims a wave reissued are retired the same way (claims): no map's list of the mapping's claims shows them, and search leaves them out.",
-  "decided": "META, 11 Nov 2026, from PM's waves: reading identity repairs (GNOSIS, ETHEREUM and L2 waves); 12 Nov, DAO SET's NEAR and Solana repairs; 12 Nov, META from Elco's walk: the 1-day holder windows of 9 Nov, read again whole",
+  "note": "Readings that mapping runs replaced, retired from every list of the map, never deleted: each stays in the store and its flower still opens by its hash; its map shows the reading that replaced it. Taking its line out brings it back. Each says what changed. Claims a mapping run reissued are retired the same way (claims): no map's list of the mapping's claims shows them, and search leaves them out.",
+  "decided": "Shared map curation, 11 Nov 2026: map identity repairs on Gnosis, Ethereum, Arbitrum and Base; 12 Nov 2026: the NEAR and Solana repairs, and the 1-day holder windows of 9 Nov read again whole",
   "retired": [
     {
       "snapshot": "00a4ada1c64d9c7a93848fba523f4e290a635db84681ead51a830ecb72273345",
       "replaced_by": "6caa1f4919d9e5ceb5f27ae5a13b5a05f297b72e3b27a1a0e0727cebe93d6217",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "01accf2de86d1b13cb4c1d1596f53b69ede4c9c911b0e2f9916d798a7ad86fde",
       "replaced_by": "0e376d2e9887be9dae4a67109fa8a6dc3781339ea59fbf37bf596a137ce0559e",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "01e4231ee7cb16602e1c644d9fb018022fb04cf311b067e971bc5b5c65eefdbf",
       "replaced_by": "3eccb56ff0b93046f2621c3694e436b168c549f92e282e0f85478a66e24bc138",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "021f3035f9c687456c4e2c399ceabeb0e9f6209574a293fe60ec445937c8065e",
       "replaced_by": "8ed84320bd46ef913daff4aed9b851460db5816cfaa1a3e6c176728d39f091bb",
-      "from": "data/gnosis/READING-LINK-REPAIR.json"
+      "from": "Gnosis map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "03718e2fbe92e8b02f87979f14903106cb8a010c7431a2f712080e4c5b4b6cac",
       "replaced_by": "bf749bb68debf6ecf566a43b8ec9339beef9ed2fb511761bf1fe5302aeb26ddd",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "054e5f1d2b137a0076dbbd6f7f268abd0edad98972ef91782be57074a881417c",
       "replaced_by": "58d724019a8970710b2a02422087adb6f27e3142a6ede53b6dbf0597adff984f",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "064cf56c164d50c5f1d1f7cc70d4cffd1c3cf8b47b8dcec85f4f0641467ab83d",
       "replaced_by": "b0bb92210ec62901ce173c907217977983cf530f8c1f68325e88aa8c0074ebdc",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "06622ffbd94c0b690dd02603e5b34d8424083f2c7aa1f804cd021a49520e7787",
       "replaced_by": "d0da7c6db7f5dc0d56f993a228311cdf83dac9a3fc437356315bfc4467cff59a",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "08d93d9b3a3e5b53fff0bd8866075b35436b9d10491ae218159117b163e43579",
       "replaced_by": "760f0415fc3e7b5e2fe49e7cb873f7ef94b43fd2924d67006983541fce6bbd43",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "09657082b7c273618b040fe7a5c70518d9625c4180a335a9c6d7f593dc693223",
       "replaced_by": "2628366e57702e49394c983441ab067fefe92e144cd7f2a9c4cb978b42c4d98b",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "0d5502745ff09f07e884d38171ab2d8ece42c78f4d238bb0898a50175ec2dfd8",
       "replaced_by": "531e463f0fef599c93183e9aac802a95154309a1a1981619e979885d3c96243c",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "0e195947b68d9aea50d18595b86ee30e640e761f75f4166cd02bc1759e9a1e1b",
       "replaced_by": "09257c11b0991d31ce3979440822277492532d22f4cf740b88f6124b15b90439",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "0ef9ea4af152e162681a99ca9bcbd7b37347c8a7c2db794d6bed1e8ffbc0668f",
       "replaced_by": "3551f6d478381930e33c5859a7dd989ac55238ffb3cec6549bf4ae13716768fc",
-      "from": "data/gnosis/READING-LINK-REPAIR.json"
+      "from": "Gnosis map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "0f7b766a02e9b383801638ee03f707493b8fbe9a4f96f0fa83545be103d34dd2",
       "replaced_by": "961fb103d0962acf803be92c3b90a2f4fdf7859c76386e5e08a2f19b695129d3",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "0f97f61025407836058198566cf21673dce68172f270fb535834e291911a765b",
       "replaced_by": "abc361c460187932e1b40daa045b1928e95ad7f03f411e48c9b7aa9303117ea8",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "1266ed3dd44b00f550844aa1c27a9631a46bb33ac1581fe0eef5e479b10d8276",
       "replaced_by": "8ae5f7312ecb16a2e765e8eea2d7be11f075bfc3da8412049c330073d01c939b",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "12b502ce813b26cbda9331352f3af062a55c3964e36233c8f0302aa9e3d50613",
       "replaced_by": "7a7c9a7cabf5500717f4f46f1f6532508632da35624451d90ecacab024b0823f",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "157c0b4bfbf04f794d3ec7cfa6770059acb875b169aa4204cec64f3601595a78",
       "replaced_by": "a1e23300296e6e054082d049efb049fa5321d02b6de0261209d5fd3a6e4a5d72",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "16c7e2c52bcc5a2c66e366e89fbc6de98297fc1eaa7522594cb334af6780b18e",
       "replaced_by": "e3db14207135ce47b199d2dfd6c87d5c0add4a9310f408fa34a0c61d5d25bd68",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "17be4480a8f1584a37f61074b9d0fef62941be8e134904802e1bf51964906fc2",
       "replaced_by": "5ab4cb544e395dc7201d281685750d22f5d84087e1e2f50abdcb027048c19258",
-      "from": "NEAR-HOS-IDENTITY-HOLD.json: Petals' own House of Stake reading (9 Nov) on the old key near:mainnet:house-of-stake, which names no account; the House of Stake is one map on venear.dao"
+      "from": "Petals' own House of Stake reading (9 Nov) on the old key near:mainnet:house-of-stake, which names no account; the House of Stake is one map on venear.dao"
     },
     {
       "snapshot": "1823e5e7228862c6c7c6a7dd9e48de0397b5b43dc81f5c57d3c7fc76bc035be4",
       "replaced_by": "6421d174823a9b71759663a5582ad5a0bed31cdd43b69c06d1ec750b42b0ee20",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "18d21f1b84c5be0de278a0c3b16155a59a52da2ec7e9a7f2545782e9972bbe91",
       "replaced_by": "1c6e7cf025eefb3d4149ebc9f2d949ab31d8b5ce10049e7d204802c6871e22ba",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "19e1a1e04b98e4b03e4afae8b032f15563ac54df0ab4cc5b1f1d1aa4fec43a99",
       "replaced_by": "00c709058b517d83d3eb89780217c319f21c12885cd98c132ea1c9fc2f46028c",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "19f5aa9143f3ef54f80ec530d029d04dd0b4c533b8c4c2a0f060a136b0746694",
       "replaced_by": "f60345358e91f6ca88727631255b67b49d0ce1d0ca43158d3bbd05d105e226fe",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "1a5835549d9bfc3bd1f431979e30d75965b834ac09ffc7dc3efab0d29f827bd5",
       "replaced_by": "639b3f439783e4a457770da9c4c41673bf9913dae40a12c9ae7fa4866144f015",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "1a83c849f74036f710d3b2035b3b405d449b8328bde899470a015c8489b4e78e",
       "replaced_by": "763b1da0f261ae15c7d0e5240d093b355d304c5f70d7744477e5e6f646df951e",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "1d588babc911f91dfdf147ab302e8c4cb3cdd98c8dcc0a012a746a4ce2e31bb6",
       "replaced_by": "3166627170f63ab64448fd3f112e854f04ed0cb3cd9da49cf595f00685fbd97f",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "1da671a48e97a328e7d3f2c573d8502e1fa73205929870d77b38c0977a378aed",
       "replaced_by": "a32ab668856e973850f2f0cae64e93025c2962c7713e46a4ecae86f7a8e52019",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "20e0de875669ca506ad0171a896ab4d27bd5428e0a8ace028244cdf95b50a57b",
       "replaced_by": "497a2837feff0b5b9ff5e08e3780bb6239176a992677cec8c1e164a8b6697fe3",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "253fc2383a3a1ea0ceb35ef7031d4b9230883d6018ac843a23cc9fc0dd6ab399",
       "replaced_by": "63eb5cf5e8adf08902a7868da6e1db3a353ca256bcd09111aff7d9ec9a84fc54",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "2821e6ef7c40e0be33a66626b844579ad356a6e0309762d97eeeba8789ec822d",
       "replaced_by": "8fbb9de613c35c4135b8fb2f444ea58e7035902c41f75d074b9a7608784f46c7",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "29179a826b694d74004b9d1bb30c59f5dcd90bc8bb73cd13521ef6159af66a79",
       "replaced_by": "05d53b5405601efdca62be5a32e32a649e0fce6fc89f14a941994622c0c3f3f6",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "298d39bc3503dc65ade1db51985a11de280842a9cd12843ae23c690efeaaca96",
       "replaced_by": "b5b3bd1c7a158d2472c915d2fb86f9142787080f8e691c3e535e1043c705a704",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "2a0bef1e19171a8e4a09de73d7a3ea4bbbc2533748f96ca060109fbcf2324813",
       "replaced_by": "a5a9860cd4ebfb5f772e3382b075a3f4148ec85eaa8a6d72e42f980ff7d15c7d",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "2c2bbd337256a344c27e80dd2ba5b195c20f03413dbb2a9be4f7c9ac62bfe483",
       "replaced_by": "54f681b911df95d39160d126828346a0cdb016c338866f54bba30b3615bffd97",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "2d1a749c197926d39ba0223fbf4fa902f61520caee856a460e2edc6d06905c54",
       "replaced_by": "e813bf5a9d817f43ea9ee0eeeaee3b61ed42954da9e83c47ed530edc44a49eba",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "2ece961d64fa0ddc29bc0b03352dfa1ef159e743b2487b8b3152c83ff2fe1d7e",
       "replaced_by": "d974208fc1958337498769bb1803661046f1041ca42a67c78c079f5dea799d9d",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "30793b8ef005adb120c0fbe585e679d51e05c7bfd8db48e9e401321c5a632217",
       "replaced_by": "beafd3ee291b480a72cf5ddf7b630666a10e560da8923c6285dc60c1033bcb13",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "329b7d8277af97ccc2e103be43f42f54f6bd48f763f37ca6fa56b52083f5f613",
       "replaced_by": "7e70c960b6f82a41b30f8de97e4c2bb6c56c99622545498bc74c816e962cbcac",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "32c72ee17783ff5b35aaa26fcc3cfe57c7aa52617b811056204173ffb0b36bbf",
       "replaced_by": "33fcc67681a7386716bd21d82a525af6403008423763565c84e4c0c96538298e",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "3465d917f0d2c7d4dc31205b41fe1fbeef8de9759d9d0e8bb25d850b803d6350",
       "replaced_by": "e757ed156334a25f12238c7df20e3952d76de42ff8104e72ef76a5bfd886f256",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "3567088194a6274bfebf9c685c231c91f81626c1bd11180a5094c423930a5d85",
       "replaced_by": "89de9cd1daf81b5a47b4026fcd67b21267e92e7e8b6a4fc486b7ceed76ee3e6f",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "3639472ca07c0dd4f85cf30ccda4c3e00b28264840560652ebc8c10a5e9fc1c7",
       "replaced_by": "3063d125a09197e64f1d084873ad15b13ec33b4603450b75da42dad143457cc9",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "36bc90a8e7a7b5a06330b195215560602ab22060268fcf7d1b55e486dec114f9",
       "replaced_by": "bf749bb68debf6ecf566a43b8ec9339beef9ed2fb511761bf1fe5302aeb26ddd",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "3ae0cb03206c65dbb7ef34dcdb1721fa6907a15ac0b66eef5e050e82de87d134",
       "replaced_by": "74dd1ef94f95125222b822d887930444297b5686c685c1c2021a161109d1cda7",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "3c82ad28639bee0115c7034e87f1ca3c6558acc734551903b4f4fd91e76ffbad",
       "replaced_by": "e0c4789882ecba0e712c11f57957cada16932bede657dcd40a55966b5dd5efe9",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "3f42c58c33849b3ec20dad068e82f4c344c9ef027eebf18433b42a313e12b123",
       "replaced_by": "1a60b1b9cd30c04f3a139a291a98e75af4d5377b686973d605be4fea342051ee",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "417e99b90ce4f007d253dbd0137e256552531fc8db872b4bd95b5393ac2507e1",
       "replaced_by": "358cbe4799b51583dafc124f4306e6ffda98b8e177364b9dcfecb811a953cc97",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "459e030146fd8733492c1999e43b73ac13df7d34104e55efb6a29fb1ccc4c3b4",
       "replaced_by": "7b3a06675e7d9b5bea8c2709913c4b8e258a10433552b839f98d1068b0d4573f",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "45b7e910102904d894bb64c823ebb3665bce9f693cb2fa2615b783a19f45d351",
       "replaced_by": "a3bbde68f4febdd316bf104d20d83fcfa63c730ce06feb6e7976ea2dff04d2e7",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "4c0b7e5071f83be35d56bb5e7af6e5e5e119b4472d22f10b96bc8939af71a5e7",
       "replaced_by": "588764b3914fa74b3366e7396cd31e8a53327525f89996d5edbafaa444ba4736",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "4cf1aa604fc9ccd6d480056c0139f389ce3923b601e4743dab2b2d728a073b5f",
       "replaced_by": "f0e7a838fed2a8637f2135187d55c47c21847401f4b8e0b09b9261cfc81bb7f7",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "5018f1df43b4e81360cb5862a0d02c80dfaaa7d0dc71a2b18408abe8be1b8342",
       "replaced_by": "e0910d8c3f0427b3a330a40c58979269c49b38d70b83448c59dd358f4d07a360",
-      "from": "data/gnosis/READING-LINK-REPAIR.json"
+      "from": "Gnosis map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "5085653dfd68c393bb9e13a983d2059414ebf983326a5f70a0f663e1f88e23ff",
       "replaced_by": "1e459325a11a79d61f71bcfd8f5e3c93dfaa246ecd890c9899e8f9c942733ca1",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "50b54f91cbd33f84ace52bf5789438ff87edb4412e36d99280bb9a9a1fd8f173",
       "replaced_by": "770aae92115264373efee61c6eb724357bced97a5114bbee6645855ce872fef6",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "51f967dfa01763f522a7385d98c5ede116387bcff6d5ece07472d8801b54ed20",
       "replaced_by": "1221cb3ec5d025d8e4e167e2792f04d5a4803e1e3b4534fd8797918a4fa4d1cd",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "523fb1a5ad0d40ca2229325aaf2a19ecbb4263bffa383112a92d3bca08f1c4ff",
       "replaced_by": "36b5f62567bf0418af60a20c0acdcf420ab98bfca0dc52ae82228ccbecd6eec8",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "5366943998205acf803b100b602bc827594ffe231d383e5a551f1bddd3d17213",
       "replaced_by": "37538cbd69894424ec2e8e0fb59b0975f87e7350f8e5c26388b26e5cd903698e",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "5581585a48db3e65d439c48bbc12ac3e43b5dd585f5324b934f293a5447c782e",
       "replaced_by": "b82dca5e0fe85c8aa9377652f557e81753047a3c1ead7604349680e6cd9d075c",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "594265c5b303265307f96cae175f1e121c3fd91d6b5389a449acf74f29aa72de",
       "replaced_by": "14226b6f198db590be85bf7ef158ce4f0841bc21b6bc7c96a4009587601948d1",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "597edda21f55f29540e709d109dc9255b579a6f979d265d74b671f3cf5b179b8",
       "replaced_by": "6dc339e35400c5d7f271fa2138115b855a36996c1d5fa9fbcfbe114855b8fe02",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "598c13c09106951f1d9153e8fe5e29054f30a3d274ff8a2c1883ddad1866a38f",
       "replaced_by": "55f97420936125de86b20fee41ca3aa7609583a387cdab71e343e7b87754496d",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "59d38d2ebcb87aa098c390ae031bc5df28039b4b07d15c5556ac32ff5035f9af",
       "replaced_by": "1e9f479c64c5e44fd08c575b136901ec20f884eaef8bec989743bc86595a9dcc",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "5c24595c31c9ff3a3286ae4c6becfc3463a48abc99666be989854af87d17e6b4",
       "replaced_by": "1244ac53ccf941d07077e36bed2a0091c8d7c7a296de51a2b79d3b67177080e3",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "606a18363ef3ee3f8042186d3feb16ad1f543db72dfcf00452cb4f80cfebc7d7",
       "replaced_by": "568fa30a2fbb531a58bd019a54b12c311c869d4af1f6d93707045a6e032ccd83",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "62a53a3576567600cea51f0500091df520f17ec842f8507737d7fbcd1668245f",
       "replaced_by": "14226b6f198db590be85bf7ef158ce4f0841bc21b6bc7c96a4009587601948d1",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "63e03fd8202a7675c0ee4ff8b103f025e26f31d7a922bb18a07959f781aee138",
       "replaced_by": "0413e07b50f46b8c24ab72844d54e72278f25c1d9405e0e4967a38f9c5d927f3",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "6718b5c641a808d1e50de68765fe5c3bff9ba8a010d741fdce776257c6f39fb1",
       "replaced_by": "f4cc54f22486be6fea3ad33e6c4488556ac510a08d645d34fc730526fe83e9a5",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "6923f4700b0d1a289adf823b804dbd6db814d55040b274537d317302dcd01c2e",
       "replaced_by": "cac0ed22334af4ae40a2791256d92c2ecfd9b26dc377c3cf6d211c825e583191",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "6927884d82f352efd35a64f1ca68ad9068f440138a199855203448fd7bdbf823",
       "replaced_by": "60d4d2b71f6a3a6a662c8a8b5d09c3fc21eea8bede40aaaefa142ca17815a5c6",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "694bfe11d5ad10611852f3028a55f50e46a14b3a155720140adff85a1796a571",
       "replaced_by": "ec450bf0c2ada00e5006d64772168debdb6bbf94a9634708ef85c2139b58c679",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "6a243ed28418b6437cb63c0e31e205639a1d583c6a7ab73d2fc19078720358c6",
       "replaced_by": "d43a29eecc3eb228a9c430fcb9f80baa3147cfb18c2b0ad6a3cd1ba68f2cc6dc",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "6b5d0dc7a4239732d450db4eb7533157d2031f47ba42b01a6d84bc5bb1a9555d",
       "replaced_by": "1340317a6c79f488ccc219d386a9df4477ad13a58f300431a40061451b91c33c",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "6e91ed77e6ba71827b18f88dd60a69e5f792ad21967fb3c8d3d7e030963ee3ee",
       "replaced_by": "ac724bf4f1d3d1c971953ed0934f08bd8510bdf0118b1afc0167f741c032e321",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "71d675843d57e52104927949b4267112425e77acc15ecb54dafb919d39b69404",
       "replaced_by": "c25cc50f77d71028b81c43e9f62a62dc81eb17a3d347572a601332e8031e9e88",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "74f67ea984e866e0e4d5f5796f2330f70ff530756cb4e2d5ee5bdf1aef811cc3",
       "replaced_by": "5a0a8f5693b1a692dc17ef38bcace74ff683c2a8d2b145fcded3bb1b7d0d6552",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "771bb6044c5f3b468c751e302bc72a0eb23c6488149aaf36fdf8b3af3ddca0a7",
       "replaced_by": "6514ef9214e15525ab6f0b819fa4466cfacad8e8b1ec0215922ed26be7cd24d9",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "773df4d4540070279d37e42382e4faafae2c8d10cc36fa522aba7db81b162bfe",
       "replaced_by": "de953119cd1f8c8775767af518db55feb2627029009a18fe01361e520eabd229",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "785579a2f867993686ed8f7670b012377d8b777617f860229c64fd232dbd96c7",
       "replaced_by": "26056148929a18365ba2f68837312629be410be52055aa3cb852770b627ad485",
-      "from": "data/gnosis/READING-LINK-REPAIR.json"
+      "from": "Gnosis map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "791110a837c23770bf2893faca3dc22a1b69429f90e8973f4fc2eb1c258734f8",
       "replaced_by": "b73b716e67f872fb85501712557d835454a8c904393c09253a9daeed0f067092",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "7bc8c8a389c5b48cef6c9dcd4dc928c45fda90ed6006ca48f2989e209a1c8877",
       "replaced_by": "eef24fc358b55f00702f2b8d876a926ad548645a51cf4c8e23ed6c7b2f1d03bc",
-      "from": "data/gnosis/READING-LINK-REPAIR.json"
+      "from": "Gnosis map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "7db9bb9360c0d2f1974131aa665a4c4c50795949472ccdf4149bec2e4e55698b",
       "replaced_by": "2111d82bcea3795a11b6820b617a91181222e76acbc50b1e806a0dbc4ef8be9f",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "7dc4c091958056ababb1aa5902564db05366a10595430c2c0746fcb7dc7ed0e3",
       "replaced_by": "0a299a21dafbad6dac04a41dada69f40ae13d33725c54b38549a3a14115109e7",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "8147587f7a89ecf0c8fe6f44baa4027797ff11e0531a87dbf9e1902f0f2118c8",
       "replaced_by": "aaaabcbdb44709d4c47f382bb140e32dd095e40fb35969daee0de726c8ed6c81",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "8608de3fc69a1c9cc45996747d496b958ff3a1d1a73adf4c259d314b6e2377e4",
       "replaced_by": "5dcffd30ab21d7e13e9718549f3d505b6c670918f944020e2cec855748429bd6",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "8763ee338c6b48ca08ed7a259b4ae1e2960e620cd585d419c10ef197c9f6d68c",
       "replaced_by": "8f37996bf3d916f9c1218ac74293ef77e8d7dc0e2b1b3e30cdbe49d389097b86",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "8801a3badee78832a1be25499ef306d293916a69f557c7fdb2d6b3fb6855bceb",
       "replaced_by": "750b18f1c551e6a5e964ae334d6fe2f8e79e53ecb5273b8db192989c221794d2",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "8a80680f0f991348cc61bfb212cf824eece6a4c61710bcae49f2a420d7403ced",
       "replaced_by": "f8d92bf5b02ec3f142fb9559320dd71fbf714641260459a74dd442976762d67e",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "8bca5e8c1eb8b2c894810720ed89c46401adb20f27a8ad07bcbd9b6f214a26bd",
       "replaced_by": "33189b1938f69508bce8bcf6718e04681e99eed63aec3ecd106cb55edb1bb581",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "8f8d100c8a793b228c8e7df8997b82f2f3aa270564b195794d55f1631e7725ac",
       "replaced_by": "96f10f11d1b6578b548784b3beff1d847a3620e09067f62585f44380b9389d4e",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "9356b2f843fa59e8ee6b7486f1ab9ef8f7d405d275deaa88a67b348621e03cf8",
       "replaced_by": "24b383cc097155ae88155247528ad5cc6ce293d4b5bff0fdf65e33d951656384",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "93b2476c9ac9b3e9e04f5f1cfedc97655119e63cee1874ebc00363b3f51dc485",
       "replaced_by": "024687b7bef8ce5c339799b215865912dd6db7f624291340e8720e4dea3cc72b",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "94de2d083ec91c2bd91f0b82ec5c0d72b1ece6dbafee0b0edc0b82434652cf39",
       "replaced_by": "2ab857f26fbfab4e9a5242deb3e9475f8666248042d43d0b18ac2cd59c6db682",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "979ddbc19db34513c96d831f3b78a656acb32ee5c8f5b217eae0ef0c059af3a7",
       "replaced_by": "18120811bf9e3721de1929c2681a2b790d8fb58b329eb9a8882a793d73885468",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "9ae7679dead9235b214087308269b769df524b4a75908b18343e405c61a9395f",
       "replaced_by": "c206b812a57d0000ed6b0eeda767ba1511730720bff2c467078fb6915b70ed80",
-      "from": "data/gnosis/READING-LINK-REPAIR.json"
+      "from": "Gnosis map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "9dcc5f296784c6c602348dcf813d41c5a7f4c702d90f91b45046376961068ef2",
       "replaced_by": "adb9d4ab3734499e6e80888ad40af99b7ef26255bc023f62a0cc3ee940c01bd1",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "9eedf3bb9cd45c62b4b8b61d2bc0dc101a05590ee698545aca75d7416d0cf2e0",
       "replaced_by": "76b8351aed33f85c7ecd9ffa4347f0d2ec3d300a3f3ec2c7716c8a19f983e21d",
-      "from": "data/gnosis/READING-LINK-REPAIR.json"
+      "from": "Gnosis map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "a1420e457ea5318b4d5d790437e938a23573a03215d8a902d44f1582bb3c6153",
       "replaced_by": "75dae7826f6d7416f6f1fd60a2beef7cbd7343c71499c672debc5420ecad7a28",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "a2ca9db80764a0de54770c74508f9fa8bee81c75cb1eb8696a9bb71a40f05951",
       "replaced_by": "b9e8a64eda70239155a50b3d871c4df55da118361ff7e31dcfad7bfbb40bbebc",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "a2fde54c4e1a70735a4cf271246e76e5fda483e09a3478e9d0141ff52a355e35",
       "replaced_by": "569a80a233ce9cf431f4e7fc740923cb97695ccdfeae7b0a038c49dd92c5c252",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "a4826b82eea8cb25a361cde3effd5e2e3cf26c28b32c7bdf657f88af0d5daba5",
       "replaced_by": "d39b9f18dcdb093cc71d034a1f832c409524fb6efcbf5c8757c55f13feb0d26e",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "a502c0b254c4004124728815376c14145424f599cfb4b313d2e15b95cc0ac02d",
       "replaced_by": "092fd1d92785e0627e89668dbc603565572d045a45420613c941be8d81eea952",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "a579b8a2154eae13a199a07f7bb1c5823370a84b1a4cb7a631d075fd3942bba1",
       "replaced_by": "6ce538b0ebc5c3575f37deda4c7c8952813387d9e76d60fa8b6b7967f7f6838d",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "a580ebe524a21341d823099adfa12baf301e145b6351da33f3a85a6b6b4ac306",
       "replaced_by": "8675fc8463212e101f8b9f7a0b952d983066a8dfd335549576bc3fa79a1b9e28",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "a6d6a6bae658f6b3dd3e01e7ecb8a07fead31abd32be54aba0f273829bf65260",
       "replaced_by": "992ab46a0cce718447bba3126f092275dc0ed4131dd5a737c94523d4a3d46ae2",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "a802679d64bc0bba3e0f068a707d3a53db64097a49999409410de928a1a0ecaf",
       "replaced_by": "a99ffa8fdf21112970eca5676a0a26d354beabe0c2400e4000196ff53b434cb8",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "a8415ca7747fd3d7b1adb6054708de8b87a0963871e5bd04f2367201191e9dc3",
       "replaced_by": "fea83dbaa54c91aeee777e774d048a9082ddcb2299ffc1d943fc69df8bf1e637",
-      "from": "data/gnosis/READING-LINK-REPAIR.json"
+      "from": "Gnosis map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "ab1584ae3a6d66a649613f11e9e92b4d3523c6babf07085704f1686cb93e6927",
       "replaced_by": "4d58ca31fddfd507ee4cac3ef3eaf9d8f4ff8c8b1ef005e0e23bb728718ac7f3",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "adedba8113fcaf0d476460393da0b3495ea68abc6fd5771a260b11ff14b6bece",
       "replaced_by": "5ab4cb544e395dc7201d281685750d22f5d84087e1e2f50abdcb027048c19258",
-      "from": "NEAR-HOS-IDENTITY-HOLD.json: Petals' own House of Stake reading (11 Nov) on the old key near:mainnet:house-of-stake, which names no account; the House of Stake is one map on venear.dao"
+      "from": "Petals' own House of Stake reading (11 Nov) on the old key near:mainnet:house-of-stake, which names no account; the House of Stake is one map on venear.dao"
     },
     {
       "snapshot": "aed0505ea6be827e7320dc3808aafb5af6a3fc727ec9c6a8d37cc3fdfe549a09",
       "replaced_by": "19c3c2b3a46f83f6722ae2860afc71121eb83bb7abfb0e1bdd5782778cb0df1e",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "b1f503a118c7a7a4a5ea06c70c9273e61cd1df240cee4ef37ed42f5c866f9efc",
       "replaced_by": "c860a5edb3255efdf66ff9ab8877580d24d7afe44b3e8021178ff0af3d2f0863",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "b5750f7be3579f6cd7a361fd8bd71d6cee8a810802f0b15e285617d992e9cfbe",
       "replaced_by": "5ab4cb544e395dc7201d281685750d22f5d84087e1e2f50abdcb027048c19258",
-      "from": "NEAR-HOS-IDENTITY-HOLD.json"
+      "from": "House of Stake identity repair: the old key near:mainnet:house-of-stake names no account; the House of Stake is one map on venear.dao"
     },
     {
       "snapshot": "b67510a880c4b2db2f2bec87c401545819a7b14d8206d6bc651ee7e3026c9fe7",
       "replaced_by": "8ee64f4f636028950e69a99e37d2cadc16af41c2b60ee141027cc6733d405853",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "b756318ff11f308c5b23f37f97bb0a347b63ecdc1d26b223b7aec58899ca7869",
       "replaced_by": "74def63085c8a0449d9de9ef060eb56f4b0a7d5d5b6025eee72443ceeb99882d",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "b79247c817fc0c32f5021c0b71ce3ab288ca5ae5009bcd7a2a9eded28c716581",
       "replaced_by": "de9195b8d4bdec3968a7b0b5a3bf6d6fe248204b2d2550c7a764a278944fc7a4",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "b7ae0028e17e448dc274cebf8bd6e6209ab04af23869cd35c4f2d117b8e9453c",
       "replaced_by": "0724566e996aba11533eda054d51b260dd38709d98f38714ac54a65f4897a189",
-      "from": "near-identity-reissue/CHANGES.json"
+      "from": "NEAR map identity repair: reissued on its DAO's own account, its data unchanged"
     },
     {
       "snapshot": "b97f89685d8713de52bba359cd2cb1a52163dc3e6110fc77c424a0eb569958bc",
       "replaced_by": "b6fb985d90ae5b57cbca5abaaa5fa6f20675b3014aff00bc961b29e9348262a2",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "b9d217aa9c864d60fb746a367a48199e4c57f7f0318433cf51239619a0e553be",
       "replaced_by": "6da78778f62d0eec6e0f46f0ae21c86afc2a4905466aebeecc4faa01641d2ff9",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "babc19fadd8ef8c55b474c93bd0cf2581ca91e0f50225e4456354413aa0de910",
       "replaced_by": "50d2ce45a18b97542be520d1ecf8b98ab32993afb23ee3b0ef7c5dd141f8c7c4",
-      "from": "data/gnosis/READING-LINK-REPAIR.json"
+      "from": "Gnosis map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "bc880869e033cd94aa97b26ee5f1a17aad88888681707bec4f03da95af45be66",
       "replaced_by": "99fd9c50ed6674a9cb616ed265c532b587ccee85005c583c7fe3b93bd16520dd",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "bcd6122d90bf49e7bdf05d1bb5605a87c67c7b673b9e7040484b066ffefab996",
       "replaced_by": "027d2f2f74b98badc33fb25de22f5cc725810154ffedb8cc958ff47641107d9f",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "bd2528dd079e29b2829469d7a6d40a63aabdb5599f6b86a9b344766894bac9e4",
       "replaced_by": "68a4c864c5fe7d6c873a24967357412b245990b5059cc64429eb1664aac0437e",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "bd30b9daf4665ee04b200414a1a769eca089014ad801ec6b7f0c86cf7fd0666c",
       "replaced_by": "7983ca1808e080aaa383e161f90587db1b885322d5d0ea61c6140b6d915df779",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "bd3eb6f647604ba186e8868ad6c185b36e1811dea57867de18cfbb2353228f63",
       "replaced_by": "9f14ce39e3627d5c08da5f2d50a49cf40fcf9c5b569b5d7d005bbd4e14d17a6e",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "c56e985b952430dd5ca2f6b0e9705d49888147c41c4d5168f7dec5cc6de710b0",
       "replaced_by": "aecd0793ba71c3d8f4cc7cbf36eabeb225243d290bb0d767aa16b759cf4218aa",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "c66dd22f22ba5dddf4cd1584c6cc6e7cf650a6b075cfd51c6479a623d70c7554",
       "replaced_by": "d43a29eecc3eb228a9c430fcb9f80baa3147cfb18c2b0ad6a3cd1ba68f2cc6dc",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "cd3f4c844fba38d578a78a0db0c50e45e75c8e6fc325c101b0eb9ba34cec06d2",
       "replaced_by": "c274f1ed093ccc6f99db849538e1891e293d7ea61eff2ba7ee41b352b4baf45e",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "d028ef29bfa7ad4fc5d05317efe12d7573223c7ab96eb5587e40511b7ee4afa7",
       "replaced_by": "ace9d8e596ff0e629fb597ef9769a4a78065f4a4a753d96bc2b2e83a00bdb42d",
-      "from": "data/gnosis/READING-LINK-REPAIR.json"
+      "from": "Gnosis map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "d22d12e4263bfb3bf44d24c2fcc5c74ce5d829f7fc0c4f99e04dd6da7d9ef084",
       "replaced_by": "bbcaba2cb4d914c9c5a57183b1e035639c0e9b282657fd973b8c268e48c41721",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "d260ccb1db90a71853bb68031363b13ccc79a92cb266f40a07ea774dd22d0779",
       "replaced_by": "a421a1156d39063f4ab624d0807ddc43967a26090607f566bcc01d28b02496ce",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "d2f228949f9fc55fe24ee1445a5ac68c16fd3a7fc0efb56c75240f5661d0336f",
       "replaced_by": "ca65cd83b2243049741060eb4b04d2ffce6276c6310e683a6949422ca5f4b4cd",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "d41c0e6e52ac4a179a05ab29fff273d58815e521ce79805803e61c9634d7c7cd",
       "replaced_by": "1fefa4792bd41f4ac07eedd8771cf9fb20ce2460999a9ea765e32c07e8ddfcc0",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "d8693e9d71cbb057599ae4b3f60f07b616090bd0c797a9e746ce593017ac43dd",
       "replaced_by": "ec053d115a6f1c8ba8022a94d8b018641d851addb9751263a52b31f801431b71",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "dcafc51041e1903ad0b7d5b1da3e55e9ec8bc8491194a2ccf190957bdb0fdd84",
       "replaced_by": "732df1631a797dc21d8e549f4ccaf7f2a1afce413c613e9accba9f4367c9d648",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "e25c664cc847fb43f84b2e0bfa4b335792064eb1fb696cc013732d2d230f10c0",
       "replaced_by": "cd5d4b06d8d0e43003e315a95e28460b56945b3f0b3978a341e6db53cb6f9a91",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "e2d3fdd95631e88c71cfa2ebf9245b0f4689190033579998d5949045f65e343a",
       "replaced_by": "c6367b941bbfea152a6534a3b418a1e9e99922242c0c41c6b8037ad0862e96f8",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "e6b567f94261b43f0e1ce238e2db525a2d501715fd549d726eb9a9990a9780fa",
       "replaced_by": "fa6ba92c522e87389e7104cede2b40bb98514e31482f6eae5481197044dbe8c6",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "e6ed71b7f6e1d369aed4c124d5265e8f60fb823670cdc5a841ff49165b31d62d",
       "replaced_by": "8f6254cac6f19d8e4651b700667eea10a64a55db412834dd1cdeace72c9d0181",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "e6ee76ae6299206ebaebd9eeaf7ff5086fde68fc3ba91d92fe900c8d5817afe0",
       "replaced_by": "853c6c25ea89b1064ce827b99415186fbfe48e44deec34d77ea0fa9212c0eb06",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "e88237f4dab2ddeb5f7a8d387c1371d849bc6ad171ab673d7e12e7635ca8b496",
       "replaced_by": "5684c04493bbcb12b1f8a4272f321b03d3a1b690ecaefc90b90c554708359ca3",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "eb256e41c96de032618ec410e07289947d164a03f76222a44eeaa6ce43ba4855",
       "replaced_by": "46eb489013cc1beecebb2c23fe444c55039aba3a53e5fe667564af6ba41072a3",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "eb5f8918824d19f2a2f9506f94ea7c53de5fb9b2d18ddd4ac01844778daa7ada",
       "replaced_by": "c67176e2d59ac479300f4b1e35c3b5372676062f1abc2a460e128d0da090c0dd",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "eb6d770222598813f66417577893eea49da388713bc4206995e351d491555786",
       "replaced_by": "144fe3834d86f92c98956528866bab35fd981d0b5cf60e485b6cdaa68100623e",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "ed3d39c1fbad870fbdb30a733757e2de1a06dd5a97f50c962874595eb59626c5",
       "replaced_by": "22771b57a17a952bcbaa5e817a2ba2a186938603e7b80487ab0fb6dd4f05ef73",
-      "from": "data/solana/MAP-BINDING-FIX.json"
+      "from": "Solana map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "f6ca1f5a8482edce8102b88e01a857076dbeb47d1361b207de0b93d9b22127f6",
       "replaced_by": "b5379027db4229c3ac7d3c833f839ed9a84230cf0e241d5677de09a6a30a9641",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "f883311d7d6a2669dd1a8a312270907471a2d71f9e8c7c5a2399a930bff59a8b",
       "replaced_by": "bd72019057ed7eb309e2c73a46ff5940a74598f369e8cef869ecddd36bc633c4",
-      "from": "readings-reissue/IDENTITY-AUDIT.json"
+      "from": "Arbitrum and Base map identity repair: reissued on its DAO's map, its data unchanged"
     },
     {
       "snapshot": "fb753bc56be9af487545c5613ef6c0675c91e5bb85bcec25b2e47b94b0c4d00a",
       "replaced_by": "481b3e3784249f6730d8fcafb8ca2b393894c1aeca3f6bec4a4cbb7154872e30",
-      "from": "research/holders-full-2026-11-12 (SYSTEMS, 12 Nov: the whole supply read again, in place of a 1-day window)"
+      "from": "12 Nov 2026: the whole supply read again, in place of a 1-day window"
     },
     {
       "snapshot": "fcda96c7eedcda6168193ca7a62ac6c9f6378206cbf5116038df489fee198661",
       "replaced_by": "b231f6788c92827b38955198436bca0656ac56c441c18aad5960ef782e71349a",
-      "from": "data/gnosis/BALLOT-LINK-REPAIR.json"
+      "from": "Snapshot ballots on Gnosis DAOs: reissued on their DAO's map, the votes unchanged"
     },
     {
       "snapshot": "fed5e3a97553af0d705fdb074fb0d644adfa04f65e04bec3be52103243dea5a6",
       "replaced_by": "83acb671f9388d71e74c521a120fc92d67c73491d0af51a0592c6967a4c03801",
-      "from": "phase2-ethereum-map-bindings.json"
+      "from": "Ethereum map identity repair: reissued on its DAO's map, its data unchanged"
     }
   ],
   "claims": [
     {
       "id": "0eac654e2f5d974545ecee8de0f11c4882872ff15aa24703ee8a3ad56146883c",
       "replaced_by": "aa3c3d392ca44d240f497227e837fe6760c6db64f3dbb31c601d2af2fd1fd68a",
-      "from": "near-identity-reissue/CHANGES.json"
+      "from": "NEAR map identity repair: reissued on its DAO's own account, its data unchanged"
     },
     {
       "id": "4a8354829dcdc9720229f2fd61dc9b36d551d9b1a0607ec897895e4107c0b9e0",
       "replaced_by": "c3b4ca770305157a873085fb2d88bd2d5906fdcf10d5ff3e60db701f630131c0",
-      "from": "near-identity-reissue/CHANGES.json"
+      "from": "NEAR map identity repair: reissued on its DAO's own account, its data unchanged"
     },
     {
       "id": "c046eac4914032142be7621e5dbc834f186cc6ae6a7b1d7db39a2310f5eea1d4",
       "replaced_by": "f0e6efdc39294717aa5175ceb4f80447ad80074489a5d43c410ffbc5f9da8995",
-      "from": "NEAR-HOS-IDENTITY-HOLD.json"
+      "from": "House of Stake identity repair: the old key near:mainnet:house-of-stake names no account; the House of Stake is one map on venear.dao"
     }
   ]
 }

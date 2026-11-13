@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:petal:schema:credit:v1",
   "title": "Petal credit v1",
-  "description": "credit/v1 (13 Nov, wave 8; specs/005-mapping-brain/composition.md, section 7): one author's credit, computed from the publication record alone, so anyone can recompute it. Every layer they published, the facts they stated first and those they matched, and who else used it. points/v1: a layer earns one point for each distinct other account that built on it (from, the whole chain back) or reused it (published a version including it), only from uses appended after the author published it; an author's own use never counts.",
+  "description": "credit/v1 (13 Nov; specs/005-mapping-brain/composition.md, section 7): one author's credit, computed from the publication record alone, so anyone can recompute it. Every layer they published, the facts they stated first and those they matched, and who else used it. points/v1: a layer earns one point for each distinct other account that built on it (from, the whole chain back) or reused it (published a version including it), only from uses appended after the author published it; an author's own use never counts.",
   "type": "object",
   "additionalProperties": false,
   "required": ["petal", "author", "rule", "compose", "layers", "totals", "composed_from"],

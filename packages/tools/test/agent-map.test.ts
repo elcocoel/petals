@@ -1,6 +1,6 @@
-// The agent goes to what's on the map (META, from Elco, 12 Nov: "the agent is kinda dumb - it's assuming it has to
-// count everything from scratch all the time instead of navigating and helping me interprate what's already
-// there"): look_up finds a map with its link, get_map hands over its layers, and the turns it lost go. Offline.
+// The agent goes to what's on the map, navigating and interpreting what's already there instead of counting
+// everything from scratch: look_up finds a map with its link, get_map hands over its layers, and the turns it
+// lost go. Offline.
 import { modules } from '@petal/inputs';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { activityOf } from '../src/activity.ts';
@@ -26,7 +26,7 @@ let r: TestRig;
 const run = async (name: string, input: unknown, ctx: ToolContext = r.ctx) =>
   (await callTool(name, input, ctx)) as Out;
 
-/** A drawing of the stored Moloch reading, named and made by Petals' mapping, as the waves' are. */
+/** A drawing of the stored Moloch reading, named and made by Petals' mapping, as the mapping runs' are. */
 async function onTheMap() {
   const proposed = await run('propose_spec', { network: 'moloch-v1', sha256: MOLOCH });
   const drawn = await run('render_flower', { spec: proposed.spec });
@@ -192,10 +192,10 @@ describe('get_map hands over what the map holds', () => {
   });
 });
 
-describe("propose_spec takes a stored reading's own params back (12 Nov: the wasted turn)", () => {
+describe("propose_spec takes a stored reading's own params back (no wasted turn)", () => {
   test("a param its reading carries, though its reader doesn't take it, isn't refused; another is", async () => {
     const s = await loadSnapshot(r.ctx, MOLOCH);
-    // a wave wrote its own words into the reading's params (RaidGuild's governance_contract)
+    // a mapping run wrote its own words into the reading's params (RaidGuild's governance_contract)
     const waved = {
       ...s,
       network: { ...s.network, params: { ...s.network.params, governance_contract: DAO } },
@@ -217,7 +217,7 @@ describe("propose_spec takes a stored reading's own params back (12 Nov: the was
   });
 });
 
-describe("the ceremony's card: where a new read would land (Elco, 12 Nov)", () => {
+describe("the ceremony's card: where a new read would land", () => {
   test('a target at an address already on the map lands on that map; a new one on its chain, with none', async () => {
     const at = await whereItLands(r.ctx, 'moloch-v1', {
       dao: DAO.toUpperCase().replace('0X', '0x'),
@@ -240,7 +240,7 @@ describe("the ceremony's card: where a new read would land (Elco, 12 Nov)", () =
   });
 });
 
-describe('the next steps on a map just read (META, from Elco, 12 Nov)', () => {
+describe('the next steps on a map just read', () => {
   test("what it holds gives the steps; Compare only fills the composer; the brain's services that fit", () => {
     const all = nextSteps({
       id: MAP,
@@ -272,7 +272,7 @@ describe('the next steps on a map just read (META, from Elco, 12 Nov)', () => {
   });
 });
 
-describe("list_publishable through a project's link (CONNECTORS, 12 Nov: a person's own agent has no session)", () => {
+describe("list_publishable through a project's link (a person's own agent has no session)", () => {
   test("the link's owner is whose data it is: what their agents kept about the map, and what stays private", async () => {
     // a project their agent works in by its link (an unclaimed one here: its owner is the project itself)
     const started = await run('start_exploration', { question: 'who runs the guild?' });
@@ -321,11 +321,11 @@ describe("list_publishable through a project's link (CONNECTORS, 12 Nov: a perso
   });
 });
 
-describe("each petal's activity reaches every drawing of the map (activity.ts, 12 Nov)", () => {
+describe("each petal's activity reaches every drawing of the map (activity.ts)", () => {
   test("from the map's proposals as last read; none before any were read", async () => {
     const s = await loadSnapshot(r.ctx, MOLOCH);
     expect(await activityOf(r.ctx, s)).toEqual([]);
-    // each view says the pieces its reading has, so Tools offers only what draws (OVERLAYS, wave 3)
+    // each view says the pieces its reading has, so Tools offers only what draws
     const names = async () => (await mapViews(r.ctx))[0]?.pieces.map((p) => p.name) ?? [];
     expect(await names()).toEqual(expect.arrayContaining(['share', 'amount', 'kind', 'identity']));
     expect(await names()).not.toContain('votes_cast');
@@ -361,7 +361,7 @@ describe("each petal's activity reaches every drawing of the map (activity.ts, 1
     const pieces = await activityOf(r.ctx, s);
     expect(pieces.map((p) => p.name)).toEqual(['votes_cast', 'voted', 'last_active']);
     expect(await names()).toEqual(expect.arrayContaining(['votes_cast', 'voted', 'last_active']));
-    // and the pieces themselves, as readFlower took them, for the drawn petals only (LOOK, wave 4: redraw at once)
+    // and the pieces themselves, as readFlower took them, for the drawn petals only (redrawn at once)
     const [v] = await mapViews(r.ctx);
     if (!v) throw new Error('no view on the map');
     const drawn = new Set((v.reading.petals as { id: string }[]).map((p) => p.id));
@@ -376,7 +376,7 @@ describe("each petal's activity reaches every drawing of the map (activity.ts, 1
   });
 });
 
-describe('what a press adds, by layer (Elco, 12 Nov: "a clear indicator of what data layers and claims I would be adding")', () => {
+describe('what a press adds, by layer: a clear indicator of the data layers and claims it adds', () => {
   test("a reading the person drew of the map goes with the press; once another maker has it, it doesn't", async () => {
     const person = { ...r.ctx, caller: { subject: 'prs_elco', by: 'near:mainnet:elco.near' } };
     const started = await run('start_exploration', { question: 'who runs the guild?' }, person);

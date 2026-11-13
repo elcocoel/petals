@@ -744,7 +744,7 @@
       ],
       "status": "ready",
       "file": "connecting/setup.md",
-      "sha256": "375e3e5b6533137df7f30751be2c1ab30d21954ca9a28dc4b0caca5ef794f413"
+      "sha256": "220799a8e9b6931d0ba222881689a50f6884bc47026e11eeb951e11225231603"
     },
     {
       "id": "stake-behind-the-network",
@@ -900,7 +900,7 @@
       ],
       "status": "partial",
       "file": "money/vesting.md",
-      "sha256": "7f287e54b9f37199c15c487286c78dc2dc0a53e22241e3035b5fcafc7c0ea334"
+      "sha256": "46c5b7245a3b678a02a3f9b39f564efa67235fdcacaef3ab6bce4afcfd13f3b9"
     },
     {
       "id": "voting-blocs-over-time",

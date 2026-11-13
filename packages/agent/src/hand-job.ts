@@ -1,5 +1,5 @@
-// hand_job (9 Nov, C; Elco: "the agent in the conversation can work in collaboration with conversations in
-// the apps to outsource mapping and other processes"). Petals' own agent hands a job to the person's own
+// hand_job: the agent in the conversation works with conversations in the person's apps, to outsource
+// mapping and other processes. Petals' own agent hands a job to the person's own
 // agent (Claude Code, Codex, ChatGPT, Claude), which takes it from this conversation's exploration, does it
 // on their machine and reports back (take_job, report_job in @petal/tools). One per run: it knows which
 // run, and so which exploration, it hands the job into. Only Petals' agent has it; the doors don't.
@@ -50,7 +50,7 @@ export async function agentsOfRun(ctx: ToolContext, runId: string) {
       jobs: held
         .filter((j) => j.taken_by?.toLowerCase() === a.name.toLowerCase())
         .map((j) => j.title),
-      // what it says it can do (swarm lean 2): each of its workers' words, and its own, once each
+      // what it says it can do: each of its workers' words, and its own, once each
       can: [...new Set([...own.map((w) => w.can), a.can].filter((c): c is string => !!c))],
     };
   });
@@ -153,7 +153,7 @@ export function handJobTool(ctx: ToolContext, runId: string, bell?: Bell): AnyTo
       };
       const to = agentOf(args.to);
       if (to !== null && typeof to !== 'string') return to;
-      // in parts (swarm.md step 4): each its own job, for its own worker, all in one conversation
+      // in parts: each its own job, for its own worker, all in one conversation
       const parts = Array.isArray(args.parts) ? args.parts : [];
       const each: {
         title: string;
@@ -186,7 +186,7 @@ export function handJobTool(ctx: ToolContext, runId: string, bell?: Bell): AnyTo
           "This conversation isn't kept anywhere, so it can't hand out a job.",
         );
       }
-      // its own conversation, in this one's folder, so its work doesn't fill this one (swarm.md step 2)
+      // its own conversation, in this one's folder, so its work doesn't fill this one
       const conversation = await jobConversation(ctx, runId, { title, brief });
       const at = ctx.now().toISOString();
       const part_of = each.length ? `prt_${randomBytes(9).toString('hex')}` : null;
@@ -225,7 +225,7 @@ export function handJobTool(ctx: ToolContext, runId: string, bell?: Bell): AnyTo
 export const STOP_JOB = 'stop_job';
 
 /**
- * stop_job (Elco's swarm lean 3, 11 Nov: "create, manage, start and stop"): Petals' agent stops a job it handed
+ * stop_job (a job can be created, managed, started and stopped): Petals' agent stops a job it handed
  * out, open or taken, as the person can from the page. Its worker's next call is told the job was stopped,
  * and nothing more of its work lands. One per run: only this conversation's jobs.
  */
@@ -268,7 +268,7 @@ export function stopJobTool(ctx: ToolContext, runId: string): AnyTool {
 export const RETRY_JOB = 'retry_job';
 
 /**
- * retry_job (swarm.md step 3): Petals' agent puts a job it handed out back as open, one that failed, was
+ * retry_job: Petals' agent puts a job it handed out back as open, one that failed, was
  * stopped, or whose worker has gone quiet: for whoever takes it first, or with to, for that agent. The old
  * worker's next call is told it was handed on. One per run: only this conversation's jobs.
  */

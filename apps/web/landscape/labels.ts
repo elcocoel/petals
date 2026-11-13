@@ -1,9 +1,8 @@
-// The map's names and marks (OVERLAYS; LOOK places them, in scene.ts's draw()). Each name is the organisation's
-// badge (design/org-badge.md; Elco, 11 Nov, on the far map: "text and badges are still fugly"; #86): a solid
+// The map's names and marks (placed in scene.ts's draw()). Each name is the organisation's badge: a solid
 // fill of the ground with a hairline edge and square corners, so the lines behind never cross its words; the
 // name in the app's UI type; with no logo, the token symbol before it in mono, muted, or alone in the words'
-// colour when it's the name; then what kind of thing it is, quiet in mono (#97), cut before the name is. With
-// the far wave the mark stands in the flower's middle (LOOK sizes it), round whether it's a logo or not: with
+// colour when it's the name; then what kind of thing it is, quiet in mono, cut before the name is. With
+// the far wave the mark stands in the flower's middle (scene.ts sizes it), round whether it's a logo or not: with
 // no logo, the symbol's first letter on the ground in a hairline ring. Without it (the arrows' names), the
 // logo is inside the badge, before the name.
 import { textWidth } from '../flower/words.ts';
@@ -32,7 +31,7 @@ export interface LabelFlower {
   name: string;
   /** `chain`: the logo of the chain it's on, for the centre where it has none of its own */
   mark: { logo: string | null; symbol: string; types?: readonly string[]; chain?: string | null };
-  /** its map's treasury and token price, in words, for the line under its badge (LOOK, Elco's walk 3) */
+  /** its map's treasury and token price, in words, for the line under its badge */
   worth?: readonly string[] | undefined;
 }
 
@@ -43,7 +42,7 @@ export interface Label {
   group: Slot<SVGGElement>;
   /** With the far wave, the mark alone, drawn at the flower's centre. */
   centre: Slot<SVGGElement> | null;
-  /** How wide it is with its types, and with its name alone (its types cut first, org-badge.md line 9). */
+  /** How wide it is with its types, and with its name alone (its types cut first). */
   width: number;
   short: number;
   /** Shows its types or cuts them, the ground following. */
@@ -82,10 +81,8 @@ function drawLogo(logo: string, parent: Element, clip: string, size: number): vo
 }
 
 /**
- * The far wave's centre mark, its middle at (0, 0): a round logo; with none of its own, the logo of the chain it's on
- * (Elco, 12 Nov walk 3: "We should find a better visual representation for daos that don't have a logo ... maybe
- * there's something that we can display there for example which chain they're on"); else the symbol's first letter
- * in a ring.
+ * The far wave's centre mark, its middle at (0, 0): a round logo; with none of its own, the logo of the chain
+ * it's on, so a DAO without a logo still shows where it lives; else the symbol's first letter in a ring.
  */
 function drawCentreMark(m: LabelFlower['mark'], parent: Element, clip: string): void {
   const logo = m.logo ?? m.chain;
@@ -121,7 +118,7 @@ export function drawLabel(f: LabelFlower, parent: Element, clip: string, centred
     ),
   );
   const symbol = f.mark.symbol.trim();
-  // a name that's only its symbol is said once, by the symbol, in the words' colour (org-badge.md, line 2)
+  // a name that's only its symbol is said once, by the symbol, in the words' colour
   const said = !f.mark.logo && symbol.toLowerCase() === f.name.trim().toLowerCase();
   let x = BADGE.pad;
   if (!centre && f.mark.logo) {
@@ -130,7 +127,7 @@ export function drawLabel(f: LabelFlower, parent: Element, clip: string, centred
     x += BADGE.mark + GAP;
   }
   // a symbol of one letter is only the name's initial (no token symbol was found): it says nothing before the
-  // name (Elco, 12 Nov, wave 3: "there's like, D, R, A, H, I bet these mean something. I just have no idea")
+  // name, where a row of lone letters would only puzzle
   const initial = Array.from(symbol).length <= 1;
   if (!f.mark.logo && symbol && !said && !initial) {
     const t = el('text', { class: MONO, fill: MUTED, x, y: 4 }, group.node);

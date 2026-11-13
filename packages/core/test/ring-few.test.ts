@@ -1,7 +1,6 @@
-// Elco, 12 Nov: "we haven't yet figure out how to make those with a small group number of people to show up. In a
-// nice way". A flower of fewer than FEW petals keeps each as wide as in a flower of FEW, the petals evenly round the
-// circle with open circle between, the first at twelve; one or two people drew nothing before (a wedge of half the
-// circle or more has no side to stand on).
+// Small groups show up well too. A flower of fewer than FEW petals keeps each as wide as in a flower of FEW, the
+// petals evenly round the circle with open circle between, the first at twelve; one or two people drew nothing
+// before (a wedge of half the circle or more has no side to stand on).
 import { describe, expect, test } from 'vitest';
 import { FEW, lay, newRing, polygonPath, roundTopPath, SHAPE } from '../src/render/wedge/ring.ts';
 

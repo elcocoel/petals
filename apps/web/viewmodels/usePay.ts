@@ -193,6 +193,9 @@ export function usePay(
     /** what the press says, and the dollars the person chose (none to choose while a transfer waits) */
     label,
     amount: pending || near === null ? null : { usd, label: payWords.amount, onUsd: setUsd },
+    /** the one amount, which paying with another token reads too */
+    usd,
+    setUsd,
     /** a transfer out and not confirmed yet: what the row says after a failed press */
     failedWords: why ?? (pending ? payWords.pending : payWords.failed),
     canPay: Boolean(pending) || near === null || amount > 0,

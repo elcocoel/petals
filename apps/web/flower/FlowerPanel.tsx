@@ -1,7 +1,8 @@
 'use client';
 // What the flower's own box shows: the flower's date, then the selected petal or the reading key, and
-// the rest one quiet click away: with a petal open, only what's about the petal (#78, 11 Nov). Before there's a flower, the shelf, or the words for why not. The flower
-// itself is the canvas under this, and its title is the box's bar, so neither is here.
+// the rest one quiet click away: with a petal open, only what's about the petal. Before there's a flower, the
+// shelf, or the words for why not. The flower itself is the canvas under this, and its title is the
+// box's bar, so neither is here.
 import type { PetalDetail } from '@petal/core/types';
 import type { ReactNode } from 'react';
 import { Interpretation, SignatureLine } from '../components/Interpretation.tsx';
@@ -29,7 +30,7 @@ export interface FlowerPanelActions {
   onLink?: (href: string) => boolean;
   /**
    * Given where the open wallet has no map of its own and Petals' agent can be asked now (/make): the box says
-   * so, and pressing it asks the agent to map it (Elco, walk 5, 12 Nov).
+   * so, and pressing it asks the agent to map it.
    */
   onMapPopulation?: (() => void) | undefined;
 }
@@ -90,7 +91,7 @@ function OpenFlower({
       ) : (
         <ReadingKey view={view.reading} />
       )}
-      {/* With a petal open, the box is about the petal; what's about the whole flower waits (#78). */}
+      {/* With a petal open, the box is about the petal; what's about the whole flower waits. */}
       <div hidden={Boolean(petal)} className="flex flex-wrap items-center gap-x-block-gap">
         <Button
           variant="quiet"
@@ -147,7 +148,7 @@ export function FlowerPanel({
   /** The selected petal's own record, when one is selected. */
   petal?: PetalDetail | null;
   unit?: string | undefined;
-  /** The selected petal's dollars at its map's price (#91). */
+  /** The selected petal's dollars at its map's price. */
   worth?: WorthLine | 'no price' | null | undefined;
   section?: PanelSection;
   actions?: FlowerPanelActions;

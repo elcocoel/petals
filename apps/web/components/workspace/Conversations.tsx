@@ -1,8 +1,8 @@
-// The Conversations card (#79, the profile page as the investigator's card): the person's conversations,
+// The Conversations card (the profile page as the investigator's card): the person's conversations,
 // newest first, the networks they've mapped, each opening where it's held, with when it last moved, in a set
 // height that scrolls inside, as the Claims widget's does. The
 // same list the side panel reads (viewmodels/useWorkPanel.ts), so both say the same. Props only. Words from
-// lib/profile-view.ts, drafts.
+// lib/profile-view.ts.
 import type { ConversationRow } from '../../lib/conversation-list.ts';
 import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
 import { profilePageWords } from '../../lib/profile-view.ts';
@@ -16,7 +16,7 @@ export function Conversations({
   quote,
 }: {
   rows: ConversationRow[];
-  /** An illustrated power quote for when there's nothing yet (#89, wave 7). */
+  /** An illustrated power quote for when there's nothing yet. */
   quote?: PowerQuoteItem | null;
 }) {
   return (

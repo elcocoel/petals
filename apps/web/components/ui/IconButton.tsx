@@ -1,7 +1,7 @@
 // A control that is only an icon, in the side panel: a square one row high. Its name is read aloud, and
-// shown in a tooltip beside it while the pointer is over it or the keyboard is on it (design/side-panel.md,
-// line 6): to its right in the bar, to its left at a row's end, so it stays in sight. The fill under the
-// pointer is item's, as a row's is. A way somewhere is Next's Link, as NavItem's is.
+// shown in a tooltip beside it while the pointer is over it or the keyboard is on it: to its right in the
+// bar, to its left at a row's end, so it stays in sight. The fill under the pointer is item's, as a row's
+// is. A way somewhere is Next's Link, as NavItem's is.
 import Link from 'next/link';
 import type { MouseEventHandler } from 'react';
 import { Icon, type IconName } from './Icon.tsx';

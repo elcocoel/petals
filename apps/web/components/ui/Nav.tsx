@@ -1,6 +1,6 @@
 // Figma's Nav (66:2181), the one nav of every page. Links into the landing start with /, so they work
 // from anywhere. On a phone the links fold behind one menu button, a native disclosure that needs no script,
-// and the wordmark and Connect stay on the bar (11 Nov: the links wrapped the bar onto three rows).
+// and the wordmark and Connect stay on the bar (unfolded, the links wrapped the bar onto three rows).
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { Button } from './Button.tsx';
@@ -26,7 +26,7 @@ export function Nav() {
         </a>
         <div className="flex items-center gap-x-space-8 md:gap-x-space-32">
           <div className="hidden items-center gap-x-space-32 md:flex">{links}</div>
-          {/* The one Connect, as the hero's box has it: primary, with its arrow (Elco, 10 Nov). */}
+          {/* The one Connect, as the hero's box has it: primary, with its arrow. */}
           <Button href={siteLinks.lobby} arrow>
             {copy.ask}
           </Button>

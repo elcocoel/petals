@@ -1,4 +1,4 @@
-// The flower's geometry, ported from draw() in research/spikes/flower/index.html (renderer.md):
+// The flower's geometry, ported from the flower spike's draw() (renderer.md):
 // a polygon with one side per petal, bars standing straight out along each side's normal, cut
 // into stacked parallelograms. Straight edges only: no curves, no rounded petals (constitution I).
 // Pure numbers here; ./svg.ts writes them out.
