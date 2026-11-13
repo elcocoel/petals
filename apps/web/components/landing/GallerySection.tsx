@@ -1,30 +1,31 @@
-// Figma's "The atlas" (66:2303), now the Power Map (Elco, 9 Nov: "Power map is a good name - let's keep it"),
-// and since 10 Nov the map itself, live, in place of a grid of its tiles (Elco: "this should be the global
-// map not a bunch of digusting squares"): components/landing/LandingMap.tsx. The button opens the whole map.
-// The colour key over it went on 12 Nov: it was the old nine tiles' colours, which the map doesn't paint (a
-// petal's colour is keyed in each flower, and the map's own legend says what it means there).
+// The landing's Power Map section: its name, then the live map (components/landing/LandingMap.tsx) across the
+// window's full width as a wide strip that ends the section. The map plays its moves by itself; the whole of it,
+// and the button centred over its foot, open the Power Map. There's no colour key over it: each flower keys its own
+// colours, and the map's legend says what they mean.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { Button } from '../ui/Button.tsx';
 import { Section } from '../ui/Section.tsx';
-import { SectionHead } from '../ui/SectionHead.tsx';
+import { SectionName } from '../ui/SectionName.tsx';
 import { LandingMap } from './LandingMap.tsx';
 
 const copy = landingCopy.gallery;
 
 export function GallerySection() {
   return (
-    <Section
-      tone="mist"
-      rule="top"
-      head={
-        <div className="flex flex-wrap items-end justify-between gap-block-gap">
-          <SectionHead title={copy.title} />
-          <Button href={siteLinks.map}>{copy.open}</Button>
+    <Section tone="mist" rule="top" bleed head={<SectionName name={copy.title} />}>
+      {/* the window's width, whatever the page's column, and down to the section's foot */}
+      <div className="relative left-1/2 -mb-page-inset w-screen -translate-x-1/2 md:-mb-section-padding">
+        <LandingMap into={{ href: siteLinks.map, label: copy.open }} />
+        {/* the way in, over the map, where the eye already is */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-block-gap md:p-page-inset">
+          <div className="pointer-events-auto">
+            <Button href={siteLinks.map} arrow>
+              {copy.open}
+            </Button>
+          </div>
         </div>
-      }
-    >
-      <LandingMap />
+      </div>
     </Section>
   );
 }

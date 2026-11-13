@@ -64,7 +64,6 @@ import { NextSteps } from '../components/NextSteps.tsx';
 import { Oops } from '../components/Oops.tsx';
 import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
-import { PowerQuote } from '../components/PowerQuote.tsx';
 import { PublishFlow } from '../components/PublishFlow.tsx';
 import { PublishPress } from '../components/PublishPress.tsx';
 import { QuotePanel } from '../components/QuotePanel.tsx';
@@ -98,6 +97,7 @@ import { NavItem } from '../components/ui/NavItem.tsx';
 import { OrgBadge } from '../components/ui/OrgBadge.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
 import { PlateLink } from '../components/ui/PlateLink.tsx';
+import { Quote } from '../components/ui/Quote.tsx';
 import { Ramp } from '../components/ui/Ramp.tsx';
 import { Range } from '../components/ui/Range.tsx';
 import { RowField } from '../components/ui/RowField.tsx';
@@ -127,7 +127,6 @@ import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { PublicProfile } from '../components/workspace/PublicProfile.tsx';
 import { Published } from '../components/workspace/Published.tsx';
-import { QuoteBand } from '../components/workspace/QuoteBand.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { TipControl } from '../components/workspace/TipControl.tsx';
 import { Usage } from '../components/workspace/Usage.tsx';
@@ -2605,9 +2604,11 @@ export const registry: LabEntry[] = [
         render: () => (
           <WalletAsk
             pick={[
+              { id: 'phone', name: 'Your phone (scan a QR code)', icon: null },
               { id: 'a', name: 'MetaMask', icon: null },
               { id: 'b', name: 'SafePal', icon: null },
             ]}
+            qr={null}
             waitingFor={null}
             onChoose={() => {}}
             onStop={() => {}}
@@ -2618,7 +2619,13 @@ export const registry: LabEntry[] = [
         name: 'waiting for one',
         wide: true,
         render: () => (
-          <WalletAsk pick={null} waitingFor="SafePal" onChoose={() => {}} onStop={() => {}} />
+          <WalletAsk
+            pick={null}
+            qr={null}
+            waitingFor="SafePal"
+            onChoose={() => {}}
+            onStop={() => {}}
+          />
         ),
       },
     ],
@@ -3295,15 +3302,31 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'QuoteBand',
-    group: 'The workspace',
+    id: 'Quote',
+    group: 'Blocks',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/workspace/QuoteBand.tsx',
-    states: POWER_QUOTES.slice(0, 2).map((q) => ({
-      name: q.id,
-      render: () => <QuoteBand quote={q} />,
-    })),
+    source: 'apps/web/components/ui/Quote.tsx',
+    // in a band of its own, side by side from a wide window; and in a column, the drawing over the words
+    states: [
+      ...POWER_QUOTES.slice(0, 2).map((q) => ({
+        name: `${q.id}, in a band`,
+        wide: true,
+        render: () => (
+          <Section tone="mist" rule="top">
+            <Quote quote={q} />
+          </Section>
+        ),
+      })),
+      ...POWER_QUOTES.slice(2, 3).map((q) => ({
+        name: `${q.id}, in a column`,
+        render: () => (
+          <div className="w-1/3">
+            <Quote quote={q} room="column" />
+          </div>
+        ),
+      })),
+    ],
   },
   {
     id: 'Claims',
@@ -3369,17 +3392,6 @@ export const registry: LabEntry[] = [
       },
       { name: 'none yet', render: () => <Conversations rows={[]} /> },
     ],
-  },
-  {
-    id: 'PowerQuote',
-    group: 'The workspace',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/PowerQuote.tsx',
-    states: POWER_QUOTES.slice(0, 3).map((q) => ({
-      name: q.id,
-      render: () => <PowerQuote quote={q} />,
-    })),
   },
   {
     id: 'MappingBox',
@@ -4558,4 +4570,6 @@ export const NOT_IN_LAB: Record<string, string> = {
   Dialog: "a modal over the page, so it is shown live, from a row's ⋯ menu at /lab/panel",
   WorkMenu:
     'the SideRail and the list, both here, fixed to the window: the layout of /lobby and /make holds it (/lab/panel shows it whole)',
+  CoverLink:
+    "an invisible link laid over a figure, with nothing of its own to see: it covers the landing's Power Map (GallerySection, here)",
 };
