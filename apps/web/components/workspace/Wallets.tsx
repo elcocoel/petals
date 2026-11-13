@@ -2,8 +2,9 @@
 // signing in with them, each with its chain and when it signed, and the badge PROVEN, set against a link's
 // DECLARED, so it reads what backs the person and what's only their word. Null while it's read; with no
 // answer, it says so. Its one action, Add a wallet, asks another wallet to sign, as signing in does. With
-// several wallets of one kind in this browser, it asks which, each by its own name and icon; while a wallet is
-// asked it names it, with a way to stop waiting; what the wallet answers, a no included, shows plainly.
+// a phone first (any phone wallet, by a QR code it shows here until the phone says yes) and the wallets in this
+// browser after, it asks which, each by its own name and icon; while a wallet is asked it names it, with a way
+// to stop waiting; what the wallet answers, a no included, shows plainly.
 // Props only: viewmodels/useLobby.ts reads it and adds. Words from lib/profile-view.ts.
 import {
   type AddWalletPhase,
@@ -108,6 +109,24 @@ export function Wallets({
               </Button>
             )}
           </div>
+        </div>
+      )}
+      {adding.kind === 'scan' && (
+        <div className="flex flex-col items-start gap-space-8 border-t border-hairline pt-text-gap">
+          <p className="my-0 type-body">{profilePageWords.scan}</p>
+          {/* biome-ignore lint/performance/noImgElement: a QR code drawn here, as a data: URL */}
+          <img
+            className="block h-auto max-w-full border border-hairline"
+            src={adding.qr}
+            width={240}
+            height={240}
+            alt={profilePageWords.qrAlt}
+          />
+          {onStop && (
+            <Button variant="quiet" onClick={onStop}>
+              {profilePageWords.stop}
+            </Button>
+          )}
         </div>
       )}
       {adding.kind === 'adding' && (

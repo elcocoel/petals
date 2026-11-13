@@ -10,7 +10,7 @@
 // is no timer.
 
 import type { Credit } from '@petal/core';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   addMyWallet,
   readMyAnnotations,
@@ -20,7 +20,8 @@ import {
   sessionClient,
 } from '../lib/agent-client.ts';
 import { contributionView } from '../lib/contribution-view.ts';
-import { evmWallets, NO_EVM_WALLET } from '../lib/evm-wallet.ts';
+import { evmWallets } from '../lib/evm-wallet.ts';
+import { PHONE, qrOf } from '../lib/phone-wallet.ts';
 import {
   type AddWalletPhase,
   type ClaimsView,
@@ -33,7 +34,7 @@ import {
   walletRefusal,
   walletRows,
 } from '../lib/profile-view.ts';
-import { NO_SOLANA_WALLET, solanaWallets } from '../lib/solana-wallet.ts';
+import { solanaWallets } from '../lib/solana-wallet.ts';
 import { tipLine } from '../lib/tip.ts';
 import { connectWallet, SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
 import { usePay } from './usePay.ts';
@@ -123,6 +124,8 @@ export function useLobby() {
     [usage, nearUsd],
   );
 
+  /** The try at adding a wallet that's current. */
+  const attempt = useRef(0);
   /**
    * Adds a wallet: a NEAR one signs Petals' challenge as signing in does, an EVM or a Solana one its Sign-In
    * text. With several wallets of one kind in this browser, the person picks one by name first. The wallet
@@ -130,13 +133,17 @@ export function useLobby() {
    */
   const addWallet = useCallback(
     async (kind: WalletKind, pick?: string) => {
+      // one try at a time: Stop waiting, or another press, leaves an older try's answer unused
+      attempt.current += 1;
+      const mine = attempt.current;
+      const current = () => attempt.current === mine;
       let wallet: string = profilePageWords.nearWallet;
       if (kind !== 'near') {
-        const list = kind === 'evm' ? evmWallets() : solanaWallets();
-        if (list.length === 0) {
-          setAdding({ kind: 'failed', why: kind === 'evm' ? NO_EVM_WALLET : NO_SOLANA_WALLET });
-          return;
-        }
+        // the phone first, by a QR code, then the wallets in this browser
+        const list = [
+          { id: PHONE, name: profilePageWords.phone, icon: null },
+          ...(kind === 'evm' ? evmWallets() : solanaWallets()),
+        ];
         if (!pick && list.length > 1) {
           setAdding({ kind: 'choose', chain: kind, wallets: list });
           return;
@@ -144,18 +151,34 @@ export function useLobby() {
         const chosen = list.find((w) => w.id === pick) ?? list[0];
         if (!chosen) return;
         pick = chosen.id;
-        wallet = chosen.name;
+        wallet = chosen.id === PHONE ? profilePageWords.phoneRefused : chosen.name;
       }
-      setAdding({ kind: 'adding', wallet });
+      setAdding(
+        pick === PHONE
+          ? { kind: 'adding', wallet: profilePageWords.phoneWallet }
+          : { kind: 'adding', wallet },
+      );
+      // a phone shows its QR code until it says yes, then is named by what it calls itself
+      const phone = {
+        show: (uri: string) => {
+          void qrOf(uri).then((qr) => {
+            if (current()) setAdding({ kind: 'scan', qr });
+          });
+        },
+        approved: (name: string) => {
+          wallet = name;
+          if (current()) setAdding({ kind: 'adding', wallet: name });
+        },
+      };
       let network: string;
       let proof: Parameters<typeof addMyWallet>[1];
       try {
         if (kind === 'evm') {
           network = 'eip155';
-          proof = await evmProof(pick);
+          proof = await evmProof(pick, phone);
         } else if (kind === 'solana') {
           network = 'solana';
-          proof = await solanaProof(pick);
+          proof = await solanaProof(pick, phone);
         } else {
           const challenge = await sessionClient.challenge();
           const signed = await signPrepared({ ...challenge, entry_sha256: '' }, SIGN_IN_NETWORK);
@@ -171,9 +194,10 @@ export function useLobby() {
           };
         }
       } catch (e) {
-        setAdding({ kind: 'failed', why: walletRefusal(wallet, e) });
+        if (current()) setAdding({ kind: 'failed', why: walletRefusal(wallet, e) });
         return;
       }
+      if (!current()) return;
       try {
         const { wallets: now } = await addMyWallet(network, proof);
         setWallets(walletRows(now));
@@ -186,8 +210,11 @@ export function useLobby() {
     },
     [editor],
   );
-  /** Stops waiting for a wallet that doesn't answer, or puts the pick away. */
-  const stopAdding = useCallback(() => setAdding({ kind: 'ready' }), []);
+  /** Stops waiting for a wallet that doesn't answer, or puts the pick away; a later answer is left unused. */
+  const stopAdding = useCallback(() => {
+    attempt.current += 1;
+    setAdding({ kind: 'ready' });
+  }, []);
 
   return {
     profile: {
