@@ -16,7 +16,7 @@ export type AnswerBlock = string | { readonly list: readonly string[] };
 function words(line: string): ReactNode[] {
   return line.split(/\*\*(.+?)\*\*/).map((part, i) =>
     i % 2 === 1 ? (
-      <strong key={`${i}-${part}`} className="font-semibold">
+      <strong key={part} className="font-semibold">
         {part}
       </strong>
     ) : (
