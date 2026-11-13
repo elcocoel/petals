@@ -28,11 +28,11 @@ export const siteLinks = {
   /** The docs: the brain, the data and rendering protocols, connecting an agent, the API (DOCS, 11 Nov). */
   docs: '/docs',
   howItWorks: '/#how-it-works',
-  /** Petals' code on GitHub: the hero's star gives it one (Elco, 13 Nov; it works once the repo is public). */
+  /** Petals' code on GitHub: the hero's star gives it one (it works once the repo is public). */
   github: 'https://github.com/elcocoel/petals',
   /** Elementary Complexity's site: the footer's name links here. */
   elementaryComplexity: 'https://elementarycomplexity.com',
-  /** The socials under the hero's buttons, in Elco's order; their addresses come later (Elco, 13 Nov: "don't worry about the links yet"). */
+  /** The socials under the hero's buttons; an empty address is one still to come. */
   socials: { github: '', telegram: '', twitter: '', youtube: '' },
   liveShape: `/f/${LIVE_SHAPE}`,
   /** its picture, in the person's view */
