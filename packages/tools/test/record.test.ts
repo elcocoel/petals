@@ -66,7 +66,7 @@ beforeEach(async () => {
   await store.mark.put({ about: MAP, body: JSON.stringify(mark), read_at: AT });
   // a press signed before the protocol: one name, published with its NEP-413 proof
   const s = await loadSnapshot(r.ctx, MOLOCH);
-  member = `eip155:1:${(s.participants[0]?.id as string).toLowerCase()}`;
+  member = `eip155:1:${String(s.participants[0]?.id).toLowerCase()}`;
   const claim = {
     petal: 'claim/v3',
     id: 'c-named-1',

@@ -218,7 +218,8 @@ export function readingCredit(
         : s.what;
     const [shown, ...rest] = s.values;
     if (!shown) continue;
-    (pieces[piece] ??= {})[id] = {
+    pieces[piece] ??= {};
+    (pieces[piece] as NonNullable<(typeof pieces)[string]>)[id] = {
       by: shown.by.map((b) => b.author),
       first: shown.by[0]?.publication as string,
       ...(s.differs
