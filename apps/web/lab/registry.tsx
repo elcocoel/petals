@@ -64,7 +64,6 @@ import { NextSteps } from '../components/NextSteps.tsx';
 import { Oops } from '../components/Oops.tsx';
 import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PetalDetails } from '../components/PetalDetails.tsx';
-import { PowerQuote } from '../components/PowerQuote.tsx';
 import { PublishFlow } from '../components/PublishFlow.tsx';
 import { PublishPress } from '../components/PublishPress.tsx';
 import { QuotePanel } from '../components/QuotePanel.tsx';
@@ -3236,10 +3235,10 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/ui/Quote.tsx',
-    // the same quote with room for both sides, and narrow, the drawing over the words
+    // in a band of its own, side by side from a wide window; and in a column, the drawing over the words
     states: [
       ...POWER_QUOTES.slice(0, 2).map((q) => ({
-        name: `${q.id}, with room`,
+        name: `${q.id}, in a band`,
         wide: true,
         render: () => (
           <Section tone="mist" rule="top">
@@ -3248,10 +3247,10 @@ export const registry: LabEntry[] = [
         ),
       })),
       ...POWER_QUOTES.slice(2, 3).map((q) => ({
-        name: `${q.id}, narrow`,
+        name: `${q.id}, in a column`,
         render: () => (
           <div className="w-1/3">
-            <Quote quote={q} />
+            <Quote quote={q} room="column" />
           </div>
         ),
       })),
@@ -3321,17 +3320,6 @@ export const registry: LabEntry[] = [
       },
       { name: 'none yet', render: () => <Conversations rows={[]} /> },
     ],
-  },
-  {
-    id: 'PowerQuote',
-    group: 'The workspace',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/PowerQuote.tsx',
-    states: POWER_QUOTES.slice(0, 3).map((q) => ({
-      name: q.id,
-      render: () => <PowerQuote quote={q} />,
-    })),
   },
   {
     id: 'MappingBox',

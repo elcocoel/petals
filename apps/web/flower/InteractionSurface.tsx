@@ -17,10 +17,10 @@ import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { NewConversation } from '../components/chat/NewConversation.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { PetalClaims } from '../components/PetalClaims.tsx';
-import { PowerQuote } from '../components/PowerQuote.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { Icon } from '../components/ui/Icon.tsx';
+import { Quote } from '../components/ui/Quote.tsx';
 import { MappingBox } from '../components/workspace/MappingBox.tsx';
 import { WalletAsk } from '../components/workspace/WalletAsk.tsx';
 import { LandscapeCanvas, PANEL_W } from '../landscape/LandscapeCanvas.tsx';
@@ -257,7 +257,11 @@ export function InteractionSurface({
           <div ref={mapArea} className="absolute inset-0">
             {!land ? (
               <div className="flex h-full flex-col items-center justify-center gap-block-gap">
-                {openingQuote && <PowerQuote quote={openingQuote} />}
+                {openingQuote && (
+                  <div className="w-full max-w-tile-width">
+                    <Quote quote={openingQuote} room="column" />
+                  </div>
+                )}
                 <p role="status" className="m-0 flex items-center gap-text-gap type-ui text-muted">
                   <Icon name="petals" />
                   {groundWords.opening}
@@ -526,7 +530,9 @@ function EmptyGround({
   }, [left, bottom, besideColumn]);
   return (
     <div ref={el} className="pointer-events-none absolute inset-0 flex items-center justify-center">
-      <PowerQuote quote={quote} />
+      <div className="w-full max-w-tile-width">
+        <Quote quote={quote} room="column" />
+      </div>
     </div>
   );
 }
