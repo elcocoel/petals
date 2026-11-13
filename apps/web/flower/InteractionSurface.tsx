@@ -44,6 +44,7 @@ import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useGroundMap } from '../viewmodels/useGroundMap.ts';
 import { usePowerQuote } from '../viewmodels/usePowerQuote.ts';
+import { usePressAll } from '../viewmodels/usePressAll.ts';
 import { usePublishPress } from '../viewmodels/usePublishPress.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import type { Clear } from './camera.ts';
@@ -219,6 +220,8 @@ export function InteractionSurface({
   const [inMap, setInMap] = useState<string | null>(null);
   const publishMap = inMap ?? flowerMap ?? state.mapAt?.map ?? madeMap;
   const publishing = usePublishPress(publishMap);
+  // with no single map in front, everything kept on maps across the Power Map goes in one press
+  const pressAll = usePressAll(state.mode === 'mapping' && !publishMap, rereadMap);
   // a power quote wherever /make has nothing to show yet, on the background: the map on its way, or a canvas
   // with nothing drawn on it
   const openingQuote = usePowerQuote(0);
@@ -429,6 +432,7 @@ export function InteractionSurface({
             view={mapping}
             press={publishing.view}
             onPublish={() => void publishing.publish()}
+            all={pressAll.view && { view: pressAll.view, onPublish: () => void pressAll.publish() }}
             wallet={
               chosen && chosenAccount
                 ? {

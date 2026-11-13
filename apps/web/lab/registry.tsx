@@ -155,6 +155,7 @@ import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.
 import { payWords } from '../lib/pay.ts';
 import { viewChoices } from '../lib/person-view.ts';
 import { POWER_QUOTES } from '../lib/power-quotes.ts';
+import { pressAllView } from '../lib/press-all.ts';
 import { claimsView, usageView, walletRows } from '../lib/profile-view.ts';
 import { publishPressView, publishWords, signerOf } from '../lib/publish-press.ts';
 import type { Done } from '../lib/thread.ts';
@@ -3447,6 +3448,44 @@ export const registry: LabEntry[] = [
         render: () => (
           <MappingBox view={mappingView(null, null, null)} press={null} onPublish={() => {}} />
         ),
+      },
+      {
+        name: 'no map in front: everything kept on many maps, in one press',
+        render: () => {
+          const all = pressAllView(
+            {
+              author: 'near:mainnet:petals.near',
+              maps: [
+                {
+                  about: 'eip155:100:0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6',
+                  name: 'RaidGuild',
+                  layers: 3,
+                },
+                {
+                  about: 'near:mainnet:marketing.sputnik-dao.near',
+                  name: 'marketing DAO',
+                  layers: 1,
+                },
+              ],
+              left: [
+                {
+                  about: 'near:mainnet:old.sputnik-dao.near',
+                  why: 'Nothing new since your last version.',
+                },
+              ],
+            },
+            'ready',
+            null,
+          );
+          return (
+            <MappingBox
+              view={mappingView(null, null, null)}
+              press={null}
+              onPublish={() => {}}
+              all={all && { view: all, onPublish: () => {} }}
+            />
+          );
+        },
       },
     ],
   },

@@ -358,6 +358,71 @@ export async function publishPublication(
   return (await res.json()) as PublishedVersion;
 }
 
+/** Where one press over many maps would publish (GET /api/v1/publish/data?maps=all): read-only, nothing kept. */
+export interface PressAll {
+  author: string;
+  /** each map with something to publish, and how many layers its version holds */
+  maps: { about: string; name: string; layers: number }[];
+  /** maps with nothing to add, and why */
+  left: { about: string; why: string }[];
+}
+
+/** What one press over many maps would publish; null for nobody, or a server that can't say. */
+export async function readPressAll(): Promise<PressAll | null> {
+  const res = await fetch('/api/v1/publish/data?maps=all', { cache: 'no-store' });
+  if (!res.ok) return null;
+  return (await res.json()) as PressAll;
+}
+
+/** One press over many maps, prepared when it's pressed (manifest/v1): every map's version and the one text. */
+export interface PreparedPress {
+  manifest: unknown;
+  sha256: string;
+  text: string;
+  publications: { about: string; name: string; sha256: string; publication: unknown }[];
+  left: { about: string; why: string }[];
+  recipient?: string;
+  nonce?: string;
+}
+
+export async function preparePress(o: {
+  maps: 'all' | string[];
+  /** the wallet that signs, CAIP-10 */
+  author: string;
+}): Promise<PreparedPress> {
+  const res = await fetch('/api/v1/publish/data/prepare', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(o),
+  });
+  if (!res.ok) throw new Error(await failureOf(res));
+  return (await res.json()) as PreparedPress;
+}
+
+/** What one press over many maps published: the manifest, and each map's signed version and its layers. */
+export interface PublishedPress {
+  manifest: unknown;
+  publications: {
+    about: string;
+    publication: string;
+    layers: { sha256: string; petal: string }[];
+  }[];
+}
+
+/** Sends the one signature over the manifest: every map's version goes on the shared map at once, or none. */
+export async function publishPress(
+  sha256: string,
+  proof: PublicationProof,
+): Promise<PublishedPress | { refused: number; message: string }> {
+  const res = await fetch('/api/v1/publish/data', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ sha256, proof }),
+  });
+  if (!res.ok) return { refused: res.status, message: await failureOf(res) };
+  return (await res.json()) as PublishedPress;
+}
+
 async function failureOf(res: Response): Promise<string> {
   const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
   return body?.error?.message ?? `HTTP ${res.status}`;
