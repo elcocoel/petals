@@ -93,6 +93,8 @@ export interface LegendEdit {
   onScale: (d: Dimension, scale: Scale) => void;
   /** Puts the default back; absent while the view is the default. */
   onReset?: (() => void) | undefined;
+  /** Why the last change wasn't saved, or null. */
+  failed?: string | null | undefined;
   /**
    * The dimension just changed while the map is drawn again in it, as visual feedback that something is
    * being updated, or null.

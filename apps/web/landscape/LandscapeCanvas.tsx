@@ -924,7 +924,7 @@ export function LandscapeCanvas({
     ? (inFlower?.reading.petals.find((p) => p.id === wallet) ?? null)
     : null;
   const blocs = useMapBlocs(legend ? (inFlower?.map ?? null) : null, span);
-  // a bloc is offered only where its members are petals of the flower drawn (flow 15)
+  // a bloc is offered only where its members are petals of the flower drawn
   const choices = useMemo(
     () =>
       blocs && inFlower
