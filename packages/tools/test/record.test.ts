@@ -1,4 +1,4 @@
-// The publication record on the server (wave 8; specs/005-mapping-brain/composition.md): what was on the map before
+// The publication record on the server (specs/005-mapping-brain/composition.md): what was on the map before
 // enters it once, Petals' rows as "imported, unsigned" by mapping.petals.near and a press signed before the protocol
 // as its author's with its proof; then the map's layers, its authors with their three counts, a composed reading's
 // credit and an author's credit/v1 all come from the record alone. Offline.
@@ -133,6 +133,29 @@ describe('the import: what was on the map before the record', () => {
     expect(await recordOf(r.ctx)).toHaveLength(2);
   });
 
+  test("a re-read changes Petals' rows: the next run appends the next version, its parent the last", async () => {
+    await importRecord(r.ctx);
+    const [first] = await recordOf(r.ctx, MAP);
+    const store = privateStore(r.ctx.config);
+    const row = await store.mark.get(MAP);
+    const mark = { ...JSON.parse(String(row?.body)), read_at: '2026-11-13T12:00:00.000Z' };
+    await store.mark.put({ about: MAP, body: JSON.stringify(mark), read_at: mark.read_at });
+    const next = await importRecord(r.ctx);
+    expect(next.publications.map((p) => [p.author, p.layers])).toEqual([
+      ['mapping.petals.near', { snapshot: 1, mark: 1 }],
+    ]);
+    const own = (await recordOf(r.ctx, MAP)).filter(
+      (e) => e.publication.author === 'mapping.petals.near',
+    );
+    expect(own).toHaveLength(2);
+    expect(own[1]?.publication).toMatchObject({ parent: first?.hash, previous: first?.hash });
+    // the record keeps the mark it held before; the new version names the new one
+    const shas = (e: (typeof own)[number] | undefined) =>
+      e?.publication.layers.map((l) => l.sha256).sort();
+    expect(shas(own[1])).not.toEqual(shas(own[0]));
+    expect((await importRecord(r.ctx)).publications).toEqual([]);
+  });
+
   test('a press since the record began is its own publication: the import leaves it', async () => {
     await privateStore(r.ctx.config).annotation.add([
       {
@@ -185,8 +208,11 @@ describe("the map from the record: its layers, its authors' three counts, a read
     const elcoCredit = await creditFor(r.ctx, ELCO);
     expect(elcoCredit.totals).toEqual({ layers: 1, first: 1, confirmed: 0, built_on: 0 });
     expect(elcoCredit.hash).toMatch(/^[0-9a-f]{64}$/);
-    // a bare NEAR account is the same author (LOBBY, 13 Nov: /credit/petals.near answered zeros)
+    // a bare NEAR account is the same author (so /credit/petals.near doesn't answer zeros)
     expect(authorOf('petals.near')).toBe(ELCO);
+    // Petals' own mapping is named bare in the record, however it's asked for
+    expect(authorOf('mapping.petals.near')).toBe('mapping.petals.near');
+    expect(authorOf('near:mainnet:mapping.petals.near')).toBe('mapping.petals.near');
     expect(authorOf('alice.testnet')).toBe('near:testnet:alice.testnet');
     expect(authorOf(ELCO)).toBe(ELCO);
     expect((await creditFor(r.ctx, authorOf('petals.near'))).hash).toBe(elcoCredit.hash);

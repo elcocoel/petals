@@ -7,7 +7,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { httpApp } from '../src/http/app.ts';
 import { flow, progressOf, rig, validatorsFixture } from './helpers.ts';
 
-// Under load (a shared Mac at a load of 170-190, 13 Nov) this file's tests pass alone and time out together:
+// Under load (a shared machine at a load of 170-190) this file's tests pass alone and time out together:
 // a longer limit here only; what they check is unchanged.
 vi.setConfig({ testTimeout: 120_000, hookTimeout: 120_000 });
 
@@ -125,7 +125,7 @@ describe('tool routes', () => {
     expect((await app.request('/api/v1/health', from('1.2.3.4'))).status).toBe(200);
   });
 
-  test("the map itself isn't a tool call: a person clicking through Tools draws it again and again (12 Nov)", async () => {
+  test("the map itself isn't a tool call: a person clicking through Tools draws it again and again", async () => {
     const { app } = await setup();
     const from = { headers: { 'cf-connecting-ip': '9.9.9.9' } };
     for (let i = 0; i < 61; i++) {
@@ -194,7 +194,7 @@ describe('SSE, bodies, health', () => {
       version: 'api/v1',
       tools_version: 'tools/v2',
       commit: null,
-      // the brain every door serves (step 4): its index hash, then its commit
+      // the brain every door serves: its index hash, then its commit
       brain_version: expect.stringMatching(/^[0-9a-f]{16}@([0-9a-f]{12}|unknown)$/),
       public: false,
     });

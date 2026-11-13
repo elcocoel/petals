@@ -1,4 +1,4 @@
-// The side panel's bench (Elco, 10 Nov): the panel at its real size, empty, with a first afternoon, with
+// The side panel's bench: the panel at its real size, empty, with a first afternoon, with
 // forty conversations in six projects, and folded. Hidden in production unless PETAL_LAB=1, as the lab is.
 import { notFound } from 'next/navigation';
 import { PanelBench } from '../../../lab/PanelBench.tsx';

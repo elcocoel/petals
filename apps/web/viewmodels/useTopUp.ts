@@ -1,7 +1,7 @@
 // Paying with another token through NEAR Intents, beside the pay row's 'Add 1 NEAR', so people can pay with
 // anything from anywhere. The person picks a token and its chain, the dollars and their own
 // address on that chain for a refund; the server gives a deposit address and the exact amount; they send it
-// in one plain transfer from whatever wallet they have. Where it stands is read again every few seconds
+// in one plain transfer from whatever wallet they have. The dollars are the pay row's own amount, one for both. Where it stands is read again every few seconds
 // while it's under way, and stops when it ends; once it has landed, the one balance reads again (`paid`).
 // lib/intents.ts holds what's offered and the words.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -22,11 +22,16 @@ import {
 /** How often a top-up under way is read again: 1Click settles in tens of seconds. */
 const READ_AGAIN_MS = 5000;
 
-export function useTopUp(asking: string | null, paid: () => void): TopUpView {
+export function useTopUp(
+  asking: string | null,
+  paid: () => void,
+  /** the pay row's amount: one amount for both ways of paying */
+  amount: { usd: string; setUsd: (usd: string) => void },
+): TopUpView {
+  const { usd, setUsd } = amount;
   const [open, setOpen] = useState(false);
   const [tokens, setTokens] = useState<PayToken[] | null>(null);
   const [asset, setAsset] = useState('');
-  const [usd, setUsd] = useState('');
   const [refund, setRefund] = useState('');
   const [getting, setGetting] = useState(false);
   const [error, setError] = useState<string | null>(null);

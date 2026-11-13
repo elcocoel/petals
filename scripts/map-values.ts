@@ -1,7 +1,6 @@
-// What each map's token is worth (board #91; Elco, 11 Nov: "monetary estimates of the value of these petals
-// and the stakes and the supply"): each map on the shared map, its token's price from NEAR Intents' 1Click
-// list, its supply from its chain and its newest reading's totals at that price, kept as value/v3 by the
-// map's address, with its circulating supply, max and market cap (the chain's max first, else CoinGecko's)
+// What each map's token is worth (monetary estimates of its petals, its stakes and its supply): each map on
+// the shared map, its token's price from NEAR Intents' 1Click list, its supply from its chain and its newest
+// reading's totals at that price, kept as value/v3 by the map's address, with its circulating supply, max and market cap (the chain's max first, else CoinGecko's)
 // and its treasury (one the chain gave stays; else DefiLlama's). A token nothing prices says no price.
 // It writes to the server's own store, so run it
 // where the server runs:

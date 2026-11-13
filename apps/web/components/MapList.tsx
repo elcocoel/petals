@@ -1,8 +1,7 @@
-// Mapped work as a list (design/map-list.md; Elco, 11 Nov: "the way the work you have mapped shows up
-// right now is all of these boxes. We need to create a list for this."). One row per map, as the side
-// panel's rows are: its picture small, its name in UI words with a quiet mono line under it, its chain at
-// the end. The whole row opens the map, with the item's soft fill under the pointer. No boxes: no border
-// around a row, a picture or the list. It takes the rows FlowerTile takes, so a place swaps one for the other.
+// Mapped work as a list. One row per map, as the side panel's rows are: its picture small, its name in UI
+// words with a quiet mono line under it, its chain at the end. The whole row opens the map, with the item's
+// soft fill under the pointer. No boxes: no border around a row, a picture or the list. It takes the rows
+// FlowerTile takes, so a place swaps one for the other.
 import Link from 'next/link';
 import { Mono } from './ui/Mono.tsx';
 

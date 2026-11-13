@@ -1,8 +1,9 @@
 // The Power Map as the workspace's ground (on /make signed out too): the same live map as /map, behind the
 // conversation, so the room isn't empty. Its data is megabytes, so it's asked for once a visit (the adapter's
 // readPowerMap) and moving between conversations, which stays inside the page, keeps it. `opening` while it's
-// on its way, so its room can say so; if it can't be read, the room stays empty.
-import { useEffect, useState } from 'react';
+// on its way, so its room can say so; if it can't be read, the room stays empty. A new map made in the
+// conversation is read again once it lands, so it's on the map as the map it now is (reread).
+import { useCallback, useEffect, useState } from 'react';
 import type { BenchLandscape } from '../landscape/land.ts';
 import { readPowerMap } from '../lib/agent-client.ts';
 
@@ -16,7 +17,12 @@ const readOnce = () => {
   return asked;
 };
 
-export function useGroundMap(): { land: BenchLandscape | null; opening: boolean } {
+export function useGroundMap(): {
+  land: BenchLandscape | null;
+  opening: boolean;
+  /** Reads the map again, for every page that asks next too: a new map has landed on it. */
+  reread: () => void;
+} {
   const [read, setRead] = useState<{ land: BenchLandscape | null; opening: boolean }>({
     land: null,
     opening: true,
@@ -30,5 +36,11 @@ export function useGroundMap(): { land: BenchLandscape | null; opening: boolean 
       gone = true;
     };
   }, []);
-  return read;
+  const reread = useCallback(() => {
+    asked = null;
+    void readOnce().then((got) => {
+      if (got) setRead({ land: got, opening: false });
+    });
+  }, []);
+  return { ...read, reread };
 }

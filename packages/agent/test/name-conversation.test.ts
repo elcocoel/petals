@@ -1,4 +1,4 @@
-// Conversations are named (Elco, 10 Nov): Petals' agent names each conversation with name_conversation in
+// Conversations are named: Petals' agent names each conversation with name_conversation in
 // the same message as its first answer, and renames it when the subject changes, at no model call of its
 // own. The person's own agents send a title with add_note. Through petalApp, with a scripted model: no
 // NEAR AI is called.

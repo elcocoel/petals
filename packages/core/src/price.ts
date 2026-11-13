@@ -1,7 +1,6 @@
-// What a person pays for Petals' agent (price/v2; coordinator/pricing-protocol.md). Elco, 10 Nov: "there's
-// three components to the price. There is the inevitable payment that we have to collect to pay for the AI.
-// We have to know that price. Then we can add a base fee, which would be unavoidable. And then a tip, an
-// optional donation type payment ... how much the users tip in relation to their usage, they could set it".
+// What a person pays for Petals' agent (price/v2). The price has three components: the payment that covers the
+// AI, whose price must be known; a base fee, unavoidable; and an optional tip, a donation the person sets in
+// relation to their usage.
 // So a charge is NEAR AI's own bill, plus the base fee (each part a switch), plus the person's tip: a percent
 // of their usage on a scale they set, a donation, always charged apart. Every switch off and a tip of 0 is
 // Petals at cost. It replaces price/v1, whose fees were multiplied by a tip; v1's schema stays readable.

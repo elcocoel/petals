@@ -1,4 +1,4 @@
-// seam/v1 as a typed document (seam.md; systems check, step 2): every piece of data with its kind, standing and
+// seam/v1 as a typed document (seam.md): every piece of data with its kind, standing and
 // layer, valid against urn:petal:schema:seam:v1, and about the same address as the reading it starts from.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

@@ -1,4 +1,4 @@
-// The connect chapters as code (systems check, step 4; Elco's go): brain/connecting/connect-*.md are the only
+// The connect chapters as code: brain/connecting/connect-*.md are the only
 // source of how each app connects. This writes packages/agent/src/connect.generated.ts from them, so
 // /skill.md's setup, the keep commands /connect shows, and petal.mjs say exactly what the chapters say, and
 // the web app (which has no brain/ at run time) carries them too.

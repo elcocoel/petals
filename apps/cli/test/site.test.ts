@@ -306,7 +306,7 @@ describe('the file itself', () => {
   });
 });
 
-// Elco, 9 Nov (B with C): the page's agent hands jobs out in a project, and the person's own agent
+// The page's agent hands jobs out in a project, and the person's own agent
 // takes one, does it on their machine and reports back. The project is reached by its link.
 describe('jobs from the page’s agent', () => {
   test('take_job claims the next job in the project the agent is in', async () => {
@@ -392,7 +392,7 @@ describe('jobs from the page’s agent', () => {
     expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/brain/files/where-power-lives`);
     await byName(tools, 'brain_index').run({}, ctx());
     expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/brain`);
-    // the open-calls feed is the site's: this computer keeps none (Elco, 12 Nov)
+    // the open-calls feed is the site's: this computer keeps none
     await byName(tools, 'list_calls').run({ kind: 'rfp', q: 'relayer' }, ctx());
     expect((site.seen.at(-1) as Seen).url).toBe(`${SITE}/api/v1/calls?kind=rfp&q=relayer`);
     await byName(tools, 'brain_context').run(
@@ -441,7 +441,7 @@ describe('jobs from the page’s agent', () => {
   });
 });
 
-// Elco's glasses rule, 10 Nov: a job brings the person's view, and every flower drawn for it goes
+// A job brings the person's view, and every flower drawn for it goes
 // through that view, in the CLI (one process per command) and in an MCP session alike.
 describe("a job's flowers are drawn as the person sees them", () => {
   const VIEW = { petal: 'view/v1', color: { data: 'kind' } };
@@ -524,7 +524,7 @@ describe("a job's flowers are drawn as the person sees them", () => {
   });
 });
 
-// What an agent finds about accounts goes into the project as data (annotation-layer.md step 4): through
+// What an agent finds about accounts goes into the project as data: through
 // the site, never only on this machine, with the job's project and the worker's name filled in.
 describe('annotations go to the project on the site', () => {
   const CLAIM = {
@@ -681,7 +681,7 @@ describe('a job that ended under the worker', () => {
   });
 });
 
-describe('several workers on one computer, each with its own job (swarm.md step 5)', () => {
+describe('several workers on one computer, each with its own job', () => {
   const A = 'A'.repeat(43);
   const B = 'B'.repeat(43);
   const PAGE = `${SITE}/s/${'P'.repeat(43)}`;
@@ -823,7 +823,7 @@ describe('several workers on one computer, each with its own job (swarm.md step 
   });
 });
 
-describe("the map's search goes to the site (SEARCH, #105)", () => {
+describe("the map's search goes to the site", () => {
   test('search_petals asks GET /api/v1/search with q, kinds and limit, and runs nothing here', async () => {
     const site = fakeSite();
     const fetch = async (url: string, init: RequestInit = {}) => {
@@ -856,7 +856,7 @@ describe("the map's search goes to the site (SEARCH, #105)", () => {
   });
 });
 
-describe('what an agent found goes in the project, privately (keep_data, #98)', () => {
+describe('what an agent found goes in the project, privately (keep_data)', () => {
   test("keep_data posts the document to the job's project; list_data asks by petal", async () => {
     const { writeFileSync } = await import('node:fs');
     const currentFile = join(mkdtempSync(join(tmpdir(), 'petal-data-')), 'current.json');
@@ -893,7 +893,7 @@ describe('what an agent found goes in the project, privately (keep_data, #98)', 
   });
 });
 
-describe("what would publish, from a person's own agent (list_publishable, SYSTEMS's sys/publish)", () => {
+describe("what would publish, from a person's own agent (list_publishable)", () => {
   test("list_publishable asks the site through the project's link, never publishing", async () => {
     const { writeFileSync } = await import('node:fs');
     const currentFile = join(mkdtempSync(join(tmpdir(), 'petal-publishable-')), 'current.json');

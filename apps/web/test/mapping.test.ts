@@ -132,6 +132,18 @@ describe('the cases, in words', () => {
     ).toEqual(['New data: The map has no token balance TRUMP, proposals outcome yet']);
   });
 
+  test('a unit its name already says isn’t said twice: votes cast, not votes cast votes', () => {
+    expect(
+      toMapLines({
+        new_data: { whats: ['snapshot/proposals_made proposals', 'snapshot/votes_cast votes'] },
+        new_moment: { states: [] },
+        new_subjects: { count: 0 },
+        match: { count: 0, authors: [] },
+        differs: { count: 0, authors: [] },
+      }).map((l) => l.words),
+    ).toEqual(['The map has no proposals made, votes cast yet']);
+  });
+
   test('the summary counts kinds of data, moments, subjects and facts, and says nothing of what’s zero', () => {
     expect(casesLine({ new_subjects: 1, match: 1, differs: 0 })).toBe(
       '1 new subject · 1 fact matches',

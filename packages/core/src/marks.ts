@@ -1,11 +1,11 @@
-// mark/v1 (board #85; research/org-names-logos-2026-11-11.md, strategy 2, Elco's pick, 11 Nov): what tells one
+// mark/v1: what tells one
 // organisation on the map from another, its name, its token's symbol and its logo, each saying where it came
 // from. One per map, named by the map's address. Reading one is @petal/inputs' (marks/); this is the format.
 import type { Claim } from './claims/types.ts';
 import { createAjv, schemaId } from './schema/ajv.ts';
 import type { Result, ValidationIssue } from './types/index.ts';
 
-/** mark/v2 since 11 Nov: mark/v1 with its types, as is_a claims (#97). v1 still reads. */
+/** mark/v2 since 11 Nov: mark/v1 with its types, as is_a claims. v1 still reads. */
 export const MARK_VERSION = 'mark/v2';
 
 /** self-declared: the thing says it of itself. verified: a curated list holds the address. inferred: Petals' own. */

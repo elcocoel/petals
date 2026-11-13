@@ -1,4 +1,4 @@
-// Carry forward on the credit contract (Elco's choice, 10 Nov): the contract can only charge, so what lands on
+// Carry forward on the credit contract: the contract can only charge, so what lands on
 // a person's credit between two chats (NEAR AI's correction, a base fee, a tip) rides on the next charge on
 // chain: owed is charged with it, owed back takes from it. A stand-in chain; the real one is the testnet
 // rehearsal.

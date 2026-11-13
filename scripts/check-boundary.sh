@@ -71,7 +71,7 @@ while IFS= read -r f; do
 done <<<"$files"
 
 if [[ $bad -ne 0 ]]; then
-  echo "boundary: refused. Fix the files above, or ask Elco to approve an allowlist change." >&2
+  echo "boundary: refused. Fix the files above, or have an allowlist change approved." >&2
   exit 1
 fi
 echo "boundary: $(grep -c . <<<"$files") files inside the publication boundary"

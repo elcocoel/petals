@@ -88,52 +88,57 @@ export function useLobby() {
   );
 
   /** Adds a wallet: a NEAR one signs Petals' challenge as signing in does, an EVM one its Sign-In text. */
-  const addWallet = useCallback(async (kind: WalletKind) => {
-    if (kind === 'evm' && !hasEvmWallet()) {
-      setAdding({ kind: 'failed', why: NO_EVM_WALLET });
-      return;
-    }
-    if (kind === 'solana' && !hasSolanaWallet()) {
-      setAdding({ kind: 'failed', why: NO_SOLANA_WALLET });
-      return;
-    }
-    setAdding({ kind: 'adding' });
-    let network: string;
-    let proof: Parameters<typeof addMyWallet>[1];
-    try {
-      if (kind === 'evm') {
-        network = 'eip155';
-        proof = await evmProof();
-      } else if (kind === 'solana') {
-        network = 'solana';
-        proof = await solanaProof();
-      } else {
-        const challenge = await sessionClient.challenge();
-        const signed = await signPrepared({ ...challenge, entry_sha256: '' }, SIGN_IN_NETWORK);
-        network = SIGN_IN_NETWORK;
-        proof = {
-          type: 'nep413',
-          account_id: signed.accountId,
-          public_key: signed.publicKey,
-          signature: signed.signature,
-          message: challenge.message,
-          nonce: challenge.nonce,
-          recipient: challenge.recipient,
-        };
+  const addWallet = useCallback(
+    async (kind: WalletKind) => {
+      if (kind === 'evm' && !hasEvmWallet()) {
+        setAdding({ kind: 'failed', why: NO_EVM_WALLET });
+        return;
       }
-    } catch {
-      // closing the picker, or saying no in the wallet, adds nothing and isn't an error
-      setAdding({ kind: 'ready' });
-      return;
-    }
-    try {
-      const { wallets: now } = await addMyWallet(network, proof);
-      setWallets(walletRows(now));
-      setAdding({ kind: 'ready' });
-    } catch (e) {
-      setAdding({ kind: 'failed', why: why(e) });
-    }
-  }, []);
+      if (kind === 'solana' && !hasSolanaWallet()) {
+        setAdding({ kind: 'failed', why: NO_SOLANA_WALLET });
+        return;
+      }
+      setAdding({ kind: 'adding' });
+      let network: string;
+      let proof: Parameters<typeof addMyWallet>[1];
+      try {
+        if (kind === 'evm') {
+          network = 'eip155';
+          proof = await evmProof();
+        } else if (kind === 'solana') {
+          network = 'solana';
+          proof = await solanaProof();
+        } else {
+          const challenge = await sessionClient.challenge();
+          const signed = await signPrepared({ ...challenge, entry_sha256: '' }, SIGN_IN_NETWORK);
+          network = SIGN_IN_NETWORK;
+          proof = {
+            type: 'nep413',
+            account_id: signed.accountId,
+            public_key: signed.publicKey,
+            signature: signed.signature,
+            message: challenge.message,
+            nonce: challenge.nonce,
+            recipient: challenge.recipient,
+          };
+        }
+      } catch {
+        // closing the picker, or saying no in the wallet, adds nothing and isn't an error
+        setAdding({ kind: 'ready' });
+        return;
+      }
+      try {
+        const { wallets: now } = await addMyWallet(network, proof);
+        setWallets(walletRows(now));
+        setAdding({ kind: 'ready' });
+        // an open profile editor publishes as the NEAR wallet just added
+        editor.readNear();
+      } catch (e) {
+        setAdding({ kind: 'failed', why: why(e) });
+      }
+    },
+    [editor],
+  );
 
   return {
     profile: {

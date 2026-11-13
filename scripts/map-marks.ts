@@ -1,10 +1,10 @@
-// Every map's mark (board #85; Elco's pick, 11 Nov: "Chain first, then lists"): each map on the shared map, its
+// Every map's mark (the chain first, then lists): each map on the shared map, its
 // organisation's name, its token's symbol and its logo, each saying where it came from (mark/v1), kept by the
 // map's address. It writes to the server's own store, so run it where the server runs:
 //   container exec petals node /app/scripts/map-marks.ts [--dry] [--only <part of a map's address>]
 // --dry reads and says, and keeps nothing. Read again, a map's mark is replaced.
-// --types only adds each kept mark's types (#97), keeping its name, symbol and logo as they are.
-// --logos only adds a logo to each kept mark that has none (Elco, 12 Nov, walk 3), keeping the rest as it is.
+// --types only adds each kept mark's types, keeping its name, symbol and logo as they are.
+// --logos only adds a logo to each kept mark that has none, keeping the rest as it is.
 import { parseArgs } from 'node:util';
 import { createContext, logoMaps, markMaps, serverConfig, typeMaps } from '@petal/agent';
 

@@ -40,7 +40,7 @@ export interface VerbRule {
 }
 
 const READ = ['observed', 'sourced'] as const;
-/** What a person or an agent adds about an account (annotation-layer.md): never read from a chain. */
+/** What a person or an agent adds about an account: never read from a chain. */
 const ANNOTATION = ['declared', 'stated', 'sourced', 'inferred'] as const;
 const AMOUNT = { amount: 'decimal', unit: 'symbol' } as const;
 
@@ -229,7 +229,7 @@ export const VERBS = {
     object: 'link',
     qualifiers: { grounds: 'grounds' },
   },
-  // v4 (11 Nov, board #97; Elco: types are data, claims with evidence, any value, several at once)
+  // v4: types are data, claims with evidence, any value, several at once
   is_a: {
     means:
       'The account is of this type, in any word: a form, a role or a declared nature. One per claim.',

@@ -1,4 +1,4 @@
-// A Sputnik DAO (AstroDAO) on NEAR (board #93; META's pick, 11 Nov: NEAR's Marketing DAO first): its members,
+// A Sputnik DAO (AstroDAO) on NEAR (NEAR's Marketing DAO first): its members,
 // the accounts in its policy's roles and every account that voted, each sized by the votes it cast; and its
 // proposals with each account's vote (proposals/v1), read keyless from the DAO's own views at one final block.
 // Sputnik keeps each vote in its proposal (Approve, Reject or Remove) and no time for it, nor when a proposal

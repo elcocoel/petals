@@ -1,8 +1,7 @@
-// Elco, 12 Nov: "the dimension of time specifically is particularly absent ... it always looks like a shell, like a
-// nautilus ... last active, most active ... a way to color grade the [wallets] that never voted ... the legend tells
-// me what each color is". Order takes the activity pieces SYSTEMS gives with a reading (last_active, a date, newest
-// first; votes_cast, a count, most first); Colour takes voted, 'never voted' in grey; and a map's keys are ranked
-// once over all its flowers.
+// Time as a dimension, so a flower isn't always the same shell: last active, most active, a colour grade for the
+// wallets that never voted, and a legend that says what each colour is. Order takes the activity pieces given with
+// a reading (last_active, a date, newest first; votes_cast, a count, most first); Colour takes voted, 'never
+// voted' in grey; and a map's keys are ranked once over all its flowers.
 import { describe, expect, test } from 'vitest';
 import { readFlower, redress } from '../src/reading/index.ts';
 import { GREY, KEYS, keysOf, mapKeys, wordsOf } from '../src/render/wedge/keys.ts';
@@ -89,7 +88,7 @@ describe('Order', () => {
   });
 });
 
-describe('every choice Tools offers draws (VISUAL QA, 12 Nov)', () => {
+describe('every choice Tools offers draws', () => {
   test('order by kind, who it is, or the name each petal shows', () => {
     for (const data of ['kind', 'identity', 'name']) {
       const r = readFlower(
@@ -171,7 +170,7 @@ describe('Colour', () => {
   });
 });
 
-describe('Colour graded by a number or a date, and chosen colours (Elco, wave 4)', () => {
+describe('Colour graded by a number or a date, and chosen colours', () => {
   test('last active as a grade: five steps, the newest darkest, one hue', () => {
     const r = readFlower(
       spec,

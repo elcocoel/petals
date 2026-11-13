@@ -1,7 +1,7 @@
-// What an answer is about on the Power Map (Elco, 12 Nov on /make: "the power map should always be there", an answer
-// moves it; WORKSPACE's seam): the `show` event, read off what a tool answered, so it costs the model no turn, and
-// LOOK's map takes it as it is. And the `next` event: after a map is read, the next steps on it (META, from Elco:
-// "three next-step buttons that drive the map", the brain's services as one-press options).
+// What an answer is about on the Power Map (the map is always there, and an answer moves it): the `show` event,
+// read off what a tool answered, so it costs the model no turn, and the map takes it as it is. And the `next`
+// event: after a map is read, the next steps on it (three next-step buttons that drive the map, the brain's
+// services as one-press options).
 import type { MapShow, NextSteps } from '@petal/core/types';
 import { nextSteps } from '@petal/tools';
 

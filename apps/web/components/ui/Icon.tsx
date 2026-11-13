@@ -1,9 +1,7 @@
-// Every icon on the site, from one family: Phosphor (@phosphor-icons/react, pinned at 2.1.10), as Fire draws
-// its own (Elco, 10 Nov: "let's define our icons family and stay within it - whatever is the latest one I
-// was using for fire was great, let's go with that"). One weight, regular, as Fire's, and two sizes from the
-// tokens: Icon size beside Label words, Icon small beside UI words in the side panel. The names below are
-// Petals' roles; which glyph plays each is decided here and nowhere else, so Phosphor's own names never
-// leave this file, as in Fire's phosphor-semantic-icons.ts. The arrows sit in text, so they're sized in em.
+// Every icon on the site, from one family: Phosphor (@phosphor-icons/react, pinned at 2.1.10), and nothing
+// outside it. One weight, regular, and two sizes from the tokens: Icon size beside Label words, Icon small
+// beside UI words in the side panel. The names below are Petals' roles; which glyph plays each is decided here
+// and nowhere else, so Phosphor's own names never leave this file. The arrows sit in text, so they're sized in em.
 // SSR glyphs: they need no context, so a server component can draw them.
 import type { Icon as Glyph } from '@phosphor-icons/react';
 import {
@@ -49,7 +47,7 @@ const GLYPHS = {
   gallery: SquaresFour,
   connect: Plug,
   arrow: ArrowRight,
-  // a source outside Petals, linked beside what it gave (Elco, 12 Nov: "the little diagonal arrow")
+  // a source outside Petals, linked beside what it gave: the little diagonal arrow
   outside: ArrowUpRight,
   back: ArrowLeft,
   /** The side panel's fold. */
@@ -64,7 +62,7 @@ const GLYPHS = {
   petals: Flower,
   /** A conversation with, or a line for, the person's own agent. */
   agent: TerminalWindow,
-  /** The side panel's sections (Elco, 10 Nov: "each of them is a set of tools"), and what they hold. */
+  /** The side panel's sections, each a set of tools, and what they hold. */
   conversation: ChatCircle,
   profile: UserCircle,
   settings: GearSix,
@@ -78,7 +76,7 @@ const GLYPHS = {
   undo: ArrowCounterClockwise,
   // the nav's links, folded on a phone
   menu: List,
-  // a story that plays by itself, stopped and started (the hero, 11 Nov)
+  // a story that plays by itself, stopped and started (the hero)
   pause: Pause,
   play: Play,
   /** A row's menu of what can be done with it. */
@@ -87,7 +85,7 @@ const GLYPHS = {
   unarchive: ArrowUUpLeft,
   /** Removing something for good. */
   remove: Trash,
-  // a star given to Petals on GitHub, and the socials under the hero's buttons (Elco, 13 Nov)
+  // a star given to Petals on GitHub, and the socials under the hero's buttons
   star: Star,
   github: GithubLogo,
   telegram: TelegramLogo,

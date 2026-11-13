@@ -50,7 +50,7 @@ NEAR signs it with NEP-413 (`recipient` this site, a fresh 32-byte `nonce`), as 
 - **Who the author is.** The author is the wallet that signed, never Petals' internal person id. A person with several bound wallets (`me/wallets`) chooses which one signs. Anyone can check the signature against the account.
 - **Petals' own mapping** publishes the same way: an author like any other.
 - **Presses signed before this protocol keep their signatures.** Elco's 35 RaidGuild names (12 Nov, 22:07 UTC) were signed with NEP-413 by their wallet. They enter the record as that author's publication, with that proof, whose message names the hash of what it signed. They are never folded into the import (PM).
-- **What was loaded before this protocol** enters the record once per map, as an import. That covers the waves' readings, values, proposals, marks, vesting and payouts under `mapping.petals.near`. The import's `author` is `mapping.petals.near` and its `proof` is null, said plainly as "imported, unsigned". It is never presented as signed.
+- **What was loaded before this protocol** enters the record once per map, as an import. That covers the waves' readings, values, proposals, marks, vesting and payouts under `mapping.petals.near`. The import's `author` is `mapping.petals.near` and its `proof` is null, said plainly as "imported, unsigned". It is never presented as signed. When a later read replaces one of those rows (a new value, new proposals, a reading retired), the import run after it appends Petals' next version of that map, its `parent` and `previous` the last: the composed map follows what Petals holds now, and the record keeps what it held before. A map whose rows haven't changed is left.
 - **Where it lives:** Petals' server keeps the record append-only. Entries are added, never updated or deleted. Anchoring each author's latest publication on NEAR (`data.md`, "Where layers live") is the next step, not built here.
 
 ## 3. What a layer says: facts
@@ -116,7 +116,7 @@ A deterministic summary per author, built from the record alone.
 | Field | What it holds |
 |---|---|
 | `author` | the account |
-| `layers` | each layer they published: its hash, format and map; when they first published it; the facts they added **first**, the facts they **confirmed**; and who built on it |
+| `layers` | each layer they published: its hash, format and map; when they first published it; the facts they added **first**, the facts they **confirmed**; and who built on it. A fact counts once for its author, under the first of their layers that carried it: the same fact in two of their layers is one contribution |
 | `layers[].built_on_by` | other authors whose published layers name it in `from` |
 | `layers[].reused_by` | other authors whose published versions include it, or fork a version that includes it (`parent`) |
 | `totals` | Elco's three counts, "who's helping a lot or a little": `first` (facts they added to the map first: new data, new moments, new subjects), `confirmed` (facts they matched independently) and `built_on` (accounts that built on their work, once per layer: `points/v1`, below); and `layers` |
@@ -153,17 +153,19 @@ Elco: "our system should otherwise communicate that these issues have been consi
 
 ## 8. Facts by format (`compose/v1`)
 
-| Format | Subject | What | State | Value |
-|---|---|---|---|---|
-| `snapshot/v1` | each holding's participant | `snapshot/<measure> <unit>` | its chain and `block_height`, or `as_of`; plus its window | the amount |
-| `snapshot/v1` | each relationship's `from→to` | `snapshot/<type> <unit>` | as above | its amount, or `1` |
-| `layer/v1` | each row's participant | `layer/<measure> <unit> <kind>` | `when.block_height`, or `when.as_of` | the row's value |
-| value | the map | `value/price usd`, `value/circulating`, `value/max`, `value/market_cap usd`, `value/treasury usd` | the document's `read_at` (an outside price holds at its own time) | each figure; its source stays with the layer |
-| proposals | each proposal, `proposal:<map>:<id>` | `proposals/outcome`; `proposals/vote` per voter (subject `<proposal>#<account>`) | the source's block or `at`; the window read | the outcome word; the choice and weight |
-| mark | the map | `mark/name`, `mark/symbol`, `mark/logo` | the document's `read_at` | the name; the symbol; the logo's sha256 |
-| vesting | each allocation, `<holder>#<name>` | `vesting/schedule` | the document's `read_at` | the hash of its total and schedule |
-| payouts | each payout, by its transaction | `payouts/paid` | its block | the asset and the raw amount |
-| claims | the claim's subject | `claim/<verb>` | its `as_of`, or its `issued_at` | the hash of its object |
+| Format | Subject | What | Of | State | Value |
+|---|---|---|---|---|---|
+| `snapshot/v1` | each holding's participant | `snapshot/<measure> <unit>` | the holding's `asset`, where it names one | its chain and `block_height`, or `as_of`; plus its window | the amount |
+| `snapshot/v1` | each relationship's `from→to` | `snapshot/<type> <unit>` | — | as above | its amount, or `1` |
+| `layer/v1` | each row's participant | `layer/<measure> <unit> <kind>` | — | `when.block_height`, or `when.as_of` | the row's value |
+| value | the map | `value/price usd`, `value/circulating`, `value/max`, `value/market_cap usd`, `value/treasury usd` | — | the document's `read_at` (an outside price holds at its own time) | each figure; its source stays with the layer |
+| proposals | each proposal, `proposal:<map>:<id>` | `proposals/outcome`; `proposals/vote` per voter (subject `<proposal>#<account>`) | — | the source's block or `at`; the window read | the outcome word; the choice and weight |
+| mark | the map | `mark/name`, `mark/symbol`, `mark/logo` | — | the document's `read_at` | the name; the symbol; the logo's sha256 |
+| vesting | each allocation, `<holder>#<name>` | `vesting/schedule` | — | the document's `read_at` | the hash of its total and schedule |
+| payouts | each payout, by its transaction | `payouts/paid` | its recipient and asset | its block | the asset and the raw amount |
+| claims | the claim's subject | `claim/<verb>` | — | its `as_of`, or its `issued_at` | the hash of its object |
+
+A slot is a fact's subject, what, of and state. **Of** is what, within its subject, a fact is about, where one subject holds several at one moment: a participant's deposits of two governing mints (a realm's community and council tokens), a transaction's payouts to several recipients. Without it those would be several values in one slot, and read as "differs" when nothing disagrees. It is part of the slot, never of `what`, so the words for a kind of data are the same.
 
 A format not in this table can be published as a layer, but it gives no facts until a later `compose` version adds its rule.
 

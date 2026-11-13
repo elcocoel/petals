@@ -1,4 +1,4 @@
-// A top-up through NEAR Intents (Elco, 10 Nov: "let users pay with anything from anywhere"): a real 1Click
+// A top-up through NEAR Intents, to pay with any token from any chain: a real 1Click
 // quote gives a deposit address, the person sends to it from any wallet on any chain, and once the swap has
 // landed the dollars it delivered are on their credit, once, with their own entry. A fake 1Click: no money
 // moves.
@@ -183,7 +183,7 @@ describe('a top-up through NEAR Intents', () => {
   });
 });
 
-describe('a top-up lands though the tab was closed (META, 12 Nov, wave 5)', () => {
+describe('a top-up lands though the tab was closed', () => {
   test('the person reading who they are settles it, once; a quote nothing was sent to expires', async () => {
     const w = setup();
     await w.signIn();

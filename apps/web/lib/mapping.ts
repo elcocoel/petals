@@ -64,11 +64,17 @@ const pointWords = (p: number | string) =>
 /** The formats whose name says nothing a person needs: their data reads by its own name. */
 const PLAIN = new Set(['snapshot', 'layer', 'value', 'mark']);
 
-/** A fact's data, in words (composition.md §8): vesting/schedule → vesting schedule; snapshot/token_balance TRUMP → token balance TRUMP. */
+/**
+ * A fact's data, in words (composition.md §8): vesting/schedule → vesting schedule; snapshot/token_balance TRUMP →
+ * token balance TRUMP. Its unit only where its name doesn't say it already: snapshot/votes_cast votes → votes cast.
+ */
 export function whatWords(what: string): string {
   const cut = what.indexOf('/');
   const format = cut < 0 ? '' : what.slice(0, cut);
-  const rest = (cut < 0 ? what : what.slice(cut + 1)).replaceAll('_', ' ');
+  const [name = '', ...unit] = (cut < 0 ? what : what.slice(cut + 1)).split(' ');
+  const words = name.replaceAll('_', ' ');
+  const u = unit.join(' ');
+  const rest = u && !words.split(' ').includes(u) ? `${words} ${u}` : words;
   return PLAIN.has(format) || !format ? rest : `${format} ${rest}`;
 }
 

@@ -17,7 +17,7 @@ export function FlowerSheet({
 }) {
   return (
     <>
-      {/* One line in people's words (design/minimally-good.md, rule 5): what, where, when. */}
+      {/* One line in people's words: what, where, when. */}
       <p>
         <strong>{networkLabel(spec.network.id)}</strong> · {chainLabel(spec.network.chain)} ·{' '}
         {dateLabel(spec.snapshot.as_of)}

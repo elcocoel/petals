@@ -1,15 +1,15 @@
-// Publishing to the shared map (Elco, 12 Nov: "we need this live soon, it's a big part of my test"; META's go on
-// SYSTEMS's lean): what a person kept about a map in their projects goes to everyone's Power Map with one press,
-// signed by their wallet (NEP-413, as signing in: no transaction, nothing spent), at once, credited to them.
+// Publishing to the shared map: what a person kept about a map in their projects goes to everyone's Power Map
+// with one press, signed by their wallet (NEP-413, as signing in: no transaction, nothing spent), at once,
+// credited to them.
 // Their claims join the map's Insights beside Petals' own mapping's, each saying who answers for it; the signed
 // message and its signature are kept with each, so anyone can check them. What the people rule keeps private
 // (people.ts) stays in their project, and says why.
 //
-// The qualifier (Elco, 12 Nov: "Build it"; "Let me look first"): each item, one per row, with its name, address,
+// The qualifier, a look before the press: each item, one per row, with its name, address,
 // source and a confidence before the press. A veto is the claim rules (validateClaim, people.ts): what fails them
 // stays private and says why. The confidence is how strongly the claim's own evidence says it, read by search's
-// reranker on Elco's Mac (Qwen3-Reranker, search-model.ts): nothing new runs and nothing is spent. With the model
-// off, confidence is null and says so; it never holds a publish back.
+// reranker on the host machine (Qwen3-Reranker, search-model.ts): nothing new runs and nothing is spent. With the
+// model off, confidence is null and says so; it never holds a publish back.
 import {
   aboutKey,
   type Cases,
@@ -58,7 +58,7 @@ export interface RowSource {
   url?: string;
 }
 
-/** One item, as the person reads it before the press (WORKSPACE's rows, 12 Nov). */
+/** One item, as the person reads it before the press: one row in the workspace. */
 export interface PublishRow {
   /** the layer of the map it joins: Insights, for a claim */
   layer: string;
@@ -79,8 +79,8 @@ export interface StaysPrivate extends PublishRow {
 }
 
 /**
- * What one press adds to the map, by layer and kind (Elco, 12 Nov: "a clear indicator of what data layers and
- * claims I would be adding"): goes, what the press publishes; else why it can't go yet.
+ * What one press adds to the map, by layer and kind (a clear indicator of the data layers and claims it
+ * adds): goes, what the press publishes; else why it can't go yet.
  */
 export interface Adds {
   layer: string;
@@ -93,7 +93,7 @@ export interface Adds {
   why?: string;
 }
 
-/** A reading the person drew of the map, as the box lists it (WORKSPACE, wave 7). */
+/** A reading the person drew of the map, as the box lists it. */
 export interface ReadingRow {
   layer: 'Readings';
   /** the view's hash, as in its /d/ link */
@@ -110,7 +110,7 @@ export interface Publishable {
   about: string;
   name: string;
   claims: Claim[];
-  /** the readings they drew of it that no one is credited with yet, credited to them by the press (#16, wave 7) */
+  /** the readings they drew of it that no one is credited with yet, credited to them by the press */
   readings: ReadingRow[];
   /** the claims, one row each, in the order they'd go */
   rows: PublishRow[];
@@ -180,8 +180,8 @@ const RECORD: Record<string, string> = {
 
 /**
  * How the claim reads to the reranker against one piece of its evidence: a name as the record names it ("A
- * proposal names Dekan"); anything else in its own words. Measured on Elco's 68 names (12 Nov, read only): this
- * phrasing put 2 under 0.3 where "This account is named Dekan" put 6, the record's quote unchanged.
+ * proposal names Dekan"); anything else in its own words. Measured on one person's 68 names (12 Nov, read only):
+ * this phrasing put 2 under 0.3 where "This account is named Dekan" put 6, the record's quote unchanged.
  */
 const statementOf = (c: Claim, e: ClaimEvidence) =>
   c.verb === 'named'
@@ -225,7 +225,7 @@ async function confidences(
   }
 }
 
-/** Each verb as the box names it (WORKSPACE's 'Insights · Names · 35'). */
+/** Each verb as the box names it (the workspace's 'Insights · Names · 35'). */
 const VERB_LABEL: Record<string, string> = {
   named: 'Names',
   noted: 'Notes',

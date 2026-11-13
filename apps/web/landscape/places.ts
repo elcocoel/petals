@@ -301,10 +301,10 @@ export function placeFlowers(
 }
 
 /**
- * Gravity (Elco, 12 Nov walk: "we're unnecessarily hyper clustering ... gravity so how much things attract each
- * other so we can give more space between them"): 1 keeps the saved places as packed as the force map left them,
- * 0 gives three times the room. Places stay addresses: a flower moves out from its continent's middle along its
- * own line, so the arrangement is the same, only the space between changes.
+ * Gravity, how much the flowers attract each other, so the map can give more space between them: 1 keeps the
+ * saved places as packed as the force map left them, 0 gives three times the room. Places stay addresses: a
+ * flower moves out from its continent's middle along its own line, so the arrangement is the same, only the
+ * space between changes.
  */
 export const GRAVITY_DEFAULT = 0.75;
 export const spreadOf = (gravity: number): number =>
@@ -318,10 +318,9 @@ export const spreadPlace = (p: Place, c: Pick<Continent, 'x' | 'y'>, spread: num
 });
 
 /**
- * The map around one DAO (Elco, 12 Nov walk: "one click put something in the center ... we could put a dashed line
- * on the center for focus all the dowels are organized around that and then I can put something in the center to
- * be what everything else gets compared to"): it in the middle; the others on rings round it, those sharing the
- * most wallets with it nearest, those sharing none on rings past them; each ring clockwise from twelve. Sizes stay.
+ * The map around one DAO, put in the centre by a click so everything else is compared to it: it in the middle;
+ * the others on rings round it, those sharing the most wallets with it nearest, those sharing none on rings past
+ * them; each ring clockwise from twelve. Sizes stay.
  * `shared` is how many wallets each flower shares with the one in the middle. Pure.
  */
 export function ringsAround(
@@ -390,9 +389,8 @@ export function homeOf(places: Places): { cx: number; cy: number; r: number } {
 }
 
 /**
- * Where a new map stands on its chain's map before it's read (Elco, 12 Nov on /make: "if it's completely new, than
- * we have a 'place holder'"): the first free place, from the middle outward, as big as the chain's middling
- * flower, clear of every flower there; its reading lands there.
+ * Where a new map stands on its chain's map before it's read, a placeholder: the first free place, from the
+ * middle outward, as big as the chain's middling flower, clear of every flower there; its reading lands there.
  */
 export function freePlace(
   on: readonly Place[],

@@ -1,9 +1,8 @@
 // A person's conversations in the side panel, one row each. A row is a link: opening one is opening its
-// address. Who it's with is its icon, and said in full on hover. With `actions` (design/side-panel.md,
-// lines 24 to 32), a row's end holds its ⋯ menu, shown where the pointer or the keyboard is, in the
-// trail's place, and the row can be dragged onto a project; the row just moved takes a soft fill. The
-// words and the addresses come from conversationRows in lib/conversation-list.ts; the panel's own words
-// from lib/panel-words.ts.
+// address. Who it's with is its icon, and said in full on hover. With `actions`, a row's end holds its ⋯
+// menu, shown where the pointer or the keyboard is, in the trail's place, and the row can be dragged
+// onto a project; the row just moved takes a soft fill. The words and the addresses come from
+// conversationRows in lib/conversation-list.ts; the panel's own words from lib/panel-words.ts.
 import type { DragEvent } from 'react';
 import type { ConversationRow } from '../../lib/conversation-list.ts';
 import { panelWords } from '../../lib/panel-words.ts';

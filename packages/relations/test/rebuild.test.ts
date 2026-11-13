@@ -15,7 +15,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { type Queries, RelationsIndex, type SnapshotSource } from '../src/index.ts';
 import { evm, shaOf, snap, source, tmpDir, tmpIndexPath } from './helpers.ts';
 
-// Under load (a shared Mac at a load of 170-190, 13 Nov) this file's tests pass alone and time out together:
+// Under heavy load (a machine at a load of 170-190) this file's tests pass alone and time out together:
 // a longer limit here only; what they check is unchanged.
 vi.setConfig({ testTimeout: 120_000, hookTimeout: 120_000 });
 

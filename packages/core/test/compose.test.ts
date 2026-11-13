@@ -1,7 +1,7 @@
-// Many authors, one map (specs/005-mapping-brain/composition.md; Elco, 13 Nov: "how do different data layers from
-// different people contribute to fuller and fuller maps ... results should be deterministic"). Two real authors on
-// RaidGuild: Petals' own mapping (its readings, imported unsigned) and Elco's 35 names (signed with NEP-413 on 12
-// Nov). Then a third account, to show a match at the same block, a difference, and credit that copying can't take.
+// Many authors, one map (specs/005-mapping-brain/composition.md): layers from different people add up to fuller
+// maps, deterministically. Two real authors on RaidGuild: Petals' own mapping (its readings, imported unsigned)
+// and a second author's 35 names (signed with NEP-413 on 12 Nov). Then a third account, to show a match at the
+// same block, a difference, and credit that copying can't take.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
@@ -78,7 +78,7 @@ const entry = (p: Publication): Entry => ({
   hash: publicationHash(p),
   publication: p,
 });
-/** Petals' own mapping (the import, unsigned), then Elco's press as signed on 12 Nov. */
+/** Petals' own mapping (the import, unsigned), then the second author's press as signed on 12 Nov. */
 const base = () => {
   seq = 0;
   return [entry(publication('mapping.petals.near', [SHARES, TOKEN])), entry(elcoPress)];
@@ -107,7 +107,7 @@ describe('facts: what a layer says, whatever else differs between two documents'
 });
 
 describe('compose: two real authors on RaidGuild', () => {
-  test("Petals' readings and Elco's names, each credited to its own author, nothing differing", () => {
+  test("Petals' readings and the second author's names, each credited to its own author, nothing differing", () => {
     const map = compose(ABOUT, base(), docs);
     expect(map.authors.map((a) => [a.author, a.imported])).toEqual([
       ['mapping.petals.near', true],
@@ -230,7 +230,7 @@ describe('compose: two real authors on RaidGuild', () => {
 });
 
 describe('credit and points (points/v1): who used whose layer, and copying earns nothing', () => {
-  test("Elco's names: 35 layers, every fact stated first, no points yet (no one has built on them)", () => {
+  test("the second author's names: 35 layers, every fact stated first, no points (no one has built on them)", () => {
     const credit = creditOf(ELCO, base(), docs);
     expect(credit.totals).toEqual({ layers: 35, first: 35, confirmed: 0, built_on: 0 });
   });
@@ -309,7 +309,7 @@ describe('what the wallet signs', () => {
     expect(textNames(text, { ...p, layers: [] })).toBe(false);
   });
 
-  test("Elco's press of 12 Nov keeps its own proof, whose message names what it signed", () => {
+  test("the second author's press of 12 Nov keeps its own proof, whose message names what it signed", () => {
     expect(elcoPress.proof?.standard).toBe('nep413');
     expect(JSON.parse(elcoPress.proof?.message ?? '{}')).toMatchObject({
       petal: 'publish-data/v1',

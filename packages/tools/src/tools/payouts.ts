@@ -1,4 +1,4 @@
-// list_payouts (12 Nov; Elco: "an unopinionated 'payouts from this treasury over period x'"): what a DAO map
+// list_payouts (unopinionated, a treasury's payouts over a period): what a DAO map
 // paid out over a period, from the payouts Petals read for it: each payout (from, to, what, how much, when it
 // was paid, the proposal and its kind, its dollars that day) and the period's totals. It keeps nothing.
 import { payoutsIn } from '@petal/core';

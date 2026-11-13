@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:petal:schema:price:v2",
   "title": "Petal price v2",
-  "description": "What a person pays for Petals' agent (coordinator/pricing-protocol.md; Elco, 10 Nov: \"there's three components to the price. There is the inevitable payment that we have to collect to pay for the AI. We have to know that price. Then we can add a base fee, which would be unavoidable. And then a tip, an optional donation type payment ... how much the users tip in relation to their usage, they could set it ... some form of a slider or scale\"). A charge is NEAR AI's own bill, plus the base fee (its switches), plus the person's tip: a donation, a percent of their usage they set on the price's scale, always its own entry. Every switch off and a tip of 0 is Petals at cost. Each charge names the hash of the price it used. It replaces price/v1, whose fees were multiplied by the tip.",
+  "description": "What a person pays for Petals' agent. A charge is NEAR AI's own bill, plus the base fee (its switches), plus the person's tip: a donation, a percent of their usage they set on the price's scale, always its own entry. Every switch off and a tip of 0 is Petals at cost. Each charge names the hash of the price it used. It replaces price/v1, whose fees were multiplied by the tip.",
   "type": "object",
   "additionalProperties": false,
   "required": [

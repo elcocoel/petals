@@ -1,8 +1,7 @@
-// The Snapshot proposals on the shared map given their own text and their page on Snapshot (proposals/v3; Elco,
-// 12 Nov, walk 3: "there's no way for me to know what this proposal is about so maybe there's a link to wherever
-// it was made maybe there is a summary"), by each proposal's id from Snapshot's keyless GraphQL. Only summary and
-// link are added; everything else in each doc stays. It writes to the server's own store, so run it where the
-// server runs:
+// The Snapshot proposals on the shared map given their own text and their page on Snapshot (proposals/v3: so a
+// reader can tell what a proposal is about, with a summary and a link to where it was made), by each proposal's
+// id from Snapshot's keyless GraphQL. Only summary and link are added; everything else in each doc stays. It
+// writes to the server's own store, so run it where the server runs:
 //   container exec petals node /app/scripts/map-snapshot-texts.ts [--dry] [--only <part of a map's address>]
 import { parseArgs } from 'node:util';
 import { createContext, serverConfig, snapshotTexts } from '@petal/agent';

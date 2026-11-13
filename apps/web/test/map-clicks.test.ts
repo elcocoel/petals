@@ -64,3 +64,11 @@ test('the page hears which proposal is pinned, and when it is let go', () => {
   expect(land).toMatch(/if \(j >= 0\) remount\(j\);\s+tellProposal\(\);/);
   expect(land).toMatch(/if \(voted\) at\?\.current\?\.onProposal\?\.\(null\);/);
 });
+
+// flow 17 on live, 13 Nov: with a proposal pinned, a click on the empty ground read as a press on it, let it go and
+// kept the chosen wallet; empty space clears both
+test('a press reads a proposal only when the pointer is on its arc', () => {
+  expect(text('flower/scene.ts')).toMatch(
+    /return overArc && pointed >= 0 \? \(markSlots\[pointed\]\?\.pl\.id \?\? null\) : null;/,
+  );
+});

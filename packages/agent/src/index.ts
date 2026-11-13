@@ -12,7 +12,7 @@ import { createAgentRoutes } from './routes.ts';
 import { startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
 
-/** Every map's mark, read where the server runs: scripts/map-marks.ts (board #85). */
+/** Every map's mark, read where the server runs: scripts/map-marks.ts. */
 export {
   addDaoMap,
   blocMaps,
