@@ -187,6 +187,9 @@ describe("the map from the record: its layers, its authors' three counts, a read
     expect(elcoCredit.hash).toMatch(/^[0-9a-f]{64}$/);
     // a bare NEAR account is the same author (LOBBY, 13 Nov: /credit/petals.near answered zeros)
     expect(authorOf('petals.near')).toBe(ELCO);
+    // Petals' own mapping is named bare in the record, however it's asked for
+    expect(authorOf('mapping.petals.near')).toBe('mapping.petals.near');
+    expect(authorOf('near:mainnet:mapping.petals.near')).toBe('mapping.petals.near');
     expect(authorOf('alice.testnet')).toBe('near:testnet:alice.testnet');
     expect(authorOf(ELCO)).toBe(ELCO);
     expect((await creditFor(r.ctx, authorOf('petals.near'))).hash).toBe(elcoCredit.hash);
