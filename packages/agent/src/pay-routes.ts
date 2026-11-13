@@ -2,7 +2,9 @@
 //   GET  /api/v1/pay   where to send NEAR, on the network the person signed in on, and NEAR's price now
 //   POST /api/v1/pay   {network, account_id, tx_hash}: the server reads that transaction on chain, and a
 //                      successful NEAR transfer from one of this person's wallets to Petals' account goes
-//                      onto their credit, in dollars at NEAR's price now, once however often it's sent
+//                      onto their credit, in dollars at NEAR's price now, once however often it's sent. A
+//                      wallet that pays from NEAR Intents (near.com's) sends it as a withdraw it signs, in
+//                      intents.near's own transaction: that counts as the same transfer
 //
 // The server holds no key: Petals' account is the operator's, and the server only reads the chain. Each turn of the
 // agent then draws the credit down by what NEAR AI charged (invites.ts, personLedger).
@@ -22,6 +24,7 @@ import {
   nearUsd,
   PAY_RECEIVER,
   payTokens,
+  readIntentsWithdraw,
   readTransfer,
   swapStatus,
   type Transfer,
@@ -46,6 +49,13 @@ export interface PayDeps {
   oneClick?: DepositDeps;
   /** the transfer as the chain shows it; default readTransfer on the public RPC */
   readTransfer?: (network: Network, txHash: string, sender: string) => Promise<Transfer>;
+  /** a payment from NEAR Intents (near.com's wallet) as the chain shows it; default readIntentsWithdraw */
+  readIntentsWithdraw?: (
+    network: Network,
+    txHash: string,
+    signer: string,
+    receiver: string,
+  ) => Promise<Transfer>;
   /** dollars per NEAR now; default NEAR Intents' token list */
   nearUsd?: () => Promise<number | null>;
   /** where a chat on the person's own credit stops, as /api/v1/me says it */
@@ -61,6 +71,9 @@ const NEAR_ACCOUNT = /^[a-z0-9._-]{2,64}$/;
 
 export function payRoutes(d: PayDeps): Hono {
   const read = d.readTransfer ?? ((network, hash, sender) => readTransfer(network, hash, sender));
+  const readIntents =
+    d.readIntentsWithdraw ??
+    ((network, hash, signer, receiver) => readIntentsWithdraw(network, hash, signer, receiver));
   const price = d.nearUsd ?? (() => nearUsd({ onWarning: (m) => console.warn(`petal: ${m}`) }));
   const clock = d.clock ?? Date.now;
   const ok = (c: Context, body: Record<string, unknown>) =>
@@ -80,9 +93,10 @@ export function payRoutes(d: PayDeps): Hono {
       // signed in on this network: their balance in the contract, read now
       const me = await d.gate.personOf(c);
       let credit: Record<string, unknown> | null = null;
-      if (me?.account && me.network === network && near_usd !== null) {
+      // every NEAR wallet they hold on its network: an Ethereum or Solana person's linked one too
+      if (me && me.network === network && me.accounts.length && near_usd !== null) {
         const now = () => new Date(clock());
-        const synced = await chainChat(d.store, chain, me.person, me.account, near_usd, now).catch(
+        const synced = await chainChat(d.store, chain, me.person, me.accounts, near_usd, now).catch(
           () => null,
         );
         if (synced) {
@@ -137,11 +151,15 @@ export function payRoutes(d: PayDeps): Hono {
       if (!me.accounts.includes(account_id)) {
         return fail(c, 'unauthorised', `${account_id} isn't one of your wallets here.`);
       }
-      if (d.credit) return contractPaid(c, d.credit, me, account_id, tx_hash);
       const receiver = PAY_RECEIVER[me.network];
       let t: Transfer;
       try {
-        t = await read(me.network, tx_hash, account_id);
+        t = await read(me.network, tx_hash, account_id).catch((e) =>
+          // not the wallet's own transaction: paid from NEAR Intents (near.com's wallet), a withdraw it signed
+          (e as { code?: string }).code === 'not_found'
+            ? readIntents(me.network, tx_hash, account_id, receiver)
+            : Promise.reject(e),
+        );
       } catch (e) {
         const code = (e as { code?: string }).code;
         const message = (e as Error).message;
@@ -153,6 +171,9 @@ export function payRoutes(d: PayDeps): Hono {
           "Couldn't read the transaction on NEAR, so nothing changed. Send it again.",
         );
       }
+      // with the contract, a deposit or a withdrawal in it; a plain transfer to Petals' account still counts
+      if (d.credit && t.receiver_id !== receiver)
+        return contractPaid(c, d.credit, me, account_id, t);
       if (
         t.signer_id !== account_id ||
         t.receiver_id !== receiver ||
@@ -207,9 +228,9 @@ export function payRoutes(d: PayDeps): Hono {
   async function contractPaid(
     c: Context,
     chain: CreditChain,
-    me: { person: string; network: Network; account: string | null },
+    me: { person: string; network: Network; accounts: string[] },
     account: string,
-    txHash: string,
+    t: Transfer,
   ) {
     const { network, contract } = chain.contract;
     if (me.network !== network) {
@@ -217,23 +238,6 @@ export function payRoutes(d: PayDeps): Hono {
         c,
         'bad_input',
         `Credit here is on ${network}: sign in with a ${network} wallet.`,
-      );
-    }
-    if (account !== me.account) {
-      return fail(c, 'unauthorised', `${account} isn't the wallet you signed in with.`);
-    }
-    let t: Transfer;
-    try {
-      t = await read(network, txHash, account);
-    } catch (e) {
-      const code = (e as { code?: string }).code;
-      const message = (e as Error).message;
-      if (code === 'not_found') return fail(c, 'not_found', message);
-      if (code === 'bad_input') return fail(c, 'bad_input', message);
-      return fail(
-        c,
-        'source_failed',
-        "Couldn't read the transaction on NEAR, so nothing changed. Send it again.",
       );
     }
     const deposit = t.methods.includes('deposit');
@@ -264,7 +268,7 @@ export function payRoutes(d: PayDeps): Hono {
         d.store,
         chain,
         me.person,
-        account,
+        me.accounts,
         near_usd,
         () => new Date(clock()),
       );

@@ -70,6 +70,7 @@ export function Lobby({
   wallets,
   adding,
   addWallet,
+  stopAdding,
   claims,
   conversations,
   map,
@@ -106,7 +107,10 @@ export function Lobby({
   usage: UsageView | 'reading' | 'unread';
   wallets: WalletRow[] | 'reading' | 'unread';
   adding: AddWalletPhase;
-  addWallet: (kind: WalletKind) => void;
+  /** Asks a wallet to sign; with several of one kind, the one picked by its id. */
+  addWallet: (kind: WalletKind, pick?: string) => void;
+  /** Stops waiting for a wallet, or puts the pick away. */
+  stopAdding: () => void;
   claims: ClaimsView | 'reading' | 'unread';
   conversations: ConversationRow[];
   map: LobbyMap;
@@ -118,7 +122,9 @@ export function Lobby({
   tip: TipView;
 }) {
   const named = profile.social.kind === 'profile' ? profile.social.profile : null;
-  const walletsCard = <Wallets wallets={wallets} adding={adding} onAdd={addWallet} />;
+  const walletsCard = (
+    <Wallets wallets={wallets} adding={adding} onAdd={addWallet} onStop={stopAdding} />
+  );
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
       <div className="min-w-0 flex-1 overflow-y-auto">
