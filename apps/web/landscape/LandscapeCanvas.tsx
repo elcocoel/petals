@@ -907,13 +907,15 @@ export function LandscapeCanvas({
   useEffect(() => {
     if (joined && joined.map === strataMap) setClaimsOpen(true);
   }, [joined, strataMap]);
-  // where authors differ, the map's credit says who stated which value: read once, all layers on
-  const creditRead = useComposed(
-    card?.differs ? strataMap : null,
-    card?.differs && strata ? strata.ids : null,
+  // the whole map, all layers on, read once: the version you're seeing (its rule and the publications it was
+  // composed from) and, where authors differ, who stated which value
+  const wholeRead = useComposed(
+    strata ? strataMap : null,
+    strata ? strata.ids : null,
     person.hash,
     version,
   );
+  const creditRead = card?.differs ? wholeRead : null;
   const joinedHere = useMemo(
     () => new Set(joined && joined.map === strataMap ? joined.documents.map((d) => d.sha256) : []),
     [joined, strataMap],
@@ -1282,6 +1284,11 @@ export function LandscapeCanvas({
                         }
                         joined={joinedHere}
                         swatches={swatches}
+                        version={
+                          wholeRead?.rule && wholeRead.composed_from
+                            ? { rule: wholeRead.rule, from: wholeRead.composed_from }
+                            : undefined
+                        }
                       />
                       {card?.differs ? (
                         <p className="my-0 pt-space-8 type-ui text-muted">

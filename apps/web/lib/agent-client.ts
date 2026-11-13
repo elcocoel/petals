@@ -628,6 +628,8 @@ export interface ComposedReading {
   petals: FlowerReading['petals'];
   given?: SeamPiece[];
   pieces?: string[];
+  /** the rule that composed this version of the map, and the publications it was composed from */
+  rule?: string;
   composed_from?: readonly string[];
   /** who stated each value (composition.md §9): per piece and participant, its authors, and the values that differ */
   credit?: {
