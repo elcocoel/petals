@@ -201,6 +201,13 @@ export interface MapLanded {
   /** its token's symbol, and its logo, where known */
   symbol?: string | undefined;
   logo?: string | null | undefined;
+  /**
+   * the pieces of data it has, and the values it got, as a map's own reading carries them: what Tools offers and
+   * what the browser dresses it with. A layer switched on or off hands its composed reading's own (wave 8, OVERLAYS
+   * useComposed); without them it's drawn as it was read, never with the reading it replaced's.
+   */
+  pieces?: readonly string[] | undefined;
+  given?: SeamPiece[] | undefined;
 }
 
 /** Where a new map stands on its chain before and after it's read: the first free place (places.ts freePlace). */
@@ -225,7 +232,13 @@ function withLanded<D extends { flowers: CanvasFlower[]; chains: CanvasChain[] }
   const here = data.flowers[i];
   if (here) {
     const flowers = data.flowers.slice();
-    flowers[i] = { ...here, reading: landed.reading, snapshot: landed.snapshot ?? here.snapshot };
+    flowers[i] = {
+      ...here,
+      reading: landed.reading,
+      snapshot: landed.snapshot ?? here.snapshot,
+      pieces: landed.pieces ?? here.pieces,
+      given: landed.given,
+    };
     return { ...data, flowers };
   }
   const place = placeOfNew(data, landed.chain, `new:${landed.name}`);
@@ -240,6 +253,8 @@ function withLanded<D extends { flowers: CanvasFlower[]; chains: CanvasChain[] }
     reading: landed.reading,
     snapshot: landed.snapshot,
     map: landed.map,
+    pieces: landed.pieces,
+    given: landed.given,
   };
   return { ...data, flowers: [...data.flowers, flower] };
 }

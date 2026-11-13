@@ -56,3 +56,11 @@ test('while a change in Tools reads the map again, a strip says so under the DAO
   expect(canvas).toMatch(/const UPDATING = 'Updating the map';/);
   expect(text('landscape/scene.ts')).toMatch(/progress\?\.at === 'map'/);
 });
+
+// Elco, wave 8: "how different data layers from different people contribute to fuller and fuller maps"; a layer
+// switched hands the map its composed reading the way a just-made one lands (OVERLAYS useComposed)
+test("a reading landing on a map that's here brings its own pieces, never the replaced reading's", () => {
+  const canvas = text('landscape/LandscapeCanvas.tsx');
+  expect(canvas).toMatch(/pieces: landed\.pieces \?\? here\.pieces,\s+given: landed\.given,/);
+  expect(canvas).toMatch(/map: landed\.map,\s+pieces: landed\.pieces,\s+given: landed\.given,/);
+});
