@@ -20,9 +20,10 @@ case "$(node -v)" in
 esac
 
 # Every temp folder the tests and the build make goes in one folder of this run's, removed when the check
-# ends, failed or not, so tests that don't clean up after themselves can't fill the disk.
+# ends, failed or not, so tests that don't clean up after themselves can't fill the disk. Some tests leave a
+# folder read-only, so write access comes back first; the check's own exit code is kept either way.
 check_tmp="$(mktemp -d "${TMPDIR:-/tmp}/petal-check.XXXXXX")"
-trap 'rm -rf "$check_tmp"' EXIT
+trap 'rc=$?; chmod -R u+w "$check_tmp" 2>/dev/null; rm -rf "$check_tmp" || true; exit $rc' EXIT
 export TMPDIR="$check_tmp"
 
 step() { printf '\n== %s\n' "$1"; }
