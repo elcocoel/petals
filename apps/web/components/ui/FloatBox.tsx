@@ -110,7 +110,9 @@ export function FloatBox({
         {/* its rows scroll above the box's rounded foot, so nothing is cut by the corner and the scroll bar stays
             inside it (Elco, 12 Nov, wave 4 walk: "things going out of the visual frame in this radius ... Even the
             scroll bar just falls out of the thing"); with a base, the base closes it instead */}
-        <div className={`flex min-h-0 flex-1 flex-col ${foot ? '' : 'pb-space-32'}`}>
+        {/* folded to its bar it holds nothing, so no foot: the foot would stand below the bar, unseen, and take
+            the map's clicks there (LOOK, flow 17 on live) */}
+        <div className={`flex min-h-0 flex-1 flex-col ${foot || folded ? '' : 'pb-space-32'}`}>
           <div
             className={`flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none ${foot ? 'pb-space-16' : ''}`}
           >

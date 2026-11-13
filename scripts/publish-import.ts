@@ -1,4 +1,4 @@
-// What was on the map before the publication record enters it once (wave 8; specs/005-mapping-brain/composition.md,
+// What was on the map before the publication record enters it once (specs/005-mapping-brain/composition.md,
 // section 2): per map, Petals' own rows as one "imported, unsigned" publication by mapping.petals.near, and each
 // press signed before the protocol as its author's, with its proof. A map already in the record is left. Where the
 // server runs:

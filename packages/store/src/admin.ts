@@ -26,7 +26,8 @@ function role(name: string): string {
 
 /**
  * Migrates as the owner, then gives the runtime role exactly its rows: read, add, change and delete, and
- * the automatic numbering. Nothing else: no schema changes, no TRUNCATE, no ownership.
+ * the automatic numbering. Nothing else: no schema changes, no TRUNCATE, no ownership. The publication record
+ * (35) it may only read and add to: append-only by its grants, not by convention.
  */
 export async function migrateAndGrant(raw: Raw, runtimeRole: string): Promise<number> {
   await migrate(raw, true);
@@ -35,6 +36,7 @@ export async function migrateAndGrant(raw: Raw, runtimeRole: string): Promise<nu
     GRANT USAGE ON SCHEMA public TO ${r};
     GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${r};
     GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ${r};
+    REVOKE UPDATE, DELETE ON publication, published_layer FROM ${r};
     REVOKE CREATE ON SCHEMA public FROM ${r};
   `);
   const { rows } = await raw.query('SELECT MAX(version) AS v FROM schema_migration');

@@ -1,7 +1,6 @@
-// Petals' open-calls feed (Elco, 12 Nov: "open calls is the most useful ... let's bias towards keyless"):
-// each source's open calls read now, without a key, and kept as calls/v1, a source's replaced as a whole so a
-// call no longer open leaves. A source that doesn't answer keeps what it had. It writes to the server's own
-// store, so run it where the server runs:
+// Petals' open-calls feed, keyless first: each source's open calls read now, without a key, and kept as
+// calls/v1, a source's replaced as a whole so a call no longer open leaves. A source that doesn't answer keeps
+// what it had. It writes to the server's own store, so run it where the server runs:
 //   container exec petals node /app/scripts/read-calls.ts [--dry]
 // --dry reads and says, and keeps nothing.
 import { parseArgs } from 'node:util';

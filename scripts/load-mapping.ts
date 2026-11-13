@@ -1,11 +1,11 @@
-// The mapping waves' files onto the shared map (board #96; Elco, 11 Nov: "map it ourselves using the brain but
-// at super speed"): each of Petals' formats in a folder (snapshot, proposals, mark, value, claim, vesting) checked
+// A mapping run's files onto the shared map (Petals maps it itself, with the brain): each of Petals' formats
+// in a folder (snapshot, proposals, mark, value, claim, vesting) checked
 // against its own schema, a bad one refused with its reasons; a good reading kept and drawn, credited to Petals'
 // own mapping; a good mark, value, proposals or vesting kept by its map's address unless one is kept there already
-// (--replace puts the wave's instead); claims checked as published and kept as Petals' mapping's. Hidden maps stay hidden. Where the server runs:
+// (--replace puts the run's instead); claims checked as published and kept as Petals' mapping's. Hidden maps stay hidden. Where the server runs:
 //   container exec petals node /app/scripts/load-mapping.ts <folder> [--dry] [--replace] [--by mapping.petals.near]
-//     [--manifest <a wave's manifest outside the folder: L2-IMPORT-MANIFEST.json, phase2-ethereum-manifest.json>]
-// A wave's manifest says which files load (and the canonical sha256 each must have); unlisted ones are held.
+//     [--manifest <a run's manifest outside the folder: L2-IMPORT-MANIFEST.json, phase2-ethereum-manifest.json>]
+// A run's manifest says which files load (and the canonical sha256 each must have); unlisted ones are held.
 import { parseArgs } from 'node:util';
 import { createContext, loadMapping, serverConfig } from '@petal/agent';
 

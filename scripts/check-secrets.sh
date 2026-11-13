@@ -54,7 +54,7 @@ while IFS= read -r f; do
 done <<<"$files"
 
 if [[ $hits -ne 0 ]]; then
-  echo "secrets: possible secret found at the lines above. Remove it; keys belong in ../.secrets/." >&2
+  echo "secrets: possible secret found at the lines above. Remove it; keys belong outside the repository." >&2
   exit 1
 fi
 echo "secrets: no private keys or API keys found"

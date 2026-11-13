@@ -1,6 +1,6 @@
-// Corrects what a person was charged (positive goes back, negative is charged), as one entry with its reason (Elco, 10 Nov: "give the
-// overcharge back, one entry 'repriced at the cached rate'"). Running it again with the same reason changes
-// nothing. It moves no money: it's a record of what Petals will let them spend.
+// Corrects what a person was charged (positive goes back, negative is charged), as one entry with its reason
+// (an overcharge goes back as one entry, "repriced at the cached rate"). Running it again with the same
+// reason changes nothing. It moves no money: it's a record of what Petals will let them spend.
 //   node scripts/credit-back.ts --person <prs_id> --usd <dollars> --reason "repriced at the cached rate"
 // It writes to the server's own store, so for a container run it from inside, as fund-person.ts says.
 import { existsSync } from 'node:fs';

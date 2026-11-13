@@ -1,4 +1,4 @@
-// One prompt, several agents (Elco, 9 Nov): an agent joins with the person's agent key, then waits
+// One prompt, several agents: an agent joins with the person's agent key, then waits
 // for its next job, asking the site again and again and coming back before its app's own limit.
 // A stand-in site and a stand-in clock; a throwaway PETALS_HOME.
 import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -63,7 +63,7 @@ describe('join', () => {
   });
 });
 
-describe("what an agent says it can do (Elco's lean 2, 11 Nov)", () => {
+describe('what an agent says it can do', () => {
   test('join keeps it with the worker, and every wait tells Petals', async () => {
     const env = home();
     const said = 'runs sub-agents, on this computer, on Opus and Haiku';
@@ -210,7 +210,7 @@ describe('jobs wait', () => {
       expect(a.body.as).toBe('hermes');
       expect(a.body.wait_s).toBeLessThanOrEqual(85);
     }
-    // its own file, so another worker on this computer never takes it for theirs (swarm.md step 5)
+    // its own file, so another worker on this computer never takes it for theirs
     expect(JSON.parse(readFileSync(workerCurrentFile(current, worker), 'utf8'))).toEqual({
       link: LINK,
       as: 'hermes',

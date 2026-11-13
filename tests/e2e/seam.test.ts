@@ -1,5 +1,5 @@
-// The website in front of the server, as two processes (002-system research; Elco, 8 Nov: "when I test
-// I must test reality"). The server alone (packages/agent/src/serve.ts), public, with a site key; the
+// The website in front of the server, as two processes (002-system research), so the test is of what
+// really runs. The server alone (packages/agent/src/serve.ts), public, with a site key; the
 // site built with Next and started with `next start`, forwarding to it. Everything goes through the
 // site's one address, as a person and their agent would use it. Ports 3176 (server) and 3177 (site),
 // on 127.0.0.1 only. No model, no wallet, no outside reads: a public server refuses those.

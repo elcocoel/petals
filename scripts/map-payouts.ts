@@ -1,5 +1,5 @@
-// What each DAO map paid out (payouts/v1, 12 Nov; Elco: "an unopinionated 'payouts from this treasury over
-// period x'"; NEAR first): each map of a Sputnik DAO on the shared map, every passed proposal's payment, dated
+// What each DAO map paid out (payouts/v1: an unopinionated "payouts from this treasury over period x"; NEAR
+// first): each map of a Sputnik DAO on the shared map, every passed proposal's payment, dated
 // by the DAO's own transfer in the transaction that approved it (FastNEAR's keyless transactions API) and
 // priced that day (DefiLlama's past prices), kept by the map's address. It writes to the server's own store,
 // so run it where the server runs:
