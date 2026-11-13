@@ -1,9 +1,8 @@
-// One badge for an organisation (design/org-badge.md; Elco, 11 Nov: "we need this badge that is opaque that
-// can withstand being surrounded by a lot of information"; board #86). Its logo, round as the map draws it,
-// or its token symbol in mono where there's no logo, then its name, then what kind of thing it is, quiet in
-// mono (any value, several at once: #97; no colour or shape is a type's): one row high, on a solid fill of the
-// ground it's on with a hairline edge, so nothing behind it shows through. Information only, as Badge is:
-// no hover and no press of its own, square corners in v1.
+// One badge for an organisation, opaque so it holds up among a lot of information. Its logo, round as the map
+// draws it, or its token symbol in mono where there's no logo, then its name, then what kind of thing it is, quiet
+// in mono (any value, several at once; no colour or shape is a type's): one row high, on a solid fill of the
+// ground it's on with a hairline edge, so nothing behind it shows through. Information only, as Badge is: no hover
+// and no press of its own, square corners in v1.
 import { Logo } from './Logo.tsx';
 import { Mono } from './Mono.tsx';
 
@@ -40,7 +39,7 @@ export function OrgBadge({
       ) : null}
       {!nameIsSymbol && <span className="min-w-0 truncate type-ui">{name}</span>}
       {types.length > 0 && (
-        // it takes only the room the name leaves, so it's cut first (design/org-badge.md, line 9)
+        // it takes only the room the name leaves, so it's cut first
         <span className="min-w-0 grow basis-0 truncate type-mono text-muted">
           {types.join(' · ')}
         </span>

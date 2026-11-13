@@ -1,7 +1,6 @@
-// The Power Map (coordinator/one-source.md, step 5): the continuous map, one flower per map (an address with
-// all its readings), on their chains' continents, joined by the accounts they share, drawn in the person's
-// view, zooming without a break into a flower and its petals. Public, no account needed. The grid of the same
-// maps is the Gallery (/gallery).
+// The Power Map: the continuous map, one flower per map (an address with all its readings), on their chains'
+// continents, joined by the accounts they share, drawn in the person's view, zooming without a break into a
+// flower and its petals. Public, no account needed. The grid of the same maps is the Gallery (/gallery).
 import { ReadingColumn } from '../../../components/SiteChrome.tsx';
 import { LandscapeCanvas } from '../../../landscape/LandscapeCanvas.tsx';
 import { powerMapLandscape } from '../../../landscape/land.ts';

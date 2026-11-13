@@ -69,8 +69,8 @@ export function answeredBy(done: Done, signature: ModelSignature | null): Segmen
 }
 
 /**
- * The one quiet line the model note folds under, after a turn (#78, 11 Nov: every turn ended in four lines
- * of it): how many calls and what they cost, the rest a click away. Null when no model answered.
+ * The one quiet line the model note folds under, after a turn (not four lines of it at every turn's
+ * end): how many calls and what they cost, the rest a click away. Null when no model answered.
  */
 export function answeredSummary(done: Done): string | null {
   if (done.model === 'recorded' || done.turns === 0) return null;
@@ -147,7 +147,7 @@ export interface TurnRow {
   refollow?: { label: string; disabled: boolean };
 }
 
-/** A job handed to the person's own agent (C); where it stands is read apart (useJobs). */
+/** A job handed to the person's own agent; where it stands is read apart (useJobs). */
 export interface JobRowData {
   kind: 'job';
   key: string;
@@ -159,11 +159,11 @@ export type Row =
   | { kind: 'user'; key: string; text: string; label: string; about?: string }
   | { kind: 'note' | 'error'; key: string; text: string }
   /**
-   * Out of credit for Petals' agent: the way to add some, where the person meets it (B). `first` is the one
-   * offered before the first question, to someone with no credit yet (#78).
+   * Out of credit for Petals' agent: the way to add some, where the person meets it. `first` is the one
+   * offered before the first question, to someone with no credit yet.
    */
   | { kind: 'pay'; key: string; first?: true }
-  /** A job handed to the person's own agent (C); where it stands is read apart (useJobs). */
+  /** A job handed to the person's own agent; where it stands is read apart (useJobs). */
   | JobRowData
   | { kind: 'steps'; key: string; summary: string; steps: StepRow[] }
   /**
@@ -171,14 +171,14 @@ export type Row =
    * agent's words, which don't carry Petals' mark.
    */
   | { kind: 'message'; key: string; blocks: MarkdownBlock[]; speaker?: string; foreign?: boolean }
-  /** `summary` is the one quiet line the whole note folds under (#78: the turns read like a log). */
+  /** `summary` is the one quiet line the whole note folds under, so the turns don't read like a log. */
   | { kind: 'done'; key: string; line: Segment[]; summary: string | null }
   | FlowerRow
   | StoredRow
   | TurnRow
   /** A new map waiting for the person's yes, at the end of the last turn (lib/ceremony.ts) */
   | { kind: 'ceremony'; key: string; view: CeremonyView }
-  /** What can be done next on the map just read, at the end of the last turn (SYSTEMS's next, OVERLAYS's NextSteps) */
+  /** What can be done next on the map just read, at the end of the last turn (the server's next, drawn by NextSteps) */
   | { kind: 'next'; key: string; next: NextOnMap };
 
 export type ThreadInput = Pick<ChatState, 'items' | 'busy' | 'runId' | 'turn' | 'lostAgain'> & {
@@ -423,13 +423,13 @@ export interface ComposerView {
   run?: { id: string; href: string };
   /** the conversation is happening somewhere else, so nothing can be typed here */
   away?: boolean;
-  /** which state the person is in: exploring what's there, or creating a new data packet (Elco, 12 Nov) */
+  /** which state the person is in: exploring what's there, or creating a new data packet */
   state?: string;
   /** the two states, the one the person is in pressed (lib/mapping.ts) */
   modes?: { now: 'exploring' | 'mapping'; exploring: string; mapping: string };
 }
 
-// Drafts (design/minimally-good.md, rule 5: no "Ask" as a label).
+// No "Ask" as a label.
 const PLACEHOLDER: Record<'flower' | 'wallet' | 'group', string> = {
   flower: 'About this flower…',
   wallet: 'About this wallet…',
@@ -458,7 +458,7 @@ export function composerView(
       placeholder: v.unavailable
         ? 'This conversation isn’t available here.'
         : `This conversation is happening in ${v.elsewhere}.`,
-      // Elco, 6 Nov: "it will not be 'Ask', it will be the send"
+      // never 'Ask': the button is Send
       button: 'Send',
       disabled: true,
       away: true,
@@ -493,7 +493,7 @@ export function composerView(
     ...(target.kind === 'wallet' || target.kind === 'group'
       ? { about: aboutLabel(target.line) }
       : {}),
-    // while a turn runs, it goes on without the page (#78: no run id under the box at rest)
+    // while a turn runs, it goes on without the page (no run id under the box at rest)
     ...(v.busy && v.runId && runHref ? { run: { id: v.runId, href: runHref } } : {}),
   };
 }

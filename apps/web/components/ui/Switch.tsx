@@ -1,6 +1,6 @@
-// Something on the map turned on or off by hand, in a tool panel (Elco, 12 Nov, walk 3: "I should be able to turn
-// these things on and off on my little tools pane"): the browser's own checkbox as a switch, so the keyboard and a
-// screen reader know it, in the accent as the Range is, with On or Off beside it in mono. Props only.
+// Something on the map turned on or off by hand, in a tool panel: the browser's own checkbox as a switch, so the
+// keyboard and a screen reader know it, in the accent as the Range is, with On or Off beside it in mono. Props
+// only.
 import { Mono } from './Mono.tsx';
 
 export function Switch({

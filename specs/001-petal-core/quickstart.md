@@ -8,9 +8,9 @@ This is the end-to-end check for Phase A. When all five steps pass, every part o
 
 | Need | For | Without it |
 |---|---|---|
-| Node 24 (`nvm use`; the default `node` on Elco's PATH is 22) and pnpm 10 | everything | nothing runs |
-| `NEAR_AI_API_KEY` in `../.secrets/near-ai.env` (outside the repo) | live agent in step 2 | the agent replays a recorded run and says so |
-| Testnet receiver `petals.testnet` and writer `petals-writer.testnet`, the writer's function-call key file in `../.secrets/` | map reads and writes in steps 1 and 3 | gallery shows fixtures only; publish uses the fake map |
+| Node 24 (`nvm use`; Node 22 won't do) and pnpm 10 | everything | nothing runs |
+| `NEAR_AI_API_KEY` in `/path/to/keys/near-ai.env` (outside the repo) | live agent in step 2 | the agent replays a recorded run and says so |
+| Testnet receiver `petals.testnet` and writer `petals-writer.testnet`, the writer's function-call key file in `/path/to/keys/` | map reads and writes in steps 1 and 3 | gallery shows fixtures only; publish uses the fake map |
 | A Meteor (or Intear) wallet with any `.testnet` account | signing in step 3 | step 3 can't be checked |
 | Claude Code with the Petal skill | step 4 | step 4 can't be checked |
 
@@ -26,7 +26,7 @@ pnpm test               # unit, golden, contract and schema tests; must be green
 pnpm dev                # site and API on http://localhost:3000 (API also standalone on :8787 via `pnpm api`)
 ```
 
-Environment (all optional; see `.env.example`): `NEAR_AI_API_KEY`, `PETAL_MAP_NETWORK=testnet`, `PETAL_MAP_RECEIVER=petals.testnet`, `PETAL_WRITER_ACCOUNT=petals-writer.testnet`, `PETAL_WRITER_KEY_FILE=../.secrets/petal-writer.testnet.json`, `PETAL_TRUSTED_WRITERS=petals-writer.testnet`, `PETAL_LLM_DAILY_USD=3`, `FASTNEAR_API_KEY`.
+Environment (all optional; see `.env.example`): `NEAR_AI_API_KEY`, `PETAL_MAP_NETWORK=testnet`, `PETAL_MAP_RECEIVER=petals.testnet`, `PETAL_WRITER_ACCOUNT=petals-writer.testnet`, `PETAL_WRITER_KEY_FILE=/path/to/keys/petal-writer.testnet.json`, `PETAL_TRUSTED_WRITERS=petals-writer.testnet`, `PETAL_LLM_DAILY_USD=3`, `FASTNEAR_API_KEY`.
 
 `GET /api/v1/health` reports `map: up | down | mirror` and `llm: up | down | recorded`, so you know which mode you are in.
 
@@ -85,11 +85,11 @@ The recorded test runs on every change. The live test runs at least at the end o
 
 ## Judge path (SC-009)
 
-From a clean clone with no keys: `pnpm install && pnpm dev`, open the site. **Expect** the hero flowers from fixtures, each opening fully, and the `/make` chat replaying a recorded run. Without the site: `pnpm petal figures near-validators` prints the same figures the flower quotes (the CLI door, re-runnable evidence). Phase B adds the hosted URL (with Elco's OK) where the live agent and live map work with no account.
+From a clean clone with no keys: `pnpm install && pnpm dev`, open the site. **Expect** the hero flowers from fixtures, each opening fully, and the `/make` chat replaying a recorded run. Without the site: `pnpm petal figures near-validators` prints the same figures the flower quotes (the CLI door, re-runnable evidence). Phase B adds the hosted URL where the live agent and live map work with no account.
 
 ## Skeleton is done when
 
 - [ ] All five steps pass live once, and `pnpm test:e2e` passes.
 - [ ] Golden SVG tests pass twice in a row on a clean checkout (SC-005).
 - [ ] No secret is in the repo (`git grep` for key prefixes returns nothing).
-- [ ] Elco has seen steps 1–5 running.
+- [ ] Steps 1–5 have been seen running live.

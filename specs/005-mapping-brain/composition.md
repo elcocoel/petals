@@ -1,6 +1,6 @@
 # Many authors, one map: publishing, composing and credit
 
-Wave 8, 13 Nov: `publication/v1`, `compose/v1` and `credit/v1`. This extends `data.md` (Elco's answers, 9 Nov) and builds its "Later, not now" line: **merging**, and the credit that comes with it. Everything else in `data.md` stands as written:
+13 Nov: `publication/v1`, `compose/v1` and `credit/v1`. This extends `data.md` (decided 9 Nov) and builds its "Later, not now" line: **merging**, and the credit that comes with it. Everything else in `data.md` stands as written:
 
 - a dataset per address, the sum of the layers anyone added;
 - a layer never changes, and is named by its hash;
@@ -11,7 +11,7 @@ Wave 8, 13 Nov: `publication/v1`, `compose/v1` and `credit/v1`. This extends `da
 - each author has their own latest version;
 - private first, published under the author's signature.
 
-Elco, 13 Nov: "who 'wins' is the wrong question unless they are mapping exactly the same data for exactly the same block ... results should be deterministic, right? so the question is 'how do different data layers from different people contribute to fuller and fuller maps' - that was the whole idea, all along". And: "this needs to be taken with absolute seriousness - it's the heart of the promise of the protocol (collective mapping)".
+Who "wins" is the wrong question unless two authors map exactly the same data at exactly the same block, and results are deterministic. The question is how data layers from different people contribute to fuller and fuller maps: collective mapping, the heart of the protocol's promise.
 
 So the shared map composes what everyone published. No author's work replaces another's. Credit is kept for every author, forever, and anyone can check it without asking Petals.
 
@@ -44,13 +44,13 @@ Publication 3f9a…(64 hex)
 
 NEAR signs it with NEP-413 (`recipient` this site, a fresh 32-byte `nonce`), as signing in does. EVM signs it with EIP-191 (`personal_sign`), Solana with ed25519 over its UTF-8 bytes; the wallets' checks are `@petal/near/auth/wallets.ts`'s. A publication is named by the hash of its canonical JSON, proof included.
 
-- **Order is the record's, never the author's.** The server appends each publication with its own sequence number and time (`seq`, `appended_at`), kept beside the signed body. Every "first", "earlier" and "before" in this spec is by `seq`. Nobody can set it or backdate it (PM, 13 Nov).
-- **A published version names only what's public.** Its layers, every hash in their `from`, and its `parent` must be published already, or published in this same version. The credit chain never points into the dark (PM).
+- **Order is the record's, never the author's.** The server appends each publication with its own sequence number and time (`seq`, `appended_at`), kept beside the signed body. Every "first", "earlier" and "before" in this spec is by `seq`. Nobody can set it or backdate it.
+- **A published version names only what's public.** Its layers, every hash in their `from`, and its `parent` must be published already, or published in this same version. The credit chain never points into the dark.
 - **Withdrawing is a new version without the layer.** An author's **latest** publication about a map is what they contribute to it now, as `data.md` says. Their earlier publications stay in the record with their times, so credit is never lost.
 - **Who the author is.** The author is the wallet that signed, never Petals' internal person id. A person with several bound wallets (`me/wallets`) chooses which one signs. Anyone can check the signature against the account.
 - **Petals' own mapping** publishes the same way: an author like any other.
-- **Presses signed before this protocol keep their signatures.** Elco's 35 RaidGuild names (12 Nov, 22:07 UTC) were signed with NEP-413 by their wallet. They enter the record as that author's publication, with that proof, whose message names the hash of what it signed. They are never folded into the import (PM).
-- **What was loaded before this protocol** enters the record once per map, as an import. That covers the waves' readings, values, proposals, marks, vesting and payouts under `mapping.petals.near`. The import's `author` is `mapping.petals.near` and its `proof` is null, said plainly as "imported, unsigned". It is never presented as signed. When a later read replaces one of those rows (a new value, new proposals, a reading retired), the import run after it appends Petals' next version of that map, its `parent` and `previous` the last: the composed map follows what Petals holds now, and the record keeps what it held before. A map whose rows haven't changed is left.
+- **Presses signed before this protocol keep their signatures.** The first 35 RaidGuild names (12 Nov, 22:07 UTC) were signed with NEP-413 by their wallet. They enter the record as that author's publication, with that proof, whose message names the hash of what it signed. They are never folded into the import.
+- **What was loaded before this protocol** enters the record once per map, as an import. That covers the mapping runs' readings, values, proposals, marks, vesting and payouts under `mapping.petals.near`. The import's `author` is `mapping.petals.near` and its `proof` is null, said plainly as "imported, unsigned". It is never presented as signed. When a later read replaces one of those rows (a new value, new proposals, a reading retired), the import run after it appends Petals' next version of that map, its `parent` and `previous` the last: the composed map follows what Petals holds now, and the record keeps what it held before. A map whose rows haven't changed is left.
 - **Where it lives:** Petals' server keeps the record append-only. Entries are added, never updated or deleted. Anchoring each author's latest publication on NEAR (`data.md`, "Where layers live") is the next step, not built here.
 
 ## 3. What a layer says: facts
@@ -70,8 +70,6 @@ Each format has one fixed rule that turns a layer into its facts (section 8), ve
 
 ## 4. Three times, kept apart
 
-This closes ATTRIBUTION's gap (`research/attribution-2026-11-12.md`, section 3).
-
 - **State-at:** the chain state a value describes: the block, with its chain, where the layer names one; else the instant it holds at (`as_of`).
 - **Period covered:** for facts about a span (votes, payouts, activity), the window `{from, to}`. It is part of the state, so two windows are two slices.
 - **Collected-at:** when the author read it (a source's `fetched_at`, a document's `read_at`). It stays with the layer and its publication, never in the fact. Two reads of one block, an hour apart, state the same facts.
@@ -80,7 +78,7 @@ Two facts are **at the same moment** only when their states are equal: the same 
 
 ## 5. How facts meet: the four cases
 
-Facts are grouped by their **slot**: `subject`, `what` and `state`. Every fact a publication brings lands in one of four cases. These are the words the press shows before publishing (WORKSPACE's Mapping box) and Information shows after (OVERLAYS).
+Facts are grouped by their **slot**: `subject`, `what` and `state`. Every fact a publication brings lands in one of four cases. These are the words the press shows before publishing (the Mapping box) and Information shows after.
 
 - **New data:** a `what` the map has no fact of, at any state. A new layer on the map.
 - **New moment:** a `what` the map has, at a state it doesn't have. Another slice in time; every slice stays.
@@ -96,7 +94,7 @@ The map's composition is a pure function of the record. Given the same publicati
 1. Take each author's **latest** publication about the map. Order the authors by the `seq` of their first publication on the map.
 2. Turn each of its layers into facts (section 8). Each fact carries its author and the publication that first brought it.
 3. Group the facts by slot. Each slot has its distinct values; each value lists its authors, first to last. A slot with two or more values "differs".
-4. **What a drawing shows for a slot that differs** (Elco, 13 Nov: "classifier outcome / score of author for ordering, showing the options of double maps would be 'ideal'"):
+4. **What a drawing shows for a slot that differs:**
    - The first value shown is the qualifier's best, where the server recorded its verdict when it appended the layer; then the one published first, by the record's order.
    - The other values stand beside it as options, the "double maps" a person can switch to.
    - **For chain data, a difference should be impossible**, or nearly: a read at a block is deterministic. So a "differs" there is flagged as a probable read error, to check.
@@ -119,7 +117,7 @@ A deterministic summary per author, built from the record alone.
 | `layers` | each layer they published: its hash, format and map; when they first published it; the facts they added **first**, the facts they **confirmed**; and who built on it. A fact counts once for its author, under the first of their layers that carried it: the same fact in two of their layers is one contribution |
 | `layers[].built_on_by` | other authors whose published layers name it in `from` |
 | `layers[].reused_by` | other authors whose published versions include it, or fork a version that includes it (`parent`) |
-| `totals` | Elco's three counts, "who's helping a lot or a little": `first` (facts they added to the map first: new data, new moments, new subjects), `confirmed` (facts they matched independently) and `built_on` (accounts that built on their work, once per layer: `points/v1`, below); and `layers` |
+| `totals` | three counts of who's helping a lot or a little: `first` (facts they added to the map first: new data, new moments, new subjects), `confirmed` (facts they matched independently) and `built_on` (accounts that built on their work, once per layer: `points/v1`, below); and `layers` |
 | `composed_from` | the publications it was computed from, by hash, and its rule (`credit/v1`) |
 
 - **Counted once each:** another account counts once per layer, however many times it used it. An author's own use never counts.
@@ -128,19 +126,19 @@ A deterministic summary per author, built from the record alone.
 
 - **A layer earns one point for each distinct other account that built on it or reused it.** Building on follows `from` the whole chain back: a layer built on a layer that was built on yours counts for yours too, once.
 - Only published layers count, and only other authors' published versions count as use.
-- **A use gives its point only to the authors who had published that layer before the use was appended** (by `seq`). Publishing an already-used layer again by its hash earns "matched" credit, an independent confirmation, never points from earlier uses. Copying earns nothing (PM).
+- **A use gives its point only to the authors who had published that layer before the use was appended** (by `seq`). Publishing an already-used layer again by its hash earns "matched" credit, an independent confirmation, never points from earlier uses. Copying earns nothing.
 - An author's points are the sum over their layers.
 - Matching or stating facts first is credit, not points.
 - The record keeps who used what.
-- **Anyone can recompute it** from Petals' record and compare. Posting it to NEAR Social under the author's account waits, as does anchoring (Elco, 13 Nov: "let's not make this more complicated than it has to be").
-- **The caveats, named.** ATTRIBUTION, section 5 says:
+- **Anyone can recompute it** from Petals' record and compare. Posting it to NEAR Social under the author's account waits, as does anchoring.
+- **The caveats, named:**
   - No count here proves usefulness.
   - Several wallets can be one person (sock puppets), and colluding accounts can reuse each other.
   - "Imported, unsigned" credit is a collective label, not a person's.
 
 ## 7c. Considered, and how each is handled
 
-Elco: "our system should otherwise communicate that these issues have been considered and are solveable and we are not naive about it."
+Each of these issues has been considered and is solvable, and the system says so plainly.
 
 | The worry | How it's handled now | Later |
 |---|---|---|
@@ -172,7 +170,7 @@ A format not in this table can be published as a layer, but it gives no facts un
 ## 9. The API (answers, additive; the formats above are what's stored and signed)
 
 - **Before a press: `GET /api/v1/publish/data?map=`.** Each layer the press would publish: `{ sha256, petal, title, cases }`, where `cases` is `{ new_data: { whats }, new_moment: { states: [{ what, state, newest }] }, new_subjects: { count }, match: { count, authors }, differs: { count, authors } }`. `authors` are `[{ author, name }]`, the ones already credited. A state is `{ chain?, block?, at?, window? }`; `newest` is null when the map has none. `totals` has the same `cases`, summed for the whole publication. The layers are what this press adds: the readings the person drew, the claims that can go, and the documents they kept (values, proposals, marks, readings, vesting, payouts, layers), less what their latest version holds already. A layer built on one that isn't published stays back, in `adds` with why.
-- **Prepare: `POST /api/v1/publish/data/prepare { map, author }`** (built 13 Nov; `via` waits, Elco).
+- **Prepare: `POST /api/v1/publish/data/prepare { map, author }`** (built 13 Nov; `via` waits).
   - `author` is one of the signed-in person's wallets, as `GET /api/v1/me`'s `wallets[].author` names it (CAIP-10). Any other is refused.
   - It answers `{ publication, sha256, text, recipient?, nonce? }`: the unsigned `publication/v1`, the hash of its canonical JSON without `proof`, and the text the wallet signs (section 2). For a NEAR author, `recipient` is this site's hostname and `nonce` a fresh 32-byte base64, for NEP-413.
   - The version's `layers` are the author's latest version's and what this press adds; its `parent` and `previous` are the author's latest publication about the map; `published_at` is the server's time.
@@ -194,10 +192,10 @@ A format not in this table can be published as a layer, but it gives no facts un
   - It also gives `composed_from` and `rule`. The same query always gives the same answer.
 - **Credit: `GET /api/v1/me/credit` and `GET /api/v1/credit/:account`.** The author's `credit/v1`, with its `hash`. NEAR Social's copy under the author's account (`petals/credit`) holds `{ hash, points, site }`, and anyone can recompute it here.
 
-## What this changes, in order (nothing merges before Elco's OK)
+## What this changes, in order
 
-1. **Core:** `publication/v1` and `credit/v1`, each with its schema, fixture and pin; `factsOf`, `compose` and `creditOf`, pure, with golden fixtures. The fixtures are two real authors on one map: RaidGuild, with Elco's published names and Petals' mapping's reading. The check runs them.
-2. **The record on the server:** an append-only `publication` table, beside `dataset_version` and `layer`. **This needs a migration, on META's go.**
+1. **Core:** `publication/v1` and `credit/v1`, each with its schema, fixture and pin; `factsOf`, `compose` and `creditOf`, pure, with golden fixtures. The fixtures are two real authors on one map: RaidGuild, with a person's published names and Petals' mapping's reading. The check runs them.
+2. **The record on the server:** an append-only `publication` table, beside `dataset_version` and `layer`. **This needs a migration.**
 3. **The press** publishes a signed version of any kept layer (values, proposals, marks, layers, vesting), not only claims and readings. NEAR, EVM and Solana wallets all sign.
-4. **The map:** `GET /api/v1/maps/:id` gives its layers, slices and credits. A composed reading comes for any set of layers and any moment. The press says which of the four cases each fact is (WORKSPACE). Information lists the layers with their authors (OVERLAYS). The map draws the composed reading (LOOK). Each author's credit record is shown (LOBBY).
+4. **The map:** `GET /api/v1/maps/:id` gives its layers, slices and credits. A composed reading comes for any set of layers and any moment. The press says which of the four cases each fact is. Information lists the layers with their authors. The map draws the composed reading. Each author's credit record is shown.
 5. **The import:** today's rows, as one unsigned publication by `mapping.petals.near` per map.

@@ -1,5 +1,5 @@
-// coordinator/one-source.md, step 3: the site reads the person's view in one place, and every petal, still
-// picture and list is drawn in it. Elco's glasses rule: the view is the person's, never a petal's.
+// The site reads the person's view in one place, and every petal, still
+// picture and list is drawn in it. The glasses rule: the view is the person's, never a petal's.
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import { DEFAULT_VIEW, viewHash } from '@petal/core/view';
@@ -79,8 +79,8 @@ describe('what can go where', () => {
     const names = Object.fromEntries(
       Object.entries(viewChoices()).map(([d, pieces]) => [d, pieces.map((p) => p.name)]),
     );
-    // each wallet's activity where its map's proposals were read (Elco, 12 Nov: time is absent): votes cast is a
-    // count, voted a category; last active is a date, which Order takes, newest first (LOOK's fe-orderby)
+    // each wallet's activity where its map's proposals were read (so time is present): votes cast is a
+    // count, voted a category; last active is a date, which Order takes, newest first
     expect(names).toEqual({
       height: ['share', 'amount', 'votes_cast'],
       width: ['share', 'amount', 'votes_cast'],
@@ -97,7 +97,7 @@ describe('what can go where', () => {
         'name',
         'name_kind',
       ],
-      // a category's values, or a number's or a date's grade (wave 4)
+      // a category's values, or a number's or a date's grade
       colour: [
         'share',
         'amount',
@@ -111,16 +111,16 @@ describe('what can go where', () => {
         'name',
         'name_kind',
       ],
-      // only what each dimension draws (12 Nov: a choice draws, or isn't offered): an outline says how an identity is
+      // only what each dimension draws (a choice draws, or isn't offered): an outline says how an identity is
       // known; texture and markings draw nothing yet
       outline: ['identity'],
       texture: [],
       markings: [],
-      // who backs each wallet, where a flower's reading has delegations (Elco's walk 3: no choices on segments), and
-      // what it holds by its vesting schedules (wave 7)
+      // who backs each wallet, where a flower's reading has delegations (no choices on segments), and
+      // what it holds by its vesting schedules
       segments: ['backers', 'vesting'],
       lines: [],
-      // a person's annotations name accounts (annotation-layer.md, step 6): labels show them once chosen
+      // a person's annotations name accounts: labels show them once chosen
       labels: ['kind', 'identity', 'voted', 'tranche', 'name', 'name_kind'],
     });
   });

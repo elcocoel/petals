@@ -11,7 +11,7 @@ export interface Rect extends Size {
   x: number;
   y: number;
   /**
-   * A box with a base (FloatBox's `foot`, design/conversation.md): the base's height, from the box's foot up.
+   * A box with a base (FloatBox's `foot`): the base's height, from the box's foot up.
    * The sheet above it has the rest.
    */
   base?: number;
@@ -52,8 +52,8 @@ const SNAP = floatBox.bar;
 
 /**
  * box.snap: a box let go near the window's edges, or near the side panel's edge (`left`, where it ends, 0
- * for none), lands flush on them, where the boxes start (Elco, walk 5, 12 Nov: "maybe they would snap to the
- * edges more easily"). Its room's top is `top` (below the site's nav, on a page that has one).
+ * for none), lands flush on them, where the boxes start, so boxes snap to the edges easily. Its room's top
+ * is `top` (below the site's nav, on a page that has one).
  */
 export function snapped(r: Rect, win: Size, left = 0, top = 0): Rect {
   const { inset } = floatBox;
@@ -69,7 +69,7 @@ export function snapped(r: Rect, win: Size, left = 0, top = 0): Rect {
 
 /**
  * The edge or corner under the hand follows it; the opposite one stays where it is. With a base, each edge
- * sizes its own part (design/conversation.md, lines 5 to 7): the top the sheet, the bottom the base.
+ * sizes its own part: the top the sheet, the bottom the base.
  */
 export function sized(
   from: Rect,
@@ -113,7 +113,7 @@ export const seamed = (from: Rect, dy: number): Rect =>
 const BAR = sizes['Row height'] + 2 * layout['Space 8'];
 export const besideMenu = BAR + sizes['Sidebar width'] + floatBox.gap;
 
-/** Where the boxes start past a side panel that ends at `edge` (design/side-panel.md, line 21). */
+/** Where the boxes start past a side panel that ends at `edge`. */
 export const besidePanel = (edge: number) => edge + floatBox.gap;
 
 /** A column of boxes `w` wide starts at `from`, or further left if it wouldn't fit there. */
@@ -121,7 +121,7 @@ const columnAt = (from: number, w: number, win: Size) =>
   Math.max(floatBox.inset, Math.min(from, win.w - floatBox.inset - w));
 
 /**
- * Where the conversation starts (design/conversation.md, line 3): on the left, because a sorted flower's
+ * Where the conversation starts: on the left, because a sorted flower's
  * small side is there and its biggest names are upper right, and past the menu when there is one (`from`).
  * One box, its sheet over its base, stopping above the corner the flower's small map has. The flower's own
  * box waits on the right, at the top, closed until something asks for it. The models wait beside it,
@@ -163,7 +163,7 @@ export function boxUnder(win: Size, top: number): Rect {
 }
 
 /**
- * What the conversation, where it starts, covers of the canvas, so the flower fits beside it (#78, 11 Nov), or
+ * What the conversation, where it starts, covers of the canvas, so the flower fits beside it, or
  * above it on a phone. Nothing when neither leaves the flower a third of the canvas.
  */
 export function clearOfConversation(
@@ -183,8 +183,8 @@ export function clearOfConversation(
 const ABOVE = 0.4;
 
 /**
- * Where the conversation stands so the flower has room (#78, 11 Nov: on a phone the flower wasn't seen at
- * all): beside it when what's left beside is a third of the canvas or more; otherwise below it, the flower
+ * Where the conversation stands so the flower has room (on a phone it would otherwise be hidden): beside it
+ * when what's left beside is a third of the canvas or more; otherwise below it, the flower
  * keeping the top of the window. `left` is where the canvas starts, the side panel's edge.
  */
 export function besideOrBelow(conversation: Rect, win: Size, left: number): Rect {
@@ -199,8 +199,8 @@ export function besideOrBelow(conversation: Rect, win: Size, left: number): Rect
 
 /**
  * On /make, the flower's box opens over the conversation's thread, down to its base, so the flower keeps the
- * room beside the conversation and the field that asks about the petal stays in sight (#78, 11 Nov: the box
- * covered the flower's right side).
+ * room beside the conversation and the field that asks about the petal stays in sight (rather than the box
+ * covering the flower's right side).
  */
 export function overThread(conversation: Rect): Rect {
   const { x, y, w, h, base = 0 } = conversation;

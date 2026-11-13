@@ -1,7 +1,6 @@
-// The Power Map on the landing (Elco, 9 Nov: "instead of these shitty place holders let's see how to put the
-// actual map here - research yesterday grabbed data for SEVERAL DAOs"). Nine views of the one shared map, by
+// The Power Map on the landing: the actual map, with data read for several DAOs. Nine views of the one shared map, by
 // their hash, each with the picture the server draws for it in the person's view, its address and its colours
-// (GET /api/v1/map/views; Elco, 10 Nov, fix 2: the landing reads the map). The list is read at most hourly.
+// (GET /api/v1/map/views: the landing reads the map). The list is read at most hourly.
 // A view that isn't on the map is left out. Titles and counts are the night run's own.
 
 import { hourly } from './api.ts';
@@ -81,7 +80,7 @@ export interface PowerMapTile extends PowerMapView {
   keys: LegendKey[];
 }
 
-/** The hero's flower (Elco, 10 Nov: the landing's first flower in the one look): NEAR's validators, the map's one flower coloured all the way round today. */
+/** The hero's flower (the landing's first flower in the one look): NEAR's validators, the map's one flower coloured all the way round today. */
 export const HERO_SHA = '37def7bc0670b27a8d5145cdcef00eea579539ca07fd485bb582b4abffe6e49f';
 
 /** One key for a set of tiles: each colour any of them paints, once. */

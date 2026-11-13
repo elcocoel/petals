@@ -1,8 +1,7 @@
-// What's said about a petal's account, from the annotations layer (coordinator/annotation-layer.md, steps 3
-// and 7; Elco, 10 Nov: "the agent and the person can go CRAZY adding annotation"): each claim as a person
-// reads it, with what it says, how it's known (stated, sourced, inferred: never "verified"), where it
-// rests and who said it. Read from GET /api/v1/me/annotations, the person's own; written to POST
-// /api/v1/me/annotations. Pure. The words are drafts.
+// What's said about a petal's account, from the annotations layer, where the agent and the person can add as
+// many as they like: each claim as a person reads it, with what it says, how it's known (stated, sourced,
+// inferred: never "verified"), where it rests and who said it. Read from GET /api/v1/me/annotations, the
+// person's own; written to POST /api/v1/me/annotations. Pure.
 import { readableAgent } from './agents.ts';
 
 /** A claim as the annotations layer keeps it: only what the detail box reads. */
@@ -118,7 +117,6 @@ export function noteDraft(about: string, words: string, as: 'note' | 'name') {
   };
 }
 
-/** Drafts (Elco changes them later). */
 export const claimWords = {
   heading: "What's said about it",
   none: 'Nothing said about it yet. Add a note or a name below.',

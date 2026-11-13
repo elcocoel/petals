@@ -1,6 +1,6 @@
-// The tip, Settings' first row (design/side-panel.md, lines 34 to 38): its percent at the row's end, and,
-// open, what it is, the slider on the price's scale, and what it adds to a typical turn. Letting go of
-// the slider keeps it. Words from lib/tip.ts, drafts. Props only: viewmodels/useTip.ts holds it.
+// The tip, Settings' first row: its percent at the row's end, and, open, what it is, the slider on the
+// price's scale, and what it adds to a typical turn. Letting go of the slider keeps it. Words from
+// lib/tip.ts. Props only: viewmodels/useTip.ts holds it.
 
 import { panelWords } from '../../lib/panel-words.ts';
 import { tipWords } from '../../lib/tip.ts';

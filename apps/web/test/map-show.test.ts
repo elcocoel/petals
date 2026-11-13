@@ -1,4 +1,4 @@
-// Elco, 12 Nov on /make: "the power map should always be there"; an answer moves the map, never replaces it. A page
+// On /make the Power Map is always there; an answer moves the map, never replaces it. A page
 // shows what its conversation is about with the four clicks' own states: a DAO flown to and entered, a wallet lit
 // everywhere it sits, the line between two DAOs, a proposal pinned (its stack open) in its DAO.
 import { readFileSync } from 'node:fs';

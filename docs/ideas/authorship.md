@@ -14,7 +14,7 @@ The same facts from two people are the same layer, with two records of who kept 
 
 A layer never changes after it is made. Adding a layer makes a new dataset version that names the version it came from. A computed layer names the readings or layers it was built on, so checking can follow the chain back.
 
-Forking a version makes another version; the original stays untouched. For now, a fork takes your own versions only. Publishing dataset versions to the shared map is not built yet.
+Forking a version makes another version; the original stays untouched. For now, a fork takes your own versions only. Publishing one of your versions to the shared map signs it with your own wallet: see [collective mapping](/docs/ideas/collective-mapping).
 
 ## Who said a claim
 

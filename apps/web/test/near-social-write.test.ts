@@ -1,5 +1,5 @@
-// NEAR Social's writes (Elco, 10 Nov): the picture's borsh payload, byte for byte as the standard's own
-// Python writes it (research/spikes/near-social-2026-11-09/skill.md, section 4).
+// NEAR Social's writes: the picture's borsh payload, byte for byte as the standard's own
+// Python writes it.
 import { describe, expect, test } from 'vitest';
 import { base64Of, FASTFS_SIMPLE_MAX, fastfsSimple } from '../lib/near-social.ts';
 

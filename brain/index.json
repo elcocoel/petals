@@ -11,7 +11,7 @@
       "continues": [],
       "status": "ready",
       "file": "doctrine.md",
-      "sha256": "e882bd15b66e4c99046b1375f3c21f176dbab6472a9b7e126a44267cc9644fa1"
+      "sha256": "1c6813f7ae5cd7de2855169a41a43ff9cde9ddf1cd9c0e6583c2def955cba2c5"
     },
     {
       "id": "connecting",
@@ -87,7 +87,7 @@
       "id": "services",
       "kind": "department",
       "department": "services",
-      "for": "one-press deliverables, each a chapter an agent follows, all free (#101)",
+      "for": "one-press deliverables, each a chapter an agent follows, all free",
       "recognise": [
         "services"
       ],
@@ -95,7 +95,7 @@
       "continues": [],
       "status": "partial",
       "file": "services/README.md",
-      "sha256": "73655fcc46b5c0d5790d1dd9d06a76b2ceabd660d611d9dcf1e54000f5859799"
+      "sha256": "70cb6f579bbb5683f59d6f0584039cc67b321175b4188c53fae4be94bf655593"
     },
     {
       "id": "stewardship",
@@ -289,7 +289,7 @@
       ],
       "status": "ready",
       "file": "connecting/connect-codex.md",
-      "sha256": "70acb6700264ba7218f2bb75a29701b6a795f8d0ad1227f199e11f7b0f5e7295"
+      "sha256": "06f5a0a7a3f2b4e94bcc904ac259b6401a1afb25696316135d915c3e8448f5df"
     },
     {
       "id": "connect-hermes",
@@ -633,7 +633,7 @@
       ],
       "status": "partial",
       "file": "gathering/open-source-leads.md",
-      "sha256": "9c75a83bcd71db709eac2a236c412e0893459ea5b0f38292817e4b33b171057f"
+      "sha256": "c51ace57a67fb46e8c050c6fa2122c43ce985fa626a4d4f554f098e4993e05e6"
     },
     {
       "id": "over-time",
@@ -744,7 +744,7 @@
       ],
       "status": "ready",
       "file": "connecting/setup.md",
-      "sha256": "375e3e5b6533137df7f30751be2c1ab30d21954ca9a28dc4b0caca5ef794f413"
+      "sha256": "03f9e62c3cd51235c05174b4a8663f9a3fdc61956a2b0e8b9bfc04a1948daa27"
     },
     {
       "id": "stake-behind-the-network",
@@ -1038,7 +1038,7 @@
       ],
       "status": "ready",
       "file": "governance/where-power-lives.md",
-      "sha256": "502a749f65ecd8549f065f66553cc6bbd9523f9e370816faab8b3019192774e4"
+      "sha256": "ef7290aa96ac17589d0d4dfce6d1cde80abb0683524b62c11d29d858bf51ad53"
     },
     {
       "id": "who-can-move-money-or-change-rules",
@@ -1659,7 +1659,7 @@
       "also": []
     },
     {
-      "task": "A one-press service (#101)",
+      "task": "A one-press service",
       "words": [
         "service",
         "deliverable"

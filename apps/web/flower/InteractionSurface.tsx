@@ -1,11 +1,11 @@
 'use client';
-// The page where people work (design/interaction-surface.md): the live flower fills the window, and the
-// conversation floats above it, one box a hand can move and size: its thread a light sheet rising out of the
-// dark base its input is (design/conversation.md). Another, the same box, shows the flower's own details
-// once something asks for them. This only wires the ViewModels to the views. The canvas starts at the side
-// panel's edge, and the camera fits the flower beside the conversation, not under it (#78, 11 Nov). Until
-// the conversation has a flower, and when a link in it opens a map, the Power Map stands beside the
-// conversation, the same live map as /map (#78), with no flower of the conversation's hard-coded in.
+// The page where people work: the live flower fills the window, and the conversation floats above it, one
+// box a hand can move and size: its thread a light sheet rising out of the dark base its input is. Another,
+// the same box, shows the flower's own details once something asks for them. This only wires the ViewModels
+// to the views. The canvas starts at the side panel's edge, and the camera fits the flower beside the
+// conversation, not under it. Until the conversation has a flower, and when a link in it opens a map, the
+// Power Map stands beside the conversation, the same live map as /map, with no flower of the conversation's
+// hard-coded in.
 import { accountRef } from '@petal/core';
 import type { SurfaceName } from '@petal/tokens';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -71,7 +71,7 @@ export function InteractionSurface({
   const { state, actions, refs } = useWorkspace(workspace);
   useFollowScroll(refs.thread, refs.following);
   // The boxes start past the side panel when it's there (the layout's, app/(work)/WorkPanel.tsx), and follow
-  // its edge when it's sized or folded, until a hand moves them (design/side-panel.md, line 21).
+  // its edge when it's sized or folded, until a hand moves them.
   const edge = state.menuShown ? state.panelEdge : 0;
   const from = state.menuShown ? besidePanel(state.panelEdge) : undefined;
   // The flower's box opens over the thread, not over the flower (lib/float-box.ts overThread).
@@ -93,7 +93,7 @@ export function InteractionSurface({
     },
     [from, edge, workspace.recorded],
   );
-  // the boxes next to the side panel, or near it, move with it as it opens and closes (Elco's walk 5)
+  // the boxes next to the side panel, or near it, move with it as it opens and closes
   const hands = useFloatBoxes(BOXES, place, { edge, snap: true });
   // What the conversation covers of the canvas, where it starts, so the flower is drawn beside it.
   const area = useRef<HTMLDivElement>(null);
@@ -134,17 +134,17 @@ export function InteractionSurface({
   const { onCanvas, panel } = state;
   // The Power Map: at the map a link opened, or whole until the conversation has a flower.
   const { land, opening: mapOpening, reread: rereadMap } = useGroundMap();
-  // the legend changes the person's view here, with Settings' own hands (#92)
-  // The Power Map is always the ground (Elco, 12 Nov: "the power map should always be there"): the
-  // conversation floats over it, and its flower, where the map holds it, opens the map there instead of
-  // replacing it. Only a flower the map doesn't hold yet is drawn apart, until it lands on the map (LOOK's
-  // placeholder and new layer, next); never an empty ground while one is on its way.
+  // the legend changes the person's view here, with Settings' own hands
+  // The Power Map is always the ground: the conversation floats over it, and its flower, where the map
+  // holds it, opens the map there instead of replacing it. Only a flower the map doesn't hold yet is
+  // drawn apart, until it lands on the map (its placeholder and new layer, next); never an empty ground
+  // while one is on its way.
   const flowerOnMap =
     onCanvas && land && state.flowerSnapshot
       ? land.flowers.findIndex((f) => f.snapshot === state.flowerSnapshot)
       : -1;
   // A new map being made (lib/ceremony.ts): a placeholder on its chain's map, or the map it adds to, a strip under
-  // it while the read runs, and its flower landing there (LOOK's placeholder, progress and landed).
+  // it while the read runs, and its flower landing there (the map's placeholder, progress and landed).
   const made = state.making;
   const madeChain =
     made?.held.chain && land
@@ -195,7 +195,7 @@ export function InteractionSurface({
         }
       : null;
   const ground = state.mapAt ?? (onCanvas && flowerOnMap < 0 && !landed ? null : { map: null });
-  // the open wallet has no map of its own on the Power Map (Elco, walk 5: "population not mapped")
+  // the open wallet has no map of its own on the Power Map: its population isn't mapped
   const unmapped =
     panel.kind === 'flower' &&
     panel.account !== null &&
@@ -205,15 +205,15 @@ export function InteractionSurface({
     ground?.map && land ? land.flowers.findIndex((f) => f.map === ground.map) : flowerOnMap;
   // the map opens at the conversation's flower: a petal pressed in it is that flower's, as on the flower itself
   const atFlower = !state.mapAt && flowerOnMap >= 0;
-  // what the map shows: the map a new read adds to, else what the last answer is about (SYSTEMS's show), else the
-  // conversation's flower where the map holds it; undefined says nothing (Elco, 12 Nov: "an answer moves the map")
+  // what the map shows: the map a new read adds to, else what the last answer is about, else the
+  // conversation's flower where the map holds it; undefined says nothing. An answer moves the map.
   const flowerMap = atFlower && land ? (land.flowers[flowerOnMap]?.map ?? null) : null;
-  // what the person kept about the map in front of them, published with one press (Elco, 12 Nov)
+  // what the person kept about the map in front of them, published with one press
   // the map in front: the flower the person is inside on the map, else the conversation's (lib/mapping.ts)
   const [inMap, setInMap] = useState<string | null>(null);
   const publishMap = inMap ?? flowerMap ?? state.mapAt?.map ?? madeMap;
   const publishing = usePublishPress(publishMap);
-  // a power quote wherever /make has nothing to show yet (#89, wave 7): the map on its way, an empty Mapping
+  // a power quote wherever /make has nothing to show yet: the map on its way, an empty Mapping
   const openingQuote = usePowerQuote(0);
   const mappingQuote = usePowerQuote(1);
   // the wallet chosen on the map (the wallet level): in Mapping, a note or a name about it, or having it mapped
@@ -267,16 +267,16 @@ export function InteractionSurface({
                 placeholder={placeholder}
                 progress={progress}
                 landed={landed}
-                // a publication that just joined the map, in the person's name (wave 8): read again, lit in Information
+                // a publication that just joined the map, in the person's name: read again, lit in Information
                 joined={publishing.joined}
-                // a wallet chosen on it is what the next question is about (Elco, 12 Nov)
+                // a wallet chosen on it is what the next question is about
                 onWallet={actions.chooseMapWallet}
                 // the map in front, for the mapping state: the flower the person is inside
                 onEnter={setInMap}
                 // the room beside the conversation is narrow: the map keeps clear of its own chains
                 clearOfChains
-                // the same map as /map's, from the same code (Elco, wave 4: "if we make them exactly the same, we only
-                // have one thing to edit"): its legend, Tools with the search at every zoom, and Cmd+K
+                // the same map as /map's, from the same code, so there's one thing to edit: its
+                // legend, Tools with the search at every zoom, and Cmd+K
                 legend="edit"
                 search
                 // the map's boxes keep the side panel's room rule, as the conversation's do
@@ -304,7 +304,7 @@ export function InteractionSurface({
         surface={surface}
         hand={hands.conversation}
         // Work from another door goes on in its own app: its thread says so, and there's no base to send
-        // from (design/conversation.md, line 18).
+        // from.
         foot={
           state.composer.away ? undefined : (
             <>
@@ -371,7 +371,7 @@ export function InteractionSurface({
           next={{ onStep: actions.step, moreOpen: state.nextMore, onMore: actions.toggleNextMore }}
         />
       </FloatBox>
-      {/* the mapping state: what the person would add to the map in front, in their name (Elco, 12 Nov) */}
+      {/* the mapping state: what the person would add to the map in front, in their name */}
       <FloatBox
         label="Mapping"
         title={mapping.heading}
@@ -421,14 +421,14 @@ export function InteractionSurface({
       >
         <ModelOptions options={state.models} onPick={actions.pickModel} />
       </FloatBox>
-      {/* Who's signed in, and the way out, are the side panel's Profile section (PANEL, WORKSPACE, 10 Nov). */}
+      {/* Who's signed in, and the way out, are the side panel's Profile section. */}
       <FloatBox
         label="Flower"
         title={panel.kind === 'flower' ? panel.title : undefined}
         surface={surface}
         hand={hands.panel}
         // it opens over the conversation's thread (overThread), so its glass sits on a solid surface: the
-        // thread's words and buttons never show through it (WORKSPACE's walk, META's go, 11 Nov)
+        // thread's words and buttons never show through it
         solid
         closed={!state.boxOpen}
         control={

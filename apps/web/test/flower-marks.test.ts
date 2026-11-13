@@ -112,7 +112,7 @@ function collisions(m: Marks): string[] {
 }
 
 describe('the table', () => {
-  test('has a row for each thing Elco named', () => {
+  test('has a row for each thing a flower can show', () => {
     for (const thing of [
       'silhouette',
       'titleInside',

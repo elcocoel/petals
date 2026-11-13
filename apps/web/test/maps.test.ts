@@ -1,4 +1,4 @@
-// One map per address (Elco, 10 Nov): the Power Map lists maps, each card opens its map's page, and a page
+// One map per address: the Power Map lists maps, each card opens its map's page, and a page
 // lists the map's readings newest first with who made them and their drawings.
 import { describe, expect, test } from 'vitest';
 import {

@@ -1,4 +1,4 @@
-// A chosen wallet in Information says only what its reading says (WORKSPACE, wave 4).
+// A chosen wallet in Information says only what its reading says.
 import type { ReadingPetal } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
 import type { MapValue } from '../lib/value-view.ts';

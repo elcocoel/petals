@@ -33,17 +33,17 @@ export interface BoxHand {
   fold: (to: number | null) => void;
 }
 
-/** Where a page's boxes live, and how they behave there (OVERLAYS, 12 Nov: the map's panels as boxes). */
+/** Where a page's boxes live, and how they behave there (the map's panels as boxes). */
 export interface FloatRoom {
   /**
    * Where the side panel ends, on a page that has one (/make): when it opens or closes, the boxes next to it
-   * or near it move with it into the room, a hand's too (Elco, walk 5, 12 Nov: "anything that is in its area
-   * of influence or close to it ... would like get out of the way"), and they snap beside it.
+   * or near it move with it into the room, a hand's too (whatever is in its way or close to it gets out of
+   * the way), and they snap beside it.
    */
   edge?: number | undefined;
   /** Where the boxes' room starts from the window's top, as it is now (below the site's nav): no bar goes above it. */
   top?: (() => number) | undefined;
-  /** box.snap: a box let go near the room's edges lands on them (Elco, walk 5: "snap to the edges"). */
+  /** box.snap: a box let go near the room's edges lands on them. */
   snap?: boolean | undefined;
 }
 
@@ -66,7 +66,7 @@ const windowSize = (): Size => ({ w: window.innerWidth, h: window.innerHeight })
 
 /**
  * A box a hand has put next to the side panel, or near it: its left side under the panel, or no further past
- * the panel's edge than the panel's own width. It moves with the edge (Elco's walk 5, 12 Nov).
+ * the panel's edge than the panel's own width. It moves with the edge.
  */
 const nearPanel = (r: Rect, edge: number) => r.x <= edge + sizes['Sidebar width'];
 
@@ -227,7 +227,7 @@ export function useFloatBoxes<K extends string>(
   }, [keys]);
 
   // Placed again when the placing changes (the side panel's edge, on /make), except a box a hand has put
-  // somewhere (design/side-panel.md, line 21): that one stays, unless it's next to the panel or near it, and
+  // somewhere: that one stays, unless it's next to the panel or near it, and
   // then it moves as far as the panel's edge did.
   useLayoutEffect(() => {
     const now = windowSize();

@@ -1,5 +1,5 @@
 'use client';
-// What a real wallet does with NEAR Social's two kinds of write, on testnet (Elco, 10 Nov, choice A). The
+// What a real wallet does with NEAR Social's two kinds of write, on testnet. The
 // writes go to the tester's own testnet account, which, like `social` on mainnet, has no contract, so the
 // receipt fails with CodeDoesNotExist as expected. After each one the page reads back from NEAR what
 // arrived and compares it with what it sent: for the text, the same JSON; for the picture, the same bytes.

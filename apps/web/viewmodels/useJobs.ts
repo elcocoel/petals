@@ -1,4 +1,4 @@
-// Where the jobs stand (C): read when the page has a conversation with jobs in it, and again each time
+// Where the jobs stand: read when the page has a conversation with jobs in it, and again each time
 // its live stream says something changed (an agent waiting, a job taken or reported). No timer.
 import { useEffect, useState } from 'react';
 import { listenElsewhere, readJobs } from '../lib/agent-client.ts';

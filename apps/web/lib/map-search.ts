@@ -1,8 +1,7 @@
-// Search on the Power Map (#105; Elco, 11 Nov: "search with the embedding model on the server being super smart to
-// find shit all sorts of different ways"): what GET /api/v1/search answers, as the rows the chain list shows in
+// Search on the Power Map: what GET /api/v1/search answers, as the rows the chain list shows in
 // its place while something's typed. One row per map on this map, with what matched under it (a proposal, what
 // Petals' mapping says); the rest of what search finds (a person's own work, a claim about no map here) isn't a
-// place on this map, so it's left out. Words are drafts for Elco.
+// place on this map, so it's left out.
 
 /** One answer, as GET /api/v1/search gives it (search-petals.ts, SearchAnswer). */
 export interface SearchAnswer {

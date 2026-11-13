@@ -1,5 +1,5 @@
-// Wave 8, Elco: "how different data layers from different people contribute to fuller and fuller maps"; the map
-// drawn from the layers on, petals moving, no jump (META, 13 Nov).
+// Data layers from different people add up to fuller and fuller maps; the map
+// drawn from the layers on, petals moving, no jump.
 import { expect, test } from 'vitest';
 import { drawnOf, GLIDE, glideBetween, stepGlide } from '../flower/glide.ts';
 import { lay, newRing, type Ring } from '../flower/ring.ts';

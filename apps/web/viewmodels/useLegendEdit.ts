@@ -1,4 +1,4 @@
-// The legend's hands on /make (design/legend.md, line 6; #92): Settings' own, so a choice in the legend changes
+// The legend's hands on /make: Settings' own, so a choice in the legend changes
 // the person's view at once, everywhere, as a choice in Settings does (usePersonView keeps it, one source).
 // The row whose choices are open is the legend's own, so opening one doesn't open Settings' too.
 import { type ColourKey, colourKeysOf, type Dimension, withColourKeys } from '@petal/core/view';
@@ -34,7 +34,7 @@ export function useLegendEdit(): LegendEdit {
       keep(withScale(person.view, d, scale));
     },
     drawing: person.busy ? changed : null,
-    // a value's colour, chosen by hand (Elco, wave 4): the view becomes v3 while any is chosen (core's withColourKeys)
+    // a value's colour, chosen by hand: the view becomes v3 while any is chosen (core's withColourKeys)
     colourKeys: colourKeysOf(person.view),
     onKey: (value: string, key: string | null) => {
       setChanged('colour');
@@ -43,7 +43,7 @@ export function useLegendEdit(): LegendEdit {
       else delete now[value];
       keep(withColourKeys(person.view, now));
     },
-    // usePersonView's reset, as Settings' (Elco, 11 Nov: "keep a reset to default button handy")
+    // usePersonView's reset, as Settings', a reset to the defaults kept at hand
     onReset: isDefault(person.view, defaults)
       ? undefined
       : () => {

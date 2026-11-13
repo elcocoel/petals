@@ -1,6 +1,5 @@
-// A logo, round, the size of an icon (design/org-badge.md, line 4): an organisation's in its badge, a chain's
-// in the map's chain list (Elco, 11 Nov: "we need the logo of the chains"). A picture, drawn round through an
-// SVG clip, since corners are refused in classes. Props only.
+// A logo, round, the size of an icon: an organisation's in its badge, a chain's in the map's chain list. A
+// picture, drawn round through an SVG clip, since corners are refused in classes. Props only.
 import { useId } from 'react';
 
 export function Logo({ src }: { /** an image of the logo (a URL or a data URL) */ src: string }) {

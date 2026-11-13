@@ -1,9 +1,7 @@
-// A person's contribution to the shared map (wave 8; Elco, 13 Nov: "its people contribute to a collective
-// construction and we wanna know who's helping a lot or a little and provide an useful measure of 'what doing
-// good' looks like"; "let's not make this more complicated than it has to be"). Three plain counts, as
-// SYSTEMS's credit/v1 already computes them (composition.md, section 7): facts the person added to the map
-// first, facts they confirmed (matched independently), and accounts that built on their work (points/v1, Elco's
-// points for mapping, 004-workspace): core's Credit, totals { first, confirmed, built_on }. Pure. LOBBY's drafts.
+// A person's contribution to the shared map, a collective construction: who's helping a lot or a little. Three
+// plain counts, as the server's credit/v1 already computes them (composition.md, section 7): facts the person
+// added to the map first, facts they confirmed (matched independently), and accounts that built on their work
+// (points/v1, 004-workspace): core's Credit, totals { first, confirmed, built_on }. Pure.
 
 import type { Credit } from '@petal/core';
 import { dateLabel, shortId } from './flower-view.ts';

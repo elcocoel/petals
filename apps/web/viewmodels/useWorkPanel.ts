@@ -1,11 +1,10 @@
 // The side panel's state, held by the layout /make and /lobby share (app/(work)/layout.tsx), so the panel
-// stays put while the page beside it changes (Elco, 10 Nov: "when I click on a new conversation, the whole
-// page reloads - so the side bar is fake?"). It reads who's here, the person's conversations and the
-// panel's own state (useWorkMenu), and says which conversation is open from the address, which the page
-// keeps true. The page tells it two things through WorkPanelContext: when to read the list again (a turn
-// started or ended, a job moved) and the name Petals' agent just gave the open conversation. It also holds
-// the person's own state (the session, the profile and its editor, the credit), once, which the panel's
-// Profile and Lobby sections and the lobby page all read. No timer.
+// stays put while the page beside it changes: opening another conversation doesn't reload the page. It reads
+// who's here, the person's conversations and the panel's own state (useWorkMenu), and says which conversation
+// is open from the address, which the page keeps true. The page tells it two things through WorkPanelContext:
+// when to read the list again (a turn started or ended, a job moved) and the name Petals' agent just gave the
+// open conversation. It also holds the person's own state (the session, the profile and its editor, the
+// credit), once, which the panel's Profile and Lobby sections and the lobby page all read. No timer.
 
 import type { View } from '@petal/core/types';
 import type { Dimension, Piece } from '@petal/core/view';
@@ -34,7 +33,7 @@ import { useSession } from './useSession.ts';
 import { useTip } from './useTip.ts';
 import { useWorkMenu } from './useWorkMenu.ts';
 
-/** The person's own state, read once here for the panel and the lobby page alike (LOBBY, 10 Nov: one state,
+/** The person's own state, read once here for the panel and the lobby page alike (one state,
  * not two reads, so a Saved or a withdrawal shows in both). */
 export interface PanelPerson {
   session: ReturnType<typeof useSession>;
@@ -87,8 +86,8 @@ export interface WorkPanelBus {
 const BAR = sizes['Row height'] + 2 * layout['Space 8'] + 1;
 
 /**
- * A window too narrow for the bar, the panel and a box's least width side by side: a phone
- * (design/side-panel.md, line 47). Read after the first paint and again when the window is sized.
+ * A window too narrow for the bar, the panel and a box's least width side by side: a phone.
+ * Read after the first paint and again when the window is sized.
  */
 function useNarrow(panel: number): boolean {
   const [narrow, setNarrow] = useState(false);
@@ -168,8 +167,7 @@ export function usePanelState() {
   const menu = useWorkMenu(signedIn, signal, reread);
   const width = usePanelWidth();
   const narrow = useNarrow(width.width);
-  // on a narrow window the panel starts folded and folds back on every move; opened, it lies over the
-  // page (design/side-panel.md, lines 47 to 49)
+  // on a narrow window the panel starts folded and folds back on every move; opened, it lies over the page
   const { shut } = menu;
   const moves = visits.current;
   // biome-ignore lint/correctness/useExhaustiveDependencies: `moves` is the signal: each move folds it again
@@ -208,7 +206,7 @@ export function usePanelState() {
     }),
     [signedIn, person, rows, visit, claim, restart, edge],
   );
-  // the Settings section: the person's view, read once for the whole site (usePersonView, LOOK's), each
+  // the Settings section: the person's view, read once for the whole site (usePersonView), each
   // choice saved at once, and everything drawn in it again without a reload
   const personView = usePersonView();
   const [openDimension, setOpenDimension] = useState<Dimension | null>(null);
@@ -245,7 +243,7 @@ export function usePanelState() {
     failed,
   };
   // the tip, Settings' first row: what it adds to a typical turn reads as the balance does, at NEAR's price
-  // from the one balance (LOBBY, 10 Nov)
+  // from the one balance
   const tipped = useTip(signedIn);
   const tip = {
     percent: tipped.percent,

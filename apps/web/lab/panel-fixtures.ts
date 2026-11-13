@@ -1,7 +1,7 @@
-// The side panel's states for /lab/panel (Elco, 10 Nov: "we haven't even prepared for the basic stress
-// test of what an interface should handle"): nothing yet, a first afternoon, and forty conversations in
-// six projects with three agents. Titles are written the way Petals' agent will name a conversation:
-// a few plain words for its subject. The rows go through the same functions the pages use.
+// The side panel's states for /lab/panel, the basic stress test an interface should handle: nothing yet, a
+// first afternoon, and forty conversations in six projects with three agents. Titles are written the way
+// Petals' agent will name a conversation: a few plain words for its subject. The rows go through the same
+// functions the pages use.
 import { agentRows, type ConnectedAgent } from '../lib/agents.ts';
 import {
   type ConversationRow,

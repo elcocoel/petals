@@ -1,6 +1,6 @@
-// Settings never lets a person break their view (Elco, 12 Nov: "don't let users break their views and keep a
-// reset to default button handy"): no row hides or locks because of what it shows, so every choice can be
-// switched back, and Put the default back is there while the view isn't the default.
+// Settings never lets a person break their view, and keeps a reset to default at hand: no row hides or locks
+// because of what it shows, so every choice can be switched back, and Put the default back is there while the
+// view isn't the default.
 import type { View } from '@petal/core/types';
 import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';

@@ -1,4 +1,4 @@
-// A visitor's own view (Elco, 12 Nov, walk 3: "their choice kept in their browser; costs nothing on the server"):
+// A visitor's own view, their choice kept in their browser at no cost on the server:
 // the server keeps it by its hash, nobody's (PUT /api/v1/views), and the visitor's browser keeps the hash in a
 // cookie, so the pages the server builds for them ask for it (lib/viewer-view.ts). A person signed in keeps
 // their own on the server instead, and the cookie goes. Pure: the browser sets it (viewmodels/usePersonView.ts).

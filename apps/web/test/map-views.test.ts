@@ -1,4 +1,4 @@
-// The gallery on the one shared map (Elco, 10 Nov, fix 2): a view's tile says its name in people's words,
+// The gallery on the one shared map: a view's tile says its name in people's words,
 // and uses the server's picture and address as given.
 import { describe, expect, test } from 'vitest';
 import { listKeys, type MapViewRow, viewName, viewTile } from '../lib/map-views.ts';

@@ -1,5 +1,5 @@
-// What a map's token is worth, in people's words (#91): a petal's dollars in its box, the map's total and its
-// token's supply on its page, each with where and when, and "No price" when there's none. On SYSTEMS's own
+// What a map's token is worth, in people's words: a petal's dollars in its box, the map's total and its
+// token's supply on its page, each with where and when, and "No price" when there's none. On the server's own
 // fixture, ENS's delegates priced by DefiLlama.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

@@ -1,5 +1,5 @@
-// The landing's map (Elco, 10 Nov: "this should be the global map not a bunch of digusting squares"). Its
-// data is megabytes, so it's asked for once, when its frame comes near the window (the adapter's readPowerMap).
+// The landing's map: the global Power Map, not placeholder squares. Its data is megabytes, so it's asked for
+// once, when its frame comes near the window (the adapter's readPowerMap).
 import { type RefObject, useEffect, useState } from 'react';
 import type { BenchLandscape } from '../landscape/land.ts';
 import { readPowerMap } from '../lib/agent-client.ts';

@@ -1,4 +1,4 @@
-// Search on /docs (Elco, 12 Nov) finds exactly the pages /docs shows: the server's list (@petal/tools docsPages)
+// Search on /docs finds exactly the pages /docs shows: the server's list (@petal/tools docsPages)
 // and the site's (catalog()) are the same files, and the same formats by their schema's $id.
 import { docsPages } from '@petal/tools';
 import { describe, expect, test } from 'vitest';
