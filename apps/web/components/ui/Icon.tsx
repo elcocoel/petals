@@ -20,6 +20,7 @@ import {
   Flower,
   FolderSimple,
   GearSix,
+  GithubLogo,
   House,
   IdentificationCard,
   List,
@@ -31,11 +32,15 @@ import {
   SidebarSimple,
   SignOut,
   SquaresFour,
+  Star,
+  TelegramLogo,
   TerminalWindow,
   Trash,
+  TwitterLogo,
   UserCircle,
   Wallet,
   X,
+  YoutubeLogo,
 } from '@phosphor-icons/react/dist/ssr';
 
 const GLYPHS = {
@@ -82,6 +87,12 @@ const GLYPHS = {
   unarchive: ArrowUUpLeft,
   /** Removing something for good. */
   remove: Trash,
+  // a star given to Petals on GitHub, and the socials under the hero's buttons (Elco, 13 Nov)
+  star: Star,
+  github: GithubLogo,
+  telegram: TelegramLogo,
+  twitter: TwitterLogo,
+  youtube: YoutubeLogo,
 } as const satisfies Record<string, Glyph>;
 
 export type IconName = keyof typeof GLYPHS;

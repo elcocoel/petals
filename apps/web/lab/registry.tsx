@@ -1494,6 +1494,16 @@ export const registry: LabEntry[] = [
         ),
       },
       {
+        name: 'square, link',
+        ...SECONDARY,
+        render: () => (
+          <Button variant="square" href="#button">
+            <Icon name="star" />
+            <span className="sr-only">Star Petals on GitHub</span>
+          </Button>
+        ),
+      },
+      {
         name: 'starter',
         closedIn: 'Actions',
         ...STARTER,

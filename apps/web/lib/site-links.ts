@@ -28,6 +28,10 @@ export const siteLinks = {
   /** The docs: the brain, the data and rendering protocols, connecting an agent, the API (DOCS, 11 Nov). */
   docs: '/docs',
   howItWorks: '/#how-it-works',
+  /** Petals' code on GitHub: the hero's star gives it one (Elco, 13 Nov; it works once the repo is public). */
+  github: 'https://github.com/elcocoel/petals',
+  /** The socials under the hero's buttons, in Elco's order; their addresses come later (Elco, 13 Nov: "don't worry about the links yet"). */
+  socials: { github: '', telegram: '', twitter: '', youtube: '' },
   liveShape: `/f/${LIVE_SHAPE}`,
   /** its picture, in the person's view */
   liveShapeImage: (view: View) => flowerImage(LIVE_SHAPE, view),

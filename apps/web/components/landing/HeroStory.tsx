@@ -36,8 +36,9 @@ import {
 // It plays by itself (viewmodels/useHeroStory.ts). `HeroStoryView` only draws, so the lab can hand it a layer to
 // isolate. Only the stage redraws each frame.
 import { landingCopy } from '../../lib/landing-copy.ts';
-import { siteLinks } from '../../lib/site-links.ts';
+import { publicOrigin, siteLinks } from '../../lib/site-links.ts';
 import { type HeroStoryClock, useHeroStory } from '../../viewmodels/useHeroStory.ts';
+import { CopyPrompt } from '../CopyPrompt.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Icon } from '../ui/Icon.tsx';
 import { IconButton } from '../ui/IconButton.tsx';
@@ -50,6 +51,10 @@ import { StoryFlower } from './StoryFlower.tsx';
 
 const hero = landingCopy.hero;
 const story = landingCopy.heroStory;
+/** The one setup prompt, as the Give-to-your-agent section hands it out (CONNECTORS's piece, LANDING's words). */
+const setup = landingCopy.giveToAgent;
+/** The socials, in Elco's order (13 Nov: "github telegram twitter and youtube"). */
+const SOCIALS = ['github', 'telegram', 'twitter', 'youtube'] as const;
 
 /** Which layers show: all of them on the page; the lab can look at the words or the flower alone. */
 export type StoryLayer = 'all' | 'words' | 'petals';
@@ -145,9 +150,43 @@ const Intro = memo(function Intro() {
         <p className="mt-block-gap mb-0 whitespace-pre-line text-pretty type-body">{hero.body}</p>
       </div>
       <div className={`order-4 mt-column-gap ${GUTTER}`}>
-        <Button href={siteLinks.lobby} arrow>
-          {hero.ask.action}
-        </Button>
+        {/* Connect the one dark button; beside it, lighter, the setup prompt to copy and a smaller one with a
+            star for GitHub (Elco, 13 Nov: "connect is like the first one ... right next to it we should have
+            connect setup prompt and then a smaller button with a star") */}
+        <div className="flex flex-wrap items-center gap-space-8">
+          <Button href={siteLinks.lobby} arrow>
+            {hero.ask.action}
+          </Button>
+          <CopyPrompt
+            prompt={setup.prompt(publicOrigin)}
+            originIn={publicOrigin}
+            label={setup.copy}
+            copied={setup.copied}
+            variant="secondary"
+            bare
+          />
+          <Button variant="square" href={siteLinks.github}>
+            <Icon name="star" />
+            <span className="sr-only">{hero.star}</span>
+          </Button>
+        </div>
+        {/* Under them, the socials: just their icons, grey, no fill (Elco, 13 Nov: "they should be subtle
+            probably gray no background just the icons"); a social with no address yet does nothing. */}
+        <div className="mt-space-16 -ml-space-8 flex items-center">
+          {SOCIALS.map((s) =>
+            siteLinks.socials[s] ? (
+              <IconButton
+                key={s}
+                icon={s}
+                label={hero.socials[s]}
+                href={siteLinks.socials[s]}
+                tip="right"
+              />
+            ) : (
+              <IconButton key={s} icon={s} label={hero.socials[s]} onClick={() => {}} tip="right" />
+            ),
+          )}
+        </div>
       </div>
     </>
   );
@@ -331,17 +370,23 @@ export function HeroStoryView({
         phone or a tablet, the headline, then the story four by five, the question above a big flower and the
         answer under it, then the rest of the words (Elco, 12 Nov: "purposefully layouted to work on mobile").
       */}
-      <div className="relative left-1/2 flex w-screen -translate-x-1/2 flex-col">
-        <div className="contents lg:pointer-events-none lg:absolute lg:inset-0 lg:z-10 lg:block">
-          <div className="contents lg:mx-auto lg:flex lg:h-full lg:w-full lg:max-w-page-width lg:items-center lg:px-page-inset">
+      {/* Wide, the words and the stage share one cell, so the hero is as tall as the taller of them: words that
+          outgrow a short stage push the next band down rather than run onto it. */}
+      <div className="relative left-1/2 flex w-screen -translate-x-1/2 flex-col lg:grid">
+        <div className="contents lg:pointer-events-none lg:relative lg:z-10 lg:col-start-1 lg:row-start-1 lg:block">
+          {/* The words a quarter of the way down the room the stage leaves them, not half (Elco, 13 Nov: "an
+              unnecessarily large amount of padding in relations to the top ... about half the size"). */}
+          <div className="contents lg:mx-auto lg:flex lg:h-full lg:w-full lg:max-w-page-width lg:flex-col lg:px-page-inset">
+            <div aria-hidden="true" className="hidden lg:block lg:flex-1" />
             <div className="contents lg:pointer-events-auto lg:block lg:w-1/3">
               <Intro />
             </div>
+            <div aria-hidden="true" className="hidden lg:block lg:flex-3" />
           </div>
         </div>
         <div
           ref={clock.stage}
-          className="relative order-2 mt-space-16 aspect-4/5 max-h-[calc(100svh-6rem)] w-full lg:order-none lg:mt-0 lg:aspect-16/9 lg:max-h-[min(calc(100svh-12rem),calc(var(--spacing-page-width)*9/16))]" /* token-exempt: on a phone or a tablet, four by five and never taller than the screen under the nav, so the question, a big flower and the answer each have their own room; wide, sixteen by nine of the window, never taller than sixteen by nine of the page's width nor than the first screen, so the next band stays in sight */
+          className="relative order-2 mt-space-16 aspect-4/5 max-h-[calc(100svh-6rem)] w-full lg:order-none lg:col-start-1 lg:row-start-1 lg:mt-0 lg:self-start lg:aspect-16/9 lg:max-h-[min(calc(100svh-12rem),calc(var(--spacing-page-width)*9/16))]" /* token-exempt: on a phone or a tablet, four by five and never taller than the screen under the nav, so the question, a big flower and the answer each have their own room; wide, sixteen by nine of the window, never taller than sixteen by nine of the page's width nor than the first screen, so the next band stays in sight */
           style={{ containerType: 'size', perspective: '900px' }}
         >
           {/* The world stays inside the stage, so the far map never spills onto the page; the map fades its own
