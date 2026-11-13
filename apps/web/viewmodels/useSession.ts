@@ -23,6 +23,7 @@ import {
   NO_EVM_WALLET,
   type WalletChoice,
 } from '../lib/evm-wallet.ts';
+import { PHONE, phoneSession, phoneSignEvm, phoneSignSolana } from '../lib/phone-wallet.ts';
 import { walletRefusal } from '../lib/profile-view.ts';
 import type { WalletSignature } from '../lib/publish.ts';
 import {
@@ -76,11 +77,28 @@ export async function signIn(d: SessionDeps): Promise<void> {
 }
 
 /**
+ * What a phone wallet's QR code needs from the page: to show the code (a WalletConnect address), then to know
+ * which wallet said yes on the phone, to name it while it's asked to sign.
+ */
+export interface PhoneSteps {
+  show: (uri: string) => void;
+  approved: (wallet: string) => void;
+}
+
+/**
  * An EVM wallet's proof: the browser's EVM wallet (the one picked by its id, lib/evm-wallet.ts, or the first)
  * names its account, Petals' challenge gives the Sign-In with Ethereum text for it, and the wallet signs that
  * text. No transaction, no spend. It rejects when there's no wallet or the person says no.
  */
-export async function evmProof(wallet?: string): Promise<EvmProof> {
+export async function evmProof(wallet?: string, phone?: PhoneSteps): Promise<EvmProof> {
+  if (wallet === PHONE) {
+    const s = await phoneSession('eip155', phone?.show ?? (() => {}));
+    phone?.approved(s.name);
+    const address = s.address.toLowerCase();
+    const { message } = await evmChallenge(address, 1);
+    const signature = await phoneSignEvm(s, message);
+    return { type: 'eip191', address, message, signature };
+  }
   const { address, chainId } = await evmAccount(wallet);
   const { message } = await evmChallenge(address, chainId);
   const signature = await evmSign(message, address, wallet);
@@ -120,7 +138,14 @@ export async function signInEvm(
  * A Solana wallet's proof: the browser's Solana wallet (the one picked by its id, or the first) connects, Petals'
  * challenge gives the text, the wallet signs it.
  */
-export async function solanaProof(wallet?: string): Promise<SolanaProof> {
+export async function solanaProof(wallet?: string, phone?: PhoneSteps): Promise<SolanaProof> {
+  if (wallet === PHONE) {
+    const s = await phoneSession('solana', phone?.show ?? (() => {}));
+    phone?.approved(s.name);
+    const { message } = await solanaChallenge(s.address);
+    const signature = await phoneSignSolana(s, message);
+    return { type: 'ed25519', address: s.address, message, signature };
+  }
   const address = await solanaAccount(wallet);
   const { message } = await solanaChallenge(address);
   const signature = await solanaSign(message, wallet);

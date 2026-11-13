@@ -37,6 +37,14 @@ export const profilePageWords = {
   whichWallet: 'Which wallet?',
   /** The NEAR wallet, by the name its picker gives it. */
   nearWallet: 'Your NEAR wallet',
+  /** The phone, first in the pick: any wallet on it that connects by a QR code (WalletConnect). */
+  phone: 'Your phone (scan a QR code)',
+  /** The phone's wallet before it has said which it is: waited for, and refusing. */
+  phoneWallet: 'your phone',
+  phoneRefused: 'Your phone',
+  /** Over the QR code. */
+  scan: 'Scan this with your phone’s wallet: MetaMask, Phantom, Trust or any wallet that connects with WalletConnect.',
+  qrAlt: 'A QR code to connect your phone’s wallet',
   /** What a wallet said, plainly: it was refused, it's busy, or its own words. */
   declined: (wallet: string) => `${wallet} declined. Nothing was added.`,
   busy: (wallet: string) =>
@@ -79,6 +87,8 @@ export type AddWalletPhase =
   | { kind: 'ready' }
   | { kind: 'choose'; chain: 'evm' | 'solana'; wallets: WalletPick[] }
   | { kind: 'adding'; wallet: string }
+  /** A phone wallet's QR code, shown until the phone says yes: a picture's data: URL. */
+  | { kind: 'scan'; qr: string }
   | { kind: 'failed'; why: string };
 
 /**
