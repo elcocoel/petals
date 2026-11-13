@@ -120,7 +120,11 @@ describe('about $1, never twice (wave 5, Elco’s mainnet test)', () => {
 });
 
 describe('the NEAR comes from one of their own wallets (flow 3, 13 Nov)', () => {
-  const deps = (o: { mine?: string[]; connected?: string | null; link?: string | null | Error }) => {
+  const deps = (o: {
+    mine?: string[];
+    connected?: string | null;
+    link?: string | null | Error;
+  }) => {
     const calls: string[] = [];
     return {
       calls,
