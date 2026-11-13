@@ -2,7 +2,7 @@
 // function over an injected adapter, tested without a browser; the hook only wires it to React. Connecting
 // or leaving reloads the page, because the address holds what it was showing and everything on it depends
 // on who's asking.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   type Challenge,
   type EvmProof,
@@ -23,8 +23,8 @@ import {
   NO_EVM_WALLET,
   type WalletChoice,
 } from '../lib/evm-wallet.ts';
-import { PHONE, phoneSession, phoneSignEvm, phoneSignSolana } from '../lib/phone-wallet.ts';
-import { walletRefusal } from '../lib/profile-view.ts';
+import { PHONE, phoneSession, phoneSignEvm, phoneSignSolana, qrOf } from '../lib/phone-wallet.ts';
+import { profilePageWords, walletRefusal } from '../lib/profile-view.ts';
 import type { WalletSignature } from '../lib/publish.ts';
 import {
   NO_SOLANA_WALLET,
@@ -113,17 +113,19 @@ export async function signInEvm(
   arrived: () => void,
   failed: (words: string) => void,
   picked?: WalletChoice,
+  phone?: PhoneSteps,
 ) {
   const wallet = picked ?? evmWallets()[0];
   if (!wallet) {
     failed(NO_EVM_WALLET);
     return;
   }
+  const said = sayingAs(wallet, phone);
   let proof: EvmProof;
   try {
-    proof = await evmProof(wallet.id);
+    proof = await evmProof(wallet.id, said.steps);
   } catch (e) {
-    failed(walletRefusal(wallet.name, e, doorWords.declined));
+    failed(walletRefusal(said.name(), e, doorWords.declined));
     return;
   }
   try {
@@ -157,17 +159,19 @@ export async function signInSolana(
   arrived: () => void,
   failed: (words: string) => void,
   picked?: WalletChoice,
+  phone?: PhoneSteps,
 ) {
   const wallet = picked ?? solanaWallets()[0];
   if (!wallet) {
     failed(NO_SOLANA_WALLET);
     return;
   }
+  const said = sayingAs(wallet, phone);
   let proof: SolanaProof;
   try {
-    proof = await solanaProof(wallet.id);
+    proof = await solanaProof(wallet.id, said.steps);
   } catch (e) {
-    failed(walletRefusal(wallet.name, e, doorWords.declined));
+    failed(walletRefusal(said.name(), e, doorWords.declined));
     return;
   }
   try {
@@ -176,6 +180,22 @@ export async function signInSolana(
   } catch (e) {
     failed(refusalCode(e) === 'source_failed' ? doorWords.nearDidntAnswer : doorWords.badSignature);
   }
+}
+
+/**
+ * Whose name a refusal is said in: the wallet picked, or a phone, which is 'Your phone' until it says which wallet
+ * it is. The phone's steps pass through, keeping that name.
+ */
+function sayingAs(wallet: WalletChoice, phone?: PhoneSteps) {
+  let name = wallet.id === PHONE ? profilePageWords.phoneRefused : wallet.name;
+  const steps: PhoneSteps | undefined = phone && {
+    show: phone.show,
+    approved: (n) => {
+      name = n;
+      phone.approved(n);
+    },
+  };
+  return { steps, name: () => name };
 }
 
 export function useSession(reading: boolean) {
@@ -191,6 +211,10 @@ export function useSession(reading: boolean) {
   );
   /** The wallet asked now, by name, so the person knows where to answer. */
   const [waitingFor, setWaitingFor] = useState<string | null>(null);
+  /** A phone wallet's QR code, shown until the phone says yes: a picture's data: URL. */
+  const [qr, setQr] = useState<string | null>(null);
+  /** The try at signing in that's current: Stop, or another press, leaves an older try's answer unused. */
+  const attempt = useRef(0);
   const deps = useMemo<SessionDeps>(
     () => ({
       client: sessionClient,
@@ -221,23 +245,51 @@ export function useSession(reading: boolean) {
   const connectWith = (chain: 'evm' | 'solana', id?: string) => {
     if (busy) return;
     setFailed(null);
-    const wallets = chain === 'evm' ? evmWallets() : solanaWallets();
-    if (wallets.length === 0) {
-      setFailed(chain === 'evm' ? NO_EVM_WALLET : NO_SOLANA_WALLET);
-      return;
-    }
+    // the phone first, by a QR code, then the wallets in this browser
+    const wallets: WalletChoice[] = [
+      { id: PHONE, name: profilePageWords.phone, icon: null },
+      ...(chain === 'evm' ? evmWallets() : solanaWallets()),
+    ];
     if (!id && wallets.length > 1) {
       setPick({ chain, wallets });
       return;
     }
     const wallet = wallets.find((w) => w.id === id) ?? wallets[0];
+    if (!wallet) return;
+    attempt.current += 1;
+    const mine = attempt.current;
+    const current = () => attempt.current === mine;
     setPick(null);
     setBusy(true);
-    setWaitingFor(wallet?.name ?? null);
+    setWaitingFor(wallet.id === PHONE ? profilePageWords.phoneWallet : wallet.name);
+    // a phone shows its QR code until it says yes, then is named by what it calls itself
+    const phone: PhoneSteps = {
+      show: (uri) => {
+        void qrOf(uri).then((code) => {
+          if (current()) setQr(code);
+        });
+      },
+      approved: (name) => {
+        if (!current()) return;
+        setQr(null);
+        setWaitingFor(name);
+      },
+    };
     const signIn = chain === 'evm' ? signInEvm : signInSolana;
-    void signIn(deps.arrived, setFailed, wallet).finally(() => {
+    void signIn(
+      () => {
+        if (current()) deps.arrived();
+      },
+      (words) => {
+        if (current()) setFailed(words);
+      },
+      wallet,
+      phone,
+    ).finally(() => {
+      if (!current()) return;
       setBusy(false);
       setWaitingFor(null);
+      setQr(null);
     });
   };
 
@@ -253,6 +305,7 @@ export function useSession(reading: boolean) {
     },
     pick,
     waitingFor,
+    qr,
     /** The same with an EVM wallet: one signed message, then the page loads again. */
     connectEvm: (id?: string) => connectWith('evm', id),
     /** The same with a Solana wallet. */
@@ -263,9 +316,11 @@ export function useSession(reading: boolean) {
     },
     /** Stops waiting for a wallet that doesn't answer, or puts the pick away; its request stays in the wallet. */
     stop: () => {
+      attempt.current += 1;
       setBusy(false);
       setWaitingFor(null);
       setPick(null);
+      setQr(null);
     },
     disconnect: () => {
       // Leaving the account leaves the app, back to the front page.
