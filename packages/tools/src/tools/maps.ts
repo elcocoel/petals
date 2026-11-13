@@ -433,8 +433,8 @@ export const listPublishable = defineTool<
   description:
     'What the signed-in person kept about a map in their projects (their names and other claims about its ' +
     'accounts) and could publish to the shared Power Map with one press on that map, signed by their own wallet ' +
-    'and credited to them: each item one per row (its name, address, source and a confidence from the reranker on ' +
-    "Elco's Mac, how strongly its own evidence says it), which stay private and why (the people rule: a name goes only as the " +
+    'and credited to them: each item one per row (its name, address, source and a confidence from the search ' +
+    "model's reranker, how strongly its own evidence says it), which stay private and why (the people rule: a name goes only as the " +
     "DAO's own records declare it), and how many are published already. It publishes nothing; never sign for them. " +
     "A person's own agent names their project by its link (exploration); on the site it's the person signed in.",
   input: obj(

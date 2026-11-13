@@ -325,37 +325,37 @@
     {
       "about": "none:historical-snapshot-ballot-addresses",
       "name": "ResearchHub and Extra Finance ballots",
-      "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. The waves reissued them naming their DAO's token, so they're now on that DAO's own map. This card held two DAOs' ballots at once, since both used the same population.",
+      "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. Later mapping runs reissued them naming their DAO's token, so they're now on that DAO's own map. This card held two DAOs' ballots at once, since both used the same population.",
       "decided": "Shared map curation, 11 Nov 2026: the 'none' card retired, never deleted; its ballots were reissued on their DAOs' own maps"
     },
     {
       "about": "none:gnosis.eth-2026-selected-ballots",
       "name": "GnosisDAO ballot participation",
-      "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. The waves reissued them naming their DAO's token, so they're now on that DAO's own map.",
+      "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. Later mapping runs reissued them naming their DAO's token, so they're now on that DAO's own map.",
       "decided": "Shared map curation, 11 Nov 2026: the 'none' card retired, never deleted; its ballots were reissued on their DAOs' own maps"
     },
     {
       "about": "none:gnosis.eth-gip-154-voters",
       "name": "GnosisDAO GIP-154 voting power",
-      "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. The waves reissued them naming their DAO's token, so they're now on that DAO's own map.",
+      "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. Later mapping runs reissued them naming their DAO's token, so they're now on that DAO's own map.",
       "decided": "Shared map curation, 11 Nov 2026: the 'none' card retired, never deleted; its ballots were reissued on their DAOs' own maps"
     },
     {
       "about": "none:giveth-basic-ballot-participation",
       "name": "Giveth ballot participation",
-      "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. The waves reissued them naming their DAO's token, so they're now on that DAO's own map.",
+      "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. Later mapping runs reissued them naming their DAO's token, so they're now on that DAO's own map.",
       "decided": "Shared map curation, 11 Nov 2026: the 'none' card retired, never deleted; its ballots were reissued on their DAOs' own maps"
     },
     {
       "about": "none:cow.eth-2026-selected-ballots",
       "name": "CoW DAO ballot participation",
-      "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. The waves reissued them naming their DAO's token, so they're now on that DAO's own map.",
+      "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. Later mapping runs reissued them naming their DAO's token, so they're now on that DAO's own map.",
       "decided": "Shared map curation, 11 Nov 2026: the 'none' card retired, never deleted; its ballots were reissued on their DAOs' own maps"
     },
     {
       "about": "none:cow.eth-cip-91-voters",
       "name": "CoW DAO CIP-91 voting power",
-      "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. The waves reissued them naming their DAO's token, so they're now on that DAO's own map.",
+      "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. Later mapping runs reissued them naming their DAO's token, so they're now on that DAO's own map.",
       "decided": "Shared map curation, 11 Nov 2026: the 'none' card retired, never deleted; its ballots were reissued on their DAOs' own maps"
     }
   ]
