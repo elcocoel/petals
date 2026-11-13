@@ -12,7 +12,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { confirmPay, readCredit, readPay } from '../lib/agent-client.ts';
 import { type HeldCredit, WITHDRAW_ALL, type WithdrawPhase, withdrawn } from '../lib/lobby-view.ts';
 import { type Credit, type Money, money, type PayInfo, sentBy } from '../lib/pay.ts';
-import { sendAction } from '../lib/wallet.ts';
+import { profilePageWords, walletRefusal } from '../lib/profile-view.ts';
+import { connectWallet, sendAction } from '../lib/wallet.ts';
 
 export function useFunds(cue: string) {
   const [info, setInfo] = useState<PayInfo | null>(null);
@@ -24,6 +25,8 @@ export function useFunds(cue: string) {
   const [held, setHeld] = useState<string | null>(null);
   const [phase, setPhase] = useState<WithdrawPhase>('ready');
   const [withdrew, setWithdrew] = useState<string | null>(null);
+  /** Why the last withdrawal didn't go through, as the wallet or Petals said it. */
+  const [failedWhy, setFailedWhy] = useState<string | null>(null);
   /** Bumped by reread(), so the read runs again with the same cue. */
   const [again, setAgain] = useState(0);
 
@@ -54,10 +57,21 @@ export function useFunds(cue: string) {
     if (!info || held === null) return;
     const before = held;
     setPhase('withdrawing');
+    setFailedWhy(null);
     void (async () => {
+      // the person's own NEAR wallet sends it: connected first (its picker opens when none is), and what it
+      // says, a no included, is said as it said it
+      let sent: ReturnType<typeof sentBy>;
       try {
-        const sent = sentBy(await sendAction(info.network, info.receiver, WITHDRAW_ALL));
+        await connectWallet(info.network);
+        sent = sentBy(await sendAction(info.network, info.receiver, WITHDRAW_ALL));
         if (!sent) throw new Error('The wallet named no transaction.');
+      } catch (e) {
+        setFailedWhy(walletRefusal(profilePageWords.nearWallet, e));
+        setPhase('failed');
+        return;
+      }
+      try {
         const after = await confirmPay({
           network: info.network,
           account_id: sent.account,
@@ -68,7 +82,8 @@ export function useFunds(cue: string) {
         setCredit(after.credit);
         setHeld(left);
         setPhase('withdrew');
-      } catch {
+      } catch (e) {
+        setFailedWhy(e instanceof Error && e.message ? e.message : null);
         setPhase('failed');
       }
     })();
@@ -87,6 +102,8 @@ export function useFunds(cue: string) {
     held,
     phase,
     withdrew,
+    /** Why the last withdrawal didn't go through; null for the plain words. */
+    failedWhy,
     withdraw,
     reread,
   };
