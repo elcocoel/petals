@@ -50,7 +50,7 @@ import { panelWords } from '../lib/panel-words.ts';
 import { CHOOSABLE } from '../lib/person-view.ts';
 import { proposalView, proposalWords } from '../lib/proposal-view.ts';
 import { type LegendEdit, onlyWhatDraws } from '../lib/view-edit.ts';
-import { walletView, walletWords } from '../lib/wallet-view.ts';
+import { differsOf, walletView, walletWords } from '../lib/wallet-view.ts';
 import { useComposed } from '../viewmodels/useComposed.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
@@ -913,6 +913,13 @@ export function LandscapeCanvas({
   useEffect(() => {
     if (joined && joined.map === strataMap) setClaimsOpen(true);
   }, [joined, strataMap]);
+  // where authors differ, the map's credit says who stated which value: read once, all layers on (wave 8)
+  const creditRead = useComposed(
+    card?.differs ? strataMap : null,
+    card?.differs && strata ? strata.ids : null,
+    person.hash,
+    version,
+  );
   const joinedHere = useMemo(
     () => new Set(joined && joined.map === strataMap ? joined.documents.map((d) => d.sha256) : []),
     [joined, strataMap],
@@ -1224,7 +1231,14 @@ export function LandscapeCanvas({
                   <div className="flex flex-col px-space-8">
                     <SectionHead size="panel" title={walletWords.title} />
                     <div className="px-space-8 py-space-8">
-                      <WalletFacts view={walletView(chosenWallet, card?.value)} />
+                      <WalletFacts
+                        view={{
+                          ...walletView(chosenWallet, card?.value),
+                          differs: differsOf(creditRead?.credit, chosenWallet.id, (w) =>
+                            panelWords.settings.piece(w),
+                          ),
+                        }}
+                      />
                     </div>
                   </div>
                 )}
@@ -1265,6 +1279,11 @@ export function LandscapeCanvas({
                         joined={joinedHere}
                         swatches={swatches}
                       />
+                      {card?.differs ? (
+                        <p className="my-0 pt-space-8 type-ui text-muted">
+                          {strataWords.differs(card.differs)}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 ) : (

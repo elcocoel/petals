@@ -571,6 +571,17 @@ export interface ComposedReading {
   given?: SeamPiece[];
   pieces?: string[];
   composed_from?: readonly string[];
+  /** who stated each value (composition.md §9): per piece and participant, its authors, and the values that differ */
+  credit?: {
+    pieces?: Record<
+      string,
+      Record<
+        string,
+        { by?: readonly string[]; differs?: readonly { value: string; by: readonly string[] }[] }
+      >
+    >;
+    authors?: Record<string, { name?: string | null; imported?: boolean }>;
+  };
 }
 
 /**

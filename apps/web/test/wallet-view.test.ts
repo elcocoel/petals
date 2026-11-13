@@ -2,7 +2,7 @@
 import type { ReadingPetal } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
 import type { MapValue } from '../lib/value-view.ts';
-import { walletView } from '../lib/wallet-view.ts';
+import { differsOf, walletView } from '../lib/wallet-view.ts';
 
 const petal = {
   id: 'cronus.near',
@@ -43,5 +43,34 @@ describe('a chosen wallet', () => {
     expect(v.worth).toBeNull();
     expect(v.address).toBe('cronus.near');
     expect(v.facts[2]).toEqual(['Holds', '534']);
+  });
+});
+
+describe('where authors differ on a wallet', () => {
+  test('each piece, each value with who stated it, named as the map says', () => {
+    const credit = {
+      pieces: {
+        amount: {
+          'near:mainnet:cronus.near': {
+            differs: [
+              { value: '534', by: ['near:mainnet:mapping.petals.near'] },
+              { value: '535', by: ['near:mainnet:elco.near'] },
+            ],
+          },
+        },
+        kind: { 'near:mainnet:cronus.near': {} },
+      },
+      authors: { 'near:mainnet:mapping.petals.near': { name: "Petals' mapping" } },
+    };
+    expect(differsOf(credit, 'cronus.near', (p) => p)).toEqual([
+      {
+        what: 'amount',
+        values: [
+          { value: '534', by: "Petals' mapping" },
+          { value: '535', by: 'elco.near' },
+        ],
+      },
+    ]);
+    expect(differsOf(undefined, 'cronus.near', (p) => p)).toEqual([]);
   });
 });

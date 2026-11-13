@@ -52,7 +52,7 @@ const layers: CardLayer[] = [
 ];
 const authors: CardAuthor[] = [
   { author: 'near:mainnet:mapping.petals.near', name: "Petals' mapping", imported: true },
-  { author: 'near:mainnet:elco.near', name: 'elco.near' },
+  { author: 'near:mainnet:elco.near', name: 'elco.near', first: 34, confirmed: 12, built_on: 3 },
   { author: 'near:mainnet:raid.near' },
 ];
 
@@ -65,7 +65,9 @@ describe('a map’s layers as strata', () => {
     expect(authorsLine(strata[0]?.authors ?? [])).toBe(
       "by Petals' mapping, imported, unsigned, 13 Nov 2026",
     );
-    expect(authorsLine(strata[2]?.authors ?? [])).toBe('by elco.near, 13 Nov 2026 and raid.near');
+    expect(authorsLine(strata[2]?.authors ?? [])).toBe(
+      'by elco.near, 13 Nov 2026, (on this map: 34 added first · 12 confirmed · 3 built on it) and raid.near',
+    );
     expect(authorsLine([])).toBe('by not recorded');
   });
   test('what each covers, and its kind', () => {

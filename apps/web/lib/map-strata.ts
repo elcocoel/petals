@@ -18,6 +18,8 @@ export interface StrataAuthor {
   signed: boolean;
   /** when they published it, in words */
   published: string | null;
+  /** on this map: facts added first, confirmed, and accounts that built on their work, where the record says */
+  counts?: { first: number; confirmed: number; builtOn: number } | null;
 }
 
 /** One layer of a map, as Information lists it. */
@@ -51,10 +53,14 @@ export const strataWords = {
   notRecorded: 'not recorded',
   by: (who: string) => `by ${who}`,
   and: (who: string) => `and ${who}`,
+  counts: (first: number, confirmed: number, builtOn: number) =>
+    `on this map: ${first.toLocaleString('en-US')} added first · ${confirmed.toLocaleString('en-US')} confirmed · ${builtOn.toLocaleString('en-US')} built on it`,
   imported: 'imported, unsigned',
   read: (when: string) => `read ${when}`,
   builtOn: (n: number) => (n === 1 ? 'built on 1 layer' : `built on ${n} layers`),
   joined: 'Just added, in your name',
+  differs: (n: number) =>
+    `${n.toLocaleString('en-US')} ${n === 1 ? 'fact differs' : 'facts differ'} between authors on this map: both values stand, and anyone can check. Two reads of one block should agree, so one is probably wrong.`,
   on: (title: string) => `Show ${title} on the map`,
 } as const;
 
@@ -67,7 +73,16 @@ export function authorsLine(authors: readonly StrataAuthor[]): string {
   const [first, ...rest] = authors;
   if (!first) return strataWords.by(strataWords.notRecorded);
   const one = (a: StrataAuthor) =>
-    [a.name, a.signed ? null : strataWords.imported, a.published].filter(Boolean).join(', ');
+    [
+      a.name,
+      a.signed ? null : strataWords.imported,
+      a.published,
+      a.counts
+        ? `(${strataWords.counts(a.counts.first, a.counts.confirmed, a.counts.builtOn)})`
+        : null,
+    ]
+      .filter(Boolean)
+      .join(', ');
   return [strataWords.by(one(first)), ...rest.map((a) => strataWords.and(one(a)))].join(' ');
 }
 
@@ -107,6 +122,11 @@ export interface CardAuthor {
   author: string;
   name?: string | null;
   imported?: boolean;
+  /** on this map, from credit/v1 (Elco, wave 8: "who's helping a lot or a little"): facts they added first, facts
+   * they confirmed, and accounts that built on their work */
+  first?: number;
+  confirmed?: number;
+  built_on?: number;
 }
 
 /** What each kind of document is, in people's words (composition.md §1). Drafts. */
@@ -165,6 +185,10 @@ export function strataOf(
       name: a?.name ?? accountWords(account),
       signed: !(a?.imported ?? false),
       published,
+      counts:
+        a && a.first !== undefined && a.confirmed !== undefined && a.built_on !== undefined
+          ? { first: a.first, confirmed: a.confirmed, builtOn: a.built_on }
+          : null,
     };
   };
   return [...layers]

@@ -2,7 +2,7 @@
 // shows the same on /make as on /map): its name in UI words, its address quiet in mono where the name says
 // something else, then each fact as a tool row reads (what it is quiet, the value in the words' colour), and its
 // dollars with where the price was read. Props only.
-import type { WalletView } from '../lib/wallet-view.ts';
+import { type WalletView, walletWords } from '../lib/wallet-view.ts';
 import { Mono } from './ui/Mono.tsx';
 import { SourceLink } from './ui/SourceLink.tsx';
 
@@ -23,6 +23,20 @@ export function WalletFacts({ view }: { view: WalletView }) {
           </div>
         ))}
       </dl>
+      {view.differs && view.differs.length > 0 && (
+        // where authors stated different values: each shown with who stated it, none erased (wave 8)
+        <div className="flex flex-col gap-space-4">
+          <Mono as="span" tone="muted">
+            {walletWords.differ}
+          </Mono>
+          {view.differs.map((d) => (
+            <p key={d.what} className="my-0 type-ui">
+              <span className="text-muted">{d.what} </span>
+              {d.values.map((v) => walletWords.value(v.value, v.by)).join(' · ')}
+            </p>
+          ))}
+        </div>
+      )}
       {view.worth && (
         <p className="my-0 type-ui">
           {view.worth.text}
