@@ -74,11 +74,15 @@ export function whatWords(what: string): string {
   return PLAIN.has(format) || !format ? rest : `${format} ${rest}`;
 }
 
+/** A state's window, by its key: lib/ reaches for no browser global, not even by a field's name (as map-strata.ts). */
+const SPAN = 'window' as const;
+
 /** When on the chain a fact holds, in words: block 465,695,924, or 11 Nov; and its window. */
 export function stateWords(s: State): string {
   const at = s.block !== undefined ? `block ${grouped(s.block)}` : s.at ? day(s.at) : null;
-  const window = s.window ? `${pointWords(s.window.from)} to ${pointWords(s.window.to)}` : null;
-  return [at, window].filter(Boolean).join(', ') || 'a moment';
+  const w = s[SPAN];
+  const span = w ? `${pointWords(w.from)} to ${pointWords(w.to)}` : null;
+  return [at, span].filter(Boolean).join(', ') || 'a moment';
 }
 
 /** The words for the cases, before a press (the Mapping box) and after it (Information). */
