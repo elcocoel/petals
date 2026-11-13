@@ -134,7 +134,7 @@ export function Lobby({
             <SectionName name={lobbyWords.page} />
             {profile.account && (
               <AccountMenu
-                name={named?.name ?? shortId(profile.account)}
+                name={shortId(profile.account)}
                 full={profile.account}
                 avatar={named?.avatar ?? null}
                 open={menu.open}

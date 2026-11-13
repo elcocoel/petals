@@ -1,8 +1,10 @@
-// The account menu, at the lobby's top right, where well-made apps keep it: the person's picture and name on a
-// button, which opens a short list under it: the way to the profile's editor, and Disconnect, the one way out
-// of the account. It holds no state: whether it's open is its ViewModel's, and the list (ui/Menu) says when
+// The account menu, at the lobby's top right, where well-made apps keep it: the connected account as the
+// site's Connect button shows it once someone is connected (the green done look, the account shortened the
+// same way, components/ui/ConnectButton.tsx), with the person's own picture from their profile. It opens a
+// short list under it: the way to the profile's editor, and Disconnect, the one way out of the account. It holds no state: whether it's open is its ViewModel's, and the list (ui/Menu) says when
 // to close. Props only: viewmodels/useLobby.ts holds it. Words from lib/lobby-view.ts.
 import { lobbyWords } from '../../lib/lobby-view.ts';
+import { Button } from '../ui/Button.tsx';
 import { Icon } from '../ui/Icon.tsx';
 import { Menu, type MenuItem } from '../ui/Menu.tsx';
 
@@ -16,7 +18,7 @@ export function AccountMenu({
   onEdit,
   onLeave,
 }: {
-  /** What the button says: the profile's name, or the account, shortened. */
+  /** What the button says: the account, shortened as the Connect button shortens it. */
   name: string;
   /** The whole account, for its title. */
   full: string;
@@ -37,14 +39,12 @@ export function AccountMenu({
   ];
   return (
     <div className="relative">
-      <button
-        type="button"
+      <Button
+        variant="done"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={lobbyWords.account}
-        title={full}
         onClick={onToggle}
-        className="flex h-control-height items-center gap-space-8 border border-hairline bg-transparent px-space-8 text-primary hover:border-primary"
       >
         {avatar ? (
           // biome-ignore lint/performance/noImgElement: a picture the account chose, from its own storage
@@ -56,11 +56,13 @@ export function AccountMenu({
         ) : (
           <Icon name="profile" />
         )}
-        <span className="max-w-tile-width truncate type-ui">{name}</span>
+        <span title={full} className="max-w-tile-width truncate">
+          {name}
+        </span>
         <span className={`flex ${open ? 'rotate-180' : ''}`}>
           <Icon name="down" small />
         </span>
-      </button>
+      </Button>
       {open && <Menu label={lobbyWords.account} items={items} onClose={onClose} />}
     </div>
   );
