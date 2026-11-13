@@ -46,10 +46,12 @@ export default async function Docs({ params }: Props) {
             <Icon name="chevron" small />
             <span>{section?.title}</span>
           </div>
-          <div className={styles.kindLabel}>
-            <Icon name={page.kind === 'guide' ? 'petals' : 'project'} small />
-            <span>{page.kind === 'guide' ? 'Guide' : 'System reference'}</span>
-          </div>
+          {page.kind === 'reference' && (
+            <div className={styles.kindLabel}>
+              <Icon name="project" small />
+              <span>System reference</span>
+            </div>
+          )}
           <h1 className="type-heading">{page.title}</h1>
           {page.kind === 'reference' && (
             <div className={styles.provenance}>
@@ -98,10 +100,12 @@ export default async function Docs({ params }: Props) {
                 pages.filter((p) => p.section === page.section && !p.overview && p.kind === kind),
               ).map((group) => (
                 <section key={`${kind}:${group.department ?? ''}`} data-kind={kind}>
-                  <h2>
-                    <Icon name={kind === 'guide' ? 'petals' : 'project'} small />
-                    {group.title ?? (kind === 'guide' ? 'Guides' : 'System reference')}
-                  </h2>
+                  {(kind === 'reference' || group.title) && (
+                    <h2>
+                      {kind === 'reference' && <Icon name="project" small />}
+                      {group.title ?? 'System reference'}
+                    </h2>
+                  )}
                   {group.pages.map((p) => (
                     <a href={`/docs/${p.slug}`} key={p.slug}>
                       <span>{p.hub ? 'Overview' : p.title}</span>

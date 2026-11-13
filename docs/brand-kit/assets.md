@@ -8,7 +8,7 @@ order: 10
 
 The word Petals in Bitcount Grid Single: three layers of live text at one origin.
 
-{slot}
+![The Petals wordmark](../assets/wordmark.png)
 
 ## Illustrations
 
@@ -44,7 +44,7 @@ The word Petals in Bitcount Grid Single: three layers of live text at one origin
 
 ### Skip the Reading
 
-![Petals’ agent leading two agents by the hand](/landing/give-to-agent/petals-leading-agents.webp)
+![Petals’ agent leading two agents by the hand](/landing/give-to-agent/petals-leading-agents-clear.webp)
 
 **Skip the Reading.** Let your agent set you up.
 
