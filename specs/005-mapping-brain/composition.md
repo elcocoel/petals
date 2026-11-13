@@ -57,7 +57,7 @@ Publishing is the step `data.md` left open: **an author signs one of their versi
 |---|---|
 | `petal` | `publication/v1` |
 | `about` | the map's address, `chain:address` |
-| `author` | the signing account, CAIP-10: `near:mainnet:alice.near`, `eip155:1:0x…` (one for every EVM chain), `solana:5eykt…:<base58>` |
+| `author` | the signing account, CAIP-10: a NEAR account, `near:mainnet:alice.near`, the profile (section 2c). A publication signed before change 3 may name an Ethereum or Solana wallet: `eip155:1:0x…` (one for every EVM chain), `solana:5eykt…:<base58>` |
 | `via` | who did the work on the author's behalf, as the author says it: `{ kind: 'agent', name, model? }`, or null. It is recorded, never credited in the author's place |
 | `layers` | the version's layers: `{ sha256, petal }` each |
 | `parent` | the publication this version came from: the author's own previous one, or another author's when it's a fork. Null for a first |
@@ -77,7 +77,7 @@ NEAR signs it with NEP-413 (`recipient` this site, a fresh 32-byte `nonce`), as 
 - **Order is the record's, never the author's.** The server appends each publication with its own sequence number and time (`seq`, `appended_at`), kept beside the signed body. Every "first", "earlier" and "before" in this spec is by `seq`. Nobody can set it or backdate it.
 - **A published version names only what's public.** Its layers, every hash in their `from`, and its `parent` must be published already, or published in this same version. The credit chain never points into the dark.
 - **Withdrawing is a new version without the layer.** An author's **latest** publication about a map is what they contribute to it now, as `data.md` says. Their earlier publications stay in the record with their times, so credit is never lost.
-- **Who the author is.** The author is the wallet that signed, never Petals' internal person id. A person with several bound wallets (`me/wallets`) chooses which one signs. Anyone can check the signature against the account.
+- **Who the author is.** The author is the NEAR account that signed: the profile, never Petals' internal person id. A person's Ethereum and Solana wallets are proven links to it (section 2c), credited through it. Anyone can check the signature against the account.
 - **Petals' own mapping** publishes the same way: an author like any other.
 - **Presses signed before this protocol keep their signatures.** The first 35 RaidGuild names (12 Nov, 22:07 UTC) were signed with NEP-413 by their wallet. They enter the record as that author's publication, with that proof, whose message names the hash of what it signed. They are never folded into the import.
 - **What was loaded before this protocol** entered the record once per map, as an import (from now on bulk data goes through a press, section 2b). That covers the mapping runs' readings, values, proposals, marks, vesting and payouts under `mapping.petals.near`. The import's `author` is `mapping.petals.near` and its `proof` is null, said plainly as "imported, unsigned". It is never presented as signed. When a later read replaces one of those rows (a new value, new proposals, a reading retired), the import run after it appends Petals' next version of that map, its `parent` and `previous` the last: the composed map follows what Petals holds now, and the record keeps what it held before. A map whose rows haven't changed is left.
@@ -117,6 +117,43 @@ It is signed as section 2 says: NEP-413 for NEAR, EIP-191 for EVM, ed25519 for S
 **How credit counts.** As for any publication. Each is credited by its own `seq`, so firsts follow the manifest's order inside the press. A manifest is not a unit of data: it adds no facts and earns nothing. One press over many maps counts exactly as many presses would.
 
 **A bulk import is a press like any other.** Data loaded in bulk (a mapping run's readings, values, proposals, marks, vesting and payouts) enters the record through prepare and publish, under the author who signs it, with no special path. Petals' own base data is published this way by `near:mainnet:petals.near`, in one press. That press signs one version for each map: the next version after that map's imported entry, with `parent` and `previous` set to it. The bare label `mapping.petals.near` on the imported entries and `near:mainnet:petals.near` are one author, Petals'. From then on, the latest version of every map is signed, and the imported entries stay in the record as they are.
+
+## 2c. The author is a NEAR profile; other wallets are proven links (`link/v1`; change 3, to section 2)
+
+A person's profile has one master key: its NEAR account. Every publication from change 3 on is signed by a NEAR account, and that account is its `author`; a manifest's too (section 2b). An Ethereum or Solana wallet joins the profile the way a social account does: it proves once, with its own signature, that it belongs to the profile. Its work is then credited to the profile through that link, and it pays through NEAR Intents. A new profile starts with NEAR; a linked wallet signs in to its profile, and one linked to none is refused.
+
+**The link** is a document of its own, kept once by its hash:
+
+| Field | What it holds |
+|---|---|
+| `petal` | `link/v1` |
+| `profile` | the NEAR account, CAIP-10: `near:mainnet:alice.near` |
+| `wallet` | the linked wallet, CAIP-10: `eip155:1:0x…` (one for every EVM chain), `solana:5eykt…:<base58>` |
+| `linked_at` | when the server prepared the link |
+| `proof` | the wallet's signature, as its chain signs (EIP-191 for EVM, ed25519 for Solana), over the text below |
+
+**What the wallet signs** is one readable text that names the link's hash without its `proof`:
+
+```
+Petals: 0x12…ab belongs to alice.near.
+Link 5d0e…(64 hex)
+```
+
+(The wallet's whole address, as its chain writes it, where this shows its ends.)
+
+**Public, and checked from both sides.** A link works in Petals as soon as the wallet signs it (signing in, paying). It goes public with the profile's next press: it travels as a layer of the profile's own publication about its own account (`about` is the NEAR account), so the profile's NEAR signature covers it, and it costs no second prompt. Anyone checks a link in two steps: the wallet's signature over its text, for that wallet; and the NEAR-signed publication that carries it, for that profile. A link only one side has signed credits nothing.
+
+**How the map and credit read links.**
+- **On the map,** each signing account's line stands as published: nothing is hidden or merged. A line signed by a wallet with a public link is shown as the profile's, through that wallet ("alice.near, via 0x12…ab").
+- **In credit,** a profile and its publicly linked wallets are one author: a fact counts once for the profile, under the first of their publications that stated it, and a profile never confirms, builds on or reuses its own linked wallets' work.
+
+**Publications signed by an Ethereum or Solana wallet before change 3** stay in the record as they are, valid, signed by that wallet, with their place and time; nothing is rewritten. Once that wallet's link to a profile is public, they read as the profile's, as above; until then the wallet is its own author, as before.
+
+**What changes, in order:**
+1. Core: `link/v1`, its schema, fixture and pin; its text and check beside `signedText`; compose and credit read published links as above.
+2. Prepare (sections 2b and 9) takes a NEAR `author` only, and refuses an Ethereum or Solana wallet: "Publish with your NEAR account; your linked wallets' work is credited to it."
+3. Linking (`POST /api/v1/me/wallets`) keeps the link with its signature; the next press carries the profile's unpublished links. The sign-in rule is built (a new profile starts with NEAR).
+4. `GET /api/v1/profiles/:account` and the map's authors name each public link.
 
 ## 3. What a layer says: facts
 
@@ -236,7 +273,7 @@ A format not in this table can be published as a layer, but it gives no facts un
 
 - **Before a press: `GET /api/v1/publish/data?map=`.** Each layer the press would publish: `{ sha256, petal, title, cases }`, where `cases` is `{ new_data: { whats }, new_moment: { states: [{ what, state, newest }] }, new_subjects: { count }, match: { count, authors }, differs: { count, authors } }`. `authors` are `[{ author, name }]`, the ones already credited. A state is `{ chain?, block?, at?, window? }`; `newest` is null when the map has none. `totals` has the same `cases`, summed for the whole publication. The layers are what this press adds: the readings the person drew, the claims that can go, and the documents they kept (values, proposals, marks, readings, vesting, payouts, layers), less what their latest version holds already. A layer built on one that isn't published stays back, in `adds` with why.
 - **Prepare: `POST /api/v1/publish/data/prepare { map, author }`** (built 13 Nov; `via` waits).
-  - `author` is one of the signed-in person's wallets, as `GET /api/v1/me`'s `wallets[].author` names it (CAIP-10). Any other is refused.
+  - `author` is the signed-in person's NEAR account, as `GET /api/v1/me`'s `wallets[].author` names it (CAIP-10). Any other is refused, an Ethereum or Solana wallet too (section 2c).
   - It answers `{ publication, sha256, text, recipient?, nonce? }`: the unsigned `publication/v1`, the hash of its canonical JSON without `proof`, and the text the wallet signs (section 2). For a NEAR author, `recipient` is this site's hostname and `nonce` a fresh 32-byte base64, for NEP-413.
   - The version's `layers` are the author's latest version's and what this press adds; its `parent` and `previous` are the author's latest publication about the map; `published_at` is the server's time.
 - **Publish: `POST /api/v1/publish/data { sha256, proof }`.**
