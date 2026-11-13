@@ -1,8 +1,7 @@
-// The person's profile (Elco, 9 and 10 Nov: "hold the same data shape as near.social in our DB ... and have
-// a publish button"): the wallet this session signed in with, and the profile the page shows: Petals' own
-// copy (GET /api/v1/me/profile), or, before Petals keeps one, the account's NEAR Social profile, which the
-// editor then starts from; or none anywhere; or that it couldn't be read. Read when the page opens and
-// again after the person saves. There is no timer. lib/agent-client.ts reads, lib/near-social.ts shapes,
+// The person's profile (in the same data shape as NEAR Social, with a publish button): the wallet this
+// session signed in with, and the profile the page shows: Petals' own copy (GET /api/v1/me/profile), or,
+// before Petals keeps one, the account's NEAR Social profile, which the editor then starts from; or none
+// anywhere; or that it couldn't be read. Read when the page opens and again after the person saves. There is no timer. lib/agent-client.ts reads, lib/near-social.ts shapes,
 // and lib/lobby-view.ts holds the words and the states.
 import { useCallback, useEffect, useState } from 'react';
 import { readMyProfile, readSignedIn, readSocialProfile } from '../lib/agent-client.ts';

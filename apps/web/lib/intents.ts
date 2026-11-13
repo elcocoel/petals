@@ -1,8 +1,8 @@
-// Paying with any token, from any chain, through NEAR Intents (Elco, 10 Nov: "let users pay with anything
-// from anywhere"). SYSTEMS's GET /api/v1/pay/tokens lists what 1Click swaps; POST /api/v1/pay/intents gives
-// a deposit address and the exact amount to send; GET /api/v1/pay/intents/:deposit says where it stands,
-// and at SUCCESS the dollars are on the person's credit. One plain transfer from whatever wallet they have,
-// on any computer. Pure: what's offered, how it's named, and the words. The words are drafts.
+// Paying with any token, from any chain, through NEAR Intents. The server's GET /api/v1/pay/tokens lists what
+// 1Click swaps; POST /api/v1/pay/intents gives a deposit address and the exact amount to send; GET
+// /api/v1/pay/intents/:deposit says where it stands, and at SUCCESS the dollars are on the person's credit.
+// One plain transfer from whatever wallet they have, on any computer. Pure: what's offered, how it's named,
+// and the words.
 
 /** A token a person can pay with, as GET /api/v1/pay/tokens lists it. */
 export interface PayToken {
@@ -81,7 +81,7 @@ export interface TokenChoice {
 }
 
 /**
- * What most people hold, first, so the list doesn't open on two hundred tokens (#78, 11 Nov): the dollar
+ * What most people hold, first, so the list doesn't open on two hundred tokens: the dollar
  * stablecoins on the biggest chains, and each big coin on its own chain. A symbol and a chain, in this order.
  */
 export const COMMON: readonly (readonly [symbol: string, chain: string])[] = [
@@ -143,7 +143,6 @@ export function untilWords(deadline: string | undefined): string | null {
   return at.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 }
 
-/** Drafts (Elco changes them later). */
 export const intentWords = {
   other: 'Pay with another token',
   token: 'Token',

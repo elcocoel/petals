@@ -1,6 +1,6 @@
-// node apps/web/scripts/lab-petal-data.ts: the petal look bench's one flower of its own (#76, /lab/petal). RaidGuild's
-// RG delegates on Gnosis at block 49,181,976 (9 Nov 2026), the flower Elco's art direction was drawn on
-// (design/flower-art-direction/raidguild-render-record.json): its snapshot, taken from the live site by its hash and
+// node apps/web/scripts/lab-petal-data.ts: the petal look bench's one flower of its own (/lab/petal). RaidGuild's
+// RG delegates on Gnosis at block 49,181,976 (9 Nov 2026), the flower the petal look was drawn on:
+// its snapshot, taken from the live site by its hash and
 // checked, and the spec the site proposes for it. Written to fixtures/lab/, outside the store's lookup path, so the
 // relations index and every other reader of fixtures/snapshots stay as they are. Read-only on the site; files
 // already there are left alone.

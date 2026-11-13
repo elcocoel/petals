@@ -1,4 +1,4 @@
-// Mapping something new is a ceremony (Elco, 12 Nov): the card for a held read, and the composer's state.
+// Mapping something new is a ceremony: the card for a held read, and the composer's state.
 import { describe, expect, test } from 'vitest';
 import { ceremonyView, ceremonyWords, creating, making, turnShow } from '../lib/ceremony.ts';
 import { fold, type Item } from '../lib/thread.ts';
@@ -71,7 +71,7 @@ describe("the composer's state", () => {
     const base = { question: '', runId: 'r', busy: true, recorded: false };
     expect(composerView({ ...base, creating: true }).state).toBe(ceremonyWords.creating);
     expect(composerView({ ...base, creating: false }).state).toBeUndefined();
-    // the two states, switchable, the one the person is in pressed (wave 3)
+    // the two states, switchable, the one the person is in pressed
     expect(composerView({ ...base, mode: 'mapping' }).modes).toMatchObject({
       now: 'mapping',
       exploring: 'Exploring',

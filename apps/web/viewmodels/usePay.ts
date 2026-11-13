@@ -1,10 +1,10 @@
-// Paying for Petals' agent (B): the one payment, which the wallet sends and the server checks on chain, to
+// Paying for Petals' agent: the one payment, which the wallet sends and the server checks on chain, to
 // where GET /api/v1/pay says. That's read once, with the one balance (useFunds, in the layout), and handed in
 // as `where`; `paid` reads both again once a payment lands. lib/pay.ts holds the arithmetic and the words.
-// The person sets how many dollars (about $1 to start, Elco's mainnet test), and a transfer the wallet sent is
-// kept until the server confirms it, so pressing again never sends a second one (wave 5). The NEAR comes from
-// one of the person's own wallets: signed in with Ethereum or Solana, the NEAR wallet is bound first, with one
-// signature and nothing spent, so the server never refuses a transfer that has already gone (flow 3, 13 Nov).
+// The person sets how many dollars (about $1 to start), and a transfer the wallet sent is kept until the
+// server confirms it, so pressing again never sends a second one. The NEAR comes from one of the person's own
+// wallets: signed in with Ethereum or Solana, the NEAR wallet is bound first, with one signature and nothing
+// spent, so the server never refuses a transfer that has already gone.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addMyWallet, confirmPay, readWallets, sessionClient } from '../lib/agent-client.ts';
 import {
@@ -55,7 +55,7 @@ export interface PayFrom {
 }
 
 /**
- * Makes sure a payment's NEAR comes from one of this person's wallets before any leaves (flow 3, 13 Nov): the
+ * Makes sure a payment's NEAR comes from one of this person's wallets before any leaves: the
  * server credits only a transfer from a wallet bound to the person (POST /api/v1/pay), and signed in with
  * Ethereum or Solana, the connected NEAR wallet is bound to no one yet. `account` is the one that has to be
  * theirs, a transfer already out; else it's the connected wallet's. False when the person closed the wallet.

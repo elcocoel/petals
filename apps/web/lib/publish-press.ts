@@ -1,9 +1,8 @@
-// Publishing what a person mapped, with one press (Elco, 12 Nov: "let's try to get our information published";
-// 13 Nov, wave 8: "it's the heart of the promise of the protocol (collective mapping)"). The press publishes one
-// signed version of the layers the Mapping box lists (SYSTEMS's publication/v1, specs/005-mapping-brain/
+// Publishing what a person mapped, with one press: the heart of collective mapping. The press publishes one
+// signed version of the layers the Mapping box lists (publication/v1, specs/005-mapping-brain/
 // composition.md §2): the wallet the person chose signs two readable lines once, no transaction, nothing spent,
 // and the layers join the shared map in that wallet's name, credited per fact. The names that go are listed
-// first, each with its source (Elco: "Let me look first"); the rest stay private, each saying why. Words are drafts.
+// first, each with its source, to look at before the press; the rest stay private, each saying why.
 import type { PublishableData, PublishSource } from './agent-client.ts';
 import { shortId } from './flower-view.ts';
 import { type ProvenWallet, walletRows } from './profile-view.ts';
@@ -19,7 +18,7 @@ export const publishWords = {
   failed: 'That didn’t publish. Try again.',
   otherWallet: 'Sign with the wallet you chose.',
   why: 'Why some stay private',
-  /** the names, read before the press (Elco: "Let me look first") */
+  /** the names, read before the press */
   goes: 'Names and notes that go',
   stays: 'Stays private',
   source: (s: PublishSource) => {

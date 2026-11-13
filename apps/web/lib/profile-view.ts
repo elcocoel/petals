@@ -1,8 +1,7 @@
-// The profile page (#79; Elco, 9 Nov: "a profile area where people gain credibility as investigators and
-// researchers"; 11 Nov: "our profile page needs work"; META, 11 Nov: build LOBBY's lean, the investigator's
+// The profile page, where people gain credibility as investigators and researchers (the investigator's
 // card): the person and what backs them. The wallets they proved by signing in, the claims they and their
 // agents have kept about accounts, by how each is known, and their conversations. Pure: the words and the
-// arithmetic are here, and the views only lay them out. LOBBY's drafts, listed in design/journey-strings.md.
+// arithmetic are here, and the views only lay them out.
 import { type AnnotationRow, type ClaimLine, claimLines } from './claim-lines.ts';
 import { shortWhen } from './conversation-list.ts';
 import { chainLabel, dateLabel, shortId } from './flower-view.ts';
@@ -16,9 +15,9 @@ export const profilePageWords = {
   /** Under a wallet: when it signed. */
   provedOn: (date: string) => `Signed in on ${date}`,
   walletsNote: 'Each one signed a message with its own key, so it’s proven yours.',
-  /** The Wallets widget's one action (Elco, 11 Nov: "have the wallets one allow me to add more wallets"). */
+  /** The Wallets widget's one action: adding more wallets. */
   addWallet: 'Add a wallet',
-  /** The two ways to add one (wave 5; buttons say Connect; WORKSPACE's door says the same). */
+  /** The two ways to add one (buttons say Connect; /make's door says the same). */
   connectNear: 'Connect a NEAR wallet',
   connectEvm: 'Connect an Ethereum wallet',
   connectSolana: 'Connect a Solana wallet',
@@ -35,7 +34,7 @@ export const profilePageWords = {
   reading: 'Reading…',
 } as const;
 
-/** Which wallet to add: NEAR, an EVM one, or a Solana one (wave 5). */
+/** Which wallet to add: NEAR, an EVM one, or a Solana one. */
 export type WalletKind = 'near' | 'evm' | 'solana';
 
 /** Where adding a wallet is: offered, waiting for the wallet, or it didn't go through and why. */
@@ -49,7 +48,7 @@ export interface ProvenWallet {
   network: string;
   account_id: string;
   proved_at: string;
-  /** the wallet in CAIP-10, as a publication names its author (SYSTEMS, wave 8) */
+  /** the wallet in CAIP-10, as a publication names its author */
   author?: string;
 }
 
@@ -130,9 +129,9 @@ export function claimsView(rows: readonly AnnotationRow[]): ClaimsView {
 }
 
 /**
- * The Balance widget's usage (Elco, 11 Nov: "turn the balance widget into like a full-blown professional
- * usages widget"): every model call charged to the person (usage/v1, GET /api/v1/me/usage), newest first,
- * with its tokens, what it cost, and whether NEAR AI's own bill has confirmed it. LOBBY's drafts.
+ * The Balance widget's usage, a full usage widget: every model call charged to the person (usage/v1,
+ * GET /api/v1/me/usage), newest first,
+ * with its tokens, what it cost, and whether NEAR AI's own bill has confirmed it.
  */
 export const usageWords = {
   title: 'Usage',

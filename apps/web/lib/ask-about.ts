@@ -6,7 +6,7 @@ export type About =
   | { kind: 'account'; id: string; network: string; asOf: string }
   | { kind: 'group'; label: string; count?: number; network: string; asOf: string }
   | { kind: 'flower'; id: string; title: string; network: string; asOf: string }
-  /** a wallet chosen on the Power Map (LOOK's wallet level), by its account, in the flower it was chosen in */
+  /** a wallet chosen on the Power Map (its wallet level), by its account, in the flower it was chosen in */
   | { kind: 'mapWallet'; id: string; flower: string };
 
 const plain = (s: string) => s.replace(/[[\]]/g, '');
@@ -34,7 +34,7 @@ export function aboutLabel(line: string): string {
   const inner = line.replace(/^\[|\]$/g, '');
   const title = /^About flower [^,]+, "([^"]*)"/.exec(inner)?.[1];
   if (title) return `About “${title}”`;
-  // the model reads the whole id; a person reads it short (#78: 'About account eip155:1:0x…')
+  // the model reads the whole id; a person reads it short ('About account eip155:1:0x…')
   const account = /^About account ([^,]+)/.exec(inner)?.[1];
   return account ? `About account ${shortId(account)}` : (inner.split(',')[0] as string);
 }

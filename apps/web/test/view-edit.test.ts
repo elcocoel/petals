@@ -31,7 +31,7 @@ describe('a choice in Settings', () => {
     const amount = withData(DEFAULT_VIEW, 'height', 'amount', EVERY_FLOWER, DEFAULT_VIEW);
     expect(scaleOf(amount, 'height', EVERY_FLOWER)).toBe('linear');
     expect(takesScale(DEFAULT_VIEW, 'colour', EVERY_FLOWER)).toBe(false);
-    // the default has every petal as wide since 11 Nov; the one before had width, so it shows the scale kept
+    // the default has every petal as wide; the one before had width, so it shows the scale kept
     expect(takesScale(DEFAULT_VIEW, 'width', EVERY_FLOWER)).toBe(false);
     expect(takesScale(DEFAULT_VIEW_V2_0, 'width', EVERY_FLOWER)).toBe(true);
     expect(
@@ -67,7 +67,7 @@ describe('a choice in Settings', () => {
   });
 });
 
-describe('what Tools offers where you are (wave 3: every offered choice draws)', () => {
+describe('what Tools offers where you are (every offered choice draws)', () => {
   const choices = viewChoices();
   test('who backs a wallet, and its activity, only where a flower here has them', () => {
     const ref = onlyWhatDraws(choices, [

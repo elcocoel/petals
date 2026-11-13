@@ -1,5 +1,5 @@
-// Gravity (Elco, 12 Nov walk: "we're unnecessarily hyper clustering ... gravity so how much things attract each
-// other so we can give more space between them"): places stay addresses; gravity only spreads a chain's flowers
+// Gravity (how much things attract each other, so flowers don't cluster too tightly and get more space between
+// them): places stay addresses; gravity only spreads a chain's flowers
 // about its middle, each along its own line.
 import { expect, test } from 'vitest';
 import { GRAVITY_DEFAULT, spreadOf, spreadPlace } from '../landscape/places.ts';

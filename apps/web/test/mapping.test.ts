@@ -1,5 +1,5 @@
-// /make's two states (Elco, 12 Nov): what mapping says the person would add to the map in front. Wave 8 (13 Nov):
-// each layer says what it adds to that map, by the cases of SYSTEMS's composition (composition.md §5).
+// /make's two states: what mapping says the person would add to the map in front. Each layer says what it
+// adds to that map, by the cases of the server's composition (composition.md §5).
 import { describe, expect, test } from 'vitest';
 import type { PublishableData } from '../lib/agent-client.ts';
 import {

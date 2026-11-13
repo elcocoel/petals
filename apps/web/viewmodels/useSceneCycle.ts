@@ -1,6 +1,5 @@
-// How it works' row of scenes (Elco, 10 Nov: "automated cycling on a loop and the focused card could be
-// highlighted"). One scene is in focus at a time, and the row slides so it's in the middle. Under version 2 a line
-// fills under it (box.cycle, app/versions/v2.css) and, once it's full, the focus moves on to the next,
+// How it works' row of scenes, cycling on a loop with the focused card highlighted. One scene is in focus at a
+// time, and the row slides so it's in the middle. Under version 2 a line fills under it (box.cycle, app/versions/v2.css) and, once it's full, the focus moves on to the next,
 // round and round. Without that line (version 1, reduced motion) nothing moves by itself.
 // A hand on the row holds it: the pointer over it, the keyboard in it, the row out of sight or the tab
 // hidden. The ticks and the arrows move the focus in every version; a finger or a trackpad moves the row,

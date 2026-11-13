@@ -1,11 +1,10 @@
 // The list of a person's conversations as they read it in the side panel. Pure, so a row's words and
-// where it goes are decided here and the view only lays them out. A row is one line (Elco, 10 Nov: "I
-// can't tell what they are by the naming"): its title, who it's with as an icon, and when it last moved,
-// short, as Orca and the other tools say it.
+// where it goes are decided here and the view only lays them out. A row is one line, so each reads for what
+// it is: its title, who it's with as an icon, and when it last moved, short, as other agent tools say it.
 import { readAbout } from './ask-about.ts';
 import { MONTHS } from './flower-view.ts';
 
-/** What the list needs from GET /api/v1/conversations (design/workspace-data.md). */
+/** What the list needs from GET /api/v1/conversations. */
 export interface ListedConversation {
   id: string;
   /** null: work from another door, with no run here */
@@ -109,8 +108,8 @@ export interface ProjectRow {
 
 /**
  * The panel's two lists: the person's projects, each holding its conversations, in the person's order,
- * and the conversations in none. A project is one level (Elco, 9 Nov: "group conversations under an
- * umbrella"), so a folder the server holds inside another counts as the one at the top.
+ * and the conversations in none. A project is one level, an umbrella over conversations, so a folder the
+ * server holds inside another counts as the one at the top.
  */
 export function byProject(
   rows: readonly ConversationRow[],

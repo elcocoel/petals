@@ -38,13 +38,13 @@ export type Item =
   /** a stored flower was opened here: what it was asked and what it found */
   | StoredItem
   | { kind: 'error'; code: string; message: string; hint?: string }
-  /** A job Petals' agent handed to the person's own agent (C), as the run said it. */
+  /** A job Petals' agent handed to the person's own agent, as the run said it. */
   | { kind: 'job'; job: JobEvent }
   /** A new map waiting for the person's yes (lib/ceremony.ts) */
   | { kind: 'ceremony'; held: Held }
-  /** what the answer is about on the Power Map: the map moves to it, nothing is said (SYSTEMS, 12 Nov) */
+  /** what the answer is about on the Power Map: the map moves to it, nothing is said */
   | { kind: 'show'; show: MapShow }
-  /** the next steps on a map just read, each a message to send (SYSTEMS, 12 Nov) */
+  /** the next steps on a map just read, each a message to send */
   | { kind: 'next'; next: NextSteps }
   | { kind: 'done'; done: Done; signature: ModelSignature | null };
 
@@ -58,12 +58,12 @@ export interface StoredItem {
 }
 
 /**
- * Petals' agent names the conversation with this tool, beside its answer (SYSTEMS, 10 Nov). The name
- * shows in the list, so the call isn't a step here (META's lean).
+ * Petals' agent names the conversation with this tool, beside its answer. The name
+ * shows in the list, so the call isn't a step here.
  */
 const NAMING_TOOL = 'name_conversation';
 
-/** How a turn Petals' agent starts on its own begins (SYSTEMS, C): a report it takes up at once. */
+/** How a turn Petals' agent starts on its own begins: a report it takes up at once. */
 export const FROM_PETALS = '(Petals)';
 
 /** One event into the list. `run` and heartbeats add nothing to read. */
@@ -146,7 +146,7 @@ export function threadFromRun(run: Pick<Run, 'messages' | 'events'>): Item[] {
           items = [...items, { kind: 'message', text: m.content }];
         } else {
           if (questionsLeft() <= chatsAfter) break;
-          // a turn Petals started itself, on a report (C), says so; the person didn't write it
+          // a turn Petals started itself, on a report, says so; the person didn't write it
           items = [
             ...items,
             m.content.startsWith(FROM_PETALS)

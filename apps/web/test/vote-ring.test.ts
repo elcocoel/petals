@@ -1,4 +1,4 @@
-// The vote ring on the product's flowers (#93): a map's proposals over its last 90 days, in the question's own
+// The vote ring on the product's flowers: a map's proposals over its last 90 days, in the question's own
 // colours, on every flower page whose map has any (lib/vote-ring.ts, viewmodels/useMapVotes.ts).
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -64,7 +64,7 @@ describe("a map's ring", () => {
   });
 });
 
-test('one look: every flower has round tops, with a vote ring or without (Elco, 12 Nov walk: no fork)', () => {
+test('one look: every flower has round tops, with a vote ring or without (no fork)', () => {
   expect(text('flower/scene.ts')).toMatch(
     /given \?\? \{ \.\.\.lookFills\(m\.petals\), highlight: \[\], roundTops: true \}/,
   );

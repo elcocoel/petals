@@ -1,11 +1,9 @@
-// The person's own agents, connected to their whole account with one prompt (Elco, 9 Nov, the first full
-// test: coordinator/agent-house-test.md). Each waits for its next job and is shown as waiting while it does.
-// GET /api/v1/agents lists them (SYSTEMS); each copy of the prompt carries a new agent link of its own,
-// and older ones keep working until revoked. Pure. The words are drafts (Elco, 9 Nov: "Ship the drafts,
-// I'll change them later").
+// The person's own agents, connected to their whole account with one prompt. Each waits for its next job
+// and is shown as waiting while it does. GET /api/v1/agents lists them; each copy of the prompt carries a
+// new agent link of its own, and older ones keep working until revoked. Pure.
 
 /**
- * An agent's worker as GET /api/v1/agents lists it (swarm step 1, 10 Nov: one entry per worker): the name
+ * An agent's worker as GET /api/v1/agents lists it (one entry per worker): the name
  * the agent called itself, and the worker's place among its kind, 1 for the first.
  */
 export interface ConnectedAgent {
@@ -21,7 +19,7 @@ export interface ConnectedAgent {
   job: { id: string; title: string; exploration?: string } | null;
 }
 
-/** The agents people know, by the names they join with (CONNECTORS's `--as`). */
+/** The agents people know, by the names they join with (the connector's `--as`). */
 const KNOWN: Record<string, string> = {
   'claude-code': 'Claude Code',
   claude: 'Claude Code',
@@ -34,7 +32,7 @@ const KNOWN: Record<string, string> = {
 };
 
 /**
- * An agent's name as a person reads it (design/minimally-good.md, rule 5: claude-code is Claude Code): a
+ * An agent's name as a person reads it (claude-code is Claude Code): a
  * known one by its own name, any other with its hyphens as spaces and capitals, as given otherwise.
  */
 export function readableAgent(name: string): string {
@@ -69,13 +67,13 @@ export interface AgentRow {
 export const workerName = (name: string, n?: number | null) =>
   n && n > 1 ? `${readableAgent(name)} ${n}` : readableAgent(name);
 
-/** Where Connect an agent was pressed, so its Copied shows there alone (design/side-panel.md, line 45). */
+/** Where Connect an agent was pressed, so its Copied shows there alone. */
 export type CopiedAt = 'top';
 
 const BUSIEST: readonly AgentRow['state'][] = ['busy', 'waiting', 'away'];
 
 /**
- * What the panel's top says of the agents (design/side-panel.md, line 46): each agent once, however many
+ * What the panel's top says of the agents: each agent once, however many
  * workers it has, and the busiest of them; null with none connected.
  */
 export function agentsAtTop(
@@ -103,36 +101,31 @@ export function agentRows(agents: readonly ConnectedAgent[]): AgentRow[] {
   }));
 }
 
-/** Drafts. */
 export const agentWords = {
   waiting: 'Waiting for a job',
   away: 'Not connected now',
   on: (title: string) => `On: ${title}`,
-  /** The panel's top, with more than one agent connected (design/side-panel.md, line 46). */
+  /** The panel's top, with more than one agent connected. */
   several: (n: number) => `${n} agents`,
-  /**
-   * The one prompt's button, the same at the panel's top and in Your agents (Elco, 11 Nov:
-   * "connect an agent or connect more AIs or connect another AI"; a draft of the first).
-   */
+  /** The one prompt's button, the same at the panel's top and in Your agents. */
   copy: 'Connect an agent',
   copied: 'Copied. Paste it into each agent.',
-  /** CONNECTORS's line, 9 Nov, routing a cloud chat to the connector since 10 Nov; `site` is this site's address and `key` a fresh agent link's token. */
+  /** The prompt to paste, routing a cloud chat to the connector; `site` is this site's address and `key` a fresh agent link's token. */
   prompt: (site: string, key: string) =>
     `Be one of my agents in Petals. If you run on my computer, read ${site}/skill.md and set yourself up, then join with my agent key and wait for my jobs, as its Jobs section says. If you're the Claude app's chat or ChatGPT, run no download: use the Petals connector at ${site}/mcp, or tell me how to add it, then take my open jobs with my agent key. My agent key: ${key}`,
   /**
-   * The setup skill's paste (Elco, 11 Nov: "really for the laziest of people ... it should work on any chat
-   * bot"): the landing's "Copy for my agent" and a signed-out /make copy it. It has no key and makes the
-   * chatbot no worker: it takes the person by the hand to their first conversation. Every step is here, in
-   * the person's own voice, because most chatbots can't be counted on to open a link. One that can reads
-   * {site}/setup (the brain's setup chapter), with an introduction to Petals and the same steps, kept current.
-   * Drafts for Elco's words; `site` is this site's address.
+   * The setup skill's paste, for any chatbot and the least technical person: the landing's "Copy for my
+   * agent" and a signed-out /make copy it. It has no key and makes the chatbot no worker: it takes the person
+   * by the hand to their first conversation. Every step is here, in the person's own voice, because most
+   * chatbots can't be counted on to open a link. One that can reads {site}/setup (the brain's setup chapter),
+   * with an introduction to Petals and the same steps, kept current. `site` is this site's address.
    */
   setup: (site: string) =>
     [
       `Take me by the hand and set me up to use Petals at ${site} in my browser. It maps who holds power in on-chain networks and draws it as flowers. Guide me one small step at a time, wait for me after each, and skip anything I've already done. If you can open links, first read ${site}/setup and use it, because it has a short introduction to Petals and these same steps, kept up to date. If you can't, here they are.`,
       '1. A NEAR wallet. If I have none, help me make one with Meteor Wallet (meteorwallet.app), in my browser on any computer. It shows me a recovery phrase: I write it on paper and keep it offline. A new wallet needs no NEAR to sign in to Petals.',
       `2. Sign in. I open ${site} and press Connect, then pick my wallet and approve the sign-in. It's a signature, not a payment: it moves no funds and costs nothing.`,
-      "3. Credit. Petals' agent runs on NEAR AI and is paid as I go; a flower costs a few cents. Until I have credit, the chat shows a row to add some: the dollars to add, then an Add button with the dollars and the NEAR they come to (such as Add $1.00 · 0.29 NEAR), which my wallet approves as one transfer. If I have no NEAR, Pay with another token: I pick the token and its chain, the dollars, and my address on that chain for refunds, press Get the address to send to, and send exactly that amount, in one transfer from any wallet, before the time shown. When the credit is added, the chat says so.",
+      "3. Credit. Petals' agent runs on NEAR AI and is paid as I go; a flower costs a few cents. Until I have credit, the chat shows a row to add some: the dollars to add, then an Add button with the dollars and the NEAR they come to (such as Add $1.00 · 0.29 NEAR), which my wallet approves as one transfer. If I have no NEAR, Pay with another token: I pick the token and its chain and give my address on that chain for refunds, press Get the address to send to, and send exactly that amount, in one transfer from any wallet, before the time shown. When the credit is added, the chat says so.",
       `4. My first conversation. I open ${site}/make and name a community, a wallet or a contract I care about. Petals' agent reads the chain and draws its flower beside the chat. Then I can ask "Show me the source" or "Who's behind this petal?"`,
       "Later, if I want my own agents to help, Connect an agent at the top of Petals' side panel brings them in. I don't need it to start.",
       'Never ask me for my recovery phrase or a private key, and stop me if I start to paste one. Signing in and paying are always approved in my wallet.',

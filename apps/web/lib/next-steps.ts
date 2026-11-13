@@ -1,8 +1,8 @@
-// What the agent offers next on /make, under its short reading of what's there (Elco, 12 Nov evening: "making this
-// agent a great navigator of the data that's already there and helping me use all the functions of the brain"):
+// What the agent offers next on /make, under its short reading of what's there, so it navigates the data already
+// there and helps the person use all the brain's functions:
 // a few steps that drive the map ('show the blocs', 'what it paid out', 'compare with…'), and the brain's services
-// as one-press options under More. WORKSPACE builds them from SYSTEMS's events and binds each press; NextSteps
-// draws them (OVERLAYS). Pure.
+// as one-press options under More. The workspace builds them from the server's events and binds each press;
+// NextSteps draws them. Pure.
 
 /** One step, one press. */
 export interface NextStep {
@@ -16,7 +16,6 @@ export interface NextStep {
   onPress: () => void;
 }
 
-/** Drafts. */
 export const nextStepWords = {
   label: 'Next steps',
   more: (n: number) => `More it can do · ${n}`,

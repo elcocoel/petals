@@ -1,4 +1,4 @@
-// A flower's map's proposals as its vote ring (#93): read once per map, as its value is (useMapValue). Null until
+// A flower's map's proposals as its vote ring: read once per map, as its value is (useMapValue). Null until
 // they're read, and when the map has none.
 import type { Spec } from '@petal/core/types';
 import { useEffect, useRef, useState } from 'react';

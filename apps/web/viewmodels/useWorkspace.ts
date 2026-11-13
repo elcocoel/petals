@@ -227,7 +227,7 @@ export function useWorkspace(props: {
   const needsWallet = !recorded && !initialElsewhere && session.known && !session.account;
   // Until the server has said who's here, nothing offers to send or to connect.
   const composerShown = recorded || Boolean(initialElsewhere) || Boolean(session.account);
-  // Jobs handed to the person's own agent (C), in the conversation the newest one names.
+  // Jobs handed to the person's own agent, in the conversation the newest one names.
   const jobsIn = useMemo(
     () => items.findLast((i) => i.kind === 'job')?.job.exploration ?? null,
     [items],
@@ -235,7 +235,7 @@ export function useWorkspace(props: {
   const jobs = useJobs(jobsIn);
   // the person's say over them: stop, send again, hand to another agent (swarm.md, step 3)
   const jobControls = useJobControls();
-  // A report landed: Petals' agent takes it up at once, in this run (C), so the page follows that turn.
+  // A report landed: Petals' agent takes it up at once, in this run, so the page follows that turn.
   const reported = useRef<Set<string>>(new Set());
   const follow = chatActions.follow;
   useEffect(() => {
@@ -258,7 +258,7 @@ export function useWorkspace(props: {
   // the one balance (useFunds, in the layout): read again after each turn, and after a payment lands
   const funds = panelBus.person?.funds;
   // Someone with no credit yet meets the way to add some under Petals' greeting, before the first question
-  // (#78, 11 Nov: it came up only after asking). Once offered it stays until they ask, so what a payment
+  // (not only after asking). Once offered it stays until they ask, so what a payment
   // added is said there.
   const asks = shownRows.some((r) => r.kind === 'user');
   const [offered, setOffered] = useState(false);
@@ -270,7 +270,7 @@ export function useWorkspace(props: {
       offered && !asks ? [...shownRows, { kind: 'pay', key: 'pay-first', first: true }] : shownRows,
     [offered, asks, shownRows],
   );
-  // Paying for Petals' agent (B): the newest pay row is the live one.
+  // Paying for Petals' agent: the newest pay row is the live one.
   const asking = useMemo(
     () => threadRows.findLast((r) => r.kind === 'pay')?.key ?? null,
     [threadRows],
@@ -278,15 +278,15 @@ export function useWorkspace(props: {
   const reread = funds?.reread;
   const paid = useCallback(() => reread?.(), [reread]);
   const pay = usePay(funds?.where ?? null, asking, paid);
-  // or any other token, from any chain, through NEAR Intents (Elco, 10 Nov), beside it in the same row
+  // or any other token, from any chain, through NEAR Intents, beside it in the same row
   const topUp = useTopUp(asking, paid, pay);
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
   const onCanvas = canvas;
-  // A link in the conversation to the Power Map or a map on it opens the map here, at that map (#78, 11 Nov:
-  // the first message's maps led off /make). It stays until a flower is opened, or a new one is drawn.
+  // A link in the conversation to the Power Map or a map on it opens the map here, at that map, rather than
+  // leading off /make. It stays until a flower is opened, or a new one is drawn.
   const [mapAt, setMapAt] = useState<{ map: string | null } | null>(null);
-  // a wallet chosen on the map on the canvas (LOOK's wallet level): the question is about it (Elco, 12 Nov)
+  // a wallet chosen on the map on the canvas (the map's wallet level): the question is about it
   const [mapWallet, setMapWallet] = useState<MapWallet | null>(null);
   // the services under a map's next steps, folded until pressed (one list at a time: the last turn's)
   const [nextMore, setNextMore] = useState(false);
@@ -309,10 +309,9 @@ export function useWorkspace(props: {
     Boolean(onCanvas) &&
     (onCanvas?.key === panelFlower?.key || (storedId !== null && onCanvas?.stored === storedId));
 
-  // With the map on the canvas from a link, the question isn't about the flower left behind it (#78: the
-  // field said 'About this flower…' over the whole map).
-  // A wallet chosen on the map: the question is about that wallet (Elco, 12 Nov: "a place to interact with it
-  // via the agent and find out more about it").
+  // With the map on the canvas from a link, the question isn't about the flower left behind it (else the
+  // field would say 'About this flower…' over the whole map).
+  // A wallet chosen on the map: the question is about that wallet, so the agent can find out more about it.
   const target = useMemo(
     (): ComposerTarget =>
       mapWallet
@@ -427,7 +426,7 @@ export function useWorkspace(props: {
       composer,
       panel,
       onCanvas,
-      /** what the last answer is about on the Power Map (SYSTEMS's show): the map moves to it */
+      /** what the last answer is about on the Power Map (the server's show): the map moves to it */
       mapShow: turnShow(items),
       /** a new map being made: the held read the person said yes to, what it's doing, and its flower once drawn */
       making: making(items, busy),
@@ -439,7 +438,7 @@ export function useWorkspace(props: {
       mapWallet,
       /** the snapshot the conversation's flower reads, which the Power Map may hold as one of its flowers */
       flowerSnapshot: panelFlower?.spec.snapshot.sha256 ?? null,
-      /** the canvas flower's map's proposals on the ring (#93), once it's the panel's */
+      /** the canvas flower's map's proposals on the ring, once it's the panel's */
       votes: canvasIsOpen ? mapVotes : null,
       /** The Power Map on the canvas, at a map (by id) or whole (null), when a link in the chat opened it. */
       mapAt,
@@ -447,7 +446,7 @@ export function useWorkspace(props: {
       boxOpen,
       petal: selectedPetal && canvasPetal(selectedPetal),
       unit: panelFlower && facts.units[panelFlower.spec.selection.measure],
-      /** the selected petal's dollars at its map's price (#91) */
+      /** the selected petal's dollars at its map's price */
       worth:
         selectedPetal && panelFlower
           ? petalWorth(selectedPetal.amount, panelFlower.spec.selection.measure, mapValue)
@@ -544,7 +543,7 @@ export function useWorkspace(props: {
         if (opensBox) setBoxOpen(true);
       },
       /**
-       * A click inside a map on the canvas (#78): a petal opens that map's flower here, as a link to it would,
+       * A click inside a map on the canvas: a petal opens that map's flower here, as a link to it would,
        * with the petal chosen and its box open, so it does what a petal does everywhere.
        */
       pickOnMap: (hit: CanvasHit) => {
@@ -596,10 +595,10 @@ export function useWorkspace(props: {
         refs.box.current?.focus();
       },
       /**
-       * A link in the conversation to one of this site's flowers opens it here, on the canvas beside it (Elco,
-       * 10 Nov: not outside the work surface): a stored one (/f/), a drawing (/draft?spec=) or a view on the
+       * A link in the conversation to one of this site's flowers opens it here, on the canvas beside it, not
+       * outside the work surface: a stored one (/f/), a drawing (/draft?spec=) or a view on the
        * map (/d/<sha>, read first). One that can't be read goes where it points, as any link would. A link to
-       * the Power Map (/map) or a map on it (/m/<id>) opens the map here (#78).
+       * the Power Map (/map) or a map on it (/m/<id>) opens the map here.
        */
       followLink: (href: string) => {
         const map = mapLink(href, window.location.origin);
