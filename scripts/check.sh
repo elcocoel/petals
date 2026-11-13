@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The one local check (T006). No CI: run this before every commit you care about.
-# typecheck, lint, unit tests, secret scan, fixture size, publication boundary, design tokens and
-# the literal scan.
+# typecheck, lint, unit tests, secret scan, dated personal attributions, fixture size, publication boundary,
+# design tokens and the literal scan.
 # Never uses `timeout` (macOS has none).
 
 cd "$(dirname "$0")/.." || exit 1
@@ -26,6 +26,7 @@ step typecheck;     pnpm -s typecheck
 step lint;          pnpm -s lint
 step test;          pnpm -s test
 step secrets;       bash scripts/check-secrets.sh
+step public-tree;   bash scripts/check-public-tree.sh
 step fixture-size;  node scripts/check-fixture-size.ts
 step boundary;      bash scripts/check-boundary.sh
 step protocols;     node scripts/check-protocols.ts
