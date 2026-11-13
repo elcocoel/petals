@@ -501,14 +501,17 @@ describe('limits', () => {
 });
 
 describe('liveness', () => {
-  test('heartbeats fill quiet stretches: no gap reaches the heartbeat interval by much', async () => {
-    const stamped: { e: string; t: number }[] = [];
+  test('heartbeats fill quiet stretches: every slow model call has one inside it', async () => {
+    // by order, not by the clock: a 40 ms heartbeat is due before a 120 ms call returns, however late a loaded
+    // machine runs both (13 Nov: gaps of 208 ms at a load of 190)
+    const seen: { event: string; data: unknown }[] = [];
     const { events } = run(slowRecorded(120), { opts: { heartbeatMs: 40 } });
-    for await (const e of events) stamped.push({ e: e.event, t: performance.now() });
-    expect(stamped.some((s) => s.e === 'heartbeat')).toBe(true);
-    const gaps = stamped.slice(1).map((s, i) => s.t - (stamped[i]?.t ?? s.t));
-    expect(Math.max(...gaps)).toBeLessThan(40 + 60);
-    expect(stamped.at(-1)?.e).toBe('done');
+    for await (const e of events) seen.push(e);
+    const done = seen.at(-1) as { event: string; data: { turns: number } };
+    expect(done.event).toBe('done');
+    const turns = done.data.turns;
+    expect(turns).toBeGreaterThan(0);
+    expect(seen.filter((e) => e.event === 'heartbeat').length).toBeGreaterThanOrEqual(turns);
   });
 
   test('a consumer that stops early stops the run', async () => {

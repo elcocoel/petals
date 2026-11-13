@@ -3,9 +3,13 @@
 
 import { gunzipSync } from 'node:zlib';
 import { canonicalJson, DEFAULT_VIEW, sha256Hex } from '@petal/core';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { httpApp } from '../src/http/app.ts';
 import { flow, progressOf, rig, validatorsFixture } from './helpers.ts';
+
+// Under load (a shared Mac at a load of 170-190, 13 Nov) this file's tests pass alone and time out together:
+// a longer limit here only; what they check is unchanged.
+vi.setConfig({ testTimeout: 120_000, hookTimeout: 120_000 });
 
 const json = (body: unknown, headers: Record<string, string> = {}) => ({
   method: 'POST',

@@ -11,9 +11,13 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { type Queries, RelationsIndex, type SnapshotSource } from '../src/index.ts';
 import { evm, shaOf, snap, source, tmpDir, tmpIndexPath } from './helpers.ts';
+
+// Under load (a shared Mac at a load of 170-190, 13 Nov) this file's tests pass alone and time out together:
+// a longer limit here only; what they check is unchanged.
+vi.setConfig({ testTimeout: 120_000, hookTimeout: 120_000 });
 
 const [x, y, z] = [evm(1), evm(2), evm(3)] as [string, string, string];
 const group = (name: string, holders: string[], o: Parameters<typeof snap>[0] = {}) =>

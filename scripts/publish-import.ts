@@ -4,8 +4,8 @@
 // server runs:
 //   container exec petals node /app/scripts/publish-import.ts [--dry]
 import { parseArgs } from 'node:util';
-import { createContext, serverConfig } from '@petal/agent';
-import { importRecord } from '@petal/tools';
+// through @petal/agent, as the other scripts: /app/scripts resolves no other workspace package in the container
+import { createContext, importRecord, serverConfig } from '@petal/agent';
 
 const { values } = parseArgs({ options: { dry: { type: 'boolean' } } });
 const ctx = createContext(serverConfig(process.env));

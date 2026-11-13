@@ -116,9 +116,15 @@ export async function importRecord(
     presses.set(a.exploration, press);
   }
   for (const press of presses.values()) {
-    const proof = press.credential
-      ? (JSON.parse(press.credential) as { proof?: Record<string, string> }).proof
-      : undefined;
+    const credential = press.credential
+      ? (JSON.parse(press.credential) as {
+          proof?: Record<string, string>;
+          publication?: string;
+        })
+      : {};
+    // a press since the record began is in it already, as its own publication
+    if (credential.publication) continue;
+    const proof = credential.proof;
     const message = proof?.message ? (JSON.parse(proof.message) as { about?: string }) : {};
     const author = String(press.claims[0]?.by ?? '');
     const about = aboutKey(message.about ?? '');

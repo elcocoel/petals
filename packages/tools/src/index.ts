@@ -70,7 +70,16 @@ export {
   snapshotTexts,
 } from './proposals.ts';
 export type { PublicPage } from './public-fetch.ts';
-export { type Publishable, preparePublishData, publishable, publishData } from './publish-data.ts';
+export {
+  type PressCases,
+  type PressLayer,
+  type PressProof,
+  type Publishable,
+  preparePublication,
+  publishable,
+  publishPublication,
+  type SignatureCheck,
+} from './publish-data.ts';
 export {
   appendPublication,
   authorsOn,

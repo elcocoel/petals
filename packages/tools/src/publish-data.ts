@@ -10,21 +10,44 @@
 // stays private and says why. The confidence is how strongly the claim's own evidence says it, read by search's
 // reranker on Elco's Mac (Qwen3-Reranker, search-model.ts): nothing new runs and nothing is spent. With the model
 // off, confidence is null and says so; it never holds a publish back.
-import { canonicalJson, sha256Hex, validateClaim } from '@petal/core';
-import type { Claim, ClaimEvidence, Nep413Proof } from '@petal/core/types';
+import {
+  aboutKey,
+  type Cases,
+  type Composition,
+  canonicalJson,
+  casesOf,
+  compose,
+  type Entry,
+  layerTitle,
+  type Proof,
+  PUBLICATION_VERSION,
+  type Publication,
+  type State,
+  sameAbout,
+  sha256Hex,
+  signedText,
+  stateKey,
+  textNames,
+  unsignedHash,
+  validateClaim,
+} from '@petal/core';
+import type { Claim, ClaimEvidence, Spec } from '@petal/core/types';
 import { nonceStore, privateStore } from './drafts.ts';
 import { ToolFailure } from './errors.ts';
 import { retiredClaim } from './hidden.ts';
 import { mapViews } from './map.ts';
 import { aboutOneOf, cardAccounts, PUBLISHED } from './mapping-claims.ts';
+import { appendPublication, authorName, compositionOf, recordOf } from './record.ts';
 import { SEARCH_RERANKER, SearchModelDown } from './search-model.ts';
-import { mapIndex, mapUrl } from './tools/maps.ts';
+import { mapIndex } from './tools/maps.ts';
 import { searchModelOf } from './tools/search-petals.ts';
+import { findSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
 
 export { PUBLISHED };
 
-const VERSION = 'publish-data/v1';
+/** What a prepared press holds until it's signed: a publication/v1, unsigned (composition.md, section 2). */
+const PRESS = 'press/publication-v1';
 
 /** Where an item's word comes from: a proposal or a transaction it rests on (or, kept private, what else). */
 export interface RowSource {
@@ -100,25 +123,33 @@ export interface Publishable {
   scored_by: string | null;
   /** why nothing was scored, when nothing was */
   unscored?: string;
+  /** each layer the press would publish, and what it adds to the map in front, by case (composition.md, section 9) */
+  layers: PressLayer[];
+  /** the same cases, summed for the whole publication */
+  totals: PressCases;
 }
 
-/** What a prepared publish holds until it's signed. */
-interface Prepared {
-  petal: typeof VERSION;
-  about: string;
-  owner: string;
-  by: string;
-  claims: string[];
-  /** the views of their readings the press credits to them */
-  readings?: string[];
-  /** each claim's confidence as the person saw it, by its id, and the model that read it */
-  confidence?: Record<string, number | null>;
-  scored_by?: string | null;
-  message: string;
-  nonce: string;
-  recipient: string;
-  expires_at: string;
-  created_at: string;
+/** An author already credited on the map, as the box names them. */
+export interface Named {
+  author: string;
+  name: string;
+}
+
+/** The four cases (composition.md, section 5), with the authors already credited named. */
+export interface PressCases {
+  new_data: Cases['new_data'];
+  new_moment: Cases['new_moment'];
+  new_subjects: Cases['new_subjects'];
+  match: { count: number; authors: Named[] };
+  differs: { count: number; authors: Named[] };
+}
+
+/** A layer the press would publish: its name (sha256), its format, its title, and what it adds. */
+export interface PressLayer {
+  sha256: string;
+  petal: string;
+  title: string;
+  cases: PressCases;
 }
 
 /** What a claim says, in words: the name for a name. */
@@ -224,21 +255,15 @@ function claimAdds(claims: readonly Claim[], goes: boolean, why?: string): Adds[
   }));
 }
 
-/** What a person kept in a project, by its kind, as the box names it, and why it can't go yet. */
-const KEPT: Record<string, { layer: string; label: string; why: string }> = {
-  reading: {
-    layer: 'Readings',
-    label: 'Readings kept',
-    why: 'a reading you kept publishes later',
-  },
-  value: { layer: 'Value', label: 'Values kept', why: 'a value you kept publishes later' },
-  proposals: {
-    layer: 'Proposals',
-    label: 'Proposals kept',
-    why: 'proposals you kept publish later',
-  },
-  mark: { layer: 'Mark', label: 'Names and logos kept', why: 'a mark you kept publishes later' },
-  layer: { layer: 'Layers', label: 'Layers kept', why: 'a layer you kept publishes later' },
+/** What a person kept in a project, by its kind, as the box names it. */
+const KEPT: Record<string, { layer: string; label: string }> = {
+  snapshot: { layer: 'Readings', label: 'Readings kept' },
+  value: { layer: 'Value', label: 'Values kept' },
+  proposals: { layer: 'Proposals', label: 'Proposals kept' },
+  mark: { layer: 'Mark', label: 'Names and logos kept' },
+  layer: { layer: 'Layers', label: 'Layers kept' },
+  vesting: { layer: 'Vesting', label: 'Vesting kept' },
+  payouts: { layer: 'Payouts', label: 'Payouts kept' },
 };
 
 /**
@@ -284,43 +309,6 @@ async function drawnReadings(
   };
 }
 
-async function keptAdds(ctx: ToolContext, owner: string, about: string): Promise<Adds[]> {
-  const store = privateStore(ctx.config);
-  const out: Adds[] = [];
-  const projects = await store.exploration.listByOwner(owner, Number.MAX_SAFE_INTEGER);
-  const kept = new Map<string, number>();
-  for (const project of projects) {
-    for (const row of await store.projectData.list(owner, project.id)) {
-      if (row.about !== about) continue;
-      const kind = row.petal.split('/')[0] ?? row.petal;
-      // a claim kept this way is an annotation, counted with the claims
-      if (kind === 'claim') continue;
-      kept.set(kind, (kept.get(kind) ?? 0) + 1);
-    }
-  }
-  for (const [kind, count] of kept) {
-    const k = KEPT[kind] ?? {
-      layer: kind,
-      label: `${kind} kept`,
-      why: `what you kept publishes later`,
-    };
-    out.push({ layer: k.layer, kind, label: k.label, count, goes: false, why: k.why });
-  }
-  const layers = await store.layer.list(owner, about);
-  if (layers.length) {
-    const k = KEPT.layer as { layer: string; label: string; why: string };
-    out.push({
-      layer: k.layer,
-      kind: 'layer',
-      label: k.label,
-      count: layers.length,
-      goes: false,
-      why: k.why,
-    });
-  }
-  return out;
-}
-
 const rowOf = (c: Claim, confidence: number | null): PublishRow => ({
   layer: INSIGHTS,
   id: c.id,
@@ -331,12 +319,200 @@ const rowOf = (c: Claim, confidence: number | null): PublishRow => ({
   confidence,
 });
 
-/** The account a `by` names: near:mainnet:alice.near → alice.near. */
-const accountOf = (by: string) => by.slice(by.lastIndexOf(':') + 1);
+/** One of Petals' documents the press would publish as a layer, by its hash. */
+interface PressDoc {
+  sha256: string;
+  petal: string;
+  doc: unknown;
+}
+
+const hashOf = (doc: unknown) => sha256Hex(canonicalJson(doc));
+const kindOf = (petal: string) => petal.split('/')[0] ?? petal;
+
+/**
+ * The documents the person kept about this map in their projects (keep_data's values, proposals, marks, readings,
+ * vesting, payouts; keep_layer's layers), each once by its hash, oldest first. A claim kept this way is an
+ * annotation, published with the claims.
+ */
+async function keptDocs(ctx: ToolContext, owner: string, about: string): Promise<PressDoc[]> {
+  const store = privateStore(ctx.config);
+  const out = new Map<string, PressDoc>();
+  for (const project of await store.exploration.listByOwner(owner, Number.MAX_SAFE_INTEGER))
+    for (const row of await store.projectData.list(owner, project.id)) {
+      if (!row.about || !sameAbout(row.about, about)) continue;
+      if (kindOf(row.petal) === 'claim' || out.has(row.sha256)) continue;
+      out.set(row.sha256, { sha256: row.sha256, petal: row.petal, doc: JSON.parse(row.body) });
+    }
+  for (const row of await store.layer.list(owner, about)) {
+    if (out.has(row.hash)) continue;
+    const doc = JSON.parse(row.body) as { petal?: string };
+    out.set(row.hash, { sha256: row.hash, petal: doc.petal ?? 'layer/v1', doc });
+  }
+  return [...out.values()];
+}
+
+/** The snapshot a reading the person drew reads, by the view's hash: the layer it publishes. */
+async function readingDoc(ctx: ToolContext, view: string): Promise<PressDoc | null> {
+  const row = await privateStore(ctx.config).draft.get(view);
+  if (!row) return null;
+  const sha = (JSON.parse(row.body) as Spec).snapshot?.sha256;
+  const s = sha ? await findSnapshot(ctx, sha) : null;
+  return s && sha ? { sha256: sha, petal: s.petal, doc: s } : null;
+}
+
+/** The hashes a layer/v1 was built on (its `from`); nothing for every other format. */
+function builtOn(doc: unknown): string[] {
+  const d = doc as { petal?: unknown; from?: unknown };
+  return typeof d?.petal === 'string' && d.petal.startsWith('layer/') && Array.isArray(d.from)
+    ? d.from.filter((h): h is string => typeof h === 'string')
+    : [];
+}
+
+/** This author's latest publication about the map, or null for a first. */
+async function latestBy(ctx: ToolContext, about: string, author: string): Promise<Entry | null> {
+  return (await recordOf(ctx, about)).filter((e) => e.publication.author === author).at(-1) ?? null;
+}
+
+/** The map as the record composes it now; empty when nothing about it was ever published. */
+async function mapNow(ctx: ToolContext, about: string): Promise<Composition> {
+  return (await compositionOf(ctx, about)) ?? compose(about, [], new Map());
+}
+
+const named = (authors: readonly string[]): Named[] =>
+  authors.map((author) => ({ author, name: authorName(author) }));
+
+/** One layer's cases on the map in front, as its author would publish it, with the authors named. */
+function pressCases(map: Composition, doc: unknown, author: string): PressCases {
+  const c = casesOf(map, doc, author);
+  return {
+    ...c,
+    match: { count: c.match.count, authors: named(c.match.authors) },
+    differs: { count: c.differs.count, authors: named(c.differs.authors) },
+  };
+}
+
+/** The cases of a whole publication: each layer's, summed. */
+function summed(all: readonly PressCases[]): PressCases {
+  const whats = new Set<string>();
+  const moments = new Map<string, { what: string; state: State; newest: State | null }>();
+  const authors = { match: new Map<string, Named>(), differs: new Map<string, Named>() };
+  const out: PressCases = {
+    new_data: { whats: [] },
+    new_moment: { states: [] },
+    new_subjects: { count: 0 },
+    match: { count: 0, authors: [] },
+    differs: { count: 0, authors: [] },
+  };
+  for (const c of all) {
+    for (const w of c.new_data.whats) whats.add(w);
+    for (const m of c.new_moment.states) moments.set(`${m.what}\u0000${stateKey(m.state)}`, m);
+    out.new_subjects.count += c.new_subjects.count;
+    for (const k of ['match', 'differs'] as const) {
+      out[k].count += c[k].count;
+      for (const a of c[k].authors) authors[k].set(a.author, a);
+    }
+  }
+  out.new_data.whats = [...whats].sort();
+  out.new_moment.states = [...moments.values()];
+  for (const k of ['match', 'differs'] as const)
+    out[k].authors = [...authors[k].values()].sort((a, b) => (a.author < b.author ? -1 : 1));
+  return out;
+}
+
+/**
+ * What one press publishes on a map for this author: the readings they drew, the claims that can go and the
+ * documents they kept, each a layer by its hash, less what their latest version holds already. A published version
+ * names only what's public (composition.md, section 2): a layer built on one that isn't published, nor in this
+ * version, stays back and says why.
+ */
+async function pressOf(
+  ctx: ToolContext,
+  o: {
+    owner: string;
+    about: string;
+    author: string | null;
+    claims: readonly Claim[];
+    readings: readonly ReadingRow[];
+  },
+) {
+  const latest = o.author ? await latestBy(ctx, o.about, o.author) : null;
+  const carried = new Set(latest?.publication.layers.map((l) => l.sha256) ?? []);
+  const kept = await keptDocs(ctx, o.owner, o.about);
+  const drawn: PressDoc[] = [];
+  for (const r of o.readings) {
+    const d = await readingDoc(ctx, r.id);
+    if (d && !drawn.some((x) => x.sha256 === d.sha256)) drawn.push(d);
+  }
+  const candidates = [
+    ...drawn,
+    ...o.claims.map((c) => ({ sha256: hashOf(c), petal: c.petal, doc: c as unknown })),
+    ...kept,
+  ].filter(
+    (d, i, all) => !carried.has(d.sha256) && all.findIndex((x) => x.sha256 === d.sha256) === i,
+  );
+  const store = privateStore(ctx.config);
+  const published = new Map<string, boolean>();
+  const isPublished = async (h: string) => {
+    if (!published.has(h)) published.set(h, !!(await store.publication.layer(h)));
+    return published.get(h) as boolean;
+  };
+  // what stays back for a `from` in the dark, until nothing more falls out
+  let goes = candidates;
+  const held: { doc: PressDoc; why: string }[] = [];
+  for (let changed = true; changed; ) {
+    changed = false;
+    const inVersion = new Set([...carried, ...goes.map((d) => d.sha256)]);
+    const next: PressDoc[] = [];
+    for (const d of goes) {
+      const dark: string[] = [];
+      for (const h of builtOn(d.doc))
+        if (!inVersion.has(h) && !(await isPublished(h))) dark.push(h);
+      if (dark.length) {
+        held.push({
+          doc: d,
+          why: `it's built on ${dark.length === 1 ? 'a layer' : `${dark.length} layers`} not published yet`,
+        });
+        changed = true;
+      } else next.push(d);
+    }
+    goes = next;
+  }
+  return {
+    latest,
+    goes,
+    held,
+    /** what they kept that their latest version holds already */
+    carriedKept: kept.filter((d) => carried.has(d.sha256)).length,
+    keptGoing: goes.filter((d) => kept.includes(d)),
+  };
+}
+
+/** Counted by kind, as entries of what a press adds. */
+function keptAdds(docs: readonly PressDoc[], goes: boolean, why?: (d: PressDoc) => string): Adds[] {
+  const by = new Map<string, { count: number; why?: string }>();
+  for (const d of docs) {
+    const kind = kindOf(d.petal);
+    const e = by.get(kind) ?? { count: 0, ...(why ? { why: why(d) } : {}) };
+    e.count++;
+    by.set(kind, e);
+  }
+  return [...by].map(([kind, e]) => {
+    const k = KEPT[kind] ?? { layer: kind, label: `${kind} kept` };
+    return {
+      layer: k.layer,
+      kind,
+      label: k.label,
+      count: e.count,
+      goes,
+      ...(e.why ? { why: e.why } : {}),
+    };
+  });
+}
 
 /**
  * What the person (owner, the session's subject) kept about this map in their projects: the claims about its
- * accounts that can be published now, and those the people rule keeps private, with why.
+ * accounts that can be published now, and those the people rule keeps private, with why; and each layer one press
+ * would publish in the name of `by`, with what it adds to the map in front (composition.md, sections 5 and 9).
  */
 export async function publishable(
   ctx: ToolContext,
@@ -372,6 +548,14 @@ export async function publishable(
   const c = found.card;
   const drawn = await drawnReadings(ctx, owner, about, by);
   published += drawn.theirs;
+  const press = await pressOf(ctx, {
+    owner,
+    about,
+    author: by,
+    claims,
+    readings: drawn.readings,
+  });
+  published += press.carriedKept;
   const adds = [
     ...(drawn.readings.length
       ? [
@@ -390,8 +574,20 @@ export async function publishable(
       false,
       'they stay private: each says why',
     ),
-    ...(await keptAdds(ctx, owner, about)),
+    ...keptAdds(press.keptGoing, true),
+    ...keptAdds(
+      press.held.map((h) => h.doc),
+      false,
+      (d) => press.held.find((h) => h.doc === d)?.why ?? '',
+    ),
   ];
+  const map = await mapNow(ctx, about);
+  const layers = press.goes.map((d) => ({
+    sha256: d.sha256,
+    petal: d.petal,
+    title: layerTitle(d.doc),
+    cases: pressCases(map, d.doc, by ?? ''),
+  }));
   return {
     about,
     name: c.name ?? c.mark?.name?.value ?? c.title,
@@ -406,25 +602,63 @@ export async function publishable(
     adds,
     scored_by: scored.scored_by,
     ...(scored.unscored ? { unscored: scored.unscored } : {}),
+    layers,
+    totals: summed(layers.map((l) => l.cases)),
   };
 }
 
-/** The hash a publish signs: the map, the person, and the claims, by their ids. */
-const hashOf = (about: string, by: string, ids: readonly string[]) =>
-  sha256Hex(canonicalJson({ petal: VERSION, about, by, claims: [...ids].sort() }));
+/** What a prepared press holds until it's signed. */
+interface Prepared {
+  petal: typeof PRESS;
+  owner: string;
+  publication: Omit<Publication, 'proof'>;
+  /** the text the wallet signs */
+  text: string;
+  nonce: string;
+  recipient: string;
+  expires_at: string;
+  created_at: string;
+  /** the claims and the views of the readings it publishes, for the map's Insights and the readings' credit */
+  claims: string[];
+  readings: string[];
+  /** each claim's confidence as the person saw it, by its id, and the model that read it */
+  confidence: Record<string, number | null>;
+  scored_by: string | null;
+}
+
+/** How each chain's wallet signs the text (composition.md, section 2). */
+const STANDARD: Record<string, Proof['standard']> = {
+  near: 'nep413',
+  eip155: 'eip191',
+  solana: 'ed25519',
+};
+const standardOf = (author: string) => STANDARD[author.split(':')[0] ?? ''];
+
+const refused = (message: string) =>
+  new ToolFailure('unauthorised', message, 'Press Publish again and sign the new message.');
 
 /**
- * One press, first half: what goes, and the message the person's wallet signs for it (recipient: this site, as
- * signing in names it). Nothing is published until publishData has the signature.
+ * One press, first half: the unsigned publication/v1 in the name of one of the person's wallets (`authors`, each
+ * CAIP-10): its layers are their latest version's and what this press adds, its parent and previous their latest
+ * publication about the map, its time the server's. The answer is the publication, its unsigned hash, and the text
+ * the wallet signs, which names that hash; for NEAR, this site as the recipient and a fresh nonce (NEP-413).
  */
-export async function preparePublishData(
+export async function preparePublication(
   ctx: ToolContext,
-  who: { owner: string; by: string },
+  who: { owner: string; authors: readonly string[] },
   about: string,
+  author: string,
   recipient: string,
 ) {
-  const p = await publishable(ctx, who.owner, about, who.by);
-  if (!p.claims.length && !p.readings.length)
+  const mine = who.authors.find((a) => aboutKey(a) === aboutKey(author));
+  if (!mine || !standardOf(mine))
+    throw new ToolFailure(
+      'unauthorised',
+      `${author} isn't one of your wallets.`,
+      'Publish with a wallet you signed in with or added on your profile.',
+    );
+  const p = await publishable(ctx, who.owner, about, mine);
+  if (!p.layers.length)
     throw new ToolFailure(
       'not_found',
       p.private.length
@@ -432,31 +666,36 @@ export async function preparePublishData(
         : `You have nothing about ${p.name} that isn't on the shared map already.`,
       p.private[0] ? `Why: ${p.private[0].why}` : undefined,
     );
-  const ids = p.claims.map((c) => c.id);
-  const readings = p.readings.map((r) => r.id);
-  const sha256 = hashOf(about, who.by, [...ids, ...readings.map((r) => `reading:${r}`)]);
-  const message = JSON.stringify({
-    petal: VERSION,
-    about,
-    claims: ids.length,
-    readings: readings.length,
-    sha256,
-  });
+  const latest = await latestBy(ctx, about, mine);
+  const publication: Omit<Publication, 'proof'> = {
+    petal: PUBLICATION_VERSION,
+    about: aboutKey(p.about),
+    author: mine,
+    via: null,
+    layers: [
+      ...(latest?.publication.layers ?? []),
+      ...p.layers.map((l) => ({ sha256: l.sha256, petal: l.petal })),
+    ],
+    parent: latest?.hash ?? null,
+    previous: latest?.hash ?? null,
+    published_at: ctx.now().toISOString(),
+  };
+  const sha256 = unsignedHash(publication);
+  const text = signedText(publication, p.name);
   const { nonce, expires_at } = await nonceStore(ctx.config).issue();
   const prepared: Prepared = {
-    petal: VERSION,
-    about,
+    petal: PRESS,
     owner: who.owner,
-    by: who.by,
-    claims: ids,
-    readings,
-    confidence: Object.fromEntries(p.rows.map((r) => [r.id, r.confidence])),
-    scored_by: p.scored_by,
-    message,
+    publication,
+    text,
     nonce,
     recipient,
     expires_at,
-    created_at: ctx.now().toISOString(),
+    created_at: publication.published_at,
+    claims: p.claims.map((c) => c.id),
+    readings: p.readings.map((r) => r.id),
+    confidence: Object.fromEntries(p.rows.map((r) => [r.id, r.confidence])),
+    scored_by: p.scored_by,
   };
   const store = privateStore(ctx.config);
   await store.tx(async () => {
@@ -464,102 +703,152 @@ export async function preparePublishData(
     await store.publishDraft.put(sha256, JSON.stringify(prepared), expires_at);
   });
   return {
+    publication,
     sha256,
-    about,
-    name: p.name,
-    claims: ids.length,
-    readings: readings.length,
-    private: p.private.length,
-    message,
-    nonce,
-    recipient,
-    expires_at,
+    text,
+    ...(standardOf(mine) === 'nep413' ? { recipient, nonce } : {}),
   };
 }
 
-const refused = (message: string) =>
-  new ToolFailure('unauthorised', message, 'Press Publish again and sign the new message.');
+/** A wallet's signature of the text, as its chain signs it (composition.md, section 9). */
+export interface PressProof {
+  standard: Proof['standard'];
+  signature: string;
+  public_key?: string;
+  nonce?: string;
+}
+
+/** Checks that the author's wallet signed this text: NEP-413 on its network, EIP-191 or ed25519. */
+export type SignatureCheck = (o: {
+  author: string;
+  proof: PressProof;
+  text: string;
+  recipient: string;
+}) => Promise<{ ok: boolean; reason?: string }>;
 
 /**
- * One press, second half: the signature checked, the claims land on the shared map at once, each kept with the
- * signed message and signature that published it. `verify` checks a NEP-413 proof on the person's network.
+ * One press, second half: the signature checked, the publication goes in the record with its proof, at the
+ * server's place in it. The map's claims show at once as before (Insights, each kept with its signature and the
+ * confidence the person saw) and the readings they drew are credited to them.
  */
-export async function publishData(
+export async function publishPublication(
   ctx: ToolContext,
-  who: { owner: string; by: string },
+  who: { owner: string },
   sha256: string,
-  proof: Nep413Proof,
-  verify: (
-    proof: Nep413Proof,
-    expect: { message: string; recipient: string },
-  ) => Promise<{ ok: boolean; reason?: string }>,
+  proof: PressProof,
+  check: SignatureCheck,
 ) {
   const store = privateStore(ctx.config);
   const row = await store.publishDraft.get(sha256);
   const prepared = row ? (JSON.parse(row.body) as Prepared) : null;
-  if (!row || prepared?.petal !== VERSION)
+  if (!row || prepared?.petal !== PRESS)
     throw new ToolFailure('not_found', `Nothing was prepared to publish under ${sha256}.`);
   if (row.used_at) throw refused('This was already published.');
   if (prepared.owner !== who.owner) throw refused('Someone else prepared this.');
   if (ctx.now().getTime() > Date.parse(prepared.expires_at)) throw refused('The message expired.');
-  if (
-    proof?.nonce !== prepared.nonce ||
-    proof.message !== prepared.message ||
-    proof.recipient !== prepared.recipient
-  )
+  const p = prepared.publication;
+  const standard = standardOf(p.author);
+  if (!proof || typeof proof.signature !== 'string' || proof.standard !== standard)
+    throw refused(`${p.author.split(':')[0]} wallets sign this with ${standard}.`);
+  if (standard === 'nep413' && proof.nonce !== prepared.nonce)
     throw refused('The signature is for another message.');
-  if (proof.account_id !== accountOf(who.by))
-    throw refused(`Sign with the wallet you signed in with, ${accountOf(who.by)}.`);
-  let check: { ok: boolean; reason?: string };
+  if (!textNames(prepared.text, { ...p, proof: null }))
+    throw refused('The text signed names another publication.');
+  // the author's record is a chain nobody can cut: their latest is still the one this version follows
+  const latest = await latestBy(ctx, p.about, p.author);
+  if ((latest?.hash ?? null) !== p.previous)
+    throw refused('You published on this map since this was prepared.');
+  let signed: { ok: boolean; reason?: string };
   try {
-    check = await verify(proof, { message: prepared.message, recipient: prepared.recipient });
+    signed = await check({
+      author: p.author,
+      proof,
+      text: prepared.text,
+      recipient: prepared.recipient,
+    });
   } catch {
     throw new ToolFailure(
       'source_failed',
-      "Couldn't reach NEAR to check the signature, so nothing was published. Try again.",
+      "Couldn't reach the chain to check the signature, so nothing was published. Try again.",
     );
   }
-  if (!check.ok) throw refused(`The signature was refused: ${check.reason ?? 'not valid'}.`);
+  if (!signed.ok) throw refused(`The signature was refused: ${signed.reason ?? 'not valid'}.`);
+  // the documents of the layers this press adds, as they're kept now
+  const before = new Set(latest?.publication.layers.map((l) => l.sha256) ?? []);
+  const adds = p.layers.filter((l) => !before.has(l.sha256));
+  const docs = new Map<string, unknown>();
+  const want = new Set(adds.map((l) => l.sha256));
+  for (const r of await store.annotation.list(who.owner)) {
+    const c = JSON.parse(r.body) as Claim;
+    if (want.has(hashOf(c))) docs.set(hashOf(c), c);
+  }
+  for (const d of await keptDocs(ctx, who.owner, p.about))
+    if (want.has(d.sha256)) docs.set(d.sha256, d.doc);
+  for (const l of adds)
+    if (!docs.has(l.sha256) && l.petal.startsWith('snapshot/')) {
+      const s = await findSnapshot(ctx, l.sha256);
+      if (s) docs.set(l.sha256, s);
+    }
+  if (adds.some((l) => !docs.has(l.sha256)))
+    throw refused('What you kept about this map changed since this was prepared.');
+  const map = await mapNow(ctx, p.about);
+  const totals = summed(adds.map((l) => pressCases(map, docs.get(l.sha256), p.author)));
   const at = ctx.now().toISOString();
   if (!(await store.publishDraft.claim(sha256, at))) throw refused('This was already published.');
-  // the claims as kept, by their ids (an id is its content's hash), checked again as published ones
-  const want = new Set(prepared.claims);
+  const publication: Publication = {
+    ...p,
+    proof: {
+      standard,
+      signature: proof.signature,
+      message: prepared.text,
+      ...(proof.public_key ? { public_key: proof.public_key } : {}),
+      ...(standard === 'nep413' ? { nonce: prepared.nonce, recipient: prepared.recipient } : {}),
+    },
+  };
+  // the qualifier's outcome for each claim, as the person saw it, recorded with the layer
+  const chosen = new Set(prepared.claims);
   const claims = (await store.annotation.list(who.owner))
-    .filter((r) => want.has(r.id))
+    .filter((r) => chosen.has(r.id))
     .map((r) => JSON.parse(r.body) as Claim)
     .filter((c) => validateClaim(c).ok);
-  // each kept with the signature that published it, and the confidence the person saw before the press
-  const added = await store.annotation.add(
+  const scores: Record<string, number> = {};
+  for (const c of claims) {
+    const s = prepared.confidence[c.id];
+    if (typeof s === 'number' && want.has(hashOf(c))) scores[hashOf(c)] = s;
+  }
+  const bodies = new Map(
+    [...docs].filter(([, d]) => !(d as { petal?: string }).petal?.startsWith('snapshot/')),
+  );
+  const entry = await appendPublication(ctx, publication, bodies, scores);
+  // the map's Insights show the claims at once, each with the signature that published it
+  await store.annotation.add(
     claims.map((c, place) => ({
       owner: PUBLISHED,
       id: c.id,
-      exploration: `published:${sha256}`,
+      exploration: `published:${entry.hash}`,
       subject: c.subject,
       verb: c.verb,
       kind: c.kind,
       body: JSON.stringify(c),
       credential: JSON.stringify({
-        proof,
-        confidence: prepared.confidence?.[c.id] ?? null,
-        scored_by: prepared.scored_by ?? null,
+        publication: entry.hash,
+        proof: publication.proof,
+        confidence: prepared.confidence[c.id] ?? null,
+        scored_by: prepared.scored_by,
       }),
       created_at: at,
       place,
     })),
   );
   // the readings they drew, credited to them: a view no one was credited with since the press was prepared
-  let readings = 0;
-  for (const sha of prepared.readings ?? []) {
-    const row = await store.draft.get(sha);
-    if (!row || row.made_by) continue;
-    if (await store.draft.label(sha, { name: row.name ?? null, made_by: who.by })) readings++;
+  for (const sha of prepared.readings) {
+    const view = await store.draft.get(sha);
+    if (view && !view.made_by)
+      await store.draft.label(sha, { name: view.name ?? null, made_by: p.author });
   }
   return {
-    about: prepared.about,
-    sha256,
-    published: added,
-    readings,
-    by: who.by,
-    map_url: mapUrl(ctx, prepared.about),
+    publication: entry.hash,
+    layers: adds.map((l) => ({ sha256: l.sha256, petal: l.petal })),
+    totals,
   };
 }
