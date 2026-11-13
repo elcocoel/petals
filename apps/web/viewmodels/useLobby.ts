@@ -131,85 +131,80 @@ export function useLobby() {
    * text. With several wallets of one kind in this browser, the person picks one by name first. The wallet
    * asked is named while it's asked, and whatever it answers, a no included, is said plainly: never silence.
    */
-  const addWallet = useCallback(
-    async (kind: WalletKind, pick?: string) => {
-      // one try at a time: Stop waiting, or another press, leaves an older try's answer unused
-      attempt.current += 1;
-      const mine = attempt.current;
-      const current = () => attempt.current === mine;
-      let wallet: string = profilePageWords.nearWallet;
-      if (kind !== 'near') {
-        // the phone first, by a QR code, then the wallets in this browser
-        const list = [
-          { id: PHONE, name: profilePageWords.phone, icon: null },
-          ...(kind === 'evm' ? evmWallets() : solanaWallets()),
-        ];
-        if (!pick && list.length > 1) {
-          setAdding({ kind: 'choose', chain: kind, wallets: list });
-          return;
-        }
-        const chosen = list.find((w) => w.id === pick) ?? list[0];
-        if (!chosen) return;
-        pick = chosen.id;
-        wallet = chosen.id === PHONE ? profilePageWords.phoneRefused : chosen.name;
-      }
-      setAdding(
-        pick === PHONE
-          ? { kind: 'adding', wallet: profilePageWords.phoneWallet }
-          : { kind: 'adding', wallet },
-      );
-      // a phone shows its QR code until it says yes, then is named by what it calls itself
-      const phone = {
-        show: (uri: string) => {
-          void qrOf(uri).then((qr) => {
-            if (current()) setAdding({ kind: 'scan', qr });
-          });
-        },
-        approved: (name: string) => {
-          wallet = name;
-          if (current()) setAdding({ kind: 'adding', wallet: name });
-        },
-      };
-      let network: string;
-      let proof: Parameters<typeof addMyWallet>[1];
-      try {
-        if (kind === 'evm') {
-          network = 'eip155';
-          proof = await evmProof(pick, phone);
-        } else if (kind === 'solana') {
-          network = 'solana';
-          proof = await solanaProof(pick, phone);
-        } else {
-          const challenge = await sessionClient.challenge();
-          const signed = await signPrepared({ ...challenge, entry_sha256: '' }, SIGN_IN_NETWORK);
-          network = SIGN_IN_NETWORK;
-          proof = {
-            type: 'nep413',
-            account_id: signed.accountId,
-            public_key: signed.publicKey,
-            signature: signed.signature,
-            message: challenge.message,
-            nonce: challenge.nonce,
-            recipient: challenge.recipient,
-          };
-        }
-      } catch (e) {
-        if (current()) setAdding({ kind: 'failed', why: walletRefusal(wallet, e) });
+  const addWallet = useCallback(async (kind: WalletKind, pick?: string) => {
+    // one try at a time: Stop waiting, or another press, leaves an older try's answer unused
+    attempt.current += 1;
+    const mine = attempt.current;
+    const current = () => attempt.current === mine;
+    let wallet: string = profilePageWords.nearWallet;
+    if (kind !== 'near') {
+      // the phone first, by a QR code, then the wallets in this browser
+      const list = [
+        { id: PHONE, name: profilePageWords.phone, icon: null },
+        ...(kind === 'evm' ? evmWallets() : solanaWallets()),
+      ];
+      if (!pick && list.length > 1) {
+        setAdding({ kind: 'choose', chain: kind, wallets: list });
         return;
       }
-      if (!current()) return;
-      try {
-        const { wallets: now } = await addMyWallet(network, proof);
-        setWallets(walletRows(now));
-        setAdding({ kind: 'ready' });
-        // an open profile editor publishes as the NEAR wallet just added
-        editor.readNear();
-      } catch (e) {
-        setAdding({ kind: 'failed', why: why(e) });
+      const chosen = list.find((w) => w.id === pick) ?? list[0];
+      if (!chosen) return;
+      pick = chosen.id;
+      wallet = chosen.id === PHONE ? profilePageWords.phoneRefused : chosen.name;
+    }
+    setAdding(
+      pick === PHONE
+        ? { kind: 'adding', wallet: profilePageWords.phoneWallet }
+        : { kind: 'adding', wallet },
+    );
+    // a phone shows its QR code until it says yes, then is named by what it calls itself
+    const phone = {
+      show: (uri: string) => {
+        void qrOf(uri).then((qr) => {
+          if (current()) setAdding({ kind: 'scan', qr });
+        });
+      },
+      approved: (name: string) => {
+        wallet = name;
+        if (current()) setAdding({ kind: 'adding', wallet: name });
+      },
+    };
+    let network: string;
+    let proof: Parameters<typeof addMyWallet>[1];
+    try {
+      if (kind === 'evm') {
+        network = 'eip155';
+        proof = await evmProof(pick, phone);
+      } else if (kind === 'solana') {
+        network = 'solana';
+        proof = await solanaProof(pick, phone);
+      } else {
+        const challenge = await sessionClient.challenge();
+        const signed = await signPrepared({ ...challenge, entry_sha256: '' }, SIGN_IN_NETWORK);
+        network = SIGN_IN_NETWORK;
+        proof = {
+          type: 'nep413',
+          account_id: signed.accountId,
+          public_key: signed.publicKey,
+          signature: signed.signature,
+          message: challenge.message,
+          nonce: challenge.nonce,
+          recipient: challenge.recipient,
+        };
       }
-    },
-    [editor],
-  );
+    } catch (e) {
+      if (current()) setAdding({ kind: 'failed', why: walletRefusal(wallet, e) });
+      return;
+    }
+    if (!current()) return;
+    try {
+      const { wallets: now } = await addMyWallet(network, proof);
+      setWallets(walletRows(now));
+      setAdding({ kind: 'ready' });
+    } catch (e) {
+      setAdding({ kind: 'failed', why: why(e) });
+    }
+  }, []);
   /** Stops waiting for a wallet that doesn't answer, or puts the pick away; a later answer is left unused. */
   const stopAdding = useCallback(() => {
     attempt.current += 1;

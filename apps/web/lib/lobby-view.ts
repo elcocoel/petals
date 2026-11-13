@@ -146,10 +146,6 @@ export const editorWords = {
   otherWallet: (wallet: string, account: string) =>
     `Your wallet is on ${wallet}. Switch it to ${account} to publish.`,
   tryAgain: 'Try again',
-  /** Signed in with an Ethereum or Solana wallet and no NEAR wallet added: where Save puts it, and why. */
-  needsNear:
-    'Save keeps it on Petals. NEAR Social is on NEAR, so having it there needs a NEAR wallet: add one in Wallets.',
-  goToWallets: 'Go to Wallets',
 } as const;
 
 /**
@@ -190,11 +186,6 @@ export interface ProfileEditorView {
   creating: boolean;
   /** The account it's kept for and would publish as, as shown, and in full. */
   account: { shown: string; full: string };
-  /**
-   * Publishing to NEAR Social needs a NEAR account: someone signed in with an Ethereum or
-   * Solana wallet and no NEAR wallet added yet; the editor says so and leads them to Wallets.
-   */
-  needsNearWallet: boolean;
   draft: ProfileDraft;
   /** The picture shown: the one chosen, or the one there now. */
   picture: string | null;
