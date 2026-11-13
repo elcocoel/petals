@@ -252,8 +252,6 @@ export function InteractionSurface({
                 placeholder={placeholder}
                 progress={progress}
                 landed={landed}
-                // a publication that just joined the map, in the person's name (wave 8)
-                joined={publishing.joined}
                 // a wallet chosen on it is what the next question is about (Elco, 12 Nov)
                 onWallet={actions.chooseMapWallet}
                 // the map in front, for the mapping state: the flower the person is inside

@@ -160,7 +160,7 @@ export function toMapLines(c: LayerCases): ToMapLine[] {
   }));
 }
 
-/** A publication that just landed on the map, as the press hands it to the map (LOOK) and Information (OVERLAYS). */
+/** A publication that just landed on the map, as the press hands it to the map's `joined` (OVERLAYS's MapJoined). */
 export interface Joined {
   /** the map it joined */
   map: string;
@@ -171,8 +171,6 @@ export interface Joined {
   documents: { sha256: string; petal: string; what: string }[];
   /** when it landed, so a second press is a second moment */
   at: number;
-  /** what it added, by case */
-  cases?: MapCases;
 }
 
 /** A layer the press would publish, one line, with what it adds to the map. */
@@ -202,7 +200,6 @@ export function joinedOf(
       what: layers.find((x) => x.sha256 === l.sha256)?.title ?? l.petal,
     })),
     at,
-    cases: countsOf(published.totals),
   };
 }
 

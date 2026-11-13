@@ -161,7 +161,6 @@ describe('when the press lands', () => {
       author: 'alice.near',
       documents: [{ sha256: 'b2', petal: 'vesting/v1', what: 'TRUMP vesting' }],
       at: 1700000000000,
-      cases: { new_data: 1 },
     });
   });
 });
