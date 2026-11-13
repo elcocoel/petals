@@ -11,7 +11,7 @@ import { useSceneCycle } from '../../viewmodels/useSceneCycle.ts';
 import { Button } from '../ui/Button.tsx';
 import { IconButton } from '../ui/IconButton.tsx';
 import { Section } from '../ui/Section.tsx';
-import { SectionHead } from '../ui/SectionHead.tsx';
+import { SectionName } from '../ui/SectionName.tsx';
 import { Scene } from './Scene.tsx';
 
 const copy = landingCopy.howItWorks;
@@ -21,7 +21,7 @@ export function HowItWorks() {
   return (
     <Section tone="paper" rule="top" bleed id="how-it-works">
       <div className="mb-column-gap">
-        <SectionHead size="compact" title={copy.title} />
+        <SectionName name={copy.title} look="logo" />
       </div>
       <div data-paused={cycle.held ? '' : undefined} {...cycle.holder}>
         {/* The row runs out to the window's edges, past the page's column, with one scene in focus in its
