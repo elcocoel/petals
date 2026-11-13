@@ -1,9 +1,8 @@
-// The lobby's ViewModel, one page with the profile (Elco, 11 Nov: "we might want to unify them"): the person,
-// their profile and its editor, and the one balance, all read once in the layout (viewmodels/useWorkPanel.ts)
-// so the side panel and the page say the same; their conversations, the panel's own list; and, read here when
-// the page opens, the wallets they proved by signing in (GET /api/v1/me) and the claims they and their agents
-// keep about accounts (GET /api/v1/me/annotations), and every model call charged to them (usage/v1, GET
-// /api/v1/me/usage). Add a wallet signs Petals' challenge with another wallet, as signing in does, and binds
+// The lobby's ViewModel, one page with the profile: the person, their profile and its editor, and the one
+// balance, all read once in the layout (viewmodels/useWorkPanel.ts) so the side panel and the page say the
+// same; their conversations, the panel's own list; and, read here when the page opens, the wallets they proved
+// by signing in (GET /api/v1/me) and the claims they and their agents keep about accounts (GET
+// /api/v1/me/annotations), and every model call charged to them (usage/v1, GET /api/v1/me/usage). Add a wallet signs Petals' challenge with another wallet, as signing in does, and binds
 // it to this person (POST /api/v1/me/wallets); the session stays as it is. There is no timer.
 
 import type { Credit } from '@petal/core';
@@ -74,7 +73,7 @@ export function useLobby() {
     };
   }, []);
 
-  // one illustrated power quote per empty widget, each its own (#89, wave 7)
+  // one illustrated power quote per empty widget, each its own
   const quotes = {
     profile: usePowerQuote(0),
     claims: usePowerQuote(1),
@@ -88,7 +87,7 @@ export function useLobby() {
     [usage, nearUsd],
   );
 
-  /** Adds a wallet: a NEAR one signs Petals' challenge as signing in does, an EVM one its Sign-In text (wave 5). */
+  /** Adds a wallet: a NEAR one signs Petals' challenge as signing in does, an EVM one its Sign-In text. */
   const addWallet = useCallback(async (kind: WalletKind) => {
     if (kind === 'evm' && !hasEvmWallet()) {
       setAdding({ kind: 'failed', why: NO_EVM_WALLET });

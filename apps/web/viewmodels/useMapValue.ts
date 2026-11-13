@@ -1,4 +1,4 @@
-// What a flower's map's token is worth (board #91): its map's card's value, read once per map, so a petal's box can
+// What a flower's map's token is worth: its map's card's value, read once per map, so a petal's box can
 // say its dollars. Null until it's read, and when the map has none.
 import { mapOf } from '@petal/core';
 import type { Snapshot, Spec } from '@petal/core/types';

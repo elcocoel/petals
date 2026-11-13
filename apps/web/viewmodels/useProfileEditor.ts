@@ -1,5 +1,5 @@
-// The profile's editor (Elco, 10 Nov: people create and edit their profile inside Petals; "hold the same
-// data shape as near.social in our DB ... and have a publish button"). Save keeps the whole profile in
+// The profile's editor: people create and edit their profile inside Petals, in the same data shape as NEAR
+// Social, with a publish button. Save keeps the whole profile in
 // Petals (PUT /api/v1/me/profile), the picture as a data: URI the server stores; it costs nothing. The first
 // time, the editor starts from the account's NEAR Social profile when there is one.
 // Publish, off until it's set up on mainnet (PUBLISH_TO_NEAR_SOCIAL), puts it on NEAR Social, in order:

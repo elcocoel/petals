@@ -1,4 +1,4 @@
-// The person's money, the one balance (Elco, 9 and 10 Nov; "the balance hasn't updated", 10 Nov): the credit
+// The person's money, the one balance, kept up to date: the credit
 // they hold (GET /api/v1/me's credit, which plain transfers to Petals and credit given by hand both go onto,
 // in NEAR at today's price; with the contract, what it holds, read from the chain). It's read once, in the
 // layout (viewmodels/useWorkPanel.ts), and again whenever `cue` changes: after each turn and on every move,
@@ -74,7 +74,7 @@ export function useFunds(cue: string) {
     /** Where a payment goes and NEAR's price (GET /api/v1/pay), read with the credit: the pay step's too. */
     where: info,
     /**
-     * What's left, dollars first and NEAR beside at today's price (Elco, 10 Nov); nothing given yet is
+     * What's left, dollars first and NEAR beside at today's price; nothing given yet is
      * none. Null until Petals has said.
      */
     balance: (info ? money(credit?.left_usd ?? 0, info.near_usd) : null) as Money | null,

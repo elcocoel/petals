@@ -1,8 +1,8 @@
-// Paying for Petals' agent (B): the one payment, which the wallet sends and the server checks on chain, to
+// Paying for Petals' agent: the one payment, which the wallet sends and the server checks on chain, to
 // where GET /api/v1/pay says. That's read once, with the one balance (useFunds, in the layout), and handed in
 // as `where`; `paid` reads both again once a payment lands. lib/pay.ts holds the arithmetic and the words.
-// The person sets how many dollars (about $1 to start, Elco's mainnet test), and a transfer the wallet sent is
-// kept until the server confirms it, so pressing again never sends a second one (wave 5).
+// The person sets how many dollars (about $1 to start), and a transfer the wallet sent is
+// kept until the server confirms it, so pressing again never sends a second one.
 import { useCallback, useEffect, useState } from 'react';
 import { confirmPay } from '../lib/agent-client.ts';
 import {
