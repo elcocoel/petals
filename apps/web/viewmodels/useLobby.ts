@@ -5,14 +5,18 @@
 // keep about accounts (GET /api/v1/me/annotations), and every model call charged to them (usage/v1, GET
 // /api/v1/me/usage). Add a wallet signs Petals' challenge with another wallet, as signing in does, and binds
 // it to this person (POST /api/v1/me/wallets); the session stays as it is. There is no timer.
+
+import type { Credit } from '@petal/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   addMyWallet,
   readMyAnnotations,
+  readMyCredit,
   readMyUsage,
   readWallets,
   sessionClient,
 } from '../lib/agent-client.ts';
+import { contributionView } from '../lib/contribution-view.ts';
 import { hasEvmWallet, NO_EVM_WALLET } from '../lib/evm-wallet.ts';
 import {
   type AddWalletPhase,
@@ -26,7 +30,7 @@ import {
   walletRows,
 } from '../lib/profile-view.ts';
 import { hasSolanaWallet, NO_SOLANA_WALLET } from '../lib/solana-wallet.ts';
-import { SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
+import { connectWallet, SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
 import { usePowerQuote } from './usePowerQuote.ts';
 import { evmProof, solanaProof } from './useSession.ts';
 import { useWorkPanel } from './useWorkPanel.ts';
@@ -45,6 +49,7 @@ export function useLobby() {
     'reading',
   );
   const [adding, setAdding] = useState<AddWalletPhase>({ kind: 'ready' });
+  const [credit, setCredit] = useState<Credit | 'reading' | 'unread'>('reading');
 
   useEffect(() => {
     let gone = false;
@@ -55,6 +60,10 @@ export function useLobby() {
     void readMyAnnotations().then(
       (rows) => !gone && setClaims(rows ? claimsView(rows) : 'unread'),
       () => !gone && setClaims('unread'),
+    );
+    void readMyCredit().then(
+      (c) => !gone && setCredit(c ?? 'unread'),
+      () => !gone && setCredit('unread'),
     );
     void readMyUsage().then(
       (u) => !gone && setUsage(u ? { calls: u.usage, spent: u.totals.charged_usd } : 'unread'),
@@ -71,6 +80,7 @@ export function useLobby() {
     claims: usePowerQuote(1),
     usage: usePowerQuote(2),
     conversations: usePowerQuote(3),
+    contribution: usePowerQuote(4),
   };
   const nearUsd = funds.where?.near_usd ?? null;
   const usageShown = useMemo(
@@ -142,6 +152,7 @@ export function useLobby() {
     addWallet: (kind: WalletKind) => void addWallet(kind),
     claims,
     conversations: bus.rows,
+    contribution: typeof credit === 'string' ? credit : contributionView(credit),
     quotes,
   };
 }

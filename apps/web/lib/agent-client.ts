@@ -2,7 +2,7 @@
 // Everything else gets plain values and agent events, so views and ViewModels hold no URLs, no status
 // codes and no `fetch`. layers.test.ts names this file as the only one in lib/ allowed to call it.
 
-import type { Blocs } from '@petal/core';
+import type { Blocs, Credit as CreditRecord } from '@petal/core';
 import type {
   AgentEvent,
   ChatMessage,
@@ -736,6 +736,14 @@ export async function readCredit(): Promise<Credit | null> {
   if (!res.ok) return null;
   const json = (await res.json()) as { credit?: Credit | null };
   return json.credit ?? null;
+}
+
+/** The person's credit record (SYSTEMS's credit/v1, wave 8); null for nobody or no answer. */
+export async function readMyCredit(): Promise<CreditRecord | null> {
+  const res = await fetch('/api/v1/me/credit', { cache: 'no-store' });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { credit?: CreditRecord } & Partial<CreditRecord>;
+  return json.credit ?? (json.petal ? (json as CreditRecord) : null);
 }
 
 /** Every model call charged to the person (usage/v1), newest first, and what they came to; null for nobody. */
