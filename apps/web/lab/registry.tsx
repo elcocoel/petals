@@ -788,8 +788,8 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/landing/HeroStory.tsx',
-    // HERO ART's V2, approved by Elco (11 Nov); with its lab controls at /lab/landing-hero
-    states: [{ name: 'as approved', wide: true, render: () => <HeroStory /> }],
+    // the landing's hero as the page draws it; its lab controls are at /lab/landing-hero
+    states: [{ name: 'on the landing', wide: true, render: () => <HeroStory /> }],
   },
   {
     id: 'StoryFlower',
