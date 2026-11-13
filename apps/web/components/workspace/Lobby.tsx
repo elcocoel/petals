@@ -52,6 +52,7 @@ export function Lobby({
   wallets,
   adding,
   addWallet,
+  stopAdding,
   claims,
   conversations,
   map,
@@ -83,7 +84,10 @@ export function Lobby({
   usage: UsageView | 'reading' | 'unread';
   wallets: WalletRow[] | 'reading' | 'unread';
   adding: AddWalletPhase;
-  addWallet: (kind: WalletKind) => void;
+  /** Asks a wallet to sign; with several of one kind, the one picked by its id. */
+  addWallet: (kind: WalletKind, pick?: string) => void;
+  /** Stops waiting for a wallet, or puts the pick away. */
+  stopAdding: () => void;
   claims: ClaimsView | 'reading' | 'unread';
   conversations: ConversationRow[];
   map: LobbyMap;
@@ -123,7 +127,7 @@ export function Lobby({
               />
             )}
           </div>
-          <Wallets wallets={wallets} adding={adding} onAdd={addWallet} />
+          <Wallets wallets={wallets} adding={adding} onAdd={addWallet} onStop={stopAdding} />
           <div className="grid min-w-0 lg:col-span-2">
             <Contribution contribution={contribution} quote={quotes.contribution} />
           </div>

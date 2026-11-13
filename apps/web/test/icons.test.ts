@@ -22,6 +22,8 @@ const DRAWINGS = [
   'components/landing/HeroGlass.tsx',
   // a grade's five steps in the look's own colours, under Colour in Tools (LOOK's grade, Elco, wave 4)
   'components/ui/Ramp.tsx',
+  // the landing's system graph: its lines, regions and what travels on them
+  'components/landing/SystemGraph.tsx',
 ];
 
 const sources = (dir: string): string[] =>
