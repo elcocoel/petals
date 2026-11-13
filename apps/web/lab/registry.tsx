@@ -50,6 +50,7 @@ import { MapHero } from '../components/landing/MapHero.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
 import { StoryFlower } from '../components/landing/StoryFlower.tsx';
+import { SystemGraph } from '../components/landing/SystemGraph.tsx';
 import { MapClaims } from '../components/MapClaims.tsx';
 import { MapLayers } from '../components/MapLayers.tsx';
 import { MapList } from '../components/MapList.tsx';
@@ -912,6 +913,26 @@ export const registry: LabEntry[] = [
     '66:2316',
     () => <BuildWithUs />,
   ),
+  {
+    id: 'SystemGraph',
+    group: 'Sections',
+    // from the system map, Figma "Systems map" (119:2271)
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/SystemGraph.tsx',
+    // Build it with us's system graph, on the ink band it sits in
+    states: [
+      {
+        name: 'on the ink band',
+        wide: true,
+        render: () => (
+          <Section kind="ink">
+            <SystemGraph />
+          </Section>
+        ),
+      },
+    ],
+  },
   {
     id: 'Footer',
     group: 'Sections',
