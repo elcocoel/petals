@@ -703,7 +703,6 @@ const LAB_CREDIT: Credit = {
 const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
   creating: false,
   account: { shown: 'a-name.near', full: 'a-name.near' },
-  needsNearWallet: false,
   onSocial: true,
   draft: {
     name: 'A name on NEAR Social',
@@ -2876,18 +2875,6 @@ export const registry: LabEntry[] = [
       {
         name: 'saving',
         render: () => <ProfileEditor view={editorView({ phase: 'saving' })} />,
-      },
-      {
-        name: 'signed in with an Ethereum wallet, no NEAR wallet yet',
-        render: () => (
-          <ProfileEditor
-            view={editorView({
-              account: { shown: '0x3f…f0be', full: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be' },
-              needsNearWallet: true,
-              onSocial: false,
-            })}
-          />
-        ),
       },
       {
         name: "NEAR Social didn't take it",
