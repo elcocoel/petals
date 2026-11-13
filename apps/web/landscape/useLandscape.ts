@@ -1228,6 +1228,7 @@ export function useLandscape(
                   m.petals.map((p) => p.id),
                   m.petals.map((p) => fills[p.id] ?? ''),
                   { width: m.width, height: m.height },
+                  d?.live.glide ?? null,
                 ),
               ];
             }),

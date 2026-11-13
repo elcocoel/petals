@@ -22,6 +22,8 @@ export interface Drawn {
   rotation: number;
   ox: number;
   oy: number;
+  /** a glide it was still in when it was taken down, so the same reading coming again carries on with it */
+  glide: Glide | null;
 }
 
 export interface Glide {
@@ -51,6 +53,7 @@ export function drawnOf(
   ids: readonly string[],
   fills: readonly string[],
   rest: { width: Float64Array; height: Float64Array },
+  glide: Glide | null = null,
 ): Drawn {
   const n = ids.length;
   return {
@@ -64,6 +67,7 @@ export function drawnOf(
     rotation: ring.rotation,
     ox: ring.ox,
     oy: ring.oy,
+    glide,
   };
 }
 
@@ -71,8 +75,9 @@ const same = (a: Float64Array, b: Float64Array): boolean =>
   a.length === b.length && a.every((x, i) => Math.abs(x - (b[i] as number)) < 1e-9);
 
 /**
- * The glide from what was drawn to a reading of these petals, with this rest shape; null when the reading draws the
- * same petals the same way, so nothing moves.
+ * The glide from what was drawn to a reading of these petals, with this rest shape. When the reading draws the same
+ * petals the same way: the glide it was still in, carried on where it was (on live the server's reading lands half way
+ * through the browser's own, the same; it glided on, it didn't jump), or null, so nothing moves.
  */
 export function glideBetween(
   was: Drawn,
@@ -80,7 +85,7 @@ export function glideBetween(
   rest: { width: Float64Array; height: Float64Array },
 ): Glide | null {
   const sameIds = was.ids.length === ids.length && was.ids.every((id, i) => id === ids[i]);
-  if (sameIds && same(was.width, rest.width) && same(was.height, rest.height)) return null;
+  if (sameIds && same(was.width, rest.width) && same(was.height, rest.height)) return was.glide;
   const n = ids.length;
   const oldAt = new Map(was.ids.map((id, k) => [id, k]));
   const newAt = new Map(ids.map((id, j) => [id, j]));
