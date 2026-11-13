@@ -57,6 +57,8 @@ export interface LegendGroups {
   /** which votes they come from, and the period that is, in words */
   span: BlocSpan;
   period: string;
+  /** The flower has blocs, but none with members drawn on it. */
+  elsewhere?: boolean;
   onChoose: (id: string | null) => void;
   onSpan: (span: BlocSpan) => void;
   /** Outside any flower: nothing to choose yet, and the rows stay where they are (one menu, Elco's walk 3). */
@@ -422,7 +424,12 @@ export function ViewLegend({
               {groups.away
                 ? `${blocWords.away}.`
                 : [
-                    groups.choices.length === 0 && groups.period ? `${blocWords.noneHere}.` : '',
+                    groups.choices.length === 0 && groups.elsewhere
+                      ? `${blocWords.elsewhere}.`
+                      : '',
+                    groups.choices.length === 0 && !groups.elsewhere && groups.period
+                      ? `${blocWords.noneHere}.`
+                      : '',
                     groups.period ? `${groups.period}.` : '',
                     chosen ? `${blocWords.caveat}.` : '',
                   ]
